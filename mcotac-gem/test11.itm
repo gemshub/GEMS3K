@@ -1,0 +1,27 @@
+itest   : 1
+ncyc    : 1
+ntim    : 51
+de      : 1.0
+tmult   : 31557600.
+nx      : 51
+ny      : 1
+dxx     : 0.01
+dyy     : 0.01
+itest   : 1
+inma    : 0
+ipfile  : 0
+npin    : 50000
+npkt    : 0
+backg   : 0.0
+rd      : 1.0
+lambda  : 0.e-00
+lambt0  : 0.0
+along   : .0067
+vxx     : 9.37e-6
+dm      : 0.3e-10
+dtmax   : 400.
+ismooth : 1
+i_sorb  : 0
+j_sorb  : 0
+j_decay : 0
+

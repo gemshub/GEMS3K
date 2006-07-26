@@ -1,0 +1,155 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: mcotac_gems_11_2005 - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP5F.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\work\MCO_gem\ms_multi_file.cpp"
+"C:\work\MCO_gem\ms_multi_format.cpp"
+"C:\work\MCO_gem\ms_param.cpp"
+"C:\work\MCO_gem\node.cpp"
+"C:\work\MCO_gem\node_format.cpp"
+"C:\work\MCO_gem\s_fgl.cpp"
+"C:\work\MCO_gem\setpar.cpp"
+"C:\work\MCO_gem\setpar_.c"
+"C:\work\MCO_gem\walk2_.c"
+"C:\work\MCO_gem\wegdat1d_.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP5F.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP60.tmp" with contents
+[
+/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
+"C:\work\MCO_gem\mcotac1d.f"
+]
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP61.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\work\MCO_gem\ipm_chemical.cpp"
+"C:\work\MCO_gem\ipm_chemical2.cpp"
+"C:\work\MCO_gem\ipm_chemical3.cpp"
+"C:\work\MCO_gem\ipm_main.cpp"
+"C:\work\MCO_gem\ipm_simplex.cpp"
+"C:\work\MCO_gem\mainfromf.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP61.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP62.tmp" with contents
+[
+/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
+"C:\work\MCO_gem\inparf.f"
+"C:\work\MCO_gem\inistat2.f"
+]
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP63.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"C:\work\MCO_gem\gdatastream.cpp"
+"C:\work\MCO_gem\gstring.cpp"
+"C:\work\MCO_gem\hydro1d_.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP63.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP64.tmp" with contents
+[
+/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
+"C:\work\MCO_gem\erech.f"
+"C:\work\MCO_gem\datio.f"
+]
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP65.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Debug/mcotac_gems_11_2005.pdb" /debug /machine:I386 /nodefaultlib:"libcd libcpd libc" /force /out:"Debug/mcotac_gems_11_2005.exe" /pdbtype:sept 
+.\Debug\datio.obj
+.\Debug\erech.obj
+.\Debug\gdatastream.obj
+.\Debug\gstring.obj
+.\Debug\hydro1d_.obj
+.\Debug\inistat2.obj
+.\Debug\inparf.obj
+.\Debug\ipm_chemical.obj
+.\Debug\ipm_chemical2.obj
+.\Debug\ipm_chemical3.obj
+.\Debug\ipm_main.obj
+.\Debug\ipm_simplex.obj
+.\Debug\mainfromf.obj
+.\Debug\mcotac1d.obj
+.\Debug\ms_multi_file.obj
+.\Debug\ms_multi_format.obj
+.\Debug\ms_param.obj
+.\Debug\node.obj
+.\Debug\node_format.obj
+.\Debug\s_fgl.obj
+.\Debug\setpar.obj
+.\Debug\setpar_.obj
+.\Debug\walk2_.obj
+.\Debug\wegdat1d_.obj
+]
+Creating command line "link.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP65.tmp"
+<h3>Output Window</h3>
+Compiling...
+ms_multi_file.cpp
+ms_multi_format.cpp
+c:\work\mco_gem\ms_multi_format.cpp(619) : warning C4305: '=' : truncation from 'const double' to 'float'
+c:\work\mco_gem\ms_multi_format.cpp(620) : warning C4305: '=' : truncation from 'const double' to 'float'
+ms_param.cpp
+node.cpp
+c:\work\mco_gem\node.cpp(113) : warning C4101: 'err' : unreferenced local variable
+node_format.cpp
+s_fgl.cpp
+setpar.cpp
+setpar_.c
+walk2_.c
+c:\work\mco_gem\walk2_.c(135) : warning C4087: 'rand' : declared with 'void' parameter list
+c:\work\mco_gem\walk2_.c(136) : warning C4087: 'rand' : declared with 'void' parameter list
+wegdat1d_.c
+Compiling Fortran...
+C:\work\MCO_gem\mcotac1d.f
+Compiling...
+ipm_chemical.cpp
+ipm_chemical2.cpp
+ipm_chemical3.cpp
+ipm_main.cpp
+ipm_simplex.cpp
+mainfromf.cpp
+Compiling Fortran...
+C:\work\MCO_gem\inparf.f
+C:\work\MCO_gem\inistat2.f
+Compiling...
+gdatastream.cpp
+gstring.cpp
+hydro1d_.c
+Compiling Fortran...
+C:\work\MCO_gem\erech.f
+C:\work\MCO_gem\datio.f
+Linking...
+LINK : warning LNK4075: ignoring /EDITANDCONTINUE due to /INCREMENTAL:NO specification
+LIBCD.lib(dbgheap.obj) : warning LNK4006: _malloc already defined in libc.lib(malloc.obj); second definition ignored
+LIBCD.lib(dbgheap.obj) : warning LNK4006: __nh_malloc already defined in libc.lib(malloc.obj); second definition ignored
+LIBCD.lib(dbgheap.obj) : warning LNK4006: __heap_alloc already defined in libc.lib(malloc.obj); second definition ignored
+LIBCD.lib(dbgheap.obj) : warning LNK4006: _calloc already defined in libc.lib(calloc.obj); second definition ignored
+LIBCD.lib(dbgheap.obj) : warning LNK4006: _realloc already defined in libc.lib(realloc.obj); second definition ignored
+LIBCD.lib(dbgheap.obj) : warning LNK4006: _free already defined in libc.lib(free.obj); second definition ignored
+LIBCD.lib(dbgheap.obj) : warning LNK4006: __msize already defined in libc.lib(msize.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: __get_sbh_threshold already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: __set_sbh_threshold already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_heap_init already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_find_block already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_free_block already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_alloc_block already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_alloc_new_region already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_alloc_new_group already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_resize_block already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_heapmin already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_heap_check already defined in libc.lib(sbheap.obj); second definition ignored
+LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_threshold already defined in libc.lib(sbheap.obj); second definition ignored
+LINK : warning LNK4098: defaultlib "LIBCD" conflicts with use of other libs; use /NODEFAULTLIB:library
+Debug/mcotac_gems_11_2005.exe : warning LNK4088: image being generated due to /FORCE option; image may not run
+
+
+
+<h3>Results</h3>
+mcotac_gems_11_2005.exe - 0 error(s), 27 warning(s)
+</pre>
+</body>
+</html>
