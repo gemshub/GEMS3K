@@ -376,7 +376,6 @@ int TParticleArray::RandomWalkIteration( int /*Mode*/, double t0, double t1 )
   for( cpx=0; cpx < anParts; cpx++ )
      iRet = DisplaceParticle( cpx, t0, t1 );
 
-
  // Walk (transport step) for particles between nodes
   for( cpx=0; cpx < anParts; cpx++ )
      iRet = MoveParticleBetweenNodes( cpx, t0, t1 );

@@ -3,7 +3,7 @@
 
 TEMPLATE	= app
 LANGUAGE        = C++
-TARGET		= gemnode
+TARGET		= rockflow_gem
 VERSION         = 2.1.1
 
 CONFIG		-= qt

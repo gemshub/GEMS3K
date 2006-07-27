@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 774 2006-07-26 08:45:45Z gems $
+// $Id: ms_multi.h 783 2006-07-27 11:18:26Z gems $
 //
 // Declaration of TMulti class, config functions
 //
@@ -233,7 +233,7 @@ typedef struct
     *F, //Prime DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
     *F0;  // Excess Gibbs energies for (metastable) DC, mole/mole [0:L-1]
    double (*D)[MST];    // Reserved; new work array for calc. surface act.coeff.
-  
+
   char  (*sMod)[6]; 	 // Codes of models of multicomponent phases [0:FIs-1]
   char  (*SB)[MAXICNAME+MAXSYMB]; // List of IC names in the system [0:N-1]
   char  (*SB1)[MAXICNAME]; // List of IC names in the system [0:N-1]
@@ -431,8 +431,6 @@ public:
 
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
-    double LagranInterp(float *y, float *x, double *d, float yoi,
-                      float xoi, int M, int N);
 
 #endif
 

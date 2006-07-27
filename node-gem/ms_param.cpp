@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 742 2006-07-14 13:48:20Z gems $
+// $Id: ms_param.cpp 783 2006-07-27 11:18:26Z gems $
 //
 // Copyright  (C) 1992-2000 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -24,6 +24,7 @@
 
 #include <math.h>
 #include "m_param.h"
+#include "num_methods.h"
 #include "gdatastream.h"
 #include "node.h"
 
@@ -117,87 +118,6 @@ void TProfil::readMulti( const char* path )
       multi->from_text_file_gemipm( path);
 }
 
-/*-----------------------------------------------------------------*/
-// Interpolation over tabulated values (array y) using the Lagrange method
-// for extracting thermodynamic data in gemipm2k or in gem2mt
-// parameters:
-//  y[N] - discrete values of argument over rows (ascending order)
-//  x[M] - discrete values of arguments over columns (ascending order)
-//  d[N][M] - discrete values of a function of x and y arguments
-//  xoi - column (x) argument of interest ( x[0] <= xi <= x[M-1] )
-//  yoi - row (y) argument of interest  ( y[0] <= yi <= y[N-1] )
-//  N - number of rows in y array;
-//  M - number of columns in y array.
-//  Function returns an interpolated value of d(yoi,xoi) or 0 if
-//  yoi or xoi are out of range
-//
-double TMulti::LagranInterp(float *y, float *x, double *d, float yoi,
-                    float xoi, int M, int N)
-{
-    double s=0,z,s1[21];
-    int py, px, i=0, j, j1, k, jy, jy1;
-
-    py = N-1;
-    px = M-1;
-
-   if (yoi < y[0] || yoi > y[py] )
-        Error( GetName(), "E34RErun: yoi < y[0] (minimal row argument value)");
-   if(xoi < x[0] || xoi > x[px] )
-        Error( GetName(), "E35RErun: xoi < x[0] (minimal column argument value)");
-
-//    if(yoi < y[0] || xoi < x[0] || yoi > y[py] || xoi > x[px] )
-//       return s;  // one of arguments outside the range
-   if( N==1 && M==1 )
-      return d[0];
-
-    for(j1=0;j1<N;j1++)
-        if (yoi >= y[j1] && yoi <= y[j1+1])
-            goto m1;
-    //z=yoi;
-    goto m2;
-m1:
-    for(i=0;i<M;i++)
-        if(xoi >= x[i] && xoi <= x[i+1])
-            goto m;
-    // z=xoi;
-    if(xoi <= x[px])
-        goto m;
-m2:
-    if(yoi <= y[py])
-        goto m;
-m:
-    if(i < M-px)
-        j=i;
-    else j=M-px-1;
-    if( j1 >= N-py)
-        j1=N-py-1;
-    jy1=j1;
-    for(jy=0;jy <= py; jy++)
-    {
-        s=0.;
-        for(i=0;i<=px;i++)
-        {
-            z=1; //z1=1;
-            for(k=0;k<=px;k++)
-                if(k!=i)
-                    z*=(xoi-x[k+j])/(x[i+j]-x[k+j]);
-            s+=d[i+j+(j1)*M]*z;
-        }
-        s1[jy]=s;
-        j1++;
-    }
-    s=0.;
-    for(i=0;i<=py;i++)
-    {
-        z=1;
-        for(k=0;k<=py;k++)
-            if(k!=i)
-                z*=(yoi-y[k+jy1])/(y[i+jy1]-y[k+jy1]);
-        s+=s1[i]*z;
-    }
-    return(s);
-}
-
 // Load Thermodynamic Data from MTPARM to MULTI using LagranInterp
 void TMulti::CompG0Load()
 {
@@ -245,10 +165,10 @@ if( dCH->nTp <1 && dCH->nPp <1 )
  if( dCH->ccPH[0] == PH_AQUEL )
  {
    pmp->denW = LagranInterp( dCH->Pval, dCH->Tval, dCH->roW,
-                          P, TC, dCH->nTp, dCH->nPp );
+                          P, TC, dCH->nTp, dCH->nPp,1 );
    //       pmp->denWg = tpp->RoV;
    pmp->epsW = LagranInterp( dCH->Pval, dCH->Tval, dCH->epsW,
-                          P, TC, dCH->nTp, dCH->nPp );
+                          P, TC, dCH->nTp, dCH->nPp,1 );
    //       pmp->epsWg = tpp->EpsV;
  }
  else
@@ -276,7 +196,7 @@ if( dCH->nTp <1 && dCH->nPp <1 )
     {
       jj =  j * dCH->nPp * dCH->nTp;
       Gg = LagranInterp( dCH->Pval, dCH->Tval, dCH->G0+jj,
-                          P, TC, dCH->nTp, dCH->nPp );
+                          P, TC, dCH->nTp, dCH->nPp,1 );
       pmp->G0[j] = Cj_init_calc( Gg, j, k );
 //Test outpur ***********************************
 //  f_log << j  << " Gg = " <<  Gg  << "  GO =  " << pmp->G0[j] << endl;
@@ -287,7 +207,7 @@ if( dCH->nTp <1 && dCH->nPp <1 )
  {
     jj =  j * dCH->nPp * dCH->nTp;
     Vv = LagranInterp( dCH->Pval, dCH->Tval, dCH->V0+jj,
-                          P, TC, dCH->nTp, dCH->nPp );
+                          P, TC, dCH->nTp, dCH->nPp, 1 );
     switch( pmp->PV )
     { /* make mol volumes of components */
        case VOL_CONSTR:

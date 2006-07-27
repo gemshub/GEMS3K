@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: main.cpp 755 2006-07-19 12:08:45Z gems $
+// $Id: main.cpp 783 2006-07-27 11:18:26Z gems $
 //
 // Debugging version of a finite-difference 1D advection-diffusion
 // mass transport model supplied by Dr. Frieder Enzmann (Uni Mainz)
@@ -42,6 +42,8 @@ int main( int argc, char* argv[] )
       if (argc >= 3 )
         gem2mt_in1 = argv[2];
 
+   try{
+
 // The NodeArray must be allocated here
     TGEM2MT::pm = new TGEM2MT();
 
@@ -55,6 +57,13 @@ int main( int argc, char* argv[] )
 
 // here we call the mass-transport finite-difference coupled routine
    RetC = TGEM2MT::pm->Trans1D( NEED_GEM_AIA );
+   }
+   catch(TError& err)
+       {
+        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        f_log << err.title.c_str() << ": " << err.mess.c_str() << endl;
+        return 1;
+       }
 
    return RetC;
 }

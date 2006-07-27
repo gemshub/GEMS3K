@@ -35,6 +35,46 @@
 
 TNode* TNode::na;
 
+void  TNode::check_TP()
+{
+   bool ok = true;
+   double T_ = CNode->T, P_ = CNode->P;
+
+   if( CNode->T-C_to_K < CSD->Tval[0] )
+   { ok = false;
+     CNode->T = C_to_K + CSD->Tval[0];
+   }
+   if( CNode->T-C_to_K > CSD->Tval[CSD->nTp-1] )
+   { ok = false;
+     CNode->T = C_to_K + CSD->Tval[CSD->nTp-1];
+   }
+
+  if( !ok )
+  {
+    fstream f_log("ipmlog.txt", ios::out|ios::app );
+    f_log << "In node "<< CNode->NodeHandle << "  Given T= "<<  T_ <<
+             "  is beyond the range for thermodynamic data;" <<
+             " set to T= " << CNode->T << endl;
+  }
+
+  ok = true;
+  if( CNode->P < CSD->Pval[0] )
+  { ok = false;
+    CNode->P = CSD->Pval[0];
+  }
+  if( CNode->P > CSD->Pval[CSD->nPp-1] )
+  { ok = false;
+    CNode->P = CSD->Pval[CSD->nPp-1];
+  }
+
+  if( !ok )
+  {
+    fstream f_log("ipmlog.txt", ios::out|ios::app );
+    f_log << "In node "<< CNode->NodeHandle << "  Given P= "<<  P_ <<
+           "  is beyond the range for thermodynamic data;" <<
+           " set to P= " << CNode->P << endl;
+  }
+}
 //-------------------------------------------------------------------------
 // GEM_run()
 // GEM IPM calculation of equilibrium state for the current node.
@@ -51,7 +91,8 @@ int  TNode::GEM_run()
   {
 // f_log << " MAIF_CALC begin Mode= " << p_NodeStatusCH endl;
 //---------------------------------------------
-
+// Checking T and P
+   check_TP();
 // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
    unpackDataBr();
 // set up Mode
@@ -281,16 +322,7 @@ if( binary_mult )
         profil->readMulti(multu_in.c_str());
 #endif
   }
-// output multy
-      gstring strr = "out_multi.ipm";
-      GemDataStream o_m( strr, ios::out|ios::binary);
-#ifdef IPMGEMPLUGIN
-          profil->outMulti(o_m, strr );
-#else
-          TProfil::pm->outMulti(o_m, strr );
-#endif
-
-    return 0;
+   return 0;
 
 #ifdef IPMGEMPLUGIN
     }

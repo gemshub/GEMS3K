@@ -148,7 +148,9 @@ int main( int argc, char* argv[] )
        m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
        m_bPS+in*nIC*nPS, m_xPA+in*nPS );
 
-      m_T[in] += (in-1)*5;
+//  Uncomment this to test variable pressures and temperatures
+         m_T[in] += (in-1)*5;
+//         m_P[in] += (in-1)*20;
      // Here the file output for the initial conditions can be implemented
    }
 

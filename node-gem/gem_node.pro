@@ -63,6 +63,7 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_H/ms_multi.h \
 		    $$GEMIPM_H/m_const.h \
 		    $$GEMIPM_H/m_param.h  \
+                    $$NUMERICS_H/num_methods.h \
                     $$NUMERICS_H/tnt_i_refvec.h \
                     $$NUMERICS_H/tnt_array1d.h \
                     $$NUMERICS_H/tnt_array2d.h \
@@ -83,4 +84,5 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_CPP/ipm_main.cpp \
                     $$SUBMOD_CPP/ipm_simplex.cpp \
 		    main.cpp \
-		    $$GEMIPM_CPP/ms_param.cpp
+		    $$GEMIPM_CPP/ms_param.cpp \
+                    $$NUMERICS_CPP/num_methods.cpp

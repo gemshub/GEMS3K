@@ -48,6 +48,7 @@ protected:
     DATABR* CNode;   // Pointer to a work node data bridge structure  CNode
                      // used for sending input data to and receiving results from GEM IPM
 
+    void  check_TP();
     void allocMemory();
     void freeMemory();
 

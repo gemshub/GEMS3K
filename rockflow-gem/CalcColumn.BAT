@@ -1,4 +1,4 @@
 echo off
 rem Normal runs
-gemnode.exe tp_test/CalcColumn-dat.lst tp_test/CalcColumn-dbr-0-0000.dat > test.out
+rockflow_gem.exe test_data/CalcColumn-dat.lst test_data/CalcColumn-dbr-0-0000.dat > test.out
 

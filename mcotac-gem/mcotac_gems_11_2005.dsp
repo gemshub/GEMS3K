@@ -159,9 +159,6 @@ SOURCE=.\mcotac1d.f
 DEP_F90_MCOTA=\
 	".\gwheader.inc"\
 	
-NODEP_F90_MCOTA=\
-	".\Debug\datach.inc"\
-	
 # End Source File
 # Begin Source File
 
@@ -182,6 +179,10 @@ SOURCE=.\node.cpp
 # Begin Source File
 
 SOURCE=.\node_format.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\num_methods.cpp
 # End Source File
 # Begin Source File
 
@@ -258,6 +259,10 @@ SOURCE=.\ms_multi.h
 # Begin Source File
 
 SOURCE=.\node.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\num_methods.h
 # End Source File
 # Begin Source File
 

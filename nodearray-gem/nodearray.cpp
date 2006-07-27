@@ -20,6 +20,7 @@
 #include "particlearray.h"
 #include "nodearray.h"
 #include "gdatastream.h"
+#include "num_methods.h"
 #include <math.h>
 
 #ifndef __unix
@@ -473,9 +474,6 @@ double TNodeArray::get_vPH( int ia, int nodex, int PHx )
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
   {
-#ifndef IPMGEMPLUGIN
-     val = pmm->G[DCx];
-#else
      double T, P;
      if( ia == 0 )
      {
@@ -488,10 +486,8 @@ double TNodeArray::get_vPH( int ia, int nodex, int PHx )
       P = pNodT1()[(nodex)]->P;
      }
      DCx  *=  pCSD()->nPp * pCSD()->nTp;
-     val = multi->LagranInterp( pCSD()->Pval, pCSD()->Tval, pCSD()->V0+DCx,
-                       P, T, pCSD()->nTp, pCSD()->nPp )*10.;
-
-#endif
+     val = LagranInterp( pCSD()->Pval, pCSD()->Tval, pCSD()->V0+DCx,
+                       P, T, pCSD()->nTp, pCSD()->nPp, 1 )*10.;
 
   }
   return val;

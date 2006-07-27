@@ -87,6 +87,8 @@ mcotac-gem/ms_param.cpp -text
 mcotac-gem/node.cpp -text
 mcotac-gem/node.h -text
 mcotac-gem/node_format.cpp -text
+mcotac-gem/num_methods.cpp -text
+mcotac-gem/num_methods.h -text
 mcotac-gem/p_ibxa.dat -text
 mcotac-gem/p_ibxb.dat -text
 mcotac-gem/p_ibxc.dat -text
@@ -160,6 +162,8 @@ node-gem/ms_param.cpp -text
 node-gem/node.cpp -text
 node-gem/node.h -text
 node-gem/node_format.cpp -text
+node-gem/num_methods.cpp -text
+node-gem/num_methods.h -text
 node-gem/obj/Readme.txt -text
 node-gem/platform/Linux-GNU/Makefile -text
 node-gem/platform/Linux-PGI/Makefile -text
@@ -277,9 +281,12 @@ rockflow-gem/ms_param.cpp -text
 rockflow-gem/node.cpp -text
 rockflow-gem/node.h -text
 rockflow-gem/node_format.cpp -text
+rockflow-gem/num_methods.cpp -text
+rockflow-gem/num_methods.h -text
 rockflow-gem/obj/Readme.txt -text
 rockflow-gem/platform/other/Makefile -text
 rockflow-gem/platform/win32msvc/Makefile -text
+rockflow-gem/rockflow-gem-sep.pro -text
 rockflow-gem/s_fgl.cpp -text
 rockflow-gem/s_fgl.h -text
 rockflow-gem/test_data/CalcColumn-dat.lst -text
