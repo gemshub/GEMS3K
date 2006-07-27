@@ -151,6 +151,7 @@ node-gem/ipm_main.cpp -text
 node-gem/ipm_simplex.cpp -text
 node-gem/jama_cholesky.h -text
 node-gem/jama_lu.h -text
+node-gem/linux-run.bat -text
 node-gem/m_const.h -text
 node-gem/m_param.h -text
 node-gem/main.cpp -text
@@ -194,6 +195,7 @@ node-gem/tp_test/CalcColumn.txt -text
 node-gem/v_user.h -text
 node-gem/verror.h -text
 nodearray-gem/CalcColumn.BAT -text
+nodearray-gem/LINUX-RUN.BAT -text
 nodearray-gem/Makefile -text
 nodearray-gem/array.h -text
 nodearray-gem/databr.h -text
@@ -270,6 +272,7 @@ rockflow-gem/ipm_main.cpp -text
 rockflow-gem/ipm_simplex.cpp -text
 rockflow-gem/jama_cholesky.h -text
 rockflow-gem/jama_lu.h -text
+rockflow-gem/linux-run.bat -text
 rockflow-gem/m_const.h -text
 rockflow-gem/m_param.h -text
 rockflow-gem/main.cpp -text
