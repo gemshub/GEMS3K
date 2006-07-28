@@ -1,0 +1,23 @@
+mcotac1dxt3.x: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o
+	pgf90 -o mcotac1dxt3.x    -fastsse -tp k8-64 -g -p  -I/usr/include  -L/usr/lib64 -llammpio -llamf77mpi -lmpi -llam -laio -laio -lutil mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o
+mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
+	pgf90 -v -c    -fastsse -tp k8-64 -g -p  -I/usr/include  -L/usr/lib64 -llammpio -llamf77mpi -lmpi -llam -laio -laio -lutil    mcotac1d.f
+datio.o: datio.f gwheader.inc kinetics.inc
+	pgf90 -v -c     -fastsse -tp k8-64 -g -p   datio.f
+erech.o: erech.f gwheader.inc kinetics.inc
+	pgf90 -v -c    -fastsse -tp k8-64 -g  -p    erech.f
+inistat2.o: inistat2.f gwheader.inc kinetics.inc
+	pgf90 -v -c  -fastsse -tp k8-64 -g -p    inistat2.f
+inparf.o: inparf.f gwheader.inc
+	pgf90 -v -c -fastsse -tp k8-64 -g  -p  inparf.f
+setpar_.o: setpar_.c gwheader.h
+	pgcc -v -c    -fastsse -tp k8-64 -g -p    setpar_.c
+walk2_.o: walk2_.c gwheader.h
+	pgcc -v -c  -fastsse -tp k8-64 -g -p     walk2_.c
+wegdat1d_.o: wegdat1d_.c gwheader.h
+	pgcc -v -c  -fastsse -tp k8-64 -g -p     wegdat1d_.c
+hydro1d_.o: hydro1d_.c  gwheader.h
+	pgcc -v -c   -fastsse -tp k8-64 -g -p hydro1d_.c 
+gwheader.h: gwheader.h
+gwheader.inc: gwheader.inc
+kinetics.inc: kinetics.inc

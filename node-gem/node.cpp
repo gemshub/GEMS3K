@@ -632,7 +632,7 @@ void TNode::makeStartDataChBR(
    memset( &CNode->T, 0, 32*sizeof(double));
    CNode->T = pmm->Tc; //25
    CNode->P = pmm->Pc; //1
-   CNode->Ms = pmm->MBX;
+   CNode->Ms = pmm->MBX; // in kg
 
 // arrays
    for( i1=0; i1<CSD->nICb; i1++ )
@@ -792,7 +792,7 @@ void TNode::packDataBr()
    CNode->IterDone = pmm->IT;
 
 // values
-  CNode->Vs = pmm->VXc;
+  CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
   CNode->Gs = pmm->FX;
   CNode->Hs = pmm->HXc;
   CNode->IC = pmm->IC;

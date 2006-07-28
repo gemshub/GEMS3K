@@ -35,7 +35,7 @@ void TNode::databr_to_text_file( fstream& ff )
       ff << "# Comments can be marked with #" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
-      ff << "#'sCon' Node handle and status code" << endl;
+      ff << "#Section (scalar-2): Controls of the GEM IPM operation and data exchenge" << endl;
    }
    if( _comment )
       ff << "# Node identification handle" << endl;
@@ -53,11 +53,11 @@ void TNode::databr_to_text_file( fstream& ff )
       ff << "# Node status code CH;  see typedef NODECODECH" << endl;
    ff << left << setw(17) << "<NodeStatusCH> " <<  CNode->NodeStatusCH << endl;
    if( _comment )
-      ff << "# Number of iterations performed by IPM" << endl;
+      ff << "# Number of iterations performed by IPM (output)" << endl;
    ff << left << setw(17) << "<IterDone> " <<  CNode->IterDone << endl;
    ff << endl;
    if( _comment )
-      ff << "##'dCon' Chemical scalar variables" << endl;
+      ff << "##Section (scalar-2): Chemical scalar variables" << endl;
    if( _comment )
          ff << "# Temperature T, K" << endl;
    ff << left << setw(7) << "<T> " <<  CNode->T << endl;
@@ -65,16 +65,16 @@ void TNode::databr_to_text_file( fstream& ff )
          ff << "# Pressure P, bar" << endl;
    ff << left << setw(7) << "<P> " <<  CNode->P << endl;
    if( _comment )
-         ff << "# Volume V of reactive subsystem, cm3" << endl;
+         ff << "# Volume V of reactive subsystem, m3 (GEM output)" << endl;
    ff << left << setw(7) << "<Vs> " << CNode->Vs << endl;
    if( _comment )
-         ff << "# Volume of inert subsystem, cm3" << endl;
+         ff << "# Volume of inert subsystem, m3" << endl;
    ff << left << setw(7) << "<Vi> " <<  CNode->Vi << endl;
    if( _comment )
-         ff << "# Mass of reactive subsystem,  g " << endl;
+         ff << "# Mass of reactive subsystem,  kg " << endl;
    ff << left << setw(7) << "<Ms> " <<  CNode->Ms << endl;
    if( _comment )
-         ff << "# Mass of inert subsystem, g" << endl;
+         ff << "# Mass of inert subsystem, kg" << endl;
    ff << left << setw(7) << "<Mi> " <<  CNode->Mi << endl;
    if( _comment )
          ff << "# Gibbs energy of reactive subsystem, J" << endl;
@@ -83,7 +83,7 @@ void TNode::databr_to_text_file( fstream& ff )
          ff << "# Enthalpy of reactive subsystem, J " << endl;
    ff << left << setw(7) << "<Hs> " <<  CNode->Hs << endl;
    if( _comment )
-         ff << "# Enthalpy of inert subsystem, J  " << endl;
+         ff << "# Enthalpy of inert subsystem, J/RT  " << endl;
    ff << left << setw(7) << "<Hi> " <<  CNode->Hi << endl;
    if( _comment )
          ff << "# Effective aqueous ionic strength, molal" << endl;
@@ -107,13 +107,13 @@ void TNode::databr_to_text_file( fstream& ff )
        ff << "# actual time step" << endl;
    ff << left << setw(7) << "<dt> " <<  CNode->dt << endl;
    if( _comment )
-       ff << "# General diffusivity of disolved matter in the mode" << endl;
+       ff << "# General diffusivity of disolved matter in the mode, m2/s" << endl;
    ff << left << setw(7) << "<Dif> " <<  CNode->Dif << endl;
    if( _comment )
        ff << "# total volume of the node (voxel), m3" << endl;
    ff << left << setw(7) << "<Vt> " <<  CNode->Vt << endl;
    if( _comment )
-       ff << "# advection velocity (in pores) in this node" << endl;
+       ff << "# advection velocity (in pores) in this node, m/s" << endl;
    ff << left << setw(7) << "<vp> " <<  CNode->vp << endl;
    if( _comment )
        ff << "#  effective (actual) porosity normalized to 1" << endl;
@@ -134,7 +134,7 @@ void TNode::databr_to_text_file( fstream& ff )
        ff << "# actual hydraulic head (hydraulic potential), m" << endl;
    ff << left << setw(7) << "<h> " <<  CNode->h << endl;
    if( _comment )
-       ff << "# actual carrier density for density-driven flow, g/cm3" << endl;
+       ff << "# actual carrier density for density-driven flow, kg/m3" << endl;
    ff << left << setw(7) << "<rho> " <<  CNode->rho << endl;
    if( _comment )
        ff << "# specific longitudinal dispersivity of porous media, m" << endl;;

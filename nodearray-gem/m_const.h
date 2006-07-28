@@ -56,6 +56,25 @@ enum solmod_switches { /* indexes of keys of model solution*/
 #ifndef _chbr_classes_h_
 #define _chbr_classes_h_
 
+typedef enum {  // classes of independent components IC, used in ccIC code list
+    IC_ELEMENT  =  'e',  // chemical element (except oxygen and hydrogen)
+    IC_OXYGEN   =  'o',  // oxygen
+    IC_HYDROGEN =  'h',  // hydrogen (natural mixture of isotopes) H
+    IC_PROTIUM   = 'p',  // protium Hp (reserved)
+    IC_DEYTERIUM = 'd',  // deuterium D (reserved)
+    IC_TRITIUM  =  't',  // tritium T (reserved)
+    IC_FORMULA  =  'f',  // formula unit (eg. for Sio - a symbol of SiO2)
+    IC_METALION =  'm',  // metal ion (cation), reserved
+    IC_LIGAND   =  'l',  // ligand (anion), reserved
+    IC_ADDIT    =  'a',  // IC with unknown stoichiometry (eg: Hum - humate ligand)
+    IC_ISOTOPE  =  'i',  // isotope of chemical element (mass from 1 to 250)
+    IC_OXYGEN16 =  'q',  // q  - oxygen 16O (reserved)
+    IC_OXYGEN18 =  'r',  // r  - oxygen 18O (reserved)
+    IC_CHARGE   =  'z',  // z  - electrical charge
+    IC_VOLUME   =  'v',  // volume (for the volume balance constraint)
+        IC_SITE     =  's'   // sorption site for site balance constraint (reserved)
+} ICL_CLASSES;
+
 typedef enum {  /* Classifications of DC */
     /* Type of input data for */
     SRC_DCOMP =  'd',  // the key points to existing PDB record in DCOMP chain

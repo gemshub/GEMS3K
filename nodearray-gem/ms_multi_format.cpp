@@ -410,12 +410,12 @@ if( pm.FIs > 0 && pm.Ls > 0 )
    if( _comment )
       ff << "\n\n# DC Fixed (start) activity coefficients";
    outArray( ff, "lnGmf", pmp->lnGmf,  pmp->L);
-   if( pmp->E )
-   {
-     if( _comment )
-        ff << "\n\n# DC Unit formula charges - can be extracted from the stoich. matrix ????";
-     outArray( ff, "EZ", pmp->EZ,  pmp->L);
-   }
+//   if( pmp->E )
+//   {
+//     if( _comment )
+//        ff << "\n\n# DC Unit formula charges - can be extracted from the stoich. matrix ????";
+ //    outArray( ff, "EZ", pmp->EZ,  pmp->L);
+//   }
    if( _comment )
    {  ff << "\n\n# (5) Section for metastability/ kinetic constraints" << endl;
       ff << "# Code of metastability/kinetic constraints for DCs";
@@ -533,7 +533,7 @@ void TMulti::from_text_file_gemipm( const char *path )
   pmp->L = dCH->nDC;
   pmp->FI = dCH->nPH;
   pmp->FIs = dCH->nPS;
-  pmp->Ls = 0;
+  pmp->Ls = 0; //dCH->nDCs;
   for( ii=0; ii<dCH->nPS; ii++)
   {
     pmp->Ls += dCH->nDCinPH[ii];
@@ -638,7 +638,19 @@ void TMulti::from_text_file_gemipm( const char *path )
 // get dynamic data from DATACH file
   for( ii=0; ii<dCH->nPH; ii++)
     pmp->L1[ii] = dCH->nDCinPH[ii];
+
   memcpy( pmp->A, dCH->A, dCH->nIC*dCH->nDC*sizeof(float));
+  if( pmp->EZ )
+  { int iZ=-1;
+    for(  ii=0; ii<dCH->nDC; ii++ )
+     if( dCH->ccIC[ii] == IC_CHARGE )
+         break;
+    if( ii< dCH->nDC )
+    { iZ = ii;
+      for( ii=0; ii<dCH->nDC; ii++)
+          pmp->EZ[ii] = pmp->A[pmp->N*ii+iZ];
+    }
+  }
   for( ii=0; ii< dCH->nIC; ii++ )
    pmp->Awt[ii]  = dCH->ICmm[ii];
   memcpy( pmp->MM, dCH->DCmm, dCH->nDC*sizeof(double));
@@ -686,8 +698,8 @@ if( pm.FIs > 0 && pm.Ls > 0 )
 //   inArray( ff, "G0", pmp->G0,  pmp->L);
    inArray( ff, "GEX", pmp->GEX,  pmp->L);
    inArray( ff, "lnGmf", pmp->lnGmf,  pmp->L);
-   if( pmp->E )
-     inArray( ff, "EZ", pmp->EZ,  pmp->L);
+//   if( pmp->E )
+//     inArray( ff, "EZ", pmp->EZ,  pmp->L);
    inArray( ff, "RLC", pmp->RLC, pmp->L, 1 );
    inArray( ff, "RSC", pmp->RSC, pmp->L, 1 );
    inArray( ff, "DLL", pmp->DLL,  pmp->L);

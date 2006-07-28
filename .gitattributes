@@ -79,6 +79,7 @@ mcotac-gem/mcotac_gems_11_2005.dsw -text
 mcotac-gem/mcotac_gems_11_2005.ncb -text
 mcotac-gem/mcotac_gems_11_2005.opt -text
 mcotac-gem/mcotac_gems_11_2005.plg -text
+mcotac-gem/mkmco1dpgn -text
 mcotac-gem/ms_multi.cpp -text
 mcotac-gem/ms_multi.h -text
 mcotac-gem/ms_multi_file.cpp -text
@@ -95,7 +96,12 @@ mcotac-gem/p_ibxc.dat -text
 mcotac-gem/p_ibxd.dat -text
 mcotac-gem/p_ibxe.dat -text
 mcotac-gem/p_ibxf.dat -text
+mcotac-gem/platform/hydro1d_.c -text
+mcotac-gem/platform/inpar_.c -text
 mcotac-gem/platform/readme.1st -text
+mcotac-gem/platform/setpar_.c -text
+mcotac-gem/platform/walk2_.c -text
+mcotac-gem/platform/wegdat1d_.c -text
 mcotac-gem/por001.dat -text
 mcotac-gem/qn0001.dat -text
 mcotac-gem/qr0001.dat -text
@@ -111,7 +117,9 @@ mcotac-gem/setpar.cpp -text
 mcotac-gem/setpar_.c -text
 mcotac-gem/solids.dat -text
 mcotac-gem/ss0001.dat -text
+mcotac-gem/test.mak -text
 mcotac-gem/test11.itm -text
+mcotac-gem/testpg.mak -text
 mcotac-gem/tnt.h -text
 mcotac-gem/tnt_array1d.h -text
 mcotac-gem/tnt_array2d.h -text
