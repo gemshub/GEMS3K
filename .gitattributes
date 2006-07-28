@@ -150,6 +150,9 @@ node-gem/doc/dbr-dat-doc.txt -text
 node-gem/doc/dch-dat-doc.txt -text
 node-gem/doc/filelist-doc.txt -text
 node-gem/doc/ipm-dat-doc.txt -text
+node-gem/doc/scm-dbr-dat-doc.txt -text
+node-gem/doc/scm-dch-dat-doc.txt -text
+node-gem/doc/scm-ipm-dat-doc.txt -text
 node-gem/gdatastream.cpp -text
 node-gem/gdatastream.h -text
 node-gem/gem_node-sep.pro -text

@@ -1,4 +1,6 @@
 Description of the IPM-DAT file format and example of the input IPM-DAT file
+(for the system containing a sorption phase). See also the accompanying 
+"scm-dch-dat-doc.txt" and "scm-dbr-dat-doc.txt" files.
 
 # GEMIPM2K v. 0.780
 # Prototype 28.07.2006
@@ -35,7 +37,7 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # The numbers and name lists may change if a different CSD is constructed. 
 
 # ID key of the initial chemical system definition
-"CalDolCol G  CalcColumn  1001 0       1       25      000 "
+"AluSiOMSA G  Gibbsite    1    0       1       25      0   "
 
 ## Section (1): Controls of operation of the GEM IPM numerical algorithm
 # These settings should be changed carefully, only if you know what you 
@@ -52,13 +54,13 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 <pa_DHB>       1e-08
 # Precision criterion of the simplex() procedure to obtain the automatic 
 # initial approximation (may be set in the interval 1e-10 < DHB < 1e-6)
-<pa_EPS>       1e-07  
+<pa_EPS>       1e-07
 
 # IPM convergence threshold for the Dikin criterion (may be set in the 
 # interval 1e-6 < DK < 1e-4, value 1e-4 is recommended). Setting too low 
 # DK < 1e-5 may dramatically increase the number of IPM iterations, slow
 # the convergence down, and deteriorate the quality and mass balance 
-# precision of the GEM IPM result.  
+# precision of the GEM IPM result.
 <pa_DK>       0.0001
 
 # Threshold for the application of the Karpov phase stability criterion 
@@ -88,19 +90,18 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # IPM loops to improve the GEM final solution in highly non-ideal systems 
 # (especially around the critial point). IPM_gamma() is called on each 
 # GEM iteration, as usual. 
-<pa_PRD>          -1
+<pa_PRD>           3
 
 # Smoothing parameters controlling IPM convergence in highly non-ideal 
 # systems. AG can be set between 0.7 and 1.0; DGC between 0.01 and 0.1. 
 # If there is no non-ideal solutions in the system then it is best to 
 # set AG = 1. 
-<pa_AG>            1
+<pa_AG>          0.7
 <pa_DGC>        0.07
 
 # Flag for using initial activity coefficients <lnGmf> for simplex() 
 # initial approximation (1-enable, 0-disable)
 <pa_PSM>           1
-
 # Initial activity coefficient values for simplex() initial approximation:
 # GAR for major components (default 1) and GAH for minor components 
 # (default 1000). 
@@ -109,12 +110,12 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 
 # Cutoff threshold for the elimination of a phase if its amount goes 
 # below this threshold. Values can be set between 1e-7 and 1e-12 mol.
-<pa_DS>        1e-09
+<pa_DS>        1e-12
 
 # Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; 
 # Dc - solution or surface species; Ph - non-electrolyte solution phases
-<pa_XwMin>     1e-09
-<pa_ScMin>     1e-07
+<pa_XwMin>     1e-08
+<pa_ScMin>     1e-08
 <pa_DcMin>     1e-20
 <pa_PhMin>     1e-10
 
@@ -127,7 +128,7 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 
 # Threshold of Karpov stability criterion f_a for insertion of a phase 
 # in Selekt2() procedure 
-<pa_DFM>        0.1
+<pa_DFM>       1e-09
 
 # Insertion amounts used after the simplex() initial approximation and 
 # in the Selekt2() procedure for zeroes-off species 
@@ -144,21 +145,21 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 <pa_DFYh>      1e-06
 # DFYc - single-component phase; 
 <pa_DFYc>      1e-06
-# Insertion amount of single-component phase in Selekt2() algorithm only
-<pa_DFYs>      1e-06
+# Insertion amount of single-component phase (Selekt2() algorithm only)
+<pa_DFYs>      1e-12
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # Number of the IPM-2 enhancement loops for obtaining high-accuracy 
 # improved mass balance (from 0 to 15)
-<pa_DW>            0
+<pa_DW>           15
 # Exponent for dual-thermodynamic restoring of low amounts of 
 # solutes (+2 to -5), relative to DHBM (default 0 or -2 for sorption
 # models)
-<pa_DT>            0
+<pa_DT>           -3
 # IPM2 balance accuracy control ratio DHBM[i]/b[i], determines the 
 # maximum allowed mass balance error for minor Independent Components
 # (value of 0.001 means 1% residual relative to IC amount in the system). 
-<pa_GAS>       0.001
+<pa_GAS>        0.01
 
 # Parameters for surface complexation models
 # Standard surface density (nm-2) for calculating activity of 
@@ -173,7 +174,7 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # DC amounts (see <DLL>, <DUL> arrays)
 <pKin>             1
 # Tolerance on the amount of DC with two-side metastability constraints 
-# set equal in <DLL>, <DUL> (moles) 
+# set equal in <DLL>, <DUL> (moles)  
 <pa_DKIN>     0.0001
 
 # Flag for using electroneutrality condition in GEM IPM calculations 
@@ -205,13 +206,13 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # Total number of Dependent Components in sorption phases included into
 # this system. If Lads > 0 and FIa > 0 then the data section (7) must 
 # be provided at the end of this file (see also "scm-ipm-dat-doc.txt" file)
-<Lads>             0
+<Lads>             5
 # Number of sorption phases included in this system (0 if no sorption 
 # phases are included).
-<FIa>              0
+<FIa>              1
 # Actual maximum number of surface types per adsorption phase (if FIa > 0,
 # <FIat> must be set to 6). 
-<FIat>             0
+<FIat>             6
 
 ## (3) Initial data for multicomponent phases (see DATACH file for 
 # the dimension <nPS>) and mixing model parameters. 
@@ -253,30 +254,32 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 #    and <LsMod>[0] = 0);
 # 'A' - built-in SACT and EDL calculations in CD-MUSIC or NEM surface 
 #    complexation model (for sorption phases only, <LsMdc>[0] = 0 
-#    and <LsMod>[0] = 0);
+#    and <LsMod>[0] = 0).
+# Code values for EDL models (sixth character): 
+#
 <sMod>
-'DNNSNN' 'INNINN' 
+'3NNSNN' 'INNINN' 'ANNSN3' 
 
 # Dimensions for parameters of non-ideal mixing models per whole  
 # multicomponent phase; depends on the code in <sMod>. 
 # If at least one element in <LsMod> is not zero then 
 # the <PMc> vector must be provided after <LsMdc> item.
 <LsMod>
-0 0 
+8 0 0 
 
 # Number of parameters per component of the phase for the non-ideal 
 # mixing models; depends on the code in <sMod>. If at least one 
 # element in <LsMdc> is not zero then the <DMc> vector must be provided 
 # after this or the <PMc> item.
 <LsMdc>
-0 0 
+1 0 0 
 
 # Parameters per phase for the non-ideal mixing models. Number of 
 # parameters used by k-th phase model is given in <LsMod>[k]. Un-
 # comment the tag below and provide necessary numbers if at least 
 # one element in <LsMod> is not zero. 
-# <PMc> 
-# parameter1, parameter2, ...
+<PMc>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 6.4e-02 0.0e+00 0.0e+00 
 
 # Parameters per phase component for the non-ideal mixing models. 
 # Number of parameters per component used by k-th phase model is 
@@ -284,8 +287,9 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # numbers if at least one element in <LsMdc> is not zero. Total 
 # number of parameters per phase in <DMc> is <LsMdc>[k] times the 
 # number of Dependent Components included in the phase. 
-# <DMc> 
-# parameter1, parameter2, ...
+<DMc>
+6.65e+00 4.0e+00 4.0e+00 -1.0e+00 4.0e+00 4.32e+00 -1.0e+00 -1.0e+00 
+3.0e+00 -1.0e+00 2.5e+00 -1.0e+00 -1.0e+00 1.065e+01 9.0e+00 -1.0e+00 
 
 ## Section (4): Some data arrays which are not provided in DATACH 
 # file or may be provided incomplete in DATABR files when not all 
@@ -296,7 +300,8 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # Full total bulk composition of the initial system (vector b)
 # (see DATACH file for dimension <nIC> and list of ICs <ICNL>)
 <B>
-3.31e-04 3.31e-04 2.0e-07 1.106837e+02 1.0e-07 5.534286e+01 0.0e+00 
+3.84598e-01 1.1153774e+02 1.000001e-01 1.000001e-01 4.0e+00 
+5.7045769e+01 0.0e+00 
 
 # Initial data for DCs - see DATACH file for dimensions <nDC>, 
 # <nDCs> and the list of DC names <DCNL>
@@ -305,36 +310,32 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # used internally in GEM IPM 
 <DCCW>
 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 
-'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'W' 'I' 
-'I' 'I' 'I' 'U' 'U' 'U' 'U' 'U' 
+'S' 'S' 'S' 'S' 'S' 'W' 'I' 'I' 'I' 'S' 
+'S' 'S' 'S' 'W' 'U' 
 
 # Partial pressures (or fugacities) of Dependent Components 
 # (for setting constant chemical potentials or pure gas fugacity)
 # Default values: total pressure P (bar). Size: <nDC>
 <Pparc>
-1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 
-1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 
-1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 
-1.0e+00 1.0e+00 1.0e+00 1.0e+00 
+1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 
+1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 
+1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 
 
 # Increments for adjustment of G0 values of Dependent Components 
 # in J/mol/(RT) (normalized units) (default value: 0). Size: <nDC>
 <GEX>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 2.302568105586581382e+01 
 
 # Natural logarithms of activity coefficients to be used at 
 # simplex() initial approximation in GEM IPM (default 0 for 
 # all components except minor 'J' end members and surface 
 # complexes for which the default is ln(1000) = 6.907755375).
-# Size: <nDC>.
 <lnGmf>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 6.907755374908447266e+00 
+6.907755374908447266e+00 6.907755374908447266e+00 6.907755374908447266e+00 0.000000000000000000e+00 0.000000000000000000e+00 
 
 # (5) Section for metastability/ kinetic constraints on amounts 
 # of Dependent Components (<xDC>) in GEM IPM result. 
@@ -345,7 +346,7 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 <RLC>
 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
-'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+'B' 'B' 'B' 'B' 'B' 
 
 # Units of metastability/kinetic constraints for DCs 
 # (see vectors DUL, DLL). By now, only 'M' (moles) code 
@@ -353,7 +354,7 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 <RSC>
 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
-'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+'M' 'M' 'M' 'M' 'M' 
 
 # Full vector of lower metastability constraints on DC
 # amounts <xDC> in the system. Entered here because this 
@@ -361,10 +362,9 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # all DCs were selected to be kept there. Size: <nDC>.
 # Default value: 0 mol.
 <DLL>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 3.845919966697692871e-01 0.000000000000000000e+00 
 
 # Full vector of upper metastability constraints on DC
 # amounts <xDC> in the system. Entered here because this 
@@ -372,50 +372,151 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # all DCs were selected to be kept there. Size: <nDC>
 # Default value: 1e6 mol.
 <DUL>
-1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 
-1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 
-1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 
-1.0e+06 1.0e+06 1.0e+06 1.0e+06 
+1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 
+1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 
+1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 
+
+# (6) Initial data for phases
 
 # Section (6): Initial data for phases
 # Full vector of specific surface areas of phases
 # Default value: 0 m2/g Part or all values may be set up in 
 # the DATABR file(s). Size: <nPH> (see DATACH file).
 <Aalp>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 2.03e+01 0.0e+00 
 
 # Specific surface free energy for phase-water interface (J/m2)
 # Cannot be set in DATABR or DATACH files - only here
 # Size: <nPH>. Default - 0 J/m2
 <Sigw>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 
 
 # Specific surface free energy for phase-gas interface
 # (not yet used). Default: 0 J/m2. Size: <nPH>.
 <Sigg>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 
 
 # Surface free energy or metastability parameters for phases
 # (in J/g to accomodate for variable phase composition). 
 # Default: 0 J/g. Size: <nPH>
 <YOF>
-0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 
 
 # Section (7): Setup of surface complexation models. Should 
 # be provided only if sorption phase(s) are included in the 
 # system definition (<FIa> > 0 and <Lads> > 0 and <FIat> > 0). 
-# In this data example, sorption is not included. See another
-# example in "scm-ipm-dat-doc.txt" file. 
-# <Nfsp>
-# <MASDT>
-# <C1>
-# <C2>
-# <C3>
-# <pCh>
-# <SATX>
-# <MASDJ>
-# <SCM>
-# <SACT>
-# <DCads>
+
+# The following six arrays have dimensions <nPS><FIat>, 
+# (number of multi-component phases times number of surface
+# types). For technical reasons, the rows for aqueous, gas 
+# phases, and solid solutions are present but not used in 
+# surface complexation models. Only the numbers that correspond
+# to sorption phase(s) and surface types specified in the <SCM>
+# codes are used; the rest can be filled with zeros or EMPTY 
+# values (1.1754943508e-38). #
+
+# Fraction of sorbent surface allocated to surface types
+<Nfsp>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+1.0 0 0 0 0 0  
+# Total maximum site density per surface type, mkmol/g
+<MASDT>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+2.74728e+02 0 0 0 0 0  
+# Inner capacitance density parameter C1 (TLM, BSM, CCM), F/m2
+<C1>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+9.0e-01 0 0 0 0 0 
+# Outer capacitance density parameter C2 (TLM, 3LM), F/m2
+<C2>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+4.0e+00 0 0 0 0 0 
+# Third capacitance density parameter C3 (reserved)
+<C3>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+# Density of permanent surface type charge (mkeq/m2)
+<pCh>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Setup of surface sites and species: link to
+# in column [0]: surface type index; in column [1]: 
+# sorbent end member (index) or the whole sorbent (-1);
+# in column [2]: index of surface site in surface type; 
+# in column [3]: the index of surface EDL plane (0 -
+# zero plane, 1 - beta plane, 2- third plane, 3 - d-plane. 
+# This array has 4 columns of fixed order and <Lads> rows
+# (for each species in each sorption phase). Species 
+# names can be found in the <DCNL> list (DATACH file) 
+# after skipping all aqueous, gas, and solid solution
+# components
+<SATX>
+0 -1 0 0 
+0 -1 0 1 
+0 -1 0 0 
+0 -1 0 1 
+0 -1 0 0 
+
+# Setup parameters of surface binding models:
+# column [0]: max site density mmol/g; 
+# column [1]: charge allocated to 0 plane;
+# column [2]: charge allocated to beta -or third plane; 
+# column [3]: Frumkin interaction parameter;
+# column [4]: dentateness or CN (ccordination number); 
+# column [5]: additional isoterm parameter (reserved).
+# This array has 6 columns of fixed order and <Lads> rows
+# (for each species in each sorption phase). 
+<MASDJ>
+2.74728e+02 -5.0e-01 0.0e+00 0.0e+00 1.0e+00 0.0e+00 
+2.74728e+02 -5.0e-01 1.0e+00 0.0e+00 1.0e+00 0.0e+00 
+2.74728e+02 5.0e-01  0.0e+00 0.0e+00 1.0e+00 0.0e+00 
+2.74728e+02 5.0e-01 -1.0e+00 0.0e+00 1.0e+00 0.0e+00 
+0.0e+00     0.0e+00  0.0e+00 0.0e+00 1.0e+00 0.0e+00 
+
+# Classifier of EDL models applied to surface types.
+# For aqueous, gas and solid solution phases, empty 
+# strings '' should be specified. 'N' code means that
+# the electrostatic model for this surface type is not 
+# considered. 
+# other codes: 'I' - non-electrostatic model applied.
+#  'D' - Generalized Double Layer model
+#  'C' - Constant Capacitance model
+#  'S' - Basic Stern model
+#  'T' - Triple Layer model
+#  'M' - Triple Layer model for ion exchange on permanent charge;
+#  'E' - Basic Stern model for ion exchange on permanent charge;
+#  '3' - Three-layer model (CD MUSIC) 
+#
+<SCM>
+'' '' 'SNNNNN' 
+
+# These two data objects contain Lads codes which apply only
+# to species in sorption phase(s).
+# Classifier of applied built-in SACT equations (applied 
+# separately on each site type on each surface type).
+# 'L' - competitive Langmuir isotherm for monodentate species
+# '1' - non-competitive monodentate QCA isotherm
+# '2' - non-competitive bidentate QCA isotherm
+# '3' - non-competitive tridentate QCA isotherm
+# '4' - non-competitive tetradentate QCA isotherm
+# 'F' - non-competitive Frumkin isotherm for monodentate species
+# Any SATC code will be ignored for the sorbent.
+<SACT>
+'L' 'L' 'L' 'L' 'L' 
+# Classifier of species in sorption phase
+# 'X' - neutral OH amphoteric site
+# 'Y' - inner-sphere surface complex or charged site
+# 'Z' - outer-sphere surface complex or exchange ion
+# 'Q' - sorbent (if single-solid)
+# 'P' - end-member of the sorbent (if solid solution)
+<DCads>
+'Y' 'Z' 'Y' 'Z' 'Q' 
 
 # End of file
