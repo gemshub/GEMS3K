@@ -158,7 +158,7 @@ static TNode* na;   // static pointer to this class
 #endif
 
    // Main call for GEM IPM calculation
-   int  GEM_run();   // calls GEM for a work node
+   int  GEM_run();   // calls GEM for a work node; returns GEMNodeStatus value
 
    // reads work node (DATABR structure) from a file
    int  GEM_read_dbr( bool binary_f, char *fname );

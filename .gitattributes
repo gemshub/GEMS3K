@@ -142,6 +142,7 @@ mcotac-gem/wegdat1d_.c -text
 mcotac-gem/wf.dat -text
 node-gem/CalcColumn.BAT -text
 node-gem/Makefile -text
+node-gem/TestAds.BAT -text
 node-gem/array.h -text
 node-gem/databr.h -text
 node-gem/datach.h -text
@@ -188,6 +189,13 @@ node-gem/platform/win32bcc/Makefile -text
 node-gem/platform/win32msvc/Makefile -text
 node-gem/s_fgl.cpp -text
 node-gem/s_fgl.h -text
+node-gem/test_ads/TestAds.BAT -text
+node-gem/test_ads/UL_on_Qtz-dat.lst -text
+node-gem/test_ads/UL_on_Qtz-dbr-0-0000.dat -text
+node-gem/test_ads/UL_on_Qtz-dch.dat -text
+node-gem/test_ads/UL_on_Qtz-ipm.dat -text
+node-gem/test_ads/main.cpp -text
+node-gem/test_ads/test_ads.out -text
 node-gem/test_data/CalcColumn-dat.lst -text
 node-gem/test_data/CalcColumn-dbr-0-0000.dat -text
 node-gem/test_data/CalcColumn-dbr-0-0001.dat -text
