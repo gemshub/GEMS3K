@@ -137,13 +137,13 @@ $(TARGET):  $(UICDECLS) $(OBJECTS) $(OBJMOC)
 mocables: $(SRCMOC)
 uicables: $(UICIMPLS) $(UICDECLS)
 
-Makefile: rockflow-gem-sep.pro  
-	$(QMAKE) -o Makefile rockflow-gem-sep.pro
-qmake: 
-	@$(QMAKE) -o Makefile rockflow-gem-sep.pro
+#Makefile: rockflow-gem-sep.pro  
+#	$(QMAKE) -o Makefile rockflow-gem-sep.pro
+#qmake: 
+#	@$(QMAKE) -o Makefile rockflow-gem-sep.pro
 
-dist:
-	$(ZIP) rockflow_gem.zip $(SOURCES) $(HEADERS) $(DIST) $(FORMS) c:/standalone/rockflow-gem/rockflow-gem-sep.pro  
+#dist:
+#	$(ZIP) rockflow_gem.zip $(SOURCES) $(HEADERS) $(DIST) $(FORMS) c:/standalone/rockflow-gem/rockflow-gem-sep.pro  
 
 uiclean:
 mocclean:
