@@ -31,12 +31,16 @@
 ## Section (1): Basis CSD Dimensions (for memory allocation)
 # Number of Independent Components (stoichiometry basis of the system) 
 <nIC>  7
+
 # Number of Dependent Components (species made of independent components)
 <nDC>  28
+
 # Number of phases (into which Dependent Components are grouped)
 <nPH>  7
+
 # Number of phases-solutions (multicomponent phases), nPS <= nPH
 <nPS>  2
+
 # Number of DCs in phases-solutions (multicomponent phases), nDCs <= nDC
 <nDCs> 23
 
@@ -44,14 +48,19 @@
 # Dimensions needed for reading and accessing the DATABR (node description) 
 # files like <TaskName>-dbr-<node0>.dat. The corresponding index lists are
 # given in Section (4) of this file.
+#
 # Number of Independent Components kept in the DATABR structure, nICb <= nIC
 <nICb> 7
+
 # Number of Dependent Components kept in the DATABR structure, nDCb <= nDC
 <nDCb> 28
+
 # Number of Phases to be kept in DATABR structure, nPHb <= nPH
 <nPHb> 7
+
 # Number of Phases-solutions (multicomponent phases) kept in DATABR structure
 <nPSb> 2
+
 # Note that in order to use previous GEM solution as initial approximation, 
 # it must be set nICb = nIC, nDCb = nDC, nPHb = nPH and nPSb = nPS.
 
@@ -59,12 +68,15 @@
 # data; the arrays are given in Section (8) of this file. 
 # Number of temperature points in the interpolation grid array, 1 < nTP < 20
 <nTp>  5
+
 # Number of pressure points in the interpolation grid array, 1 < nTP < 10
 <nPp>  2
+
 # Flag for selection of grid arrays provided: 0 - V0 and G0 only; 
 # 1 - V0, G0 and H0; 2 - V0, G0, H0, and S0; 3 - V0, G0, H0, S0 and Cp0;
 # 4 - V0, G0, H0, S0, Cp0 and A0 (Helmholtz) (reserved)
 <iGrd> 0
+
 # Flag for keeping specific surface areas in DATABR structures/files
 <fAalp> 1
 
@@ -76,16 +88,19 @@
 # xIC Size: see <nICb>
 <xIC>
 0 1 2 3 4 5 6 
+
 # DATACH index list of Dependent Components kept in the DATABR structure
 # xDC Size: see <nDCb>
 <xDC>
 0 1 2 3 4 5 6 7 8 9 
 10 11 12 13 14 15 16 17 18 19 
 20 21 22 23 24 25 26 27 
+
 # DATACH index list of Phases kept in the DATABR structure
 # xPH Size: see <nPHb>
 <xPH>
 0 1 2 3 4 5 6 
+
 # Note: the index lists are trivial when all components and phases from 
 # DATACH are also kept in DATABR structure. If not, for instance, if 
 # nDCb < nDC, then indexes of DCs from DATACH lists which are not taken 
@@ -103,11 +118,13 @@
 # must follow the order given in this list.
 <ICNL>
 'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+
 # Codes of independent components: 'e' - chemical element; 'h' - hydrogen; 
 # 'o' - oxygen, 'z' - electric charge (used in GEM IPM).
 # Size of the list: see <nIC>
 <ccIC>
 'e' 'e' 'e' 'h' 'e' 'o' 'z' 
+
 # Atomic (molar) masses of Independent Components, in g/mol
 # Size of the list: see <nIC>
 <ICmm>
@@ -127,6 +144,7 @@
 'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 
 'HCO3-' 'CH4@' 'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 
 'CH4' 'H2' 'O2' 'Gr' 'Cal' 'Dis-Dol' 'Portlandite' 'Brc' 
+
 # Type codes of Dependent components: 'S' - aqueous solute; 'T' - aqueous 
 # H+ ion; 'W' - water-solvent; 'G' - component of the gas mixture; 
 # 'I' - component of ideal non-electrolyte solution; 'M' - major component 
@@ -154,13 +172,15 @@
 # must go in the same order as the Phase names in this list.
 <PHNL>
 'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' 
+
 # Phase aggregate state code list: 'a' - aqueous electrolyte; 'g' - gas mixture;
 # 'f' - non-ideal fluid; 's' - solid; 'l' - liquid non-electrolyte; 'm' -
 # silicate melt; 'x' - sorption phase. 
 # Size of the list: see <nPH>. The type codes are heavily used in GEM IPM
 # for the selection of mixing models, scaling factors etc. 
 <ccPH>
-'a' 'g' 's' 's' 's' 's' 's' 
+'a' 'g' 's' 's' 's' 's' 's'
+
 # Vector L1 telling how many Dependent Components is included in each phase.
 # Size of the vector: see <nPH>. The vector (together with the <ccPH> codes) 
 # tells that the first 19 DCs incl. water-solvent belong to the aqueous 
@@ -220,6 +240,7 @@
 9.94506e+01 3.5453e+01 2.0159e+00 3.19988e+01 1.700735e+01 1.00795e+00 1.80153e+01 
 4.40096e+01 1.60426e+01 2.0159e+00 3.19988e+01 1.20108e+01 1.00087e+02 1.84401e+02 
 7.40927e+01 5.83197e+01 
+
 # Diffusion coefficients for DCs in multicomponent phases (provisional). 
 # This vector has <nDCs> elements. 
 # In future versions, this data object will be moved in section (9). 
@@ -232,17 +253,21 @@
 # is by more than Ttol different than the previous one used in 
 # GEM IPM calculation
 <Ttol> 5.0e-01
+
 # Temperatures for the grid arrays data, C; <nTp> temperatures
 <Tval>
 2.5e+01 4.0e+01 5.5e+01 7.0e+01 8.5e+01 
+
 # Tolerance for the interpolation over pressure (bar)
 # Thermodynamic data will be re-interpolated only if pressure
 # is by more than Ptol different than the previous one used in 
 # GEM IPM calculation
 <Ptol> 1.0e+00
+
 # Pressures for the grid (bar), <nPp> pressures
 <Pval>
 1.0e+00 2.0e+02 
+
 # Note: if current T or P is set beyond the interval covered 
 # in <Tval> or <Pval> then it will be automatically set on the
 # nearest border of the interval in the DATABR node and in the

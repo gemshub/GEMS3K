@@ -465,14 +465,14 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 0 -1 0 0 
 
 # Setup parameters of surface binding models:
-# column [0]: max site density mmol/g; 
-# column [1]: charge allocated to 0 plane;
-# column [2]: charge allocated to beta -or third plane; 
+# column [0]: max site density in mkmol/g; 
+# column [1]: surface species charge allocated to 0 plane;
+# column [2]: surface species charge allocated to beta -or third plane; 
 # column [3]: Frumkin interaction parameter;
-# column [4]: dentateness or CN (ccordination number); 
+# column [4]: dentateness or CN (coordination number); 
 # column [5]: additional isoterm parameter (reserved).
 # This array has 6 columns of fixed order and <Lads> rows
-# (for each species in each sorption phase). 
+# for each species of all sorption phases. 
 <MASDJ>
 2.74728e+02 -5.0e-01 0.0e+00 0.0e+00 1.0e+00 0.0e+00 
 2.74728e+02 -5.0e-01 1.0e+00 0.0e+00 1.0e+00 0.0e+00 
@@ -515,7 +515,8 @@ Description of the IPM-DAT file format and example of the input IPM-DAT file
 # 'Y' - inner-sphere surface complex or charged site
 # 'Z' - outer-sphere surface complex or exchange ion
 # 'Q' - sorbent (if single-solid)
-# 'P' - end-member of the sorbent (if solid solution)
+# 'P' - end-member of the sorbent (if solid solution).
+#
 <DCads>
 'Y' 'Z' 'Y' 'Z' 'Q' 
 
