@@ -47,7 +47,7 @@
 <pa_GAH>        1000
 
 # Cutoff threshold for the amount of phase for phase elimination 
-<pa_DS>        1e-09
+<pa_DS>        1e-08
 
 # Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; 
 # Ph - non-electrolyte solution phases

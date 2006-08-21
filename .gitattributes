@@ -201,8 +201,6 @@ node-gem/test_data/CalcColumn-dbr-0-0000.dat -text
 node-gem/test_data/CalcColumn-dbr-0-0001.dat -text
 node-gem/test_data/CalcColumn-dch.dat -text
 node-gem/test_data/CalcColumn-ipm.dat -text
-node-gem/test_data/CalcColumn.ipm -text
-node-gem/test_data/CalcColumn.txt -text
 node-gem/test_data/Readme.1st -text
 node-gem/tnt.h -text
 node-gem/tnt_array1d.h -text
@@ -213,8 +211,7 @@ node-gem/tp_test/CalcColumn-dbr-0-0000.dat -text
 node-gem/tp_test/CalcColumn-dbr-0-0001.dat -text
 node-gem/tp_test/CalcColumn-dch.dat -text
 node-gem/tp_test/CalcColumn-ipm.dat -text
-node-gem/tp_test/CalcColumn.ipm -text
-node-gem/tp_test/CalcColumn.txt -text
+node-gem/tp_test/main.cpp -text
 node-gem/v_user.h -text
 node-gem/verror.h -text
 nodearray-gem/CalcColumn.BAT -text
