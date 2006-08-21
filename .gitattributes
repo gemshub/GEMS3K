@@ -140,7 +140,6 @@ mcotac-gem/wd.dat -text
 mcotac-gem/we.dat -text
 mcotac-gem/wegdat1d_.c -text
 mcotac-gem/wf.dat -text
-node-gem/CalcColumn.BAT -text
 node-gem/Makefile -text
 node-gem/TestAds.BAT -text
 node-gem/array.h -text
@@ -206,6 +205,7 @@ node-gem/tnt.h -text
 node-gem/tnt_array1d.h -text
 node-gem/tnt_array2d.h -text
 node-gem/tnt_i_refvec.h -text
+node-gem/tp_test.BAT -text
 node-gem/tp_test/CalcColumn-dat.lst -text
 node-gem/tp_test/CalcColumn-dbr-0-0000.dat -text
 node-gem/tp_test/CalcColumn-dbr-0-0001.dat -text
