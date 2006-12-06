@@ -225,6 +225,7 @@ pVisor->Update( false );
 //Calc equstat method IPM (iterations)
 void TMulti::MultiCalcIterations()
 {
+
     MultiCalcMain();
 
     //calc demo data
@@ -345,7 +346,8 @@ STEP_POINT( "End Simplex" );
                     pmp->Gamma[j] = exp( LnGam );
                 else pmp->Gamma[j] = 1.0;
                 pmp->F0[j] = Ej_init_calc( 0.0, j, k  );
-                pmp->G[j] = pmp->G0[j] + pmp->F0[j];
+//                pmp->G[j] = pmp->G0[j] + pmp->F0[j];   changed 05.12.2006 KD
+                pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
                 pmp->lnGmo[j] = LnGam;
             }  // j
         } // k
@@ -831,7 +833,7 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
           B[ii] = aa;
       }
 
-// this routine constructs its Cholesky decomposition, A = L � LT .
+// this routine constructs its Cholesky decomposition, A = L x LT .
   Cholesky<double>  chol(A);
 
   if( chol.is_spd() )  // is positive definite A.

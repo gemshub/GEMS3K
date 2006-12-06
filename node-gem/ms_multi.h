@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 783 2006-07-27 11:18:26Z gems $
+// $Id: ms_multi.h 809 2006-12-05 15:15:41Z gems $
 //
 // Declaration of TMulti class, config functions
 //
@@ -176,7 +176,7 @@ typedef struct
   double
     *DUL,  // VG Vector of upper restrictions to x_j (reserved) [L]
     *DLL,  // NG Vector of lower restrictions to x_j, moles [L]
-    *GEX,  // Excess free energy of (metastable) DC, moles [L]
+    *GEX,  // Molar Gibbs energy increment of (metastable) DC, normalized to moles [L]
     *PUL,  // Vector of upper restrictions to X_a (reserved)[FIs]
     *PLL,  // Vector of lower restrictions to X_a (reserved)[FIs]
     *YOF,  // Phase metastability parameter [FI !!!!]
@@ -252,7 +252,7 @@ typedef struct
     *RFSC,  // Classifier of restriction scales for XF_a 0:FIs-1
     *ICC,   // Classifier of IC { e o h a z v i <int> } 0:N-1
     *DCC,   // Classifier of DC { TESWGVCHNIJMDRAB0123XYZPQO } 0:L-1
-    *PHC;   // Classifier of phases { a g p m l x d h } 0:FI-1
+    *PHC;   // Classifier of phases { a g f p m l x d h } 0:FI-1
   char  (*SCM)[MST]; //classifier of adsorption models for sur types [FIs][FIat]
   char  *SATT,  /* classifier of methods of SAT calculation [0:Lads] */
     *DCCW;  // reserved 0:L-1 codes see in file S_CLASS.H
@@ -285,7 +285,6 @@ class TMulti
 
     void multi_sys_dc();
     void multi_sys_ph();
-    void ConvertDCC();
     void ph_sur_param( int k, int kk );
     void ph_surtype_assign( int k, int kk, int jb, int je,
                             short car_l[], int car_c, short Cjs );
@@ -326,6 +325,7 @@ class TMulti
     double GX( double LM  );
     double Cj_init_calc( double g0, int j, int k );
     void Mol_u( double Y[], double X[], double XF[], double XFA[] );
+    void ConvertDCC();
 
 // ipm_chemical2.cpp
     void GasParcP();
@@ -464,6 +464,7 @@ void inArray( fstream& ff, char *name, double* arr, int size );
 void inArray( fstream& ff, char *name, char* arr,
                               int size, int arr_siz );
 
+/*
 void outArray( fstream& ff, char *name, short* arr,
                             int size, int l_size=-1 );
 void outArray( fstream& ff, char *name,  float* arr,
@@ -472,6 +473,6 @@ void outArray( fstream& ff, char *name,  double* arr,
                              int size, int l_size=-1 );
 void outArray( fstream& ff, char *name, char* arr,
                               int size, int arr_siz );
-
+*/
 #endif   //_ms_multi_h
 

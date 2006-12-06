@@ -61,6 +61,7 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_H/datach.h \
                     $$SUBMOD_H/node.h \
                     $$SUBMOD_H/ms_multi.h \
+	            $$SUBMOD_H/io_arrays.h \
 		    $$GEMIPM_H/m_const.h \
 		    $$GEMIPM_H/m_param.h  \
                     $$NUMERICS_H/num_methods.h \
@@ -83,6 +84,7 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_CPP/ipm_chemical3.cpp \
                     $$SUBMOD_CPP/ipm_main.cpp \
                     $$SUBMOD_CPP/ipm_simplex.cpp \
-		    main.cpp \
+		    $$SUBMOD_CPP/io_arrays.cpp \
+                    main.cpp \
 		    $$GEMIPM_CPP/ms_param.cpp \
                     $$NUMERICS_CPP/num_methods.cpp
