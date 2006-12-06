@@ -1,12 +1,12 @@
 mcotac1dxt3.x: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        gstring.o gdatastream.o s_fgl.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
-       ipm_main.o ipm_simplex.o mainfromf.o ms_param.o num_methods.o
-	pgf90 -o mcotac1dxt3.x    -fastsse -tp k8-64 -g -p  -I/usr/include  -L/usr/lib64 -llammpio -llamf77mpi -lmpi -llam -laio -laio -lutil mcotac1d.o datio.o \
+       ipm_main.o ipm_simplex.o io_arrays.o f_gem_node.o ms_param.o num_methods.o
+       pgf90 -o mcotac1dxt3.x    -fastsse -tp k8-64 -g -p  -I/usr/include  -L/usr/lib64 -llammpio -llamf77mpi -lmpi -llam -laio -laio -lutil mcotac1d.o datio.o \
                  erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        gstring.o gdatastream.o s_fgl.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
-       ipm_main.o ipm_simplex.o mainfromf.o ms_param.o num_methods.o
+       ipm_main.o ipm_simplex.o io_arrays.o f_gem_node.o ms_param.o num_methods.o
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
 	pgf90 -v -c    -fastsse -tp k8-64 -g -p  -I/usr/include  -L/usr/lib64 -llammpio -llamf77mpi -lmpi -llam -laio -laio -lutil    mcotac1d.f
@@ -29,19 +29,19 @@ hydro1d_.o: hydro1d_.c  gwheader.h
 
 gstring.o: gstring.cpp gstring.h \
 		array.h
-	pgCC -g gstring.cpp
+	pgCC -g -v gstring.cpp
 gdatastream.o: gdatastream.cpp gdatastream.h \
 		verror.h \
 		gstring.h \
 		array.h
-	pgCC -g gdatastream.cpp
+	pgCC -g -v gdatastream.cpp
 s_fgl.o: s_fgl.cpp s_fgl.h \
 		m_const.h \
 		verror.h \
 		v_user.h \
 		gstring.h \
 		array.h
-	pgCC -g s_fgl.cpp
+	pgCC -g -v s_fgl.cpp
 node.o: node.cpp node.h \
 		gdatastream.h \
 		m_param.h \
@@ -53,8 +53,9 @@ node.o: node.cpp node.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g node.cpp
-node_format.o: node_format.cpp node.h \
+	pgCC -g -vnode.cpp
+node_format.o: node_format.cpp io_arrays.h \
+                node.h \
 		gdatastream.h \
 		m_param.h \
 		datach.h \
@@ -65,8 +66,9 @@ node_format.o: node_format.cpp node.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g node_format.cpp
-ms_multi_file.o: ms_multi_file.cpp m_param.h \
+	pgCC -g -v node_format.cpp
+ms_multi_file.o: ms_multi_file.cpp  io_arrays.h \
+                m_param.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
@@ -74,8 +76,9 @@ ms_multi_file.o: ms_multi_file.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g ms_multi_file.cpp
-ms_multi_format.o: ms_multi_format.cpp m_param.h \
+	pgCC -g -v ms_multi_file.cpp
+ms_multi_format.o: ms_multi_format.cpp  io_arrays.h \
+                m_param.h \
 		node.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -86,7 +89,7 @@ ms_multi_format.o: ms_multi_format.cpp m_param.h \
 		v_user.h \
 		datach.h \
 		databr.h
-	pgCC -g ms_multi_format.cpp
+	pgCC -g -v ms_multi_format.cpp
 ipm_chemical.o: ipm_chemical.cpp m_param.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -95,7 +98,7 @@ ipm_chemical.o: ipm_chemical.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g ipm_chemical.cpp
+	pgCC -g -v ipm_chemical.cpp
 ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -104,7 +107,7 @@ ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g ipm_chemical2.cpp
+	pgCC -g -v ipm_chemical2.cpp
 ipm_chemical3.o: ipm_chemical3.cpp m_param.h \
 		s_fgl.h \
 		gdatastream.h \
@@ -114,7 +117,7 @@ ipm_chemical3.o: ipm_chemical3.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g ipm_chemical3.cpp
+	pgCC -g -v ipm_chemical3.cpp
 ipm_main.o: ipm_main.cpp m_param.h \
 		jama_lu.h \
 		jama_cholesky.h \
@@ -132,7 +135,7 @@ ipm_main.o: ipm_main.cpp m_param.h \
 		tnt_i_refvec.h \
 		datach.h \
 		databr.h
-	pgCC -g ipm_main.cpp
+	pgCC -g -v ipm_main.cpp
 ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -141,8 +144,13 @@ ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g ipm_simplex.cpp
-mainfromf.o: mainmainfrom.cpp node.h \
+	pgCC -g -v ipm_simplex.cpp
+io_arrays.o: io_arrays.cpp io_arrays.h \
+		verror.h \
+		gstring.h \
+		array.h
+	pgCC -g -v io_arrays.cpp
+f_gem_node.o: f_gem_node.cpp node.h \
 		m_param.h \
 		datach.h \
 		databr.h \
@@ -153,7 +161,7 @@ mainfromf.o: mainmainfrom.cpp node.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC -g mainfromf.cpp
+	pgCC -g -v f_gem_node.cpp
 ms_param.o: ms_param.cpp m_param.h \
 		num_methods.h \
 		gdatastream.h \
@@ -166,14 +174,15 @@ ms_param.o: ms_param.cpp m_param.h \
 		v_user.h \
 		datach.h \
 		databr.h
-	pgCC -g ms_param.cpp
+	pgCC -g -v ms_param.cpp
 num_methods.o: num_methods.cpp v_user.h \
 		num_methods.h \
 		verror.h \
 		gstring.h \
 		array.h
-	pgCC -g num_methods.cpp
+	pgCC -g -v num_methods.cpp
 
 gwheader.h: gwheader.h
+f_gem_node.h: f_gem_node.h
 gwheader.inc: gwheader.inc
 kinetics.inc: kinetics.inc

@@ -37,7 +37,7 @@
 <iGrd> 0
 # Flag for keeping specific surface areas in DATABR structures/files
 <fAalp> 1
-
+<END_DIM>
 ## (4) Databridge configuration section (for memory allocation)
 # number of ICs to be kept in DATABR structure
 <xIC>

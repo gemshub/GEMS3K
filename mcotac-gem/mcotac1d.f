@@ -3,176 +3,7 @@
       program mcotac1D
       implicit double precision (a-h,o-z)
       include 'gwheader.inc'
-
-c     //masstransport
-	INTERFACE
-	subroutine MAIF_START( c_to_i1)
-
-	integer c_to_i1(100)
-	
-	END SUBROUTINE MAIF_START
-	END INTERFACE
-
-	INTERFACE
-	subroutine  MAIF_GET_A( p_nICb, p_nDCb, p_A )
-	integer p_nICb [REFERENCE]   
-      integer p_nDCb [REFERENCE]   
-      real*4    p_A( 17, 7)
-
-	END SUBROUTINE MAIF_GET_A
-	END INTERFACE
-
-	INTERFACE
-	subroutine  MAIF_CALC( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
-     *,p_T, p_P, p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
-     *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho
-     *,p_al,p_at,p_av,p_hDl,p_hDt,p_hDv,p_nto
-     *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam,p_dul,p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,p_dRes1
-     *)
-c2005	common  /DATABR/  dBR
-c2005       !DEC$ ATTRIBUTES C, EXTERN :: dBR
-c2005       !DEC$ ATTRIBUTES C, EXTERN :: dBR1
-c2005       INTEGER*4 dBR,dBR1                                    ! idata (20)
-	integer p_NodeHandle [REFERENCE]   !// Node identification handle
-      integer p_NodeTypeHY [REFERENCE]   !// Node type (hydraulic); see typedef NODETYPE
-      integer p_NodeTypeMT [REFERENCE]   !// Node type (mass transport); see typedef NODETYPE
-      integer p_NodeStatusFMT [REFERENCE]!// Node status code FMT; see typedef NODECODEFMT
-      integer p_NodeStatusCH  [REFERENCE]!// Node status code CH;  see typedef NODECODECH
-      integer p_IterDone      [REFERENCE]!// Number of iterations performed by IPM (if not need GEM)
-c !// Chemical scalar variables
-      real*8 p_T [REFERENCE]    !// Temperature T, K                        +      +      -     -
-      real*8 p_P [REFERENCE]    !// Pressure P, bar                         +      +      -     -
-      real*8 p_Vs [REFERENCE]   !// Volume V of reactive subsystem, cm3     -      -      +     +
-      real*8 p_Vi  [REFERENCE]  !// Volume of inert subsystem  ?            +      -      -     +
-      real*8 p_Ms  [REFERENCE]  !// Mass of reactive subsystem, kg          +      +      -     -
-      real*8 p_Mi  [REFERENCE]  !// Mass of inert part, kg    ?             +      -      -     +
-      real*8 p_Gs  [REFERENCE]  !// Gibbs energy of reactive subsystem (J)  -      -      +     +
-      real*8 p_Hs  [REFERENCE]  !// Enthalpy of reactive subsystem (J)      -      -      +     +
-      real*8 p_Hi  [REFERENCE]  !// Enthalpy of inert subsystem (J) ?       +      -      -     +
-      real*8 p_IC   [REFERENCE] !// Effective molal aq ionic strength           -      -      +     +
-      real*8 p_pH   [REFERENCE] !// pH of aqueous solution                      -      -      +     +
-      real*8 p_pe  [REFERENCE]  !// pe of aqueous solution                      -      -      +     +
-      real*8 p_Eh  [REFERENCE]  !// Eh of aqueous solution, V                   -      -      +     +
-c !//  FMT variables (units need dimensionsless form)
-      real*8 p_Tm [REFERENCE]   !// actual total simulation time
-      real*8 p_dt  [REFERENCE]  !// actual time step
-      real*8 p_dt1 [REFERENCE]  !// priveous time step
-      real*8 p_Vt  [REFERENCE]  !// total volume of node (voxel) = dx*dy*dz, m**3
-      real*8 p_vp  [REFERENCE]   !// advection velocity (in pores) in this node
-      real*8 p_eps [REFERENCE]  !// effective (actual) porosity normalized to 1
-      real*8 p_Km  [REFERENCE]  !// actual permeability, m**2
-      real*8 p_Kf [REFERENCE]   !// actual DARCY`s constant, m**2/s
-      real*8 p_S	[REFERENCE]  !// specific storage coefficient, dimensionless
-      real*8 p_Tr  [REFERENCE]  !// transmissivity m**2/s
-      real*8 p_h	[REFERENCE]  !  // actual hydraulic head (hydraulic potential), m
-      real*8 p_rho [REFERENCE]  !// actual carrier density for density driven flow, g/cm**3
-      real*8 p_al  [REFERENCE]  !// specific longitudinal dispersivity of porous media, m
-      real*8 p_at [REFERENCE]   !// specific transversal dispersivity of porous media, m
-      real*8 p_av  [REFERENCE]  !// specific vertical dispersivity of porous media, m
-      real*8 p_hDl [REFERENCE]  !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-      real*8 p_hDt [REFERENCE]  !// hydraulic transversal dispersivity, m**2/s
-      real*8 p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, m**2/s
-      real*8 p_nto [REFERENCE]  !// tortuosity factor
-c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
-c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      real*8  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      real*8  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      real*8  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      real*8  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      real*8  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-      real*8  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-   	real*8  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-   	real*8  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      real*8  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      real*8  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      real*8  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      real*8  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
-c !  // What else?
-      real*8  p_dRes1 (7) ! (nICb) ! //should be array Sveta ?
-      
-	END SUBROUTINE MAIF_CALC
-	END INTERFACE
-
-
-	INTERFACE
-	subroutine  MAIF_READ( p_file, p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
-     *,p_T, p_P, p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
-     *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho
-     *,p_al,p_at,p_av,p_hDl,p_hDt,p_hDv,p_nto
-     *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam,p_dul,p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,p_dRes1
-     *)
-c2005	common  /DATABR/  dBR
-c2005       !DEC$ ATTRIBUTES C, EXTERN :: dBR
-c2005       !DEC$ ATTRIBUTES C, EXTERN :: dBR1
-c2005       INTEGER*4 dBR,dBR1                                    ! idata (20)
-	integer p_file(100)    !// Node file name
-      integer p_NodeHandle [REFERENCE]   !// Node identification handle
-      integer p_NodeTypeHY [REFERENCE]   !// Node type (hydraulic); see typedef NODETYPE
-      integer p_NodeTypeMT [REFERENCE]   !// Node type (mass transport); see typedef NODETYPE
-      integer p_NodeStatusFMT [REFERENCE]!// Node status code FMT; see typedef NODECODEFMT
-      integer p_NodeStatusCH  [REFERENCE]!// Node status code CH;  see typedef NODECODECH
-      integer p_IterDone      [REFERENCE]!// Number of iterations performed by IPM (if not need GEM)
-c !// Chemical scalar variables
-      real*8 p_T [REFERENCE]    !// Temperature T, K                        +      +      -     -
-      real*8 p_P [REFERENCE]    !// Pressure P, bar                         +      +      -     -
-      real*8 p_Vs [REFERENCE]   !// Volume V of reactive subsystem, cm3     -      -      +     +
-      real*8 p_Vi  [REFERENCE]  !// Volume of inert subsystem  ?            +      -      -     +
-      real*8 p_Ms  [REFERENCE]  !// Mass of reactive subsystem, kg          +      +      -     -
-      real*8 p_Mi  [REFERENCE]  !// Mass of inert part, kg    ?             +      -      -     +
-      real*8 p_Gs  [REFERENCE]  !// Gibbs energy of reactive subsystem (J)  -      -      +     +
-      real*8 p_Hs  [REFERENCE]  !// Enthalpy of reactive subsystem (J)      -      -      +     +
-      real*8 p_Hi  [REFERENCE]  !// Enthalpy of inert subsystem (J) ?       +      -      -     +
-      real*8 p_IC   [REFERENCE] !// Effective molal aq ionic strength           -      -      +     +
-      real*8 p_pH   [REFERENCE] !// pH of aqueous solution                      -      -      +     +
-      real*8 p_pe  [REFERENCE]  !// pe of aqueous solution                      -      -      +     +
-      real*8 p_Eh  [REFERENCE]  !// Eh of aqueous solution, V                   -      -      +     +
-c !//  FMT variables (units need dimensionsless form)
-      real*8 p_Tm [REFERENCE]   !// actual total simulation time
-      real*8 p_dt  [REFERENCE]  !// actual time step
-      real*8 p_dt1 [REFERENCE]  !// priveous time step
-      real*8 p_Vt  [REFERENCE]  !// total volume of node (voxel) = dx*dy*dz, m**3
-      real*8 p_vp  [REFERENCE]   !// advection velocity (in pores) in this node
-      real*8 p_eps [REFERENCE]  !// effective (actual) porosity normalized to 1
-      real*8 p_Km  [REFERENCE]  !// actual permeability, m**2
-      real*8 p_Kf [REFERENCE]   !// actual DARCY`s constant, m**2/s
-      real*8 p_S	[REFERENCE]  !// specific storage coefficient, dimensionless
-      real*8 p_Tr  [REFERENCE]  !// transmissivity m**2/s
-      real*8 p_h	[REFERENCE]  !  // actual hydraulic head (hydraulic potential), m
-      real*8 p_rho [REFERENCE]  !// actual carrier density for density driven flow, g/cm**3
-      real*8 p_al  [REFERENCE]  !// specific longitudinal dispersivity of porous media, m
-      real*8 p_at [REFERENCE]   !// specific transversal dispersivity of porous media, m
-      real*8 p_av  [REFERENCE]  !// specific vertical dispersivity of porous media, m
-      real*8 p_hDl [REFERENCE]  !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-      real*8 p_hDt [REFERENCE]  !// hydraulic transversal dispersivity, m**2/s
-      real*8 p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, m**2/s
-      real*8 p_nto [REFERENCE]  !// tortuosity factor
-c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
-c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      real*8  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      real*8  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      real*8  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      real*8  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      real*8  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-      real*8  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-   	real*8  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      real*8  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      real*8  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      real*8  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      real*8  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      real*8  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
-c !  // What else?
-      real*8  p_dRes1 (7) ! (nICb) ! //should be array Sveta ?
-      
-	END SUBROUTINE MAIF_READ
-	END INTERFACE
+c      include 'f_gem_node.inc'
 
 
 
@@ -308,31 +139,25 @@ c MAIN FORTRAN PROGRAM START IS HERE
 	INTEGER argc, iinn, i_gems, nNodes
 	integer CSTR(100)
 	integer c_to_i(100)
-	integer c_to_i1(100)
-	integer c_to_i2(100)
-	integer c_to_i3(100)
-	integer c_to_i4(100)
-	integer c_to_i5(100)
 	integer itergemstime(80,51)    ! array for output of iterations done per node during every time step
       integer nodeTypes(51)
-c for MAIF_CALC      
+c for F_GEM_CALC_NODE      
 	integer iNodeF
-      integer*1 p_NodeHandle    !// Node identification handle
-      integer*1 p_NodeTypeHY    !// Node type (hydraulic); see typedef NODETYPE
-      integer*1 p_NodeTypeMT    !// Node type (mass transport); see typedef NODETYPE
-      integer*1 p_NodeStatusFMT !// Node status code FMT; see typedef NODECODEFMT
-      integer*1 p_NodeStatusCH  !// Node status code CH;  see typedef NODECODECH
-      integer*1 p_IterDone      !// Number of iterations performed by IPM (if not need GEM)
+      integer p_NodeHandle    !// Node identification handle
+      integer p_NodeTypeHY    !// Node type (hydraulic); see typedef NODETYPE
+      integer p_NodeTypeMT    !// Node type (mass transport); see typedef NODETYPE
+      integer p_NodeStatusFMT !// Node status code FMT; see typedef NODECODEFMT
+      integer p_NodeStatusCH  !// Node status code CH;  see typedef NODECODECH
+      integer p_IterDone      !// Number of iterations performed by IPM (if not need GEM)
 
 	character  argv1,argv2
 	character*10 fname10
 	character*10 line
       character*1 chch(100)
-	character*1 chch1(100),chch2(100),chch3(100),chch4(100),chch5(100)
 	character*100 CSTR_char30
 	character*20 dummystring(25)
-	character*100 gems_in_ipmf,gems_in_ipmf_list,gems_dbr_f1,gems_dbr_f2
-	character*100 gems_out,gems_dbr_w
+	character*100 gems_in_ipmf,gems_dbr_f1,gems_dbr_f2
+	character*100 gems_dbr_w
 	character*20 dummystringb(20)
 	
 c12345678901234567890123456789012345678901234567890123456789012345690
@@ -394,16 +219,6 @@ c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
       real*8  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
       real*8  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
       real*8  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-c      real*4  p_A(17,7)
-c !  // What else?
-cc      real*8  p_dRes1(16) ! (nDCb) ! //should be array [nICb] Sveta
-cc      real*8  p_dRes2(16) ! (nDCb) ! //should be array [nICb] 
-
-cc2005      INTEGER*4 dBR,dBR1                                   ! idata (20)
-cc2005	common  /DATABR/  dBR
-cc2005	common  /DATABR1/  dBR1
-c       !DEC$ ATTRIBUTES C, EXTERN :: dBR
-c       !DEC$ ATTRIBUTES C, EXTERN :: dBR1
 
 
       real*8 xminr,xmaxr,de,xnaohmw,xnaohd,xkohmw,xkohd
@@ -520,8 +335,6 @@ c      pause "initial time"
 c   From GEMS INTEGRATION
 c   these files are necessary for GEMS command line execution to start running
       gems_in_ipmf ="MCOTAC-GEM/MySystem-dat.lst" ! list file including nodes' chemical systems
-	gems_in_ipmf_list="uuuuuuuuuuuuuuu"  ! list file including nodes' chemical systems
-ccc                                    caldol-init1.ipm ipmfiles-dat.lst  are in RUNBAT normally
       gems_dbr_f1="MCOTAC-GEM/MySystem-dbr-0007.dat"    ! chemical system at the boundary
 	gems_dbr_f2="MCOTAC-GEM/MySystem-dbr-0008.dat"    
 
@@ -841,27 +654,9 @@ c  first read is for boundary conditons node 1
 	CSTR_char30="xbtdefghijklmnopqrst1234567890"
       read(CSTR_char30,'(100(a1))')(chch(i),i=1,100)
 
-      read(gems_in_ipmf,'(100(a1))')(chch1(i),i=1,100)
-      read(gems_in_ipmf_list,'(100(a1))')(chch2(i),i=1,100)
-      read(gems_dbr_f1,'(100(a1))')(chch3(i),i=1,100)
-      read(gems_dbr_f2,'(100(a1))')(chch4(i),i=1,100)
-      read(gems_out,'(100(a1))')(chch5(i),i=1,100)
       write(*,*)gems_in_ipmf
-      write(*,*)gems_in_ipmf_list
       write(*,*)gems_dbr_f1
       write(*,*)gems_dbr_f2
-      write(*,*)gems_out
-
-      do 46 i=1, 100
-      
-	     c_to_i(i) = ichar ( chch(i))
-	     c_to_i1(i) = ichar ( chch1(i))
-           c_to_i2(i) = ichar ( chch2(i))
-           c_to_i3(i) = ichar ( chch3(i))
-           c_to_i4(i) = ichar ( chch4(i))
-           c_to_i5(i) = ichar ( chch5(i))
-c	     write(*,*)'chch i ',i,chch(i),c_to_i(i)
-  46  continue
 
       write (*,*)'FORTRAN dedined in C++ argc', argc
       write (*,*)'FORTRAN integer        iinn', iinn
@@ -877,16 +672,14 @@ c	     write(*,*)'chch i ',i,chch(i),c_to_i(i)
 	write(*,*)'cto',c_to_i1
 	write(*,*)'cto',c_to_i2
 	write(*,*)'nodetype',nodeTypes
-	pause "MAIF_START"
-c       nodeTypes=0
+
+	pause "F_GEM_INIT"
+
        nNodes= nxmax-1    !   1 
-c      call MAIF_START( nNodes,1,1, c_to_i1 )
-      call MAIF_START( c_to_i1 )
+      call F_GEM_INIT( gems_in_ipmf )
       write(*,*)'nNodes =', nNodes
-	pause "MAIF_START called"
-c      if(i_gems.eq.1)
-c     *call MAIF(argc,iinn,xxyy,xarray,FNAME10,CSTR,line,c_to_i
-c     *      , c_to_i1,c_to_i2,c_to_i3,c_to_i4,c_to_i5)
+
+	pause "F_GEM_INIT called"
 
       do 50 i=1,20
 	  chch(i)=char(CSTR(i))
@@ -900,19 +693,18 @@ c     open data-ch file for initialisation and names (only once)
 
 c   read 2. for p_ variables        
 c        if(igems_rw.eq.1)
-      call MAIF_GET_A( p_nICb, p_nDCb, p_A )
+      call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_A )
 
       write(*,*) 'gemsA', p_A
-	pause "MAIF_START nach A "
+	pause "F_GEM_GET_DCH nach A "
 
       write(*,*) 'gemsread_dch.dat done'
 
 	p_A_trans = transpose (p_A)               !invert stoichiometric coeff. matrix
       write(*,*) 'gemsA', p_A_trans
-	pause "MAIF_START nach A_trans "
+	pause "F_GEM_GET_DCH nach A_trans "
 
-      gems_out="gemsoutput.out"
-
+      
 cc2005      endif  ! igems_rw=0
 
 
@@ -921,9 +713,9 @@ cc2005      endif  ! igems_rw=0
       p_NodeStatusFMT = 1
       p_NodeStatusCH=1
       if(i_gems.eq.1) then
-	call MAIF_READ(  c_to_i3, p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
+	call F_GEM_READ_NODE(  gems_dbr_f1, p_NodeHandle,p_NodeTypeHY
+     *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
+     *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
      *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,p_Tm
      *,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
      *,p_av,p_hDl,p_hDt,p_hDv,p_nto, p_bIC,p_rMB,p_uIC,p_xDC,p_gam
@@ -934,19 +726,6 @@ cc2005      endif  ! igems_rw=0
       write(*,*)iNode,p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
       pause
-c
-c      
-c
-c	gemsA_trans = transpose (p_xPA)               !invert stoichiometric coeff. matrix
- 
-c     read DataBR from file 
-
-c      write(*,*) 'gemsA'  !, p_A_trans
-c      do 4412 i=1,P_nICb
-c 4412 write(*,'(20(f3.0,1x))') (p_A_trans(i,j),j=1,p_nDCb)
-
-c      write(*,*) 'gemsA', p_A_trans
-	pause "MAIF_START nach A "
 
       write(*,*)'p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs'
       write(*,*)p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
@@ -958,10 +737,6 @@ c      write(*,*) 'gemsA', p_A_trans
      *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
      *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
       pause
-c      if(igems_rw.eq.1)
-c     *call readgems_dbr(gems_dbr_f,dummystringb,   
-c     *)
-cgems      pause "gems_dbrread "
 
 c  here loop to read in additional geochmical systems to define other nodes....
 c      aa-initial-dbr-1.dat to aa-initial-dbr-50.dat and aa-boundary-dbr-0.dat are available)
@@ -1006,9 +781,9 @@ c  second read is for initial conditons nodes 2 to nxmax
       p_NodeStatusFMT = 1
       p_NodeStatusCH=1
       if(i_gems.eq.1) then
-	call MAIF_READ( c_to_i4, p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+	call F_GEM_READ_NODE( gems_dbr_f2, p_NodeHandle,p_NodeTypeHY
+     *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
+     *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_Tm,p_dt,p_dt1,p_Vt,p_vp
      *,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
      *,p_av,p_hDl,p_hDt,p_hDv,p_nto,p_bIC,p_rMB,p_uIC, p_xDC,p_gam
@@ -1685,28 +1460,6 @@ c      write(*,*)n,(gemsbIC(ib),ib=1,gemsnICb)
 
 c	stop
 
-      
-
-        if(n.le.9) then                          !start with zero
-	    nk=n
-	    write(gems_dbr_w,'(a15,i1,a4)')'MySystem-dbr-',nk,'.dat'
-	  endif
-        if(n.gt.9)then
-	    nk=n
-	    write(gems_dbr_w,'(a15,i2,a4)')'MySystem-dbr-',nk,'.dat'
-        endif
-
-
-c        ch=char(i)
-c        write(gems_dbr_w,*)'aa-initial-dbr-',ch,'.out' 
-cgems        write(*,*)'n ',n,ch,gems_dbr_w
-      time_gemswritestart=secnds(0.)
-cc        if(igems_rw.eq.1)
-cc     *  call writegems_dbr(gems_dbr_w,dummystringb,   
-cc     *)
-      time_gemswriteend=secnds(0.)
-      time_gemswritetotal=time_gemswritetotal+
-     *(time_gemswriteend-time_gemswritestart)
 
 cfalsch 1555 continue   
 c      pause "write dbr"
@@ -1722,27 +1475,28 @@ cc	do 1411 nspez=2,nxmax-1
       p_NodeStatusCH= 1    ! 7 : without simplex 
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
-      time_gemsstart=secnds(0.)
+      time_gemsstart=RTC()
+c     time_gemsstart=secnds(0.)
 
-	call MAIF_CALC( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-     *,p_Tm,p_dt,p_dt1
-     *,p_Vt,p_vp, p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
-     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
+c     *,p_Tm,p_dt,p_dt1
+c     *,p_Vt,p_vp, p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
+c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,p_dRes1
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+c     *,p_dRes1
      *)
 
-c      call MAIF(argc,iinn,xxyy,xarray,FNAME10,CSTR,line,c_to_i
-c     *      , c_to_i1,c_to_i2,c_to_i3,c_to_i4,c_to_i5)
-      time_gemsend=secnds(0.)
+      time_gemsend=RTC()
+c      time_gemsend=secnds(0.)
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
-ccx 1411 continue
-ccx      endif
+c      time_gemstotal=time_gemstotal+ secnds(time_gemsstart)
+
 	if (i_output.eq.1.and.n.eq.2)then
       	write(35,*) 'node',n,'nach GEMS' 
-	    write(35,*) 'DCb'
+	    write(35,*) 'DCb', '#######   ',time_gemstotal
 	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
 c	    write(35,*) 'ICb'
 	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
@@ -1980,29 +1734,11 @@ c      gems_dbr_f="aa-initial-dbr-1.dat"
 
       if(i_gems.eq.1) then
 c      do 1799 n=2,nxmax
-c        if(n.le.9) then                          !start with zero
-c	    nk=n
-c	    write(gems_dbr_f,'(a15,i1,a4)')'MySystem-dbr-',nk,'.dat'
-c	  endif
-c        if(n.gt.9)then
-c	    nk=n
-c	    write(gems_dbr_f,'(a15,i2,a4)')'MySystem-dbr-',nk,'.dat'
-c        endif
-
-cc      time_gemsreadstart=secnds(0.)
-cc        if(igems_rw.eq.1)
-cc     *      call readgems_dbr(gems_dbr_f,dummystringb,   
-
-cc	time_gemsreadend=secnds(0.)
-cc	time_gemsreadtotal= time_gemsreadtotal+
-cc     *                    (time_gemsreadend-time_gemsreadstart)
 
 
 cc      itergemstime(itimestep_tp,n)=gemsIterDone
 cc	gemsIterDone=0
-cgems      pause "gems_dbrread "
 
-cxcx      pause "solid change after GEMS"
 c 1799 continue
 c      write(*,*)(bn(ib,2),ib=1,m1)
 c      write(*,*)(cn(ic,2),ic=1,m2)

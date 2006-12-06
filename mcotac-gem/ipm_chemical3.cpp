@@ -224,7 +224,8 @@ void TMulti::pm_GC_ods_link( int k, int jb, int jpb, int jdb )
     aObj[o_nmvol].SetN( pmp->L1[k]);
     aObj[ o_nppar].SetPtr(pmp->VL+jb );
     aObj[o_nppar].SetN(  pmp->L1[k]);
-    aObj[ o_ngtn].SetPtr( pmp->G0+jb );
+//    aObj[ o_ngtn].SetPtr( pmp->G0+jb );
+ aObj[ o_ngtn].SetPtr( pmp->GEX+jb );     // changed 05.12.2006 by DK
     aObj[o_ngtn].SetN( pmp->L1[k] );
     aObj[ o_ngam].SetPtr( pmp->Gamma+jb ); /* Gamma calculated */
     aObj[o_ngam].SetN( pmp->L1[k] );
@@ -603,7 +604,8 @@ END_LOOP: /* if( LinkMode == LINK_TP_MODE ) */
                 pmp->Gamma[j] = exp( LnGam );
             else pmp->Gamma[j] = 1.0;
             pmp->F0[j] = Ej_init_calc( 0.0, j, k );
-            pmp->G[j] = pmp->G0[j] + pmp->F0[j];
+//            pmp->G[j] = pmp->G0[j] + pmp->F0[j];   changed 5.12.2006   KD 
+            pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
         }
     }  // k - end loop over phases
     //  if( wn[W_EQCALC].status )
@@ -1092,7 +1094,7 @@ TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k )
       Error( "E71IPM IPMgamma: ",  buf );
     }
     // Phase volume of the fluid in cm3
-    pmp->FVOL[k] = PhVol * 10.;;
+    pmp->FVOL[k] = PhVol * 10.;
 
     for( jj=0, j=jb; j<je; j++, jj++ )
     {

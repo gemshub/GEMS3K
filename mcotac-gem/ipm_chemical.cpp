@@ -905,7 +905,7 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
 
     G = g0/pmp->RT;
     /*  if( k < pmp->FIs )  */
-    YOF = pmp->YOF[k];
+    YOF = pmp->YOF[k];     // J/g:   check this!   04.12.2006  DK
     /* Calculation of concentration scaling increments */
     switch( pmp->DCC[j] )
     { /* Aqueous electrolyte */
@@ -918,28 +918,35 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
     case DC_AQ_SOLVENT:
 #ifndef IPMGEMPLUGIN
         if( syp->PYOF != S_OFF )
-            pmp->GEX[j] += YOF;
+//            pmp->GEX[j] += YOF;
+        G += YOF;
 #endif
         break;
-        /* as phase- test add ln P general !!!!!!!!!!!!!!!!!!!!!! */
-    case DC_GAS_COMP: /* gases exept H2O and CO2 */
+    case DC_GAS_COMP: /* gases except H2O and CO2 */
     case DC_GAS_H2O: /* index to switch off? */
     case DC_GAS_CO2:
     case DC_GAS_H2:
     case DC_GAS_N2:
-        if( pmp->Pparc[j] != 1.0 && pmp->Pparc[j] > 1e-30 )
-            G += log( pmp->Pparc[j] );
-        /* Solution non-electrolyte */
-    case DC_SCP_CONDEN: /*a single-component phase */
     case DC_SOL_IDEAL:
     case DC_SOL_MINOR:
-    case DC_SOL_MAJOR:
+    case DC_SOL_MAJOR: // changed by DK on 4.12.2006
+        if( pmp->PHC[k] == PH_GASMIX || pmp->PHC[k] == PH_FLUID
+            || pmp->PHC[k] == PH_PLASMA )
+        {
+//        if( pmp->Pparc[j] != 1.0 && pmp->Pparc[j] > 1e-30 )
+//           G += log( pmp->Pparc[j] ); // log partial pressure/fugacity
+//        else
+               G += log( pmp->Pc ); // log general pressure (changed 04.12.2006)
+        }
+        /* Solution of non-electrolyte */
+    case DC_SCP_CONDEN: /*a single-component phase */
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
 #ifndef IPMGEMPLUGIN
         if( syp->PYOF != S_OFF )
-            pmp->GEX[j] += YOF;
+//            pmp->GEX[j] += YOF;
+           G += YOF;
 #endif
         break;
         /* Sorption phases */
@@ -963,7 +970,8 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
     default: /* error code */
         return 7777777.;
     }
-    return G += pmp->GEX[j];
+//    return G += pmp->GEX[j];
+    return G;
 }
 
 //----------------------------------------------------------------
@@ -1009,8 +1017,9 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
     {
       if( XF[k] >= pmp->DSM ) // pmp->lowPosNum ) fixed by KD 23.11.01
       {
-         XU[j] = -pmp->G0[j] -pmp->lnGam[j]
-                 + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+ //        XU[j] = -pmp->G0[j] -pmp->lnGam[j]  changed 5.12.2006
+         XU[j] = -pmp->G0[j] - pmp->lnGam[j] - pmp->GEX[j]
+                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
          if( pmp->PHC[k] == PH_AQUEL ) // pmp->LO && k==0)
          {
             if(j == pmp->LO)
@@ -1115,6 +1124,88 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
 
     delete[] XU;
 //   ofs.close();
+}
+
+
+// Convert class codes of DC into general codes of IPM
+void TMulti::ConvertDCC()
+{
+    int i, j, k, iRet=0;
+    char DCCW;
+
+    j=0;
+    for( k=0; k< pmp->FI; k++ )
+    { /* cycle by phases  */
+        i=j+pmp->L1[k];
+        if( pmp->L1[k] == 1 )
+        {
+            pmp->DCCW[j] = DC_SINGLE;
+            goto NEXT_PHASE;
+        }
+        for( ; j<i; j++ )
+        { /* cykle by DC. */
+            switch( pmp->DCC[j] ) /* selection necessary expressions  v_j */
+            {
+            case DC_SCP_CONDEN:
+                DCCW = DC_SINGLE;
+                break;
+            case DC_GAS_COMP:
+            case DC_GAS_H2O:
+            case DC_GAS_CO2:
+            case DC_GAS_H2:
+            case DC_GAS_N2:
+            case DC_SOL_IDEAL:
+            case DC_SOL_MINOR:
+            case DC_SOL_MAJOR:
+                DCCW = DC_SYMMETRIC;
+                break;
+            case DC_AQ_PROTON:
+            case DC_AQ_ELECTRON:
+            case DC_AQ_SPECIES:
+                DCCW = DC_ASYM_SPECIES;
+                break;
+            case DC_AQ_SOLVCOM:
+            case DC_AQ_SOLVENT:
+                DCCW = DC_ASYM_CARRIER;
+                break;
+            case DC_IESC_A:
+            case DC_IEWC_B:
+                DCCW = DC_ASYM_SPECIES;
+                break;
+                /* Remapping */
+            case DC_SUR_GROUP:
+            case DC_SUR_COMPLEX:
+                DCCW = DC_ASYM_SPECIES;
+                pmp->DCC[j] = DC_SSC_A0;
+                break;
+            case DC_SUR_IPAIR:
+                DCCW = DC_ASYM_SPECIES;
+                pmp->DCC[j] = DC_WSC_A0;
+                break;
+            case DC_SUR_MINAL:
+            case DC_SUR_CARRIER:
+            case DC_PEL_CARRIER:
+                DCCW = DC_ASYM_CARRIER;
+                break;
+            default:
+                if( isdigit( pmp->DCC[j] ))
+                {
+                    if( pmp->PHC[k] == PH_SORPTION ||
+                            pmp->PHC[k] == PH_POLYEL )
+                    {
+                        DCCW = DC_ASYM_SPECIES;
+                        break;
+                    }
+                }
+                DCCW = DC_SINGLE;
+                iRet++;  /* error in code  */
+            }
+            pmp->DCCW[j] = DCCW;
+        }   /* j */
+NEXT_PHASE:
+        j = i;
+    }  /* k */
+    ErrorIf( iRet>0, "Multi", "Error in DCC code.");
 }
 
 //--------------------- End of ipm_chemical.cpp ---------------------------

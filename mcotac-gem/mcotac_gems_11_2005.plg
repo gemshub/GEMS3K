@@ -6,74 +6,39 @@
 --------------------Configuration: mcotac_gems_11_2005 - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3B.tmp" with contents
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDF.tmp" with contents
 [
-/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
-"D:\standalone\mcotac-gem\ms_multi_file.cpp"
-"D:\standalone\mcotac-gem\ms_multi_format.cpp"
-"D:\standalone\mcotac-gem\ms_param.cpp"
-"D:\standalone\mcotac-gem\node.cpp"
-"D:\standalone\mcotac-gem\node_format.cpp"
-"D:\standalone\mcotac-gem\num_methods.cpp"
-"D:\standalone\mcotac-gem\s_fgl.cpp"
-"D:\standalone\mcotac-gem\setpar.cpp"
-"D:\standalone\mcotac-gem\setpar_.c"
-"D:\standalone\mcotac-gem\walk2_.c"
-"D:\standalone\mcotac-gem\wegdat1d_.c"
-]
-Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3B.tmp" 
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3C.tmp" with contents
-[
-/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
-"D:\standalone\mcotac-gem\mcotac1d.f"
-]
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3D.tmp" with contents
-[
-/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+/nologo /MLd /W3 /GX /Zi /O2 /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /c 
+"D:\standalone\mcotac-gem\f_gem_node.cpp"
 "D:\standalone\mcotac-gem\ipm_chemical.cpp"
 "D:\standalone\mcotac-gem\ipm_chemical2.cpp"
 "D:\standalone\mcotac-gem\ipm_chemical3.cpp"
 "D:\standalone\mcotac-gem\ipm_main.cpp"
 "D:\standalone\mcotac-gem\ipm_simplex.cpp"
-"D:\standalone\mcotac-gem\mainfromf.cpp"
+"D:\standalone\mcotac-gem\ms_multi_file.cpp"
+"D:\standalone\mcotac-gem\ms_multi_format.cpp"
+"D:\standalone\mcotac-gem\ms_param.cpp"
+"D:\standalone\mcotac-gem\node.cpp"
+"D:\standalone\mcotac-gem\node_format.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3D.tmp" 
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3E.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDF.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPE0.tmp" with contents
 [
-/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
-"D:\standalone\mcotac-gem\inparf.f"
-"D:\standalone\mcotac-gem\inistat2.f"
-]
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3F.tmp" with contents
-[
-/nologo /MLd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
-"D:\standalone\mcotac-gem\gdatastream.cpp"
-"D:\standalone\mcotac-gem\gstring.cpp"
-"D:\standalone\mcotac-gem\hydro1d_.c"
-]
-Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP3F.tmp" 
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP40.tmp" with contents
-[
-/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
-"D:\standalone\mcotac-gem\erech.f"
-"D:\standalone\mcotac-gem\datio.f"
-]
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSP41.tmp" with contents
-[
-kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Debug/mcotac_gems_11_2005.pdb" /debug /machine:I386 /nodefaultlib:"libcd libcpd libc" /force /out:"Debug/mcotac_gems_11_2005.exe" /pdbtype:sept 
+/nologo /subsystem:console /incremental:no /pdb:"Debug/mcotac_gems_11_2005.pdb" /debug /machine:I386 /nodefaultlib:"libc" /force /out:"Debug/mcotac_gems_11_2005.exe" /pdbtype:sept 
 ".\Debug\datio.obj"
 ".\Debug\erech.obj"
+".\Debug\f_gem_node.obj"
 ".\Debug\gdatastream.obj"
 ".\Debug\gstring.obj"
 ".\Debug\hydro1d_.obj"
 ".\Debug\inistat2.obj"
 ".\Debug\inparf.obj"
+".\Debug\io_arrays.obj"
 ".\Debug\ipm_chemical.obj"
 ".\Debug\ipm_chemical2.obj"
 ".\Debug\ipm_chemical3.obj"
 ".\Debug\ipm_main.obj"
 ".\Debug\ipm_simplex.obj"
-".\Debug\mainfromf.obj"
 ".\Debug\mcotac1d.obj"
 ".\Debug\ms_multi_file.obj"
 ".\Debug\ms_multi_format.obj"
@@ -87,72 +52,26 @@ kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32
 ".\Debug\walk2_.obj"
 ".\Debug\wegdat1d_.obj"
 ]
-Creating command line "link.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSP41.tmp"
+Creating command line "link.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPE0.tmp"
 <h3>Output Window</h3>
 Compiling...
-ms_multi_file.cpp
-ms_multi_format.cpp
-d:\standalone\mcotac-gem\ms_multi_format.cpp(619) : warning C4305: '=' : truncation from 'const double' to 'float'
-d:\standalone\mcotac-gem\ms_multi_format.cpp(620) : warning C4305: '=' : truncation from 'const double' to 'float'
-ms_param.cpp
-node.cpp
-d:\standalone\mcotac-gem\node.cpp(154) : warning C4101: 'err' : unreferenced local variable
-node_format.cpp
-num_methods.cpp
-s_fgl.cpp
-setpar.cpp
-setpar_.c
-walk2_.c
-d:\standalone\mcotac-gem\walk2_.c(135) : warning C4087: 'rand' : declared with 'void' parameter list
-d:\standalone\mcotac-gem\walk2_.c(136) : warning C4087: 'rand' : declared with 'void' parameter list
-wegdat1d_.c
-Compiling Fortran...
-D:\standalone\mcotac-gem\mcotac1d.f
-Compiling...
+f_gem_node.cpp
 ipm_chemical.cpp
 ipm_chemical2.cpp
 ipm_chemical3.cpp
 ipm_main.cpp
 ipm_simplex.cpp
-mainfromf.cpp
-Compiling Fortran...
-D:\standalone\mcotac-gem\inparf.f
-D:\standalone\mcotac-gem\inistat2.f
-Compiling...
-gdatastream.cpp
-gstring.cpp
-hydro1d_.c
-Compiling Fortran...
-D:\standalone\mcotac-gem\erech.f
-D:\standalone\mcotac-gem\datio.f
+ms_multi_file.cpp
+ms_multi_format.cpp
+ms_param.cpp
+node.cpp
+node_format.cpp
 Linking...
-LINK : warning LNK4075: ignoring /EDITANDCONTINUE due to /INCREMENTAL:NO specification
-LIBCD.lib(dbgheap.obj) : warning LNK4006: _malloc already defined in libc.lib(malloc.obj); second definition ignored
-LIBCD.lib(dbgheap.obj) : warning LNK4006: __nh_malloc already defined in libc.lib(malloc.obj); second definition ignored
-LIBCD.lib(dbgheap.obj) : warning LNK4006: __heap_alloc already defined in libc.lib(malloc.obj); second definition ignored
-LIBCD.lib(dbgheap.obj) : warning LNK4006: _calloc already defined in libc.lib(calloc.obj); second definition ignored
-LIBCD.lib(dbgheap.obj) : warning LNK4006: _realloc already defined in libc.lib(realloc.obj); second definition ignored
-LIBCD.lib(dbgheap.obj) : warning LNK4006: _free already defined in libc.lib(free.obj); second definition ignored
-LIBCD.lib(dbgheap.obj) : warning LNK4006: __msize already defined in libc.lib(msize.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: __get_sbh_threshold already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: __set_sbh_threshold already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_heap_init already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_find_block already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_free_block already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_alloc_block already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_alloc_new_region already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_alloc_new_group already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_resize_block already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_heapmin already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_heap_check already defined in libc.lib(sbheap.obj); second definition ignored
-LIBCD.lib(sbheap.obj) : warning LNK4006: ___sbh_threshold already defined in libc.lib(sbheap.obj); second definition ignored
-LINK : warning LNK4098: defaultlib "LIBCD" conflicts with use of other libs; use /NODEFAULTLIB:library
-Debug/mcotac_gems_11_2005.exe : warning LNK4088: image being generated due to /FORCE option; image may not run
 
 
 
 <h3>Results</h3>
-mcotac_gems_11_2005.exe - 0 error(s), 27 warning(s)
+mcotac_gems_11_2005.exe - 0 error(s), 0 warning(s)
 </pre>
 </body>
 </html>

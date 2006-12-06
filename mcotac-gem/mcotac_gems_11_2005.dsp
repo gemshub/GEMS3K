@@ -68,9 +68,9 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE F90 /check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt
-# ADD F90 /check:bounds /compile_only /debug:full /include:"Debug/" /nologo /traceback /warn:argument_checking /warn:nofileopt
+# ADD F90 /check:bounds /compile_only /debug:full /include:"Debug/" /nologo /optimize:4 /traceback /warn:argument_checking /warn:nofileopt
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /GX /Zi /O2 /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /YX /FD /c
 # ADD BASE RSC /l 0x807 /d "_DEBUG"
 # ADD RSC /l 0x807 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -78,7 +78,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /debug /machine:I386 /nodefaultlib:"libcd libcpd libc" /force /pdbtype:sept
+# ADD LINK32 /nologo /subsystem:console /incremental:no /debug /machine:I386 /nodefaultlib:"libc" /force /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
@@ -102,6 +103,10 @@ SOURCE=.\erech.f
 DEP_F90_ERECH=\
 	".\gwheader.inc"\
 	
+# End Source File
+# Begin Source File
+
+SOURCE=.\f_gem_node.cpp
 # End Source File
 # Begin Source File
 
@@ -131,6 +136,10 @@ DEP_F90_INPAR=\
 # End Source File
 # Begin Source File
 
+SOURCE=.\io_arrays.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ipm_chemical.cpp
 # End Source File
 # Begin Source File
@@ -148,10 +157,6 @@ SOURCE=.\ipm_main.cpp
 # Begin Source File
 
 SOURCE=.\ipm_simplex.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\mainfromf.cpp
 # End Source File
 # Begin Source File
 
@@ -226,6 +231,10 @@ SOURCE=.\datach.inc
 # End Source File
 # Begin Source File
 
+SOURCE=.\f_gem_node.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\gdatastream.h
 # End Source File
 # Begin Source File
@@ -235,6 +244,10 @@ SOURCE=.\gstring.h
 # Begin Source File
 
 SOURCE=.\gwheader.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\io_arrays.h
 # End Source File
 # Begin Source File
 
@@ -297,6 +310,10 @@ SOURCE=.\verror.h
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 # End Group
+# Begin Source File
+
+SOURCE=.\f_gem_node.inc
+# End Source File
 # Begin Source File
 
 SOURCE=.\gwheader.inc

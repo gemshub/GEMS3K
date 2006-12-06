@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 783 2006-07-27 11:18:26Z gems $
+// $Id: ms_param.cpp 809 2006-12-05 15:15:41Z gems $
 //
 // Copyright  (C) 1992-2000 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -46,23 +46,23 @@ enum volume_code {  /* Codes of volume parameter ??? */
 };
 
 SPP_SETTING pa_ = {
-    "GEM-Selektor v2-PSI: Controls and defaults for numeric modules",
-    {
-        1,  /* PC */  3,     /* PD */   3,   /* PRD */
-        1,  /* PSM  */ 144,  /* DP */   15,   /* DW */
-        0, /* was -2 DT */  0,     /* PLLG */   1,   /* PE */
-        500,   /* IIM */
-        1e-30, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
-        1e-5,  /* DK */  0.01,  /* DF */  1e-9,  /* DFM */
-        1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
-        1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
-        1e-12, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
-        0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-        0.01, /* GAS */  12.05,  /* DNS */  1e-8,  /* XwMin, */
-        1e-8,  /* ScMin, */  1e-20, /* DcMin, */   1e-10, /* PhMin, */
-        3e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
-        1e-4,  /* DKIN  */ 0,  /* tprn */
-    },
+  "GEMS-PSI v2.x: Controls and defaults for numeric modules",
+  {
+    1,  /* PC */  3,     /* PD */   3,   /* PRD */
+    1,  /* PSM  */ 144,  /* DP */   15,   /* DW */
+    -3, /* DT */  0,     /* PLLG */   1,   /* PE */
+    500,   /* IIM */
+    1e-30, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
+    1e-4,  /* DK */  0.01,  /* DF */  -0.1,  /* DFM */
+    1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
+    1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
+    1e-12, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
+    0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+    0.01, /* GAS */  12.05,  /* DNS */  1e-8,  /* XwMin, */
+    1e-8,  /* ScMin, */  1e-20, /* DcMin, */   1e-10, /* PhMin, */
+    3e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
+    1e-4,  /* DKIN  */ 0,  /* tprn */
+  },
 }; /* SPP_SETTING */
 
 
@@ -116,7 +116,12 @@ void TProfil::readMulti( GemDataStream& ff )
 void TProfil::readMulti( const char* path )
 {
       multi->from_text_file_gemipm( path);
+      // test 29/11/2006
+      multi->to_text_file_gemipm( "test_multi.out");
+
 }
+
+static bool load = false;
 
 // Load Thermodynamic Data from MTPARM to MULTI using LagranInterp
 void TMulti::CompG0Load()
@@ -154,7 +159,7 @@ if( dCH->nTp <1 && dCH->nPp <1 )
 //  f_log << "TC = " <<  TC << "  P =  " << P << endl;
 //Test outpur ***********************************
 
- if( fabs( pmp->TC - TC ) < 1.e-10 &&
+ if( load && fabs( pmp->TC - TC ) < 1.e-10 &&
             fabs( pmp->P - P ) < 1.e-10 )
    return;    //T, P not changed
 
@@ -221,6 +226,7 @@ if( dCH->nTp <1 && dCH->nPp <1 )
 //  f_log << j  << " Vv = " <<  Vv  << "  VO =  " << pmp->Vol[j] << endl;
 //Test outpur ***********************************
  }
+ load = true;
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
@@ -248,7 +254,17 @@ void TMulti::MultiCalcInit( const char *key )
     pmp->YMET = 0;
     pmp->PCI = 0.0;
 
-//    if( pmp->pESU  && pmp->pNP )     // problematic statement !!!!!!!!!
+/* calc mass of system */
+pmp->MBX = 0.0;
+for(int i=0; i<pmp->N; i++ )
+{
+    pmp->MBX += pmp->B[i] * (double)pmp->Awt[i];
+}
+pmp->MBX /= 1000.;
+
+
+
+    if( /*pmp->pESU  &&*/ pmp->pNP )     // problematic statement !!!!!!!!!
     {
 //      unpackData(); // loading data from EqstatUnpack( key );
         pmp->IC = 0.;
@@ -256,13 +272,14 @@ void TMulti::MultiCalcInit( const char *key )
             pmp->X[j] = pmp->Y[j];
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
     }
-//    else
-//        for( j=0; j<pmp->L; j++ )
-//            pmp->Y[j] = 0.0;
+    else
+        for( j=0; j<pmp->L; j++ )
+           pmp->X[j] =  pmp->Y[j] = 0.0;
 
     CompG0Load();
     for( j=0; j< pmp->L; j++ )
-        pmp->G[j] = pmp->G0[j];
+//        pmp->G[j] = pmp->G0[j];   changed 5.12.2006 KD
+        pmp->G[j] = pmp->G0[j] + pmp->GEX[j];
     // test phases - solutions and load models
     if( pmp->FIs )
     {

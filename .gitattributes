@@ -40,6 +40,9 @@ mcotac-gem/debug/TEST.INI -text
 mcotac-gem/debug/initial.out -text
 mcotac-gem/doc/Readme.1st -text
 mcotac-gem/erech.f -text
+mcotac-gem/f_gem_node.cpp -text
+mcotac-gem/f_gem_node.h -text
+mcotac-gem/f_gem_node.inc -text
 mcotac-gem/fort.10 -text
 mcotac-gem/fort.11 -text
 mcotac-gem/fort.12 -text
@@ -59,6 +62,8 @@ mcotac-gem/inistat2.f -text
 mcotac-gem/initial.out -text
 mcotac-gem/inparf.f -text
 mcotac-gem/input_1.dat -text
+mcotac-gem/io_arrays.cpp -text
+mcotac-gem/io_arrays.h -text
 mcotac-gem/ipm_chemical.cpp -text
 mcotac-gem/ipm_chemical2.cpp -text
 mcotac-gem/ipm_chemical3.cpp -text

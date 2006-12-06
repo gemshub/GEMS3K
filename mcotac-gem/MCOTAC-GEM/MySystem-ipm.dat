@@ -8,6 +8,29 @@
 # ID key of the initial chemical system definition
 "caldpl    G  MySystem    0008 0       1       25      000 "
 
+# Flag for using electroneutrality condition in GEM IPM calculations 
+<pa_PE>            1
+
+# Flag for the volume balance constraint (on Vol IC)
+<PV>               0
+
+# Total number of DCs in liquid hydrocarbon phases
+<PSOL>             0
+
+# Flag for using (+) or ignoring (-) specific surface areas of phases 
+<PAalp>          '+'
+
+# Flag for using (+) or ignoring (-) specific surface free energies of phase interfaces 
+<PSigm>          '+'
+
+## (2) Important dimensionalities that affect memory allocation
+# Total number of dependent components in sorption phases included in this system
+<Lads>             0
+# Number of sorption phases included in this system
+<FIa>              0
+# Allowed number of surface types per adsorption phase (default: 6 if FIa > 0)
+<FIat>             0
+<END_DIM>
 ## (1) Controls of the numerical behavior of the GEM IPM algorithm
 # Minimum amount of independent component in bulk composition (except charge Zz), moles
 <pa_DB>        1e-17
@@ -98,28 +121,7 @@
 # Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
 <pa_DKIN>     0.0001
 
-# Flag for using electroneutrality condition in GEM IPM calculations 
-<pa_PE>            1
 
-# Flag for the volume balance constraint (on Vol IC)
-<PV>               0
-
-# Total number of DCs in liquid hydrocarbon phases
-<PSOL>             0
-
-# Flag for using (+) or ignoring (-) specific surface areas of phases 
-<PAalp>          '+'
-
-# Flag for using (+) or ignoring (-) specific surface free energies of phase interfaces 
-<PSigm>          '+'
-
-## (2) Important dimensionalities that affect memory allocation
-# Total number of dependent components in sorption phases included in this system
-<Lads>             0
-# Number of sorption phases included in this system
-<FIa>              0
-# Allowed number of surface types per adsorption phase (default: 6 if FIa > 0)
-<FIat>             0
 
 ## (3) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # Codes for mixing models of multicomponent phases
