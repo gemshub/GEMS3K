@@ -164,6 +164,8 @@ node-gem/gem_node-sep.pro -text
 node-gem/gem_node.pro -text
 node-gem/gstring.cpp -text
 node-gem/gstring.h -text
+node-gem/io_arrays.cpp -text
+node-gem/io_arrays.h -text
 node-gem/ipm_chemical.cpp -text
 node-gem/ipm_chemical2.cpp -text
 node-gem/ipm_chemical3.cpp -text
