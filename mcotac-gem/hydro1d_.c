@@ -11,12 +11,25 @@
 #include <string.h>
 #include "gwheader.h"
 
-double irmaske();
-double vrech();
-double bilanz();
-double gsv();
-double info();
-void wegdat1d_();
+double irmaske(int ir[NCNODEX+2], int nxmax,
+   double  tx[NCNODEX+2], double st[NCNODEX+2], double h0[NCNODEX+2]);
+double vrech(double hb[NCNODEX+2], double tx[NCNODEX+2],
+   double am[NCNODEX+2], double por[NCNODEX+2],
+   double dx[NCNODEX+2], int nxmax, double vx[NCNODEX+2]);
+double bilanz(char datei6[10], int nxmax,
+             double dx[NCNODEX+2], int  ir[NCNODEX+2],
+             double  hb[NCNODEX+2], double st[NCNODEX+2],
+             double am[NCNODEX+2], double por[NCNODEX+2],
+             double qw[NCNODEX+2], double vx[NCNODEX+2],
+             double qbil[NCNODEX+2]);
+double gsv(double hb[NCNODEX+2], double h0[NCNODEX+2],
+           double qw[NCNODEX+2], double dx[NCNODEX+2],
+           double tx[NCNODEX+2], double st[NCNODEX+2],
+           int nxmax, int iter, float de,float re);
+double info( int nxmax, int iter, double time,
+             double fehler, double texe, int ij);
+int wegdat1d_( int nxmax, char fname[10],
+    double hb[NCNODEX+2], char text[10])
 
 
 double hydro1d(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCNODEX+2],
@@ -24,16 +37,6 @@ double hydro1d(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCN
 			   ,double qw[NCNODEX+2],double qbil[NCNODEX+2],char text,double vx[NCNODEX+2]
 			   ,double dx[NCNODEX+2],int icyc,double texe,double time,
 			    char fname)
-
-/*double  hb[NCNODEX+2],h0[NCNODEX+2],am[NCNODEX+2], 
-	qw[NCNODEX+2],st[NCNODEX+2],qbil[NCNODEX+2],
-	tx[NCNODEX+2],vx[NCNODEX+2],
-	por[NCNODEX+2],
-	dx[NCNODEX+2], *time, *texe;
-
-int	ir[NCNODEX+2], (*nxmax), *icyc;
-char text[10]fname[10];
-*/
   {
 	double anfkt=1.0, fehler=1. , re=1.6 ,er=1.e-6;
 
@@ -71,11 +74,11 @@ char text[10]fname[10];
 		vx[i]   = 0;
 		qbil[i] = 0;
 	}
- 
-	dx[(nxmax) + 1] = dx[nxmax];
- 
 
-	wegdat1d_(nxmax ,"tx.dat" , tx,  "Hb");      
+	dx[(nxmax) + 1] = dx[nxmax];
+
+
+	wegdat1d_(nxmax ,"tx.dat" , tx,  "Hb");
  	/* Berechnung der Transmissivitaeten zwischen den Knoten */
 /*nov2002	if( *icyc == 0) {
 	for(i=1; i<=(*nxmax); i++)
@@ -93,11 +96,11 @@ char text[10]fname[10];
 		 tx[j][i] = 2 * tx[j][i] * dx[i] / (dy[j] + dy[j + 1]);
 		 ty[j][i] = 2 * ty[j][i] * dy[j] / (dx[i] + dx[i + 1]);
 
-		
+
         }
 	}
 nov 2002*/
-	wegdat1d_(nxmax,"tx.dat.dat" , tx,  "Hb");      
+	wegdat1d_(nxmax,"tx.dat.dat" , tx,  "Hb");
 
 	/*  Start der Simulation  */
 
@@ -109,40 +112,40 @@ nov 2002*/
 	       qw[i] =  qw[i];   /*qr[i];*/
 	}
 	iter = 1;    /*  iterationsschleife */
-	wegdat1d_(nxmax,"porb.dat" , por,  "Hb"); 
+	wegdat1d_(nxmax,"porb.dat" , por,  "Hb");
 	if (icyc == 0) {
-	     wegdat1d_(nxmax,"stbe.dat" , st,  "Hb"); 
-	     wegdat1d_(nxmax,"ambe.dat" , am,  "Hb"); 
-	     wegdat1d_(nxmax,"Hbe0.dat" , hb,  "Hb"); 
+	     wegdat1d_(nxmax,"stbe.dat" , st,  "Hb");
+	     wegdat1d_(nxmax,"ambe.dat" , am,  "Hb");
+	     wegdat1d_(nxmax,"Hbe0.dat" , hb,  "Hb");
 	}
 	do  {
 
 	  fehler = gsv(hb,h0,qw,dx,tx,st,nxmax,iter,de,re);
 
-	  info(nxmax,iter,time,fehler,texe,ij); 
+	  info(nxmax,iter,time,fehler,texe,ij);
 
 	  for(i=1; i<=(nxmax); i++)
  	      h0 [i] = hb [i];
- 
+
 	  }  while( fehler>=er  && iter++<itermax);
-	
-	wegdat1d_(nxmax,"Hber.dat" , hb,  "Hb"); 
+
+	wegdat1d_(nxmax,"Hber.dat" , hb,  "Hb");
 
 	vrech(hb,tx, am,por,dx,nxmax,vx);
 
 
-	bilanz(datei6,nxmax,dx,ir,hb,st,am,por,qw,vx,qbil); 
+	bilanz(datei6,nxmax,dx,ir,hb,st,am,por,qw,vx,qbil);
 
  	wegdat1d_(nxmax ,"qbil.dat",qbil,"Qbil" ) ;
 	wegdat1d_(nxmax ,"vxx.dat" ,  vx,  "Vx" ) ;
- 
-	wegdat1d_(nxmax ,"qwbe.dat" , qw,  "Hb"); 
-	wegdat1d_(nxmax ,"qbib.dat" , qbil,  "Hb"); 
+
+	wegdat1d_(nxmax ,"qwbe.dat" , qw,  "Hb");
+	wegdat1d_(nxmax ,"qbib.dat" , qbil,  "Hb");
 /*printf("nach bilanz \n");*/
 
-        
+
 	if (iter > itermax) {
-       	   wegdat1d_(nxmax,"H_err.dat" , hb,  "Hb"); 
+       	   wegdat1d_(nxmax,"H_err.dat" , hb,  "Hb");
            exit(1);
         }
 return (iter);
@@ -157,9 +160,9 @@ return (iter);
 *  Input:
 *
 *     ir[i][j] : ir-Maske
-*                Kennziffer 0: Knoten auáerhalb
+*                Kennziffer 0: Knoten auï¿½erhalb
 *                           1: Knoten innerhalb
-*                           2: Randknoten mit vorgegebenem Zufluá Qr
+*                           2: Randknoten mit vorgegebenem Zufluï¿½ Qr
 *                              (Qr kann auch = 0 sein)
 *                           4: Knoten mit fester Standrohrspiegelhoehe
 *	                    5: Leakage-Knoten (-)
@@ -177,14 +180,8 @@ return (iter);
 *===========================================================================*/
 #include "gwheader.h"
 
-double irmaske(ir,nxmax,tx,st,h0)
-double  tx[NCNODEX+2]
-       , st[NCNODEX+2],h0[NCNODEX+2];
-
-int     ir[NCNODEX+2];
-
-int nxmax;
-
+double irmaske(int ir[NCNODEX+2], int nxmax,
+   double  tx[NCNODEX+2], double st[NCNODEX+2], double h0[NCNODEX+2])
 {
 
 	register i;
@@ -204,7 +201,7 @@ int nxmax;
 		case 2:  /*  Nachbarknoten muss Ir==0 haben ..*/
 /*jun2001*/
 /*
-                if( (ir[j+1][i]==0 && (ir[j+1][i-1] ==0 || ir[j+1][i+1] ==0)) || 
+                if( (ir[j+1][i]==0 && (ir[j+1][i-1] ==0 || ir[j+1][i+1] ==0)) ||
                     (ir[j-1][i]==0 && (ir[j-1][i-1] ==0 || ir[j-1][i+1] ==0 )) )
 			ty[j][i] = 0.;
                 if( (ir[j][i+1]==0 && (ir[j-1][i+1] ==0 || ir[j+1][i+1] ==0)) ||
@@ -217,7 +214,7 @@ int nxmax;
 			st[i] = 1.e+20;
 		break;
 		case 6:  /*  Entnahmeknoten  */
-			
+
 		break;
 	/*	default:
 		break; */
@@ -246,15 +243,18 @@ int nxmax;
 #include <math.h>
 #include "gwheader.h"
 
-double gsv(hb,h0,qw,dx,tx,st,nxmax,iter,de,re)
-
+double gsv(double hb[NCNODEX+2], double h0[NCNODEX+2],
+           double qw[NCNODEX+2], double dx[NCNODEX+2],
+           double tx[NCNODEX+2], double st[NCNODEX+2],
+           int nxmax, int iter, float de,float re)
+/*
 double hb[NCNODEX+2], h0[NCNODEX+2], qw[NCNODEX+2],
-       tx[NCNODEX+2], st[NCNODEX+2], 
+       tx[NCNODEX+2], st[NCNODEX+2],
        dx[NCNODEX+2];
 
 float  re, de;
 int (nxmax),  iter;
-
+*/
 {
 	register i;
 	double m1, m2, m3, m4, xne, za, hi;
@@ -264,15 +264,15 @@ int (nxmax),  iter;
 
 
 	for (i=1; i<=(nxmax+1); i++)
-		
+
 		if (st[i] / dx[i]  <= 1.)  {
 /*		printf("gsvgsv i hb tx %d %e %e \n",i,hb[i],tx[i]); */
-			xne  = tx[i] * m2 + tx[i- 1 ] * m4 
+			xne  = tx[i] * m2 + tx[i- 1 ] * m4
 				+ st[i] / 1. /* de */ ;
 			if (xne != 0.)  {
 				za  = hb[i- 1] * tx[i - 1] * m4
 					+ hb[i + 1] * tx[i] * m2
-					 
+
 					 + qw[i]
 					+ h0[i] * st[i] / 1. /* de */ ;
 				hi = za / xne;
@@ -298,22 +298,23 @@ int (nxmax),  iter;
 #include <stdio.h>
 #include <math.h>
 
-double info(nxmax,iter,time,fehler,texe,ij)
-
+double info( int nxmax, int iter, double time,
+             double fehler, double texe, int ij)
+/*
 double fehler, time, texe;
 int (nxmax),  iter,   ij;
-
-{ 
+*/
+{
 	int iswitch;
 	iswitch = ( (nxmax)>3000 ? 1 : 50);
 	if (fmod((double)iter,(double)iswitch) == 0.)  {
 		printf("anzahl iterationen    :  %d\n", iter);
 		printf("max fehler pro knoten :  %e\n", fehler);
-		
+
 		printf("zeit            :  %f\n",time);
 		printf("zeitintervall   :  %f\n\n", texe);
 /*		printf("zeitschritt nr. :  %d\n\n\n", ij);*/
-		
+
 	}
 	return(iter);
  }
@@ -340,25 +341,27 @@ int (nxmax),  iter,   ij;
 *==========================================================================*/
 #include "gwheader.h"
 
-double vrech(hb,tx,am,por,dx,nxmax,vx)
-
-double hb[NCNODEX+2], tx[NCNODEX+2], 
+double vrech(double hb[NCNODEX+2], double tx[NCNODEX+2],
+             double am[NCNODEX+2], double por[NCNODEX+2],
+             double dx[NCNODEX+2], int nxmax, double vx[NCNODEX+2])
+/*
+double hb[NCNODEX+2], tx[NCNODEX+2],
        am[NCNODEX+2], por[NCNODEX+2], vx[NCNODEX+2],
        dx[NCNODEX+2] ;
 
 int (nxmax);
-
+*/
 {
 	register i;
 /*	float ma;*/
 
 	/* gespannter aquifer: tx ist transmissivitaet */
- 			      
+
 	  for (i=1; i<=(nxmax-3); i++)  {
-	    
+
 	    vx[i] = tx[i]  * (hb[i] - hb[i + 1]) / dx[i] / por[i];
 	  }
-	
+
            vx[0] = vx[1] *por[1]/ por[0];
            vx[nxmax-2] = vx[nxmax-3] *por[nxmax-3]/ por[nxmax-2];
            vx[nxmax-1] = vx[nxmax-2] *por[nxmax-2]/ por[nxmax-1];
@@ -393,15 +396,20 @@ int (nxmax);
 #include <stdio.h>
 #include "gwheader.h"
 
-double bilanz(datei6,nxmax,dx,ir,hb,st,am,por,qw,vx,qbil)
-
+double bilanz(char datei6[10], int nxmax,
+              double dx[NCNODEX+2], int  ir[NCNODEX+2],
+              double  hb[NCNODEX+2], double st[NCNODEX+2],
+              double am[NCNODEX+2], double por[NCNODEX+2],
+              double qw[NCNODEX+2], double vx[NCNODEX+2],
+              double qbil[NCNODEX+2])
+/*
 char datei6[10];
-double hb[NCNODEX+2], st[NCNODEX+2], am[NCNODEX+2], 
-       vx[NCNODEX+2], 
-       por[NCNODEX+2], qbil[NCNODEX+2], qw[NCNODEX+2], 
+double hb[NCNODEX+2], st[NCNODEX+2], am[NCNODEX+2],
+       vx[NCNODEX+2],
+       por[NCNODEX+2], qbil[NCNODEX+2], qw[NCNODEX+2],
        dx[NCNODEX+2];
 int (nxmax),   ir[NCNODEX+2];
-
+*/
 {
 	FILE *output;
 	double ma, q1, q2,  qg, qknoten,  qzu, qab;
@@ -409,7 +417,7 @@ int (nxmax),   ir[NCNODEX+2];
 
 	double qfehlzu = 0;                 /* fehler */
 	double qfehlab = 0;
-	double qfixzu = 0;                 /* fest vorgegebener Randzufluá */
+	double qfixzu = 0;                 /* fest vorgegebener Randzufluï¿½ */
 	double qfixab = 0;
 	double qneubzu = 0;                /* q-grundwasserneubildung */
 	double qfestzu = 0;                /* q-festpotential gesamtgebiet */
@@ -420,9 +428,9 @@ int (nxmax),   ir[NCNODEX+2];
 	for (i=1; i<=(nxmax); i++)
             {
 	    ma = 1;     /*area vor */
- 
+
 	    q1 = -vx[i] * por[i] * ma;
-	    
+
 	    q2 = vx[i - 1] * por[i - 1]  * ma;
 	    qknoten = -q1 - q2 ;
 	    qbil[i] = qknoten;
@@ -438,15 +446,15 @@ int (nxmax),   ir[NCNODEX+2];
 		break;
 		case 2:
 			if (qknoten<0)
-				qfixab += 0.+   qw[i];  /* qknoten - qneu[i]*wf +   qr[i];*/ 
+				qfixab += 0.+   qw[i];  /* qknoten - qneu[i]*wf +   qr[i];*/
 			else
-				qfixzu += 0.+   qw[i]; /* qknoten - qneu[i]*wf +   qr[i];*/ 
+				qfixzu += 0.+   qw[i]; /* qknoten - qneu[i]*wf +   qr[i];*/
 		break;
 		case 6:                /* qfixab and qfix zu including wells */
 			if (qknoten<0)
-				qfixab += 0.+   qw[i];  /* qknoten - qneu[i]*wf +   qr[i];*/ 
+				qfixab += 0.+   qw[i];  /* qknoten - qneu[i]*wf +   qr[i];*/
 			else
-				qfixzu += 0.+   qw[i]; /* qknoten - qneu[i]*wf +   qr[i];*/ 
+				qfixzu += 0.+   qw[i]; /* qknoten - qneu[i]*wf +   qr[i];*/
 		break;
 		default:
 		break;

@@ -7,12 +7,12 @@
 *
 *    nxmax        : Anzahl der Knoten in X-Richtung
 *    icyc      : Zeitzyklus-Nummer
-*    along, aq    : longitudinale bzw. transversale Dispersivit„t
+*    along, aq    : longitudinale bzw. transversale Dispersivitï¿½t
 *    de        : Zeitschrittweite =delt
 *    vx[i]  : Geschwindigkeitskomponente in X-Richtung
-*    dx[i]     : Knotenabst„nde in X-Richtung
+*    dx[i]     : Knotenabstï¿½nde in X-Richtung
 *
-*    ir[i][j]: ir-Maske - Transportmodell, enth„lt Randbedingungen
+*    ir[i][j]: ir-Maske - Transportmodell, enthï¿½lt Randbedingungen
 *
 * Output:
 *
@@ -29,7 +29,7 @@
 
 #define SQRT12 3.464101615
 #define randinv 1.0/RAND_MAX
-double gasdev();
+double gasdev( int *idum);
 
  void walk2(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
 		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
@@ -38,7 +38,7 @@ double gasdev();
 		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
 		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2)
 {/*
-         
+
 double partx[NCPMAX],partxo[NCPMAX],dx[NCNODEX+2],vx[NCNODEX+2],*xmaxr,*xminr, *texe;
 double  partic[NCBASIS+NCCOMPL][NCPMAX];
 double x[NCNODEX],bn[NCNODEX][NCBASIS],cn[NCNODEX][NCCOMPL] ,bo[NCNODEX][NCBASIS],co[NCNODEX][NCCOMPL] ;
@@ -84,9 +84,9 @@ if(vabs == 0.)  vabs=1.e-30; /* keine division durch 0 */
            else {                                                     /* wenigstens eine Dispersivitaet > 0 */
 
               Z1=(double) rand()*randinv -0.5 ;
-              slong = 2.*Z1* sqrt(6.* (along*vpx  + dm[iknx]) * texe);   
+              slong = 2.*Z1* sqrt(6.* (along*vpx  + dm[iknx]) * texe);
 	   /*   slong= (double ) gasdev(idum) * sqrt(2. *( along * vpx + dm[iknx]) * texe); longitu. Weg x' */
-	   
+
            }
 
            partx[ip] +=  vpx *  texe +  slong;  /* neue position der teilchen = konv. Anteil + disp. Anteil x */
@@ -97,19 +97,19 @@ if(vabs == 0.)  vabs=1.e-30; /* keine division durch 0 */
              for (ipa=0; ipa< m1; ipa++) {
                 partic[ipa][ip]=bn[0][ipa]/(double) ibpstart ; /*division durch 50 partikelx in randbox */
              }
-             for (ipa=0; ipa< m2; ipa++) {        
+             for (ipa=0; ipa< m2; ipa++) {
                partic[ipa+ m1][ip]=cn[0][ipa]/(double) ibpstart;
-             } 
+             }
            }
            if(partx[ip] <= xxmin) {
                partxo[ip] =  partx[ip] ;
-               partx[ip] += xlaenge   ; 
+               partx[ip] += xlaenge   ;
                for (ipa=0; ipa< m1; ipa++) {
                   partic[ipa][ip]=bo[nxmax-1][ipa]/(double)  ibpstart; /* -1 durch -2 ersetzt, 090796 */
                }
-               for (ipa=0; ipa< m2; ipa++) {        
+               for (ipa=0; ipa< m2; ipa++) {
                   partic[ipa+ m1][ip]=co[nxmax-1][ipa]/(double) ibpstart; /*  -1 durch -2 ersetzt, 090796 */
-               } 
+               }
             }
         ++ip;
         }   while (ip<= npmax-1  );      /* ende teilchenloop */
@@ -121,13 +121,13 @@ if(vabs == 0.)  vabs=1.e-30; /* keine division durch 0 */
 #include <stdlib.h>
 #define randinv 1.0/RAND_MAX
 
-double gasdev(idum)
-int *idum;
+double gasdev( int *idum)
+/*int *idum;*/
 /* returns a normally distributed deviate with  zero mean and unit variance */
 
 {
         int iset=0;
-        double gset; 
+        double gset;
         double fac,r,v1,v2;
         gset=0.;
         if (iset ==0) {
