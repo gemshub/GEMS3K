@@ -5,7 +5,9 @@
       include 'gwheader.inc'
 c      include 'f_gem_node.inc'
 
-      !IFNDEF __unix
+
+#ifndef __unix
+ 
 
 c
 c    cement diffusion 2003....
@@ -132,7 +134,7 @@ c 	!DEC$ ATTRIBUTES REFERENCE :: itest
 	END SUBROUTINE walk2
 	END INTERFACE
 
-      !endif
+#endif
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c MAIN FORTRAN PROGRAM START IS HERE
 
