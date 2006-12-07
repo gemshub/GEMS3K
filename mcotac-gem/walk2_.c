@@ -31,12 +31,13 @@
 #define randinv 1.0/RAND_MAX
 double gasdev( int *idum);
 
- void walk2(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
-		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
-		   ,double partx[NCPMAX],double partxo[NCPMAX],double xmaxr,double xminr
+extern "C"
+ void walk2_(int& npmax,int& nxmax,int& ncyc,double& along,double& aquer,double dm[NCNODEX+2]
+		   ,double& texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
+		   ,double partx[NCPMAX],double partxo[NCPMAX],double& xmaxr,double& xminr
 		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
-		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
-		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2)
+		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int& ibpstart,double x[NCNODEX]
+		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int& m1,int& m2)
 {/*
 
 double partx[NCPMAX],partxo[NCPMAX],dx[NCNODEX+2],vx[NCNODEX+2],*xmaxr,*xminr, *texe;
@@ -51,14 +52,14 @@ int   *npmax,*nxmax,  partib[NCNODEX],*ibpstart, *ncyc, *m1, *m2 ;
 {
         double  slong,xlaenge, xxmin, xxmax;
         double dabs(),dpx, vpx,Z1,vabs;
-        register  ip,ipa;
+        int  ip,ipa;
 /*      float gasdef(idum);*/
         int idum, iknx;
 
         idum=1;
         ip = 0;
         ipa =0;
-/*      printf("walk %d %d %d %g %g %g %g %g %g\n",*ibpstart,*nxmax,*ncyc,*along,*dm,*texe,*xmaxr, *xminr);
+/*      printf("walk %d %d %d %g %g %g %g %g %g\n",ibpstart,nxmax,ncyc,along,*dm,texe,xmaxr, xminr);
       printf("walk %d %d %d %g %g %g %g %g %g\n",*ibpstart,*nymax,*ncyc,*along,*dm,*texe,*ymaxr, *yminr);
 
         for (i=0; i<=(*nxmax)-1; i++) {
@@ -132,8 +133,8 @@ double gasdev( int *idum)
         gset=0.;
         if (iset ==0) {
                 do {
-                        v1=2.0*rand(idum)*randinv - 1.0;
-                        v2=2.0*rand(idum)*randinv - 1.0;
+                        v1=2.0*rand(/*idum*/)*randinv - 1.0;
+                        v2=2.0*rand(/*idum*/)*randinv - 1.0;
                         r=v1*v1+v2*v2;
                 } while( r >= 1.0 || r ==0 );
                 fac = sqrt(-2.0*log(r)/r);

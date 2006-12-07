@@ -220,6 +220,7 @@ int  TNode::GEM_init( const char* ipmfiles_lst_name,
       gstring datachbr_file;
       f_getline( f_chbr, datachbr_file, ' ');
 
+
 //Testing flag "-t" or "-b" (by default "-b")   // use bynary or text files for Multi
       pos = datachbr_file.find( '-');
       if( pos != /*gstring::*/npos )

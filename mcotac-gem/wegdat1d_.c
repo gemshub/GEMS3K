@@ -69,7 +69,8 @@ char text[10], fname[10];
 #include "gwheader.h"
 #include <math.h>
 
-int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2],char*  text)
+extern "C"
+int holdat1d_(int& nxmax,char* fname,double hb[NCNODEX+2],char*  text)
 /*
 double hb[NCNODEX+2];
 int *nxmax;
@@ -92,7 +93,7 @@ char text[10], *fname[10];
               sum += fscanf(input," %d",&ihb[i] );
 /*        printf("1i= %d  %d %d \n",i,ihb[i],sum ); */
 	      hb[i] = faktor *  (double) ihb[i];
-/*        printf("2i= %d  %g %d \n",i,hb[i],sum );  */
+//        printf("2i= %d  %g %d \n",i,hb[i],sum );  
 	   }
 	fclose(input);
 /*	if (sum != (NXMAX+2)*(NYMAX+2)) ierr = 3; */

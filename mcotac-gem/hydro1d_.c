@@ -29,10 +29,11 @@ double gsv(double hb[NCNODEX+2], double h0[NCNODEX+2],
 double info( int nxmax, int iter, double time,
              double fehler, double texe, int ij);
 int wegdat1d_( int nxmax, char fname[10],
-    double hb[NCNODEX+2], char text[10])
+    double hb[NCNODEX+2], char text[10]);
 
 
-double hydro1d(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCNODEX+2],
+extern "C"
+double hydro1d_(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCNODEX+2],
 			   double am[NCNODEX+2],double st[NCNODEX+2],double por[NCNODEX+2],int	ir[NCNODEX+2]
 			   ,double qw[NCNODEX+2],double qbil[NCNODEX+2],char text,double vx[NCNODEX+2]
 			   ,double dx[NCNODEX+2],int icyc,double texe,double time,
@@ -46,7 +47,7 @@ double hydro1d(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCN
 	int ierr = 0, iweg = 1,itermax=5000000;
 	int iinst=0, ifrei=0,  ntim, ij,
 		iter, itest=0, isolve=0 ,  itrans, ihb;
-	register i;
+	int i;
 	char   datei6[10];
 
 /*        FILE *output;*/
@@ -184,7 +185,7 @@ double irmaske(int ir[NCNODEX+2], int nxmax,
    double  tx[NCNODEX+2], double st[NCNODEX+2], double h0[NCNODEX+2])
 {
 
-	register i;
+	int i;
 
 
           for(i=1; i<= (nxmax); i++)
@@ -256,7 +257,7 @@ float  re, de;
 int (nxmax),  iter;
 */
 {
-	register i;
+	int i;
 	double m1, m2, m3, m4, xne, za, hi;
 	double fehler = 0.;
 
@@ -352,7 +353,7 @@ double hb[NCNODEX+2], tx[NCNODEX+2],
 int (nxmax);
 */
 {
-	register i;
+	int i;
 /*	float ma;*/
 
 	/* gespannter aquifer: tx ist transmissivitaet */
@@ -413,7 +414,7 @@ int (nxmax),   ir[NCNODEX+2];
 {
 	FILE *output;
 	double ma, q1, q2,  qg, qknoten,  qzu, qab;
-	register i;
+	int i;
 
 	double qfehlzu = 0;                 /* fehler */
 	double qfehlab = 0;

@@ -4,20 +4,23 @@
 
 
 extern "C"
-int  __stdcall  F_GEM_INIT( char* string_, unsigned int length_ )
+int  /*_stdcall*/  f_gem_init_( char* string_, unsigned int length_ )
 {
 
-   string_[length_] = '\0';
+   // string_[length_] = '\0';
   
-   // gstring string_cto_i1c( string_, 0, length_);
+   gstring string_cto_i1c( string_, 0, length_);
+   string_cto_i1c.strip();
 	
 	// Creating TNode structure accessible trough node pointer
     TNode* node = new TNode();
 
    // Here we read the files needed as input for initializing GEMIPM2K
    // The easiest way to prepare them is to use GEMS-PSI code (GEM2MT module)
-   if( node->GEM_init( string_ /*string_cto_i1c.c_str()*/ ) )
+   if( node->GEM_init( /*string_ */ string_cto_i1c.c_str() ) )
        return 1;  // error occured during reading the files
+
+   cout << "Init  " << string_ << endl;
 
    return 0;
 }
@@ -25,7 +28,7 @@ int  __stdcall  F_GEM_INIT( char* string_, unsigned int length_ )
 
 // Parameter list may be extended in future with other DCH elements
 extern "C"
-int  __stdcall  F_GEM_GET_DCH( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+int  /*__stdcall*/  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
 {
 
    p_nICb = TNode::na->pCSD()->nIC;
@@ -40,8 +43,8 @@ int  __stdcall  F_GEM_GET_DCH( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A
 
 //-------------------------------------------------------------------------
 extern "C"
-int  __stdcall   F_GEM_READ_NODE( char* string_, unsigned int length_,
-   int& p_NodeHandle,    // Node identification handle
+int  /*__stdcall*/   f_gem_read_node_( char* string_,  
+    int& p_NodeHandle,    // Node identification handle
    int& p_NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
    int& p_NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
    int& p_NodeStatusFMT, // Node status code FMT; see typedef NODECODEFMT
@@ -97,7 +100,7 @@ int  __stdcall   F_GEM_READ_NODE( char* string_, unsigned int length_,
    double  *p_bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
    double  *p_xPA,  // amount of carrier in phases  [nPSb] ??       -      -      +     +
   // What else?
-   double  *p_dRes1
+   double  *p_dRes1, unsigned int length_
 )
 {
    short NodeHandle, NodeTypeHY,  NodeTypeMT, NodeStatusFMT, NodeStatusCH, IterDone;      
@@ -109,11 +112,12 @@ int  __stdcall   F_GEM_READ_NODE( char* string_, unsigned int length_,
    NodeStatusCH = p_NodeStatusCH;
    IterDone =p_IterDone;      
 
-	string_[length_] = '\0';
-	// gstring dbr_file_name( string_, 0, length_);
-    
+   //	string_[length_] = '\0';
+   gstring dbr_file_name( string_, 0, length_);
+   dbr_file_name.strip();
+       
  // Read DATABR structure from file
-    TNode::na->GEM_read_dbr( false, string_ /*dbr_file_name.c_str()*/ );
+    TNode::na->GEM_read_dbr( false, /*string_*/ dbr_file_name.c_str() );
 
  // re-calculating equilibrium by calling GEMIPM
  //	 short NodeStatusCH = TNode::na->GEM_run();
@@ -142,7 +146,7 @@ int  __stdcall   F_GEM_READ_NODE( char* string_, unsigned int length_,
 //-------------------------------------------------------------------------
 
 extern "C"
-int  __stdcall   F_GEM_CALC_NODE( 
+int  /*__stdcall*/   f_gem_calc_node_( 
    int& p_NodeHandle,    // Node identification handle
    int& p_NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
    int& p_NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE

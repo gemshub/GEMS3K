@@ -17,7 +17,8 @@
 #include <math.h>
 #include "gwheader.h"
 
-void setpar(int npmax,double xmin,double xmax,double partx[50000],int nbox)
+extern "C"
+void setpar_(int& npmax,double& xmin,double& xmax,double partx[50000],int& nbox)
 
 /*double *xmin, *xmax;                    
 double  partx[NCPMAX];
@@ -55,7 +56,8 @@ int  *npmax,*nbox;
 #include <stdio.h>
 #include "gwheader.h"
 
-void partid(long npmax,int nbox,double xmin,double xmax,int partib[51],
+extern "C"
+void partid_(long& npmax,int& nbox,double& xmin,double& xmax,int partib[51],
 			double dx[51+2],double partx[50000])
 /*
 double  partx[NCPMAX],dx[NCNODEX+2], *xmin, *xmax;
@@ -105,9 +107,10 @@ int *npmax,*nbox,partib[NCNODEX];
 #include <math.h>
 #include "gwheader.h"
 
-void concver(long npmax,int nbox,double dx[51+2],double bn[51][10],
+extern "C"
+void concver_(long& npmax,int& nbox,double dx[51+2],double bn[51][10],
 			 double cn[51][25],int partib[51],double partx[50000],
-			 double partic[10+25][50000],int ismooth,int m1,int m2)
+			 double partic[10+25][50000],int& ismooth,int& m1,int& m2)
 /*
 double  bn[NCNODEX][NCBASIS],cn[NCNODEX][NCCOMPL],partx[NCPMAX],
         partic[NCBASIS+NCCOMPL][NCPMAX],dx[NCNODEX+2];
@@ -161,11 +164,12 @@ int  *npmax,*nbox, partib[NCNODEX], *ismooth, *m1, *m2 ;
 #include <math.h>
 #include "gwheader.h"
 
-void concneu(int npmax,int nbox,int nxmax,double xminr,double xmaxr,double dx[51+2],
+extern "C"
+void concneu_(int& npmax,int& nbox,int& nxmax,double& xminr,double& xmaxr,double dx[51+2],
 			 double  bn[51][10],double cn[51][25],int partib[51],
 			 double partx[50000],double partic[10+25][50000],
 			 double bo[51][10], double co[51][25], 
-			 int ismooth, int m1,int m2)
+			 int& ismooth, int& m1,int& m2)
 
 
 {
