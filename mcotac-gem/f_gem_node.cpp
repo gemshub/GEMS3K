@@ -3,8 +3,11 @@
 #include "node.h"
 
 
-extern "C"
-int  /*_stdcall*/  f_gem_init_( char* string_, unsigned int length_ )
+#ifdef __unix
+   extern "C" int f_gem_init_( char* string_, unsigned int length_ )
+#else
+   extern "C" int __stdcall F_GEM_INIT( char* string_, unsigned int length_ )
+#endif  
 {
 
    // string_[length_] = '\0';
@@ -27,8 +30,11 @@ int  /*_stdcall*/  f_gem_init_( char* string_, unsigned int length_ )
 
 
 // Parameter list may be extended in future with other DCH elements
-extern "C"
-int  /*__stdcall*/  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+#ifdef __unix
+   extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+#else
+   extern "C" int  __stdcall  F_GEM_GET_DCH( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+#endif
 {
 
    p_nICb = TNode::na->pCSD()->nIC;
@@ -42,9 +48,13 @@ int  /*__stdcall*/  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float
 }
 
 //-------------------------------------------------------------------------
-extern "C"
-int  /*__stdcall*/   f_gem_read_node_( char* string_,  
-    int& p_NodeHandle,    // Node identification handle
+
+#ifdef __unix
+  extern "C" int   f_gem_read_node_( char* string_,  
+#else
+  extern "C" int __stdcall   F_GEM_READ_NODE( char* string_,  unsigned int length_,
+#endif	  
+   int& p_NodeHandle,    // Node identification handle
    int& p_NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
    int& p_NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
    int& p_NodeStatusFMT, // Node status code FMT; see typedef NODECODEFMT
@@ -100,7 +110,10 @@ int  /*__stdcall*/   f_gem_read_node_( char* string_,
    double  *p_bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
    double  *p_xPA,  // amount of carrier in phases  [nPSb] ??       -      -      +     +
   // What else?
-   double  *p_dRes1, unsigned int length_
+   double  *p_dRes1
+#ifdef __unix
+   , unsigned int length_
+#endif
 )
 {
    short NodeHandle, NodeTypeHY,  NodeTypeMT, NodeStatusFMT, NodeStatusCH, IterDone;      
@@ -145,8 +158,11 @@ int  /*__stdcall*/   f_gem_read_node_( char* string_,
 
 //-------------------------------------------------------------------------
 
-extern "C"
-int  /*__stdcall*/   f_gem_calc_node_( 
+#ifdef __unix
+   extern "C" int  f_gem_calc_node_( 
+#else
+   extern "C" int  __stdcall   F_GEM_CALC_NODE( 
+#endif
    int& p_NodeHandle,    // Node identification handle
    int& p_NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
    int& p_NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE

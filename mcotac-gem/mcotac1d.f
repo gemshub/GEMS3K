@@ -5,6 +5,134 @@
       include 'gwheader.inc'
 c      include 'f_gem_node.inc'
 
+      !IFNDEF __unix
+
+c
+c    cement diffusion 2003....
+
+
+      INTERFACE
+	subroutine inpar (itest,ncyc,nxmax,isteu,inma,
+     *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay,
+     *backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de)
+	!DEC$ ATTRIBUTES C :: inpar
+      include 'gwheader.inc' 
+	real*8 tmult [REFERENCE]
+	real*8 backg [REFERENCE]
+	real*8 rd [REFERENCE]
+	real*8 xlambda [REFERENCE]
+	real*8 aquer [REFERENCE]
+	real*8 along [REFERENCE]
+	real*8 vxx [REFERENCE]
+	real*8 dm0 [REFERENCE]
+	real*8 dtmax [REFERENCE]
+	real*8 dx(NNODEX+2)
+	real*8 de [REFERENCE]
+      integer itest [REFERENCE]
+	integer ncyc [REFERENCE]
+	integer ntim [REFERENCE]
+	integer nxmax [REFERENCE]
+	integer isteu [REFERENCE]
+	integer inma [REFERENCE]
+	integer ipfile [REFERENCE]
+	integer npkt [REFERENCE]
+	integer ismooth [REFERENCE]
+	integer i_sorb [REFERENCE]
+	integer j_sorb [REFERENCE]
+	integer j_decay [REFERENCE]
+      integer npin [REFERENCE]
+c 	!DEC$ ATTRIBUTES REFERENCE :: itest
+	END SUBROUTINE inpar
+	END INTERFACE
+
+      INTERFACE
+	subroutine holdat1d (nxmax,fnamec,hb,textc)
+	!DEC$ ATTRIBUTES C :: holdat1d
+      include 'gwheader.inc' 
+	real*8 hb(NNODEX+2)
+      integer nxmax 
+      character* (*) textc, fnamec
+
+ 	!DEC$ ATTRIBUTES REFERENCE :: textc, fnamec
+	END SUBROUTINE holdat1d
+	END INTERFACE
+
+      INTERFACE
+	subroutine setpar (npmax,xmin,xmax,partx,nbox)
+	!DEC$ ATTRIBUTES C :: setpar
+      include 'gwheader.inc' 
+	real*8 xmin,xmax,partx(NUPMAX)
+      integer npmax ,nbox
+ 	!DEC$ ATTRIBUTES REFERENCE :: partx
+	END SUBROUTINE setpar
+	END INTERFACE
+
+      INTERFACE
+	subroutine partid (npmax,nbox,xmin,xmax,partib,dx,partx)
+	!DEC$ ATTRIBUTES C :: partid
+      include 'gwheader.inc' 
+	real*8 xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
+      integer npmax ,nbox, partib(NNODEX)
+	END SUBROUTINE partid
+	END INTERFACE
+
+      INTERFACE
+	subroutine concver(npmax,nbox,dx,bn,cn,partib,partx,partic
+     *,ismooth,m1,m2)
+	!DEC$ ATTRIBUTES C :: concver
+      include 'gwheader.inc' 
+	real*8 xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
+	real*8 bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      real*8 partic(NCOMPL+NBASIS,NUPMAX)
+      integer npmax ,nbox, partib(NNODEX), ismooth, m1,m2
+	END SUBROUTINE concver
+	END INTERFACE
+
+      INTERFACE
+	subroutine concneu (npmax,nbox,nxmax,xminr,xmaxr,dx,bn,cn,partib,
+     *                    partx,partic,bo,co,ismooth,m1,m2)
+	!DEC$ ATTRIBUTES C :: concneu
+      include 'gwheader.inc' 
+	real*8 xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      real*8 partx(NUPMAX), dx(NNODEX+2),bo(NBASIS,NNODEX)
+      real*8 co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+	integer nxmax,npmax ,nbox, partib(NNODEX), ismooth, m1,m2
+	END SUBROUTINE concneu
+	END INTERFACE
+
+      INTERFACE
+	subroutine hydro1d(nxmax,h0,hb,tx,am,st,por,ir,qw,qbil,text,vx,dx
+     *                    ,icyc,texe,time,fname)
+
+	!DEC$ ATTRIBUTES C :: hydro1d
+      include 'gwheader.inc' 
+	real*8 h0(NNODEX),hb(NNODEX),tx(NNODEX),am(NNODEX)
+	real*8 st(NNODEX),por(NNODEX),qw(NNODEX),qbil(NNODEX)
+      real*8 dx(NNODEX+2), vx(NNODEX+2),texe,time
+	integer nxmax, icyc, ir(NNODEX)
+	character*10 text, fname 
+	END SUBROUTINE hydro1d
+	END INTERFACE
+
+      INTERFACE
+	subroutine walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
+     *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
+     *,m2)
+
+	!DEC$ ATTRIBUTES C :: walk2
+      include 'gwheader.inc' 
+	real*8 xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      real*8 dx(NNODEX+2),bo(NBASIS,NNODEX)
+      real*8 co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+	real*8 along, aquer, dm(nnodex+2),texe
+      real*8 vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
+	real*8 x(NNODEX)
+	integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
+	integer ibpstart
+	END SUBROUTINE walk2
+	END INTERFACE
+
+      !endif
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c MAIN FORTRAN PROGRAM START IS HERE
 

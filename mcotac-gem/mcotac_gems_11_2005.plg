@@ -6,23 +6,60 @@
 --------------------Configuration: mcotac_gems_11_2005 - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDF.tmp" with contents
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPD8.tmp" with contents
 [
 /nologo /MLd /W3 /GX /Zi /O2 /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /c 
-"D:\standalone\mcotac-gem\f_gem_node.cpp"
-"D:\standalone\mcotac-gem\ipm_chemical.cpp"
-"D:\standalone\mcotac-gem\ipm_chemical2.cpp"
-"D:\standalone\mcotac-gem\ipm_chemical3.cpp"
-"D:\standalone\mcotac-gem\ipm_main.cpp"
-"D:\standalone\mcotac-gem\ipm_simplex.cpp"
 "D:\standalone\mcotac-gem\ms_multi_file.cpp"
 "D:\standalone\mcotac-gem\ms_multi_format.cpp"
 "D:\standalone\mcotac-gem\ms_param.cpp"
 "D:\standalone\mcotac-gem\node.cpp"
 "D:\standalone\mcotac-gem\node_format.cpp"
+"D:\standalone\mcotac-gem\num_methods.cpp"
+"D:\standalone\mcotac-gem\s_fgl.cpp"
+"D:\standalone\mcotac-gem\setpar.cpp"
+"D:\standalone\mcotac-gem\hydro1d_.c"
+"D:\standalone\mcotac-gem\setpar_.c"
+"D:\standalone\mcotac-gem\walk2_.c"
+"D:\standalone\mcotac-gem\wegdat1d_.c"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDF.tmp" 
-Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPE0.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPD8.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPD9.tmp" with contents
+[
+/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /optimize:4 /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
+"D:\standalone\mcotac-gem\mcotac1d.f"
+]
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDA.tmp" with contents
+[
+/nologo /MLd /W3 /GX /Zi /O2 /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /c 
+"D:\standalone\mcotac-gem\io_arrays.cpp"
+"D:\standalone\mcotac-gem\ipm_chemical.cpp"
+"D:\standalone\mcotac-gem\ipm_chemical2.cpp"
+"D:\standalone\mcotac-gem\ipm_chemical3.cpp"
+"D:\standalone\mcotac-gem\ipm_main.cpp"
+"D:\standalone\mcotac-gem\ipm_simplex.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDA.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDB.tmp" with contents
+[
+/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /optimize:4 /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
+"D:\standalone\mcotac-gem\inparf.f"
+"D:\standalone\mcotac-gem\inistat2.f"
+]
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDC.tmp" with contents
+[
+/nologo /MLd /W3 /GX /Zi /O2 /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "IPMGEMPLUGIN" /Fp"Debug/mcotac_gems_11_2005.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /c 
+"D:\standalone\mcotac-gem\f_gem_node.cpp"
+"D:\standalone\mcotac-gem\gdatastream.cpp"
+"D:\standalone\mcotac-gem\gstring.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDC.tmp" 
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDD.tmp" with contents
+[
+/check:bounds /compile_only /debug:full /include:"Debug/" /nologo /optimize:4 /traceback /warn:argument_checking /warn:nofileopt /module:"Debug/" /object:"Debug/" /pdbfile:"Debug/DF60.PDB" 
+"D:\standalone\mcotac-gem\erech.f"
+"D:\standalone\mcotac-gem\datio.f"
+]
+Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDE.tmp" with contents
 [
 /nologo /subsystem:console /incremental:no /pdb:"Debug/mcotac_gems_11_2005.pdb" /debug /machine:I386 /nodefaultlib:"libc" /force /out:"Debug/mcotac_gems_11_2005.exe" /pdbtype:sept 
 ".\Debug\datio.obj"
@@ -30,7 +67,6 @@ Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPE0.tmp" with contents
 ".\Debug\f_gem_node.obj"
 ".\Debug\gdatastream.obj"
 ".\Debug\gstring.obj"
-".\Debug\hydro1d_.obj"
 ".\Debug\inistat2.obj"
 ".\Debug\inparf.obj"
 ".\Debug\io_arrays.obj"
@@ -48,30 +84,56 @@ Creating temporary file "C:\DOCUME~1\gems\LOCALS~1\Temp\RSPE0.tmp" with contents
 ".\Debug\num_methods.obj"
 ".\Debug\s_fgl.obj"
 ".\Debug\setpar.obj"
+".\Debug\hydro1d_.obj"
 ".\Debug\setpar_.obj"
 ".\Debug\walk2_.obj"
 ".\Debug\wegdat1d_.obj"
 ]
-Creating command line "link.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPE0.tmp"
+Creating command line "link.exe @C:\DOCUME~1\gems\LOCALS~1\Temp\RSPDE.tmp"
 <h3>Output Window</h3>
 Compiling...
-f_gem_node.cpp
-ipm_chemical.cpp
-ipm_chemical2.cpp
-ipm_chemical3.cpp
-ipm_main.cpp
-ipm_simplex.cpp
 ms_multi_file.cpp
 ms_multi_format.cpp
 ms_param.cpp
 node.cpp
 node_format.cpp
+num_methods.cpp
+s_fgl.cpp
+setpar.cpp
+hydro1d_.c
+D:\standalone\mcotac-gem\hydro1d_.c(130) : warning C4244: 'function' : conversion from 'double ' to 'float ', possible loss of data
+D:\standalone\mcotac-gem\hydro1d_.c(130) : warning C4244: 'function' : conversion from 'double ' to 'float ', possible loss of data
+setpar_.c
+walk2_.c
+wegdat1d_.c
+Compiling Fortran...
+D:\standalone\mcotac-gem\mcotac1d.f
+D:\standalone\mcotac-gem\mcotac1d.f(959) : Warning: Variable SSW is used before its value has been defined
+      if(ssw.eq.'y'.or.ssw.eq.'Y')then
+---------^
+Compiling...
+io_arrays.cpp
+ipm_chemical.cpp
+ipm_chemical2.cpp
+ipm_chemical3.cpp
+ipm_main.cpp
+ipm_simplex.cpp
+Compiling Fortran...
+D:\standalone\mcotac-gem\inparf.f
+D:\standalone\mcotac-gem\inistat2.f
+Compiling...
+f_gem_node.cpp
+gdatastream.cpp
+gstring.cpp
+Compiling Fortran...
+D:\standalone\mcotac-gem\erech.f
+D:\standalone\mcotac-gem\datio.f
 Linking...
 
 
 
 <h3>Results</h3>
-mcotac_gems_11_2005.exe - 0 error(s), 0 warning(s)
+mcotac_gems_11_2005.exe - 0 error(s), 3 warning(s)
 </pre>
 </body>
 </html>

@@ -17,13 +17,11 @@
 #include <math.h>
 #include "gwheader.h"
 
-extern "C"
-void setpar_(int& npmax,double& xmin,double& xmax,double partx[50000],int& nbox)
-
-/*double *xmin, *xmax;                    
-double  partx[NCPMAX];
-int  *npmax,*nbox;
-*/
+#ifdef __unix
+   extern "C" void setpar_(int& npmax,double& xmin,double& xmax,double partx[50000],int& nbox)
+#else
+   void setpar(int npmax,double xmin,double xmax,double partx[50000],int nbox)
+#endif
 {
         register i ;
         double xco/*, xx*/ ;
@@ -56,14 +54,13 @@ int  *npmax,*nbox;
 #include <stdio.h>
 #include "gwheader.h"
 
-extern "C"
-void partid_(long& npmax,int& nbox,double& xmin,double& xmax,int partib[51],
-			double dx[51+2],double partx[50000])
-/*
-double  partx[NCPMAX],dx[NCNODEX+2], *xmin, *xmax;
-int *npmax,*nbox,partib[NCNODEX];
-*/
-
+#ifdef __unix
+   extern "C" void partid_( long& npmax, int& nbox, double& xmin, double& xmax,
+	                        int partib[51], double dx[51+2], double partx[50000])
+#else
+   void partid( long npmax, int nbox, double xmin, double xmax,
+	                        int partib[51], double dx[51+2], double partx[50000])
+#endif
 {
         register i;
         int iknx;
@@ -107,16 +104,15 @@ int *npmax,*nbox,partib[NCNODEX];
 #include <math.h>
 #include "gwheader.h"
 
-extern "C"
-void concver_(long& npmax,int& nbox,double dx[51+2],double bn[51][10],
+#ifdef __unix
+  extern "C" void concver_(long& npmax,int& nbox,double dx[51+2],double bn[51][10],
 			 double cn[51][25],int partib[51],double partx[50000],
 			 double partic[10+25][50000],int& ismooth,int& m1,int& m2)
-/*
-double  bn[NCNODEX][NCBASIS],cn[NCNODEX][NCCOMPL],partx[NCPMAX],
-        partic[NCBASIS+NCCOMPL][NCPMAX],dx[NCNODEX+2];
-int  *npmax,*nbox, partib[NCNODEX], *ismooth, *m1, *m2 ;
-*/
-
+#else
+ void concver(long npmax,int nbox,double dx[51+2],double bn[51][10],
+			 double cn[51][25],int partib[51],double partx[50000],
+			 double partic[10+25][50000],int ismooth,int m1,int m2)
+#endif
 {
         double partiv[NCNODEX];
         register i,j,i2;
@@ -164,16 +160,23 @@ int  *npmax,*nbox, partib[NCNODEX], *ismooth, *m1, *m2 ;
 #include <math.h>
 #include "gwheader.h"
 
-extern "C"
-void concneu_(int& npmax,int& nbox,int& nxmax,double& xminr,double& xmaxr,double dx[51+2],
+#ifdef __unix
+  extern "C" void concneu_(int& npmax,int& nbox,int& nxmax,
+	                       double& xminr,double& xmaxr,double dx[51+2],
+			               double  bn[51][10],double cn[51][25],int partib[51],
+			               double partx[50000],double partic[10+25][50000],
+			               double bo[51][10], double co[51][25], 
+			               int& ismooth, int& m1,int& m2)
+#else
+  void concneu(int npmax,int nbox,int nxmax,
+             double xminr,double xmaxr,double dx[51+2],
 			 double  bn[51][10],double cn[51][25],int partib[51],
 			 double partx[50000],double partic[10+25][50000],
 			 double bo[51][10], double co[51][25], 
-			 int& ismooth, int& m1,int& m2)
-
-
-{
-        register i,j,n;
+			 int ismooth, int m1,int m2)
+#endif
+  {
+        int i,j,n;
         int iknx;
 
 

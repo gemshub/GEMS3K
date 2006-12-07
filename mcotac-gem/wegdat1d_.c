@@ -22,11 +22,6 @@
 
 int wegdat1d_( int nxmax, char fname[10],
      double hb[NCNODEX+2], char text[10])
-/*
-double hb[NCNODEX+2];
-int nxmax;
-char text[10], fname[10];
-*/
 {
 	int i;
 	int ierr=0;
@@ -69,13 +64,12 @@ char text[10], fname[10];
 #include "gwheader.h"
 #include <math.h>
 
-extern "C"
-int holdat1d_(int& nxmax,char* fname,double hb[NCNODEX+2],char*  text)
-/*
-double hb[NCNODEX+2];
-int *nxmax;
-char text[10], *fname[10];
-*/
+#ifdef __unix
+  extern "C"
+     int holdat1d_(int& nxmax,char* fname,double hb[NCNODEX+2],char*  text)
+#else
+     int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2],char*  text)
+#endif
 {
 	register i;
 	int ierr=0;
