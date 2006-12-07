@@ -101,12 +101,7 @@ mcotac-gem/p_ibxc.dat -text
 mcotac-gem/p_ibxd.dat -text
 mcotac-gem/p_ibxe.dat -text
 mcotac-gem/p_ibxf.dat -text
-mcotac-gem/platform/hydro1d_.c -text
-mcotac-gem/platform/inpar_.c -text
 mcotac-gem/platform/readme.1st -text
-mcotac-gem/platform/setpar_.c -text
-mcotac-gem/platform/walk2_.c -text
-mcotac-gem/platform/wegdat1d_.c -text
 mcotac-gem/por001.dat -text
 mcotac-gem/qn0001.dat -text
 mcotac-gem/qr0001.dat -text
