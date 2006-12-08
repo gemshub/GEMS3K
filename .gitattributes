@@ -147,6 +147,7 @@ node-gem/TestAds.BAT -text
 node-gem/array.h -text
 node-gem/databr.h -text
 node-gem/datach.h -text
+node-gem/doc/PGIcompile.txt -text
 node-gem/doc/Readme.1st -text
 node-gem/doc/dbr-dat-doc.txt -text
 node-gem/doc/dch-dat-doc.txt -text

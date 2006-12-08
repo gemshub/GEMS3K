@@ -9,6 +9,9 @@ gcc 3.6
 gcc 4.1
 pgCC 
 
+Linux Cluster (PGI):
+pgCC
+
 The respective Makefiles are located in \platform\<compiler>. 
 Just copy the appropriate one in the main module directory 
 over the existing Makefile. Use "make" or "nmake" to build 
@@ -22,7 +25,7 @@ the \test_data subdirectory. Description of the format of
 input files is given here (in dbr-dat-doc.txt and other
 files).
 
-Before launching the test under Linux, do "dos2unix *.dat" 
+Before launching the test under Linux/PGI, do "dos2unix *.dat" 
 and "dos2unix *.lst" command line commands in order to convert 
 the input data files from Win32 (CR/LF) to Unix (LF) text 
 format.
