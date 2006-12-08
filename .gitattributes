@@ -224,7 +224,9 @@ nodearray-gem/Makefile -text
 nodearray-gem/array.h -text
 nodearray-gem/databr.h -text
 nodearray-gem/datach.h -text
+nodearray-gem/doc/PGIcompile.txt -text
 nodearray-gem/doc/Readme.1st -text
+nodearray-gem/doc/filelist-doc.txt -text
 nodearray-gem/gdatastream.cpp -text
 nodearray-gem/gdatastream.h -text
 nodearray-gem/gemipm2k-sep.pro -text
