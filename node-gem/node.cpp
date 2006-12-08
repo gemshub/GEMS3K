@@ -442,8 +442,8 @@ void TNode::freeMemory()
    CNode = databr_free( CNode );
 
 #ifdef IPMGEMPLUGIN
-  delete[] multi;
-  delete[] profil;
+  delete multi;
+  delete profil;
 #endif
 }
 
@@ -757,7 +757,7 @@ TNode::TNode()
 
 
 TNode::~TNode()
-{
+{   
    freeMemory();
    na = 0;
 }

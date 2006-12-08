@@ -55,6 +55,7 @@ HEADERS = array.h \
 		datach.h \
 		node.h \
 		ms_multi.h \
+		io_arrays.h \
 		m_const.h \
 		m_param.h \
 		num_methods.h \
@@ -76,6 +77,7 @@ SOURCES = gstring.cpp \
 		ipm_chemical3.cpp \
 		ipm_main.cpp \
 		ipm_simplex.cpp \
+		io_arrays.cpp \
 		main.cpp \
 		ms_param.cpp \
 		num_methods.cpp
@@ -91,6 +93,7 @@ OBJECTS = obj/gstring.o \
 		obj/ipm_chemical3.o \
 		obj/ipm_main.o \
 		obj/ipm_simplex.o \
+		obj/io_arrays.o \
 		obj/main.o \
 		obj/ms_param.o \
 		obj/num_methods.o
@@ -196,7 +199,8 @@ obj/node.o: node.cpp node.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node.o node.cpp
 
-obj/node_format.o: node_format.cpp node.h \
+obj/node_format.o: node_format.cpp io_arrays.h \
+		node.h \
 		gdatastream.h \
 		m_param.h \
 		datach.h \
@@ -209,7 +213,8 @@ obj/node_format.o: node_format.cpp node.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node_format.o node_format.cpp
 
-obj/ms_multi_file.o: ms_multi_file.cpp m_param.h \
+obj/ms_multi_file.o: ms_multi_file.cpp io_arrays.h \
+		m_param.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
@@ -219,7 +224,8 @@ obj/ms_multi_file.o: ms_multi_file.cpp m_param.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_file.o ms_multi_file.cpp
 
-obj/ms_multi_format.o: ms_multi_format.cpp m_param.h \
+obj/ms_multi_format.o: ms_multi_format.cpp io_arrays.h \
+		m_param.h \
 		node.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -291,6 +297,12 @@ obj/ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		m_const.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_simplex.o ipm_simplex.cpp
+
+obj/io_arrays.o: io_arrays.cpp io_arrays.h \
+		verror.h \
+		gstring.h \
+		array.h 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o io_arrays.cpp
 
 obj/main.o: main.cpp node.h \
 		m_param.h \
