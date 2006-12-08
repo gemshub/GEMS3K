@@ -287,6 +287,7 @@ rockflow-gem/Makefile -text
 rockflow-gem/array.h -text
 rockflow-gem/databr.h -text
 rockflow-gem/datach.h -text
+rockflow-gem/doc/PGIcompile.txt -text
 rockflow-gem/doc/Readme.1st -text
 rockflow-gem/doc/dbr-dat-doc.txt -text
 rockflow-gem/doc/dch-dat-doc.txt -text
