@@ -38,6 +38,7 @@ mcotac-gem/datach.h -text
 mcotac-gem/datio.f -text
 mcotac-gem/debug/TEST.INI -text
 mcotac-gem/debug/initial.out -text
+mcotac-gem/doc/PGIcompile.txt -text
 mcotac-gem/doc/Readme.1st -text
 mcotac-gem/erech.f -text
 mcotac-gem/f_gem_node.cpp -text
