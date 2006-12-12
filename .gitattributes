@@ -186,6 +186,7 @@ node-gem/node_format.cpp -text
 node-gem/num_methods.cpp -text
 node-gem/num_methods.h -text
 node-gem/obj/Readme.txt -text
+node-gem/platform/CRAYXT3-catamount/Makefile -text
 node-gem/platform/Linux-GNU/Makefile -text
 node-gem/platform/Linux-PGI/Makefile -text
 node-gem/platform/other/Makefile -text
