@@ -612,10 +612,13 @@ prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
     prar.writeArray(  "Cp0", CSD->Cp0,CSD->nDC*CSD->nPp*CSD->nTp,
                                         CSD->nPp*CSD->nTp  );
   }
+  if( CSD->iGrd > 3 )
+  {
   if( _comment )
     ff << "\n\n# DD: Diffusion coefficients for DCs (reserved)";
-  prar.writeArray(  "DD", CSD->DD, CSD->nDCs);
-
+    prar.writeArray(  "DD", CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp,
+                                          CSD->nPp*CSD->nTp);
+  }
   if( _comment )
       ff << "\n\n# End of file";
 }
@@ -683,6 +686,8 @@ void TNode::datach_from_text_file(fstream& ff)
       rddar.setNoAlws( 17 /*"roW"*/);
       rddar.setNoAlws( 18 /*"epsW"*/);
    }
+   if( CSD->iGrd <= 3 )
+      rddar.setNoAlws( 24 /*"DD"*/);
    if( CSD->iGrd <= 2 )
       rddar.setNoAlws( 23 /*"Cp0"*/);
    if( CSD->iGrd <= 0 )
@@ -691,8 +696,9 @@ void TNode::datach_from_text_file(fstream& ff)
       rddar.setNoAlws( 22 /*"S0"*/);
 
 // default set up
-  for( ii=0; ii< CSD->nDCs; ii++ )
-    CSD->DD[ii] = 0.;
+  if( CSD->DD )
+    for( ii=0; ii< CSD->nDCs*CSD->nPp*CSD->nTp; ii++ )
+       CSD->DD[ii] = 0.;
   CSD->Ttol = 0.1;
   CSD->Ptol = 0.1;
   if( CSD->nIC == CSD->nICb )
@@ -777,8 +783,10 @@ void TNode::datach_from_text_file(fstream& ff)
                    Error( "Error", "Array CpO not used in task");
             rddar.readArray( "Cp0", CSD->Cp0,CSD->nDC*CSD->nPp*CSD->nTp );
             break;
-   case 24: rddar.readArray( "DD", CSD->DD, CSD->nDCs);
-              break;
+    case 24: if( !CSD->DD )
+                    Error( "Error", "Array DD not used in task");
+            rddar.readArray( "DD", CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp);
+           break;
   }
      nfild = rddar.findNext();
  }
@@ -813,7 +821,6 @@ void TNode::datach_to_file( GemDataStream& ff )
    ff.writeArray( CSD->A, CSD->nIC*CSD->nDC );
    ff.writeArray( CSD->ICmm, CSD->nIC );
    ff.writeArray( CSD->DCmm, CSD->nDC );
-   ff.writeArray( CSD->DD, CSD->nDCs );
 
    ff.writeArray( CSD->Tval,  CSD->nTp );
    ff.writeArray( CSD->Pval,  CSD->nPp );
@@ -834,6 +841,8 @@ void TNode::datach_to_file( GemDataStream& ff )
       ff.writeArray( CSD->S0, CSD->nDC*CSD->nPp*CSD->nTp );
    if(  CSD->iGrd > 2 )
       ff.writeArray( CSD->Cp0, CSD->nDC*CSD->nPp*CSD->nTp );
+   if(  CSD->iGrd > 3 )
+      ff.writeArray( CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp );
 
    ff.writeArray( (char *)CSD->ICNL, MaxICN*CSD->nIC*sizeof(char) );
    ff.writeArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC*sizeof(char) );
@@ -860,7 +869,6 @@ void TNode::datach_from_file( GemDataStream& ff )
    ff.readArray( CSD->A, CSD->nIC*CSD->nDC );
    ff.readArray( CSD->ICmm, CSD->nIC );
    ff.readArray( CSD->DCmm, CSD->nDC );
-   ff.readArray( CSD->DD, CSD->nDCs );
 
    ff.readArray( CSD->Tval,  CSD->nTp );
    ff.readArray( CSD->Pval,  CSD->nPp );
@@ -881,6 +889,8 @@ void TNode::datach_from_file( GemDataStream& ff )
      ff.readArray( CSD->S0, CSD->nDC*CSD->nPp*CSD->nTp );
    if(  CSD->iGrd > 2 )
      ff.readArray( CSD->Cp0, CSD->nDC*CSD->nPp*CSD->nTp );
+   if(  CSD->iGrd > 2 )
+     ff.readArray( CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp );
 
    ff.readArray( (char *)CSD->ICNL, MaxICN*CSD->nIC*sizeof(char) );
    ff.readArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC*sizeof(char) );
@@ -907,7 +917,6 @@ void TNode::datach_realloc()
   CSD->A = new float[CSD->nIC*CSD->nDC];
   CSD->ICmm = new double[CSD->nIC];
   CSD->DCmm = new double[CSD->nDC];
-  CSD->DD = new double[CSD->nDCs];
 
   CSD->Tval = new float[CSD->nTp];
   CSD->Pval = new float[CSD->nPp];
@@ -930,6 +939,10 @@ void TNode::datach_realloc()
     CSD->Cp0 = new double[CSD->nDC*CSD->nPp*CSD->nTp];
   else
     CSD->Cp0 = 0;
+  if(  CSD->iGrd > 3 )
+      CSD->DD = new double[CSD->nDCs*CSD->nPp*CSD->nTp];
+  else
+      CSD->DD = 0;
 
   CSD->ICNL = new char[CSD->nIC][MaxICN];
   CSD->DCNL = new char[CSD->nDC][MaxDCN];

@@ -115,13 +115,22 @@ static TNode* na;   // static pointer to this class
 
     virtual ~TNode();      // destructor
 
-// Typical method call sequence ----------------------------------------------
+// Typical sequence for using TNode class ----------------------------------
 // (1)
-    // For separate coupled FMT-GEM programs that use GEMIPM2K module
-    // Reads in the MULTI, DATACH and DATABR files prepared from GEMS
-    // and fills out nodes in node arrays according to distribution vector
-    // nodeTypes ( only for TNodeArray ). If TnodeArray is not used then
-    // nodeTypes = 0 must be set
+// For separate coupled FMT-GEM programs that use GEMIPM2K module
+// Reads in the MULTI, DATACH and optionally DATABR files prepared
+// in text format from GEMS and fills out nodes in node arrays
+// according to distribution vector nodeTypes ( only for compatibility
+// with TNodeArray class; If TnodeArray is not used then nodeTypes = 0
+// must be set).
+// Optional parameter getNodT1 defines whether the DATABR (node) files
+// will be read (if set to true or 1). In this case, on the TNode level,
+// only the contents of last file (in the ipmfiles_lst list) will be
+// accessible because all DATABR files are read into a single work DATABR
+// structure. On the level of TNodeArray, the initial node contents
+// from DATABR files will be distributed among nodes in T1 node array
+// according to distribution list nodeTypes.
+//
     int  GEM_init( const char *ipmfiles_lst_name,
                    int *nodeTypes = 0, bool getNodT1 = false);
 
@@ -129,25 +138,9 @@ static TNode* na;   // static pointer to this class
 //  Calls for direct coupling of a FMT code with GEMIPM2K
 
 // (2)
-// Loads GEM input data  provided in parameters by the FMT part
-// into the DATABR work structure for the subsequent GEM calculation
-   void GEM_from_MT(
-    short  p_NodeHandle,   // Node identification handle
-    short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
-                     //                                     GEM input output  FMT control
-    double p_T,      // Temperature T, K                        +       -      -
-    double p_P,      // Pressure P, bar                         +       -      -
-    double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
-    double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
-    double *p_bIC,    // bulk mole amounts of IC [nICb]         +       -      -
-    double *p_dul,   // upper kinetic restrictions [nDCb]       +       -      -
-    double *p_dll,   // lower kinetic restrictions [nDCb]       +       -      -
-    double *p_aPH  // Specific surface areas of phases (m2/g)   +       -      -
-   );
-
-// (3)
 // Passes (copies) the GEM input data from an already loaded DATABR
 //  work structure into parameters provided by the FMT part
+//
    void GEM_restore_MT(
     short  &p_NodeHandle,   // Node identification handle
     short  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
@@ -162,30 +155,65 @@ static TNode* na;   // static pointer to this class
     double *p_aPH     // Specific surface areas of phases (m2/g) +       -      -
    );
 
+// (3)
+// Loads GEM input data  provided in parameters by the FMT part
+// into the DATABR work structure for the subsequent GEM calculation
+//
+   void GEM_from_MT(
+    short  p_NodeHandle,   // Node identification handle
+    short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                     //                                     GEM input output  FMT control
+    double p_T,      // Temperature T, K                        +       -      -
+    double p_P,      // Pressure P, bar                         +       -      -
+    double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
+    double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
+    double *p_bIC,    // bulk mole amounts of IC [nICb]         +       -      -
+    double *p_dul,   // upper kinetic restrictions [nDCb]       +       -      -
+    double *p_dll,   // lower kinetic restrictions [nDCb]       +       -      -
+    double *p_aPH  // Specific surface areas of phases (m2/g)   +       -      -
+   );
+
 #endif
 
-   // (2 alternative)
-   // reads work node (DATABR structure) from a file
-   int  GEM_read_dbr( bool binary_f, const char *fname );
+// (3 alternative)
+// Reads work node (DATABR structure) from a file path name fname
+// Parameter binary_f defines if the file is in binary format (true or 1)
+// or in text format (false or 0, default)
+//
+   int GEM_read_dbr( const char* fname, bool binary_f=false );
 
-   // (4)
-   // Main call for GEM IPM calculation, returns p_NodeStatusCH value
+// (4)
+// Main call for GEM IPM calculation, returns p_NodeStatusCH value
+// see databr.h for p_NodeStatusCH flag values
+// Before calling GEM_run(), make sure that the node data are
+// loaded using GEM_from_MT() call; after calling GEM_run(),
+// check the return code and retrieve chemical speciation etc.
+// using the GEM_to_MT() call
+//
    int  GEM_run();   // calls GEM for a work node
 
-   // (5 debugging/interruption)
-   // For examining GEM calculation results:
-   // Prints current multi and/or work node structures to files with
-   // names given in the parameter list (if any parameter is NULL
-   // then writing the respective file is skipped)
-   void  GEM_printf( const char* multi_file, const char* databr_text,
-                         const char* databr_bin );
+// (5) For interruption/debugging
+// Writes work node (DATABR structure) into a file path name fname
+// Parameter binary_f defines if the file is to be written in binary
+// format (true or 1, good for interruption of coupled modeling task
+// if called in loop for each node), or in text format
+// (false or 0, default)
+//
+   void  GEM_write_dbr( const char* fname, bool binary_f=false );
+
+// (5a) For detailed examination of GEM work data structure:
+// writes GEMIPM internal MULTI data structure into text file
+// path name fname in debugging format (different from MULTI input format).
+// This file cannot be read back with GEM_init()!
+//
+   void  GEM_print_ipm( const char* fname );
 
 #ifdef IPMGEMPLUGIN
-//  Calls for direct coupling of an FMT code with GEMIPM2K
-   // (5)
-   // Copies GEM calculation results into parameters provided by the
-   // FMT part (dimensions and order of elements in arrays must correspond
-   // to those in currently existing DATACH structure )
+// (6)
+// Copies GEM calculation results into parameters provided by the
+// FMT part (dimensions and order of elements in arrays must correspond
+// to those in currently existing DATACH structure )
+//
    void GEM_to_MT(
    short &p_NodeHandle,    // Node identification handle
    short &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH

@@ -310,7 +310,7 @@ STEP_POINT( "End Simplex" );
     }
     else  // Taking previous result as initial approximation
     {
-        int jb, je=0, jpb, jpe=0, jdb, jde=0;
+        int jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
         double LnGam, FitVar3;
         /*    pmp->IT *= pa->p.PLLG; */
 
@@ -328,10 +328,14 @@ STEP_POINT( "End Simplex" );
         {
             jb = je;
             je += pmp->L1[k];
+// Indexes for extracting data from IPx, PMc and DMc arrays
+    ipb = ipe;                  // added 07.12.2006 by KD
+    ipe += pmp->LsMod[k*3]*pmp->LsMod[k*3+1];
             jpb = jpe;
-            jpe += pmp->LsMod[k];
+            jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];  // Changed 07.12.2006  by KD
             jdb = jde;
             jde += pmp->LsMdc[k]*pmp->L1[k];
+
             if( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
             {
                if( pmp->E && pmp->LO )

@@ -306,19 +306,24 @@ if( pm.FIs > 0 && pm.Ls > 0 )
   }
   prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6 );
 
-  int LsModSum = 0;
-  int LsMdcSum = 0;
-  for(int i=0; i<pmp->FIs; i++)
-  {
-     LsModSum += pmp->LsMod[i];
-     LsMdcSum += (pmp->LsMdc[i]*pmp->L1[i]);
-  }
+int LsModSum;
+int LsIPxSum;
+int LsMdcSum;
+getLsModsum( LsModSum, LsIPxSum );
+getLsMdcsum( LsMdcSum );
+
   if( _comment )
   {  ff << "\n\n# LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase" << endl;
      ff << "# Number of parameters per phase";
   }
-  prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs);
+  prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3);
 
+if(LsIPxSum )
+ {
+   if( _comment )
+      ff << "\n\n# IPx: List of indexes of interaction parameters for non-ideal solutions ";
+  prar.writeArray(  "IPxPH", pmp->IPx,  LsIPxSum);
+}
   if(LsModSum )
    {
      if( _comment )
@@ -650,20 +655,21 @@ void TMulti::from_text_file_gemipm( const char *path )
               break;
       case 1:{ if( !pmp->LsMod )
                 Error( "Error", "Array LsMod is not used in this problem");
-              rddar.readArray( "LsMod" , pmp->LsMod, pmp->FIs) ;
-              int LsModSum = 0;
-              for(int i=0; i<pmp->FIs; i++)
-                 LsModSum += pmp->LsMod[i];
-             if(LsModSum )
-              rddar.readArray( "PMc", pmp->PMc,  LsModSum);
+              rddar.readArray( "LsMod" , pmp->LsMod, pmp->FIs*3) ;
+              int LsModSum;
+              int LsIPxSum;
+              getLsModsum( LsModSum, LsIPxSum );
+              if(LsIPxSum )
+               rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
+               if(LsModSum )
+               rddar.readArray( "PMc", pmp->PMc,  LsModSum);
               break;
              }
       case 2: { if( !pmp->LsMdc )
                    Error( "Error", "Array LsMdc not used in this problem");
                 rddar.readArray( "LsMdc" , pmp->LsMdc, pmp->FIs );
-                int LsMdcSum = 0;
-                for(int i=0; i<pmp->FIs; i++)
-                 LsMdcSum += (pmp->LsMdc[i]*pmp->L1[i]);
+                int LsMdcSum;
+                getLsMdcsum( LsMdcSum );
                 if(LsMdcSum )
                  rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
                 break;

@@ -105,6 +105,7 @@ int  TNode::GEM_run()
 
 /**************************************************************
 // only for testing output results for files
+    GEM_write_dbr( "calculated_dbr.dat",  false );
     GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
 ********************************************************* */
 
@@ -137,7 +138,7 @@ int  TNode::GEM_run()
 }
 
  // reads work node (DATABR structure) from a  file
-int  TNode::GEM_read_dbr( bool binary_f, const char *fname )
+int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 {
   try
   {
@@ -603,7 +604,7 @@ void TNode::makeStartDataChBR(
      CSD->ICmm[i1] = pmm->Awt[i1];
 
   memcpy( CSD->DCmm, pmm->MM , CSD->nDC*sizeof(double));
-  memset( CSD->DD, 0, CSD->nDCs*sizeof(double));
+//  memset( CSD->DD, 0, CSD->nDCs*sizeof(double));
 
   for( ii=0; ii<CSD->nIC; ii++ )
      memcpy( CSD->ICNL[ii], pmm->SB[ii] , MaxICN*sizeof(char));
@@ -662,6 +663,9 @@ void TNode::makeStartDataChBR(
 
    G0_V0_H0_Cp0_DD_arrays();
 
+   if(  CSD->iGrd > 3 )
+     for( i1=0; i1< CSD->nDCs*CSD->nPp*CSD->nTp; i1++ )
+       CSD->DD[i1] = 0.;
 }
 
 void TNode::G0_V0_H0_Cp0_DD_arrays()
@@ -757,7 +761,7 @@ TNode::TNode()
 
 
 TNode::~TNode()
-{   
+{
    freeMemory();
    na = 0;
 }
@@ -898,35 +902,37 @@ void TNode::unpackDataBr()
 
 }
 
-void  TNode::GEM_printf( const char* multi_file,
-                             const char* databr_text,
-                             const char* databr_bin )
-{
-//**************************************************************
-// only for testing output results for files
-// binary DATABR
-    gstring strr;
-   if( databr_bin )
-   {  strr = databr_bin;
-      GemDataStream out_br(strr, ios::out|ios::binary);
-      databr_to_file(out_br);
+// (5) For interruption/debugging
+// Writes work node (DATABR structure) into a file path name fname
+// Parameter binary_f defines if the file is to be written in binary
+// format (true or 1, good for interruption of coupled modeling task
+// if called in loop for each node), or in text format
+// (false or 0, default)
+//
+   void  TNode::GEM_write_dbr( const char* fname, bool binary_f )
+   {
+       if( binary_f )
+           {
+              gstring str_file = fname;
+              GemDataStream out_br(str_file, ios::out|ios::binary);
+              databr_to_file(out_br);
+           }
+      else
+      {  fstream out_br(fname, ios::out );
+         ErrorIf( !out_br.good() , fname, "DataBR text make error");
+         databr_to_text_file(out_br);
+      }
    }
-// text DATABR
-   if( databr_text )
-   {  fstream out_br_t(databr_text, ios::out );
-      ErrorIf( !out_br_t.good() , databr_text,
-                "DataBR text file open error");
-      databr_to_text_file(out_br_t);
-   }
-// output multy
-    if( multi_file )
-   {  strr = multi_file;
-      GemDataStream o_m( strr, ios::out|ios::binary);
-       TProfil::pm->outMulti(o_m, strr );
-    }
-//********************************************************* */
 
-}
+// (5a) For detailed examination of GEM work data structure:
+// writes GEMIPM internal MULTI data structure into text file
+// path name fname in debugging format (different from MULTI input format).
+// This file cannot be read back with GEM_init()!
+//
+   void  TNode::GEM_print_ipm( const char* fname )
+   {
+       TProfil::pm->outMultiTxt( fname  );
+   }
 
 #ifdef IPMGEMPLUGIN
 

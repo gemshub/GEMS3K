@@ -92,7 +92,6 @@ void TProfil::calcMulti()
     multi->MultiCalcInit( 0 );
     if( multi->AutoInitialApprox() == false )
     {
-       //       TNode::na->GEM_printf( "calc_multi_test.ipm", 0, 0 );
         multi->MultiCalcIterations();
     }
 }
@@ -102,6 +101,11 @@ void TProfil::outMulti( GemDataStream& ff, gstring& path  )
     ff.writeArray( &pa.p.PC, 10 );
     ff.writeArray( &pa.p.DG, 28 );
     multi->to_file( ff, path );
+}
+
+void TProfil::outMultiTxt( const char *path  )
+{
+    multi->to_text_file( path );
 }
 
 // Reading structure MULTI (GEM IPM work structure)
@@ -116,9 +120,6 @@ void TProfil::readMulti( GemDataStream& ff )
 void TProfil::readMulti( const char* path )
 {
       multi->from_text_file_gemipm( path);
-      // test 29/11/2006
-      multi->to_text_file_gemipm( "test_multi.out");
-
 }
 
 static bool load = false;
