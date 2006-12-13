@@ -1,18 +1,18 @@
 //-------------------------------------------------------------------
-// DATABRIDGE - defines the structure of node-dependent data for
+// DATABRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
-// Requires DATACH.H
-// Used in Tnode and Tnodearray classes
+// Requires DATACH.H header and data structure.
+// DATABR is used in TNode and TNodeArray classes.
 //
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 //
-// Written by D.Kulik, W.Pfingsten, F.Enzmann and S.Dmytriyeva
-// Copyright (C) 2003-2006
+// Copyright (C) 2003-2006 by D.Kulik, W.Pfingsten, F.Enzmann and S.Dmytriyeva
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
 // developed by the Laboratory of Waste Management, Paul Scherrer Institute
+
 // This file may be distributed together with GEMIPM2K source code
 // under the licence terms defined in GEMIPM2K.QAL
 //
@@ -35,13 +35,12 @@ typedef struct
      IterDone;      // Number of iterations performed by IPM
 
 /*  these important dimensions are provided in the DATACH structure
-   unsigned short
-    nICb,       // number of stoichiometry units (<= nIC) used in the data bridge
+   int
+    nICb,       // number of Independent Components (<= nIC) used in the data bridge
     nDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
-    nPHb,     	// number of phases (<= nPH) used in the data bridge
-    nPSb;       // number of multicomponent phases (<= nPS) used in the data bridge
+    nPHb,     	// number of Phases (<= nPH) used in the data bridge
+    nPSb;       // number of Phases-solutions (<= nPS) used in the data bridge
 */
-
 //      Usage of this variable (DB - data bridge)        MT-DB DB-GEM GEM-DB DB-MT
    double
 // Chemical scalar variables
@@ -57,8 +56,8 @@ typedef struct
     Hi,         // Enthalpy of inert subsystem, J          +      -      -     +
 
     IC,     // Effective aqueous ionic strength, molal     -      -      +     +
-    pH,     // pH of aqueous solution                      -      -      +     +
-    pe,     // pe of aqueous solution                      -      -      +     +
+    pH,     // pH of aqueous solution (-log10 molal)       -      -      +     +
+    pe,     // pe of aqueous solution (-log10 molal)       -      -      +     +
     Eh,     // Eh of aqueous solution, V                   -      -      +     +
 
 //  FMT variables (units need dimensionsless form) - to be used for storing them
@@ -90,23 +89,25 @@ typedef struct
    double
 // IC (stoichiometry units)
     *bIC,  // bulk mole amounts of IC[nICb]                +      +      -     -
-    *rMB,  // MB Residuals from GEM IPM [nICb]             -      -      +     +
+    *rMB,  // Mass balance residuals from GEMIPM [nICb]    -      -      +     +
     *uIC,  // IC chemical potentials (mol/mol)[nICb]       -      -      +     +
 // DC (species) in reactive subsystem
     *xDC,  // DC mole amounts at equilibrium [nDCb]        -      -      +     +
-    *gam,  // activity coeffs of DC [nDCb]                 -      -      +     +
+    *gam,  // activity coefficients of DC [nDCb]           -      -      +     +
 // Metastability/kinetic controls
-    *dul,  // upper kinetic restrictions [nDCb]            +      +      -     -
-    *dll,  // lower kinetic restrictions [nDCb]            +      +      -     -
+    *dul,  // upper kinetic restrictions on xDC [nDCb]     +      +      -     -
+    *dll,  // lower kinetic restrictions on xDC [nDCb]     +      +      -     -
 // Phases in reactive subsystem
-*aPH,  // Specific surface areas of phases (m2/g)          +      +      -     -
+    *aPH,  // Specific surface areas of phases (m2/g)      +      +      -     -
     *xPH,  // total mole amounts of phases [nPHb]          -      -      +     +
-    *vPS,  // phase volume, cm3/mol        [nPSb]          -      -      +     +
-    *mPS,  // phase (carrier) mass, g      [nPSb]          -      -      +     +
-    *bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-    *xPA,  // amount of carrier in phases  [nPSb] ??       -      -      +     +
+    *vPS,  // volumes of phases-solutions, cm3/mol [nPSb]  -      -      +     +
+    *mPS,  // masses of phases-solutions, g   [nPSb]       -      -      +     +
+    *bPS,  // bulk compositions of phases-solutions
+           //    [nPSb][nICb]                              -      -      +     +
+    *xPA,  // amounts of solvent/sorbent in
+           //    phases-solutions [nPSb]                   -      -      +     +
 
-  // What else?
+  // Reserved
     *dRes1;
 }
 DATABR;
@@ -114,18 +115,19 @@ DATABR;
 typedef DATABR*  DATABRPTR;
 
 typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
- NEED_GEM_AIA = 1,   // GEM calculation starts with simplex initial approximation (IA)
+ NEED_GEM_AIA = 1,   // GEM starts with simplex initial approximation (IA)
  OK_GEM_AIA   = 2,   // OK after GEM calculation with simplex IA
  BAD_GEM_AIA  = 3,   // Bad result after GEM calculation with simplex IA
  ERR_GEM_AIA  = 4,   // Failure in GEM calculation with simplex IA
- NEED_GEM_PIA = 5,   // GEM calculation starts without simplex using IA from previous solution
+ NEED_GEM_PIA = 5,   // GEM starts without simplex IA using IA from
+                     //   the previous GEM solution (full DATABR lists only)
  OK_GEM_PIA   = 6,   // OK after GEM calculation without simplex IA
  BAD_GEM_PIA  = 7,   // Bad result after GEM calculation without simplex IA
- ERR_GEM_PIA  = 8,   // Failure in after GEM calculation without simplex IA
- TERROR_GEM   = 9    // Terminal error occurred in GEMIPM2K
+ ERR_GEM_PIA  = 8,   // Failure in GEM calculation without simplex IA
+ TERROR_GEM   = 9    // Terminal error has occurred in GEMIPM2K
 } NODECODECH;
 
-typedef enum {  // NodeStatus codes FluidMassTransport
+typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part
 
  Initial_RUN   = 1,
  OK_Hydraulic  = 2,
@@ -139,8 +141,8 @@ typedef enum {  // NodeStatus codes FluidMassTransport
  OK_Time       = 10
 } NODECODEFMT;
 
-typedef enum {  // Node Type codes controlling hydraulic/masstransport behavior
- normal       = 0, // normal node
+typedef enum {  // Node type codes controlling hydraulic/mass-transport behavior
+  normal       = 0, // normal node
 // boundary condition node
   NBC1source   = 1, // Dirichlet source ( constant concentration )
   NBC1sink    = -1, // Dirichlet sink
@@ -148,7 +150,7 @@ typedef enum {  // Node Type codes controlling hydraulic/masstransport behavior
   NBC2sink    = -2, // Neumann sink
   NBC3source   = 3, // Cauchy source ( constant flux )
   NBC3sink    = -3, // Cauchy sink
-  INIT_FUNK    = 4  // functional initial conditions (e.g. input time depended functions)
+  INIT_FUNK    = 4  // functional conditions (e.g. input time-depended functions)
 } NODETYPE;
 
 #endif   //_DataBr_h

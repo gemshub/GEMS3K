@@ -238,6 +238,8 @@ nodearray-gem/gemipm2k-sep.pro -text
 nodearray-gem/gemipm2k.pro -text
 nodearray-gem/gstring.cpp -text
 nodearray-gem/gstring.h -text
+nodearray-gem/io_arrays.cpp -text
+nodearray-gem/io_arrays.h -text
 nodearray-gem/ipm_chemical.cpp -text
 nodearray-gem/ipm_chemical2.cpp -text
 nodearray-gem/ipm_chemical3.cpp -text
@@ -250,7 +252,6 @@ nodearray-gem/m_gem2mtt.cpp -text
 nodearray-gem/m_param.h -text
 nodearray-gem/main.cpp -text
 nodearray-gem/ms_gem2mt.h -text
-nodearray-gem/ms_multi.cpp -text
 nodearray-gem/ms_multi.h -text
 nodearray-gem/ms_multi_file.cpp -text
 nodearray-gem/ms_multi_format.cpp -text
@@ -272,6 +273,15 @@ nodearray-gem/platform/win32bcc/Makefile -text
 nodearray-gem/platform/win32msvc/Makefile -text
 nodearray-gem/s_fgl.cpp -text
 nodearray-gem/s_fgl.h -text
+nodearray-gem/test/CalcColumn-dat.lst -text
+nodearray-gem/test/CalcColumn-dbr-0-0000.dat -text
+nodearray-gem/test/CalcColumn-dbr-0-0001.dat -text
+nodearray-gem/test/CalcColumn-dch.dat -text
+nodearray-gem/test/CalcColumn-ipm.dat -text
+nodearray-gem/test/CalcColumn.BAT -text
+nodearray-gem/test/Readme.1st -text
+nodearray-gem/test/testA.dat -text
+nodearray-gem/test/testW.dat -text
 nodearray-gem/tnt.h -text
 nodearray-gem/tnt_array1d.h -text
 nodearray-gem/tnt_array2d.h -text

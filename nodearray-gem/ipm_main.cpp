@@ -225,6 +225,7 @@ pVisor->Update( false );
 //Calc equstat method IPM (iterations)
 void TMulti::MultiCalcIterations()
 {
+
     MultiCalcMain();
 
     //calc demo data
@@ -309,7 +310,7 @@ STEP_POINT( "End Simplex" );
     }
     else  // Taking previous result as initial approximation
     {
-        int jb, je=0, jpb, jpe=0, jdb, jde=0;
+        int jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
         double LnGam, FitVar3;
         /*    pmp->IT *= pa->p.PLLG; */
 
@@ -327,10 +328,14 @@ STEP_POINT( "End Simplex" );
         {
             jb = je;
             je += pmp->L1[k];
+// Indexes for extracting data from IPx, PMc and DMc arrays
+    ipb = ipe;                  // added 07.12.2006 by KD
+    ipe += pmp->LsMod[k*3]*pmp->LsMod[k*3+1];
             jpb = jpe;
-            jpe += pmp->LsMod[k];
+            jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];  // Changed 07.12.2006  by KD
             jdb = jde;
             jde += pmp->LsMdc[k]*pmp->L1[k];
+
             if( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
             {
                if( pmp->E && pmp->LO )
@@ -345,7 +350,8 @@ STEP_POINT( "End Simplex" );
                     pmp->Gamma[j] = exp( LnGam );
                 else pmp->Gamma[j] = 1.0;
                 pmp->F0[j] = Ej_init_calc( 0.0, j, k  );
-                pmp->G[j] = pmp->G0[j] + pmp->F0[j];
+//                pmp->G[j] = pmp->G0[j] + pmp->F0[j];   changed 05.12.2006 KD
+                pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
                 pmp->lnGmo[j] = LnGam;
             }  // j
         } // k
@@ -831,7 +837,7 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
           B[ii] = aa;
       }
 
-// this routine constructs its Cholesky decomposition, A = L � LT .
+// this routine constructs its Cholesky decomposition, A = L x LT .
   Cholesky<double>  chol(A);
 
   if( chol.is_spd() )  // is positive definite A.

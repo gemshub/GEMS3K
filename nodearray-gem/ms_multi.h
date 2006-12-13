@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 783 2006-07-27 11:18:26Z gems $
+// $Id: ms_multi.h 826 2006-12-12 16:52:28Z gems $
 //
 // Declaration of TMulti class, config functions
 //
@@ -124,8 +124,11 @@ typedef struct
     FitVar[5]; // internal; FitVar[0] is T,P-dependent b_gamma parameter
   short
     *L1,    // l_a vector - number of DC included into each phase [Fi]
-    *LsMod, // Number of non-ideality coeffs per multicomponent phase [FIs]
+*LsMod, // Number of interaction parameters, max. parameter order (cols in IPx),
+        // and number of coefficients per parameter in PMc table [3*FIs]
     *LsMdc, // Number of non-ideality coeffs per one DC in multicomponent phase[FIs]
+*IPx,  // List of indexes of interaction parameters for non-ideal solutions
+       // ->LsMod[k,0] x LsMod[k,1]   added 07.12.2006   KD
     *mui,   // IC indices in RMULTS IC list [N]
     *muk,   // Phase indices in RMULTS phase list [FI]
     *muj;   // DC indices in RMULTS DC list [L]
@@ -134,8 +137,8 @@ typedef struct
             /* formerly SATndx: surface type index, 0,1,...,Fiat-1 [0:Ls-1][2] */
             /* and assign. sur.DC to carrier end-member indices */
   float
-    *PMc,   // Non-ideality coefficients f(TP) -> LsMod
-    *DMc,   // Non-ideality coefficients f(TPX) for DC -> LsMdc
+    *PMc,   // Non-ideality coefficients f(TP) -> LsMod[k,0] x LsMod[k,2]
+    *DMc,   // Non-ideality coefficients f(TPX) for DC -> LsMdc[k]
     *A,    // DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,   // IC atomic (molar) mass, g/mole [0:N-1]
     *Wb,    //Relative Born factors (HKF, reserved) [0:Ls-1]
@@ -149,7 +152,7 @@ typedef struct
     *S0,    // DC p-molar entropies, reserved [L]
     *Cp0,   // DC p-molar entropies, reserved [L]
     *Cv0,   // DC p-molar Cv, reserved [L]
-    *VL,    // ln mole fraction
+    *VL,    // ln mole fraction of end members in phases-solutions
     *Xcond, 	/* conductivity of phase carrier, sm/m2   [0:FI-1] */
     *Xeps,  	/* diel.permeability of phase carriers    [0:FI-1] */
     *Aalp,  	/* phase specific surface area m2/g       [0:FI-1] */
@@ -176,7 +179,7 @@ typedef struct
   double
     *DUL,  // VG Vector of upper restrictions to x_j (reserved) [L]
     *DLL,  // NG Vector of lower restrictions to x_j, moles [L]
-    *GEX,  // Excess free energy of (metastable) DC, moles [L]
+    *GEX,  // Molar Gibbs energy increment of (metastable) DC, normalized to moles [L]
     *PUL,  // Vector of upper restrictions to X_a (reserved)[FIs]
     *PLL,  // Vector of lower restrictions to X_a (reserved)[FIs]
     *YOF,  // Phase metastability parameter [FI !!!!]
@@ -252,7 +255,7 @@ typedef struct
     *RFSC,  // Classifier of restriction scales for XF_a 0:FIs-1
     *ICC,   // Classifier of IC { e o h a z v i <int> } 0:N-1
     *DCC,   // Classifier of DC { TESWGVCHNIJMDRAB0123XYZPQO } 0:L-1
-    *PHC;   // Classifier of phases { a g p m l x d h } 0:FI-1
+    *PHC;   // Classifier of phases { a g f p m l x d h } 0:FI-1
   char  (*SCM)[MST]; //classifier of adsorption models for sur types [FIs][FIat]
   char  *SATT,  /* classifier of methods of SAT calculation [0:Lads] */
     *DCCW;  // reserved 0:L-1 codes see in file S_CLASS.H
@@ -285,7 +288,6 @@ class TMulti
 
     void multi_sys_dc();
     void multi_sys_ph();
-    void ConvertDCC();
     void ph_sur_param( int k, int kk );
     void ph_surtype_assign( int k, int kk, int jb, int je,
                             short car_l[], int car_c, short Cjs );
@@ -307,6 +309,9 @@ class TMulti
 
 #endif
 
+   void getLsModsum( int& LsModSum, int& LsIPxSum );
+   void getLsMdcsum( int& LsMdcSum );
+
 // ipm_chemical.cpp
     void XmaxSAT_IPM2();
     void XmaxSAT_IPM2_reset();
@@ -326,6 +331,7 @@ class TMulti
     double GX( double LM  );
     double Cj_init_calc( double g0, int j, int k );
     void Mol_u( double Y[], double X[], double XF[], double XFA[] );
+    void ConvertDCC();
 
 // ipm_chemical2.cpp
     void GasParcP();
@@ -341,7 +347,7 @@ class TMulti
 
 // ipm_chemical2.cpp
     void IS_EtaCalc();
-    void pm_GC_ods_link( int k, int jb, int jpb, int jdb );
+void pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb );
     double TinkleSupressFactor( double ag, int ir);
     void GammaCalc( int LinkMode );
 //  aqueous electrolyte
@@ -442,7 +448,7 @@ public:
 
    //mass transport
     void to_file( GemDataStream& ff, gstring& path  );
-    void to_text_file( gstring& path );
+    void to_text_file( const char *path );
     void from_file( GemDataStream& ff );
     void to_text_file_gemipm( const char *path );
     void from_text_file_gemipm( const char *path );
@@ -464,6 +470,7 @@ void inArray( fstream& ff, char *name, double* arr, int size );
 void inArray( fstream& ff, char *name, char* arr,
                               int size, int arr_siz );
 
+/*
 void outArray( fstream& ff, char *name, short* arr,
                             int size, int l_size=-1 );
 void outArray( fstream& ff, char *name,  float* arr,
@@ -472,6 +479,6 @@ void outArray( fstream& ff, char *name,  double* arr,
                              int size, int l_size=-1 );
 void outArray( fstream& ff, char *name, char* arr,
                               int size, int arr_siz );
-
+*/
 #endif   //_ms_multi_h
 

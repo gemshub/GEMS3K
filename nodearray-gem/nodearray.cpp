@@ -185,14 +185,20 @@ AGAIN:
        fout << "-t \"" << name.c_str() << "-dch.dat\"";
    }
 
+  if( bin_mode )
+  {
 //  putting MULTI to binary file
     Path_ = u_makepath( dir, name, "ipm" );
     GemDataStream  ff(Path_, ios::out|ios::binary);
     TProfil::pm->outMulti( ff, Path_  );
+  }
+ else
+  {
 // output MULTI to txt file
     newname = name+"-ipm";
     Path_ = u_makepath( dir, newname, "dat" );
     TProfil::pm->outMulti( Path_  );
+  }
 
 // out dataCH to binary file
    newname = name+"-dch";

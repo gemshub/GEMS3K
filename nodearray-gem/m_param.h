@@ -67,7 +67,7 @@ struct BASE_PARAM
 struct SPP_SETTING
 {   // Base Parametres of SP
     char ver[TDBVERSION]; // Version & Copyright 64
-    BASE_PARAM p; // 
+    BASE_PARAM p; //
     void write(ostream& oss);
 };
 
@@ -92,6 +92,7 @@ public:
     }
 
    void outMulti( GemDataStream& ff, gstring& path  );
+   void outMultiTxt( const char *path  );
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
    void calcMulti();
@@ -100,7 +101,7 @@ public:
 
 /* Work DC classifier codes  pm->DCCW */
 enum SolDCodes {
-    
+
     DC_SINGLE = 'U',        /* This DC is a single-component phase */
     DC_SYMMETRIC = 'I',     /* This DC is in symmetric solution phase */
     DC_ASYM_SPECIES = 'S', /*This is DC-solute(sorbate) in asymmetric phase */

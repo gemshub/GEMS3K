@@ -19,7 +19,7 @@ DEFINES         += IPMGEMPLUGIN
 
 
 win32-borland {
-      	DEFINES += __win32_borland
+    	DEFINES += __win32_borland
         #  Debug, RTTI, exceptions, Visual C - compatible
         QMAKE_CFLAGS += -x -xd -xp -VM -RT
         QMAKE_CXXFLAGS += -x -xd -xp -VM -RT
@@ -44,8 +44,8 @@ SUBMOD_H     =  $$SUBMOD_CPP
 NUMERICS_H     =  $$NUMERICS_CPP
 
 
-DEPENDPATH   += ;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
-INCLUDEPATH   += ;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
+DEPENDPATH   += ;.;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
+INCLUDEPATH   +=;.;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
 
 OBJECTS_DIR       = obj
 
@@ -61,6 +61,7 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_H/node.h \
                     $$SUBMOD_H/particlearray.h \
                     $$SUBMOD_H/ms_multi.h \
+	            $$SUBMOD_H/io_arrays.h \
 		    ms_gem2mt.h \
 		    m_const.h \
 		    m_param.h  \
@@ -88,5 +89,6 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_CPP/ipm_chemical3.cpp \
                     $$SUBMOD_CPP/ipm_main.cpp \
                     $$SUBMOD_CPP/ipm_simplex.cpp \
-		    main.cpp \
+		    $$SUBMOD_CPP/io_arrays.cpp \
+                    main.cpp \
 		    ms_param.cpp

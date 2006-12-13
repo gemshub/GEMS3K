@@ -4,7 +4,7 @@
 // C/C++  interface between GEM IPM and FMT node array
 // Working whith DATACH and DATABR structures
 //
-// Copyright (C) 2004-2005 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2005-2006 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization
@@ -35,6 +35,9 @@
 
 TNode* TNode::na;
 
+// This function proves whether the given T and P values fit within
+// the interpolation regions. Result is returned in the ok field in this
+// TNode class instance (true if T and P fit, otherwise false)
 void  TNode::check_TP()
 {
    bool ok = true;
@@ -77,23 +80,21 @@ void  TNode::check_TP()
 }
 //-------------------------------------------------------------------------
 // GEM_run()
-// GEM IPM calculation of equilibrium state for the current node.
-// Mode - mode of GEMS calculation
-//
-//  Function returns: NodeStatus codes GEMS
+// GEM IPM calculation of equilibrium state for the work node.
+//   mode of GEM calculation is taken from the DATABR work structure
+//   Function returns: NodeStatusCH code from DATABR structure
 //   ( OK; GEMIPM2K calculation error; system error )
 //
-//-------------------------------------------------------------------
 int  TNode::GEM_run()
 {
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
   {
-// f_log << " MAIF_CALC begin Mode= " << p_NodeStatusCH endl;
+// f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
 //---------------------------------------------
-// Checking T and P
+// Checking T and P  for interpolation intervals
    check_TP();
-// Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
+// Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
    unpackDataBr();
 // set up Mode
 //   CNode->NodeStatusCH = (short)Mode;
@@ -104,6 +105,7 @@ int  TNode::GEM_run()
 
 /**************************************************************
 // only for testing output results for files
+    GEM_write_dbr( "calculated_dbr.dat",  false );
     GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
 ********************************************************* */
 
@@ -126,7 +128,7 @@ int  TNode::GEM_run()
     catch(...)
     {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "gems2: Unknown exception: program aborted" << endl;
+     f_log << "gems2: Unknown exception: GEM calculation aborted" << endl;
        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
          CNode->NodeStatusCH = ERR_GEM_AIA;
        else
@@ -136,7 +138,7 @@ int  TNode::GEM_run()
 }
 
  // reads work node (DATABR structure) from a  file
-int  TNode::GEM_read_dbr( bool binary_f, char *fname )
+int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 {
   try
   {
@@ -151,7 +153,7 @@ int  TNode::GEM_read_dbr( bool binary_f, char *fname )
        ErrorIf( !in_br.good() , fname, "DataBR Fileopen error");
        databr_from_text_file(in_br);
    }
-  } catch(TError& err)
+  } catch(TError& /*err*/)
     {
       return 1;
     }
@@ -169,7 +171,7 @@ int  TNode::GEM_read_dbr( bool binary_f, char *fname )
 //-------------------------------------------------------------------
 // GEM_init()
 // reads in the data from MULTI, DATACH, DATABR files prepared
-// using the GEMS-PSI RMT module
+// using the GEMS-PSI GEM2MT module.
 //  Parameters:
 //  ipmfiles_lst_name - name of a text file that contains:
 //    " -t/-b <MULTI file name> -t/-b <dataCH file name>,
@@ -441,8 +443,8 @@ void TNode::freeMemory()
    CNode = databr_free( CNode );
 
 #ifdef IPMGEMPLUGIN
-  delete[] multi;
-  delete[] profil;
+  delete multi;
+  delete profil;
 #endif
 }
 
@@ -565,7 +567,7 @@ void TNode::makeStartDataChBR(
   if ( pmm->Cp0 )
     CSD->iGrd = 3;
 
-// These dimensionalities define sizes of dynamic data in DATABT structure!!!
+// These dimensionalities define sizes of dynamic data in DATABR structure!!!
 
   CSD->nICb = (short)selIC.GetCount();
   CSD->nDCb = (short)selDC.GetCount();
@@ -574,7 +576,7 @@ void TNode::makeStartDataChBR(
   for( ii=0; ii< selPH.GetCount(); ii++, CSD->nPSb++ )
    if( selPH[ii] >= pmm->FIs )
        break;
-  CSD->uRes2 = 0;
+  CSD->uRes1 = 0;
   CSD->dRes1 = 0.;
   CSD->dRes2 = 0.;
 
@@ -602,7 +604,7 @@ void TNode::makeStartDataChBR(
      CSD->ICmm[i1] = pmm->Awt[i1];
 
   memcpy( CSD->DCmm, pmm->MM , CSD->nDC*sizeof(double));
-  memset( CSD->DD, 0, CSD->nDCs*sizeof(double));
+//  memset( CSD->DD, 0, CSD->nDCs*sizeof(double));
 
   for( ii=0; ii<CSD->nIC; ii++ )
      memcpy( CSD->ICNL[ii], pmm->SB[ii] , MaxICN*sizeof(char));
@@ -659,11 +661,14 @@ void TNode::makeStartDataChBR(
    for( i1=0; i1<CSD->nPp; i1++ )
     CSD->Pval[i1] = Pai[i1];
 
-   getG0_V0_H0_Cp0_matrix();
+   G0_V0_H0_Cp0_DD_arrays();
 
+   if(  CSD->iGrd > 3 )
+     for( i1=0; i1< CSD->nDCs*CSD->nPp*CSD->nTp; i1++ )
+       CSD->DD[i1] = 0.;
 }
 
-void TNode::getG0_V0_H0_Cp0_matrix()
+void TNode::G0_V0_H0_Cp0_DD_arrays()
 {
 
   double cT, cP/*, cDC*/;
@@ -897,53 +902,54 @@ void TNode::unpackDataBr()
 
 }
 
-void  TNode::GEM_printf( const char* multi_file,
-                             const char* databr_text,
-                             const char* databr_bin )
-{
-//**************************************************************
-// only for testing output results for files
-// binary DATABR
-    gstring strr;
-   if( databr_bin )
-   {  strr = databr_bin;
-      GemDataStream out_br(strr, ios::out|ios::binary);
-      databr_to_file(out_br);
+// (5) For interruption/debugging
+// Writes work node (DATABR structure) into a file path name fname
+// Parameter binary_f defines if the file is to be written in binary
+// format (true or 1, good for interruption of coupled modeling task
+// if called in loop for each node), or in text format
+// (false or 0, default)
+//
+   void  TNode::GEM_write_dbr( const char* fname, bool binary_f )
+   {
+       if( binary_f )
+           {
+              gstring str_file = fname;
+              GemDataStream out_br(str_file, ios::out|ios::binary);
+              databr_to_file(out_br);
+           }
+      else
+      {  fstream out_br(fname, ios::out );
+         ErrorIf( !out_br.good() , fname, "DataBR text make error");
+         databr_to_text_file(out_br);
+      }
    }
-// text DATABR
-   if( databr_text )
-   {  fstream out_br_t(databr_text, ios::out );
-      ErrorIf( !out_br_t.good() , databr_text,
-                "DataBR text file open error");
-      databr_to_text_file(out_br_t);
-   }
-// output multy
-    if( multi_file )
-   {  strr = multi_file;
-      GemDataStream o_m( strr, ios::out|ios::binary);
-       TProfil::pm->outMulti(o_m, strr );
-    }
-//********************************************************* */
 
-}
+// (5a) For detailed examination of GEM work data structure:
+// writes GEMIPM internal MULTI data structure into text file
+// path name fname in debugging format (different from MULTI input format).
+// This file cannot be read back with GEM_init()!
+//
+   void  TNode::GEM_print_ipm( const char* fname )
+   {
+       TProfil::pm->outMultiTxt( fname  );
+   }
 
 #ifdef IPMGEMPLUGIN
 
 // calculation mode: passing input GEM data changed on previous FMT iteration
-//                   into work DATABR structure
+//                   into the work DATABR structure
 void TNode::GEM_from_MT(
    short  p_NodeHandle,   // Node identification handle
    short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                     //                                     GEM input output  FMT control
-   double p_T,      // Temperature T, K                        +       -      -
-   double p_P,      // Pressure P, bar                         +       -      -
-   double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
-   double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
+   double p_T,      // Temperature T, K                         +       -      -
+   double p_P,      // Pressure P, bar                          +       -      -
+   double p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
+   double p_Ms,     // Mass of reactive subsystem, kg           -       -      +
    double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
    double *p_dul,   // upper kinetic restrictions [nDCb]        +       -      -
    double *p_dll,   // lower kinetic restrictions [nDCb]        +       -      -
-   double *p_aPH  // Specific surface areas of phases (m2/g)      +       -     -
-
+   double *p_aPH  // Specific surface areas of phases (m2/g)    +       -      -
 )
 {
   int ii;
