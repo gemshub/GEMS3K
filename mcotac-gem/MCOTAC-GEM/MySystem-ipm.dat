@@ -131,7 +131,7 @@
 # Dimensions for parameters of non-ideal mixing models for each multicomponent phase
 # Number of parameters per phase
 <LsMod>
-0 
+0 0 0
 
 # Number of parameters per component of the phase
 <LsMdc>

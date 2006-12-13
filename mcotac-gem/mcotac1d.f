@@ -723,7 +723,7 @@ cc2005      endif  ! igems_rw=0
      *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,p_Tm
      *,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
      *,p_av,p_hDl,p_hDt,p_hDv,p_nto, p_bIC,p_rMB,p_uIC,p_xDC,p_gam
-     *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA,p_dRes1
+     *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
       write(*,*)'iNode,p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone'
@@ -792,7 +792,6 @@ c  second read is for initial conditons nodes 2 to nxmax
      *,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
      *,p_av,p_hDl,p_hDt,p_hDv,p_nto,p_bIC,p_rMB,p_uIC, p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
-     *,p_dRes1
      *)
 	 write(*,*) 'inode= ' ,inode
       if (i_output.eq.1)then

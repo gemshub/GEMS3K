@@ -44,7 +44,7 @@
                   // before calling  F_GEM_GET_DCH(), a memory block of the size
                   // greater than sizeof(float)*nDCb*nICb must be allocated and
                   // a pointer to is passed in p_A
-);
+)
 #endif
 {
 
@@ -126,7 +126,7 @@
    double  *p_vPS,  // phase volume, cm3/mol        [nPSb]          -      -      +     +
    double  *p_mPS,  // phase (carrier) mass, g      [nPSb]          -      -      +     +
    double  *p_bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-   double  *p_xPA,  // amount of carrier in phases  [nPSb] ??       -      -      +     +
+   double  *p_xPA  // amount of carrier in phases  [nPSb] ??       -      -      +     +
   // What else?
 //   double  *p_dRes1
 #ifdef __unix
@@ -334,13 +334,13 @@
 #else
  extern "C"  void  __stdcall   F_GEM_WRITE_NODE(
    char* string_,        // path (file name) of the DATABR file
-   unsigned int length_, // length of the block fname_
+   unsigned int length_ // length of the block fname_
 )
 #endif
 {
   gstring fname( string_, 0, length_);
   fname.strip();
-  TNode::na->GEM_write_dbr( fname.c_str() ) );
+  TNode::na->GEM_write_dbr( fname.c_str()  );
 }
 
 // (6) For detailed examination of GEM work data structure:
@@ -353,13 +353,13 @@
 #else
  extern "C"  void  __stdcall   F_GEM_PRINT_IPM(
    char* string_,        // path (file name) of the DATABR file
-   unsigned int length_, // length of the block fname_
+   unsigned int length_ // length of the block fname_
 )
 #endif
 {
   gstring fname( string_, 0, length_);
   fname.strip();
-  TNode::na->GEM_print_ipm( fname.c_str() ) );
+  TNode::na->GEM_print_ipm( fname.c_str()  );
 }
 
 

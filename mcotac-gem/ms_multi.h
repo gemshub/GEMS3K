@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 818 2006-12-11 12:51:06Z gems $
+// $Id: ms_multi.h 826 2006-12-12 16:52:28Z gems $
 //
 // Declaration of TMulti class, config functions
 //
