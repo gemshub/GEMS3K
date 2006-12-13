@@ -20,14 +20,14 @@ CFLAGS	=	-tWR -x -xd -xp -VM -RT -w -w-hid -tWM -v -tWC -RT-  -DUNICODE -DIPMGEM
 CXXFLAGS=	-tWR -x -xd -xp -VM -RT -w -w-hid -tWM -v -tWC -RT-  -DUNICODE -DIPMGEMPLUGIN -D__win32_borland
 LEXFLAGS=
 YACCFLAGS=-d
-INCPATH	=	 -I"." -I"." -I"." -I"." -I"." -I"." -I"." -I"C:\Qt\3.3.7\mkspecs\win32-borland"
+INCPATH	=	 -I"." 
 LINK	=	ilink32
 LFLAGS	=	-L$(BCB)\lib -c -x -Gn -v -ap -Tpe c0x32.obj
 LIBS	=	import32.lib cw32mti.lib
-MOC	=	$(QTDIR)\bin\moc.exe
-UIC	=	$(QTDIR)\bin\uic.exe
+MOC	=	
+UIC	=	
 QMAKE =       qmake
-IDC		=	$(QTDIR)\bin\idc.exe
+IDC		=	
 IDL		=	midl
 ZIP	=	zip -r -9
 DEF_FILE =	
@@ -145,7 +145,7 @@ $(TARGET):  $(UICDECLS) $(OBJECTS) $(OBJMOC)
 mocables: $(SRCMOC)
 uicables: $(UICIMPLS) $(UICDECLS)
 
-Makefile: gemipm2k-sep.pro  C:\Qt\3.3.7\mkspecs\win32-borland\qmake.conf 
+Makefile: gemipm2k-sep.pro  
 	$(QMAKE) -o Makefile gemipm2k-sep.pro
 qmake: 
 	@$(QMAKE) -o Makefile gemipm2k-sep.pro
