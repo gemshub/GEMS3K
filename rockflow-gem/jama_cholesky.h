@@ -121,13 +121,16 @@ Cholesky<Real>::Cholesky(const Array2D<Real> &A)
 			{
                s += L_[k][i]*L_[j][i];
             }
-            L_[j][k] = s = (A[j][k] - s)/L_[k][k];
+            L_[j][k] = s = (A[j][k] - s)/L_[k][k];  // Zerodivide detected !
             d = d + s*s;
             isspd = isspd && (A[k][j] == A[j][k]);
          }
          d = A[j][j] - d;
          isspd = isspd && (d > 0.0);
-         L_[j][j] = sqrt(d > 0.0 ? d : 0.0);
+//         if( !isspd ) // Added SD 29/11/2006
+//             return;
+//        L_[j][j] = sqrt(d > 0.0 ? d : 0.0);
+ L_[j][j] = sqrt(d > 0.0 ? d : 1e-60);  //  Test change!  DK 13.10.2006
          for ( k = j+1; k < n; k++)
 		 {
             L_[j][k] = 0.0;

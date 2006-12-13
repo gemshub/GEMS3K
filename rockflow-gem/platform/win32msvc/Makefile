@@ -48,6 +48,7 @@ HEADERS =	array.h \
 		datach.h \
 		node.h \
 		ms_multi.h \
+		io_arrays.h \
 		m_const.h \
 		m_param.h \
 		num_methods.h \
@@ -69,6 +70,7 @@ SOURCES =	gstring.cpp \
 		ipm_chemical3.cpp \
 		ipm_main.cpp \
 		ipm_simplex.cpp \
+		io_arrays.cpp \
 		main.cpp \
 		ms_param.cpp \
 		num_methods.cpp
@@ -84,6 +86,7 @@ OBJECTS =	obj\gstring.obj \
 		obj\ipm_chemical3.obj \
 		obj\ipm_main.obj \
 		obj\ipm_simplex.obj \
+		obj\io_arrays.obj \
 		obj\main.obj \
 		obj\ms_param.obj \
 		obj\num_methods.obj
@@ -160,6 +163,7 @@ clean: uiclean mocclean
 	-$(DEL_FILE) obj\ipm_chemical3.obj
 	-$(DEL_FILE) obj\ipm_main.obj
 	-$(DEL_FILE) obj\ipm_simplex.obj
+	-$(DEL_FILE) obj\io_arrays.obj
 	-$(DEL_FILE) obj\main.obj
 	-$(DEL_FILE) obj\ms_param.obj
 	-$(DEL_FILE) obj\num_methods.obj
@@ -205,34 +209,37 @@ obj\node.obj: node.cpp node.h \
 		m_const.h \
 		v_user.h
 
-obj\node_format.obj: node_format.cpp node.h \
+obj\node_format.obj: node_format.cpp io_arrays.h \
+		node.h \
 		gdatastream.h \
+		gstring.h \
+		array.h \
 		m_param.h \
 		datach.h \
 		databr.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
 		v_user.h
 
-obj\ms_multi_file.obj: ms_multi_file.cpp m_param.h \
+obj\ms_multi_file.obj: ms_multi_file.cpp io_arrays.h \
+		m_param.h \
 		gdatastream.h \
+		gstring.h \
+		array.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
 		v_user.h
 
-obj\ms_multi_format.obj: ms_multi_format.cpp m_param.h \
+obj\ms_multi_format.obj: ms_multi_format.cpp io_arrays.h \
+		m_param.h \
 		node.h \
+		gstring.h \
+		array.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
 		v_user.h \
 		datach.h \
@@ -292,6 +299,11 @@ obj\ipm_simplex.obj: ipm_simplex.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
+
+obj\io_arrays.obj: io_arrays.cpp io_arrays.h \
+		verror.h \
+		gstring.h \
+		array.h
 
 obj\main.obj: main.cpp node.h \
 		m_param.h \

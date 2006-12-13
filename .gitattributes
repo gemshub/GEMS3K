@@ -320,6 +320,12 @@ rockflow-gem/platform/win32msvc/Makefile -text
 rockflow-gem/rockflow-gem-sep.pro -text
 rockflow-gem/s_fgl.cpp -text
 rockflow-gem/s_fgl.h -text
+rockflow-gem/test_data/CalcColumn-dat.lst -text
+rockflow-gem/test_data/CalcColumn-dbr-0-0000.dat -text
+rockflow-gem/test_data/CalcColumn-dbr-0-0001.dat -text
+rockflow-gem/test_data/CalcColumn-dch.dat -text
+rockflow-gem/test_data/CalcColumn-ipm.dat -text
+rockflow-gem/test_data/Readme.1st -text
 rockflow-gem/tnt.h -text
 rockflow-gem/tnt_array1d.h -text
 rockflow-gem/tnt_array2d.h -text
