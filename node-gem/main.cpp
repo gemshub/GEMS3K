@@ -29,7 +29,7 @@
 
 #include "node.h"
 
-#define nNodes  3//11 // set here how many nodes you need
+#define nNodes  11 // set here how many nodes you need
 
 int main( int argc, char* argv[] )
  {
@@ -149,8 +149,8 @@ int main( int argc, char* argv[] )
        m_bPS+in*nIC*nPS, m_xPA+in*nPS );
 
 //  Uncomment this to test variable pressures and temperatures
-//         m_T[in] += (in-1)*5;
-//         m_P[in] += (in-1)*20;
+         m_T[in] += in*7;
+         m_P[in] += (in-1)*20;
      // Here the file output for the initial conditions can be implemented
    }
 
@@ -206,15 +206,17 @@ int main( int argc, char* argv[] )
  //   cout << " FMT loop begins: " << endl;
 
      // Loop over nodes for calculating the mass transport step
-     for(  in=0; in<nNodes; in++ )
+     for(  in=1; in<nNodes; in++ )
      {
        ; // add here some operators as function of tc and dt
        // in this example, simply adding MgCl2 to m_bIC vector
        // in order to cause the conversion of calcite to dolomite
-       m_bIC[in*nIC+xMg] += dt*4e-7;
-       m_bIC[in*nIC+xCl] += dt*8e-7;
+       if( it > 0 )
+       {
+         m_bIC[in*nIC+xMg] += dt*4e-7;
+         m_bIC[in*nIC+xCl] += dt*8e-7;
+       }
      }
-
 //     cout << " FMT loop ends: ";
      cout << " it = " << it << "  dt = " << dt << "  tc = " << tc << endl;
 
@@ -222,7 +224,7 @@ int main( int argc, char* argv[] )
      // Loop over nodes for calculating the chemical equilibration step
      for( in=0; in<nNodes; in++ )
      {
-        cout << "  in = " << in;
+        cout << "  in = " << in << "  T = " << m_T[in];
 
         m_NodeHandle[in] = in;
         m_NodeStatusCH[in] = NEED_GEM_AIA; // or NEED_GEM_PIA
