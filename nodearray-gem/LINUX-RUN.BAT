@@ -1,1 +1,1 @@
-exec ./gemipm2k test-data/CalcColumn-dat.lst test-data/testW2.dat
+exec ./gemipm2k test/CalcColumn-dat.lst test/testA.dat

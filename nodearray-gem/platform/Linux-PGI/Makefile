@@ -57,6 +57,7 @@ HEADERS = array.h \
 		node.h \
 		particlearray.h \
 		ms_multi.h \
+		io_arrays.h \
 		ms_gem2mt.h \
 		m_const.h \
 		m_param.h \
@@ -83,6 +84,7 @@ SOURCES = gstring.cpp \
 		ipm_chemical3.cpp \
 		ipm_main.cpp \
 		ipm_simplex.cpp \
+		io_arrays.cpp \
 		main.cpp \
 		ms_param.cpp
 OBJECTS = obj/gstring.o \
@@ -101,6 +103,7 @@ OBJECTS = obj/gstring.o \
 		obj/ipm_chemical3.o \
 		obj/ipm_main.o \
 		obj/ipm_simplex.o \
+		obj/io_arrays.o \
 		obj/main.o \
 		obj/ms_param.o
 FORMS = 
@@ -146,7 +149,7 @@ uicables: $(UICDECLS) $(UICIMPLS)
 $(MOC): 
 	( cd $(QTDIR)/src/moc && $(MAKE) )
 
-Makefile: gemipm2k-sep.pro   
+Makefile: gemipm2k-sep.pro  
 	$(QMAKE) -o Makefile gemipm2k-sep.pro
 qmake: 
 	@$(QMAKE) -o Makefile gemipm2k-sep.pro
@@ -244,15 +247,16 @@ obj/node.o: node.cpp node.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node.o node.cpp
 
-obj/node_format.o: node_format.cpp node.h \
+obj/node_format.o: node_format.cpp io_arrays.h \
+		node.h \
 		gdatastream.h \
+		gstring.h \
+		array.h \
 		m_param.h \
 		datach.h \
 		databr.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node_format.o node_format.cpp
@@ -273,23 +277,25 @@ obj/particlearray.o: particlearray.cpp particlearray.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/particlearray.o particlearray.cpp
 
-obj/ms_multi_file.o: ms_multi_file.cpp m_param.h \
+obj/ms_multi_file.o: ms_multi_file.cpp io_arrays.h \
+		m_param.h \
 		gdatastream.h \
-		ms_multi.h \
-		verror.h \
 		gstring.h \
 		array.h \
+		ms_multi.h \
+		verror.h \
 		m_const.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_file.o ms_multi_file.cpp
 
-obj/ms_multi_format.o: ms_multi_format.cpp m_param.h \
+obj/ms_multi_format.o: ms_multi_format.cpp io_arrays.h \
+		m_param.h \
 		node.h \
+		gstring.h \
+		array.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
 		v_user.h \
 		datach.h \
@@ -356,8 +362,16 @@ obj/ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_simplex.o ipm_simplex.cpp
 
-obj/main.o: main.cpp ms_gem2mt.h \
+obj/io_arrays.o: io_arrays.cpp io_arrays.h \
+		verror.h \
 		gstring.h \
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o io_arrays.cpp
+
+obj/main.o: main.cpp io_arrays.h \
+		ms_gem2mt.h \
+		gstring.h \
+		array.h \
 		particlearray.h \
 		nodearray.h \
 		node.h \
@@ -367,7 +381,6 @@ obj/main.o: main.cpp ms_gem2mt.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
-		array.h \
 		m_const.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o main.cpp
