@@ -293,6 +293,8 @@ rockflow-gem/gdatastream.cpp -text
 rockflow-gem/gdatastream.h -text
 rockflow-gem/gstring.cpp -text
 rockflow-gem/gstring.h -text
+rockflow-gem/io_arrays.cpp -text
+rockflow-gem/io_arrays.h -text
 rockflow-gem/ipm_chemical.cpp -text
 rockflow-gem/ipm_chemical2.cpp -text
 rockflow-gem/ipm_chemical3.cpp -text
