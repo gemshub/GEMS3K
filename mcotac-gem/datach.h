@@ -87,7 +87,7 @@ typedef struct
 
 // DC - related values
     *DCmm,   // DC molar mass, g/mol, [nDC] elements
-    *DD,     // Diffusition coefficients, [nDC] elements, for now constant
+    *DD,     // Diffusition coefficients, [nDC][nPp][nTp] elements, for now constant
 
 // Grid arrays of thermodynamic data
 // Require a Lagrange interpolation subroutine to extract data
