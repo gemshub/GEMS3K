@@ -681,11 +681,11 @@ void TNode::datach_from_text_file(fstream& ff)
  TReadArrays  rddar( 25, DataCH_dynamic_fields, ff);
 
 // Set up flags
-   if( CSD->ccPH[0] == PH_AQUEL )
-   {
-      rddar.setNoAlws( 17 /*"roW"*/);
-      rddar.setNoAlws( 18 /*"epsW"*/);
-   }
+//   if( CSD->ccPH[0] == PH_AQUEL )
+//   {
+//      rddar.setNoAlws( 17 /*"roW"*/);
+//      rddar.setNoAlws( 18 /*"epsW"*/);
+//   }
    if( CSD->iGrd <= 3 )
       rddar.setNoAlws( 24 /*"DD"*/);
    if( CSD->iGrd <= 2 )
@@ -789,6 +789,12 @@ void TNode::datach_from_text_file(fstream& ff)
            break;
   }
      nfild = rddar.findNext();
+ }
+
+ if( CSD->ccPH[0] == PH_AQUEL )
+ {
+   rddar.setNoAlws( 17 /*"roW"*/);
+   rddar.setNoAlws( 18 /*"epsW"*/);
  }
 
  // testing read
