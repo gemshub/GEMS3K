@@ -10,7 +10,7 @@ mcotac1dgem.x: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o
        ipm_main.o ipm_simplex.o io_arrays.o f_gem_node.o ms_param.o num_methods.o
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
-	pgf90  -c -g -D__unix mcotac1d.f
+	pgf90  -c -g -Mpreprocess -D__unix mcotac1d.f
 datio.o: datio.f gwheader.inc kinetics.inc
 	pgf90  -c -g datio.f
 erech.o: erech.f gwheader.inc kinetics.inc

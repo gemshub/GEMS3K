@@ -1,1 +1,9 @@
 Here makefiles and other platform-specific files should be collected
+
+To use input data in Linux execute
+
+  dos2unix *.dat
+  dos2unix *.INI
+  dos2unix *.itm
+  cd ./MCOTAC-GEM
+  dos2unix *.dat 
