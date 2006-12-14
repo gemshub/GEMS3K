@@ -1,0 +1,42 @@
+Information for checkout of standalone coupled ROCKFLOW-GEM module 
+from the PSI LES SVN repository. 
+
+Pre-requisites: 
+
+1. You must be able to login via SSH as a user <myuser> belonging to the 
+group "svn" on the server les-svn.psi.ch. 
+
+2. On your PC, create a (home) directory <work> (e.g. D:\mywork)
+
+3. Use TortoiseSVN (on Win32 or Win64) or esvn (on Linux) client 
+to checkout a necessary module from the SVN repository. You will need 
+to know a URL to this module (provided below). 
+Before checkout, create an empty directory <work>/<ToDir>, where
+<ToDir> is your module directory name. 
+
+
+Module "Coupled ROCKFLOW-GEM" 
+
+URL:
+svn+ssh://<myuser>@les-svn.psi.ch/srv/svn/repos/GEMIPM2K/trunk/rockflow-gem/
+
+Checkout into:
+<work>/rockflow-gem/
+
+
+During checkout, you will be requested to type your password for login to 
+<myuser> up to three times. 
+
+Any time you work with the subversioned <work>/rockflow-gem/, you can 
+refresh the files by doing SVN update. 
+
+If you have changed some files (source code, test data etc.), and you 
+believe the changes are Ok to put them to the SVN repository, 
+then do SVN update and SVN Checkout operations. 
+
+If you want to add some directories and/or files to the SVN repository, 
+use SVN Add and then SVN Checkout. 
+
+To delete some files/directories, use SVN Delete and then SVN Checkout. 
+Before Checkout, all changes are in your local directory only. 
+

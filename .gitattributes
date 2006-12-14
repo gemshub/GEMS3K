@@ -1,4 +1,12 @@
 * text=auto !eol
+GEMIPM2K/doc/html/gemipm2k-inp.html -text
+GEMIPM2K/doc/html/gemipm2k-man.html -text
+GEMIPM2K/doc/txt/PGIcompile.txt -text
+GEMIPM2K/doc/txt/SVN-URL-ROCKFLOW-GEM.txt -text
+GEMIPM2K/doc/txt/dbr-dat-doc.txt -text
+GEMIPM2K/doc/txt/dch-dat-doc.txt -text
+GEMIPM2K/doc/txt/filelist-doc.txt -text
+GEMIPM2K/doc/txt/ipm-dat-doc.txt -text
 mcotac-gem/MCOTAC-GEM/MySystem-dat.lst -text
 mcotac-gem/MCOTAC-GEM/MySystem-dbr-0007.dat -text
 mcotac-gem/MCOTAC-GEM/MySystem-dbr-0008.dat -text
@@ -38,7 +46,6 @@ mcotac-gem/datach.h -text
 mcotac-gem/datio.f -text
 mcotac-gem/debug/TEST.INI -text
 mcotac-gem/debug/initial.out -text
-mcotac-gem/doc/PGIcompile.txt -text
 mcotac-gem/doc/Readme.1st -text
 mcotac-gem/erech.f -text
 mcotac-gem/f_gem_node.cpp -text
@@ -146,12 +153,7 @@ node-gem/Makefile -text
 node-gem/array.h -text
 node-gem/databr.h -text
 node-gem/datach.h -text
-node-gem/doc/PGIcompile.txt -text
 node-gem/doc/Readme.1st -text
-node-gem/doc/dbr-dat-doc.txt -text
-node-gem/doc/dch-dat-doc.txt -text
-node-gem/doc/filelist-doc.txt -text
-node-gem/doc/ipm-dat-doc.txt -text
 node-gem/doc/scm-dbr-dat-doc.txt -text
 node-gem/doc/scm-dch-dat-doc.txt -text
 node-gem/doc/scm-ipm-dat-doc.txt -text
@@ -229,7 +231,6 @@ nodearray-gem/Makefile -text
 nodearray-gem/array.h -text
 nodearray-gem/databr.h -text
 nodearray-gem/datach.h -text
-nodearray-gem/doc/PGIcompile.txt -text
 nodearray-gem/doc/Readme.1st -text
 nodearray-gem/doc/filelist-doc.txt -text
 nodearray-gem/gdatastream.cpp -text
@@ -293,12 +294,7 @@ rockflow-gem/Makefile -text
 rockflow-gem/array.h -text
 rockflow-gem/databr.h -text
 rockflow-gem/datach.h -text
-rockflow-gem/doc/PGIcompile.txt -text
 rockflow-gem/doc/Readme.1st -text
-rockflow-gem/doc/dbr-dat-doc.txt -text
-rockflow-gem/doc/dch-dat-doc.txt -text
-rockflow-gem/doc/filelist-doc.txt -text
-rockflow-gem/doc/ipm-dat-doc.txt -text
 rockflow-gem/gdatastream.cpp -text
 rockflow-gem/gdatastream.h -text
 rockflow-gem/gstring.cpp -text
