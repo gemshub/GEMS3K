@@ -206,7 +206,7 @@
 // can be used for interruption of coupled modeling or for debugging purposes
 //
 #ifdef __unix
- extern "C" void f_gem_write_node( char* string_, unsigned int length_ );
+ extern "C" void f_gem_write_node_( char* string_, unsigned int length_ );
 #else
  extern "C"  void  __stdcall   F_GEM_WRITE_NODE(
    char* string_,        // path (file name) of the DATABR file
@@ -220,7 +220,7 @@
 // This file cannot be read back with F_GEM_INIT()!
 //
 #ifdef __unix
- extern "C" void f_gem_print_ipm( char* string_, unsigned int length_ );
+ extern "C" void f_gem_print_ipm_( char* string_, unsigned int length_ );
 #else
  extern "C"  void  __stdcall   F_GEM_PRINT_IPM(
    char* string_,        // path (file name) of the DATABR file
