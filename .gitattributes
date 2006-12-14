@@ -5,6 +5,8 @@ GEMIPM2K/doc/txt/PGIcompile.txt -text
 GEMIPM2K/doc/txt/SVN-URL-ROCKFLOW-GEM.txt -text
 GEMIPM2K/doc/txt/dbr-dat-doc.txt -text
 GEMIPM2K/doc/txt/dch-dat-doc.txt -text
+GEMIPM2K/doc/txt/f_gem_node.h -text
+GEMIPM2K/doc/txt/f_gem_node.inc -text
 GEMIPM2K/doc/txt/filelist-doc.txt -text
 GEMIPM2K/doc/txt/ipm-dat-doc.txt -text
 mcotac-gem/MCOTAC-GEM/MySystem-dat.lst -text
