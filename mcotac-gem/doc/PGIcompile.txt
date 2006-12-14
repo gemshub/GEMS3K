@@ -24,8 +24,12 @@
      4.	To Build the node-gem executable file, execute
 
           make
+	  
+        To re-compile, first remove *.ti and *.o files and execute 
+	
+	  make
                            
-     5. To save changes to sourse code on SVN server, execute
+     5. To save changes to source code on SVN server, execute
 
         svn commit –mText <password>
 
