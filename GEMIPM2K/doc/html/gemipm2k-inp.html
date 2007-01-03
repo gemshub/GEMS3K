@@ -9,14 +9,13 @@
   <meta name="description" content="Version 3.0.0-PSI">
 </head>
 <body>
-<h1><img src="gems1.png" align="left" height="48" width="48"> <font
- color="#000066"> GEMIPM2K version 2.2.0</font> </h1>
+<h1><img alt="GEMS icon" src="gems1.png"
+ style="width: 48px; height: 48px;" align="left"> <font color="#000066">
+GEMIPM2K version 2.2.0</font> </h1>
 <h2>Formats of Text Input Files (TNode level) <br>
 </h2>
 <hr size="2" width="100%">
 <p> </p>
-<h3><span style="color: rgb(255, 0, 0);">&lt;under construction&gt;</span><br>
-</h3>
 <h3>Contents</h3>
 <blockquote>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#1-INTRO">1.
@@ -26,16 +25,16 @@ Introduction<br>
 Input Files Needed to Run a Standalone GEMIPM2K Calculation <br>
   </a></font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#DATACH">2.1.
-The DATACH (*-dch.dat) File with Chemical System Definition</a><br>
+The DCH_DAT (*-dch.dat) File with Chemical System Definition</a><br>
   </font><font face="Helvetica, Arial, sans-serif"><br>
-  <a href="#GEMIPM">2.2. The MULTI (*-ipm.dat) File with
-GEMIPM-Specific Data, Optional Sorption and Solution Models</a><br>
+  <a href="#GEMIPM">2.2. The IPM_DAT (*-ipm.dat) File with
+GEM IPM-Specific Data, Optional Sorption and Solution Models</a><br>
   </font><font face="Helvetica, Arial, sans-serif"><br>
-  <a href="#DATABR">2.3. The DATABR (*-dbr.dat) File with Node
-Composition and Speciation Data</a></font><br>
+  <a href="#DATABR">2.3. The DBR_DAT (*-dbr.dat) File with Node
+Data Bridge Composition and Speciation Data</a></font><br>
   </p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#FREEDATA">3.
-Free Data Input Format at GEMIPM2K TNode Level<br>
+Free Data Input File Format on GEMIPM2K TNode Level<br>
   </a></font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#ALPHABETICAL">4.
 Alphabetical List of Data Objects <br>
@@ -43,9 +42,31 @@ Alphabetical List of Data Objects <br>
 &nbsp;<br>
   <hr size="2" width="100%"><br>
   <h2><a name="1-INTRO"></a>1. Introduction</h2>
-  <p> Geochemical modeling often requires&nbsp; </p>
-  <p><br>
+  <p>The text input file formats of GEMIPM2K program, in general,
+correspond to three data structures that keep the definition of
+chemical system (DATACH) and work data of GEM IPM algorithm (MULTI),
+with part of data that change from node to node exchanged through the
+DATABR ("data bridge") structure. Accordingly, the input consists of
+three file types: the DCH_DAT, the IPM_DAT and the DBR_DAT. All these
+files have the same <a href="#FREEDATA">free-text data format</a>. <br>
   </p>
+  <p>The contents of DCH_DAT file, which is read only once in the
+beginning of the GEMIPM2 session, are copied into both DATACH and MULTI
+memory structures. <br>
+  </p>
+  <p>The IPM_DAT file contains data that are irrelevant for the
+mass-transport part; it is read once after the DCH_DAT file and the
+contents sent into the MULTI memory structure. The IPM_DAT file
+contains numerical setup of GEM IPM algorithm, as well as the model
+parameters of non-ideal mixing in phases-solutions and/or properties of
+sorption species and surface complexes. <br>
+  </p>
+  <p>Finally, the DBR_DAT file contains data for the bulk composition,
+temperature, pressure and kinetic constraints (GEM input) as well as
+(when written from GEMIPM2K)&nbsp; dual solution, primal solution
+(speciation) and activity coefficients - the GEM results. <br>
+  </p>
+  <br>
   <hr size="2" width="100%">
   <h2><br>
   </h2>
@@ -53,147 +74,223 @@ Alphabetical List of Data Objects <br>
 Standalone GEMIPM2K Calculation<br>
   </h2>
   <p><br>
-The standalone test examples of usage of GEMIPM2K start with the
+The test examples of usage of GEMIPM2K on the TNode and TNodeArray
+levels can be executed with the
 following command line: <br>
   <br>
-gemnode.exe tp_test/&lt;TaskName&gt;-dat.lst
-tp_test/&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat &gt; test.out<br>
+  <span style="font-family: monospace;">gemnode.exe
+&lt;TestDir&gt;/&lt;TaskName&gt;-dat.lst
+&lt;TestDir&gt;/&lt;TaskName&gt;-dbr-&lt;node&gt;.dat &gt;
+&lt;TaskName&gt;.out</span><br>
   <br>
-where &lt;TaskName&gt; should be substituted by a string denoting the
-problem name, e.g. MyTask.<br>
+where <span style="font-family: monospace;">&lt;TestDir&gt;</span> is
+an optional subdirectory path relative to that where the executable
+file is located; <span style="font-family: monospace;">&lt;TaskName&gt;</span>
+should be substituted by a string denoting the
+problem name, e.g. <span style="font-family: monospace;">"MyTask"</span>.
+The file <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node&gt;.dat</span>,
+if provided (TNode level only), will be read as the last file (<span
+ style="font-family: monospace;">&lt;node&gt;</span> is to be
+substituted by a string identifying the last node composition which
+overwrites the last node ). The file <span
+ style="font-family: monospace;">&lt;TaskName&gt;.out</span> will
+contain console output of the program, redirected there during
+execution of the
+TNode example. Without this redirection, the output can be found in a
+terminal (Linux) or lost (Windows). <br>
+  </p>
+  <p>The simplest example of the command line (under Windows) to call
+GEMIPM2K example on TNode level looks like</p>
+  <p><span style="font-family: monospace;">gemnode.exe
+MyTestData/mytask-dat.lst &gt; mytask.out<br>
+  </span></p>
+  <p>The file <span style="font-family: monospace;">&lt;TaskName&gt;-dat.lst</span>
+must have the following contents (also automatically created upon file
+generation from GEMS-PSI code):<br>
   <br>
-The file &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat will be additionally
-read by the Tnode example. <br>
-The file "test.out" will contain console output during operation of the
-Tnode example. <br>
-  <br>
-The file &lt;TaskName&gt;-dat.lst has the following structure:<br>
-  <br>
--t "&lt;TaskName&gt;-ipm.dat" -t "&lt;TaskName&gt;-dch.dat",
+  <span style="font-family: monospace;">-t "&lt;TaskName&gt;-ipm.dat"
+-t "&lt;TaskName&gt;-dch.dat",
 "&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat",
-"&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat" <br>
-[, ... ]<br>
+"&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat" [, ... ]</span><br
+ style="font-family: monospace;">
   <br>
-The first -t key tells that the following file
-"&lt;TaskName&gt;-ipm.dat" is to be read in text format (see decription
-of the file format in file ipm-dat-doc.txt). Alternative key: -b (the
-ipm file should be read in binary format). <br>
+This is simply the list of all files prepared for the GEMIPM2K input;
+all these files must be located in the same directory where the
+*-dat.lst file itself is located.&nbsp; <br>
+  </p>
+  <p>The first file, <span style="font-family: monospace;">&lt;TaskName&gt;<a
+ href="#GEMIPM">-ipm.dat</a></span>, contains input data that are used
+internally by the GEM IPM kernel and must not be exchanged with the
+mass transport part. This file also contains the flags and values for
+the numerical setup of GEM IPM subroutines, such as the convergence
+threshold. The first <span style="font-family: monospace;">-t</span>
+key tells that the following file <span style="font-family: monospace;">&lt;TaskName&gt;-ipm.dat</span>
+is prepared in free text input format (see example in the file <a
+ href="../txt/ipm-dat-doc.txt"><span style="font-family: monospace;">ipm-dat-doc.txt</span></a>).
+Alternative command-line key is <span style="font-family: monospace;">-b</span>
+(the
+ipm file is prepared in binary format - this can only be done from
+GEMS-PSI code). <br>
   <br>
-The second -t key tells that the following "&lt;TaskName&gt;-dch.dat",
-"&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat" and so on should be read in
-text format. The formats are described in files dch-dat-doc.txt and
-dbr-dat-doc.txt, respectively. There can be many comma-separated file
-names of dbr (node description) type, which will be read sequentially,
-but only the last one will remain loaded in this Tnode example. <br>
+The second file in the list, <span style="font-family: monospace;">&lt;TaskName&gt;<a
+ href="#DATACH">-dch.dat</a></span>, contains input data for the
+chemical system definition (CSD) that can be used by both GEM and the
+mass transport parts of the coupled code (see example in the file <a
+ href="../txt/dch-dat-doc.txt"><span style="font-family: monospace;">dch-dat-doc.txt</span></a>).
+These data are also needed for reading/writing the <span
+ style="font-family: monospace;">*-dbr.dat</span> files (see below).
+The second <span style="font-family: monospace;">-t</span>
+command-line key tells that the following <span
+ style="font-family: monospace;">&lt;TaskName&gt;-dch.dat,
+&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span> files, and so on, are
+prepared in
+text format. <br>
+  </p>
+  <p>There can be one or many comma-separated file
+names of <a href="#DATABR"><span style="font-family: monospace;">*-dbr.dat</span></a>&nbsp;
+(node description) type, which will be read sequentially. On the
+TNodeArray level, these files contain composition and speciation of all
+chemical systems needed to set up the initial conditions for the mass
+transport modelling. On the TNode level, in principle, one <span
+ style="font-family: monospace;">*-dbr.dat</span> file is sufficient;
+if there are many such file names then they will be read one by one,
+but only the last one will remain in the work DATABR structure in the
+program memory. See an example of <span style="font-family: monospace;">*-dbr.dat</span>
+file in the file <a href="../txt/dbr-dat-doc.txt"><span
+ style="font-family: monospace;">dbr-dat-doc-txt</span></a>.<br>
   <br>
-GEMIPM2K kernel will read specified input files in the following order:
+To summarize, the GEMIPM2K kernel will read input files specified in
+the command line in the following order: <br>
   <br>
+  <span style="font-family: monospace;">&lt;TaskName&gt;-dat.lst</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;TaskName&gt;-dch.dat</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;TaskName&gt;-ipm.dat</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">............</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;nodeN&gt;.dat</span><br
+ style="font-family: monospace;">
   <br>
-&lt;TaskName&gt;-dat.lst<br>
-&lt;TaskName&gt;-dch.dat<br>
-&lt;TaskName&gt;-ipm.dat<br>
-&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat<br>
-............<br>
-&lt;TaskName&gt;-dbr-&lt;nodeN&gt;.dat<br>
-  <br>
-The file &lt;TaskName&gt;-dch.dat contains parts of chemical system
-definitions (CSD) that can be requested both by GEM and by the FMT
-parts of the coupled code. Contents of this file will be placed in two
-memory data structures: (1) DATACH structure visible from both GEMIPM
-and the FMT part and (2) MULTI structure - the internal work structure
-of GEMIPM, not visible from the FMT part. The &lt;TaskName&gt;-dch.dat
-(and the DATACH structure) also contain dimensions and index lists that
-are needed for reading and accessing the DATABR (node description)
-files like &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat. Finally, the DATACH
-file and structure contains grid arrays of thermodynamic data used
-later on for automatic interpolation of gibbs energies G0, molar
-volumes V0 of components to given values of temperature T and pressure
-P in GEM IPM calculations for any node and time. <br>
-  <br>
-The file &lt;TaskName&gt;-ipm.dat contains additional data and
-numerical controls from the MULTI data strucutre that are necessary for
-the GEM IPM algorithm but are irrelevant for the FMT part. As an
-option, the whole binary MULTI structure can be read from the
-&lt;TaskName&gt;.ipm binary file if the -b key is set at the beginning
-in the &lt;TaskName&gt;-dat.lst file.<br>
-  <br>
-The file &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat (read into the DATABR
-memory structure) contains parts of the chemical system definition that
-may be changed by the FMT part (input data of GEM such as T, P, bulk
-composition, metastability constraints) or are returned after the GEM
-IPM calculation and be utilized by the FMT part on the next time
-iteration. The &lt;TaskName&gt;-dat.lst file may contain any number of
-(comma-separated) DATABR file names. These files will be read
-one-by-one: (a) into the same work DATABR structure on the level of
-Tnode example and coupling of GEMIPM with already existing FMT codes;
-(b) distributed into different DATABR structures for many nodes on the
-level of Tnodearray example (and coupled FMT-GEM codes written on the
-basis of TNodearray); see documentation to the Tnodearray example for
-more information in this respect.&nbsp; <br>
-  <br>
-As an option, the DATACH and DATABR files can be read in in the binary
+As an option, the DCH_DAT and DBR_DAT files can be read in in the
+binary
 format (after changing the second -t key to -b in the file
 &lt;TaskName&gt;-dat.lst. <br>
   <br>
-The whole collection of GEM IPM input files describing the chemical
+The whole collection of GEMIPM2K input files describing the chemical
 system for starting the coupled examples can be written directly from
 the GEMS-PSI code (either in GEM2MT module or, for a single equilibrium
-system, from the GEMS Single Thermodynamic System dialog, "Data" "Write
-IPM ..." menu command. <br>
+system, from the GEMS Single Thermodynamic System dialog, the "Data"
+"Write
+IPM ..." menu command). <br>
   <br>
 Later on, the text input files can be modified by the user according to
-descriptions of file formats found in the accompanying files
-dch-dat-doc.txt, ipm-dat-doc.txt, and dbr-dat-doc.txt. The format in
-three file types is essentially the same, only the data tags and fields
-differ. <br>
+descriptions of free-input file formats found in the accompanying files
+  <a style="font-family: monospace;" href="../txt/dch-dat-doc.txt">dch-dat-doc.txt</a><span
+ style="font-family: monospace;">, </span><a
+ style="font-family: monospace;" href="../txt/ipm-dat-doc.txt">ipm-dat-doc.txt</a><span
+ style="font-family: monospace;">,</span> and <a
+ style="font-family: monospace;" href="../txt/dbr-dat-doc.txt">dbr-dat-doc.txt</a>.
   <br>
-&nbsp; </p>
-  <h3><a name="DATACH"></a>2.1. The DATACH (*-dch.dat) File with
+  </p>
+  <p>The <a href="#FREEDATA">format of
+these file types</a> is essentially the same, only the data tags and
+fields
+differ. The file consists of two sections - the "dimensions" section
+where the data needed for memory allocation in GEMIPM2K are provided,
+and the "free-data" section which follows next. The two sections are
+separated by a keyword tag<br>
+  </p>
+  <p style="font-family: monospace;">&lt;END_DIM&gt;</p>
+  <p>Each data object consists of a name tag (e.g., &lt;nDCinPH&gt;),
+followed by space- or end-line -separated data elements (numbers,
+strings etc.), quantity and order of which is defined by the object and
+its dimensionality. When text files are printed from GEMS-PSI, each
+data object entry also has a comment line that begins with '#'
+character. So, the data object entry typically looks like this: <br>
+  </p>
+  <p><span style="font-family: monospace;"># nDCinPH: Vector L1 telling
+how many DCs is included in each phase</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;nDCinPH&gt;</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">19 4 1 1 1 1 1 </span><br>
+  </p>
+  <p>The data object entries can follow in any order if they are
+located after the <span style="font-family: monospace;">&lt;END_DIM&gt;</span>
+keyword. However, within a data object entry, the values must follow
+the tag (after space or new-line) and the order is strict. Comment
+lines are ignored by GEMIPM2K. <br>
+  </p>
+  <p>Many data object entries can be skipped (especially in the <span
+ style="font-family: monospace;">*-ipm.dat</span> file), in which case
+the default values will be used automatically by GEMIPM2K. The data
+objects without default values must always be provided at input (they
+are marked accordingly in the file format documentation files).<br>
+  </p>
+  <p>&nbsp;&nbsp; <br>
+  </p>
+  <h3><a name="DATACH"></a>2.1. The DCH_DAT (*-dch.dat) File with
 Chemical System Definition</h3>
-  <p>The dch-dat text input file for DATACH data generated by the
+  <p>The DCH_DAT text input file for DATACH data generated by the
 GEMS-PSI GEM2MT module. This file should be be read before the IPM-DAT
-file and the DATABR files.<br>
-  <br>
-The DATACH file contains parts of chemical system definitions (CSD)
-that can be requested both by GEM and by the FMT parts of the coupled
-code. Contents of&nbsp; this file will be placed in two memory data
-structures: <br>
-(1) DATACH - visible from both GEMIPM and the FMT part, and <br>
-(2) MULTI - the internal work structure of GEMIPM, not visible from the
-FMT part. <br>
-  <br>
-&nbsp;The DATACH text input file consists of nine sections, of which
+file and the DBR_DAT files.<br>
+  </p>
+  <p>The file &lt;TaskName&gt;-dch.dat contains parts of chemical
+system
+definitions (CSD) that can be requested both by GEM and by the FMT
+parts of the coupled code. Contents of this file will be placed in two
+memory data structures: (1) DCH_DAT structure visible from both GEMIPM
+and the FMT part and (2) MULTI structure - the internal work structure
+of GEM IPM, not visible from the FMT part. The &lt;TaskName&gt;-dch.dat
+(and the DATACH structure) also contain dimensions and index lists that
+are needed for reading and accessing the DBR_DAT (node description)
+files like &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat. Finally, the DCH_DAT
+file and structure contains grid arrays of thermodynamic data used
+later on for automatic interpolation of gibbs energies G0, molar
+volumes V0 of components to given values of temperature T and pressure
+P in GEM IPM calculations for any node and time. </p>
+  <p> The DCH_DAT text input file consists of nine sections, of which
 sections (1), (2),&nbsp; (3) and (4) contain dimensions needed for
-memory allocation and have the fixed order of data fields, each
-beginning with a tag - a data name in &lt;&gt;. Tags mostly correspond
-to names of variables in the DATACH.H header. The section (5) contains
+memory allocation must appear before the <span
+ style="text-decoration: underline;">&lt;END_DIM&gt;</span> tag. Any
+other data object fields can appear after this tag in any order, and
+some data objects can be skipped. If the data object tag is not found
+in the input file, its elements will be assigned default values, if
+possible. <br>
+  </p>
+  <p>It is recommended to place the input data&nbsp; in logical
+sections as printed from GEMS code. The section (5) contains
 names and some data for independent components (IC), section (6)
 contains names and data for the dependent components (DC), section (7)
 contains names and data for phases, the section (8) contains data for
 Dependent Components, and the section (9) contains the interpolation
-grid arrays with thermodynamic data for DCs. <br>
-At present, data tags and fields in sections (5) to (9) have a fixed
-order, but this may be changed to the arbitrary order in the following
-versions. <br>
-  <br>
-The actual numbers in this description are related to a particular
-example of the chemical system and are given for illustration purposes.
-The numbers and name lists may change if a different CSD is constructed.<br>
-  </p>
-  <p>more in dch-dat-doc.txt file<br>
+grid arrays with thermodynamic data for DCs. More about the file
+arrangement can be found in <a href="../txt/dch-dat-doc.txt">dch-dat-doc.txt</a>
+example file.<br>
   <br>
   </p>
-  <h3><a name="GEMIPM"></a>2.2. The GEMIPM (*-ipm.dat) File with
+  <h3><a name="GEMIPM"></a>2.2. The IPM_DAT (*-ipm.dat) File with
 GEMIPM-Specific Data, Optional Sorption and Solution Models</h3>
 &nbsp;The ipm-dat text input file for GEM-IPM specific data is usually
-generated by the GEMS-PSI GEM2MT module. This file should be be read
-after the DATACH file and before any DATABR file.<br>
+generated by the GEMS-PSI GEM2MT module. The GEMIPM2K program reads
+this file after the DCH_DAT file and before any DBR_DAT file.<br>
   <br>
-The IPM-DAT file is complementary to the DATACH file. The IPM-DAT file
+The file &lt;TaskName&gt;-ipm.dat contains additional data and
+numerical controls from the IPM (MULTI) data strucutre that are
+necessary for
+the GEM IPM algorithm but are not relevant for the FMT part. As an
+option, the whole binary MULTI structure can be read from the
+&lt;TaskName&gt;.ipm binary file if the -b key is set at the beginning
+in the &lt;TaskName&gt;-dat.lst file.<br>
+  <br>
+The IPM_DAT file is complementary to the DCH_DAT file. The IPM_DAT file
 contains parts of chemical system definitions (CSD) that are&nbsp; used
-by GEM IPM part but not visible to the FMT part of the coupled code.
-Contents of this file will be placed in the MULTI internal work
-structure of GEM IPM, not visible outside of it. <br>
+by GEM IPM part but are not visible to the FMT part of the coupled
+code. <br>
   <br>
 The IPM-DAT text input file consists of six sections, of which&nbsp;
 section (1) contains numerical controls of GEM IPM algorithm
@@ -208,64 +305,402 @@ contains some initial data for phases; and, finally, section (7)
 contains initial data for sorption (surface&nbsp; complexation) phases,
 it is present if set in section (2). <br>
   <br>
-In this version, there is a fixed order of data fields, each beginning
-with a tag - a data name in &lt;&gt;. This may be changed to the
-arbitrary order in the forthcoming versions. <br>
+Sections (1) and (2) contain flags and dimensions needed for
+optional memory allocation which must appear before the <span
+ style="text-decoration: underline;">&lt;END_DIM&gt;</span>
+tag. Any other data object fields can appear after this tag in any
+order, and some data objects can be skipped. If the data object tag is
+not found in the input file, its elements will be assigned default
+values, if possible. It is recommended to place the input data&nbsp; in
+logical sections as printed from GEMS code.<br>
   <br>
-The actual numbers in this description are related to a particular
-example of the chemical system and are given for illustration purposes.
-The numbers and name lists may change if a different CSD is
-constructed. <br>
+More about the IPM_DAT file format can be found in the <a
+ href="../txt/ipm-dat-doc.txt">ipm-dat-doc.txt</a> file.<br>
   <br>
-more in ipm-dat-doc.txt file<br>
-  <h3><a name="DATABR"></a>2.3. The DATABR (*-dch.dat) File with Node
-Composition and Speciation Data<br>
+  <h3><a name="DATABR"></a>2.3. The DBR_DAT (*-dbr.dat) File with Node
+Data Bridge Composition and Speciation Data<br>
   </h3>
-The dbr-dat text input file for DATABR data generated by the GEMS-PSI
-GEM2MT module. This file should be be read after the DATACH and the
-IPM-DAT files.<br>
+The DBR_DAT text input file for DATABR (node description) data can also
+be generated by the GEMS-PSI
+GEM2MT module. The GEMIPM2K program reads such files after the DCH_DAT
+and IPM_DAT files. <br>
   <br>
-This file (read into the DATABR memory structure) describes properties
-of the local-equilibrium node that should be exchanged between the
-coupled FMT and GEM parts. Hence, the DATABR data structure is the main
-interface for coupling mass transport and chemistry (see DATABR.H
-file). The DATABR file and structure contain parts of the chemical
-system definition that may be changed by the FMT part (input data of
-GEM such as T, P, bulk composition, metastability constraints) or are
-returned after the GEM IPM calculation and can be utilized by the FMT
-part in the next time iteration loop.<br>
+The DATABR data structure comprises the interface ("data bridge") for
+coupling mass transport and chemistry (see DATABR.H
+file).<br>
   <br>
-The DATABR text input file consists of several sections. Dimesions of
-all arrays in DATABR correspond to Section 2 and the order of
-components and phases - to the index lists in Section (4) in the DATACH
-file (see dch-dat-doc.txt file). Here, we will refer to tags from these
+The file &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat (read into the DATABR
+memory structure) contains parts of the chemical system definition that
+may be changed by the FMT part (input data of GEM such as T, P, bulk
+composition, metastability constraints) or are returned after the GEM
+IPM calculation and be utilized by the FMT part on the next time
+iteration. The &lt;TaskName&gt;-dat.lst file may contain any number of
+(comma-separated) DBR_DAT file names. These files will be read
+one-by-one: (a) into the same work DATABR structure on the level of
+TNode class for coupling of GEMIPM with already existing FMT codes;
+(b) distributed into different DATABR structures for many nodes on the
+level of TNodeArray class&nbsp; (and coupled FMT-GEM codes written on
+the
+basis of TNodeArray); see documentation to the TNodeArray example for
+more information in this respect.&nbsp; <br>
+  <br>
+As an option, the DCH and DBR files can be read in in the binary
+format (after changing the second -t key to -b in the file
+&lt;TaskName&gt;-dat.lst. <br>
+  <br>
+The DATABR text input file consists of several logical sections.
+Dimesions of
+all arrays in DATABR correspond to those given in Section 2 of DCH_DAT
+file, and the order of
+components and phases - to the index lists in Section (4) in the
+DCH_DAT
+file (see <a href="../txt/dch-dat-doc.txt">dch-dat-doc.txt</a> file).
+Here, we will refer to tags from these
 two sections even though these tags are not present in the DATABR file;
 it is assumed&nbsp; that the DATACH structure exists and is correctly
 filled out before any operation with DATABR files or structures. <br>
   <br>
-At present, data tags and fields in this file have a fixed order,
-but&nbsp; this may be changed to the arbitrary order in the following
-versions. <br>
+There is no <span style="text-decoration: underline;">&lt;END_DIM&gt;</span>
+tag in the DBR_DAT file. Any other data object fields can appear in any
+order, and some data objects can be skipped. If the data object tag is
+not found in the input file, its elements will be assigned default
+values, if possible. It is recommended to place the input data&nbsp; in
+logical sections as printed from GEMS code.<br>
   <br>
-The actual numbers in this description are related to a particular
-example of the chemical system (the same as in the dch-dat-doc.txt and
-ipm-dat-doc.txt files) and are given for illustration purposes. The
-numbers and name lists may change if a different CSD is constructed. <br>
-  <br>
-more in dbr-dat-doc.txt file<br>
+More about the DBR_DAT file format can be found in the <a
+ href="../txt/dbr-dat-doc.txt">dbr-dat-doc.txt</a> file.<br>
   <br>
   <p> </p>
   <hr size="2" width="100%">
   <h2><br>
   </h2>
-  <h2><a name="FREEDATA"></a>3. Free Data Input Format at GEMIPM2K
+  <h2><a name="FREEDATA"></a>3. Free Data Input File Format at GEMIPM2K
 TNode Class Level</h2>
-  <p> Geochemical modeling often requires&nbsp; </p>
+  <p>This section summarizes the syntax of free data input format used
+in text DCH_DAT, IPM_DAT and DBR_DAT files readable by the TNode class
+subroutines.&nbsp; Details about data objects for each file are given
+in the respective sections above, as well as in the text-level
+documentation files <span style="font-family: monospace;"><a
+ href="../txt/dch-dat-doc.txt">dch-dat-doc.txt</a>, <a
+ href="../txt/ipm-dat-doc.txt">ipm-dat-doc.txt</a></span> and <a
+ href="../txt/dbr-dat-doc.txt"><span style="font-family: monospace;">dbr-dat-doc.txt</span></a>.
+  <br>
+  </p>
+  <p>The file consists of one or more input data objects (fields) and
+optional comment lines. <br>
+  </p>
+  <p>A comment line begins with the '#' character in the first
+position; by reading the file, anything after '#' will be ignored until
+the line end code(s). <br>
+  </p>
+  <p>Any data object field begins with a tag - an identifier in angle
+brackets &lt;&gt;. The tag is followed by one or more values, depending
+on the type and dimensions of the respective data object. The values
+are space-,
+tab-, or endline -separated; the numerical values can be given as
+(signed) integer, floating-point, or decimal exponent (with e or E)
+forms; the string values must be taken in quotes ' ' or " ", e.g.
+'Quartz'. <br>
+An example of the data object with comment
+lines is given below:<br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;"># Bulk
+composition of (reactive part of) the system - GEM input (moles)<br>
+# Number of elements: &lt;nICb&gt;; order of IC: defined in &lt;xIC&gt;
+index list<br>
+# in the DCH-DAT file. <br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;"># This vector
+is the main input of GEM IPM. Inconsistent data in &lt;bIC&gt; <br>
+# may cause bad convergence or failure of the GEM IPM algorithm. <br>
+# *** This data object cannot be skipped from the DBR-DAT file!<br>
+  <span style="font-weight: bold;">&lt;bIC&gt;</span><br
+ style="font-weight: bold;">
+  <span style="font-weight: bold;">3.31e-04 3.31e-04 2.0e-07 110.6837
+1.0e-07 55.34286 0 </span><br>
+# Numbers in &lt;bIC&gt; must be positive, between 1e-16 and 9.9999e+5
+mol, <br>
+# except the last number (charge balance) which is usually set to zero.</p>
   <p><br>
+The data objects which define dimensionalities of other data objects
+must always be provided in the beginning of the file, before the
+reserved tag <span style="font-family: monospace;">&lt;END_DIM&gt;</span>,
+or in another file which had been read before this file. In the above
+example, the <span style="font-family: monospace;">&lt;nICb&gt;</span>
+item has been provided in the companion DCH_DAT file, where it looks
+like: <br>
+  </p>
+  <p style="margin-left: 40px;"><span style="font-family: monospace;">#
+*** Number of Independent Components kept in the DATABR structure, nICb
+&lt;= nIC</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;nICb&gt; 7</span><br>
+  </p>
+  <p><br>
+To see which value in the <span style="font-family: monospace;">&lt;bIC&gt;</span>
+vector corresponds to which Independent Component, check the <span
+ style="font-family: monospace;">&lt;xIC&gt;</span> index list and the <span
+ style="font-family: monospace;">&lt;ICNL&gt;</span> name list in the
+DCH_DAT file:<br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;"># DATACH index
+list of Independent Component kept in the DATABR structure.<br>
+# *** xIC Size: see &lt;nICb&gt;<br>
+  <span style="font-weight: bold;">&lt;xIC&gt;</span><br
+ style="font-weight: bold;">
+  <span style="font-weight: bold;">0 1 2 3 4 5 6 </span><br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">.......<br>
+  </p>
+  <div style="margin-left: 40px;"><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"># Names in the ICNL list must be
+alphabetically sorted.</span><span style="font-family: monospace;">
+Size of the list: see &lt;nIC&gt;. <br>
+# *** Data in all other arrays involving ICs</span><span
+ style="font-family: monospace;"> must follow the order given in this
+list.</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&lt;ICNL&gt;</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz'
+  </span><br>
+  </div>
+  <p>So, in this example, the <span style="font-family: monospace;">&lt;bIC&gt;</span>
+data object in the DBR-DAT file can be represented like this (the
+second line is a comment for readability):: <br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;"><span
+ style="font-weight: bold;">&lt;bIC&gt;&nbsp;</span> <span
+ style="font-weight: bold;">3.31e-04&nbsp; 3.31e-04&nbsp;
+2.0e-07&nbsp; 110.6837&nbsp; 1.0e-07&nbsp; 55.34286&nbsp; 0 <br>
+#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>'C'&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp; 'Ca'&nbsp;&nbsp;&nbsp;&nbsp; 'Cl'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+'H'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'Mg'&nbsp;&nbsp;&nbsp;&nbsp;
+'O'&nbsp; &nbsp;&nbsp; 'Zz' <br>
+  </p>
+  <p><br>
+&nbsp;After the <span style="font-family: monospace;">&lt;END_DIM&gt;</span>
+tag (present in DCH_DAT and IPM_DAT files), other data object items may
+follow in any order (although it is recommended to keep them in logical
+sections as arranged in the files printed from the GEMS code). <br>
+  </p>
+  <p>Some data objects can be skipped (the tag together with all
+values; part of values cannot be skipped). Many data object fields
+after the <span style="font-family: monospace;">&lt;END_DIM&gt;</span>
+tag in IPM_DAT and in the DBR_DAT file are not obligatory; when
+skipped, the default values will be set in the program memory. However,
+if some optional dimensions are set (e.g. <span
+ style="font-family: monospace;">&lt;Lads&gt;</span> before the <span
+ style="font-family: monospace;">&lt;END_DIM&gt;</span> tag in the
+IPM_DAT file) then the data objects connected to it must also be
+provided in the rest of the file.&nbsp; <br>
+  </p>
+  <p>The possibility to skip data objects with default values makes the
+input data files really compact. For instance, the amply commented data
+input files <span style="font-family: monospace;"><a
+ href="../txt/dch-dat-doc.txt">dch-dat-doc.txt</a>, <a
+ href="../txt/ipm-dat-doc.txt">ipm-dat-doc.txt</a></span> and <a
+ href="../txt/dbr-dat-doc.txt"><span style="font-family: monospace;">dbr-dat-doc.txt</span></a>
+can be condensed as shown below: <br>
+  </p>
+  <p><span style="font-weight: bold; text-decoration: underline;">dch.dat
+file:</span><br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">&lt;nIC&gt;&nbsp;
+7&nbsp;&nbsp; &lt;nDC&gt;&nbsp; 28&nbsp;&nbsp; &lt;nPH&gt;&nbsp;
+7&nbsp;&nbsp; &lt;nPS&gt;&nbsp; 2&nbsp; &lt;nDCs&gt; 23<br>
+&lt;nICb&gt; 7&nbsp; &lt;nDCb&gt; 10&nbsp; &lt;nPHb&gt; 3&nbsp;
+&lt;nPSb&gt; 1<br>
+&lt;nTp&gt;&nbsp; 1&nbsp; &lt;nPp&gt;&nbsp; 3&nbsp; &lt;iGrd&gt;
+0&nbsp; &lt;fAalp&gt; 1<br>
+&lt;END_DIM&gt;&nbsp;&nbsp; <br>
+&lt;xIC&gt;&nbsp; 0 1 2 3 4 5 6 <br>
+&lt;xDC&gt;&nbsp; 2 6 9 10 13 16 17 18 24 25<br>
+&lt;xPH&gt;&nbsp; 0 3 4<br>
+&lt;ICNL&gt; 'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' <br>
+&lt;ccIC&gt; 'e' 'e' 'e' 'h' 'e' 'o' 'z' <br>
+&lt;ICmm&gt; 1.20108e+01 4.0078e+01 3.5453e+01 1.00795e+00 2.4305e+01
+1.59994e+01 0.0e+00<br>
+&lt;PHNL&gt; 'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis'
+'Portlandite' 'Brucite' <br>
+&lt;ccPH&gt; 'a' 'g' 's' 's' 's' 's' 's'<br>
+&lt;nDCinPH&gt; 19 4 1 1 1 1 1 <br>
+&lt;DCNL&gt; 'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@'
+'Mg(HCO3)+' 'Mg+2' 'MgOH+' <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'CO2@' 'CO3-2' 'HCO3-' 'CH4@'
+'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'CO2' 'CH4' 'H2' 'O2' 'Gr' 'Cal'
+'Dis-Dol' 'Portlandite' 'Brc' <br>
+&lt;ccDC&gt; 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S'&nbsp; 'S' 'S' 'S'
+'S' 'S' 'S' 'S' 'T' 'W' <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'G' 'G' 'G' 'G' 'O' 'O' 'O' 'O'
+'O' <br>
+&lt;DCmm&gt;&nbsp; 1.00087e+02 1.0109495e+02 4.0078e+01 5.708535e+01
+8.4314e+01 8.532195e+01 <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.4305e+01 4.131235e+01
+4.40096e+01 6.0009e+01 6.101695e+01 1.60426e+01 <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9.94506e+01 3.5453e+01
+2.015899e+00 3.19988e+01 1.700735e+01 1.00795e+00 <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.80153e+01 4.40096e+01
+1.60426e+01 2.0159e+00 3.19988e+01 1.20108e+01 <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.00087e+02 1.84401e+02
+7.40927e+01 5.83197e+01 <br>
+&lt;A&gt;<br>
+# 'C'&nbsp;&nbsp;&nbsp;&nbsp; 'Ca'&nbsp;&nbsp;&nbsp;
+'Cl'&nbsp;&nbsp;&nbsp;&nbsp; 'H'&nbsp;&nbsp;&nbsp;
+'Mg'&nbsp;&nbsp;&nbsp; 'O'&nbsp;&nbsp;&nbsp; 'Zz' <br>
+1.0 1.0 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp;
+&nbsp; 3.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 2.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
+-2.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
+-1.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+4.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 4.0&nbsp;&nbsp; &nbsp;
+-1.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+-1.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 2.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp;
+-1.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+1.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; <br>
+# Gases <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 2.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+4.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 2.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+# Pure solids<br>
+1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+1.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+2.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 6.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 2.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
+2.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 2.0&nbsp;&nbsp; &nbsp;
+0.0&nbsp;&nbsp;&nbsp; <br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">&lt;Ttol&gt;
+1.0e-01&nbsp; &lt;Tval&gt; 5.0e0&nbsp;&nbsp; &lt;Ptol&gt; 1.0
+&lt;Pval&gt; 1.0&nbsp;&nbsp; <br>
+&lt;roW&gt; 9.999926e-01&nbsp; &lt;epsW&gt; 8.559333e+01 <br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">&lt;V0&gt;
+-1.568198&nbsp; 1.202911&nbsp; 0.4794548 -1.675791 0.8217261 -2.200911
+8.536497e-02 3.064951<br>
+&nbsp;-0.6493417 2.208085 3.503861 3.904007 1.624488 2.343719 2.844305
+-0.6595503&nbsp; 0 1.8015434<br>
+2.312681e+03 2.312681e+03 2.312681e+03 2.312681e+03 0.5298 3.6934 6.439
+3.306 2.463<br>
+&lt;G0&gt;<br>
+-1.0988688e+06 -1.1448745e+06 -5.538948e+05 -7.164635e+05
+-1.0008909e+06 -1.0474611e+06 <br>
+-4.567231e+05 -6.275596e+05 -3.838431e+05 -5.287587e+05 -5.849402e+05
+-3.28029e+04 <br>
+-4.8694e+03&nbsp; -1.30063e+05&nbsp; 1.876195e+04 1.84523e+04
+-1.573758e+05&nbsp; 0&nbsp; <br>
+-2.358346e+05 -3.901433e+05 -4.6958e+04 2.5939e+03 4.0827e+03 1.092e+02
+-1.1273776e+06 <br>
+-2.1539214e+06 -8.954044e+05 -8.310163e+05&nbsp; <br>
+#end of dch.dat <br>
+  </p>
+  <p><span style="font-weight: bold; text-decoration: underline;">ipm.dat
+file:</span><br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">"CalDolCol
+G&nbsp; CalcColumn&nbsp; 1001 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 "<br>
+&lt;pa_PE&gt;&nbsp;&nbsp; 1 &nbsp; &lt;PV&gt;&nbsp; 0&nbsp;&nbsp;
+&lt;PSOL&gt;&nbsp;&nbsp; 0&nbsp;&nbsp; &lt;PAalp&gt;&nbsp;
+'+'&nbsp;&nbsp; &lt;PSigm&gt;&nbsp;&nbsp; '+'<br>
+&lt;Lads&gt;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp; &lt;FIa&gt;&nbsp; 0 &nbsp;
+&nbsp; &lt;FIat&gt;&nbsp;&nbsp; 0&nbsp;&nbsp; <br>
+&lt;END_DIM&gt;<br>
+&lt;sMod&gt;&nbsp;&nbsp; 'DNNSNN' 'INNINN' <br>
+&lt;LsMod&gt;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp; <br>
+&lt;LsMdc&gt;&nbsp;&nbsp; 0 &nbsp; &nbsp; &nbsp;&nbsp; 0<br>
+&lt;B&gt;&nbsp;&nbsp; 3.31e-04 3.31e-04 2.0e-07 1.106837e+02 1.0e-07
+5.534286e+01 0<br>
+  </p>
+  <p><span style="font-weight: bold; text-decoration: underline;">dbr.dat
+file:</span><br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">&lt;NodeHandle&gt;&nbsp;&nbsp;&nbsp;&nbsp;
+0<br>
+&lt;NodeStatusCH&gt;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; &lt;T&gt;
+278.15&nbsp;&nbsp; &lt;P&gt;&nbsp; 1<br>
+&lt;bIC&gt;&nbsp; 3.31e-04 3.31e-04 2.0e-07 1.106837e+02 1.0e-07
+5.534286e+01 0<br>
+  </p>
+  <p><br>
+  </p>
+  <p>Please remember that&nbsp; the dch.dat and ipm.dat files are read
+only once per GEMIPM2 session, and any number of dbr.dat files (for
+nodes) can be provided and read in a sequence for the whole node array
+(in TNodeArray).&nbsp; These dbr.dat files normally have different bulk
+compositions <br>
+(&lt;bIC&gt;) and&nbsp; &lt;NodeHandle&gt; values. If the dch.dat file
+contains grid arrays for thermodynamic data, also &lt;T&gt; and
+&lt;P&gt; values can vary from node to node. <br>
   </p>
   <hr size="2" width="100%"><br>
   <br>
-  <br>
+  <h3><span style="color: rgb(255, 0, 0);">&lt;under construction&gt;</span></h3>
   <p> </p>
   <h2><a name="ALPHABETICAL"></a>4. Alphabetical List of Data Objects <br>
   </h2>

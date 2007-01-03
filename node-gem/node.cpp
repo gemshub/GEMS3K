@@ -803,7 +803,8 @@ void TNode::packDataBr()
   CNode->IC = pmm->IC;
   CNode->pH = pmm->pH;
   CNode->pe = pmm->pe;
-  CNode->Eh = pmm->FitVar[3];
+//  CNode->Eh = pmm->FitVar[3];  Bugfix 19.12.2006  KD
+  CNode->Eh = pmm->Eh;
   CNode->Ms = pmm->MBX;
 
   // arrays
@@ -856,7 +857,8 @@ void TNode::unpackDataBr()
   pmm->Pc  = CNode->P;
   pmm->MBX = CNode->Ms;
   pmm->IC = CNode->IC;
-  pmm->FitVar[3] = CNode->Eh;
+//  pmm->FitVar[3] = CNode->Eh;  Bugfix 19.12.2006  KD
+  pmm->Eh = CNode->Eh;
 // arrays
    for( ii=0; ii<CSD->nDCb; ii++ )
    {

@@ -9,8 +9,9 @@
   <meta name="description" content="Version 3.0.0-PSI">
 </head>
 <body>
-<h1><img src="gems1.png" align="left" height="48" width="48"> <font
- color="#000066"> GEMIPM2K version 2.2.0</font> </h1>
+<h1><img alt="GEMS-icon" src="gems1.png"
+ style="width: 48px; height: 48px;" align="left"> <font color="#000066">
+GEMIPM2K version 2.2.0</font> </h1>
 <h2>Standalone GEM-IPM-2 Solver of Chemical Equilibria by Gibbs Energy
 Minimization<br>
 </h2>
@@ -27,30 +28,65 @@ Introduction<br>
 Structure of GEMIPM2K Code&nbsp; and its Data Exchange Intefaces <br>
   </a></font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#KERNEL">2.1.
-The GEM-IPM Kernel and its Work Data Structure </a><br>
+The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM (Multi) </a><br>
+  </font></p>
+  <p><a href="#DATACH"><font face="Helvetica, Arial, sans-serif">2.2.
+The DATACH Structure for Chemical System Definition (CSD) Accessible to
+both FMT and GEM parts</font></a></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#DATABR">2.3.
+The DATABR Structure for the Node Data Bridge Composition and
+Speciation data</a> <br>
+  <br>
+  </font><font face="Helvetica, Arial, sans-serif"> <a href="#TNODE">2.4.
+The TNode Class - a Minimal Data Exchange
+Interface for Coupling with Existing Transport Codes</a><br>
   </font><font face="Helvetica, Arial, sans-serif"><br>
-  <a href="#TNODE">2.2. The TNode Class - a Minimum Data Exchange
-Interface for Coupling with Existing Codes</a><br>
-  </font><font face="Helvetica, Arial, sans-serif"><br>
-  <a href="#TNODEARRAY">2.3. The TNodeArray Class - a Node Data Storage
+  <a href="#TNODEARRAY">2.5. The TNodeArray Class - a Node Data Storage
 for Developing New Coupled Codes</a></font><br>
   </p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#REQUIREMENTS">3.
 Requirements for Programming </a><br>
   </font></p>
-  <p><font face="Helvetica, Arial, sans-serif"><a
- href="gemipm2k-man.html#FREEDATA">3.1. Requirements when the External
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#CALLFROMCPP">3.1.
+When the Calling (FMT)
 Program is Written in C++</a><br>
   </font><font face="Helvetica, Arial, sans-serif"><br>
-  <a href="gemipm2k-man.html#FREEDATA">3.2. Requirements when the
-External Program is Written in Fortran-90 </a></font><br>
+  <a href="#CALLFROMFORTRAN">3.2. When the Calling (FMT) Program is
+Written in Fortran-90 </a></font><br>
   </p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#ALPHABETICAL">4.
 Compilation and Linking on Various Platforms</a><br>
   </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#GNUCPP_FOR">4.1.
+GNU C++ (gcc - gfortran)</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#PGICPP_FOR">4.2.
+Portland Group C++ (pgcc- pgf)</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#MSVCPP_DIGIFOR">4.3.
+MS Visual C++ (with Digital Fortran)</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#BORLANDCPP">4.4.
+Borland C++</a><br>
+  </font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a
- href="gemipm2k-man.html#FREEDATA">5. Test Examples<br>
-  </a></font></p>
+ href="#OTHER_COMPILERS">4.5. Other compilers and linkers</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#SVN_REP">4.6.
+Subversion Repository of GEMIPM2K</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#INPUT_FILES">5.
+Input Files</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#TEST_EXAMPLES">6.
+Test Examples</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#TEST_TNODE">6.1.
+TNode Level</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a
+ href="#TEST_TNODEARRAY">6.2. TNodeArray Level</a><br>
+  <a href="gemipm2k-man.html#FREEDATA"> </a></font></p>
 &nbsp;<br>
   <hr size="2" width="100%"><br>
   <h2><a name="1-INTRO"></a>1. Introduction</h2>
@@ -64,82 +100,138 @@ Compilation and Linking on Various Platforms</a><br>
 its Data Exchange Intefaces </h2>
   <p> Geochemical modeling often requires<br>
 &nbsp; </p>
-  <h3><a name="KERNEL"></a>2.1. The GEM-IPM Kernel and its Work Data
-Structure</h3>
+  <h3><a name="KERNEL"></a>2.1. The GEM-IPM2 Kernel (GEMIPM2K) and its
+Work Data
+Structure IPM (Multi)<br>
+  </h3>
+  <p><br>
+  <br>
+  </p>
+  <h3><a name="DATACH"></a>2.2. <font
+ style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif">The DATACH Structure for Chemical
+System Definition (CSD) Accessible to both FMT and GEM parts</font> </h3>
+  <p><br>
+  <br>
+  </p>
+  <p> </p>
+  <h3><a name="DATABR"></a>2.3. <font
+ face="Helvetica, Arial, sans-serif"><span
+ style="font-family: times new roman,times,serif;">The DATABR Structure
+for the Node Data Bridge Composition and Speciation data</span> </font>
+  </h3>
   <p><br>
   </p>
-  <h3><a name="TNODE"></a>2.2. The TNode Class - a Minimum Data
-Exchange Interface for Coupling with Existing Codes</h3>
+  <h3><a name="TNODE"></a>2.4. The TNode Class - a Minimum Data
+Exchange Interface for Coupling with Existing Transport Codes</h3>
   <br>
-  <h3><a name="TNODEARRAY"></a>2.3. The TNodeArray Class - a Data
+  <br>
+  <h3><a name="TNODEARRAY"></a>2.5. The TNodeArray Class - a Data
 Storage for Developing New Coupled Codes </h3>
+  <br>
   <br>
   <p> </p>
   <hr size="2" width="100%">
   <h2><br>
   </h2>
   <h2><a name="REQUIREMENTS"></a>3. Requirements for Programming</h2>
-  <p> Geochemical modeling often requires&nbsp; </p>
+  <p> Geochemical modeling often requires<br>
+  </p>
   <p><br>
+  <font face="Helvetica, Arial, sans-serif"></font></p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="CALLFROMCPP"></a>3.1. When the Calling (FMT)
+Program is Written in C/C++ </h3>
+  <p><br>
+  </p>
+  <p><font face="Helvetica, Arial, sans-serif"><br>
+  </font></p>
+  <h3><font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><a name="CALLFROMFORTRAN"></a>3.2.
+When the
+Calling (FMT) Program is Written in Fortran-90 </font><br>
+  </h3>
+  <p><br>
+  </p>
+  <p><br>
+  <br>
   </p>
   <hr size="2" width="100%"><br>
   <br>
   <br>
   <p> </p>
-  <h2><a name="ALPHABETICAL"></a>4. Alphabetical List of Data Objects <br>
+  <h2><a name="COMPILE_PLATFORMS"></a>4. Compilation and Linking on
+Various Platforms <br>
   </h2>
   <dl>
   </dl>
   <br>
+introduction <br>
   <br>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="GNUCPP_FOR"></a>4.1. GNU C++ (gcc - gfortran)<br>
+  </h3>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="PGICPP_FOR"></a>4.2. Portland Group C++ (pgcc- pgf)<br>
+  </h3>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="MSVCPP_DIGIFOR"></a>4.3. MS Visual C++ (with Digital Fortran)<br>
+  </h3>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="BORLANDCPP"></a>4.4. Borland C++<br>
+  </h3>
+  <font face="Helvetica, Arial, sans-serif"><br>
   <br>
+  </font>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="OTHER_COMPILERS"></a>4.5. Other compilers and linkers</h3>
   <br>
+  <font face="Helvetica, Arial, sans-serif"><br>
+  </font>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="SVN_REP"></a>4.6. Subversion Repository of GEMIPM2K<br>
+  </h3>
   <br>
-  <br>
-  <br>
-  <br>
-  <br>
-  <br>
-  <dl>
-    <dt><a name="dtTc"></a><big><b><big><tt>dtTc</tt></big></b></big>
-Current state
-parameter
-T, centigrade</dt>
-    <dd><br>
-    </dd>
-    <dd>description</dd>
-    <dd><br>
-    </dd>
-    <dt> <a name="dtPc"></a><big><b><big><tt>dtPc</tt></big></b></big>
-Current state
-parameter
-P, bar</dt>
-    <dd><br>
-    </dd>
-    <dd>description</dd>
-    <dd><br>
-    </dd>
-    <dt> <a name="dtVc"></a><big><b><big><tt>dtVc</tt></big></b></big>
-Current state
-parameter
-V, litres</dt>
-    <dd><br>
-    </dd>
-    <dd>description</dd>
-    <dd><br>
-    </dd>
-    <dt> <a name="for_nr"></a><big><b><big><tt>for_nr</tt></big></b></big>
-Formulae of DC
-(end-member) stoichiometry candidates, input</dt>
-    <dd><br>
-    </dd>
-    <dd>description</dd>
-    <dd><br>
-    </dd>
-  </dl>
   <dl>
     <br>
-&nbsp; <br>
+  </dl>
+&nbsp;
+  <br>
+  <hr size="2" width="100%"><br>
+  <h2><a name="INPUT_FILES"></a>5. Input Files <br>
+  </h2>
+  <p> Geochemical modeling often requires&nbsp; </p>
+  <p><br>
+  </p>
+&nbsp;
+  <br>
+  <hr size="2" width="100%"><br>
+  <h2><a name="TEST_EXAMPLES"></a>6. Test Examples <br>
+  </h2>
+  <p> Geochemical modeling often requires&nbsp; </p>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3><font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><a name="TEST_TNODE"></a>6.1.
+TNode Level</font></h3>
+  <font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"></font>
+  <font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><br>
+  <br>
+  </font>
+  <h3><font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><a name="TEST_TNODEARRAY"></a>6.2.
+TNodeArray Level</font></h3>
+  <dl>
+    <br style="font-family: times new roman,times,serif;">
+    <span style="font-family: times new roman,times,serif;">&nbsp; </span><br>
     <br>
   </dl>
   <hr size="2" width="100%"> To
