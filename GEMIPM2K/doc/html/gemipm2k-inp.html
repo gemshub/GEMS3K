@@ -34,7 +34,7 @@ GEM IPM-Specific Data, Optional Sorption and Solution Models</a><br>
 Data Bridge Composition and Speciation Data</a></font><br>
   </p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#FREEDATA">3.
-Free Data Input File Format on GEMIPM2K TNode Level<br>
+Free Data Input File Format of GEMIPM2K<br>
   </a></font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#ALPHABETICAL">4.
 Alphabetical List of Data Objects <br>
@@ -64,7 +64,8 @@ sorption species and surface complexes. <br>
   <p>Finally, the DBR_DAT file contains data for the bulk composition,
 temperature, pressure and kinetic constraints (GEM input) as well as
 (when written from GEMIPM2K)&nbsp; dual solution, primal solution
-(speciation) and activity coefficients - the GEM results. <br>
+(speciation) and activity coefficients - the GEM equilibrium
+calculation results. <br>
   </p>
   <br>
   <hr size="2" width="100%">
@@ -79,8 +80,7 @@ levels can be executed with the
 following command line: <br>
   <br>
   <span style="font-family: monospace;">gemnode.exe
-&lt;TestDir&gt;/&lt;TaskName&gt;-dat.lst
-&lt;TestDir&gt;/&lt;TaskName&gt;-dbr-&lt;node&gt;.dat &gt;
+&lt;TestDir&gt;/&lt;TaskName&gt;-dat.lst &gt;
 &lt;TaskName&gt;.out</span><br>
   <br>
 where <span style="font-family: monospace;">&lt;TestDir&gt;</span> is
@@ -88,11 +88,8 @@ an optional subdirectory path relative to that where the executable
 file is located; <span style="font-family: monospace;">&lt;TaskName&gt;</span>
 should be substituted by a string denoting the
 problem name, e.g. <span style="font-family: monospace;">"MyTask"</span>.
-The file <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node&gt;.dat</span>,
-if provided (TNode level only), will be read as the last file (<span
- style="font-family: monospace;">&lt;node&gt;</span> is to be
-substituted by a string identifying the last node composition which
-overwrites the last node ). The file <span
+  <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span> The file <span
  style="font-family: monospace;">&lt;TaskName&gt;.out</span> will
 contain console output of the program, redirected there during
 execution of the
@@ -108,43 +105,43 @@ MyTestData/mytask-dat.lst &gt; mytask.out<br>
 must have the following contents (also automatically created upon file
 generation from GEMS-PSI code):<br>
   <br>
-  <span style="font-family: monospace;">-t "&lt;TaskName&gt;-ipm.dat"
--t "&lt;TaskName&gt;-dch.dat",
-"&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat",
-"&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat" [, ... ]</span><br
+  <span style="font-family: monospace;">-t "&lt;TaskName&gt;-dch.dat"
+"&lt;TaskName&gt;-ipm.dat",
+"&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat"[,
+"&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat", ... ]</span><br
  style="font-family: monospace;">
   <br>
 This is simply the list of all files prepared for the GEMIPM2K input;
 all these files must be located in the same directory where the
 *-dat.lst file itself is located.&nbsp; <br>
   </p>
-  <p>The first file, <span style="font-family: monospace;">&lt;TaskName&gt;<a
- href="#GEMIPM">-ipm.dat</a></span>, contains input data that are used
-internally by the GEM IPM kernel and must not be exchanged with the
-mass transport part. This file also contains the flags and values for
-the numerical setup of GEM IPM subroutines, such as the convergence
-threshold. The first <span style="font-family: monospace;">-t</span>
-key tells that the following file <span style="font-family: monospace;">&lt;TaskName&gt;-ipm.dat</span>
-is prepared in free text input format (see example in the file <a
- href="../txt/ipm-dat-doc.txt"><span style="font-family: monospace;">ipm-dat-doc.txt</span></a>).
-Alternative command-line key is <span style="font-family: monospace;">-b</span>
-(the
-ipm file is prepared in binary format - this can only be done from
-GEMS-PSI code). <br>
-  <br>
-The second file in the list, <span style="font-family: monospace;">&lt;TaskName&gt;<a
- href="#DATACH">-dch.dat</a></span>, contains input data for the
+  <p> The <span style="font-family: monospace;">-t</span>
+command-line key tells that the following <span
+ style="font-family: monospace;">&lt;TaskName&gt;-dch.dat,</span><span
+ style="font-family: monospace;"> &lt;TaskName&gt;-ipm.dat,</span><span
+ style="font-family: monospace;">
+&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span> files, and so on, are
+prepared in
+free-text input format. Alternative command-line key is <span
+ style="font-family: monospace;">-b</span>
+(the files are prepared in binary format - this can only be done from
+GEMS-PSI code, or the files were written from the GEMIPM2K). <br>
+  </p>
+  <p>The first file in the list, <span style="font-family: monospace;">&lt;TaskName&gt;<a
+ href="gemipm2k-inp.html#DATACH">-dch.dat</a></span>, contains input
+data for the
 chemical system definition (CSD) that can be used by both GEM and the
 mass transport parts of the coupled code (see example in the file <a
  href="../txt/dch-dat-doc.txt"><span style="font-family: monospace;">dch-dat-doc.txt</span></a>).
 These data are also needed for reading/writing the <span
- style="font-family: monospace;">*-dbr.dat</span> files (see below).
-The second <span style="font-family: monospace;">-t</span>
-command-line key tells that the following <span
- style="font-family: monospace;">&lt;TaskName&gt;-dch.dat,
-&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span> files, and so on, are
-prepared in
-text format. <br>
+ style="font-family: monospace;">*-dbr.dat</span> files (see below). <br>
+  </p>
+  <p>The second file, <span style="font-family: monospace;">&lt;TaskName&gt;<a
+ href="#GEMIPM">-ipm.dat</a></span>, contains input data that are used
+internally by the GEM IPM kernel and must not be exchanged with the
+mass transport part. This file also contains the flags and values for
+the numerical setup of GEM IPM subroutines, such as the convergence
+threshold. <br>
   </p>
   <p>There can be one or many comma-separated file
 names of <a href="#DATABR"><span style="font-family: monospace;">*-dbr.dat</span></a>&nbsp;
@@ -175,10 +172,10 @@ the command line in the following order: <br>
   <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;nodeN&gt;.dat</span><br
  style="font-family: monospace;">
   <br>
-As an option, the DCH_DAT and DBR_DAT files can be read in in the
+As an option, the files can be read in in the
 binary
-format (after changing the second -t key to -b in the file
-&lt;TaskName&gt;-dat.lst. <br>
+format (after changing the -t key to -b in the file
+&lt;TaskName&gt;-dat.lst). <br>
   <br>
 The whole collection of GEMIPM2K input files describing the chemical
 system for starting the coupled examples can be written directly from
@@ -374,8 +371,9 @@ More about the DBR_DAT file format can be found in the <a
   <hr size="2" width="100%">
   <h2><br>
   </h2>
-  <h2><a name="FREEDATA"></a>3. Free Data Input File Format at GEMIPM2K
-TNode Class Level</h2>
+  <h2><a name="FREEDATA"></a>3. Free Data Input File Format of GEMIPM2K
+  <br>
+  </h2>
   <p>This section summarizes the syntax of free data input format used
 in text DCH_DAT, IPM_DAT and DBR_DAT files readable by the TNode class
 subroutines.&nbsp; Details about data objects for each file are given
@@ -544,11 +542,14 @@ file:</span><br>
 1.60426e+01 2.0159e+00 3.19988e+01 1.20108e+01 <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.00087e+02 1.84401e+02
 7.40927e+01 5.83197e+01 <br>
-&lt;A&gt;<br>
+# &lt;DCmm&gt; will not be necessary in future versions<br>
+  </p>
+  <p style="margin-left: 40px; font-family: monospace;">&lt;A&gt;<br>
 # 'C'&nbsp;&nbsp;&nbsp;&nbsp; 'Ca'&nbsp;&nbsp;&nbsp;
 'Cl'&nbsp;&nbsp;&nbsp;&nbsp; 'H'&nbsp;&nbsp;&nbsp;
 'Mg'&nbsp;&nbsp;&nbsp; 'O'&nbsp;&nbsp;&nbsp; 'Zz' <br>
-1.0 1.0 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp;
+1.0&nbsp;&nbsp;&nbsp;&nbsp; 1.0&nbsp;&nbsp;&nbsp;&nbsp; 0.0&nbsp;&nbsp;
+&nbsp; 0.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp;
 &nbsp; 3.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp;&nbsp; <br>
 1.0&nbsp;&nbsp; &nbsp; 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp;
 1.0&nbsp;&nbsp; &nbsp; 0.0&nbsp;&nbsp; &nbsp; 3.0&nbsp;&nbsp; &nbsp;
@@ -635,7 +636,8 @@ file:</span><br>
 0.0&nbsp;&nbsp;&nbsp; <br>
   </p>
   <p style="margin-left: 40px; font-family: monospace;">&lt;Ttol&gt;
-1.0e-01&nbsp; &lt;Tval&gt; 5.0e0&nbsp;&nbsp; &lt;Ptol&gt; 1.0
+1.0e-01&nbsp; &lt;Tval&gt; 5.0e0&nbsp;&nbsp; &lt;Ptol&gt;
+1.0&nbsp;&nbsp;
 &lt;Pval&gt; 1.0&nbsp;&nbsp; <br>
 &lt;roW&gt; 9.999926e-01&nbsp; &lt;epsW&gt; 8.559333e+01 <br>
   </p>
@@ -661,10 +663,7 @@ file:</span><br>
   <p><span style="font-weight: bold; text-decoration: underline;">ipm.dat
 file:</span><br>
   </p>
-  <p style="margin-left: 40px; font-family: monospace;">"CalDolCol
-G&nbsp; CalcColumn&nbsp; 1001 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-000 "<br>
+  <p style="margin-left: 40px; font-family: monospace;">"CalDolCol:G:CalcColumn:1001:0:1:25:000:"<br>
 &lt;pa_PE&gt;&nbsp;&nbsp; 1 &nbsp; &lt;PV&gt;&nbsp; 0&nbsp;&nbsp;
 &lt;PSOL&gt;&nbsp;&nbsp; 0&nbsp;&nbsp; &lt;PAalp&gt;&nbsp;
 '+'&nbsp;&nbsp; &lt;PSigm&gt;&nbsp;&nbsp; '+'<br>
@@ -689,12 +688,12 @@ file:</span><br>
   </p>
   <p><br>
   </p>
-  <p>Please remember that&nbsp; the dch.dat and ipm.dat files are read
+  <p>Please remember that&nbsp; the DCH_DAT and IPM_DAT files are read
 only once per GEMIPM2 session, and any number of dbr.dat files (for
 nodes) can be provided and read in a sequence for the whole node array
-(in TNodeArray).&nbsp; These dbr.dat files normally have different bulk
-compositions <br>
-(&lt;bIC&gt;) and&nbsp; &lt;NodeHandle&gt; values. If the dch.dat file
+(in TNodeArray).&nbsp; These DBR_DAT files normally have different bulk
+compositions (&lt;bIC&gt;) and&nbsp; &lt;NodeHandle&gt; values. If the
+dch.dat file
 contains grid arrays for thermodynamic data, also &lt;T&gt; and
 &lt;P&gt; values can vary from node to node. <br>
   </p>
