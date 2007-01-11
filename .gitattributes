@@ -1,6 +1,7 @@
 * text=auto !eol
 GEMIPM2K/doc/html/gemipm2k-inp.html -text
 GEMIPM2K/doc/html/gemipm2k-man.html -text
+GEMIPM2K/doc/html/gems1.png -text
 GEMIPM2K/doc/txt/PGIcompile.txt -text
 GEMIPM2K/doc/txt/SVN-URL-ROCKFLOW-GEM.txt -text
 GEMIPM2K/doc/txt/dbr-dat-doc.txt -text
