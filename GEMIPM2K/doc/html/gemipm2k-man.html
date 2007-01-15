@@ -1,220 +1,518 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
-	<TITLE>GEMIPM2K Description</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Linux)">
-	<META NAME="CREATED" CONTENT="20070111;11040100">
-	<META NAME="CHANGED" CONTENT="16010101;0">
-	<META NAME="DESCRIPTION" CONTENT="Version 3.0.0-PSI">
-</HEAD>
-<BODY LANG="en-US" DIR="LTR">
-<H1><IMG SRC="gems1.png" NAME="graphics1" ALT="GEMS-icon" ALIGN=LEFT WIDTH=48 HEIGHT=48 BORDER=0><FONT COLOR="#000066">GEMIPM2K
-version 2.2.0</FONT> 
-</H1>
-<H2>Standalone GEM-IPM-2 Solver of Chemical Equilibria by Gibbs
-Energy Minimization</H2>
-<HR SIZE=1>
-<H3><FONT COLOR="#ff0000">&lt;under construction&gt;</FONT></H3>
-<H3>Contents</H3>
-<BLOCKQUOTE><A HREF="#1-INTRO"><FONT FACE="Helvetica, Arial, sans-serif">1.
-Introduction</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#2-STRUCTURE"><FONT FACE="Helvetica, Arial, sans-serif">2.
-Structure of GEMIPM2K Code and its Data Exchange Intefaces </FONT></A>
-</BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#KERNEL"><FONT FACE="Helvetica, Arial, sans-serif">2.1.
-The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM
-(Multi) </FONT></A>
-</BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#DATACH"><FONT FACE="Helvetica, Arial, sans-serif">2.2.
-The DATACH Structure for Chemical System Definition (CSD) Accessible
-to both FMT and GEM parts</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><FONT FACE="Helvetica, Arial, sans-serif"><A HREF="#DATABR">2.3.
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR"
+ content="Mozilla/4.7 [en] (WinNT; I) [Netscape]">
+  <title>GEMIPM2K Description</title>
+  <meta name="description" content="Version 3.0.0-PSI">
+</head>
+<body>
+<h1><img alt="GEMS-icon" src="gems1.png"
+ style="width: 48px; height: 48px;" align="left"> <font color="#000066">
+GEMIPM2K version 2.2.0</font> </h1>
+<h2>Standalone GEM-IPM-2 Solver of Chemical Equilibria by Gibbs Energy
+Minimization<br>
+</h2>
+<hr size="2" width="100%">
+<p> </p>
+<h3><span style="color: rgb(255, 0, 0);">&lt;under construction&gt;</span><br>
+</h3>
+<h3>Contents</h3>
+<blockquote>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#1-INTRO">1.
+Introduction<br>
+  </a></font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#2-STRUCTURE">2.
+Structure of GEMIPM2K Code&nbsp; and its Data Exchange Intefaces <br>
+  </a></font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#KERNEL">2.1.
+The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM (Multi) </a><br>
+  </font></p>
+  <p><a href="#DATACH"><font face="Helvetica, Arial, sans-serif">2.2.
+The DATACH Structure for Chemical System Definition (CSD) Accessible to
+both FMT and GEM parts</font></a></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#DATABR">2.3.
 The DATABR Structure for the Node Data Bridge Composition and
-Speciation data</A> <BR><BR><A HREF="#TNODE">2.4. The TNode Class - a
-Minimal Data Exchange Interface for Coupling with Existing Transport
-Codes</A><BR><BR><A HREF="#TNODEARRAY">2.5. The TNodeArray Class - a
-Node Data Storage for Developing New Coupled Codes</A></FONT></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#REQUIREMENTS"><FONT FACE="Helvetica, Arial, sans-serif">3.
-Requirements for Programming </FONT></A>
-</BLOCKQUOTE>
-<BLOCKQUOTE><FONT FACE="Helvetica, Arial, sans-serif"><A HREF="#CALLFROMCPP">3.1.
-When the Calling (FMT) Program is Written in C++</A><BR><BR><A HREF="#CALLFROMFORTRAN">3.2.
-When the Calling (FMT) Program is Written in Fortran-90 </A></FONT>
-</BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#ALPHABETICAL"><FONT FACE="Helvetica, Arial, sans-serif">4.
-Compilation and Linking on Various Platforms</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#GNUCPP_FOR"><FONT FACE="Helvetica, Arial, sans-serif">4.1.
-GNU C++ (gcc - gfortran)</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#PGICPP_FOR"><FONT FACE="Helvetica, Arial, sans-serif">4.2.
-Portland Group C++ (pgcc- pgf)</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#MSVCPP_DIGIFOR"><FONT FACE="Helvetica, Arial, sans-serif">4.3.
-MS Visual C++ (with Digital Fortran)</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#BORLANDCPP"><FONT FACE="Helvetica, Arial, sans-serif">4.4.
-Borland C++</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#OTHER_COMPILERS"><FONT FACE="Helvetica, Arial, sans-serif">4.5.
-Other compilers and linkers</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#SVN_REP"><FONT FACE="Helvetica, Arial, sans-serif">4.6.
-Subversion Repository of GEMIPM2K</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#INPUT_FILES"><FONT FACE="Helvetica, Arial, sans-serif">5.
-Input Files</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#TEST_EXAMPLES"><FONT FACE="Helvetica, Arial, sans-serif">6.
-Test Examples</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#TEST_TNODE"><FONT FACE="Helvetica, Arial, sans-serif">6.1.
-TNode Level</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE><A HREF="#TEST_TNODEARRAY"><FONT FACE="Helvetica, Arial, sans-serif">6.2.
-TNodeArray Level</FONT></A></BLOCKQUOTE>
-<BLOCKQUOTE STYLE="margin-bottom: 0in">&nbsp;</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="1-INTRO"></A>
-1. Introduction</H2>
-<BLOCKQUOTE>Geochemical modeling often requires&nbsp; 
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in">
-<BR><BR>
-</H2>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="2-STRUCTURE"></A>
-2. Structure of GEMIPM2K Code&nbsp; and its Data Exchange Intefaces 
-</H2>
-<BLOCKQUOTE>Geochemical modeling often requires<BR>&nbsp; 
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="KERNEL"></A>
-2.1. The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM
-(Multi)</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="DATACH"></A>
-2.2. <FONT FACE="times new roman, times, serif">The DATACH Structure
-for Chemical System Definition (CSD) Accessible to both FMT and GEM
-parts</FONT> 
-</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="DATABR"></A>
-2.3. <FONT FACE="Helvetica, Arial, sans-serif"><FONT FACE="times new roman, times, serif">The
-DATABR Structure for the Node Data Bridge Composition and Speciation
-data</FONT> </FONT>
-</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="TNODE"></A>
-2.4. The TNode Class - a Minimum Data Exchange Interface for Coupling
-with Existing Transport Codes</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="TNODEARRAY"></A>
-2.5. The TNodeArray Class - a Data Storage for Developing New Coupled
-Codes 
-</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in">
-<BR><BR>
-</H2>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="REQUIREMENTS"></A>
-3. Requirements for Programming</H2>
-<BLOCKQUOTE>Geochemical modeling often requires</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="CALLFROMCPP"></A>
-<FONT FACE="times new roman, times, serif">3.1. When the Calling
-(FMT) Program is Written in C/C++ </FONT>
-</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="CALLFROMFORTRAN"></A>
-<FONT FACE="times new roman, times, serif">3.2. When the Calling
-(FMT) Program is Written in Fortran-90 </FONT>
-</H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<BLOCKQUOTE><BR><BR><BR>
-</BLOCKQUOTE>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="COMPILE_PLATFORMS"></A>
-4. Compilation and Linking on Various Platforms 
-</H2>
-<BLOCKQUOTE><BR>introduction 
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="GNUCPP_FOR"></A>
-<FONT FACE="times new roman, times, serif">4.1. GNU C++ (gcc -
-gfortran)</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="PGICPP_FOR"></A>
-<FONT FACE="times new roman, times, serif">4.2. Portland Group C++
-(pgcc- pgf)</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="MSVCPP_DIGIFOR"></A>
-<FONT FACE="times new roman, times, serif">4.3. MS Visual C++ (with
-Digital Fortran)</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="BORLANDCPP"></A>
-<FONT FACE="times new roman, times, serif">4.4. Borland C++</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="OTHER_COMPILERS"></A>
-<FONT FACE="times new roman, times, serif">4.5. Other compilers and
-linkers</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="SVN_REP"></A>
-<FONT FACE="times new roman, times, serif">4.6. Subversion Repository
-of GEMIPM2K</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<BLOCKQUOTE STYLE="margin-bottom: 0in">&nbsp; 
-</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="INPUT_FILES"></A>
-5. Input Files 
-</H2>
-<BLOCKQUOTE>Geochemical modeling often requires&nbsp; 
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<BLOCKQUOTE STYLE="margin-bottom: 0in">&nbsp; 
-</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H2 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="TEST_EXAMPLES"></A>
-6. Test Examples 
-</H2>
-<BLOCKQUOTE>Geochemical modeling often requires&nbsp; 
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="TEST_TNODE"></A>
-<FONT FACE="times new roman, times, serif">6.1. TNode Level</FONT></H3>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-<H3 STYLE="margin-left: 0.39in; margin-right: 0.39in; margin-top: 0in"><A NAME="TEST_TNODEARRAY"></A>
-<FONT FACE="times new roman, times, serif">6.2. TNodeArray Level</FONT></H3>
-<BLOCKQUOTE><BR>&nbsp; 
-</BLOCKQUOTE>
-<HR WIDTH=143165387 ALIGN=CENTER SIZE=1>
-<BLOCKQUOTE>To Contents &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<TT>About
-GEMIPM2K </TT><BR><TT><BR>end of file</TT> <BR>&nbsp;</BLOCKQUOTE>
-<BLOCKQUOTE><BR>&nbsp; 
-</BLOCKQUOTE>
-<BLOCKQUOTE><BR><BR>
-</BLOCKQUOTE>
-</BODY>
-</HTML>
+Speciation data</a> <br>
+  <br>
+  </font><font face="Helvetica, Arial, sans-serif"> <a href="#TNODE">2.4.
+The TNode Class - a Minimal Data Exchange
+Interface for Coupling with Existing Transport Codes</a><br>
+  </font><font face="Helvetica, Arial, sans-serif"><br>
+  <a href="#TNODEARRAY">2.5. The TNodeArray Class - a Node Data Storage
+for Developing New Coupled Codes</a></font><br>
+  </p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#REQUIREMENTS">3.
+Requirements for Programming </a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#CALLFROMCPP">3.1.
+When the Calling (FMT)
+Program is Written in C++</a><br>
+  </font><font face="Helvetica, Arial, sans-serif"><br>
+  <a href="#CALLFROMFORTRAN">3.2. When the Calling (FMT) Program is
+Written in Fortran-90 </a></font><br>
+  </p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#ALPHABETICAL">4.
+Compilation and Linking on Various Platforms</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#GNUCPP_FOR">4.1.
+GNU C++ (gcc - gfortran)</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#PGICPP_FOR">4.2.
+Portland Group C++ (pgcc- pgf)</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#MSVCPP_DIGIFOR">4.3.
+MS Visual C++ (with Digital Fortran)</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#BORLANDCPP">4.4.
+Borland C++</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a
+ href="#OTHER_COMPILERS">4.5. Other compilers and linkers</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#SVN_REP">4.6.
+Subversion Repository of GEMIPM2K</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#INPUT_FILES">5.
+Input Files</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#TEST_EXAMPLES">6.
+Test Examples</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#TEST_TNODE">6.1.
+TNode Level</a><br>
+  </font></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a
+ href="#TEST_TNODEARRAY">6.2. TNodeArray Level</a><br>
+  <a href="gemipm2k-man.html#FREEDATA"> </a></font></p>
+&nbsp;<br>
+  <hr size="2" width="100%"><br>
+  <h2><a name="1-INTRO"></a>1. Introduction</h2>
+  <p></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">Modern
+approaches to reactive mass transport (RMT) or fluid mass transport
+(FMT) modelling require simultaneous account for mass transport of
+contaminants through aqueous and/or gas phase in subsurface, and their
+interaction with wall-rock minerals, including (ad)sorption,
+(co)precipitation,&nbsp; and mineral dissolution.&nbsp; These chemical
+processes depend on redox state of the system, are inherently complex,
+and may involve many phases and chemical species, with kinetically
+controlled interactions. They may indirectly affect the mass transport
+via porosity and permeability changes due to mineral dissolution or
+precipitation.</p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">Direct
+inclusion of all possible chemical reactions in the mass transport
+model would often render it intractable, especially in 2D or 3D space.
+In this case, the chemical model must be dramatically simplified to a
+few reactions, which makes its chemical plausibility questionable.<br>
+  </p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">An
+alternative approach is to keep the full-complexity chemical model
+solver in a kind of "black box" which can be applied separately to each
+node of the FMT model at a given time point.&nbsp; The&nbsp; input of
+the "chemical black box" at time <span style="font-style: italic;">t</span>&nbsp;
+is just the bulk chemical composition <span style="font-style: italic;">b</span>
+of the reactive part of the node, as well as temperature <span
+ style="font-style: italic;">T,</span> pressure <span
+ style="font-style: italic;">P</span>, and optionally, kinetic
+constraints <span style="font-style: italic;">k</span> on some
+reactions or amounts of certain components. Some or all these inputs
+could have been changed by the mass transport part on its previous
+iteration time step <span style="font-style: italic;">t</span>-1 over
+all nodes.&nbsp; Now, the "chemical black box" equilibration is applied
+to each node independently at time <span style="font-style: italic;">t</span>,
+to produce changed speciation <span style="font-style: italic;">n</span>
+(amounts or concentrations of chemical species in all reactive
+phases),&nbsp; new phase volumes, redox (Eh, pe of aqueous solution,
+gas fugitivities), chemical potentials of components, etc. This
+procedure can also establish a disappearance of some phases or
+appearance of some new phases in some nodes (e.g., by dissolution or
+precipitation of solids). After this "chemistry" run over all nodes is
+finished, the next time step of the FMT algorithm can be done for the
+time point <span style="font-style: italic;">t</span>+1, using the
+updated concentrations of mobile species (also pH, Eh, <span
+ style="font-style: italic;">f</span>(H<sub>2</sub>), ... ) in aqueous
+and/or gas phases at time <span style="font-style: italic;">t</span>.
+The FMT part redistributes matter between nodes (under mass
+concervation) thus producing corrected compositions of reactive part of
+each node. So, the coupled RMT algorithm actually runs over all nodes
+twice at the time point <span style="font-style: italic;">t</span>:&nbsp;
+once doing a mass transport iteration using node compositions obtained
+earlier (at <span style="font-style: italic;">t</span>-1), and
+then&nbsp; by applying the "chemical black box" to each node at time <span
+ style="font-style: italic;">t</span>, producing the updated speciation
+which will be used by the FMT part at the next time point&nbsp; <span
+ style="font-style: italic;">t</span>+1.<br>
+  </p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">This
+idea is not really new and it has been implemented in a number of
+coupled codes (PHREEQC, COTRAN, RockFlow, MCOTAC, ....). These codes
+use different mass transport algorithms (for advection, diffusion,
+advection and diffusion) but in most cases the same type of chemical
+solver based on the law of mass action (LMA) and Newton-Raphson method
+for minimizing the mass balance deviations. Recently, another type of
+chemical solvers based on Gibbs energy minimization (GEM) come into
+coupling with the FMT codes. <br>
+  </p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">Both LMA and
+GEM can solve the so-called&nbsp; <i style="">forward
+chemical modeling problem</i> which consists in finding the
+concentrations (or
+amounts) and activities of chemical species in aqueous and other phases
+present
+in a complex chemical system in an equilibrium state defined by
+temperature <i style="">T</i>, pressure <i style="">P</i>, and the
+system bulk composition <span style="font-style: italic;">b</span>. In
+practice, calculations for
+solving such problems range from trivial to enormously complex,
+depending on
+the number of species, phases, and stoichiometry units. The complexity
+further
+increases when several phases-solutions with redox sensitive components
+are
+included in the mass balance; a typical case is the Aq-SS system with
+the gas
+mixture phase. Even more complex systems can be considered, e.g. those
+involving (ad)sorption on several co-existing (stable or metastable)
+sorbents. <br>
+  </span></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">Chemical
+speciation problems are usually solved with help of LMA method,
+supported with tools such as calculation of
+Lippmann functions and saturation indexes.</span> A good introduction
+into modern LMA chemical speciation numerical
+methods can be found in several textbooks [Van Zeggeren and Storey,
+1970; Morel and Hering, 1993; Bethke, 1996] and in the manuals of
+speciation codes such as MINEQL or
+PHREEQC [Parkhurst and Appelo, 1999]. <br>
+  </p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">The
+advantages of LMA - excellent mass balance accuracy and fast
+convergence - are best revealed in the case of simple aqueous
+speciation models with known stable pure solid phase assemblage and
+known Eh and fugacities of gases. The LMA codes require thermodynamic
+data only for the product species (usually aqueous/surface complexes,
+minerals, and gases) but not for the master species (usually aqueous
+ions) - this "input data economy" can also be viewed as an advantage. <br>
+  </p>
+  <span style="font-size: 11pt;" lang="EN-GB"></span>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">However,
+solving with LMA code the complex equilibria involving the aqueous
+electrolyte phase, many possible solid phases, especially with solid
+solutions is,
+in general, an inefficient and awkward process because a single aqueous
+speciation calculation turns into a series of many runs controlled by
+non-rigorous
+test procedures for selecting (over)saturated solids one-by-one [see
+Read, 1982; Bethke, 1996], without a theoretical guarantee of
+convergence to a unique solution. This kind of retardation is difficult
+to evaluate, but, with a large list of possible solids, more than 5 or
+even 10 LMA sub-runs can be necessary to include all stable solids into
+mass balance. Only ideal solid solutions&nbsp; or non-ideal binary
+solid solutions can be included into this LMA iteration scheme. </span><span
+ style="font-size: 11pt; line-height: 150%; font-family: Arial;"
+ lang="EN-GB"><br>
+  </span></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">In the
+complementary GEM chemical solver setup [for details, see Karpov et
+al., 1997; 2001; Kulik et al., 2004], the total mole amounts of
+chemical
+elements <i style="">n<sub>i</sub></i> and (zero)
+charge <i style="">n<sub>Z</sub></i> comprise the
+input bulk composition of the chemical system expressed using <i
+ style="">n</i>(<i style="">N</i>)<i style=""> independent component</i>
+(IC). All<i style="">&nbsp; n</i>(<i style="">L</i>)<i style=""> </i>stoichiometrically
+feasible<i style=""> </i>chemical species or <i style="">dependent
+components</i> (DC) belonging to a set <i style="">L</i> are taken
+into the mass balance
+through their chemical formulae and mole amounts <i style="">n<sub>j</sub></i>,
+  <i style="">j</i> </span><span
+ style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">from
+  </span></span><span style="font-size: 11pt; line-height: 150%;"
+ lang="ES"></span><i style=""><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">L</span></i><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">. A dependent
+component belongs to a single- or
+multi-component aqueous, gaseous, fluid, liquid, solid, or sorption
+phase.
+The stability of <i>j</i>-th chemical species at temperature <i
+ style="">T </i>and pressure <span style="font-style: italic;">P</span>
+of
+interest is defined by its input standard molar Gibbs energy function <span
+ style="font-style: italic;">g<sub>T,P</sub></span></span><span
+ style="font-size: 11pt; line-height: 150%; font-family: Arial;"
+ lang="ES"><span style="position: relative; top: 7pt;"><!--[if gte vml 1]><v:shapetype
+ id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
+ path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:15pt;
+ height:20.25pt' o:ole="">
+ <v:imagedata src="file:///C:\DOCUME~1\KULIK~1.PSI\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
+  o:title=""/>
+</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span><!--[if gte mso 9]><xml>
+ <o:OLEObject Type="Embed" ProgID="Equation.3" ShapeID="_x0000_i1025"
+  DrawAspect="Content" ObjectID="_1230310185">
+ </o:OLEObject>
+</xml><![endif]--></span><span
+ style="font-size: 11pt; line-height: 150%; font-family: Arial;"
+ lang="EN-GB">.</span><span style="font-size: 11pt; line-height: 150%;"
+ lang="EN-GB"> Activities and concentrations
+of dependent components are treated separately in each phase (through
+subsets
+of indexes <i style="">L</i></span><i style=""><sub><span
+ style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">a</span></span></sub></i><i
+ style=""><sub><span style="font-size: 11pt; line-height: 150%;"
+ lang="EN-GB">, </span></sub></i><i style=""><span
+ style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">a</span></span></i><i
+ style=""><span style="font-size: 11pt; line-height: 150%;" lang="ES"> </span></i><span
+ style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">from</span></span><span
+ style="font-size: 11pt; line-height: 150%;" lang="ES"></span><i
+ style=""><span style="font-size: 11pt; line-height: 150%;" lang="ES"> </span></i><i
+ style=""><span style="font-size: 11pt; line-height: 150%;" lang="ES"><span
+ style="">F</span></span></i><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">), taking
+into account the appropriate standard and
+reference states, concentration scales, and mixing models. <br>
+  </span></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">Conversely,
+GEM
+algorithms can solve complex aqueous - solid (solution) Aq-SS
+equilibria in one GEM run, in a
+straightforward way, without any supporting tools such as Lippmann
+functions
+and semi-empirical iterative procedures required in LMA Aq-SS
+speciation
+models. The applicability of GEM to chemical systems is limited only by
+the knowledge of
+standard-state molar properties of end-members and the non-ideal
+interaction
+parameters for each phase.<br>
+  </span></p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">The
+disadvantages of GEM in comparison with LMA codes are (i) slower
+convergence (up to 7 times) in simple aqueous speciation calculations
+and (ii) less mass balance accuracy (1e-7 mol compared to 1e-19 mol in
+LMA). The performance of GEM can be dramatically improved (7-10 times)
+using the previous equilibrium speciation as an initial approximation
+for the new run, if the chemical composition has been changed only
+slightly. The mass balance accuracy can be improved up to 1e-17 mol
+(comparable to that of LMA)&nbsp; at the cost of a few additional
+iterations (the IPM-2 algorithm), as described in [Chudnenko ea, 2002].
+  <br>
+  </p>
+  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">The
+performance and chemical feasibility of GEM in complex Aq-SS multiphase
+systems is unmatched and may be much better than that of LMA codes (no
+direct benchmarking is yet available). A very interesting advantage of
+GEM is that it yields two solutions - "primal" one for speciation
+(analogous to LMA) and the "dual" one for chemical potentials of
+stoichiometry units (not available from LMA). This dual solution opens
+the innovative ways to constructing new mass transport models for
+diffusion-dominated systems, since on the most general level, the
+diffusion of any component is driven by the gradient of its chemical
+potential. &nbsp; &nbsp; <br>
+  <span style="font-size: 11pt; line-height: 150%;" lang="EN-GB"></span><span
+ style="font-size: 11pt; line-height: 150%; font-family: Arial;"
+ lang="EN-GB"><o:p></o:p></span></p>
+  <p><span style="font-size: 11pt; line-height: 150%;" lang="EN-GB">The
+present program GEMIPM2K is an implementation of GEM IPM-2 chemical
+solver with the data exchange interface which makes it possible to
+couple any existing FMT code with GEM&nbsp; "chemical black box" to
+produce a coupled modeling code with high chemical plausibility. This
+kind of coupling, in which the chemical information for all nodes is
+stored in the mass transport part which calls the chemical solver for
+each node </span><span style="font-size: 11pt; line-height: 150%;"
+ lang="EN-GB">one-by-one</span><span
+ style="font-size: 11pt; line-height: 150%;" lang="EN-GB">, is
+supported by the TNode C++ class (and its fortran interface). When a
+new FMT code is written, the whole data storage for all nodes can be
+organized using a TNodeArray C++ class into two node arrays (for time <span
+ style="font-style: italic;">t</span> and <span
+ style="font-style: italic;">t</span>-1), with each node accessible
+from the GEM IPM-2 routines or from the FMT program.</span></p>
+  <p><span style="font-size: 11pt; line-height: 150%;" lang="EN-GB"></span>This
+document describes the structure of GEMIPM2K program and the data
+exchange interface (DATACH and DATABR structures), followed by the
+overview of TNode and TNodeArray classes and examples of their
+usage.&nbsp; </p>
+  <p><br>
+  </p>
+  <hr size="2" width="100%">
+  <h2><br>
+  </h2>
+  <h2><a name="2-STRUCTURE"></a>2. Structure of GEMIPM2K Code&nbsp; and
+its Data Exchange Intefaces </h2>
+  <p> Geochemical modeling often requires<br>
+&nbsp; </p>
+  <h3><a name="KERNEL"></a>2.1. The GEM-IPM2 Kernel (GEMIPM2K) and its
+Work Data
+Structure IPM (Multi)<br>
+  </h3>
+  <p><br>
+  <br>
+  </p>
+  <h3><a name="DATACH"></a>2.2. <font
+ style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif">The DATACH Structure for Chemical
+System Definition (CSD) Accessible to both FMT and GEM parts</font> </h3>
+  <p><br>
+  <br>
+  </p>
+  <p> </p>
+  <h3><a name="DATABR"></a>2.3. <font
+ face="Helvetica, Arial, sans-serif"><span
+ style="font-family: times new roman,times,serif;">The DATABR Structure
+for the Node Data Bridge Composition and Speciation data</span> </font>
+  </h3>
+  <p><br>
+  </p>
+  <h3><a name="TNODE"></a>2.4. The TNode Class - a Minimum Data
+Exchange Interface for Coupling with Existing Transport Codes</h3>
+  <br>
+  <br>
+  <h3><a name="TNODEARRAY"></a>2.5. The TNodeArray Class - a Data
+Storage for Developing New Coupled Codes </h3>
+  <br>
+  <br>
+  <p> </p>
+  <hr size="2" width="100%">
+  <h2><br>
+  </h2>
+  <h2><a name="REQUIREMENTS"></a>3. Requirements for Programming</h2>
+  <p> Geochemical modeling often requires<br>
+  </p>
+  <p><br>
+  <font face="Helvetica, Arial, sans-serif"></font></p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="CALLFROMCPP"></a>3.1. When the Calling (FMT)
+Program is Written in C/C++ </h3>
+  <p><br>
+  </p>
+  <p><font face="Helvetica, Arial, sans-serif"><br>
+  </font></p>
+  <h3><font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><a name="CALLFROMFORTRAN"></a>3.2.
+When the
+Calling (FMT) Program is Written in Fortran-90 </font><br>
+  </h3>
+  <p><br>
+  </p>
+  <p><br>
+  <br>
+  </p>
+  <hr size="2" width="100%"><br>
+  <br>
+  <br>
+  <p> </p>
+  <h2><a name="COMPILE_PLATFORMS"></a>4. Compilation and Linking on
+Various Platforms <br>
+  </h2>
+  <dl>
+  </dl>
+  <br>
+introduction <br>
+  <br>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="GNUCPP_FOR"></a>4.1. GNU C++ (gcc - gfortran)<br>
+  </h3>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="PGICPP_FOR"></a>4.2. Portland Group C++ (pgcc- pgf)<br>
+  </h3>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="MSVCPP_DIGIFOR"></a>4.3. MS Visual C++ (with Digital Fortran)<br>
+  </h3>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="BORLANDCPP"></a>4.4. Borland C++<br>
+  </h3>
+  <font face="Helvetica, Arial, sans-serif"><br>
+  <br>
+  </font>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="OTHER_COMPILERS"></a>4.5. Other compilers and linkers</h3>
+  <br>
+  <font face="Helvetica, Arial, sans-serif"><br>
+  </font>
+  <h3 style="font-family: times new roman,times,serif;"><a
+ name="SVN_REP"></a>4.6. Subversion Repository of GEMIPM2K<br>
+  </h3>
+  <br>
+  <dl>
+    <br>
+  </dl>
+&nbsp; <br>
+  <hr size="2" width="100%"><br>
+  <h2><a name="INPUT_FILES"></a>5. Input Files <br>
+  </h2>
+  <p> Geochemical modeling often requires&nbsp; </p>
+  <p><br>
+  </p>
+&nbsp; <br>
+  <hr size="2" width="100%"><br>
+  <h2><a name="TEST_EXAMPLES"></a>6. Test Examples <br>
+  </h2>
+  <p> Geochemical modeling often requires&nbsp; </p>
+  <p style="font-family: times new roman,times,serif;"><br>
+  </p>
+  <h3><font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><a name="TEST_TNODE"></a>6.1.
+TNode Level</font></h3>
+  <font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"></font> <font
+ style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><br>
+  <br>
+  </font>
+  <h3><font style="font-family: times new roman,times,serif;"
+ face="Helvetica, Arial, sans-serif"><a name="TEST_TNODEARRAY"></a>6.2.
+TNodeArray Level</font></h3>
+  <dl>
+    <br style="font-family: times new roman,times,serif;">
+    <span style="font-family: times new roman,times,serif;">&nbsp; </span><br>
+    <br>
+  </dl>
+  <hr size="2" width="100%"> To
+Contents
+&nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp;<tt>About GEMIPM2K </tt><br>
+  <tt><br>
+end of file</tt> <br>
+&nbsp;<br>
+  <p><br>
+&nbsp; </p>
+  <br>
+  <br>
+</blockquote>
+</body>
+</html>
+
