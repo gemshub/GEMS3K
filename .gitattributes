@@ -4,6 +4,8 @@ GEMIPM2K/doc/html/gemipm2k-man.html -text
 GEMIPM2K/doc/html/gems1.png -text
 GEMIPM2K/doc/txt/PGIcompile.txt -text
 GEMIPM2K/doc/txt/SVN-URL-ROCKFLOW-GEM.txt -text
+GEMIPM2K/doc/txt/databr.h -text
+GEMIPM2K/doc/txt/datach.h -text
 GEMIPM2K/doc/txt/dbr-dat-doc.txt -text
 GEMIPM2K/doc/txt/dch-dat-doc.txt -text
 GEMIPM2K/doc/txt/f_gem_node.h -text

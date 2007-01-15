@@ -164,31 +164,28 @@ int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
   return 0;
 }
 
-
-
-
-
 //-------------------------------------------------------------------
 // GEM_init()
-// reads in the data from MULTI, DATACH, DATABR files prepared
-// using the GEMS-PSI GEM2MT module.
+// reads in the data from IPM_DAT, DCH_DAT, DBR_DAT files (prepared by hand or
+// using the GEMS-PSI GEM2MT module).
 //  Parameters:
 //  ipmfiles_lst_name - name of a text file that contains:
-//    " -t/-b <MULTI file name> -t/-b <dataCH file name>,
-//    <dataBR file name1>, ...  <dataBR file nameN> "
-//    These files (one MULTI & dataCH file, at least one dataBR file) must exist in
-//    the current directory; the dataBR files in the above list are indexed
-//    as 1, 2, ... N (node types) and must contain valid initial chemical
-//    systems (of the same structure described in the dataCH file) to set up
-//    the initial state of the FMT node array. If -t flag is specified
-//    then dataCH and dataBR files must be in text (ASCII) format;
-//    if -b or nothing is specified then dataCH and dataBR files are
-//    assumed to be binary (little-endian) files.
-//  nodeTypes[nNodes] - array of node type (fortran) indexes of dataBR files in
-//    the ipmfiles_lst_name list. This array, for each FMT node, specifies
-//    from which dataBR file the initial chemical system should be taken.
-//  Function returns:
-//   0: OK; 1: GEMIPM read file error; -1: System error (e.g. memory allocation)
+//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name1>,
+//      ... , <dataBR file nameN> "
+//    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
+//    exist in the same directory where the ipmfiles_lst_name file is located.
+//    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
+//    and must contain valid initial chemical systems (of the same structure
+//    as described in the DCH_DAT file) to set up the initial state of the FMT
+//    node array. If -t flag or nothing is specified then all data files must
+//    be in text (ASCII) format; if -b flag is specified then all data files
+//    are  assumed to be binary (little-endian) files.
+//  nodeTypes[nNodes] - array of node type (fortran) indexes of DBR_DAT files
+//    in the ipmfiles_lst_name list. This array (handle for each FMT node),
+//    specifies from which DBR_DAT file the initial chemical system should
+//    be taken.
+//  This function returns:
+//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
 //
 //-------------------------------------------------------------------
 
@@ -203,63 +200,74 @@ int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #else
       size_t npos = gstring::npos;
 #endif
-     bool binary_mult = true;
-     bool binary_f = true;
-     gstring chbr_in = ipmfiles_lst_name;
+//     bool binary_mult = true;
+     bool binary_f = false;
+     gstring lst_in = ipmfiles_lst_name;
 
 // Get path
-      size_t pos = chbr_in.rfind("/");
+      size_t pos = lst_in.rfind("/");
       gstring Path = "";
       if( pos < npos )
-       Path = chbr_in.substr(0, pos+1);
+       Path = lst_in.substr(0, pos+1);
 
-//  open file stream and reading name of MULTI file
-//  -t/-b  "<MULTI file name>"
-      fstream f_chbr(chbr_in.c_str(), ios::in );
-      ErrorIf( !f_chbr.good() , chbr_in.c_str(), "Fileopen error");
+//  open file stream for the file names list file
+      fstream f_lst( lst_in.c_str(), ios::in );
+      ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
 
-      gstring datachbr_file;
-      f_getline( f_chbr, datachbr_file, ' ');
+      gstring datachbr_fn;
+      f_getline( f_lst, datachbr_fn, ' ');
 
-//Testing flag "-t" or "-b" (by default "-b")   // use bynary or text files for Multi
-      pos = datachbr_file.find( '-');
+//  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
+//       "<DBR_DAT file1 name>" [, ... , "<DBR_DAT fileN name>"]
+// Rearranged in logical shape by KD on 12.01.2007
+
+//Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
+      pos = datachbr_fn.find( '-');
       if( pos != /*gstring::*/npos )
       {
-         if( datachbr_file[pos+1] == 't' )
-            binary_mult = false;
-         f_getline( f_chbr, datachbr_file, ' ');
+         if( datachbr_fn[pos+1] == 'b' )
+            binary_f = true;
+         f_getline( f_lst, datachbr_fn, ' ');
       }
 
-    // Reading structure MULTI (GEM IPM work structure)
-    gstring multu_in = Path + datachbr_file;
+      // Reading name of DCH_DAT file
+      gstring dat_ch = Path + datachbr_fn;
 
-// Reading name of dataCH file and names of dataBR files
-//  -t/-b  "<dataCH file name>" ,"<dataBR file1 name>", ..., "<dataBR fileN name>"
-      f_getline( f_chbr, datachbr_file, ' ');
+      // Reading name of IPM_DAT file for structure MULTI (GEM IPM work structure)
+      f_getline( f_lst, datachbr_fn, ' ');
+      gstring mult_in = Path + datachbr_fn;
 
-//Testing flag "-t" or "-b" (by default "-b")   // use bynary or text files as input
-      pos = datachbr_file.find( '-');
-      if( pos != /*gstring::*/npos )
-      {
-         if( datachbr_file[pos+1] == 't' )
-            binary_f = false;
-         f_getline( f_chbr, datachbr_file, ',');
-      }
-
-// Reading dataCH structure from file
-     gstring dat_ch = Path + datachbr_file;
+// Reading DCH_DAT file in binary or text format
       if( binary_f )
       {  GemDataStream f_ch(dat_ch, ios::in|ios::binary);
          datach_from_file(f_ch);
        }
       else
       { fstream f_ch(dat_ch.c_str(), ios::in );
-         ErrorIf( !f_ch.good() , dat_ch.c_str(), "DataCH Fileopen error");
+         ErrorIf( !f_ch.good() , dat_ch.c_str(), "DCH_DAT fileopen error");
          datach_from_text_file(f_ch);
       }
 
+// Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
+if( binary_f )
+ {
+   GemDataStream f_m(mult_in, ios::in|ios::binary);
+#ifdef IPMGEMPLUGIN
+    profil->readMulti(f_m);
+#else
+    TProfil::pm->readMulti(f_m);
+#endif
+  }
+  else
+  {
+#ifdef IPMGEMPLUGIN
+        profil->readMulti(mult_in.c_str());
+#endif
+  }
+
+// Prepare for reading DBR_DAT files
      i = 0;
-     while( !f_chbr.eof() )  // For all dataBR files listed
+     while( !f_lst.eof() )  // For all DBR_DAT files listed
      {
 
 #ifndef IPMGEMPLUGIN
@@ -268,10 +276,13 @@ int  TNode::GEM_init( const char* ipmfiles_lst_name,
            "Please, wait...", i, nNodes() );
 #endif
 
-// Reading work dataBR structure from file
-         f_getline( f_chbr, datachbr_file, ',');
+// Reading DBR_DAT file into work DATABR structure
+         if( i )  // Comma only after the first DBR_DAT file!
+            f_getline( f_lst, datachbr_fn, ',');
+         else
+            f_getline( f_lst, datachbr_fn, ' ');
 
-         gstring dbr_file = Path + datachbr_file;
+         gstring dbr_file = Path + datachbr_fn;
          if( binary_f )
          {
              GemDataStream in_br(dbr_file, ios::in|ios::binary);
@@ -279,8 +290,8 @@ int  TNode::GEM_init( const char* ipmfiles_lst_name,
           }
          else
           {   fstream in_br(dbr_file.c_str(), ios::in );
-                 ErrorIf( !in_br.good() , datachbr_file.c_str(),
-                    "DataBR Fileopen error");
+                 ErrorIf( !in_br.good() , datachbr_fn.c_str(),
+                    "DBR_DAT fileopen error");
                databr_from_text_file(in_br);
           }
 
@@ -300,30 +311,14 @@ int  TNode::GEM_init( const char* ipmfiles_lst_name,
            setNodeArray( i, nodeTypes  );
          }
           i++;
-     }
+     }  // end while()
 #ifndef IPMGEMPLUGIN
    pVisor->CloseMessage();
 #endif
 
-    ErrorIf( i==0, datachbr_file.c_str(), "GEM_init() error: No dataBR files read!" );
-    checkNodeArray( i, nodeTypes, datachbr_file.c_str()  );
+    ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
+    checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
 
-// Reading structure MULTI (GEM IPM work structure)
-if( binary_mult )
- {
-   GemDataStream f_m(multu_in, ios::in|ios::binary);
-#ifdef IPMGEMPLUGIN
-    profil->readMulti(f_m);
-#else
-    TProfil::pm->readMulti(f_m);
-#endif
-  }
-  else
-  {
-#ifdef IPMGEMPLUGIN
-        profil->readMulti(multu_in.c_str());
-#endif
-  }
    return 0;
 
 #ifdef IPMGEMPLUGIN

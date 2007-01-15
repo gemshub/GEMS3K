@@ -36,7 +36,7 @@ int main( int argc, char* argv[] )
    // Analyzing command line arguments
      // Default arguments
      char ipm_input_file_list_name[256] = "chemsys.lst";
-     char dbr_input_file_name[256] = "chemsys-dbr.dat";
+     char dbr_input_file_name[256] = "";
      char fmt_input_file_name[256] = "fmtparam.dat";
 
      if (argc >= 2 )
@@ -159,6 +159,7 @@ int main( int argc, char* argv[] )
   //   cout << "Begin Initialiation part" << endl;
 
   // Read DATABR structure from text file (read boundary condition)
+if( strlen( dbr_input_file_name ))
       TNode::na->GEM_read_dbr( dbr_input_file_name );
 
   for(  in=0; in<1; in++ )
