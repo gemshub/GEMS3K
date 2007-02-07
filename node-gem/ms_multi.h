@@ -281,6 +281,9 @@ class TMulti
     MULTI pm;
     MULTI *pmp;
 
+    void Alloc_A_B( int newN );
+    void Free_A_B();
+
 #ifndef IPMGEMPLUGIN
     SYSTEM *syp;
     MTPARM *tpp;
