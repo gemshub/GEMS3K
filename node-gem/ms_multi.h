@@ -283,6 +283,9 @@ class TMulti
 
     void Alloc_A_B( int newN );
     void Free_A_B();
+    void Build_compress_AN();
+    void Free_compress_AN();
+    void Free_internal();
 
 #ifndef IPMGEMPLUGIN
     SYSTEM *syp;

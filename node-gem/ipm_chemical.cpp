@@ -842,9 +842,9 @@ double TMulti::GX( double LM  )
             if( x < pmp->lowPosNum*10. )
                 continue;
             /* calc increment of G(x) */
-            //Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
-            //                     pmp->DCCW[j] );
-            switch( pmp->DCCW[j] )
+            Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+                                 pmp->DCCW[j] );
+            /*switch( pmp->DCCW[j] )
             {
              case DC_ASYM_SPECIES:
                     Gi = x * ( pmp->G[j] + log(x) - pmp->logXw );
@@ -858,7 +858,7 @@ double TMulti::GX( double LM  )
                    break;
            default:
                     Gi = 7777777.;
-           }
+           }*/
           FX += Gi;
         }   /* j */
 NEXT_PHASE:
