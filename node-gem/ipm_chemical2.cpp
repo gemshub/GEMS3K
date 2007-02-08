@@ -147,7 +147,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
 
     for( j=jb; j<je; j++ )
     { /* cycle by DC - important bugfixes 02.04.2003 */
-        Muj = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+        Muj = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
         pmp->Fx[j] = Muj * pmp->RT;     /* el-chem potential in J/mole */
 
         if( X[j] <= pmp->lowPosNum )
@@ -377,7 +377,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 if( pmp->LO )
                     pmp->Y_m[j] = 0.0;
                 pmp->Y_w[j] = 0.0;
-                pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+                pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
                 pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] -pmp->GEX[j]/* + Dsur */ );
                 pmp->Fx[j] *= pmp->RT;     /* el-chem potential */
                 goto NEXT_PHASE;
@@ -388,7 +388,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 pmp->Y_m[j] = X[j] * 1000./18.01528/XFA[0]; /* molality */
             pmp->Y_w[j] = /* mass % in the system */
                 1e2 * X[j] * pmp->MM[j] / pmp->MBX;
-            pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+            pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] - pmp->GEX[j] /* + Dsur */ );
             pmp->Fx[j] *= pmp->RT;     /* el-chem potential */
             //     pmp->Y_la[j] = ln_to_lg * pmp->lnGam[j];
@@ -415,7 +415,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 if( pmp->LO )
                     pmp->Y_m[jj] = 0.0;
                 pmp->Y_w[jj] = 0.0;
-                pmp->Fx[jj] = DualChemPot( pmp->U, pmp->A+jj*pmp->N, pmp->NR );
+                pmp->Fx[jj] = DualChemPot( pmp->U, pmp->A+jj*pmp->N, pmp->NR, jj );
                 pmp->Y_la[jj] = ln_to_lg * ( pmp->Fx[jj] - pmp->G0[jj] /* + Dsur */ );
                 if(pmp->PHC[k] == PH_AQUEL || pmp->PHC[k] == PH_SORPTION )
                    pmp->Y_la[jj] += 1.74438;

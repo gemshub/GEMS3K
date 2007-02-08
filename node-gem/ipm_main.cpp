@@ -38,8 +38,8 @@ using namespace JAMA;
 static int sizeN = 0;
 static double *AA=0;
 static double *BB=0;
-static int *arrL=0;
-static int *arrAN=0;
+int *arrL=0;
+int *arrAN=0;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main sequence of IPM calculations
@@ -232,9 +232,6 @@ pVisor->Update( false );
 //Calc equstat method IPM (iterations)
 void TMulti::MultiCalcIterations()
 {
-  // optimization 08/02/2007
-  Alloc_A_B( pmp->N );
-  Build_compress_AN();
 
     MultiCalcMain();
 
@@ -242,9 +239,6 @@ void TMulti::MultiCalcIterations()
     for( int ii=0; ii<pmp->N; ii++ )
         pmp->U_r[ii] = pmp->U[ii]*pmp->RT;
     GasParcP();
-
-   // optimization 08/02/2007
-   Free_internal();
 
     /* calc finished */
 }
@@ -841,6 +835,8 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
         for( i=arrL[jj]; i<arrL[jj+1]; i++ )
         { ii = arrAN[i];
           kk = arrAN[k];
+          if( ii>= N || kk>= N )
+           continue;
           (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pmp->W[jj];
         }
     }
@@ -856,6 +852,8 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
            if( pmp->Y[jj] > pmp->lowPosNum  )
               for( i=arrL[jj]; i<arrL[jj+1]; i++ )
               {  ii = arrAN[i];
+                 if( ii>= N )
+                  continue;
                  BB[ii] += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
               }
       }
@@ -906,7 +904,7 @@ double TMulti::calcDikin(  int N, bool initAppr )
   {
     if( pmp->Y[J] > pmp->lowPosNum /*1E-19 */)
     {
-      Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N );
+      Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N, J );
       if( !initAppr )
         Mu -= pmp->F[J];
       PCI += Mu*pmp->W[J]*Mu;
@@ -1170,7 +1168,7 @@ void TMulti::Build_compressed_xAN()
  int ii, jj, k;
 
  // free old memory allocation
- Free_compress_AN();
+ Free_compressed_xAN();
 
  // calc sizes
  k = 0;
@@ -1198,7 +1196,7 @@ void TMulti::Build_compressed_xAN()
 }
 #undef a
 
-void TMulti::Free_compress_AN()
+void TMulti::Free_compressed_xAN()
 {
   if( arrL  )
     { delete[] arrL; arrL = 0; }
@@ -1208,7 +1206,7 @@ void TMulti::Free_compress_AN()
 
 void TMulti::Free_internal()
 {
-  Free_compress_AN();
+  Free_compressed_xAN();
   Free_A_B();
 }
 

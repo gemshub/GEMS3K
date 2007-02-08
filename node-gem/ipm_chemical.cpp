@@ -217,13 +217,19 @@ void TMulti::XmaxSAT_IPM2_reset()
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 // calc value of dual chemical potencial
-double TMulti::DualChemPot( double U[], float AL[], int N )
+double TMulti::DualChemPot( double U[], float AL[], int N, int j )
 {
+    int i, ii;
     double Nu = 0.0;
-    for(int i=0; i<N; i++ )
+//    for(int i=; i<N; i++ )
 //    Nu += AL[i]? U[i]*(double)(AL[i]): 0.0;
-    Nu += U[i]*(double)(AL[i]);
-    return Nu;
+   for( i=arrL[j]; i<arrL[j+1]; i++ )
+   {  ii = arrAN[i];
+      if( ii>= N )
+       continue;
+       Nu += U[ii]*(double)(AL[ii]);
+   }
+   return Nu;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -740,7 +746,7 @@ void TMulti::f_alpha()
 
         for( ; j<ii; j++ )
         { /* DC */
-            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; /* this is -s_j (6pot paper 1) */
             Wx = 0.0;
             Yj = pmp->Y[j];
@@ -1035,7 +1041,7 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
       {
  //        XU[j] = -pmp->G0[j] -pmp->lnGam[j]  changed 5.12.2006
          XU[j] = -pmp->G0[j] - pmp->lnGam[j] - pmp->GEX[j]
-                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
          if( pmp->PHC[k] == PH_AQUEL ) // pmp->LO && k==0)
          {
             if(j == pmp->LO)

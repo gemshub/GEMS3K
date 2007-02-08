@@ -33,6 +33,9 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #endif
 
+extern int *arrL;
+extern int *arrAN;
+
 typedef struct
 {  // MULTI is base to Project (local values)
   char
@@ -283,8 +286,8 @@ class TMulti
 
     void Alloc_A_B( int newN );
     void Free_A_B();
-    void Build_compress_AN();
-    void Free_compress_AN();
+    void Build_compressed_xAN();
+    void Free_compressed_xAN();
     void Free_internal();
 
 #ifndef IPMGEMPLUGIN
@@ -321,7 +324,7 @@ class TMulti
 // ipm_chemical.cpp
     void XmaxSAT_IPM2();
     void XmaxSAT_IPM2_reset();
-    double DualChemPot( double U[], float AL[], int N );
+    double DualChemPot( double U[], float AL[], int N, int j );
     void Set_DC_limits( int Mode );
     void TotalPhases( double X[], double XF[], double XFA[] );
     double Ej_init_calc( double, int j, int k);
