@@ -29,14 +29,14 @@
 
 #include "node.h"
 
-#define nNodes  11 // set here how many nodes you need
+#define nNodes  2 // set here how many nodes you need
 
 int main( int argc, char* argv[] )
  {
    // Analyzing command line arguments
      // Default arguments
      char ipm_input_file_list_name[256] = "chemsys.lst";
-     char dbr_input_file_name[256] = "";
+     char dbr_input_file_name[256] = "chemsys-dbr.dat";
      char fmt_input_file_name[256] = "fmtparam.dat";
 
      if (argc >= 2 )
@@ -149,8 +149,8 @@ int main( int argc, char* argv[] )
        m_bPS+in*nIC*nPS, m_xPA+in*nPS );
 
 //  Uncomment this to test variable pressures and temperatures
-         m_T[in] += in*7;
-         m_P[in] += (in-1)*20;
+//         m_T[in] += in*7;
+//         m_P[in] += (in-1)*20;
      // Here the file output for the initial conditions can be implemented
    }
 
@@ -159,7 +159,6 @@ int main( int argc, char* argv[] )
   //   cout << "Begin Initialiation part" << endl;
 
   // Read DATABR structure from text file (read boundary condition)
-if( strlen( dbr_input_file_name ))
       TNode::na->GEM_read_dbr( dbr_input_file_name );
 
   for(  in=0; in<1; in++ )
@@ -186,6 +185,8 @@ if( strlen( dbr_input_file_name ))
  }
 
    cout << "End Initialiation part" << endl;
+   clock_t t_start11, t_end11;
+   t_start11 = clock();
 
    // (2) ----------------------------------------------
    // Work loop for the coupled FMT-GEM modelling
@@ -261,6 +262,10 @@ if( strlen( dbr_input_file_name ))
 
     tc += dt;
   }
+  t_end11 = clock();
+  double dtime = ( t_end11- t_start11 );
+  double clc_sec = CLOCKS_PER_SEC;
+  cout <<  "Total time of calculation  s; " <<  (dtime)/clc_sec << endl;
   cout << " End Coupled Modelling part" << endl;
 
   // (3) ----------------------------------------------

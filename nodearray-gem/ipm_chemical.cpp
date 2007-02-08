@@ -841,9 +841,24 @@ double TMulti::GX( double LM  )
             if( x < pmp->lowPosNum*10. )
                 continue;
             /* calc increment of G(x) */
-            Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
-                                 pmp->DCCW[j] );
-            FX += Gi;
+            //Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+            //                     pmp->DCCW[j] );
+            switch( pmp->DCCW[j] )
+            {
+             case DC_ASYM_SPECIES:
+                    Gi = x * ( pmp->G[j] + log(x) - pmp->logXw );
+                    break;
+            case DC_ASYM_CARRIER:
+            case DC_SYMMETRIC:
+                   Gi = x * ( pmp->G[j] + log(x) - pmp->logYFk );
+                   break;
+            case DC_SINGLE:
+                   Gi = pmp->G[j] * x;
+                   break;
+           default:
+                    Gi = 7777777.;
+           }
+          FX += Gi;
         }   /* j */
 NEXT_PHASE:
         j = i;
@@ -1198,7 +1213,7 @@ void TMulti::ConvertDCC()
                     }
                 }
                 DCCW = DC_SINGLE;
-                iRet++;  /* error in code  */
+                iRet++;  /* error in codeï¿½ */
             }
             pmp->DCCW[j] = DCCW;
         }   /* j */

@@ -36,9 +36,11 @@ using namespace JAMA;
 #include "node.h"
 
 static int sizeN = 0;
-static Array2D<double> *AA=0;
-static Array1D<double> *BB=0;
-static Array1D<double> X;
+//static Array2D<double> *AA=0;
+//static Array1D<double> *BB=0;
+//static Array1D<double> X;
+static double *AA=0;
+static double *BB=0;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -877,36 +879,43 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 {
   int ii, jj, kk;
   double aa;
-//  Array1D<double> B(N);
   Alloc_A_B( N );
 
   // making  matrix of IPM linear equations
   for( kk=0; kk<N; kk++)
-    for( ii=0; ii<N; ii++ )
-    {  aa = 0.;
-       for( jj=0; jj<pmp->L; jj++ )
-          if( pmp->Y[jj] > pmp->lowPosNum   )
-            aa += a(jj,ii) * a(jj,kk) * pmp->W[jj];
-      (*AA)[kk][ii] = aa;
+   for( ii=0; ii<N; ii++ )
+      (*(AA+(ii)+(kk)*N)) = 0.;
+
+  for( jj=0; jj<pmp->L; jj++ )
+   if( pmp->Y[jj] > pmp->lowPosNum   )
+   {
+      for( kk=0; kk<N; kk++)
+        for( ii=0; ii<N; ii++ )
+            (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pmp->W[jj];
     }
 
- for( ii=0; ii<N; ii++ )
    if( initAppr )
-       (*BB)[ii] = pmp->C[ii];
+     for( ii=0; ii<N; ii++ )
+         BB[ii] = pmp->C[ii];
    else
-      {  aa = 0.;
+      {
+         for( ii=0; ii<N; ii++ )
+            BB[ii] = 0.;
           for( jj=0; jj<pmp->L; jj++)
            if( pmp->Y[jj] > pmp->lowPosNum  )
-                aa += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
-          (*BB)[ii] = aa;
+              for( ii=0; ii<N; ii++ )
+                BB[ii] += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
       }
 
+  Array2D<double> A(N,N, AA);
+  Array1D<double> B(N, BB);
+
 // this routine constructs its Cholesky decomposition, A = L x LT .
-  Cholesky<double>  chol(*AA);
+  Cholesky<double>  chol(A);
 
   if( chol.is_spd() )  // is positive definite A.
   {
-    X = chol.solve( *BB );
+    B = chol.solve( B );
   }
   else
   {
@@ -914,7 +923,7 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 // The LU decompostion with pivoting always exists, even if the matrix is
 // singular, so the constructor will never fail.
 
-   LU<double>  lu(*AA);
+   LU<double>  lu(A);
 
 // The primary use of the LU decomposition is in the solution
 // of square systems of simultaneous linear equations.
@@ -922,11 +931,11 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
    if( !lu.isNonsingular() )
      return 1; // Singular matrix
 
-  X = lu.solve( *BB );
+  B = lu.solve( B );
   }
 
   for( ii=0; ii<N; ii++ )
-   pmp->U[ii] = X[ii];
+   pmp->U[ii] = B[ii];
   return 0;
 }
 #undef a
@@ -1186,8 +1195,10 @@ void TMulti::Alloc_A_B( int newN )
   if( AA && BB && newN==sizeN )
     return;
   Free_A_B();
-  AA = new  Array2D<double>(newN, newN);
-  BB = new  Array1D<double>(newN);
+//  AA = new  Array2D<double>(newN, newN);
+//  BB = new  Array1D<double>(newN);
+  AA = new  double[newN*newN];
+  BB = new  double[newN];
   sizeN = newN;
 }
 
