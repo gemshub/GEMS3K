@@ -217,7 +217,7 @@ if( dCH->nTp <1 && dCH->nPp <1 )
     switch( pmp->PV )
     { /* make mol volumes of components */
        case VOL_CONSTR:
-                    pmp->A[j*pmp->N] = Vv;
+                    pmp->A[j*pmp->N] = Vv; // !!  error
        case VOL_CALC:
        case VOL_UNDEF:
                     pmp->Vol[j] = Vv  * 10.;

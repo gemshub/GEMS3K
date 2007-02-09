@@ -610,13 +610,21 @@ STEP_POINT( "IPM Iteration" );
 void
 TMulti::MassBalanceDeviations( int N, int L, float *A, double *Y, double *B, double *C )
 {
-    int I,J;
-    for(J=0;J<N;J++)
+    int ii, jj, i;
+/*    for(J=0;J<N;J++)
     {
         C[J]=B[J];
         for(I=0;I<L;I++)
             C[J]-=(double)(*(A+I*N+J))*Y[I];
     }
+*/
+    for(ii=0;ii<N;ii++)
+        C[ii]=B[ii];
+    for(jj=0;jj<L;jj++)
+     for( i=arrL[jj]; i<arrL[jj+1]; i++ )
+     {  ii = arrAN[i];
+         C[ii]-=(double)(*(A+jj*N+ii))*Y[jj];
+     }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -820,7 +828,6 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 {
   int ii,i, jj, kk, k, Na = pmp->N;
   double aa;
-  //float *Aa=pmp->A;
   Alloc_A_B( N );
 
   // making  matrix of IPM linear equations

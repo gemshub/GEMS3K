@@ -87,7 +87,7 @@ double TMulti::pH_via_hydroxyl( double x[], double Factor, int j)
 */
 void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
 {
-    int i, j;
+    int ii, i, j;
     double Xx;
 
     if( !A || !X || !BF )
@@ -98,8 +98,10 @@ void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
         Xx = X[j];
         if( fabs( Xx ) < 1e-12 )
             continue;
-        for( i=0; i<N; i++ )
+        for( ii=arrL[j]; ii<arrL[j+1]; ii++ )
+        {  i = arrAN[ii];
             BF[i] += (double)A[i+j*N] * Xx;
+        }
     }
 }
 
@@ -109,7 +111,7 @@ void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
 */
 void TMulti::phase_bfc( int k, int jj )
 {
-    int i, j;
+    int ii, i, j;
     double Xx;
 
     if( pmp->PHC[k] == PH_AQUEL  || pmp->PHC[k] == PH_GASMIX ||
@@ -120,8 +122,10 @@ void TMulti::phase_bfc( int k, int jj )
         Xx = pmp->X[j+jj];
         if( fabs( Xx ) < 1e-12 )
             continue;
-        for( i=0; i<pmp->N; i++ )
+        for( ii=arrL[j]; ii<arrL[j+1]; ii++ )
+        {  i = arrAN[ii];
            pmp->BFC[i] += (double)pmp->A[i+(jj+j)*pmp->N] * Xx;
+        }
     }
 }
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -135,7 +139,7 @@ void TMulti::phase_bfc( int k, int jj )
 void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
               double Factor, double MMC, double Dsur, int jb, int je, int k)
 {
-    int j, ii;
+    int j, ii, i;
     double Muj, DsurT, SPmol, lnFmol=4.016535;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -248,8 +252,10 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
                                         + Dsur + lnFmol); //    Variant: Without Dsur?
             // obsolete        pmp->Y_la[j] = ln_to_lg* (log( SPmol ) + pmp->lnGam[j] );
             pmp->Y_w[j] = 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[k];
-            for( ii=0; ii<pmp->NR; ii++ )
-            {
+            for( i=arrL[j]; i<arrL[j+1]; i++ )
+            {  ii = arrAN[i];
+               if( ii>= pmp->NR )
+                continue;
                 pmp->IC_m[ii] += SPmol* a(j,ii);
                 pmp->IC_wm[ii] += X[j]* a(j,ii);  // moles of element in aq spec
             }
