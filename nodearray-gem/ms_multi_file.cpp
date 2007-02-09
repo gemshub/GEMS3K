@@ -1033,6 +1033,9 @@ if( pm.D ) delete[] pm.D;
     if( pm.sitE )     delete[] pm.sitE;
     if( pm.sitXcat )  delete[] pm.sitXcat;
     if( pm.sitXan )    delete[] pm.sitXan;
+
+    // optimization 08/02/2007
+    Free_internal();
 }
 
 #endif

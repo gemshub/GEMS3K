@@ -808,6 +808,8 @@ double TMulti::GX( double LM  )
 {
     int i, j, k;
     double x, XF, XFw, FX, Gi /* debug variable */;
+    double const1= pmp->lowPosNum*10.,
+           const2 = pmp->lowPosNum*1000.;
 
     if( LM<pmp->lowPosNum)     /* copy vector Y into X */
         for(i=0;i<pmp->L;i++)
@@ -831,26 +833,28 @@ double TMulti::GX( double LM  )
         XFw = 0.0;  /* calc moles of solvent/sorbent */
         if( pmp->FIs && k<pmp->FIs )
             XFw = pmp->XFA[k];
-        if( XFw > pmp->lowPosNum*10. )
+        if( XFw > const1 )
             pmp->logXw = log( XFw );
         /*   */
         XF = pmp->XF[k];
-        if( XF <= pmp->lowPosNum*1000. ||
+        if( XF <= const2 ||
                 (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
                 || XFw <= TProfil::pm->pa.p.XwMin) )
                 || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
             goto NEXT_PHASE;
         pmp->logYFk = log( XF );
+//        if( XFw > const1 )
+//            pmp->logXw = log( XFw );
 
         for( ; j<i; j++ )
         { /* Species */
             x = pmp->X[j];
-            if( x < pmp->lowPosNum*10. )
+            if( x < const1 )
                 continue;
             /* calc increment of G(x) */
-            Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
-                                 pmp->DCCW[j] );
-            /*switch( pmp->DCCW[j] )
+            //Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+            //                     pmp->DCCW[j] );
+            switch( pmp->DCCW[j] )
             {
              case DC_ASYM_SPECIES:
                     Gi = x * ( pmp->G[j] + log(x) - pmp->logXw );
@@ -864,7 +868,7 @@ double TMulti::GX( double LM  )
                    break;
            default:
                     Gi = 7777777.;
-           }*/
+           }
           FX += Gi;
         }   /* j */
 NEXT_PHASE:

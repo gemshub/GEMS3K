@@ -87,7 +87,7 @@ double TMulti::pH_via_hydroxyl( double x[], double Factor, int j)
 */
 void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
 {
-    int i, j;
+    int ii, i, j;
     double Xx;
 
     if( !A || !X || !BF )
@@ -98,8 +98,10 @@ void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
         Xx = X[j];
         if( fabs( Xx ) < 1e-12 )
             continue;
-        for( i=0; i<N; i++ )
+        for( ii=arrL[j]; ii<arrL[j+1]; ii++ )
+        {  i = arrAN[ii];
             BF[i] += (double)A[i+j*N] * Xx;
+        }
     }
 }
 
@@ -109,7 +111,7 @@ void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
 */
 void TMulti::phase_bfc( int k, int jj )
 {
-    int i, j;
+    int ii, i, j;
     double Xx;
 
     if( pmp->PHC[k] == PH_AQUEL  || pmp->PHC[k] == PH_GASMIX ||
@@ -120,8 +122,10 @@ void TMulti::phase_bfc( int k, int jj )
         Xx = pmp->X[j+jj];
         if( fabs( Xx ) < 1e-12 )
             continue;
-        for( i=0; i<pmp->N; i++ )
+        for( ii=arrL[j]; ii<arrL[j+1]; ii++ )
+        {  i = arrAN[ii];
            pmp->BFC[i] += (double)pmp->A[i+(jj+j)*pmp->N] * Xx;
+        }
     }
 }
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -135,7 +139,7 @@ void TMulti::phase_bfc( int k, int jj )
 void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
               double Factor, double MMC, double Dsur, int jb, int je, int k)
 {
-    int j, ii;
+    int j, ii, i;
     double Muj, DsurT, SPmol, lnFmol=4.016535;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -147,7 +151,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
 
     for( j=jb; j<je; j++ )
     { /* cycle by DC - important bugfixes 02.04.2003 */
-        Muj = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+        Muj = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
         pmp->Fx[j] = Muj * pmp->RT;     /* el-chem potential in J/mole */
 
         if( X[j] <= pmp->lowPosNum )
@@ -248,8 +252,10 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
                                         + Dsur + lnFmol); //    Variant: Without Dsur?
             // obsolete        pmp->Y_la[j] = ln_to_lg* (log( SPmol ) + pmp->lnGam[j] );
             pmp->Y_w[j] = 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[k];
-            for( ii=0; ii<pmp->NR; ii++ )
-            {
+            for( i=arrL[j]; i<arrL[j+1]; i++ )
+            {  ii = arrAN[i];
+               if( ii>= pmp->NR )
+                continue;
                 pmp->IC_m[ii] += SPmol* a(j,ii);
                 pmp->IC_wm[ii] += X[j]* a(j,ii);  // moles of element in aq spec
             }
@@ -377,7 +383,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 if( pmp->LO )
                     pmp->Y_m[j] = 0.0;
                 pmp->Y_w[j] = 0.0;
-                pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+                pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
                 pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] -pmp->GEX[j]/* + Dsur */ );
                 pmp->Fx[j] *= pmp->RT;     /* el-chem potential */
                 goto NEXT_PHASE;
@@ -388,7 +394,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 pmp->Y_m[j] = X[j] * 1000./18.01528/XFA[0]; /* molality */
             pmp->Y_w[j] = /* mass % in the system */
                 1e2 * X[j] * pmp->MM[j] / pmp->MBX;
-            pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+            pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] - pmp->GEX[j] /* + Dsur */ );
             pmp->Fx[j] *= pmp->RT;     /* el-chem potential */
             //     pmp->Y_la[j] = ln_to_lg * pmp->lnGam[j];
@@ -415,7 +421,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 if( pmp->LO )
                     pmp->Y_m[jj] = 0.0;
                 pmp->Y_w[jj] = 0.0;
-                pmp->Fx[jj] = DualChemPot( pmp->U, pmp->A+jj*pmp->N, pmp->NR );
+                pmp->Fx[jj] = DualChemPot( pmp->U, pmp->A+jj*pmp->N, pmp->NR, jj );
                 pmp->Y_la[jj] = ln_to_lg * ( pmp->Fx[jj] - pmp->G0[jj] /* + Dsur */ );
                 if(pmp->PHC[k] == PH_AQUEL || pmp->PHC[k] == PH_SORPTION )
                    pmp->Y_la[jj] += 1.74438;

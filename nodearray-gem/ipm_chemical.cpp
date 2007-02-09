@@ -217,13 +217,19 @@ void TMulti::XmaxSAT_IPM2_reset()
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 // calc value of dual chemical potencial
-double TMulti::DualChemPot( double U[], float AL[], int N )
+double TMulti::DualChemPot( double U[], float AL[], int N, int j )
 {
+    int i, ii;
     double Nu = 0.0;
-    for(int i=0; i<N; i++ )
+//    for(int i=; i<N; i++ )
 //    Nu += AL[i]? U[i]*(double)(AL[i]): 0.0;
-    Nu += U[i]*(double)(AL[i]);
-    return Nu;
+   for( i=arrL[j]; i<arrL[j+1]; i++ )
+   {  ii = arrAN[i];
+      if( ii>= N )
+       continue;
+       Nu += U[ii]*(double)(AL[ii]);
+   }
+   return Nu;
 }
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
@@ -740,7 +746,7 @@ void TMulti::f_alpha()
 
         for( ; j<ii; j++ )
         { /* DC */
-            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; /* this is -s_j (6pot paper 1) */
             Wx = 0.0;
             Yj = pmp->Y[j];
@@ -802,6 +808,8 @@ double TMulti::GX( double LM  )
 {
     int i, j, k;
     double x, XF, XFw, FX, Gi /* debug variable */;
+    double const1= pmp->lowPosNum*10.,
+           const2 = pmp->lowPosNum*1000.;
 
     if( LM<pmp->lowPosNum)     /* copy vector Y into X */
         for(i=0;i<pmp->L;i++)
@@ -825,26 +833,28 @@ double TMulti::GX( double LM  )
         XFw = 0.0;  /* calc moles of solvent/sorbent */
         if( pmp->FIs && k<pmp->FIs )
             XFw = pmp->XFA[k];
-        if( XFw > pmp->lowPosNum*10. )
+        if( XFw > const1 )
             pmp->logXw = log( XFw );
         /*   */
         XF = pmp->XF[k];
-        if( XF <= pmp->lowPosNum*1000. ||
+        if( XF <= const2 ||
                 (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
                 || XFw <= TProfil::pm->pa.p.XwMin) )
                 || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
             goto NEXT_PHASE;
         pmp->logYFk = log( XF );
+//        if( XFw > const1 )
+//            pmp->logXw = log( XFw );
 
         for( ; j<i; j++ )
         { /* Species */
             x = pmp->X[j];
-            if( x < pmp->lowPosNum*10. )
+            if( x < const1 )
                 continue;
             /* calc increment of G(x) */
-            Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
-                                 pmp->DCCW[j] );
-            /*switch( pmp->DCCW[j] )
+            //Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+            //                     pmp->DCCW[j] );
+            switch( pmp->DCCW[j] )
             {
              case DC_ASYM_SPECIES:
                     Gi = x * ( pmp->G[j] + log(x) - pmp->logXw );
@@ -858,7 +868,7 @@ double TMulti::GX( double LM  )
                    break;
            default:
                     Gi = 7777777.;
-           }*/
+           }
           FX += Gi;
         }   /* j */
 NEXT_PHASE:
@@ -1035,7 +1045,7 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
       {
  //        XU[j] = -pmp->G0[j] -pmp->lnGam[j]  changed 5.12.2006
          XU[j] = -pmp->G0[j] - pmp->lnGam[j] - pmp->GEX[j]
-                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR );
+                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
          if( pmp->PHC[k] == PH_AQUEL ) // pmp->LO && k==0)
          {
             if(j == pmp->LO)

@@ -38,8 +38,8 @@ using namespace JAMA;
 static int sizeN = 0;
 static double *AA=0;
 static double *BB=0;
-static int *arrL=0;
-static int *arrAN=0;
+int *arrL=0;
+int *arrAN=0;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main sequence of IPM calculations
@@ -232,9 +232,6 @@ pVisor->Update( false );
 //Calc equstat method IPM (iterations)
 void TMulti::MultiCalcIterations()
 {
-  // optimization 08/02/2007
-  Alloc_A_B( pmp->N );
-  Build_compressed_xAN();
 
     MultiCalcMain();
 
@@ -242,9 +239,6 @@ void TMulti::MultiCalcIterations()
     for( int ii=0; ii<pmp->N; ii++ )
         pmp->U_r[ii] = pmp->U[ii]*pmp->RT;
     GasParcP();
-
-   // optimization 08/02/2007
-   Free_internal();
 
     /* calc finished */
 }
@@ -616,13 +610,21 @@ STEP_POINT( "IPM Iteration" );
 void
 TMulti::MassBalanceDeviations( int N, int L, float *A, double *Y, double *B, double *C )
 {
-    int I,J;
-    for(J=0;J<N;J++)
+    int ii, jj, i;
+/*    for(J=0;J<N;J++)
     {
         C[J]=B[J];
         for(I=0;I<L;I++)
             C[J]-=(double)(*(A+I*N+J))*Y[I];
     }
+*/
+    for(ii=0;ii<N;ii++)
+        C[ii]=B[ii];
+    for(jj=0;jj<L;jj++)
+     for( i=arrL[jj]; i<arrL[jj+1]; i++ )
+     {  ii = arrAN[i];
+         C[ii]-=(double)(*(A+jj*N+ii))*Y[jj];
+     }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -826,7 +828,6 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 {
   int ii,i, jj, kk, k, Na = pmp->N;
   double aa;
-  //float *Aa=pmp->A;
   Alloc_A_B( N );
 
   // making  matrix of IPM linear equations
@@ -841,6 +842,8 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
         for( i=arrL[jj]; i<arrL[jj+1]; i++ )
         { ii = arrAN[i];
           kk = arrAN[k];
+          if( ii>= N || kk>= N )
+           continue;
           (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pmp->W[jj];
         }
     }
@@ -856,6 +859,8 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
            if( pmp->Y[jj] > pmp->lowPosNum  )
               for( i=arrL[jj]; i<arrL[jj+1]; i++ )
               {  ii = arrAN[i];
+                 if( ii>= N )
+                  continue;
                  BB[ii] += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
               }
       }
@@ -906,7 +911,7 @@ double TMulti::calcDikin(  int N, bool initAppr )
   {
     if( pmp->Y[J] > pmp->lowPosNum /*1E-19 */)
     {
-      Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N );
+      Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N, J );
       if( !initAppr )
         Mu -= pmp->F[J];
       PCI += Mu*pmp->W[J]*Mu;

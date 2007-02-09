@@ -217,7 +217,7 @@ if( dCH->nTp <1 && dCH->nPp <1 )
     switch( pmp->PV )
     { /* make mol volumes of components */
        case VOL_CONSTR:
-                    pmp->A[j*pmp->N] = Vv;
+                    pmp->A[j*pmp->N] = Vv; // !!  error
        case VOL_CALC:
        case VOL_UNDEF:
                     pmp->Vol[j] = Vv  * 10.;
@@ -278,6 +278,10 @@ pmp->MBX /= 1000.;
            pmp->X[j] =  pmp->Y[j] = 0.0;
 
     CompG0Load();
+    // optimization 08/02/2007
+    Alloc_A_B( pmp->N );
+    Build_compressed_xAN();
+
     for( j=0; j< pmp->L; j++ )
 //        pmp->G[j] = pmp->G0[j];   changed 5.12.2006 KD
         pmp->G[j] = pmp->G0[j] + pmp->GEX[j];
