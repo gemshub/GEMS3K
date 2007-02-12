@@ -1,4 +1,3 @@
-     
   Working in Linux Cluster, compiling with PGI compilers (Parallel Fortran and C++ )    
 
   This applies to node-gem, nodearray-gem, rockflow-gem and mcotac-gem modules.
@@ -53,3 +52,35 @@
      8.	To finish session on Linux Cluster, type
 
         exit
+
+
+
+  Working in Linux Cluster, working with PGPROF Profile    
+
+  This applies to node-gem, nodearray-gem, rockflow-gem and mcotac-gem modules.
+  
+     1.	To generate the special executable file, copy and rename the required Makefile, e.g. 
+
+         cp /afs/psi.ch/project/gems/standalone/mcotac-gem/platform/Linux-PGI/Makefile.prof.           
+  
+
+	and re-compile, type 
+
+          make clean 
+ 
+        (or in mcotac-gem, remove *.ti and *.o files by rm *.ti and rm *.o )
+
+         and execute 
+     
+          make
+	  
+    
+    2.  To generate a profile data file ( pgprof.out ) the profiled program must be
+    
+        invoked normaly.
+	
+    3. The PGPROF tool interprets the pgprof.out file to display the profile data. Type
+    
+        pgprof
+    
+       ( use commands: help, print [ > filename ], quit )
