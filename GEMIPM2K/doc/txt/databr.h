@@ -44,7 +44,7 @@ typedef struct
 //      Usage of this variable (DB - data bridge)        MT-DB DB-GEM GEM-DB DB-MT
    double
 // Chemical scalar variables
-    T,      	// Temperature T, K                        +      +      -     -
+    TC,      	// Temperature T, Celsius                  +      +      -     -
     P, 	        // Pressure P, bar                         +      +      -     -
     Vs,         // Volume V of reactive subsystem, cm3     -      -      +     +
     Vi,         // Volume of inert subsystem, cm3          +      -      -     +

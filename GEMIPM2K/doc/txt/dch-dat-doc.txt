@@ -250,17 +250,17 @@
 ## are stored into the IPM (MULTI) work structure. Otherwise (if T and P remain the same within 
 ## their tolerances) the interpolation is skipped and thermodynamic data already present in the 
 ## IPM structure will be used in the next GEMIPM run. If current T or P value goes beyond the 
-## interval between the first and the last value in <Tval> (or <Pval>) vectors then an interpolation 
+## interval between the first and the last value in <TCval> (or <Pval>) vectors then an interpolation 
 ## error code is returned and the interpolation with GEM calculation is performed using the closest
 ## allowed T or P values.   
 #
 # Tolerance for the interpolation over temperature (C, K). Thermodynamic data will be re-interpolated 
 # only if current temperature is by more than Ttol different than the previous one used in GEM IPM run.
-# Default value: 0.1 K. 
+# Default value: 0.1 degree. 
 <Ttol> 1.0e-01
 
 # *** Temperatures for the interpolation grid, C; <nTp> float values (must be in ascending order)
-<Tval>
+<TCval>
 5.0e0 2.5e+01 4.5e+01 6.5e+01 8.5e+01 
 
 # Tolerance for the interpolation over pressure (bar). Thermodynamic data will be re-interpolated 
@@ -272,7 +272,7 @@
 <Pval>
 1.0e+00 1.01e+02 2.01e+02
 
-# Note: if current T or P is set beyond the interval covered in <Tval> or <Pval> vectors then it 
+# Note: if current T or P is set beyond the interval covered in <TCval> or <Pval> vectors then it 
 # will be automatically set on the nearest border of the interval in the DATABR node structure 
 # and in the MULTI structure for GEM IPM calculation.  
 #

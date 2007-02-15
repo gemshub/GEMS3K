@@ -72,13 +72,13 @@ in DATABR.H must be given here (to be described in more detail). Default value: 
 <IterDone>       34
 
 ## Section (Scalar-2): Chemical scalar variables
-# *** Node Temperature T, K (GEM input). This value must always be provided. If this value differs by more than 
-# <Ttol> K from the temperature value used in previous GEM calculation, the GEMIPM2K program will first attempt
+# *** Node Temperature T, C (GEM input). This value must always be provided. If this value differs by more than 
+# <Ttol> degrees from the temperature value used in previous GEM calculation, the GEMIPM2K program will first attempt
 # to interpolate thermodynamic data (if interpolation grid arrays were provided in DCH_DAT file or DATACH memory
-# structure). If a given <T> value goes beyond the interpolation interval, it will be automatically replaced by 
+# structure). If a given <TC> value goes beyond the interpolation interval, it will be automatically replaced by 
 # the closest available temperature from the interpolation range (this can be checked in this data object after
 # GEMIPM returns control or writes the DBR_DAT file). 
-<T>    298.15
+<TC>    298.15
 
 # *** Node Pressure P, bar (GEM input). This value must always be provided. If this value differs by more than 
 # <Ptol> bar from the pressure value used in previous GEM calculation, the GEMIPM2K program will first attempt
