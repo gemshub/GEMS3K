@@ -68,7 +68,7 @@ typedef struct
             // see below definitions of the ICNL, DCNL and PHNL lists
 
   float
-    *Tval,   // discrete values of Temperature (K), [nTp] elements,
+    *TCval,   // discrete values of Temperature (C), [nTp] elements,
  // that correspond to grid arrays for the interpolation of thermodynamic data
     *Pval,   // discrete values of Pressure (bar), [nPp] elements,
  // that correspond to grid arrays for the interpolation of thermodynamic data

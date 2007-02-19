@@ -23,8 +23,8 @@ public:
 struct outField
  {
    char name[20]; // name of field in structure
-   short alws;    // 1 - must be readed, 0 - posible use default values
-   short readed;  // set up to 1 after reading field from input file
+   short alws;    // 1 - must be read, 0 - default values can be used
+   short readed;  // 0; set to 1 after reading the field from input file
 };
 
  class TReadArrays  // read fields of structure

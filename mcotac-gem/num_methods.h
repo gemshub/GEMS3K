@@ -1,9 +1,12 @@
 //-------------------------------------------------------------------
-// $Id:  $
+// $Id: num_methods.h 705 2006-04-28 19:39:01Z gems $
 //
-// C/C++ Some functions from NUMERICAL RECIPES IN C
+// C/C++ Numerical Methods (Linear Algebra) used in GEMS-PSI and GEMIPM2K
+// (c) 2006-2007 S.Dmytriyeva, D.Kulik
 //
-// Copyright (C) 2006 S.Dmytriyeva, D.Kulik
+// Uses: JAMA/C++ Linear Algebra Package based on the Template
+// Numerical Toolkit (TNT) - an interface for scientific computing in C++,
+// (c) Roldan Pozo, NIST (USA), http://math.nist.gov/tnt/download.html
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization
@@ -25,23 +28,6 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
                     float xoi, int M, int N, int pp );
 double LagranInterp(float *y, float *x, float *d, float yoi,
                     float xoi, int M, int N, int pp );
-
-double enorm( int n, double *x );
-int CholeskyDecomposition( int N, double* R, double* X, double* R1  );
-int LUDecomposition( int N, double* A, double* X  );
-//void InverseofMatrix( int N, double* A, double* Y );
-//double DeterminantofMatrix( int N, double* A );
-
-// Random numbers ==========================================================
-double randuni(double& x); // uniform point
-double randnorm(double& x); // normal point
-// Long period (> 2 � 1018) random number generator of L�Ecuyer with Bays-Durham
-// shuffle and added safeguards. Returns a uniform random deviate between 0.0 and 1.0
-float ran2(long& idum);
-// According to Knuth, any large MBIG, and any smaller (but still large) MSEED
-// can be substituted for the above values.
-// Returns a uniform random deviate between 0.0 and 1.0.
-float ran3(long& idum);
 
 #endif   // _num_methods_h_
 

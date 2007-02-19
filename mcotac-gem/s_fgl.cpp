@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 759 2006-07-21 14:03:53Z wagner $
+// $Id: s_fgl.cpp 860 2007-02-19 10:08:13Z gems $
 //
-// Copyright (C) 2004-2005  S.Churakov, D.Kulik
+// Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
 // Implementation of TFGLcalc class
 //
@@ -19,13 +19,10 @@
 #include <math.h>
 #include <stdio.h>
 
-//#include "s_tpwork.h"
 #include "s_fgl.h"
 #ifndef IPMGEMPLUGIN
   #include "m_const.h"
 #endif
-//#include "service.h"
-//#include "visor.h"
 
 //--------------------------------------------------------------------//
 
@@ -211,7 +208,7 @@ double TCGFcalc::K23_13(double T, double ro)
 int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
         double &Volume, double &DeltaH, double &DeltaS, double P, double T )
 {
-      int iRet; double ro;
+      int iRet=0; double ro;
       double X[1]={1.};
       double FugPure[1];
 
@@ -243,7 +240,7 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
       ro = CGActivCoefPT( X, EoSparPT, FugPure, 1, P, T );
       if( ro < 0.  )
       {
-          return (int)ro;
+          return -1;
       };
       Fugacity= FugPure[0];
       ro = DENSITY( X, EoSparPT, 1, P, T );
@@ -1376,7 +1373,8 @@ TPRSVcalc::FugacityPure( )
 { // Calculates the fugacity of pure species
 // calculates fugacity and state functions of pure species
     int i;
-	double Tcrit, Pcrit, Tred, aprsv, bprsv, alph, k, aa, bb, a2, a1, a0, z1, z2, z3;
+	double Tcrit, Pcrit, Tred, aprsv, bprsv, alph, k, aa, bb, a2, a1, a0,
+               z1, z2, z3;
 	double vol1, vol2, vol3, lnf1, lnf2, lnf3, z, vol, lnf;
 	double gig, hig, sig, gdep, hdep, sdep, g, h, s, fugpure;
 
@@ -1406,15 +1404,18 @@ TPRSVcalc::FugacityPure( )
 		vol2 = z2*R_CONSTANT*Tk/P;
 		vol3 = z3*R_CONSTANT*Tk/P;
 		if (z1 > bb)
-			lnf1 = (-1.)*log(z1-bb) - aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
+			lnf1 = (-1.)*log(z1-bb)
+    - aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
 		else
 			lnf1 = 1000.;
 		if (z2 > bb)
-			lnf2 = (-1.)*log(z2-bb) - aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
+			lnf2 = (-1.)*log(z2-bb)
+    - aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
 		else
 			lnf2 = 1000.;
 		if (z3 > bb)
-			lnf3 = (-1.)*log(z3-bb) - aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
+			lnf3 = (-1.)*log(z3-bb)
+    - aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
 		else
 			lnf3 = 1000.;
 
@@ -1437,8 +1438,10 @@ TPRSVcalc::FugacityPure( )
 		// calculate thermodynamic properties
 		alph = aprsv/(0.457235*pow(R_CONSTANT,2.)*pow(Tcrit,2.) / Pcrit);
 		k = (sqrt(alph)-1.)/(1.-sqrt(Tred));
-		gdep = R_CONSTANT*Tk*(z-1.-log(z-bb)-aa/(bb*sqrt(8.))*log((z+(1+sqrt(2.))*bb)/(z+(1-sqrt(2.))*bb)));
-		hdep = R_CONSTANT*Tk*(z-1.-log((z+(1+sqrt(2.))*bb)/(z+(1-sqrt(2.))*bb))*aa/(bb*sqrt(8.))*(1+k*sqrt(Tred)/sqrt(alph)));
+		gdep = R_CONSTANT*Tk*(z-1.-log(z-bb)-aa/(bb*sqrt(8.))
+                       *log((z+(1+sqrt(2.))*bb)/(z+(1-sqrt(2.))*bb)));
+		hdep = R_CONSTANT*Tk*(z-1.-log((z+(1+sqrt(2.))*bb)/(z+(1-sqrt(2.))*bb))
+                       *aa/(bb*sqrt(8.))*(1+k*sqrt(Tred)/sqrt(alph)));
 		sdep = (hdep-gdep)/Tk;
 		g = gig + gdep;
 		h = hig + hdep;
@@ -1539,15 +1542,18 @@ TPRSVcalc::FugacityMix( double amix, double bmix,
 	vol2 = z2*R_CONSTANT*Tk/P;
 	vol3 = z3*R_CONSTANT*Tk/P;
 	if (z1 > bb)
-		lnf1 = (-1.)*log(z1-bb) - aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
+		lnf1 = (-1.)*log(z1-bb)
+    - aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
 	else
 		lnf1 = 1000.;
 	if (z2 > bb)
-		lnf2 = (-1.)*log(z2-bb) - aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
+		lnf2 = (-1.)*log(z2-bb)
+    - aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
 	else
 		lnf2 = 1000.;
 	if (z3 > bb)
-		lnf3 = (-1.)*log(z3-bb) - aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
+		lnf3 = (-1.)*log(z3-bb)
+    - aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
 	else
 		lnf3 = 1000.;
 
@@ -1572,6 +1578,7 @@ TPRSVcalc::FugacityMix( double amix, double bmix,
 	return 0;
 }
 
+// #define MAXPUREPARAM 7
 int
 TPRSVcalc::FugacitySpec( double *fugpure, float *binpar, float *params  )
 {
@@ -1584,8 +1591,12 @@ TPRSVcalc::FugacitySpec( double *fugpure, float *binpar, float *params  )
     for( j=0; j<NComp; j++ )
     {
       Fugpure[j][0] = fugpure[j]/P;
-      for( i=0; i<4; i++ )
-        Pureparm[j][i] = (double)params[j*4+i];
+//      for( i=0; i<4; i++ )
+//        Pureparm[j][i] = (double)params[j*4+i];
+      for( i=0; i<4; i++ )  // Temporary
+      {
+           Pureparm[j][i] = (double)params[j*10+i+6];
+      }
     }
 
     for( j=0; j<NComp; j++ )
@@ -1607,13 +1618,14 @@ TPRSVcalc::FugacitySpec( double *fugpure, float *binpar, float *params  )
 			sum = sum + Wx[j]*AAij[i][j];
 		}
 		lnfci = Pureparm[i][1]/bmix*(zmix-1.) - log(zmix-bu)
-		+ au/(sqrt(8.)*bu)*(2.*sum/amix-Pureparm[i][1]/bmix)*log((zmix+bu*(1.-sqrt(2.)))/(zmix+bu*(1.+sqrt(2.))));
+		      + au/(sqrt(8.)*bu)*(2.*sum/amix-Pureparm[i][1]/bmix)
+                      * log((zmix+bu*(1.-sqrt(2.)))/(zmix+bu*(1.+sqrt(2.))));
 		fci = exp(lnfci);
 		Fugci[i][0] = fci;	// fugacity coefficient using engineering convention
-		Fugci[i][1] = Wx[i]*fci;	// fugacity coefficient using geology convention
-		Fugci[i][2] = Fugci[i][1]/Fugpure[i][0];	// activity of species
+		Fugci[i][1] = Wx[i]*fci;  // fugacity coefficient using geology convention
+		Fugci[i][2] = Fugci[i][1]/Fugpure[i][0];  // activity of species
 		if (Wx[i]>1.0e-20)
-			Fugci[i][3] = Fugci[i][2]/Wx[i];	// activity coefficient of species
+			Fugci[i][3] = Fugci[i][2]/Wx[i];  // activity coefficient of species
 		else
 			Fugci[i][3] = 1.0;
 
@@ -1665,6 +1677,7 @@ TPRSVcalc::ObtainResults( double *ActCoef )
 // - - - - - - -
 
 // TPRSVcalc class - high-level methods
+// Constructor
 
 TPRSVcalc::TPRSVcalc( int NCmp, double Pp, double Tkp )
     {
@@ -1764,7 +1777,7 @@ TPRSVcalc::~TPRSVcalc()
  // Implementation of the TPRSVcalc class
 
 int
-TPRSVcalc::PRFugacityPT( double Tk, double P, float *EoSparam, double *Eos2parPT,
+TPRSVcalc::PRFugacityPT( double P, double Tk, float *EoSparam, double *Eos2parPT,
         double &Fugacity, double &Volume, double &DeltaH, double &DeltaS )
  {
 
@@ -1774,7 +1787,8 @@ TPRSVcalc::PRFugacityPT( double Tk, double P, float *EoSparam, double *Eos2parPT
       if( iRet)
         return iRet;
 
-      iRet = PureParam( Eos2parPT ); // Calculates A and B - attraction and repulsion terms
+      iRet = PureParam( Eos2parPT ); // Calculates A and B
+                                     // - attraction and repulsion terms
       if( iRet)
         return iRet;
 
@@ -1793,7 +1807,7 @@ TPRSVcalc::PRFugacityPT( double Tk, double P, float *EoSparam, double *Eos2parPT
  // Called from IPM-Gamma() where activity coefficients are computed
 int
 TPRSVcalc::PRActivCoefPT( int NComp, double Pbar, double Tk, double *X,
-        double *fugpure, float *binpar, float *param, double *act, double &PhaseVol )
+    double *fugpure, float *binpar, float *param, double *act, double &PhaseVol )
 {
 
    int iRet;
@@ -1806,6 +1820,5 @@ TPRSVcalc::PRActivCoefPT( int NComp, double Pbar, double Tk, double *X,
 
     return iRet;
 }
-
 
 //--------------------- End of s_fgl.cpp ---------------------------

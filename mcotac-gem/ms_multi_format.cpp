@@ -12,7 +12,13 @@
 bool _comment = true;
 
 //===================================================================
-
+// in the arrays below, the first field of each structure contains a string
+// which is put into <> to comprise a data object tag, e.g. <IterDone>, in
+// free text input files. The second field (0 or 1) denotes whether the data
+// object can be skipped from the file (0) and default value(s) can be used,
+// or (1) the data object must be always present in the file. The third
+// field is used internally and must be set to 0 here.
+//
 outField MULTI_static_fields[8] =  {
   { "pa_PE" , 0 , 0 },
   { "PV" , 0 , 0 },
@@ -576,7 +582,9 @@ void TMulti::from_text_file_gemipm( const char *path )
   for( ii=0; ii<dCH->nPH; ii++)
     pmp->L1[ii] = dCH->nDCinPH[ii];
 
-  memcpy( pmp->A, dCH->A, dCH->nIC*dCH->nDC*sizeof(float));
+  for( ii=0; ii<dCH->nIC*dCH->nDC; ii++)
+    pmp->A[ii] = dCH->A[ii];
+
   if( pmp->EZ )
   { int iZ=-1;
     for(  ii=0; ii<dCH->nDC; ii++ )
@@ -588,28 +596,30 @@ void TMulti::from_text_file_gemipm( const char *path )
           pmp->EZ[ii] = pmp->A[pmp->N*ii+iZ];
     }
   }
-  for( ii=0; ii< dCH->nIC; ii++ )
-   pmp->Awt[ii]  = dCH->ICmm[ii];
-  memcpy( pmp->MM, dCH->DCmm, dCH->nDC*sizeof(double));
 
-  memset( pmp->SB, ' ', MaxICN*dCH->nIC*sizeof(char));
   for( ii=0; ii< dCH->nIC; ii++ )
-  {   memcpy( pmp->SB[ii], dCH->ICNL[ii], MaxICN*sizeof(char) );
-      pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
+  { pmp->Awt[ii]  = dCH->ICmm[ii];
+    memset(pmp->SB[ii], ' ', MaxICN*sizeof(char));
+    memcpy( pmp->SB[ii], dCH->ICNL[ii], MaxICN*sizeof(char) );
+    pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
+    pmp->ICC[ii] =  dCH->ccIC[ii];
   }
 
-  memcpy( pmp->SM, dCH->DCNL, MaxDCN*dCH->nDC*sizeof(char));
+  for( ii=0; ii< dCH->nDC; ii++ )
+  { pmp->MM[ii] = dCH->DCmm[ii];
+    pmp->DCC[ii] = dCH->ccDC[ii];
+    memcpy( pmp->SM[ii], dCH->DCNL[ii], MaxDCN*sizeof(char));
+  }
 
-  memset( pmp->SF, ' ', MaxPHN*dCH->nPH*sizeof(char) );
   for( ii=0; ii< dCH->nPH; ii++ )
-  {  memcpy( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN*sizeof(char));
+  {
+     memset( pmp->SF[ii], ' ', MaxPHN*sizeof(char) );
+     memcpy( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN*sizeof(char));
      pmp->SF[ii][0] = dCH->ccPH[ii];
+     pmp->PHC[ii] = dCH->ccPH[ii];
   }
 
-  memcpy( pmp->ICC, dCH->ccIC, dCH->nIC*sizeof(char));
-  memcpy( pmp->DCC, dCH->ccDC, dCH->nDC*sizeof(char));
 // !!!!  memcpy( pmp->DCCW, dCH->ccDCW, dCH->nDC*sizeof(char));
-  memcpy( pmp->PHC, dCH->ccPH, dCH->nPH*sizeof(char));
   // set up DCCW
   ConvertDCC();
 
