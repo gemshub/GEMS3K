@@ -14,7 +14,7 @@
 <IterDone>       40
 
 ##'dCon' Chemical scalar variables
-<T>    298.15
+<TC>    25
 <P>    1
 <Vs>   999.964
 <Vi>   0
