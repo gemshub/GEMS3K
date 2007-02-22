@@ -1,14 +1,13 @@
 //-------------------------------------------------------------------
-// $Id: verror.h 774 2006-07-26 08:45:45Z gems $
+// $Id: verror.h 871 2007-02-21 14:29:54Z gems $
 //
-// Error handling classes TError and TFatalError
+// Error handling: classes TError and TFatalError
 //
 // Copyright (C) 1996-2001 A.Rysin, S.Dmytriyeva
 // Uses  gstring class (C) A.Rysin 1999
 //
-// This file is part of the GEM-Vizor library which uses the
-// Qt v.2.x GUI Toolkit (Troll Tech AS, http://www.trolltech.com)
-// according to the Qt Duo Commercial license
+// This file is part of the GEM-Vizor library and GEMIPM2K
+// code package
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -70,5 +69,6 @@ void ErrorIf(bool error, const gstring& title, const gstring& message)
 }
 
 
-#endif    // _verror_h
+#endif
+// _verror_h
 

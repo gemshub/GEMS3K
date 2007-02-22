@@ -1,3 +1,19 @@
+//-------------------------------------------------------------------
+// $Id: ms_multi_format.cpp 774 2006-07-26 08:45:45Z gems $
+//
+// Implementation of text writing/reading IPM, DCH and DBR files
+//
+// Copyright (C) 2006-2007 S.Dmytriyeva
+//
+// This file is part of the GEM-Vizor library and GEMIPM2K
+// code package
+//
+// This file may be distributed under the terms of the GEMS-PSI
+// QA Licence (GEMSPSI.QAL)
+//
+// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// E-mail gems2.support@psi.ch
+//-------------------------------------------------------------------
 //#include  <iostream>
 
 #include "io_arrays.h"
@@ -12,7 +28,13 @@
 bool _comment = true;
 
 //===================================================================
-
+// in the arrays below, the first field of each structure contains a string
+// which is put into <> to comprise a data object tag, e.g. <IterDone>, in
+// free text input files. The second field (0 or 1) denotes whether the data
+// object can be skipped from the file (0) and default value(s) can be used,
+// or (1) the data object must be always present in the file. The third
+// field is used internally and must be set to 0 here.
+//
 outField MULTI_static_fields[8] =  {
   { "pa_PE" , 0 , 0 },
   { "PV" , 0 , 0 },
@@ -24,7 +46,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" , 0 , 0 }
 };
 
-outField MULTI_dynamic_fields[63] =  {
+outField MULTI_dynamic_fields[66] =  {
 //read dynamic (array) data from the txt input file
    {  "sMod", 1 , 0 },
    {  "LsMod", 1 , 0 },
@@ -89,13 +111,16 @@ outField MULTI_dynamic_fields[63] =  {
    { "pa_DNS" , 0 , 0 },
    { "pa_IEPS" , 0 , 0 },
    { "pKin" , 0 , 0 },
-   { "pa_DKIN" , 0 , 0 }
+   { "pa_DKIN" , 0 , 0 },
+   { "mui" , 0 , 0 },
+   { "muk" , 0 , 0 },
+   { "muj" , 0 , 0 }
 };
 
 
 //===================================================================
 
-void TMulti::to_text_file_gemipm( const char *path )
+void TMulti::to_text_file_gemipm( const char *path, bool addMui )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -121,8 +146,8 @@ void TMulti::to_text_file_gemipm( const char *path )
   TPrintArrays  prar(ff);
 
 if( _comment )
-{   ff << "# GEMIPM2K v. 0.98" << endl;
-   ff << "# Prototype 12.12.2006" << endl;
+{   ff << "# GEMIPM2K v. 2.2.0" << endl;
+   ff << "# Prototype 22.02.2007" << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
@@ -455,6 +480,19 @@ if(LsIPxSum )
    if( pm.sitNan )
      prar.writeArray(  "sitXa", pmp->sitXan, pmp->sitNan );
 */
+if( addMui )
+{
+  if( _comment )
+    ff << "\n\n# mui: IC indices in RMULTS IC list";
+  prar.writeArray(  "mui", pmp->mui,  pmp->N);
+  if( _comment )
+    ff << "\n\n# muk: Phase indices in RMULTS phase list";
+  prar.writeArray(  "muk", pmp->muk,  pmp->FI);
+  if( _comment )
+    ff << "\n\n# muj: DC indices in RMULTS DC list";
+  prar.writeArray(  "muj", pmp->muj,  pmp->L);
+}
+
  if( _comment )
    ff << "\n\n# End of file" << endl;
 
@@ -502,7 +540,7 @@ void TMulti::from_text_file_gemipm( const char *path )
   pmp->FIat = 0; //6
   pmp->PLIM  = 1;
 
-  // read sizes and constants from txt file
+  // reads sizes and constants from txt file
   fstream ff( path, ios::in );
   ErrorIf( !ff.good() , path, "Fileopen error");
 
@@ -576,7 +614,9 @@ void TMulti::from_text_file_gemipm( const char *path )
   for( ii=0; ii<dCH->nPH; ii++)
     pmp->L1[ii] = dCH->nDCinPH[ii];
 
-  memcpy( pmp->A, dCH->A, dCH->nIC*dCH->nDC*sizeof(float));
+  for( ii=0; ii<dCH->nIC*dCH->nDC; ii++)
+    pmp->A[ii] = dCH->A[ii];
+
   if( pmp->EZ )
   { int iZ=-1;
     for(  ii=0; ii<dCH->nDC; ii++ )
@@ -588,33 +628,35 @@ void TMulti::from_text_file_gemipm( const char *path )
           pmp->EZ[ii] = pmp->A[pmp->N*ii+iZ];
     }
   }
-  for( ii=0; ii< dCH->nIC; ii++ )
-   pmp->Awt[ii]  = dCH->ICmm[ii];
-  memcpy( pmp->MM, dCH->DCmm, dCH->nDC*sizeof(double));
 
-  memset( pmp->SB, ' ', MaxICN*dCH->nIC*sizeof(char));
   for( ii=0; ii< dCH->nIC; ii++ )
-  {   memcpy( pmp->SB[ii], dCH->ICNL[ii], MaxICN*sizeof(char) );
-      pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
+  { pmp->Awt[ii]  = dCH->ICmm[ii];
+    memset(pmp->SB[ii], ' ', MaxICN*sizeof(char));
+    memcpy( pmp->SB[ii], dCH->ICNL[ii], MaxICN*sizeof(char) );
+    pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
+    pmp->ICC[ii] =  dCH->ccIC[ii];
   }
 
-  memcpy( pmp->SM, dCH->DCNL, MaxDCN*dCH->nDC*sizeof(char));
+  for( ii=0; ii< dCH->nDC; ii++ )
+  { pmp->MM[ii] = dCH->DCmm[ii];
+    pmp->DCC[ii] = dCH->ccDC[ii];
+    memcpy( pmp->SM[ii], dCH->DCNL[ii], MaxDCN*sizeof(char));
+  }
 
-  memset( pmp->SF, ' ', MaxPHN*dCH->nPH*sizeof(char) );
   for( ii=0; ii< dCH->nPH; ii++ )
-  {  memcpy( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN*sizeof(char));
+  {
+     memset( pmp->SF[ii], ' ', MaxPHN*sizeof(char) );
+     memcpy( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN*sizeof(char));
      pmp->SF[ii][0] = dCH->ccPH[ii];
+     pmp->PHC[ii] = dCH->ccPH[ii];
   }
 
-  memcpy( pmp->ICC, dCH->ccIC, dCH->nIC*sizeof(char));
-  memcpy( pmp->DCC, dCH->ccDC, dCH->nDC*sizeof(char));
 // !!!!  memcpy( pmp->DCCW, dCH->ccDCW, dCH->nDC*sizeof(char));
-  memcpy( pmp->PHC, dCH->ccPH, dCH->nPH*sizeof(char));
   // set up DCCW
   ConvertDCC();
 
-//read dynamic values from txt file
-   TReadArrays  rddar( 63, MULTI_dynamic_fields, ff);
+//reads dynamic values from txt file
+   TReadArrays  rddar( 66, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
 
@@ -660,9 +702,17 @@ void TMulti::from_text_file_gemipm( const char *path )
               int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
               if(LsIPxSum )
-               rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
-               if(LsModSum )
-               rddar.readArray( "PMc", pmp->PMc,  LsModSum);
+              { rddar.readNext( "IPxPH");
+                if(!pmp->IPx )
+                  pmp->IPx = new short[LsIPxSum];
+                rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
+              }
+              if(LsModSum )
+              { rddar.readNext( "PMc");
+                if(!pmp->PMc )
+                  pmp->PMc = new float[LsModSum];
+                rddar.readArray( "PMc", pmp->PMc,  LsModSum);
+              }
               break;
              }
       case 2: { if( !pmp->LsMdc )
@@ -671,7 +721,11 @@ void TMulti::from_text_file_gemipm( const char *path )
                 int LsMdcSum;
                 getLsMdcsum( LsMdcSum );
                 if(LsMdcSum )
-                 rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
+                { rddar.readNext( "DMc");
+                  if(!pmp->DMc )
+                     pmp->DMc = new float[LsMdcSum];
+                  rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
+                }
                 break;
               }
       case 3: rddar.readArray( "B", pmp->B,  pmp->N);
@@ -748,77 +802,83 @@ void TMulti::from_text_file_gemipm( const char *path )
                 Error( "Error", "Array DCC3 not used in this problem");
                rddar.readArray( "DCads", pmp->DCC3, pmp->Lads, 1 );
                break;
-      case 27: rdar.readArray( "pa_DB" , &pa->p.DB, 1);
+      case 27: rddar.readArray( "pa_DB" , &pa->p.DB, 1);
                break;
-      case 28: rdar.readArray("pa_DHB", &pa->p.DHB, 1);
+      case 28: rddar.readArray("pa_DHB", &pa->p.DHB, 1);
                break;
-      case 29: rdar.readArray("pa_EPS" , &pa->p.EPS, 1);
+      case 29: rddar.readArray("pa_EPS" , &pa->p.EPS, 1);
                break;
-      case 30: rdar.readArray("pa_DK" , &pa->p.DK, 1);
+      case 30: rddar.readArray("pa_DK" , &pa->p.DK, 1);
                break;
-      case 31: rdar.readArray("pa_DF" , &pa->p.DF, 1);
+      case 31: rddar.readArray("pa_DF" , &pa->p.DF, 1);
                break;
-      case 32: rdar.readArray("pa_DP", &pa->p.DP, 1);
+      case 32: rddar.readArray("pa_DP", &pa->p.DP, 1);
                break;
-      case 33: rdar.readArray("pa_IIM", &pa->p.IIM, 1);
+      case 33: rddar.readArray("pa_IIM", &pa->p.IIM, 1);
                break;
-      case 34: rdar.readArray("pa_PD" , &pa->p.PD, 1);
+      case 34: rddar.readArray("pa_PD" , &pa->p.PD, 1);
                break;
-      case 35: rdar.readArray("pa_PRD" , &pa->p.PRD, 1);
+      case 35: rddar.readArray("pa_PRD" , &pa->p.PRD, 1);
                break;
-      case 36: rdar.readArray("pa_AG" , &pa->p.AG, 1);
+      case 36: rddar.readArray("pa_AG" , &pa->p.AG, 1);
                break;
-      case 37: rdar.readArray("pa_DGC" , &pa->p.DGC, 1);
+      case 37: rddar.readArray("pa_DGC" , &pa->p.DGC, 1);
                break;
-      case 38: rdar.readArray("pa_PSM" , &pa->p.PSM, 1);
+      case 38: rddar.readArray("pa_PSM" , &pa->p.PSM, 1);
                break;
-      case 39: rdar.readArray("pa_GAR" , &pa->p.GAR, 1);
+      case 39: rddar.readArray("pa_GAR" , &pa->p.GAR, 1);
                break;
-      case 40: rdar.readArray("pa_GAH" , &pa->p.GAH, 1);
+      case 40: rddar.readArray("pa_GAH" , &pa->p.GAH, 1);
                break;
-      case 41: rdar.readArray("pa_DS", &pa->p.DS, 1);
+      case 41: rddar.readArray("pa_DS", &pa->p.DS, 1);
                break;
-      case 42: rdar.readArray("pa_XwMin" , &pa->p.XwMin, 1);
+      case 42: rddar.readArray("pa_XwMin" , &pa->p.XwMin, 1);
                break;
-      case 43: rdar.readArray("pa_ScMin" , &pa->p.ScMin, 1);
+      case 43: rddar.readArray("pa_ScMin" , &pa->p.ScMin, 1);
                break;
-      case 44: rdar.readArray("pa_DcMin" , &pa->p.DcMin, 1);
+      case 44: rddar.readArray("pa_DcMin" , &pa->p.DcMin, 1);
                break;
-      case 45: rdar.readArray("pa_PhMin" , &pa->p.PhMin, 1);
+      case 45: rddar.readArray("pa_PhMin" , &pa->p.PhMin, 1);
                break;
-      case 46: rdar.readArray("pa_ICmin" , &pa->p.ICmin, 1);
+      case 46: rddar.readArray("pa_ICmin" , &pa->p.ICmin, 1);
                break;
-      case 47: rdar.readArray("pa_PC" , &pa->p.PC, 1);
+      case 47: rddar.readArray("pa_PC" , &pa->p.PC, 1);
                break;
-      case 48: rdar.readArray("pa_DFM" , &pa->p.DFM, 1);
+      case 48: rddar.readArray("pa_DFM" , &pa->p.DFM, 1);
                break;
-      case 49: rdar.readArray("pa_DFYw" , &pa->p.DFYw, 1);
+      case 49: rddar.readArray("pa_DFYw" , &pa->p.DFYw, 1);
                break;
-      case 50: rdar.readArray("pa_DFYaq" , &pa->p.DFYaq, 1);
+      case 50: rddar.readArray("pa_DFYaq" , &pa->p.DFYaq, 1);
                break;
-      case 51: rdar.readArray("pa_DFYid" , &pa->p.DFYid, 1);
+      case 51: rddar.readArray("pa_DFYid" , &pa->p.DFYid, 1);
                break;
-      case 52: rdar.readArray("pa_DFYr" , &pa->p.DFYr, 1);
+      case 52: rddar.readArray("pa_DFYr" , &pa->p.DFYr, 1);
                break;
-      case 53: rdar.readArray("pa_DFYh" , &pa->p.DFYh, 1);
+      case 53: rddar.readArray("pa_DFYh" , &pa->p.DFYh, 1);
                break;
-      case 54: rdar.readArray("pa_DFYc" , &pa->p.DFYc, 1);
+      case 54: rddar.readArray("pa_DFYc" , &pa->p.DFYc, 1);
                break;
-      case 55: rdar.readArray("pa_DFYs", &pa->p.DFYs, 1);
+      case 55: rddar.readArray("pa_DFYs", &pa->p.DFYs, 1);
                break;
-      case 56: rdar.readArray("pa_DW", &pa->p.DW , 1);
+      case 56: rddar.readArray("pa_DW", &pa->p.DW , 1);
                break;
-      case 57: rdar.readArray("pa_DT", &pa->p.DT , 1);
+      case 57: rddar.readArray("pa_DT", &pa->p.DT , 1);
                break;
-      case 58: rdar.readArray("pa_GAS", &pa->p.GAS, 1);
+      case 58: rddar.readArray("pa_GAS", &pa->p.GAS, 1);
                break;
-      case 59: rdar.readArray("pa_DNS" , &pa->p.DNS, 1);
+      case 59: rddar.readArray("pa_DNS" , &pa->p.DNS, 1);
                break;
-      case 60: rdar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
+      case 60: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
                break;
-      case 61: rdar.readArray("pKin" , &pmp->PLIM, 1);
+      case 61: rddar.readArray("pKin" , &pmp->PLIM, 1);
                break;
-      case 62: rdar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
+      case 62: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
+               break;
+      case 63: rddar.readArray("mui" , pmp->mui, pmp->N);
+               break;
+      case 64: rddar.readArray("muk" , pmp->muk, pmp->FI);
+               break;
+      case 65: rddar.readArray("muj" , pmp->muj, pmp->L);
                break;
     }
     nfild = rddar.findNext();
@@ -840,3 +900,5 @@ void TMulti::from_text_file_gemipm( const char *path )
 }
 
 //=============================================================================
+// ms_multi_format.cpp
+

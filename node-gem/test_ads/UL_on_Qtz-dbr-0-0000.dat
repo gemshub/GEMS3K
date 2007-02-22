@@ -21,7 +21,7 @@
 
 ##Section (scalar-2): Chemical scalar variables
 # Temperature T, K
-<T>    298.15
+<TC>   25
 # Pressure P, bar
 <P>    1
 # Volume V of reactive subsystem, m3 (GEM output)

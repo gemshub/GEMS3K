@@ -30,7 +30,7 @@
 #include "node.h"
 
 // #define nNodes  11 // set here how many nodes you need
-#define nNodes  1 // nodes for the adsorption example
+#define nNodes  5 // nodes for the adsorption example
 
 int main( int argc, char* argv[] )
  {
@@ -187,6 +187,8 @@ int main( int argc, char* argv[] )
  }
 
    cout << "End Initialization part" << endl;
+   clock_t t_start11, t_end11;
+   t_start11 = clock();
 
    // (2) ----------------------------------------------
    // Work loop for the coupled FMT-GEM modelling
@@ -286,6 +288,10 @@ int main( int argc, char* argv[] )
 
     tc += dt;
   }
+  t_end11 = clock();
+  double dtime = ( t_end11- t_start11 );
+  double clc_sec = CLOCKS_PER_SEC;
+  cout <<  "Total time of calculation  s; " <<  (dtime)/clc_sec << endl;
   cout << " End Coupled Modelling part" << endl;
 
   // (3) ----------------------------------------------

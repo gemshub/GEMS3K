@@ -1,13 +1,14 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 759 2006-07-21 14:03:53Z wagner $
+// $Id: s_fgl.h 871 2007-02-21 14:29:54Z gems $
 //
-// Copyright (C) 1992-2000  K.Chudnenko, D.Kulik, S.Dmitrieva
+// Copyright (C) 2003-2007  S.Churakov, Th.Wagner, D.Kulik, S.Dmitrieva
 //
-// Declaration of TFGLcalc class
+// Declaration of new implementation of Fluid EoS classes
+// (PRSV and CG EoS models)
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// and part of the standalone GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -20,140 +21,15 @@
 #ifndef _s_fgl_h_
 #define _s_fgl_h_
 
-// #include "m_dcomp.h"
-
-
-/* copyright (c) Irkutsk 1995  FGL */
-typedef struct
-{ /* Working parameters */
-    short Z;
-    float MM,
-          FUG,
-          VLK,
-          DH,
-          DS,
-          P1,
-          P2,
-          TK,
-          TR,
-          PR,
-          GTP,
-          dU,
-          KT,
-          KP,
-          KZ,
-          KV,
-          WW;
-    int IH;
-    float HV,    // work variable
-          VRK,
-          VR0,
-          VRR,
-          Z0,
-          ZR,
-          Z1,
-          ZLK;
-}
-FGWORK;
-
-typedef struct
-{ /* Constants to fugacity */
-    float COF[20][4];
-    float PPP[5];
-    float Tmin[9],Tmax[9],Pmin[9],Pmax[9];
-}
-FGCONST;
-
-
-typedef struct
-{ /* water fitches */
-    float T;
-    float P;
-    float R;
-    float ALP;
-    float BE;
-    float DAT;
-    float DBT;
-    float DAP;
-    float DBP;
-    float CHI;
-    float FUG;
-    float G1;
-    float H1;
-    float CP1;
-    float S01;
-    float GPG0;
-    float FT;
-    float GT;
-    float UT;
-    float HT;
-    float ST;
-    float CVT;
-    float CPT;
-}
-H2O;
-
-class TFGLcalc  // description of thermodinamic properties of gases: FGL module
-{
-    // working parameters
-    FGWORK fg;
-    FGCONST fc;
-    H2O tw;
-
-protected:
-    void DOK(float *PH,float *PB,int PGL);
-    void ZAK(int PGL);
-    float SAT( float T );
-    float KNIGHT( float T );
-    void fugaz();
-    void fgl();
-    int OPTION(float P);
-    float PY();
-    float PKDM(float P,float EPS);
-    float NG();
-    void  FESAX(int TT,float P1,float P2, float *GTP,float *DH );
-    void  BERTOLE(float P1,float P2,float *GTP,float *DH);
-    void  LEEK(  float P1, float P2,float *GTP,float *DH);
-    void water_g( float P1, float P2,float *GTP,float *DH);
-    void TERH2O(float RH);
-    float HAAR(float T,float P);
-    float ENTLG();
-    void EXTRA( float P1, float P2,float *GTP,float *DH);
-    void LIKES();
-    float BISEC(float A,float B,float EPS,float EPS1, short K );
-    float LB1();
-    float LB2();
-    float FD();
-    float RK();
-    float LK1();
-    float LK2();
-    float ROOT(short K,float A,float EPS,short N);
-    void TABLE1();
-    void BREED(float P1, float P2,float *GTP,float *DH );
-    float densi1(float TR,float PR);
-    float lfug(float TR,float PR);
-    float ENTALPIA(float TR,float PR);
-    float LagranInterp(float *a, float *x, float *y, float x1, float x2,
-                 int p,int p0,int p1);
-
-public:
-
-    TFGLcalc()
-    {}
-    //--- Value manipulation
-
-    void calc_FGL( void );
-
-};
-
 // Added 09 May 2003
 // Definition of a class for CG EOS calculations for fluids
 // Incorporates a C++ program written by Sergey Churakov (CSCS ETHZ)
-// implementing a paper Churakov & Gottschalk 2003 GCA v.   p.
-
+// implementing papers by Churakov & Gottschalk 2003 GCA v.67 p. 2397-2414
+// and p. 2415-2425
+// Reference: http://people.web.psi.ch/churakov/, sergey.churakov@psi.ch
 
 /*-----------------07.11.99 12:14-------------------
- Structure of parameers for LJ and Shokmayer potential
+ Structure of parameters for LJ and Shokmayer potential
  sig(A)=F1+F5*T*1E-4
  epsilon(K)=F2+F3*Exp(-F4*T*1E-3)
  polaris(A)=F6
@@ -366,11 +242,13 @@ public:
 
 };
 
-
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Added 19 July 2006 by Th.Wagner and D.Kulik
 // Definition of a class for PRSV EOS calculations for fluids
 // Incorporates a C++ program written by Thomas Wagner (Univ. Tuebingen)
-
+// Reference: http://www.uni-tuebingen.de/uni/emi/ag-markl/pages/wagner/
+// th.wagner@uni-tuebingen.de
+//
 class TPRSVcalc // Peng-Robinson-Styjek-Vera EOS calculations
 {
   private:
@@ -401,7 +279,7 @@ class TPRSVcalc // Peng-Robinson-Styjek-Vera EOS calculations
 
    int CalcFugPure( void );
    // Calc. fugacity for 1 species at X=1
-   int PRFugacityPT( double Tk, double P, float *EoSparam, double *Eos2parPT,
+   int PRFugacityPT( double P, double Tk, float *EoSparam, double *Eos2parPT,
         double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
 
 protected:
@@ -422,6 +300,5 @@ double ObtainResults( double *ActCoef ); // returns activity coeffs and phase vo
 
 };
 
-
-
-#endif  // _v_fgl_h
+#endif
+// _s_fgl_h

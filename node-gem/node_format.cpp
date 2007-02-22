@@ -1,14 +1,13 @@
 //--------------------------------------------------------------------
-// $Id: node.cpp 684 2005-11-23 13:17:15Z gems $
+// $Id: node_format.cpp 684 2005-11-23 13:17:15Z gems $
 //
-// C/C++ interface between GEM IPM and FMT node array
-// Working whith DATACH and DATABR structures
+// C/C++ interface for writing/reading DBR and DCH files
+// Works with DATACH and DATABR structures
 //
-// Copyright (C) 2004-2005 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2006-2007 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// modelling by Gibbs energy minimization and of the GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -24,8 +23,15 @@
 #include "gdatastream.h"
 
 extern bool _comment;
-//===============================================================
 
+//===============================================================
+// in the arrays below, the first field of each structure contains a string
+// which is put into <> to comprise a data object tag, e.g. <IterDone>, in
+// free text input files. The second field (0 or 1) denotes whether the data
+// object can be skipped from the file (0) and default value(s) can be used,
+// or (1) the data object must be always present in the file. The third
+// field is used internally and must be set to 0 here.
+//
 outField DataBR_fields[51] =  {
   { "NodeHandle",  0, 0 },
   { "NodeTypeHY",  0, 0 },
@@ -33,7 +39,7 @@ outField DataBR_fields[51] =  {
   { "NodeStatusFMT",  0, 0 },
   { "NodeStatusCH",  1, 0 },
   { "IterDone",  0, 0 },
-  { "T",   1, 0 },
+  { "TC",   1, 0 },
   { "P",  1, 0 },
   { "Vs",  1, 0 },
   { "Vi",   0, 0 },
@@ -71,9 +77,9 @@ outField DataBR_fields[51] =  {
   { "uIC",     0, 0 },
   { "xDC",     0, 0 },
   { "gam",    0, 0 },
-  { "dll",    1, 0 },
-  { "dul",    1, 0 },
-  { "aPH",    1, 0 },
+  { "dll",    0, 0 },   // changed to non-obligatory by KD on 19.12.2006
+  { "dul",    0, 0 },   // changed to non-obligatory by KD on 19.12.2006
+  { "aPH",    0, 0 },   // changed to non-obligatory by KD on 19.12.2006
   { "xPH",    0, 0 },
   { "vPS",    0, 0 },
   { "mPS",   0, 0 },
@@ -112,17 +118,17 @@ outField DataCH_dynamic_fields[25] =  {
    { "nDCinPH",  1, 0 },
    { "A",  1, 0 },
    { "Ttol",  0, 0 },
-   { "Tval",  1, 0 },
+   { "TCval",  1, 0 },
    { "Ptol",  0, 0 },
    { "Pval",  1, 0 },
    { "roW",  1, 0 },
    { "epsW",  1, 0 },
    { "V0",  1, 0 },
    { "G0",  1, 0 },
-   { "H0", 1, 0 },
-   { "S0",  1, 0 },
-   { "Cp0",  1, 0 },
-   { "DD",  0, 0 }
+   { "H0", 1, 0 },    // Depending on iGrd flag
+   { "S0",  1, 0 },   // Depending on iGrd flag
+   { "Cp0",  1, 0 },  // Depending on iGrd flag
+   { "DD",  0, 0 }    // Depending on iGrd flag
 };
 
 //===============================================================
@@ -135,8 +141,8 @@ void TNode::databr_to_text_file( fstream& ff )
   TPrintArrays  prar(ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 0.98" << endl;
-      ff << "# Prototype 12.12.2006" << endl;
+   {  ff << "# GEMIPM2K v. 2.2.0" << endl;
+      ff << "# Prototype 22.02.2007" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -165,7 +171,7 @@ void TNode::databr_to_text_file( fstream& ff )
       ff << "##Section (scalar-2): Chemical scalar variables" << endl;
    if( _comment )
          ff << "# Temperature T, K" << endl;
-   ff << left << setw(7) << "<T> " <<  CNode->T << endl;
+   ff << left << setw(7) << "<TC> " <<  CNode->TC << endl;
    if( _comment )
          ff << "# Pressure P, bar" << endl;
    ff << left << setw(7) << "<P> " <<  CNode->P << endl;
@@ -341,7 +347,7 @@ void TNode::databr_from_text_file( fstream& ff )
             break;
     case 5: rdar.readArray( "IterDone",  &CNode->IterDone, 1);
             break;
-    case 6: rdar.readArray( "T",  &CNode->T, 1);
+    case 6: rdar.readArray( "TC",  &CNode->TC, 1);
             break;
     case 7: rdar.readArray( "P",  &CNode->P, 1);
             break;
@@ -437,7 +443,7 @@ void TNode::databr_from_text_file( fstream& ff )
  // testing read
  gstring ret = rdar.testRead();
  if( !ret.empty() )
-  { ret += " - fields must be readed from DataBR structure";
+  { ret += " - fields must be read from DataBR structure";
     Error( "Error", ret);
   }
 }
@@ -450,8 +456,8 @@ void TNode::datach_to_text_file( fstream& ff )
   TPrintArrays  prar(ff);
 
   if( _comment )
-  {  ff << "# GEMIPM2K v. 0.98" << endl;
-     ff << "# Prototype 12.12.2006" << endl;
+  {  ff << "# GEMIPM2K v. 2.2.0" << endl;
+     ff << "# Prototype 22.02.2007" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
@@ -506,7 +512,7 @@ void TNode::datach_to_text_file( fstream& ff )
 
   ff<< "\n<END_DIM>\n";
 
-// dynamic arrays - must follow after static data
+// dynamic arrays - must follow static data
   if( _comment )
   {   ff << "\n## (4) Databridge configuration section (for memory allocation)";
       ff << "\n# xIC: indexes of ICs to be kept in DATABR structure";
@@ -566,7 +572,7 @@ prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
   ff << left << setw(7) << "<Ttol> " <<  CSD->Ttol;
   if( _comment )
     ff << "\n# Tval: Grid temperatures for the interpolation";
- prar.writeArray(  "Tval", CSD->Tval, CSD->nTp );
+ prar.writeArray(  "TCval", CSD->TCval, CSD->nTp );
   if( _comment )
     ff << "\n\n# Ptol: Tolerance for the interpolation over pressure (K)" << endl;
   ff << left << setw(7) << "<Ptol> " <<  CSD->Ptol;
@@ -753,7 +759,7 @@ void TNode::datach_from_text_file(fstream& ff)
             break;
     case 13: rddar.readArray( "Ttol", &CSD->Ttol, 1);
             break;
-    case 14: rddar.readArray( "Tval", CSD->Tval, CSD->nTp );
+    case 14: rddar.readArray( "TCval", CSD->TCval, CSD->nTp );
             break;
     case 15: rddar.readArray( "Ptol", &CSD->Ptol, 1);
             break;
@@ -800,17 +806,16 @@ void TNode::datach_from_text_file(fstream& ff)
  // testing read
  ret = rddar.testRead();
  if( !ret.empty() )
-  { ret += " - fields must be readed from DataCH structure";
+  { ret += " - fields must be read from DataCH structure";
     Error( "Error", ret);
   }
 
 }
 
 //---------------------------------------------------------------
+// new i/o structures
 
-// new structures i/o
-
-// Writting DataCH to binary file
+// Writing DataCH to binary file
 void TNode::datach_to_file( GemDataStream& ff )
 {
 // const data
@@ -828,7 +833,7 @@ void TNode::datach_to_file( GemDataStream& ff )
    ff.writeArray( CSD->ICmm, CSD->nIC );
    ff.writeArray( CSD->DCmm, CSD->nDC );
 
-   ff.writeArray( CSD->Tval,  CSD->nTp );
+   ff.writeArray( CSD->TCval,  CSD->nTp );
    ff.writeArray( CSD->Pval,  CSD->nPp );
 
    ff.writeArray( CSD->ccIC, CSD->nIC*sizeof(char) );
@@ -855,7 +860,7 @@ void TNode::datach_to_file( GemDataStream& ff )
    ff.writeArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH*sizeof(char) );
 }
 
-// Reading dataCH structure from binary file
+// Reading DataCH structure from binary file
 void TNode::datach_from_file( GemDataStream& ff )
 {
 // const data
@@ -876,7 +881,7 @@ void TNode::datach_from_file( GemDataStream& ff )
    ff.readArray( CSD->ICmm, CSD->nIC );
    ff.readArray( CSD->DCmm, CSD->nDC );
 
-   ff.readArray( CSD->Tval,  CSD->nTp );
+   ff.readArray( CSD->TCval,  CSD->nTp );
    ff.readArray( CSD->Pval,  CSD->nPp );
 
    ff.readArray( CSD->ccIC, CSD->nIC*sizeof(char) );
@@ -905,7 +910,7 @@ void TNode::datach_from_file( GemDataStream& ff )
 
 }
 
-// allocate DataCH structure
+// allocating DataCH structure
 void TNode::datach_realloc()
 {
  CSD->nDCinPH = new short[CSD->nPH];
@@ -924,7 +929,7 @@ void TNode::datach_realloc()
   CSD->ICmm = new double[CSD->nIC];
   CSD->DCmm = new double[CSD->nDC];
 
-  CSD->Tval = new float[CSD->nTp];
+  CSD->TCval = new float[CSD->nTp];
   CSD->Pval = new float[CSD->nPp];
 
   CSD->roW = new double[ CSD->nPp*CSD->nTp];
@@ -995,9 +1000,9 @@ void TNode::datach_free()
     CSD->DD = 0;
   }
 
- if( CSD->Tval )
-  { delete[] CSD->Tval;
-    CSD->Tval = 0;
+ if( CSD->TCval )
+  { delete[] CSD->TCval;
+    CSD->TCval = 0;
   }
  if( CSD->Pval )
   { delete[] CSD->Pval;
@@ -1066,7 +1071,7 @@ void TNode::databr_to_file( GemDataStream& ff )
 {
 // const data
    ff.writeArray( &CNode->NodeHandle, 6 );
-   ff.writeArray( &CNode->T, 32 );
+   ff.writeArray( &CNode->TC, 32 );
 
 //dynamic data
    ff.writeArray( CNode->bIC, CSD->nICb );
@@ -1096,7 +1101,7 @@ void TNode::databr_from_file( GemDataStream& ff )
 {
 // const data
    ff.readArray( &CNode->NodeHandle, 6 );
-   ff.readArray( &CNode->T, 32 );
+   ff.readArray( &CNode->TC, 32 );
 
 //dynamic data
    ff.readArray( CNode->bIC, CSD->nICb );
@@ -1120,22 +1125,32 @@ void TNode::databr_from_file( GemDataStream& ff )
 
 }
 
-// allocate DataBR structure
+// Allocates DataBR structure
 void TNode::databr_realloc()
 {
+  int j;
   CNode->bIC = new double[CSD->nICb];
   CNode->rMB = new double[CSD->nICb];
   CNode->uIC = new double[CSD->nICb];
 
  CNode->xDC = new double[CSD->nDCb];
  CNode->gam = new double[CSD->nDCb];
- for( int ii=0; ii<CSD->nDCb; ii++ )
-   CNode->gam[ii] = 1.;
+
+for(  j=0; j<CSD->nDCb; j++ )
+   CNode->gam[j] = 1.;               //  default assignment
  CNode->dul = new double[CSD->nDCb];
+for(  j=0; j<CSD->nDCb; j++ )
+   CNode->dul[j] = 1.0e6;            // default assignment
  CNode->dll = new double[CSD->nDCb];
+for(  j=0; j<CSD->nDCb; j++ )
+   CNode->dll[j] = 0.0;              // default assignment
 
  if( CSD->nAalp >0 )
-     CNode->aPH = new double[CSD->nPHb];
+ {
+    CNode->aPH = new double[CSD->nPHb];
+    for( int k=0; k<CSD->nPHb; k++ )
+      CNode->aPH[k] = 0.0;       // default assignment
+ }
  else
     CNode->aPH = 0;
 
@@ -1154,7 +1169,7 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
   if( CNode_ == 0)
     CNode_ = CNode;
   memset( &CNode_->NodeHandle, 0, 6*sizeof(short));
-  memset( &CNode_->T, 0, 32*sizeof(double));
+  memset( &CNode_->TC, 0, 32*sizeof(double));
 
  if( CNode_->bIC )
  { delete[] CNode_->bIC;
@@ -1214,6 +1229,5 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
  delete[] CNode_;
  return NULL;
 }
-
 
 //-----------------------End of node_format.cpp--------------------------

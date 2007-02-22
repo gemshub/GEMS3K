@@ -1,6 +1,21 @@
+//-------------------------------------------------------------------
+// $Id: ms_multi_file.cpp 872 2007-02-21 14:53:38Z gems $
+//
+// Implementation of writing/reading IPM work data structure files
+//
+// Copyright (C) 2006-2007 S.Dmytriyeva
+//
+// This file is part of the GEM-Vizor library and GEMIPM2K
+// code package
+//
+// This file may be distributed under the terms of the GEMS-PSI
+// QA Licence (GEMSPSI.QAL)
+//
+// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// E-mail gems2.support@psi.ch
+//-------------------------------------------------------------------
+
 #include <math.h>
-//#include <iomanip>
-//#include <iostream>
 
 #include "io_arrays.h"
 #include "m_param.h"
@@ -492,11 +507,14 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  pm.L1 = new short[pm.FI];
  memset(pm.L1, 0, pm.FI*sizeof(short));
  pm.muk = new short[pm.FI];
- memset(pm.muk, 0, pm.FI*sizeof(short));
+ for( ii=0; ii<pm.FI; ii++)
+   pm.muk[ii] = ii;
  pm.mui = new short[pm.N];
- memset(pm.mui, 0, pm.N*sizeof(short));
+ for( ii=0; ii<pm.N; ii++)
+   pm.mui[ii] = ii;
  pm.muj = new short[pm.L];
- memset(pm.muj, 0, pm.L*sizeof(short));
+ for( ii=0; ii<pm.L; ii++)
+   pm.muj[ii] = ii;
 
  pm.DUL = new double[pm.L];
  for( ii=0; ii<pm.L; ii++ )         // 28/11/2006
@@ -889,7 +907,7 @@ else
 }
 
 
-// realloc dynamic memory
+// Reallocation of dynamic memory
 void TMulti::multi_free()
 {
     // Part 1
@@ -1162,7 +1180,7 @@ void TMulti::to_text_file( const char *path )
      prar.writeArray(  "IC_wm", pm.IC_wm,  pm.N);
     }
 
-    /* dispersed and sorption phases */
+    // dispersed and sorption phases
     if( PAalp != S_OFF )
     {
      prar.writeArray(  "Aalp", pm.Aalp, pm.FI);

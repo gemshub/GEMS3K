@@ -1,4 +1,20 @@
-
+//-------------------------------------------------------------------
+// $Id: io_arrays.h 774 2006-07-26 08:45:45Z gems $
+//
+// Service functions for writing/reading arrays in files
+//
+// Copyright (C) 2006-2007 S.Dmytriyeva
+// Uses  gstring class
+//
+// This file is part of the GEM-Vizor library and GEMIPM2K
+// code package
+//
+// This file may be distributed under the terms of the GEMS-PSI
+// QA Licence (GEMSPSI.QAL)
+//
+// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// E-mail gems2.support@psi.ch
+//-------------------------------------------------------------------
 //#include <iomanip>
 #include  <fstream>
 #include "gstring.h"
@@ -23,8 +39,8 @@ public:
 struct outField
  {
    char name[20]; // name of field in structure
-   short alws;    // 1 - must be readed, 0 - posible use default values
-   short readed;  // set up to 1 after reading field from input file
+   short alws;    // 1 - must be read, 0 - default values can be used
+   short readed;  // 0; set to 1 after reading the field from input file
 };
 
  class TReadArrays  // read fields of structure
@@ -45,6 +61,7 @@ struct outField
 
     short findFld( const char *Name ); // find field by name
     short findNext();  // read next name from file and find in fields list
+    void  readNext( const char* label);
     void  setNoAlws( short ii )
     {  flds[ii].alws = 0; }
 
@@ -55,7 +72,7 @@ struct outField
             setNoAlws(ii);
     }
 
-    gstring testRead();   // test for reading all always arrays;
+    gstring testRead();   // test for reading all arrays
 
     void readArray( char *name, short* arr, int size );
     void readArray( char *name, float* arr, int size );

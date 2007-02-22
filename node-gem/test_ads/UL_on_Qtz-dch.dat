@@ -207,7 +207,7 @@
 # Ttol: Tolerance for the interpolation over temperature (K)
 <Ttol> 1.0000000000e+00
 # Tval: Grid temperatures for the interpolation
-<Tval>
+<TCval>
 2.5000000000e+01 
 
 # Ptol: Tolerance for the interpolation over pressure (K)

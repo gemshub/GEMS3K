@@ -1,3 +1,20 @@
+//-------------------------------------------------------------------
+// $Id: m_param.h 871 2007-02-21 14:29:54Z gems $
+//
+// Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
+//
+// Base parameters and codes used in GEM IPM work structure
+// (standalone version)
+//
+// This file is part of the standalone GEMIPM2K code
+//
+// This file may be distributed under the terms of the GEMS-PSI
+// QA Licence (GEMSPSI.QAL)
+//
+// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// E-mail: gems2.support@psi.ch; chud@igc.irk.ru
+//-------------------------------------------------------------------
+//
 #ifndef _m_param_h_
 #define _m_param_h_
 
@@ -20,21 +37,21 @@ extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
 struct BASE_PARAM
 { // Flags and thresholds for numeric modules
     short PC,    // "Mode of Selekt2() subroutine operation"
-    PD,// Mode of DHH():0-invoke,1-at FIA only,2-last IPM it. 3-every IPM it.
-    PRD,//Positive: mode GammaCalc(): 0-inactive, 1-FIA only, 2-SELEKT2 only 3-every IPM iteration
+    PD,  // Mode of DHH():0-invoke,1-at FIA only,2-last IPM it. 3-every IPM it.
+    PRD, //Positive: mode GammaCalc(): 0-inactive, 1-FIA only, 2-SELEKT2 only 3-every IPM iteration
          // Negative: number of additional EFD-IPM improvement loops (-1 to -30 )
-    PSM,//  Mode of setting FIA Gamma in phases: 0-off; 1 - set activ.coeff. GAN
-    DP, //  Max number of EnterFeasibleDomain() iterations { default 144 }
-    DW, // IPM-2 precision mode: 0- disable >=1  - enable (number of loops, default 15)
-    DT, // Exponent for restoring x_j from dual solution {-5 to +2, default -3}
+    PSM, //  Mode of setting FIA Gamma in phases: 0-off; 1 - set activ.coeff. GAN
+    DP,  //  Max number of EnterFeasibleDomain() iterations { default 144 }
+    DW,  // IPM-2 precision mode: 0- disable >=1  - enable (number of loops, default 15)
+    DT,  // Exponent for restoring x_j from dual solution {-5 to +2, default -3}
     PLLG, // IPM view debug time on Progress Dialog screen from (sec) or 0
-    PE, // Include electroneutrality condition? { 0 1 }
-    IIM // Maximum number of iterations in the main IPM algorithm { 500 }
+    PE,  // Include electroneutrality condition? { 0 1 }
+    IIM  // Maximum number of iterations in the main IPM algorithm { 500 }
     ;
     double DG,   // Precision of LEM IPM solver (Jordan) { 1e-15 }
-    DHB, // Precision of mass balance deviations at EFD { 1e-8 }
-    DS,  // Cutoff number of moles of a phase { 1e-10 }
-    DK,  // Threshold of Dikin criterion of IPM convergence { 1e-5 }
+    DHB,  // Precision of mass balance deviations at EFD { 1e-8 }
+    DS,   // Cutoff number of moles of a phase { 1e-10 }
+    DK,   // Threshold of Dikin criterion of IPM convergence { 1e-5 }
     DF,   // Threshold of Karpov' criteria for phase stability { 0.01 }
     DFM,  // Threshold for Karpov' criteria for insertion of phases { -0.1 }
     DFYw, // N of moles of H2O-solvent for phase insertion { 2e-5 }
@@ -58,7 +75,7 @@ struct BASE_PARAM
     ICmin, // Cutoff value of ionic strength to run DH equation { 1e-5 }
     EPS,   // Precision of FIA by SIMPLEX-method { 1e-15 }
     IEPS,  // Accuracy of cutoff limits 1+eps for surface activity terms {1e-8}
-    DKIN; // Range of lower to upper kinetic restrictions for DC { 0.001 }
+    DKIN;  // Range of lower to upper kinetic restrictions for DC { 0.001 }
     char *tprn;       // internal
 
     void write(ostream& oss);
@@ -99,13 +116,13 @@ public:
 
 };
 
-/* Work DC classifier codes  pm->DCCW */
+// Work DC classifier codes  pm->DCCW
 enum SolDCodes {
 
-    DC_SINGLE = 'U',        /* This DC is a single-component phase */
-    DC_SYMMETRIC = 'I',     /* This DC is in symmetric solution phase */
-    DC_ASYM_SPECIES = 'S', /*This is DC-solute(sorbate) in asymmetric phase */
-    DC_ASYM_CARRIER = 'W'  /*This is carrier(solvent) DC in asymmetric phase*/
+    DC_SINGLE = 'U',        // This DC is a single-component phase
+    DC_SYMMETRIC = 'I',     // This DC is in symmetric solution phase
+    DC_ASYM_SPECIES = 'S',  // This is DC-solute(sorbate) in asymmetric phase
+    DC_ASYM_CARRIER = 'W'   // This is carrier(solvent) DC in asymmetric phase
 };
 
 enum QpQdSizes {   // see m_phase.h
@@ -113,5 +130,5 @@ enum QpQdSizes {   // see m_phase.h
    QDSIZE = 60
 };
 
-
-#endif  // _m_param_h
+#endif
+// _m_param_h

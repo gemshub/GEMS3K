@@ -1,3 +1,22 @@
+//-------------------------------------------------------------------
+// $Id: gdatastream.h 871 2007-02-21 14:29:54Z gems $
+//
+// Stream binary file operations extended for endianness (e.g.
+// for compatibility between Intel- and old Mac processors)
+//
+// Copyright (C) 1996-2004 A.Rysin, S.Dmytriyeva
+// Uses  gstring class (C) A.Rysin 1999
+//
+// This file is part of the GEM-Vizor library and GEMIPM2K
+// code package
+//
+// This file may be distributed under the terms of the GEMS-PSI
+// QA Licence (GEMSPSI.QAL)
+//
+// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// E-mail gems2.support@psi.ch
+//-------------------------------------------------------------------
+
 #ifndef _gemdatastream_h_
 #define _gemdatastream_h_
 
