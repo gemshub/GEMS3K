@@ -30,19 +30,19 @@ hydro1d_.o: hydro1d_.c  gwheader.h
 
 gstring.o: gstring.cpp gstring.h \
 		array.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix gstring.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix gstring.cpp
 gdatastream.o: gdatastream.cpp gdatastream.h \
 		verror.h \
 		gstring.h \
 		array.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix gdatastream.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix gdatastream.cpp
 s_fgl.o: s_fgl.cpp s_fgl.h \
 		m_const.h \
 		verror.h \
 		v_user.h \
 		gstring.h \
 		array.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix s_fgl.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix s_fgl.cpp
 node.o: node.cpp node.h \
 		gdatastream.h \
 		m_param.h \
@@ -54,7 +54,7 @@ node.o: node.cpp node.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix node.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix node.cpp
 node_format.o: node_format.cpp io_arrays.h \
                 node.h \
 		gdatastream.h \
@@ -67,7 +67,7 @@ node_format.o: node_format.cpp io_arrays.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix node_format.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix node_format.cpp
 ms_multi_file.o: ms_multi_file.cpp  io_arrays.h \
                 m_param.h \
 		gdatastream.h \
@@ -77,7 +77,7 @@ ms_multi_file.o: ms_multi_file.cpp  io_arrays.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix ms_multi_file.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix ms_multi_file.cpp
 ms_multi_format.o: ms_multi_format.cpp  io_arrays.h \
                 m_param.h \
 		node.h \
@@ -90,7 +90,7 @@ ms_multi_format.o: ms_multi_format.cpp  io_arrays.h \
 		v_user.h \
 		datach.h \
 		databr.h
-	pgCC  -g -c -DIPMGEMPLUGIN -D__unix ms_multi_format.cpp
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix ms_multi_format.cpp
 ipm_chemical.o: ipm_chemical.cpp m_param.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -99,7 +99,7 @@ ipm_chemical.o: ipm_chemical.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix ipm_chemical.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix ipm_chemical.cpp
 ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -108,7 +108,7 @@ ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC  -c -g -DIPMGEMPLUGIN -D__unix ipm_chemical2.cpp
+	pgCC  -c -g -O3 -DIPMGEMPLUGIN -D__unix ipm_chemical2.cpp
 ipm_chemical3.o: ipm_chemical3.cpp m_param.h \
 		s_fgl.h \
 		gdatastream.h \
@@ -118,7 +118,7 @@ ipm_chemical3.o: ipm_chemical3.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC  -c -g  -DIPMGEMPLUGIN -D__unix ipm_chemical3.cpp
+	pgCC  -c -g -O3  -DIPMGEMPLUGIN -D__unix ipm_chemical3.cpp
 ipm_main.o: ipm_main.cpp m_param.h \
 		jama_lu.h \
 		jama_cholesky.h \
@@ -136,7 +136,7 @@ ipm_main.o: ipm_main.cpp m_param.h \
 		tnt_i_refvec.h \
 		datach.h \
 		databr.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix ipm_main.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix ipm_main.cpp
 ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		gdatastream.h \
 		ms_multi.h \
@@ -145,12 +145,12 @@ ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix ipm_simplex.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix ipm_simplex.cpp
 io_arrays.o: io_arrays.cpp io_arrays.h \
 		verror.h \
 		gstring.h \
 		array.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix io_arrays.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix io_arrays.cpp
 f_gem_node.o: f_gem_node.cpp node.h \
 		m_param.h \
 		datach.h \
@@ -162,7 +162,7 @@ f_gem_node.o: f_gem_node.cpp node.h \
 		array.h \
 		m_const.h \
 		v_user.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix f_gem_node.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix f_gem_node.cpp
 ms_param.o: ms_param.cpp m_param.h \
 		num_methods.h \
 		gdatastream.h \
@@ -175,13 +175,13 @@ ms_param.o: ms_param.cpp m_param.h \
 		v_user.h \
 		datach.h \
 		databr.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix ms_param.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix ms_param.cpp
 num_methods.o: num_methods.cpp v_user.h \
 		num_methods.h \
 		verror.h \
 		gstring.h \
 		array.h
-	pgCC   -c -g  -DIPMGEMPLUGIN -D__unix num_methods.cpp
+	pgCC   -c -g -O3  -DIPMGEMPLUGIN -D__unix num_methods.cpp
 
 #gwheader.h: gwheader.h
 #f_gem_node.h: f_gem_node.h

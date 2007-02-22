@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 858 2007-02-16 17:11:38Z gems $
+// $Id: s_fgl.h 871 2007-02-21 14:29:54Z gems $
 //
 // Copyright (C) 2003-2007  S.Churakov, Th.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -8,6 +8,7 @@
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
+// and part of the standalone GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -23,11 +24,12 @@
 // Added 09 May 2003
 // Definition of a class for CG EOS calculations for fluids
 // Incorporates a C++ program written by Sergey Churakov (CSCS ETHZ)
-// implementing a paper Churakov & Gottschalk 2003 GCA v.   p.
-
+// implementing papers by Churakov & Gottschalk 2003 GCA v.67 p. 2397-2414
+// and p. 2415-2425
+// Reference: http://people.web.psi.ch/churakov/, sergey.churakov@psi.ch
 
 /*-----------------07.11.99 12:14-------------------
- Structure of parameers for LJ and Shokmayer potential
+ Structure of parameters for LJ and Shokmayer potential
  sig(A)=F1+F5*T*1E-4
  epsilon(K)=F2+F3*Exp(-F4*T*1E-3)
  polaris(A)=F6
@@ -244,7 +246,8 @@ public:
 // Added 19 July 2006 by Th.Wagner and D.Kulik
 // Definition of a class for PRSV EOS calculations for fluids
 // Incorporates a C++ program written by Thomas Wagner (Univ. Tuebingen)
-//
+// Reference: http://www.uni-tuebingen.de/uni/emi/ag-markl/pages/wagner/
+// th.wagner@uni-tuebingen.de
 //
 class TPRSVcalc // Peng-Robinson-Styjek-Vera EOS calculations
 {
@@ -297,6 +300,5 @@ double ObtainResults( double *ActCoef ); // returns activity coeffs and phase vo
 
 };
 
-
-
-#endif  // _v_fgl_h
+#endif
+// _s_fgl_h

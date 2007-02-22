@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 858 2007-02-16 17:11:38Z gems $
+// $Id: ms_multi.h 874 2007-02-22 08:03:01Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -358,7 +358,7 @@ class TMulti
 
 // ipm_chemical2.cpp
     void GasParcP();
-    void phase_bcs( int N, int M, float *A, double X[], double BF[] );
+    void phase_bcs( int N, int M, int jb, float *A, double X[], double BF[] );
     void phase_bfc( int k, int jj );
     double pH_via_hydroxyl( double x[], double Factor, int j);
     void ConCalcDC( double X[], double XF[], double XFA[],
@@ -489,7 +489,7 @@ public:
     void to_file( GemDataStream& ff, gstring& path  );
     void to_text_file( const char *path );
     void from_file( GemDataStream& ff );
-    void to_text_file_gemipm( const char *path );
+    void to_text_file_gemipm( const char *path, bool addMui );
     void from_text_file_gemipm( const char *path );
 
     // EXTERNAL FUNCTIONS

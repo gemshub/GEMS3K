@@ -27,6 +27,12 @@ TMulti::TMulti( int nrt, SYSTEM* sy_, MTPARM *tp_, RMULTS *mu_ ):
 {
     set_def();
     pmp = &pm;
+
+    sizeN = 0;
+    AA=0;
+    BB=0;
+    arrL=0;
+    arrAN=0;
 }
 
 

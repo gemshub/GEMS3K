@@ -2,13 +2,13 @@
 // TNode class - implements a simple C/C++ interface
 // between GEM IPM and FMT codes
 // Works with DATACH and work DATABR structures
-// without using the nodearray class
+// without using the Tnodearray class
 //
-// Written by S.Dmytriyeva,  D.Kulik
-// Copyright (C) 2006 S.Dmytriyeva, D.Kulik
+// (c) 2006-2007 S.Dmytriyeva, D.Kulik
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
+// developed in the Laboratory for Waste Management, Paul Scherrer Institute
 
 // This file may be distributed under the licence terms
 // defined in GEMIPM2K.QAL
@@ -43,29 +43,32 @@ protected:
 
 #endif
 
-    DATACH* CSD;     // Pointer to chemical system data structure CSD (DATACH)
+    DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)
 
-    DATABR* CNode;   // Pointer to a work node data bridge structure (node)
+    DATABR* CNode;  // Pointer to a work node data bridge structure (node)
       // used for exchanging input data and results between FMT and GEMIPM
 
     // Checks if given Tc and P fit within interpolation intervals
     bool  check_TP( double& Tc, double& P );
-    // Test Tc as grid point for the interpolation of thermodynamic data
-    // Return index in grid array or -1
+
+    // Tests Tc as a grid point for the interpolation of thermodynamic data
+    // Returns index in the grid array or -1  if it is not a grid point
     int  check_grid_T( double& Tc );
-    // Test P as grid point for the interpolation of thermodynamic data
-    // Return index in grid array or -1
+
+    // Tests P as a grid point for the interpolation of thermodynamic data
+    // Return index in the grid array or -1 if it is not a grid point
     int  check_grid_P( double& P );
 
     void allocMemory();
     void freeMemory();
 
-    // Functions that maintain DATACH and DATABR memory allocation
+   // Functions that maintain DATACH and DATABR memory allocation
     void datach_realloc();
     void datach_free();
     void databr_realloc();
-       // deletes fields of DATABR structure indicated by data_BR_
-       // and sets the pointer data_BR_ to NULL
+
+    // deletes fields of DATABR structure indicated by data_BR_
+    // and sets the pointer data_BR_ to NULL
     DATABR* databr_free( DATABR* data_BR_ =0);
 
     // Binary i/o functions
@@ -97,16 +100,16 @@ protected:
 
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS
-    // - prepares DATACH and DATABR files for reading into the coupled code
+    // Prepares DATACH and DATABR files for reading into the coupled code
     void makeStartDataChBR(
          TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
          short nTp_, short nPp_, float Ttol_, float Ptol_,
          float *Tai, float *Pai );
 
-    // creates arrays of thermodynamic data for interpolation
+    // Creates arrays of thermodynamic data for interpolation
     void G0_V0_H0_Cp0_DD_arrays(); // which are written into DATACH file
 
-    // virtual function for interaction with nodearray class
+    // Virtual function for interaction with tnodearray class
     virtual void  setNodeArray( gstring& , int , bool ) { }
 #endif
 
@@ -338,8 +341,8 @@ static TNode* na;   // static pointer to this class
 
     // Data exchange methods between GEMIPM and work node DATABR structure
     // Are called inside of GEM_run()
-    void packDataBr();      //  packs GEMIPM calculation results into work node structure
-    void unpackDataBr();    //  unpacks work node structure into GEMIPM data structure
+    void packDataBr();   //  packs GEMIPM calculation results into work node structure
+    void unpackDataBr(); //  unpacks work node structure into GEMIPM data structure
 
     // Access to interpolated thermodynamic data from DCH structure
     // Test Tc and P as grid point for the interpolation of thermodynamic data
@@ -365,7 +368,7 @@ static TNode* na;   // static pointer to this class
 
 
 #ifndef IPMGEMPLUGIN
-// These calls are used only inside of the GEMS-PSI GEM2MT module
+// These calls are used only inside the GEMS-PSI GEM2MT module
 
     // Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
     // interaction variant (the user must select ICs, DCs and phases to be included

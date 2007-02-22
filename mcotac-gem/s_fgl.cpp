@@ -1,13 +1,13 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 860 2007-02-19 10:08:13Z gems $
+// $Id: s_fgl.cpp 871 2007-02-21 14:29:54Z gems $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
-// Implementation of TFGLcalc class
+// Implementation of TFGLcalc class (see s_fgl.h)
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// and part of the GEMIPM2K standalone code 
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)

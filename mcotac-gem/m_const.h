@@ -1,3 +1,19 @@
+//-------------------------------------------------------------------
+// $Id: m_const.h 871 2007-02-21 14:29:54Z gems $
+//
+// Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
+//
+// Codes and parameters used in GEM IPM work structure (standalone version)
+//
+// This file is part of the standalone GEMIPM2K code
+//
+// This file may be distributed under the terms of the GEMS-PSI
+// QA Licence (GEMSPSI.QAL)
+//
+// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// E-mail: gems2.support@psi.ch; chud@igc.irk.ru
+//-------------------------------------------------------------------
+//
 #ifndef _m_const_h
 #define _m_const_h
 
@@ -21,18 +37,18 @@ const int
     MAXPHNAME =      16,
     EQ_RKLEN = 58;
 
-enum solmod_switches { /* indexes of keys of model solution*/
+enum solmod_switches { // indexes of keys of model solution
     SPHAS_TYP, DCOMP_DEP, SPHAS_DEP, SGM_MODE, DCE_LINK, SCM_TYPE,
-    /* link state */
+    // link state
     LINK_UX_MODE, LINK_TP_MODE, LINK_FIA_MODE,
-    /* Posible values of  of keys of model solution - DCOMP_DEP, SPHAS_DEP */
+    // Posible values of ï¿½of keys of model solution - DCOMP_DEP, SPHAS_DEP
     SM_UNDEF = 'N', SM_TPDEP = 'T', SM_UXDEP = 'X', SM_PRIVATE_ = 'P',
     SM_PUBLIC = 'U',
     // Posible modes calculating of activity coefficients SGM_MODE
     SM_STNGAM = 'S', SM_NOSTGAM = 'N',
-    /* This code (one upper-case letter or digit) defines type of mixing
-    and default method of calculation of mixing properties before and at
-    IPM iterations.   Possible values: (SPHAS_TYP) */
+    // This code (one upper-case letter or digit) defines type of mixing
+    //and default method of calculation of mixing properties before and at
+    //IPM iterations.   Possible values: (SPHAS_TYP)
     SM_IDEAL =  'I', // ideal solution or single-component phase;
     SM_REDKIS = 'G', // built-in Guggenheim (Redlich-Kister) binary SS model
                      // (with 3 coeffs)
@@ -75,48 +91,48 @@ typedef enum {  // classes of independent components IC, used in ccIC code list
         IC_SITE     =  's'   // sorption site for site balance constraint (reserved)
 } ICL_CLASSES;
 
-typedef enum {  /* Classifications of DC */
-    /* Type of input data for */
+typedef enum {  // Classifications of DC
+    // Type of input data for
     SRC_DCOMP =  'd',  // the key points to existing PDB record in DCOMP chain
     SRC_REACDC = 'r',  // the key points to existing PDB record in REACDC chain
     SRC_NEWDC =  'n',  // the key new reaction-defined component
     SRC_NEWISO = 'i',  // the same as n, but this component is an isotopic form
     SRC_FICT =   'f',  // fictive species
-    /*Aqueous electrolyte phase:*/
+    // Aqueous electrolyte phase:
     DC_AQ_PROTON   = 'T',      // hydrogen ion H+
     DC_AQ_ELECTRON = 'E',      // electron (as a DC)
     DC_AQ_SPECIES  = 'S',      // other aqueous species (ions, complexes and ion pairs)
     DC_AQ_SOLVENT  = 'W',      // water H2O (major solvent)
     DC_AQ_SOLVCOM  = 'L',      // other components of a solvent (eg. alcohol)
-    /*Gas phase ( G code can be used for all gases; V,C,H,N codes are reserved
-    for future use of the built-in equations of state in FGL module): */
+    // Gas phase ( G code can be used for all gases; V,C,H,N codes are reserved
+    // for future use of the built-in equations of state in FGL module):
     DC_GAS_COMP    = 'G',   // other gases
     DC_GAS_H2O     = 'V',   // H2O steam
     DC_GAS_CO2     = 'C',   // CO2 (carbon dioxide)
     DC_GAS_H2      = 'H',   // H2 hydrogen
     DC_GAS_N2      = 'N',   // N2 nitrogen
-    /* Solid/liquid non-electrolyte multicomponent phases:*/
+    // Solid/liquid non-electrolyte multicomponent phases:
     DC_SOL_IDEAL   = 'I',   // end-member component with ideal behaviour
     DC_SOL_MINOR   = 'J',   // junior component (Henry's Law)
     DC_SOL_MAJOR   = 'M',   // major component (Raoult's Law)
-    /* Sorption phases and poly(oligo)electrolytes */
-    DC_SUR_CARRIER = 'Q',   /* Principal end-member of solid carrier */
-    DC_SUR_MINAL   = 'P',   /* Minor end-member of solid carrier */
-    DC_PEL_CARRIER = 'R',   /* Carrier of poly(oligo)electrolyte */
+    // Sorption phases and poly(oligo)electrolytes
+    DC_SUR_CARRIER = 'Q',   // Principal end-member of solid carrier
+    DC_SUR_MINAL   = 'P',   // Minor end-member of solid carrier
+    DC_PEL_CARRIER = 'R',   // Carrier of poly(oligo)electrolyte
 
     DC_SSC_A0 = '0', DC_SSC_A1 = '2', DC_SSC_A2 = '4', DC_SSC_A3 = '6',
-    DC_SSC_A4 = '8', /* Strong surface complex on site type 0,1,2,3,4 - A plane */
+    DC_SSC_A4 = '8', // Strong surface complex on site type 0,1,2,3,4 - A plane
     DC_WSC_A0 = '1', DC_WSC_A1 = '3', DC_WSC_A2 = '5', DC_WSC_A3 = '7',
-    DC_WSC_A4 = '9', /* Weak surface complex on site type 0,1,2,3,4 - B plane */
-    DC_IESC_A  = 'A', /* Strong exchange ion const-charge plane */
-    DC_IEWC_B  = 'B', /* Weak exchange ion const-charge plane */
+    DC_WSC_A4 = '9', // Weak surface complex on site type 0,1,2,3,4 - B plane
+    DC_IESC_A  = 'A', // Strong exchange ion const-charge plane
+    DC_IEWC_B  = 'B', // Weak exchange ion const-charge plane
 
-    /* Aliaces for 1-site model */
-    DC_SUR_GROUP    = 'X',  /* Surface group on A plane -> '0' */
-    DC_SUR_COMPLEX = 'Y',  /* Strong sur. complex A plane -> '0' */
-    DC_SUR_IPAIR   = 'Z',  /* Weak sur complex B plane -> '1' */
+    // Aliaces for 1-site model
+    DC_SUR_GROUP    = 'X',  // Surface group on A plane -> '0'
+    DC_SUR_COMPLEX = 'Y',   // Strong sur. complex A plane -> '0'
+    DC_SUR_IPAIR   = 'Z',   // Weak sur complex B plane -> '1'
 
-    /* Single-component phases:*/
+    // Single-component phases:
     DC_SCP_CONDEN  = 'O',   // DC forming a single-component phase
 
 } DC_CLASSES;
@@ -125,7 +141,7 @@ typedef enum {  /* Classifications of DC */
 //    This code defines standard state and reference scale of concentra-
 // tions for components of this phase. It is used by many subroutines
 // during calculations of equilibrium states
-enum PH_CLASSES{  /* Possible values */
+enum PH_CLASSES{  // Possible values
     PH_AQUEL    = 'a',  // aqueous electrolyte
     PH_GASMIX   = 'g',  // mixture of gases
     PH_FLUID    = 'f',  // fluid phase
@@ -141,10 +157,10 @@ enum PH_CLASSES{  /* Possible values */
 
 #else
 
-//    This code defines standard state and reference scale of concentra-
+// This code defines standard state and reference scale of concentra-
 // tions for components of this phase. It is used by many subroutines
 // during calculations of equilibrium states
-enum PH_CLASSES2{  /* Possible values */
+enum PH_CLASSES2{  // Possible values
     PH_PLASMA   = 'p',  // plasma
     PH_SIMELT   = 'm',  // silicate (magmatic) melt or non-aqueous electrolyte
     PH_HCARBL   = 'h'   // mixture of condensed hydrocarbons
@@ -152,27 +168,27 @@ enum PH_CLASSES2{  /* Possible values */
 
 #endif
 
-typedef enum {  /* Limits on DC and phases */
-    /* type of lmits */
+typedef enum {  // Limits on DC and phases
+    // type of lmits
     NO_LIM = 'O', LOWER_LIM ='L', UPPER_LIM = 'U', BOTH_LIM ='B',
-    /* mode recalc of limits Set_DC_Limits() */
+    // mode recalc of limits Set_DC_Limits()
     DC_LIM_INIT = 0, DC_LIM_CURRENT = 1
 } DC_LIMITS;
 
 
 enum sorption_control {
-    /* EDL interface models - separate for site types in v. 3.1 */
+    // EDL interface models - separate for site types in v. 3.1
     SC_DDLM = 'D',  SC_CCM = 'C',     SC_TLM = 'T',   SC_MTL = 'M',
     SC_MXC = 'E',   SC_NNE = 'X',     SC_IEV  = 'I',  SC_BSM = 'S',
 SC_3LM = '3', SC_NOT_USED = 'N',
-    /* Methods of Surface Activity Terms calculation */
+    // Methods of Surface Activity Terms calculation
     SAT_COMP = 'C', SAT_NCOMP = 'N', SAT_SOLV = 'S', SAT_INDEF = 'I',
-/* New methods for surface activity coefficient terms (2004) */
+// New methods for surface activity coefficient terms (2004)
  SAT_L_COMP = 'L', SAT_QCA_NCOMP = 'Q', SAT_QCA1_NCOMP = '1',
  SAT_QCA2_NCOMP = '2', SAT_QCA3_NCOMP = '3', SAT_FREU_NCOMP = 'f',
  SAT_QCA4_NCOMP = '4', SAT_BET_NCOMP = 'B', SAT_VIR_NCOMP = 'W',
  SAT_FRUM_NCOMP = 'F', SAT_FRUM_COMP = 'R', SAT_PIVO_NCOMP = 'P',
-    /* Assignment of surtype to carrier (end-member) */
+    // Assignment of surtype to carrier (end-member)
     CCA_VOL = 'V', CCA_0 = '0', CCA_1, CCA_2, CCA_3, CCA_4, CCA_5,
     CCA_6, CCA_7, CCA_8, CCA_9, SPL_0='0', SPL_1, SPL_2, SPL_3,
     SPL_B = 'b', SPL_D = 'd', SPL_C = 'c',
@@ -188,10 +204,10 @@ SC_3LM = '3', SC_NOT_USED = 'N',
 };
 
 typedef enum { // Units of measurement of quantities and concentrations
-    /* number of components and phases */
-    QUAN_MKMOL = 'Y',  QUAN_MMOL = 'h',  QUAN_MOL = 'M', // NUMBER OF MOLES
-    QUAN_MGRAM = 'y',  QUAN_GRAM = 'g',  QUAN_KILO = 'G',// MASS
-    /* concentrations of components and phases*/
+    // amounts of components and phases
+    QUAN_MKMOL = 'Y',  QUAN_MMOL = 'h',  QUAN_MOL = 'M', // MOLES
+    QUAN_MGRAM = 'y',  QUAN_GRAM = 'g',  QUAN_KILO = 'G',// MASSES
+    // concentrations of components and phases
     CON_MOLFR = 'n', CON_MOLPROC = 'N', CON_pMOLFR = 'f', // MOLE FRACTION
     CON_VOLFR = 'v', CON_VOLPROC = 'V', CON_pVOLFR = 'u', // VOLUME FRACTION
     CON_MOLAL = 'm', CON_MMOLAL =  'i', CON_pMOLAL = 'p', // MOLALITY
@@ -210,7 +226,7 @@ typedef enum { // Units of measurement of quantities and concentrations
     //Attention: Only b code can be used in this version!
 
     //Units of measurement of molar volume  { c j a L m }'
-    PVT_CM3 =  'c', /*cm3, cm3/mole*/
+    PVT_CM3 =  'c',  // cm3, cm3/mole
     PVT_LITR =  'L', // liters (L) - volume of the system only, 1 L = 1000 cm3
     PVT_JBAR =  'j', // J/bar, 10 cm3/mole = 1 J/bar
     PVT_CBAR = 'a',  // (cal/bar), 41.84 cm3/mole = 1 cal/bar
@@ -218,16 +234,17 @@ typedef enum { // Units of measurement of quantities and concentrations
     //Attention: only j code can be used in this version!
 
     //Units of measurement of reference temperature Tr { C K F }'
-    PVT_CELS = 'C', /*degrees Celsius (C)*/
-    PVT_KELVIN = 'K', /*Kelvins (K), 0 C = 273.15 K*/
-    PVT_FAREN = 'F',  /*degrees Fahrenheit (F)*/
+    PVT_CELS = 'C',   // degrees Celsius (C)
+    PVT_KELVIN = 'K', // Kelvins (K), 0 C = 273.15 K
+    PVT_FAREN = 'F',  // degrees Fahrenheit (F)
     //Attention: Only C code can be used in this version.
 
     // Units of measurement of energy values { j c J C n N }
-    TDAT_JOUL = 'j',/* Joules (J/mole)*/ TDAT_KJOUL = 'J', /*kilojoules (kJ/mole)*/
-    TDAT_CAL = 'c', /* calories (cal/mole); 1 cal = 4.184 J; */
-    TDAT_KCAL = 'C', /*kilocalories (kcal/mole)*/
-    TDAT_NORM = 'N' /*normalized (mole/mole, J/mole/RT, cal/mole/RT)*/
+    TDAT_JOUL = 'j',  // Joules (J/mole)
+    TDAT_KJOUL = 'J', // kilojoules (kJ/mole)
+    TDAT_CAL = 'c',   // calories (cal/mole); 1 cal = 4.184 J;
+    TDAT_KCAL = 'C',  // kilocalories (kcal/mole)
+    TDAT_NORM = 'N'   // normalized (mole/mole, J/mole/RT, cal/mole/RT)
                 // Attention: Only j code can be used in this version!
 } SPPA_UNITS;
 
@@ -237,3 +254,4 @@ const char S_OFF = '-',
                                   A_NUL ='?';
 
 #endif
+// m_const.h in GEMIPM2K

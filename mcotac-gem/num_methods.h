@@ -9,8 +9,7 @@
 // (c) Roldan Pozo, NIST (USA), http://math.nist.gov/tnt/download.html
 //
 // This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// modelling by Gibbs energy minimization and of the GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)

@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 858 2007-02-16 17:11:38Z gems $
+// $Id: ms_param.cpp 871 2007-02-21 14:29:54Z gems $
 //
-// Copyright  (C) 1992-2000 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
+// Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
 // Implementation  of parts of the Interior Points Method (IPM) module
 // for convex programming Gibbs energy minimization, described in:
@@ -9,7 +9,8 @@
 //  v.297 p. 767-806)
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
-// environment for thermodynamic modeling in geochemistry
+// environment for thermodynamic modeling in geochemistry and
+// of the GEMIPM2K standalone code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -41,7 +42,7 @@ const double R_CONSTANT = 8.31451,
                           lg_to_ln = 2.302585093,
                             ln_to_lg = 0.434294481;
 
-enum volume_code {  /* Codes of volume parameter ??? */
+enum volume_code {  // Codes of volume parameter ???
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
 };
 
@@ -63,7 +64,7 @@ SPP_SETTING pa_ = {
     3e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
     1e-4,  /* DKIN  */ 0,  /* tprn */
   },
-}; /* SPP_SETTING */
+}; // SPP_SETTING
 
 
 void BASE_PARAM::write(ostream& oss)
@@ -177,14 +178,14 @@ void TMulti::CompG0Load()
  pmp->RT = R_CONSTANT * pmp->Tc;
  pmp->FRT = F_CONSTANT/pmp->RT;
  pmp->lnP = 0.;
- if( P != 1. ) /* ??????? */
+ if( P != 1. ) // ???????
    pmp->lnP = log( P );
 
  for( k=0; k<pmp->FI; k++ )
  {
    jb = je;
    je += pmp->L1[k];
-   /*load t/d data from DC */
+   // load t/d data from DC
     for( j=jb; j<je; j++ )
     {
       jj =  j * dCH->nPp * dCH->nTp;
@@ -202,7 +203,7 @@ void TMulti::CompG0Load()
      }
      pmp->G0[j] = Cj_init_calc( Gg, j, k );
      switch( pmp->PV )
-     { /* make mol volumes of components */
+     { // put mol volumes of components into A matrix
        case VOL_CONSTR:
                     pmp->A[j*pmp->N] = Vv; // !!  error
        case VOL_CALC:
@@ -280,7 +281,7 @@ void TMulti::MultiCalcInit( const char */*key*/ )
 //        SolModLoad();
         GammaCalc( LINK_TP_MODE);
     }
-    // recalc restrictions for DC quantities
+    // recalculate kinetic restrictions for DC quantities
     if( pmp->pULR && pmp->PLIM )
          Set_DC_limits(  DC_LIM_INIT );
 
@@ -295,7 +296,7 @@ void TMulti::MultiCalcInit( const char */*key*/ )
 //-------------------------------------------------------------------------
 // internal functions
 
-// read string as: "<characters>",
+// read string as: "<characters>"
 istream& f_getline(istream& is, gstring& str, char delim)
 {
     char ch;

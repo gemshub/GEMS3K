@@ -1,7 +1,8 @@
 //-------------------------------------------------------------------
 // $Id: num_methods.cpp 705 2006-04-28 19:39:01Z gems $
 //
-// C/C++ Numerical Methods (Linear Algebra) used in GEMS-PSI and GEMIPM2K
+// C/C++ Numerical Methods (Lagrange interpolation)
+// used in GEMS-PSI and GEMIPM2K
 //
 // (c) 2006-2007 S.Dmytriyeva, D.Kulik
 //
@@ -10,8 +11,7 @@
 // (c) Roldan Pozo, NIST (USA), http://math.nist.gov/tnt/download.html
 //
 // This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// modelling by Gibbs energy minimization and the GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)

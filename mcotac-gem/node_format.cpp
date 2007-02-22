@@ -1,14 +1,13 @@
 //--------------------------------------------------------------------
-// $Id: node.cpp 684 2005-11-23 13:17:15Z gems $
+// $Id: node_format.cpp 684 2005-11-23 13:17:15Z gems $
 //
-// C/C++ interface between GEM IPM and FMT node array
-// Working whith DATACH and DATABR structures
+// C/C++ interface for writing/reading DBR and DCH files
+// Works with DATACH and DATABR structures
 //
-// Copyright (C) 2004-2005 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2006-2007 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// modelling by Gibbs energy minimization and of the GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -142,8 +141,8 @@ void TNode::databr_to_text_file( fstream& ff )
   TPrintArrays  prar(ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 0.98" << endl;
-      ff << "# Prototype 12.12.2006" << endl;
+   {  ff << "# GEMIPM2K v. 2.2.0" << endl;
+      ff << "# Prototype 22.02.2007" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -457,8 +456,8 @@ void TNode::datach_to_text_file( fstream& ff )
   TPrintArrays  prar(ff);
 
   if( _comment )
-  {  ff << "# GEMIPM2K v. 0.98" << endl;
-     ff << "# Prototype 12.12.2006" << endl;
+  {  ff << "# GEMIPM2K v. 2.2.0" << endl;
+     ff << "# Prototype 22.02.2007" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
@@ -814,10 +813,9 @@ void TNode::datach_from_text_file(fstream& ff)
 }
 
 //---------------------------------------------------------------
+// new i/o structures
 
-// new structures i/o
-
-// Writting DataCH to binary file
+// Writing DataCH to binary file
 void TNode::datach_to_file( GemDataStream& ff )
 {
 // const data
@@ -862,7 +860,7 @@ void TNode::datach_to_file( GemDataStream& ff )
    ff.writeArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH*sizeof(char) );
 }
 
-// Reading dataCH structure from binary file
+// Reading DataCH structure from binary file
 void TNode::datach_from_file( GemDataStream& ff )
 {
 // const data
@@ -912,7 +910,7 @@ void TNode::datach_from_file( GemDataStream& ff )
 
 }
 
-// allocate DataCH structure
+// allocating DataCH structure
 void TNode::datach_realloc()
 {
  CSD->nDCinPH = new short[CSD->nPH];
@@ -1127,7 +1125,7 @@ void TNode::databr_from_file( GemDataStream& ff )
 
 }
 
-// allocate DataBR structure
+// Allocates DataBR structure
 void TNode::databr_realloc()
 {
   int j;
@@ -1231,6 +1229,5 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
  delete[] CNode_;
  return NULL;
 }
-
 
 //-----------------------End of node_format.cpp--------------------------

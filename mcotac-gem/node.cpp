@@ -1,14 +1,15 @@
 //-------------------------------------------------------------------
 // $Id: node.cpp 684 2005-11-23 13:17:15Z gems $
 //
-// C/C++  interface between GEM IPM and FMT node array
-// Working whith DATACH and DATABR structures
+// Implementation of Tnode class including initialization and
+// execution of GEMIPM2 kernel
+
+// Works whith DATACH and DATABR structures
 //
-// Copyright (C) 2005-2006 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2005-2007 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization
-// Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// modelling by Gibbs energy minimization and of GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -107,11 +108,11 @@ int  TNode::GEM_run()
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
 
-/**************************************************************
+//**************************************************************
 // only for testing output results for files
-    GEM_write_dbr( "calculated_dbr.dat",  false );
-    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
-********************************************************* */
+//    GEM_write_dbr( "calculated_dbr.dat",  false );
+//    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
+// *********************************************************
 
    if( CNode->NodeStatusCH  == NEED_GEM_AIA )
          CNode->NodeStatusCH = OK_GEM_AIA;
@@ -586,7 +587,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
 
 void TNode::allocMemory()
 {
-// alloc memory for data bridge structures
+// memory allocation for data bridge structures
     CSD = new DATACH;
     CNode = new DATABR;
 
@@ -616,7 +617,7 @@ void TNode::freeMemory()
 
 #ifndef IPMGEMPLUGIN
 
-// Make start DATACH and DATABR data from GEMS internal data (MULTI and other)
+// Makes start DATACH and DATABR data from GEMS internal data (MULTI and other)
 void TNode::MakeNodeStructures(
     short anICb,       // number of stoichiometry units (<= nIC) used in the data bridge
     short anDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
@@ -707,8 +708,7 @@ void TNode::makeStartDataChBR(
 // set sizes for DataCh
   uint ii;
   short i1;
-// realloc memory for     DATACH  *CSD;  and  DATABR  *CNode;
-
+// reallocates memory for     DATACH  *CSD;  and  DATABR  *CNode;
   if( !CSD )
      CSD = new DATACH;
   if( !CNode )
@@ -819,8 +819,7 @@ void TNode::makeStartDataChBR(
       for( i1=0; i1< CSD->nPHb; i1++ )
         CNode->aPH[i1] = pmm->Aalp[CSD->xPH[i1]];
 
-// set calculated&dynamic data to DataBR
-
+// puts calculated & dynamic data to DataBR
    packDataBr();
 
 // must be changed to matrix structure  ???????
@@ -840,7 +839,7 @@ void TNode::makeStartDataChBR(
 void TNode::G0_V0_H0_Cp0_DD_arrays()
 {
 
-  double cT, cP/*, cDC*/;
+  double cT, cP;
   double *G0, *V0, *H0, *Cp0, *S0, roW, epsW;
 
   G0 =  new double[TProfil::pm->mup->L];
@@ -864,7 +863,7 @@ void TNode::G0_V0_H0_Cp0_DD_arrays()
     for( int jj=0; jj<CSD->nPp; jj++)
     {
       cP = CSD->Pval[jj];
-     // calc new G0, V0, H0, Cp0, S0
+     // calculates new G0, V0, H0, Cp0, S0
      TProfil::pm->LoadFromMtparm( cT, cP, G0, V0, H0, S0, Cp0, roW, epsW );
      CSD->roW[ jj * CSD->nTp + ii] = roW;
      CSD->epsW[ jj * CSD->nTp + ii] = epsW;
@@ -1135,7 +1134,7 @@ void TNode::GEM_from_MT(
   CNode->Ms = p_Ms;
 // Checking if no-simplex IA is Ok
    for( ii=0; ii<CSD->nICb; ii++ )
-   {  //  Sveta 11/02/05 for test
+   {  //  SD 11/02/05 for test
       //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
        //     useSimplex = true;
      CNode->bIC[ii] = p_bIC[ii];
@@ -1158,14 +1157,14 @@ void TNode::GEM_restore_MT(
    short  &p_NodeHandle,   // Node identification handle
    short  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                     //                                     GEM input output  FMT control
-   double &p_TC,      // Temperature T, K                        +       -      -
-   double &p_P,      // Pressure P, bar                         +       -      -
-   double &p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
-   double &p_Ms,     // Mass of reactive subsystem, kg          -       -      +
-   double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
-   double *p_dul,   // upper kinetic restrictions [nDCb]       +       -      -
-   double *p_dll,   // lower kinetic restrictions [nDCb]       +       -      -
-   double *p_aPH  // Specific surface areas of phases (m2/g)      +       -     -
+   double &p_TC,     // Temperature T, K                         +       -      -
+   double &p_P,      // Pressure P, bar                          +       -      -
+   double &p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
+   double &p_Ms,     // Mass of reactive subsystem, kg           -       -      +
+   double *p_bIC,    // bulk mole amounts of IC [nICb]           +       -      -
+   double *p_dul,    // upper kinetic restrictions [nDCb]        +       -      -
+   double *p_dll,    // lower kinetic restrictions [nDCb]        +       -      -
+   double *p_aPH     // Specific surface areas of phases (m2/g)  +       -      -
    )
 {
  int ii;

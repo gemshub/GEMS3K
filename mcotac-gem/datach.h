@@ -1,5 +1,5 @@
 //------------------------------------------------------------------------------
-// DATACHem - contains chemical system definitions common to all
+// DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.
 // Contains dimensions and index lists for ICs, DCs, Phases in DATABR structure.
 // Also contains thermodynamic data as grid arrays for interpolation over T,P.
@@ -8,7 +8,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 
-// Copyright (C) 2003-2006 by D.Kulik, W.Pfingsten, F.Enzmann and S.Dmytriyeva
+// Copyright (C) 2003-2006 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
 // developed in the Laboratory for Waste Management, Paul Scherrer Institute
@@ -221,7 +221,6 @@ enum SolDCLcodes {
 
 #endif
 // -----------------------------------------------------------------------------
-//_DataCH_H
 // End of datach.h
 
 

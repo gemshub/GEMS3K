@@ -90,7 +90,7 @@ void TMulti::GasParcP()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculating bulk stoichiometry of a multicomponent phase
 //
-void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
+void TMulti::phase_bcs( int N, int M, int jb, float *A, double X[], double BF[] )
 {
     int ii, i, j;
     double Xx;
@@ -105,7 +105,7 @@ void TMulti::phase_bcs( int N, int M, float *A, double X[], double BF[] )
         Xx = X[j];
         if( fabs( Xx ) < 1e-16 )  // was 1e-12
             continue;
-        for( ii=arrL[j]; ii<arrL[j+1]; ii++ )
+        for( ii=arrL[j+jb]; ii<arrL[j+jb+1]; ii++ )
         {  i = arrAN[ii];
             BF[i] += (double)A[i+j*N] * Xx;
         }
@@ -129,7 +129,7 @@ void TMulti::phase_bfc( int k, int jj )
         Xx = pmp->X[j+jj];
         if( fabs( Xx ) < 1e-12 )
             continue;
-        for( ii=arrL[j]; ii<arrL[j+1]; ii++ )
+        for( ii=arrL[j+jj]; ii<arrL[j+jj+1]; ii++ )
         {  i = arrAN[ii];
            pmp->BFC[i] += (double)pmp->A[i+(jj+j)*pmp->N] * Xx;
         }
@@ -429,7 +429,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
             goto NEXT_PHASE;
         }
         // calculate bulk stoichiometry of a multicomponent phase
-        phase_bcs( pmp->N, pmp->L1[k], pmp->A+j*pmp->N, pmp->X+j,
+        phase_bcs( pmp->N, pmp->L1[k], j, pmp->A+j*pmp->N, pmp->X+j,
                    pmp->BF+k*pmp->N );
 
         switch( pmp->PHC[k] )
@@ -911,7 +911,7 @@ void TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
             // Cj - index of carrier DC
             Cj = pmp->SATX[ja][XL_EM];
             if( Cj < 0 )
-            {  // Assigned to the whole sorbent 
+            {  // Assigned to the whole sorbent
                 XVk = pmp->XFA[k];
                 Mm = pmp->FWGT[k] / XVk;
             }
@@ -1222,7 +1222,7 @@ void TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 break;
             }
         }
-    }  // j 
+    }  // j
 }
 
 //--------------------- End of ipm_chemical2.cpp ---------------------------
