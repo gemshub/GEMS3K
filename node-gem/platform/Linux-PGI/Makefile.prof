@@ -12,13 +12,13 @@ CC       = pgCC
 CXX      = pgCC
 LEX      = flex
 YACC     = yacc
-CFLAGS   = -g -O3 -DIPMGEMPLUGIN -D__unix
-CXXFLAGS = -g -O3 -DIPMGEMPLUGIN -D__unix
+CFLAGS   = -g -O3 -Mprof=func -DIPMGEMPLUGIN -D__unix
+CXXFLAGS = -g -O3 -Mprof=func -DIPMGEMPLUGIN -D__unix
 LEXFLAGS = 
 YACCFLAGS= -d
 INCPATH  =  -I.
 LINK     = pgCC
-LFLAGS   = 
+LFLAGS   = -O3 -Mprof=func
 LIBS     = $(SUBLIBS)  
 AR       = ar cqs
 RANLIB   = 

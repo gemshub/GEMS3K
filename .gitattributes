@@ -195,6 +195,7 @@ node-gem/obj/Readme.txt -text
 node-gem/platform/CRAYXT3-catamount/Makefile -text
 node-gem/platform/Linux-GNU/Makefile -text
 node-gem/platform/Linux-PGI/Makefile -text
+node-gem/platform/Linux-PGI/Makefile.prof -text
 node-gem/platform/other/Makefile -text
 node-gem/platform/win32bcc/Makefile -text
 node-gem/platform/win32msvc/Makefile -text

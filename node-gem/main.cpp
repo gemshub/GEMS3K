@@ -29,8 +29,7 @@
 
 #include "node.h"
 
-// #define nNodes  11 // set here how many nodes you need
-#define nNodes  5 // nodes for the adsorption example
+#define nNodes  11 // set here how many nodes you need
 
 int main( int argc, char* argv[] )
  {
@@ -50,7 +49,7 @@ int main( int argc, char* argv[] )
        strncpy( fmt_input_file_name, argv[3], 256);
          // your optional file with FMT input parameters
 
-   // Creating TNode structure accessible trough the node pointer
+   // Creating TNode structure accessible trough node pointer
    TNode* node  = new TNode();
 
    // Here we read the files needed as input for initializing GEMIPM2K
@@ -104,8 +103,8 @@ int main( int argc, char* argv[] )
    short m_NodeHandle[nNodes], m_NodeStatusCH[nNodes], m_IterDone[nNodes];
 
    double m_T[nNodes], m_P[nNodes], m_Vs[nNodes], m_Ms[nNodes],
-          m_Gs[nNodes], m_Hs[nNodes], m_IS[nNodes], m_pH[nNodes],
-          m_pe[nNodes], m_Eh[nNodes];
+          m_Gs[nNodes], m_Hs[nNodes], m_IC[nNodes], m_pH[nNodes], m_pe[nNodes],
+          m_Eh[nNodes];
 
    double *m_xDC, *m_gam, *m_xPH, *m_aPH, *m_vPS, *m_mPS,*m_bPS,
          *m_xPA, *m_dul, *m_dll, *m_bIC, *m_rMB, *m_uIC;
@@ -127,14 +126,14 @@ int main( int argc, char* argv[] )
    // (1) ---------------------------------------------
    // Initialization of GEMIPM and chemical data kept in the FMT part
    // Can be done in a loop over nodes if there are many nodes
-//   cout << "Begin Initialization part" << endl;
+//   cout << "Begin Initialiation part" << endl;
    int in;
    for(  in=1; in<nNodes; in++ )
    {
      dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
      // re-calculating equilibrium by calling GEMIPM
-     m_NodeStatusCH[in] = (short)node->GEM_run();
+     m_NodeStatusCH[in] = node->GEM_run();
 
      if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
         return 5;
@@ -144,21 +143,20 @@ int main( int argc, char* argv[] )
        m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
         // Extracting GEMIPM output data to FMT part
      node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
-       m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IS[in], m_pH[in], m_pe[in],
+       m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
        m_Eh[in], m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,
        m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
        m_bPS+in*nIC*nPS, m_xPA+in*nPS );
 
 //  Uncomment this to test variable pressures and temperatures
-//         m_T[in] += (in-1)*5;
-//         m_P[in] += (in-1)*20;
-
-// Here the file output for the initial conditions can be implemented
+         m_T[in] += in*7;
+         m_P[in] += (in-1)*20;
+     // Here the file output for the initial conditions can be implemented
    }
 
   // Initialization of GEMIPM and chemical data kept in the FMT part
   // Can be done in a loop over boundary nodes
-  //   cout << "Begin Initialization part" << endl;
+  //   cout << "Begin Initialiation part" << endl;
 
   // Read DATABR structure from text file (read boundary condition)
       TNode::na->GEM_read_dbr( dbr_input_file_name );
@@ -168,7 +166,7 @@ int main( int argc, char* argv[] )
    dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
   // re-calculating equilibrium by calling GEMIPM
-   m_NodeStatusCH[in] = (short)node->GEM_run();
+   m_NodeStatusCH[in] = node->GEM_run();
 
   if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
      return 5;
@@ -178,7 +176,7 @@ int main( int argc, char* argv[] )
     m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
      // Extracting GEMIPM output data to FMT part
    node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
-    m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IS[in], m_pH[in], m_pe[in],
+    m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
     m_Eh[in], m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,
     m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
     m_bPS+in*nIC*nPS, m_xPA+in*nPS );
@@ -186,7 +184,7 @@ int main( int argc, char* argv[] )
   // Here the file output for the initial conditions can be implemented
  }
 
-   cout << "End Initialization part" << endl;
+   cout << "End Initialiation part" << endl;
    clock_t t_start11, t_end11;
    t_start11 = clock();
 
@@ -194,27 +192,15 @@ int main( int argc, char* argv[] )
    // Work loop for the coupled FMT-GEM modelling
 
    cout << "Begin Coupled Modelling part" << endl;
-//   int xCa = node->IC_name_to_xDB("Ca");
-//   int xMg = node->IC_name_to_xDB("Mg");
-//   int xCl = node->IC_name_to_xDB("Cl");
-//   int xCalcite = node->Ph_name_to_xDB("Calcite");
-//   int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
-
-// For the adsorption example (UL on quartz)
-   int xNa = node->IC_name_to_xDB("Na");
-   int xO = node->IC_name_to_xDB("O");
-   int xH = node->IC_name_to_xDB("H");
-   int xU = node->IC_name_to_xDB("U");
-   int xQads = node->Ph_name_to_xDB("SiO2_1sTLM");
-   int xUL0 = node->DC_name_to_xDB("Sio>>OUL@");
+   int xCa = node->IC_name_to_xDB("Ca");
+   int xMg = node->IC_name_to_xDB("Mg");
+   int xCl = node->IC_name_to_xDB("Cl");
+   int xCalcite = node->Ph_name_to_xDB("Calcite");
+   int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
 
    // Checking indexes
-//   cout << "xCa= " << xCa << " xMg=" << xMg << " xCl=" << xCl
-//      << " xCalcite=" << xCalcite << " xDolomite=" << xDolomite << endl;
-
-// Adsorption example
-   cout << "xNa= " << xNa << " xO=" << xO << " xH=" << xH << " xU="
-        << xU << " xQads=" << xQads << " xUL@=" << xUL0 << endl;
+   cout << "xCa= " << xCa << " xMg=" << xMg << " xCl=" << xCl
+        << " xCalcite=" << xCalcite << " xDolomite=" << xDolomite << endl;
 
    for( int it=0; it<nTimes; it++ )  // iterations over time
    {
@@ -222,21 +208,17 @@ int main( int argc, char* argv[] )
  //   cout << " FMT loop begins: " << endl;
 
      // Loop over nodes for calculating the mass transport step
-     if( it > 0 )
-     for(  in=0; in<nNodes; in++ )
+     for(  in=1; in<nNodes; in++ )
      {
-// add here some operators as function of tc and dt
+       ; // add here some operators as function of tc and dt
        // in this example, simply adding MgCl2 to m_bIC vector
        // in order to cause the conversion of calcite to dolomite
-//       m_bIC[in*nIC+xMg] += dt*4e-7;
-//       m_bIC[in*nIC+xCl] += dt*8e-7;
-
-// For the adsorption example, adding NaOH
-       m_bIC[in*nIC+xNa] += dt*3e-7;
-       m_bIC[in*nIC+xO] += dt*3e-7;
-       m_bIC[in*nIC+xH] += dt*3e-7;
+       if( it > 0 )
+       {
+         m_bIC[in*nIC+xMg] += dt*4e-7;
+         m_bIC[in*nIC+xCl] += dt*8e-7;
+       }
      }
-
 //     cout << " FMT loop ends: ";
      cout << " it = " << it << "  dt = " << dt << "  tc = " << tc << endl;
 
@@ -244,7 +226,7 @@ int main( int argc, char* argv[] )
      // Loop over nodes for calculating the chemical equilibration step
      for( in=0; in<nNodes; in++ )
      {
-        cout << "  in = " << in;
+        cout << "  in = " << in << "  T = " << m_T[in];
 
         m_NodeHandle[in] = in;
         m_NodeStatusCH[in] = NEED_GEM_AIA; // or NEED_GEM_PIA
@@ -255,33 +237,25 @@ int main( int argc, char* argv[] )
              m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
 
         // Calling GEMIPM calculation
-        m_NodeStatusCH[in] = (short)node->GEM_run( );
+        m_NodeStatusCH[in] = node->GEM_run( );
         if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
                m_NodeStatusCH[in] == OK_GEM_PIA ) )
             return 5;
 
         // Extracting GEMIPM output data to FMT part
         node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
-          m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IS[in], m_pH[in], m_pe[in],
+          m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
           m_Eh[in],m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,
           m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
           m_bPS+in*nIC*nPS, m_xPA+in*nPS  );
 
         // Here the debug print for each node in can be implemented
 //        cout << " Gem run ends: ";
-//        cout << " Cal= " << m_xPH[in*nPH+xCalcite] <<
-//                " Dol= " << m_xPH[in*nPH+xDolomite];
-//        cout << " [Ca]= " << m_bPS[in*nIC*nPS+xCa] <<
-//                " [Mg]= " << m_bPS[in*nIC*nPS+xMg] <<
-//                " pH= " << m_pH[in] << endl;
-
-// Adsorption test example
-        cout << " pH= " << m_pH[in] <<
-                " [Uaq]=  " << m_bPS[in*nIC*nPS+xU] <<
-                " [Uads]= " << m_bPS[in*nIC*nPS+nIC*xQads+xU] <<
-                " x>UL@=  " << m_xDC[in*nDC+xUL0] <<
-                " gam>UL@= " << m_gam[in*nDC+xUL0] << endl;
-
+        cout << " Cal= " << m_xPH[in*nPH+xCalcite] <<
+                " Dol= " << m_xPH[in*nPH+xDolomite];
+        cout << " [Ca]= " << m_bPS[in*nIC*nPS+xCa] <<
+                " [Mg]= " << m_bPS[in*nIC*nPS+xMg] <<
+                " pH= " << m_pH[in] << endl;
    }
 //    cout << " Chemical loop ends: " << endl;
     // Here the output for the current state at tc can be implemented
