@@ -1,17 +1,21 @@
 //-------------------------------------------------------------------
 // $Id: ipm_main.cpp 705 2006-04-28 19:39:01Z gems $
 //
-// Copyright (C) 1992-2000 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
+// Copyright (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
 // Implementation of parts of the Interior Points Method (IPM) module
 // for convex programming Gibbs energy minimization, described in:
 // (Karpov, Chudnenko, Kulik (1997): American Journal of Science
 //  v.297 p. 767-806)
 //
-// This file is part of a GEM-Selektor (GEMS) v.2.x.x program
-// environment for thermodynamic modeling in geochemistry
 // Uses: GEM-Vizor GUI DBMS library, gems/lib/gemvizor.lib
+// Uses: JAMA/C++ Linear Algebra Package based on the Template
+// Numerical Toolkit (TNT) - an interface for scientific computing in C++,
+// (c) Roldan Pozo, NIST (USA), http://math.nist.gov/tnt/download.html
 //
+// This file is part of a GEM-Selektor (GEMS) v.2.x.x program
+// environment for thermodynamic modeling in geochemistry and of the
+// standalone GEMIPM2K code.
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
@@ -27,19 +31,18 @@ using namespace TNT;
 using namespace JAMA;
 
 #ifndef IPMGEMPLUGIN
-
 #include "service.h"
 #include "stepwise.h"
-
 #endif
 
 #include "node.h"
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main sequence of IPM calculations
 //  Main place for implementation of diagnostics and setup
 //  of IPM precision and convergence
-//  Returns true   if IPM result is OK
-//          false  if good result could not be obtained
+//  Returns: true   if IPM result is OK
+//           false  if a good result could not be obtained
 //
 void TMulti::MultiCalcMain()
 {
@@ -50,7 +53,7 @@ void TMulti::MultiCalcMain()
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
 
-    /* test insert in valid area */
+    // testing the entry into feasible domain
 mEFD:
      if(pmp->PZ && pmp->W1)
      { for( i=0; i<pmp->L; i++ )
@@ -72,12 +75,12 @@ STEP_POINT("After FIA");
     {
      case 0:  // OK
               break;
-     case 2:  // max iteration exceeded in EnterFeasibleDomain
+     case 2:  // max number of iterations has been exceeded in EnterFeasibleDomain()
                  Error("E04IPM EFD(): " ,
-     "Prescribed precision of mass balance could not be reached because vector b or\n"
+     "Prescribed precision of mass balance could not be reached because the vector b or\n"
      "DC stoichiometries or standard-state thermodynamic data are inconsistent.\n");
               break;
-     case 1: // degeneration in R matrix  for EnterFeasibleDomain
+     case 1: // degeneration in R matrix  for EnterFeasibleDomain()
            if( pmp->DHBM<1e-5 )
             {
                pmp->DHBM *= 10.;
@@ -90,7 +93,7 @@ STEP_POINT("After FIA");
            break;
     }
 
-   // call of main minimization IPM
+   // call of main IPM minimization algorithm
    eRet = InteriorPointsMethod( );
 
 #ifndef IPMGEMPLUGIN
@@ -106,7 +109,7 @@ STEP_POINT("After FIA");
    {
      case 0:  // OK
               break;
-     case 2:  // max iteration exceeded in InteriorPointsMethod
+     case 2:  // max number of iterations has been exceeded in InteriorPointsMethod()
                if( pmp->DX<1e-3 )
                {
                    pmp->DX *= 10.;
@@ -116,7 +119,7 @@ STEP_POINT("After FIA");
                  Error("E06IPM IPM-main(): " ,
      "Given IPM convergence criterion could not be reached;\n Perhaps, vector b is not balanced,\n"
      "or DC stoichiometries or standard-state thermodynamic data are inconsistent. \n");
-     case 1: // degeneration in R matrix  for InteriorPointsMethod
+     case 1: // degeneration in R matrix  for InteriorPointsMethod()
            if( pmp->DHBM<1e-5 )
             {
                pmp->DHBM *= 10.;
@@ -142,13 +145,14 @@ STEP_POINT("After FIA");
                 pmp->FI1s++;
         }
 
-    if( !pa->p.PC )    //  No Selector2 subroutine operation
+    if( !pa->p.PC )    //  No PhaseSelect() operation allowed
     {  if( pmp->PD >= 2 )
-           memcpy( pmp->G, pmp->G0, pmp->L*sizeof(double));
+           for( i=0; i<pmp->L; i++)
+             pmp->G[i] = pmp->G0[i];
         return;  // solved
     }
 
-//========= call Selekt2() =======
+//========= call Selekt2 algorithm =======
    PhaseSelect();
    if( pa->p.PC == 2 )
        XmaxSAT_IPM2();  // Install upper limits to xj of surface species
@@ -161,7 +165,7 @@ STEP_POINT("After FIA");
      else
        Error( "E08IPM PhaseSelect(): "," Insertion of phases was incomplete!");
 
-  MassBalanceDeviations( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
+  MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
 
 #ifndef IPMGEMPLUGIN
 // STEPWISE (4) Stop point after PhaseSelect()
@@ -175,7 +179,7 @@ pVisor->Update( false );
    {
      if( !pmp->W1 )
      {
-       pmp->W1++;           // IPM-2 precision algorithm - 1st run
+       pmp->W1++;            // IPM-2 precision refinement - 1st run
        goto mEFD;
      }
      else
@@ -188,7 +192,7 @@ pVisor->Update( false );
             {
                if(pmp->W1 < pa->p.DW-1)
                {
-                 pmp->W1++;          // IPM-2 precision algorithm - 2nd run
+                 pmp->W1++;  // IPM-2 precision enhancement - further runs
                  goto mEFD;
                }
                else
@@ -197,7 +201,7 @@ pVisor->Update( false );
                  vstr pl(5);
                  int jj=0;
                  for( j=0; j<pmp->N-pmp->E; j++ )
-                    //  if( fabs(pmp->C[j]) > pmp->DHBM  || fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
+//  if( fabs(pmp->C[j]) > pmp->DHBM  || fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
                   if( fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
                   { sprintf( pl, " %-2.2s  ", pmp->SB[j] );
                     buf1 +=pl;
@@ -218,26 +222,29 @@ pVisor->Update( false );
           } // end of i loop
       }
    }
-    memcpy( pmp->G, pmp->G0, pmp->L*sizeof(double));
-   // appears to be normal return after successfull improvement of mass balance precision
+   for( i=0; i<pmp->L; i++)
+      pmp->G[i] = pmp->G0[i];
+   // Normal return after successfull improvement of mass balance precision
 }
 
-//Calc equstat method IPM (iterations)
+//Call for IPM iteration sequence
 void TMulti::MultiCalcIterations()
 {
 
     MultiCalcMain();
 
-    //calc demo data
+    // calculation of demo data for gases
     for( int ii=0; ii<pmp->N; ii++ )
         pmp->U_r[ii] = pmp->U[ii]*pmp->RT;
     GasParcP();
 
-    /* calc finished */
 }
 
-// Finding automatic initial approximation for the IPM algorithm
-// using modified simplex method with two-side constraints
+// Finding whether the automatic initial approximation is necessary for
+// launching the IPM algorithm.
+//
+// Uses a modified simplex method with two-side constraints (Karpov ea 1997)
+//
 // Return code:
 // false - OK for IPM
 // true  - OK solved
@@ -248,13 +255,12 @@ bool TMulti::AutoInitialApprox( )
     double minB, sfactor;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-// Kostya correct DK & DHB as automatic
     NN = pmp->N - pmp->E;
     minB=pmp->B[0];
     for(i=0;i<NN;i++)
       if( pmp->B[i] < minB )
           minB = pmp->B[i];
-    if( minB < pa->p.DB )  // KD - foolproof
+    if( minB < pa->p.DB )  // foolproof
        minB = pa->p.DB;
 
 //  check Ymin (cutoff)
@@ -280,10 +286,10 @@ bool TMulti::AutoInitialApprox( )
     // Analyzing if Simplex approximation is needed
     if( !pmp->pNP  )
     {   // Preparing to call Simplex method
-        pmp->FitVar[4] = pa->p.AG;  // smoothing parameter init
+        pmp->FitVar[4] = pa->p.AG;  // smoothing parameter initialization
         pmp->pRR1 = 0;
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-//      pmp->IC = 0.0;  Important - for reproducibility of simplex FIA
+//      pmp->IC = 0.0;  For reproducibility of simplex FIA?
         if( pa->p.PSM && pmp->FIs )
             GammaCalc(LINK_FIA_MODE);
         if( pa->p.PC == 2 )
@@ -293,7 +299,7 @@ bool TMulti::AutoInitialApprox( )
         pmp->K2 = 0;
         pmp->PCI = 0;
 
-  // simplex method is called here
+     // Calling the simplex method here
         SimplexInitialApproximation( );
 
 //  STEPWISE (0) - stop point for examining results from simplex IA
@@ -303,16 +309,15 @@ STEP_POINT( "End Simplex" );
 
         // no multi-component phases?
         if( !pmp->FIs )
-            return true; // goto OVER; // solved !
+            return true; // If so, the GEM problem is already solved !
 
-      // Trace DC quantity into zeros
-      TraceDCzeros( 0, pmp->L, sfactor );
+        // Setting default trace amounts to DCs that were zeroed off
+        RaiseZeroedOffDCs( 0, pmp->L, sfactor );
     }
-    else  // Taking previous result as initial approximation
+    else  // Taking previous GEMIPM result as initial approximation
     {
         int jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
         double LnGam, FitVar3;
-        /*    pmp->IT *= pa->p.PLLG; */
 
         FitVar3 = pmp->FitVar[3];
         pmp->FitVar[3] = 1.0;
@@ -323,7 +328,7 @@ STEP_POINT( "End Simplex" );
         ConCalc( pmp->X, pmp->XF, pmp->XFA );
         if( pmp->E && pmp->LO )
             IS_EtaCalc();
-        /*    if( pa->p.PSM )  corr. 13.4.96 */
+
         for( k=0; k<pmp->FI; k++ )
         {
             jb = je;
@@ -350,17 +355,16 @@ STEP_POINT( "End Simplex" );
                     pmp->Gamma[j] = exp( LnGam );
                 else pmp->Gamma[j] = 1.0;
                 pmp->F0[j] = Ej_init_calc( 0.0, j, k  );
-//                pmp->G[j] = pmp->G0[j] + pmp->F0[j];   changed 05.12.2006 KD
                 pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
                 pmp->lnGmo[j] = LnGam;
             }  // j
         } // k
-        pmp->FitVar[3] = FitVar3; // Restore smoothing parameter
+        pmp->FitVar[3] = FitVar3; // Restoring smoothing parameter
 
         if( pmp->pNP <= -1 )
-        {  // With raising zeroed species and phases
-           // Trace DC quantity into zeros
-           TraceDCzeros( 0, pmp->L, 1/1000. );
+        {  // With raising species and phases zeroed off by simplex()
+           // Setting default trace amounts of DCs that were zeroed off
+           RaiseZeroedOffDCs( 0, pmp->L, 1/1000. );
         }
     }  // else
     pmp->MK = 1;
@@ -373,14 +377,14 @@ STEP_POINT("Before FIA");
 }
 
 // ------------------- ------------------ ----------------
-// Calculation of feasible IPM initial approximation point
+// Calculation of a feasible IPM initial approximation point
 //
 // Algorithm: see Karpov, Chudnenko, Kulik 1997 Amer.J.Sci. vol 297 p. 798-799
 // (Appendix B)
 //
 // Returns: 0 - OK,
-//          1 - no convergence at specified precision DHB
-//          2  - used more than pa.p.DP iterations
+//          1 - no convergence at the specified precision pa.p.DHB
+//          2  - used up more than pa.p.DP iterations
 //
 int TMulti::EnterFeasibleDomain()
 {
@@ -394,17 +398,17 @@ int TMulti::EnterFeasibleDomain()
     DHB = pmp->DHBM;  // Convergence (balance precision) criterion
     pmp->Ec=0;  // Return code
 
-    // calculation of total moles of phases
+    // calculation of total mole amounts of phases
     TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
 
     if( pmp->PLIM )
         Set_DC_limits(  DC_LIM_INIT );
 
-    // Adjustment of prime approximation according to kinetic constraints
+    // Adjustment of primal approximation according to kinetic constraints
     LagrangeMultiplier();
 
 //----------------------------------------------------------------------------
-// BEGIN:  /* main cycle */
+// BEGIN:  main loop
     for( IT1=0; IT1 < pa->p.DP; IT1++, pmp->IT++ )
     {
         // get size of task
@@ -415,10 +419,10 @@ int TMulti::EnterFeasibleDomain()
         }
         N=pmp->NR;
 
-       // Calculation of mass-balance deviations in IPM
-       MassBalanceDeviations( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C);
+       // Calculation of mass-balance residuals in IPM
+       MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C);
 
-      // test solution
+      // Testing mass balance residuals
        Z = pmp->N - pmp->E;
        for(I=0;I<Z;I++)
          if( fabs(pmp->C[I]) > DHB  ||
@@ -430,12 +434,12 @@ int TMulti::EnterFeasibleDomain()
        }
 
        WeightMultipliers( true );
-       // Assembling and Solving system of linear equations
+       // Assembling and solving the system of linearized equations
        sRet = SolverLinearEquations( N, true );
-       if( sRet == 1 )  // error no solution
+       if( sRet == 1 )  // error: no SLE solution!
           break;
 
-// SOLVED: solution of linear matrix obtained
+// SOLVED: solution of linear matrix has been obtained
       pmp->PCI = calcDikin( N, true);  // calc of MU values and Dikin criterion
 
       LM = calcLM( true ); // Calculation of descent step size LM
@@ -445,7 +449,7 @@ int TMulti::EnterFeasibleDomain()
       if( LM > 1.)
          LM = 1.;
 
-        // calculation of new prime solution approximation
+      // calculation of new prime solution approximation
       for(J=0;J<pmp->L;J++)
             pmp->Y[J] += LM * pmp->MU[J];
 
@@ -470,13 +474,13 @@ STEP_POINT("FIA Iteration");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of chemical equilibrium using Interior Points
+// Calculation of chemical equilibrium using the Interior Points
 //  Method algorithm (see Karpov et al., 1997, p. 785-786)
 //  GEM IPM
 // Returns: 0, if converged;
-//          1, in case of degeneration
-//          2, (more than max iteration)  divergence or
-//             user interruption
+//          1, in the case of R matrix degeneration
+//          2, (more than max iteration) - no convergence
+//              or user's interruption
 //
 int TMulti::InteriorPointsMethod( )
 {
@@ -496,15 +500,14 @@ int TMulti::InteriorPointsMethod( )
     pmp->Ec=0;
     pmp->FX=GX( LM  );  // calculation of G(x)
 
-    if( pmp->FIs ) // multicomponent phases present
+    if( pmp->FIs ) // multicomponent phases are present
       for(Z=0; Z<pmp->FIs; Z++)
         pmp->YFA[Z]=pmp->XFA[Z];
 
 //----------------------------------------------------------------------------
-//  main cycle of IPM iterations
+//  Main loop of IPM iterations
     for( IT1 = 0; IT1 < pa->p.IIM; IT1++, pmp->IT++ )
     {
-      // get size of task
         pmp->NR=pmp->N;
         if( pmp->LO ) // water-solvent is present
         {
@@ -512,43 +515,44 @@ int TMulti::InteriorPointsMethod( )
                 pmp->NR=(short)(pmp->N-1);
         }
         N = pmp->NR;
-        memset( pmp->F, 0, pmp->L*sizeof(double));
+//        memset( pmp->F, 0, pmp->L*sizeof(double));
 
-        PrimeChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
+        PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
-        // Set weight multipliers for DC
+        // Setting weight multipliers for DC
         WeightMultipliers( false );
-        // making and solve  matrix of IPM linear equations
+        // Making and solving the R matrix of IPM linearized equations
         iRet = SolverLinearEquations( N, false );
         if( iRet == 1 )
         { pmp->Ec=1;
           return 1;
         }
 
-//SOLVED:  // got U vector - calculating criteria Karpov and Dikin
+//SOLVED: got the dual solution u vector - calculating the Dikin criterion
+//    of GEM IPM convergence
        f_alpha( );
-       pmp->PCI=calcDikin( N, false );  // calc of MU values and Dikin criterion;
+       pmp->PCI=calcDikin( N, false );
 
-       // Determination of descent step size  LM
+       // Determination of the descent step size LM
        LM = calcLM( false );
 
-       LM1=LMD( LM ); // Finding optimal value of descent step
-       FX1=GX( LM1 ); // New G(X) after the descent step
+       LM1=LMD( LM ); // Finding an optimal value of the descent step
+       FX1=GX( LM1 ); // New G(X) value after the descent step
        pmp->PCI = sqrt(pmp->PCI); // Dikin criterion
 
        if( (IT1 > 3) && (FX1 - pmp->FX > 10)  &&
-          ( IT1 > pa->p.IIM/2 || pmp->PD==3 ) )  // ????????
-        {
+          ( IT1 > pa->p.IIM/2 || pmp->PD==3 ) )
+        {                                 // Adjusting Dikin threshold
             if( pmp->LO && pmp->X[pmp->LO]>pmp->lowPosNum && pmp->PD==3 )
                 pmp->PD=2;     //  what does this mean?
             else  pmp->DX= 0.5 * pmp->PCI;
         }
 
-       MassBalanceDeviations( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+       MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
 
        pmp->FX=FX1;
-       // main iteration done�
-       // Calculation of activity coefficients on IPM iteration
+       // Main IPM iteration done
+       // Calculation of activity coefficients
         if( pmp->PD==3 )
             GammaCalc( LINK_UX_MODE );
 
@@ -568,15 +572,15 @@ int TMulti::InteriorPointsMethod( )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif
-        if( pmp->PCI < pmp->DX )  // Dikin criterion satisfied
+        if( pmp->PCI < pmp->DX )  // Dikin criterion satisfied - converged!
             break;
     } // end of main IPM cycle
 //----------------------------------------------------------------------------
 
   if( IT1 >= pa->p.IIM)
-   return 2; // IT>500
+   return 2; // bad convergence - too many IPM iterations!
 
- // Final calculation of activity coefficients
+ // Final calculation phase amounts and activity coefficients
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
   if(pmp->PZ && pmp->W1)
@@ -587,38 +591,47 @@ STEP_POINT( "IPM Iteration" );
    else
         ConCalc( pmp->X, pmp->XF, pmp->XFA );
 
-   MassBalanceDeviations( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
+   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
    return 0;
 }
 
 
-/*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-/* Calculation of mass-balance deviations in IPM
-*  Params: N - number of IC in IPM problem
-*          L -   number of DC in IPM problem
-*          A - DC stoichiometry matrix (LxN)
-*          Y - moles  DC quantities in IPM solution (L)
-*          B - Input bulk chem. compos. (N)
-*          C - deviations (N)*/
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Calculation of mass-balance residuals in GEM IPM CSD
+//  Params: N - number of IC in IPM problem
+//          L -   number of DC in IPM problem
+//          A - DC stoichiometry matrix (LxN)
+//          Y - moles  DC quantities in IPM solution (L)
+//          B - Input bulk chem. compos. (N)
+//          C - mass balance residuals (N)
 void
-TMulti::MassBalanceDeviations( int N, int L, float *A, double *Y, double *B, double *C )
+TMulti::MassBalanceResiduals( int N, int L, float *A, double *Y, double *B,
+         double *C )
 {
-    int I,J;
-    for(J=0;J<N;J++)
-    {
-        C[J]=B[J];
-        for(I=0;I<L;I++)
-            C[J]-=(double)(*(A+I*N+J))*Y[I];
-    }
+    int ii, jj, i;
+//    for(J=0;J<N;J++)    obsolete - replaced by an optimized one 09.02.2007
+//    {
+//        C[J]=B[J];
+//        for(I=0;I<L;I++)
+//            C[J]-=(double)(*(A+I*N+J))*Y[I];
+//    }
+
+    for(ii=0;ii<N;ii++)
+        C[ii]=B[ii];
+    for(jj=0;jj<L;jj++)
+     for( i=arrL[jj]; i<arrL[jj+1]; i++ )
+     {  ii = arrAN[i];
+         C[ii]-=(double)(*(A+jj*N+ii))*Y[jj];
+     }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Interior Points Method:
-// subroutine for unconditional minimization of descent step length
+// subroutine for unconditional minimization of the descent step length
 // on the interval 0 to LM
-// uses the "Golden Section" procedure
+// uses the "Golden Section" algorithm
 //
-// Returns: optimal value of LM which provides largest monotonous
+// Returns: optimal value of LM which provides the largest monotonous
 // decrease in G(X)
 //
 double TMulti::LMD( double LM )
@@ -662,11 +675,14 @@ OCT:
     return(LM1);
 }
 
-//Added Sveta
+//Added by Sveta
 //===================================================================
 
-// Trace DC quantity into zeros
-void TMulti::TraceDCzeros( int iStart, int iEnd, double sfactor, int JJ )
+// Inserting minor quantities of DC which were zeroed off after simplex()
+// (important for the automatic initial approximation with solution phases
+//  or after Selekt2() algorithm
+//
+void TMulti::RaiseZeroedOffDCs( int iStart, int iEnd, double sfactor, int JJ )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -720,11 +736,11 @@ void TMulti::TraceDCzeros( int iStart, int iEnd, double sfactor, int JJ )
    } // i
 }
 
-// Adjustment of prime approximation according to kinetic constraints
+// Adjustment of primal approximation according to kinetic constraints
 void TMulti::LagrangeMultiplier()
 {
     double E = 1E-8;  // pa.p.DKIN? Default min value of Lagrange multiplier p
-//    E = 1E-30;  // pa.p.DKIN? Default min value of Lagrange multiplier p
+//    E = 1E-30;
 
     for(int J=0;J<pmp->L;J++)
     {
@@ -749,13 +765,13 @@ void TMulti::LagrangeMultiplier()
     }   // J
 }
 
-// Calculation of weight multipliers
+// Calculation of weight multipliers for DCs
 void TMulti::WeightMultipliers( bool square )
 {
-  double  W1, W2;//, *W = pmp->W;
-  memset( pmp->W, 0, pmp->L*sizeof(double));
+  int J;
+  double  W1, W2;
 
-  for(int J=0; J<pmp->L; J++)
+  for( J=0; J<pmp->L; J++)
   {
     switch( pmp->RLC[J] )
     {
@@ -785,7 +801,7 @@ void TMulti::WeightMultipliers( bool square )
            pmp->W[J]=( W1 < W2 ) ? W1 : W2 ;
            if( !square && pmp->W[J] < 0. ) pmp->W[J]=0.;
            break;
-      default: // big error
+      default: // error
             Error( "E04IPM IPM-Iteration:",
                  "Error in codes of metastability constraints" );
     }
@@ -793,49 +809,65 @@ void TMulti::WeightMultipliers( bool square )
 }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Make and Solve a system of linear equations using method of
-// Cholesky Decomposition (  if a square matrix R happens to
-// be symmetric and positive defined)
-// If Cholesky Decomposition has no solution,
-// Solve of a system of linear set of equations using method of
-// LU Decomposition (   A = L*U , L - lower triangular ( has elements only
-// on the diagonal and below )  U - is upper triangular ( has elements only
-// on the diagonal and above))
+// Make and Solve a system of linear equations to find the dual vector
+// approximation using a method of Cholesky Decomposition (good if a
+// square matrix R happens to be symmetric and positive defined).
+// If Cholesky Decomposition does not solve the problem, an attempt is done
+// to solve the SLE using method of LU Decomposition
+// (A = L*U , L is lower triangular ( has elements only on the diagonal and below )
+//   U is is upper triangular ( has elements only on the diagonal and above))
 // Parameters:
 // bool initAppr - Inital approximation point(true) or iteration of IPM (false)
 // int N - dimension of the matrix R (number of equations)
-// pmp->U - solution vector (N).
+// pmp->U - dual solution vector (N).
 // Return values: 0  - solved OK;
-//                1  - no solution, degenerated or inconsistent system;
-#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*N)))
+//                1  - no solution, degenerated or inconsistent system
 //
+#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*Na)))
+//#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*N)))  obsolete
 int TMulti::SolverLinearEquations( int N, bool initAppr )
 {
-  int ii, jj, kk;
+  int ii,i, jj, kk, k, Na = pmp->N;
   double aa;
-  Array2D<double> A(N,N);
-  Array1D<double> B(N);
+  Alloc_A_B( N );
 
-  // making  matrix of IPM linear equations
+  // Making the  matrix of IPM linear equations
   for( kk=0; kk<N; kk++)
-    for( ii=0; ii<N; ii++ )
-    {  aa = 0.;
-       for( jj=0; jj<pmp->L; jj++ )
-          if( pmp->Y[jj] > pmp->lowPosNum /* 1E-19 */ )
-            aa += a(jj,ii) * a(jj,kk) * pmp->W[jj];
-      A[kk][ii] = aa;
+   for( ii=0; ii<N; ii++ )
+      (*(AA+(ii)+(kk)*N)) = 0.;
+
+  for( jj=0; jj<pmp->L; jj++ )
+   if( pmp->Y[jj] > pmp->lowPosNum   )
+   {
+      for( k=arrL[jj]; k<arrL[jj+1]; k++)
+        for( i=arrL[jj]; i<arrL[jj+1]; i++ )
+        { ii = arrAN[i];
+          kk = arrAN[k];
+          if( ii>= N || kk>= N )
+           continue;
+          (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pmp->W[jj];
+        }
     }
 
- for( ii=0; ii<N; ii++ )
    if( initAppr )
-       B[ii] = pmp->C[ii];
+     for( ii=0; ii<N; ii++ )
+         BB[ii] = pmp->C[ii];
    else
-      {  aa = 0.;
+      {
+         for( ii=0; ii<N; ii++ )
+            BB[ii] = 0.;
           for( jj=0; jj<pmp->L; jj++)
-           if( pmp->Y[jj] > pmp->lowPosNum /* 1E-19 */ )
-                aa += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
-          B[ii] = aa;
+           if( pmp->Y[jj] > pmp->lowPosNum  )
+              for( i=arrL[jj]; i<arrL[jj+1]; i++ )
+              {  ii = arrAN[i];
+                 if( ii>= N )
+                  continue;
+                 BB[ii] += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
+              }
       }
+
+  Array2D<double> A(N,N, AA);
+  Array1D<double> B(N, BB);
 
 // this routine constructs its Cholesky decomposition, A = L x LT .
   Cholesky<double>  chol(A);
@@ -846,7 +878,7 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
   }
   else
   {
-// no solution by Cholesky decomposition Try LU Decompositon
+// no solution by Cholesky decomposition; Trying the LU Decompositon
 // The LU decompostion with pivoting always exists, even if the matrix is
 // singular, so the constructor will never fail.
 
@@ -856,7 +888,7 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 // of square systems of simultaneous linear equations.
 // This will fail if isNonsingular() returns false.
    if( !lu.isNonsingular() )
-     return 1; // Singular matrix
+     return 1; // Singular matrix - it's a pity.
 
   B = lu.solve( B );
   }
@@ -867,9 +899,9 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 }
 #undef a
 
-// calc of MU values and Dikin criterion
+// Calculation of MU values (dual DC chemical potentials) and Dikin criterion
 // Parameters:
-// bool initAppr - Inital approximation point(true) or iteration of IPM (false)
+// bool initAppr - Inital approximation (true) or main iteration of IPM (false)
 // int N - dimension of the matrix R (number of equations)
 double TMulti::calcDikin(  int N, bool initAppr )
 {
@@ -878,9 +910,9 @@ double TMulti::calcDikin(  int N, bool initAppr )
 
   for(J=0;J<pmp->L;J++)
   {
-    if( pmp->Y[J] > pmp->lowPosNum /*1E-19 */)
+    if( pmp->Y[J] > pmp->lowPosNum )
     {
-      Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N );
+      Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N, J );
       if( !initAppr )
         Mu -= pmp->F[J];
       PCI += Mu*pmp->W[J]*Mu;
@@ -899,9 +931,9 @@ double TMulti::calcDikin(  int N, bool initAppr )
   return PCI;
 }
 
-// Calculation of descent step size LM
+// Calculation of the descent step length LM
 // Parameters:
-// bool initAppr - Inital approximation point(true) or iteration of IPM (false)
+// bool initAppr - Inital approximation (true) or iteration of IPM (false)
 double TMulti::calcLM(  bool initAppr )
 {
    int J;
@@ -914,7 +946,7 @@ double TMulti::calcLM(  bool initAppr )
     if( pmp->RLC[J]==NO_LIM ||
         pmp->RLC[J]==LOWER_LIM || pmp->RLC[J]==BOTH_LIM )
     {
-       if( Mu < 0 && fabs(Mu)>pmp->lowPosNum*100.)  //1E-16)
+       if( Mu < 0 && fabs(Mu)>pmp->lowPosNum*100.)
        {
          if( Z == -1 )
          { Z = J;
@@ -930,7 +962,7 @@ double TMulti::calcLM(  bool initAppr )
     }
     if( pmp->RLC[J]==UPPER_LIM || pmp->RLC[J]==BOTH_LIM )
     {
-       if( Mu > pmp->lowPosNum*100.)  //1E-16)
+       if( Mu > pmp->lowPosNum*100.)
        {
          if( Z == -1 )
          { Z = J;
@@ -944,13 +976,13 @@ double TMulti::calcLM(  bool initAppr )
          }
       }
     }
-   }
+  }
 
   if( initAppr )
   { if( Z == -1 )
      LM = pmp->PCI;
     else
-     LM *= .95;     // Smoothing of final lambda ????
+     LM *= .95;     // Smoothing of final lambda value
   }
   else
   {  if( Z == -1 )
@@ -959,7 +991,7 @@ double TMulti::calcLM(  bool initAppr )
   return LM;
 }
 
-// Restoring vectors Y and YF
+// Restoring primal vectors Y and YF
 void TMulti::Restoring_Y_YF()
 {
  int Z, I, JJ = 0;
@@ -992,7 +1024,7 @@ void TMulti::Restoring_Y_YF()
 
 }
 
-// Calculation of sfactor
+// Calculation of the scaling factor for the IPM-2 algorithm
 double TMulti::calcSfactor()
 {
     double molB=0.0, sfactor;
@@ -1007,20 +1039,17 @@ double TMulti::calcSfactor()
 
 //===================================================================
 
-// Checks of Karpov phase stability criteria,
-// Selekt2() procedure by Karpov & Chudnenko
-// modified by DAK in 1995
-// Returns 0, if new IPM loop is needed;
-//         1, if the solution is final.
-//
-//#define  a(j,i) ((double *)(*(pm[q].A+(i)+(j)*pm[q].N)))
+// Checking Karpov phase stability criteria Fa for phases and DCs
+//  using Selekt2() algorithm by Karpov & Chudnenko (1989)
+//  modified by DK in 1995.
+//  Returns 0, if a new IPM loop is needed;
+//          1, if the solution is final.
 //
 void TMulti::PhaseSelect()
 {
-    short /*II,*/JJ,Z,I,J;//, iRet=0;
-    double F1,F2/*,F3=0.0*/,*F0;
+    short JJ,Z,I,J;
+    double F1,F2,*F0;
     SPP_SETTING *pa = &TProfil::pm->pa;
-
 
     f_alpha( );
     F0 = pmp->Falp;
@@ -1035,7 +1064,7 @@ void TMulti::PhaseSelect()
     {
         if( F0[Z]>F1 && pmp->YF[Z]<pmp->lowPosNum )
         {
-            F1=F0[Z];  // selection of max Fa and phase index
+            F1=F0[Z];  // selection of max Fa and corresponding phase index
             JJ=Z;
         }
         if( F0[Z]>F2 && pmp->YF[Z]>pmp->lowPosNum )
@@ -1050,20 +1079,20 @@ void TMulti::PhaseSelect()
         // There is a phase for which DF (0.01) is exceeded
         sfactor = calcSfactor();
         do
-        {  // insert all phases with  F1 > DFM
+        {  // inserting all phases with  F1 > DFM
             // insert this phase and set Y[j] for its components
             // with account for asymmetry and non-ideality
-            for( J=0, I=0; I<JJ/*-1*/; I++ )   // A bug ?
+            for( J=0, I=0; I<JJ; I++ )
                  J+=pmp->L1[I];
 
-            TraceDCzeros( J, J+pmp->L1[JJ], sfactor, JJ );
+            RaiseZeroedOffDCs( J, J+pmp->L1[JJ], sfactor, JJ );
 
             pmp->FI1++;  // check phase rule
             if( pmp->FI1 >= pmp->NR+1 )
             { // No more phase can be inserted
                 break;
             }
-            // find a new phase to insert, if any
+            // find a new phase to insert, if any exists
             F1= pmp->lowPosNum*10000.; // 1e-16
             JJ = -1;
             for( Z=0; Z<pmp->FI; Z++ )
@@ -1073,9 +1102,9 @@ void TMulti::PhaseSelect()
                     JJ=Z;
                 }
         }
-        while( F1 > pa->p.DF && JJ >= 0/* 1E-15 */ );
+        while( F1 > pa->p.DF && JJ >= 0 );
         // end of insertion cycle
-        J=0;   /*  insert prime IPM solution */
+        J=0;   // insert primeal GEM IPM solution
         for(Z=0;Z<pmp->FIs;Z++)
         {
             if( pmp->YF[Z ] > pmp->lowPosNum /* 1E-18 */ )
@@ -1084,8 +1113,8 @@ void TMulti::PhaseSelect()
                 for(I=J;I<J+pmp->L1[Z];I++)
                 {
                    if( pmp->Y[I] < pmp->lowPosNum ) // Check what to insert !
-                       pmp->Y[I] = pa->p.DFM; // lowPosNum?
-                    pmp->YF[Z]+=pmp->Y[I]; // calc new  quantities of phases
+                       pmp->Y[I] = pa->p.DFM; // lowPosNum should be used ?
+                    pmp->YF[Z]+=pmp->Y[I]; // calculate new amounts of phases
                 }
             }
             J+=pmp->L1[Z];
@@ -1096,22 +1125,101 @@ void TMulti::PhaseSelect()
 #endif
 #endif
         if( pmp->K2>1 )
-        { // more then first step - solution is not improved
+        { // more then the first step - but the IPM solution has not been improved
             for(I=0;I<pmp->L;I++)
                 if( fabs(pmp->Y[I]- pmp->XY[I]) > pa->p.DF*pmp->Y[I] ) // Check!
                     goto S6;
             pmp->PZ=2;
             goto S4;
         }
-S6: // copy X changed by SELEKT2 algorithm
+S6: // copy of X vector changed by Selekt2() algorithm
         for(I=0;I<pmp->L;I++)
             pmp->XY[I]=pmp->Y[I];
 // Copy here also to pmp->X[I]?
         return;
     }
-S4: // No phases to insert or no distortions
-    // end of iterations of SELEKT2
+S4: // No phases to insert or no Fa distortions found
+    // Successful end of iterations of SELEKT2
     pmp->MK=1;
 }
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Internal memory allocation for IPM performance optimization
+// (since version 2.2.0)
+//
+void TMulti::Alloc_A_B( int newN )
+{
+  if( AA && BB && newN==sizeN )
+    return;
+  Free_A_B();
+  AA = new  double[newN*newN];
+  BB = new  double[newN];
+  sizeN = newN;
+}
+
+void TMulti::Free_A_B()
+{
+  if( AA  )
+    { delete[] AA; AA = 0; }
+  if( BB )
+    { delete[] BB; BB = 0; }
+  sizeN = 0;
+}
+
+
+// Building an index list of non-zero elements of the matrix pmp->A
+#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*pmp->N)))
+void TMulti::Build_compressed_xAN()
+{
+ int ii, jj, k;
+
+ // Free old memory allocation
+ Free_compressed_xAN();
+
+ // Calculate sizes
+ k = 0;
+ for( jj=0; jj<pmp->L; jj++ )
+   for( ii=0; ii<pmp->N; ii++ )
+     if( fabs( a(jj,ii) ) > 1e-12 )
+       k++;
+
+ // Allocate memory
+ arrL = new int[pmp->L+1];
+ arrAN = new int[k];
+
+ // Set indexes
+ k = 0;
+ for( jj=0; jj<pmp->L; jj++ )
+ { arrL[jj] = k;
+   for( ii=0; ii<pmp->N; ii++ )
+     if( fabs( a(jj,ii) ) > 1e-12 )
+     {
+        arrAN[k] = ii;
+        k++;
+     }
+ }
+ arrL[jj] = k;
+}
+#undef a
+
+void TMulti::Free_compressed_xAN()
+{
+  if( arrL  )
+    { delete[] arrL; arrL = 0; }
+  if( arrAN )
+    { delete[] arrAN; arrAN = 0; }
+}
+
+void TMulti::Free_internal()
+{
+  Free_compressed_xAN();
+  Free_A_B();
+}
+
+void TMulti::Alloc_internal()
+{
+// optimization 08/02/2007
+ Alloc_A_B( pmp->N );
+ Build_compressed_xAN();
+}
 //--------------------- End of ipm_main.cpp ---------------------------

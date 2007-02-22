@@ -1,14 +1,13 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 776 2006-07-26 12:26:16Z gems $
+// $Id: v_user.h 871 2007-02-21 14:29:54Z gems $
 //
 // Declaration of miscellaneous utility functions and classes
 //
 // Copyright (C) 1996-2001 A.Rysin, S.Dmytriyeva
 // Uses  gstring class (C) A.Rysin 1999
 //
-// This file is part of the GEM-Vizor library which uses the
-// Qt v.2.x GUI Toolkit (Troll Tech AS, http://www.trolltech.com)
-// according to the Qt Duo Commercial license
+// This file is part of the GEM-Vizor library and the GEMIPM2K
+// code package
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -60,7 +59,6 @@ int ROUND(double x )
     return int((x)+.5);
 }
 
-
 inline
 bool
 IsSpace(char ch)
@@ -70,7 +68,7 @@ IsSpace(char ch)
 
 void StripLine(gstring& line);
 
-// Added Sveta 22/12/2001
+// Added by SD on 22/12/2001
 // Change string on templates
 void
 ChangeforTempl( gstring& data_str,  const gstring& from_templ1,
@@ -78,11 +76,13 @@ ChangeforTempl( gstring& data_str,  const gstring& from_templ1,
 
 // Returns string representation of current date in dd/mm/yyyy format
 gstring curDate();
+
 // Returns string representation of current date in dd/mm/yy format
 gstring curDateSmol();
 
 // Returns string representation of current time in HH:MM  format
 gstring curTime();
+
 // Returns string representation of current date and time
 inline
 gstring curDateTime()
@@ -90,11 +90,11 @@ gstring curDateTime()
     return curDate() + curTime();
 }
 
-// read line to gstring class from istream with delimiter
+// reads line to gstring class from istream with a delimiter
 istream& u_getline(istream& instream, gstring& dst_string, char delimit = '\n');
 istream& f_getline(istream& is, gstring& str, char delim);
 
-/*! return pointer after spaces in gstring 's'*/
+/*! returns pointer after spaces in gstring 's'*/
 /*
 inline
 const char* fastLeftStrip(const char* s)
@@ -122,7 +122,7 @@ inline char* gcvt(double num, int digit, char* buf)
     return buf;
 }
 
-#endif  // __FreedBSD
+#endif  // __FreeBSD
 
 #ifdef __APPLE__
 #include <algobase.h>
@@ -135,7 +135,7 @@ inline char* gcvt(double num, int digit, char* buf)
 
 #endif    // IPMGEMPLUGIN
 
-// dynamically allocated temporary 'char*'
+// dynamically allocates temporary 'char*'
 // for simple string manipulations
 // (used instead of stack char[] allocation to avoid stack problems)
 struct vstr
@@ -177,10 +177,6 @@ void
 u_splitpath(const gstring& Path, gstring& dir,
             gstring& name, gstring& ext);
 
-
-
-
-
-
-#endif // _v_user_h_
+#endif
+// _v_user_h_
 

@@ -1,5 +1,5 @@
-# GEMIPM2K v. 0.98
-# Prototype 12.12.2006
+# GEMIPM2K v. 2.2.0
+# Prototype 22.02.2007
 # Comments can be marked with # $ ; as the first character in the line
 
 # Template for the ipm-dat text input file for the internal MULTI data
@@ -145,7 +145,7 @@
 ## (5) Some data arrays which are not provided in DATACH and DATABR files
 # B: Full total bulk composition of the initial system (vector b) - see DATACH file for dimension nIC
 <B>
-3.309999883640557528e-04 3.309999883640557528e-04 2.000000023372194846e-07 1.106836964176732749e+02 1.000000011686097423e-07 5.534286120880122440e+01 0.000000000000000000e+00 
+3.309999883640557528e-04 3.309999883640557528e-04 2.000000023372194846e-07 1.106836964176732749e+02 1.000000011686097423e-07 5.534286120880122439e+01 0.000000000000000000e+00 
 
 # Initial data for DCs - see DATACH file for dimensions nDC, nDCs
 # Pparc: Partial pressures (fugacities) of dependent components

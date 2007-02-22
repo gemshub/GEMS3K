@@ -1,4 +1,4 @@
-// $Id: gstring.h 396 2004-11-09 13:35:25Z sveta $
+// $Id: gstring.h 871 2007-02-21 14:29:54Z gems $
 /***************************************************************************
 	gstring class
 	Version 1.02
@@ -9,9 +9,7 @@
 	without copy-on-write technology
 	(there's a lot of improvements could be done here :-)
 
-// This file is part of the GEM-Vizor library which uses the
-// Qt v.2.x GUI Toolkit (Troll Tech AS, http://www.trolltech.com)
-// according to the Qt Duo Commercial license
+// This file is part of the GEM-Vizor library and GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -19,7 +17,7 @@
 // See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
 //
 	Copyright (c) 2000
-	Authors: Andy Rysin, Dima Kulik
+	Author: Andy Rysin
 	E-mail: arysin@yahoo.com
 ****************************************************************************/
 
@@ -32,15 +30,13 @@
 
 #ifdef IPMGEMPLUGIN
    static const size_t npos = static_cast<size_t>(-1);
-//   static  const size_t npos=32767;           //wp sergey 2004 from below assignment
+//   static  const size_t npos=32767;   /wp sergey 2004 from below assignment
 
 #endif
 
 class gstring
 {
-    /*
-    	inside class for keeping string values
-    */
+//    internal class for keeping string values
 struct str_val:
                 public TOArray<char>
     {
@@ -203,7 +199,8 @@ const gstring operator+(const gstring& str1, const gstring& str2)
     return res += str2;
 }
 
-// added for convinience because of frequent use
+// added for convenience because of frequent use
 typedef TArrayF<gstring> TCStringArray;
 
-#endif //_gstring_h_
+#endif
+//_gstring_h_
