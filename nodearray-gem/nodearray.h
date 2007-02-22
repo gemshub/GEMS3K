@@ -314,6 +314,7 @@ public:
   // mass of single-component phase with index PHx from T1 node with index nodex
 #define node1_mPH( nodex, PHx )  (TNodeArray::na->get_mPH( 1, (nodex), (PHx)))
 
+
   // amount of solvent/sorbent in phase with index PHx from T0 node with index nodex
 #define node0_xPA( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->xPA[(PHx)])
   // amount of solvent/sorbent in phase with index PHx from T1 node with index nodex

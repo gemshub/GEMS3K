@@ -426,6 +426,169 @@ int TParticleArray::GEMCOTAC( int Mode, double t0_, double t1_ )
   return iRet;
 }
 
+//=========================================================================
+
+// Random numbers (re-written from Numerical Recipes in C)
+// with uniform distribution
+//
+double randuni (double& x)
+{ double m35=34359738368., m36=68719476736., m37=137438953472.;
+  float a=0.,b=1.;
+  if( x < 0 ) // Initialize process
+  {
+    int j;
+    double R;
+    j=rand();
+    R = ceil(24359738368.*j/RAND_MAX + 10000000000.);
+    if( !fmod(R,2) )
+      R=R+1.;
+    x = R;
+  }
+  x=x*5.;
+  if(x>=m37) x=x-m37;
+  if(x>=m36) x=x-m36;
+  if(x>=m35) x=x-m35;
+ return(x/m35*(b-a)+a);
+}
+
+// normal point
+double randnorm(double& x)
+{ double R1=0.;
+  int j;
+  for(j=0;j<101;j++)
+    R1+=randuni(x);
+      R1=(R1-101./2.)/pow(101./12.,0.5);
+           R1=1./6.*(R1-(-3.0));
+           if(R1<0.) R1=0.;
+           if(R1>1.) R1=1.;
+           return(R1);
+// return(1./9.*(R1-(-4.5)));
+}
+
+#define IM1 2147483563
+#define IM2 2147483399
+#define AM (1.0/IM1)
+#define IMM1 (IM1-1)
+#define IA1 40014
+#define IA2 40692
+#define IQ1 53668
+#define IQ2 52774
+#define IR1 12211
+#define IR2 3791
+#define NTAB 32
+#define NDIV (1+IMM1/NTAB)
+#define EPS  1.2e-7
+#define RNMX  (1.0-EPS)
+
+// Long period (> 2'1018) random number generator of L'Ecuyer with
+// Bays-Durham shuffle and added safeguards.
+// Returns a uniform random deviate between 0.0 and 1.0 (exclusive of
+// the endpoint values). Call with idum a negative integer to initialize;
+// thereafter, do not alter idum between successive deviates in a sequence.
+// RNMX should approximate the largest floating value that is less than 1.
+// Modified from Numerical Recipes in C
+//
+float ran2(long& idum)
+{
+   int j;
+   long k;
+   static long idum2=123456789;
+   static long iy=0;
+   static long iv[NTAB];
+   float temp;
+   if (idum <= 0)
+   { // Initialize.
+      if ( -idum < 1)
+         idum=1; // Be sure to prevent idum = 0.
+      else
+         idum = -idum;
+      idum2= idum;
+     for (j=NTAB+7;j>=0;j--) // Load the shuffle table (after 8 warm-ups).
+     {
+       k = idum/IQ1;
+       idum = IA1*(idum-k*IQ1)-k*IR1;
+       if (idum < 0)
+         idum += IM1;
+       if (j < NTAB)
+         iv[j] = idum;
+     }
+   iy=iv[0];
+   }
+   k = idum/IQ1;                       // Start here when not initializing.
+   idum = IA1 * (idum-k*IQ1) - k*IR1;  // Compute idum=(IA1*idum) % IM1 without
+                                       // overflows by Schrage's  method.
+   if ( idum < 0 )
+      idum += IM1;
+   k = idum2/IQ2;
+   idum2 = IA2*(idum2-k*IQ2)-k*IR2;  // Compute idum2=(IA2*idum) % IM2 likewise.
+   if (idum2 < 0)
+      idum2 += IM2;
+   j = iy/NDIV;                      // Will be in the range 0..NTAB-1.
+   iy = iv[j]-idum2;                 // Here idum is shuffled, idum and idum2 are
+   iv[j] = idum;                     // combined to generate output.
+   if (iy < 1)
+      iy += IMM1;
+   if ( ( temp=AM*iy) > RNMX)
+       return (float)RNMX;         //  Because users don't expect endpoint values.
+   return temp;
+}
+
+#define MBIG 1000000000
+#define MSEED 161803398
+#define MZ 0
+#define FAC (1.0/MBIG)
+
+// According to Knuth, any large MBIG, and any smaller (but still large) MSEED
+// can be substituted for the above values.
+// Returns a uniform random deviate between 0.0 and 1.0.
+// Set idum to any negative value to initialize or reinitialize the sequence.
+// Modified From Numerical Recipes in C
+//
+float ran3(long& idum)
+{
+  static int inext,inextp;
+  static long ma[56];     // The value 56 (range ma[1..55]) is special and
+  static int iff=0;       // should not be modified; see  Knuth.
+  long mj,mk;
+  int i,ii,k;
+  if ( idum < 0 || iff == 0) // Initialization.
+  {
+     iff=1;
+     mj = labs( MSEED - labs(idum));  // Initialize ma[55] using the seed idum
+     mj %= MBIG;                      // and the large number MSEED.
+     ma[55] = mj;
+     mk = 1;
+     for (i=1;i<=54;i++)   // Now initialize the rest of the table,
+     {  ii=(21*i) % 55;    // in a slightly random order,
+        ma[ii]=mk;         // with numbers that are not especially random.
+        mk=mj-mk;
+        if (mk < MZ)
+          mk += MBIG;
+        mj=ma[ii];
+      }
+      for (k=1;k<=4;k++)    // We randomize them by 'warming up the generator'
+        for(i=1;i<=55;i++)
+        {
+         ma[i] -= ma[1+(i+30) % 55];
+         if (ma[i] < MZ)
+            ma[i] += MBIG;
+         }
+       inext=0;     // Prepare indices for our first generated number.
+       inextp=31;  //  The constant 31 is special; see Knuth.
+       idum=1;
+   }
+   //  Here is where we start, except on initialization.
+    if (++inext == 56)
+       inext=1;           // Increment inext and inextp, wrapping around 56 to 1.
+    if (++inextp == 56)
+       inextp=1;
+    mj = ma[inext]-ma[inextp];  // Generate a new random number subtractively.
+    if (mj < MZ)
+         mj += MBIG;    //  Be sure that it is in range.
+    ma[inext]=mj;       // Store it,
+    return mj*FAC;      // and output the derived uniform deviate.
+}
+
 
 //-----------------------End of particlearray.cpp--------------------------
 

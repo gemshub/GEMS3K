@@ -21,6 +21,11 @@
 
 #include "nodearray.h"
 
+// Random numbers ==========================================================
+double randuni(double& x); // uniform
+double randnorm(double& x); // normal
+float ran2(long& idum);  // uniform between 1 and 0
+float ran3(long& idum);  // uniform between 1 and 0
 
 enum  PMCODE // Codes of particle movement
 {

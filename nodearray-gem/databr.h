@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// DATABRidge - defines the structure of node-dependent data for
+// DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
 // Requires DATACH.H header and data structure.
 // DATABR is used in TNode and TNodeArray classes.
@@ -7,7 +7,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 //
-// Copyright (C) 2003-2006 by D.Kulik, W.Pfingsten, F.Enzmann and S.Dmytriyeva
+// Copyright (C) 2003-2007 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
@@ -44,7 +44,7 @@ typedef struct
 //      Usage of this variable (DB - data bridge)        MT-DB DB-GEM GEM-DB DB-MT
    double
 // Chemical scalar variables
-    T,      	// Temperature T, K                        +      +      -     -
+    TC,      	// Temperature T, C                        +      +      -     -
     P, 	        // Pressure P, bar                         +      +      -     -
     Vs,         // Volume V of reactive subsystem, cm3     -      -      +     +
     Vi,         // Volume of inert subsystem, cm3          +      -      -     +
@@ -153,5 +153,6 @@ typedef enum {  // Node type codes controlling hydraulic/mass-transport behavior
   INIT_FUNK    = 4  // functional conditions (e.g. input time-depended functions)
 } NODETYPE;
 
-#endif   //_DataBr_h
+#endif
+//_DataBr_h
 

@@ -2,13 +2,13 @@
 // TNode class - implements a simple C/C++ interface
 // between GEM IPM and FMT codes
 // Works with DATACH and work DATABR structures
-// without using the nodearray class
+// without using the Tnodearray class
 //
-// Written by S.Dmytriyeva,  D.Kulik
-// Copyright (C) 2006 S.Dmytriyeva, D.Kulik
+// (c) 2006-2007 S.Dmytriyeva, D.Kulik
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
+// developed in the Laboratory for Waste Management, Paul Scherrer Institute
 
 // This file may be distributed under the licence terms
 // defined in GEMIPM2K.QAL
@@ -43,21 +43,32 @@ protected:
 
 #endif
 
-    DATACH* CSD;     // Pointer to chemical system data structure CSD (DATACH)
+    DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)
 
-    DATABR* CNode;   // Pointer to a work node data bridge structure (node)
+    DATABR* CNode;  // Pointer to a work node data bridge structure (node)
       // used for exchanging input data and results between FMT and GEMIPM
 
-    void check_TP();  // Checks if given T and P fit within interpolation intervals
+    // Checks if given Tc and P fit within interpolation intervals
+    bool  check_TP( double& Tc, double& P );
+
+    // Tests Tc as a grid point for the interpolation of thermodynamic data
+    // Returns index in the grid array or -1  if it is not a grid point
+    int  check_grid_T( double& Tc );
+
+    // Tests P as a grid point for the interpolation of thermodynamic data
+    // Return index in the grid array or -1 if it is not a grid point
+    int  check_grid_P( double& P );
+
     void allocMemory();
     void freeMemory();
 
-    // Functions that maintain DATACH and DATABR memory allocation
+   // Functions that maintain DATACH and DATABR memory allocation
     void datach_realloc();
     void datach_free();
     void databr_realloc();
-       // deletes fields of DATABR structure indicated by data_BR_
-       // and sets the pointer data_BR_ to NULL
+
+    // deletes fields of DATABR structure indicated by data_BR_
+    // and sets the pointer data_BR_ to NULL
     DATABR* databr_free( DATABR* data_BR_ =0);
 
     // Binary i/o functions
@@ -89,16 +100,16 @@ protected:
 
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS
-    // - prepares DATACH and DATABR files for reading into the coupled code
+    // Prepares DATACH and DATABR files for reading into the coupled code
     void makeStartDataChBR(
          TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
          short nTp_, short nPp_, float Ttol_, float Ptol_,
          float *Tai, float *Pai );
 
-    // creates arrays of thermodynamic data for interpolation
+    // Creates arrays of thermodynamic data for interpolation
     void G0_V0_H0_Cp0_DD_arrays(); // which are written into DATACH file
 
-    // virtual function for interaction with nodearray class
+    // Virtual function for interaction with tnodearray class
     virtual void  setNodeArray( gstring& , int , bool ) { }
 #endif
 
@@ -145,7 +156,7 @@ static TNode* na;   // static pointer to this class
     short  &p_NodeHandle,   // Node identification handle
     short  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                       //                                    GEM input output  FMT control
-    double &p_T,      // Temperature T, K                        +       -      -
+    double &p_TC,      // Temperature T, C                       +       -      -
     double &p_P,      // Pressure P, bar                         +       -      -
     double &p_Vs,     // Volume V of reactive subsystem, cm3    (+)      -      +
     double &p_Ms,     // Mass of reactive subsystem, kg          -       -      +
@@ -163,7 +174,7 @@ static TNode* na;   // static pointer to this class
     short  p_NodeHandle,   // Node identification handle
     short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                      //                                     GEM input output  FMT control
-    double p_T,      // Temperature T, K                        +       -      -
+    double p_TC,     // Temperature T, C                        +       -      -
     double p_P,      // Pressure P, bar                         +       -      -
     double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
     double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
@@ -252,8 +263,8 @@ static TNode* na;   // static pointer to this class
     }  // usage on the level of Tnodearray is not recommended !
 
     // These methods get contents of fields in the work node structure
-    double cT() const     // get current Temperature T, K
-    {        return CNode->T;   }
+    double cTC() const     // get current Temperature T, C
+    {  return CNode->TC;   }
 
     double cP() const     // get current Pressure P, bar
     {        return CNode->P;   }
@@ -320,21 +331,44 @@ static TNode* na;   // static pointer to this class
    // Converts the Phase DCH index into the DC DCH index (for pure phases)
     int Phx_to_DCx( const int Phx );
 
+   // Converts the Phase DCH index into the DC DCH index (1-st)
+   // returns into nDCinPh number of DC included into Phx phase
+    int  PhtoDC_DCH( const int Phx, int& nDCinPh );
+
+   // Converts the Phase DBR index into the DC DBR index (1-st selected )
+   // returns into nDCinPh number of DC selected into Phx phase
+    int  PhtoDC_DBR( const int Phx, int& nDCinPh );
+
     // Data exchange methods between GEMIPM and work node DATABR structure
     // Are called inside of GEM_run()
-    void packDataBr();      //  packs GEMIPM calculation results into work node structure
-    void unpackDataBr();    //  unpacks work node structure into GEMIPM data structure
+    void packDataBr();   //  packs GEMIPM calculation results into work node structure
+    void unpackDataBr(); //  unpacks work node structure into GEMIPM data structure
+
+    // Access to interpolated thermodynamic data from DCH structure
+    // Test Tc and P as grid point for the interpolation of thermodynamic data
+    // Return index in grid matrix or -1
+     int  check_grid_TP(  double& Tc, double& P );
+    // Access to interpolated G0 from DCH structure ( xCH the DC DCH index)
+     double  DC_G0_TP( const int xCH, double& Tc, double& P );
+    // Access to interpolated V0 from DCH structure ( xCH the DC DCH index)
+     double  DC_V0_TP( const int xCH, double& Tc, double& P );
 
 // To be provided - access to interpolated thermodynamic data from DCH structure
-//  G0TP
-//  V0TP
 //  H0TP
 //  S0TP
 // Cp0TP
 //  DDTP
 
+     // Retrieval of Phase Volume ( xBR the Ph DBR index)
+      double  Ph_Volume( const int xBR );
+     // Retrieval of Phase mass ( xBR the Ph DBR index)
+      double  Ph_Mass( const int xBR );
+     // Retrieval of Phase composition ( xBR the Ph DBR index)
+      void  Ph_BC( const int xBR, double *ARout=0 );
+
+
 #ifndef IPMGEMPLUGIN
-// These calls are used only inside of the GEMS-PSI GEM2MT module
+// These calls are used only inside the GEMS-PSI GEM2MT module
 
     // Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
     // interaction variant (the user must select ICs, DCs and phases to be included

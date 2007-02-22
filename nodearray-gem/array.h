@@ -1,14 +1,13 @@
 //-------------------------------------------------------------------
-// $Id: array.h 242 2004-06-25 13:32:33Z gems $
+// $Id: array.h 871 2007-02-21 14:29:54Z gems $
 //
 // Declaration/implementation of array classes collection
 //
 // Copyright (C) 1996-2001 A.Rysin
 // Uses  gstring class (C) A.Rysin 1999
 //
-// This file is part of the GEM-Vizor library which uses the
-// Qt v.2.x GUI Toolkit (Troll Tech AS, http://www.trolltech.com)
-// according to the Qt Duo Commercial license
+// This file is part of the GEM-Vizor library and GEMIPM2K
+// code package
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -74,8 +73,7 @@ public:
 #endif
 };
 
-/* Reallocates memory of the array
-*/
+// Reallocates memory of the array
 template <class T>
 T*
 TAllocator<T>::realloc(size_t sz, size_t old_cnt)
@@ -89,9 +87,7 @@ TAllocator<T>::realloc(size_t sz, size_t old_cnt)
     return this->p = pt;
 }
 
-/* Changes the size of the array and 
-    reallocates the memory
-*/    
+// Changes the size of the array and reallocates the memory
 template <class T>
 size_t
 TAllocator<T>::resize(size_t ind)
@@ -109,9 +105,7 @@ TAllocator<T>::resize(size_t ind)
     return this->size;
 }
 
-/* Constructor. Takes the initial size of the array
-    and granularity value
-*/
+// Constructor. Takes the initial size of the array and granularity value
 template <class T>
 TAllocator<T>::TAllocator(size_t sz, size_t gr):
         gran(gr),
@@ -122,9 +116,8 @@ TAllocator<T>::TAllocator(size_t sz, size_t gr):
     //  IF_THROW( !p, EAlloc );
 }
 
-/* removes element of the array but
-    does not change the size of it's memory
-*/
+// removes element of the array but
+// does not change the size of it's memory
 template <class T>
 size_t
 TAllocator<T>::Remove(size_t ind)
@@ -136,9 +129,7 @@ TAllocator<T>::Remove(size_t ind)
     return ind;
 }
 
-/* clears the array and
-    resets memory allocation
-*/
+// clears the array and resets memory allocation
 template <class T>
 void
 TAllocator<T>::Clear(bool freeMem)
@@ -154,10 +145,8 @@ TAllocator<T>::Clear(bool freeMem)
 }
 
 
-/* Class TOArray store objects as they are
-    and destroys them on cleanup
-*/
-
+// Class TOArray store objects as they are and destroys them on cleanup
+//
 template <class T>
 class TOArray:
             public TAllocator<T>
@@ -189,8 +178,7 @@ public:
     void SetToArray(T* p, size_t cnt);
 };
 
-/* TOArray copy constructor
-*/ 
+// TOArray copy constructor
 template <class T>
 TOArray<T>::TOArray(const TOArray& a):
         TAllocator<T>(a.size, a.gran)
@@ -200,8 +188,7 @@ TOArray<T>::TOArray(const TOArray& a):
         this->p[ii] = a.p[ii];
 }
 
-/* returns element at position 'index'
-*/
+// returns element at position 'index'
 template <class T>
 inline
 T& TOArray<T>::elem(size_t index) const
@@ -213,8 +200,7 @@ T& TOArray<T>::elem(size_t index) const
     return this->p[index];
 }
 
-/* TOArray assignment operator
-*/
+// TOArray assignment operator
 template <class T>
 const TOArray<T>&
 TOArray<T>::operator=(const TOArray<T>& a)
@@ -234,8 +220,7 @@ TOArray<T>::operator=(const TOArray<T>& a)
     return *this;
 }
 
-/* Adds element to the array
-*/
+// Adds element to the array
 template <class T>
 size_t
 TOArray<T>::Add(const T& t)
@@ -245,8 +230,7 @@ TOArray<T>::Add(const T& t)
     return this->count - 1;
 }
 
-/* Adds element to the array at position 'index'
-*/
+// Adds element to the array at position 'index'
 template <class T>
 size_t
 TOArray<T>::AddAt(const T& t, size_t index)
@@ -262,9 +246,8 @@ TOArray<T>::AddAt(const T& t, size_t index)
     return index;
 }
 
-/* Resets the array and fills it with values from 
-    C-type array
-*/
+// Resets the array and fills it with values from C-type array
+//
 template <class T>
 void
 TOArray<T>::SetToArray(T* ptr_n, size_t cnt)
@@ -278,11 +261,10 @@ TOArray<T>::SetToArray(T* ptr_n, size_t cnt)
         this->p[ii] = ptr_n[ii];
 }
 
-/* TArrayF - extends TOArray with Find() and Sort() functions
-    This allows TOArray to store types wich does not have
-    assignment and '<', '>' operators
-*/
-
+// TArrayF - extends TOArray with Find() and Sort() functions
+//    This allows TOArray to store types wich does not have
+//    assignment and '<', '>' operators
+//
 template <class T>
 class TArrayF:
             public TOArray< T >
@@ -300,10 +282,10 @@ public:
     void Sort();
 };
 
-/* searches the array for element which equals to 'object'
-    and returns index of the element in the array
-    pretty unefficient, but we can't be sure array is sorted
-*/
+// searches the array for element which equals to 'object'
+//    and returns index of the element in the array
+//    pretty unefficient, but we can't be sure array is sorted
+//
 template <class T>
 int
 TArrayF<T>::Find(const T& object) const
@@ -315,8 +297,7 @@ TArrayF<T>::Find(const T& object) const
     return -1;
 }
 
-/* sorts the elements of the array
-*/
+// sorts the elements of the array
 template <class T>
 void
 TArrayF<T>::Sort()
@@ -335,16 +316,15 @@ TArrayF<T>::Sort()
     }
 }
 
-// Added for convinience
+// Added for convenience
 typedef TArrayF<int> TCIntArray;
 
 
-/* TIArray stores pointers to object
-    returns and accepts references on pointed objects
-    and cleans the objects pointed by its elements
-    If you don't want objects to be cleaned use TOArray<type*>
-*/
-
+// TIArray stores pointers to object
+//    returns and accepts references on pointed objects
+//    and cleans the objects pointed by its elements
+//   If you don't want objects to be cleaned use TOArray<type*>
+//
 template <class T>
 class TIArray:
             public TAllocator< auto_ptr<T> >
@@ -378,8 +358,7 @@ public:
 };
 
 
-/* Adds pointer to the element to the array
-*/
+// Adds pointer to the element to the array
 template <class T>
 size_t
 TIArray<T>::Add(T* t)
@@ -389,8 +368,7 @@ TIArray<T>::Add(T* t)
     return this->count - 1;
 }
 
-/* Adds pointer to the element to the array at position 'index'
-*/
+// Adds pointer to the element to the array at position 'index'
 template <class T>
 size_t
 TIArray<T>::AddAt(T* t, size_t ind)
@@ -405,8 +383,7 @@ TIArray<T>::AddAt(T* t, size_t ind)
     return ind;
 }
 
-/* returns element pointer at index points to
-*/
+// returns element pointer at index points to
 template <class T>
 inline
 T&
@@ -419,11 +396,9 @@ TIArray<T>::elem(size_t index) const
 }
 
 
-/* TIArrayF - extends TIArray with Find() function
-    This allows TIArray to store pointers to types wich does not have
-    assignment and '<', '>' operators
-*/
-
+// TIArrayF - extends TIArray with Find() function
+//    This allows TIArray to store pointers to types wich does not have
+//   assignment and '<', '>' operators
 template <class T>
 class TIArrayF:
             public TIArray< T >
@@ -450,3 +425,5 @@ TIArrayF<T>::Find(const T& object) const
 }
 
 #endif
+// End of array.h
+

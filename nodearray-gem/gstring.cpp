@@ -1,4 +1,4 @@
-// $Id: gstring.cpp 647 2005-12-04 13:44:57Z gems $
+// $Id: gstring.cpp 871 2007-02-21 14:29:54Z gems $
 /***************************************************************************
 	gstring class
 	Version 1.02
@@ -9,9 +9,8 @@
 	without copy-on-write technology
 	(there's a lot of improvements could be done here :-)
 
-// This file is part of the GEM-Vizor library which uses the
-// Qt v.2.x GUI Toolkit (Troll Tech AS, http://www.trolltech.com)
-// according to the Qt Duo Commercial license
+// This file is part of the GEM-Vizor library and of the standalone
+// GEMIPM2K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -19,7 +18,7 @@
 // See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
 //
 	Copyright (c) 2000
-	Authors: Andy Rysin, Dima Kulik
+	Author: Andy Rysin
 	E-mail: arysin@yahoo.com
 ****************************************************************************/
 
