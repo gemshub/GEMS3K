@@ -128,6 +128,7 @@ mcotac-gem/re.dat -text
 mcotac-gem/rf.dat -text
 mcotac-gem/s_fgl.cpp -text
 mcotac-gem/s_fgl.h -text
+mcotac-gem/s_fgl2.cpp -text
 mcotac-gem/setpar.cpp -text
 mcotac-gem/setpar_.c -text
 mcotac-gem/solids.dat -text
@@ -202,6 +203,7 @@ node-gem/platform/win32bcc/Makefile -text
 node-gem/platform/win32msvc/Makefile -text
 node-gem/s_fgl.cpp -text
 node-gem/s_fgl.h -text
+node-gem/s_fgl2.cpp -text
 node-gem/test_ads/TestAds.BAT -text
 node-gem/test_ads/UL_on_Qtz-dat.lst -text
 node-gem/test_ads/UL_on_Qtz-dbr-0-0000.dat -text
@@ -283,6 +285,7 @@ nodearray-gem/platform/win32bcc/Makefile -text
 nodearray-gem/platform/win32msvc/Makefile -text
 nodearray-gem/s_fgl.cpp -text
 nodearray-gem/s_fgl.h -text
+nodearray-gem/s_fgl2.cpp -text
 nodearray-gem/test/CalcColumn-dat.lst -text
 nodearray-gem/test/CalcColumn-dbr-0-0000.dat -text
 nodearray-gem/test/CalcColumn-dbr-0-0001.dat -text
@@ -337,6 +340,7 @@ rockflow-gem/platform/win32msvc/Makefile -text
 rockflow-gem/rockflow-gem-sep.pro -text
 rockflow-gem/s_fgl.cpp -text
 rockflow-gem/s_fgl.h -text
+rockflow-gem/s_fgl2.cpp -text
 rockflow-gem/test_data/CalcColumn-dat.lst -text
 rockflow-gem/test_data/CalcColumn-dbr-0-0000.dat -text
 rockflow-gem/test_data/CalcColumn-dbr-0-0001.dat -text
