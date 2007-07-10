@@ -803,11 +803,11 @@ double TMulti::GX( double LM  )
     double const1= pmp->lowPosNum*10.,
            const2 = pmp->lowPosNum*1000.;
 
-    if( LM<pmp->lowPosNum)     // copy vector Y into X
+    if( LM<pmp->lowPosNum )     // copy vector Y into X
         for(i=0;i<pmp->L;i++)
             pmp->X[i]=pmp->Y[i];
     else  // calculate new values of X
-        for(i=0;i<pmp->L;i++)
+        for(i=0;i<pmp->L;i++ )
         {  // vector pmp->MU - the direction of descent!
             pmp->X[i]=pmp->Y[i]+LM*pmp->MU[i];
             if( pmp->X[i] <  pmp->lowPosNum )

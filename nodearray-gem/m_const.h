@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 871 2007-02-21 14:29:54Z gems $
+// $Id: m_const.h 900 2007-03-21 14:54:15Z gems $
 //
 // Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
 //
@@ -46,26 +46,30 @@ enum solmod_switches { // indexes of keys of model solution
     SM_PUBLIC = 'U',
     // Posible modes calculating of activity coefficients SGM_MODE
     SM_STNGAM = 'S', SM_NOSTGAM = 'N',
-    // This code (one upper-case letter or digit) defines type of mixing
-    //and default method of calculation of mixing properties before and at
-    //IPM iterations.   Possible values: (SPHAS_TYP)
+// This code (one upper-case letter or digit) defines type of mixing
+//    and default method of calculation of mixing properties before and at
+//    IPM iterations.   Possible values: (SPHAS_TYP)
     SM_IDEAL =  'I', // ideal solution or single-component phase;
     SM_REDKIS = 'G', // built-in Guggenheim (Redlich-Kister) binary SS model
                      // (with 3 coeffs)
     SM_MARGB = 'M',  // built-in binary Margules SS (subreg. w. 3 coeff U,P,T )
-    SM_MARGT = 'T',  // built-in ternary Margules SS (reg. w. 3 coeff U,P,T )
-    SM_CGFLUID = 'F', // built-in multicomp. EOS fluid Churakov&Gottschalk 2003
-    SM_RECIP = 'R',  // reciprocal solution (to be done), formerly regular solution
+SM_MARGT = 'T',  // built-in ternary Margules SS (reg. w. 3 coeff U,P,T )
+SM_GUGGENM = 'K', // built-in multicomponent Guggenheim SS model (added by Th.Wagner)
+    SM_CGFLUID = 'F',  // built-in multicomp. EOS fluid Churakov&Gottschalk 2003
+//    SM_RECIP = 'R',  // reciprocal solution (to be done), formerly regular solution
+    SM_REGULAR = 'R',  // regular multicomponent solution model (added by Th.Wagner)
     SM_AQDAV = 'D',  // built-in Davies equation (with 0.3) added KD 25.01.02
     SM_AQDH1 = '1',  // built-in limiting Debye-Hueckel law for aqueous species
     SM_AQDH2 = '2',  // built-in 2-term Debye-Hueckel (Kielland)
     SM_AQDH3 = '3',  // built-in 3-d approximation of Debye-Hueckel
     SM_AQDHH = 'H',  // built-in 3-d approximation of Debye-Hueckel (Helgeson)
-    SM_AQSIT = 'S',  // built-in SIT model for aq activity coeffs
+    SM_AQSIT = 'S',  // built-in SIT model for aq activity coeffs (reserved)
+SM_AQEUQ = 'Q',  // built-in EUNIQUAC model for aqueous activity coeffs (reserved)
     SM_PRFLUID = 'P', // Peng-Robinson-Stryjek-Vera EOS fluid model (Added by Th.Wagner)
     SM_IONEX = 'E',  // ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A', // models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U', // user-defined mixing model (in Phase record)
+    SM_VANLAAR = 'V', // Generalized Van Laar solution model
     SM_OTHER = 'O'   //  other models of non-ideal solutions (reserved)
 };
 

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 871 2007-02-21 14:29:54Z gems $
+// $Id: s_fgl.cpp 895 2007-03-20 15:26:05Z wagner $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
@@ -7,7 +7,7 @@
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
-// and part of the GEMIPM2K standalone code 
+// and part of the GEMIPM2K standalone code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -212,7 +212,13 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
       double X[1]={1.};
       double FugPure[1];
 
-      switch (int(EoSparam[4]))
+		// modification to simplify CG database structure, TW 20/03/2007
+        EoSparPT[0] = EoSparam[0]+EoSparam[4]*(float)exp(T*EoSparam[5]);
+        EoSparPT[1] = EoSparam[1]+EoSparam[6]*(float)exp(T*EoSparam[7]);
+        EoSparPT[2] = EoSparam[2]+EoSparam[8]/((float)T+EoSparam[9]);
+        EoSparPT[3] = EoSparam[3]+EoSparam[10]/((float)T+EoSparam[11]);
+
+      /*switch (int(EoSparam[4]))
       {
        case 0:
         EoSparPT[0]=EoSparam[0];
@@ -235,7 +241,9 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
         default:
 
         return 1;// Error: Wrong type of equation
-      };
+      };*/
+
+
  // returns density!
       ro = CGActivCoefPT( X, EoSparPT, FugPure, 1, P, T );
       if( ro < 0.  )
@@ -1599,10 +1607,11 @@ TPRSVcalc::FugacitySpec( double *fugpure, float *binpar, float *params  )
       }
     }
 
+/*
     for( j=0; j<NComp; j++ )
       for( i=0; i<NComp; i++ )
         KK0ij[j][i] = (double)binpar[j*NComp+i];
-
+*/
 	// retrieve properties of the mixture
 	iRet = MixParam( amix, bmix);
 	iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix);
@@ -1807,10 +1816,30 @@ TPRSVcalc::PRFugacityPT( double P, double Tk, float *EoSparam, double *Eos2parPT
  // Called from IPM-Gamma() where activity coefficients are computed
 int
 TPRSVcalc::PRActivCoefPT( int NComp, double Pbar, double Tk, double *X,
-    double *fugpure, float *binpar, float *param, double *act, double &PhaseVol )
+    double *fugpure, float *binpar, float *param, double *act, double &PhaseVol,
+    int NPar, int NPcoef, int MaxOrd, short *aIPx  )
 {
 
    int iRet;
+   int j, i, ip;
+   int index1, index2;
+
+   if( NPcoef > 0 )
+   {
+      // fill internal array of interaction parameters with standard value
+      for( j=0; j<NComp; j++ )
+        for( i=0; i<NComp; i++ )
+          KK0ij[j][i] = 0.;
+
+      // transfer those interaction parameters that have non-standard value
+      for ( ip=0; ip<NPar; ip++ )
+      {
+         index1 = (int)aIPx[MaxOrd*ip];
+         index2 = (int)aIPx[MaxOrd*ip+1];
+	 KK0ij[index1][index2] = binpar[NPcoef*ip];
+	 KK0ij[index2][index1] = binpar[NPcoef*ip];	// symmetric case
+      }
+    }
 
     GetMoleFract( X );
 

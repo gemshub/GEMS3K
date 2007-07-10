@@ -29,7 +29,7 @@
 
 #include "node.h"
 
-#define nNodes  11 // set here how many nodes you need
+#define nNodes  5 // set here how many nodes you need
 
 int main( int argc, char* argv[] )
  {
@@ -61,7 +61,7 @@ int main( int argc, char* argv[] )
    int nTimes = 100;   // Maximum number of time iteration steps
    double t_start = 0., t_end = 10000., dt = 100., tc = 1.;
 
-   cout << "Start Tnode test: " << ipm_input_file_list_name << " "
+   cout << "Start of gemnode test: " << ipm_input_file_list_name << " "
          << dbr_input_file_name << endl;
    cout << " nNodes = " << nNodes << "  nTimes = " << nTimes
          << "  t_start = " << t_start << " t_end = " << t_end
@@ -149,8 +149,10 @@ int main( int argc, char* argv[] )
        m_bPS+in*nIC*nPS, m_xPA+in*nPS );
 
 //  Uncomment this to test variable pressures and temperatures
-         m_T[in] += in*7;
-         m_P[in] += (in-1)*20;
+//         m_T[in] += in*5;
+//         m_P[in] += (in-1)*20;
+//         m_T[in] += in*7;
+//         m_P[in] += (in-1)*20;
      // Here the file output for the initial conditions can be implemented
    }
 
@@ -184,7 +186,7 @@ int main( int argc, char* argv[] )
   // Here the file output for the initial conditions can be implemented
  }
 
-   cout << "End Initialiation part" << endl;
+   cout << "End of gemnode test initialisation part" << endl;
    clock_t t_start11, t_end11;
    t_start11 = clock();
 
@@ -265,8 +267,8 @@ int main( int argc, char* argv[] )
   t_end11 = clock();
   double dtime = ( t_end11- t_start11 );
   double clc_sec = CLOCKS_PER_SEC;
-  cout <<  "Total time of calculation  s; " <<  (dtime)/clc_sec << endl;
-  cout << " End Coupled Modelling part" << endl;
+  cout <<  "Total time of calculation, s: " <<  (dtime)/clc_sec << endl;
+  cout << " gemnode test ";
 
   // (3) ----------------------------------------------
   // Calculations finished - t_end reached
@@ -288,7 +290,7 @@ int main( int argc, char* argv[] )
   // deleting GEMIPM and data exchange memory structures
   delete node;
 
-  cout << endl << "Finished Ok" << endl;
+  cout << "has finished Ok" << endl;
 
   return 0;
 }

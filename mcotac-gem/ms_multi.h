@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 874 2007-02-22 08:03:01Z gems $
+// $Id: ms_multi.h 888 2007-03-15 13:08:58Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -314,7 +314,7 @@ class TMulti
                             short car_l[], int car_c, short Cjs );
     void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
     void SolModLoad();
-    float *PackSITcoeffs( int k, int JB, int JE, int jb, int je, int nCxA );
+//    float *PackSITcoeffs( int k, int JB, int JE, int jb, int je, int nCxA );
     gstring PressSolMod( int nP );
     char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
     int find_icnum( char *name, int LNmode );
@@ -382,16 +382,19 @@ class TMulti
     void DebyeHueckel2Kjel( int jb, int je, int jpb, int jdb, int k );
     void DebyeHueckel1LL( int jb, int je, int k );
     void Davies03temp( int jb, int je, int k );
-    void SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k );
+    void SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k, int ipb );
 // fluid mixtures
     void ChurakovFluid( int jb, int je, int jpb, int jdb, int k );
     void CGofPureGases( int jb, int je, int jpb, int jdb, int k );
-    void PRSVFluid( int jb, int je, int jpb, int jdb, int k );
-    void PRSVofPureGases( int jb, int je, int jpb, int jdb, int k );
+    void PRSVFluid( int jb, int je, int jpb, int jdb, int k, int ipb );
+    void PRSVofPureGases( int jb, int je, int jpb, int jdb, int k, int ipb );
 // condensed mixtures
     void RedlichKister( int jb, int je, int jpb, int jdb, int k );
     void MargulesBinary( int jb, int je, int jpb, int jdb, int k );
     void MargulesTernary( int jb, int je, int jpb, int jdb, int k );
+// Generic solution model calls
+void SolModParPT ( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
+void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
 
 // ipm_main.cpp - numerical part of GEM-IPM2
     void MultiCalcMain();
@@ -448,7 +451,7 @@ public:
     void dyn_kill( int i=0);
     void dyn_new( int i=0);
     void set_def( int i=0);
-    void sit_dyn_new();
+//    void sit_dyn_new();
 
     // ms_muleq.cpp
     void packData();

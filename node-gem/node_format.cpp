@@ -112,7 +112,7 @@ outField DataCH_dynamic_fields[25] =  {
    { "ICmm",  1, 0 },
    { "DCNL",  1, 0 },
    { "ccDC",  1, 0 },
-   { "DCmm",  1, 0 },
+   { "DCmm",  0, 0 },   // Changed to non-obligatory by DK on 3.05.2007
    { "PHNL",  1, 0 },
    { "ccPH",  1, 0 },
    { "nDCinPH",  1, 0 },
@@ -928,6 +928,7 @@ void TNode::datach_realloc()
   CSD->A = new float[CSD->nIC*CSD->nDC];
   CSD->ICmm = new double[CSD->nIC];
   CSD->DCmm = new double[CSD->nDC];
+CSD->DCmm[0] = 0.0;   // Added by DK on 03.03.2007 
 
   CSD->TCval = new float[CSD->nTp];
   CSD->Pval = new float[CSD->nPp];

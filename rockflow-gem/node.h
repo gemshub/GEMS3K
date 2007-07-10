@@ -184,6 +184,26 @@ static TNode* na;   // static pointer to this class
     double *p_aPH  // Specific surface areas of phases (m2/g)   +       -      -
    );
 
+// Overload - uses also xDC vector for bulk composition input to GEM
+// added by DK on 09.07.2007
+void GEM_from_MT(
+ short  p_NodeHandle,   // Node identification handle
+ short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                  //                                     GEM input output  FMT control
+ double p_TC,     // Temperature T, C                        +       -      -
+ double p_P,      // Pressure P, bar                         +       -      -
+ double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
+ double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
+ double *p_bIC,    // bulk mole amounts of IC [nICb]         +       -      -
+ double *p_dul,   // upper kinetic restrictions [nDCb]       +       -      -
+ double *p_dll,   // lower kinetic restrictions [nDCb]       +       -      -
+ double *p_aPH,  // Specific surface areas of phases (m2/g)   +       -      -
+ double *p_xDC  // Optional: mole amounts of DCs [nDCb] - will be convoluted
+                 // and added to the bIC GEM input vector
+);
+
+
+
 #endif
 
 // (3 alternative)

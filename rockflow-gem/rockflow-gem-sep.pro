@@ -4,7 +4,7 @@
 TEMPLATE	= app
 LANGUAGE        = C++
 TARGET		= rockflow_gem
-VERSION         = 2.1.1
+VERSION         = 2.2.0
 
 CONFIG		-= qt
 CONFIG		+=  warn_on debug windows
@@ -75,6 +75,7 @@ OBJECTS_DIR       = obj
         SOURCES	  +=  $$LIBS_CPP/gstring.cpp  \
                       $$LIBS_CPP/gdatastream.cpp  \
                     $$MODS_CPP/s_fgl.cpp \
+                    $$MODS_CPP/s_fgl2.cpp \
                     $$SUBMOD_CPP/node.cpp \
                     $$SUBMOD_CPP/node_format.cpp \
                     $$SUBMOD_CPP/ms_multi_file.cpp \

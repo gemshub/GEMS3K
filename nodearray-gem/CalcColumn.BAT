@@ -1,3 +1,3 @@
 echo off
 rem Normal runs
-gemipm2k.exe test/CalcColumn-dat.lst test/testW.dat > test.out
+gemipm2k.exe test/CalcColumn-dat.lst test/testA.dat > test.out

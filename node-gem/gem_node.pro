@@ -4,7 +4,7 @@
 TEMPLATE	= app
 LANGUAGE        = C++
 TARGET		= gemnode
-VERSION         = 2.1.1
+VERSION         = 2.2.0
 
 CONFIG		-= qt
 CONFIG		+=  warn_on debug windows
@@ -28,21 +28,21 @@ LIBS_CPP       =  ../../vizor/libs
 KERNEL_CPP     =  ../../vizor/kernel
 MODS_CPP       =  ../
 SUBMOD_CPP     =  ../submod
-NUMERICS_CPP     =  ../numerics
+NUMERICS_CPP   =  ../numerics
 GEMIPM_CPP     =  ../gemipm
 
 #LIBS_CPP       =  .
 #KERNEL_CPP     =  .
 #MODS_CPP       =  .
 #SUBMOD_CPP     =  .
-#NUMERICS_CPP     =  .
+#NUMERICS_CPP   =  .
 #GEMIPM_CPP     =  .
 
 KERNEL_H     =  $$KERNEL_CPP
 LIBS_H       =  $$LIBS_CPP
 MODS_H       =  $$MODS_CPP
 SUBMOD_H     =  $$SUBMOD_CPP
-NUMERICS_H     =  $$NUMERICS_CPP
+NUMERICS_H   =  $$NUMERICS_CPP
 GEMIPM_H     =  $$GEMIPM_CPP
 
 
@@ -75,6 +75,7 @@ OBJECTS_DIR       = obj
         SOURCES	  +=  $$LIBS_CPP/gstring.cpp  \
                       $$LIBS_CPP/gdatastream.cpp  \
                     $$MODS_CPP/s_fgl.cpp \
+		    $$MODS_CPP/s_fgl2.cpp \
                     $$SUBMOD_CPP/node.cpp \
                     $$SUBMOD_CPP/node_format.cpp \
                     $$SUBMOD_CPP/ms_multi_file.cpp \

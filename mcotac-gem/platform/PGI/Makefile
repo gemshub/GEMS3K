@@ -1,11 +1,11 @@
 mcotac1dgem.x: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
-       gstring.o gdatastream.o s_fgl.o node.o node_format.o ms_multi_file.o \
+       gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o f_gem_node.o ms_param.o num_methods.o
 
 	 pgf90 -o mcotac1dgem.x -lpgc -lrt -lstd -lC  mcotac1d.o datio.o \
                  erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
-       gstring.o gdatastream.o s_fgl.o node.o node_format.o ms_multi_file.o \
+       gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o f_gem_node.o ms_param.o num_methods.o
 
@@ -43,6 +43,13 @@ s_fgl.o: s_fgl.cpp s_fgl.h \
 		gstring.h \
 		array.h
 	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix s_fgl.cpp
+s_fgl2.o: s_fgl2.cpp s_fgl.h \
+		m_const.h \
+		verror.h \
+		v_user.h \
+		gstring.h \
+		array.h
+	pgCC  -g -c -O3 -DIPMGEMPLUGIN -D__unix s_fgl2.cpp
 node.o: node.cpp node.h \
 		gdatastream.h \
 		m_param.h \

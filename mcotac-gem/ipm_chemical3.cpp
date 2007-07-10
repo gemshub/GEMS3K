@@ -349,6 +349,7 @@ void TMulti::GammaCalc( int LinkMode  )
             jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];
             jdb = jde;
             jde += pmp->LsMdc[k]*pmp->L1[k];
+// jpx
 
             sMod = pmp->sMod[k];
             if( sMod[SGM_MODE] == SM_IDEAL )
@@ -356,6 +357,13 @@ void TMulti::GammaCalc( int LinkMode  )
 
             switch( pmp->PHC[k] )
             {
+               case PH_LIQUID:
+               case PH_SINCOND:
+               case PH_SINDIS:
+               case PH_HCARBL:
+               case PH_SIMELT:
+                       SolModParPT( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] ); // new solution models (TW, DK 2007)
+                    break;
                case PH_GASMIX:
                case PH_PLASMA:
                case PH_FLUID:
@@ -365,7 +373,7 @@ void TMulti::GammaCalc( int LinkMode  )
                        break;
                      }
                      if( sMod[SPHAS_TYP] == SM_PRFLUID )
-                       PRSVofPureGases( jb, je, jpb, jdb, k ); // PRSV pure gas
+                       PRSVofPureGases( jb, je, jpb, jdb, k, ipb ); // PRSV pure gas
                      break;
                default: break;
             }
@@ -431,6 +439,7 @@ void TMulti::GammaCalc( int LinkMode  )
         jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];  // Changed 07.12.2006  by KD
         jdb = jde;
         jde += pmp->LsMdc[k]*pmp->L1[k];
+//  jpx
 
         switch( pmp->PHC[k] )
         {  // calculating activity coefficients using built-in functions
@@ -456,7 +465,7 @@ void TMulti::GammaCalc( int LinkMode  )
                        Davies03temp( jb, je, k );
                           break;
                   case SM_AQSIT:  // SIT - under construction
-                       SIT_aqac_PSI( jb, je, jpb, jdb, k );
+                       SIT_aqac_PSI( jb, je, jpb, jdb, k, ipb );
                           break;
                   default:
                           break;
@@ -476,7 +485,7 @@ void TMulti::GammaCalc( int LinkMode  )
                     if( sMod[SPHAS_TYP] == SM_CGFLUID && pmp->XF[k] > pa->p.PhMin )
                        ChurakovFluid( jb, je, jpb, jdb, k );
                     if( sMod[SPHAS_TYP] == SM_PRFLUID && pmp->XF[k] > pa->p.PhMin )
-                       PRSVFluid( jb, je, jpb, jdb, k );
+                       PRSVFluid( jb, je, jpb, jdb, k, ipb );
                        // Added by Th.Wagner and DK on 20.07.06
                 }
                 goto END_LOOP;             }
@@ -492,16 +501,24 @@ void TMulti::GammaCalc( int LinkMode  )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
-                  case SM_REDKIS:
+                  case SM_REDKIS:  // left for compatibility with old projects
                        RedlichKister( jb, je, jpb, jdb, k );
                           break;
-                  case SM_MARGB:
+                  case SM_MARGB:   // left for compatibility with old projects
                        MargulesBinary( jb, je, jpb, jdb, k );
                           break;
-                  case SM_MARGT:
+                  case SM_MARGT:   // left for compatibility with old projects
                        MargulesTernary( jb, je, jpb, jdb, k );
                           break;
-                  case SM_RECIP: // under construction
+                  case SM_GUGGENM: // Redlich-Kister generalized TW 2007
+                       SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+                          break;
+                  case SM_VANLAAR: // VanLaar for solid solutions TW 2007
+                       SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+                          break;
+                  case SM_REGULAR: // Regular multicomponent TW 2007  // formerly SM_RECIP
+                       SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+                          break;
                   default:
                           break;
                 }
@@ -629,10 +646,12 @@ END_LOOP:
 // SIT NEA PSI (not yet official)
 //
 void
-TMulti::SIT_aqac_PSI( int jb, int je, int, int, int )
+TMulti::SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k, int ipb )
 {
 
-    int j, icat, ian, ic, ia;
+    int j, icat, ian, ic, ia,  index1, index2, ip, NComp, NPar, NPcoef, MaxOrd;
+    short *aIPx;
+    float *aIPc, *aDCc;
     double T, A, B, I, sqI, bgi=0, Z2, lgGam, SumSIT;
 //    float nPolicy;
 
@@ -649,6 +668,20 @@ TMulti::SIT_aqac_PSI( int jb, int je, int, int, int )
     ErrorIf( fabs(A) < 1e-9 || fabs(B) < 1e-9, "SIT",
         "Error: A,B were not calculated - no values of RoW and EpsW !" );
 
+NComp = pmp->L1[k];          // Number of components in the phase
+NPar = pmp->LsMod[k*3];      // Number of interaction parameters
+NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
+
+// These pointers provide direct access to parts of MULTI arrays related to this phase!
+aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
+                          // -> NPar x MaxOrd   added 07.12.2006   KD
+aIPc = pmp->PMc+jpb;    // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+// aWx = pmp->Wx+jb;       // End member mole fractions
+// alnGam = pmp->lnGam+jb; // End member ln activity coeffs
+
+
     // Calculation of EDH equation
 //  bgi = bg;
     ian= -1;
@@ -657,17 +690,44 @@ TMulti::SIT_aqac_PSI( int jb, int je, int, int, int )
     {
 // Determining the index of cation or anion
       if( pmp->EZ[j] < 0 )
-          ian++;
+          ian = j-jb; // ian++;
       else if( pmp->EZ[j] > 0 )
-          icat++;
+          icat = j-jb; // icat++;
       else ;
 
       if( pmp->EZ[j] )
-      {       // Charged species : calculation of the DH part
+      {    // Charged species : calculation of the DH part
            Z2 = pmp->EZ[j]*pmp->EZ[j];
            lgGam = ( -A * sqI * Z2 ) / ( 1. + 1.5 * sqI );  // B * 4.562 = 1.5 at 25 C
-              // Calculation of SIT sums
+
+// Calculation of SIT sum - new variant
            SumSIT = 0.;
+           if( pmp->EZ[j] > 0 )  // cation
+           {
+              for( ip=0; ip<NPar; ip++ )
+              {
+                 index1 = aIPx[ip*MaxOrd];
+                 if( index1 != icat )
+                    continue;
+                 index2 = aIPx[ip*MaxOrd+1];
+                 SumSIT += (double)aIPc[ip*NPcoef]   // epsilon
+                        * I * pmp->Y_m[jb+index2];
+              }
+           }
+           else {   // anion
+              for( ip=0; ip<NPar; ip++ )
+              {
+                 index2 = aIPx[ip*MaxOrd+1];
+                 if( index2 != ian )
+                    continue;
+                 index1 = aIPx[ip*MaxOrd];  // index of cation
+                 SumSIT += (double)aIPc[ip*NPcoef]  // epsilon
+                            * I * pmp->Y_m[jb + index1];
+              }
+           }
+           lgGam += SumSIT;
+              // Calculation of SIT sums - old variant
+/*           SumSIT = 0.;
            if( pmp->EZ[j] > 0 )
            {       // this is a cation
               for( ia=0; ia<pmp->sitNan; ia++ )
@@ -681,9 +741,9 @@ TMulti::SIT_aqac_PSI( int jb, int je, int, int, int )
                         * I * pmp->Y_m[pmp->sitXcat[ic]];
               lgGam += SumSIT;
            }
+*/
       }
-      else
-      { // Neutral species
+      else { // Neutral species
          if( pmp->DCC[j] != DC_AQ_SOLVENT ) // common salting-out coefficient ??
                lgGam = bgi * I;
             else // water-solvent - a0 - osmotic coefficient
@@ -691,19 +751,21 @@ TMulti::SIT_aqac_PSI( int jb, int je, int, int, int )
       }
       pmp->lnGam[j] = lgGam * lg_to_ln;
     } // j
-    if( ++icat != pmp->sitNcat || ++ian != pmp->sitNan )
-       Error( "SITgamma",
-          "Inconsistent numbers of cations and anions in gamma calculation" );
+//    if( ++icat != pmp->sitNcat || ++ian != pmp->sitNan )
+//       Error( "SITgamma",
+//          "Inconsistent numbers of cations and anions in gamma calculation" );
 }
 
 //----------------------------------------------------------------------------
 // Extended Debye-Hueckel (EDH) model with a common ion-size parameter
 //
 void
-TMulti::DebyeHueckel3Hel( int jb, int je, int jpb, int, int )
+TMulti::DebyeHueckel3Hel( int jb, int je, int jpb, int, int k )
 {
     int j;
     double T, A, B, a0, a0c, I, sqI, bg, bgi, Z2, lgGam; //  molt;
+    double Xw, Xaq, Nw, molT, Lgam, lnwxWat, lnGam;
+    double Lam, SigTerm, Phi, lnActWat, ActWat, gamWat;
     float nPolicy;
 
     I= pmp->IC;
@@ -713,11 +775,16 @@ TMulti::DebyeHueckel3Hel( int jb, int je, int jpb, int, int )
     A = (double)pmp->PMc[jpb+0];
     B = (double)pmp->PMc[jpb+1];
     bg = pmp->FitVar[0];   // Changed 07.06.05 for T,P-dep. b_gamma in DHH
-//    bg = pmp->PMc[jpb+5];
+//    bg = pmp->PMc[jpb+5];     // May be inappropriate for GEMIPM2K !
     a0c = (double)pmp->PMc[jpb+6];
     nPolicy = pmp->PMc[jpb+7];
 
+    Xaq = pmp->XF[k]; // Mole amount of the whole aqueous phase
+    Xw = pmp->XFA[k]; // Mole amount of water-solvent
+    Nw = 1000./18.01528;
+    molT = (Xaq-Xw)/(Nw/Xw);
 //    molt = ( pmp->XF[0]-pmp->XFA[0] )*1000./18.01528/pmp->XFA[0]; // tot.molality
+    lnwxWat = log(Xw/Xaq);
     sqI = sqrt( I );
 
 #ifndef IPMGEMPLUGIN
@@ -744,32 +811,50 @@ TMulti::DebyeHueckel3Hel( int jb, int je, int jpb, int, int )
     ErrorIf( fabs(A) < 1e-9 || fabs(B) < 1e-9, "DebyeHueckel3Hel",
         "Error: A,B were not calculated - no values of RoW and EpsW !" );
     // Calculation of the EDH equation
-//  bgi = bg;
+    bgi = bg; // Common third parameter
+    a0 = a0c; // Common ion-size parameter
     for( j=jb; j<je; j++ )
     {
-        bgi = bg; // Common third parameter
-        a0 = a0c; // Common ion-size parameter
+//        bgi = bg; // Common third parameter
+//        a0 = a0c; // Common ion-size parameter
         if( pmp->EZ[j] )
         { // Charged species
             Z2 = pmp->EZ[j]*pmp->EZ[j];
             lgGam = ( -A * sqI * Z2 ) / ( 1. + B * a0 * sqI ) + bgi * I ;
+            pmp->lnGam[j] = lgGam * lg_to_ln;
+            continue;
         }
-        else
-        { // Neutral species
-            if( nPolicy >= 0.0 )
-            {
-               if( pmp->DCC[j] != DC_AQ_SOLVENT ) // salting-out coefficient
-                   lgGam = bgi * I;
-               else // water-solvent - a0 - osmotic coefficient
-                   lgGam = 0.;
-//                 lgGam = a0 * molt; // corrected: instead of I - tot.molality
-            }
-            else { // nPolicy < 0 - all gamma = 1 for neutral species
-               lgGam = 0.;
-            }
+        // Neutral species
+        // <= -2 - gamma of both neutral aqueous species and water = 1.0
+        // -1 - gamma of neutral species = 1.0, H2O activity coef. calculated
+        // 0 - gamma of neutral species from salting out coefficient,
+        //       H2O activity coefficient calculated
+        //  >= 1 gamma of neutral species from salting out coefficient,
+        //       H2O activity coefficient set to 1.0
+        lgGam = 0.0;
+        if( pmp->DCC[j] != DC_AQ_SOLVENT )
+        {  // Calculation of gamma for neutral species except water
+           if( nPolicy > -0.000001 )
+  	       lgGam = bgi * I;
+           pmp->lnGam[j] = lgGam * lg_to_ln;
+           continue;
         }
-        pmp->lnGam[j] = lgGam * lg_to_ln;
+        // Water-solvent
+        lnGam = 0.0;  Lgam = 0.;
+        if( nPolicy > -1.000001 && nPolicy < 0.000001 )
+        {
+       	   // Calculate activity coefficient of water solvent
+	   // Lgam = -log10(1.+0.0180153*molT); // large gamma added (Helgeson 1981)
+	   Lam = 1. + a0*B*sqI;
+	   SigTerm = 3./(pow(a0,3.)*pow(B,3.)*pow(I,(3./2.)))*(Lam-1./Lam-2*log(Lam));
+	   Phi = -2.3025851*(A*sqI*SigTerm/3. + Lgam/(0.0180153*2.*I) - bgi*I/2.);
+	   lnActWat = -Phi*molT/Nw;         //	   ActWat = exp(lnActWat);
+           lnGam = lnActWat - lnwxWat;      //	   gamWat = ActWat/wxWat;
+//         lgGam = a0 * molt; // corrected: instead of I - tot.molality
+        }
+        pmp->lnGam[j] = lnGam;
     } // j
+    return;
 }
 
 // Extended Debye-Hueckel eq. with Kielland ion-size and optional salting-out
@@ -1041,7 +1126,7 @@ void TMulti::Davies03temp( int jb, int je, int )
 // Added by D.Kulik on 15.02.2007
 //
 void
-TMulti::CGofPureGases( int jb, int je, int jpb, int jdb, int k )
+TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
 {
     double T, P, Fugacity = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
     float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 } ;
@@ -1146,12 +1231,12 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
 // Added by D.Kulik on 15.02.2007
 //
 void
-TMulti::PRSVofPureGases( int jb, int je, int jpb, int jdb, int k )
+TMulti::PRSVofPureGases( int jb, int je, int, int jdb, int, int )
 {
     double /* *FugPure, */ Fugcoeff, Volume, DeltaH, DeltaS;
     float *Coeff; //  *BinPar;
     double Eos2parPT[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
-    int j, jj, jdc, iRet, NComp, retCode = 0;
+    int j, jdc, NComp, retCode = 0;
 
     NComp = 1; // = pmp->L1[k];
 
@@ -1200,11 +1285,12 @@ TMulti::PRSVofPureGases( int jb, int je, int jpb, int jdb, int k )
 // Added by Th.Wagner and D.Kulik on 19.07.2006, changed by DK on 15.02.2007
 //
 void
-TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k )
+TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k, int ipb )
 {
     double *ActCoefs, PhVol, *FugPure;
     float *EoSparam, *BinPar;
-    int j, jj, iRet, NComp;
+    int j, jj, iRet, NComp, NPar, NPcoef, MaxOrd;
+    short *aIPx;
 
     NComp = pmp->L1[k];
 
@@ -1215,6 +1301,10 @@ TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k )
 //    FugPure = (double*)malloc( NComp*sizeof(double) );
     FugPure = pmp->Pparc + jb;
     BinPar = pmp->PMc+jpb;
+    NPar = pmp->LsMod[k*3];      // Number of non-zero interaction parameters
+    NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+    MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
+    aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters
 
     for( j=jb; j<je; j++)
        pmp->Wx[j] = pmp->X[j]/pmp->XF[k];
@@ -1226,7 +1316,7 @@ TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k )
 //    }
 
     iRet = aPRSV.PRActivCoefPT( NComp, pmp->Pc, pmp->Tc, pmp->Wx+jb, FugPure,
-        BinPar, EoSparam, ActCoefs, PhVol );
+        BinPar, EoSparam, ActCoefs, PhVol, NPar, NPcoef, MaxOrd, aIPx );
 
     if ( iRet )
     {
@@ -1387,5 +1477,98 @@ pmp->FVOL[k] += Vex*10.;
 //  Hex = (WU12+P*WV12)*X1*X2 + (WU13+P*WV13)*X1*X3
 //         + (WU23+P*WV23)*X2*X3 + (WU123+P*WV123)*X1*X2*X3;
 }
+
+
+// ------------------------------------------------------------------------
+// Wrapper calls for VanLaar model (see s_fgl.h and s_fgl2.cpp)
+// Uses the TSolMod class by Th.Wagner and D.Kulik
+
+void
+TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
+{
+    int NComp, NPar, NPcoef, MaxOrd, NP_DC;
+    float *aIPc, *aDCc;
+    short * aIPx;
+
+    NComp = pmp->L1[k];          // Number of components in the phase
+    NPar = pmp->LsMod[k*3];      // Number of interaction parameters
+    NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+    MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
+    NP_DC = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
+    aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
+                              // -> NPar x MaxOrd   added 07.12.2006   KD
+    aIPc = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+    aDCc = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+
+    TSolMod aSM( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
+       aIPx, aIPc, aDCc, NULL, NULL );
+// Extended constructor is required, also to load params and coeffs
+
+   // calculate P-T dependence of interaction parameters
+    switch( ModCode )
+    {
+        case SM_VANLAAR:
+             aSM.VanLaarPT();
+             break;
+        case SM_REGULAR:
+             aSM.RegularPT();
+             break;
+        case SM_GUGGENM:
+        	 aSM.RedlichKisterPT();
+        	 break;
+        default:
+             break;
+    }
+}
+
+void
+TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
+            char ModCode )
+{
+
+    int NComp, NPar, NPcoef, MaxOrd, NP_DC;
+    float *aIPc, *aDCc;
+    double *aWx, *alnGam;
+    short * aIPx;
+    double Gex=0.0, Vex=0.0, Hex=0.0, Sex=0.0, CPex=0.0;
+
+    NComp = pmp->L1[k];          // Number of components in the phase
+    NPar = pmp->LsMod[k*3];      // Number of interaction parameters
+    NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+    MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
+    NP_DC = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase[FIs]
+
+// These pointers provide direct access to parts of MULTI arrays related to this phase!
+    aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
+                              // -> NPar x MaxOrd   added 07.12.2006   KD
+    aIPc = pmp->PMc+jpb;    // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+    aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+    aWx = pmp->Wx+jb;       // End member mole fractions
+    alnGam = pmp->lnGam+jb; // End member ln activity coeffs
+
+    TSolMod aSM( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
+       aIPx, aIPc, aDCc, aWx, alnGam );
+    // Extended constructor to connect to params, coeffs, and mole fractions
+
+    switch( ModCode )
+    {
+        case SM_VANLAAR:
+             aSM.VanLaarMixMod( Gex, Vex, Hex, Sex, CPex );
+             break;
+        case SM_REGULAR:
+             aSM.RegularMixMod( Gex, Vex, Hex, Sex, CPex );
+             break;
+        case SM_GUGGENM:
+        	 aSM.RedlichKisterMixMod( Gex, Vex, Hex, Sex, CPex );
+        	 break;
+        default: // catch error here
+              break;
+    }
+    // To add handling of excess properties for the phase
+    // Gex, Vex, Hex, Sex, CPex
+
+}
+
+
 
 //--------------------- End of ipm_chemical3.cpp ---------------------------

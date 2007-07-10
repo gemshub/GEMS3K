@@ -4,7 +4,7 @@
 TEMPLATE	= app
 LANGUAGE        = C++
 TARGET		= gemipm2k
-VERSION         = 2.1.1
+VERSION         = 2.2.0
 
 CONFIG		-= qt
 CONFIG		+=  warn_on debug windows
@@ -77,6 +77,7 @@ OBJECTS_DIR       = obj
                       $$LIBS_CPP/gdatastream.cpp  \
                     $$NUMERICS_CPP/num_methods.cpp \
                     $$MODS_CPP/s_fgl.cpp \
+                    $$MODS_CPP/s_fgl2.cpp \
                     $$MODS_CPP/m_gem2mtt.cpp \
                     $$SUBMOD_CPP/nodearray.cpp \
                     $$SUBMOD_CPP/node.cpp \

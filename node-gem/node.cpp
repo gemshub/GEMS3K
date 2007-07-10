@@ -1250,8 +1250,64 @@ void TNode::GEM_to_MT(
     p_bPS[ii] = CNode->bPS[ii];
 }
 
-#endif
+// Overloaded variant - takes input to bIC vector also from the speciation
+//     vector xDC.     Added by DK on 09.07.2007
+// calculation mode: passing input GEM data changed on previous FMT iteration
+//                   into the work DATABR structure
+void TNode::GEM_from_MT(
+   short  p_NodeHandle,   // Node identification handle
+   short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                    //                                     GEM input output  FMT control
+   double p_TC,      // Temperature T, K                         +       -      -
+   double p_P,      // Pressure P, bar                          +       -      -
+   double p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
+   double p_Ms,     // Mass of reactive subsystem, kg           -       -      +
+   double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
+   double *p_dul,   // upper kinetic restrictions [nDCb]        +       -      -
+   double *p_dll,   // lower kinetic restrictions [nDCb]        +       -      -
+   double *p_aPH,  // Specific surface areas of phases (m2/g)    +       -      -
+   double *p_xDC  // Optional: mole amounts of DCs [nDCb] - will be convoluted
+                    // and added to the bIC GEM input vector
+   )
+{
+  int ii;
+  bool useSimplex = false;
 
+  CNode->NodeHandle = p_NodeHandle;
+  CNode->NodeStatusCH = p_NodeStatusCH;
+  CNode->TC = p_TC;
+  CNode->P = p_P;
+  CNode->Vs = p_Vs;
+  CNode->Ms = p_Ms;
+// Checking if no-simplex IA is Ok
+   for( ii=0; ii<CSD->nICb; ii++ )
+   {
+     CNode->bIC[ii] = p_bIC[ii];
+   }
+   for( ii=0; ii<CSD->nDCb; ii++ )
+   {
+     CNode->dul[ii] = p_dul[ii];
+     CNode->dll[ii] = p_dll[ii];
+   }
+    if( CSD->nAalp >0 )
+     for( ii=0; ii<CSD->nPHb; ii++ )
+         CNode->aPH[ii] = p_aPH[ii];
+   if( useSimplex && CNode->NodeStatusCH == NEED_GEM_PIA )
+     CNode->NodeStatusCH = NEED_GEM_AIA;
+   // Switch only if PIA is ordered, leave if simplex is ordered (KD)
+
+   // Optional part - convolution of xDC vector into bIC vector
+   if( p_xDC )
+   {  int jj;
+      // Correction of bIC vector by convoluting the amounts of DCs
+      for( jj=0; jj<CSD->nDCb; jj++ )
+        if( p_xDC[jj] )
+          for( ii=0; ii<CSD->nICb; ii++ )
+            CNode->bIC[ii] += p_xDC[jj] * nodeCH_A( jj, ii );
+   }
+}
+
+#endif
 //-----------------------End of node.cpp--------------------------
 
 
