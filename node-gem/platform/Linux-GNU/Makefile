@@ -84,6 +84,7 @@ SOURCES = gstring.cpp \
 OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
 		obj/s_fgl.o \
+		obj/s_fgl2.o \
 		obj/node.o \
 		obj/node_format.o \
 		obj/ms_multi_file.o \
@@ -185,6 +186,14 @@ obj/s_fgl.o: s_fgl.cpp s_fgl.h \
 		gstring.h \
 		array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl.o s_fgl.cpp
+
+obj/s_fgl2.o: s_fgl2.cpp s_fgl.h \
+		m_const.h \
+		verror.h \
+		v_user.h \
+		gstring.h \
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl2.o s_fgl2.cpp
 
 obj/node.o: node.cpp node.h \
 		gdatastream.h \
