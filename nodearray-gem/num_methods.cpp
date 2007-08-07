@@ -29,10 +29,10 @@
 //  y[N] - discrete values of argument over rows (ascending order)
 //  x[M] - discrete values of arguments over columns (ascending order)
 //  d[N][M] - discrete values of a function of x and y arguments
+//  yoi - row (y) argument of interest ( y[0] <= yi <= y[N-1] )
 //  xoi - column (x) argument of interest ( x[0] <= xi <= x[M-1] )
-//  yoi - row (y) argument of interest  ( y[0] <= yi <= y[N-1] )
-//  N - number of rows in y array;
-//  M - number of columns in y array.
+//  M - number of rows in y array
+//  N - number of columns in y array
 //  pp  -level of interpolation ( default 1)
 //  Function returns an interpolated value of d(yoi,xoi) or error if
 //  yoi or xoi are out of range
