@@ -909,7 +909,7 @@ TMulti::DebyeHueckel2Kjel( int jb, int je, int jpb, int jdb, int k )
     for( j=jb; j<je; j++ )
     {
         a0 = (double)(pmp->DMc[jdb+j*pmp->LsMdc[k]]);
-        if( pmp->EZ[j] )
+        if( pmp->EZ[j] && ( a0 < -1.000001 || a0 > -0.999999 ) ) // bugfix 26.07.07 DK
         { // Charged species
             Z2 = pmp->EZ[j]*pmp->EZ[j];
             lgGam = ( -A * sqI * Z2 ) / ( 1. + B * a0 * sqI ); // + bgi * I ;
@@ -1044,7 +1044,7 @@ void TMulti::DebyeHueckel3Karp( int jb, int je, int jpb, int jdb, int k )
 //            if( !bgi )
 //                bgi = bg;
 //        }
-        if( pmp->EZ[j] )
+        if( pmp->EZ[j] && ( a0 < -1.000001 || a0 > -0.999999 ) )
         { // Charged species
             Z2 = pmp->EZ[j]*pmp->EZ[j];
             lgGam = ( -A * sqI * Z2 ) / ( 1. + B * a0 * sqI ) + bgi * I ;
