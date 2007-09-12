@@ -62,7 +62,6 @@ mEFD:
      }
 
     eRet = EnterFeasibleDomain( );
-
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
     pVisor->Update(false);
@@ -166,8 +165,9 @@ STEP_POINT("After FIA");
        Error( "E08IPM PhaseSelect(): "," Insertion of phases was incomplete!");
 
   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
-
 #ifndef IPMGEMPLUGIN
+pmp->t_end = clock();
+pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
 // STEPWISE (4) Stop point after PhaseSelect()
 STEP_POINT("PhaseSelect");
 #ifndef Use_mt_mode
@@ -216,7 +216,7 @@ pVisor->Update( false );
                  }
                 else
                  Error("E10IPM IPM-main(): " ,
-                 "Inconsistent GEM solution: imprecise mass balance\n for some major independent components: " );
+"Inconsistent GEM solution: imprecise mass balance\n for some major independent components: " );
               }
             }
           } // end of i loop
@@ -224,7 +224,9 @@ pVisor->Update( false );
    }
    for( i=0; i<pmp->L; i++)
       pmp->G[i] = pmp->G0[i];
-   // Normal return after successfull improvement of mass balance precision
+   // Normal return after successful improvement of the mass balance precision
+pmp->t_end = clock();   // Fix pure runtime
+pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
 }
 
 //Call for IPM iteration sequence

@@ -88,13 +88,19 @@ TProfil::TProfil( TMulti* amulti )
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
-void TProfil::calcMulti()
+double TProfil::calcMulti()
 {
+  pmp->t_start = clock();     // Added 11.09.2007 by DK to check pure runtime
+  pmp->t_end = pmp->t_start;
+  pmp->t_elap_sec = 0.0;
     multi->MultiCalcInit( 0 );
     if( multi->AutoInitialApprox() == false )
     {
         multi->MultiCalcIterations();
     }
+ pmp->t_end = clock();
+ pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+ return pmp->t_elap_sec;
 }
 
 void TProfil::outMulti( GemDataStream& ff, gstring& path  )

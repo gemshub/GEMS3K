@@ -90,9 +90,11 @@ bool  TNode::check_TP( double& Tc, double& P )
 //   Function returns: NodeStatusCH code from DATABR structure
 //   ( OK; GEMIPM2K calculation error; system error )
 //
-int  TNode::GEM_run()
+int TNode::GEM_run()
 {
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
+  CalcTime = 0.0;
+//
   try
   {
 // f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
@@ -104,7 +106,7 @@ int  TNode::GEM_run()
 // set up Mode
 //   CNode->NodeStatusCH = (short)Mode;
 // GEM IPM calculation of equilibrium state in MULTI
-    TProfil::pm->calcMulti();
+   CalcTime = TProfil::pm->calcMulti();
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
 
@@ -142,6 +144,15 @@ int  TNode::GEM_run()
    return CNode->NodeStatusCH;
 }
 
+//-----------------------------------------------------------------------
+// Returns calculation time after the last GEM_run() call
+//
+double TNode::GEM_CalcTime()
+{
+  return CalcTime;
+}
+
+// ----------------------------------------------------------------------
  // reads work node (DATABR structure) from a  file
 int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 {

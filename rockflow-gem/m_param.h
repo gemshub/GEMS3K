@@ -112,7 +112,7 @@ public:
    void outMultiTxt( const char *path  );
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
-   void calcMulti();
+   double calcMulti();
 
 };
 

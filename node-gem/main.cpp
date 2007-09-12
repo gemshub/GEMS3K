@@ -33,6 +33,7 @@
 
 int main( int argc, char* argv[] )
  {
+   double PureTime = 0.0;
    // Analyzing command line arguments
      // Default arguments
      char ipm_input_file_list_name[256] = "chemsys.lst";
@@ -167,6 +168,7 @@ int main( int argc, char* argv[] )
                                      // approximation
   // re-calculating equilibrium by calling GEMIPM
    m_NodeStatusCH[in] = node->GEM_run();
+// PureTime += node->GEM_CalcTime();
 
   if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
      return 5;
@@ -252,7 +254,9 @@ int main( int argc, char* argv[] )
 
         // Calling GEM IPM calculation
         m_NodeStatusCH[in] = node->GEM_run( );
-                if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
+PureTime += node->GEM_CalcTime();  // Account for pure calculation time
+
+        if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
                m_NodeStatusCH[in] == OK_GEM_PIA ) )
             return 5;
 
@@ -280,6 +284,7 @@ int main( int argc, char* argv[] )
   t_end11 = clock(); // getting end time of coupled calculations
   double dtime = ( t_end11- t_start11 );
   double clc_sec = CLOCKS_PER_SEC;
+  cout <<  "Pure time of calculation, s: " <<  PureTime << endl;
   cout <<  "Total time of calculation, s: " <<  (dtime)/clc_sec << endl;
   cout << " This gem_node test ";
 

@@ -48,6 +48,7 @@ protected:
     DATABR* CNode;  // Pointer to a work node data bridge structure (node)
       // used for exchanging input data and results between FMT and GEMIPM
 
+    double CalcTime;  // GEMIPM2 calculation time (from the last GEM_run() call)
     // Checks if given Tc and P fit within interpolation intervals
     bool  check_TP( double& Tc, double& P );
 
@@ -202,8 +203,6 @@ void GEM_from_MT(
                  // and added to the bIC GEM input vector
 );
 
-
-
 #endif
 
 // (3 alternative)
@@ -222,6 +221,9 @@ void GEM_from_MT(
 // using the GEM_to_MT() call
 //
    int  GEM_run();   // calls GEM for a work node
+
+// Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
+   double GEM_CalcTime();
 
 // (5) For interruption/debugging
 // Writes work node (DATABR structure) into a file path name fname

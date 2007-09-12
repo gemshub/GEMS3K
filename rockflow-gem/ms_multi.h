@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 888 2007-03-15 13:08:58Z gems $
+// $Id: ms_multi.h 921 2007-09-10 12:04:49Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -30,7 +30,7 @@
 typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #else
-
+#include <time.h>
 #include "m_const.h"
 
 #endif
@@ -271,6 +271,8 @@ typedef struct
      *sitXan;  // SIT: indices of anions
   float
      *sitE;    // pointer to SIT coeff. table (may be changed soon)
+  clock_t t_start, t_end;
+  double t_elap_sec;  // work variables for determining IPM calculation time
 }
 MULTI;
 

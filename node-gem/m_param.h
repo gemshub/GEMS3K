@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 871 2007-02-21 14:29:54Z gems $
+// $Id: m_param.h 921 2007-09-10 12:04:49Z gems $
 //
 // Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
 //
@@ -112,7 +112,7 @@ public:
    void outMultiTxt( const char *path  );
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
-   void calcMulti();
+   double calcMulti();
 
 };
 
