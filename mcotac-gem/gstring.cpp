@@ -1,4 +1,4 @@
-// $Id: gstring.cpp 871 2007-02-21 14:29:54Z gems $
+// $Id: gstring.cpp 925 2007-09-18 15:57:25Z gems $
 /***************************************************************************
 	gstring class
 	Version 1.02
@@ -113,7 +113,8 @@ gstring::gstring(const char* s, size_t pos, size_t len)
 {
     size_t s_len;
     if( len == npos )
-        s_len = strlen(s);
+      //    s_len = strlen(s);// ? pos Changed SD 27/08/2007
+     s_len = max( strlen(s) - pos, (size_t)0 );
     else
         for(s_len = 0; s_len < len && s[s_len+pos]; s_len++ );
 

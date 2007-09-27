@@ -203,6 +203,27 @@ void GEM_from_MT(
                  // and added to the bIC GEM input vector
 );
 
+// Overload - uses xDC and gam vectors as old primal solution for the node
+// in GEM IPM2 input when NEED_GEM_PIA flag is set for calculation
+// Important! This variant works only when DATACH contains a full list of DCs
+// with passed through the DATABR structure.
+// added by DK on 17.09.2007
+void GEM_from_MT(
+ short  p_NodeHandle,   // Node identification handle
+ short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                  //                                     GEM input output  FMT control
+ double p_TC,     // Temperature T, C                         +      -      -
+ double p_P,      // Pressure P, bar                          +      -      -
+ double p_Vs,     // Volume V of reactive subsystem, cm3      -      -      +
+ double p_Ms,     // Mass of reactive subsystem, kg           -      -      +
+ double *p_bIC,    // bulk mole amounts of IC [nICb]          +      -      -
+ double *p_dul,   // upper kinetic restrictions [nDCb]        +      -      -
+ double *p_dll,   // lower kinetic restrictions [nDCb]        +      -      -
+ double *p_aPH,  // Specific surface areas of phases (m2/g)   +      -      -
+ double *p_xDC,  // Amounts of DCs [nDCb] - old primal soln.  +      -      -
+ double *p_gam   // DC activity coeffs [nDCb] - old primal s. +      -      -
+);
+
 #endif
 
 // (3 alternative)

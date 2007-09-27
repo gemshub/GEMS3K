@@ -711,7 +711,7 @@ aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x N
                     continue;
                  index2 = aIPx[ip*MaxOrd+1];
                  SumSIT += (double)aIPc[ip*NPcoef]   // epsilon
-                        * I * pmp->Y_m[jb+index2];
+                        * pmp->Y_m[jb+index2];
               }
            }
            else {   // anion
@@ -722,7 +722,7 @@ aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x N
                     continue;
                  index1 = aIPx[ip*MaxOrd];  // index of cation
                  SumSIT += (double)aIPc[ip*NPcoef]  // epsilon
-                            * I * pmp->Y_m[jb + index1];
+                         * pmp->Y_m[jb + index1];
               }
            }
            lgGam += SumSIT;

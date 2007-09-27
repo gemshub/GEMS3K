@@ -354,7 +354,7 @@ if( binary_f )
 //-----------------------------------------------------------------
 // work with lists
 
-// Return DCH index of IC by Name or -1 if name not found
+// Return ICH index of IC by Name or -1 if name not found
 int TNode::IC_name_to_x( const char *Name )
 {
   uint len = strlen( Name );
@@ -1056,16 +1056,19 @@ void TNode::unpackDataBr()
 
 // added  to compare SD 15/07/04
    for( ii=0; ii<CSD->nDCb; ii++ )
-    pmm->X[ CSD->xDC[ii] ] = pmm->Y[ CSD->xDC[ii] ] = CNode->xDC[ii];
+/*    pmm->X[ CSD->xDC[ii] ] = */
+      pmm->Y[ CSD->xDC[ii] ] = CNode->xDC[ii];
    for( ii=0; ii<CSD->nDCb; ii++ )
    {
-      Gamm = CNode->gam[ii];
-      pmm->Gamma[ CSD->xDC[ii] ] = Gamm;
-      pmm->lnGmo[ CSD->xDC[ii] ] = pmm->lnGam[ CSD->xDC[ii] ] = log(Gamm);
+      pmm->lnGam[ CSD->xDC[ii] ] = log( CNode->gam[ii] );
+//       Gamm = CNode->gam[ii];
+//      pmm->Gamma[ CSD->xDC[ii] ] = Gamm;
+//      pmm->lnGmo[ CSD->xDC[ii] ] = pmm->lnGam[ CSD->xDC[ii] ] = log(Gamm);
    }
    for( ii=0; ii<CSD->nPHb; ii++ )
    {
-     pmm->XF[ CSD->xPH[ii] ] = pmm->YF[ CSD->xPH[ii] ] = CNode->xPH[ii];
+     pmm->XF[ CSD->xPH[ii] ] =
+     pmm->YF[ CSD->xPH[ii] ] = CNode->xPH[ii];
      if( CSD->nAalp >0 )
           pmm->Aalp[ CSD->xPH[ii] ] = CNode->aPH[ii];
    }
@@ -1074,12 +1077,13 @@ void TNode::unpackDataBr()
    for( ii=0; ii<CSD->nPSb; ii++ )
     pmm->FWGT[ CSD->xPH[ii] ] = CNode->mPS[ii];
 
-   for( ii=0; ii<CSD->nPSb; ii++ )
-   for(short jj=0; jj<CSD->nICb; jj++ )
-   { int new_ndx= (ii*CSD->nICb)+jj,
-           mul_ndx = ( CSD->xPH[ii]*CSD->nIC )+ CSD->xIC[jj];
-     pmm->BF[ mul_ndx ] = CNode->bPS[new_ndx];
+   for( int k=0; k<CSD->nPSb; k++ )
+   for(int i=0; i<CSD->nICb; i++ )
+   { int dbr_ndx= (k*CSD->nICb)+i,
+           mul_ndx = ( CSD->xPH[k]*CSD->nIC )+ CSD->xIC[i];
+     pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
    }
+
    for( ii=0; ii<CSD->nPSb; ii++ )
     pmm->XFA[ CSD->xPH[ii] ] = pmm->YFA[ CSD->xPH[ii] ] = CNode->xPA[ii];
 
@@ -1087,7 +1091,6 @@ void TNode::unpackDataBr()
     pmm->C[ CSD->xIC[ii] ] = CNode->rMB[ii];
    for( ii=0; ii<CSD->nICb; ii++ )
     pmm->U[ CSD->xIC[ii] ] = CNode->uIC[ii];
-
 }
 
 // (5) For interruption/debugging
@@ -1285,7 +1288,7 @@ void TNode::GEM_from_MT(
    double *p_aPH,  // Specific surface areas of phases (m2/g)    +       -      -
    double *p_xDC  // Optional: mole amounts of DCs [nDCb] - will be convoluted
                     // and added to the bIC GEM input vector
-   )
+)
 {
   int ii;
   bool useSimplex = false;
@@ -1322,6 +1325,65 @@ void TNode::GEM_from_MT(
           for( ii=0; ii<CSD->nICb; ii++ )
             CNode->bIC[ii] += p_xDC[jj] * nodeCH_A( jj, ii );
    }
+}
+
+// Overloaded variant - uses xDC and gam vectors as old primal solution
+// for the node in GEM IPM2 input when NEED_GEM_PIA flag is set for calculation
+// Important! This variant works only when DATACH contains a full list of DCs
+// with passed through the DATABR structure.
+// added by DK on 17.09.2007
+// calculation mode: passing input GEM data changed on previous FMT iteration
+//                   into the work DATABR structure
+void TNode::GEM_from_MT(
+   short  p_NodeHandle,   // Node identification handle
+   short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                    //                                     GEM input output  FMT control
+   double p_TC,      // Temperature T, K                         +       -      -
+   double p_P,      // Pressure P, bar                          +       -      -
+   double p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
+   double p_Ms,     // Mass of reactive subsystem, kg           -       -      +
+   double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
+   double *p_dul,   // upper kinetic restrictions [nDCb]        +       -      -
+   double *p_dll,   // lower kinetic restrictions [nDCb]        +       -      -
+   double *p_aPH,  // Specific surface areas of phases (m2/g)    +       -      -
+   double *p_xDC,  // Amounts of DCs [nDCb] - old primal soln.  +      -      -
+   double *p_gam   // DC activity coeffs [nDCb] - old primal s. +      -      -
+)
+{
+  int ii;
+
+  CNode->NodeHandle = p_NodeHandle;
+  CNode->NodeStatusCH = p_NodeStatusCH;
+  CNode->TC = p_TC;
+  CNode->P = p_P;
+  CNode->Vs = p_Vs;
+  CNode->Ms = p_Ms;
+// Checking if no-simplex IA is Ok
+   for( ii=0; ii<CSD->nICb; ii++ )
+   {
+     CNode->bIC[ii] = p_bIC[ii];
+   }
+   for( ii=0; ii<CSD->nDCb; ii++ )
+   {
+     CNode->dul[ii] = p_dul[ii];
+     CNode->dll[ii] = p_dll[ii];
+   }
+    if( CSD->nAalp >0 )
+     for( ii=0; ii<CSD->nPHb; ii++ )
+         CNode->aPH[ii] = p_aPH[ii];
+
+   // Optional part - copying old primal solution from p_xDC and p_gam vectors
+   if( p_xDC && p_gam )
+   {
+      for( ii=0; ii<CSD->nDCb; ii++ )
+      {
+        CNode->xDC[ii] = p_xDC[ii];
+        CNode->gam[ii] = p_gam[ii];
+      }
+   }
+   else if( CNode->NodeStatusCH == NEED_GEM_PIA )
+            CNode->NodeStatusCH = NEED_GEM_AIA;   // no complete old primal
+                                                  // provided!
 }
 
 #endif

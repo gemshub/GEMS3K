@@ -92,8 +92,8 @@ typedef struct
     *rMB,  // Mass balance residuals from GEMIPM [nICb]    -      -      +     +
     *uIC,  // IC chemical potentials (mol/mol)[nICb]       -      -      +     +
 // DC (species) in reactive subsystem
-    *xDC,  // DC mole amounts at equilibrium [nDCb]        -      -      +     +
-    *gam,  // activity coefficients of DC [nDCb]           -      -      +     +
+    *xDC,  // DC mole amounts at equilibrium [nDCb]       (+)    (+)     +     +
+    *gam,  // activity coefficients of DC [nDCb]          (+)    (+)     +     +
 // Metastability/kinetic controls
     *dul,  // upper kinetic restrictions on xDC [nDCb]     +      +      -     -
     *dll,  // lower kinetic restrictions on xDC [nDCb]     +      +      -     -
