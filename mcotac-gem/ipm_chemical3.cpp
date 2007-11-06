@@ -1145,7 +1145,7 @@ TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
         Coeff = pmp->DMc+jdb+jdc*20;
 
         // Calling CG EoS for pure fugacity
-        if( T >= 273.15 && T < 1e4 && P >= 1. && P < 1e5 )
+        if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
             retCode = aCGF.CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume,
                DeltaH, DeltaS, P, T );
         else {
@@ -1189,8 +1189,10 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
     double *FugCoefs;
     float *EoSparam, *Coeffs;
     int i, j, jj;
-    double ro;
+    double T, P, ro;
     TCGFcalc aCGF;
+    P = pmp->Pc;
+    T = pmp->Tc;
 
     FugCoefs = (double*)malloc( pmp->L1[k]*sizeof(double) );
     EoSparam = (float*)malloc( pmp->L1[k]*sizeof(double)*4 );
@@ -1201,18 +1203,23 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
        for( i=0; i<4; i++)
           EoSparam[j*4+i] = Coeffs[j*20+i+15];
 //    EoSparam = pmp->DMc+jdb;
-
-    ro = aCGF.CGActivCoefPT( pmp->X+jb, EoSparam, FugCoefs, pmp->L1[k],
-        pmp->Pc, pmp->Tc );
-    if (ro <= 0. )
+    if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
     {
-      free( FugCoefs );
-      char buf[150];
-      sprintf(buf, "CGFluid(): bad calculation of density ro= %lg", ro);
-      Error( "E71IPM IPMgamma: ",  buf );
+        ro = aCGF.CGActivCoefPT( pmp->X+jb, EoSparam, FugCoefs, pmp->L1[k],
+             pmp->Pc, pmp->Tc );
+        if (ro <= 0. )
+        {
+           free( FugCoefs );
+           char buf[150];
+           sprintf(buf, "CGFluid(): bad calculation of density ro= %lg", ro);
+           Error( "E71IPM IPMgamma: ",  buf );
+        }
+        // Phase volume of the fluid in cm3
+        pmp->FVOL[k] = pmp->FWGT[k] / ro;
     }
-    // Phase volume of the fluid in cm3
-    pmp->FVOL[k] = pmp->FWGT[k] / ro;
+    else // Setting Fugcoefs to 0 outside TP interval
+      for( j=0; j<pmp->L1[k]; j++ )
+        FugCoefs[ j ] = 0.0;
 
     for( jj=0, j=jb; j<je; j++, jj++ )
     {

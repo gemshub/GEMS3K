@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 871 2007-02-21 14:29:54Z gems $
+// $Id: ms_param.cpp 932 2007-11-06 13:54:17Z gems $
 //
 // Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -47,22 +47,22 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-  "GEMS-PSI v2.x: Controls and defaults for numeric modules",
+  "GEMS-PSI v2.2: Controls and defaults for numeric modules",
   {
-    1,  /* PC */  3,     /* PD */   3,   /* PRD */
-    1,  /* PSM  */ 144,  /* DP */   15,   /* DW */
-    -3, /* DT */  0,     /* PLLG */   1,   /* PE */
-    500,   /* IIM */
-    1e-30, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
-    1e-4,  /* DK */  0.01,  /* DF */  -0.1,  /* DFM */
-    1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
-    1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
-    1e-12, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
-    0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-    0.01, /* GAS */  12.05,  /* DNS */  1e-8,  /* XwMin, */
-    1e-8,  /* ScMin, */  1e-20, /* DcMin, */   1e-10, /* PhMin, */
-    3e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
-    1e-4,  /* DKIN  */ 0,  /* tprn */
+        1,  /* PC */  3,     /* PD */   3,   /* PRD */
+        1,  /* PSM  */ 144,  /* DP */   15,   /* DW */
+        0, /* DT */     0,   /* PLLG */   1,  /* PE */
+        500,   /* IIM */
+        1e-15, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
+        1e-4,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+        1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
+        1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
+        1e-7, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
+        0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+        0.001, /* GAS */   12.05,  /* DNS */   1e-5,  /* XwMin, */
+        1e-7,  /* ScMin, */  1e-19, /* DcMin, */   1e-10, /* PhMin, */
+        1e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
+        1e-5,  /* DKIN  */ 0,  /* tprn */
   },
 }; // SPP_SETTING
 
@@ -88,19 +88,21 @@ TProfil::TProfil( TMulti* amulti )
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
+// Modified on 10.09.2007 to return elapsed GEMIPM2 runtime in seconds
+//
 double TProfil::calcMulti()
 {
-  pmp->t_start = clock();     // Added 11.09.2007 by DK to check pure runtime
-  pmp->t_end = pmp->t_start;
-  pmp->t_elap_sec = 0.0;
+    pmp = multi->GetPM();
+pmp->t_start = clock();
+pmp->t_end = pmp->t_start;
     multi->MultiCalcInit( 0 );
     if( multi->AutoInitialApprox() == false )
     {
         multi->MultiCalcIterations();
     }
- pmp->t_end = clock();
- pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
- return pmp->t_elap_sec;
+pmp->t_end = clock();
+pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+return pmp->t_elap_sec;
 }
 
 void TProfil::outMulti( GemDataStream& ff, gstring& path  )

@@ -41,24 +41,32 @@ using namespace JAMA;
 // Main sequence of IPM calculations
 //  Main place for implementation of diagnostics and setup
 //  of IPM precision and convergence
-//  Returns: true   if IPM result is OK
-//           false  if a good result could not be obtained
 //
 void TMulti::MultiCalcMain()
 {
-    int i, j, RepeatSel=0, eRet;
+    int i, j, k, eRet;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     pmp->W1=0;
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
 
-    // testing the entry into feasible domain
+// cleaning the f_alpha vector (phase stability criteria)
+    for( k=0; k<pmp->FI; k++ )
+            pmp->Falp[k] = 0.0;
+    for( j=0; j<pmp->L; j++ )
+    {
+        pmp->EMU[j] = 0.0;
+        pmp->NMU[j] = 0.0;
+    }
+
+   // testing the entry into feasible domain
 mEFD:
      if(pmp->PZ && pmp->W1)
-     { for( i=0; i<pmp->L; i++ )
-        pmp->Y[i]=pmp->X[i];
-      TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
+     {
+        for( j=0; j<pmp->L; j++ )
+           pmp->Y[j]=pmp->X[j];
+        TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
      }
 
     eRet = EnterFeasibleDomain( );
@@ -116,8 +124,9 @@ STEP_POINT("After FIA");
                 }
                else
                  Error("E06IPM IPM-main(): " ,
-     "Given IPM convergence criterion could not be reached;\n Perhaps, vector b is not balanced,\n"
-     "or DC stoichiometries or standard-state thermodynamic data are inconsistent. \n");
+     "Given IPM convergence criterion (Pa_DK) could not be reached;\n"
+     " Perhaps, vector b is not balanced,or DC stoichiometries or\n"
+     " standard-state thermodynamic data are inconsistent. \n");
      case 1: // degeneration in R matrix  for InteriorPointsMethod()
            if( pmp->DHBM<1e-5 )
             {
@@ -127,9 +136,11 @@ STEP_POINT("After FIA");
            else
                Error("E07IPM IPM-main(): ",
         "Degeneration in R matrix (fault in the linearized system solver).\n"
-        "No valid IPM solution could be obtained. Probably, vector b is not balanced,\n"
-        "or DC stoichiometries or standard-state thermodynamic data are inconsistent,\n"
-        "or some relevant phases or DC are missing, or some kinetic constraints are too stiff.\n"
+        " It is not possible to obtain a valid IPM solution.\n"
+        " Probably, vector b is not balanced, or DC stoichiometries\n"
+        " or standard-state thermodynamic data are inconsistent,\n"
+        " or some relevant phases or DC are missing, or some kinetic constraints\n"
+        " are too stiff.\n"
         );
           break;
    }
@@ -145,37 +156,55 @@ STEP_POINT("After FIA");
         }
 
     if( !pa->p.PC )    //  No PhaseSelect() operation allowed
-    {  if( pmp->PD >= 2 )
+    {   if( pmp->PD >= 2 )
            for( i=0; i<pmp->L; i++)
              pmp->G[i] = pmp->G0[i];
         return;  // solved
     }
 
 //========= call Selekt2 algorithm =======
-   PhaseSelect();
+   int ps_rcode, k_miss, k_unst;
+
+   ps_rcode = PhaseSelect( k_miss, k_unst );
+
+   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
+
    if( pa->p.PC == 2 )
        XmaxSAT_IPM2();  // Install upper limits to xj of surface species
 
-   if( !pmp->MK )
-     if( RepeatSel<3 )
-       { RepeatSel++;
-         goto mEFD;
-       }
-     else
-       Error( "E08IPM PhaseSelect(): "," Insertion of phases was incomplete!");
+   switch( ps_rcode )
+   {
+      case 1:   // IPM solution is final and consistent, no phases were inserted
+                break;
+      case 0:   // some phases were inserted and a new IPM loop is needed
+                goto mEFD;
+      default:
+      case -1:  // the IPM solution is inconsistent after 3 Selekt2() loops
+      {
+           gstring pmbuf(pmp->SF[k_miss],0,20);
+           gstring pubuf(pmp->SF[k_unst],0,20);
+           char buf[400];
+           sprintf( buf,
+    " The computed phase assemblage remains inconsistent after 3 Selekt2() loops.\n"
+    " Problematic phase(s): %d %s   %d %s \n"
+    " Probably, vector b is not balanced, or DC stoichiometries\n"
+    " or standard g0 are wrong, or some relevant phases or DCs are missing.",
+                    k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
+            Error( "E08IPM: PhaseSelect():", buf );
+      }
+   }
 
-  MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
 #ifndef IPMGEMPLUGIN
-pmp->t_end = clock();
-pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+   pmp->t_end = clock();
+   pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
 // STEPWISE (4) Stop point after PhaseSelect()
-STEP_POINT("PhaseSelect");
+   STEP_POINT("Before Refine()");
 #ifndef Use_mt_mode
-pVisor->Update( false );
+   pVisor->Update( false );
 #endif
 #endif
 
-   if(pmp->PZ )
+   if( pmp->PZ )
    {
      if( !pmp->W1 )
      {
@@ -201,7 +230,7 @@ pVisor->Update( false );
                  vstr pl(5);
                  int jj=0;
                  for( j=0; j<pmp->N-pmp->E; j++ )
-//  if( fabs(pmp->C[j]) > pmp->DHBM  || fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
+   //  if( fabs(pmp->C[j]) > pmp->DHBM  || fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
                   if( fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
                   { sprintf( pl, " %-2.2s  ", pmp->SB[j] );
                     buf1 +=pl;
@@ -215,8 +244,9 @@ pVisor->Update( false );
                     Error("E09IPM IPM-main(): ", buf.c_str() );
                  }
                 else
-                 Error("E10IPM IPM-main(): " ,
-"Inconsistent GEM solution: imprecise mass balance\n for some major independent components: " );
+                    Error("E10IPM IPM-main(): " ,
+                       "Inconsistent GEM solution: imprecise mass balance\n"
+                       "for some major independent components: " );
               }
             }
           } // end of i loop
@@ -225,8 +255,8 @@ pVisor->Update( false );
    for( i=0; i<pmp->L; i++)
       pmp->G[i] = pmp->G0[i];
    // Normal return after successful improvement of the mass balance precision
-pmp->t_end = clock();   // Fix pure runtime
-pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+   pmp->t_end = clock();   // Fix pure runtime
+   pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
 }
 
 //Call for IPM iteration sequence
@@ -279,7 +309,7 @@ bool TMulti::AutoInitialApprox( )
    if( pmp->DX < 0.01 * pa->p.DK )
        pmp->DX = 0.01 * pa->p.DK;
    pmp->DSM = pa->p.DS;  // Shall we add  * sfactor ?
-
+   pmp->ITG = 0; pmp->ITF = 0;
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
    pVisor->Update(false);
@@ -296,7 +326,7 @@ bool TMulti::AutoInitialApprox( )
             GammaCalc(LINK_FIA_MODE);
         if( pa->p.PC == 2 )
            XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
-        pmp->IT = 0;
+        pmp->IT = 0; 
         pmp->pNP = 0;
         pmp->K2 = 0;
         pmp->PCI = 0;
@@ -320,7 +350,7 @@ STEP_POINT( "End Simplex" );
     {
         int jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
         double LnGam, FitVar3;
-
+pmp->K2 = 0;
         FitVar3 = pmp->FitVar[3];
         pmp->FitVar[3] = 1.0;
         TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
@@ -420,7 +450,7 @@ int TMulti::EnterFeasibleDomain()
                 pmp->NR= (short)(pmp->N-1);
         }
         N=pmp->NR;
-
+        pmp->ITF++;
        // Calculation of mass-balance residuals in IPM
        MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C);
 
@@ -518,7 +548,7 @@ int TMulti::InteriorPointsMethod( )
         }
         N = pmp->NR;
 //        memset( pmp->F, 0, pmp->L*sizeof(double));
-
+        pmp->ITG++;
         PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
         // Setting weight multipliers for DC
@@ -532,7 +562,7 @@ int TMulti::InteriorPointsMethod( )
 
 //SOLVED: got the dual solution u vector - calculating the Dikin criterion
 //    of GEM IPM convergence
-       f_alpha( );
+//       f_alpha( );  commented out 30.10.2007  DK
        pmp->PCI=calcDikin( N, false );
 
        // Determination of the descent step size LM
@@ -579,7 +609,7 @@ STEP_POINT( "IPM Iteration" );
     } // end of main IPM cycle
 //----------------------------------------------------------------------------
 
-  if( IT1 >= pa->p.IIM)
+  if( IT1 >= pa->p.IIM )
    return 2; // bad convergence - too many IPM iterations!
 
  // Final calculation phase amounts and activity coefficients
@@ -677,34 +707,45 @@ OCT:
     return(LM1);
 }
 
-//Added by Sveta
+
 //===================================================================
+
+// Cleaning the unstable phase with index k >= 0
+
+void TMulti::ZeroDCsOff( int jStart, int jEnd, int k )
+{
+  if( k >=0 )
+     pmp->YF[k] = 0.;
+
+  for(int j=jStart; j<jEnd; j++ )
+     pmp->Y[j] =  0.0;
+}
 
 // Inserting minor quantities of DC which were zeroed off after simplex()
 // (important for the automatic initial approximation with solution phases
-//  or after Selekt2() algorithm
+//  (k = -1)  or after Selekt2() algorithm (k >= 0)
 //
-void TMulti::RaiseZeroedOffDCs( int iStart, int iEnd, double sfactor, int JJ )
+void TMulti::RaiseZeroedOffDCs( int jStart, int jEnd, double sfactor, int k )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
 
-  for(int i=iStart; i<iEnd; i++ )
-  {
-    if( JJ >=0 )
-      pmp->YF[JJ] = 0.;
+  if( k >= 0 )
+     pmp->YF[k] = 0.;
 
-     switch( pmp->DCC[i] )
+  for(int j=jStart; j<jEnd; j++ )
+  {
+     switch( pmp->DCC[j] )
      {
        case DC_AQ_PROTON:
        case DC_AQ_ELECTRON:
        case DC_AQ_SPECIES:
-          if( JJ>=0 || pmp->Y[i] < pa->p.DFYaq * sfactor )
-               pmp->Y[i] =  pa->p.DFYaq * sfactor;
+          if( k >= 0 || pmp->Y[j] < pa->p.DFYaq * sfactor )
+               pmp->Y[j] =  pa->p.DFYaq * sfactor;
            break;
        case DC_AQ_SOLVCOM:
        case DC_AQ_SOLVENT:
-            if( JJ>=0 || pmp->Y[i] < pa->p.DFYw * sfactor )
-                pmp->Y[i] =  pa->p.DFYw * sfactor;
+            if( k >= 0 || pmp->Y[j] < pa->p.DFYw * sfactor )
+                pmp->Y[j] =  pa->p.DFYw * sfactor;
             break;
        case DC_GAS_H2O:
        case DC_GAS_CO2:
@@ -712,29 +753,34 @@ void TMulti::RaiseZeroedOffDCs( int iStart, int iEnd, double sfactor, int JJ )
        case DC_GAS_N2:
        case DC_GAS_COMP:
        case DC_SOL_IDEAL:
-            if( JJ>=0 || pmp->Y[i] < pa->p.DFYid*sfactor )
-                  pmp->Y[i] = pa->p.DFYid * sfactor;
+            if( k >= 0 || pmp->Y[j] < pa->p.DFYid*sfactor )
+                  pmp->Y[j] = pa->p.DFYid * sfactor;
              break;
        case DC_SOL_MINOR:
-            if( JJ>=0 || pmp->Y[i] < pa->p.DFYh*sfactor )
-                   pmp->Y[i] = pa->p.DFYh * sfactor;
+            if( k >= 0 || pmp->Y[j] < pa->p.DFYh*sfactor )
+                   pmp->Y[j] = pa->p.DFYh * sfactor;
              break;
        case DC_SOL_MAJOR:
-            if( JJ>=0 || pmp->Y[i] < pa->p.DFYr * sfactor )
-                  pmp->Y[i] =  pa->p.DFYr * sfactor;
+            if( k >= 0 || pmp->Y[j] < pa->p.DFYr * sfactor )
+                  pmp->Y[j] =  pa->p.DFYr * sfactor;
              break;
        case DC_SCP_CONDEN:
-             if( JJ>=0 || pmp->Y[i] < pa->p.DFYc * sfactor )
-                  pmp->Y[i] =  pa->p.DFYc * sfactor;
+             if( k >= 0 )
+             {                // Added 05.11.2007 DK 
+                 pmp->Y[j] =  pa->p.DFYs * sfactor;
+                 break;
+             }
+             if( pmp->Y[j] < pa->p.DFYc * sfactor )
+                  pmp->Y[j] =  pa->p.DFYc * sfactor;
               break;
                     // implementation for adsorption?
        default:
-             if( JJ>=0 || pmp->Y[i] < pa->p.DFYaq *sfactor )
-                   pmp->Y[i] =  pa->p.DFYaq * sfactor;
+             if( k>=0 || pmp->Y[j] < pa->p.DFYaq *sfactor )
+                   pmp->Y[j] =  pa->p.DFYaq * sfactor;
              break;
      }
-    if( JJ >=0 )
-     pmp->YF[JJ] += pmp->Y[i];
+     if( k >=0 )
+     pmp->YF[k] += pmp->Y[j];
    } // i
 }
 
@@ -1043,106 +1089,151 @@ double TMulti::calcSfactor()
 
 // Checking Karpov phase stability criteria Fa for phases and DCs
 //  using Selekt2() algorithm by Karpov & Chudnenko (1989)
-//  modified by DK in 1995.
-//  Returns 0, if a new IPM loop is needed;
-//          1, if the solution is final.
+//  modified by DK in 1995 and in 2007
+//  Returns 0, if some phases were inserted and a new IPM loop is needed
+//             (up to 3 loops possible);
+//          1, if the IPM solution is final and consistent, no phases were inserted
+//          -1, if the IPM solution is inconsistent after 3 Selekt2() loops
+//  In this case, the index of most problematic phase is passed through kf or
+//  ku parameter (parameter value -1 means that no problematic phases were found)
 //
-void TMulti::PhaseSelect()
+int TMulti::PhaseSelect( int &kf, int &ku )
 {
-    short JJ,Z,I,J;
-    double F1,F2,*F0;
+    short k, j, jb;
+    double F1, F2, *F0, sfactor;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-    f_alpha( );
+    sfactor = calcSfactor();
+    f_alpha( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
     F0 = pmp->Falp;
 
     (pmp->K2)++;
     pmp->MK=0;
-    JJ= -1;
- //   II= -1;
-    F1= F2= pmp->lowPosNum*10000.;  // 1E-16;
+    kf = -1; ku = -1;  // Index for phase diagnostics
+//    F1= F2= pmp->lowPosNum*10000.;  // 1E-16;
+    F1 = pa->p.DF;  // Fixed 29.10.2007  DK
+    F2 = -pa->p.DFM;  // Meaning of DFM changed 02.11.2007
 
-    for(Z=0;Z<pmp->FI;Z++)
+    for(k=0;k<pmp->FI;k++)
     {
-        if( F0[Z]>F1 && pmp->YF[Z]<pmp->lowPosNum )
-        {
-            F1=F0[Z];  // selection of max Fa and corresponding phase index
-            JJ=Z;
+        if( F0[k] > F1 && pmp->YF[k] < pa->p.DS )  // < pmp->lowPosNum?
+        {            // stable phase not in mass balance - to be inserted
+            F1=F0[k];
+            kf=k;
         }
-        if( F0[Z]>F2 && pmp->YF[Z]>pmp->lowPosNum )
-        {
-            F2=F0[Z];
-           // II=Z;
+        if( F0[k] < F2 && pmp->YF[k] >= pa->p.DS )  // Fixed 2.11.2007
+        {            // unstable phase in mass balance - to be excluded
+            F2=F0[k];
+            ku=k;
         }
     }
-    if( F1 > pa->p.DF && JJ >= 0 )
-    {
-        double sfactor;
-        // There is a phase for which DF (0.01) is exceeded
-        sfactor = calcSfactor();
-        do
-        {  // inserting all phases with  F1 > DFM
-            // insert this phase and set Y[j] for its components
-            // with account for asymmetry and non-ideality
-            for( J=0, I=0; I<JJ; I++ )
-                 J+=pmp->L1[I];
 
-            RaiseZeroedOffDCs( J, J+pmp->L1[JJ], sfactor, JJ );
+    if( kf < 0 && ku < 0 )
+    {    // No phases to insert/exclude or no Fa distortions found
+          // Successful end of iterations of SELEKT2()
+        pmp->MK=1;
+        return pmp->MK;
+    }
+
+    if( (F2 < -pa->p.DFM ) && ( ku >= 0 ) )
+    {
+        if( pmp->K2 > 4 ) // Three Selekt2() loops have already been done!
+           return -1;   // Persistent presence of unstable phase(s) - bad system!
+
+        // Excluding problematic phases
+        do
+        {  // excluding all phases with  F2 < DF*sfactor
+            for( jb=0, k=0; k < ku; k++ )
+                 jb += pmp->L1[k];
+
+            ZeroDCsOff( jb, jb+pmp->L1[ku], ku ); // Zeroing the phase off
+            pmp->FI1--;
+            // find a new phase to exclude, if any exists
+            F2= -pa->p.DFM;
+            ku = -1;
+            for( k=0; k<pmp->FI; k++ )
+                if( F0[k] < F2 && pmp->YF[k] >= pa->p.DS )
+                {
+                    F2=F0[k];
+                    ku=k;
+                }
+        }
+        while( ( F2 <= -pa->p.DFM ) && ( ku >= 0 ) );
+    }
+
+    // Inserting problematic phases
+    if( F1 > pa->p.DF && kf >= 0 )
+    {
+        if( pmp->K2 > 4 )
+           return -1;   // Persistent absence of stable phase(s) - bad system!
+
+        // There is a phase for which DF*sfactor threshold is exceeded
+        do
+        {   // insert this phase and set Y[j] for its components
+            // with account for asymmetry and non-ideality
+            for( jb=0, k=0; k < kf; k++ )
+                 jb += pmp->L1[k];
+
+            RaiseZeroedOffDCs( jb, jb+pmp->L1[kf], sfactor, kf );
 
             pmp->FI1++;  // check phase rule
+
             if( pmp->FI1 >= pmp->NR+1 )
-            { // No more phase can be inserted
-                break;
-            }
+               break;   // No more phases can be inserted
+
             // find a new phase to insert, if any exists
             F1= pmp->lowPosNum*10000.; // 1e-16
-            JJ = -1;
-            for( Z=0; Z<pmp->FI; Z++ )
-                if( F0[Z] > F1 && pmp->YF[Z] < pmp->lowPosNum )
+            kf = -1;
+            for( k=0; k<pmp->FI; k++ )
+                if( F0[k] > F1 && pmp->YF[k] < pmp->lowPosNum )
                 {
-                    F1=F0[Z];
-                    JJ=Z;
+                    F1=F0[k];
+                    kf=k;
                 }
         }
-        while( F1 > pa->p.DF && JJ >= 0 );
+        while( F1 > pa->p.DF && kf >= 0 );
         // end of insertion cycle
-        J=0;   // insert primeal GEM IPM solution
-        for(Z=0;Z<pmp->FIs;Z++)
+
+// Raise zeros in DC amounts in phases-solutions in the case if some phases
+// were inserted or excluded                          - experimental option!
+        double RaiseZeroVal = pmp->DHBM;  // Added 29.10.07  by DK
+        jb=0;
+        for(k=0;k<pmp->FIs;k++)
         {
-            if( pmp->YF[Z ] > pmp->lowPosNum /* 1E-18 */ )
-            {
-                pmp->YF[Z]=0.;
-                for(I=J;I<J+pmp->L1[Z];I++)
-                {
-                   if( pmp->Y[I] < pmp->lowPosNum ) // Check what to insert !
-                       pmp->Y[I] = pa->p.DFM; // lowPosNum should be used ?
-                    pmp->YF[Z]+=pmp->Y[I]; // calculate new amounts of phases
-                }
+            if( pmp->YF[k] >= pa->p.DS ) // Only in phase present in mass balance!
+            {                            // (acc. to definition of L_S set)
+                 pmp->YF[k]=0.;
+                 for(j=jb;j<jb+pmp->L1[k];j++)
+                 {
+                    if( pmp->Y[j] < pmp->lowPosNum )
+                        pmp->Y[j] = RaiseZeroVal; // bugfix 29.10.07
+                    pmp->YF[k] += pmp->Y[j]; // calculate new amounts of phases
+                 }
             }
-            J+=pmp->L1[Z];
+            jb+=pmp->L1[k];
         }
+    }
 #ifndef IPMGEMPLUGIN
+    STEP_POINT("Select2()");
 #ifndef Use_mt_mode
         pVisor->Update(false);  // "PhaseSelection"
 #endif
 #endif
-        if( pmp->K2>1 )
-        { // more then the first step - but the IPM solution has not been improved
-            for(I=0;I<pmp->L;I++)
-                if( fabs(pmp->Y[I]- pmp->XY[I]) > pa->p.DF*pmp->Y[I] ) // Check!
-                    goto S6;
-            pmp->PZ=2;
-            goto S4;
-        }
-S6: // copy of X vector changed by Selekt2() algorithm
-        for(I=0;I<pmp->L;I++)
-            pmp->XY[I]=pmp->Y[I];
-// Copy here also to pmp->X[I]?
-        return;
+    if( pmp->K2 > 1 )
+    { // more then the first step - but the IPM solution has not been improved
+       double RaiseZeroVal = pmp->DHBM*0.1;   // experimental
+       for(j=0;j<pmp->L;j++)
+          if( fabs(pmp->Y[j]- pmp->XY[j]) > RaiseZeroVal ) //
+               goto S6;
+       pmp->PZ=2; // No significant change has been done by Selekt2()
+       pmp->MK=1;  // can check the balance precision
+       return pmp->MK;
     }
-S4: // No phases to insert or no Fa distortions found
-    // Successful end of iterations of SELEKT2
-    pmp->MK=1;
+S6: // copy of X vector has been changed by Selekt2() algorithm - store
+    for(j=0;j<pmp->L;j++)
+        pmp->XY[j]=pmp->Y[j];
+// Copy here also to pmp->X[j]?
+    return pmp->MK;  // Another loop is needed
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

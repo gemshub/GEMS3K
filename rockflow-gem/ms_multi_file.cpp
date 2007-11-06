@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 872 2007-02-21 14:53:38Z gems $
+// $Id: ms_multi_file.cpp 932 2007-11-06 13:54:17Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -251,12 +251,12 @@ ff.writeArray((double*)pm.D, MST*MST);
    }
 
 //  Added 16.11.2004 by Sveta
-   if( pm.sitNcat*pm.sitNcat )
-     ff.writeArray( pm.sitE, pm.sitNcat*pm.sitNan );
-   if( pm.sitNcat )
-     ff.writeArray( pm.sitXcat, pm.sitNcat );
-   if( pm.sitNan )
-     ff.writeArray( pm.sitXan, pm.sitNan );
+//   if( pm.sitNcat*pm.sitNcat )
+//     ff.writeArray( pm.sitE, pm.sitNcat*pm.sitNan );
+//   if( pm.sitNcat )
+//     ff.writeArray( pm.sitXcat, pm.sitNcat );
+//   if( pm.sitNan )
+//     ff.writeArray( pm.sitXan, pm.sitNan );
 
 /*   gstring Path_ = path;
      gstring dir;
@@ -483,13 +483,12 @@ ff.readArray((double*)pm.D, MST*MST);
       ff.readArray(pm.Qd, pm.FIs*QDSIZE);
    }
 //  Added 16.11.2004 by Sveta
-   if( pm.sitNcat*pm.sitNcat )
-     ff.readArray( pm.sitE, pm.sitNcat*pm.sitNan );
-   if( pm.sitNcat )
-     ff.readArray( pm.sitXcat, pm.sitNcat );
-   if( pm.sitNan )
-     ff.readArray( pm.sitXan, pm.sitNan );
-
+//   if( pm.sitNcat*pm.sitNcat )
+//     ff.readArray( pm.sitE, pm.sitNcat*pm.sitNan );
+//   if( pm.sitNcat )
+//     ff.readArray( pm.sitXcat, pm.sitNcat );
+//   if( pm.sitNan )
+//     ff.readArray( pm.sitXan, pm.sitNan );
 }
 
 
@@ -884,26 +883,24 @@ else
 
  }
 //  Added 16.11.2004 by Sveta
-    if( pm.sitNcat*pm.sitNcat )
-    { pm.sitE = new float[pm.sitNcat*pm.sitNan];
-      memset(pm.sitE, 0, pm.sitNcat*pm.sitNan*sizeof(float));
-    }
-    else
-       pm.sitE = 0;
-    if( pm.sitNcat )
-    {  pm.sitXcat = new short[pm.sitNcat];
-       memset(pm.sitXcat, 0, pm.sitNcat*sizeof(float));
-     }
-    else
-       pm.sitXcat = 0;
-    if( pm.sitNan )
-    {   pm.sitXan = new short[pm.sitNan];
-        memset(pm.sitXan, 0, pm.sitNan*sizeof(float));
-    }
-    else
-       pm.sitXan = 0;
-
-
+//    if( pm.sitNcat*pm.sitNcat )
+//    { pm.sitE = new float[pm.sitNcat*pm.sitNan];
+//      memset(pm.sitE, 0, pm.sitNcat*pm.sitNan*sizeof(float));
+//    }
+//    else
+//       pm.sitE = 0;
+//    if( pm.sitNcat )
+//    {  pm.sitXcat = new short[pm.sitNcat];
+//       memset(pm.sitXcat, 0, pm.sitNcat*sizeof(float));
+//     }
+//    else
+//       pm.sitXcat = 0;
+//    if( pm.sitNan )
+//    {   pm.sitXan = new short[pm.sitNan];
+//        memset(pm.sitXan, 0, pm.sitNan*sizeof(float));
+//    }
+//    else
+//       pm.sitXan = 0;
 }
 
 
@@ -1048,9 +1045,9 @@ if( pm.D ) delete[] pm.D;
    if( pm.Qd ) delete[] pm.Qd;
 
 //  Added 16.11.2004 by Sveta
-    if( pm.sitE )     delete[] pm.sitE;
-    if( pm.sitXcat )  delete[] pm.sitXcat;
-    if( pm.sitXan )    delete[] pm.sitXan;
+//    if( pm.sitE )     delete[] pm.sitE;
+//    if( pm.sitXcat )  delete[] pm.sitXcat;
+//    if( pm.sitXan )    delete[] pm.sitXan;
 
     // optimization 08/02/2007
     Free_internal();
@@ -1249,12 +1246,12 @@ prar.writeArray(  "XetaD", &pm.XetaD[0][0],  pm.FIs*pm.FIat);   // added 12.09.0
     }
 
 //  Added 16.11.2004 by Sveta
-   if( pm.sitNcat*pm.sitNcat )
-    prar.writeArray(  "sitE", pm.sitE, pm.sitNcat*pm.sitNan );
-   if( pm.sitNcat )
-    prar.writeArray(  "sitXcat", pm.sitXcat, pm.sitNcat );
-   if( pm.sitNan )
-     prar.writeArray(  "sitXan", pm.sitXan, pm.sitNan );
+//   if( pm.sitNcat*pm.sitNcat )
+//    prar.writeArray(  "sitE", pm.sitE, pm.sitNcat*pm.sitNan );
+//   if( pm.sitNcat )
+//    prar.writeArray(  "sitXcat", pm.sitXcat, pm.sitNcat );
+//   if( pm.sitNan )
+//     prar.writeArray(  "sitXan", pm.sitXan, pm.sitNan );
 }
 
 

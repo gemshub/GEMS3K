@@ -164,7 +164,8 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
 
         if( X[j] <= pmp->lowPosNum )
         { // zeroing off
-            pmp->Wx[j] = pmp->lowPosNum; // 0.0;  debugging 29.11.05
+//            pmp->Wx[j] = pmp->lowPosNum; // 0.0;  debugging 29.11.05
+pmp->Wx[j] = 0.0;
             pmp->VL[j] = (float)log( pmp->lowPosNum );
             pmp->Y_w[j] = 0.0;
             pmp->lnGam[j] = 0.0;

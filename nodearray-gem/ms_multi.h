@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 921 2007-09-10 12:04:49Z gems $
+// $Id: ms_multi.h 932 2007-11-06 13:54:17Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -266,11 +266,13 @@ typedef struct
   char  (*SCM)[MST]; // Classifier of adsorption models for sur types [FIs][FIat]
   char  *SATT,  // classifier of methods of SAT calculation [Lads]
     *DCCW;  // internal DC class codes [L]
-  short
-     *sitXcat, // SIT: indices of cations (may be changed soon)
-     *sitXan;  // SIT: indices of anions
-  float
-     *sitE;    // pointer to SIT coeff. table (may be changed soon)
+//  short
+//     *sitXcat, // SIT: indices of cations (may be changed soon)
+//     *sitXan;  // SIT: indices of anions
+//  float
+//     *sitE;    // pointer to SIT coeff. table (may be changed soon)
+  short ITF,        // Number of completed EFD iterations
+        ITG;        // Number of completed GEM IPM iterations
   clock_t t_start, t_end;
   double t_elap_sec;  // work variables for determining IPM calculation time
 }
@@ -348,7 +350,7 @@ class TMulti
     void PrimalChemicalPotentials( double F[], double Y[],
                                   double YF[], double YFA[] );
     double KarpovCriterionDC( double *dNuG, double logYF, double asTail,
-                              double logYw, double Wx,  char DCCW );
+                 double logYw, double Wx,  char DCCW );
     void f_alpha();
     double FreeEnergyIncr(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
@@ -408,7 +410,8 @@ void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModC
    void MassBalanceResiduals( int N, int L, float *A, double *Y,
                                double *B, double *C );
    double LMD( double LM );
-   void RaiseZeroedOffDCs( int iStart, int iEnd, double sfactor, int JJ=-1 );
+   void ZeroDCsOff( int jStart, int jEnd, int k=-1 );
+   void RaiseZeroedOffDCs( int jStart, int jEnd, double sfactor, int k=-1 );
    void LagrangeMultiplier();
    void WeightMultipliers( bool square );
    int SolverLinearEquations( int N, bool initAppr );
@@ -416,7 +419,7 @@ void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModC
    double calcLM(  bool initAppr );
    void Restoring_Y_YF();
    double calcSfactor();
-   void PhaseSelect( );
+   int PhaseSelect( int &k_miss, int &k_unst );
    // IPM_SIMPLEX.CPP Simplex method with two side constraints (Karpov ea 1997)
     void Simplex(int M, int N, int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,

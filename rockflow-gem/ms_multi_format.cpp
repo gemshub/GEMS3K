@@ -480,6 +480,7 @@ if(LsIPxSum )
    if( pm.sitNan )
      prar.writeArray(  "sitXa", pmp->sitXan, pmp->sitNan );
 */
+
 if( addMui )
 {
   if( _comment )

@@ -657,6 +657,7 @@ NEXT_PHASE:
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of Karpov stability criteria for a DC
+// Modified for kinetic constraints 05.11.2007 by DK
 //
 double TMulti::KarpovCriterionDC(
     double *dNuG,  // Nu[j]-c[j] difference - is modified here
@@ -664,12 +665,15 @@ double TMulti::KarpovCriterionDC(
     double asTail, // asymmetry correction (0 for symmetric phases)
     double logYw,  // ln Xv
     double Wx,     // mole fraction
-    char DCCW      // generalized DC class code
+    char DCCW      // Generic class code of DC 
 )
 {
-    double Fj;     // output phase stability criterion
+    double Fj=0.0;  // output phase stability criterion
 
-    if( logYF > -35. && Wx > 1e-18 )
+//    if( KinConst )
+//        return Fj;
+
+    if( logYF > -35. && Wx > 1e-18 )    // Check thresholds!
         switch( DCCW ) // expressions for fj
         {
         default: // error code here !!!
@@ -687,7 +691,8 @@ double TMulti::KarpovCriterionDC(
     if( fabs( *dNuG ) > 35.)
         Fj = ( *dNuG > 0 )? 1.5860135e15: 6.305117e-16;
     else Fj = exp( *dNuG );
-    Fj -= Wx;
+    Fj -= Wx;                    // If Wx = 0 then this DC is not in L_S set
+
     return Fj;
 }
 
@@ -696,15 +701,16 @@ double TMulti::KarpovCriterionDC(
 //
 void TMulti::f_alpha()
 {
+    bool KinConstr;
     short k;
     int j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj;
+    SPP_SETTING *pa = &TProfil::pm->pa;
 
     EMU = pmp->EMU;
     NMU = pmp->NMU;
     //memset( EMU, 0, pmp->L*sizeof(double));
     //memset( NMU, 0, pmp->L*sizeof(double));
-
     j=0;
     pmp->YMET = 0.0;
     for( k=0; k<pmp->FI; k++ )
@@ -718,7 +724,7 @@ void TMulti::f_alpha()
         YF= pmp->YF[k]; // moles of carrier
         if( pmp->FIs && k<pmp->FIs )
             pmp->YFk = pmp->YFA[k];
-        if( pmp->YFk > 6.305117e-16 )
+        if( pmp->YFk > 6.305117e-16 )   // check threshold!
         {
             pmp->logXw = log(pmp->YFk);
             pmp->aqsTail = 1.- pmp->YFk / YF;
@@ -735,22 +741,53 @@ void TMulti::f_alpha()
         if( pmp->PHC[k] == PH_AQUEL) // number of moles of solvent
             pmp->Yw = pmp->YFk;
 
-        for( ; j<ii; j++ )
-        { /* DC */
+// The code below was re-arranged by DK on 2.11.2007
+        if(pmp->L1[k] == 1 )
+        {   // This is a single-component phase - always included in L_S set
+            KinConstr = false;
+            Wx = 1.0;
+            Yj = pmp->Y[j];
             Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
-            Wx = 0.0;
-            Yj = pmp->Y[j];
-            if( YF > 1e-12 && Yj > pmp->lowPosNum*10. )
-                Wx = Yj / YF; // calculating mole fraction of DC
-            // calculating Karpov stability criteria for DCs
+            if( ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+                || (pmp->DLL[j] > 0 && Yj <= pmp->DLL[j] + pa->p.DKIN ) )
+                KinConstr = true; // Avoiding kinetically constrained phase
             Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
-                                    pmp->logXw, Wx, pmp->DCCW[j] );
+                            pmp->logXw, Wx, pmp->DCCW[j] );
             NMU[j] = dNuG;
             EMU[j] = Fj;
-            if( YF > 1e-12 && Yj > pmp->lowPosNum*10. )
-                pmp->Falp[k] += EMU[j]; // calc Karpov criteria of phase
-        }   // j
+            if( KinConstr == false )
+                pmp->Falp[k] = Fj;   // Karpov criterion of pure phase
+        }
+        else {
+        // This is a multi-component phase
+            for( ; j<ii; j++ )
+            {
+                KinConstr = false;
+                Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+                dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
+                Wx = 0.0;
+                Yj = pmp->Y[j];
+                if( YF > pa->p.DS && Yj > pmp->lowPosNum )
+                    Wx = Yj / YF; // calculating mole fraction of DC
+                if( ( pmp->DUL[j] < 1e6 && Yj > ( pmp->DUL[j] - pa->p.DKIN ) )
+                      || (pmp->DLL[j] > 0 && Yj < pmp->DLL[j] + pa->p.DKIN ) )
+                    KinConstr = true; // Avoiding check on kinetically constrained DCs
+                // calculating Karpov stability criteria for DCs
+                Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
+                         pmp->logXw, Wx, pmp->DCCW[j] );
+                NMU[j] = dNuG;  // dNuG is stored for all DCs, not only in L_S
+                if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
+                {
+
+                    if( KinConstr == false )
+                        pmp->Falp[k] += Fj; // incr Karpov stability criterion
+                    EMU[j] = Fj;
+                }
+                else
+                    EMU[j] = 0;   // This DC is not in L_S set
+            }   // j
+        }
         j = ii;
     }  // k
 }

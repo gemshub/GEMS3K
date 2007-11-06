@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 871 2007-02-21 14:29:54Z gems $
+// $Id: m_param.h 932 2007-11-06 13:54:17Z gems $
 //
 // Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
 //
@@ -36,32 +36,32 @@ extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
 
 struct BASE_PARAM
 { // Flags and thresholds for numeric modules
-    short PC,    // "Mode of Selekt2() subroutine operation"
+    short PC,    // Mode of PhaseSelekt() (Selekt2) operation ( 0 1 2 ... )
     PD,  // Mode of DHH():0-invoke,1-at FIA only,2-last IPM it. 3-every IPM it.
     PRD, //Positive: mode GammaCalc(): 0-inactive, 1-FIA only, 2-SELEKT2 only 3-every IPM iteration
          // Negative: number of additional EFD-IPM improvement loops (-1 to -30 )
     PSM, //  Mode of setting FIA Gamma in phases: 0-off; 1 - set activ.coeff. GAN
     DP,  //  Max number of EnterFeasibleDomain() iterations { default 144 }
     DW,  // IPM-2 precision mode: 0- disable >=1  - enable (number of loops, default 15)
-    DT,  // Exponent for restoring x_j from dual solution {-5 to +2, default -3}
+    DT,  // Exponent for restoring x_j from dual solution {-5 to +2, default 0}
     PLLG, // IPM view debug time on Progress Dialog screen from (sec) or 0
     PE,  // Include electroneutrality condition? { 0 1 }
     IIM  // Maximum number of iterations in the main IPM algorithm { 500 }
     ;
     double DG,   // Precision of LEM IPM solver (Jordan) { 1e-15 }
-    DHB,  // Precision of mass balance deviations at EFD { 1e-8 }
-    DS,   // Cutoff number of moles of a phase { 1e-10 }
-    DK,   // Threshold of Dikin criterion of IPM convergence { 1e-5 }
-    DF,   // Threshold of Karpov' criteria for phase stability { 0.01 }
-    DFM,  // Threshold for Karpov' criteria for insertion of phases { -0.1 }
-    DFYw, // N of moles of H2O-solvent for phase insertion { 2e-5 }
+    DHB, // Precision of mass balance deviations at EFD { 1e-8 }
+    DS,  // Cutoff number of moles of a phase { 1e-10 }
+    DK,  // Threshold of Dikin criterion of IPM convergence { 1e-4 }
+    DF,   // Threshold for Karpov's criterion (Fa > DF) for a lost stable phase { 0.01 }
+    DFM,  // Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase { 0.01 }
+    DFYw, // N of moles of H2O-solvent for phase insertion { 1e-6 }
     DFYaq,// N of moles of aqueous DC for phase insertion { 1e-6 }
     DFYid,// N of moles of DC in ideal solution for phase insertion { 1e-6 }
-    DFYr, // Cutoff moles of major DC in non-ideal solution { 1e-6 }
-    DFYh, // Cutoff moles of junior DC in non-ideal solution { 1e-6 }
+    DFYr, // Insertion moles of major DC in non-ideal solution { 1e-6 }
+    DFYh, // Insertion moles of junior DC in non-ideal solution { 1e-6 }
     DFYc, // N of moles for insertion of single-component phase { 1e-6 }
-    DFYs, // Moles of DC to boost phases-solutions (SELEKT2) { 1e-6 }
-    DB,   // Cutoff number of moles of IC in the system 1e-9
+    DFYs, // Moles of DC to insert a single-component phase in Selekt2() { 1e-8 }
+    DB,   // Cutoff number of moles of IC in the system stoichiometry (1e-17)
     AG,   //Smoothing parameter for free energy increments on iterations {0.7}
     DGC,  // Power to raise Pa_AG on steps of smoothing { 0.07 }
     GAR,  // Initial activity coefficient of major DC in a phase (FIA) { 1 }
@@ -70,12 +70,12 @@ struct BASE_PARAM
     DNS,  // Default standard surface site density 1/nm2 (12.05)
     XwMin, // Cutoff N of moles of water in aqueous phase { 1e-5 }
     ScMin, // Cutoff N of moles of main DC in solid carrier for sorption {1e-7}
-    DcMin, //  Cutoff N of moles of solute (sorbate) { 1e-19 }
+    DcMin, // Cutoff N of moles of solute (sorbate) { 1e-19 }
     PhMin, // Cutoff N of moles of a phase { 1e-12 }
     ICmin, // Cutoff value of ionic strength to run DH equation { 1e-5 }
-    EPS,   // Precision of FIA by SIMPLEX-method { 1e-15 }
-    IEPS,  // Accuracy of cutoff limits 1+eps for surface activity terms {1e-8}
-    DKIN;  // Range of lower to upper kinetic restrictions for DC { 0.001 }
+    EPS,   // Precision of FIA by SIMPLEX-method { 1e-7 to 1e-15 }
+    IEPS,  // Accuracy of cutoff limits 1+eps for surface activity terms {1e-3}
+    DKIN; // Range of lower to upper kinetic restrictions for DC { 1e-6 }
     char *tprn;       // internal
 
     void write(ostream& oss);
