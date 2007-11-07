@@ -749,8 +749,9 @@ void TMulti::f_alpha()
             Yj = pmp->Y[j];
             Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
-            if( ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
-                || (pmp->DLL[j] > 0 && Yj <= pmp->DLL[j] + pa->p.DKIN ) )
+            if( pmp->DUL[j] < pa->p.DKIN  
+            	|| ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+                || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
                 KinConstr = true; // Avoiding kinetically constrained phase
             Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
                             pmp->logXw, Wx, pmp->DCCW[j] );
@@ -770,8 +771,9 @@ void TMulti::f_alpha()
                 Yj = pmp->Y[j];
                 if( YF > pa->p.DS && Yj > pmp->lowPosNum )
                     Wx = Yj / YF; // calculating mole fraction of DC
-                if( ( pmp->DUL[j] < 1e6 && Yj > ( pmp->DUL[j] - pa->p.DKIN ) )
-                      || (pmp->DLL[j] > 0 && Yj < pmp->DLL[j] + pa->p.DKIN ) )
+                if( pmp->DUL[j] < pa->p.DKIN  
+                	|| ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+                    || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
                     KinConstr = true; // Avoiding check on kinetically constrained DCs
                 // calculating Karpov stability criteria for DCs
                 Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
