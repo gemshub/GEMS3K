@@ -94,6 +94,7 @@ int TNode::GEM_run()
 {
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
   CalcTime = 0.0;
+  PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
 //
   try
   {
@@ -106,7 +107,7 @@ int TNode::GEM_run()
 // set up Mode
 //   CNode->NodeStatusCH = (short)Mode;
 // GEM IPM calculation of equilibrium state in MULTI
-   CalcTime = TProfil::pm->calcMulti();
+   CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
 
@@ -152,8 +153,21 @@ double TNode::GEM_CalcTime()
   return CalcTime;
 }
 
+// Returns total number of FIA + IPM iterations after the last call to GEM_run()
+// More detailed info is returned via parameters by reference:
+//    PrecLoops:  Number of performed IPM-2 precision refinement loops
+//    NumIterFIA: Total Number of performed FIA entry iterations
+//    NumIterIPM: Total Number of performed IPM main iterations
+int TNode::GEM_Iterations( int& PrecLoops_, int& NumIterFIA_, int& NumIterIPM_ )
+{
+	PrecLoops_ = PrecLoops;
+	NumIterFIA_ = NumIterFIA;
+	NumIterIPM_ = NumIterIPM;
+	return NumIterFIA+NumIterIPM;
+}
+
 // ----------------------------------------------------------------------
- // reads work node (DATABR structure) from a  file
+// reads work node (DATABR structure) from a  file
 int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 {
   try
@@ -1371,7 +1385,7 @@ void TNode::GEM_from_MT(
     if( CSD->nAalp >0 )
      for( ii=0; ii<CSD->nPHb; ii++ )
          CNode->aPH[ii] = p_aPH[ii];
-
+         
    // Optional part - copying old primal solution from p_xDC and p_gam vectors
    if( p_xDC && p_gam )
    {

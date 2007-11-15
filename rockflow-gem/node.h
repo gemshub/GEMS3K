@@ -48,7 +48,12 @@ protected:
     DATABR* CNode;  // Pointer to a work node data bridge structure (node)
       // used for exchanging input data and results between FMT and GEMIPM
 
-    double CalcTime;  // GEMIPM2 calculation time (from the last GEM_run() call)
+    double CalcTime;  // GEMIPM2 calculation time (after the last GEM_run() call)
+    
+    int PrecLoops,    // Number of performed IPM-2 precision refinement loops
+        NumIterFIA,   // Total Number of performed FIA entry iterations
+        NumIterIPM;   // Total Number of performed IPM main iterations
+    
     // Checks if given Tc and P fit within interpolation intervals
     bool  check_TP( double& Tc, double& P );
 
@@ -246,6 +251,13 @@ void GEM_from_MT(
 // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
    double GEM_CalcTime();
 
+// Returns total number of FIA + IPM iterations after the last call to GEM_run()
+// More detailed info is returned via parameters by reference:
+//    PrecLoops:  Number of performed IPM-2 precision refinement loops
+//    NumIterFIA: Total Number of performed FIA entry iterations
+//    NumIterIPM: Total Number of performed IPM main iterations
+   int GEM_Iterations( int& PrecLoops, int& NumIterFIA, int& NumIterIPM ); 
+   
 // (5) For interruption/debugging
 // Writes work node (DATABR structure) into a file path name fname
 // Parameter binary_f defines if the file is to be written in binary

@@ -86,7 +86,7 @@
 <pa_PhMin>     1e-09
 
 # ICmin: Minimal ionic strength, below which the aqueous activity coefficients are set to 1
-<pa_ICmin>     3e-05
+<pa_ICmin>     1e-05
 
 # PC: Mode of Selekt2() procedure operation
 <pa_PC>            1

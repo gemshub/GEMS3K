@@ -64,8 +64,12 @@ int main( int argc, char* argv[] )
    unsigned int nTotIt;   // Number of GEM iterations per time step
    double t_start = 0., t_end = 10000., dt = 100., tc = 1.;
    double CalcTime = 0.0;
-   double MeanIt;         // mean number of GEM iterations at time step
-
+   double MeanIt, MeanFIA, MeanIPM, MeanPRL;  // mean numbers of GEM iterations
+   int nPrecLoops =0;     // Number of IPM-2 precision enhancement loops
+   int nIterFIA =0;       // Number of EnterFeasibleDomain() iterations
+   int nIterIPM =0;       // Number of main IPM iterations
+   int nIterTotal=0;      // Total FIA+IPM iterations done
+   
    cout << "Start of gemnode PIA test: " << ipm_input_file_list_name << " "
          << dbr_input_file_name << endl;
    cout << " nNodes = " << nNodes << "  nTimes = " << nTimes
@@ -107,6 +111,7 @@ int main( int argc, char* argv[] )
    //  (see "databr.h") for better readability
 
    short m_NodeHandle[nNodes], m_NodeStatusCH[nNodes], m_IterDone[nNodes];
+   int nPrecL[nNodes], nFIA[nNodes], nIPM[nNodes];
 
    double m_T[nNodes], m_P[nNodes], m_Vs[nNodes], m_Ms[nNodes],
           m_Gs[nNodes], m_Hs[nNodes], m_IC[nNodes], m_pH[nNodes], 
@@ -114,7 +119,7 @@ int main( int argc, char* argv[] )
 
    double *m_xDC, *m_gam, *m_xPH, *m_aPH, *m_vPS, *m_mPS,*m_bPS,
          *m_xPA, *m_dul, *m_dll, *m_bIC, *m_rMB, *m_uIC;
-
+   
    m_bIC = (double*)malloc( nNodes*nIC*sizeof(double) );
    m_rMB = (double*)malloc( nNodes*nIC*sizeof(double) );
    m_uIC = (double*)malloc( nNodes*nIC*sizeof(double) );
@@ -285,7 +290,11 @@ int main( int argc, char* argv[] )
                m_NodeStatusCH[in] == OK_GEM_PIA ) )
             return 5;
         CalcTime += node->GEM_CalcTime();  // Incrementing calculation time - only v.2.2.0
-
+        nIterTotal += node->GEM_Iterations( nPrecL[in], nFIA[in], nIPM[in] );
+        nPrecLoops += nPrecL[in];
+        nIterFIA += nFIA[in];
+        nIterIPM += nIPM[in];
+        
 // Extracting GEM IPM output data to FMT part
         node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
           m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
@@ -309,7 +318,8 @@ int main( int argc, char* argv[] )
                 "  Str= " << m_xPH[in*nPH+xStr];
         cout << "  [Ca]= " << m_bPS[in*nIC*nPS+xiCa] <<
                 "  [Sr]= " << m_bPS[in*nIC*nPS+xiSr];
-        cout << "  pH= " << m_pH[in] << "  It= " <<  m_IterDone[in] << endl;
+        cout << "  pH= " << m_pH[in] << "  It= " <<  m_IterDone[in]; // << endl;
+        cout << "  nPRL= " << nPrecL[in] << "  nFIA= "  << nFIA[in] << "  nIPM= " << nIPM[in] << endl;
 //}
    }
 //    cout << " Chemical loop ends: " << endl;
@@ -323,11 +333,15 @@ int main( int argc, char* argv[] )
   t_end11 = clock(); // getting end time of coupled calculations
   double dtime = ( t_end11- t_start11 );
   double clc_sec = CLOCKS_PER_SEC;
-  MeanIt = double(nTotIt)/500.; // (double(nNodes*nTimes);
-
+  MeanIt = double(nIterTotal)/500.; // per 1 GEMIPM2 call ( nTotIt double(nNodes*nTimes);
+  MeanFIA = double(nIterFIA)/500.; 
+  MeanIPM = double(nIterIPM)/500.;
+  MeanPRL = double(nPrecLoops)/500.;
+  
   cout <<  "Pure GEM IPM2 runtime , s: " <<  CalcTime << endl; // Only v. 2.2.0
   cout <<  "Total time of calculation, s: " <<  (dtime)/clc_sec << endl;
-  cout << "    Mean GEM IPM iterations: " << MeanIt << endl;
+  cout << "    Mean GEMIPM2 iterations per node: " << MeanPRL << " " << 
+               MeanFIA << " " << MeanIPM << " " << MeanIt << endl;
 
   cout << " This gem_node test ";
 

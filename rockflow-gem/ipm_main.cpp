@@ -47,7 +47,8 @@ void TMulti::MultiCalcMain()
     int i, j, k, eRet;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-    pmp->W1=0;
+    pmp->W1=0; pmp->K2=0;
+    
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
 
@@ -309,7 +310,7 @@ bool TMulti::AutoInitialApprox( )
    if( pmp->DX < 0.01 * pa->p.DK )
        pmp->DX = 0.01 * pa->p.DK;
    pmp->DSM = pa->p.DS;  // Shall we add  * sfactor ?
-   pmp->ITG = 0; pmp->ITF = 0;
+   pmp->ITG = 0; pmp->ITF = 0; pmp->K2 = 0; pmp->W1 = 0; 
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
    pVisor->Update(false);
@@ -328,7 +329,7 @@ bool TMulti::AutoInitialApprox( )
            XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
         pmp->IT = 0; 
         pmp->pNP = 0;
-        pmp->K2 = 0;
+//        pmp->K2 = 0;
         pmp->PCI = 0;
 
      // Calling the simplex method here
@@ -350,7 +351,7 @@ STEP_POINT( "End Simplex" );
     {
         int jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
         double LnGam, FitVar3;
-pmp->K2 = 0;
+// pmp->K2 = 0;
         FitVar3 = pmp->FitVar[3];
         pmp->FitVar[3] = 1.0;
         TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
@@ -441,7 +442,7 @@ int TMulti::EnterFeasibleDomain()
 
 //----------------------------------------------------------------------------
 // BEGIN:  main loop
-    for( IT1=0; IT1 < pa->p.DP; IT1++, pmp->IT++ )
+    for( IT1=0; IT1 < pa->p.DP; IT1++, pmp->IT++, pmp->ITF++ )
     {
         // get size of task
         pmp->NR=pmp->N;
@@ -450,7 +451,7 @@ int TMulti::EnterFeasibleDomain()
                 pmp->NR= (short)(pmp->N-1);
         }
         N=pmp->NR;
-        pmp->ITF++;
+//      pmp->ITF++;
        // Calculation of mass-balance residuals in IPM
        MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C);
 
@@ -538,7 +539,7 @@ int TMulti::InteriorPointsMethod( )
 
 //----------------------------------------------------------------------------
 //  Main loop of IPM iterations
-    for( IT1 = 0; IT1 < pa->p.IIM; IT1++, pmp->IT++ )
+    for( IT1 = 0; IT1 < pa->p.IIM; IT1++, pmp->IT++, pmp->ITG++ )
     {
         pmp->NR=pmp->N;
         if( pmp->LO ) // water-solvent is present
@@ -548,7 +549,7 @@ int TMulti::InteriorPointsMethod( )
         }
         N = pmp->NR;
 //        memset( pmp->F, 0, pmp->L*sizeof(double));
-        pmp->ITG++;
+//        pmp->ITG++;
         PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
         // Setting weight multipliers for DC

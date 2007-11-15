@@ -53,7 +53,7 @@
 <pa_DF>         0.01
 
 # DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>          144
+<pa_DP>          30
 
 # IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
 <pa_IIM>         500
@@ -86,12 +86,12 @@
 <pa_PhMin>     1e-09
 
 # ICmin: Minimal ionic strength, below which the aqueous activity coefficients are set to 1
-<pa_ICmin>     3e-05
+<pa_ICmin>     1e-05
 
 # PC: Mode of Selekt2() procedure operation
 <pa_PC>            1
 # DFM: Threshold of Karpov stability criterion for insertion of a phase in Selekt2() procedure
-<pa_DFM>         0.1
+<pa_DFM>         0.01
 # DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
 # DFYw - water solvent;
 <pa_DFYw>      1e-06
@@ -107,7 +107,7 @@
 # DFYc - single-component phase; 
 <pa_DFYc>      1e-06
 # Insertion amount of single-component phase (Selekt2() algorithm only)
-<pa_DFYs>      1e-06
+<pa_DFYs>      1e-07
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
@@ -125,7 +125,8 @@
 # pKin: Flag for using metastability/kinetic constraints on calculated DC amounts (see dll, dul arrays)
 <pKin>             1
 # DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
-<pa_DKIN>     0.0001
+<pa_DKIN>     0.00001
+
 
 ## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # sMod: Codes for mixing models of multicomponent phases
