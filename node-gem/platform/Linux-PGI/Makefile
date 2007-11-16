@@ -12,19 +12,19 @@ CC       = pgCC
 CXX      = pgCC
 LEX      = flex
 YACC     = yacc
-CFLAGS   = -g -O3 -DIPMGEMPLUGIN -D__unix
+CFLAGS   = -g -O3 -DIPMGEMPLUGIN -D__unix 
 CXXFLAGS = -g -O3 -DIPMGEMPLUGIN -D__unix
 LEXFLAGS = 
 YACCFLAGS= -d
 INCPATH  =  -I.
 LINK     = pgCC
-LFLAGS   = 
+LFLAGS   = -Bstatic
 LIBS     = $(SUBLIBS)  
 AR       = ar cqs
 RANLIB   = 
 MOC      = 
 UIC      = 
-QMAKE    = qmake
+QMAKE    = 
 TAR      = tar -cf
 GZIP     = gzip -9f
 COPY     = cp -f
@@ -68,6 +68,7 @@ HEADERS = array.h \
 SOURCES = gstring.cpp \
 		gdatastream.cpp \
 		s_fgl.cpp \
+		s_fgl2.cpp \
 		node.cpp \
 		node_format.cpp \
 		ms_multi_file.cpp \
@@ -84,6 +85,7 @@ SOURCES = gstring.cpp \
 OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
 		obj/s_fgl.o \
+		obj/s_fgl2.o \
 		obj/node.o \
 		obj/node_format.o \
 		obj/ms_multi_file.o \
@@ -140,8 +142,6 @@ uicables: $(UICDECLS) $(UICIMPLS)
 $(MOC): 
 	( cd $(QTDIR)/src/moc && $(MAKE) )
 
-Makefile: gem_node-sep.pro   
-	$(QMAKE) -o Makefile gem_node-sep.pro
 qmake: 
 	@$(QMAKE) -o Makefile gem_node-sep.pro
 
@@ -185,6 +185,14 @@ obj/s_fgl.o: s_fgl.cpp s_fgl.h \
 		gstring.h \
 		array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl.o s_fgl.cpp
+
+obj/s_fgl2.o: s_fgl2.cpp s_fgl.h \
+		m_const.h \
+		verror.h \
+		v_user.h \
+		gstring.h \
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl2.o s_fgl2.cpp
 
 obj/node.o: node.cpp node.h \
 		gdatastream.h \

@@ -91,7 +91,7 @@
 # PC: Mode of Selekt2() procedure operation
 <pa_PC>            1
 # DFM: Threshold of Karpov stability criterion for insertion of a phase in Selekt2() procedure
-<pa_DFM>         0.1
+<pa_DFM>         0.5
 # DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
 # DFYw - water solvent;
 <pa_DFYw>      1e-06
