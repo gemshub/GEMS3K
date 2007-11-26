@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>GEMIPM2K</name>
+	<name>Gemipm2k</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -36,10 +36,6 @@
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.contents</key>
 					<value>org.eclipse.cdt.make.core.activeConfigSettings</value>
-				</dictionary>
-				<dictionary>
-					<key>org.eclipse.cdt.make.core.buildLocation</key>
-					<value>${workspace_loc:/GEMIPM2K}</value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.useDefaultBuildCmd</key>

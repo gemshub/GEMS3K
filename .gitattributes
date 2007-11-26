@@ -51,6 +51,7 @@ GEMIPM2K/platform/Linux-GNU/Makefile -text
 GEMIPM2K/platform/Linux-PGI/Makefile -text
 GEMIPM2K/platform/Linux-PGI/Makefile.prof -text
 GEMIPM2K/platform/other/Makefile -text
+GEMIPM2K/platform/win32MinGW/Makefile -text
 GEMIPM2K/platform/win32bcc/Makefile -text
 GEMIPM2K/s_fgl.cpp -text
 GEMIPM2K/s_fgl.h -text
@@ -255,6 +256,7 @@ node-gem/platform/Linux-PGI/Makefile -text
 node-gem/platform/Linux-PGI/Makefile.prof -text
 node-gem/platform/other/Makefile -text
 node-gem/platform/win32bcc/Makefile -text
+node-gem/platform/win32minGW/Makefile -text
 node-gem/platform/win32msvc/Makefile -text
 node-gem/s_fgl.cpp -text
 node-gem/s_fgl.h -text
