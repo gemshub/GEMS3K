@@ -45,6 +45,7 @@ GEMIPM2K/node.h -text
 GEMIPM2K/node_format.cpp -text
 GEMIPM2K/num_methods.cpp -text
 GEMIPM2K/num_methods.h -text
+GEMIPM2K/obj/Readme.txt -text
 GEMIPM2K/platform/CRAYXT3-catamount/Makefile -text
 GEMIPM2K/platform/Linux-GNU/Makefile -text
 GEMIPM2K/platform/Linux-PGI/Makefile -text
