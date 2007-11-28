@@ -1,3 +1,3 @@
-exec ./gemnode tp_test/CalcColumn-dat.lst tp_test/CalcColumn-dbr-0-0000.dat >  CalcColumn_tp.out  
+./gemipm2k test/CalcColumn-dat.lst test/CalcColumn-dbr.lst >  CalcColumn_.out  
 
 

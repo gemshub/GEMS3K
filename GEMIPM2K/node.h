@@ -32,6 +32,8 @@ class QWidget;
 class TNode
 {
 
+  gstring dbr_file_name;
+  
 protected:
 
    MULTI* pmm;  // Pointer to GEMIPM work data structure (see ms_multi.h)

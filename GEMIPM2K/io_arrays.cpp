@@ -30,7 +30,7 @@
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
 
-void TPrintArrays::writeArray( char *name, char* arr,
+void TPrintArrays::writeArray( const char *name, char* arr,
                               int size, int arr_siz )
 {
  ff << endl << "<" << name << ">" << endl;
@@ -44,7 +44,7 @@ void TPrintArrays::writeArray( char *name, char* arr,
  }
 }
 
-void TPrintArrays::writeArray( char *name, short* arr,
+void TPrintArrays::writeArray( const char *name, short* arr,
                  int size, int l_size  )
 {
   int sz = 10;
@@ -60,7 +60,7 @@ void TPrintArrays::writeArray( char *name, short* arr,
  }
 }
 
-void TPrintArrays::writeArray( char *name,  float* arr,
+void TPrintArrays::writeArray( const char *name,  float* arr,
             int size, int l_size )
 {
  int sz = 10;
@@ -76,7 +76,7 @@ void TPrintArrays::writeArray( char *name,  float* arr,
  }
 }
 
-void TPrintArrays::writeArray( char *name,  double* arr,
+void TPrintArrays::writeArray( const char *name,  double* arr,
             int size, int l_size )
 {
  int sz = 10;
@@ -174,7 +174,7 @@ void TReadArrays::readNext( const char* label)
  Error( buf, "Format text read 03: Invalid name of array");
 }
 
-void TReadArrays::readArray( char*, short* arr, int size )
+void TReadArrays::readArray( const char*, short* arr, int size )
 {
  for( int ii=0; ii<size; ii++  )
  {
@@ -183,7 +183,7 @@ void TReadArrays::readArray( char*, short* arr, int size )
  }
 }
 
-void TReadArrays::readArray( char*, float* arr, int size )
+void TReadArrays::readArray( const char*, float* arr, int size )
 {
  for( int ii=0; ii<size; ii++  )
  {
@@ -192,7 +192,7 @@ void TReadArrays::readArray( char*, float* arr, int size )
  }
 }
 
-void TReadArrays::readArray( char*, double* arr, int size )
+void TReadArrays::readArray( const char*, double* arr, int size )
 {
  for( int ii=0; ii<size; ii++  )
  {
@@ -201,7 +201,7 @@ void TReadArrays::readArray( char*, double* arr, int size )
  }
 }
 
-void TReadArrays::readArray( char*, char* arr, int size, int el_size )
+void TReadArrays::readArray( const char*, char* arr, int size, int el_size )
 {
  char ch;
  char buf[200];

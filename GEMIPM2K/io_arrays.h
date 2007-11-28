@@ -28,10 +28,10 @@ public:
     TPrintArrays( fstream& fout ):
       ff( fout ){}
 
-    void writeArray( char *name, char*   arr, int size, int arr_siz );
-    void writeArray( char *name, short*  arr, int size, int l_size=-1  );
-    void writeArray( char *name, float*  arr, int size, int l_size=-1 );
-    void writeArray( char *name, double* arr, int size, int l_size=-1 );
+    void writeArray( const char *name, char*   arr, int size, int arr_siz );
+    void writeArray( const char *name, short*  arr, int size, int l_size=-1  );
+    void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
+    void writeArray( const char *name, double* arr, int size, int l_size=-1 );
 
 };
 
@@ -74,10 +74,10 @@ struct outField
 
     gstring testRead();   // test for reading all arrays
 
-    void readArray( char *name, short* arr, int size );
-    void readArray( char *name, float* arr, int size );
-    void readArray( char *name, double* arr, int size );
-    void readArray( char *name, char* arr, int size, int el_size );
+    void readArray( const char *name, short* arr, int size );
+    void readArray( const char *name, float* arr, int size );
+    void readArray( const char *name, double* arr, int size );
+    void readArray( const char *name, char* arr, int size, int el_size );
 
 };
 

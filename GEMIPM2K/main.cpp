@@ -34,27 +34,19 @@ int main( int argc, char* argv[] )
  {
    double PureTime = 0.0;
    int nNodes = 1, nRecipes = 0;
-   char *recipes = NULL;
-   char *ThisRecipe = NULL;
+   char  (*recipes)[fileNameLength] = 0;
+
+   //  char *recipes = NULL;
+ //  char *ThisRecipe = NULL;
 
    // Analyzing command line arguments
      // Default arguments
      char input_system_file_list_name[256] = "system.lst";
      char input_recipes_file_list_name[256] = "more_recipes.lst";
-
+   
      if (argc >= 2 )
        strncpy( input_system_file_list_name, argv[1], 256);
          // list of CSD files needed as input for initializing GEMIPM2K
-     if (argc >= 3 )
-     {  
-    	 strncpy( input_recipes_file_list_name, argv[2], 256);
-          // list of additional recipes (dbr.dat files) e.g. for simulation
-          // of a titration or another irreversible process
-          recipes = new char[32768]; 
-    	  // Reading this file into text buffer
-          // fstream( input_recipes_file_list_name )
-          // ................................
-     }   
 
    // Creating TNode structure accessible trough the "node" pointer
    TNode* node  = new TNode();
@@ -96,35 +88,87 @@ int main( int argc, char* argv[] )
   nPH = dCH->nPHb;
   nPS = dCH->nPSb;
   
-  do { 
-       nRecipes++; 
-	   dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
+  //
+  // Calculate start DATABR structure reading from files needed as input for initializing GEMIPM2K
+  //
+  
+  dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
-       // re-calculating equilibrium by calling GEMIPM2K, getting the status
-       NodeStatusCH = node->GEM_run();
-       PureTime += node->GEM_CalcTime();
+  // re-calculating equilibrium by calling GEMIPM2K, getting the status
+  NodeStatusCH = node->GEM_run();
+  PureTime += node->GEM_CalcTime();
 
-       if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
-       {
+  if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
+      {
           cout << "Error: GEMIPM2K did not converge well " << NodeStatusCH << endl;
           cout << "See GEMIPM2K-Dump file" << endl;
-          node->GEM_print_ipm( "GEMIPM2K-Dump.out" );
+          node->GEM_print_ipm( 0 );
           cout << "Bye! " << endl;
           return 5; // GEM IPM did not converge properly
-       }
+      }
 
-       IterDone = dBR->IterDone;
-       cout << "Success: GEMIPM2K converged in " << IterDone << " iterations in "
+  IterDone = dBR->IterDone;
+  cout << "Success: GEMIPM2K converged in " << IterDone << " iterations in "
             << PureTime << " sec" << endl;
-       cout << "See output in the system-dbr.out file" << endl;
-       node->GEM_write_dbr( "system-dbr.out" );
-       cout << "See details in the GEMIPM2K-Dump.out file" << endl;
-       node->GEM_print_ipm( "GEMIPM2K-Dump.out" );
+  cout << "See output in the system-dbr.out file" << endl;
+  node->GEM_write_dbr( 0 );
+  cout << "See details in the GEMIPM2K-Dump.out file" << endl;
+  node->GEM_print_ipm( 0 );
 
-       // Trying to read the next file name 
-       
-   }  while ( !TNode::na->GEM_read_dbr( NextRecipeFileName() ));
-   
+
+  // Working with list of additional recipes
+  if (argc >= 3 )
+  {  
+	  char NextRecipeFileName[256];
+	  char NextRecipeOutFileName[300];
+	  char input_recipes_file_list_path[256-fileNameLength] = "";
+    
+	  strncpy( input_recipes_file_list_name, argv[2], 256);
+      // list of additional recipes (dbr.dat files) e.g. for simulation
+      // of a titration or another irreversible process
+ 	 // Reading list of recipes names from file 
+ 	  recipes = f_getfiles(  input_recipes_file_list_name, 
+ 	       		 input_recipes_file_list_path, nRecipes, ',');			 
+     
+ 	 for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
+     { 
+
+        // Trying to read the next file name 
+ 	    sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[cRecipe] );
+ 	    TNode::na->GEM_read_dbr( NextRecipeFileName );
+ 	    
+
+ 		dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
+
+        // re-calculating equilibrium by calling GEMIPM2K, getting the status
+        NodeStatusCH = node->GEM_run();
+        PureTime += node->GEM_CalcTime();
+
+        if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
+        {
+          cout << "Error: GEMIPM2K did not converge well " << NodeStatusCH << endl;
+   	      sprintf(NextRecipeOutFileName , "%s.GEMIPM2K-Dump.out", NextRecipeFileName );
+          cout << "See " << NextRecipeOutFileName << " file" << endl;
+          node->GEM_print_ipm( NextRecipeOutFileName );
+          cout << "Bye! " << endl;
+          return 5; // GEM IPM did not converge properly
+        }
+
+      IterDone = dBR->IterDone;
+      cout << "Success: GEMIPM2K converged in " << IterDone << " iterations in "
+            << PureTime << " sec" << endl;
+      sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
+      cout << "See output in the " << NextRecipeOutFileName << " file" << endl;
+      node->GEM_write_dbr( NextRecipeOutFileName );
+      sprintf(NextRecipeOutFileName , "%s.GEMIPM2K-Dump.out", NextRecipeFileName );
+      cout << "See out in the " << NextRecipeOutFileName << " file" << endl;
+      node->GEM_print_ipm( NextRecipeOutFileName  );
+
+    
+   }  // endfor
+
+  } // endif
+  
   // Finished! 
   // deleting GEMIPM and data exchange memory structures
    delete node;
