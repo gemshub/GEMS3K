@@ -58,10 +58,7 @@ GEMIPM2K/s_fgl.h -text
 GEMIPM2K/s_fgl2.cpp -text
 GEMIPM2K/test/CalcColumn-dat.lst -text
 GEMIPM2K/test/CalcColumn-dbr-0-0000.dat -text
-GEMIPM2K/test/CalcColumn-dbr-0-0000.dat.GEMIPM2K-Dump.out -text
-GEMIPM2K/test/CalcColumn-dbr-0-0000.dat.out -text
 GEMIPM2K/test/CalcColumn-dbr-0-0001.dat -text
-GEMIPM2K/test/CalcColumn-dbr-0-0001.dat.out -text
 GEMIPM2K/test/CalcColumn-dbr.lst -text
 GEMIPM2K/test/CalcColumn-dch.dat -text
 GEMIPM2K/test/CalcColumn-ipm.dat -text
