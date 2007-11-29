@@ -1118,7 +1118,7 @@ void TNode::unpackDataBr()
 // if called in loop for each node), or in text format
 // (false or 0, default)
 //
-   void  TNode::GEM_write_dbr( const char* fname, bool binary_f )
+   void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments )
    {
        gstring str_file;
        if( fname == 0)	   
@@ -1135,7 +1135,7 @@ void TNode::unpackDataBr()
       else
       {  fstream out_br(str_file.c_str(), ios::out );
          ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
-         databr_to_text_file(out_br);
+         databr_to_text_file(out_br, with_comments );
       }
    }
 
@@ -1148,7 +1148,7 @@ void TNode::unpackDataBr()
    {
      gstring str_file;  
      if( fname == 0)	   
-    	   str_file = dbr_file_name+".GEMIPM-Dump.out";
+    	   str_file = dbr_file_name + ".Dump.out";
      else
            str_file = fname;
       

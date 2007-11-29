@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 940 2007-11-27 12:47:06Z gems $
+// $Id: ms_param.cpp 941 2007-11-28 08:36:03Z gems $
 //
 // Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //

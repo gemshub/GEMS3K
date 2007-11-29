@@ -92,11 +92,11 @@ protected:
 
     // Text i/o functions
       // writes CSD (DATACH structure) to a text file
-    void datach_to_text_file( fstream& ff );
+    void datach_to_text_file( fstream& ff, bool with_comments = true );
       // reads CSD (DATACH structure) from a text file
     void datach_from_text_file( fstream& ff);
       // writes work node (DATABR structure) to a text file
-    void databr_to_text_file(fstream& ff );
+    void databr_to_text_file(fstream& ff, bool with_comments = true );
       // reads work node (DATABR structure) from a text file
     void databr_from_text_file(fstream& ff );
 
@@ -265,9 +265,10 @@ void GEM_from_MT(
 // Parameter binary_f defines if the file is to be written in binary
 // format (true or 1, good for interruption of coupled modeling task
 // if called in loop for each node), or in text format
-// (false or 0, default)
+// (false or 0, default). Parameter with_comments, if true, tells that 
+// the text file will be written with comments for all data entries. 
 //
-   void  GEM_write_dbr( const char* fname, bool binary_f=false );
+   void  GEM_write_dbr( const char* fname,  bool binary_f=false, bool with_comments = true);
 
 // (5a) For detailed examination of GEM work data structure:
 // writes GEMIPM internal MULTI data structure into text file

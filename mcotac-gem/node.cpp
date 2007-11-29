@@ -496,7 +496,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
     if( fabs( Tc - CSD->TCval[jj] ) < CSD->Ttol )
     {
        Tc = CSD->TCval[jj];
-       return jj;;
+       return jj;
     }
    return -1;
  }
@@ -510,7 +510,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
     if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
     {
       P = CSD->Pval[jj];
-      return jj;;
+      return jj;
     }
    return -1;
  }

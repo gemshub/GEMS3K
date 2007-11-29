@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 717 2006-07-06 08:06:21Z gems $
+// $Id: main.cpp 941 2006-07-06 08:06:21Z gems $
 //
 // Demo test of usage of the TNode class for implementing a simple
 // batch-like calculation of equilibria using text file input and
@@ -51,7 +51,7 @@ int main( int argc, char* argv[] )
    // Creating TNode structure accessible trough the "node" pointer
    TNode* node  = new TNode();
 
-   cout << "Welcome to GEMIPM2K v. 2.0.0 solver of (geo)chemical equilibria! "
+   cout << "Welcome to GEMIPM2K v. 2.2.0 solver of (geo)chemical equilibria! "
         << endl;
 
    // Here we read the files needed as input for initializing GEMIPM2K
@@ -81,7 +81,7 @@ int main( int argc, char* argv[] )
   DATABR* dBR = node->pCNode();
   if( !dBR  )
      return 4;
-
+  
   // Extracting data bridge array sizes
   nIC = dCH->nICb;
   nDC = dCH->nDCb;
@@ -91,29 +91,29 @@ int main( int argc, char* argv[] )
   //
   // Calculate start DATABR structure reading from files needed as input for initializing GEMIPM2K
   //
-  
+  dBR->NodeStatusFMT = No_transport; 
   dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
-
+  dBR->NodeHandle = -1;
   // re-calculating equilibrium by calling GEMIPM2K, getting the status
   NodeStatusCH = node->GEM_run();
   PureTime += node->GEM_CalcTime();
 
   if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
       {
-          cout << "Error: GEMIPM2K did not converge well " << NodeStatusCH << endl;
-          cout << "See GEMIPM2K-Dump file" << endl;
-          node->GEM_print_ipm( 0 );
+          cout << "Error: GEMIPM2 did not converge well " << NodeStatusCH << endl;
+          cout << "See *.Dump.out file" << endl;
+          node->GEM_print_ipm( NULL );
           cout << "Bye! " << endl;
           return 5; // GEM IPM did not converge properly
       }
 
   IterDone = dBR->IterDone;
-  cout << "Success: GEMIPM2K converged in " << IterDone << " iterations in "
-            << PureTime << " sec" << endl;
-  cout << "See output in the system-dbr.out file" << endl;
-  node->GEM_write_dbr( 0 );
-  cout << "See details in the GEMIPM2K-Dump.out file" << endl;
-  node->GEM_print_ipm( 0 );
+  cout << "GEMIPM2 converged in " << IterDone << " iterations in "
+            << node->GEM_CalcTime() << " sec" << endl;
+  cout << "See output in the *.out file" << endl;
+  node->GEM_write_dbr( NULL, false, true );
+//  cout << "See details in the *.Dump.out file" << endl;
+//  node->GEM_print_ipm( NULL );
 
 
   // Working with list of additional recipes
@@ -129,25 +129,27 @@ int main( int argc, char* argv[] )
  	 // Reading list of recipes names from file 
  	  recipes = f_getfiles(  input_recipes_file_list_name, 
  	       		 input_recipes_file_list_path, nRecipes, ',');			 
+     if( nRecipes < 0 || nRecipes > 1000 )
+    	 goto FINISH;
      
+ 	  
  	 for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
      { 
-
         // Trying to read the next file name 
  	    sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[cRecipe] );
  	    TNode::na->GEM_read_dbr( NextRecipeFileName );
  	    
-
+ 	    dBR->NodeStatusFMT = No_transport; 
  		dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
-
+ 		dBR->NodeHandle = cRecipe;
         // re-calculating equilibrium by calling GEMIPM2K, getting the status
         NodeStatusCH = node->GEM_run();
         PureTime += node->GEM_CalcTime();
 
         if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
         {
-          cout << "Error: GEMIPM2K did not converge well " << NodeStatusCH << endl;
-   	      sprintf(NextRecipeOutFileName , "%s.GEMIPM2K-Dump.out", NextRecipeFileName );
+          cout << "Error: GEMIPM2 did not converge well " << NodeStatusCH << endl;
+   	      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
           cout << "See " << NextRecipeOutFileName << " file" << endl;
           node->GEM_print_ipm( NextRecipeOutFileName );
           cout << "Bye! " << endl;
@@ -155,24 +157,25 @@ int main( int argc, char* argv[] )
         }
 
       IterDone = dBR->IterDone;
-      cout << "Success: GEMIPM2K converged in " << IterDone << " iterations in "
-            << PureTime << " sec" << endl;
+      cout << "GEMIPM2 converged in " << IterDone << " iterations in "
+            << node->GEM_CalcTime() << " sec" << endl;
       sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
       cout << "See output in the " << NextRecipeOutFileName << " file" << endl;
-      node->GEM_write_dbr( NextRecipeOutFileName );
-      sprintf(NextRecipeOutFileName , "%s.GEMIPM2K-Dump.out", NextRecipeFileName );
-      cout << "See out in the " << NextRecipeOutFileName << " file" << endl;
-      node->GEM_print_ipm( NextRecipeOutFileName  );
-
+      node->GEM_write_dbr( NextRecipeOutFileName, false, false );
+//      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+//      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
+//      node->GEM_print_ipm( NextRecipeOutFileName  );
     
-   }  // endfor
+   }  // end for
 
-  } // endif
+  } // end if
   
+FINISH:
   // Finished! 
   // deleting GEMIPM and data exchange memory structures
    delete node;
    if( recipes ) delete recipes;
+   cout <<  "Pure time of calculation, s: " <<  PureTime << endl;
    cout << "Bye!" << endl;
 
    return 0;

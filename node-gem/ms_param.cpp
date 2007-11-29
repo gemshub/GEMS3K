@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 932 2007-11-06 13:54:17Z gems $
+// $Id: ms_param.cpp 941 2007-11-28 08:36:03Z gems $
 //
 // Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -388,6 +388,54 @@ void u_splitpath(const gstring& Path, gstring& dir,
         name = Path.substr(pos, npos);
     }
 }
+
+// Reading list of names from file, return number of names 
+int f_getnames(istream& is, TCStringArray& nameList, char delim = ' ')
+{
+  gstring name;
+
+  nameList.Clear();
+  while( !is.eof() )
+  {
+	f_getline( is, name, delim);
+	nameList.Add(name);
+  }
+	
+ return nameList.GetCount();
+}
+
+// Get Path of file and Reading list of file names from it, return number of files
+char  (* f_getfiles(const char *f_name, char *Path, 
+		int& nElem, char delim ))[fileNameLength]
+{
+  char  (*filesList)[fileNameLength];
+
+// Get path
+     gstring path_;
+	 gstring flst_name = f_name;
+	 size_t pos = flst_name.rfind("/");
+     path_ = "";
+     if( pos < npos )
+      path_ = flst_name.substr(0, pos+1);
+     strncpy( Path, path_.c_str(), 256-fileNameLength);
+     Path[255] = '\0';
+     
+//  open file stream for the file names list file
+     fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
+     ErrorIf( !f_lst.good(), f_name, "Fileopen error");
+
+// Reading list of names from file	
+    TCStringArray nameList; 
+	nElem = f_getnames(f_lst, nameList, delim);
+	filesList = new char[nElem][fileNameLength];
+
+	for(int ii=0; ii<nElem; ii++)
+	{     strncpy( filesList[ii], nameList[ii].c_str(), fileNameLength);
+	      filesList[ii][fileNameLength-1] = '\0';
+	}
+   return filesList;	
+}
+
 
 // ------------------ End of ms_param.cpp -----------------------
 

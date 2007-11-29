@@ -29,14 +29,18 @@
 
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
-
-void TPrintArrays::writeArray( char *name, char* arr,
+// If the first parameter is given as NULL then the char array 
+// will be printed as a comment  
+void TPrintArrays::writeArray( const char *name, char* arr,
                               int size, int arr_siz )
 {
- ff << endl << "<" << name << ">" << endl;
+ 
+ if( name ) 
+     ff << endl << "<" << name << ">" << endl;
+ else ff << endl << "#  ";
  for( int ii=0, jj=0; ii<size; ii++, jj++  )
  {
-    if(jj == 10)
+    if(jj == 40)
     { jj=0;  ff << endl;}
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
     str.strip();
@@ -44,10 +48,10 @@ void TPrintArrays::writeArray( char *name, char* arr,
  }
 }
 
-void TPrintArrays::writeArray( char *name, short* arr,
+void TPrintArrays::writeArray( const char *name, short* arr,
                  int size, int l_size  )
 {
-  int sz = 10;
+  int sz = 40;
   if( l_size > 0 )
         sz = l_size;
 
@@ -60,10 +64,10 @@ void TPrintArrays::writeArray( char *name, short* arr,
  }
 }
 
-void TPrintArrays::writeArray( char *name,  float* arr,
+void TPrintArrays::writeArray( const char *name,  float* arr,
             int size, int l_size )
 {
- int sz = 10;
+ int sz = 40;
  if( l_size > 0 )
        sz = l_size;
 
@@ -72,14 +76,15 @@ void TPrintArrays::writeArray( char *name,  float* arr,
  {
     if(jj == sz)
     { jj=0;  ff << endl;}
-    ff << setprecision(10) << scientific << arr[ii] << " ";
+//    ff << setprecision(10) << scientific << arr[ii] << " ";
+    ff << setprecision(7) << arr[ii] << " ";
  }
 }
 
-void TPrintArrays::writeArray( char *name,  double* arr,
+void TPrintArrays::writeArray( const char *name,  double* arr,
             int size, int l_size )
 {
- int sz = 10;
+ int sz = 40;
  if( l_size > 0 )
        sz = l_size;
 
@@ -88,7 +93,8 @@ void TPrintArrays::writeArray( char *name,  double* arr,
  {
     if(jj == sz)
     { jj=0;  ff << endl;}
-    ff << setprecision(18) << scientific << arr[ii] << " ";
+//    ff << setprecision(18) << scientific << arr[ii] << " ";
+    ff << setprecision(15) << arr[ii] << " ";
  }
 }
 
@@ -174,7 +180,7 @@ void TReadArrays::readNext( const char* label)
  Error( buf, "Format text read 03: Invalid name of array");
 }
 
-void TReadArrays::readArray( char*, short* arr, int size )
+void TReadArrays::readArray( const char*, short* arr, int size )
 {
  for( int ii=0; ii<size; ii++  )
  {
@@ -183,7 +189,7 @@ void TReadArrays::readArray( char*, short* arr, int size )
  }
 }
 
-void TReadArrays::readArray( char*, float* arr, int size )
+void TReadArrays::readArray( const char*, float* arr, int size )
 {
  for( int ii=0; ii<size; ii++  )
  {
@@ -192,7 +198,7 @@ void TReadArrays::readArray( char*, float* arr, int size )
  }
 }
 
-void TReadArrays::readArray( char*, double* arr, int size )
+void TReadArrays::readArray( const char*, double* arr, int size )
 {
  for( int ii=0; ii<size; ii++  )
  {
@@ -201,7 +207,7 @@ void TReadArrays::readArray( char*, double* arr, int size )
  }
 }
 
-void TReadArrays::readArray( char*, char* arr, int size, int el_size )
+void TReadArrays::readArray( const char*, char* arr, int size, int el_size )
 {
  char ch;
  char buf[200];

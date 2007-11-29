@@ -52,7 +52,7 @@ typedef struct
     Mi,         // Mass of inert subsystem, g              +      -      -     +
 
     Gs,         // Gibbs energy of reactive subsystem, J   -      -      +     +
-    Hs, 	// Enthalpy of reactive subsystem, J       -      -      +     +
+    Hs, 	// Enthalpy of reactive subsystem, J           -      -      +     +
     Hi,         // Enthalpy of inert subsystem, J          +      -      -     +
 
     IC,     // Effective aqueous ionic strength, molal     -      -      +     +
@@ -115,6 +115,7 @@ DATABR;
 typedef DATABR*  DATABRPTR;
 
 typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
+ NO_GEM_SOLVER= 0,   // No GEM re-calculation needed for this node
  NEED_GEM_AIA = 1,   // GEM starts with simplex initial approximation (IA)
  OK_GEM_AIA   = 2,   // OK after GEM calculation with simplex IA
  BAD_GEM_AIA  = 3,   // Bad result after GEM calculation with simplex IA
@@ -128,7 +129,7 @@ typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
 } NODECODECH;
 
 typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part
-
+ No_transport  = 0,  // Chemical calculations only, no transport coupled
  Initial_RUN   = 1,
  OK_Hydraulic  = 2,
  BAD_Hydraulic = 3,  // insufficient convergence

@@ -36,12 +36,12 @@ outField DataBR_fields[51] =  {
   { "NodeHandle",  0, 0 },
   { "NodeTypeHY",  0, 0 },
   { "NodeTypeMT",  0, 0 },
-  { "NodeStatusFMT",  0, 0 },
+  { "NodeStatusFMT",  1, 0 },
   { "NodeStatusCH",  1, 0 },
   { "IterDone",  0, 0 },
   { "TC",   1, 0 },
   { "P",  1, 0 },
-  { "Vs",  1, 0 },
+  { "Vs",  0, 0 },
   { "Vi",   0, 0 },
   { "Ms",   0, 0 },
   { "Mi",   0, 0 },
@@ -133,30 +133,34 @@ outField DataCH_dynamic_fields[25] =  {
 
 //===============================================================
 
-void TNode::databr_to_text_file( fstream& ff )
+void TNode::databr_to_text_file( fstream& ff, bool with_comments )
 {
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
-
+  _comment = with_comments;
+  
   TPrintArrays  prar(ff);
 
    if( _comment )
    {  ff << "# GEMIPM2K v. 2.2.0" << endl;
-      ff << "# Prototype 22.02.2007" << endl;
+      ff << "# Prototype 28.11.2007" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
       ff << "#Section (scalar-1): Controls of the GEM IPM operation and data exchange" << endl;
    }
    if( _comment )
-      ff << "# Node identification handle" << endl;
+      ff << "# Node identification handle (index of recipe)" << endl;
    ff << left << setw(17) << "<NodeHandle> " <<  CNode->NodeHandle << endl;
+if( CNode->NodeStatusFMT != No_transport )
+{	   
    if( _comment )
       ff << "# Node type (hydraulic); see typedef NODETYPE" << endl;
    ff << left << setw(17) << "<NodeTypeHY> " <<  CNode->NodeTypeHY << endl;
    if( _comment )
       ff << "# Node type (mass transport); see typedef NODETYPE" << endl;
    ff << left << setw(17) << "<NodeTypeMT> " <<  CNode->NodeTypeMT << endl;
+}   
    if( _comment )
       ff << "# Node status code FMT; see typedef NODECODEFMT" << endl;
    ff << left << setw(17) << "<NodeStatusFMT> " <<  CNode->NodeStatusFMT << endl;
@@ -164,53 +168,67 @@ void TNode::databr_to_text_file( fstream& ff )
       ff << "# Node status code CH;  see typedef NODECODECH" << endl;
    ff << left << setw(17) << "<NodeStatusCH> " <<  CNode->NodeStatusCH << endl;
    if( _comment )
-      ff << "# Number of iterations performed by IPM (output)" << endl;
+      ff << "# Number of iterations performed by IPM algorithm (GEM output)" << endl;
    ff << left << setw(17) << "<IterDone> " <<  CNode->IterDone << endl;
    ff << endl;
    if( _comment )
       ff << "##Section (scalar-2): Chemical scalar variables" << endl;
    if( _comment )
-         ff << "# Temperature T, K" << endl;
+         ff << "# Temperature T, C (GEM input)" << endl;
    ff << left << setw(7) << "<TC> " <<  CNode->TC << endl;
    if( _comment )
-         ff << "# Pressure P, bar" << endl;
+         ff << "# Pressure P, bar (GEM input)" << endl;
    ff << left << setw(7) << "<P> " <<  CNode->P << endl;
    if( _comment )
          ff << "# Volume V of reactive subsystem, m3 (GEM output)" << endl;
    ff << left << setw(7) << "<Vs> " << CNode->Vs << endl;
+if( CNode->NodeStatusFMT != No_transport )
+{	
    if( _comment )
          ff << "# Volume Vi of inert subsystem, m3" << endl;
    ff << left << setw(7) << "<Vi> " <<  CNode->Vi << endl;
+}
    if( _comment )
-         ff << "# Mass Ms of reactive subsystem,  kg " << endl;
+         ff << "# Mass Ms of reactive subsystem,  kg (GEM output)" << endl;
    ff << left << setw(7) << "<Ms> " <<  CNode->Ms << endl;
+if( CNode->NodeStatusFMT != No_transport )
+{	
    if( _comment )
          ff << "# Mass Mi of inert subsystem, kg" << endl;
    ff << left << setw(7) << "<Mi> " <<  CNode->Mi << endl;
+}
    if( _comment )
-         ff << "# Enthalpy Hs of reactive subsystem, J " << endl;
+         ff << "# Enthalpy Hs of reactive subsystem, J (GEM output, optional) " << endl;
    ff << left << setw(7) << "<Hs> " <<  CNode->Hs << endl;
+if( CNode->NodeStatusFMT != No_transport )
+{	
    if( _comment )
          ff << "# Enthalpy Hi of inert subsystem, J " << endl;
    ff << left << setw(7) << "<Hi> " <<  CNode->Hi << endl;
+}
    if( _comment )
-         ff << "# Gibbs energy Gs of reactive subsystem, J" << endl;
+         ff << "# Gibbs energy Gs of reactive subsystem, J (GEM output)" << endl;
    ff << left << setw(7) << "<Gs> " <<  CNode->Gs << endl;
-   if( _comment )
-         ff << "# Effective aqueous ionic strength IS, molal" << endl;
+if( CSD->ccPH[0] == PH_AQUEL )
+{
+	if( _comment )
+         ff << "# Effective aqueous ionic strength IS, molal (GEM output)" << endl;
    ff << left << setw(7) << "<IS> " <<  CNode->IC << endl;
    if( _comment )
-         ff << "# pH of aqueous solution " << endl;
+         ff << "# pH of aqueous solution (GEM output)" << endl;
    ff << left << setw(7) << "<pH> " <<  CNode->pH << endl;
    if( _comment )
-         ff << "# pe of aqueous solution" << endl;
+         ff << "# pe of aqueous solution (GEM output)" << endl;
    ff << left << setw(7) << "<pe> " <<  CNode->pe << endl;
    if( _comment )
-         ff << "# Eh of aqueous solution, V" << endl;
+         ff << "# Eh of aqueous solution, V (GEM output)" << endl;
    ff << left << setw(7) << "<Eh> " <<  CNode->Eh << endl;
+}
    ff << endl;
+if( CNode->NodeStatusFMT != No_transport )
+{	
    if( _comment )
-       ff << "## FMT scalar variables (used only on the level of NodeArray)" << endl;
+       ff << "## FMT scalar variables (used only in NodeArray, not used in GEM)" << endl;
    if( _comment )
        ff << "# actual total simulation time Tm, s" << endl;
    ff << left << setw(7) << "<Tm> " <<  CNode->Tm << endl;
@@ -248,32 +266,33 @@ void TNode::databr_to_text_file( fstream& ff )
        ff << "# actual carrier density rho for density-driven flow, kg/m3" << endl;
    ff << left << setw(7) << "<rho> " <<  CNode->rho << endl;
    if( _comment )
-       ff << "# specific longitudinal dispersivity al of porous media, m" << endl;;
+       ff << "# specific longitudinal dispersivity al of porous media, m" << endl;
    ff << left << setw(7) << "<al> " <<  CNode->al << endl;
    if( _comment )
-       ff << "# specific transversal dispersivity at of porous media, m" << endl;;
+       ff << "# specific transversal dispersivity at of porous media, m" << endl;
    ff << left << setw(7) << "<at> " <<  CNode->at << endl;
    if( _comment )
-       ff << "# specific vertical dispersivity av of porous media, m" << endl;;
+       ff << "# specific vertical dispersivity av of porous media, m" << endl;
    ff << left << setw(7) << "<av> " <<  CNode->av << endl;
    if( _comment )
-       ff << "# hydraulic longitudinal dispersivity hDl, m2/s" << endl;;
+       ff << "# hydraulic longitudinal dispersivity hDl, m2/s" << endl;
    ff << left << setw(7) << "<hDl> " <<  CNode->hDl << endl;
    if( _comment )
-       ff << "# hydraulic transversal dispersivity hDt, m2/s" << endl;;
+       ff << "# hydraulic transversal dispersivity hDt, m2/s" << endl;
    ff << left << setw(7) << "<hDt> " <<  CNode->hDt << endl;
    if( _comment )
-       ff << "# hydraulic vertical dispersivity hDv, m2/s" << endl;;
+       ff << "# hydraulic vertical dispersivity hDv, m2/s" << endl;
    ff << left << setw(7) << "<hDv> " <<  CNode->hDv << endl;
    if( _comment )
-       ff << "# tortuosity factor nto, dimensionless" << endl;;
+       ff << "# tortuosity factor nto, dimensionless" << endl;
    ff << left << setw(7) << "<nto> " <<  CNode->nto << endl;
    ff << endl;
-
+}
    if( _comment )
    {   ff << "### Arrays - for dimensions and index lists, see Section (2) of DATACH file" << endl << endl;
-       ff << "## IC data section" << endl;
-       ff << "# Bulk composition bIC of the reactive part of the node (GEM input, moles)";
+       ff << "## IC data section";
+       prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
+       ff << "\n# Bulk composition bIC of the reactive part of the node (GEM input, moles)";
    }
   prar.writeArray(  "bIC",  CNode->bIC, CSD->nICb );
    if( _comment )
@@ -283,39 +302,45 @@ void TNode::databr_to_text_file( fstream& ff )
        ff << "\n\n# Dual chemical potentials uIC (GEM output, normalized)";
   prar.writeArray(  "uIC",  CNode->uIC, CSD->nICb );
    if( _comment )
-   {    ff << "\n\n## DC data section" << endl;
-        ff << "# Speciation xDC (amounts of DCs in equilibrium state) - GEM output, moles";
+   {    ff << "\n\n## DC data section";
+        prar.writeArray(  NULL, CSD->DCNL[0], CSD->nDC, MaxDCN );
+        ff << "\n# Speciation xDC (amounts of DCs in equilibrium state), moles - GEM output, input in PIA mode";
    }
   prar.writeArray(  "xDC",  CNode->xDC, CSD->nDCb );
    if( _comment )
-       ff << "\n\n# Activity coefficients gam of Dependent Components, GEM output";
+       ff << "\n\n# Activity coefficients gam of Dependent Components, GEM output, input in PIA mode";
   prar.writeArray(  "gam",  CNode->gam, CSD->nDCb );
    if( _comment )
-       ff << "\n\n# Lower metastability constraints dll on amounts in xDC (GEM input, moles)";
+       ff << "\n\n# Lower metastability constraints dll on amounts in xDC, moles (GEM optional input)";
   prar.writeArray(  "dll",  CNode->dll, CSD->nDCb );
    if( _comment )
-       ff << "\n\n# Upper metastability constraints dul on amounts in xDC (GEM input, moles)";
+       ff << "\n\n# Upper metastability constraints dul on amounts in xDC, moles (GEM optional input)";
   prar.writeArray(  "dul",  CNode->dul, CSD->nDCb );
    if( _comment )
-   {    ff << "\n\n## Phase data section" << endl;
-        ff << "# Specific surface areas of phases aPH (m2/g) - GEM input";
+   {    ff << "\n\n## Phase data section";
+        prar.writeArray(  NULL, CSD->PHNL[0], CSD->nPH, MaxPHN );
+        ff << "\n# Specific surface areas of phases aPH (m2/g) - GEM optional input";
    }
   prar.writeArray(  "aPH",  CNode->aPH, CSD->nPHb );
    if( _comment )
         ff << "\n\n# Amounts of phases in equilibrium state xPH (GEM output, moles)";
   prar.writeArray(  "xPH",  CNode->xPH, CSD->nPHb );
    if( _comment )
-        ff << "\n\n# Volumes of the multicomponent phases vPS (cm3), GEM output";
+        ff << "\n\n# Volumes of the multicomponent phases vPS, cm3 (GEM output)";
   prar.writeArray(  "vPS",  CNode->vPS, CSD->nPSb );
    if( _comment )
-        ff << "\n\n# Masses of the multicomponent phases mPS (g), GEM output";
+        ff << "\n\n# Masses of the multicomponent phases mPS, g (GEM output)";
   prar.writeArray(  "mPS",  CNode->mPS, CSD->nPSb );
-   if( _comment )
-        ff << "\n\n# Bulk elemental compositions of multicomponent phases bPS (GEM output, moles)";
-  prar.writeArray(  "bPS",  CNode->bPS, CSD->nPSb*CSD->nICb );
-   if( _comment )
-        ff << "\n\n# Amounts of carrier xPA (sorbent or solvent) in multicomponent phases";
+  if( _comment )
+       ff << "\n\n# Amounts of carrier xPA (sorbent or solvent) in multicomponent phases";
   prar.writeArray(  "xPA",  CNode->xPA, CSD->nPSb );
+  if( _comment )
+  {
+	  ff << "\n\n# Bulk elemental compositions of multicomponent phases bPS (GEM output, moles)";
+	  prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
+//	  ff << endl;
+  }
+   prar.writeArray(  "bPS",  CNode->bPS, CSD->nPSb*CSD->nICb );
    if( _comment )
    {     ff << "\n\n# reserved" << endl;
          ff << "\n# End of file"<< endl;
@@ -448,16 +473,16 @@ void TNode::databr_from_text_file( fstream& ff )
   }
 }
 
-void TNode::datach_to_text_file( fstream& ff )
+void TNode::datach_to_text_file( fstream& ff, bool with_comments )
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
-
+  _comment = with_comments; 
   TPrintArrays  prar(ff);
 
   if( _comment )
   {  ff << "# GEMIPM2K v. 2.2.0" << endl;
-     ff << "# Prototype 22.02.2007" << endl;
+     ff << "# Prototype 28.07.2007" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;

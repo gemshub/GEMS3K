@@ -120,10 +120,10 @@ outField MULTI_dynamic_fields[66] =  {
 
 //===================================================================
 
-void TMulti::to_text_file_gemipm( const char *path, bool addMui )
+void TMulti::to_text_file_gemipm( const char *path, bool addMui, bool with_comments )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
-
+   _comment = with_comments;
    //static values
    char PAalp;
    char PSigm;
@@ -147,7 +147,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui )
 
 if( _comment )
 {   ff << "# GEMIPM2K v. 2.2.0" << endl;
-   ff << "# Prototype 22.02.2007" << endl;
+   ff << "# Prototype 28.11.2007" << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;

@@ -53,7 +53,7 @@ struct outField
  public:
 
     TReadArrays( short aNumFlds, outField* aFlds, fstream& fin ):
-      numFlds(aNumFlds), flds(aFlds), ff( fin )
+    	ff( fin ), numFlds(aNumFlds), flds(aFlds)
     {}
 
     void  skipSpace();

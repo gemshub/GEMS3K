@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 940 2007-11-27 12:47:06Z gems $
+// $Id: v_user.h 941 2007-11-28 08:36:03Z gems $
 //
 // Declaration of miscellaneous utility functions and classes
 //
