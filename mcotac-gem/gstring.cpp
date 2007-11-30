@@ -24,6 +24,10 @@
 
 #include "gstring.h"
 
+#ifndef max
+#define max(a,b)    (((a) > (b)) ? (a) : (b))
+#endif
+
 //#define CHECK_GSTR
 
 #ifdef CHECK_GSTR

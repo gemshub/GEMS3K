@@ -195,6 +195,10 @@ SOURCE=.\s_fgl.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\s_fgl2.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\setpar.cpp
 # End Source File
 # Begin Source File
