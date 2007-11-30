@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 932 2007-11-06 13:54:17Z gems $
+// $Id: m_param.h 935 2007-11-15 16:16:52Z gems $
 //
 // Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
 //
@@ -53,7 +53,7 @@ struct BASE_PARAM
     DS,  // Cutoff number of moles of a phase { 1e-10 }
     DK,  // Threshold of Dikin criterion of IPM convergence { 1e-4 }
     DF,   // Threshold for Karpov's criterion (Fa > DF) for a lost stable phase { 0.01 }
-    DFM,  // Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase { 0.01 }
+    DFM,  // Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase { 0.1 }
     DFYw, // N of moles of H2O-solvent for phase insertion { 1e-6 }
     DFYaq,// N of moles of aqueous DC for phase insertion { 1e-6 }
     DFYid,// N of moles of DC in ideal solution for phase insertion { 1e-6 }

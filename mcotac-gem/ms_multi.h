@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 932 2007-11-06 13:54:17Z gems $
+// $Id: ms_multi.h 945 2007-11-29 13:55:34Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -497,7 +497,7 @@ public:
     void to_file( GemDataStream& ff, gstring& path  );
     void to_text_file( const char *path );
     void from_file( GemDataStream& ff );
-    void to_text_file_gemipm( const char *path, bool addMui );
+    void to_text_file_gemipm( const char *path, bool addMui, bool with_comments = true );
     void from_text_file_gemipm( const char *path );
 
     // EXTERNAL FUNCTIONS

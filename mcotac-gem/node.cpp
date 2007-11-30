@@ -183,6 +183,9 @@ int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
        ErrorIf( !in_br.good() , fname, "DataBR Fileopen error");
        databr_from_text_file(in_br);
    }
+
+    dbr_file_name = fname;
+
   } catch(TError& /*err*/)
     {
       return 1;
@@ -296,9 +299,13 @@ if( binary_f )
   }
 
 // Prepare for reading DBR_DAT files
-     i = 0;
-     while( !f_lst.eof() )  // For all DBR_DAT files listed
-     {
+// Reading list of names from file, return number of names 
+  TCStringArray nameList;  
+  i = f_getnames(f_lst, nameList, ',');
+  ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
+
+  for(int ii=0; ii<i; ii++ ) // For all DBR_DAT files listed
+  {
 
 #ifndef IPMGEMPLUGIN
    pVisor->Message( 0, "GEM2MT node array",
@@ -307,12 +314,7 @@ if( binary_f )
 #endif
 
 // Reading DBR_DAT file into work DATABR structure
-         if( i )  // Comma only after the first DBR_DAT file!
-            f_getline( f_lst, datachbr_fn, ',');
-         else
-            f_getline( f_lst, datachbr_fn, ' ');
-
-         gstring dbr_file = Path + datachbr_fn;
+         gstring dbr_file = Path + nameList[ii];
          if( binary_f )
          {
              GemDataStream in_br(dbr_file, ios::in|ios::binary);
@@ -324,6 +326,7 @@ if( binary_f )
                     "DBR_DAT fileopen error");
                databr_from_text_file(in_br);
           }
+         dbr_file_name = dbr_file;
 
 // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
 //    unpackDataBr();
@@ -331,17 +334,16 @@ if( binary_f )
 #ifndef IPMGEMPLUGIN
         if( getNodT1 )
         {
-           setNodeArray( dbr_file, i, binary_f );
+           setNodeArray( dbr_file, ii, binary_f );
         }
         else
 #endif
         {
 // Copying data from work DATABR structure into the node array
 // (as specified in nodeTypes array)
-           setNodeArray( i, nodeTypes  );
+           setNodeArray( ii, nodeTypes  );
          }
-          i++;
-     }  // end while()
+     }  // end for()
 #ifndef IPMGEMPLUGIN
    pVisor->CloseMessage();
 #endif
@@ -944,6 +946,7 @@ TNode::TNode( MULTI *apm  )
     CNode = 0;
     allocMemory();
     na = this;
+    dbr_file_name = "dbr_file_name";
 }
 
 #else
@@ -954,6 +957,7 @@ TNode::TNode()
   CNode = 0;
   allocMemory();
   na = this;
+  dbr_file_name = "dbr_file_name";
 }
 
 #endif
@@ -1114,18 +1118,24 @@ void TNode::unpackDataBr()
 // if called in loop for each node), or in text format
 // (false or 0, default)
 //
-   void  TNode::GEM_write_dbr( const char* fname, bool binary_f )
+   void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments )
    {
-       if( binary_f )
+       gstring str_file;
+       if( fname == 0)	   
+    	   str_file = dbr_file_name+".out";
+       else
+           str_file = fname;
+       
+	   if( binary_f )
            {
-              gstring str_file = fname;
+            // gstring str_file = fname;
               GemDataStream out_br(str_file, ios::out|ios::binary);
               databr_to_file(out_br);
            }
       else
-      {  fstream out_br(fname, ios::out );
-         ErrorIf( !out_br.good() , fname, "DataBR text make error");
-         databr_to_text_file(out_br);
+      {  fstream out_br(str_file.c_str(), ios::out );
+         ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
+         databr_to_text_file(out_br, with_comments );
       }
    }
 
@@ -1136,7 +1146,13 @@ void TNode::unpackDataBr()
 //
    void  TNode::GEM_print_ipm( const char* fname )
    {
-       TProfil::pm->outMultiTxt( fname  );
+     gstring str_file;  
+     if( fname == 0)	   
+    	   str_file = dbr_file_name + ".Dump.out";
+     else
+           str_file = fname;
+      
+	   TProfil::pm->outMultiTxt( str_file.c_str()  );
    }
 
 #ifdef IPMGEMPLUGIN

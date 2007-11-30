@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 941 2007-11-28 08:36:03Z gems $
+// $Id: ms_param.cpp 945 2007-11-29 13:55:34Z gems $
 //
 // Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -54,7 +54,7 @@ SPP_SETTING pa_ = {
         0, /* DT */     0,   /* PLLG */   1,  /* PE */
         500,   /* IIM */
         1e-15, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
-        1e-4,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+        1e-4,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
         1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
         1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
         1e-7, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */

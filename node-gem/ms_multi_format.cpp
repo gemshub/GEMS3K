@@ -223,8 +223,14 @@ ff << "\n<END_DIM>\n\n";
      ff << "\n# DK: IPM convergence threshold for the Dikin criterion (1e-6 < DK < 1e-4)" << endl;
    ff << left << setw(12) << "<pa_DK> " <<  right << setw(8) << pa->p.DK << endl;
    if( _comment )
-     ff << "\n# DF: Threshold for the application of the Karpov phase stability criterion f_alpha" << endl;
+     ff << "\n# DB: Cutoff (threshold) for the amount of phase for phase elimination " << endl;
+   ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
+   if( _comment )
+     ff << "\n# DF: Threshold for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted" << endl;
    ff << left << setw(12) << "<pa_DF> " <<  right << setw(8) << pa->p.DF << endl;
+   if( _comment )
+     ff << "# DFM: Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated" << endl;
+   ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
    if( _comment )
      ff << "\n# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure" << endl;
    ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
@@ -251,9 +257,6 @@ ff << "\n<END_DIM>\n\n";
    ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa->p.GAR << endl;
    ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa->p.GAH << endl;
    if( _comment )
-     ff << "\n# DB: Cutoff (threshold) for the amount of phase in phase elimination " << endl;
-   ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
-   if( _comment )
    {  ff << "\n# _Min: Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; " << endl;
       ff << "# Ph - non-electrolyte solution phases" << endl;
    }
@@ -267,9 +270,6 @@ ff << "\n<END_DIM>\n\n";
    if( _comment )
      ff << "\n# PC: Mode of Selekt2() procedure operation" << endl;
    ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
-   if( _comment )
-     ff << "# DFM: Threshold of Karpov stability criterion for insertion of a phase in Selekt2() procedure" << endl;
-   ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
    if( _comment )
    {  ff << "# DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm" << endl;
       ff << "# DFYw - water solvent;" << endl;

@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 941 2006-07-06 08:06:21Z gems $
+// $Id: main.cpp 945 2007-11-29 13:55:34Z gems $
 //
 // Demo test of usage of the TNode class for implementing a simple
 // batch-like calculation of equilibria using text file input and
