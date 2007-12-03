@@ -915,9 +915,24 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
               }
       }
 
+#ifndef PGf90
+
   Array2D<double> A(N,N, AA);
   Array1D<double> B(N, BB);
 
+#else
+
+  Array2D<double> A(N,N);
+  Array1D<double> B(N);
+
+  for( kk=0; kk<N; kk++)
+   for( ii=0; ii<N; ii++ )
+      A[kk][ii] = (*(AA+(ii)+(kk)*N));
+
+   for( ii=0; ii<N; ii++ )
+     B[ii] = BB[ii];
+  
+#endif
 // this routine constructs its Cholesky decomposition, A = L x LT .
   Cholesky<double>  chol(A);
 

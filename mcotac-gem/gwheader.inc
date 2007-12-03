@@ -6,4 +6,4 @@
       parameter (nsolid = 10)
 
       parameter (zero = 0.)
-      parameter (rlarge = 1.0e+99)
+      parameter (rlarge = 1.0e+12)

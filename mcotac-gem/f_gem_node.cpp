@@ -8,7 +8,7 @@
 //  Must be called once before the beginning of the coupled RMT calculation
 //
 #ifdef __unix
-   extern "C" int f_gem_init_( char* string_, unsigned int length_ )
+   extern "C" int f_gem_init__( char* string_, unsigned int length_ )
 #else
    extern "C" int __stdcall F_GEM_INIT( char* string_, unsigned int length_ )
 #endif
@@ -34,7 +34,7 @@
 // Parameter list may be extended in future with other DCH elements
 //
 #ifdef __unix
-   extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+   extern "C" int  f_gem_get_dch__( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
 #else
   extern "C" int  __stdcall  F_GEM_GET_DCH(  // All parameters are return values
    int& p_nICb,   // Number of Independent Components (ICs) in chemical system
@@ -66,7 +66,7 @@
 //  all nodes
 //
 #ifdef __unix
-  extern "C" int   f_gem_read_node_( char* string_,
+  extern "C" int   f_gem_read_node__( char* string_,
 #else
   extern "C" int __stdcall   F_GEM_READ_NODE(
   char* string_,        // path (file name) of the DATABR file
@@ -183,7 +183,7 @@
 //  Is called on each external iteration for each node
 //
 #ifdef __unix
-   extern "C" int  f_gem_calc_node_(
+   extern "C" int  f_gem_calc_node__(
 #else
    extern "C" int  __stdcall   F_GEM_CALC_NODE(
 #endif
@@ -330,7 +330,7 @@
 // can be used for interruption of coupled modeling or for debugging purposes
 //
 #ifdef __unix
- extern "C" void f_gem_write_node( char* string_, unsigned int length_ )
+ extern "C" void f_gem_write_node__( char* string_, unsigned int length_ )
 #else
  extern "C"  void  __stdcall   F_GEM_WRITE_NODE(
    char* string_,        // path (file name) of the DATABR file
