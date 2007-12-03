@@ -390,8 +390,9 @@ void u_splitpath(const gstring& Path, gstring& dir,
 }
 
 // Reading list of names from file, return number of names 
-int f_getnames(istream& is, TCStringArray& nameList, char delim = ' ')
+TCStringArray f_getnames(istream& is, char delim = ' ')
 {
+  TCStringArray nameList;
   gstring name;
 
   nameList.Clear();
@@ -400,8 +401,8 @@ int f_getnames(istream& is, TCStringArray& nameList, char delim = ' ')
 	f_getline( is, name, delim);
 	nameList.Add(name);
   }
-	
- return nameList.GetCount();
+
+ return nameList;
 }
 
 // Get Path of file and Reading list of file names from it, return number of files
@@ -425,8 +426,8 @@ char  (* f_getfiles(const char *f_name, char *Path,
      ErrorIf( !f_lst.good(), f_name, "Fileopen error");
 
 // Reading list of names from file	
-    TCStringArray nameList; 
-	nElem = f_getnames(f_lst, nameList, delim);
+    TCStringArray nameList = f_getnames(f_lst, delim);
+	nElem = nameList.GetCount();
 	filesList = new char[nElem][fileNameLength];
 
 	for(int ii=0; ii<nElem; ii++)

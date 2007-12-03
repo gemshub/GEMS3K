@@ -300,8 +300,8 @@ if( binary_f )
 
 // Prepare for reading DBR_DAT files
 // Reading list of names from file, return number of names 
-  TCStringArray nameList;  
-  i = f_getnames(f_lst, nameList, ',');
+  TCStringArray nameList = f_getnames(f_lst, ',');
+  i = nameList.GetCount();
   ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
 
   for(int ii=0; ii<i; ii++ ) // For all DBR_DAT files listed

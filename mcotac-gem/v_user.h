@@ -180,7 +180,7 @@ u_splitpath(const gstring& Path, gstring& dir,
 #define fileNameLength 64
 
 // Reading list of names from file, return number of names 
-int f_getnames(istream& is, TCStringArray& nameList, char delim );
+TCStringArray f_getnames(istream& is, char delim );
 // Get Path of file and Reading list of file names from it, return number of files 
 char  (* f_getfiles(const char *f_name, char *Path, 
 		int& nElem, char delim ))[fileNameLength];
