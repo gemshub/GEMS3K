@@ -80,6 +80,7 @@ mcotac-gem/MCOTAC-GEM/MySystem-ipm.dat -text
 mcotac-gem/MCOTAC-GEM/MySystem.ipm -text
 mcotac-gem/MCOTAC-GEM/MySystem.txt -text
 mcotac-gem/MCOTAC-GEM/caldpl.zip -text
+mcotac-gem/Makefile -text
 mcotac-gem/TEST.INI -text
 mcotac-gem/am0001.dat -text
 mcotac-gem/array.h -text
