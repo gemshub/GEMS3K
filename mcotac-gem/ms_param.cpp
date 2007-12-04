@@ -253,7 +253,7 @@ void TMulti::CompG0Load()
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
-void TMulti::MultiCalcInit( const char */*key*/ )
+void TMulti::MultiCalcInit( const char* /*key*/ )
 {
   short j,k;
   SPP_SETTING *pa = &TProfil::pm->pa;
@@ -389,52 +389,61 @@ void u_splitpath(const gstring& Path, gstring& dir,
     }
 }
 
-// Reading list of names from file, return number of names 
-TCStringArray f_getnames(istream& is, char delim = ' ')
-{
-  TCStringArray nameList;
-  gstring name;
-
-  nameList.Clear();
-  while( !is.eof() )
-  {
-	f_getline( is, name, delim);
-	nameList.Add(name);
-  }
-
- return nameList;
-}
+const size_t bGRAN = 20;
 
 // Get Path of file and Reading list of file names from it, return number of files
 char  (* f_getfiles(const char *f_name, char *Path, 
 		int& nElem, char delim ))[fileNameLength]
 {
+  size_t ii, bSize = bGRAN;
   char  (*filesList)[fileNameLength];
+  char  (*filesListNew)[fileNameLength];
+  filesList = new char[bSize][fileNameLength];
+  gstring name;
 
 // Get path
-     gstring path_;
-	 gstring flst_name = f_name;
-	 size_t pos = flst_name.rfind("/");
-     path_ = "";
-     if( pos < npos )
+   gstring path_;
+   gstring flst_name = f_name;
+   size_t pos = flst_name.rfind("/");
+   path_ = "";
+   if( pos < npos )
       path_ = flst_name.substr(0, pos+1);
-     strncpy( Path, path_.c_str(), 256-fileNameLength);
-     Path[255] = '\0';
+   strncpy( Path, path_.c_str(), 256-fileNameLength);
+   Path[255] = '\0';
      
 //  open file stream for the file names list file
-     fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
-     ErrorIf( !f_lst.good(), f_name, "Fileopen error");
+   fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
+   ErrorIf( !f_lst.good(), f_name, "Fileopen error");
 
 // Reading list of names from file	
-    TCStringArray nameList = f_getnames(f_lst, delim);
-	nElem = nameList.GetCount();
-	filesList = new char[nElem][fileNameLength];
-
-	for(int ii=0; ii<nElem; ii++)
-	{     strncpy( filesList[ii], nameList[ii].c_str(), fileNameLength);
-	      filesList[ii][fileNameLength-1] = '\0';
+  nElem = 0;
+  while( !f_lst.eof() )
+  {
+	f_getline( f_lst, name, delim);
+    if( nElem >= bSize )
+    {    bSize = bSize+bGRAN;
+         filesListNew = new char[bSize][fileNameLength];
+         for( ii=0; ii<nElem-1; ii++ )
+		   strncpy( filesListNew[ii], filesList[ii], fileNameLength);
+	     delete[] filesList;
+		 filesList =  filesListNew;
 	}
-   return filesList;	
+    strncpy( filesList[nElem], name.c_str(), fileNameLength);
+	filesList[nElem][fileNameLength-1] = '\0';
+    nElem++; 
+  }
+  
+  // Realloc memory for reading size
+  if( nElem != bSize )
+  {    
+    filesListNew = new char[nElem][fileNameLength];
+    for(  ii=0; ii<nElem; ii++ )
+	  strncpy( filesListNew[ii], filesList[ii], fileNameLength);
+	delete[] filesList;
+	filesList =  filesListNew;
+  }
+
+  return filesList;	
 }
 
 

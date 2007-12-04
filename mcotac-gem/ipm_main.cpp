@@ -877,7 +877,7 @@ void TMulti::WeightMultipliers( bool square )
 int TMulti::SolverLinearEquations( int N, bool initAppr )
 {
   int ii,i, jj, kk, k, Na = pmp->N;
-  double aa;
+//  double aa;
   Alloc_A_B( N );
 
   // Making the  matrix of IPM linear equations
