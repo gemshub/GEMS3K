@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 932 2007-11-06 13:54:17Z gems $
+// $Id: ms_multi_file.cpp 959 2007-12-10 14:57:58Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -666,7 +666,8 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.PMc = 0;
    pm.DMc = 0;
    pm.PUL = new double[pm.FIs];
-   memset(pm.PUL, 0, pm.FIs*sizeof(double));
+   for( ii=0; ii<pm.FIs; ii++ )        // 08/12/2007
+    pm.PUL[ii] = 1e6;
    pm.PLL = new double[pm.FIs];
    memset(pm.PLL, 0, pm.FIs*sizeof(double));
 

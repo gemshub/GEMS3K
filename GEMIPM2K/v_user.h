@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 941 2007-11-28 08:36:03Z gems $
+// $Id: v_user.h 950 2007-12-05 10:07:12Z gems $
 //
 // Declaration of miscellaneous utility functions and classes
 //
@@ -178,9 +178,6 @@ u_splitpath(const gstring& Path, gstring& dir,
             gstring& name, gstring& ext);
 
 #define fileNameLength 64
-
-// Reading list of names from file, return number of names 
-int f_getnames(istream& is, TCStringArray& nameList, char delim );
 // Get Path of file and Reading list of file names from it, return number of files 
 char  (* f_getfiles(const char *f_name, char *Path, 
 		int& nElem, char delim ))[fileNameLength];

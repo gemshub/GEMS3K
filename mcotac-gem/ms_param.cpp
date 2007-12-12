@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 945 2007-11-29 13:55:34Z gems $
+// $Id: ms_param.cpp 959 2007-12-10 14:57:58Z gems $
 //
 // Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -89,7 +89,7 @@ TProfil::TProfil( TMulti* amulti )
 
 // GEM IPM calculation of equilibrium state in MULTI
 // Modified on 10.09.2007 to return elapsed GEMIPM2 runtime in seconds
-// Modified on 15.11.2007 to return more detailed info on FIA and IPM iterations 
+// Modified on 15.11.2007 to return more detailed info on FIA and IPM iterations
 // and precision refinement loops
 //
 double TProfil::calcMulti( int& PrecLoops_, int& NumIterFIA_, int& NumIterIPM_ )
@@ -98,13 +98,14 @@ double TProfil::calcMulti( int& PrecLoops_, int& NumIterFIA_, int& NumIterIPM_ )
 pmp->t_start = clock();
 pmp->t_end = pmp->t_start;
     multi->MultiCalcInit( 0 );
+
     if( multi->AutoInitialApprox() == false )
     {
         multi->MultiCalcIterations();
     }
-PrecLoops_ = pmp->W1 + pmp->K2 - 2; // Prec.ref. + Selekt2() loops 
-NumIterFIA_ = pmp->ITF; 
-NumIterIPM_ = pmp->ITG; 
+PrecLoops_ = pmp->W1 + pmp->K2 - 2; // Prec.ref. + Selekt2() loops
+NumIterFIA_ = pmp->ITF;
+NumIterIPM_ = pmp->ITG;
 
 if( pa.p.PRD < 0 && pa.p.PRD > -50 && !pmp->pNP ) // max 50 loops after simplex FIA
 {  // Test refinement loops for highly non-ideal systems  Added here by KD 15.10.2007
@@ -119,13 +120,13 @@ if( pa.p.PRD < 0 && pa.p.PRD > -50 && !pmp->pNP ) // max 50 loops after simplex 
          multi->MultiCalcIterations();
      }
      TotIT += pmp->IT; TotW1 += pmp->W1 + pmp->K2 - 2;
-     TotITF += (int)pmp->ITF; TotITG += (int)pmp->ITG; 
+     TotITF += (int)pmp->ITF; TotITG += (int)pmp->ITG;
    }
    pmp->pNP = 0;
    pmp->IT = (short)TotIT;
    pmp->ITF = (short)TotITF; pmp->ITG = (short)TotITG;
-   PrecLoops_ = TotW1;   //  
-   NumIterFIA_ = TotITF; 
+   PrecLoops_ = TotW1;   //
+   NumIterFIA_ = TotITF;
    NumIterIPM_ = TotITG; // pmp->IT
 }
 pmp->t_end = clock();
@@ -159,7 +160,7 @@ void TProfil::readMulti( const char* path )
       multi->from_text_file_gemipm( path);
 }
 
-static bool load = false;
+ bool load = false;
 
 // Load Thermodynamic Data from MTPARM to MULTI using LagranInterp
 void TMulti::CompG0Load()
@@ -237,16 +238,28 @@ void TMulti::CompG0Load()
        Vv = LagranInterp( dCH->Pval, dCH->TCval, dCH->V0+jj,
                             P, TC, dCH->nTp, dCH->nPp, 1 );
      }
+     if( pmp->tpp_G )
+    	  pmp->tpp_G[j] = Gg;
+     if( pmp->Guns )
+           Gg += pmp->Guns[j];
      pmp->G0[j] = Cj_init_calc( Gg, j, k );
      switch( pmp->PV )
      { // put mol volumes of components into A matrix
        case VOL_CONSTR:
-                    pmp->A[j*pmp->N] = Vv; // !!  error
+           if( pmp->Vuns )
+              Vv += pmp->Vuns[jj];
+           // pmp->A[j*pmp->N+xVol] = tpp->Vm[jj]+Vv;
+             pmp->A[j*pmp->N] = Vv; // !!  error
        case VOL_CALC:
        case VOL_UNDEF:
-                    pmp->Vol[j] = Vv  * 10.;
-                    break;
+    	     if( pmp->tpp_Vm )
+    	    	  pmp->tpp_Vm[j] = Vv;
+              if( pmp->Vuns )
+                     Vv += pmp->Vuns[j];
+ 	          pmp->Vol[j] = Vv  * 10.;
+              break;
      }
+
     }
  }
  load = true;
@@ -269,6 +282,7 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     pmp->logXw = -16.;
     pmp->logYFk = -9.;
     pmp->FitVar[4] = pa->p.AG;
+    pmp->FitVar[0] = 0.0640000030398369; // pa->aqPar[0]; setting T,P dependent b_gamma parameters
     pmp->pRR1 = 0;      //IPM smoothing factor and level
     pmp->DX = pa->p.DK;
 
@@ -392,7 +406,7 @@ void u_splitpath(const gstring& Path, gstring& dir,
 const size_t bGRAN = 20;
 
 // Get Path of file and Reading list of file names from it, return number of files
-char  (* f_getfiles(const char *f_name, char *Path, 
+char  (* f_getfiles(const char *f_name, char *Path,
 		int& nElem, char delim ))[fileNameLength]
 {
   size_t ii, bSize = bGRAN;
@@ -410,12 +424,12 @@ char  (* f_getfiles(const char *f_name, char *Path,
       path_ = flst_name.substr(0, pos+1);
    strncpy( Path, path_.c_str(), 256-fileNameLength);
    Path[255] = '\0';
-     
+
 //  open file stream for the file names list file
    fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
    ErrorIf( !f_lst.good(), f_name, "Fileopen error");
 
-// Reading list of names from file	
+// Reading list of names from file
   nElem = 0;
   while( !f_lst.eof() )
   {
@@ -430,12 +444,12 @@ char  (* f_getfiles(const char *f_name, char *Path,
 	}
     strncpy( filesList[nElem], name.c_str(), fileNameLength);
 	filesList[nElem][fileNameLength-1] = '\0';
-    nElem++; 
+    nElem++;
   }
-  
+
   // Realloc memory for reading size
   if( nElem != bSize )
-  {    
+  {
     filesListNew = new char[nElem][fileNameLength];
     for(  ii=0; ii<nElem; ii++ )
 	  strncpy( filesListNew[ii], filesList[ii], fileNameLength);
@@ -443,7 +457,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 	filesList =  filesListNew;
   }
 
-  return filesList;	
+  return filesList;
 }
 
 

@@ -23,6 +23,11 @@
 ****************************************************************************/
 
 #include "gstring.h"
+#include "v_user.h"
+
+#ifndef max
+#define max(a,b)    (((a) > (b)) ? (a) : (b))
+#endif
 
 //#define CHECK_GSTR
 

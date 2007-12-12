@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 945 2007-11-29 13:55:34Z gems $
+// $Id: ms_multi.h 959 2007-12-10 14:57:58Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -275,6 +275,13 @@ typedef struct
         ITG;        // Number of completed GEM IPM iterations
   clock_t t_start, t_end;
   double t_elap_sec;  // work variables for determining IPM calculation time
+#ifdef IPMGEMPLUGIN
+  float *Guns;  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
+  float *Vuns;  //  mu.L work vector of uncertainty space increments to tp->Vm
+  double *tpp_G; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole 
+  float *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
+  double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
+#endif  
 }
 MULTI;
 
@@ -480,6 +487,12 @@ public:
      BB = 0;
      arrL = 0;
      arrAN = 0;
+     pmp->Guns = 0;
+     pmp->Vuns = 0;
+     pmp->tpp_G = 0;  
+     pmp->tpp_S = 0; 
+     pmp->tpp_Vm = 0;
+     
    }
 
     void multi_realloc( char PAalp, char PSigm );

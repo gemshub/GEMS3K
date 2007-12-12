@@ -32,6 +32,9 @@ public:
     void writeArray( const char *name, short*  arr, int size, int l_size=-1  );
     void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
     void writeArray( const char *name, double* arr, int size, int l_size=-1 );
+    void writeArray( const char *name, short*  arr, int size, short* selAr, int nColumns=1, int l_size=-1  );
+    void writeArray( const char *name, float*  arr, int size, short* selAr, int nColumns=1, int l_size=-1 );
+    void writeArray( const char *name, double* arr, int size, short* selAr, int nColumns=1, int l_size=-1 );
 
 };
 
@@ -70,6 +73,16 @@ struct outField
          short ii = findFld( Name );
          if( ii >=0 )
             setNoAlws(ii);
+    }
+
+    void  setAlws( short ii )
+    {  flds[ii].alws = 1; }
+
+    void  setAlws( const char *Name )
+    {
+         short ii = findFld( Name );
+         if( ii >=0 )
+            setAlws(ii);
     }
 
     gstring testRead();   // test for reading all arrays

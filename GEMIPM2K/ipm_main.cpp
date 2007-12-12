@@ -406,6 +406,7 @@ STEP_POINT( "End Simplex" );
 STEP_POINT("Before FIA");
 #endif
 
+
     return false;
 }
 
@@ -877,7 +878,7 @@ void TMulti::WeightMultipliers( bool square )
 int TMulti::SolverLinearEquations( int N, bool initAppr )
 {
   int ii,i, jj, kk, k, Na = pmp->N;
-  double aa;
+//  double aa;
   Alloc_A_B( N );
 
   // Making the  matrix of IPM linear equations
@@ -915,9 +916,24 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
               }
       }
 
+#ifndef PGf90
+
   Array2D<double> A(N,N, AA);
   Array1D<double> B(N, BB);
 
+#else
+
+  Array2D<double> A(N,N);
+  Array1D<double> B(N);
+
+  for( kk=0; kk<N; kk++)
+   for( ii=0; ii<N; ii++ )
+      A[kk][ii] = (*(AA+(ii)+(kk)*N));
+
+   for( ii=0; ii<N; ii++ )
+     B[ii] = BB[ii];
+  
+#endif
 // this routine constructs its Cholesky decomposition, A = L x LT .
   Cholesky<double>  chol(A);
 

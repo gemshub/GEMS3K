@@ -1194,8 +1194,10 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
     P = pmp->Pc;
     T = pmp->Tc;
 
-    FugCoefs = (double*)malloc( pmp->L1[k]*sizeof(double) );
-    EoSparam = (float*)malloc( pmp->L1[k]*sizeof(double)*4 );
+//    FugCoefs = (double*)malloc( pmp->L1[k]*sizeof(double) );
+//    EoSparam = (float*)malloc( pmp->L1[k]*sizeof(double)*4 );
+    FugCoefs =  new double[ pmp->L1[k] ];
+    EoSparam =  new float[ pmp->L1[k]*4 ];
     Coeffs = pmp->DMc+jdb;
 
     // Copying T,P corrected coefficients
@@ -1209,7 +1211,9 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
              pmp->Pc, pmp->Tc );
         if (ro <= 0. )
         {
-           free( FugCoefs );
+            delete[] FugCoefs;	
+            delete[] EoSparam;	
+//           free( FugCoefs );
            char buf[150];
            sprintf(buf, "CGFluid(): bad calculation of density ro= %lg", ro);
            Error( "E71IPM IPMgamma: ",  buf );
@@ -1228,7 +1232,9 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
         else
              pmp->lnGam[j] = 0;
     } // j
-    free( FugCoefs );
+    delete[] EoSparam;	
+    delete[] FugCoefs;	
+//    free( FugCoefs );
 
 }
 
@@ -1303,7 +1309,8 @@ TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k, int ipb )
 
     TPRSVcalc aPRSV( NComp, pmp->Pc, pmp->Tc );
 
-    ActCoefs = (double*)malloc( NComp*sizeof(double) );
+//    ActCoefs = (double*)malloc( NComp*sizeof(double) );
+    ActCoefs =  new double[NComp];
     EoSparam = pmp->DMc+jdb;
 //    FugPure = (double*)malloc( NComp*sizeof(double) );
     FugPure = pmp->Pparc + jb;
@@ -1327,7 +1334,8 @@ TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k, int ipb )
 
     if ( iRet )
     {
-      free( ActCoefs );
+      delete[] ActCoefs;	
+//      free( ActCoefs );
 //      free( FugPure );
       char buf[150];
       sprintf(buf, "PRSVFluid(): bad calculation");
@@ -1343,7 +1351,8 @@ TMulti::PRSVFluid( int jb, int je, int jpb, int jdb, int k, int ipb )
         else
              pmp->lnGam[j] = 0;
     } /* j */
-    free( ActCoefs );
+   delete[] ActCoefs;	
+//    free( ActCoefs );
 //    free( FugPure );
 }
 

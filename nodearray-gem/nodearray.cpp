@@ -41,8 +41,8 @@ TNodeArray* TNodeArray::na;
 // GEM IPM calculation of equilibrium state for the iNode node
 // from array NodT1. Mode - mode of GEMS calculation
 //
-//  Function returns: NodeStatus codes GEMS
-//   ( OK; GEMIPM2K calculation error; system error )
+//  Function returns: NodeStatus code after GEM calculation
+//   ( OK_GEM_AIA; OK_GEM_PIA; error codes )
 //
 //-------------------------------------------------------------------
 
@@ -53,14 +53,14 @@ int  TNodeArray::RunGEM( int  iNode, int Mode )
 
 // GEM IPM calculation of equilibrium state in MULTI
   pCNode()->NodeStatusCH = (short)Mode;
-  int retCod = GEM_run();
+  int retCode = GEM_run();
 
 // Copying data for node iNode back from work DATABR structure into the node array
-//   if( retCod == OK_GEM_AIA ||
-//       retCod == OK_GEM_PIA  )
+//   if( retCode == OK_GEM_AIA ||
+//       retCode == OK_GEM_PIA  )
    MoveWorkNodeToArray( iNode, anNodes, NodT1 );
 
-   return retCod;
+   return retCode;
 }
 
 void  TNodeArray::checkNodeArray(
@@ -307,6 +307,17 @@ void TNodeArray::allocMemory()
     NodT1 = new  DATABRPTR[anNodes];
     for(  ii=0; ii<anNodes; ii++ )
         NodT1[ii] = 0;
+    
+// alloc memory for the work array of node types
+    tcNode = new char[anNodes];
+    for(  ii=0; ii<anNodes; ii++ )
+        tcNode[ii] = normal;    
+        
+// alloc memory for the work array of IA indicators
+    iaNode = new bool[anNodes];
+    for(  ii=0; ii<anNodes; ii++ )
+        iaNode[ii] = true;
+// grid ?    
 }
 
 void TNodeArray::freeMemory()
@@ -330,8 +341,10 @@ void TNodeArray::freeMemory()
 
   if( grid )
      delete[] grid;
-  if( tNode)
-     delete[] tNode;
+  if( tcNode)
+     delete[] tcNode;
+  if( iaNode )
+	 delete[] iaNode; 
 }
 
 #ifndef IPMGEMPLUGIN
@@ -344,7 +357,8 @@ TNodeArray::TNodeArray( int nNod, MULTI *apm  ):TNode( apm )
     NodT0 = 0;  // nodes at current time point
     NodT1 = 0;  // nodes at previous time point
     grid  = 0;   // Array of grid point locations, size is anNodes+1
-    tNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+    tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+    iaNode = 0;
     allocMemory();
     na = this;
 }
@@ -356,7 +370,8 @@ TNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   NodT0 = 0;  // nodes at current time point
   NodT1 = 0;  // nodes at previous time point
   grid  = 0;   // Array of grid point locations, size is anNodes+1
-  tNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+  tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+  iaNode = 0;
   allocMemory();
   na = this;
 }
@@ -372,7 +387,8 @@ TNodeArray::TNodeArray( int nNod  ):
   NodT0 = 0;  // nodes at current time point
   NodT1 = 0;  // nodes at previous time point
   grid  = 0;   // Array of grid point locations, size is anNodes+1
-  tNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+  tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+  iaNode = 0;
   allocMemory();
   na = this;
 }
@@ -384,7 +400,8 @@ sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   NodT0 = 0;  // nodes at current time point
   NodT1 = 0;  // nodes at previous time point
   grid  = 0;   // Array of grid point locations, size is anNodes+1
-  tNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+  tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
+  iaNode = 0;
   allocMemory();
   na = this;
 }
@@ -748,8 +765,9 @@ void TNodeArray::MoveParticleMass( int ndx_from, int ndx_to,
                         mass = node1_mPS(ndx_from,ips) -
                              node1_xPA(ndx_from,ips) * dch->DCmm[xWatCH];
                    break;
-    case ADVECTIVE: // full liquid advection
+    case ADVECTIVE: // mass of liquid phase for full advection
                    mass = node1_mPS( ndx_from, ips );
+                    //  - node1_xPA(ndx_from,ips) * dch->DCmm[xWatCH];
                    break;
     case COLLOID:  // colloid particles
                    if( ips < dch->nPSb )
@@ -769,14 +787,16 @@ void TNodeArray::MoveParticleMass( int ndx_from, int ndx_to,
      mol = 0.; // moles if IC in the particle
      switch( tcode )
      {
-        case DISSOLVED: // moving only dissolved IC (-H2 or -O)
+        case DISSOLVED: // moving only dissolved IC (-H2O)
                         // xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
                         mol = ( node1_bPS( ndx_from, ips, ie )
                               - nodeCH_A( xWatCH, ie)
                               * node1_xPA(ndx_from,ips)) * coeff;
                         break;
         case ADVECTIVE: // moving IC of the whole aq phase
-                        mol = node1_bPS( ndx_from, ips, ie ) * coeff;
+                        mol = ( node1_bPS( ndx_from, ips, ie )
+                        // - nodeCH_A( xWatCH, ie) * node1_xPA(ndx_from,ips)
+                        ) * coeff;
                         break;
         case COLLOID:   // moving IC of solid particle
                         if( ips < dch->nPSb )

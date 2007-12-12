@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------
 // $Id: main.cpp 922 2007-09-14 08:06:21Z gems $
 //
-// gemnode 
+// gemnode
 // Demo test of usage of the TNode class for implementing a simple
 // direct coupling scheme between FMT and GEM in a single-GEM-call
 // fashion, assuming that the chemical speciation and all dynamic
@@ -69,7 +69,7 @@ int main( int argc, char* argv[] )
    int nIterFIA =0;       // Number of EnterFeasibleDomain() iterations
    int nIterIPM =0;       // Number of main IPM iterations
    int nIterTotal=0;      // Total FIA+IPM iterations done
-   
+
    cout << "Start of gemnode PIA test: " << ipm_input_file_list_name << " "
          << dbr_input_file_name << endl;
    cout << " nNodes = " << nNodes << "  nTimes = " << nTimes
@@ -82,7 +82,7 @@ int main( int argc, char* argv[] )
    // if( my_fmt_input(fmt_input_file_name) )
    //   return 2;
 
-// Number of ICs, DCs, Phases and Phases-solutions kept in the node DATABR 
+// Number of ICs, DCs, Phases and Phases-solutions kept in the node DATABR
 // structure for exchange with GEMIPM - for your convenience
    int nIC, nDC, nPH, nPS;
 //   int i,   j,   k,   ks;    // indices for direct access to components
@@ -93,7 +93,7 @@ int main( int argc, char* argv[] )
    if( !dCH  )
        return 3;
 
-// Getting direct access to the work node DATABR structure which exchanges 
+// Getting direct access to the work node DATABR structure which exchanges
 // the data between GEM and FMT parts
    DATABR* dBR = node->pCNode();
    if( !dBR  )
@@ -114,25 +114,25 @@ int main( int argc, char* argv[] )
    int nPrecL[nNodes], nFIA[nNodes], nIPM[nNodes];
 
    double m_T[nNodes], m_P[nNodes], m_Vs[nNodes], m_Ms[nNodes],
-          m_Gs[nNodes], m_Hs[nNodes], m_IC[nNodes], m_pH[nNodes], 
+          m_Gs[nNodes], m_Hs[nNodes], m_IC[nNodes], m_pH[nNodes],
 	  m_pe[nNodes], m_Eh[nNodes];
 
    double *m_xDC, *m_gam, *m_xPH, *m_aPH, *m_vPS, *m_mPS,*m_bPS,
          *m_xPA, *m_dul, *m_dll, *m_bIC, *m_rMB, *m_uIC;
-   
-   m_bIC = (double*)malloc( nNodes*nIC*sizeof(double) );
-   m_rMB = (double*)malloc( nNodes*nIC*sizeof(double) );
-   m_uIC = (double*)malloc( nNodes*nIC*sizeof(double) );
-   m_xDC = (double*)malloc( nNodes*nDC*sizeof(double) );
-   m_gam = (double*)malloc( nNodes*nDC*sizeof(double) );
-   m_dul = (double*)malloc( nNodes*nDC*sizeof(double) );
-   m_dll = (double*)malloc( nNodes*nDC*sizeof(double) );
-   m_aPH = (double*)malloc( nNodes*nPH*sizeof(double) );
-   m_xPH = (double*)malloc( nNodes*nPH*sizeof(double) );
-   m_vPS = (double*)malloc( nNodes*nPS*sizeof(double) );
-   m_mPS = (double*)malloc( nNodes*nPS*sizeof(double) );
-   m_xPA = (double*)malloc( nNodes*nPS*sizeof(double) );
-   m_bPS = (double*)malloc( nNodes*nIC*nPS*sizeof(double) );
+
+   m_bIC = new double[ nNodes*nIC ];
+   m_rMB = new double[ nNodes*nIC ];
+   m_uIC = new double[ nNodes*nIC ];
+   m_xDC = new double[ nNodes*nDC ];
+   m_gam = new double[ nNodes*nDC ];
+   m_dul = new double[ nNodes*nDC ];
+   m_dll = new double[ nNodes*nDC ];
+   m_aPH = new double[ nNodes*nPH ];
+   m_xPH = new double[ nNodes*nPH ];
+   m_vPS = new double[ nNodes*nPS ];
+   m_mPS = new double[ nNodes*nPS ];
+   m_xPA = new double[ nNodes*nPS ];
+   m_bPS = new double[ nNodes*nIC*nPS ];
 
 // (1) ---------------------------------------------
 // Initialization of chemical data kept in the FMT part.
@@ -294,7 +294,7 @@ int main( int argc, char* argv[] )
         nPrecLoops += nPrecL[in];
         nIterFIA += nFIA[in];
         nIterIPM += nIPM[in];
-        
+
 // Extracting GEM IPM output data to FMT part
         node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
           m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
@@ -334,13 +334,13 @@ int main( int argc, char* argv[] )
   double dtime = ( t_end11- t_start11 );
   double clc_sec = CLOCKS_PER_SEC;
   MeanIt = double(nIterTotal)/500.; // per 1 GEMIPM2 call ( nTotIt double(nNodes*nTimes);
-  MeanFIA = double(nIterFIA)/500.; 
+  MeanFIA = double(nIterFIA)/500.;
   MeanIPM = double(nIterIPM)/500.;
   MeanPRL = double(nPrecLoops)/500.;
-  
+
   cout <<  "Pure GEM IPM2 runtime , s: " <<  CalcTime << endl; // Only v. 2.2.0
   cout <<  "Total time of calculation, s: " <<  (dtime)/clc_sec << endl;
-  cout << "    Mean GEMIPM2 iterations per node: " << MeanPRL << " " << 
+  cout << "    Mean GEMIPM2 iterations per node: " << MeanPRL << " " <<
                MeanFIA << " " << MeanIPM << " " << MeanIt << endl;
 
   cout << " This gem_node test ";
@@ -349,18 +349,19 @@ int main( int argc, char* argv[] )
 // Calculations finished - t_end reached
 
 // freeing dynamic arrays
-  free( m_xDC );
-  free( m_gam );
-  free( m_xPH );
-  free( m_vPS );
-  free( m_mPS );
-  free( m_bPS );
-  free( m_xPA );
-  free( m_dul );
-  free( m_dll );
-  free( m_bIC );
-  free( m_rMB );
-  free( m_uIC );
+  delete[] m_xDC;
+  delete[] m_gam;
+  delete[] m_xPH;
+  delete[] m_vPS;
+  delete[] m_mPS;
+  delete[] m_bPS;
+  delete[] m_xPA;
+  delete[] m_dul;
+  delete[] m_dll;
+  delete[] m_bIC;
+  delete[] m_rMB;
+  delete[] m_uIC;
+  delete[] m_aPH;
 
 // deleting GEMIPM and data exchange memory structures
   delete node;

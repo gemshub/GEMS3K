@@ -31,9 +31,6 @@ LFLAGS   = -static
 LIBS     = $(SUBLIBS)  
 AR       = ar cqs
 RANLIB   = 
-MOC      = 
-UIC      = 
-QMAKE    = 
 TAR      = tar -cf
 GZIP     = gzip -9f
 COPY     = cp -f
@@ -109,13 +106,8 @@ OBJECTS = obj/gstring.o \
 		obj/main.o \
 		obj/ms_param.o \
 		obj/num_methods.o
-FORMS = 
-UICDECLS = 
-UICIMPLS = 
-SRCMOC   = 
-OBJMOC = 
+
 DIST	   = gem_node-sep.pro
-QMAKE_TARGET = gemnode.exe
 DESTDIR  = 
 TARGET   = gemnode.exe
 
@@ -143,17 +135,8 @@ first: all
 
 all: Makefile $(TARGET)
 
-$(TARGET):  $(UICDECLS) $(OBJECTS) $(OBJMOC)  
-	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJMOC) $(OBJCOMP) $(LIBS)
-
-mocables: $(SRCMOC)
-uicables: $(UICDECLS) $(UICIMPLS)
-
-$(MOC): 
-	( cd $(QTDIR)/src/moc && $(MAKE) )
-
-qmake: 
-	@$(QMAKE) -o Makefile gem_node-sep.pro
+$(TARGET):   $(OBJECTS)  
+	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
 
 dist: 
 	@mkdir -p obj/gemnode && $(COPY_FILE) --parents $(SOURCES) $(HEADERS) $(FORMS) $(DIST) obj/gemnode/ && ( cd `dirname obj/gemnode` && $(TAR) gemnode.tar gemnode && $(GZIP) gemnode.tar ) && $(MOVE) `dirname obj/gemnode`/gemnode.tar.gz . && $(DEL_FILE) -r obj/gemnode
