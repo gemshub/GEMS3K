@@ -53,12 +53,9 @@ HEADERS = array.h \
 		s_fgl.h \
 		databr.h \
 		datach.h \
-		nodearray.h \
 		node.h \
-		particlearray.h \
 		ms_multi.h \
 		io_arrays.h \
-		ms_gem2mt.h \
 		m_const.h \
 		m_param.h \
 		tnt_i_refvec.h \
@@ -72,11 +69,9 @@ SOURCES = gstring.cpp \
 		gdatastream.cpp \
 		num_methods.cpp \
 		s_fgl.cpp \
-		m_gem2mtt.cpp \
-		nodearray.cpp \
+		s_fgl2.cpp \
 		node.cpp \
 		node_format.cpp \
-		particlearray.cpp \
 		ms_multi_file.cpp \
 		ms_multi_format.cpp \
 		ipm_chemical.cpp \
@@ -91,11 +86,9 @@ OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
 		obj/num_methods.o \
 		obj/s_fgl.o \
-		obj/m_gem2mtt.o \
-		obj/nodearray.o \
+		obj/s_fgl2.o \
 		obj/node.o \
 		obj/node_format.o \
-		obj/particlearray.o \
 		obj/ms_multi_file.o \
 		obj/ms_multi_format.o \
 		obj/ipm_chemical.o \
@@ -202,37 +195,45 @@ obj/s_fgl.o: s_fgl.cpp s_fgl.h \
 		array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl.o s_fgl.cpp
 
-obj/m_gem2mtt.o: m_gem2mtt.cpp nodearray.h \
-		ms_gem2mt.h \
-		node.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
+obj/s_fgl2.o: s_fgl2.cpp s_fgl.h \
 		m_const.h \
+		verror.h \
 		v_user.h \
-		particlearray.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/m_gem2mtt.o m_gem2mtt.cpp
-
-obj/nodearray.o: nodearray.cpp particlearray.h \
-		nodearray.h \
-		gdatastream.h \
-		num_methods.h \
-		node.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		ms_multi.h \
-		verror.h \
 		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/nodearray.o nodearray.cpp
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl2.o s_fgl2.cpp
+
+#obj/m_gem2mtt.o: m_gem2mtt.cpp nodearray.h \
+#		ms_gem2mt.h \
+#		node.h \
+#		m_param.h \
+#		datach.h \
+#		databr.h \
+#		gdatastream.h \
+#		ms_multi.h \
+#		verror.h \
+#		gstring.h \
+#		array.h \
+#		m_const.h \
+#		v_user.h \
+#		particlearray.h
+#	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/m_gem2mtt.o m_gem2mtt.cpp
+
+#obj/nodearray.o: nodearray.cpp particlearray.h \
+#		nodearray.h \
+#		gdatastream.h \
+#		num_methods.h \
+#		node.h \
+#		m_param.h \
+#		datach.h \
+#		databr.h \
+#		ms_multi.h \
+#		verror.h \
+#		gstring.h \
+#		array.h \
+#		m_const.h \
+#		v_user.h
+#	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/nodearray.o nodearray.cpp
 
 obj/node.o: node.cpp node.h \
 		gdatastream.h \
@@ -261,21 +262,21 @@ obj/node_format.o: node_format.cpp io_arrays.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node_format.o node_format.cpp
 
-obj/particlearray.o: particlearray.cpp particlearray.h \
-		num_methods.h \
-		nodearray.h \
-		node.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/particlearray.o particlearray.cpp
+#obj/particlearray.o: particlearray.cpp particlearray.h \
+#		num_methods.h \
+#		nodearray.h \
+#		node.h \
+#		m_param.h \
+#		datach.h \
+#		databr.h \
+#		gdatastream.h \
+#		ms_multi.h \
+#		verror.h \
+#		gstring.h \
+#		array.h \
+#		m_const.h \
+#		v_user.h
+#	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/particlearray.o particlearray.cpp
 
 obj/ms_multi_file.o: ms_multi_file.cpp io_arrays.h \
 		m_param.h \
