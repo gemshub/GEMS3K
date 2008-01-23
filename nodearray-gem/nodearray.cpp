@@ -4,7 +4,7 @@
 // C/C++ interface between GEM IPM and FMT node array
 // Working whith DATACH and DATABR structures
 //
-// Copyright (C) 2004-2005 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2004,2007 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization
@@ -13,7 +13,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 
@@ -39,8 +39,9 @@ TNodeArray* TNodeArray::na;
 //-------------------------------------------------------------------------
 // RunGEM()
 // GEM IPM calculation of equilibrium state for the iNode node
-// from array NodT1. Mode - mode of GEMS calculation
-//
+// from array NodT1. abs(Mode)) - mode of GEMS calculation (NEED_GEM_PIA or NEED_GEM_AIA)
+//    if Mode is negative then the loading of primal solution from the node is forced
+//    (only in PIA mode)
 //  Function returns: NodeStatus code after GEM calculation
 //   ( OK_GEM_AIA; OK_GEM_PIA; error codes )
 //
@@ -48,12 +49,17 @@ TNodeArray* TNodeArray::na;
 
 int  TNodeArray::RunGEM( int  iNode, int Mode )
 {
-// Copy data from the iNode node from array NodT1 to work DATABR structure
+
+bool uPrimalSol = false;  
+  if( Mode < 0 || (short)abs(Mode) == NEED_GEM_PIA )
+	  uPrimalSol = true;
+	  
+// Copy data from the iNode node from array NodT1 to the work DATABR structure
    CopyWorkNodeFromArray( iNode, anNodes, NodT1 );
 
 // GEM IPM calculation of equilibrium state in MULTI
-  pCNode()->NodeStatusCH = (short)Mode;
-  int retCode = GEM_run();
+  pCNode()->NodeStatusCH = (short)abs(Mode);
+  int retCode = GEM_run( uPrimalSol );
 
 // Copying data for node iNode back from work DATABR structure into the node array
 //   if( retCode == OK_GEM_AIA ||
@@ -720,9 +726,9 @@ double TNodeArray::GetNodeMass( int ndx,
      switch( tcode )
      {
         case DISSOLVED: // mass of dissolved matter in aqueous solution
-                    xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
-                        mass = node1_mPS(ndx,ips) - node1_xPA(ndx,ips) *
-                               dch->DCmm[xWatCH];
+                        xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
+//                       mass = node1_mPS(ndx,ips); // - node1_xPA(ndx,ips)*dch->DCmm[xWatCH];
+                        mass = node1_xPA(ndx,ips)*dch->DCmm[xWatCH]; // Mass of aq-solvent
                         break;
         case ADVECTIVE: // mass of aq solution
                         mass = node1_mPS( ndx, ips );
@@ -744,26 +750,33 @@ double TNodeArray::GetNodeMass( int ndx,
 // move mass m_v from node ndx_from to node ind_to, one particle move
 // ndx_from    -  (absolute) index of the old node
 // ndx_to     -  (absolute) index of the new  node
-// ptype  -  particle type index ( 1 to 255 )
+// type  -  particle type index ( 1 to 255 )
+// COmpMode: true: transport of DCs; false - transport of ICs 
 // tcode  -  particle transport mechanism code (see enum PTCODE)
-// ips   - DataBr index of phase or species to which this particle is connected
+// iips   - DataBr index of phase or species to which this particle is connected
 // m_v -  mass or volume of the particle (depending on ptype and mmode)
 void TNodeArray::MoveParticleMass( int ndx_from, int ndx_to,
-       char /*type*/, char tcode, unsigned char iips, double m_v )
+       char /*type*/, char CompMode, char tcode, unsigned char iips, double m_v )
 {
-   double mass = 0., coeff, mol;
+   double mass = 0., coeff, mol, mWat, fmolal, aji;
    DATABR* dbr = NodT1[ndx_from];
    DATACH* dch = CSD;
-   int xWatCH=0, ips = (int)iips;
-   if( tcode == DISSOLVED  )
-     xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
+   int xWatCH=0, ic, ips = (int)iips;
+   if( tcode == DISSOLVED || tcode == ADVECTIVE || tcode == DIFFUSIVE )
+   {
+	   xWatCH = CSD->nDCinPH[CSD->xPH[0]]-1; // CH index of water
+//	   mWat = node1_xDC( ndx_from, xWatCH )* CSD->DCmm[xWatCH]; 
+	   mWat = node1_xPA(ndx_from, ips) * CSD->DCmm[xWatCH];  // Mass of water-solvent
+	   fmolal = 1.0; // 1000./mWat;              // molality conversion factor
+   }
 
    switch( tcode )
    {
     case DISSOLVED: // mass of dissolved matter in aqueous solution
-                    // xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
-                        mass = node1_mPS(ndx_from,ips) -
-                             node1_xPA(ndx_from,ips) * dch->DCmm[xWatCH];
+    				mass = mWat;  // trying normalization over mass of water-solvent
+//    				mass = 1000/fmolal; // grams of water in the node
+//    				fmolal = 1.0;
+    				//    	mass = node1_mPS(ndx_from,ips) - mWat;
                    break;
     case ADVECTIVE: // mass of liquid phase for full advection
                    mass = node1_mPS( ndx_from, ips );
@@ -779,24 +792,90 @@ void TNodeArray::MoveParticleMass( int ndx_from, int ndx_to,
                    mass = nodeCH_DCmm( ips ) * node1_xDC( ndx_from, ips );
                    break;
     }
-   coeff = m_v/mass; // mass of particle/mass of phase
+   coeff = m_v/mass; // mass of particle/mass of phase (solvent). Is this reasonable? 
 
-
+  if( CompMode == true )
+  { // Moving dependent components 
+	for(short jc=0; jc < CSD->nDC; jc++ )
+	{
+	  mol = 0.; // moles of DC transported in the particle
+	  switch( tcode )
+	  {
+        case DISSOLVED: // moving only dissolved DC (-H2O)
+//             if( jc == xWatCH )
+//            	 continue;  // H2O is ignored - not moved with the particle 
+	    case ADVECTIVE: // moving DC of the whole aq phase
+             if( jc > xWatCH )
+            	 continue;     // ignoring non-aqueous species 
+	    	 mol = node1_xDC( ndx_from, jc ) * coeff * fmolal;
+             break;                	 
+//             ( node1_bPS( ndx_from, ips, ie )
+//                   - nodeCH_A( xWatCH, ie)
+//                   * node1_xPA(ndx_from,ips)) * coeff;
+	     case COLLOID:  // moving DC of solid particle - to be completed!     
+// 	    	 if( ips < dch->nPSb )
+//                  mol = node1_bPS( ndx_from, ips, ie ) * coeff;
+//             else
+//                  mol = node1_bPH( ndx_from, ips, ie ) * coeff;
+	    	 break;
+	     case DIFFUSIVE: // moving DC - a diffusing species
+             if( jc != ips )
+            	 continue;     // ignoring other diffusive species 
+	    	 mol = node1_xDC( ndx_from, jc ) * coeff * fmolal;
+             break;                	 
+	  }
+	  if( tcode == DISSOLVED || tcode == ADVECTIVE || tcode == DIFFUSIVE )
+	      mol /= fmolal;       // back from molality to moles
+      
+      if( fabs(mol) > 1e-20 ) // mtp->cdv ) // Threshold for DC change carried over in the particle  
+      { 	   
+    	  if( NodT1[ndx_from]->NodeTypeHY != NBC3source )
+    	  {
+    		  node1_xDC( ndx_from, jc ) -= mol;   // Correcting species amount in source node at T1 
+    		  for( ic=0; ic<CSD->nICb; ic++)  // incrementing independent components
+    		  {
+    			  aji = nodeCH_A( jc, ic );
+    			  if( aji )
+    				  node1_bIC(ndx_from, ic) -= aji * mol;
+    		  }
+    	  }
+ 	  	  if( ndx_to >= 0 && ndx_to < anNodes )
+ 	  	  {
+ 	  		  if( NodT1[ndx_to]->NodeTypeHY != NBC3source )
+ 	  		  {
+ 	  			  node1_xDC( ndx_to, jc ) += mol;
+ 	  			  for( ic=0; ic<CSD->nICb; ic++)  // incrementing independent components
+ 	  			  {
+ 	  				  aji = nodeCH_A( jc, ic );
+ 	  				  if( aji )
+ 	  					  node1_bIC(ndx_to, ic) += aji * mol;
+ 	  			  }	
+ 	  		  }	 
+ 	  	  }
+ 	  	  else
+ 	  		  if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
+ 	  			cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << endl; 
+// 	  			  Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
+//	   } 
+     } 	  
+	} // loop jc  	  
+  }
+  else {  
+	      // Transport of independent components 
    for(short ie=0; ie < CSD->nICb; ie++ )
    {
-     mol = 0.; // moles if IC in the particle
+     mol = 0.; // moles of IC in the particle
      switch( tcode )
      {
         case DISSOLVED: // moving only dissolved IC (-H2O)
-                        // xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
                         mol = ( node1_bPS( ndx_from, ips, ie )
-                              - nodeCH_A( xWatCH, ie)
-                              * node1_xPA(ndx_from,ips)) * coeff;
+//                              - nodeCH_A( xWatCH, ie)* node1_xPA(ndx_from,ips)
+                              ) * coeff * fmolal;
                         break;
         case ADVECTIVE: // moving IC of the whole aq phase
                         mol = ( node1_bPS( ndx_from, ips, ie )
                         // - nodeCH_A( xWatCH, ie) * node1_xPA(ndx_from,ips)
-                        ) * coeff;
+                        ) * coeff * fmolal;
                         break;
         case COLLOID:   // moving IC of solid particle
                         if( ips < dch->nPSb )
@@ -806,22 +885,26 @@ void TNodeArray::MoveParticleMass( int ndx_from, int ndx_to,
                         break;
         case DIFFUSIVE: // moving IC of diffusing species
                         mol = node1_xDC( ndx_from, ips ) * nodeCH_A( ips, ie )
-                                * coeff;
+                                * coeff * fmolal;
                         break;
      }
+     if( tcode == DISSOLVED || tcode == ADVECTIVE || tcode == DIFFUSIVE )
+    	 mol /= fmolal; 
      if( dbr->NodeTypeHY != NBC3source )
        dbr->bIC[ie] -= mol;
-
-      if( ndx_to >= 0 && ndx_to < anNodes )
-      {
+     if( ndx_to >= 0 && ndx_to < anNodes )
+     {
          if( NodT1[ndx_to]->NodeTypeHY != NBC3source )
            NodT1[ndx_to]->bIC[ie] += mol;
-      }
-      else
+     }
+     else
          if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-           Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
+        	 cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << endl;        	                     
+//        	 Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
 
-   }
+   } // loop ie 
+  } // else
+   // End of function
 }
 
 //==========================================================================

@@ -52,33 +52,14 @@ OBJECTS_DIR = obj/
 
 ####### Files
 
-HEADERS = array.h \
-		verror.h \
-		gstring.h \
-		gdatastream.h \
-		v_user.h \
-		s_fgl.h \
-		databr.h \
-		datach.h \
-		node.h \
-		nodearray.h \
-		particlearray.h \
-		ms_multi.h \
-		io_arrays.h \
-		m_const.h \
-		m_param.h \
-		num_methods.h \
-		tnt_i_refvec.h \
-		tnt_array1d.h \
-		tnt_array2d.h \
-		tnt.h \
-		jama_cholesky.h \
-		jama_lu.h
+
 SOURCES = gstring.cpp \
 		gdatastream.cpp \
 		s_fgl.cpp \
 		s_fgl2.cpp \
 		node.cpp \
+                m_gem2mtt.cpp \
+                m_gem2mtbox.cpp \
 		nodearray.cpp \
 		particlearray.cpp \
 		node_format.cpp \
@@ -90,17 +71,21 @@ SOURCES = gstring.cpp \
 		ipm_main.cpp \
 		ipm_simplex.cpp \
 		io_arrays.cpp \
+		ms_gem2mt.cpp \
 		main.cpp \
 		ms_param.cpp \
 		num_methods.cpp
 OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
+		obj/num_methods.o \
 		obj/s_fgl.o \
 		obj/s_fgl2.o \
-		obj/node.o \
+		obj/m_gem2mtt.o \
+		obj/m_gem2mtbox.o \
 		obj/nodearray.o \
-		obj/particlearray.o \
+		obj/node.o \
 		obj/node_format.o \
+		obj/particlearray.o \
 		obj/ms_multi_file.o \
 		obj/ms_multi_format.o \
 		obj/ipm_chemical.o \
@@ -109,9 +94,9 @@ OBJECTS = obj/gstring.o \
 		obj/ipm_main.o \
 		obj/ipm_simplex.o \
 		obj/io_arrays.o \
+		obj/ms_gem2mt.o \
 		obj/main.o \
-		obj/ms_param.o \
-		obj/num_methods.o
+		obj/ms_param.o
 
 DIST	   = gem_node-sep.pro
 DESTDIR  = 
@@ -150,24 +135,27 @@ dist:
 clean: 
 #	-$(DEL_FILE) $(OBJECTS)
 #	-$(DEL_FILE) *~ core *.core
-	-$(DEL_FILE) obj\gstring.o 
-	-$(DEL_FILE) obj\gdatastream.o 
-	-$(DEL_FILE) obj\s_fgl.o 
-	-$(DEL_FILE) obj\s_fgl2.o 
+	-$(DEL_FILE) obj\gstring.o
+	-$(DEL_FILE) obj\gdatastream.o
+	-$(DEL_FILE) obj\s_fgl.o
+	-$(DEL_FILE) obj\s_fgl2.o
+	-$(DEL_FILE) obj\m_gem2mtt.o
+	-$(DEL_FILE) obj\m_gem2mtbox.o
 	-$(DEL_FILE) obj\node.o
 	-$(DEL_FILE) obj\nodearray.o 
 	-$(DEL_FILE) obj\particlearray.o 
-	-$(DEL_FILE) obj\node_format.o 
-	-$(DEL_FILE) obj\ms_multi_file.o 
-	-$(DEL_FILE) obj\ms_multi_format.o 
-	-$(DEL_FILE) obj\ipm_chemical.o 
-	-$(DEL_FILE) obj\ipm_chemical2.o 
+	-$(DEL_FILE) obj\node_format.o
+	-$(DEL_FILE) obj\ms_multi_file.o
+	-$(DEL_FILE) obj\ms_multi_format.o
+	-$(DEL_FILE) obj\ipm_chemical.o
+	-$(DEL_FILE) obj\ipm_chemical2.o
 	-$(DEL_FILE) obj\ipm_chemical3.o
-	-$(DEL_FILE) obj\ipm_main.o 
-	-$(DEL_FILE) obj\ipm_simplex.o 
-	-$(DEL_FILE) obj\io_arrays.o 
-	-$(DEL_FILE) obj\main.o 
-	-$(DEL_FILE) obj\ms_param.o 
+	-$(DEL_FILE) obj\ipm_main.o
+	-$(DEL_FILE) obj\ipm_simplex.o
+	-$(DEL_FILE) obj\io_arrays.o
+	-$(DEL_FILE) obj\main.o
+	-$(DEL_FILE) obj\ms_param.o
+	-$(DEL_FILE) obj\ms_gem2mt.o
 	-$(DEL_FILE) obj\num_methods.o
 	-$(DEL_FILE) $(TARGET)
 
@@ -356,19 +344,6 @@ obj/io_arrays.o: io_arrays.cpp io_arrays.h \
 		array.h 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o io_arrays.cpp
 
-obj/main.o: main.cpp node.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o main.cpp
-
 obj/ms_param.o: ms_param.cpp m_param.h \
 		num_methods.h \
 		gdatastream.h \
@@ -389,6 +364,72 @@ obj/num_methods.o: num_methods.cpp v_user.h \
 		gstring.h \
 		array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/num_methods.o num_methods.cpp
+
+obj/m_gem2mtt.o: m_gem2mtt.cpp m_param.h \
+		gstring.h \
+		array.h \
+		verror.h \
+		v_user.h \
+		ms_multi.h \
+		m_const.h \
+		particlearray.h \
+		nodearray.h \
+		node.h \
+		datach.h \
+		databr.h \
+		ms_gem2mt.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/m_gem2mtt.o m_gem2mtt.cpp
+
+obj/m_gem2mtbox.o: m_gem2mtbox.cpp io_arrays.h \
+		nodearray.h \
+		ms_gem2mt.h \
+		gstring.h \
+		array.h \
+		m_param.h \
+		particlearray.h \
+		gdatastream.h \
+		ms_multi.h \
+		verror.h \
+		m_const.h \
+		v_user.h \
+		node.h \
+		m_param.h \
+		datach.h \
+		databr.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/m_gem2mtbox.o m_gem2mtbox.cpp
+
+obj/ms_gem2mt.o: ms_gem2mt.cpp io_arrays.h \
+		ms_gem2mt.h \
+		gstring.h \
+		array.h \
+		particlearray.h \
+		nodearray.h \
+		node.h \
+		m_param.h \
+		datach.h \
+		databr.h \
+		gdatastream.h \
+		ms_multi.h \
+		verror.h \
+		m_const.h \
+		v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_gem2mt.o ms_gem2mt.cpp
+
+obj/main.o: main.cpp ms_gem2mt.h \
+		gstring.h \
+		particlearray.h \
+		nodearray.h \
+		node.h \
+		m_param.h \
+		datach.h \
+		databr.h \
+		gdatastream.h \
+		ms_multi.h \
+		verror.h \
+		array.h \
+		m_const.h \
+		v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o main.cpp
 
 ####### Install
 

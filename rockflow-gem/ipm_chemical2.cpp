@@ -16,7 +16,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
 //-------------------------------------------------------------------
 //
@@ -753,7 +753,7 @@ GEMU_CALC:
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
 // cout << "EDL (TLM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
-//      "  IT= " << pmp->IT << " k= " << k << " ist= " << ist << endl;
+//      "  IT= " << k << " k= " << k << " ist= " << ist << endl;
                 PsiA = PsiA<0? -1.1: 1.1;
             }
             pmp->XpsiA[k][ist] = PsiA;

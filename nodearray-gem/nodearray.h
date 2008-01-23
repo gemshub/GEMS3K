@@ -14,7 +14,7 @@
 // This file may be distributed under the licence terms
 // defined in GEMIPM2K.QAL
 //
-// See also http://les.web.psi.ch/Software/GEMS-PSI
+// See also http://gems.web.psi.ch/
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
@@ -257,8 +257,8 @@ public:
      double GetNodeMass( int ndx, char type, char tcode, unsigned char ips );
 
      // move a mass m_v from node ndx_from to node ind_to, for particle type
-     void MoveParticleMass( int ndx_from, int ind_to,
-            char type, char tcode, unsigned char ips, double m_v );
+     void MoveParticleMass( int ndx_from, int ind_to, char type, char ComponentMode, 
+    		 char tcode, unsigned char ips, double m_v );
 
 };
 

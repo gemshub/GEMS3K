@@ -19,7 +19,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
 //-------------------------------------------------------------------
 //
@@ -34,19 +34,21 @@ using namespace JAMA;
 #include "service.h"
 #include "stepwise.h"
 #endif
-
 #include "node.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main sequence of IPM calculations
 //  Main place for implementation of diagnostics and setup
 //  of IPM precision and convergence
+//  rLoop is the index of primal solution refinement loop (for tracing) or -1 if this is main call 
 //
-void TMulti::MultiCalcMain()
+void TMulti::MultiCalcMain( int rLoop )
 {
     int i, j, k, eRet;
     SPP_SETTING *pa = &TProfil::pm->pa;
-
+#ifdef GEMITERTRACE
+fstream f_log("ipmlog.txt", ios::out|ios::app );
+#endif
     pmp->W1=0; pmp->K2=0;
     
     if( pmp->pULR && pmp->PLIM )
@@ -83,18 +85,36 @@ STEP_POINT("After FIA");
     {
      case 0:  // OK
               break;
+     case 3:  // too small step length in descent algorithm
      case 2:  // max number of iterations has been exceeded in EnterFeasibleDomain()
-                 Error("E04IPM EFD(): " ,
+   	         if( pmp->pNP )
+   	         {   // bad PIA mode - trying the AIA mode
+       	        pmp->MK = 2;   // Set to check in calcMulti() later on
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E04IPM" << endl;
+#endif
+               goto FORCED_AIA;                                 
+   	         }
+   	         else 
+   	        	 Error("E04IPM EFD(): " ,
      "Prescribed precision of mass balance could not be reached because the vector b or\n"
      "DC stoichiometries or standard-state thermodynamic data are inconsistent.\n");
               break;
      case 1: // degeneration in R matrix  for EnterFeasibleDomain()
-           if( pmp->DHBM<1e-5 )
-            {
-               pmp->DHBM *= 10.;
-               goto mEFD;
-            }
-           else
+	         if( pmp->pNP )
+	         {   // bad PIA mode - trying the AIA mode
+    	        pmp->MK = 2;   // Set to check in calcMulti() later on
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E05IPM" << endl;
+#endif
+    	        goto FORCED_AIA;                                 
+	         }
+//    	     if( pmp->DHBM<1e-5 )
+//             {
+//                pmp->DHBM *= 10.;
+//                goto mEFD;
+//             }
+             else
                  Error("E05IPM EFD(): " ,
           "Degeneration in R matrix (fault in the linearized system solver).\n"
           "Invalid initial approximation - further IPM calculations are not possible");
@@ -118,31 +138,58 @@ STEP_POINT("After FIA");
      case 0:  // OK
               break;
      case 2:  // max number of iterations has been exceeded in InteriorPointsMethod()
-               if( pmp->DX<1e-3 )
-               {
-                   pmp->DX *= 10.;
-                   goto mEFD;
-                }
-               else
-                 Error("E06IPM IPM-main(): " ,
+         if( pmp->pNP )
+         {   // bad PIA mode - trying the AIA mode
+	        pmp->MK = 2;   // Set to check in calcMulti() later on
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E06IPM" << endl;
+#endif
+	        goto FORCED_AIA;                                 
+         }
+         else
+        	 if( pmp->DX < 1e-4 || pmp->DHBM < 1e-6 )
+             {  // Attempt to get result using most tolerant thresholds for convergence and balance accuracy
+        	    pmp->DX = 1e-4;
+                pmp->DHBM = 1e-6;
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " AIA: DX->1e-4, DHBM->1e-6 on E06IPM" << endl;
+#endif
+                goto mEFD;
+             }   
+        	 Error("E06IPM IPM-main(): " ,
      "Given IPM convergence criterion (Pa_DK) could not be reached;\n"
      " Perhaps, vector b is not balanced,or DC stoichiometries or\n"
      " standard-state thermodynamic data are inconsistent. \n");
+         break;
      case 1: // degeneration in R matrix  for InteriorPointsMethod()
-           if( pmp->DHBM<1e-5 )
-            {
-               pmp->DHBM *= 10.;
-               goto mEFD;
-            }
-           else
-               Error("E07IPM IPM-main(): ",
+         if( pmp->pNP )
+         {   // bad PIA mode - trying the AIA mode
+	        pmp->MK = 2;   // Set to check in calcMulti() later on
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E07IPM" << endl;
+#endif
+	        goto FORCED_AIA;                                 
+         }  
+         else 
+         {
+        	 if( pmp->DX < 1e-4 || pmp->DHBM < 1e-6 )
+             {  // Attempt to get result using most tolerant thresholds for convergence and balance accuracy
+        	    pmp->DX = 1e-4;
+                pmp->DHBM = 1e-6;
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " AIA: DX->1e-4, DHBM->1e-6 on E07IPM" << endl;
+#endif
+                goto mEFD;
+             }       	 
+             Error("E07IPM IPM-main(): ",
         "Degeneration in R matrix (fault in the linearized system solver).\n"
         " It is not possible to obtain a valid IPM solution.\n"
         " Probably, vector b is not balanced, or DC stoichiometries\n"
         " or standard-state thermodynamic data are inconsistent,\n"
         " or some relevant phases or DC are missing, or some kinetic constraints\n"
-        " are too stiff.\n"
+        " are inconsistent.\n"
         );
+         }     
           break;
    }
 
@@ -163,10 +210,13 @@ STEP_POINT("After FIA");
         return;  // solved
     }
 
-//========= call Selekt2 algorithm =======
+//========= calling Selekt2 algorithm =======
    int ps_rcode, k_miss, k_unst;
 
-   ps_rcode = PhaseSelect( k_miss, k_unst );
+if( rLoop < 0 )   
+    ps_rcode = PhaseSelect( k_miss, k_unst, rLoop );
+else 
+   ps_rcode = 1; // do not call Selekt2() in primal solution refinement loops (experimental!!!!!)
 
    MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
 
@@ -178,10 +228,24 @@ STEP_POINT("After FIA");
       case 1:   // IPM solution is final and consistent, no phases were inserted
                 break;
       case 0:   // some phases were inserted and a new IPM loop is needed
-                goto mEFD;
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " K2=" << pmp->K2 << 
+      " k_miss=" << k_miss << " k_unst=" << k_unst <<  " ! (new Selekt loop)" << endl;
+#endif 
+    	        goto mEFD;
       default:
       case -1:  // the IPM solution is inconsistent after 3 Selekt2() loops
-      {
+    	  if( pmp->pNP )
+    	  {   // bad PIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
+        	  pmp->MK = 2;   // Set to check in calcMulti() later on
+#ifdef GEMITERTRACE
+f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << 
+      " k_miss=" << k_miss << " k_unst=" << k_unst << " ! PIA->AIA on E08IPM (Selekt)" << endl;
+#endif
+        	  goto FORCED_AIA;                                 
+    	  }
+    	  else 
+    	  {
            gstring pmbuf(pmp->SF[k_miss],0,20);
            gstring pubuf(pmp->SF[k_unst],0,20);
            char buf[400];
@@ -192,7 +256,7 @@ STEP_POINT("After FIA");
     " or standard g0 are wrong, or some relevant phases or DCs are missing.",
                     k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
             Error( "E08IPM: PhaseSelect():", buf );
-      }
+          }
    }
 
 #ifndef IPMGEMPLUGIN
@@ -204,7 +268,9 @@ STEP_POINT("After FIA");
    pVisor->Update( false );
 #endif
 #endif
-
+   if( pmp->MK == 2 )
+       goto FORCED_AIA;
+   
    if( pmp->PZ )
    {
      if( !pmp->W1 )
@@ -253,6 +319,15 @@ STEP_POINT("After FIA");
           } // end of i loop
       }
    }
+#ifdef GEMITERTRACE
+f_log << "ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " MBPRL=" 
+   << pmp->W1 << " rLoop=" << rLoop; 
+if( pmp->pNP )
+	f_log << " Ok after PIA" << endl;
+else 
+	f_log << " Ok after AIA" << endl;
+#endif
+FORCED_AIA:
    for( i=0; i<pmp->L; i++)
       pmp->G[i] = pmp->G0[i];
    // Normal return after successful improvement of the mass balance precision
@@ -261,10 +336,10 @@ STEP_POINT("After FIA");
 }
 
 //Call for IPM iteration sequence
-void TMulti::MultiCalcIterations()
+void TMulti::MultiCalcIterations( int rLoop )
 {
 
-    MultiCalcMain();
+    MultiCalcMain( rLoop );
 
     // calculation of demo data for gases
     for( int ii=0; ii<pmp->N; ii++ )
@@ -282,7 +357,7 @@ void TMulti::MultiCalcIterations()
 // false - OK for IPM
 // true  - OK solved
 //
-bool TMulti::AutoInitialApprox( )
+bool TMulti::AutoInitialApprox(  )
 {
     int i, j, k, NN;
     double minB, sfactor;
@@ -310,7 +385,7 @@ bool TMulti::AutoInitialApprox( )
    if( pmp->DX < 0.01 * pa->p.DK )
        pmp->DX = 0.01 * pa->p.DK;
    pmp->DSM = pa->p.DS;  // Shall we add  * sfactor ?
-   pmp->ITG = 0; pmp->ITF = 0; pmp->K2 = 0; pmp->W1 = 0; 
+   pmp->K2 = 0; pmp->W1 = 0; 
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
    pVisor->Update(false);
@@ -327,8 +402,8 @@ bool TMulti::AutoInitialApprox( )
             GammaCalc(LINK_FIA_MODE);
         if( pa->p.PC == 2 )
            XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
-        pmp->IT = 0; 
-        pmp->pNP = 0;
+        pmp->IT = 0; pmp->ITF += 1; // Assuming simplex() time equal to one iteration of EFD()  
+//        pmp->pNP = 0;
 //        pmp->K2 = 0;
         pmp->PCI = 0;
 
@@ -416,9 +491,10 @@ STEP_POINT("Before FIA");
 // Algorithm: see Karpov, Chudnenko, Kulik 1997 Amer.J.Sci. vol 297 p. 798-799
 // (Appendix B)
 //
-// Returns: 0 - OK,
-//          1 - no convergence at the specified precision pa.p.DHB
+// Returns: 0 -  OK,
+//          1 -  no SLE colution at the specified precision pa.p.DHB
 //          2  - used up more than pa.p.DP iterations
+//          3  - too small step length (< pa.p.DG), no descent possible
 //
 int TMulti::EnterFeasibleDomain()
 {
@@ -443,7 +519,7 @@ int TMulti::EnterFeasibleDomain()
 
 //----------------------------------------------------------------------------
 // BEGIN:  main loop
-    for( IT1=0; IT1 < pa->p.DP; IT1++, pmp->IT++, pmp->ITF++ )
+    for( IT1=0; IT1 < pa->p.DP; IT1++, pmp->ITF++ )   
     {
         // get size of task
         pmp->NR=pmp->N;
@@ -452,7 +528,6 @@ int TMulti::EnterFeasibleDomain()
                 pmp->NR= (short)(pmp->N-1);
         }
         N=pmp->NR;
-//      pmp->ITF++;
        // Calculation of mass-balance residuals in IPM
        MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C);
 
@@ -463,9 +538,7 @@ int TMulti::EnterFeasibleDomain()
              ( pmp->W1 && fabs(pmp->C[I]) > pmp->B[I] * pa->p.GAS ) )
            break;
        if( I == Z ) // OK
-       { pmp->IT -= IT1;
          return iRet;       // OK
-       }
 
        WeightMultipliers( true );
        // Assembling and solving the system of linearized equations
@@ -477,13 +550,21 @@ int TMulti::EnterFeasibleDomain()
       pmp->PCI = calcDikin( N, true);  // calc of MU values and Dikin criterion
 
       LM = calcLM( true ); // Calculation of descent step size LM
-      if( LM < 1E-5 )
-         Error( "E03IPM FIA-iteration:",
-            "Too small step size - too slow convergence");
+
+//       if( LM < 1E-5 )
+      if( LM < min(pa->p.DG, 1e-5) )
+      {  // Experimental 
+         if( !pmp->pNP )     // cannot improve in AIA mode!
+    	    Error( "E03IPM FIA-iteration:",
+              "Too small step size - too slow convergence");
+         else    // in PIA mode, attempt switching to AIA mode 
+        	 return 3;          	        
+      }
       if( LM > 1.)
          LM = 1.;
 
-      // calculation of new prime solution approximation
+      // calculation of new primal solution approximation
+      // from step size LM and the descent vector MU
       for(J=0;J<pmp->L;J++)
             pmp->Y[J] += LM * pmp->MU[J];
 
@@ -550,7 +631,6 @@ int TMulti::InteriorPointsMethod( )
         }
         N = pmp->NR;
 //        memset( pmp->F, 0, pmp->L*sizeof(double));
-//        pmp->ITG++;
         PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
         // Setting weight multipliers for DC
@@ -1103,7 +1183,6 @@ double TMulti::calcSfactor()
 }
 
 //===================================================================
-
 // Checking Karpov phase stability criteria Fa for phases and DCs
 //  using Selekt2() algorithm by Karpov & Chudnenko (1989)
 //  modified by DK in 1995 and in 2007
@@ -1114,9 +1193,9 @@ double TMulti::calcSfactor()
 //  In this case, the index of most problematic phase is passed through kf or
 //  ku parameter (parameter value -1 means that no problematic phases were found)
 //
-int TMulti::PhaseSelect( int &kf, int &ku )
+int TMulti::PhaseSelect( int &kfr, int &kur, int rLoop )
 {
-    short k, j, jb;
+    short k, j, jb;  int kf, ku; 
     double F1, F2, *F0, sfactor;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -1144,8 +1223,9 @@ int TMulti::PhaseSelect( int &kf, int &ku )
             ku=k;
         }
     }
-
-    if( kf < 0 && ku < 0 )
+kfr = kf;
+kur = ku; 
+    if( kfr < 0 && kur < 0 )
     {    // No phases to insert/exclude or no Fa distortions found
           // Successful end of iterations of SELEKT2()
         pmp->MK=1;
@@ -1217,8 +1297,8 @@ int TMulti::PhaseSelect( int &kf, int &ku )
         jb=0;
         for(k=0;k<pmp->FIs;k++)
         {
-            if( pmp->YF[k] >= pa->p.DS ) // Only in phase present in mass balance!
-            {                            // (acc. to definition of L_S set)
+            if( ( pmp->YF[k] >= pa->p.DS )  || (pmp->pNP && rLoop < 0 ) ) // Only in phase present in mass balance!
+            {                            // (acc. to definition of L_S set) PIA only if initial!
                  pmp->YF[k]=0.;
                  for(j=jb;j<jb+pmp->L1[k];j++)
                  {

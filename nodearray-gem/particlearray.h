@@ -12,7 +12,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
@@ -127,14 +127,14 @@ class TParticleArray
   // Calculation of new particle locations
   int DisplaceParticle( int px, double t0, double t1 );
   // Walk (transport step) for particle px between nodes
-  int MoveParticleBetweenNodes( int px, double t0, double t1 );
+  int MoveParticleBetweenNodes( int px, bool CompMode, double t0, double t1 );
   // call to the whole Random Walk method time step over all particles and nodes
  // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
  // GEM was called before this function
-  int RandomWalkIteration( int Mode, double t0, double t1 );
+  int RandomWalkIteration( int Mode, bool CompMode, double t0, double t1 );
   // call to the whole FiniteCell Walk method time step over all particles and nodes
   // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
-  int FCellWalkIteration( int Mode, double t0, double t1 );
+  int FCellWalkIteration( int Mode, bool CompMode, double t0, double t1 );
 
 // not use functions
   void particles_to_text_file( fstream& ff );    // writes particle array(s) to a text file
@@ -172,10 +172,10 @@ public:
   {    ParT1[px].xyz = cxyz;  }
 
   void  setUpCounters();
-  void CopyfromT1toT0();  // Copy resalts of ParT1 step to ParT0
+  void CopyfromT1toT0();  // Copy results of ParT1 step to ParT0
   void ParticleArrayInit();  // Particle array initialization
    // stub call for coupled mass transport calculation
-  int GEMCOTAC( int Mode, double t0, double t1 );
+  int GEMPARTRACK( int Mode, bool ComponentMode, double t0, double t1 );
 
 //#ifdef IPMGEMPLUGIN
 

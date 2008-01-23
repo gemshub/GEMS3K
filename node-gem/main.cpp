@@ -12,7 +12,7 @@
 // and FMT codes. Works with DATACH and work DATABR structures
 // without using the TNodearray class
 //
-// Copyright (C) 2006,2007 S.Dmytrieva, D.Kulik
+// Copyright (C) 2006,2008 S.Dmytrieva, D.Kulik
 //
 // This file is part of GEMIPM2K code for thermodynamic modelling
 // by Gibbs energy minimization
@@ -29,7 +29,7 @@
 #include <string.h>
 
 #include "node.h"
-#define nNodes  5   // set here how many nodes you need
+const int  nNodes =  5;   // set here how many nodes you need
 
 int main( int argc, char* argv[] )
  {
@@ -144,7 +144,7 @@ int main( int argc, char* argv[] )
      dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
 // re-calculating equilibrium by calling GEMIPM2K, getting the status
-     m_NodeStatusCH[in] = node->GEM_run();
+     m_NodeStatusCH[in] = node->GEM_run( false );
 
      if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
         return 5; // GEM IPM did not converge properly
@@ -178,9 +178,10 @@ int main( int argc, char* argv[] )
   {
    dBR->NodeStatusCH = NEED_GEM_AIA; // activating GEM IPM for automatic initial
                                      // approximation
-// re-calculating equilibrium by calling GEMIPM
-   m_NodeStatusCH[in] = node->GEM_run();
-
+// re-calculating equilibrium by calling GEMIPM using previous primal solution in this node
+//   m_NodeStatusCH[in] = node->GEM_run( true );
+   // re-calculating equilibrium by calling GEMIPM using previous content of GEMIPM structure
+      m_NodeStatusCH[in] = node->GEM_run( false );
   if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
      return 5;
 // Extracting GEM IPM input chemical data into FMT part
@@ -261,7 +262,7 @@ int main( int argc, char* argv[] )
         m_NodeHandle[in] = in;
 
 // Below you can switch between AIA and PIA initial approximation modes
-        m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2B (-O2)
+        m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2A 
 //        m_NodeStatusCH[in] = NEED_GEM_PIA;      // tests are marked *.out2P
 
 // Setting input data for GEM IPM
@@ -285,9 +286,11 @@ int main( int argc, char* argv[] )
 //     m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH, m_xDC+in*nDC );
 
 // Calling GEM IPM2 calculation
-        m_NodeStatusCH[in] = node->GEM_run( );
-                if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
-               m_NodeStatusCH[in] == OK_GEM_PIA ) )
+// re-calculating equilibrium by calling GEMIPM using previous primal solution in this node
+//    m_NodeStatusCH[in] = node->GEM_run( true );
+// re-calculating equilibrium by calling GEMIPM using previous content of GEMIPM structure
+       m_NodeStatusCH[in] = node->GEM_run( false );
+       if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
             return 5;
         CalcTime += node->GEM_CalcTime();  // Incrementing calculation time - only v.2.2.0
         nIterTotal += node->GEM_Iterations( nPrecL[in], nFIA[in], nIPM[in] );

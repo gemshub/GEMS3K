@@ -11,7 +11,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail gems2.support@psi.ch
 //-------------------------------------------------------------------
 //#include  <iostream>
@@ -46,7 +46,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" , 0 , 0 }
 };
 
-outField MULTI_dynamic_fields[66] =  {
+outField MULTI_dynamic_fields[67] =  {
 //read dynamic (array) data from the txt input file
    {  "sMod", 1 , 0 },
    {  "LsMod", 1 , 0 },
@@ -108,6 +108,7 @@ outField MULTI_dynamic_fields[66] =  {
    { "pa_DW", 0 , 0 },
    { "pa_DT", 0 , 0 },
    { "pa_GAS", 0 , 0 },
+{ "pa_DG", 0 , 0 },   
    { "pa_DNS" , 0 , 0 },
    { "pa_IEPS" , 0 , 0 },
    { "pKin" , 0 , 0 },
@@ -305,8 +306,9 @@ ff << "\n<END_DIM>\n\n";
    if( _comment )
      ff << "\n# GAS: IPM2 balance accuracy control factor DHBM[i]/b[i]" << endl;
    ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa->p.GAS << endl;
-//   ff << "# 'pa_DG'        1e-30  now internal in LU decomposition procedure from JAMA-TNT" << endl << endl;
-//  ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
+   if( _comment )
+	 ff << "# DG: Minimal step length in the initial approximation EFD() procedure, 1e-7 " << endl;
+   ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
    if( _comment )
      ff << "# DNS: Standard surface density (nm-2) for calculating activity of surface species" << endl;
    ff << left << setw(12) << "<pa_DNS> " <<  right << setw(8) << pa->p.DNS << endl;
@@ -666,7 +668,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   ConvertDCC();
 
 //reads dynamic values from txt file
-   TReadArrays  rddar( 66, MULTI_dynamic_fields, ff);
+   TReadArrays  rddar( 67, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
 
@@ -876,19 +878,21 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                break;
       case 58: rddar.readArray("pa_GAS", &pa->p.GAS, 1);
                break;
-      case 59: rddar.readArray("pa_DNS" , &pa->p.DNS, 1);
+      case 59: rddar.readArray("pa_DG" , &pa->p.DG, 1);
                break;
-      case 60: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
+      case 60: rddar.readArray("pa_DNS" , &pa->p.DNS, 1);
                break;
-      case 61: rddar.readArray("pKin" , &pmp->PLIM, 1);
+      case 61: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
                break;
-      case 62: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
+      case 62: rddar.readArray("pKin" , &pmp->PLIM, 1);
                break;
-      case 63: rddar.readArray("mui" , pmp->mui, pmp->N);
+      case 63: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
                break;
-      case 64: rddar.readArray("muk" , pmp->muk, pmp->FI);
+      case 64: rddar.readArray("mui" , pmp->mui, pmp->N);
                break;
-      case 65: rddar.readArray("muj" , pmp->muj, pmp->L);
+      case 65: rddar.readArray("muk" , pmp->muk, pmp->FI);
+               break;
+      case 66: rddar.readArray("muj" , pmp->muj, pmp->L);
                break;
     }
     nfild = rddar.findNext();

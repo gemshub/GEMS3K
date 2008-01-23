@@ -12,7 +12,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail gems2.support@psi.ch
 //-------------------------------------------------------------------
 
@@ -34,14 +34,21 @@
 void TPrintArrays::writeArray( const char *name, char* arr,
                               int size, int arr_siz )
 {
- 
+ bool isComment = false;
+	
  if( name ) 
      ff << endl << "<" << name << ">" << endl;
- else ff << endl << "#  ";
+ else 
+ { ff << endl << "#  ";
+   isComment = true;
+ }
  for( int ii=0, jj=0; ii<size; ii++, jj++  )
  {
-    if(jj == 40)
-    { jj=0;  ff << endl;}
+    if(jj == 40 )
+    { jj=0;  ff << endl;
+      if(isComment)
+    	  ff << "#  ";  
+    }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
     str.strip();
     ff  << "\'" << str.c_str() << "\'" << " ";
@@ -281,8 +288,8 @@ void TReadArrays::readArray( const char*, char* arr, int size, int el_size )
  {
    skipSpace();
    ff.get(ch);
-   while( ff.good() && ch != '\'' )
-       ff.get(ch);
+//   while( ff.good() && ch != '\'' )
+//       ff.get(ch);
    ff.getline( buf, el_size+1, '\'');
    strncpy( arr +(ii*el_size), buf, el_size );
  }

@@ -16,7 +16,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
 //-------------------------------------------------------------------
 //
@@ -259,6 +259,9 @@ void TMulti::Set_DC_limits( int Mode )
         for( j=jb; j<je; j++ )
             if( pmp->RLC[j] != NO_LIM )
                 MpL = 1;
+
+if( k < pmp->FIs )
+{					// Temporary workaround - DK  13.12.2007         	
         if( pmp->RFLC[k] == NO_LIM && !MpL )
         { // check type restrictions on phase
             goto NEXT_PHASE;
@@ -293,6 +296,7 @@ void TMulti::Set_DC_limits( int Mode )
             XFL = 0.0;
             XFU = 1e6;
 //        }
+} 
         for( j=jb; j<je; j++ )
         { // loop over DCs
             if( pmp->RLC[j] == NO_LIM )
@@ -661,22 +665,19 @@ NEXT_PHASE:
 //
 double TMulti::KarpovCriterionDC(
     double *dNuG,  // Nu[j]-c[j] difference - is modified here
-    double logYF,  // ln Xa
+    double logYF,  // ln Xa   (Xa is mole amount of the whole phase)
     double asTail, // asymmetry correction (0 for symmetric phases)
-    double logYw,  // ln Xv
-    double Wx,     // mole fraction
+    double logYw,  // ln Xw   (Xw is mole amount of solvent)
+    double Wx,     // mole fraction of this DC 
     char DCCW      // Generic class code of DC 
 )
 {
     double Fj=0.0;  // output phase stability criterion
 
-//    if( KinConst )
-//        return Fj;
-
     if( logYF > -35. && Wx > 1e-18 )    // Check thresholds!
         switch( DCCW ) // expressions for fj
         {
-        default: // error code here !!!
+        default: // error code would be needed here !!!
             *dNuG = 36.;
         case DC_SINGLE:
             Wx = 1.0;
@@ -749,10 +750,10 @@ void TMulti::f_alpha()
             Yj = pmp->Y[j];
             Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
-            if( pmp->DUL[j] < pa->p.DKIN  
+            if( pmp->DUL[j] < pa->p.DKIN      // DKIN (1e-6) is used here as tolerance
             	|| ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
                 || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
-                KinConstr = true; // Avoiding kinetically constrained phase
+                KinConstr = true; // Avoiding phase with the amount lying on the non-trivial kinetic constraint 
             Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
                             pmp->logXw, Wx, pmp->DCCW[j] );
             NMU[j] = dNuG;
@@ -771,24 +772,49 @@ void TMulti::f_alpha()
                 Yj = pmp->Y[j];
                 if( YF > pa->p.DS && Yj > pmp->lowPosNum )
                     Wx = Yj / YF; // calculating mole fraction of DC
-                if( pmp->DUL[j] < pa->p.DKIN  
-                	|| ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+                if( pmp->DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
+                	( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
                     || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
-                    KinConstr = true; // Avoiding check on kinetically constrained DCs
+                    KinConstr = true; // Avoiding DC with the amount lying on the non-=trivial kinetic constraint
                 // calculating Karpov stability criteria for DCs
                 Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
                          pmp->logXw, Wx, pmp->DCCW[j] );
-                NMU[j] = dNuG;  // dNuG is stored for all DCs, not only in L_S
+                NMU[j] = dNuG;  // dNuG is stored for all DCs, not only those in L_S set
+// Experimental option - checking zeroed off DCs in multicomponent phases 
+// during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)                 
+if( pmp->pNP && !pmp->K2 )                
+{  // Checking L_S set and potentially stable zero DCs and phases 
+   if( YF >= pa->p.DS )
+   {                            // phase is there
+	   if( Yj > pmp->lowPosNum )
+       {	                    // DC is there
+		   if( KinConstr == false)
+              pmp->Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
+       }
+	   else {                  // DC is zeroed off  
+		   if( Fj > pa->p.DF*100. )
+	          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
+	   }       
+       EMU[j] = Fj;
+   }
+   else {  // The whole phase is absent
+	   if( Fj > pa->p.DF*100. )
+          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?  
+       EMU[j] = Fj;              // To check values (remove this line later on) 
+   }
+}             
+else {   // Standard checking in the L_S set only              
                 if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
                 {
 
                     if( KinConstr == false )
-                        pmp->Falp[k] += Fj; // incr Karpov stability criterion
+                        pmp->Falp[k] += Fj; // incrementing Karpov stability criterion for the phase
                     EMU[j] = Fj;
                 }
                 else
                     EMU[j] = 0;   // This DC is not in L_S set
-            }   // j
+}
+             }   // j
         }
         j = ii;
     }  // k

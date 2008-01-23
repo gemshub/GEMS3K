@@ -13,7 +13,7 @@
 // This file may be distributed under the licence terms
 // defined in GEMIPM2K.QAL
 //
-// See also http://les.web.psi.ch/Software/GEMS-PSI
+// See also http://gems.web.psi.ch/
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
@@ -248,7 +248,7 @@ void GEM_from_MT(
 // check the return code and retrieve chemical speciation etc.
 // using the GEM_to_MT() call
 //
-   int  GEM_run();   // calls GEM for a work node
+   int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
 
 // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
    double GEM_CalcTime();
@@ -400,7 +400,7 @@ void GEM_from_MT(
     // Data exchange methods between GEMIPM and work node DATABR structure
     // Are called inside of GEM_run()
     void packDataBr();   //  packs GEMIPM calculation results into work node structure
-    void unpackDataBr(); //  unpacks work node structure into GEMIPM data structure
+    void unpackDataBr( bool uPrimalSol ); //  unpacks work DATABR content into GEMIPM data structure
 
     // Access to interpolated thermodynamic data from DCH structure
     // Test Tc and P as grid point for the interpolation of thermodynamic data

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 959 2007-12-10 14:57:58Z gems $
+// $Id: ms_multi.h 1000 2008-01-18 16:40:05Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -15,7 +15,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
@@ -271,8 +271,8 @@ typedef struct
 //     *sitXan;  // SIT: indices of anions
 //  float
 //     *sitE;    // pointer to SIT coeff. table (may be changed soon)
-  short ITF,        // Number of completed EFD iterations
-        ITG;        // Number of completed GEM IPM iterations
+  short ITF,       // Number of completed IA EFD iterations
+         ITG;        // Number of completed GEM IPM iterations
   clock_t t_start, t_end;
   double t_elap_sec;  // work variables for determining IPM calculation time
 #ifdef IPMGEMPLUGIN
@@ -408,7 +408,7 @@ void SolModParPT ( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCod
 void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
 
 // ipm_main.cpp - numerical part of GEM-IPM2
-    void MultiCalcMain();
+    void MultiCalcMain( int rLoop );
     int EnterFeasibleDomain( );
     int InteriorPointsMethod( );
     void SimplexInitialApproximation( );
@@ -426,7 +426,7 @@ void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModC
    double calcLM(  bool initAppr );
    void Restoring_Y_YF();
    double calcSfactor();
-   int PhaseSelect( int &k_miss, int &k_unst );
+   int PhaseSelect( int &k_miss, int &k_unst, int rLoop );
    // IPM_SIMPLEX.CPP Simplex method with two side constraints (Karpov ea 1997)
     void Simplex(int M, int N, int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,
@@ -518,7 +518,7 @@ public:
     void Alloc_internal();
     void MultiCalcInit( const char *key );
     bool AutoInitialApprox();
-    void MultiCalcIterations();
+    void MultiCalcIterations( int rLoop );
     void CompG0Load();
 
     // connection to Unspace

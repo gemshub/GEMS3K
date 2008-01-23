@@ -14,7 +14,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 
@@ -87,10 +87,18 @@ bool  TNode::check_TP( double& Tc, double& P )
 // GEM_run()
 // GEM IPM calculation of equilibrium state for the work node.
 //   mode of GEM calculation is taken from the DATABR work structure
+//
+//  if uPrimalSol == true then the primal solution (vectors x, gamma, IC etc.) 
+//    will be unpacked before GEMIPM calculation - as an option for the PIA mode 
+//    with previous GEM solution taken from the same node. 
+//  If uPrimalSol == false then the primal solution data will not be unpacked 
+//    into the MULTI structure (AIA mode or PIA mode with primal solution retained 
+//    in the MULTI structure from any previous IPM calculation)
+//
 //   Function returns: NodeStatusCH code from DATABR structure
 //   ( OK; GEMIPM2K calculation error; system error )
 //
-int TNode::GEM_run()
+int TNode::GEM_run( bool uPrimalSol )
 {
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
   CalcTime = 0.0;
@@ -103,14 +111,21 @@ int TNode::GEM_run()
 // Checking T and P  for interpolation intervals
    check_TP( CNode->TC, CNode->P);
 // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
-   unpackDataBr();
-// set up Mode
-//   CNode->NodeStatusCH = (short)Mode;
-// GEM IPM calculation of equilibrium state in MULTI
+// setting up up PIA or AIA mode
+   if( CNode->NodeStatusCH == NEED_GEM_PIA )
+   {
+	   pmm->pNP = 1;
+	   unpackDataBr( uPrimalSol );
+   }
+   else { 
+	   pmm->pNP = 0; // As default setting AIA mode
+	   unpackDataBr( false );
+   }
+   // GEM IPM calculation of equilibrium state in MULTI
    CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
-
+    CNode->IterDone = NumIterFIA+NumIterIPM;
 //**************************************************************
 // only for testing output results for files
 //    GEM_write_dbr( "calculated_dbr.dat",  false );
@@ -327,7 +342,8 @@ if( binary_f )
                     "DBR_DAT fileopen error");
                databr_from_text_file(in_br);
           }
-
+          if(!i) 
+        	  dbr_file_name = dbr_file;
 // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
 //    unpackDataBr();
 
@@ -986,20 +1002,20 @@ void TNode::packDataBr()
     CNode->NodeStatusCH = NEED_GEM_AIA;
   else
      CNode->NodeStatusCH = NEED_GEM_PIA;
-#else
-
+//#else
+//
  // numbers
-  if( pmm->pNP == 0 )
-    CNode->NodeStatusCH = OK_GEM_AIA;
-  else
-    CNode->NodeStatusCH = OK_GEM_PIA;
-
+//  if( pmm->pNP == 0 )
+//    CNode->NodeStatusCH = OK_GEM_AIA;
+//  else
+//    CNode->NodeStatusCH = OK_GEM_PIA;
+//
 #endif
 
    CNode->TC = pmm->TCc; //25
    CNode->P = pmm->Pc; //1
-   CNode->IterDone = pmm->IT;
-
+//   CNode->IterDone = pmm->IT;
+   CNode->IterDone = pmm->ITF+pmm->ITG;   // Now complete number of FIA and IPM iterations
 // values
   CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
   CNode->Gs = pmm->FX;
@@ -1044,72 +1060,87 @@ void TNode::packDataBr()
 
 // Unpacking work DATABR structure into MULTI
 //(GEM IPM work structure): uses DATACH
-void TNode::unpackDataBr()
+//  if uPrimalSol is true then the primal solution (vectors x, gamma, IC etc.) 
+//  will be unpacked - as an option for PIA mode with previous GEM solution from 
+//  the same node. 
+//  If uPrimalSol = false then the primal solution data will not be unpacked 
+//  into the MULTI structure (AIA mode or PIA mode with primal solution retained 
+//    in the MULTI structure from previous IPM calculation)
+void TNode::unpackDataBr( bool uPrimalSol )
 {
  short ii;
  double Gamm;
 // numbers
 
-  if( CNode->NodeStatusCH >= NEED_GEM_PIA )
-   pmm->pNP = 1;
-  else
-   pmm->pNP = 0; //  NEED_GEM_AIA;
+//  if( CNode->NodeStatusCH >= NEED_GEM_PIA )
+//   pmm->pNP = 1;
+//  else
+//   pmm->pNP = 0; //  NEED_GEM_AIA;
   CNode->IterDone = 0;
-  pmm->IT = 0;
-// values
   pmm->TCc = CNode->TC;
-  pmm->Tc = CNode->TC+C_to_K; // ??????
+  pmm->Tc = CNode->TC+C_to_K;
   pmm->Pc  = CNode->P;
+  // Obligatory arrays - always unpacked!
+  for( ii=0; ii<CSD->nDCb; ii++ )
+  {
+    pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii];
+    pmm->DLL[ CSD->xDC[ii] ] = CNode->dll[ii];
+  }
+  for( ii=0; ii<CSD->nICb; ii++ )
+    pmm->B[ CSD->xIC[ii] ] = CNode->bIC[ii];
+  for( ii=0; ii<CSD->nPHb; ii++ )
+  {
+    if( CSD->nAalp >0 )
+        pmm->Aalp[ CSD->xPH[ii] ] = CNode->aPH[ii];
+  }
+ 
+ if( !uPrimalSol )
+ {    //  Using primal solution retained in the MULTI structure instead - 
+     // the primal solution data from the DATABR structure are not unpacked
+   pmm->IT = 0;	
+ }
+ else {   // Unpacking primal solution provided in the node DATABR structure 	
   pmm->MBX = CNode->Ms;
   pmm->IC = CNode->IC;
 //  pmm->FitVar[3] = CNode->Eh;  Bugfix 19.12.2006  KD
   pmm->Eh = CNode->Eh;
-// arrays
-   for( ii=0; ii<CSD->nDCb; ii++ )
-   {
-    pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii];
-    pmm->DLL[ CSD->xDC[ii] ] = CNode->dll[ii];
-   }
-   for( ii=0; ii<CSD->nICb; ii++ )
-    pmm->B[ CSD->xIC[ii] ] = CNode->bIC[ii];
+  for( ii=0; ii<CSD->nDCb; ii++ )
+  /*    pmm->X[ CSD->xDC[ii] ] = */
+        pmm->Y[ CSD->xDC[ii] ] = CNode->xDC[ii];
+  for( ii=0; ii<CSD->nDCb; ii++ )
+  {
+     pmm->lnGam[ CSD->xDC[ii] ] = log( CNode->gam[ii] );
+  //       Gamm = CNode->gam[ii];
+  //      pmm->Gamma[ CSD->xDC[ii] ] = Gamm;
+  //      pmm->lnGmo[ CSD->xDC[ii] ] = pmm->lnGam[ CSD->xDC[ii] ] = log(Gamm);
+  }
+  for( ii=0; ii<CSD->nPSb; ii++ )
+   pmm->FVOL[ CSD->xPH[ii] ] = CNode->vPS[ii];
+  for( ii=0; ii<CSD->nPSb; ii++ )
+   pmm->FWGT[ CSD->xPH[ii] ] = CNode->mPS[ii];
 
-// added  to compare SD 15/07/04
-   for( ii=0; ii<CSD->nDCb; ii++ )
-/*    pmm->X[ CSD->xDC[ii] ] = */
-      pmm->Y[ CSD->xDC[ii] ] = CNode->xDC[ii];
-   for( ii=0; ii<CSD->nDCb; ii++ )
-   {
-      pmm->lnGam[ CSD->xDC[ii] ] = log( CNode->gam[ii] );
-//       Gamm = CNode->gam[ii];
-//      pmm->Gamma[ CSD->xDC[ii] ] = Gamm;
-//      pmm->lnGmo[ CSD->xDC[ii] ] = pmm->lnGam[ CSD->xDC[ii] ] = log(Gamm);
-   }
-   for( ii=0; ii<CSD->nPHb; ii++ )
-   {
-     pmm->XF[ CSD->xPH[ii] ] =
-     pmm->YF[ CSD->xPH[ii] ] = CNode->xPH[ii];
-     if( CSD->nAalp >0 )
-          pmm->Aalp[ CSD->xPH[ii] ] = CNode->aPH[ii];
-   }
-   for( ii=0; ii<CSD->nPSb; ii++ )
-    pmm->FVOL[ CSD->xPH[ii] ] = CNode->vPS[ii];
-   for( ii=0; ii<CSD->nPSb; ii++ )
-    pmm->FWGT[ CSD->xPH[ii] ] = CNode->mPS[ii];
+  for( ii=0; ii<CSD->nPHb; ii++ )
+  {
+    pmm->XF[ CSD->xPH[ii] ] =
+    pmm->YF[ CSD->xPH[ii] ] = CNode->xPH[ii];
+  } 
+  
+  for( int k=0; k<CSD->nPSb; k++ )
+  for(int i=0; i<CSD->nICb; i++ )
+  { int dbr_ndx= (k*CSD->nICb)+i,
+          mul_ndx = ( CSD->xPH[k]*CSD->nIC )+ CSD->xIC[i];
+    pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
+  }
 
-   for( int k=0; k<CSD->nPSb; k++ )
-   for(int i=0; i<CSD->nICb; i++ )
-   { int dbr_ndx= (k*CSD->nICb)+i,
-           mul_ndx = ( CSD->xPH[k]*CSD->nIC )+ CSD->xIC[i];
-     pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
-   }
+  for( ii=0; ii<CSD->nPSb; ii++ )
+   pmm->XFA[ CSD->xPH[ii] ] = pmm->YFA[ CSD->xPH[ii] ] = CNode->xPA[ii];
 
-   for( ii=0; ii<CSD->nPSb; ii++ )
-    pmm->XFA[ CSD->xPH[ii] ] = pmm->YFA[ CSD->xPH[ii] ] = CNode->xPA[ii];
-
-   for( ii=0; ii<CSD->nICb; ii++ )
-    pmm->C[ CSD->xIC[ii] ] = CNode->rMB[ii];
-   for( ii=0; ii<CSD->nICb; ii++ )
-    pmm->U[ CSD->xIC[ii] ] = CNode->uIC[ii];
+  for( ii=0; ii<CSD->nICb; ii++ )
+   pmm->C[ CSD->xIC[ii] ] = CNode->rMB[ii];
+  for( ii=0; ii<CSD->nICb; ii++ )
+   pmm->U[ CSD->xIC[ii] ] = CNode->uIC[ii];
+ }
+//  End
 }
 
 // (5) For interruption/debugging

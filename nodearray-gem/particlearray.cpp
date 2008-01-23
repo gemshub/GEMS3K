@@ -12,7 +12,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
@@ -135,7 +135,7 @@ void TParticleArray::setUpCounters()
   }
 }
 
-void TParticleArray::CopyfromT1toT0()  // Copy resalts of ParT1 step to ParT0
+void TParticleArray::CopyfromT1toT0()  // Copy results of ParT1 step to ParT0
 {
 /*  fstream f_out("nods_particl.out", ios::out|ios::app  );
   for(int iNode=0; iNode < nNodes; iNode++ )
@@ -272,7 +272,7 @@ int TParticleArray::DisplaceParticle( int px, double /*t0*/, double /*t1*/ )
 // Walk (transport step) for particle px between nodes
 // returns -1 if particle stays in the same node
 // or an index of another node the particle enters
-int TParticleArray::MoveParticleBetweenNodes( int px, double /*t0*/, double /*t1*/ )
+int TParticleArray::MoveParticleBetweenNodes( int px, bool CompMode, double /*t0*/, double /*t1*/ )
 {
   int old_node = ParT1[px].node;
   int new_node = nodes->FindNodeFromLocation( ParT1[px].xyz, old_node );
@@ -291,8 +291,8 @@ int TParticleArray::MoveParticleBetweenNodes( int px, double /*t0*/, double /*t1
   if( old_node == new_node ) // particle left in old node
      return -1;
 
-  // move mass of old_node to new_node (if new_node==-1 mass be lost)
-  nodes->MoveParticleMass( old_node, new_node, type_,
+  // move mass of particle from old_node to new_node (if new_node==-1 mass may be lost)
+  nodes->MoveParticleMass( old_node, new_node, type_, CompMode, 
             ParT1[px].tcode, ParT1[px].ips, ParT1[px].m_v );
 
   // check minimum/maximum particle number in node
@@ -353,7 +353,7 @@ int TParticleArray::MoveParticleBetweenNodes( int px, double /*t0*/, double /*t1
 // call to the whole Random Walk method time step over all particles and nodes
 // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
 // GEM was called before this function
-int TParticleArray::RandomWalkIteration( int /*Mode*/, double t0, double t1 )
+int TParticleArray::RandomWalkIteration( int /*Mode*/, bool CompMode, double t0, double t1 )
 {
 
   int iNode, iType, iRet=0, cpx;
@@ -378,7 +378,7 @@ int TParticleArray::RandomWalkIteration( int /*Mode*/, double t0, double t1 )
 
  // Walk (transport step) for particles between nodes
   for( cpx=0; cpx < anParts; cpx++ )
-     iRet = MoveParticleBetweenNodes( cpx, t0, t1 );
+     iRet = MoveParticleBetweenNodes( cpx, CompMode, t0, t1 );
 
   bool reset = false;
   for( iNode=0; iNode < nNodes; iNode++ )
@@ -403,13 +403,13 @@ int TParticleArray::RandomWalkIteration( int /*Mode*/, double t0, double t1 )
 
 // call to the whole FiniteCell Walk method time step over all particles and nodes
 // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
-int TParticleArray::FCellWalkIteration( int /*Mode*/, double /*t0*/, double /*t1*/ )
+int TParticleArray::FCellWalkIteration( int /*Mode*/, bool /* CompMode*/, double /*t0*/, double /*t1*/ )
 {
   return 0;
 }
 
  // stub call for coupled mass transport calculation
-int TParticleArray::GEMCOTAC( int Mode, double t0_, double t1_ )
+int TParticleArray::GEMPARTRACK( int Mode, bool ComponentMode, double t0_, double t1_ )
 {
   int iRet;
 
@@ -418,9 +418,9 @@ int TParticleArray::GEMCOTAC( int Mode, double t0_, double t1_ )
   dt = (t1-t0);
   switch( Mode )
   {
-   case 'W':  iRet = RandomWalkIteration( Mode, t0, t1 );
+   case 'W':  iRet = RandomWalkIteration( Mode, ComponentMode, t0, t1 );
               break;
-   case 'V':  iRet = FCellWalkIteration( Mode, t0, t1 );
+   case 'V':  iRet = FCellWalkIteration( Mode, ComponentMode, t0, t1 );
               break;
   }
   return iRet;

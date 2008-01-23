@@ -12,7 +12,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 
@@ -57,7 +57,7 @@ typedef enum {
 #define SIZE_HYDP 7
 
 typedef struct
-{ // Description of GEM2MT data structure (prototype of 21 Feb. 2005)
+{ // Description of GEM2MT data structure (prototype of 04 Dec. 2007)
   // Record key format: the same as Proces
   char
    PunE,          // Units of energy   { j;  J c C N reserved }
@@ -93,7 +93,7 @@ typedef struct
    name[MAXFORMULA],  //  Name of GEM2MT task
    notes[MAXFORMULA]  //  Comments
     ;
- short
+  short
 // input I
    nC,   // nQ - number of local equilibrium compartments (nodes)
    xC, yC, zC,  // numbers of nodes along x, y, z coordinates
@@ -108,9 +108,9 @@ typedef struct
    Nsd,  // N of references to data sources
    Nqpt, // Number of elements in the script work array qpi for transport
    Nqpg, // Number of elements in the script work array qpc for graphics
-   Nb,   // N - number of independent components (set automatically from Multi)
-   FIb,   // N - number of phases (set automatically from Multi)
-   Lb,   // N - number of dependent components in multycomponent phases (set automatically from Multi)
+   Nb,   // N - number of independent components (set automatically from RMults)
+   FIb,   // N - number of phases (set automatically from RMults)
+   Lb,   // N - number of dependent components in multycomponent phases (set automatically from RMults)
    bTau, // Time point for the simulation break (Tau[0] at start)
    ntM, // Maximum allowed number of time iteration steps (default 1000)
    nYS,  // number of plots (columns in the yt array)
@@ -118,15 +118,15 @@ typedef struct
    nYE,  // number of experimental parameters (columns in the yEt array)
    nPai,  // Number of P points in MTP interpolation array in DataCH ( 1 to 10 )
    nTai,  // Number of T points in MTP interpolation array in DataCH ( 1 to 20 )
-   sRes,   // reserved
+   Lsf,       // number of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
   // These dimensionalities define sizes of dynamic data in DATABR structure!!!
   // Needed to reduce on storage demand for data bridge instances (nodes)!
   // Connection occurs through xIC, xPH and xDC lists!
     nICb,       // number of stoichiometry units (<= nIC) used in the data bridge
     nDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
     nPHb,     	// number of phases (<= nPH) used in the data bridge
-    nPSb,       // number of multicomponent phases (<= nPS) used in the data bridge
-    uRes3,
+    Nf,       // nICb number of ICs in  (DATABR) for setting box-fluxes
+    FIf,      // nPHb number of phases in (DATABR) for setting box-fluxes
 
 // iterators for generating syseq record keys for initial system variants
    tmi[3],   // SYSTEM CSD definition #: start, end, step (initial)
@@ -139,11 +139,11 @@ typedef struct
     *NPmean,       // array of initial mean particle type numbers per node ( size: nPTypes )
     *nPmin,        // minimum average total number of particles of each type per one node nPTypes
     *nPmax;        // maximum average total number of particles of each type per one node nPTypes
-  short (*DiCp)[2];     // array of indexes of initial system variants for
-              // distributing to nodes [nC]
-  short (*ParTD)[6]; // array of particle type definitions at t0 or after interruption nPTypes
+ short (*DiCp)[2];     // array of indexes of initial system variants for
+                       // distributing to nodes [nC]
+ short (*ParTD)[6]; // array of particle type definitions at t0 or after interruption nPTypes
 
-  short (*FDLi)[2] //[nFD][2] Indexes of nodes where this flux begins and ends
+ short (*FDLi)[2]; //[nFD][2] Indexes of nodes where this flux begins and ends
               // negative value means one-side flux (source or sink)
          // for source fluxes, -2 means "source flux stoichiometry with index 1
          // line in the BSF table", and so on
@@ -164,11 +164,11 @@ typedef struct
    WmCb,  // mole fraction of the carrier DC (e.g. sorbent or solvent)
    Asur,  // Specific surface area of the sorbent (for adsorbed species)
 // "ADpar" data object (11 doubles)
-   fVel,   // Advection/diffusion mass transport:fluid advection velocity (m/sec)
+   fVel,   // Advection/diffusion mass transport: initial fluid advection velocity (m/sec)
    cLen,   // column length (m)
    tf,     // time step reduction factor
-   cdv,    // cutoff factor for differences
-   cez,    // cutoff factor for minimal amounts of IC in node bulk compositions
+   cdv,    // cutoff factor for differences (1e-9)
+   cez,    // cutoff factor for minimal amounts of IC in node bulk compositions (1e-12)
    al_in,  // initial value of longitudinal dispersivity (m), usually 1e-3
    Dif_in, // initial general diffusivity (m2/sec), usually 1e-9
    ADrs3,
@@ -184,61 +184,62 @@ typedef struct
 // graphics
    size[2][4], // Graph axis scale for the region and the fragment
    sizeLc[3],   // spatial dimensions of the medium defines topology of nodes
-
    *xEt,    // Abscissa for experimental points [nXE]
    *yEt,       // Ordinates for experimental points to plot [nXE, nYE]
-   *DDc,  //  [Ls] diffusion coefficients for DC
-   *DIc,  //  [N] diffusion coefficients for IC
+   *DDc,  //  [Lsf] diffusion coefficients for DC
+   *DIc,  //  [Nf] diffusion coefficients for IC
    *DEl   //  [nE] diffusion coefficients for electrolyte salts
     ;
- float (*grid)[3];      // Array of grid point locations, size is nC
+float (*grid)[3];      // Array of grid point locations, size is nC
 
  double
-   *Bn,    //  [nIV][N] Table of bulk compositions of initial systems
+   *Bn,    //  [nIV][Nb] Table of bulk compositions of initial systems
    *qpi,   //  [Nqpi] Work array for initial systems math script
    *qpc,    //  [Nqpc] Work array for mass transport math script,
    *xt,    //  Abscissa for sampled data [nS]
    *yt,     //  Ordinates for sampled data [nS][nYS]
-   //  value order to be described
-   *BSF,    // [nSFD][N] table of bulk compositions of source fluxes
+   *BSF,    // [nSFD][Nf] table of bulk compositions of source fluxes
             //  More to be added here for seq reactors?
-   *MB,  // [nC]  column of current masses of boxes (in kg)
-   *dMB // [nC][Nb]  Table of current derivatives dM for elements in reservoirs
+   *MB,  // [nC] [Nf] column of current masses of boxes (in kg)
+   *dMB // [nC][Nf]  Table of current derivatives dM for elements in reservoirs
     ;
  double  (*HydP)[SIZE_HYDP]; // [nC][6] hydraulic parameters for nodes in mass transport model
+   //  value order to be described
  float
    *Tval,   // discrete values of T [nTai] in grid arrays in DataCH
    *Pval,   // discrete values of P [nPai]
 
-   *CIb, // [nIV][N] Table of quantity/concentration of IC in initial systems
+   *CIb, // [nIV][Nb] Table of quantity/concentration of IC in initial systems
    *CAb, // [nIV][Lbi] Table of quantity/concentration of formulae for initial systems
-   *PGT  // Quantities of phases in MPG [Fi][nPG]
+   *PGT  // Quantities of phases in MPG [FIf][nPG]
     ;
  float  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flux rate, MPG quantities)
  char
    *tExpr,  // Math script text for calculation of mass transport
    *gExpr,  // Math script text for calculation of data sampling and plotting
 //
-   *CIclb, // [N] Units of IC quantity/concentration for initial systems compositions
+   *CIclb, // [Nb] Units of IC quantity/concentration for initial systems compositions
    *AUcln, // [Lbi] Units of setting UDF quantities for initial system compositions
-   *UMPG,  // [nFi] units for setting phase quantities in MPG (see PGT )
-//  graphics
-    xNames[MAXAXISNAME],        // Abscissa name
-    yNames[MAXAXISNAME];       // Ordinate name
-  char  (*lNam)[MAXGRNAME];        // List of ID of lines on Graph [nYS]
-  char   (*lNamE)[MAXGRNAME];       // List of ID of lines of empirical data [nYE]
-  char  (*sdref)[V_SD_RKLEN]; // "List of bibl. refs to data sources" [0:Nsd-1]
-  char  (*sdval)[V_SD_VALEN];  // "Parameters taken from the respective data sources"[0:Nsd-1]
-  char  (*nam_i)[MAXIDNAME]; // [nIV][12] id names of initial systems
-  char  (*for_i)[MAXFORMUNITDT]; // [Lbi][40] formulae for setting initial system compositions
-  char  (*for_e)[MAXFORMUNITDT]; // [nE][40] formulae for diffusing dissolved electrolytes
-  char  (*stld)[EQ_RKLEN]; // List of SysEq record keys for initial systems [nIV]
-  char  (*FDLid)[MAXSYMB]; // [nFD] ID of fluxes
-  char  (*FDLop)[MAXSYMB]; // [nFD] Operation codes (letters) flux type codes
-  char  (*FDLmp)[MAXSYMB]; // [nFD] ID of MPG to move in this flux  dim changed!
-  char  (*MPGid)[MAXSYMB]; // [nPG] ID list of mobile phase groups
+   *UMPG;  // [FIf] units for setting phase quantities in MPG (see PGT )
+
+  char (*sdref)[V_SD_RKLEN]; // "List of bibl. refs to data sources" [0:Nsd-1]
+  char (*sdval)[V_SD_VALEN];  // "Parameters taken from the respective data sources"[0:Nsd-1]
+  char (*nam_i)[MAXIDNAME]; // [nIV][12] id names of initial systems
+  char (*for_i)[MAXFORMUNITDT]; // [Lbi][40] formulae for setting initial system compositions
+  char (*for_e)[MAXFORMUNITDT]; // [nE][40] formulae for diffusing dissolved electrolytes
+  char (*stld)[EQ_RKLEN]; // List of SysEq record keys for initial systems [nIV]
+  char (*FDLid)[MAXSYMB]; // [nFD] ID of fluxes
+  char (*FDLop)[MAXSYMB]; // [nFD] Operation codes (letters) flux type codes
+  char (*FDLmp)[MAXSYMB]; // [nFD] ID of MPG to move in this flux  dim changed!
+  char (*MPGid)[MAXSYMB]; // [nPG] ID list of mobile phase groups
 //
-  char  (*SBM)[MAXICNAME+MAXSYMB];  // Keys (names) of IC
+  char (*SBM)[MAXICNAME+MAXSYMB];  // Keys (names) of IC
+//  graphics
+  char  xNames[MAXAXISNAME],        // Abscissa name
+    yNames[MAXAXISNAME];      // Ordinate name
+  char  (*lNam)[MAXGRNAME];        // List of ID of lines on Graph [nYS]
+  char  (*lNamE)[MAXGRNAME];       // List of ID of lines of empirical data [nYE]
+
 
 /* Work arrays */
  float
@@ -246,7 +247,8 @@ typedef struct
     *Ae  // [nE][N] stoich matrix for for diffusing electrolytes
    ;
  double
-   *gc  // [nC][nPG][Nb] Array of element partition coefficients for MPG and its source reservoir
+ *gfc,  // [nC][nPG][Nf] Array of element partition coefficients between MPG and its source box
+ *yfb;  // [nC][nPG][Nf] Array of MPG bulk compositions at current time point 
    ;
    char sykey[EQ_RKLEN+10],    // Key of currently processed SysEq record
    *etext,              // internal
@@ -275,7 +277,7 @@ typedef struct
    dTau, // current time step value
    oTau, // old time step value
    dx,   // node distance [L/nC]
-   ref2,
+   TimeGEM, // pure GEM runtime, in seconds
    ref3,
    ref4
   ;
@@ -302,18 +304,53 @@ protected:
 
 
     void  copyNodeArrays();
+    int CheckPIAinNodes1D( char mode, int start_node = 0, int end_node = 1000 );
     bool  CalcIPM( char mode, int start_node = 0,
          int end_node = 1000, FILE* diffile = NULL );
     void  MassTransAdvecStart();
-    void  MassTransAdvecStep();
+    void  MassTransAdvecStep( bool ComponentMode = true );
     void  MassTransParticleStart();
-    void  MassTransParticleStep();
+    void  MassTransParticleStep( bool ComponentMode = true );
 
+
+    
+    // for box floor model
+    int MaxIter,  // max number of iterations
+         nfcn,      // number of functional estimates
+         nstep,     // number of steps
+         naccept,   // number of permissible steps
+         nrejct;    // number of unpermissible steps
+    double *x;
+    double *dx;
+    double *tv;
+
+    double (*tt)[9];
+
+   
+//    bool CalcBoxModel( char mode ); // calculate Mobile Phase-Group Flows
+    int LookUpXMGP( const char* MGPid );
+    // calculate 1-step from system of equation 
+    void Solut( double *m, double *dm, double t );
+    // Calculate new reservuir states for tcur = x
+    bool CalcNewStates( int Ni,int pr, double x, double step );
+    // internal point j calculation
+    void MIDEX( int j, double t, double h );
+    void INTEG( double eps, double& step, double t_begin, double t_end );
+
+    
 public:
 
-   int MassTransSetUp( const char *gem2mt_in1 );
+	// write/read unspace structure	   
+	void to_text_file( fstream& ff, bool with_comments );
+	void from_text_file(fstream& ff);
+//    void result_to_text_file( fstream& ff, bool with_comments );
+	int ReadTask( const char *unsp_in1 );
+	int WriteTask( const char *unsp_in1 );
+	
+//   int MassTransSetUp( const char *gem2mt_in1 );
    int MassTransInit( const char *chbr_in1 );
    bool Trans1D( char mode  );  // return true if canceled
+   bool CalcBoxModel( char mode ); // calculate Mobile Phase-Group Flows
 
     static TGEM2MT* pm;
 
@@ -321,6 +358,7 @@ public:
 
     TGEM2MT();
     ~TGEM2MT();
+    void RecCalc( );
 
     const char* GetName() const
     {
