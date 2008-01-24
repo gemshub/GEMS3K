@@ -1477,7 +1477,7 @@ cc	do 1411 nspez=2,nxmax-1
 
 	iNode=  n
       p_NodeHandle=  n
-      p_NodeStatusCH= 1    ! 7 : without simplex 
+      p_NodeStatusCH= 5    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()

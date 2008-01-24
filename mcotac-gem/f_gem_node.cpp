@@ -261,7 +261,7 @@
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH );
 
  // Calling GEMIPM calculation
-   iRet = TNode::na->GEM_run( );
+   iRet = TNode::na->GEM_run( true );
    if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_PIA ) )
    {
 	  return 1;
