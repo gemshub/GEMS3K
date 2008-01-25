@@ -53,7 +53,7 @@
 <pa_DF>         0.01
 
 # DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>          144
+<pa_DP>          15
 
 # IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
 <pa_IIM>         500
@@ -63,7 +63,7 @@
 
 # PRD: Positive: control of calling IPM_gamma() on iterations of GEM EFD and IPM (default 3)
 #      Negative: the number of additional EFD-IPM loops to improve the GEM final solution
-<pa_PRD>          -1
+<pa_PRD>          3
 
 # AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
 <pa_AG>            1
@@ -76,7 +76,7 @@
 <pa_GAH>        1000
 
 # DB: Cutoff (threshold) for the amount of phase in phase elimination 
-<pa_DS>       1e-008
+<pa_DS>       1e-010
 
 # _Min: Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; 
 # Ph - non-electrolyte solution phases
@@ -91,7 +91,7 @@
 # PC: Mode of Selekt2() procedure operation
 <pa_PC>            1
 # DFM: Threshold of Karpov stability criterion for insertion of a phase in Selekt2() procedure
-<pa_DFM>        0.01
+<pa_DFM>        0.1
 # DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
 # DFYw - water solvent;
 <pa_DFYw>     1e-006
@@ -111,7 +111,7 @@
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
-<pa_DW>          -15
+<pa_DW>          15
 # DT: Exponent for dual-thermodynamic restoring of low amounts of solutes (+2 to -5), relative to DHBM
 <pa_DT>           -2
 
@@ -126,6 +126,8 @@
 <pKin>             1
 # DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
 <pa_DKIN>     0.0001
+
+<pa_DG>     1e-7
 
 ## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # sMod: Codes for mixing models of multicomponent phases

@@ -72,6 +72,7 @@ GEMIPM2K/tnt_array2d.h -text
 GEMIPM2K/tnt_i_refvec.h -text
 GEMIPM2K/v_user.h -text
 GEMIPM2K/verror.h -text
+GEMIPM2K/win32-run.bat -text
 mcotac-gem/MCOTAC-GEM/MySystem-dat.lst -text
 mcotac-gem/MCOTAC-GEM/MySystem-dbr-0007.dat -text
 mcotac-gem/MCOTAC-GEM/MySystem-dbr-0008.dat -text
