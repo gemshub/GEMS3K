@@ -115,9 +115,9 @@ UICIMPLS =
 SRCMOC   = 
 OBJMOC = 
 DIST	   = gem_node-sep.pro
-QMAKE_TARGET = gemnode.exe
+QMAKE_TARGET = gemipm2k.exe
 DESTDIR  = 
-TARGET   = gemnode.exe
+TARGET   = gemipm2k.exe
 
 first: all
 ####### Implicit rules

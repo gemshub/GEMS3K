@@ -12,7 +12,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 
@@ -142,8 +142,8 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments )
   TPrintArrays  prar(ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 2.2.0" << endl;
-      ff << "# Prototype 28.11.2007" << endl;
+   {  ff << "# GEMIPM2K v. 2.2.3" << endl;
+      ff << "# Prototype 31.03.2008" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -481,8 +481,8 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
   TPrintArrays  prar(ff);
 
   if( _comment )
-  {  ff << "# GEMIPM2K v. 2.2.0" << endl;
-     ff << "# Prototype 28.07.2007" << endl;
+  {  ff << "# GEMIPM2K v. 2.2.3" << endl;
+     ff << "# Prototype 31.03.2008" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;

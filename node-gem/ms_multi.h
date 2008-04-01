@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1000 2008-01-18 16:40:05Z gems $
+// $Id: ms_multi.h 1044 2008-03-13 17:06:50Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -195,7 +195,7 @@ typedef struct
     *Y_w,     // Mass concentrations of DC in multi-component phases,%(ppm)[Ls]
     *Gamma,   // DC activity coefficients [0:L-1]
     *lnGmf,   // ln of initial DC activity coefficients [0:L-1]
-    *lnGmM,   // ln of DC pure gas fugacity (or metastability) coefficients [0:L-1]
+    *lnGmM,   // ln of DC pure gas fugacity (or metastability) coeffs or DDF correction [0:L-1]
     *EZ,      // Formula charge of DC in multi-component phases [0:Ls-1]
     *FVOL,    // phase volumes, cm3/mol                   [0:FI-1]
     *FWGT,    // phase (carrier) masses, g                [0:FI-1]
@@ -375,17 +375,17 @@ class TMulti
     void ConCalcDC( double X[], double XF[], double XFA[],
                     double Factor, double MMC, double Dsur, int jb, int je, int k );
     void ConCalc( double X[], double XF[], double XFA[]);
-    void GouyChapman(  int jb, int je, int k );
+    int GouyChapman(  int jb, int je, int k );
 //  Surface activity coefficient terms
-    void SurfaceActivityCoeff( int jb, int je, int jpb, int jdb, int k );
-    void SurfaceActivityTerm( int jb, int je, int k );  // Obsolete / deleted
+    int SurfaceActivityCoeff( int jb, int je, int jpb, int jdb, int k );
+//    void SurfaceActivityTerm( int jb, int je, int k );  // Obsolete / deleted
 
 // ipm_chemical2.cpp
     void IS_EtaCalc();
     void pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb );
     double TinkleSupressFactor( double ag, int ir);
 // Main call for calculation of activity coefficients on IPM iterations
-    void GammaCalc( int LinkMode );
+    int GammaCalc( int LinkMode );
 // Built-in activity coefficient models
 //  aqueous electrolyte
     void DebyeHueckel3Hel( int jb, int je, int jpb, int jdb, int k );
@@ -410,7 +410,7 @@ void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModC
 // ipm_main.cpp - numerical part of GEM-IPM2
     void MultiCalcMain( int rLoop );
     int EnterFeasibleDomain( );
-    int InteriorPointsMethod( );
+    int InteriorPointsMethod( int &status, int rLoop );
     void SimplexInitialApproximation( );
 
 // ipm_main.cpp - miscellaneous fuctions of GEM-IPM2

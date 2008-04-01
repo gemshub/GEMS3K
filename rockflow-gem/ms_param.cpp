@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1004 2008-01-23 14:06:44Z gems $
+// $Id: ms_param.cpp 1045 2008-03-14 16:42:07Z gems $
 //
 // Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -47,13 +47,13 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-  "GEMS-PSI v2.2: Controls and defaults for numeric modules",
+  "GEMS-PSI v2.2.3: Controls and defaults for numeric modules",
   {
         1,  /* PC */  3,     /* PD */   3,   /* PRD */
         1,  /* PSM  */ 15,  /* DP */   15,   /* DW */
         0, /* DT */     0,   /* PLLG */   1,  /* PE */
         500,   /* IIM */
-        1e-7, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
+        1e-6, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
         1e-4,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
         1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
         1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
@@ -96,50 +96,52 @@ TProfil::TProfil( TMulti* amulti )
 double TProfil::calcMulti( int& PrecLoops_, int& NumIterFIA_, int& NumIterIPM_ )
 {
     pmp = multi->GetPM();
-pmp->t_start = clock();
-pmp->t_end = pmp->t_start;
-    multi->MultiCalcInit( 0 );
+    pmp->t_start = clock();
+    pmp->t_end = pmp->t_start;
+//    multi->MultiCalcInit( 0 );
     pmp->ITF = pmp->ITG = 0;  
 FORCED_AIA:
-    if( multi->AutoInitialApprox() == false )
+    multi->MultiCalcInit( 0 );
+      
+    if( multi->AutoInitialApprox( ) == false )
     {
-        multi->MultiCalcIterations( -1 );
+    	multi->MultiCalcIterations( -1 );
     }
     if( pmp->MK == 2 )
     {
- 	   pmp->pNP = 0; 
- 	   pmp->MK = 0;
- 	   goto FORCED_AIA;  // Trying again with AIA set after bad PIA 
-    }
-    
+    	pmp->pNP = 0; 
+    	pmp->MK = 0;
+    	goto FORCED_AIA;  // Trying again with AIA set after bad PIA 
+    }    
     PrecLoops_ = pmp->W1 + pmp->K2 - 1; // Prec.ref. + Selekt2() loops
     NumIterFIA_ = pmp->ITF;
     NumIterIPM_ = pmp->ITG;
 
-    if( pa.p.PRD < 0 && pa.p.PRD > -50 /* && !pmp->pNP */ ) // max 50 loops
+    if( pa.p.PRD < 0 && pa.p.PRD > -50 ) // max 50 loops
     {  // Test refinement loops for highly non-ideal systems Added here by KD on 15.11.2007
-              int pp, pNPo = pmp->pNP,  TotIT = pmp->IT, // TotITG = pmp->ITG, TotITF = pmp->ITF,
-                       TotW1 = pmp->W1+pmp->K2-1;
-              pmp->pNP = 1;
-              for( pp=0; pp < abs(pa.p.PRD); pp++ )
-              {
-                pmp->IT = 0;  // This may be sensitive   // pmp->ITG = 0; pmp->ITF = 0;
-                if( multi->AutoInitialApprox( ) == false )
-                {
-    //                pmp->ITF = (short)TotITF; pmp->ITG = (short)TotITG;
-                    multi->MultiCalcIterations( pp );
-                }
-                TotIT += pmp->IT; 
-                TotW1 += pmp->W1+pmp->K2-2; 
-    //           TotITF += pmp->ITF; TotITG += pmp->ITG;
-              }
-              if( !pNPo )
-                pmp->pNP = 0;
-                pmp->IT = (short)TotIT;
-    //          pmp->ITF = (short)TotITF; pmp->ITG = (short)TotITG;
-              PrecLoops_ = TotW1; 
-              NumIterFIA_ = pmp->ITF;  //   TotITF;
-              NumIterIPM_ = pmp->ITG;  //   TotITG;
+       int pp, pNPo = pmp->pNP,  TotW1 = pmp->W1+pmp->K2-1,  
+         ITold = pmp->IT, TotIT = pmp->IT;
+       pmp->pNP = 1;
+       for( pp=0; pp < abs(pa.p.PRD); pp++ )
+       {
+          pmp->IT = 0; // Important for refinement in highly non-ideal systems!
+          if( multi->AutoInitialApprox( ) == false )
+          {
+             multi->MultiCalcIterations( pp );
+          }
+          TotIT += pmp->IT;
+          TotW1 += pmp->W1+pmp->K2-2; 
+       }
+       if( !pNPo ) 
+       {   
+     	  pmp->IT = (TotIT-ITold)/2;
+           pmp->pNP = 0;
+       }
+       else pmp->IT = ITold;         
+
+       PrecLoops_ = TotW1; 
+       NumIterFIA_ = pmp->ITF;  //   TotITF;
+       NumIterIPM_ = pmp->ITG;  //   TotITG;
     }       
 pmp->t_end = clock();
 pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
@@ -174,11 +176,11 @@ void TProfil::readMulti( const char* path )
 
  bool load = false;
 
-// Load Thermodynamic Data from MTPARM to MULTI using LagranInterp
+// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 void TMulti::CompG0Load()
 {
   int j, jj, k, xTP, jb, je=0;
-  double Gg, Vv;
+  double Go, Gg, Vv;
   double TC, P;
 
   DATACH  *dCH = TNode::na->pCSD();
@@ -195,8 +197,7 @@ void TMulti::CompG0Load()
 
  if( load && fabs( pmp->TC - TC ) < 1.e-10 &&
             fabs( pmp->P - P ) < 1.e-10 )
-   return;    //T, P not changed
-
+   return;    //T, P not changed - problematic for UnSpace! 
 
  pmp->T = pmp->Tc = TC + C_to_K;
  pmp->TC = pmp->TCc = TC;
@@ -240,21 +241,21 @@ void TMulti::CompG0Load()
       jj =  j * dCH->nPp * dCH->nTp;
       if( xTP >= 0 )
       {
-        Gg = dCH->G0[ jj+xTP];
+        Go = dCH->G0[ jj+xTP];
         Vv = dCH->V0[ jj+xTP];
       }
      else
      {
-       Gg = LagranInterp( dCH->Pval, dCH->TCval, dCH->G0+jj,
+       Go = LagranInterp( dCH->Pval, dCH->TCval, dCH->G0+jj,
                           P, TC, dCH->nTp, dCH->nPp,1 );
        Vv = LagranInterp( dCH->Pval, dCH->TCval, dCH->V0+jj,
                             P, TC, dCH->nTp, dCH->nPp, 1 );
      }
      if( pmp->tpp_G )
-    	  pmp->tpp_G[j] = Gg;
+    	  pmp->tpp_G[j] = Go;
      if( pmp->Guns )
-           Gg += pmp->Guns[j];
-     pmp->G0[j] = Cj_init_calc( Gg, j, k );
+           Gg = pmp->Guns[j];
+     pmp->G0[j] = Cj_init_calc( Go+Gg, j, k ); // Inside this function, pmp->YOF[k] can be added!
      switch( pmp->PV )
      { // put mol volumes of components into A matrix
        case VOL_CONSTR:
@@ -271,8 +272,7 @@ void TMulti::CompG0Load()
  	          pmp->Vol[j] = Vv  * 10.;
               break;
      }
-
-    }
+   }
  }
  load = true;
 }
@@ -280,7 +280,7 @@ void TMulti::CompG0Load()
 // GEM IPM calculation of equilibrium state in MULTI
 void TMulti::MultiCalcInit( const char* /*key*/ )
 {
-  short j,k;
+  short j,k, jb, je=0;;
   SPP_SETTING *pa = &TProfil::pm->pa;
 
     pmp->Ec = pmp->K2 = pmp->MK = 0;
@@ -289,7 +289,7 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     pmp->is = 0;
     pmp->js = 0;
     pmp->next  = 0;
-    pmp->ln5551 = 4.0165339;
+    pmp->ln5551 = 4.016533882;  //  ln(55.50837344)  4.0165339; 
     pmp->lowPosNum = pa->p.DcMin;
     pmp->logXw = -16.;
     pmp->logYFk = -9.;
@@ -311,48 +311,82 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     }
     pmp->MBX /= 1000.;
 
-    if( /*pmp->pESU  &&*/ pmp->pNP )     // problematic statement !!!!!!!!!
+    if(  pmp->pNP )     // Checking if this is PIA or AIA mode 
     {
-//      unpackData(); // loading data from EqstatUnpack( key );
-        pmp->IC = 0.;
         for( j=0; j< pmp->L; j++ )
-            pmp->X[j] = pmp->Y[j];
+          pmp->X[j] = pmp->Y[j];
+ //       pmp->IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+        ConCalc( pmp->X, pmp->XF, pmp->XFA);  
     }
-    else
-        for( j=0; j<pmp->L; j++ )
-           pmp->X[j] =  pmp->Y[j] = 0.0;
+    else // Simplex initial approximation to be done
+    {
+    	for( j=0; j<pmp->L; j++ )
+    	{                           // cleaning work vectors
+    		pmp->X[j] = pmp->Y[j] = pmp->lnGam[j] = pmp->lnGmo[j] = 0.0;
+    		pmp->Gamma[j] = 1.0;
+    	}
+    	pmp->FitVar[4] = pa->p.AG;
+    	pmp->pRR1 = 0;   // Resetting smoothing factors
+        pmp->IT = 0;     // needed here to clean LINK_TP_MODE
+    }
 
-    CompG0Load();
+    CompG0Load(); // Loading thermodynamic data into MULTI structure
     // optimization 08/02/2007
     Alloc_A_B( pmp->N );
     Build_compressed_xAN();
 
-    for( j=0; j< pmp->L; j++ )
-//        pmp->G[j] = pmp->G0[j];   changed 5.12.2006 KD
-        pmp->G[j] = pmp->G0[j] + pmp->GEX[j];
-    // test phases - solutions and load models
-    if( pmp->FIs )
-    {
-        for( j=0; j< pmp->Ls; j++ )
+    // multicomponent phases and mixing models
+ if( pmp->FIs )
+ {
+     	// Load activity coeffs for phases-solutions
+    	for( j=0; j< pmp->Ls; j++ )
         {
             pmp->lnGmo[j] = pmp->lnGam[j];
-            pmp->Gamma[j] = 1.0;
+            if( fabs( pmp->lnGam[j] ) <= 84. )
+                pmp->Gamma[j] = exp( pmp->lnGam[j] );
+            else pmp->Gamma[j] = 1.0;
         }
         pmp->PD = pa->p.PD;
-//        SolModLoad();
-        GammaCalc( LINK_TP_MODE);
+
+        //           SolModLoad();   Scripts cannot be used here!
+    // Calculate Eh, pe, pH,and other stuff
+    if( pmp->E && pmp->LO && pmp->pNP )
+    {    
+    	ConCalc( pmp->X, pmp->XF, pmp->XFA);
+    	IS_EtaCalc();
+        if( pmp->Lads )  // Calling this only when sorption models are present  
+        {
+    	   for( k=0; k<pmp->FIs; k++ )
+    	   { // loop on solution phases
+    	      jb = je;
+    	      je += pmp->L1[k];
+    	      if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )	
+    	      {  
+    		     if( pmp->PHC[0] == PH_AQUEL && pmp->XF[k] > pmp->DSM
+    		       && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin ))
+    		       GouyChapman( jb, je, k );  // getting PSIs - elecrtic potentials on surface planes               
+    	      }                   
+    	   }
+        }  
     }
+    //   double FitVar3 = pmp->FitVar[3];  // Reset the smoothing factor
+    //   pmp->FitVar[3] = 1.0;
+        GammaCalc( LINK_TP_MODE);   // Computing DQF, FugPure and G wherever necessary
+                                       // Activity coeffs are restored from lnGmo 
+    //   pmp->FitVar[3]=FitVar3;
+}
+ 
     // recalculate kinetic restrictions for DC quantities
     if( pmp->pULR && pmp->PLIM )
          Set_DC_limits(  DC_LIM_INIT );
 
-   // dynamic arrays - begin load
-    for( k=0; k<pmp->FI; k++ )
-    {
-        pmp->XFs[k] = pmp->YF[k];
-        pmp->Falps[k] = pmp->Falp[k];
-    }
+// dynamic demo arrays - do we need it here at all? - DK  14.03.2008
+//    for( k=0; k<pmp->FI; k++ )
+//    {
+//       pmp->XFs[k] = pmp->YF[k];
+//        pmp->Falps[k] = pmp->Falp[k];
+//    }
 }
 
 //-------------------------------------------------------------------------

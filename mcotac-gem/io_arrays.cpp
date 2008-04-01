@@ -227,7 +227,7 @@ short TReadArrays::findNext()
 
  short ii = findFld( buf+1 );
  if(  ii < 0 )
-    Error( buf, "Format text read 01: Invalid name of array");
+    Error( buf, "Format text read 01: Invalid label of data");
 
  flds[ii].readed = 1;
  return ii;
@@ -240,7 +240,7 @@ void TReadArrays::readNext( const char* label)
  skipSpace();
 
  if( ff.eof() )
-   Error( label, "Format text read 02: No array");
+   Error( label, "Format text read 02: No data where expected");
 
  ff >> buf;
  gstring str = buf+1;
@@ -249,7 +249,7 @@ void TReadArrays::readNext( const char* label)
 
  if( !( strcmp( label, str.c_str() ) ))
      return;
- Error( buf, "Format text read 03: Invalid name of array");
+ Error( buf, "Format text read 03: Invalid label of data");
 }
 
 void TReadArrays::readArray( const char*, short* arr, int size )

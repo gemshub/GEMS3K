@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: gdatastream.cpp 871 2007-02-21 14:29:54Z gems $
+// $Id: gdatastream.cpp 968 2007-12-13 13:23:32Z gems $
 //
 // Implementation of stream binary file operations extended for endianness
 // (e.g. for compatibility between Intel- and old Mac processors)
@@ -13,7 +13,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail gems2.support@psi.ch
 //-------------------------------------------------------------------
 #include <iostream>

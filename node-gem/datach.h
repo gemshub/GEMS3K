@@ -16,7 +16,7 @@
 // This file may be distributed together with GEMIPM2K source code
 // under the licence terms defined in GEMIPM2K.QAL
 //
-// See also http://les.web.psi.ch/Software/GEMS-PSI
+// See also http://gems.web.psi.ch/
 // E-mail: gems2.support@psi.ch
 //------------------------------------------------------------------------------
 //

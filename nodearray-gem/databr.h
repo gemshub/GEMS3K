@@ -7,7 +7,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 //
-// Copyright (C) 2003-2007 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
+// Copyright (C) 2003,2008 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization

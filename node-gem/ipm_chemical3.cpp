@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ipm_gamma.cpp 690 2006-03-29 07:10:23Z gems $
+// $Id: ipm_chemical3.cpp 690 2006-03-29 07:10:23Z gems $
 //
 // Copyright (C) 1992-2007  D.Kulik, S.Dmitrieva, K.Chudnenko, I.Karpov
 //
@@ -16,7 +16,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
 //-------------------------------------------------------------------
 //
@@ -199,6 +199,7 @@ void TMulti::pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb )
     aObj[o_nppar].SetN(  pmp->L1[k]);
 //    aObj[ o_ngtn].SetPtr( pmp->G0+jb );
  aObj[ o_ngtn].SetPtr( pmp->GEX+jb );     // changed 05.12.2006 by DK
+//  aObj[ o_ngtn].SetPtr( pmp->lnGmM+jb );     // experimental: 21.02.2007 by DK   
     aObj[o_ngtn].SetN( pmp->L1[k] );
     aObj[ o_ngam].SetPtr( pmp->Gamma+jb ); // Gamma calculated
     aObj[o_ngam].SetN( pmp->L1[k] );
@@ -277,19 +278,23 @@ static double ICold=0.;
 //   LINK_UX_MODE  - calculation of equations depending on current
 //                   IPM approximation of the equilibrium state;
 //   LINK_FIA_MODE - calculation of Gammas on the initial approximation (FIA).
+//    Added 13.03.2008 by DK: returns int value showing (if not 0) 
+//    that some extreme values were obtained for some SACTs, PSIs,
+//    or activity coefficients (for detecting bad PIA case). 0 if Ok.
 //
-void TMulti::GammaCalc( int LinkMode  )
+int 
+TMulti::GammaCalc( int LinkMode  )
 {
     int k, j, jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
-    char *sMod;
+    char *sMod;  
+    int statusGam=0, statusGC=0, statusSACT=0;
     double LnGam, pmpXFk;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
- //  high-precision IPM-2 debugging
- //   if(pmp->PZ && pmp->W1 > 1 )
- //     goto END_LOOP;
-
-   pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );
+//  high-precision IPM-2 debugging
+//   if(pmp->PZ && pmp->W1 > 1 )
+//     goto END_LOOP;
+//   pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );
 
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
@@ -303,8 +308,8 @@ void TMulti::GammaCalc( int LinkMode  )
                 if( pmp->X[j] < pmp->lowPosNum )
                     pmp->X[j] = pa->p.DFYaq;
             ConCalc( pmp->X, pmp->XF, pmp->XFA );
-//            if( pmp->E )
-//                IS_EtaCalc( );
+// if( pmp->E )
+//    IS_EtaCalc( );
 //          pmp->IC = max( pmp->MOL, pmp->IC );
             pmp->IC = 0.0;  // Important for the simplex FIA reproducibility
             if( pmp->E && pmp->FIat > 0 )
@@ -329,15 +334,16 @@ void TMulti::GammaCalc( int LinkMode  )
         for( j=0; j<pmp->L; j++ )
         {
             if( pmp->lnGmf[j] )
-                pmp->lnGam[j] = pmp->lnGmf[j];
+                pmp->lnGam[j] = pmp->lnGmf[j]; // setting up fixed act.coeff. for simplex IA
             else pmp->lnGam[j] = 0.;   // + pmp->lnGmm[j];
             pmp->Gamma[j] = 1.;
         }
+        break;      // added as bugfix 04.03.2008  DK
     case LINK_TP_MODE:  // Built-in functions depending on T,P only
          pmp->FitVar[3] = 1.0;  // resetting the IPM smoothing factor
-
-         for( k=0; k<pmp->FI; k++ )
-         { // loop on phases
+         
+         for( k=0; k<pmp->FIs; k++ )
+         { // loop on solution phases
             jb = je;
             je += pmp->L1[k];
             if( pmp->L1[k] == 1 )
@@ -349,11 +355,18 @@ void TMulti::GammaCalc( int LinkMode  )
             jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];
             jdb = jde;
             jde += pmp->LsMdc[k]*pmp->L1[k];
-// jpx
-
             sMod = pmp->sMod[k];
-            if( sMod[SGM_MODE] == SM_IDEAL )
-                continue;
+
+   		    double nxk = 1./pmp->L1[k];
+            for( j= jb; j<je; j++ )
+    		{  
+if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK 
+   pmp->Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
+    		   pmp->GEX[j] =0.0;  // cleaning GEX in TP mode!
+    		   pmp->lnGmo[j] = pmp->lnGam[j]; // saving activity coefficients in TP mode
+       	    }	  
+            if( sMod[SGM_MODE] != SM_STNGAM )
+                continue;  // The switch below is for built-in functions only!
 
             switch( pmp->PHC[k] )
             {
@@ -377,17 +390,11 @@ void TMulti::GammaCalc( int LinkMode  )
                      break;
                default: break;
             }
-//            for( j = jb; j < je; j++ )
-         } // k
-//      if( pmp->LO && pmp->Lads )           Debugging!
-//        {
-//            ConCalc( pmp->X, pmp->XF, pmp->XFA  );
-//            if( pmp->E )
-//                IS_EtaCalc();
-//        }
-
+        } // k
         break;
-    case LINK_UX_MODE: // calculating DC concentrations after this IPM iteration
+    case LINK_UX_MODE: 
+pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );  // Getting actual smoothing parameter    	
+    	// calculating DC concentrations after this IPM iteration
         ConCalc( pmp->X, pmp->XF, pmp->XFA );
         // cleaning activity coefficients
         for( j=0; j<pmp->L; j++ )
@@ -395,9 +402,9 @@ void TMulti::GammaCalc( int LinkMode  )
             pmp->lnGam[j] = 0.;
             pmp->Gamma[j] = 1.;
         }
-        if( pmp->E ) // checking electrostatics
+        if( pmp->E && pmp->LO ) // checking electrostatics
         {
-//          IS_EtaCalc();
+          IS_EtaCalc();  //  calculating charges and charge densities 
           if( pmp->FIat > 0 )
              for( k=0; k<pmp->FIs; k++ )
              {
@@ -405,7 +412,7 @@ void TMulti::GammaCalc( int LinkMode  )
                {  int ist;
                   for( ist=0; ist<pmp->FIat; ist++ ) // loop over surface types
                   {
-                     pmp->XpsiA[k][ist] = 0.0;
+                     pmp->XpsiA[k][ist] = 0.0;        // cleaning Psi before GouyChapman() 
                      pmp->XpsiB[k][ist] = 0.0;
                      pmp->XpsiD[k][ist] = 0.0;
                   }  // ist
@@ -439,13 +446,13 @@ void TMulti::GammaCalc( int LinkMode  )
         jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];  // Changed 07.12.2006  by KD
         jdb = jde;
         jde += pmp->LsMdc[k]*pmp->L1[k];
-//  jpx
-
+      
+   if( LinkMode == LINK_UX_MODE && sMod[SGM_MODE] == SM_STNGAM )
+   {                             // check that SGM_MODE for adsorption is not SM_IDEAL in Phase records!
         switch( pmp->PHC[k] )
         {  // calculating activity coefficients using built-in functions
           case PH_AQUEL:   // DH III variant consistent with HKF
-             if( sMod[SGM_MODE] == SM_STNGAM && ( pmpXFk > pa->p.XwMin &&
-                 pmp->X[pmp->LO] > pmp->lowPosNum*1e3 ) && pmp->IC > pa->p.ICmin )
+             if( pmpXFk > pa->p.XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
@@ -470,34 +477,29 @@ void TMulti::GammaCalc( int LinkMode  )
                   default:
                           break;
                 }
-                goto END_LOOP;
+                ICold = pmp->IC;
              }
-             else if( sMod[SGM_MODE] == SM_IDEAL )
-                goto END_LOOP;
+             goto END_LOOP;
              break;
           case PH_GASMIX:
           case PH_PLASMA:
           case PH_FLUID:
-            if( sMod[SGM_MODE] == SM_STNGAM )
-            {
-                if( pmpXFk > pmp->DSM )
-                {
-                    if( sMod[SPHAS_TYP] == SM_CGFLUID && pmp->XF[k] > pa->p.PhMin )
-                       ChurakovFluid( jb, je, jpb, jdb, k );
-                    if( sMod[SPHAS_TYP] == SM_PRFLUID && pmp->XF[k] > pa->p.PhMin )
-                       PRSVFluid( jb, je, jpb, jdb, k, ipb );
-                       // Added by Th.Wagner and DK on 20.07.06
-                }
-                goto END_LOOP;             }
-            else if( sMod[SGM_MODE] == SM_IDEAL )
-                goto END_LOOP;
-            break;
+             if( pmpXFk > pmp->DSM && pmp->XF[k] > pa->p.PhMin )
+             {
+                 if( sMod[SPHAS_TYP] == SM_CGFLUID )
+                    ChurakovFluid( jb, je, jpb, jdb, k );
+                 if( sMod[SPHAS_TYP] == SM_PRFLUID )
+                    PRSVFluid( jb, je, jpb, jdb, k, ipb );
+                    // Added by Th.Wagner and DK on 20.07.06
+             }
+             goto END_LOOP;             
+             break;
          case PH_LIQUID:
          case PH_SIMELT:
          case PH_SINCOND:
          case PH_SINDIS:
          case PH_HCARBL:  // solid and liquid mixtures
-             if( sMod[SGM_MODE] == SM_STNGAM && pmpXFk > pmp->DSM )
+             if( pmpXFk > pmp->DSM )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
@@ -522,54 +524,35 @@ void TMulti::GammaCalc( int LinkMode  )
                   default:
                           break;
                 }
-                goto END_LOOP;
              }
-             else if( sMod[SGM_MODE] == SM_IDEAL )
-                goto END_LOOP;
+             goto END_LOOP;
              break;
         case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
-        case PH_SORPTION: // elstatic potenials from Gouy-Chapman eqn
+        case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
             if( pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
                 && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin ))
             {
 //              ConCalc( pmp->X, pmp->XF, pmp->XFA  );  Debugging
-                if( LinkMode == LINK_UX_MODE )
-                {
                     if( pmp->E )
                     {
-                       IS_EtaCalc();
-                       GouyChapman( jb, je, k );
+//                       IS_EtaCalc();
+                       statusGC = GouyChapman( jb, je, k );
                     // PoissonBoltzmann( q, jb, je, k )
                     }
         // Calculating surface activity coefficient terms
-//                  SurfaceActivityTerm(  jb, je, k );
-                    SurfaceActivityCoeff(  jb, je, jpb, jdb, k );
-                }
+                    statusSACT = SurfaceActivityCoeff(  jb, je, jpb, jdb, k );
             }
-            if( sMod[SGM_MODE] == SM_IDEAL )
-                goto END_LOOP;
-            else break;
-        default:
-            if( sMod[SGM_MODE] == SM_STNGAM )
-            {
-                // RegSolMod(  jb, je, k );
-                goto END_LOOP;
-            }
-            if( sMod[SGM_MODE] == SM_IDEAL )
-                goto END_LOOP;
-        }
-        if( pmp->XF[k]<=pmp->DSM && LinkMode == LINK_UX_MODE )
-            goto END_LOOP; // phase has been zeroed off
-        if( pmp->PHC[k] == PH_AQUEL && (pmp->XFA[k] <= pmp->lowPosNum*1e3 || // bugfix 29.11.05 KD
-               pmp->XF[k] <= pa->p.XwMin ) && LinkMode == LINK_UX_MODE )
-            goto END_LOOP; // aqueous phase is about to disappear
-        if(pmp->PHC[k] == PH_AQUEL && (( pmp->IC < pa->p.ICmin))
-                && LinkMode == LINK_UX_MODE )
-            goto END_LOOP; // Ionic strength is too low for aqueous solution
-        else ICold = pmp->IC;
+//            if( sMod[SGM_MODE] == SM_IDEAL )
+//                goto END_LOOP;
+            break;
+         default:
+            goto END_LOOP;
+       } // end switch 
+   }  // end if LinkMode == LINK_UX_MODE 
+
 
 #ifndef IPMGEMPLUGIN
-// This part running Phase math scripts is not used in GEMIPM2K
+// This part running Phase math scripts is not used in standalone GEMIPM2K
         // Link DOD and set sizes of work arrays
         pm_GC_ods_link( k, jb, jpb, jdb, ipb );
         pmp->is=0;
@@ -578,10 +561,12 @@ void TMulti::GammaCalc( int LinkMode  )
 
         switch( LinkMode )
         { // check the calculation mode
-        case LINK_TP_MODE: // first running TP-dependent scripts
-            if( sMod[SPHAS_DEP] == SM_TPDEP && qEp[k].nEquat() )
-                qEp[k].CalcEquat();
-            if( sMod[DCOMP_DEP] == SM_TPDEP && qEd[k].nEquat() )
+        case LINK_TP_MODE: // running TP-dependent scripts
+            if(( sMod[SPHAS_DEP] == SM_TPDEP || sMod[SPHAS_DEP] == SM_UXDEP ) && qEp[k].nEquat() )
+            {	// Changed on 26.02.2008 to try TW DQF scripts - DK
+        	      qEp[k].CalcEquat();
+            }
+        	if((sMod[DCOMP_DEP] == SM_TPDEP || sMod[DCOMP_DEP] == SM_UXDEP) && qEd[k].nEquat() )
             {
                 switch( sMod[DCE_LINK] )
                 {
@@ -593,11 +578,42 @@ void TMulti::GammaCalc( int LinkMode  )
                     qEd[k].CalcEquat();
                     break;
                 }
-            }
-            break;
+            }           
+        	break;
         case LINK_FIA_MODE: // cold start approximation
-            break;
-        case LINK_UX_MODE:  // model dependent on current IPM iteration
+            goto END_LOOP;
+        	break;
+        case LINK_UX_MODE:  // the model is dependent on current concentrations on IPM iteration    	
+            switch( pmp->PHC[k] )
+            {  //
+              case PH_AQUEL:  
+                 if(!(pmpXFk > pa->p.XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin ))
+                	 goto END_LOOP; 
+                 break;
+              case PH_GASMIX:
+              case PH_PLASMA:
+              case PH_FLUID:
+                 if( !(pmpXFk > pmp->DSM && pmp->XF[k] > pa->p.PhMin))
+                     goto END_LOOP;             
+                 break;
+             case PH_LIQUID:
+             case PH_SIMELT:
+             case PH_SINCOND:
+             case PH_SINDIS:
+             case PH_HCARBL:  // solid and liquid mixtures
+                 if( !(pmpXFk > pmp->DSM) )
+                     goto END_LOOP;
+                 break;
+            case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
+            case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
+                if( !(pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
+                    && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin )))
+                    goto END_LOOP;
+                break;
+             default:
+                goto END_LOOP;
+           } // end switch         	
+        	
             if( sMod[SPHAS_DEP] == SM_UXDEP && qEp[k].nEquat() )
                 // Equations for the whole phase
                 qEp[k].CalcEquat();
@@ -614,29 +630,54 @@ void TMulti::GammaCalc( int LinkMode  )
                     break;
                 }
             }
+            if( pmp->PHC[k] == PH_AQUEL )
+                ICold = pmp->IC;
             break;
         default:
             Error("GammaCalc","Invalid LinkMode 2");
-        }
+        } // end switch
 #endif
+
 END_LOOP:
-        // if( LinkMode == LINK_TP_MODE )
-        // make lnGam with priority
-        for( j=jb; j<je; j++ )
+        if( LinkMode == LINK_TP_MODE )  // TP mode - added 04.03.2008 by DK
         {
-            if( fabs( 1.0-pmp->Gamma[j] ) > 1e-9 && pmp->Gamma[j] > 1e-35 )
+        	for( j=jb; j<je; j++ )
+        	{
+if( pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
+	pmp->Wx[j] = 0.0;               //
+        	   LnGam = pmp->lnGmo[j];
+               pmp->lnGam[j] = LnGam;
+               if( fabs( LnGam ) > 1e-9 && fabs( LnGam ) < 84. )  
+                    pmp->Gamma[j] = exp( LnGam );
+               else pmp->Gamma[j] = 1.0;
+               pmp->F0[j] = Ej_init_calc( 0.0, j, k );
+               pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];       		
+        	}	
+        }
+        else 
+        { // Real mode for activity coefficients
+          for( j=jb; j<je; j++ )
+          {
+            if( fabs( 1.0-pmp->Gamma[j] ) > 1e-9 
+            		&& pmp->Gamma[j] > 3.3e-37 && pmp->Gamma[j] < 3.03e+36 )   // > 1e-35 before 26.02.08
                 pmp->lnGam[j] += log( pmp->Gamma[j] );
             LnGam = pmp->lnGam[j];
             pmp->lnGmo[j] = LnGam;
-            if( fabs( LnGam ) > 1e-9 && fabs( LnGam )<42. )
+            if( fabs( LnGam ) > 1e-9 && fabs( LnGam ) < 84. )   // before 26.02.08: < 42.
                 pmp->Gamma[j] = exp( LnGam );
             else pmp->Gamma[j] = 1.0;
             pmp->F0[j] = Ej_init_calc( 0.0, j, k );
             pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
-        }
+          }
+        }   
     }  // k - end loop over phases
     //  if( wn[W_EQCALC].status )
     //  aSubMod[MD_EQCALC]->ModUpdate("PM_ipms   EqCalc() converged");
+    if( statusGC )
+        	return statusGC;     
+    if( statusSACT )
+    	return statusSACT; 
+    return statusGam; 
 }
 
 // ----------------------------------------------------------------------------
@@ -649,7 +690,7 @@ void
 TMulti::SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k, int ipb )
 {
 
-    int j, icat, ian, ic, ia,  index1, index2, ip, NComp, NPar, NPcoef, MaxOrd;
+    int j, icat, ian, /*ic, ia,*/  index1, index2, ip, NComp, NPar, NPcoef, MaxOrd;
     short *aIPx;
     float *aIPc, *aDCc;
     double T, A, B, I, sqI, bgi=0, Z2, lgGam, SumSIT;
@@ -693,7 +734,7 @@ aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x N
           ian = j-jb; // ian++;
       else if( pmp->EZ[j] > 0 )
           icat = j-jb; // icat++;
-      else ;
+//      else ;
 
       if( pmp->EZ[j] )
       {    // Charged species : calculation of the DH part
@@ -765,7 +806,7 @@ TMulti::DebyeHueckel3Hel( int jb, int je, int jpb, int, int k )
     int j;
     double T, A, B, a0, a0c, I, sqI, bg, bgi, Z2, lgGam; //  molt;
     double Xw, Xaq, Nw, molT, Lgam, lnwxWat, lnGam;
-    double Lam, SigTerm, Phi, lnActWat, ActWat, gamWat;
+    double Lam, SigTerm, Phi, lnActWat;
     float nPolicy;
 
     I= pmp->IC;
@@ -848,8 +889,8 @@ TMulti::DebyeHueckel3Hel( int jb, int je, int jpb, int, int k )
 	   Lam = 1. + a0*B*sqI;
 	   SigTerm = 3./(pow(a0,3.)*pow(B,3.)*pow(I,(3./2.)))*(Lam-1./Lam-2*log(Lam));
 	   Phi = -2.3025851*(A*sqI*SigTerm/3. + Lgam/(0.0180153*2.*I) - bgi*I/2.);
-	   lnActWat = -Phi*molT/Nw;         //	   ActWat = exp(lnActWat);
-           lnGam = lnActWat - lnwxWat;      //	   gamWat = ActWat/wxWat;
+	   lnActWat = -Phi*molT/Nw;         
+           lnGam = lnActWat - lnwxWat;      
 //         lgGam = a0 * molt; // corrected: instead of I - tot.molality
         }
         pmp->lnGam[j] = lnGam;
@@ -1160,9 +1201,10 @@ TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
             return;
         }
 
-        pmp->lnGmM[j] = log( Fugacity / pmp->Pc ); // Constant correction to G0 here!
+//        pmp->lnGmM[j] = log( Fugacity / pmp->Pc ); // Constant correction to G0 here!
+pmp->GEX[j] = log( Fugacity / pmp->Pc );   // now here (since 26.02.2008)  DK
         pmp->Pparc[j] = Fugacity;          // Necessary only for performance
-        pmp->Vol[j] = Volume;       // molar volume of pure fluid component, J/bar
+        pmp->Vol[j] = Volume * 10.;       // molar volume of pure fluid component, J/bar to cm3
 
         // passing corrected EoS coeffs to calculation of fluid mixtures
         Coeff[15] = Eos4parPT[0];
@@ -1268,10 +1310,10 @@ TMulti::PRSVofPureGases( int jb, int je, int, int jdb, int, int )
 
 //    aW.twp->H +=  DeltaH;   // in J/mol - to be completed
 //    aW.twp->S +=  DeltaS;   // to be completed
-
-         pmp->lnGmM[j] = log( Fugcoeff );    // Constant correction to G0 here!
+//         pmp->lnGmM[j] = log( Fugcoeff );    // Constant correction to G0 here!
+pmp->GEX[j] = log( Fugcoeff );    // now here (since 26.02.2008) DK
          pmp->Pparc[j] = Fugcoeff * pmp->Pc; // Necessary only for performance
-         pmp->Vol[j] = Volume;  // molar volume of pure fluid component, J/bar
+         pmp->Vol[j] = Volume * 10.;  // molar volume of pure fluid component, J/bar to cm3
 
 //  passing corrected EoS coeffs to calculation of fluid mixtures
          Coeff[6] = Eos2parPT[0];      // a

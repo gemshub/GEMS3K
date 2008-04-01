@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: array.h 871 2007-02-21 14:29:54Z gems $
+// $Id: array.h 968 2007-12-13 13:23:32Z gems $
 //
 // Declaration/implementation of array classes collection
 //
@@ -12,7 +12,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail gems2.support@psi.ch
 //-------------------------------------------------------------------
 

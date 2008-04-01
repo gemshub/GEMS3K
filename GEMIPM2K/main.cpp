@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 1004 2008-01-23 14:06:44Z gems $
+// $Id: main.cpp 1052 2008-03-31 11:32:38Z gems $
 //
 // Demo test of usage of the TNode class for implementing a simple
 // batch-like calculation of equilibria using text file input and
@@ -51,7 +51,7 @@ int main( int argc, char* argv[] )
    // Creating TNode structure accessible trough the "node" pointer
    TNode* node  = new TNode();
 
-   cout << "Welcome to GEMIPM2K v. 2.2.0 solver of (geo)chemical equilibria! "
+   cout << "Welcome to GEMIPM2K v. 2.2.3 solver of (geo)chemical equilibria! "
         << endl;
 
    // Here we read the files needed as input for initializing GEMIPM2K

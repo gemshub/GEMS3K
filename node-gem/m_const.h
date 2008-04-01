@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 900 2007-03-21 14:54:15Z gems $
+// $Id: m_const.h 968 2007-12-13 13:23:32Z gems $
 //
 // Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
 //
@@ -10,7 +10,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI for more information
+// See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
 //-------------------------------------------------------------------
 //

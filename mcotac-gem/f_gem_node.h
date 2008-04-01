@@ -5,6 +5,8 @@
 // Part of the GEMS-PSI program package developed at LES PSI
 // (C) 2006 S.Dmytriyeva, D.Kulik, W.Pfingsten
 //
+// This is a documentation file and, in principle, may not be linked to the 
+//  compiled program; only the file f_gem_node.cpp should be linked. 
 
 #ifndef _fgemnode_
 #define _fgemnode_
@@ -12,9 +14,10 @@
 #include "node.h"
 
 // (1) Initialization of TNode data exchange interface
-// This function reads DATACH and MULTI text input files
-// returns 0 if success or 1 if error
-//  Must be called once before the beginning of the coupled RMT calculation
+// This function reads DATACH and MULTI text input files which it takes from 
+// the *.lst path file name string_. 
+// Returns 0 if success or 1 if error;
+//  must be called once before the beginning of the coupled RMT calculation
 //
 #ifdef __unix
  extern "C" int f_gem_init_( char* string_, unsigned int length_ );
@@ -46,7 +49,7 @@
 #endif
 
 
-// (3) Reads DATABR input file that describes a single node composition,
+// (3) Reads DATABR input file (string_) that describes a single node composition,
 //   runs the GEM calculation and provides via parameters the GEM input and
 //   output data
 //
@@ -213,7 +216,7 @@
 
 // (6) For detailed examination of GEM work data structure:
 // writes GEMIPM internal MULTI data structure into text file
-// path name fname in debugging format (different from MULTI input format).
+// path name string_ in debugging format (different from MULTI input format).
 // This file cannot be read back with F_GEM_INIT()!
 //
 #ifdef __unix

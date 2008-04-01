@@ -1,4 +1,4 @@
-// $Id: gstring.cpp 925 2007-09-18 15:57:25Z gems $
+// $Id: gstring.cpp 969 2007-12-13 15:41:25Z gems $
 /***************************************************************************
 	gstring class
 	Version 1.02
@@ -15,7 +15,7 @@
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
 //
-// See http://les.web.psi.ch/Software/GEMS-PSI/ for more information
+// See http://gems.web.psi.ch/ for more information
 //
 	Copyright (c) 2000
 	Author: Andy Rysin
@@ -72,6 +72,8 @@ gstring::str_val::clone(size_t add_size)
     CHECK_LEN(GetCount()+add_size);
     str_val* pv = new str_val( GetCount() + add_size + OVERSIZE);
     strncpy(pv->p, p, GetCount());
+    if( OVERSIZE )  // 13/12/2007
+      pv->p[GetCount()] = '\0';
     pv->count = GetCount();
     return pv;
 }
@@ -101,7 +103,8 @@ gstring::gstring(const gstring& s, size_t pos, size_t len)
         ps = s.ps->clone();
         return;
     }
-    size_t s_len = s.length() - pos;
+//    size_t s_len = s.length() - pos; 13/12/2007
+    size_t s_len = max( s.length() - pos, (size_t)0);
     size_t min_length;
     if( len == npos )
         min_length = s_len;
@@ -111,6 +114,8 @@ gstring::gstring(const gstring& s, size_t pos, size_t len)
     ps = new str_val( min_length + OVERSIZE );
     ps->count = min_length;
     strncpy(ps->p, s.ps->p + pos, min_length);
+    if( OVERSIZE )  // 13/12/2007
+      ps->p[min_length] = '\0';
 }
 
 //! constructs gstring from "const char*" starting position 'pos' and with length = 'len'
@@ -119,7 +124,7 @@ gstring::gstring(const char* s, size_t pos, size_t len)
     size_t s_len;
     if( len == npos )
       //    s_len = strlen(s);// ? pos Changed SD 27/08/2007
-     s_len = max( strlen(s) - pos, (size_t)0 );
+     s_len = max( strlen(s)-pos , (size_t)0 );
     else
         for(s_len = 0; s_len < len && s[s_len+pos]; s_len++ );
 
@@ -127,6 +132,8 @@ gstring::gstring(const char* s, size_t pos, size_t len)
     ps = new str_val( s_len + OVERSIZE );
     ps->count = s_len;
     strncpy(ps->p, s + pos, s_len);
+    if( OVERSIZE )  // 13/12/2007
+      ps->p[s_len] = '\0';
 }
 
 gstring::gstring(int num, char ch)
@@ -135,6 +142,8 @@ gstring::gstring(int num, char ch)
     ps = new str_val(num + OVERSIZE);
     memset(ps->p, ch, num);
     ps->count = num;
+    if( OVERSIZE )  // 13/12/2007
+      ps->p[num] = '\0';
 }
 
 const gstring&
@@ -146,6 +155,8 @@ gstring::operator=(const char* s)
     ps = new str_val( src_length + OVERSIZE );
     ps->count = src_length;
     strncpy(ps->p, s, src_length);
+    if( OVERSIZE )  // 13/12/2007
+      ps->p[src_length] = '\0';
 
     return *this;
 }
@@ -159,6 +170,8 @@ gstring::operator+=(const char* s)
     ps->resize(length() + length1 + OVERSIZE);
     strncpy(ps->p + cnt, s, length1);
     ps->count = cnt + length1;
+    if( OVERSIZE )  // 13/12/2007
+      ps->p[ ps->count] = '\0';
 
     return *this;
 }
@@ -172,6 +185,8 @@ gstring::operator+=(const gstring& s)
     ps->resize(length() + length1 + OVERSIZE);
     strncpy(ps->p + cnt, s.ps->p, length1);
     ps->count = cnt + length1;
+    if( OVERSIZE )  // 13/12/2007
+      ps->p[ ps->count] = '\0';
 
     return *this;
 }

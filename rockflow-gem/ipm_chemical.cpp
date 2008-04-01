@@ -221,7 +221,7 @@ double TMulti::DualChemPot( double U[], float AL[], int N, int j )
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  This procedure sets kinetic constraints according to a given
 //  concentration units
-//  Needs much more work, elaboration, and perfromance optimization
+//  Needs much more work, elaboration, and performance optimization
 //
 void TMulti::Set_DC_limits( int Mode )
 {
@@ -399,7 +399,7 @@ void TMulti::TotalPhases( double X[], double XF[], double XFA[] )
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Corrections to prime chemical potentials F0[j]
+// Corrections to primal chemical potentials F0[j]
 //  of j-th species in k-th phase among IPM main iterations
 //  Returns double - value of corrected chem. potential.
 //  If error, returns +7777777 J/mole.
@@ -561,8 +561,9 @@ double TMulti::Ej_init_calc( double, int j, int k)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of DC primal chemical potential F (return value)
-// from moles of DC Y[], total moles of phase YF[] and DC standard
-// molar Gibbs energy gT (obtained from pmp->G[])
+// from moles of DC Y[], total moles of phase YF[] and DC partial
+// molar Gibbs energy gT (obtained from pmp->G[]) which includes 
+// activity coefficient terms. 
 // On error returns F = +7777777.
 //
 double TMulti::PrimalDC_ChemPot(
@@ -988,10 +989,11 @@ NEXT_PHASE:
 //
 double TMulti::Cj_init_calc( double g0, int j, int k )
 {
-    double G, YOF;
+    double G, YOF=0;
 
     G = g0/pmp->RT;
-    YOF = pmp->YOF[k];     // J/g:   check this!   04.12.2006  DK
+    if( pmp->YOF )
+        YOF = pmp->YOF[k];     // J/g:   check this!   04.12.2006  DK
     // Calculation of standard concentration scaling terms
     switch( pmp->DCC[j] )
     { // Aqueous electrolyte
@@ -1004,8 +1006,10 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
     case DC_AQ_SOLVENT:
 #ifndef IPMGEMPLUGIN
         if( syp->PYOF != S_OFF )
-        G += YOF;
 #endif
+          if( YOF != 0.0 )
+        	G += YOF;  // In GEMIPM2K, YOF[k] is the only way to influence 
+
         break;
     case DC_GAS_COMP: // gases except H2O and CO2
     case DC_GAS_H2O: // index to switch off?
@@ -1030,8 +1034,9 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
     case DC_PEL_CARRIER:
 #ifndef IPMGEMPLUGIN
         if( syp->PYOF != S_OFF )
-           G += YOF;
 #endif
+          if( YOF != 0.0 )
+        	 G += YOF;
         break;
         // Sorption phases
     case DC_SSC_A0:
