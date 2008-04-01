@@ -291,6 +291,7 @@ node-gem/time/10/Speed10ic.out2A -text
 node-gem/time/10/Speed10ic.out2B -text
 node-gem/time/10/Speed10ic.out2P -text
 node-gem/time/10/linux-run.bat -text
+node-gem/time/10/win32-run.bat -text
 node-gem/time/15/Speed15ic-dat.lst -text
 node-gem/time/15/Speed15ic-dbr-0-0000.dat -text
 node-gem/time/15/Speed15ic-dch.dat -text
@@ -299,6 +300,7 @@ node-gem/time/15/Speed15ic.out2A -text
 node-gem/time/15/Speed15ic.out2B -text
 node-gem/time/15/Speed15ic.out2P -text
 node-gem/time/15/linux-run.bat -text
+node-gem/time/15/win32-run.bat -text
 node-gem/time/20/Speed20ic-dat.lst -text
 node-gem/time/20/Speed20ic-dbr-0-0000.dat -text
 node-gem/time/20/Speed20ic-dch.dat -text
@@ -307,6 +309,7 @@ node-gem/time/20/Speed20ic.out2A -text
 node-gem/time/20/Speed20ic.out2B -text
 node-gem/time/20/Speed20ic.out2P -text
 node-gem/time/20/linux-run.bat -text
+node-gem/time/20/win32-run.bat -text
 node-gem/time/25/Speed25ic-dat.lst -text
 node-gem/time/25/Speed25ic-dbr-0-0000.dat -text
 node-gem/time/25/Speed25ic-dch.dat -text
@@ -315,6 +318,7 @@ node-gem/time/25/Speed25ic.out2A -text
 node-gem/time/25/Speed25ic.out2B -text
 node-gem/time/25/Speed25ic.out2P -text
 node-gem/time/25/linux-run.bat -text
+node-gem/time/25/win32-run.bat -text
 node-gem/time/30/Speed30ic-dat.lst -text
 node-gem/time/30/Speed30ic-dbr-0-0000.dat -text
 node-gem/time/30/Speed30ic-dch.dat -text
@@ -323,6 +327,7 @@ node-gem/time/30/Speed30ic.out2A -text
 node-gem/time/30/Speed30ic.out2B -text
 node-gem/time/30/Speed30ic.out2P -text
 node-gem/time/30/linux-run.bat -text
+node-gem/time/30/win32-run.bat -text
 node-gem/time/35/Speed35ic-dat.lst -text
 node-gem/time/35/Speed35ic-dbr-0-0000.dat -text
 node-gem/time/35/Speed35ic-dch.dat -text
@@ -331,6 +336,7 @@ node-gem/time/35/Speed35ic.out2A -text
 node-gem/time/35/Speed35ic.out2B -text
 node-gem/time/35/Speed35ic.out2P -text
 node-gem/time/35/linux-run.bat -text
+node-gem/time/35/win32-run.bat -text
 node-gem/time/40/Speed40ic-dat.lst -text
 node-gem/time/40/Speed40ic-dbr-0-0000.dat -text
 node-gem/time/40/Speed40ic-dch.dat -text
@@ -340,6 +346,7 @@ node-gem/time/40/Speed40ic.out2B -text
 node-gem/time/40/Speed40ic.out2P -text
 node-gem/time/40/linux-run.bat -text
 node-gem/time/40/main.cpp -text
+node-gem/time/40/win32-run.bat -text
 node-gem/time/5/Speed05ic-dat.lst -text
 node-gem/time/5/Speed05ic-dbr-0-0000.dat -text
 node-gem/time/5/Speed05ic-dch.dat -text
@@ -348,11 +355,13 @@ node-gem/time/5/Speed05ic.out2A -text
 node-gem/time/5/Speed05ic.out2B -text
 node-gem/time/5/Speed05ic.out2P -text
 node-gem/time/5/linux-run.bat -text
+node-gem/time/5/win32-run.bat -text
 node-gem/time/All_test/AnoxSystem-dat.lst -text
 node-gem/time/All_test/AnoxSystem-dbr-0-0000.dat -text
 node-gem/time/All_test/AnoxSystem-dch.dat -text
 node-gem/time/All_test/AnoxSystem-ipm.dat -text
 node-gem/time/All_test/AnoxSystem.out2P -text
+node-gem/time/All_test/linux-run.bat -text
 node-gem/time/main.cpp -text
 node-gem/tnt.h -text
 node-gem/tnt_array1d.h -text
@@ -394,9 +403,11 @@ nodearray-gem/ipm_simplex.cpp -text
 nodearray-gem/jama_cholesky.h -text
 nodearray-gem/jama_lu.h -text
 nodearray-gem/m_const.h -text
+nodearray-gem/m_gem2mtbox.cpp -text
 nodearray-gem/m_gem2mtt.cpp -text
 nodearray-gem/m_param.h -text
 nodearray-gem/main.cpp -text
+nodearray-gem/ms_gem2mt.cpp -text
 nodearray-gem/ms_gem2mt.h -text
 nodearray-gem/ms_multi.h -text
 nodearray-gem/ms_multi_file.cpp -text
@@ -427,7 +438,9 @@ nodearray-gem/test/CalcColumn-dch.dat -text
 nodearray-gem/test/CalcColumn-ipm.dat -text
 nodearray-gem/test/CalcColumn.BAT -text
 nodearray-gem/test/Readme.1st -text
+nodearray-gem/test/testA-W32.bat -text
 nodearray-gem/test/testA.dat -text
+nodearray-gem/test/testW-W32.bat -text
 nodearray-gem/test/testW.dat -text
 nodearray-gem/tnt.h -text
 nodearray-gem/tnt_array1d.h -text

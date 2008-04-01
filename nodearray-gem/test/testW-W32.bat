@@ -1,0 +1,1 @@
+..\gem2mt-sep CalcColumn-dat.lst testW.dat > testW.out

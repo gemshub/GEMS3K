@@ -29,7 +29,7 @@ f_getline(istream& is, gstring& str, char delim);
 
 int main( int argc, char* argv[] )
  {
-     int       RetC = 0;
+//     int       RetC = 0;
      gstring gem2mt_in1 = "gem2mt_init.txt";
      //gstring multu_in1 = "MgWBoundC.ipm";
      gstring chbr_in1 = "ipmfiles-dat.lst";

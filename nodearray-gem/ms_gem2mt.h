@@ -65,17 +65,17 @@ typedef struct
    PunP,          //  Units of pressure  { b;  B p P A reserved }
    PunT,          // Units of temperature  { C; K F reserved }
 
-// Allocation flags
+// Allocation and setup flags
    PvICi,    // Use IC quantities for initial system compositions? { + * - }
    PvAUi,    // Use formula units for initial sub-system compositions? { + * - }
    PvMO,     // Use non stop debug output for nodes (+ -)?
    PvMSg,    // Use math script for graphic presentation (+ -)?
-   PvEF,      // Use empirical data for graphics  (+ -)?
+   PvEF,     // Use empirical data for graphics  (+ -)?
    PvPGD,    // Use phase groups definitions (+ -)?
    PvFDL,    // Use flux definition list (+ -)
    PvSFL,    // Use source fluxes and elemental stoichiometries for them? (+ -)
-   PvGrid,    // Use array of grid point locations? (+ -)
-   PvRes,    // reserved (+ -)
+   PvGrid,   // Use array of grid point locations? (+ -)
+   PvSIA,    // Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)
 
      // Controls on operation
    PsMode,  // Code of GEM2MT mode of operation { S F A D T }
@@ -96,11 +96,11 @@ typedef struct
   short
 // input I
    nC,   // nQ - number of local equilibrium compartments (nodes)
-   xC, yC, zC,  // numbers of nodes along x, y, z coordinates
+// xC, yC, zC  numbers of nodes along x, y, z coordinates
    nIV,  // number of initial variants of the chemical system, nIV <= nC
-   nPG,  // number of mobile phase groups (0 or >1)
-   nFD,  // number of MPG flux definitions (0 or >1)
-   nSFD,   // number of source flux definitions (0 or < nFD )
+   nPG,  // number of mobile phase groups (0 or >= 1)
+   nFD,  // number of MPG flux definitions (0 or >1 )
+   nSFD,   // number of elemental flux definitions (0 or >= 1 )
    nEl, // number of electrolytes for setting up electrolyte diffusion coefficients in mDEl vector
    nPTypes,     // res Number of allocated particle types (< 20 ? )
    nProps,      // res Number of particle statistic properties (for monitoring) >= anPTypes
@@ -108,11 +108,12 @@ typedef struct
    Nsd,  // N of references to data sources
    Nqpt, // Number of elements in the script work array qpi for transport
    Nqpg, // Number of elements in the script work array qpc for graphics
+
    Nb,   // N - number of independent components (set automatically from RMults)
-   FIb,   // N - number of phases (set automatically from RMults)
+   FIb,  // N - number of phases (set automatically from RMults)
    Lb,   // N - number of dependent components in multycomponent phases (set automatically from RMults)
    bTau, // Time point for the simulation break (Tau[0] at start)
-   ntM, // Maximum allowed number of time iteration steps (default 1000)
+   ntM,  // Maximum allowed number of time iteration steps (default 1000)
    nYS,  // number of plots (columns in the yt array)
    nE,   // Total number of experiments points (in xEt, yEt) to plot over
    nYE,  // number of experimental parameters (columns in the yEt array)
@@ -147,7 +148,6 @@ typedef struct
               // negative value means one-side flux (source or sink)
          // for source fluxes, -2 means "source flux stoichiometry with index 1
          // line in the BSF table", and so on
-   ;
   float        // input
    *Pi,    // Pressure P, bar for initial systems (values within Pai range) [nIV]
    *Ti,    // Temperature T, C for initial systems (values within Pai range) [nIV]
@@ -195,13 +195,13 @@ float (*grid)[3];      // Array of grid point locations, size is nC
  double
    *Bn,    //  [nIV][Nb] Table of bulk compositions of initial systems
    *qpi,   //  [Nqpi] Work array for initial systems math script
-   *qpc,    //  [Nqpc] Work array for mass transport math script,
+   *qpc,   //  [Nqpc] Work array for mass transport math script,
    *xt,    //  Abscissa for sampled data [nS]
-   *yt,     //  Ordinates for sampled data [nS][nYS]
-   *BSF,    // [nSFD][Nf] table of bulk compositions of source fluxes
-            //  More to be added here for seq reactors?
-   *MB,  // [nC] [Nf] column of current masses of boxes (in kg)
-   *dMB // [nC][Nf]  Table of current derivatives dM for elements in reservoirs
+   *yt,    //  Ordinates for sampled data [nS][nYS]
+   *BSF,   // [nSFD][Nf] table of bulk compositions of elemental fluxes
+           //  More to be added here for seq reactors?
+   *MB,    // [nC][Nf] column of current IC masses in the boxes (in kg)
+   *dMB    // [nC][Nf]  Table of current derivatives dM/dTau for ICs in boxes
     ;
  double  (*HydP)[SIZE_HYDP]; // [nC][6] hydraulic parameters for nodes in mass transport model
    //  value order to be described
@@ -229,8 +229,9 @@ float (*grid)[3];      // Array of grid point locations, size is nC
   char (*for_e)[MAXFORMUNITDT]; // [nE][40] formulae for diffusing dissolved electrolytes
   char (*stld)[EQ_RKLEN]; // List of SysEq record keys for initial systems [nIV]
   char (*FDLid)[MAXSYMB]; // [nFD] ID of fluxes
-  char (*FDLop)[MAXSYMB]; // [nFD] Operation codes (letters) flux type codes
-  char (*FDLmp)[MAXSYMB]; // [nFD] ID of MPG to move in this flux  dim changed!
+  char (*FDLop)[MAXSYMB]; // [nFD] Operation codes (letters): flux order,  type codes
+  char (*FDLmp)[MAXSYMB]; // [nFD] ID of MPG to move in this flux (if starts with letter)
+                             // Otherwise BSF row index of elemental flux (if 0,1,2,...) 
   char (*MPGid)[MAXSYMB]; // [nPG] ID list of mobile phase groups
 //
   char (*SBM)[MAXICNAME+MAXSYMB];  // Keys (names) of IC
@@ -247,10 +248,9 @@ float (*grid)[3];      // Array of grid point locations, size is nC
     *Ae  // [nE][N] stoich matrix for for diffusing electrolytes
    ;
  double
- *gfc,  // [nC][nPG][Nf] Array of element partition coefficients between MPG and its source box
- *yfb;  // [nC][nPG][Nf] Array of MPG bulk compositions at current time point 
-   ;
-   char sykey[EQ_RKLEN+10],    // Key of currently processed SysEq record
+   *gfc,  // [nC][nPG][Nf] Array of element partition coefficients between MPG and its source box
+   *yfb;  // [nC][nPG][Nf] Array of MPG bulk compositions at current time point 
+ char sykey[EQ_RKLEN+10],   // Key of currently processed SysEq record
    *etext,              // internal
    *tprn;              // internal
 //work data

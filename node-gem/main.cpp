@@ -262,8 +262,8 @@ int main( int argc, char* argv[] )
         m_NodeHandle[in] = in;
 
 // Below you can switch between AIA and PIA initial approximation modes
-        m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2A 
-//        m_NodeStatusCH[in] = NEED_GEM_PIA;      // tests are marked *.out2P
+//        m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2A 
+        m_NodeStatusCH[in] = NEED_GEM_PIA;      // tests are marked *.out2P
 
 // Setting input data for GEM IPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
