@@ -773,9 +773,9 @@ c	pause
 c      write(*,*)'npbox xmin xmax',nbox, xmin,xmax,xminr,xmaxr
 c       pause
 c   set particles in the grid
-c      call setpar(npmax,xmin,xmax,partx,nbox)
-       call setpar(%val(npmax),%val(xmin),%val(xmax),%val(partx),
-     *             %val(nbox))
+      call setpar(npmax,xmin,xmax,partx,nbox)
+c       call setpar(%val(npmax),%val(xmin),%val(xmax),%val(partx),
+c     *             %val(nbox))
 c      do 1328 ip=1,npmax
 c      write(*,*)'i partx ',ip,partx(ip)
 c 1328 continue
@@ -1083,9 +1083,9 @@ c       pause 'time'
 c   assign concentration at time t to particles
 c   1. nuber of particles in each grid cell
 c      write (*,*) npmax, nbox,xmin,xmax
-c      call partid(npmax, nbox,xmin,xmax,partib,dx,partx)
-       call partid(%val(npmax),%val(nbox),%val(xmin),%val(xmax),
-     *            %val(partib),%val(dx),%val(partx))
+      call partid(npmax, nbox,xmin,xmax,partib,dx,partx)
+c       call partid(%val(npmax),%val(nbox),%val(xmin),%val(xmax),
+c     *            %val(partib),%val(dx),%val(partx))
 
 c      write(*,*)'partid hinter'
 
