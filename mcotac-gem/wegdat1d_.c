@@ -10,7 +10,6 @@
 *    nx   : Anzahl der Knoten in X- bzw. in Y-Richtung
 *    fname    : File-Name
 *    hb[i][j]  : abzuspeicherdes Feld
-*    text     : Bezeichnung des Feldes
 *
 *   return =  Fehlernummer ierr
 *
@@ -20,8 +19,7 @@
 #include <stdio.h>
 #include "gwheader.h"
 
-int wegdat1d_( int nxmax, char fname[10],
-     double hb[NCNODEX+2], char text[10])
+int wegdat1d_( int nxmax, char* fname, double hb[NCNODEX+2],char *text)
 {
 	int i;
 	int ierr=0;
@@ -53,7 +51,6 @@ int wegdat1d_( int nxmax, char fname[10],
 *    nx   : Anzahl der Knoten in X- bzw. in Y-Richtung
 *    fname    : File-Name
 *    hb[i][j] : einzulesendes Feld
-*    text     : Bezeichnung des Feldes
 *
 *   return =  Fehlernummer ierr
 *
@@ -64,14 +61,9 @@ int wegdat1d_( int nxmax, char fname[10],
 #include "gwheader.h"
 #include <math.h>
 
-#ifdef __unix
-  extern "C"
-     int holdat1d_(int& nxmax,char* fname,double hb[NCNODEX+2],char*  text)
-#else
-     int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2],char*  text)
-#endif
+int holdat1d(int nxmax,char fname[10],double hb[NCNODEX+2])
 {
-	register i;
+	register int i;
 	int ierr=0;
         int ihb[NCNODEX+2];
 	FILE *input;
@@ -81,7 +73,7 @@ int wegdat1d_( int nxmax, char fname[10],
         printf("a datei nx faktor %s %d %d %g\n",fname, nxmax,NCNODEX, faktor );
 	input = fopen(fname,"r");
         fscanf(input, "%d %g", &nxx, &faktor );
-        printf("datei nx faktor %s %d %d %g\n",fname, nxmax,NCNODEX, faktor );
+        printf("datei nx faktor \n%s10\n %d %d %g\n",fname, nxmax,NCNODEX, faktor );
            for(i=0; i<= (nxmax)-1; i++)  {
 		    /* sum += fread(&h[i][j],sizeof(float),1,input);*/
               sum += fscanf(input," %d",&ihb[i] );

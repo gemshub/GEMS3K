@@ -31,22 +31,12 @@
 #define randinv 1.0/RAND_MAX
 double gasdev( int *idum);
 
-#ifdef __unix
-extern "C"
- void walk2_(int& npmax,int& nxmax,int& ncyc,double& along,double& aquer,double dm[NCNODEX+2]
-		   ,double& texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
-		   ,double partx[NCPMAX],double partxo[NCPMAX],double& xmaxr,double& xminr
-		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
-		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int& ibpstart,double x[NCNODEX]
-		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int& m1,int& m2)
-#else
  void walk2(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
 		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
 		   ,double partx[NCPMAX],double partxo[NCPMAX],double xmaxr,double xminr
 		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
 		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
 		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2)
-#endif
 {
 {
         double  slong,xlaenge, xxmin, xxmax;

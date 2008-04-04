@@ -48,14 +48,14 @@ c 	!DEC$ ATTRIBUTES REFERENCE :: itest
 	END INTERFACE
 
       INTERFACE
-	subroutine holdat1d (nxmax,fnamec,hb,textc)
+	subroutine holdat1d (nxmax,fname,hb)
 	!DEC$ ATTRIBUTES C :: holdat1d
       include 'gwheader.inc' 
-	real*8 hb(NNODEX+2)
-      integer nxmax 
-      character* (*) textc, fnamec
+	real*8 :: hb(NNODEX+2)
+        integer :: nxmax 
+        character(*) :: fname
 
- 	!DEC$ ATTRIBUTES REFERENCE :: textc, fnamec
+ 	!DEC$ ATTRIBUTES REFERENCE :: fname
 	END SUBROUTINE holdat1d
 	END INTERFACE
 
@@ -428,9 +428,9 @@ c  **************************
 c  read iche(nnodex) array used to have heterogeneous chemistry
 c  **************************
       fname= "iche01.dat"
-c	write(*,*) 'fname = ',fname
-      call holdat1d(nxmax,"iche01.dat",hb,text)
-c      call holdat1d(nxmax,fname,hb,text)
+	write(*,*) 'fname = ',fname,nxmax
+c      call holdat1d(nxmax,"iche01.dat",hb,text)
+      call holdat1d(%val(nxmax),fname // char(0),hb)
       do 1331 ih=1,nxmax
       iche(ih)=int(hb(ih))
       nodeTypes(ih) = iche(ih) ! 1
@@ -605,14 +605,14 @@ c03      if (ihydro.eq.1)then                             !if ihydro = 1
 
 c<<<<<<<140895      START HYDROLOGY
 c  input ir - array h0 - array  tt - array  s - array
-      call holdat1d(nxmax+2,"ir0001.dat",hb,text)
+      call holdat1d(%val(nxmax+2),"ir0001.dat" //char(0),hb)
       do 3330 ih=1,nxmax+1
 3330  ir(ih)=int(hb(ih))
       write(*,*)ir
 cpause	pause
-      call holdat1d(nxmax+2,"ss0001.dat",st,text)
+      call holdat1d(%val(nxmax+2),"ss0001.dat"//char(0),st)
       write(*,*)st
-	call holdat1d(nxmax+2,"por001.dat",por,text)
+	call holdat1d(%val(nxmax+2),"por001.dat"//char(0),por)
       write(*,*)por
 cpause	pause
 	do 3331 ih=1,nxmax+2
@@ -621,16 +621,16 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx(ih)= tx_null(ih)*por(ih)**3/(1.-por(ih))**2
  3331 continue 
-      call holdat1d(nxmax+2,"qr0001.dat",qr,text)
+      call holdat1d(%val(nxmax+2),"qr0001.dat"//char(0),qr)
       write(*,*)qr
 cpause	pause
-      call holdat1d(nxmax+2,"qn0001.dat",qw,text)
+      call holdat1d(%val(nxmax+2),"qn0001.dat"//char(0),qw)
        write(*,*)qw
 cpause	pause
-      call holdat1d(nxmax+2,"am0001.dat",am,text)
+      call holdat1d(%val(nxmax+2),"am0001.dat"//char(0),am)
       write(*,*)am
 cpause	pause
-      call holdat1d(nxmax+2,"h00001.dat",h0,text)
+      call holdat1d(%val(nxmax+2),"h00001.dat"//char(0),h0)
       write(*,*)h0
 cpause	pause
       do 3332 ih=1,nxmax+2
