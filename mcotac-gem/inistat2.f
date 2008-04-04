@@ -1169,7 +1169,7 @@ c       write(*,*)' loop 20 j=  zz=', j,zz
           if (nspezx.eq.2.and.dabs(re(j)).gt.1.e+32)then
        write(*,'(a4,1x,i2,1x,3(e10.4,1x),i2)')'re_b',
      * j,re(j),bn(j,nspezx),wconst(j)
-           pause
+c           pause
           endif
  
         if (m2.eq.0) go to 12

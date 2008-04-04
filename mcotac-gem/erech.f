@@ -89,7 +89,7 @@ c           write(*,*)'g for i= ',j,' >10'
            g=0.
          write(*,*)'ag lower 0 for i= ',j,(bn(iii,nspezx),
      * iii=1,m1)
-        pause
+c        pause
         endif
         acb(j,nspezx)=10.**(-g)
 

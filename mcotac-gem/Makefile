@@ -1,11 +1,12 @@
 CC = gcc
 CXX = g++
 FORT = gfortran-4.2
-CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins 
+CFLAGS = -c  -g  -pedantic -fno-nonansi-builtins -fbounds-check 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring
+CCFLAGS =   -c -g  -DIPMGEMPLUGIN -D__unix -fbounds-check 
+CCFLAGS1 =   -c -g  -DIPMGEMPLUGIN -D__unix -fbounds-check 
+FFLAGS = -c -g -fno-underscoring -fbounds-check 
+# FFLAGS = -c -g -O2 -fno-underscoring -fbounds-check 
 LINK = gfortran-4.2
 LFLAGS = -lstdc++
 EXEC = mcotacgem

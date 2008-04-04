@@ -6,135 +6,6 @@
 c      include 'f_gem_node.inc'
 
 
-#ifndef __unix
- 
-
-c
-c    cement diffusion 2003....
-
-
-      INTERFACE
-	subroutine inpar (itest,ncyc,nxmax,isteu,inma,
-     *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay,
-     *backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de)
-	!DEC$ ATTRIBUTES C :: inpar
-      include 'gwheader.inc' 
-	real*8 tmult [REFERENCE]
-	real*8 backg [REFERENCE]
-	real*8 rd [REFERENCE]
-	real*8 xlambda [REFERENCE]
-	real*8 aquer [REFERENCE]
-	real*8 along [REFERENCE]
-	real*8 vxx [REFERENCE]
-	real*8 dm0 [REFERENCE]
-	real*8 dtmax [REFERENCE]
-	real*8 dx(NNODEX+2)
-	real*8 de [REFERENCE]
-      integer itest [REFERENCE]
-	integer ncyc [REFERENCE]
-	integer ntim [REFERENCE]
-	integer nxmax [REFERENCE]
-	integer isteu [REFERENCE]
-	integer inma [REFERENCE]
-	integer ipfile [REFERENCE]
-	integer npkt [REFERENCE]
-	integer ismooth [REFERENCE]
-	integer i_sorb [REFERENCE]
-	integer j_sorb [REFERENCE]
-	integer j_decay [REFERENCE]
-      integer npin [REFERENCE]
-c 	!DEC$ ATTRIBUTES REFERENCE :: itest
-	END SUBROUTINE inpar
-	END INTERFACE
-
-      INTERFACE
-	subroutine holdat1d (nxmax,fname,hb)
-	!DEC$ ATTRIBUTES C :: holdat1d
-      include 'gwheader.inc' 
-	real*8 :: hb(NNODEX+2)
-        integer :: nxmax 
-        character(*) :: fname
-
- 	!DEC$ ATTRIBUTES REFERENCE :: fname
-	END SUBROUTINE holdat1d
-	END INTERFACE
-
-      INTERFACE
-	subroutine setpar (npmax,xmin,xmax,partx,nbox)
-	!DEC$ ATTRIBUTES C :: setpar
-      include 'gwheader.inc' 
-	real*8 xmin,xmax,partx(NUPMAX)
-      integer npmax ,nbox
- 	!DEC$ ATTRIBUTES REFERENCE :: partx
-	END SUBROUTINE setpar
-	END INTERFACE
-
-      INTERFACE
-	subroutine partid (npmax,nbox,xmin,xmax,partib,dx,partx)
-	!DEC$ ATTRIBUTES C :: partid
-      include 'gwheader.inc' 
-	real*8 xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
-      integer npmax ,nbox, partib(NNODEX)
-	END SUBROUTINE partid
-	END INTERFACE
-
-      INTERFACE
-	subroutine concver(npmax,nbox,dx,bn,cn,partib,partx,partic
-     *,ismooth,m1,m2)
-	!DEC$ ATTRIBUTES C :: concver
-      include 'gwheader.inc' 
-	real*8 xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
-	real*8 bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
-      real*8 partic(NCOMPL+NBASIS,NUPMAX)
-      integer npmax ,nbox, partib(NNODEX), ismooth, m1,m2
-	END SUBROUTINE concver
-	END INTERFACE
-
-      INTERFACE
-	subroutine concneu (npmax,nbox,nxmax,xminr,xmaxr,dx,bn,cn,partib,
-     *                    partx,partic,bo,co,ismooth,m1,m2)
-	!DEC$ ATTRIBUTES C :: concneu
-      include 'gwheader.inc' 
-	real*8 xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
-      real*8 partx(NUPMAX), dx(NNODEX+2),bo(NBASIS,NNODEX)
-      real*8 co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
-	integer nxmax,npmax ,nbox, partib(NNODEX), ismooth, m1,m2
-	END SUBROUTINE concneu
-	END INTERFACE
-
-      INTERFACE
-	subroutine hydro1d(nxmax,h0,hb,tx,am,st,por,ir,qw,qbil,text,vx,dx
-     *                    ,icyc,texe,time,fname)
-
-	!DEC$ ATTRIBUTES C :: hydro1d
-      include 'gwheader.inc' 
-	real*8 h0(NNODEX),hb(NNODEX),tx(NNODEX),am(NNODEX)
-	real*8 st(NNODEX),por(NNODEX),qw(NNODEX),qbil(NNODEX)
-      real*8 dx(NNODEX+2), vx(NNODEX+2),texe,time
-	integer nxmax, icyc, ir(NNODEX)
-	character*10 text, fname 
-	END SUBROUTINE hydro1d
-	END INTERFACE
-
-      INTERFACE
-	subroutine walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
-     *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
-     *,m2)
-
-	!DEC$ ATTRIBUTES C :: walk2
-      include 'gwheader.inc' 
-	real*8 xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
-      real*8 dx(NNODEX+2),bo(NBASIS,NNODEX)
-      real*8 co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
-	real*8 along, aquer, dm(nnodex+2),texe
-      real*8 vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
-	real*8 x(NNODEX)
-	integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
-	integer ibpstart
-	END SUBROUTINE walk2
-	END INTERFACE
-
-#endif
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c MAIN FORTRAN PROGRAM START IS HERE
 
@@ -170,7 +41,7 @@ c12345678901234567890123456789012345678901234567890123456789012345690
       integer ismooth,iortx(5), i_sorb,j_sorb,iche(nnodex+2),j_decay
      *,ialkali,icyc
       integer npin, s,ss
-	integer p_nICb  
+	integer p_nICb, p_nPHb  
       integer p_nDCb  
       real*4 t1,t2
       real*4 p_A_trans(17,7)          ! GEMS invert coeff.-matrix
@@ -677,13 +548,13 @@ c  first read is for boundary conditons node 1
 	write(*,*)'cto',c_to_i2
 	write(*,*)'nodetype',nodeTypes
 
-	pause "F_GEM_INIT"
+c	pause "F_GEM_INIT"
 
        nNodes= nxmax-1    !   1 
       call F_GEM_INIT( gems_in_ipmf )
       write(*,*)'nNodes =', nNodes
 
-	pause "F_GEM_INIT called"
+c	pause "F_GEM_INIT called"
 
       do 50 i=1,20
 	  chch(i)=char(CSTR(i))
@@ -700,13 +571,13 @@ c        if(igems_rw.eq.1)
       call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_A )
 
       write(*,*) 'gemsA', p_A
-	pause "F_GEM_GET_DCH nach A "
+c	pause "F_GEM_GET_DCH nach A "
 
       write(*,*) 'gemsread_dch.dat done'
 
 	p_A_trans = transpose (p_A)               !invert stoichiometric coeff. matrix
       write(*,*) 'gemsA', p_A_trans
-	pause "F_GEM_GET_DCH nach A_trans "
+c	pause "F_GEM_GET_DCH nach A_trans "
 
       
 cc2005      endif  ! igems_rw=0
@@ -730,18 +601,18 @@ c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto,
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone'
       write(*,*)iNode,p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-      pause
+c      pause
 
       write(*,*)'p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs'
       write(*,*)p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
-	pause
+c	pause
      *
       write(*,*)p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,
      *p_Tm
      *,p_dt,p_dt1,p_ot,p_Vt,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
      *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
      *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
-      pause
+c      pause
 
 c  here loop to read in additional geochmical systems to define other nodes....
 c      aa-initial-dbr-1.dat to aa-initial-dbr-50.dat and aa-boundary-dbr-0.dat are available)
@@ -775,7 +646,7 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
 c      write(*,*)(bn(ib,1),ib=1,m1)
 c      write(*,*)(cn(ic,1),ic=1,m2)
 c      write(*,*)(pn(ip,1),ip=1,m3)
-	pause "basis complex solids at n=1"
+c	pause "basis complex solids at n=1"
       endif
 
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
@@ -835,7 +706,7 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
 
 c      write(*,*)(cn(ic,2),ic=1,m2)
 c      write(*,*)(pn(ip,2),ip=1,m3)
-	pause "basis complex solids at n=2 to nxmax"
+c	pause "basis complex solids at n=2 to nxmax"
 
 cgems	stop
 
@@ -902,7 +773,9 @@ c	pause
 c      write(*,*)'npbox xmin xmax',nbox, xmin,xmax,xminr,xmaxr
 c       pause
 c   set particles in the grid
-      call setpar(npmax,xmin,xmax,partx,nbox)
+c      call setpar(npmax,xmin,xmax,partx,nbox)
+       call setpar(%val(npmax),%val(xmin),%val(xmax),%val(partx),
+     *             %val(nbox))
 c      do 1328 ip=1,npmax
 c      write(*,*)'i partx ',ip,partx(ip)
 c 1328 continue
@@ -1210,7 +1083,10 @@ c       pause 'time'
 c   assign concentration at time t to particles
 c   1. nuber of particles in each grid cell
 c      write (*,*) npmax, nbox,xmin,xmax
-      call partid(npmax, nbox,xmin,xmax,partib,dx,partx)
+c      call partid(npmax, nbox,xmin,xmax,partib,dx,partx)
+       call partid(%val(npmax),%val(nbox),%val(xmin),%val(xmax),
+     *            %val(partib),%val(dx),%val(partx))
+
 c      write(*,*)'partid hinter'
 
 c   2. "concentrations of species" assigned to particles 
@@ -1440,7 +1316,7 @@ c 1684 continue
 c        do 1683 jj=11,13                              !  gemsnDCb-gemsnPHb+1, gemsnDCb               
 cc   	  gemsxPH(ii)=gemsxDc(10+ii)            ! only one phse here       ! ( nPSb,nICb) ???
 cfalsch   	  p_xPH(ii)=p_xDc(13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-   	  p_xPH(ii)=p_xDc(p_nDCb-p_nPHb+ii)   !13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
+   	  p_xPH(ii)=p_xDc(p_nDCb-p_nPHb+ii)          !13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
 c        write(*,*)ii, gemsxPH(ii)
  1682 continue
 cgems      pause "XXXX"
