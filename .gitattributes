@@ -152,6 +152,7 @@ mcotac-gem/m_const.h -text
 mcotac-gem/m_param.h -text
 mcotac-gem/mainfromf.cpp -text
 mcotac-gem/mco_out.out -text
+mcotac-gem/mcotac.cpp -text
 mcotac-gem/mcotac1d.f -text
 mcotac-gem/mcotac_gems_11_2005.dsp -text
 mcotac-gem/mcotac_gems_11_2005.dsw -text

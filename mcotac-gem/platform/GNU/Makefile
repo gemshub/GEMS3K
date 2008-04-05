@@ -1,21 +1,21 @@
 CC = gcc
 CXX = g++
-FORT = gfortran-4.2
+FORT = gfortran
 CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring
-LINK = gfortran-4.2
+LINK = gfortran
 LFLAGS = -lstdc++
 EXEC = mcotacgem
 
-${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
+${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o f_gem_node.o ms_param.o num_methods.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac.o mcotac1d.o datio.o \
                  erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
@@ -45,6 +45,8 @@ wegdat1d_.o: wegdat1d_.c gwheader.h
 hydro1d_.o: hydro1d_.c  gwheader.h
 	$(CC)  $(CFLAGS)  hydro1d_.c
 
+mcotac.o: mcotac.cpp 
+	$(CXX)  $(CCFLAGS) mcotac.cpp
 gstring.o: gstring.cpp gstring.h \
 		array.h
 	$(CXX)  $(CCFLAGS) gstring.cpp

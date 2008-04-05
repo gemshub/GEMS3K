@@ -1,6 +1,6 @@
 
 
-      program mcotac1D
+      subroutine mcotac1D
       implicit double precision (a-h,o-z)
       include 'gwheader.inc'
 c      include 'f_gem_node.inc'
@@ -2006,7 +2006,7 @@ C end of file for breakthrough curves
 
     
 cpause	pause "ende"
-      stop
+      return
 c  *********************************************************************
 
       end
