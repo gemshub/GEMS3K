@@ -404,8 +404,8 @@ class TMulti
     void MargulesBinary( int jb, int je, int jpb, int jdb, int k );
     void MargulesTernary( int jb, int je, int jpb, int jdb, int k );
 // Generic solution model calls
-void SolModParPT ( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
-void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
+   void SolModParPT ( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
+   void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
 
 // ipm_main.cpp - numerical part of GEM-IPM2
     void MultiCalcMain( int rLoop );
