@@ -1,14 +1,14 @@
-CC = gcc
-CXX = gcc
-FORT = gfortran
-CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins -D__unix 
+CC = pgcc
+CXX = pgCC
+FORT = gf90
+CFLAGS = -c  -g -O2 -D__unix 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -D__unix -D__GNU
-LINK = gcc
+FFLAGS = -c -g -O2 -D__unix -D__GNU
+LINK = pgCC
 LFLAGS = -lstdc++ -lgfortran
-LIB = libgemipm2k.a
+LIB = libgemipm2k-pgi.a
 
 ${LIB}: gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
