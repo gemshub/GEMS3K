@@ -176,6 +176,7 @@ mcotac-gem/p_ibxd.dat -text
 mcotac-gem/p_ibxe.dat -text
 mcotac-gem/p_ibxf.dat -text
 mcotac-gem/platform/GNU/Makefile -text
+mcotac-gem/platform/INTEL/Makefile -text
 mcotac-gem/platform/PGI/Makefile -text
 mcotac-gem/platform/PGI/ipm_main.cpp -text
 mcotac-gem/platform/readme.1st -text

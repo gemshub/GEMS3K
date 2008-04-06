@@ -1,13 +1,13 @@
-CC = gcc
-CXX = g++
-FORT = gfortran
-CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins 
+CC = gcc-4.3
+CXX = gcc-4.3
+FORT = gfortran-4.3
+CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins -D__unix 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring
-LINK = gfortran
-LFLAGS = -lstdc++
+FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -D__unix -D__GNU
+LINK = gcc-4.3
+LFLAGS = -lstdc++ -lgfortran
 EXEC = mcotacgem
 
 ${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \

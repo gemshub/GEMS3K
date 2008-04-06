@@ -6,10 +6,98 @@
 c      include 'f_gem_node.inc'
 
 
+      INTERFACE
+        subroutine holdat1d (nxmax,fnamec,hb)
+        !DEC$ ATTRIBUTES C :: holdat1d
+      include 'gwheader.inc'
+        double precision hb(NNODEX+2)
+      integer nxmax
+      character* (*) fnamec
+
+        !DEC$ ATTRIBUTES REFERENCE :: textc, fnamec
+        END SUBROUTINE holdat1d
+        END INTERFACE
+
+      INTERFACE
+        subroutine setpar (npmax,xmin,xmax,partx,nbox)
+        !DEC$ ATTRIBUTES C :: setpar
+      include 'gwheader.inc'
+        double precision xmin,xmax,partx(NUPMAX)
+      integer npmax ,nbox
+        !DEC$ ATTRIBUTES REFERENCE :: partx
+        END SUBROUTINE setpar
+        END INTERFACE
+
+      INTERFACE
+        subroutine partid (npmax,nbox,xmin,xmax,partib,dx,partx)
+        !DEC$ ATTRIBUTES C :: partid
+      include 'gwheader.inc'
+        double precision xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
+      integer npmax ,nbox, partib(NNODEX)
+        END SUBROUTINE partid
+        END INTERFACE
+
+      INTERFACE
+        subroutine concver(npmax,nbox,dx,bn,cn,partib,partx,partic
+     *,ismooth,m1,m2)
+        !DEC$ ATTRIBUTES C :: concver
+      include 'gwheader.inc'
+        double precision xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
+        double precision bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      double precision partic(NCOMPL+NBASIS,NUPMAX)
+      integer npmax ,nbox, partib(NNODEX), ismooth, m1,m2
+        END SUBROUTINE concver
+        END INTERFACE
+
+      INTERFACE
+       subroutine concneu (npmax,nbox,nxmax,xminr,xmaxr,dx,bn,cn,partib,
+     *                    partx,partic,bo,co,ismooth,m1,m2)
+        !DEC$ ATTRIBUTES C :: concneu
+      include 'gwheader.inc'
+        double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      double precision partx(NUPMAX), dx(NNODEX+2),bo(NBASIS,NNODEX)
+      double precision co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+        integer nxmax,npmax ,nbox, partib(NNODEX), ismooth, m1,m2
+        END SUBROUTINE concneu
+        END INTERFACE
+
+      INTERFACE
+        subroutine hydro1d(nxmax,h0,hb,tx,am,st,por,ir,qw,qbil,text,vx
+     *                    ,dx,icyc,texe,time,fname)
+
+        !DEC$ ATTRIBUTES C :: hydro1d
+      include 'gwheader.inc'
+        double precision h0(NNODEX),hb(NNODEX),tx(NNODEX),am(NNODEX)
+        double precision st(NNODEX),por(NNODEX),qw(NNODEX),qbil(NNODEX)
+        double precision dx(NNODEX+2), vx(NNODEX+2),texe,time
+        integer nxmax, icyc, ir(NNODEX)
+        character*10 text, fname
+        END SUBROUTINE hydro1d
+        END INTERFACE
+
+      INTERFACE
+        subroutine walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
+     *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
+     *,m2)
+
+        !DEC$ ATTRIBUTES C :: walk2
+      include 'gwheader.inc'
+        double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      double precision dx(NNODEX+2),bo(NBASIS,NNODEX)
+      double precision co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+        double precision along, aquer, dm(nnodex+2),texe
+      double precision vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
+        double precision x(NNODEX)
+        integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
+        integer ibpstart
+        END SUBROUTINE walk2
+        END INTERFACE
+
+
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c MAIN FORTRAN PROGRAM START IS HERE
 
-      real*8 xxyy , xarray(10)
+      double precision xxyy , xarray(10)
 
 	INTEGER argc, iinn, i_gems, nNodes
 	integer CSTR(100)
@@ -43,60 +131,60 @@ c12345678901234567890123456789012345678901234567890123456789012345690
       integer npin, s,ss
 	integer p_nICb, p_nPHb  
       integer p_nDCb  
-      real*4 t1,t2
-      real*4 p_A_trans(17,7)          ! GEMS invert coeff.-matrix
-      real*4 p_A(7,17)          ! GEMS invert coeff.-matrix
-      real*8 p_T     !// Temperature T, K                        +      +      -     -
-      real*8 p_P     !// Pressure P, bar                         +      +      -     -
-      real*8 p_Vs    !// Volume V of reactive subsystem, cm3     -      -      +     +
-      real*8 p_Vi    !// Volume of inert subsystem  ?            +      -      -     +
-      real*8 p_Ms    !// Mass of reactive subsystem, kg          +      +      -     -
-      real*8 p_Mi    !// Mass of inert part, kg    ?             +      -      -     +
-      real*8 p_Gs    !// Gibbs energy of reactive subsystem (J)  -      -      +     +
-      real*8 p_Hs    !// Enthalpy of reactive subsystem (J)      -      -      +     +
-      real*8 p_Hi    !// Enthalpy of inert subsystem (J) ?       +      -      -     +
-      real*8 p_IC    !// Effective molal aq ionic strength           -      -      +     +
-      real*8 p_pH    !// pH of aqueous solution                      -      -      +     +
-      real*8 p_pe    !// pe of aqueous solution                      -      -      +     +
-      real*8 p_Eh    !// Eh of aqueous solution, V                   -      -      +     +
+      real t1,t2
+      real p_A_trans(17,7)          ! GEMS invert coeff.-matrix
+      real p_A(7,17)          ! GEMS invert coeff.-matrix
+      double precision p_T     !// Temperature T, K                        +      +      -     -
+      double precision p_P     !// Pressure P, bar                         +      +      -     -
+      double precision p_Vs    !// Volume V of reactive subsystem, cm3     -      -      +     +
+      double precision p_Vi    !// Volume of inert subsystem  ?            +      -      -     +
+      double precision p_Ms    !// Mass of reactive subsystem, kg          +      +      -     -
+      double precision p_Mi    !// Mass of inert part, kg    ?             +      -      -     +
+      double precision p_Gs    !// Gibbs energy of reactive subsystem (J)  -      -      +     +
+      double precision p_Hs    !// Enthalpy of reactive subsystem (J)      -      -      +     +
+      double precision p_Hi    !// Enthalpy of inert subsystem (J) ?       +      -      -     +
+      double precision p_IC    !// Effective molal aq ionic strength           -      -      +     +
+      double precision p_pH    !// pH of aqueous solution                      -      -      +     +
+      double precision p_pe    !// pe of aqueous solution                      -      -      +     +
+      double precision p_Eh    !// Eh of aqueous solution, V                   -      -      +     +
 c !//  FMT variables (units need dimensionsless form)
-      real*8 p_Tm    !// actual total simulation time
-      real*8 p_dt    !// actual time step
-      real*8 p_dt1   !// priveous time step
-      real*8 p_vp    !// output time control for postprocessing
-      real*8 p_Vt    !// total volume of node (voxel) = dx*dy*dz, m**3
-      real*8 p_eps   !// effective (actual) porosity normalized to 1
-      real*8 p_Km    !// actual permeability, m**2
-      real*8 p_Kf    !// actual DARCY`s constant, m**2/s
-      real*8 p_S	  !// specific storage coefficient, dimensionless
-      real*8 p_Tr    !// transmissivity m**2/s
-      real*8 p_h	  !  // actual hydraulic head (hydraulic potential), m
-      real*8 p_rho   !// actual carrier density for density driven flow, g/cm**3
-      real*8 p_al    !// specific longitudinal dispersivity of porous media, m
-      real*8 p_at    !// specific transversal dispersivity of porous media, m
-      real*8 p_av    !// specific vertical dispersivity of porous media, m
-      real*8 p_hDl   !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-      real*8 p_hDt   !// hydraulic transversal dispersivity, m**2/s
-      real*8 p_hDv   !// hydraulic vertical dispersivity, m**2/s
-      real*8 p_nto   !// node Peclet number, dimensionless
+      double precision p_Tm    !// actual total simulation time
+      double precision p_dt    !// actual time step
+      double precision p_dt1   !// priveous time step
+      double precision p_vp    !// output time control for postprocessing
+      double precision p_Vt    !// total volume of node (voxel) = dx*dy*dz, m**3
+      double precision p_eps   !// effective (actual) porosity normalized to 1
+      double precision p_Km    !// actual permeability, m**2
+      double precision p_Kf    !// actual DARCY`s constant, m**2/s
+      double precision p_S	  !// specific storage coefficient, dimensionless
+      double precision p_Tr    !// transmissivity m**2/s
+      double precision p_h	  !  // actual hydraulic head (hydraulic potential), m
+      double precision p_rho   !// actual carrier density for density driven flow, g/cm**3
+      double precision p_al    !// specific longitudinal dispersivity of porous media, m
+      double precision p_at    !// specific transversal dispersivity of porous media, m
+      double precision p_av    !// specific vertical dispersivity of porous media, m
+      double precision p_hDl   !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
+      double precision p_hDt   !// hydraulic transversal dispersivity, m**2/s
+      double precision p_hDv   !// hydraulic vertical dispersivity, m**2/s
+      double precision p_nto   !// node Peclet number, dimensionless
 c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      real*8  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      real*8  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-      real*8  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      real*8  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      real*8  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      real*8  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      real*8  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      real*8  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
-      real*8  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      real*8  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      real*8  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+      double precision  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+      double precision  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
+      double precision  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+      double precision  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+      double precision  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+      double precision  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+      double precision  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+      double precision  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+      double precision  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+      double precision  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+      double precision  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
 
 
-      real*8 xminr,xmaxr,de,xnaohmw,xnaohd,xkohmw,xkohd
+      double precision xminr,xmaxr,de,xnaohmw,xnaohd,xkohmw,xkohd,xmin
       character *79 title
       character *10 dumb,dumc,dump,input,dtdumb(nbasis),dtdumc(ncompl)
       character *10 tdumb(nbasis), dummy, text, fname
@@ -117,23 +205,23 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        real*8 amin(nsolid,nnodex),km(nsolid)
-        real*8 eab(nsolid,nbasis),eac(nsolid,ncompl)
-        real*8 kmp(nsolid)
-        real*8 eabp(nsolid,nbasis),eacp(nsolid,ncompl)
-        real*8 kmd(nsolid)
-        real*8 eabd(nsolid,nbasis),eacd(nsolid,ncompl)
-        real*8 fg(nsolid),omega(nsolid),catinh(nsolid)
-        real*8 ratem(nsolid),a(nsolid),b(nsolid)
-        real*8 ap(nsolid),ad(nsolid),bp(nsolid),bd(nsolid)
-        real*8 otherj(nbasis),otheri(ncompl)
-        real*8 dratemdc(nsolid,nbasis)
-        real*8 dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
-        real*8 rng(nsolid),volmol(nsolid),por(nnodex+2)
-        real*8 gespvfi(nsolid),gespvfb(nsolid)
+        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
+        double precision kmp(nsolid)
+        double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
+        double precision kmd(nsolid)
+        double precision eabd(nsolid,nbasis),eacd(nsolid,ncompl)
+        double precision fg(nsolid),omega(nsolid),catinh(nsolid)
+        double precision ratem(nsolid),a(nsolid),b(nsolid)
+        double precision ap(nsolid),ad(nsolid),bp(nsolid),bd(nsolid)
+        double precision otherj(nbasis),otheri(ncompl)
+        double precision dratemdc(nsolid,nbasis)
+        double precision dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
+        double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
+        double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        real*8 vout(nsolid,nnodex),rout(nsolid,nnodex)
-        real*8 wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
+        double precision wout(nsolid,nnodex)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
@@ -301,7 +389,11 @@ c  **************************
       fname= "iche01.dat"
 	write(*,*) 'fname = ',fname,nxmax
 c      call holdat1d(nxmax,"iche01.dat",hb,text)
+#ifdef __GNU
       call holdat1d(%val(nxmax),fname // char(0),hb)
+#else
+      call holdat1d(nxmax,fname // char(0),hb)
+#endif
       do 1331 ih=1,nxmax
       iche(ih)=int(hb(ih))
       nodeTypes(ih) = iche(ih) ! 1
@@ -476,14 +568,28 @@ c03      if (ihydro.eq.1)then                             !if ihydro = 1
 
 c<<<<<<<140895      START HYDROLOGY
 c  input ir - array h0 - array  tt - array  s - array
+#ifdef __GNU
       call holdat1d(%val(nxmax+2),"ir0001.dat" //char(0),hb)
+#else
+      call holdat1d(nxmax+2,"ir0001.dat" //char(0),hb)
+#endif
+
+
       do 3330 ih=1,nxmax+1
 3330  ir(ih)=int(hb(ih))
       write(*,*)ir
 cpause	pause
+#ifdef __GNU
       call holdat1d(%val(nxmax+2),"ss0001.dat"//char(0),st)
+#else
+      call holdat1d(nxmax+2,"ss0001.dat"//char(0),st)
+#endif
       write(*,*)st
+#ifdef __GNU
 	call holdat1d(%val(nxmax+2),"por001.dat"//char(0),por)
+#else
+	call holdat1d(nxmax+2,"por001.dat"//char(0),por)
+#endif
       write(*,*)por
 cpause	pause
 	do 3331 ih=1,nxmax+2
@@ -492,16 +598,32 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx(ih)= tx_null(ih)*por(ih)**3/(1.-por(ih))**2
  3331 continue 
+#ifdef __GNU
       call holdat1d(%val(nxmax+2),"qr0001.dat"//char(0),qr)
+#else
+      call holdat1d(nxmax+2,"qr0001.dat"//char(0),qr)
+#endif
       write(*,*)qr
 cpause	pause
+#ifdef __GNU
       call holdat1d(%val(nxmax+2),"qn0001.dat"//char(0),qw)
+#else
+      call holdat1d(nxmax+2,"qn0001.dat"//char(0),qw)
+#endif
        write(*,*)qw
 cpause	pause
+#ifdef __GNU
       call holdat1d(%val(nxmax+2),"am0001.dat"//char(0),am)
+#else
+      call holdat1d(nxmax+2,"am0001.dat"//char(0),am)
+#endif
       write(*,*)am
 cpause	pause
+#ifdef __GNU
       call holdat1d(%val(nxmax+2),"h00001.dat"//char(0),h0)
+#else
+      call holdat1d(nxmax+2,"h00001.dat"//char(0),h0)
+#endif
       write(*,*)h0
 cpause	pause
       do 3332 ih=1,nxmax+2
@@ -592,8 +714,9 @@ cc2005      endif  ! igems_rw=0
      *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
      *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
      *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-c     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
-c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto, 
+     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al
+     *,p_at
+     *,p_av,p_hDl,p_hDt,p_hDv,p_nto 
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
@@ -608,7 +731,7 @@ c      pause
 c	pause
      *
       write(*,*)p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,
-     *p_Tm
+     * p_Tm
      *,p_dt,p_dt1,p_ot,p_Vt,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
      *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
      *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
@@ -625,6 +748,8 @@ c     pn=
       do 1690 n=1,1
 	do 1691 ib=1,m1-1    !charge is last parameter in the lict of bn  24.01.2005 but not transported
 ccc	bn(ib,n)=gemsxDc(i_bcp_gemx(ib))         !2)
+        write(*,*) ' debug', i_bcp_gemx
+        write(*,*) ' debug', ib, i_bcp_gemx(ib)
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))         !2)
  1691 continue
 	do 1692 ic=1,m2
@@ -660,9 +785,9 @@ c  second read is for initial conditons nodes 2 to nxmax
 	call F_GEM_READ_NODE( gems_dbr_f2, p_NodeHandle,p_NodeTypeHY
      *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
      *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-c     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp
-c     *,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
-c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto,
+     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp
+     *,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
+     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
@@ -773,9 +898,13 @@ c	pause
 c      write(*,*)'npbox xmin xmax',nbox, xmin,xmax,xminr,xmaxr
 c       pause
 c   set particles in the grid
+#ifdef __GNU
+      write(*,*)'before setpar',npmax,xmin,xmax,nbox
+       call setpar(%val(npmax),%val(xmin),%val(xmax),partx,
+     *             %val(nbox))
+#else
       call setpar(npmax,xmin,xmax,partx,nbox)
-c       call setpar(%val(npmax),%val(xmin),%val(xmax),%val(partx),
-c     *             %val(nbox))
+#endif
 c      do 1328 ip=1,npmax
 c      write(*,*)'i partx ',ip,partx(ip)
 c 1328 continue
@@ -789,8 +918,13 @@ c>>>>>>>>>>>>>>>>>>>>> nov 2002
 
 c      write(*,*)'main  vor hydro'
       if (ihydro.eq.1)then
+#ifdef __GNU
       call hydro1d(nxmax,h0,hb,tx,am,st,
      *   por,ir,qw,qbil,text,vx,dx,icyc,texe,time,fname)
+#else
+      call hydro1d(nxmax,h0,hb,tx,am,st,
+     *   por,ir,qw,qbil,text,vx,dx,icyc,texe,time,fname)
+#endif
       write(*,*)'hb',hb
 cpause	pause
       write(*,*)'vx',vx
@@ -1083,15 +1217,23 @@ c       pause 'time'
 c   assign concentration at time t to particles
 c   1. nuber of particles in each grid cell
 c      write (*,*) npmax, nbox,xmin,xmax
+#ifdef __GNU
+       call partid(%val(npmax),%val(nbox),%val(xmin),%val(xmax),
+     *            partib,dx,partx)
+#else
       call partid(npmax, nbox,xmin,xmax,partib,dx,partx)
-c       call partid(%val(npmax),%val(nbox),%val(xmin),%val(xmax),
-c     *            %val(partib),%val(dx),%val(partx))
-
+#endif
 c      write(*,*)'partid hinter'
 
 c   2. "concentrations of species" assigned to particles 
+
+#ifdef __GNU
+      call concver(%val(npmax),%val(nbox),dx,bn,cn,partib,partx,partic,
+     * %val(ismooth) ,%val(m1),%val(m2))
+#else
       call concver(npmax,nbox,dx,bn,cn,partib,partx,partic,ismooth
      * ,m1,m2)
+#endif
 
 c       write(*,*)'conver'
 
@@ -1109,11 +1251,16 @@ c  ************************************************************
 c
 c   move particles during dt
 c      write (*,*) 'walk time:  treal texe', treal, texe
-
+#ifdef __GNU
+      call walk2(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
+     * %val(aquer),dm,%val(texe),dx,vx
+     *  ,partx,partxo, %val(xmaxr),%val(xminr),partic,bn,cn,partib,
+     *  ibpstart,x,bo,co,%val(m1),%val(m2))
+#else
       call walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
      *  ibpstart,x,bo,co,m1,m2)
-
+#endif
 c**assign concentrations at t+dt to grid  (including boundary conditions)
 c**particle in which nbox
 
@@ -1124,8 +1271,9 @@ c      write(*,'(6(e10.4,1x))')(bn(i,3),i=1,m1)
 c      write(*,'(6(e10.4,1x))')(bn(i,11),i=1,m1)
 c       pause
 c**new concentration in each box
-      call concneu(npmax,nbox,nxmax,xminr,xmaxr,dx,bn,cn,partib,partx,
-     *  partic,bo,co,ismooth,m1,m2)
+      call concneu(%val(npmax),%val(nbox),%val(nxmax),%val(xminr),
+     *  %val(xmaxr),dx,bn,cn,partib,partx,
+     *  partic,bo,co,%val(ismooth),%val(m1),%val(m2))
 
       write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
      *bn(1,1),pn(2,1),pn(3,1)
@@ -1367,7 +1515,7 @@ c     *,p_Vt,p_vp, p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
 c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
-c     *,p_dRes1
+     *,p_dRes1
      *)
 
 c      time_gemsend=RTC()

@@ -21,12 +21,12 @@
    void setpar(int npmax,double xmin,double xmax,double partx[50000],int nbox)
 {
         register int i ;
-        double xco/*, xx*/ ;
+        double xco /*, xx*/ ;
 
 
         xco= (xmax-xmin) / (double)(npmax) ; /*                (double) */
         partx[0] = xmin + xco/2.0;
-/*        printf("setpar nbox  npmax %d %d xco  %f  %f \n",*nbox,*npmax,xco,partx[0]);*/
+        printf("setpar npmax %i %e %e   %i \n",npmax,xmin,xmax,nbox);
         for (i=1; i<=npmax-1; i++)  {
                 partx[i] =partx[i-1] + xco;
         }
