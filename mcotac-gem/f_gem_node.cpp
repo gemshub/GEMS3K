@@ -93,25 +93,25 @@
    double &p_pe,    // pe of aqueous solution                      -      -      +     +
    double &p_Eh,    // Eh of aqueous solution, V                   -      -      +     +
 //  FMT variables (units need dimensionsless form)
-   double &p_Tm,    // actual total simulation time
-   double &p_dt,    // actual time step
-   double &p_dt1,   // priveous time step
-   double &p_Vt,    // total volume of node (voxel) = dx*dy*dz, m**3
-   double &p_vp,	// advection velocity (in pores) in this node
-   double &p_eps,   // effective (actual) porosity normalized to 1
-   double &p_Km,    // actual permeability, m**2
-   double &p_Kf,    // actual DARCY`s constant, m**2/s
-   double &p_S,	    // specific storage coefficient, dimensionless
-   double &p_Tr,    // transmissivity m**2/s
-   double &p_h,	    // actual hydraulic head (hydraulic potential), m
-   double &p_rho,   // actual carrier density for density driven flow, g/cm**3
-   double &p_al,    // specific longitudinal dispersivity of porous media, m
-   double &p_at,    // specific transversal dispersivity of porous media, m
-   double &p_av,    // specific vertical dispersivity of porous media, m
-   double &p_hDl,   // hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-   double &p_hDt,   // hydraulic transversal dispersivity, m**2/s
-   double &p_hDv,   // hydraulic vertical dispersivity, m**2/s
-   double &p_nto,   // tortuosity factor
+//   double &p_Tm,    // actual total simulation time
+//   double &p_dt,    // actual time step
+//   double &p_dt1,   // priveous time step
+//   double &p_Vt,    // total volume of node (voxel) = dx*dy*dz, m**3
+//   double &p_vp,	// advection velocity (in pores) in this node
+//   double &p_eps,   // effective (actual) porosity normalized to 1
+//   double &p_Km,    // actual permeability, m**2
+//   double &p_Kf,    // actual DARCY`s constant, m**2/s
+//   double &p_S,	    // specific storage coefficient, dimensionless
+//   double &p_Tr,    // transmissivity m**2/s
+//   double &p_h,	    // actual hydraulic head (hydraulic potential), m
+//   double &p_rho,   // actual carrier density for density driven flow, g/cm**3
+//   double &p_al,    // specific longitudinal dispersivity of porous media, m
+//   double &p_at,    // specific transversal dispersivity of porous media, m
+//   double &p_av,    // specific vertical dispersivity of porous media, m
+//   double &p_hDl,   // hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
+//   double &p_hDt,   // hydraulic transversal dispersivity, m**2/s
+//   double &p_hDv,   // hydraulic vertical dispersivity, m**2/s
+//   double &p_nto,   // tortuosity factor
 // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 // exchange of values occurs through lists of indices, e.g. xDC, xPH
    double  *p_bIC,  // bulk mole amounts of IC[nICb]                +      +      -     -
@@ -247,6 +247,7 @@
  )
 {
   int iRet = 0;
+  bool uPrimalSol = true;
 
   short NodeHandle, NodeStatusCH, IterDone;
 
@@ -261,7 +262,7 @@
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH );
 
  // Calling GEMIPM calculation
-   iRet = TNode::na->GEM_run(1);
+   iRet = TNode::na->GEM_run(uPrimalSol);
    if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_PIA ) )
    {
 	  return 1;
