@@ -1,22 +1,23 @@
-CC = gcc
-CXX = gcc
-FORT = gfortran
-CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic -fno-nonansi-builtins -D__unix 
+CC = pgcc
+CXX = pgCC
+FORT = pgf90
+CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU
-LINK = gcc
-LFLAGS = -lstdc++ -lgfortran
+CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
+CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
+FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU -D__PGI -Mnosecond_underscore -Mpreprocess
+LINK = pgCC
+LFLAGS = 
+LIBS = -lstdc++ -lpgf90 -lpgf90_rpm1 -lpgf902 -lpgf90rtl -lpgftnrtl 
 GEMINCLUDE = /home5/kosakowski/mcotac-gem/GEMIPM2K
-GEMLIB     = /home5/kosakowski/mcotac-gem/GEMIPM2K
-EXEC = mcotacgem-gnu
+GEMLIB     = -L/home5/kosakowski/mcotac-gem/GEMIPM2K -lgemipm2k-pgi
+EXEC = mcotacgem-pgi
 
 ${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        f_gem_node.o
        
 	${LINK} -o ${EXEC}  ${LFLAGS} mcotac.o mcotac1d.o datio.o \
-                 erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o -L${GEMLIB} -lgemipm2k
+          erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o ${GEMLIB} ${LIBS}
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
 	cp mcotac1d.f mcotac1d.fpp
@@ -44,6 +45,7 @@ hydro1d_.o: hydro1d_.c  gwheader.h
 
 mcotac.o: mcotac.cpp 
 	$(CXX)  $(CCFLAGS) mcotac.cpp
+
 f_gem_node.o: f_gem_node.cpp ../GEMIPM2K/node.h \
 		../GEMIPM2K/m_param.h \
 		../GEMIPM2K/datach.h \
