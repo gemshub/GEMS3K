@@ -61,7 +61,11 @@ int wegdat1d_( int nxmax, char* fname, double hb[NCNODEX+2],char *text)
 #include "gwheader.h"
 #include <math.h>
 
+#ifdef __PGI
+int holdat1d_(int nxmax,char* fname,double hb[NCNODEX+2])
+#else
 int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2])
+#endif
 {
 	register int i;
 	int ierr=0;
