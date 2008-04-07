@@ -149,7 +149,6 @@ mcotac-gem/input_1.dat -text
 mcotac-gem/ir0001.dat -text
 mcotac-gem/iter_array.grd -text
 mcotac-gem/kinetics.inc -text
-mcotac-gem/mco_out.out -text
 mcotac-gem/mcotac.cpp -text
 mcotac-gem/mcotac1d.f -text
 mcotac-gem/mcotac_gems_11_2005.dsp -text
