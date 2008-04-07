@@ -19,7 +19,7 @@ lambt0  : 0.0
 along   : .0067
 vxx     : 9.37e-6
 dm      : 0.3e-10
-dtmax   : 400.
+dtmax   : 100.
 ismooth : 1
 i_sorb  : 0
 j_sorb  : 0

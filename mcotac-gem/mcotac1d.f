@@ -293,6 +293,8 @@ ccc init itimestep_tp
       itimestep_tp=0
 c    init k1
       k1=1
+c     dtprstep needs to be initialized
+      dtprstep = 0
 
       i_gems=1	                 ! =0  no GEMS calculation   =1 GEMS calculation
       igems_rw=0               ! =1  read/write gems IO old performed
@@ -1929,8 +1931,6 @@ c        delt=deltn
         k1=k1+1
         itprint=1
       endif
-c     dtprstep needs to be initialized
-      dtprstep = 0
       if(kmax.gt.k1.and.k1.eq.1)dtprstep=tprint(k1)/10.                     !windows compiler tprint(0) - array limit
       if(kmax.gt.k1.and.k1.gt.1)dtprstep=(tprint(k1)-tprint(k1-1))/10.
 
@@ -2266,3 +2266,38 @@ c      pause
       
 
 
+c*==========================================================================*
+c
+c                            Unterprogramm: holdat1df
+c               Lesen eines Feldes aus Datei Fname.dat
+c
+c
+c    nx, ny   : Anzahl der Knoten in X- bzw. in Y-Richtung
+c    fname    : File-Name
+c    hb[i][j] : einzulesendes Feld
+c    text     : Bezeichnung des Feldes
+c
+c   return =  Fehlernummer ierr
+c
+c    07.12.01
+c===========================================================================*/
+
+      subroutine holdat1df(nxmax,cname,hb,text)
+       include 'gwheader.inc'
+
+        real*8 hb(NNODEx+2)
+        integer nxmax,nymax,ihb(NNODEx+2)
+        character*10 text,  cname
+
+        open(31, file=cname)
+        read (31, *)nxmaxx,faktor
+        write(*,*)'hol nx  faktor', nxmax,faktor, cname
+         read(31, 1010)(ihb(i),i=1,nxmax)
+   10   continue
+ 1010   format (83i4)
+        do 20, i=1,nxmax
+        hb(i)= faktor*ihb(i)
+ 20     continue
+        close (31)
+        return
+        end
