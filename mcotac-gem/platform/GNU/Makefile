@@ -8,8 +8,8 @@ CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU
 LINK = gcc-4.3
 LFLAGS = -lstdc++ -lgfortran
-GEMINCLUDE = ../GEMIPM2K
-GEMLIB     = ../GEMIPM2K
+GEMINCLUDE = ./GEMIPM2K
+GEMLIB     = ./GEMIPM2K
 EXEC = mcotacgem-gnu
 
 ${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
@@ -44,17 +44,17 @@ hydro1d_.o: hydro1d_.c  gwheader.h
 
 mcotac.o: mcotac.cpp 
 	$(CXX)  $(CCFLAGS) mcotac.cpp
-f_gem_node.o: f_gem_node.cpp ../GEMIPM2K/node.h \
-		../GEMIPM2K/m_param.h \
-		../GEMIPM2K/datach.h \
-		../GEMIPM2K/databr.h \
-		../GEMIPM2K/gdatastream.h \
-		../GEMIPM2K/ms_multi.h \
-		../GEMIPM2K/verror.h \
-		../GEMIPM2K/gstring.h \
-		../GEMIPM2K/array.h \
-		../GEMIPM2K/m_const.h \
-		../GEMIPM2K/v_user.h
+f_gem_node.o: f_gem_node.cpp ${GEMINCLUDE}/node.h \
+		${GEMINCLUDE}/m_param.h \
+		${GEMINCLUDE}/datach.h \
+		${GEMINCLUDE}/databr.h \
+		${GEMINCLUDE}/gdatastream.h \
+		${GEMINCLUDE}/ms_multi.h \
+		${GEMINCLUDE}/verror.h \
+		${GEMINCLUDE}/gstring.h \
+		${GEMINCLUDE}/array.h \
+		${GEMINCLUDE}/m_const.h \
+		${GEMINCLUDE}/v_user.h
 	$(CXX)  $(CCFLAGS1) -I${GEMINCLUDE}  f_gem_node.cpp
 
 #gwheader.h: gwheader.h
