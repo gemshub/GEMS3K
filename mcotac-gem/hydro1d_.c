@@ -31,11 +31,19 @@ double info( int nxmax, int iter, double time,
 int wegdat1d_( int nxmax, char fname[10],
     double hb[NCNODEX+2], char text[10]);
 
+#ifdef __PGI
+ double hydro1d_(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCNODEX+2],
+			  double am[NCNODEX+2],double st[NCNODEX+2],double por[NCNODEX+2],int	ir[NCNODEX+2]
+			  ,double qw[NCNODEX+2],double qbil[NCNODEX+2],char text,double vx[NCNODEX+2]
+			  ,double dx[NCNODEX+2],int icyc,double texe,double time,
+              char fname)
+#else
  double hydro1d(int nxmax,double h0[NCNODEX+2],double hb[NCNODEX+2],double tx[NCNODEX+2],
 			  double am[NCNODEX+2],double st[NCNODEX+2],double por[NCNODEX+2],int	ir[NCNODEX+2]
 			  ,double qw[NCNODEX+2],double qbil[NCNODEX+2],char text,double vx[NCNODEX+2]
 			  ,double dx[NCNODEX+2],int icyc,double texe,double time,
               char fname)
+#endif
   {
 	double anfkt=1.0, fehler=1. , re=1.6 ,er=1.e-6;
 

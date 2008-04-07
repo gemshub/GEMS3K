@@ -102,7 +102,8 @@ c MAIN FORTRAN PROGRAM START IS HERE
 	INTEGER argc, iinn, i_gems, nNodes
 	integer CSTR(100)
 	integer c_to_i(100)
-	integer itergemstime(80,51)    ! array for output of iterations done per node during every time step
+c kg44 itergemstime only needed for debug
+c	integer itergemstime(250,51)    ! array for output of iterations done per node during every time step
       integer nodeTypes(51)
 c for F_GEM_CALC_NODE      
 	integer iNodeF
@@ -131,6 +132,7 @@ c12345678901234567890123456789012345678901234567890123456789012345690
       integer npin, s,ss
 	integer p_nICb, p_nPHb  
       integer p_nDCb  
+      integer itimestep_tp, dtprstep, k1
       real t1,t2
       real p_A_trans(17,7)          ! GEMS invert coeff.-matrix
       real p_A(7,17)          ! GEMS invert coeff.-matrix
@@ -287,7 +289,10 @@ c<<<<<<  system time initialisation for CPU consumption purposes
       time_initial=secnds(0.)
       write(*,*)time_initial
 c      pause "initial time"
-
+ccc init itimestep_tp
+      itimestep_tp=0
+c    init k1
+      k1=1
 
       i_gems=1	                 ! =0  no GEMS calculation   =1 GEMS calculation
       igems_rw=0               ! =1  read/write gems IO old performed
@@ -869,6 +874,9 @@ cpause         pause
 
 c   set grid and subgrid
       x(1)=0.-dx(1)
+c init ix and iy
+      ix=0
+      iy=0
 c      uabs= abs(vx(1,1))
       do 1320 ix=2,nxmax
        x(ix)=x(ix-1)+dx(ix)
@@ -919,8 +927,9 @@ c>>>>>>>>>>>>>>>>>>>>> nov 2002
 c      write(*,*)'main  vor hydro'
       if (ihydro.eq.1)then
 #ifdef __GNU
-      call hydro1d(nxmax,h0,hb,tx,am,st,
-     *   por,ir,qw,qbil,text,vx,dx,icyc,texe,time,fname)
+      call hydro1d(%val(nxmax),h0,hb,tx,am,st,
+     *   por,ir,qw,qbil,text,vx,dx,
+     *   %val(icyc),%val(texe),%val(time),fname)
 #else
       call hydro1d(nxmax,h0,hb,tx,am,st,
      *   por,ir,qw,qbil,text,vx,dx,icyc,texe,time,fname)
@@ -965,7 +974,8 @@ c <<<<< nov 2002
 c***  input of concentration arrays at a certain time 
       write(*,*)'do you want to start calculation at a certain time?'
       write(*,*)'(Y/N)'
-cpause      read(*,*)ssw
+c        pause      
+       read(*,*)ssw
       if(ssw.eq.'y'.or.ssw.eq.'Y')then
         write(*,*)'give: filename by number of tprint(k1)'
         read(*,*)k1
@@ -1103,9 +1113,14 @@ c2002      write(*,*)'tx ',ih,tx(ih),por(ih),poro(ih)
  3432  continue
 c       pause
        icyc=icyc+1
+#ifdef __GNU
+       call hydro1d(%val(nxmax),h0,hb,tx,am,st,
+     *   por,ir,qw,qbil,text,vx,dx,
+     *   %val(icyc),%val(texe),%val(time),fname)
+#else
        call hydro1d(nxmax,h0,hb,tx,am,st,
      *   por,ir,qw,qbil,text,vx,dx,icyc,texe,time,fname)
-
+#endif
 c       write(*,*)'nach hydro',icyc
       endif                                     ! endif ihydro=1
 
@@ -1250,12 +1265,12 @@ c  calculate new values of conc. and temp. as functions of time
 c  ************************************************************
 c
 c   move particles during dt
-c      write (*,*) 'walk time:  treal texe', treal, texe
+      write (*,*) 'walk time:  treal texe', treal, texe
 #ifdef __GNU
       call walk2(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
      * %val(aquer),dm,%val(texe),dx,vx
      *  ,partx,partxo, %val(xmaxr),%val(xminr),partic,bn,cn,partib,
-     *  ibpstart,x,bo,co,%val(m1),%val(m2))
+     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2))
 #else
       call walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
@@ -1271,14 +1286,25 @@ c      write(*,'(6(e10.4,1x))')(bn(i,3),i=1,m1)
 c      write(*,'(6(e10.4,1x))')(bn(i,11),i=1,m1)
 c       pause
 c**new concentration in each box
+#ifdef __GNU
       call concneu(%val(npmax),%val(nbox),%val(nxmax),%val(xminr),
      *  %val(xmaxr),dx,bn,cn,partib,partx,
      *  partic,bo,co,%val(ismooth),%val(m1),%val(m2))
-
-      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
+#else
+      call concneu(npmax,nbox,nxmax,xminr,
+     *  xmaxr,dx,bn,cn,partib,partx,
+     *  partic,bo,co,ismooth,m1,m2)
+#endif
+c kg44 changed output format
+      write(*,*)'cneu',itimestep_tp,
      *bn(1,1),pn(2,1),pn(3,1)
-      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
+      write(*,*)'cneu',itimestep_tp,
      *bn(1,2),pn(2,2),pn(3,2)
+
+c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
+c     *bn(1,1),pn(2,1),pn(3,1)
+c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
+c     *bn(1,2),pn(2,2),pn(3,2)
 
 
 
@@ -1501,7 +1527,7 @@ cc	do 1411 nspez=2,nxmax-1
 
 	iNode=  n
       p_NodeHandle=  n
-      p_NodeStatusCH= 5    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusCH= 1    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
@@ -1515,7 +1541,7 @@ c     *,p_Vt,p_vp, p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
 c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
-     *,p_dRes1
+c     *,p_dRes1
      *)
 
 c      time_gemsend=RTC()
@@ -1554,7 +1580,9 @@ c      do 1695 n=2,nxmax
 	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
       endif
 
-      itergemstime(itimestep_tp,n)=p_IterDone
+c kg44 only needed for debug
+c      itergemstime(itimestep_tp,n)=p_IterDone
+
 c      write(*,*)itimestep_tp,n,itergemstime(itimestep_tp,n),p_IterDone
 c	pause
 	p_IterDone=0
@@ -1900,7 +1928,8 @@ c        delt=deltn
         k1=k1+1
         itprint=1
       endif
-
+c     dtprstep needs to be initialized
+      dtprstep = 0
       if(kmax.gt.k1.and.k1.eq.1)dtprstep=tprint(k1)/10.                     !windows compiler tprint(0) - array limit
       if(kmax.gt.k1.and.k1.gt.1)dtprstep=(tprint(k1)-tprint(k1-1))/10.
 
@@ -1909,15 +1938,18 @@ c      if(kmax.gt.k1.and.k1.gt.1)
 c     * write(*,*)'k1= ',k1,'dt pr-step= ',dtprstep,texe
 c     *,tprint(k1),tprint(k1-1)
 c      write(*,*)'k1= ',k1,'dt pr-step= ',dtprstep,texe
-       if(k1.gt.1.and.(time.gt.(tprint(k1-1)+itprint*dtprstep)
-     *.or.time.eq.tprint(k1-1)))then
+
+c kg44 ----------------this are two very long if ....
+       if(k1.gt.1) then
+        if (time.gt.(tprint(k1-1)+itprint*dtprstep)
+     *.or.time.eq.tprint(k1-1))then
 c      if(treal.gt.0.)then
            itprint=itprint+1
 
            ttt=time/1.
            tty=treal/31557600.
          write(*,'(a6,2(e10.2,a6,2x), 2x,a7,i10)')
-     *   'time= ',treal,' [sec]',tty,'  [yr]', 'icyle= ',icyc
+     *   'time= ',treal,' [sec]',tty,'  [yr]', 'iccyle= ',icyc
          write(*,'(a14,1x,10(e10.4,1x))')
      *   'solids iort(1)',(pn(ii,iortx(1)),ii=1,m3),cs(iortx(1)),
      *    (eqconst(ii,iortx(1)),ii=1,m3)
@@ -1947,6 +1979,7 @@ c      write(*,*)i,j_k,i_sorb+2,s(j_k,i),cn(i,iortx(1)),tot_K
        if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(1))
   775 continue
        endif
+c---------------------------------------------------------- 
        tot_Ca=bn(1,iortx(1))+s(1,1)*cn(1,iortx(1))
          write(10,2300)treal
      *               ,(bn(ii,iortx(1)),ii=1,m1)
@@ -1982,6 +2015,7 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(2))*cn(lnhc,iortx(2)))
        if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(2))
   776 continue
       endif
+
        tot_Ca=bn(1,iortx(2))+s(1,1)*cn(1,iortx(2))
         write(11,2300)treal
      *               ,(bn(ii,iortx(2)),ii=1,m1)
@@ -2017,6 +2051,7 @@ c0-4      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(3))*cn(lnhc,iortx(3)))
        if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(3))
   777 continue
       endif
+
        tot_Ca=bn(1,iortx(3))+s(1,1)*cn(1,iortx(3))
         write(12,2300)treal
      *               ,(bn(ii,iortx(3)),ii=1,m1)
@@ -2052,6 +2087,7 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(4))*cn(lnhc,iortx(4)))
        if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(4))
   778 continue
       endif
+
        tot_Ca=bn(1,iortx(4))+s(1,1)*cn(1,iortx(4))
         write(13,2300)treal
      *               ,(bn(ii,iortx(4)),ii=1,m1)
@@ -2087,6 +2123,7 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(5))*cn(lnhc,iortx(5)))
        if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(5))
   779 continue
       endif
+
        tot_Ca=bn(1,iortx(5))+s(1,1)*cn(1,iortx(5))
         write(14,2300)treal
      *               ,(bn(ii,iortx(5)),ii=1,m1)
@@ -2102,8 +2139,9 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(5))*cn(lnhc,iortx(5)))
      *               ,dqwater(iortx(5))
      *               ,(sumbcflowt(ii,iortx(5)),ii=1,m1)
  2300    format(70(1x,e10.3))
+c kg44  here the two very long if are finished... 
       endif
-
+      endif  
 
 c  *********************************************************
 c  write out the species concentrations
@@ -2140,15 +2178,16 @@ C end of file for breakthrough curves
       write(*,*) 'time used during GEMS write = ',time_gemswritetotal
       write(*,*) 'time used during MCOTAC-chem-calc=',time_initreadtotal
 
-      open (25, file = "iter_array.grd")
-	write(25,'(A4)')"DSAA"
-	write(25,'(2(i2,1x))')80,  51 ! grid dimension
-	write(25,'(2(i2,1x))')1,80    ! xmin xmax
-	write(25,'(2(i2,1x))')1,51   ! ymin ymax
-	write(25,'(2(i3,1x))')0,200   ! zin zmax
-	do 2408 n=51,1,-1
-2408	write(25,'(80(i3,1x))')(itergemstime(it,n),it=1,80)
-      close (25)
+c kg44 this is not needed..only for debug
+c      open (25, file = "iter_array.grd")
+c	write(25,'(A4)')"DSAA"
+c	write(25,'(2(i2,1x))')80,  51 ! grid dimension
+c	write(25,'(2(i2,1x))')1,80    ! xmin xmax
+c	write(25,'(2(i2,1x))')1,51   ! ymin ymax
+c	write(25,'(2(i3,1x))')0,200   ! zin zmax
+c	do 2408 n=51,1,-1
+c2408	write(25,'(80(i3,1x))')(itergemstime(it,n),it=1,80)
+c      close (25)
 
       if(i_output.eq.1) close(35)
 

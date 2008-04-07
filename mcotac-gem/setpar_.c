@@ -55,11 +55,11 @@
 #include "gwheader.h"
 
 #ifdef __PGI
-   void partid_( long npmax, int nbox, double xmin, double xmax,
+   void partid_( int npmax, int nbox, double xmin, double xmax,
 	                        int partib[51], double dx[51+2], double partx[50000])
 
 #else
-   void partid( long npmax, int nbox, double xmin, double xmax,
+   void partid( int npmax, int nbox, double xmin, double xmax,
 	                        int partib[51], double dx[51+2], double partx[50000])
 
 #endif
@@ -107,11 +107,11 @@
 #include "gwheader.h"
 
 #ifdef __PGI
- void concver_(long npmax,int nbox,double dx[51+2],double bn[51][10],
+ void concver_(int npmax,int nbox,double dx[51+2],double bn[51][10],
 			 double cn[51][25],int partib[51],double partx[50000],
 			 double partic[10+25][50000],int ismooth,int m1,int m2)
 #else
- void concver(long npmax,int nbox,double dx[51+2],double bn[51][10],
+ void concver(int npmax,int nbox,double dx[51+2],double bn[51][10],
 			 double cn[51][25],int partib[51],double partx[50000],
 			 double partic[10+25][50000],int ismooth,int m1,int m2)
 #endif

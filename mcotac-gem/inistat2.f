@@ -412,6 +412,8 @@ c
 c04      common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 
 c      istatic=istatic+1
+c   initialize istaticnxmax
+      istaticnxmax=0
       write(*,*)'subroutine static aufgerufen',istaticnxmax, i_sorb,
      *ialkali
 
