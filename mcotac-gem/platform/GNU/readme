@@ -1,0 +1,6 @@
+1. Copy Makefile.lib to ../../GEMIPM2K, cd there and run
+   make -f Makefile.lib to produce gemipm2klib.a file
+
+2. cd .. and run
+   make
+   

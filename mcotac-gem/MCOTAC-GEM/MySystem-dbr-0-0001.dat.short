@@ -1,0 +1,14 @@
+<NodeHandle>     1
+<NodeTypeHY>     0
+<NodeTypeMT>     0
+<NodeStatusFMT>  1
+<NodeStatusCH>   1
+<IterDone>       38
+
+<TC>   25
+<P>    1
+<bIC>
+#  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+0.000331 0.000331 2e-07 110.6836964 1e-07 55.3428612 0 
+
+# End of file

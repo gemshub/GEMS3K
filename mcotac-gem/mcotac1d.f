@@ -303,8 +303,8 @@ c    init k1
 c   From GEMS INTEGRATION
 c   these files are necessary for GEMS command line execution to start running
       gems_in_ipmf ="MCOTAC-GEM/MySystem-dat.lst" ! list file including nodes' chemical systems
-      gems_dbr_f1="MCOTAC-GEM/MySystem-dbr-0007.dat"    ! chemical system at the boundary
-	gems_dbr_f2="MCOTAC-GEM/MySystem-dbr-0008.dat"    
+      gems_dbr_f1="MCOTAC-GEM/MySystem-dbr-0-0000.dat"    ! chemical system at the boundary
+      gems_dbr_f2="MCOTAC-GEM/MySystem-dbr-0-0001.dat"    
 
 	k1=1                    !time cycle counter
 
@@ -660,7 +660,7 @@ c  first read is for boundary conditons node 1
       write(*,*)gems_dbr_f1
       write(*,*)gems_dbr_f2
 
-      write (*,*)'FORTRAN dedined in C++ argc', argc
+      write (*,*)'FORTRAN defined in C++ argc', argc
       write (*,*)'FORTRAN integer        iinn', iinn
       write (*,*)'FORTRAN double         xxyy', xxyy
 	write (*,*)'FORTRAN char*10   FNAME10  ', fname10
@@ -1441,7 +1441,7 @@ c  then new xDC tarsnfereed to 'bIC' total idepandent masses
 
 1558  CONTINUE ! NO TRANSPORT DONE BEFORE 
 
-c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
+c  <<<<<<<   transfer of GEMS nomenclature to MCOTAC naming
 c	do 1699 ib=1,m1
 	if (i_gems. eq. 1) then     ! goto 1557
 	do 1555 n=2,  nxmax-1                  !node loop for GEMS after Transport step
@@ -1508,7 +1508,8 @@ c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
 
 
 cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
-      p_NodeStatusCH =1    ! need GEMS AIA  ??
+      p_NodeStatusCH =1    ! need GEMS AIA  
+c      p_NodeStatusCH = 5    ! uses PIA (Smart Initial Approximation) to accelerate calculatios
 c   array boundaries  * gemsnDCb,gemsnPHb,gemsnPSb,gemsnICb
 c                       gemsA(MaxDCN,MaxICN) 
 c      write(*,*)n,(gemsbIC(ib),ib=1,gemsnICb)

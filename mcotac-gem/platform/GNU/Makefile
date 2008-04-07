@@ -1,5 +1,5 @@
 CC = gcc-4.3
-CXX = gcc-4.3
+CXX = g++-4.3
 FORT = gfortran-4.3
 CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic -fno-nonansi-builtins -D__unix 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
@@ -8,8 +8,8 @@ CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU
 LINK = gcc-4.3
 LFLAGS = -lstdc++ -lgfortran
-GEMINCLUDE = /home/kosakowski/SOFT/GEMS/trunk/GEMIPM2K
-GEMLIB     = /home/kosakowski/SOFT/GEMS/trunk/GEMIPM2K
+GEMINCLUDE = ../GEMIPM2K
+GEMLIB     = ../GEMIPM2K
 EXEC = mcotacgem-gnu
 
 ${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
@@ -63,4 +63,4 @@ f_gem_node.o: f_gem_node.cpp ../GEMIPM2K/node.h \
 #kinetics.inc: kinetics.inc
 
 clean: 
-	rm -f *.o *.ti
+	rm -f *.o *.ti *.fpp
