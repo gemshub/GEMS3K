@@ -1,19 +1,20 @@
-CC = gcc
-CXX = gcc
-FORT = gfortran
+CC = gcc-4.3
+CXX = gcc-4.3
+FORT = gfortran-4.3
 CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins -D__unix 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -D__unix -D__GNU
-LINK = gcc
+LINK = gcc-4.3
 LFLAGS = -lstdc++ -lgfortran
 LIB = libgemipm2k.a
 
-${LIB}: gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
+${LIB}:  gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
-       
+# mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o 
+             
 	ar -rvs ${LIB} gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
@@ -147,7 +148,6 @@ io_arrays.o: io_arrays.cpp io_arrays.h \
 		verror.h \
 		gstring.h \
 		array.h
-	$(CXX)  $(CCFLAGS) io_arrays.cpp
 ms_param.o: ms_param.cpp m_param.h \
 		num_methods.h \
 		gdatastream.h \
@@ -174,4 +174,4 @@ num_methods.o: num_methods.cpp v_user.h \
 #kinetics.inc: kinetics.inc
 
 clean: 
-	rm -f *.o *.ti
+	rm -f *.o *.ti *.a
