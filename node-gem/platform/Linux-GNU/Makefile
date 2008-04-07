@@ -293,7 +293,7 @@ obj/io_arrays.o: ../GEMIPM2K/io_arrays.cpp ../GEMIPM2K/io_arrays.h \
 		../GEMIPM2K/array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o ../GEMIPM2K/io_arrays.cpp
 
-obj/main.o: main.cpp node.h \
+obj/main.o: main.cpp ../GEMIPM2K/node.h \
 		../GEMIPM2K/m_param.h \
 		../GEMIPM2K/datach.h \
 		../GEMIPM2K/databr.h \
