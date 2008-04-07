@@ -150,8 +150,6 @@ node-gem/doc/scm-dch-dat-doc.txt -text
 node-gem/doc/scm-ipm-dat-doc.txt -text
 node-gem/gdatastream.cpp -text
 node-gem/gdatastream.h -text
-node-gem/gem_node-sep.pro -text
-node-gem/gem_node.pro -text
 node-gem/gstring.cpp -text
 node-gem/gstring.h -text
 node-gem/io_arrays.cpp -text
@@ -171,6 +169,7 @@ node-gem/ms_multi.h -text
 node-gem/ms_multi_file.cpp -text
 node-gem/ms_multi_format.cpp -text
 node-gem/ms_param.cpp -text
+node-gem/node-gem-sep.pro -text
 node-gem/node.cpp -text
 node-gem/node.h -text
 node-gem/node_format.cpp -text
