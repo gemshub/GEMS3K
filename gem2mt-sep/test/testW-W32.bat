@@ -1,0 +1,1 @@
+exec ../gem2mts CalcColumn-dat.lst testW.dat > testW.out
