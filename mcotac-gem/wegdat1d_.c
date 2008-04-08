@@ -83,7 +83,7 @@ int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2])
               sum += fscanf(input," %d",&ihb[i] );
 /*        printf("1i= %d  %d %d \n",i,ihb[i],sum ); */
 	      hb[i] = faktor *  (double) ihb[i];
-//        printf("2i= %d  %g %d \n",i,hb[i],sum );  
+	      /*        printf("2i= %d  %g %d \n",i,hb[i],sum ); */ 
 	   }
 	fclose(input);
 /*	if (sum != (NXMAX+2)*(NYMAX+2)) ierr = 3; */
