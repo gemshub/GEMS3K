@@ -1,6 +1,6 @@
 
 
-      subroutine mcotac1D
+      program mcotac1D
       implicit double precision (a-h,o-z)
       include 'gwheader.inc'
 c      include 'f_gem_node.inc'
@@ -2194,7 +2194,7 @@ c      close (25)
 
     
 cpause	pause "ende"
-      return
+      stop
 c  *********************************************************************
 
       end

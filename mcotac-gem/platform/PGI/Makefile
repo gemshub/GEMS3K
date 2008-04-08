@@ -6,17 +6,17 @@ CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
 FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU -D__PGI -Mnosecond_underscore -Mpreprocess
-LINK = pgCC
+LINK = pgf90
 LFLAGS = 
 LIBS = -lrt -lstdc++ -lpgf90 -lpgf90_rpm1 -lpgf902 -lpgf90rtl -lpgftnrtl 
 GEMINCLUDE = /home5/kosakowski/mcotac-gem/GEMIPM2K
 GEMLIB     = -L/home5/kosakowski/mcotac-gem/GEMIPM2K -lgemipm2k-pgi
 EXEC = mcotacgem-pgi
 
-${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
+${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        f_gem_node.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac.o mcotac1d.o datio.o \
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
           erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o  ${LIBS} ${GEMLIB}
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
@@ -43,8 +43,6 @@ wegdat1d_.o: wegdat1d_.c gwheader.h
 hydro1d_.o: hydro1d_.c  gwheader.h
 	$(CC)  $(CFLAGS)  hydro1d_.c
 
-mcotac.o: mcotac.cpp 
-	$(CXX)  $(CCFLAGS) mcotac.cpp
 
 f_gem_node.o: f_gem_node.cpp ../GEMIPM2K/node.h \
 		../GEMIPM2K/m_param.h \

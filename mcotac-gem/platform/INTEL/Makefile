@@ -6,17 +6,17 @@ CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -D__unix -Mpreprocess
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -Mpreprocess 
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -Mpreprocess 
 FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -assume nounderscore -D__GNU
-LINK = pgCC
+LINK = ifort
 LFLAGS = 
 LIBS = -lstdc++ -ldl -L/opt/intel/intel-10.1/fce-10.1/lib -lifcore
 GEMINCLUDE = ../GEMIPM2K
 GEMLIB     = -L../GEMIPM2K -lgemipm2k-intel -lsvml -lipgo
 EXEC = mcotacgem-intel
 
-${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
+${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        f_gem_node.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac.o mcotac1d.o datio.o \
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
           erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o ${GEMLIB} ${LIBS}
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
@@ -42,9 +42,6 @@ wegdat1d_.o: wegdat1d_.c gwheader.h
 	$(CC)  $(CFLAGS) wegdat1d_.c
 hydro1d_.o: hydro1d_.c  gwheader.h
 	$(CC)  $(CFLAGS)  hydro1d_.c
-
-mcotac.o: mcotac.cpp 
-	$(CXX)  $(CCFLAGS) mcotac.cpp
 
 f_gem_node.o: f_gem_node.cpp ${GEMINCLUDE}/node.h \
 		${GEMINCLUDE}/m_param.h \

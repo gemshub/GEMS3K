@@ -6,16 +6,16 @@ CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic -fno-nonansi-builtins -D__unix
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
 FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU
-LINK = gcc-4.3
+LINK = gfortran-4.3
 LFLAGS = -lstdc++ -lgfortran
 GEMINCLUDE = ../GEMIPM2K
 GEMLIB     = ../GEMIPM2K
 EXEC = mcotacgem-gnu
 
-${EXEC}: mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
+${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        f_gem_node.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac.o mcotac1d.o datio.o \
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
                  erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o -L${GEMLIB} -lgemipm2k
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
@@ -42,8 +42,6 @@ wegdat1d_.o: wegdat1d_.c gwheader.h
 hydro1d_.o: hydro1d_.c  gwheader.h
 	$(CC)  $(CFLAGS)  hydro1d_.c
 
-mcotac.o: mcotac.cpp 
-	$(CXX)  $(CCFLAGS) mcotac.cpp
 f_gem_node.o: f_gem_node.cpp ${GEMINCLUDE}/node.h \
 		${GEMINCLUDE}/m_param.h \
 		${GEMINCLUDE}/datach.h \
