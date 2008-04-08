@@ -164,6 +164,7 @@ mcotac-gem/platform/GNU/Makefile.lib -text
 mcotac-gem/platform/GNU/readme -text
 mcotac-gem/platform/INTEL/Makefile -text
 mcotac-gem/platform/PGI/Makefile -text
+mcotac-gem/platform/PGI/Makefile.mpi -text
 mcotac-gem/platform/PGI/ipm_main.cpp -text
 mcotac-gem/platform/readme.1st -text
 mcotac-gem/por001.dat -text

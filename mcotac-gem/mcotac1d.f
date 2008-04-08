@@ -4,7 +4,9 @@
       implicit double precision (a-h,o-z)
       include 'gwheader.inc'
 c      include 'f_gem_node.inc'
-
+#ifdef __MPI
+      include 'mpif.h'
+#endif
 
       INTERFACE
         subroutine holdat1d (nxmax,fnamec,hb)
@@ -123,6 +125,10 @@ c for F_GEM_CALC_NODE
 	character*100 gems_in_ipmf,gems_dbr_f1,gems_dbr_f2
 	character*100 gems_dbr_w
 	character*20 dummystringb(20)
+c in an ideal world this definitions are only used for MPI stuff
+#ifdef __MPI
+        integer ierr
+#endif
 	
 c12345678901234567890123456789012345678901234567890123456789012345690
       integer itest,ncyc,nxmax,nymax,isteu,inma,ipfile,ntim
@@ -284,6 +290,33 @@ c <<<
       common /tempdep/ itmpdep(ncompl+nsolid)
 c >>>
       common /titl/ title
+
+#ifdef __MPI
+C mpi init
+      call mpi_init(ierr)
+      if (ierr.eq.0) then
+         write(*,*)'mpi_init successfull'
+      else
+         write(*,*)'mpi_init failed'
+         stop
+      endif
+      call mpi_comm_size(MPI_COMM_WORLD,npes, ierr)
+      if (ierr.eq.0) then
+         write(*,*)'mpi_comm_size successfull'
+      else
+         write(*,*)'mpi_comm_size failed'
+         stop
+      endif
+      call mpi_comm_rank(MPI_COMM_WORLD,irank,ierr)
+      if (ierr.eq.0) then
+         write(*,*)'mpi_comm_rank successfull'
+      else
+         write(*,*)'mpi_comm_rank failed'
+         stop
+      endif
+      print*,npes,irank,' = number of procs and process rank'
+c
+#endif
 
 c<<<<<<  system time initialisation for CPU consumption purposes
       time_initial=secnds(0.)
@@ -977,7 +1010,9 @@ c***  input of concentration arrays at a certain time
       write(*,*)'do you want to start calculation at a certain time?'
       write(*,*)'(Y/N)'
 c        pause      
-       read(*,*)ssw
+Ckg44 removed this for batch jobs and testing
+c       read(*,*)ssw
+        ssw='n'
       if(ssw.eq.'y'.or.ssw.eq.'Y')then
         write(*,*)'give: filename by number of tprint(k1)'
         read(*,*)k1
@@ -2191,6 +2226,19 @@ c2408	write(25,'(80(i3,1x))')(itergemstime(it,n),it=1,80)
 c      close (25)
 
       if(i_output.eq.1) close(35)
+
+
+#ifdef __MPI
+C mpi finalize
+      call mpi_finalize(ierr)
+      if (ierr.eq.0) then
+         write(*,*)'mpi_finalize successfull'
+      else
+         write(*,*)'mpi_finalize failed'
+         stop
+      endif
+c
+#endif
 
     
 cpause	pause "ende"
