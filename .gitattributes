@@ -309,6 +309,7 @@ nodearray-gem/Makefile -text
 nodearray-gem/doc/Readme.1st -text
 nodearray-gem/doc/filelist-doc.txt -text
 nodearray-gem/main.cpp -text
+nodearray-gem/main.cpp.template -text
 nodearray-gem/nodearray-gem.pro -text
 nodearray-gem/obj/Readme.txt -text
 nodearray-gem/platform/Linux-GNU/Makefile -text
