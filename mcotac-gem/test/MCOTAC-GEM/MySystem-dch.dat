@@ -1,0 +1,170 @@
+# GEMIPM2K v. 2.2.3
+# Prototype 31.03.2008
+# Comments are marked with # $ ;
+
+# Template for the dch-dat text input file for DATACH data 
+# (should be read first, before the IPM-DAT file and DATABR files)
+
+## (1) Dimensions for memory allocation
+# nIC: Number of Independent Components
+<nIC>  7
+# nDC: Number of Dependent Components
+<nDC>  17
+# nPH: Number of Phases
+<nPH>  4
+# nPS: Number of Phases-solutions (<= nPH)
+<nPS>  1
+# nDCs: Number of Dependent Components in Phases-solutions
+<nDCs> 14
+
+## (2) Databridge configuration section (for memory allocation)
+# nICb: number of ICs to be kept in DATABR structure (<= nIC)
+<nICb> 7
+# nDCb: number of DCs to be kept in DATABR structure (<=nDC)
+<nDCb> 17
+# nPHb: number of Phases to be kept in DATABR structure (<=nPH)
+<nPHb> 4
+# nPSb: number of Phases-solutions to be kept in DATABR structure
+<nPSb> 1
+
+## (3) Dimensions for thermodynamic data arrays
+# nTp: Number of temperature points in the interpolation grid array
+<nTp>  1
+# nPp: Number of pressure points in the interpolation grid array
+<nPp>  1
+# iGrd: flag for DC array setup: 0 - only V0 and G0; 1 - plus H0; 2 - plus S0; 3 - plus Cp0;
+# 4 - plus A0 (Helmholtz)
+<iGrd> 0
+# fAalp: Flag for keeping specific surface areas in DATABR structures/files
+<fAalp> 1
+
+<END_DIM>
+
+## (4) Databridge configuration section (for memory allocation)
+# xIC: indexes of ICs to be kept in DATABR structure
+<xIC>
+0 1 2 3 4 5 6 
+# xDC: indexes of DCs to be kept in DATABR structure
+<xDC>
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 
+# xPH: indexes of Phases to be kept in DATABR structure
+<xPH>
+0 1 2 3 
+
+## (5) Independent components section
+# ICNL: List of names of Independent Components
+<ICNL>
+'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+# ccIC: List of class codes for Independent Components
+<ccIC>
+'e' 'e' 'e' 'h' 'e' 'o' 'z' 
+# ICmm: Atomic (molar) masses of Independent Components, g/mol
+<ICmm>
+12.0108003616333 40.0779991149902 35.4529991149902 1.00794994831085 24.3050003051758 15.999400138855 0 
+
+## (6) Dependent components section (codes and names)
+# DCNL: List of names of Dependent Components
+<DCNL>
+'Ca(CO3)@' 'Ca+2' 'Mg(CO3)@' 'Mg+2' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'Gr' 'Cal' 'Dis-Dol' 
+# ccDC: class codes of Dependent Components
+<ccDC>
+'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'T' 'W' 'O' 'O' 'O' 
+
+# DCmm: Molar masses of DCs 
+<DCmm>
+100.086999893188 40.0779991149902 84.314001083374 24.3050003051758 44.0096006393433 60.0090007781982 61.0169507265091 16.0426001548767 35.4529991149902 2.0158998966217 31.99880027771 17.0073500871658 1.00794994831085 18.0153000354767 12.0108003616333 100.086999893188 184.401000976562 
+
+## (7) Phases section
+# PHNL: Phase name list (without a g s ...)
+<PHNL>
+'aq_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 
+# ccPH: Phase aggregate state code list
+<ccPH>
+'a' 's' 's' 's' 
+# nDCinPH: Vector L1 telling how many DCs is included in each phase
+<nDCinPH>
+14 1 1 1 
+
+# (8) Data section for DCs
+# A: Stoichiometry matrix for DCs - one column per IC, row per DC
+<A>
+1 1 0 0 0 3 0 
+0 1 0 0 0 0 2 
+1 0 0 0 1 3 0 
+0 0 0 0 1 0 2 
+1 0 0 0 0 2 0 
+1 0 0 0 0 3 -2 
+1 0 0 1 0 3 -1 
+1 0 0 4 0 0 0 
+0 0 1 0 0 0 -1 
+0 0 0 2 0 0 0 
+0 0 0 0 0 2 0 
+0 0 0 1 0 1 -1 
+0 0 0 1 0 0 1 
+0 0 0 2 0 1 0 
+1 0 0 0 0 0 0 
+1 1 0 0 0 3 0 
+2 1 0 0 1 6 0 
+
+## (8) Thermodynamic data section
+# Ttol: Tolerance for the interpolation over temperature (K)
+<Ttol> 1.936243e+31
+# Tval: Grid temperatures for the interpolation
+<TCval>
+25 
+
+# Ptol: Tolerance for the interpolation over pressure (K)
+<Ptol> 0.5
+# Grid pressures for the interpolation
+<Pval>
+1 
+
+# roW: Grid array for the density of water-solvent (g/cm3)
+<roW>
+0.997061371803284 
+
+# epsW: grid array for the dielectric constant of water-solvent
+<epsW>
+78.2451477050781 
+
+# V0: Grid array for the molar volumes of Dependent Components (J/bar)
+<V0>
+-1.5648444890976 
+-1.84387421607971 
+-1.67761921882629 
+-2.20137405395508 
+3.28066802024841 
+-0.605772435665131 
+2.42108964920044 
+3.73979878425598 
+1.73408937454224 
+2.52643585205078 
+3.05008888244629 
+-0.470784306526184 
+0 
+1.80683970451355 
+0.529799997806549 
+3.69339990615845 
+6.43900012969971 
+
+# G0: Grid array for DC molar Gibbs energy function (J/mol)
+<G0>
+-1099175.99998001 
+-552790.000650549 
+-998974.999980009 
+-453985.000808688 
+-386014.999989478 
+-527982.001784141 
+-586940.000669855 
+-34353.99983276 
+-131290.000765969 
+17729.0001099501 
+16446.0002074323 
+-157270.000907274 
+0 
+-237181.384836642 
+0 
+-1129176 
+-2157149 
+
+# End of file

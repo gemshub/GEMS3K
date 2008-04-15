@@ -137,6 +137,16 @@ mcotac-gem/source/inparf.f -text
 mcotac-gem/source/kinetics.inc -text
 mcotac-gem/source/mcotac.cpp -text
 mcotac-gem/source/mcotac1d.f -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-dat.lst -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-dbr-0-0000.dat -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-dbr-0-0000.dat.short -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-dbr-0-0001.dat -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-dbr-0-0001.dat.short -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-dch.dat -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-ipm.dat -text
+mcotac-gem/test/MCOTAC-GEM/MySystem-ipm.dat.short -text
+mcotac-gem/test/MCOTAC-GEM/MySystem.ipm -text
+mcotac-gem/test/MCOTAC-GEM/caldpl.zip -text
 mcotac-gem/test/TEST.INI -text
 mcotac-gem/test/am0001.dat -text
 mcotac-gem/test/c_2daa.dat -text

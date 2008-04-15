@@ -1,0 +1,153 @@
+# GEMIPM2K v. 2.2.0
+# Prototype 28.11.2007
+# Comments can be marked with # $ ;
+
+# Template for the dbr-dat text input file for DATABR (node) data
+# (should be read only after the DATACH and the IPM-DAT files)
+
+#Section (scalar-1): Controls of the GEM IPM operation and data exchange
+# Node identification handle (index of recipe)
+<NodeHandle>     0
+# Node type (hydraulic); see typedef NODETYPE
+<NodeTypeHY>     0
+# Node type (mass transport); see typedef NODETYPE
+<NodeTypeMT>     0
+# Node status code FMT; see typedef NODECODEFMT
+<NodeStatusFMT>  1
+# Node status code CH;  see typedef NODECODECH
+<NodeStatusCH>   1
+# Number of iterations performed by IPM algorithm (GEM output)
+<IterDone>       28
+
+##Section (scalar-2): Chemical scalar variables
+# Temperature T, C (GEM input)
+<TC>   25
+# Pressure P, bar (GEM input)
+<P>    1
+# Volume V of reactive subsystem, m3 (GEM output)
+<Vs>   0.000999964
+# Volume Vi of inert subsystem, m3
+<Vi>   0
+# Mass Ms of reactive subsystem,  kg (GEM output)
+<Ms>   0.997191
+# Mass Mi of inert subsystem, kg
+<Mi>   0
+# Enthalpy Hs of reactive subsystem, J (GEM output, optional) 
+<Hs>   0
+# Enthalpy Hi of inert subsystem, J 
+<Hi>   0
+# Gibbs energy Gs of reactive subsystem, J (GEM output)
+<Gs>   -5295.58
+# Effective aqueous ionic strength IS, molal (GEM output)
+<IS>   0.00601842
+# pH of aqueous solution (GEM output)
+<pH>   7.21376
+# pe of aqueous solution (GEM output)
+<pe>   13.033
+# Eh of aqueous solution, V (GEM output)
+<Eh>   0.769474
+
+## FMT scalar variables (used only in NodeArray, not used in GEM)
+# actual total simulation time Tm, s
+<Tm>   0
+# actual time step dt, s
+<dt>   0
+# General diffusivity Dif of disolved matter in the mode, m2/s
+<Dif>  0
+# total volume Vt of the node (voxel), m3
+<Vt>   0
+# advection velocity vp in this node, m/s
+<vp>   0
+#  effective (actual) porosity eps, normalized to 1
+<eps>  0
+# actual permeability Km, m2
+<Km>   0
+# actual DARCY`s constant Kf, m2/s
+<Kf>   0
+# specific storage coefficient S, dimensionless
+<S>    0
+# transmissivity Tr, m2/s
+<Tr>   0
+# actual hydraulic head h (hydraulic potential), m
+<h>    0
+# actual carrier density rho for density-driven flow, kg/m3
+<rho>  0
+# specific longitudinal dispersivity al of porous media, m
+<al>   0
+# specific transversal dispersivity at of porous media, m
+<at>   0
+# specific vertical dispersivity av of porous media, m
+<av>   0
+# hydraulic longitudinal dispersivity hDl, m2/s
+<hDl>  0
+# hydraulic transversal dispersivity hDt, m2/s
+<hDt>  0
+# hydraulic vertical dispersivity hDv, m2/s
+<hDv>  0
+# tortuosity factor nto, dimensionless
+<nto>  0
+
+### Arrays - for dimensions and index lists, see Section (2) of DATACH file
+
+## IC data section
+#  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+# Bulk composition bIC of the reactive part of the node (GEM input, moles)
+<bIC>
+1.0000000116861e-07 1.0000000116861e-07 0.00400000018998981 110.683696417673 0.0020000000949949 55.3418685088361 0 
+
+# Mass balance residuals rMB of GEM solution (GEM output, moles)
+<rMB>
+2.06525819601594e-11 1.43257115010619e-11 -1.71737624121704e-16 6.2328808780876e-11 5.36591951427745e-12 1.07675646177086e-10 -5.38593120838099e-13 
+
+# Dual chemical potentials uIC (GEM output, normalized)
+<uIC>
+-169.142955649499 -299.456688620854 -28.552844254955 -46.6198257683356 -249.695796957922 -2.43780459667051 30.0096374719921 
+
+## DC data section
+#  'Ca(CO3)@' 'Ca+2' 'Mg(CO3)@' 'Mg+2' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'Gr' 'Cal' 'Dis-Dol' 
+# Speciation xDC (amounts of DCs in equilibrium state), moles - GEM output, input in PIA mode
+<xDC>
+7.55856640947265e-15 9.99856678985423e-08 8.60923227608439e-11 0.00200000000353666 1.07788388628517e-08 8.71102413772242e-11 8.90272996010934e-08 0 0.00400000018998998 0 9.99999212768791e-06 1.76835836616204e-07 6.6249476152847e-08 55.3418480427492 0 0 0 
+
+# Activity coefficients gam of Dependent Components, GEM output, input in PIA mode
+<gam>
+1 0.718503649689569 1 0.718503649689569 1 0.718503649689569 0.920676895524384 1 0.920676895524384 1 1 0.920676895524384 0.920676895524384 1 1 1 1 
+
+# Lower metastability constraints dll on amounts in xDC, moles (GEM optional input)
+<dll>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# Upper metastability constraints dul on amounts in xDC, moles (GEM optional input)
+<dul>
+1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 0.000199999994947575 1000000 
+
+## Phase data section
+#  'aq_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 
+# Specific surface areas of phases aPH (m2/g) - GEM optional input
+<aPH>
+0 0 0 0 
+
+# Amounts of phases in equilibrium state xPH (GEM output, moles)
+<xPH>
+55.3478584859852 0 0 0 
+
+# Volumes of the multicomponent phases vPS, cm3 (GEM output)
+<vPS>
+999.964124584666 
+
+# Masses of the multicomponent phases mPS, g (GEM output)
+<mPS>
+997.190752000072 
+
+# Amounts of carrier xPA (sorbent or solvent) in multicomponent phases
+<xPA>
+55.3418480427492 
+
+# Bulk elemental compositions of multicomponent phases bPS (GEM output, moles)
+#  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+<bPS>
+9.99793485866496e-08 9.99856754571087e-08 0.00400000018998998 110.683696417611 0.00200000008962898 55.3418685087285 5.38593120838099e-13 
+
+# reserved
+
+# End of file
