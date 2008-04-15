@@ -132,11 +132,15 @@ mcotac-gem/source/f_gem_node.h -text
 mcotac-gem/source/f_gem_node.inc -text
 mcotac-gem/source/gwheader.h -text
 mcotac-gem/source/gwheader.inc -text
+mcotac-gem/source/hydro1d_.c -text
 mcotac-gem/source/inistat2.f -text
 mcotac-gem/source/inparf.f -text
 mcotac-gem/source/kinetics.inc -text
 mcotac-gem/source/mcotac.cpp -text
 mcotac-gem/source/mcotac1d.f -text
+mcotac-gem/source/setpar_.c -text
+mcotac-gem/source/walk2_.c -text
+mcotac-gem/source/wegdat1d_.c -text
 mcotac-gem/test/MCOTAC-GEM/MySystem-dat.lst -text
 mcotac-gem/test/MCOTAC-GEM/MySystem-dbr-0-0000.dat -text
 mcotac-gem/test/MCOTAC-GEM/MySystem-dbr-0-0000.dat.short -text
