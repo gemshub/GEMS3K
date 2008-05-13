@@ -8,8 +8,8 @@ CC       = pgCC
 CXX      = pgCC
 LEX      = flex
 YACC     = yacc
-CFLAGS   = -g -O3 -DIPMGEMPLUGIN -D__unix
-CXXFLAGS = -g -O3 -DIPMGEMPLUGIN -D__unix
+CFLAGS   = -g -O2 -DIPMGEMPLUGIN -D__unix
+CXXFLAGS = -g -O2 -DIPMGEMPLUGIN -D__unix
 LEXFLAGS = 
 YACCFLAGS= -d
 INCPATH  =  -I.
@@ -78,7 +78,7 @@ SOURCES = gstring.cpp \
 OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
 		obj/s_fgl.o \
-		obj/s_fgl.2 \
+		obj/s_fgl2.o \
 		obj/node.o \
 		obj/node_format.o \
 		obj/ms_multi_file.o \

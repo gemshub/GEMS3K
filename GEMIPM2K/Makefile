@@ -1,21 +1,20 @@
 #############################################################################
-# GEMIPM2K - standalone GEMS version 
 # Makefile for building: gemcalc
 #############################################################################
 
 ####### Compiler, tools and options
 
-CC       = gcc-4.3
-CXX      = g++-4.3
+CC       = pgCC
+CXX      = pgCC
 LEX      = flex
 YACC     = yacc
-CFLAGS   = -pipe -Wall -W -g  -DIPMGEMPLUGIN -D__unix
-CXXFLAGS = -pipe -Wall -W -g  -DIPMGEMPLUGIN -D__unix
+CFLAGS   = -g -O2 -DIPMGEMPLUGIN -D__unix
+CXXFLAGS = -g -O2 -DIPMGEMPLUGIN -D__unix
 LEXFLAGS = 
 YACCFLAGS= -d
-INCPATH  = -I.
-LINK     = gcc-4.3
-LFLAGS   = -lstdc++
+INCPATH  =  -I.
+LINK     = pgCC
+LFLAGS   = 
 LIBS     = $(SUBLIBS)  
 AR       = ar cqs
 RANLIB   = 
@@ -62,6 +61,7 @@ HEADERS = array.h \
 SOURCES = gstring.cpp \
 		gdatastream.cpp \
 		s_fgl.cpp \
+		s_fgl2.cpp \
 		node.cpp \
 		node_format.cpp \
 		ms_multi_file.cpp \
@@ -92,8 +92,6 @@ OBJECTS = obj/gstring.o \
 		obj/main.o \
 		obj/ms_param.o \
 		obj/num_methods.o
-
-
 DESTDIR  = 
 TARGET   = gemcalc
 
@@ -122,8 +120,7 @@ first: all
 all: Makefile $(TARGET)
 
 $(TARGET):  $(OBJECTS)  
-	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS)  $(OBJCOMP) $(LIBS)
-
+	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
 
 clean:
 	-$(DEL_FILE) $(OBJECTS)
@@ -134,7 +131,6 @@ clean:
 
 distclean: clean
 	-$(DEL_FILE) $(TARGET)
-
 
 FORCE:
 
@@ -182,13 +178,13 @@ obj/node.o: node.cpp node.h \
 obj/node_format.o: node_format.cpp io_arrays.h \
 		node.h \
 		gdatastream.h \
-		gstring.h \
-		array.h \
 		m_param.h \
 		datach.h \
 		databr.h \
 		ms_multi.h \
 		verror.h \
+		gstring.h \
+		array.h \
 		m_const.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node_format.o node_format.cpp
@@ -196,10 +192,10 @@ obj/node_format.o: node_format.cpp io_arrays.h \
 obj/ms_multi_file.o: ms_multi_file.cpp io_arrays.h \
 		m_param.h \
 		gdatastream.h \
-		gstring.h \
-		array.h \
 		ms_multi.h \
 		verror.h \
+		gstring.h \
+		array.h \
 		m_const.h \
 		v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_file.o ms_multi_file.cpp
@@ -207,11 +203,11 @@ obj/ms_multi_file.o: ms_multi_file.cpp io_arrays.h \
 obj/ms_multi_format.o: ms_multi_format.cpp io_arrays.h \
 		m_param.h \
 		node.h \
-		gstring.h \
-		array.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
+		gstring.h \
+		array.h \
 		m_const.h \
 		v_user.h \
 		datach.h \
@@ -281,7 +277,7 @@ obj/ipm_simplex.o: ipm_simplex.cpp m_param.h \
 obj/io_arrays.o: io_arrays.cpp io_arrays.h \
 		verror.h \
 		gstring.h \
-		array.h
+		array.h 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o io_arrays.cpp
 
 obj/main.o: main.cpp node.h \
