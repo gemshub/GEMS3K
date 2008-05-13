@@ -1,9 +1,9 @@
 itest   : 1
 ncyc    : 1
-ntim    : 51
+ntim    : 52
 de      : 1.0
 tmult   : 31557600.
-nx      : 51
+nx      : 52
 ny      : 1
 dxx     : 0.01
 dyy     : 0.01
