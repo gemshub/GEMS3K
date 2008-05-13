@@ -1,16 +1,16 @@
 CC = mpicc
-CXX = mpicxx
+CXX = mpiCC
 FORT = mpif90
-CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic  -D__unix -D__MPI
+CFLAGS = -c  -g -O -DIPMGEMPLUGIN -pedantic -D__unix -D__GNU  -D__MPI
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__MPI
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__MPI
-FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU -D__MPI
+CCFLAGS =   -c -g -O -DIPMGEMPLUGIN -D__unix -D__MPI -D__GNU 
+CCFLAGS1 =   -c -g -O -DIPMGEMPLUGIN -D__unix -D__MPI -D__GNU 
+FFLAGS = -c -g -O -fno-underscoring -fdefault-real-8 -fopenmp -DIPMGEMPLUGIN -D__unix -D__GNU -D__MPI 
 LINK = mpif90
 LFLAGS = -lstdc++ -lgfortran
 GEMINCLUDE = ../../GEMIPM2K
 GEMLIB     = ../../GEMIPM2K
-EXEC = mcotacgem-gnu
+EXEC = mcotacgem-mpi
 
 ${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
        f_gem_node.o

@@ -100,13 +100,13 @@ c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c MAIN FORTRAN PROGRAM START IS HERE
 c variables for gems-buffer
 #ifdef __MPI
-       DOUBLE PRECISION, ALLOCATABLE :: bn_subdomain(:,:) !rank 2
-       DOUBLE PRECISION, ALLOCATABLE :: cn_subdomain(:,:) !rank 2
-       DOUBLE PRECISION, ALLOCATABLE :: pn_subdomain(:,:) !rank 2
+       DOUBLE PRECISION, ALLOCATABLE :: bn_subdomain(:) !rank 1
+       DOUBLE PRECISION, ALLOCATABLE :: cn_subdomain(:) !rank 1
+       DOUBLE PRECISION, ALLOCATABLE :: pn_subdomain(:) !rank 1
 c and a second buffer 
-       DOUBLE PRECISION, ALLOCATABLE :: bn_domain(:,:) !rank 2
-       DOUBLE PRECISION, ALLOCATABLE :: cn_domain(:,:) !rank 2
-       DOUBLE PRECISION, ALLOCATABLE :: pn_domain(:,:) !rank 2
+       DOUBLE PRECISION, ALLOCATABLE :: bn_domain(:) !rank 1
+       DOUBLE PRECISION, ALLOCATABLE :: cn_domain(:) !rank 1
+       DOUBLE PRECISION, ALLOCATABLE :: pn_domain(:) !rank 1
 #endif
 
       double precision xxyy , xarray(10)
@@ -140,8 +140,9 @@ c for F_GEM_CALC_NODE
 c in an ideal world this definitions are only used for MPI stuff
 #ifdef __MPI
         integer ierr
-	integer i_subdomain_length     !// number of grid nodes per processor
-        integer root      !// identifier for root 
+	integer npes, i_subdomain_length     !// no of procs, number of grid nodes per processor
+        integer irank, root      !// rank and identifier for root 
+        integer recvcount, sendcount
 #endif
 	
 c12345678901234567890123456789012345678901234567890123456789012345690
@@ -559,7 +560,7 @@ c  **************************
 
 #ifdef __MPI
 c we define the size of subintervalls for buffer variables
-	i_subdomain_length = abs((nxmax)/npes)
+	i_subdomain_length = (nxmax)/npes
          write(*,*) 'nodes/procs: ', (nxmax)/npes
          write(*,*) 'i_interval_mpi', i_subdomain_length
 c  make sure grid size and no of processors fit together
@@ -577,13 +578,13 @@ c  make sure grid size and no of processors fit together
          stop
         endif
 c now we allocate memory for the buffers
-      allocate(bn_subdomain(nbasis,i_subdomain_length),
-     &         cn_subdomain(ncompl,i_subdomain_length),
-     &         pn_subdomain(nsolid,i_subdomain_length))
+      allocate(bn_subdomain(nbasis*i_subdomain_length))
+      allocate(cn_subdomain(ncompl*i_subdomain_length))
+      allocate(pn_subdomain(nsolid*i_subdomain_length))
 c and a second buffer because W. refuses to work with allocate
-      allocate(bn_domain(nbasis,nxmax),
-     &         cn_domain(ncompl,nxmax),
-     &         pn_domain(nsolid,nxmax))
+      allocate(bn_domain(nbasis*nxmax))
+      allocate(cn_domain(ncompl*nxmax))
+      allocate(pn_domain(nsolid*nxmax))
 
 #endif
 
@@ -1113,12 +1114,12 @@ c
 c  **************************************
 c  write header of f(t) files
 c  **************************************
-      OPEN(10,file='conc1t.dat',form='formatted',status='unknown')
+      OPEN(25,file='conc1t.dat',form='formatted',status='unknown')
       OPEN(11,file='conc2t.dat',form='formatted',status='unknown')
       OPEN(12,file='conc3t.dat',form='formatted',status='unknown')
       OPEN(13,file='conc4t.dat',form='formatted',status='unknown')
       OPEN(14,file='conc5t.dat',form='formatted',status='unknown')
-      write(10,1111)' time     ',(dumb(iw1),iw1=1,m1),
+      write(25,1111)' time     ',(dumb(iw1),iw1=1,m1),
      *  (dumc(iw2),iw2=1,m2),(dump(iw3),iw3=1,m3),'  c/s    ',
      *  ' porosity ','  pH      ','tot._Na_aq','tot._K_aq '
      * ,'  Ca_total','  vx      ','  tx      ' 
@@ -1256,7 +1257,7 @@ c2003        pn(j,n)=pn(j,n)*por(n)/poro(n)
         tmpold(n)=tmp(n)
         poro(n)=por(n)
 	  if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'vor transport' 
+      	    write(35,*) 'node',n,'vor transport' 
 	     write(35,*) 'DCb'
 	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
         endif
@@ -1532,43 +1533,62 @@ c	do 1699 ib=1,m1
 #ifdef __MPI
 c first scatter the inital dataset among the processors
 c root obtains the full dataset
-        if (irank.eq.root) then        
+
+        root = 0
+	bn_domain=0.0
+	cn_domain=0.0
+        pn_domain=0.0
+c        if (irank.eq.root) then        
 	  do n=1,nxmax
             do ib=1,m1-1
-	  	bn_domain(ib,n)=bn(ib,n)
+	  	bn_domain(ib+(n-1)*nbasis)=bn(ib,n)
             enddo
             do ic=1,m2
-	  	cn_domain(ic,n)=bn(ic,n)
+	  	cn_domain(ic+(n-1)*ncompl)=cn(ic,n)
             enddo
             do ip=1,m3
-	  	pn_domain(ip,n)=po(ip,n)  !//we reuse pn_domain for Po_domain
+	  	pn_domain(ip+(n-1)*nsolid)=po(ip,n)  !//we reuse pn_domain for Po_domain
             enddo
           enddo
-	endif
-	
-        call MPI_SCATTER(bn_domain, i_subdomain_length*nbasis, MPI_DOUBLE,
-     &	    bn_subdomain, i_subdomain_length*nbasis, MPI_DOUBLE_PRECISION,
+c	endif
+
+
+c        write(*,*)' MPI Scatter:', MPI_COMM_WORLD
+c	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+c         write(*,*) 'barrier ok'
+c	if (irank.eq.root) write(*,*)bn_domain
+        sendcount = i_subdomain_length*nbasis
+        recvcount = i_subdomain_length*nbasis
+        call MPI_SCATTER(bn_domain, sendcount, 
+     &      MPI_DOUBLE_PRECISION,
+     &	    bn_subdomain, recvcount, MPI_DOUBLE_PRECISION,
      &      root, MPI_COMM_WORLD, ierr);
-        write(*,*)' MPI Scatter ok'
-        call MPI_SCATTER(cn_domain, i_subdomain_length*ncompl, MPI_DOUBLE,
-     &	    cn_subdomain, i_subdomain_length*ncompl, MPI_DOUBLE_PRECISION,
-     &    root, MPI_COMM_WORLD,ierr);
-        call MPI_SCATTER(pn_domain, i_subdomain_length*nsolid, MPI_DOUBLE,
-     &    pn_subdomain, i_subdomain_length*nsolid, MPI_DOUBLE_PRECISION,
-     &    root, MPI_COMM_WORLD,ierr);
+c	write(*,*)'irank',irank,'values',bn_subdomain
+        sendcount = i_subdomain_length*ncompl
+        recvcount = i_subdomain_length*ncompl
+        call MPI_SCATTER(cn_domain, sendcount, 
+     &      MPI_DOUBLE_PRECISION,
+     &	    cn_subdomain, recvcount, MPI_DOUBLE_PRECISION,
+     &      root, MPI_COMM_WORLD, ierr);
+        sendcount = i_subdomain_length*nsolid
+        recvcount = i_subdomain_length*nsolid
+        call MPI_SCATTER(pn_domain, sendcount, 
+     &      MPI_DOUBLE_PRECISION,
+     &	    pn_subdomain, recvcount, MPI_DOUBLE_PRECISION,
+     &      root, MPI_COMM_WORLD, ierr);
 c
 
 	do 1555 n=1,  i_subdomain_length                 !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1
 
-	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib,n)   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
+	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib+(n-1)*nbasis)   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
  1596 continue
 	do 1597 ic=1,m2
-	p_xDc(i_bcp_gemx(m1+ic))=cn_subdomain(ic,n)
+	p_xDc(i_bcp_gemx(m1+ic))=cn_subdomain(ic+(n-1)*ncompl)
  1597 continue
 	do 1598 ip=1,m3
-	p_xDc(i_bcp_gemx(m1+m2+ip))= pn_subdomain(ip,n)  !  gemsxDc(12)    ! pn(1,n)   solids not used for transport
+	p_xDc(i_bcp_gemx(m1+m2+ip))= pn_subdomain(ip+(n-1)*nsolid)  !  gemsxDc(12)    ! pn(1,n)   solids not used for transport
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
@@ -1609,10 +1629,10 @@ c        write(*,*)ii, gemsxPH(ii)
  1682 continue
 cgems      pause "XXXX"
 	if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'vor GEMS' 
-	     write(35,*) 'DCb'
+      	    write(35,*) 'node',n,'vor GEMS' 
+	    write(35,*) 'DCb'
 	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-	write(35,*) 'ICb'
+	    write(35,*) 'ICb'
 	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
 c	     write(35,*) 'b_bPS'
 c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
@@ -1678,13 +1698,13 @@ c     cn=
 c     pn=
 c      do 1695 n=2,nxmax
 	do 1796 ib=1,m1-1
-	bn_subdomain(ib,n)=p_xDc(i_bcp_gemx(ib))
+	bn_subdomain(ib+(n-1)*nbasis)=p_xDc(i_bcp_gemx(ib))
  1796 continue
 	do 1797 ic=1,m2
-	cn_subdomain(ic,n)=p_xDc(i_bcp_gemx(m1+ic))
+	cn_subdomain(ic+(n-1)*ncompl)=p_xDc(i_bcp_gemx(m1+ic))
  1797 continue
 	do 1798 ip=1,m3
-	pn_subdomain(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))
+	pn_subdomain(ip+(n-1)*nsolid)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
 	if (i_output.eq.1.and.n.eq.2)then
       	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
@@ -1702,16 +1722,42 @@ c	pause
  1555 continue                 ! end node loop for GEMS after Transport step             
  1557 continue
 
+
 c now do MPI_GATHER
-      call MPI_AllGather(bn_subdomain, i_subdomain_length*nbasis, MPI_DOUBLE,
-     &	    bn_domain, i_subdomain_length*nbasis, MPI_DOUBLE_PRECISION,
-     &	    root, MPI_COMM_WORLD, ierr)
-      call MPI_AllGather(cn_subdomain, i_subdomain_length*ncompl, MPI_DOUBLE,
-     &	    pn_domain, i_subdomain_length*ncompl, MPI_DOUBLE_PRECISION,
-     &	    root, MPI_COMM_WORLD,ierr)
-      call MPI_AllGather(pn_subdomain, i_subdomain_length*nsolid, MPI_DOUBLE,
-     &	    pn_domain, i_subdomain_length*nsolid, MPI_DOUBLE_PRECISION,
-     &	    root, MPI_COMM_WORLD,ierr)
+        sendcount = i_subdomain_length*nbasis
+        recvcount = i_subdomain_length*nbasis
+      call MPI_AllGather(bn_subdomain, sendcount, 
+     &     MPI_DOUBLE_PRECISION,
+     &	    bn_domain, recvcount, MPI_DOUBLE_PRECISION,
+     &	    MPI_COMM_WORLD, ierr)
+
+        sendcount = i_subdomain_length*ncompl
+        recvcount = i_subdomain_length*ncompl
+      call MPI_AllGather(cn_subdomain, sendcount, 
+     &      MPI_DOUBLE_PRECISION,
+     &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
+     &	    MPI_COMM_WORLD,ierr)
+
+        sendcount = i_subdomain_length*nsolid
+        recvcount = i_subdomain_length*nsolid
+      call MPI_AllGather(pn_subdomain, sendcount, 
+     &      MPI_DOUBLE_PRECISION,
+     &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
+     &	    MPI_COMM_WORLD,ierr)
+
+c        if (irank.eq.root) then        
+	  do n=2,nxmax-1
+            do ib=1,m1-1
+	  	bn(ib,n)=bn_domain(ib+(n-1)*nbasis)
+            enddo
+            do ic=1,m2
+	  	cn(ic,n)=cn_domain(ic+(n-1)*ncompl)
+            enddo
+            do ip=1,m3
+	  	pn(ip,n)=pn_domain(ip+(n-1)*nsolid)  
+            enddo
+          enddo
+c	endif
 
 C
 
@@ -2251,7 +2297,7 @@ c      write(*,*)i,j_k,i_sorb+2,s(j_k,i),cn(i,iortx(1)),tot_K
        endif
 c---------------------------------------------------------- 
        tot_Ca=bn(1,iortx(1))+s(1,1)*cn(1,iortx(1))
-         write(10,2300)treal
+         write(25,2300)treal
      *               ,(bn(ii,iortx(1)),ii=1,m1)
      *               ,(cn(ii,iortx(1)),ii=1,m2)
      *               ,(pn(ii,iortx(1)),ii=1,m3)
@@ -2425,8 +2471,8 @@ c	pause "next time step"
   500 continue
 C end of file for breakthrough curves 
          xloc=x(1)+iortx(1)*dx(1)
-         write(10,*)'at location ',xloc,' [m]'
-         close (10)
+         write(25,*)'at location ',xloc,' [m]'
+         close (25)
          xloc=x(1)+iortx(2)*dx(1)
          write(11,*)'at location ',xloc,' [m]'
          close (11)
