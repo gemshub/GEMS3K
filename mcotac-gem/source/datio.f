@@ -617,9 +617,9 @@ c
       k2=0
   420 k1=k2+1
       k2=k1+i4-1
-c      write (6,619) (dumc(j),j=k1,k2)
+      write (6,619) (dumc(j),j=k1,k2)
       do 421 n=1,nxmax
-c      write (6,625) x(n),(cn(j,n),j=k1,k2)
+      write (6,625) x(n),(cn(j,n),j=k1,k2)
   421 continue
       i1=i1+1
       if (i1.le.npri) go to 420
@@ -636,9 +636,9 @@ c
       k2=0
   450 k1=k2+1
       k2=k1+i4-1
-c      write (6,619) (dump(j),j=k1,k2)
+      write (6,619) (dump(j),j=k1,k2)
       do 451 n=1,nxmax
-c      write (6,625) x(n),(pn(j,n),j=k1,k2)
+      write (6,625) x(n),(pn(j,n),j=k1,k2)
   451 continue
       i1=i1+1
       if (i1.le.npri) go to 450
@@ -646,15 +646,15 @@ c      write (6,625) x(n),(pn(j,n),j=k1,k2)
       if (i4.gt.0) go to 450
 c <<<
       if (idismdl.eq.1) then
-c         write (6,640)
+         write (6,640)
          do 453 n = 1,nxmax
             rlogc = dlog10(eqconst(indxca,n))
             rlogs = dlog10(eqconst(indxsi,n))
             rlogcs = dlog10(eqconst(indxcs,n))
             if (cs(n).lt.0.) then
-c               write (6,642) x(n),rlogc,rlogs,rlogcs
+               write (6,642) x(n),rlogc,rlogs,rlogcs
             else
-c               write (6,641) x(n),cs(n),rlogc,rlogs,rlogcs
+               write (6,641) x(n),cs(n),rlogc,rlogs,rlogcs
             end if
   453    continue
       end if

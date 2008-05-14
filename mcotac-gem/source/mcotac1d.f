@@ -141,9 +141,9 @@ c in an ideal world this definitions are only used for MPI stuff
 #ifdef __MPI
         integer ierr
 	integer npes, i_subdomain_length     !// no of procs, number of grid nodes per processor
-        integer irank, root      !// rank and identifier for root 
         integer recvcount, sendcount
 #endif
+        integer irank, root      !// rank and identifier for root used also outside MPI
 	
 c12345678901234567890123456789012345678901234567890123456789012345690
       integer itest,ncyc,nxmax,nymax,isteu,inma,ipfile,ntim
@@ -305,6 +305,9 @@ c <<<
 c >>>
       common /titl/ title
 
+c set irank and root to zero , used also outside MPI in seriall version
+       root=0
+       irank=0
 #ifdef __MPI
 C mpi init
       call mpi_init(ierr)
@@ -329,14 +332,12 @@ C mpi init
          stop
       endif
       print*,npes,irank,' = number of procs and process rank'
-c set root to zero
-       root=0
 c
 #endif
 
 c<<<<<<  system time initialisation for CPU consumption purposes
       time_initial=secnds(0.)
-      write(*,*)time_initial
+      if (irank.eq.root) write(*,*)"time initial: ",time_initial
 c      pause "initial time"
 ccc init itimestep_tp
       itimestep_tp=0
@@ -426,7 +427,7 @@ c     2,betac
      1                conhcsm
      9,i_bcp_gemx)
 c                                 added nov 2004
-      write (*,*)gespi
+      if (irank.eq.root) write (*,*)gespi
 
       m1=num(1)
       m2=num(2)
@@ -439,11 +440,12 @@ c >>>
       m6=m2+m3
 
       num(6)=m6
+
 c  **************************
 c  read iche(nnodex) array used to have heterogeneous chemistry
 c  **************************
       fname= "iche01.dat"
-	write(*,*) 'fname = ',fname,nxmax
+	if (irank.eq.root) write(*,*) 'fname = ',fname,nxmax
 c      call holdat1d(nxmax,"iche01.dat",hb,text)
 #ifdef __GNU
       call holdat1d(%val(nxmax),fname // char(0),hb)
@@ -467,8 +469,10 @@ c  **************************************
       read(20,*)
       read(20,'(40x,5i3)')(iortx(iort),iort=1,5) 
       close(20)
+	if (irank.eq.root) then 
       write(*,'(a22,5(1x,i4))')'breakthrough at nodes '
      *         ,(iortx(iort),iort=1,5)
+        endif
       do 3 iort=1,5
       if(iortx(iort).gt.nxmax) then
         write(*,*)'one node out of x range'
@@ -476,6 +480,8 @@ c  **************************************
         stop
       endif
   3   continue 
+
+
       do 4 m=1,m1
         l=0
         do 7 j=1,10
@@ -489,7 +495,7 @@ c  **************************************
         endif
   7     continue
         write(dtdumb(m),'(a4,a6)')'dtb_',dummy
-        write(tdumb(m),'(a4,a6)'),'stb_',dummy
+         write(tdumb(m),'(a4,a6)'),'stb_',dummy
   4   continue
       do 5 m=1,m2
         l=0
@@ -505,9 +511,11 @@ c  **************************************
   8     continue
         write(dtdumc(m),'(a4,a6)')'dtc_',dummy
   5   continue
+	if (irank.eq.root) then 
         write(*,*)(dtdumb(m), m=1,m1)
         write(*,*)(tdumb(m), m=1,m1)
         write(*,*)(dtdumc(m), m=1,m2)
+        endif
 cpause        pause
 
 c
@@ -564,10 +572,12 @@ c   input for dynamic calculations
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
      *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de)
+	if (irank.eq.root) then 
       Write(*,*)itest,ncyc,nxmax,isteu,inma,ipfile
      *,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
      *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de
+       endif
 cpause	pause 
 c
 c
@@ -601,11 +611,13 @@ c  *******************************************************************
             endif
        endif
  1315  continue
+	if (irank.eq.root) then 
        write(*,*)'porosities'
        write(*,'(85(f5.3,1x))')(por(nspezx),nspezx=1,nxmax)
 	write(*,*)'end porosities'
 cpause       pause
       write(*,*)(pn(1,nx),nx=1,nxmax)
+        endif
 cpause	pause
 c      t2=secnds(t1)
 c      write (6,2200) t2
@@ -636,20 +648,20 @@ c  input ir - array h0 - array  tt - array  s - array
 
       do 3330 ih=1,nxmax+1
 3330  ir(ih)=int(hb(ih))
-      write(*,*)ir
+      	if (irank.eq.root) write(*,*)ir
 cpause	pause
 #ifdef __GNU
       call holdat1d(%val(nxmax+2),"ss0001.dat"//char(0),st)
 #else
       call holdat1d(nxmax+2,"ss0001.dat"//char(0),st)
 #endif
-      write(*,*)st
+	if (irank.eq.root) write(*,*)st
 #ifdef __GNU
 	call holdat1d(%val(nxmax+2),"por001.dat"//char(0),por)
 #else
 	call holdat1d(nxmax+2,"por001.dat"//char(0),por)
 #endif
-      write(*,*)por
+	if (irank.eq.root) write(*,*)por
 cpause	pause
 	do 3331 ih=1,nxmax+2
       por_null(ih)=por(ih)
@@ -662,28 +674,28 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
 #else
       call holdat1d(nxmax+2,"qr0001.dat"//char(0),qr)
 #endif
-      write(*,*)qr
+      	if (irank.eq.root) write(*,*)qr
 cpause	pause
 #ifdef __GNU
       call holdat1d(%val(nxmax+2),"qn0001.dat"//char(0),qw)
 #else
       call holdat1d(nxmax+2,"qn0001.dat"//char(0),qw)
 #endif
-       write(*,*)qw
+	if (irank.eq.root) write(*,*)qw
 cpause	pause
 #ifdef __GNU
       call holdat1d(%val(nxmax+2),"am0001.dat"//char(0),am)
 #else
       call holdat1d(nxmax+2,"am0001.dat"//char(0),am)
 #endif
-      write(*,*)am
+	if (irank.eq.root) write(*,*)am
 cpause	pause
 #ifdef __GNU
       call holdat1d(%val(nxmax+2),"h00001.dat"//char(0),h0)
 #else
       call holdat1d(nxmax+2,"h00001.dat"//char(0),h0)
 #endif
-      write(*,*)h0
+	if (irank.eq.root) write(*,*)h0
 cpause	pause
       do 3332 ih=1,nxmax+2
          hb(ih)=h0(ih)
@@ -709,31 +721,31 @@ c  first read is for boundary conditons node 1
 	FNAME10="abcdevwxyz"
 	CSTR_char30="xbtdefghijklmnopqrst1234567890"
       read(CSTR_char30,'(100(a1))')(chch(i),i=1,100)
-
+	if (irank.eq.root) then 
       write(*,*)gems_in_ipmf
       write(*,*)gems_dbr_f1
       write(*,*)gems_dbr_f2
 
-      write (*,*)'FORTRAN defined in C++ argc', argc
-      write (*,*)'FORTRAN integer        iinn', iinn
-      write (*,*)'FORTRAN double         xxyy', xxyy
+        write (*,*)'FORTRAN defined in C++ argc', argc
+        write (*,*)'FORTRAN integer        iinn', iinn
+        write (*,*)'FORTRAN double         xxyy', xxyy
 	write (*,*)'FORTRAN char*10   FNAME10  ', fname10
-      write (*,*)'FORTRAN double array (10)  ', xarray
+        write (*,*)'FORTRAN double array (10)  ', xarray
 	write (*,*)'FORTRAN int array CSTR(10) ', (CSTR(L),L=1,10)
 	write (*,*)'FORTRAN char*10     line   ', line
 	write (*,*)'FORTRAN char*10 c_to_i ',  c_to_i
       
 
-      write(*,*)'nnode',nNodes
+        write(*,*)'nnode',nNodes
 	write(*,*)'cto',c_to_i1
 	write(*,*)'cto',c_to_i2
 	write(*,*)'nodetype',nodeTypes
-
+        endif
 c	pause "F_GEM_INIT"
 
        nNodes= nxmax-1    !   1 
       call F_GEM_INIT( gems_in_ipmf )
-      write(*,*)'nNodes =', nNodes
+      	if (irank.eq.root) write(*,*)'nNodes =', nNodes
 
 c	pause "F_GEM_INIT called"
 
@@ -751,13 +763,13 @@ c   read 2. for p_ variables
 c        if(igems_rw.eq.1)
       call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_A )
 
-      write(*,*) 'gemsA', p_A
+      	if (irank.eq.root) write(*,*) 'gemsA', p_A
 c	pause "F_GEM_GET_DCH nach A "
 
-      write(*,*) 'gemsread_dch.dat done'
+      	if (irank.eq.root) write(*,*) 'gemsread_dch.dat done'
 
 	p_A_trans = transpose (p_A)               !invert stoichiometric coeff. matrix
-      write(*,*) 'gemsA', p_A_trans
+	if (irank.eq.root) write(*,*) 'gemsA', p_A_trans
 c	pause "F_GEM_GET_DCH nach A_trans "
 
       
@@ -779,6 +791,7 @@ c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
+	if (irank.eq.root) then 
       write(*,*)'iNode,p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone'
       write(*,*)iNode,p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
@@ -795,20 +808,21 @@ c	pause
      *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
      *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
 c      pause
-
+	endif
 c  here loop to read in additional geochmical systems to define other nodes....
 c      aa-initial-dbr-1.dat to aa-initial-dbr-50.dat and aa-boundary-dbr-0.dat are available)
 c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
 c     bn=
 c     cn=
 c     pn=
-      if(i_output.eq.1)open(35, file='mco_out.out')
+ckg44
+c      if(i_output.eq.1)open(35, file='mco_out.out')
 
       do 1690 n=1,1
 	do 1691 ib=1,m1-1    !charge is last parameter in the lict of bn  24.01.2005 but not transported
 ccc	bn(ib,n)=gemsxDc(i_bcp_gemx(ib))         !2)
-        write(*,*) ' debug', i_bcp_gemx
-        write(*,*) ' debug', ib, i_bcp_gemx(ib)
+        	if (irank.eq.root) write(*,*) ' debug', i_bcp_gemx
+        	if (irank.eq.root) write(*,*) ' debug', ib, i_bcp_gemx(ib)
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))         !2)
  1691 continue
 	do 1692 ic=1,m2
@@ -821,12 +835,13 @@ ccc	pn(ip,n)=gemsxDc(i_bcp_gemx(m1+m2+ip))     ! 12)/1.
 c	pn(2,n)=gemsxDc(13)/1.
  1693 continue
  1690 continue
+	if (irank.eq.root) then 
       write(*,'(13(e8.2,1x))')(bn(ib,1),ib=1,m1),(cn(ic,1),ic=1,m2)
      *,(pn(ip,1),ip=1,m3)
 ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
       write(*,*)' 1 p_xDc(ib) '
 	write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-
+        endif
 c      write(*,*)(bn(ib,1),ib=1,m1)
 c      write(*,*)(cn(ic,1),ic=1,m2)
 c      write(*,*)(pn(ip,1),ip=1,m3)
@@ -850,13 +865,14 @@ c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
-	 write(*,*) 'inode= ' ,inode
-      if (i_output.eq.1)then
-	   write(35,*) 'node','2 and rest' 
-	   write(35,'(20(e18.12,1x))')(p_xDc(ib),ib=1,p_nDCb)
-	   write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
-         write(35,*) 'end node 2 and rest'
-      endif
+	 if (irank.eq.root) write(*,*) 'inode= ' ,inode
+c kg44
+c      if (i_output.eq.1)then
+c	   write(35,*) 'node','2 and rest' 
+c	   write(35,'(20(e18.12,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c	   write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
+c         write(35,*) 'end node 2 and rest'
+c      endif
 	 endif
 
       do 1695 n=2,nxmax-1
@@ -870,24 +886,27 @@ c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))     !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
  1695 continue
-      if(i_output.eq.1)then
-       write(35,*)' bn n=2  '
-       write(35,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1)
-       write(35,*)' cn n=2  '
-       write(35,'(13(e8.2,1x))')(cn(ic,2),ic=1,m2)
-       write(35,*)' pn n=2  '
-       write(35,'(13(e8.2,1x))')(pn(ip,2),ip=1,m3)
+c kg44
+c      if(i_output.eq.1)then
+c       write(35,*)' bn n=2  '
+c       write(35,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1)
+c       write(35,*)' cn n=2  '
+c       write(35,'(13(e8.2,1x))')(cn(ic,2),ic=1,m2)
+c       write(35,*)' pn n=2  '
+c       write(35,'(13(e8.2,1x))')(pn(ip,2),ip=1,m3)
+c
+c       write(35,*)' 2 p_xDc(ib) '
+c       write(35,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c	 write (35,*)' end of initial calc ' 
+c      endif
 
-       write(35,*)' 2 p_xDc(ib) '
-       write(35,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-	 write (35,*)' end of initial calc ' 
-      endif
-      write(*,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1),(cn(ic,2),ic=1,m2)
+	if (irank.eq.root) then 
+         write(*,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1),(cn(ic,2),ic=1,m2)
      *,(pn(ip,2),ip=1,m3)
 ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-      write(*,*)' 2 p_xDc(ib) '
-      write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-
+         write(*,*)' 2 p_xDc(ib) '
+         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+         endif
 c      write(*,*)(cn(ic,2),ic=1,m2)
 c      write(*,*)(pn(ip,2),ip=1,m3)
 c	pause "basis complex solids at n=2 to nxmax"
@@ -914,12 +933,12 @@ c>>>>>>>>>>>>>>>>>>>>FROM GEMS integration>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 c i_sorb for sorption as a complexation
       if(i_sorb.gt.0)then
-         write(*,*)' Sorption for complexes greater 
+	if (irank.eq.root) write(*,*)'Sorption for complexes greater 
      *   than No.',i_sorb,'assumed' 
 cpause         pause
       endif
       if(j_sorb.gt.0)then
-         write(*,*)' Sorption for basis species greater 
+	if (irank.eq.root)write(*,*)'Sorption for basis species greater 
      *   than No.',j_sorb,'assumed' 
 cpause         pause
       endif
@@ -935,11 +954,11 @@ c      uabs= abs(vx(1,1))
       do 1320 ix=2,nxmax
        x(ix)=x(ix-1)+dx(ix)
  1320 continue
-       write(*,*)'dx',dx  
+	if (irank.eq.root) write(*,*)'dx',dx  
       do 1322 ix=1,nxmax+2
        vx(ix) = vxx
        dm(ix) = dm0
-       write(*,*)'vx',ix,iy,vx(ix)  
+	if (irank.eq.root) write(*,*)'vx',ix,iy,vx(ix)  
  1322 continue
 
       xmin=x(1)
@@ -955,13 +974,13 @@ c	pause
       else 
         ibpstart=npmax/nbox
       endif     
-      write(*,*)'ibpstart =',ibpstart, npmax, nbox
+	if (irank.eq.root) write(*,*)'ibpstart =',ibpstart, npmax, nbox
       de=de*tmult
 c      write(*,*)'npbox xmin xmax',nbox, xmin,xmax,xminr,xmaxr
 c       pause
 c   set particles in the grid
 #ifdef __GNU
-      write(*,*)'before setpar',npmax,xmin,xmax,nbox
+	if (irank.eq.root) write(*,*)'before setpar',npmax,xmin,xmax,nbox
        call setpar(%val(npmax),%val(xmin),%val(xmax),partx,
      *             %val(nbox))
 #else
@@ -988,10 +1007,13 @@ c      write(*,*)'main  vor hydro'
       call hydro1d(nxmax,h0,hb,tx,am,st,
      *   por,ir,qw,qbil,text,vx,dx,icyc,texe,time,fname)
 #endif
-      write(*,*)'hb',hb
+	if (irank.eq.root) then 
+           write(*,*)'hb',hb
 cpause	pause
-      write(*,*)'vx',vx
+           write(*,*)'vx',vx
 cpause	pause
+	endif
+	if (irank.eq.root) then
       open(28,file='arrays.dat',form='formatted')
        write(28,'(a4,85(i10,1x))')
      *       'ir  ',(ir(nspezx),nspezx=1,nxmax+2)
@@ -1015,8 +1037,8 @@ cpause	pause
      *       'hb  ',(hb(nspezx),nspezx=1,nxmax+2)
        write(28,'(a4,85(e10.3,1x))')
      *       'vx  ',(vx(nspezx),nspezx=1,nxmax+2)
-
       close(28)
+	endif       ! endif irank.eq.root
       endif                                       ! endif ihydro=1
 c>>>>>>>>140895    END HYDROLOGY,  initially 
 c       stop
@@ -1026,8 +1048,8 @@ c <<<<< nov 2002
 
 
 c***  input of concentration arrays at a certain time 
-      write(*,*)'do you want to start calculation at a certain time?'
-      write(*,*)'(Y/N)'
+c      write(*,*)'do you want to start calculation at a certain time?'
+c      write(*,*)'(Y/N)'
 c        pause      
 Ckg44 removed this for batch jobs and testing
 c       read(*,*)ssw
@@ -1085,6 +1107,7 @@ c
 c  **************************************
 c  write header of f(t) files
 c  **************************************
+	if (irank.eq.root) then
       OPEN(25,file='conc1t.dat',form='formatted',status='unknown')
       OPEN(11,file='conc2t.dat',form='formatted',status='unknown')
       OPEN(12,file='conc3t.dat',form='formatted',status='unknown')
@@ -1131,20 +1154,22 @@ c  **************************************
      * ,(tdumb(iw1),iw1=1,m1), ' sumqwater' ,' delta-t  '        ! sumbnflow, sumwaterflow
      * ,' delta-q  ',(dtdumb(iw1),iw1=1,m1) 
 c
-
+	endif
       texe=dtmax
 
  235  continue                                              !  next time step interval
       itimestep_tp=itimestep_tp+1
+	if (irank.eq.root) then 
       write(*,'(a4,1x,i3,1x,6(e8.2,1x))')'235 ',itimestep_tp,
      *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
+	endif
       texe=dtmax
 c      write(*,*)'DIM F90', nnodex,nbasis,ncompl,nsolid,nupmax,npmax
       told=time
       time=time+texe
 c      time=time+dtmax
 
-      write(*,*)'time',time,told,texe,tprint(k1),k1
+	if (irank.eq.root) write(*,*)'time',time,told,texe,tprint(k1),k1
 c	pause
       deltn=texe
       if (time.le.tprint(k1)) go to 245
@@ -1227,11 +1252,12 @@ c2003        pn(j,n)=pn(j,n)*por(n)/poro(n)
   238   continue
         tmpold(n)=tmp(n)
         poro(n)=por(n)
-	  if (i_output.eq.1.and.n.eq.2)then
-      	    write(35,*) 'node',n,'vor transport' 
-	     write(35,*) 'DCb'
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-        endif
+c kg44
+c	  if (i_output.eq.1.and.n.eq.2)then
+c      	    write(35,*) 'node',n,'vor transport' 
+c	     write(35,*) 'DCb'
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c        endif
   240 continue
 c2002<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c2003         if(ipor.gt.0)then
@@ -1321,7 +1347,9 @@ c  calculate new values of conc. and temp. as functions of time
 c  ************************************************************
 c
 c   move particles during dt
+	if (irank.eq.root) then 
       write (*,*) 'walk time:  treal texe', treal, texe
+         endif
 #ifdef __GNU
       call walk2(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
      * %val(aquer),dm,%val(texe),dx,vx
@@ -1352,11 +1380,12 @@ c**new concentration in each box
      *  partic,bo,co,ismooth,m1,m2)
 #endif
 c kg44 changed output format
+	if (irank.eq.root) then 
       write(*,*)'cneu',itimestep_tp,
      *bn(1,1),pn(2,1),pn(3,1)
       write(*,*)'cneu',itimestep_tp,
      *bn(1,2),pn(2,2),pn(3,2)
-
+	endif
 c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
 c     *bn(1,1),pn(2,1),pn(3,1)
 c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
@@ -1505,12 +1534,16 @@ c	do 1699 ib=1,m1
 c f irst scatter the inital dataset among the processors
 c root obtains the full dataset
 
+       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c we define the size of subintervalls for buffer variables
-	i_subdomain_length = (nxmax-2)/npes
+	i_subdomain_length = abs((nxmax-2)/npes)
+	if (irank.eq.root) then 
          write(*,*) 'nodes/procs: ', (nxmax-2)/npes
-         write(*,*) 'i_interval_mpi', i_subdomain_length
+         write(*,*) 'nxmax, procs',nxmax-2, npes
+         write(*,*) 'i_subdomain_length', i_subdomain_length
+        endif
 c  make sure grid size and no of processors fit together
-        if (mod((nxmax),npes).ne.0) then
+        if (mod((nxmax-2),npes).ne.0) then
          write(*,*) 'parallelization error: check numer of processors'
             write(*,*)'i_subdomain_length is not an integer'
             write(*,*)'mod((nxmax),npes)',mod((nxmax-2),npes)
@@ -1524,24 +1557,27 @@ c  make sure grid size and no of processors fit together
          stop
         endif
 
-c now we allocate memory for the buffers
-      allocate(bn_subdomain((m1-1)*i_subdomain_length))
-      allocate(cn_subdomain(m2*i_subdomain_length))
-      allocate(pn_subdomain(m3*i_subdomain_length))
+c now we allocate memory for the buffers..
+c we assume that if bn_subdomain is already allocated the others are also existing
+	if (.NOT.allocated(bn_subdomain)) then
+         allocate(bn_subdomain((m1-1)*i_subdomain_length))
+         allocate(cn_subdomain(m2*i_subdomain_length))
+         allocate(pn_subdomain(m3*i_subdomain_length))
 c and a second buffer because W. refuses to work with allocate
-       allocate(bn_domain((m1-1)*(nxmax-2)))
-       allocate(cn_domain(m2*(nxmax-2)))
-       allocate(pn_domain(m3*(nxmax-2)))
-	write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
-     &  irank,nxmax,i_subdomain_length 
-	write(*,*) m1, m2, m3
-        root = 0
-	bn_domain=0.0
-	cn_domain=0.0
-        pn_domain=0.0
-	bn_subdomain=0.0
-	cn_subdomain=0.0
-        pn_subdomain=0.0
+         allocate(bn_domain((m1-1)*(nxmax-2)))
+         allocate(cn_domain(m2*(nxmax-2)))
+         allocate(pn_domain(m3*(nxmax-2)))
+c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
+c     &   irank,nxmax,i_subdomain_length 
+c	 write(*,*) m1, m2, m3
+         root = 0
+	 bn_domain=0.0
+	 cn_domain=0.0
+         pn_domain=0.0
+	 bn_subdomain=0.0
+	 cn_subdomain=0.0
+         pn_subdomain=0.0
+	endif
         
         if (irank.eq.root) then        
 	  do n=2,nxmax-1
@@ -1634,17 +1670,18 @@ cfalsch   	  p_xPH(ii)=p_xDc(13+ii)            ! only one phse here       ! ( nP
 c        write(*,*)ii, gemsxPH(ii)
  1682 continue
 cgems      pause "XXXX"
-	if (i_output.eq.1.and.n.eq.2)then
-      	    write(35,*) 'node',n,'vor GEMS' 
-	    write(35,*) 'DCb'
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-	    write(35,*) 'ICb'
-	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
+c kg44
+c	if (i_output.eq.1.and.n.eq.2)then
+c      	    write(35,*) 'node',n,'vor GEMS' 
+c	    write(35,*) 'DCb'
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c	    write(35,*) 'ICb'
+c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
 c	     write(35,*) 'b_bPS'
 c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
 c	     write(35,*) 'xPH'
 c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-	endif
+c	endif
 
 
 cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
@@ -1687,17 +1724,18 @@ c      time_gemsend=RTC()
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
 c      time_gemstotal=time_gemstotal+ secnds(time_gemsstart)
 
-	if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'nach GEMS' 
-	    write(35,*) 'DCb', '#######   ',time_gemstotal
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c kg44
+c	if (i_output.eq.1.and.n.eq.2)then
+c            write(35,*) 'node',n,'nach GEMS' 
+c	    write(35,*) 'DCb', '#######   ',time_gemstotal
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
 c	    write(35,*) 'ICb'
-	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
+c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
 c	write(35,*) 'b_bPS'
 c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
 c	write(35,*) 'xPH'
 c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-	endif
+c	endif
 c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
 c     bn=
 c     cn=
@@ -1712,11 +1750,12 @@ c      do 1695 n=2,nxmax
 	do 1798 ip=1,m3
 	pn_subdomain(ip+(n-1)*m3)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
-	if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
-	    write(35,*) 'DCb'
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-      endif
+c kg44
+c	if (i_output.eq.1.and.n.eq.2)then
+c      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
+c	    write(35,*) 'DCb'
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c      endif
 
 c kg44 only needed for debug
 c      itergemstime(itimestep_tp,n)=p_IterDone
@@ -1732,24 +1771,24 @@ c	pause
 c now do MPI_GATHER
         sendcount = i_subdomain_length*(m1-1)
         recvcount = i_subdomain_length*(m1-1)
-      call MPI_AllGather(bn_subdomain, sendcount, 
+      call MPI_Gather(bn_subdomain, sendcount, 
      &     MPI_DOUBLE_PRECISION,
      &	    bn_domain, recvcount, MPI_DOUBLE_PRECISION,
-     &	    MPI_COMM_WORLD, ierr)
+     &	    MPI_COMM_WORLD, root,ierr)
 
         sendcount = i_subdomain_length*m2
         recvcount = i_subdomain_length*m2
-      call MPI_AllGather(cn_subdomain, sendcount, 
+      call MPI_Gather(cn_subdomain, sendcount, 
      &      MPI_DOUBLE_PRECISION,
      &	    cn_domain, recvcount, MPI_DOUBLE_PRECISION,
-     &	    MPI_COMM_WORLD,ierr)
+     &	    MPI_COMM_WORLD,root,ierr)
 
         sendcount = i_subdomain_length*m3
         recvcount = i_subdomain_length*m3
-      call MPI_AllGather(pn_subdomain, sendcount, 
+      call MPI_Gather(pn_subdomain, sendcount, 
      &      MPI_DOUBLE_PRECISION,
      &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
-     &	    MPI_COMM_WORLD,ierr)
+     &	    MPI_COMM_WORLD,root,ierr)
 
         if (irank.eq.root) then        
 	  do n=2,nxmax-1
@@ -1764,24 +1803,17 @@ c now do MPI_GATHER
             enddo
           enddo
 	endif
-       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-       sendcount = nbasis*nnodex
-       call MPI_BCAST(bn,sendcount,MPI_DOUBLE_PRECISION,
-     &                    root,MPI_COMM_WORLD,ierr)
-       sendcount = ncompl*nnodex      
-       call MPI_BCAST(cn,sendcount,MPI_DOUBLE_PRECISION,
-     &                    root,MPI_COMM_WORLD,ierr)
-       sendcount = nsolid*nnodex      
-       call MPI_BCAST(pn,sendcount,MPI_DOUBLE_PRECISION,
-     &                     root,MPI_COMM_WORLD,ierr)
+c       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
+c       sendcount = nbasis*nnodex
+c       call MPI_BCAST(bn,sendcount,MPI_DOUBLE_PRECISION,
+c     &                    root,MPI_COMM_WORLD,ierr)
+c       sendcount = ncompl*nnodex      
+c       call MPI_BCAST(cn,sendcount,MPI_DOUBLE_PRECISION,
+c     &                    root,MPI_COMM_WORLD,ierr)
+c       sendcount = nsolid*nnodex      
+c       call MPI_BCAST(pn,sendcount,MPI_DOUBLE_PRECISION,
+c     &                     root,MPI_COMM_WORLD,ierr)
 C
-	deallocate (bn_domain) 
-        deallocate (cn_domain) 
-        deallocate (pn_domain) 
-        deallocate (bn_subdomain)
-        deallocate (cn_subdomain)
-        deallocate (pn_subdomain)
-
 #else       
 c
 	do 1555 n=2,  nxmax-1                  !node loop for GEMS after Transport step
@@ -1834,17 +1866,18 @@ cfalsch   	  p_xPH(ii)=p_xDc(13+ii)            ! only one phse here       ! ( nP
 c        write(*,*)ii, gemsxPH(ii)
  1682 continue
 cgems      pause "XXXX"
-	if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'vor GEMS' 
-	     write(35,*) 'DCb'
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-	write(35,*) 'ICb'
-	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
+ckg44
+c	if (i_output.eq.1.and.n.eq.2)then
+c      	write(35,*) 'node',n,'vor GEMS' 
+c	     write(35,*) 'DCb'
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c	write(35,*) 'ICb'
+c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
 c	     write(35,*) 'b_bPS'
 c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
 c	     write(35,*) 'xPH'
 c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-	endif
+c	endif
 
 
 cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
@@ -1887,17 +1920,18 @@ c      time_gemsend=RTC()
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
 c      time_gemstotal=time_gemstotal+ secnds(time_gemsstart)
 
-	if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'nach GEMS' 
-	    write(35,*) 'DCb', '#######   ',time_gemstotal
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+ckg44
+c	if (i_output.eq.1.and.n.eq.2)then
+c      	write(35,*) 'node',n,'nach GEMS' 
+c	    write(35,*) 'DCb', '#######   ',time_gemstotal
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
 c	    write(35,*) 'ICb'
-	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
+c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
 c	write(35,*) 'b_bPS'
 c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
 c	write(35,*) 'xPH'
 c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-	endif
+c	endif
 c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
 c     bn=
 c     cn=
@@ -1912,11 +1946,12 @@ c      do 1695 n=2,nxmax
 	do 1798 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
-	if (i_output.eq.1.and.n.eq.2)then
-      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
-	    write(35,*) 'DCb'
-	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-      endif
+ckg44
+c	if (i_output.eq.1.and.n.eq.2)then
+c      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
+c	    write(35,*) 'DCb'
+c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c      endif
 
 c kg44 only needed for debug
 c      itergemstime(itimestep_tp,n)=p_IterDone
@@ -2011,6 +2046,7 @@ c  *******************************************
 c  check if a solid is starting to precipitate
 c  or has dissolved at any node
 c  *******************************************
+	if (irank.eq.root) then
 
         do 390 i=1,m3
         if (pn(i,nspez).le.(zero)) go to 330
@@ -2027,8 +2063,10 @@ cc2004       endif
      1  dump(i),treal,tmp(nspez),eqconst(i,nspez)
  2050   format(/,1x,'at node',i4,1x,' solid',a10,' has dissolved at 
      1  time',1pe12.4,/,4x,'temp =',0pf8.3,', sol prod =',1pe12.4)
-
   390   continue
+
+       endif                ! endif printout on root only
+
 
 c************************************************
 c    calculation of the apparent porosity resulting 
@@ -2146,7 +2184,7 @@ c  *******************************************gems
 c  check if a solid is starting to precipitate
 c  or has dissolved at any node
 c  *******************************************gems
-
+       if (irank.eq.root) then
         do 1390 i=1,m3
         if (pn(i,n).le.(zero)) go to 1330
         if (po(i,n).le.(zero)) write(6,2000)n,
@@ -2155,11 +2193,14 @@ c  *******************************************gems
  1330   if (po(i,n).gt.(zero)) write(6,2050) n,
      1  dump(i),treal,tmp(n),eqconst(i,n)
  1390   continue
-
+        endif   ! end printout root only
 
 	endif                                       ! if i_gems=1 
+
+	if (irank.eq.root) then 
       write(*,'(a4,1x,i3,1x,6(e8.2,1x))')'n_ge',itimestep_tp,
      *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
+         endif
 cgems	 pause "next time step"
 c      if(itimestep_tp.gt.10)stop
 
@@ -2174,8 +2215,10 @@ c2002      if (time.eq.tprint(k1)) then
       if (treal.eq.tprint(k1)) then
         kk1=k1+96
         ttt=treal/31557600
-        write(*,*)'kk1',kk1,'time',treal
+	if (irank.eq.root) write(*,*)'kk1',kk1,'time',treal
         ch=char(kk1)
+
+        if (irank.eq.root) then
         write(datei1,'(a4,a1,a4)')'conc',ch,'.dat' 
         open(15,file=datei1,form='formatted',status='unknown')
 c       Volume fractions, rates, and omegas       -kinet-
@@ -2194,8 +2237,9 @@ c       Volume fractions, rates, and omegas       -kinet-
         write(17,1577)' x       ',(dump(iw3),iw3=1,m3)
         write(18,1577)' x       ',(dump(iw3),iw3=nmineq+1,m3)
         write(19,1577)' x       ',(dump(iw3),iw3=nmineq+1,m3)
+        endif    ! end printout root only
 
-
+        if (irank.eq.root) then
         do 1513 nn1=1,nxmax
         if(nn1.eq.1)then
                 xspez=x(nn1)+dx(1)
@@ -2224,7 +2268,8 @@ c      Vol. fractions, rates, and log omega   -kinet-
         close(17)   ! kinet
         close(18)   ! kinet
         close(19)   ! kinet
-
+         endif     ! printout root only
+        if (irank.eq.root) then
 c****  write out particle positions
         write(datei2,'(a5,a1,a4)')'p_ibx',ch,'.dat' 
         open(16,file=datei2,form='formatted',status='unknown')
@@ -2263,6 +2308,8 @@ c****   solutes (basis species and complexes)
         write(16,*)'time = ',treal
         close(16)
 
+       endif       ! end output if root only
+
 c        delt=deltn
         k1=k1+1
         itprint=1
@@ -2285,11 +2332,13 @@ c      if(treal.gt.0.)then
 
            ttt=time/1.
            tty=treal/31557600.
+	if (irank.eq.root) then 
          write(*,'(a6,2(e10.2,a6,2x), 2x,a7,i10)')
      *   'time= ',treal,' [sec]',tty,'  [yr]', 'iccyle= ',icyc
          write(*,'(a14,1x,10(e10.4,1x))')
      *   'solids iort(1)',(pn(ii,iortx(1)),ii=1,m3),cs(iortx(1)),
      *    (eqconst(ii,iortx(1)),ii=1,m3)
+         endif
 c------------------------------------------------------------- 19/09/96
 C pH, tot. K and tot Na in aqueous phase 
       if(i_sorb.gt.0.and.ialkali.gt.0)then
@@ -2318,7 +2367,7 @@ c      write(*,*)i,j_k,i_sorb+2,s(j_k,i),cn(i,iortx(1)),tot_K
        endif
 c---------------------------------------------------------- 
        tot_Ca=bn(1,iortx(1))+s(1,1)*cn(1,iortx(1))
-         write(25,2300)treal
+         if (irank.eq.root) write(25,2300)treal
      *               ,(bn(ii,iortx(1)),ii=1,m1)
      *               ,(cn(ii,iortx(1)),ii=1,m2)
      *               ,(pn(ii,iortx(1)),ii=1,m3)
@@ -2354,7 +2403,7 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(2))*cn(lnhc,iortx(2)))
       endif
 
        tot_Ca=bn(1,iortx(2))+s(1,1)*cn(1,iortx(2))
-        write(11,2300)treal
+        if (irank.eq.root) write(11,2300)treal
      *               ,(bn(ii,iortx(2)),ii=1,m1)
      *               ,(cn(ii,iortx(2)),ii=1,m2)
      *               ,(pn(ii,iortx(2)),ii=1,m3)
@@ -2390,7 +2439,7 @@ c0-4      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(3))*cn(lnhc,iortx(3)))
       endif
 
        tot_Ca=bn(1,iortx(3))+s(1,1)*cn(1,iortx(3))
-        write(12,2300)treal
+        if (irank.eq.root) write(12,2300)treal
      *               ,(bn(ii,iortx(3)),ii=1,m1)
      *               ,(cn(ii,iortx(3)),ii=1,m2)
      *               ,(pn(ii,iortx(3)),ii=1,m3)
@@ -2426,7 +2475,7 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(4))*cn(lnhc,iortx(4)))
       endif
 
        tot_Ca=bn(1,iortx(4))+s(1,1)*cn(1,iortx(4))
-        write(13,2300)treal
+        if (irank.eq.root) write(13,2300)treal
      *               ,(bn(ii,iortx(4)),ii=1,m1)
      *               ,(cn(ii,iortx(4)),ii=1,m2)
      *               ,(pn(ii,iortx(4)),ii=1,m3)
@@ -2462,7 +2511,7 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(5))*cn(lnhc,iortx(5)))
       endif
 
        tot_Ca=bn(1,iortx(5))+s(1,1)*cn(1,iortx(5))
-        write(14,2300)treal
+        if (irank.eq.root) write(14,2300)treal
      *               ,(bn(ii,iortx(5)),ii=1,m1)
      *               ,(cn(ii,iortx(5)),ii=1,m2)
      *               ,(pn(ii,iortx(5)),ii=1,m3)
@@ -2490,6 +2539,7 @@ c      write(*,*)(pn(1,nx),nx=1,nxmax)
 c	pause "next time step"
       goto 235
   500 continue
+          if (irank.eq.root) then
 C end of file for breakthrough curves 
          xloc=x(1)+iortx(1)*dx(1)
          write(25,*)'at location ',xloc,' [m]'
@@ -2506,15 +2556,17 @@ C end of file for breakthrough curves
          xloc=x(1)+iortx(5)*dx(1)
          write(14,*)'at location ',xloc,' [m]'
          close (14)
+       endif     ! end print root only
       time_end=secnds(1.)
       time_interval=time_end-time_initial
+	if (irank.eq.root) then 
       write(*,*) 'time_end  time_interval',time_end, time_interval
       write(*,*) 'time steps calculated timestep_tp = ',itimestep_tp
       write(*,*) 'time used during GEMS calling = ',time_gemstotal
       write(*,*) 'time used during GEMS read = ',time_gemsreadtotal
       write(*,*) 'time used during GEMS write = ',time_gemswritetotal
       write(*,*) 'time used during MCOTAC-chem-calc=',time_initreadtotal
-
+         endif
 c kg44 this is not needed..only for debug
 c      open (25, file = "iter_array.grd")
 c	write(25,'(A4)')"DSAA"
@@ -2526,7 +2578,8 @@ c	do 2408 n=51,1,-1
 c2408	write(25,'(80(i3,1x))')(itergemstime(it,n),it=1,80)
 c      close (25)
 
-      if(i_output.eq.1) close(35)
+c kg44
+c      if(i_output.eq.1) close(35)
 
 
 #ifdef __MPI
@@ -2536,8 +2589,21 @@ C mpi finalize
          write(*,*)'mpi_finalize successfull'
       else
          write(*,*)'mpi_finalize failed'
+	deallocate (bn_domain) 
+        deallocate (cn_domain) 
+        deallocate (pn_domain) 
+        deallocate (bn_subdomain)
+        deallocate (cn_subdomain)
+        deallocate (pn_subdomain)
          stop
       endif
+c get rid of the buffer for gems
+	deallocate (bn_domain) 
+        deallocate (cn_domain) 
+        deallocate (pn_domain) 
+        deallocate (bn_subdomain)
+        deallocate (cn_subdomain)
+        deallocate (pn_subdomain)
 c
 #endif
 
@@ -2565,14 +2631,14 @@ c     read solid properties
       read (30,*)
       do 10, i=1,m3
       read (30,'(a10,2(e10.5))')dumchar,pnw(i),pnd(i)
-      write(*,'(a10,2(e10.5))')dumchar,pnw(i),pnd(i)
+c	write(*,'(a10,2(e10.5))')dumchar,pnw(i),pnd(i)
   10  continue
       read (30,'(a10,3(e10.5))')dumchar,etc(1),etc(2),etc(3)
-      write(*,'(a10,3(e10.5))')dumchar,etc(1),etc(2),etc(3)
+c      write(*,'(a10,3(e10.5))')dumchar,etc(1),etc(2),etc(3)
       read (30,'(a10,2(e10.5))')dumchar,xnaohmw,xnaohd
-      write(*,'(a10,2(e10.5))')dumchar,xnaohmw,xnaohd
+c      write(*,'(a10,2(e10.5))')dumchar,xnaohmw,xnaohd
       read (30,'(a10,2(e10.5))')dumchar,xkohmw,xkohd
-      write(*,'(a10,2(e10.5))')dumchar,xkohmw,xkohd
+c      write(*,'(a10,2(e10.5))')dumchar,xkohmw,xkohd
 c      pause
       close(30)
       return
