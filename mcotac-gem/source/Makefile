@@ -1,13 +1,13 @@
 CC = mpicc
 CXX = mpiCC
 FORT = mpif90
-CFLAGS = -c  -g -O -DIPMGEMPLUGIN -pedantic -D__unix -D__GNU  -D__MPI
+CFLAGS = -c  -g -O -DIPMGEMPLUGIN -pedantic -D__unix -D__GNU  -D__MPI -fbounds-check 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O -DIPMGEMPLUGIN -D__unix -D__MPI -D__GNU 
-CCFLAGS1 =   -c -g -O -DIPMGEMPLUGIN -D__unix -D__MPI -D__GNU 
-FFLAGS = -c -g -O -fno-underscoring -fdefault-real-8 -fopenmp -DIPMGEMPLUGIN -D__unix -D__GNU -D__MPI 
+CCFLAGS =   -c -g -O -DIPMGEMPLUGIN -D__unix -D__MPI -D__GNU -fbounds-check 
+CCFLAGS1 =   -c -g -O -DIPMGEMPLUGIN -D__unix -D__MPI -D__GNU -fbounds-check 
+FFLAGS = -c -g -O -fno-underscoring -fbounds-check -DIPMGEMPLUGIN -D__unix -D__GNU -D__MPI 
 LINK = mpif90
-LFLAGS = -lstdc++ -lgfortran
+LFLAGS = -fbounds-check -lstdc++ -lgfortran
 GEMINCLUDE = ../../GEMIPM2K
 GEMLIB     = ../../GEMIPM2K
 EXEC = mcotacgem-mpi
