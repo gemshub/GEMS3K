@@ -111,6 +111,8 @@ c and a second buffer
 
       double precision xxyy , xarray(10)
 
+c time measurements
+	double precision time_gemsmpi, time_gemsmpi_start, time_gemsmpi_end 
 	INTEGER argc, iinn, i_gems, nNodes
 	integer CSTR(100)
 	integer c_to_i(100)
@@ -1528,7 +1530,8 @@ c  then new xDC trasnfereed to 'bIC' total idepandent masses
 
 c  <<<<<<<   transfer of GEMS nomenclature to MCOTAC naming
 c	do 1699 ib=1,m1
-	if (i_gems. eq. 1) then     ! goto 1557
+          time_gemsmpi_start=secnds(0.)
+	if (i_gems. eq. 1) then     
 
 #ifdef __MPI
 c f irst scatter the inital dataset among the processors
@@ -1765,7 +1768,6 @@ c	pause
 	p_IterDone=0
 
  1555 continue                 ! end node loop for GEMS after Transport step             
- 1557 continue
 
 
 c now do MPI_GATHER
@@ -1961,9 +1963,11 @@ c	pause
 	p_IterDone=0
 
  1555 continue                 ! end node loop for GEMS after Transport step             
- 1557 continue
 #endif           
       endif        ! i_gems eq.1  
+      time_gemsmpi_end=secnds(0.)
+      time_gemsmpi=time_gemsmpi+(time_gemsmpi_end-time_gemsmpi_start)
+
 c<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c          here MCOTAC-chem calculations at each node
       if(i_gems.ne.1)then 
@@ -2559,14 +2563,18 @@ C end of file for breakthrough curves
        endif     ! end print root only
       time_end=secnds(1.)
       time_interval=time_end-time_initial
-	if (irank.eq.root) then 
-      write(*,*) 'time_end  time_interval',time_end, time_interval
-      write(*,*) 'time steps calculated timestep_tp = ',itimestep_tp
-      write(*,*) 'time used during GEMS calling = ',time_gemstotal
-      write(*,*) 'time used during GEMS read = ',time_gemsreadtotal
-      write(*,*) 'time used during GEMS write = ',time_gemswritetotal
-      write(*,*) 'time used during MCOTAC-chem-calc=',time_initreadtotal
-         endif
+      write(*,*) 'Proc No: ',irank,
+     &       'time_end  time_interval',time_end, time_interval
+      write(*,*) 'Proc No: ',irank,
+     &       'time steps calculated timestep_tp = ',itimestep_tp
+      write(*,*) 'Proc No: ',irank,
+     &        'time used during GEMS calling = ',time_gemstotal
+      write(*,*) 'Proc No: ',irank,
+     &'time used for Gems-Loop (incl. communication) = ',time_gemsmpi
+
+c      write(*,*) 'time used during GEMS read = ',time_gemsreadtotal
+c      write(*,*) 'time used during GEMS write = ',time_gemswritetotal
+c      write(*,*) 'time used during MCOTAC-chem-calc=',time_initreadtotal
 c kg44 this is not needed..only for debug
 c      open (25, file = "iter_array.grd")
 c	write(25,'(A4)')"DSAA"
