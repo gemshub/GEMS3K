@@ -1773,26 +1773,25 @@ c	pause
 c now do MPI_GATHER
         sendcount = i_subdomain_length*(m1-1)
         recvcount = i_subdomain_length*(m1-1)
-      call MPI_Gather(bn_subdomain, sendcount, 
+      call MPI_AllGather(bn_subdomain, sendcount, 
      &     MPI_DOUBLE_PRECISION,
      &	    bn_domain, recvcount, MPI_DOUBLE_PRECISION,
-     &	    MPI_COMM_WORLD, root,ierr)
+     &	    MPI_COMM_WORLD,ierr)
 
         sendcount = i_subdomain_length*m2
         recvcount = i_subdomain_length*m2
-      call MPI_Gather(cn_subdomain, sendcount, 
+      call MPI_AllGather(cn_subdomain, sendcount, 
      &      MPI_DOUBLE_PRECISION,
      &	    cn_domain, recvcount, MPI_DOUBLE_PRECISION,
-     &	    MPI_COMM_WORLD,root,ierr)
+     &	    MPI_COMM_WORLD,ierr)
 
         sendcount = i_subdomain_length*m3
         recvcount = i_subdomain_length*m3
-      call MPI_Gather(pn_subdomain, sendcount, 
+      call MPI_AllGather(pn_subdomain, sendcount, 
      &      MPI_DOUBLE_PRECISION,
      &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
-     &	    MPI_COMM_WORLD,root,ierr)
+     &	    MPI_COMM_WORLD,ierr)
 
-        if (irank.eq.root) then        
 	  do n=2,nxmax-1
             do ib=1,m1-1
 	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1-1))
@@ -1804,7 +1803,6 @@ c now do MPI_GATHER
 	  	pn(ip,n)=pn_domain(ip+(n-2)*m3)  
             enddo
           enddo
-	endif
 c       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c       sendcount = nbasis*nnodex
 c       call MPI_BCAST(bn,sendcount,MPI_DOUBLE_PRECISION,
