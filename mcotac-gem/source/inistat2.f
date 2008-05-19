@@ -26,7 +26,8 @@ c  species at each node for the initial and inner boundary or influx
 c  conditions.
 c  *********************************************************************
 c
-      integer s,ss,iche(nnodex),i_sorb,ialkali
+c-coeff      integer s,ss,iche(nnodex),i_sorb,ialkali
+      integer s,iche(nnodex),i_sorb,ialkali
       character *10 dumb,dumc,dump
 
       character*40 dummy_a40
@@ -362,7 +363,8 @@ c  basis species in equilibrium with solids.
 c  *********************************************************************
 c
       character*1 ssw
-      integer s,ss,i_sorb,ialkali
+c-coeff      integer s,ss,i_sorb,ialkali
+      integer s,i_sorb,ialkali
       character *10 dumb,dumc,dump
       character*40 dummy_a40
       character*6 dateiv,dateir,dateiw  !kinet
@@ -817,7 +819,8 @@ c  *********************************************************************
 c  this subroutine calculates the equilibrium concentrations of all species 
 c  *********************************************************************
 c
-      integer s,ss,iche(nnodex),i_sorb,ialkali
+c-coeff      integer s,ss,iche(nnodex),i_sorb,ialkali
+      integer s,iche(nnodex),i_sorb,ialkali
       character *10 dumb,dumc,dump
       character*40 dummy_a40
       character*6 dateiv,dateir,dateiw  !kinet
@@ -1049,7 +1052,8 @@ c  *********************************************************************
 c
       character*1 ssw
       character*10 dumb,dumc,dump
-      integer s,ss,ialkali
+c-coeff      integer s,ss,ialkali
+      integer s,ialkali
       character*40 dummy_a40
       character*6 dateiv,dateir,dateiw  !kinet
 ckinet<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

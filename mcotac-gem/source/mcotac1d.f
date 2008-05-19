@@ -3,6 +3,8 @@
       program mcotac1D
       implicit double precision (a-h,o-z)
       include 'gwheader.inc'
+c-coeff :commented out ss(nbasis,nsolid) integert stoichiometric arrays, change to flowt
+
 c      include 'f_gem_node.inc'
 #ifdef __MPI
       include 'mpif.h'
@@ -152,8 +154,9 @@ c12345678901234567890123456789012345678901234567890123456789012345690
       integer npkt,ir(nnodex+2),npmax,nbox,nboxy,partib(nnodex)   
       integer ismooth,iortx(5), i_sorb,j_sorb,iche(nnodex+2),j_decay
      *,ialkali,icyc
-      integer npin, s,ss
-	integer p_nICb, p_nPHb  
+c-coeff      integer npin, s,ss
+      integer npin, s
+      	integer p_nICb, p_nPHb  
       integer p_nDCb  
       integer itimestep_tp, dtprstep, kk1,k1
       real t1,t2
@@ -593,14 +596,14 @@ c04     2,q,acb,acc,bn,pn,cn,vjb,vjc,s,ss,bc2,lne,eh,idismdl,cs,tmpk
 c04     3,iche,i_sorb,ialkali)
 c >>>                                  ^       ^  ^ added 9/87
 
-      call initial(itemp,li,lb,li_i1,li_i2,in1,in2,lnh,err,nxmax,tb
-     +,temp,vo
-     1,x,itype,num,con,eqconst,tmp,bi,bc,indexi,indexb
-     +,index_i1,bi_i1,gesb_i1,index_i2,bi_i2,gesb_i2
-     +,gesp_i1,gesp_i2,gesc_i1,gesc_i2
-     +,gespvf_i1,gespvf_i2
-     2,q,acb,acc,bn,pn,cn,vjb,vjc,s,ss,lne,eh,idismdl,cs,tmpk
-     3,iche,i_sorb,ialkali,dumb,dumc,dump,itmpdep)
+c-coeff      call initial(itemp,li,lb,li_i1,li_i2,in1,in2,lnh,err,nxmax,tb
+c-coeff      +,temp,vo
+c-coeff      1,x,itype,num,con,eqconst,tmp,bi,bc,indexi,indexb
+c-coeff      +,index_i1,bi_i1,gesb_i1,index_i2,bi_i2,gesb_i2
+c-coeff      +,gesp_i1,gesp_i2,gesc_i1,gesc_i2
+c-coeff      +,gespvf_i1,gespvf_i2
+c-coeff      2,q,acb,acc,bn,pn,cn,vjb,vjc,s,ss,lne,eh,idismdl,cs,tmpk
+c-coeff      3,iche,i_sorb,ialkali,dumb,dumc,dump,itmpdep)
 
 c  *******************************************************************
 c  initial porosity calculation from solids concentration
@@ -2021,11 +2024,11 @@ c        endif
 cxz      if(i_gems.ne.1)then
 	time_initreadstart=secnds(0.)
 
-        call init2(itemp,li,lb,in1,in2,lnh,err,nspez,tb,
-     1     temp,vo,x,itype,num,con,eqconst,tmp,bi,bc,
-     2          indexi,indexb,q,acb,acc,bn,pn,cn,vjb,vjc,
-     3          s,ss,bc2,lne,eh,idismdl,cs,tmpk,bo,co,po
-     4          ,i_sorb,ialkali,dumb,dumc,dump,itmpdep)
+c-coeff        call init2(itemp,li,lb,in1,in2,lnh,err,nspez,tb,
+c-coeff     1     temp,vo,x,itype,num,con,eqconst,tmp,bi,bc,
+c-coeff     2          indexi,indexb,q,acb,acc,bn,pn,cn,vjb,vjc,
+c-coeff     3          s,ss,bc2,lne,eh,idismdl,cs,tmpk,bo,co,po
+c-coeff     4          ,i_sorb,ialkali,dumb,dumc,dump,itmpdep)
 c******************************************************* 
 c            write(*,*)'init2 n ',nspez
 c            if(nspez.eq.3)then 

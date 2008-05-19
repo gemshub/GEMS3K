@@ -33,7 +33,8 @@ c
       include 'gwheader.inc'
 c      include 'kinetics.inc'    ! kinet
 
-      integer s,ss,itest,ncyc,nxmax,ny,isteu,inma,ipfile,ntim,npin
+c-coeff      integer s,ss,itest,ncyc,nxmax,ny,isteu,inma,ipfile,ntim,npin
+      integer s,itest,ncyc,nxmax,ny,isteu,inma,ipfile,ntim,npin
 c04      real*4 t1,t2
       character *79 title
       character *10 dumb(nbasis),dumc(ncompl),dump(nsolid),input
@@ -301,9 +302,11 @@ c >>>                       ^ added 9/87
 c04      read (4,1004) (ss(j,i),j=1,m1)
 c>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>    kinet
       write(7,1005)dump(i),itmpdep(i),(con(i,j),j=1,4)
-      read (4,1004) (ss(j,i),j=1,m1)
-      write(*,1004) (ss(j,i),j=1,m1)
-      write(7,1004) (ss(j,i),j=1,m1)
+c-coeff      read (4,1004) (ss(j,i),j=1,m1)
+      read (4,*) (ss(j,i),j=1,m1)
+c-coeff       write(*,1004) (ss(j,i),j=1,m1)
+c-coeff       write(7,1004) (ss(j,i),j=1,m1)
+      write(*,*) (ss(j,i),j=1,m1)
 cc2004      pause
 c
 c  **************************************
@@ -371,7 +374,8 @@ c  **************************************
 c  write out information about the solids
 c  **************************************
 c      write (6,971) dump(i),(ss(j,i),j=1,m1)
-      write (7,971) dump(i),(ss(j,i),j=1,m1)
+c-coeff      write (7,971) dump(i),(ss(j,i),j=1,m1)
+      write (7,*) dump(i),(ss(j,i),j=1,m1)
    40 continue
 c
 c  -----------------------------------------------------------------------------
@@ -523,7 +527,8 @@ c  *********************************************************************
 c  this subroutine prints results of the calculations.
 c  *********************************************************************
 c
-      integer s,ss,itest,ncyc,nxmax,ny,isteu,inma,ipfile,ntim,npin
+c-coeff      integer s,ss,itest,ncyc,nxmax,ny,isteu,inma,ipfile,ntim,npin
+      integer s,itest,ncyc,nxmax,ny,isteu,inma,ipfile,ntim,npin
 c      integer ir(21,1),npmax,nbox,partib(21),ismooth ,npkt   
 c      real*4 t1,t2
       character *79 title
