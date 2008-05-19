@@ -3,7 +3,7 @@
 
 TEMPLATE	= app
 LANGUAGE        = C++
-TARGET		= nodearrs
+TARGET		= gemnodar
 VERSION         = 2.2.3
 
 CONFIG		-= qt

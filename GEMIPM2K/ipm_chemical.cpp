@@ -1008,7 +1008,7 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
         if( syp->PYOF != S_OFF )
 #endif
           if( YOF != 0.0 )
-        	G += YOF;  // In GEMIPM2K, YOF[k] is the only way to influence 
+        	G += YOF;  // In GEMIPM2K, YOF[k] is the only way to influence G directly
 
         break;
     case DC_GAS_COMP: // gases except H2O and CO2

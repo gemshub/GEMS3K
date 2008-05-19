@@ -96,6 +96,8 @@ gem2mt-sep/platform/Linux-GNU/Makefile -text
 gem2mt-sep/platform/Linux-PGI/Makefile -text
 gem2mt-sep/platform/other/Makefile -text
 gem2mt-sep/platform/win32bcc/Makefile -text
+gem2mt-sep/platform/win32minGW/Makefile -text
+gem2mt-sep/platform/win32minGW/object_ld_script -text
 gem2mt-sep/platform/win32msvc/Makefile -text
 gem2mt-sep/test/CalcColumn-dat.lst -text
 gem2mt-sep/test/CalcColumn-dbr-0-0000.dat -text
@@ -224,6 +226,7 @@ node-gem/platform/Linux-PGI/Makefile.prof -text
 node-gem/platform/other/Makefile -text
 node-gem/platform/win32bcc/Makefile -text
 node-gem/platform/win32minGW/Makefile -text
+node-gem/platform/win32minGW/object_ld_script -text
 node-gem/platform/win32msvc/Makefile -text
 node-gem/test_ads/TestAds.BAT -text
 node-gem/test_ads/UL_on_Qtz-dat.lst -text
@@ -344,6 +347,8 @@ nodearray-gem/platform/Linux-GNU/Makefile -text
 nodearray-gem/platform/Linux-PGI/Makefile -text
 nodearray-gem/platform/other/Makefile -text
 nodearray-gem/platform/win32bcc/Makefile -text
+nodearray-gem/platform/win32minGW/Makefile -text
+nodearray-gem/platform/win32minGW/object_ld_script -text
 nodearray-gem/platform/win32msvc/Makefile -text
 nodearray-gem/test/CalcColumn-dat.lst -text
 nodearray-gem/test/CalcColumn-dbr-0-0000.dat -text
@@ -363,6 +368,8 @@ unspace-sep/main.cpp -text
 unspace-sep/ms_unspace.cpp -text
 unspace-sep/ms_unspace.h -text
 unspace-sep/platform/Linux-GNU/Makefile -text
+unspace-sep/platform/win32minGW/Makefile -text
+unspace-sep/platform/win32minGW/object_ld_script -text
 unspace-sep/test/Portlandit-dat.lst -text
 unspace-sep/test/Portlandit-dbr-0-0000.dat -text
 unspace-sep/test/Portlandit-dch.dat -text

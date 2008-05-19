@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1044 2008-03-13 17:06:50Z gems $
+// $Id: ms_multi.h 1066 2008-05-16 14:16:59Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -362,7 +362,7 @@ class TMulti
     double FreeEnergyIncr(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
     double GX( double LM  );
-    double Cj_init_calc( double g0, int j, int k );
+//    double Cj_init_calc( double g0, int j, int k );
     void Mol_u( double Y[], double X[], double XF[], double XFA[] );
     void ConvertDCC();
     int  getXvolume();
@@ -521,7 +521,9 @@ public:
     void MultiCalcIterations( int rLoop );
     void CompG0Load();
 
-    // connection to Unspace
+double Cj_init_calc( double g0, int j, int k ); // Moved here on 16.05.2008
+
+// connection to Unspace
     double pb_GX( double *Gxx  );
 };
 
