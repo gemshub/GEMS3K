@@ -2251,7 +2251,7 @@ c       Volume fractions, rates, and omegas       -kinet-
        else
                xspez=x(nn1)+dx(1)      !   feb 2003    /2
        endif
-      if(lnhc.gt.0.and.acc(lnhc,nn1).gt.0.and.cn(lnhc,nn1).gt.0.)then                  !2003   and.acc(lnhc,nn1).gt.0.and.cn(lnhc,nn1).gt0.
+      if(lnhc.gt.0)then                  !2008   and.acc(lnhc,nn1).gt.0.and.cn(lnhc,nn1).gt0.
           pHarr(nn1)=-dlog10(acc(lnhc,nn1)*cn(lnhc,nn1))
          else
 c15112004          pHarr(nn1)=-dlog10(acb(lnh,nn1)*bn(lnh,nn1))

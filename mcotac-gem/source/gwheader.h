@@ -13,7 +13,7 @@
 #define NCPMAX 50000       /* Maximale Anzahl Partikel       */
 #define NCBASIS 10
 #define NCCOMPL 25
-#define NCSOLID 10
+#define NCSOLID 20
 
 /* min and max macros */
 
