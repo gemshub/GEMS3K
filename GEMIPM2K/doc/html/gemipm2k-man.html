@@ -11,7 +11,7 @@
 <body>
 <h1><img alt="GEMS-icon" src="gems1.png"
  style="width: 48px; height: 48px;" align="left"> <font color="#000066">
-GEMIPM2K version 2.2.0</font> </h1>
+GEMIPM2K version 2.2.3</font> </h1>
 <h2>Standalone GEM-IPM-2 Solver of Chemical Equilibria by Gibbs Energy
 Minimization<br>
 </h2>
@@ -87,57 +87,75 @@ TNode Level</a><br>
   <p><font face="Helvetica, Arial, sans-serif"><a
  href="#TEST_TNODEARRAY">6.2. TNodeArray Level</a><br>
   <a href="gemipm2k-man.html#FREEDATA"> </a></font></p>
-&nbsp;<br>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><a
+ href="#REFERENCES">7. References</a></p>
+  <br>
   <hr size="2" width="100%"><br>
   <h2><a name="1-INTRO"></a>1. Introduction</h2>
   <p></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">Modern
+  <p style="font-family: Helvetica,Arial,sans-serif;">Modern
 approaches to reactive mass transport (RMT) or fluid mass transport
-(FMT) modelling require simultaneous account for mass transport of
-contaminants through aqueous and/or gas phase in subsurface, and their
-interaction with wall-rock minerals, including (ad)sorption,
-(co)precipitation,&nbsp; and mineral dissolution.&nbsp; These chemical
-processes depend on redox state of the system, are inherently complex,
-and may involve many phases and chemical species with kinetically
-controlled interactions. They may indirectly affect the mass transport
-via porosity and permeability changes due to mineral dissolution or
-precipitation.</p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">Direct
+(FMT) modelling require simultaneous account for the mass transport of
+contaminants through aqueous and/or gas phase in subsurface, together
+with their
+interaction with wall-rock minerals by means of (ad)sorption,
+mineral (co)precipitation, dissolution, etc.&nbsp; These chemical
+processes depend on the redox state of the system, are inherently
+complex,
+and may involve many phases and chemical species, some of which are
+kinetically dependent. Such interactions may indirectly affect the mass
+transport
+via the porosity and permeability changes e.g. due to mineral
+dissolution or
+precipitation. </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Direct
 inclusion of all possible chemical reactions in the mass transport
 model may render it intractable in 2D or 3D space.
 If this is the case, the chemical model must be dramatically simplified
 to a
-few reactions, which puts its chemical plausibility under question.<br>
+few reactions, which makes its chemical plausibility doubtful. The
+modeller must make (often arbitrary) decisions which chemical
+interactions are relevant and which can be neglected. <br>
   </p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">An
-alternative approach is to keep the full-complexity chemical model
-solver in a kind of "black box" which can be applied separately to each
-node of the FMT model at a given time point.&nbsp; The&nbsp; input of
+  <p style="font-family: Helvetica,Arial,sans-serif;">An
+alternative approach would be to keep a complex enough chemical model
+in a kind of "black box" which can be applied separately to each
+node of the FMT model at each given time point <span
+ style="font-style: italic;">t</span>.&nbsp; The&nbsp; input of
 the "chemical black box" at time <span style="font-style: italic;">t</span>&nbsp;
-is just the bulk chemical composition <span style="font-style: italic;">b</span>
+is just the vector of bulk chemical composition <span
+ style="font-style: italic;">b</span>
 of the reactive part of the node, as well as temperature <span
- style="font-style: italic;">T,</span> pressure <span
+ style="font-style: italic;">T</span>, pressure <span
  style="font-style: italic;">P</span>, and optionally, kinetic
 constraints <span style="font-style: italic;">k</span> on some
-reactions or amounts of certain components. Some or all these inputs
+reactions or amounts of certain components. Some or all of these inputs
 could have been changed by the mass transport part on its previous
-iteration time step <span style="font-style: italic;">t</span>-1 over
-all nodes.&nbsp; Now, the "chemical black box" equilibration is applied
-to each node independently at time <span style="font-style: italic;">t</span>,
+iteration time step <span style="font-style: italic;">t-</span>1.&nbsp;
+  <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Now, the
+"chemical black box" equilibration is applied
+to each node independently at time point <span
+ style="font-style: italic;">t</span>,
 to produce changed speciation <span style="font-style: italic;">n</span>
-(amounts or concentrations of chemical species in all reactive
+(amounts of chemical species in all reactive
 phases),&nbsp; new phase volumes, redox (Eh, pe of aqueous solution,
 gas fugacities), chemical potentials of components, etc. This
 procedure can also detect a disappearance of some phases or
 appearance of some new phases in some nodes (e.g., by dissolution or
-precipitation of solids). After this "chemistry" run over all nodes is
+precipitation of solids). <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">After the
+"chemistry" run over all nodes is
 finished, the next time step of the FMT algorithm can be done for the
 time point <span style="font-style: italic;">t</span>+1, using the
-updated concentrations of mobile species (also pH, Eh, <span
- style="font-style: italic;">f</span>(H<sub>2</sub>), ... ) in aqueous
-and/or gas phases at time <span style="font-style: italic;">t</span>.
+updated concentrations of mobile species (also pH, Eh, f(H2), ... ) in
+aqueous
+and/or gas phases at time <span style="font-style: italic;">t.</span>
 The FMT part redistributes matter between nodes (under mass
-concervation) thus producing corrected compositions of reactive part of
+concervation), thus producing corrected compositions of reactive part
+of
 each node. So, the coupled RMT algorithm actually runs over all nodes
 twice at the time point <span style="font-style: italic;">t</span>:&nbsp;
 once doing a mass transport iteration using node compositions obtained
@@ -145,66 +163,66 @@ earlier (at <span style="font-style: italic;">t</span>-1), and
 then&nbsp; by applying the "chemical black box" to each node at time <span
  style="font-style: italic;">t</span>, producing the updated speciation
 which will be used by the FMT part at the next time point&nbsp; <span
- style="font-style: italic;">t</span>+1.<br>
-  </p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">This
-idea is not really new and it has been implemented in a number of
+ style="font-style: italic;">t</span>+1.</p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">This
+idea of "reactor-splitting" coupling is not really new and it has
+already been implemented in a number of
 coupled codes (PHREEQC, RockFlow, MCOTAC, ....). These codes
-use different mass transport algorithms (for advection, diffusion,
-advection and diffusion), but in most cases the same type of chemical
-solver based on the law of mass action (LMA) and Newton-Raphson method
-for minimizing the mass balance deviations. Recently, another type of
-chemical solvers based on Gibbs energy minimization (GEM) come into
-coupling with the FMT codes. <br>
-  </p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">Both LMA and
-GEM can solve the so-called&nbsp; <i style="">forward
-chemical modeling problem</i> which consists in finding the
+use different mass transport algorithms, but in most cases the same
+type of chemical
+solver based on the law of mass action (LMA) and the Newton-Raphson
+method
+for minimizing the mass balance deviations. However, another type of
+chemical solvers based on Gibbs energy minimization (GEM) can also
+be&nbsp;
+coupled with the FMT codes. </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Both LMA and
+GEM can solve the so-called&nbsp; forward
+chemical modeling problem, which consists in finding
 concentrations (or
 amounts) and activities of chemical species in aqueous and other phases
 present
 in a complex chemical system in an equilibrium state defined by
-temperature <i style="">T</i>, pressure <i style="">P</i>, and the
+temperature <span style="font-style: italic;">T</span>, pressure <span
+ style="font-style: italic;">P</span>, and the
 system bulk composition <span style="font-style: italic;">b</span>. In
 practice, calculations for
-solving such problems range from trivial to enormously complex,
+solving such problems range from trivial to complex,
 depending on
 the number of species, phases, and stoichiometry units. The complexity
 further
 increases when several phases-solutions with redox sensitive components
 are
-included in the mass balance; a typical case is the Aq-SS system with
-the gas
-mixture phase. Even more complex systems can be considered, e.g. those
-involving (ad)sorption on several co-existing (stable or metastable)
-sorbents. <br>
-  </span></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">Chemical
-speciation problems are usually solved with help of the LMA codes,
-supported with tools such as calculation of
-Lippmann functions and saturation indexes.</span> A good introduction
+included in the mass balance; a typical case is the aqueous - solid
+solution (Aq-SS) system which also involves a non-ideal fluid (gas
+mixture) phase. Even more complex systems can be considered, e.g. those
+involving (ad)sorption on several co-existing stable or metastable
+sorbents. </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Chemical
+speciation problems were traditionally solved with help of the LMA
+codes,
+supported with tools for calculation of
+Lippmann functions and saturation indexes. A good introduction
 into modern LMA chemical speciation numerical
-methods can be found in several textbooks [Van Zeggeren and Storey,
-1970; Morel and Hering, 1993; Bethke, 1996] and in the manuals of
-speciation codes such as MINEQL or
-PHREEQC [Parkhurst and Appelo, 1999]. <br>
+methods can be found in several textbooks [<a
+ href="#Ref_Van-Zeggeren-1970">Van Zeggeren and Storey,
+1970</a>; <a href="#Ref_Morel-Hering-1993">Morel and Hering, 1993</a>;
+  <a href="#Ref_Bethke-1996">Bethke, 1996</a>] and in the manuals of
+speciation codes such as PHREEQC [<a href="#Ref_Parkhurst-Appelo-1999">Parkhurst
+and Appelo, 1999</a>] or CHESS
+[<a href="#Ref_van-der-Lee-1998">van der Lee, 1998</a>]. <br>
   </p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">The
+  <p style="font-family: Helvetica,Arial,sans-serif;">The
 advantages of LMA - excellent mass balance accuracy and fast
 convergence - are best revealed in the case of simple aqueous
 speciation models with known stable pure solid phase assemblage and
 known Eh and fugacities of gases. The LMA codes require thermodynamic
 data only for the product species (usually aqueous/surface complexes,
 minerals, and gases), but not for the master species (usually aqueous
-ions) - this "input data economy" can also be viewed as an advantage. <br>
-  </p>
-  <span style="font-size: 11pt;" lang="EN-GB"></span>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">However,
+ions) - this "input data economy" can also be viewed as an advantage in
+some cases.<br>
+  <br>
+However,
 solving with LMA code the complex equilibria involving the aqueous
 electrolyte phase, many possible condensed phases including solid
 solutions or fluids is,
@@ -212,46 +230,15 @@ in general, an inefficient and awkward process because a single aqueous
 speciation calculation turns into a series of many runs controlled by
 non-rigorous
 test procedures for selecting (over)saturated solids one-by-one [see
-Read, 1982; Bethke, 1996], without a theoretical guarantee of
+  <a href="#Ref_Reed-1982">Reed, 1982</a>; <a href="#Ref_Bethke-1996">Bethke,
+1996</a>], without a theoretical guarantee of
 convergence to a unique result. This kind of retardation is difficult
 to evaluate, but, with a large list of possible condensed phases, more
-than 5 to 10 LMA sub-runs can be necessary to include all stable solids
+than ten LMA sub-runs may be required to include all stable solids
 into
 mass balance. Only ideal solid solutions or non-ideal binary
-solid solutions can be included into this LMA iteration scheme. </span><span
- style="font-size: 11pt; line-height: 150%; font-family: Arial;"
- lang="EN-GB"><br>
-  </span></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">In the
-complementary GEM chemical solver setup [for details, see Karpov et
-al., 1997; 2001; Kulik et al., 2004], the total mole amounts of
-chemical
-elements <i style="">n<sub>i</sub></i> and (zero)
-charge <i style="">n<sub>z</sub></i> comprise the
-input bulk composition of the chemical system expressed using <i
- style="">n</i>(<i style="">N</i>)<i style=""> independent component</i>
-(IC). All<i style="">&nbsp; n</i>(<i style="">L</i>)<i style=""> </i>stoichiometrically
-feasible<i style=""> </i>chemical species or <i style="">dependent
-components</i> (DC) belonging to a set <i style="">L</i> are taken
-into the mass balance
-through their chemical formulae and mole amounts <i style="">n<sub>j</sub></i>,
-  <i style="">j</i> </span><span
- style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">from
-  </span></span><span style="font-size: 11pt; line-height: 150%;"
- lang="ES"></span><i style=""><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">L</span></i><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">. A dependent
-component belongs to a single- or
-multi-component aqueous, gaseous, fluid, liquid, solid, or sorption
-phase.
-The stability of <i>j</i>-th chemical species at temperature <i
- style="">T </i>and pressure <span style="font-style: italic;">P</span>
-of
-interest is defined by its input standard molar Gibbs energy function <span
- style="font-style: italic;">g<sub>T,P</sub></span></span><span
- style="font-size: 11pt; line-height: 150%; font-family: Arial;"
- lang="ES"><span style="position: relative; top: 7pt;"><!--[if gte vml 1]><v:shapetype
+solid solutions can be included into this LMA iteration scheme. </p>
+<!--[if gte vml 1]><v:shapetype
  id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
  path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
  <v:stroke joinstyle="miter"/>
@@ -275,103 +262,133 @@ interest is defined by its input standard molar Gibbs energy function <span
  height:20.25pt' o:ole="">
  <v:imagedata src="file:///C:\DOCUME~1\KULIK~1.PSI\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
   o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span><!--[if gte mso 9]><xml>
+</v:shape><![endif]--><!--[if !vml]--><!--[endif]--><!--[if gte mso 9]><xml>
  <o:OLEObject Type="Embed" ProgID="Equation.3" ShapeID="_x0000_i1025"
   DrawAspect="Content" ObjectID="_1230310185">
  </o:OLEObject>
-</xml><![endif]--></span><span
- style="font-size: 11pt; line-height: 150%; font-family: Arial;"
- lang="EN-GB">.</span><span style="font-size: 11pt; line-height: 150%;"
- lang="EN-GB"> Activities and concentrations
-of dependent components are treated separately in each phase (through
-subsets
-of indexes <i style="">L</i></span><i style=""><sub><span
- style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">a</span></span></sub></i><i
- style=""><sub><span style="font-size: 11pt; line-height: 150%;"
- lang="EN-GB">, </span></sub></i><i style=""><span
- style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">a</span></span></i><i
- style=""><span style="font-size: 11pt; line-height: 150%;" lang="ES"> </span></i><span
- style="font-size: 11pt; line-height: 150%;" lang="ES"><span style="">from</span></span><span
- style="font-size: 11pt; line-height: 150%;" lang="ES"></span><i
- style=""><span style="font-size: 11pt; line-height: 150%;" lang="ES"> </span></i><i
- style=""><span style="font-size: 11pt; line-height: 150%;" lang="ES"><span
- style="">F</span></span></i><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">), taking
+</xml><![endif]-->
+  <p style="font-family: Helvetica,Arial,sans-serif;">In a
+complementary GEM chemical solver [for details, see <a
+ href="#Ref_Karpov-ea-1997">Karpov et
+al., 1997</a>; <a href="#Ref_Karpov-ea-2001">2001</a>; <a
+ href="#Ref_Kulik-ea-2004">Kulik et al., 2004</a>; <a
+ href="#Ref_Bruno_ea_2007">Bruno et al., 2007</a>], total mole
+amounts of
+chemical
+elements <span style="font-style: italic;">n<sub>i</sub></span><sub> </sub>and
+(zero)
+charge <span style="font-style: italic;">n<sub>z</sub></span> comprise
+the
+input bulk composition of the chemical system expressed using <span
+ style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>)
+independent components
+(IC). All&nbsp; <span style="font-style: italic;">n</span>(<span
+ style="font-style: italic;">L</span>) stoichiometrically
+feasible chemical species or dependent
+components (DC) are taken
+into the mass balance
+through their chemical formulae and mole amounts <span
+ style="font-style: italic;">n<sub>j</sub></span>. A given <span
+ style="font-style: italic;">j</span>-th dependent
+component belongs to a single- or
+multi-component aqueous, gaseous, fluid, liquid, solid, or sorption
+phase.
+The stability of <span style="font-style: italic;">j</span>-th DC at
+temperature <span style="font-style: italic;">T</span> and pressure <span
+ style="font-style: italic;">P</span>
+of
+interest is defined by its molar Gibbs energy function <span
+ style="font-style: italic;">g<sub>T,P</sub></span>. Activities and
+concentrations
+of dependent components are treated separately in each phase, taking
 into account the appropriate standard and
-reference states, concentration scales, and mixing models. <br>
-  </span></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;"><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">Conversely,
+reference states, concentration scales, and models of (non)ideal
+mixing. </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Conversely,
 GEM
-algorithms can solve complex aqueous - solid (solution) Aq-SS
+algorithms can solve complex Aq-SS
 equilibria in one GEM run, in a
 straightforward way, without any supporting tools such as Lippmann
-functions
-and semi-empirical iterative procedures required in LMA Aq-SS
+functions or semi-empirical iterative procedures required in LMA Aq-SS
 speciation
 models. The applicability of GEM to chemical systems is limited only by
 the knowledge of
 standard-state molar properties of end-members and the non-ideal
 interaction
-parameters for each phase.<br>
-  </span></p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">The
+parameters for each phase.</p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The
 disadvantages of GEM in comparison with LMA codes are (i) slower
-convergence (up to 7 times) in simple aqueous speciation calculations
-and (ii) less mass balance accuracy (1e-7 mol compared to 1e-19 mol in
-LMA). The performance of GEM can be dramatically improved (7-10 times)
-using the previous equilibrium speciation as an initial approximation
-for the new run, if the chemical composition has been changed only
-slightly. The mass balance accuracy can be improved up to 1e-17 mol
-(comparable to that of LMA)&nbsp; at the cost of a few additional
-iterations (the IPM-2 algorithm), as described in [Chudnenko ea, 2002].
-  <br>
-  </p>
-  <p class="MsoNormal" style="margin: 6pt 0cm; line-height: 150%;">However,
-performance and chemical feasibility of GEM in complex Aq-SS multiphase
-systems is unmatched and may be much better than that of LMA codes
+convergence in simple aqueous speciation calculations
+and (ii) less mass balance accuracy. The performance of GEM can be
+dramatically improved using the previous equilibrium speciation as an
+initial approximation
+for the new run (in "smart initial approximation" mode). The mass
+balance accuracy can be made comparable to that of LMA at the cost of a
+few additional
+GEM iterations (the IPM-2 algorithm), as described in [<a
+ href="#Ref_TM-44-02-06">Chudnenko ea,
+2002</a>]. </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Performance and
+chemical feasibility of GEM in complex Aq-SS multiphase
+systems may be much better than that of LMA codes
 (though no
 direct benchmarking is yet available). Another advantage of
 GEM method (in "convex programming" variant) is that it yields two
-solutions - the "primal" one for speciation
-(analogous to LMA) and the "dual" one for chemical potentials of
-stoichiometry units (not available from LMA). This dual solution opens
-innovative ways to constructing new mass transport models for
-diffusion-dominated systems, since at the most general level, the
+solutions - the "primal" <span style="font-style: italic;">n</span>
+for speciation
+(analogous to LMA) and the "dual" <span style="font-style: italic;">u</span>
+for chemical potentials of
+stoichiometry units (not available from LMA solvers). The dual solution
+may open
+innovative ways to constructing mass transport models for
+diffusion-dominated systems, since the
 diffusion of any component is driven by the gradient of its chemical
-potential. &nbsp; &nbsp; <br>
-  <span style="font-size: 11pt; line-height: 150%;" lang="EN-GB"></span><span
- style="font-size: 11pt; line-height: 150%; font-family: Arial;"
- lang="EN-GB"><o:p></o:p></span></p>
-  <p><span style="font-size: 11pt; line-height: 150%;" lang="EN-GB">The
-present program GEMIPM2K is an implementation of GEM IPM-2 chemical
-solver with the data exchange interface which makes it possible to
+potential.</p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The
+present program package GEMIPM2K is an implementation of GEM IPM-2
+chemical
+solver with a simple data exchange interface that makes it possible to
 couple any existing FMT code with the GEM&nbsp; "chemical black box" to
-produce a coupled modeling code with high chemical plausibility. This
-kind of coupling, in which the chemical information for all nodes is
+produce a coupled modeling code with high chemical plausibility. As
+there is no GUI and data exchange occurs via files or in RAM, such code
+can be parallelized and compiled on various platforms up to HPC
+clusters.&nbsp; <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The traditional
+"operator-splitting" coupling, where the chemical information for all
+nodes is
 stored in the mass transport part which calls the chemical solver for
-each node </span><span style="font-size: 11pt; line-height: 150%;"
- lang="EN-GB">one-by-one</span><span
- style="font-size: 11pt; line-height: 150%;" lang="EN-GB">, is
+each node one-by-one, is
 supported by the TNode C++ class (and its fortran interface). When a
 new FMT code is written, the whole data storage for all nodes can be
-organized using a TNodeArray C++ class into two node arrays (for time <span
- style="font-style: italic;">t</span> and <span
- style="font-style: italic;">t</span>-1), with each node accessible
-from the GEM IPM-2 routines or from the FMT program.</span></p>
-  <p><span style="font-size: 11pt; line-height: 150%;" lang="EN-GB"></span>This
+organized using a TNodeArray C++ class into two node arrays (for time t
+and t-1), with each node accessible
+from the GEM IPM-2 routines or from the FMT program. </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">This
 document describes the structure of GEMIPM2K program and the data
 exchange interface (DATACH and DATABR structures), followed by an
 overview of TNode and TNodeArray classes and examples of their
-usage.&nbsp; </p>
+usage. In a companion document <a href="gemipm2k-inp.html">gemipm2k-inp.html</a>,
+the format of GEMIPM2K text input/output files is described together
+with the reference on data objects encountered in these files. Most of
+these data objects are the same as in GEM-Selektor; hyperlinks are
+provided wherever necessary. <br>
+  </p>
   <p><br>
   </p>
   <hr size="2" width="100%">
   <h2><br>
   </h2>
-  <h2><a name="2-STRUCTURE"></a>2. Structure of GEMIPM2K Code&nbsp; and
-its Data Exchange Intefaces </h2>
-  <p> Geochemical modeling often requires</p>
+  <h2><a name="2-STRUCTURE"></a>2. Structure of GEMIPM2K Code and
+its Data Exchange Inteface </h2>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The GEM IPM2
+algorithm is described in a companion PSI Technical Report [Kulik et
+al., 2008] ]TM-44-08-0X, as well as in earlier report [<a
+ href="#Ref_TM-44-02-06">Chudnenko et al., 2002</a>]. A short overview
+is given in [<a href="#Ref_Bruno_ea_2007">Bruno et al., 2007</a>],
+pages 94-104. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">document describes</p>
   <p><br>
   </p>
   <p><img alt="Basic GEM IPM flow chart" src="IPM.png"
@@ -517,7 +534,65 @@ TNodeArray Level</font></h3>
     <span style="font-family: times new roman,times,serif;">&nbsp; </span><br>
     <br>
   </dl>
-  <hr size="2" width="100%"> To
+  <hr size="2" width="100%"><br>
+  <h2><a name="REFERENCES"></a>7. References</h2>
+  <a name="Ref_Bethke-1996"></a> Bethke, 1996 (<a
+ href="http://hercules.geology.uiuc.edu/%7Ebethke/hydro_gwb.htm">http://hercules.geology.uiuc.edu/~bethke/hydro_gwb.htm</a>)<br>
+  <br>
+  <a name="Ref_Bruno_ea_2007"></a>Bruno J.,
+Bosbach D., Kulik D., Navrotsky A. (2007): <i>Chemical
+thermodynamics of solid solutions of interest in radioactive waste
+management: A state-of-the art report</i>, Eds.
+F.J.Mompean, M.Illemassene, J.Perrone, Chemical Thermodynamics Series
+Vol. <span style="font-weight: bold;">10</span>, Paris, OECD, 292 p.
+(<a href="http://www.nea.fr/html/dbtdb/info/publications/welcome.html">http://www.nea.fr/html/dbtdb/info/publications/welcome.html</a>)<br>
+  <br>
+  <a name="Ref_TM-44-02-06"></a> Chudnenko K.V. et al. TM-44-02-06 <br>
+  <br>
+  <a name="Ref_Karpov-ea-2001"></a> Karpov I.K.,
+Chudnenko
+K.V., Kulik D.A., Avchenko O.V. and Bychinski V.A. (2001). Minimization
+of Gibbs free energy in geochemical systems by convex programming.
+Geochemistry International <span style="font-weight: bold;">39</span>(11),
+1108-1119.
+  <br>
+  <br>
+  <a name="Ref_Karpov-ea-1997"></a>Karpov I.K.,
+Chudnenko
+K.V.
+and Kulik D.A. (1997): Modeling chemical mass-transfer in geochemical
+processes: Thermodynamic relations, conditions of equilibria and
+numerical algorithms.
+American Journal of Science <span style="font-weight: bold;">297</span>,
+767-806<br>
+  <br>
+  <a name="Ref_Kulik-ea-2004"></a>Kulik D.,
+Berner U., Curti E.
+(2004): Modelling chemical equilibrium partitioning with the GEMS-PSI
+code. In: PSI Scientific Report 2003 / Volume <span
+ style="font-weight: bold;">IV</span>, Nuclear Energy and
+Safety (edited by B.Smith and B.Gschwend), Paul Scherrer Institute,
+Villigen, Switzerland, March 2004, p.109-122 (ISSN 1423-7334) (<a
+ href="http://gems.web.psi.ch/">http://gems.web.psi.ch/</a>)<br>
+  <br>
+  <a name="Ref_Morel-Hering-1993"></a> Morel and Hering, 1993 <br>
+  <br>
+  <a name="Ref_Parkhurst-Appelo-1999"></a> Parkhurst and Appelo, 1999 (<a
+ href="http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/%29">http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/)</a><br>
+  <br>
+  <a name="Ref_Reed-1982"></a>Reed, 1982<br>
+  <br>
+  <a name="Ref_van-der-Lee-1998"></a> van der Lee J. (1998):
+Thermodynamic and mathematical concepts of CHESS, Technical Report Nr.
+LHM/RD/98/39, Ecole des Mines de Paris, Fontaineleau, France&nbsp; (<a
+ href="http://chess.ensmp.fr/doc.html">http://chess.ensmp.fr/doc.html</a>).<br>
+  <br>
+  <a name="Ref_Van-Zeggeren-1970"></a> Van Zeggeren and Storey,
+1970<br>
+  <br>
+  <br>
+  <br>
+To
 Contents
 &nbsp; &nbsp; &nbsp; &nbsp;
 &nbsp;<tt>About GEMIPM2K </tt><br>
