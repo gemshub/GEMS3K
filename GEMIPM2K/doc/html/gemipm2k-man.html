@@ -27,21 +27,23 @@ Introduction<br>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#2-STRUCTURE">2.
 Structure of GEMIPM2K Code&nbsp; and its Data Exchange Intefaces <br>
   </a></font></p>
-  <p><font face="Helvetica, Arial, sans-serif"><a href="#KERNEL">2.1.
+  <p><a href="#IPM2-OPERATION"><font face="Helvetica, Arial, sans-serif">2.1.
+Brief overview of GEM IPM2 module operation</font></a></p>
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#KERNEL">2.2.
 The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM (Multi) </a><br>
   </font></p>
-  <p><a href="#DATACH"><font face="Helvetica, Arial, sans-serif">2.2.
+  <p><a href="#DATACH"><font face="Helvetica, Arial, sans-serif">2.3.
 The DATACH Structure for Chemical System Definition (CSD) Accessible to
 both FMT and GEM parts</font></a></p>
-  <p><font face="Helvetica, Arial, sans-serif"><a href="#DATABR">2.3.
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#DATABR">2.4.
 The DATABR Structure for the Node Data Bridge Composition and
 Speciation data</a> <br>
   <br>
-  </font><font face="Helvetica, Arial, sans-serif"> <a href="#TNODE">2.4.
+  </font><font face="Helvetica, Arial, sans-serif"> <a href="#TNODE">2.5.
 The TNode Class - a Minimal Data Exchange
 Interface for Coupling with Existing Transport Codes</a><br>
   </font><font face="Helvetica, Arial, sans-serif"><br>
-  <a href="#TNODEARRAY">2.5. The TNodeArray Class - a Node Data Storage
+  <a href="#TNODEARRAY">2.6. The TNodeArray Class - a Node Data Storage
 for Developing New Coupled Codes</a></font><br>
   </p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#REQUIREMENTS">3.
@@ -222,22 +224,47 @@ minerals, and gases), but not for the master species (usually aqueous
 ions) - this "input data economy" can also be viewed as an advantage in
 some cases.<br>
   <br>
-However,
-solving with LMA code the complex equilibria involving the aqueous
+  <a name="CRITIQUE-LMA"></a>However,
+solving with LMA code complex equilibria that involve the aqueous
 electrolyte phase, many possible condensed phases including solid
 solutions or fluids is,
-in general, an inefficient and awkward process because a single aqueous
+in general, an inefficient and awkward process. Different approaches
+are used in LMA chemical solvers. In the Geochemists Workbench [<a
+ href="#Ref_Bethke-1996">Bethke,1996</a>],&nbsp; any pure mineral phase
+is taken as master species. Because there is no way to mix master
+species, this program cannot handle solid solutions or gas mixture at
+all. Other LMA codes (such as PHREEQC) consider minerals and gases as
+product species. As pointed by [<a href="#Ref_Reed-1982">Reed, 1982</a>],
+usually no solids are taken into mass balance in the initial speciation
+calculation; after it is done, the saturation indexes are computed for
+each stoichiometrically feasible mineral phase, the mineral with the
+highest oversaturation is included into the mass balance, the
+speciation is computed again, and this loop is repeated until no
+supersaturated phases are left in the list. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The real problem
+in LMA approach is how to determine the saturation index of the solid
+solution
+phase or the gas mixture. For the ideal (solid) solution, this can be
+done over iterations using ionic mole fractions
+available from aqueous speciation. For non-ideal SS, this is a problem
+which has
+no general solution, as explained on Page 94 in [<a
+ href="#Ref_Bruno_ea_2007">Bruno et al, 2007</a>]. Because of that, the
+LMA chemical solvers can at best treat only ideal solution phases and
+simple binary non-ideal solid solutions that can be described using
+Lippmann functions and diagrams. If many solids and/or solid solutions
+are potentially present,&nbsp; a simple LMA aqueous
 speciation calculation turns into a series of many runs controlled by
 non-rigorous
-test procedures for selecting (over)saturated solids one-by-one [see
-  <a href="#Ref_Reed-1982">Reed, 1982</a>; <a href="#Ref_Bethke-1996">Bethke,
-1996</a>], without a theoretical guarantee of
+test procedures for selecting (over)saturated solids one-by-one,
+without a theoretical guarantee of
 convergence to a unique result. This kind of retardation is difficult
 to evaluate, but, with a large list of possible condensed phases, more
 than ten LMA sub-runs may be required to include all stable solids
 into
-mass balance. Only ideal solid solutions or non-ideal binary
-solid solutions can be included into this LMA iteration scheme. </p>
+mass balance.&nbsp;<br>
+  </p>
 <!--[if gte vml 1]><v:shapetype
  id="_x0000_t75" coordsize="21600,21600" o:spt="75" o:preferrelative="t"
  path="m@4@5l@4@11@9@11@9@5xe" filled="f" stroked="f">
@@ -267,12 +294,13 @@ solid solutions can be included into this LMA iteration scheme. </p>
   DrawAspect="Content" ObjectID="_1230310185">
  </o:OLEObject>
 </xml><![endif]-->
-  <p style="font-family: Helvetica,Arial,sans-serif;">In a
-complementary GEM chemical solver [for details, see <a
+  <p style="font-family: Helvetica,Arial,sans-serif;">These drawbacks
+of LMA approach are not relevant in a
+complementary GEM approach [for details, see <a
  href="#Ref_Karpov-ea-1997">Karpov et
 al., 1997</a>; <a href="#Ref_Karpov-ea-2001">2001</a>; <a
  href="#Ref_Kulik-ea-2004">Kulik et al., 2004</a>; <a
- href="#Ref_Bruno_ea_2007">Bruno et al., 2007</a>], total mole
+ href="#Ref_Bruno_ea_2007">Bruno et al., 2007</a>], where total mole
 amounts of
 chemical
 elements <span style="font-style: italic;">n<sub>i</sub></span><sub> </sub>and
@@ -381,35 +409,291 @@ provided wherever necessary. <br>
   </h2>
   <h2><a name="2-STRUCTURE"></a>2. Structure of GEMIPM2K Code and
 its Data Exchange Inteface </h2>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="font-size: 12pt; font-family: Helvetica,Arial,sans-serif;">GEMIPM2K
+package is a set of C++ classes and functions
+extracted from the <st1:stockticker w:st="on">GEMS</st1:stockticker>-<st1:stockticker
+ w:st="on">PSI</st1:stockticker> code package for thermodynamic
+modelling by Gibbs energy minimization (<st1:stockticker w:st="on">GEM</st1:stockticker>).
+GEMIPM2K implements the GEM chemical solver linked to TMulti C++ class
+and data structure, enhanced with <st1:stockticker w:st="on">RAM</st1:stockticker>-
+and file- data exchange interfaces implemented in TNode and TNodeArray
+classes. <br>
+  </span></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="font-size: 12pt; font-family: Helvetica,Arial,sans-serif;"><st1:stockticker
+ w:st="on"></st1:stockticker> GEMIPM2K has been designed for
+coupling the <st1:stockticker w:st="on">GEM</st1:stockticker> chemical
+solver with
+existing and new fluid-mass-transport (<st1:stockticker w:st="on">FMT</st1:stockticker>)
+codes. The program source code is compatible with <st1:stockticker
+ w:st="on">ANSI</st1:stockticker>
+C++ and can be compiled on many computer platforms (Windows, Linux, <st1:stockticker
+ w:st="on">HPC</st1:stockticker> Merlin, Cray XT, etc.) using many
+optimizing
+compilers (GNU C++, <st1:stockticker w:st="on">PGI</st1:stockticker>
+C++, Intel
+C++, Microsoft C++, &#8230; ). <br>
+  </span></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="font-size: 12pt; font-family: Helvetica,Arial,sans-serif;">The
+input data can be provided in human-readable ASCII files, the
+output can also be written in ASCII files. Alternatively, the whole
+data
+exchange with a transport code part can be performed in <st1:stockticker
+ w:st="on">RAM</st1:stockticker>
+using&nbsp; DATACH
+and&nbsp; DATABR data structures.
+This data exchange interface is implemented in two C++ classes &#8211; TNode
+and TNodeArray. <br>
+  </span></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="font-size: 12pt; font-family: Helvetica,Arial,sans-serif;">The
+TNode class provides functionality for attaching GEMIPM2K
+kernel to an existing transport model code which keeps the chemical
+information
+for all nodes and calls <st1:stockticker w:st="on">GEM</st1:stockticker>
+calculation for each node separately. The TNodeArray class is built on
+top of the TNode class and can store both chemical and dynamic data
+for all nodes of the mass transport problem. Recalculation of
+equilibrium
+states in all nodes after the mass transport step can be done with a
+single call (with
+internal parallelization possible). This may be suitable for developing
+of a
+new coupled code. The GEMIPM2K source code is expected to be
+distributed under
+LGPL or similar license.<br>
+  <br style="font-family: Helvetica,Arial,sans-serif;">
+  </span></p>
+  <h3><a name="IPM2-OPERATION"></a>2.1. Brief overview of GEM IPM2
+module operation<br>
+  </h3>
   <p style="font-family: Helvetica,Arial,sans-serif;">The GEM IPM2
-algorithm is described in a companion PSI Technical Report [Kulik et
-al., 2008] ]TM-44-08-0X, as well as in earlier report [<a
+algorithm is described in a companion PSI Technical Report [<a
+ href="#Ref_Kulik_ea-2008">Kulik et
+al., 2008</a>] , as well as in earlier report [<a
  href="#Ref_TM-44-02-06">Chudnenko et al., 2002</a>]. A short overview
 is given in [<a href="#Ref_Bruno_ea_2007">Bruno et al., 2007</a>],
-pages 94-104. <br>
+pages 94-104. Recently, the speed of GEM IPM-2 calculations has been
+dramatically increased [<a href="#Ref_Dmytrieva-2008">Dmytrieva et al.,
+2008</a>] and now is comparable with that of LMA codes, at least in
+"smart initial approximation" mode. <br>
   </p>
-  <p style="font-family: Helvetica,Arial,sans-serif;">document describes</p>
-  <p><br>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The basic idea of
+the GEM IPM algorithm consists in finding such a distribution vector <span
+ style="font-style: italic;">n </span>of bulk chemical composition of
+the system <span style="font-style: italic;">b</span> over its
+thermodynamic phases and their components that the total Gibbs energy <span
+ style="font-style: italic;">G</span>(<span style="font-style: italic;">n</span>)
+of the system is at minimum at temperature and pressure of interest.
+Each phase component (chemical species) is represented by its
+stoichiometry and the standard chemical potential (molar Gibbs energy
+function <span style="font-style: italic;">g</span><sup>o</sup>(<span
+ style="font-style: italic;">T,P</span>)) at temperature <span
+ style="font-style: italic;">T</span> and pressure <span
+ style="font-style: italic;">P</span> of interest. As seen on Fig. 2-1,
+the process consists of four major steps. <br>
+  <br>
   </p>
-  <p><img alt="Basic GEM IPM flow chart" src="IPM.png"
- style="width: 510px; height: 521px;">&nbsp; <br>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><img
+ alt="Basic GEM IPM flow chart" src="IPM.png"
+ style="width: 510px; height: 521px;"></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><br>
+The first step is to obtain an initial approximation of the <span
+ style="font-style: italic;">n</span> vector which is close enough to
+the <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">n</span>) minimum, so that the GEM process
+would succeed in finding the solution of the problem. In principle, any
+previously calculated speciation vector<span style="font-style: italic;">
+n</span> for this setup of thermodynamic system (even for different <span
+ style="font-style: italic;">b, T, P</span>) can be used as initial
+approximation in "smart initial approximation" (SIA) mode. If no
+previous solution is available at all, or the available one is bad,
+then the so-called "automatic initial approximation" (AIA) must
+obtained by solving a linear programming (LP) sub-problem using a
+modified simplex method. <br>
   </p>
-  <p>Enhanced mass balance accuracy GEM IPM-2 algorithm<br>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The LP
+sub-problem is constructed by truncating all the mixing terms from
+chemical potential expressions for all components of phases-solutions,
+which is equivalent to considering any component as a pure phase. Given
+  <span style="font-style: italic;">n</span>(<span
+ style="font-style: italic;">N</span>) Independent Components (usually
+chemical elements and charge) in the bulk composition vector <span
+ style="font-style: italic;">b</span>, the simplex solution contains at
+most <span style="font-style: italic;">n</span>(<span
+ style="font-style: italic;">N</span>) non-zero elements in the AIA
+speciation vector <span style="font-style: italic;">n</span>(AIA).
+This is also consistent with the Gibbs phase rule. <br>
   </p>
-  <p><br>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Usually, the
+number of aqueous species is greater than <span
+ style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>).
+If the number of stoichiometrically possible phases exceeds n(N), such
+system is called "multisystem" [Karpov et al., 1997]. Equilibria in
+multisystems cannot be solved directly by LMA algorithm (see a <a
+ href="#CRITIQUE-LMA">comment here</a>), but such equilibria can be
+solved in one GEM run, if the initial approximation belongs to the
+so-called "feasible domain". So, the second step consists in checking
+whether the AIA or SIA vector <span style="font-style: italic;">n</span>
+is feasible, i.e. whether the mass balance residuals for all
+independent components are small enough. This is usually so in the case
+of previously available SIA vector. But the AIA vector contains many
+zero amounts of chemical species (dependent components) which may be
+relevant aqueous species or form stable condensed or fluid phases,
+although this is not a priori known. For that reason, the zero mole
+amounts in the AIA initial approximation are filled out with a default
+amount (1e-7 - 1e-6 mol) which then would increase or decrease upon GEM
+iterations depending on the stability of the chemical species in this
+chemical system. If the current amount of <span
+ style="font-style: italic;">j</span>-th species <span
+ style="font-style: italic;">n<sub>j</sub></span> falls below a certain
+numerical threshold (ca. 1e-20 mol), it will be zeroed off. This
+eliminates the <span style="font-style: italic;">j</span>-th species
+from subsequent GEM iterations in order to avoid numerical troubles.
+However, if the total amount of a phase falls below another threshold
+(Pa_DS between 1e-9 and 1e-12 mol) then all components in this phase
+will be zeroed off and the whole phase is eliminated from next GEM
+iterations.<br>
   </p>
-  <p><img alt="GEM IPM-2 Algorithm Flow Path" src="IPM-2.png"
- style="width: 731px; height: 901px;"><br>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The fill-out
+procedure in AIA bears also a danger that the mass balance is violated.
+Hence, a special EFD() algorithm checks the mass balance residuals and
+tries to change the largest elements of the AIA vector in such a way
+that the mass balance accuracy would be at least satisfactory (i.e.
+deviations less than 1e-7 mol). This is usually done in a few
+iterations, and then the initial approximation vector is ready for the
+main GEM algorithm. <br>
   </p>
-  <p>&nbsp; </p>
-  <h3><a name="KERNEL"></a>2.1. The GEM-IPM2 Kernel (GEMIPM2K) and its
+  <p style="font-family: Helvetica,Arial,sans-serif;">The third step is
+to adjust the elements of <span style="font-style: italic;"></span>speciation
+vector <span style="font-style: italic;">n</span> to minimize the
+total Gibbs energy of the system <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">n</span>) while keeping mass balance
+deviations the same or lower as inherited from the EFD() step. This is
+the core of IPM-2 algorithm - it approaches the GEM problem using the
+duality (Kuhn-Tucker) theorem by introducing Lagrange multipliers <span
+ style="font-style: italic;">u<sub>i</sub></span> conjugate to the
+elements <span style="font-style: italic;">b<sub>i</sub></span> of the
+bulk composition vector. These Lagrange multipliers form the so-called
+"dual solution" of the GEM problem (the "primal solution" being the <span
+ style="font-style: italic;">n</span> speciation vector). The total
+Gibbs energy of the system can be calculated either as <span
+ style="font-style: italic;">G</span>(<span style="font-style: italic;">n</span>)
+= sum(<span style="font-style: italic;">n<sub>j</sub> v<sub>j</sub></span>)
+where <span style="font-style: italic;">v<sub>j</sub></span> = <span
+ style="font-style: italic;">f</span>(<span style="font-style: italic;">g</span><sup>o</sup><sub><span
+ style="font-style: italic;">j</span></sub>, <span
+ style="font-style: italic;">n</span>) is the primal chemical potential
+of j-th dependent component., or as <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">b</span>) = sum(<span
+ style="font-style: italic;">b<sub>i</sub> u<sub>i</sub></span>).
+Towards equilibrium, <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">n</span>) scalar value approaches a
+(global) minimum which equals the <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">b</span>) (global) maximum. Hence, the
+criterion of convergence can be constructed using any normalized
+function of <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">n</span>) - <span
+ style="font-style: italic;">G</span>(<span style="font-style: italic;">b</span>)
+which is ideally zero, but numerically must be below a small threshold
+(for the quadratic Dikin's criterion, DK &lt; Pa_DK = 1e-4).&nbsp; <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Each iteration of
+IPM consists of three steps. First, a new dual solution approximation <span
+ style="font-style: italic;">u</span> is found by solving with the
+Cholesky decomposition method a SLE constructed from the previous
+primal solution, stoichiometry matrix and weight multipliers. Next, the
+vector of descent direction is found by comparing primal and dual
+chemical potentials for each dependent component. Finally, a step
+length multiplier is determined from a condition that no new nj value
+should break the "feasible domain" of mass balance and metastability
+constraints. The new approximation of the <span
+ style="font-style: italic;">n</span> speciation vector is found by
+incrementing non-zero elements of the old one with a product of the
+respective element of the descent direction vector and the scalar step
+length. Convergence is usually achieved in 1-10 iterations in the SIA
+and 20 to 100 iterations in the simplex AIA case. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The fourth step
+is called "phase selection" (implemented in PhaseSelect() function). It
+consists in calculation of Karpov's phase stability criteria for each
+multi-component phase present in non-zero amount, as well as for each
+pure phase, either zeroed off or not. The stability criteria have been
+derived from the Karpov-Kuhn-Tucker conditions of equilibrium state
+that compare primal and dual estimates of chemical potential for each
+component. For any stable component in a stable phase, the value of
+such criterion must be close to zero.&nbsp; However, if the initial
+approximation was bad, or there were errors in stoichiometry or <span
+ style="font-style: italic;">g</span><sup>o</sup> value for a dependent
+component, <span style="font-style: italic;"></span> the value of
+Karpov's criterion may indicate that a phase present in the mass
+balance is unstable and must be excluded, or vice versa - a phase
+absent from the mass balance (zeroed off) is stable and must be
+included. If any such phase has been detected, it is zeroed off
+respectively its component amounts are filled out with small amounts,
+and the whole sequence is repeated from Step two (but without the
+overall fill-out step). If, after three such refinement loops, the
+PhaseSelect() still finds inconsistent phases, the behavior of GEM IPM
+algorithm depends on the original initial approximation. If it was SIA,
+the mode is automatically switched to AIA and calculation begin "from
+scratch", i.e. from solving the LP sub-problem for a generic IA. If it
+was AIA, an error message is generated and the GEM solution is not
+accepted. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The flow-chart
+described above applies when all elements of the bulk composition
+vector (except charge) exceed 1e-6 mol. However, if there are some
+elements less than 1e-7 mol, the IPM algorithm starting with AIA may
+fail with the corresponding mass balance residual which may also be of
+the same order of magnitude or even higher (i.e. the mass balance error
+may be from 50% to 1000%). The reason for that is the "fill-out" step
+spoils the mass balance and the EFD() procedure cannot recover it
+completely. In this sutiation, the IPM-2 algorithm is invoked, which in
+the case of AIA first runs as the generic IPM algorithm. Even with bad
+mass balance precision, this step yields a solution which lies very
+close to the <span style="font-style: italic;">G</span>(<span
+ style="font-style: italic;">n</span>) minimum and can be used as a
+very good initial approximation where the fill-out procedure is not
+needed (because all stable phases and components are already known) and
+the mass balance residuals thresholds in the EFD-2() procedure can be
+set at much lower levels, separately for different independent
+components. This is the idea of IPM-2 refinement loops: after
+convergence of GEM descent and PhaseSelect() check, an additional check
+for the fullfillment of severe mass balance requirements is performed.
+If there are still some bad residuals, the loop is repeated with just
+obtained approximation of the <span style="font-style: italic;">n</span>
+vector from the EFD-2() procedure. In most cases, up to 15 such loops
+are sufficient to provide a GEM solution with 0.1% maximum mass balance
+residual even for the smallest "trace" independent component present in
+1e-14 mol total amount. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">A similar
+sequence of refinement loops can be applied when two or more non-ideal
+solution phases are present near the critical point of their solvus. In
+such a system, the difference in molar Gibbs energy of such phases
+becomes tiny and up to 20 refinement GEM-IPM2 runs may be required to
+obtain correct speciation. Such systems, however, are rare and in
+principle cannot be solved with LMA algorithms. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">All these
+numerical paths of the iterative GEM IPM-2 algorithm are controlled
+through ca. 20 thersholds and flags, values of which were empirically
+found in many test and modelling calculations in various systems. All
+these controls can be adjusted in GEMS-PSI GUI window or in the
+*ipm.dat input file of GEMIPM2K standalone program. <br>
+  <br>
+  </p>
+  <p>&nbsp;</p>
+  <h3><a name="KERNEL"></a>2.2. The GEM-IPM2 Kernel (GEMIPM2K) and its
 Work Data
 Structure IPM (Multi)<br>
   </h3>
   <p><br>
   <br>
   </p>
-  <h3><a name="DATACH"></a>2.2. <font
+  <h3><a name="DATACH"></a>2.3. <font
  style="font-family: times new roman,times,serif;"
  face="Helvetica, Arial, sans-serif">The DATACH Structure for Chemical
 System Definition (CSD) Accessible to both FMT and GEM parts</font> </h3>
@@ -417,18 +701,18 @@ System Definition (CSD) Accessible to both FMT and GEM parts</font> </h3>
   <br>
   </p>
   <p> </p>
-  <h3><a name="DATABR"></a>2.3. <font
+  <h3><a name="DATABR"></a>2.4. <font
  face="Helvetica, Arial, sans-serif"><span
  style="font-family: times new roman,times,serif;">The DATABR Structure
 for the Node Data Bridge Composition and Speciation data</span> </font>
   </h3>
   <p><br>
   </p>
-  <h3><a name="TNODE"></a>2.4. The TNode Class - a Minimum Data
+  <h3><a name="TNODE"></a>2.5. The TNode Class - a Minimum Data
 Exchange Interface for Coupling with Existing Transport Codes</h3>
   <br>
   <br>
-  <h3><a name="TNODEARRAY"></a>2.5. The TNodeArray Class - a Data
+  <h3><a name="TNODEARRAY"></a>2.6. The TNodeArray Class - a Data
 Storage for Developing New Coupled Codes </h3>
   <br>
   <br>
@@ -539,7 +823,7 @@ TNodeArray Level</font></h3>
   <a name="Ref_Bethke-1996"></a> Bethke, 1996 (<a
  href="http://hercules.geology.uiuc.edu/%7Ebethke/hydro_gwb.htm">http://hercules.geology.uiuc.edu/~bethke/hydro_gwb.htm</a>)<br>
   <br>
-  <a name="Ref_Bruno_ea_2007"></a>Bruno J.,
+  <a name="Ref_Bruno_ea_2007"></a> Bruno J.,
 Bosbach D., Kulik D., Navrotsky A. (2007): <i>Chemical
 thermodynamics of solid solutions of interest in radioactive waste
 management: A state-of-the art report</i>, Eds.
@@ -549,15 +833,17 @@ Vol. <span style="font-weight: bold;">10</span>, Paris, OECD, 292 p.
   <br>
   <a name="Ref_TM-44-02-06"></a> Chudnenko K.V. et al. TM-44-02-06 <br>
   <br>
+  <a name="Ref_Dmytrieva-2008"></a>Dmytrieva S.V. et al. 2008
+TM-44-08-XY<br>
+  <br>
   <a name="Ref_Karpov-ea-2001"></a> Karpov I.K.,
 Chudnenko
 K.V., Kulik D.A., Avchenko O.V. and Bychinski V.A. (2001). Minimization
 of Gibbs free energy in geochemical systems by convex programming.
 Geochemistry International <span style="font-weight: bold;">39</span>(11),
-1108-1119.
+1108-1119. <br>
   <br>
-  <br>
-  <a name="Ref_Karpov-ea-1997"></a>Karpov I.K.,
+  <a name="Ref_Karpov-ea-1997"></a> Karpov I.K.,
 Chudnenko
 K.V.
 and Kulik D.A. (1997): Modeling chemical mass-transfer in geochemical
@@ -566,7 +852,7 @@ numerical algorithms.
 American Journal of Science <span style="font-weight: bold;">297</span>,
 767-806<br>
   <br>
-  <a name="Ref_Kulik-ea-2004"></a>Kulik D.,
+  <a name="Ref_Kulik-ea-2004"></a> Kulik D.,
 Berner U., Curti E.
 (2004): Modelling chemical equilibrium partitioning with the GEMS-PSI
 code. In: PSI Scientific Report 2003 / Volume <span
@@ -575,12 +861,14 @@ Safety (edited by B.Smith and B.Gschwend), Paul Scherrer Institute,
 Villigen, Switzerland, March 2004, p.109-122 (ISSN 1423-7334) (<a
  href="http://gems.web.psi.ch/">http://gems.web.psi.ch/</a>)<br>
   <br>
+  <a name="Ref_Kulik_ea-2008"></a> Kulik D. et al. (2008) TM-44-08-XX<br>
+  <br>
   <a name="Ref_Morel-Hering-1993"></a> Morel and Hering, 1993 <br>
   <br>
   <a name="Ref_Parkhurst-Appelo-1999"></a> Parkhurst and Appelo, 1999 (<a
  href="http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/%29">http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/)</a><br>
   <br>
-  <a name="Ref_Reed-1982"></a>Reed, 1982<br>
+  <a name="Ref_Reed-1982"></a> Reed, 1982<br>
   <br>
   <a name="Ref_van-der-Lee-1998"></a> van der Lee J. (1998):
 Thermodynamic and mathematical concepts of CHESS, Technical Report Nr.
