@@ -1,4 +1,6 @@
-//------------------------------------------------------------------------------
+//-------------------------------------------------------------------
+// $Id: datach.h 1066 2008-05-16 14:16:59Z gems $
+//
 // DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.
 // Contains dimensions and index lists for ICs, DCs, Phases in DATABR structure.
@@ -8,7 +10,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 
-// Copyright (C) 2003-2006 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
+// Copyright (C) 2003,2008 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
 // developed in the Laboratory for Waste Management, Paul Scherrer Institute
@@ -24,9 +26,9 @@
 #define _DataCh_H_
 
 const unsigned int
-    MaxICN =      6,
-    MaxDCN =      16,
-    MaxPHN =      16;
+    MaxICN =      6,      // IC name length
+    MaxDCN =      16,     // DC name length
+    MaxPHN =      16;     // PH name length
 
 typedef struct
 {  // Structure DataCH
@@ -89,7 +91,7 @@ typedef struct
     *DCmm,   // DC molar mass, g/mol, [nDC] elements
     *DD,     // Diffusition coefficients, [nDC][nPp][nTp] elements, for now constant
 
-// Grid arrays of thermodynamic data
+// Look-up grid arrays of thermodynamic data
 // Require a Lagrange interpolation subroutine to extract data
 // for a given P,T point (new interpolation is done when P or T differs
 // from the previous P,T by more than Ptol, Ttol)

@@ -3,10 +3,10 @@
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
-// thermodynamic multisystem
+// thermodynamic multisystem work data for GEM IPM-2 algorithm
 //
 // Rewritten from C to C++ by S.Dmytriyeva
-// Copyright (C) 1995-2007 S.Dmytriyeva, D.Kulik
+// Copyright (C) 1995,2008 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization and of the
@@ -26,7 +26,7 @@
 
 #include "m_param.h"
 #include "v_ipnc.h"
-// Internal subroutine for ET_translate
+// Internal subroutine for ET_translate() to process Phase scripts
 typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #else
@@ -313,7 +313,7 @@ class TMulti
    void Free_internal();
 
 #ifndef IPMGEMPLUGIN
-// This stuff is used only in GEMS-PSI
+// These pointers and methods are only used in GEMS-PSI
     SYSTEM *syp;
     MTPARM *tpp;
     RMULTS *mup;
@@ -380,7 +380,7 @@ class TMulti
     int SurfaceActivityCoeff( int jb, int je, int jpb, int jdb, int k );
 //    void SurfaceActivityTerm( int jb, int je, int k );  // Obsolete / deleted
 
-// ipm_chemical2.cpp
+// ipm_chemical3.cpp
     void IS_EtaCalc();
     void pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb );
     double TinkleSupressFactor( double ag, int ir);
@@ -407,13 +407,13 @@ class TMulti
 void SolModParPT ( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
 void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
 
-// ipm_main.cpp - numerical part of GEM-IPM2
+// ipm_main.cpp - numerical part of GEM IPM-2
     void MultiCalcMain( int rLoop );
     int EnterFeasibleDomain( );
     int InteriorPointsMethod( int &status, int rLoop );
     void SimplexInitialApproximation( );
 
-// ipm_main.cpp - miscellaneous fuctions of GEM-IPM2
+// ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
    void MassBalanceResiduals( int N, int L, float *A, double *Y,
                                double *B, double *C );
    double LMD( double LM );
@@ -427,7 +427,8 @@ void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModC
    void Restoring_Y_YF();
    double calcSfactor();
    int PhaseSelect( int &k_miss, int &k_unst, int rLoop );
-   // IPM_SIMPLEX.CPP Simplex method with two side constraints (Karpov ea 1997)
+   
+   // IPM_SIMPLEX.CPP Simplex method with two-sided constraints (Karpov ea 1997)
     void Simplex(int M, int N, int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,
                  double *AA, int *STR, int *NMB );
@@ -479,9 +480,10 @@ public:
 
    class UserCancelException {};
 #else
-// this variant is used only in GEMIPM2K
+// this allocation is used only in standalone GEMIPM2K
    TMulti()
-   { pmp = &pm;
+   { 
+	 pmp = &pm;
      sizeN = 0;
      AA = 0;
      BB = 0;
@@ -491,8 +493,7 @@ public:
      pmp->Vuns = 0;
      pmp->tpp_G = 0;  
      pmp->tpp_S = 0; 
-     pmp->tpp_Vm = 0;
-     
+     pmp->tpp_Vm = 0;     
    }
 
     void multi_realloc( char PAalp, char PSigm );
@@ -506,7 +507,7 @@ public:
     const char* GetName() const
     {  return "Multi";  }
 
-   //mass transport
+   //connection to mass transport
     void to_file( GemDataStream& ff, gstring& path  );
     void to_text_file( const char *path );
     void from_file( GemDataStream& ff );
@@ -523,7 +524,7 @@ public:
 
 double Cj_init_calc( double g0, int j, int k ); // Moved here on 16.05.2008
 
-// connection to Unspace
+// connection to UnSpace
     double pb_GX( double *Gxx  );
 };
 

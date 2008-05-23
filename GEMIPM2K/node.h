@@ -1,14 +1,17 @@
 //-------------------------------------------------------------------
+// $Id: node.h 1066 2008-05-16 14:16:59Z gems $
+//
 // TNode class - implements a simple C/C++ interface
 // between GEM IPM and FMT codes
 // Works with DATACH and work DATABR structures
 // without using the Tnodearray class
 //
-// (c) 2006-2007 S.Dmytriyeva, D.Kulik
+// (c) 2006,2008 S.Dmytriyeva, D.Kulik
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
-// developed in the Laboratory for Waste Management, Paul Scherrer Institute
+// developed in the Laboratory for Waste Management, 
+//   Paul Scherrer Institute
 
 // This file may be distributed under the licence terms
 // defined in GEMIPM2K.QAL
@@ -31,40 +34,36 @@ class QWidget;
 
 class TNode
 {
-
-  gstring dbr_file_name;
+  gstring dbr_file_name;  // place for the *dbr. I/O file name 
   
 protected:
-
-   MULTI* pmm;  // Pointer to GEMIPM work data structure (see ms_multi.h)
+   MULTI* pmm;  // Pointer to GEM IPM work data structure (see ms_multi.h)
 
 #ifdef IPMGEMPLUGIN
-               // This is used in the isolated GEMIPM2K module for coupled codes
+       // These pointers are only used in standalone GEMIPM2K programs
     TMulti* multi;
     TProfil* profil;
-
 #endif
 
     DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)
-
     DATABR* CNode;  // Pointer to a work node data bridge structure (node)
-      // used for exchanging input data and results between FMT and GEMIPM
+         // used for exchanging input data and results between FMT and GEM IPM
 
-    double CalcTime;  // GEMIPM2 calculation time (after the last GEM_run() call)
-    
+    // These four values are set by the last GEM_run() call
+    double CalcTime;  // GEMIPM2 calculation time, s 
     int PrecLoops,    // Number of performed IPM-2 precision refinement loops
-        NumIterFIA,   // Total Number of performed FIA entry iterations
+        NumIterFIA,   // Total Number of performed FIA entry iterations 
         NumIterIPM;   // Total Number of performed IPM main iterations
     
-    // Checks if given Tc and P fit within interpolation intervals
+    // Checks if given Tc and P fit within the interpolation intervals
     bool  check_TP( double& Tc, double& P );
 
     // Tests Tc as a grid point for the interpolation of thermodynamic data
-    // Returns index in the grid array or -1  if it is not a grid point
+    // Returns index in the lookup grid array or -1  if it is not a grid point
     int  check_grid_T( double& Tc );
 
     // Tests P as a grid point for the interpolation of thermodynamic data
-    // Return index in the grid array or -1 if it is not a grid point
+    // Return index in the lookup grid array or -1 if it is not a grid point
     int  check_grid_P( double& P );
 
     void allocMemory();
@@ -80,59 +79,59 @@ protected:
     DATABR* databr_free( DATABR* data_BR_ =0);
 
     // Binary i/o functions
-    // including file i/o using GemDataStream class (different endianness)
-      // writes CSD (DATACH structure) to a binary file
+    // including file i/o using GemDataStream class (with account for endianness)
+      // writes CSD (DATACH structure) to a binary DCH file
     void datach_to_file( GemDataStream& ff );
-      // reads CSD (DATACH structure) from a binary file
+      // reads CSD (DATACH structure) from a binary DCH file
     void datach_from_file( GemDataStream& ff );
-      // writes node (work DATABR structure) to a binary file
+      // writes node (work DATABR structure) to a binary DBR file
     void databr_to_file( GemDataStream& ff );
-      // reads node (work DATABR structure) from a binary file
+      // reads node (work DATABR structure) from a binary DBR file
     void databr_from_file( GemDataStream& ff );
 
     // Text i/o functions
-      // writes CSD (DATACH structure) to a text file
+      // writes CSD (DATACH structure) to a text DCH file
     void datach_to_text_file( fstream& ff, bool with_comments = true );
-      // reads CSD (DATACH structure) from a text file
+      // reads CSD (DATACH structure) from a text DCH file
     void datach_from_text_file( fstream& ff);
-      // writes work node (DATABR structure) to a text file
+      // writes work node (DATABR structure) to a text DBR file
     void databr_to_text_file(fstream& ff, bool with_comments = true );
-      // reads work node (DATABR structure) from a text file
+      // reads work node (DATABR structure) from a text DBR file
     void databr_from_text_file(fstream& ff );
 
-    // virtual functions for interaction with nodearray class (not used at TNode level)
+    // virtual functions for interaction with TNodeArray class (not used at TNode level)
     virtual void  setNodeArray( int , int*  ) { }
     virtual void  checkNodeArray( int, int*, const char* ) { }
-    virtual int nNodes()  const // virtual call for interaction with nodearray class
+    virtual int nNodes()  const // virtual call for interaction with TNodeArray class
     { return 1; }
 
 #ifndef IPMGEMPLUGIN
-    // Integration in GEMS
-    // Prepares DATACH and DATABR files for reading into the coupled code
+    // Integration in GEMS-PSI GUI environment
+    // Prepares and writes DCH and DBR files for reading into the coupled code
     void makeStartDataChBR(
          TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
          short nTp_, short nPp_, float Ttol_, float Ptol_,
          float *Tai, float *Pai );
 
-    // Creates arrays of thermodynamic data for interpolation
-    void G0_V0_H0_Cp0_DD_arrays(); // which are written into DATACH file
+    // Creates lookup arrays for interpolation of thermodynamic data 
+    void G0_V0_H0_Cp0_DD_arrays(); // to be written into DCH file
 
-    // Virtual function for interaction with tnodearray class
+    // Virtual function for interaction with TNodeArray class
     virtual void  setNodeArray( gstring& , int , bool ) { }
 #endif
 
 public:
 
-static TNode* na;   // static pointer to this class
+static TNode* na;   // static pointer to this TNode class instance
 
 #ifndef IPMGEMPLUGIN
-   TNode( MULTI *apm );   // constructor for integration in GEMS
+   TNode( MULTI *apm );   // constructor for integration in GEMS environment
 #else
 
-  TNode();      // constructor for GEMIPM2K
+  TNode();      // constructor for standalone GEMIPM2K or coupled program
 #endif
 
-    virtual ~TNode();      // destructor
+  virtual ~TNode();      // destructor
 
 // Typical sequence for using TNode class ----------------------------------
 // (1)

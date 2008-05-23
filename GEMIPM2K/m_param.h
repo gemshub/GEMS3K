@@ -1,9 +1,9 @@
 //-------------------------------------------------------------------
 // $Id: m_param.h 968 2007-12-13 13:23:32Z gems $
 //
-// Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
+// Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
-// Base parameters and codes used in GEM IPM work structure
+// Basic codes and numerical settings used in GEM IPM-2 operation
 // (standalone version)
 //
 // This file is part of the standalone GEMIPM2K code

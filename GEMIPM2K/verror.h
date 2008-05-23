@@ -3,7 +3,7 @@
 //
 // Error handling: classes TError and TFatalError
 //
-// Copyright (C) 1996-2001 A.Rysin, S.Dmytriyeva
+// Copyright (C) 1996,2001 A.Rysin, S.Dmytriyeva
 // Uses  gstring class (C) A.Rysin 1999
 //
 // This file is part of the GEM-Vizor library and GEMIPM2K

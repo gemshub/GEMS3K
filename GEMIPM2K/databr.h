@@ -1,4 +1,6 @@
 //-------------------------------------------------------------------
+// $Id: databr.h 1066 2008-05-16 14:16:59Z gems $
+//
 // DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
 // Requires DATACH.H header and data structure.
@@ -20,7 +22,6 @@
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
-
 #ifndef _DataBr_H_
 #define _DataBr_H_
 
@@ -34,44 +35,46 @@ typedef struct
      NodeStatusCH,  // Node status code CH;  see typedef NODECODECH
      IterDone;      // Number of iterations performed by IPM
 
-/*  these important dimensions are provided in the DATACH structure
+/*  these important data array dimensions are provided in the DATACH structure
    int
-    nICb,       // number of Independent Components (<= nIC) used in the data bridge
-    nDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
-    nPHb,     	// number of Phases (<= nPH) used in the data bridge
-    nPSb;       // number of Phases-solutions (<= nPS) used in the data bridge
+    nICb,     // number of Independent Components (<= nIC) used in the data bridge
+    nDCb,     // number of DC (chemical species, <= nDC) used in the data bridge
+    nPHb,     // number of Phases (<= nPH) used in the data bridge
+    nPSb;     // number of Phases-solutions (<= nPS) used in the data bridge
 */
-//      Usage of this variable (DB - data bridge)        MT-DB DB-GEM GEM-DB DB-MT
+//      Usage of this variable (DB - data bridge)      	MT-DB DB-GEM GEM-DB DB-MT
    double
 // Chemical scalar variables
-    TC,      	// Temperature T, C                        +      +      -     -
-    P, 	        // Pressure P, bar                         +      +      -     -
-    Vs,         // Volume V of reactive subsystem, cm3     -      -      +     +
-    Vi,         // Volume of inert subsystem, cm3          +      -      -     +
-    Ms,         // Mass of reactive subsystem,  g          +      +      -     -
-    Mi,         // Mass of inert subsystem, g              +      -      -     +
+    TC,     // Temperature T, C                        	+      +      -     -
+    P, 	    // Pressure P, bar                         	+      +      -     -
+    Vs,     // Volume V of reactive subsystem, cm3     (+)    (+)     +     +
+    Vi,     // Volume of inert subsystem, cm3          	+      -      -     +
+    Ms,     // Mass of reactive subsystem,  g          	+     (+)     -     -
+    Mi,     // Mass of inert subsystem, g              	+      -      -     +
 
-    Gs,         // Gibbs energy of reactive subsystem, J   -      -      +     +
-    Hs, 	// Enthalpy of reactive subsystem, J           -      -      +     +
-    Hi,         // Enthalpy of inert subsystem, J          +      -      -     +
+    Gs,     // Gibbs energy of reactive subsystem, J   	-      -      +     +
+    Hs, 	// Enthalpy of reactive subsystem, J        -      -      +     +
+    Hi,     // Enthalpy of inert subsystem, J           +      -      -     +
 
-    IC,     // Effective aqueous ionic strength, molal     -      -      +     +
-    pH,     // pH of aqueous solution (-log10 molal)       -      -      +     +
-    pe,     // pe of aqueous solution (-log10 molal)       -      -      +     +
-    Eh,     // Eh of aqueous solution, V                   -      -      +     +
+    IC,     // Effective aqueous ionic strength, molal  -      -      +     +
+    pH,     // pH of aqueous solution (-log10 molal)    -      -      +     +
+    pe,     // pe of aqueous solution (-log10 molal)    -      -      +     +
+    Eh,     // Eh of aqueous solution, V                -      -      +     +
 
-//  FMT variables (units need dimensionsless form) - to be used for storing them
+//  FMT variables (units or dimensionsless) - to be used for storing them
 //  at the nodearray level, normally not used in the single-node FMT-GEM coupling
-    Tm,         // actual total simulation time, s
-    dt,         // actual time step
-    Dif,        // General diffusivity of disolved matter in the mode
+    Tm,     // actual total simulation time, s
+    dt,     // actual time step, s
+    Dif,    // General diffusivity of disolved matter in the mode
     Vt,		// total volume of the node (voxel), m3
     vp,		// advection velocity (in pores) in this node
     eps,	// effective (actual) porosity normalized to 1
     Km,		// actual permeability, m2
     Kf,		// actual DARCY`s constant, m2/s
-    S,		// specific storage coefficient, dimensionless
-    Tr,         // transmissivity m2/s
+    S,		// specific storage coefficient, dimensionless (default 1.0)
+               //  if not 1.0 then can be used as mass scaling factor relative to Ms for the 
+               //  bulk composition/speciation of reactive sub-system in this node 
+    Tr,     // transmissivity m2/s
     h,		// actual hydraulic head (hydraulic potential), m
     rho,	// actual carrier density for density-driven flow, g/cm3
     al,		// specific longitudinal dispersivity of porous media, m
@@ -82,10 +85,10 @@ typedef struct
     hDv,	// hydraulic vertical dispersivity, m2/s
     nto;	// tortuosity factor
 
-// Data arrays - dimensions see in DATACH.H structures
-// exchange of values occurs through lists of indices, e.g. xDC, xPH
+// Data arrays - dimensions nICb, nDCb, nPHb, nPSb see in the DATACH structure
+// exchange of values occurs through lists of indices, e.g. xIC, xDC, xPH from DATACH
 
-//      Usage of this variable (DB - data bridge)        MT-DB DB-GEM GEM-DB DB-MT
+//      Usage of this variable (DB = data bridge)        MT-DB DB-GEM GEM-DB DB-MT
    double
 // IC (stoichiometry units)
     *bIC,  // bulk mole amounts of IC[nICb]                +      +      -     -
@@ -106,8 +109,9 @@ typedef struct
            //    [nPSb][nICb]                              -      -      +     +
     *xPA,  // amounts of solvent/sorbent in
            //    phases-solutions [nPSb]                   -      -      +     +
+// (+) can be used as input in "smart initial approximation" mode of GEM IPM-2 algorithm     
 
-  // Reserved
+    // Reserved data array pointer
     *dRes1;
 }
 DATABR;

@@ -1,9 +1,9 @@
 //-------------------------------------------------------------------
 // $Id: v_user.h 988 2007-12-19 09:32:52Z gems $
 //
-// Declaration of miscellaneous utility functions and classes
+// Declaration of platform-specific utility functions and classes
 //
-// Copyright (C) 1996-2001 A.Rysin, S.Dmytriyeva
+// Copyright (C) 1996,2001 A.Rysin, S.Dmytriyeva
 // Uses  gstring class (C) A.Rysin 1999
 //
 // This file is part of the GEM-Vizor library and the GEMIPM2K

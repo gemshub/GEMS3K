@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: ms_param.cpp 1045 2008-03-14 16:42:07Z gems $
 //
-// Copyright  (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
+// Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
 // Implementation  of parts of the Interior Points Method (IPM) module
 // for convex programming Gibbs energy minimization, described in:

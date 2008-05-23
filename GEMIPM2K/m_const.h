@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: m_const.h 968 2007-12-13 13:23:32Z gems $
 //
-// Copyright (C) 2006-2007  S.Dmitrieva, D.Kulik
+// Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
 // Codes and parameters used in GEM IPM work structure (standalone version)
 //
