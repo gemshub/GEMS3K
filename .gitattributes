@@ -120,6 +120,8 @@ mcotac-gem/debug/TEST.INI -text
 mcotac-gem/debug/initial.out -text
 mcotac-gem/doc/Readme.1st -text
 mcotac-gem/platform/GNU/Makefile -text
+mcotac-gem/platform/GNU/Makefile.kosas-spider -text
+mcotac-gem/platform/GNU/Makefile.kosas-spider-mpi -text
 mcotac-gem/platform/GNU/Makefile.lib -text
 mcotac-gem/platform/GNU/readme -text
 mcotac-gem/platform/INTEL/Makefile -text
