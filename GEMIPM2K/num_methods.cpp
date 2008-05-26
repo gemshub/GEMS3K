@@ -4,11 +4,7 @@
 // C/C++ Numerical Methods (Lagrange interpolation)
 // used in GEMS-PSI and GEMIPM2K
 //
-// (c) 2006-2007 S.Dmytriyeva, D.Kulik
-//
-// Uses: JAMA/C++ Linear Algebra Package based on the Template
-// Numerical Toolkit (TNT) - an interface for scientific computing in C++,
-// (c) Roldan Pozo, NIST (USA), http://math.nist.gov/tnt/download.html
+// (c) 2006,20078 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization and the GEMIPM2K code
@@ -53,10 +49,10 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
    Error( "LagranInterp",
     "E34RErun: xoi < x[0] or xoi > x[px] ( column argument outside the range )");
 
-   if( N==1 && M==1 ) // one dimension interpolation
+   if( N==1 && M==1 ) // zero dimension interpolation
       return d[0];
 
-// find point in row
+// find the point in a row
    ppy = min( N-1, pp );
    for(jy=0;jy<N;jy++)
      if ( yoi >= y[jy] && yoi <= y[jy+1])
@@ -65,7 +61,7 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
        jy=N-ppy-1;
    jy1=jy;
 
-// find point in column
+// find the point in column
    ppx = min( M-1, pp );
    for(jx=0;jx<M;jx++)
         if(xoi >= x[jx] && xoi <= x[jx+1])

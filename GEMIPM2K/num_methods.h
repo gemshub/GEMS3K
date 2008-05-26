@@ -1,12 +1,8 @@
 //-------------------------------------------------------------------
 // $Id: num_methods.h 705 2006-04-28 19:39:01Z gems $
 //
-// C/C++ Numerical Methods (Linear Algebra) used in GEMS-PSI and GEMIPM2K
-// (c) 2006-2007 S.Dmytriyeva, D.Kulik
-//
-// Uses: JAMA/C++ Linear Algebra Package based on the Template
-// Numerical Toolkit (TNT) - an interface for scientific computing in C++,
-// (c) Roldan Pozo, NIST (USA), http://math.nist.gov/tnt/download.html
+// C/C++ Numerical Methods used in GEMS-PSI and GEMIPM2K
+// (c) 2006,2008 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization and of the GEMIPM2K code

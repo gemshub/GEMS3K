@@ -686,8 +686,8 @@ numerical paths of the iterative GEM IPM-2 algorithm are controlled
 through ca. 20 thresholds and flags, values of which were empirically
 found in many test and modelling calculations in various systems. These
   <a href="#NUMERICAL_CONTROLS">numerical controls</a> can be adjusted
-in GEMS-PSI GUI window or in the
-  <big><span style="font-family: monospace;">*ipm.dat</span></big>&nbsp;
+in GEMS-PSI GUI window or in the <big><span
+ style="font-family: monospace;">*ipm.dat</span></big>&nbsp;
 input file of GEMIPM2K standalone program, as described in the <a
  href="gemipm2k-inp.html">companion manual</a>. <br>
   <br>
@@ -877,8 +877,8 @@ numerical&nbsp; solvers used in GEM IPM module <br>
       </tr>
       <tr>
         <td style="font-family: monospace;"><big>num_methods.h</big></td>
-        <td style="vertical-align: top;">Headers for internal numerical
-functions used in GEM IPM module for solving SLE and interpolation<br>
+        <td style="vertical-align: top;">Headers for internal 1-D and
+2-D Lagrange interpolation function (used in TNode)<br>
         </td>
       </tr>
       <tr>
@@ -1102,7 +1102,8 @@ thermodynamic data<br>
 grid array <br>
         </td>
         <td style="vertical-align: top;">Direct access to thermodynamic
-data base<br>
+data base, built-in HKF EoS, CG EoS, PRSV EoS, Cp double integration,
+etc.<br>
         </td>
       </tr>
       <tr>
@@ -1112,8 +1113,8 @@ work data<br>
         <td style="vertical-align: top;">Batch mode only (I/O files or
 in RAM)<br>
         </td>
-        <td style="vertical-align: top;">Direct GUI access, incl.
-stepwise mode<br>
+        <td style="vertical-align: top;">Direct GUI access, including
+multithread stepwise mode<br>
         </td>
       </tr>
       <tr>
@@ -1121,7 +1122,8 @@ stepwise mode<br>
         </td>
         <td style="vertical-align: top;">Not available<br>
         </td>
-        <td style="vertical-align: top;">Available (HTML help)<br>
+        <td style="vertical-align: top;">Available as runtime HTML
+help, either local or in internet<br>
         </td>
       </tr>
     </tbody>
@@ -1129,9 +1131,9 @@ stepwise mode<br>
   <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
 In principle,&nbsp; all the input data required for GEM IPM-2
 calculation can be provided in a human-made ASCII file. However,
-producing such file without a software fron-end accessing the
+producing such file without a software front-end that can accessing the
 thermodynamic data base would be a difficult and error-prone
-process.&nbsp; <br>
+process. <br>
   </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">Moreover,
 RMT problems are usually represented by many nodes; reactive subsystems
@@ -1264,11 +1266,12 @@ GEMIPM2K run for a single system, e.g., after changing manually some
 input data in DBR or IPM file. <br>
   </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">Another way
-to create a set of GEMIPM2K input file with multiple DBR files (for
-multiple nodes) is to set up a GEM2MT module record of "S" type (see
+to create a set of GEMIPM2K input files for
+multiple nodes is to set up a GEM2MT module record of "S" type (see
 documentation to GEM2MT, under construction). Re-calculation of such
-record results in a collection of DCH, IPM and DBR files sufficient to
-start a coupled modelling session. </span><br>
+record results in a collection of one DCH, one IPM and multiple DBR
+files sufficient to
+set ip initial systems and start a coupled modelling session. </span><br>
   <br style="font-family: Helvetica,Arial,sans-serif;">
   <br>
   </p>
@@ -1282,308 +1285,386 @@ structure (mirrored in a DCH input file) contains an input definition
 of the chemical system visible to both GEMIPM2K and mass-transport
 parts of a coupled code. The respective dimensions, lists of components
 and phases etc. will be automatically copied into the MULTI work data
-structure of GEM IPM algorithm upon initialization of a&nbsp; <big><span
+structure of GEM IPM algorithm upon an initialization of a&nbsp; <big><span
  style="font-family: monospace;"><a href="../../node.h">TNode</a> </span></big>class
-instance which consists in reading of DCH, IPM and at least one DBR
+instance which includes reading of one DCH, one IPM and at least one
+DBR
 files. <br>
   </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">The CSD part of
 DATACH structure includes the following data: <br>
   </p>
-  <table border="1" cellpadding="2" cellspacing="2" width="100%">
+  <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
     <tbody>
       <tr>
         <td style="font-family: Helvetica,Arial,sans-serif;">Type</td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> ID in
-DATACH</td>
+DATACH structure<br>
+        </td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> ID in
-MULTI</td>
-        <td style="font-family: Helvetica,Arial,sans-serif;"> Label in
-DCH file</td>
+MULTI structure<br>
+        </td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> DOD label
 in GEMS</td>
-        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td style="vertical-align: top;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">Label in DCH file</span><br>
+        </td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Content</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">short</span></td>
         <td style="font-family: monospace;"><big> nIC</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Total number of IC (independent components) <br>
+        <td style="font-family: monospace;"><big> N<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>nIC<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Total
+number of IC (independent components) <br>
         </td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;"> </span><span
  style="font-family: monospace;">short</span></td>
         <td style="font-family: monospace;"><big> nDC</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Total number of DC (chemical species) <br>
+        <td style="font-family: monospace;"><big> L<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>nDC<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Total
+number of DC (chemical species or dependent components) <br>
         </td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;"> </span><span
  style="font-family: monospace;">short</span></td>
         <td style="font-family: monospace;"><big> nPH</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Total number of phases included into the GEM IPM problem</td>
+        <td style="font-family: monospace;"><big> FI<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>nPH<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Total
+number of phases included into this CSD</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;"> </span><span
  style="font-family: monospace;">short</span></td>
         <td style="font-family: monospace;"><big> nPS</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Number of multicomponent phases nPS &lt;= nPH</td>
+        <td style="font-family: monospace;"><big> FIs<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>nPS<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Number of
+multicomponent phases (nPS &lt;=&nbsp; nPH)</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;"> </span><span
  style="font-family: monospace;">short</span></td>
         <td style="font-family: monospace;"><big> nDCs</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Total Number of DC in phases-solutions</td>
+        <td style="font-family: monospace;"><big> Ls<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>nDCs<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Total
+Number of DC in phases-solutions</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">short</span><span
  style="font-family: monospace;">[]</span></td>
         <td style="font-family: monospace;"><big> nDCinPH</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // number of DC included into each phase [nPH] </td>
+        <td style="font-family: monospace;"><big> L1<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> L1<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>nDCinPH<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Number of
+DC included into each phase [nPH] </td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">float[]</span></td>
         <td style="font-family: monospace;"><big> A</big></td>
-        <td> <br>
+        <td style="font-family: monospace;"><big> A<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> A<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>A</big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;">Stoichiometry
+matrix A containing amounts of IC in one mole of each DC
+[nIC][nDC]<br>
         </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Stoichiometry matrix A containing elemental
-stoichiometries of Dependent Components [nIC][nDC] elements</td>
       </tr>
       <tr>
-        <td><span style="font-family: monospace;">float</span><span
+        <td><span style="font-family: monospace;">double</span><span
  style="font-family: monospace;">[]</span></td>
         <td style="font-family: monospace;"><big> ICmm</big></td>
-        <td> <br>
+        <td style="font-family: monospace;"><big> Awt<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> icM<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>ICmm<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> IC atomic
+(molar) mass in g/mol [nIC]<br>
         </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // IC atomic (molar) mass g/mol [nIC] elements</td>
       </tr>
       <tr>
-        <td><span style="font-family: monospace;">float</span><span
+        <td><span style="font-family: monospace;">double</span><span
  style="font-family: monospace;">[]</span></td>
         <td style="font-family: monospace;"><big> DCmm</big></td>
-        <td> <br>
+        <td style="font-family: monospace;"><big> MM<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> mmDC<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>DCmm *<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> DC molar
+mass in g/mol [nDC]<br>
         </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // DC molar mass g/mol [nDC] elements</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">char*[]</span></td>
         <td style="font-family: monospace;"><big> ICNL</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // List of IC names in the system [nIC] elements of MaxICN
+        <td style="font-family: monospace;"><big> SB<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> ICnam<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>ICNL<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> List of
+IC names, [nIC] strings of MaxICN
 length</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">char*[]</span></td>
         <td style="font-family: monospace;"><big> DCNL</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // List of DC names in the system [nDC] elements of MaxDCN
+        <td style="font-family: monospace;"><big> SM<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> DCnam<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>DCNL<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> List of
+DC names, [nDC] strings of MaxDCN
 length</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">char*[]</span></td>
         <td style="font-family: monospace;"><big> PHNL</big></td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // List of phase names in the system [nPH] elements of
+        <td style="font-family: monospace;"><big> SF<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> PHnam<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>PHNL<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> List of
+names of phases, [nPH] strings of
 MaxPHN length</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">char[]</span></td>
         <td style="font-family: monospace;"><big> ccIC</big></td>
-        <td> <br>
+        <td style="font-family: monospace;"><big> ICC<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>ccIC<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Class
+codes of IC [nIC], see codes in enum ICL_CLASSES<br>
         </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Class codes of IC see enum ICL_CLASSES ([nIC] elements)</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">char[]</span></td>
         <td style="font-family: monospace;"><big> ccDC</big></td>
-        <td> <br>
+        <td style="font-family: monospace;"><big> DCC<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> DCC<br>
+        </big></td>
+        <td style="font-family: monospace;"><big>ccDC<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Class
+codes of DC [nDC], see codes in enum DCL_CLASSES<br>
         </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Class codes of DC see enum DCL_CLASSES ([nDC] elements)</td>
       </tr>
       <tr>
         <td><span style="font-family: monospace;">char[]</span></td>
         <td style="font-family: monospace;"><big> ccPH</big></td>
-        <td> <br>
+        <td style="font-family: monospace;"><big> PHC<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> <br>
+        </big></td>
+        <td style="font-family: monospace;"><big>ccPH<br>
+        </big></td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Class
+codes of phases [nPH], see codes in enum PHL_CLASSES <br>
         </td>
-        <td> <br>
-        </td>
-        <td> <br>
-        </td>
-        <td> // Class codes of phases see enum PHL_CLASSES ([nPH]
-elements)</td>
       </tr>
     </tbody>
   </table>
-  <p style="font-family: Helvetica,Arial,sans-serif;"><br>
+  <p style="font-family: Helvetica,Arial,sans-serif;">* since version
+2.2.3, <big><span style="font-family: monospace;">DCmm</span></big>
+vector is automatically calculated from <big><span
+ style="font-family: monospace;">A</span></big> and <big><span
+ style="font-family: monospace;">ICmm</span></big> and can be skipped
+from the DCH file<br>
   <br>
   </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Because direct
 access to GEMS thermodynamic data base is not possible and functions
-for T,P corrections of thermodynamic data&nbsp; are not available in
+for <span style="font-style: italic;">T,P</span> corrections of
+thermodynamic data&nbsp; are not available in
 GEMIPM2K, the retrieval of thermodynamic data for dependent components
 is implemented through the interpolation from look-up arrays provided
 in the DATACH structure and file. This part includes the following
 data: <br>
   </p>
-  <table border="1" cellpadding="2" cellspacing="2" width="100%">
+  <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
     <tbody>
       <tr>
         <td style="font-family: Helvetica,Arial,sans-serif;">Type</td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> ID</td>
-        <td style="font-family: Helvetica,Arial,sans-serif;"> length</td>
-        <td style="font-family: Helvetica,Arial,sans-serif;"> comment</td>
-        <td style="vertical-align: top;">Label in DCH file<br>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Dimensions</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td style="vertical-align: top;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">Label in DCH file</span><br>
         </td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nTp</big></td>
-        <td> 1<br>
+        <td style="font-family: monospace;"><big> 1<br>
+        </big></td>
+        <td> Number of temperature points in lookup grid arrays<br>
         </td>
-        <td> // Number of temperature points in grid arrays for the
-interpolation of thermodynamic data</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big>nTp<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nPp</big></td>
-        <td> 1<br>
+        <td style="font-family: monospace;"><big> 1<br>
+        </big></td>
+        <td> Number of pressure points in lookup grid arrays <br>
         </td>
-        <td> // Number of pressure points in grid arrays for the
-interpolation of thermodynamic data</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big>nPp<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> iGrd</big></td>
-        <td> 1<br>
-        </td>
-        <td> // flag for grid array setup: 0 - only V0 and G0; 1
-- plus H0; 2 - plus S0; 3 - plus Cp0; 4 - plus A0 (Helmholtz); -1 - V0
-G0 and DD (diffusion coefficients in aq reserved)</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big> 1<br>
+        </big></td>
+        <td> Flag for lookup grid array setup: 0 - only V0 and G0; 1
+- plus H0; 2 - plus S0; 3 - plus Cp0; 4 - plus A0 (Helmholtz); -1 - V0,
+G0 and DD (modes 1,2,3,4,-1 reserved)</td>
+        <td style="font-family: monospace;"><big>iGrd<br>
+        </big></td>
       </tr>
       <tr>
-        <td>float[]</td>
+        <td style="font-family: monospace;"><big>float[]</big></td>
         <td style="font-family: monospace;"><big> TCval</big></td>
-        <td> nTp</td>
-        <td> // discrete values of Temperature (C) [nTp]
-elements that correspond to grid arrays for the interpolation of
+        <td style="font-family: monospace;"><big> nTp</big></td>
+        <td>[nTp] discrete values of temperature <span
+ style="font-style: italic;">T</span>, in C,&nbsp; for the lookup of
 thermodynamic data</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big>TCval<br>
+        </big></td>
       </tr>
       <tr>
-        <td>float[]</td>
+        <td style="font-family: monospace;"><big>float[]</big></td>
         <td style="font-family: monospace;"><big> Pval</big></td>
-        <td> nPp</td>
-        <td> // discrete values of Pressure (bar) [nPp] elements
-that correspond to grid arrays for the interpolation of thermodynamic
+        <td style="font-family: monospace;"><big> nPp</big></td>
+        <td>[nPp] discrete values of pressure <span
+ style="font-style: italic;">P</span>, in bars,&nbsp; for the lookup of
+thermodynamic
 data</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big>Pval<br>
+        </big></td>
       </tr>
       <tr>
-        <td>double</td>
+        <td style="font-family: monospace;"><big>double</big></td>
         <td style="font-family: monospace;"><big> Ttol</big></td>
-        <td> 1<br>
+        <td style="font-family: monospace;"><big> 1<br>
+        </big></td>
+        <td> Temperature tolerance, in K, for the interpolation of
+thermodynamic data (default: 0.1)<br>
         </td>
-        <td> // Temperature tolerance (K) for interpolation of
-thermodynamic data</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big>Ttol<br>
+        </big></td>
       </tr>
       <tr>
-        <td>double</td>
+        <td style="font-family: monospace;"><big>double</big></td>
         <td style="font-family: monospace;"><big> Ptol</big></td>
-        <td> 1<br>
+        <td style="font-family: monospace;"><big> 1<br>
+        </big></td>
+        <td> Pressure tolerance, in bars, for the interpolation of
+thermodynamic data (default: 1.0)<br>
         </td>
-        <td> // Pressure tolerance (bar) for interpolation of
-thermodynamic data</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td style="font-family: monospace;"><big>Ptol<br>
+        </big></td>
       </tr>
     </tbody>
   </table>
-  <p style="font-family: Helvetica,Arial,sans-serif;"><br>
-Lookup grid arrays of thermodynamic data Require a Lagrange
-interpolation subroutine to extract data for a given P,T point (new
+  <p style="font-family: Helvetica,Arial,sans-serif;">The<big><span
+ style="font-family: monospace;"> iGrd</span></big> flag defines which
+thermodynamic data must be considered (and provided as lookup grid
+arrays in the DCH file). In the default case (<big><span
+ style="font-family: monospace;">iGrd = 0</span></big>),&nbsp; only
+molar volumes <span style="font-style: italic;">V</span><sup>o</sup>
+and molar Gibbs energies of chemical species <span
+ style="font-style: italic;">G</span><sup>o</sup> are provided and used
+(see table below). If the aqueous phase is included in the chemical
+system then also the density <big><span style="font-family: monospace;">roW</span></big>
+and dielectric constant <big><span style="font-family: monospace;">epsW</span></big>
+of water must be provided. With this setup, coupled reactive mass
+transport calculations based on calculations of isobaric-isothermal
+chemical equilibria can be performed. Complete THMC coupled modeling
+cases require usage of other <big><span style="font-family: monospace;">iGrd</span></big>
+setups with more thermodynamic data, e.g. <big><span
+ style="font-family: monospace;">iGrd</span></big> = 1, 3 or 4. These
+setups will be completed and tested in future versions of GEMIPM2K
+(since 2.3).&nbsp; <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The trivial case
+of lookup is when <big><span style="font-family: monospace;">nTp</span></big>
+= 1 and <big><span style="font-family: monospace;">nPp</span></big> =
+1. In this case, each thermodynamic data array (see the table below)
+must contain one
+value per DC for a single temperature <big><span
+ style="font-family: monospace;">TCval[0]</span></big> and pressure <big><span
+ style="font-family: monospace;">Pval[0]</span></big>. Conversely, no
+variations in <span style="font-style: italic;">T,P</span> between the
+nodes or with
+time will then be allowed in the coupled model. Actually, the program
+checks that current <span style="font-style: italic;">T</span> and <span
+ style="font-style: italic;">P</span> coincide with a value from <big><span
+ style="font-family: monospace;">TCval </span></big>resp. <big><span
+ style="font-family: monospace;">Pval</span><span
+ style="font-family: monospace;"></span></big> within the tolerance
+limits given in <big><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">Ttol</span></big> and <big><span
+ style="font-family: monospace;">Ptol</span></big>, respectively, and
+picks up the values from grid arrays.&nbsp; <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">Lookup grid
+arrays of thermodynamic data permit GEMIPM2K to extract thermodynamic
+data for any current T and P in any node, provided that T and P are
+within respective ranges set in TCval and Pval arrays. The
+interpolation is performed in TNode class before calling the GEM IPM-2
+calculation with help of a Lagrange
+polynomial interpolation subroutine. New
 interpolation is done when P or T differs from the previous P,T by more
-than Ptol, Ttol). The actual allocation of lookup arrays depends on the
+than Ptol, Ttol. The actual allocation of lookup arrays depends on the
 control code in the iGrd field. <br>
   </p>
   <table border="1" cellpadding="2" cellspacing="2" width="100%">
@@ -1591,7 +1672,7 @@ control code in the iGrd field. <br>
       <tr>
         <td style="font-family: Helvetica,Arial,sans-serif;">Type</td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> ID</td>
-        <td style="font-family: Helvetica,Arial,sans-serif;"> length</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;">Dimensions</td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> comment</td>
         <td style="vertical-align: top;">Label in DCH file<br>
         </td>
@@ -1601,78 +1682,85 @@ control code in the iGrd field. <br>
         </td>
         <td style="font-family: monospace;"><big> roW</big></td>
         <td> [nPp][nTp] </td>
-        <td> // density of water-solvent g/cm3 [ nPp][nTp] elements</td>
-        <td style="vertical-align: top;"><br>
+        <td> Density of water-solvent, g/cm3 <br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>roW<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> epsW</big></td>
         <td> [nPp][nTp]</td>
-        <td> // dielectric constant of water-solvent [nPp][nTp] elements</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td> Dielectric constant of water-solvent, relative</td>
+        <td style="vertical-align: top; font-family: monospace;"><big>epsW<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> G0</big></td>
         <td> [nDC][nPp][nTp] </td>
-        <td> // G0 standard molar Gibbs energy of DC J/mol
-[nDC][nPp][nTp] elements</td>
-        <td style="vertical-align: top;"><br>
+        <td> Go standard molar Gibbs energy of DC, J/mol, corrected to <span
+ style="font-style: italic;">T,P</span><br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>G0<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> V0</big></td>
         <td> [nDC][nPp][nTp]</td>
-        <td> // V0 standard molar volume of DC J/bar [nDC][nPp][nTp]
-elements</td>
-        <td style="vertical-align: top;"><br>
-        </td>
+        <td> Vo standard molar volume of DC, J/bar, corrected to <span
+ style="font-style: italic;">T,P</span></td>
+        <td style="vertical-align: top; font-family: monospace;"><big>V0<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> S0</big></td>
         <td> [nDC][nPp][nTp]</td>
-        <td> // S0 standard molar entropy of DC J/K/mol [nDC][nPp][nTp]
-elements</td>
-        <td style="vertical-align: top;"><br>
+        <td>So standard molar entropy of DC, J/K/mol, corrected to <span
+ style="font-style: italic;">T,P</span> (reserved)<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>S0<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> H0</big></td>
         <td> [nDC][nPp][nTp]</td>
-        <td> // H0 standard molar enthalpy of DC J/mol reserved
-[nDC][nPp][nTp] elements</td>
-        <td style="vertical-align: top;"><br>
+        <td> Ho standard molar enthalpy of DC, J/mol, corrected to <span
+ style="font-style: italic;">T,P</span>, (reserved) <br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>H0<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> Cp0</big></td>
         <td> [nDC][nPp][nTp] </td>
-        <td> // Cp0 molar heat capacity of DC J/K/mol [nDC][nPp][nTp]
-elements</td>
-        <td style="vertical-align: top;"><br>
+        <td> Cpo molar heat capacity of DC J/K/mol, corrected to <span
+ style="font-style: italic;">T,P</span> (reserved)<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>Cp0<br>
+        </big></td>
       </tr>
       <tr>
         <td>double[]<br>
         </td>
         <td style="font-family: monospace;"><big> DD</big></td>
         <td> [nDC][nPp][nTp]</td>
-        <td> // Diffusition coefficients [nDC][nPp][nTp] elements for
-now constant (reserved)</td>
-        <td style="vertical-align: top;"><br>
+        <td> Diffusition coefficients for
+aqueous species (now constant, reserved) <span
+ style="background-color: rgb(255, 255, 153);">units?</span><br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>DD<br>
+        </big></td>
       </tr>
     </tbody>
   </table>
