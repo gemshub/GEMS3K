@@ -1291,7 +1291,8 @@ instance which includes reading of one DCH, one IPM and at least one
 DBR
 files. <br>
   </p>
-  <p style="font-family: Helvetica,Arial,sans-serif;">The CSD part of
+  <p style="font-family: Helvetica,Arial,sans-serif;">The<span
+ style="font-weight: bold;"> first</span>, CSD part of
 DATACH structure includes the following data: <br>
   </p>
   <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
@@ -1525,7 +1526,11 @@ for <span style="font-style: italic;">T,P</span> corrections of
 thermodynamic data&nbsp; are not available in
 GEMIPM2K, the retrieval of thermodynamic data for dependent components
 is implemented through the interpolation from look-up arrays provided
-in the DATACH structure and file. This part includes the following
+in the DATACH structure and file. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">This <span
+ style="font-weight: bold;">second</span> part of DATACH includes the
+following
 data: <br>
   </p>
   <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
@@ -1575,8 +1580,8 @@ G0 and DD (modes 1,2,3,4,-1 reserved)</td>
         <td style="font-family: monospace;"><big> TCval</big></td>
         <td style="font-family: monospace;"><big> nTp</big></td>
         <td>[nTp] discrete values of temperature <span
- style="font-style: italic;">T</span>, in C,&nbsp; for the lookup of
-thermodynamic data</td>
+ style="font-style: italic;">T</span>, in C,&nbsp; in ascending order<br>
+        </td>
         <td style="font-family: monospace;"><big>TCval<br>
         </big></td>
       </tr>
@@ -1585,9 +1590,8 @@ thermodynamic data</td>
         <td style="font-family: monospace;"><big> Pval</big></td>
         <td style="font-family: monospace;"><big> nPp</big></td>
         <td>[nPp] discrete values of pressure <span
- style="font-style: italic;">P</span>, in bars,&nbsp; for the lookup of
-thermodynamic
-data</td>
+ style="font-style: italic;">P</span>, in bars,&nbsp; in ascending order<br>
+        </td>
         <td style="font-family: monospace;"><big>Pval<br>
         </big></td>
       </tr>
@@ -1615,8 +1619,9 @@ thermodynamic data (default: 1.0)<br>
       </tr>
     </tbody>
   </table>
-  <p style="font-family: Helvetica,Arial,sans-serif;">The<big><span
- style="font-family: monospace;"> iGrd</span></big> flag defines which
+  <p style="font-family: Helvetica,Arial,sans-serif;"><br>
+The<big><span style="font-family: monospace;"> iGrd</span></big> flag
+defines which
 thermodynamic data must be considered (and provided as lookup grid
 arrays in the DCH file). In the default case (<big><span
  style="font-family: monospace;">iGrd = 0</span></big>),&nbsp; only
@@ -1629,17 +1634,133 @@ and dielectric constant <big><span style="font-family: monospace;">epsW</span></
 of water must be provided. With this setup, coupled reactive mass
 transport calculations based on calculations of isobaric-isothermal
 chemical equilibria can be performed. Complete THMC coupled modeling
-cases require usage of other <big><span style="font-family: monospace;">iGrd</span></big>
-setups with more thermodynamic data, e.g. <big><span
- style="font-family: monospace;">iGrd</span></big> = 1, 3 or 4. These
+cases require usage of other <big><span style="font-family: monospace;"></span></big>setups
+with more thermodynamic data, e.g. indicated by&nbsp; <big><span
+ style="font-family: monospace;">iGrd</span></big> = 1, 2, 3 or 4.
+These
 setups will be completed and tested in future versions of GEMIPM2K
 (since 2.3).&nbsp; <br>
+  </p>
+  <table border="1" cellpadding="2" cellspacing="2" width="100%">
+    <tbody>
+      <tr>
+        <td style="font-family: Helvetica,Arial,sans-serif;">Type</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> ID</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;">Dimensions</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> comment</td>
+        <td style="vertical-align: top;">Label in DCH file<br>
+        </td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> roW</big></td>
+        <td> [nPp][nTp] </td>
+        <td> Density of water-solvent, g/cm3 <br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>roW<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> epsW</big></td>
+        <td> [nPp][nTp]</td>
+        <td> Dielectric constant of water-solvent, relative</td>
+        <td style="vertical-align: top; font-family: monospace;"><big>epsW<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> G0</big></td>
+        <td> [nDC][nPp][nTp] </td>
+        <td> Go standard molar Gibbs energy of DC, J/mol, corrected to <span
+ style="font-style: italic;">T,P</span><br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>G0<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> V0</big></td>
+        <td> [nDC][nPp][nTp]</td>
+        <td> Vo standard molar volume of DC, J/bar, corrected to <span
+ style="font-style: italic;">T,P</span></td>
+        <td style="vertical-align: top; font-family: monospace;"><big>V0<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> S0</big></td>
+        <td> [nDC][nPp][nTp]</td>
+        <td>So standard molar entropy of DC, J/K/mol, corrected to <span
+ style="font-style: italic;">T,P</span> (reserved)<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>S0<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> H0</big></td>
+        <td> [nDC][nPp][nTp]</td>
+        <td> Ho standard molar enthalpy of DC, J/mol, corrected to <span
+ style="font-style: italic;">T,P</span>, (reserved) <br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>H0<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> Cp0</big></td>
+        <td> [nDC][nPp][nTp] </td>
+        <td> Cpo molar heat capacity of DC J/K/mol, corrected to <span
+ style="font-style: italic;">T,P</span> (reserved)<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>Cp0<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>double[]<br>
+        </big></td>
+        <td style="font-family: monospace;"><big> DD</big></td>
+        <td> [nDC][nPp][nTp]</td>
+        <td> Diffusition coefficients for
+aqueous species (now constant, reserved) <span
+ style="background-color: rgb(255, 255, 153);">units?</span><br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>DD<br>
+        </big></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><br>
+Implementation of this functionality is located in the <big><span
+ style="font-family: monospace;">ms_param.cpp</span></big>
+(GEMIPM2K-specific variant of <big><span
+ style="font-family: monospace;">TMulti::CompG0Load()</span></big>
+function), <big><span style="font-family: monospace;">num_methods.cpp</span></big>
+(<big><span style="font-family: monospace;">LagranInterp()</span></big>
+function, and <big><span style="font-family: monospace;">node.cpp</span></big>
+(<big><span style="font-family: monospace;">TNode::check_grid_TP()</span></big>
+function)) files. In addition, the <big><span
+ style="font-family: monospace;">TNode</span></big> class provides
+methods for accessing interpolated thermodynamic data from the
+mass-transport part at any time through the <big><span
+ style="font-family: monospace;">DATACH</span></big> memory structure (<big><span
+ style="font-family: monospace;">TNode::DC_G0_TP()</span></big>, <big><span
+ style="font-family: monospace;">TNode::DC_V0_TP()</span></big>,
+etc.)&nbsp; <br>
   </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">The trivial case
 of lookup is when <big><span style="font-family: monospace;">nTp</span></big>
 = 1 and <big><span style="font-family: monospace;">nPp</span></big> =
-1. In this case, each thermodynamic data array (see the table below)
-must contain one
+1 (0-D interpolation). In this case, each thermodynamic data array (see
+the table below) must contain one
 value per DC for a single temperature <big><span
  style="font-family: monospace;">TCval[0]</span></big> and pressure <big><span
  style="font-family: monospace;">Pval[0]</span></big>. Conversely, no
@@ -1656,16 +1777,101 @@ limits given in <big><span style="font-family: monospace;"></span><span
  style="font-family: monospace;">Ptol</span></big>, respectively, and
 picks up the values from grid arrays.&nbsp; <br>
   </p>
-  <p style="font-family: Helvetica,Arial,sans-serif;">Lookup grid
+  <p style="font-family: Helvetica,Arial,sans-serif;">The more common
+case is when the pressure is fixed (<big><span
+ style="font-family: monospace;">nPp</span></big> =
+1) but the temperature in the nodes is allowed to change (e.g. <big><span
+ style="font-family: monospace;">nTp</span></big>=
+8). Then the <big><span style="font-family: monospace;">Pval</span></big>
+array must contain a single value of pressure (e.g.
+10 bar) and the <big><span style="font-family: monospace;">Tval</span></big>
+array - 8 values of temperature in ascending order
+(e.g. 5, 25, 45, 65, 85, 105, 125, 145
+  <sup>o</sup>C). These values define the overall temperature interval
+{4.9; 145.1
+  <sup>o</sup>C}. The differences between adjacent temperature values
+must not
+necessarily be equal. According to this setup, the <big><span
+ style="font-family: monospace;">roW</span></big> and <big><span
+ style="font-family: monospace;">EpsW</span></big> arrays
+must contain 8 values each that correspond to 10 bar pressure and the
+temperatures given in <big><span style="font-family: monospace;">Tval</span></big>
+array. Provided that there are 40 dependent
+components in the DCH list, the <big><span
+ style="font-family: monospace;">G0</span></big> array will consist of
+8 values per
+DC, i.e. total 320 numbers, the first 8 contain <span
+ style="font-style: italic;">G</span><sup>o</sup> values for the first
+species (for temperatures in <big><span style="font-family: monospace;">Tval</span></big>),
+next 8 values - for the second
+species, and so on. The <big><span style="font-family: monospace;">V0</span></big>
+array should be organized likewise. The
+interpolation subroutine looks then separately for each dependent
+component to return <span style="font-style: italic;">G</span><sup>o</sup>
+and <span style="font-style: italic;">V</span><sup>o</sup> values for <span
+ style="font-style: italic;">P</span>=10 bar and <span
+ style="font-style: italic;">T</span> of interest,
+interpolated in 1-D mode, if necessary. <br>
+  </p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">In the most
+general
+case, the lookup grid arrays contain numbers for several discrete
+pressures and several discrete temperatures. Then the <big><span
+ style="font-family: monospace;">roW</span></big> and <big><span
+ style="font-family: monospace;">epsW</span></big>
+arrays are actually&nbsp; tables made of rows each containing values
+for different
+temperatures from <big><span style="font-family: monospace;">Tval</span></big>
+but one pressure value from <big><span style="font-family: monospace;">Pval</span></big>.
+The <big><span style="font-family: monospace;">G0 </span></big>and <big><span
+ style="font-family: monospace;">V0</span></big>
+arrays are then composed of such tables for each dependent component,
+arranged in the order in which the dependent components are listed in
+the DATACH <big><span style="font-family: monospace;">DCNL</span></big>
+list. The interpolation subroutine performs 2-D interpolation
+separately for each dependent component to return its <span
+ style="font-style: italic;">G</span><sup>o</sup> and <span
+ style="font-style: italic;">V</span><sup>o</sup> values
+for <span style="font-style: italic;">P,T</span> of interest.&nbsp;
+&nbsp; </p>
+  <span style="font-family: Helvetica,Arial,sans-serif;">Thus, the
+lookup grid
 arrays of thermodynamic data permit GEMIPM2K to extract thermodynamic
-data for any current T and P in any node, provided that T and P are
-within respective ranges set in TCval and Pval arrays. The
-interpolation is performed in TNode class before calling the GEM IPM-2
-calculation with help of a Lagrange
-polynomial interpolation subroutine. New
-interpolation is done when P or T differs from the previous P,T by more
-than Ptol, Ttol. The actual allocation of lookup arrays depends on the
-control code in the iGrd field. <br>
+data for any current <span style="font-style: italic;">T</span> and <span
+ style="font-style: italic;">P</span> in any node, provided that <span
+ style="font-style: italic;">T</span> and <span
+ style="font-style: italic;">P</span> are
+within the respective ranges set in </span><big><span
+ style="font-family: monospace;">TCval</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and </span><big><span
+ style="font-family: monospace;">Pval</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> lists. </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">Before calling the
+GEM IPM-2
+calculation, </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">the
+interpolation is performed, and <span style="font-style: italic;">G</span><sup>o</sup>
+and <span style="font-style: italic;">V</span><sup>o</sup> values are
+loaded directly into the MULTI
+structure, where they remain as long as the input <span
+ style="font-style: italic;">P</span> and <span
+ style="font-style: italic;">T</span> do not
+change. New
+interpolation is done when the requested <span
+ style="font-style: italic;">P</span> or <span
+ style="font-style: italic;">T</span> differ from previous values by
+more
+than </span><big><span style="font-family: monospace;">Ptol</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">, </span><big><span
+ style="font-family: monospace;">Ttol</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">. </span><br>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><a
+ name="INDEX_MAPPING"></a>The <span style="font-weight: bold;">third</span>
+part of the DATACH structure (and file) defines the selection of
+components and phases to be exchanged with the mass-transport part via
+DATABR structure instances for nodes, or via DBR files. This part
+includes the
+following data items: <br>
   </p>
   <table border="1" cellpadding="2" cellspacing="2" width="100%">
     <tbody>
@@ -1673,192 +1879,241 @@ control code in the iGrd field. <br>
         <td style="font-family: Helvetica,Arial,sans-serif;">Type</td>
         <td style="font-family: Helvetica,Arial,sans-serif;"> ID</td>
         <td style="font-family: Helvetica,Arial,sans-serif;">Dimensions</td>
-        <td style="font-family: Helvetica,Arial,sans-serif;"> comment</td>
-        <td style="vertical-align: top;">Label in DCH file<br>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Label
+in DCH file<br>
         </td>
       </tr>
       <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> roW</big></td>
-        <td> [nPp][nTp] </td>
-        <td> Density of water-solvent, g/cm3 <br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><big>roW<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> epsW</big></td>
-        <td> [nPp][nTp]</td>
-        <td> Dielectric constant of water-solvent, relative</td>
-        <td style="vertical-align: top; font-family: monospace;"><big>epsW<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> G0</big></td>
-        <td> [nDC][nPp][nTp] </td>
-        <td> Go standard molar Gibbs energy of DC, J/mol, corrected to <span
- style="font-style: italic;">T,P</span><br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><big>G0<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> V0</big></td>
-        <td> [nDC][nPp][nTp]</td>
-        <td> Vo standard molar volume of DC, J/bar, corrected to <span
- style="font-style: italic;">T,P</span></td>
-        <td style="vertical-align: top; font-family: monospace;"><big>V0<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> S0</big></td>
-        <td> [nDC][nPp][nTp]</td>
-        <td>So standard molar entropy of DC, J/K/mol, corrected to <span
- style="font-style: italic;">T,P</span> (reserved)<br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><big>S0<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> H0</big></td>
-        <td> [nDC][nPp][nTp]</td>
-        <td> Ho standard molar enthalpy of DC, J/mol, corrected to <span
- style="font-style: italic;">T,P</span>, (reserved) <br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><big>H0<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> Cp0</big></td>
-        <td> [nDC][nPp][nTp] </td>
-        <td> Cpo molar heat capacity of DC J/K/mol, corrected to <span
- style="font-style: italic;">T,P</span> (reserved)<br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><big>Cp0<br>
-        </big></td>
-      </tr>
-      <tr>
-        <td>double[]<br>
-        </td>
-        <td style="font-family: monospace;"><big> DD</big></td>
-        <td> [nDC][nPp][nTp]</td>
-        <td> Diffusition coefficients for
-aqueous species (now constant, reserved) <span
- style="background-color: rgb(255, 255, 153);">units?</span><br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><big>DD<br>
-        </big></td>
-      </tr>
-    </tbody>
-  </table>
-  <p style="font-family: Helvetica,Arial,sans-serif;"><br>
-Third part of the DATACH structure (and file) defines the selection of
-components and phases to be exchanged with the mass-transport part via
-DATABR structure instances for nodes or DBR files. This includes the
-following data items: Connection between any node and DATACH occurs
-through the xIC, xPH and xDC index lists (see below) Indices connecting
-the lists used in nodes (DATABR structure), see&nbsp; databr.h, with
-the lists in this (DATACH) structure<br>
-  </p>
-  <table border="1" cellpadding="2" cellspacing="2" width="100%">
-    <tbody>
-      <tr>
-        <td>Type</td>
-        <td> ID</td>
-        <td> length</td>
-        <td> comment</td>
-        <td style="vertical-align: top;">Label in DCH file<br>
-        </td>
-      </tr>
-      <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nICb</big></td>
         <td> 1<br>
         </td>
-        <td> // number of IC (stoichiometry units) (&lt;= nIC) used in
-nodes</td>
-        <td style="vertical-align: top;"><br>
+        <td> Number of IC (stoichiometry units) (&lt;= nIC) used in
+DATABR<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>nICb<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nDCb</big></td>
         <td> 1<br>
         </td>
-        <td> // number of DC (chemical species) &lt;= nDC) used in nodes</td>
-        <td style="vertical-align: top;"><br>
+        <td> Number of DC (chemical species) &lt;= nDC) used in DATABR<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>nDCb<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nPHb</big></td>
         <td> 1<br>
         </td>
-        <td> // number of Phases (&lt;= nPH) used in nodes</td>
-        <td style="vertical-align: top;"><br>
+        <td> Number of Phases (&lt;= nPH) used in DATABR<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>nPHb<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nPSb</big></td>
         <td> 1<br>
         </td>
-        <td> // number of Phases-solutions (&lt;= nPS) used in nodes</td>
-        <td style="vertical-align: top;"><br>
+        <td> Number of Phases-solutions (&lt;= nPS) used in DATABR<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>nPSb<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short</td>
+        <td style="font-family: monospace;"><big>short</big></td>
         <td style="font-family: monospace;"><big> nAalp</big></td>
         <td> 1<br>
         </td>
-        <td> // Flag for considering surface areas of phases</td>
-        <td style="vertical-align: top;"><br>
+        <td> Flag for considering surface areas of phases in DATABR<br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>nAalp<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short[]</td>
+        <td style="font-family: monospace;"><big>short[]</big></td>
         <td style="font-family: monospace;"><big> xIC</big></td>
         <td> [nICb]</td>
-        <td> // IC name indices in DATABR IC vectors [nICb] elements</td>
-        <td style="vertical-align: top;"><br>
+        <td>index mapping list for ICs used in DATABR data vectors <br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>xIC<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short[]</td>
+        <td style="font-family: monospace;"><big>short[]</big></td>
         <td style="font-family: monospace;"><big> xDC</big></td>
         <td> [nDCb]</td>
-        <td> // DC name indices in DATABR DC vectors [nDCb] elements</td>
-        <td style="vertical-align: top;"><br>
+        <td>index mapping list for DCs used in DATABR data vectors <br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>xDC<br>
+        </big></td>
       </tr>
       <tr>
-        <td>short[]</td>
+        <td style="font-family: monospace;"><big>short[]</big></td>
         <td style="font-family: monospace;"><big> xPH</big></td>
         <td> [nPHb]</td>
-        <td> // PH name indices in DATABR Phase vectors [nPHb] elements</td>
-        <td style="vertical-align: top;"><br>
+        <td>index mapping list for phases used in DATABR data vectors <br>
         </td>
+        <td style="vertical-align: top; font-family: monospace;"><big>xPH<br>
+        </big></td>
       </tr>
     </tbody>
   </table>
-  <p style="font-family: Helvetica,Arial,sans-serif;">see definitions
-of the ICNL, DCNL and PHNL lists<br>
-  </p>
-  <br>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The trivial
+(default) case is when <big> <span style="font-family: monospace;">nICb
+= nIC,</span></big><big><span style="font-family: monospace;">nDCb =
+nDC, </span></big><big><span style="font-family: monospace;">nPHb =
+nPH, </span></big><big><span style="font-family: monospace;">nPSb =
+nPS.<span style="font-family: Helvetica,Arial,sans-serif;">In this
+case, the data vectors in DATABR structure exactly map the
+corresponding data vectors in DATACH and MULTI structures. For
+instance, the bulk chemical composition of the system - vector </span><span
+ style="font-family: monospace;">b</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> in MULTI - is the
+same as the vector </span><span style="font-family: monospace;">bIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> provided in the
+DATABR structure or DBR file. The index mapping lists </span><span
+ style="font-family: monospace;">xIC, xDC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and </span><span
+ style="font-family: monospace;">xPH</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> will also be
+trivial. For instance, given 7 independent components in the system (</span><span
+ style="font-family: monospace;">nIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> = 7), the </span><span
+ style="font-family: monospace;">xIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> array will simply
+contain ascending indexes (</span><span style="font-family: monospace;">0,1,2,3,4,5,6</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">). <br>
+  </span></span></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><big><span
+ style="font-family: monospace;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">However, the usage of
+index mapping lists&nbsp; </span></span></big><big><span
+ style="font-family: monospace;"><span style="font-family: monospace;">xIC,xDC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and </span><span
+ style="font-family: monospace;">xPH</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big><big><span
+ style="font-family: monospace;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">may&nbsp;
+significantly accelerate data exchange and reduce memory size of the
+coupled FMT-GEM problem when some ICs, DCs and their phases are not
+transported between the nodes. For example, the break-through columns
+in experiments are often filled with quartz sand, dissolution of which
+is neglected, so the transport of dissolved silica can also be
+neglected.&nbsp; For a system involving calcium and magnesium,
+carbonate, and chloride, the&nbsp; DATACH lists&nbsp; will look like:<br>
+  </span></span></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><big><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&lt;nIC&gt;
+8&nbsp;&nbsp; &lt;nDC&gt; 27&nbsp;&nbsp; &lt;nPH&gt; 8&nbsp;&nbsp;
+&lt;nPSb&gt; 2<br>
+&lt;ICNL&gt;</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span
+ style="font-family: monospace;">'C' 'Ca' 'Cl' 'H' 'Mg' 'O' <span
+ style="color: rgb(204, 0, 0);">'Si'</span> <span
+ style="color: rgb(204, 0, 0);">'Zz'</span></span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> &nbsp;&nbsp; ( NB: </span><span
+ style="font-family: monospace;">'Zz'</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> stays for electrical
+charge). <br>
+  </span><span style="font-family: monospace;">&lt;DCNL&gt;</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span
+ style="font-family: monospace;">'Ca+2' 'CaOH+' <span
+ style="color: rgb(204, 0, 0);">'Ca(HSiO3)+'</span> <span
+ style="color: rgb(204, 0, 0);">'CaSiO3@'</span> 'Mg+2' 'MgOH+' <span
+ style="color: rgb(204, 0, 0);">'HSiO3-' 'SiO2@' 'SiO3-2'</span> 'CO2@'
+'CO3-2' 'HCO3-' <span style="color: rgb(153, 51, 153);">'CH4@'</span>
+'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' <span
+ style="color: rgb(204, 0, 0);">'H2' 'O2'</span> <span
+ style="color: rgb(153, 51, 153);">'Gr'</span> 'Cal' 'Dis-Dol' <span
+ style="color: rgb(153, 51, 153);">'Portlandite' 'Brc'</span> <span
+ style="color: rgb(204, 0, 0);">'Qtz'</span></span><span
+ style="font-family: Helvetica,Arial,sans-serif;">. <br>
+  </span><span style="font-family: monospace;">&lt;PHNL&gt;</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><span
+ style="font-family: monospace;"> 'aq_gen' <span
+ style="color: rgb(204, 0, 0);">'gas_gen'</span> <span
+ style="color: rgb(153, 51, 153);">'Graphite'</span> 'Calcite'
+'Dolomite-dis' <span style="color: rgb(153, 51, 153);">'Portlandite'
+'Brucite'</span><span style="color: rgb(204, 0, 0);"> 'Quartz'</span></span><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span><span style="font-family: monospace;">&lt;nDCinPH&gt;</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span
+ style="font-family: monospace;">19 2 1 1 1 1 1 1</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> <br>
+  </span></span></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><big><span
+ style="font-family: monospace;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">Now, suppose that our
+mass transport model assumes that there is no transport of gas phase,
+electric charge, and of dissolved silicium species (non-transported
+components and species are marked with red in lists above). Some
+aqueous species and solids are very unlikely to appear and thus
+considered irrelevant for the MT model (marked in pink). Then&nbsp;
+the&nbsp; respective arrays of the DATABR structure can be made
+smaller, and values in them re-mapped to DATACH or MULTI structure as
+follows: <br>
+  </span></span></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><big><span
+ style="font-family: monospace;"><span style="font-family: monospace;">&lt;nICb&gt;
+6 &nbsp; &lt;nDCb&gt; 15 &nbsp; &lt;nPH&gt; 3 &nbsp; &lt;nPSb&gt; 1<br>
+&lt;xIC&gt;&nbsp; 0 1 2 3 4 5 <br>
+&lt;xDC&gt;&nbsp; 0 1&nbsp; 4 5&nbsp; 9 10 11&nbsp; 13 14 15 16 17
+18&nbsp; 22 23 <br>
+&lt;xPH&gt;&nbsp; 0&nbsp; 3 4 <br>
+  </span></span></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><big><span
+ style="font-family: monospace;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">It is very important
+to realize that this re-mapping does not affect any dimensions in the
+MULTI structure and any DATACH lists and arrays (the latter remain
+accessible in full also to the transport part of the coupled code).
+Values for components and phases marked red (non-transported) are
+skipped only from vectors in all instances of the DATABR structure, but
+these components and phases are still present in DATACH and MULTI
+structures and take part in the equilibration. In the above example,
+the size of a DATBR instance (and DBR file) becomes more than 30% less
+compared with the trivial (complete) index mapping case.&nbsp; This
+decrease can be even more dramatic for some transport algorithms where
+only a certain tracers move, or where the advection strongly prevails
+over the diffusion. In the latter case, only the bulk aqueous solution
+is migrated as the whole between the nodes, so all dependent components
+of the aqueous phase can be skipped from the DATABR mapping. In the
+above example, this would make the DATABR instance ca. 4 times smaller
+than in the trivial mapping case. <br>
+  </span></span></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><big><span
+ style="font-family: monospace;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">It can be stated that
+the presence of DATABR index mapping to DATACH structure provides a
+great flexibility in defining various coupling schemes between the FMT
+and the GEM parts. A natural question is - how the bulk composition of
+the node system can be set up when the mapping list </span><span
+ style="font-family: monospace;">xIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> is incomplete?&nbsp;
+A straightforward answer is - the full </span><span
+ style="font-family: monospace;">b</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> vector can always be
+provided in the IPM file (from where it is directly loaded into the
+MULTI structure). The </span><span style="font-family: monospace;">TNode</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> class also has
+methods for the direct access to the </span><span
+ style="font-family: monospace;">b</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> vector using the
+DATACH/MULTI indexation, which can be used e.g. for setting in all
+nodes the initial amounts of ICs skipped from the DATABR index mapping.
+Use of this functionality makes sense in 2-D or 3-D FMT problems with
+relatively large chemical system definition, where it may result in
+considerably less memory demand and higher performance of data
+exchange. However, the use of SIA initial approximation mode of GEM
+IPM2 is restricted in this case. Hence, for 1-D columns, we recommend
+using the trivial (complete) mapping in DATABR files. </span></span></big></p>
   <br>
   <p> </p>
   <h3><a name="DATABR"></a>2.4. <font
@@ -1870,277 +2125,758 @@ for the Node Data Bridge Composition and Speciation data</span> </font>
 structure relies on dimensions provided in the DATACH structure. Hence,
 the DCH file must always be read before DBR file(s) in order to
 initialize the MULTI and DATABR structures and perform dynamic memory
-allocation. </span><br>
+allocation. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The DATABR
+structure contains several flags and three blocks of data. In the
+following tables, four columns are provided to indicate which data
+fields are set in DATABR by the mass transport part (MT-DB); which are
+given from DATABR instance to GEM as input data (DB-GEM); which data is
+taken from GEM to DATABR as GEM output (GEM-DB); and which are taken
+from DATABR instance to MT part data structures (DB-MT). The most
+important GEM input and output data are shown in boldface. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">1. Chemical
+scalar variables (all double floating point numbers)</span>. <span
+ style="font-family: Helvetica,Arial,sans-serif;">Data for the inert
+sub-system are not included in GEM IPM-2 calculations and serve for
+completeness of node-related information used by the MT part (mainly on
+TNodeArray level).</span> <br>
+  <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span></p>
+  <table style="width: 891px; height: 395px;" border="1" cellpadding="2"
+ cellspacing="2">
+    <tbody>
+      <tr>
+        <td style="font-family: Helvetica,Arial,sans-serif;">ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>
+        </td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td style="vertical-align: top;"><span
+ style="font-family: Helvetica,Arial,sans-serif;">Default</span><br>
+        </td>
+        <td
+ style="font-family: Helvetica,Arial,sans-serif; text-align: center;">
+MT-DB</td>
+        <td
+ style="font-family: Helvetica,Arial,sans-serif; text-align: center;">
+DB-GEM</td>
+        <td
+ style="font-family: Helvetica,Arial,sans-serif; text-align: center;">
+GEM-DB</td>
+        <td
+ style="font-family: Helvetica,Arial,sans-serif; text-align: center;">
+DB-MT</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Label in
+DBR file</td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;"><big><span
+ style="font-family: monospace;">TC</span></big></td>
+        <td> Temperature T,
+C</td>
+        <td style="vertical-align: top;">25<br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace;"><big>TC<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;"><big><span
+ style="font-family: monospace;"> P</span></big></td>
+        <td> Pressure P,
+bar</td>
+        <td style="vertical-align: top;">1<br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace;"><big>P<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Vs</span></big></td>
+        <td> Volume V of reactive subsystem,
+cm3</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big>+</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>
+(+)</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>(+)</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>+</big></td>
+        <td style="font-family: monospace;"><big>Vs<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Vi</span></big></td>
+        <td> Volume of inert subsystem,
+cm3</td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>Vi<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;"><big><span
+ style="font-family: monospace;"> Ms</span></big></td>
+        <td> Mass M of reactive subsystem,
+g</td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>(+)</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace;"><big>Ms<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Mi</span></big></td>
+        <td> Mass of inert subsystem,
+g</td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>Mi<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Gs</span></big></td>
+        <td> Gibbs energy of reactive subsystem,
+J</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>
+(+)</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>Gs<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Hs</span></big></td>
+        <td> Enthalpy of reactive subsystem,
+J (reserved)<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>
+(+)</big></td>
+        <td style="font-family: monospace; text-align: center;"><big>+</big></td>
+        <td style="font-family: monospace;"><big>Hs<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Hi</span></big></td>
+        <td> Enthalpy of inert subsystem,
+J</td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>Hi<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> IC</span></big></td>
+        <td> Effective aqueous ionic strength, molal</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>IC<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> pH</span></big></td>
+        <td> pH of aqueous solution (-log10
+molal)</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>pH<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> pe</span></big></td>
+        <td> pe (redox) of aqueous solution (-log10
+molal)</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>pe<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> Eh</span></big></td>
+        <td> Eh (redox) of aqueous solution
+V</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> -</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace; text-align: center;"><big> +</big></td>
+        <td style="font-family: monospace;"><big>Eh<br>
+        </big></td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Symbols in
+parenthesis (+) indicate data items that are automatically scaled when
+loaded from DATABR instance into MULTI structure by multiplying by a
+specific storage coefficient </span><big><span
+ style="font-family: monospace;">S</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">, or scaled back by
+dividing with </span><big><span style="font-family: monospace;">S</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> when extracted from
+MULTI to DATABR instance (valid from GEMIPM2K v.2.3.0). Only extensive
+properties are re-scaled if </span><big><span
+ style="font-family: monospace;">S</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> not equals 1. </span><br>
   </p>
-  <p><span style="font-family: monospace;">//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Usage of this variable (DB - data bridge)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; MT-DB DB-GEM GEM-DB DB-MT</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp; double</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">// Chemical scalar variables</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-TC,&nbsp;&nbsp;&nbsp;&nbsp; // Temperature T,
-C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp; -</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; P,
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // Pressure P,
-bar&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp; -</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Vs,&nbsp;&nbsp;&nbsp;&nbsp; // Volume V of reactive subsystem,
-cm3&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp; (+) &nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Vi,&nbsp;&nbsp;&nbsp;&nbsp; // Volume of inert subsystem,
-cm3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp; +</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Ms,&nbsp;&nbsp;&nbsp;&nbsp; // Mass of reactive subsystem,&nbsp;
-g&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp; -</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Mi,&nbsp;&nbsp;&nbsp;&nbsp; // Mass of inert subsystem,
-g&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp; +</span><br
- style="font-family: monospace;">
+  <p><br>
+  <span style="font-family: Helvetica,Arial,sans-serif;">2. Chemical
+arrays for the reactive sub-system (all double* C++ type). Values of </span><big><span
+ style="font-family: monospace;">nICb,nDCb,nPHb</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and </span><big><span
+ style="font-family: monospace;">nPSb</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> can be found in the
+DATACH instance (or DCH file). Access to all arrays in DATABR instance
+requires the usage of DATACH <a href="#INDEX_MAPPING">index mapping</a>
+lists&nbsp; </span><big><span style="font-family: monospace;">xIC,xDC</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and </span><big><span
+ style="font-family: monospace;">xPH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">. </span><br>
+  <span style="font-family: monospace;"></span></p>
+  <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
+    <tbody>
+      <tr>
+        <td style="font-family: Helvetica,Arial,sans-serif;">ID</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Dimensions</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td
+ style="vertical-align: middle; font-family: Helvetica,Arial,sans-serif;">Default<br>
+        </td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> MT-DB</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> DB-GEM</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> GEM-DB</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;">DB-MT</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Label in
+DBR file</td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace; font-weight: bold;"><big> bIC</big></td>
+        <td style="font-family: monospace;"><big>[nICb]</big></td>
+        <td>Bulk amounts of
+independent components, moles<br>
+        </td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="text-align: center;"> +</td>
+        <td style="text-align: center;">(+)</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="font-family: monospace;"><big>bIC<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> rMB</big></td>
+        <td style="font-family: monospace;"><big> [nICb]</big></td>
+        <td> Mass balance residuals from GEMIPM, mol<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;">(+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>rMB<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace; font-weight: bold;"><big> uIC</big></td>
+        <td style="font-family: monospace;"><big> [nICb]</big></td>
+        <td> IC chemical potentials
+(mol/mol)</td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> +</td>
+        <td style="text-align: center;"> +<span
+ style="font-family: monospace;"></span></td>
+        <td style="font-family: monospace;"><big>uIC<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace; font-weight: bold;"><big> xDC</big></td>
+        <td style="font-family: monospace;"><big> [nDCb]</big></td>
+        <td> DC amounts at equilibrium, mol</td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="text-align: center;"> {+}</td>
+        <td style="text-align: center;"> {(+)}</td>
+        <td style="text-align: center;"> (+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>xDC<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> gam</big></td>
+        <td style="font-family: monospace;"><big> [nDCb]</big></td>
+        <td>DC activity coefficients</td>
+        <td style="vertical-align: top;">1<br>
+        </td>
+        <td style="text-align: center;">{+}</td>
+        <td style="text-align: center;"> {+}</td>
+        <td style="text-align: center;"> +</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>gam<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> dul</big></td>
+        <td style="font-family: monospace;"><big> [nDCb]</big></td>
+        <td>Upper kinetic restrictions on xDC<br>
+        </td>
+        <td style="vertical-align: top;">1e6<br>
+        </td>
+        <td style="text-align: center;"> +</td>
+        <td style="text-align: center;">(+)</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="font-family: monospace;"><big>dul<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> dll</big></td>
+        <td style="font-family: monospace;"><big> [nDCb]</big></td>
+        <td>Lower kinetic restrictions on xDC<br>
+        </td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="text-align: center;">]+</td>
+        <td style="text-align: center;"> (+)</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="font-family: monospace;"><big>dll<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> aPH</big></td>
+        <td style="font-family: monospace;"><big> [nPHb]</big></td>
+        <td> Specific surface areas of phases, m2/g</td>
+        <td style="vertical-align: top;">0<br>
+        </td>
+        <td style="text-align: center;"> +</td>
+        <td style="text-align: center;"> +</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="font-family: monospace;"><big>aPH<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace; font-weight: bold;"><big> xPH</big></td>
+        <td style="font-family: monospace;"><big> [nPHb]</big></td>
+        <td> Total amounts of phases, mol<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> (+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>xPH<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> vPS</big></td>
+        <td style="font-family: monospace;"><big> [nPSb]</big></td>
+        <td>Volumes of phases-solutions, cm3<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;">(+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>vPS<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> mPS</big></td>
+        <td style="font-family: monospace;"><big> [nPSb]</big></td>
+        <td> Masses of phases-solutions, g<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> (+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>mPS<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace; font-weight: bold;"><big> bPS</big></td>
+        <td style="font-family: monospace;"><big> [nPSb][nICb]</big></td>
+        <td>Bulk compositions of phases-solutions, mol<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> (+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>bPS<br>
+        </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> xPA</big></td>
+        <td style="font-family: monospace;"><big> [nPSb]</big></td>
+        <td>Amounts of solvent/sorbent in phases-solutions, mol<br>
+        </td>
+        <td style="vertical-align: top;"><br>
+        </td>
+        <td style="text-align: center;">-</td>
+        <td style="text-align: center;"> -</td>
+        <td style="text-align: center;"> (+)</td>
+        <td style="text-align: center;"> +</td>
+        <td style="font-family: monospace;"><big>xPA<br>
+        </big></td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span style="font-family: monospace;"></span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Symbols in
+parenthesis (+) indicate data items that are automatically scaled when
+loaded from DATABR instance into MULTI structure by multiplying by a
+specific storage coefficient </span><big><span
+ style="font-family: monospace;">S</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">, or scaled back by
+dividing with </span><big><span style="font-family: monospace;">S</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> when extracted from
+MULTI to DATABR instance (valid from GEMIPM2K v.2.3.0). Symbols in
+braces {} indicate optional use for calculation of equilibrium in SIA
+(smart initial approximation) mode of GEM IPM-2 algorithm. <br>
+  </span></p>
+  <p><br>
+  <span style="font-family: Helvetica,Arial,sans-serif;">3. FMT node
+properties, all scalar double values, can be used for storing mass
+transport parameters for nodes mainly at TNodeArray implementation
+level. This information is normally not exchanged in the single-call
+FMT-GEM coupling at the TNode level.&nbsp; </span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+  </p>
+  <table border="1" cellpadding="2" cellspacing="2" width="100%">
+    <tbody>
+      <tr>
+        <td style="font-family: Helvetica,Arial,sans-serif;">ID</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Default</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Label in
+DBR file</td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> Tm</big></td>
+        <td> Actual total simulation time, s</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> Tm</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> dt</big></td>
+        <td> Actual time step, s</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> dt</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> Dif</big></td>
+        <td> General diffusivity of disolved matter in the node</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> Dif</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> Vt</big></td>
+        <td> Total volume of the node
+(voxel), cm3</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> Vt</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> vp</big></td>
+        <td> Advection velocity (in
+pores) in this node, m/s<br>
+        </td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> vp</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> eps</big></td>
+        <td> Effective (actual) porosity normalized to 1</td>
+        <td> 1</td>
+        <td style="font-family: monospace;"><big> eps</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> Km</big></td>
+        <td> Actual permeability, m2</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> Km </big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> Kf</big></td>
+        <td> Actual DARCY`s constant,
+m2/s</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> Kf</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> S</big></td>
+        <td> Specific storage
+coefficient (scaling factor) for chemical sub-system, dimensionless</td>
+        <td> 1</td>
+        <td style="font-family: monospace;"><big> S</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> Tr</big></td>
+        <td> Transmissivity in the node, m2/s</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> Tr</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> h</big></td>
+        <td> Actual hydraulic head
+(hydraulic potential), m</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> h</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> rho</big></td>
+        <td> Actual carrier density for density-driven
+flow, g/cm3</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> rho</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> al</big></td>
+        <td> Specific longitudinal
+dispersivity of porous media, m</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> al</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> at</big></td>
+        <td> Specific transversal
+dispersivity of porous media, m</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> at</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> av</big></td>
+        <td> Specific vertical
+dispersivity of porous media, m</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> av</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> hDl</big></td>
+        <td>Hydraulic longitudinal dispersivity, m2/s<br>
+        </td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> hDl</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> hDt</big></td>
+        <td> Hydraulic transversal dispersivity, m2/s</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> hDt</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> hDv</big></td>
+        <td> Hydraulic vertical dispersivity, m2/s</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> hDv</big></td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big> nto</big></td>
+        <td> Tortuosity factor</td>
+        <td> 1</td>
+        <td style="font-family: monospace;"><big> nto</big></td>
+      </tr>
+    </tbody>
+  </table>
+  <p> </p>
+  <p><span style="font-family: monospace;"><br>
+  </span><span style="font-family: Helvetica,Arial,sans-serif;">The
+scaling factor S may be used for scaling the input/output extensive
+variables of GEM IPM for keeping the size of reactive sub-system in GEM
+runs approximately the same, regardless of the node size. Especially
+in&nbsp; finite-element methods, this can improve numerical accuracy of
+GEM calculations (under construction, to be implemented since v.2.3.0).</span><span
+ style="font-family: monospace;"> <br>
   <br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Gs,&nbsp;&nbsp;&nbsp;&nbsp; // Gibbs energy of reactive subsystem,
-J&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp; +</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; Hs,
-&nbsp;&nbsp;&nbsp; // Enthalpy of reactive subsystem,
-J&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Hi,&nbsp;&nbsp;&nbsp;&nbsp; // Enthalpy of inert subsystem,
-J&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-IC,&nbsp;&nbsp;&nbsp;&nbsp; // Effective aqueous ionic strength, molal
-&nbsp; &nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp; +</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-pH,&nbsp;&nbsp;&nbsp;&nbsp; // pH of aqueous solution (-log10
-molal)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-pe,&nbsp;&nbsp;&nbsp;&nbsp; // pe of aqueous solution (-log10
-molal)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Eh,&nbsp;&nbsp;&nbsp;&nbsp; // Eh of aqueous solution,
-V&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br>
+  </span><span style="font-family: monospace;"></span> <span
+ style="font-family: monospace;"></span><br>
+  <span style="font-family: Helvetica,Arial,sans-serif;">4. GEM IPM-2
+and FMT operation control flags and return codes (all scalar short
+integer values)</span><br>
   </p>
-  <p><br>
-  </p>
-  <p><br>
-  <span style="font-family: monospace;">//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Usage of this variable (DB = data
-bridge)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MT-DB DB-GEM GEM-DB
-DB-MT</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp; double</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">// IC (stoichiometry units)</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *bIC,&nbsp;
-// bulk mole amounts of
-IC[nICb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp; -</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *rMB,&nbsp;
-// Mass balance residuals from GEMIPM [nICb]&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *uIC,&nbsp;
-// IC chemical potentials
-(mol/mol)[nICb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">// DC (species) in reactive
-subsystem</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *xDC,&nbsp;
-// DC mole amounts at equilibrium
-[nDCb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (+)&nbsp;&nbsp;&nbsp;
-(+)&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp; +</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *gam,&nbsp;
-// activity coefficients of DC
-[nDCb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-(+)&nbsp;&nbsp;&nbsp; (+)&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">// Metastability/kinetic
-controls</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *dul,&nbsp;
-// upper kinetic restrictions on xDC [nDCb]&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp; -</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *dll,&nbsp;
-// lower kinetic restrictions on xDC [nDCb]&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp; -</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">// Phases in reactive subsystem</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *aPH,&nbsp;
-// Specific surface areas of phases
-(m2/g)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp; -</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *xPH,&nbsp;
-// total mole amounts of phases
-[nPHb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *vPS,&nbsp;
-// volumes of phases-solutions, cm3/mol [nPSb]&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *mPS,&nbsp;
-// masses of phases-solutions, g&nbsp;&nbsp;
-[nPSb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *bPS,&nbsp;
-// bulk compositions of phases-solutions</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//&nbsp;&nbsp;&nbsp;
-[nPSb][nICb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; *xPA,&nbsp;
-// amounts of solvent/sorbent in</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//&nbsp;&nbsp;&nbsp; phases-solutions
-[nPSb]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
--&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-+&nbsp;&nbsp;&nbsp;&nbsp; +</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">// (+) can be used as input in
-"smart initial approximation" mode of GEM IPM-2
-algorithm&nbsp;&nbsp;&nbsp; </span><br style="font-family: monospace;">
-  </p>
-  <p><br>
-  </p>
-  <p><span style="font-family: monospace;">//&nbsp; FMT variables
-(units or dimensionsless) - to be used for storing them</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">//&nbsp; at the nodearray
-level, normally not used in the single-node FMT-GEM coupling</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double
-Tm,&nbsp;&nbsp;&nbsp;&nbsp; // actual total simulation time, s</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-dt,&nbsp;&nbsp;&nbsp;&nbsp; // actual time step, s</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Dif,&nbsp;&nbsp;&nbsp; // General diffusivity of disolved matter in the
-mode</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Vt,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // total volume of the node
-(voxel), m3</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-vp,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // advection velocity (in
-pores) in this node</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-eps,&nbsp;&nbsp;&nbsp; // effective (actual) porosity normalized to 1</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Km,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // actual permeability, m2</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Kf,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // actual DARCY`s constant,
-m2/s</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-S,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // specific storage
-coefficient, dimensionless (default 1.0)</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//&nbsp; if not 1.0 then can be used as mass scaling factor relative to
-Ms for the </span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//&nbsp; bulk composition/speciation of reactive sub-system in this
-node </span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-Tr,&nbsp;&nbsp;&nbsp;&nbsp; // transmissivity m2/s</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-h,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // actual hydraulic head
-(hydraulic potential), m</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-rho,&nbsp;&nbsp;&nbsp; // actual carrier density for density-driven
-flow, g/cm3</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-al,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // specific longitudinal
-dispersivity of porous media, m</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-at,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // specific transversal
-dispersivity of porous media, m</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-av,&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; // specific vertical
-dispersivity of porous media, m</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-hDl,&nbsp;&nbsp;&nbsp; // hydraulic longitudinal dispersivity, m2/s,
-diffusities from chemical database</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-hDt,&nbsp;&nbsp;&nbsp; // hydraulic transversal dispersivity, m2/s</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-hDv,&nbsp;&nbsp;&nbsp; // hydraulic vertical dispersivity, m2/s</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
-nto;&nbsp;&nbsp;&nbsp; // tortuosity factor</span><br>
-  <br>
-  </p>
-  <p>&nbsp;&nbsp; <span style="font-family: monospace;">short</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-NodeHandle,&nbsp;&nbsp;&nbsp; // Node identification handle</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-NodeTypeHY,&nbsp;&nbsp;&nbsp; // Node type (hydraulic); see typedef
-NODETYPE</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-NodeTypeMT,&nbsp;&nbsp;&nbsp; // Node type (mass transport); see
-typedef NODETYPE</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-NodeStatusFMT, // Node status code FMT; see typedef NODECODEFMT</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-NodeStatusCH,&nbsp; // Node status code CH;&nbsp; see typedef NODECODECH</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-IterDone;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of iterations
-performed by IPM</span><br>
-  </p>
-  <p><br>
-  </p>
-  <h3><a name="TNODE"></a>2.5. The TNode Class - a Minimum Data
+  <table border="1" cellpadding="2" cellspacing="2" width="100%">
+    <tbody>
+      <tr>
+        <td style="font-family: Helvetica,Arial,sans-serif;">ID</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Comment</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Default</td>
+        <td style="font-family: Helvetica,Arial,sans-serif;"> Label in
+DBR file</td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> NodeHandle</span></big></td>
+        <td> Node identification handle</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> NodeHandle</big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> NodeTypeHY</span></big></td>
+        <td> Node type (hydraulic) see typedef
+NODETYPE</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> NodeTypeHY</big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> NodeTypeMT</span></big></td>
+        <td> Node type (mass transport) see
+typedef NODETYPE</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> NodeTypeMT</big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> NodeStatusFMT</span></big></td>
+        <td> Node status code FMT see typedef NODECODEFMT</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> NodeStatusFMT</big></td>
+      </tr>
+      <tr>
+        <td style="font-weight: bold;"><big><span
+ style="font-family: monospace;"> NodeStatusCH</span></big></td>
+        <td> Node status code CH see typedef NODECODECH</td>
+        <td> 1</td>
+        <td style="font-family: monospace;"><big> NodeStatusCH</big></td>
+      </tr>
+      <tr>
+        <td><big><span style="font-family: monospace;"> IterDone</span></big></td>
+        <td> Total number of iterations
+performed in the last GEM IPM-2 run for this node</td>
+        <td> 0</td>
+        <td style="font-family: monospace;"><big> IterDone</big></td>
+      </tr>
+    </tbody>
+  </table>
+  <p><span style="font-family: monospace;"></span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The first
+four flags are only important for the FMT part implemented at
+TNodeArray level. For calling the GEM IPM-2 calculations, the</span><big><span
+ style="font-family: monospace;"> NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; flag is
+extremely important. This flag sets the GEM initial approximation mode
+and is reset after GEM calculation to GEM IPM-2 return code. Hence, the
+MT part must reset this flag every time when the GEM calculation must
+be done, and check the return value after getting the control back from
+GEMIPM2K. Most important situations (at simple TNode level of
+coupling): <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">AIA
+(simplex) initial approximation mode of GEM calculations (slow but more
+accurate and reproducible results): Before calling GEM: set </span><big><span
+ style="font-family: monospace;">NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> to 1 (</span><span
+ style="font-family: monospace;">NEED_GEM_AIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">). After GEM
+calculation: check that </span><big><span
+ style="font-family: monospace;">NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> contains 2 (</span><span
+ style="font-family: monospace;">OK_GEM_AIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">). If yes then copy
+GEM results to MT data structures and proceed with the next node. If
+no, but </span><big><span style="font-family: monospace;">NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> contains 3 (</span><span
+ style="font-family: monospace;">BAD_GEM_AIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">) then decide on
+further actions (e.g. check whether the current bulk composition in the
+reactive sub-system is well balanced). If NodeStatusCH contains 4 (</span><span
+ style="font-family: monospace;">ERR_GEM_AIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">) or 9 (</span><span
+ style="font-family: monospace;">T_ERROR_GEM</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">), generate a
+diagnostic message and break the coupled modeling calculations. Code 9
+(terminal error) usually reflects the dynamic memory corruption in GEM
+IPM-2 kernel. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">SIA (smart)
+initial approximation mode of GEM calculations (fast but results may be
+less accurate and, in general, not exactly reproducible): </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">Before calling GEM:
+set </span><big><span style="font-family: monospace;">NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> to 5 (</span><span
+ style="font-family: monospace;">NEED_GEM_SIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">). After GEM
+calculation: check that </span><big><span
+ style="font-family: monospace;">NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> contains 6 (</span><span
+ style="font-family: monospace;">OK_GEM_SIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">) or 2 (</span><span
+ style="font-family: monospace;">OK_GEM_AIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">).
+If yes then copy GEM results to MT data structures and proceed with the
+next node. Code 2 in this situation means that the GEM IPM algorithm
+had found the node chemical speciation inappropriate as initial
+approximation and has switched to the automatic (simplex) initial
+approximation. Accordingly, error codes 3 or 4 mean the same as above
+for the AIA start. Seldom, </span><big><span
+ style="font-family: monospace;">NodeStatusCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> may contain 7 (</span><span
+ style="font-family: monospace;">BAD_GEM_SIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">) or 8 (</span><big><span
+ style="font-family: monospace;">ERR_GEM_SIA</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">); if so, the MT part
+may try re-starting GEM calculation for this node in the AIA mode. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The </span><big><span
+ style="font-family: monospace;">IterDone</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> field can be used
+after a GEM calculation for diagnostic purposes (e.g. to keep track of
+GEM IPM-2 performance). The TNode class also provides several function
+calls that return the elapsed and pure GEM calculation time. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <h3><a name="TNODE"></a> 2.5. The TNode Class - a Minimum Data
 Exchange Interface for Coupling with Existing Transport Codes</h3>
   <br>
   <br>

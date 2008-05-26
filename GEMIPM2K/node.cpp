@@ -534,8 +534,9 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
    return -1;
  }
 
-  // Test Tc and P as grid point for the interpolation of thermodynamic data
- // Return index in grid matrix or -1
+ // Test if Tc and P are at a grid point for the interpolation of thermodynamic data
+ // Return the index in grid matrix or -1 if interpolation is needed
+ //
   int  TNode::check_grid_TP(  double& Tc, double& P )
   {
     int xT, xP, ndx=-1;
@@ -547,7 +548,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
     return ndx;
   }
 
- // Access to interpolated G0 from DCH structure ( xCH the DC DCH index)
+ // Access to interpolated G0 value from DCH structure ( xCH is the DC index in DATACH)
   double  TNode::DC_G0_TP( const int xCH, double& Tc, double& P )
   {
     int xTP, jj;

@@ -66,8 +66,8 @@ typedef struct
     Tm,     // actual total simulation time, s
     dt,     // actual time step, s
     Dif,    // General diffusivity of disolved matter in the mode
-    Vt,		// total volume of the node (voxel), m3
-    vp,		// advection velocity (in pores) in this node
+    Vt,		// total volume of the node (voxel), cm3 (Vs + Vi)
+    vp,		// advection velocity (in pores) in this node, m/s
     eps,	// effective (actual) porosity normalized to 1
     Km,		// actual permeability, m2
     Kf,		// actual DARCY`s constant, m2/s
@@ -80,7 +80,7 @@ typedef struct
     al,		// specific longitudinal dispersivity of porous media, m
     at,		// specific transversal dispersivity of porous media, m
     av,		// specific vertical dispersivity of porous media, m
-    hDl,	// hydraulic longitudinal dispersivity, m2/s, diffusities from chemical database
+    hDl,	// hydraulic longitudinal dispersivity, m2/s
     hDt,	// hydraulic transversal dispersivity, m2/s
     hDv,	// hydraulic vertical dispersivity, m2/s
     nto;	// tortuosity factor
@@ -124,12 +124,12 @@ typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
  OK_GEM_AIA   = 2,   // OK after GEM calculation with simplex IA
  BAD_GEM_AIA  = 3,   // Bad result after GEM calculation with simplex IA
  ERR_GEM_AIA  = 4,   // Failure in GEM calculation with simplex IA
- NEED_GEM_PIA = 5,   // GEM starts without simplex IA using IA from
+ NEED_GEM_SIA = 5,   // GEM starts without simplex IA using IA from
                      //   the previous GEM solution (full DATABR lists only)
- OK_GEM_PIA   = 6,   // OK after GEM calculation without simplex IA
- BAD_GEM_PIA  = 7,   // Bad result after GEM calculation without simplex IA
- ERR_GEM_PIA  = 8,   // Failure in GEM calculation without simplex IA
- TERROR_GEM   = 9    // Terminal error has occurred in GEMIPM2K
+ OK_GEM_SIA   = 6,   // OK after GEM calculation without simplex IA
+ BAD_GEM_SIA  = 7,   // Bad result after GEM calculation without simplex IA
+ ERR_GEM_SIA  = 8,   // Failure in GEM calculation without simplex IA
+ T_ERROR_GEM   = 9    // Terminal error has occurred in GEMIPM2K
 } NODECODECH;
 
 typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part
