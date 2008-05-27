@@ -129,7 +129,7 @@ typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
  OK_GEM_SIA   = 6,   // OK after GEM calculation without simplex IA
  BAD_GEM_SIA  = 7,   // Bad result after GEM calculation without simplex IA
  ERR_GEM_SIA  = 8,   // Failure in GEM calculation without simplex IA
- T_ERROR_GEM   = 9    // Terminal error has occurred in GEMIPM2K
+ T_ERROR_GEM  = 9    // Terminal error has occurred in GEMIPM2K
 } NODECODECH;
 
 typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part

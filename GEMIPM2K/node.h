@@ -210,7 +210,7 @@ void GEM_from_MT(
 );
 
 // Overload - uses xDC and gam vectors as old primal solution for the node
-// in GEM IPM2 input when NEED_GEM_PIA flag is set for calculation
+// in GEM IPM2 input when NEED_GEM_SIA flag is set for calculation
 // Important! This variant works only when DATACH contains a full list of DCs
 // with passed through the DATABR structure.
 // added by DK on 17.09.2007

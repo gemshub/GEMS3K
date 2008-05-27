@@ -98,7 +98,7 @@ int main( int argc, char* argv[] )
   NodeStatusCH = node->GEM_run( false );
   PureTime += node->GEM_CalcTime();
 
-  if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
+  if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA ) )
       {
           cout << "Error: GEMIPM2 did not converge well " << NodeStatusCH << endl;
           cout << "See *.Dump.out file" << endl;
@@ -140,13 +140,13 @@ int main( int argc, char* argv[] )
  	    TNode::na->GEM_read_dbr( NextRecipeFileName );
  	    
  	    dBR->NodeStatusFMT = No_transport; 
- 		dBR->NodeStatusCH = NEED_GEM_PIA; // direct access to node DATABR structure
+ 		dBR->NodeStatusCH = NEED_GEM_SIA; // direct access to node DATABR structure
  		dBR->NodeHandle = cRecipe;
         // re-calculating equilibrium by calling GEMIPM2K, getting the status
         NodeStatusCH = node->GEM_run( false );
         PureTime += node->GEM_CalcTime();
 
-        if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
+        if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA ) )
         {
           cout << "Error: GEMIPM2 did not converge well " << NodeStatusCH << endl;
    	      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );

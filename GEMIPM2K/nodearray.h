@@ -75,7 +75,7 @@ class TNodeArray : public TNode
     LOCATION* grid;    // Array of grid point locations, size is anNodes
 
     char* tcNode;      // Node type codes (see databr.h), size anNodes
-    bool* iaNode;      // GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_PIA)
+    bool* iaNode;      // GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_SIA)
 
     void allocMemory();
     void freeMemory();
