@@ -315,7 +315,7 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     }
     pmp->MBX /= 1000.;
 
-    if(  pmp->pNP )     // Checking if this is PIA or AIA mode 
+    if(  pmp->pNP )     // Checking if this is SIA or AIA mode 
     {
         for( j=0; j< pmp->L; j++ )
           pmp->X[j] = pmp->Y[j];
@@ -323,7 +323,7 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
         ConCalc( pmp->X, pmp->XF, pmp->XFA);  
     }
-    else // Simplex initial approximation to be done
+    else // Simplex initial approximation to be done (AIA mode)
     {
     	for( j=0; j<pmp->L; j++ )
     	{                           // cleaning work vectors

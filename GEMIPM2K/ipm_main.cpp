@@ -1365,7 +1365,7 @@ S6: // copy of X vector has been changed by Selekt2() algorithm - store
 //
 void TMulti::Alloc_A_B( int newN )
 {
-  if( AA && BB && newN==sizeN )
+  if( AA && BB && (newN==sizeN) )
     return;
   Free_A_B();
   AA = new  double[newN*newN];
@@ -1389,41 +1389,44 @@ void TMulti::Build_compressed_xAN()
 {
  int ii, jj, k;
 
- // Free old memory allocation
- Free_compressed_xAN();
-
- // Calculate sizes
+ if( arrL && arrAN && (sizeL == pmp->L+1) && ( sizeAN == pmp->N ) )  
+   return; // The index arrays are intact - no need to remake (added by DK 27.05.08) !
+ 
+ // Calculate number of non-zero elements in A matrix
  k = 0;
  for( jj=0; jj<pmp->L; jj++ )
    for( ii=0; ii<pmp->N; ii++ )
      if( fabs( a(jj,ii) ) > 1e-12 )
-       k++;
+       k++;  
+ 
+   // Free old memory allocation
+    Free_compressed_xAN();
+ 
+   // Allocate memory
+   arrL = new int[pmp->L+1]; sizeL = pmp->L+1;
+   arrAN = new int[k];  sizeAN = pmp->N; // sizeAN = k; 
 
- // Allocate memory
- arrL = new int[pmp->L+1];
- arrAN = new int[k];
-
- // Set indexes
- k = 0;
- for( jj=0; jj<pmp->L; jj++ )
- { arrL[jj] = k;
-   for( ii=0; ii<pmp->N; ii++ )
-     if( fabs( a(jj,ii) ) > 1e-12 )
-     {
+   // Set indexes in the index arrays
+   k = 0;
+   for( jj=0; jj<pmp->L; jj++ )
+   { arrL[jj] = k;
+     for( ii=0; ii<pmp->N; ii++ )
+       if( fabs( a(jj,ii) ) > 1e-12 )
+       {
         arrAN[k] = ii;
         k++;
-     }
- }
- arrL[jj] = k;
+       }
+   }
+   arrL[jj] = k;
 }
 #undef a
 
 void TMulti::Free_compressed_xAN()
 {
   if( arrL  )
-    { delete[] arrL; arrL = 0; }
+    { delete[] arrL; arrL = 0; sizeL = 0; }
   if( arrAN )
-    { delete[] arrAN; arrAN = 0; }
+    { delete[] arrAN; arrAN = 0; sizeAN = 0; }
 }
 
 void TMulti::Free_internal()

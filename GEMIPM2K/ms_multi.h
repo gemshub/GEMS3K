@@ -299,8 +299,8 @@ class TMulti
     MULTI pm;
     MULTI *pmp;
 
-// Internal arrays for the optimization part (since version 2.0.0)
-   int sizeN;
+// Internal arrays for the performance optimization  (since version 2.0.0)
+   int sizeN, sizeL, sizeAN; 
    double *AA;
    double *BB;
    int *arrL;
@@ -484,7 +484,7 @@ public:
    TMulti()
    { 
 	 pmp = &pm;
-     sizeN = 0;
+     sizeN = 0; sizeL = 0; sizeAN = 0;
      AA = 0;
      BB = 0;
      arrL = 0;

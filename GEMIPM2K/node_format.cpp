@@ -482,7 +482,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
 
   if( _comment )
   {  ff << "# GEMIPM2K v. 2.2.3" << endl;
-     ff << "# Prototype 31.03.2008" << endl;
+     ff << "# Prototype 27.05.2008" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
