@@ -315,6 +315,11 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     }
     pmp->MBX /= 1000.;
 
+    // optimization 08/02/2007
+    Alloc_A_B( pmp->N );
+    Build_compressed_xAN();
+
+
     if(  pmp->pNP )     // Checking if this is SIA or AIA mode 
     {
         for( j=0; j< pmp->L; j++ )
@@ -336,9 +341,6 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     }
 
     CompG0Load(); // Loading thermodynamic data into MULTI structure
-    // optimization 08/02/2007
-    Alloc_A_B( pmp->N );
-    Build_compressed_xAN();
 
     // multicomponent phases and mixing models
  if( pmp->FIs )
