@@ -27,7 +27,7 @@ c     //
 	 integer p_nICb [REFERENCE]   
          integer p_nDCb [REFERENCE]   
          integer p_nPHb [REFERENCE]
-         real*4    p_A( p_nDCb, p_nICb )
+         real    p_A( p_nDCb, p_nICb )
 	END SUBROUTINE F_GEM_GET_DCH
 	END INTERFACE
 
@@ -57,56 +57,56 @@ c     *,p_al,p_at,p_av,p_hDl,p_hDt,p_hDv,p_nto
       integer p_NodeStatusCH  [REFERENCE]!// Node status code CH;  see typedef NODECODECH
       integer p_IterDone      [REFERENCE]!// Number of iterations performed by IPM (if not need GEM)
 c !// Chemical scalar variables
-      real*8 p_T    [REFERENCE]  !// Temperature T, K                        +      +      -     -
-      real*8 p_P    [REFERENCE]  !// Pressure P, bar                         +      +      -     -
-      real*8 p_Vs   [REFERENCE]  !// Volume V of reactive subsystem, cm3     -      -      +     +
-      real*8 p_Vi   [REFERENCE]  !// Volume of inert subsystem  ?            +      -      -     +
-      real*8 p_Ms   [REFERENCE]  !// Mass of reactive subsystem, kg          +      +      -     -
-      real*8 p_Mi   [REFERENCE]  !// Mass of inert part, kg    ?             +      -      -     +
-      real*8 p_Gs   [REFERENCE]  !// Gibbs energy of reactive subsystem (J)  -      -      +     +
-      real*8 p_Hs   [REFERENCE]  !// Enthalpy of reactive subsystem (J)      -      -      +     +
-      real*8 p_Hi   [REFERENCE]  !// Enthalpy of inert subsystem (J) ?       +      -      -     +
-      real*8 p_IC   [REFERENCE]  !// Effective molal aq ionic strength           -      -      +     +
-      real*8 p_pH   [REFERENCE]  !// pH of aqueous solution                      -      -      +     +
-      real*8 p_pe   [REFERENCE]  !// pe of aqueous solution                      -      -      +     +
-      real*8 p_Eh   [REFERENCE]  !// Eh of aqueous solution, V                   -      -      +     +
+      double precision p_T    [REFERENCE]  !// Temperature T, K                        +      +      -     -
+      double precision p_P    [REFERENCE]  !// Pressure P, bar                         +      +      -     -
+      double precision p_Vs   [REFERENCE]  !// Volume V of reactive subsystem, cm3     -      -      +     +
+      double precision p_Vi   [REFERENCE]  !// Volume of inert subsystem  ?            +      -      -     +
+      double precision p_Ms   [REFERENCE]  !// Mass of reactive subsystem, kg          +      +      -     -
+      double precision p_Mi   [REFERENCE]  !// Mass of inert part, kg    ?             +      -      -     +
+      double precision p_Gs   [REFERENCE]  !// Gibbs energy of reactive subsystem (J)  -      -      +     +
+      double precision p_Hs   [REFERENCE]  !// Enthalpy of reactive subsystem (J)      -      -      +     +
+      double precision p_Hi   [REFERENCE]  !// Enthalpy of inert subsystem (J) ?       +      -      -     +
+      double precision p_IC   [REFERENCE]  !// Effective molal aq ionic strength           -      -      +     +
+      double precision p_pH   [REFERENCE]  !// pH of aqueous solution                      -      -      +     +
+      double precision p_pe   [REFERENCE]  !// pe of aqueous solution                      -      -      +     +
+      double precision p_Eh   [REFERENCE]  !// Eh of aqueous solution, V                   -      -      +     +
 c !//  FMT variables (units need dimensionsless form)
-c      real*8 p_Tm  [REFERENCE]  !// actual total simulation time
-c      real*8 p_dt  [REFERENCE]  !// actual time step
-c      real*8 p_dt1 [REFERENCE]  !// priveous time step
-c      real*8 p_Vt  [REFERENCE]  !// total volume of node (voxel) = dx*dy*dz, m**3
-c      real*8 p_vp  [REFERENCE]  !// advection velocity (in pores) in this node
-c      real*8 p_eps [REFERENCE]  !// effective (actual) porosity normalized to 1
-c      real*8 p_Km  [REFERENCE]  !// actual permeability, m**2
-c      real*8 p_Kf  [REFERENCE]  !// actual DARCY`s constant, m**2/s
-c      real*8 p_S   [REFERENCE]  !// specific storage coefficient, dimensionless
-c      real*8 p_Tr  [REFERENCE]  !// transmissivity m**2/s
-c      real*8 p_h   [REFERENCE]  !// actual hydraulic head (hydraulic potential), m
-c      real*8 p_rho [REFERENCE]  !// actual carrier density for density driven flow, g/cm**3
-c      real*8 p_al  [REFERENCE]  !// specific longitudinal dispersivity of porous media, m
-c      real*8 p_at  [REFERENCE]  !// specific transversal dispersivity of porous media, m
-c      real*8 p_av  [REFERENCE]  !// specific vertical dispersivity of porous media, m
-c      real*8 p_hDl [REFERENCE]  !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-c      real*8 p_hDt [REFERENCE]  !// hydraulic transversal dispersivity, m**2/s
-c      real*8 p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, m**2/s
-c      real*8 p_nto [REFERENCE]  !// tortuosity factor
+c      double precision p_Tm  [REFERENCE]  !// actual total simulation time
+c      double precision p_dt  [REFERENCE]  !// actual time step
+c      double precision p_dt1 [REFERENCE]  !// priveous time step
+c      double precision p_Vt  [REFERENCE]  !// total volume of node (voxel) = dx*dy*dz, m**3
+c      double precision p_vp  [REFERENCE]  !// advection velocity (in pores) in this node
+c      double precision p_eps [REFERENCE]  !// effective (actual) porosity normalized to 1
+c      double precision p_Km  [REFERENCE]  !// actual permeability, m**2
+c      double precision p_Kf  [REFERENCE]  !// actual DARCY`s constant, m**2/s
+c      double precision p_S   [REFERENCE]  !// specific storage coefficient, dimensionless
+c      double precision p_Tr  [REFERENCE]  !// transmissivity m**2/s
+c      double precision p_h   [REFERENCE]  !// actual hydraulic head (hydraulic potential), m
+c      double precision p_rho [REFERENCE]  !// actual carrier density for density driven flow, g/cm**3
+c      double precision p_al  [REFERENCE]  !// specific longitudinal dispersivity of porous media, m
+c      double precision p_at  [REFERENCE]  !// specific transversal dispersivity of porous media, m
+c      double precision p_av  [REFERENCE]  !// specific vertical dispersivity of porous media, m
+c      double precision p_hDl [REFERENCE]  !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
+c      double precision p_hDt [REFERENCE]  !// hydraulic transversal dispersivity, m**2/s
+c      double precision p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, m**2/s
+c      double precision p_nto [REFERENCE]  !// tortuosity factor
 c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      real*8  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      real*8  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      real*8  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      real*8  p_xDC(17) ! (nDCb)  !// DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      real*8  p_gam(17) ! (nDCb)  !// activity coeffs of DC [nDCb]               -      -      +     +
-      real*8  p_dul(17) ! (nDCb)  !// upper kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_dll(17) ! (nDCb)  !//  lower kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      real*8  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      real*8  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      real*8  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      real*8  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      real*8  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+      double precision  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+      double precision  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+      double precision  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+      double precision  p_xDC(17) ! (nDCb)  !// DC mole amounts at equilibrium [nDCb]      -      -      +     +
+      double precision  p_gam(17) ! (nDCb)  !// activity coeffs of DC [nDCb]               -      -      +     +
+      double precision  p_dul(17) ! (nDCb)  !// upper kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_dll(17) ! (nDCb)  !//  lower kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+      double precision  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+      double precision  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+      double precision  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+      double precision  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+      double precision  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
 c !  // What else?
-c      real*8  p_dRes1 (7) ! (nICb) ! //should be a reserved array?
+c      double precision  p_dRes1 (7) ! (nICb) ! //should be a reserved array?
       END SUBROUTINE F_GEM_READ_NODE
       END INTERFACE
 
@@ -136,56 +136,56 @@ c     *,p_al,p_at,p_av,p_hDl,p_hDt,p_hDv,p_nto
       integer p_NodeStatusCH  [REFERENCE]!// Node status code CH;  see typedef NODECODECH
       integer p_IterDone      [REFERENCE]!// Number of iterations performed by IPM (if not need GEM)
 c !// Chemical scalar variables
-      real*8 p_T [REFERENCE]    !// Temperature T, K                        +      +      -     -
-      real*8 p_P [REFERENCE]    !// Pressure P, bar                         +      +      -     -
-      real*8 p_Vs [REFERENCE]   !// Volume V of reactive subsystem, cm3     -      -      +     +
-      real*8 p_Vi  [REFERENCE]  !// Volume of inert subsystem  ?            +      -      -     +
-      real*8 p_Ms  [REFERENCE]  !// Mass of reactive subsystem, kg          +      +      -     -
-      real*8 p_Mi  [REFERENCE]  !// Mass of inert part, kg    ?             +      -      -     +
-      real*8 p_Gs  [REFERENCE]  !// Gibbs energy of reactive subsystem (J)  -      -      +     +
-      real*8 p_Hs  [REFERENCE]  !// Enthalpy of reactive subsystem (J)      -      -      +     +
-      real*8 p_Hi  [REFERENCE]  !// Enthalpy of inert subsystem (J) ?       +      -      -     +
-      real*8 p_IC   [REFERENCE] !// Effective molal aq ionic strength       -      -      +     +
-      real*8 p_pH   [REFERENCE] !// pH of aqueous solution                  -      -      +     +
-      real*8 p_pe  [REFERENCE]  !// pe of aqueous solution                  -      -      +     +
-      real*8 p_Eh  [REFERENCE]  !// Eh of aqueous solution, V               -      -      +     +
+      double precision p_T [REFERENCE]    !// Temperature T, K                        +      +      -     -
+      double precision p_P [REFERENCE]    !// Pressure P, bar                         +      +      -     -
+      double precision p_Vs [REFERENCE]   !// Volume V of reactive subsystem, cm3     -      -      +     +
+      double precision p_Vi  [REFERENCE]  !// Volume of inert subsystem  ?            +      -      -     +
+      double precision p_Ms  [REFERENCE]  !// Mass of reactive subsystem, kg          +      +      -     -
+      double precision p_Mi  [REFERENCE]  !// Mass of inert part, kg    ?             +      -      -     +
+      double precision p_Gs  [REFERENCE]  !// Gibbs energy of reactive subsystem (J)  -      -      +     +
+      double precision p_Hs  [REFERENCE]  !// Enthalpy of reactive subsystem (J)      -      -      +     +
+      double precision p_Hi  [REFERENCE]  !// Enthalpy of inert subsystem (J) ?       +      -      -     +
+      double precision p_IC   [REFERENCE] !// Effective molal aq ionic strength       -      -      +     +
+      double precision p_pH   [REFERENCE] !// pH of aqueous solution                  -      -      +     +
+      double precision p_pe  [REFERENCE]  !// pe of aqueous solution                  -      -      +     +
+      double precision p_Eh  [REFERENCE]  !// Eh of aqueous solution, V               -      -      +     +
 c !//  FMT variables (units need dimensionsless form)
-c      real*8 p_Tm [REFERENCE]   !// actual total simulation time
-c      real*8 p_dt  [REFERENCE]  !// actual time step
-c      real*8 p_dt1 [REFERENCE]  !// priveous time step
-c      real*8 p_Vt  [REFERENCE]  !// total volume of node (voxel) = dx*dy*dz, m**3
-c      real*8 p_vp  [REFERENCE]   !// advection velocity (in pores) in this node
-c      real*8 p_eps [REFERENCE]  !// effective (actual) porosity normalized to 1
-c      real*8 p_Km  [REFERENCE]  !// actual permeability, m**2
-c      real*8 p_Kf [REFERENCE]   !// actual DARCY`s constant, m**2/s
-c      real*8 p_S	[REFERENCE]  !// specific storage coefficient, dimensionless
-c      real*8 p_Tr  [REFERENCE]  !// transmissivity m**2/s
-c      real*8 p_h	[REFERENCE]  !  // actual hydraulic head (hydraulic potential), m
-c      real*8 p_rho [REFERENCE]  !// actual carrier density for density driven flow, g/cm**3
-c      real*8 p_al  [REFERENCE]  !// specific longitudinal dispersivity of porous media, m
-c      real*8 p_at [REFERENCE]   !// specific transversal dispersivity of porous media, m
-c      real*8 p_av  [REFERENCE]  !// specific vertical dispersivity of porous media, m
-c      real*8 p_hDl [REFERENCE]  !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-c      real*8 p_hDt [REFERENCE]  !// hydraulic transversal dispersivity, m**2/s
-c      real*8 p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, m**2/s
-c      real*8 p_nto [REFERENCE]  !// tortuosity factor
+c      double precision p_Tm [REFERENCE]   !// actual total simulation time
+c      double precision p_dt  [REFERENCE]  !// actual time step
+c      double precision p_dt1 [REFERENCE]  !// priveous time step
+c      double precision p_Vt  [REFERENCE]  !// total volume of node (voxel) = dx*dy*dz, m**3
+c      double precision p_vp  [REFERENCE]   !// advection velocity (in pores) in this node
+c      double precision p_eps [REFERENCE]  !// effective (actual) porosity normalized to 1
+c      double precision p_Km  [REFERENCE]  !// actual permeability, m**2
+c      double precision p_Kf [REFERENCE]   !// actual DARCY`s constant, m**2/s
+c      double precision p_S	[REFERENCE]  !// specific storage coefficient, dimensionless
+c      double precision p_Tr  [REFERENCE]  !// transmissivity m**2/s
+c      double precision p_h	[REFERENCE]  !  // actual hydraulic head (hydraulic potential), m
+c      double precision p_rho [REFERENCE]  !// actual carrier density for density driven flow, g/cm**3
+c      double precision p_al  [REFERENCE]  !// specific longitudinal dispersivity of porous media, m
+c      double precision p_at [REFERENCE]   !// specific transversal dispersivity of porous media, m
+c      double precision p_av  [REFERENCE]  !// specific vertical dispersivity of porous media, m
+c      double precision p_hDl [REFERENCE]  !// hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
+c      double precision p_hDt [REFERENCE]  !// hydraulic transversal dispersivity, m**2/s
+c      double precision p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, m**2/s
+c      double precision p_nto [REFERENCE]  !// tortuosity factor
 c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      real*8  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      real*8  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      real*8  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      real*8  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      real*8  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-      real*8  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-      real*8  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      real*8  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      real*8  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      real*8  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      real*8  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      real*8  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+      double precision  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+      double precision  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+      double precision  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+      double precision  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+      double precision  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
+      double precision  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+      double precision  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+      double precision  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+      double precision  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+      double precision  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+      double precision  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
 c !  // What else?
-c      real*8  p_dRes1 (7) ! (nICb) ! //should be array Sveta ?
+c      double precision  p_dRes1 (7) ! (nICb) ! //should be array Sveta ?
 	END SUBROUTINE F_GEM_CALC_NODE
 	END INTERFACE
 

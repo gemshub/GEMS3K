@@ -279,7 +279,7 @@
 
  // Calling GEMIPM calculation
    iRet = TNode::na->GEM_run(uPrimalSol);
-   if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_PIA ) )
+   if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_SIA ) )
    {
 	  return 1;
    }
