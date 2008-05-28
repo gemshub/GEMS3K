@@ -263,7 +263,7 @@
  )
 {
   int iRet = 0;
-  bool uPrimalSol = true;
+  bool uPrimalSol = false;
 
   short NodeHandle, NodeStatusCH, IterDone;
 

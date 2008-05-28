@@ -14,6 +14,7 @@ c     // Returns 0 if success or 1 if error;
 c     //  must be called once before the beginning of the coupled RMT calculation
 c     //
 	INTERFACE TO SUBROUTINE F_GEM_INIT( string )
+         include 'gwheader.inc'
 	 CHARACTER* (*) string [REFERENCE]
 	END
 c
@@ -49,6 +50,7 @@ c     *,p_al,p_at,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam,p_dul,p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *) 
+     include 'gwheader.inc'
       CHARACTER* (*) p_file [REFERENCE]  !// File path name 
       integer p_NodeHandle [REFERENCE]   !// Node identification handle
       integer p_NodeTypeHY [REFERENCE]   !// Node type (hydraulic); see typedef NODETYPE
@@ -92,21 +94,21 @@ c      double precision p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, 
 c      double precision p_nto [REFERENCE]  !// tortuosity factor
 c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      double precision  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      double precision  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      double precision  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      double precision  p_xDC(17) ! (nDCb)  !// DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      double precision  p_gam(17) ! (nDCb)  !// activity coeffs of DC [nDCb]               -      -      +     +
-      double precision  p_dul(17) ! (nDCb)  !// upper kinetic restrictions [nDCb]           +      +      -     -
-      double precision  p_dll(17) ! (nDCb)  !//  lower kinetic restrictions [nDCb]           +      +      -     -
-      double precision  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      double precision  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      double precision  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      double precision  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      double precision  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      double precision  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+      double precision  p_xDC(gsize1) ! (nDCb)  !// DC mole amounts at equilibrium [nDCb]      -      -      +     +
+      double precision  p_gam(gsize1) ! (nDCb)  !// activity coeffs of DC [nDCb]               -      -      +     +
+      double precision  p_dul(gsize1) ! (nDCb)  !// upper kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_dll(gsize1) ! (nDCb)  !//  lower kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_aPH(gsize3) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
 c !  // What else?
-c      double precision  p_dRes1 (7) ! (nICb) ! //should be a reserved array?
+c      double precision  p_dRes1 (gsize2) ! (nICb) ! //should be a reserved array?
       END SUBROUTINE F_GEM_READ_NODE
       END INTERFACE
 
@@ -129,6 +131,7 @@ c     *,p_al,p_at,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam,p_dul,p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA 
      *)
+     include 'gwheader.inc'
       integer p_NodeHandle [REFERENCE]   !// Node identification handle
       integer p_NodeTypeHY [REFERENCE]   !// Node type (hydraulic); see typedef NODETYPE
       integer p_NodeTypeMT [REFERENCE]   !// Node type (mass transport); see typedef NODETYPE
@@ -171,21 +174,21 @@ c      double precision p_hDv [REFERENCE]  !// hydraulic vertical dispersivity, 
 c      double precision p_nto [REFERENCE]  !// tortuosity factor
 c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      double precision  p_bIC(7) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      double precision  p_rMB(7) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      double precision  p_uIC(7) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      double precision  p_xDC(17) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      double precision  p_gam(17) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-      double precision  p_dul(17) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-      double precision  p_dll(17) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-      double precision  p_aPH(20) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      double precision  p_xPH(20) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      double precision  p_vPS(20) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      double precision  p_mPS(20) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      double precision  p_bPS(7,20) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      double precision  p_xPA(20) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+      double precision  p_xDC(gsize1) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+      double precision  p_gam(gsize1) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
+      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_dll(gsize1) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
+      double precision  p_aPH(gsize3) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
 c !  // What else?
-c      double precision  p_dRes1 (7) ! (nICb) ! //should be array Sveta ?
+c      double precision  p_dRes1 (gsize2) ! (nICb) ! //should be array Sveta ?
 	END SUBROUTINE F_GEM_CALC_NODE
 	END INTERFACE
 

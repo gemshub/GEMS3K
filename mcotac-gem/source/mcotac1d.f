@@ -1691,7 +1691,7 @@ c	endif
 
 
 cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
-      p_NodeStatusCH =1    ! need GEMS AIA  
+c      p_NodeStatusCH =1    ! need GEMS AIA  
 c      p_NodeStatusCH = 5    ! uses PIA (Smart Initial Approximation) to accelerate calculatios
 c   array boundaries  * gemsnDCb,gemsnPHb,gemsnPSb,gemsnICb
 c                       gemsA(MaxDCN,MaxICN) 
@@ -1711,7 +1711,7 @@ cc	do 1411 nspez=2,nxmax-1
 
 	iNode=  n
       p_NodeHandle=  n
-      p_NodeStatusCH= 1    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusCH= 5    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
@@ -1724,6 +1724,8 @@ c      time_gemsstart=RTC()
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
+c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
+c     &              p_NodeStatusCH,p_IterDone
 
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
@@ -1884,7 +1886,7 @@ c	endif
 
 
 cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
-      p_NodeStatusCH =1    ! need GEMS AIA  
+c      p_NodeStatusCH =1    ! need GEMS AIA  
 c      p_NodeStatusCH = 5    ! uses PIA (Smart Initial Approximation) to accelerate calculatios
 c   array boundaries  * gemsnDCb,gemsnPHb,gemsnPSb,gemsnICb
 c                       gemsA(MaxDCN,MaxICN) 
@@ -1904,7 +1906,7 @@ cc	do 1411 nspez=2,nxmax-1
 
 	iNode=  n
       p_NodeHandle=  n
-      p_NodeStatusCH= 1    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusCH= 5    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
@@ -1917,6 +1919,8 @@ c      time_gemsstart=RTC()
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
+c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
+c     &              p_NodeStatusCH,p_IterDone
 
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
