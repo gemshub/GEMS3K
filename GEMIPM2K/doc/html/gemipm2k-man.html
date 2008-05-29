@@ -99,7 +99,6 @@ TNode Level</a><br>
   <br>
   <hr size="2" width="100%"><br>
   <h2><a name="1-INTRO"></a>1. Introduction</h2>
-  <p></p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Modern
 approaches to reactive mass transport (RMT) or fluid mass transport
 (FMT) modelling require simultaneous account for the mass transport of
@@ -933,7 +932,6 @@ exceptions handling: classes TError and TFatalError<br>
       </tr>
     </tbody>
   </table>
-  <p style="font-family: Helvetica,Arial,sans-serif;"></p>
   <p style="font-family: Helvetica,Arial,sans-serif;"><br>
 Files necessary for calling GEMIPM2K from coupled codes are shown in
 boldface. <br>
@@ -2914,8 +2912,555 @@ in the nodes. <br>
   </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">During
 initialization, the TNode class constructor dynamically allocates one
-instance of DATACH, one instance of MULTI, and one instance of DATABR
-data structures. <br>
+instance of TMULTI, one instance of DATACH, and one instance of DATABR
+data structures. </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">The dynamic arrays in
+DATACH and DATABR are allocated in </span><big><span
+ style="font-family: monospace;">datach_from_text_file()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> or </span><big><span
+ style="font-family: monospace;">datach_from_file()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> functions upon
+reading the text or binary DCH file, respectively. The arrays in DATACH
+are filled out with data upon further reading of DCH file. The dynamic
+arrays of MULTI are allocated upon reading the IPM file, then all
+relevant data are copied from DATACH to MULTI structure arrays. The
+data in DATABR are read from DBR file in&nbsp; </span><big><span
+ style="font-family: monospace;">databr_from_text_file()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> or </span><big><span
+ style="font-family: monospace;">databr_from_file()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> functions. The
+format of text IPM, DCH and DBR files is described in detail in a <a
+ href="gemipm2k-inp.html">companion document</a>. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">As seen in
+example main.cpp files from GEMIPM2K or node_gem directories, the whole
+work on initializing and filling out the <br>
+GEMIPM2K data structures on TNode level is done by three code lines:<br>
+  </span></p>
+  <p style="margin-left: 40px; font-family: monospace;"><big>TNode*
+worknode&nbsp; = new TNode();<br>
+if( worknode-&gt;GEM_init( input_system_file_list_name ) )<br>
+&nbsp;&nbsp; return 1;&nbsp; // Error in reading GEMIPM2K input files<br>
+  </big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;"><big><small><span
+ style="font-family: Helvetica,Arial,sans-serif;">Here, </span></small><span
+ style="font-family: monospace;">input_system_file_list_name</span></big>
+is a <big><span style="font-family: monospace;">char[]</span></big>
+identifier containing a string with path name of a text file with a
+list of DCH, IPM and DBR input file names. For instance, assuming that
+GEMIPM2K text input files <big><span style="font-family: monospace;">Test1-dat.lst,&nbsp;
+Test1-dch.dat, Test1-ipm.dat</span></big> and <big><span
+ style="font-family: monospace;">Test1-dbr-0.dat</span></big> are
+prepared in <big><span style="font-family: monospace;">./testdir/</span></big>
+subdirectory, the&nbsp; <big><span style="font-family: monospace;">input_system_file_list_name</span>&nbsp;</big>
+should contain <big><span style="font-family: monospace;">"testdir/Test1-dat.lst"</span></big>.
+The file&nbsp; <big><span style="font-family: monospace;">Test1-dat.lst</span><small><span
+ style="font-family: Helvetica,Arial,sans-serif;"> should contain the
+following text: <br>
+  </span></small></big></p>
+  <p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><big><small><span
+ style="font-family: Helvetica,Arial,sans-serif;"></span></small></big><big><span
+ style="font-family: monospace;">-t "Test1-dch.dat" "Test1-ipm.dat" "</span></big><big><span
+ style="font-family: monospace;">Test1-dbr-0.dat"</span></big><br>
+  </p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The </span><big><span
+ style="font-family: monospace;">-t</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> key tells the
+program to read text input files (</span><big><span
+ style="font-family: monospace;">-b</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> would be binary
+files), then the name of DCH file, then IPM file, and at least one DBR
+file (always in this order). These files must be present in the same
+directory where the </span><big><span style="font-family: monospace;">*dat.lst</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file is located.
+Multiple DBR files will be read only by calling GEMIPM2K on <a
+ href="#TNODEARRAY">TNodeArray level (see next section)</a>; on TNode
+level, only the first DBR file is read and others will be ignored. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">However,
+the TNode class provides a function that can read other DBR files
+one-by-one at any time. The simplest call is like this: <br>
+  </span></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">if( worknode-&gt;GEM_read_dbr(
+NextRecipeFileName ) ) <br>
+&nbsp;&nbsp; return 2; </span></big><big>// <span
+ style="font-family: monospace;">Error in reading DBR input file</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The </span><big><span
+ style="font-family: monospace;">NextRecipeFileName</span></big><big><span
+ style="font-family: monospace;"></span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">
+is a</span> <big><span style="font-family: monospace;">char[]</span></big>
+  <span style="font-family: Helvetica,Arial,sans-serif;">identifier
+containing a string with path name of a text DBR file (in our example,
+it may be &nbsp;</span> <big><span style="font-family: monospace;">"testdir/Test1-dbr-1.dat"</span></big>
+)<span style="font-family: Helvetica,Arial,sans-serif;"> Since there is
+only one DATABR structure linked to the TNode class instance, this call
+destroys any previous bulk composition and speciation kept in the TNode
+instance&nbsp; </span><big><span style="font-family: monospace;">node</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">After the
+DBR file information has been read, the chemical equilibrium can be
+calculated. This is normally done with the following C++ lines:<br>
+  </span></p>
+  <p style="margin-left: 40px;"><span style="font-family: monospace;"><big>int
+StatusGEM;</big><br>
+// Get direct access to work node DATABR structure which exchanges data
+between GEMIPM and FMT parts<br>
+  <big>DATABR* wdbr = worknode-&gt;pCNode();</big></span></p>
+  <p style="margin-left: 40px;"><span style="font-family: monospace;"><big>wdbr-&gt;NodeStatusCH
+= NEED_GEM_AIA; </big>// Ask GEM to run with automatic initial
+approximation<br>
+  <big>StatusGEM = worknode-&gt;GEM_run( false );</big><br>
+  </span></p>
+  <p style="margin-left: 40px;"><span style="font-family: monospace;"><big>if(
+StatusGEM != OK_GEM_AIA )</big>&nbsp; // Check the GEM return code <br>
+  <big>{</big>&nbsp; <br>
+&nbsp;&nbsp; <big>cout &lt;&lt; endl &lt;&lt; "Error in GEM
+calculation for DBR file " <small>&lt;&lt; </small></big></span><big
+ style="font-family: monospace;">NextRecipeFileName <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;&lt; " return code " &lt;&lt;
+StatusGEM;<small> </small><br>
+&nbsp; return 3; <br>
+  </big><span style="font-family: monospace;"><big>}</big>&nbsp; </span><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">After
+successfull GEM calculation, the resulting speciation, activity
+coefficients etc. are&nbsp; returned in the same work DATABR structure
+where the input bulk composition, temperature and pressure were
+provided (by reading the last DBR file). The easiest way to look at the
+results is to write them back into the same DBR file: <br>
+  </span></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">worknode-&gt;GEM_write_dbr(
+NextRecipeFileName, false, false );</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p style="font-family: Helvetica,Arial,sans-serif;">The file contents
+can be viewed with any text viewer or editor. You can also produce a
+copy of the DBR file with current GEM input and results by using the
+same call but with different file name: <br>
+  </p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>char
+NextResultFileName[60] = "testdir/Test1-dbr-1.out";<br>
+worknode-&gt;GEM_write_dbr( NextResultFileName, false, true );<br>
+  </big></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The second
+parameter in </span><big><span style="font-family: monospace;">GEM_write_dbr()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> call tells the
+program to produce binary (</span><big><span
+ style="font-family: monospace;">true</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">) or text (</span><big><span
+ style="font-family: monospace;">false</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">) file. The third
+parameter is used only in writing text DBR files: if set to&nbsp; </span><big><span
+ style="font-family: monospace;">true</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> then each data item
+is printed with comment lines for better readability, otherwise without
+comments. </span><br>
+  <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Detailed
+contents of the MULTI data structure after GEM calculation can be found
+in a text file produced with a call </span><br>
+  </p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>char
+NextPrintoutFileName[60] = "testdir/Test1-dbr-1.IPMprint.out";<br>
+worknode-&gt;GEM_print_ipm( NextPrintoutFileName );<br>
+  </big></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">This
+formatted file cannot be read back by </span><big><span
+ style="font-family: monospace;">GEM_init()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> or </span><big><span
+ style="font-family: monospace;">GEM_read_dbr()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> methods, but it is
+useful for detailed examination or comparisons of GEM inputs and
+results, especially when GEM returns a bad status code. In the latter
+case, a more exact error message can be found in the </span><big><span
+ style="font-family: monospace;">ipmlog.txt</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file located in the
+executable file directory.<br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Any DBR
+file can be modified in text editor (see the <a
+ href="gemipm2k-inp.html">companion manual</a> for details) and then
+used for the next calculation, as described above. Many variants of the
+system, e.g. with different bulk compositions, can be prepared as DBR
+files and processed in batch mode putting the code sequence above in a
+loop. This is demonstrated in the </span><a href="../../main.cpp"><big><span
+ style="font-family: monospace;">main.cpp</span></big></a><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file in </span><big><span
+ style="font-family: monospace;">GEMIPM2</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> directory.<br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">However, on
+the TNode level, the work DATABR structure can be read or modified
+directly in the program memory, which is of course the most interesting
+case for coupling GEM with an existing mass transport or reaction-path
+modeling code. There are several ways to access data in DATACH and
+DATABR or modify data in DATABR - from multi-parameter function calls
+to direct memory access via dedicated methods or macroses. Some of
+these are used in the </span><a href="../../../node-gem/main.cpp"><big><span
+ style="font-family: monospace;">main.cpp</span></big></a><span
+ style="font-family: Helvetica,Arial,sans-serif;"> example in </span><big><span
+ style="font-family: monospace;">node_gem</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> directory.<br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><a
+ name="NODE_GEM_INIT"></a>Direct access to members of DATACH and DATABR
+instances is possible via pointers obtained as shown in the C++ code
+fragment below. </span><br>
+  <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>#include
+"node.h"<br>
+  </big></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>char[60]
+input_system_file_list_name = "testdir/Test2-dat.lst";<br>
+TNode* node&nbsp; = new TNode();<br>
+if( node-&gt;GEM_init( ipm_input_file_list_name ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;&nbsp;&nbsp; <br>
+  </big></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">DATACH* dCH = node-&gt;pCSD();</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">DATABR* dBR = node-&gt;pCNode();</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Through the
+  </span><big><span style="font-family: monospace;">dCH</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> pointer, the
+chemical system definition can be accessed. For instance,&nbsp; the
+numbers of components and phases in DATACH and MULTI structures:<br>
+  </span></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>int nICs,
+nDCs, nPHs, nPSs;<br>
+  </big></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">nICs =
+dCH-&gt;nIC;&nbsp;&nbsp;&nbsp;&nbsp; // Number of independent components</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">nDCs =
+dCH-&gt;nDC;&nbsp;&nbsp;&nbsp;&nbsp; // Number of dependent components
+(chemical species)</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">nPHs =
+dCH-&gt;nPH;&nbsp;&nbsp;&nbsp;&nbsp; // Number of phases </span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">nPSs =
+dCH-&gt;nPS;&nbsp;&nbsp;&nbsp;&nbsp; // Number of phases-solutions</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The names
+of 2nd independent component, 3rd chemical species and 1st phase can be
+easily retrieved as strings: &nbsp;</span></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>char
+ElementName[MaxICN+1];<br>
+char ComponentName[MaxDCN+1];<br>
+char PhaseName[MaxPHN+1];<br>
+  </big></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>strncpy(
+ElementName, dCH-&gt;ICNL[2], MaxICN ); <br>
+strncpy( ComponentName, dCH-&gt;DCNL[3], MaxDCN );<br>
+strncpy( PhaseName, dCH-&gt;ICNL[1], MaxPHN ); <br>
+  </big></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The molar
+masses of ICs and DCs can also be retrieved directly as<br>
+  </span></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>double
+AtMass2 = dCH-&gt;ICmm[2];<br>
+double MolMass3 = dCH-&gt;DCmm[3]; <br>
+  </big></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The number
+of components included in 1st phase can be found as <br>
+  </span></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">int NumCompPhase1 = dCH-&gt;nDCinPH[1];</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">and so on. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The
+dimensions of data vectors in DATABR structure (and DBR file) can also
+be easily retrieved:<br>
+  </span></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>int nICb,
+nDCb, nPHb, nPSb;<br>
+  </big></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">nICb =
+dCH-&gt;nICb;&nbsp;&nbsp;&nbsp;&nbsp; // Number of independent
+components accessible through DATABR </span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">nDCb =
+dCH-&gt;nDCb;&nbsp;&nbsp;&nbsp;&nbsp; // Number of dependent components
+  </span></big><big><span style="font-family: monospace;">accessible
+through DATABR</span></big><big><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">nPHb =
+dCH-&gt;nPHb;&nbsp;&nbsp;&nbsp;&nbsp; // Number of phases </span></big><big><span
+ style="font-family: monospace;">exchanged accesible DATABR</span></big><big><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">nPSb =
+dCH-&gt;nPSb;&nbsp;&nbsp;&nbsp;&nbsp; // Number of phases-solutions </span></big><big><span
+ style="font-family: monospace;">accessible through DATABR</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">This allows
+us to copy or write a whole data vector from/to the data&nbsp; bridge
+structure. For example, the bulk composition of the system can be
+retrieved and even modified: <br>
+  </span></p>
+  <div style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">double bc[]; </span></big><br
+ style="font-family: monospace;">
+  <big><span style="font-family: monospace;">bc = new double[nICb]; </span></big><br
+ style="font-family: monospace;">
+  <big><span style="font-family: monospace;">for(int i=0; i&lt;nICb;
+i++)</span></big><br style="font-family: monospace;">
+  <big><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; bc[i] =
+dBR-&gt;bIC[i]; <br>
+.........................<br>
+bc[2] +=
+0.01;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// in moles<br>
+  </span></big><big><span style="font-family: monospace;">dBR-&gt;bIC[2]
+= bc[2];</span></big><br style="font-family: monospace;">
+  </div>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Useful
+direct-access methods are defined in the public section of TNode class
+definition in the </span><a href="../../node.h"><big><span
+ style="font-family: monospace;">node.h</span></big></a><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file (can be
+extended in future versions of GEMIPM2K). <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">It is
+important to keep in mind that in the TNode class, two systems for
+indexation of components and phases are used: one for DATACH/MULTI data
+lists and data arrays, and another for the DATABR data arrays. These
+two indexation systems are connected via the <a href="#INDEX_MAPPING">index
+mapping lists</a> in the DATACH structure. Both indexation systems are
+identical only in the trivial one-to-one mapping case when </span><big><span
+ style="font-family: monospace;">nICb == nICs, nDCb == nDCs, nPHb ==
+nPHs</span></big><span style="font-family: Helvetica,Arial,sans-serif;">,
+i.e. data for all components and phases are exchanged through DATABR
+structure or DBR file. In a general case, some components and phases
+are not exchanged or transported between nodes, so </span><big><span
+ style="font-family: monospace;">nICb &lt;= nICs, nDCb &lt;= nDCs, nPHb
+&lt;= nPHs</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">. </span><span
+ style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The TNode
+class contains methods that search for both kinds of indexes for a
+given component or phase name and convert an index of one kind into
+another. For instance, the indexes for Ca+2 ion (assuming that it is
+present in the DATACH structure list) can be found using the lines
+below:<br>
+  </span></p>
+  <p style="font-family: monospace; margin-left: 40px;"><big>int
+xcCa_ion = node-&gt;DC_name_to_xCH("Ca+2");<br>
+int xbCa_ion = node-&gt;DC_name_to_xDB("Ca+2");<br>
+if( xbCa_ion &lt; 0 )<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Error - data for the Ca+2 ion are not
+exchanged through DATABR!"; <br>
+  </big></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The known
+DATABR index of the Ca+2 component can be directly converted into
+DATACH index, and vice versa: <br>
+  </span></p>
+  <div style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">xcCa_ion = DC_xDB_to_xCH( xbCa_ion );</span></big><br
+ style="font-family: monospace;">
+  <big><span style="font-family: monospace;">....................................</span></big><br
+ style="font-family: monospace;">
+  <big><span style="font-family: monospace;">xbCa_ion = DC_xCH_to_xDB(
+xcCa_ion );</span></big><br>
+  </div>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Similar
+methods are also provided for independent components and phases. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Normally,
+the mass transport part of the coupled code should see only the data
+accessible via the DATABR interface. For example, the amount of Ca+2 in
+the node is simply accessible as&nbsp; </span><big><span
+ style="font-family: monospace;">dbr-&gt;xDC[xbCa_ion]</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; through DATABR
+index of Ca+2. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">However,
+there are some useful numbers (such as molar masses or thermodynamic
+properties of chemical species) that are not directly accessible using
+the DATABR indexation. For such data, macroses are provided. For the
+above example, the molar mass of Ca+2 with DATABR index&nbsp; </span><big><span
+ style="font-family: monospace;">xbCa_ion </span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">can be obtained as <br>
+  </span></p>
+  <p style="margin-left: 40px;"><big><span
+ style="font-family: monospace;">double mmCa_ion = nodeCH_DCmm( xbCa_ion
+); </span></big><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Assuming
+that independent component Ca is exchanged in DATABR, the stoichiometry
+coefficient of Ca in Ca+2 species can be obtained as <br>
+  </span></p>
+</blockquote>
+<p style="margin-left: 80px;"><big><span style="font-family: monospace;">int
+xbCa_IC = node-&gt;IC_name_to_xDB( "Ca" );</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">float scCa = nodeCH_A( xbCa_ion,
+xbCa_IC );</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span></p>
+<blockquote>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The direct
+access methods outlined above are especially useful when the transport
+algorithm is implemented using TNodeArray class because the transport
+part then may not maintain its own data structures for keeping chemical
+properties in all nodes. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">For
+coupling with existing transport codes that keep arrays with chemical
+speciation for all nodes, the integrated GEMIPM calls are more useful.
+Typical sequence of such calls is shown in </span><a
+ href="../../../node-gem/main.cpp"><big><span
+ style="font-family: monospace;">main.cpp</span></big></a><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file of the node_gem
+example directory.&nbsp; Here we assume that the memory in the mass
+transport part is allocated in separate vectors or arrays for each
+property: <br>
+  </span></p>
+  <div style="margin-left: 40px;"><span style="font-family: monospace;">&nbsp;&nbsp;
+const int nNodes =&nbsp; 100;&nbsp;&nbsp; // set here how many nodes
+you need&nbsp; <br>
+&nbsp;&nbsp; ..........................<br>
+  <br>
+&nbsp;&nbsp; short m_NodeHandle[nNodes], m_NodeStatusCH[nNodes],
+m_IterDone[nNodes];</span><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; double
+m_T[nNodes], m_P[nNodes], m_Vs[nNodes], m_Ms[nNodes],</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_Gs[nNodes], m_Hs[nNodes], m_IC[nNodes], m_pH[nNodes],</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_pe[nNodes], m_Eh[nNodes];</span><br
+ style="font-family: monospace;">
+  <br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; double m_xDC[],
+m_gam[], m_xPH[], m_aPH[], m_vPS[], m_mPS[],m_bPS[],</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_xPA[], m_dul[], m_dll[], m_bIC[], m_rMB[], m_uIC[];</span><br
+ style="font-family: monospace;">
+  <br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_bIC = new
+double[ nNodes*nICb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_rMB = new
+double[ nNodes*nICb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_uIC = new
+double[ nNodes*nICb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_xDC = new
+double[ nNodes*nDCb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_gam = new
+double[ nNodes*nDCb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_dul = new
+double[ nNodes*nDCb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_dll = new
+double[ nNodes*nDCb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_aPH = new
+double[ nNodes*nPHb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_xPH = new
+double[ nNodes*nPHb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_vPS = new
+double[ nNodes*nPSb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_mPS = new
+double[ nNodes*nPSb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_xPA = new
+double[ nNodes*nPSb ];</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; m_bPS = new
+double[ nNodes*nICb*nPSb ];</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"></span><br>
+  <span style="font-family: Helvetica,Arial,sans-serif;"></span></div>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Initially,
+the chemical information should be loaded in these arrays either from
+input files of the mass-transport part, but this would require a lot of
+extra work. It is much easier to use a </span><a href="#NODE_GEM_INIT"><big><span
+ style="font-family: monospace;">node-&gt;GEM_init()</span></big></a><span
+ style="font-family: Helvetica,Arial,sans-serif;"><a
+ href="#NODE_GEM_INIT"> call</a> to read at least one DBR file,
+retrieve numbers of components and phases whose data are exchanged via
+the DATABR structure, allocate arrays (see above) and fill them out by
+organizing a loop like <br>
+  </span></p>
+  <p><big><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+dBR-&gt;NodeStatusCH = NEED_GEM_AIA; <br>
+&nbsp;&nbsp;&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run( false );<br>
+  <br>
+&nbsp;&nbsp;&nbsp;&nbsp; if( NodeStatusCH != OK_GEM_AIA )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5; // GEM IPM did not
+converge properly on these input data<br>
+  <br>
+  </span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+for( int in=0; in&lt;nNodes; in++ )</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp; &nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Extracting GEM IPM input chemical data into MT part</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in],</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_T[in], m_P[in], m_Vs[in], m_Ms[in],</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_bIC+in*nICb, m_dul+in*nDCb, m_dll+in*nDCb, m_aPH+in*nPHb );</span><br
+ style="font-family: monospace;">
+  <br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Extracting GEM IPM output chemical data into MT part</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in],
+m_IterDone[in],</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_Eh[in], m_rMB+in*nICb, m_uIC+in*nICb, m_xDC+in*nDCb, m_gam+in*nDCb,</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_xPH+in*nPHb, m_vPS+in*nPSb, m_mPS+in*nPSb,</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_bPS+in*nICb*nPSb, m_xPA+in*nPSb );</span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; &nbsp; }</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+  <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+The first
+call of GEMIPM2K in any coupled code must always be a call of the
+function <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">int&nbsp;
+TNode::GEM_init( const char* ipmfiles_lst_name, int* nodeTypes, bool
+getNodT1)<br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
   </span></p>
   <br>
   <br>

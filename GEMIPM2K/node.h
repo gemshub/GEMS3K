@@ -336,30 +336,30 @@ void GEM_from_MT(
 
    // Returns DCH index of IC given the IC Name string (null-terminated)
    // or -1 if no such name was found in the DATACH IC name list
-   int IC_name_to_x( const char *Name );
+   int IC_name_to_xCH( const char *Name );
 
    // Returns DCH index of DC given the DC Name string
    // or -1 if no such name was found in the DATACH DC name list
-   int DC_name_to_x( const char *Name );
+   int DC_name_to_xCH( const char *Name );
 
    // Returns DCH index of Phase given the Phase Name string
    // or -1 if no such name was found in the DATACH Phase name list
-   int Ph_name_to_x( const char *Name );
+   int Ph_name_to_xCH( const char *Name );
 
    // Returns DBR index of IC given the IC Name string
    // or -1 if no such name was found in the DATACH IC name list
    inline int IC_name_to_xDB( const char *Name )
-   { return IC_xCH_to_xDB( IC_name_to_x( Name ) ); }
+   { return IC_xCH_to_xDB( IC_name_to_xCH( Name ) ); }
 
    // Returns DBR index of DC given the DC Name string
    // or -1 if no such name was found in the DATACH DC name list
    inline int DC_name_to_xDB( const char *Name )
-   { return DC_xCH_to_xDB( DC_name_to_x( Name ) ); }
+   { return DC_xCH_to_xDB( DC_name_to_xCH( Name ) ); }
 
    // Returns DBR index of Phase given the Phase Name string
    // or -1 if no such name was found in the DATACH Phase name list
    inline int Ph_name_to_xDB( const char *Name )
-   { return Ph_xCH_to_xDB( Ph_name_to_x( Name ) ); }
+   { return Ph_xCH_to_xDB( Ph_name_to_xCH( Name ) ); }
 
    // Converts the IC DCH index into the IC DBR index
    // or returns -1 if this IC is not used in the data bridge
@@ -374,15 +374,15 @@ void GEM_from_MT(
    int Ph_xCH_to_xDB( const int xCH );
 
    // Converts the IC DBR index into the IC DCH index
-   inline int IC_xBR_to_xCH( const int xBR )
+   inline int IC_xDB_to_xCH( const int xBR )
    { return CSD->xIC[xBR]; }
 
    // Converts the DC DBR index into the DC DCH index
-   inline int DC_xBR_to_xCH( const int xBR )
+   inline int DC_xDB_to_xCH( const int xBR )
    { return CSD->xDC[xBR]; }
 
    // Converts the Phase DBR index into the Phase DCH index
-   inline int Ph_xBR_to_xCH( const int xBR )
+   inline int Ph_xDB_to_xCH( const int xBR )
    { return CSD->xPH[xBR]; }
 
    // Converts the Phase DCH index into the DC DCH index (for pure phases)
@@ -405,22 +405,22 @@ void GEM_from_MT(
     // Test Tc and P as grid point for the interpolation of thermodynamic data
     // Return index in grid matrix or -1
      int  check_grid_TP(  double& Tc, double& P );
-    // Access to interpolated G0 from DCH structure ( xCH the DC DCH index)
+    // Access to interpolated G0 from DCH structure ( xCH is the DC DCH index)
      double  DC_G0_TP( const int xCH, double& Tc, double& P );
-    // Access to interpolated V0 from DCH structure ( xCH the DC DCH index)
+    // Access to interpolated V0 from DCH structure ( xCH is the DC DCH index)
      double  DC_V0_TP( const int xCH, double& Tc, double& P );
 
 // To be provided - access to interpolated thermodynamic data from DCH structure
-//  H0TP
-//  S0TP
-// Cp0TP
-//  DDTP
+//  DC_H0_TP
+//  DC_S0_TP
+//  DC_Cp0_TP
+//  DC_DD_TP
 
-     // Retrieval of Phase Volume ( xBR the Ph DBR index)
+     // Retrieval of Phase Volume ( xBR is DBR phase index)
       double  Ph_Volume( const int xBR );
-     // Retrieval of Phase mass ( xBR the Ph DBR index)
+     // Retrieval of Phase mass ( xBR is DBR phase index)
       double  Ph_Mass( const int xBR );
-     // Retrieval of Phase composition ( xBR the Ph DBR index)
+     // Retrieval of Phase composition ( xBR is DBR phase index)
       void  Ph_BC( const int xBR, double *ARout=0 );
 
 
@@ -449,20 +449,20 @@ void GEM_from_MT(
 // Data direct access macroses (for FMT programs written in C++)
 // Work on both sides of assignment - use with caution!
 //
-// Molar mass of Independent Component with node index ICx
+// Molar mass of Independent Component with node DATABRIDGE index ICx
 #define nodeCH_ICmm( ICx )  (  TNode::na->pCSD()->ICmm[ \
                                TNode::na->pCSD()->xIC[(ICx)]] )
 
-// Molar mass of Dependent Component with node index DCx
+// Molar mass of Dependent Component with node DATABRIDGE index DCx
 #define nodeCH_DCmm( DCx )  (  TNode::na->pCSD()->DCmm[ \
                                TNode::na->pCSD()->xDC[(DCx)]] )
 
 // Redo into a function with interpolation
-// Diffusion coefficient of dependent component with node index ICx
+// Diffusion coefficient of dependent component with node DBr index ICx
 // #define nodeCH_DD( DCx )    ( TNode::na->pCSD()->DD[
 //                              TNode::na->pCSD()->xDC[(DCx)]] )
 
-// stoichiometry coefficient A[j][i] of IC with node index ICx
+// stoichiometry coefficient A[j][i] of IC with node DATABRIDGE index ICx
 // in the formula of DC with node index DCx
 #define nodeCH_A( DCx, ICx )  ( (double)(TNode::na->pCSD()->A[ \
                                  (TNode::na->pCSD()->xIC[(ICx)])+ \

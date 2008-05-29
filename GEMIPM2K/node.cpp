@@ -387,8 +387,8 @@ if( binary_f )
 //-----------------------------------------------------------------
 // work with lists
 
-// Return ICH index of IC by Name or -1 if name not found
-int TNode::IC_name_to_x( const char *Name )
+// Return DCH index of IC by Name or -1 if name not found
+int TNode::IC_name_to_xCH( const char *Name )
 {
   uint len = strlen( Name );
   len =  min(len,MaxICN);
@@ -401,7 +401,7 @@ int TNode::IC_name_to_x( const char *Name )
 }
 
 // Return DCH index of DC by Name or -1 if name not found
-int TNode::DC_name_to_x( const char *Name )
+int TNode::DC_name_to_xCH( const char *Name )
 {
   uint len = strlen( Name );
   len =  min(len,MaxDCN);
@@ -414,7 +414,7 @@ int TNode::DC_name_to_x( const char *Name )
 }
 
 // Return DCH index of Ph by Name or -1 if name not found
-int TNode::Ph_name_to_x( const char *Name )
+int TNode::Ph_name_to_xCH( const char *Name )
 {
   uint len = strlen( Name );
   len =  min(len,MaxPHN);
@@ -487,7 +487,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
  {
    int DCx, DCxCH, PhxCH, nDCinPhCH;
 
-   PhxCH = Ph_xBR_to_xCH( Phx );
+   PhxCH = Ph_xDB_to_xCH( Phx );
    DCxCH = PhtoDC_DCH( PhxCH, nDCinPhCH );
 
    DCx = -1;
@@ -592,7 +592,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
     vol = CNode->vPS[xBR];
    else
    {
-     int xDC = Phx_to_DCx( Ph_xBR_to_xCH( xBR ));
+     int xDC = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
      vol = DC_V0_TP( xDC, CNode->TC, CNode->P );
      vol *= CNode->xDC[DC_xCH_to_xDB(xDC)] *10.;
    }
@@ -607,7 +607,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
         mass = CNode->mPS[xBR];
      else
      {
-        int xDC = Phx_to_DCx( Ph_xBR_to_xCH( xBR ));
+        int xDC = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
         mass = CNode->xDC[ DC_xCH_to_xDB(xDC) ] * CSD->DCmm[xDC];
      }
     return mass;
@@ -625,10 +625,10 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
          ARout[ii] = CNode->bPS[ xBR * CSD->nICb + ii ];
     else
     {
-      int DCx = Phx_to_DCx( Ph_xBR_to_xCH(xBR) );
+      int DCx = Phx_to_DCx( Ph_xDB_to_xCH(xBR) );
       for( ii=0; ii<pCSD()->nICb; ii++ )
       {
-         ARout[ii] = CSD->A[ IC_xBR_to_xCH(ii) + DCx * CSD->nIC];
+         ARout[ii] = CSD->A[ IC_xDB_to_xCH(ii) + DCx * CSD->nIC];
          ARout[ii] *= CNode->xDC[ DC_xCH_to_xDB(DCx) ];
       }
     }

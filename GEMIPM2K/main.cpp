@@ -92,7 +92,7 @@ int main( int argc, char* argv[] )
   // Calculate start DATABR structure reading from files needed as input for initializing GEMIPM2K
   //
   dBR->NodeStatusFMT = No_transport; 
-  dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
+  dBR->NodeStatusCH = NEED_GEM_AIA; // Ask GEM to run with automatic initial approximation
   dBR->NodeHandle = -1;
   // re-calculating equilibrium by calling GEMIPM2K, getting the status
   NodeStatusCH = node->GEM_run( false );
@@ -137,8 +137,9 @@ int main( int argc, char* argv[] )
      { 
         // Trying to read the next file name 
  	    sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[cRecipe] );
- 	    TNode::na->GEM_read_dbr( NextRecipeFileName );
- 	    
+ 	    node->GEM_read_dbr( NextRecipeFileName );
+//      TNode::na->GEM_read_dbr( NextRecipeFileName );
+ 	   
  	    dBR->NodeStatusFMT = No_transport; 
  		dBR->NodeStatusCH = NEED_GEM_SIA; // direct access to node DATABR structure
  		dBR->NodeHandle = cRecipe;

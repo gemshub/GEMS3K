@@ -50,7 +50,7 @@ SPP_SETTING pa_ = {
   "GEMS-PSI v2.2.3: Controls and defaults for numeric modules",
   {
         1,  /* PC */  3,     /* PD */   3,   /* PRD */
-        1,  /* PSM  */ 15,  /* DP */   15,   /* DW */
+        1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
         0, /* DT */     0,   /* PLLG */   1,  /* PE */
         500,   /* IIM */
         1e-6, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
@@ -315,10 +315,9 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     }
     pmp->MBX /= 1000.;
 
-    // optimization 08/02/2007
+    // optimization 08/02/2007 - allocation of A matrix index lists and IPM work arrays
     Alloc_A_B( pmp->N );
     Build_compressed_xAN();
-
 
     if(  pmp->pNP )     // Checking if this is SIA or AIA mode 
     {
