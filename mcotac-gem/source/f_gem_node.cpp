@@ -263,7 +263,9 @@
  )
 {
   int iRet = 0;
-  bool uPrimalSol = false;
+  bool uPrimalSol = true;
+
+
 
   short NodeHandle, NodeStatusCH, IterDone;
 
@@ -273,10 +275,18 @@
   // (2) ----------------------------------------------
   // Work loop for the coupled FMT-GEM modelling
 
+  if (uPrimalSol) {
+   // sends also speciation changed by mcotac : used for smart initial aproximation
+   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
+             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC, p_gam );
+
+   }
+   else
+   {
   // Setting input data for GEMIPM
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH );
-
+   }
  // Calling GEMIPM calculation
    iRet = TNode::na->GEM_run(uPrimalSol);
    if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_SIA ) )
