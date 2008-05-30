@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 968 2007-12-13 13:23:32Z gems $
+// $Id: s_fgl2.cpp 1070 2008-05-29 16:20:29Z wagner $
 //
 // Copyright (c) 2003-2007   S.Churakov, Th.Wagner,
 //    D.Kulik, S.Dmitrieva
@@ -217,7 +217,8 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
    int index1, index2;
    double dj, dk;
    double sumPhi; // Sum of Phi terms
-   double *Wh;
+   double gEX, vEX, hEX, sEX, cpEX, uEX;
+   double *Wu;
    double *Ws;
    double *Wv;
    double *Wpt;   // Interaction coeffs at P-T
@@ -228,7 +229,7 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
          || MaxOrd < 2 || !x || !lnGamma )
            return 1;  // foolproof!
 
-   Wh = new double [NPar];
+   Wu = new double [NPar];
    Ws = new double [NPar];
    Wv = new double [NPar];
    Wpt = new double [NPar];
@@ -241,7 +242,7 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	// read P-T corrected interaction parameters
    for (ip=0; ip<NPar; ip++)
    {
-        Wh[ip] = (double)aIPc[NPcoef*ip];
+        Wu[ip] = (double)aIPc[NPcoef*ip];
 	Ws[ip] = (double)aIPc[NPcoef*ip+1];
 	Wv[ip] = (double)aIPc[NPcoef*ip+2];
 	Wpt[ip] = (double)aIPc[NPcoef*ip+3]; // were stored in VanLaarPT()
@@ -286,29 +287,31 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	}
 
    // calculate bulk phase excess properties
-   Gex = 0.;
-   Vex = 0.;
-   Hex = 0.;
-   Sex = 0.;
-   CPex = 0.;
+   gEX = 0.0;
+   vEX = 0.0;
+   hEX = 0.0;
+   sEX = 0.0;
+   cpEX = 0.0;
+   uEX = 0.0;
 
    for (ip=0; ip<NPar; ip++)
    {
       index1 = (int)aIPx[MaxOrd*ip];
       index2 = (int)aIPx[MaxOrd*ip+1];
-      Gex += Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wpt[ip];
-      Vex += Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wv[ip];
-      Hex += Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wh[ip];
-      Sex -= Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wv[ip];
+      gEX += Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wpt[ip];
+      vEX += Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wv[ip];
+      uEX += Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Wu[ip];
+      sEX -= Phi[index1]*Phi[index2]*2.*sumPhi/(PsVol[index1]+PsVol[index2])*Ws[ip];
    }
+   
+   hEX = uEX+vEX*Pbar;
+   Gex_ = gEX;
+   Vex_ = vEX;
+   Hex_ = hEX;
+   Sex_ = sEX;
+   CPex_ = cpEX;
 
-   Gex_ = Gex;
-   Vex_ = Vex;
-   Hex_ = Hex;
-   Sex_ = Sex;
-   CPex_ = CPex;
-
-   delete[]Wh;
+   delete[]Wu;
    delete[]Ws;
    delete[]Wv;
    delete[]Wpt;
@@ -357,7 +360,8 @@ TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
    int ip, j;
    int index1, index2;
    double dj, dk;
-   double *Wh;
+   double gEX, vEX, hEX, sEX, cpEX, uEX;
+   double *Wu;
    double *Ws;
    double *Wv;
    double *Wpt;   // Interaction coeffs at P-T
@@ -366,18 +370,18 @@ TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
          || MaxOrd < 2 || !x || !lnGamma )
            return 1;  // foolproof!
 
-   Wh = new double [NPar];
+   Wu = new double [NPar];
    Ws = new double [NPar];
    Wv = new double [NPar];
    Wpt = new double [NPar];
 
-   if( !Wpt || !Wh || !Ws || !Wv )
+   if( !Wpt || !Wu || !Ws || !Wv )
         return -1;  // memory alloc failure
 
 	// read P-T corrected interaction parameters
    for (ip=0; ip<NPar; ip++)
    {
-    Wh[ip] = (double)aIPc[NPcoef*ip];
+    Wu[ip] = (double)aIPc[NPcoef*ip];
 	Ws[ip] = (double)aIPc[NPcoef*ip+1];
 	Wv[ip] = (double)aIPc[NPcoef*ip+2];
 	Wpt[ip] = (double)aIPc[NPcoef*ip+3]; // were stored in RegularPT()
@@ -408,29 +412,31 @@ TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	}
 
    // calculate bulk phase excess properties
-   Gex = 0.;
-   Vex = 0.;
-   Hex = 0.;
-   Sex = 0.;
-   CPex = 0.;
+   gEX = 0.0;
+   vEX = 0.0;
+   hEX = 0.0;
+   sEX = 0.0;
+   cpEX = 0.0;
+   uEX = 0.0;
 
    for (ip=0; ip<NPar; ip++)
    {
       index1 = (int)aIPx[MaxOrd*ip];
       index2 = (int)aIPx[MaxOrd*ip+1];
-      Gex += x[index1]*x[index2]*Wpt[ip];
-      Vex += x[index1]*x[index2]*Wv[ip];
-      Hex += x[index1]*x[index2]*Wh[ip];
-      Sex -= x[index1]*x[index2]*Wv[ip];
+      gEX += x[index1]*x[index2]*Wpt[ip];
+      vEX += x[index1]*x[index2]*Wv[ip];
+      uEX += x[index1]*x[index2]*Wu[ip];
+      sEX -= x[index1]*x[index2]*Ws[ip];
    }
-
-   Gex_ = Gex;
-   Vex_ = Vex;
-   Hex_ = Hex;
-   Sex_ = Sex;
-   CPex_ = CPex;
-
-   delete[]Wh;
+   
+   hEX = uEX+vEX*Pbar;
+   Gex_ = gEX;
+   Vex_ = vEX;
+   Hex_ = hEX;
+   Sex_ = sEX;
+   CPex_ = cpEX;
+   
+   delete[]Wu;
    delete[]Ws;
    delete[]Wv;
    delete[]Wpt;
@@ -462,19 +468,16 @@ TSolMod::RedlichKisterPT()
         L0[2] = (double)aIPc[NPcoef*ip+2];
         L0[3] = (double)aIPc[NPcoef*ip+3];
         L0[4] = L0[0] + L0[1]*Tk + L0[2]*Tk*log(Tk) + L0[3]*Pbar;
-
         L1[0] = (double)aIPc[NPcoef*ip+4];
         L1[1] = (double)aIPc[NPcoef*ip+5];
         L1[2] = (double)aIPc[NPcoef*ip+6];
         L1[3] = (double)aIPc[NPcoef*ip+7];
         L1[4] = L1[0] + L1[1]*Tk + L1[2]*Tk*log(Tk) + L1[3]*Pbar;
-
         L2[0] = (double)aIPc[NPcoef*ip+8];
         L2[1] = (double)aIPc[NPcoef*ip+9];
         L2[2] = (double)aIPc[NPcoef*ip+10];
         L2[3] = (double)aIPc[NPcoef*ip+11];
         L2[4] = L2[0] + L2[1]*Tk + L2[2]*Tk*log(Tk) + L2[3]*Pbar;
-
         L3[0] = (double)aIPc[NPcoef*ip+12];
         L3[1] = (double)aIPc[NPcoef*ip+13];
         L3[2] = (double)aIPc[NPcoef*ip+14];
@@ -502,29 +505,26 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 {
    int ip, j;
    int index1, index2, L, I, J;
-   double Lh, Ls, Lcp, Lv, Lpt;
+   double Lu, Ls, Lcp, Lv, Lpt;
    double L0, L1, L2, L3;
-   // double dj, dk;
-
-   double *L0h;
+   double gEX, vEX, hEX, sEX, cpEX, uEX;
+   
+   double *L0u;
    double *L0s;
    double *L0cp;
    double *L0v;
    double *L0pt;
-
-   double *L1h;
+   double *L1u;
    double *L1s;
    double *L1cp;
    double *L1v;
    double *L1pt;
-
-   double *L2h;
+   double *L2u;
    double *L2s;
    double *L2cp;
    double *L2v;
    double *L2pt;
-
-   double *L3h;
+   double *L3u;
    double *L3s;
    double *L3cp;
    double *L3v;
@@ -534,65 +534,58 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
          || MaxOrd < 2 || !x || !lnGamma )
            return 1;  // foolproof!
 
-   L0h = new double [NPar];
+   L0u = new double [NPar];
    L0s = new double [NPar];
    L0cp = new double [NPar];
    L0v = new double [NPar];
    L0pt = new double [NPar];
-
-   L1h = new double [NPar];
+   L1u = new double [NPar];
    L1s = new double [NPar];
    L1cp = new double [NPar];
    L1v = new double [NPar];
    L1pt = new double [NPar];
-
-   L2h = new double [NPar];
+   L2u = new double [NPar];
    L2s = new double [NPar];
    L2cp = new double [NPar];
    L2v = new double [NPar];
    L2pt = new double [NPar];
-
-   L3h = new double [NPar];
+   L3u = new double [NPar];
    L3s = new double [NPar];
    L3cp = new double [NPar];
    L3v = new double [NPar];
    L3pt = new double [NPar];
 
-   if( !L0h || !L0s || !L0cp || !L0v || !L0pt || !L1h || !L1s || !L1cp
-   		|| !L1v || !L1pt || !L2h || !L2s || !L2cp || !L2v || !L2pt
-   			|| !L3h || !L3s || !L3cp || !L3v || !L3pt )
+   if( !L0u || !L0s || !L0cp || !L0v || !L0pt || !L1u || !L1s || !L1cp
+   		|| !L1v || !L1pt || !L2u || !L2s || !L2cp || !L2v || !L2pt
+   			|| !L3u || !L3s || !L3cp || !L3v || !L3pt )
         return -1;  // memory alloc failure
 
 	// read in interaction parameters
    	for (ip=0; ip<NPar; ip++)
    	{
-	   	L0h[ip] = (double)aIPc[NPcoef*ip+0];
+	   	L0u[ip] = (double)aIPc[NPcoef*ip+0];
 	   	L0s[ip] = (double)aIPc[NPcoef*ip+1];
 	   	L0cp[ip] = (double)aIPc[NPcoef*ip+2];
 	   	L0v[ip] = (double)aIPc[NPcoef*ip+3];
 	   	L0pt[ip] = (double)aIPc[NPcoef*ip+16];
-
-	   	L1h[ip] = (double)aIPc[NPcoef*ip+4];
+	   	L1u[ip] = (double)aIPc[NPcoef*ip+4];
 	   	L1s[ip] = (double)aIPc[NPcoef*ip+5];
 	   	L1cp[ip] = (double)aIPc[NPcoef*ip+6];
 	   	L1v[ip] = (double)aIPc[NPcoef*ip+7];
 	   	L1pt[ip] = (double)aIPc[NPcoef*ip+17];
-
-	   	L2h[ip] = (double)aIPc[NPcoef*ip+8];
+	   	L2u[ip] = (double)aIPc[NPcoef*ip+8];
 	   	L2s[ip] = (double)aIPc[NPcoef*ip+9];
 	   	L2cp[ip] = (double)aIPc[NPcoef*ip+10];
 	   	L2v[ip] = (double)aIPc[NPcoef*ip+11];
 	   	L2pt[ip] = (double)aIPc[NPcoef*ip+18];
-
-	   	L3h[ip] = (double)aIPc[NPcoef*ip+12];
+	   	L3u[ip] = (double)aIPc[NPcoef*ip+12];
 	   	L3s[ip] = (double)aIPc[NPcoef*ip+13];
 	   	L3cp[ip] = (double)aIPc[NPcoef*ip+14];
 	   	L3v[ip] = (double)aIPc[NPcoef*ip+15];
 	   	L3pt[ip] = (double)aIPc[NPcoef*ip+19];
 	}
 
-
-	// calculate activity coefficients (under construction)
+	// calculate activity coefficients
 	for (j=0; j<NComp; j++)      // index end members with j
 	{
 		lnGamRT = 0.;
@@ -612,7 +605,6 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 					L2 = L2pt[ip];
 					L3 = L3pt[ip];
 				}
-
 				else
 				{
 					L = index2;
@@ -650,11 +642,12 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 	}
 
    	// calculate bulk phase excess properties
-   	Gex = 0.;
-   	Vex = 0.;
-   	Hex = 0.;
-   	Sex = 0.;
-   	CPex = 0.;
+   	gEX = 0.0;
+   	vEX = 0.0;
+   	hEX = 0.0;
+   	sEX = 0.0;
+   	cpEX = 0.0;
+   	uEX = 0.0;
 
    	for (ip=0; ip<NPar; ip++)
    	{
@@ -669,10 +662,10 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
       			+ L2v[ip]*pow((x[index1]-x[index2]),2.)
       			+ L3v[ip]*pow((x[index1]-x[index2]),3.);
 
-   	   	Lh = (L0h[ip]-L0cp[ip]*Tk)
-   	  			+ (L1h[ip]-L1cp[ip]*Tk)*(x[index1]-x[index2])
-      			+ (L2h[ip]-L2cp[ip]*Tk)*pow((x[index1]-x[index2]),2.)
-      			+ (L3h[ip]-L3cp[ip]*Tk)*pow((x[index1]-x[index2]),3.);
+   	   	Lu = (L0u[ip]-L0cp[ip]*Tk)
+   	  			+ (L1u[ip]-L1cp[ip]*Tk)*(x[index1]-x[index2])
+      			+ (L2u[ip]-L2cp[ip]*Tk)*pow((x[index1]-x[index2]),2.)
+      			+ (L3u[ip]-L3cp[ip]*Tk)*pow((x[index1]-x[index2]),3.);
 
    	   	Ls = (-L0s[ip]-L0cp[ip]*(1.+log(Tk)))
       			+ (-L1s[ip]-L1cp[ip]*(1.+log(Tk)))*(x[index1]-x[index2])
@@ -683,38 +676,36 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
       			+ (-L2cp[ip])*pow((x[index1]-x[index2]),2.)
       			+ (-L3cp[ip])*pow((x[index1]-x[index2]),3.);
 
-      	Gex += x[index1]*x[index2]*Lpt;
-      	Vex += x[index1]*x[index2]*Lv;
-      	Hex += x[index1]*x[index2]*Lh;
-      	Sex += x[index1]*x[index2]*Ls;
-      	CPex += x[index1]*x[index2]*Lcp;
+      	gEX += x[index1]*x[index2]*Lpt;
+      	vEX += x[index1]*x[index2]*Lv;
+      	uEX += x[index1]*x[index2]*Lu;
+      	sEX += x[index1]*x[index2]*Ls;
+      	cpEX += x[index1]*x[index2]*Lcp;
   	}
 
-   	Gex_ = Gex;
-   	Vex_ = Vex;
-   	Hex_ = Hex;
-   	Sex_ = Sex;
-   	CPex_ = CPex;
+   	hEX = uEX+vEX*Pbar;
+   	Gex_ = gEX;
+   	Vex_ = vEX;
+   	Hex_ = hEX;
+   	Sex_ = sEX;
+   	CPex_ = cpEX;
 
-   	delete[]L0h;
+   	delete[]L0u;
    	delete[]L0s;
    	delete[]L0cp;
    	delete[]L0v;
    	delete[]L0pt;
-
-   	delete[]L1h;
+   	delete[]L1u;
    	delete[]L1s;
    	delete[]L1cp;
    	delete[]L1v;
    	delete[]L1pt;
-
-   	delete[]L2h;
+   	delete[]L2u;
    	delete[]L2s;
    	delete[]L2cp;
    	delete[]L2v;
    	delete[]L2pt;
-
-   	delete[]L3h;
+   	delete[]L3u;
    	delete[]L3s;
    	delete[]L3cp;
    	delete[]L3v;

@@ -504,8 +504,9 @@ the process consists of four major steps. <br>
  alt="Basic GEM IPM flow chart" src="IPM.png"
  style="width: 510px; height: 521px;"></p>
   <p style="font-family: Helvetica,Arial,sans-serif;"><br>
-The first step is to obtain an initial approximation of the <span
- style="font-style: italic;">n</span> vector which is close enough to
+  <a name="INITIAL_APPROXIMATION"></a>The first step is to obtain an
+initial approximation of the <span style="font-style: italic;">n</span>
+vector which is close enough to
 the <span style="font-style: italic;">G</span>(<span
  style="font-style: italic;">n</span>) minimum, so that the GEM process
 would succeed in finding the solution of the problem. In principle, any
@@ -570,7 +571,8 @@ deviations less than 1e-7 mol). This is usually done in a few
 iterations, and then the initial approximation vector is ready for the
 main GEM algorithm. <br>
   </p>
-  <p style="font-family: Helvetica,Arial,sans-serif;">The third step is
+  <p style="font-family: Helvetica,Arial,sans-serif;"><a
+ name="EFD_PROCEDURE"></a>The third step is
 to adjust the elements of <span style="font-style: italic;"></span>speciation
 vector <span style="font-style: italic;">n</span> to minimize the
 total Gibbs energy of the system <span style="font-style: italic;">G</span>(<span
@@ -1249,7 +1251,8 @@ beginning of DCH and IPM files. More about the file structure of
 GEMIPM2K is provided in <a href="#INPUT_FILES">section 5 of this manual</a>,
 as well as in the <a href="gemipm2k-inp.html">companion manual</a>.<br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;">In order to
+  <p><span style="font-family: Helvetica,Arial,sans-serif;"><a
+ name="GEMS_GENERATE_INPUT_FILES"></a>In order to
 facilitate preparation of GEMIPM2K input files, the GEMS-PSI code has
 two ways of generating them automatically.&nbsp; One way is to set up
 the chemical system in "Single thermodynamic system" dialog, calculate
@@ -3172,15 +3175,14 @@ AtMass2 = dCH-&gt;ICmm[2];<br>
 double MolMass3 = dCH-&gt;DCmm[3]; <br>
   </big></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">The number
-of components included in 1st phase can be found as <br>
+of components included in the 1st phase can be found as <br>
   </span></p>
   <p style="margin-left: 40px;"><big><span
  style="font-family: monospace;">int NumCompPhase1 = dCH-&gt;nDCinPH[1];</span></big><span
  style="font-family: Helvetica,Arial,sans-serif;"> <br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;">and so on. <br>
-  </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;">The
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">and so on.
+The
 dimensions of data vectors in DATABR structure (and DBR file) can also
 be easily retrieved:<br>
   </span></p>
@@ -3205,8 +3207,7 @@ dCH-&gt;nPHb;&nbsp;&nbsp;&nbsp;&nbsp; // Number of phases </span></big><big><spa
   <span style="font-family: monospace;">nPSb =
 dCH-&gt;nPSb;&nbsp;&nbsp;&nbsp;&nbsp; // Number of phases-solutions </span></big><big><span
  style="font-family: monospace;">accessible through DATABR</span></big><span
- style="font-family: Helvetica,Arial,sans-serif;">
-  </span></p>
+ style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">This allows
 us to copy or write a whole data vector from/to the data&nbsp; bridge
 structure. For example, the bulk composition of the system can be
@@ -3299,7 +3300,8 @@ above example, the molar mass of Ca+2 with DATABR index&nbsp; </span><big><span
  style="font-family: Helvetica,Arial,sans-serif;">can be obtained as <br>
   </span></p>
   <p style="margin-left: 40px;"><big><span
- style="font-family: monospace;">double mmCa_ion = nodeCH_DCmm( xbCa_ion
+ style="font-family: monospace;">double mmCa_ion = nodeCH_DCmm(
+xbCa_ion
 ); </span></big><span style="font-family: Helvetica,Arial,sans-serif;"><br>
   </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">Assuming
@@ -3324,10 +3326,12 @@ properties in all nodes. <br>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">For
 coupling with existing transport codes that keep arrays with chemical
 speciation for all nodes, the integrated GEMIPM calls are more useful.
-Typical sequence of such calls is shown in </span><a
+Typical sequence of such calls is shown in the </span><a
  href="../../../node-gem/main.cpp"><big><span
  style="font-family: monospace;">main.cpp</span></big></a><span
- style="font-family: Helvetica,Arial,sans-serif;"> file of the node_gem
+ style="font-family: Helvetica,Arial,sans-serif;"> file of the </span><big><span
+ style="font-family: monospace;">/node_gem</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">
 example directory.&nbsp; Here we assume that the memory in the mass
 transport part is allocated in separate vectors or arrays for each
 property: <br>
@@ -3387,17 +3391,22 @@ double[ nNodes*nICb*nPSb ];</span><span
  style="font-family: Helvetica,Arial,sans-serif;"></span><br>
   <span style="font-family: Helvetica,Arial,sans-serif;"></span></div>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">Initially,
-the chemical information should be loaded in these arrays either from
+the chemical information should be loaded in these arrays from
 input files of the mass-transport part, but this would require a lot of
-extra work. It is much easier to use a </span><a href="#NODE_GEM_INIT"><big><span
+extra work to produce such MT input files consistent with GEM chemical
+system definition. Keeping in mind that the whole set of <a
+ href="#GEMS_GENERATE_INPUT_FILES">GEMIPM2K input files can easily be
+generated from GEMS-PSI</a> modelling project, it is much easier to use
+a </span><a href="#NODE_GEM_INIT"><big><span
  style="font-family: monospace;">node-&gt;GEM_init()</span></big></a><span
  style="font-family: Helvetica,Arial,sans-serif;"><a
  href="#NODE_GEM_INIT"> call</a> to read at least one DBR file,
 retrieve numbers of components and phases whose data are exchanged via
-the DATABR structure, allocate arrays (see above) and fill them out by
-organizing a loop like <br>
+the DATABR structure, allocate the arrays (see above), and fill them
+out by
+organizing a loop like the one shown below:<br>
   </span></p>
-  <p><big><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+  <p><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
 dBR-&gt;NodeStatusCH = NEED_GEM_AIA; <br>
 &nbsp;&nbsp;&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run( false );<br>
   <br>
@@ -3443,26 +3452,363 @@ m_xPH+in*nPHb, m_vPS+in*nPSb, m_mPS+in*nPSb,</span><br
 m_bPS+in*nICb*nPSb, m_xPA+in*nPSb );</span><span
  style="font-family: monospace;"></span><br
  style="font-family: monospace;">
-  <span style="font-family: monospace;">&nbsp;&nbsp; &nbsp; }</span></big><span
+  <span style="font-family: monospace;">&nbsp;&nbsp; &nbsp; }</span><span
  style="font-family: Helvetica,Arial,sans-serif;"><br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
-  <br>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">This code
+fragment would assign the same chemical composition and speciation to
+reactive part in all nodes.&nbsp; However, some nodes usually must be
+assigned different composition. For instance, the very first node (with
+index 0) may be set up as a boundary condition of the infinite source
+type.&nbsp; The corresponding chemical composition and speciation can
+be prepared as a separate system variant in GEMS and saved in another
+DBR file (compatible with already used DCH and IPM files). One or more
+such DBR files can be read separately and their chemical data assigned
+to certain nodes as shown below:</span></p>
+  <p style="font-family: monospace; margin-left: 40px;">char[60]
+dbr_input_file_name = "testdir/Test2-boundary-0-dbr.dat";<span
+ style="font-family: monospace;">&nbsp; <br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+  <p style="font-family: monospace; margin-left: 40px;"><span
+ style="font-family: monospace;">if( node-&gt;GEM_read_dbr(
+dbr_input_file_name ) ) </span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; return 2; // Error
+in reading DBR input file</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;"><br>
+dBR-&gt;NodeStatusCH = NEED_GEM_AIA; <br>
+int NodeStatusCH = node-&gt;GEM_run( false );<br>
+if( NodeStatusCH != OK_GEM_AIA )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5; // GEM IPM did not
+converge properly on these input data<br>
+  </span><span style="font-family: monospace;"><br>
+int xBCnodes[3] = { 0, 33, 66 };</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">for( int in, i=0; i&lt;3; i++ )
+// Initialising boundary condition node(s)</span><br>
+{<br>
+&nbsp;&nbsp; in = xBCnodes[i];<br>
+&nbsp;&nbsp; node-&gt;GEM_restore_MT( m_NodeHandle[in],
+m_NodeStatusCH[in], m_T[in],<br>
+&nbsp; &nbsp;&nbsp; m_P[in], m_Vs[in], m_Ms[in], m_bIC+in*nIC,
+m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );<br>
+&nbsp;&nbsp; node-&gt;GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in],
+m_IterDone[in],<br>
+&nbsp;&nbsp;&nbsp; m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in],
+m_pH[in], m_pe[in],<br>
+&nbsp;&nbsp;&nbsp; m_Eh[in], m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC,
+m_gam+in*nDC,<br>
+&nbsp;&nbsp;&nbsp; m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
+m_bPS+in*nIC*nPS, m_xPA+in*nPS ); <br>
+}<br>
+  </p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The GEM run
+in the above code snippet can be skipped, though we recommend having it
+there for checking whether the input files are consistent and the
+equilibrium can be calculated flawlessly. <br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
-The first
-call of GEMIPM2K in any coupled code must always be a call of the
-function <br>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Now, after
+the initial chemical speciation and composition has been distributed
+over all nodes, the main loop of mass transport modelling begins.
+Whatever the method used for solving transport and mass conservation
+equations, this will re-distribute some components of mobile phases
+(usually aqueous species)&nbsp; between nodes and accordingly will
+change their bulk compositions at the next time point. All this will be
+done on elements of the </span><big><span
+ style="font-family: monospace;">m_xDC</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> array if aqueous
+ions and complexes are transported, or on the elements of </span><big><span
+ style="font-family: monospace;">m_bPS</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> if only the bulk
+aqueous and/or fluid phase(s) is transported (e.g. by pure advection).
+From this changed speciation </span><big><span
+ style="font-family: monospace;">xDC</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> or aqueous/fluid
+composition </span><big><span style="font-family: monospace;">m_bPS</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">, the changes to the
+system bulk composition vector </span><big><span
+ style="font-family: monospace;">m_bIC</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> are computed (with
+possibly changes in temperatures </span><big><span
+ style="font-family: monospace;">m_T</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and pressures </span><big><span
+ style="font-family: monospace;">m_P</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">, in some nodes, as
+well as kinetic constraints </span><big><span
+ style="font-family: monospace;">m_dul, m_dll</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> for some
+components). <br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;">int&nbsp;
-TNode::GEM_init( const char* ipmfiles_lst_name, int* nodeTypes, bool
-getNodT1)<br>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Next, the
+equilibria in every node must be re-calculated in order to correct for
+phase assemblage and speciation that may eventually change because of
+changed bulk chemical composition, temperature, pressure, or kinetic
+constraints e.g. for mineral dissolution or precipitation. The
+re-equilibration may change phase volumes or aqueous speciation, which
+in turn may change transport between some nodes at the next time step.
+So, this "operator-splitting" reactive transport modelling is performed
+by alternating transport and chemistry loops over nodes, embedded in
+the time integration loop. The code fragment below shows how the
+chemistry loop may look like when GEMIPM2K </span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> TNode interface </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">functions are used. <br>
   </span></p>
-  <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+  <p><span style="font-family: monospace;">double time = 0., dt=1,
+CalcTime=0., MeanTotIt=0.;<br>
+&nbsp; &nbsp; <br>
+for( int it=0; it&lt;nTimes; it++ )&nbsp; // iterations over time</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">{</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; </span><span
+ style="font-family: monospace;">//&nbsp; The call below&nbsp; stands
+for the mass transport loop over all nodes</span><br>
+  <span style="font-family: monospace;">&nbsp;&nbsp; dt =
+MassTransportStep( nNodes, time, dt, m_T, m_P, m_Vs, m_Ms, </span><span
+ style="font-family: monospace;">m_Hs, m_IC, m_pH,</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m_Eh, m_xDC, m_xPH, m_aPH, m_vPS, m_mPS,
+m_bPS,</span><span style="font-family: monospace;"> m_xPA, m_dul,
+m_dll, m_bIC )</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; // Not all node
+chemical data arrays may be changed in the mass transport step!</span> <br>
+  </p>
+  <p><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp; for( int in=0;
+in&lt;nNodes; in++ ) </span><span style="font-family: monospace;">//
+Chemical equilibration loop over nodes</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp; {&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int </span><span
+ style="font-family: monospace;">nTotIt = 0;</span><span
+ style="font-family: monospace;"> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bool UseNodeSpeciation = false; </span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_NodeHandle[in] = in;</span><br style="font-family: monospace;">
+&nbsp;<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"> &nbsp; &nbsp;&nbsp;
+m_NodeStatusCH[in] = NEED_GEM_AIA;&nbsp;&nbsp;&nbsp; // GEM Automatic
+(simplex) initial approximation</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_NodeStatusCH[in] = NEED_GEM_SIA;&nbsp;&nbsp; // GEM Smart initial
+approximation</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+UseNodeSpeciation =
+true;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// set true for GEM SIA if aqueous species are transported,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// set false if only aqueous bulk composition is moved <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp;&nbsp; or for GEM AIA if coupled with any transport algorithm<br
+ style="font-family: monospace;">
+  </span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+// Setting input data for GEM IPM</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],</span><span
+ style="font-family: monospace;"> m_T[in], m_P[in], <br>
+&nbsp;&nbsp;&nbsp;&nbsp; m_Vs[in], m_Ms[in],</span><span
+ style="font-family: monospace;"> m_bIC+in*nIC, m_dul+in*nDC,
+m_dll+in*nDC, m_aPH+in*nPH, </span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; m_xDC+in*nDC, m_gam+in*nDC ); <br>
+  </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; //
+Calling GEM IPM2 calculation</span><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+m_NodeStatusCH[in] = node-&gt;GEM_run( UseNodeSpeciation );</span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; if( !(
+m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; endl &lt;&lt; "GEM
+calculation error " &lt;&lt; </span><span
+ style="font-family: monospace;">m_NodeStatusCH[in] &lt;&lt; " in node "<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &lt;&lt; in &lt;&lt;&nbsp; " at time
+" &lt;&lt; time+dt;&nbsp; </span><br>
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return 5;</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp; CalcTime += node-&gt;GEM_CalcTime();&nbsp; //
+Monitoring GEM calculation time</span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; nTotIt
++= m_IterDone[in];</span><br style="font-family: monospace;">
+  <br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; //
+Extracting GEM IPM output data to FMT part</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in],
+m_IterDone[in],</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in],
+m_pH[in], m_pe[in],</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp; m_Eh[in],m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,</span><br
+ style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp; m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,</span><span
+ style="font-family: monospace;"> m_bPS+in*nIC*nPS, m_xPA+in*nPS&nbsp;
+);</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; }</span><span
+ style="font-family: monospace;"> <br>
+&nbsp; MeanTotIt += (double)nTotIt / (double)nNodes; <br
+ style="font-family: monospace;">
+  </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; time += dt;&nbsp; // time
+increment</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">}&nbsp; // End of time
+integration loop<br>
   </span></p>
-  <br>
+  <p><span style="font-family: monospace;">MeanTotIt /= nTimes; <br>
+  </span><span style="font-family: monospace;">cout &lt;&lt; endl
+&lt;&lt; "Total model time " &lt;&lt; time &lt;&lt; "&nbsp; Total GEM
+runtime " &lt;&lt; CalcTime <br>
+&nbsp;&nbsp;&nbsp; &lt;&lt; "&nbsp; Mean number of GEM iterations per
+call " &lt;&lt; MeanTotIt; &nbsp; </span><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">In the
+above code fragment, two kinds of monitoring GEM performance are
+exemplified. The total GEM calculation time (in seconds) is collected
+in </span><big><span style="font-family: monospace;">CalcTime</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> variable, and&nbsp;
+the average number of iterations per GEM call is available at the
+end&nbsp; from </span><big><span style="font-family: monospace;">MeanTotIt</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> varilable. Both
+performance indicators strongly depends on setup and composition of the
+chemical system, as well as on the computer processor and architecture,
+as shown in the GEM performance report [<a href="#Ref_Dmytrieva-2008">Dmytrieva
+et al., 2008</a>]. However, there is one explicit performance control -
+namely, the choice of the mode of <a href="#INITIAL_APPROXIMATION">GEM
+initial approximation</a>. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">In the code
+fragment, the GEM calculation for each node is requested to start with
+the automatic (simplex) initial approximation&nbsp; </span><span
+ style="font-family: monospace;">NEED_GEM_AIA </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">mode.&nbsp; In this
+mode, GEM calculations are 100% reproducible but rather slow (20 to 200
+GEM iterations depending on the chemical system definition and
+composition). The alternative mode </span><span
+ style="font-family: monospace;">NEED_GEM_SIA</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> (smart initial
+approximation) uses the currently available contents of the speciation (</span><big><span
+ style="font-family: monospace;">xDC</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">) and activity
+coefficients (</span><big><span style="font-family: monospace;">gam</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">) vectors (modified
+through the DATABR interface) as the initial approximation. If the xDC
+vector for the current node, modified after the mass transport time
+step, does not violate the mass balance relative to the current bulk
+composition vector bIC, and neither the phase assemblage nor the redox
+state are going to change, then GEM is expected to do 0 to 10
+iterations, i.e. 10-20 times less than in the automatic initial
+approximation (AIA) mode. This acceleration can be relevant for large
+2-D or 3-D coupled RMT models. However, the SIA mode result is by
+definition not exactly reproducible. Even repeated SIA mode
+calculations for the same system always yield slightly different
+amounts of dependent components because the previously computed
+speciation taken as initial approximation is always slightly different.
+Although It is unlikely that this may lead to diverging coupled
+modelling results because any GEM-calculated speciation must converge
+to the Gibbs energy minimum, the behavior of SIA mode GEM calculation
+relative to AIA in coupled models still needs more testing and
+verification.<br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">Yet the SIA
+GEM calculation mode may be preferable over the AIA mode when the
+transport program part moves aqueous species. In this case, any changed
+chemical speciation in the node is guaranteed to remain mass-balanced
+because the corrections to the bulk composition vector bIC are
+calculated by the mass transport part from the corrections to xDC
+vector. The latter then is a good initial approximation at least in the
+sense of mass balance, so the <a href="#EFD_PROCEDURE">GEM EFD()
+procedure</a> is not expected to do any extra iterations. In most
+meaningful RMT problems, the phase association or redox changes occur
+along some distinct reaction fronts or barriers that are represented by
+small fraction of the nodes. In such a node it may happen that the
+current speciation turns to be a bad GEM initial approximation. The GEM
+IPM kernel has several built-in criteria to check if this happens
+indeed; if so, then the program "smartly" switches to simplex (AIA)
+initial approximation and obtains correct new phase assemblage and
+speciation just at cost of performing more iterations. However,&nbsp;
+for the vast majority of nodes that lie not in the vicinity of rock
+heterogeneities or reaction fronts, slight changes of speciation and
+composition upon the transport time iteration would not result in any
+phase or redox shifts. In this case, the SIA approximation appears safe
+enough and GEM is expected to converge in 1,2 or 3 iterations. For this
+kind of the transport problem, three code lines in the above example
+can be replaced by the following ones: <br>
+  </span></p>
+  <p><span style="font-family: monospace;">..............................<br>
+// &nbsp; &nbsp;&nbsp; m_NodeStatusCH[in] =
+NEED_GEM_AIA;&nbsp;&nbsp;&nbsp; // GEM Automatic (simplex) initial
+approximation</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+m_NodeStatusCH[in] = NEED_GEM_SIA;&nbsp;&nbsp; // GEM Smart initial
+approximation</span><br style="font-family: monospace;">
+  <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+UseNodeSpeciation =
+true;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// set true for GEM SIA if aqueous species are transported<br>
+..............................<br>
+  </span></p>
+  <p><span style="font-family: monospace;"></span><span
+ style="font-family: Helvetica,Arial,sans-serif;">The </span><big><span
+ style="font-family: monospace;">UseNodeSpeciation</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> flag, if set to </span><big><span
+ style="font-family: monospace;">true</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">, tells the program
+to take the (modified) speciation from xDC vector as the initial
+approximation together with the activity coefficients gam (the latter
+are usually not modified in the mass transport part). If this flag is
+set to false then the xDC and gam vectors will not be copied into the
+MULTI structure and instead, the previous contents of the speciation
+vector x and activity coefficients lnGam vector will be used as initial
+approximation. This may be the only possible SIA mode for pure
+advection coupled problems where the whole fluid composition is moved
+and not single species. A disadvantage in this case is that the changed
+bIC vector is no more compatible with the speciation inherited from
+previous node in the sense of mass balance. This may lead to multiple
+EFD() iterations or more frequent internal switches to AIA mode, hence
+the acceleration of GEM calculations may only be moderate. <br>
+  </span></p>
+  <p><span style="font-family: Helvetica,Arial,sans-serif;">The TNode
+class contains several overloaded forms of the GEM_from_MT() function
+which loads input data into work DATABR structure before launching the
+GEM calculation for a given node. The simplest form does not transfer
+the speciation vector at all and can be used when GEM is started in AIA
+mode or in SIA mode with </span><big><span
+ style="font-family: monospace;">UseNodeSpeciation = false.<span
+ style="font-family: Helvetica,Arial,sans-serif;"> The&nbsp; variant
+used in the above code example sends xIC,&nbsp; xDC and gam vectors as
+they are available in the transport part data arrays. Finally, there is
+a call which transmits the xDC vector where the increments in the
+species amounts over the time step are given, and the bIC vector
+unchanged over the time step. In this case, the TNode class adds the
+xDC increments to the previous contents of x vector in the MULTI
+structure, computes the bulk composition increments, adds those to bIC
+vector in work DATABR structure and copies the contents of bIC&nbsp; to
+the b vector of the MULTI structure. In other words, the mass-transport
+part is not balancing the bulk composition vector bIC, leaving this
+work to the GEMIPM2K program.&nbsp;</span></span></big><span
+ style="font-family: monospace;"><span
+ style="font-family: Helvetica,Arial,sans-serif,mon;"></span> <br>
+  </span></p>
   <br>
   <h3><a name="TNODEARRAY"></a>2.6. The TNodeArray Class - a Data
 Storage for Developing New Coupled Codes </h3>

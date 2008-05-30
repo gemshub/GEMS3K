@@ -18,3 +18,9 @@ Started from version 2.2.3 (build 186) in the process ow writing doc html files
    default values (on/off) and data formatting (the latter to discuss)
 
 
+30.05.2008 DK
+    
+   Rewrite main.cpp in /nodearray-gem to use node array instead of the 
+   direct memory array allocation as in the /node-gem example
+
+ 

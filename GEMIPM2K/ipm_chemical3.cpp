@@ -1407,21 +1407,29 @@ void
 TMulti::RedlichKister( int jb, int, int jpb, int, int k )
 {
   double a0, a1, a2, lnGam1, lnGam2, X1, X2;
-
-//  if( je != jb+1 )
-//    ; // Wrong dimensions - error message?
-//  T = pmp->Tc;
-//  P = pmp->Pc;
-// parameters
+  double gEX, vEX, hEX, sEX, cpEX, uEX;
+  
+// load parameters
   a0 = (double)pmp->PMc[jpb+0];
   a1 = (double)pmp->PMc[jpb+1];  // in regular model should be 0
   a2 = (double)pmp->PMc[jpb+2];  // in regular model should be 0
-// mole fractions
+  
+// load mole fractions
   X1 = pmp->X[jb] / pmp->XF[k];
   X2 = pmp->X[jb+1] / pmp->XF[k];
+  
 // activity coeffs
-  lnGam1 = X2*X2 *(a0 + a1*( 3.*X1 - X2 ) + a2 *( X1 - X2 )*( 5.*X1 - X2 ) );
-  lnGam2 = X1*X1 *(a0 - a1*( 3.*X2 - X1 ) + a2 *( X2 - X1 )*( 5.*X2 - X1 ) );
+  lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
+  lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
+  
+// bulk phase excess properties (added by TW, 29.05.2008)
+  gEX = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
+  vEX = 0.0;
+  uEX = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
+  sEX = 0.0;
+  cpEX = 0.0;
+  hEX = uEX;
+  
 // assignment
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
@@ -1436,10 +1444,9 @@ TMulti::MargulesBinary( int jb, int, int jpb, int, int k )
 {
   double T, P, WU1, WS1, WV1, WU2, WS2, WV2, WG1, WG2,
          a1, a2, lnGam1, lnGam2, X1, X2;
-  double Vex; // double Sex, Hex, Uex;
+  double gEX, vEX, hEX, sEX, cpEX, uEX;
 
-//  if( je != jb+1 )
-//    ; // Wrong dimensions - error message?
+  // load parameters
   T = pmp->Tc;
   P = pmp->Pc;
   WU1 = (double)pmp->PMc[jpb+0];
@@ -1448,29 +1455,34 @@ TMulti::MargulesBinary( int jb, int, int jpb, int, int k )
   WU2 = (double)pmp->PMc[jpb+3];
   WS2 = (double)pmp->PMc[jpb+4];  // if unknown should be 0
   WV2 = (double)pmp->PMc[jpb+5];  // if unknown should be 0
-// parameters
-  WG1 = WU1 - T * WS1 + P * WV1;
-  WG2 = WU2 - T * WS2 + P * WV2;
-// if regular, WG1 should be equal to WG2
-// if ideal, WG1 = WG2 = 0
+  
+  // calculate parameters at (T,P)
+  WG1 = WU1 - T*WS1 + P*WV1;
+  WG2 = WU2 - T*WS2 + P*WV2;
   a1 = WG1 / pmp->RT;
   a2 = WG2 / pmp->RT;
-// mole fractions
+  
+// load mole fractions
   X1 = pmp->X[jb] / pmp->XF[k];
   X2 = pmp->X[jb+1] / pmp->XF[k];
-// activity coeffs
-  lnGam1 = ( 2.*a2 - a1 )* X2*X2 + 2.*( a1 - a2 )* X2*X2*X2;
-  lnGam2 = ( 2.*a1 - a2 )* X1*X1 + 2.*( a2 - a1 )* X1*X1*X1;
-// assignment
+  
+// activity coefficients
+  lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
+  lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
+
+// bulk phase excess properties (extended by TW, 29.05.2008)
+  gEX = X1*X2*( X2*WG1 + X1*WG2 );
+  vEX = X1*X2*( X2*WV1 + X1*WV2 );
+  uEX = X1*X2*( X2*WU1 + X1*WU2 );
+  sEX = X1*X2*( X2*WS1 + X1*WS2 );
+  cpEX = 0.0;
+  hEX = uEX+vEX*P;
+  
+// assignments
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
-  // Calculate excess volume, entropy and enthalpy !
-  // To be used in total phase property calculations
-  Vex = ( WV1*X1 + WV2*X2 ) * X1*X2;
-pmp->FVOL[k] += Vex*10.;
-//  Sex = ( WS1*X1 + WS2*X2 ) * X1*X2;
-//  Hex = ( (WU1+P*WV1)*X1 + (WU2+P*WV2)*X2 ) * X1*X2;
-//  Uex = ( WU1*X1 + WU2*X2 ) * X1*X2;
+  pmp->FVOL[k] += vEX*10.;  // make consistent with TSolMod
+  
  }
 
 // Ternary regular Margules model - parameters (in J/mol)
@@ -1480,13 +1492,12 @@ pmp->FVOL[k] += Vex*10.;
 void
 TMulti::MargulesTernary( int jb, int, int jpb, int, int k )
 {
-  double T, P, WU12, WS12, WV12, WU23, WS23, WV23, WU13, WS13, WV13,
+  double T, P, WU12, WS12, WV12, WU13, WS13, WV13, WU23, WS23, WV23,
          WU123, WS123, WV123, WG12, WG13, WG23, WG123,
          a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
-  double Vex; // double Sex, Hex, Uex;
+  double gEX, vEX, hEX, sEX, cpEX, uEX;
 
-//  if( je != jb+2 )
-//    ; // Wrong dimensions - error message?
+  // load parameters
   T = pmp->Tc;
   P = pmp->Pc;
   WU12 = (double)pmp->PMc[jpb+0];
@@ -1501,44 +1512,49 @@ TMulti::MargulesTernary( int jb, int, int jpb, int, int k )
   WU123 = (double)pmp->PMc[jpb+9];
   WS123 = (double)pmp->PMc[jpb+10];  // if unknown should be 0
   WV123 = (double)pmp->PMc[jpb+11];  // if unknown should be 0
-
-  // parameters
-  WG12 = WU12 - T * WS12 + P * WV12;
-  WG13 = WU13 - T * WS13 + P * WV13;
-  WG23 = WU23 - T * WS23 + P * WV23;
-  WG123 = WU123 - T * WS123 + P * WV123;
+  
+  // calculate parameters at (T,P)
+  WG12 = WU12 - T*WS12 + P*WV12;
+  WG13 = WU13 - T*WS13 + P*WV13;
+  WG23 = WU23 - T*WS23 + P*WV23;
+  WG123 = WU123 - T*WS123 + P*WV123;
   a12 = WG12 / pmp->RT;
   a13 = WG13 / pmp->RT;
   a23 = WG23 / pmp->RT;
   a123 = WG123 / pmp->RT;
-
-  // mole fractions
+  
+  // load mole fractions
   X1 = pmp->X[jb] / pmp->XF[k];
   X2 = pmp->X[jb+1] / pmp->XF[k];
-  X3 = pmp->X[jb+2] / pmp->XF[k];  // activity coeffs
-  lnGam1 = a12 * X2 *( 1-X1 ) + a13 * X3 * ( 1-X1 ) - a23 * X2 * X3
-           + a123 * X2 * X3 * ( 1 - 2.*X1 );
-  lnGam2 = a23 * X3 *( 1-X2 ) + a12 * X1 * ( 1-X2 ) - a13 * X1 * X3
-           + a123 * X1 * X3 * ( 1 - 2.*X2 );
-  lnGam3 = a13 * X1 *( 1-X3 ) + a23 * X2 * ( 1-X3 ) - a12 * X1 * X2
-           + a123 * X1 * X2 * ( 1 - 2.*X3 );
-  // assignment
+  X3 = pmp->X[jb+2] / pmp->XF[k];
+
+  // activity coefficients
+  lnGam1 = a12*X2*(1.-X1) + a13*X3*(1.-X1) - a23*X2*X3
+           + a123*X2*X3*(1.-2.*X1);
+  lnGam2 = a23*X3*(1.-X2) + a12*X1*(1.-X2) - a13*X1*X3
+           + a123*X1*X3*(1.-2.*X2);
+  lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
+           + a123*X1*X2*(1.-2.*X3);
+  
+  // bulk phase excess properties (added by TW, 29.05.2008)
+  gEX = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
+  vEX = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
+  uEX = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
+  sEX = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
+  cpEX = 0.0;
+  hEX = uEX+vEX*P;
+  
+  // assignments
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
   pmp->lnGam[jb+2] = lnGam3;
-  // Calculate excess volume, entropy and enthalpy !
-  // To be done!
-  Vex = WV12*X1*X2 + WV13*X1*X3 + WV23*X2*X3 + WV123*X1*X2*X3;
-pmp->FVOL[k] += Vex*10.;
-//  Sex = WS12*X1*X2 + WS13*X1*X3 + WS23*X2*X3 + WS123*X1*X2*X3;
-//  Uex = WU12*X1*X2 + WU13*X1*X3 + WU23*X2*X3 + WU123*X1*X2*X3;
-//  Hex = (WU12+P*WV12)*X1*X2 + (WU13+P*WV13)*X1*X3
-//         + (WU23+P*WV23)*X2*X3 + (WU123+P*WV123)*X1*X2*X3;
+  pmp->FVOL[k] += vEX*10.;  // make consistent with TSolMod
+
 }
 
 
 // ------------------------------------------------------------------------
-// Wrapper calls for VanLaar model (see s_fgl.h and s_fgl2.cpp)
+// Wrapper calls for generic multi-component mixing models (see s_fgl.h and s_fgl2.cpp)
 // Uses the TSolMod class by Th.Wagner and D.Kulik
 
 void

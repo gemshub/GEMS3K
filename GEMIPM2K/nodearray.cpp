@@ -491,7 +491,7 @@ void TNodeArray::CopyNodeFromTo( int ndx, int nNod,
 // Calculate phase (carrier) mass, g  of single component phase
 double TNodeArray::get_mPH( int ia, int nodex, int PHx )
 {
-  int DCx = Phx_to_DCx( Ph_xBR_to_xCH(PHx) );
+  int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
   double val=0.;
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
@@ -509,7 +509,7 @@ double TNodeArray::get_mPH( int ia, int nodex, int PHx )
 // Calculate phase volume, cm3/mol  of single component phase
 double TNodeArray::get_vPH( int ia, int nodex, int PHx )
 {
-  int DCx = Phx_to_DCx( Ph_xBR_to_xCH(PHx) );
+  int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
   double val=0.;
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
@@ -536,7 +536,7 @@ double TNodeArray::get_vPH( int ia, int nodex, int PHx )
 // Calculate bulk compositions  of single component phase
 double TNodeArray::get_bPH( int ia, int nodex, int PHx, int ICx )
 {
-  int DCx = Phx_to_DCx( Ph_xBR_to_xCH(PHx) );
+  int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
   double val=0.;
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )

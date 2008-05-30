@@ -147,7 +147,7 @@ int main( int argc, char* argv[] )
 // re-calculating equilibrium by calling GEMIPM2K, getting the status
      m_NodeStatusCH[in] = node->GEM_run( false );
 
-     if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
+     if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
         return 5; // GEM IPM did not converge properly
 
 // Extracting GEM IPM input chemical data into FMT part
@@ -183,7 +183,7 @@ int main( int argc, char* argv[] )
 //   m_NodeStatusCH[in] = node->GEM_run( true );
    // re-calculating equilibrium by calling GEMIPM using previous content of GEMIPM structure
       m_NodeStatusCH[in] = node->GEM_run( false );
-  if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
+  if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
      return 5;
 // Extracting GEM IPM input chemical data into FMT part
    node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_T[in],
@@ -264,7 +264,7 @@ int main( int argc, char* argv[] )
 
 // Below you can switch between AIA and PIA initial approximation modes
 //        m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2A 
-        m_NodeStatusCH[in] = NEED_GEM_PIA;      // tests are marked *.out2P
+        m_NodeStatusCH[in] = NEED_GEM_SIA;      // tests are marked *.out2P
 
 // Setting input data for GEM IPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
