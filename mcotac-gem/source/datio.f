@@ -110,8 +110,10 @@ c04      common /titl/ title
      5,gespvf_i1(nsolid),gespvf_i2(nsolid)
      9,i_bcp_gemx(nbasis+ncompl+nsolid)
 
-      idatin=idatin+1
-      write(*,*)'subroutine datin aufgerufen',idatin
+ckg44 idatin is not inialized! 
+c      idatin=idatin+1
+c      write(*,*)'subroutine datin aufgerufen',idatin
+
       open(7,file='initial.out')
 c
 
@@ -278,7 +280,9 @@ c      write (6,802) ncmplxp
       write (7,820) dumc(i),vjc(i),(s(j,i),j=1,m1)
    30 continue
       do 31 i=1,m2
-   31 write(*,960) gesci(i),gescb(i),gesc_i1(i),gesc_i2(i)
+ckg44 gesc_il and gesc_i2 are not initialized (never read?)
+c   31 write(*,960) gesci(i),gescb(i),gesc_i1(i),gesc_i2(i)
+   31 write(*,960) gesci(i),gescb(i)
 c
    35 continue
 c

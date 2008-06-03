@@ -1,5 +1,4 @@
 
-
       program mcotac1D
       implicit double precision (a-h,o-z)
       include 'gwheader.inc'
@@ -120,9 +119,13 @@ c time measurements
 	integer c_to_i(100)
 c kg44 itergemstime only needed for debug
 c	integer itergemstime(250,51)    ! array for output of iterations done per node during every time step
+ckg44 we would like to monitor the iterations of gems (smart initial aprox. vs. simplex init.)
+	integer itergems, itergemstotal 
 c kg44 why is nodeTypes here fixed? should be allocatable
 c      integer nodeTypes(52)
-      integer nodeTypes(nnodex)
+c      integer, allocatable :: nodeTypes(:)
+ckg44 variable for interactive definition of gems initial aproximation
+	integer gems_PIA
 c for F_GEM_CALC_NODE      
 	integer iNodeF
       integer p_NodeHandle    !// Node identification handle
@@ -156,12 +159,9 @@ c12345678901234567890123456789012345678901234567890123456789012345690
      *,ialkali,icyc
 c-coeff      integer npin, s,ss
       integer npin, s
-      	integer p_nICb, p_nPHb  
-      integer p_nDCb  
+      integer p_nDCb, p_nICb, p_nPHb, p_nPSb, p_nPH, gsize3
       integer itimestep_tp, dtprstep, kk1,k1
       real t1,t2
-      real p_A_trans(gsize1,gsize2)          ! GEMS invert coeff.-matrix
-      real p_A(gsize2,gsize1)          ! GEMS invert coeff.-matrix
       double precision p_T     !// Temperature T, K                        +      +      -     -
       double precision p_P     !// Pressure P, bar                         +      +      -     -
       double precision p_Vs    !// Volume V of reactive subsystem, cm3     -      -      +     +
@@ -197,19 +197,36 @@ c !//  FMT variables (units need dimensionsless form)
       double precision p_nto   !// node Peclet number, dimensionless
 c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-      double precision  p_xDC(gsize1) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-      double precision  p_gam(gsize1) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-      double precision  p_aPH(gsize3) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
-      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-      double precision  p_dll(gsize1) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+c      real p_A_trans(gsize1,gsize2)          ! GEMS invert coeff.-matrix
+c      real p_A(gsize2,gsize1)          ! GEMS invert coeff.-matrix
+c      double precision  p_xDC(gsize1) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+c      double precision  p_gam(gsize1) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
+c      double precision  p_aPH(gsize3) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+c      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+c      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+c      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+c      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+c      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
+c      double precision  p_dll(gsize1) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
+c      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+c      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+c      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+      real, allocatable :: p_A_trans(:,:)          ! GEMS invert coeff.-matrix
+      real, allocatable :: p_A(:,:)          ! GEMS invert coeff.-matrix
+      double precision, allocatable ::  p_xDC(:) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+      double precision, allocatable ::  p_gam(:) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
+      double precision, allocatable ::  p_aPH(:) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+      double precision, allocatable ::  p_xPH(:) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+      double precision, allocatable ::  p_vPS(:) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+      double precision, allocatable ::  p_mPS(:) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+      double precision, allocatable ::  p_bPS(:,:) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+      double precision, allocatable ::  p_xPA(:) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+      double precision, allocatable ::  p_dul(:) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
+      double precision, allocatable ::  p_dll(:) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
+      double precision, allocatable ::  p_bIC(:) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+      double precision, allocatable ::  p_rMB(:) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+      double precision, allocatable ::  p_uIC(:) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
 
       double precision xminr,xmaxr,de,xnaohmw,xnaohd,xkohmw,xkohd,xmin
       character *79 title
@@ -252,14 +269,17 @@ c       kinetics.inc
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
+c   kg44 st needs to be defined
+        double precision treal, texe
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 c
-      dimension dx(nnodex+2),am(nnodex+2),por1(nnodex+2),poro(nnodex+2)
+        double precision st(nnodex+2),am(nnodex+2)
+     * ,dx(nnodex+2),por1(nnodex+2),poro(nnodex+2)
      * ,partx(nupmax),partxo(nupmax),partic(nupmax,nbasis+ncompl)
      * ,dm(nnodex+2)
      * ,vx(nnodex+2), partiv(nnodex)
      * ,hb(nnodex+2), por_null(nnodex+2), tx_null(nnodex+2)
-     * ,h0(nnodex+2), st(nnodex+2), qw(nnodex+2), qr(nnodex+2)
+     * ,h0(nnodex+2), qw(nnodex+2), qr(nnodex+2)
      * ,qbil(nnodex+2),	tx(nnodex+2)  
      * ,bnflow(nbasis,nnodex+2),cnflow(ncompl,nnodex+2)
      * ,sumbflowt(nbasis,nnodex+2)
@@ -313,6 +333,106 @@ c >>>
 c set irank and root to zero , used also outside MPI in seriall version
        root=0
        irank=0
+	gems_PIA=1
+	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
+c	read(*,*)gems_PIA
+	gems_PIA=1
+	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
+	 gems_PIA=1
+	endif
+	write(*,*)"gems_PIA: ",gems_PIA
+c 
+ckg44 init several variables in order to make sure they have the correct values
+	st=0.0
+        write(*,*)st
+        ir=0
+        por=0
+        qr=0
+        qw=0
+        am=0
+        h0=0
+        itest=0
+        ncyc=0
+        nxmax=0
+        isteu=0
+        inma=0
+        ipfile=0
+        ntim=0
+        npin=0
+        npkt=0
+        ismooth=0
+        i_sorb=0
+        j_sorb=0
+        j_decay=0
+        backg=0
+        rd=0
+        xlambda=0
+        aquer=0
+        along=0
+        vxx=0
+        dm0=0
+        dtmax=0
+        tmult=0
+        dx=0
+        de=0
+        c_to_i=0
+        c_to_i1=0
+        c_to_i2=0
+        iNode=0
+        treal=0 
+        texe=0
+        st=0
+         hb=0
+c gems init
+        p_nPH=0
+         p_NodeHandle=0
+         p_NodeTypeHY=0
+         p_NodeTypeMT=0
+         p_NodeStatusFMT=0
+         p_NodeStatusCH=0
+         p_IterDone=0
+         p_T=0 
+         p_P=0
+        p_nICb=0 
+        p_nDCb=0 
+        p_nPHb=0
+        p_nPSb=0
+
+        p_Vs=0
+        p_Vi=0
+        p_Ms=0
+        p_Mi=0
+         p_Gs=0
+        p_Hs=0
+        p_Hi=0
+        p_IC=0
+         p_pH=0
+         p_pe=0
+         p_Eh=0
+          p_Tm=0
+        p_dt=0
+        p_dt1 =0
+         p_ot =0
+         p_Vt =0
+         p_eps =0
+          p_Km =0
+          p_Kf =0
+          p_S =0
+          p_Tr =0
+           p_h =0
+           p_rho =0
+           p_al =0
+           p_at=0
+          p_av =0
+          p_hDl =0
+           p_hDt =0
+           p_hDv =0
+           p_nPe =0
+            p_dRes1 =0
+            p_dRes2=0
+           
+
+c
 #ifdef __MPI
 C mpi init
       call mpi_init(ierr)
@@ -340,6 +460,10 @@ C mpi init
 c
 #endif
 
+c init for gems iterations
+	itergems=0
+	itergemstotal=0
+
 c<<<<<<  system time initialisation for CPU consumption purposes
       time_initial=secnds(0.)
       if (irank.eq.root) write(*,*)"time initial: ",time_initial
@@ -356,7 +480,7 @@ c     dtprstep needs to be initialized
       i_output=1
 
       line="a1b2c3d4e5"
-	nNodes=51
+	nNodes=52
 c   From GEMS INTEGRATION
 c   these files are necessary for GEMS command line execution to start running
       gems_in_ipmf ="MCOTAC-GEM/MySystem-dat.lst" ! list file including nodes' chemical systems
@@ -457,10 +581,15 @@ c      call holdat1d(nxmax,"iche01.dat",hb,text)
 #else
       call holdat1d(nxmax,fname // char(0),hb)
 #endif
-      do 1331 ih=1,nxmax
-      iche(ih)=int(hb(ih))
-      nodeTypes(ih) = iche(ih) ! 1
-1331  continue
+c allocate memory for nodeTypes
+c      if (.not.ALLOCATED(nodeTypes)) then
+c	ALLOCATE(nodeTypes(nxmax))
+c      endif
+c assign values
+c      do 1331 ih=1,nxmax
+c      iche(ih)=int(hb(ih))
+c      nodeTypes(ih) = iche(ih) ! 1
+c1331  continue
 	if(m3.gt.0)then 
       call solid(m3,pnw,pnd,etc,xnaohmw,xnaohd,xkohmw,xkohd)
       endif
@@ -660,13 +789,14 @@ cpause	pause
 #else
       call holdat1d(nxmax+2,"ss0001.dat"//char(0),st)
 #endif
-	if (irank.eq.root) write(*,*)st
+c	if (irank.eq.root) write(*,*)st
 #ifdef __GNU
 	call holdat1d(%val(nxmax+2),"por001.dat"//char(0),por)
 #else
 	call holdat1d(nxmax+2,"por001.dat"//char(0),por)
 #endif
-	if (irank.eq.root) write(*,*)por
+	
+	if (irank.eq.root) write(*,*)por(1:nxmax+2)
 cpause	pause
 	do 3331 ih=1,nxmax+2
       por_null(ih)=por(ih)
@@ -744,15 +874,19 @@ c  first read is for boundary conditons node 1
         write(*,*)'nnode',nNodes
 	write(*,*)'cto',c_to_i1
 	write(*,*)'cto',c_to_i2
-	write(*,*)'nodetype',nodeTypes
+c	write(*,*)'nodetype',nodeTypes
         endif
 c	pause "F_GEM_INIT"
 
        nNodes= nxmax-1    !   1 
-      call F_GEM_INIT( gems_in_ipmf )
       	if (irank.eq.root) write(*,*)'nNodes =', nNodes
 
-c	pause "F_GEM_INIT called"
+      if (F_GEM_INIT( gems_in_ipmf ).eq.1) then
+		write(*,*) "GEMS init failed"
+		stop
+       else
+	if (irank.eq.root) write(*,*) "GEMS init ok"
+       endif
 
       do 50 i=1,20
 	  chch(i)=char(CSTR(i))
@@ -764,14 +898,82 @@ c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 cccc -t "cal-dol-boun1-dch.dat", "cal-dol-boun1-dbr-1.dat"  are also in ipmfiles-dat.lst normally
 c     open data-ch file for initialisation and names (only once)
 
+
 c   read 2. for p_ variables        
 c        if(igems_rw.eq.1)
-      call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_A )
+c      call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_A )
+      call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_nPSb, p_nPH)
+      	if (irank.eq.root) write(*,*) 'gemsread_dch.dat done'
+        write(*,*)p_nICb, p_nDCb, p_nPHb, p_nPSb, p_nPH
+        
+c        p_nPSb=43
+c       gsize3=43
+c      real p_A_trans(gsize1,gsize2)          ! GEMS invert coeff.-matrix
+	if (.NOT.allocated(p_A)) then
+         allocate(p_A(p_nDCb,p_nICb))
+        endif
+c      real p_A(gsize2,gsize1)          ! GEMS invert coeff.-matrix
+	if (.NOT.allocated(p_A_trans)) then
+         allocate(p_A_trans(p_nICb,p_nDCb))
+        endif
+c      double precision  p_xDC(gsize1) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+	if (.NOT.allocated(p_xDC)) then
+         allocate(p_xDC(p_nDCb))
+        endif
+c      double precision  p_gam(gsize1) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
+	if (.NOT.allocated(p_gam)) then
+         allocate(p_gam(p_nDCb))
+        endif
+c
+c      double precision  p_aPH(gsize3) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
+	if (.NOT.allocated(p_aPH)) then
+         allocate(p_aPH(p_nPHb))
+        endif
+cc      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
+	if (.NOT.allocated(p_xPH)) then
+         allocate(p_xPH(p_nPHb))
+        endif
+c      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+	if (.NOT.allocated(p_vPS)) then
+         allocate(p_vPS(n_PSb))
+        endif
+c      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+	if (.NOT.allocated(p_mPS)) then
+         allocate(p_mPS(n_PSb))
+        endif
+c      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+	if (.NOT.allocated(p_bPS)) then
+         allocate(p_bPS(p_nICb,n_PSb))
+        endif
+c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+	if (.NOT.allocated(p_xPA)) then
+         allocate(p_xPA(n_PSb))
+        endif
+c      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
+	if (.NOT.allocated(p_dul)) then
+         allocate(p_dul(p_nDCb))
+        endif
+c      double precision  p_dll(gsize1) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
+	if (.NOT.allocated(p_dll)) then
+         allocate(p_dll(p_nDCb))
+        endif
+c      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
+	if (.NOT.allocated(p_bIC)) then
+         allocate(p_bIC(p_nICb))
+        endif
+c      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
+	if (.NOT.allocated(p_rMB)) then
+         allocate(p_rMB(p_nICb))
+        endif
+c      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+	if (.NOT.allocated(p_uIC)) then
+         allocate(p_uIC(p_nICb))
+        endif
+c allocation ended
+       call F_GEM_GET_PA( p_A )
 
       	if (irank.eq.root) write(*,*) 'gemsA', p_A
 c	pause "F_GEM_GET_DCH nach A "
-
-      	if (irank.eq.root) write(*,*) 'gemsread_dch.dat done'
 
 	p_A_trans = transpose (p_A)               !invert stoichiometric coeff. matrix
 	if (irank.eq.root) write(*,*) 'gemsA', p_A_trans
@@ -832,11 +1034,11 @@ ccc	bn(ib,n)=gemsxDc(i_bcp_gemx(ib))         !2)
  1691 continue
 	do 1692 ic=1,m2
 ccc	cn(ic,n)=gemsxDc(i_bcp_gemx(m1+ic))       !10)
-	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))       !10)
+	cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))       !10)
  1692 continue
 	do 1693 ip=1,m3
 ccc	pn(ip,n)=gemsxDc(i_bcp_gemx(m1+m2+ip))     ! 12)/1.
-	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))     ! 12)/1.
+	pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))     ! 12)/1.
 c	pn(2,n)=gemsxDc(13)/1.
  1693 continue
  1690 continue
@@ -885,10 +1087,10 @@ c      endif
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))    !   2)   ! i_bcp_gemx(1)=2
  1696 continue
 	do 1697 ic=1,m2
-	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))   ! i_bcp_gemx(7)=10
+	cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))   ! i_bcp_gemx(7)=10
  1697 continue
 	do 1698 ip=1,m3
-	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))     !12)/1.    ! i_bcp_gemx(12)=12
+	pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))     !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
  1695 continue
 c kg44
@@ -1536,6 +1738,9 @@ c	do 1699 ib=1,m1
           time_gemsmpi_start=secnds(0.)
 	if (i_gems. eq. 1) then     
 
+c reset itergems
+	itergems=0
+
 #ifdef __MPI
 c f irst scatter the inital dataset among the processors
 c root obtains the full dataset
@@ -1566,11 +1771,11 @@ c  make sure grid size and no of processors fit together
 c now we allocate memory for the buffers..
 c we assume that if bn_subdomain is already allocated the others are also existing
 	if (.NOT.allocated(bn_subdomain)) then
-         allocate(bn_subdomain((m1-1)*i_subdomain_length))
+         allocate(bn_subdomain((m1)*i_subdomain_length))
          allocate(cn_subdomain(m2*i_subdomain_length))
          allocate(pn_subdomain(m3*i_subdomain_length))
 c and a second buffer because W. refuses to work with allocate
-         allocate(bn_domain((m1-1)*(nxmax-2)))
+         allocate(bn_domain((m1)*(nxmax-2)))
          allocate(cn_domain(m2*(nxmax-2)))
          allocate(pn_domain(m3*(nxmax-2)))
 c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
@@ -1587,8 +1792,8 @@ c	 write(*,*) m1, m2, m3
         
         if (irank.eq.root) then        
 	  do n=2,nxmax-1
-            do ib=1,m1-1
-	  	bn_domain(ib+(n-2)*(m1-1))=bn(ib,n)
+            do ib=1,m1
+	  	bn_domain(ib+(n-2)*(m1))=bn(ib,n)
             enddo
             do ic=1,m2
 	  	cn_domain(ic+(n-2)*m2)=cn(ic,n)
@@ -1605,8 +1810,8 @@ c        write(*,*)' MPI Scatter:', MPI_COMM_WORLD
 c	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 c         write(*,*) 'barrier ok'
 c	if (irank.eq.root) write(*,*)bn_domain
-        sendcount = i_subdomain_length*(m1-1)
-        recvcount = i_subdomain_length*(m1-1)
+        sendcount = i_subdomain_length*(m1)
+        recvcount = i_subdomain_length*(m1)
         call MPI_SCATTER(bn_domain, sendcount, 
      &      MPI_DOUBLE_PRECISION,
      &	    bn_subdomain, recvcount, MPI_DOUBLE_PRECISION,
@@ -1628,9 +1833,9 @@ c
 
 	do 1555 n=1,  i_subdomain_length                 !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
-	do 1596 ib=1,m1-1
+	do 1596 ib=1,m1-1   ! last value is charge zzz and is mapped to gems 
 
-	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib+(n-1)*(m1-1))   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
+	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib+(n-1)*(m1))   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
  1596 continue
 	do 1597 ic=1,m2
 	p_xDc(i_bcp_gemx(m1+ic))=cn_subdomain(ic+(n-1)*m2)
@@ -1642,13 +1847,14 @@ c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
 
 c      write(*,*)n,(p_xDc(ib),ib=1,p_nDCb)
 c      pause "xDC after transport at n"
-      do 1680 ii=1, p_nICb-1    !gems   -1 because last is charge and should be zero
+      do 1680 ii=1, p_nICb-1    !gems    -1 because last is charge and should be zero
       sum=0.
-      do 1681 jj=1, p_nDCb    !gems           
-       sum=sum+ p_A(ii,jj) *p_xDc(jj)
+      do 1681 jj=1, p_nDCb    !gems
+       sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
  1681 continue
 
       p_bIC(ii)=sum
+c      p_bIC(ii)=0.0
 
 c      do 31 i=1, gemsnPSb  
 cc      write (*,*) (gemsbPS(i,j), j=1, gemsnICb)   !ICb) 
@@ -1656,6 +1862,9 @@ c  31  continue
 cxx	gemsbPS(ii)=sum
 c       write(*,*)ii,p_bIC(ii) 
  1680 continue
+
+	p_bIC(p_nICb)=0.0
+
 c      goto 1556  ! only node 2 with old gems  values
 
 c      do 1684 ii=1, p_nICb   !gems
@@ -1711,7 +1920,7 @@ cc	do 1411 nspez=2,nxmax-1
 
 	iNode=  n
       p_NodeHandle=  n
-      p_NodeStatusCH= 5    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
@@ -1724,8 +1933,13 @@ c      time_gemsstart=RTC()
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
-c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
-c     &              p_NodeStatusCH,p_IterDone
+
+c  monitor gems iterations
+        itergems=itergems+p_IterDone
+        itergemstotal=itergemstotal+p_IterDone
+	
+	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
+     &              p_NodeStatusCH,p_IterDone
 
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
@@ -1750,7 +1964,7 @@ c     cn=
 c     pn=
 c      do 1695 n=2,nxmax
 	do 1796 ib=1,m1-1
-	bn_subdomain(ib+(n-1)*(m1-1))=p_xDc(i_bcp_gemx(ib))
+	bn_subdomain(ib+(n-1)*(m1))=p_xDc(i_bcp_gemx(ib))
  1796 continue
 	do 1797 ic=1,m2
 	cn_subdomain(ic+(n-1)*m2)=p_xDc(i_bcp_gemx(m1+ic))
@@ -1776,8 +1990,8 @@ c	pause
 
 
 c now do MPI_GATHER
-        sendcount = i_subdomain_length*(m1-1)
-        recvcount = i_subdomain_length*(m1-1)
+        sendcount = i_subdomain_length*(m1)
+        recvcount = i_subdomain_length*(m1)
       call MPI_AllGather(bn_subdomain, sendcount, 
      &     MPI_DOUBLE_PRECISION,
      &	    bn_domain, recvcount, MPI_DOUBLE_PRECISION,
@@ -1798,8 +2012,8 @@ c now do MPI_GATHER
      &	    MPI_COMM_WORLD,ierr)
 
 	  do n=2,nxmax-1
-            do ib=1,m1-1
-	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1-1))
+            do ib=1,m1
+	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1))
             enddo
             do ic=1,m2
 	  	cn(ic,n)=cn_domain(ic+(n-2)*m2)
@@ -1819,6 +2033,7 @@ c       sendcount = nsolid*nnodex
 c       call MPI_BCAST(pn,sendcount,MPI_DOUBLE_PRECISION,
 c     &                     root,MPI_COMM_WORLD,ierr)
 C
+
 #else       
 c
 	do 1555 n=2,  nxmax-1                  !node loop for GEMS after Transport step
@@ -1837,13 +2052,14 @@ c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
 
 c      write(*,*)n,(p_xDc(ib),ib=1,p_nDCb)
 c      pause "xDC after transport at n"
-      do 1680 ii=1, p_nICb-1    !gems   -1 because last is charge and should be zero
+      do 1680 ii=1, p_nICb    !gems   -1 because last is charge and should be zero
       sum=0.
       do 1681 jj=1, p_nDCb    !gems           
-       sum=sum+ p_A(ii,jj) *p_xDc(jj)
+       sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
  1681 continue
 
       p_bIC(ii)=sum
+c      p_bIC(ii)=0.0
 
 c      do 31 i=1, gemsnPSb  
 cc      write (*,*) (gemsbPS(i,j), j=1, gemsnICb)   !ICb) 
@@ -1851,6 +2067,8 @@ c  31  continue
 cxx	gemsbPS(ii)=sum
 c       write(*,*)ii,p_bIC(ii) 
  1680 continue
+      p_bIC(p_nICb)=0.0
+
 c      goto 1556  ! only node 2 with old gems  values
 
 c      do 1684 ii=1, p_nICb   !gems
@@ -1906,12 +2124,13 @@ cc	do 1411 nspez=2,nxmax-1
 
 	iNode=  n
       p_NodeHandle=  n
-      p_NodeStatusCH= 5    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
+c	write(*,*)"p_bic",n, p_bIC
 
 	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
@@ -1919,8 +2138,13 @@ c      time_gemsstart=RTC()
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
-c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
-c     &              p_NodeStatusCH,p_IterDone
+
+c  monitor gems iterations
+        itergems=itergems+p_IterDone
+        itergemstotal=itergemstotal+p_IterDone
+
+	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
+     &              p_NodeStatusCH,p_IterDone
 
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
@@ -1969,6 +2193,13 @@ c	pause
 
  1555 continue                 ! end node loop for GEMS after Transport step             
 #endif           
+
+c  
+ckg44    print out itergems
+      write(*,*)'proc, t-step,gems iterations, total iterations'
+      write(*,*)irank, itimestep_tp,itergems, 
+     &          itergemstotal," CPU time:", time_gemstotal
+
       endif        ! i_gems eq.1  
       time_gemsmpi_end=secnds(0.)
       time_gemsmpi=time_gemsmpi+(time_gemsmpi_end-time_gemsmpi_start)
@@ -2713,16 +2944,17 @@ c===========================================================================*/
       subroutine holdat1df(nxmax,cname,hb,text)
        include 'gwheader.inc'
 
-        real*8 hb(NNODEx+2)
+        double precision hb(NNODEx+2)
         integer nxmax,nymax,ihb(NNODEx+2)
         character*10 text,  cname
 
         open(31, file=cname)
         read (31, *)nxmaxx,faktor
         write(*,*)'hol nx  faktor', nxmax,faktor, cname
-         read(31, 1010)(ihb(i),i=1,nxmax)
+         read(31, *)(ihb(i),i=1,nxmax)
+c         read(31, 1010)(ihb(i),i=1,nxmax)
    10   continue
- 1010   format (83i4)
+ 1010   format (520i4)
         do 20, i=1,nxmax
         hb(i)= faktor*ihb(i)
  20     continue

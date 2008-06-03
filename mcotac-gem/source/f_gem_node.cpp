@@ -1,4 +1,5 @@
 #include <iomanip>
+#include "string.h"
 
 #include "node.h"
 
@@ -9,14 +10,16 @@
 //
 #ifdef __unix
 #ifdef __PGI
-    extern "C" int f_gem_init_( char* string_, unsigned int length_ )
+    extern "C" int f_gem_init_( char* string_)
  #else
-   extern "C" int f_gem_init( char* string_, unsigned int length_ )
+   extern "C" int f_gem_init( char* string_)
 #endif
 #else
    extern "C" int __stdcall F_GEM_INIT( char* string_, unsigned int length_ )
 #endif
 {
+  unsigned int length_;
+  length_=strlen(string_);
   gstring string_cto_i1c( string_, 0, length_);
   string_cto_i1c.strip();
 
@@ -25,9 +28,10 @@
 
    // Here we read the files needed as input for initializing GEMIPM2K
    // The easiest way to prepare them is to use GEMS-PSI code (GEM2MT module)
-   if( node->GEM_init( string_cto_i1c.c_str() ) )
+   if( node->GEM_init( string_cto_i1c.c_str() ) ){
+       printf("\nerror during gems init\n");
        return 1;  // error occured during reading the files
-
+     }
    return 0;
 }
 
@@ -39,16 +43,21 @@
 //
 #ifdef __unix
 #ifdef __PGI
-    extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+    extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, int& p_nPSb,int& p_nPH)
+//    extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
 #else
-   extern "C" int  f_gem_get_dch( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+   extern "C" int  f_gem_get_dch( int& p_nICb, int& p_nDCb, int& p_nPHb, int& p_nPSb,int& p_nPH)
+//   extern "C" int  f_gem_get_dch( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
 #endif
 #else
   extern "C" int  __stdcall  F_GEM_GET_DCH(  // All parameters are return values
    int& p_nICb,   // Number of Independent Components (ICs) in chemical system
    int& p_nDCb,   // Number of Dependent Components (DCs) in chemical system
    int& p_nPHb,   // Number of Phases (PHs) in chemical system
-   float* p_A     // Stoichiometry matrix A with nDCb rows and nICb columns
+   int& p_nPSb,   // number of Phases-solutions (<= nPS) used in the data bridge
+   int& p_nPH,   // Number of Phases (PHs) in chemical system
+
+//   float* p_A     // Stoichiometry matrix A with nDCb rows and nICb columns
                   // before calling  F_GEM_GET_DCH(), a memory block of the size
                   // greater than sizeof(float)*nDCb*nICb must be allocated and
                   // a pointer to is passed in p_A
@@ -56,12 +65,50 @@
 #endif
 {
 
-   p_nICb = TNode::na->pCSD()->nIC;
-   p_nDCb = TNode::na->pCSD()->nDC;
+   p_nICb = TNode::na->pCSD()->nICb;
+   p_nDCb = TNode::na->pCSD()->nDCb;
    p_nPHb = TNode::na->pCSD()->nPHb;
-    for( int i=0; i<p_nICb; i++ )
-       for( int j=0; j<p_nDCb; j++ )
-		   p_A[j*p_nICb+i] = nodeCH_A(j, i);
+   p_nPSb = TNode::na->pCSD()->nPSb;
+   p_nPH = TNode::na->pCSD()->nPH;
+
+//    for( int i=0; i<p_nICb; i++ )
+//       for( int j=0; j<p_nDCb; j++ )
+//		   p_A[j*p_nICb+i] = nodeCH_A(j, i);
+   return 0;
+}
+
+// (2) This function gets some elements of the DATACH data structure
+// that can be used in the part of the program external to GEMIPM2K
+// returns 0 if success or 1 if error
+// Parameter list may be extended in future with other DCH elements
+//
+#ifdef __unix
+#ifdef __PGI
+    extern "C" int  f_gem_get_pa_( float* p_A )
+//    extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+#else
+   extern "C" int  f_gem_get_pa( float* p_A )
+//   extern "C" int  f_gem_get_dch( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
+#endif
+#else
+  extern "C" int  __stdcall  F_GEM_GET_PA(  // All parameters are return values
+
+   float* p_A;     // Stoichiometry matrix A with nDCb rows and nICb columns
+                  // before calling  F_GEM_GET_DCH(), a memory block of the size
+                  // greater than sizeof(float)*nDCb*nICb must be allocated and
+                  // a pointer to is passed in p_A
+)
+#endif
+{
+   int p2_nICb;   // Number of Independent Components (ICs) in chemical system
+   int p2_nDCb;   // Number of Dependent Components (DCs) in chemical system
+ 
+   p2_nICb = TNode::na->pCSD()->nICb;
+   p2_nDCb = TNode::na->pCSD()->nDCb;
+   
+    for( int i=0; i<p2_nICb; i++ )
+       for( int j=0; j<p2_nDCb; j++ )
+		   p_A[j*p2_nICb+i] = nodeCH_A(j, i);
    return 0;
 }
 
@@ -263,9 +310,9 @@
  )
 {
   int iRet = 0;
-  bool uPrimalSol = true;
-
-
+  int ii;
+  bool uPrimalSol = false;
+ 
 
   short NodeHandle, NodeStatusCH, IterDone;
 
@@ -275,18 +322,31 @@
   // (2) ----------------------------------------------
   // Work loop for the coupled FMT-GEM modelling
 
-  if (uPrimalSol) {
-   // sends also speciation changed by mcotac : used for smart initial aproximation
-   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
-             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC, p_gam );
 
+  if (uPrimalSol) {
+   // sends only speciation changed by mcotac 
+	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) 
+             p_bIC[ii]=0;
+   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
+             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
    }
    else
    {
   // Setting input data for GEMIPM
+ 
+   // sends only speciation changed by mcotac 
+	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) 
+             p_bIC[ii]=0;
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
-             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH );
+             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
+
+ 
+//  TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
+//             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
+//   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
+//             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH );
    }
+  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr.dat");
  // Calling GEMIPM calculation
    iRet = TNode::na->GEM_run(uPrimalSol);
    if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_SIA ) )
