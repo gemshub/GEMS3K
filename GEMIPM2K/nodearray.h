@@ -6,7 +6,7 @@
 // Uses the TNode class
 //
 // Written by S.Dmytriyeva,  D.Kulik
-// Copyright (C) 2006 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2006,2008 S.Dmytriyeva, D.Kulik
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
@@ -167,6 +167,9 @@ public:
 
     bool* piaNode() const // get pointer to IA switches for nodes
     { return iaNode; }
+    
+    char* ptcNode() const // get pointer to boundary condition codes for nodes
+    { return tcNode; }
     
     // Calls GEM IPM calculation for a node with absolute index ndx
     int RunGEM( int ndx, int Mode );

@@ -27,353 +27,257 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "nodearray.h"
 
-const int  nNodes =  5;   // set here how many nodes you need
+const int nNodes =  10;   // set here how many nodes you need
+const int nTimes = 20;    // set here how many time loops will be performed
 
 int main( int argc, char* argv[] )
- {
+{
 // Analyzing command line arguments
    // Default arguments
     char ipm_input_file_list_name[256] = "chemsys.lst";
-    char dbr_input_file_name[256] = "chemsys-dbr.dat";
+    char logging_file_name[256] = "speciation.log";
     char fmt_input_file_name[256] = "fmtparam.dat";
 
     if (argc >= 2 )
        strncpy( ipm_input_file_list_name, argv[1], 256);
-     // list of files needed as input for initializing GEMIPM2K
-
+       // list of files needed as input for initializing node array
     if (argc >= 3 )
-           strncpy( dbr_input_file_name, argv[2], 256);
-     // input file for boundary conditions
-
+       strncpy( logging_file_name, argv[2], 256);
+       // input file for distributing boundary conditions over the nodes
     if (argc >= 4 )
        strncpy( fmt_input_file_name, argv[3], 256);
      // your optional file with FMT input parameters
+ 
+    double TimeGEM =0., TimeOfGEM, ct=0., dt=1.; // , dc;
+    int IterTotGEM = 0, PrecLoops, NumIterFIA, NumIterIPM;
+    int nIC, nPS;
+    TNodeArray* na;
+    // The NodeArray must be allocated here
+    TNodeArray::na = na = new TNodeArray( nNodes );
 
-// Creating TNode structure accessible trough the pointer node
-   TNode* node  = new TNode();
+   // Prepare the array for initial node system and boundary condition codes
+    int nodeIn[nNodes] = { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    int Mode, RetCode; 
 
-// Here we read the files needed as input for initializing GEMIPM2K
-  // The easiest way to prepare them is to use GEMS-PSI code
-   if( node->GEM_init( ipm_input_file_list_name ) )
-       return 1;  // error occured when reading the files (unix2dos?)
+    // Here we read the MULTI structure, DCH and DBR files prepared from GEMS
+       // There must be two DBR files - the first will be loaded into node 0 and 
+       // the second - into nodes 1 until 9. 
+    if( na->GEM_init( ipm_input_file_list_name, nodeIn ) )
+          return 1;   // error reading files
 
-// int nNodes = 5;     // number of local equilibrium nodes, 1 or more
-   int nTimes = 100;      // Maximum number of time iteration steps
-   unsigned int nTotIt;   // Number of GEM iterations per time step
-   double t_start = 0., t_end = 10000., dt = 100., tc = 1.;
-   double CalcTime = 0.0;
-   double MeanIt, MeanFIA, MeanIPM, MeanPRL;  // mean numbers of GEM iterations
-   int nPrecLoops =0;     // Number of IPM-2 precision enhancement loops
-   int nIterFIA =0;       // Number of EnterFeasibleDomain() iterations
-   int nIterIPM =0;       // Number of main IPM iterations
-   int nIterTotal=0;      // Total FIA+IPM iterations done
+    FILE* logfile;    // Opening file for logging 
+    logfile = fopen( logging_file_name, "w+" );   
+    if( !logfile)
+      return -1;
+    
+    // getting direct access to nodearray layers and their nodes  
+    DATABRPTR* C0 = na->pNodT0();  // nodes at previous time point
+    DATABRPTR* C1 = na->pNodT1();  // nodes at next time point
+    bool* iaN = na->piaNode();     // indicators for IA in the nodes
+    char* tbN = na->ptcNode();     // Codes for node boundary contition types 
 
-   cout << "Start of gemnode PIA test: " << ipm_input_file_list_name << " "
-         << dbr_input_file_name << endl;
-   cout << " nNodes = " << nNodes << "  nTimes = " << nTimes
-         << "  t_start = " << t_start << " t_end = " << t_end
-         << "  dt = " << dt << "  tc = " << tc << endl;
+    // allocations and defaults for other FMT parameters can be added here
+    // . . . . . . . . . . . . . . . .
+    // Here you can read your file with some FMT parameters and initial data
+       // if( my_fmt_input(fmt_input_file_name) )
+       //   return 2;    
+    cout << "Nodearray-gem test start: nNodes = " << nNodes << "  nTimes = " << nTimes 
+    << endl << endl;
+    
+    for( int in=0; in<nNodes; in++) // Loading dynamic parameters
+    {
+    	C0[in]->NodeTypeHY = 0; // These dynamic parameters can be used in a real MT model
+    	C0[in]->Vt = 1.;        //   and can be set for each node separately
+    	C0[in]->vp = 1e-7;
+    	C0[in]->eps = 0;
+    	C0[in]->Km = 0;
+    	C0[in]->al = 0;
+    	C0[in]->Dif = 0;
+    	C0[in]->hDl = 0; // C0[j]->al*C0[j]->vp+C0[j]->Dif;
+    	C0[in]->nto = 0;
+    	tbN[in] = 0;
+     }
+     C0[0]->NodeTypeHY = 3; tbN[0] = 3;
+     C0[nNodes-1]->NodeTypeHY = -3; tbN[nNodes-1] = -3; 
 
-// allocations and defaults for other FMT parameters can be added here
-// . . . . . . . . . . . . . . . .
-// Here you can read your file with some FMT parameters and initial data
-   // if( my_fmt_input(fmt_input_file_name) )
-   //   return 2;
-
-// Number of ICs, DCs, Phases and Phases-solutions kept in the node DATABR
-// structure for exchange with GEMIPM - for your convenience
-   int nIC, nDC, nPH, nPS;
-//   int i,   j,   k,   ks;    // indices for direct access to components
-                               // and phases data in the DataCH framework
-
-// Getting direct access to DATACH structure in GEMIPM2K memory
-   DATACH* dCH = node->pCSD();
-   if( !dCH  )
-       return 3;
-
-// Getting direct access to the work node DATABR structure which exchanges
-// the data between GEM and FMT parts
-   DATABR* dBR = node->pCNode();
-   if( !dBR  )
-       return 4;
-
-// Extracting data bridge array sizes
-   nIC = dCH->nICb;
-   nDC = dCH->nDCb;
-   nPH = dCH->nPHb;
-   nPS = dCH->nPSb;
-
-// Allocating work memory for FMT part (here only chemical variables)
-   // for nNodes (a few) nodes (real FMT problems consider many more nodes).
-   // Names of arrays are taken consistent with the DATABR structure
-   //  (see "databr.h") for better readability
-
-   short m_NodeHandle[nNodes], m_NodeStatusCH[nNodes], m_IterDone[nNodes];
-   int nPrecL[nNodes], nFIA[nNodes], nIPM[nNodes];
-
-   double m_T[nNodes], m_P[nNodes], m_Vs[nNodes], m_Ms[nNodes],
-          m_Gs[nNodes], m_Hs[nNodes], m_IC[nNodes], m_pH[nNodes],
-	  m_pe[nNodes], m_Eh[nNodes];
-
-   double *m_xDC, *m_gam, *m_xPH, *m_aPH, *m_vPS, *m_mPS,*m_bPS,
-         *m_xPA, *m_dul, *m_dll, *m_bIC, *m_rMB, *m_uIC;
-
-   m_bIC = new double[ nNodes*nIC ];
-   m_rMB = new double[ nNodes*nIC ];
-   m_uIC = new double[ nNodes*nIC ];
-   m_xDC = new double[ nNodes*nDC ];
-   m_gam = new double[ nNodes*nDC ];
-   m_dul = new double[ nNodes*nDC ];
-   m_dll = new double[ nNodes*nDC ];
-   m_aPH = new double[ nNodes*nPH ];
-   m_xPH = new double[ nNodes*nPH ];
-   m_vPS = new double[ nNodes*nPS ];
-   m_mPS = new double[ nNodes*nPS ];
-   m_xPA = new double[ nNodes*nPS ];
-   m_bPS = new double[ nNodes*nIC*nPS ];
-
-// (1) ---------------------------------------------
-// Initialization of chemical data kept in the FMT part.
-   // Can be done in a loop over nodes, if there are many nodes
-   //   cout << "Begin Initialisation Part" << endl;
-   int in;
-   for(  in=1; in<nNodes; in++ )  // Node with in=0 will be initialized later
-   {
-     dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
-
-// re-calculating equilibrium by calling GEMIPM2K, getting the status
-     m_NodeStatusCH[in] = node->GEM_run( false );
-
-     if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
-        return 5; // GEM IPM did not converge properly
-
-// Extracting GEM IPM input chemical data into FMT part
-     node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in],
-       m_T[in], m_P[in], m_Vs[in], m_Ms[in],
-       m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
-
-// Extracting GEM IPM output chemical data into FMT part
-     node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
-       m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
-       m_Eh[in], m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,
-       m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
-       m_bPS+in*nIC*nPS, m_xPA+in*nPS );
-
-//  Uncomment this to test variable pressures and temperatures
-//         m_T[in] += in*5;
-//         m_P[in] += (in-1)*20;
-//         m_T[in] += in*7;
-//         m_P[in] += (in-1)*20;
-
-// Here the file output for the initial conditions can be implemented
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-   }
-
-// Read DATABR structure from text file separately (boundary condition)
-      TNode::na->GEM_read_dbr( dbr_input_file_name );
-
-  for(  in=0; in<1; in++ ) // Initialising boundary condition node(s)
-  {
-   dBR->NodeStatusCH = NEED_GEM_AIA; // activating GEM IPM for automatic initial
-                                     // approximation
-// re-calculating equilibrium by calling GEMIPM using previous primal solution in this node
-//   m_NodeStatusCH[in] = node->GEM_run( true );
-   // re-calculating equilibrium by calling GEMIPM using previous content of GEMIPM structure
-      m_NodeStatusCH[in] = node->GEM_run( false );
-  if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
-     return 5;
-// Extracting GEM IPM input chemical data into FMT part
-   node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_T[in],
-    m_P[in], m_Vs[in], m_Ms[in],
-    m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
-// Extracting GEM IPM output chemical data to FMT part
-   node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
-    m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
-    m_Eh[in], m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,
-    m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
-    m_bPS+in*nIC*nPS, m_xPA+in*nPS );
-
-// Here the file output for the initial boundary conditions can be implemented
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-   }
-
-   cout << "End of gem_node test initialisation" << endl;
+   for ( int in=0; in<nNodes; in++)  // Copying node layer 0 to node layer 1  
+   {                          // (for MT models that can reset time step dt 
+        na->CopyNodeFromTo( in, nNodes, C0, C1 );
+        iaN[in] = true;    // AIA mode forced 
+        Mode = NEED_GEM_AIA;
+        RetCode = na->RunGEM( in, Mode ); // running GEM for the i-th node
+        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
+        {
+           cout << "RunGEM-initial calculation error " << RetCode << "  in node " << in << endl;
+           return 5; 
+        } 
+        // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
+        TimeOfGEM = na->GEM_CalcTime(); 
+        TimeGEM += TimeOfGEM;
+        // pCNode() takes a pointer to the work TNode class instance
+        IterTotGEM += na->GEM_Iterations( PrecLoops, NumIterFIA, NumIterIPM );
+        cout << " Init node# " << in << " rtime " << TimeOfGEM <<  " AIA GEM PL; ItEFD; itIPM " 
+             << PrecLoops << " " << NumIterFIA << " " << NumIterIPM << endl; 
+    }  // in    end of the initial node Loop
+   
+   na->logProfileAqIC( logfile, -1, 0., nNodes, 1 );   // logging [IC] in aq phase
    clock_t t_start11, t_end11;
    t_start11 = clock();  // Setting time when the coupled modelling starts
 
 // (2) ----------------------------------------------
 // Work loop for the coupled FMT-GEM modelling
-
-   cout << "Begin Coupled Modelling Part" << endl;
-      // Getting DATABR indexes for chemical species to be monitored
-
-   int xiC = node->IC_name_to_xDB("C");
-   int xiCa = node->IC_name_to_xDB("Ca");
-   int xiH = node->IC_name_to_xDB("H");
-   int xiO = node->IC_name_to_xDB("O");
-   int xiSr = node->IC_name_to_xDB("Sr");
-   int xiZz = node->IC_name_to_xDB("Zz");
-   int xiCl = node->IC_name_to_xDB("Cl");
-   int xCal = node->Ph_name_to_xDB("(Sr,Ca)CO3(reg)");
-   int xStr = node->Ph_name_to_xDB("Strontianite");
+   // Getting DATABR indexes for chemical species to be monitored
+   int xiC = na->IC_name_to_xDB("C");
+   int xiCa = na->IC_name_to_xDB("Ca");
+   int xiH = na->IC_name_to_xDB("H");
+   int xiO = na->IC_name_to_xDB("O");
+   int xiSr = na->IC_name_to_xDB("Sr");
+   int xiZz = na->IC_name_to_xDB("Zz");
+   int xiCl = na->IC_name_to_xDB("Cl");
+   int xCal = na->Ph_name_to_xDB("(Sr,Ca)CO3(reg)");
+   int xStr = na->Ph_name_to_xDB("(Ca,Ba,Sr)SO4");
    // Checking indexes
    cout << " xiC= " << xiC << "  xiCa= " << xiCa << "  xiH= " << xiH
         << "  xiO= " << xiO << "  xiSr=" << xiSr << "  xiZz=" << xiZz
-        << "  xCalcite=" << xCal << "  xStrontianite=" << xStr << endl;
-   nTotIt = 0;
+        << "  xCalSS=" << xCal << "  xCelSS=" << xStr << endl;
 
+   cout << "Begin Coupled Modelling Part" << endl;
+   bool NeedGEM;  // Flag set to true if GEM calculation for this node is needed
+   bool TimeStepAccept; // Flag set to true if the time step dt is accepted
    for( int it=0; it<nTimes; it++ )  // iterations over time
    {
      int in;
-//   cout << " FMT loop begins: " << endl;
-// Loop over nodes for calculating the mass transport step
-   // ( this whole loop may be replaced by call(s) to FMT subroutines)
+     ct += dt;  
+     iaN[0] = false; 
+     //   cout << " FMT loop begins: " << endl;
+     // Loop over nodes for calculating the mass transport step
+     // ( this whole loop may be replaced by call(s) to FMT subroutines)
      for(  in=1; in<nNodes; in++ )
      {
-       ; // Add here some operators as function of tc and dt
-       // that transfer mass between nodes (i.e. change some elements of
-       // m_bIC array). Take care about mass conservation and consistency
-       // of chemical compositions of the nodes.
-       // in this example, simply adding SrCl2 to m_bIC vector
-       // in order to cause the conversion of calcite to strontianite
+       iaN[in] = false; // true;  // SIA mode of GEMIPM is allowed for this node 
+       // Add here some operators as function of tc and dt that transfer the matter 
+       // between nodes. Take care about mass conservation and consistency of chemical 
+       // compositions of the nodes.
+       // in this example, we add SrCl2 to the old bIC vector of the previous node at 
+       // previous time to make composition in this node at the next time step
        if( it > 0 )
        {
          if( xiSr >= 0 )
-           m_bIC[in*nIC+xiSr] += dt*in*1e-6;
+        	 node1_bIC( in, xiSr ) = node0_bIC( in-1, xiSr ) += dt*in*1e-4; 
          if( xiCl >= 0 )
-           m_bIC[in*nIC+xiCl] += dt*in*2e-6;
+        	 node1_bIC( in, xiCl ) = node0_bIC( in-1, xiCl ) += dt*in*2e-4; 
        }
-       // Alternatively, the transport may be simulated using m_xDC arrays.
-       // In this case, an alternative (overloaded) call to GEM_from_MT()
-       // should be used (see below)
+       // This is a placeholder for a real mass transport model with real times ct, dt
+       // which also should check the mass conservation in the whole set of nodes
+       //  Uncomment this to test variable pressures and temperatures
+       //  C1[in]->TC = C0[in-1]->TC + 0.2;
+       //  C1[in]->P = C0[in-1]->P + 2.;
+       //  . . . . . . . . . . . . . . . . . . 
+       // Here the file output for the initial conditions can be implemented
+       //  . . . . . . . . . . . . . . . . . . 
      }
-//     cout << " FMT loop ends: ";
-     cout << " it = " << it << "  tc = " << tc << endl;
-
-//     cout << " Chemical loop begins: " << endl;
-
-// Loop over nodes for calculating the chemical equilibration step
+     //     cout << " FMT loop ends: ";
+     cout << " it = " << it << "  ct = " << ct << "  dt = " << dt << endl;
+     //     cout << " Chemical loop begins: " << endl;
+     // Loop over nodes for calculating the chemical equilibration step
      for( in=0; in<nNodes; in++ )
      {
-//if( !in)
-        cout << "  in = " << in << "  T = " << m_T[in];
-        m_NodeHandle[in] = in;
+        cout << "      in = " << in << "  T = " << C1[in]->TC;
+        // You can switch between AIA and SIA GEM initial approximation modes
+        if( iaN[in] )
+            C1[in]->NodeStatusCH = NEED_GEM_AIA;    // Auto (simplex) initial approximation 
+        else
+        	C1[in]->NodeStatusCH = NEED_GEM_SIA;    // Smart initial approximation
+       // Here we can also check if the GEM calculation for this node is needed at all
+       // Here we compare this node for current time and for previous time - works for AIA and PIA
+       if( in == 0 )  // First node is not re-equilibrated since it is not changed
+          NeedGEM = false;
+       else NeedGEM = true; 
+       for( int ic=0; ic < na->pCSD()->nICb-1; ic++)   // do not check charge here
+       {     // It has to be checked on minimal allowed c0 value
+    	 if( node1_bIC( in, ic ) < 1e-9 )
+    	 { // to prevent loss of Independent Component
+    		 node1_bIC( in, ic ) = 1e-9;
+  	 	 }
+//   		 dc = node0_bIC( in, ic ) - node1_bIC( in, ic );
+//    	 if( fabs( dc ) > min( 1e-7, ( node1_bIC( in, ic ) * 1e-3 )))
+//    		 NeedGEM = true;  // we need to recalculate equilibrium
+                              // in this node because its vector b has strong enough 
+       }
+//       node1_bIC( in, na->pCSD()->nICb-1 ) = 0.;   // zeroing charge off in bulk composition
+       if( !NeedGEM ) 
+       {   // GEM calculation for this node not needed
+           cout << "  !GEM skipped " << endl; 
+    	   C1[in]->IterDone = 0; // number of GEMIPM iterations is set to 0
+       }
+       else {// Calling GEM IPM2 calculation
+    	   Mode = C1[in]->NodeStatusCH; // * -1; // using the speciation from the current node for SIA 
+           cout << "  Mode = " << Mode; 
+  	       RetCode = na->RunGEM( in, Mode ); // running GEM for the node in (node layer C1) 
+           if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
+           {
+              cout << "RunGEM calculation error " << RetCode << "  in node " << in
+                   << "  at time step " << it << endl;
+              return 5; 
+           }   
+           // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
+           TimeGEM += na->GEM_CalcTime(); 
+           IterTotGEM += na->GEM_Iterations( PrecLoops, NumIterFIA, NumIterIPM );
+           cout << " GEM PL; ItEFD; itIPM " << PrecLoops << " " << NumIterFIA 
+                << " " << NumIterIPM << endl;
+       }    
+       // Here the debug print for each node can be implemented
+       // . . . . . . . . . . . . . . . . . 
+       nIC = na->pCSD()->nICb; 
+       nPS = na->pCSD()->nPSb;
+       cout << "     CalSS= " << node1_xPH( in, xCal ) << "  CelSS= " << node1_xPH( in, xStr );
+       cout << "  [Ca]= " << node1_bPS( in, 0, xiCa ) << "  [Sr]= " << node1_bPS( in, 0, xiSr);
+       cout << "  pH= " << C1[in]->pH << endl;
+     } // end of node loop
+     
+     // Here various checks for the acceptance of the time step can be performed 
+     TimeStepAccept = true;  // false; 
+     // as well as a back-coupling of phase speciation, porosity and permeability
+     // . . . . . . . . . . . . . . . . . . . .
+     na->logProfileAqIC( logfile, it, ct, nNodes, 5 );   // logging [IC] in aq phase
+     
+     if( TimeStepAccept ) // Time step accepted 
+        for ( in=1; in<nNodes; in++)  // Copying node layer 1 to node layer 0 
+          na->CopyNodeFromTo( in, nNodes, C1, C0 );
+     else { 
+    	if(dt > 1e-3) 
+    	{
+    		ct-= dt;
+    		dt /= 2.; // Trying the time loop again with twice smaller time step
+    	}
+    	cout << "Error: Time step " << dt << " becomes too small!";      
+        return 6; 
+     }
+     // Here the output for the current transport state at tc can be implemented
+     // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .  
+   } // End of time loop  
 
-// Below you can switch between AIA and PIA initial approximation modes
-//        m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2A 
-        m_NodeStatusCH[in] = NEED_GEM_SIA;      // tests are marked *.out2P
-
-// Setting input data for GEM IPM
-        node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
-            m_T[in], m_P[in], m_Vs[in], m_Ms[in],
-            m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH // );
-	    ,m_xDC+in*nDC, m_gam+in*nDC );   // this overload call works also
-                               // in NEED_GEM_AIA mode, but only in v.2.2!
-//if(!in)
-//    for( int j=0; j<nDC; j++ )
-//      cout << "  " << m_xDC[in*nDC+j];
-// if(!in)
-//    for( int j=0; j<nDC; j++ )
-//      cout << "  " << m_gam[in*nDC+j];
-//  Alternative call to correct bulk chemical composition using changed
-//     m_xDC (chemical species amounts) data. Take care that this function
-//     actually compresses the xDC values into mole amounts of elements
-//     and adds them to the elements of bIC vector.
-//   node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
-//     m_T[in], m_P[in], m_Vs[in], m_Ms[in],
-//     m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH, m_xDC+in*nDC );
-
-// Calling GEM IPM2 calculation
-// re-calculating equilibrium by calling GEMIPM using previous primal solution in this node
-//    m_NodeStatusCH[in] = node->GEM_run( true );
-// re-calculating equilibrium by calling GEMIPM using previous content of GEMIPM structure
-       m_NodeStatusCH[in] = node->GEM_run( false );
-       if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
-            return 5;
-        CalcTime += node->GEM_CalcTime();  // Incrementing calculation time - only v.2.2.0
-        nIterTotal += node->GEM_Iterations( nPrecL[in], nFIA[in], nIPM[in] );
-        nPrecLoops += nPrecL[in];
-        nIterFIA += nFIA[in];
-        nIterIPM += nIPM[in];
-
-// Extracting GEM IPM output data to FMT part
-        node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
-          m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
-          m_Eh[in],m_rMB+in*nIC, m_uIC+in*nIC, m_xDC+in*nDC, m_gam+in*nDC,
-          m_xPH+in*nPH, m_vPS+in*nPS, m_mPS+in*nPS,
-          m_bPS+in*nIC*nPS, m_xPA+in*nPS  );
-
-        nTotIt += m_IterDone[in];
-
-// Here the debug print for each node can be implemented
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-// if( !in )
-//{ //        cout << " Gem run ends: ";
-/*
-        cout << "  bC= " << m_bIC[in*nIC+xiC] << "  bCa= " << m_bIC[in*nIC+xiCa]
-             << "  bH= " << m_bIC[in*nIC+xiH] << "  bO= " << m_bIC[in*nIC+xiO]
-             << "  bSr= " << m_bIC[in*nIC+xiSr] << "  bZz= " << m_bIC[in*nIC+xiZz];
-//      cout << endl;  */
-        cout << "     Cal= " << m_xPH[in*nPH+xCal] <<
-                "  Str= " << m_xPH[in*nPH+xStr];
-        cout << "  [Ca]= " << m_bPS[in*nIC*nPS+xiCa] <<
-                "  [Sr]= " << m_bPS[in*nIC*nPS+xiSr];
-        cout << "  pH= " << m_pH[in] << "  It= " <<  m_IterDone[in]; // << endl;
-        cout << "  nPRL= " << nPrecL[in] << "  nFIA= "  << nFIA[in] << "  nIPM= " << nIPM[in] << endl;
-//}
-   }
-//    cout << " Chemical loop ends: " << endl;
-
-// Here the output for the current transport state at tc can be implemented
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-
-    tc += dt;  // time increment
-  }
-
-  t_end11 = clock(); // getting end time of coupled calculations
-  double dtime = ( t_end11- t_start11 );
-  double clc_sec = CLOCKS_PER_SEC;
-  MeanIt = double(nIterTotal)/500.; // per 1 GEMIPM2 call ( nTotIt double(nNodes*nTimes);
-  MeanFIA = double(nIterFIA)/500.;
-  MeanIPM = double(nIterIPM)/500.;
-  MeanPRL = double(nPrecLoops)/500.;
-
-  cout <<  "Pure GEM IPM2 runtime , s: " <<  CalcTime << endl; // Only v. 2.2.0
-  cout <<  "Total time of calculation, s: " <<  (dtime)/clc_sec << endl;
-  cout << "    Mean GEMIPM2 iterations per node: " << MeanPRL << " " <<
-               MeanFIA << " " << MeanIPM << " " << MeanIt << endl;
-
-  cout << " This gem_node test ";
-
-// (3) ----------------------------------------------
-// Calculations finished - t_end reached
-
-// freeing dynamic arrays
-  delete[] m_xDC;
-  delete[] m_gam;
-  delete[] m_xPH;
-  delete[] m_vPS;
-  delete[] m_mPS;
-  delete[] m_bPS;
-  delete[] m_xPA;
-  delete[] m_dul;
-  delete[] m_dll;
-  delete[] m_bIC;
-  delete[] m_rMB;
-  delete[] m_uIC;
-  delete[] m_aPH;
-
-// deleting GEMIPM and data exchange memory structures
-  delete node;
-
-  cout << "has finished Ok" << endl;
-
-  return 0;
+   t_end11 = clock(); // getting end time of coupled calculations
+   double dtime = ( t_end11- t_start11 );
+   double clc_sec = CLOCKS_PER_SEC;
+   double factr = (double)nNodes*(double)nTimes; 
+   double MeanIt = double(IterTotGEM)/factr; // per 1 GEMIPM2 call 
+   double MeanTime = TimeGEM/factr; 
+   
+   cout <<  " Pure GEM IPM2 runtime , s: " <<  TimeGEM << endl;
+   cout <<  " Total elapsed time, s: " <<  (dtime)/clc_sec << endl;
+   cout <<  "Average per GEMIPM2 call: Iterations: " << MeanIt << "   Time, s: " << MeanTime << endl;             
+   cout << "    This nodearray-gem test ";
+   // freeing dynamic data
+   delete na;
+   fclose( logfile );
+   cout << "has finished Ok" << endl;
+   return 0;
 }
 
 //---------------------------------------------------------------------------
-// end of main.cpp for gemnode - the TNode class usage example
+// end of main.cpp for nodearray-gem example

@@ -3788,24 +3788,46 @@ EFD() iterations or more frequent internal switches to AIA mode, hence
 the acceleration of GEM calculations may only be moderate. <br>
   </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">The TNode
-class contains several overloaded forms of the GEM_from_MT() function
+class contains several overloaded forms of the </span><big><span
+ style="font-family: monospace;">GEM_from_MT()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> function
 which loads input data into work DATABR structure before launching the
 GEM calculation for a given node. The simplest form does not transfer
 the speciation vector at all and can be used when GEM is started in AIA
 mode or in SIA mode with </span><big><span
  style="font-family: monospace;">UseNodeSpeciation = false.<span
  style="font-family: Helvetica,Arial,sans-serif;"> The&nbsp; variant
-used in the above code example sends xIC,&nbsp; xDC and gam vectors as
+used in the above code example sends </span><span
+ style="font-family: monospace;">xIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">,&nbsp; </span><span
+ style="font-family: monospace;">xDC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> and </span><span
+ style="font-family: monospace;">gam</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> vectors as
 they are available in the transport part data arrays. Finally, there is
-a call which transmits the xDC vector where the increments in the
-species amounts over the time step are given, and the bIC vector
+a call which transmits the </span><span style="font-family: monospace;">xDC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> vector where the
+increments in the
+species amounts over the time step are given, and the </span><span
+ style="font-family: monospace;">bIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> vector
 unchanged over the time step. In this case, the TNode class adds the
-xDC increments to the previous contents of x vector in the MULTI
-structure, computes the bulk composition increments, adds those to bIC
-vector in work DATABR structure and copies the contents of bIC&nbsp; to
-the b vector of the MULTI structure. In other words, the mass-transport
-part is not balancing the bulk composition vector bIC, leaving this
-work to the GEMIPM2K program.&nbsp;</span></span></big><span
+  </span><span style="font-family: monospace;">xDC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> increments to the
+previous contents of the x vector in the MULTI
+structure, computes the bulk composition increments, adds those to </span><span
+ style="font-family: monospace;">bIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">
+vector in work DATABR structure and copies the contents of </span><span
+ style="font-family: monospace;">bIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; to
+the </span><span style="font-family: monospace;">b</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> vector of the MULTI
+structure. In other words, the mass-transport
+part is not balancing the bulk composition vector </span><span
+ style="font-family: monospace;">bIC</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, leaving this
+work to GEMIPM2K.&nbsp;</span></span></big><span
  style="font-family: monospace;"><span
  style="font-family: Helvetica,Arial,sans-serif,mon;"></span> <br>
   </span></p>

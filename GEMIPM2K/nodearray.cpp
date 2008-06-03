@@ -44,9 +44,9 @@ TNodeArray* TNodeArray::na;
 // GEM IPM calculation of equilibrium state for the iNode node
 // from array NodT1. abs(Mode)) - mode of GEMS calculation (NEED_GEM_SIA or NEED_GEM_AIA)
 //    if Mode is negative then the loading of primal solution from the node is forced
-//    (only in PIA mode)
+//    (only in SIA mode)
 //  Function returns: NodeStatus code after GEM calculation
-//   ( OK_GEM_AIA; OK_GEM_PIA; error codes )
+//   ( OK_GEM_AIA; OK_GEM_SIA; error codes )
 //
 //-------------------------------------------------------------------
 
