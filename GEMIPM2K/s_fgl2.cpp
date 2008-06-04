@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1070 2008-05-29 16:20:29Z wagner $
+// $Id: s_fgl2.cpp 1074 2008-06-03 13:02:22Z wagner $
 //
 // Copyright (c) 2003-2007   S.Churakov, Th.Wagner,
 //    D.Kulik, S.Dmitrieva
@@ -60,10 +60,13 @@ int TPRSVcalc::CalcFugPure( void )
     aW.twp->V = Volume; /* /10.  in J/bar */
     aW.twp->Fug = Fugcoeff * P;   /* fugacity at P */
 
-//  passing corrected EoS coeffs to calculation of fluid mixtures
-    aW.twp->wtW[6] = Eos2parPT[0];      // a
-    aW.twp->wtW[7] = Eos2parPT[1];      // b
-// three more to add !!!
+//  passing corrected EoS coeffs to calculation of fluid mixtures (3 added, 31.05.2008 TW)
+    aW.twp->wtW[6] = Eos2parPT[0];	// a
+    aW.twp->wtW[7] = Eos2parPT[1];  // b
+    aW.twp->wtW[8] = Eos2parPT[2];	// sqrAL
+    aW.twp->wtW[9] = Eos2parPT[3];	// ac
+    aW.twp->wtW[10] = Eos2parPT[4];	// dALdT
+
     return retCode;
 }
 
@@ -208,7 +211,6 @@ TSolMod::VanLaarPT()
 // References:  Holland & Powell (2003)
 // Calculates activity coefficients and excess functions
 // Returns 0 if Ok or not 0 if error
-//
 int
 TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
          double &CPex_ )
@@ -352,7 +354,6 @@ TSolMod::RegularPT()
 // References:  Holland & Powell (1993)
 // Calculates activity coefficients and excess functions
 // Returns 0 if Ok or not 0 if error
-//
 int
 TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
          double &CPex_ )
@@ -498,7 +499,6 @@ TSolMod::RedlichKisterPT()
 // References:  Hillert (1998)
 // Calculates activity coefficients and excess functions
 // Returns 0 if Ok or not 0 if error
-//
 int
 TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
          double &CPex_ )
@@ -716,8 +716,175 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 
 
 
+// NRTL model for liquid solutions (c) TW June 2008
+// Calculates T-corrected interaction parameters
+// Returns 0 if OK or 1 if error
+int
+TSolMod::NRTL_PT()
+{
+	// calculates T-dependence of binary interaction parameters
+	int ip;
+	double alpha, A, B, C, D, tau, dtau;
+
+        if ( /* ModCode != SM_NRTL || */ NPcoef < 7 || NPar < 1 )
+           return 1;  // foolproof!
+
+	for (ip=0; ip<NPar; ip++)
+	{
+		alpha = (double)aIPc[NPcoef*ip+0];
+		A = (double)aIPc[NPcoef*ip+1];
+		B = (double)aIPc[NPcoef*ip+2];
+		C = (double)aIPc[NPcoef*ip+3];
+		D = (double)aIPc[NPcoef*ip+4];
+		tau = A + B/Tk + C*Tk + D*log(Tk);
+		dtau = - B/pow(Tk,2.) + C + D/Tk;  // partial derivative of tau
+		aIPc[NPcoef*ip+5] = (float)tau;
+		aIPc[NPcoef*ip+6] = (float)dtau;
+	}
+	return 0;
+}
 
 
+
+// NRTL model for liquid solutions (c) TW June 2008
+// References: Renon and Prausnitz (1968)
+// Calculates activity coefficients and excess functions
+// Returns 0 if OK or 1 if error
+int
+TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
+         double &CPex_ )
+{
+	int ip, j, i, k;
+	int index1, index2;
+	double K, L, M, N, O;
+	double U, dU, V, dV, g, dg, lnGam;
+	double gEX, vEX, hEX, sEX, cpEX;
+	double **Alpha;
+	double **Tau;
+	double **G;
+	double **dTau;
+	double **dG;
+
+	if ( NPcoef < 7 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+	        return 1;  // foolproof!
+
+	Alpha = new double *[NComp];
+	Tau = new double *[NComp];
+	G = new double *[NComp];
+	dTau = new double *[NComp];	// matrix of partial derivatives
+	dG = new double *[NComp];
+
+    for (j=0; j<NComp; j++)
+    {
+		Alpha[j] = new double [NComp];    
+		Tau[j] = new double [NComp];
+		G[j] = new double [NComp];
+		dTau[j] = new double [NComp];
+		dG[j] = new double [NComp];
+	}
+
+	// fill internal arrays of interaction parameters with standard value
+	for (j=0; j<NComp; j++)
+	{
+		for ( i=0; i<NComp; i++ )
+		{
+			Alpha[j][i] = 0.0;
+			Tau[j][i] = 0.0;
+			G[j][i] = 1.0;
+			dTau[j][i] = 0.0;
+			dG[j][i] = 0.0;
+		}
+	}
+
+	// read and convert parameters that have non-standard value
+	for (ip=0; ip<NPar; ip++)
+	{
+		index1 = (int)aIPx[MaxOrd*ip];
+		index2 = (int)aIPx[MaxOrd*ip+1];
+		Alpha[index1][index2] = (double)aIPc[NPcoef*ip+0];
+		Tau[index1][index2] = (double)aIPc[NPcoef*ip+5];
+		G[index1][index2] = exp(-Alpha[index1][index2]*Tau[index1][index2]);
+		dTau[index1][index2] = (double)aIPc[NPcoef*ip+6];
+		dG[index1][index2] = - Alpha[index1][index2] * exp( -Alpha[index1][index2]*Tau[index1][index2] )
+			* dTau[index1][index2];
+	}
+
+	// calculate activity coefficients
+	for (j=0; j<NComp; j++)
+	{
+		lnGam = 0.0;
+		K = 0.0;
+		L = 0.0;
+		M = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			N = 0.0;
+			O = 0.0;
+			K += ( x[i]*Tau[i][j]*G[i][j] );
+			L += ( x[i]*G[i][j] );
+			for (k=0; k<NComp; k++)
+			{
+				N += ( x[k]*G[k][i] );
+				O += ( x[k]*Tau[k][i]*G[k][i] );
+			}
+			M += ( x[i]*G[j][i]/N * ( Tau[j][i] - O/N ) );
+		}
+		lnGam = K/L + M;
+		lnGamma[j] = lnGam;
+	}
+
+	// calculate bulk phase excess properties
+   	gEX = 0.0;
+   	vEX = 0.0;
+   	hEX = 0.0;
+   	sEX = 0.0;
+   	cpEX = 0.0;
+   	g = 0.0;
+   	dg = 0.0;
+
+   	for (j=0; j<NComp; j++)
+   	{
+		U = 0.0;
+		V = 0.0;
+		dU = 0.0;
+		dV = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			U += ( x[i]*Tau[i][j]*G[i][j] );
+			V += ( x[i]*G[i][j] );
+			dU += ( x[i] * ( dTau[i][j]*G[i][j] + Tau[i][j]*dG[i][j] ) );
+			dV += ( x[i]*dG[i][j] );
+		}
+		g += ( x[j]*U/V );
+		dg += ( x[j] * (dU*V-U*dV)/pow(V,2.) );
+	}
+
+	gEX = g*R_CONST*Tk;
+	hEX = - R_CONST*pow(Tk,2.)*dg;
+	sEX = (hEX-gEX)/Tk;
+
+	Gex_ = gEX;
+	Vex_ = vEX;
+	Hex_ = hEX;
+	Sex_ = sEX;
+	CPex_ = cpEX;
+
+   	// cleaning memory
+   	for (j=0; j<NComp; j++)
+   	{
+		delete[]Alpha[j];
+		delete[]Tau[j];
+		delete[]G[j];
+		delete[]dTau[j];
+		delete[]dG[j];
+	}
+	delete[]Alpha;
+	delete[]Tau;
+	delete[]G;
+	delete[]dTau;
+	delete[]dG;
+	return 0;
+}
 
 // add other solution models here
 

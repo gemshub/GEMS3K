@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 1052 2008-03-31 11:32:38Z gems $
+// $Id: main.cpp 199 2008-06-04 11:32:38Z gems $
 //
 // Demo test of usage of the TNode class for implementing a simple
 // batch-like calculation of equilibria using text file input and
@@ -7,12 +7,12 @@
 
 // TNode class implements a  simple C/C++ interface of GEMIPM2K.
 // It works with DATACH and work DATABR structures and respective
-// .dch.dat (chemical system definition) and .dbr.dat (recipe or data bridge)
-// files. In addition, the program reads a .ipm.dat file which can be
-// used for tuning up numerical controls of GEM IPM2 algorithm and for
-// setting up the parameters of non-ideal mixing models.
+// DCH (chemical system definition) and DBR (recipe or data bridge)
+// data files. In addition, the program reads an IPM inlut file which 
+// can be used for tuning up numerical controls of GEM IPM2 algorithm 
+// and for setting up the parameters of non-ideal mixing models.
 //
-// Copyright (C) 2007 D.Kulik, S.Dmitrieva
+// Copyright (C) 2007,2008 D.Kulik, S.Dmitrieva
 //
 // This file is part of GEMIPM2K code for thermodynamic modelling
 // by Gibbs energy minimization
@@ -46,7 +46,7 @@ int main( int argc, char* argv[] )
    
      if (argc >= 2 )
        strncpy( input_system_file_list_name, argv[1], 256);
-         // list of CSD files needed as input for initializing GEMIPM2K
+       // list of DCH, IPM and DBR input files for initializing GEMIPM2K
 
    // Creating TNode structure accessible trough the "node" pointer
    TNode* node  = new TNode();
@@ -184,4 +184,4 @@ FINISH:
  }
 
 //---------------------------------------------------------------------------
-// end of main.cpp for node class usage - GEM single calculation example
+// end of main.cpp for TNode class usage - GEM single calculation example

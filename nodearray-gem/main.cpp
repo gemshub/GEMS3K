@@ -1,12 +1,11 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 922 2007-09-14 08:06:21Z gems $
+// $Id: main.cpp 199 2008-06-04 09:06:21Z gems $
 //
-// gemnode
-// Demo test of usage of the TNodeArray class for implementing a simple
+// nodearray-gem example, gemnodar(.exe)
+// Demo of usage of the TNodeArray class for implementing a simple
 // direct coupling scheme between FMT and GEM in a single-GEM-call
 // fashion, assuming that the chemical speciation and all dynamic
-// parameter data are kept in the FMT part, which calls GEMIPM
-// calculation once per node.
+// parameter data are kept in two node arrays C0 and C1
 
 // TNodeArray class implements a flexible C/C++ interface between GEM IPM
 // and FMT codes. Works with DATACH and work DATABR structures
@@ -14,8 +13,8 @@
 //
 // Copyright (C) 2006,2008 S.Dmytrieva, D.Kulik
 //
-// This file is part of GEMIPM2K code for thermodynamic modelling
-// by Gibbs energy minimization
+// This file is part of standalone GEMIPM2K code for thermodynamic 
+// modelling by Gibbs energy minimization
 
 // This file may be distributed under the licence terms defined
 // in GEMIPM2K.QAL
@@ -42,6 +41,9 @@ int main( int argc, char* argv[] )
     char logging_file_name[256] = "speciation.log";
     char fmt_input_file_name[256] = "fmtparam.dat";
 
+    clock_t t_start11, t_end11;
+    t_start11 = clock();  // Setting time when the coupled program starts
+    
     if (argc >= 2 )
        strncpy( ipm_input_file_list_name, argv[1], 256);
        // list of files needed as input for initializing node array
@@ -125,29 +127,24 @@ int main( int argc, char* argv[] )
     }  // in    end of the initial node Loop
    
    na->logProfileAqIC( logfile, -1, 0., nNodes, 1 );   // logging [IC] in aq phase
-   clock_t t_start11, t_end11;
-   t_start11 = clock();  // Setting time when the coupled modelling starts
 
 // (2) ----------------------------------------------
 // Work loop for the coupled FMT-GEM modelling
    // Getting DATABR indexes for chemical species to be monitored
-   int xiC = na->IC_name_to_xDB("C");
    int xiCa = na->IC_name_to_xDB("Ca");
-   int xiH = na->IC_name_to_xDB("H");
-   int xiO = na->IC_name_to_xDB("O");
    int xiSr = na->IC_name_to_xDB("Sr");
    int xiZz = na->IC_name_to_xDB("Zz");
    int xiCl = na->IC_name_to_xDB("Cl");
    int xCal = na->Ph_name_to_xDB("(Sr,Ca)CO3(reg)");
    int xStr = na->Ph_name_to_xDB("(Ca,Ba,Sr)SO4");
    // Checking indexes
-   cout << " xiC= " << xiC << "  xiCa= " << xiCa << "  xiH= " << xiH
-        << "  xiO= " << xiO << "  xiSr=" << xiSr << "  xiZz=" << xiZz
+   cout <<  "  xiCa= " << xiCa <<  "  xiSr=" << xiSr << "  xiZz=" << xiZz
         << "  xCalSS=" << xCal << "  xCelSS=" << xStr << endl;
 
    cout << "Begin Coupled Modelling Part" << endl;
    bool NeedGEM;  // Flag set to true if GEM calculation for this node is needed
    bool TimeStepAccept; // Flag set to true if the time step dt is accepted
+
    for( int it=0; it<nTimes; it++ )  // iterations over time
    {
      int in;
@@ -193,7 +190,7 @@ int main( int argc, char* argv[] )
         else
         	C1[in]->NodeStatusCH = NEED_GEM_SIA;    // Smart initial approximation
        // Here we can also check if the GEM calculation for this node is needed at all
-       // Here we compare this node for current time and for previous time - works for AIA and PIA
+       // Here we compare this node for current time and for previous time - works for AIA and SIA
        if( in == 0 )  // First node is not re-equilibrated since it is not changed
           NeedGEM = false;
        else NeedGEM = true; 
@@ -208,7 +205,7 @@ int main( int argc, char* argv[] )
 //    		 NeedGEM = true;  // we need to recalculate equilibrium
                               // in this node because its vector b has strong enough 
        }
-//       node1_bIC( in, na->pCSD()->nICb-1 ) = 0.;   // zeroing charge off in bulk composition
+//       node1_bIC( in, xiZz ) = 0.;   // zeroing charge off in bulk composition
        if( !NeedGEM ) 
        {   // GEM calculation for this node not needed
            cout << "  !GEM skipped " << endl; 

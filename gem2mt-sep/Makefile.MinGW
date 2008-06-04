@@ -100,7 +100,7 @@ OBJECTS = obj/gstring.o \
 
 DIST	   = gem_node-sep.pro
 DESTDIR  = 
-TARGET   = gemnodar.exe
+TARGET   = gem2mts.exe
 
 first: all
 ####### Implicit rules

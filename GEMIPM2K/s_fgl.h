@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 968 2007-12-13 13:23:32Z gems $
+// $Id: s_fgl.h 1074 2008-06-03 13:02:22Z wagner $
 //
 // Copyright (C) 2003-2007  S.Churakov, Th.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -287,14 +287,15 @@ class TPRSVcalc // Peng-Robinson-Styjek-Vera EOS calculations
 protected:
 
 	int PureParam( double *params ); // calculates a and b arrays
-	double A(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit);
-	double B(double Tcrit, double Pcrit);
+	int A(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit,
+			double &apure, double &sqrAL, double &ac, double &dALdT);
+	int B(double Tcrit, double Pcrit, double &bpure);
 	int FugacityPure( void ); // Calculates the fugacity of pure species
 	int Cardano(double a2, double a1, double a0, double &z1, double &z2, double &z3);
 	int MixParam( double &amix, double &bmix);
 	int FugacityMix( double amix, double bmix,
      double &fugmix, double &zmix, double &vmix);
-	int FugacitySpec( double *fugpure, float *binpar, float *params  );
+	int FugacitySpec( double *fugpure, float *params  );
 
 	int GetEosParam( float *params ); // Loads EoS parameters for NComp species
 	int GetMoleFract( double *Wx ); // Loads mole fractions for NComp species
@@ -358,15 +359,19 @@ public:
 	int RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 		 double &CPex_ );
 
-
+// NRTL model for liquid solutions
+	int NRTL_PT();
+	int NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
+	         double &CPex_ );
+	
 // Prototypes for other models to be added here
 // Redlich-Kister / Guggenheim ...
-// Margules ...
 // Darken ...
 // Pitzer ...
 // SIT ...
 // EUniquac ...
-// NRTL (Wilson) ...
+// UNIQUAC
+// Wilson ...
 // PRSV can also be moved here
 
 

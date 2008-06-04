@@ -367,7 +367,10 @@ if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
        	    }	  
             if( sMod[SGM_MODE] != SM_STNGAM )
                 continue;  // The switch below is for built-in functions only!
-
+            
+            // the following section probably needs to be re-written to allow more flexible
+            // combinations of fluid models for pure gases with gEX mixing models, 
+            // scheme should probably be the same as in LINK_UX_MODE, 03.06.2008 (TW)
             switch( pmp->PHC[k] )
             {
                case PH_LIQUID:
@@ -512,15 +515,18 @@ pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );  // Getting act
                   case SM_MARGT:   // left for compatibility with old projects
                        MargulesTernary( jb, je, jpb, jdb, k );
                           break;
-                  case SM_GUGGENM: // Redlich-Kister generalized TW 2007
+                  case SM_GUGGENM: // Redlich-Kister model multicomponent, 2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
                           break;
-                  case SM_VANLAAR: // VanLaar for solid solutions TW 2007
+                  case SM_VANLAAR: // VanLaar model multicomponent, 2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
                           break;
-                  case SM_REGULAR: // Regular multicomponent TW 2007  // formerly SM_RECIP
+                  case SM_REGULAR: // Regular model multicomponent, 2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
                           break;
+                  case SM_NRTLLIQ: // NRTL model multicomponent, 03.06.2007 (TW)
+                       SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+                          break;                          
                   default:
                           break;
                 }
@@ -709,18 +715,18 @@ TMulti::SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k, int ipb )
     ErrorIf( fabs(A) < 1e-9 || fabs(B) < 1e-9, "SIT",
         "Error: A,B were not calculated - no values of RoW and EpsW !" );
 
-NComp = pmp->L1[k];          // Number of components in the phase
-NPar = pmp->LsMod[k*3];      // Number of interaction parameters
-NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
-MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
+    NComp = pmp->L1[k];          // Number of components in the phase
+    NPar = pmp->LsMod[k*3];      // Number of interaction parameters
+    NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+    MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
 
-// These pointers provide direct access to parts of MULTI arrays related to this phase!
-aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
+    // These pointers provide direct access to parts of MULTI arrays related to this phase!
+    aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
                           // -> NPar x MaxOrd   added 07.12.2006   KD
-aIPc = pmp->PMc+jpb;    // Interaction parameter coefficients f(TP) -> NPar x NPcoef
-aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x NP_DC
-// aWx = pmp->Wx+jb;       // End member mole fractions
-// alnGam = pmp->lnGam+jb; // End member ln activity coeffs
+    aIPc = pmp->PMc+jpb;    // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+    aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+    // aWx = pmp->Wx+jb;       // End member mole fractions
+    // alnGam = pmp->lnGam+jb; // End member ln activity coeffs
 
 
     // Calculation of EDH equation
@@ -1303,7 +1309,7 @@ TMulti::PRSVofPureGases( int jb, int je, int, int jdb, int, int )
 
     for( jdc=0, j=jb; j<je; jdc++,j++)
     {
-         Coeff = pmp->DMc+jdb+jdc*10;
+         Coeff = pmp->DMc+jdb+jdc*12;	// increased from 10 to 12 (31.05.2008 TW)
          // Calling PRSV EoS for pure fugacity
          retCode = aPRSV.PRFugacityPT( pmp->Pc, pmp->Tc, Coeff,
                  Eos2parPT, Fugcoeff, Volume, DeltaH, DeltaS );
@@ -1315,12 +1321,12 @@ pmp->GEX[j] = log( Fugcoeff );    // now here (since 26.02.2008) DK
          pmp->Pparc[j] = Fugcoeff * pmp->Pc; // Necessary only for performance
          pmp->Vol[j] = Volume * 10.;  // molar volume of pure fluid component, J/bar to cm3
 
-//  passing corrected EoS coeffs to calculation of fluid mixtures
-         Coeff[6] = Eos2parPT[0];      // a
-         Coeff[7] = Eos2parPT[1];      // b
-//         Coeff[8] = Eos2parPT[1];      // c
-//         Coeff[9] = Eos2parPT[1];      // d
-         // three more to add !!!  under construction
+//  passing corrected EoS coeffs to calculation of fluid mixtures (3 added, 31.05.2008 TW)
+         Coeff[6] = Eos2parPT[0];	// a
+         Coeff[7] = Eos2parPT[1];	// b
+         Coeff[8] = Eos2parPT[2];	// sqrAL
+         Coeff[9] = Eos2parPT[3];	// ac
+         Coeff[10] = Eos2parPT[4];	// dALdT
 
     } // jdc, j
 
@@ -1576,7 +1582,6 @@ TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
 
     TSolMod aSM( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
        aIPx, aIPc, aDCc, NULL, NULL );
-// Extended constructor is required, also to load params and coeffs
 
    // calculate P-T dependence of interaction parameters
     switch( ModCode )
@@ -1590,6 +1595,9 @@ TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
         case SM_GUGGENM:
         	 aSM.RedlichKisterPT();
         	 break;
+        case SM_NRTLLIQ:
+        	 aSM.NRTL_PT();
+        	 break;
         default:
              break;
     }
@@ -1599,7 +1607,6 @@ void
 TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
             char ModCode )
 {
-
     int NComp, NPar, NPcoef, MaxOrd, NP_DC;
     float *aIPc, *aDCc;
     double *aWx, *alnGam;
@@ -1612,7 +1619,7 @@ TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
     MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
     NP_DC = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase[FIs]
 
-// These pointers provide direct access to parts of MULTI arrays related to this phase!
+    // These pointers provide direct access to parts of MULTI arrays related to this phase!
     aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
                               // -> NPar x MaxOrd   added 07.12.2006   KD
     aIPc = pmp->PMc+jpb;    // Interaction parameter coefficients f(TP) -> NPar x NPcoef
@@ -1634,6 +1641,9 @@ TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
              break;
         case SM_GUGGENM:
         	 aSM.RedlichKisterMixMod( Gex, Vex, Hex, Sex, CPex );
+        	 break;
+        case SM_NRTLLIQ:
+        	 aSM.NRTL_MixMod( Gex, Vex, Hex, Sex, CPex );
         	 break;
         default: // catch error here
               break;
