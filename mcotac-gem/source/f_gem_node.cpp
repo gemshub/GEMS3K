@@ -10,16 +10,16 @@
 //
 #ifdef __unix
 #ifdef __PGI
-    extern "C" int f_gem_init_( char* string_)
+    extern "C" int f_gem_init_( char* string_,
  #else
-   extern "C" int f_gem_init( char* string_)
+   extern "C" int f_gem_init( char* string_,
 #endif
 #else
-   extern "C" int __stdcall F_GEM_INIT( char* string_, unsigned int length_ )
+   extern "C" int __stdcall F_GEM_INIT( char* string_,
 #endif
+                  unsigned int length_ )
 {
-  unsigned int length_;
-  length_=strlen(string_);
+
   gstring string_cto_i1c( string_, 0, length_);
   string_cto_i1c.strip();
 
@@ -65,11 +65,11 @@
 #endif
 {
 
-   p_nICb = TNode::na->pCSD()->nICb;
-   p_nDCb = TNode::na->pCSD()->nDCb;
-   p_nPHb = TNode::na->pCSD()->nPHb;
-   p_nPSb = TNode::na->pCSD()->nPSb;
-   p_nPH = TNode::na->pCSD()->nPH;
+   p_nICb = (int) TNode::na->pCSD()->nICb;
+   p_nDCb = (int) TNode::na->pCSD()->nDCb;
+   p_nPHb = (int) TNode::na->pCSD()->nPHb;
+   p_nPSb = (int) TNode::na->pCSD()->nPSb;
+   p_nPH  = (int) TNode::na->pCSD()->nPH;
 
 //    for( int i=0; i<p_nICb; i++ )
 //       for( int j=0; j<p_nDCb; j++ )
@@ -151,26 +151,6 @@
    double &p_pH,    // pH of aqueous solution                      -      -      +     +
    double &p_pe,    // pe of aqueous solution                      -      -      +     +
    double &p_Eh,    // Eh of aqueous solution, V                   -      -      +     +
-//  FMT variables (units need dimensionsless form)
-//   double &p_Tm,    // actual total simulation time
-//   double &p_dt,    // actual time step
-//   double &p_dt1,   // priveous time step
-//   double &p_Vt,    // total volume of node (voxel) = dx*dy*dz, m**3
-//   double &p_vp,	// advection velocity (in pores) in this node
-//   double &p_eps,   // effective (actual) porosity normalized to 1
-//   double &p_Km,    // actual permeability, m**2
-//   double &p_Kf,    // actual DARCY`s constant, m**2/s
-//   double &p_S,	    // specific storage coefficient, dimensionless
-//   double &p_Tr,    // transmissivity m**2/s
-//   double &p_h,	    // actual hydraulic head (hydraulic potential), m
-//   double &p_rho,   // actual carrier density for density driven flow, g/cm**3
-//   double &p_al,    // specific longitudinal dispersivity of porous media, m
-//   double &p_at,    // specific transversal dispersivity of porous media, m
-//   double &p_av,    // specific vertical dispersivity of porous media, m
-//   double &p_hDl,   // hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-//   double &p_hDt,   // hydraulic transversal dispersivity, m**2/s
-//   double &p_hDv,   // hydraulic vertical dispersivity, m**2/s
-//   double &p_nto,   // tortuosity factor
 // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 // exchange of values occurs through lists of indices, e.g. xDC, xPH
    double  *p_bIC,  // bulk mole amounts of IC[nICb]                +      +      -     -
@@ -195,12 +175,12 @@
 {
    short NodeHandle, NodeTypeHY,  NodeTypeMT, NodeStatusFMT, NodeStatusCH, IterDone;
 
-   NodeHandle = p_NodeHandle;
-   NodeTypeHY = p_NodeTypeHY;
-   NodeTypeMT = p_NodeTypeMT;
-   NodeStatusFMT = p_NodeStatusFMT;
-   NodeStatusCH = p_NodeStatusCH;
-   IterDone =p_IterDone;
+   NodeHandle = (short) p_NodeHandle;
+   NodeTypeHY = (short) p_NodeTypeHY;
+   NodeTypeMT = (short) p_NodeTypeMT;
+   NodeStatusFMT = (short) p_NodeStatusFMT;
+   NodeStatusCH = (short) p_NodeStatusCH;
+   IterDone = (short) p_IterDone;
 
    gstring dbr_file_name( string_, 0, length_);
    dbr_file_name.strip();
@@ -222,12 +202,12 @@
                            p_Vs, p_Ms, p_Gs, p_Hs, p_IC, p_pH, p_pe, p_Eh,
                            p_rMB, p_uIC, p_xDC, p_gam, p_xPH, p_vPS, p_mPS, p_bPS, p_xPA );
 
- p_NodeHandle = NodeHandle;
- p_NodeTypeHY = NodeTypeHY;
- p_NodeTypeMT = NodeTypeMT;
- p_NodeStatusFMT = NodeStatusFMT;
- p_NodeStatusCH = NodeStatusCH;
- p_IterDone =IterDone;
+ p_NodeHandle = (int) NodeHandle;
+ p_NodeTypeHY = (int) NodeTypeHY;
+ p_NodeTypeMT = (int) NodeTypeMT;
+ p_NodeStatusFMT = (int) NodeStatusFMT;
+ p_NodeStatusCH = (int) NodeStatusCH;
+ p_IterDone = (int) IterDone;
 
  return 0;
 }
@@ -270,26 +250,6 @@
    double &p_pH,    // pH of aqueous solution                      -      -      +     +
    double &p_pe,    // pe of aqueous solution                      -      -      +     +
    double &p_Eh,    // Eh of aqueous solution, V                   -      -      +     +
-//  FMT variables (units need dimensionsless form)
-//   double &p_Tm,    // actual total simulation time
-//   double &p_dt,    // actual time step
-//   double &p_dt1,   // priveous time step
-//   double &p_Vt,    // total volume of node (voxel) = dx*dy*dz, m**3
-//   double &p_vp,	// advection velocity (in pores) in this node
-//   double &p_eps,   // effective (actual) porosity normalized to 1
-//   double &p_Km,    // actual permeability, m**2
-//   double &p_Kf,    // actual DARCY`s constant, m**2/s
-//   double &p_S,	    // specific storage coefficient, dimensionless
-//   double &p_Tr,    // transmissivity m**2/s
-//   double &p_h,	    // actual hydraulic head (hydraulic potential), m
-//   double &p_rho,   // actual carrier density for density driven flow, g/cm**3
-//   double &p_al,    // specific longitudinal dispersivity of porous media, m
-//   double &p_at,    // specific transversal dispersivity of porous media, m
-//   double &p_av,    // specific vertical dispersivity of porous media, m
-//   double &p_hDl,   // hydraulic longitudinal dispersivity, m**2/s, diffusities from chemical database
-//   double &p_hDt,   // hydraulic transversal dispersivity, m**2/s
-//   double &p_hDv,   // hydraulic vertical dispersivity, m**2/s
-//   double &p_nto,   // tortuosity factor
 // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
 // exchange of values occurs through lists of indices, e.g. xDC, xPH
    double  *p_bIC,  // bulk mole amounts of IC[nICb]                +      +      -     -
@@ -311,24 +271,34 @@
 {
   int iRet = 0;
   int ii;
-  bool uPrimalSol = false;
+  bool uPrimalSol = true;
  
 
   short NodeHandle, NodeStatusCH, IterDone;
 
-  NodeHandle = p_NodeHandle;
-  NodeStatusCH = p_NodeStatusCH;
-  IterDone = p_IterDone;
+  NodeHandle =(short) p_NodeHandle;
+  NodeStatusCH =(short) p_NodeStatusCH;
+  IterDone =(short) p_IterDone;
   // (2) ----------------------------------------------
   // Work loop for the coupled FMT-GEM modelling
 
 
   if (uPrimalSol) {
    // sends only speciation changed by mcotac 
-	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) 
+//   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
+//             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC,p_gam);
+	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
+	      printf("bIC: %i %g \n",ii,p_bIC[ii]);
              p_bIC[ii]=0;
+		}
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
+
+	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
+	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
+		}
+             TNode::na->pCNode()->bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
+
    }
    else
    {
@@ -339,6 +309,7 @@
              p_bIC[ii]=0;
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
+          p_bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
 
  
 //  TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
@@ -359,9 +330,9 @@
        p_Vs, p_Ms, p_Gs, p_Hs, p_IC, p_pH, p_pe, p_Eh, p_rMB, p_uIC,
        p_xDC, p_gam, p_xPH, p_vPS, p_mPS, p_bPS, p_xPA  );
 
- p_NodeHandle = NodeHandle;
- p_NodeStatusCH = NodeStatusCH;
- p_IterDone =IterDone;
+ p_NodeHandle =(short) NodeHandle;
+ p_NodeStatusCH =(short)  NodeStatusCH;
+ p_IterDone = (short) IterDone;
 
 /**************************************************************
   int ii;

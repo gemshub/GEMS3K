@@ -115,8 +115,8 @@ c and a second buffer
 c time measurements
 	double precision time_gemsmpi, time_gemsmpi_start, time_gemsmpi_end 
 	INTEGER argc, iinn, i_gems, nNodes
-	integer CSTR(100)
-	integer c_to_i(100)
+c	integer CSTR(100)
+c	integer c_to_i(100)
 c kg44 itergemstime only needed for debug
 c	integer itergemstime(250,51)    ! array for output of iterations done per node during every time step
 ckg44 we would like to monitor the iterations of gems (smart initial aprox. vs. simplex init.)
@@ -139,7 +139,7 @@ c for F_GEM_CALC_NODE
 	character*10 fname10
 	character*10 line
       character*1 chch(100)
-	character*100 CSTR_char30
+c	character*100 CSTR_char30
 	character*20 dummystring(25)
 	character*100 gems_in_ipmf,gems_dbr_f1,gems_dbr_f2
 	character*100 gems_dbr_w
@@ -212,8 +212,6 @@ c      double precision  p_dll(gsize1) ! (nDCb)  ! //  lower kinetic restriction
 c      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
 c      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
 c      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-      real, allocatable :: p_A_trans(:,:)          ! GEMS invert coeff.-matrix
-      real, allocatable :: p_A(:,:)          ! GEMS invert coeff.-matrix
       double precision, allocatable ::  p_xDC(:) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
       double precision, allocatable ::  p_gam(:) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
       double precision, allocatable ::  p_aPH(:) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
@@ -375,9 +373,9 @@ ckg44 init several variables in order to make sure they have the correct values
         tmult=0
         dx=0
         de=0
-        c_to_i=0
-        c_to_i1=0
-        c_to_i2=0
+c        c_to_i=0
+c        c_to_i1=0
+c        c_to_i2=0
         iNode=0
         treal=0 
         texe=0
@@ -848,32 +846,29 @@ c04<<<<<<<<<<<
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
 c  first read is for boundary conditons node 1
       do 45 i=1,10
-	CSTR(i)=96+i
+c	CSTR(i)=96+i
   45	xarray(i)=i**i
 	argc=5
 	iinn=3
       xxyy=1.23456789
 	FNAME10="abcdevwxyz"
-	CSTR_char30="xbtdefghijklmnopqrst1234567890"
-      read(CSTR_char30,'(100(a1))')(chch(i),i=1,100)
+c	CSTR_char30="xbtdefghijklmnopqrst1234567890"
+c      read(CSTR_char30,'(100(a1))')(chch(i),i=1,100)
 	if (irank.eq.root) then 
-      write(*,*)gems_in_ipmf
-      write(*,*)gems_dbr_f1
-      write(*,*)gems_dbr_f2
-
+         write(*,*)gems_in_ipmf
+         write(*,*)gems_dbr_f1
+         write(*,*)gems_dbr_f2
         write (*,*)'FORTRAN defined in C++ argc', argc
         write (*,*)'FORTRAN integer        iinn', iinn
         write (*,*)'FORTRAN double         xxyy', xxyy
 	write (*,*)'FORTRAN char*10   FNAME10  ', fname10
         write (*,*)'FORTRAN double array (10)  ', xarray
-	write (*,*)'FORTRAN int array CSTR(10) ', (CSTR(L),L=1,10)
+c	write (*,*)'FORTRAN int array CSTR(10) ', (CSTR(L),L=1,10)
 	write (*,*)'FORTRAN char*10     line   ', line
-	write (*,*)'FORTRAN char*10 c_to_i ',  c_to_i
-      
-
+c	write (*,*)'FORTRAN char*10 c_to_i ',  c_to_i
         write(*,*)'nnode',nNodes
-	write(*,*)'cto',c_to_i1
-	write(*,*)'cto',c_to_i2
+c	write(*,*)'cto',c_to_i1
+c	write(*,*)'cto',c_to_i2
 c	write(*,*)'nodetype',nodeTypes
         endif
 c	pause "F_GEM_INIT"
@@ -888,10 +883,10 @@ c	pause "F_GEM_INIT"
 	if (irank.eq.root) write(*,*) "GEMS init ok"
        endif
 
-      do 50 i=1,20
-	  chch(i)=char(CSTR(i))
-  50	continue
-      write(CSTR_char30,'(30a1)')(CSTR(i),i=1,30) 
+c      do 50 i=1,20
+c	  chch(i)=char(CSTR(i))
+c  50	continue
+c      write(CSTR_char30,'(30a1)')(CSTR(i),i=1,30) 
 
 
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -908,14 +903,6 @@ c      call F_GEM_GET_DCH( p_nICb, p_nDCb, p_nPHb, p_A )
         
 c        p_nPSb=43
 c       gsize3=43
-c      real p_A_trans(gsize1,gsize2)          ! GEMS invert coeff.-matrix
-	if (.NOT.allocated(p_A)) then
-         allocate(p_A(p_nDCb,p_nICb))
-        endif
-c      real p_A(gsize2,gsize1)          ! GEMS invert coeff.-matrix
-	if (.NOT.allocated(p_A_trans)) then
-         allocate(p_A_trans(p_nICb,p_nDCb))
-        endif
 c      double precision  p_xDC(gsize1) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
 	if (.NOT.allocated(p_xDC)) then
          allocate(p_xDC(p_nDCb))
@@ -935,19 +922,19 @@ cc      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phas
         endif
 c      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
 	if (.NOT.allocated(p_vPS)) then
-         allocate(p_vPS(n_PSb))
+         allocate(p_vPS(n_PSb+1))
         endif
 c      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
 	if (.NOT.allocated(p_mPS)) then
-         allocate(p_mPS(n_PSb))
+         allocate(p_mPS(n_PSb+1))
         endif
 c      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
 	if (.NOT.allocated(p_bPS)) then
-         allocate(p_bPS(p_nICb,n_PSb))
+         allocate(p_bPS(p_nICb,n_PSb+1))
         endif
 c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
 	if (.NOT.allocated(p_xPA)) then
-         allocate(p_xPA(n_PSb))
+         allocate(p_xPA(n_PSb+1))
         endif
 c      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
 	if (.NOT.allocated(p_dul)) then
@@ -969,17 +956,8 @@ c      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol
 	if (.NOT.allocated(p_uIC)) then
          allocate(p_uIC(p_nICb))
         endif
-c allocation ended
-       call F_GEM_GET_PA( p_A )
 
-      	if (irank.eq.root) write(*,*) 'gemsA', p_A
-c	pause "F_GEM_GET_DCH nach A "
 
-	p_A_trans = transpose (p_A)               !invert stoichiometric coeff. matrix
-	if (irank.eq.root) write(*,*) 'gemsA', p_A_trans
-c	pause "F_GEM_GET_DCH nach A_trans "
-
-      
 cc2005      endif  ! igems_rw=0
 
 
@@ -992,9 +970,6 @@ cc2005      endif  ! igems_rw=0
      *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
      *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
      *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-c     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al
-c     *,p_at
-c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto 
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
@@ -1005,15 +980,16 @@ c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
 c      pause
 
-      write(*,*)'p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs'
-      write(*,*)p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
+c      write(*,*)'p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs'
+c      write(*,*)p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
 c	pause
      *
-      write(*,*)p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,
-     * p_Tm
-     *,p_dt,p_dt1,p_ot,p_Vt,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
-     *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
-     *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
+c      write(*,*)p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,
+c     * p_Tm
+c     *,p_dt,p_dt1,p_ot,p_Vt,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
+c     *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
+c     *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
+	write(*,*)"p_XDC 0", p_xDC
 c      pause
 	endif
 c  here loop to read in additional geochmical systems to define other nodes....
@@ -1026,28 +1002,23 @@ ckg44
 c      if(i_output.eq.1)open(35, file='mco_out.out')
 
       do 1690 n=1,1
-	do 1691 ib=1,m1-1    !charge is last parameter in the lict of bn  24.01.2005 but not transported
-ccc	bn(ib,n)=gemsxDc(i_bcp_gemx(ib))         !2)
-        	if (irank.eq.root) write(*,*) ' debug', i_bcp_gemx
-        	if (irank.eq.root) write(*,*) ' debug', ib, i_bcp_gemx(ib)
+
+	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))         !2)
  1691 continue
 	do 1692 ic=1,m2
-ccc	cn(ic,n)=gemsxDc(i_bcp_gemx(m1+ic))       !10)
-	cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))       !10)
+	   cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))       !10)
  1692 continue
 	do 1693 ip=1,m3
-ccc	pn(ip,n)=gemsxDc(i_bcp_gemx(m1+m2+ip))     ! 12)/1.
-	pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))     ! 12)/1.
-c	pn(2,n)=gemsxDc(13)/1.
+ 	   pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))     ! 12)/1.
  1693 continue
  1690 continue
 	if (irank.eq.root) then 
-      write(*,'(13(e8.2,1x))')(bn(ib,1),ib=1,m1),(cn(ic,1),ic=1,m2)
-     *,(pn(ip,1),ip=1,m3)
+c      write(*,'(13(e8.2,1x))')(bn(ib,1),ib=1,m1),(cn(ic,1),ic=1,m2)
+c     *,(pn(ip,1),ip=1,m3)
 ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-      write(*,*)' 1 p_xDc(ib) '
-	write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c      write(*,*)' 1 p_xDc(ib) '
+c	write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
         endif
 c      write(*,*)(bn(ib,1),ib=1,m1)
 c      write(*,*)(cn(ic,1),ic=1,m2)
@@ -1060,19 +1031,19 @@ c  second read is for initial conditons nodes 2 to nxmax
       
       if(i_gems.eq.1) then
       iNode=0
+      p_NodeHandle=1
       p_NodeStatusFMT = 1
       p_NodeStatusCH=1
-      if(i_gems.eq.1) then
 	call F_GEM_READ_NODE( gems_dbr_f2, p_NodeHandle,p_NodeTypeHY
      *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
-     *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-c     *,p_Tm,p_dt,p_dt1,p_Vt,p_vp
-c     *,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
-c     *,p_av,p_hDl,p_hDt,p_hDv,p_nto
-     *,p_bIC,p_rMB,p_uIC, p_xDC,p_gam
+     *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
+     *,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
-	 if (irank.eq.root) write(*,*) 'inode= ' ,inode
+
+	write(*,*)"p_XDC 1", p_xDC
+c	 if (irank.eq.root) write(*,*) 'inode= ' ,inode
 c kg44
 c      if (i_output.eq.1)then
 c	   write(35,*) 'node','2 and rest' 
@@ -1122,10 +1093,10 @@ cgems	stop
 
 
 
-      do 51 i=1,20
-	  chch(i)=char(c_to_i(i))
-  51	continue
-      endif 
+c      do 51 i=1,20
+c	  chch(i)=char(c_to_i(i))
+c  51	continue
+
 cc      write(CSTR_char30,'(30a1)')(chch(i),i=1,30) 
 cc	write (*,*)'FORTRAN char*10 c_to_i ',c_to_i,CSTR_char30
 cpause	pause "pause"
@@ -1847,23 +1818,6 @@ c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
 
 c      write(*,*)n,(p_xDc(ib),ib=1,p_nDCb)
 c      pause "xDC after transport at n"
-      do 1680 ii=1, p_nICb-1    !gems    -1 because last is charge and should be zero
-      sum=0.
-      do 1681 jj=1, p_nDCb    !gems
-       sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
- 1681 continue
-
-      p_bIC(ii)=sum
-c      p_bIC(ii)=0.0
-
-c      do 31 i=1, gemsnPSb  
-cc      write (*,*) (gemsbPS(i,j), j=1, gemsnICb)   !ICb) 
-c  31  continue
-cxx	gemsbPS(ii)=sum
-c       write(*,*)ii,p_bIC(ii) 
- 1680 continue
-
-	p_bIC(p_nICb)=0.0
 
 c      goto 1556  ! only node 2 with old gems  values
 
@@ -2035,6 +1989,7 @@ c     &                     root,MPI_COMM_WORLD,ierr)
 C
 
 #else       
+c	pause "node loop start"
 c
 	do 1555 n=2,  nxmax-1                  !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
@@ -2050,24 +2005,14 @@ c      goto 1556  ! only node 2 with old gems  values
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
-c      write(*,*)n,(p_xDc(ib),ib=1,p_nDCb)
-c      pause "xDC after transport at n"
-      do 1680 ii=1, p_nICb    !gems   -1 because last is charge and should be zero
-      sum=0.
-      do 1681 jj=1, p_nDCb    !gems           
-       sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
- 1681 continue
-
-      p_bIC(ii)=sum
-c      p_bIC(ii)=0.0
-
-c      do 31 i=1, gemsnPSb  
-cc      write (*,*) (gemsbPS(i,j), j=1, gemsnICb)   !ICb) 
-c  31  continue
-cxx	gemsbPS(ii)=sum
-c       write(*,*)ii,p_bIC(ii) 
- 1680 continue
-      p_bIC(p_nICb)=0.0
+	if (irank.eq.root) then 
+	 write(*,*)" vectors after transport before chemistry"
+         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
+     *,(pn(ip,2),ip=1,m3)
+ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
+         write(*,*)' 2 p_xDc(ib) '
+         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+         endif
 
 c      goto 1556  ! only node 2 with old gems  values
 
@@ -2079,15 +2024,16 @@ c         sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
 c 1685   continue
 c   	  p_bPS(1,ii)=sum            ! only one phse here       ! ( nPSb,nICb) ???
 c 1684 continue
- 
-      do 1682 ii=1, p_nPHb  !gems
-        sum=0.
+
+c kg44 do we really need this? 
+c      do 1682 ii=1, p_nPHb  !gems
+c        sum=0.
 c        do 1683 jj=11,13                              !  gemsnDCb-gemsnPHb+1, gemsnDCb               
 cc   	  gemsxPH(ii)=gemsxDc(10+ii)            ! only one phse here       ! ( nPSb,nICb) ???
 cfalsch   	  p_xPH(ii)=p_xDc(13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-   	  p_xPH(ii)=p_xDc(p_nDCb-p_nPHb+ii)          !13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-c        write(*,*)ii, gemsxPH(ii)
- 1682 continue
+c   	  p_xPH(ii)=p_xDc(p_nDCb-p_nPHb+ii)          !13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
+c         write(*,*)ii, p_xPH(ii)
+c 1682 continue
 cgems      pause "XXXX"
 ckg44
 c	if (i_output.eq.1.and.n.eq.2)then
@@ -2150,7 +2096,6 @@ c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
 c      time_gemstotal=time_gemstotal+ secnds(time_gemsstart)
-
 ckg44
 c	if (i_output.eq.1.and.n.eq.2)then
 c      	write(35,*) 'node',n,'nach GEMS' 
@@ -2177,6 +2122,16 @@ c      do 1695 n=2,nxmax
 	do 1798 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
+
+	if (irank.eq.root) then 
+	 write(*,*)" vectors after transport after chemistry"
+         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
+     *,(pn(ip,2),ip=1,m3)
+ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
+         write(*,*)' 2 p_xDc(ib) '
+         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+         endif
+c         pause
 ckg44
 c	if (i_output.eq.1.and.n.eq.2)then
 c      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
@@ -2869,7 +2824,8 @@ c     read solid properties
 
       integer m3
       character*10 dumchar
-      dimension pnw(nsolid),pnd(nsolid),etc(3)
+      double precision pnw(nsolid),pnd(nsolid),etc(3)
+
       open (30,file='solids.dat')
 
       read (30,*)
