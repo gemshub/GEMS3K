@@ -417,6 +417,29 @@
   TNode::na->GEM_print_ipm( fname.c_str()  );
 }
 
+// function for calculation of volume of all solids
+// returns porosity if ref_volume is set to initial volume of phases 
+// double  *p_xDC,    // DC mole amounts at equilibrium [nDCb]      -      -      +     +
+// double    TC,     // Temperature T, C                        	+      +      -     -
+// double    P, 	    // Pressure P, bar                         	+      +      -     -
+#ifdef __unix
+#ifdef __PGI
+    extern "C" double  f_gem_get_molar_volume(int& i, double& Tc, double& P)
+ #else
+    extern "C" double  f_gem_get_molar_volume(int& i, double& Tc, double& P)
+#endif
+#else
+    extern "C" dobule  __stdcall   f_gem_get_molar_volume(int& i, double& Tc, double& P)
+#endif
+{
+  double volume;
+    volume = TNode::na->DC_V0_TP( i-1, Tc, P );   //i -> i-1 indexing arrays in Fortran and C++ is different    
+  return volume;
+}
+
+
+
+
 
 // end of f_gem_node.cpp
 // -------------------------------------------------------------------------------------

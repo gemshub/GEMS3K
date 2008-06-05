@@ -334,7 +334,7 @@ c set irank and root to zero , used also outside MPI in seriall version
 	gems_PIA=1
 	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
 c	read(*,*)gems_PIA
-	gems_PIA=1
+	gems_PIA=5
 	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
 	 gems_PIA=1
 	endif
@@ -1000,17 +1000,22 @@ c     cn=
 c     pn=
 ckg44
 c      if(i_output.eq.1)open(35, file='mco_out.out')
-
-      do 1690 n=1,1
-
+c kg44 
+c normalize everything to grid size! dxx x dxx x dxx 
+c and for GEMS it is better to work with bigger numbers ;-) so multipy with 10e3
+c      gridvol=dxx * dxx * dxx *1000.0
+	gridvol=1.0
+      write(*,*)"scaling 1:",gridvol,gridvol/p_Vs
+      do 1690 n=1,26
+	 gridvol=dx(n)   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
-	bn(ib,n)=p_xDc(i_bcp_gemx(ib))         !2)
+	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
  1691 continue
 	do 1692 ic=1,m2
-	   cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))       !10)
+	   cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))/p_Vs*gridvol  !10)
  1692 continue
 	do 1693 ip=1,m3
- 	   pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))     ! 12)/1.
+ 	   pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))/p_Vs*gridvol     ! 12)/1.
  1693 continue
  1690 continue
 	if (irank.eq.root) then 
@@ -1052,16 +1057,19 @@ c	   write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
 c         write(35,*) 'end node 2 and rest'
 c      endif
 	 endif
+	gridvol=1.0
+      write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
-      do 1695 n=2,nxmax-1
+      do 1695 n=27,nxmax
+	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
-	bn(ib,n)=p_xDc(i_bcp_gemx(ib))    !   2)   ! i_bcp_gemx(1)=2
+	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
  1696 continue
 	do 1697 ic=1,m2
-	cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))   ! i_bcp_gemx(7)=10
+	cn(ic,n)=p_xDc(i_bcp_gemx((m1)+ic))/p_Vs*gridvol  ! i_bcp_gemx(7)=10
  1697 continue
 	do 1698 ip=1,m3
-	pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))     !12)/1.    ! i_bcp_gemx(12)=12
+	pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
  1695 continue
 c kg44
@@ -2121,6 +2129,7 @@ c      do 1695 n=2,nxmax
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
 
+
 c	if (irank.eq.root) then 
 c	 write(*,*)" vectors after transport after chemistry"
 c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
@@ -2153,9 +2162,30 @@ ckg44    print out itergems
       write(*,*)irank, itimestep_tp,itergems, 
      &          itergemstotal," CPU time:", time_gemstotal
 
+c here we update porosities from GEMS molar volumes!
+c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
+	Tc_dummy=25.0
+        P_dummy = 1.0
+	do n=2,nxmax-1
+          poro(n)=por(n)
+	  por(n)=0.0
+	  do  ip=1,m3
+      dum1=f_gem_get_molar_volume(i_bcp_gemx(m1+m2+ip),Tc_dummy,P_dummy)
+           dum2= pn(ip,n)
+            por(n)=por(n) + dum1*dum2
+          enddo
+c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
+	 por(n)=1-por(n)*dx(n)*0.1  ! normalized !
+c         if (por(n).le.1.e-6) por(n)=1.e-6
+        enddo
+	write(*,*) "porosity update:", por(1:nxmax+2)
+
+c
+
       endif        ! i_gems eq.1  
       time_gemsmpi_end=secnds(0.)
       time_gemsmpi=time_gemsmpi+(time_gemsmpi_end-time_gemsmpi_start)
+
 
 c<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c          here MCOTAC-chem calculations at each node
