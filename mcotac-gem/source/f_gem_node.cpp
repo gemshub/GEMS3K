@@ -1,5 +1,4 @@
 #include <iomanip>
-#include "string.h"
 
 #include "node.h"
 
@@ -287,16 +286,14 @@
    // sends only speciation changed by mcotac 
 //   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
 //             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC,p_gam);
-	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
-	      printf("bIC: %i %g \n",ii,p_bIC[ii]);
-             p_bIC[ii]=0;
-		}
+	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) p_bIC[ii]=0;
+		
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
 
-	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
-	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
-		}
+//	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
+//	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
+//		}
              TNode::na->pCNode()->bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
 
    }
@@ -309,7 +306,7 @@
              p_bIC[ii]=0;
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
-          p_bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
+          TNode::na->pCNode()->bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
 
  
 //  TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
@@ -330,9 +327,9 @@
        p_Vs, p_Ms, p_Gs, p_Hs, p_IC, p_pH, p_pe, p_Eh, p_rMB, p_uIC,
        p_xDC, p_gam, p_xPH, p_vPS, p_mPS, p_bPS, p_xPA  );
 
- p_NodeHandle =(short) NodeHandle;
- p_NodeStatusCH =(short)  NodeStatusCH;
- p_IterDone = (short) IterDone;
+ p_NodeHandle =(int) NodeHandle;
+ p_NodeStatusCH =(int)  NodeStatusCH;
+ p_IterDone = (int) IterDone;
 
 /**************************************************************
   int ii;

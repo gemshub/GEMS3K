@@ -920,22 +920,6 @@ cc      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phas
 	if (.NOT.allocated(p_xPH)) then
          allocate(p_xPH(p_nPHb))
         endif
-c      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-	if (.NOT.allocated(p_vPS)) then
-         allocate(p_vPS(n_PSb+1))
-        endif
-c      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-	if (.NOT.allocated(p_mPS)) then
-         allocate(p_mPS(n_PSb+1))
-        endif
-c      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-	if (.NOT.allocated(p_bPS)) then
-         allocate(p_bPS(p_nICb,n_PSb+1))
-        endif
-c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
-	if (.NOT.allocated(p_xPA)) then
-         allocate(p_xPA(n_PSb+1))
-        endif
 c      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
 	if (.NOT.allocated(p_dul)) then
          allocate(p_dul(p_nDCb))
@@ -955,6 +939,22 @@ c      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [
 c      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
 	if (.NOT.allocated(p_uIC)) then
          allocate(p_uIC(p_nICb))
+        endif
+c      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
+	if (.NOT.allocated(p_vPS)) then
+         allocate(p_vPS(p_nPSb))
+        endif
+c      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
+	if (.NOT.allocated(p_mPS)) then
+         allocate(p_mPS(p_nPSb))
+        endif
+c      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
+	if (.NOT.allocated(p_bPS)) then
+         allocate(p_bPS(p_nICb,p_nPSb))
+        endif
+c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
+	if (.NOT.allocated(p_xPA)) then
+         allocate(p_xPA(p_nPSb))
         endif
 
 
@@ -2005,14 +2005,14 @@ c      goto 1556  ! only node 2 with old gems  values
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
-	if (irank.eq.root) then 
-	 write(*,*)" vectors after transport before chemistry"
-         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-     *,(pn(ip,2),ip=1,m3)
+c	if (irank.eq.root) then 
+c	 write(*,*)" vectors after transport before chemistry"
+c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
+c     *,(pn(ip,2),ip=1,m3)
 ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-         write(*,*)' 2 p_xDc(ib) '
-         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-         endif
+c         write(*,*)' 2 p_xDc(ib) '
+c         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c         endif
 
 c      goto 1556  ! only node 2 with old gems  values
 
@@ -2089,8 +2089,8 @@ c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
 
-	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
-     &              p_NodeStatusCH,p_IterDone
+c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
+c     &              p_NodeStatusCH,p_IterDone
 
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
@@ -2123,14 +2123,14 @@ c      do 1695 n=2,nxmax
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
 
-	if (irank.eq.root) then 
-	 write(*,*)" vectors after transport after chemistry"
-         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-     *,(pn(ip,2),ip=1,m3)
+c	if (irank.eq.root) then 
+c	 write(*,*)" vectors after transport after chemistry"
+c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
+c     *,(pn(ip,2),ip=1,m3)
 ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-         write(*,*)' 2 p_xDc(ib) '
-         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-         endif
+c         write(*,*)' 2 p_xDc(ib) '
+c         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
+c         endif
 c         pause
 ckg44
 c	if (i_output.eq.1.and.n.eq.2)then
