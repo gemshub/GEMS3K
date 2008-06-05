@@ -1742,11 +1742,11 @@ c  make sure grid size and no of processors fit together
 c now we allocate memory for the buffers..
 c we assume that if bn_subdomain is already allocated the others are also existing
 	if (.NOT.allocated(bn_subdomain)) then
-         allocate(bn_subdomain((m1)*i_subdomain_length))
+         allocate(bn_subdomain((m1-1)*i_subdomain_length))
          allocate(cn_subdomain(m2*i_subdomain_length))
          allocate(pn_subdomain(m3*i_subdomain_length))
 c and a second buffer because W. refuses to work with allocate
-         allocate(bn_domain((m1)*(nxmax-2)))
+         allocate(bn_domain((m1-1)*(nxmax-2)))
          allocate(cn_domain(m2*(nxmax-2)))
          allocate(pn_domain(m3*(nxmax-2)))
 c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
@@ -1763,14 +1763,13 @@ c	 write(*,*) m1, m2, m3
         
         if (irank.eq.root) then        
 	  do n=2,nxmax-1
-            do ib=1,m1
-	  	bn_domain(ib+(n-2)*(m1))=bn(ib,n)
+            do ib=1,m1-1
+	  	bn_domain(ib+(n-2)*(m1-1))=bn(ib,n)
             enddo
             do ic=1,m2
 	  	cn_domain(ic+(n-2)*m2)=cn(ic,n)
             enddo
             do ip=1,m3
- 
 	  	pn_domain(ip+(n-2)*m3)=po(ip,n)  !//we reuse pn_domain for Po_domain
             enddo
           enddo
@@ -1781,8 +1780,8 @@ c        write(*,*)' MPI Scatter:', MPI_COMM_WORLD
 c	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 c         write(*,*) 'barrier ok'
 c	if (irank.eq.root) write(*,*)bn_domain
-        sendcount = i_subdomain_length*(m1)
-        recvcount = i_subdomain_length*(m1)
+        sendcount = i_subdomain_length*(m1-1)
+        recvcount = i_subdomain_length*(m1-1)
         call MPI_SCATTER(bn_domain, sendcount, 
      &      MPI_DOUBLE_PRECISION,
      &	    bn_subdomain, recvcount, MPI_DOUBLE_PRECISION,
@@ -1805,8 +1804,7 @@ c
 	do 1555 n=1,  i_subdomain_length                 !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1   ! last value is charge zzz and is mapped to gems 
-
-	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib+(n-1)*(m1))   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
+	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib+(n-1)*(m1-1))   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
  1596 continue
 	do 1597 ic=1,m2
 	p_xDc(i_bcp_gemx(m1+ic))=cn_subdomain(ic+(n-1)*m2)
@@ -1892,8 +1890,8 @@ c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
 	
-	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
-     &              p_NodeStatusCH,p_IterDone
+c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
+c     &              p_NodeStatusCH,p_IterDone
 
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
@@ -1918,7 +1916,7 @@ c     cn=
 c     pn=
 c      do 1695 n=2,nxmax
 	do 1796 ib=1,m1-1
-	bn_subdomain(ib+(n-1)*(m1))=p_xDc(i_bcp_gemx(ib))
+	bn_subdomain(ib+(n-1)*(m1-1))=p_xDc(i_bcp_gemx(ib))
  1796 continue
 	do 1797 ic=1,m2
 	cn_subdomain(ic+(n-1)*m2)=p_xDc(i_bcp_gemx(m1+ic))
@@ -1944,8 +1942,8 @@ c	pause
 
 
 c now do MPI_GATHER
-        sendcount = i_subdomain_length*(m1)
-        recvcount = i_subdomain_length*(m1)
+        sendcount = i_subdomain_length*(m1-1)
+        recvcount = i_subdomain_length*(m1-1)
       call MPI_AllGather(bn_subdomain, sendcount, 
      &     MPI_DOUBLE_PRECISION,
      &	    bn_domain, recvcount, MPI_DOUBLE_PRECISION,
@@ -1966,8 +1964,8 @@ c now do MPI_GATHER
      &	    MPI_COMM_WORLD,ierr)
 
 	  do n=2,nxmax-1
-            do ib=1,m1
-	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1))
+            do ib=1,m1-1
+	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1-1))
             enddo
             do ic=1,m2
 	  	cn(ic,n)=cn_domain(ic+(n-2)*m2)
