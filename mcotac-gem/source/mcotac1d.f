@@ -70,8 +70,9 @@ c      include 'f_gem_node.inc'
 
         !DEC$ ATTRIBUTES C :: hydro1d
       include 'gwheader.inc'
-        double precision h0(NNODEX),hb(NNODEX),tx(NNODEX),am(NNODEX)
-        double precision st(NNODEX),por(NNODEX),qw(NNODEX),qbil(NNODEX)
+        double precision h0(NNODEX+2),hb(NNODEX+2),tx(NNODEX+2)
+        double precision st(NNODEX+2),por(NNODEX+2),qw(NNODEX+2)
+        double precision qbil(NNODEX+2),am(NNODEX+2)
         double precision dx(NNODEX+2), vx(NNODEX+2),texe,time
         integer nxmax, icyc, ir(NNODEX)
         character*10 text, fname
@@ -82,7 +83,6 @@ c      include 'f_gem_node.inc'
         subroutine walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
      *,m2)
-
         !DEC$ ATTRIBUTES C :: walk2
       include 'gwheader.inc'
         double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
@@ -94,6 +94,23 @@ c      include 'f_gem_node.inc'
         integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
         integer ibpstart
         END SUBROUTINE walk2
+        END INTERFACE
+
+      INTERFACE
+        subroutine walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
+     *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
+     *,m2,por)
+        !DEC$ ATTRIBUTES C :: walk2
+      include 'gwheader.inc'
+        double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+      double precision dx(NNODEX+2),bo(NBASIS,NNODEX)
+      double precision co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+        double precision along, aquer, dm(nnodex+2),texe
+      double precision vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
+        double precision x(NNODEX), por(NNODEX+2)
+        integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
+        integer ibpstart
+        END SUBROUTINE walk2h
         END INTERFACE
 
 
@@ -658,7 +675,6 @@ c  ***************************************
       por(n)=0.32                  !for initial porcalc 
       poro(n)=0.32       
 c      por(n)=phi              ! kinet
-      por(n)=1              ! kinet
       sumqwat(n)=0.
       dqwater(n)=0.
    42 continue
@@ -740,6 +756,9 @@ c  *******************************************************************
             if(m3.gt.0.and.ipor.gt.0)then                                    !  .and.ipor.gt.0
             call porcalc(nspezx,m3,pn,pnw,pnd,etc,por
      *         ,cn,i_sorb,xnaohmw,xnaohd,xkohmw,xkohd)
+	  if (por(nspezx).le.1.e-6) por(nspezx)=1.e-6   ! make sure porosity does not get zero
+c now change diffusion coefficient
+	dm(nspezx)=dm0*por(nspezx)
             endif
        endif
  1315  continue
@@ -1072,6 +1091,31 @@ c      endif
 	pn(ip,n)=p_xDc(i_bcp_gemx((m1)+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
  1695 continue
+c here we update porosities from GEMS molar volumes!
+c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
+	Tc_dummy=25.0
+        P_dummy = 1.0
+	do n=2,nxmax-1
+          poro(n)=por(n)
+	  por(n)=0.0
+	  do  ip=1,m3
+      dum1=f_gem_get_molar_volume(i_bcp_gemx(m1+m2+ip),Tc_dummy,P_dummy)
+           dum2= pn(ip,n)
+            por(n)=por(n) + dum1*dum2
+          enddo
+c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
+	 por(n)=1-por(n)*dx(n)*0.1  ! normalized !
+	  if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
+c now change diffusion coefficient
+	dm(n)=dm0*por(n)
+c         if (por(n).le.1.e-6) por(n)=1.e-6
+      por_null(n)=por(n)
+c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
+      tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
+      tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
+        enddo
+	write(*,*) "porosity update:", por(1:nxmax+2)
+
 c kg44
 c      if(i_output.eq.1)then
 c       write(35,*)' bn n=2  '
@@ -1537,15 +1581,20 @@ c   move particles during dt
       write (*,*) 'walk time:  treal texe', treal, texe
          endif
 #ifdef __GNU
-      call walk2(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
+      call walk2h(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
      * %val(aquer),dm,%val(texe),dx,vx
      *  ,partx,partxo, %val(xmaxr),%val(xminr),partic,bn,cn,partib,
-     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2))
+     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2),por)
 #else
-      call walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
+      call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
-     *  ibpstart,x,bo,co,m1,m2)
+     *  ibpstart,x,bo,co,m1,m2,por)
 #endif
+c kg44 walker with variable porosity
+c      call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
+c     *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
+c     *  ibpstart,x,bo,co,m1,m2,por)
+
 c**assign concentrations at t+dt to grid  (including boundary conditions)
 c**particle in which nbox
 
@@ -2176,6 +2225,10 @@ c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
           enddo
 c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
 	 por(n)=1-por(n)*dx(n)*0.1  ! normalized !
+	 if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
+c now change diffusion coefficient
+	 dm(n)=dm0*por(n)
+
 c         if (por(n).le.1.e-6) por(n)=1.e-6
         enddo
 	write(*,*) "porosity update:", por(1:nxmax+2)
