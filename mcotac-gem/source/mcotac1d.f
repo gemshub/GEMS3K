@@ -758,7 +758,7 @@ c  *******************************************************************
      *         ,cn,i_sorb,xnaohmw,xnaohd,xkohmw,xkohd)
 	  if (por(nspezx).le.1.e-6) por(nspezx)=1.e-6   ! make sure porosity does not get zero
 c now change diffusion coefficient
-	dm(nspezx)=dm0*por(nspezx)
+	    dm(nspezx)=dm0*por(nspezx)
             endif
        endif
  1315  continue
@@ -1104,7 +1104,8 @@ c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
             por(n)=por(n) + dum1*dum2
           enddo
 c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
-	 por(n)=1-por(n)*dx(n)*0.1  ! normalized !
+           gridvol=dx(n)   ! normalized !
+	   por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
 	  if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
 c now change diffusion coefficient
 	dm(n)=dm0*por(n)
@@ -2224,8 +2225,10 @@ c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
             por(n)=por(n) + dum1*dum2
           enddo
 c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
-	 por(n)=1-por(n)*dx(n)*0.1  ! normalized !
-	 if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
+         gridvol=dx(n)   ! normalized !
+         por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
+         if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
+c
 c now change diffusion coefficient
 	 dm(n)=dm0*por(n)
 
