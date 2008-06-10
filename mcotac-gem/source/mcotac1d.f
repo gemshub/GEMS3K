@@ -36,7 +36,7 @@ c      include 'f_gem_node.inc'
         !DEC$ ATTRIBUTES C :: partid
       include 'gwheader.inc'
         double precision xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
-      integer npmax ,nbox, partib(NNODEX)
+      integer npmax ,nbox, partib(NNODEX+2)
         END SUBROUTINE partid
         END INTERFACE
 
@@ -46,9 +46,9 @@ c      include 'f_gem_node.inc'
         !DEC$ ATTRIBUTES C :: concver
       include 'gwheader.inc'
         double precision xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
-        double precision bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
+        double precision bn(NBASIS,NNODEX+2),cn(NCOMPL,NNODEX+2)
       double precision partic(NCOMPL+NBASIS,NUPMAX)
-      integer npmax ,nbox, partib(NNODEX), ismooth, m1,m2
+      integer npmax ,nbox, partib(NNODEX+2), ismooth, m1,m2
         END SUBROUTINE concver
         END INTERFACE
 
@@ -57,10 +57,11 @@ c      include 'f_gem_node.inc'
      *                    partx,partic,bo,co,ismooth,m1,m2)
         !DEC$ ATTRIBUTES C :: concneu
       include 'gwheader.inc'
-        double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
-      double precision partx(NUPMAX), dx(NNODEX+2),bo(NBASIS,NNODEX)
-      double precision co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
-        integer nxmax,npmax ,nbox, partib(NNODEX), ismooth, m1,m2
+      double precision xminr,xmaxr,bn(NBASIS,NNODEX+2)
+      double precision cn(NCOMPL,NNODEX+2)
+      double precision partx(NUPMAX), dx(NNODEX+2),bo(NBASIS,nnodex+2)
+      double precision co(NCOMPL,nnodex+2),partic(NCOMPL+NBASIS,NUPMAX)
+        integer nxmax,npmax ,nbox, partib(nnodex+2), ismooth, m1,m2
         END SUBROUTINE concneu
         END INTERFACE
 
@@ -74,7 +75,7 @@ c      include 'f_gem_node.inc'
         double precision st(NNODEX+2),por(NNODEX+2),qw(NNODEX+2)
         double precision qbil(NNODEX+2),am(NNODEX+2)
         double precision dx(NNODEX+2), vx(NNODEX+2),texe,time
-        integer nxmax, icyc, ir(NNODEX)
+        integer nxmax, icyc, ir(nnodex+2)
         character*10 text, fname
         END SUBROUTINE hydro1d
         END INTERFACE
@@ -85,13 +86,14 @@ c      include 'f_gem_node.inc'
      *,m2)
         !DEC$ ATTRIBUTES C :: walk2
       include 'gwheader.inc'
-        double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
-      double precision dx(NNODEX+2),bo(NBASIS,NNODEX)
-      double precision co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+        double precision xminr,xmaxr,bn(NBASIS,nnodex+2)
+        double precision cn(NCOMPL,nnodex+2)
+      double precision dx(NNODEX+2),bo(NBASIS,nnodex+2)
+      double precision co(NCOMPL,nnodex+2),partic(NCOMPL+NBASIS,NUPMAX)
         double precision along, aquer, dm(nnodex+2),texe
       double precision vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
-        double precision x(NNODEX)
-        integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
+        double precision x(nnodex+2)
+        integer nxmax,npmax ,ncyc, partib(nnodex+2), ismooth, m1,m2,m3,m4
         integer ibpstart
         END SUBROUTINE walk2
         END INTERFACE
@@ -102,13 +104,14 @@ c      include 'f_gem_node.inc'
      *,m2,por)
         !DEC$ ATTRIBUTES C :: walk2
       include 'gwheader.inc'
-        double precision xminr,xmaxr,bn(NBASIS,NNODEX),cn(NCOMPL,NNODEX)
-      double precision dx(NNODEX+2),bo(NBASIS,NNODEX)
-      double precision co(NCOMPL,NNODEX),partic(NCOMPL+NBASIS,NUPMAX)
+        double precision xminr,xmaxr,bn(NBASIS,nnodex+2)
+       double precision cn(NCOMPL,nnodex+2)
+      double precision dx(NNODEX+2),bo(NBASIS,nnodex+2)
+      double precision co(NCOMPL,nnodex+2),partic(NCOMPL+NBASIS,NUPMAX)
         double precision along, aquer, dm(nnodex+2),texe
       double precision vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
-        double precision x(NNODEX), por(NNODEX+2)
-        integer nxmax,npmax ,ncyc, partib(NNODEX), ismooth, m1,m2,m3,m4
+        double precision x(nnodex+2), por(NNODEX+2)
+        integer nxmax,npmax ,ncyc, partib(nnodex+2), ismooth, m1,m2,m3,m4
         integer ibpstart
         END SUBROUTINE walk2h
         END INTERFACE
@@ -127,7 +130,7 @@ c and a second buffer
        DOUBLE PRECISION, ALLOCATABLE :: pn_domain(:) !rank 1
 #endif
 
-      double precision xxyy , xarray(10)
+      double precision xxyy 
 
 c time measurements
 	double precision time_gemsmpi, time_gemsmpi_start, time_gemsmpi_end 
@@ -171,7 +174,7 @@ c in an ideal world this definitions are only used for MPI stuff
 	
 c12345678901234567890123456789012345678901234567890123456789012345690
       integer itest,ncyc,nxmax,nymax,isteu,inma,ipfile,ntim
-      integer npkt,ir(nnodex+2),npmax,nbox,nboxy,partib(nnodex)   
+      integer npkt,ir(nnodex+2),npmax,nbox,nboxy,partib(nnodex+2)   
       integer ismooth,iortx(5), i_sorb,j_sorb,iche(nnodex+2),j_decay
      *,ialkali,icyc
 c-coeff      integer npin, s,ss
@@ -264,7 +267,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision amin(nsolid,nnodex+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -279,8 +282,8 @@ c       kinetics.inc
         double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
-        double precision wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
+        double precision wout(nsolid,nnodex+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
@@ -292,7 +295,7 @@ c
      * ,dx(nnodex+2),por1(nnodex+2),poro(nnodex+2)
      * ,partx(nupmax),partxo(nupmax),partic(nupmax,nbasis+ncompl)
      * ,dm(nnodex+2)
-     * ,vx(nnodex+2), partiv(nnodex)
+     * ,vx(nnodex+2), partiv(nnodex+2)
      * ,hb(nnodex+2), por_null(nnodex+2), tx_null(nnodex+2)
      * ,h0(nnodex+2), qw(nnodex+2), qr(nnodex+2)
      * ,qbil(nnodex+2),	tx(nnodex+2)  
@@ -304,23 +307,23 @@ c
      * ,sumbcflowt(ncompl,nnodex+2)
 	 
 
-      dimension x(nnodex),tmp(nnodex),bn(nbasis,nnodex)
-     1,bo(nbasis,nnodex),pn(nsolid,nnodex),po(nsolid,nnodex)
-     1,cn(ncompl,nnodex),co(ncompl,nnodex)
-     2,eqconst(ncompl+nsolid,nnodex),acb(nbasis,nnodex)
-     3,acc(ncompl,nnodex),q(nsolid,nnodex),tmpold(nnodex),
+      dimension x(nnodex+2),tmp(nnodex+2),bn(nbasis,nnodex+2)
+     1,bo(nbasis,nnodex+2),pn(nsolid,nnodex+2),po(nsolid,nnodex+2)
+     1,cn(ncompl,nnodex+2),co(ncompl,nnodex+2)
+     2,eqconst(ncompl+nsolid,nnodex+2),acb(nbasis,nnodex+2)
+     3,acc(ncompl,nnodex+2),q(nsolid,nnodex+2),tmpold(nnodex+2),
      5z(nbasis+nsolid,nbasis+nsolid),re(nbasis+nsolid)
-     7,wconst(nbasis),bc2(nbasis),eh(nnodex),pHarr(nnodex)
+     7,wconst(nbasis),bc2(nbasis),eh(nnodex+2),pHarr(nnodex+2)
      8,pnw(nsolid),pnd(nsolid)
      9,etc(3)
-     9,dpn(nsolid,nnodex)
+     9,dpn(nsolid,nnodex+2)
      5,index_i1(nbasis),bi_i1(nbasis),gesb_i1(nbasis)
      6,index_i2(nbasis),bi_i2(nbasis),gesb_i2(nbasis)
      7,gesp_i1(nsolid),gesp_i2(nsolid)
      8,gesc_i1(ncompl),gesc_i2(ncompl)
      5,gespvf_i1(nsolid),gespvf_i2(nsolid)
 
-      dimension cs(nnodex),tmpk(nnodex)
+      dimension cs(nnodex+2),tmpk(nnodex+2)
       common /betat/ betac
       common /dismdl/ idismdl,indxca,indxsi,indxcs,csbndry(0:2),
      1                conhcsm(0:3,2,4)
@@ -351,7 +354,7 @@ c set irank and root to zero , used also outside MPI in seriall version
 	gems_PIA=1
 	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
 c	read(*,*)gems_PIA
-	gems_PIA=5
+	gems_PIA=1
 	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
 	 gems_PIA=1
 	endif
@@ -495,7 +498,7 @@ c     dtprstep needs to be initialized
       i_output=1
 
       line="a1b2c3d4e5"
-	nNodes=52
+
 c   From GEMS INTEGRATION
 c   these files are necessary for GEMS command line execution to start running
       gems_in_ipmf ="MCOTAC-GEM/MySystem-dat.lst" ! list file including nodes' chemical systems
@@ -671,7 +674,7 @@ c
 c  ***************************************
 c  assign initial temperature and porosity to each node
 c  ***************************************
-   43 do 42 n=1,nxmax+2
+   43 do 42 n=1,nxmax
       por(n)=0.32                  !for initial porcalc 
       poro(n)=0.32       
 c      por(n)=phi              ! kinet
@@ -775,7 +778,7 @@ c      write (6,2200) t2
 
 c>>>>>02-2003 modified boundary on the right side
       if(imodbound.gt.0)then  
-       do 1316, nspezx=1,nxmax+1
+       do 1316, nspezx=1,nxmax
        if (nspezx.ge.45)then
          bn(4,nspezx)=0.
          bn(5,nspezx)=0.
@@ -791,65 +794,65 @@ c03      if (ihydro.eq.1)then                             !if ihydro = 1
 c<<<<<<<140895      START HYDROLOGY
 c  input ir - array h0 - array  tt - array  s - array
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"ir0001.dat" //char(0),hb)
+      call holdat1d(%val(nxmax),"ir0001.dat" //char(0),hb)
 #else
-      call holdat1d(nxmax+2,"ir0001.dat" //char(0),hb)
+      call holdat1d(nxmax,"ir0001.dat" //char(0),hb)
 #endif
 
 
-      do 3330 ih=1,nxmax+1
+      do 3330 ih=1,nxmax
 3330  ir(ih)=int(hb(ih))
       	if (irank.eq.root) write(*,*)ir
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"ss0001.dat"//char(0),st)
+      call holdat1d(%val(nxmax),"ss0001.dat"//char(0),st)
 #else
-      call holdat1d(nxmax+2,"ss0001.dat"//char(0),st)
+      call holdat1d(nxmax,"ss0001.dat"//char(0),st)
 #endif
 c	if (irank.eq.root) write(*,*)st
 #ifdef __GNU
-	call holdat1d(%val(nxmax+2),"por001.dat"//char(0),por)
+	call holdat1d(%val(nxmax),"por001.dat"//char(0),por)
 #else
-	call holdat1d(nxmax+2,"por001.dat"//char(0),por)
+	call holdat1d(nxmax,"por001.dat"//char(0),por)
 #endif
 	
-	if (irank.eq.root) write(*,*)por(1:nxmax+2)
+	if (irank.eq.root) write(*,*)por(1:nxmax)
 cpause	pause
-	do 3331 ih=1,nxmax+2
+	do 3331 ih=1,nxmax
       por_null(ih)=por(ih)
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx(ih)= tx_null(ih)*por(ih)**3/(1.-por(ih))**2
  3331 continue 
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"qr0001.dat"//char(0),qr)
+      call holdat1d(%val(nxmax),"qr0001.dat"//char(0),qr)
 #else
-      call holdat1d(nxmax+2,"qr0001.dat"//char(0),qr)
+      call holdat1d(nxmax,"qr0001.dat"//char(0),qr)
 #endif
       	if (irank.eq.root) write(*,*)qr
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"qn0001.dat"//char(0),qw)
+      call holdat1d(%val(nxmax),"qn0001.dat"//char(0),qw)
 #else
-      call holdat1d(nxmax+2,"qn0001.dat"//char(0),qw)
+      call holdat1d(nxmax,"qn0001.dat"//char(0),qw)
 #endif
 	if (irank.eq.root) write(*,*)qw
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"am0001.dat"//char(0),am)
+      call holdat1d(%val(nxmax),"am0001.dat"//char(0),am)
 #else
-      call holdat1d(nxmax+2,"am0001.dat"//char(0),am)
+      call holdat1d(nxmax,"am0001.dat"//char(0),am)
 #endif
 	if (irank.eq.root) write(*,*)am
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"h00001.dat"//char(0),h0)
+      call holdat1d(%val(nxmax),"h00001.dat"//char(0),h0)
 #else
-      call holdat1d(nxmax+2,"h00001.dat"//char(0),h0)
+      call holdat1d(nxmax,"h00001.dat"//char(0),h0)
 #endif
 	if (irank.eq.root) write(*,*)h0
 cpause	pause
-      do 3332 ih=1,nxmax+2
+      do 3332 ih=1,nxmax
          hb(ih)=h0(ih)
          qw(ih)=qw(ih)+qr(ih)
 c      write(*,*)'main', ih,tx(ih)
@@ -864,9 +867,6 @@ c04<<<<<<<<<<<
       p_NodeHandle=1
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
 c  first read is for boundary conditons node 1
-      do 45 i=1,10
-c	CSTR(i)=96+i
-  45	xarray(i)=i**i
 	argc=5
 	iinn=3
       xxyy=1.23456789
@@ -881,7 +881,6 @@ c      read(CSTR_char30,'(100(a1))')(chch(i),i=1,100)
         write (*,*)'FORTRAN integer        iinn', iinn
         write (*,*)'FORTRAN double         xxyy', xxyy
 	write (*,*)'FORTRAN char*10   FNAME10  ', fname10
-        write (*,*)'FORTRAN double array (10)  ', xarray
 c	write (*,*)'FORTRAN int array CSTR(10) ', (CSTR(L),L=1,10)
 	write (*,*)'FORTRAN char*10     line   ', line
 c	write (*,*)'FORTRAN char*10 c_to_i ',  c_to_i
@@ -892,7 +891,7 @@ c	write(*,*)'nodetype',nodeTypes
         endif
 c	pause "F_GEM_INIT"
 
-       nNodes= nxmax-1    !   1 
+       nNodes= nxmax    !   1 
       	if (irank.eq.root) write(*,*)'nNodes =', nNodes
 
       if (F_GEM_INIT( gems_in_ipmf ).eq.1) then
@@ -1025,7 +1024,7 @@ c and for GEMS it is better to work with bigger numbers ;-) so multipy with 10e3
 c      gridvol=dxx * dxx * dxx *1000.0
 	gridvol=1.0
       write(*,*)"scaling 1:",gridvol,gridvol/p_Vs
-      do 1690 n=1,100
+      do 1690 n=1,nxmax/2
 	 gridvol=dx(n)   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
@@ -1079,7 +1078,7 @@ c      endif
 	gridvol=1.0
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
-      do 1695 n=101,nxmax+2
+      do 1695 n=nxmax/2+1,nxmax
 	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
@@ -1095,7 +1094,7 @@ c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
-	do n=1,nxmax+2
+	do n=1,nxmax
           poro(n)=por(n)
 	  por(n)=0.0
 	  do  ip=1,m3
@@ -1115,7 +1114,7 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
         enddo
-	write(*,*) "porosity update:", por(1:nxmax+2)
+	write(*,*) "porosity update:", por(1:nxmax)
 
 c kg44
 c      if(i_output.eq.1)then
@@ -1186,7 +1185,7 @@ c      uabs= abs(vx(1,1))
        x(ix)=x(ix-1)+dx(ix)
  1320 continue
 	if (irank.eq.root) write(*,*)'dx',dx  
-      do 1322 ix=1,nxmax+2
+      do 1322 ix=1,nxmax
        vx(ix) = vxx
        dm(ix) = dm0
 	if (irank.eq.root) write(*,*)'vx',ix,iy,vx(ix)  
@@ -1247,27 +1246,27 @@ cpause	pause
 	if (irank.eq.root) then
       open(28,file='arrays.dat',form='formatted')
        write(28,'(a4,85(i10,1x))')
-     *       'ir  ',(ir(nspezx),nspezx=1,nxmax+2)
+     *       'ir  ',(ir(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(i10,1x))')
-     *       'iche',(iche(nspezx),nspezx=1,nxmax+2)
+     *       'iche',(iche(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'por ',(por(nspezx),nspezx=1,nxmax+2)
+     *       'por ',(por(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'tx  ',(tx(nspezx),nspezx=1,nxmax+2)
+     *       'tx  ',(tx(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'h0  ',(hb(nspezx),nspezx=1,nxmax+2)
+     *       'h0  ',(hb(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'am  ',(am(nspezx),nspezx=1,nxmax+2)
+     *       'am  ',(am(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'st  ',(st(nspezx),nspezx=1,nxmax+2)
+     *       'st  ',(st(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'qw  ',(qw(nspezx),nspezx=1,nxmax+2)
+     *       'qw  ',(qw(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'dx  ',(dx(nspezx),nspezx=1,nxmax+2)
+     *       'dx  ',(dx(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'hb  ',(hb(nspezx),nspezx=1,nxmax+2)
+     *       'hb  ',(hb(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'vx  ',(vx(nspezx),nspezx=1,nxmax+2)
+     *       'vx  ',(vx(nspezx),nspezx=1,nxmax)
       close(28)
 	endif       ! endif irank.eq.root
       endif                                       ! endif ihydro=1
@@ -1417,7 +1416,7 @@ c      if (restzeit.eq.0) goto 3333
       if (ihydro.eq.1)then
 c  NEW HYDRAULIC HEAD AND FLOW FIELD 
 c  calculate new conductivity depending on  porosity ?? dpor >  xxx 
-       do 3432 ih=2,nxmax+1
+       do 3432 ih=2,nxmax-1
 c dec2002        tx(ih)=tx(ih)*(1.-(por(ih)-poro(ih)))
       tx(ih)=tx_null(ih)*por(ih)**3/(1.-por(ih))**2
 
@@ -1582,14 +1581,14 @@ c   move particles during dt
       write (*,*) 'walk time:  treal texe', treal, texe
          endif
 #ifdef __GNU
-      call walk2h(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
+      call walk2(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
      * %val(aquer),dm,%val(texe),dx,vx
      *  ,partx,partxo, %val(xmaxr),%val(xminr),partic,bn,cn,partib,
-     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2),por)
+     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2))
 #else
-      call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
+      call walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
-     *  ibpstart,x,bo,co,m1,m2,por)
+     *  ibpstart,x,bo,co,m1,m2)
 #endif
 c kg44 walker with variable porosity
 c      call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
@@ -2234,7 +2233,7 @@ c now change diffusion coefficient
 
 c         if (por(n).le.1.e-6) por(n)=1.e-6
         enddo
-	write(*,*) "porosity update:", por(1:nxmax+2)
+	write(*,*) "porosity update:", por(1:nxmax)
 
 c
 
@@ -2939,8 +2938,8 @@ c     calculate porosity from solids amount density and molweight
 
       include 'gwheader.inc'
       integer m3
-      dimension pn(nsolid,nnodex),pnw(nsolid),pnd(nsolid),etc(3)
-      dimension por(nnodex+2),cn(ncompl,nnodex)
+      dimension pn(nsolid,nnodex+2),pnw(nsolid),pnd(nsolid),etc(3)
+      dimension por(nnodex+2),cn(ncompl,nnodex+2)
 
       xxnaoh=0.
       xxkoh=0.

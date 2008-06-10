@@ -1,5 +1,5 @@
       real*8 rlarge
-      parameter (nupmax = 50000)
+      parameter (nupmax = 500000)
       parameter (nnodex = 510)
       parameter (nbasis = 10)
       parameter (ncompl = 45)

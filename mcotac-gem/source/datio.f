@@ -55,7 +55,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision amin(nsolid,nnodex+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -67,11 +67,11 @@ c       kinetics.inc
         double precision otherj(nbasis),otheri(ncompl)
         double precision dratemdc(nsolid,nbasis)
         double precision dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
-        double precision rng(nsolid),volmol(nsolid),por(nnodex)
+        double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
-        double precision wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
+        double precision wout(nsolid,nnodex+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
@@ -541,10 +541,10 @@ c      real*4 t1,t2
       character*10 datei2
       character *1 ch
  
-       dimension x(nnodex),tmp(nnodex),bn(nbasis,nnodex)
-     1,cn(ncompl,nnodex),pn(nsolid,nnodex),num(6)
-     2,eqconst(ncompl+nsolid,nnodex),acb(nbasis,nnodex)
-     3,acc(ncompl,nnodex),cs(nnodex),tmpk(nnodex),eh(nnodex)
+       dimension x(nnodex+2),tmp(nnodex+2),bn(nbasis,nnodex+2)
+     1,cn(ncompl,nnodex+2),pn(nsolid,nnodex+2),num(6)
+     2,eqconst(ncompl+nsolid,nnodex+2),acb(nbasis,nnodex+2)
+     3,acc(ncompl,nnodex+2),cs(nnodex+2),tmpk(nnodex+2),eh(nnodex+2)
 c <<<
       common /betat/ betac
       common /dismdl/ idismdl,indxca,indxsi,indxcs,csbndry(0:2),

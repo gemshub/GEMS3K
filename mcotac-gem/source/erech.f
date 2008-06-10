@@ -12,9 +12,9 @@ c  calculates activities based on the davies equation.
 c  the activities are stored in the matrices acb and acc.
 c  **********************************************************
 c
-      dimension num(6),bn(nbasis,nnodex),cn(ncompl,nnodex)
+      dimension num(6),bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
      1,vjb(nbasis),vjc(ncompl),
-     1acb(nbasis,nnodex),acc(ncompl,nnodex)
+     1acb(nbasis,nnodex+2),acc(ncompl,nnodex+2)
 
 c      iactco=iactco+1
 c      write(*,*)'subroutine actco aufgerufen',iactco,nspezx,nspezy
@@ -158,8 +158,8 @@ c  *********************************************************************
 c
       include 'gwheader.inc'
 
-      dimension tmp(nnodex),bn(nbasis,nnodex)
-     1,acb(nbasis,nnodex),eh(nnodex)
+      dimension tmp(nnodex+2),bn(nbasis,nnodex+2)
+     1,acb(nbasis,nnodex+2),eh(nnodex+2)
       data a1,tcel /1.9841412e-04,273.15/
 c
       iehcalc=iehcalc+1
@@ -211,8 +211,8 @@ c ----------------------------------------------------------------------
 
       include 'gwheader.inc'
 
-      dimension num(6),cs(nnodex),eqconst(ncompl+nsolid,nnodex)
-     1,pn(nsolid,nnodex)
+      dimension num(6),cs(nnodex+2),eqconst(ncompl+nsolid,nnodex+2)
+     1,pn(nsolid,nnodex+2)
       common /dismdl/ idismdl,indxca,indxsi,indxcs,
      1                csbndry(0:2),conhcsm(0:3,2,4)
 c >>>                              ^ named shortened from conhcsm in main
@@ -369,8 +369,8 @@ c
       include 'gwheader.inc'
 
       dimension itmpdep(ncompl+nsolid),num(6)
-     1,con(ncompl+nsolid,4),eqconst(ncompl+nsolid,nnodex)
-     2,tmp(nnodex),tmpk(nnodex)
+     1,con(ncompl+nsolid,4),eqconst(ncompl+nsolid,nnodex+2)
+     2,tmp(nnodex+2),tmpk(nnodex+2)
 
 c --- betac = 1/(R*ln10)
       common /betat/ betac

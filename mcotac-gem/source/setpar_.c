@@ -18,9 +18,9 @@
 #include "gwheader.h"
 
 #ifdef __PGI
-   void setpar_(int npmax,double xmin,double xmax,double partx[50000],int nbox)
+   void setpar_(int npmax,double xmin,double xmax,double partx[NUPMAX],int nbox)
 #else
-   void setpar(int npmax,double xmin,double xmax,double partx[50000],int nbox)
+   void setpar(int npmax,double xmin,double xmax,double partx[NUPMAX],int nbox)
 #endif
 {
         register int i ;
@@ -29,7 +29,6 @@
 
         xco= (xmax-xmin) / (double)(npmax) ; /*                (double) */
         partx[0] = xmin + xco/2.0;
-        printf("setpar npmax %i %e %e   %i \n",npmax,xmin,xmax,nbox);
         for (i=1; i<=npmax-1; i++)  {
                 partx[i] =partx[i-1] + xco;
         }
@@ -56,11 +55,11 @@
 
 #ifdef __PGI
    void partid_( int npmax, int nbox, double xmin, double xmax,
-	                        int partib[51], double dx[51+2], double partx[50000])
+	                        int partib[NCNODEX+2], double dx[NCNODEX+2], double partx[NUPMAX])
 
 #else
    void partid( int npmax, int nbox, double xmin, double xmax,
-	                        int partib[51], double dx[51+2], double partx[50000])
+	                        int partib[NCNODEX+2], double dx[NCNODEX+2], double partx[NUPMAX])
 
 #endif
 {
@@ -107,16 +106,16 @@
 #include "gwheader.h"
 
 #ifdef __PGI
- void concver_(int npmax,int nbox,double dx[51+2],double bn[51][10],
-			 double cn[51][25],int partib[51],double partx[50000],
-			 double partic[10+25][50000],int ismooth,int m1,int m2)
+ void concver_(int npmax,int nbox,double dx[NCNODEX],double bn[NCNODEX+2][NCBASIS],
+			 double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX],double partx[NUPMAX],
+			 double partic[NCCOMPL+NCBASIS][NUPMAX],int ismooth,int m1,int m2)
 #else
- void concver(int npmax,int nbox,double dx[51+2],double bn[51][10],
-			 double cn[51][25],int partib[51],double partx[50000],
-			 double partic[10+25][50000],int ismooth,int m1,int m2)
+ void concver(int npmax,int nbox,double dx[NCNODEX],double bn[NCNODEX+2][NCBASIS],
+			 double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX],double partx[NUPMAX],
+			 double partic[NCCOMPL+NCBASIS][NUPMAX],int ismooth,int m1,int m2)
 #endif
 {
-        double partiv[NCNODEX];
+        double partiv[NCNODEX+2];
         register int i,j,i2;
         int iknx;
 
@@ -164,17 +163,17 @@
 
 #ifdef __PGI
   void concneu_(int npmax,int nbox,int nxmax,
-             double xminr,double xmaxr,double dx[51+2],
-			 double  bn[51][10],double cn[51][25],int partib[51],
-			 double partx[50000],double partic[10+25][50000],
-			 double bo[51][10], double co[51][25], 
+             double xminr,double xmaxr,double dx[NCNODEX+2],
+			 double  bn[NCNODEX+2][NCCOMPL],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
+			 double partx[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
+			 double bo[NCNODEX+2][NCCOMPL], double co[NCNODEX+2][NCCOMPL], 
 			 int ismooth, int m1,int m2)
 #else
   void concneu(int npmax,int nbox,int nxmax,
-             double xminr,double xmaxr,double dx[51+2],
-			 double  bn[51][10],double cn[51][25],int partib[51],
-			 double partx[50000],double partic[10+25][50000],
-			 double bo[51][10], double co[51][25], 
+             double xminr,double xmaxr,double dx[NCNODEX+2],
+			 double  bn[NCNODEX+2][NCCOMPL],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
+			 double partx[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
+			 double bo[NCNODEX+2][NCCOMPL], double co[NCNODEX+2][NCCOMPL], 
 			 int ismooth, int m1,int m2)
 #endif
   {

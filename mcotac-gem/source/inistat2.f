@@ -26,8 +26,8 @@ c  species at each node for the initial and inner boundary or influx
 c  conditions.
 c  *********************************************************************
 c
-c-coeff      integer s,ss,iche(nnodex),i_sorb,ialkali
-      integer s,iche(nnodex),i_sorb,ialkali
+c-coeff      integer s,ss,iche(nnodex+2),i_sorb,ialkali
+      integer s,iche(nnodex+2),i_sorb,ialkali
       character *10 dumb,dumc,dump
 
       character*40 dummy_a40
@@ -44,7 +44,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision amin(nsolid,nnodex+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -59,26 +59,26 @@ c       kinetics.inc
         double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
-        double precision wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
+        double precision wout(nsolid,nnodex+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
       dimension num(6),con(ncompl+nsolid,4)
-     1,eqconst(ncompl+nsolid,nnodex),tmp(nnodex),bi(nbasis)
+     1,eqconst(ncompl+nsolid,nnodex+2),tmp(nnodex+2),bi(nbasis)
      1,bc(nbasis),indexi(nbasis),indexb(nbasis)
      5,index_i1(nbasis),bi_i1(nbasis),gesb_i1(nbasis)
      6,index_i2(nbasis),bi_i2(nbasis),gesb_i2(nbasis)
      7,gesp_i1(nsolid),gesp_i2(nsolid)
      8,gesc_i1(ncompl),gesc_i2(ncompl)
      9,index(nbasis),wconst(nbasis)
-     1,q(nsolid,nnodex),acb(nbasis,nnodex),acc(ncompl,nnodex)
-     3,bn(nbasis,nnodex),pn(nsolid,nnodex),cn(ncompl,nnodex)
+     1,q(nsolid,nnodex+2),acb(nbasis,nnodex+2),acc(ncompl,nnodex+2)
+     3,bn(nbasis,nnodex+2),pn(nsolid,nnodex+2),cn(ncompl,nnodex+2)
      3,vjb(nbasis),vjc(ncompl),s(nbasis,ncompl)
-     4,ss(nbasis,nsolid),bc2(nbasis),x(nnodex),eh(nnodex)
-      dimension cs(nnodex),tmpk(nnodex)
+     4,ss(nbasis,nsolid),bc2(nbasis),x(nnodex+2),eh(nnodex+2)
+      dimension cs(nnodex+2),tmpk(nnodex+2)
      1,dumb(nbasis),dumc(ncompl),dump(nsolid)
      2,itmpdep(ncompl+nsolid)
      +,nchem_index(4)
@@ -380,7 +380,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision amin(nsolid,nnodex+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -392,21 +392,21 @@ c       kinetics.inc
         double precision otherj(nbasis),otheri(ncompl)
         double precision dratemdc(nsolid,nbasis)
         double precision dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
-        double precision rng(nsolid),volmol(nsolid),por(nnodex)
+        double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
-        double precision wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
+        double precision wout(nsolid,nnodex+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       dimension wconst(nbasis),index(nbasis),num(6),
-     1eqconst(ncompl+nsolid,nnodex),ss(nbasis,nsolid),bi(nbasis)
-     2,bc(nbasis),acb(nbasis,nnodex),acc(ncompl,nnodex)
+     1eqconst(ncompl+nsolid,nnodex+2),ss(nbasis,nsolid),bi(nbasis)
+     2,bc(nbasis),acb(nbasis,nnodex+2),acc(ncompl,nnodex+2)
      3,re(nbasis+nsolid),vjb(nbasis),vjc(ncompl),s(nbasis,ncompl)
-     4,bn(nbasis,nnodex),pn(nsolid,nnodex),cn(ncompl,nnodex)
-     5,z(nbasis+nsolid,nbasis+nsolid),q(nsolid,nnodex)
+     4,bn(nbasis,nnodex+2),pn(nsolid,nnodex+2),cn(ncompl,nnodex+2)
+     5,z(nbasis+nsolid,nbasis+nsolid),q(nsolid,nnodex+2)
      6,indexi(nbasis),indexb(nbasis)
      7,con(ncompl+nsolid,4)
      8,dumb(nbasis),dumc(ncompl),dump(nsolid)
@@ -819,8 +819,8 @@ c  *********************************************************************
 c  this subroutine calculates the equilibrium concentrations of all species 
 c  *********************************************************************
 c
-c-coeff      integer s,ss,iche(nnodex),i_sorb,ialkali
-      integer s,iche(nnodex),i_sorb,ialkali
+c-coeff      integer s,ss,iche(nnodex+2),i_sorb,ialkali
+      integer s,iche(nnodex+2),i_sorb,ialkali
       character *10 dumb,dumc,dump
       character*40 dummy_a40
       character*6 dateiv,dateir,dateiw  !kinet
@@ -836,7 +836,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision amin(nsolid,nnodex+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -848,24 +848,24 @@ c       kinetics.inc
         double precision otherj(nbasis),otheri(ncompl)
         double precision dratemdc(nsolid,nbasis)
         double precision dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
-        double precision rng(nsolid),volmol(nsolid),por(nnodex)
+        double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
-        double precision wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
+        double precision wout(nsolid,nnodex+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       dimension num(6),con(ncompl+nsolid,4)
-     1,eqconst(ncompl+nsolid,nnodex),tmp(nnodex),bi(nbasis)
+     1,eqconst(ncompl+nsolid,nnodex+2),tmp(nnodex+2),bi(nbasis)
      1,bc(nbasis),indexi(nbasis),indexb(nbasis)
-     1,q(nsolid,nnodex),acb(nbasis,nnodex),acc(ncompl,nnodex)
-     3,bn(nbasis,nnodex),pn(nsolid,nnodex),cn(ncompl,nnodex)
+     1,q(nsolid,nnodex+2),acb(nbasis,nnodex+2),acc(ncompl,nnodex+2)
+     3,bn(nbasis,nnodex+2),pn(nsolid,nnodex+2),cn(ncompl,nnodex+2)
      3,vjb(nbasis),vjc(ncompl),s(nbasis,ncompl)
-     4,ss(nbasis,nsolid),bc2(nbasis),x(nnodex),eh(nnodex)
-     5,cs(nnodex),tmpk(nnodex)
-     6,bo(nbasis,nnodex),po(nsolid,nnodex),co(ncompl,nnodex)
+     4,ss(nbasis,nsolid),bc2(nbasis),x(nnodex+2),eh(nnodex+2)
+     5,cs(nnodex+2),tmpk(nnodex+2)
+     6,bo(nbasis,nnodex+2),po(nsolid,nnodex+2),co(ncompl,nnodex+2)
      7,dumb(nbasis),dumc(ncompl),dump(nsolid)
      8,itmpdep(ncompl+nsolid)
 
@@ -873,7 +873,7 @@ c04      common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 c      common /tempdep/ itmpdep(ncompl+nsolid)
 c
       common /vels/vx,vxx     !kinet
-      double precision vx(nnodex)       !kinet
+      double precision vx(nnodex+2)       !kinet
 
 c      iinit2=iinit2+1
 c      write(*,*)'subroutine initi2 aufgerufen',iinit2
@@ -1068,7 +1068,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex),km(nsolid)
+        double precision amin(nsolid,nnodex+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -1080,28 +1080,28 @@ c       kinetics.inc
         double precision otherj(nbasis),otheri(ncompl)
         double precision dratemdc(nsolid,nbasis)
         double precision dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
-        double precision rng(nsolid),volmol(nsolid),por(nnodex)
+        double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex),rout(nsolid,nnodex)
-        double precision wout(nsolid,nnodex)
+        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
+        double precision wout(nsolid,nnodex+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       dimension wconst(nbasis),index(nbasis),num(6)
-     1,eqconst(ncompl+nsolid,nnodex),ss(nbasis,nsolid),bi(nbasis)
-     2,bc(nbasis),acb(nbasis,nnodex),acc(ncompl,nnodex)
+     1,eqconst(ncompl+nsolid,nnodex+2),ss(nbasis,nsolid),bi(nbasis)
+     2,bc(nbasis),acb(nbasis,nnodex+2),acc(ncompl,nnodex+2)
      3,re(nbasis+nsolid),vjb(nbasis),vjc(ncompl),s(nbasis,ncompl)
-     4,bn(nbasis,nnodex),pn(nsolid,nnodex),cn(ncompl,nnodex)
-     5,z(nbasis+nsolid,nbasis+nsolid),q(nsolid,nnodex)
-     6,indexi(nbasis),indexb(nbasis),bo(nbasis,nnodex)
-     7,po(nsolid,nnodex)
-     8,con(ncompl+nsolid,4),cs(nnodex)
+     4,bn(nbasis,nnodex+2),pn(nsolid,nnodex+2),cn(ncompl,nnodex+2)
+     5,z(nbasis+nsolid,nbasis+nsolid),q(nsolid,nnodex+2)
+     6,indexi(nbasis),indexb(nbasis),bo(nbasis,nnodex+2)
+     7,po(nsolid,nnodex+2)
+     8,con(ncompl+nsolid,4),cs(nnodex+2)
      9,dumb(nbasis),dumc(ncompl),dump(nsolid)
 c      common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
       common /vels/vx,vxx     !kinet
-      double precision vx(nnodex)       !kinet
+      double precision vx(nnodex+2)       !kinet
 
 
 c      istati2=istati2+1
@@ -1712,12 +1712,12 @@ c2004xx             bn(nfailba_max,nspezx)=bn(nfailba_max,nspezx-1)/2.
           if(mod(iterneu,2).eq.1)then
 c2004xx             bn(nfailba_max,nspezx)=bn(nfailba_max,nspezx+1)/2.
            do 1819 ib=1,m1
- 1819		 bn(ib,nspezx)=bn(ib,nnodex)  
+ 1819		 bn(ib,nspezx)=bn(ib,nnodex+2)  
            do 1820 ib=1,m2
- 1820		 cn(ib,nspezx)=cn(ib,nnodex)  
+ 1820		 cn(ib,nspezx)=cn(ib,nnodex+2)  
            do 1821 ib=1,m3
- 1821		 pn(ib,nspezx)=pn(ib,nnodex)  
-             write (*,*)'changen+nnodex',nfailba_max,
+ 1821		 pn(ib,nspezx)=pn(ib,nnodex+2)  
+             write (*,*)'changen+nnodex+2',nfailba_max,
      *                      bn(nfailba_max,nspezx+1)
           endif
  1323    continue

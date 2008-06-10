@@ -35,16 +35,16 @@ double gasdev( int *idum);
  void walk2_(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
 		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
 		   ,double partx[NCPMAX],double partxo[NCPMAX],double xmaxr,double xminr
-		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
-		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
-		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2)
+		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX+2][NCBASIS]
+		   ,double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],int ibpstart,double x[NCNODEX+2]
+		   ,double bo[NCNODEX+2][NCBASIS],double co[NCNODEX+2][NCCOMPL],int m1,int m2)
 #else
  void walk2(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
 		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
 		   ,double partx[NCPMAX],double partxo[NCPMAX],double xmaxr,double xminr
-		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
-		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
-		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2)
+		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX+2][NCBASIS]
+		   ,double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],int ibpstart,double x[NCNODEX+2]
+		   ,double bo[NCNODEX+2][NCBASIS],double co[NCNODEX+2][NCCOMPL],int m1,int m2)
 #endif
 {
 {
@@ -183,16 +183,16 @@ double gasdev( int *idum);
  void walk2h_(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
 		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
 		   ,double partx[NCPMAX],double partxo[NCPMAX],double xmaxr,double xminr
-		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
-		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
-		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2,double por[NCNODEX+2])
+		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX+2][NCBASIS]
+		   ,double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],int ibpstart,double x[NCNODEX+2]
+		   ,double bo[NCNODEX+2][NCBASIS],double co[NCNODEX+2][NCCOMPL],int m1,int m2,double por[NCNODEX+2])
 #else
  void walk2h(int npmax,int nxmax,int ncyc,double along,double aquer,double dm[NCNODEX+2]
 		   ,double texe,double dx[NCNODEX+2],double vx[NCNODEX+2]
 		   ,double partx[NCPMAX],double partxo[NCPMAX],double xmaxr,double xminr
-		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX][NCBASIS]
-		   ,double cn[NCNODEX][NCCOMPL],int partib[NCNODEX],int ibpstart,double x[NCNODEX]
-		   ,double bo[NCNODEX][NCBASIS],double co[NCNODEX][NCCOMPL],int m1,int m2,double por[NCNODEX+2])
+		   ,double partic[NCBASIS+NCCOMPL][NCPMAX],double bn[NCNODEX+2][NCBASIS]
+		   ,double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],int ibpstart,double x[NCNODEX+2]
+		   ,double bo[NCNODEX+2][NCBASIS],double co[NCNODEX+2][NCCOMPL],int m1,int m2,double por[NCNODEX+2])
 #endif
  
  
