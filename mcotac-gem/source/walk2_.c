@@ -232,9 +232,10 @@ double gasdev( int *idum);
               slong = 2.*Z1* sqrt(6.* (along*vpx  + dm[iknx]) * texe); /* longitu. Weg x' */
  
            }
-//           partx[ip] +=  vpx *  *texe +  slong;  /* neue position der teilchen = konv. Anteil + disp. Anteil x */
+/*           partx[ip] +=  vpx *  *texe +  slong;  */
+                               /* neue position der teilchen = konv. Anteil + disp. Anteil x */
            partx_dt =  vpx *  texe +  slong;  /* neue position der teilchen = konv. Anteil + disp. Anteil x */
-//reflection of particles
+/*reflection of particles */
 
  
            iknxx= (int ) ( (partx[ip]+dx[1])  / dx[2])  ;
@@ -261,7 +262,7 @@ double gasdev( int *idum);
            
 /* 05-2008 check-move        }
 05-2008 check-move */
-//end reflection
+/* end reflection */
 /* end         05-2008 check-move */
            if(partx[ip]  >=   xxmax  ){  /*keine diffusion ueber 'rechten rand' - const. conc   */
 
