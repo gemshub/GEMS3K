@@ -1025,7 +1025,7 @@ c and for GEMS it is better to work with bigger numbers ;-) so multipy with 10e3
 c      gridvol=dxx * dxx * dxx *1000.0
 	gridvol=1.0
       write(*,*)"scaling 1:",gridvol,gridvol/p_Vs
-      do 1690 n=1,26
+      do 1690 n=1,100
 	 gridvol=dx(n)   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
@@ -1079,7 +1079,7 @@ c      endif
 	gridvol=1.0
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
-      do 1695 n=27,nxmax
+      do 1695 n=101,nxmax+2
 	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
@@ -1095,7 +1095,7 @@ c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
-	do n=2,nxmax-1
+	do n=1,nxmax+2
           poro(n)=por(n)
 	  por(n)=0.0
 	  do  ip=1,m3
