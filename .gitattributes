@@ -133,8 +133,6 @@ mcotac-gem/source/Makefile -text
 mcotac-gem/source/datio.f -text
 mcotac-gem/source/erech.f -text
 mcotac-gem/source/f_gem_node.cpp -text
-mcotac-gem/source/f_gem_node.h -text
-mcotac-gem/source/f_gem_node.inc -text
 mcotac-gem/source/gwheader.h -text
 mcotac-gem/source/gwheader.inc -text
 mcotac-gem/source/hydro1d_.c -text
