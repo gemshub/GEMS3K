@@ -319,7 +319,7 @@
    iRet = TNode::na->GEM_run(uPrimalSol);
    if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_SIA ) )
    {
-	  return 1;
+	  return (int)iRet;
    }
 
   // Extracting GEMIPM output data to FMT part
@@ -377,7 +377,7 @@
 
 *************************************************************/
 
-  return 0;
+	  return (int)iRet;
 }
 
 // (5) Writes a DATABR text file (with file path name provided in string_)

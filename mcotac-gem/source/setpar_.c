@@ -107,11 +107,11 @@
 
 #ifdef __PGI
  void concver_(int npmax,int nbox,double dx[NCNODEX],double bn[NCNODEX+2][NCBASIS],
-			 double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX],double partx[NUPMAX],
+			 double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],double partx[NUPMAX],
 			 double partic[NCCOMPL+NCBASIS][NUPMAX],int ismooth,int m1,int m2)
 #else
  void concver(int npmax,int nbox,double dx[NCNODEX],double bn[NCNODEX+2][NCBASIS],
-			 double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX],double partx[NUPMAX],
+			 double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],double partx[NUPMAX],
 			 double partic[NCCOMPL+NCBASIS][NUPMAX],int ismooth,int m1,int m2)
 #endif
 {
@@ -128,7 +128,7 @@
            }
          }
 
-        for (i=0; i<=npmax-1; i++)  {
+        for (i=0; i<npmax; i++)  {
               iknx= (int )(( partx[i]+dx[1])  / dx[2] );
 
               for(j=0; j< m1;j++) {
@@ -164,14 +164,14 @@
 #ifdef __PGI
   void concneu_(int npmax,int nbox,int nxmax,
              double xminr,double xmaxr,double dx[NCNODEX+2],
-			 double  bn[NCNODEX+2][NCCOMPL],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
+			 double  bn[NCNODEX+2][NCBASIS],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
 			 double partx[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
 			 double bo[NCNODEX+2][NCCOMPL], double co[NCNODEX+2][NCCOMPL], 
 			 int ismooth, int m1,int m2)
 #else
   void concneu(int npmax,int nbox,int nxmax,
              double xminr,double xmaxr,double dx[NCNODEX+2],
-			 double  bn[NCNODEX+2][NCCOMPL],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
+			 double  bn[NCNODEX+2][NCBASIS],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
 			 double partx[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
 			 double bo[NCNODEX+2][NCCOMPL], double co[NCNODEX+2][NCCOMPL], 
 			 int ismooth, int m1,int m2)
@@ -196,7 +196,7 @@
 /*                      printf("boooooo i j %d %d %e \n",i,j,bo[i][j]); */
         }
 
-        for (i=0; i<=npmax-1; i++)  {
+        for (i=0; i<npmax; i++)  {
 /*        for (j=0; j<=*m1; j++) {
         printf("i jjbn partic partib  %d %d %e  %e %d  \n",i,j,bn[iknx][j],partic[j][i],partib[iknx]); 
         } */
@@ -204,7 +204,7 @@
            if(partx[i] > xminr  && partx[i] < xmaxr) {  /**/
 /*               printf("i partx  %d %e \n",i,partx[i]);*/
                   iknx= (int ) (( partx[i]+dx[2]) /dx[2] ) ;
-/*               printf("i iknx  %d %d \n",i,iknx);*/
+/*               printf("i iknx  %d %d \n",i,iknx); */
                    
                   if( iknx > 0  ) {
                         partib[iknx] += 1 ;
@@ -224,7 +224,7 @@
 
 
         if( ismooth ==1) {
-             for(n=0; n<= nxmax-1 ;n++) {  /* cal_dol 1 durch 0 ersetzt */ 
+             for(n=0; n< nxmax ;n++) {  /* cal_dol 1 durch 0 ersetzt */ 
                  for(j=0; j< m1;j++) {
                     if(partib[n]!=0) bn[n][j]=bn[n][j]/(double)partib[n];
                  }

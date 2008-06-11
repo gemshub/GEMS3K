@@ -78,7 +78,7 @@ int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2])
 	input = fopen(fname,"r");
         fscanf(input, "%d %g", &nxx, &faktor );
         printf("datei nx faktor \n%s10\n %d %d %g\n",fname, nxmax,NCNODEX, faktor );
-           for(i=0; i<= (nxmax)-1; i++)  {
+           for(i=0; i< nxmax; i++)  {
 		    /* sum += fread(&h[i][j],sizeof(float),1,input);*/
               sum += fscanf(input," %d",&ihb[i] );
 /*        printf("1i= %d  %d %d \n",i,ihb[i],sum ); */

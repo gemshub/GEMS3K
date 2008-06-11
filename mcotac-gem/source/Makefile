@@ -1,10 +1,10 @@
 CC = gcc-4.3
 CXX = g++-4.3
 FORT = gfortran-4.3
-CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic -D__unix 
+CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic -D__unix -D__GNU 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
+CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU
+CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU
 FFLAGS = -c -g -O2 -fno-underscoring -fbounds-check -DIPMGEMPLUGIN -D__unix -D__GNU
 LINK = gfortran-4.3
 LFLAGS = -g -O2 -fno-underscoring -fbounds-check -DIPMGEMPLUGIN -D__unix -D__GNU -lstdc++ -lgfortran
