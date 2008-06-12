@@ -354,7 +354,7 @@ c set irank and root to zero , used also outside MPI in seriall version
 	gems_PIA=1
 	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
 c	read(*,*)gems_PIA
-	gems_PIA=5
+	gems_PIA=1
 	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
 	 gems_PIA=1
 	endif
@@ -1028,6 +1028,7 @@ c      gridvol=dxx * dxx * dxx *1000.0
 	 gridvol=dx(n)   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
+         bo(j,n)=bn(j,n)         
  1691 continue
 	do 1692 ic=1,m2
 	   cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  !10)
@@ -1082,6 +1083,7 @@ c      endif
 	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
+         bo(j,n)=bn(j,n)         
  1696 continue
 	do 1697 ic=1,m2
 	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  ! i_bcp_gemx(7)=10
@@ -1107,12 +1109,14 @@ c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
 	   por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
 	  if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
 c now change diffusion coefficient
-	dm(n)=dm0*por(n)
+        dm(n)=dm0*por(n)
 c         if (por(n).le.1.e-6) por(n)=1.e-6
       por_null(n)=por(n)
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
+c change amount of water in the system ....water should be at bn(m1-1)
+         bo(m1-1,n)=bn(m1-1,n)/por(n)         
         enddo
 	write(*,*) "porosity update:", por(1:nxmax+2)
 
@@ -1464,7 +1468,7 @@ c>>>>>02-2003 modified boundary on the right side
  
         do 236 j=1,m1
 c               write(*,*)' n j bo bn ',n,j,bo(j,n),bn(j,n)
-        bo(j,n)=bn(j,n)         
+        if (j_sorb.le.j) bo(j,n)=bn(j,n)         
   236   continue
         if (m2.eq.0) go to 241
         do 237 j=1,m2
@@ -1684,7 +1688,7 @@ c****************************
 	do nspez=2,nxmax-1
           do ii=1,m1
            if(ii.gt.j_sorb.and.j_sorb.gt.0) then
-              bn(ii,nspez)=bo(ii,nspez)
+              bn(ii,nspez)=por(nspez)*bo(ii,nspez)
               endif
            enddo
             do jj=1,m2
@@ -2150,7 +2154,6 @@ ckg44    print out itergems
       write(*,*)'proc, t-step,gems iterations, total iterations'
       write(*,*)irank, itimestep_tp,itergems, 
      &          itergemstotal," CPU time:", time_gemstotal
-
 c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
@@ -2166,14 +2169,14 @@ c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
          gridvol=dx(n)   ! normalized !
          por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
-         if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
+         if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero	 
 c
 c now change diffusion coefficient
 	 dm(n)=dm0*por(n)
 
 c         if (por(n).le.1.e-6) por(n)=1.e-6
         enddo
-	write(*,*) "porosity update:", por(1:nxmax)
+	if (irank.eq.toot) write(*,*) "porosity update:", por(1:nxmax)
 
 c
 
