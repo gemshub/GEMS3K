@@ -819,7 +819,6 @@ c	if (irank.eq.root) write(*,*)st
 	if (irank.eq.root) write(*,*)por(1:nxmax)
 cpause	pause
 	do 3331 ih=1,nxmax+2
-      por_null(ih)=por(ih)
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx(ih)= tx_null(ih)*por(ih)**3/(1.-por(ih))**2
@@ -1096,7 +1095,7 @@ c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
-	do n=1,nxmax
+	do n=1,nxmax+2
           poro(n)=por(n)
 	  por(n)=0.0
 	  do  ip=1,m3
@@ -1112,11 +1111,11 @@ c now change diffusion coefficient
         dm(n)=dm0*por(n)
 c         if (por(n).le.1.e-6) por(n)=1.e-6
       por_null(n)=por(n)
+          poro(n)=por(n)
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
 c change amount of water in the system ....water should be at bn(m1-1)
-         bo(m1-1,n)=bn(m1-1,n)/por(n)         
         enddo
 	write(*,*) "porosity update:", por(1:nxmax+2)
 
@@ -1688,7 +1687,7 @@ c****************************
 	do nspez=2,nxmax-1
           do ii=1,m1
            if(ii.gt.j_sorb.and.j_sorb.gt.0) then
-              bn(ii,nspez)=por(nspez)*bo(ii,nspez)
+              bn(ii,nspez)=por(nspez)*bo(ii,nspez)/por_null(nspez)
               endif
            enddo
             do jj=1,m2
@@ -2159,7 +2158,6 @@ c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
 	do n=2,nxmax-1
-          poro(n)=por(n)
 	  por(n)=0.0
 	  do  ip=1,m3
       dum1=f_gem_get_molar_volume(i_bcp_gemx(m1+m2+ip),Tc_dummy,P_dummy)
