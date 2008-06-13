@@ -619,7 +619,7 @@ c  read input locations for output of breakthrough locations
 c  **************************************
       open(20,file ='input_1.dat')
       read(20,*)
-      read(20,'(40x,5i3)')(iortx(iort),iort=1,5) 
+      read(20,'(40x,5i5)')(iortx(iort),iort=1,5) 
       close(20)
 	if (irank.eq.root) then 
       write(*,'(a22,5(1x,i4))')'breakthrough at nodes '
