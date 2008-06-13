@@ -1027,7 +1027,7 @@ c      gridvol=dxx * dxx * dxx *1000.0
 	 gridvol=dx(n)   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
-         bo(j,n)=bn(j,n)         
+         bo(ib,n)=bn(ib,n)         
  1691 continue
 	do 1692 ic=1,m2
 	   cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  !10)
@@ -1082,7 +1082,7 @@ c      endif
 	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
-         bo(j,n)=bn(j,n)         
+         bo(ib,n)=bn(ib,n)         
  1696 continue
 	do 1697 ic=1,m2
 	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  ! i_bcp_gemx(7)=10
@@ -1687,7 +1687,9 @@ c****************************
 	do nspez=2,nxmax-1
           do ii=1,m1
            if(ii.gt.j_sorb.and.j_sorb.gt.0) then
-              bn(ii,nspez)=por(nspez)*bo(ii,nspez)/por_null(nspez)
+c restrict the changes to a minimum relative porosity change of 1%
+	   if (abs(1-por(nspez)/por_null(nspez)).gt.0.01) 
+     &         bn(ii,nspez)=por(nspez)*bo(ii,nspez)/por_null(nspez)
               endif
            enddo
             do jj=1,m2
