@@ -1035,6 +1035,13 @@ c      gridvol=dxx * dxx * dxx *1000.0
 	do 1693 ip=1,m3
  	   pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol     ! 12)/1.
  1693 continue
+c transform the b and c vector to concentrations j_sorb+1 is water!
+	do ib = 1, j_sorb
+ 	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
+	enddo
+	do ic = 1, m2
+ 	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
+	enddo
  1690 continue
 	if (irank.eq.root) then 
 c      write(*,'(13(e8.2,1x))')(bn(ib,1),ib=1,m1),(cn(ic,1),ic=1,m2)
@@ -1090,6 +1097,13 @@ c      endif
 	do 1698 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
+c transform the b and c vector to concentrations j_sorb+1 is water!
+	do ib = 1, j_sorb
+ 	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
+	enddo
+	do ic = 1, m2
+ 	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
+	enddo
  1695 continue
 c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
@@ -1684,21 +1698,33 @@ c   if sorption is included as a complexation reaction the sorbed complexes
 c   with index greater than i_sorb are not moved : reset after transport
 c   for this species
 c****************************
-	do nspez=2,nxmax-1
+	do n=1,nxmax+2
           do ii=1,m1
            if(ii.gt.j_sorb.and.j_sorb.gt.0) then
 c restrict the changes to a minimum relative porosity change of 1%
-	   if (abs(1-por(nspez)/por_null(nspez)).gt.0.01) 
-     &         bn(ii,nspez)=por(nspez)*bo(ii,nspez)/por_null(nspez)
-              endif
+	   if (abs(1-por(n)/por_null(n)).gt.0.01) then
+              bn(ii,n)=por(n)*bo(ii,n)/por_null(n)
+           else 
+	      bn(ii,n)=bo(ii,n)
+            endif
+           endif
            enddo
             do jj=1,m2
                     if(jj.gt.i_sorb.and.i_sorb.gt.0) then
-                     cn(jj,nspez)=co(jj,nspez)
+                     cn(jj,n)=co(jj,n)
 	            endif
              enddo
 	enddo
 
+c transform the b and c vector to back to absolute values j_sorb+1 is water!
+	do n=2,nxmax-1
+	do ib = 1, j_sorb
+ 	   bn(ib,n)=bn(ib,n)*bn(j_sorb+1,n)
+	enddo
+	do ic = 1, m2
+ 	   cn(ic,n)=cn(ic,n)*bn(j_sorb+1,n)
+	enddo
+	enddo
 
 c reset itergems
 	itergems=0
@@ -2170,10 +2196,18 @@ c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
          gridvol=dx(n)   ! normalized !
          por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
          if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero	 
+
 c
 c now change diffusion coefficient
 	 dm(n)=dm0*por(n)
 
+c transform the b and c vector to concentrations j_sorb+1 is water!
+	do ib = 1, j_sorb
+ 	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
+	enddo
+	do ic = 1, m2
+ 	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
+	enddo
 c         if (por(n).le.1.e-6) por(n)=1.e-6
         enddo
 	if (irank.eq.toot) write(*,*) "porosity update:", por(1:nxmax)

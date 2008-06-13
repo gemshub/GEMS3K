@@ -166,14 +166,14 @@
              double xminr,double xmaxr,double dx[NCNODEX+2],
 			 double  bn[NCNODEX+2][NCBASIS],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
 			 double partx[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
-			 double bo[NCNODEX+2][NCCOMPL], double co[NCNODEX+2][NCCOMPL], 
+			 double bo[NCNODEX+2][NCBASIS], double co[NCNODEX+2][NCCOMPL], 
 			 int ismooth, int m1,int m2)
 #else
   void concneu(int npmax,int nbox,int nxmax,
              double xminr,double xmaxr,double dx[NCNODEX+2],
 			 double  bn[NCNODEX+2][NCBASIS],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
 			 double partx[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
-			 double bo[NCNODEX+2][NCCOMPL], double co[NCNODEX+2][NCCOMPL], 
+			 double bo[NCNODEX+2][NCBASIS], double co[NCNODEX+2][NCCOMPL], 
 			 int ismooth, int m1,int m2)
 #endif
   {
