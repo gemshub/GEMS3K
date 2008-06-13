@@ -1701,12 +1701,7 @@ c****************************
 	do n=1,nxmax+2
           do ii=1,m1
            if(ii.gt.j_sorb.and.j_sorb.gt.0) then
-c restrict the changes to a minimum relative porosity change of 1%
-	   if (abs(1-por(n)/por_null(n)).gt.0.01) then
               bn(ii,n)=por(n)*bo(ii,n)/por_null(n)
-           else 
-	      bn(ii,n)=bo(ii,n)
-            endif
            endif
            enddo
             do jj=1,m2
