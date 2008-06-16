@@ -134,7 +134,7 @@ c and a second buffer
 
 c time measurements
 	double precision time_gemsmpi, time_gemsmpi_start, time_gemsmpi_end 
-	INTEGER argc, iinn, i_gems, nNodes
+	INTEGER argc, iinn, i_gems
 c	integer CSTR(100)
 c	integer c_to_i(100)
 c kg44 itergemstime only needed for debug
@@ -182,6 +182,8 @@ c-coeff      integer npin, s,ss
       integer p_nDCb, p_nICb, p_nPHb, p_nPSb, p_nPH, gsize3
       integer itimestep_tp, dtprstep, kk1,k1
       real t1,t2
+      double precision bog(nbasis,nnodex+2),pog(nnodex+2),          ! this are arrays used for conversion gems-mcotac
+     &         cog(ncompl,nnodex+2)
       double precision p_T     !// Temperature T, K                        +      +      -     -
       double precision p_P     !// Pressure P, bar                         +      +      -     -
       double precision p_Vs    !// Volume V of reactive subsystem, cm3     -      -      +     +
@@ -215,23 +217,6 @@ c !//  FMT variables (units need dimensionsless form)
       double precision p_hDt   !// hydraulic transversal dispersivity, m**2/s
       double precision p_hDv   !// hydraulic vertical dispersivity, m**2/s
       double precision p_nto   !// node Peclet number, dimensionless
-c !// Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
-c !// exchange of values occurs through lists of indices, e.g. xDC, xPH
-c      real p_A_trans(gsize1,gsize2)          ! GEMS invert coeff.-matrix
-c      real p_A(gsize2,gsize1)          ! GEMS invert coeff.-matrix
-c      double precision  p_xDC(gsize1) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-c      double precision  p_gam(gsize1) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
-c      double precision  p_aPH(gsize3) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
-c      double precision  p_xPH(gsize3) ! (nPHb)  !// total mole amounts of phases [nPHb]          -      -      +     +
-c      double precision  p_vPS(gsize3) ! (nPSb)  !// phase volume, cm3/mol        [nPSb]          -      -      +     +
-c      double precision  p_mPS(gsize3) ! (nPSb)  !// phase (carrier) mass, g      [nPSb]          -      -      +     +
-c      double precision  p_bPS(gsize2,gsize3) ! (nICBb,nPSb)  !// bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases  [nPSb] ??       -      -      +     +
-c      double precision  p_dul(gsize1) ! (nDCb)  ! // upper kinetic restrictions [nDCb]           +      +      -     -
-c      double precision  p_dll(gsize1) ! (nDCb)  ! //  lower kinetic restrictions [nDCb]           +      +      -     -
-c      double precision  p_bIC(gsize2) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
-c      double precision  p_rMB(gsize2) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
-c      double precision  p_uIC(gsize2) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
       double precision, allocatable ::  p_xDC(:) ! (nDCb)  !  // DC mole amounts at equilibrium [nDCb]      -      -      +     +
       double precision, allocatable ::  p_gam(:) ! (nDCb)  !  // activity coeffs of DC [nDCb]               -      -      +     +
       double precision, allocatable ::  p_aPH(:) ! (nPHb)  !// Specific surface areas of phases (m2/g)       +      +      -     -
@@ -522,7 +507,7 @@ c04>>>>>>>>>>>>>>>>>>>>
 c      ialkali=1    
       ialkali=0  
 c      ipor=1
-      ipor=0
+      ipor=1
       imodbound=0	 
 c nov 2002>>>>>>>>
       ipuls=0
@@ -700,7 +685,7 @@ c  **************************
       do 48 i=1,m3
       pn(i,1)=gespb(i)
    48 continue
-   49 do 54 n=2,nxmax
+   49 do 54 n=2,nxmax+2
       do 150 i=1,m1
       bn(i,n)=gesbi(i)
       acb(i,n)=1.
@@ -777,14 +762,14 @@ c      t2=secnds(t1)
 c      write (6,2200) t2
 
 c>>>>>02-2003 modified boundary on the right side
-      if(imodbound.gt.0)then  
-       do 1316, nspezx=1,nxmax+1
-       if (nspezx.ge.45)then
-         bn(4,nspezx)=0.
-         bn(5,nspezx)=0.
-       endif
- 1316  continue
-      endif
+c      if(imodbound.gt.0)then  
+c       do 1316, nspezx=1,nxmax+1
+c       if (nspezx.ge.45)then
+c         bn(4,nspezx)=0.
+c         bn(5,nspezx)=0.
+c       endif
+c 1316  continue
+c      endif
 c>>>>>02-2003 modified boundary on the right side
 
 
@@ -862,36 +847,18 @@ c03      endif                                          !endif ihydro = 1
 
 
 cpause      pause
-c04<<<<<<<<<<<
+c04<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+cccc -t "cal-dol-boun1-dch.dat", "cal-dol-boun1-dbr-1.dat"  are also in ipmfiles-dat.lst normally
+c     open data-ch file for initialisation and names (only once)
+
+	if(i_gems.eq.1) then
+
       p_NodeHandle=1
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
 c  first read is for boundary conditons node 1
-	argc=5
-	iinn=3
-      xxyy=1.23456789
-	FNAME10="abcdevwxyz"
-c	CSTR_char30="xbtdefghijklmnopqrst1234567890"
-c      read(CSTR_char30,'(100(a1))')(chch(i),i=1,100)
-	if (irank.eq.root) then 
-         write(*,*)gems_in_ipmf
-         write(*,*)gems_dbr_f1
-         write(*,*)gems_dbr_f2
-        write (*,*)'FORTRAN defined in C++ argc', argc
-        write (*,*)'FORTRAN integer        iinn', iinn
-        write (*,*)'FORTRAN double         xxyy', xxyy
-	write (*,*)'FORTRAN char*10   FNAME10  ', fname10
-c	write (*,*)'FORTRAN int array CSTR(10) ', (CSTR(L),L=1,10)
-	write (*,*)'FORTRAN char*10     line   ', line
-c	write (*,*)'FORTRAN char*10 c_to_i ',  c_to_i
-        write(*,*)'nnode',nNodes
-c	write(*,*)'cto',c_to_i1
-c	write(*,*)'cto',c_to_i2
-c	write(*,*)'nodetype',nodeTypes
-        endif
-c	pause "F_GEM_INIT"
 
-       nNodes= nxmax    !   1 
-      	if (irank.eq.root) write(*,*)'nNodes =', nNodes
 
       if (F_GEM_INIT( gems_in_ipmf ).eq.1) then
 		write(*,*) "GEMS init failed"
@@ -906,9 +873,6 @@ c  50	continue
 c      write(CSTR_char30,'(30a1)')(CSTR(i),i=1,30) 
 
 
-c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-cccc -t "cal-dol-boun1-dch.dat", "cal-dol-boun1-dbr-1.dat"  are also in ipmfiles-dat.lst normally
-c     open data-ch file for initialisation and names (only once)
 
 
 c   read 2. for p_ variables        
@@ -974,15 +938,12 @@ c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases
          allocate(p_xPA(p_nPSb))
         endif
 
-
-cc2005      endif  ! igems_rw=0
-
-
+	p_xDC=0.0
       iNode=0
       p_NodeHandle=1
       p_NodeStatusFMT = 1
       p_NodeStatusCH=1
-      if(i_gems.eq.1) then
+
 	call F_GEM_READ_NODE( gems_dbr_f1, p_NodeHandle,p_NodeTypeHY
      *,p_NodeTypeMT,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone
      *,p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
@@ -995,20 +956,9 @@ cc2005      endif  ! igems_rw=0
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone'
       write(*,*)iNode,p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-c      pause
-
-c      write(*,*)'p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs'
-c      write(*,*)p_T, p_P,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs
-c	pause
-     *
-c      write(*,*)p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh,
-c     * p_Tm
-c     *,p_dt,p_dt1,p_ot,p_Vt,p_eps,p_Km,p_Kf,p_S,p_Tr,p_h,p_rho,p_al,p_at
-c     *,p_av,p_hDl,p_hDt,p_hDv,p_nPe,p_xDC,p_gam,p_xPH,p_vPS,p_mPS,p_bPS
-c     *,p_xPA,p_bIC,p_rMB,p_uIC,p_dRes1,p_dRes2
 	write(*,*)"p_XDC 0", p_xDC
-c      pause
 	endif
+c      pause
 c  here loop to read in additional geochmical systems to define other nodes....
 c      aa-initial-dbr-1.dat to aa-initial-dbr-50.dat and aa-boundary-dbr-0.dat are available)
 c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
@@ -1027,39 +977,29 @@ c      gridvol=dxx * dxx * dxx *1000.0
 	 gridvol=dx(n)   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
-         bo(ib,n)=bn(ib,n)         
- 1691 continue
+         bog(ib,n)=bn(ib,n)              ! initial copy of masses        
+ 1691    continue
 	do 1692 ic=1,m2
 	   cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  !10)
- 1692 continue
+           cog(ic,n)=cn(ic,n)
+ 1692    continue
 	do 1693 ip=1,m3
  	   pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol     ! 12)/1.
- 1693 continue
+ 1693     continue
 c transform the b and c vector to concentrations j_sorb+1 is water!
-	do ib = 1, j_sorb
+	do ib = 1, m1-1
  	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
 	enddo
 	do ic = 1, m2
  	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
+              ! initial copy of masses        
 	enddo
- 1690 continue
-	if (irank.eq.root) then 
-c      write(*,'(13(e8.2,1x))')(bn(ib,1),ib=1,m1),(cn(ic,1),ic=1,m2)
-c     *,(pn(ip,1),ip=1,m3)
-ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-c      write(*,*)' 1 p_xDc(ib) '
-c	write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-        endif
-c      write(*,*)(bn(ib,1),ib=1,m1)
-c      write(*,*)(cn(ic,1),ic=1,m2)
-c      write(*,*)(pn(ip,1),ip=1,m3)
-c	pause "basis complex solids at n=1"
-      endif
+ 1690  continue
+
 
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
 c  second read is for initial conditons nodes 2 to nxmax
       
-      if(i_gems.eq.1) then
       iNode=0
       p_NodeHandle=1
       p_NodeStatusFMT = 1
@@ -1072,16 +1012,6 @@ c  second read is for initial conditons nodes 2 to nxmax
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
 
-	write(*,*)"p_XDC 1", p_xDC
-c	 if (irank.eq.root) write(*,*) 'inode= ' ,inode
-c kg44
-c      if (i_output.eq.1)then
-c	   write(35,*) 'node','2 and rest' 
-c	   write(35,'(20(e18.12,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c	   write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
-c         write(35,*) 'end node 2 and rest'
-c      endif
-	 endif
 	gridvol=1.0
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
@@ -1089,16 +1019,17 @@ c      endif
 	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
-         bo(ib,n)=bn(ib,n)         
+         bog(ib,n)=bn(ib,n)         
  1696 continue
 	do 1697 ic=1,m2
 	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  ! i_bcp_gemx(7)=10
+ 	   cog(ic,n)=cn(ic,n)
  1697 continue
 	do 1698 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
 c transform the b and c vector to concentrations j_sorb+1 is water!
-	do ib = 1, j_sorb
+	do ib = 1, m1-1
  	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
 	enddo
 	do ic = 1, m2
@@ -1123,29 +1054,14 @@ c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
 	  if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
 c now change diffusion coefficient
         dm(n)=dm0*por(n)
-c         if (por(n).le.1.e-6) por(n)=1.e-6
-      por_null(n)=por(n)
-          poro(n)=por(n)
+        por_null(n)=por(n)
+        poro(n)=por(n)
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
 c change amount of water in the system ....water should be at bn(m1-1)
         enddo
 	write(*,*) "porosity update:", por(1:nxmax+2)
-
-c kg44
-c      if(i_output.eq.1)then
-c       write(35,*)' bn n=2  '
-c       write(35,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1)
-c       write(35,*)' cn n=2  '
-c       write(35,'(13(e8.2,1x))')(cn(ic,2),ic=1,m2)
-c       write(35,*)' pn n=2  '
-c       write(35,'(13(e8.2,1x))')(pn(ip,2),ip=1,m3)
-c
-c       write(35,*)' 2 p_xDc(ib) '
-c       write(35,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c	 write (35,*)' end of initial calc ' 
-c      endif
 
 	if (irank.eq.root) then 
          write(*,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1),(cn(ic,2),ic=1,m2)
@@ -1154,24 +1070,12 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
          write(*,*)' 2 p_xDc(ib) '
          write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
          endif
-c      write(*,*)(cn(ic,2),ic=1,m2)
-c      write(*,*)(pn(ip,2),ip=1,m3)
-c	pause "basis complex solids at n=2 to nxmax"
 
-cgems	stop
+	endif                ! end if for i_gems
 
-
-
-c      do 51 i=1,20
-c	  chch(i)=char(c_to_i(i))
-c  51	continue
-
-cc      write(CSTR_char30,'(30a1)')(chch(i),i=1,30) 
-cc	write (*,*)'FORTRAN char*10 c_to_i ',c_to_i,CSTR_char30
-cpause	pause "pause"
 
 c>>>>>>>>>>>>>>>>>>>>FROM GEMS integration>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+c**************************************************************************
 
 
       if (idynam.eq.0) go to 500
@@ -1198,10 +1102,10 @@ c init ix and iy
       ix=0
       iy=0
 c      uabs= abs(vx(1,1))
-      do 1320 ix=2,nxmax
+      do 1320 ix=2,nxmax+2
        x(ix)=x(ix-1)+dx(ix)
  1320 continue
-	if (irank.eq.root) write(*,*)'dx',dx  
+	if (irank.eq.root) write(*,*)'dx',dx(1:nxmax)  
       do 1322 ix=1,nxmax+2
        vx(ix) = vxx
        dm(ix) = dm0
@@ -1456,14 +1360,14 @@ c  **********************************
 c  set old values equal to new values
 c  **********************************  
 c>>>>>02-2003 modified boundary on the right side
-      if(imodbound.gt.0) then
-       do 1317, nspezx=1,nxmax+1
-       if (nspezx.ge.41)then
-         bn(4,nspezx)=0.
-         bn(5,nspezx)=0.
-       endif
- 1317  continue
-      endif
+c      if(imodbound.gt.0) then
+c       do 1317, nspezx=1,nxmax+1
+c       if (nspezx.ge.41)then
+c         bn(4,nspezx)=0.
+c         bn(5,nspezx)=0.
+c       endif
+c 1317  continue
+c      endif
 c>>>>>02-2003 modified boundary on the right side
       do 240 n=1,nxmax-1
         if (j_decay.gt.0)then
@@ -1507,31 +1411,31 @@ c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
 c        endif
   240 continue
 c2002<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-c2003         if(ipor.gt.0)then
-c2003          if (k1.gt.3)then
-c2003           dtnminmin=dtmax
-c2003           dtdxmin=xmax
-c2003           ndtmin=nxmax
-c2003           vmin=vx(1)
-c2003           do 221 n1=2,nxmax-1
-c2003            if(vx(n1).ne.0.)dtnmin1=dx(n1)/vx(n1)/2.
-c2003            if(dm(n1).ne.0.)dtnmin2=dx(n1)**2/2/dm(n1)
-c2003             dtnmin=dtnmin1+dtnmin2
-c2003            if(dtnminmin.le.dtnmin)then
-c2003               dtnminmin=dtnmin
-c2003               dtdxmin=dx(n1)
-c2003               vmin=vx(n1) 
-c2003               ndtmin=n1
-c2003            endif
-c2003  221      continue
-c2003           dtmax=dtnminmin/2.
-c          texe=dtnminmin
+c         if(ipor.gt.0)then
+c          if (k1.gt.3)then
+c           dtnminmin=dtmax
+c           dtdxmin=xmax
+c           ndtmin=nxmax
+c           vmin=vx(1)
+c           do 221 n1=2,nxmax-1
+c            if(vx(n1).ne.0.)dtnmin1=dx(n1)/vx(n1)/2.
+c            if(dm(n1).ne.0.)dtnmin2=dx(n1)**2/2/dm(n1)
+c             dtnmin=dtnmin1+dtnmin2
+c            if(dtnminmin.le.dtnmin)then
+c               dtnminmin=dtnmin
+c               dtdxmin=dx(n1)
+c               vmin=vx(n1) 
+c               ndtmin=n1
+c            endif
+c  221      continue
+c           dtmax=dtnminmin/2.
+c           texe=dtmax
 c            dtmax=dx(2)/2./vx(2)
 c            texe=dx(2)/2./vx(2)
-c2003          endif
+c          endif
 c          write(*,*)'k3-ddtmax=',k1, texe,dtdxmin,vmin,ndtmin
 c         pause
-c2003         endif
+c         endif
 c2002>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 c      tmax= abs(dx(1)/( (2.0 *(along*uabs+dm)/dx(1))+uabs))
 c      tmax=  dtmax
@@ -1601,11 +1505,11 @@ c   move particles during dt
       call walk2h(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
      * %val(aquer),dm,%val(texe),dx,vx
      *  ,partx,partxo, %val(xmaxr),%val(xminr),partic,bn,cn,partib,
-     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2), por)
+     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2),por)
 #else
       call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
-     *  ibpstart,x,bo,co,m1,m2, por)
+     *  ibpstart,x,bo,co,m1,m2,por)
 #endif
 c kg44 walker with variable porosity
 c      call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
@@ -1663,14 +1567,14 @@ c     *bn(1,2),pn(2,2),pn(3,2)
 
 
 c>>>>>02-2003 modified boundary on the right side
-      if(imodbound.gt.0)then  
-       do 1318, nspezx=1,nxmax+1
-       if (nspezx.ge.45)then
-         bn(4,nspezx)=0.
-         bn(5,nspezx)=0.
-       endif
- 1318  continue
-      endif 
+c      if(imodbound.gt.0)then  
+c       do 1318, nspezx=1,nxmax+1
+c       if (nspezx.ge.45)then
+c         bn(4,nspezx)=0.
+c         bn(5,nspezx)=0.
+c       endif
+c 1318  continue
+c      endif 
 c>>>>>02-2003 modified boundary on the right side
 
 
@@ -1698,28 +1602,19 @@ c   if sorption is included as a complexation reaction the sorbed complexes
 c   with index greater than i_sorb are not moved : reset after transport
 c   for this species
 c****************************
+c transform the b and c vector to back to absolute values j_sorb+1 is water!
+
 	do n=1,nxmax+2
-          do ii=1,m1
-           if(ii.gt.j_sorb.and.j_sorb.gt.0) then
-              bn(ii,n)=por(n)*bo(ii,n)/por_null(n)
-           endif
+c set water!
+              bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
+          do ii=1,j_sorb
+   	      bn(ii,n)=bn(ii,n)*bn(j_sorb+1,n)
            enddo
             do jj=1,m2
-                    if(jj.gt.i_sorb.and.i_sorb.gt.0) then
-                     cn(jj,n)=co(jj,n)
-	            endif
+        	     cn(jj,n)=cn(jj,n)*bn(j_sorb+1,n)
              enddo
 	enddo
 
-c transform the b and c vector to back to absolute values j_sorb+1 is water!
-	do n=2,nxmax-1
-	do ib = 1, j_sorb
- 	   bn(ib,n)=bn(ib,n)*bn(j_sorb+1,n)
-	enddo
-	do ic = 1, m2
- 	   cn(ic,n)=cn(ic,n)*bn(j_sorb+1,n)
-	enddo
-	enddo
 
 c reset itergems
 	itergems=0
@@ -1730,17 +1625,17 @@ c root obtains the full dataset
 
        call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c we define the size of subintervalls for buffer variables
-	i_subdomain_length = abs((nxmax-2)/npes)
+	i_subdomain_length = abs((nxmax)/npes)
 	if (irank.eq.root) then 
-         write(*,*) 'nodes/procs: ', (nxmax-2)/npes
-         write(*,*) 'nxmax, procs',nxmax-2, npes
+         write(*,*) 'nodes/procs: ', (nxmax)/npes
+         write(*,*) 'nxmax, procs',nxmax, npes
          write(*,*) 'i_subdomain_length', i_subdomain_length
         endif
 c  make sure grid size and no of processors fit together
         if (mod((nxmax-2),npes).ne.0) then
          write(*,*) 'parallelization error: check numer of processors'
             write(*,*)'i_subdomain_length is not an integer'
-            write(*,*)'mod((nxmax),npes)',mod((nxmax-2),npes)
+            write(*,*)'mod((nxmax),npes)',mod((nxmax),npes)
             call mpi_finalize(ierr)
             if (ierr.eq.0) then
               write(*,*)'mpi_finalize successfull'
@@ -1758,9 +1653,9 @@ c we assume that if bn_subdomain is already allocated the others are also existi
          allocate(cn_subdomain(m2*i_subdomain_length))
          allocate(pn_subdomain(m3*i_subdomain_length))
 c and a second buffer because W. refuses to work with allocate
-         allocate(bn_domain((m1-1)*(nxmax-2)))
-         allocate(cn_domain(m2*(nxmax-2)))
-         allocate(pn_domain(m3*(nxmax-2)))
+         allocate(bn_domain((m1-1)*(nxmax)))
+         allocate(cn_domain(m2*(nxmax)))
+         allocate(pn_domain(m3*(nxmax)))
 c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
 c     &   irank,nxmax,i_subdomain_length 
 c	 write(*,*) m1, m2, m3
@@ -1774,7 +1669,7 @@ c	 write(*,*) m1, m2, m3
 	endif
         
         if (irank.eq.root) then        
-	  do n=2,nxmax-1
+	  do n=2,nxmax+1
             do ib=1,m1-1
 	  	bn_domain(ib+(n-2)*(m1-1))=bn(ib,n)
             enddo
@@ -1782,7 +1677,7 @@ c	 write(*,*) m1, m2, m3
 	  	cn_domain(ic+(n-2)*m2)=cn(ic,n)
             enddo
             do ip=1,m3
-	  	pn_domain(ip+(n-2)*m3)=po(ip,n)  !//we reuse pn_domain for Po_domain
+	  	pn_domain(ip+(n-2)*m3)=pn(ip,n)  !//we reuse pn_domain for Po_domain
             enddo
           enddo
 	endif
@@ -1826,63 +1721,11 @@ c      goto 1556  ! only node 2 with old gems  values
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
-c      write(*,*)n,(p_xDc(ib),ib=1,p_nDCb)
-c      pause "xDC after transport at n"
-
-c      goto 1556  ! only node 2 with old gems  values
-
-c      do 1684 ii=1, p_nICb   !gems
-c        sum=0.
-c        do 1685 jj=1 , p_nDCb  !  -2  14-02-2005     !gems         
-
-c         sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
-c 1685   continue
-c   	  p_bPS(1,ii)=sum            ! only one phse here       ! ( nPSb,nICb) ???
-c 1684 continue
- 
-      do 1682 ii=1, p_nPHb  !gems
-        sum=0.
-c        do 1683 jj=11,13                              !  gemsnDCb-gemsnPHb+1, gemsnDCb               
-cc   	  gemsxPH(ii)=gemsxDc(10+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-cfalsch   	  p_xPH(ii)=p_xDc(13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-   	  p_xPH(ii)=p_xDc(p_nDCb-p_nPHb+ii)          !13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-c        write(*,*)ii, gemsxPH(ii)
- 1682 continue
-cgems      pause "XXXX"
-c kg44
-c	if (i_output.eq.1.and.n.eq.2)then
-c      	    write(35,*) 'node',n,'vor GEMS' 
-c	    write(35,*) 'DCb'
-c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c	    write(35,*) 'ICb'
-c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
-c	     write(35,*) 'b_bPS'
-c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
-c	     write(35,*) 'xPH'
-c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-c	endif
+c	write(*,*)"p_bic",n, p_bIC
+c	write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
 
-cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
-c      p_NodeStatusCH =1    ! need GEMS AIA  
-c      p_NodeStatusCH = 5    ! uses PIA (Smart Initial Approximation) to accelerate calculatios
-c   array boundaries  * gemsnDCb,gemsnPHb,gemsnPSb,gemsnICb
-c                       gemsA(MaxDCN,MaxICN) 
-c      write(*,*)n,(gemsbIC(ib),ib=1,gemsnICb)
-
-c	stop
-
-
-cfalsch 1555 continue   
-c      pause "write dbr"
-c<<<<<<<<<<GEMS caclculations for all nodes have to be prepared here
-
-ccx      if(i_gems.eq.1)then
-
-cc	do 1411 nspez=2,nxmax-1
- 1556 continue
-
-	iNode=  n
+      iNode=  n
       p_NodeHandle=  n
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
@@ -1890,13 +1733,16 @@ c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
-
-	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+	idum = F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
+c	if (idum.ne.1) then 
+c	   write(*,*)"GEMS problem ", idum
+c	   stop
+c	endif
 
 c  monitor gems iterations
         itergems=itergems+p_IterDone
@@ -1975,7 +1821,7 @@ c now do MPI_GATHER
      &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
      &	    MPI_COMM_WORLD,ierr)
 
-	  do n=2,nxmax-1
+	  do n=2,nxmax+1
             do ib=1,m1-1
 	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1-1))
             enddo
@@ -2001,7 +1847,7 @@ C
 #else       
 c	pause "node loop start"
 c
-	do 1555 n=2,  nxmax-1                  !node loop for GEMS after Transport step
+	do 1555 n=2,  nxmax+1                  !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1
 
@@ -2014,79 +1860,6 @@ c      goto 1556  ! only node 2 with old gems  values
 	p_xDc(i_bcp_gemx(m1+m2+ip))= pn(ip,n)  !  gemsxDc(12)    ! pn(1,n)   solids not used for transport
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
-c	if (irank.eq.root) then 
-c	 write(*,*)" node: ",n
-c	 write(*,*)" vectors after transport before chemistry"
-c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-c     *,(pn(ip,2),ip=1,m3)
-ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-c         write(*,*)' 2 p_xDc(ib) '
-c         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c         endif
-
-
-c	if (irank.eq.root) then 
-c	 write(*,*)" vectors after transport before chemistry"
-c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-c     *,(pn(ip,2),ip=1,m3)
-ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-c         write(*,*)' 2 p_xDc(ib) '
-c         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c         endif
-
-c      goto 1556  ! only node 2 with old gems  values
-
-c      do 1684 ii=1, p_nICb   !gems
-c        sum=0.
-c        do 1685 jj=1 , p_nDCb  !  -2  14-02-2005     !gems         
-
-c         sum=sum+ p_A_trans(ii,jj) *p_xDc(jj)
-c 1685   continue
-c   	  p_bPS(1,ii)=sum            ! only one phse here       ! ( nPSb,nICb) ???
-c 1684 continue
-
-c kg44 do we really need this? 
-c      do 1682 ii=1, p_nPHb  !gems
-c        sum=0.
-c        do 1683 jj=11,13                              !  gemsnDCb-gemsnPHb+1, gemsnDCb               
-cc   	  gemsxPH(ii)=gemsxDc(10+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-cfalsch   	  p_xPH(ii)=p_xDc(13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-c   	  p_xPH(ii)=p_xDc(p_nDCb-p_nPHb+ii)          !13+ii)            ! only one phse here       ! ( nPSb,nICb) ???
-c         write(*,*)ii, p_xPH(ii)
-c 1682 continue
-cgems      pause "XXXX"
-ckg44
-c	if (i_output.eq.1.and.n.eq.2)then
-c      	write(35,*) 'node',n,'vor GEMS' 
-c	     write(35,*) 'DCb'
-c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c	write(35,*) 'ICb'
-c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
-c	     write(35,*) 'b_bPS'
-c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
-c	     write(35,*) 'xPH'
-c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-c	endif
-
-
-cc      gemsNodeStatusCH =1    ! need GEMS AIA  ??
-c      p_NodeStatusCH =1    ! need GEMS AIA  
-c      p_NodeStatusCH = 5    ! uses PIA (Smart Initial Approximation) to accelerate calculatios
-c   array boundaries  * gemsnDCb,gemsnPHb,gemsnPSb,gemsnICb
-c                       gemsA(MaxDCN,MaxICN) 
-c      write(*,*)n,(gemsbIC(ib),ib=1,gemsnICb)
-
-c	stop
-
-
-cfalsch 1555 continue   
-c      pause "write dbr"
-c<<<<<<<<<<GEMS caclculations for all nodes have to be prepared here
-
-ccx      if(i_gems.eq.1)then
-
-cc	do 1411 nspez=2,nxmax-1
- 1556 continue
 
 	iNode=  n
       p_NodeHandle=  n
@@ -2097,14 +1870,18 @@ c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
 c	write(*,*)"p_bic",n, p_bIC
+c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
-	idum = F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+      idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
-c	if (idum.ne.1) write(*,*)"GEMS answered: ",idum
+c	if (idum.ne.1) then 
+c	   write(*,*)"GEMS problem ", idum
+c	   stop
+c	endif
 
 c  monitor gems iterations
         itergems=itergems+p_IterDone
@@ -2180,7 +1957,7 @@ c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
-	do n=2,nxmax-1
+	do n=1,nxmax+2
 	  por(n)=0.0
 	  do  ip=1,m3
       dum1=f_gem_get_molar_volume(i_bcp_gemx(m1+m2+ip),Tc_dummy,P_dummy)
@@ -2191,21 +1968,24 @@ c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
          gridvol=dx(n)   ! normalized !
          por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
          if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero	 
-
 c
 c now change diffusion coefficient
 	 dm(n)=dm0*por(n)
-
 c transform the b and c vector to concentrations j_sorb+1 is water!
-	do ib = 1, j_sorb
- 	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
-	enddo
-	do ic = 1, m2
- 	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
-	enddo
-c         if (por(n).le.1.e-6) por(n)=1.e-6
+
+c set water!
+              bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
+c
+          do ii=1,j_sorb
+ 	      bn(ii,n)=bn(ii,n)/bn(j_sorb+1,n)
+           enddo
+           do jj=1,m2
+  	          cn(jj,n)=cn(jj,n)/bn(j_sorb+1,n)
+           enddo
+
+c         end loop over nodes
         enddo
-	if (irank.eq.toot) write(*,*) "porosity update:", por(1:nxmax)
+	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
 
 c
 

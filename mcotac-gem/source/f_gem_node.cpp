@@ -222,7 +222,7 @@
 //
 #ifdef __unix
 #ifdef __PGI
-    extern "C" int  f_gem_calc_node_(
+   extern "C" int  f_gem_calc_node_(
  #else
    extern "C" int  f_gem_calc_node(
 #endif
@@ -269,6 +269,7 @@
  )
 {
   int iRet = 0;
+  int idum = 0;
   int ii;
   bool uPrimalSol = true;
  
@@ -281,6 +282,7 @@
   // (2) ----------------------------------------------
   // Work loop for the coupled FMT-GEM modelling
 
+//  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_before1.dat");
 
   if (uPrimalSol) {
    // sends only speciation changed by mcotac 
@@ -290,10 +292,9 @@
 		
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
-
-//	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
+//	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ )
 //	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
-//		}
+
              TNode::na->pCNode()->bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
 
    }
@@ -307,6 +308,8 @@
    TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
              p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
           TNode::na->pCNode()->bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
+//	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ )
+//	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
 
  
 //  TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
@@ -314,12 +317,23 @@
 //   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
 //             p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH );
    }
-  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr.dat");
+//  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_befor2.dat");
  // Calling GEMIPM calculation
    iRet = TNode::na->GEM_run(uPrimalSol);
-   if( !( iRet == OK_GEM_AIA || iRet == OK_GEM_SIA ) )
+
+   if( !( (iRet == OK_GEM_AIA) || (iRet == OK_GEM_SIA) ) )
    {
-	  return (int)iRet;
+	printf("GEMS returned: %d for node %d \n",iRet,p_NodeHandle);
+
+	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ ) {
+	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
+		}
+//  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_error.dat");
+
+	/* here we stop the execution */
+        abort();
+        idum =0;
+	  return idum;
    }
 
   // Extracting GEMIPM output data to FMT part
@@ -330,54 +344,8 @@
  p_NodeHandle =(int) NodeHandle;
  p_NodeStatusCH =(int)  NodeStatusCH;
  p_IterDone = (int) IterDone;
-
-/**************************************************************
-  int ii;
-  int nIC, nDC, nPH;
- // Extracting data bridge dimensionalities
-   nIC = TProfil::pm->multi->CSD->nICb;
-   nDC = TProfil::pm->multi->CSD->nDCb;
-   nPH = TProfil::pm->multi->CSD->nPHb;
-
-  fstream f_log("MAIF_CALC.txt", ios::out|ios::app );
-
-  f_log << "Node = " <<  p_NodeHandle << "( " << readF << ", " <<
-         indN << ", " << indM << ", " <<  indK << " )";
-  f_log << "  NodeStatus = " <<  p_NodeStatusCH;
-  f_log << "  ReturnStatus = " <<  iRet;
-  f_log << "  IterDone = " <<  p_IterDone << endl;
-
-  f_log << "p_xDC" << endl;
-  for(ii=0; ii<nDC; ii++ )
-    f_log << setprecision(15) << scientific << p_xDC[ii]<< ", ";
-  f_log <<  endl;
-
-  f_log << "p_gam" << endl;
-  for(ii=0; ii<nDC; ii++ )
-    f_log << setprecision(15) << scientific << p_gam[ii]<< ", ";
-  f_log <<  endl;
-
-  f_log << "p_xPH" << endl;
-  for(ii=0; ii<nPH; ii++ )
-    f_log << setprecision(15) << scientific << p_xPH[ii]<< ", ";
-  f_log <<  endl;
-
-  f_log << "p_uIC" << endl;
-  for(ii=0; ii<nIC; ii++ )
-    f_log << setprecision(15) << scientific << p_uIC[ii]<< ", ";
-  f_log <<  endl;
-
-  f_log << "p_rMB" << endl;
-  for(ii=0; ii<nIC; ii++ )
-    f_log << setprecision(15) << scientific << p_rMB[ii]<< ", ";
-  f_log <<  endl;
-
-  f_log <<  endl;
-  f_log <<  endl;
-
-*************************************************************/
-
-	  return (int)iRet;
+	  idum=1;
+	  return idum;
 }
 
 // (5) Writes a DATABR text file (with file path name provided in string_)
