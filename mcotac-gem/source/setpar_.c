@@ -234,12 +234,15 @@
               }
         }
 /*  constant concentration at x=0   */
+/*
              for(j=0; j< m1;j++) {
-               bn[0][j] = bo[0][j] ;    /* inlet = const. concentration */
+               bn[0][j] = bo[0][j] ;    
             }
              for(j=0; j< m2;j++) {        
-                cn[0][j] = co[0][j] ;    /* inlet = const. concentration */
+                cn[0][j] = co[0][j] ;    
              }
+*/
+
 /*	transmission boundary  'rigth side' 
 		bn[*nx -2][j] = -bn[*nx-4][j]+2.*bn[*nx -3][j] ;
 		cn[*nx -2][j] = -cn[*nx-4][j]+2.*cn[*nx -3][j] ;

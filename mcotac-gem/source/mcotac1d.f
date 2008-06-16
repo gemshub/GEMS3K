@@ -1669,15 +1669,15 @@ c	 write(*,*) m1, m2, m3
 	endif
         
         if (irank.eq.root) then        
-	  do n=2,nxmax+1
+	  do n=1,nxmax
             do ib=1,m1-1
-	  	bn_domain(ib+(n-2)*(m1-1))=bn(ib,n)
+	  	bn_domain(ib+(n-1)*(m1-1))=bn(ib,n)
             enddo
             do ic=1,m2
-	  	cn_domain(ic+(n-2)*m2)=cn(ic,n)
+	  	cn_domain(ic+(n-1)*m2)=cn(ic,n)
             enddo
             do ip=1,m3
-	  	pn_domain(ip+(n-2)*m3)=pn(ip,n)  !//we reuse pn_domain for Po_domain
+	  	pn_domain(ip+(n-1)*m3)=pn(ip,n)  !//we reuse pn_domain for Po_domain
             enddo
           enddo
 	endif
@@ -1821,15 +1821,15 @@ c now do MPI_GATHER
      &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
      &	    MPI_COMM_WORLD,ierr)
 
-	  do n=2,nxmax+1
+	  do n=1,nxmax
             do ib=1,m1-1
-	  	bn(ib,n)=bn_domain(ib+(n-2)*(m1-1))
+	  	bn(ib,n)=bn_domain(ib+(n-1)*(m1-1))
             enddo
             do ic=1,m2
-	  	cn(ic,n)=cn_domain(ic+(n-2)*m2)
+	  	cn(ic,n)=cn_domain(ic+(n-1)*m2)
             enddo
             do ip=1,m3
-	  	pn(ip,n)=pn_domain(ip+(n-2)*m3)  
+	  	pn(ip,n)=pn_domain(ip+(n-1)*m3)  
             enddo
           enddo
 c       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
@@ -1847,7 +1847,7 @@ C
 #else       
 c	pause "node loop start"
 c
-	do 1555 n=2,  nxmax+1                  !node loop for GEMS after Transport step
+	do 1555 n=1,  nxmax+2                  !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1
 
