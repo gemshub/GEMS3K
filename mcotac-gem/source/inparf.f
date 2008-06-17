@@ -46,13 +46,15 @@ c*
 *==========================================================================*/
 	subroutine inparf(itest,ncyc,nxmax,isteu,inma,
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
-     *,backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA)
+     *,backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA
+     *, Tc_dummy, P_dummy)
 	
 	
       implicit double precision (a-h,o-z)
 
 	include 'gwheader.inc'
 	integer gems_PIA
+        double precision Tc_dummy, P_dummy
       dimension dx(NNODEX+2)
 	character*9 dum9
 
@@ -111,6 +113,10 @@ c*
       write(*,*)dum9,j_decay
 	read(10,'(a8,1x,i10)')dum9,gems_PIA
       write(*,*)dum9,gems_PIA
+ 	read(10,'(a8,1x,g12.4)')dum9,Tc_dummy
+      write(*,*)dum9,Tc_dummy
+ 	read(10,'(a8,1x,g12.4)')dum9,P_dummy
+      write(*,*)dum9,P_dummy
 
 	close (10)
 c        /*  Zellgroessen in X- und Y-Richtung: dx[i] */

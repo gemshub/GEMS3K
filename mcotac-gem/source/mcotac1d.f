@@ -696,17 +696,23 @@ c  **************************
    52 continue
    54 continue
 
-
+c pressure and temperature values for gems
+	Tc_dummy=25.0
+        P_dummy = 1.0
 c   input for dynamic calculations
       call inparf(itest,ncyc,nxmax,isteu,inma,
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
-     *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA)
+     *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA
+     *,Tc_dummy,P_dummy)
+
 	if (irank.eq.root) then 
       Write(*,*)itest,ncyc,nxmax,isteu,inma,ipfile
      *,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
-     *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de
+     *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA
+     *,Tc_dummy,P_dummy
+
        endif
 
 c	gems_PIA=1
@@ -1042,8 +1048,6 @@ c transform the b and c vector to concentrations j_sorb+1 is water!
  1695 continue
 c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
-	Tc_dummy=25.0
-        P_dummy = 1.0
 	do n=1,nxmax
           poro(n)=por(n)
 	  por(n)=0.0
