@@ -19,7 +19,7 @@ c*    Ny        :  Anzahl der Knoten in Y-Richtung
 c
 c*    isteu     :  1=Transport, 2=Bahnlinien, 3=Isochronen
 c*    itest     :  wenn ITest=1 -> Protokoll der Eingabedaten
-c*    inma      :  1 = Einsetzen der Partikel Åber inmat[][]
+c*    inma      :  1 = Einsetzen der Partikel ÔøΩber inmat[][]
 c*    ipfile    :  1 = Startpartikelpositionen werden aus einer Datei gelesen
 c*    ntim      :  Anz. Zeitschritte innerhalb e. Intervalls
 c*    de        :  Dauer eines Zeitschrittes
@@ -27,31 +27,32 @@ c*    npin      :  Anzahl Partikel im ersten Zeitschritt mit Kontamination
 c
 c*    nxmax        :  Anzahl der Knoten in X-Richtung
 c*    nx        :  Anzahl der Knoten in Y-Richtung
-c*    npkt      :  Anzahl der StÅtzstellen zur Definition der Eintragsfunktion
+c*    npkt      :  Anzahl der StÔøΩtzstellen zur Definition der Eintragsfunktion
 c*    teil      :  legt Ausschnitt fest mit Anfangs- u. Endknoten
-c*    dx[]      :  Zellgrî·en in X-Richtung
-c*    dy[]      :  Zellgrî·en in Y-Richtung
+c*    dx[]      :  ZellgrÔøΩÔøΩen in X-Richtung
+c*    dy[]      :  ZellgrÔøΩÔøΩen in Y-Richtung
 c*    backg     :  "background"-Wert der Schadstoffkonzentration
 c*    rd        :  Retardierungsfaktor
 c*    lambda    :  Zerfallskonstante
-c*    lambt0    :  Verzîgerung bis zum Beginn der Zerfallsprozesse
-c*    al        :  longitudinale DispersivitÑt
+c*    lambt0    :  VerzÔøΩgerung bis zum Beginn der Zerfallsprozesse
+c*    al        :  longitudinale DispersivitÔøΩt
 c*    vxx      :   const fliessgeschwindigkeit
 c*    dm0       :   Diffusionskoeffizient
 c*    dtmax    :   max time step
+c     gems_PIA   : gems mode for initial approximation
 c*
 c*   return =  Fehlernummer IErr
 c*
 *==========================================================================*/
 	subroutine inparf(itest,ncyc,nxmax,isteu,inma,
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
-     *,backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de)
+     *,backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA)
 	
 	
       implicit double precision (a-h,o-z)
 
 	include 'gwheader.inc'
-
+	integer gems_PIA
       dimension dx(NNODEX+2)
 	character*9 dum9
 
@@ -108,6 +109,8 @@ c*
       write(*,*)dum9,j_sorb
 	read(10,'(a8,1x,i10)')dum9,j_decay
       write(*,*)dum9,j_decay
+	read(10,'(a8,1x,i10)')dum9,gems_PIA
+      write(*,*)dum9,gems_PIA
 
 	close (10)
 c        /*  Zellgroessen in X- und Y-Richtung: dx[i] */

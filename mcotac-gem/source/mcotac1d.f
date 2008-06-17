@@ -336,14 +336,6 @@ c >>>
 c set irank and root to zero , used also outside MPI in seriall version
        root=0
        irank=0
-	gems_PIA=1
-	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
-c	read(*,*)gems_PIA
-	gems_PIA=5
-	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
-	 gems_PIA=1
-	endif
-	write(*,*)"gems_PIA: ",gems_PIA
 c 
 ckg44 init several variables in order to make sure they have the correct values
 	pormin=1.e+10
@@ -709,13 +701,23 @@ c   input for dynamic calculations
       call inparf(itest,ncyc,nxmax,isteu,inma,
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
-     *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de)
+     *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA)
 	if (irank.eq.root) then 
       Write(*,*)itest,ncyc,nxmax,isteu,inma,ipfile
      *,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
      *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de
        endif
+
+c	gems_PIA=1
+c	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
+c	read(*,*)gems_PIA
+c	gems_PIA=5
+	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
+	 gems_PIA=1
+	endif
+	write(*,*)"gems_PIA: ",gems_PIA
+
 cpause	pause 
 c
 c
