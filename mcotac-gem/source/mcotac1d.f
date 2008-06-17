@@ -339,13 +339,14 @@ c set irank and root to zero , used also outside MPI in seriall version
 	gems_PIA=1
 	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
 c	read(*,*)gems_PIA
-	gems_PIA=1
+	gems_PIA=5
 	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
 	 gems_PIA=1
 	endif
 	write(*,*)"gems_PIA: ",gems_PIA
 c 
 ckg44 init several variables in order to make sure they have the correct values
+	icyc=0
 	st=0.0
         write(*,*)st
         ir=0
@@ -1071,6 +1072,54 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
          write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
          endif
 
+#ifdef __MPI
+       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
+c we define the size of subintervalls for buffer variables
+	i_subdomain_length = abs((nxmax)/npes)
+	if (irank.eq.root) then 
+         write(*,*) 'nodes/procs: ', (nxmax)/npes
+         write(*,*) 'nxmax, procs',nxmax, npes
+         write(*,*) 'i_subdomain_length', i_subdomain_length
+        endif
+c  make sure grid size and no of processors fit together
+        if (mod((nxmax-2),npes).ne.0) then
+         write(*,*) 'parallelization error: check numer of processors'
+            write(*,*)'i_subdomain_length is not an integer'
+            write(*,*)'mod((nxmax),npes)',mod((nxmax),npes)
+            call mpi_finalize(ierr)
+            if (ierr.eq.0) then
+              write(*,*)'mpi_finalize successfull'
+            else
+              write(*,*)'mpi_finalize failed'
+              stop
+            endif
+         stop
+        endif
+
+c now we allocate memory for the buffers..
+c we assume that if bn_subdomain is already allocated the others are also existing
+	if (.NOT.allocated(bn_subdomain)) then
+         allocate(bn_subdomain((m1-1)*i_subdomain_length))
+         allocate(cn_subdomain(m2*i_subdomain_length))
+         allocate(pn_subdomain(m3*i_subdomain_length))
+c and a second buffer because W. refuses to work with allocate
+         allocate(bn_domain((m1-1)*(nxmax)))
+         allocate(cn_domain(m2*(nxmax)))
+         allocate(pn_domain(m3*(nxmax)))
+c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
+c     &   irank,nxmax,i_subdomain_length 
+c	 write(*,*) m1, m2, m3
+         root = 0
+	 bn_domain=0.0
+	 cn_domain=0.0
+         pn_domain=0.0
+	 bn_subdomain=0.0
+	 cn_subdomain=0.0
+         pn_subdomain=0.0
+	endif
+#endif
+
+
 	endif                ! end if for i_gems
 
 
@@ -1623,50 +1672,6 @@ c reset itergems
 c f irst scatter the inital dataset among the processors
 c root obtains the full dataset
 
-       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-c we define the size of subintervalls for buffer variables
-	i_subdomain_length = abs((nxmax)/npes)
-	if (irank.eq.root) then 
-         write(*,*) 'nodes/procs: ', (nxmax)/npes
-         write(*,*) 'nxmax, procs',nxmax, npes
-         write(*,*) 'i_subdomain_length', i_subdomain_length
-        endif
-c  make sure grid size and no of processors fit together
-        if (mod((nxmax-2),npes).ne.0) then
-         write(*,*) 'parallelization error: check numer of processors'
-            write(*,*)'i_subdomain_length is not an integer'
-            write(*,*)'mod((nxmax),npes)',mod((nxmax),npes)
-            call mpi_finalize(ierr)
-            if (ierr.eq.0) then
-              write(*,*)'mpi_finalize successfull'
-            else
-              write(*,*)'mpi_finalize failed'
-              stop
-            endif
-         stop
-        endif
-
-c now we allocate memory for the buffers..
-c we assume that if bn_subdomain is already allocated the others are also existing
-	if (.NOT.allocated(bn_subdomain)) then
-         allocate(bn_subdomain((m1-1)*i_subdomain_length))
-         allocate(cn_subdomain(m2*i_subdomain_length))
-         allocate(pn_subdomain(m3*i_subdomain_length))
-c and a second buffer because W. refuses to work with allocate
-         allocate(bn_domain((m1-1)*(nxmax)))
-         allocate(cn_domain(m2*(nxmax)))
-         allocate(pn_domain(m3*(nxmax)))
-c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
-c     &   irank,nxmax,i_subdomain_length 
-c	 write(*,*) m1, m2, m3
-         root = 0
-	 bn_domain=0.0
-	 cn_domain=0.0
-         pn_domain=0.0
-	 bn_subdomain=0.0
-	 cn_subdomain=0.0
-         pn_subdomain=0.0
-	endif
         
         if (irank.eq.root) then        
 	  do n=1,nxmax
@@ -2228,7 +2233,7 @@ c  *******************************************gems
 	endif                                       ! if i_gems=1 
 
 	if (irank.eq.root) then 
-      write(*,'(a4,1x,i3,1x,6(e8.2,1x))')'n_ge',itimestep_tp,
+      write(*,*)'n_ge',itimestep_tp,
      *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
          endif
 cgems	 pause "next time step"
@@ -2365,10 +2370,11 @@ c      if(treal.gt.0.)then
 	if (irank.eq.root) then 
          write(*,'(a6,2(e10.2,a6,2x), 2x,a7,i10)')
      *   'time= ',treal,' [sec]',tty,'  [yr]', 'iccyle= ',icyc
-         write(*,'(a14,1x,10(e10.4,1x))')
+         write(*,*)
      *   'solids iort(1)',(pn(ii,iortx(1)),ii=1,m3),cs(iortx(1)),
      *    (eqconst(ii,iortx(1)),ii=1,m3)
          endif
+c	if (tty.ge.1.e4) pause
 c------------------------------------------------------------- 19/09/96
 C pH, tot. K and tot Na in aqueous phase 
       if(i_sorb.gt.0.and.ialkali.gt.0)then
