@@ -128,6 +128,10 @@ c and a second buffer
        DOUBLE PRECISION, ALLOCATABLE :: bn_domain(:) !rank 1
        DOUBLE PRECISION, ALLOCATABLE :: cn_domain(:) !rank 1
        DOUBLE PRECISION, ALLOCATABLE :: pn_domain(:) !rank 1
+
+      double precision, allocatable ::  ph_domain(:) 
+      double precision, allocatable ::  ph_subdomain(:) 
+
 #endif
 
       double precision xxyy, pormin, dmin
@@ -230,6 +234,7 @@ c !//  FMT variables (units need dimensionsless form)
       double precision, allocatable ::  p_bIC(:) ! (nICb)  !// bulk mole amounts of IC[nICb]                +      +      -     -
       double precision, allocatable ::  p_rMB(:) ! (nICb)  !// MB Residuals from GEM IPM [nICb]             -      -      +     +
       double precision, allocatable ::  p_uIC(:) ! (nICb)  !// IC chemical potentials (mol/mol)[nICb]       -      -      +     +
+
 
       double precision xminr,xmaxr,de,xnaohmw,xnaohd,xkohmw,xkohd,xmin
       character *79 title
@@ -863,7 +868,6 @@ c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 cccc -t "cal-dol-boun1-dch.dat", "cal-dol-boun1-dbr-1.dat"  are also in ipmfiles-dat.lst normally
 c     open data-ch file for initialisation and names (only once)
 
-	if(i_gems.eq.1) then
 
       p_NodeHandle=1
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
@@ -1113,6 +1117,9 @@ c and a second buffer because W. refuses to work with allocate
          allocate(bn_domain((m1-1)*(nxmax)))
          allocate(cn_domain(m2*(nxmax)))
          allocate(pn_domain(m3*(nxmax)))
+c   ph_domain
+	allocate(ph_domain(nxmax))
+        allocate(ph_subdomain(i_subdomain_length))
 c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
 c     &   irank,nxmax,i_subdomain_length 
 c	 write(*,*) m1, m2, m3
@@ -1123,11 +1130,12 @@ c	 write(*,*) m1, m2, m3
 	 bn_subdomain=0.0
 	 cn_subdomain=0.0
          pn_subdomain=0.0
+         ph_domain=0.0
+         ph_subdomain=0.0
 	endif
 #endif
 
 
-	endif                ! end if for i_gems
 
 
 c>>>>>>>>>>>>>>>>>>>>FROM GEMS integration>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -1646,7 +1654,6 @@ c  then new xDC trasnfereed to 'bIC' total idepandent masses
 c  <<<<<<<   transfer of GEMS nomenclature to MCOTAC naming
 c	do 1699 ib=1,m1
           time_gemsmpi_start=secnds(0.)
-	if (i_gems. eq. 1) then     
 
 c ********************************************************
 c   neue "total-massen" in den zellen
@@ -1755,6 +1762,8 @@ c	   write(*,*)"GEMS problem ", idum
 c	   stop
 c	endif
 
+	pH_subdomain(n)=p_pH
+
 c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
@@ -1832,7 +1841,16 @@ c now do MPI_GATHER
      &	    pn_domain, recvcount, MPI_DOUBLE_PRECISION,
      &	    MPI_COMM_WORLD,ierr)
 
+        sendcount = i_subdomain_length
+        recvcount = i_subdomain_length
+      call MPI_AllGather(ph_subdomain, sendcount, 
+     &     MPI_DOUBLE_PRECISION,
+     &	    ph_domain, recvcount, MPI_DOUBLE_PRECISION,
+     &	    MPI_COMM_WORLD,ierr)
+
+
 	  do n=1,nxmax
+	    pHarr(n)=ph_domain(n)
             do ib=1,m1-1
 	  	bn(ib,n)=bn_domain(ib+(n-1)*(m1-1))
             enddo
@@ -1893,6 +1911,7 @@ c	if (idum.ne.1) then
 c	   write(*,*)"GEMS problem ", idum
 c	   stop
 c	endif
+	pHarr(n)=p_pH
 
 c  monitor gems iterations
         itergems=itergems+p_IterDone
@@ -2005,167 +2024,14 @@ c	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
 
 c
 
-      endif        ! i_gems eq.1  
       time_gemsmpi_end=secnds(0.)
       time_gemsmpi=time_gemsmpi+(time_gemsmpi_end-time_gemsmpi_start)
 
 
 c<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c          here MCOTAC-chem calculations at each node
-      if(i_gems.ne.1)then 
-c*** speciation at each node with diffrent total concentrations
-      itest=itest+1
-c      write(*,*) 'dddd',itest,time,treal,texe
-c      pause      
-      do 3322 nspez=2,nxmax-1
-      if(iche(nspez).eq.2)then
+c kg44 deleted
 
-c ********************************************************
-c   neue "total-massen" in den zellen
-c ********************************************************
-c   if sorption is included for a basis species , basis species with index 
-c   greater than j_sorb are not moved 
-c   if sorption is included as a complexation reaction the sorbed complexes
-c   with index greater than i_sorb are not moved : reset after transport
-c   for this species
-c****************************
-         do 677 ii=1,m1
-           if(ii.gt.j_sorb.and.j_sorb.gt.0) then
-            bbx=bo(ii,nspez)
-           else  
-            bbx=bn(ii,nspez)
-           endif
-            do 678 jj=1,m2
-                    if(jj.gt.i_sorb.and.i_sorb.gt.0) then
-                     bbx=bbx+s(ii,jj)*co(jj,nspez)
-c2003              bbx=bbx+s(ii,jj)*co(jj,nspez)/poro(nspez)
-c       write(*,*)'i_sorb',dumc(jj),jj,cn(jj,nspez),co(jj,nspez)
-                    else
-                     bbx=bbx+s(ii,jj)*cn(jj,nspez)
-c       write(*,*)'nicht sorb',dumc(jj),jj,cn(jj,nspez),co(jj,nspez)
-                    endif
-  678       continue
-            do 679 kk=1,m3
-c2003              bbx=bbx+ss(ii,kk)*po(kk,nspez)  
-              bbx=bbx+ss(ii,kk)*po(kk,nspez)                  ! /por(nspez)  2004
-  679       continue
-              bi(ii)=bbx
-c             write(*,*)'nspez bbx m1 ',nspez,bbx,ii
- 677     continue
-c            if(nspez.eq.3)write (*,*)'init2 v',nspez,pn(1,3)
-
-
-c*******************************************************  
-c speciation
-c******************************************************* 
-c        if (isio2.gt.0.and. nspez.eq.2)then
-c             cccc=pn(1,nspez)
-c        endif
-
-cxz      if(i_gems.ne.1)then
-	time_initreadstart=secnds(0.)
-
-c-coeff        call init2(itemp,li,lb,in1,in2,lnh,err,nspez,tb,
-c-coeff     1     temp,vo,x,itype,num,con,eqconst,tmp,bi,bc,
-c-coeff     2          indexi,indexb,q,acb,acc,bn,pn,cn,vjb,vjc,
-c-coeff     3          s,ss,bc2,lne,eh,idismdl,cs,tmpk,bo,co,po
-c-coeff     4          ,i_sorb,ialkali,dumb,dumc,dump,itmpdep)
-c******************************************************* 
-c            write(*,*)'init2 n ',nspez
-c            if(nspez.eq.3)then 
-c	itt=itt+1
-c		  write (*,*)'init2 n',treal,time,restzeit,texe,itt 
-c            pause
-c
-c	      endif 
-	time_initreadend=secnds(0.)
-	time_initreadtotal= time_initreadtotal+
-     *                    (time_initreadend-time_initreadstart)
-cxz      endif
-         do 687 ii=1,m1
-                bi(ii)=0.
- 687     continue
-
-         if (m3.eq.0) go to 402
-
-c  *******************************************
-c  check if a solid is starting to precipitate
-c  or has dissolved at any node
-c  *******************************************
-	if (irank.eq.root) then
-
-        do 390 i=1,m3
-        if (pn(i,nspez).le.(zero)) go to 330
-cc2004        if (pn(3,nspez).gt.0.) then
-cc2004             isio2=isio2+1
-cc2004       endif
-        if (po(i,nspez).le.(zero)) write(6,2000)nspez,
-     1  dump(i),treal,tmp(nspez),eqconst(i,nspez)
- 2000   format(/,1x,'at node',i4,1x,a10,
-     1  ' started precipitating at time', 1pe12.4,
-     1  /,4x,'temp =',0pf8.3,', sol prod =',1pe12.4)
-        go to 390
-  330   if (po(i,nspez).gt.(zero)) write(6,2050) nspez,
-     1  dump(i),treal,tmp(nspez),eqconst(i,nspez)
- 2050   format(/,1x,'at node',i4,1x,' solid',a10,' has dissolved at 
-     1  time',1pe12.4,/,4x,'temp =',0pf8.3,', sol prod =',1pe12.4)
-  390   continue
-
-       endif                ! endif printout on root only
-
-
-c************************************************
-c    calculation of the apparent porosity resulting 
-c    from the solid concentrations
-c    molvolume[mol/l]/solid_density[kg/l]
-c      *solid[mol/fluidvolume in cell nspez]
-c      /1000[kg->g]/fluidvolume in cell nspez[l]
-c*************************************************
-cc2004a      if (iche(nspez).eq.2)then
-c<<<<<<<2003
-c        do 1860 j=1,m2
-c          if(jj.gt.i_sorb.and.i_sorb.gt.0) then
-c                cn(jj,nspez)=cn(jj,nspez)*por(nspez)
-c          endif
-c 1860   continue
-cc204        if(m3.gt.0)then
-cc204         do 1861 i=1,m3
-cc204          pn(i,nspez)= pn(i,nspez)*por(nspez)
-cc204 1861    continue
-
-c>>>>2003
-cc2004a        call porcalc(nspez,m3,pn,pnw,pnd,etc,por
-cc2004a     *   ,cn,i_sorb,xnaohmw,xnaohd,xkohmw,xkohd)
-c2004      endif
-cc2004a      endif
-      
-  402   continue
-      endif                                     ! if (iche(nspez).eq.2)
-c2000>>>>>>>>>>>>>>>> puls
-
-       if(i_puls.eq.1) then
-        if(time.gt.1000*3600*24*365.25)then
-         do 1424 i1=1,m1
-          cn(i1,1)=1.e-20
-          bn(i1,1)=1.e-20
-c          cn(i1,2)=1.e-20
-c          bn(i1,2)=1.e-20
- 1424    continue
-        else
-         do 1425, i1=1, m1
-          cn(i1,1)=co(i1,1)
-          bn(i1,1)=bo(i1,1)
-c          cn(i1,2)=co(i1,2)
-c          bn(i1,2)=bo(i1,2)
-c          cn(2,2)=co(i1,1)
-c          bn(2,1)=1.
-
- 1425    continue
-        endif
-       endif                                       !i_puls =1
-
- 3322 continue                                     !  nspez=2,nxmax-1
-      endif                                     ! i_gems.ne.1 
 c 4444 continue
 c dec2002<<<<<<<<<
       do 1880 nx=1,nxmax
@@ -2212,36 +2078,23 @@ c  loop read for nodes 2 to nxmax
 c      gems_dbr_f="aa-initial-dbr-1.dat"
 
 
-      if(i_gems.eq.1) then
-c      do 1799 n=2,nxmax
-
-
-cc      itergemstime(itimestep_tp,n)=gemsIterDone
-cc	gemsIterDone=0
-
-c 1799 continue
-c      write(*,*)(bn(ib,2),ib=1,m1)
-c      write(*,*)(cn(ic,2),ic=1,m2)
-c      write(*,*)(pn(ip,2),ip=1,m3)
-c	pause "basis complex solids at n=2 to nxmax"            
 
 
 c  *******************************************gems
 c  check if a solid is starting to precipitate
 c  or has dissolved at any node
 c  *******************************************gems
-       if (irank.eq.root) then
-        do 1390 i=1,m3
-        if (pn(i,n).le.(zero)) go to 1330
-        if (po(i,n).le.(zero)) write(6,2000)n,
-     1  dump(i),treal,tmp(n),eqconst(i,n)
-        go to 1390
- 1330   if (po(i,n).gt.(zero)) write(6,2050) n,
-     1  dump(i),treal,tmp(n),eqconst(i,n)
- 1390   continue
-        endif   ! end printout root only
+c       if (irank.eq.root) then
+c        do 1390 i=1,m3
+c        if (pn(i,n).le.(zero)) go to 1330
+c        if (po(i,n).le.(zero)) write(6,2000)n,
+c     1  dump(i),treal,tmp(n),eqconst(i,n)
+c        go to 1390
+c 1330   if (po(i,n).gt.(zero)) write(6,2050) n,
+c     1  dump(i),treal,tmp(n),eqconst(i,n)
+c 1390   continue
+c        endif   ! end printout root only
 
-	endif                                       ! if i_gems=1 
 
 c	if (irank.eq.root) then 
 c      write(*,*)'n_ge',itimestep_tp,
@@ -2292,11 +2145,11 @@ c       Volume fractions, rates, and omegas       -kinet-
        else
                xspez=x(nn1)+dx(1)      !   feb 2003    /2
        endif
-      if(lnhc.gt.0)then                  !2008   and.acc(lnhc,nn1).gt.0.and.cn(lnhc,nn1).gt0.
-          pHarr(nn1)=-dlog10(acc(lnhc,nn1)*cn(lnhc,nn1))
-         else
+c      if(lnhc.gt.0)then                  !2008   and.acc(lnhc,nn1).gt.0.and.cn(lnhc,nn1).gt0.
+c          pHarr(nn1)=-dlog10(acc(lnhc,nn1)*cn(lnhc,nn1))
+c         else
 c15112004          pHarr(nn1)=-dlog10(acb(lnh,nn1)*bn(lnh,nn1))
-         endif
+c         endif
 
 c      Vol. fractions, rates, and log omega   -kinet-
         if (nn1.eq.1) goto 1513
