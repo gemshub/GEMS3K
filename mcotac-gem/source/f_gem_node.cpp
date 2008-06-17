@@ -392,7 +392,7 @@
 // double    P, 	    // Pressure P, bar                         	+      +      -     -
 #ifdef __unix
 #ifdef __PGI
-    extern "C" double  f_gem_get_molar_volume(int& i, double& Tc, double& P)
+    extern "C" double  f_gem_get_molar_volume_(int& i, double& Tc, double& P)
  #else
     extern "C" double  f_gem_get_molar_volume(int& i, double& Tc, double& P)
 #endif
