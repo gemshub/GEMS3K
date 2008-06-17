@@ -130,7 +130,7 @@ c and a second buffer
        DOUBLE PRECISION, ALLOCATABLE :: pn_domain(:) !rank 1
 #endif
 
-      double precision xxyy 
+      double precision xxyy, pormin, dmin
 
 c time measurements
 	double precision time_gemsmpi, time_gemsmpi_start, time_gemsmpi_end 
@@ -346,6 +346,8 @@ c	read(*,*)gems_PIA
 	write(*,*)"gems_PIA: ",gems_PIA
 c 
 ckg44 init several variables in order to make sure they have the correct values
+	pormin=1.e+10
+        dmin=1.e+10
 	icyc=0
 	st=0.0
         write(*,*)st
@@ -1601,12 +1603,10 @@ c         enddo
 c         endif
 
 c kg44 changed output format
-	if (irank.eq.root) then 
-      write(*,*)'cneu',itimestep_tp,
-     *bn(1,1),pn(2,1),pn(3,1)
-      write(*,*)'cneu',itimestep_tp,
-     *bn(1,2),pn(2,2),pn(3,2)
-	endif
+c	if (irank.eq.root) then 
+c      write(*,*)'cneu',itimestep_tp,
+c     *bn(1,1),pn(2,1),pn(3,1)
+c	endif
 c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
 c     *bn(1,1),pn(2,1),pn(3,1)
 c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
@@ -1852,7 +1852,7 @@ C
 #else       
 c	pause "node loop start"
 c
-	do 1555 n=1,  nxmax+2                  !node loop for GEMS after Transport step
+	do 1555 n=1,  nxmax                  !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1
 
@@ -1977,6 +1977,9 @@ c
 c now change diffusion coefficient
 	 dm(n)=dm0*por(n)
 c transform the b and c vector to concentrations j_sorb+1 is water!
+	 pormin=min(por(n),pormin)
+         dmin=min(dm(n),dmin)
+
 
 c set water!
               bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
@@ -1990,7 +1993,9 @@ c
 
 c         end loop over nodes
         enddo
-	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
+c	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
+	if (irank.eq.root) write(*,*) "min porosity:",pormin
+     &                             ," min diffusion: ",dmin
 
 c
 
@@ -2371,8 +2376,8 @@ c      if(treal.gt.0.)then
          write(*,'(a6,2(e10.2,a6,2x), 2x,a7,i10)')
      *   'time= ',treal,' [sec]',tty,'  [yr]', 'iccyle= ',icyc
          write(*,*)
-     *   'solids iort(1)',(pn(ii,iortx(1)),ii=1,m3),cs(iortx(1)),
-     *    (eqconst(ii,iortx(1)),ii=1,m3)
+c     *   'solids iort(1)',(pn(ii,iortx(1)),ii=1,m3),cs(iortx(1)),
+c     *    (eqconst(ii,iortx(1)),ii=1,m3)
          endif
 c	if (tty.ge.1.e4) pause
 c------------------------------------------------------------- 19/09/96
