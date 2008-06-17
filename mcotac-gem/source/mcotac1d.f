@@ -339,7 +339,7 @@ c set irank and root to zero , used also outside MPI in seriall version
 	gems_PIA=1
 	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
 c	read(*,*)gems_PIA
-	gems_PIA=1
+	gems_PIA=5
 	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
 	 gems_PIA=1
 	endif
@@ -1689,7 +1689,7 @@ c root obtains the full dataset
 
 
 c        write(*,*)' MPI Scatter:', MPI_COMM_WORLD
-c	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 c         write(*,*) 'barrier ok'
 c	if (irank.eq.root) write(*,*)bn_domain
         sendcount = i_subdomain_length*(m1-1)
@@ -1993,7 +1993,7 @@ c
 
 c         end loop over nodes
         enddo
-	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
+c	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
 	if (irank.eq.root) write(*,*) "min porosity:",pormin
      &                             ," min diffusion: ",dmin
 
