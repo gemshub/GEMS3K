@@ -339,7 +339,7 @@ c set irank and root to zero , used also outside MPI in seriall version
 	gems_PIA=1
 	write(*,*)"input for initial gems aproximation (AIA:1, PIA5)"
 c	read(*,*)gems_PIA
-	gems_PIA=5
+	gems_PIA=1
 	if(.not.((gems_PIA.eq.1).or.(gems_PIA.eq.5))) then
 	 gems_PIA=1
 	endif
@@ -350,7 +350,6 @@ ckg44 init several variables in order to make sure they have the correct values
         dmin=1.e+10
 	icyc=0
 	st=0.0
-        write(*,*)st
         ir=0
         por=0
         qr=0
@@ -662,7 +661,7 @@ c
 c  ***************************************
 c  assign initial temperature and porosity to each node
 c  ***************************************
-   43 do 42 n=1,nxmax+2
+   43 do 42 n=1,nxmax
       por(n)=0.32                  !for initial porcalc 
       poro(n)=0.32       
 c      por(n)=phi              ! kinet
@@ -688,7 +687,7 @@ c  **************************
       do 48 i=1,m3
       pn(i,1)=gespb(i)
    48 continue
-   49 do 54 n=2,nxmax+2
+   49 do 54 n=2,nxmax
       do 150 i=1,m1
       bn(i,n)=gesbi(i)
       acb(i,n)=1.
@@ -782,64 +781,64 @@ c03      if (ihydro.eq.1)then                             !if ihydro = 1
 c<<<<<<<140895      START HYDROLOGY
 c  input ir - array h0 - array  tt - array  s - array
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"ir0001.dat" //char(0),hb)
+      call holdat1d(%val(nxmax),"ir0001.dat" //char(0),hb)
 #else
-      call holdat1d(nxmax+2,"ir0001.dat" //char(0),hb)
+      call holdat1d(nxmax,"ir0001.dat" //char(0),hb)
 #endif
 
 
-      do 3330 ih=1,nxmax+1
+      do 3330 ih=1,nxmax
 3330  ir(ih)=int(hb(ih))
       	if (irank.eq.root) write(*,*)ir
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"ss0001.dat"//char(0),st)
+      call holdat1d(%val(nxmax),"ss0001.dat"//char(0),st)
 #else
-      call holdat1d(nxmax+2,"ss0001.dat"//char(0),st)
+      call holdat1d(nxmax,"ss0001.dat"//char(0),st)
 #endif
 c	if (irank.eq.root) write(*,*)st
 #ifdef __GNU
-	call holdat1d(%val(nxmax+2),"por001.dat"//char(0),por)
+	call holdat1d(%val(nxmax),"por001.dat"//char(0),por)
 #else
-	call holdat1d(nxmax+2,"por001.dat"//char(0),por)
+	call holdat1d(nxmax,"por001.dat"//char(0),por)
 #endif
 	
 	if (irank.eq.root) write(*,*)por(1:nxmax)
 cpause	pause
-	do 3331 ih=1,nxmax+2
+	do 3331 ih=1,nxmax
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx(ih)= tx_null(ih)*por(ih)**3/(1.-por(ih))**2
  3331 continue 
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"qr0001.dat"//char(0),qr)
+      call holdat1d(%val(nxmax),"qr0001.dat"//char(0),qr)
 #else
-      call holdat1d(nxmax+2,"qr0001.dat"//char(0),qr)
+      call holdat1d(nxmax,"qr0001.dat"//char(0),qr)
 #endif
       	if (irank.eq.root) write(*,*)qr
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"qn0001.dat"//char(0),qw)
+      call holdat1d(%val(nxmax),"qn0001.dat"//char(0),qw)
 #else
-      call holdat1d(nxmax+2,"qn0001.dat"//char(0),qw)
+      call holdat1d(nxmax,"qn0001.dat"//char(0),qw)
 #endif
 	if (irank.eq.root) write(*,*)qw
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"am0001.dat"//char(0),am)
+      call holdat1d(%val(nxmax),"am0001.dat"//char(0),am)
 #else
-      call holdat1d(nxmax+2,"am0001.dat"//char(0),am)
+      call holdat1d(nxmax,"am0001.dat"//char(0),am)
 #endif
 	if (irank.eq.root) write(*,*)am
 cpause	pause
 #ifdef __GNU
-      call holdat1d(%val(nxmax+2),"h00001.dat"//char(0),h0)
+      call holdat1d(%val(nxmax),"h00001.dat"//char(0),h0)
 #else
-      call holdat1d(nxmax+2,"h00001.dat"//char(0),h0)
+      call holdat1d(nxmax,"h00001.dat"//char(0),h0)
 #endif
 	if (irank.eq.root) write(*,*)h0
 cpause	pause
-      do 3332 ih=1,nxmax+2
+      do 3332 ih=1,nxmax
          hb(ih)=h0(ih)
          qw(ih)=qw(ih)+qr(ih)
 c      write(*,*)'main', ih,tx(ih)
@@ -1018,7 +1017,7 @@ c  second read is for initial conditons nodes 2 to nxmax
 	gridvol=1.0
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
-      do 1695 n=nxmax/2+1,nxmax+2
+      do 1695 n=nxmax/2+1,nxmax
 	 gridvol=dx(n)   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
@@ -1043,7 +1042,7 @@ c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
-	do n=1,nxmax+2
+	do n=1,nxmax
           poro(n)=por(n)
 	  por(n)=0.0
 	  do  ip=1,m3
@@ -1064,7 +1063,7 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
 c change amount of water in the system ....water should be at bn(m1-1)
         enddo
-	write(*,*) "porosity update:", por(1:nxmax+2)
+	write(*,*) "porosity update:", por(1:nxmax)
 
 	if (irank.eq.root) then 
          write(*,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1),(cn(ic,2),ic=1,m2)
@@ -1084,7 +1083,7 @@ c we define the size of subintervalls for buffer variables
          write(*,*) 'i_subdomain_length', i_subdomain_length
         endif
 c  make sure grid size and no of processors fit together
-        if (mod((nxmax-2),npes).ne.0) then
+        if (mod((nxmax),npes).ne.0) then
          write(*,*) 'parallelization error: check numer of processors'
             write(*,*)'i_subdomain_length is not an integer'
             write(*,*)'mod((nxmax),npes)',mod((nxmax),npes)
@@ -1153,11 +1152,11 @@ c init ix and iy
       ix=0
       iy=0
 c      uabs= abs(vx(1,1))
-      do 1320 ix=2,nxmax+2
+      do 1320 ix=2,nxmax
        x(ix)=x(ix-1)+dx(ix)
  1320 continue
 	if (irank.eq.root) write(*,*)'dx',dx(1:nxmax)  
-      do 1322 ix=1,nxmax+2
+      do 1322 ix=1,nxmax
        vx(ix) = vxx
        dm(ix) = dm0
 	if (irank.eq.root) write(*,*)'vx',ix,iy,vx(ix)  
@@ -1218,27 +1217,27 @@ cpause	pause
 	if (irank.eq.root) then
       open(28,file='arrays.dat',form='formatted')
        write(28,'(a4,85(i10,1x))')
-     *       'ir  ',(ir(nspezx),nspezx=1,nxmax+2)
+     *       'ir  ',(ir(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(i10,1x))')
-     *       'iche',(iche(nspezx),nspezx=1,nxmax+2)
+     *       'iche',(iche(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'por ',(por(nspezx),nspezx=1,nxmax+2)
+     *       'por ',(por(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'tx  ',(tx(nspezx),nspezx=1,nxmax+2)
+     *       'tx  ',(tx(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'h0  ',(hb(nspezx),nspezx=1,nxmax+2)
+     *       'h0  ',(hb(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'am  ',(am(nspezx),nspezx=1,nxmax+2)
+     *       'am  ',(am(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'st  ',(st(nspezx),nspezx=1,nxmax+2)
+     *       'st  ',(st(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'qw  ',(qw(nspezx),nspezx=1,nxmax+2)
+     *       'qw  ',(qw(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'dx  ',(dx(nspezx),nspezx=1,nxmax+2)
+     *       'dx  ',(dx(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'hb  ',(hb(nspezx),nspezx=1,nxmax+2)
+     *       'hb  ',(hb(nspezx),nspezx=1,nxmax)
        write(28,'(a4,85(e10.3,1x))')
-     *       'vx  ',(vx(nspezx),nspezx=1,nxmax+2)
+     *       'vx  ',(vx(nspezx),nspezx=1,nxmax)
       close(28)
 	endif       ! endif irank.eq.root
       endif                                       ! endif ihydro=1
@@ -1361,17 +1360,18 @@ c
 
  235  continue                                              !  next time step interval
       itimestep_tp=itimestep_tp+1
-	if (irank.eq.root) then 
-      write(*,'(a4,1x,i3,1x,6(e8.2,1x))')'235 ',itimestep_tp,
-     *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
-	endif
+c	if (irank.eq.root) then 
+c      write(*,'(a4,1x,i3,1x,6(e8.2,1x))')'235 ',itimestep_tp,
+c     *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
+c	endif
       texe=dtmax
 c      write(*,*)'DIM F90', nnodex,nbasis,ncompl,nsolid,nupmax,npmax
       told=time
       time=time+texe
 c      time=time+dtmax
 
-	if (irank.eq.root) write(*,*)'time',time,told,texe,tprint(k1),k1
+	if (irank.eq.root) 
+     &   write(*,*)'time',itimestep_tp,time,told,texe,tprint(k1),k1
 c	pause
       deltn=texe
       if (time.le.tprint(k1)) go to 245
@@ -1388,7 +1388,7 @@ c      if (restzeit.eq.0) goto 3333
       if (ihydro.eq.1)then
 c  NEW HYDRAULIC HEAD AND FLOW FIELD 
 c  calculate new conductivity depending on  porosity ?? dpor >  xxx 
-       do 3432 ih=2,nxmax+1
+       do 3432 ih=1,nxmax
 c dec2002        tx(ih)=tx(ih)*(1.-(por(ih)-poro(ih)))
       tx(ih)=tx_null(ih)*por(ih)**3/(1.-por(ih))**2
 
@@ -1420,7 +1420,7 @@ c       endif
 c 1317  continue
 c      endif
 c>>>>>02-2003 modified boundary on the right side
-      do 240 n=1,nxmax-1
+      do 240 n=1,nxmax
         if (j_decay.gt.0)then
           if(m3.gt.0)then
              dissolvef=1
@@ -1653,7 +1653,7 @@ c   for this species
 c****************************
 c transform the b and c vector to back to absolute values j_sorb+1 is water!
 
-	do n=1,nxmax+2
+	do n=1,nxmax
 c set water!
               bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
           do ii=1,j_sorb
@@ -1962,7 +1962,7 @@ c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
 	Tc_dummy=25.0
         P_dummy = 1.0
-	do n=1,nxmax+2
+	do n=1,nxmax
 	  por(n)=0.0
 	  do  ip=1,m3
       dum1=f_gem_get_molar_volume(i_bcp_gemx(m1+m2+ip),Tc_dummy,P_dummy)
@@ -1993,7 +1993,7 @@ c
 
 c         end loop over nodes
         enddo
-c	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
+	if (irank.eq.root) write(*,*) "porosity update:", por(1:nxmax)
 	if (irank.eq.root) write(*,*) "min porosity:",pormin
      &                             ," min diffusion: ",dmin
 
@@ -2237,10 +2237,10 @@ c  *******************************************gems
 
 	endif                                       ! if i_gems=1 
 
-	if (irank.eq.root) then 
-      write(*,*)'n_ge',itimestep_tp,
-     *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
-         endif
+c	if (irank.eq.root) then 
+c      write(*,*)'n_ge',itimestep_tp,
+c     *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
+c         endif
 cgems	 pause "next time step"
 c      if(itimestep_tp.gt.10)stop
 
@@ -2255,7 +2255,7 @@ c2002      if (time.eq.tprint(k1)) then
       if (treal.eq.tprint(k1)) then
         kk1=k1+96
         ttt=treal/31557600
-	if (irank.eq.root) write(*,*)'kk1',kk1,'time',treal
+c	if (irank.eq.root) write(*,*)'kk1',kk1,'time',treal
         ch=char(kk1)
 
         if (irank.eq.root) then
