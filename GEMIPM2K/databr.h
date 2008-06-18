@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: databr.h 1066 2008-05-16 14:16:59Z gems $
+// $Id: databr.h 1084 2008-06-11 14:33:08Z gems $
 //
 // DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
@@ -71,7 +71,7 @@ typedef struct
     eps,	// effective (actual) porosity normalized to 1
     Km,		// actual permeability, m2
     Kf,		// actual DARCY`s constant, m2/s
-    S,		// specific storage coefficient, dimensionless (default 1.0)
+    S,		// specific storage compressibility coefficient, dimensionless (default 1.0)
                //  if not 1.0 then can be used as mass scaling factor relative to Ms for the 
                //  bulk composition/speciation of reactive sub-system in this node 
     Tr,     // transmissivity m2/s

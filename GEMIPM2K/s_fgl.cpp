@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1074 2008-06-03 13:02:22Z wagner $
+// $Id: s_fgl.cpp 1078 2008-06-07 08:25:01Z wagner $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
@@ -1339,8 +1339,8 @@ TPRSVcalc::PureParam( double *Eos2parPT )
       k2 = Eosparm[i][4];
       k3 = Eosparm[i][5];
 
-      A(Tcrit, omg, k1, k2, k3, Pcrit, apure, sqrAL, ac, dALdT);
-      B(Tcrit, Pcrit, bpure);
+      AB(Tcrit, omg, k1, k2, k3, Pcrit, apure, bpure, sqrAL, ac, dALdT);
+      // B(Tcrit, Pcrit, bpure);
       Pureparm[i][0] = apure;
       Pureparm[i][1] = bpure;
       Pureparm[i][2] = sqrAL;
@@ -1358,36 +1358,37 @@ TPRSVcalc::PureParam( double *Eos2parPT )
 
 
 int
-TPRSVcalc::A(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit, 
-		double &apure, double &sqrAL, double &ac, double &dALdT)
+TPRSVcalc::AB(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit, 
+		double &apure, double &bpure, double &sqrAL, double &ac, double &dALdT)
 {
- // calculates a term of cubic EoS, modified 31.05.2008 (TW)
-  double Tred, k0, k, alph;
+	// calculates a term of cubic EoS, modified 31.05.2008 (TW)
+	double Tred, k0, k, alph;
 
-  Tred = Tk/Tcrit;
-  k0 = 0.378893 + 1.4897153*omg - 0.17131848*pow(omg,2.) + 0.0196554*pow(omg,3.);
-  if(Tk >= Tcrit)
-  {
-	  k1 = 0.0;
-	  k2 = 0.0;
-	  k3 = 0.0;
-  }
-  k = k0 + (k1 + k2*(k3-Tred)*(1.-sqrt(Tred))) * (1.+sqrt(Tred)) * (0.7-Tred);
-  alph = pow(1. + k*(1.-sqrt(Tred)), 2.);
-  apure = alph*(0.457235*pow(R_CONSTANT,2.)*pow(Tcrit,2.) / Pcrit);
-  sqrAL = 1.+k*(1.-sqrt(Tred));
-  ac = 0.457235*pow(R_CONSTANT,2.)*pow(Tcrit,2.) / Pcrit;
-  dALdT = (-1.)*k0/(2.*sqrt(Tk*Tcrit)) - 1.7*k1/Tcrit + 2.*k1*Tk/(pow(Tcrit,2.));  // extend dA/dT for k2, k3
-  return 0;
+	Tred = Tk/Tcrit;
+	k0 = 0.378893 + 1.4897153*omg - 0.17131848*pow(omg,2.) + 0.0196554*pow(omg,3.);
+	if(Tk >= Tcrit)
+	{
+		k1 = 0.0;
+		k2 = 0.0;
+		k3 = 0.0;
+	}
+	k = k0 + (k1 + k2*(k3-Tred)*(1.-sqrt(Tred))) * (1.+sqrt(Tred)) * (0.7-Tred);
+	alph = pow(1. + k*(1.-sqrt(Tred)), 2.);
+	apure = alph*(0.457235*pow(R_CONSTANT,2.)*pow(Tcrit,2.) / Pcrit);
+	bpure = 0.077796*R_CONSTANT*Tcrit/Pcrit;
+	sqrAL = 1.+k*(1.-sqrt(Tred));
+	ac = 0.457235*pow(R_CONSTANT,2.)*pow(Tcrit,2.) / Pcrit;
+	dALdT = (-1.)*k0/(2.*sqrt(Tk*Tcrit)) - 1.7*k1/Tcrit + 2.*k1*Tk/(pow(Tcrit,2.));  // extend dA/dT for k2, k3
+	return 0;
 }
 
 
-int
-TPRSVcalc::B(double Tcrit, double Pcrit, double &bpure)
-{
-    bpure = 0.077796*R_CONSTANT*Tcrit/Pcrit;
-    return 0;
-}
+// int
+// TPRSVcalc::B(double Tcrit, double Pcrit, double &bpure)
+// {
+//    bpure = 0.077796*R_CONSTANT*Tcrit/Pcrit;
+//    return 0;
+// }
 
 
 int
@@ -1427,17 +1428,17 @@ TPRSVcalc::FugacityPure( )
 		vol3 = z3*R_CONSTANT*Tk/P;
 		if (z1 > bb)
 			lnf1 = (-1.)*log(z1-bb)
-    - aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
+				- aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
 		else
 			lnf1 = 1000.;
 		if (z2 > bb)
 			lnf2 = (-1.)*log(z2-bb)
-    - aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
+				- aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
 		else
 			lnf2 = 1000.;
 		if (z3 > bb)
 			lnf3 = (-1.)*log(z3-bb)
-    - aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
+				- aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
 		else
 			lnf3 = 1000.;
 
@@ -1526,7 +1527,7 @@ TPRSVcalc::MixParam( double &amix, double &bmix)
 		for (j=0; j<NComp; j++)
 		{
 			// K = KK0ij[i][j] + KK1ij[i][j]*Tk;
-                        K = KK0ij[i][j];
+            K = KK0ij[i][j];
 			AAij[i][j] = sqrt(Pureparm[i][0]*Pureparm[j][0])*(1.-K);
 		}
 	}
@@ -1568,17 +1569,17 @@ TPRSVcalc::FugacityMix( double amix, double bmix,
 	vol3 = z3*R_CONSTANT*Tk/P;
 	if (z1 > bb)
 		lnf1 = (-1.)*log(z1-bb)
-    - aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
+			- aa/(bb*sqrt(8.))*log((z1+(1.+sqrt(2.))*bb)/(z1+(1.-sqrt(2.))*bb))+z1-1.;
 	else
 		lnf1 = 1000.;
 	if (z2 > bb)
 		lnf2 = (-1.)*log(z2-bb)
-    - aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
+			- aa/(bb*sqrt(8.))*log((z2+(1.+sqrt(2.))*bb)/(z2+(1.-sqrt(2.))*bb))+z2-1.;
 	else
 		lnf2 = 1000.;
 	if (z3 > bb)
 		lnf3 = (-1.)*log(z3-bb)
-    - aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
+			- aa/(bb*sqrt(8.))*log((z3+(1.+sqrt(2.))*bb)/(z3+(1.-sqrt(2.))*bb))+z3-1.;
 	else
 		lnf3 = 1000.;
 
@@ -1837,8 +1838,8 @@ TPRSVcalc::PRActivCoefPT( int NComp, double Pbar, double Tk, double *X,
       {
          index1 = (int)aIPx[MaxOrd*ip];
          index2 = (int)aIPx[MaxOrd*ip+1];
-	 KK0ij[index1][index2] = binpar[NPcoef*ip];
-	 KK0ij[index2][index1] = binpar[NPcoef*ip];	// symmetric case
+         KK0ij[index1][index2] = binpar[NPcoef*ip];
+         KK0ij[index2][index1] = binpar[NPcoef*ip];	// symmetric case
       }
     }
 

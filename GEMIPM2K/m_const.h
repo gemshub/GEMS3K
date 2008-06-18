@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 1074 2008-06-03 13:02:22Z wagner $
+// $Id: m_const.h 1080 2008-06-09 12:01:15Z wagner $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -81,7 +81,7 @@ SM_AQEUQ = 'Q',  // built-in EUNIQUAC model for aqueous activity coeffs (reserve
     SM_USERDEF = 'U',	// user-defined mixing model (in Phase record)
     SM_VANLAAR = 'V',	// Generalized Van Laar solution model
     SM_NRTLLIQ = 'L',	// NRTL multicomponent model for liquids, added 03.06.2008 (TW)
-    SM_WILSLIQ = 'W',	// Wilson NRTL multicomponent model for liquids (reserved)
+    SM_WILSLIQ = 'W',	// Wilson multicomponent model for liquids, added 09.06.2008 (TW)
     SM_OTHER = 'O'		//  other models of non-ideal solutions (reserved)
 };
 

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1074 2008-06-03 13:02:22Z wagner $
+// $Id: s_fgl2.cpp 1082 2008-06-11 11:57:15Z wagner $
 //
 // Copyright (c) 2003-2007   S.Churakov, Th.Wagner,
 //    D.Kulik, S.Dmitrieva
@@ -146,7 +146,7 @@ if( aW.twp->wtW[6] < 1. || aW.twp->wtW[6] > 10. )
 TSolMod::TSolMod( int NSpecies, int NParams, int NPcoefs, int MaxOrder,
        int NPperDC, double T_k, double P_bar, char Mod_Code,
        short* arIPx, float* arIPc, float* arDCc,
-       double *arWx, double *arlnGam )
+       double *arWx, double *arlnGam, double dW, double eW, double iS )
 {
     R_CONST = 8.31451;
     NComp = NSpecies;
@@ -157,6 +157,9 @@ TSolMod::TSolMod( int NSpecies, int NParams, int NPcoefs, int MaxOrder,
     Tk = T_k;
     Pbar = P_bar;
     ModCode = Mod_Code;
+    RhoW = dW;
+    EpsW = eW;
+    IonStr = iS;
 
     // pointer assignment
     aIPx = arIPx;   // Direct access to index list and parameter coeff arrays!
@@ -496,7 +499,7 @@ TSolMod::RedlichKisterPT()
 
 
 // Redlich-Kister model for multicomponent solid solutions (c) TW March 2007
-// References:  Hillert (1998)
+// References: Hillert (1998)
 // Calculates activity coefficients and excess functions
 // Returns 0 if Ok or not 0 if error
 int
@@ -505,84 +508,61 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 {
    int ip, j;
    int index1, index2, L, I, J;
-   double Lu, Ls, Lcp, Lv, Lpt;
+   double LU, LS, LCP, LV, LPT;
    double L0, L1, L2, L3;
    double gEX, vEX, hEX, sEX, cpEX, uEX;
    
-   double *L0u;
-   double *L0s;
-   double *L0cp;
-   double *L0v;
-   double *L0pt;
-   double *L1u;
-   double *L1s;
-   double *L1cp;
-   double *L1v;
-   double *L1pt;
-   double *L2u;
-   double *L2s;
-   double *L2cp;
-   double *L2v;
-   double *L2pt;
-   double *L3u;
-   double *L3s;
-   double *L3cp;
-   double *L3v;
-   double *L3pt;
+   double **Lu;
+   double **Ls;
+   double **Lcp;
+   double **Lv;
+   double **Lpt;
 
    if ( /* ModCode != SM_REGULAR || */ NPcoef < 20 || NPar < 1 || NComp < 2
          || MaxOrd < 2 || !x || !lnGamma )
            return 1;  // foolproof!
 
-   L0u = new double [NPar];
-   L0s = new double [NPar];
-   L0cp = new double [NPar];
-   L0v = new double [NPar];
-   L0pt = new double [NPar];
-   L1u = new double [NPar];
-   L1s = new double [NPar];
-   L1cp = new double [NPar];
-   L1v = new double [NPar];
-   L1pt = new double [NPar];
-   L2u = new double [NPar];
-   L2s = new double [NPar];
-   L2cp = new double [NPar];
-   L2v = new double [NPar];
-   L2pt = new double [NPar];
-   L3u = new double [NPar];
-   L3s = new double [NPar];
-   L3cp = new double [NPar];
-   L3v = new double [NPar];
-   L3pt = new double [NPar];
+   Lu = new double *[NPar];
+   Ls = new double *[NPar];
+   Lcp = new double *[NPar];
+   Lv = new double *[NPar];
+   Lpt = new double *[NPar];
+   
+   for (ip=0; ip<NPar; ip++)
+   {
+	   Lu[ip] = new double [4];
+	   Ls[ip] = new double [4];
+	   Lcp[ip] = new double [4];
+	   Lv[ip] = new double [4];
+	   Lpt[ip] = new double [4];
+   }
 
-   if( !L0u || !L0s || !L0cp || !L0v || !L0pt || !L1u || !L1s || !L1cp
-   		|| !L1v || !L1pt || !L2u || !L2s || !L2cp || !L2v || !L2pt
-   			|| !L3u || !L3s || !L3cp || !L3v || !L3pt )
+   if( !Lu || !Ls || !Lcp || !Lv || !Lpt )
         return -1;  // memory alloc failure
 
 	// read in interaction parameters
    	for (ip=0; ip<NPar; ip++)
    	{
-	   	L0u[ip] = (double)aIPc[NPcoef*ip+0];
-	   	L0s[ip] = (double)aIPc[NPcoef*ip+1];
-	   	L0cp[ip] = (double)aIPc[NPcoef*ip+2];
-	   	L0v[ip] = (double)aIPc[NPcoef*ip+3];
-	   	L0pt[ip] = (double)aIPc[NPcoef*ip+16];
-	   	L1u[ip] = (double)aIPc[NPcoef*ip+4];
-	   	L1s[ip] = (double)aIPc[NPcoef*ip+5];
-	   	L1cp[ip] = (double)aIPc[NPcoef*ip+6];
-	   	L1v[ip] = (double)aIPc[NPcoef*ip+7];
-	   	L1pt[ip] = (double)aIPc[NPcoef*ip+17];
-	   	L2u[ip] = (double)aIPc[NPcoef*ip+8];
-	   	L2s[ip] = (double)aIPc[NPcoef*ip+9];
-	   	L2cp[ip] = (double)aIPc[NPcoef*ip+10];
-	   	L2v[ip] = (double)aIPc[NPcoef*ip+11];
-	   	L2pt[ip] = (double)aIPc[NPcoef*ip+18];
-	   	L3u[ip] = (double)aIPc[NPcoef*ip+12];
-	   	L3s[ip] = (double)aIPc[NPcoef*ip+13];
-	   	L3cp[ip] = (double)aIPc[NPcoef*ip+14];
-	   	L3v[ip] = (double)aIPc[NPcoef*ip+15];
-	   	L3pt[ip] = (double)aIPc[NPcoef*ip+19];
+	   	Lu[ip][0] = (double)aIPc[NPcoef*ip+0];
+	   	Ls[ip][0] = (double)aIPc[NPcoef*ip+1];
+	   	Lcp[ip][0] = (double)aIPc[NPcoef*ip+2];
+	   	Lv[ip][0] = (double)aIPc[NPcoef*ip+3];
+	   	Lpt[ip][0] = (double)aIPc[NPcoef*ip+16];
+	   	Lu[ip][1] = (double)aIPc[NPcoef*ip+4];
+	   	Ls[ip][1] = (double)aIPc[NPcoef*ip+5];
+	   	Lcp[ip][1] = (double)aIPc[NPcoef*ip+6];
+	   	Lv[ip][1] = (double)aIPc[NPcoef*ip+7];
+	   	Lpt[ip][1] = (double)aIPc[NPcoef*ip+17];
+	   	Lu[ip][2] = (double)aIPc[NPcoef*ip+8];
+	   	Ls[ip][2] = (double)aIPc[NPcoef*ip+9];
+	   	Lcp[ip][2] = (double)aIPc[NPcoef*ip+10];
+	   	Lv[ip][2] = (double)aIPc[NPcoef*ip+11];
+	   	Lpt[ip][2] = (double)aIPc[NPcoef*ip+18];
+	   	Lu[ip][3] = (double)aIPc[NPcoef*ip+12];
+	   	Ls[ip][3] = (double)aIPc[NPcoef*ip+13];
+	   	Lcp[ip][3] = (double)aIPc[NPcoef*ip+14];
+	   	Lv[ip][3] = (double)aIPc[NPcoef*ip+15];
+	   	Lpt[ip][3] = (double)aIPc[NPcoef*ip+19];
 	}
 
 	// calculate activity coefficients
@@ -600,19 +580,19 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 				{
 					L = index1;
 					I = index2;
-					L0 = L0pt[ip];
-					L1 = L1pt[ip];
-					L2 = L2pt[ip];
-					L3 = L3pt[ip];
+					L0 = Lpt[ip][0];
+					L1 = Lpt[ip][1];
+					L2 = Lpt[ip][2];
+					L3 = Lpt[ip][3];
 				}
 				else
 				{
 					L = index2;
 					I = index1;
-					L0 = L0pt[ip];
-					L1 = -L1pt[ip];
-					L2 = L2pt[ip];
-					L3 = -L3pt[ip];
+					L0 = Lpt[ip][0];
+					L1 = -Lpt[ip][1];
+					L2 = Lpt[ip][2];
+					L3 = -Lpt[ip][3];
 				}
 
 				lnGamRT += L0*x[I]*(1.-x[L])
@@ -625,10 +605,10 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 			{
 				I = index1;
 				J = index2;
-				L0 = L0pt[ip];
-				L1 = L1pt[ip];
-				L2 = L2pt[ip];
-				L3 = L3pt[ip];
+				L0 = Lpt[ip][0];
+				L1 = Lpt[ip][1];
+				L2 = Lpt[ip][2];
+				L3 = Lpt[ip][3];
 
 				lnGamRT -= x[I]*x[J]*( L0 + L1*2.*(x[I]-x[J])
 					+ L2*3.*pow((x[I]-x[J]),2.)
@@ -654,33 +634,33 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
    	   	index1 = (int)aIPx[MaxOrd*ip];
    	   	index2 = (int)aIPx[MaxOrd*ip+1];
 
-      	Lpt = L0pt[ip] + L1pt[ip]*(x[index1]-x[index2])
-      			+ L2pt[ip]*pow((x[index1]-x[index2]),2.)
-      			+ L3pt[ip]*pow((x[index1]-x[index2]),3.);
+      	LPT = Lpt[ip][0] + Lpt[ip][1]*(x[index1]-x[index2])
+      			+ Lpt[ip][2]*pow((x[index1]-x[index2]),2.)
+      			+ Lpt[ip][3]*pow((x[index1]-x[index2]),3.);
 
-      	Lv = L0v[ip] + L1v[ip]*(x[index1]-x[index2])
-      			+ L2v[ip]*pow((x[index1]-x[index2]),2.)
-      			+ L3v[ip]*pow((x[index1]-x[index2]),3.);
+      	LV = Lv[ip][0] + Lv[ip][1]*(x[index1]-x[index2])
+      			+ Lv[ip][2]*pow((x[index1]-x[index2]),2.)
+      			+ Lv[ip][3]*pow((x[index1]-x[index2]),3.);
 
-   	   	Lu = (L0u[ip]-L0cp[ip]*Tk)
-   	  			+ (L1u[ip]-L1cp[ip]*Tk)*(x[index1]-x[index2])
-      			+ (L2u[ip]-L2cp[ip]*Tk)*pow((x[index1]-x[index2]),2.)
-      			+ (L3u[ip]-L3cp[ip]*Tk)*pow((x[index1]-x[index2]),3.);
+   	   	LU = (Lu[ip][0]-Lcp[ip][0]*Tk)
+   	  			+ (Lu[ip][1]-Lcp[ip][1]*Tk)*(x[index1]-x[index2])
+      			+ (Lu[ip][2]-Lcp[ip][2]*Tk)*pow((x[index1]-x[index2]),2.)
+      			+ (Lu[ip][3]-Lcp[ip][3]*Tk)*pow((x[index1]-x[index2]),3.);
 
-   	   	Ls = (-L0s[ip]-L0cp[ip]*(1.+log(Tk)))
-      			+ (-L1s[ip]-L1cp[ip]*(1.+log(Tk)))*(x[index1]-x[index2])
-      			+ (-L2s[ip]-L2cp[ip]*(1.+log(Tk)))*pow((x[index1]-x[index2]),2.)
-      			+ (-L3s[ip]-L3cp[ip]*(1.+log(Tk)))*pow((x[index1]-x[index2]),3.);
+   	   	LS = (-Ls[ip][0]-Lcp[ip][0]*(1.+log(Tk)))
+      			+ (-Ls[ip][1]-Lcp[ip][1]*(1.+log(Tk)))*(x[index1]-x[index2])
+      			+ (-Ls[ip][2]-Lcp[ip][2]*(1.+log(Tk)))*pow((x[index1]-x[index2]),2.)
+      			+ (-Ls[ip][3]-Lcp[ip][3]*(1.+log(Tk)))*pow((x[index1]-x[index2]),3.);
 
-   	   	Lcp = (-L0cp[ip]) + (-L1cp[ip])*(x[index1]-x[index2])
-      			+ (-L2cp[ip])*pow((x[index1]-x[index2]),2.)
-      			+ (-L3cp[ip])*pow((x[index1]-x[index2]),3.);
+   	   	LCP = (-Lcp[ip][0]) + (-Lcp[ip][1])*(x[index1]-x[index2])
+      			+ (-Lcp[ip][2])*pow((x[index1]-x[index2]),2.)
+      			+ (-Lcp[ip][3])*pow((x[index1]-x[index2]),3.);
 
-      	gEX += x[index1]*x[index2]*Lpt;
-      	vEX += x[index1]*x[index2]*Lv;
-      	uEX += x[index1]*x[index2]*Lu;
-      	sEX += x[index1]*x[index2]*Ls;
-      	cpEX += x[index1]*x[index2]*Lcp;
+      	gEX += x[index1]*x[index2]*LPT;
+      	vEX += x[index1]*x[index2]*LV;
+      	uEX += x[index1]*x[index2]*LU;
+      	sEX += x[index1]*x[index2]*LS;
+      	cpEX += x[index1]*x[index2]*LCP;
   	}
 
    	hEX = uEX+vEX*Pbar;
@@ -689,28 +669,21 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
    	Hex_ = hEX;
    	Sex_ = sEX;
    	CPex_ = cpEX;
-
-   	delete[]L0u;
-   	delete[]L0s;
-   	delete[]L0cp;
-   	delete[]L0v;
-   	delete[]L0pt;
-   	delete[]L1u;
-   	delete[]L1s;
-   	delete[]L1cp;
-   	delete[]L1v;
-   	delete[]L1pt;
-   	delete[]L2u;
-   	delete[]L2s;
-   	delete[]L2cp;
-   	delete[]L2v;
-   	delete[]L2pt;
-   	delete[]L3u;
-   	delete[]L3s;
-   	delete[]L3cp;
-   	delete[]L3v;
-   	delete[]L3pt;
-
+   	
+   	for (ip=0; ip<NPar; ip++)
+   	{
+   		delete[]Lu[ip];
+   		delete[]Ls[ip];
+   		delete[]Lcp[ip];
+   		delete[]Lv[ip];
+   		delete[]Lpt[ip];
+   	}
+   	delete[]Lu;
+   	delete[]Ls;
+   	delete[]Lcp;
+   	delete[]Lv;
+   	delete[]Lpt;
+ 
    	return 0;
 }
 
@@ -724,22 +697,32 @@ TSolMod::NRTL_PT()
 {
 	// calculates T-dependence of binary interaction parameters
 	int ip;
-	double alpha, A, B, C, D, tau, dtau;
+	double A, B, C, D, E, F;
+	double tau, dtau, d2tau, alp, dalp, d2alp;
 
-        if ( /* ModCode != SM_NRTL || */ NPcoef < 7 || NPar < 1 )
+        if ( /* ModCode != SM_NRTL || */ NPcoef < 12 || NPar < 1 )
            return 1;  // foolproof!
 
 	for (ip=0; ip<NPar; ip++)
 	{
-		alpha = (double)aIPc[NPcoef*ip+0];
-		A = (double)aIPc[NPcoef*ip+1];
-		B = (double)aIPc[NPcoef*ip+2];
-		C = (double)aIPc[NPcoef*ip+3];
-		D = (double)aIPc[NPcoef*ip+4];
-		tau = A + B/Tk + C*Tk + D*log(Tk);
-		dtau = - B/pow(Tk,2.) + C + D/Tk;  // partial derivative of tau
-		aIPc[NPcoef*ip+5] = (float)tau;
-		aIPc[NPcoef*ip+6] = (float)dtau;
+		A = (double)aIPc[NPcoef*ip+0];
+		B = (double)aIPc[NPcoef*ip+1];
+		C = (double)aIPc[NPcoef*ip+2];
+		D = (double)aIPc[NPcoef*ip+3];
+		E = (double)aIPc[NPcoef*ip+4];
+		F = (double)aIPc[NPcoef*ip+5];
+		tau = A + B/Tk + C*Tk + D*log(Tk);	// partial derivatives of tau and alp
+		dtau = - B/pow(Tk,2.) + C + D/Tk;
+		d2tau = 2.*B/pow(Tk,3.) - D/pow(Tk,2.);
+		alp = E + F*(Tk-273.15);
+		dalp = F;
+		d2alp = 0.0;
+		aIPc[NPcoef*ip+6] = (float)tau;
+		aIPc[NPcoef*ip+7] = (float)dtau;
+		aIPc[NPcoef*ip+8] = (float)d2tau;
+		aIPc[NPcoef*ip+9] = (float)alp;
+		aIPc[NPcoef*ip+10] = (float)dalp;
+		aIPc[NPcoef*ip+11] = (float)d2alp;
 	}
 	return 0;
 }
@@ -747,40 +730,54 @@ TSolMod::NRTL_PT()
 
 
 // NRTL model for liquid solutions (c) TW June 2008
-// References: Renon and Prausnitz (1968)
+// References: Renon and Prausnitz (1968), Prausnitz et al. (1997)
 // Calculates activity coefficients and excess functions
+// heat capacity calculation added, 06.06.2008 (TW)
 // Returns 0 if OK or 1 if error
 int
 TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
          double &CPex_ )
 {
 	int ip, j, i, k;
-	int index1, index2;
+	int i1, i2;
 	double K, L, M, N, O;
-	double U, dU, V, dV, g, dg, lnGam;
+	double U, dU, V, dV, d2U, d2V;
+	double g, dg, d2g, lnGam;
 	double gEX, vEX, hEX, sEX, cpEX;
-	double **Alpha;
 	double **Tau;
-	double **G;
 	double **dTau;
+	double **d2Tau;
+	double **Alp;
+	double **dAlp;
+	double **d2Alp;
+	double **G;
 	double **dG;
+	double **d2G;
 
-	if ( NPcoef < 7 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+	if ( NPcoef < 12 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;  // foolproof!
 
-	Alpha = new double *[NComp];
 	Tau = new double *[NComp];
+	dTau = new double *[NComp];
+	d2Tau = new double *[NComp];
+	Alp = new double *[NComp];
+	dAlp = new double *[NComp];
+	d2Alp = new double *[NComp];
 	G = new double *[NComp];
-	dTau = new double *[NComp];	// matrix of partial derivatives
 	dG = new double *[NComp];
+	d2G = new double *[NComp];
 
     for (j=0; j<NComp; j++)
     {
-		Alpha[j] = new double [NComp];    
-		Tau[j] = new double [NComp];
+    	Tau[j] = new double [NComp];
+    	dTau[j] = new double [NComp];
+    	d2Tau[j] = new double [NComp];
+    	Alp[j] = new double [NComp];
+    	dAlp[j] = new double [NComp];
+    	d2Alp[j] = new double [NComp];
 		G[j] = new double [NComp];
-		dTau[j] = new double [NComp];
 		dG[j] = new double [NComp];
+		d2G[j] = new double [NComp];
 	}
 
 	// fill internal arrays of interaction parameters with standard value
@@ -788,25 +785,41 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	{
 		for ( i=0; i<NComp; i++ )
 		{
-			Alpha[j][i] = 0.0;
 			Tau[j][i] = 0.0;
-			G[j][i] = 1.0;
 			dTau[j][i] = 0.0;
+			d2Tau[j][i] = 0.0;
+			Alp[j][i] = 0.0;
+			dAlp[j][i] = 0.0;
+			d2Alp[j][i] = 0.0;
+			G[j][i] = 1.0;
 			dG[j][i] = 0.0;
+			d2G[j][i] = 0.0;
 		}
 	}
 
 	// read and convert parameters that have non-standard value
 	for (ip=0; ip<NPar; ip++)
 	{
-		index1 = (int)aIPx[MaxOrd*ip];
-		index2 = (int)aIPx[MaxOrd*ip+1];
-		Alpha[index1][index2] = (double)aIPc[NPcoef*ip+0];
-		Tau[index1][index2] = (double)aIPc[NPcoef*ip+5];
-		G[index1][index2] = exp(-Alpha[index1][index2]*Tau[index1][index2]);
-		dTau[index1][index2] = (double)aIPc[NPcoef*ip+6];
-		dG[index1][index2] = - Alpha[index1][index2] * exp( -Alpha[index1][index2]*Tau[index1][index2] )
-			* dTau[index1][index2];
+		i1 = (int)aIPx[MaxOrd*ip];
+		i2 = (int)aIPx[MaxOrd*ip+1];
+		Tau[i1][i2] = (double)aIPc[NPcoef*ip+6];
+		dTau[i1][i2] = (double)aIPc[NPcoef*ip+7];
+		d2Tau[i1][i2] = (double)aIPc[NPcoef*ip+8];
+		Alp[i1][i2] = (double)aIPc[NPcoef*ip+9];
+		dAlp[i1][i2] = (double)aIPc[NPcoef*ip+10];
+		d2Alp[i1][i2] = (double)aIPc[NPcoef*ip+11];
+		
+		G[i1][i2] = exp(-Alp[i1][i2]*Tau[i1][i2]);
+		dG[i1][i2] = - ( dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2] )
+				* exp(-Alp[i1][i2]*Tau[i1][i2]);
+		d2G[i1][i2] = - ( (d2Alp[i1][i2]*Tau[i1][i2] + 2.*dAlp[i1][i2]*dTau[i1][i2]
+				+ Alp[i1][i2]*d2Tau[i1][i2])*G[i1][i2]
+				+ (dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2])*dG[i1][i2] );
+		
+		// old version with constant Alp
+		// dG[i1][i2] = -Alp[i1][i2] * exp( -Alp[i1][i2]*Tau[i1][i2] ) * dTau[i1][i2];
+		// d2G[i1][i2] = -Alp[i1][i2]*(-Alp[i1][i2]*exp(-Alp[i1][i2]*Tau[i1][i2])*dTau[i1][i2]*dTau[i1][i2]
+		//		+ exp(-Alp[i1][i2]*Tau[i1][i2])*d2Tau[i1][i2]);		                                                                                                                                  
 	}
 
 	// calculate activity coefficients
@@ -841,6 +854,7 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
    	cpEX = 0.0;
    	g = 0.0;
    	dg = 0.0;
+   	d2g = 0.0;
 
    	for (j=0; j<NComp; j++)
    	{
@@ -848,20 +862,28 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 		V = 0.0;
 		dU = 0.0;
 		dV = 0.0;
+		d2U = 0.0;
+		d2V = 0.0;
 		for (i=0; i<NComp; i++)
 		{
-			U += ( x[i]*Tau[i][j]*G[i][j] );
-			V += ( x[i]*G[i][j] );
-			dU += ( x[i] * ( dTau[i][j]*G[i][j] + Tau[i][j]*dG[i][j] ) );
-			dV += ( x[i]*dG[i][j] );
+			U += x[i]*Tau[i][j]*G[i][j];
+			V += x[i]*G[i][j];
+			dU += x[i] * ( dTau[i][j]*G[i][j] + Tau[i][j]*dG[i][j] );
+			dV += x[i]*dG[i][j];
+			d2U += x[i] * ( d2Tau[i][j]*G[i][j] + 2.*dTau[i][j]*dG[i][j]
+					+ Tau[i][j]*d2G[i][j] );
+			d2V += x[i]*d2G[i][j];
 		}
-		g += ( x[j]*U/V );
-		dg += ( x[j] * (dU*V-U*dV)/pow(V,2.) );
+		g += x[j]*U/V;
+		dg += x[j] * (dU*V-U*dV)/pow(V,2.);
+		d2g += x[j] * ( (d2U*V+dU*dV)*pow(V,2.)/pow(V,4.) - (dU*V)*(2.*V*dV)/pow(V,4.)
+				- (dU*dV+U*d2V)*pow(V,2.)/pow(V,4.) + (U*dV)*(2.*V*dV)/pow(V,4.) );
 	}
 
 	gEX = g*R_CONST*Tk;
-	hEX = - R_CONST*pow(Tk,2.)*dg;
+	hEX = -R_CONST*pow(Tk,2.)*dg;
 	sEX = (hEX-gEX)/Tk;
+	cpEX = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
 	Gex_ = gEX;
 	Vex_ = vEX;
@@ -872,19 +894,188 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
    	// cleaning memory
    	for (j=0; j<NComp; j++)
    	{
-		delete[]Alpha[j];
-		delete[]Tau[j];
+   		delete[]Tau[j];
+   		delete[]dTau[j];
+   		delete[]d2Tau[j];
+   		delete[]Alp[j];
+   		delete[]dAlp[j];
+   		delete[]d2Alp[j];
 		delete[]G[j];
-		delete[]dTau[j];
 		delete[]dG[j];
+		delete[]d2G[j];
 	}
-	delete[]Alpha;
-	delete[]Tau;
+   	delete[]Tau;
+   	delete[]dTau;
+   	delete[]d2Tau;
+   	delete[]Alp;
+   	delete[]dAlp;
+   	delete[]d2Alp;
 	delete[]G;
-	delete[]dTau;
 	delete[]dG;
+	delete[]d2G;
 	return 0;
 }
+
+
+
+// Wilson model for liquid solutions (c) TW June 2008
+// Calculates T-corrected interaction parameters
+// Returns 0 if OK or 1 if error
+int
+TSolMod::Wilson_PT()
+{
+	// calculates T-dependence of binary interaction parameters
+	int ip;
+	double A, B, C, D;
+	double lam, dlam, d2lam;
+
+        if ( /* ModCode != SM_NRTL || */ NPcoef < 7 || NPar < 1 )
+           return 1;  // foolproof!
+
+	for (ip=0; ip<NPar; ip++)
+	{
+		A = (double)aIPc[NPcoef*ip+0];
+		B = (double)aIPc[NPcoef*ip+1];
+		C = (double)aIPc[NPcoef*ip+2];
+		D = (double)aIPc[NPcoef*ip+3];
+		lam = exp( A + B/Tk + C*Tk + D*log(Tk) );
+		dlam = lam*( - B/pow(Tk,2.) + C + D/Tk );
+		d2lam = dlam*( - B/pow(Tk,2.) + C + D/Tk ) + lam*( 2.*B/pow(Tk,3.) - D/pow(Tk,2.) );
+		aIPc[NPcoef*ip+4] = (float)lam;
+		aIPc[NPcoef*ip+5] = (float)dlam;
+		aIPc[NPcoef*ip+6] = (float)d2lam;
+	}
+	return 0;
+}
+
+
+
+// Wilson model for liquid solutions (c) TW June 2008
+// References: Prausnitz et al. (1997)
+// Calculates activity coefficients and excess functions
+// heat capacity calculation added, 06.06.2008 (TW)
+// Returns 0 if OK or 1 if error
+int
+TSolMod::Wilson_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
+         double &CPex_ )
+{
+	int ip, j, i, k;
+	int i1, i2;
+	double K, L, M;
+	double U, dU, d2U;
+	double g, dg, d2g, lnGam;
+	double gEX, vEX, hEX, sEX, cpEX;
+	double **Lam;
+	double **dLam;
+	double **d2Lam;
+
+	if ( NPcoef < 7 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+	        return 1;  // foolproof!
+
+	Lam = new double *[NComp];
+	dLam = new double *[NComp];
+	d2Lam = new double *[NComp];
+
+    for (j=0; j<NComp; j++)
+    {
+		Lam[j] = new double [NComp];
+		dLam[j] = new double [NComp];
+		d2Lam[j] = new double [NComp];
+	}
+
+	// fill internal arrays of interaction parameters with standard value
+	for (j=0; j<NComp; j++)
+	{
+		for ( i=0; i<NComp; i++ )
+		{
+			Lam[j][i] = 1.0;
+			dLam[j][i] = 0.0;
+			d2Lam[j][i] = 0.0;
+		}
+	}
+
+	// read and convert parameters that have non-standard value
+	for (ip=0; ip<NPar; ip++)
+	{
+		i1 = (int)aIPx[MaxOrd*ip];
+		i2 = (int)aIPx[MaxOrd*ip+1];
+		Lam[i1][i2] = (double)aIPc[NPcoef*ip+4];
+		dLam[i1][i2] = (double)aIPc[NPcoef*ip+5];
+		d2Lam[i1][i2] = (double)aIPc[NPcoef*ip+6];
+	}
+
+	// calculate activity coefficients (Wilson)
+	for (j=0; j<NComp; j++)
+	{
+		lnGam = 0.0;
+		K = 0.0;
+		L = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			M = 0.0;
+			K += x[i]*Lam[j][i];
+			for (k=0; k<NComp; k++)
+			{
+				M += x[k]*Lam[i][k];
+			}
+			L += x[i]*Lam[i][j]/M;
+		}
+		lnGam = 1.-log(K)-L;
+		lnGamma[j] = lnGam;
+	}
+
+	// calculate bulk phase excess properties
+	gEX = 0.0;
+	vEX = 0.0;
+	hEX = 0.0;
+	sEX = 0.0;
+	cpEX = 0.0;
+	g = 0.0;
+	dg = 0.0;
+	d2g = 0.0;
+
+	for (j=0; j<NComp; j++)
+	{
+		U = 0.0;
+		dU = 0.0;
+		d2U = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			U += x[i]*Lam[j][i];
+			dU += x[i]*dLam[j][i];
+			d2U += x[i]*d2Lam[j][i];
+		}
+		g -= x[j]*log(U);
+		dg -= x[j]*(1./U)*dU;
+		d2g -= x[j] * ( (-1./pow(U,2.))*dU*dU + (1./U)*d2U );  // fixed, 11.06.2008 (TW)
+	}
+
+	// final calculations and assignments
+	gEX = g*R_CONST*Tk;
+	hEX = -R_CONST*pow(Tk,2.)*dg;
+	sEX = (hEX-gEX)/Tk;
+	cpEX = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+
+	Gex_ = gEX;
+	Vex_ = vEX;
+	Hex_ = hEX;
+	Sex_ = sEX;
+	CPex_ = cpEX;
+
+   	// cleaning memory
+   	for (j=0; j<NComp; j++)
+   	{
+		delete[]Lam[j];
+		delete[]dLam[j];
+		delete[]d2Lam[j];
+	}
+	delete[]Lam;
+	delete[]dLam;
+	delete[]d2Lam;
+	return 0;
+}
+
+
 
 // add other solution models here
 

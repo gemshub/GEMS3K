@@ -515,18 +515,21 @@ pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );  // Getting act
                   case SM_MARGT:   // left for compatibility with old projects
                        MargulesTernary( jb, je, jpb, jdb, k );
                           break;
-                  case SM_GUGGENM: // Redlich-Kister model multicomponent, 2007 (TW)
+                  case SM_GUGGENM: // Redlich-Kister model (multicomponent), 2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
                           break;
-                  case SM_VANLAAR: // VanLaar model multicomponent, 2007 (TW)
+                  case SM_VANLAAR: // VanLaar model (multicomponent), 2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
                           break;
-                  case SM_REGULAR: // Regular model multicomponent, 2007 (TW)
+                  case SM_REGULAR: // Regular model (multicomponent), 2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
                           break;
-                  case SM_NRTLLIQ: // NRTL model multicomponent, 03.06.2007 (TW)
+                  case SM_NRTLLIQ: // NRTL model (multicomponent), 03.06.2007 (TW)
                        SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
-                          break;                          
+                          break;
+                  case SM_WILSLIQ: // Wilson model (multicomponent), 09.06.2007 (TW)
+                       SolModActCoeff( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+                          break;              	  	
                   default:
                           break;
                 }
@@ -1415,20 +1418,20 @@ TMulti::RedlichKister( int jb, int, int jpb, int, int k )
   double a0, a1, a2, lnGam1, lnGam2, X1, X2;
   double gEX, vEX, hEX, sEX, cpEX, uEX;
   
-// load parameters
+  // load parameters
   a0 = (double)pmp->PMc[jpb+0];
   a1 = (double)pmp->PMc[jpb+1];  // in regular model should be 0
   a2 = (double)pmp->PMc[jpb+2];  // in regular model should be 0
   
-// load mole fractions
+  // load mole fractions
   X1 = pmp->X[jb] / pmp->XF[k];
   X2 = pmp->X[jb+1] / pmp->XF[k];
   
-// activity coeffs
+  // activity coeffs
   lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
   lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
   
-// bulk phase excess properties (added by TW, 29.05.2008)
+  // bulk phase excess properties (added by TW, 29.05.2008)
   gEX = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
   vEX = 0.0;
   uEX = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
@@ -1436,7 +1439,7 @@ TMulti::RedlichKister( int jb, int, int jpb, int, int k )
   cpEX = 0.0;
   hEX = uEX;
   
-// assignment
+  // assignments
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
 }
@@ -1468,15 +1471,15 @@ TMulti::MargulesBinary( int jb, int, int jpb, int, int k )
   a1 = WG1 / pmp->RT;
   a2 = WG2 / pmp->RT;
   
-// load mole fractions
+  // load mole fractions
   X1 = pmp->X[jb] / pmp->XF[k];
   X2 = pmp->X[jb+1] / pmp->XF[k];
   
-// activity coefficients
+  // activity coefficients
   lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
   lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
 
-// bulk phase excess properties (extended by TW, 29.05.2008)
+  // bulk phase excess properties (extended by TW, 29.05.2008)
   gEX = X1*X2*( X2*WG1 + X1*WG2 );
   vEX = X1*X2*( X2*WV1 + X1*WV2 );
   uEX = X1*X2*( X2*WU1 + X1*WU2 );
@@ -1484,7 +1487,7 @@ TMulti::MargulesBinary( int jb, int, int jpb, int, int k )
   cpEX = 0.0;
   hEX = uEX+vEX*P;
   
-// assignments
+  // assignments
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
   pmp->FVOL[k] += vEX*10.;  // make consistent with TSolMod
@@ -1568,7 +1571,8 @@ TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
 {
     int NComp, NPar, NPcoef, MaxOrd, NP_DC;
     float *aIPc, *aDCc;
-    short * aIPx;
+    short *aIPx;
+    double RhoW, EpsW;
 
     NComp = pmp->L1[k];          // Number of components in the phase
     NPar = pmp->LsMod[k*3];      // Number of interaction parameters
@@ -1579,9 +1583,11 @@ TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
                               // -> NPar x MaxOrd   added 07.12.2006   KD
     aIPc = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
     aDCc = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+    RhoW = pmp->denW;		// added 04.06.2008 (TW)
+    EpsW = pmp->epsW;
 
     TSolMod aSM( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-       aIPx, aIPc, aDCc, NULL, NULL );
+       aIPx, aIPc, aDCc, NULL, NULL, RhoW, EpsW, NULL );
 
    // calculate P-T dependence of interaction parameters
     switch( ModCode )
@@ -1598,6 +1604,9 @@ TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
         case SM_NRTLLIQ:
         	 aSM.NRTL_PT();
         	 break;
+        case SM_WILSLIQ:
+        	 aSM.Wilson_PT();
+        	 break;
         default:
              break;
     }
@@ -1610,8 +1619,9 @@ TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
     int NComp, NPar, NPcoef, MaxOrd, NP_DC;
     float *aIPc, *aDCc;
     double *aWx, *alnGam;
-    short * aIPx;
+    short *aIPx;
     double Gex=0.0, Vex=0.0, Hex=0.0, Sex=0.0, CPex=0.0;
+    double RhoW, EpsW, IonStr;
 
     NComp = pmp->L1[k];          // Number of components in the phase
     NPar = pmp->LsMod[k*3];      // Number of interaction parameters
@@ -1626,9 +1636,12 @@ TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
     aDCc = pmp->DMc+jdb;    // End-member parameter coefficients f(TPX) -> NComp x NP_DC
     aWx = pmp->Wx+jb;       // End member mole fractions
     alnGam = pmp->lnGam+jb; // End member ln activity coeffs
+    RhoW = pmp->denW;		// added 04.06.2008 (TW)
+    EpsW = pmp->epsW;
+    IonStr = pmp->IC;
 
     TSolMod aSM( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-       aIPx, aIPc, aDCc, aWx, alnGam );
+       aIPx, aIPc, aDCc, aWx, alnGam, RhoW, EpsW, IonStr );
     // Extended constructor to connect to params, coeffs, and mole fractions
 
     switch( ModCode )
@@ -1644,6 +1657,9 @@ TMulti::SolModActCoeff( int jb, int, int jpb, int jdb, int k, int ipb,
         	 break;
         case SM_NRTLLIQ:
         	 aSM.NRTL_MixMod( Gex, Vex, Hex, Sex, CPex );
+        	 break;
+        case SM_WILSLIQ:
+        	 aSM.Wilson_MixMod( Gex, Vex, Hex, Sex, CPex );
         	 break;
         default: // catch error here
               break;
