@@ -1107,14 +1107,13 @@ c now change diffusion coefficient
 c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specific
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
-c change amount of water in the system ....water should be at bn(m1-1)
+c convert aqueous species to concentrations
 c
-
           do ii=1,j_sorb
- 	      bn(ii,n)=bn(ii,n)*por(n)
+ 	      bn(ii,n)=bn(ii,n)/por(n)
            enddo
            do jj=1,m2
-  	       cn(jj,n)=cn(jj,n)*por(n)
+  	       cn(jj,n)=cn(jj,n)/por(n)
            enddo
  
        enddo
@@ -1694,10 +1693,10 @@ c transform the b and c vector to back to absolute values j_sorb+1 is water!
 c set water!
               bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
           do ii=1,j_sorb
-   	        bn(ii,n)=bn(ii,n)/por(n)
+   	        bn(ii,n)=bn(ii,n)*por(n)
            enddo
             do jj=1,m2
-        	 cn(jj,n)=cn(jj,n)/por(n)
+        	 cn(jj,n)=cn(jj,n)*por(n)
              enddo
 	enddo
 
@@ -2040,10 +2039,10 @@ c transform the b and c vector to concentrations j_sorb+1 is water!
 
 c
           do ii=1,j_sorb
- 	       bn(ii,n)=bn(ii,n)*por(n)
+ 	       bn(ii,n)=bn(ii,n)/por(n)
            enddo
            do jj=1,m2
-  	        cn(jj,n)=cn(jj,n)*por(n)
+  	        cn(jj,n)=cn(jj,n)/por(n)
            enddo
 
 c         end loop over nodes
