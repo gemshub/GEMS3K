@@ -1005,19 +1005,20 @@ c and for GEMS it is better to work with bigger numbers ;-) so multipy with 10e3
 c      gridvol=dxx * dxx * dxx *1000.0
 	gridvol=1.0
 	ref_vol=p_Vs
-      write(*,*)"scaling 1:",gridvol,gridvol/p_Vs
+     
       do 1690 n=1,nxmax/2
-	 gridvol=dx(n)/dx(1)*ref_vol   ! normalized !
+	 gridvol=dx(n)/dx(1)*ref_vol/p_Vs   ! normalized !
+         write(*,*)"scaling 1:",gridvol,p_Vs,dx(1),dx(2)
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
-	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
+	bn(ib,n)=p_xDc(i_bcp_gemx(ib))*gridvol    !2)
          bog(ib,n)=bn(ib,n)              ! initial copy of masses        
  1691    continue
 	do 1692 ic=1,m2
-	   cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  !10)
+	   cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))*gridvol  !10)
            cog(ic,n)=cn(ic,n)
  1692    continue
 	do 1693 ip=1,m3
- 	   pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol     ! 12)/1.
+ 	   pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))*gridvol     ! 12)/1.
  	   pog(ip,n)=pn(ip,n)
  1693     continue
 
@@ -1063,20 +1064,21 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
 	write(*,*)"p_XDC 1", p_xDC
 	gridvol=1.0
-      write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
       do 1695 n=nxmax/2+1,nxmax
-	 gridvol=dx(n)/dx(1)*ref_vol   ! normalized !
+	 gridvol=dx(n)/dx(1)* ref_vol/p_Vs   ! normalized !
+       write(*,*)"scaling 2:",gridvol,p_Vs
+
 	do 1696 ib=1,m1-1
-	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
+	bn(ib,n)=p_xDc(i_bcp_gemx(ib))*gridvol   !   2)   ! i_bcp_gemx(1)=2
          bog(ib,n)=bn(ib,n)         
  1696 continue
 	do 1697 ic=1,m2
-	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))/p_Vs*gridvol  ! i_bcp_gemx(7)=10
+	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))*gridvol  ! i_bcp_gemx(7)=10
  	   cog(ic,n)=cn(ic,n)
  1697 continue
 	do 1698 ip=1,m3
-	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
+	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
  	   pog(ip,n)=pn(ip,n)
  1698 continue
 
@@ -1084,17 +1086,19 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
  1695 continue
 c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
+
 	do n=1,nxmax
-          poro(n)=por(n)
 	  por(n)=0.0
+          poro(n)=por(n)
 	  do  ip=1,m3
       dum1=f_gem_get_molar_volume(i_bcp_gemx(m1+m2+ip),Tc_dummy,P_dummy)
            dum2= pn(ip,n)
             por(n)=por(n) + dum1*dum2
           enddo
 c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
-           gridvol=dx(n)   ! normalized !
-	   por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
+           gridvol=dx(n)/dx(1)*1.e-4/ref_vol *0.1  ! normalized ... convert from cm^3 to m^3   factor 0.1 from definition of molar volume in GEMS!!!
+
+	   por(n)=1-gridvol*por(n)  ! normalized  ...f
 	  if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero
 c now change diffusion coefficient
         dm(n)=dm0*por(n)
@@ -1105,17 +1109,17 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
 c change amount of water in the system ....water should be at bn(m1-1)
 c
+
           do ii=1,j_sorb
- 	      bn(ii,n)=bn(ii,n)/p_vPS(1)
+ 	      bn(ii,n)=bn(ii,n)*por(n)
            enddo
            do jj=1,m2
-  	       cn(jj,n)=cn(jj,n)/p_vPS(1)
+  	       cn(jj,n)=cn(jj,n)*por(n)
            enddo
  
        enddo
-	write(*,*) "porosity update:", por(1:nxmax)
-
 	if (irank.eq.root) then 
+	write(*,*) "porosity update:", por(1:nxmax)
          write(*,'(13(e8.2,1x))')(bn(ib,2),ib=1,m1),(cn(ic,2),ic=1,m2)
      *,(pn(ip,2),ip=1,m3)
 ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
@@ -1690,10 +1694,10 @@ c transform the b and c vector to back to absolute values j_sorb+1 is water!
 c set water!
               bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
           do ii=1,j_sorb
-   	        bn(ii,n)=bn(ii,n)*p_vPS(1)
+   	        bn(ii,n)=bn(ii,n)/por(n)
            enddo
             do jj=1,m2
-        	 cn(jj,n)=cn(jj,n)*p_vPS(1)
+        	 cn(jj,n)=cn(jj,n)/por(n)
              enddo
 	enddo
 
@@ -2023,8 +2027,8 @@ c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
             por(n)=por(n) + dum1*dum2
           enddo
 c	 por(n)=1-por(n)/abs((dx(n+1)-dx(n-1))*0.5)   ! normalized !
-         gridvol=dx(n)   ! normalized !
-         por(n)=1-por(n)*gridvol*0.1  ! normalized  ...factor 0.1 from definition of molar volume in GEMS!!!
+           gridvol=dx(n)/dx(1)*1.e-4/ref_vol *0.1  ! normalized ... convert from cm^3 to m^3   factor 0.1 from definition of molar volume in GEMS!!!
+	   por(n)=1-gridvol*por(n)  ! normalized  ...f
          if (por(n).le.1.e-6) por(n)=1.e-6   ! make sure porosity does not get zero	 
 c
 c now change diffusion coefficient
@@ -2036,10 +2040,10 @@ c transform the b and c vector to concentrations j_sorb+1 is water!
 
 c
           do ii=1,j_sorb
- 	       bn(ii,n)=bn(ii,n)/p_vPS(1)
+ 	       bn(ii,n)=bn(ii,n)*por(n)
            enddo
            do jj=1,m2
-  	        cn(jj,n)=cn(jj,n)/p_vPS(1)
+  	        cn(jj,n)=cn(jj,n)*por(n)
            enddo
 
 c         end loop over nodes
