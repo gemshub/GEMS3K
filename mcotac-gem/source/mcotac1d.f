@@ -186,7 +186,7 @@ c-coeff      integer npin, s,ss
       integer p_nDCb, p_nICb, p_nPHb, p_nPSb, p_nPH, gsize3
       integer itimestep_tp, dtprstep, kk1,k1
       real t1,t2
-      double precision bog(nbasis,nnodex+2),pog(nnodex+2),          ! this are arrays used for conversion gems-mcotac
+      double precision bog(nbasis,nnodex+2),pog(nsolid,nnodex+2),          ! this are arrays used for conversion gems-mcotac
      &         cog(ncompl,nnodex+2)
       double precision p_T     !// Temperature T, K                        +      +      -     -
       double precision p_P     !// Pressure P, bar                         +      +      -     -
@@ -1018,6 +1018,7 @@ c      gridvol=dxx * dxx * dxx *1000.0
  1692    continue
 	do 1693 ip=1,m3
  	   pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol     ! 12)/1.
+ 	   pog(ip,n)=pn(ip,n)
  1693     continue
 
 
@@ -1076,6 +1077,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
  1697 continue
 	do 1698 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
+ 	   pog(ip,n)=pn(ip,n)
  1698 continue
 
 
@@ -1633,14 +1635,22 @@ c     *bn(1,2),pn(2,2),pn(3,2)
 
 
 
-c>>>>>02-2003 modified boundary on the right side
+c>>>>>0modified boundary on both sides
 c      if(imodbound.gt.0)then  
-c       do 1318, nspezx=1,nxmax+1
-c       if (nspezx.ge.45)then
-c         bn(4,nspezx)=0.
-c         bn(5,nspezx)=0.
-c       endif
-c 1318  continue
+            do ib=1,j_sorb
+	  	bn(ib,1)=bog(ib,1)/p_vPS(1)
+	  	bn(ib,nxmax)=bog(ib,nxmax)/p_vPS(1)
+            enddo
+            do ic=1,m2
+	  	cn(ic,1)=cog(ic,1)/p_vPS(1)
+	  	cn(ic,nxmax)=cog(ic,nxmax)/p_vPS(1)
+            enddo
+            do ip=1,m3
+	  	pn(ip,1)=pog(ip,1)  
+	  	pn(ip,nxmax)=pog(ip,nxmax)  
+            enddo
+
+
 c      endif 
 c>>>>>02-2003 modified boundary on the right side
 
