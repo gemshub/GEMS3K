@@ -1025,7 +1025,7 @@ c  second read is for initial conditons nodes 2 to nxmax
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
-
+	write(*,*)"p_XDC 1", p_xDC
 	gridvol=1.0
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
@@ -1687,16 +1687,18 @@ c root obtains the full dataset
 
         
         if (irank.eq.root) then        
-	  do n=1,nxmax
+	  do n=1,nxmax,npes
+          do i=1,npes
             do ib=1,m1-1
-	  	bn_domain(ib+(n-1)*(m1-1))=bn(ib,n)
+	  	bn_domain(ib+(i-1+n-1)*(m1-1))=bn(ib,i-1+n)
             enddo
             do ic=1,m2
-	  	cn_domain(ic+(n-1)*m2)=cn(ic,n)
+	  	cn_domain(ic+(i-1+n-1)*m2)=cn(ic,n+i-1)
             enddo
             do ip=1,m3
-	  	pn_domain(ip+(n-1)*m3)=pn(ip,n)  !//we reuse pn_domain for Po_domain
+	  	pn_domain(ip+(i-1+n-1)*m3)=pn(ip,n+i-1)  
             enddo
+          enddo
           enddo
 	endif
 
@@ -1849,17 +1851,19 @@ c now do MPI_GATHER
      &	    MPI_COMM_WORLD,ierr)
 
 
-	  do n=1,nxmax
-	    pHarr(n)=ph_domain(n)
+	  do n=1,nxmax,npes
+	  do i=1,npes
+	    pHarr(n+i-1)=ph_domain(n+i-1)            
             do ib=1,m1-1
-	  	bn(ib,n)=bn_domain(ib+(n-1)*(m1-1))
+	  	bn(ib,n+i-1)=bn_domain(ib+(n-1+i-1)*(m1-1))
             enddo
             do ic=1,m2
-	  	cn(ic,n)=cn_domain(ic+(n-1)*m2)
+	  	cn(ic,n+i-1)=cn_domain(ic+(n-1+i-1)*m2)
             enddo
             do ip=1,m3
-	  	pn(ip,n)=pn_domain(ip+(n-1)*m3)  
+	  	pn(ip,n+i-1)=pn_domain(ip+(n-1+i-1)*m3)  
             enddo
+          enddo
           enddo
 c       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c       sendcount = nbasis*nnodex
@@ -1898,8 +1902,8 @@ c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
-c	write(*,*)"p_bic",n, p_bIC
-c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
+	write(*,*)"p_bic",n, p_bIC
+	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
       idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
@@ -1907,6 +1911,8 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
+
+
 c	if (idum.ne.1) then 
 c	   write(*,*)"GEMS problem ", idum
 c	   stop
@@ -2241,38 +2247,12 @@ c     *    (eqconst(ii,iortx(1)),ii=1,m3)
 c	if (tty.ge.1.e4) pause
 c------------------------------------------------------------- 19/09/96
 C pH, tot. K and tot Na in aqueous phase 
-      if(i_sorb.gt.0.and.ialkali.gt.0)then
-      j_K=m1
-      j_Na=m1-1
-      tot_Na = 0.
-      tot_K = 0.
-      pH = 0.
-c      write(*,*)lnhc,iortx(1),acc(lnhc,iortx(1)),cn(lnhc,iortx(1))
-c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(1))*cn(lnhc,iortx(1)))
-      if(lnhc.gt.0.or.lnh.gt.0)then                 ! if no pH then no calculation
-       if(lnhc.gt.0)then
-        ph = - dlog10(acc(lnhc,iortx(1))*cn(lnhc,iortx(1)))
-       else
-        ph = - dlog10(acb(lnh,iortx(1))*bn(lnh,iortx(1)))
-       endif   
-      endif
-
-      tot_K = bn(j_k,iortx(1))
-      tot_Na = bn(j_Na,iortx(1))
-      do 775 i=1,m2
-       if(i.ne.i_sorb+2)tot_K=tot_K+s(j_k,i)*cn(i,iortx(1))
-c      write(*,*)i,j_k,i_sorb+2,s(j_k,i),cn(i,iortx(1)),tot_K
-       if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(1))
-  775 continue
-       endif
-c---------------------------------------------------------- 
-       tot_Ca=bn(1,iortx(1))+s(1,1)*cn(1,iortx(1))
          if (irank.eq.root) write(25,2300)treal
      *               ,(bn(ii,iortx(1)),ii=1,m1)
      *               ,(cn(ii,iortx(1)),ii=1,m2)
      *               ,(pn(ii,iortx(1)),ii=1,m3)
      *               ,cs(iortx(1)),por(iortx(1))
-     *               ,pH,tot_Na,tot_K,tot_Ca
+     *               ,pHarr(iortx(1)),tot_Na,tot_K,tot_Ca
      *               ,vx(iortx(1)),tx(iortx(1))
      *               ,(bnflow(ii,iortx(1)),ii=1,m1)
      *               ,(cnflow(ii,iortx(1)),ii=1,m2)
@@ -2281,34 +2261,12 @@ c----------------------------------------------------------
      *               ,dqwater(iortx(1))
      *               ,(sumbcflowt(ii,iortx(1)),ii=1,m1)
 
-      if(i_sorb.gt.0.and.ialkali.gt.0)then
-      tot_Na = 0.
-      tot_K = 0.
-      pH = 0.
-c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(2))*cn(lnhc,iortx(2)))
-      if(lnhc.gt.0.or.lnh.gt.0)then                 ! if no pH then no calculation
-       if(lnhc.gt.0)then
-        ph = - dlog10(acc(lnhc,iortx(2))*cn(lnhc,iortx(2)))
-       else
-        ph = - dlog10(acb(lnh,iortx(2))*bn(lnh,iortx(2)))
-       endif   
-      endif
-
-      tot_K = bn(j_k,iortx(2))
-      tot_Na = bn(j_Na,iortx(2))
-      do 776 i=1,m2
-       if(i.ne.i_sorb+2)tot_K=tot_K+s(j_k,i)*cn(i,iortx(2))
-       if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(2))
-  776 continue
-      endif
-
-       tot_Ca=bn(1,iortx(2))+s(1,1)*cn(1,iortx(2))
         if (irank.eq.root) write(11,2300)treal
      *               ,(bn(ii,iortx(2)),ii=1,m1)
      *               ,(cn(ii,iortx(2)),ii=1,m2)
      *               ,(pn(ii,iortx(2)),ii=1,m3)
      *               ,cs(iortx(2)),por(iortx(2))
-     *               ,pH,tot_Na,tot_K,tot_Ca
+     *               ,pHarr(iortx(2)),tot_Na,tot_K,tot_Ca
      *               ,vx(iortx(2)),tx(iortx(2))
      *               ,(bnflow(ii,iortx(2)),ii=1,m1)
      *               ,(cnflow(ii,iortx(2)),ii=1,m2)
@@ -2317,34 +2275,12 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(2))*cn(lnhc,iortx(2)))
      *               ,dqwater(iortx(2))
      *               ,(sumbcflowt(ii,iortx(2)),ii=1,m1)
 
-      if(i_sorb.gt.0.and.ialkali.gt.0)then
-      tot_Na = 0.
-      tot_K = 0.
-      pH = 0.
-c0-4      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(3))*cn(lnhc,iortx(3)))
-      if(lnhc.gt.0.or.lnh.gt.0)then                 ! if no pH then no calculation
-       if(lnhc.gt.0)then
-        ph = - dlog10(acc(lnhc,iortx(3))*cn(lnhc,iortx(3)))
-       else
-        ph = - dlog10(acb(lnh,iortx(3))*bn(lnh,iortx(3)))
-       endif   
-      endif
-
-      tot_K = bn(j_k,iortx(3))
-      tot_Na = bn(j_Na,iortx(3))
-      do 777 i=1,m2
-       if(i.ne.i_sorb+2)tot_K=tot_K+s(j_k,i)*cn(i,iortx(3))
-       if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(3))
-  777 continue
-      endif
-
-       tot_Ca=bn(1,iortx(3))+s(1,1)*cn(1,iortx(3))
         if (irank.eq.root) write(12,2300)treal
      *               ,(bn(ii,iortx(3)),ii=1,m1)
      *               ,(cn(ii,iortx(3)),ii=1,m2)
      *               ,(pn(ii,iortx(3)),ii=1,m3)
      *               ,cs(iortx(3)),por(iortx(3))
-     *               ,pH,tot_Na,tot_K,tot_Ca
+     *               ,pHarr(iortx(3)),tot_Na,tot_K,tot_Ca
      *               ,vx(iortx(3)),tx(iortx(3))
      *               ,(bnflow(ii,iortx(3)),ii=1,m1)
      *               ,(cnflow(ii,iortx(3)),ii=1,m2)
@@ -2353,34 +2289,12 @@ c0-4      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(3))*cn(lnhc,iortx(3)))
      *               ,dqwater(iortx(3))
      *               ,(sumbcflowt(ii,iortx(3)),ii=1,m1)
 
-      if(i_sorb.gt.0.and.ialkali.gt.0)then
-      tot_Na = 0.
-      tot_K = 0.
-      pH = 0.
-c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(4))*cn(lnhc,iortx(4)))
-      if(lnhc.gt.0.or.lnh.gt.0)then                 ! if no pH then no calculation
-       if(lnhc.gt.0)then
-        ph = - dlog10(acc(lnhc,iortx(4))*cn(lnhc,iortx(4)))
-       else
-        ph = - dlog10(acb(lnh,iortx(4))*bn(lnh,iortx(4)))
-       endif   
-      endif
-
-      tot_K = bn(j_k,iortx(4))
-      tot_Na = bn(j_Na,iortx(4))
-      do 778 i=1,m2
-       if(i.ne.i_sorb+2)tot_K=tot_K+s(j_k,i)*cn(i,iortx(4))
-       if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(4))
-  778 continue
-      endif
-
-       tot_Ca=bn(1,iortx(4))+s(1,1)*cn(1,iortx(4))
         if (irank.eq.root) write(13,2300)treal
      *               ,(bn(ii,iortx(4)),ii=1,m1)
      *               ,(cn(ii,iortx(4)),ii=1,m2)
      *               ,(pn(ii,iortx(4)),ii=1,m3)
      *               ,cs(iortx(4)),por(iortx(4))
-     *               ,pH,tot_Na,tot_K,tot_Ca
+     *               ,pHarr(iortx(4)),tot_Na,tot_K,tot_Ca
      *               ,vx(iortx(4)),tx(iortx(4))
      *               ,(bnflow(ii,iortx(4)),ii=1,m1)
      *               ,(cnflow(ii,iortx(4)),ii=1,m2)
@@ -2389,34 +2303,12 @@ c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(4))*cn(lnhc,iortx(4)))
      *               ,dqwater(iortx(4))
      *               ,(sumbcflowt(ii,iortx(4)),ii=1,m1)
 
-      if(i_sorb.gt.0.and.ialkali.gt.0)then
-      tot_Na = 0.
-      tot_K = 0.
-      pH = 0.
-c04      if(lnhc.gt.0)ph = - dlog10(acc(lnhc,iortx(5))*cn(lnhc,iortx(5)))
-      if(lnhc.gt.0.or.lnh.gt.0)then                 ! if no pH then no calculation
-       if(lnhc.gt.0)then
-        ph = - dlog10(acc(lnhc,iortx(5))*cn(lnhc,iortx(5)))
-       else
-        ph = - dlog10(acb(lnh,iortx(5))*bn(lnh,iortx(5)))
-       endif   
-      endif
-
-      tot_K = bn(j_k,iortx(5))
-      tot_Na = bn(j_Na,iortx(5))
-      do 779 i=1,m2
-       if(i.ne.i_sorb+2)tot_K=tot_K+s(j_k,i)*cn(i,iortx(5))
-       if(i.ne.i_sorb+1)tot_Na=tot_Na+s(j_Na,i)*cn(i,iortx(5))
-  779 continue
-      endif
-
-       tot_Ca=bn(1,iortx(5))+s(1,1)*cn(1,iortx(5))
         if (irank.eq.root) write(14,2300)treal
      *               ,(bn(ii,iortx(5)),ii=1,m1)
      *               ,(cn(ii,iortx(5)),ii=1,m2)
      *               ,(pn(ii,iortx(5)),ii=1,m3)
      *               ,cs(iortx(5)),por(iortx(5))
-     *               ,pH,tot_Na,tot_K,tot_Ca
+     *               ,pHarr(iortx(5)),tot_Na,tot_K,tot_Ca
      *               ,vx(iortx(5)),tx(iortx(5))
      *               ,(bnflow(ii,iortx(5)),ii=1,m1)
      *               ,(cnflow(ii,iortx(5)),ii=1,m2)
@@ -2432,7 +2324,6 @@ c kg44  here the two very long if are finished...
 c  *********************************************************
 c  write out the species concentrations
 c  *********************************************************
-      if (lne.gt.0) call ehcalc(1,nxmax,lne,tmp,bn,eh)
 
       if (k1.gt.kmax) go to 500
 c      write(*,*)(pn(1,nx),nx=1,nxmax)
