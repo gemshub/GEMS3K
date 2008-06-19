@@ -972,6 +972,24 @@ c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
 	write(*,*)"p_XDC 0", p_xDC
 	endif
+c make sure we have an equilibrated file
+	iNode=  n
+      p_NodeHandle=  n
+      p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusFMT = 1
+c<<<<<<  system time initialisation for CPU consumption purposes
+c      time_gemsstart=RTC()
+      time_gemsstart=secnds(0.)
+
+c	write(*,*)"p_bic",n, p_bIC
+c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
+
+      idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
+     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+     *)
 c      pause
 c  here loop to read in additional geochmical systems to define other nodes....
 c      aa-initial-dbr-1.dat to aa-initial-dbr-50.dat and aa-boundary-dbr-0.dat are available)
@@ -1000,15 +1018,11 @@ c      gridvol=dxx * dxx * dxx *1000.0
 	do 1693 ip=1,m3
  	   pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol     ! 12)/1.
  1693     continue
-c transform the b and c vector to concentrations j_sorb+1 is water!
-	do ib = 1, m1-1
- 	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
-	enddo
-	do ic = 1, m2
- 	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
-              ! initial copy of masses        
-	enddo
+
+
+
  1690  continue
+
 
 
 c     open data bridge file initially for initialising the spatial distribution of chemical systems
@@ -1025,6 +1039,26 @@ c  second read is for initial conditons nodes 2 to nxmax
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam
      *,p_dul, p_dll, p_aPH,p_xPH, p_vPS,p_mPS,p_bPS,p_xPA
      *)
+
+c make sure we have an equilibrated file
+	iNode=  n
+      p_NodeHandle=  n
+      p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
+      p_NodeStatusFMT = 1
+c<<<<<<  system time initialisation for CPU consumption purposes
+c      time_gemsstart=RTC()
+      time_gemsstart=secnds(0.)
+
+c	write(*,*)"p_bic",n, p_bIC
+c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
+
+      idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
+     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+     *)
+
 	write(*,*)"p_XDC 1", p_xDC
 	gridvol=1.0
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
@@ -1042,13 +1076,8 @@ c  second read is for initial conditons nodes 2 to nxmax
 	do 1698 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))/p_Vs*gridvol    !12)/1.    ! i_bcp_gemx(12)=12
  1698 continue
-c transform the b and c vector to concentrations j_sorb+1 is water!
-	do ib = 1, m1-1
- 	   bn(ib,n)=bn(ib,n)/bn(j_sorb+1,n)
-	enddo
-	do ic = 1, m2
- 	   cn(ic,n)=cn(ic,n)/bn(j_sorb+1,n)
-	enddo
+
+
  1695 continue
 c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
@@ -1072,7 +1101,16 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
 c change amount of water in the system ....water should be at bn(m1-1)
-        enddo
+              bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
+c
+          do ii=1,j_sorb
+ 	      bn(ii,n)=bn(ii,n)/bn(j_sorb+1,n)
+           enddo
+           do jj=1,m2
+  	          cn(jj,n)=cn(jj,n)/bn(j_sorb+1,n)
+           enddo
+ 
+       enddo
 	write(*,*) "porosity update:", por(1:nxmax)
 
 	if (irank.eq.root) then 
@@ -1330,44 +1368,24 @@ c  **************************************
       OPEN(14,file='conc5t.dat',form='formatted',status='unknown')
       write(25,1111)' time     ',(dumb(iw1),iw1=1,m1),
      *  (dumc(iw2),iw2=1,m2),(dump(iw3),iw3=1,m3),'  c/s    ',
-     *  ' porosity ','  pH      ','tot._Na_aq','tot._K_aq '
-     * ,'  Ca_total','  vx      ','  tx      ' 
-     * ,(dtdumb(iw1),iw1=1,m1),(dtdumc(iw2),iw2=1,m2)            ! bnflow , cnflow
-     * ,(tdumb(iw1),iw1=1,m1), 'sumqwater ',' delta-t  '         ! sumbnflow, sumwaterflow
-     * ,' delta-q  ',(dtdumb(iw1),iw1=1,m1)
+     *  ' porosity ','  pH      '
 
  1111   format(2x,80((a10),1x)) 
       write(11,1111)' time    ',(dumb(iw1),iw1=1,m1),
      *  (dumc(iw2),iw2=1,m2),(dump(iw3),iw3=1,m3),'  c/s    ',
-     *  ' porosity ','  pH      ','tot._Na_aq','tot._K_aq '
-     * ,'  Ca_total','  vx      ' ,'  tx      '  
-     * ,(dtdumb(iw1),iw1=1,m1),(dtdumc(iw2),iw2=1,m2)            ! bnflow , cnflow
-     * ,(tdumb(iw1),iw1=1,m1), ' sumqwater',' delta-t  '         ! sumbnflow, sumwaterflow
-     * ,' delta-q  ',(dtdumb(iw1),iw1=1,m1)
+     *  ' porosity ','  pH      '
  
       write(12,1111)' time    ',(dumb(iw1),iw1=1,m1),
      *  (dumc(iw2),iw2=1,m2),(dump(iw3),iw3=1,m3),'  c/s    ',
-     *  ' porosity ','  pH      ','tot._Na_aq','tot._K_aq '
-     * ,'  Ca_total','  vx      ','  tx      '   
-     * ,(dtdumb(iw1),iw1=1,m1),(dtdumc(iw2),iw2=1,m2)            ! bnflow , cnflow
-     * ,(tdumb(iw1),iw1=1,m1), ' sumqwater',' delta-t  '         ! sumbnflow, sumwaterflow
-     * ,' delta-q  ',(dtdumb(iw1),iw1=1,m1)
+     *  ' porosity ','  pH      '
  
       write(13,1111)' time    ',(dumb(iw1),iw1=1,m1),
      *  (dumc(iw2),iw2=1,m2),(dump(iw3),iw3=1,m3),'  c/s    ',
-     *  ' porosity ','  pH      ','tot._Na_aq','tot._K_aq '
-     * ,'  Ca_total' ,'  vx      ' ,'  tx      '  
-     * ,(dtdumb(iw1),iw1=1,m1),(dtdumc(iw2),iw2=1,m2)            ! bnflow , cnflow
-     * ,(tdumb(iw1),iw1=1,m1), ' sumqwater',' delta-t  '         ! sumbnflow, sumwaterflow
-     * ,' delta-q  ',(dtdumb(iw1),iw1=1,m1)
+     *  ' porosity ','  pH      '
 
       write(14,1111)' time  ',(dumb(iw1),iw1=1,m1),
      *  (dumc(iw2),iw2=1,m2),(dump(iw3),iw3=1,m3),'  c/s    ',
-     *  ' porosity ','  pH      ','tot._Na_aq','tot._K_aq '
-     * ,'  Ca_total','  vx      ','  tx      '  
-     * ,(dtdumb(iw1),iw1=1,m1),(dtdumc(iw2),iw2=1,m2)            ! bnflow , cnflow
-     * ,(tdumb(iw1),iw1=1,m1), ' sumqwater' ,' delta-t  '        ! sumbnflow, sumwaterflow
-     * ,' delta-q  ',(dtdumb(iw1),iw1=1,m1) 
+     *  ' porosity ','  pH      '
 c
 	endif
       texe=dtmax
@@ -1902,8 +1920,8 @@ c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
-	write(*,*)"p_bic",n, p_bIC
-	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
+c	write(*,*)"p_bic",n, p_bIC
+c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
       idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
@@ -1912,9 +1930,11 @@ c      time_gemsstart=RTC()
      *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
      *)
 
+c	if (n.eq.106) pause
 
 c	if (idum.ne.1) then 
 c	   write(*,*)"GEMS problem ", idum
+c	  write(*,*) "P_IterDone: ",p_IterDone
 c	   stop
 c	endif
 	pHarr(n)=p_pH
@@ -2177,41 +2197,41 @@ c      Vol. fractions, rates, and log omega   -kinet-
         if (irank.eq.root) then
 c****  write out particle positions
         write(datei2,'(a5,a1,a4)')'p_ibx',ch,'.dat' 
-        open(16,file=datei2,form='formatted',status='unknown')
- 1514   write(16,1578)(partib(nix),nix=1,nxmax)
- 1578   format(51(1x,i4))
-        write(16,*)'time = ',treal
-        close(16)
+c        open(16,file=datei2,form='formatted',status='unknown')
+c 1514   write(16,1578)(partib(nix),nix=1,nxmax)
+c 1578   format(51(1x,i4))
+c        write(16,*)'time = ',treal
+c        close(16)
 c****  write out 2D concentration arrays
 c****  solids and porosity 
-        write(datei2,'(a5,a1,a4)')'c_2da',ch,'.dat' 
-        open(16,file=datei2,form='formatted',status='unknown')
-        do 1516 j1=1,m3
-        write(16,1576)(pn(j1,nix),nix=1,nxmax)
- 1515   continue
-        write(16,*)'  '
- 1516   continue
- 1576   format(51(1x,e10.4))
-        write(16,1576)(por(nix),nix=1,nxmax)
- 1517   continue
-        write(16,*)'time = ',treal
-        close(16)
+c        write(datei2,'(a5,a1,a4)')'c_2da',ch,'.dat' 
+c        open(16,file=datei2,form='formatted',status='unknown')
+c        do 1516 j1=1,m3
+c        write(16,1576)(pn(j1,nix),nix=1,nxmax)
+c 1515   continue
+c        write(16,*)'  '
+c 1516   continue
+c 1576   format(51(1x,e10.4))
+c        write(16,1576)(por(nix),nix=1,nxmax)
+c 1517   continue
+c        write(16,*)'time = ',treal
+c        close(16)
 
 c****   solutes (basis species and complexes)
-        write(datei2,'(a5,a1,a4)')'c_2ds',ch,'.dat' 
-        open(16,file=datei2,form='formatted',status='unknown')
-        do 1522 j1=1,m1
-        write(16,1576)(bn(j1,nix),nix=1,nxmax)
- 1523   continue
-        write(16,*)dumb(m1),'above'
- 1522   continue
-        do 1520 j1=1,m2
-        write(16,1576)(cn(j1,nix),nix=1,nxmax)
- 1521   continue
-        write(16,*)dumc(m2),'above'
- 1520   continue
-        write(16,*)'time = ',treal
-        close(16)
+c        write(datei2,'(a5,a1,a4)')'c_2ds',ch,'.dat' 
+c        open(16,file=datei2,form='formatted',status='unknown')
+c        do 1522 j1=1,m1
+c        write(16,1576)(bn(j1,nix),nix=1,nxmax)
+c 1523   continue
+c        write(16,*)dumb(m1),'above'
+c 1522   continue
+c        do 1520 j1=1,m2
+c        write(16,1576)(cn(j1,nix),nix=1,nxmax)
+c 1521   continue
+c        write(16,*)dumc(m2),'above'
+c 1520   continue
+c        write(16,*)'time = ',treal
+c        close(16)
 
        endif       ! end output if root only
 
@@ -2252,70 +2272,35 @@ C pH, tot. K and tot Na in aqueous phase
      *               ,(cn(ii,iortx(1)),ii=1,m2)
      *               ,(pn(ii,iortx(1)),ii=1,m3)
      *               ,cs(iortx(1)),por(iortx(1))
-     *               ,pHarr(iortx(1)),tot_Na,tot_K,tot_Ca
-     *               ,vx(iortx(1)),tx(iortx(1))
-     *               ,(bnflow(ii,iortx(1)),ii=1,m1)
-     *               ,(cnflow(ii,iortx(1)),ii=1,m2)
-     *               ,(sumbflowt(ii,iortx(1)),ii=1,m1)
-     *               ,sumqwat(iortx(1)), texe
-     *               ,dqwater(iortx(1))
-     *               ,(sumbcflowt(ii,iortx(1)),ii=1,m1)
+     *               ,pHarr(iortx(1))
 
         if (irank.eq.root) write(11,2300)treal
      *               ,(bn(ii,iortx(2)),ii=1,m1)
      *               ,(cn(ii,iortx(2)),ii=1,m2)
      *               ,(pn(ii,iortx(2)),ii=1,m3)
      *               ,cs(iortx(2)),por(iortx(2))
-     *               ,pHarr(iortx(2)),tot_Na,tot_K,tot_Ca
-     *               ,vx(iortx(2)),tx(iortx(2))
-     *               ,(bnflow(ii,iortx(2)),ii=1,m1)
-     *               ,(cnflow(ii,iortx(2)),ii=1,m2)
-     *               ,(sumbflowt(ii,iortx(2)),ii=1,m1)
-     *               ,sumqwat(iortx(2)), texe
-     *               ,dqwater(iortx(2))
-     *               ,(sumbcflowt(ii,iortx(2)),ii=1,m1)
+     *               ,pHarr(iortx(2))
 
         if (irank.eq.root) write(12,2300)treal
      *               ,(bn(ii,iortx(3)),ii=1,m1)
      *               ,(cn(ii,iortx(3)),ii=1,m2)
      *               ,(pn(ii,iortx(3)),ii=1,m3)
      *               ,cs(iortx(3)),por(iortx(3))
-     *               ,pHarr(iortx(3)),tot_Na,tot_K,tot_Ca
-     *               ,vx(iortx(3)),tx(iortx(3))
-     *               ,(bnflow(ii,iortx(3)),ii=1,m1)
-     *               ,(cnflow(ii,iortx(3)),ii=1,m2)
-     *               ,(sumbflowt(ii,iortx(3)),ii=1,m1)
-     *               ,sumqwat(iortx(3)), texe
-     *               ,dqwater(iortx(3))
-     *               ,(sumbcflowt(ii,iortx(3)),ii=1,m1)
+     *               ,pHarr(iortx(3))
 
         if (irank.eq.root) write(13,2300)treal
      *               ,(bn(ii,iortx(4)),ii=1,m1)
      *               ,(cn(ii,iortx(4)),ii=1,m2)
      *               ,(pn(ii,iortx(4)),ii=1,m3)
      *               ,cs(iortx(4)),por(iortx(4))
-     *               ,pHarr(iortx(4)),tot_Na,tot_K,tot_Ca
-     *               ,vx(iortx(4)),tx(iortx(4))
-     *               ,(bnflow(ii,iortx(4)),ii=1,m1)
-     *               ,(cnflow(ii,iortx(4)),ii=1,m2)
-     *               ,(sumbflowt(ii,iortx(4)),ii=1,m1)
-     *               ,sumqwat(iortx(4)), texe
-     *               ,dqwater(iortx(4))
-     *               ,(sumbcflowt(ii,iortx(4)),ii=1,m1)
+     *               ,pHarr(iortx(4))
 
         if (irank.eq.root) write(14,2300)treal
      *               ,(bn(ii,iortx(5)),ii=1,m1)
      *               ,(cn(ii,iortx(5)),ii=1,m2)
      *               ,(pn(ii,iortx(5)),ii=1,m3)
      *               ,cs(iortx(5)),por(iortx(5))
-     *               ,pHarr(iortx(5)),tot_Na,tot_K,tot_Ca
-     *               ,vx(iortx(5)),tx(iortx(5))
-     *               ,(bnflow(ii,iortx(5)),ii=1,m1)
-     *               ,(cnflow(ii,iortx(5)),ii=1,m2)
-     *               ,(sumbflowt(ii,iortx(5)),ii=1,m1)
-     *               ,sumqwat(iortx(5)), texe
-     *               ,dqwater(iortx(5))
-     *               ,(sumbcflowt(ii,iortx(5)),ii=1,m1)
+     *               ,pHarr(iortx(5))
  2300    format(70(1x,e10.3))
 c kg44  here the two very long if are finished... 
       endif
