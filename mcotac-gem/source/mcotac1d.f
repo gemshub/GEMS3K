@@ -1004,9 +1004,10 @@ c normalize everything to grid size! dxx x dxx x dxx
 c and for GEMS it is better to work with bigger numbers ;-) so multipy with 10e3
 c      gridvol=dxx * dxx * dxx *1000.0
 	gridvol=1.0
+	ref_vol=p_Vs
       write(*,*)"scaling 1:",gridvol,gridvol/p_Vs
       do 1690 n=1,nxmax/2
-	 gridvol=dx(n)   ! normalized !
+	 gridvol=dx(n)/dx(1)*ref_vol   ! normalized !
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol    !2)
          bog(ib,n)=bn(ib,n)              ! initial copy of masses        
@@ -1064,7 +1065,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
       write(*,*)"scaling 2:",gridvol,gridvol/p_Vs
 
       do 1695 n=nxmax/2+1,nxmax
-	 gridvol=dx(n)   ! normalized !
+	 gridvol=dx(n)/dx(1)*ref_vol   ! normalized !
 	do 1696 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))/p_Vs*gridvol   !   2)   ! i_bcp_gemx(1)=2
          bog(ib,n)=bn(ib,n)         
@@ -1101,13 +1102,12 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
       tx_null(n)= 1.28E-10*(1.-por(n))**2/por(n)**3.       !exp 4 specific
       tx(n)= tx_null(n)*por(n)**3/(1.-por(n))**2
 c change amount of water in the system ....water should be at bn(m1-1)
-              bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
 c
           do ii=1,j_sorb
- 	      bn(ii,n)=bn(ii,n)/bn(j_sorb+1,n)
+ 	      bn(ii,n)=bn(ii,n)/p_vPS(1)
            enddo
            do jj=1,m2
-  	          cn(jj,n)=cn(jj,n)/bn(j_sorb+1,n)
+  	       cn(jj,n)=cn(jj,n)/p_vPS(1)
            enddo
  
        enddo
@@ -1181,7 +1181,6 @@ c**************************************************************************
 
 
       if (idynam.eq.0) go to 500
-
 
 
 c i_sorb for sorption as a complexation
@@ -1453,20 +1452,7 @@ c 1317  continue
 c      endif
 c>>>>>02-2003 modified boundary on the right side
       do 240 n=1,nxmax
-        if (j_decay.gt.0)then
-          if(m3.gt.0)then
-             dissolvef=1
-             dp1=pn(1,n)-po(1,n)
-             if(dp1.gt.0)bn(j_decay,n)=bn(j_decay,n)+dp1*dissolvef
-             dp2=pn(2,n)-po(2,n)
-             if(dp2.gt.0)bn(j_decay,n)=bn(j_decay,n)+dp2*dissolvef
-             dp3=pn(3,n)-po(3,n)
-             if(dp3.gt.0)bn(j_decay,n)=bn(j_decay,n)+dp3*dissolvef
-          endif
-          bn(j_decay,n)=bn(j_decay,n)*exp((-xlambda*texe))
-        endif
- 
-        do 236 j=1,m1
+         do 236 j=1,m1
 c               write(*,*)' n j bo bn ',n,j,bo(j,n),bn(j,n)
         if (j_sorb.le.j) bo(j,n)=bn(j,n)         
   236   continue
@@ -1688,10 +1674,10 @@ c transform the b and c vector to back to absolute values j_sorb+1 is water!
 c set water!
               bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
           do ii=1,j_sorb
-   	      bn(ii,n)=bn(ii,n)*bn(j_sorb+1,n)
+   	        bn(ii,n)=bn(ii,n)*p_vPS(1)
            enddo
             do jj=1,m2
-        	     cn(jj,n)=cn(jj,n)*bn(j_sorb+1,n)
+        	 cn(jj,n)=cn(jj,n)*p_vPS(1)
              enddo
 	enddo
 
@@ -2032,14 +2018,12 @@ c transform the b and c vector to concentrations j_sorb+1 is water!
          dmin=min(dm(n),dmin)
 
 
-c set water!
-              bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
 c
           do ii=1,j_sorb
- 	      bn(ii,n)=bn(ii,n)/bn(j_sorb+1,n)
+ 	       bn(ii,n)=bn(ii,n)/p_vPS(1)
            enddo
            do jj=1,m2
-  	          cn(jj,n)=cn(jj,n)/bn(j_sorb+1,n)
+  	        cn(jj,n)=cn(jj,n)/p_vPS(1)
            enddo
 
 c         end loop over nodes
@@ -2053,6 +2037,7 @@ c
       time_gemsmpi_end=secnds(0.)
       time_gemsmpi=time_gemsmpi+(time_gemsmpi_end-time_gemsmpi_start)
 
+c reset boundary value
 
 c<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c          here MCOTAC-chem calculations at each node
