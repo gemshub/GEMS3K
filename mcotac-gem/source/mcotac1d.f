@@ -1639,19 +1639,19 @@ c>>>>>0modified boundary on both sides
 c      if(imodbound.gt.0)then  
             do ib=1,j_sorb
 	  	bn(ib,1)=bog(ib,1)/p_vPS(1)
-	  	bn(ib,2)=bog(ib,2)/p_vPS(1)
+c	  	bn(ib,2)=bog(ib,2)/p_vPS(1)
 	  	bn(ib,nxmax)=bog(ib,nxmax)/p_vPS(1)
 	  	bn(ib,nxmax-1)=bog(ib,nxmax-1)/p_vPS(1)
             enddo
             do ic=1,m2
 	  	cn(ic,1)=cog(ic,1)/p_vPS(1)
-	  	cn(ic,2)=cog(ic,1)/p_vPS(2)
+c	  	cn(ic,2)=cog(ic,2)/p_vPS(2)
 	  	cn(ic,nxmax)=cog(ic,nxmax)/p_vPS(1)
 	  	cn(ic,nxmax-1)=cog(ic,nxmax-1)/p_vPS(1)
             enddo
             do ip=1,m3
 	  	pn(ip,1)=pog(ip,1)  
-	  	pn(ip,2)=pog(ip,2)  
+c	  	pn(ip,2)=pog(ip,2)  
 	  	pn(ip,nxmax)=pog(ip,nxmax)  
 	  	pn(ip,nxmax-1)=pog(ip,nxmax-1)  
             enddo
