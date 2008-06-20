@@ -273,7 +273,7 @@ f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
            gstring pubuf(pmp->SF[k_unst],0,20);
            char buf[400];
            sprintf( buf,
-    " The computed phase assemblage remains inconsistent after 3 Selekt2() loops.\n"
+    " The computed phase assemblage remains inconsistent after 3 PhaseSelect() loops.\n"
     " Problematic phase(s): %d %s   %d %s \n"
     " Probably, vector b is not balanced, or DC stoichiometries\n"
     " or standard g0 are wrong, or some relevant phases or DCs are missing.",
@@ -376,8 +376,8 @@ to_text_file( "MultiDumpB.txt" );   // Debugging
 #endif	   
 // short It_for_smoothing = pmp->IT; 
      MultiCalcMain( rLoop );
-// if( pmp->pNP ) 
-//     pmp->IT = It_for_smoothing; 
+if( !pmp->pNP ) 
+     pmp->ITaia = pmp->IT; 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpE.txt" );   // Debugging 
 #endif	
@@ -441,7 +441,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
     if( !pmp->pNP  )
     {   // Preparing to call Simplex method
         pmp->FitVar[4] = pa->p.AG;  //  initializing the smoothing parameter
-        pmp->pRR1 = 0;
+        pmp->ITaia = 0;             // resetting the previous number of AIA iterations 
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 //      pmp->IC = 0.0;  For reproducibility of simplex FIA?
         if( pa->p.PSM && pmp->FIs )
@@ -480,6 +480,9 @@ STEP_POINT( "End Simplex" );
 // pmp->K2 = 0;
 // double FitVar3 = pmp->FitVar[3];
 // pmp->FitVar[3] = 1.0;
+//    	if( pmp->ITaia <=20 )       // Foolproof     
+//    		pmp->ITaia = 20;
+//    	pmp->IT = pmp->ITaia;     // Setting number of iterations for the smoothing parameter
 		TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
         for( j=0; j< pmp->L; j++ )
             pmp->X[j] = pmp->Y[j];
@@ -710,21 +713,20 @@ if( pmp->pNP && rLoop < 0 && status )
 STEP_POINT( "IPM Iteration" );
 #endif
         if( pmp->PCI < pmp->DX )  // Dikin criterion satisfied - converged!
-            break;
+            goto CONVERGED;
     } // end of main IPM cycle
+    //  if( IT1 >= pa->p.IIM )
+    return 2; // bad convergence - too many IPM iterations!
 //----------------------------------------------------------------------------
-
-  if( IT1 >= pa->p.IIM )
-   return 2; // bad convergence - too many IPM iterations!
-
- // Final calculation phase amounts and activity coefficients
+CONVERGED:
+ // Final calculation of phase amounts and activity coefficients
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
   if(pmp->PZ && pmp->W1)
       Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );
 
   if( pmp->PD==1 || pmp->PD == 2  /*|| pmp->PD == 3*/  )
-        GammaCalc( LINK_UX_MODE);
+        GammaCalc( LINK_UX_MODE );
 //   else
   ConCalc( pmp->X, pmp->XF, pmp->XFA );
 
@@ -1170,8 +1172,8 @@ void TMulti::Restoring_Y_YF()
  for( Z=0; Z<pmp->FI ; Z++ )
  {
    if( pmp->XF[Z] <= pmp->DSM ||
-       pmp->PHC[Z] == PH_SORPTION &&
-       ( pmp->XFA[Z] < TProfil::pm->pa.p.ScMin) )
+       ( pmp->PHC[Z] == PH_SORPTION &&
+       ( pmp->XFA[Z] < TProfil::pm->pa.p.ScMin) ) )
    {
       pmp->YF[Z]= 0.;
       if( pmp->FIs && Z<pmp->FIs )

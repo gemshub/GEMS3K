@@ -19,8 +19,8 @@
 
 #include <math.h>
 
-#include "m_const.h"
 #include "s_fgl.h"
+#include "m_const.h"
 
 #ifndef IPMGEMPLUGIN
 #include "s_tpwork.h"

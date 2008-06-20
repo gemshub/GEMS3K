@@ -232,40 +232,58 @@ void TMulti::pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb )
 #endif
 }
 
-// Calculation of smoothing factor for high non-ideality systems
-// Returns current value of this factor
+// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
+// added 18.06.2008 DK
 //
-double TMulti::TinkleSupressFactor( double ag, int ir)
+double TMulti::SmoothingFactor( )
 {
-    double TF, dg, rg=0.0, irf;
-    int Level, itqF, itq;
+   if( pmp->FitVar[3] > 0 )
+	   return pmp->FitVar[3];
+   else
+	   return pmp->FitVar[4];
+}	
 
-    Level = pmp->pRR1;
+// Correction of smoothing factor for high non-ideality systems
+//  re-written 18.06.2008 DK
+//
+void TMulti::SetSmoothingFactor( )
+{
+    double TF, ag, dg, irf; // rg=0.0;
+    int ir, Level, itqF, itq;
+
+    ir = pmp->IT; // (double)ir;
     irf = (double)ir;
+    ag = TProfil::pm->pa.p.AG; // pmp->FitVar[4]; 
     dg = TProfil::pm->pa.p.DGC;
-    if( dg > -0.1 )
+    
+    if( dg > -0.1 )       // Smoothing used in the IPM-2 algorithm 
     {
         if(ag>1) ag=1;
         if(ag<0.1) ag=0.1;
         if(dg>0.15) dg=0.15;
+        if( irf > 1000. )
+        	irf = 1000; 
         if( dg <= 0.0 )
           TF = ag;
         else
           TF = ag * ( 1 - pow(1-exp(-dg*irf),60.));
-        Level =  (int)rg;
+//        Level =  (int)rg;
     }
     else
-    {  // Old smoothing for solid solutions: -1.0 < pa.p.DGC < 0
-        itq = ir/60;
+    {  // Obsolete smoothing for solid solutions: -1.0 < pa.p.DGC < 0
+        Level = (int)pmp->FitVar[2]; 
+    	itq = ir/60;
         dg = fabs( dg );
         itqF = ir/(60/(itq+1))-itq;  // 0,1,2,4,5,6...
         if( itqF < Level )
             itqF = Level;
         TF = ag * pow( dg, itqF );
         Level = itqF;
+        pmp->FitVar[2] = (double)Level;
     }
-    pmp->pRR1 = (short)Level;
-    return TF;
+    pmp->FitVar[3] = TF;     
+//    pmp->pRR1 = (short)Level;
+//    return TF;
 }
 
 static double ICold=0.;
@@ -294,7 +312,6 @@ TMulti::GammaCalc( int LinkMode  )
 //  high-precision IPM-2 debugging
 //   if(pmp->PZ && pmp->W1 > 1 )
 //     goto END_LOOP;
-//   pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );
 
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
@@ -308,8 +325,6 @@ TMulti::GammaCalc( int LinkMode  )
                 if( pmp->X[j] < pmp->lowPosNum )
                     pmp->X[j] = pa->p.DFYaq;
             ConCalc( pmp->X, pmp->XF, pmp->XFA );
-// if( pmp->E )
-//    IS_EtaCalc( );
 //          pmp->IC = max( pmp->MOL, pmp->IC );
             pmp->IC = 0.0;  // Important for the simplex FIA reproducibility
             if( pmp->E && pmp->FIat > 0 )
@@ -396,7 +411,8 @@ if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
         } // k
         break;
     case LINK_UX_MODE: 
-pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );  // Getting actual smoothing parameter    	
+// pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );  // Getting actual smoothing parameter    	
+    	SetSmoothingFactor();   // Changed 18.06.2008 by DK
     	// calculating DC concentrations after this IPM iteration
         ConCalc( pmp->X, pmp->XF, pmp->XFA );
         // cleaning activity coefficients

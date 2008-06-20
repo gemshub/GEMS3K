@@ -93,7 +93,7 @@ TProfil::TProfil( TMulti* amulti )
 // and precision refinement loops
 // Modified on 22.01.2008 to implement "smart PIA" mode 
 //
-double TProfil::calcMulti( int& PrecLoops_, int& NumIterFIA_, int& NumIterIPM_ )
+double TProfil::calcMulti( int& RefinLoops_, int& NumIterFIA_, int& NumIterIPM_ )
 {
     pmp = multi->GetPM();
     pmp->t_start = clock();
@@ -101,9 +101,15 @@ double TProfil::calcMulti( int& PrecLoops_, int& NumIterFIA_, int& NumIterIPM_ )
 //    multi->MultiCalcInit( 0 );
     pmp->ITF = pmp->ITG = 0;  
 FORCED_AIA:
-    multi->MultiCalcInit( 0 );
-      
-    if( multi->AutoInitialApprox( ) == false )
+    multi->MultiCalcInit( "GEMIPM2K" );
+	if( pmp->pNP )
+    { 
+	   if( pmp->ITaia <=30 )       // Foolproof     
+		  pmp->IT = 30;
+	   else 
+		  pmp->IT = pmp->ITaia;     // Setting number of iterations for the smoothing parameter  
+    }
+	if( multi->AutoInitialApprox( ) == false )
     {
     	multi->MultiCalcIterations( -1 );
     }
@@ -113,33 +119,31 @@ FORCED_AIA:
     	pmp->MK = 0;
     	goto FORCED_AIA;  // Trying again with AIA set after bad PIA 
     }    
-    PrecLoops_ = pmp->W1 + pmp->K2 - 1; // Prec.ref. + Selekt2() loops
+    RefinLoops_ = pmp->W1 + pmp->K2 - 1; // Prec.ref. + Selekt2() loops
     NumIterFIA_ = pmp->ITF;
     NumIterIPM_ = pmp->ITG;
+    pmp->IT = pmp->ITG;   // This is to provide correct number of IPM iterations to upper levels
 
     if( pa.p.PRD < 0 && pa.p.PRD > -50 ) // max 50 loops
     {  // Test refinement loops for highly non-ideal systems Added here by KD on 15.11.2007
        int pp, pNPo = pmp->pNP,  TotW1 = pmp->W1+pmp->K2-1,  
-         ITold = pmp->IT, TotIT = pmp->IT;
+ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
        pmp->pNP = 1;
        for( pp=0; pp < abs(pa.p.PRD); pp++ )
        {
-          pmp->IT = 0; // Important for refinement in highly non-ideal systems!
+pmp->IT = ITstart; // Important for refinement in highly non-ideal systems!
           if( multi->AutoInitialApprox( ) == false )
           {
              multi->MultiCalcIterations( pp );
           }
-          TotIT += pmp->IT;
-          TotW1 += pmp->W1+pmp->K2-2; 
-       }
-       if( !pNPo ) 
-       {   
-     	  pmp->IT = (TotIT-ITold)/2;
-           pmp->pNP = 0;
-       }
-       else pmp->IT = ITold;         
+          TotIT += pmp->IT - ITstart;
+          TotW1 += pmp->W1+pmp->K2-1; 
+       }  // end pp loop
+       
+       pmp->pNP = pNPo;
+       pmp->IT = TotIT; // ITold;         
 
-       PrecLoops_ = TotW1; 
+       RefinLoops_ = TotW1; 
        NumIterFIA_ = pmp->ITF;  //   TotITF;
        NumIterIPM_ = pmp->ITG;  //   TotITG;
     }       
@@ -282,11 +286,11 @@ void TMulti::CompG0Load()
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
-void TMulti::MultiCalcInit( const char* /*key*/ )
+void TMulti::MultiCalcInit( const char* key )
 {
   short j,k, jb, je=0;;
   SPP_SETTING *pa = &TProfil::pm->pa;
-
+    strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
     pmp->Ec = pmp->K2 = pmp->MK = 0;
     pmp->PZ = pa->p.DW; // IPM-2 default
     pmp->W1 = 0;
@@ -297,9 +301,9 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     pmp->lowPosNum = pa->p.DcMin;
     pmp->logXw = -16.;
     pmp->logYFk = -9.;
-    pmp->FitVar[4] = pa->p.AG;
-    pmp->FitVar[0] = 0.0640000030398369; // pa->aqPar[0]; setting T,P dependent b_gamma parameters
-    pmp->pRR1 = 0;      //IPM smoothing factor and level
+//    pmp->FitVar[4] = pa->p.AG;
+    pmp->FitVar[0] = 0.0640000030398369; // pa->aqPar[0]; setting T,P dependent b_gamma parameters 
+
     pmp->DX = pa->p.DK;
 
     pmp->T0 = 273.15;    // not used anywhere
@@ -325,7 +329,8 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
           pmp->X[j] = pmp->Y[j];
  //       pmp->IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-        ConCalc( pmp->X, pmp->XF, pmp->XFA);  
+        ConCalc( pmp->X, pmp->XF, pmp->XFA);
+ //       pmp->IT = pmp->ITaia; 
     }
     else // Simplex initial approximation to be done (AIA mode)
     {
@@ -334,9 +339,8 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     		pmp->X[j] = pmp->Y[j] = pmp->lnGam[j] = pmp->lnGmo[j] = 0.0;
     		pmp->Gamma[j] = 1.0;
     	}
-    	pmp->FitVar[4] = pa->p.AG;
-    	pmp->pRR1 = 0;   // Resetting smoothing factors
-        pmp->IT = 0;     // needed here to clean LINK_TP_MODE
+//    	pmp->FitVar[4] = pa->p.AG;
+//        pmp->IT = 0;     // needed here to clean LINK_TP_MODE
     }
 
     CompG0Load(); // Loading thermodynamic data into MULTI structure

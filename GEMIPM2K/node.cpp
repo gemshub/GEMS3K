@@ -1077,7 +1077,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   pmm->pNP = 1;
 //  else
 //   pmm->pNP = 0; //  NEED_GEM_AIA;
-  CNode->IterDone = 0;
+//  CNode->IterDone = 0;
   pmm->TCc = CNode->TC;
   pmm->Tc = CNode->TC+C_to_K;
   pmm->Pc  = CNode->P;
@@ -1097,8 +1097,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
  
  if( !uPrimalSol )
  {    //  Using primal solution retained in the MULTI structure instead - 
-     // the primal solution data from the DATABR structure are not unpacked
-   pmm->IT = 0;	
+    ; // the primal solution data from the DATABR structure are not unpacked
+//   pmm->IT = 0;	
  }
  else {   // Unpacking primal solution provided in the node DATABR structure 	
   pmm->MBX = CNode->Ms;

@@ -75,7 +75,7 @@ typedef struct
     pFAG_,  // reserved SD
     pTPD,  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
     pULR,  // Start recalc kinetic constraints (0-do not, 1-do )internal
-    pRR1,  // internal
+    ITaia,  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
     FIat,   // max. number of surface site types
     MK,     // PM return code: 0 - continue;  1 - converged
     W1,     // internal IPM-2 indicator
@@ -124,6 +124,8 @@ typedef struct
     logYFk,     // work variable
     YFk,        // Current number of moles in a multicomponent phase
     FitVar[5];  // internal; FitVar[0] is T,P-dependent b_gamma parameter
+                //       FitVar[4] is the AG smoothing parameter; 
+                //       FitVar[3] is the actual smoothing coefficient
   short
     *L1,    // l_a vector - number of DCs included into each phase [Fi]
     *LsMod, // Number of interaction parameters, max. parameter order (cols in IPx),
@@ -395,7 +397,8 @@ class TMulti
 // ipm_chemical3.cpp
     void IS_EtaCalc();
     void pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb );
-    double TinkleSupressFactor( double ag, int ir);
+    double SmoothingFactor( );
+    void SetSmoothingFactor( ); 
 // Main call for calculation of activity coefficients on IPM iterations
     int GammaCalc( int LinkMode );
 // Built-in activity coefficient models
