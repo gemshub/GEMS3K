@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1078 2008-06-07 08:25:01Z wagner $
+// $Id: s_fgl.cpp 1087 2008-06-19 15:23:53Z gems $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
@@ -206,7 +206,7 @@ double TCGFcalc::K23_13(double T, double ro)
 // Implementation of TCGFcalc class
 
 int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
-        double &Volume, double &DeltaH, double &DeltaS, double P, double T )
+        double &Volume, double P, double T )
 {
       int iRet=0; double ro;
       double X[1]={1.};
@@ -257,13 +257,44 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
          iRet = -2; ro = 1.0;
       }
       Volume=0.1/ro;  // in J/bar
-//
-      DeltaH=0.;  // To be completed
-      DeltaS=0.;  // To be completed
-//
+
       return iRet;
   }
 
+//void ACTDENS(double *data,long nn, double *act )
+//////  Numerical derivative of H
+int TCGFcalc::CGEntalpyRhoT(double *X, float *param, float *param1, unsigned NN,
+     double ro, double T, double &H, double &S )
+ {
+
+    EOSPARAM paar(X,param,NN);
+    EOSPARAM paar1(X,param1,NN);
+    
+     double   F0,Z,F1;
+    double delta=DELTA,tmp;
+    int i;
+
+     norm(paar.XX0,paar.NCmp());
+     norm(paar1.XX0,paar1.NCmp());
+     
+
+   //   paar.ParamMix(xtmp);
+   //   paar1.ParamMix(xtmp);
+      
+      Z=ZTOTALMIX(T,ro,paar);
+
+      F0=FTOTALMIX(T,ro,paar);
+      //  recalculate param1 for T+T*delta
+      F1=FTOTALMIX(T+T*delta,ro,paar1);
+      
+      S =( (F1-F0)/(delta*T)*(-1.0)  +  F0 ) * 8.31;
+      
+      H = (F0*T*8.31 + T*S) + Z*8.31*T;
+            
+      return 0;
+
+  //   MLPutRealList(stdlink,act,paar.NCmp());
+ };
 
    double TCGFcalc::CGActivCoefPT(double *X,float *param, double *act, unsigned NN,
         double Pbar, double T )

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1082 2008-06-11 11:57:15Z wagner $
+// $Id: s_fgl2.cpp 1087 2008-06-19 15:23:53Z gems $
 //
 // Copyright (c) 2003-2007   S.Churakov, Th.Wagner,
 //    D.Kulik, S.Dmitrieva
@@ -19,8 +19,8 @@
 
 #include <math.h>
 
-#include "s_fgl.h"
 #include "m_const.h"
+#include "s_fgl.h"
 
 #ifndef IPMGEMPLUGIN
 #include "s_tpwork.h"
@@ -78,7 +78,9 @@ int TPRSVcalc::CalcFugPure( void )
 int TCGFcalc::CGcalcFug( void )
 {
     double T, P, Fugacity = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
-    float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 } ;
+    double X[1]={1.};
+    float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
+                  Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
     int retCode = 0;
 
     ErrorIf( !aW.twp, "CG EoS", "Undefined twp");
@@ -91,8 +93,7 @@ int TCGFcalc::CGcalcFug( void )
 // Calling CG EoS functions here
 
     if( T >= aW.twp->TClow +273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
-       retCode = CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume,
-            DeltaH, DeltaS, P, T );
+       retCode = CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T );
     else {
             Fugacity = P;
             Volume = 8.31451*T/P;
@@ -114,9 +115,6 @@ int TCGFcalc::CGcalcFug( void )
 //    }
 
     aW.twp->G += 8.31451 * T * log( Fugacity / P );
-    /* add enthalpy and enthropy increments */
-    aW.twp->H +=  DeltaH;   // in J/mol - to be completed
-    aW.twp->S +=  DeltaS;   // to be completed
     aW.twp->V = Volume /* /10.  in J/bar */;
 //    aW.twp->U = ((aW.twp->H/4.184)-RP*fg.VLK*fg.P2)*4.184;
     aW.twp->Fug = Fugacity;   /* fugacity at P */
@@ -128,6 +126,12 @@ if( aW.twp->wtW[6] < 1. || aW.twp->wtW[6] > 10. )
     aW.twp->wtW[7] = Eos4parPT[1];
     aW.twp->wtW[8] = Eos4parPT[2];
     aW.twp->wtW[9] = Eos4parPT[3];
+    
+    // add enthalpy and enthropy increments 
+    retCode = CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*DELTA );   
+    CGEntalpyRhoT( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS );
+    aW.twp->H +=  DeltaH;   
+    aW.twp->S +=  DeltaS;   
 //
     return retCode;
 }

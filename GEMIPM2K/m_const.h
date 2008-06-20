@@ -37,6 +37,13 @@ const int
     MAXPHNAME =      16,
     EQ_RKLEN = 58;
 
+const int 	MPP_TOT = 0,       // index of column with total mixed phase property 
+	MPP_STD = 1,       // index of column with standard property sum for mixed phases
+	MPP_RES = 2,       // index of column with residual property sum for mixed phases
+	MPP_ID = 3,        // index of column with ideal mixing property for the phases 
+	MPP_EX = 4,        // index of column with excess mixing property for the phases 
+	MIXPHPROPS = 5;    // Number of columns in the property table for mixed phases
+
 enum solmod_switches { // indexes of keys of model solution
     SPHAS_TYP, 
     DCOMP_DEP, 

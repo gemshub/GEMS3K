@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1066 2008-05-16 14:16:59Z gems $
+// $Id: ms_multi.h 1087 2008-06-19 15:23:53Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -141,17 +141,20 @@ typedef struct
     *DMc,    // Non-ideality coefficients f(TPX) for DC -> LsMdc[k]
     *A,      // DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    // IC atomic (molar) mass, g/mole [0:N-1]
+// Reconsider usage 
     *Wb,     //Relative Born factors (HKF, reserved) [0:Ls-1]
     *Wabs,   // Absolute Born factors (HKF, reserved) [0:Ls-1]
     *Rion,   // Ionic or solvation radii, A (reserved) [0:Ls-1]
     *HYM,    // reserved
     *ENT,    // reserved no object
-    *H0,     // DC p-molar enthalpies, reserved [L]
-    *A0,     // DC p-molar Helmholtz energies, reserved [L]
-    *U0,     // DC p-molar internal energies, reserved [L]
-    *S0,     // DC p-molar entropies, reserved [L]
-    *Cp0,    // DC p-molar entropies, reserved [L]
-    *Cv0,    // DC p-molar Cv, reserved [L]
+// Convert H0, A0, U0, S0, Cp0 to double
+    *H0,     // DC pmolar enthalpies, reserved [L]
+    *A0,     // DC molar Helmholtz energies, reserved [L]
+    *U0,     // DC molar internal energies, reserved [L]
+    *S0,     // DC molar entropies, reserved [L]
+    *Cp0,    // DC molar heat capacity, reserved [L]
+    *Cv0,    // DC molar Cv, reserved [L]
+//
     *VL,     // ln mole fraction of end members in phases-solutions
     *Xcond, 	// conductivity of phase carrier, sm/m2   [0:FI-1], reserved
     *Xeps,  	// diel.permeability of phase carrier (solvent) [0:FI-1], reserved
@@ -183,7 +186,7 @@ typedef struct
   double
     *DUL,     // VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     // NG Vector of lower kinetic restrictions to x_j, moles [L]
-    *GEX,     // Increments to molar G0 values of DCs, normalized [L]
+    *GEX,     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
     *PUL,  // Vector of upper restrictions to phases amounts X_a (reserved)[FIs]
     *PLL,  // Vector of lower restrictions to phases amounts X_a (reserved)[FIs]
     *YOF,     // Phase metastability parameter (spec.surf.energy), in J/g [FI !!!!]
@@ -219,6 +222,15 @@ typedef struct
     *XFA,   // Quantity of carrier in asymmetric phases Xwa, moles [FIs]
     *YFA,   // Copy of Xwa from previous IPM iteration [0:FIs-1]
     *Falp;  // Karpov phase stability criteria F_a [0:FI-1]
+/*  
+  double (*VPh)[MIXPHPROPS],     // Volume properties for mixed phases [FIs] 
+         (*GPh)[MIXPHPROPS],     // Gibbs energy properties for mixed phases [FIs]
+  		 (*HPh)[MIXPHPROPS],     // Enthalpy properties for mixed phases [FIs]
+         (*SPh)[MIXPHPROPS],     // Entropy properties for mixed phases [FIs]
+         (*CPh)[MIXPHPROPS],     // Heat capacity Cp properties for mixed phases [FIs]
+         (*APh)[MIXPHPROPS],     // Helmholtz energy properties for mixed phases [FIs]
+         (*UPh)[MIXPHPROPS];     // Internal energy properties for mixed phases [FIs]
+*/         
 // EDL models (data for electrostatic activity coefficients)
    double (*XetaA)[MST]; // Total EDL charge on A (0) EDL plane, moles [FIs][FIat]
    double (*XetaB)[MST]; // Total charge of surface species on B (1) EDL plane, moles[FIs][FIat]

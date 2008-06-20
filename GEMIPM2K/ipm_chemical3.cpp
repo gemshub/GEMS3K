@@ -1179,7 +1179,9 @@ void
 TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
 {
     double T, P, Fugacity = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
-    float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 } ;
+    float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
+                  Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
+    double X[1]={1.};
     int jdc, j, retCode = 0;
 
     TCGFcalc aCGF;
@@ -1192,12 +1194,11 @@ TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
 
     for( jdc=0, j=jb; j<je; jdc++,j++)
     {
-        Coeff = pmp->DMc+jdb+jdc*20;
+        Coeff = pmp->DMc+jdb+jdc*24;
 
         // Calling CG EoS for pure fugacity
         if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
-            retCode = aCGF.CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume,
-               DeltaH, DeltaS, P, T );
+            retCode = aCGF.CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T );
         else {
             Fugacity = pmp->Pc;
             Volume = 8.31451*pmp->Tc/pmp->Pc;
@@ -1222,6 +1223,20 @@ pmp->GEX[j] = log( Fugacity / pmp->Pc );   // now here (since 26.02.2008)  DK
         Coeff[16] = Eos4parPT[1];
         Coeff[17] = Eos4parPT[2];
         Coeff[18] = Eos4parPT[3];
+        
+        aCGF.CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*aCGF.GetDELTA() );
+         
+        // passing corrected EoS coeffs for T+T*DELTA
+        Coeff[19] = Eos4parPT1[0];
+        if( Coeff[15] < 1. || Coeff[15] > 10. )
+            Coeff[15] = 1.;                            // foolproof temporary
+        Coeff[20] = Eos4parPT1[1];
+        Coeff[21] = Eos4parPT1[2];
+        Coeff[22] = Eos4parPT1[3];
+        
+        // Calculation of residual H and S
+        aCGF.CGEntalpyRhoT( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS);
+        
     } // jdc, j
 
     if ( retCode )
@@ -1238,9 +1253,9 @@ void
 TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
 {
     double *FugCoefs;
-    float *EoSparam, *Coeffs;
+    float *EoSparam, *EoSparam1, *Coeffs;
     int i, j, jj;
-    double T, P, ro;
+    double T, P, ro, DeltaH, DeltaS;
     TCGFcalc aCGF;
     P = pmp->Pc;
     T = pmp->Tc;
@@ -1249,12 +1264,17 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
 //    EoSparam = (float*)malloc( pmp->L1[k]*sizeof(double)*4 );
     FugCoefs =  new double[ pmp->L1[k] ];
     EoSparam =  new float[ pmp->L1[k]*4 ];
+    EoSparam1 =  new float[ pmp->L1[k]*4 ];        
     Coeffs = pmp->DMc+jdb;
 
     // Copying T,P corrected coefficients
     for( j=0; j<pmp->L1[k]; j++)
-       for( i=0; i<4; i++)
-          EoSparam[j*4+i] = Coeffs[j*20+i+15];
+    {   
+    	for( i=0; i<4; i++)
+          EoSparam[j*4+i] = Coeffs[j*24+i+15];
+    	for( i=0; i<4; i++)
+    	  EoSparam1[j*4+i] = Coeffs[j*24+i+19];
+    }
 //    EoSparam = pmp->DMc+jdb;
     if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
     {
@@ -1263,7 +1283,8 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
         if (ro <= 0. )
         {
             delete[] FugCoefs;	
-            delete[] EoSparam;	
+            delete[] EoSparam;
+            delete[] EoSparam1;	
 //           free( FugCoefs );
            char buf[150];
            sprintf(buf, "CGFluid(): bad calculation of density ro= %lg", ro);
@@ -1271,6 +1292,12 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
         }
         // Phase volume of the fluid in cm3
         pmp->FVOL[k] = pmp->FWGT[k] / ro;
+        // Get back residual H and S 
+        aCGF.CGEntalpyRhoT( pmp->X+jb, EoSparam, EoSparam1, pmp->L1[k], pmp->Pc, pmp->Tc,
+        		DeltaH, DeltaS );
+        // Utilize residual enthalpy DeltaH, entropy DeltaS 
+        // . . . . . . . . . . .
+        // 
     }
     else // Setting Fugcoefs to 0 outside TP interval
       for( j=0; j<pmp->L1[k]; j++ )
@@ -1283,7 +1310,8 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
         else
              pmp->lnGam[j] = 0;
     } // j
-    delete[] EoSparam;	
+    delete[] EoSparam;
+    delete[] EoSparam1;
     delete[] FugCoefs;	
 //    free( FugCoefs );
 
@@ -1587,7 +1615,7 @@ TMulti::SolModParPT( int, int, int jpb, int jdb, int k, int ipb, char ModCode )
     EpsW = pmp->epsW;
 
     TSolMod aSM( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-       aIPx, aIPc, aDCc, NULL, NULL, RhoW, EpsW, NULL );
+       aIPx, aIPc, aDCc, NULL, NULL, RhoW, EpsW, pmp->IC );
 
    // calculate P-T dependence of interaction parameters
     switch( ModCode )
