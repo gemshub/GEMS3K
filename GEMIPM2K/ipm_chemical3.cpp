@@ -1251,7 +1251,7 @@ pmp->GEX[j] = log( Fugacity / pmp->Pc );   // now here (since 26.02.2008)  DK
         Coeff[22] = Eos4parPT1[3];
         
         // Calculation of residual H and S
-        aCGF.CGEntalpyRhoT( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS);
+        aCGF.CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS);
         
     } // jdc, j
 
@@ -1309,7 +1309,7 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
         // Phase volume of the fluid in cm3
         pmp->FVOL[k] = pmp->FWGT[k] / ro;
         // Get back residual H and S 
-        aCGF.CGEntalpyRhoT( pmp->X+jb, EoSparam, EoSparam1, pmp->L1[k], pmp->Pc, pmp->Tc,
+        aCGF.CGEnthalpy( pmp->X+jb, EoSparam, EoSparam1, pmp->L1[k], pmp->Pc, pmp->Tc,
         		DeltaH, DeltaS );
         // Utilize residual enthalpy DeltaH, entropy DeltaS 
         // . . . . . . . . . . .

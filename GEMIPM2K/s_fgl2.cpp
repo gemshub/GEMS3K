@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1087 2008-06-19 15:23:53Z gems $
+// $Id: s_fgl2.cpp 1091 2008-06-20 14:28:02Z wagner $
 //
 // Copyright (c) 2003-2007   S.Churakov, Th.Wagner,
 //    D.Kulik, S.Dmitrieva
@@ -129,7 +129,7 @@ if( aW.twp->wtW[6] < 1. || aW.twp->wtW[6] > 10. )
     
     // add enthalpy and enthropy increments 
     retCode = CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*DELTA );   
-    CGEntalpyRhoT( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS );
+    CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS );
     aW.twp->H +=  DeltaH;   
     aW.twp->S +=  DeltaS;   
 //

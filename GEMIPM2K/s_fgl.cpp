@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1087 2008-06-19 15:23:53Z gems $
+// $Id: s_fgl.cpp 1091 2008-06-20 14:28:02Z wagner $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
@@ -261,39 +261,35 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
       return iRet;
   }
 
-//void ACTDENS(double *data,long nn, double *act )
-//////  Numerical derivative of H
-int TCGFcalc::CGEntalpyRhoT(double *X, float *param, float *param1, unsigned NN,
+
+//  Numerical derivative of Ares/RT to obtain Sres and Hres
+int TCGFcalc::CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
      double ro, double T, double &H, double &S )
  {
 
     EOSPARAM paar(X,param,NN);
     EOSPARAM paar1(X,param1,NN);
     
-     double   F0,Z,F1;
+    double   F0,Z,F1;
     double delta=DELTA,tmp;
-    int i;
 
-     norm(paar.XX0,paar.NCmp());
-     norm(paar1.XX0,paar1.NCmp());
+    norm(paar.XX0,paar.NCmp());
+    norm(paar1.XX0,paar1.NCmp());
      
+    //   paar.ParamMix(xtmp);
+    //   paar1.ParamMix(xtmp);
+      
+    Z = ZTOTALMIX(T,ro,paar);
 
-   //   paar.ParamMix(xtmp);
-   //   paar1.ParamMix(xtmp);
+    F0 = FTOTALMIX(T,ro,paar);
+    // recalculate param1 for T+T*delta
+    F1 = FTOTALMIX(T+T*delta,ro,paar1);
       
-      Z=ZTOTALMIX(T,ro,paar);
-
-      F0=FTOTALMIX(T,ro,paar);
-      //  recalculate param1 for T+T*delta
-      F1=FTOTALMIX(T+T*delta,ro,paar1);
-      
-      S =( (F1-F0)/(delta*T)*(-1.0)  +  F0 ) * 8.31;
-      
-      H = (F0*T*8.31 + T*S) + Z*8.31*T;
+    S = - ( (F1-F0)/(delta*T)*T + F0 ) * R;	// corrected, 20.06.2008 (TW)
+    H = (F0*T*R + T*S) + Z*R*T;
             
-      return 0;
+    return 0;
 
-  //   MLPutRealList(stdlink,act,paar.NCmp());
  };
 
    double TCGFcalc::CGActivCoefPT(double *X,float *param, double *act, unsigned NN,
