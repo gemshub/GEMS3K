@@ -66,7 +66,7 @@
 <pa_PRD>          3
 
 # AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
-<pa_AG>            1
+<pa_AG>         0.7
 <pa_DGC>        0.07
 
 # PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)

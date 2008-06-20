@@ -131,7 +131,7 @@ ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
        pmp->pNP = 1;
        for( pp=0; pp < abs(pa.p.PRD); pp++ )
        {
-pmp->IT = ITstart; // Important for refinement in highly non-ideal systems!
+    	  pmp->IT = ITstart; // Value is important for refinement in highly non-ideal systems!
           if( multi->AutoInitialApprox( ) == false )
           {
              multi->MultiCalcIterations( pp );

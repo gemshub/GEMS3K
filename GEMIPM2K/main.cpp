@@ -70,7 +70,8 @@ int main( int argc, char* argv[] )
   int i,   j,   k,   ks;    // indices for direct access to components
                             // and phases data in the DataCH framework
   short nodeHandle, NodeStatusCH, IterDone;
-
+  double NewMass;
+  
   // Getting direct access to DataCH structure in GEMIPM2K memory
   DATACH* dCH = node->pCSD();
   if( !dCH  )
@@ -94,8 +95,11 @@ int main( int argc, char* argv[] )
   dBR->NodeStatusFMT = No_transport; 
   dBR->NodeStatusCH = NEED_GEM_AIA; // Ask GEM to run with automatic initial approximation
   dBR->NodeHandle = -1;
+  
+  NewMass = node->ResizeNode( 0.001 );
+  
   // re-calculating equilibrium by calling GEMIPM2K, getting the status
-  NodeStatusCH = node->GEM_run( false );
+  NodeStatusCH = node->GEM_run( 3., false );
   PureTime += node->GEM_CalcTime();
 
   if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA ) )
@@ -143,8 +147,9 @@ int main( int argc, char* argv[] )
  	    dBR->NodeStatusFMT = No_transport; 
  		dBR->NodeStatusCH = NEED_GEM_SIA; // direct access to node DATABR structure
  		dBR->NodeHandle = cRecipe;
-        // re-calculating equilibrium by calling GEMIPM2K, getting the status
-        NodeStatusCH = node->GEM_run( false );
+ 		NewMass = node->ResizeNode( 1000 );
+ 		// re-calculating equilibrium by calling GEMIPM2K, getting the status
+        NodeStatusCH = node->GEM_run( 3., false );
         PureTime += node->GEM_CalcTime();
 
         if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA ) )

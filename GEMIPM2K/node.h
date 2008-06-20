@@ -143,11 +143,11 @@ static TNode* na;   // static pointer to this TNode class instance
 // must be set).
 // Optional parameter getNodT1 defines whether the DATABR (node) files
 // will be read (if set to true or 1). In this case, on the TNode level,
-// only the contents of last file (in the ipmfiles_lst list) will be
+// only the contents of the last file (in the ipmfiles_lst list) will be
 // accessible because all DATABR files are read into a single work DATABR
 // structure. On the level of TNodeArray, the initial node contents
 // from DATABR files will be distributed among nodes in T1 node array
-// according to distribution list nodeTypes.
+// according to the distribution list nodeTypes.
 //
     int  GEM_init( const char *ipmfiles_lst_name,
                    int *nodeTypes = 0, bool getNodT1 = false);
@@ -248,6 +248,12 @@ void GEM_from_MT(
 // using the GEM_to_MT() call
 //
    int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
+//
+// Calls GEM for a work node - an overloaded variant which scales the system 
+//   provided in DATABR and DATACH multiplying by a factor ScalingCoef/Ms before 
+//   calling GEM and the results by Ms/ScalingCoef after the GEM calculation
+//   
+   int  GEM_run( double InternalMass = 1., bool uPrimalSol = false  );   
 
 // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
    double GEM_CalcTime();
@@ -329,7 +335,11 @@ void GEM_from_MT(
     // Setting node identification handle
     void setNodeHandle( int jj )
     {      CNode->NodeHandle = (short)jj;  }
-
+    
+    // Resizes the node chemical system
+    // Returns new node mass Ms
+    double ResizeNode( double Factor );
+    
 // Useful methods facilitating the communication between DataCH (or FMT)
 // and DataBR (or node) data structures for components and phases
 // (i.e. between the chemical system definition and the node)
@@ -401,6 +411,9 @@ void GEM_from_MT(
     void packDataBr();   //  packs GEMIPM calculation results into work node structure
     void unpackDataBr( bool uPrimalSol ); //  unpacks work DATABR content into GEMIPM data structure
 
+    void packDataBr( double ScFact );  // Overloaded variant with scaling to constant mass of internal system 
+    void unpackDataBr( bool uPrimalSol, double ScFact );     
+    
     // Access to interpolated thermodynamic data from DCH structure
     // Test Tc and P as grid point for the interpolation of thermodynamic data
     // Return index in grid matrix or -1
