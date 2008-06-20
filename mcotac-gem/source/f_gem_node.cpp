@@ -319,7 +319,7 @@
    }
 //  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_before_calc.dat");
  // Calling GEMIPM calculation
-   iRet = TNode::na->GEM_run(uPrimalSol);
+   iRet = TNode::na->GEM_run(3.0, uPrimalSol); // use the overload to normalize mass of the system to 3.0 kg 
 
    if( !( (iRet == OK_GEM_AIA) || (iRet == OK_GEM_SIA) ) )
    {
