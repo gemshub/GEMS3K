@@ -2016,8 +2016,7 @@ ckg44    print out itergems
      &          itergemstotal," CPU time:", time_gemstotal
 c here we update porosities from GEMS molar volumes!
 c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
-	Tc_dummy=25.0
-        P_dummy = 1.0
+
 	do n=1,nxmax
 	  por(n)=0.0
 	  do  ip=1,m3
