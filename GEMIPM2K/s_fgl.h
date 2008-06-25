@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1091 2008-06-20 14:28:02Z wagner $
+// $Id: s_fgl.h 1093 2008-06-21 10:52:41Z wagner $
 //
 // Copyright (C) 2003-2007  S.Churakov, Th.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -233,12 +233,12 @@ public:
    double DENSITY(double *X,float *param, unsigned NN ,double Pbar, double T );
    int CGActivCoefRhoT(double *X,float *param, double *act, unsigned NN,
      double ro, double T );
-   double CGActivCoefPT(double *X,float *param,double *act, unsigned NN,
-     double Pbar, double T );
+   int CGActivCoefPT(double *X,float *param,double *act, unsigned NN,
+     double Pbar, double T, double &roro );
 
     int CGcalcFug( void );  // Calc. fugacity for 1 species at X=1
     int CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
-        double &Volume, double P, double T );
+        double &Volume, double P, double T, double &roro );
     // Calculates residual enthalpy and entropy
     int CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
          double ro, double T, double &H, double &S );

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1091 2008-06-20 14:28:02Z wagner $
+// $Id: s_fgl2.cpp 1093 2008-06-21 10:52:41Z wagner $
 //
 // Copyright (c) 2003-2007   S.Churakov, Th.Wagner,
 //    D.Kulik, S.Dmitrieva
@@ -79,6 +79,7 @@ int TCGFcalc::CGcalcFug( void )
 {
     double T, P, Fugacity = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
     double X[1]={1.};
+    double roro;  // added 21.06.2008 (TW)
     float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
                   Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
     int retCode = 0;
@@ -93,7 +94,7 @@ int TCGFcalc::CGcalcFug( void )
 // Calling CG EoS functions here
 
     if( T >= aW.twp->TClow +273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
-       retCode = CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T );
+       retCode = CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T, roro );
     else {
             Fugacity = P;
             Volume = 8.31451*T/P;
@@ -128,8 +129,8 @@ if( aW.twp->wtW[6] < 1. || aW.twp->wtW[6] > 10. )
     aW.twp->wtW[9] = Eos4parPT[3];
     
     // add enthalpy and enthropy increments 
-    retCode = CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*DELTA );   
-    CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS );
+    retCode = CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*DELTA, roro );   
+    CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, roro, T, DeltaH, DeltaS );
     aW.twp->H +=  DeltaH;   
     aW.twp->S +=  DeltaS;   
 //

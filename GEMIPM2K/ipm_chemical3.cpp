@@ -1198,6 +1198,7 @@ TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
     float *Coeff, Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
                   Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
     double X[1]={1.};
+    double roro;  // added, 21.06.2008 (TW)
     int jdc, j, retCode = 0;
 
     TCGFcalc aCGF;
@@ -1214,7 +1215,7 @@ TMulti::CGofPureGases( int jb, int je, int, int jdb, int )
 
         // Calling CG EoS for pure fugacity
         if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
-            retCode = aCGF.CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T );
+            retCode = aCGF.CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T, roro );
         else {
             Fugacity = pmp->Pc;
             Volume = 8.31451*pmp->Tc/pmp->Pc;
@@ -1240,7 +1241,7 @@ pmp->GEX[j] = log( Fugacity / pmp->Pc );   // now here (since 26.02.2008)  DK
         Coeff[17] = Eos4parPT[2];
         Coeff[18] = Eos4parPT[3];
         
-        aCGF.CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*aCGF.GetDELTA() );
+        aCGF.CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*aCGF.GetDELTA(), roro );
          
         // passing corrected EoS coeffs for T+T*DELTA
         Coeff[19] = Eos4parPT1[0];
@@ -1251,7 +1252,7 @@ pmp->GEX[j] = log( Fugacity / pmp->Pc );   // now here (since 26.02.2008)  DK
         Coeff[22] = Eos4parPT1[3];
         
         // Calculation of residual H and S
-        aCGF.CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, P, T, DeltaH, DeltaS);
+        aCGF.CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, roro, T, DeltaH, DeltaS);  // changed, 21.06.2008 (TW)
         
     } // jdc, j
 
@@ -1271,7 +1272,7 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
     double *FugCoefs;
     float *EoSparam, *EoSparam1, *Coeffs;
     int i, j, jj;
-    double T, P, ro, DeltaH, DeltaS;
+    double T, P, roro, DeltaH, DeltaS; // changed, 21.06.2008 (TW)
     TCGFcalc aCGF;
     P = pmp->Pc;
     T = pmp->Tc;
@@ -1294,26 +1295,25 @@ TMulti::ChurakovFluid( int jb, int je, int, int jdb, int k )
 //    EoSparam = pmp->DMc+jdb;
     if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
     {
-        ro = aCGF.CGActivCoefPT( pmp->X+jb, EoSparam, FugCoefs, pmp->L1[k],
-             pmp->Pc, pmp->Tc );
-        if (ro <= 0. )
+        aCGF.CGActivCoefPT( pmp->X+jb, EoSparam, FugCoefs, pmp->L1[k],
+             pmp->Pc, pmp->Tc, roro );  // changed, 21.06.2008 (TW)
+        if (roro <= 0. )
         {
             delete[] FugCoefs;	
             delete[] EoSparam;
             delete[] EoSparam1;	
 //           free( FugCoefs );
            char buf[150];
-           sprintf(buf, "CGFluid(): bad calculation of density ro= %lg", ro);
+           sprintf(buf, "CGFluid(): bad calculation of density ro= %lg", roro);
            Error( "E71IPM IPMgamma: ",  buf );
         }
         // Phase volume of the fluid in cm3
-        pmp->FVOL[k] = pmp->FWGT[k] / ro;
+        pmp->FVOL[k] = pmp->FWGT[k] / roro;
         // Get back residual H and S 
-        aCGF.CGEnthalpy( pmp->X+jb, EoSparam, EoSparam1, pmp->L1[k], pmp->Pc, pmp->Tc,
+        aCGF.CGEnthalpy( pmp->X+jb, EoSparam, EoSparam1, pmp->L1[k], roro, pmp->Tc,
         		DeltaH, DeltaS );
         // Utilize residual enthalpy DeltaH, entropy DeltaS 
-        // . . . . . . . . . . .
-        // 
+ 
     }
     else // Setting Fugcoefs to 0 outside TP interval
       for( j=0; j<pmp->L1[k]; j++ )

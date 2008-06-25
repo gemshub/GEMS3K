@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1091 2008-06-20 14:28:02Z wagner $
+// $Id: s_fgl.cpp 1093 2008-06-21 10:52:41Z wagner $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
@@ -206,9 +206,10 @@ double TCGFcalc::K23_13(double T, double ro)
 // Implementation of TCGFcalc class
 
 int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
-        double &Volume, double P, double T )
+        double &Volume, double P, double T, double &roro )
 {
-      int iRet=0; double ro;
+      int iRet = 0; 
+      // double ro;
       double X[1]={1.};
       double FugPure[1];
 
@@ -245,18 +246,19 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
 
 
  // returns density!
-      ro = CGActivCoefPT( X, EoSparPT, FugPure, 1, P, T );
-      if( ro < 0.  )
+      CGActivCoefPT( X, EoSparPT, FugPure, 1, P, T, roro );  // changed, 21.06.2008 (TW)
+      if( roro < 0.  )
       {
           return -1;
       };
       Fugacity= FugPure[0];
-      ro = DENSITY( X, EoSparPT, 1, P, T );
-      if( ro < 0 )
+      roro = DENSITY( X, EoSparPT, 1, P, T );
+      if( roro < 0 )
       {  // error - density could not be calculated
-         iRet = -2; ro = 1.0;
+         iRet = -2; roro = 1.0;
       }
-      Volume=0.1/ro;  // in J/bar
+      Volume = 0.1/roro;  // in J/bar
+      // roro = ro;  // added, 21.06.2008 (TW)
 
       return iRet;
   }
@@ -290,10 +292,10 @@ int TCGFcalc::CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
             
     return 0;
 
- };
+ }
 
-   double TCGFcalc::CGActivCoefPT(double *X,float *param, double *act, unsigned NN,
-        double Pbar, double T )
+   int TCGFcalc::CGActivCoefPT(double *X,float *param, double *act, unsigned NN,
+        double Pbar, double T, double &roro )
    {
       //double act[MAXPARAM];
       //unsigned ncmp;
@@ -371,9 +373,10 @@ if( ro < 0.0 ) //  Too low pressure - no corrections will be done
          //MLPutRealList(stdlink,act,paar.NCmp());
         delete [] xtmp;
         delete [] Fx;
-
-         return ro;
-   };
+        
+        roro = ro;  // added, 21.06.2008 (TW)
+         return 0;  // changed, 21.06.2008 (TW)
+   }
 
 
    //void ACTDENS(double *data,long nn, double *act )
