@@ -148,7 +148,7 @@ int TNode::GEM_run( bool uPrimalSol )
    catch(TError& err)
    {
     fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "Node " << CNode->NodeStatusCH << ": " << 
+    f_log << "Node " << CNode->NodeHandle << ": " << 
           err.title.c_str() << ": " << err.mess.c_str() << endl;
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
       CNode->NodeStatusCH = BAD_GEM_AIA;
@@ -159,7 +159,7 @@ int TNode::GEM_run( bool uPrimalSol )
    catch(...)
    {
     fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "Node " << CNode->NodeStatusCH << ": "
+    f_log << "Node " << CNode->NodeHandle << ": "
    		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
       if( CNode->NodeStatusCH  == NEED_GEM_AIA )
         CNode->NodeStatusCH = ERR_GEM_AIA;
@@ -1275,6 +1275,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   pmm->IT = 0;	
  }
  else {   // Unpacking primal solution provided in the node DATABR structure 	
+   pmm->IT = 0;	
   pmm->MBX = CNode->Ms;
   pmm->IC = CNode->IC;
 //  pmm->FitVar[3] = CNode->Eh;  Bugfix 19.12.2006  KD
