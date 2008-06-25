@@ -76,7 +76,9 @@ class TNodeArray : public TNode
 
     char* tcNode;      // Node type codes (see databr.h), size anNodes
     bool* iaNode;      // GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_SIA)
-
+    
+    double IPM_InternalMass;  // Mass (in kg) to scale system internally in IPM MULTI
+    						  // If <= 0 then no scaling is performed
     void allocMemory();
     void freeMemory();
 
@@ -171,6 +173,12 @@ public:
     char* ptcNode() const // get pointer to boundary condition codes for nodes
     { return tcNode; }
     
+    double GetIPM_InternalMass()    // get current IPM internal mass (in kg), default 1 kg
+    { return IPM_InternalMass; }
+    
+    void SetIPM_InternalMass (const double NewMass ) // set new IPM internal mass (kg), 
+    { IPM_InternalMass = NewMass; }        // NewMass <= 0. disables the IPM system size rescaling
+    
     // Calls GEM IPM calculation for a node with absolute index ndx
     int RunGEM( int ndx, int Mode );
 
@@ -190,7 +198,7 @@ public:
    // Methods for working with node arrays (access to data from DBR)
    // Calculate phase (carrier) mass, g  of single component phase
    double get_mPH( int ia, int nodex, int PHx );
-   // Calculate phase volume, cm3/mol  of single component phase
+   // Calculate phase volume, cm3  of single component phase
    double get_vPH( int ia, int nodex, int PHx );
    // Calculate bulk compositions  of single component phase
    double get_bPH( int ia, int nodex, int PHx, int IC );
@@ -217,7 +225,8 @@ public:
 
     //---------------------------------------------------------
     // Data collection for monitoring differences
-
+    // formatted writing into text file that must be already open 
+    //
     // Prints difference increments in all nodes (cells) for step t (time point at)
     void logDiffsIC( FILE* diffile, int t, double at, int nx, int every_t );
 
@@ -229,7 +238,10 @@ public:
 
     // Prints amounts of phases in all cells for time point t / at
     void logProfilePhMol( FILE* logfile, int t, double at, int nx, int every_t );
-
+    
+    // Prints volumes of phases in all cells for time point t / at
+    void logProfilePhVol( FILE* logfile, int t, double at, int nx, int every_t );
+    
     // Prints dissolved species molarities in all cells for time point t / at
     void logProfileAqDC( FILE* logfile, int t, double at, int nx, int every_t );
 
@@ -299,7 +311,7 @@ public:
   // amount of phase with index PHx from T0 node with index nodex
 #define node0_xPH( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->xPH[(PHx)])
   // amount of phase with index PHx from T1 node with index nodex
-#define node1_xPH( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->xPH[(PHx)])
+#define node1_xPH( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->xPH[(PHx)])
 
   // volume of multicomponent phase with index PHx from T0 node with index nodex
 #define node0_vPS( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->vPS[(PHx)])
@@ -337,8 +349,8 @@ public:
 
 // amount of independent component ICx in single-component phase PHx in T0 node nodex
 #define node0_bPH( nodex, PHx, ICx )  (TNodeArray::na->get_bPH( 0, (nodex), (PHx), (ICx)))
-// amount of independent component ICx in single-component phase PHx in T0 node nodex
-#define node1_bPH( nodex, PHx, ICx )  (TNodeArray::na->get_bPH( 0, (nodex), (PHx), (ICx)))
+// amount of independent component ICx in single-component phase PHx in T1 node nodex
+#define node1_bPH( nodex, PHx, ICx )  (TNodeArray::na->get_bPH( 1, (nodex), (PHx), (ICx)))
 
 #endif   // _nodearray_h_
 

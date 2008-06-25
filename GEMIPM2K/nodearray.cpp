@@ -53,7 +53,9 @@ TNodeArray* TNodeArray::na;
 int  TNodeArray::RunGEM( int  iNode, int Mode )
 {
 
-bool uPrimalSol = false;  
+bool uPrimalSol = false;
+int retCode;
+
   if( Mode < 0 || (short)abs(Mode) == NEED_GEM_SIA )
 	  uPrimalSol = true;
 	  
@@ -62,7 +64,10 @@ bool uPrimalSol = false;
 
 // GEM IPM calculation of equilibrium state in MULTI
   pCNode()->NodeStatusCH = (short)abs(Mode);
-  int retCode = GEM_run( uPrimalSol );
+  if( IPM_InternalMass > 0. )
+	  retCode = GEM_run( IPM_InternalMass, uPrimalSol );
+  else  // no scaling to internal mass
+	  retCode = GEM_run( uPrimalSol );
 
 // Copying data for node iNode back from work DATABR structure into the node array
 //   if( retCode == OK_GEM_AIA ||
@@ -371,6 +376,7 @@ TNodeArray::TNodeArray( int nNod, MULTI *apm  ):TNode( apm )
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
     iaNode = 0;
+    IPM_InternalMass = 1.;
     allocMemory();
     na = this;
 }
@@ -384,6 +390,7 @@ TNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
+  IPM_InternalMass = 1.;
   allocMemory();
   na = this;
 }
@@ -401,6 +408,7 @@ TNodeArray::TNodeArray( int nNod  ):
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
+  IPM_InternalMass = 1.;
   allocMemory();
   na = this;
 }
@@ -414,6 +422,7 @@ sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
+  IPM_InternalMass = 1.;
   allocMemory();
   na = this;
 }
@@ -428,6 +437,8 @@ TNodeArray::~TNodeArray()
 
 
 // Copying data for node ii from node array into work DATABR structure
+// Rewrite avoiding memcpy()!   DK
+//
 void TNodeArray::CopyWorkNodeFromArray( int ii, int nNodes, DATABRPTR* arr_BR )
 {
   // from arr_BR[ii] to pCNode() structure
@@ -506,7 +517,7 @@ double TNodeArray::get_mPH( int ia, int nodex, int PHx )
   return val;
 }
 
-// Calculate phase volume, cm3/mol  of single component phase
+// Calculate phase volume (in cm3) of single - component phase
 double TNodeArray::get_vPH( int ia, int nodex, int PHx )
 {
   int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
@@ -527,7 +538,7 @@ double TNodeArray::get_vPH( int ia, int nodex, int PHx )
       P = pNodT1()[(nodex)]->P;
       val = pNodT1()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
      }
-     val *= DC_V0_TP( DCx, T, P );
+     val *= DC_V0_TP( DCx, T, P )*10.;  // from j/bar to cm3/mol
   }
   return val;
 }
@@ -917,6 +928,7 @@ void TNodeArray::MoveParticleMass( int ndx_from, int ndx_to,
 // Data collection for monitoring differences
 
 // Prints difference increments in a all nodes (cells) for time point t / at
+//
 void TNodeArray::logDiffsIC( FILE* diffile, int t, double at, int nx, int every_t )
 {
   double dc;
@@ -941,7 +953,35 @@ void TNodeArray::logDiffsIC( FILE* diffile, int t, double at, int nx, int every_
 }
 
 // Data collection for monitoring 1D profiles in debugging FMT models
+//
+// Prints dissolved species molarities in all cells for time point t / at
+//
+void TNodeArray::logProfileAqDC( FILE* logfile, int t, double at, int nx, int every_t )
+{
+	double pm;
+	int i, is;
+	if( t % every_t )
+		return;
+	fprintf( logfile, "\nStep= %-8d  Time= %-12.4g     Dissolved species concentrations, M\n",
+			t, at/(365*86400) );
+	fprintf(logfile, "%s","Node#   ");	
+	for( is=0; is < int(pCSD()->nDCb); is++ )
+		fprintf( logfile, "%-12.4s ", pCSD()->DCNL[is] );
+	for (i=0; i<nx; i++)    // node iteration
+	{
+		fprintf( logfile, "\n%5d   ", i );
+		for( is=0; is < int(pCSD()->nDCinPH[0]); is++ )
+		{
+			pm = NodT1[i]->xDC[is]/NodT1[i]->vPS[0]*1000.;  // Assumes there is aq phase!
+               // dissolved species molarity
+			fprintf( logfile, "%-12.4g ", pm );
+		}
+	}
+	fprintf( logfile, "\n" );
+}
+
 // Prints dissolved elemental molarities in all cells for time point t / at
+//
 void TNodeArray::logProfileAqIC( FILE* logfile, int t, double at, int nx, int every_t )
 {
   double pm;
@@ -967,6 +1007,7 @@ void TNodeArray::logProfileAqIC( FILE* logfile, int t, double at, int nx, int ev
 
 // Data collection for monitoring 1D profiles
 // Prints total elemental amounts in all cells for time point t / at
+//
 void TNodeArray::logProfileTotIC( FILE* logfile, int t, double at, int nx, int every_t )
 {
   double pm;
@@ -1005,7 +1046,8 @@ void TNodeArray::logProfilePhMol( FILE* logfile, int t, double at, int nx, int e
      fprintf( logfile, "\n%5d   ", i );
      for( ip=0; ip < int(pCSD()->nPHb); ip++ )
      {
-       pm = NodT1[i]->xPH[ip];
+//       pm = NodT1[i]->xPH[ip];
+       pm = node1_xPH( i, ip );
        fprintf( logfile, "%-12.4g ", pm );
      }
 #ifndef NOPARTICLEARRAY
@@ -1024,26 +1066,31 @@ void TNodeArray::logProfilePhMol( FILE* logfile, int t, double at, int nx, int e
   fprintf( logfile, "\n" );
 }
 
-// Prints dissolved species molarities in all cells for time point t / at
-void TNodeArray::logProfileAqDC( FILE* logfile, int t, double at, int nx, int every_t )
+// Prints volumes of reactive phases in all cells for time point t / at
+// in nodearray layer C1
+//
+void TNodeArray::logProfilePhVol( FILE* logfile, int t, double at, int nx, int every_t )
 {
   double pm;
-  int i, is;
+  int i, ip;
   if( t % every_t )
     return;
-  fprintf( logfile, "\nStep= %-8d  Time= %-12.4g     Dissolved species concentrations, M\n",
-        t, at/(365*86400) );
+  fprintf( logfile, "\nStep= %-8d  Time= %-12.4g     Volumes of reactive phases, moles\n", t, at/(365*86400) );
   fprintf(logfile, "%s","Node#   ");
-  for( is=0; is < int(pCSD()->nDCb); is++ )
-    fprintf( logfile, "%-12.4s ", pCSD()->DCNL[is] );
+  for( ip=0; ip < int(pCSD()->nPHb); ip++ )
+    fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip] );
   for (i=0; i<nx; i++)    // node iteration
   {
      fprintf( logfile, "\n%5d   ", i );
-     for( is=0; is < int(pCSD()->nDCinPH[0]); is++ )
-     {
-       pm = NodT1[i]->xDC[is]/NodT1[i]->vPS[0]*1000.;  // Assumes there is aq phase!
-                 // dissolved species molarity
-       fprintf( logfile, "%-12.4g ", pm );
+     for( ip=0; ip < int(pCSD()->nPSb); ip++ )
+     {   // Multi-component phases
+        pm = node1_vPS( i, ip );
+        fprintf( logfile, "%-12.4g ", pm );
+     }
+     for( ip=int(pCSD()->nPSb); ip < int(pCSD()->nPHb); ip++ )
+     {  // Single-component phases
+        pm = node1_vPH( i, ip );
+        fprintf( logfile, "%-12.4g ", pm );
      }
   }
   fprintf( logfile, "\n" );

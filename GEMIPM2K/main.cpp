@@ -96,7 +96,7 @@ int main( int argc, char* argv[] )
   dBR->NodeStatusCH = NEED_GEM_AIA; // Ask GEM to run with automatic initial approximation
   dBR->NodeHandle = -1;
   
-  NewMass = node->ResizeNode( 0.001 );
+//  NewMass = node->ResizeNode( 0.001 );
   
   // re-calculating equilibrium by calling GEMIPM2K, getting the status
   NodeStatusCH = node->GEM_run( 3., false );
@@ -147,7 +147,7 @@ int main( int argc, char* argv[] )
  	    dBR->NodeStatusFMT = No_transport; 
  		dBR->NodeStatusCH = NEED_GEM_SIA; // direct access to node DATABR structure
  		dBR->NodeHandle = cRecipe;
- 		NewMass = node->ResizeNode( 1000 );
+// 		NewMass = node->ResizeNode( 1000 );
  		// re-calculating equilibrium by calling GEMIPM2K, getting the status
         NodeStatusCH = node->GEM_run( 3., false );
         PureTime += node->GEM_CalcTime();

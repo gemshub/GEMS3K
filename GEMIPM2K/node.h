@@ -185,10 +185,10 @@ static TNode* na;   // static pointer to this TNode class instance
     double p_P,      // Pressure P, bar                         +       -      -
     double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
     double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
-    double *p_bIC,    // bulk mole amounts of IC [nICb]         +       -      -
+    double *p_bIC,   // bulk mole amounts of IC [nICb]         +       -      -
     double *p_dul,   // upper kinetic restrictions [nDCb]       +       -      -
     double *p_dll,   // lower kinetic restrictions [nDCb]       +       -      -
-    double *p_aPH  // Specific surface areas of phases (m2/g)   +       -      -
+    double *p_aPH    // Specific surface areas of phases (m2/g)   +       -      -
    );
 
 // Overload - uses also xDC vector for bulk composition input to GEM
@@ -201,15 +201,17 @@ void GEM_from_MT(
  double p_P,      // Pressure P, bar                         +       -      -
  double p_Vs,     // Volume V of reactive subsystem, cm3     -       -      +
  double p_Ms,     // Mass of reactive subsystem, kg          -       -      +
- double *p_bIC,    // bulk mole amounts of IC [nICb]         +       -      -
+ double *p_bIC,   // bulk mole amounts of IC [nICb]         +       -      -
  double *p_dul,   // upper kinetic restrictions [nDCb]       +       -      -
  double *p_dll,   // lower kinetic restrictions [nDCb]       +       -      -
- double *p_aPH,  // Specific surface areas of phases (m2/g)   +       -      -
- double *p_xDC  // Optional: mole amounts of DCs [nDCb] - will be convoluted
-                 // and added to the bIC GEM input vector
+ double *p_aPH,   // Specific surface areas of phases (m2/g)   +       -      -
+ double *p_xDC    // Mole amounts of DCs [nDCb] - will be convoluted
+                  // and added to the bIC GEM input vector (if full speciation
+                  // and not just increments then p_bIC vector must be zeroed off - 
+                  // it will be calculated from p_xDC and stoichiometry matrix A
 );
 
-// Overload - uses xDC and gam vectors as old primal solution for the node
+// Overload - uses xDC and gam vectors as input primal solution for the node
 // in GEM IPM2 input when NEED_GEM_SIA flag is set for calculation
 // Important! This variant works only when DATACH contains a full list of DCs
 // with passed through the DATABR structure.
@@ -250,8 +252,8 @@ void GEM_from_MT(
    int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
 //
 // Calls GEM for a work node - an overloaded variant which scales the system 
-//   provided in DATABR and DATACH multiplying by a factor ScalingCoef/Ms before 
-//   calling GEM and the results by Ms/ScalingCoef after the GEM calculation
+//   provided in DATABR and DATACH multiplying by a factor InternalMass/Ms before 
+//   calling GEM and the results by Ms/InternalMass after the GEM calculation
 //   
    int  GEM_run( double InternalMass = 1., bool uPrimalSol = false  );   
 

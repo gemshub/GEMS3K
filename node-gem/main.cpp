@@ -142,7 +142,7 @@ int main( int argc, char* argv[] )
    for(  in=1; in<nNodes; in++ )  // Node with in=0 will be initialized later
    {
      dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
-
+     dBR->NodeHandle = in;
 // re-calculating equilibrium by calling GEMIPM2K, getting the status
      m_NodeStatusCH[in] = node->GEM_run( false );
 
@@ -177,7 +177,7 @@ int main( int argc, char* argv[] )
   for(  in=0; in<1; in++ ) // Initialising boundary condition node(s)
   {
    dBR->NodeStatusCH = NEED_GEM_AIA; // activating GEM IPM for automatic initial
-                                     // approximation
+   dBR->NodeHandle = in;                // approximation
 // re-calculating equilibrium by calling GEMIPM using previous primal solution in this node
 //   m_NodeStatusCH[in] = node->GEM_run( true );
    // re-calculating equilibrium by calling GEMIPM using previous content of GEMIPM structure
@@ -259,12 +259,11 @@ int main( int argc, char* argv[] )
      {
 //if( !in)
         cout << "  in = " << in << "  T = " << m_T[in];
-        m_NodeHandle[in] = in;
+//        m_NodeHandle[in] = in;
 
 // Below you can switch between AIA and PIA initial approximation modes
 //         m_NodeStatusCH[in] = NEED_GEM_AIA;    // tests are marked *.out2A 
         m_NodeStatusCH[in] = NEED_GEM_SIA;      // tests are marked *.out2P
-
 // Setting input data for GEM IPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
             m_T[in], m_P[in], m_Vs[in], m_Ms[in],

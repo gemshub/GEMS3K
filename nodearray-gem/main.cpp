@@ -8,8 +8,8 @@
 // parameter data are kept in two node arrays C0 and C1
 
 // TNodeArray class implements a flexible C/C++ interface between GEM IPM
-// and FMT codes. Works with DATACH and work DATABR structures
-// using the TNode class
+// and FMT codes. Works with DATACH and DATABR structures
+// using the TNode class functionality
 //
 // Copyright (C) 2006,2008 S.Dmytrieva, D.Kulik
 //
@@ -102,15 +102,17 @@ int main( int argc, char* argv[] )
     	C0[in]->hDl = 0; // C0[j]->al*C0[j]->vp+C0[j]->Dif;
     	C0[in]->nto = 0;
     	tbN[in] = 0;
+    	iaN[in] = true;    // AIA mode forced 
      }
      C0[0]->NodeTypeHY = 3; tbN[0] = 3;
      C0[nNodes-1]->NodeTypeHY = -3; tbN[nNodes-1] = -3; 
 
    for ( int in=0; in<nNodes; in++)  // Copying node layer 0 to node layer 1  
    {                          // (for MT models that can reset time step dt 
-        na->CopyNodeFromTo( in, nNodes, C0, C1 );
-        iaN[in] = true;    // AIA mode forced 
-        Mode = NEED_GEM_AIA;
+        Mode = NEED_GEM_SIA; 
+	    na->CopyNodeFromTo( in, nNodes, C0, C1 );
+        if( iaN[in] )   
+           Mode = NEED_GEM_AIA;
         RetCode = na->RunGEM( in, Mode ); // running GEM for the i-th node
         if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
         {

@@ -41,46 +41,53 @@ TNode* TNode::na;
 // the interpolation regions.
 // Result is returned in the ok field in this
 // TNode class instance (true if T and P fit, otherwise false)
+//
 bool  TNode::check_TP( double& Tc, double& P )
 {
-   bool ok = true;
+   bool okT = true, okP = true;
    double T_ = Tc, P_ = P;
 
-   if( Tc < CSD->TCval[0] )
-   { ok = false;
-     Tc = CSD->TCval[0];
+   if( T_ < CSD->TCval[0] - CSD->Ttol )
+   { 				// Corrected 25.06.2008 by DK
+	 okT = false;
+     T_ = CSD->TCval[0] - CSD->Ttol;
    }
-   if( Tc > CSD->TCval[CSD->nTp-1] )
-   { ok = false;
-     Tc = CSD->TCval[CSD->nTp-1];
+   if( Tc > CSD->TCval[CSD->nTp-1] + CSD->Ttol )
+   { 
+	 okT = false;
+     T_ = CSD->TCval[CSD->nTp-1] + CSD->Ttol;
    }
 
-  if( !ok )
-  {
-    fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "In node "<< CNode->NodeHandle << "  Given T= "<<  T_ <<
+   if( !okT )
+   {
+     fstream f_log("ipmlog.txt", ios::out|ios::app );
+     f_log << "In node "<< CNode->NodeHandle << "  Given T= "<<  T_ <<
              "  is beyond the range for thermodynamic data;" <<
              " set to T= " << Tc << endl;
-  }
+     Tc = T_; 
+   }
 
-  ok = true;
-  if( P < CSD->Pval[0] )
-  { ok = false;
-    P = CSD->Pval[0];
-  }
-  if( P > CSD->Pval[CSD->nPp-1] )
-  { ok = false;
-    P = CSD->Pval[CSD->nPp-1];
-  }
+   if( P_ < CSD->Pval[0] - CSD->Ptol )
+   { 
+	  okP = false;
+      P_ = CSD->Pval[0] - CSD->Ptol;
+   }
+   if( P_ > CSD->Pval[CSD->nPp-1] + CSD->Ptol )
+   { 
+	  okP = false;
+      P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+   }
 
-  if( !ok )
-  {
-    fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "In node "<< CNode->NodeHandle << "  Given P= "<<  P_ <<
+   if( !okP )
+   {
+     fstream f_log("ipmlog.txt", ios::out|ios::app );
+     f_log << "In node "<< CNode->NodeHandle << "  Given P= "<<  P_ <<
            "  is beyond the range for thermodynamic data;" <<
            " set to P= " << P << endl;
-  }
-  return ok;
+     P = P_;
+   }
+   Tc = T_; 
+   return (okT && okP);
 }
 
 //-------------------------------------------------------------------------
@@ -675,8 +682,8 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
    else
    {
      int xDC = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
-     vol = DC_V0_TP( xDC, CNode->TC, CNode->P );
-     vol *= CNode->xDC[DC_xCH_to_xDB(xDC)] *10.;
+     vol = DC_V0_TP( xDC, CNode->TC, CNode->P )*10.; // from J/bar to cm3/mol
+     vol *= CNode->xDC[DC_xCH_to_xDB(xDC)];
    }
    return vol;
  }

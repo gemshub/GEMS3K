@@ -103,7 +103,7 @@ typedef struct
 // Phases in reactive subsystem
     *aPH,  // Specific surface areas of phases (m2/g)      +      +      -     -
     *xPH,  // total mole amounts of phases [nPHb]          -      -      +     +
-    *vPS,  // volumes of phases-solutions, cm3/mol [nPSb]  -      -      +     +
+    *vPS,  // volumes of phases-solutions, cm3 [nPSb]      -      -      +     +
     *mPS,  // masses of phases-solutions, g   [nPSb]       -      -      +     +
     *bPS,  // bulk compositions of phases-solutions
            //    [nPSb][nICb]                              -      -      +     +
