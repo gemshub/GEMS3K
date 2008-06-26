@@ -39,55 +39,51 @@ TNode* TNode::na;
 
 // This function proves whether the given Tc and P values fit within
 // the interpolation regions.
-// Result is returned in the ok field in this
-// TNode class instance (true if T and P fit, otherwise false)
+// true is returned if Tc and P fit within the regions. 
+// Otherwise false is returned 
+// Important: removed parameter access per reference om 26.06.2008 (DK)
 //
-bool  TNode::check_TP( double& Tc, double& P )
+bool  TNode::check_TP( double Tc, double P )
 {
    bool okT = true, okP = true;
-   double T_ = Tc, P_ = P;
-
-   if( T_ < CSD->TCval[0] - CSD->Ttol )
-   { 				// Corrected 25.06.2008 by DK
+   double T_, P_;
+   
+   if( Tc <= (double)CSD->TCval[0] - CSD->Ttol )
+   { 				// Lower boundary of T interpolation interval
 	 okT = false;
-     T_ = CSD->TCval[0] - CSD->Ttol;
+     T_ = (double)CSD->TCval[0] - CSD->Ttol;
    }
-   if( Tc > CSD->TCval[CSD->nTp-1] + CSD->Ttol )
+   if( Tc >= (double)CSD->TCval[CSD->nTp-1] + CSD->Ttol )
    { 
 	 okT = false;
-     T_ = CSD->TCval[CSD->nTp-1] + CSD->Ttol;
+     T_ = (double)CSD->TCval[CSD->nTp-1] + CSD->Ttol;
    }
-
-   if( !okT )
+   if( okT == false )
    {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "In node "<< CNode->NodeHandle << "  Given T= "<<  T_ <<
-             "  is beyond the range for thermodynamic data;" <<
-             " boundary T= " << T_ << endl;
-//     Tc = T_; 
+     f_log << "In node "<< CNode->NodeHandle << ",  Given TC= "<<  Tc <<
+             "  is beyond the interpolation range for thermodynamic data near boundary T_= " 
+     		<< T_ << endl;
    }
 
-   if( P_ < CSD->Pval[0] - CSD->Ptol )
+   if( P <= (double)CSD->Pval[0] - CSD->Ptol )
    { 
 	  okP = false;
-      P_ = CSD->Pval[0] - CSD->Ptol;
+      P_ = (double)CSD->Pval[0] - CSD->Ptol;
    }
-   if( P_ > CSD->Pval[CSD->nPp-1] + CSD->Ptol )
+   if( P >= (double)CSD->Pval[CSD->nPp-1] + CSD->Ptol )
    { 
 	  okP = false;
-      P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+      P_ = (double)CSD->Pval[CSD->nPp-1] + CSD->Ptol;
    }
-
    if( !okP )
    {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "In node "<< CNode->NodeHandle << "  Given P= "<<  P_ <<
-           "  is beyond the range for thermodynamic data;" <<
-           " boundary P= " << P_ << endl;
-//     P = P_;
+     f_log << "In node "<< CNode->NodeHandle << ", Given P= "<<  P <<
+           "  is beyond the interpolation range for thermodynamic data near boundary P_= " 
+           << P_ << endl;
    }
-
-   return (okT && okP);
+   return ( okT && okP );
 }
 
 //-------------------------------------------------------------------------
@@ -227,7 +223,7 @@ int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
    catch(TError& err)
     {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Node " << CNode->NodeStatusCH << ": " << 
+     f_log << "Node " << CNode->NodeHandle << ": " << 
            err.title.c_str() << ": " << err.mess.c_str() << endl;
      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
        CNode->NodeStatusCH = BAD_GEM_AIA;
@@ -595,38 +591,33 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
    return DCx;
  }
 
- // Test Tc as grid point for the interpolation of thermodynamic data
- // Return index in grid array or -1
- int  TNode::check_grid_T( double& Tc )
+ // Test Tc as lying in the vicinity of a grid point for the interpolation of thermodynamic data
+ // Return index of the node in lookup array or -1
+ int  TNode::check_grid_T( double Tc )
  {
    int jj;
    for( jj=0; jj<CSD->nTp; jj++)
-    if( fabs( Tc - CSD->TCval[jj] ) < CSD->Ttol )
-    {
-//       Tc = CSD->TCval[jj];
-       return jj;
-    }
+     if( fabs( Tc - (double)CSD->TCval[jj] ) < CSD->Ttol )
+        return jj;
    return -1;
  }
 
- // Test P as grid point for the interpolation of thermodynamic data
- // Return index in grid array or -1
- int  TNode::check_grid_P( double& P )
+ // Test P as lying in the vicinity of a grid point for the interpolation of thermodynamic data
+ // Return index of the node in lookup array or -1
+ int  TNode::check_grid_P( double P )
  {
    int jj;
    for( jj=0; jj<CSD->nPp; jj++)
-    if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
-    {
-//      P = CSD->Pval[jj];
-      return jj;
-    }
+     if( fabs( P - (double)CSD->Pval[jj] ) < CSD->Ptol )
+       return jj;
    return -1;
  }
 
- // Test if Tc and P are at a grid point for the interpolation of thermodynamic data
- // Return the index in grid matrix or -1 if interpolation is needed
+ // Test if Tc and P are in the vicinity of a grid point of the lookup array 
+ //   for the interpolation of thermodynamic data
+ // Returns the index of the grid node in the lookup array or -1 if interpolation is needed
  //
-  int  TNode::check_grid_TP(  double& Tc, double& P )
+  int  TNode::check_grid_TP(  double Tc, double P )
   {
     int xT, xP, ndx=-1;
 
@@ -637,13 +628,17 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
     return ndx;
   }
 
- // Access to interpolated G0 value from DCH structure ( xCH is the DC index in DATACH)
-  double  TNode::DC_G0_TP( const int xCH, double& Tc, double& P )
+ // Returns the (interpolated) G0 value for Tc, P from the DCH structure in J/mol 
+ //    ( xCH is the DC index in DATACH)
+ //  In the case of error (e.g. Tc and P out of range) returns 7777777
+  double  TNode::DC_G0_TP( const int xCH, double Tc, double P )
   {
     int xTP, jj;
     double G0;
 
-    check_TP( Tc, P );
+    if( check_TP( Tc, P ) == false )
+    	return 7777777.;
+
     xTP = check_grid_TP( Tc, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
@@ -651,17 +646,21 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
        G0 = CSD->G0[ jj + xTP ];
     else
        G0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->G0+jj,
-                        P, Tc, CSD->nTp, CSD->nPp, 1 );
+               (float)P, (float)Tc, CSD->nTp, CSD->nPp, 1 );
     return G0;
  }
 
-  // Access to interpolated V0 from DCH structure ( xCH the DC DCH index)
-  double  TNode::DC_V0_TP( const int xCH, double& Tc, double& P )
+  // Access to interpolated V0 for Tc, P from the DCH structure (in J/bar)
+  //   (xCH the DC DCH index)
+  // If error (e.g. Tc or P out of range) returns -777
+  double  TNode::DC_V0_TP( const int xCH, double Tc, double P )
   {
     int xTP, jj;
     double V0;
 
-    check_TP( Tc, P );
+    if( check_TP( Tc, P ) == false )
+    	return -777.;
+
     xTP = check_grid_TP( Tc, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
@@ -669,7 +668,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
        V0 = CSD->V0[ jj + xTP ];
     else
        V0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->V0+jj,
-                        P, Tc, CSD->nTp, CSD->nPp, 1 );
+                (float)P, (float)Tc, CSD->nTp, CSD->nPp, 1 );
     return V0;
 }
 

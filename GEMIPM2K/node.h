@@ -55,16 +55,13 @@ protected:
         NumIterFIA,   // Total Number of performed FIA entry iterations 
         NumIterIPM;   // Total Number of performed IPM main iterations
     
-    // Checks if given Tc and P fit within the interpolation intervals
-    bool  check_TP( double& Tc, double& P );
-
     // Tests Tc as a grid point for the interpolation of thermodynamic data
     // Returns index in the lookup grid array or -1  if it is not a grid point
-    int  check_grid_T( double& Tc );
+    int  check_grid_T( double Tc );
 
     // Tests P as a grid point for the interpolation of thermodynamic data
     // Return index in the lookup grid array or -1 if it is not a grid point
-    int  check_grid_P( double& P );
+    int  check_grid_P( double P );
 
     void allocMemory();
     void freeMemory();
@@ -131,8 +128,8 @@ static TNode* na;   // static pointer to this TNode class instance
   TNode();      // constructor for standalone GEMIPM2K or coupled program
 #endif
 
-  virtual ~TNode();      // destructor
-
+  virtual ~TNode();      // destructor  
+  
 // Typical sequence for using TNode class ----------------------------------
 // (1)
 // For separate coupled FMT-GEM programs that use GEMIPM2K module
@@ -417,13 +414,18 @@ void GEM_from_MT(
     void unpackDataBr( bool uPrimalSol, double ScFact );     
     
     // Access to interpolated thermodynamic data from DCH structure
+    // Checks if given Tc and P fit within the interpolation intervals
+    bool  check_TP( double Tc, double P );
+    
     // Test Tc and P as grid point for the interpolation of thermodynamic data
     // Return index in grid matrix or -1
-     int  check_grid_TP(  double& Tc, double& P );
-    // Access to interpolated G0 from DCH structure ( xCH is the DC DCH index)
-     double  DC_G0_TP( const int xCH, double& Tc, double& P );
-    // Access to interpolated V0 from DCH structure ( xCH is the DC DCH index)
-     double  DC_V0_TP( const int xCH, double& Tc, double& P );
+     int  check_grid_TP(  double Tc, double P );
+
+     // Access to interpolated G0 from DCH structure ( xCH is the DC DCH index)
+     double  DC_G0_TP( const int xCH, double Tc, double P );
+    
+     // Access to interpolated V0 from DCH structure ( xCH is the DC DCH index)
+     double  DC_V0_TP( const int xCH, double Tc, double P );
 
 // To be provided - access to interpolated thermodynamic data from DCH structure
 //  DC_H0_TP
