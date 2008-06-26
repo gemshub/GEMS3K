@@ -63,8 +63,8 @@ bool  TNode::check_TP( double& Tc, double& P )
      fstream f_log("ipmlog.txt", ios::out|ios::app );
      f_log << "In node "<< CNode->NodeHandle << "  Given T= "<<  T_ <<
              "  is beyond the range for thermodynamic data;" <<
-             " set to T= " << Tc << endl;
-     Tc = T_; 
+             " boundary T= " << T_ << endl;
+//     Tc = T_; 
    }
 
    if( P_ < CSD->Pval[0] - CSD->Ptol )
@@ -83,10 +83,10 @@ bool  TNode::check_TP( double& Tc, double& P )
      fstream f_log("ipmlog.txt", ios::out|ios::app );
      f_log << "In node "<< CNode->NodeHandle << "  Given P= "<<  P_ <<
            "  is beyond the range for thermodynamic data;" <<
-           " set to P= " << P << endl;
-     P = P_;
+           " boundary P= " << P_ << endl;
+//     P = P_;
    }
-   Tc = T_; 
+
    return (okT && okP);
 }
 
@@ -603,7 +603,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
    for( jj=0; jj<CSD->nTp; jj++)
     if( fabs( Tc - CSD->TCval[jj] ) < CSD->Ttol )
     {
-       Tc = CSD->TCval[jj];
+//       Tc = CSD->TCval[jj];
        return jj;
     }
    return -1;
@@ -617,7 +617,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
    for( jj=0; jj<CSD->nPp; jj++)
     if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
     {
-      P = CSD->Pval[jj];
+//      P = CSD->Pval[jj];
       return jj;
     }
    return -1;
