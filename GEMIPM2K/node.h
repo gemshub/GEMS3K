@@ -157,8 +157,8 @@ static TNode* na;   // static pointer to this TNode class instance
 //  work structure into parameters provided by the FMT part
 //
    void GEM_restore_MT(
-    short  &p_NodeHandle,   // Node identification handle
-    short  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+    int  &p_NodeHandle,   // Node identification handle
+    int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                       //                                    GEM input output  FMT control
     double &p_TC,      // Temperature T, C                       +       -      -
     double &p_P,      // Pressure P, bar                         +       -      -
@@ -175,8 +175,8 @@ static TNode* na;   // static pointer to this TNode class instance
 // into the DATABR work structure for the subsequent GEM calculation
 //
    void GEM_from_MT(
-    short  p_NodeHandle,   // Node identification handle
-    short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+    int  p_NodeHandle,   // Node identification handle
+    int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                      //                                     GEM input output  FMT control
     double p_TC,     // Temperature T, C                        +       -      -
     double p_P,      // Pressure P, bar                         +       -      -
@@ -191,8 +191,8 @@ static TNode* na;   // static pointer to this TNode class instance
 // Overload - uses also xDC vector for bulk composition input to GEM
 // added by DK on 09.07.2007
 void GEM_from_MT(
- short  p_NodeHandle,   // Node identification handle
- short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+ int  p_NodeHandle,   // Node identification handle
+ int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                   //                                     GEM input output  FMT control
  double p_TC,     // Temperature T, C                        +       -      -
  double p_P,      // Pressure P, bar                         +       -      -
@@ -214,8 +214,8 @@ void GEM_from_MT(
 // with passed through the DATABR structure.
 // added by DK on 17.09.2007
 void GEM_from_MT(
- short  p_NodeHandle,   // Node identification handle
- short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+ int  p_NodeHandle,   // Node identification handle
+ int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                   //                                     GEM input output  FMT control
  double p_TC,     // Temperature T, C                         +      -      -
  double p_P,      // Pressure P, bar                          +      -      -
@@ -288,9 +288,9 @@ void GEM_from_MT(
 // to those in currently existing DATACH structure )
 //
    void GEM_to_MT(
-   short &p_NodeHandle,    // Node identification handle
-   short &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH
-   short &p_IterDone,      // Number of iterations performed by GEM IPM
+   int &p_NodeHandle,    // Node identification handle
+   int &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH
+   int &p_IterDone,      // Number of iterations performed by GEM IPM
                          //                                     GEM input output  FMT control
     // Chemical scalar variables
     double &p_Vs,    // Volume V of reactive subsystem, cm3     -      -      +     +
@@ -438,7 +438,8 @@ void GEM_from_MT(
      // Retrieval of Phase mass ( xBR is DBR phase index)
       double  Ph_Mass( const int xBR );
      // Retrieval of Phase composition ( xBR is DBR phase index)
-      void  Ph_BC( const int xBR, double *ARout=0 );
+     // Returns pointer to ARout which may also be allocated inside of Ph_BC()
+      double* Ph_BC( const int xBR, double *ARout=0 );
 
 
 #ifndef IPMGEMPLUGIN
@@ -481,7 +482,7 @@ void GEM_from_MT(
 
 // stoichiometry coefficient A[j][i] of IC with node DATABRIDGE index ICx
 // in the formula of DC with node index DCx
-#define nodeCH_A( DCx, ICx )  ( (double)(TNode::na->pCSD()->A[ \
+#define nodeCH_A( DCx, ICx )  ( (TNode::na->pCSD()->A[ \
                                  (TNode::na->pCSD()->xIC[(ICx)])+ \
                                  (TNode::na->pCSD()->xDC[(DCx)]) * \
                                   TNode::na->pCSD()->nIC]) )

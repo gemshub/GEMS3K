@@ -597,7 +597,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
  {
    int jj;
    for( jj=0; jj<CSD->nTp; jj++)
-     if( fabs( Tc - (double)CSD->TCval[jj] ) < CSD->Ttol )
+     if( fabs( Tc - CSD->TCval[jj] ) < CSD->Ttol )
         return jj;
    return -1;
  }
@@ -608,7 +608,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
  {
    int jj;
    for( jj=0; jj<CSD->nPp; jj++)
-     if( fabs( P - (double)CSD->Pval[jj] ) < CSD->Ptol )
+     if( fabs( P - CSD->Pval[jj] ) < CSD->Ptol )
        return jj;
    return -1;
  }
@@ -646,7 +646,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
        G0 = CSD->G0[ jj + xTP ];
     else
        G0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->G0+jj,
-               (float)P, (float)Tc, CSD->nTp, CSD->nPp, 1 );
+               P, Tc, CSD->nTp, CSD->nPp, 1 );
     return G0;
  }
 
@@ -668,7 +668,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
        V0 = CSD->V0[ jj + xTP ];
     else
        V0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->V0+jj,
-                (float)P, (float)Tc, CSD->nTp, CSD->nPp, 1 );
+                P, Tc, CSD->nTp, CSD->nPp, 1 );
     return V0;
 }
 
@@ -702,11 +702,11 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
   }
 
   // Retrieval of Phase composition ( xBR the Ph DBR index)
-  void  TNode::Ph_BC( const int xBR, double* ARout )
+  double *TNode::Ph_BC( const int xBR, double* ARout )
   {
     int ii;
     if( !ARout )
-      ARout = new double[ CSD->nICb ];
+      ARout = new double[ CSD->nICb ];   // Potential memory leak ! ! ! ! ! ! ! !
 
     if( xBR < CSD->nPSb )
        for( ii=0; ii<pCSD()->nICb; ii++ )
@@ -720,6 +720,7 @@ int TNode::Ph_xCH_to_xDB( const int xCH )
          ARout[ii] *= CNode->xDC[ DC_xCH_to_xDB(DCx) ];
       }
     }
+    return ARout;  
   }
 
 //---------------------------------------------------------//
@@ -1154,7 +1155,7 @@ void TNode::packDataBr()
 //
 void TNode::packDataBr( double ScFact )
 {
- short ii;
+  int ii;
 
   if( ScFact < 1e-6 )    // foolproof
  	 ScFact = 1e-6; 
@@ -1242,7 +1243,7 @@ void TNode::packDataBr( double ScFact )
 //    in the MULTI structure from previous IPM calculation)
 void TNode::unpackDataBr( bool uPrimalSol )
 {
- short ii;
+ int ii;
  double Gamm;
 // numbers
 
@@ -1328,7 +1329,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //    in the MULTI structure from previous IPM calculation)
 void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 {
- short ii;
+ int ii;
  double Gamm;
  
  if( ScFact < 1e-6 )    // foolproof
@@ -1503,8 +1504,8 @@ double TNode::ResizeNode( double Factor )
 // calculation mode: passing input GEM data changed on previous FMT iteration
 //                   into the work DATABR structure
 void TNode::GEM_from_MT(
-   short  p_NodeHandle,   // Node identification handle
-   short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+   int  p_NodeHandle,   // Node identification handle
+   int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                     //                                     GEM input output  FMT control
    double p_TC,      // Temperature T, K                         +       -      -
    double p_P,      // Pressure P, bar                          +       -      -
@@ -1547,8 +1548,8 @@ void TNode::GEM_from_MT(
 
 // readonly mode: passing input GEM data to FMT
 void TNode::GEM_restore_MT(
-   short  &p_NodeHandle,   // Node identification handle
-   short  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+   int  &p_NodeHandle,   // Node identification handle
+   int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                     //                                     GEM input output  FMT control
    double &p_TC,     // Temperature T, K                         +       -      -
    double &p_P,      // Pressure P, bar                          +       -      -
@@ -1581,9 +1582,9 @@ void TNode::GEM_restore_MT(
 
 // Copying results that must be returned into the FMT part into MAIF_CALC parameters
 void TNode::GEM_to_MT(
-       short &p_NodeHandle,    // Node identification handle
-       short &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH
-       short &p_IterDone,      // Number of iterations performed by GEM IPM
+       int &p_NodeHandle,    // Node identification handle
+       int &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH
+       int &p_IterDone,      // Number of iterations performed by GEM IPM
                          //                                     GEM input output  FMT control
        // Chemical scalar variables
        double &p_Vs,    // Volume V of reactive subsystem, cm3     -      -      +     +
@@ -1648,8 +1649,8 @@ void TNode::GEM_to_MT(
 // calculation mode: passing input GEM data changed on previous FMT iteration
 //                   into the work DATABR structure
 void TNode::GEM_from_MT(
-   short  p_NodeHandle,   // Node identification handle
-   short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+   int  p_NodeHandle,   // Node identification handle
+   int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                     //                                     GEM input output  FMT control
    double p_TC,      // Temperature T, K                         +       -      -
    double p_P,      // Pressure P, bar                          +       -      -
@@ -1708,8 +1709,8 @@ void TNode::GEM_from_MT(
 // calculation mode: passing input GEM data changed on previous FMT iteration
 //                   into the work DATABR structure
 void TNode::GEM_from_MT(
-   short  p_NodeHandle,   // Node identification handle
-   short  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+   int  p_NodeHandle,   // Node identification handle
+   int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                     //                                     GEM input output  FMT control
    double p_TC,      // Temperature T, K                         +       -      -
    double p_P,      // Pressure P, bar                          +       -      -

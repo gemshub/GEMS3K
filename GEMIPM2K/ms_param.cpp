@@ -223,10 +223,10 @@ void TMulti::CompG0Load()
    else
    {
        pmp->denW = LagranInterp( dCH->Pval, dCH->TCval, dCH->roW,
-                          (float)P, (float)TC, dCH->nTp, dCH->nPp,1 );
+                          P, TC, dCH->nTp, dCH->nPp,1 );
         //       pmp->denWg = tpp->RoV;
        pmp->epsW = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsW,
-                          (float)P, (float)TC, dCH->nTp, dCH->nPp,1 );
+                          P, TC, dCH->nTp, dCH->nPp,1 );
        //       pmp->epsWg = tpp->EpsV;
    }
  }
@@ -259,9 +259,9 @@ void TMulti::CompG0Load()
      else
      {
        Go = LagranInterp( dCH->Pval, dCH->TCval, dCH->G0+jj,
-                          (float)P, (float)TC, dCH->nTp, dCH->nPp,1 );
+                          P, TC, dCH->nTp, dCH->nPp,1 );
        Vv = LagranInterp( dCH->Pval, dCH->TCval, dCH->V0+jj,
-                          (float)P, (float)TC, dCH->nTp, dCH->nPp, 1 );
+                          P, TC, dCH->nTp, dCH->nPp, 1 );
      }
      if( pmp->tpp_G )
     	  pmp->tpp_G[j] = Go;

@@ -143,7 +143,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments )
 
    if( _comment )
    {  ff << "# GEMIPM2K v. 2.2.3" << endl;
-      ff << "# Prototype 31.03.2008" << endl;
+      ff << "# Prototype 26.06.2008" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -482,7 +482,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
 
   if( _comment )
   {  ff << "# GEMIPM2K v. 2.2.3" << endl;
-     ff << "# Prototype 27.05.2008" << endl;
+     ff << "# Prototype 26.06.2008" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
@@ -736,19 +736,19 @@ void TNode::datach_from_text_file(fstream& ff)
   {
     rddar.setNoAlws( "xIC");
     for( ii=0; ii< CSD->nICb; ii++ )
-      CSD->xIC[ii] = (short)ii;
+      CSD->xIC[ii] = ii;
   }
   if(CSD->nDC == CSD->nDCb )
   {
     rddar.setNoAlws( 1 /*"xDC"*/);
     for( ii=0; ii< CSD->nDCb; ii++ )
-      CSD->xDC[ii] = (short)ii;
+      CSD->xDC[ii] = ii;
   }
   if(CSD->nPH == CSD->nPHb )
   {
     rddar.setNoAlws( 2 /*"xPH"*/);
     for( ii=0; ii< CSD->nPHb; ii++ )
-      CSD->xPH[ii] = (short)ii;
+      CSD->xPH[ii] = ii;
   }
 
   nfild = rddar.findNext();
@@ -938,25 +938,25 @@ void TNode::datach_from_file( GemDataStream& ff )
 // allocating DataCH structure
 void TNode::datach_realloc()
 {
- CSD->nDCinPH = new short[CSD->nPH];
+ CSD->nDCinPH = new int[CSD->nPH];
 
  if( CSD->nICb >0 )
-   CSD->xIC = new short[CSD->nICb];
+   CSD->xIC = new int[CSD->nICb];
  else  CSD->xIC = 0;
  if( CSD->nDCb >0 )
-   CSD->xDC = new short[CSD->nDCb];
+   CSD->xDC = new int[CSD->nDCb];
  else  CSD->xDC = 0;
  if( CSD->nPHb >0 )
-   CSD->xPH = new short[CSD->nPHb];
+   CSD->xPH = new int[CSD->nPHb];
  else  CSD->xPH = 0;
 
-  CSD->A = new float[CSD->nIC*CSD->nDC];
+  CSD->A = new double[CSD->nIC*CSD->nDC];
   CSD->ICmm = new double[CSD->nIC];
   CSD->DCmm = new double[CSD->nDC];
 CSD->DCmm[0] = 0.0;   // Added by DK on 03.03.2007 
 
-  CSD->TCval = new float[CSD->nTp];
-  CSD->Pval = new float[CSD->nPp];
+  CSD->TCval = new double[CSD->nTp];
+  CSD->Pval = new double[CSD->nPp];
 
   CSD->roW = new double[ CSD->nPp*CSD->nTp];
   CSD->epsW = new double[ CSD->nPp*CSD->nTp];
@@ -1194,7 +1194,7 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
 {
   if( CNode_ == 0)
     CNode_ = CNode;
-  memset( &CNode_->NodeHandle, 0, 6*sizeof(short));
+  memset( &CNode_->NodeHandle, 0, 6*sizeof(int));
   memset( &CNode_->TC, 0, 32*sizeof(double));
 
  if( CNode_->bIC )

@@ -33,8 +33,8 @@
 //  Function returns an interpolated value of d(yoi,xoi) or error if
 //  yoi or xoi are out of range
 //
-double LagranInterp(float *y, float *x, double *d, float yoi,
-                    float xoi, int M, int N, int pp )
+double LagranInterp(double *y, double *x, double *d, double yoi,
+                    double xoi, int M, int N, int pp )
 {
     double s,z,s1[21];
     int ppy, ppx, py, px, i, j, k, jx, jy, jy1;
@@ -52,7 +52,7 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
    if( N==1 && M==1 ) // zero dimension interpolation
       return d[0];
 
-// find the point in a row
+// find the point in the row
    ppy = min( N-1, pp );
    for(jy=0;jy<N;jy++)
      if ( yoi >= y[jy] && yoi <= y[jy+1])
@@ -61,7 +61,7 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
        jy=N-ppy-1;
    jy1=jy;
 
-// find the point in column
+// find the point in the column
    ppx = min( M-1, pp );
    for(jx=0;jx<M;jx++)
         if(xoi >= x[jx] && xoi <= x[jx+1])
@@ -99,18 +99,44 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
 double LagranInterp(float *y, float *x, float *d, float yoi,
                     float xoi, int M, int N, int pp )
 {
-  double *dd, res;
+  double *dd, *yy, *xx, res;
 
   dd = new double[N*M];
   for(int ii=0; ii<N*M; ii++ )
-   dd[ii] = (double)d[ii];
-
-  res = LagranInterp( y, x, dd, yoi, xoi, M, N, pp );
+    dd[ii] = (double)d[ii];
+  yy = new double[N];
+  for(int ii=0; ii<N; ii++ )
+    yy[ii] = (double)y[ii];
+  xx = new double[M];
+  for(int ii=0; ii<M; ii++ )
+    xx[ii] = (double)x[ii];
+ 
+  res = LagranInterp( yy, xx, dd, (double)yoi, (double)xoi, M, N, pp );
 
  delete[] dd;
+ delete[] yy;
+ delete[] xx;
  return res;
 }
 
+double LagranInterp(float *y, float *x, double *d, float yoi,
+                    float xoi, int M, int N, int pp )
+{
+  double *yy, *xx, res;
+
+  yy = new double[N];
+  for(int ii=0; ii<N; ii++ )
+      yy[ii] = (double)y[ii];
+  xx = new double[M];
+  for(int ii=0; ii<M; ii++ )
+      xx[ii] = (double)x[ii];
+   
+  res = LagranInterp( yy, xx, d, (double)yoi, (double)xoi, M, N, pp );
+
+ delete[] yy;
+ delete[] xx;
+ return res;
+}
 //-----------------------End of num_methods.cpp--------------------------
 
 
