@@ -83,16 +83,16 @@
 //
 #ifdef __unix
 #ifdef __PGI
-    extern "C" int  f_gem_get_pa_( float* p_A )
+    extern "C" int  f_gem_get_pa_( double* p_A )
 //    extern "C" int  f_gem_get_dch_( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
 #else
-   extern "C" int  f_gem_get_pa( float* p_A )
+   extern "C" int  f_gem_get_pa( double* p_A )
 //   extern "C" int  f_gem_get_dch( int& p_nICb, int& p_nDCb, int& p_nPHb, float* p_A )
 #endif
 #else
   extern "C" int  __stdcall  F_GEM_GET_PA(  // All parameters are return values
 
-   float* p_A;     // Stoichiometry matrix A with nDCb rows and nICb columns
+   double* p_A;     // Stoichiometry matrix A with nDCb rows and nICb columns
                   // before calling  F_GEM_GET_DCH(), a memory block of the size
                   // greater than sizeof(float)*nDCb*nICb must be allocated and
                   // a pointer to is passed in p_A
@@ -172,14 +172,14 @@
 #endif
 )
 {
-   short NodeHandle, NodeTypeHY,  NodeTypeMT, NodeStatusFMT, NodeStatusCH, IterDone;
+   int NodeHandle, NodeTypeHY,  NodeTypeMT, NodeStatusFMT, NodeStatusCH, IterDone;
 
-   NodeHandle = (short) p_NodeHandle;
-   NodeTypeHY = (short) p_NodeTypeHY;
-   NodeTypeMT = (short) p_NodeTypeMT;
-   NodeStatusFMT = (short) p_NodeStatusFMT;
-   NodeStatusCH = (short) p_NodeStatusCH;
-   IterDone = (short) p_IterDone;
+   NodeHandle = (int) p_NodeHandle;
+   NodeTypeHY = (int) p_NodeTypeHY;
+   NodeTypeMT = (int) p_NodeTypeMT;
+   NodeStatusFMT = (int) p_NodeStatusFMT;
+   NodeStatusCH = (int) p_NodeStatusCH;
+   IterDone = (int) p_IterDone;
 
    gstring dbr_file_name( string_, 0, length_);
    dbr_file_name.strip();
@@ -188,7 +188,7 @@
     TNode::na->GEM_read_dbr( dbr_file_name.c_str() );
 
  // re-calculating equilibrium by calling GEMIPM
- //	 short NodeStatusCH = TNode::na->GEM_run();
+ //	 int NodeStatusCH = TNode::na->GEM_run();
  //     if( !( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_PIA ) )
  //        return 1;
 
@@ -274,11 +274,11 @@
   bool uPrimalSol = true;
  
 
-  short NodeHandle, NodeStatusCH, IterDone;
+  int NodeHandle, NodeStatusCH, IterDone;
 
-  NodeHandle =(short) p_NodeHandle;
-  NodeStatusCH =(short) p_NodeStatusCH;
-  IterDone =(short) p_IterDone;
+  NodeHandle =(int) p_NodeHandle;
+  NodeStatusCH =(int) p_NodeStatusCH;
+  IterDone =(int) p_IterDone;
   // (2) ----------------------------------------------
   // Work loop for the coupled FMT-GEM modelling
 
