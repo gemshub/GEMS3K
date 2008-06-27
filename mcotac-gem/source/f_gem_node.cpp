@@ -263,22 +263,24 @@
    double  *p_vPS,  // phase volume, cm3/mol        [nPSb]          -      -      +     +
    double  *p_mPS,  // phase (carrier) mass, g      [nPSb]          -      -      +     +
    double  *p_bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-   double  *p_xPA  // amount of carrier in phases  [nPSb] ??       -      -      +     +
+   double  *p_xPA,  // amount of carrier in phases  [nPSb] ??       -      -      +     +
+   int &idum   // return status
   // What else?
   // double  *p_dRes1
  )
 {
   int iRet = 0;
-  int idum = 0;
   int ii;
   bool uPrimalSol = true;
- 
+   
 
   int NodeHandle, NodeStatusCH, IterDone;
 
-  NodeHandle =(int) p_NodeHandle;
-  NodeStatusCH =(int) p_NodeStatusCH;
-  IterDone =(int) p_IterDone;
+
+  idum=0;
+  NodeHandle =p_NodeHandle;
+  NodeStatusCH =p_NodeStatusCH;
+  IterDone =p_IterDone;
   // (2) ----------------------------------------------
   // Work loop for the coupled FMT-GEM modelling
 
@@ -319,7 +321,6 @@
 //  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_before_calc.dat");
  // Calling GEMIPM calculation
    iRet = TNode::na->GEM_run(3.0, uPrimalSol); // use the overload to normalize mass of the system to 3.0 kg 
-
     idum=0;
    if( !( (iRet == OK_GEM_AIA) || (iRet == OK_GEM_SIA) ) )
    {
@@ -355,9 +356,9 @@
 
 //  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_after_calc.dat");
 
- p_NodeHandle =(int) NodeHandle;
- p_NodeStatusCH =(int)  NodeStatusCH;
- p_IterDone = (int) IterDone;
+ p_NodeHandle = NodeHandle;
+ p_NodeStatusCH =  NodeStatusCH;
+ p_IterDone = IterDone;
 	  idum=1;
 	  return idum;
 }

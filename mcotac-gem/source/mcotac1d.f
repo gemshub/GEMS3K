@@ -117,6 +117,7 @@ c      include 'f_gem_node.inc'
         END INTERFACE
 
 
+
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 c MAIN FORTRAN PROGRAM START IS HERE
 c variables for gems-buffer
@@ -343,6 +344,7 @@ c set irank and root to zero , used also outside MPI in seriall version
        irank=0
 c 
 ckg44 init several variables in order to make sure they have the correct values
+	idum=0
 	pormin=1.e+10
         dmin=1.e+10
 	icyc=0
@@ -583,21 +585,11 @@ c      call holdat1d(nxmax,"iche01.dat",hb,text)
 #else
       call holdat1d(nxmax,fname // char(0),hb)
 #endif
-c allocate memory for nodeTypes
-c      if (.not.ALLOCATED(nodeTypes)) then
-c	ALLOCATE(nodeTypes(nxmax))
-c      endif
-c assign values
-c      do 1331 ih=1,nxmax
-c      iche(ih)=int(hb(ih))
-c      nodeTypes(ih) = iche(ih) ! 1
-c1331  continue
+
 	if(m3.gt.0)then 
       call solid(m3,pnw,pnd,etc,xnaohmw,xnaohd,xkohmw,xkohd)
       endif
-c      write(*,*)iche
-c      call wegdat1d(nxmax,"iccccc.dat",iche,"iicc")
-c       pause
+
 c  **************************************
 c  read input locations for output of breakthrough locations
 c  **************************************
@@ -729,63 +721,8 @@ c	gems_PIA=5
 	endif
 	write(*,*)"gems_PIA: ",gems_PIA
 
-cpause	pause 
-c
-c
-c  *******************************************************************
-c  determine the equilibrium concentrations for the initial conditions
-c  *******************************************************************
-c      write(*,*)'itest isorb=',itest,nxmax,i_sorb 
-c04      call initial(itemp,li,lb,in1,in2,lnh,err,nxmax,tb,temp,vo
-c04     1,x,itype,num,con,eqconst,tmp,bi,bc,indexi,indexb
-c04     2,q,acb,acc,bn,pn,cn,vjb,vjc,s,ss,bc2,lne,eh,idismdl,cs,tmpk
-c04     3,iche,i_sorb,ialkali)
-c >>>                                  ^       ^  ^ added 9/87
 
-c-coeff      call initial(itemp,li,lb,li_i1,li_i2,in1,in2,lnh,err,nxmax,tb
-c-coeff      +,temp,vo
-c-coeff      1,x,itype,num,con,eqconst,tmp,bi,bc,indexi,indexb
-c-coeff      +,index_i1,bi_i1,gesb_i1,index_i2,bi_i2,gesb_i2
-c-coeff      +,gesp_i1,gesp_i2,gesc_i1,gesc_i2
-c-coeff      +,gespvf_i1,gespvf_i2
-c-coeff      2,q,acb,acc,bn,pn,cn,vjb,vjc,s,ss,lne,eh,idismdl,cs,tmpk
-c-coeff      3,iche,i_sorb,ialkali,dumb,dumc,dump,itmpdep)
 
-c  *******************************************************************
-c  initial porosity calculation from solids concentration
-c  *******************************************************************
-       do 1315, nspezx=1,nxmax
-       if (iche(nspezx).eq.2)then
-            if(m3.gt.0.and.ipor.gt.0)then                                    !  .and.ipor.gt.0
-            call porcalc(nspezx,m3,pn,pnw,pnd,etc,por
-     *         ,cn,i_sorb,xnaohmw,xnaohd,xkohmw,xkohd)
-	  if (por(nspezx).le.1.e-6) por(nspezx)=1.e-6   ! make sure porosity does not get zero
-c now change diffusion coefficient
-	    dm(nspezx)=dm0*por(nspezx)
-            endif
-       endif
- 1315  continue
-	if (irank.eq.root) then 
-       write(*,*)'porosities'
-       write(*,'(85(f5.3,1x))')(por(nspezx),nspezx=1,nxmax)
-	write(*,*)'end porosities'
-cpause       pause
-      write(*,*)(pn(1,nx),nx=1,nxmax)
-        endif
-cpause	pause
-c      t2=secnds(t1)
-c      write (6,2200) t2
-
-c>>>>>02-2003 modified boundary on the right side
-c      if(imodbound.gt.0)then  
-c       do 1316, nspezx=1,nxmax+1
-c       if (nspezx.ge.45)then
-c         bn(4,nspezx)=0.
-c         bn(5,nspezx)=0.
-c       endif
-c 1316  continue
-c      endif
-c>>>>>02-2003 modified boundary on the right side
 
 
 c03      if (ihydro.eq.1)then                             !if ihydro = 1
@@ -865,8 +802,7 @@ cpause      pause
 c04<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 c<<<<<<<<<<<<<<<FROM GEMS integration<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-cccc -t "cal-dol-boun1-dch.dat", "cal-dol-boun1-dbr-1.dat"  are also in ipmfiles-dat.lst normally
-c     open data-ch file for initialisation and names (only once)
+
 
 
       p_NodeHandle=1
@@ -984,12 +920,21 @@ c      time_gemsstart=RTC()
 c	write(*,*)"p_bic",n, p_bIC
 c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
-      idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
      *)
+
+	if (idum.ne.1) then 
+	   write(*,*)"GEMS problem for first dbr file", idum
+	  write(*,*) "P_IterDone: ",p_IterDone
+	  write(*,*)" Please look into ipmlog.txt"
+           pause
+c	   stop
+	endif
+
 c      pause
 c  here loop to read in additional geochmical systems to define other nodes....
 c      aa-initial-dbr-1.dat to aa-initial-dbr-50.dat and aa-boundary-dbr-0.dat are available)
@@ -1055,12 +1000,19 @@ c      time_gemsstart=RTC()
 c	write(*,*)"p_bic",n, p_bIC
 c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
-      idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
      *)
+	if (idum.ne.1) then 
+	   write(*,*)"GEMS problem for second dbr file", idum
+	  write(*,*) "P_IterDone: ",p_IterDone
+	  write(*,*)" Please look into ipmlog.txt"
+           pause
+c	   stop
+	endif
 
 	write(*,*)"p_XDC 1", p_xDC
 	gridvol=1.0
@@ -1243,16 +1195,7 @@ c   set particles in the grid
 #else
       call setpar(npmax,xmin,xmax,partx,nbox)
 #endif
-c      do 1328 ip=1,npmax
-c      write(*,*)'i partx ',ip,partx(ip)
-c 1328 continue
-c      do 1529 ib =1,nxmax
-c      do 1519 id =1,maxnb
-c 1519 write(*,'(a6,1x,3i8,1x,e10.4)')'c_b x y j',ib,ic,id,bn(id,ib)
-c      do 1518 idc =1,maxnc
-c 1518 write(*,'(a6,1x,3i8,1x,e10.4)')'c_c x y j',ib,ic,idc,cn(idc,ib)
-c 1529 continue
-c>>>>>>>>>>>>>>>>>>>>> nov 2002
+
 
 c      write(*,*)'main  vor hydro'
       if (ihydro.eq.1)then
@@ -1446,15 +1389,7 @@ c       write(*,*)'nach hydro',icyc
 c  **********************************
 c  set old values equal to new values
 c  **********************************  
-c>>>>>02-2003 modified boundary on the right side
-c      if(imodbound.gt.0) then
-c       do 1317, nspezx=1,nxmax+1
-c       if (nspezx.ge.41)then
-c         bn(4,nspezx)=0.
-c         bn(5,nspezx)=0.
-c       endif
-c 1317  continue
-c      endif
+
 c>>>>>02-2003 modified boundary on the right side
       do 240 n=1,nxmax
          do 236 j=1,m1
@@ -1585,28 +1520,7 @@ c   move particles during dt
      *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
      *  ibpstart,x,bo,co,m1,m2,por)
 #endif
-c kg44 walker with variable porosity
-c      call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
-c     *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
-c     *  ibpstart,x,bo,co,m1,m2,por)
 
-c**assign concentrations at t+dt to grid  (including boundary conditions)
-c**particle in which nbox
-
-c      write (*,*)'xminr xmaxr',xminr,xmaxr
-c      write(*,'(6(e10.4,1x))')(bn(i,1),i=1,m1)
-c      write(*,'(6(e10.4,1x))')(bn(i,2),i=1,m1)
-c      write(*,'(6(e10.4,1x))')(bn(i,3),i=1,m1)
-c      write(*,'(6(e10.4,1x))')(bn(i,11),i=1,m1)
-c       pause
-c**new concentration in each box
-c	if (irank.eq.root) then 
-c	do n=1,nxmax
-c	 write(*,*)" vectors before concneut, n=",n
-c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-c     *,(pn(ip,2),ip=1,m3)
-c         enddo
-c         endif
 
 #ifdef __GNU
       call concneu(%val(npmax),%val(nbox),%val(nxmax),%val(xminr),
@@ -1617,23 +1531,7 @@ c         endif
      *  xmaxr,dx,bn,cn,partib,partx,
      *  partic,bo,co,ismooth,m1,m2)
 #endif
-c	if (irank.eq.root) then 
-c	do n=1,nxmax
-c	 write(*,*)" vectors after concneut, n=",n
-c        write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-c     *,(pn(ip,2),ip=1,m3)
-c         enddo
-c         endif
 
-c kg44 changed output format
-c	if (irank.eq.root) then 
-c      write(*,*)'cneu',itimestep_tp,
-c     *bn(1,1),pn(2,1),pn(3,1)
-c	endif
-c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
-c     *bn(1,1),pn(2,1),pn(3,1)
-c      write(*,'(a4,1x,i3,1x,6(e12.6,1x))')'cneu',itimestep_tp,
-c     *bn(1,2),pn(2,2),pn(3,2)
 
 
 
@@ -1776,12 +1674,20 @@ c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
-	idum = F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
      *)
+	if (idum.ne.1) then 
+	   write(*,*)"GEMS problem ", idum
+	  write(*,*) "P_IterDone: ",p_IterDone
+	  write(*,*)" Please look into ipmlog.txt"
+            pause
+c	   stop
+	endif
+
 c	if (idum.ne.1) then 
 c	   write(*,*)"GEMS problem ", idum
 c	   stop
@@ -1799,25 +1705,7 @@ c     &              p_NodeStatusCH,p_IterDone
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
-c      time_gemstotal=time_gemstotal+ secnds(time_gemsstart)
 
-c kg44
-c	if (i_output.eq.1.and.n.eq.2)then
-c            write(35,*) 'node',n,'nach GEMS' 
-c	    write(35,*) 'DCb', '#######   ',time_gemstotal
-c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c	    write(35,*) 'ICb'
-c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
-c	write(35,*) 'b_bPS'
-c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
-c	write(35,*) 'xPH'
-c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-c	endif
-c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
-c     bn=
-c     cn=
-c     pn=
-c      do 1695 n=2,nxmax
 	do 1796 ib=1,m1-1
 	bn_subdomain(ib+(n-1)*(m1-1))=p_xDc(i_bcp_gemx(ib))
  1796 continue
@@ -1827,18 +1715,7 @@ c      do 1695 n=2,nxmax
 	do 1798 ip=1,m3
 	pn_subdomain(ip+(n-1)*m3)=p_xDc(i_bcp_gemx(m1+m2+ip))
  1798 continue
-c kg44
-c	if (i_output.eq.1.and.n.eq.2)then
-c      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
-c	    write(35,*) 'DCb'
-c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c      endif
 
-c kg44 only needed for debug
-c      itergemstime(itimestep_tp,n)=p_IterDone
-
-c      write(*,*)itimestep_tp,n,itergemstime(itimestep_tp,n),p_IterDone
-c	pause
 	p_IterDone=0
 
  1555 continue                 ! end node loop for GEMS after Transport step             
@@ -1888,17 +1765,6 @@ c now do MPI_GATHER
             enddo
           enddo
           enddo
-c       call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-c       sendcount = nbasis*nnodex
-c       call MPI_BCAST(bn,sendcount,MPI_DOUBLE_PRECISION,
-c     &                    root,MPI_COMM_WORLD,ierr)
-c       sendcount = ncompl*nnodex      
-c       call MPI_BCAST(cn,sendcount,MPI_DOUBLE_PRECISION,
-c     &                    root,MPI_COMM_WORLD,ierr)
-c       sendcount = nsolid*nnodex      
-c       call MPI_BCAST(pn,sendcount,MPI_DOUBLE_PRECISION,
-c     &                     root,MPI_COMM_WORLD,ierr)
-C
 
 #else       
 c	pause "node loop start"
@@ -1928,50 +1794,30 @@ c      time_gemsstart=RTC()
 c	write(*,*)"p_bic",n, p_bIC
 c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
-      idum= F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
      *)
 
-c	if (n.eq.106) pause
-
-c	if (idum.ne.1) then 
-c	   write(*,*)"GEMS problem ", idum
-c	  write(*,*) "P_IterDone: ",p_IterDone
-c	   stop
-c	endif
+	if (idum.ne.1) then 
+	   write(*,*)"GEMS problem ", idum
+	  write(*,*) "P_IterDone: ",p_IterDone
+	  write(*,*)" Please look into ipmlog.txt"
+           pause
+	   stop
+	endif
 	pHarr(n)=p_pH
 
 c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
 
-c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
-c     &              p_NodeStatusCH,p_IterDone
 
-c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
-c      time_gemstotal=time_gemstotal+ secnds(time_gemsstart)
-ckg44
-c	if (i_output.eq.1.and.n.eq.2)then
-c      	write(35,*) 'node',n,'nach GEMS' 
-c	    write(35,*) 'DCb', '#######   ',time_gemstotal
-c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c	    write(35,*) 'ICb'
-c	    write(35,'(10(e18.12,1x))')(p_bIC(ib),ib=1,p_nICb)
-c	write(35,*) 'b_bPS'
-c	    write(35,'(10(e8.2,1x))')(p_bPS(ib),ib=1,p_nDCb)
-c	write(35,*) 'xPH'
-c	    write(35,'(10(e8.2,1x))')(p_xPH(ib),ib=1,p_nICb)
-c	endif
-c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming
-c     bn=
-c     cn=
-c     pn=
-c      do 1695 n=2,nxmax
+c
 	do 1796 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))
  1796 continue
@@ -1983,27 +1829,6 @@ c      do 1695 n=2,nxmax
  1798 continue
 
 
-c	if (irank.eq.root) then 
-c	 write(*,*)" vectors after transport after chemistry"
-c         write(*,'(13(e8.2,1x))')(bn(ib,n),ib=1,m1),(cn(ic,n),ic=1,m2)
-c     *,(pn(ip,2),ip=1,m3)
-ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
-c         write(*,*)' 2 p_xDc(ib) '
-c         write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c         endif
-c         pause
-ckg44
-c	if (i_output.eq.1.and.n.eq.2)then
-c      	write(35,*) 'node',n,'weit nach GEMS bei 1798' 
-c	    write(35,*) 'DCb'
-c	    write(35,'(20(e12.6,1x))')(p_xDc(ib),ib=1,p_nDCb)
-c      endif
-
-c kg44 only needed for debug
-c      itergemstime(itimestep_tp,n)=p_IterDone
-
-c      write(*,*)itimestep_tp,n,itergemstime(itimestep_tp,n),p_IterDone
-c	pause
 	p_IterDone=0
 
  1555 continue                 ! end node loop for GEMS after Transport step             
@@ -2014,8 +1839,7 @@ ckg44    print out itergems
       write(*,*)'proc, t-step,gems iterations, total iterations'
       write(*,*)irank, itimestep_tp,itergems, 
      &          itergemstotal," CPU time:", time_gemstotal
-c here we update porosities from GEMS molar volumes!
-c         f_gem_get_molar_volume(int& i, double& Tc, double& P)
+
 
 	do n=1,nxmax
 	  por(n)=0.0
@@ -2094,48 +1918,6 @@ c      pause
 c      endif
 
  1880 continue
-c dec20002>>>>>>>>>>>>
-c      write(*,*)restzeit,pn
-c	pause
-c      if( restzeit .gt.0.) goto 335
-c 3333 continue
-c<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-c   here GEMS 
-c  <<<<<<<   tranfer of GEMS nomenclature to MCOTAC naming to check solids
-c     open data bridge file initially for initialising the spatial distribution of chemical systems
-c  loop read for nodes 2 to nxmax
-c      gems_dbr_f="aa-initial-dbr-1.dat"
-
-
-
-
-c  *******************************************gems
-c  check if a solid is starting to precipitate
-c  or has dissolved at any node
-c  *******************************************gems
-c       if (irank.eq.root) then
-c        do 1390 i=1,m3
-c        if (pn(i,n).le.(zero)) go to 1330
-c        if (po(i,n).le.(zero)) write(6,2000)n,
-c     1  dump(i),treal,tmp(n),eqconst(i,n)
-c        go to 1390
-c 1330   if (po(i,n).gt.(zero)) write(6,2050) n,
-c     1  dump(i),treal,tmp(n),eqconst(i,n)
-c 1390   continue
-c        endif   ! end printout root only
-
-
-c	if (irank.eq.root) then 
-c      write(*,*)'n_ge',itimestep_tp,
-c     *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
-c         endif
-cgems	 pause "next time step"
-c      if(itimestep_tp.gt.10)stop
-
-c  end GEMS reading and re-naming after re-equilibration
-
-
-c>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
 c**** output fuer t(k1)
@@ -2174,11 +1956,6 @@ c       Volume fractions, rates, and omegas       -kinet-
        else
                xspez=x(nn1)+dx(1)      !   feb 2003    /2
        endif
-c      if(lnhc.gt.0)then                  !2008   and.acc(lnhc,nn1).gt.0.and.cn(lnhc,nn1).gt0.
-c          pHarr(nn1)=-dlog10(acc(lnhc,nn1)*cn(lnhc,nn1))
-c         else
-c15112004          pHarr(nn1)=-dlog10(acb(lnh,nn1)*bn(lnh,nn1))
-c         endif
 
 c      Vol. fractions, rates, and log omega   -kinet-
         if (nn1.eq.1) goto 1513
@@ -2200,41 +1977,7 @@ c      Vol. fractions, rates, and log omega   -kinet-
         if (irank.eq.root) then
 c****  write out particle positions
         write(datei2,'(a5,a1,a4)')'p_ibx',ch,'.dat' 
-c        open(16,file=datei2,form='formatted',status='unknown')
-c 1514   write(16,1578)(partib(nix),nix=1,nxmax)
-c 1578   format(51(1x,i4))
-c        write(16,*)'time = ',treal
-c        close(16)
-c****  write out 2D concentration arrays
-c****  solids and porosity 
-c        write(datei2,'(a5,a1,a4)')'c_2da',ch,'.dat' 
-c        open(16,file=datei2,form='formatted',status='unknown')
-c        do 1516 j1=1,m3
-c        write(16,1576)(pn(j1,nix),nix=1,nxmax)
-c 1515   continue
-c        write(16,*)'  '
-c 1516   continue
-c 1576   format(51(1x,e10.4))
-c        write(16,1576)(por(nix),nix=1,nxmax)
-c 1517   continue
-c        write(16,*)'time = ',treal
-c        close(16)
 
-c****   solutes (basis species and complexes)
-c        write(datei2,'(a5,a1,a4)')'c_2ds',ch,'.dat' 
-c        open(16,file=datei2,form='formatted',status='unknown')
-c        do 1522 j1=1,m1
-c        write(16,1576)(bn(j1,nix),nix=1,nxmax)
-c 1523   continue
-c        write(16,*)dumb(m1),'above'
-c 1522   continue
-c        do 1520 j1=1,m2
-c        write(16,1576)(cn(j1,nix),nix=1,nxmax)
-c 1521   continue
-c        write(16,*)dumc(m2),'above'
-c 1520   continue
-c        write(16,*)'time = ',treal
-c        close(16)
 
        endif       ! end output if root only
 
@@ -2245,11 +1988,7 @@ c        delt=deltn
       if(kmax.gt.k1.and.k1.eq.1)dtprstep=tprint(k1)/10.                     !windows compiler tprint(0) - array limit
       if(kmax.gt.k1.and.k1.gt.1)dtprstep=(tprint(k1)-tprint(k1-1))/10.
 
-c      if((mod(int(time/365.25/24/3600),10)).eq.0
-c      if(kmax.gt.k1.and.k1.gt.1)
-c     * write(*,*)'k1= ',k1,'dt pr-step= ',dtprstep,texe
-c     *,tprint(k1),tprint(k1-1)
-c      write(*,*)'k1= ',k1,'dt pr-step= ',dtprstep,texe
+
 
 c kg44 ----------------this are two very long if ....
        if(k1.gt.1) then
@@ -2347,22 +2086,7 @@ C end of file for breakthrough curves
       write(*,*) 'Proc No: ',irank,
      &'time used for Gems-Loop (incl. communication) = ',time_gemsmpi
 
-c      write(*,*) 'time used during GEMS read = ',time_gemsreadtotal
-c      write(*,*) 'time used during GEMS write = ',time_gemswritetotal
-c      write(*,*) 'time used during MCOTAC-chem-calc=',time_initreadtotal
-c kg44 this is not needed..only for debug
-c      open (25, file = "iter_array.grd")
-c	write(25,'(A4)')"DSAA"
-c	write(25,'(2(i2,1x))')80,  51 ! grid dimension
-c	write(25,'(2(i2,1x))')1,80    ! xmin xmax
-c	write(25,'(2(i2,1x))')1,51   ! ymin ymax
-c	write(25,'(2(i3,1x))')0,200   ! zin zmax
-c	do 2408 n=51,1,-1
-c2408	write(25,'(80(i3,1x))')(itergemstime(it,n),it=1,80)
-c      close (25)
 
-c kg44
-c      if(i_output.eq.1) close(35)
 
 
 #ifdef __MPI
@@ -2430,74 +2154,7 @@ c      pause
       end
 
 
-c  *********************************************************************
-c     calculate porosity from solids amount density and molweight
-
-      subroutine porcalc(nspezx,m3,pn,pnw,pnd,etc,por
-     *   ,cn,i_sorb,xnaohmw,xnaohd,xkohmw,xkohd)
-      implicit double precision (a-h,o-z)
-
-      include 'gwheader.inc'
-      integer m3
-      dimension pn(nsolid,nnodex+2),pnw(nsolid),pnd(nsolid),etc(3)
-      dimension por(nnodex+2),cn(ncompl,nnodex+2)
-
-      xxnaoh=0.
-      xxkoh=0.
-      porsum=0.
-      do 10, i=1,m3
-      porsum=porsum+pn(i,nspezx)*pnw(i)/pnd(i)/1000.
-c      write(*,'(i3,1x,4(e10.4,1x))')i,pn(i,nspezx),pnw(i),pnd(i),porsum
-   10 continue
-      por(nspezx)=1.-(etc(3)*etc(1)/etc(2)/1000.+ porsum
-     *   ) *por(nspezx)
-
-      if (i_sorb.gt.0)then
-         xxnaoh=cn(i_sorb+1,nspezx)*xnaohmw/xnaohd/1000.
-         xxkoh=cn(i_sorb+2,nspezx)*xkohmw/xkohd/1000.
-           por(nspezx)=por(nspezx)-xxnaoh  -xxkoh
-      endif
-c       write(*,*)nspezx, por(nspezx)
-c      pause
-      return
-
-      end
-      
 
 
-c*==========================================================================*
-c
-c                            Unterprogramm: holdat1df
-c               Lesen eines Feldes aus Datei Fname.dat
-c
-c
-c    nx, ny   : Anzahl der Knoten in X- bzw. in Y-Richtung
-c    fname    : File-Name
-c    hb[i][j] : einzulesendes Feld
-c    text     : Bezeichnung des Feldes
-c
-c   return =  Fehlernummer ierr
-c
-c    07.12.01
-c===========================================================================*/
 
-      subroutine holdat1df(nxmax,cname,hb,text)
-       include 'gwheader.inc'
 
-        double precision hb(NNODEx+2)
-        integer nxmax,nymax,ihb(NNODEx+2)
-        character*10 text,  cname
-
-        open(31, file=cname)
-        read (31, *)nxmaxx,faktor
-        write(*,*)'hol nx  faktor', nxmax,faktor, cname
-         read(31, *)(ihb(i),i=1,nxmax)
-c         read(31, 1010)(ihb(i),i=1,nxmax)
-   10   continue
- 1010   format (520i4)
-        do 20, i=1,nxmax
-        hb(i)= faktor*ihb(i)
- 20     continue
-        close (31)
-        return
-        end
