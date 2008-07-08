@@ -918,8 +918,8 @@ c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases
 	write(*,*)"p_XDC 0", p_xDC
 	endif
 c make sure we have an equilibrated file
-	iNode=  n-1
-      p_NodeHandle=  n-1
+	iNode=  n
+      p_NodeHandle=  n
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -998,8 +998,8 @@ c  second read is for initial conditons nodes 2 to nxmax
      *)
 
 c make sure we have an equilibrated file
-	iNode=  n-1
-      p_NodeHandle=  n-1
+	iNode=  n
+      p_NodeHandle=  n
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -1285,12 +1285,11 @@ c        ssw='n'
       if(irestart.eq.1)then               ! 1 read backup file - 0 start from t=0
       if (irank.eq.root)then
        call readdump(bn,cn,pn,por,dm,
-     * time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+     * time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
         kk1=k1+96
-c        time=tprint(k1)
-c        write(*,*)'kk1',kk1,'time',time
+        write(*,*)'kk1',k1,'time',time, "dtmax",dtmax
         ch=char(kk1)
-        if(kk1.ge.kmax)stop 'end of difned calculation time reached'
+        if(k1.ge.kmax)stop 'end of defined calculation time reached'
 	endif
       else
 c
@@ -1666,8 +1665,8 @@ c	write(*,*)"p_bic",n, p_bIC
 c	write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
 
-      iNode=  n-1
-      p_NodeHandle=  n-1
+      iNode=  n
+      p_NodeHandle=  n
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -1823,8 +1822,8 @@ c      goto 1556  ! only node 2 with old gems  values
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
-	iNode=  n-1
-      p_NodeHandle=  n-1
+	iNode=  n
+      p_NodeHandle=  n
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -2095,7 +2094,7 @@ c**** output fuer t als backup
       if (irank.eq.root)then
          if (mod(itimestep_dt,it_outt).eq.0) then
            call writedump(bn,cn,pn,por,dm,
-     *     time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+     *     time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
          endif                          ! write out backso
       endif 
 c**** end output fuer t als backup
@@ -2207,13 +2206,13 @@ c  to file backup.dat
 c  *********************************************************
 
        subroutine writedump(bn,cn,pn,por,dm,
-     *     time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+     *     time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
       include 'gwheader.inc'
         character *10 dumb,dumc,dump
 
         double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
      *, pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
-     * ,time_sum,tprint(25)
+     * ,time,tprint(25)
         integer itimestep_tp,k1,m1,m2,m3,nxmax
         common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 
@@ -2239,7 +2238,7 @@ c****  solids and porosity
         write(17,1775)(dm(nix),nix=1,nxmax+2)
  1775   format(85(1x,e10.4))
         write(17,*)'diffusion coefficient above  '
-        write(17,*)time_sum,itimestep_tp,tprint(k1),k1
+        write(17,*)time,itimestep_tp,tprint(k1),k1
         close(17)
 
         end
@@ -2250,12 +2249,12 @@ c  file backup.dat
 c  *********************************************************
 
        subroutine readdump(bn,cn,pn,por,dm,
-     *         time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+     *         time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
       include 'gwheader.inc'
         character *10 dumb,dumc,dump
         double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
      *,pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
-     * ,time_sum,tprint(25)
+     * ,time,tprint(25)
         integer itimestep_tp,k1,m1,m2,m3,nxmax
         common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 
@@ -2281,7 +2280,7 @@ c****  solids and porosity
         read(17,1775)(dm(nix),nix=1,nxmax+2)
  1775   format(85(1x,e10.4))
         read(17,*)
-        read(17,*)time_sum,itimestep_tp,tprint(k1),k1
+        read(17,*)time,itimestep_tp,tprint(k1),k1
         close(17)
 
         end
