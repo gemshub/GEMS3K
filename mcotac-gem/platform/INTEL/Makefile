@@ -9,19 +9,25 @@ FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -assume nounderscore -D__GNU
 LINK = ifort
 LFLAGS = 
 LIBS = -lstdc++ -ldl -L/opt/intel/intel-10.1/fce-10.1/lib -lifcore
-GEMINCLUDE = ../GEMIPM2K
-GEMLIB     = -L../GEMIPM2K -lgemipm2k-intel -lsvml -lipgo
+GEMINCLUDE = ../../GEMIPM2K
+GEMLIB     = -L../../GEMIPM2K -lgemipm2k-intel -lsvml -lipgo
 EXEC = mcotacgem-intel
 
+GEMINCLUDE = ../../GEMIPM2K
+GEMLIB     = -L../../GEMIPM2K -lgemipm2k-pgi
+EXEC = mcotacgem-pgi
+
 ${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
-       f_gem_node.o
+       f_gem_node.o quicksort.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
-          erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o ${GEMLIB} ${LIBS}
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o quicksort.o\
+          erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o  ${GEMLIB}  ${LIBS}
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
 	cp mcotac1d.f mcotac1d.fpp
 	$(FORT)  $(FFLAGS) mcotac1d.fpp
+quicksort.o: quicksort.f
+	$(FORT)  $(FFLAGS) quicksort.f
 datio.o: datio.f gwheader.inc kinetics.inc
 	cp datio.f datio.fpp
 	$(FORT)  $(FFLAGS) datio.fpp
@@ -42,6 +48,7 @@ wegdat1d_.o: wegdat1d_.c gwheader.h
 	$(CC)  $(CFLAGS) wegdat1d_.c
 hydro1d_.o: hydro1d_.c  gwheader.h
 	$(CC)  $(CFLAGS)  hydro1d_.c
+
 
 f_gem_node.o: f_gem_node.cpp ${GEMINCLUDE}/node.h \
 		${GEMINCLUDE}/m_param.h \
