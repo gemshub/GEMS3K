@@ -133,6 +133,10 @@ c and a second buffer
       double precision, allocatable ::  ph_domain(:) 
       double precision, allocatable ::  ph_subdomain(:) 
 
+      double precision, allocatable ::  gems_iterations_domain(:) 
+      double precision, allocatable ::  gems_iterations_subdomain(:) 
+
+
 #endif
 
       double precision xxyy, pormin, dmin
@@ -174,6 +178,9 @@ c in an ideal world this definitions are only used for MPI stuff
         integer ierr
 	integer npes, i_subdomain_length     !// no of procs, number of grid nodes per processor
         integer recvcount, sendcount
+	double precision, allocatable ::  gems_iterations(:) ! number of Iterations for each node
+        integer, allocatable ::  node_distribution(:) ! list with ordered nodes (ascending numbers of GEMS iterations)
+        integer i_reorder
 #endif
         integer irank, root      !// rank and identifier for root used also outside MPI
 	
@@ -911,8 +918,8 @@ c      double precision  p_xPA(gsize3) ! (nPSb)  !// amount of carrier in phases
 	write(*,*)"p_XDC 0", p_xDC
 	endif
 c make sure we have an equilibrated file
-	iNode=  n
-      p_NodeHandle=  n
+	iNode=  n-1
+      p_NodeHandle=  n-1
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -933,7 +940,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 	   write(*,*)"GEMS problem for first dbr file", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
 	  write(*,*)" Please look into ipmlog.txt"
-           pause
+c           pause
 c	   stop
 	endif
 
@@ -991,8 +998,8 @@ c  second read is for initial conditons nodes 2 to nxmax
      *)
 
 c make sure we have an equilibrated file
-	iNode=  n
-      p_NodeHandle=  n
+	iNode=  n-1
+      p_NodeHandle=  n-1
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -1012,7 +1019,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 	   write(*,*)"GEMS problem for second dbr file", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
 	  write(*,*)" Please look into ipmlog.txt"
-           pause
+c           pause
 c	   stop
 	endif
 
@@ -1089,6 +1096,21 @@ c we define the size of subintervalls for buffer variables
          write(*,*) 'nxmax, procs',nxmax, npes
          write(*,*) 'i_subdomain_length', i_subdomain_length
         endif
+c allocate memory for arrays (gems_iterations,node_distribution) 
+	if (.NOT.allocated(gems_iterations)) then
+         allocate(gems_iterations(nxmax))
+        endif
+	if (.NOT.allocated(node_distribution)) then
+         allocate(node_distribution(nxmax))
+        endif
+	do i=1,nxmax
+	  gems_iterations=1.0
+	  node_distribution(i)=i
+	enddo
+	
+        write(*,*) node_distribution
+c	pause
+	i_reorder=2   ! set counter for load balancing --counting is done backward ;-)
 c  make sure grid size and no of processors fit together
         if (mod((nxmax),npes).ne.0) then
          write(*,*) 'parallelization error: check numer of processors'
@@ -1117,6 +1139,10 @@ c and a second buffer because W. refuses to work with allocate
 c   ph_domain
 	allocate(ph_domain(nxmax))
         allocate(ph_subdomain(i_subdomain_length))
+c gems iterations is already allocated..now we take the subdomain
+        allocate(gems_iterations_domain(nxmax))
+        allocate(gems_iterations_subdomain(i_subdomain_length))
+
 c	 write(*,*) 'allocated buffers: irank,nxmax,i_subdom',
 c     &   irank,nxmax,i_subdomain_length 
 c	 write(*,*) m1, m2, m3
@@ -1578,19 +1604,20 @@ c reset itergems
 #ifdef __MPI
 c f irst scatter the inital dataset among the processors
 c root obtains the full dataset
-
+c for better load balancing, it is possible to manipulate
+c the node ordering with node_distribution
         
         if (irank.eq.root) then        
 	  do n=1,nxmax,npes
           do i=1,npes
             do ib=1,m1-1
-	  	bn_domain(ib+(i-1+n-1)*(m1-1))=bn(ib,i-1+n)
+      bn_domain(ib+(i-1+n-1)*(m1-1))=bn(ib,node_distribution(i-1+n))
             enddo
             do ic=1,m2
-	  	cn_domain(ic+(i-1+n-1)*m2)=cn(ic,n+i-1)
+	  cn_domain(ic+(i-1+n-1)*m2)=cn(ic,node_distribution(n+i-1))
             enddo
             do ip=1,m3
-	  	pn_domain(ip+(i-1+n-1)*m3)=pn(ip,n+i-1)  
+	  pn_domain(ip+(i-1+n-1)*m3)=pn(ip,node_distribution(n+i-1))  
             enddo
           enddo
           enddo
@@ -1598,7 +1625,7 @@ c root obtains the full dataset
 
 
 c        write(*,*)' MPI Scatter:', MPI_COMM_WORLD
-	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+c	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 c         write(*,*) 'barrier ok'
 c	if (irank.eq.root) write(*,*)bn_domain
         sendcount = i_subdomain_length*(m1-1)
@@ -1639,8 +1666,8 @@ c	write(*,*)"p_bic",n, p_bIC
 c	write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
 
-      iNode=  n
-      p_NodeHandle=  n
+      iNode=  n-1
+      p_NodeHandle=  n-1
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -1657,7 +1684,7 @@ c      time_gemsstart=RTC()
 	   write(*,*)"GEMS problem ", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
 	  write(*,*)" Please look into ipmlog.txt"
-            pause
+c            pause
 c	   stop
 	endif
 
@@ -1671,7 +1698,9 @@ c	endif
 c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
-	
+
+	gems_iterations_subdomain(n)=p_IterDone    ! conversion from integer to double
+
 c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
 c     &              p_NodeStatusCH,p_IterDone
 
@@ -1726,19 +1755,57 @@ c now do MPI_GATHER
 
 	  do n=1,nxmax,npes
 	  do i=1,npes
-	    pHarr(n+i-1)=ph_domain(n+i-1)            
+	    pHarr(node_distribution(n+i-1))=ph_domain(n+i-1)            
             do ib=1,m1-1
-	  	bn(ib,n+i-1)=bn_domain(ib+(n-1+i-1)*(m1-1))
+	  bn(ib,node_distribution(n+i-1))=bn_domain(ib+(n-1+i-1)*(m1-1))
             enddo
             do ic=1,m2
-	  	cn(ic,n+i-1)=cn_domain(ic+(n-1+i-1)*m2)
+	  cn(ic,node_distribution(n+i-1))=cn_domain(ic+(n-1+i-1)*m2)
             enddo
             do ip=1,m3
-	  	pn(ip,n+i-1)=pn_domain(ip+(n-1+i-1)*m3)  
+	  pn(ip,node_distribution(n+i-1))=pn_domain(ip+(n-1+i-1)*m3)  
             enddo
+          enddo
+          enddo
+c	call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+c         write(*,*) 'barrier ok'
+
+	    if (irank.eq.root) write(*,*) "i_reorder =",i_reorder
+
+	if (i_reorder.le.0) then    ! we reorder only every 10th step
+        sendcount = i_subdomain_length
+        recvcount = i_subdomain_length
+      call MPI_AllGather(gems_iterations_subdomain, sendcount, 
+     &     MPI_DOUBLE_PRECISION,
+     &	    gems_iterations_domain, recvcount, MPI_DOUBLE_PRECISION,
+     &	    MPI_COMM_WORLD,ierr)
+
+	if (irank.eq.root) then
+	  do n=1,nxmax,npes
+	  do i=1,npes
+                gems_iterations(node_distribution(n+i-1))=
+     &          gems_iterations_domain(n+1-1)
           enddo
           enddo
 
+c now calculate new node_distribution
+c	pause
+	write(*,*)"gems_iterations ", gems_iterations
+	write(*,*)"node_distribution before", node_distribution
+
+	call sortrx(nxmax,gems_iterations, node_distribution)
+
+	write(*,*)"node_distribution after", node_distribution
+	endif !endif for  root
+
+            i_reorder=10   ! reset i_reorder
+c distribute mpi data
+	call MPI_BCAST(node_distribution,nxmax, MPI_INTEGER,root,
+     &                 MPI_COMM_world,ierr) 
+
+	else
+	    i_reorder=i_reorder-1
+        endif ! endif for i_reorder process  
 #else       
 c	pause "node loop start"
 c
@@ -1756,8 +1823,8 @@ c      goto 1556  ! only node 2 with old gems  values
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
-	iNode=  n
-      p_NodeHandle=  n
+	iNode=  n-1
+      p_NodeHandle=  n-1
       p_NodeStatusCH= gems_PIA    ! 1 : with simplex PIA; 5 smart PIA
       p_NodeStatusFMT = 1
 c<<<<<<  system time initialisation for CPU consumption purposes
@@ -1778,7 +1845,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 	   write(*,*)"GEMS problem ", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
 	  write(*,*)" Please look into ipmlog.txt"
-           pause
+c           pause
 	   stop
 	endif
 	pHarr(n)=p_pH
