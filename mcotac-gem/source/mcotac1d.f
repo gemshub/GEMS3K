@@ -1110,7 +1110,7 @@ c allocate memory for arrays (gems_iterations,node_distribution)
 	
         write(*,*) node_distribution
 c	pause
-	i_reorder=2   ! set counter for load balancing --counting is done backward ;-)
+	i_reorder=100   ! set counter for load balancing --counting is done backward ;-)
 c  make sure grid size and no of processors fit together
         if (mod((nxmax),npes).ne.0) then
          write(*,*) 'parallelization error: check numer of processors'
@@ -1698,7 +1698,8 @@ c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
 
-	gems_iterations_subdomain(n)=p_IterDone    ! conversion from integer to double
+	gems_iterations_subdomain(n)=
+     &   gems_iterations_subdomain(n)+p_IterDone    ! conversion from integer to double
 
 c	write(*,*)"itimestep_tp,n: ",itimestep_tp,n,p_NodeHandle,
 c     &              p_NodeStatusCH,p_IterDone
@@ -1793,11 +1794,12 @@ c	pause
 	write(*,*)"node_distribution before", node_distribution
 
 	call sortrx(nxmax,gems_iterations, node_distribution)
-
 	write(*,*)"node_distribution after", node_distribution
+
 	endif !endif for  root
 
-            i_reorder=10   ! reset i_reorder
+            i_reorder=100   ! reset i_reorder
+           gems_iterations_subdomain=0
 c distribute mpi data
 	call MPI_BCAST(node_distribution,nxmax, MPI_INTEGER,root,
      &                 MPI_COMM_world,ierr) 
