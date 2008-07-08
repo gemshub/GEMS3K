@@ -47,7 +47,7 @@ c*
 	subroutine inparf(itest,ncyc,nxmax,isteu,inma,
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA
-     *, Tc_dummy, P_dummy)
+     *, Tc_dummy, P_dummy,irestart,it_out)
 	
 	
       implicit double precision (a-h,o-z)
@@ -117,6 +117,10 @@ c*
       write(*,*)dum9,Tc_dummy
  	read(10,'(a8,1x,g12.4)')dum9,P_dummy
       write(*,*)dum9,P_dummy
+ 	read(10,'(a8,1x,i10)')dum9,irestart
+      write(*,*)dum9,irestart
+ 	read(10,'(a8,1x,i10)')dum9,it_out
+      write(*,*)dum9,it_out
 
 	close (10)
 c        /*  Zellgroessen in X- und Y-Richtung: dx[i] */

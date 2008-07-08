@@ -344,6 +344,8 @@ c set irank and root to zero , used also outside MPI in seriall version
        irank=0
 c 
 ckg44 init several variables in order to make sure they have the correct values
+        irestart=0
+	t_outint=1e+10
 	idum=0
 	pormin=1.e+10
         dmin=1.e+10
@@ -701,7 +703,7 @@ c   input for dynamic calculations
      *ipfile,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
      *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA
-     *,Tc_dummy,P_dummy)
+     *,Tc_dummy,P_dummy,irestart,it_out)
 
 	if (irank.eq.root) then 
       Write(*,*)itest,ncyc,nxmax,isteu,inma,ipfile
@@ -1253,46 +1255,17 @@ c      write(*,*)'(Y/N)'
 c        pause      
 Ckg44 removed this for batch jobs and testing
 c       read(*,*)ssw
-        ssw='n'
-      if(ssw.eq.'y'.or.ssw.eq.'Y')then
-        write(*,*)'give: filename by number of tprint(k1)'
-        read(*,*)k1
+c        ssw='n'
+      if(irestart.eq.1)then               ! 1 read backup file - 0 start from t=0
+      if (irank.eq.root)then
+       call readdump(bn,cn,pn,por,dm,
+     * time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
         kk1=k1+96
-        time=tprint(k1)
-        write(*,*)'kk1',kk1,'time',time
+c        time=tprint(k1)
+c        write(*,*)'kk1',kk1,'time',time
         ch=char(kk1)
-
-c****   read in 2D concentration arrays
-c****   solids and porosity 
-        write(datei2,'(a5,a1,a4)')'c_2da',ch,'.dat' 
-        open(16,file=datei2,form='formatted',status='unknown')
-        do 1416 j1=1,m3
-        read(16,1476)(pn(j1,nix),nix=1,nxmax)
- 1415   continue
-        read(16,*)
- 1416   continue
- 1476   format(21(1x,e10.4))
-        read(16,1476)(por(nix),nix=1,nxmax)
- 1417   continue
-        read(16,'(7x,e20.10)')time
-        close(16)
-        write(*,*)'data read from',datei2
-c****   solutes (basis species and complexes)
-        write(datei2,'(a5,a1,a4)')'c_2ds',ch,'.dat' 
-        open(16,file=datei2,form='formatted',status='unknown')
-        do 1422 j1=1,m1
-        read(16,1476)(bn(j1,nix),nix=1,nxmax)
- 1423   continue
-        read(16,*)dumb(m1)
- 1422   continue
-        do 1420 j1=1,m2
-        read(16,1476)(cn(j1,nix),nix=1,nxmax)
- 1421   continue
-        read(16,*)dumc(m2)
- 1420   continue
-        read(16,'(7x,e20.10)')time
-        close(16)
-        write(*,*)'data read from',datei2
+        if(kk1.ge.kmax)stop 'end of difned calculation time reached'
+	endif
       else
 c
 c  *********************************************************************
@@ -2051,7 +2024,14 @@ c kg44  here the two very long if are finished...
 c  *********************************************************
 c  write out the species concentrations
 c  *********************************************************
-
+c**** output fuer t als backup
+      if (irank.eq.root)then
+         if (mod(itimestep_dt,it_outt).eq.0) then
+           call writedump(bn,cn,pn,por,dm,
+     *     time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+         endif                          ! write out backso
+      endif 
+c**** end output fuer t als backup
       if (k1.gt.kmax) go to 500
 c      write(*,*)(pn(1,nx),nx=1,nxmax)
 c	pause "next time step"
@@ -2154,7 +2134,88 @@ c      pause
       end
 
 
+c  *********************************************************
+c  subroutine writes out the species concentrations dm por as backup
+c  to file backup.dat
+c  *********************************************************
 
+       subroutine writedump(bn,cn,pn,por,dm,
+     *     time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+      include 'gwheader.inc'
+        character *10 dumb,dumc,dump
 
+        double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
+     *, pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
+     * ,time_sum,tprint(25)
+        integer itimestep_tp,k1,m1,m2,m3,nxmax
+        common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 
+c****  write out concentration arrays
+c****   solutes (basis species and complexes)
+        open(17,file="backup.dat",form='formatted',status='unknown')
+        do 1722 j1=1,m1
+        write(17,1776)(bn(j1,nix),nix=1,nxmax)
+        write(17,*)dumb(j1),'above'
+ 1722   continue
+        do 1720 j1=1,m2
+        write(17,1776)(cn(j1,nix),nix=1,nxmax)
+        write(17,*)dumc(j1),'above'
+ 1720   continue
+c****  solids and porosity
+        do 1716 j1=1,m3
+        write(17,1776)(pn(j1,nix),nix=1,nxmax)
+        write(17,*)dump(j1),'above  '
+ 1716   continue
+ 1776   format(85(1x,e10.4))
+        write(17,1776)(por(nix),nix=1,nxmax+2)
+        write(17,*)'porosity above  '
+        write(17,1775)(dm(nix),nix=1,nxmax+2)
+ 1775   format(85(1x,e10.4))
+        write(17,*)'diffusion coefficient above  '
+        write(17,*)time_sum,itimestep_tp,tprint(k1),k1
+        close(17)
+
+        end
+
+c  *********************************************************
+c  subroutine reads  the species concentrations dm por from backup
+c  file backup.dat
+c  *********************************************************
+
+       subroutine readdump(bn,cn,pn,por,dm,
+     *         time_sum,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+      include 'gwheader.inc'
+        character *10 dumb,dumc,dump
+        double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
+     *,pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
+     * ,time_sum,tprint(25)
+        integer itimestep_tp,k1,m1,m2,m3,nxmax
+        common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
+
+c****  write out concentration arrays
+c****   solutes (basis species and complexes)
+        open(17,file="backup.dat",form='formatted',status='unknown')
+        do 1722 j1=1,m1
+        read(17,1776)(bn(j1,nix),nix=1,nxmax)
+        read(17,*)
+ 1722   continue
+        do 1720 j1=1,m2
+        read(17,1776)(cn(j1,nix),nix=1,nxmax)
+        read(17,*)
+ 1720   continue
+c****  solids and porosity
+        do 1716 j1=1,m3
+        read(17,1776)(pn(j1,nix),nix=1,nxmax)
+        read(17,*)
+ 1716   continue
+ 1776   format(85(1x,e10.4))
+        read(17,1776)(por(nix),nix=1,nxmax+2)
+        read(17,*)
+        read(17,1775)(dm(nix),nix=1,nxmax+2)
+ 1775   format(85(1x,e10.4))
+        read(17,*)
+        read(17,*)time_sum,itimestep_tp,tprint(k1),k1
+        close(17)
+
+        end
 
