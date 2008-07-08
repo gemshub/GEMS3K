@@ -1283,14 +1283,14 @@ Ckg44 removed this for batch jobs and testing
 c       read(*,*)ssw
 c        ssw='n'
       if(irestart.eq.1)then               ! 1 read backup file - 0 start from t=0
-      if (irank.eq.root)then
+c      if (irank.eq.root)then
        call readdump(bn,cn,pn,por,dm,
      * time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
         kk1=k1+96
         write(*,*)'kk1',k1,'time',time, "dtmax",dtmax
         ch=char(kk1)
         if(k1.ge.kmax)stop 'end of defined calculation time reached'
-	endif
+c	endif
       else
 c
 c  *********************************************************************
@@ -1790,12 +1790,12 @@ c         write(*,*) 'barrier ok'
 
 c now calculate new node_distribution
 c	pause
-	write(*,*)"gems_iterations ", gems_iterations
-	write(*,*)"node_distribution before", node_distribution
+c	write(*,*)"gems_iterations ", gems_iterations
+c	write(*,*)"node_distribution before", node_distribution
 
 	call sortrx(nxmax,gems_iterations, node_distribution)
 	write(*,*)"node_distribution after", node_distribution
-
+	write(*,*)"gems_iterations ", gems_iterations
 	endif !endif for  root
 
             i_reorder=100   ! reset i_reorder
