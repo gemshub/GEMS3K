@@ -140,6 +140,7 @@ mcotac-gem/source/inistat2.f -text
 mcotac-gem/source/inparf.f -text
 mcotac-gem/source/kinetics.inc -text
 mcotac-gem/source/mcotac1d.f -text
+mcotac-gem/source/quicksort.f -text
 mcotac-gem/source/setpar_.c -text
 mcotac-gem/source/walk2_.c -text
 mcotac-gem/source/wegdat1d_.c -text

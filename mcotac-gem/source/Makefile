@@ -1,27 +1,28 @@
-CC = pgcc
-CXX = pgCC
-FORT = pgf90
-CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
+CC = gcc-4.3
+CXX = g++-4.3
+FORT = gfortran-4.3
+CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -ansi -pedantic -D__unix -D__GNU 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
-FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU -D__PGI -Mnosecond_underscore -Mpreprocess
-LINK = pgf90
-LFLAGS = 
-LIBS = -lrt -lstd -lC -lpgc 
+CCFLAGS =   -c -g -O2 -ansi -DIPMGEMPLUGIN -D__unix -D__GNU
+CCFLAGS1 =   -c -g -O2 -ansi -DIPMGEMPLUGIN -D__unix -D__GNU
+FFLAGS = -c -g -O2 -fno-underscoring -fbounds-check -DIPMGEMPLUGIN -D__unix -D__GNU
+LINK = gfortran-4.3
+LFLAGS = -g -O2 -fno-underscoring -fbounds-check -DIPMGEMPLUGIN -D__unix -D__GNU -lstdc++ -lgfortran -lefence
 GEMINCLUDE = ../../GEMIPM2K
-GEMLIB     = -L../../GEMIPM2K -lgemipm2k-pgi
-EXEC = mcotacgem-pgi
+GEMLIB     = ../../GEMIPM2K
+EXEC = mcotacgem-gnu
 
 ${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
-       f_gem_node.o
+       f_gem_node.o quicksort.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
-       erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o  ${GEMLIB}  ${LIBS}
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o quicksort.o\
+                 erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o -L${GEMLIB} -lgemipm2k
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
 	cp mcotac1d.f mcotac1d.fpp
 	$(FORT)  $(FFLAGS) mcotac1d.fpp
+quicksort.o: quicksort.f
+	$(FORT)  $(FFLAGS) quicksort.f
 datio.o: datio.f gwheader.inc kinetics.inc
 	cp datio.f datio.fpp
 	$(FORT)  $(FFLAGS) datio.fpp
@@ -43,18 +44,17 @@ wegdat1d_.o: wegdat1d_.c gwheader.h
 hydro1d_.o: hydro1d_.c  gwheader.h
 	$(CC)  $(CFLAGS)  hydro1d_.c
 
-
-f_gem_node.o: f_gem_node.cpp $(GEMINCLUDE)/node.h \
-		$(GEMINCLUDE)/m_param.h \
-		$(GEMINCLUDE)/datach.h \
-		$(GEMINCLUDE)/databr.h \
-		$(GEMINCLUDE)/gdatastream.h \
-		$(GEMINCLUDE)/ms_multi.h \
-		$(GEMINCLUDE)/verror.h \
-		$(GEMINCLUDE)/gstring.h \
-		$(GEMINCLUDE)/array.h \
-		$(GEMINCLUDE)/m_const.h \
-		$(GEMINCLUDE)/v_user.h
+f_gem_node.o: f_gem_node.cpp ${GEMINCLUDE}/node.h \
+		${GEMINCLUDE}/m_param.h \
+		${GEMINCLUDE}/datach.h \
+		${GEMINCLUDE}/databr.h \
+		${GEMINCLUDE}/gdatastream.h \
+		${GEMINCLUDE}/ms_multi.h \
+		${GEMINCLUDE}/verror.h \
+		${GEMINCLUDE}/gstring.h \
+		${GEMINCLUDE}/array.h \
+		${GEMINCLUDE}/m_const.h \
+		${GEMINCLUDE}/v_user.h
 	$(CXX)  $(CCFLAGS1) -I${GEMINCLUDE}  f_gem_node.cpp
 
 #gwheader.h: gwheader.h
@@ -63,4 +63,4 @@ f_gem_node.o: f_gem_node.cpp $(GEMINCLUDE)/node.h \
 #kinetics.inc: kinetics.inc
 
 clean: 
-	rm -f *.o *.ti
+	rm -f *.o *.ti *.fpp
