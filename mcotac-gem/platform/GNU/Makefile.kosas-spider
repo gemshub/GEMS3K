@@ -1,26 +1,28 @@
 CC = gcc-4.3
 CXX = g++-4.3
 FORT = gfortran-4.3
-CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -pedantic -fno-nonansi-builtins -D__unix 
+CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -ansi -pedantic -D__unix -D__GNU 
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU
+CCFLAGS =   -c -g -O2 -ansi -DIPMGEMPLUGIN -D__unix -D__GNU
+CCFLAGS1 =   -c -g -O2 -ansi -DIPMGEMPLUGIN -D__unix -D__GNU
+FFLAGS = -c -g -O2 -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU
 LINK = gfortran-4.3
-LFLAGS = -lstdc++ -lgfortran
+LFLAGS = -g -O2 -fno-underscoring -DIPMGEMPLUGIN -D__unix -D__GNU -lstdc++ -lgfortran -lefence
 GEMINCLUDE = ../../GEMIPM2K
 GEMLIB     = ../../GEMIPM2K
 EXEC = mcotacgem-gnu
 
 ${EXEC}: mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o \
-       f_gem_node.o
+       f_gem_node.o quicksort.o
        
-	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o \
+	${LINK} -o ${EXEC}  ${LFLAGS} mcotac1d.o datio.o quicksort.o\
                  erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o f_gem_node.o -L${GEMLIB} -lgemipm2k
 
 mcotac1d.o: mcotac1d.f gwheader.inc kinetics.inc
 	cp mcotac1d.f mcotac1d.fpp
 	$(FORT)  $(FFLAGS) mcotac1d.fpp
+quicksort.o: quicksort.f
+	$(FORT)  $(FFLAGS) quicksort.f
 datio.o: datio.f gwheader.inc kinetics.inc
 	cp datio.f datio.fpp
 	$(FORT)  $(FFLAGS) datio.fpp
