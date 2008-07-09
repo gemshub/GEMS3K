@@ -1792,10 +1792,12 @@ c now calculate new node_distribution
 c	pause
 c	write(*,*)"gems_iterations ", gems_iterations
 c	write(*,*)"node_distribution before", node_distribution
-
-	call sortrx(nxmax,gems_iterations, node_distribution)
-	write(*,*)"node_distribution after", node_distribution
+	write(*,*)"node_distribution before", node_distribution
 	write(*,*)"gems_iterations ", gems_iterations
+	call sortrx(nxmax,1.0/gems_iterations, node_distribution)   ! we would like to get the result in ascending order, therefore use 1.0/iteration
+	write(*,*)"node_distribution after"
+	write(*,*)"gems_iterations ", 
+     &        (gems_iterations(node_distribution(i)),i=1,nxmax)
 	endif !endif for  root
 
             i_reorder=100   ! reset i_reorder
@@ -1847,7 +1849,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 	  write(*,*) "P_IterDone: ",p_IterDone
 	  write(*,*)" Please look into ipmlog.txt"
 c           pause
-	   stop
+c	   stop
 	endif
 	pHarr(n)=p_pH
 
@@ -2032,9 +2034,11 @@ c        delt=deltn
 
 
 c kg44 ----------------this are two very long if ....
-       if(k1.gt.1) then
-        if (time.gt.(tprint(k1-1)+itprint*dtprstep)
-     *.or.time.eq.tprint(k1-1))then
+c I do not have any idea how to change the settings for output in the files
+c I just use every timestep 
+c       if(k1.gt.1) then
+c        if (time.gt.(tprint(k1-1)+itprint*dtprstep)
+c     *.or.time.eq.tprint(k1-1))then
 c      if(treal.gt.0.)then
            itprint=itprint+1
 
@@ -2086,8 +2090,8 @@ C pH, tot. K and tot Na in aqueous phase
      *               ,pHarr(iortx(5))
  2300    format(70(1x,e10.3))
 c kg44  here the two very long if are finished... 
-      endif
-      endif  
+c      endif
+c      endif  
 
 c  *********************************************************
 c  write out the species concentrations
@@ -2222,22 +2226,22 @@ c****  write out concentration arrays
 c****   solutes (basis species and complexes)
         open(17,file="backup.dat",form='formatted',status='unknown')
         do 1722 j1=1,m1
-        write(17,1776)(bn(j1,nix),nix=1,nxmax)
+        write(17,*)(bn(j1,nix),nix=1,nxmax)
         write(17,*)dumb(j1),'above'
  1722   continue
         do 1720 j1=1,m2
-        write(17,1776)(cn(j1,nix),nix=1,nxmax)
+        write(17,*)(cn(j1,nix),nix=1,nxmax)
         write(17,*)dumc(j1),'above'
  1720   continue
 c****  solids and porosity
         do 1716 j1=1,m3
-        write(17,1776)(pn(j1,nix),nix=1,nxmax)
+        write(17,*)(pn(j1,nix),nix=1,nxmax)
         write(17,*)dump(j1),'above  '
  1716   continue
  1776   format(85(1x,e10.4))
-        write(17,1776)(por(nix),nix=1,nxmax+2)
+        write(17,*)(por(nix),nix=1,nxmax+2)
         write(17,*)'porosity above  '
-        write(17,1775)(dm(nix),nix=1,nxmax+2)
+        write(17,*)(dm(nix),nix=1,nxmax+2)
  1775   format(85(1x,e10.4))
         write(17,*)'diffusion coefficient above  '
         write(17,*)time,itimestep_tp,tprint(k1),k1
@@ -2264,22 +2268,22 @@ c****  write out concentration arrays
 c****   solutes (basis species and complexes)
         open(17,file="backup.dat",form='formatted',status='unknown')
         do 1722 j1=1,m1
-        read(17,1776)(bn(j1,nix),nix=1,nxmax)
+        read(17,*)(bn(j1,nix),nix=1,nxmax)
         read(17,*)
  1722   continue
         do 1720 j1=1,m2
-        read(17,1776)(cn(j1,nix),nix=1,nxmax)
+        read(17,*)(cn(j1,nix),nix=1,nxmax)
         read(17,*)
  1720   continue
 c****  solids and porosity
         do 1716 j1=1,m3
-        read(17,1776)(pn(j1,nix),nix=1,nxmax)
+        read(17,*)(pn(j1,nix),nix=1,nxmax)
         read(17,*)
  1716   continue
  1776   format(85(1x,e10.4))
-        read(17,1776)(por(nix),nix=1,nxmax+2)
+        read(17,*)(por(nix),nix=1,nxmax+2)
         read(17,*)
-        read(17,1775)(dm(nix),nix=1,nxmax+2)
+        read(17,*)(dm(nix),nix=1,nxmax+2)
  1775   format(85(1x,e10.4))
         read(17,*)
         read(17,*)time,itimestep_tp,tprint(k1),k1
