@@ -178,11 +178,11 @@ pmp->Wx[j] = 0.0;
                     break;
                case DC_AQ_ELECTRON: case DC_AQ_PROTON:  case DC_AQ_SPECIES:
                     pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] /* -pmp->GEX[j] */
-                                        + Dsur + lnFmol);
+                                      /* + Dsur */ + lnFmol);
                     break;
                case DC_AQ_SOLVENT: case DC_AQ_SOLVCOM:
                     pmp->Y_la[j] = ln_to_lg* (Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                        + Dsur - 1. + 1. / ( 1.+Dsur ) );
+                                      ); //  + Dsur - 1. + 1. / ( 1.+Dsur ) );
                     break;
                case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   /* gases */
                case DC_GAS_H2: case DC_GAS_N2:
@@ -219,7 +219,7 @@ pmp->Wx[j] = 0.0;
         // calculation of the mole fraction
         pmp->Wx[j] = X[j]/XF[k];
         if( pmp->Wx[j] > pmp->lowPosNum )
-            pmp->VL[j] = (float)log( pmp->Wx[j] );
+            pmp->VL[j] = (float)log( pmp->Wx[j] );     // this is used nowhere except in some scripts. Remove? 
         else pmp->VL[j] = (float)log( pmp->lowPosNum );   // debugging 29.11.05 KD
         pmp->Y_la[j] = 0.0;
         switch( pmp->DCC[j] ) // choice of expressions
@@ -232,7 +232,7 @@ pmp->Wx[j] = 0.0;
             else pmp->Y_m[j] = 0.0;
             pmp->Y_w[j] = // mass % of the system
                 1e2 * X[j] * pmp->MM[j] / pmp->MBX;
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ ); 
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
             break;
         case DC_AQ_ELECTRON:
@@ -240,8 +240,8 @@ pmp->Wx[j] = 0.0;
             pmp->Y_la[j] = 0.0 - pmp->pe;
             pmp->Y_w[j] = 0.0;
             break;
-        case DC_AQ_PROTON:
-            pmp->pH = -ln_to_lg*(Muj-pmp->G0[j] /* -pmp->GEX[j]*/ + Dsur + lnFmol);
+        case DC_AQ_PROTON:  // in molal scale! 
+            pmp->pH = -ln_to_lg*(Muj-pmp->G0[j] /* -pmp->GEX[j] + Dsur */ + lnFmol );
         case DC_AQ_SPECIES:
             SPmol = X[j]*Factor;  // molality
             pmp->IC +=  // increment to effective molal ionic strength
@@ -250,9 +250,9 @@ pmp->Wx[j] = 0.0;
           pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 04.02.03 KD
             pmp->Y_m[j] = SPmol;
             pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] /* -pmp->GEX[j] */
-                            + Dsur + lnFmol); //    Variant: Without Dsur?
+                           /* + Dsur */ + lnFmol); //    Yes - Without Dsur!
             pmp->Y_w[j] = 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[k];
-//  Optimized for performance - dualth calculation inline
+//  Optimized for performance - calculation inline
             for( i=arrL[j]; i<arrL[j+1]; i++ )
             {  ii = arrAN[i];
                if( ii>= pmp->NR )
@@ -267,7 +267,7 @@ pmp->Wx[j] = 0.0;
             pmp->Y_w[j] = 1e3*X[j]*pmp->MM[j]/pmp->FWGT[k];
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
             pmp->Y_la[j] = ln_to_lg* (Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                        + Dsur - 1. + 1. / ( 1.+Dsur ) );
+                                       /* + Dsur - 1. + 1. / ( 1.+Dsur ) */ );
             break;
         case DC_GAS_COMP:
         case DC_GAS_H2O:
@@ -1258,6 +1258,103 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
     	   status = 101;   // the SACT has changed too much; threshold needs adjustment!  
     }  // j
    return status;
+}
+
+//   New function for converting general (rational) mol-fr lnGam[j] value into a 
+//      practical (phase-scale-specific) Gamma[j] if DirFlag = 0 
+//      or the other way round if DirFlag = 1
+//  Returns the respectively corrected practical or ln(rational) activity coefficient 
+//  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
+//    amount is zero (X[j] == 0)
+//   
+double 
+TMulti::PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag )
+{
+    double NonLogTerm = 0., NonLogTermW = 0.; 
+    
+	if( DirFlag == 0 )
+	{	 // Converting lnGam[j] into Gamma[j]
+		if( !pmp->X[j] )
+			return 1.;		
+		double Gamma = 1.;
+		double lnGamS = pmp->lnGam[j];
+
+	    switch( pmp->DCC[j] )
+	    { // Aqueous electrolyte
+	      case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES:
+	        if( pmp->XF[k] && pmp->XFA[k] )
+	        	NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];
+// NonLogTerm =0.;
+	        lnGamS += NonLogTerm;    // Correction by asymmetry term 	    	
+	        break; 
+	    	// calculate molar mass of solvent
+	    case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
+	        if( pmp->XF[k] && pmp->XFA[k] )
+	        	NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
+	    	lnGamS += NonLogTermW; 
+	        break;
+	    case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:
+	    case DC_GAS_H2: case DC_GAS_N2:
+	    	break; 
+	    case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: 
+            break;
+	    	// non-electrolyte condensed mixtures
+	    case DC_SCP_CONDEN: case DC_SUR_MINAL: 
+	        break; 	
+	    case DC_SUR_CARRIER: case DC_PEL_CARRIER:
+	        break;
+	        // Sorption phases
+	    case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
+	    case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
+	    case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
+	    case DC_IEWC_B:
+            // To be completed
+	    	break;
+	    default: 
+	        break; 
+	    }
+        Gamma = exp( lnGamS ); 
+	    return Gamma;
+	}
+	else { // Converting Gamma[j] into lnGam[j]
+		if( !pmp->X[j] )
+			return 0.;	
+		double Gamma = pmp->Gamma[j]; 
+		double lnGam = log( Gamma ); 
+		
+		switch( pmp->DCC[j] )
+        { // Aqueous electrolyte
+		   case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES:
+		        if( pmp->XF[k] && pmp->XFA[k] )
+		        	NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];
+// NonLogTerm =0.;
+		        lnGam -= NonLogTerm;  // Correction by asymmetry term 
+		    	break; 
+		   case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
+		        if( pmp->XF[k] && pmp->XFA[k] )
+		        	NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
+		    	lnGam -= NonLogTermW; 
+		        break;
+   	       case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
+			   	break; 
+		   case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: 
+		        break;
+   	       case DC_SCP_CONDEN: case DC_SUR_MINAL: 
+			    break; 	
+		   case DC_SUR_CARRIER: case DC_PEL_CARRIER:
+			    break;
+			        // Sorption phases
+	       case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
+		   case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
+		   case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
+		   case DC_IEWC_B:
+		     // To be completed
+		    	break;
+		    default: 
+		        break; 
+		}	
+	    return lnGam;
+	}
 }
 
 //--------------------- End of ipm_chemical2.cpp ---------------------------

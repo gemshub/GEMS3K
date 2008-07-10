@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1093 2008-06-21 10:52:41Z wagner $
+// $Id: s_fgl.cpp 1100 2008-07-09 19:29:25Z wagner $
 //
 // Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
 //
@@ -268,6 +268,7 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
 int TCGFcalc::CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
      double ro, double T, double &H, double &S )
  {
+   double * xtmp=new double [NN];
 
     EOSPARAM paar(X,param,NN);
     EOSPARAM paar1(X,param1,NN);
@@ -277,19 +278,24 @@ int TCGFcalc::CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
 
     norm(paar.XX0,paar.NCmp());
     norm(paar1.XX0,paar1.NCmp());
-     
-    //   paar.ParamMix(xtmp);
-    //   paar1.ParamMix(xtmp);
+    
+    copy(paar.XX0,xtmp,paar.NCmp());
+
+    
+    paar.ParamMix(xtmp);
+    paar1.ParamMix(xtmp);
       
     Z = ZTOTALMIX(T,ro,paar);
 
     F0 = FTOTALMIX(T,ro,paar);
     // recalculate param1 for T+T*delta
     F1 = FTOTALMIX(T+T*delta,ro,paar1);
-      
+   // F1 = FTOTALMIX(T+T*delta,ro,paar);  
     S = - ( (F1-F0)/(delta*T)*T + F0 ) * R;	// corrected, 20.06.2008 (TW)
     H = (F0*T*R + T*S) + Z*R*T;
-            
+    
+    
+    delete [] xtmp;
     return 0;
 
  }

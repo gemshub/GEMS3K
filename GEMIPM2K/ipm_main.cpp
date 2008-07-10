@@ -725,7 +725,7 @@ CONVERGED:
   if(pmp->PZ && pmp->W1)
       Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );
 
-  if( pmp->PD==1 || pmp->PD == 2  /*|| pmp->PD == 3*/  )
+  if( pmp->PD == 1 || pmp->PD == 2  /*|| pmp->PD == 3*/  )
         GammaCalc( LINK_UX_MODE );
 //   else
   ConCalc( pmp->X, pmp->XF, pmp->XFA );

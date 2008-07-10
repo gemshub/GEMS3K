@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1087 2008-06-19 15:23:53Z gems $
+// $Id: ms_multi.h 1101 2008-07-10 15:43:13Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -196,9 +196,9 @@ typedef struct
     *MM,      // DC molar masses, g/mol [L]
     *Pparc,   // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
     *Y_m,     // Molalities of aqueous species and sorbates [0:Ls-1]
-    *Y_la,    // log activity of DC in multi-component phases[0:Ls-1]
+    *Y_la,    // log activity of DC in multi-component phases (mju-mji0) [0:Ls-1]
     *Y_w,     // Mass concentrations of DC in multi-component phases,%(ppm)[Ls]
-    *Gamma,   // DC activity coefficients [0:L-1]
+    *Gamma,   // DC activity coefficients in molal or other phase-specific scale [0:L-1]
     *lnGmf,   // ln of initial DC activity coefficients [0:L-1]
     *lnGmM,   // ln of DC pure gas fugacity (or metastability) coeffs or DDF correction [0:L-1]
     *EZ,      // Formula charge of DC in multi-component phases [0:Ls-1]
@@ -207,7 +207,7 @@ typedef struct
 //
     *G,    // Normalized DC energy function c(j), mole/mole [0:L-1]
     *G0,   // Input normalized g0_j(T,P) for DC at unified standard scale[L]
-    *lnGam, // ln of DC activity coefficients [0:L-1]
+    *lnGam, // ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]
     *lnGmo; // Copy of lnGam from previous IPM iteration (reserved)
   double  (*lnSAC)[4]; // former lnSAT ln surface activity coeff and Coulomb's term  [Lads][4]
   double  *B,  // Input bulk chem. compos. of the system - b vector, moles of IC[N]
@@ -393,7 +393,7 @@ class TMulti
 //  Surface activity coefficient terms
     int SurfaceActivityCoeff( int jb, int je, int jpb, int jdb, int k );
 //    void SurfaceActivityTerm( int jb, int je, int k );  // Obsolete / deleted
-
+    double PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag = 0 ); // Added 26.06.08
 // ipm_chemical3.cpp
     void IS_EtaCalc();
     void pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb );
@@ -407,7 +407,7 @@ class TMulti
     void DebyeHueckel3Karp( int jb, int je, int jpb, int jdb, int k );
     void DebyeHueckel2Kjel( int jb, int je, int jpb, int jdb, int k );
     void DebyeHueckel1LL( int jb, int je, int k );
-    void Davies03temp( int jb, int je, int k );
+    void Davies03temp( int jb, int je, int jpb, int k );
     void SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k, int ipb );
 // fluid mixtures
     void ChurakovFluid( int jb, int je, int jpb, int jdb, int k );

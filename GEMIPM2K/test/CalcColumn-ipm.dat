@@ -1,5 +1,5 @@
-# GEMIPM2K v. 2.2.0
-# Prototype 28.11.2007
+# GEMIPM2K v. 2.2.3
+# Prototype 31.03.2008
 # Comments can be marked with # $ ; as the first character in the line
 
 # Template for the ipm-dat text input file for the internal MULTI data
@@ -38,22 +38,27 @@
 ## (3) Controls of the numerical behavior of the GEM IPM algorithm
 #      - Need to be changed only in rare special cases
 # DB - Minimum amount of independent component in bulk composition (except charge Zz), moles
-<pa_DB>       1e-017
+<pa_DB>        1e-17
 
 # DHB: Maximum allowed mass balance residual (moles) for major independent components
-<pa_DHB>      1e-008
+<pa_DHB>       1e-08
 
 # EPS: Precision criterion of the simplex() procedure for automatic initial approximation
-<pa_EPS>      1e-007
+<pa_EPS>       1e-07
 
 # DK: IPM convergence threshold for the Dikin criterion (1e-6 < DK < 1e-4)
 <pa_DK>       0.0001
 
-# DF: Threshold for the application of the Karpov phase stability criterion f_alpha
+# DB: Cutoff (threshold) for the amount of phase for phase elimination 
+<pa_DS>        1e-12
+
+# DF: Threshold for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted
 <pa_DF>         0.01
+# DFM: Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated
+<pa_DFM>         0.6
 
 # DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>          15
+<pa_DP>           15
 
 # IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
 <pa_IIM>         500
@@ -63,10 +68,10 @@
 
 # PRD: Positive: control of calling IPM_gamma() on iterations of GEM EFD and IPM (default 3)
 #      Negative: the number of additional EFD-IPM loops to improve the GEM final solution
-<pa_PRD>          3
+<pa_PRD>           3
 
 # AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
-<pa_AG>         0.7
+<pa_AG>          0.7
 <pa_DGC>        0.07
 
 # PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)
@@ -75,48 +80,45 @@
 <pa_GAR>           1
 <pa_GAH>        1000
 
-# DB: Cutoff (threshold) for the amount of phase in phase elimination 
-<pa_DS>       1e-010
-
 # _Min: Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; 
 # Ph - non-electrolyte solution phases
-<pa_XwMin>    1e-009
-<pa_ScMin>    1e-007
-<pa_DcMin>    1e-020
-<pa_PhMin>    1e-010
+<pa_XwMin>     1e-09
+<pa_ScMin>     1e-07
+<pa_DcMin>     1e-20
+<pa_PhMin>     1e-10
 
 # ICmin: Minimal ionic strength, below which the aqueous activity coefficients are set to 1
-<pa_ICmin>    3e-005
+<pa_ICmin>     1e-05
 
 # PC: Mode of Selekt2() procedure operation
 <pa_PC>            1
-# DFM: Threshold of Karpov stability criterion for insertion of a phase in Selekt2() procedure
-<pa_DFM>        0.1
 # DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
 # DFYw - water solvent;
-<pa_DFYw>     1e-006
+<pa_DFYw>      1e-06
 # DFYaq - aqueous species;
-<pa_DFYaq>    1e-006
+<pa_DFYaq>     1e-06
 
 # DFYid - ideal solution components;
-<pa_DFYid>    1e-006
+<pa_DFYid>     1e-06
 # DFYr - major solution components;
-<pa_DFYr>     1e-006
+<pa_DFYr>      1e-06
 # DFYh - minor solution components;
-<pa_DFYh>     1e-006
+<pa_DFYh>      1e-06
 # DFYc - single-component phase; 
-<pa_DFYc>     1e-006
+<pa_DFYc>      1e-06
 # Insertion amount of single-component phase (Selekt2() algorithm only)
-<pa_DFYs>     1e-007
+<pa_DFYs>      1e-07
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
-<pa_DW>          15
+<pa_DW>           15
 # DT: Exponent for dual-thermodynamic restoring of low amounts of solutes (+2 to -5), relative to DHBM
-<pa_DT>           -2
+<pa_DT>           -3
 
 # GAS: IPM2 balance accuracy control factor DHBM[i]/b[i]
 <pa_GAS>       0.001
+# DG: Minimal step length in the initial approximation EFD() procedure, 1e-7 
+<pa_DG>        1e-06
 # DNS: Standard surface density (nm-2) for calculating activity of surface species
 <pa_DNS>       12.05
 # IEPS: Control parameter of SACT calculation in sorption/surface complexation models
@@ -127,8 +129,6 @@
 # DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
 <pa_DKIN>     0.0001
 
-<pa_DG>     1e-7
-
 ## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # sMod: Codes for mixing models of multicomponent phases
 <sMod>
@@ -137,8 +137,12 @@
 # LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase
 # Number of parameters per phase
 <LsMod>
+2 0 4 
 0 0 0 
-0 0 0 
+
+# PMc: Parameters of non-ideal mixing models for multicomponent phases 
+<PMc>
+0 0 0 0 0 0 0 1 
 
 # LsMdc: Number of parameters per component of the phase
 <LsMdc>
@@ -147,7 +151,7 @@
 ## (5) Some data arrays which are not provided in DATACH and DATABR files
 # B: Full total bulk composition of the initial system (vector b) - see DATACH file for dimension nIC
 <B>
-0.000330999988364056 0.000330999988364056 2.00000002337219e-007 110.683696417673 1.0000000116861e-007 55.3428612088012 0 
+0.000330999988364056 0.000330999988364056 2.00000002337219e-07 110.683696417673 1.0000000116861e-07 55.3428612088012 0 
 
 # Initial data for DCs - see DATACH file for dimensions nDC, nDCs
 # Pparc: Partial pressures (fugacities) of dependent components
@@ -196,5 +200,17 @@
 # YOF: Surface energy or metastability parameters for phases (J/g)
 <YOF>
 0 0 0 0 0 0 0 
+
+# mui: IC indices in RMULTS IC list
+<mui>
+0 1 2 3 4 5 6 
+
+# muk: Phase indices in RMULTS phase list
+<muk>
+0 1 2 4 5 6 8 
+
+# muj: DC indices in RMULTS DC list
+<muj>
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 25 26 27 29 
 
 # End of file
