@@ -51,7 +51,7 @@ int main( int argc, char* argv[] )
    // Creating TNode structure accessible trough the "node" pointer
    TNode* node  = new TNode();
 
-   cout << "Welcome to standalone GEMIPM2K v.2.2.3 solver of (geo)chemical equilibria! "
+   cout << "Welcome to standalone GEMIPM2K v.2.2.4 solver of (geo)chemical equilibria! "
         << endl;
 
    // Here we read the files needed as input for initializing GEMIPM2K

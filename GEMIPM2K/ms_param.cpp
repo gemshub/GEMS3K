@@ -47,7 +47,7 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-  "GEMS-PSI v2.2.3: Controls and defaults for numeric modules",
+  "GEMS-PSI v2.2.4: Controls and defaults for numeric modules",
   {
         1,  /* PC */  3,     /* PD */   3,   /* PRD */
         1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
