@@ -325,24 +325,26 @@
    if( !( (iRet == OK_GEM_AIA) || (iRet == OK_GEM_SIA) ) )
    {
 	printf("GEMS returned: %d for node %d \n",iRet,p_NodeHandle);
+        TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_failed1_calc.dat");    //
         idum=0;
    } 	   
    else { idum=1;}   // end calculation attempt
 
    if (idum ==0) { // try again with different normalization
-        iRet = TNode::na->GEM_run(0.3, uPrimalSol); // use the overload to normalize mass of the system to 1.0 kg 
+        iRet = TNode::na->GEM_run(0.3, uPrimalSol); // use the overload to normalize mass of the system to 0.3 kg 
           if( !( (iRet == OK_GEM_AIA) || (iRet == OK_GEM_SIA) ) ) {
    	     printf("GEMS returned: %d for node %d \n",iRet,p_NodeHandle);
+             TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_failed2_calc.dat");    //
              idum=0;
            }
 	   else { idum=1;} 
     }
 
    if (idum ==0) { // try again with different normalization
-        iRet = TNode::na->GEM_run(30.0, uPrimalSol); // use the overload to normalize mass of the system to 10.0 kg 
+        iRet = TNode::na->GEM_run(30.0, uPrimalSol); // use the overload to normalize mass of the system to 30.0 kg 
           if( !( (iRet == OK_GEM_AIA) || (iRet == OK_GEM_SIA) ) ) {
    	     printf("GEMS returned: %d for node %d ..giving up!\n",iRet,p_NodeHandle);
-              TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_failed_calc.dat");    // 
+              TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_failed3_calc.dat");    // 
              idum=0;
              return idum;
            }

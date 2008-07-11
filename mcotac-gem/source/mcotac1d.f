@@ -140,7 +140,8 @@ c and a second buffer
 #endif
 
       double precision xxyy, pormin, dmin
-
+c debug for failing GEMS iterations
+	double precision maxmola,maxmolb
 c time measurements
 	double precision time_gemsmpi, time_gemsmpi_start, time_gemsmpi_end 
 	INTEGER argc, iinn, i_gems
@@ -1647,17 +1648,20 @@ c	write(*,*)'irank',irank,'values',bn_subdomain
      &	    pn_subdomain, recvcount, MPI_DOUBLE_PRECISION,
      &      root, MPI_COMM_WORLD, ierr);
 c
-
+	maxmola=0.0 ! for debugging of GEMS 
 	do 1555 n=1,  i_subdomain_length                 !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1   ! last value is charge zzz and is mapped to gems 
 	p_xDc(i_bcp_gemx(ib))=bn_subdomain(ib+(n-1)*(m1-1))   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
+        maxmola=max(maxmola,p_xDc(i_bcp_gemx(ib)))
  1596 continue
 	do 1597 ic=1,m2
 	p_xDc(i_bcp_gemx(m1+ic))=cn_subdomain(ic+(n-1)*m2)
+        maxmola=max(maxmola,p_xDc(i_bcp_gemx(m1+ic)))
  1597 continue
 	do 1598 ip=1,m3
 	p_xDc(i_bcp_gemx(m1+m2+ip))= pn_subdomain(ip+(n-1)*m3)  !  gemsxDc(12)    ! pn(1,n)   solids not used for transport
+        maxmola=max(maxmola,p_xDc(i_bcp_gemx(m1+m2+ip)))
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
@@ -1707,16 +1711,25 @@ c     &              p_NodeStatusCH,p_IterDone
 c      time_gemsend=RTC()
       time_gemsend=secnds(0.)
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
-
+	maxmolb=0.0
 	do 1796 ib=1,m1-1
 	bn_subdomain(ib+(n-1)*(m1-1))=p_xDc(i_bcp_gemx(ib))
+	maxmolb=max(bn_subdomain(ib+(n-1)*(m1-1)),maxmolb)
  1796 continue
 	do 1797 ic=1,m2
 	cn_subdomain(ic+(n-1)*m2)=p_xDc(i_bcp_gemx(m1+ic))
+	maxmolb=max(cn_subdomain(ic+(n-1)*m2),maxmolb)
  1797 continue
 	do 1798 ip=1,m3
 	pn_subdomain(ip+(n-1)*m3)=p_xDc(i_bcp_gemx(m1+m2+ip))
+	maxmolb=max(pn_subdomain(ip+(n-1)*m3),maxmolb)
  1798 continue
+
+	if((maxmola.gt.100.0).or.(maxmola.gt.100.0).or.
+     &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
+	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
+	   STOP
+	endif
 
 	p_IterDone=0
 
@@ -1815,14 +1828,16 @@ c
 	do 1555 n=1,  nxmax                  !node loop for GEMS after Transport step
 c      goto 1556  ! only node 2 with old gems  values
 	do 1596 ib=1,m1-1
-
 	p_xDc(i_bcp_gemx(ib))=bn(ib,n)   ! 2)  index_gems(1,...,m1,m+1,m2,   m3) index_mcotac(m1+m2+m3)
+        maxmola=max(maxmola,p_xDc(i_bcp_gemx(ib)))
  1596 continue
 	do 1597 ic=1,m2
 	p_xDc(i_bcp_gemx(m1+ic))=cn(ic,n)
+        maxmola=max(maxmola,p_xDc(i_bcp_gemx(ic+m1)))
  1597 continue
 	do 1598 ip=1,m3
 	p_xDc(i_bcp_gemx(m1+m2+ip))= pn(ip,n)  !  gemsxDc(12)    ! pn(1,n)   solids not used for transport
+        maxmola=max(maxmola,p_xDc(i_bcp_gemx(ip+m1+m2)))
 c      if(n.eq.2.and.ip.eq.2)p_xDc(i_bcp_gemx(m1+m2+ip))= po(ip,n)/10.
  1598 continue
 
@@ -1861,15 +1876,25 @@ c  monitor gems iterations
       time_gemsend=secnds(0.)
       time_gemstotal=time_gemstotal+(time_gemsend-time_gemsstart)
 c
+	maxmolb=0.0
 	do 1796 ib=1,m1-1
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))
+	maxmolb=max(bn(ib,n),maxmolb)
  1796 continue
 	do 1797 ic=1,m2
 	cn(ic,n)=p_xDc(i_bcp_gemx(m1+ic))
+	maxmolb=max(cn(ic,n),maxmolb)
  1797 continue
 	do 1798 ip=1,m3
 	pn(ip,n)=p_xDc(i_bcp_gemx(m1+m2+ip))
+	maxmolb=max(pn(ip,n),maxmolb)
  1798 continue
+
+	if((maxmola.gt.100.0).or.(maxmola.gt.100.0).or.
+     &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
+	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
+	   STOP
+	endif
 
 
 	p_IterDone=0
