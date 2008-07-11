@@ -1,0 +1,18 @@
+Here makefiles and other platform-specific files should be collected
+
+In Linux, after svn checkout or update, execute dos2unix command 
+to convert data input files into Unix text format:
+
+$  dos2unix *.dat
+
+$  dos2unix *.INI
+
+$  dos2unix *.itm
+
+$  cd ./MCOTAC-GEM
+
+$  dos2unix *.dat 
+
+$  cd ..
+
+
