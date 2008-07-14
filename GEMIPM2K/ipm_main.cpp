@@ -96,6 +96,8 @@ STEP_POINT("After FIA");
     {
      case 0:  // OK
               break;
+     case 5:  // Initial Lagrange multiplier for metastability broken for DC
+     case 4:  // Initial mass balance broken for IC
      case 3:  // too small step length in descent algorithm
      case 2:  // max number of iterations has been exceeded in EnterFeasibleDomain()
    	         if( pmp->pNP )
@@ -241,7 +243,21 @@ if( rLoop < 0 )
 else 
    ps_rcode = 1; // do not call Selekt2() in primal solution refinement loops (experimental!!!!!)
 
-   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
+int iB = CheckMassBalanceResiduals( pmp->X );
+if( iB >= 0 )
+{	
+    if( pmp->pNP )
+    {   // bad PIA mode - trying the AIA mode
+       pmp->MK = 2;   // Set to check in calcMulti() later on
+       goto FORCED_AIA;                                 
+    }  
+    else {
+        char buf[128]; 
+        sprintf( buf, "Mass balance broken after PhaseSelect() for IC %-6.6s ", pmp->SB[iB] );
+   	    Error( "E12IPM After PhaseSelect():", buf );    	
+    }
+}	
+    //   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
 
    if( pa->p.PC == 2 )
        XmaxSAT_IPM2();  // Install upper limits to xj of surface species
@@ -516,11 +532,12 @@ STEP_POINT("Before FIA");
 //          1 -  no SLE colution at the specified precision pa.p.DHB
 //          2  - used up more than pa.p.DP iterations
 //          3  - too small step length (< pa.p.DG), no descent possible
+//          4  - error in MetastabilityLagrangeMultiplier() (debugging)
 //
 int TMulti::EnterFeasibleDomain()
 {
     short IT1;
-    int I, J, Z,  N, sRet, iRet=0;
+    int I, J, Z,  N, sRet, iRet=0, jK, iB;
     double DHB, LM;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -528,6 +545,20 @@ int TMulti::EnterFeasibleDomain()
                               "Error alloc pmp->MU or pmp->W." );
     DHB = pmp->DHBM;  // Convergence (balance precision) criterion
     pmp->Ec=0;  // Return code
+ 
+    // Initial rough check of mass balance residuals
+    iB = CheckMassBalanceResiduals( pmp->Y );
+    if( iB >= 0 )
+    {  // Experimental 
+       if( !pmp->pNP )     // cannot improve in AIA mode!
+       { 
+         char buf[128]; 
+         sprintf( buf, "Initial mass balance broken for IC %-6.6s ", pmp->SB[iB] );
+    	 Error( "E11IPM FIA-iteration:", buf );
+       }
+       else    // in PIA mode, attempt switching to AIA mode 
+      	 return 4;          	        
+    }
     
     // calculation of total mole amounts of phases
     TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
@@ -536,7 +567,21 @@ int TMulti::EnterFeasibleDomain()
         Set_DC_limits(  DC_LIM_INIT );
 
     // Adjustment of primal approximation according to kinetic constraints
-    LagrangeMultiplier();
+    // Now returns <0 (OK) or index of DC that caused a problem
+    //
+    jK = MetastabilityLagrangeMultiplier();
+    if( jK >= 0 )
+    {  // Experimental 
+       if( !pmp->pNP )     // cannot improve in AIA mode!
+       {
+           char buf[128]; 
+           sprintf( buf, "Initial Lagrange multiplier for metastability broken for DC %16s ", pmp->SM[jK] );
+    	   Error( "E12IPM FIA-iteration:", buf );
+       }
+       else    // in PIA mode, attempt switching to AIA mode 
+      	 return 5;          	        
+    }
+    
 
 //----------------------------------------------------------------------------
 // BEGIN:  main loop
@@ -764,6 +809,30 @@ TMulti::MassBalanceResiduals( int N, int L, float *A, double *Y, double *B,
      }
 }
 
+// Diagnostics for a severe break of mass balance in the initial approximation
+// or after GEM IPM PhaseSelect() (when pmp->X is passed as parameter)
+// Returns -1 (Ok) or index of the chemical element for which the balance is 
+// broken
+int
+TMulti::CheckMassBalanceResiduals(double *Y )
+{	
+	MassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);
+	for(int i=0; i<pmp->N; i++)
+	{	
+	   if( pmp->B[i] > 1e-5 )
+	   {	   // Major IC
+		  if( fabs( pmp->C[i] ) < pmp->B[i] )
+			  continue; 
+	   }
+	   else {  // Trace IC - less than 1e-5 mol
+	      if( fabs( pmp->C[i] ) < 1e-4 )
+	    	  continue; 
+	   }
+	   return i;
+	}
+	return -1;	
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Interior Points Method:
 // subroutine for unconditional minimization of the descent step length
@@ -837,7 +906,7 @@ void TMulti::RaiseZeroedOffDCs( int jStart, int jEnd, double scalingFactor, int 
   double sfactor = scalingFactor;
   SPP_SETTING *pa = &TProfil::pm->pa;
 
-  if( sfactor > 1. )      // can reach 30 at total moles in system above 300000 (DK 11.03.2008)
+  if( fabs( sfactor ) > 1. )   // can reach 30 at total moles in system above 300000 (DK 11.03.2008)
 	  sfactor = 1.;       // Workaround for very large systems (insertion breaks the EFD convergence)
   if( k >= 0 )
        pmp->YF[k] = 0.;	
@@ -895,14 +964,16 @@ void TMulti::RaiseZeroedOffDCs( int jStart, int jEnd, double scalingFactor, int 
 }
 
 // Adjustment of primal approximation according to kinetic constraints
-void TMulti::LagrangeMultiplier()
+int TMulti::MetastabilityLagrangeMultiplier()
 {
     double E = 1E-8;  // pa.p.DKIN? Default min value of Lagrange multiplier p
 //    E = 1E-30;
 
     for(int J=0;J<pmp->L;J++)
     {
-        if( pmp->Y[J] < pmp->lowPosNum )
+        if( pmp->Y[J] < 0. )   // negative number of moles!
+        	return J;
+    	if( pmp->Y[J] < pmp->lowPosNum )
             continue;
 
         switch( pmp->RLC[J] )
@@ -917,10 +988,15 @@ void TMulti::LagrangeMultiplier()
                 pmp->Y[J]=pmp->DLL[J]+E;  /* 1e-10: pa.DKIN ? */
         case UPPER_LIM:
             if( pmp->Y[J]>=pmp->DUL[J])
-                pmp->Y[J]=pmp->DUL[J]-E;
+            {    
+               	if( pmp->DUL[J] == 1e6 )
+               	    return J;   // Broken initial approximation! 
+            	pmp->Y[J]=pmp->DUL[J]-E;            
+            }
             break;
         }
     }   // J
+    return -1;
 }
 
 // Calculation of weight multipliers for DCs

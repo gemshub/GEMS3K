@@ -431,10 +431,12 @@ void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModC
 // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
    void MassBalanceResiduals( int N, int L, float *A, double *Y,
                                double *B, double *C );
+   int CheckMassBalanceResiduals(double *Y );
    double LMD( double LM );
    void ZeroDCsOff( int jStart, int jEnd, int k=-1 );
    void RaiseZeroedOffDCs( int jStart, int jEnd, double sfactor, int k=-1 );
-   void LagrangeMultiplier();
+//   void LagrangeMultiplier();
+   int MetastabilityLagrangeMultiplier(); 
    void WeightMultipliers( bool square );
    int SolverLinearEquations( int N, bool initAppr );
    double calcDikin(  int N, bool initAppr );
