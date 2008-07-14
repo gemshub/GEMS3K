@@ -287,7 +287,7 @@ c       kinetics.inc
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
 c   kg44 st needs to be defined
-        double precision treal, texe
+        double precision texe
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 c
         double precision st(nnodex+2),am(nnodex+2)
@@ -393,7 +393,6 @@ c        c_to_i=0
 c        c_to_i1=0
 c        c_to_i2=0
         iNode=0
-        treal=0 
         texe=0
         st=0
          hb=0
@@ -490,7 +489,7 @@ c     dtprstep needs to be initialized
       dtprstep = 0
 
       i_gems=1	                 ! =0  no GEMS calculation   =1 GEMS calculation
-      igems_rw=0               ! =1  read/write gems IO old performed
+      igems_rw=0               ! =1  read/write gems IO old performedvtk
       i_output=1
 
       line="a1b2c3d4e5"
@@ -718,7 +717,7 @@ c   input for dynamic calculations
      *,ntim,npin,npkt,ismooth,i_sorb,j_sorb,j_decay
      *,backg,rd
      *,xlambda,aquer,along,vxx,dm0,dtmax,tmult,dx,de,gems_PIA
-     *,Tc_dummy,P_dummy
+     *,Tc_dummy,P_dummy, irestart, it_out
 
        endif
 
@@ -1088,6 +1087,18 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
          write(*,'(13(e8.2,1x))')(p_xDc(ib),ib=1,p_nDCb)
          endif
 
+
+#ifdef __GNU
+	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
+     &     %val(m2),%val(m3),dx,bn,cn,pn,dumb, dumc, dump)
+#else
+	idum=vtkout(itimestep_tp,time,nxmax,m1,
+     &     m2,m3,dx,bn,cn,pn,dumb,dumc,dump)
+#endif
+c	pause
+
+
+
 #ifdef __MPI
        call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c we define the size of subintervalls for buffer variables
@@ -1158,9 +1169,6 @@ c	 write(*,*) m1, m2, m3
          ph_subdomain=0.0
 	endif
 #endif
-
-
-
 
 c>>>>>>>>>>>>>>>>>>>>FROM GEMS integration>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 c**************************************************************************
@@ -1357,10 +1365,6 @@ c	pause
       texe=time-told
   245 continue
 
-cccc      restzeit = delt
-c 2002 c 2002
-c      restzeit=tprint(k1)-tprint(k1-1)
-c      if (restzeit.eq.0) goto 3333
  335  continue 
 
       if (ihydro.eq.1)then
@@ -1448,26 +1452,12 @@ c2002>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 c      tmax= abs(dx(1)/( (2.0 *(along*uabs+dm)/dx(1))+uabs))
 c      tmax=  dtmax
 c      ixxxx=mod(irest+1,2)
-c      write(*,*)'ixxxx irest restzeit',ixxxx,irest,restzeit
-
-c ** tasaechlich ausgef. zeitschritt
-ccccc      texe = min(restzeit,dtmax)
-ccc       texe = min(texe,dtmax)
-c       write(*,*)'texe ',texe,restzeit,dtmax,time,told,texe
 
 
-c*** realtime im walk-loop
-      treal=treal+texe
 
-c*** zeit, die noch abzuarbeiten ist 
-      restzeit = restzeit -texe
-c      write(*,*)'rest ..texe dtmax tp',irest,restzeit,texe,dtmax
+c      write(*,*)'rest ..texe dtmax tp',irest,texe,dtmax
 c     *,tprint(k1)
  
-c      write(*,'(a21,1x,i2,1x,i2,1x,3(e10.4,1x))')
-c     *  'k1 it texe time treal',k1,it,texe,time,treal      
-c      it=it+1
-c       pause 'time'
 
 
 c   assign concentration at time t to particles
@@ -1507,7 +1497,7 @@ c  ************************************************************
 c
 c   move particles during dt
 	if (irank.eq.root) then 
-      write (*,*) 'walk time:  treal texe', treal, texe
+      write (*,*) 'walk time:  time texe', time, texe
          endif
 #ifdef __GNU
       call walk2h(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
@@ -1981,7 +1971,7 @@ c         endif
       sumqwat(nx)=sumqwat(nx)+dqwater(nx)                       ! vx in m/s - am is in cm^2 cross section
 c      if (nx.eq.2)then
 c      write(*,'(2(i2,1x),1x,7(e8.2,1x))')k1,
-c     *nx,am(nx),por(nx),vx(nx),texe,treal,qwater,sumqwat(nx)
+c     *nx,am(nx),por(nx),vx(nx),texe,time,qwater,sumqwat(nx)
 c      pause
 c      endif
 
@@ -1990,10 +1980,10 @@ c      endif
 
 c**** output fuer t(k1)
 c2002      if (time.eq.tprint(k1)) then
-      if (treal.eq.tprint(k1)) then
+      if (time.eq.tprint(k1)) then
         kk1=k1+96
-        ttt=treal/31557600
-c	if (irank.eq.root) write(*,*)'kk1',kk1,'time',treal
+        ttt=time/31557600
+c	if (irank.eq.root) write(*,*)'kk1',kk1,'time',time
         ch=char(kk1)
 
         if (irank.eq.root) then
@@ -2036,7 +2026,7 @@ c      Vol. fractions, rates, and log omega   -kinet-
      *                     ,cs(nn1),por(nn1)
      *               ,pHarr(nn1), vx(nn1),hb(nn1)
  1579   format(1x,70(e10.3,1x))
-        write(15,*)'time = ',treal ,'(s)',ttt , '(J)'
+        write(15,*)'time = ',time ,'(s)',ttt , '(J)'
         close(15)
         close(17)   ! kinet
         close(18)   ! kinet
@@ -2064,14 +2054,14 @@ c I just use every timestep
 c       if(k1.gt.1) then
 c        if (time.gt.(tprint(k1-1)+itprint*dtprstep)
 c     *.or.time.eq.tprint(k1-1))then
-c      if(treal.gt.0.)then
+c      if(time.gt.0.)then
            itprint=itprint+1
 
            ttt=time/1.
-           tty=treal/31557600.
+           tty=time/31557600.
 	if (irank.eq.root) then 
-         write(*,'(a6,2(e10.2,a6,2x), 2x,a7,i10)')
-     *   'time= ',treal,' [sec]',tty,'  [yr]', 'iccyle= ',icyc
+         write(*,*)
+     *   'time= ',time,' [sec]',tty,'  [yr]', 'iccyle= ',icyc
          write(*,*)
 c     *   'solids iort(1)',(pn(ii,iortx(1)),ii=1,m3),cs(iortx(1)),
 c     *    (eqconst(ii,iortx(1)),ii=1,m3)
@@ -2079,35 +2069,35 @@ c     *    (eqconst(ii,iortx(1)),ii=1,m3)
 c	if (tty.ge.1.e4) pause
 c------------------------------------------------------------- 19/09/96
 C pH, tot. K and tot Na in aqueous phase 
-         if (irank.eq.root) write(25,2300)treal
+         if (irank.eq.root) write(25,2300)time
      *               ,(bn(ii,iortx(1)),ii=1,m1)
      *               ,(cn(ii,iortx(1)),ii=1,m2)
      *               ,(pn(ii,iortx(1)),ii=1,m3)
      *               ,cs(iortx(1)),por(iortx(1))
      *               ,pHarr(iortx(1))
 
-        if (irank.eq.root) write(11,2300)treal
+        if (irank.eq.root) write(11,2300)time
      *               ,(bn(ii,iortx(2)),ii=1,m1)
      *               ,(cn(ii,iortx(2)),ii=1,m2)
      *               ,(pn(ii,iortx(2)),ii=1,m3)
      *               ,cs(iortx(2)),por(iortx(2))
      *               ,pHarr(iortx(2))
 
-        if (irank.eq.root) write(12,2300)treal
+        if (irank.eq.root) write(12,2300)time
      *               ,(bn(ii,iortx(3)),ii=1,m1)
      *               ,(cn(ii,iortx(3)),ii=1,m2)
      *               ,(pn(ii,iortx(3)),ii=1,m3)
      *               ,cs(iortx(3)),por(iortx(3))
      *               ,pHarr(iortx(3))
 
-        if (irank.eq.root) write(13,2300)treal
+        if (irank.eq.root) write(13,2300)time
      *               ,(bn(ii,iortx(4)),ii=1,m1)
      *               ,(cn(ii,iortx(4)),ii=1,m2)
      *               ,(pn(ii,iortx(4)),ii=1,m3)
      *               ,cs(iortx(4)),por(iortx(4))
      *               ,pHarr(iortx(4))
 
-        if (irank.eq.root) write(14,2300)treal
+        if (irank.eq.root) write(14,2300)time
      *               ,(bn(ii,iortx(5)),ii=1,m1)
      *               ,(cn(ii,iortx(5)),ii=1,m2)
      *               ,(pn(ii,iortx(5)),ii=1,m3)
@@ -2123,9 +2113,17 @@ c  write out the species concentrations
 c  *********************************************************
 c**** output fuer t als backup
       if (irank.eq.root)then
-         if (mod(itimestep_dt,it_outt).eq.0) then
-           call writedump(bn,cn,pn,por,dm,
+         if (mod(itimestep_tp,it_out).eq.0) then
+      call writedump(bn,cn,pn,por,dm,
      *     time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
+#ifdef __GNU
+	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
+     &     %val(m2),%val(m3),dx,bn,cn,pn,dumb, dumc, dump)
+#else
+	idum=vtkout(itimestep_tp,time,nxmax,m1,
+     &     m2,m3,dx,bn,cn,pn,dumb,dumc,dump)
+#endif
+
          endif                          ! write out backso
       endif 
 c**** end output fuer t als backup
@@ -2243,7 +2241,7 @@ c  *********************************************************
 
         double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
      *, pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
-     * ,time,tprint(25)
+     * ,time,tprint(25),dtmax
         integer itimestep_tp,k1,m1,m2,m3,nxmax
         common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 
@@ -2285,7 +2283,7 @@ c  *********************************************************
         character *10 dumb,dumc,dump
         double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
      *,pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
-     * ,time,tprint(25)
+     * ,time,tprint(25),dtmax
         integer itimestep_tp,k1,m1,m2,m3,nxmax
         common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
 
