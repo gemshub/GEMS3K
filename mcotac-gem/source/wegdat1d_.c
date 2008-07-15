@@ -138,13 +138,13 @@ int vtkout(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[
 	   fprintf(output,"SCALARS %s double\n",cdummy);
 	   fprintf(output,"LOOKUP_TABLE default\n");
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",bn[i][l]);
+		fprintf(output," %g \n",bn[i][l]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",bn[i][l]);
+		fprintf(output," %g  \n",bn[i][l]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",bn[i][l]);
+		fprintf(output," %g \n",bn[i][l]);
 	   }
 	}
 
@@ -158,13 +158,13 @@ int vtkout(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[
 	   fprintf(output,"SCALARS %s double\n",cdummy);
 	   fprintf(output,"LOOKUP_TABLE default\n");
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",cn[i][l]);
+		fprintf(output," %g\n",cn[i][l]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",cn[i][l]);
+		fprintf(output," %g \n",cn[i][l]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",cn[i][l]);
+		fprintf(output," %g\n",cn[i][l]);
 	   }
 	}
 
@@ -178,13 +178,13 @@ int vtkout(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[
 	   fprintf(output,"SCALARS %s double\n",cdummy);
 	   fprintf(output,"LOOKUP_TABLE default\n");
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",pn[i][l]);
+		fprintf(output," %g\n",pn[i][l]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",pn[i][l]);
+		fprintf(output," %g\n",pn[i][l]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g %g %g \n",pn[i][l]);
+		fprintf(output," %g \n",pn[i][l]);
 	   }
 	}
 
