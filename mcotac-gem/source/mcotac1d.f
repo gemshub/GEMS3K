@@ -933,7 +933,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
      *)
 
 	if (idum.ne.1) then 
@@ -961,7 +961,7 @@ c      gridvol=dxx * dxx * dxx *1000.0
 	ref_vol=p_Vs
      
       do 1690 n=1,nxmax/2
-	 gridvol=dx(n)/dx(1)*ref_vol/p_Vs   ! normalized !
+	 gridvol=dx(1)/dx(n)*ref_vol/p_Vs   ! normalized !
          write(*,*)"scaling 1:",gridvol,p_Vs,dx(1),dx(2)
 	do 1691 ib=1,m1-1    !charge is last parameter in the list of bn  24.01.2005 but not transported
 	bn(ib,n)=p_xDc(i_bcp_gemx(ib))*gridvol    !2)
@@ -1013,7 +1013,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
      *)
 	if (idum.ne.1) then 
 	   write(*,*)"GEMS problem for second dbr file", idum
@@ -1027,7 +1027,7 @@ c	   stop
 	gridvol=1.0
 
       do 1695 n=nxmax/2+1,nxmax
-	 gridvol=dx(n)/dx(1)* ref_vol/p_Vs   ! normalized !
+	 gridvol=dx(1)/dx(n)* ref_vol/p_Vs   ! normalized !
        write(*,*)"scaling 2:",gridvol,p_Vs
 
 	do 1696 ib=1,m1-1
@@ -1090,10 +1090,10 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
 
 #ifdef __GNU
 	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
-     &     %val(m2),%val(m3),dx,bn,cn,pn,dumb, dumc, dump)
+     &     %val(m2),%val(m3),dx,bn,cn,pn,por,pe,ph,dumb, dumc, dump)
 #else
 	idum=vtkout(itimestep_tp,time,nxmax,m1,
-     &     m2,m3,dx,bn,cn,pn,dumb,dumc,dump)
+     &     m2,m3,dx,bn,cn,pn,por,pe,ph,dumb,dumc,dump)
 #endif
 c	pause
 
@@ -1671,7 +1671,7 @@ c      time_gemsstart=RTC()
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
      *)
 	if (idum.ne.1) then 
 	   write(*,*)"GEMS problem ", idum
@@ -1846,7 +1846,7 @@ c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
      *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
      *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
      *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
      *)
 
 	if (idum.ne.1) then 

@@ -264,7 +264,8 @@
    double  *p_mPS,  // phase (carrier) mass, g      [nPSb]          -      -      +     +
    double  *p_bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
    double  *p_xPA,  // amount of carrier in phases  [nPSb] ??       -      -      +     +
-   int &idum   // return status
+   int &idum,   // return status
+   int &idebug
   // What else?
   // double  *p_dRes1
  )
@@ -285,7 +286,7 @@
   // Work loop for the coupled FMT-GEM modelling
 
 //  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_before1.dat");
-
+          if(idebug)  TNode::na->GEM_print_ipm( "ipm_structure_debug-before.dat");
   if (uPrimalSol) {
    // sends only speciation changed by mcotac 
 //   TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
@@ -310,7 +311,7 @@
             TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH, p_T, p_P, p_Vs, p_Ms, p_bIC, p_dul, p_dll,  p_aPH, p_xDC);
           TNode::na->pCNode()->bIC[(TNode::na->pCSD()->nICb)-1]=0.0;
 //	for ( ii=0 ; ii < TNode::na->pCSD()->nICb ; ii++ )
-//	      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
+//      printf("bIC: %i %g \n",ii, TNode::na->pCNode()->bIC[ii]);
 
  
 //  TNode::na->GEM_from_MT( NodeHandle, NodeStatusCH,
@@ -351,13 +352,15 @@
 	   else { idum=1;} 
     }
 
+   if (idebug) TNode::na->GEM_print_ipm( "ipm_structure_debug-after1.dat");
 
   // Extracting GEMIPM output data to FMT part
    TNode::na->GEM_to_MT( NodeHandle, NodeStatusCH, IterDone,
        p_Vs, p_Ms, p_Gs, p_Hs, p_IC, p_pH, p_pe, p_Eh, p_rMB, p_uIC,
        p_xDC, p_gam, p_xPH, p_vPS, p_mPS, p_bPS, p_xPA  );
+    //    TNode::na->GEM_print_ipm( "ipm_structure_debug-after2.dat");
 
-//  TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_after_calc.dat");
+ // if (idebug) TNode::na->GEM_write_dbr( "Test-clay-cement-dbr_after_calc.dat");
 
  p_NodeHandle = NodeHandle;
  p_NodeStatusCH =  NodeStatusCH;

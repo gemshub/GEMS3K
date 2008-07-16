@@ -8,7 +8,7 @@
 
 /* Dimensionierung der Felder */
 
-#define NCNODEX 510       /* Maximale Anzahl der Knoten in X-Richtung       */
+#define NCNODEX 410       /* Maximale Anzahl der Knoten in X-Richtung       */
 #define NUPMAX 500000       /* Maximale Anzahl Partikel       */
 #define NCPMAX 500000       /* Maximale Anzahl Partikel       */
 #define NCBASIS 10
