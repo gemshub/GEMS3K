@@ -92,9 +92,9 @@ int holdat1d(int nxmax,char* fname,double hb[NCNODEX+2])
 }
 
 #ifdef __PGI
-int vtkout_(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[NCNODEX+2],double bn[NCNODEX+2][NCBASIS], double cn[NCNODEX+2][NCCOMPL], double pn[NCNODEX+2][NCSOLID], double por[NCNODEX+2], double pe[NCNODEX+2], double ph[NCNODEX+2], char dumb[10*NCBASIS],char dumc[10*NCCOMPL],char dump[10*NCSOLID])
+int vtkout_(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[NCNODEX+2],double bn[NCNODEX+2][NCBASIS], double cn[NCNODEX+2][NCCOMPL], double pn[NCNODEX+2][NCSOLID], double por[NCNODEX+2], double eh[NCNODEX+2], double ph[NCNODEX+2], char dumb[10*NCBASIS],char dumc[10*NCCOMPL],char dump[10*NCSOLID])
 #else
-int vtkout(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[NCNODEX+2],double bn[NCNODEX+2][NCBASIS], double cn[NCNODEX+2][NCCOMPL], double pn[NCNODEX+2][NCSOLID], double por[NCNODEX+2], double pe[NCNODEX+2], double ph[NCNODEX+2], char dumb[10*NCBASIS],char dumc[10*NCCOMPL],char dump[10*NCSOLID])
+int vtkout(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[NCNODEX+2],double bn[NCNODEX+2][NCBASIS], double cn[NCNODEX+2][NCCOMPL], double pn[NCNODEX+2][NCSOLID], double por[NCNODEX+2], double eh[NCNODEX+2], double ph[NCNODEX+2], char dumb[10*NCBASIS],char dumc[10*NCCOMPL],char dump[10*NCSOLID])
 #endif
 {
 	int ierr=0, i, l;
@@ -187,18 +187,18 @@ int vtkout(int number,double time,int nxmax,int m1, int m2, int m3,double dxarr[
 		fprintf(output," %g \n",pn[i][l]);
 	   }
 	}
-	   fprintf(output,"SCALARS pe double\n");
+	   fprintf(output,"SCALARS Eh double\n");
 	   fprintf(output,"LOOKUP_TABLE default\n");
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g\n",pe[i]);
+		fprintf(output," %g\n",eh[i]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g\n",pe[i]);
+		fprintf(output," %g\n",eh[i]);
 	   }
            for(i=0; i< nxmax; i++)  {
-		fprintf(output," %g \n",pe[i]);
+		fprintf(output," %g \n",eh[i]);
 	   }	   
-	   fprintf(output,"SCALARS ph double\n");
+	   fprintf(output,"SCALARS pH double\n");
 	   fprintf(output,"LOOKUP_TABLE default\n");
            for(i=0; i< nxmax; i++)  {
 		fprintf(output," %g\n",ph[i]);

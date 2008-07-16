@@ -1,6 +1,6 @@
       real*8 rlarge
       parameter (nupmax = 500000)
-      parameter (nnodex = 410)
+      parameter (nnodex = 2010)
       parameter (nbasis = 10)
       parameter (ncompl = 45)
       parameter (nsolid = 20)

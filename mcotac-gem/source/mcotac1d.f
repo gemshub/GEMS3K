@@ -132,6 +132,8 @@ c and a second buffer
 
       double precision, allocatable ::  ph_domain(:) 
       double precision, allocatable ::  ph_subdomain(:) 
+      double precision, allocatable ::  eh_domain(:) 
+      double precision, allocatable ::  eh_subdomain(:) 
 
       double precision, allocatable ::  gems_iterations_domain(:) 
       double precision, allocatable ::  gems_iterations_subdomain(:) 
@@ -1090,10 +1092,10 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
 
 #ifdef __GNU
 	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
-     &     %val(m2),%val(m3),dx,bn,cn,pn,por,pe,ph,dumb, dumc, dump)
+     &     %val(m2),%val(m3),dx,bn,cn,pn,por,eh,pHarr,dumb, dumc, dump)
 #else
 	idum=vtkout(itimestep_tp,time,nxmax,m1,
-     &     m2,m3,dx,bn,cn,pn,por,pe,ph,dumb,dumc,dump)
+     &     m2,m3,dx,bn,cn,pn,por,eh,pHarr,dumb,dumc,dump)
 #endif
 c	pause
 
@@ -1151,6 +1153,9 @@ c and a second buffer because W. refuses to work with allocate
 c   ph_domain
 	allocate(ph_domain(nxmax))
         allocate(ph_subdomain(i_subdomain_length))
+c   pe_domain
+	allocate(eh_domain(nxmax))
+        allocate(eh_subdomain(i_subdomain_length))
 c gems iterations is already allocated..now we take the subdomain
         allocate(gems_iterations_domain(nxmax))
         allocate(gems_iterations_subdomain(i_subdomain_length))
@@ -1167,6 +1172,8 @@ c	 write(*,*) m1, m2, m3
          pn_subdomain=0.0
          ph_domain=0.0
          ph_subdomain=0.0
+         pe_domain=0.0
+         pe_subdomain=0.0
 	endif
 #endif
 
@@ -1754,11 +1761,16 @@ c now do MPI_GATHER
      &     MPI_DOUBLE_PRECISION,
      &	    ph_domain, recvcount, MPI_DOUBLE_PRECISION,
      &	    MPI_COMM_WORLD,ierr)
+      call MPI_AllGather(eh_subdomain, sendcount, 
+     &     MPI_DOUBLE_PRECISION,
+     &	    eh_domain, recvcount, MPI_DOUBLE_PRECISION,
+     &	    MPI_COMM_WORLD,ierr)
 
 
 	  do n=1,nxmax,npes
 	  do i=1,npes
 	    pHarr(node_distribution(n+i-1))=ph_domain(n+i-1)            
+	    eh(node_distribution(n+i-1))=eh_domain(n+i-1)            
             do ib=1,m1-1
 	  bn(ib,node_distribution(n+i-1))=bn_domain(ib+(n-1+i-1)*(m1-1))
             enddo
@@ -1857,7 +1869,7 @@ c           pause
 c	   stop
 	endif
 	pHarr(n)=p_pH
-
+        eh(n)=p_Eh
 c  monitor gems iterations
         itergems=itergems+p_IterDone
         itergemstotal=itergemstotal+p_IterDone
