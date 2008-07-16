@@ -2130,10 +2130,10 @@ c**** output fuer t als backup
      *     time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
 #ifdef __GNU
 	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
-     &     %val(m2),%val(m3),dx,bn,cn,pn,dumb, dumc, dump)
+     &     %val(m2),%val(m3),dx,bn,cn,pn,eh,pHarr,dumb, dumc, dump)
 #else
 	idum=vtkout(itimestep_tp,time,nxmax,m1,
-     &     m2,m3,dx,bn,cn,pn,dumb,dumc,dump)
+     &     m2,m3,dx,bn,cn,pn,eh,pHarr,dumb,dumc,dump)
 #endif
 
          endif                          ! write out backso
