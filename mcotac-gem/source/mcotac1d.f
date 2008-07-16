@@ -361,6 +361,8 @@ ckg44 init several variables in order to make sure they have the correct values
         dmin=1.e+10
 	icyc=0
 	st=0.0
+	pHarr=0.0
+	eh=0.0
         ir=0
         por=0
         qr=0
@@ -1694,6 +1696,7 @@ c	   stop
 c	endif
 
 	pH_subdomain(n)=p_pH
+	eh_subdomain(n)=p_Eh
 
 c  monitor gems iterations
         itergems=itergems+p_IterDone
@@ -2130,10 +2133,10 @@ c**** output fuer t als backup
      *     time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
 #ifdef __GNU
 	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
-     &     %val(m2),%val(m3),dx,bn,cn,pn,eh,pHarr,dumb, dumc, dump)
+     &     %val(m2),%val(m3),dx,bn,cn,pn,por,eh,pHarr,dumb, dumc, dump)
 #else
 	idum=vtkout(itimestep_tp,time,nxmax,m1,
-     &     m2,m3,dx,bn,cn,pn,eh,pHarr,dumb,dumc,dump)
+     &     m2,m3,dx,bn,cn,pn,por,eh,pHarr,dumb,dumc,dump)
 #endif
 
          endif                          ! write out backso
