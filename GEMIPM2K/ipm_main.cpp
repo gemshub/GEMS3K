@@ -816,16 +816,21 @@ TMulti::MassBalanceResiduals( int N, int L, float *A, double *Y, double *B,
 int
 TMulti::CheckMassBalanceResiduals(double *Y )
 {	
+	double cutoff; 
+	
+	cutoff = pmp->DHBM * 1e4; 
+	if( cutoff > 1e-3 )
+		cutoff = 1e-3;
 	MassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);
 	for(int i=0; i<pmp->N; i++)
 	{	
-	   if( pmp->B[i] > 1e-5 )
+	   if( pmp->B[i] > cutoff )
 	   {	   // Major IC
 		  if( fabs( pmp->C[i] ) < pmp->B[i] )
 			  continue; 
 	   }
-	   else {  // Trace IC - less than 1e-5 mol
-	      if( fabs( pmp->C[i] ) < 1e-4 )
+	   else {  // Trace IC - less than (cutoff) mol
+	      if( fabs( pmp->C[i] ) < cutoff )
 	    	  continue; 
 	   }
 	   return i;
