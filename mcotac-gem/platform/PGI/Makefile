@@ -1,12 +1,12 @@
-CC = pgcc
-CXX = pgCC
-FORT = pgf90
+CC = mpicc
+CXX = mpicxx
+FORT = mpif90
 CFLAGS = -c  -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
 # -lstd -lC -lpgc -lrt -Msecond_underscore
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
 CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__PGI -Mpreprocess
-FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU -D__PGI -Mnosecond_underscore -Mpreprocess
-LINK = pgf90
+FFLAGS = -c -g -O2 -DIPMGEMPLUGIN -D__unix -D__GNU -D__PGI -Mnosecond_underscore -Mpreprocess -D__MPI
+LINK = mpif90
 LFLAGS = 
 LIBS = -lrt -lstd -lC -lpgc 
 GEMINCLUDE = ../../GEMIPM2K
