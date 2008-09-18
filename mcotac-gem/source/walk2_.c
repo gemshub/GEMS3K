@@ -216,7 +216,7 @@ double gasdev();
         do  {  /*  teilchenloop  */
            iknx= (int ) ( (partx[ip]+dx[1])  / dx[2])  ;
 
-           dpx=dx[1]-(partx[ip]-x[iknx]);
+           dpx=(partx[ip]-x[iknx]);
            vpx=vx[iknx];
            vabs=sqrt(vpx*vpx);
            if(vabs == 0.)  vabs=1.e-30; /* keine division durch 0 */
@@ -235,7 +235,7 @@ double gasdev();
            partx_dt =  vpx *  texe +  slong;  /* neue position der teilchen = konv. Anteil + disp. Anteil x */
 /* reflection of particles */
 
-           iknxx= (int ) ( (partx[ip]+dx[1])  / dx[2])  ;
+           iknxx= (int ) ( (partx[ip]+partx_dt+dx[1])  / dx[2])  ;
            if(iknx == iknxx || (por[iknx]==por[iknxx])){ 
 	     partx[ip] +=partx_dt ;
 	     }
@@ -244,15 +244,15 @@ double gasdev();
                    if(por[iknxx] > por[iknx]) {
                       partx[ip]+=partx_dt;   /*    por[iknx]/por[iknxx];*/
                       }
-	           if (por[iknxx] < por[iknx]){
-		       Z1=((double) rand()*randinv -0.5) ;
-                       if (Z1 <= (por[iknxx]/por[iknx]) ){
+		       Z1=((double) rand()*randinv) ;
+                       if (Z1 <= (sqrt(por[iknxx])/(sqrt(por[iknx])+sqrt(por[iknxx]))) ){
 		        partx[ip]+=partx_dt;
 			}
 			else {
-			partx[ip]= 2 * x[iknx] -partxo[ip]-partx_dt;
+			
+			partx[ip]= partx[ip]-(partx_dt-2*(dx[1]-dpx)); /* check with Wilfried if this is correct */
 			}
-		        }
+		        
 	     
 	     /*partx[ip] +=partx_dt ;*/
 	     
