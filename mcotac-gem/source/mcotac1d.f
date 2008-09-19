@@ -1676,13 +1676,13 @@ c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
-c	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-c     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-c     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-c     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-c     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
-c     *)
-	idum=1
+	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
+     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
+     *)
+c	idum=1
 	if (idum.ne.1) then 
 	   write(*,*)"GEMS problem ", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
@@ -1858,13 +1858,13 @@ c      time_gemsstart=RTC()
 c	write(*,*)"p_bic",n, p_bIC
 c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
-c      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-c     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-c     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-c     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-c     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
-c     *)
-	idum=1
+      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
+     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
+     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
+     *)
+c	idum=1
 	if (idum.ne.1) then 
 	   write(*,*)"GEMS problem ", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
