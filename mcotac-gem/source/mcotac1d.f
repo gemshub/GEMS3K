@@ -1754,8 +1754,7 @@ c      time_gemsend=RTC()
 	maxmolb=max(pn_subdomain(ip+(n-1)*m3),maxmolb)
  1798 continue
 
-	if((maxmola.gt.100.0).or.(maxmolb.gt.100.0).or.
-     &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
+	if((maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
 	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
 	   STOP
 	endif
@@ -1924,11 +1923,10 @@ c
 	maxmolb=max(pn(ip,n),maxmolb)
  1798 continue
 
-c	if((maxmola.gt.100.0).or.(maxmolb.gt.100.0).or.
-c     &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
-c	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
-c	   STOP
-c	endif
+	if((maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
+	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
+	   STOP
+	endif
 
 
 	p_IterDone=0
