@@ -139,7 +139,7 @@ void concver ( int npmax,int nbox,double dx[NCNODEX+2],double bn[NCNODEX+2][NCBA
 
 	for ( i=0; i<npmax; i++ )
 	{
-		iknx= ( int ) ( ( partx[i])  / dx[2] );
+		iknx= ( int ) ( ( partx[i] )  / dx[2] );
 
 		for ( j=0; j< m1;j++ )
 		{
@@ -177,7 +177,7 @@ void concver ( int npmax,int nbox,double dx[NCNODEX+2],double bn[NCNODEX+2][NCBA
 void concneu_ ( int npmax,int nbox,int nxmax,
                 double xmin,double xmaxr,double dx[NCNODEX+2],
                 double  bn[NCNODEX+2][NCBASIS],double cn[NCNODEX+2][NCCOMPL],int partib[NCNODEX+2],
-		double partx[NUPMAX], double partxo[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
+                double partx[NUPMAX], double partxo[NUPMAX],double partic[NCCOMPL+NCBASIS][NUPMAX],
                 double bo[NCNODEX+2][NCBASIS], double co[NCNODEX+2][NCCOMPL],
                 double por[NCNODEX+2], int ismooth, int m1,int m2 )
 #else
@@ -195,15 +195,15 @@ void concneu ( int npmax,int nbox,int nxmax,
 	double dxinv , x_partib[NCNODEX+2],total_x_part,Pn,Po;
 
 	/* set new concentrations at t +dt equal zero and sum over particles to get the new ones */
-		total_part=0.0;
-		total_x_part=0.0;
-		partout=0;
+	total_part=0.0;
+	total_x_part=0.0;
+	partout=0;
 	for ( i=0; i< nbox; i++ )
 	{
 		partib[i]=0;
 		x_partib[i]=0.;
 	}
-	for ( i=0; i< nbox; i++ ) 
+	for ( i=0; i< nbox; i++ )
 	{
 		for ( j=0; j< m1;j++ )
 		{
@@ -221,36 +221,38 @@ void concneu ( int npmax,int nbox,int nxmax,
 		        printf("i jjbn partic partib  %d %d %e  %e %d  \n",i,j,bn[iknx][j],partic[j][i],partib[iknx]);
 		        } */
 		/*               printf("concneu i partx [i]  %d %f %f %f \n",i, *xminr, *xmaxr, partx [i]);*/
-			/*               printf("i partx  %d %e \n",i,partx[i]);*/
-			iknx= ( int ) ( ( partx[i] ) /dx[1] ) ;
-			iknxo= ( int ) ( ( partxo[i]) /dx[1] ) ;
-			partib[iknx] +=1; /* add one for particle position */
-			/*               printf("i iknx  %d %d \n",i,iknx); */
-/*			if ( (iknx !=0) && (iknx != nbox-1)  && (iknxo !=0) && (iknxo != nbox-1) ){ */
+		/*               printf("i partx  %d %e \n",i,partx[i]);*/
+		iknx= ( int ) ( ( partx[i] ) /dx[1] ) ;
+		iknxo= ( int ) ( ( partxo[i] ) /dx[1] ) ;
+		partib[iknx] +=1; /* add one for particle position */
+		/*               printf("i iknx  %d %d \n",i,iknx); */
+		/*			if ( (iknx !=0) && (iknx != nbox-1)  && (iknxo !=0) && (iknxo != nbox-1) ){ */
 
-					if (por[iknxo]<=por[iknx]) {
-						Pn=1.0;Po=0.0;
-					}
-					else {
-						Pn=por[iknx] / por[iknxo] ; Po=1-Pn;
-					}	
-/*					if ((iknx<2) || (iknx>nbox-2) || (iknxo<2) || (iknxo>nbox-2)) {Pn=1.0;Po=0.0;}		*/			
-					/* Pn=por[iknx] / ( por[iknx] + por[iknxo] ); */   /*probability to enter new domain */
-					/* Po=1.0-Pn;  */     /* probability for old domain */
+		if ( por[iknxo]<=por[iknx] )
+		{
+			Pn=1.0;Po=0.0;
+		}
+		else
+		{
+			Pn=por[iknx] / por[iknxo] ; Po=1-Pn;
+		}
+		/*					if ((iknx<2) || (iknx>nbox-2) || (iknxo<2) || (iknxo>nbox-2)) {Pn=1.0;Po=0.0;}		*/
+		/* Pn=por[iknx] / ( por[iknx] + por[iknxo] ); */   /*probability to enter new domain */
+		/* Po=1.0-Pn;  */     /* probability for old domain */
 
-					x_partib[iknx]+= Pn;    /* mass is distributed according to probability */
-					x_partib[iknxo]+= Po;
+		x_partib[iknx]+= Pn;    /* mass is distributed according to probability */
+		x_partib[iknxo]+= Po;
 
-					for ( j=0; j< m1;j++ )
-					{
-						bn[iknx][j] +=partic[j][i] * Pn;
-						bn[iknxo][j]+=partic[j][i] * Po;
-					}
-					for ( j=0; j< m2;j++ )
-					{
-						cn[iknx][j] +=partic[j+ m1][i] * Pn;
-						cn[iknxo][j]+=partic[j+ m1][i] * Po;
-					}
+		for ( j=0; j< m1;j++ )
+		{
+			bn[iknx][j] +=partic[j][i] * Pn;
+			bn[iknxo][j]+=partic[j][i] * Po;
+		}
+		for ( j=0; j< m2;j++ )
+		{
+			cn[iknx][j] +=partic[j+ m1][i] * Pn;
+			cn[iknxo][j]+=partic[j+ m1][i] * Po;
+		}
 
 
 	}
@@ -264,11 +266,11 @@ void concneu ( int npmax,int nbox,int nxmax,
 		total_part+=partib[n];
 		total_x_part+=x_partib[n];
 	}
- 	printf(" total_part: %d partout %d total_x_partx: %d \n",total_part+partout,partout, total_x_part);
+	printf ( " total_part: %d partout %d total_x_partx: %d \n",total_part+partout,partout, total_x_part );
 
 	if ( ismooth ==1 )
 	{
-		for ( n=0; n< nbox;n++ ) 
+		for ( n=0; n< nbox;n++ )
 		{
 			for ( j=0; j< m1;j++ )
 			{
@@ -284,34 +286,38 @@ void concneu ( int npmax,int nbox,int nxmax,
 
 
 	/*  constant concentration at x=0   */
-	
-	             for(j=0; j< m1;j++) {
-	               bn[0][j] = bo[0][j] ;
-	            }
-	             for(j=0; j< m2;j++) {
-	                cn[0][j] = co[0][j] ;
-	             }
-/*	             for(j=0; j< m1;j++) {
-	               bn[1][j] = bo[0][j] ;
-	            }
-	             for(j=0; j< m2;j++) {
-	                cn[1][j] = co[0][j] ;
-	             } */
 
-/* constant concentration also at right boundary */
-	             for(j=0; j< m1;j++) {
-	               bn[nxmax-1][j] = bo[nxmax-1][j] ;
-	            }
-	             for(j=0; j< m2;j++) {
-	                cn[nxmax-1][j] = co[nxmax-1][j] ;
-	             }
-/*	             for(j=0; j< m1;j++) {
-	               bn[nxmax-2][j] = bo[nxmax-1][j] ; 
-	            }
-	             for(j=0; j< m2;j++) {
-	                cn[nxmax-2][j] = co[nxmax-1][j] ; 
-	             } */
-	
+	for ( j=0; j< m1;j++ )
+	{
+		bn[0][j] = bo[0][j] ;
+	}
+	for ( j=0; j< m2;j++ )
+	{
+		cn[0][j] = co[0][j] ;
+	}
+	/*	             for(j=0; j< m1;j++) {
+		               bn[1][j] = bo[0][j] ;
+		            }
+		             for(j=0; j< m2;j++) {
+		                cn[1][j] = co[0][j] ;
+		             } */
+
+	/* constant concentration also at right boundary */
+	for ( j=0; j< m1;j++ )
+	{
+		bn[nxmax-1][j] = bo[nxmax-1][j] ;
+	}
+	for ( j=0; j< m2;j++ )
+	{
+		cn[nxmax-1][j] = co[nxmax-1][j] ;
+	}
+	/*	             for(j=0; j< m1;j++) {
+		               bn[nxmax-2][j] = bo[nxmax-1][j] ;
+		            }
+		             for(j=0; j< m2;j++) {
+		                cn[nxmax-2][j] = co[nxmax-1][j] ;
+		             } */
+
 
 }
 
