@@ -32,11 +32,11 @@ c      include 'f_gem_node.inc'
         END INTERFACE
 
       INTERFACE
-        subroutine partid (npmax,nbox,xmin,xmax,partib,dx,partx)
+        subroutine partid (npmax,nbox,nxmax,xmin,xmax,partib,dx,partx)
         !DEC$ ATTRIBUTES C :: partid
       include 'gwheader.inc'
         double precision xmin,xmax,partx(NUPMAX), dx(NNODEX+2)
-      integer npmax ,nbox, partib(NNODEX+2)
+      integer npmax ,nbox, partib(NNODEX+2),nxmax
         END SUBROUTINE partid
         END INTERFACE
 
@@ -54,14 +54,15 @@ c      include 'f_gem_node.inc'
 
       INTERFACE
        subroutine concneu (npmax,nbox,nxmax,xminr,xmaxr,dx,bn,cn,partib,
-     *                    partx,partic,bo,co,ismooth,m1,m2)
+     *                    partx,partxo,partic,bo,co,por,ismooth,m1,m2)
         !DEC$ ATTRIBUTES C :: concneu
       include 'gwheader.inc'
       double precision xminr,xmaxr,bn(NBASIS,NNODEX+2)
       double precision cn(NCOMPL,NNODEX+2)
-      double precision partx(NUPMAX), dx(NNODEX+2),bo(NBASIS,nnodex+2)
-      double precision co(NCOMPL,nnodex+2),partic(NUPMAX,NCOMPL+NBASIS)
-        integer nxmax,npmax ,nbox, partib(nnodex+2), ismooth, m1,m2
+      double precision partx(NUPMAX), partxo(NUPMAX),dx(NNODEX+2)
+      double precision bo(NBASIS,NNODEX+2), por(NNODEX+2)
+      double precision co(NCOMPL,NNODEX+2),partic(NUPMAX,NCOMPL+NBASIS)
+        integer nxmax,npmax ,nbox, partib(NNODEX+2), ismooth, m1,m2
         END SUBROUTINE concneu
         END INTERFACE
 
@@ -75,7 +76,7 @@ c      include 'f_gem_node.inc'
         double precision st(NNODEX+2),por(NNODEX+2),qw(NNODEX+2)
         double precision qbil(NNODEX+2),am(NNODEX+2)
         double precision dx(NNODEX+2), vx(NNODEX+2),texe,time
-        integer nxmax, icyc, ir(nnodex+2)
+        integer nxmax, icyc, ir(NNODEX+2)
         character*10 text, fname
         END SUBROUTINE hydro1d
         END INTERFACE
@@ -83,17 +84,17 @@ c      include 'f_gem_node.inc'
       INTERFACE
         subroutine walk2(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
-     *,m2)
+     *,m2,ismooth)
         !DEC$ ATTRIBUTES C :: walk2
       include 'gwheader.inc'
-        double precision xminr,xmaxr,bn(NBASIS,nnodex+2)
-        double precision cn(NCOMPL,nnodex+2)
-      double precision dx(NNODEX+2),bo(NBASIS,nnodex+2)
-      double precision co(NCOMPL,nnodex+2),partic(NUPMAX,NCOMPL+NBASIS)
-        double precision along, aquer, dm(nnodex+2),texe
+        double precision xminr,xmaxr,bn(NBASIS,NNODEX+2)
+        double precision cn(NCOMPL,NNODEX+2)
+      double precision dx(NNODEX+2),bo(NBASIS,NNODEX+2)
+      double precision co(NCOMPL,NNODEX+2),partic(NUPMAX,NCOMPL+NBASIS)
+        double precision along, aquer, dm(NNODEX+2),texe
       double precision vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
-        double precision x(nnodex+2)
-        integer nxmax,npmax ,ncyc, partib(nnodex+2), ismooth, m1,m2,m3,m4
+        double precision x(NNODEX+2)
+        integer nxmax,npmax ,ncyc, partib(NNODEX+2), ismooth, m1,m2,m3,m4
         integer ibpstart
         END SUBROUTINE walk2
         END INTERFACE
@@ -101,17 +102,17 @@ c      include 'f_gem_node.inc'
       INTERFACE
         subroutine walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
      *,partx,partxo,xmaxr,xminr,partic,bn,cn,partib,ibpstart,x,bo,co,m1
-     *,m2,por)
+     *,m2,por,ismooth)
         !DEC$ ATTRIBUTES C :: walk2
       include 'gwheader.inc'
-        double precision xminr,xmaxr,bn(NBASIS,nnodex+2)
-       double precision cn(NCOMPL,nnodex+2)
-      double precision dx(NNODEX+2),bo(NBASIS,nnodex+2)
-      double precision co(NCOMPL,nnodex+2),partic(NUPMAX,NCOMPL+NBASIS)
-        double precision along, aquer, dm(nnodex+2),texe
+        double precision xminr,xmaxr,bn(NBASIS,NNODEX+2)
+       double precision cn(NCOMPL,NNODEX+2)
+      double precision dx(NNODEX+2),bo(NBASIS,NNODEX+2)
+      double precision co(NCOMPL,NNODEX+2),partic(NUPMAX,NCOMPL+NBASIS)
+        double precision along, aquer, dm(NNODEX+2),texe
       double precision vx(NNODEX+2),partx(NUPMAX),partxo(NUPMAX)
-        double precision x(nnodex+2), por(NNODEX+2)
-        integer nxmax,npmax ,ncyc, partib(nnodex+2), ismooth, m1,m2,m3,m4
+        double precision x(NNODEX+2), por(NNODEX+2)
+        integer nxmax,npmax ,ncyc, partib(NNODEX+2), ismooth, m1,m2,m3,m4
         integer ibpstart
         END SUBROUTINE walk2h
         END INTERFACE
@@ -189,16 +190,16 @@ c in an ideal world this definitions are only used for MPI stuff
 	
 c12345678901234567890123456789012345678901234567890123456789012345690
       integer itest,ncyc,nxmax,nymax,isteu,inma,ipfile,ntim
-      integer npkt,ir(nnodex+2),npmax,nbox,nboxy,partib(nnodex+2)   
-      integer ismooth,iortx(5), i_sorb,j_sorb,iche(nnodex+2),j_decay
+      integer npkt,ir(NNODEX+2),npmax,nbox,nboxy,partib(NNODEX+2)   
+      integer ismooth,iortx(5), i_sorb,j_sorb,iche(NNODEX+2),j_decay
      *,ialkali,icyc
 c-coeff      integer npin, s,ss
       integer npin, s
       integer p_nDCb, p_nICb, p_nPHb, p_nPSb, p_nPH, gsize3
       integer itimestep_tp, dtprstep, kk1,k1
       real t1,t2
-      double precision bog(nbasis,nnodex+2),pog(nsolid,nnodex+2),          ! this are arrays used for conversion gems-mcotac
-     &         cog(ncompl,nnodex+2)
+      double precision bog(nbasis,NNODEX+2),pog(nsolid,NNODEX+2),          ! this are arrays used for conversion gems-mcotac
+     &         cog(ncompl,NNODEX+2)
       double precision p_T     !// Temperature T, K                        +      +      -     -
       double precision p_P     !// Pressure P, bar                         +      +      -     -
       double precision p_Vs    !// Volume V of reactive subsystem, cm3     -      -      +     +
@@ -268,7 +269,7 @@ c       kinetics.inc
 
         common /ikin1/ikin,ifgp,ifgd,nmineq
 
-        double precision amin(nsolid,nnodex+2),km(nsolid)
+        double precision amin(nsolid,NNODEX+2),km(nsolid)
         double precision eab(nsolid,nbasis),eac(nsolid,ncompl)
         double precision kmp(nsolid)
         double precision eabp(nsolid,nbasis),eacp(nsolid,ncompl)
@@ -280,11 +281,11 @@ c       kinetics.inc
         double precision otherj(nbasis),otheri(ncompl)
         double precision dratemdc(nsolid,nbasis)
         double precision dqdc(nsolid,nbasis),dxdc(ncompl,nbasis)
-        double precision rng(nsolid),volmol(nsolid),por(nnodex+2)
+        double precision rng(nsolid),volmol(nsolid),por(NNODEX+2)
         double precision gespvfi(nsolid),gespvfb(nsolid)
 
-        double precision vout(nsolid,nnodex+2),rout(nsolid,nnodex+2)
-        double precision wout(nsolid,nnodex+2)
+        double precision vout(nsolid,NNODEX+2),rout(nsolid,NNODEX+2)
+        double precision wout(nsolid,NNODEX+2)
 
         integer ikin(nsolid),ifg(nsolid)
         integer ifgp(nsolid),ifgd(nsolid)
@@ -292,39 +293,40 @@ c   kg44 st needs to be defined
         double precision texe
 ckinet>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 c
-        double precision st(nnodex+2),am(nnodex+2)
-     * ,dx(nnodex+2),por1(nnodex+2),poro(nnodex+2)
+        double precision st(NNODEX+2),am(NNODEX+2)
+     * ,dx(NNODEX+2),por1(NNODEX+2),poro(NNODEX+2)
      * ,partx(nupmax),partxo(nupmax),partic(nupmax,nbasis+ncompl)
-     * ,dm(nnodex+2)
-     * ,vx(nnodex+2), partiv(nnodex+2)
-     * ,hb(nnodex+2), por_null(nnodex+2), tx_null(nnodex+2)
-     * ,h0(nnodex+2), qw(nnodex+2), qr(nnodex+2)
-     * ,qbil(nnodex+2),	tx(nnodex+2)  
-     * ,bnflow(nbasis,nnodex+2),cnflow(ncompl,nnodex+2)
-     * ,sumbflowt(nbasis,nnodex+2)
-     * ,sumcflowt(ncompl,nnodex+2)
-     * ,sumqwat(nnodex+2)
-     * ,dqwater(nnodex+2)
-     * ,sumbcflowt(ncompl,nnodex+2)
+     * ,dm(NNODEX+2)
+     * ,vx(NNODEX+2), partiv(NNODEX+2)
+     * ,hb(NNODEX+2), por_null(NNODEX+2), tx_null(NNODEX+2)
+     * ,h0(NNODEX+2), qw(NNODEX+2), qr(NNODEX+2)
+     * ,qbil(NNODEX+2),	tx(NNODEX+2)  
+     * ,bnflow(nbasis,NNODEX+2),cnflow(ncompl,NNODEX+2)
+     * ,sumbflowt(nbasis,NNODEX+2)
+     * ,sumcflowt(ncompl,NNODEX+2)
+     * ,sumqwat(NNODEX+2)
+     * ,dqwater(NNODEX+2)
+     * ,sumbcflowt(ncompl,NNODEX+2)
+
 	 
 
-      dimension x(nnodex+2),tmp(nnodex+2),bn(nbasis,nnodex+2)
-     1,bo(nbasis,nnodex+2),pn(nsolid,nnodex+2),po(nsolid,nnodex+2)
-     1,cn(ncompl,nnodex+2),co(ncompl,nnodex+2)
-     2,eqconst(ncompl+nsolid,nnodex+2),acb(nbasis,nnodex+2)
-     3,acc(ncompl,nnodex+2),q(nsolid,nnodex+2),tmpold(nnodex+2),
-     5z(nbasis+nsolid,nbasis+nsolid),re(nbasis+nsolid)
-     7,wconst(nbasis),bc2(nbasis),eh(nnodex+2),pHarr(nnodex+2)
+      double precision x(NNODEX+2),tmp(NNODEX+2),bn(nbasis,NNODEX+2)
+     1,bo(nbasis,NNODEX+2),pn(nsolid,NNODEX+2),po(nsolid,NNODEX+2)
+     1,cn(ncompl,NNODEX+2),co(ncompl,NNODEX+2)
+     2,eqconst(ncompl+nsolid,NNODEX+2),acb(nbasis,NNODEX+2)
+     3,acc(ncompl,NNODEX+2),q(nsolid,NNODEX+2),tmpold(NNODEX+2)
+     5,z(nbasis+nsolid,nbasis+nsolid),re(nbasis+nsolid)
+     7,wconst(nbasis),bc2(nbasis),eh(NNODEX+2),pHarr(NNODEX+2)
      8,pnw(nsolid),pnd(nsolid)
      9,etc(3)
-     9,dpn(nsolid,nnodex+2)
-     5,index_i1(nbasis),bi_i1(nbasis),gesb_i1(nbasis)
+     9,dpn(nsolid,NNODEX+2)
+      integer index_i1(nbasis),bi_i1(nbasis),gesb_i1(nbasis)
      6,index_i2(nbasis),bi_i2(nbasis),gesb_i2(nbasis)
      7,gesp_i1(nsolid),gesp_i2(nsolid)
      8,gesc_i1(ncompl),gesc_i2(ncompl)
      5,gespvf_i1(nsolid),gespvf_i2(nsolid)
 
-      dimension cs(nnodex+2),tmpk(nnodex+2)
+      dimension cs(NNODEX+2),tmpk(NNODEX+2)
       common /betat/ betac
       common /dismdl/ idismdl,indxca,indxsi,indxcs,csbndry(0:2),
      1                conhcsm(0:3,2,4)
@@ -533,7 +535,7 @@ c nov 2002<<<<<<<
 c  --------------
 c  set max values
 c  --------------
-      maxnmax = nnodex
+      maxnmax = NNODEX
       maxnb = nbasis
       maxnc = ncompl
       maxnp = nsolid 
@@ -588,7 +590,7 @@ c >>>
       num(6)=m6
 
 c  **************************
-c  read iche(nnodex) array used to have heterogeneous chemistry
+c  read iche(NNODEX) array used to have heterogeneous chemistry
 c  **************************
       fname= "iche01.dat"
 	if (irank.eq.root) write(*,*) 'fname = ',fname,nxmax
@@ -1075,10 +1077,10 @@ c2003      tx_null(ih)= 1.28E-10*(1.-por(ih))**2/por(ih)**3.       !exp 4 specif
 c convert aqueous species to concentrations
 c
           do ii=1,j_sorb
- 	      bn(ii,n)=bn(ii,n)/por(n)
+ 	      bn(ii,n)=bn(ii,n)
            enddo
            do jj=1,m2
-  	       cn(jj,n)=cn(jj,n)/por(n)
+  	       cn(jj,n)=cn(jj,n)
            enddo
  
        enddo
@@ -1094,10 +1096,11 @@ ccc      write(*,'(13(e8.2,1x))')(gemsxDc(ib),ib=1,gemsnDCb)
 
 #ifdef __GNU
 	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
-     &     %val(m2),%val(m3),dx,bn,cn,pn,por,eh,pHarr,dumb, dumc, dump)
+     &     %val(m2),%val(m3),partib,dx,bn,cn,pn,por,eh,pHarr,dumb, 
+     &     dumc, dump)
 #else
 	idum=vtkout(itimestep_tp,time,nxmax,m1,
-     &     m2,m3,dx,bn,cn,pn,por,eh,pHarr,dumb,dumc,dump)
+     &     m2,m3,partib,dx,bn,cn,pn,por,eh,pHarr,dumb,dumc,dump)
 #endif
 c	pause
 
@@ -1201,7 +1204,7 @@ cpause         pause
       mges=m1+m2+m3
 
 c   set grid and subgrid
-      x(1)=0.-dx(1)
+      x(1)=0.
 c init ix and iy
       ix=0
       iy=0
@@ -1360,7 +1363,7 @@ c      write(*,'(a4,1x,i3,1x,6(e8.2,1x))')'235 ',itimestep_tp,
 c     *bn(1,1),pn(1,1),pn(2,1),bn(1,2),pn(1,2),pn(2,2)
 c	endif
       texe=dtmax
-c      write(*,*)'DIM F90', nnodex,nbasis,ncompl,nsolid,nupmax,npmax
+c      write(*,*)'DIM F90', NNODEX,nbasis,ncompl,nsolid,nupmax,npmax
       told=time
       time=time+texe
 c      time=time+dtmax
@@ -1401,6 +1404,30 @@ c       write(*,*)'nach hydro',icyc
 c  **********************************
 c  set old values equal to new values
 c  **********************************  
+c>>>>>0modified boundary on both sides
+            do ib=1,j_sorb
+	  	bn(ib,1)=bog(ib,1)
+	  	bn(ib,2)=bog(ib,2)
+	  	bn(ib,nxmax)=bog(ib,nxmax)
+	  	bn(ib,nxmax-1)=bog(ib,nxmax)
+	  	bn(ib,nxmax-2)=bog(ib,nxmax)
+            enddo
+            do ic=1,m2
+	  	cn(ic,1)=cog(ic,1)
+	  	cn(ic,1)=cog(ic,1)
+	  	cn(ic,nxmax)=cog(ic,nxmax)
+	  	cn(ic,nxmax-1)=cog(ic,nxmax)
+	  	cn(ib,nxmax-2)=cog(ib,nxmax)
+
+            enddo
+            do ip=1,m3
+	  	pn(ip,1)=pog(ip,1)  
+	  	pn(ip,2)=pog(ip,2)  
+	  	pn(ip,nxmax)=pog(ip,nxmax)  
+	  	pn(ip,nxmax-1)=pog(ip,nxmax)  
+	  	pn(ip,nxmax-2)=pog(ip,nxmax)  
+
+            enddo
 
 c>>>>>02-2003 modified boundary on the right side
       do 240 n=1,nxmax
@@ -1473,10 +1500,10 @@ c   assign concentration at time t to particles
 c   1. nuber of particles in each grid cell
 c      write (*,*) npmax, nbox,xmin,xmax
 #ifdef __GNU
-       call partid(%val(npmax),%val(nbox),%val(xmin),%val(xmax),
-     *            partib,dx,partx)
+       call partid(%val(npmax),%val(nbox),%val(nxmax),%val(xmin),
+     *            %val(xmax),partib,dx,partx)
 #else
-      call partid(npmax, nbox,xmin,xmax,partib,dx,partx)
+      call partid(npmax, nbox,nxmax,xmin,xmax,partib,dx,partx)
 #endif
 c      write(*,*)'partid hinter'
 
@@ -1511,23 +1538,24 @@ c   move particles during dt
 #ifdef __GNU
       call walk2h(%val(npmax),%val(nxmax),%val(ncyc),%val(along),
      * %val(aquer),dm,%val(texe),dx,vx
-     *  ,partx,partxo, %val(xmaxr),%val(xminr),partic,bn,cn,partib,
-     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2),por)
+     *  ,partx,partxo, %val(xmax),%val(xmin),partic,bn,cn,partib,
+     *  %val(ibpstart),x,bo,co,%val(m1),%val(m2),por,ismooth)
 #else
       call walk2h(npmax,nxmax,ncyc,along,aquer,dm,texe,dx,vx
-     *  ,partx,partxo, xmaxr,xminr,partic,bn,cn,partib,
-     *  ibpstart,x,bo,co,m1,m2,por)
+     *  ,partx,partxo, xmax,xmin,partic,bn,cn,partib,
+     *  ibpstart,x,bo,co,m1,m2,por,ismooth)
 #endif
 
 
+
 #ifdef __GNU
-      call concneu(%val(npmax),%val(nbox),%val(nxmax),%val(xminr),
-     *  %val(xmaxr),dx,bn,cn,partib,partx,
-     *  partic,bo,co,%val(ismooth),%val(m1),%val(m2))
+      call concneu(%val(npmax),%val(nbox),%val(nxmax),%val(xmin),
+     *  %val(xmax),dx,bn,cn,partib,partx,partxo,
+     *  partic,bo,co,por,%val(ismooth),%val(m1),%val(m2))
 #else
-      call concneu(npmax,nbox,nxmax,xminr,
-     *  xmaxr,dx,bn,cn,partib,partx,
-     *  partic,bo,co,ismooth,m1,m2)
+      call concneu(npmax,nbox,nxmax,xmin,
+     *  xmax,dx,bn,cn,partib,partx,partxo,
+     *  partic,bo,co,por,ismooth,m1,m2)
 #endif
 
 
@@ -1537,16 +1565,16 @@ c   move particles during dt
 c>>>>>0modified boundary on both sides
 c      if(imodbound.gt.0)then  
             do ib=1,j_sorb
-	  	bn(ib,1)=bog(ib,1)/por(1)
-	  	bn(ib,2)=bog(ib,2)/por(2)
-	  	bn(ib,nxmax)=bog(ib,nxmax)/por(nxmax)
-	  	bn(ib,nxmax-1)=bog(ib,nxmax-1)/por(nxmax-1)
+	  	bn(ib,1)=bog(ib,1)
+	  	bn(ib,2)=bog(ib,2)
+	  	bn(ib,nxmax)=bog(ib,nxmax)
+	  	bn(ib,nxmax-1)=bog(ib,nxmax-1)
             enddo
             do ic=1,m2
-	  	cn(ic,1)=cog(ic,1)/por(1)
-	  	cn(ic,2)=cog(ic,2)/por(2)
-	  	cn(ic,nxmax)=cog(ic,nxmax)/por(nxmax)
-	  	cn(ic,nxmax-1)=cog(ic,nxmax-1)/por(nxmax-1)
+	  	cn(ic,1)=cog(ic,1)
+	  	cn(ic,2)=cog(ic,2)
+	  	cn(ic,nxmax)=cog(ic,nxmax)
+	  	cn(ic,nxmax-1)=cog(ic,nxmax-1)
             enddo
             do ip=1,m3
 	  	pn(ip,1)=pog(ip,1)  
@@ -1589,10 +1617,10 @@ c transform the b and c vector to back to absolute values j_sorb+1 is water!
 c set water!
               bn(j_sorb+1,n)=por(n)*bog(j_sorb+1,n)/por_null(n)
           do ii=1,j_sorb
-   	        bn(ii,n)=bn(ii,n)*por(n)
+   	        bn(ii,n)=bn(ii,n)
            enddo
             do jj=1,m2
-        	 cn(jj,n)=cn(jj,n)*por(n)
+        	 cn(jj,n)=cn(jj,n)
              enddo
 	enddo
 
@@ -1676,13 +1704,13 @@ c<<<<<<  system time initialisation for CPU consumption purposes
 c      time_gemsstart=RTC()
       time_gemsstart=secnds(0.)
 
-	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
-     *)
-c	idum=1
+c	call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+c     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
+c     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+c     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
+c     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
+c     *)
+	idum=1
 	if (idum.ne.1) then 
 	   write(*,*)"GEMS problem ", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
@@ -1726,7 +1754,7 @@ c      time_gemsend=RTC()
 	maxmolb=max(pn_subdomain(ip+(n-1)*m3),maxmolb)
  1798 continue
 
-	if((maxmola.gt.100.0).or.(maxmola.gt.100.0).or.
+	if((maxmola.gt.100.0).or.(maxmolb.gt.100.0).or.
      &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
 	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
 	   STOP
@@ -1858,13 +1886,13 @@ c      time_gemsstart=RTC()
 c	write(*,*)"p_bic",n, p_bIC
 c	    write(*,*)"node",n,"p_xDc",(p_xDc(ib),ib=1,p_nDCb)
 
-      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
-     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
-     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
-     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
-     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
-     *)
-c	idum=1
+c      call F_GEM_CALC_NODE( p_NodeHandle,p_NodeTypeHY,p_NodeTypeMT
+c     *,p_NodeStatusFMT,p_NodeStatusCH,p_IterDone,p_T, p_P
+c     *,p_Vs,p_Vi,p_Ms,p_Mi,p_Gs,p_Hs,p_Hi,p_IC,p_pH,p_pe,p_Eh
+c     *,p_bIC,p_rMB,p_uIC,p_xDC,p_gam, p_dul, p_dll, p_aPH
+c     *,p_xPH,p_vPS,p_mPS,p_bPS,p_xPA,idum,idebug
+c     *)
+	idum=1
 	if (idum.ne.1) then 
 	   write(*,*)"GEMS problem ", idum
 	  write(*,*) "P_IterDone: ",p_IterDone
@@ -1896,11 +1924,11 @@ c
 	maxmolb=max(pn(ip,n),maxmolb)
  1798 continue
 
-	if((maxmola.gt.100.0).or.(maxmola.gt.100.0).or.
-     &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
-	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
-	   STOP
-	endif
+c	if((maxmola.gt.100.0).or.(maxmolb.gt.100.0).or.
+c     &     (maxmolb/maxmola.gt.2.0).or.(idum.ne.1)) then
+c	   write(*,*) "Problem with maxmol or idum!", maxmola,maxmolb
+c	   STOP
+c	endif
 
 
 	p_IterDone=0
@@ -1933,14 +1961,6 @@ c transform the b and c vector to concentrations j_sorb+1 is water!
 	 pormin=min(por(n),pormin)
          dmin=min(dm(n),dmin)
 
-
-c
-          do ii=1,j_sorb
- 	       bn(ii,n)=bn(ii,n)/por(n)
-           enddo
-           do jj=1,m2
-  	        cn(jj,n)=cn(jj,n)/por(n)
-           enddo
 
 c         end loop over nodes
         enddo
@@ -2134,10 +2154,11 @@ c**** output fuer t als backup
      *     time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
 #ifdef __GNU
 	idum=vtkout(%val(itimestep_tp),%val(time),%val(nxmax),%val(m1),
-     &     %val(m2),%val(m3),dx,bn,cn,pn,por,eh,pHarr,dumb, dumc, dump)
+     &     %val(m2),%val(m3),partib,dx,bn,cn,pn,por,eh,pHarr,
+     &     dumb, dumc, dump)
 #else
 	idum=vtkout(itimestep_tp,time,nxmax,m1,
-     &     m2,m3,dx,bn,cn,pn,por,eh,pHarr,dumb,dumc,dump)
+     &     m2,m3,partib,dx,bn,cn,pn,por,eh,pHarr,dumb,dumc,dump)
 #endif
 
          endif                          ! write out backso
@@ -2255,8 +2276,8 @@ c  *********************************************************
       include 'gwheader.inc'
         character *10 dumb,dumc,dump
 
-        double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
-     *, pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
+        double precision bn(nbasis,NNODEX+2),cn(ncompl,NNODEX+2)
+     *, pn(nsolid,NNODEX+2),por(NNODEX+2),dm(NNODEX+2)
      * ,time,tprint(25),dtmax
         integer itimestep_tp,k1,m1,m2,m3,nxmax
         common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
@@ -2297,8 +2318,8 @@ c  *********************************************************
      *         time,itimestep_tp,tprint,k1,m1,m2,m3,nxmax)
       include 'gwheader.inc'
         character *10 dumb,dumc,dump
-        double precision bn(nbasis,nnodex+2),cn(ncompl,nnodex+2)
-     *,pn(nsolid,nnodex+2),por(nnodex+2),dm(nnodex+2)
+        double precision bn(nbasis,NNODEX+2),cn(ncompl,NNODEX+2)
+     *,pn(nsolid,NNODEX+2),por(NNODEX+2),dm(NNODEX+2)
      * ,time,tprint(25),dtmax
         integer itimestep_tp,k1,m1,m2,m3,nxmax
         common /inc/ dumb(nbasis),dumc(ncompl),dump(nsolid)
