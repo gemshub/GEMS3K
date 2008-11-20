@@ -156,7 +156,7 @@ typedef enum {  // Classifications of DC
     DC_SUR_IPAIR   = 'Z',   // Weak sur complex B plane -> '1'
 
     // Single-component phases:
-    DC_SCP_CONDEN  = 'O',   // DC forming a single-component phase
+    DC_SCP_CONDEN  = 'O'   // DC forming a single-component phase
 
 } DC_CLASSES;
 

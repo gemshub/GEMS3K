@@ -184,7 +184,14 @@ int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
   CalcTime = 0.0;
   PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
-  double ScFact = InternalMass/CNode->Ms; 
+//  double ScFact = InternalMass/CNode->Ms; //bug: old mass from previous run will be taken 
+double mass_temp=0.0, ScFact=0.0; 
+int i;
+	for (i=0;i<CSD->nICb;i++){
+		mass_temp += CNode->bIC[i]*CSD->ICmm[IC_xDB_to_xCH(i)];
+	}
+	CNode->Ms=mass_temp;
+	ScFact = InternalMass/mass_temp; // changed to scaling via newly calculated mass from bIC vector, 
 //
   try
   {
@@ -759,16 +766,16 @@ void TNode::freeMemory()
 
 // Makes start DATACH and DATABR data from GEMS internal data (MULTI and other)
 void TNode::MakeNodeStructures(
-    short anICb,       // number of stoichiometry units (<= nIC) used in the data bridge
-    short anDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
-    short anPHb,     	// number of phases (<= nPH) used in the data bridge
-    short* axIC,   // ICNL indices in DATABR IC vectors [nICb]
-    short* axDC,   // DCNL indices in DATABR DC list [nDCb]
-    short* axPH,   // PHNL indices in DATABR phase vectors [nPHb]
+    int anICb,       // number of stoichiometry units (<= nIC) used in the data bridge
+    int anDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
+    int anPHb,     	// number of phases (<= nPH) used in the data bridge
+    int* axIC,   // ICNL indices in DATABR IC vectors [nICb]
+    int* axDC,   // DCNL indices in DATABR DC list [nDCb]
+    int* axPH,   // PHNL indices in DATABR phase vectors [nPHb]
     float* Tai, float* Pai,
-    short nTp_, short nPp_, float Ttol_, float Ptol_  )
+    int nTp_, int nPp_, float Ttol_, float Ptol_  )
 {
-  short ii;
+  int ii;
   TCIntArray aSelIC;
   TCIntArray aSelDC;
   TCIntArray aSelPH;
@@ -789,7 +796,7 @@ void TNode::MakeNodeStructures(
 // Make start DATACH and DATABR data from GEMS internal data (MULTI and other)
 void TNode::MakeNodeStructures( QWidget* par, bool select_all,
     float *Tai, float *Pai,
-    short nTp_, short nPp_, float Ttol_, float Ptol_  )
+    int nTp_, int nPp_, float Ttol_, float Ptol_  )
 {
 
   //MULTI *mult = TProfil::pm->pmp;
@@ -842,12 +849,12 @@ void TNode::MakeNodeStructures( QWidget* par, bool select_all,
 // Writing dataCH structure to binary file
 void TNode::makeStartDataChBR(
   TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-  short nTp_, short nPp_, float Ttol_, float Ptol_,
+  int nTp_, int nPp_, float Ttol_, float Ptol_,
   float *Tai, float *Pai )
 {
 // set sizes for DataCh
   uint ii;
-  short i1;
+  int i1;
 // reallocates memory for     DATACH  *CSD;  and  DATABR  *CNode;
   if( !CSD )
      CSD = new DATACH;
@@ -875,9 +882,9 @@ void TNode::makeStartDataChBR(
 
 // These dimensionalities define sizes of dynamic data in DATABR structure!!!
 
-  CSD->nICb = (short)selIC.GetCount();
-  CSD->nDCb = (short)selDC.GetCount();
-  CSD->nPHb = (short)selPH.GetCount();
+  CSD->nICb = (int)selIC.GetCount();
+  CSD->nDCb = (int)selDC.GetCount();
+  CSD->nPHb = (int)selPH.GetCount();
   CSD->nPSb = 0;
   for( ii=0; ii< selPH.GetCount(); ii++, CSD->nPSb++ )
    if( selPH[ii] >= pmm->FIs )
@@ -897,11 +904,11 @@ void TNode::makeStartDataChBR(
 // set dynamic data to DataCH
 
   for( ii=0; ii< selIC.GetCount(); ii++ )
-    CSD->xIC[ii] = (short)selIC[ii];
+    CSD->xIC[ii] = (int)selIC[ii];
   for( ii=0; ii< selDC.GetCount(); ii++ )
-    CSD->xDC[ii] = (short)selDC[ii];
+    CSD->xDC[ii] = (int)selDC[ii];
   for( ii=0; ii< selPH.GetCount(); ii++ )
-    CSD->xPH[ii] = (short)selPH[ii];
+    CSD->xPH[ii] = (int)selPH[ii];
 
   for( i1=0; i1< CSD->nIC*CSD->nDC; i1++ )
     CSD->A[i1] = pmm->A[i1];
@@ -1079,7 +1086,7 @@ TNode::~TNode()
 // Extracting and packing GEM IPM results into work DATABR structure
 void TNode::packDataBr()
 {
- short ii;
+ int ii;
 
 // set default data to DataBr
 #ifndef IPMGEMPLUGIN
@@ -1129,7 +1136,7 @@ void TNode::packDataBr()
        CNode->xPA[ii] = pmm->XFA[ CSD->xPH[ii] ];
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
-   for(short jj=0; jj<CSD->nICb; jj++ )
+   for(int jj=0; jj<CSD->nICb; jj++ )
    { int   new_ndx= (ii*CSD->nICb)+jj,
            mul_ndx = ( CSD->xPH[ii]*CSD->nIC )+ CSD->xIC[jj];
      CNode->bPS[new_ndx] = pmm->BF[ mul_ndx ];
@@ -1210,7 +1217,7 @@ void TNode::packDataBr( double ScFact )
        CNode->xPA[ii] = pmm->XFA[ CSD->xPH[ii] ]  / ScFact;
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
-   for(short jj=0; jj<CSD->nICb; jj++ )
+   for(int jj=0; jj<CSD->nICb; jj++ )
    { int   new_ndx= (ii*CSD->nICb)+jj,
            mul_ndx = ( CSD->xPH[ii]*CSD->nIC )+ CSD->xIC[jj];
      CNode->bPS[new_ndx] = pmm->BF[ mul_ndx ]  / ScFact;
