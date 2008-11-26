@@ -34,10 +34,10 @@
 //  yoi or xoi are out of range
 //
 double LagranInterp(double *y, double *x, double *d, double yoi,
-                    double xoi, int M, int N, int pp )
+                    double xoi, long int M, long int N, long int pp )
 {
     double s,z,s1[21];
-    int ppy, ppx, py, px, i, j, k, jx, jy, jy1;
+    long int ppy, ppx, py, px, i, j, k, jx, jy, jy1;
 
     py = N-1;
     px = M-1;

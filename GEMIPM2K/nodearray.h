@@ -36,7 +36,7 @@ enum  PTCODE // Codes of particle type
 
 struct  LOCATION // Location (coordinates) of a point in space
 {                // for implementation of particle transport algorithms
-  float x,
+  double x,
         y,
         z;
 
@@ -64,10 +64,10 @@ class TNodeArray : public TNode
     DATABR* (*NodT0);  // array of nodes for previous time point
     DATABR* (*NodT1);  // array of nodes for current time point
 
-    int anNodes;       // Number of allocated nodes
-    int sizeN;		   // Number of nodes along x direction
-    int sizeM;           // Number of nodes along y direction
-    int sizeK;           // Number of nodes along z direction
+    long int anNodes;       // Number of allocated nodes
+    long int sizeN;		   // Number of nodes along x direction
+    long int sizeM;           // Number of nodes along y direction
+    long int sizeK;           // Number of nodes along z direction
 
     LOCATION size;     // spatial dimensions of the medium ( x, 0, 0 - 1D; x,y,0 - 2D; x,0,z - 2D; x,y,z - 3D )
                        // defines topology of nodes (N of grid points per node): 1D- 2; 2D- 4; 3D- 8 )
@@ -84,12 +84,12 @@ class TNodeArray : public TNode
 
    // Prototypes of functions to manage location of particles
    // within nodes relative to the whole grid of the node walls
-   LOCATION getGrid( int iN, int jN, int kN ) const;
+   LOCATION getGrid( long int iN, long int jN, long int kN ) const;
 
    // Test if the location cxyz resides in the node ( ii,jj,kk )
-   bool isLocationInNode( int ii, int jj, int kk, LOCATION cxyz ) const;
+   bool isLocationInNode( long int ii, long int jj, long int kk, LOCATION cxyz ) const;
    // Test if the location cxyz resides in the node with absolute index iNode
-   bool isLocationInNode( int iNode, LOCATION cxyz ) const;
+   bool isLocationInNode( long int iNode, LOCATION cxyz ) const;
 
 public:
 
@@ -99,49 +99,49 @@ public:
 // These calls are used only inside of GEMS-PSI GEM2MT module
 
    // constructor for integration in GEM2MT module of GEMS-PSI
-   TNodeArray( int nNodes, MULTI *apm );
+   TNodeArray( long int nNodes, MULTI *apm );
 
    // constructor that uses 3D node arrangement
-   TNodeArray( int asizeN, int asizeM, int asizeK,MULTI *apm );
+   TNodeArray( long int asizeN, long int asizeM, long int asizeK, MULTI *apm );
 
   // Prints MULTI, DATACH and DATABR files structure prepared from GEMS
   // for separate coupled FMT-GEM programs that use GEMIPM2K module
   // or if putNodT1 == true  as a break point for the running FMT calculation
-  gstring PutGEM2MTFiles(  QWidget* par, int nIV,
+  gstring PutGEM2MTFiles(  QWidget* par, long int nIV,
       bool multi_bin_mode, bool bin_mode, bool putNodT1=false );
 
    // Reads DATABR files saved by GEMS as a break point of the FMT calculation
    // Copying data from work DATABR structure into the node array NodT0
    // and read DATABR structure into the node array NodT1 from file dbr_file
-   void  setNodeArray( gstring& dbr_file, int ndx, bool binary_f );
+   void  setNodeArray( gstring& dbr_file, long int ndx, bool binary_f );
 
 #else
 // Used in GEMIPM2 standalone module only
-   TNodeArray( int nNod );   // constructors for 1D arrangement of nodes
-   TNodeArray( int asizeN, int asizeM, int asizeK );
+   TNodeArray( long int nNod );   // constructors for 1D arrangement of nodes
+   TNodeArray( long int asizeN, long int asizeM, long int asizeK );
    // constructor that uses 3D node arrangement
 #endif
 
 // makes one absolute node index from three spatial coordinate indexes
-   inline int iNode( int indN, int indM, int indK ) const
+   inline long int iNode( long int indN, long int indM, long int indK ) const
      { return  (( indK * sizeM + indM  ) * sizeN + indN);  }
 
      // get i index along N (x axis) from the absolute index ndx
-   inline int indN( int ndx ) const
+   inline long int indN( long int ndx ) const
     { return  (ndx % sizeN);  }
 
     // get j index along M (y axis) from the absolute index ndx
-   inline int indM( int ndx ) const
+   inline long int indM( long int ndx ) const
     {
-     int j = (ndx - ndx % sizeN);
+	   long int j = (ndx - ndx % sizeN);
          j /=  sizeN;
      return  (j % sizeM);
     }
 
     // get k index along K (z axis) from the absolute index ndx
-   inline int indK( int ndx ) const
+   inline long int indK( long int ndx ) const
     {
-      int k = ndx - ndx % sizeN;
+	   long int k = ndx - ndx % sizeN;
           k /= sizeN;
           k = k - k % sizeM;
       return  k/sizeM;
@@ -149,16 +149,16 @@ public:
 
     ~TNodeArray();      // destructor
 
-    int nNodes() const  // get total number of nodes in the node array
+    long int nNodes() const  // get total number of nodes in the node array
     { return anNodes; }
 
-    int SizeN() const  // get number of nodes in N direction (along x coordinate)
+    long int SizeN() const  // get number of nodes in N direction (along x coordinate)
     { return sizeN; }
 
-    int SizeM() const  // get number of nodes in M direction (along y coordinate)
+    long int SizeM() const  // get number of nodes in M direction (along y coordinate)
     { return sizeM; }
 
-    int SizeK() const  // get number of nodes in K direction (along z coordinate)
+    long int SizeK() const  // get number of nodes in K direction (along z coordinate)
     { return sizeK; }
 
     DATABRPTR* pNodT0() const // get pointer to array of nodes for the previous time point
@@ -180,28 +180,28 @@ public:
     { IPM_InternalMass = NewMass; }        // NewMass <= 0. disables the IPM system size rescaling
     
     // Calls GEM IPM calculation for a node with absolute index ndx
-    int RunGEM( int ndx, int Mode );
+    long int RunGEM( long int ndx, long int Mode );
 
     // Calls GEM IPM for one node with three indexes (along x,y,z)
-    int  RunGEM( int indN, int indM, int indK, int Mode )
+    long int  RunGEM( long int indN, long int indM, long int indK, long int Mode )
     { return RunGEM( iNode( indN, indM, indK ), Mode); }
         // (both calls clean the work node DATABR structure)
 
     // Copies data from the work DATABR structure into the node ndx in  ?????
     // the node arrays NodT0 and NodT1  (as specified in nodeTypes array)
-    void  setNodeArray( int ndx, int* nodeTypes  );
+    void  setNodeArray( long int ndx, long int* nodeTypes  );
 
    // test setup of the boundary condition for all nodes in the task
-    void  checkNodeArray(int i, int* nodeTypes, const char*  datachbr_file );
+    void  checkNodeArray( long int i, long int* nodeTypes, const char*  datachbr_file );
 
    //---------------------------------------------------------
    // Methods for working with node arrays (access to data from DBR)
    // Calculate phase (carrier) mass, g  of single component phase
-   double get_mPH( int ia, int nodex, int PHx );
+   double get_mPH( long int ia, long int nodex, long int PHx );
    // Calculate phase volume, cm3  of single component phase
-   double get_vPH( int ia, int nodex, int PHx );
+   double get_vPH( long int ia, long int nodex, long int PHx );
    // Calculate bulk compositions  of single component phase
-   double get_bPH( int ia, int nodex, int PHx, int IC );
+   double get_bPH( long int ia, long int nodex, long int PHx, long int IC );
 
 
    //---------------------------------------------------------
@@ -209,18 +209,18 @@ public:
 
     //  Copies data for a node ndx from the array of nodes anyNodeArray that
      // contains nNodes into the work node data bridge structure
-    void CopyWorkNodeFromArray( int ndx, int nNodes, DATABRPTR* anyNodeArray );
+    void CopyWorkNodeFromArray( long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
 
     //  Moves work node data to the ndx element of the node array anyNodeArray
      // that has nNodes. Previous contents of the ndx element will be lost,
      // work node will be allocated new and will contain no data
-    void MoveWorkNodeToArray( int ndx, int nNodes, DATABRPTR* anyNodeArray );
+    void MoveWorkNodeToArray( long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
 
     // Copies a node from the node array arr_From to the same place in the
      // node array arr_To. Previous contents of the ndx element in arr_To
      // will be lost. Uses the work node structure which will be newly
      // allocated and contain no data afterwards
-    void CopyNodeFromTo( int ndx, int nNodes, DATABRPTR* arr_From,
+    void CopyNodeFromTo( long int ndx, long int nNodes, DATABRPTR* arr_From,
          DATABRPTR* arr_To );
 
     //---------------------------------------------------------
@@ -228,22 +228,22 @@ public:
     // formatted writing into text file that must be already open 
     //
     // Prints difference increments in all nodes (cells) for step t (time point at)
-    void logDiffsIC( FILE* diffile, int t, double at, int nx, int every_t );
+    void logDiffsIC( FILE* diffile, long int t, double at, long int nx, long int every_t );
 
     // Prints dissolved elemental molarities in all cells for time point t / at
-    void logProfileAqIC( FILE* logfile, int t, double at, int nx, int every_t );
+    void logProfileAqIC( FILE* logfile, long int t, double at, long int nx, long int every_t );
 
     // Prints total elemental amounts in all cells for time point t / at
-    void logProfileTotIC( FILE* logfile, int t, double at, int nx, int every_t );
+    void logProfileTotIC( FILE* logfile, long int t, double at, long int nx, long int every_t );
 
     // Prints amounts of phases in all cells for time point t / at
-    void logProfilePhMol( FILE* logfile, int t, double at, int nx, int every_t );
+    void logProfilePhMol( FILE* logfile, long int t, double at, long int nx, long int every_t );
     
     // Prints volumes of phases in all cells for time point t / at
-    void logProfilePhVol( FILE* logfile, int t, double at, int nx, int every_t );
+    void logProfilePhVol( FILE* logfile, long int t, double at, long int nx, long int every_t );
     
     // Prints dissolved species molarities in all cells for time point t / at
-    void logProfileAqDC( FILE* logfile, int t, double at, int nx, int every_t );
+    void logProfileAqDC( FILE* logfile, long int t, double at, long int nx, long int every_t );
 
     //---------------------------------------------------------
     // Working with the node grid (mainly used in Random Walk algorithms)
@@ -255,13 +255,13 @@ public:
      // Finds a node absolute index for the current
      // point location (uses grid coordinate array grid[])
      // performance-important functions to be used e.g. in particle tracking methods
-     int FindNodeFromLocation( LOCATION cxyz, int old_node = -1 ) const;
+     long int FindNodeFromLocation( LOCATION cxyz, long int old_node = -1 ) const;
 
      // get 3D sizes for node (  from cxyz[0] - to cxyz[1] )
-     void GetNodeSizes( int ndx, LOCATION cxyz[2] );
+     void GetNodeSizes( long int ndx, LOCATION cxyz[2] );
 
      // get 3D location for node (  from cxyz[0] - to cxyz[1] )
-     LOCATION& GetNodeLocation( int ndx )
+     LOCATION& GetNodeLocation( long int ndx )
      { return grid[ndx]; }
 
      // get 3D size of the whole region
@@ -269,10 +269,10 @@ public:
      { return size; }
 
      // get full mass particle type in the node ndx
-     double GetNodeMass( int ndx, char type, char tcode, unsigned char ips );
+     double GetNodeMass( long int ndx, char type, char tcode, unsigned char ips );
 
      // move a mass m_v from node ndx_from to node ind_to, for particle type
-     void MoveParticleMass( int ndx_from, int ind_to, char type, char ComponentMode, 
+     void MoveParticleMass( long int ndx_from, long int ind_to, char type, char ComponentMode, 
     		 char tcode, unsigned char ips, double m_v );
 
 };

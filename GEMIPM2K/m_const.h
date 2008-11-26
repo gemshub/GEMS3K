@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 1080 2008-06-09 12:01:15Z wagner $
+// $Id: m_const.h 1122 2008-11-25 13:06:47Z gems $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -24,45 +24,45 @@ using namespace std;
 #include "verror.h"
 #include "v_user.h"
 
-const int MST =  6,
+const long int MST =  6,
           DFCN = 6; // number of columns in MASDJ table
 
-const unsigned int
+const unsigned long int
     MAXICNAME =      6,
     MAXSYMB =        4,
     TDBVERSION =     64;
 
-const int
+const long int
     MAXDCNAME =      16,
     MAXPHNAME =      16,
     EQ_RKLEN = 58;
 
-const int 	MPP_TOT = 0,       // index of column with total mixed phase property 
+const int 	MPP_TOT = 0,       // index of column with total mixed phase property
 	MPP_STD = 1,       // index of column with standard property sum for mixed phases
 	MPP_RES = 2,       // index of column with residual property sum for mixed phases
-	MPP_ID = 3,        // index of column with ideal mixing property for the phases 
-	MPP_EX = 4,        // index of column with excess mixing property for the phases 
+	MPP_ID = 3,        // index of column with ideal mixing property for the phases
+	MPP_EX = 4,        // index of column with excess mixing property for the phases
 	MIXPHPROPS = 5;    // Number of columns in the property table for mixed phases
 
 enum solmod_switches { // indexes of keys of model solution
-    SPHAS_TYP, 
-    DCOMP_DEP, 
-    SPHAS_DEP, 
-    SGM_MODE, 
-    DCE_LINK, 
+    SPHAS_TYP,
+    DCOMP_DEP,
+    SPHAS_DEP,
+    SGM_MODE,
+    DCE_LINK,
     SCM_TYPE,
     // link state
-    LINK_UX_MODE, 
-    LINK_TP_MODE, 
+    LINK_UX_MODE,
+    LINK_TP_MODE,
     LINK_FIA_MODE,
     // Posible values of �of keys of model solution - DCOMP_DEP, SPHAS_DEP
-    SM_UNDEF = 'N', 
-    SM_TPDEP = 'T', 
-    SM_UXDEP = 'X', 
+    SM_UNDEF = 'N',
+    SM_TPDEP = 'T',
+    SM_UXDEP = 'X',
     SM_PRIVATE_ = 'P',
     SM_PUBLIC = 'U',
     // Posible modes calculating of activity coefficients SGM_MODE
-    SM_STNGAM = 'S', 
+    SM_STNGAM = 'S',
     SM_NOSTGAM = 'N',
 // This code (one upper-case letter or digit) defines type of mixing
 //    and default method of calculation of mixing properties before and at
@@ -81,7 +81,8 @@ enum solmod_switches { // indexes of keys of model solution
     SM_AQDH3 = '3',		// built-in 3-d approximation of Debye-Hueckel
     SM_AQDHH = 'H',		// built-in 3-d approximation of Debye-Hueckel (Helgeson)
     SM_AQSIT = 'S',		// built-in SIT model for aq activity coeffs (reserved)
-SM_AQEUQ = 'Q',  // built-in EUNIQUAC model for aqueous activity coeffs (reserved)
+    SM_AQEXUQ = 'Q',    // built-in EUNIQUAC model for aqueous activity coeffs (reserved)
+    SM_AQPITZ = 'Z',    // built-in Pitzer HMW aqueous activity coefficient model (under construction)
     SM_PRFLUID = 'P',	// Peng-Robinson-Stryjek-Vera EOS fluid model (Added by Th.Wagner)
     SM_IONEX = 'E',		// ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface

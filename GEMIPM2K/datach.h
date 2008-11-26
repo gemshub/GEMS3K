@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: datach.h 1066 2008-05-16 14:16:59Z gems $
+// $Id: datach.h 1121 2008-11-25 10:16:38Z gems $
 //
 // DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.
@@ -25,7 +25,7 @@
 #ifndef _DataCh_H_
 #define _DataCh_H_
 
-const int
+const long int
     MaxICN =      6,      // IC name length
     MaxDCN =      16,     // DC name length
     MaxPHN =      16;     // PH name length
@@ -33,7 +33,7 @@ const int
 typedef struct
 {  // Structure DataCH
 // Dimensionalities
-  int     // changed from short on 26.06.2008   DK
+  long int     // changed from short on 26.06.2008   DK
 //  These dimensionalities should be the same as in the GEMIPM work structure (MULTI)
     nIC,    // Total number of IC (independent components) in the reactive part
     nDC,    // Total number of DC (chemical species) in the reactive part

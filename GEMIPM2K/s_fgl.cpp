@@ -1,9 +1,11 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1100 2008-07-09 19:29:25Z wagner $
+// $Id: s_fgl.cpp 1122 2008-11-25 13:06:47Z gems $
 //
-// Copyright (C) 2004-2007  S.Churakov, Th.Wagner, D.Kulik
+// Copyright (C) 2004,2008  S.Churakov, Th.Wagner, D.Kulik
 //
 // Implementation of TFGLcalc class (see s_fgl.h)
+// Implementation of parts of TPRSVcalc and TCFGcalc classes
+// called from m_dcomp.cpp
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
@@ -24,9 +26,128 @@
   #include "m_const.h"
 #endif
 
+#ifndef IPMGEMPLUGIN
+#include "s_tpwork.h"
+//--------------------------------------------------------------------//
+//
+long int TPRSVcalc::CalcFugPure( void )
+{
+    double T, P, Fugcoeff = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
+    float *Coeff;
+    double Eos2parPT[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
+    long int retCode = 0;
+
+    ErrorIf( !aW.twp, "PRSV EoS", "Undefined twp");
+
+    P = aW.twp->P;    /* P in 10^5 Pa? */
+    T = aW.twp->TC+273.15;   /* T?in K */
+
+    Coeff = aW.twp->CPg;     /* pointer to coeffs of CG EOS */
+
+// Calling PRSV EoS functions here
+
+    if( T >= aW.twp->TClow +273.15 && T < 1e4 && P >= 1e-5 && P < 1e5 )
+       retCode = PRFugacityPT( P, T, Coeff, Eos2parPT, Fugcoeff, Volume,
+            DeltaH, DeltaS );
+    else {
+            Fugcoeff = 1.;
+            Volume = 8.31451*T/P;
+            aW.twp->V = Volume;
+            aW.twp->Fug = Fugcoeff*P;
+            return retCode;
+          }
+
+    aW.twp->G += 8.31451 * T * log( Fugcoeff );   // from fugacity coeff
+    /* add enthalpy and enthropy increments */
+    aW.twp->H +=  DeltaH;   // in J/mol - to be completed
+    aW.twp->S +=  DeltaS;   // to be completed
+    aW.twp->V = Volume; /* /10.  in J/bar */
+    aW.twp->Fug = Fugcoeff * P;   /* fugacity at P */
+
+//  passing corrected EoS coeffs to calculation of fluid mixtures (3 added, 31.05.2008 TW)
+    aW.twp->wtW[6] = Eos2parPT[0];	// a
+    aW.twp->wtW[7] = Eos2parPT[1];  // b
+    aW.twp->wtW[8] = Eos2parPT[2];	// sqrAL
+    aW.twp->wtW[9] = Eos2parPT[3];	// ac
+    aW.twp->wtW[10] = Eos2parPT[4];	// dALdT
+
+    return retCode;
+}
+
+#endif
+
+#ifndef IPMGEMPLUGIN
+//--------------------------------------------------------------------//
+//
+long int TCGFcalc::CGcalcFug( void )
+{
+    double T, P, Fugacity = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
+    double X[1]={1.};
+    double roro;  // added 21.06.2008 (TW)
+    float *Coeff;
+    double Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
+            Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
+    long int retCode = 0;
+
+    ErrorIf( !aW.twp, "CG EoS", "Undefined twp");
+
+    P = aW.twp->P;    /* P in 10^5 Pa? */
+    T = aW.twp->TC+273.15;   /* T?in K */
+
+    Coeff = aW.twp->Cemp;     /* pointer to coeffs of CG EOS */
+
+// Calling CG EoS functions here
+
+    if( T >= aW.twp->TClow +273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
+       retCode = CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T, roro );
+    else {
+            Fugacity = P;
+            Volume = 8.31451*T/P;
+            aW.twp->V = Volume;
+            aW.twp->Fug = Fugacity;
+            aW.twp->wtW[6] = Coeff[0];
+            if( aW.twp->wtW[6] < 1. || aW.twp->wtW[6] > 10. )
+                aW.twp->wtW[6] = 1.;                 // foolproof temporary
+            aW.twp->wtW[7] = Coeff[1];
+            aW.twp->wtW[8] = Coeff[2];
+            aW.twp->wtW[9] = Coeff[3];
+            return retCode;
+          }
+
+//    if( retCode < 0 )
+//    {  //  error - too low pressure
+//       Fugacity = P;
+//      Volume = 8.31451*T;
+//    }
+
+    aW.twp->G += 8.31451 * T * log( Fugacity / P );
+    aW.twp->V = Volume /* /10.  in J/bar */;
+//    aW.twp->U = ((aW.twp->H/4.184)-RP*fg.VLK*fg.P2)*4.184;
+    aW.twp->Fug = Fugacity;   /* fugacity at P */
+// For passing corrected EoS coeffs to calculation of fluid
+// mixtures
+    aW.twp->wtW[6] = Eos4parPT[0];
+if( aW.twp->wtW[6] < 1. || aW.twp->wtW[6] > 10. )
+  aW.twp->wtW[6] = 1.;                            // foolproof temporary
+    aW.twp->wtW[7] = Eos4parPT[1];
+    aW.twp->wtW[8] = Eos4parPT[2];
+    aW.twp->wtW[9] = Eos4parPT[3];
+
+    // add enthalpy and enthropy increments
+    retCode = CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*DELTA, roro );
+    CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, roro, T, DeltaH, DeltaS );
+    aW.twp->H +=  DeltaH;
+    aW.twp->S +=  DeltaS;
+//
+    return retCode;
+}
+
+#endif
+
+
 //--------------------------------------------------------------------//
 
-double TCGFcalc::DIntegral(double T, double ro,unsigned IType)
+double TCGFcalc::DIntegral(double T, double ro, unsigned long int IType)
 {
   static double TOld,roOld;
   static double a,b,c,d,e;
@@ -52,7 +173,7 @@ double TCGFcalc::DIntegral(double T, double ro,unsigned IType)
 //      {-2.139734,1.971553, 0.945513, -1.901492,-0.588630,-5.390941};
 //      {-0.637684, 0.708107,  0.222086,  -0.481116, -0.332141, -3.492213};
 
-   unsigned n;
+   unsigned long int n;
    double *dtmp,rez;
 
   if ( (T!=TOld) || (ro!=roOld) )
@@ -83,7 +204,7 @@ double TCGFcalc::DIntegral(double T, double ro,unsigned IType)
 }
 
 
-double TCGFcalc::LIntegral(double T, double ro,unsigned IType)
+double TCGFcalc::LIntegral(double T, double ro,unsigned long int IType)
 {
   static double TOld,roOld;
   static double a,b,c,d,e;
@@ -125,7 +246,7 @@ double TCGFcalc::LIntegral(double T, double ro,unsigned IType)
 
 }
 
-double TCGFcalc::KIntegral(double T, double ro,long unsigned IType)
+double TCGFcalc::KIntegral(double T, double ro,unsigned long int IType)
 {
   static double TOld,roOld;
   static double a,b,c,d,e;
@@ -205,19 +326,19 @@ double TCGFcalc::K23_13(double T, double ro)
 /////////////////////////////////////////////////////////////////////////////
 // Implementation of TCGFcalc class
 
-int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
+long int TCGFcalc::CGFugacityPT( float *EoSparam, double *EoSparPT, double &Fugacity,
         double &Volume, double P, double T, double &roro )
 {
-      int iRet = 0; 
+      long int iRet = 0;
       // double ro;
       double X[1]={1.};
       double FugPure[1];
 
 		// modification to simplify CG database structure, TW 20/03/2007
-        EoSparPT[0] = EoSparam[0]+EoSparam[4]*(float)exp(T*EoSparam[5]);
-        EoSparPT[1] = EoSparam[1]+EoSparam[6]*(float)exp(T*EoSparam[7]);
-        EoSparPT[2] = EoSparam[2]+EoSparam[8]/((float)T+EoSparam[9]);
-        EoSparPT[3] = EoSparam[3]+EoSparam[10]/((float)T+EoSparam[11]);
+        EoSparPT[0] = EoSparam[0]+EoSparam[4]*exp(T*EoSparam[5]);
+        EoSparPT[1] = EoSparam[1]+EoSparam[6]*exp(T*EoSparam[7]);
+        EoSparPT[2] = EoSparam[2]+EoSparam[8]/(T+EoSparam[9]);
+        EoSparPT[3] = EoSparam[3]+EoSparam[10]/(T+EoSparam[11]);
 
       /*switch (int(EoSparam[4]))
       {
@@ -263,51 +384,108 @@ int TCGFcalc::CGFugacityPT( float *EoSparam, float *EoSparPT, double &Fugacity,
       return iRet;
   }
 
+long int TCGFcalc::CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fugacity,
+        double &Volume, double P, double T, double &roro )
+{
+      long int iRet = 0; 
+      // double ro;
+      double X[1]={1.};
+      double FugPure[1];
+
+		// modification to simplify CG database structure, TW 20/03/2007
+        EoSparPT[0] = EoSparam[0]+EoSparam[4]*exp(T*EoSparam[5]);
+        EoSparPT[1] = EoSparam[1]+EoSparam[6]*exp(T*EoSparam[7]);
+        EoSparPT[2] = EoSparam[2]+EoSparam[8]/(T+EoSparam[9]);
+        EoSparPT[3] = EoSparam[3]+EoSparam[10]/(T+EoSparam[11]);
+
+      /*switch (int(EoSparam[4]))
+      {
+       case 0:
+        EoSparPT[0]=EoSparam[0];
+        EoSparPT[1]=EoSparam[1];
+        EoSparPT[2]=EoSparam[2];
+        EoSparPT[3]=EoSparam[3];
+       break;
+       case 1:  // H2O type
+        EoSparPT[0]=EoSparam[0]+EoSparam[5]/(T+EoSparam[6]);
+        EoSparPT[1]=EoSparam[1]+EoSparam[7]/(T+EoSparam[8]);
+        EoSparPT[2]=EoSparam[2]+EoSparam[9]/(T+EoSparam[10]);
+        EoSparPT[3]=EoSparam[3]+EoSparam[11]/(T+EoSparam[12]);
+        break;
+       case 2:  // CO2 type
+        EoSparPT[0]=EoSparam[0]+EoSparam[5]*exp(T*EoSparam[6]);
+        EoSparPT[1]=EoSparam[1]+EoSparam[7]*exp(T*EoSparam[8]);
+        EoSparPT[2]=EoSparam[2]+EoSparam[9]*exp(T*EoSparam[10]);
+        EoSparPT[3]=EoSparam[3]+EoSparam[11]*exp(T*EoSparam[12]);
+        break;
+        default:
+
+        return 1;// Error: Wrong type of equation
+      };*/
+
+
+ // returns density!
+      CGActivCoefPT( X, EoSparPT, FugPure, 1, P, T, roro );  // changed, 21.06.2008 (TW)
+      if( roro < 0.  )
+      {
+          return -1;
+      };
+      Fugacity= FugPure[0];
+      roro = DENSITY( X, EoSparPT, 1, P, T );
+      if( roro < 0 )
+      {  // error - density could not be calculated
+         iRet = -2; roro = 1.0;
+      }
+      Volume = 0.1/roro;  // in J/bar
+      // roro = ro;  // added, 21.06.2008 (TW)
+
+      return iRet;
+  }
 
 //  Numerical derivative of Ares/RT to obtain Sres and Hres
-int TCGFcalc::CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
+long int TCGFcalc::CGEnthalpy(double *X, double *param, double *param1, unsigned long int NN,
      double ro, double T, double &H, double &S )
  {
    double * xtmp=new double [NN];
 
     EOSPARAM paar(X,param,NN);
     EOSPARAM paar1(X,param1,NN);
-    
+
     double   F0,Z,F1;
     double delta=DELTA,tmp;
 
     norm(paar.XX0,paar.NCmp());
     norm(paar1.XX0,paar1.NCmp());
-    
+
     copy(paar.XX0,xtmp,paar.NCmp());
 
-    
+
     paar.ParamMix(xtmp);
     paar1.ParamMix(xtmp);
-      
+
     Z = ZTOTALMIX(T,ro,paar);
 
     F0 = FTOTALMIX(T,ro,paar);
     // recalculate param1 for T+T*delta
     F1 = FTOTALMIX(T+T*delta,ro,paar1);
-   // F1 = FTOTALMIX(T+T*delta,ro,paar);  
+   // F1 = FTOTALMIX(T+T*delta,ro,paar);
     S = - ( (F1-F0)/(delta*T)*T + F0 ) * R;	// corrected, 20.06.2008 (TW)
     H = (F0*T*R + T*S) + Z*R*T;
-    
-    
+
+
     delete [] xtmp;
     return 0;
 
  }
 
-   int TCGFcalc::CGActivCoefPT(double *X,float *param, double *act, unsigned NN,
-        double Pbar, double T, double &roro )
+   long int TCGFcalc::CGActivCoefPT(double *X,double *param, double *act, 
+		   unsigned long int NN,   double Pbar, double T, double &roro )
    {
       //double act[MAXPARAM];
-      //unsigned ncmp;
+      //unsigned long int ncmp;
        double *xtmp,*Fx;
        double P=Pbar/10.;
-      //ncmp=unsigned((nn-2)/5);
+      //ncmp= ((nn-2)/5);
 //      try
 //      {
         xtmp=new double [NN];
@@ -325,7 +503,7 @@ int TCGFcalc::CGEnthalpy(double *X, float *param, float *param1, unsigned NN,
       double F0,Z,F1,fideal;
       //double e[4],s3[4],m,a,xnonp;
       double ro,delta=DELTA,ax,dx /*,tmp*/;
-      /* unsigned */ int i;
+      /* unsigned */ long int i;
 
        norm(paar.XX0,paar.NCmp());
        copy(paar.XX0,xtmp,paar.NCmp());
@@ -379,19 +557,19 @@ if( ro < 0.0 ) //  Too low pressure - no corrections will be done
          //MLPutRealList(stdlink,act,paar.NCmp());
         delete [] xtmp;
         delete [] Fx;
-        
+
         roro = ro;  // added, 21.06.2008 (TW)
          return 0;  // changed, 21.06.2008 (TW)
    }
 
 
    //void ACTDENS(double *data,long nn, double *act )
-   int TCGFcalc::CGActivCoefRhoT(double *X,float *param,double *act, unsigned NN,
-       double ro, double T )
+   long int TCGFcalc::CGActivCoefRhoT(double *X,double *param,double *act, 
+		   unsigned long int NN,   double ro, double T )
    {
 
       //double  act[MAXPARAM];
-     // unsigned ncmp;
+     // unsigned long int ncmp;
       //ncmp=unsigned((nn-2)/5);
 
       //double  T = data[nn - 2];
@@ -411,9 +589,9 @@ if( ro < 0.0 ) //  Too low pressure - no corrections will be done
 //      }
       EOSPARAM paar(X,param,NN);
 
-       double   F0,Z,F1,GMix,fideal;
+      double   F0,Z,F1,GMix,fideal;
       double delta=DELTA,ax,dx,tmp;
-      int i;
+      long int i;
 
        norm(paar.XX0,paar.NCmp());
        copy(paar.XX0,xtmp,paar.NCmp());
@@ -472,7 +650,7 @@ if( ro < 0.0 ) //  Too low pressure - no corrections will be done
     //   MLPutRealList(stdlink,act,paar.NCmp());
    };
 
-   double TCGFcalc::DENSITY(double *X,float *param, unsigned NN ,double Pbar, double T )
+   double TCGFcalc::DENSITY(double *X,double *param, unsigned long NN ,double Pbar, double T )
    {
       double P = Pbar * 0.1;
       //unsigned ncmp;
@@ -508,7 +686,8 @@ if( ro < 0.0 ) //  Too low pressure - no corrections will be done
         return ro;
    };
 
-   double TCGFcalc::PRESSURE(double *X,float *param,unsigned NN,double ro, double T)
+   double TCGFcalc::PRESSURE(double *X,double *param,
+		    unsigned long int NN,double ro, double T)
    {
    //   unsigned ncmp;
    //   ncmp=unsigned((nn-2)/5);
@@ -544,19 +723,19 @@ if( ro < 0.0 ) //  Too low pressure - no corrections will be done
 
 
 
-void TCGFcalc::copy(double* sours,double *dest,unsigned num)
+void TCGFcalc::copy(double* sours,double *dest,unsigned long int num)
  {
-  unsigned i;
+  unsigned long int i;
        for ( i=0;i<num;i++)
        {
         dest[i]=sours[i];
        };
  }
 
-void TCGFcalc::norm(double *X,unsigned mNum)
+void TCGFcalc::norm(double *X,unsigned long int mNum)
  {
   double tmp=0.;
-  unsigned i;
+  unsigned long int i;
   for ( i=0;i<mNum;i++ )
   {
     tmp+=X[i];
@@ -588,7 +767,7 @@ double TCGFcalc::dHS(double beta,double ro )
    double a0,a1,a6,a3,a4,a7,a9,a12;
    double p0,p2,p6,p3,p5,p8,p11;
    double dbdl,ri6ro,ri6ro2,d3,d2,dnew,F0,F1;
-   unsigned i;
+   unsigned long int i;
 
    T12=sqrt(beta);
    T112=exp(DV112*log(beta));
@@ -781,7 +960,7 @@ double TCGFcalc::FWCA(double T,double ro)
     //unsigned iall,inopol;
     double emix,s3mix,rotmp,T2R;
     double Jind,Jdp;
-    int /*itmp,jtmp,ktmp,*/ i,j,k;
+    long int /*itmp,jtmp,ktmp,*/ i,j,k;
     double s3tmp,mtmp,IK /*,atmp*/;
     double imtmp,jmtmp,iatmp,jatmp;
     double m2i,m2j,m2k;
@@ -958,9 +1137,9 @@ double TCGFcalc::UTOTALMIX(double T_Real,double ro_Real,EOSPARAM& param)
  #define ROMIN (1.E-2)
  #define NPOINT (5)
 
- void  choose(double *pres, double P,unsigned &x1,unsigned &x2)
+ void  choose(double *pres, double P,unsigned long int &x1,unsigned long int &x2)
  {
-  unsigned i;
+  unsigned long int i;
   double deltam=-10000000.,tmp;
   double deltap=10000000.;
 
@@ -992,14 +1171,14 @@ double TCGFcalc::UTOTALMIX(double T_Real,double ro_Real,EOSPARAM& param)
 /////////////////////////////////////////////////////////////////
  double TCGFcalc::ROTOTALMIX(double P,double TT,EOSPARAM& param)
  {
-     unsigned i;
+     unsigned long int i;
      double T /*,ro*/;
      double fact, fact0, romax, dro, roarr[FIRSTSEED];
      double Ptmp[FIRSTSEED], ro0, ro1, rotest, PP0, PP1 /* ,Ptest */;
      double a,b;
      double inttofloat;
      double f[4],x[4],ff,dens[5],pres[5];
-     unsigned x1,x2;
+     unsigned long int x1,x2;
 //     double ptmp;
 
      T=TT/param.EMIX();
@@ -1151,7 +1330,7 @@ double TCGFcalc::UTOTALMIX(double T_Real,double ro_Real,EOSPARAM& param)
 
 EOSPARAM::~EOSPARAM()
 {
-  unsigned  i;
+  unsigned  long int i;
   if ( isize > 0)
   {
          for ( i=0;i<isize;i++ )
@@ -1177,9 +1356,9 @@ EOSPARAM::~EOSPARAM()
 }
 
 
-void EOSPARAM::allocate(unsigned inew)
+void EOSPARAM::allocate(unsigned long int inew)
 {
-   unsigned i;
+   unsigned long int i;
   if ( (isize > 0) && (inew > isize) )
   {
          for ( i=0;i<isize;i++ )
@@ -1235,9 +1414,9 @@ void EOSPARAM::allocate(unsigned inew)
   }
 }
 
-unsigned EOSPARAM::ParamMix(double *Xin)
+unsigned long int EOSPARAM::ParamMix(double *Xin)
   {
-    /* unsigned */ int j,i;
+    /* unsigned */ long int j,i;
     double tmp,tmp1,tmp2;
     for ( i=0; i<NComp; i++ ) XX[i]=Xin[i];
 
@@ -1272,7 +1451,7 @@ unsigned EOSPARAM::ParamMix(double *Xin)
 
   void EOSPARAM::PureParam(double* e,double* s,double* m,double* a)
   {
-    /* unsigned */ int i;
+    /* unsigned */ long int i;
 
     for ( i=0;i<NComp;i++ )
     {
@@ -1285,14 +1464,14 @@ unsigned EOSPARAM::ParamMix(double *Xin)
   }
 
  ////////////////////////////////////////////////////////////////////
-void EOSPARAM::init(double *Xinp, float * data,unsigned ncmp)
+void EOSPARAM::init(double *Xinp, double * data,unsigned long int ncmp)
 {
-  int i,j;
+  long int i,j;
   double tmp;
 
   //if ( ncmp>MAXPARAM ) NComp=MAXPARAM;
    allocate(ncmp);
-   NComp=(int)ncmp;
+   NComp= ncmp;
 
   for ( i=0;i<NComp;i++ )
   {
@@ -1331,19 +1510,19 @@ void EOSPARAM::init(double *Xinp, float * data,unsigned ncmp)
 
 /////////////////////////////////////////////////////////////////////
 
-void EOSPARAM::copy(double* sours,double *dest,unsigned num)
+void EOSPARAM::copy(double* sours,double *dest,unsigned long int num)
  {
-  unsigned i;
+  unsigned long int i;
        for ( i=0;i<num;i++)
        {
         dest[i]=sours[i];
        };
  }
 
-void EOSPARAM::norm(double *X,unsigned mNum)
+void EOSPARAM::norm(double *X,unsigned long int mNum)
  {
   double tmp=0.;
-  unsigned i;
+  unsigned long int i;
   for ( i=0;i<mNum;i++ )
   {
     tmp+=X[i];
@@ -1359,11 +1538,11 @@ void EOSPARAM::norm(double *X,unsigned mNum)
 
 // Implementation
 // TPRSVcalc class - private methods
-int
+long int
 TPRSVcalc::PureParam( double *Eos2parPT )
 { // calculates a and b arrays
 	// calculates a, b, sqrAL, ac, dALdT of pure species
-   int i;
+   long int i;
    double Tcrit, Pcrit, omg, k1, k2, k3, apure, bpure, sqrAL, ac, dALdT;
 
    for (i=0; i<NComp; i++)
@@ -1393,8 +1572,8 @@ TPRSVcalc::PureParam( double *Eos2parPT )
 }
 
 
-int
-TPRSVcalc::AB(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit, 
+long int
+TPRSVcalc::AB(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit,
 		double &apure, double &bpure, double &sqrAL, double &ac, double &dALdT)
 {
 	// calculates a term of cubic EoS, modified 31.05.2008 (TW)
@@ -1419,7 +1598,7 @@ TPRSVcalc::AB(double Tcrit, double omg, double k1, double k2, double k3, double 
 }
 
 
-// int
+// long int
 // TPRSVcalc::B(double Tcrit, double Pcrit, double &bpure)
 // {
 //    bpure = 0.077796*R_CONSTANT*Tcrit/Pcrit;
@@ -1427,11 +1606,11 @@ TPRSVcalc::AB(double Tcrit, double omg, double k1, double k2, double k3, double 
 // }
 
 
-int
+long int
 TPRSVcalc::FugacityPure( )
 { // Calculates the fugacity of pure species
 // calculates fugacity and state functions of pure species
-    int i;
+    long int i;
 	double Tcrit, Pcrit, Tred, aprsv, bprsv, alph, k, aa, bb, a2, a1, a0,
                z1, z2, z3;
 	double vol1, vol2, vol3, lnf1, lnf2, lnf3, z, vol, lnf;
@@ -1506,7 +1685,7 @@ TPRSVcalc::FugacityPure( )
 		h = hig + hdep;
 		s = sig + sdep;
 		fugpure = exp(lnf);
-		Fugpure[i][0] = fugpure;	
+		Fugpure[i][0] = fugpure;
 		Fugpure[i][1] = gdep;	// changed to departure functions, 31.05.2008 (TW)
 		Fugpure[i][2] = hdep;
 		Fugpure[i][3] = sdep;
@@ -1516,7 +1695,7 @@ TPRSVcalc::FugacityPure( )
 }
 
 
-int
+long int
 TPRSVcalc::Cardano(double a2, double a1, double a0, double &z1, double &z2, double &z3)
 {
    // finds roots of cubic equation
@@ -1548,11 +1727,11 @@ TPRSVcalc::Cardano(double a2, double a1, double a0, double &z1, double &z2, doub
 }
 
 
-int
+long int
 TPRSVcalc::MixParam( double &amix, double &bmix)
 {;
 	// calculates a and b parameters of the mixture
-	int i, j;
+	long int i, j;
 	double K;
 	amix = 0.;
 	bmix = 0.;
@@ -1583,7 +1762,7 @@ TPRSVcalc::MixParam( double &amix, double &bmix)
 }
 
 
-int
+long int
 TPRSVcalc::FugacityMix( double amix, double bmix,
     double &fugmix, double &zmix, double &vmix)
 {
@@ -1642,11 +1821,11 @@ TPRSVcalc::FugacityMix( double amix, double bmix,
 
 
 // #define MAXPUREPARAM 7
-int
-TPRSVcalc::FugacitySpec( double *fugpure, float *params  )
+long int
+TPRSVcalc::FugacitySpec( double *fugpure, double *params  )
 {
     // calculates fugacity and activity of species
-    int i, j, iRet=0;
+    long int i, j, iRet=0;
 	double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0., sum=0.;
 	double au, bu, lnfci, fci;
 	double dAMIXdT, KK, Gdep, Hdep, Sdep;
@@ -1656,12 +1835,12 @@ TPRSVcalc::FugacitySpec( double *fugpure, float *params  )
     {
       Fugpure[j][0] = fugpure[j]/P;
 //      for( i=0; i<4; i++ )
-//        Pureparm[j][i] = (double)params[j*4+i];
-      // for( i=0; i<4; i++ )  // 
+//        Pureparm[j][i] = params[j*4+i];
+      // for( i=0; i<4; i++ )  //
       for( i=0; i<5; i++ )  // increased from 4 to 5, 31.05.2008 (TW)
       {
-          // Pureparm[j][i] = (double)params[j*10+i+6];   
-    	  Pureparm[j][i] = (double)params[j*12+i+6];  // increased from 10 to 12, 31.05.2008 (TW)
+          // Pureparm[j][i] = params[j*10+i+6];
+    	  Pureparm[j][i] = params[j*12+i+6];  // increased from 10 to 12, 31.05.2008 (TW)
       }
     }
 
@@ -1691,8 +1870,8 @@ TPRSVcalc::FugacitySpec( double *fugpure, float *params  )
 		else
 			Fugci[i][3] = 1.0;
 	}
-	
-	// calculate total departure function of the mixture 
+
+	// calculate total departure function of the mixture
 	dAMIXdT = 0.;
 	for (i=0; i<NComp; i++)
 	{
@@ -1706,43 +1885,43 @@ TPRSVcalc::FugacitySpec( double *fugpure, float *params  )
 					*Pureparm[i][4]*Pureparm[j][2]*(1.-KK);
 		}
 	}
-	
+
 	Gdep = (amix/(R_CONSTANT*Tk*sqrt(8.)*bmix)  *log((vmix+(1.-sqrt(2.))*bmix)
 		/(vmix+(1.+sqrt(2.))*bmix))-log(zmix*(1.-bmix/vmix))+zmix-1.)*R_CONSTANT*Tk;
 	Hdep = ((amix-Tk*dAMIXdT)/(R_CONSTANT*Tk*sqrt(8.)*bmix)*log((vmix+(1.-sqrt(2.))
 		*bmix)/(vmix+(1.+sqrt(2))*bmix))+zmix-1.)*R_CONSTANT*Tk;
 	Sdep = (Hdep - Gdep)/Tk;
-	
+
 	return iRet;
 }
 
 
-int
+long int
 TPRSVcalc::GetEosParam( float *EoSparam )
 {
    // reads EoS parameters from database into work array
-   int i;
+   long int i;
    if( !EoSparam )
      return -1;  // Memory alloc error
 
    for (i=0; i<NComp; i++)
    {
-      Eosparm[i][0] = (double)EoSparam[0];   // critical temperature in K
-      Eosparm[i][1] = (double)EoSparam[1];   // critical pressure in bar
-      Eosparm[i][2] = (double)EoSparam[2];   // Pitzer acentric factor omega
-      Eosparm[i][3] = (double)EoSparam[3];   // empirical EoS parameter k1
-      Eosparm[i][4] = (double)EoSparam[4];   // empirical EoS parameter k2
-      Eosparm[i][5] = (double)EoSparam[5];   // empirical EoS parameter k3
+      Eosparm[i][0] = EoSparam[0];   // critical temperature in K
+      Eosparm[i][1] = EoSparam[1];   // critical pressure in bar
+      Eosparm[i][2] = EoSparam[2];   // Pitzer acentric factor omega
+      Eosparm[i][3] = EoSparam[3];   // empirical EoS parameter k1
+      Eosparm[i][4] = EoSparam[4];   // empirical EoS parameter k2
+      Eosparm[i][5] = EoSparam[5];   // empirical EoS parameter k3
     }
     return 0;
 }
 
 
-int
+long int
 TPRSVcalc::GetMoleFract( double *X )
 {
   ; // Loads mole fractions for NComp species
-  for( int j = 0; j< NComp; j++ )
+  for( long int j = 0; j< NComp; j++ )
     Wx[j] = X[j];
   return 0;
 }
@@ -1751,7 +1930,7 @@ TPRSVcalc::GetMoleFract( double *X )
 double
 TPRSVcalc::ObtainResults( double *ActCoef )
 {
-    int j;
+    long int j;
 
     for(j=0; j<NComp; j++)
        ActCoef[j] = Fugci[j][3];
@@ -1765,9 +1944,9 @@ TPRSVcalc::ObtainResults( double *ActCoef )
 // TPRSVcalc class - high-level methods
 // Constructor
 
-TPRSVcalc::TPRSVcalc( int NCmp, double Pp, double Tkp )
+TPRSVcalc::TPRSVcalc( long int NCmp, double Pp, double Tkp )
     {
-       int i;
+       long int i;
 
        NComp = NCmp;
        P = Pp;
@@ -1792,13 +1971,13 @@ TPRSVcalc::TPRSVcalc( int NCmp, double Pp, double Tkp )
          KK0ij[i] = new double[NComp];
          KK1ij[i] = new double[NComp];
          AAij[i] = new double[NComp];
-       }      
+       }
     }
 
 
 TPRSVcalc::~TPRSVcalc()
     {
-    	int i;
+    	long int i;
 
     	for (i=0; i<NComp; i++)
     	{
@@ -1810,7 +1989,7 @@ TPRSVcalc::~TPRSVcalc()
     		delete[]KK1ij[i];
     		delete[]AAij[i];
     	}
- 
+
     	delete[]Wx;
     	delete[]Eosparm;
     	delete[]Pureparm;
@@ -1821,17 +2000,55 @@ TPRSVcalc::~TPRSVcalc()
     	delete[]AAij;
     }
 
- 
-int
+
+long int
 TPRSVcalc::PRFugacityPT( double P, double Tk, float *EoSparam, double *Eos2parPT,
         double &Fugacity, double &Volume, double &DeltaH, double &DeltaS )
  {
 
-      int iRet = 0;
+      long int iRet = 0;
 
       iRet = GetEosParam( EoSparam );
       if( iRet)
         return iRet;
+
+      iRet = PureParam( Eos2parPT ); // Calculates a, b, sqrAL, ac, dALdT
+
+      if( iRet)
+        return iRet;
+
+      iRet = FugacityPure();
+      if( iRet)
+        return iRet;
+
+      Fugacity = Fugpure[0][0]; // Fugacity coefficient
+      DeltaH = Fugpure[0][2];   // H departure function
+      DeltaS = Fugpure[0][3];   // S departure function
+      Volume = Fugpure[0][4];   //  J/bar
+
+      return iRet;
+ }
+
+
+long int
+TPRSVcalc::PRFugacityPT( double P, double Tk, double *EoSparam, double *Eos2parPT,
+        double &Fugacity, double &Volume, double &DeltaH, double &DeltaS )
+ {
+
+      long int iRet = 0;
+
+      if( !EoSparam )
+        return -1;  // Memory alloc error
+
+      for (long int i=0; i<NComp; i++)
+      {
+         Eosparm[i][0] = EoSparam[0];   // critical temperature in K
+         Eosparm[i][1] = EoSparam[1];   // critical pressure in bar
+         Eosparm[i][2] = EoSparam[2];   // Pitzer acentric factor omega
+         Eosparm[i][3] = EoSparam[3];   // empirical EoS parameter k1
+         Eosparm[i][4] = EoSparam[4];   // empirical EoS parameter k2
+         Eosparm[i][5] = EoSparam[5];   // empirical EoS parameter k3
+       }
 
       iRet = PureParam( Eos2parPT ); // Calculates a, b, sqrAL, ac, dALdT
                                      
@@ -1850,17 +2067,16 @@ TPRSVcalc::PRFugacityPT( double P, double Tk, float *EoSparam, double *Eos2parPT
       return iRet;
  }
 
-
  // Called from IPM-Gamma() where activity coefficients are computed
-int
-TPRSVcalc::PRActivCoefPT( int NComp, double Pbar, double Tk, double *X,
-    double *fugpure, float *binpar, float *param, double *act, double &PhaseVol,
-    int NPar, int NPcoef, int MaxOrd, short *aIPx  )
+long int
+TPRSVcalc::PRActivCoefPT( long int NComp, double Pbar, double Tk, double *X,
+    double *fugpure, double *binpar, double *param, double *act, double &PhaseVol,
+    long int NPar, long int NPcoef, long int MaxOrd, long int *aIPx  )
 {
 
-   int iRet;
-   int j, i, ip;
-   int index1, index2;
+   long int iRet;
+   long int j, i, ip;
+   long int index1, index2;
 
    if( NPcoef > 0 )
    {
@@ -1872,8 +2088,8 @@ TPRSVcalc::PRActivCoefPT( int NComp, double Pbar, double Tk, double *X,
       // transfer those interaction parameters that have non-standard value
       for ( ip=0; ip<NPar; ip++ )
       {
-         index1 = (int)aIPx[MaxOrd*ip];
-         index2 = (int)aIPx[MaxOrd*ip+1];
+         index1 = aIPx[MaxOrd*ip];
+         index2 = aIPx[MaxOrd*ip+1];
          KK0ij[index1][index2] = binpar[NPcoef*ip];
          KK0ij[index2][index1] = binpar[NPcoef*ip];	// symmetric case
       }

@@ -43,6 +43,10 @@
 </storageModule>
 
 <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+
+<storageModule moduleId="org.eclipse.cdt.core.language.mapping">
+<project-mappings/>
+</storageModule>
 <storageModule moduleId="scannerConfiguration">
 <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.make.core.GCCStandardMakePerProjectProfile"/>
 <profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile">
@@ -291,9 +295,6 @@
 </scannerInfoProvider>
 </profile>
 </scannerConfigBuildInfo>
-</storageModule>
-<storageModule moduleId="org.eclipse.cdt.core.language.mapping">
-<project-mappings/>
 </storageModule>
 </cconfiguration>
 </storageModule>

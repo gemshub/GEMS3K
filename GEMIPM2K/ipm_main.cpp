@@ -43,9 +43,9 @@ using namespace JAMA;
 //  rLoop is the index of the primal solution refinement loop (for tracing) 
 //   or -1 if this is main GEMIPM2 call 
 //
-void TMulti::MultiCalcMain( int rLoop )
+void TMulti::MultiCalcMain( long int rLoop )
 {
-    int i, j, k, eRet, status=0;
+    long int i, j, k, eRet, iB, status=0;
     SPP_SETTING *pa = &TProfil::pm->pa;
 #ifdef GEMITERTRACE
 fstream f_log("ipmlog.txt", ios::out|ios::app );
@@ -236,14 +236,14 @@ f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " AI
     }
 
 //========= calling Selekt2 algorithm =======
-   int ps_rcode, k_miss, k_unst;
+   long int ps_rcode, k_miss, k_unst;
 
 if( rLoop < 0 )   
     ps_rcode = PhaseSelect( k_miss, k_unst, rLoop );
 else 
    ps_rcode = 1; // do not call Selekt2() in primal solution refinement loops (experimental!!!!!)
 
-int iB = CheckMassBalanceResiduals( pmp->X );
+iB = CheckMassBalanceResiduals( pmp->X );
 if( iB >= 0 )
 {	
     if( pmp->pNP )
@@ -290,7 +290,7 @@ f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
            char buf[400];
            sprintf( buf,
     " The computed phase assemblage remains inconsistent after 3 PhaseSelect() loops.\n"
-    " Problematic phase(s): %d %s   %d %s \n"
+    " Problematic phase(s): %ld %s   %ld %s \n"
     " Probably, vector b is not balanced, or DC stoichiometries\n"
     " or standard g0 are wrong, or some relevant phases or DCs are missing.",
                     k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
@@ -343,7 +343,7 @@ f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
                   }
                   gstring  buf,buf1;
                   vstr pl(5);
-                  int jj=0;
+                  long int jj=0;
                   for( j=0; j<pmp->N-pmp->E; j++ )
    //  if( fabs(pmp->C[j]) > pmp->DHBM  || fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
                   if( fabs(pmp->C[j]) > pmp->B[j] * pa->p.GAS )
@@ -376,6 +376,7 @@ f_log << "ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " MBP
     else 
 	   f_log << " Ok after AIA" << endl;
 #endif
+
 FORCED_AIA:
    for( i=0; i<pmp->L; i++)
       pmp->G[i] = pmp->G0[i];
@@ -385,12 +386,12 @@ FORCED_AIA:
 }
 
 //Call for IPM iteration sequence
-void TMulti::MultiCalcIterations( int rLoop )
+void TMulti::MultiCalcIterations( long int rLoop )
 {
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpB.txt" );   // Debugging 
 #endif	   
-// short It_for_smoothing = pmp->IT; 
+// long int It_for_smoothing = pmp->IT; 
      MultiCalcMain( rLoop );
 if( !pmp->pNP ) 
      pmp->ITaia = pmp->IT; 
@@ -399,7 +400,7 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 #endif	
 
     // calculation of demo data for gases
-    for( int ii=0; ii<pmp->N; ii++ )
+    for( long int ii=0; ii<pmp->N; ii++ )
         pmp->U_r[ii] = pmp->U[ii]*pmp->RT;
     GasParcP();
 
@@ -416,7 +417,7 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 //
 bool TMulti::AutoInitialApprox(  )
 {
-    int i, j, NN;
+    long int i, j, NN;
     double minB, sfactor;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -534,10 +535,10 @@ STEP_POINT("Before FIA");
 //          3  - too small step length (< pa.p.DG), no descent possible
 //          4  - error in MetastabilityLagrangeMultiplier() (debugging)
 //
-int TMulti::EnterFeasibleDomain()
+long int TMulti::EnterFeasibleDomain()
 {
-    short IT1;
-    int I, J, Z,  N, sRet, iRet=0, jK, iB;
+    long int IT1;
+    long int I, J, Z,  N, sRet, iRet=0, jK, iB;
     double DHB, LM;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -591,7 +592,7 @@ int TMulti::EnterFeasibleDomain()
         pmp->NR=pmp->N;
         if( pmp->LO )
         {   if( pmp->YF[0] < pmp->DSM && pmp->YFA[0] < pmp->lowPosNum*100.)
-                pmp->NR= (short)(pmp->N-1);
+                pmp->NR= pmp->N-1;
         }
         N=pmp->NR;
        // Calculation of mass-balance residuals in IPM
@@ -664,9 +665,9 @@ STEP_POINT("FIA Iteration");
 //              or user's interruption
 //          3, GammaCalc() returns bad (non-zero) status (in PIA mode only) 
 //
-int TMulti::InteriorPointsMethod( int &status, int rLoop )
+long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 {
-    int N, IT1,J,Z,iRet;  
+    long int N, IT1,J,Z,iRet;  
     double LM=0., LM1, FX1;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -695,10 +696,10 @@ int TMulti::InteriorPointsMethod( int &status, int rLoop )
         if( pmp->LO ) // water-solvent is present
         {
             if( pmp->YF[0]<pmp->DSM && pmp->Y[pmp->LO]< pmp->lowPosNum *100.)
-                pmp->NR=(short)(pmp->N-1);
+                pmp->NR=pmp->N-1;
         }
         N = pmp->NR;
-//        memset( pmp->F, 0, pmp->L*sizeof(double));
+
         PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
         // Setting weight multipliers for DC
@@ -789,10 +790,10 @@ CONVERGED:
 //          B - Input bulk chem. compos. (N)
 //          C - mass balance residuals (N)
 void
-TMulti::MassBalanceResiduals( int N, int L, float *A, double *Y, double *B,
+TMulti::MassBalanceResiduals( long int N, long int L, double *A, double *Y, double *B,
          double *C )
 {
-    int ii, jj, i;
+    long int ii, jj, i;
 //    for(J=0;J<N;J++)    obsolete - replaced by an optimized one 09.02.2007
 //    {
 //        C[J]=B[J];
@@ -805,7 +806,7 @@ TMulti::MassBalanceResiduals( int N, int L, float *A, double *Y, double *B,
     for(jj=0;jj<L;jj++)
      for( i=arrL[jj]; i<arrL[jj+1]; i++ )
      {  ii = arrAN[i];
-         C[ii]-=(double)(*(A+jj*N+ii))*Y[jj];
+         C[ii]-=(*(A+jj*N+ii))*Y[jj];
      }
 }
 
@@ -813,16 +814,17 @@ TMulti::MassBalanceResiduals( int N, int L, float *A, double *Y, double *B,
 // or after GEM IPM PhaseSelect() (when pmp->X is passed as parameter)
 // Returns -1 (Ok) or index of the chemical element for which the balance is 
 // broken
-int
+long int
 TMulti::CheckMassBalanceResiduals(double *Y )
 {	
 	double cutoff; 
 	
-	cutoff = pmp->DHBM * 1e4; 
+	// cutoff = pmp->DHBM * 1e4;
+	cutoff = min (pmp->DHBM*1.0e5, 1.0e3 );	// changed, 28.08.2008 (TW,DK)
 	if( cutoff > 1e-3 )
 		cutoff = 1e-3;
 	MassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);
-	for(int i=0; i<pmp->N; i++)
+	for(long int i=0; i<pmp->N; i++)
 	{	
 	   if( pmp->B[i] > cutoff )
 	   {	   // Major IC
@@ -835,7 +837,7 @@ TMulti::CheckMassBalanceResiduals(double *Y )
 	   }
 	   return i;
 	}
-	return -1;	
+	return -1L;	
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -893,12 +895,12 @@ OCT:
 
 // Cleaning the unstable phase with index k >= 0
 
-void TMulti::ZeroDCsOff( int jStart, int jEnd, int k )
+void TMulti::ZeroDCsOff( long int jStart, long int jEnd, long int k )
 {
   if( k >=0 )
      pmp->YF[k] = 0.;
 
-  for(int j=jStart; j<jEnd; j++ )
+  for(long int j=jStart; j<jEnd; j++ )
      pmp->Y[j] =  0.0;
 }
 
@@ -906,7 +908,7 @@ void TMulti::ZeroDCsOff( int jStart, int jEnd, int k )
 // (important for the automatic initial approximation with solution phases
 //  (k = -1)  or after Selekt2() algorithm (k >= 0)
 //
-void TMulti::RaiseZeroedOffDCs( int jStart, int jEnd, double scalingFactor, int k )
+void TMulti::RaiseZeroedOffDCs( long int jStart, long int jEnd, double scalingFactor, long int k )
 {
   double sfactor = scalingFactor;
   SPP_SETTING *pa = &TProfil::pm->pa;
@@ -916,7 +918,7 @@ void TMulti::RaiseZeroedOffDCs( int jStart, int jEnd, double scalingFactor, int 
   if( k >= 0 )
        pmp->YF[k] = 0.;	
     
-  for(int j=jStart; j<jEnd; j++ )
+  for(long int j=jStart; j<jEnd; j++ )
   {
      switch( pmp->DCC[j] )
      {
@@ -969,12 +971,12 @@ void TMulti::RaiseZeroedOffDCs( int jStart, int jEnd, double scalingFactor, int 
 }
 
 // Adjustment of primal approximation according to kinetic constraints
-int TMulti::MetastabilityLagrangeMultiplier()
+long int TMulti::MetastabilityLagrangeMultiplier()
 {
     double E = 1E-8;  // pa.p.DKIN? Default min value of Lagrange multiplier p
 //    E = 1E-30;
 
-    for(int J=0;J<pmp->L;J++)
+    for(long int J=0;J<pmp->L;J++)
     {
         if( pmp->Y[J] < 0. )   // negative number of moles!
         	return J;
@@ -1007,7 +1009,7 @@ int TMulti::MetastabilityLagrangeMultiplier()
 // Calculation of weight multipliers for DCs
 void TMulti::WeightMultipliers( bool square )
 {
-  int J;
+  long int J;
   double  W1, W2;
 
   for( J=0; J<pmp->L; J++)
@@ -1062,11 +1064,11 @@ void TMulti::WeightMultipliers( bool square )
 // Return values: 0  - solved OK;
 //                1  - no solution, degenerated or inconsistent system
 //
-#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*Na)))
-//#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*N)))  obsolete
-int TMulti::SolverLinearEquations( int N, bool initAppr )
+#define  a(j,i) ((*(pmp->A+(i)+(j)*Na)))
+//#define  a(j,i) ((*(pmp->A+(i)+(j)*N)))  obsolete
+long int TMulti::SolverLinearEquations( long int N, bool initAppr )
 {
-  int ii,i, jj, kk, k, Na = pmp->N;
+  long int ii,i, jj, kk, k, Na = pmp->N;
 //  double aa;
   Alloc_A_B( N );
 
@@ -1148,7 +1150,7 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
   }
 
   for( ii=0; ii<N; ii++ )
-   pmp->U[ii] = B[ii];
+   pmp->U[ii] = B[(int)ii];
   return 0;
 }
 #undef a
@@ -1157,9 +1159,9 @@ int TMulti::SolverLinearEquations( int N, bool initAppr )
 // Parameters:
 // bool initAppr - Inital approximation (true) or main iteration of IPM (false)
 // int N - dimension of the matrix R (number of equations)
-double TMulti::calcDikin(  int N, bool initAppr )
+double TMulti::calcDikin(  long int N, bool initAppr )
 {
-  int  J;
+  long int  J;
   double Mu, PCI=0.;
 
   for(J=0;J<pmp->L;J++)
@@ -1190,8 +1192,7 @@ double TMulti::calcDikin(  int N, bool initAppr )
 // bool initAppr - Inital approximation (true) or iteration of IPM (false)
 double TMulti::calcLM(  bool initAppr )
 {
-   int J;
-   int Z = -1;
+   long int J, Z = -1;
    double LM, LM1, Mu;
 
    for(J=0;J<pmp->L;J++)
@@ -1248,7 +1249,7 @@ double TMulti::calcLM(  bool initAppr )
 // Restoring primal vectors Y and YF
 void TMulti::Restoring_Y_YF()
 {
- int Z, I, JJ = 0;
+ long int Z, I, JJ = 0;
 
  for( Z=0; Z<pmp->FI ; Z++ )
  {
@@ -1282,7 +1283,7 @@ void TMulti::Restoring_Y_YF()
 double TMulti::calcSfactor()
 {
     double molB=0.0, sfactor;
-    int i, NN = pmp->N - pmp->E;
+    long int i, NN = pmp->N - pmp->E;
 
     for(i=0;i<NN;i++)
       molB += pmp->B[i];
@@ -1302,9 +1303,10 @@ double TMulti::calcSfactor()
 //  In this case, the index of most problematic phase is passed through kf or
 //  ku parameter (parameter value -1 means that no problematic phases were found)
 //
-int TMulti::PhaseSelect( int &kfr, int &kur, int rLoop )
+long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int rLoop )
 {
-    short k, j, jb;  int kf, ku; 
+    long int k, j, jb; 
+    long int kf, ku; 
     double F1, F2, *F0, sfactor;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -1446,7 +1448,7 @@ S6: // copy of X vector has been changed by Selekt2() algorithm - store
 // Internal memory allocation for IPM performance optimization
 // (since version 2.2.0)
 //
-void TMulti::Alloc_A_B( int newN )
+void TMulti::Alloc_A_B( long int newN )
 {
   if( AA && BB && (newN==sizeN) )
     return;
@@ -1467,10 +1469,10 @@ void TMulti::Free_A_B()
 
 
 // Building an index list of non-zero elements of the matrix pmp->A
-#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*pmp->N)))
+#define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
 void TMulti::Build_compressed_xAN()
 {
- int ii, jj, k;
+ long int ii, jj, k;
 
  if( arrL && arrAN && (sizeL == pmp->L+1) && ( sizeAN == pmp->N ) )  
    return; // The index arrays are intact - no need to remake (added by DK 27.05.08) !
@@ -1486,8 +1488,8 @@ void TMulti::Build_compressed_xAN()
     Free_compressed_xAN();
  
    // Allocate memory
-   arrL = new int[pmp->L+1]; sizeL = pmp->L+1;
-   arrAN = new int[k];  sizeAN = pmp->N; // sizeAN = k; 
+   arrL = new long int[pmp->L+1]; sizeL = pmp->L+1;
+   arrAN = new long int[k];  sizeAN = pmp->N; // sizeAN = k; 
 
    // Set indexes in the index arrays
    k = 0;

@@ -24,7 +24,7 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
 double LagranInterp(float *y, float *x, float *d, float yoi,
                     float xoi, int M, int N, int pp );
 double LagranInterp(double *y, double *x, double *d, double yoi,
-                    double xoi, int M, int N, int pp );
+                    double xoi, long int M, long int N, long int pp );
 #endif   // _num_methods_h_
 
 //-----------------------End of num_methods.h--------------------------

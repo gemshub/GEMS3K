@@ -353,9 +353,10 @@ void TNode::databr_from_text_file( fstream& ff )
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
- memset( &CNode->Tm, 0, 19*sizeof(double));
+ // mem_set( &CNode->Tm, 0, 19*sizeof(double));
+ databr_reset( CNode );
  TReadArrays  rdar( 51, DataBR_fields, ff);
- short nfild = rdar.findNext();
+ long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
    switch( nfild )
@@ -556,7 +557,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
  prar.writeArray(  "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
    if( _comment )
     ff << "\n# ccIC: List of class codes for Independent Components";
- prar.writeArray(  "ccIC", CSD->ccIC, CSD->nIC, 1 );
+ prar.writeArray(  "ccIC", CSD->ccIC, CSD->nIC, 1L );
   if( _comment )
     ff << "\n# ICmm: Atomic (molar) masses of Independent Components, g/mol";
  prar.writeArray(  "ICmm", CSD->ICmm, CSD->nIC);
@@ -567,7 +568,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
  prar.writeArray(  "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
   if( _comment )
     ff << "\n# ccDC: class codes of Dependent Components";
- prar.writeArray(  "ccDC", CSD->ccDC, CSD->nDC, 1 );
+ prar.writeArray(  "ccDC", CSD->ccDC, CSD->nDC, 1L );
  if( _comment )
    ff << "\n\n# DCmm: Molar masses of DCs ";
  prar.writeArray(  "DCmm", CSD->DCmm, CSD->nDC);
@@ -579,7 +580,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
  prar.writeArray(  "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
   if( _comment )
     ff << "\n# ccPH: Phase aggregate state code list";
-prar.writeArray(  "ccPH", CSD->ccPH, CSD->nPH, 1 );
+prar.writeArray(  "ccPH", CSD->ccPH, CSD->nPH, 1L );
   if( _comment )
     ff << "\n# nDCinPH: Vector L1 telling how many DCs is included in each phase";
 prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
@@ -657,13 +658,13 @@ prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
 // Reading dataCH structure from text file
 void TNode::datach_from_text_file(fstream& ff)
 {
-  int ii;
+  long int ii;
 // fstream ff("DataCH.out", ios::in );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
 // static arrays
  TReadArrays  rdar( 13, DataCH_static_fields, ff);
- short nfild = rdar.findNext();
+ long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
    switch( nfild )
@@ -861,9 +862,9 @@ void TNode::datach_to_file( GemDataStream& ff )
    ff.writeArray( CSD->TCval,  CSD->nTp );
    ff.writeArray( CSD->Pval,  CSD->nPp );
 
-   ff.writeArray( CSD->ccIC, CSD->nIC*sizeof(char) );
-   ff.writeArray( CSD->ccDC, CSD->nDC*sizeof(char) );
-   ff.writeArray( CSD->ccPH, CSD->nPH*sizeof(char) );
+   ff.writeArray( CSD->ccIC, CSD->nIC );
+   ff.writeArray( CSD->ccDC, CSD->nDC );
+   ff.writeArray( CSD->ccPH, CSD->nPH );
 
    if( CSD->ccPH[0] == PH_AQUEL )
    { ff.writeArray( CSD->roW,  CSD->nPp*CSD->nTp );
@@ -880,9 +881,9 @@ void TNode::datach_to_file( GemDataStream& ff )
    if(  CSD->iGrd > 3 )
       ff.writeArray( CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp );
 
-   ff.writeArray( (char *)CSD->ICNL, MaxICN*CSD->nIC*sizeof(char) );
-   ff.writeArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC*sizeof(char) );
-   ff.writeArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH*sizeof(char) );
+   ff.writeArray( (char *)CSD->ICNL, MaxICN*CSD->nIC );
+   ff.writeArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC );
+   ff.writeArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH );
 }
 
 // Reading DataCH structure from binary file
@@ -909,9 +910,9 @@ void TNode::datach_from_file( GemDataStream& ff )
    ff.readArray( CSD->TCval,  CSD->nTp );
    ff.readArray( CSD->Pval,  CSD->nPp );
 
-   ff.readArray( CSD->ccIC, CSD->nIC*sizeof(char) );
-   ff.readArray( CSD->ccDC, CSD->nDC*sizeof(char) );
-   ff.readArray( CSD->ccPH, CSD->nPH*sizeof(char) );
+   ff.readArray( CSD->ccIC, CSD->nIC );
+   ff.readArray( CSD->ccDC, CSD->nDC );
+   ff.readArray( CSD->ccPH, CSD->nPH );
 
    if( CSD->ccPH[0] == PH_AQUEL )
    {  ff.readArray( CSD->roW,  CSD->nPp*CSD->nTp );
@@ -928,9 +929,9 @@ void TNode::datach_from_file( GemDataStream& ff )
    if(  CSD->iGrd > 2 )
      ff.readArray( CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp );
 
-   ff.readArray( (char *)CSD->ICNL, MaxICN*CSD->nIC*sizeof(char) );
-   ff.readArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC*sizeof(char) );
-   ff.readArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH*sizeof(char) );
+   ff.readArray( (char *)CSD->ICNL, MaxICN*CSD->nIC );
+   ff.readArray( (char *)CSD->DCNL, MaxDCN*CSD->nDC );
+   ff.readArray( (char *)CSD->PHNL, MaxPHN*CSD->nPH );
 
 
 }
@@ -938,16 +939,16 @@ void TNode::datach_from_file( GemDataStream& ff )
 // allocating DataCH structure
 void TNode::datach_realloc()
 {
- CSD->nDCinPH = new int[CSD->nPH];
+ CSD->nDCinPH = new long int[CSD->nPH];
 
  if( CSD->nICb >0 )
-   CSD->xIC = new int[CSD->nICb];
+   CSD->xIC = new long int[CSD->nICb];
  else  CSD->xIC = 0;
  if( CSD->nDCb >0 )
-   CSD->xDC = new int[CSD->nDCb];
+   CSD->xDC = new long int[CSD->nDCb];
  else  CSD->xDC = 0;
  if( CSD->nPHb >0 )
-   CSD->xPH = new int[CSD->nPHb];
+   CSD->xPH = new long int[CSD->nPHb];
  else  CSD->xPH = 0;
 
   CSD->A = new double[CSD->nIC*CSD->nDC];
@@ -1154,7 +1155,7 @@ void TNode::databr_from_file( GemDataStream& ff )
 // Allocates DataBR structure
 void TNode::databr_realloc()
 {
-  int j;
+  long int j;
   CNode->bIC = new double[CSD->nICb];
   CNode->rMB = new double[CSD->nICb];
   CNode->uIC = new double[CSD->nICb];
@@ -1174,7 +1175,7 @@ for(  j=0; j<CSD->nDCb; j++ )
  if( CSD->nAalp >0 )
  {
     CNode->aPH = new double[CSD->nPHb];
-    for( int k=0; k<CSD->nPHb; k++ )
+    for( long int k=0; k<CSD->nPHb; k++ )
       CNode->aPH[k] = 0.0;       // default assignment
  }
  else
@@ -1194,9 +1195,7 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
 {
   if( CNode_ == 0)
     CNode_ = CNode;
-  memset( &CNode_->NodeHandle, 0, 6*sizeof(int));
-  memset( &CNode_->TC, 0, 32*sizeof(double));
-
+  
  if( CNode_->bIC )
  { delete[] CNode_->bIC;
    CNode_->bIC = 0;
@@ -1256,4 +1255,121 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
  return NULL;
 }
 
+// set default values(zeros) for DATABR structure
+void TNode::databr_reset( DATABR *CNode, long int level )
+{
+	//  FMT variables (units or dimensionsless) - to be used for storing them
+	//  at the nodearray level = 0.; normally not used in the single-node FMT-GEM coupling
+		CNode->Tm = 0.;    
+		CNode->dt = 0.;    
+		CNode->Dif = 0.;    
+		CNode->Vt = 0.;		
+		CNode->vp = 0.;		
+		CNode->eps = 0.;	
+		CNode->Km = 0.;		
+		CNode->Kf = 0.;		
+		CNode->S = 0.;	
+		CNode->Tr = 0.;     
+		CNode->h = 0.;		
+		CNode->rho = 0.;	
+		CNode->al = 0.;		
+		CNode->at = 0.;		
+		CNode->av = 0.;		
+		CNode->hDl = 0.;	
+		CNode->hDt = 0.;	
+		CNode->hDv = 0.;	
+		CNode->nto = 0.; //19	
+
+		if(level <1 )
+          return;
+		
+   CNode->NodeHandle = 0;
+   CNode->NodeTypeHY = normal;
+   CNode->NodeTypeMT = normal;
+   CNode->NodeStatusFMT = Initial_RUN;
+   CNode->NodeStatusCH = NEED_GEM_AIA;
+   CNode->IterDone = 0;      //6
+
+// Chemical scalar variables
+	CNode->TC = 0.;
+	CNode->P = 0.;
+	CNode->Vs = 0.;  
+	CNode->Vi = 0.;   
+	CNode->Ms = 0.;   
+	CNode->Mi = 0.;    
+	CNode->Gs = 0.;    
+	CNode->Hs = 0.; 	
+	CNode->Hi = 0.;    
+	CNode->IC = 0.;    
+	CNode->pH = 0.;    
+	CNode->pe = 0.;     
+	CNode->Eh = 0.; //13     
+
+	if( level < 2 )
+       return;
+
+// Data arrays - dimensions nICb, nDCb, nPHb, nPSb see in the DATACH structure
+	CNode->bIC = 0;  
+	CNode->rMB = 0;  
+	CNode->uIC = 0;  
+	CNode->xDC = 0;  
+	CNode->gam = 0; 
+   CNode->dul = 0;  
+   CNode->dll = 0; 
+   CNode->aPH = 0; 
+   CNode->xPH = 0;  
+   CNode->vPS = 0;  
+   CNode->mPS = 0;  
+   CNode->bPS = 0;                            
+   CNode->xPA = 0;                  
+   CNode->dRes1 = 0;
+}
+
+// set default values(zeros) for DATACH structure
+void TNode::datach_reset()
+{
+	CSD->nIC = 0;
+	CSD->nDC = 0;    
+	CSD->nPH = 0;   
+	CSD->nPS = 0;    
+	CSD->nDCs = 0;   
+	CSD->nTp = 0;    
+	CSD->nPp = 0; 
+	CSD->iGrd = 0;
+	CSD->nAalp = 0; 
+	CSD->nICb = 0;       
+	CSD->nDCb = 0;      	
+	CSD->nPHb = 0;     	
+	CSD->nPSb = 0;     
+	CSD->uRes1 = 0;     
+// Lists = 0; vectors and matrices
+	CSD->nDCinPH = 0; 
+	CSD->xIC = 0;   
+	CSD->xDC = 0;   
+	CSD->xPH = 0;  //18
+
+	CSD->TCval = 0;  
+	CSD->Pval = 0; 
+	CSD->A = 0;   
+	CSD->Ttol = 0.;    
+	CSD->Ptol = 0.;    
+	CSD->dRes1 = 0.;   
+	CSD->dRes2 = 0.;  
+    CSD->ICmm = 0;  
+    CSD->DCmm = 0;  
+    CSD->DD = 0;    
+    CSD->roW = 0;  
+    CSD->epsW = 0;  
+    CSD->G0 = 0;   
+    CSD->V0 = 0;    
+    CSD->S0 = 0;   
+    CSD->H0 = 0;    
+    CSD->Cp0 = 0;
+    CSD->ICNL = 0;
+    CSD->DCNL = 0;
+    CSD->PHNL = 0;
+    CSD->ccIC = 0;  
+    CSD->ccDC = 0;  
+    CSD->ccPH = 0;  
+}
 //-----------------------End of node_format.cpp--------------------------

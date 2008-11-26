@@ -128,8 +128,8 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui, bool with_comme
    //static values
    char PAalp;
    char PSigm;
-   float EpsW;
-   float RoW;
+   double EpsW;
+   double RoW;
 
 #ifndef IPMGEMPLUGIN
    PAalp = syp->PAalp;
@@ -331,11 +331,11 @@ if( pm.FIs > 0 && pm.Ls > 0 )
   {   ff << "\n## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)" << endl;
       ff << "# sMod: Codes for mixing models of multicomponent phases";
   }
-  prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6 );
+  prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6L );
 
-int LsModSum;
-int LsIPxSum;
-int LsMdcSum;
+long int LsModSum;
+long int LsIPxSum;
+long int LsMdcSum;
 getLsModsum( LsModSum, LsIPxSum );
 getLsMdcsum( LsMdcSum );
 
@@ -343,7 +343,7 @@ getLsMdcsum( LsMdcSum );
   {  ff << "\n\n# LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase" << endl;
      ff << "# Number of parameters per phase";
   }
-  prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3);
+  prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3L);
 
 if(LsIPxSum )
  {
@@ -394,10 +394,10 @@ if(LsIPxSum )
    {  ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
       ff << "# RLC: Codes of metastability/kinetic constraints for DCs";
    }
-  prar.writeArray(  "RLC", pmp->RLC, pmp->L, 1 );
+  prar.writeArray(  "RLC", pmp->RLC, pmp->L, 1L );
    if( _comment )
      ff << "\n\n# RSC: Units of metastability/kinetic constraints for DCs (see vectors dul, dll)";
-  prar.writeArray(  "RSC", pmp->RSC, pmp->L, 1 );
+  prar.writeArray(  "RSC", pmp->RSC, pmp->L, 1L );
    if( _comment )
      ff << "\n\n# DLL: Vector of lower metastability constraints on DC amounts in the system";
   prar.writeArray(  "DLL", pmp->DLL,  pmp->L);
@@ -449,23 +449,23 @@ if(LsIPxSum )
          ff << "\n# [0] surface type; [1] sorbent emd member;";
          ff << "\n# [2] surface site in surf. type; [3] surface EDL plane";
      }
-     prar.writeArray(  "SATX", &pmp->SATX[0][0], pmp->Lads*4, 4);
+     prar.writeArray(  "SATX", &pmp->SATX[0][0], pmp->Lads*4, 4L);
       if( _comment )
       {  ff << "\n# MASDJ: Parameters of surface binding model:";
          ff << "\n# [0] max site density mmol/g; [1] charge allocated to 0 plane;";
          ff << "\n# [2] charge allocated to beta -or third plane; [3] Frumkin interaction parameter;";
          ff << "\n# [4] dentateness or CN; [5] reserved isoterm parameter.";
       }
-     prar.writeArray(  "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN, DFCN);
+     prar.writeArray(  "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN, (long int)DFCN);
       if( _comment )
          ff << "\n# SCM: Classifier of EDL models applied to surface types.";
      prar.writeArray(  "SCM", pmp->SCM[0], pmp->FIs, pmp->FIat );
       if( _comment )
          ff << "\n# SACT: Classifier of applied SACT terms.";
-     prar.writeArray(  "SACT", pmp->SATT, pmp->Lads, 1 );
+     prar.writeArray(  "SACT", pmp->SATT, pmp->Lads, 1L );
       if( _comment )
          ff << "\n# DCads: Classifier of species in sorption phase.";
-     prar.writeArray(  "DCads", pmp->DCC3, pmp->Lads, 1 );
+     prar.writeArray(  "DCads", pmp->DCC3, pmp->Lads, 1L );
     }
 //outArray( ff, "Vol", pmp->Vol,  pmp->L);
 //outArray( ff, "G0", pmp->G0,  pmp->L);
@@ -505,16 +505,17 @@ void TMulti::from_text_file_gemipm( const char *path )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
   DATACH  *dCH = TNode::na->pCSD();
-  int ii, nfild;
+  long int ii, nfild;
 
    //static values
    char PAalp;
    char PSigm;
-   float EpsW;
-   float RoW;
+   double EpsW;
+   double RoW;
 
-  memset( &pm.N, 0, 38*sizeof(short));
-  memset( &pm.TC, 0, 55*sizeof(double));
+   set_def();
+  //mem_set( &pm.N, 0, 38*sizeof(long int));
+  //mem_set( &pm.TC, 0, 55*sizeof(double));
   // get sizes from DATACH
   pmp->TC = pmp->TCc = 25.;
   pmp->T = pmp->Tc =298.15;
@@ -552,7 +553,7 @@ void TMulti::from_text_file_gemipm( const char *path )
    gstring str;
    rdar.skipSpace();
    f_getline( ff, str, '\n');
-   memcpy( pmp->stkey, str.c_str(), EQ_RKLEN );
+   copyValues( pmp->stkey, (char * )str.c_str(), EQ_RKLEN );
 
    nfild = rdar.findNext();
    while( nfild >=0 )
@@ -594,8 +595,8 @@ void TMulti::from_text_file_gemipm( const char *path )
 //   }
 //   else
 //  {
-    RoW = (float)0.99706137180;
-    EpsW = (float)78.245147705;
+    RoW = 0.99706137180;
+    EpsW = 78.245147705;
 //  }
 
 #ifndef IPMGEMPLUGIN
@@ -621,7 +622,7 @@ void TMulti::from_text_file_gemipm( const char *path )
     pmp->A[ii] = dCH->A[ii];
 
   if( pmp->EZ )
-  { int iZ=-1;
+  { long int iZ=-1;
     for(  ii=0; ii<dCH->nDC; ii++ )
      if( dCH->ccIC[ii] == IC_CHARGE )
          break;
@@ -634,14 +635,14 @@ void TMulti::from_text_file_gemipm( const char *path )
 
   for( ii=0; ii< dCH->nIC; ii++ )
   { pmp->Awt[ii]  = dCH->ICmm[ii];
-    memset(pmp->SB[ii], ' ', MaxICN*sizeof(char));
-    memcpy( pmp->SB[ii], dCH->ICNL[ii], MaxICN*sizeof(char) );
+    fillValue(pmp->SB[ii], ' ', MaxICN );
+    copyValues( pmp->SB[ii], dCH->ICNL[ii], MaxICN );
     pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
     pmp->ICC[ii] =  dCH->ccIC[ii];
   }
 
 if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
-  for( int jj=0; jj< dCH->nDC; jj++ )  // Added by DK on 03.03.2007
+  for( long int jj=0; jj< dCH->nDC; jj++ )  // Added by DK on 03.03.2007
   {
     dCH->DCmm[jj] = 0.0;
     for( ii=0; ii< dCH->nIC; ii++ )
@@ -652,18 +653,18 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   {
     pmp->MM[ii] = dCH->DCmm[ii];
     pmp->DCC[ii] = dCH->ccDC[ii];
-    memcpy( pmp->SM[ii], dCH->DCNL[ii], MaxDCN*sizeof(char));
+    copyValues( pmp->SM[ii], dCH->DCNL[ii], MaxDCN);
   }
 
   for( ii=0; ii< dCH->nPH; ii++ )
   {
-     memset( pmp->SF[ii], ' ', MaxPHN*sizeof(char) );
-     memcpy( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN*sizeof(char));
+	  fillValue( pmp->SF[ii], ' ', MaxPHN );
+	  copyValues( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN-4);
      pmp->SF[ii][0] = dCH->ccPH[ii];
      pmp->PHC[ii] = dCH->ccPH[ii];
   }
 
-// !!!!  memcpy( pmp->DCCW, dCH->ccDCW, dCH->nDC*sizeof(char));
+// !!!!  copyValues( pmp->DCCW, dCH->ccDCW, dCH->nDC);
   // set up DCCW
   ConvertDCC();
 
@@ -674,7 +675,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
 
  if( !( pm.FIs > 0 && pm.Ls > 0 ) )
  {
-   rddar.setNoAlws( short(0) /*"sMod"*/);
+   rddar.setNoAlws( (long int)(0) /*"sMod"*/);
    rddar.setNoAlws( 1 /*"LsMod"*/);
    rddar.setNoAlws( 2 /*"LsMdc"*/);
  }
@@ -710,19 +711,19 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       case 1:{ if( !pmp->LsMod )
                 Error( "Error", "Array LsMod is not used in this problem");
               rddar.readArray( "LsMod" , pmp->LsMod, pmp->FIs*3) ;
-              int LsModSum;
-              int LsIPxSum;
+              long int LsModSum;
+              long int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
               if(LsIPxSum )
               { rddar.readNext( "IPxPH");
                 if(!pmp->IPx )
-                  pmp->IPx = new short[LsIPxSum];
+                  pmp->IPx = new long int[LsIPxSum];
                 rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
               }
               if(LsModSum )
               { rddar.readNext( "PMc");
                 if(!pmp->PMc )
-                  pmp->PMc = new float[LsModSum];
+                  pmp->PMc = new double[LsModSum];
                 rddar.readArray( "PMc", pmp->PMc,  LsModSum);
               }
               break;
@@ -730,12 +731,12 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       case 2: { if( !pmp->LsMdc )
                    Error( "Error", "Array LsMdc not used in this problem");
                 rddar.readArray( "LsMdc" , pmp->LsMdc, pmp->FIs );
-                int LsMdcSum;
+                long int LsMdcSum;
                 getLsMdcsum( LsMdcSum );
                 if(LsMdcSum )
                 { rddar.readNext( "DMc");
                   if(!pmp->DMc )
-                     pmp->DMc = new float[LsMdcSum];
+                     pmp->DMc = new double[LsMdcSum];
                   rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
                 }
                 break;

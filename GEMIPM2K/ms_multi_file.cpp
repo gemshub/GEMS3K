@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 968 2007-12-13 13:23:32Z gems $
+// $Id: ms_multi_file.cpp 1121 2008-11-25 10:16:38Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -21,10 +21,10 @@
 #include "m_param.h"
 #include "gdatastream.h"
 
-void TMulti::getLsModsum( int& LsModSum, int& LsIPxSum )
+void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 {  LsModSum = 0;
    LsIPxSum = 0;
-   for(int i=0; i<pm.FIs; i++)
+   for(long int i=0; i<pm.FIs; i++)
    {
      LsModSum += (pm.LsMod[i*3]*pm.LsMod[i*3+2]);
      LsIPxSum += (pm.LsMod[i*3]*pm.LsMod[i*3+1]);
@@ -32,14 +32,241 @@ void TMulti::getLsModsum( int& LsModSum, int& LsIPxSum )
 }
 
 
-void TMulti::getLsMdcsum( int& LsMdcSum )
+void TMulti::getLsMdcsum( long int& LsMdcSum )
 {  LsMdcSum = 0;
-   for(int i=0; i<pm.FIs; i++)
+   for(long int i=0; i<pm.FIs; i++)
      LsMdcSum += (pm.LsMdc[i]*pm.L1[i]);
 }
 
 //---------------------------------------------------------//
+//set default information
+void TMulti::set_def( long int /*q*/)
+{
+    //mem_cpy( &pm.PunE, "jjbC", 4 );
+    pm.PunE = 'j';         // Units of energy  { j;  J c C N reserved }
+    pm.PunV = 'j';         // Units of volume  { j;  c L a reserved }
+    pm.PunP = 'b';        // Units of pressure  { b;  B p P A reserved }
+    pm.PunT = 'C';         // Units of temperature  { C; K F reserved }
+ 	
+    // mem_set( &pm.N, 0, 36*sizeof(long int));
+    pm.N = 0;        	// N - number of IC in IPM problem
+    pm.NR = 0;       	// NR - dimensions of R matrix
+    pm.L = 0;        	// L -   number of DC in IPM problem
+    pm.Ls = 0;       	// Ls -   total number of DC in multi-component phases
+    pm.LO = 0;       	// LO -   index of water-solvent in IPM DC list
+    pm.PG = 0;       	// PG -   number of DC in gas phase
+    pm.PSOL = 0;     	// PSOL - number of DC in liquid hydrocarbon phase
+    pm.Lads = 0;     	// Lads - number of DC in sorption phases
+    pm.FI = 0;       	// FI -   number of phases in IPM problem
+    pm.FIs = 0;      	// FIs -   number of multicomponent phases
+    pm.FIa = 0;      	// FIa -   number of sorption phases
+    pm.FI1 = 0;     // FI1 -   number of phases present in eqstate
+    pm.FI1s = 0;    // FI1s -   number of multicomponent phases present in eqstate
+    pm.FI1a = 0;    // FI1a -   number of sorption phases present in eqstate
+    pm.IT = 0;      // It - number of completed IPM iterations
+    pm.E = 0;       // PE - flag of electroneutrality constraint { 0 1 }
+    pm.PD = 0;      // PD - mode of calling GammaCalc() { 0 1 2 3 4 }
+    pm.PV = 0;      // PV - flag of system volume constraint { 0 1 }
+    pm.PLIM = 0;    // PU - flag of activation of DC/phase restrictions { 0 1 }
+    pm.Ec = 0;    // GammaCalc() return code: 0 (OK) or 1 (error)
+    pm.K2 = 0;    // Number of Selekt2() loops
+    pm.PZ = 0;    // Indicator of IPM-2 precision algorithm activation    funT = 0; sysT = 0;
+    pm.pNP = 0; //Mode of FIA selection: 0-auto-SIMPLEX = 0;1-old eqstate = 0;-1-user's choice
+    pm.pESU = 0;  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
+    pm.pIPN = 0;  // State of IPN-arrays:  0-create; 1-available; -1 remake
+    pm.pBAL = 0;  // State of reloading CSD:  1- BAL only; 0-whole CSD
+    pm.pFAG_ = 0;  // reserved SD
+    pm.pTPD = 0;  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
+    pm.pULR = 0;  // Start recalc kinetic constraints (0-do not = 0; 1-do )internal
+    pm.ITaia = 0;  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
+    pm.FIat = 0;   // max. number of surface site types
+    pm.MK = 0;     // PM return code: 0 - continue;  1 - converged
+    pm.W1 = 0;     // internal IPM-2 indicator
+    pm.is = 0;     // is - index of IC for IPN equations ( GammaCalc() )
+    pm.js = 0;     // js - index of DC for IPN equations ( GammaCalc() )
+    pm.next = 0;
+    pm.sitNcat = 0;    // SIT: number of cations
+    pm.sitNan = 0;     // SIT: number of anions
 
+    // mem_set( &pm.TC, 0, 54*sizeof(double));
+    pm.TC = pm.TCc = 0.; 	// Temperature T = 0.; min.-max. (0 = 0.;2000 C)
+    pm.T = pm.Tc = 0.;   	// T = 0.; min.-max. K
+    pm.P = pm.Pc = 0.;   	// Pressure P = 0.; min.-max.(0 = 0.;10000 bar)
+    pm.VX_ = pm.VXc = 0.;    // V(X) - volume of the system = 0.; min.-max. = 0.; cm3
+    pm.GX_ = pm.GXc = 0.;    // Gibbs potential of the system G(X) = 0.; min.-max. (J)
+    pm.AX_ = pm.AXc = 0.;    // Helmholtz potential of the system F(X) = 0.; reserved
+    pm.UX_ = pm.UXc = 0.;  	// Internal energy of the system U(X) = 0.; reserved
+    pm.HX_ = pm.HXc = 0.; 	// Total enthalpy of the system H(X) = 0.; reserved
+    pm.SX_ = pm.SXc = 0.; 	// Total entropy of the system S(X) = 0.; reserved
+    pm.CpX_ = pm.CpXc = 0.;  // reserved
+    pm.CvX_ = pm.CvXc = 0.;  // reserved
+    pm.T0 = 0.;         // reserved
+    pm.VE = 0.;         // reserved
+    pm.MBX = 0.;        // Total mass of the system = 0.; kg
+    pm.FX = 0.;    	// Current Gibbs potential of the system in IPM = 0.; moles
+    pm.IC = 0.;         // Effective molal ionic strength of aqueous electrolyte
+    pm.pH = 0.;         // pH of aqueous solution
+    pm.pe = 0.;         // pe of aqueous solution
+    pm.Eh = 0.;         // Eh of aqueous solution = 0.; V
+    pm.DHBM = 0.;       // Adjusted balance precision criterion (IPM-2 )
+    pm.DSM = 0.;        // min value phase DS (IPM-2)
+    pm.GWAT = 0.;       // used in ipm_gamma()
+    pm.YMET = 0.;       // reserved
+    pm.denW = pm.denWg = 0.;  // Density of H2O(l) and steam for Tc = 0.;Pc
+    pm.epsW = pm.epsWg = 0.;  // Diel. constant of H2O(l) and steam for Tc = 0.;Pc
+    pm.PCI = 0.;        // Current value of Dikin criterion of IPM convergence DK>=DX
+    pm.DX = 0.;         // IPM convergence criterion threshold DX (1e-5)
+    pm.lnP = 0.;        // log Ptotal
+    pm.RT = 0.;         // RT: 8.31451*T (J/mole/K)
+    pm.FRT = 0.;        // F/RT = 0.; F - Faraday constant = 96485.309 C/mol
+    pm.Yw = 0.;         // Current number of moles of solvent in aqueous phase
+    pm.ln5551 = 0.;     // ln(55.508373) = 4.0165339
+    pm.aqsTail = 0.;    // v_j asymmetry correction factor for aqueous species
+    pm.lowPosNum = 0.;  // Minimum DC amount defining the Ls set (1e-19)
+    pm.logXw = 0.;      // work variable
+    pm.logYFk = 0.;     // work variable
+    pm.YFk = 0.;        // Current number of moles in a multicomponent phase
+    pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.; 
+   
+    // pointers
+    pm.sitNcat = 0;
+    pm.sitNan = 0;
+    pm.L1    = 0;
+    pm.LsMod = 0;
+    pm.LsMdc = 0;
+    pm.mui   = 0;
+    pm.muk   = 0;
+    pm.muj   = 0;
+    pm.SATX =0;
+    pm.DUL   = 0;
+    pm.DLL   = 0;
+    pm.GEX   = 0;
+    pm.PUL   = 0;
+    pm.PLL   = 0;
+    pm.YOF   = 0;
+    pm.PMc   = 0;
+    pm.DMc   = 0;
+    pm.Vol   = 0;
+    pm.HYM   = 0;
+    pm.VL    = 0;
+    pm.MM    = 0;
+    pm.H0    = 0;
+    pm.A0    = 0;
+    pm.U0    = 0;
+    pm.S0    = 0;
+    pm.Cp0   = 0;
+    pm.Cv0   = 0;
+    pm.Pparc = 0;
+    pm.Y_m   = 0;
+    pm.Y_la  = 0;
+    pm.Y_w   = 0;
+    pm.Gamma = 0;
+    pm.lnGmf = 0;
+    pm.lnGmM = 0;
+    pm.EZ    = 0;
+    pm.Wb    = 0;
+    pm.Wabs  = 0;
+    pm.Rion  = 0;
+    pm.Aalp  = 0;
+    pm.Sigw  = 0;
+    pm.Sigg  = 0;
+    pm.Nfsp  = 0;
+    pm.MASDT = 0;
+    pm.FVOL  = 0;
+    pm.FWGT  = 0;
+    pm.XcapA = 0;
+    pm.XcapB = 0;
+    pm.XcapD = 0;
+    pm.XdlA  = 0;
+    pm.XdlB  = 0;
+    pm.XdlD  = 0;
+    pm.XpsiA = 0;
+    pm.XpsiB = 0;
+    pm.XpsiD = 0;
+    pm.Xr0h0 = 0;
+    pm.XlamA = 0;
+    pm.Xetaf = 0;
+    pm.Xcond = 0;
+    pm.Xeps  = 0;
+    pm.Awt   = 0;
+    pm.A     = 0;
+    pm.XFs   = 0;
+        pm.Falps = 0;
+        pm.Fug   = 0;
+        pm.Fug_l = 0;
+        pm.Ppg_l = 0;
+        pm.XFTS  = 0;
+        pm.MASDJ = 0;
+        pm.G     = 0;
+        pm.G0    = 0;
+        pm.lnGam = 0;
+        pm.lnGmo = 0;
+//        pm.lnSAT = 0;
+        pm.lnSAC = 0;
+        pm.B     = 0;
+        pm.U     = 0;
+        pm.U_r   = 0;
+        pm.C     = 0;
+        pm.IC_m  = 0;
+        pm.IC_lm = 0;
+        pm.IC_wm = 0;
+        pm.BF    = 0;
+        pm.BFC    = 0;
+        pm.XF    = 0;
+        pm.YF    = 0;
+        pm.XFA   = 0;
+        pm.YFA   = 0;
+        pm.Falp  = 0;
+        pm.XetaA = 0;
+        pm.XetaB = 0;
+        pm.XetaD = 0;         // added 12.09.05  KD
+        pm.X     = 0;
+        pm.Y     = 0;
+        pm.XY    = 0;
+        pm.Qp    = 0;
+        pm.Qd    = 0;
+        pm.MU    = 0;
+        pm.EMU   = 0;
+        pm.NMU   = 0;
+        pm.W     = 0;
+        pm.Fx    = 0;
+        pm.Wx    = 0;
+        pm.F     = 0;
+        pm.F0    = 0;
+        pm.D     = 0;
+     //   pm.R     = 0;
+     //   pm.R1    = 0;
+        pm.sMod  = 0;
+        pm.SB    = 0;
+        pm.SB1    = 0; // added Sveta 6/07/2001
+        pm.SM    = 0;
+        pm.SF    = 0;
+        pm.SFs   = 0;
+        pm.pbuf  = 0; //
+        pm.RLC   = 0;
+        pm.RSC   = 0;
+        pm.RFLC  = 0;
+        pm.RFSC  = 0;
+        pm.ICC   = 0;
+        pm.DCC   = 0;
+        pm.PHC   = 0;
+        pm.SCM   = 0;
+        pm.SATT  = 0;
+        pm.DCCW  = 0;
+        pm.XcapF = 0;
+        pm.SM2    = 0;
+        pm.SM3    = 0;
+        pm.SF2    = 0;
+        pm.DCC3   = 0;
+//  Added 16.11.2004 by Sveta
+//    pm.sitXcat = 0;
+//    pm.sitXan = 0;
+//    pm.sitE = 0;
+pm.IPx = 0;
+pm.ITF = pm.ITG = 0;
+}
+
+//---------------------------------------------------------//
 // writing MULTI to binary file
 void TMulti::to_file( GemDataStream& ff, gstring& path  )
 {
@@ -49,8 +276,8 @@ void TMulti::to_file( GemDataStream& ff, gstring& path  )
    //static values
    char PAalp;
    char PSigm;
-   float EpsW;
-   float RoW;
+   double EpsW;
+   double RoW;
 
 
 #ifndef IPMGEMPLUGIN
@@ -155,9 +382,9 @@ void TMulti::to_file( GemDataStream& ff, gstring& path  )
       ff.writeArray(pm.YFA, pm.FIs);
       ff.writeArray(pm.LsMod, pm.FIs*3);
       ff.writeArray(pm.LsMdc, pm.FIs);
-      int LsModSum;
-      int LsIPxSum;
-      int LsMdcSum;
+      long int LsModSum;
+      long int LsIPxSum;
+      long int LsMdcSum;
       getLsModsum( LsModSum, LsIPxSum );
       getLsMdcsum( LsMdcSum );
       ff.writeArray(pm.IPx, LsIPxSum);
@@ -183,7 +410,7 @@ void TMulti::to_file( GemDataStream& ff, gstring& path  )
     if( PAalp != S_OFF )
     {
       ff.writeArray(pm.Aalp, pm.FI);
-      ff.writeArray((float *)pm.Xr0h0, pm.FI*2);
+      ff.writeArray((double *)pm.Xr0h0, pm.FI*2);
     }
 
    if( PSigm != S_OFF )
@@ -202,28 +429,28 @@ void TMulti::to_file( GemDataStream& ff, gstring& path  )
     if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
     { /* ADSORPTION AND ION EXCHANGE */
       ff.writeArray((char*)pm.SCM, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.Nfsp, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.MASDT, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XcapA, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XcapB, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XcapD, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XcapF, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XdlA, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XdlB, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XdlD, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.Nfsp, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.MASDT, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XcapA, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XcapB, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XcapD, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XcapF, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XdlA, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XdlB, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XdlD, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XpsiA, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XpsiB, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XpsiD, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.XlamA, pm.FIs*pm.FIat);
-      ff.writeArray((float*)pm.Xetaf, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.XlamA, pm.FIs*pm.FIat);
+      ff.writeArray((double*)pm.Xetaf, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XetaA, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XetaB, pm.FIs*pm.FIat);
 ff.writeArray((double*)pm.XetaD, pm.FIs*pm.FIat);     // added 12.09.05   KD
       ff.writeArray((double*)pm.XFTS, pm.FIs*pm.FIat);
 
-ff.writeArray((short*)pm.SATX, pm.Lads*4);
+ff.writeArray((long int*)pm.SATX, pm.Lads*4);
 ff.writeArray(pm.SATT, pm.Lads);
-ff.writeArray((float*)pm.MASDJ, pm.Lads*DFCN);
+ff.writeArray((double*)pm.MASDJ, pm.Lads*DFCN);
 //      ff.writeArray(pm.MASDJ, pm.Ls);
 ff.writeArray( (double*)pm.lnSAC, pm.Lads*4 );
 ff.writeArray((char*)pm.SM3, MAXDCNAME * pm.Lads);
@@ -276,8 +503,8 @@ void TMulti::from_file( GemDataStream& ff )
    //static values
    char PAalp;
    char PSigm;
-   float EpsW;
-   float RoW;
+   double EpsW;
+   double RoW;
 
    ff.readArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.readArray( &pm.N, 38);
@@ -384,14 +611,14 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray(pm.YFA, pm.FIs);
       ff.readArray(pm.LsMod, pm.FIs*3);
       ff.readArray(pm.LsMdc, pm.FIs);
-      int LsModSum;
-      int LsIPxSum;
-      int LsMdcSum;
+      long int LsModSum;
+      long int LsIPxSum;
+      long int LsMdcSum;
       getLsModsum( LsModSum, LsIPxSum );
       getLsMdcsum( LsMdcSum );
-      pm.IPx = new short[LsIPxSum];
-      pm.PMc = new float[LsModSum];
-      pm.DMc = new float[LsMdcSum];
+      pm.IPx = new long int[LsIPxSum];
+      pm.PMc = new double[LsModSum];
+      pm.DMc = new double[LsMdcSum];
       ff.readArray(pm.IPx, LsIPxSum);
       ff.readArray(pm.PMc, LsModSum);
       ff.readArray(pm.DMc, LsMdcSum);
@@ -415,7 +642,7 @@ void TMulti::from_file( GemDataStream& ff )
     if( PAalp != S_OFF )
     {
       ff.readArray(pm.Aalp, pm.FI);
-      ff.readArray((float *)pm.Xr0h0, pm.FI*2);
+      ff.readArray((double *)pm.Xr0h0, pm.FI*2);
     }
 
    if( PSigm != S_OFF )
@@ -434,28 +661,28 @@ void TMulti::from_file( GemDataStream& ff )
     if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
     { /* ADSORBTION AND ION IXCHANDG */
       ff.readArray((char*)pm.SCM, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.Nfsp, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.MASDT, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XcapA, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XcapB, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XcapD, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XcapF, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XdlA, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XdlB, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XdlD, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.Nfsp, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.MASDT, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XcapA, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XcapB, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XcapD, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XcapF, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XdlA, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XdlB, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XdlD, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XpsiA, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XpsiB, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XpsiD, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.XlamA, pm.FIs*pm.FIat);
-      ff.readArray((float*)pm.Xetaf, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.XlamA, pm.FIs*pm.FIat);
+      ff.readArray((double*)pm.Xetaf, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XetaA, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XetaB, pm.FIs*pm.FIat);
 ff.readArray((double*)pm.XetaD, pm.FIs*pm.FIat);    // added 12.09.05  by KD
       ff.readArray((double*)pm.XFTS, pm.FIs*pm.FIat);
 
-ff.readArray((short*)pm.SATX, pm.Lads*4);
+ff.readArray((long int*)pm.SATX, pm.Lads*4);
 ff.readArray(pm.SATT, pm.Lads);
-ff.readArray((float*)pm.MASDJ, pm.Lads*DFCN);
+ff.readArray((double*)pm.MASDJ, pm.Lads*DFCN);
 //      ff.readArray(pm.MASDJ, pm.Ls);
 ff.readArray((double*)pm.lnSAC, pm.Lads*4);
 ff.readArray((char*)pm.SM3, MAXDCNAME * pm.Lads);
@@ -497,142 +724,163 @@ ff.readArray((double*)pm.D, MST*MST);
 // realloc dynamic memory
 void TMulti::multi_realloc( char PAalp, char PSigm )
 {
-  int ii;
+  long int ii, jj ;
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
         Error( GetName(), "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
 
     // Part 1
      // need  always to alloc vectors
- pm.L1 = new short[pm.FI];
- memset(pm.L1, 0, pm.FI*sizeof(short));
- pm.muk = new short[pm.FI];
+ pm.L1 = new long int[pm.FI];
+ pm.muk = new long int[pm.FI];
  for( ii=0; ii<pm.FI; ii++)
-   pm.muk[ii] = ii;
- pm.mui = new short[pm.N];
+ {   pm.L1[ii] = 0;
+	 pm.muk[ii] = ii;
+ }
+ pm.mui = new long int[pm.N];
  for( ii=0; ii<pm.N; ii++)
    pm.mui[ii] = ii;
- pm.muj = new short[pm.L];
+ pm.muj = new long int[pm.L];
  for( ii=0; ii<pm.L; ii++)
    pm.muj[ii] = ii;
 
  pm.DUL = new double[pm.L];
- for( ii=0; ii<pm.L; ii++ )         // 28/11/2006
-  pm.DUL[ii] = 1e6;
  pm.DLL = new double[pm.L];
- memset(pm.DLL, 0, pm.L*sizeof(double));  // 28/11/2006
  pm.Vol = new double[pm.L];
- memset(pm.Vol, 0, pm.L*sizeof(double));
  pm.Pparc = new double[pm.L];
- for( ii=0; ii<pm.L; ii++ )        // 28/11/2006
-  pm.Pparc[ii] = 1.;
  pm.MM = new double[pm.L];
- memset(pm.MM, 0, pm.L*sizeof(double));
- pm.Awt = new float[pm.N];
- memset(pm.Awt, 0, pm.N*sizeof(float));
- pm.A = new float[pm.N*pm.L];
- memset(pm.A, 0, pm.N*pm.L*sizeof(float));
- pm.XFs = new float[pm.FI];
- memset(pm.XFs, 0, pm.FI*sizeof(float));
- pm.Falps = new float[pm.FI];
- memset(pm.Falps, 0, pm.FI*sizeof(float));
  pm.G = new double[pm.L];
- memset(pm.G, 0, pm.L*sizeof(double));
  pm.G0 = new double[pm.L];
- memset(pm.G0, 0, pm.L*sizeof(double));
  pm.lnGam = new double[pm.L];
- memset(pm.lnGam, 0, pm.L*sizeof(double));
  pm.lnGmo = new double[pm.L];
- memset(pm.lnGmo, 0, pm.L*sizeof(double));
- pm.B = new double[pm.N];
- memset(pm.B, 0, pm.N*sizeof(double));
- pm.U = new double[pm.N];
- memset(pm.U, 0, pm.N*sizeof(double));
- pm.U_r = new double[pm.N];
- memset(pm.U_r, 0, pm.N*sizeof(double));
- pm.C = new double[pm.N];
- memset(pm.C, 0, pm.N*sizeof(double));
- pm.XF = new double[pm.FI];
- memset(pm.XF, 0, pm.FI*sizeof(double));
- pm.YF = new double[pm.FI];
- memset(pm.YF, 0, pm.FI*sizeof(double));
- pm.Falp = new double[pm.FI];
- memset(pm.Falp, 0, pm.FI*sizeof(double));
  pm.X = new double[pm.L];
- memset(pm.X, 0, pm.L*sizeof(double));
  pm.Y = new double[pm.L];
- memset(pm.Y, 0, pm.L*sizeof(double));
  pm.XY = new double[pm.L];
- memset(pm.XY, 0, pm.L*sizeof(double));
  pm.MU = new double[pm.L];
- memset(pm.MU, 0, pm.L*sizeof(double));
  pm.EMU = new double[pm.L];
- memset(pm.EMU, 0, pm.L*sizeof(double));
  pm.NMU = new double[pm.L];
- memset(pm.NMU, 0, pm.L*sizeof(double));
  pm.W = new double[pm.L];
- memset(pm.W, 0, pm.L*sizeof(double));
  pm.F = new double[pm.L];
- memset(pm.F, 0, pm.L*sizeof(double));
  pm.F0 = new double[pm.L];
- memset(pm.F0, 0, pm.L*sizeof(double));
- pm.YOF = new double[pm.FI];
- memset(pm.YOF, 0, pm.FI*sizeof(double)); // 28/11/2006
-
-    pm.SB = new char[pm.N][MAXICNAME+MAXSYMB];
-    memset(pm.SB, 0, pm.N*(MAXICNAME+MAXSYMB)*sizeof(char));
-    pm.SB1 = new char[pm.N][MAXICNAME];
-    memset(pm.SB1, 0, pm.N*(MAXICNAME)*sizeof(char));
-    pm.SFs = new char[pm.FI][MAXPHNAME+MAXSYMB];
-    memset(pm.SFs, 0, pm.FI*(MAXPHNAME+MAXSYMB)*sizeof(char));
-    pm.SM = new char[pm.L][MAXDCNAME];
-    memset(pm.SM, 0, pm.L*(MAXDCNAME)*sizeof(char));
-    pm.SF = new char[pm.FI][MAXPHNAME+MAXSYMB];
-    memset(pm.SF, 0, pm.FI*(MAXPHNAME+MAXSYMB)*sizeof(char));
-    pm.SM2 = new char[pm.Ls][MAXDCNAME];
-    memset(pm.SM2, 0, pm.Ls*(MAXDCNAME)*sizeof(char));
-    pm.SF2 = new char[pm.FIs][MAXPHNAME+MAXSYMB];
-    memset(pm.SF2, 0, pm.FIs*(MAXPHNAME+MAXSYMB)*sizeof(char));
-    pm.RLC = new char[pm.L];
-    pm.RSC = new char[pm.L];
-    for( ii=0; ii<pm.L; ii++ )        // 28/11/2006
-    { pm.RLC[ii] = 'B';
-      pm.RSC[ii] = 'M';
-    }
-    pm.ICC = new char[pm.N];
-    memset(pm.ICC, 0, pm.N*sizeof(char));
-    pm.DCC = new char[pm.L];
-    memset(pm.DCC, 0, pm.L*sizeof(char));
-    pm.PHC = new char[pm.FI];
-    memset(pm.PHC, 0, pm.FI*sizeof(char));
-    pm.DCCW = new char[pm.L];
-    memset(pm.DCCW, 0, pm.L*sizeof(char));
-
+ pm.RLC = new char[pm.L];
+ pm.RSC = new char[pm.L];
+ pm.DCC = new char[pm.L];
+ pm.DCCW = new char[pm.L];
  pm.lnGmM = new double[pm.L];
- memset(pm.lnGmM, 0, pm.L*sizeof(double));
- pm.GEX = new double[pm.L];
- memset(pm.GEX, 0, pm.L*sizeof(double)); // 28/11/2006
+ pm.GEX = new double[pm.L]; //24
+ for( ii=0; ii<pm.L; ii++ )         
+ {
+	 pm.DUL[ii] = 1e6;
+	 pm.DLL[ii] = 0.0;
+	 pm.Vol[ii] = 0.0;
+     pm.Pparc[ii] = 1.;
+     pm.MM[ii] = 0.0;
+     pm.G[ii] = 0.0;
+     pm.G0[ii] = 0.0;
+     pm.lnGam[ii] = 0.0;
+     pm.lnGmo[ii] = 0.0;
+     pm.X[ii] = 0.0;
+     pm.Y[ii] = 0.0;
+     pm.XY[ii] = 0.0;
+     pm.MU[ii] = 0.0;
+     pm.EMU[ii] = 0.0;
+     pm.NMU[ii] = 0.0;
+     pm.W[ii] = 0.0;
+     pm.F[ii] = 0.0;
+     pm.F0[ii] = 0.0;
+     pm.RLC[ii] = 'B';
+     pm.RSC[ii] = 'M';
+     pm.DCC[ii] = 0;
+     pm.DCCW[ii] = 0;
+     pm.lnGmM[ii] = 0.0;
+     pm.GEX[ii] = 0.0;
+ }
+  
+ pm.A = new double[pm.N*pm.L];
+ for( ii=0; ii<pm.N*pm.L; ii++ )         
+	 pm.A[ii] = 0.0;
+ 
+ pm.Awt = new double[pm.N];
+ pm.B = new double[pm.N];
+ pm.U = new double[pm.N];
+ pm.U_r = new double[pm.N];
+ pm.C = new double[pm.N];
+ pm.ICC = new char[pm.N];  //6
+ for( ii=0; ii<pm.N; ii++ )         
+ {
+	 pm.Awt[ii] = 0.0;
+	 pm.B[ii] = 0.0;
+	 pm.U[ii] = 0.0;
+	 pm.U_r[ii] = 0.0;
+	 pm.C[ii] = 0.0;
+	 pm.ICC[ii] = 0;
+ }
+
+ pm.XFs = new double[pm.FI];
+ pm.Falps = new double[pm.FI];
+ pm.XF = new double[pm.FI];
+ pm.YF = new double[pm.FI];
+ pm.Falp = new double[pm.FI];
+ pm.YOF = new double[pm.FI];
+ pm.PHC = new char[pm.FI];
  pm.FVOL = new double[pm.FI];
- memset(pm.FVOL, 0, pm.FI*sizeof(double));
- pm.FWGT = new double[pm.FI];
- memset(pm.FWGT, 0, pm.FI*sizeof(double));
+ pm.FWGT = new double[pm.FI]; //9
+ for( ii=0; ii<pm.FI; ii++ )
+ {
+	 pm.XFs[ii] = 0.0;	 
+	 pm.Falps[ii] = 0.0;
+	 pm.XF[ii] = 0.0;
+	 pm.YF[ii] = 0.0;
+	 pm.Falp[ii] = 0.0;
+	 pm.YOF[ii] = 0.0;
+	 pm.PHC[ii] = 0;
+	 pm.FVOL[ii] = 0.0;
+	 pm.FWGT[ii] = 0.0;
+ }
+
+  pm.SB = new char[pm.N][MAXICNAME+MAXSYMB];
+  pm.SB1 = new char[pm.N][MAXICNAME];
+  for( ii=0; ii<pm.N; ii++)
+  {
+	  fillValue( pm.SB[ii], '\0', MAXICNAME+MAXSYMB);
+	  fillValue( pm.SB1[ii], '\0', MAXICNAME);
+  }
+  pm.SF = new char[pm.FI][MAXPHNAME+MAXSYMB];
+  pm.SFs = new char[pm.FI][MAXPHNAME+MAXSYMB];
+  for( ii=0; ii<pm.FI; ii++)
+  {
+ 	  fillValue( pm.SF[ii], '\0', MAXPHNAME+MAXSYMB);
+ 	  fillValue( pm.SFs[ii], '\0',MAXPHNAME+MAXSYMB);
+   }
+  pm.SM = new char[pm.L][MAXDCNAME];
+  for( ii=0; ii<pm.L; ii++)
+ 	  fillValue( pm.SM[ii], '\0', MAXDCNAME);
+  pm.SM2 = new char[pm.Ls][MAXDCNAME];
+  for( ii=0; ii<pm.Ls; ii++)
+ 	  fillValue( pm.SM2[ii], '\0', MAXDCNAME);
+  pm.SF2 = new char[pm.FIs][MAXPHNAME+MAXSYMB];
+  for( ii=0; ii<pm.FIs; ii++)
+ 	  fillValue( pm.SF2[ii], '\0', MAXPHNAME+MAXSYMB);
 
  if( pm.L > 0 )
  {
    pm.Y_la = new double[pm.L];
-   memset(pm.Y_la, 0, pm.L*sizeof(double));
    pm.Y_w = new double[pm.L];
-   memset(pm.Y_w, 0, pm.L*sizeof(double));
    pm.Fx = new double[pm.L];
-   memset(pm.Fx, 0, pm.L*sizeof(double));
    pm.Wx = new double[pm.L];
-   memset(pm.Wx, 0, pm.L*sizeof(double));
-   pm.VL = new float[pm.L];
-   memset(pm.VL, 0, pm.L*sizeof(float));
+   pm.VL = new double[pm.L];
    pm.Gamma = new double[pm.L];
-   memset(pm.Gamma, 0, pm.L*sizeof(double));
-   pm.lnGmf = new double[pm.L];
-   memset(pm.lnGmf, 0, pm.L*sizeof(double)); // 28/11/2006
-//   pm.D = new double[pm.L];
+   pm.lnGmf = new double[pm.L]; //7
+   for( ii=0; ii<pm.L; ii++ )         
+   {
+	   pm.Y_la[ii] = 0.0;
+	   pm.Y_w[ii] = 0.0;
+	   pm.Fx[ii] = 0.0;
+	   pm.Wx[ii] = 0.0;
+	   pm.VL[ii] = 0.0;
+	   pm.Gamma[ii] = 0.0;
+	   pm.lnGmf[ii] = 0.0;
+   }
+   //   pm.D = new double[pm.L];
  }
  else
  {
@@ -651,32 +899,41 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( pm.FIs > 0 && pm.Ls > 0 )
  {
    pm.BF = new double[pm.FIs*pm.N];
-   memset(pm.BF, 0, pm.FIs*pm.N*sizeof(double));
+   for( ii=0; ii<pm.FIs*pm.N; ii++ )         
+	   pm.BF[ii] = 0.0;
    pm.BFC = new double[pm.N];
-   memset(pm.BFC, 0, pm.N*sizeof(double));
+   for( ii=0; ii<pm.N; ii++ )         
+	   pm.BFC[ii] = 0.0;
+   
    pm.XFA = new double[pm.FIs];
-   memset(pm.XFA, 0, pm.FIs*sizeof(double));
    pm.YFA = new double[pm.FIs];
-   memset(pm.YFA, 0, pm.FIs*sizeof(double));
-   pm.LsMod = new short[pm.FIs*3];
-   memset(pm.LsMod, 0, pm.FIs*3*sizeof(short));
-   pm.LsMdc = new short[pm.FIs];
-   memset(pm.LsMdc, 0, pm.FIs*sizeof(short));
+   pm.LsMdc = new long int[pm.FIs];
+   pm.PUL = new double[pm.FIs];
+   pm.PLL = new double[pm.FIs]; //5
+   for( ii=0; ii<pm.FIs; ii++ )       
+   {
+	   pm.XFA[ii] = 0.0;
+	   pm.YFA[ii] = 0.0;
+	   pm.LsMdc[ii] = 0.0;
+	   pm.PUL[ii] = 1e6;
+	   pm.PLL[ii] = 0.0;
+   }
    pm.IPx = 0;
    pm.PMc = 0;
    pm.DMc = 0;
-   pm.PUL = new double[pm.FIs];
-   for( ii=0; ii<pm.FIs; ii++ )        // 08/12/2007
-    pm.PUL[ii] = 1e6;
-   pm.PLL = new double[pm.FIs];
-   memset(pm.PLL, 0, pm.FIs*sizeof(double));
-
+   pm.LsMod = new long int[pm.FIs*3];
+   for( ii=0; ii<pm.FIs*3; ii++ )    
+     pm.LsMod[ii] =0;
+   
    pm.sMod = new char[pm.FIs][6];
-   memset(pm.sMod, 0, pm.FIs*6*sizeof(char));
    pm.RFLC = new char[pm.FIs];
-   memset(pm.RFLC, 0, pm.FIs*sizeof(char));
    pm.RFSC = new char[pm.FIs];
-   memset(pm.RFSC, 0, pm.FIs*sizeof(char));
+   for( ii=0; ii<pm.FIs; ii++)
+   {
+ 	  fillValue( pm.sMod[ii], '\0', 6);
+ 	  pm.RFLC[ii] = 0;
+      pm.RFSC[ii] = 0;
+   }
 
  }
  else
@@ -700,13 +957,17 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( pm.LO > 1 )
  {
    pm.Y_m = new double[pm.L];
-   memset(pm.Y_m, 0, pm.L*sizeof(double));
+   for( ii=0; ii<pm.L; ii++ )         
+	   pm.Y_m[ii] = 0.0;
    pm.IC_m = new double[pm.N];
-   memset(pm.IC_m, 0, pm.N*sizeof(double));
    pm.IC_lm = new double[pm.N];
-   memset(pm.IC_lm, 0, pm.N*sizeof(double));
    pm.IC_wm = new double[pm.N];
-   memset(pm.IC_wm, 0, pm.N*sizeof(double));
+   for( ii=0; ii<pm.N; ii++ )         
+   {
+	   pm.IC_m[ii] = 0.0;
+	   pm.IC_lm[ii] = 0.0;
+	   pm.IC_wm[ii] = 0.0;
+   }
  }
  else
  {
@@ -719,10 +980,12 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  // dispersion and sorbtion phases
  if( PAalp != S_OFF )
  {
-   pm.Aalp = new float[pm.FI];
-   memset(pm.Aalp, 0, pm.FI*sizeof(float)); // 28/11/2006
-   pm.Xr0h0 = new float[pm.FI][2];
-   memset(pm.Xr0h0, 0, pm.FI*2*sizeof(float));
+   pm.Aalp = new double[pm.FI];
+   for( ii=0; ii<pm.FI; ii++ ) 
+	   pm.Aalp[ii] = 0.0;
+   pm.Xr0h0 = new double[pm.FI][2];
+   for( ii=0; ii<pm.FI; ii++ ) 
+	  pm.Xr0h0[ii][0] =  pm.Xr0h0[ii][1] = 0.0; 
  }
  else
  {
@@ -731,10 +994,13 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  }
 
  if( PSigm != S_OFF )
- {   pm.Sigw = new float[pm.FI];
-     pm.Sigg = new float[pm.FI];
-     memset(pm.Sigw, 0, pm.FI*sizeof(float)); // 28/11/2006
-     memset(pm.Sigg, 0, pm.FI*sizeof(float)); // 28/11/2006
+ {   pm.Sigw = new double[pm.FI];
+     pm.Sigg = new double[pm.FI];
+     for( ii=0; ii<pm.FI; ii++ ) 
+     {
+    	 pm.Sigw[ii] = 0.0;
+    	 pm.Sigg[ii] = 0.0;
+     }
  }
  else
  {   pm.Sigw = 0;
@@ -744,11 +1010,15 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( pm.E )
  {
     pm.EZ = new double[pm.L];
-    pm.Xcond = new float[pm.FI];
-    pm.Xeps = new float[pm.FI];
-    memset(pm.EZ, 0, pm.L*sizeof(double));
-    memset(pm.Xcond, 0, pm.FI*sizeof(float));
-    memset(pm.Xeps, 0, pm.FI*sizeof(float));
+    for( ii=0; ii<pm.L; ii++ ) 
+    	pm.EZ[ii] = 0.0;
+    pm.Xcond = new double[pm.FI];
+    pm.Xeps = new double[pm.FI];
+    for( ii=0; ii<pm.FI; ii++ ) 
+    {
+        pm.Xcond[ii] = 0.0;
+        pm.Xeps[ii] = 0.0;
+    }
  }
  else
  {
@@ -759,61 +1029,75 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
 
  if( pm.FIat > 0 /*&& pm.Lads > 0*/ && pm.FIs > 0 )
  { // ADSORBTION AND ION IXCHANDG
-   pm.SATX = new short[pm.Lads][4];
-   memset(pm.SATX, 0, pm.Lads*4*sizeof(short));
+   pm.SATX = new long int[pm.Lads][4];
+   pm.MASDJ = new double[pm.Lads][DFCN];
+   pm.lnSAC = new double[pm.Lads][4];
+   for( ii=0; ii<pm.Lads; ii++ ) 
+   {  
+	   pm.SATX[ii][0] = pm.SATX[ii][1] = pm.SATX[ii][2] = pm.SATX[ii][3] = 0;
+	   pm.lnSAC[ii][0] = pm.lnSAC[ii][1] = pm.lnSAC[ii][2] = pm.lnSAC[ii][3] = 0.0;
+	  for( jj=0; jj<MST; jj++ )
+		  pm.MASDJ[ii][jj] = 0.0;
+   }
+
    pm.SCM  = new char[pm.FIs][MST];
-   memset(pm.SCM, 0, pm.FIs*MST*sizeof(char));
+   pm.Nfsp = new double[pm.FIs][MST];
+   pm.MASDT = new double[pm.FIs][MST];
+   pm.XcapA = new double[pm.FIs][MST];
+   pm.XcapB = new double[pm.FIs][MST];
+   pm.XcapD = new double[pm.FIs][MST];
+   pm.XcapF = new double[pm.FIs][MST];
+   pm.XdlA = new double[pm.FIs][MST];
+   pm.XdlB = new double[pm.FIs][MST];
+   pm.XdlD = new double[pm.FIs][MST];
+   pm.XpsiA = new double[pm.FIs][MST];
+   pm.XpsiB = new double[pm.FIs][MST];
+   pm.XpsiD = new double[pm.FIs][MST];
+   pm.XlamA = new double[pm.FIs][MST];
+   pm.Xetaf = new double[pm.FIs][MST];
+   pm.XetaA = new double[pm.FIs][MST];
+   pm.XetaB = new double[pm.FIs][MST];
+   pm.XetaD = new double[pm.FIs][MST]; 
+   pm.XFTS = new double[pm.FIs][MST];  //19
+   for( ii=0; ii<pm.FIs; ii++ )
+   	  for( jj=0; jj<MST; jj++ )
+   	  {
+   		  pm.SCM[ii][jj]  = 0;
+	      pm.Nfsp[ii][jj] = 0.0;
+	      pm.MASDT[ii][jj] = 0.0;
+	      pm.XcapA[ii][jj] = 0.0;
+	      pm.XcapB[ii][jj] = 0.0;
+	      pm.XcapD[ii][jj] = 0.0;
+	      pm.XcapF[ii][jj] = 0.0;
+	      pm.XdlA[ii][jj] = 0.0;
+	      pm.XdlB[ii][jj] = 0.0;
+	      pm.XdlD[ii][jj] = 0.0;
+	      pm.XpsiA[ii][jj] = 0.0;
+	      pm.XpsiB[ii][jj] = 0.0;
+	      pm.XpsiD[ii][jj] = 0.0;
+	      pm.XlamA[ii][jj] = 0.0;
+	      pm.Xetaf[ii][jj] = 0.0;
+	      pm.XetaA[ii][jj] = 0.0;
+	      pm.XetaB[ii][jj] = 0.0;
+	      pm.XetaD[ii][jj] = 0.0;
+	      pm.XFTS[ii][jj] = 0.0;
+   	  }
+   
+  pm.SATT = new char[pm.Lads];
+  pm.SM3 = new char[pm.Lads][MAXDCNAME];
+  pm.DCC3 = new char[pm.Lads];
+  for( ii=0; ii<pm.Lads; ii++)
+  {
+	  fillValue( pm.SM3[ii], '\0', MAXDCNAME);
+	  pm.SATT[ii] = 0;
+     pm.DCC3[ii] = 0;
+  }
 
-    pm.Nfsp = new float[pm.FIs][MST];
-    memset(pm.Nfsp, 0, pm.FIs*MST*sizeof(float));
-    pm.MASDT = new float[pm.FIs][MST];
-    memset(pm.MASDT, 0, pm.FIs*MST*sizeof(float));
-    pm.XcapA = new float[pm.FIs][MST];
-    memset(pm.XcapA, 0, pm.FIs*MST*sizeof(float));
-    pm.XcapB = new float[pm.FIs][MST];
-    memset(pm.XcapB, 0, pm.FIs*MST*sizeof(float));
-    pm.XcapD = new float[pm.FIs][MST];
-    memset(pm.XcapD, 0, pm.FIs*MST*sizeof(float));
-    pm.XcapF = new float[pm.FIs][MST];
-    memset(pm.XcapF, 0, pm.FIs*MST*sizeof(float));
-    pm.XdlA = new float[pm.FIs][MST];
-    memset(pm.XdlA, 0, pm.FIs*MST*sizeof(float));
-    pm.XdlB = new float[pm.FIs][MST];
-    memset(pm.XdlB, 0, pm.FIs*MST*sizeof(float));
-    pm.XdlD = new float[pm.FIs][MST];
-    memset(pm.XdlD, 0, pm.FIs*MST*sizeof(float));
-    pm.XpsiA = new double[pm.FIs][MST];
-    memset(pm.XpsiA, 0, pm.FIs*MST*sizeof(double));
-    pm.XpsiB = new double[pm.FIs][MST];
-    memset(pm.XpsiB, 0, pm.FIs*MST*sizeof(double));
-    pm.XpsiD = new double[pm.FIs][MST];
-    memset(pm.XpsiD, 0, pm.FIs*MST*sizeof(double));
-    pm.XlamA = new float[pm.FIs][MST];
-    memset(pm.XlamA, 0, pm.FIs*MST*sizeof(float));
-    pm.Xetaf = new float[pm.FIs][MST];
-    memset(pm.Xetaf, 0, pm.FIs*MST*sizeof(float));
-    pm.XetaA = new double[pm.FIs][MST];
-    memset(pm.XetaA, 0, pm.FIs*MST*sizeof(double));
-    pm.XetaB = new double[pm.FIs][MST];
-    memset(pm.XetaB, 0, pm.FIs*MST*sizeof(double));
-    pm.XetaD = new double[pm.FIs][MST];
-    memset(pm.XetaD, 0, pm.FIs*MST*sizeof(double));
-    pm.MASDJ = new float[pm.Lads][DFCN];
-    memset(pm.MASDJ, 0, pm.Lads*DFCN*sizeof(float));
-
-//    pm.MASDJ = new float[pm.Ls];
-pm.XFTS = new double[pm.FIs][MST];
-memset(pm.XFTS, 0, pm.FIs*MST*sizeof(double));
-pm.lnSAC = new double[pm.Lads][4];
-memset(pm.lnSAC, 0, pm.Lads*4*sizeof(double));
-pm.SATT = new char[pm.Lads];
-memset(pm.SATT, 0, pm.Lads*sizeof(char));
-pm.SM3 = new char[pm.Lads][MAXDCNAME];
-memset(pm.SM3, 0, pm.Lads*MAXDCNAME*sizeof(char));
-pm.DCC3 = new char[pm.Lads];
-memset(pm.DCC3, 0, pm.Lads*sizeof(char));
-pm.D = new double[MST][MST];
-memset(pm.D, 0, MST*MST*sizeof(double));
+  pm.D = new double[MST][MST];
+  for( ii=0; ii<MST; ii++ )
+  	  for( jj=0; jj<MST; jj++ )
+   	      pm.D[ii][jj] = 0.0;
+   
  }
 else
  { // ADSORPTION AND ION EXCHANGE
@@ -846,12 +1130,15 @@ else
 
  if( pm.PG > 0 )
  {
-  pm.Fug = new float[pm.PG];
-  memset(pm.Fug, 0, pm.PG*sizeof(float));
-  pm.Fug_l = new float[pm.PG];
-  memset(pm.Fug_l, 0, pm.PG*sizeof(float));
-  pm.Ppg_l = new float[pm.PG];
-  memset(pm.Ppg_l, 0, pm.PG*sizeof(float));
+  pm.Fug = new double[pm.PG];
+  pm.Fug_l = new double[pm.PG];
+  pm.Ppg_l = new double[pm.PG];
+  for( ii=0; ii<pm.PG; ii++ )
+  {
+	  pm.Fug[ii] = 0.;
+	  pm.Fug_l[ii] = 0.;
+	  pm.Ppg_l[ii] = 0.;
+  }
  }
 else
  {
@@ -863,16 +1150,23 @@ else
    // Part 3
  if( pm.Ls > 1 && pm.FIs > 0 )
  {
-    pm.Wb = new float[pm.Ls];
-    memset(pm.Wb, 0, pm.Ls*sizeof(float));
-    pm.Wabs = new float[pm.Ls];
-    memset(pm.Wabs, 0, pm.Ls*sizeof(float));
-    pm.Rion = new float[pm.Ls];
-    memset(pm.Rion, 0, pm.Ls*sizeof(float));
+    pm.Wb = new double[pm.Ls];
+    pm.Wabs = new double[pm.Ls];
+    pm.Rion = new double[pm.Ls];
+    for( ii=0; ii<pm.Ls; ii++ )
+    {
+        pm.Wb[ii] = 0.;
+        pm.Wabs[ii] = 0.;
+        pm.Rion[ii] = 0.;
+    }
     pm.Qp = new double[pm.FIs*QPSIZE];
-    memset(pm.Qp, 0, pm.FIs*QPSIZE*sizeof(double));
     pm.Qd = new double[pm.FIs*QDSIZE];
-    memset(pm.Qd, 0, pm.FIs*QPSIZE*sizeof(double));
+    for( ii=0; ii<pm.FIs*QPSIZE; ii++ )
+        {
+            pm.Qp[ii] = 0.;
+            pm.Qd[ii] = 0.;
+        	
+        }
  }
  else
  {
@@ -885,20 +1179,20 @@ else
  }
 //  Added 16.11.2004 by Sveta
 //    if( pm.sitNcat*pm.sitNcat )
-//    { pm.sitE = new float[pm.sitNcat*pm.sitNan];
-//      memset(pm.sitE, 0, pm.sitNcat*pm.sitNan*sizeof(float));
+//    { pm.sitE = new double[pm.sitNcat*pm.sitNan];
+//      fillValue(pm.sitE, 0, pm.sitNcat*pm.sitNan);
 //    }
 //    else
 //       pm.sitE = 0;
 //    if( pm.sitNcat )
-//    {  pm.sitXcat = new short[pm.sitNcat];
-//       memset(pm.sitXcat, 0, pm.sitNcat*sizeof(float));
+//    {  pm.sitXcat = new long int[pm.sitNcat];
+//       fillValue(pm.sitXcat, 0, pm.sitNcat);
 //     }
 //    else
 //       pm.sitXcat = 0;
 //    if( pm.sitNan )
-//    {   pm.sitXan = new short[pm.sitNan];
-//        memset(pm.sitXan, 0, pm.sitNan*sizeof(float));
+//    {   pm.sitXan = new long int[pm.sitNan];
+//        fillValue(pm.sitXan, 0, pm.sitNan);
 //    }
 //    else
 //       pm.sitXan = 0;
@@ -1061,8 +1355,8 @@ void TMulti::to_text_file( const char *path )
     //static values
    char PAalp;
    char PSigm;
-   float EpsW;
-   float RoW;
+   double EpsW;
+   double RoW;
 
 
 #ifndef IPMGEMPLUGIN
@@ -1084,7 +1378,7 @@ void TMulti::to_text_file( const char *path )
 
   TPrintArrays  prar(ff);
 
-  prar.writeArray( "Short_Const",  &pm.N, 38 );
+  prar.writeArray( "Short_Const",  &pm.N, 38L );
   prar.writeArray(  "Double_Const",  &pm.TC, 55 );
   prar.writeArray(  "EpsW", &EpsW, 1);
   prar.writeArray(  "RoW", &RoW, 1);
@@ -1156,9 +1450,9 @@ void TMulti::to_text_file( const char *path )
      prar.writeArray(  "YFA", pm.YFA,  pm.FIs);
      prar.writeArray(  "LsMod", pm.LsMod, pm.FIs*3);
      prar.writeArray(  "LsMdc", pm.LsMdc, pm.FIs);
-     int LsModSum;
-     int LsIPxSum;
-     int LsMdcSum;
+     long int LsModSum;
+     long int LsIPxSum;
+     long int LsMdcSum;
      getLsModsum( LsModSum, LsIPxSum );
      getLsMdcsum( LsMdcSum );
      prar.writeArray(  "IPxPH", pm.IPx,  LsIPxSum);

@@ -30,7 +30,7 @@
 //
 void TMulti::XmaxSAT_IPM2()
 {
-    int i, j, ja, k, jb, je=0, ist=0, Cj, iSite[6];
+    long int i, j, ja, k, jb, je=0, ist=0, Cj, iSite[6];
     double XS0, xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, xjn;
 
   if(!pmp->DUL )   // not possible to install upper kinetic constraints!
@@ -146,8 +146,8 @@ cout << "XmaxSAT_IPM2 Comp. IT= " << pmp->IT << " j= " << j << " oDUL=" << oDUL 
             case SAT_PIVO_NCOMP:
             case SAT_VIR_NCOMP:
             case SAT_NCOMP: // Non-competitive surface species
-                 xj0 = fabs( (double)pmp->MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
-                      * (double)pmp->Nfsp[k][ist]; // in moles
+                 xj0 = fabs( pmp->MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
+                      * pmp->Nfsp[k][ist]; // in moles
                  pmp->DUL[j] = xj0 - rIEPS;
                  // Compare with old DUL from previous iteration!
 /*                if( pmp->W1 != 1 && pmp->IT > 0 && fabs( (pmp->DUL[j] - oDUL)/pmp->DUL[j] ) > 0.1 )
@@ -158,8 +158,8 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pmp->IT << " j= " << j << " oDUL=" << oDUL 
 
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
                 rIEPS = TProfil::pm->pa.p.IEPS;
-                XS0 = (double)(max( pmp->MASDT[k][ist], pmp->MASDJ[ja][PI_DEN] ));
-                XS0 = XS0 * XVk * Mm / 1e6 * (double)pmp->Nfsp[k][ist]; // in moles
+                XS0 = (max( pmp->MASDT[k][ist], pmp->MASDJ[ja][PI_DEN] ));
+                XS0 = XS0 * XVk * Mm / 1e6 * pmp->Nfsp[k][ist]; // in moles
 
                 pmp->DUL[j] =  XS0 - rIEPS;
                 if( pmp->DUL[j] <= rIEPS )
@@ -178,7 +178,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pmp->IT << " j= " << j << " oDUL=" << oDUL 
 // clearing pmp->DUL constraints!
 void TMulti::XmaxSAT_IPM2_reset()
 {
-    int j, ja, k, jb, je=0;
+    long int j, ja, k, jb, je=0;
 
   if(!pmp->DUL )   // no upper kinetic constraints!
       return;
@@ -203,17 +203,17 @@ void TMulti::XmaxSAT_IPM2_reset()
 // Calculating value of dual chemical potential
 //     performance optimized version  (February 2007)
 //
-double TMulti::DualChemPot( double U[], float AL[], int N, int j )
+double TMulti::DualChemPot( double U[], double AL[], long int N, long int j )
 {
-    int i, ii;
+    long int i, ii;
     double Nu = 0.0;
-//    for(int i=; i<N; i++ )
-//    Nu += AL[i]? U[i]*(double)(AL[i]): 0.0;
+//    for(long int i=; i<N; i++ )
+//    Nu += AL[i]? U[i]*(AL[i]): 0.0;
    for( i=arrL[j]; i<arrL[j+1]; i++ )
    {  ii = arrAN[i];
       if( ii>= N )
        continue;
-       Nu += U[ii]*(double)(AL[ii]);
+       Nu += U[ii]*(AL[ii]);
    }
    return Nu;
 }
@@ -223,10 +223,10 @@ double TMulti::DualChemPot( double U[], float AL[], int N, int j )
 //  concentration units
 //  Needs much more work, elaboration, and performance optimization
 //
-void TMulti::Set_DC_limits( int Mode )
+void TMulti::Set_DC_limits( long int Mode )
 {
     double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL, XU;
-    int jb, je, j,k, MpL;
+    long int jb, je, j,k, MpL;
     vstr tbuf(80);
 
     if( !pmp->PLIM )
@@ -348,7 +348,7 @@ if( k < pmp->FIs )
             {
  //               JJ = j;
 //                KK = k;
-                sprintf( tbuf, "Inconsistent upper metastability limits j=%d k=%d XU=%g XFU=%g",
+                sprintf( tbuf, "Inconsistent upper metastability limits j=%ld k=%ld XU=%g XFU=%g",
                          j, k, XU, XFU );
                 Error( "E11IPM Set_DC_limits(): ",tbuf.p );
 //                XU = XFU; // - pmp->lowPosNum;
@@ -357,7 +357,7 @@ if( k < pmp->FIs )
             {
 //                JJ = j;
 //                KK = k;
-                sprintf( tbuf, "Inconsistent lower metastability limits j=%d k=%d XL=%g XFL=%g",
+                sprintf( tbuf, "Inconsistent lower metastability limits j=%ld k=%ld XL=%g XFL=%g",
                          j, k, XL, XFL );
                 Error( "E12IPM Set_DC_limits(): ",tbuf.p );
 //                XL = XFL; // - pmp->lowPosNum;
@@ -375,7 +375,7 @@ NEXT_PHASE:
 //
 void TMulti::TotalPhases( double X[], double XF[], double XFA[] )
 {
-    int jj, j, i, k;
+    long int jj, j, i, k;
     double XFw, XFs, x;
 
     j=0;
@@ -405,10 +405,11 @@ void TMulti::TotalPhases( double X[], double XF[], double XFA[] )
 //  If error, returns +7777777 J/mole.
 //  Last modif. 05 Jan 2000 by DK to include BSM EDL model.
 //
-double TMulti::Ej_init_calc( double, int j, int k)
+double TMulti::Ej_init_calc( double, long int j, long int k)
 {
-    int ja=0, ist, isp, jc=-1;
+    long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
+    double FactSur, FactSurT; 
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     Fold = pmp->F0[j];
@@ -462,9 +463,9 @@ double TMulti::Ej_init_calc( double, int j, int k)
         // get ist - index of surface type and isp - index of surface plane
 /*!!!!!*/  ist = pmp->SATX[ja][XL_ST];  // / MSPN;
 /*!!!!!*/  isp = pmp->SATX[ja][XL_SP]; // % MSPN;
-        CD0 = (double)pmp->MASDJ[ja][PI_CD0];  // species charge that goes into 0 plane
-        CDb = (double)pmp->MASDJ[ja][PI_CDB];  // species charge that goes into B plane
-        ObS = (double)pmp->MASDJ[ja][PI_DEN];  // obsolete - the sign for outer-sphere charge
+        CD0 = pmp->MASDJ[ja][PI_CD0];  // species charge that goes into 0 plane
+        CDb = pmp->MASDJ[ja][PI_CDB];  // species charge that goes into B plane
+        ObS = pmp->MASDJ[ja][PI_DEN];  // obsolete - the sign for outer-sphere charge
         if( ObS >= 0.0 )
             ObS = 1.0;
         else ObS = -1.0;
@@ -524,24 +525,33 @@ double TMulti::Ej_init_calc( double, int j, int k)
                }
             }
         }
-        if( Mk > 1e-9 )
-        {
-            if( pmp->SCM[k][ist] == SC_MXC || pmp->SCM[k][ist] == SC_NNE ||
+        if( Mk > 1e-9 )  // Mk is carrier molar mass in g/mkmol
+        {   // Correction for standard density, surface area and surface type fraction 
+        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054; 
+        	    // FactSur is adsorbed mole amount at st. surf. density per mole of solid carrier 
+        	FactSurT = FactSur * (pmp->Nfsp[k][ist]);
+        	if( pmp->SCM[k][ist] == SC_MXC || pmp->SCM[k][ist] == SC_NNE ||
                     pmp->SCM[k][ist] == SC_IEV )
-                F0 -= log( Mk * (double)(pmp->Nfsp[k][ist]) *
-                   (double)(pmp->Aalp[k]) * pa->p.DNS*1.66054 );
-            else F0 -= log( Mk * (double)(pmp->Nfsp[k][ist]) *
-                  (double)(pmp->Aalp[k]) * pa->p.DNS*1.66054 );
-            F0 -= (double)(pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
-                  ( 1.0 + (double)(pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
+ //               F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
+//                   (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
+                  F0 -= log( FactSurT ); 
+            else  F0 -= log( FactSurT ); 
+//            	  F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
+//                  (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
+            F0 -= FactSur / ( 1. + FactSur );
+//            F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
+//                  ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
         }
         break;
     case DC_PEL_CARRIER:
     case DC_SUR_MINAL:  // constant charge of carrier - not completed
-    case DC_SUR_CARRIER:
-        F0 -= (double)(pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
-              ( 1.0 + (double)(pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
-        F0 += (double)(pmp->Aalp[k])*Mk*pa->p.DNS*1.66054;
+    case DC_SUR_CARRIER: // Mk is carrier molar mass in g/mkmol
+       	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054;
+        F0 -= FactSur / ( 1. + FactSur ); 
+//    	F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
+//              ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
+        F0 += FactSur; 
+//        F0 += (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054;
         break;
     }
     F0 += pmp->lnGam[j];
@@ -607,11 +617,11 @@ double TMulti::PrimalDC_ChemPot(
 void
 TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
 {
-    int i,j,k;
+    long int i,j,k;
     double v, Yf; // v is debug variable
 
     for( j=0; j<pmp->L; j++)
-       pmp->F[j] =0;
+       F[j] =0;
 
     j=0;
     for( k=0; k<pmp->FI; k++ )
@@ -705,15 +715,14 @@ double TMulti::KarpovCriterionDC(
 void TMulti::f_alpha()
 {
     bool KinConstr;
-    short k;
-    int j, ii;
+    long int k, j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     EMU = pmp->EMU;
     NMU = pmp->NMU;
-    //memset( EMU, 0, pmp->L*sizeof(double));
-    //memset( NMU, 0, pmp->L*sizeof(double));
+    for(ii=0; ii<pmp->L; ii++ )
+    	EMU[ii] = NMU[ii]=0.0;
     j=0;
     pmp->YMET = 0.0;
     for( k=0; k<pmp->FI; k++ )
@@ -865,7 +874,7 @@ double TMulti::FreeEnergyIncr(
 //
 double TMulti::GX( double LM  )
 {
-    int i, j, k;
+    long int i, j, k;
     double x, XF, XFw, FX, Gi; // debug variable
     double const1= pmp->lowPosNum*10.,
            const2 = pmp->lowPosNum*1000.;
@@ -943,8 +952,7 @@ NEXT_PHASE:
 //
 double TMulti::pb_GX( double *Gxx  )
 {
-    int i, j;
-    short k;
+    long int i, j, k;
     double Gi, x, XF, XFw, FX;
 
     // calculating G(X)
@@ -988,7 +996,7 @@ NEXT_PHASE:
 // k - index of phase, j - index DC in phase
 // if error code, returns 777777777.
 //
-double TMulti::Cj_init_calc( double g0, int j, int k )
+double TMulti::Cj_init_calc( double g0, long int j, long int k )
 {
     double G, YOF=0;
 
@@ -1067,12 +1075,12 @@ double TMulti::Cj_init_calc( double g0, int j, int k )
 // KC: dual-thermo calculation of DC amount X(j) from A matrix and u vector
 //  using method and formulae from [Karpov et al., 2001]
 //
-#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*pmp->N)))
+#define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
 //
 void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
 {
-    int i,j,ja,jj,ii,jb,je,k;
-    int isp, ist;
+    long int i,j,ja,jj,ii,jb,je,k;
+    long int isp, ist;
     double Ez, Psi;   // added by KD 23.11.01
     double  Dsur, DsurT, MMC, *XU;
     XU = new double[pmp->L];
@@ -1101,7 +1109,7 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
                     MMC += pmp->MM[jj]*X[jj]/XFA[k];
          }
          Dsur = XFA[k]/XF[k] - 1.0;
-         DsurT = MMC * (double)(pmp->Aalp[k]) * TProfil::pm->pa.p.DNS*1.66054e-6;
+         DsurT = MMC * (pmp->Aalp[k]) * TProfil::pm->pa.p.DNS*1.66054e-6;
       }
 
     for(j=jb;j<je;j++)
@@ -1140,7 +1148,7 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
                else // This is the B or another plane
                    Psi = pmp->XpsiB[k][ist];
                XU[j] += Dsur + DsurT/( 1.0 + DsurT ) + log(XFA[k])+
-               log( DsurT * (double)(pmp->Nfsp[k][ist]) ) - pmp->FRT * Ez * Psi;
+               log( DsurT * (pmp->Nfsp[k][ist]) ) - pmp->FRT * Ez * Psi;
              }
          }
          else
@@ -1185,7 +1193,7 @@ void TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
 //
 void TMulti::ConvertDCC()
 {
-    int i, j, k, iRet=0;
+    long int i, j, k, iRet=0;
     char DCCW;
 
     j=0;
@@ -1265,9 +1273,9 @@ NEXT_PHASE:
 }
 
 // get the index of volume IC ("Vv") for volume balance constraint
-int TMulti::getXvolume()
+long int TMulti::getXvolume()
 {
- int ii, ret = 0;
+ long int ii, ret = 0;
  for( ii = pmp->N-1; ii>=0; ii--)
  {
   if( pmp->ICC[ii] == IC_VOLUME )

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1071 2008-05-30 15:06:09Z gems $
+// $Id: ms_param.cpp 1123 2008-11-25 13:23:26Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -69,7 +69,20 @@ SPP_SETTING pa_ = {
 
 void BASE_PARAM::write(ostream& oss)
 {
-    oss.write( (char*)&PC, 10*sizeof(short) );
+  short arr[10];
+  
+  arr[0] = PC;
+  arr[1] = PD;
+  arr[2] = PRD;
+  arr[3] = PSM;
+  arr[4] = DP;
+  arr[5] = DW;
+  arr[6] = DT;
+  arr[7] = PLLG;
+  arr[8] = PE;
+  arr[9] = IIM;
+  
+	oss.write( (char*)arr, 10*sizeof(short) );
     oss.write( (char*)&DG, 28*sizeof(double) );
     oss.write( (char*)&tprn, sizeof(char*) );
 }
@@ -93,7 +106,7 @@ TProfil::TProfil( TMulti* amulti )
 // and precision refinement loops
 // Modified on 22.01.2008 to implement "smart PIA" mode 
 //
-double TProfil::calcMulti( int& RefinLoops_, int& NumIterFIA_, int& NumIterIPM_ )
+double TProfil::calcMulti( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
     pmp = multi->GetPM();
     pmp->t_start = clock();
@@ -126,7 +139,7 @@ FORCED_AIA:
 
     if( pa.p.PRD < 0 && pa.p.PRD > -50 ) // max 50 loops
     {  // Test refinement loops for highly non-ideal systems Added here by KD on 15.11.2007
-       int pp, pNPo = pmp->pNP,  TotW1 = pmp->W1+pmp->K2-1,  
+       long int pp, pNPo = pmp->pNP,  TotW1 = pmp->W1+pmp->K2-1,  
 ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
        pmp->pNP = 1;
        for( pp=0; pp < abs(pa.p.PRD); pp++ )
@@ -154,7 +167,20 @@ return pmp->t_elap_sec;
 
 void TProfil::outMulti( GemDataStream& ff, gstring& path  )
 {
-    ff.writeArray( &pa.p.PC, 10 );
+	 short arr[10];
+	  
+	  arr[0] = pa.p.PC;
+	  arr[1] = pa.p.PD;
+	  arr[2] = pa.p.PRD;
+	  arr[3] = pa.p.PSM;
+	  arr[4] = pa.p.DP;
+	  arr[5] = pa.p.DW;
+	  arr[6] = pa.p.DT;
+	  arr[7] = pa.p.PLLG;
+	  arr[8] = pa.p.PE;
+	  arr[9] = pa.p.IIM;
+
+	ff.writeArray( arr, 10 );
     ff.writeArray( &pa.p.DG, 28 );
     multi->to_file( ff, path );
 }
@@ -167,8 +193,21 @@ void TProfil::outMultiTxt( const char *path  )
 // Reading structure MULTI (GEM IPM work structure)
 void TProfil::readMulti( GemDataStream& ff )
 {
-      ff.readArray( &pa.p.PC, 10 );
-      ff.readArray( &pa.p.DG, 28 );
+	 short arr[10];
+
+	 ff.readArray( arr, 10 );
+	  pa.p.PC = arr[0];
+	  pa.p.PD = arr[1];
+	  pa.p.PRD = arr[2];
+	  pa.p.PSM = arr[3];
+	  pa.p.DP = arr[4];
+	  pa.p.DW = arr[5];
+	  pa.p.DT = arr[6];
+	  pa.p.PLLG = arr[7];
+	  pa.p.PE = arr[8];
+	  pa.p.IIM = arr[9];
+
+	  ff.readArray( &pa.p.DG, 28 );
       multi->from_file( ff );
 }
 
@@ -185,7 +224,7 @@ void TProfil::readMulti( const char* path )
  //
 void TMulti::CompG0Load()
 {
-  int j, jj, k, xTP, jb, je=0;
+  long int j, jj, k, xTP, jb, je=0;
   double Go, Gg, Vv;
   double TC, P;
 
@@ -267,6 +306,8 @@ void TMulti::CompG0Load()
     	  pmp->tpp_G[j] = Go;
      if( pmp->Guns )
            Gg = pmp->Guns[j];
+     else 
+           Gg = 0.;	   
      pmp->G0[j] = Cj_init_calc( Go+Gg, j, k ); // Inside this function, pmp->YOF[k] can be added!
      switch( pmp->PV )
      { // put mol volumes of components into A matrix or into the vector of molar volumes
@@ -293,7 +334,7 @@ void TMulti::CompG0Load()
 // GEM IPM calculation of equilibrium state in MULTI
 void TMulti::MultiCalcInit( const char* key )
 {
-  short j,k, jb, je=0;;
+  long int  j,k, jb, je=0;;
   SPP_SETTING *pa = &TProfil::pm->pa;
     strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
     pmp->Ec = pmp->K2 = pmp->MK = 0;
@@ -318,9 +359,9 @@ void TMulti::MultiCalcInit( const char* key )
 
     // calculating mass of the system
     pmp->MBX = 0.0;
-    for(int i=0; i<pmp->N; i++ )
+    for(long int i=0; i<pmp->N; i++ )
     {
-        pmp->MBX += pmp->B[i] * (double)pmp->Awt[i];
+        pmp->MBX += pmp->B[i] * pmp->Awt[i];
     }
     pmp->MBX /= 1000.;
 
@@ -353,17 +394,23 @@ void TMulti::MultiCalcInit( const char* key )
     // multicomponent phases and mixing models
  if( pmp->FIs )
  {
-     	// Load activity coeffs for phases-solutions
-    	for( j=0; j< pmp->Ls; j++ )
+     long int k, jb, je=0; 
+	 for( k=0; k<pmp->FIs; k++ )
+     { // loop on solution phases
+         jb = je;
+         je += pmp->L1[k];
+	 // Load activity coeffs for phases-solutions
+    	for( j=jb; j< je; j++ )
         {
             pmp->lnGmo[j] = pmp->lnGam[j];
             if( fabs( pmp->lnGam[j] ) <= 84. )
-                pmp->Gamma[j] = exp( pmp->lnGam[j] );
+//                pmp->Gamma[j] = exp( pmp->lnGam[j] );
+         	  pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );           
             else pmp->Gamma[j] = 1.0;
-        }
-        pmp->PD = pa->p.PD;
-
-        //           SolModLoad();   Scripts cannot be used here!
+        } // j
+     }  // k
+     pmp->PD = pa->p.PD;
+	 //           SolModLoad();   Scripts cannot be used here!
     // Calculate Eh, pe, pH,and other stuff
     if( pmp->E && pmp->LO && pmp->pNP )
     {    
@@ -463,13 +510,13 @@ void u_splitpath(const gstring& Path, gstring& dir,
     }
 }
 
-const size_t bGRAN = 20;
+const long int bGRAN = 20;
 
 // Get Path of file and Reading list of file names from it, return number of files
 char  (* f_getfiles(const char *f_name, char *Path,
-		int& nElem, char delim ))[fileNameLength]
+		long int& nElem, char delim ))[fileNameLength]
 {
-  size_t ii, bSize = bGRAN;
+  long int ii, bSize = bGRAN;
   char  (*filesList)[fileNameLength];
   char  (*filesListNew)[fileNameLength];
   filesList = new char[bSize][fileNameLength];
@@ -478,7 +525,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 // Get path
    gstring path_;
    gstring flst_name = f_name;
-   size_t pos = flst_name.rfind("/");
+   long int pos = flst_name.rfind("/");
    path_ = "";
    if( pos < npos )
       path_ = flst_name.substr(0, pos+1);

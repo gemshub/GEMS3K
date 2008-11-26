@@ -27,8 +27,8 @@
 //
 void TMulti::SimplexInitialApproximation( )
 {
-    int T,Q,*STR=0,*NMB=0;
-    register int i,j,k;
+    long int T,Q,*STR=0,*NMB=0;
+    long int i,j,k;
     double GZ,EPS,*DN=0,*DU=0,*AA=0,*B1=0;
 
     try
@@ -39,9 +39,6 @@ void TMulti::SimplexInitialApproximation( )
         DU= new double[Q+pmp->N];
         B1= new double[pmp->N];
         ErrorIf( !DN || !DU || !B1, "SimplexInitialApproximation()", "Memory alloc error." );
-//        memset(DN, 0, sizeof(double)*Q );
-//        memset(DU, 0, sizeof(double)*(Q+pmp->N) );
-//        memset(B1, 0, sizeof(double)*pmp->N );
         for( i=0; i<pmp->N; i++)
              DU[i+Q] = 0.;
         EPS = TProfil::pm->pa.p.EPS; //  13.10.00  KC  DK
@@ -67,13 +64,10 @@ void TMulti::SimplexInitialApproximation( )
         // for(i=Q;i<Q+pmp->N;i++) DU[i]=0.;
         // Allocation of arrays on T
         AA= new double[T];
-        STR= new int[T];
-        NMB= new int[Q+1];
+        STR= new long int[T];
+        NMB= new long int[Q+1];
         ErrorIf( !AA || !STR || !NMB, "SimplexInitialApproximation",
             "Memory allocation error #2");
- //       memset(AA, 0, sizeof(double)*T );
-//        memset(STR, 0, sizeof(int)*T );
-//        memset(NMB, 0, sizeof(int)*(Q+1) );
         for( k=0; k<T; k++)
          STR[k] = 0;
 
@@ -138,9 +132,9 @@ void TMulti::SimplexInitialApproximation( )
 // Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 //  SPOS function
 //
-void TMulti::SPOS( double *P, int STR[],int NMB[],int J,int M,double AA[])
+void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[])
 {
-    int I,K;
+    long int I,K;
     K=0;
     for(I=0; I<=M; I++)
     {
@@ -157,11 +151,11 @@ void TMulti::SPOS( double *P, int STR[],int NMB[],int J,int M,double AA[])
 // Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 //  START function
 //
-void TMulti::START( int T,int *ITER,int M,int N,int NMB[],
-           double GZ,double EPS,int STR[],int *BASE, double B[],
+void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB[],
+           double GZ,double EPS,long int STR[],long int *BASE, double B[],
            double UND[],double UP[],double AA[],double *A, double *Q )
 {
-    int I,J;
+    long int I,J;
 
     for( I=0;I<M;I++)
         UP[N+I]=0.;
@@ -208,11 +202,11 @@ void TMulti::START( int T,int *ITER,int M,int N,int NMB[],
 // Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 //  NEW function
 //
-void TMulti::NEW(int *OPT,int N,int M,double EPS,double *LEVEL,int *J0,
-                  int *Z,int STR[], int NMB[], double UP[],
+void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
+                  long int *Z,long int STR[], long int NMB[], double UP[],
                   double AA[], double *A)
 {
-    int I,J,J1;
+    long int I,J,J1;
     double MAX,A1;
     double *P;
     P= new double[M+1];
@@ -285,12 +279,12 @@ MK4:
 // Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 //  WORK function
 //
-void TMulti::WORK(double GZ,double EPS,int *I0, int *J0,int *Z,int *ITER,
-                   int M, int STR[],int NMB[],double AA[],
-                   int BASE[],int *UNO,double UP[],double *A,double Q[])
+void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
+                   long int M, long int STR[],long int NMB[],double AA[],
+                   long int BASE[],long int *UNO,double UP[],double *A,double Q[])
 {
     double MIM,A1;
-    int UN,J,I;
+    long int UN,J,I;
     double *P;
     P=  new double[M+1];
     ErrorIf( !P, "Simplex", "At WORK memory allocation error. ");
@@ -376,11 +370,11 @@ void TMulti::WORK(double GZ,double EPS,int *I0, int *J0,int *Z,int *ITER,
 // Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 //  FIN function
 //
-void TMulti::FIN(double EPS,int M,int N,int STR[],int NMB[],
-                  int BASE[],double UND[],double UP[],double U[],
-                  double AA[],double *A,double Q[],int * /*ITER*/)
+void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
+                  long int BASE[],double UND[],double UP[],double U[],
+                  double AA[],double *A,double Q[],long int * /*ITER*/)
 {
-    int /* K,*/I,J;
+    long int /* K,*/I,J;
     double *P;
     P=  new double[M+1];
     ErrorIf( !P, "Simplex", "At FIN memory allocation error. ");
@@ -429,24 +423,25 @@ void TMulti::FIN(double EPS,int M,int N,int STR[],int NMB[],
 //         1 if inconsistent input constraints;
 //        -1 if memory allocation error;
 //
-void TMulti::Simplex(int M, int N, int T, double GZ, double EPS,
+void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
-                      double *AA, int *STR, int *NMB )
+                      double *AA, long int *STR, long int *NMB )
 {
-    int IT=200,I0=0,J0=0,Z,UNO,OPT=0,ITER, i;
+    long int IT=200,I0=0,J0=0,Z,UNO,OPT=0,ITER, i;
     double LEVEL;
-    int *BASE=0;
+    long int *BASE=0;
     double *A=0,*Q=0;
 
     try
     {
         A=  new double[(M+1)*(M+1)];
         Q=  new double[M+1];
-        BASE=  new int[M];
+        BASE=  new long int[M];
         ErrorIf( !A || !Q || !BASE, "Simplex", "Memory allocation error ");
-//        memset(A, 0, sizeof(double)*(M+1)*(M+1) );
-//        memset(Q, 0, sizeof(double)*(M+1) );
-//        memset(BASE, 0, sizeof(int)*(M) );
+        
+        fillValue(A, 0., (M+1)*(M+1) );
+        fillValue(Q, 0., (M+1) );
+        fillValue(BASE, 0L, (M) );
 
         LEVEL=GZ;
         START( T, &ITER, M, N, NMB, GZ, EPS, STR, BASE, B,  UND, UP, AA, A, Q );

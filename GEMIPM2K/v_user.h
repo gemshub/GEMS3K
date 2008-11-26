@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 988 2007-12-19 09:32:52Z gems $
+// $Id: v_user.h 1121 2008-11-25 10:16:38Z gems $
 //
 // Declaration of platform-specific utility functions and classes
 //
@@ -38,6 +38,7 @@ using namespace std;
 #define __FreeBSD
 #endif
 
+typedef unsigned int uint;
 #endif
 
 const int MAXKEYWD = 6+1;
@@ -54,6 +55,44 @@ inline
 int ROUND(double x )
 {
     return int((x)+.5);
+}
+
+template <class T>
+inline
+void fillValue( T* arr, T value, int size )
+{
+  if( !arr )
+    return;
+  for(int ii=0; ii<size; ii++)
+    arr[ii] = value;
+}
+
+template <class T>
+inline
+void copyValues( T* arr, T* data, int size )
+{
+  if( !arr || !data )
+    return;
+  for(int ii=0; ii<size; ii++)
+    arr[ii] = data[ii];
+}
+
+inline
+void copyValues( double* arr, float* data, int size )
+{
+  if( !arr || !data )
+    return;
+  for(int ii=0; ii<size; ii++)
+    arr[ii] = (double)data[ii];
+}
+
+inline
+void copyValues( long int* arr, short* data, int size )
+{
+  if( !arr || !data )
+    return;
+  for(int ii=0; ii<size; ii++)
+    arr[ii] = (long int)data[ii];
 }
 
 #ifndef IPMGEMPLUGIN

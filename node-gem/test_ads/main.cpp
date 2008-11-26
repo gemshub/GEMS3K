@@ -58,8 +58,8 @@ int main( int argc, char* argv[] )
    if( node->GEM_init( ipm_input_file_list_name ) )
        return 1;  // error occured during reading the files
 
-// int nNodes = 1;     // number of local equilibrium nodes, 1 or more
-   int nTimes = 100;   // Maximum number of time iteration steps
+// long int nNodes = 1;     // number of local equilibrium nodes, 1 or more
+   long int nTimes = 100;   // Maximum number of time iteration steps
    double t_start = 0., t_end = 10000., dt = 100., tc = 1.;
 
    cout << "Start Tnode test: " << ipm_input_file_list_name << " "
@@ -76,8 +76,8 @@ int main( int argc, char* argv[] )
 
    // Number of ICs, DCs, Phases and Phases-solutions kept in the node
    // DATABR structure for exchange with GEMIPM - for your convenience
-   int nIC, nDC, nPH, nPS;
-   int i,   j,   k,   ks;    // indices for direct access to components
+   long int nIC, nDC, nPH, nPS;
+   long int i,   j,   k,   ks;    // indices for direct access to components
                              // and phases data in the DataCH framework
 
    // Getting direct access to DataCH structure in GEMIPM2K memory
@@ -101,7 +101,7 @@ int main( int argc, char* argv[] )
    // for one node only (real FMT problems consider many nodes)
    // Names are consistent with the DataBridge structure (see "databr.h")
 
-   short m_NodeHandle[nNodes], m_NodeStatusCH[nNodes], m_IterDone[nNodes];
+   long int m_NodeHandle[nNodes], m_NodeStatusCH[nNodes], m_IterDone[nNodes];
 
    double m_T[nNodes], m_P[nNodes], m_Vs[nNodes], m_Ms[nNodes],
           m_Gs[nNodes], m_Hs[nNodes], m_IS[nNodes], m_pH[nNodes],
@@ -128,15 +128,15 @@ int main( int argc, char* argv[] )
    // Initialization of GEMIPM and chemical data kept in the FMT part
    // Can be done in a loop over nodes if there are many nodes
 //   cout << "Begin Initialization part" << endl;
-   int in;
+   long int in;
    for(  in=1; in<nNodes; in++ )
    {
      dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
      // re-calculating equilibrium by calling GEMIPM
-     m_NodeStatusCH[in] = (short)node->GEM_run();
+     m_NodeStatusCH[in] = node->GEM_run();
 
-     if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
+     if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
         return 5;
      // Extracting chemical data into FMT part
      node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_T[in],
@@ -168,9 +168,9 @@ int main( int argc, char* argv[] )
    dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
   // re-calculating equilibrium by calling GEMIPM
-   m_NodeStatusCH[in] = (short)node->GEM_run();
+   m_NodeStatusCH[in] = node->GEM_run();
 
-  if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_PIA ) )
+  if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
      return 5;
   // Extracting chemical data into FMT part
    node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_T[in],
@@ -194,19 +194,19 @@ int main( int argc, char* argv[] )
    // Work loop for the coupled FMT-GEM modelling
 
    cout << "Begin Coupled Modelling part" << endl;
-//   int xCa = node->IC_name_to_xDB("Ca");
-//   int xMg = node->IC_name_to_xDB("Mg");
-//   int xCl = node->IC_name_to_xDB("Cl");
-//   int xCalcite = node->Ph_name_to_xDB("Calcite");
-//   int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
+//   long int xCa = node->IC_name_to_xDB("Ca");
+//   long int xMg = node->IC_name_to_xDB("Mg");
+//   long int xCl = node->IC_name_to_xDB("Cl");
+//   long int xCalcite = node->Ph_name_to_xDB("Calcite");
+//   long int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
 
 // For the adsorption example (UL on quartz)
-   int xNa = node->IC_name_to_xDB("Na");
-   int xO = node->IC_name_to_xDB("O");
-   int xH = node->IC_name_to_xDB("H");
-   int xU = node->IC_name_to_xDB("U");
-   int xQads = node->Ph_name_to_xDB("SiO2_1sTLM");
-   int xUL0 = node->DC_name_to_xDB("Sio>>OUL@");
+   long int xNa = node->IC_name_to_xDB("Na");
+   long int xO = node->IC_name_to_xDB("O");
+   long int xH = node->IC_name_to_xDB("H");
+   long int xU = node->IC_name_to_xDB("U");
+   long int xQads = node->Ph_name_to_xDB("SiO2_1sTLM");
+   long int xUL0 = node->DC_name_to_xDB("Sio>>OUL@");
 
    // Checking indexes
 //   cout << "xCa= " << xCa << " xMg=" << xMg << " xCl=" << xCl
@@ -216,9 +216,9 @@ int main( int argc, char* argv[] )
    cout << "xNa= " << xNa << " xO=" << xO << " xH=" << xH << " xU="
         << xU << " xQads=" << xQads << " xUL@=" << xUL0 << endl;
 
-   for( int it=0; it<nTimes; it++ )  // iterations over time
+   for( long int it=0; it<nTimes; it++ )  // iterations over time
    {
-     int in;
+     long int in;
  //   cout << " FMT loop begins: " << endl;
 
      // Loop over nodes for calculating the mass transport step
@@ -255,9 +255,9 @@ int main( int argc, char* argv[] )
              m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
 
         // Calling GEMIPM calculation
-        m_NodeStatusCH[in] = (short)node->GEM_run( );
+        m_NodeStatusCH[in] = node->GEM_run( );
         if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
-               m_NodeStatusCH[in] == OK_GEM_PIA ) )
+               m_NodeStatusCH[in] == OK_GEM_SIA ) )
             return 5;
 
         // Extracting GEMIPM output data to FMT part

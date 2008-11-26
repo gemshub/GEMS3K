@@ -24,8 +24,8 @@
 // Random numbers ==========================================================
 double randuni(double& x); // uniform
 double randnorm(double& x); // normal
-float ran2(long& idum);  // uniform between 1 and 0
-float ran3(long& idum);  // uniform between 1 and 0
+double ran2(long int & idum);  // uniform between 1 and 0
+double ran3(long int & idum);  // uniform between 1 and 0
 
 enum  PMCODE // Codes of particle movement
 {
@@ -49,9 +49,9 @@ typedef struct
 
    double m_v;    // mass or volume of the particle (depending on ptype and mmode)
 
-   int node;      // (absolute) index of the parent node
+   long int node;      // (absolute) index of the parent node
 
-   unsigned int res; // reserved
+   unsigned long int res; // reserved
 
 }  // 32 bytes
 PARTICLE;
@@ -63,9 +63,9 @@ class TParticleArray
     PARTICLE* ParT0;  // array of particles for current time point
     PARTICLE* ParT1;  // array of particles for previous time point
 
-    int anParts;      // Number of allocated particles (in each array for T0 and T1) <= nNodes*nPmax
-    int anPTypes;     // Number of allocated particle types (< 20 ? )
-    int anProps;      // Number of particle statistic properties (for monitoring) >= anPTypes
+    long int anParts;      // Number of allocated particles (in each array for T0 and T1) <= nNodes*nPmax
+    long int anPTypes;     // Number of allocated particle types (< 20 ? )
+    long int anProps;      // Number of particle statistic properties (for monitoring) >= anPTypes
 
     TNodeArray* nodes; // Pointer to TNodeArray class
 
@@ -73,27 +73,27 @@ class TParticleArray
 
     // data for particle array setup
     PARTICLE *ParTD;  // array of particle type definitions at t0 or after interruption anPTypes
-    short *NPmean;       // array of initial mean particle type numbers per node ( size: anPTypes )
+    long int* NPmean;       // array of initial mean particle type numbers per node ( size: anPTypes )
 
-    short* nPmin;        // minimum average total number of particles of each type per one node anPTypes
-    short* nPmax;        // maximum average total number of particles of each type per one node anPTypes
+    long int* nPmin;        // minimum average total number of particles of each type per one node anPTypes
+    long int* nPmax;        // maximum average total number of particles of each type per one node anPTypes
 
-    int nNodes;       // Total number of allocated nodes (for convenience, to be copied from nodearray class)
-    short* NPnum;       // array of particle numbers in nodes ( size: nNodes * (anPTypes))
+    long int nNodes;       // Total number of allocated nodes (for convenience, to be copied from nodearray class)
+    long int* NPnum;       // array of particle numbers in nodes ( size: nNodes * (anPTypes))
 
    // internal setup variables
-    int  ndxCsource; // Cauchy source index
+    long int  ndxCsource; // Cauchy source index
 
     // Current step data for particle statistics
-    int cpTypes;      // current number of particle types >= 1 and <= anPTypes;
+    long int cpTypes;      // current number of particle types >= 1 and <= anPTypes;
 
-    int* cParts;       // current total number of particles per type (>= nPmin*nNodes and <= anParts;)
+    long int* cParts;       // current total number of particles per type (>= nPmin*nNodes and <= anParts;)
 
-    int cpx;          // current particle index            ??
-    int cptx;         // int current particle type index   ??
+    long int cpx;          // current particle index            ??
+    long int cptx;         // int current particle type index   ??
 
-    int* (*NPlist);   // list of particle indexes coming into each node (at T1) size: nNodes * nPmax
-    float* (*NPstat); // array of particle statistic properties in nodes (nNodes * anProps)
+    long int* (*NPlist);   // list of particle indexes coming into each node (at T1) size: nNodes * nPmax
+    double* (*NPstat); // array of particle statistic properties in nodes (nNodes * anProps)
                       // for monitoring transport
 
 //  Time variables
@@ -108,7 +108,7 @@ class TParticleArray
     double t0;        // current time point
     double t1;        // next time point, t1 = t0 + dt
 
-    int tstep;        // current time step (for t0 time point)
+    long int tstep;        // current time step (for t0 time point)
 
 // More data fields for interpolation, smoothing, etc. to add
 
@@ -121,20 +121,20 @@ class TParticleArray
 
    void freeMemory();
    LOCATION setPointInNode( LOCATION nodeSize[2] );
-   double InterpolationVp_hDl_1D( int px,double& vp, double& al, double& Dif );
+   double InterpolationVp_hDl_1D( long int px,double& vp, double& al, double& Dif );
 
   // Important for masstransport step
   // Calculation of new particle locations
-  int DisplaceParticle( int px, double t0, double t1 );
+  long int DisplaceParticle( long int px, double t0, double t1 );
   // Walk (transport step) for particle px between nodes
-  int MoveParticleBetweenNodes( int px, bool CompMode, double t0, double t1 );
+  long int MoveParticleBetweenNodes( long int px, bool CompMode, double t0, double t1 );
   // call to the whole Random Walk method time step over all particles and nodes
  // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
  // GEM was called before this function
-  int RandomWalkIteration( int Mode, bool CompMode, double t0, double t1 );
+  long int RandomWalkIteration( long int Mode, bool CompMode, double t0, double t1 );
   // call to the whole FiniteCell Walk method time step over all particles and nodes
   // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
-  int FCellWalkIteration( int Mode, bool CompMode, double t0, double t1 );
+  long int FCellWalkIteration( long int Mode, bool CompMode, double t0, double t1 );
 
 // not use functions
   void particles_to_text_file( fstream& ff );    // writes particle array(s) to a text file
@@ -151,31 +151,31 @@ public:
 // destructor
   ~TParticleArray();
 
-   int nParts() const { return anParts; }  // returns total number of particles (in each time row)
+   long int nParts() const { return anParts; }  // returns total number of particles (in each time row)
 
-   PARTICLE* pPART0( int px ) const  // get pointer to PARTICLE data structure (T0) with index Indx
+   PARTICLE* pPART0( long int px ) const  // get pointer to PARTICLE data structure (T0) with index Indx
       { return &ParT0[ px ]; }
 
-   PARTICLE* pPART1( int px ) const  // get pointer to PARTICLE data structure (T1) with index Indx
+   PARTICLE* pPART1( long int px ) const  // get pointer to PARTICLE data structure (T1) with index Indx
       { return &ParT1[ px ]; }
 
-   LOCATION* GetPartLocationT0( int px ) const  // returns pointer to the particle px location at time T0
+   LOCATION* GetPartLocationT0( long int px ) const  // returns pointer to the particle px location at time T0
     {  return &(ParT0[px].xyz); }
 
-   LOCATION* GetPartLocationT1( int px ) const  // returns pointer to the particle px location at time T1
+   LOCATION* GetPartLocationT1( long int px ) const  // returns pointer to the particle px location at time T1
     {   return &(ParT1[px].xyz); }
 
-   void SetPartLocationT0( int px, LOCATION& cxyz )  // sets particle px location at time T0
+   void SetPartLocationT0( long int px, LOCATION& cxyz )  // sets particle px location at time T0
    {   ParT0[px].xyz = cxyz;  }
 
-   void SetPartLocationT1( int px, LOCATION& cxyz )  // sets particle px location at time T1
+   void SetPartLocationT1( long int px, LOCATION& cxyz )  // sets particle px location at time T1
   {    ParT1[px].xyz = cxyz;  }
 
   void  setUpCounters();
   void CopyfromT1toT0();  // Copy results of ParT1 step to ParT0
   void ParticleArrayInit();  // Particle array initialization
    // stub call for coupled mass transport calculation
-  int GEMPARTRACK( int Mode, bool ComponentMode, double t0, double t1 );
+  long int GEMPARTRACK( long int Mode, bool ComponentMode, double t0, double t1 );
 
 //#ifdef IPMGEMPLUGIN
 
@@ -183,9 +183,9 @@ public:
 
 //#endif
 
-  int nPTypes() const
+  long int nPTypes() const
    { return anPTypes; }    // Number of allocated particle types (< 20 ? )
-  short getNPnum( int iNode, int iType ) const // particle numbers in node
+  long getNPnum( long int iNode, long int iType ) const // particle numbers in node
    { return NPnum[iType + iNode*anPTypes];   }
 };
 

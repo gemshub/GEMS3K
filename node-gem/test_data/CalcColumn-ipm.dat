@@ -1,5 +1,5 @@
-# GEMIPM2K v. 2.2.0
-# Prototype 22.02.2007
+# GEMIPM2K v. 2.2.4
+# Prototype 11.07.2008
 # Comments can be marked with # $ ; as the first character in the line
 
 # Template for the ipm-dat text input file for the internal MULTI data
@@ -49,11 +49,16 @@
 # DK: IPM convergence threshold for the Dikin criterion (1e-6 < DK < 1e-4)
 <pa_DK>       0.0001
 
-# DF: Threshold for the application of the Karpov phase stability criterion f_alpha
+# DB: Cutoff (threshold) for the amount of phase for phase elimination 
+<pa_DS>        1e-11
+
+# DF: Threshold for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted
 <pa_DF>         0.01
+# DFM: Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated
+<pa_DFM>         0.1
 
 # DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>          144
+<pa_DP>           15
 
 # IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
 <pa_IIM>         500
@@ -63,10 +68,10 @@
 
 # PRD: Positive: control of calling IPM_gamma() on iterations of GEM EFD and IPM (default 3)
 #      Negative: the number of additional EFD-IPM loops to improve the GEM final solution
-<pa_PRD>          -1
+<pa_PRD>           3
 
 # AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
-<pa_AG>            1
+<pa_AG>          0.7
 <pa_DGC>        0.07
 
 # PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)
@@ -74,9 +79,6 @@
 # Activity coefficient values for simplex(): GAR for major and GAH for minor components
 <pa_GAR>           1
 <pa_GAH>        1000
-
-# DB: Cutoff (threshold) for the amount of phase in phase elimination 
-<pa_DS>        1e-09
 
 # _Min: Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; 
 # Ph - non-electrolyte solution phases
@@ -90,8 +92,6 @@
 
 # PC: Mode of Selekt2() procedure operation
 <pa_PC>            1
-# DFM: Threshold of Karpov stability criterion for insertion of a phase in Selekt2() procedure
-<pa_DFM>       1e-07
 # DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
 # DFYw - water solvent;
 <pa_DFYw>      1e-06
@@ -107,16 +107,18 @@
 # DFYc - single-component phase; 
 <pa_DFYc>      1e-06
 # Insertion amount of single-component phase (Selekt2() algorithm only)
-<pa_DFYs>      1e-06
+<pa_DFYs>      1e-07
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
-<pa_DW>            0
+<pa_DW>           15
 # DT: Exponent for dual-thermodynamic restoring of low amounts of solutes (+2 to -5), relative to DHBM
-<pa_DT>            0
+<pa_DT>           -3
 
 # GAS: IPM2 balance accuracy control factor DHBM[i]/b[i]
-<pa_GAS>       0.001
+<pa_GAS>        0.01
+# DG: Minimal step length in the initial approximation EFD() procedure, 1e-7 
+<pa_DG>        1e-06
 # DNS: Standard surface density (nm-2) for calculating activity of surface species
 <pa_DNS>       12.05
 # IEPS: Control parameter of SACT calculation in sorption/surface complexation models
@@ -135,8 +137,12 @@
 # LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase
 # Number of parameters per phase
 <LsMod>
+2 0 4 
 0 0 0 
-0 0 0 
+
+# PMc: Parameters of non-ideal mixing models for multicomponent phases 
+<PMc>
+0 0 0 0 0 0 0 0 
 
 # LsMdc: Number of parameters per component of the phase
 <LsMdc>
@@ -145,68 +151,54 @@
 ## (5) Some data arrays which are not provided in DATACH and DATABR files
 # B: Full total bulk composition of the initial system (vector b) - see DATACH file for dimension nIC
 <B>
-3.309999883640557528e-04 3.309999883640557528e-04 2.000000023372194846e-07 1.106836964176732749e+02 1.000000011686097423e-07 5.534286120880122439e+01 0.000000000000000000e+00 
+0.000330999988364056 0.000330999988364056 2.00000002337219e-07 110.683696417673 1.0000000116861e-07 55.3428612088012 0 
 
 # Initial data for DCs - see DATACH file for dimensions nDC, nDCs
 # Pparc: Partial pressures (fugacities) of dependent components
 <Pparc>
-1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 
-1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 
-1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 1.000000000000000000e+00 
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
 
 # GEX: for dependent components, G0 increments
 <GEX>
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 
 # lnGmf:  Fixed (initial) activity coefficients
 <lnGmf>
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 
 # (6) Section for metastability/ kinetic constraints
 # RLC: Codes of metastability/kinetic constraints for DCs
 <RLC>
-'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
-'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
-'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
 
 # RSC: Units of metastability/kinetic constraints for DCs (see vectors dul, dll)
 <RSC>
-'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
-'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
-'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
 
 # DLL: Vector of lower metastability constraints on DC amounts in the system
 <DLL>
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 
 # DUL: Vector of upper metastability constraints on DC amounts in the system
 <DUL>
-1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 
-1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 
-1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 1.000000000000000000e+06 
+1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
 
 # (7) Initial data for phases
 
 # Aalp: Specific surface areas of phases (whole list), set 0 if unknown
 <Aalp>
-0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 
+0 0 0 0 0 0 0 
 
 # Sigw Specific surface free energy for phase-water interface (J/m2; 0 if unknown)
 <Sigw>
-0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 
+0 0 0 0 0 0 0 
 
 # Sigg Specific surface free energy for phase-gas interface (for future versions)
 <Sigg>
-0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 0.0000000000e+00 
+0 0 0 0 0 0 0 
 
 # YOF: Surface energy or metastability parameters for phases (J/g)
 <YOF>
-0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 0.000000000000000000e+00 
+0 0 0 0 0 0 0 
 
 # End of file

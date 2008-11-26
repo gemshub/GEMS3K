@@ -20,7 +20,7 @@
 #include "particlearray.h"
 #include "num_methods.h"
 
-static long idum = -10000l;
+static long int idum = -10000l;
 static double Rand = -1;
 
 TParticleArray* TParticleArray::pa;
@@ -34,13 +34,13 @@ TParticleArray::TParticleArray( short nPTypes, short nProps,
   ParT0(0), ParT1(0), anParts(0),
   anPTypes(nPTypes), anProps(nProps), nodes(aNodes)
 {
-  int ii;
+  long int ii;
   nNodes = nodes->nNodes();
 
-  NPmean = new short[anPTypes];
+  NPmean = new long int[anPTypes];
   ParTD = new PARTICLE[anPTypes];
-  nPmin = new short[anPTypes];
-  nPmax = new short[anPTypes];
+  nPmin = new long int[anPTypes];
+  nPmax = new long int[anPTypes];
 
   for( ii=0; ii < anPTypes; ii++ )
   {
@@ -61,7 +61,7 @@ TParticleArray::TParticleArray( short nPTypes, short nProps,
 
   ParT0 = new PARTICLE[anParts];
   ParT1 = new PARTICLE[anParts];
-  NPnum = new short[nNodes*anPTypes];
+  NPnum = new long int[nNodes*anPTypes];
   ParticleArrayInit();
 
   cParts = 0;
@@ -90,7 +90,7 @@ TParticleArray::~TParticleArray()
 // Particle array initialization
 void TParticleArray::ParticleArrayInit()
 {
-  int iNode, iType, k, cpx;
+	long int iNode, iType, k, cpx;
   LOCATION nodeSize[2];
 
   cpx = 0;
@@ -123,7 +123,7 @@ void TParticleArray::ParticleArrayInit()
 // Particle array initialization
 void TParticleArray::setUpCounters()
 {
-  int iNode;
+	long int iNode;
   ndxCsource = 0;
   for( iNode=0; iNode < nNodes; iNode++ )
   {
@@ -138,16 +138,16 @@ void TParticleArray::setUpCounters()
 void TParticleArray::CopyfromT1toT0()  // Copy results of ParT1 step to ParT0
 {
 /*  fstream f_out("nods_particl.out", ios::out|ios::app  );
-  for(int iNode=0; iNode < nNodes; iNode++ )
+  for(long int iNode=0; iNode < nNodes; iNode++ )
   {
-    for(int iType=0; iType < anPTypes; iType++ )
+    for(long int iType=0; iType < anPTypes; iType++ )
        f_out << NPnum[iNode*anPTypes+iType] << " ";
     f_out << " || ";
   }
  f_out << endl;
 
 */
-  for(int k=0; k < anParts; k++ )
+  for(long int k=0; k < anParts; k++ )
   {
     ParT0[k] = ParT1[k];
   }
@@ -160,21 +160,21 @@ LOCATION TParticleArray::setPointInNode( LOCATION nodeSize[2] )
   LOCATION loc;
   if( nodes->SizeN() > 1 )
   {
-    loc.x = (float)randuni( Rand ); //  randnorm(Rand); // value from 0. to 1.
+    loc.x = randuni( Rand ); //  randnorm(Rand); // value from 0. to 1.
 //    loc.x = ran3( idum ); //  ran2( idum ); // value from 0. to 1.
     loc.x = (loc.x*(nodeSize[1].x-nodeSize[0].x)+nodeSize[0].x);
   }
   else loc.x = 0;
   if( nodes->SizeM() > 1 )
   {
-    loc.y = (float)randnorm(Rand ); //  randuni( Rand); // value from 0. to 1.
+    loc.y = randnorm(Rand ); //  randuni( Rand); // value from 0. to 1.
 //    loc.y = ran2( idum ); //  ran3( idum ); // value from 0. to 1.
     loc.y = (loc.y*(nodeSize[1].y-nodeSize[0].y)+nodeSize[0].y);
   }
   else loc.y = 0;
   if( nodes->SizeK() > 1 )
   {
-    loc.z = (float)randnorm(Rand ); //  randuni( Rand); // value from 0. to 1.
+    loc.z = randnorm(Rand ); //  randuni( Rand); // value from 0. to 1.
 //    loc.z = ran2( idum ); //  ran3( idum ); // value from 0. to 1.
     loc.z = (loc.z*(nodeSize[1].z-nodeSize[0].z)+nodeSize[0].z);
   }
@@ -185,14 +185,14 @@ LOCATION TParticleArray::setPointInNode( LOCATION nodeSize[2] )
 // Implementation of interpolation for particle advection velocities and
 // dispersivities between nodes ( in 1D case)
 // px index of particle
-double TParticleArray::InterpolationVp_hDl_1D( int px,
+double TParticleArray::InterpolationVp_hDl_1D( long int px,
    double& vp, double& al, double& Dif )
 {
   if( nodes->SizeM() > 1 ||  nodes->SizeK() > 1 )
      Error( "InterpolationVp_hDl_1D", "Error mode of interpolation." );
 
   DATABR *dbr1, *dbr2;    // nodes for interpolation
-  int nodInd1, nodInd2;  // number of nodes for interpolation
+  long int nodInd1, nodInd2;  // number of nodes for interpolation
   double hDl, x1m, x2m;       // middle-point coordinates in the nodes
   LOCATION nodeSize[2];
 
@@ -236,10 +236,10 @@ double TParticleArray::InterpolationVp_hDl_1D( int px,
 // Calculation of new particle locations
 // Advective step, Brownian step, Dispersive step, Diffusion step
 // px: index of particle
-int TParticleArray::DisplaceParticle( int px, double /*t0*/, double /*t1*/ )
+long int TParticleArray::DisplaceParticle( long int px, double /*t0*/, double /*t1*/ )
 {
 //  DATACH* ch = nodes->pCSD();       // DataCH structure
-  int nodInd = ParT1[px].node;
+	long int nodInd = ParT1[px].node;
   double ds = 0.;
   double vp, hDl, al, Dif;
 
@@ -272,12 +272,12 @@ int TParticleArray::DisplaceParticle( int px, double /*t0*/, double /*t1*/ )
 // Walk (transport step) for particle px between nodes
 // returns -1 if particle stays in the same node
 // or an index of another node the particle enters
-int TParticleArray::MoveParticleBetweenNodes( int px, bool CompMode, double /*t0*/, double /*t1*/ )
+long int TParticleArray::MoveParticleBetweenNodes( long int px, bool CompMode, double /*t0*/, double /*t1*/ )
 {
-  int old_node = ParT1[px].node;
-  int new_node = nodes->FindNodeFromLocation( ParT1[px].xyz, old_node );
+  long int old_node = ParT1[px].node;
+  long int new_node = nodes->FindNodeFromLocation( ParT1[px].xyz, old_node );
   char type_ = ParT1[px].ptype;
-  short nodeType = nodes->pNodT1()[old_node]->NodeTypeHY;
+  long int nodeType = nodes->pNodT1()[old_node]->NodeTypeHY;
 
   if( new_node == -1 )     // location behind region
   {
@@ -336,7 +336,7 @@ int TParticleArray::MoveParticleBetweenNodes( int px, bool CompMode, double /*t0
   if( new_node == -1 )
   {
     vstr buff(300);
-    sprintf( buff, " pxOld=%d npxNew=%d",  old_node, new_node  );
+    sprintf( buff, " pxOld=%ld npxNew=%ld",  old_node, new_node  );
     Error("W003RWM",buff.p);
   }
   else
@@ -353,10 +353,10 @@ int TParticleArray::MoveParticleBetweenNodes( int px, bool CompMode, double /*t0
 // call to the whole Random Walk method time step over all particles and nodes
 // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
 // GEM was called before this function
-int TParticleArray::RandomWalkIteration( int /*Mode*/, bool CompMode, double t0, double t1 )
+long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, double t0, double t1 )
 {
 
-  int iNode, iType, iRet=0, cpx;
+  long int iNode, iType, iRet=0, cpx;
   double *mass, m_;
 
 // set up new masses to particles after GEM calculations
@@ -388,7 +388,7 @@ int TParticleArray::RandomWalkIteration( int /*Mode*/, bool CompMode, double t0,
       {
         vstr buff(300);
 
-        sprintf( buff, " Node=%d npNum=%d npMin=%d ",
+        sprintf( buff, " Node=%ld npNum=%ld npMin=%ld ",
         iNode, NPnum[iNode*anPTypes+iType], nPmin[iType] );
         Error("W005RWM",buff.p);
       // or  alternative
@@ -403,15 +403,15 @@ int TParticleArray::RandomWalkIteration( int /*Mode*/, bool CompMode, double t0,
 
 // call to the whole FiniteCell Walk method time step over all particles and nodes
 // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
-int TParticleArray::FCellWalkIteration( int /*Mode*/, bool /* CompMode*/, double /*t0*/, double /*t1*/ )
+long int TParticleArray::FCellWalkIteration( long int /*Mode*/, bool /* CompMode*/, double /*t0*/, double /*t1*/ )
 {
   return 0;
 }
 
  // stub call for coupled mass transport calculation
-int TParticleArray::GEMPARTRACK( int Mode, bool ComponentMode, double t0_, double t1_ )
+long int TParticleArray::GEMPARTRACK( long int Mode, bool ComponentMode, double t0_, double t1_ )
 {
-  int iRet;
+	long int iRet;
 
   t0 = t0_;
   t1 = t1_;
@@ -433,10 +433,10 @@ int TParticleArray::GEMPARTRACK( int Mode, bool ComponentMode, double t0_, doubl
 //
 double randuni (double& x)
 { double m35=34359738368., m36=68719476736., m37=137438953472.;
-  float a=0.,b=1.;
+  double a=0.,b=1.;
   if( x < 0 ) // Initialize process
   {
-    int j;
+	long int j;
     double R;
     j=rand();
     R = ceil(24359738368.*j/RAND_MAX + 10000000000.);
@@ -454,7 +454,7 @@ double randuni (double& x)
 // normal point
 double randnorm(double& x)
 { double R1=0.;
-  int j;
+  long int j;
   for(j=0;j<101;j++)
     R1+=randuni(x);
       R1=(R1-101./2.)/pow(101./12.,0.5);
@@ -488,14 +488,14 @@ double randnorm(double& x)
 // RNMX should approximate the largest floating value that is less than 1.
 // Modified from Numerical Recipes in C
 //
-float ran2(long& idum)
+double ran2(long int& idum)
 {
-   int j;
-   long k;
-   static long idum2=123456789;
-   static long iy=0;
-   static long iv[NTAB];
-   float temp;
+   long int j;
+   long int k;
+   static long int idum2=123456789;
+   static long int iy=0;
+   static long int iv[NTAB];
+   double temp;
    if (idum <= 0)
    { // Initialize.
       if ( -idum < 1)
@@ -529,7 +529,7 @@ float ran2(long& idum)
    if (iy < 1)
       iy += IMM1;
    if ( ( temp=AM*iy) > RNMX)
-       return (float)RNMX;         //  Because users don't expect endpoint values.
+       return RNMX;         //  Because users don't expect endpoint values.
    return temp;
 }
 
@@ -544,13 +544,13 @@ float ran2(long& idum)
 // Set idum to any negative value to initialize or reinitialize the sequence.
 // Modified From Numerical Recipes in C
 //
-float ran3(long& idum)
+double ran3(long int& idum)
 {
-  static int inext,inextp;
-  static long ma[56];     // The value 56 (range ma[1..55]) is special and
-  static int iff=0;       // should not be modified; see  Knuth.
-  long mj,mk;
-  int i,ii,k;
+  static long int inext,inextp;
+  static long int ma[56];     // The value 56 (range ma[1..55]) is special and
+  static long int iff=0;       // should not be modified; see  Knuth.
+  long int mj,mk;
+  long int i,ii,k;
   if ( idum < 0 || iff == 0) // Initialization.
   {
      iff=1;

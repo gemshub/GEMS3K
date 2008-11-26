@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1101 2008-07-10 15:43:13Z gems $
+// $Id: ms_multi.h 1121 2008-11-25 10:16:38Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -44,7 +44,7 @@ typedef struct
     PunV,         // Units of volume  { j;  c L a reserved }
     PunP,         // Units of pressure  { b;  B p P A reserved }
     PunT;         // Units of temperature  { C; K F reserved }
-  short
+  long int
     N,        	// N - number of IC in IPM problem
     NR,       	// NR - dimensions of R matrix
     L,        	// L -   number of DC in IPM problem
@@ -126,66 +126,72 @@ typedef struct
     FitVar[5];  // internal; FitVar[0] is T,P-dependent b_gamma parameter
                 //       FitVar[4] is the AG smoothing parameter; 
                 //       FitVar[3] is the actual smoothing coefficient
-  short
+  long int
     *L1,    // l_a vector - number of DCs included into each phase [Fi]
     *LsMod, // Number of interaction parameters, max. parameter order (cols in IPx),
         // and number of coefficients per parameter in PMc table [3*FIs]
     *LsMdc, // Number of non-ideality coeffs per one DC in multicomponent phase[FIs]
     *IPx,   // List of indexes of interaction parameters for non-ideal solutions
             // ->LsMod[k,0] x LsMod[k,1]   added 07.12.2006   KD
-    *mui,   // IC indices in RMULTS IC list [N]
+   *mui,   // IC indices in RMULTS IC list [N]
     *muk,   // Phase indices in RMULTS phase list [FI]
     *muj;   // DC indices in RMULTS DC list [L]
-  short  (*SATX)[4]; // New: work table [Lads]: link indexes to surface type [XL_ST];
+  long int  (*SATX)[4]; // New: work table [Lads]: link indexes to surface type [XL_ST];
             // sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
-  float
+  double
     *PMc,    // Non-ideality coefficients f(TP) -> LsMod[k,0] x LsMod[k,2]
     *DMc,    // Non-ideality coefficients f(TPX) for DC -> LsMdc[k]
     *A,      // DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    // IC atomic (molar) mass, g/mole [0:N-1]
-// Reconsider usage 
-    *Wb,     //Relative Born factors (HKF, reserved) [0:Ls-1]
-    *Wabs,   // Absolute Born factors (HKF, reserved) [0:Ls-1]
-    *Rion,   // Ionic or solvation radii, A (reserved) [0:Ls-1]
-    *HYM,    // reserved
-    *ENT,    // reserved no object
-// Convert H0, A0, U0, S0, Cp0 to double
+   
+ // Reconsider usage 
+     *Wb,     //Relative Born factors (HKF, reserved) [0:Ls-1]
+     *Wabs,   // Absolute Born factors (HKF, reserved) [0:Ls-1]
+     *Rion,   // Ionic or solvation radii, A (reserved) [0:Ls-1]
+     *HYM,    // reserved
+     *ENT,    // reserved no object
+
+ // Convert H0, A0, U0, S0, Cp0 to double
     *H0,     // DC pmolar enthalpies, reserved [L]
     *A0,     // DC molar Helmholtz energies, reserved [L]
     *U0,     // DC molar internal energies, reserved [L]
     *S0,     // DC molar entropies, reserved [L]
     *Cp0,    // DC molar heat capacity, reserved [L]
     *Cv0,    // DC molar Cv, reserved [L]
-//
+  //
     *VL,     // ln mole fraction of end members in phases-solutions
     *Xcond, 	// conductivity of phase carrier, sm/m2   [0:FI-1], reserved
     *Xeps,  	// diel.permeability of phase carrier (solvent) [0:FI-1], reserved
     *Aalp,  	// phase specific surface area m2/g       [0:FI-1]
     *Sigw,  	// st.surface free energy in water,J/m2   [0:FI-1]
-    *Sigg;  	// st.surface free energy in air,J/m2     [0:FI-1], reserved
+    *Sigg  	// st.surface free energy in air,J/m2     [0:FI-1], reserved
+    ;
+
 
 //  Data for surface comlexation and sorption models (new variant [Kulik,2006])
-  float  (*Xr0h0)[2];   // mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
-  float  (*Nfsp)[MST];  // area fraction of surface types At/A  [FIs][FIat]
-  float  (*MASDT)[MST]; // Max. surface species density Gamma_C, mkmol/g [FIs][FIat]
-  float  (*XcapF)[MST]; // Capacitance density of Ba EDL layer F/m2 [FIs][FIat]
-  float  (*XcapA)[MST]; // Capacitance density of 0 EDL layer, F/m2 [FIs][FIat]
-  float  (*XcapB)[MST]; // Capacitance density of B EDL layer, F/m2 [FIs][FIat]
-  float  (*XcapD)[MST]; // Eff. cap. density of diffuse layer, F/m2 [FIs][FIat]
-  float  (*XdlA)[MST];  // Effective thickness of A EDL layer, nm [FIs][FIat], reserved
-  float  (*XdlB)[MST];  // Effective thickness of B EDL layer, nm [FIs][FIat], reserved
-  float  (*XdlD)[MST];  // Effective thickness of diffuse layer, nm [FIs][FIat], reserved
-  float  (*XlamA)[MST]; // Factor of EDL discretness  A < 1 [FIs][FIat], reserved
-  float  (*Xetaf)[MST]; // Permanent charge density at surface type, C/m2 [FIs][FIat]
-  float  (*MASDJ)[DFCN];  // Max. density, CD-music and isotherm params [Lads][DFCN]
+  double  (*Xr0h0)[2];   // mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
+  double  (*Nfsp)[MST];  // area fraction of surface types At/A  [FIs][FIat]
+  double  (*MASDT)[MST]; // Max. surface species density Gamma_C, mkmol/g [FIs][FIat]
+  double  (*XcapF)[MST]; // Capacitance density of Ba EDL layer F/m2 [FIs][FIat]
+  double  (*XcapA)[MST]; // Capacitance density of 0 EDL layer, F/m2 [FIs][FIat]
+  double  (*XcapB)[MST]; // Capacitance density of B EDL layer, F/m2 [FIs][FIat]
+  double  (*XcapD)[MST]; // Eff. cap. density of diffuse layer, F/m2 [FIs][FIat]
+  double  (*XdlA)[MST];  // Effective thickness of A EDL layer, nm [FIs][FIat], reserved
+  double  (*XdlB)[MST];  // Effective thickness of B EDL layer, nm [FIs][FIat], reserved
+  double  (*XdlD)[MST];  // Effective thickness of diffuse layer, nm [FIs][FIat], reserved
+  double  (*XlamA)[MST]; // Factor of EDL discretness  A < 1 [FIs][FIat], reserved
+  double  (*Xetaf)[MST]; // Permanent charge density at surface type, C/m2 [FIs][FIat]
+  double  (*MASDJ)[DFCN];  // Max. density, CD-music and isotherm params [Lads][DFCN]
                           // Contents defined in the enum below this structure
 // Other data
-  float  *XFs,  // Current quantities of phases X_a at IPM iterations [0:FI-1]
-    *Falps,     // Current Karpov criteria of phase stability  F_a [0:FI-1]
-    *Fug,       // Demo partial fugacities of gases [0:PG-1]
-    *Fug_l,     // Demo log partial fugacities of gases [0:PG-1]
-    *Ppg_l;     // Demo log partial pressures of gases [0:PG-1]
+  
   double
+    *XFs,    // Current quantities of phases X_a at IPM iterations [0:FI-1]
+    *Falps,  // Current Karpov criteria of phase stability  F_a [0:FI-1]
+    *Fug,    // Demo partial fugacities of gases [0:PG-1]
+    *Fug_l,  // Demo log partial fugacities of gases [0:PG-1]
+    *Ppg_l,     // Demo log partial pressures of gases [0:PG-1]
+
     *DUL,     // VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     // NG Vector of lower kinetic restrictions to x_j, moles [L]
     *GEX,     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
@@ -280,20 +286,20 @@ typedef struct
   char  (*SCM)[MST]; // Classifier of adsorption models for sur types [FIs][FIat]
   char  *SATT,  // classifier of methods of SAT calculation [Lads]
     *DCCW;  // internal DC class codes [L]
-//  short
+//  long int
 //     *sitXcat, // SIT: indices of cations (may be changed soon)
 //     *sitXan;  // SIT: indices of anions
-//  float
+//  double
 //     *sitE;    // pointer to SIT coeff. table (may be changed soon)
-  short ITF,       // Number of completed IA EFD iterations
+  long int ITF,       // Number of completed IA EFD iterations
          ITG;        // Number of completed GEM IPM iterations
   clock_t t_start, t_end;
   double t_elap_sec;  // work variables for determining IPM calculation time
 #ifdef IPMGEMPLUGIN
-  float *Guns;  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
-  float *Vuns;  //  mu.L work vector of uncertainty space increments to tp->Vm
+  double *Guns;  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
+  double *Vuns;  //  mu.L work vector of uncertainty space increments to tp->Vm
   double *tpp_G; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole 
-  float *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
+  double *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
 #endif  
 }
@@ -314,13 +320,13 @@ class TMulti
     MULTI *pmp;
 
 // Internal arrays for the performance optimization  (since version 2.0.0)
-   int sizeN, sizeL, sizeAN; 
+   long int sizeN, sizeL, sizeAN; 
    double *AA;
    double *BB;
-   int *arrL;
-   int *arrAN;
+   long int *arrL;
+   long int *arrAN;
 
-   void Alloc_A_B( int newN );
+   void Alloc_A_B( long int newN );
    void Free_A_B();
    void Build_compressed_xAN();
    void Free_compressed_xAN();
@@ -336,10 +342,10 @@ class TMulti
     void multi_sys_ph();
     void ph_sur_param( int k, int kk );
     void ph_surtype_assign( int k, int kk, int jb, int je,
-                            short car_l[], int car_c, short Cjs );
+                            int car_l[], int car_c, int Cjs );
     void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
     void SolModLoad();
-//    float *PackSITcoeffs( int k, int JB, int JE, int jb, int je, int nCxA );
+//    double *PackSITcoeffs( int k, int JB, int JE, int jb, int je, int nCxA );
     gstring PressSolMod( int nP );
     char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
     int find_icnum( char *name, int LNmode );
@@ -350,22 +356,22 @@ class TMulti
 
    char PAalp_;
    char PSigm_;
-   float EpsW_;
-   float RoW_;
+   double EpsW_;
+   double RoW_;
 
 #endif
 
 // Internal functions for SCMs
-   void getLsModsum( int& LsModSum, int& LsIPxSum );
-   void getLsMdcsum( int& LsMdcSum );
+   void getLsModsum( long int& LsModSum, long int& LsIPxSum );
+   void getLsMdcsum( long int& LsMdcSum );
 
 // ipm_chemical.cpp
     void XmaxSAT_IPM2();
     void XmaxSAT_IPM2_reset();
-    double DualChemPot( double U[], float AL[], int N, int j );
-    void Set_DC_limits( int Mode );
+    double DualChemPot( double U[], double AL[], long int N, long int j );
+    void Set_DC_limits( long int Mode );
     void TotalPhases( double X[], double XF[], double XFA[] );
-    double Ej_init_calc( double, int j, int k);
+    double Ej_init_calc( double, long int j, long int k);
     double  PrimalDC_ChemPot(  double G,  double logY,  double logYF,
                            double asTail,  double logYw,  char DCCW );
     void PrimalChemicalPotentials( double F[], double Y[],
@@ -376,96 +382,97 @@ class TMulti
     double FreeEnergyIncr(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
     double GX( double LM  );
-//    double Cj_init_calc( double g0, int j, int k );
     void Mol_u( double Y[], double X[], double XF[], double XFA[] );
     void ConvertDCC();
-    int  getXvolume();
+    long int  getXvolume();
 
 // ipm_chemical2.cpp
     void GasParcP();
-    void phase_bcs( int N, int M, int jb, float *A, double X[], double BF[] );
-    void phase_bfc( int k, int jj );
-    double pH_via_hydroxyl( double x[], double Factor, int j);
+    void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
+    void phase_bfc( long int k, long int jj );
+    //double pH_via_hydroxyl( double x[], double Factor, long int j);
     void ConCalcDC( double X[], double XF[], double XFA[],
-                    double Factor, double MMC, double Dsur, int jb, int je, int k );
+                    double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
     void ConCalc( double X[], double XF[], double XFA[]);
-    int GouyChapman(  int jb, int je, int k );
+    long int GouyChapman(  long int jb, long int je, long int k );
 //  Surface activity coefficient terms
-    int SurfaceActivityCoeff( int jb, int je, int jpb, int jdb, int k );
-//    void SurfaceActivityTerm( int jb, int je, int k );  // Obsolete / deleted
-    double PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag = 0 ); // Added 26.06.08
+    long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
+//    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
+    double PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag = 0L ); // Added 26.06.08
 // ipm_chemical3.cpp
     void IS_EtaCalc();
-    void pm_GC_ods_link( int k, int jb, int jpb, int jdb, int ipb );
+    void pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb );
     double SmoothingFactor( );
     void SetSmoothingFactor( ); 
 // Main call for calculation of activity coefficients on IPM iterations
-    int GammaCalc( int LinkMode );
+    long int GammaCalc( long int LinkMode );
 // Built-in activity coefficient models
 //  aqueous electrolyte
-    void DebyeHueckel3Hel( int jb, int je, int jpb, int jdb, int k );
-    void DebyeHueckel3Karp( int jb, int je, int jpb, int jdb, int k );
-    void DebyeHueckel2Kjel( int jb, int je, int jpb, int jdb, int k );
-    void DebyeHueckel1LL( int jb, int je, int k );
-    void Davies03temp( int jb, int je, int jpb, int k );
-    void SIT_aqac_PSI( int jb, int je, int jpb, int jdb, int k, int ipb );
+    void DebyeHueckel3Hel( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void DebyeHueckel3Karp( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void DebyeHueckel2Kjel( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void DebyeHueckel1LL( long int jb, long int je, long int k );
+    void Davies03temp( long int jb, long int je, long int jpb, long int k );
+    void SIT_aqac_PSI( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
 // fluid mixtures
-    void ChurakovFluid( int jb, int je, int jpb, int jdb, int k );
-    void CGofPureGases( int jb, int je, int jpb, int jdb, int k );
-    void PRSVFluid( int jb, int je, int jpb, int jdb, int k, int ipb );
-    void PRSVofPureGases( int jb, int je, int jpb, int jdb, int k, int ipb );
+    void ChurakovFluid( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void PRSVFluid( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
+    void PRSVofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
 // condensed mixtures
-    void RedlichKister( int jb, int je, int jpb, int jdb, int k );
-    void MargulesBinary( int jb, int je, int jpb, int jdb, int k );
-    void MargulesTernary( int jb, int je, int jpb, int jdb, int k );
+    void RedlichKister( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void MargulesBinary( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void MargulesTernary( long int jb, long int je, long int jpb, long int jdb, long int k );
 // Generic solution model calls
-void SolModParPT ( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
-void SolModActCoeff( int jb, int je, int jpb, int jdb, int k, int ipb, char ModCode );
+void SolModParPT ( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
+void SolModActCoeff( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
 
 // ipm_main.cpp - numerical part of GEM IPM-2
-    void MultiCalcMain( int rLoop );
-    int EnterFeasibleDomain( );
-    int InteriorPointsMethod( int &status, int rLoop );
+    void MultiCalcMain( long int rLoop );
+    long int EnterFeasibleDomain( );
+    long int InteriorPointsMethod( long int &status, long int rLoop );
     void SimplexInitialApproximation( );
 
 // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
-   void MassBalanceResiduals( int N, int L, float *A, double *Y,
+   void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                double *B, double *C );
-   int CheckMassBalanceResiduals(double *Y );
+   long int CheckMassBalanceResiduals(double *Y );
    double LMD( double LM );
-   void ZeroDCsOff( int jStart, int jEnd, int k=-1 );
-   void RaiseZeroedOffDCs( int jStart, int jEnd, double sfactor, int k=-1 );
+   void ZeroDCsOff( long int jStart, long int jEnd, long int k=-1 );
+   void RaiseZeroedOffDCs( long int jStart, long int jEnd, double sfactor, long int k=-1 );
 //   void LagrangeMultiplier();
-   int MetastabilityLagrangeMultiplier(); 
+   long int MetastabilityLagrangeMultiplier(); 
    void WeightMultipliers( bool square );
-   int SolverLinearEquations( int N, bool initAppr );
-   double calcDikin(  int N, bool initAppr );
+   long int SolverLinearEquations( long int N, bool initAppr );
+   double calcDikin(  long int N, bool initAppr );
    double calcLM(  bool initAppr );
    void Restoring_Y_YF();
    double calcSfactor();
-   int PhaseSelect( int &k_miss, int &k_unst, int rLoop );
+   long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
    
-   // IPM_SIMPLEX.CPP Simplex method with two-sided constraints (Karpov ea 1997)
-    void Simplex(int M, int N, int T, double GZ, double EPS,
+   // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)
+    void Simplex(long int M, long int N, long int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,
-                 double *AA, int *STR, int *NMB );
-    void SPOS( double *P, int STR[],int NMB[],int J,int M,double AA[]);
-    void START( int T,int *ITER,int M,int N,int NMB[],
-                double GZ,double EPS,int STR[],int *BASE,
+                 double *AA, long int *STR, long int *NMB );
+    void SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[]);
+    void START( long int T,long int *ITER,long int M,long int N,long int NMB[],
+                double GZ,double EPS,long int STR[],long int *BASE,
                 double B[],double UND[],double UP[],double AA[],double *A,
                 double *Q );
-    void NEW(int *OPT,int N,int M,double EPS,double *LEVEL,int *J0,
-             int *Z,int STR[], int NMB[], double UP[],
+    void NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
+             long int *Z,long int STR[], long int NMB[], double UP[],
              double AA[], double *A);
-    void WORK(double GZ,double EPS,int *I0, int *J0,int *Z,int *ITER,
-              int M, int STR[],int NMB[],double AA[],
-              int BASE[],int *UNO,double UP[],double *A,double Q[]);
-    void FIN(double EPS,int M,int N,int STR[],int NMB[],
-             int BASE[],double UND[],double UP[],double U[],
-             double AA[],double *A,double Q[],int *ITER);
+    void WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
+              long int M, long int STR[],long int NMB[],double AA[],
+              long int BASE[],long int *UNO,double UP[],double *A,double Q[]);
+    void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
+             long int BASE[],double UND[],double UP[],double U[],
+             double AA[],double *A,double Q[],long int *ITER);
 
 public:
 
+    void set_def( long int i=0);
+    
 #ifndef IPMGEMPLUGIN
 // This is used only in GEMS-PSI
     TIArray<IPNCalc> qEp;
@@ -480,7 +487,7 @@ public:
     void dyn_set( int i=0);
     void dyn_kill( int i=0);
     void dyn_new( int i=0);
-    void set_def( int i=0);
+//    void set_def( int i=0);
 //    void sit_dyn_new();
 
     // ms_muleq.cpp
@@ -536,30 +543,14 @@ public:
     void Alloc_internal();
     void MultiCalcInit( const char *key );
     bool AutoInitialApprox();
-    void MultiCalcIterations( int rLoop );
+    void MultiCalcIterations( long int rLoop );
     void CompG0Load();
 
-double Cj_init_calc( double g0, int j, int k ); // Moved here on 16.05.2008
+double Cj_init_calc( double g0, long int j, long int k ); // Moved here on 16.05.2008
 
 // connection to UnSpace
     double pb_GX( double *Gxx  );
 };
 
-void inArray( fstream& ff, char *name, float* arr, int size );
-void inArray( fstream& ff, char *name, short* arr, int size );
-void inArray( fstream& ff, char *name, double* arr, int size );
-void inArray( fstream& ff, char *name, char* arr,
-                              int size, int arr_siz );
-
-/*
-void outArray( fstream& ff, char *name, short* arr,
-                            int size, int l_size=-1 );
-void outArray( fstream& ff, char *name,  float* arr,
-                             int size, int l_size=-1 );
-void outArray( fstream& ff, char *name,  double* arr,
-                             int size, int l_size=-1 );
-void outArray( fstream& ff, char *name, char* arr,
-                              int size, int arr_siz );
-*/
 #endif   //_ms_multi_h
 

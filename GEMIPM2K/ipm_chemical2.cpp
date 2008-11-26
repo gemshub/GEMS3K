@@ -28,18 +28,19 @@
 //
 void TMulti::GasParcP()
 {
-    short k,  i,  jj=0;
-    int jb, je, j;
 #ifndef IPMGEMPLUGIN
+
+	long int k,  i, jj=0;
+    long int jb, je, j;
 
     if( !pmp->PG )
         return;
 
   char (*SMbuf)[MAXDCNAME] =
       (char (*)[MAXDCNAME])aObj[ o_w_tprn].Alloc( pmp->PG, 1, MAXDCNAME );
-  pm.Fug = (float *)aObj[ o_wd_fug].Alloc( pm.PG, 1, F_ );
-  pm.Fug_l = (float *)aObj[ o_wd_fugl].Alloc( pm.PG, 1, F_ );
-  pm.Ppg_l = (float *)aObj[ o_wd_ppgl].Alloc( pm.PG, 1, F_ );
+  pm.Fug = (double *)aObj[ o_wd_fug].Alloc( pm.PG, 1, D_ );
+  pm.Fug_l = (double *)aObj[ o_wd_fugl].Alloc( pm.PG, 1, D_ );
+  pm.Ppg_l = (double *)aObj[ o_wd_ppgl].Alloc( pm.PG, 1, D_ );
 
     for( k=0, je=0; k<pmp->FIs; k++ ) // phase
     {
@@ -51,19 +52,19 @@ void TMulti::GasParcP()
             for( j=jb; j<je; j++,jj++ )
             {  // fixed 02.03.98 DK
 
-                memcpy(SMbuf[jj], pmp->SM[j], MAXDCNAME*sizeof(char) );
-                pmp->Fug_l[jj] = -(float)(pmp->G0[j]+pmp->GEX[j]);
+            	copyValues(SMbuf[jj], pmp->SM[j], MAXDCNAME );
+                pmp->Fug_l[jj] = -(pmp->G0[j]+pmp->GEX[j]);
                 if( pmp->Pc > 1e-9 )
-                    pmp->Fug_l[jj] += (float)log(pmp->Pc);
+                    pmp->Fug_l[jj] += log(pmp->Pc);
                 for( i=0; i<pmp->N; i++ )
-                    pmp->Fug_l[jj] += *(pmp->A+j*pmp->N+i) * (float)pmp->U[i];
+                    pmp->Fug_l[jj] += *(pmp->A+j*pmp->N+i) * pmp->U[i];
                 if( pmp->Fug_l[jj] > -37. && pmp->Fug_l[jj] < 16. )
-                    pmp->Fug[jj] = exp( (double)pmp->Fug_l[jj] );
+                    pmp->Fug[jj] = exp( pmp->Fug_l[jj] );
                 else  pmp->Fug[jj] = 0.0;
                 // Partial pressure
-                pmp->Ppg_l[jj] = pmp->Fug_l[jj] - (float)pmp->lnGam[j];
-                pmp->Fug_l[jj] *= (float).43429448;
-                pmp->Ppg_l[jj] *= (float).43429448;
+                pmp->Ppg_l[jj] = pmp->Fug_l[jj] - pmp->lnGam[j];
+                pmp->Fug_l[jj] *= .43429448;
+                pmp->Ppg_l[jj] *= .43429448;
             }
             // break;
         }
@@ -75,10 +76,10 @@ void TMulti::GasParcP()
 // Calculation of pH via activities of H2O and OH-
 // Suggested by V.A.Sinitsyn, Apr 7, 1997
 // Not used !!! SD
-// double TMulti::pH_via_hydroxyl( double x[], double Factor, int j)
+// double TMulti::pH_via_hydroxyl( double x[], double Factor, long int j)
 // {
 //    double lnaH;
-//    int jwa, jhy;
+//    long int jwa, jhy;
 //    jwa = j+1;
 //    jhy = j-1;                      // Dangerous !
 //    lnaH = - pmp->G0[jhy] + 4.016534 + pmp->G0[jwa] + pmp->lnGam[jwa]
@@ -90,9 +91,9 @@ void TMulti::GasParcP()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculating bulk stoichiometry of a multicomponent phase
 //
-void TMulti::phase_bcs( int N, int M, int jb, float *A, double X[], double BF[] )
+void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
 {
-    int ii, i, j;
+    long int ii, i, j;
     double Xx;
 
     if( !A || !X || !BF )
@@ -107,7 +108,7 @@ void TMulti::phase_bcs( int N, int M, int jb, float *A, double X[], double BF[] 
             continue;
         for( ii=arrL[j+jb]; ii<arrL[j+jb+1]; ii++ )
         {  i = arrAN[ii];
-            BF[i] += (double)A[i+j*N] * Xx;
+            BF[i] += A[i+j*N] * Xx;
         }
     }
 }
@@ -116,9 +117,9 @@ void TMulti::phase_bcs( int N, int M, int jb, float *A, double X[], double BF[] 
 // Calculating total bulk stoichiometry of  solid phases
 // Added on request by TW in November 2006
 //
-void TMulti::phase_bfc( int k, int jj )
+void TMulti::phase_bfc( long int k, long int jj )
 {
-    int ii, i, j;
+    long int ii, i, j;
     double Xx;
 
     if( pmp->PHC[k] == PH_AQUEL  || pmp->PHC[k] == PH_GASMIX ||
@@ -131,13 +132,13 @@ void TMulti::phase_bfc( int k, int jj )
             continue;
         for( ii=arrL[j+jj]; ii<arrL[j+jj+1]; ii++ )
         {  i = arrAN[ii];
-           pmp->BFC[i] += (double)pmp->A[i+(jj+j)*pmp->N] * Xx;
+           pmp->BFC[i] += pmp->A[i+(jj+j)*pmp->N] * Xx;
         }
     }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define  a(j,i) ((double)(*(pmp->A+(i)+(j)*pmp->N)))
+#define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
 // Calculation of dual chemical potentials, activities, and primal
 // concentrations for DCs (indexed jb to je) in a k-th phase.
 // Input arrays X, XF, XFA,  input factors: Factor, MMC
@@ -145,9 +146,9 @@ void TMulti::phase_bfc( int k, int jj )
 //  Do we need this all in GEMIPM ?
 //
 void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
-              double Factor, double MMC, double Dsur, int jb, int je, int k)
+              double Factor, double MMC, double Dsur, long int jb, long int je, long int k)
 {
-    int j, ii, i;
+    long int j, ii, i;
     double Muj, DsurT, SPmol, lnFmol=4.016535;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -166,7 +167,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
         { // zeroing off
 //            pmp->Wx[j] = pmp->lowPosNum; // 0.0;  debugging 29.11.05
 pmp->Wx[j] = 0.0;
-            pmp->VL[j] = (float)log( pmp->lowPosNum );
+            pmp->VL[j] = log( pmp->lowPosNum );
             pmp->Y_w[j] = 0.0;
             pmp->lnGam[j] = 0.0;
             if( pmp->PHC[0] == PH_AQUEL )
@@ -194,22 +195,22 @@ pmp->Wx[j] = 0.0;
                     pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
                     break;
                case DC_SUR_GROUP:
-                    DsurT = MMC * (double)pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
                     pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                         + Dsur + DsurT/( 1.0+DsurT ) + lnFmol );
+                                       /*  + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
                     break;
                case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3:
                case DC_SSC_A4: case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2:
                case DC_WSC_A3: case DC_WSC_A4: case DC_SUR_COMPLEX:
                case DC_SUR_IPAIR: case DC_IESC_A: case DC_IEWC_B:
-                    DsurT = MMC * (double)pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
                     pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                         + Dsur + DsurT/( 1.0+DsurT ) + lnFmol );
+                                       /*  + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
                     break; // Coulombic term needs to be considered !!!!!!!!!!
                case DC_PEL_CARRIER: case DC_SUR_MINAL: case DC_SUR_CARRIER: // sorbent
-                    DsurT = MMC * (double)pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
                     pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                       + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT) );
+                      /* + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT) */ );
                     break;
                default:
                     break; // error in DC class code
@@ -219,8 +220,8 @@ pmp->Wx[j] = 0.0;
         // calculation of the mole fraction
         pmp->Wx[j] = X[j]/XF[k];
         if( pmp->Wx[j] > pmp->lowPosNum )
-            pmp->VL[j] = (float)log( pmp->Wx[j] );     // this is used nowhere except in some scripts. Remove? 
-        else pmp->VL[j] = (float)log( pmp->lowPosNum );   // debugging 29.11.05 KD
+            pmp->VL[j] = log( pmp->Wx[j] );     // this is used nowhere except in some scripts. Remove? 
+        else pmp->VL[j] = log( pmp->lowPosNum );   // debugging 29.11.05 KD
         pmp->Y_la[j] = 0.0;
         switch( pmp->DCC[j] ) // choice of expressions
         {
@@ -290,9 +291,9 @@ pmp->Wx[j] = 0.0;
             pmp->Y_m[j] = X[j]*Factor; // molality
             pmp->Y_w[j] =  // mg/g sorbent
                 1e3 * X[j] * pmp->MM[j] / (MMC*XFA[k]);
-            DsurT = MMC * (double)pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
             pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                  + Dsur + DsurT/( 1.0+DsurT ) + lnFmol );
+                               /*   + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
             pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 11.03.2008 KD
             break;
         case DC_SSC_A0:
@@ -312,9 +313,9 @@ pmp->Wx[j] = 0.0;
             pmp->Y_m[j] = X[j]*Factor; // molality
             pmp->Y_w[j] =  // mg/g sorbent
                 1e3 * X[j] * pmp->MM[j] / (MMC*XFA[k]);
-            DsurT = MMC * (double)pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
             pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                 + Dsur + DsurT/( 1.0+DsurT ) + lnFmol );
+                              /*   + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
             pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 11.03.2008   KD
             break;
         case DC_PEL_CARRIER:
@@ -325,9 +326,9 @@ pmp->Wx[j] = 0.0;
             if(pmp->FWGT[0]>pmp->lowPosNum)
               pmp->Y_w[j] = // mg of sorbent per kg aq solution
                 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[0];
-            DsurT = MMC * (double)pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
             pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                           + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT) );
+                         /*  + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT) */ );
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
             break;
         default:
@@ -345,7 +346,7 @@ pmp->Wx[j] = 0.0;
 //
 void TMulti::ConCalc( double X[], double XF[], double XFA[])
 {
-    int k, ii, i, j, ist, jj, jja;
+    long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -413,7 +414,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
         {
             for( jj=0; jj<pmp->N; jj++)
              pmp->BF[k*pmp->N+jj] = 0.;
-//            memset( pmp->BF+k*pmp->N, 0, sizeof(double)*pmp->N );
+
             for(jj=j; jj<i; jj++)   // Loop added 10.03.01  KD (GTDEMO)
             {
                 pmp->Wx[j] = 0.0;
@@ -517,7 +518,7 @@ NEXT_PHASE:
                 else
                     pmp->IC_lm[ii] = 0;
                 if( pmp->FWGT[k] >= pa->p.DB )
-                    pmp->IC_wm[ii] *= (double)pmp->Awt[ii]*1000./pmp->FWGT[k];
+                    pmp->IC_wm[ii] *= pmp->Awt[ii]*1000./pmp->FWGT[k];
                 else
                     pmp->IC_wm[ii] = 0;
                }
@@ -537,11 +538,10 @@ NEXT_PHASE:
 //    that some extreme values were reached for charge densities or 
 //    electric potentials (for detecting bad PIA), 0 otherwise 
 // 
-int 
-TMulti::GouyChapman(  int, int, int k )
+long int 
+TMulti::GouyChapman(  long int, long int, long int k )
 {
-    int status=0; 
-	int ist;
+    long int ist, status=0; 
     double SigA=0., SigD=0., SigB=0., SigDDL=0.,
       XetaA[MST], XetaB[MST], XetaD[MST], f1, f3, A, Sig, F2RT, I, Cap;
     if( pmp->XF[k] <  TProfil::pm->pa.p.ScMin )
@@ -561,15 +561,15 @@ TMulti::GouyChapman(  int, int, int k )
         // Calculation of charge densities
         if( fabs( pmp->XetaA[k][ist]) > pmp->lowPosNum*100. )
             XetaA[ist] = pmp->XetaA[k][ist]*F_CONSTANT/pmp->YFk/
-                (double)pmp->Aalp[k]/(double)pmp->Nfsp[k][ist]; // C/m2
+                pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
         else XetaA[ist] = 0.0;
         if( fabs( pmp->XetaB[k][ist]) > pmp->lowPosNum*100. )   // moles
             XetaB[ist] = pmp->XetaB[k][ist] *F_CONSTANT/pmp->YFk/
-                (double)pmp->Aalp[k]/(double)pmp->Nfsp[k][ist]; // C/m2
+                pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
         else XetaB[ist] = 0.0;
  if( fabs( pmp->XetaD[k][ist]) > pmp->lowPosNum*100. ) // moles
      XetaD[ist] = pmp->XetaD[k][ist] *F_CONSTANT/pmp->YFk/
-               (double)pmp->Aalp[k]/(double)pmp->Nfsp[k][ist]; // C/m2
+               pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
  else XetaD[ist] = 0.0;
 
         // Limit maximum charge densities to prevent divergence
@@ -604,38 +604,38 @@ TMulti::GouyChapman(  int, int, int k )
         switch( pmp->SCM[k][ist] )
         {
         case SC_CCM:  // Constant-Capacitance Model Schindler, extension Nilsson
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigDDL = -SigA - XetaB[ist];
             SigB = XetaB[ist];
             break;
         case SC_DDLM: // Generalized Double Layer Model [Dzombak and Morel, 1990]
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigDDL = -SigA;
             SigB = 0.0;
             break;
         case SC_TLM:  // Triple-Layer Model [Hayes and Leckie, 1987]
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigB = XetaB[ist];
             SigDDL = -SigA - XetaB[ist];
             break;
         case SC_MTL:  // Modified Triple-Layer Model [Robertson, 1997]
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigB = XetaB[ist];
             SigDDL = -SigA - XetaB[ist];
             break;
         case SC_BSM: // Basic Stern model: [Christl and Kretzschmar, 1999]
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigB = XetaB[ist];
             SigDDL = -SigA - XetaB[ist];
             break;
         case SC_3LM: // Three-layer model: Hiemstra ea 1996; Tadanier & Eick 2002
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigB = XetaB[ist];
             SigD = XetaD[ist];
             SigDDL = -SigA - SigB -SigD;
             break;
         case SC_MXC:  // BSM for Ion-Exchange on permanent-charge surface
-            SigA = (double)pmp->Xetaf[k][ist] + XetaA[ist];
+            SigA = pmp->Xetaf[k][ist] + XetaA[ist];
             SigB = XetaB[ist];
             SigDDL = -SigA - XetaB[ist];
             break;
@@ -689,7 +689,7 @@ TMulti::GouyChapman(  int, int, int k )
 //          Cap0 = fabs(Sig/PSIo);
 //          Del = A*1e9/(2.*I*F)/cosh(PSIo*F2RT);
 //          pmp->XdlD[k] = Del;
-        pmp->XcapD[k][ist] = (float)Cap;
+        pmp->XcapD[k][ist] = Cap;
         pmp->XpsiD[k][ist] = PSIo;
         PsiD = PSIo;
         // Truncating diffuse plane potential to avoid divergence
@@ -711,7 +711,7 @@ GEMU_CALC:
         case SC_CCM:  // Constant-Capacitance Model Schindler, ext. Nilsson
             if( pmp->XcapB[k][ist] > 0.001 )
             {  // Classic CCM Schindler with inner-sphere species only
-               PsiA = SigA / (double)pmp->XcapA[k][ist];
+               PsiA = SigA / pmp->XcapA[k][ist];
                if( fabs( PsiA ) > 0.7 ) // truncated 0-plane potential
                {
                    PsiA = PsiA<0? -0.7: 0.7;
@@ -720,13 +720,13 @@ GEMU_CALC:
                pmp->XpsiA[k][ist] = PsiA;
             }
             else { // Extended CCM model [Nilsson ea 1996] as TLM with PsiD = 0
-               PsiB = - SigB / (double)pmp->XcapB[k][ist];
+               PsiB = - SigB / pmp->XcapB[k][ist];
                if( fabs( PsiB ) > 0.3 )  // truncated B-plane potential
                {
                    PsiB = PsiB<0? -0.3: 0.3;
                    status = 65;
                }
-               PsiA = PsiB + SigA / (double)pmp->XcapA[k][ist];
+               PsiA = PsiB + SigA / pmp->XcapA[k][ist];
                if( fabs( PsiA ) > 0.7 )
                {
                   PsiA = PsiA<0? -0.7: 0.7;
@@ -738,7 +738,7 @@ GEMU_CALC:
             break;
         case SC_MTL:  // Modified Triple Layer Model for X- Robertson | Kulik
 // PsiD = 0.0; // test
-            PsiB = PsiD - SigDDL / (double)pmp->XcapB[k][ist];
+            PsiB = PsiD - SigDDL / pmp->XcapB[k][ist];
             if( fabs( PsiB ) > 0.6)  // truncated B-plane potential
             {
 // cout << "EDL (MTL) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
@@ -746,7 +746,7 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 67;
             }
-            PsiA = PsiB + SigA / (double)pmp->XcapA[k][ist];
+            PsiA = PsiB + SigA / pmp->XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0 plane potential
             {
 // cout << "EDL (MTL) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
@@ -758,7 +758,7 @@ GEMU_CALC:
             pmp->XpsiB[k][ist] = PsiB;
             break;
         case SC_TLM:  // Triple-Layer Model   [Hayes 1987]
-            PsiB = PsiD - SigDDL / (double)pmp->XcapB[k][ist];
+            PsiB = PsiD - SigDDL / pmp->XcapB[k][ist];
             if( fabs( PsiB ) > 0.6 )  // // truncated B-plane potential
             {
 // cout << "EDL (TLM) PsiB = " << PsiB << " truncated to +- 0.6 V" <<
@@ -766,7 +766,7 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 69;
             }
-            PsiA = PsiB + SigA / (double)pmp->XcapA[k][ist];
+            PsiA = PsiB + SigA / pmp->XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
 // cout << "EDL (TLM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
@@ -781,7 +781,7 @@ GEMU_CALC:
 //            PsiB = PsiD + SigD / pmp->XcapB[k][ist];
 // cout << "EDL (3LM) PsiB(D) = " << PsiB << "  IT= " << pmp->IT << " k= "
 // << k << " ist= " << ist << endl;
-            PsiB = PsiD + ( SigA + SigB ) / (double)pmp->XcapB[k][ist];  // Compare!
+            PsiB = PsiD + ( SigA + SigB ) / pmp->XcapB[k][ist];  // Compare!
 // cout << "EDL (3LM) PsiB(AB) = " << PsiB << "  IT= " << pmp->IT << " k= "
 // << k << " ist= " << ist << endl;
             if( fabs( PsiB ) > 0.6 )  // truncated B-plane potential
@@ -791,7 +791,7 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 71;
             }
-            PsiA = PsiB + SigA / (double)pmp->XcapA[k][ist];
+            PsiA = PsiB + SigA / pmp->XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )   // truncated 0-plane potential
             {
 // cout << "EDL (3LM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
@@ -811,7 +811,7 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 73;
             }
-            PsiA = PsiB + SigA / (double)pmp->XcapA[k][ist];
+            PsiA = PsiB + SigA / pmp->XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 )  // truncated 0-plane potential
             {
 //cout << "EDL (BSM) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
@@ -831,7 +831,7 @@ GEMU_CALC:
                 PsiB = PsiB<0? -0.6: 0.6;
                 status = 75;
             }
-            PsiA = PsiB + SigA / (double)pmp->XcapA[k][ist];
+            PsiA = PsiB + SigA / pmp->XcapA[k][ist];
             if( fabs( PsiA ) > 1.1 ) // truncated 0-plane potential
             {
 // cout << "EDL (MXC) PsiA = " << PsiA << " truncated to +- 1.1 V" <<
@@ -871,11 +871,11 @@ GEMU_CALC:
 //    that some extreme values were obtained for some SACTs, 
 //    0 otherwise (for detecting bad PIA) 
 // 
-int
-TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
+long int
+TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
 {
-    int status = 0; 
-	int i, ii, j, ja, ist, iss, dent, Cj, iSite[6];
+	long int status = 0; 
+	long int i, ii, j, ja, ist, iss, dent, Cj, iSite[6];
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo;
     SPP_SETTING *pa = &TProfil::pm->pa;
@@ -961,9 +961,9 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
             // Extracting isotherm parameters
             if( pmp->MASDJ )
             {
-               cN = (double)pmp->MASDJ[ja][PI_P2];  // Frumkin/Pivovarov water coord. number
-               dent = (int)cN;                      // dentateness for L and QCA isoterms
-               aF = (double)pmp->MASDJ[ja][PI_P1];  // Frumkin lateral interaction energy term
+               cN = pmp->MASDJ[ja][PI_P2];  // Frumkin/Pivovarov water coord. number
+               dent = cN;                      // dentateness for L and QCA isoterms
+               aF = pmp->MASDJ[ja][PI_P1];  // Frumkin lateral interaction energy term
             //   bet = pmp->MASDJ[ja][PI_P3];   // BET beta parameter (reserved)
             }
             else {  // defaults
@@ -972,9 +972,9 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
             switch( pmp->SATT[ja] ) // selection of the SACT model
             {
             case SAT_L_COMP: // Competitive monodentate Langmuir on a surface and site type
-                XSkC = XSs / XVk / Mm * 1e6 /(double)pmp->Nfsp[k][ist]/
-                      (double)pmp->Aalp[k]/1.66054;  // per nm2
-                XS0 = (double)(fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
+                XSkC = XSs / XVk / Mm * 1e6 /pmp->Nfsp[k][ist]/
+                      pmp->Aalp[k]/1.66054;  // per nm2
+                XS0 = (fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
                         // max. density per nm2
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * XS0;   // relative IEPS
@@ -983,7 +983,7 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 if( XSkC >= XS0 )               // Setting limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( pa->p.PC == 2 && !pmp->W1 || pa->p.PC != 2 )
+                if( (pa->p.PC == 2 && !pmp->W1) || pa->p.PC != 2 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1005,10 +1005,10 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
 //            case SAT_QCA1_NCOMP:             // code '1'
             case SAT_QCA_NCOMP:  // dent++;   bidentate is default for QCA
                 xj0 =
-                 (double)(fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
+                 (fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
                                              // Max site density per nm2
-                xj = XSs / XVk / Mm / (double)pmp->Nfsp[k][ist] * 1e6     // xj
-                     /(double)pmp->Aalp[k]/1.66054; // Density per nm2 on site type iss
+                xj = XSs / XVk / Mm / pmp->Nfsp[k][ist] * 1e6     // xj
+                     /pmp->Aalp[k]/1.66054; // Density per nm2 on site type iss
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * xj0; // relative IEPS
                 if(xj >= xj0/(double)dent)
@@ -1027,10 +1027,10 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
             case SAT_FRUM_COMP: // Frumkin (FFG) isotherm
                 dent = 1; // monodentate for now
                 xj0 =
-                 (double)(fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
+                 (fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
                                              // Max site density per nm2
-                xj = XSs / XVk / Mm / (double)pmp->Nfsp[k][ist] * 1e6  //  xj
-                     /(double)pmp->Aalp[k]/1.66054; // Current density per nm2
+                xj = XSs / XVk / Mm / pmp->Nfsp[k][ist] * 1e6  //  xj
+                     /pmp->Aalp[k]/1.66054; // Current density per nm2
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
@@ -1054,9 +1054,9 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 break;
             case SAT_FRUM_NCOMP: // (Non)competitive Frumkin isotherm
                                  // for permanent charge surfaces
-                XSkC = xj / XVk / Mm / (double)pmp->Nfsp[k][ist] * 1e6
-                       / (double)pmp->Aalp[k]/1.66054;  // per nm2
-                XS0 = (double)(pmp->MASDJ[ja][PI_DEN]/pmp->Aalp[k]/1.66054);
+                XSkC = xj / XVk / Mm / pmp->Nfsp[k][ist] * 1e6
+                       / pmp->Aalp[k]/1.66054;  // per nm2
+                XS0 = (pmp->MASDJ[ja][PI_DEN]/pmp->Aalp[k]/1.66054);
                          // max.dens.per nm2
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * XS0;  // relative IEPS
@@ -1065,7 +1065,7 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 if( XSkC >= XS0 )  // Limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( pa->p.PC == 2 && !pmp->W1 || pa->p.PC != 2 )
+                if(( pa->p.PC == 2 && !pmp->W1) || pa->p.PC != 2 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1090,10 +1090,10 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
             case SAT_PIVO_NCOMP: // (Non)competitive Pivovarov isotherm
                 dent = 1; // monodentate for now
                 xj0 =
-                 (double)(fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
+                 (fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
                                              // Max site density per nm2
-                xj = XSs / XVk / Mm / (double)pmp->Nfsp[k][ist] * 1e6
-                     /(double)pmp->Aalp[k]/1.66054; // Current density per nm2
+                xj = XSs / XVk / Mm / pmp->Nfsp[k][ist] * 1e6
+                     /pmp->Aalp[k]/1.66054; // Current density per nm2
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
@@ -1122,10 +1122,10 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
             case SAT_VIR_NCOMP: // Non-Competitive virial isotherm
                 dent = 1; // monodentate for now
                 xj0 =
-                 (double)(fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
+                 (fabs(pmp->MASDJ[ja][PI_DEN])/pmp->Aalp[k]/1.66054);
                                              // Max site density per nm2
-                xj = XSs / XVk / Mm / (double)pmp->Nfsp[k][ist] * 1e6
-                     /(double)pmp->Aalp[k]/1.66054; // Current density per nm2
+                xj = XSs / XVk / Mm / pmp->Nfsp[k][ist] * 1e6
+                     /pmp->Aalp[k]/1.66054; // Current density per nm2
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
@@ -1159,8 +1159,8 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 if( iSite[ist] < 0 )
                     xjn = 0.0;
                 else xjn = pmp->X[iSite[ist]]; // neutral site does not compete!
-                XS0 = (double)pmp->MASDT[k][ist] * XVk * Mm / 1e6
-                      * (double)pmp->Nfsp[k][ist]; // expected total in moles
+                XS0 = pmp->MASDT[k][ist] * XVk * Mm / 1e6
+                      * pmp->Nfsp[k][ist]; // expected total in moles
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * XS0;  // relative IEPS
                 XSkC = XSk - xjn - xj; // occupied by the competing species;
@@ -1178,7 +1178,7 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 {
                    q1 = xj0 - xj;
                    q2 = rIEPS * XS0;
-                   if( pa->p.PC == 2 && !pmp->W1 || pa->p.PC != 2 )
+                   if( (pa->p.PC == 2 && !pmp->W1) || pa->p.PC != 2 )
                    {
                       if( q1 > q2 )
                         q2 = q1;
@@ -1195,8 +1195,8 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 break;
             case SAT_NCOMP: // Non-competitive truncated Langmuir SAT (obsolete)
                 // rIEPS = pa->p.IEPS * 2;
-                xj0 = fabs( (double)pmp->MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
-                      * (double)pmp->Nfsp[k][ist]; // in moles
+                xj0 = fabs( pmp->MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
+                      * pmp->Nfsp[k][ist]; // in moles
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * xj0;  // relative IEPS
                 if(xj >= xj0)
@@ -1225,10 +1225,10 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 for( i=0; i<MST; i++ )
                    XSs += pmp->D[i][ist];
                 XSkC = XSs / XVk / Mm * 1e6  // total non-solvent surf.species
-                   /(double)pmp->Nfsp[k][ist]/ (double)pmp->Aalp[k]/1.66054;  // per nm2
-                XS0 = (double)(max( pmp->MASDT[k][ist], pmp->MASDJ[ja][PI_DEN] ));
-                SATst = pa->p.DNS*1.66054*(double)pmp->Aalp[k]/XS0;
-                XS0 = XS0 / (double)pmp->Aalp[k]/1.66054;
+                   /pmp->Nfsp[k][ist]/ pmp->Aalp[k]/1.66054;  // per nm2
+                XS0 = (max( pmp->MASDT[k][ist], pmp->MASDJ[ja][PI_DEN] ));
+                SATst = pa->p.DNS*1.66054*pmp->Aalp[k]/XS0;
+                XS0 = XS0 / pmp->Aalp[k]/1.66054;
                 if( pa->p.PC == 1 )
                     rIEPS = pa->p.IEPS * XS0;  // relative IEPS
                 if( XSkC < 0.0 )
@@ -1236,7 +1236,7 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
                 if( XSkC >= XS0 )  // Limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( pa->p.PC == 2 && !pmp->W1 || pa->p.PC != 2 )
+                if( (pa->p.PC == 2 && !pmp->W1) || pa->p.PC != 2 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1268,9 +1268,45 @@ TMulti::SurfaceActivityCoeff( int jb, int je, int, int, int k )
 //    amount is zero (X[j] == 0)
 //   
 double 
-TMulti::PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag )
+TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
-    double NonLogTerm = 0., NonLogTermW = 0.; 
+    double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., NonLogTermDS = 0.,
+           NonLogTermD = 0., DsurT = 0., MMC = 0.; 
+    SPP_SETTING *pa = &TProfil::pm->pa;
+    
+    switch( pmp->PHC[k] )
+    {
+      case PH_AQUEL:
+           if( pmp->XF[k] && pmp->XFA[k] )
+           {	
+             	NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];    	        
+    	       	NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
+    	   }
+           break; 
+      case PH_GASMIX:  case PH_FLUID:   case PH_PLASMA:   case PH_SIMELT:
+      case PH_HCARBL:  case PH_SINCOND:  case PH_SINDIS:  case PH_LIQUID:
+           break;
+      case PH_POLYEL:
+      case PH_SORPTION: // only sorbent end-members!
+           if( pmp->XF[k] && pmp->XFA[k] )
+           { 
+              for( long int jj=jb; jj<je; jj++ )
+              {
+                if( pmp->DCC[jj] == DC_SUR_CARRIER ||
+                    pmp->DCC[jj] == DC_SUR_MINAL || pmp->DCC[jj] == DC_PEL_CARRIER )                 
+                    MMC += pmp->MM[jj]*pmp->X[jj]/pmp->XFA[k];
+                    // Weighted-average sorbent mole mass
+              }
+              NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];  // Also for sorption phases
+       	      NonLogTermS = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
+    	      DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+    	      NonLogTermD = - DsurT/( 1.0+DsurT );
+    	      NonLogTermDS = DsurT - DsurT/(1+DsurT);	
+           }
+    	   break;
+       default:
+          break; // Phase class code error!
+    }
     
 	if( DirFlag == 0 )
 	{	 // Converting lnGam[j] into Gamma[j]
@@ -1282,15 +1318,11 @@ TMulti::PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag )
 	    switch( pmp->DCC[j] )
 	    { // Aqueous electrolyte
 	      case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES:
-	        if( pmp->XF[k] && pmp->XFA[k] )
-	        	NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];
 // NonLogTerm =0.;
 	        lnGamS += NonLogTerm;    // Correction by asymmetry term 	    	
 	        break; 
 	    	// calculate molar mass of solvent
 	    case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
-	        if( pmp->XF[k] && pmp->XFA[k] )
-	        	NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
 	    	lnGamS += NonLogTermW; 
 	        break;
 	    case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:
@@ -1302,13 +1334,14 @@ TMulti::PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag )
 	    case DC_SCP_CONDEN: case DC_SUR_MINAL: 
 	        break; 	
 	    case DC_SUR_CARRIER: case DC_PEL_CARRIER:
-	        break;
+	        lnGamS += NonLogTermS + NonLogTermDS;
+	    	break;
 	        // Sorption phases
 	    case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
 	    case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
 	    case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
 	    case DC_IEWC_B:
-            // To be completed
+	    	lnGamS += NonLogTerm + NonLogTermD;
 	    	break;
 	    default: 
 	        break; 
@@ -1325,14 +1358,10 @@ TMulti::PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag )
 		switch( pmp->DCC[j] )
         { // Aqueous electrolyte
 		   case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES:
-		        if( pmp->XF[k] && pmp->XFA[k] )
-		        	NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];
 // NonLogTerm =0.;
 		        lnGam -= NonLogTerm;  // Correction by asymmetry term 
 		    	break; 
 		   case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
-		        if( pmp->XF[k] && pmp->XFA[k] )
-		        	NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
 		    	lnGam -= NonLogTermW; 
 		        break;
    	       case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
@@ -1342,13 +1371,14 @@ TMulti::PhaseSpecificGamma( int j, int jb, int je, int k, int DirFlag )
    	       case DC_SCP_CONDEN: case DC_SUR_MINAL: 
 			    break; 	
 		   case DC_SUR_CARRIER: case DC_PEL_CARRIER:
+			    lnGam -= NonLogTermS + NonLogTermDS;
 			    break;
 			        // Sorption phases
 	       case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
 		   case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
 		   case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
 		   case DC_IEWC_B:
-		     // To be completed
+		        lnGam -= NonLogTerm + NonLogTermD;
 		    	break;
 		    default: 
 		        break; 

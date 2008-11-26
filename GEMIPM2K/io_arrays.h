@@ -15,7 +15,7 @@
 // See http://gems.web.psi.ch/ for more information
 // E-mail gems2.support@psi.ch
 //-------------------------------------------------------------------
-//#include <iomanip>
+
 #include  <fstream>
 #include "gstring.h"
 
@@ -28,15 +28,31 @@ public:
     TPrintArrays( fstream& fout ):
       ff( fout ){}
 
+    void writeArray( const char *name, char*   arr, long int size, long int arr_size );
+    void writeArray( const char *name, float*  arr, long int size, long int l_size=-1L );
+    void writeArray( const char *name, double* arr, long int size, long int l_size=-1L );
+ //   void writeArray( const char *name, short* arr, long int size, long int l_size=-1L  );
+    void writeArray( const char *name, long* arr, long int size, long int l_size=-1L  );
+   
     void writeArray( const char *name, char*   arr, int size, int arr_size );
-    void writeArray( const char *name, short*  arr, int size, int l_size=-1  );
-    void writeArray( const char *name, int*  arr, int size, int l_size=-1  );
     void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
     void writeArray( const char *name, double* arr, int size, int l_size=-1 );
-    void writeArray( const char *name, short*  arr, int size, int* selAr, int nColumns=1, int l_size=-1  );
-    void writeArray( const char *name, int*  arr, int size, int* selAr, int nColumns=1, int l_size=-1  );
-    void writeArray( const char *name, float*  arr, int size, int* selAr, int nColumns=1, int l_size=-1 );
-    void writeArray( const char *name, double* arr, int size, int* selAr, int nColumns=1, int l_size=-1 );
+    void writeArray( const char *name, short* arr, int size, int l_size=-1  );
+//    void writeArray( const char *name, long* arr, int size, int l_size=-1  );
+
+    void writeArray( const char *name, float*  arr, long int size, long int* selAr, 
+    		long int nColumns=1L, long int l_size=-1L );
+    void writeArray( const char *name, double* arr, long int size, long int* selAr, 
+    		long int nColumns=1L, long int l_size=-1L );
+    void writeArray( const char *name, long* arr, long int size, long int* selAr, 
+    		long int nColumns=1L, long int l_size=-1L );
+
+    void writeArray( const char *name, float*  arr, int size, long int* selAr, 
+    		int nColumns=1, int l_size=-1 );
+    void writeArray( const char *name, double* arr, int size, long int* selAr, 
+    		int nColumns=1, int l_size=-1 );
+    void writeArray( const char *name, short* arr, int size, long int* selAr, 
+    		int nColumns=1, int l_size=-1 );
 
 };
 
@@ -44,15 +60,15 @@ public:
 struct outField
  {
    char name[20]; // name of field in structure
-   short alws;    // 1 - must be read, 0 - default values can be used
-   short readed;  // 0; set to 1 after reading the field from input file
+   long int alws;    // 1 - must be read, 0 - default values can be used
+   long int readed;  // 0; set to 1 after reading the field from input file
 };
 
  class TReadArrays  // read fields of structure
  {
 
     fstream& ff;
-    short numFlds;
+    long int numFlds;
     outField* flds;
 
  public:
@@ -64,36 +80,37 @@ struct outField
     void  skipSpace();
     void reset();  // reset to 0 all flags (readed)
 
-    short findFld( const char *Name ); // find field by name
-    short findNext();  // read next name from file and find in fields list
+    long int findFld( const char *Name ); // find field by name
+    long int findNext();  // read next name from file and find in fields list
     void  readNext( const char* label);
-    void  setNoAlws( short ii )
+    void  setNoAlws( long int ii )
     {  flds[ii].alws = 0; }
 
     void  setNoAlws( const char *Name )
     {
-         short ii = findFld( Name );
+    	long int ii = findFld( Name );
          if( ii >=0 )
             setNoAlws(ii);
     }
 
-    void  setAlws( short ii )
+    void  setAlws( long int ii )
     {  flds[ii].alws = 1; }
 
     void  setAlws( const char *Name )
     {
-         short ii = findFld( Name );
+    	long int ii = findFld( Name );
          if( ii >=0 )
             setAlws(ii);
     }
 
     gstring testRead();   // test for reading all arrays
 
-    void readArray( const char *name, short* arr, int size );
-    void readArray( const char *name, int* arr, int size );
-    void readArray( const char *name, float* arr, int size );
-    void readArray( const char *name, double* arr, int size );
-    void readArray( const char *name, char* arr, int size, int el_size );
+    void readArray( const char *name, short* arr, long int size );
+    void readArray( const char *name, int* arr, long int size );
+    void readArray( const char *name, long int* arr, long int size );
+    void readArray( const char *name, float* arr, long int size );
+    void readArray( const char *name, double* arr, long int size );
+    void readArray( const char *name, char* arr, long int size, long int el_size );
 
 };
 
