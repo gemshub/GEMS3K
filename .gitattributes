@@ -71,6 +71,11 @@ GEMIPM2K/test/CalcColumn-ipm.dat -text
 GEMIPM2K/test/Readme.1st -text
 GEMIPM2K/test/TEST.BAT -text
 GEMIPM2K/test/test.sh -text
+GEMIPM2K/testPitzer/Makefile -text
+GEMIPM2K/testPitzer/gem_pitz.pro -text
+GEMIPM2K/testPitzer/main.cpp -text
+GEMIPM2K/testPitzer/s_pitzer.cpp -text
+GEMIPM2K/testPitzer/s_pitzer.h -text
 GEMIPM2K/tnt.h -text
 GEMIPM2K/tnt_array1d.h -text
 GEMIPM2K/tnt_array2d.h -text
