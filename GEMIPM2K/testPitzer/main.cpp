@@ -18,6 +18,7 @@
 
 #include <time.h>
 #include <math.h>
+#include <iostream.h>
 
 
 #include "s_pitzer.h"
@@ -25,66 +26,51 @@
 int main( int argc, char* argv[] )
  {
    // Default arguments
-    long int NComp  = 6; //!!!!
-    double aWx[6] = { 0.,0.,0.,0.,0.,0.9 } ;
-    double alnGam[6]; // Cl-, Na+, NaCl@, H+, OH-, H2O@ 
-                       // 0    1    2      3   4    5
-    double aM[6] = { 5., 5., 0., 1e-7, 1e-7, 0., };
-    double aZ[6] = { -1., 1., 0., 1., -1., 0.};
+    long int NComp  = 3; //!!!!
+    double aWx[3] = { 0.,0.,0.8222 } ;
+    double alnGam[6]; // Na+, Cl-, H2O@
+                       // 0    1    2
+    double aM[6] = { 6., 6., 0.,};
+    double aZ[6] = { 1., -1., 0.,};
 
-    long int MaxOrd = 4; 
+    long int MaxOrd = 4;
     long int NPcoef = 5; // or 8
 
-    long int NPar = 13; //!!!!
-    long int aIPx[13*4] = { 
-    		1, 0, -1, -10,
-    		3, 0, -1, -10,
-    		1, 4, -1, -10,
-    		1, 0, -1, -11,
-    		3, 0, -1, -11,
-    		1, 4, -1, -11,
-    		1, 0, -1, -20,
-    		3, 0, -1, -20,
-    		1, 4, -1, -20,
-    		
-    		1, 3, -1, -40,
-    		1, 3, 0, -50,
-    	    0, 4, -1, -41,
-    		0, 4, 1, -51 };
-    
-    double aIPc[13*5] = { 
+    long int NPar = 3; //!!!!
+    long int aIPx[3*4] = {
+    		0, 1, -1, -10,
+    		0, 1, -1, -11,
+    		0, 1, -1, -20,
+    };
+
+    double aIPc[3*5] = {
     		0.0765, 0., 0., 0., 0.,
-    		0.1775, 0., 0., 0., 0.,
-    		0.0864, 0., 0., 0., 0.,
     		0.2664, 0., 0., 0., 0.,
-    		0.2945, 0., 0., 0., 0.,
-    		0.253, 0., 0., 0., 0.,
     		0.00127, 0., 0., 0., 0.,
-    		0.00080, 0., 0., 0., 0.,
-    		0.0044, 0., 0., 0., 0.,
-    		0.036, 0., 0., 0., 0.,
-    		-0.004, 0., 0., 0., 0.,
-    		-0.050, 0., 0., 0., 0.,
-    		-0.006, 0., 0., 0., 0.};
-    
+    };
+
     long int NP_DC = 0;
     double *aDCc = NULL;
-    
-    double RhoW = 1., EpsW = 2., IS = 1. ;
+
+    double RhoW = 1., EpsW = 78.38, IS = 10. ;
     double T_k = 298.15;
     double P_bar = 1.;
+    char letter;
 
     TPitzer *aPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd,
 	         NP_DC/**/, T_k, P_bar, 'Z',
 	         aIPx, aIPc, aDCc/**/,
-	         aWx /**/, alnGam, aM, aZ, 
+	         aWx /**/, alnGam, aM, aZ,
 	         RhoW, EpsW, IS );
-
+cout << "TPitzer class instance initialized: enter any character to proceed" << endl;
+cin >> letter;
     aPT->Pitzer_calc_Gamma();
+cout << "Pitzer activity coefficients calculated: enter any character to finish" << endl;
+cin >> letter;
     aPT->Pitzer_test_out( "Pitzer_test.out" );
+cout << "See file 'Pitzer_test.out' for results. Bye!" << endl;
+    delete aPT;
 
-    delete aPT;  
-    
     return 0;
 }
 
