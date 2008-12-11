@@ -99,18 +99,18 @@ int TUnSpace::TaskSystemInit( const char *chbr_in1 )
      
   //    MTPARM *tpp;
     pmu->tpp_G = new double[pmu->L]; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole 
-    pmu->tpp_S = new float[pmu->L];    // Partial molar(molal) entropy s(TP), J/mole/K
+    pmu->tpp_S = new double[pmu->L];    // Partial molar(molal) entropy s(TP), J/mole/K
     pmu->tpp_Vm = new double[pmu->L];   // Partial molar(molal) volume Vm(TP) (always), J/bar
-    memset( pmu->tpp_G, 0, pmu->L*sizeof(double) );
-    memset( pmu->tpp_S, 0, pmu->L*sizeof(float) );
-    memset( pmu->tpp_Vm, 0, pmu->L*sizeof(double) );
+    fillValue( pmu->tpp_G, 0., pmu->L );
+    fillValue( pmu->tpp_S, 0., pmu->L );
+    fillValue( pmu->tpp_Vm, 0., pmu->L );
     tpp_S = pmu->S0;  // overload
 
      
-     pmu->Guns = new float[pmu->L];  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
-     pmu->Vuns = new float[pmu->L];  //  mu.L work vector of uncertainty space increments to tp->Vm
-     memset( pmu->Guns, 0, pmu->L*sizeof(float) );
-     memset( pmu->Vuns, 0, pmu->L*sizeof(float) );
+     pmu->Guns = new double[pmu->L];  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
+     pmu->Vuns = new double[pmu->L];  //  mu.L work vector of uncertainty space increments to tp->Vm
+     fillValue( pmu->Guns, 0., pmu->L );
+     fillValue( pmu->Vuns, 0., pmu->L );
 
      
   return 0;
@@ -128,7 +128,8 @@ TUnSpace::CalcTask( const char *key )
                                   // for each cicle
     }
 
-    usp->A = pmu->A;
+   for( int ii=0; ii<(usp->L* usp->N); ii++ )
+     usp->A[ii] = pmu->A[ii];
     
     for( int ii=0; ii<nAdapt; ii++ )
     {
@@ -547,7 +548,7 @@ if( usp->nPhA > 0 )
 void TUnSpace::work_dyn_new()
 {
 //  work (not in record)
-//??pmu->A??    usp->A = new float[ usp->L* usp->N];
+    usp->A = new float[ usp->L* usp->N];
     usp->sv = new short[ usp->Q];
 
     usp->Zcp = new double[ usp->Q];

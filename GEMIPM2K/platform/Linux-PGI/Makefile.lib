@@ -10,16 +10,21 @@ LINK = pgCC
 LFLAGS = -lstdc++ -lgfortran
 LIB = libgemipm2k-pgi.a
 
-${LIB}: gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
+${LIB}:  gstring.o gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o \
+       node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
-       
-	ar -rvs ${LIB} gstring.o gdatastream.o s_fgl.o s_fgl2.o node.o node_format.o ms_multi_file.o \
+# mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o 
+             
+	ar -rvs ${LIB} gstring.o gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o \
+	   node.o node_format.o ms_multi_file.o \
        ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
        ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
 
 gstring.o: gstring.cpp gstring.h \
-		array.h
+		v_user.h \
+		array.h \
+		verror.h
 	$(CXX)  $(CCFLAGS) gstring.cpp
 gdatastream.o: gdatastream.cpp gdatastream.h \
 		verror.h \
@@ -27,12 +32,17 @@ gdatastream.o: gdatastream.cpp gdatastream.h \
 		array.h
 	$(CXX)  $(CCFLAGS) gdatastream.cpp
 s_fgl.o: s_fgl.cpp s_fgl.h \
-		m_const.h \
 		verror.h \
-		v_user.h \
+		m_const.h \
+		gstring.h \
+		array.h \
+		v_user.h
+	$(CXX)  $(CCFLAGS) s_fgl.cpp
+s_fgl1.o: s_fgl1.cpp verror.h \
+		s_fgl.h \
 		gstring.h \
 		array.h
-	$(CXX)  $(CCFLAGS) s_fgl.cpp
+	$(CXX)  $(CCFLAGS) s_fgl1.cpp
 s_fgl2.o: s_fgl2.cpp s_fgl.h \
 		m_const.h \
 		verror.h \
@@ -40,8 +50,19 @@ s_fgl2.o: s_fgl2.cpp s_fgl.h \
 		gstring.h \
 		array.h
 	$(CXX)  $(CCFLAGS) s_fgl2.cpp
+s_fgl3.o: s_fgl3.cpp verror.h \
+		s_fgl.h \
+		gstring.h \
+		array.h
+	$(CXX)  $(CCFLAGS) s_fgl3.cpp
+s_fgl4.o: s_fgl4.cpp verror.h \
+		s_fgl.h \
+		gstring.h \
+		array.h
+	$(CXX)  $(CCFLAGS) s_fgl4.cpp
 node.o: node.cpp node.h \
 		gdatastream.h \
+		num_methods.h \
 		m_param.h \
 		datach.h \
 		databr.h \
@@ -50,40 +71,44 @@ node.o: node.cpp node.h \
 		gstring.h \
 		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h
 	$(CXX)  $(CCFLAGS) node.cpp
 node_format.o: node_format.cpp io_arrays.h \
-                node.h \
+		node.h \
 		gdatastream.h \
+		gstring.h \
+		array.h \
 		m_param.h \
 		datach.h \
 		databr.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h
 	$(CXX)  $(CCFLAGS) node_format.cpp
 ms_multi_file.o: ms_multi_file.cpp  io_arrays.h \
-                m_param.h \
+		m_param.h \
 		gdatastream.h \
-		ms_multi.h \
-		verror.h \
 		gstring.h \
 		array.h \
+		ms_multi.h \
+		verror.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h
 	$(CXX)  $(CCFLAGS) ms_multi_file.cpp
 ms_multi_format.o: ms_multi_format.cpp  io_arrays.h \
-                m_param.h \
+		m_param.h \
 		node.h \
+		gstring.h \
+		array.h \
 		gdatastream.h \
 		ms_multi.h \
 		verror.h \
-		gstring.h \
-		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h \
 		datach.h \
 		databr.h
@@ -95,6 +120,7 @@ ipm_chemical.o: ipm_chemical.cpp m_param.h \
 		gstring.h \
 		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h
 	$(CXX)  $(CCFLAGS) ipm_chemical.cpp
 ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
@@ -104,6 +130,7 @@ ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
 		gstring.h \
 		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h
 	$(CXX)  $(CCFLAGS) ipm_chemical2.cpp
 ipm_chemical3.o: ipm_chemical3.cpp m_param.h \
@@ -126,6 +153,7 @@ ipm_main.o: ipm_main.cpp m_param.h \
 		gstring.h \
 		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h \
 		tnt.h \
 		tnt_array1d.h \
@@ -141,13 +169,14 @@ ipm_simplex.o: ipm_simplex.cpp m_param.h \
 		gstring.h \
 		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h
 	$(CXX)  $(CCFLAGS) ipm_simplex.cpp
 io_arrays.o: io_arrays.cpp io_arrays.h \
 		verror.h \
+		v_user.h \
 		gstring.h \
 		array.h
-	$(CXX)  $(CCFLAGS) io_arrays.cpp
 ms_param.o: ms_param.cpp m_param.h \
 		num_methods.h \
 		gdatastream.h \
@@ -157,6 +186,7 @@ ms_param.o: ms_param.cpp m_param.h \
 		gstring.h \
 		array.h \
 		m_const.h \
+		s_fgl.h \
 		v_user.h \
 		datach.h \
 		databr.h
@@ -174,4 +204,4 @@ num_methods.o: num_methods.cpp v_user.h \
 #kinetics.inc: kinetics.inc
 
 clean: 
-	rm -f *.o *.ti
+	rm -f *.o *.ti *.a

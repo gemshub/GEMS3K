@@ -18,14 +18,16 @@
 
 #include <time.h>
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 
-#include "s_pitzer.h"
+#include "s_fgl.h"
 
 int main( int argc, char* argv[] )
  {
    // Default arguments
+    double phVOL[1] = {1.};
     long int NComp  = 3; //!!!!
     double aWx[3] = { 0.,0.,0.8222 } ;
     double alnGam[6]; // Na+, Cl-, H2O@
@@ -60,8 +62,8 @@ int main( int argc, char* argv[] )
     TPitzer *aPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd,
 	         NP_DC/**/, T_k, P_bar, 'Z',
 	         aIPx, aIPc, aDCc/**/,
-	         aWx /**/, alnGam, aM, aZ,
-	         RhoW, EpsW, IS );
+	         aWx /**/, alnGam, phVOL, aM, aZ,
+	         RhoW, EpsW );
 cout << "TPitzer class instance initialized: enter any character to proceed" << endl;
 cin >> letter;
     aPT->Pitzer_calc_Gamma();

@@ -29,24 +29,27 @@ LIBS_CPP       =  ../GEMIPM2K
 KERNEL_CPP     =  ../GEMIPM2K
 MODS_CPP       =  ../GEMIPM2K
 SUBMOD_CPP     =  ../GEMIPM2K
-NUMERICS_CPP     =  ../GEMIPM2K
-GEM2MTS_CPP	= .
+NUMERICS_CPP   =  ../GEMIPM2K
+GEMIPM_CPP    =  ../GEMIPM2K
 
 #LIBS_CPP       =  .
 #KERNEL_CPP     =  .
 #MODS_CPP       =  .
 #SUBMOD_CPP     =  .
 #NUMERICS_CPP     =  .
+#GEMIPM_CPP     =  .
 
 KERNEL_H     =  $$KERNEL_CPP
 LIBS_H       =  $$LIBS_CPP
 MODS_H       =  $$MODS_CPP
 SUBMOD_H     =  $$SUBMOD_CPP
-NUMERICS_H     =  $$NUMERICS_CPP
-GEM2MTS_H    = $$GEM2MTS_CPP
+NUMERICS_H   =  $$NUMERICS_CPP
+GEMIPM_H     =  $$GEMIPM_CPP
 
-DEPENDPATH   += ;.;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H;GEM2MTS_H
-INCLUDEPATH   +=;.;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H;GEM2MTS_H
+
+
+DEPENDPATH   += ;.;$$KERNEL_H;$$LIBS_H;$$GEMIPM_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
+INCLUDEPATH   +=;.;$$KERNEL_H;$$LIBS_H;$$GEMIPM_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
 
 OBJECTS_DIR       = obj
 
@@ -60,32 +63,34 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_H/datach.h \
                     $$SUBMOD_H/nodearray.h \
                     $$SUBMOD_H/node.h \
-                    $$GEM2MTS_H/particlearray.h \
+                    particlearray.h \
                     $$SUBMOD_H/ms_multi.h \
 	            $$SUBMOD_H/io_arrays.h \
-		    $$GEM2MTS_H/ms_gem2mt.h \
-		    $$MODS_H/m_const.h \
-		    $$MODS_H/m_param.h  \
-                     $$NUMERICS_H/tnt_i_refvec.h \
-                     $$NUMERICS_H/tnt_array1d.h \
-                     $$NUMERICS_H/tnt_array2d.h \
-                     $$NUMERICS_H/tnt.h \
-                     $$NUMERICS_H/jama_cholesky.h \
-                     $$NUMERICS_H/jama_lu.h \
-                     $$NUMERICS_H/num_methods.h
+		    $$GEMIPM_H/m_const.h \
+		    $$GEMIPM_H/m_param.h  \
+		    ms_gem2mt.h \
+                    $$NUMERICS_H/tnt_i_refvec.h \
+                    $$NUMERICS_H/tnt_array1d.h \
+                    $$NUMERICS_H/tnt_array2d.h \
+                    $$NUMERICS_H/tnt.h \
+                    $$NUMERICS_H/jama_cholesky.h \
+                    $$NUMERICS_H/jama_lu.h \
+                    $$NUMERICS_H/num_methods.h
 
-        SOURCES	  +=  $$LIBS_CPP/gstring.cpp  \
-                      $$LIBS_CPP/gdatastream.cpp  \
-                    $$NUMERICS_CPP/num_methods.cpp \
-                    $$MODS_CPP/s_fgl.cpp \
-                    $$MODS_CPP/s_fgl2.cpp \
-                    $$GEM2MTS_CPP/m_gem2mtt.cpp \
-		    $$GEM2MTS_CPP/m_gem2mtbox.cpp \
-		    $$GEM2MTS_CPP/ms_gem2mt.cpp \
+        SOURCES	  += $$LIBS_CPP/gstring.cpp  \
+                     $$LIBS_CPP/gdatastream.cpp  \
+                     $$NUMERICS_CPP/num_methods.cpp \
+                     $$MODS_CPP/s_fgl.cpp \
+                     $$MODS_CPP/s_fgl1.cpp \
+                     $$MODS_CPP/s_fgl2.cpp \
+                     $$MODS_CPP/s_fgl3.cpp \
+                     $$MODS_CPP/s_fgl4.cpp \
+                    m_gem2mtt.cpp \
+                    m_gem2mtbox.cpp \
                     $$SUBMOD_CPP/nodearray.cpp \
                     $$SUBMOD_CPP/node.cpp \
                     $$SUBMOD_CPP/node_format.cpp \
-                    $$GEM2MTS_CPP/particlearray.cpp \
+                    particlearray.cpp \
                     $$SUBMOD_CPP/ms_multi_file.cpp \
                     $$SUBMOD_CPP/ms_multi_format.cpp \
                     $$SUBMOD_CPP/ipm_chemical.cpp \
@@ -93,6 +98,7 @@ OBJECTS_DIR       = obj
                     $$SUBMOD_CPP/ipm_chemical3.cpp \
                     $$SUBMOD_CPP/ipm_main.cpp \
                     $$SUBMOD_CPP/ipm_simplex.cpp \
-		    $$SUBMOD_CPP/io_arrays.cpp \
-                    $$GEM2MTS_CPP/main.cpp \
-		    $$MODS_CPP/ms_param.cpp
+		            $$SUBMOD_CPP/io_arrays.cpp \
+                    ms_gem2mt.cpp \
+                    main.cpp \
+		            $$GEMIPM_CPP/ms_param.cpp

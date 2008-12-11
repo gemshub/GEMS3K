@@ -312,7 +312,7 @@ TGEM2MT::CalcNewStates(  int Ni, int pr, double tcur, double step)
  if( mtp->PvSIA != S_ON )  
      CalcIPM( NEED_GEM_AIA, 0, mtp->nC, diffile );
  else 
-	 CalcIPM( NEED_GEM_PIA, 0, mtp->nC, diffile );
+	 CalcIPM( NEED_GEM_SIA, 0, mtp->nC, diffile );
  
  if( Ni >= 0 )
  { // Here one has to compare old and new equilibrium phase assemblage
@@ -717,8 +717,8 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments )
   TPrintArrays  prar(ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 2.2.3" << endl;
-      ff << "# Prototype 31.03.2008" << endl;
+   {  ff << "# GEMIPM2K v. 2.2.4" << endl;
+      ff << "# Prototype 11.07.2008" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the Gem2mt data file" << endl;
       ff << "# (should be read before the DATACH, the IPM-DAT and DATABR files)" << endl << endl;
@@ -835,7 +835,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments )
     {
  	   if( _comment )
         ff << "\n# Indexes of nodes where this flux begins and ends";
-        prar.writeArray(  "FDLi", mtp->FDLi[0], mtp->nFD*2,2 );
+        prar.writeArray(  "FDLi", mtp->FDLi[0], mtp->nFD*2, 2 );
  	   if( _comment )
         ff << "\n# Part of the flux defnition list (flux order, flux rate, MPG quantities)";
         prar.writeArray(  "FDLf", mtp->FDLf[0], mtp->nFD*4, 4 );

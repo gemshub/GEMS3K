@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1123 2008-11-25 13:23:26Z gems $
+// $Id: ms_param.cpp 1125 2008-11-26 15:44:58Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -366,8 +366,8 @@ void TMulti::MultiCalcInit( const char* key )
     pmp->MBX /= 1000.;
 
     // optimization 08/02/2007 - allocation of A matrix index lists and IPM work arrays
-    Alloc_A_B( pmp->N );
-    Build_compressed_xAN();
+    
+    Alloc_internal(); // performance optimization 08/02/2007
 
     if(  pmp->pNP )     // Checking if this is SIA or AIA mode 
     {

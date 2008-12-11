@@ -321,10 +321,10 @@ class TUnSpace
 
 // !!! internaal data extracted fron GEMS modelling project
 //    RMULTS* mup;
-   short mup_Laq;     // LO  - of DC in aqueous phase
-   short mup_Pg;      // PG  - of DC in gaseous phase
+   long int mup_Laq;     // LO  - of DC in aqueous phase
+   long int mup_Pg;      // PG  - of DC in gaseous phase
    char (*mup_SF)[MAXPHNAME+MAXSYMB];// List of PHASE definition keys [0:Fi-1]             DB   
-   short  *mup_Ll;          // L1 vector, shows a number of DC included to each phase [0:Fi-1] DB
+   long int  *mup_Ll;          // L1 vector, shows a number of DC included to each phase [0:Fi-1] DB
 
 //    SYSTEM *syu; // syu = TProfil::pm->syp;
 //   char  *syu_Dcl;  // DC selection switches { + * - } [0:mu.L-1]
@@ -334,7 +334,7 @@ class TUnSpace
    
 //    MTPARM *tpp;
 //   double *tpp_G; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole 
-   float *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
+   double *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
 //   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
     
 //    SYSTEM *syu; // syu = TProfil::pm->syp;

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 1121 2008-11-25 10:16:38Z gems $
+// $Id: v_user.h 1143 2008-12-10 14:40:41Z gems $
 //
 // Declaration of platform-specific utility functions and classes
 //
@@ -219,7 +219,7 @@ u_splitpath(const gstring& Path, gstring& dir,
 #define fileNameLength 64
 // Get Path of file and Reading list of file names from it, return number of files 
 char  (* f_getfiles(const char *f_name, char *Path, 
-		int& nElem, char delim ))[fileNameLength];
+		long int& nElem, char delim ))[fileNameLength];
 
 
 #endif

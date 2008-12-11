@@ -1070,7 +1070,7 @@ long int TMulti::SolverLinearEquations( long int N, bool initAppr )
 {
   long int ii,i, jj, kk, k, Na = pmp->N;
 //  double aa;
-  Alloc_A_B( N );
+  Alloc_A_B( N ); 
 
   // Making the  matrix of IPM linear equations
   for( kk=0; kk<N; kk++)
@@ -1117,11 +1117,11 @@ long int TMulti::SolverLinearEquations( long int N, bool initAppr )
   Array2D<double> A(N,N);
   Array1D<double> B(N);
 
-  for( kk=0; kk<N; kk++)
-   for( ii=0; ii<N; ii++ )
+  for(int kk=0; kk<N; kk++)
+   for(int ii=0; ii<N; ii++ )
       A[kk][ii] = (*(AA+(ii)+(kk)*N));
 
-   for( ii=0; ii<N; ii++ )
+   for(int ii=0; ii<N; ii++ )
      B[ii] = BB[ii];
   
 #endif
@@ -1474,8 +1474,8 @@ void TMulti::Build_compressed_xAN()
 {
  long int ii, jj, k;
 
- if( arrL && arrAN && (sizeL == pmp->L+1) && ( sizeAN == pmp->N ) )  
-   return; // The index arrays are intact - no need to remake (added by DK 27.05.08) !
+ //if( arrL && arrAN && (sizeL == pmp->L+1) && ( sizeAN == pmp->N ) )  
+ //  return; // The index arrays are intact - no need to remake (added by DK 27.05.08)  SD 26/11/2008
  
  // Calculate number of non-zero elements in A matrix
  k = 0;
@@ -1488,8 +1488,8 @@ void TMulti::Build_compressed_xAN()
     Free_compressed_xAN();
  
    // Allocate memory
-   arrL = new long int[pmp->L+1]; sizeL = pmp->L+1;
-   arrAN = new long int[k];  sizeAN = pmp->N; // sizeAN = k; 
+   arrL = new long int[pmp->L+1]; // sizeL = pmp->L+1;
+   arrAN = new long int[k];       // sizeAN = pmp->N; // sizeAN = k; 
 
    // Set indexes in the index arrays
    k = 0;
@@ -1509,15 +1509,16 @@ void TMulti::Build_compressed_xAN()
 void TMulti::Free_compressed_xAN()
 {
   if( arrL  )
-    { delete[] arrL; arrL = 0; sizeL = 0; }
+    { delete[] arrL; arrL = 0;  }
   if( arrAN )
-    { delete[] arrAN; arrAN = 0; sizeAN = 0; }
+    { delete[] arrAN; arrAN = 0;  }
 }
 
 void TMulti::Free_internal()
 {
   Free_compressed_xAN();
   Free_A_B();
+  Free_TSolMod();
 }
 
 void TMulti::Alloc_internal()
@@ -1525,5 +1526,6 @@ void TMulti::Alloc_internal()
 // optimization 08/02/2007
  Alloc_A_B( pmp->N );
  Build_compressed_xAN();
+ Alloc_TSolMod( pmp->FIs );
 }
 //--------------------- End of ipm_main.cpp ---------------------------

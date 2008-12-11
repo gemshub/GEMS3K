@@ -35,7 +35,7 @@ void TUnSpace::unsp_eqkey()
 {
 
 	double calculation_time;
-    int NumPrecLoops = 0, NumIterFIA = 0, NumIterIPM = 0;
+    long int NumPrecLoops = 0, NumIterFIA = 0, NumIterIPM = 0;
 
 #ifndef IPMGEMPLUGIN
 
@@ -51,24 +51,71 @@ void TUnSpace::unsp_eqkey()
     gcvt( usp->Pc, 6,  usp->Pp );
     gcvt( usp->Vc, 6,  usp->Bnamep );
 
+ //  rt[RT_SYSEQ].MakeKey( RT_UNSPACE,  usp->stkey, RT_UNSPACE, 0, RT_UNSPACE,1,
+ //       RT_UNSPACE, 2, K_IMM, usp->timep, K_IMM, usp->Bnamep,
+ //       K_IMM, usp->Pp, K_IMM, usp->TCp, RT_UNSPACE, 7, K_END );
    rt[RT_SYSEQ].MakeKey( RT_UNSPACE,  usp->stkey, RT_UNSPACE, 0, RT_UNSPACE,1,
-        RT_UNSPACE, 2, K_IMM, usp->timep, K_IMM, usp->Bnamep,
-        K_IMM, usp->Pp, K_IMM, usp->TCp, RT_UNSPACE, 7, K_END );
+        RT_UNSPACE, 2, RT_UNSPACE, 3, K_IMM, usp->Bnamep,
+        K_IMM, usp->Pp, K_IMM, usp->TCp, K_IMM, usp->timep, K_END );
    rt[RT_SYSEQ].Find(usp->stkey);
 
 // calc current SyStat 16/02/2007
      pmu->TCc = usp->Tc;
      pmu->Pc = usp->Pc;
-     
-     
+         
      calculation_time = TProfil::pm->calcMulti( NumPrecLoops, NumIterFIA, NumIterIPM );
     //TProfil::pm->CalcEqstat( false ); // 16/02/2007
 // Later: to implement account for calculation time and numbers of iterations/loops
 
+// Added 05.06.2008 by DK to save g0 variations done by UnSpace
+// by incrementing them to GEX in SysEq records (needed for diagnostic SyEq records) 
+  int k, jb, je, j, jj; 
+  double Gg, Ge, Go, pGo;   
+  for( k = 0, je=0; k < pmu->FI; k++ )
+  {
+   	jb = je;
+   	je += pmu->L1[k];
+   	for( j=jb; j<je; j++ )
+    {    		
+       Gg = 0.0;    //   This part had to be changed after integrating Ge into pmp->G0 
+       jj = pmu->muj[j]; //        DK    07.03.2008,  16.05.2008
+       Go = TProfil::pm->tpp->G[jj]; //  G0(T,P) value taken from MTPARM
+       if( syu->Guns )  // This is used mainly in UnSpace calculations
+           Gg = syu->Guns[jj];    // Increment to G0 set by UnSpace
+// Here we determine what was the initial syp->GEX[jj] increment
+       pGo = TProfil::pm->pmulti->Cj_init_calc( Go+Gg, j, k );
+       Ge = ( pmu->G0[j] - pGo )* pmu->RT; 
+       if( TProfil::pm->syp->GEX ) // Setting Gg + Ge to syp->GEX[jj]
+    	   TProfil::pm->syp->GEX[jj] = Gg + Ge;   // Ge is part of pmp->G0 since 07.03.2008 (DK)  
+//       if( syu->GEX && syu->PGEX != S_OFF )
+//           syu->GEX[jj] = Gg + Ge;       
+    } // j loop
+  } // k loop	
     if( usp->PsSY != S_OFF )
-       TSysEq::pm->CmSave();           // save results to DB
+       TSysEq::pm->CmSave();           // save SysEq record with results to DB
     if( usp->stl )
        memcpy( usp->stl+usp->q, usp->stkey, EQ_RKLEN );
+ 
+    for( k = 0, je=0; k < pmu->FI; k++ )
+    {
+     	jb = je;
+     	je += pmu->L1[k];
+     	for( j=jb; j<je; j++ )
+      {    		
+         Gg = 0.0;    //   This part had to be changed after integrating Ge into pmp->G0 
+         jj = pmu->muj[j]; //        DK    07.03.2008,  16.05.2008
+         Go = TProfil::pm->tpp->G[jj]; //  G0(T,P) value taken from MTPARM
+         if( syu->Guns )  // This is used mainly in UnSpace calculations
+             Gg = syu->Guns[jj];    // Increment to G0 set by UnSpace
+  // Here we determine what was the initial syp->GEX[jj] increment
+         pGo = TProfil::pm->pmulti->Cj_init_calc( Go+Gg, j, k );
+         Ge = ( pmu->G0[j] - pGo ) * pmu->RT; 
+         if( TProfil::pm->syp->GEX ) // Setting Gg + Ge to syp->GEX[jj]
+      	   TProfil::pm->syp->GEX[jj] = Ge;   
+  //       if( syu->GEX && syu->PGEX != S_OFF )
+  //           syu->GEX[jj] = Ge;       
+      } // j loop
+    } // k loop
     
 #else
     // calculate EqStat record (Thermodynamic&Equlibria)
@@ -140,22 +187,16 @@ if(!Ip)
 //                                     pmu->G[i];
      }
 
-     /*for( i=0; i<usp->L; i++) //16/02/2007
-    {
-       double xx = (float)(pmu->Guns[i]);
-              xx += (float)(syu->GEX[i]);
-              xx += TProfil::pm->tpp->G[i];
-       usp->vG[Ip*usp->L+i]= xx;
-     }*/
      for( i=0; i<pmu->L; i++)
      { int ii = (pmu->muj[i]);
 #ifndef IPMGEMPLUGIN
-       double xx = (float)(syu->Guns[ii]);
-            xx += (float)(pmu->GEX[i])/pmu->RT; // syu->GEX[ii]
-            xx += TProfil::pm->tpp->G[ii];
+       double xx = (double)(syu->Guns[ii]);
+       xx += (double)(TProfil::pm->syp->GEX[ii]);  // Added by DK 05.06.2008
+//            xx += (float)(pmu->GEX[i])/pmu->RT; // syu->GEX[ii]
+       xx += TProfil::pm->tpp->G[ii];
 #else
-       double xx = (float)(pmu->Guns[ii]);
-            xx += (float)(pmu->GEX[i])/pmu->RT; // syu->GEX[ii]
+       double xx = (pmu->Guns[ii]);
+//            xx += (float)(pmu->GEX[i])/pmu->RT; // syu->GEX[ii]
             xx += pmu->tpp_G[ii];
 #endif
       usp->vG[Ip*usp->L+ii]= xx;
@@ -636,14 +677,16 @@ return(Filtr);
 }
 
 //=========================================================================
-// Calculated part (not for change)
+// Calculation part for the payoffs matrix
 
-// calculate element pay-off matrix e(t,q) function (1)
+// Returns an element e(t,q) of the pay-off matrix using function A
+//    Eq. 8 on p.18,19 of TM-44-04-01 (with v_qt_j if PvSi == ON or a 
+//    simplified function with v_q_j if PvSi == OFF ) 
 // i=t, j=q
-double TUnSpace::ePO( int i, int j )
+double TUnSpace::ePO( int t, int q )
 {
-  double PM,/*rab,*/RG;
-  int k,ii,z,GF=-1,WF=-1,i1,j1;
+  double PM,/*rab,*/RG, RGT, ln5551 = 4.0165339;
+  int i,k,ii,z,GF=-1,WF=-1,i1,j1;
   short Laq_;
 #ifndef IPMGEMPLUGIN
   Laq_ = TProfil::pm->mup->Laq;
@@ -651,12 +694,14 @@ double TUnSpace::ePO( int i, int j )
   Laq_ = mup_Laq; 
 #endif
   
-  RG = R_CONSTANT;
   if(usp->PvSi == S_ON)
-    { j1=j; i1=i;}
+    { j1=q; i1=t; i=t; }
   else
-    { j1=i; i1=j;}
+    { j1=q; i1=t; i=q; }
 
+  RG = R_CONSTANT;
+  RGT = RG*(usp->vT[j1]+273.15);
+    
   if( Laq_ )
      WF=0;
 
@@ -687,32 +732,32 @@ double TUnSpace::ePO( int i, int j )
                usp->vY[i*usp->L+( Laq_ )-1] >1e-19 &&
                usp->vY[i*usp->L+ k ] >1e-19 )
 
-             PM += (usp->vG[j1*usp->L+k]/(RG*(usp->vT[j1]+273.15)) + log(55.51) - usp->vY[i*usp->L+(Laq_)-1]/
+             PM += (usp->vG[j1*usp->L+k]/RGT + ln5551 - usp->vY[i*usp->L+(Laq_)-1]/
                     usp->vYF[i*usp->Fi] + log(usp->vY[i*usp->L+k]) - log(usp->vY[i*usp->L+(Laq_)-1]) +
-                    1. + usp->vGam[i*usp->L+k]) * usp->vY[i*usp->L+k];
+                    1. + usp->vGam[i*usp->L+k]) * usp->vY[i1*usp->L+k];
 
            if( k == (Laq_-1) &&
                usp->vY[i*usp->L+(Laq_-1)] > 1e-19 &&
                usp->vYF[i*usp->Fi+z] > 1e-19 )
 
-              PM += (usp->vG[j1*usp->L+k]/(RG*(usp->vT[j1]+273.15)) + log( usp->vY[i*usp->L+k] ) - log( usp->vYF[i*usp->Fi+z] ) -
+              PM += (usp->vG[j1*usp->L+k]/RGT + log( usp->vY[i*usp->L+k] ) - log( usp->vYF[i*usp->Fi+z] ) -
                   ( usp->vY[i*usp->L+k] / usp->vYF[i*usp->Fi+z]) - ( usp->vYF[i*usp->Fi+z] / usp->vY[i*usp->L+k]) +
-                  2.+ usp->vGam[i*usp->L+k]) * usp->vY[i*usp->L+k];
+                  2.+ usp->vGam[i*usp->L+k]) * usp->vY[i1*usp->L+k];
 
           continue;
          }
         if ( z==GF)
         { if( usp->vY[i*usp->L+k] > 1e-19 &&  usp->vYF[i*usp->Fi+z] >1e-19 )
-            PM += ( usp->vG[j1*usp->L+k] / (RG*(usp->vT[j1]+273.15)) +
+            PM += ( usp->vG[j1*usp->L+k] / RGT  +
                     log(usp->vY[i*usp->L+k]) - log(usp->vYF[i*usp->Fi+z]) +
-                    usp->vGam[i*usp->L+k] + log(usp->vP[i]) ) * (usp->vY[i*usp->L+k]);
+                    usp->vGam[i*usp->L+k] + log(usp->vP[i]) ) * (usp->vY[i1*usp->L+k]);
          continue;
         }
         if( z>WF && z>GF &&
             usp->vY[i*usp->L+k] > 1e-19 &&
             usp->vYF[i*usp->Fi+z] > 1e-19 )
-           PM += ( usp->vG[j1*usp->L+k] / (RG*(usp->vT[j1]+273.15)) + log(usp->vY[i*usp->L+k])
-                   - log(usp->vYF[i*usp->Fi+z])  + usp->vGam[i*usp->L+k] ) * (usp->vY[i*usp->L+k] );
+           PM += ( usp->vG[j1*usp->L+k] / RGT  + log(usp->vY[i*usp->L+k])
+           - log(usp->vYF[i*usp->Fi+z])  + usp->vGam[i*usp->L+k] ) * (usp->vY[i1*usp->L+k] );
        }
 #ifndef IPMGEMPLUGIN
     ii += TProfil::pm->mup->Ll[z];
@@ -724,17 +769,19 @@ double TUnSpace::ePO( int i, int j )
 //     for( z=0; z<usp->N; z++) // 16/02/2007
 //       PM -= syu->B[z] * (usp->vU[i1*usp->N+z]);
        for( z=0; z<pmu->N; z++) //  B[z] is zero behind MULTI
-         PM -= pmu->B[z] * (usp->vU[i1*usp->N+(pmu->mui[z])]);
+         PM -= pmu->B[z] * (usp->vU[i1*usp->N+(pmu->mui[z])]); 
+         // To check that vB[] is properly used here except pmu->B[] !!!! 
 
    return(PM);
 }
 
-// calculate element pay-off matrix e(t,q) function (2)
+// calculate the element e(t,q) of the pay-off matrix B
+// Eq 9 on p. 20 of TM 44-04-01 (with v_qt,j if PvSi == ON and v_q_j otherwise)
 // i=t, j=q
-double TUnSpace::ePO1( int i,int j )
+double TUnSpace::ePO1( int t, int q )
 {
-  double PM/*,rab*/,RG;
-  int k,ii,z,GF=-1,WF=-1,i1,j1;
+	  double /*rab,*/RG, RGT, ln5551 = 4.0165339;
+	  int i,k,ii,z,zi,GF=-1,WF=-1,i1,j1, L1F;
   short Laq_;
 #ifndef IPMGEMPLUGIN
   Laq_ = TProfil::pm->mup->Laq;
@@ -742,11 +789,14 @@ double TUnSpace::ePO1( int i,int j )
   Laq_ = mup_Laq; 
 #endif
 
-  RG = R_CONSTANT;
   if(usp->PvSi == S_ON)
-    { j1=j; i1=i;}
+    { j1=q; i1=t; i=t; }
   else
-    { j1=i; i1=j;}
+    { j1=q; i1=t; i=q; }
+
+  RG = R_CONSTANT;
+  RGT = RG*(usp->vT[j1]+273.15);
+    
   if( Laq_ )
      WF=0;
 
@@ -760,225 +810,264 @@ double TUnSpace::ePO1( int i,int j )
     else GF=1;
    }
 
-  PM=0.;
+  double PM=0.;   // Sum for primal potentials for species
+  double DM=0.,    // Sum for dual potential for species 
+         DDM=0.,  // Sum for differences between PM and DM for a single species 
+         Dif, Ps, Ds, Ddm1;   // Difference, primal, dual potential for a species 
   ii=0;
   for( z=0; z<usp->Fi; z++)
   {
 #ifndef IPMGEMPLUGIN
-    for( k=ii; k<ii+(TProfil::pm->mup->Ll[z]); k++)
-       if (syu->Dcl[k]!=S_OFF )
+L1F = TProfil::pm->mup->Ll[z];
+  for( k=ii; k<ii+(TProfil::pm->mup->Ll[z]); k++)
+  {
+	  if (syu->Dcl[k]==S_OFF )
+		 continue; 
 #else
-     for( k=ii; k<ii+(mup_Ll[z]); k++)
-//         if (syu_Dcl[k]!=S_OFF )
+L1F = mup_Ll[z];
+  for( k=ii; k<ii+(mup_Ll[z]); k++)
+//    if (syu_Dcl[k]!=S_OFF )
+  {	  
 #endif
-    {
+      Ps = Ds = 0.;
       if( z==WF )
       {
-         if( k < (Laq_-1) &&
-               usp->vYF[i*usp->Fi] >1e-19 &&
-               usp->vY[i*usp->L+(Laq_)-1] >1e-19 &&
-               usp->vY[i*usp->L+ k ] >1e-19  )
-
-             PM += usp->vG[j1*usp->L+k]/(RG*(usp->vT[j1]+273.15)) + log(55.51) - usp->vY[i*usp->L+(Laq_-1)]/
+         if( k < (Laq_-1) &&  usp->vYF[i*usp->Fi] >1e-19 &&
+               usp->vY[i*usp->L+(Laq_)-1] >1e-19 && usp->vY[i*usp->L+ k ] >1e-19  )
+         {
+        	 Ps = usp->vG[j1*usp->L+k]/RGT + ln5551 - usp->vY[i*usp->L+(Laq_-1)]/
                     usp->vYF[i*usp->Fi] + log(usp->vY[i*usp->L+k]) - log(usp->vY[i*usp->L+(Laq_-1)]) +
                    1. + usp->vGam[i*usp->L+k];
-
-           if( k == (Laq_-1) && usp->vY[i*usp->L+(Laq_-1)] > 1e-19 &&
+             for( zi=0; zi<usp->N; zi++)
+                Ds += usp->A[k*usp->N+zi]* (usp->vU[i1*usp->N+zi]);
+         }
+         if( k == (Laq_-1) && usp->vY[i*usp->L+(Laq_-1)] > 1e-19 &&
                usp->vYF[i*usp->Fi+z] > 1e-19 )
-
-              PM += usp->vG[j1*usp->L+k]/(RG*(usp->vT[j1]+273.15)) + log( usp->vY[i*usp->L+k] ) - log( usp->vYF[i*usp->Fi+z] ) -
+         {
+           	 Ps = usp->vG[j1*usp->L+k]/RGT + log( usp->vY[i*usp->L+k] ) - log( usp->vYF[i*usp->Fi+z] ) -
                  ( usp->vY[i*usp->L+k] / usp->vYF[i*usp->Fi+z]) - ( usp->vYF[i*usp->Fi+z] / usp->vY[i*usp->L+k]) +
                  2.+ usp->vGam[i*usp->L+k];
-
-            continue;
+           	for( zi=0; zi<usp->N; zi++)
+           	     Ds += usp->A[k*usp->N+zi]* (usp->vU[i1*usp->N+zi]);
          }
+         goto SPECIES;
+        }
         if ( z==GF)
-        { if( (usp->vY[i*usp->L+k] > 1e-19) && usp->vYF[i*usp->Fi+z] >1e-19 )
-            PM += ( usp->vG[j1*usp->L+k] / (RG*(usp->vT[j1]+273.15)) + log(usp->vY[i*usp->L+k]) - log(usp->vYF[i*usp->Fi+z]) +
+        { 
+        	if( (usp->vY[i*usp->L+k] > 1e-19) && usp->vYF[i*usp->Fi+z] >1e-19 )
+        	{	
+              Ps = ( usp->vG[j1*usp->L+k] / RGT + log(usp->vY[i*usp->L+k]) - log(usp->vYF[i*usp->Fi+z]) +
                     usp->vGam[i*usp->L+k] + log(usp->vP[i]) );
-            continue;
+              for( zi=0; zi<usp->N; zi++)
+                 Ds += usp->A[k*usp->N+zi]* (usp->vU[i1*usp->N+zi]);
+        	}
+        	goto SPECIES;
         }
-        if( z>WF && z>GF &&
-            usp->vY[i*usp->L+k] > 1e-19 &&  usp->vYF[i*usp->Fi+z] > 1e-19 )
-           PM += ( usp->vG[j1*usp->L+k] / (RG*(usp->vT[j1]+273.15)) + log(usp->vY[i*usp->L+k])
+        if( z>WF && z>GF && L1F > 1 )
+        {	 // Multicomponent condensed solution phase
+        	if (usp->vY[i*usp->L+k] > 1e-19 &&  usp->vYF[i*usp->Fi+z] > 1e-19 )     
+            {  
+        	   Ps = ( usp->vG[j1*usp->L+k] / RGT + log(usp->vY[i*usp->L+k])
                    - log(usp->vYF[i*usp->Fi+z]) + usp->vGam[i*usp->L+k] );
+        	   for( zi=0; zi<usp->N; zi++)
+        	                   Ds += usp->A[k*usp->N+zi]* (usp->vU[i1*usp->N+zi]);
+            }
+            goto SPECIES; 
         }
+        if( z>WF && z>GF && L1F == 1 &&  usp->vYF[i*usp->Fi+z] > 1e-19 )  // Single-component condensed phase
+        {	
+        	Ps = usp->vG[j1*usp->L+k] / RGT;        	
+        	for( zi=0; zi<usp->N; zi++)
+               Ds += usp->A[k*usp->N+zi]* (usp->vU[i1*usp->N+zi]);
+        }        
+SPECIES: Dif = Ps - Ds; 
+//         if( Dif < 10. )
+        	 DDM += Dif; 
+//         DDM += Dif;
+         PM += Ps; DM += Ds;         
+      }  // k loop
 #ifndef IPMGEMPLUGIN
     ii += TProfil::pm->mup->Ll[z];
 #else
     ii += mup_Ll[z];
 #endif
-     }
+    } // z loop
 
-     double R=0.;
-     for( k=0; k< usp->L; k++)
-#ifndef IPMGEMPLUGIN
-         if (syu->Dcl[k]!=S_OFF && usp->vY[i1*usp->L+k] > 1e-19 )
-#else
-         if (/*syu_Dcl[k]!=S_OFF && */usp->vY[i1*usp->L+k] > 1e-19 )
-#endif
-        for( z=0; z<usp->N; z++)
-           R += usp->A[k*usp->N+z]* (usp->vU[i1*usp->N+z]);
-
-  PM-=R;
-  return(PM);
+    Ddm1 = PM - DM;
+    return(DDM);
 }
 
-double TUnSpace::ePO2( int i,int j )
-{
-  double PM,R,RG;
-  int k,ii,z,GF=-1,WF=-1,i1,j1;
-  short Laq_;
-#ifndef IPMGEMPLUGIN
-  Laq_ = TProfil::pm->mup->Laq;
-#else
-  Laq_ = mup_Laq; 
-#endif
-  
-  
-  RG = R_CONSTANT;
-  if(usp->PvSi == S_ON)
-    { j1=j; i1=i;}
-  else
-    { j1=i; i1=j;}
-  if( Laq_ )
-     WF=0;
-
-#ifndef IPMGEMPLUGIN
-  if( TProfil::pm->mup->Pg )
-#else
-  if( mup_Pg )
-#endif
-  { if(!Laq_)
-         GF=0;
-    else GF=1;
-   }
-
-  PM=R=0.;
-  ii=0;
-  for( z=0; z<usp->Fi; z++)
+  // calculate the element e(t,q) of the pay-off matrix B
+  // Eq 10 on p. 20 of TM 44-04-01 (with v_qt,j if PvSi == ON and v_q_j otherwise)
+  // i=t, j=q
+  double TUnSpace::ePO2( int t, int q )
   {
-#ifndef IPMGEMPLUGIN
-    for( k=ii; k<ii+(TProfil::pm->mup->Ll[z]); k++)
-       if (syu->Dcl[k]!=S_OFF )
-#else
-     for( k=ii; k<ii+(mup_Ll[z]); k++)
-//         if (syu_Dcl[k]!=S_OFF )
-#endif
-    {
-      if( z==WF )
-      {
-         if( k < (Laq_-1) &&
-               usp->vYF[i*usp->Fi] >1e-19 &&
-               usp->vY[i*usp->L+(Laq_)-1] >1e-19 &&
-               usp->vY[i*usp->L+ k ] >1e-19 )
-           PM += usp->vG[j1*usp->L+k]/(RG*(usp->vT[j1]+273.15)) + log(55.51) -
-             usp->vY[i*usp->L+(Laq_-1)]/usp->vYF[i*usp->Fi] +
-             log(usp->vY[i*usp->L+k]) - log(usp->vY[i*usp->L+(Laq_-1)]) +
-             1. + usp->vGam[i*usp->L+k];
-          if( k == (Laq_-1) &&
-               usp->vY[i*usp->L+(Laq_-1)] > 1e-19 &&
-               usp->vYF[i*usp->Fi+z] > 1e-19 )
-            PM += usp->vG[j1*usp->L+k]/(RG*(usp->vT[j1]+273.15)) + log( usp->vY[i*usp->L+k] ) -
-              log( usp->vYF[i*usp->Fi+z] ) - ( usp->vY[i*usp->L+k] / usp->vYF[i*usp->Fi+z]) -
-              ( usp->vYF[i*usp->Fi+z] / usp->vY[i*usp->L+k]) + 2.+ usp->vGam[i*usp->L+k];
-           continue;
-       }
-        if( ( z==GF) && (usp->vY[i*usp->L+k] > 1e-19) &&
-             usp->vYF[i*usp->Fi+z] >1e-19 )
-        {
-             PM += ( usp->vG[j1*usp->L+k] / (RG*(usp->vT[j1]+273.15)) +
-                    log(usp->vY[i*usp->L+k]) - log(usp->vYF[i*usp->Fi+z]) +
-                    usp->vGam[i*usp->L+k] + log(usp->vP[i]) );
-            continue;
-        }
-        if( z>WF && z>GF &&
-            usp->vY[i*usp->L+k] > 1e-19 && usp->vYF[i*usp->Fi+z] > 1e-19 )
-          PM += ( usp->vG[j1*usp->L+k] / (RG*(usp->vT[j1]+273.15))+ log(usp->vY[i*usp->L+k])
-                   - log(usp->vYF[i*usp->Fi+z]) + usp->vGam[i*usp->L+k] );
-      }
-#ifndef IPMGEMPLUGIN
-    ii += TProfil::pm->mup->Ll[z];
-#else
-    ii += mup_Ll[z];
-#endif
-     }
-  ii=0;
-  for( z=0; z<usp->Fi; z++)
-  {
-#ifndef IPMGEMPLUGIN
-    for( k=ii; k<ii+(TProfil::pm->mup->Ll[z]); k++)
-       if (syu->Dcl[k]!=S_OFF )
-#else
-     for( k=ii; k<ii+(mup_Ll[z]); k++)
-//         if (syu_Dcl[k]!=S_OFF )
-#endif
-    {
-      if( z==WF )
-      {
-         if( k < (Laq_-1) &&
-               usp->vYF[j*usp->Fi] >1e-19 &&
-               usp->vY[j*usp->L+(Laq_)-1] >1e-19 &&
-               usp->vY[j*usp->L+ k ] >1e-19 )
-           R += usp->vG[i1*usp->L+k]/(RG*(usp->vT[i1]+273.15)) + log(55.51) -
-             usp->vY[j*usp->L+(Laq_-1)]/usp->vYF[j*usp->Fi] +
-             log(usp->vY[j*usp->L+k]) - log(usp->vY[j*usp->L+(Laq_-1)]) +
-             1. + usp->vGam[j*usp->L+k];
-          if( k == (Laq_-1) &&
-               usp->vY[j*usp->L+(Laq_-1)] > 1e-19 &&
-               usp->vYF[j*usp->Fi+z] > 1e-19 )
-            R += usp->vG[i1*usp->L+k]/(RG*(usp->vT[i1]+273.15)) + log( usp->vY[j*usp->L+k] ) -
-              log( usp->vYF[j*usp->Fi+z] ) - ( usp->vY[j*usp->L+k] / usp->vYF[j*usp->Fi+z]) -
-              ( usp->vYF[j*usp->Fi+z] / usp->vY[j*usp->L+k]) + 2.+ usp->vGam[j*usp->L+k];
-           continue;
-       }
-        if( ( z==GF) && (usp->vY[j*usp->L+k] > 1e-19) &&
-             usp->vYF[j*usp->Fi+z] >1e-19 )
-        {
-             R += ( usp->vG[i1*usp->L+k] / (RG*(usp->vT[i1]+273.15)) +
-                    log(usp->vY[j*usp->L+k]) - log(usp->vYF[j*usp->Fi+z]) +
-                    usp->vGam[j*usp->L+k] + log(usp->vP[j]) );
-            continue;
-        }
-        if( z>WF && z>GF &&
-            usp->vY[j*usp->L+k] > 1e-19 && usp->vYF[j*usp->Fi+z] > 1e-19 )
-          R += ( usp->vG[i1*usp->L+k] / (RG*(usp->vT[i1]+273.15))+ log(usp->vY[j*usp->L+k])
-                   - log(usp->vYF[j*usp->Fi+z]) + usp->vGam[j*usp->L+k] );
-      }
-#ifndef IPMGEMPLUGIN
-    ii += TProfil::pm->mup->Ll[z];
-#else
-    ii += mup_Ll[z];
-#endif
-     }
-  PM-=R;
-  return(PM);
-}
+  	  double RG, RGT, ln5551 = 4.0165339;
+  	  int i,k,ii,z,GF=-1,WF=-1,i1,j1, L1F;
+    short Laq_;
+  #ifndef IPMGEMPLUGIN
+    Laq_ = TProfil::pm->mup->Laq;
+  #else
+    Laq_ = mup_Laq; 
+  #endif
 
+    if(usp->PvSi == S_ON)
+      { j1=q; i1=t; i=t; }
+    else
+      { j1=q; i1=t; i=q; }
+
+    RG = R_CONSTANT;
+    RGT = RG*(usp->vT[j1]+273.15);
+      
+    if( Laq_ )
+       WF=0;
+
+  #ifndef IPMGEMPLUGIN
+    if( TProfil::pm->mup->Pg )
+  #else
+    if( mup_Pg )
+  #endif
+    { if(!Laq_)
+           GF=0;
+      else GF=1;
+     }
+
+    double PM=0.;   // Sum for primal potentials for species
+    double DM=0.,    // Sum for dual potential for species 
+           DDM=0.,  // Sum for differences between PM and DM for a single species 
+           Dif, Ps, Ds, Ddm1;   // Difference, primal, dual potential for a species 
+    ii=0;
+    for( z=0; z<usp->Fi; z++)
+    {
+  #ifndef IPMGEMPLUGIN
+  L1F = TProfil::pm->mup->Ll[z];
+    for( k=ii; k<ii+(TProfil::pm->mup->Ll[z]); k++)
+    {
+  	  if (syu->Dcl[k]==S_OFF )
+  		 continue; 
+  #else
+  L1F = mup_Ll[z];
+    for( k=ii; k<ii+(mup_Ll[z]); k++)
+  //    if (syu_Dcl[k]!=S_OFF )
+    {	  
+  #endif
+        Ps = Ds = 0.;
+        if( z==WF )
+        {
+           if( k < (Laq_-1) &&  usp->vYF[i*usp->Fi] >1e-19 && usp->vY[i1*usp->L+ k ] >1e-19 &&
+                 usp->vY[i*usp->L+(Laq_)-1] >1e-19 && usp->vY[i*usp->L+ k ] >1e-19  )
+           {
+          	 Ps = usp->vG[j1*usp->L+k]/RGT + ln5551 - usp->vY[i*usp->L+(Laq_-1)]/
+                      usp->vYF[i*usp->Fi] + log(usp->vY[i*usp->L+k]) - log(usp->vY[i*usp->L+(Laq_-1)]) +
+                     1. + usp->vGam[i*usp->L+k];
+         	 Ds = usp->vG[i1*usp->L+k]/RGT + ln5551 - usp->vY[i1*usp->L+(Laq_-1)]/
+                      usp->vYF[i1*usp->Fi] + log(usp->vY[i1*usp->L+k]) - log(usp->vY[i1*usp->L+(Laq_-1)]) +
+                     1. + usp->vGam[i1*usp->L+k];
+           }
+           if( k == (Laq_-1) && usp->vY[i*usp->L+(Laq_-1)] > 1e-19 && usp->vY[i1*usp->L+(Laq_-1)] > 1e-19 &&
+                 usp->vYF[i*usp->Fi+z] > 1e-19 )
+           {
+             	 Ps = usp->vG[j1*usp->L+k]/RGT + log( usp->vY[i*usp->L+k] ) - log( usp->vYF[i*usp->Fi+z] ) -
+                   ( usp->vY[i*usp->L+k] / usp->vYF[i*usp->Fi+z]) - ( usp->vYF[i*usp->Fi+z] / usp->vY[i*usp->L+k]) +
+                   2.+ usp->vGam[i*usp->L+k];
+            	 Ds = usp->vG[i1*usp->L+k]/RGT + log( usp->vY[i1*usp->L+k] ) - log( usp->vYF[i1*usp->Fi+z] ) -
+                   ( usp->vY[i1*usp->L+k] / usp->vYF[i1*usp->Fi+z]) - ( usp->vYF[i1*usp->Fi+z] / usp->vY[i1*usp->L+k]) +
+                   2.+ usp->vGam[i1*usp->L+k];
+           }
+           goto SPECIES;
+          }
+          if ( z==GF)
+          { 
+          	if( (usp->vY[i*usp->L+k] > 1e-19) && usp->vYF[i*usp->Fi+z] >1e-19 && 
+          			(usp->vY[i1*usp->L+k] > 1e-19) && usp->vYF[i1*usp->Fi+z] >1e-19 )
+          	{	
+                Ps = ( usp->vG[j1*usp->L+k] / RGT + log(usp->vY[i*usp->L+k]) - log(usp->vYF[i*usp->Fi+z]) +
+                      usp->vGam[i*usp->L+k] + log(usp->vP[i]) );
+                Ds = ( usp->vG[i1*usp->L+k] / RGT + log(usp->vY[i1*usp->L+k]) - log(usp->vYF[i1*usp->Fi+z]) +
+                      usp->vGam[i1*usp->L+k] + log(usp->vP[i1]) );
+          	}
+          	goto SPECIES;
+          }
+          if( z>WF && z>GF && L1F > 1 )
+          {	 // Multicomponent condensed solution phase
+          	if (usp->vY[i*usp->L+k] > 1e-19 &&  usp->vYF[i*usp->Fi+z] > 1e-19 &&
+          			usp->vY[i1*usp->L+k] > 1e-19 &&  usp->vYF[i1*usp->Fi+z] > 1e-19 )     
+            {  
+          	   Ps = ( usp->vG[j1*usp->L+k] / RGT + log(usp->vY[i*usp->L+k])
+                     - log(usp->vYF[i*usp->Fi+z]) + usp->vGam[i*usp->L+k] );
+          	   Ds = ( usp->vG[i1*usp->L+k] / RGT + log(usp->vY[i1*usp->L+k])
+          	                      - log(usp->vYF[i1*usp->Fi+z]) + usp->vGam[i1*usp->L+k] );
+            }
+            goto SPECIES; 
+          }
+          if( z>WF && z>GF && L1F == 1 &&  usp->vYF[i*usp->Fi+z] > 1e-19 
+        		  &&  usp->vYF[i1*usp->Fi+z] > 1e-19 )  // Single-component condensed phase
+          {	
+          	Ps = usp->vG[j1*usp->L+k] / RGT;  
+          	Ds = usp->vG[i1*usp->L+k] / RGT;
+          }        
+  SPECIES: Dif = Ps - Ds; 
+  //         if( Dif < 10. )
+          	 DDM += Dif; 
+  //         DDM += Dif;
+           PM += Ps; DM += Ds;         
+        }  // k loop
+  #ifndef IPMGEMPLUGIN
+      ii += TProfil::pm->mup->Ll[z];
+  #else
+      ii += mup_Ll[z];
+  #endif
+      } // z loop
+      Ddm1 = PM - DM;
+      return(DDM);
+}  
+ 
+// calculate the element e(t,q) of the pay-off matrix  using
+// Eq 11 on p. 21 of TM 44-04-01 
+// i=t, j=q    
 double TUnSpace::ePO3( int i,int j )
-{  double R=0.,PM=0.;
+{  
+   double DM=0.,PM=0.;
    int k,z;
    for(k=0;k<usp->L;k++)
-    for(z=0;z<usp->N;z++)
-      R+=usp->A[k*usp->N+z]*(*(usp->vU+j*usp->N+z));
-   PM+=R;
-   R=0;
-   for(k=0;k<usp->L;k++)
-    for(z=0;z<usp->N;z++)
-      R+=usp->A[k*usp->N+z]*(*(usp->vU+i*usp->N+z));
-    PM-=R;
+   {
+	  if(usp->PvSi == S_ON )   // experimental 11.06.08 DK  
+	     if(!( usp->vY[i*usp->L+k] > 1e-19 && usp->vY[j*usp->L+k] > 1e-19 ) )
+		    continue;
+	  DM = 0.;
+	  for(z=0;z<usp->N;z++)
+         DM += usp->A[k*usp->N+z]*(*(usp->vU+j*usp->N+z))
+             - usp->A[k*usp->N+z]*(*(usp->vU+i*usp->N+z));
+	  PM += DM; 
+   }
+/*    
+    for(k=0;k<usp->L;k++)
+     for(z=0;z<usp->N;z++)
+       R+=usp->A[k*usp->N+z]*(*(usp->vU+j*usp->N+z));
+    PM+=R;
+    R=0;
+    for(k=0;k<usp->L;k++)
+     for(z=0;z<usp->N;z++)
+       R+=usp->A[k*usp->N+z]*(*(usp->vU+i*usp->N+z));
+     PM-=R;
+*/
  return(PM);
 }
 
+// calculate the element e(t,q) of the pay-off matrix  using
+// Eq 12 on p. 21 of TM 44-04-01 
+// i=t, j=q 
 double TUnSpace::ePO4( int i,int j )
 {  double PM=0.;
    int z;
    for( z=0; z<usp->N; z++)
-   PM+= (usp->vU[j*usp->N+z]) - (usp->vU[i*usp->N+z]);
+        PM+= (usp->vU[j*usp->N+z]) - (usp->vU[i*usp->N+z]);
  return(PM);
 }
 
-
+// calculate the element e(t,q) of the pay-off matrix  using
+// Eq 13 on p. 21 of TM 44-04-01 
+// i=t, j=q 
 double TUnSpace::ePO5( int i,int j )
 {  double PM=0.;
    int z;
@@ -1065,9 +1154,10 @@ void TUnSpace::Un_criteria()
            usp->Zmin[t] = usp->Zmax[t]= R;
          if( usp->Pa_Zcp == S_OFF )
            usp->Zcp[t] = R;
-          else
+         else 
            usp->Zcp[t] = fabs(R);
-           usp->ZmaxAbs[t] = fabs(R);
+         usp->ZmaxAbs[t] = fabs(R);
+           
          }
         else
         {
@@ -1095,7 +1185,7 @@ void TUnSpace::Un_criteria()
          usp->Prob[q] += fabs(R);
     }
 
-    if( usp->Q)
+    if( usp->Q)        // computing mean
       usp->Zcp[t] /= (double)usp->Q;
    }
 
@@ -1148,9 +1238,9 @@ else
    usp->CrL = R;
    usp->nl = kol_in_sol( jj );
 
-
-   for( t=0; t<usp->Q; t++)
-    usp->Zcp[t]= fabs( usp->Zcp[t]);
+//   Temporarily commented out DK 10.06.2008
+//   for( t=0; t<usp->Q; t++)
+//    usp->Zcp[t]= fabs( usp->Zcp[t]);
    kvant_index( usp->quan_lev, usp->Q, usp->Zcp, 0/*usp->quanLap*/ );
 
 // 2 prohod for Homenuk

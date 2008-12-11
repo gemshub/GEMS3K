@@ -22,7 +22,7 @@ CFLAGS   = -g -O3 -DIPMGEMPLUGIN -D__unix
 CXXFLAGS = -g -O3 -DIPMGEMPLUGIN -D__unix
 LEXFLAGS = 
 YACCFLAGS= -d
-INCPATH  =  -I.
+INCPATH  = -I. -I../GEMIPM2K
 LINK     = icpc
 LFLAGS   = -static
 # static flag for pgi linker
@@ -53,47 +53,53 @@ OBJECTS_DIR = obj/
 
 ####### Files
 
-HEADERS = array.h \
-		verror.h \
-		gstring.h \
-		gdatastream.h \
-		v_user.h \
-		s_fgl.h \
-		databr.h \
-		datach.h \
-		node.h \
-		ms_multi.h \
-		io_arrays.h \
-		m_const.h \
-		m_param.h \
-		num_methods.h \
-		tnt_i_refvec.h \
-		tnt_array1d.h \
-		tnt_array2d.h \
-		tnt.h \
-		jama_cholesky.h \
-		jama_lu.h
-SOURCES = gstring.cpp \
-		gdatastream.cpp \
-		s_fgl.cpp \
-		s_fgl2.cpp \
-		node.cpp \
-		node_format.cpp \
-		ms_multi_file.cpp \
-		ms_multi_format.cpp \
-		ipm_chemical.cpp \
-		ipm_chemical2.cpp \
-		ipm_chemical3.cpp \
-		ipm_main.cpp \
-		ipm_simplex.cpp \
-		io_arrays.cpp \
+HEADERS = ../GEMIPM2K/array.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/databr.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/node.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/io_arrays.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/m_param.h \
+		../GEMIPM2K/num_methods.h \
+		../GEMIPM2K/tnt_i_refvec.h \
+		../GEMIPM2K/tnt_array1d.h \
+		../GEMIPM2K/tnt_array2d.h \
+		../GEMIPM2K/tnt.h \
+		../GEMIPM2K/jama_cholesky.h \
+		../GEMIPM2K/jama_lu.h
+SOURCES = ../GEMIPM2K/gstring.cpp \
+		../GEMIPM2K/gdatastream.cpp \
+		../GEMIPM2K/s_fgl.cpp \
+		../GEMIPM2K/s_fgl1.cpp \
+		../GEMIPM2K/s_fgl2.cpp \
+		../GEMIPM2K/s_fgl3.cpp \
+		../GEMIPM2K/s_fgl4.cpp \
+		../GEMIPM2K/node.cpp \
+		../GEMIPM2K/node_format.cpp \
+		../GEMIPM2K/ms_multi_file.cpp \
+		../GEMIPM2K/ms_multi_format.cpp \
+		../GEMIPM2K/ipm_chemical.cpp \
+		../GEMIPM2K/ipm_chemical2.cpp \
+		../GEMIPM2K/ipm_chemical3.cpp \
+		../GEMIPM2K/ipm_main.cpp \
+		../GEMIPM2K/ipm_simplex.cpp \
+		../GEMIPM2K/io_arrays.cpp \
 		main.cpp \
-		ms_param.cpp \
-		num_methods.cpp
+		../GEMIPM2K/ms_param.cpp \
+		../GEMIPM2K/num_methods.cpp
 OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
 		obj/s_fgl.o \
+		obj/s_fgl1.o \
 		obj/s_fgl2.o \
+		obj/s_fgl3.o \
+		obj/s_fgl4.o \
 		obj/node.o \
 		obj/node_format.o \
 		obj/ms_multi_file.o \
@@ -112,7 +118,7 @@ UICDECLS =
 UICIMPLS = 
 SRCMOC   = 
 OBJMOC = 
-DIST	   = gem_node-sep.pro
+DIST	   = node-gem-sep.pro
 QMAKE_TARGET = gemnode
 DESTDIR  = 
 TARGET   = gemnode
@@ -150,8 +156,6 @@ uicables: $(UICDECLS) $(UICIMPLS)
 $(MOC): 
 	( cd $(QTDIR)/src/moc && $(MAKE) )
 
-qmake: 
-	@$(QMAKE) -o Makefile gem_node-sep.pro
 
 dist: 
 	@mkdir -p obj/gemnode && $(COPY_FILE) --parents $(SOURCES) $(HEADERS) $(FORMS) $(DIST) obj/gemnode/ && ( cd `dirname obj/gemnode` && $(TAR) gemnode.tar gemnode && $(GZIP) gemnode.tar ) && $(MOVE) `dirname obj/gemnode`/gemnode.tar.gz . && $(DEL_FILE) -r obj/gemnode
@@ -176,183 +180,215 @@ FORCE:
 
 ####### Compile
 
-obj/gstring.o: gstring.cpp gstring.h \
-		array.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/gstring.o gstring.cpp
+obj/gstring.o: ../GEMIPM2K/gstring.cpp ../GEMIPM2K/gstring.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/verror.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/gstring.o ../GEMIPM2K/gstring.cpp
 
-obj/gdatastream.o: gdatastream.cpp gdatastream.h \
-		verror.h \
-		gstring.h \
-		array.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/gdatastream.o gdatastream.cpp
+obj/gdatastream.o: ../GEMIPM2K/gdatastream.cpp ../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/gdatastream.o ../GEMIPM2K/gdatastream.cpp
 
-obj/s_fgl.o: s_fgl.cpp s_fgl.h \
-		m_const.h \
-		verror.h \
-		v_user.h \
-		gstring.h \
-		array.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl.o s_fgl.cpp
+obj/s_fgl.o: ../GEMIPM2K/s_fgl.cpp ../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl.o ../GEMIPM2K/s_fgl.cpp
 
-obj/s_fgl2.o: s_fgl2.cpp s_fgl.h \
-		m_const.h \
-		verror.h \
-		v_user.h \
-		gstring.h \
-		array.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl2.o s_fgl2.cpp
+obj/s_fgl1.o: ../GEMIPM2K/s_fgl1.cpp ../GEMIPM2K/verror.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl1.o ../GEMIPM2K/s_fgl1.cpp
 
-obj/node.o: node.cpp node.h \
-		gdatastream.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node.o node.cpp
+obj/s_fgl2.o: ../GEMIPM2K/s_fgl2.cpp ../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl2.o ../GEMIPM2K/s_fgl2.cpp
 
-obj/node_format.o: node_format.cpp io_arrays.h \
-		node.h \
-		gdatastream.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node_format.o node_format.cpp
+obj/s_fgl3.o: ../GEMIPM2K/s_fgl3.cpp ../GEMIPM2K/verror.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl3.o ../GEMIPM2K/s_fgl3.cpp
 
-obj/ms_multi_file.o: ms_multi_file.cpp io_arrays.h \
-		m_param.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_file.o ms_multi_file.cpp
+obj/s_fgl4.o: ../GEMIPM2K/s_fgl4.cpp ../GEMIPM2K/verror.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl4.o ../GEMIPM2K/s_fgl4.cpp
 
-obj/ms_multi_format.o: ms_multi_format.cpp io_arrays.h \
-		m_param.h \
-		node.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h \
-		datach.h \
-		databr.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_format.o ms_multi_format.cpp
+obj/node.o: ../GEMIPM2K/node.cpp ../GEMIPM2K/node.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/num_methods.h \
+		../GEMIPM2K/m_param.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/databr.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node.o ../GEMIPM2K/node.cpp
 
-obj/ipm_chemical.o: ipm_chemical.cpp m_param.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_chemical.o ipm_chemical.cpp
+obj/node_format.o: ../GEMIPM2K/node_format.cpp ../GEMIPM2K/io_arrays.h \
+		../GEMIPM2K/node.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_param.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/databr.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/node_format.o ../GEMIPM2K/node_format.cpp
 
-obj/ipm_chemical2.o: ipm_chemical2.cpp m_param.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_chemical2.o ipm_chemical2.cpp
+obj/ms_multi_file.o: ../GEMIPM2K/ms_multi_file.cpp ../GEMIPM2K/io_arrays.h \
+		../GEMIPM2K/m_param.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_file.o ../GEMIPM2K/ms_multi_file.cpp
 
-obj/ipm_chemical3.o: ipm_chemical3.cpp m_param.h \
-		s_fgl.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_chemical3.o ipm_chemical3.cpp
+obj/ms_multi_format.o: ../GEMIPM2K/ms_multi_format.cpp ../GEMIPM2K/io_arrays.h \
+		../GEMIPM2K/m_param.h \
+		../GEMIPM2K/node.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/databr.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_multi_format.o ../GEMIPM2K/ms_multi_format.cpp
 
-obj/ipm_main.o: ipm_main.cpp m_param.h \
-		jama_lu.h \
-		jama_cholesky.h \
-		node.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h \
-		tnt.h \
-		tnt_array1d.h \
-		tnt_array2d.h \
-		tnt_i_refvec.h \
-		datach.h \
-		databr.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_main.o ipm_main.cpp
+obj/ipm_chemical.o: ../GEMIPM2K/ipm_chemical.cpp ../GEMIPM2K/m_param.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_chemical.o ../GEMIPM2K/ipm_chemical.cpp
 
-obj/ipm_simplex.o: ipm_simplex.cpp m_param.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_simplex.o ipm_simplex.cpp
+obj/ipm_chemical2.o: ../GEMIPM2K/ipm_chemical2.cpp ../GEMIPM2K/m_param.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_chemical2.o ../GEMIPM2K/ipm_chemical2.cpp
 
-obj/io_arrays.o: io_arrays.cpp io_arrays.h \
-		verror.h \
-		gstring.h \
-		array.h 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o io_arrays.cpp
+obj/ipm_chemical3.o: ../GEMIPM2K/ipm_chemical3.cpp ../GEMIPM2K/m_param.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_chemical3.o ../GEMIPM2K/ipm_chemical3.cpp
 
-obj/main.o: main.cpp node.h \
-		m_param.h \
-		datach.h \
-		databr.h \
-		gdatastream.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h
+obj/ipm_main.o: ../GEMIPM2K/ipm_main.cpp ../GEMIPM2K/m_param.h \
+		../GEMIPM2K/jama_lu.h \
+		../GEMIPM2K/jama_cholesky.h \
+		../GEMIPM2K/node.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/tnt.h \
+		../GEMIPM2K/tnt_array1d.h \
+		../GEMIPM2K/tnt_array2d.h \
+		../GEMIPM2K/tnt_i_refvec.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/databr.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_main.o ../GEMIPM2K/ipm_main.cpp
+
+obj/ipm_simplex.o: ../GEMIPM2K/ipm_simplex.cpp ../GEMIPM2K/m_param.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ipm_simplex.o ../GEMIPM2K/ipm_simplex.cpp
+
+obj/io_arrays.o: ../GEMIPM2K/io_arrays.cpp ../GEMIPM2K/io_arrays.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/io_arrays.o ../GEMIPM2K/io_arrays.cpp
+
+obj/main.o: main.cpp ../GEMIPM2K/node.h \
+		../GEMIPM2K/m_param.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/databr.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/main.o main.cpp
 
-obj/ms_param.o: ms_param.cpp m_param.h \
-		num_methods.h \
-		gdatastream.h \
-		node.h \
-		ms_multi.h \
-		verror.h \
-		gstring.h \
-		array.h \
-		m_const.h \
-		v_user.h \
-		datach.h \
-		databr.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_param.o ms_param.cpp
+obj/ms_param.o: ../GEMIPM2K/ms_param.cpp ../GEMIPM2K/m_param.h \
+		../GEMIPM2K/num_methods.h \
+		../GEMIPM2K/gdatastream.h \
+		../GEMIPM2K/node.h \
+		../GEMIPM2K/ms_multi.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h \
+		../GEMIPM2K/m_const.h \
+		../GEMIPM2K/s_fgl.h \
+		../GEMIPM2K/v_user.h \
+		../GEMIPM2K/datach.h \
+		../GEMIPM2K/databr.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/ms_param.o ../GEMIPM2K/ms_param.cpp
 
-obj/num_methods.o: num_methods.cpp v_user.h \
-		num_methods.h \
-		verror.h \
-		gstring.h \
-		array.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/num_methods.o num_methods.cpp
+obj/num_methods.o: ../GEMIPM2K/num_methods.cpp ../GEMIPM2K/v_user.h \
+		../GEMIPM2K/num_methods.h \
+		../GEMIPM2K/verror.h \
+		../GEMIPM2K/gstring.h \
+		../GEMIPM2K/array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/num_methods.o ../GEMIPM2K/num_methods.cpp
 
 ####### Install
 

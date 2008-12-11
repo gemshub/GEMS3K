@@ -1,9 +1,10 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1121 2008-11-25 10:16:38Z gems $
+// $Id: s_fgl2.cpp 1143 2008-12-10 14:40:41Z gems $
 //
 // Copyright (c) 2007,2008  Th.Wagner, D.Kulik, S.Dmitrieva
 //
 // Implementation of the TSolMod class
+// and TVanLaar, TRegular, TRedlichKister, TNRTL and TWilson classes
 // Started by Th.Wagner and D.Kulik on 07.03.2007
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
@@ -20,113 +21,131 @@
 #include "s_fgl.h"
 #include "m_const.h"
 
+//--------------------------------------------------------------------------------------------------------------
 // Generic constructor for the TSolMod class
 //
 TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-       long int NPperDC, double T_k, double P_bar, char Mod_Code,
-       long int* arIPx, double* arIPc, double* arDCc,
-       double *arWx, double *arlnGam, double dW, double eW, double iS )
-{
-    R_CONST = 8.31451;
-    NComp = NSpecies;
-    NPar = NParams;
-    NPcoef = NPcoefs;
-    MaxOrd = MaxOrder;
-    NP_DC = NPperDC;
-    Tk = T_k;
-    Pbar = P_bar;
-    ModCode = Mod_Code;
-    RhoW = dW;
-    EpsW = eW;
-    IonStr = iS;
+        long int NPperDC, long int NPTPperDC, double T_k, double P_bar, char Mod_Code,
+        long int* arIPx, double* arIPc, double* arDCc,
+        double *arWx, double *arlnGam, double *aphVOL,
+        double dW, double eW ):
+    ModCode(Mod_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
+    MaxOrd(MaxOrder),  NP_DC(NPperDC), NPTP_DC(NPTPperDC), R_CONST(8.31451), RhoW(dW),
+    EpsW(eW),  Tk(T_k), Pbar(P_bar)
 
+{
     // pointer assignment
     aIPx = arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = arIPc;
+    aIP = new double[ NPar ];
     aDCc = arDCc;
+    if( NPTP_DC )
+    {	aDC = new double *[NComp];
+       for (long int i=0; i<NComp; i++)
+           aDC[i] = new double[NPTP_DC];
+    }
+    else aDC = 0;
     x = arWx;
+    phVOL = aphVOL;
+//    aZ = arZ;
+//    aM =	arM;
     lnGamma = arlnGam;
 }
 
 
 TSolMod::~TSolMod()
 {
-// In principle, the stuff below is not necessary if the memory is not
-// allocated within the class
-	aIPx = NULL;
-	aIPc = NULL;
-	aDCc = NULL;
-	x = NULL;
-	lnGamma = NULL;
+   delete[] aIP;
+   if( aDC )
+   {
+	for ( long i=0; i<NComp; i++)
+      delete[] aDC[i];
+    delete[] aDC;
+   }
 }
 
 
-// Van Laar model for solid solutions (c) TW March 2007
-// Calculates T,P corrected binary interaction parameters
-// Returns 0 if Ok or 1 if error
-long int
-TSolMod::VanLaarPT()
-{
-// calculates P-T dependence of binary interaction parameters
-	long int ip;
-	double Wij[4];
 
-        if ( /* ModCode != SM_VANLAAR || */ NPcoef < 4 || NPar < 1 )
-           return 1;  // foolproof!
-
-	for (ip=0; ip<NPar; ip++)
-	{
-        Wij[0] = aIPc[NPcoef*ip];
-        Wij[1] = aIPc[NPcoef*ip+1];
-        Wij[2] = aIPc[NPcoef*ip+2];
-	    Wij[3] = Wij[0]+ Wij[1]*Tk + Wij[2]*Pbar;
-	    aIPc[NPcoef*ip+3] = Wij[3];
-	}
-	return 0;
-}
-
-
+//=============================================================================================
 // Van Laar model for solid solutions (c) TW March 2007
 // References:  Holland & Powell (2003)
+//=============================================================================================
+
+
+// Generic constructor for the TVanLaar class
+TVanLaar::TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int* arIPx, double* arIPc, double* arDCc,
+        double *arWx, double *arlnGam, double *aphVOL,
+        double dW, double eW ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, 
+        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, dW, eW )
+{
+  alloc_internal();
+  // PTparam();
+}
+
+
+TVanLaar::~TVanLaar()
+{
+  free_internal();
+}
+
+
+void TVanLaar::alloc_internal()
+{
+	   Wu = new double [NPar];
+	   Ws = new double [NPar];
+	   Wv = new double [NPar];
+	   Wpt = new double [NPar];
+	   Phi = new double [NComp];
+	   PsVol = new double [NComp];
+}
+
+
+void TVanLaar::free_internal()
+{
+	 if(Wu)  delete[]Wu;
+	 if(Ws)  delete[]Ws;
+	 if(Wv)  delete[]Wv;
+	 if(Wpt)  delete[]Wpt;
+	 if(Phi)  delete[]Phi;
+	 if(PsVol)  delete[]PsVol;
+}
+
+
+// Calculates T,P corrected binary interaction parameters
+long int TVanLaar::PTparam()
+{
+	long int ip;
+    if ( NPcoef < 3 || NPar < 1 )
+       return 1;
+
+// read P-T corrected interaction parameters
+	   for (ip=0; ip<NPar; ip++)
+	   {
+	     Wu[ip] = aIPc[NPcoef*ip];
+		 Ws[ip] = aIPc[NPcoef*ip+1];
+		 Wv[ip] = aIPc[NPcoef*ip+2];
+		 Wpt[ip] = Wu[ip]+ Ws[ip]*Tk + Wv[ip]*Pbar;
+	     aIP[ip] = Wpt[ip];
+		 // aIPc[NPcoef*ip+3] = Wpt[ip]; // obsolete
+	   }
+	   return 0;
+}
+
+
 // Calculates activity coefficients and excess functions
-// Returns 0 if Ok or not 0 if error
-long int
-TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-         double &CPex_ )
+long int TVanLaar::MixMod()
 {
    long int ip, j, i1, i2;
    double dj, dk;
    double sumPhi; // Sum of Phi terms
    double gEX, vEX, hEX, sEX, cpEX, uEX;
-   double *Wu;
-   double *Ws;
-   double *Wv;
-   double *Wpt;   // Interaction coeffs at P-T
-   double *Phi;   // Mixing terms
-   double *PsVol; // End member volume parameters
 
-   if ( /* ModCode != SM_VANLAAR || */ NPcoef < 4 || NPar < 1 || NComp < 2
-         || MaxOrd < 2 || !x || !lnGamma )
-           return 1;  // foolproof!
-
-   Wu = new double [NPar];
-   Ws = new double [NPar];
-   Wv = new double [NPar];
-   Wpt = new double [NPar];
-   Phi = new double [NComp];
-   PsVol = new double [NComp];
-
-   if( !Wpt || !Phi || !PsVol )
-        return -1;  // memory alloc failure
-
-	// read P-T corrected interaction parameters
-   for (ip=0; ip<NPar; ip++)
-   {
-        Wu[ip] = aIPc[NPcoef*ip];
-	Ws[ip] = aIPc[NPcoef*ip+1];
-	Wv[ip] = aIPc[NPcoef*ip+2];
-	Wpt[ip] = aIPc[NPcoef*ip+3]; // were stored in VanLaarPT()
-   }
+   if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+           return 1;
 
    // calculating Phi values
    sumPhi = 0.;
@@ -135,6 +154,7 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
        PsVol[j] = aDCc[NP_DC*j];  // reading pseudo-volumes
        sumPhi +=  x[j]*PsVol[j];
    }
+
    if( fabs(sumPhi) < 1e-30 )
        return 2;    // to prevent zerodivide!
 
@@ -161,8 +181,8 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	    lnGamRT -= (dj-Phi[i1])*(dk-Phi[i2])*Wpt[ip]
                          *2.*PsVol[j]/(PsVol[i1]+PsVol[i2]);
 	}
-        lnGam = lnGamRT/(R_CONST*Tk);
-//	Gam = exp(lnGam);
+
+    lnGam = lnGamRT/(R_CONST*Tk);
 	lnGamma[j] = lnGam;
 	}
 
@@ -185,84 +205,88 @@ TSolMod::VanLaarMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
    }
 
    hEX = uEX+vEX*Pbar;
-   Gex_ = gEX;
-   Vex_ = vEX;
-   Hex_ = hEX;
-   Sex_ = sEX;
-   CPex_ = cpEX;
 
-   delete[]Wu;
-   delete[]Ws;
-   delete[]Wv;
-   delete[]Wpt;
-   delete[]Phi;
-   delete[]PsVol;
    return 0;
 }
 
 
+
+//=============================================================================================
 // Regular model for multicomponent solid solutions (c) TW March 2007
-// Calculates T,P corrected binary interaction parameters
-// Returns 0 if Ok or 1 if error
-long int
-TSolMod::RegularPT()
+// References:  Holland & Powell (1993)
+//=============================================================================================
+
+
+// Generic constructor for the TRegular class
+TRegular::TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int* arIPx, double* arIPc, double* arDCc,
+        double *arWx, double *arlnGam, double *aphVOL,
+        double dW, double eW ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, 
+        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, dW, eW )
 {
-// calculates P-T dependence of binary interaction parameters
-	long int ip;
-	double Wij[4];
-
-        if ( /* ModCode != SM_REGULAR || */ NPcoef < 4 || NPar < 1 )
-           return 1;  // foolproof!
-
-	for (ip=0; ip<NPar; ip++)
-	{
-        Wij[0] = aIPc[NPcoef*ip];
-        Wij[1] = aIPc[NPcoef*ip+1];
-        Wij[2] = aIPc[NPcoef*ip+2];
-	    Wij[3] = Wij[0]+ Wij[1]*Tk + Wij[2]*Pbar;
-	    aIPc[NPcoef*ip+3] = Wij[3];
-	}
-	return 0;
+  alloc_internal();
+  // PTparam();
 }
 
 
+TRegular::~TRegular()
+{
+  free_internal();
+}
 
-// Regular model for multicomponent solid solutions (c) TW March 2007
-// References:  Holland & Powell (1993)
+
+void TRegular::alloc_internal()
+{
+	   Wu = new double [NPar];
+	   Ws = new double [NPar];
+	   Wv = new double [NPar];
+	   Wpt = new double [NPar];
+}
+
+
+void TRegular::free_internal()
+{
+	 if(Wu)  delete[]Wu;
+	 if(Ws)  delete[]Ws;
+	 if(Wv)  delete[]Wv;
+	 if(Wpt)  delete[]Wpt;
+}
+
+
+//   Calculates T,P corrected binary interaction parameters
+long int TRegular::PTparam()
+{
+	long int ip;
+   if ( NPcoef < 3 || NPar < 1 )
+	           return 1;
+
+// read interaction parameters and correct to T,P
+	   for (ip=0; ip<NPar; ip++)
+	   {
+	     Wu[ip] = aIPc[NPcoef*ip];
+		 Ws[ip] = aIPc[NPcoef*ip+1];
+		 Wv[ip] = aIPc[NPcoef*ip+2];
+		 Wpt[ip] = Wu[ip]+ Ws[ip]*Tk + Wv[ip]*Pbar;
+	     aIP[ip] = Wpt[ip];
+		 // aIPc[NPcoef*ip+3] = Wpt[ip]; // obsolete
+	   }
+	   return 0;
+}
+
+
 // Calculates activity coefficients and excess functions
-// Returns 0 if Ok or not 0 if error
 long int
-TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-         double &CPex_ )
+TRegular::MixMod()
 {
    long int ip, j, i1, i2;
    double dj, dk;
    double gEX, vEX, hEX, sEX, cpEX, uEX;
-   double *Wu;
-   double *Ws;
-   double *Wv;
-   double *Wpt;   // Interaction coeffs at P-T
 
-   if ( /* ModCode != SM_REGULAR || */ NPcoef < 4 || NPar < 1 || NComp < 2
-         || MaxOrd < 2 || !x || !lnGamma )
-           return 1;  // foolproof!
-
-   Wu = new double [NPar];
-   Ws = new double [NPar];
-   Wv = new double [NPar];
-   Wpt = new double [NPar];
-
-   if( !Wpt || !Wu || !Ws || !Wv )
-        return -1;  // memory alloc failure
-
-	// read P-T corrected interaction parameters
-   for (ip=0; ip<NPar; ip++)
-   {
-    Wu[ip] = aIPc[NPcoef*ip];
-	Ws[ip] = aIPc[NPcoef*ip+1];
-	Wv[ip] = aIPc[NPcoef*ip+2];
-	Wpt[ip] = aIPc[NPcoef*ip+3]; // were stored in RegularPT()
-   }
+   if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+           return 1;
 
    // calculate activity coefficients
    for (j=0; j<NComp; j++)      // index end members with j
@@ -282,9 +306,9 @@ TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	    else
 		dk = 0.;
 	    lnGamRT -= (dj-x[i1])*(dk-x[i2])*Wpt[ip];
-	}
-        lnGam = lnGamRT/(R_CONST*Tk);
-//	Gam = exp(lnGam);
+	 }
+
+    lnGam = lnGamRT/(R_CONST*Tk);
 	lnGamma[j] = lnGam;
 	}
 
@@ -307,77 +331,103 @@ TSolMod::RegularMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
    }
 
    hEX = uEX+vEX*Pbar;
-   Gex_ = gEX;
-   Vex_ = vEX;
-   Hex_ = hEX;
-   Sex_ = sEX;
-   CPex_ = cpEX;
 
-   delete[]Wu;
-   delete[]Ws;
-   delete[]Wv;
-   delete[]Wpt;
    return 0;
 }
 
 
 
+//=============================================================================================
 // Redlich-Kister model for multicomponent solid solutions (c) TW March 2007
-// Calculates T,P corrected binary interaction parameters (4 per interaction)
-// Returns 0 if Ok or 1 if error
-long int
-TSolMod::RedlichKisterPT()
+// References: Hillert (1998)
+//=============================================================================================
+
+
+// Generic constructor for the TRedlichKister class
+TRedlichKister::TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int* arIPx, double* arIPc, double* arDCc,
+        double *arWx, double *arlnGam, double *aphVOL,
+        double dW, double eW ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, dW, eW )
 {
-// calculates P-T dependence of binary interaction parameters
-	long int ip;
-	double L0[5];
-	double L1[5];
-	double L2[5];
-	double L3[5];
-
-        if ( /* ModCode != SM_GUGGENM || */ NPcoef < 20 || NPar < 1 )
-           return 1;  // foolproof!
-
-	for (ip=0; ip<NPar; ip++)
-	{
-        L0[0] = aIPc[NPcoef*ip];
-        L0[1] = aIPc[NPcoef*ip+1];
-        L0[2] = aIPc[NPcoef*ip+2];
-        L0[3] = aIPc[NPcoef*ip+3];
-        L0[4] = L0[0] + L0[1]*Tk + L0[2]*Tk*log(Tk) + L0[3]*Pbar;
-        L1[0] = aIPc[NPcoef*ip+4];
-        L1[1] = aIPc[NPcoef*ip+5];
-        L1[2] = aIPc[NPcoef*ip+6];
-        L1[3] = aIPc[NPcoef*ip+7];
-        L1[4] = L1[0] + L1[1]*Tk + L1[2]*Tk*log(Tk) + L1[3]*Pbar;
-        L2[0] = aIPc[NPcoef*ip+8];
-        L2[1] = aIPc[NPcoef*ip+9];
-        L2[2] = aIPc[NPcoef*ip+10];
-        L2[3] = aIPc[NPcoef*ip+11];
-        L2[4] = L2[0] + L2[1]*Tk + L2[2]*Tk*log(Tk) + L2[3]*Pbar;
-        L3[0] = aIPc[NPcoef*ip+12];
-        L3[1] = aIPc[NPcoef*ip+13];
-        L3[2] = aIPc[NPcoef*ip+14];
-        L3[3] = aIPc[NPcoef*ip+15];
-        L3[4] = L3[0] + L3[1]*Tk + L3[2]*Tk*log(Tk) + L3[3]*Pbar;
-
-	    aIPc[NPcoef*ip+16] = L0[4];
-	    aIPc[NPcoef*ip+17] = L1[4];
-	    aIPc[NPcoef*ip+18] = L2[4];
-	    aIPc[NPcoef*ip+19] = L3[4];
-	}
-	return 0;
+  alloc_internal();
+  // PTparam();
 }
 
 
+TRedlichKister::~TRedlichKister()
+{
+  free_internal();
+}
 
-// Redlich-Kister model for multicomponent solid solutions (c) TW March 2007
-// References: Hillert (1998)
+
+void TRedlichKister::alloc_internal()
+{
+	   Lu = new double [NPar][4];
+	   Ls = new double [NPar][4];
+	   Lcp = new double [NPar][4];
+	   Lv = new double [NPar][4];
+	   Lpt = new double [NPar][4];
+}
+
+
+void TRedlichKister::free_internal()
+{
+	 if(Lu)  delete[]Lu;
+	 if(Ls)  delete[]Ls;
+	 if(Lv)  delete[]Lv;
+	 if(Lpt)  delete[]Lpt;
+	 if(Lcp)  delete[]Lcp;
+}
+
+
+//   Calculates T,P corrected binary interaction parameters
+long int TRedlichKister::PTparam()
+{
+   long int ip;
+
+   if ( NPcoef < 16 || NPar < 1 )
+      return 1;
+
+   // read in interaction parameters
+  	for (ip=0; ip<NPar; ip++)
+  	{
+	   	Lu[ip][0] = aIPc[NPcoef*ip+0];
+	   	Ls[ip][0] = aIPc[NPcoef*ip+1];
+	   	Lcp[ip][0] = aIPc[NPcoef*ip+2];
+	   	Lv[ip][0] = aIPc[NPcoef*ip+3];
+	   	Lpt[ip][0] = Lu[ip][0] + Ls[ip][0]*Tk + Lcp[ip][0]*Tk*log(Tk) + Lv[ip][0]*Pbar;
+	    aIP[ip] = Lpt[ip][0];
+	// aIPc[NPcoef*ip+16] = Lpt[ip][0]; // obsolete
+	   	Lu[ip][1] = aIPc[NPcoef*ip+4];
+	   	Ls[ip][1] = aIPc[NPcoef*ip+5];
+	   	Lcp[ip][1] = aIPc[NPcoef*ip+6];
+	   	Lv[ip][1] = aIPc[NPcoef*ip+7];
+	   	Lpt[ip][1] = Lu[ip][1] + Ls[ip][1]*Tk + Lcp[ip][1]*Tk*log(Tk) + Lv[ip][1]*Pbar;
+	// aIPc[NPcoef*ip+17] = Lpt[ip][1]; // obsolete
+	   	Lu[ip][2] = aIPc[NPcoef*ip+8];
+	   	Ls[ip][2] = aIPc[NPcoef*ip+9];
+	   	Lcp[ip][2] = aIPc[NPcoef*ip+10];
+	   	Lv[ip][2] = aIPc[NPcoef*ip+11];
+	   	Lpt[ip][2] = Lu[ip][2] + Ls[ip][2]*Tk + Lcp[ip][2]*Tk*log(Tk) + Lv[ip][2]*Pbar;
+	// aIPc[NPcoef*ip+18] = Lpt[ip][2]; // obsolete
+	   	Lu[ip][3] = aIPc[NPcoef*ip+12];
+	   	Ls[ip][3] = aIPc[NPcoef*ip+13];
+	   	Lcp[ip][3] = aIPc[NPcoef*ip+14];
+	   	Lv[ip][3] = aIPc[NPcoef*ip+15];
+	   	Lpt[ip][3] = Lu[ip][3] + Ls[ip][3]*Tk + Lcp[ip][3]*Tk*log(Tk) + Lv[ip][3]*Pbar;
+	// aIPc[NPcoef*ip+19] = Lpt[ip][3]; // obsolete
+	}
+   return 0;
+}
+
+
 // Calculates activity coefficients and excess functions
-// Returns 0 if Ok or not 0 if error
 long int
-TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-         double &CPex_ )
+TRedlichKister::MixMod()
 {
    long int ip, j;
    long int i1, i2, L, I, J;
@@ -385,58 +435,8 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
    double L0, L1, L2, L3;
    double gEX, vEX, hEX, sEX, cpEX, uEX;
 
-   double **Lu;
-   double **Ls;
-   double **Lcp;
-   double **Lv;
-   double **Lpt;
-
-   if ( /* ModCode != SM_REGULAR || */ NPcoef < 20 || NPar < 1 || NComp < 2
-         || MaxOrd < 2 || !x || !lnGamma )
-           return 1;  // foolproof!
-
-   Lu = new double *[NPar];
-   Ls = new double *[NPar];
-   Lcp = new double *[NPar];
-   Lv = new double *[NPar];
-   Lpt = new double *[NPar];
-
-   for (ip=0; ip<NPar; ip++)
-   {
-	   Lu[ip] = new double [4];
-	   Ls[ip] = new double [4];
-	   Lcp[ip] = new double [4];
-	   Lv[ip] = new double [4];
-	   Lpt[ip] = new double [4];
-   }
-
-   if( !Lu || !Ls || !Lcp || !Lv || !Lpt )
-        return -1;  // memory alloc failure
-
-	// read in interaction parameters
-   	for (ip=0; ip<NPar; ip++)
-   	{
-	   	Lu[ip][0] = aIPc[NPcoef*ip+0];
-	   	Ls[ip][0] = aIPc[NPcoef*ip+1];
-	   	Lcp[ip][0] = aIPc[NPcoef*ip+2];
-	   	Lv[ip][0] = aIPc[NPcoef*ip+3];
-	   	Lpt[ip][0] = aIPc[NPcoef*ip+16];
-	   	Lu[ip][1] = aIPc[NPcoef*ip+4];
-	   	Ls[ip][1] = aIPc[NPcoef*ip+5];
-	   	Lcp[ip][1] = aIPc[NPcoef*ip+6];
-	   	Lv[ip][1] = aIPc[NPcoef*ip+7];
-	   	Lpt[ip][1] = aIPc[NPcoef*ip+17];
-	   	Lu[ip][2] = aIPc[NPcoef*ip+8];
-	   	Ls[ip][2] = aIPc[NPcoef*ip+9];
-	   	Lcp[ip][2] = aIPc[NPcoef*ip+10];
-	   	Lv[ip][2] = aIPc[NPcoef*ip+11];
-	   	Lpt[ip][2] = aIPc[NPcoef*ip+18];
-	   	Lu[ip][3] = aIPc[NPcoef*ip+12];
-	   	Ls[ip][3] = aIPc[NPcoef*ip+13];
-	   	Lcp[ip][3] = aIPc[NPcoef*ip+14];
-	   	Lv[ip][3] = aIPc[NPcoef*ip+15];
-	   	Lpt[ip][3] = aIPc[NPcoef*ip+19];
-	}
+   if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+           return 1;
 
 	// calculate activity coefficients
 	for (j=0; j<NComp; j++)      // index end members with j
@@ -490,7 +490,6 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
 		}
 
 		lnGam = lnGamRT/(R_CONST*Tk);
-		//	Gam = exp(lnGam);
 		lnGamma[j] = lnGam;
 	}
 
@@ -537,99 +536,40 @@ TSolMod::RedlichKisterMixMod( double &Gex_, double &Vex_, double &Hex_, double &
   	}
 
    	hEX = uEX+vEX*Pbar;
-   	Gex_ = gEX;
-   	Vex_ = vEX;
-   	Hex_ = hEX;
-   	Sex_ = sEX;
-   	CPex_ = cpEX;
-
-   	for (ip=0; ip<NPar; ip++)
-   	{
-   		delete[]Lu[ip];
-   		delete[]Ls[ip];
-   		delete[]Lcp[ip];
-   		delete[]Lv[ip];
-   		delete[]Lpt[ip];
-   	}
-   	delete[]Lu;
-   	delete[]Ls;
-   	delete[]Lcp;
-   	delete[]Lv;
-   	delete[]Lpt;
-
    	return 0;
 }
 
 
 
+//=============================================================================================
 // NRTL model for liquid solutions (c) TW June 2008
-// Calculates T-corrected interaction parameters
-// Returns 0 if OK or 1 if error
-long int
-TSolMod::NRTL_PT()
+// References: Renon and Prausnitz (1968), Prausnitz et al. (1997)
+//=============================================================================================
+
+
+// Generic constructor for the TNRTL class
+TNRTL::TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int* arIPx, double* arIPc, double* arDCc,
+        double *arWx, double *arlnGam, double *aphVOL,
+        double dW, double eW ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, dW, eW )
 {
-	// calculates T-dependence of binary interaction parameters
-	long int ip;
-	double A, B, C, D, E, F;
-	double tau, dtau, d2tau, alp, dalp, d2alp;
-
-        if ( /* ModCode != SM_NRTL || */ NPcoef < 12 || NPar < 1 )
-           return 1;  // foolproof!
-
-	for (ip=0; ip<NPar; ip++)
-	{
-		A = aIPc[NPcoef*ip+0];
-		B = aIPc[NPcoef*ip+1];
-		C = aIPc[NPcoef*ip+2];
-		D = aIPc[NPcoef*ip+3];
-		E = aIPc[NPcoef*ip+4];
-		F = aIPc[NPcoef*ip+5];
-		tau = A + B/Tk + C*Tk + D*log(Tk);	// partial derivatives of tau and alp
-		dtau = - B/pow(Tk,2.) + C + D/Tk;
-		d2tau = 2.*B/pow(Tk,3.) - D/pow(Tk,2.);
-		alp = E + F*(Tk-273.15);
-		dalp = F;
-		d2alp = 0.0;
-		aIPc[NPcoef*ip+6] = tau;
-		aIPc[NPcoef*ip+7] = dtau;
-		aIPc[NPcoef*ip+8] = d2tau;
-		aIPc[NPcoef*ip+9] = alp;
-		aIPc[NPcoef*ip+10] = dalp;
-		aIPc[NPcoef*ip+11] = d2alp;
-	}
-	return 0;
+  alloc_internal();
+  // PTparam();
 }
 
 
-
-// NRTL model for liquid solutions (c) TW June 2008
-// References: Renon and Prausnitz (1968), Prausnitz et al. (1997)
-// Calculates activity coefficients and excess functions
-// heat capacity calculation added, 06.06.2008 (TW)
-// Returns 0 if OK or 1 if error
-long int
-TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-         double &CPex_ )
+TNRTL::~TNRTL()
 {
-	long int ip, j, i, k;
-	long int i1, i2;
-	double K, L, M, N, O;
-	double U, dU, V, dV, d2U, d2V;
-	double g, dg, d2g, lnGam;
-	double gEX, vEX, hEX, sEX, cpEX;
-	double **Tau;
-	double **dTau;
-	double **d2Tau;
-	double **Alp;
-	double **dAlp;
-	double **d2Alp;
-	double **G;
-	double **dG;
-	double **d2G;
+  free_internal();
+}
 
-	if ( NPcoef < 12 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-	        return 1;  // foolproof!
 
+void TNRTL::alloc_internal()
+{
 	Tau = new double *[NComp];
 	dTau = new double *[NComp];
 	d2Tau = new double *[NComp];
@@ -639,8 +579,7 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	G = new double *[NComp];
 	dG = new double *[NComp];
 	d2G = new double *[NComp];
-
-    for (j=0; j<NComp; j++)
+    for (long int j=0; j<NComp; j++)
     {
     	Tau[j] = new double [NComp];
     	dTau[j] = new double [NComp];
@@ -652,6 +591,46 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 		dG[j] = new double [NComp];
 		d2G[j] = new double [NComp];
 	}
+
+}
+
+
+void TNRTL::free_internal()
+{
+  	// cleaning memory
+	   	for (long int j=0; j<NComp; j++)
+	   	{
+	   		delete[]Tau[j];
+	   		delete[]dTau[j];
+	   		delete[]d2Tau[j];
+	   		delete[]Alp[j];
+	   		delete[]dAlp[j];
+	   		delete[]d2Alp[j];
+			delete[]G[j];
+			delete[]dG[j];
+			delete[]d2G[j];
+		}
+	   	delete[]Tau;
+	   	delete[]dTau;
+	   	delete[]d2Tau;
+	   	delete[]Alp;
+	   	delete[]dAlp;
+	   	delete[]d2Alp;
+		delete[]G;
+		delete[]dG;
+		delete[]d2G;
+}
+
+
+//   Calculates T,P corrected binary interaction parameters
+long int TNRTL::PTparam()
+{
+	long int ip, i, j, i1, i2;
+	double A, B, C, D, E, F;
+	double tau, dtau, d2tau, alp, dalp, d2alp;
+
+    if ( NPcoef < 6 || NPar < 1 )
+       return 1;
 
 	// fill internal arrays of interaction parameters with standard value
 	for (j=0; j<NComp; j++)
@@ -675,12 +654,31 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	{
 		i1 = aIPx[MaxOrd*ip];
 		i2 = aIPx[MaxOrd*ip+1];
-		Tau[i1][i2] = aIPc[NPcoef*ip+6];
-		dTau[i1][i2] = aIPc[NPcoef*ip+7];
-		d2Tau[i1][i2] = aIPc[NPcoef*ip+8];
-		Alp[i1][i2] = aIPc[NPcoef*ip+9];
-		dAlp[i1][i2] = aIPc[NPcoef*ip+10];
-		d2Alp[i1][i2] = aIPc[NPcoef*ip+11];
+		A = aIPc[NPcoef*ip+0];
+		B = aIPc[NPcoef*ip+1];
+		C = aIPc[NPcoef*ip+2];
+		D = aIPc[NPcoef*ip+3];
+		E = aIPc[NPcoef*ip+4];
+		F = aIPc[NPcoef*ip+5];
+		tau = A + B/Tk + C*Tk + D*log(Tk);	// partial derivatives of tau and alp
+		dtau = - B/pow(Tk,2.) + C + D/Tk;
+		d2tau = 2.*B/pow(Tk,3.) - D/pow(Tk,2.);
+		alp = E + F*(Tk-273.15);
+		dalp = F;
+		d2alp = 0.0;
+
+		Tau[i1][i2] = tau;
+		dTau[i1][i2] =  dtau;
+		d2Tau[i1][i2] = d2tau;
+		Alp[i1][i2] = alp;
+		dAlp[i1][i2] = dalp;
+		d2Alp[i1][i2] =  d2alp;
+		//aIPc[NPcoef*ip+6] = tau;          //obsolete
+		//aIPc[NPcoef*ip+7] = dtau;
+		//aIPc[NPcoef*ip+8] = d2tau;
+		//aIPc[NPcoef*ip+9] = alp;
+		//aIPc[NPcoef*ip+10] = dalp;
+		//aIPc[NPcoef*ip+11] = d2alp;
 
 		G[i1][i2] = exp(-Alp[i1][i2]*Tau[i1][i2]);
 		dG[i1][i2] = - ( dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2] )
@@ -694,6 +692,23 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 		// d2G[i1][i2] = -Alp[i1][i2]*(-Alp[i1][i2]*exp(-Alp[i1][i2]*Tau[i1][i2])*dTau[i1][i2]*dTau[i1][i2]
 		//		+ exp(-Alp[i1][i2]*Tau[i1][i2])*d2Tau[i1][i2]);
 	}
+   return 0;
+}
+
+
+// Calculates activity coefficients and excess functions
+// heat capacity calculation added, 06.06.2008 (TW)
+long int
+TNRTL::MixMod()
+{
+	long int  j, i, k;
+	double K, L, M, N, O;
+	double U, dU, V, dV, d2U, d2V;
+	double g, dg, d2g, lnGam;
+	double gEX, vEX, hEX, sEX, cpEX;
+
+	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+	        return 1;
 
 	// calculate activity coefficients
 	for (j=0; j<NComp; j++)
@@ -758,102 +773,77 @@ TSolMod::NRTL_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	sEX = (hEX-gEX)/Tk;
 	cpEX = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
-	Gex_ = gEX;
-	Vex_ = vEX;
-	Hex_ = hEX;
-	Sex_ = sEX;
-	CPex_ = cpEX;
-
-   	// cleaning memory
-   	for (j=0; j<NComp; j++)
-   	{
-   		delete[]Tau[j];
-   		delete[]dTau[j];
-   		delete[]d2Tau[j];
-   		delete[]Alp[j];
-   		delete[]dAlp[j];
-   		delete[]d2Alp[j];
-		delete[]G[j];
-		delete[]dG[j];
-		delete[]d2G[j];
-	}
-   	delete[]Tau;
-   	delete[]dTau;
-   	delete[]d2Tau;
-   	delete[]Alp;
-   	delete[]dAlp;
-   	delete[]d2Alp;
-	delete[]G;
-	delete[]dG;
-	delete[]d2G;
-	return 0;
-}
-
-
-// Wilson model for liquid solutions (c) TW June 2008
-// Calculates T-corrected interaction parameters
-// Returns 0 if OK or 1 if error
-long int
-TSolMod::Wilson_PT()
-{
-	// calculates T-dependence of binary interaction parameters
-	long int ip;
-	double A, B, C, D;
-	double lam, dlam, d2lam;
-
-        if ( /* ModCode != SM_NRTL || */ NPcoef < 7 || NPar < 1 )
-           return 1;  // foolproof!
-
-	for (ip=0; ip<NPar; ip++)
-	{
-		A = aIPc[NPcoef*ip+0];
-		B = aIPc[NPcoef*ip+1];
-		C = aIPc[NPcoef*ip+2];
-		D = aIPc[NPcoef*ip+3];
-		lam = exp( A + B/Tk + C*Tk + D*log(Tk) );
-		dlam = lam*( - B/pow(Tk,2.) + C + D/Tk );
-		d2lam = dlam*( - B/pow(Tk,2.) + C + D/Tk ) + lam*( 2.*B/pow(Tk,3.) - D/pow(Tk,2.) );
-		aIPc[NPcoef*ip+4] = lam;
-		aIPc[NPcoef*ip+5] = dlam;
-		aIPc[NPcoef*ip+6] = d2lam;
-	}
 	return 0;
 }
 
 
 
+//=============================================================================================
 // Wilson model for liquid solutions (c) TW June 2008
 // References: Prausnitz et al. (1997)
-// Calculates activity coefficients and excess functions
-// heat capacity calculation added, 06.06.2008 (TW)
-// Returns 0 if OK or 1 if error
-long int
-TSolMod::Wilson_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-         double &CPex_ )
+//=============================================================================================
+
+
+// Generic constructor for the TWilson class
+TWilson::TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int* arIPx, double* arIPc, double* arDCc,
+        double *arWx, double *arlnGam, double *aphVOL,
+        double dW, double eW ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, dW, eW )
 {
-	long int ip, j, i, k;
-	long int i1, i2;
-	double K, L, M;
-	double U, dU, d2U;
-	double g, dg, d2g, lnGam;
-	double gEX, vEX, hEX, sEX, cpEX;
-	double **Lam;
-	double **dLam;
-	double **d2Lam;
+  alloc_internal();
+  // PTparam();
+}
 
-	if ( NPcoef < 7 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-	        return 1;  // foolproof!
 
+TWilson::~TWilson()
+{
+  free_internal();
+}
+
+
+void TWilson::alloc_internal()
+{
 	Lam = new double *[NComp];
 	dLam = new double *[NComp];
 	d2Lam = new double *[NComp];
 
-    for (j=0; j<NComp; j++)
+    for (long int j=0; j<NComp; j++)
     {
 		Lam[j] = new double [NComp];
 		dLam[j] = new double [NComp];
 		d2Lam[j] = new double [NComp];
 	}
+}
+
+
+void TWilson::free_internal()
+{
+   	// cleaning memory
+   	for (long int j=0; j<NComp; j++)
+   	{
+		delete[]Lam[j];
+		delete[]dLam[j];
+		delete[]d2Lam[j];
+	}
+	delete[]Lam;
+	delete[]dLam;
+	delete[]d2Lam;
+}
+
+
+// Calculates T-corrected interaction parameters
+long int TWilson::PTparam()
+{
+	long int ip, i, j, i1, i2;
+	double A, B, C, D;
+	double lam, dlam, d2lam;
+
+    if ( NPcoef < 4 || NPar < 1 )
+           return 1;
 
 	// fill internal arrays of interaction parameters with standard value
 	for (j=0; j<NComp; j++)
@@ -865,16 +855,43 @@ TSolMod::Wilson_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 			d2Lam[j][i] = 0.0;
 		}
 	}
-
 	// read and convert parameters that have non-standard value
 	for (ip=0; ip<NPar; ip++)
 	{
+		A = aIPc[NPcoef*ip+0];
+		B = aIPc[NPcoef*ip+1];
+		C = aIPc[NPcoef*ip+2];
+		D = aIPc[NPcoef*ip+3];
+		lam = exp( A + B/Tk + C*Tk + D*log(Tk) );
+		dlam = lam*( - B/pow(Tk,2.) + C + D/Tk );
+		d2lam = dlam*( - B/pow(Tk,2.) + C + D/Tk ) + lam*( 2.*B/pow(Tk,3.) - D/pow(Tk,2.) );
+
 		i1 = aIPx[MaxOrd*ip];
 		i2 = aIPx[MaxOrd*ip+1];
-		Lam[i1][i2] = aIPc[NPcoef*ip+4];
-		dLam[i1][i2] = aIPc[NPcoef*ip+5];
-		d2Lam[i1][i2] = aIPc[NPcoef*ip+6];
+		Lam[i1][i2] = lam;
+		dLam[i1][i2] = dlam;
+		d2Lam[i1][i2] = d2lam;
+		//aIPc[NPcoef*ip+4] = lam;     //obsolete
+		//aIPc[NPcoef*ip+5] = dlam;
+		//aIPc[NPcoef*ip+6] = d2lam;
 	}
+	return 0;
+}
+
+
+// Calculates activity coefficients and excess functions
+// heat capacity calculation added, 06.06.2008 (TW)
+long int
+TWilson::MixMod( )
+{
+	long int  j, i, k;
+	double K, L, M;
+	double U, dU, d2U;
+	double g, dg, d2g, lnGam;
+	double gEX, vEX, hEX, sEX, cpEX;
+
+	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+	        return 1;
 
 	// calculate activity coefficients (Wilson)
 	for (j=0; j<NComp; j++)
@@ -928,61 +945,8 @@ TSolMod::Wilson_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
 	sEX = (hEX-gEX)/Tk;
 	cpEX = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
-	Gex_ = gEX;
-	Vex_ = vEX;
-	Hex_ = hEX;
-	Sex_ = sEX;
-	CPex_ = cpEX;
-
-   	// cleaning memory
-   	for (j=0; j<NComp; j++)
-   	{
-		delete[]Lam[j];
-		delete[]dLam[j];
-		delete[]d2Lam[j];
-	}
-	delete[]Lam;
-	delete[]dLam;
-	delete[]d2Lam;
 	return 0;
 }
 
-
-// add other solution models here
-// SIT model re-implementation for aqueous electrolyte solutions
-long int TSolMod::SIT_PT()
-{
-   return 0;
-}
-
-long int TSolMod::SIT_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-		double &CPex_ )
-{
-    return 0;
-}
-
-// Pitzer HMW model for aqueous electrolyte solutions
-long int TSolMod::Pitzer_PT()
-{
-	return 0;
-}
-
-long int TSolMod::Pitzer_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-		double &CPex_ )
-{
-	return 0;
-}
-
-// Extended UNIQUAC model for aqueous electrolyte solutions
-long int TSolMod::EUNIQUAC_PT()
-{
-    return 0;
-}
-
-long int TSolMod::EUNIQUAC_MixMod( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-   		double &CPex_ )
-{
-	return 0;
-}
 
 //--------------------- End of s_fgl2.cpp ---------------------------

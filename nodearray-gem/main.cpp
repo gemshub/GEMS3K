@@ -30,8 +30,8 @@
 
 #include "nodearray.h"
 
-const int nNodes =  10;   // set here how many nodes you need
-const int nTimes = 20;    // set here how many time loops will be performed
+const long int nNodes =  10;   // set here how many nodes you need
+const long int nTimes = 20;    // set here how many time loops will be performed
 
 int main( int argc, char* argv[] )
 {
@@ -55,15 +55,15 @@ int main( int argc, char* argv[] )
      // your optional file with FMT input parameters
  
     double TimeGEM =0., TimeOfGEM, ct=0., dt=1.; // , dc;
-    int IterTotGEM = 0, PrecLoops, NumIterFIA, NumIterIPM;
-    int nIC, nPS;
+    long int IterTotGEM = 0, PrecLoops, NumIterFIA, NumIterIPM;
+    long int nIC, nPS;
     TNodeArray* na;
     // The NodeArray must be allocated here
     TNodeArray::na = na = new TNodeArray( nNodes );
 
    // Prepare the array for initial node system and boundary condition codes
-    int nodeIn[nNodes] = { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-    int Mode, RetCode; 
+    long int nodeIn[nNodes] = { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+    long int Mode, RetCode; 
 
     // Here we read the MULTI structure, DCH and DBR files prepared from GEMS
        // There must be two DBR files - the first will be loaded into node 0 and 
@@ -90,7 +90,7 @@ int main( int argc, char* argv[] )
     cout << "Nodearray-gem test start: nNodes = " << nNodes << "  nTimes = " << nTimes 
     << endl << endl;
     
-    for( int in=0; in<nNodes; in++) // Loading dynamic parameters
+    for( long int in=0; in<nNodes; in++) // Loading dynamic parameters
     {
     	C0[in]->NodeTypeHY = 0; // These dynamic parameters can be used in a real MT model
     	C0[in]->Vt = 1.;        //   and can be set for each node separately
@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
      C0[0]->NodeTypeHY = 3; tbN[0] = 3;
      C0[nNodes-1]->NodeTypeHY = -3; tbN[nNodes-1] = -3; 
 
-   for ( int in=0; in<nNodes; in++)  // Copying node layer 0 to node layer 1  
+   for ( long int in=0; in<nNodes; in++)  // Copying node layer 0 to node layer 1  
    {                          // (for MT models that can reset time step dt 
         Mode = NEED_GEM_SIA; 
 	    na->CopyNodeFromTo( in, nNodes, C0, C1 );
@@ -133,12 +133,12 @@ int main( int argc, char* argv[] )
 // (2) ----------------------------------------------
 // Work loop for the coupled FMT-GEM modelling
    // Getting DATABR indexes for chemical species to be monitored
-   int xiCa = na->IC_name_to_xDB("Ca");
-   int xiSr = na->IC_name_to_xDB("Sr");
-   int xiZz = na->IC_name_to_xDB("Zz");
-   int xiCl = na->IC_name_to_xDB("Cl");
-   int xCal = na->Ph_name_to_xDB("(Sr,Ca)CO3(reg)");
-   int xStr = na->Ph_name_to_xDB("(Ca,Ba,Sr)SO4");
+   long int xiCa = na->IC_name_to_xDB("Ca");
+   long int xiSr = na->IC_name_to_xDB("Sr");
+   long int xiZz = na->IC_name_to_xDB("Zz");
+   long int xiCl = na->IC_name_to_xDB("Cl");
+   long int xCal = na->Ph_name_to_xDB("(Sr,Ca)CO3(reg)");
+   long int xStr = na->Ph_name_to_xDB("(Ca,Ba,Sr)SO4");
    // Checking indexes
    cout <<  "  xiCa= " << xiCa <<  "  xiSr=" << xiSr << "  xiZz=" << xiZz
         << "  xCalSS=" << xCal << "  xCelSS=" << xStr << endl;
@@ -147,9 +147,9 @@ int main( int argc, char* argv[] )
    bool NeedGEM;  // Flag set to true if GEM calculation for this node is needed
    bool TimeStepAccept; // Flag set to true if the time step dt is accepted
 
-   for( int it=0; it<nTimes; it++ )  // iterations over time
+   for( long int it=0; it<nTimes; it++ )  // iterations over time
    {
-     int in;
+     long int in;
      ct += dt;  
      iaN[0] = false; 
      //   cout << " FMT loop begins: " << endl;

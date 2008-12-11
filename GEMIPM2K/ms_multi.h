@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1121 2008-11-25 10:16:38Z gems $
+// $Id: ms_multi.h 1141 2008-12-09 10:29:43Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -34,6 +34,8 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 #include "m_const.h"
 
 #endif
+
+#include "s_fgl.h"
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
@@ -320,7 +322,7 @@ class TMulti
     MULTI *pmp;
 
 // Internal arrays for the performance optimization  (since version 2.0.0)
-   long int sizeN, sizeL, sizeAN; 
+   long int sizeN; /*, sizeL, sizeAN;*/ 
    double *AA;
    double *BB;
    long int *arrL;
@@ -332,6 +334,12 @@ class TMulti
    void Free_compressed_xAN();
    void Free_internal();
 
+   long int sizeFIs;     // current size of phSolMod
+   TSolMod* (*phSolMod); // size current FIs -   number of multicomponent phases
+   
+   void Alloc_TSolMod( long int newFIs );
+   void Free_TSolMod();
+   
 #ifndef IPMGEMPLUGIN
 // These pointers and methods are only used in GEMS-PSI
     SYSTEM *syp;
@@ -413,19 +421,20 @@ class TMulti
     void DebyeHueckel2Kjel( long int jb, long int je, long int jpb, long int jdb, long int k );
     void DebyeHueckel1LL( long int jb, long int je, long int k );
     void Davies03temp( long int jb, long int je, long int jpb, long int k );
-    void SIT_aqac_PSI( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
 // fluid mixtures
-    void ChurakovFluid( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void PRSVFluid( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
+//    void ChurakovFluid( long int jb, long int je, long int jpb, long int jdb, long int k );
+    void CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
+//    void PRSVFluid( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
     void PRSVofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
 // condensed mixtures
     void RedlichKister( long int jb, long int je, long int jpb, long int jdb, long int k );
     void MargulesBinary( long int jb, long int je, long int jpb, long int jdb, long int k );
     void MargulesTernary( long int jb, long int je, long int jpb, long int jdb, long int k );
 // Generic solution model calls
-void SolModParPT ( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
-void SolModActCoeff( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
+void SolModCreate( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
+void SolModParPT( long int k, char ModCode );
+void SolModActCoeff( long int k, char ModCode );
+void SolModExcessParam( long int k, char ModCode );
 
 // ipm_main.cpp - numerical part of GEM IPM-2
     void MultiCalcMain( long int rLoop );
@@ -508,11 +517,15 @@ public:
    TMulti()
    { 
 	 pmp = &pm;
-     sizeN = 0; sizeL = 0; sizeAN = 0;
+     sizeN = 0; 
      AA = 0;
      BB = 0;
      arrL = 0;
      arrAN = 0;
+     
+     sizeFIs = 0;
+     phSolMod = 0;
+
      pmp->Guns = 0;
      pmp->Vuns = 0;
      pmp->tpp_G = 0;  

@@ -160,7 +160,7 @@ int TGEM2MT::CheckPIAinNodes1D( char IAmode, int start_node, int end_node )
        end_node = min( end_node, (int)mtp->nC-1 );
 
        // Initializing iaNode vector
-       if( IAmode == NEED_GEM_PIA && CH->nDCb == CH->nDC )
+       if( IAmode == NEED_GEM_SIA && CH->nDCb == CH->nDC )
        {
     	  for( int ii = start_node; ii<= end_node; ii++ )
     		 iaN[ii] = false;    // potentially need PIA
@@ -300,14 +300,14 @@ bool TGEM2MT::CalcIPM( char mode, int start_node, int end_node, FILE* diffile )
 	 }
      C1[ii]->bIC[CH->nICb-1] = 0.;   // zeroing charge off in bulk composition
 //     NeedGEM = true;
-     if( mode == NEED_GEM_PIA )
+     if( mode == NEED_GEM_SIA )
      {   // smart algorithm
     	 if( iaN[ii] == true )
     	 {
     		 Mode = NEED_GEM_AIA;
        	 }
     	 else {
-    		 Mode = NEED_GEM_PIA;
+    		 Mode = NEED_GEM_SIA;
     		 if( mtp->PvSIA == S_ON )   // force loading of primal solution into GEMIPM
     			 Mode *= -1;            // othervise use internal (old) primal solution
     	 }
@@ -320,7 +320,7 @@ bool TGEM2MT::CalcIPM( char mode, int start_node, int end_node, FILE* diffile )
         // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
         mtp->TimeGEM +=	na->GEM_CalcTime();
         // checking RetCode from GEM IPM calculation
-        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_PIA ))
+        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
         {
 //          cout << "CalcIPM4 " << RetCode << endl;
           char buf[200];
@@ -337,13 +337,13 @@ bool TGEM2MT::CalcIPM( char mode, int start_node, int end_node, FILE* diffile )
                 case  ERR_GEM_AIA:
                       err_msg += "GEM calculation error using simplex IA";
                       break;
-                case  BAD_GEM_PIA:
+                case  BAD_GEM_SIA:
                       err_msg += "Bad GEM result using previous solution IA";
                       break;
-                case  ERR_GEM_PIA:
+                case  ERR_GEM_SIA:
                       err_msg += "GEM calculation error using previous solution IA";
                       break;
-               case  TERROR_GEM:  err_msg +=  "Terminal error in GEMIPM2 module";
+               case  T_ERROR_GEM:  err_msg +=  "Terminal error in GEMIPM2 module";
           }
           if( mtp->PvMO != S_OFF && diffile )
           {  fprintf( diffile, "\nError reported from GEMIPM2 module\n%s\n",
