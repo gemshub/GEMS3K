@@ -770,7 +770,7 @@ TCGFcalc::~TCGFcalc()
 // set internally used parameters
 void TCGFcalc::set_internal()
 {
-   PI = 3.141592653589793120;    // pi
+   PI_1 = 3.141592653589793120;    // pi
    TWOPI = 6.283185307179586230;   // 2.*pi
    PISIX = 0.523598775598298927;    // pi/6.
    TWOPOW1SIX = 1.12246204830937302;   // 2^ = 1/6)
@@ -1444,7 +1444,7 @@ double TCGFcalc::RPA(double beta,double nuw)
   double fi1,fi2;
  fi1=(1.20110+(0.064890+(-76.860+(562.686+(-2280.090+(6266.840+(-11753.40+(14053.8+(-9491.490 +2731.030*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw;
  fi2=(0.588890+(-7.455360+(40.57590+(-104.8970+(60.25470+(390.6310+(-1193.080+(1576.350+(-1045.910+283.7580*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw)*nuw*nuw;
- return  (-12.*fi1 + 192.*fi2*beta)*beta*beta/PI;
+ return  (-12.*fi1 + 192.*fi2*beta)*beta*beta/PI_1;
 }
 
 
@@ -1644,7 +1644,7 @@ double TCGFcalc::J6LJ(double T,double ro)
   double kappa,Z,U,beta,F;
    beta=1./T;
    Z=ZWCANum(T,ro);
-   kappa=-16.*PI*ro*beta;
+   kappa=-16.*PI_1*ro*beta;
    U=UWCANum(T,ro);
    F=(4.*beta*U-Z+1.)/kappa;
    return F;
@@ -1736,8 +1736,8 @@ double TCGFcalc::FTOTALMIX(double T_Real,double ro_Real,EOSPARAM* param)
               }
             }
           }
-            A3=A3*32.*sqrt(14.*PI/5.)*
-                  rotmp*rotmp*PI*PI*PI/(135.*T_Real*T2R);
+            A3=A3*32.*sqrt(14.*PI_1/5.)*
+                  rotmp*rotmp*PI_1*PI_1*PI_1/(135.*T_Real*T2R);
             AP= A2/(1. - A3/A2);
          }
          else AP=0.;

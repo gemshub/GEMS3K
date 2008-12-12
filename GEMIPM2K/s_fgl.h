@@ -190,7 +190,7 @@ class TCGFcalc : public TSolMod
   private:
  
   double
-          PI,    // pi
+          PI_1,    // pi
           TWOPI,    // 2.*pi
           PISIX,    // pi/6.
           TWOPOW1SIX,   // 2^(1/6)

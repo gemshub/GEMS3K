@@ -643,7 +643,7 @@ void TPitzer::Ecalc( double z, double z1, double I, double Aphi,
   else
 	if( k==2 )
 	{
-     JMM=0.25*x -1. + 0.5*(bk[0]-dk[2]);
+     JMM=0.25*x -1. + 0.5*(bk[0]-bk[2]);
      JpMM=0.25 + 0.5*dzdx*(dk[0]-dk[2]);
 	}
     else
@@ -653,8 +653,8 @@ void TPitzer::Ecalc( double z, double z1, double I, double Aphi,
     }
 
   } //k
-  Etheta=(2.0 /(4.0*I)) * (JMN - 0.5*JMM - 0.5*JNN);
-  Ethetap= - (Etheta/I) +(2.0/(8.0*I*I)) *(xMN*JpMN - 0.5*JpMM - 0.5*xNN*JpNN);
+  Etheta=((z*z1) /(4.0*I)) * (JMN - 0.5*JMM - 0.5*JNN);
+  Ethetap= - (Etheta/I) +((z*z1)/(8.0*I*I)) *(xMN*JpMN - 0.5*JpMM - 0.5*xNN*JpNN);
 }
 
 
@@ -955,10 +955,10 @@ double TPitzer::lnGammaX(  long int X )
 	      Psi1(X,a1,c) = 0.;
 	    }else
 	      {
-           z=zc(X);
-           z1=zc(a1);
+           z=za(X);
+           z1=za(a1);
            Ecalc(z,z1,I,Aphi, Etheta,Ethetap);
-           Phi1=Theta(X,a1)+Etheta; 			 // Pitzer-Toughreact Report 2006, equation (A15)
+           Phi1=Theta1(X,a1)+Etheta; 			 // Pitzer-Toughreact Report 2006, equation (A15)
 	      }
           GX3=GX3+ma(a1)*(2*Phi1+mc(c)*Psi(X,a1,c));
 	 }
@@ -975,7 +975,7 @@ double TPitzer::lnGammaX(  long int X )
           C =Cphi(c,a1)/(2*sqrt(fabs(za(a1)*zc(c))));	 // Pitzer-Toughreact Report 2006, equation (A7)
           GX5a =GX5a+(mc(c)*ma(a1)* (C/(2*sqrt(fabs(zc(c)*za(X))))) );
   	   }
-      double GX5=za(X)*GX5a;
+      double GX5=fabs(za(X))*GX5a;
 // Term GX6
      double GX6a=0.;
      for( n=0; n<Nn; n++)
