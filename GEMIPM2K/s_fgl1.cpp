@@ -979,7 +979,7 @@ double TPitzer::lnGammaX(  long int X )
 // Term GX6
      double GX6a=0.;
      for( n=0; n<Nn; n++)
-         GX6a += mn(n)*Lam(n,X);
+         GX6a += mn(n)*Lam1(n,X);
      double GX6=2*GX6a;
 // Term GX
     double GX=GX1+GX2+GX3+GX4+GX5+GX6;
