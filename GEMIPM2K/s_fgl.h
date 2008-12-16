@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1141 2008-12-09 10:29:43Z gems $
+// $Id: s_fgl.h 1158 2008-12-16 13:51:27Z gems $
 //
 // Copyright (C) 2003-2007  S.Churakov, Th.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -23,7 +23,7 @@
 #define _s_fgl_h_
 
 // Added 09 May 2003
-// Definition of a class for CG EOS calculations for fluids
+// Declaration of a class for CG EOS calculations for fluids
 // Incorporates a C++ program written by Sergey Churakov (CSCS ETHZ)
 // implementing papers by Churakov & Gottschalk 2003 GCA v.67 p. 2397-2414
 // and p. 2415-2425
@@ -188,7 +188,7 @@ public:
 class TCGFcalc : public TSolMod
 {
   private:
- 
+
   double
           PI_1,    // pi
           TWOPI,    // 2.*pi
@@ -334,10 +334,9 @@ public:
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Added 19 July 2006 by Th.Wagner and D.Kulik
-// Definition of a class for PRSV EOS calculations for fluids
+// Added 19 July 2006 by T.Wagner and D.Kulik
+// Declaration of a class for Peng-Robinson-Stryjek-Vera (PRSV) EOS calculations for fluids
 // Incorporates a C++ program written by Thomas Wagner (Univ. Tuebingen)
-// th.wagner@uni-tuebingen.de
 
 class TPRSVcalc: public TSolMod
 // Peng-Robinson-Styjek-Vera EOS calculations
@@ -351,7 +350,7 @@ class TPRSVcalc: public TSolMod
 
      // main work arrays
      double (*Eosparm)[6];   // EoS parameters
-     double (*Pureparm)[5];  // Parameters a and b for cubic EoS
+     double (*Pureparm)[5];  // Parameters a, b, sqrAl, ac, dAldT for cubic EoS
      double (*Fugpure)[5];   // Fugacity parameters of pure gas species
      double (*Fugci)[4];     // Fugacity parameters of species in the mixture
 
@@ -375,20 +374,20 @@ class TPRSVcalc: public TSolMod
     // Destructor
     ~TPRSVcalc();
 
-    // Calculation of pure species properties (pure fugacities)
+    // Calculates pure species properties (pure fugacities)
     long int PureSpecies( );
 
-    // Calculation of T,P corrected interaction parameters
+    // Calculates T,P corrected interaction parameters
 	long int PTparam();
 
-    // Calculation of activity coefficients
+    // Calculates activity coefficients
     long int MixMod();
 
 	// Called from IPM-Gamma() where activity coefficients are computed
-    // long int PRActivCoefPT(
-    // double *fugpure );
+    // long int PRActivCoefPT( double *fugpure );
 
-   long int CalcFugPure( void );
+    // Calculates pure species properties (called from DCthermo)
+    long int PRCalcFugPure( void );
 
 protected:
 
@@ -405,9 +404,79 @@ protected:
      double &fugmix, double &zmix, double &vmix);
 	long int FugacitySpec( double *fugpure  );
 
-//	long int GetEosParam( float *params ); // Loads EoS parameters for NComp species
-//  long int GetMoleFract( double *Wx ); // Loads mole fractions for NComp species
-	double ObtainResults( double *ActCoef ); // returns activity coeffs and phase volume
+	// long int GetEosParam( float *params ); // Loads EoS parameters for NComp species
+	// long int GetMoleFract( double *Wx ); // Loads mole fractions for NComp species
+	// double ObtainResults( double *ActCoef ); // returns activity coeffs and phase volume
+
+};
+
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Added 15 December 2008 by T. Wagner
+// Declaration of a class for Soave-Redlich-Kwong (SRK) EOS calculations for fluids
+// Incorporates a C++ program written by T. Wagner (ETH Zurich)
+
+class TSRKcalc: public TSolMod
+// Soave-Redlich-Kwong EOS calculations
+{
+  private:
+
+	 double PhVol;   // bar, T Kelvin, phase volume in cm3
+     double *Pparc;   // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+     double *aGEX;     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+     double *aVol;     // DC molar volumes, cm3/mol [L]
+
+     // main work arrays
+     double (*Eosparm)[4];   // EoS parameters
+     double (*Pureparm)[5];  // Parameters a, b, sqrAl, ac, dAldT for cubic EoS
+     double (*Fugpure)[5];   // Fugacity parameters of pure gas species
+     double (*Fugci)[4];     // Fugacity parameters of species in the mixture
+
+     double **KK0ij;    //  Constant term of the binary interaction parameter
+     double **AAij;     //  binary a terms in the mixture
+
+ 	 void alloc_internal();
+ 	 void free_internal();
+
+    public:
+
+    // Constructor
+    TSRKcalc( long int NCmp, double Pp, double Tkp );
+    TSRKcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+         long int* arIPx, double* arIPc, double* arDCc,
+         double *arWx, double *arlnGam, double *aphVOL, double * aPparc,
+         double *arGEX, double *arVol, double dW, double eW );
+
+    // Destructor
+    ~TSRKcalc();
+
+    // Calculates pure species properties (pure fugacities)
+    long int PureSpecies( );
+
+    // Calculates T,P corrected interaction parameters
+	long int PTparam();
+
+    // Calculates activity coefficients
+    long int MixMod();
+
+    // Calculates pure species properties (called from DCthermo)
+    long int SRCalcFugPure( void );
+
+protected:
+
+	long int AB(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit,
+			double &apure, double &bpure, double &sqrAL, double &ac, double &dALdT);
+	// Calc. fugacity for 1 species at X=1
+	long int SRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
+	        double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
+	long int FugacityPure( long int j ); // Calculates the fugacity of pure species
+	long int Cardano(double a2, double a1, double a0, double &z1, double &z2, double &z3);
+	long int MixParam( double &amix, double &bmix);
+	long int FugacityMix( double amix, double bmix,
+     double &fugmix, double &zmix, double &vmix);
+	long int FugacitySpec( double *fugpure  );
 
 };
 
@@ -453,7 +522,7 @@ public:
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//  Van Laar model for solid solutions (c) TW March 2007
+// Van Laar model for solid solutions (c) TW March 2007
 // References:  Holland & Powell (2003)
 
 class TVanLaar: public TSolMod
@@ -493,7 +562,7 @@ public:
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Regular model for multicomponent solid solutions (c) TW March 2007
-// References:  Holland & Powell (1993)
+// References: Holland & Powell (1993)
 
 class TRegular: public TSolMod
 {
@@ -645,7 +714,7 @@ public:
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Pitzer model, Harvie-M�ller-Weare (HMW) version, with explicit temperature dependence
+// Pitzer model, Harvie-Moller-Weare (HMW) version, with explicit temperature dependence
 // References:
 
 class TPitzer: public TSolMod
@@ -756,7 +825,7 @@ private:
     {
 		double sum_ =0.;
 		for( long int i=0; i<Narr; i++ )
-          sum_ += arr[ xx[i]];
+          sum_ += arr[xx[i]];
 		return sum_;
     }
 

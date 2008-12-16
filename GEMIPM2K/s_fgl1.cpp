@@ -219,7 +219,7 @@ long int TPitzer::Pitzer_calc_Gamma( )
 
     for( X=0; X<Na; X++ )
     	lnGamma[xax[X]] = lnGammaX( X );
-
+if( Nn > 0 )
     for( N=0; N<Nn; N++ )
     	lnGamma[xnx[N]] = lnGammaN( N );
 
@@ -283,6 +283,7 @@ void TPitzer::Pitzer_test_out( const char *path )
 
 void TPitzer::alloc_internal()
 {
+	int i;
 	// Input parameter arrays
 	xcx = new long int[Nc];
 	xax = new long int[Na];
@@ -295,6 +296,22 @@ void TPitzer::alloc_internal()
 	aTheta1 = new double[Na*Na];
     aPsi = new double[Nc*Nc*Na];
 	aPsi1 = new double[Na*Na*Nc];
+//	Cleaning allocated arrays
+	for( i=0; i < Nc*Na; i++ )
+	{
+	   abet0[i] = 0.0;
+	   abet1[i] = 0.0;
+	   abet2[i] = 0.0;
+	   aCphi[i] = 0.0;
+	}
+	for( i=0; i < Nc*Nc; i++ )
+	  aTheta[i] = 0.0;
+	for( i=0; i < Na*Na; i++ )
+	  aTheta1[i] = 0.0;
+	for( i=0; i < Nc*Nc*Na; i++ )
+	  aPsi[i] = 0.0;
+	for( i=0; i < Na*Na*Nc; i++ )
+	  aPsi1[i] = 0.0;
 
 	if( Nn > 0 )
 	{
@@ -302,6 +319,12 @@ void TPitzer::alloc_internal()
 		aLam = new double[Nn*Nc];
 		aLam1 = new double[Nn*Na];
 		aZeta = new double[Nn*Nc*Na];
+		for( i=0; i < Nn*Nc; i++ )
+		  aLam[i] = 0.0;
+		for( i=0; i < Nn*Na; i++ )
+		  aLam1[i] = 0.0;
+		for( i=0; i < Nn*Nc*Na; i++ )
+		  aZeta[i] = 0.0;
 	}
 	else
 	{
@@ -368,15 +391,15 @@ void TPitzer::PTcalc( double T )
    if( NPcoef == 5 ) // PHREEQPITZ and TOUGHREACT version
    {
 	  for( ii=0; ii<NPar; ii++ )
-       	aIP[ii] = IPc(ii,0) + IPc(ii,1)*(1/T-1/Tr) + IPc(ii,2)*log(T/Tr) +
+       	aIP[ii] = IPc(ii,0) + IPc(ii,1)*(1./T-1./Tr) + IPc(ii,2)*log(T/Tr) +
        	          IPc(ii,3)*(T-Tr) + IPc(ii,4)*(T*T-Tr*Tr);
    }
    else
 	if( NPcoef == 8 ) // original HMW version, also Felmy (GMIN) version
 	{
 	  for( ii=0; ii<NPar; ii++ )
-	     aIP[ii] = IPc(ii,0) + IPc(ii,1)*T + IPc(ii,2)/T + IPc(ii,3)*log(T) + IPc(ii,4)/(T-263) +
-	       IPc(ii,5)*T*T + IPc(ii,6)/(680-T) + IPc(ii,7)/(T-227);
+	     aIP[ii] = IPc(ii,0) + IPc(ii,1)*T + IPc(ii,2)/T + IPc(ii,3)*log(T) + IPc(ii,4)/(T-263.) +
+	       IPc(ii,5)*T*T + IPc(ii,6)/(680.-T) + IPc(ii,7)/(T-227.);
 	}
 	else Error( "", "PitzerHMW: Invalid number of coefficients to describe T dependence");
 }
@@ -397,7 +420,7 @@ void TPitzer::calcSizes()
 	  else
 		 Nn++;
   }
-  Ns = NComp-1;
+  Ns = NComp-1;  // index of water-solvent
 }
 
 
@@ -591,14 +614,14 @@ void TPitzer::Ecalc( double z, double z1, double I, double Aphi,
 		double& Etheta, double& Ethetap)
 {
   double xMN, xMM, xNN,  x;
-  double zet, dzdx;
+  double zet=0., dzdx=0.;
   double bk[23], dk[23];
-  double JMN, JpMN, JMM, JpMM, JNN, JpNN;
+  double JMN=0., JpMN=0., JMM=0., JpMM=0., JNN=0., JpNN=0.;
   long int k, m;
 
-  xMN= 6 * z*z1 * Aphi * pow(I,1/2);
-  xMM= 6 * z* z * Aphi * pow(I,1/2);
-  xNN= 6 *z1*z1 * Aphi * pow(I,1/2);
+  xMN= 6. * z*z1 * Aphi * pow(I,0.5);
+  xMM= 6. * z* z * Aphi * pow(I,0.5);
+  xNN= 6. *z1*z1 * Aphi * pow(I,0.5);
 
  for( k=1; k<=3; k++ )
  {
@@ -613,8 +636,8 @@ void TPitzer::Ecalc( double z, double z1, double I, double Aphi,
   {   zet=4.0 * pow(x, 0.2) - 2.0;
       dzdx=0.8 * pow(x,(-0.8));
 
-      bk[22]=0; bk[21]=0;
-      dk[21]=0; dk[22]=0;
+      bk[22]=0.; bk[21]=0.;
+      dk[21]=0.; dk[22]=0.;
       for( m=20; m>=0; m--)
       {         bk[m]= zet * bk[m+1] - bk[m+2] + ak1[m];
                 dk[m]= bk[m+1] + zet * dk[m+1]- dk[m+2];
@@ -627,8 +650,8 @@ void TPitzer::Ecalc( double z, double z1, double I, double Aphi,
           zet=-22.0/9.0 + (40.0/9.0) * pow(x,(-0.1));
           dzdx= (-40.0/90.) * pow(x,(-11./10.));
 
-          bk[22]=0; bk[21]=0;
-          dk[21]=0; dk[22]=0;
+          bk[22]=0.; bk[21]=0.;
+          dk[21]=0.; dk[22]=0.;
           for( m=20; m>=0; m--)
           {   bk[m] = zet *bk[m+1] - bk[m+2] + ak2[m];
               dk[m]=  bk[m+1] + zet *dk[m+1] - dk[m+2];
@@ -689,7 +712,7 @@ double TPitzer::A_Factor( double T )
     double Aphi;
 
 	//------------ Computing A- Factor
-	Aphi = (1./3.) * pow((2*pi*N0*dens*1000),0.5) * pow((el*el)/(eps*4*pi*eps0*k*T),1.5);
+	Aphi = (1./3.) * pow((2.*pi*N0*dens*1000.),0.5) * pow((el*el)/(eps*4.*pi*eps0*k*T),1.5);
 
 	return Aphi;
 }
@@ -717,12 +740,12 @@ double TPitzer::IonicStr( double& I )
 // Calculate osmotic coefficient, activity, and activity coefficient of water-solvent
 double TPitzer::lnGammaH2O( )
 {
-    double Etheta, Ethetap;
+    double Etheta=0., Ethetap=0.;
 	long int a, c, n, c1, a1;
 // Term OC1, Pitzer-Toughreact Report 2006, equation (A2)
-	double OC1 = 2 * ( (-(Aphi*pow(I,1.5)) / (1.+1.2*Is) ));
+	double OC1 = 2. * ( (-(Aphi*pow(I,1.5)) / (1.+1.2*Is) ));
 // Term OC2
-	double OC2=0., alp, alp1, C, h1, h2, B3;
+	double OC2=0., alp=0., alp1=0., C=0., h1=0., h2=0., B3=0.;
 	for( c=0; c<Nc; c++)
 	  for( a=0; a<Na; a++)
 	  {
@@ -776,7 +799,7 @@ double TPitzer::lnGammaH2O( )
 	double OCges=OC1+OC2+OC3+OC4+OC5+OC6;
 // Summation of Molalities
 	double   OCmol= sum(aM, xcx, Nc)+ sum(aM, xax, Na)+ sum(aM, xnx, Nn);
-// Osmotic coefficient (OC) = (1+Oges)/(OCmol)
+// Osmotic coefficient (OC)
 	double OC = (1.+OCges) / OCmol;
 // Activity of Water, Pitzer-Toughreact Report 2006, equation (A1)
 	double Lna =(-18.1/1000.)*OC*OCmol;
@@ -784,28 +807,28 @@ double TPitzer::lnGammaH2O( )
 	double activityH2O=exp(Lna);
 
 //  lnGamma[Ns] = activityH2O/molefractionH2O;
-	return Lna-log(x[Ns]);;
+	return Lna-log(x[Ns]);
 }
 
 
 void TPitzer::getAlp( long int c, long int a, double& alp, double& alp1 )
 {
-    if( zc(c) || fabs(za(a)) ==1 )
+    if( zc(c) == 1. || za(a) == -1. )
     {    alp=2;
         alp1=12.;
     }
     else
-      if( zc(c) && fabs(za(a)) ==2 )
+      if( zc(c) == 2. && za(a) == -2. )
       {   alp=1.4;
           alp1=12.;
       }
       else
-        if( zc(c) && fabs(za(a)) >=2 )
+        if( zc(c) > 2. && za(a) <= -2. )
         { alp=2.0;
           alp1=50.;
         }
         else
-          Error( "", "alpha not defined");
+          Error( " ", "alpha not defined");
 }
 
 
@@ -814,7 +837,7 @@ double TPitzer::F_Factor( double Aphi, double I, double Is )
 {
 
   long int c, c1, a, a1;
-  double z, z1, Etheta, Ethetap;
+  double z=0., z1=0., Etheta=0., Ethetap=0.;
 // Term F1
   double F1=-Aphi*( (Is/(1.+1.2*Is)) + 2.*log(1.+1.2*Is)/1.2);
 // Term F2
@@ -839,7 +862,7 @@ double TPitzer::F_Factor( double Aphi, double I, double Is )
         F3 +=(ma(a)*ma(a1)*(Phip1));
 	 }
 // Term F4
-  double F4=0., alp, alp1, h1, h2, g3, g4, B1;
+  double F4=0., alp=0., alp1=0., h1, h2, g3, g4, B1;
   for( c=0; c<Nc; c++)
 	 for( a=0; a<Na; a++)
 	 {
@@ -860,14 +883,14 @@ double TPitzer::F_Factor( double Aphi, double I, double Is )
 //
 double TPitzer::lnGammaM(  long int M )
 {
-  double Etheta, Ethetap;
+  double Etheta=0., Ethetap=0.;
   long int a, n, c1, a1;
 
 // Calculate GM1, Pitzer-Toughreact Report 2006, equation (A3)
 
  double GM1=(zc(M)*zc(M))*Ffac;
 // Term GM2
- double GM2=0., alp, alp1, h1, h2, g1,g2, B2, C;
+ double GM2=0., alp=0., alp1=0., h1, h2, g1,g2, B2, C;
  for( a=0; a<Na; a++)
  {
 	 getAlp(  M,  a, alp, alp1 );
@@ -926,13 +949,13 @@ double TPitzer::lnGammaM(  long int M )
 // Calculate lnGammaX - activity coefficient of an anion with index X
 double TPitzer::lnGammaX(  long int X )
 {
-  double Etheta, Ethetap;
+  double Etheta=0., Ethetap=0.;
   long int c, n, c1, a1;
 
 // Term GX1 (Pitzer-Toughreact Report 2006, equation A4)
   double   GX1=(za(X)*za(X))*Ffac;
 // Term GX2
-  double GX2=0., C, h1, h2, g1, g2, B2, alp, alp1;
+  double GX2=0., C=0., h1, h2, g1, g2, B2, alp, alp1;
   for( c=0; c<Nc; c++)
   {
  	 getAlp(  c,  X, alp, alp1 );
@@ -960,7 +983,7 @@ double TPitzer::lnGammaX(  long int X )
            Ecalc(z,z1,I,Aphi, Etheta,Ethetap);
            Phi1=Theta1(X,a1)+Etheta; 			 // Pitzer-Toughreact Report 2006, equation (A15)
 	      }
-          GX3=GX3+ma(a1)*(2*Phi1+mc(c)*Psi(X,a1,c));
+          GX3=GX3+ma(a1)*(2.*Phi1+mc(c)*Psi(X,a1,c));
 	 }
 // Term GX4
     double  GX4=0.;
@@ -972,15 +995,15 @@ double TPitzer::lnGammaX(  long int X )
      for( c=0; c<Nc; c++)
   	   for( a1=0; a1<Na; a1++)
   	   {
-          C =Cphi(c,a1)/(2*sqrt(fabs(za(a1)*zc(c))));	 // Pitzer-Toughreact Report 2006, equation (A7)
-          GX5a =GX5a+(mc(c)*ma(a1)* (C/(2*sqrt(fabs(zc(c)*za(X))))) );
+          C =Cphi(c,a1)/(2.*sqrt(fabs(za(a1)*zc(c))));	 // Pitzer-Toughreact Report 2006, equation (A7)
+          GX5a =GX5a+(mc(c)*ma(a1)* (C/(2.*sqrt(fabs(zc(c)*za(X))))) );
   	   }
       double GX5=fabs(za(X))*GX5a;
 // Term GX6
      double GX6a=0.;
      for( n=0; n<Nn; n++)
          GX6a += mn(n)*Lam1(n,X);
-     double GX6=2*GX6a;
+     double GX6=2.*GX6a;
 // Term GX
     double GX=GX1+GX2+GX3+GX4+GX5+GX6;
     double actcoeffX=exp(GX);

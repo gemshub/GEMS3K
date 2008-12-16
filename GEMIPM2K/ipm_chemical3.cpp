@@ -1472,7 +1472,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
 
     TSolMod* aSM = 0;
 
-   // calculate P-T dependence of interaction parameters
+   // creating instances of child classes on TSolMod basic class
     switch( ModCode )
     {
         case SM_VANLAAR:
@@ -1553,7 +1553,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
 
   	if(phSolMod[k])
    	  delete phSolMod[k];
-   	phSolMod[k] = aSM; // set up pointer for the solution model
+   	phSolMod[k] = aSM; // set up new pointer for the solution model
 }
 
 void
@@ -1571,7 +1571,7 @@ TMulti::SolModParPT( long int k, char ModCode )
         case SM_AQSIT:
         case SM_PRFLUID:
         case SM_CGFLUID:
-        {    ErrorIf( !phSolMod[k], "","Illegal index of phase");
+        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
               aSM->PTparam();
              break;
@@ -1598,7 +1598,7 @@ TMulti::SolModActCoeff( long int k, char ModCode )
         case SM_AQSIT:
         case SM_PRFLUID:
         case SM_CGFLUID:
-        {    ErrorIf( !phSolMod[k], "","Illegal index of phase");
+        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
              TSolMod* aSM = phSolMod[k];
              aSM->MixMod();
              break;
@@ -1626,7 +1626,7 @@ TMulti::SolModExcessParam( long int k, char ModCode )
         case SM_AQSIT:
         case SM_PRFLUID:
         case SM_CGFLUID:
-         {    ErrorIf( !phSolMod[k], "","Illegal index of phase");
+         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
               aSM->getExcessProp( Gex, Vex, Hex, Sex, CPex );
               break;

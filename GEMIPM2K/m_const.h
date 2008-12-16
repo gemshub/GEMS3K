@@ -64,32 +64,31 @@ enum solmod_switches { // indexes of keys of model solution
     // Posible modes calculating of activity coefficients SGM_MODE
     SM_STNGAM = 'S',
     SM_NOSTGAM = 'N',
-// This code (one upper-case letter or digit) defines type of mixing
-//    and default method of calculation of mixing properties before and at
-//    IPM iterations.   Possible values: (SPHAS_TYP)
+    //  Possible values: (SPHAS_TYP)
+    // Code to identify the mixing models used (during IPM iterations)
     SM_IDEAL =  'I',	// ideal solution or single-component phase;
-    SM_REDKIS = 'G',	// built-in Guggenheim (Redlich-Kister) binary SS model (with 3 coeffs)
-    SM_MARGB = 'M',		// built-in binary Margules SS (subreg. w. 3 coeff U,P,T )
-    SM_MARGT = 'T',		// built-in ternary Margules SS (reg. w. 3 coeff U,P,T )
-    SM_GUGGENM = 'K',	// built-in multicomponent Guggenheim SS model (added by Th.Wagner)
-    SM_CGFLUID = 'F',	// built-in multicomp. EOS fluid Churakov&Gottschalk 2003
-//    SM_RECIP = 'R',	// reciprocal solution (to be done), formerly regular solution
-    SM_REGULAR = 'R',	// regular multicomponent solution model (added by Th.Wagner)
-    SM_AQDAV = 'D',		// built-in Davies equation (with 0.3) added KD 25.01.02
-    SM_AQDH1 = '1',		// built-in limiting Debye-Hueckel law for aqueous species
-    SM_AQDH2 = '2',		// built-in 2-term Debye-Hueckel (Kielland)
-    SM_AQDH3 = '3',		// built-in 3-d approximation of Debye-Hueckel
-    SM_AQDHH = 'H',		// built-in 3-d approximation of Debye-Hueckel (Helgeson)
-    SM_AQSIT = 'S',		// built-in SIT model for aq activity coeffs (reserved)
-    SM_AQEXUQ = 'Q',    // built-in EUNIQUAC model for aqueous activity coeffs (reserved)
-    SM_AQPITZ = 'Z',    // built-in Pitzer HMW aqueous activity coefficient model (under construction)
-    SM_PRFLUID = 'P',	// Peng-Robinson-Stryjek-Vera EOS fluid model (Added by Th.Wagner)
-    SM_IONEX = 'E',		// ion exchange (Donnan, Nikolskii) (reserved)
+    SM_REDKIS = 'G', 	// built-in Guggenheim (Redlich-Kister) binary solid-solution model (with 3 coeffs)
+    SM_MARGB = 'M',		// built-in binary Margules solid-solutions (subreg. w. 3 coeff U,P,T )
+    SM_MARGT = 'T',		// built-in ternary Margules solid-solution (reg. w. 3 coeff U,P,T )
+    SM_VANLAAR = 'V',	// built-in multi-component Van Laar solid-solution model (added by T. Wagner)
+    SM_GUGGENM = 'K',	// built-in multi-component Guggenheim solid-solution model (added by T.Wagner)
+    SM_REGULAR = 'R',	// built-in multi-component Regular solid-solution model (added by T.Wagner)
+    SM_NRTLLIQ = 'L',	// built-in multi-component NRTL model for liquid solutions, added 03.06.2008 (TW)
+    SM_WILSLIQ = 'W',	// built-in multi-component Wilson model for liquid solutions, added 09.06.2008 (TW)
+    SM_CGFLUID = 'F',	// built-in multi-component Churakov-Gottschalk (CG) fluid EOS model
+    SM_PRFLUID = 'P',	// built-in Peng-Robinson-Stryjek-Vera (PRSV) fluid EOS model (added by T.Wagner)
+    SM_SRFLUID = 'E',	// built-in Soave-Redlich-Kwong (SRK) fluid EOS model (added by T.Wagner)
+    SM_AQDAV = 'D',		// built-in Davies model (with 0.3) for aqueous electrolytes (added by DK, 25.01.02)
+    SM_AQDH1 = '1',		// built-in Debye-Hueckel limiting law for aqueous electrolytes
+    SM_AQDH2 = '2',		// built-in 2-term Debye-Hueckel model for aqueous electrolytes
+    SM_AQDH3 = '3',		// built-in 3-term Debye-Hueckel model for aqueous electrolytes (Karpov version)
+    SM_AQDHH = 'H',		// built-in 3-term Debye-Hieckel model for aqueous electrolytes (Helgeson version)
+    SM_AQSIT = 'S',		// built-in SIT model for aqueous electrolytes
+    SM_AQEXUQ = 'Q',    // built-in EUNIQUAC model for aqueous electrolytes (reserved)
+    SM_AQPITZ = 'Z',    // built-in Pitzer HMW model for aqueous electrolytes
+// SM_IONEX = 'E',		// ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
-    SM_USERDEF = 'U',	// user-defined mixing model (in Phase record)
-    SM_VANLAAR = 'V',	// Generalized Van Laar solution model
-    SM_NRTLLIQ = 'L',	// NRTL multicomponent model for liquids, added 03.06.2008 (TW)
-    SM_WILSLIQ = 'W',	// Wilson multicomponent model for liquids, added 09.06.2008 (TW)
+    SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
     SM_OTHER = 'O'		//  other models of non-ideal solutions (reserved)
 };
 
