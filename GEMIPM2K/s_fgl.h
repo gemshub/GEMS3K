@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1158 2008-12-16 13:51:27Z gems $
+// $Id: s_fgl.h 1159 2008-12-16 20:27:42Z wagner $
 //
-// Copyright (C) 2003-2007  S.Churakov, Th.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
 //
 // Declaration of new implementation of Fluid EoS classes
 // (PRSV and CG EoS models)
@@ -433,7 +433,7 @@ class TSRKcalc: public TSolMod
      double (*Fugpure)[5];   // Fugacity parameters of pure gas species
      double (*Fugci)[4];     // Fugacity parameters of species in the mixture
 
-     double **KK0ij;    //  Constant term of the binary interaction parameter
+     double **KKij;    //  Constant term of the binary interaction parameter
      double **AAij;     //  binary a terms in the mixture
 
  	 void alloc_internal();
@@ -466,7 +466,7 @@ class TSRKcalc: public TSolMod
 
 protected:
 
-	long int AB(double Tcrit, double omg, double k1, double k2, double k3, double Pcrit,
+	long int AB(double Tcrit, double Pcrit, double omg, double N,
 			double &apure, double &bpure, double &sqrAL, double &ac, double &dALdT);
 	// Calc. fugacity for 1 species at X=1
 	long int SRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,

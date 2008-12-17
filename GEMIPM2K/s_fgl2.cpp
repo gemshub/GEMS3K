@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1143 2008-12-10 14:40:41Z gems $
+// $Id: s_fgl2.cpp 1159 2008-12-16 20:27:42Z wagner $
 //
-// Copyright (c) 2007,2008  Th.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (c) 2007-2008  T.Wagner, D.Kulik, S.Dmitrieva
 //
 // Implementation of the TSolMod class
 // and TVanLaar, TRegular, TRedlichKister, TNRTL and TWilson classes
@@ -78,7 +78,7 @@ TVanLaar::TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long 
         long int* arIPx, double* arIPc, double* arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, 
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, dW, eW )
 {
@@ -223,7 +223,7 @@ TRegular::TRegular( long int NSpecies, long int NParams, long int NPcoefs, long 
         long int* arIPx, double* arIPc, double* arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, 
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, dW, eW )
 {
