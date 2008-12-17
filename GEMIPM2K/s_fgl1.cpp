@@ -231,7 +231,7 @@ if( Nn > 0 )
 void TPitzer::Pitzer_test_out( const char *path )
 {
 
-	long int ii, c, a, n;
+	long int ii, c, a;
 
 	fstream ff(path, ios::out );
 	ErrorIf( !ff.good() , path, "Fileopen error");
@@ -725,10 +725,10 @@ double TPitzer::IonicStr( double& I )
 	long int a, c;
 
 	for( a=0; a<Na; a++ )
-	  Ia += za(a)*za(a)*ma(a);
+	  Ia += za(a)* za(a)* ma(a);
 
-	for( c=0; c<Nc;c++ )
-	  Ic += zc(c)*zc(c)*mc(c);
+	for( c=0; c<Nc; c++ )
+	  Ic += zc(c)* zc(c)* mc(c);
 
 	IS =0.5*(Ia+Ic);
     I=IS;
@@ -804,7 +804,7 @@ double TPitzer::lnGammaH2O( )
 // Activity of Water, Pitzer-Toughreact Report 2006, equation (A1)
 	double Lna =(-18.1/1000.)*OC*OCmol;
 
-	double activityH2O=exp(Lna);
+	double activityH2O = exp(Lna);
 
 //  lnGamma[Ns] = activityH2O/molefractionH2O;
 	return Lna-log(x[Ns]);
@@ -941,7 +941,7 @@ double TPitzer::lnGammaM(  long int M )
    double GM6 = 2*GM6a;
 // Term GM
    double GM=GM1+GM2+GM3+GM4+GM5+GM6;
-   double actcoeffM=exp(GM);
+   double actcoeffM = exp(GM);
    return GM;
 }
 
@@ -1006,7 +1006,7 @@ double TPitzer::lnGammaX(  long int X )
      double GX6=2.*GX6a;
 // Term GX
     double GX=GX1+GX2+GX3+GX4+GX5+GX6;
-    double actcoeffX=exp(GX);
+    double actcoeffX = exp(GX);
     return GX;
 }
 
@@ -1030,7 +1030,7 @@ double TPitzer::lnGammaN(  long int N )
       GN3=GN3+(mc(c)*ma(a)*Zeta(N,c,a));
 // Term GN
   double GN=GN1+GN2+GN3;
-  double actcoeffN=exp(GN);
+  double actcoeffN = exp(GN);
 
   return GN;
 }

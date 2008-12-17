@@ -732,11 +732,11 @@ private:
 	double *aZ;    // Vector of species charges (for aqueous models)
 	double *aM;    // Vector of species molality (for aqueous models)
 
-    double Aphi; //------------ Computing A- Factor
-	double I;  //----------- Ionic Strength
-	double Is;  //----------- Ionic Strength
-	double Ffac; //----------- ------- F-Factor
-	double	 Zfac; //----------- Z- Term
+    double Aphi; //----------- Computing A- Factor
+	double I;  //------------- Ionic Strength
+	double Is;  //------------ Ionic Strength square root
+	double Ffac; //----------- F-Factor
+	double Zfac; //----------- Z- Term
 
 				// Input parameter arrays
 	double *abet0;    // Beta0 table for cation-anion interactions [Nc][Na]
@@ -855,27 +855,27 @@ public:
 
 };
 
-#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + jj ])
-#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + jj ])
+#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
+#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
 
-#define mc( ii ) (aM[ xcx[ii] ])
-#define ma( ii ) (aM[ xax[ii] ])
-#define mn( ii ) (aM[ xnx[ii] ])
-#define zc( ii ) (aZ[ xcx[ii] ])
-#define za( ii ) (aZ[ xax[ii] ])
+#define mc( ii ) (aM[ xcx[(ii)] ])
+#define ma( ii ) (aM[ xax[(ii)] ])
+#define mn( ii ) (aM[ xnx[(ii)] ])
+#define zc( ii ) (aZ[ xcx[(ii)] ])
+#define za( ii ) (aZ[ xax[(ii)] ])
 
-#define bet0( c,a ) ( abet0[ ((c)*Na+a) ])
-#define bet1( c,a ) ( abet1[ ((c)*Na+a) ])
-#define bet2( c,a ) ( abet2[ ((c)*Na+a) ])
-#define Cphi( c,a ) ( aCphi[ ((c)*Na+a) ])
-#define Lam( n,c )  ( aLam[ ((n)*Nc+c) ])
-#define Lam1( n,a )  ( aLam[ ((n)*Na+a) ])
-#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+c1) ])
-#define Theta1( a,a1 )  ( aTheta1[ ((a)*Na+a1) ])
+#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
+#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
+#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
+#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
+#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
+#define Lam1( n,a )  ( aLam[ ((n)*Na+(a)) ])
+#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
+#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
 
-#define Psi( c,c1,a )  ( aPsi[ (( (c) * Nc + c1  ) * Na + a) ])
-#define Psi1( a,a1,c )  ( aPsi1[ (( (a) * Na + a1  ) * Nc + c) ])
-#define Zeta( n,c,a )  ( aZeta[ (( (n) * Nc + c  ) * Na + a) ])
+#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
+#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
+#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
 
 #endif
 
