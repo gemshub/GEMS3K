@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl1.cpp 1140 2008-12-08 19:07:05Z wagner $
 //
-// Copyright (C) 2008   D.Kulik,  S.Dmitrieva
+// Copyright (C) 2008    S.Dmitrieva, F.Hingerl, D.Kulik, Th.Wagner
 //
 // Implementation of TSIT and TPitzer class
 //
@@ -19,9 +19,9 @@
 
 #include <math.h>
 #include <stdio.h>
-//#include <iostream>
+#include <iostream>
 #include  <fstream>
-//using namespace std;
+using namespace std;
 #include "verror.h"
 #include "s_fgl.h"
 
@@ -195,10 +195,14 @@ long int TPitzer::Pitzer_calc_Gamma( )
 	lnGamma[Ns] = lnGammaH2O();
 
 	for( M=0; M<Nc; M++ )
-    	lnGamma[xcx[M]] = lnGammaM( M );
+	{	lnGamma[xcx[M]] = lnGammaM( M );
+//cout << "indexC = " <<	xcx[M] << " NComp " << NComp << endl;
+	}
 
     for( X=0; X<Na; X++ )
-    	lnGamma[xax[X]] = lnGammaX( X );
+    {	lnGamma[xax[X]] = lnGammaX( X );
+//    cout << "indexA = " <<	xax[X] << " NComp " << lnGamma[xax[X]] << endl;
+    	}
 if( Nn > 0 )
     for( N=0; N<Nn; N++ )
     	lnGamma[xnx[N]] = lnGammaN( N );
@@ -337,6 +341,31 @@ void TPitzer::free_internal()
 
 }
 
+// Moved macros here from s_fgl.h to restrict their visibility
+// in other files (DK)
+#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
+#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
+
+#define mc( ii ) (aM[ xcx[(ii)] ])
+#define ma( ii ) (aM[ xax[(ii)] ])
+#define mn( ii ) (aM[ xnx[(ii)] ])
+#define zc( ii ) (aZ[ xcx[(ii)] ])
+#define za( ii ) (aZ[ xax[(ii)] ])
+
+#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
+#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
+#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
+#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
+#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
+#define Lam1( n,a )  ( aLam[ ((n)*Na+(a)) ])
+#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
+#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
+
+#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
+#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
+#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
+//
+
 // Calculate temperature dependence of the interaction parameters.
 // Two different versions: with 5 (4) or with 8 coefficients
 void TPitzer::PTcalc( double T )
@@ -427,6 +456,7 @@ void TPitzer::	setValues()
 	         ia = getIa( IPx(ii,1) );
 	      ErrorIf( ia<0||ic<0, "", "Cation and anion index needed here"  );
 	      bet0( ic, ia ) = aIP[ii];
+//	      cout << "indexC = " << ic << "indexA = " << ia << " ind " << ((ic)*Na+(ia)) << endl;
 	      break;
 	  case bet1_:
 		  ic = getIc( IPx(ii,0) );
@@ -438,6 +468,7 @@ void TPitzer::	setValues()
 	         ia = getIa( IPx(ii,1) );
 	      ErrorIf( ia<0||ic<0, "", "Cation and anion index needed here"  );
 	      bet1( ic, ia ) = aIP[ii];
+//	      cout << "indexC = " << ic << "indexA = " << ia << " ind " << ((ic)*Na+(ia)) << endl;
 	      break;
 	  case bet2_:
 		  ic = getIc( IPx(ii,0) );
@@ -449,6 +480,7 @@ void TPitzer::	setValues()
 	         ia = getIa( IPx(ii,1) );
 	      ErrorIf( ia<0||ic<0, "", "Cation and anion indexes needed here"  );
 	      bet2( ic, ia ) = aIP[ii];
+//	      cout << "indexC = " << ic << "indexA = " << ia << " ind " << ((ic)*Na+(ia)) << endl;
 	      break;
 	  case Cphi_:
 		  ic = getIc( IPx(ii,0) );
@@ -460,6 +492,7 @@ void TPitzer::	setValues()
 	         ia = getIa( IPx(ii,1) );
 	      ErrorIf( ia<0||ic<0, "", "Cation and anion indexes needed here"  );
 	      Cphi( ic, ia ) = aIP[ii];
+//	      cout << "indexC = " << ic << "indexA = " << ia << " ind " << ((ic)*Na+(ia)) << endl;
 	      break;
 	  case Lam_:
 		  in = getIn( IPx(ii,0) );
@@ -471,6 +504,7 @@ void TPitzer::	setValues()
 	         ic = getIc( IPx(ii,1) );
 	      ErrorIf( in<0||ic<0, "", "Cation and neutral species indexes needed here"  );
 	      Lam( in, ic ) = aIP[ii];
+//	      cout << "indexN = " << in << "indexC = " << ic << " ind " << ((in)*Nc+(ic)) << endl;
 	      break;
 	  case Lam1_:
 		  in = getIn( IPx(ii,0) );
@@ -482,18 +516,21 @@ void TPitzer::	setValues()
 	         ia = getIa( IPx(ii,1) );
 	      ErrorIf( in<0||ia<0, "", "Parameters must be anion and neutral species index"  );
 	      Lam1( in, ia ) = aIP[ii];
+//	      cout << "indexN = " << in << "indexA = " << ia << " ind " << ((in)*Na+(ia)) << endl;
 	      break;
 	  case Theta_:
 	      ic = getIc( IPx(ii,0) );
           i = getIc( IPx(ii,1) );
 	      ErrorIf( i<0||ic<0, "", "Only indexes of cations needed here"  );
 	      Theta( ic, i ) = aIP[ii];
+//	      cout << "indexC = " << ic << "indexC = " << i << " ind " << ((ic)*Nc+(i)) << endl;
 	      break;
 	  case Theta1_:
 	      ia = getIa( IPx(ii,0) );
           i = getIa( IPx(ii,1) );
 	      ErrorIf( i<0||ia<0, "", "Only indexes of anions needed here"  );
 	      Theta1( ia, i ) = aIP[ii];
+//	      cout << "indexA = " << ia << "indexA = " << i << " ind " << ((ia)*Na+(i)) << endl;
 	      break;
 	  case Psi_:
 		  ic = getIc( IPx(ii,0) );
@@ -885,15 +922,16 @@ double TPitzer::lnGammaM(  long int M )
 	    if( M == c1)
 	    {
 	      Phi = 0.;
-	      Psi(M,c1,a) = 0.;
+	      // Psi(M,c1,a) = 0.;
 	    }
 	    else
 	    {  z=zc(M);
 	       z1=zc(c1);
            Ecalc(z,z1,I,Aphi,Etheta,Ethetap);
            Phi=Theta(M,c1)+Etheta;  					// Pitzer-Toughreact Report 2006, equation (A15)
-	    }
+
         GM3=GM3+mc(c1)*(2.*Phi+ ma(a)*Psi(M,c1,a)  );
+	    } // Sveta 19/12/2008
 	 }
 // Term GM4
     double GM4=0.;
@@ -950,15 +988,16 @@ double TPitzer::lnGammaX(  long int X )
 	    if( X == a1)
 	    {
 	      Phi1 = 0.;
-	      Psi1(X,a1,c) = 0.;
+	      // Psi1(X,a1,c) = 0.; // Sveta 19/12/2008
 	    }else
 	      {
            z=za(X);
            z1=za(a1);
            Ecalc(z,z1,I,Aphi, Etheta,Ethetap);
            Phi1=Theta1(X,a1)+Etheta; 			 // Pitzer-Toughreact Report 2006, equation (A15)
+
+          GX3=GX3+ma(a1)*(2.*Phi1+mc(c)*Psi1(X,a1,c));  // Sveta 19/12/2008
 	      }
-          GX3=GX3+ma(a1)*(2.*Phi1+mc(c)*Psi(X,a1,c));
 	 }
 // Term GX4
     double  GX4=0.;

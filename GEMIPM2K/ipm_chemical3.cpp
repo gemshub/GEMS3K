@@ -20,13 +20,16 @@
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
 //-------------------------------------------------------------------
 //
+
+
 #include <math.h>
 #include "m_param.h"
 #include "s_fgl.h"
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+//--------------------------------------------------------------------------------
 // Calculation of surface charge densities on multi-surface sorption phase
-//
 void TMulti::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
@@ -171,9 +174,8 @@ NEXT_PHASE:
     }  // k
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 // Linking DOD for executing Phase mixing model scripts
-//
 void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb )
 {
 
@@ -231,9 +233,9 @@ void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb
 #endif
 }
 
+
 // Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
-//
 double TMulti::SmoothingFactor( )
 {
    if( pmp->FitVar[3] > 0 )
@@ -242,9 +244,9 @@ double TMulti::SmoothingFactor( )
 	   return pmp->FitVar[4];
 }
 
+
 // Correction of smoothing factor for high non-ideality systems
-//  re-written 18.06.2008 DK
-//
+// re-written 18.06.2008 DK
 void TMulti::SetSmoothingFactor( )
 {
     double TF, ag, dg, irf; // rg=0.0;
@@ -286,19 +288,20 @@ void TMulti::SetSmoothingFactor( )
 }
 
 static double ICold=0.;
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+//--------------------------------------------------------------------------------
 // Main call point for calculation of DC activity coefficients (lnGam vector)
 // Controls various built-in models, as well as generic Phase script calculation
 //
 // LinkMode is a parameter indicating the status of Gamma calculations:
-//   LINK_TP_MODE  - calculation of equations depending on TP only;
-//   LINK_UX_MODE  - calculation of equations depending on current
+// LINK_TP_MODE - calculation of equations depending on TP only;
+// LINK_UX_MODE - calculation of equations depending on current
 //                   IPM approximation of the equilibrium state;
-//   LINK_FIA_MODE - calculation of Gammas on the initial approximation (FIA).
-//    Added 13.03.2008 by DK: returns int value showing (if not 0)
-//    that some extreme values were obtained for some SACTs, PSIs,
-//    or activity coefficients (for detecting bad PIA case). 0 if Ok.
-//
+// LINK_FIA_MODE - calculation of Gammas on the initial approximation (FIA).
+// 		Added 13.03.2008 by DK: returns int value showing (if not 0)
+//    	that some extreme values were obtained for some SACTs, PSIs,
+//    	or activity coefficients (for detecting bad PIA case)
 long int
 TMulti::GammaCalc( long int LinkMode  )
 {
@@ -374,10 +377,10 @@ TMulti::GammaCalc( long int LinkMode  )
    		    double nxk = 1./pmp->L1[k];
             for( j= jb; j<je; j++ )
     		{
-if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
-   pmp->Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
-    		   pmp->GEX[j] =0.0;  // cleaning GEX in TP mode!
-    		   pmp->lnGmo[j] = pmp->lnGam[j]; // saving activity coefficients in TP mode
+            	if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
+            		pmp->Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
+            	pmp->GEX[j] =0.0;  // cleaning GEX in TP mode!
+            	pmp->lnGmo[j] = pmp->lnGam[j]; // saving activity coefficients in TP mode
        	    }
             if( sMod[SGM_MODE] != SM_STNGAM )
                 continue;  // The switch below is for built-in functions only!
@@ -394,24 +397,34 @@ if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
                case PH_HCARBL:
                case PH_SIMELT:
             	    SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] ); // new solution models (TW, DK 2007)
-            	    SolModParPT(  k, sMod[SPHAS_TYP] );
+            	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
                case PH_GASMIX:
                case PH_PLASMA:
                case PH_FLUID:
-                     if( sMod[SPHAS_TYP] == SM_CGFLUID )
-                     {
-                      // CGofPureGases( jb, je, jpb, jdb, k, ipb ); // CG2004 pure gas
-                        SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
-                	    SolModParPT(  k, sMod[SPHAS_TYP] );
-                       break;
-                     }
-                     if( sMod[SPHAS_TYP] == SM_PRFLUID )
-                       // PRSVofPureGases( jb, je, jpb, jdb, k, ipb ); // PRSV pure gas
-                     SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
-             	    SolModParPT(  k, sMod[SPHAS_TYP] );
-                     break;
-               default: break;
+                    if( sMod[SPHAS_TYP] == SM_CGFLUID )  // CG EoS fluid model
+                    {
+                    	// CGofPureGases( jb, je, jpb, jdb, k, ipb );  // CG pure gas
+                    	SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+                    	SolModParPT( k, sMod[SPHAS_TYP] );
+                    	break;
+                    }
+                    if( sMod[SPHAS_TYP] == SM_PRFLUID )  // PRSV EoS fluid model
+                    {
+                    	// PRSVofPureGases( jb, je, jpb, jdb, k, ipb );  // PRSV pure gas
+                    	SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+						SolModParPT( k, sMod[SPHAS_TYP] );
+						break;
+                    }
+                    if( sMod[SPHAS_TYP] == SM_SRFLUID )  // SRK EoS fluid model
+                    {
+                    	SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP] );
+						SolModParPT( k, sMod[SPHAS_TYP] );
+						break;
+                    }
+                    break;
+				default:
+					break;
             }
         } // k
         break;
@@ -517,13 +530,14 @@ if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
           case PH_FLUID:
              if( pmpXFk > pmp->DSM && pmp->XF[k] > pa->p.PhMin )
              {
-                 if( sMod[SPHAS_TYP] == SM_CGFLUID )
+                 if( sMod[SPHAS_TYP] == SM_CGFLUID )  // CG EoS fluid model
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
                    //  ChurakovFluid( jb, je, jpb, jdb, k );
-                 if( sMod[SPHAS_TYP] == SM_PRFLUID )
+                 if( sMod[SPHAS_TYP] == SM_PRFLUID )  // PRSV EoS fluid model
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
                     // PRSVFluid( jb, je, jpb, jdb, k, ipb );
-                    // Added by Th.Wagner and DK on 20.07.06
+                 if( sMod[SPHAS_TYP] == SM_SRFLUID )  // SRK EoS fluid model
+                     SolModActCoeff( k, sMod[SPHAS_TYP] );
              }
              goto END_LOOP;
              break;
@@ -727,7 +741,8 @@ if( pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
     return statusGam;
 }
 
-//----------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------
 // Aqueous electrolyte
 // Extended Debye-Hueckel (EDH) model with common ion-size parameter
 // Variant of Helgeson et al. (1981) with optional T,P-dependent extended term
@@ -837,6 +852,7 @@ if( Lgam < -0.7 )
 }
 
 
+//--------------------------------------------------------------------------------
 // Aqueous electrolyte
 // Debye-Hueckel (DH) equation with Kielland-type ion-size parameters
 // optional salting-out correction for neutral species
@@ -932,7 +948,7 @@ TMulti::DebyeHueckel2Kjel( long int jb, long int je, long int jpb, long int jdb,
 }
 
 
-
+//--------------------------------------------------------------------------------
 // Aqueous electrolyte
 // Debye-Hueckel limiting law
 void
@@ -990,12 +1006,10 @@ TMulti::DebyeHueckel1LL( long int jb, long int je, long int k )
 }
 
 
-
-//----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 // Aqueous electrolyte  (Karpov's variant)
 // Extended Debye-Hueckel (EDH) equation with common 3rd parameter (HKF81)
 // and individual Kielland-type ion-size parameters
-//
 void TMulti::DebyeHueckel3Karp( long int jb, long int je, long int jpb, long int jdb, long int k )
 {
     long int j;
@@ -1095,8 +1109,7 @@ void TMulti::DebyeHueckel3Karp( long int jb, long int je, long int jpb, long int
 }
 
 
-
-//----------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
 // Aqueous electrolyte
 // Davies equation with common 0.3 parameter and
 // temperature-dependent A parameter
@@ -1283,11 +1296,13 @@ TMulti::PRSVofPureGases( long int jb, long int je, long int jpb, long int jdb, l
     SolModParPT( jb, je, jpb, jdb, k, ipb, SM_PRFLUID );
 }
 */
-// ------------------ condensed mixtures --------------------------
+
+
+
+
+//--------------------------------------------------------------------------------
 // Binary Redlich-Kister model - parameters (dimensionless)
-// in ph_cf Phase opt.array 2x3, see also Phase module
 // Implemented by KD on 31 July 2003
-//
 void
 TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k )
 {
@@ -1321,11 +1336,9 @@ TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k
 }
 
 
-
-// Binary Margules model - parameters (in J/mol) in ph_cf Phase opt.array 2x3
-// See also Phase module
+//--------------------------------------------------------------------------------
+// Binary Margules model
 // Implemented by KD on 31 July 2003
-//
 void
 TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long int k )
 {
@@ -1373,11 +1386,9 @@ TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long int 
  }
 
 
-
+//--------------------------------------------------------------------------------
 // Ternary regular Margules model - parameters (in J/mol)
-// in ph_cf Phase opt.array 4x3; see also Phase module
 // Implemented by KD on 31 July 2003
-//
 void
 TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int k )
 {
@@ -1441,9 +1452,10 @@ TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int
 
 }
 
-// ------------------------------------------------------------------------
-// Wrapper calls for generic multi-component mixing models (see s_fgl.h and s_fgl2.cpp)
-// Uses the TSolMod class by Th.Wagner and D.Kulik
+
+//--------------------------------------------------------------------------------
+// Wrapper calls for multi-component mixing models
+// uses TSolMod class
 void
 TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long int k, long int ipb, char ModCode )
 {
@@ -1472,63 +1484,71 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
 
     TSolMod* aSM = 0;
 
-   // creating instances of child classes on TSolMod basic class
+   // creating instances of subclasses of TSolMod base class
     switch( ModCode )
     {
-        case SM_VANLAAR:
+        case SM_VANLAAR:  // Van Laar solid solution
         {
         	TVanLaar* aPT = new TVanLaar( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
-             break;
-        case SM_REGULAR:
+             // break;
+
+        case SM_REGULAR:  // Regular solid solution
         {
         	TRegular* aPT = new TRegular( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
-        case SM_GUGGENM:
+
+        case SM_GUGGENM:  // Redlich-Kister solid solution
         {
         	TRedlichKister* aPT = new TRedlichKister( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
-        case SM_NRTLLIQ:
+
+        case SM_NRTLLIQ:  // NRTL liquid solution
         {
         	TNRTL* aPT = new TNRTL( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
-        case SM_WILSLIQ:
+
+        case SM_WILSLIQ:  // Wilson liquid solution
         {
         	TWilson* aPT = new TWilson( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
-        case SM_AQPITZ:
+
+        case SM_AQPITZ:  // Pitzer aqueous electrolyte
         {
            	TPitzer* aPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
              break;
         }
-        case SM_AQSIT:
+
+        case SM_AQSIT:  // SIT aqueous electrolyte
         {
            	TSIT* aPT = new TSIT( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
-        case SM_AQEXUQ:
+
+        case SM_AQEXUQ:  // EUNIQUAC aqueous electrolyte
         //        	 aSM->EUNIQUAC_PT();
         //        	 break;
-        case SM_PRFLUID:
+
+        case SM_PRFLUID:  // PRSV fluid mixture
         {
         	TPRSVcalc* aPT = new TPRSVcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, pmp->Pparc+jb,
@@ -1536,7 +1556,8 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
             aSM = (TSolMod*)aPT;
             break;
         }
-        case SM_CGFLUID:
+
+        case SM_CGFLUID:  // CG fluid mixture
         {
         	TCGFcalc* aPT = new TCGFcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
                     aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL,
@@ -1545,10 +1566,20 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
             aSM = (TSolMod*)aPT;
             break;
         }
+
+        case SM_SRFLUID:  // SRK fluid mixture
+        {
+        	TSRKcalc* aPT = new TSRKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
+                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, pmp->Pparc+jb,
+                    pmp->GEX+jb, pmp->Vol+jb, RhoW, EpsW );
+            aSM = (TSolMod*)aPT;
+            break;
+        }
+
         default:
 //            aSM = new TSolMod( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
 //                  aIPx, aIPc, aDCc,  aWx, alnGam, aM, aZ, RhoW, EpsW );
-             break;
+        	break;
     }
 
   	if(phSolMod[k])
@@ -1556,6 +1587,9 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
    	phSolMod[k] = aSM; // set up new pointer for the solution model
 }
 
+
+// Wrapper call for calculation of temperature and pressure correction
+// uses TSolMod class
 void
 TMulti::SolModParPT( long int k, char ModCode )
 {
@@ -1571,6 +1605,7 @@ TMulti::SolModParPT( long int k, char ModCode )
         case SM_AQSIT:
         case SM_PRFLUID:
         case SM_CGFLUID:
+        case SM_SRFLUID:
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
               aSM->PTparam();
@@ -1584,6 +1619,9 @@ TMulti::SolModParPT( long int k, char ModCode )
     }
 }
 
+
+// Wrapper call for calculation of activity coefficients
+// uses TSolMod class
 void
 TMulti::SolModActCoeff( long int k, char ModCode )
 {
@@ -1598,6 +1636,7 @@ TMulti::SolModActCoeff( long int k, char ModCode )
         case SM_AQSIT:
         case SM_PRFLUID:
         case SM_CGFLUID:
+        case SM_SRFLUID:
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
              TSolMod* aSM = phSolMod[k];
              aSM->MixMod();
@@ -1611,6 +1650,9 @@ TMulti::SolModActCoeff( long int k, char ModCode )
     }
 }
 
+
+// Wrapper call for calculation of bulk phase excess properties
+// uses TSolMod class
 void
 TMulti::SolModExcessParam( long int k, char ModCode )
 {
@@ -1626,6 +1668,7 @@ TMulti::SolModExcessParam( long int k, char ModCode )
         case SM_AQSIT:
         case SM_PRFLUID:
         case SM_CGFLUID:
+        case SM_SRFLUID:
          {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
               aSM->getExcessProp( Gex, Vex, Hex, Sex, CPex );
@@ -1641,12 +1684,11 @@ TMulti::SolModExcessParam( long int k, char ModCode )
     // Gex, Vex, Hex, Sex, CPex
 }
 
+
 //-------------------------------------------------------------------------
-// Added SD 26/11/2008
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Internal memory allocation for TSolMod performance optimization
 // (since version 2.3.0)
-//
+// added 26.11.2008 (SD)
 void TMulti::Alloc_TSolMod( long int newFIs )
 {
   if(  phSolMod && ( newFIs == sizeFIs) )
@@ -1659,6 +1701,7 @@ void TMulti::Alloc_TSolMod( long int newFIs )
  for( long int ii=0; ii<newFIs; ii++ )
     	  phSolMod[ii] = 0;
 }
+
 
 void TMulti::Free_TSolMod()
 {
@@ -1675,4 +1718,8 @@ void TMulti::Free_TSolMod()
   sizeFIs = 0;
 }
 
+
+
 //--------------------- End of ipm_chemical3.cpp ---------------------------
+
+

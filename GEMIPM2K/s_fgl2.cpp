@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1159 2008-12-16 20:27:42Z wagner $
+// $Id: s_fgl2.cpp 1164 2008-12-20 08:14:36Z wagner $
 //
 // Copyright (c) 2007-2008  T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -26,7 +26,7 @@
 //
 TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, long int NPTPperDC, double T_k, double P_bar, char Mod_Code,
-        long int* arIPx, double* arIPc, double* arDCc,
+        long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
     ModCode(Mod_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
@@ -75,7 +75,7 @@ TSolMod::~TSolMod()
 // Generic constructor for the TVanLaar class
 TVanLaar::TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, double T_k, double P_bar, char Mod_Code,
-        long int* arIPx, double* arIPc, double* arDCc,
+        long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
@@ -220,7 +220,7 @@ long int TVanLaar::MixMod()
 // Generic constructor for the TRegular class
 TRegular::TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, double T_k, double P_bar, char Mod_Code,
-        long int* arIPx, double* arIPc, double* arDCc,
+        long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
@@ -346,7 +346,7 @@ TRegular::MixMod()
 // Generic constructor for the TRedlichKister class
 TRedlichKister::TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, double T_k, double P_bar, char Mod_Code,
-        long int* arIPx, double* arIPc, double* arDCc,
+        long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
@@ -550,7 +550,7 @@ TRedlichKister::MixMod()
 // Generic constructor for the TNRTL class
 TNRTL::TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, double T_k, double P_bar, char Mod_Code,
-        long int* arIPx, double* arIPc, double* arDCc,
+        long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
@@ -787,7 +787,7 @@ TNRTL::MixMod()
 // Generic constructor for the TWilson class
 TWilson::TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, double T_k, double P_bar, char Mod_Code,
-        long int* arIPx, double* arIPc, double* arDCc,
+        long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
