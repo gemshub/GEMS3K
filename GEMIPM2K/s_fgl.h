@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1169 2008-12-21 16:24:07Z wagner $
+// $Id: s_fgl.h 1172 2008-12-22 16:12:17Z gems $
 //
 // Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -868,7 +868,7 @@ public:
 #define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
 #define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
 #define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
-#define Lam1( n,a )  ( aLam[ ((n)*Na+(a)) ])
+#define Lam1( n,a )  ( aLam1[ ((n)*Na+(a)) ])
 #define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
 #define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
 

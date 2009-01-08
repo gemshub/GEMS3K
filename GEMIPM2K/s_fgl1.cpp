@@ -207,15 +207,40 @@ if( Nn > 0 )
     for( N=0; N<Nn; N++ )
     	lnGamma[xnx[N]] = lnGammaN( N );
 
+// Pitzer_test_out( "test111.dat ");
     return 0;
 }
 
+// Moved macros here from s_fgl.h to restrict their visibility
+// in other files (DK)
+#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
+#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
+
+#define mc( ii ) (aM[ xcx[(ii)] ])
+#define ma( ii ) (aM[ xax[(ii)] ])
+#define mn( ii ) (aM[ xnx[(ii)] ])
+#define zc( ii ) (aZ[ xcx[(ii)] ])
+#define za( ii ) (aZ[ xax[(ii)] ])
+
+#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
+#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
+#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
+#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
+#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
+#define Lam1( n,a )  ( aLam1[ ((n)*Na+(a)) ])     // Bug fixed by SD 26.12.2008
+#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
+#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
+
+#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
+#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
+#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
+//
 
 // Output of test results into text file (standalone variant only)
 void TPitzer::Pitzer_test_out( const char *path )
 {
 
-	long int ii, c, a;
+	long int ii, c, a, n;
 
 	fstream ff(path, ios::out );
 	ErrorIf( !ff.good() , path, "Fileopen error");
@@ -245,8 +270,15 @@ void TPitzer::Pitzer_test_out( const char *path )
 
 	ff << endl << "Theta" << endl;
 	for( c=0; c<Nc; c++ )
-	{	for( a=0; a<Nc; a++ )
+	{	for( a=0; a<Na; a++ )
 			ff << aTheta[c*Nc+a] << "  ";
+		ff << endl;
+	}
+
+	ff << endl << "Lam1" << endl;
+	for( n=0; n<Nn; n++ )
+	{	for( a=0; a<Na; a++ )
+			ff << Lam1( n,a ) << "  ";
 		ff << endl;
 	}
 
@@ -341,30 +373,6 @@ void TPitzer::free_internal()
 
 }
 
-// Moved macros here from s_fgl.h to restrict their visibility
-// in other files (DK)
-#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
-#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
-
-#define mc( ii ) (aM[ xcx[(ii)] ])
-#define ma( ii ) (aM[ xax[(ii)] ])
-#define mn( ii ) (aM[ xnx[(ii)] ])
-#define zc( ii ) (aZ[ xcx[(ii)] ])
-#define za( ii ) (aZ[ xax[(ii)] ])
-
-#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
-#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
-#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
-#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
-#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
-#define Lam1( n,a )  ( aLam[ ((n)*Na+(a)) ])
-#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
-#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
-
-#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
-#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
-#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
-//
 
 // Calculate temperature dependence of the interaction parameters.
 // Two different versions: with 5 (4) or with 8 coefficients
@@ -551,6 +559,7 @@ void TPitzer::	setValues()
 	      }
           ErrorIf( ic<0||ia<0||i<0, "", "Index of anion and 2 indexes of cations needed here"  );
 	      Psi( ic, i, ia ) = aIP[ii];
+//	      cout << "Psi = " << Psi( ic, i, ia ) << "index = " << (( (ic) * Nc + (i)  ) * Na + (ia)) << endl;
 	      break;
 	  case Psi1_:
 		  ia = getIa( IPx(ii,0) );
@@ -569,8 +578,9 @@ void TPitzer::	setValues()
 	         else
 	          ic = getIc( IPx(ii,2) );
 	      }
-         ErrorIf( ic<0||ia<0||i<0, "", "Indexes of 2 anions and one cation needed here"  );
+          ErrorIf( ic<0||ia<0||i<0, "", "Indexes of 2 anions and one cation needed here"  );
 	      Psi1( ia, i, ic ) = aIP[ii];
+//	      cout << "Psi1 = " << Psi1( ia, i, ic ) << "index = " << (( (ia) * Na + (i) ) * Nc + (ic)) << endl;
 	      break;
 	  case Zeta_:
 		  in = getIn( IPx(ii,0) );
@@ -594,10 +604,10 @@ void TPitzer::	setValues()
 	      ErrorIf( ic<0||ia<0||in<0, "",
 	    		  "Index of neutral species, index of cation and index of anion needed here"  );
 	      Zeta( in, ic, ia ) = aIP[ii];
+//	      cout << "Zeta = " << Zeta( in, ic, ia ) << "index = " << (( (in) * Nc + (ic)  ) * Na + (ia)) << endl;
 	      break;
 	}
   }
-
 }
 
 
