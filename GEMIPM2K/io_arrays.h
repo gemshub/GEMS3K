@@ -33,25 +33,25 @@ public:
     void writeArray( const char *name, double* arr, long int size, long int l_size=-1L );
  //   void writeArray( const char *name, short* arr, long int size, long int l_size=-1L  );
     void writeArray( const char *name, long* arr, long int size, long int l_size=-1L  );
-   
+
     void writeArray( const char *name, char*   arr, int size, int arr_size );
     void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
     void writeArray( const char *name, double* arr, int size, int l_size=-1 );
     void writeArray( const char *name, short* arr, int size, int l_size=-1  );
 //    void writeArray( const char *name, long* arr, int size, int l_size=-1  );
 
-    void writeArray( const char *name, float*  arr, long int size, long int* selAr, 
+    void writeArray( const char *name, float*  arr, long int size, long int* selAr,
     		long int nColumns=1L, long int l_size=-1L );
-    void writeArray( const char *name, double* arr, long int size, long int* selAr, 
+    void writeArray( const char *name, double* arr, long int size, long int* selAr,
     		long int nColumns=1L, long int l_size=-1L );
-    void writeArray( const char *name, long* arr, long int size, long int* selAr, 
+    void writeArray( const char *name, long* arr, long int size, long int* selAr,
     		long int nColumns=1L, long int l_size=-1L );
 
-    void writeArray( const char *name, float*  arr, int size, long int* selAr, 
+    void writeArray( const char *name, float*  arr, int size, long int* selAr,
     		int nColumns=1, int l_size=-1 );
-    void writeArray( const char *name, double* arr, int size, long int* selAr, 
+    void writeArray( const char *name, double* arr, int size, long int* selAr,
     		int nColumns=1, int l_size=-1 );
-    void writeArray( const char *name, short* arr, int size, long int* selAr, 
+    void writeArray( const char *name, short* arr, int size, long int* selAr,
     		int nColumns=1, int l_size=-1 );
 
 };

@@ -30,16 +30,16 @@
 
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
-// If the first parameter is given as NULL then the char array 
-// will be printed as a comment  
+// If the first parameter is given as NULL then the char array
+// will be printed as a comment
 void TPrintArrays::writeArray( const char *name, char* arr,
 		long int size, long int arr_siz )
 {
  bool isComment = false;
-	
- if( name ) 
+
+ if( name )
      ff << endl << "<" << name << ">" << endl;
- else 
+ else
  { ff << endl << "#  ";
    isComment = true;
  }
@@ -48,7 +48,7 @@ void TPrintArrays::writeArray( const char *name, char* arr,
     if(jj == 40 )
     { jj=0;  ff << endl;
       if(isComment)
-    	  ff << "#  ";  
+    	  ff << "#  ";
     }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
     str.strip();
@@ -60,10 +60,10 @@ void TPrintArrays::writeArray( const char *name, char* arr,
 		int size, int arr_siz )
 {
  bool isComment = false;
-	
- if( name ) 
+
+ if( name )
      ff << endl << "<" << name << ">" << endl;
- else 
+ else
  { ff << endl << "#  ";
    isComment = true;
  }
@@ -72,7 +72,7 @@ void TPrintArrays::writeArray( const char *name, char* arr,
     if(jj == 40 )
     { jj=0;  ff << endl;
       if(isComment)
-    	  ff << "#  ";  
+    	  ff << "#  ";
     }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
     str.strip();
@@ -192,14 +192,14 @@ void TPrintArrays::writeArray( const char *name,  float* arr,
  ff << endl << "<" << name << ">" << endl;
  for( long int ii=0, jj=0; ii<size; ii++  )
  {
-	for(long int cc=0; cc<nColumns; cc++ )  
+	for(long int cc=0; cc<nColumns; cc++ )
     {
     	if(jj == sz)
 	    { jj=0;  ff << endl;}
    	//    ff << setprecision(10) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
    	    ff << setprecision(7) << arr[selArr[ii]*nColumns+cc] << " ";
 	   	jj++;
-	} 	
+	}
  }
 }
 
@@ -214,14 +214,14 @@ void TPrintArrays::writeArray( const char *name,  float* arr,
  ff << endl << "<" << name << ">" << endl;
  for( int ii=0, jj=0; ii<size; ii++  )
  {
-	for( int cc=0; cc<nColumns; cc++ )  
+	for( int cc=0; cc<nColumns; cc++ )
     {
     	if(jj == sz)
 	    { jj=0;  ff << endl;}
    	//    ff << setprecision(10) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
    	    ff << setprecision(7) << arr[selArr[ii]*nColumns+cc] << " ";
 	   	jj++;
-	} 	
+	}
  }
 }
 
@@ -236,14 +236,14 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
  ff << endl << "<" << name << ">" << endl;
  for( long int ii=0, jj=0; ii<size; ii++  )
  {
-		for(long int cc=0; cc<nColumns; cc++ )  
+		for(long int cc=0; cc<nColumns; cc++ )
 	    {
 			if(jj == sz)
 	        { jj=0;  ff << endl;}
 		    //    ff << setprecision(18) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
 		    ff << setprecision(15) << arr[selArr[ii]*nColumns+cc] << " ";
 	    	jj++;
-	    } 	
+	    }
  }
 }
 
@@ -258,14 +258,14 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
  ff << endl << "<" << name << ">" << endl;
  for( int ii=0, jj=0; ii<size; ii++  )
  {
-		for( int cc=0; cc<nColumns; cc++ )  
+		for( int cc=0; cc<nColumns; cc++ )
 	    {
 			if(jj == sz)
 	        { jj=0;  ff << endl;}
 		    //    ff << setprecision(18) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
 		    ff << setprecision(15) << arr[selArr[ii]*nColumns+cc] << " ";
 	    	jj++;
-	    } 	
+	    }
  }
 }
 
@@ -281,13 +281,13 @@ void TPrintArrays::writeArray( const char *name, long* arr,
  ff << endl << "<" << name << ">" << endl;
  for( long int ii=0, jj=0; ii<size; ii++  )
  {
-	for(long int cc=0; cc<nColumns; cc++ )  
+	for(long int cc=0; cc<nColumns; cc++ )
     {
 		if(jj == sz)
         { jj=0;  ff << endl;}
     	ff << arr[selArr[ii]*nColumns+cc] << " ";
     	jj++;
-    } 	
+    }
  }
 }
 
@@ -302,13 +302,13 @@ void TPrintArrays::writeArray( const char *name, short* arr,
  ff << endl << "<" << name << ">" << endl;
  for( int ii=0, jj=0; ii<size; ii++  )
  {
-	for( int cc=0; cc<nColumns; cc++ )  
+	for( int cc=0; cc<nColumns; cc++ )
     {
 		if(jj == sz)
         { jj=0;  ff << endl;}
     	ff << arr[selArr[ii]*nColumns+cc] << " ";
     	jj++;
-    } 	
+    }
  }
 }
 //-------------------------------------------------------------------------

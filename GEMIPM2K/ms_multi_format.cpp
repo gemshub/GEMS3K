@@ -108,7 +108,7 @@ outField MULTI_dynamic_fields[67] =  {
    { "pa_DW", 0 , 0 },
    { "pa_DT", 0 , 0 },
    { "pa_GAS", 0 , 0 },
-{ "pa_DG", 0 , 0 },   
+{ "pa_DG", 0 , 0 },
    { "pa_DNS" , 0 , 0 },
    { "pa_IEPS" , 0 , 0 },
    { "pKin" , 0 , 0 },
@@ -636,7 +636,7 @@ void TMulti::from_text_file_gemipm( const char *path )
   for( ii=0; ii< dCH->nIC; ii++ )
   { pmp->Awt[ii]  = dCH->ICmm[ii];
     fillValue(pmp->SB[ii], ' ', MaxICN );
-    copyValues( pmp->SB[ii], dCH->ICNL[ii], MaxICN );
+    copyValues( pmp->SB[ii], dCH->ICNL[ii], min(MaxICN,(long int)MAXICNAME));
     pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
     pmp->ICC[ii] =  dCH->ccIC[ii];
   }
@@ -653,13 +653,13 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   {
     pmp->MM[ii] = dCH->DCmm[ii];
     pmp->DCC[ii] = dCH->ccDC[ii];
-    copyValues( pmp->SM[ii], dCH->DCNL[ii], MaxDCN);
+    copyValues( pmp->SM[ii], dCH->DCNL[ii], min(MaxDCN,(long int)MAXDCNAME) );
   }
 
   for( ii=0; ii< dCH->nPH; ii++ )
   {
-	  fillValue( pmp->SF[ii], ' ', MaxPHN );
-	  copyValues( pmp->SF[ii]+4, dCH->PHNL[ii], MaxPHN-4);
+	  fillValue( pmp->SF[ii], ' ', MAXPHNAME+MAXSYMB );
+	  copyValues( pmp->SF[ii]+MAXSYMB, dCH->PHNL[ii], min(MaxPHN,(long int)MAXPHNAME) );
      pmp->SF[ii][0] = dCH->ccPH[ii];
      pmp->PHC[ii] = dCH->ccPH[ii];
   }
