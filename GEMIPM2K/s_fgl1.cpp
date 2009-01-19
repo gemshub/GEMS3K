@@ -1060,8 +1060,295 @@ double TPitzer::lnGammaN(  long int N )
 }
 
 
-// Down here comes the Extended Uniquac model
-//
+
+//=============================================================================================
+// Extended universal quasi-chemical (EUNIQUAC) model for aqueous electrolyte solutions
+// References: Nicolaisen et al. (1993), Thomsen et al. (1996), Thomsen (2005)
+//=============================================================================================
+
+
+// Generic constructor for the TEUNIQUAC class
+TEUNIQUAC::TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+        double dW, double eW ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, dW, eW )
+{
+	alloc_internal();
+	for (long int j=0; j<NComp; j++)
+	{
+		Z[j] = arZ[j];
+		M[j] = arM[j];
+	}
+	// Z = arZ;
+	// M = arM;
+}
+
+
+TEUNIQUAC::~TEUNIQUAC()
+{
+	free_internal();
+}
+
+
+void TEUNIQUAC::alloc_internal()
+{
+	Z = new double [NComp];
+	M = new double [NComp];
+	R = new double [NComp];
+	Q = new double [NComp];
+	Phi = new double [NComp];
+	Theta = new double [NComp];
+	U = new double *[NComp];
+	dU = new double *[NComp];
+	d2U = new double *[NComp];
+	Psi = new double *[NComp];
+	dPsi = new double *[NComp];
+	d2Psi = new double *[NComp];
+
+	for (long int j=0; j<NComp; j++)
+	{
+		U[j] = new double [NComp];
+		dU[j] = new double [NComp];
+		d2U[j] = new double [NComp];
+		Psi[j] = new double [NComp];
+		dPsi[j] = new double [NComp];
+		d2Psi[j] = new double [NComp];
+	}
+}
+
+
+void TEUNIQUAC::free_internal()
+{
+  	// cleaning memory
+	for (long int j=0; j<NComp; j++)
+	{
+		delete[]U[j];
+		delete[]dU[j];
+		delete[]d2U[j];
+		delete[]Psi[j];
+		delete[]dPsi[j];
+		delete[]d2Psi[j];
+	}
+	delete[]Z;
+	delete[]M;
+	delete[]R;
+	delete[]Q;
+	delete[]Phi;
+	delete[]Theta;
+	delete[]U;
+	delete[]dU;
+	delete[]d2U;
+	delete[]Psi;
+	delete[]dPsi;
+	delete[]d2Psi;
+}
+
+
+// Calculates T,P corrected binary interaction parameters
+long int TEUNIQUAC::PTparam()
+{
+	long int j, i, ip, i1, i2;
+	double u0, u1, u, du, d2u;
+	double psi, dpsi, d2psi, v, dv;
+
+    if ( NPcoef < 2 || NPar < 1 || NP_DC < 2 )
+       return 1;
+
+	// read and transfer species-dependent parameters
+	for (j=0; j<NComp; j++)
+	{
+		R[j] = aDCc[NP_DC*j];   // volume parameter r
+		Q[j] = aDCc[NP_DC*j+1];   // surface parameter q
+	}
+
+	// fill internal arrays of interaction parameters with standard value
+	for (j=0; j<NComp; j++)
+	{
+		for (i=0; i<NComp; i++)
+		{
+			U[j][i] = 0.0;
+			dU[j][i] = 0.0;
+			d2U[j][i] = 0.0;
+			Psi[j][i] = 1.0;
+			dPsi[j][i] = 0.0;
+			d2Psi[j][i] = 0.0;
+		}
+	}
+
+	// read and convert interaction energies (uji) that have non-standard value
+	for (ip=0; ip<NPar; ip++)
+	{
+		i1 = aIPx[MaxOrd*ip];
+		i2 = aIPx[MaxOrd*ip+1];
+		u0 = aIPc[NPcoef*ip+0];
+		u1 = aIPc[NPcoef*ip+1];
+		u = u0 + u1*(Tk-298.15);
+		du = u1;
+		d2u = 0.0;
+		U[i1][i2] = u;
+		dU[i1][i2] = du;
+		d2U[i1][i2] = d2u;
+		U[i2][i1] = u;
+		dU[i2][i1] = du;
+		d2U[i2][i1] = d2u;   // uij identical to uji
+	}
+
+	// calculate Psi and its partial derivatives
+	for (j=0; j<NComp; j++)
+	{
+		for (i=0; i<NComp; i++)
+		{
+			psi = exp( -(U[j][i]-U[i][i])/Tk );
+			v = (U[j][i]-U[i][i])/pow(Tk,2.) - (dU[j][i]-dU[i][i])/Tk;
+			dv = (-2.)*(U[j][i]-U[i][i])/pow(Tk,3.) + 2.*(dU[j][i]-dU[i][i])/pow(Tk,2.)
+					- (d2U[j][i]-d2U[i][i])/Tk;
+			dpsi = psi * v;
+			d2psi = dpsi*v + psi*dv;
+			Psi[j][i] = psi;
+			dPsi[j][i] = dpsi;
+			d2Psi[j][i] = d2psi;
+		}
+	}
+
+	return 0;
+}
+
+
+// Calculates activity coefficients and excess functions
+long int TEUNIQUAC::MixMod()
+{
+	int j, i, l, k, w;
+	double Mw, Xw, IS, A, b;
+	double RR, QQ, K, L, M, N;
+	double gamDH, gamC, gamR, lnGam, Gam;
+	double gE, hE, sE, cpE, vE, gDH, gC, gR;
+
+	// get index of water (assumes water is last species in phase)
+	w = NComp - 1;
+
+	// calculation of DH parameters
+	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
+	b = 1.5;
+
+	// calculation of ionic strength
+	IS = 0.0;
+	Mw = 0.018015;
+	Xw = x[w];
+	for (j=0; j<NComp; j++)
+	{
+		IS += 0.5*x[j]*pow(Z[j],2.)/(Xw*Mw);
+	}
+
+	// calculation of Phi and Theta terms
+	for (j=0; j<NComp; j++)
+	{
+		RR = 0.0;
+		QQ = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			RR += x[i]*R[i];
+			QQ += x[i]*Q[i];
+		}
+		Phi[j] = x[j]*R[j]/RR;
+		Theta[j] = x[j]*Q[j]/QQ;
+	}
+
+	// loop over all species
+	for (j=0; j<NComp; j++)
+	{
+		// species other than water solvent
+		if (j < w)
+		{
+			K = 0.0;
+			L = 0.0;
+			for (k=0; k<NComp; k++)
+			{
+				M = 0.0;
+				for (l=0; l<NComp; l++)
+				{
+					M += Theta[l]*Psi[l][k];
+				}
+
+				K += Theta[k]*Psi[k][j];
+				L += Theta[k]*Psi[j][k]/M;
+			}
+
+			gamDH = - pow(Z[j],2.)*A*sqrt(IS)/(1.+b*sqrt(IS));
+			gamC = log(Phi[j]/x[j]) - Phi[j]/x[j] - log(R[j]/R[w]) + R[j]/R[w]
+					- 5.0*Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
+					- log(R[j]*Q[w]/(R[w]*Q[j])) + R[j]*Q[w]/(R[w]*Q[j]) );
+			gamR = Q[j] * ( - log(K) - L + log(Psi[w][j]) + Psi[j][w] );
+			lnGam = gamDH + gamC + gamR;
+
+			// convert activity coefficient to molality scale
+			lnGam = lnGam + log(x[w]);
+			lnGamma[j] = lnGam;
+			Gam = exp(lnGam);
+		}
+
+		// water solvent
+		else
+		{
+			K = 0.0;
+			L = 0.0;
+			for (k=0; k<NComp; k++)
+			{
+				M = 0.0;
+				for (l=0; l<NComp; l++)
+				{
+					M += Theta[l]*Psi[l][k];
+				}
+
+				K += Theta[k]*Psi[k][j];
+				L += Theta[k]*Psi[j][k]/M;
+			}
+
+			gamDH = Mw*2.*A/pow(b,3.) * ( 1. + b*sqrt(IS) - 1./(1.+b*sqrt(IS)) - 2*log(1.+b*sqrt(IS)) );
+			gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
+			gamR = Q[j] * (1. - log(K) - L );
+			lnGam = gamDH + gamC + gamR;
+			lnGamma[j] = lnGam;
+			Gam = exp(lnGam);
+		}
+	}
+
+	// calculation of bulk phase excess properties (under construction)
+	gE = 0.0;
+	hE = 0.0;
+	sE = 0.0;
+	cpE = 0.0;
+	vE = 0.0;
+	gC = 0.0;
+	gR = 0.0;
+
+	K = 0.0;
+	L = 0.0;
+	M = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		N = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			N += Theta[i]*Psi[i][j];
+		}
+		K += x[j]*log(Phi[j]/x[j]);
+		L += Q[j]*x[j]*log(Phi[j]/Theta[j]);
+		M += x[j]*Q[j]*log(N);
+	}
+
+	gDH = - x[w]*Mw*4.*A/pow(b,3.) * ( log(1.+b*sqrt(IS)) - b*sqrt(IS) + 0.5*pow(b,2.)*IS );
+	gC = K - 5.0*L;
+	gR = - M;
+	gE = ( gDH + gC + gR ) * R_CONST * Tk;
+
+	return 0;
+}
+
+
 
 
 //--------------------- End of s_fgl1.cpp ---------------------------

@@ -386,7 +386,7 @@ TMulti::GammaCalc( long int LinkMode  )
                 continue;  // The switch below is for built-in functions only!
 
             // the following section probably needs to be re-written to allow more flexible
-            // combinations of fluid models for pure gases with gEX mixing models,
+            // combinations of fluid models for pure gases with gE mixing models,
             // scheme should probably be the same as in LINK_UX_MODE, 03.06.2008 (TW)
             switch( pmp->PHC[k] )
             {
@@ -1307,7 +1307,7 @@ void
 TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k )
 {
   double a0, a1, a2, lnGam1, lnGam2, X1, X2;
-  double gEX, vEX, hEX, sEX, cpEX, uEX;
+  double gE, vE, hE, sE, cpE, uE;
 
   // load parameters
   a0 = pmp->PMc[jpb+0];
@@ -1323,12 +1323,12 @@ TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k
   lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
 
   // bulk phase excess properties (added by TW, 29.05.2008)
-  gEX = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
-  vEX = 0.0;
-  uEX = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
-  sEX = 0.0;
-  cpEX = 0.0;
-  hEX = uEX;
+  gE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
+  vE = 0.0;
+  uE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
+  sE = 0.0;
+  cpE = 0.0;
+  hE = uE;
 
   // assignments
   pmp->lnGam[jb] = lnGam1;
@@ -1344,7 +1344,7 @@ TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long int 
 {
   double T, P, WU1, WS1, WV1, WU2, WS2, WV2, WG1, WG2,
          a1, a2, lnGam1, lnGam2, X1, X2;
-  double gEX, vEX, hEX, sEX, cpEX, uEX;
+  double gE, vE, hE, sE, cpE, uE;
 
   // load parameters
   T = pmp->Tc;
@@ -1371,17 +1371,17 @@ TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long int 
   lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
 
   // bulk phase excess properties (extended by TW, 29.05.2008)
-  gEX = X1*X2*( X2*WG1 + X1*WG2 );
-  vEX = X1*X2*( X2*WV1 + X1*WV2 );
-  uEX = X1*X2*( X2*WU1 + X1*WU2 );
-  sEX = X1*X2*( X2*WS1 + X1*WS2 );
-  cpEX = 0.0;
-  hEX = uEX+vEX*P;
+  gE = X1*X2*( X2*WG1 + X1*WG2 );
+  vE = X1*X2*( X2*WV1 + X1*WV2 );
+  uE = X1*X2*( X2*WU1 + X1*WU2 );
+  sE = X1*X2*( X2*WS1 + X1*WS2 );
+  cpE = 0.0;
+  hE = uE+vE*P;
 
   // assignments
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
-  pmp->FVOL[k] += vEX*10.;  // make consistent with TSolMod
+  pmp->FVOL[k] += vE*10.;  // make consistent with TSolMod
 
  }
 
@@ -1395,7 +1395,7 @@ TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int
   double T, P, WU12, WS12, WV12, WU13, WS13, WV13, WU23, WS23, WV23,
          WU123, WS123, WV123, WG12, WG13, WG23, WG123,
          a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
-  double gEX, vEX, hEX, sEX, cpEX, uEX;
+  double gE, vE, hE, sE, cpE, uE;
 
   // load parameters
   T = pmp->Tc;
@@ -1437,18 +1437,18 @@ TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int
            + a123*X1*X2*(1.-2.*X3);
 
   // bulk phase excess properties (added by TW, 29.05.2008)
-  gEX = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
-  vEX = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
-  uEX = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
-  sEX = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
-  cpEX = 0.0;
-  hEX = uEX+vEX*P;
+  gE = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
+  vE = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
+  uE = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
+  sE = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
+  cpE = 0.0;
+  hE = uE+vE*P;
 
   // assignments
   pmp->lnGam[jb] = lnGam1;
   pmp->lnGam[jb+1] = lnGam2;
   pmp->lnGam[jb+2] = lnGam3;
-  pmp->FVOL[k] += vEX*10.;  // make consistent with TSolMod
+  pmp->FVOL[k] += vE*10.;  // make consistent with TSolMod
 
 }
 
@@ -1490,7 +1490,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_VANLAAR:  // Van Laar solid solution
         {
         	TVanLaar* aPT = new TVanLaar( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1499,7 +1499,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_REGULAR:  // Regular solid solution
         {
         	TRegular* aPT = new TRegular( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1507,7 +1507,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_GUGGENM:  // Redlich-Kister solid solution
         {
         	TRedlichKister* aPT = new TRedlichKister( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1515,7 +1515,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_NRTLLIQ:  // NRTL liquid solution
         {
         	TNRTL* aPT = new TNRTL( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1523,7 +1523,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_WILSLIQ:  // Wilson liquid solution
         {
         	TWilson* aPT = new TWilson( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1531,7 +1531,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_AQPITZ:  // Pitzer aqueous electrolyte
         {
            	TPitzer* aPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
              break;
         }
@@ -1539,19 +1539,23 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_AQSIT:  // SIT aqueous electrolyte
         {
            	TSIT* aPT = new TSIT( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
         }
 
         case SM_AQEXUQ:  // EUNIQUAC aqueous electrolyte
-        //        	 aSM->EUNIQUAC_PT();
-        //        	 break;
+        {
+           	TEUNIQUAC* aPT = new TEUNIQUAC( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, RhoW, EpsW );
+            aSM = (TSolMod*)aPT;
+            break;
+        }
 
         case SM_PRFLUID:  // PRSV fluid mixture
         {
         	TPRSVcalc* aPT = new TPRSVcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, pmp->Pparc+jb,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
                     pmp->GEX+jb, pmp->Vol+jb, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
@@ -1560,7 +1564,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_CGFLUID:  // CG fluid mixture
         {
         	TCGFcalc* aPT = new TCGFcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,
                     pmp->Pparc+jb, pmp->FWGT+k, pmp->X+jb,
                     pmp->GEX+jb, pmp->Vol+jb, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
@@ -1570,7 +1574,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_SRFLUID:  // SRK fluid mixture
         {
         	TSRKcalc* aPT = new TSRKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, pmp->Tc, pmp->Pc, ModCode,
-                    aIPx, aIPc, aDCc,  aWx, alnGam, aphVOL, pmp->Pparc+jb,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
                     pmp->GEX+jb, pmp->Vol+jb, RhoW, EpsW );
             aSM = (TSolMod*)aPT;
             break;
@@ -1603,6 +1607,7 @@ TMulti::SolModParPT( long int k, char ModCode )
         case SM_WILSLIQ:
         case SM_AQPITZ:
         case SM_AQSIT:
+        case SM_AQEXUQ:
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
@@ -1611,9 +1616,6 @@ TMulti::SolModParPT( long int k, char ModCode )
               aSM->PTparam();
              break;
         }
-        case SM_AQEXUQ:
-
-             break;
         default:
               break;
     }
@@ -1634,6 +1636,7 @@ TMulti::SolModActCoeff( long int k, char ModCode )
         case SM_WILSLIQ:
         case SM_AQPITZ:
         case SM_AQSIT:
+        case SM_AQEXUQ:
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
@@ -1642,9 +1645,7 @@ TMulti::SolModActCoeff( long int k, char ModCode )
              aSM->MixMod();
              break;
         }
-        case SM_AQEXUQ:
-//             aSM->MixMod(  );
-             break;
+
         default:
               break;
     }
@@ -1666,6 +1667,7 @@ TMulti::SolModExcessParam( long int k, char ModCode )
         case SM_WILSLIQ:
         case SM_AQPITZ:
         case SM_AQSIT:
+        case SM_AQEXUQ:
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
@@ -1674,9 +1676,7 @@ TMulti::SolModExcessParam( long int k, char ModCode )
               aSM->getExcessProp( Gex, Vex, Hex, Sex, CPex );
               break;
          }
-        case SM_AQEXUQ:
-//             aSM->EUNIQUAC_MixMod( Gex, Vex, Hex, Sex, CPex );
-             break;
+
         default:
               break;
     }

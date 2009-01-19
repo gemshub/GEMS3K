@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1164 2008-12-20 08:14:36Z wagner $
+// $Id: s_fgl2.cpp 1175 2009-01-18 13:19:19Z wagner $
 //
 // Copyright (c) 2007-2008  T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -142,7 +142,7 @@ long int TVanLaar::MixMod()
    long int ip, j, i1, i2;
    double dj, dk;
    double sumPhi; // Sum of Phi terms
-   double gEX, vEX, hEX, sEX, cpEX, uEX;
+   double gE, vE, hE, sE, cpE, uE;
 
    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
            return 1;
@@ -187,24 +187,24 @@ long int TVanLaar::MixMod()
 	}
 
    // calculate bulk phase excess properties
-   gEX = 0.0;
-   vEX = 0.0;
-   hEX = 0.0;
-   sEX = 0.0;
-   cpEX = 0.0;
-   uEX = 0.0;
+   gE = 0.0;
+   vE = 0.0;
+   hE = 0.0;
+   sE = 0.0;
+   cpE = 0.0;
+   uE = 0.0;
 
    for (ip=0; ip<NPar; ip++)
    {
       i1 = aIPx[MaxOrd*ip];
       i2 = aIPx[MaxOrd*ip+1];
-      gEX += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
-      vEX += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
-      uEX += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
-      sEX -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
+      gE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
+      vE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
+      uE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
+      sE -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
    }
 
-   hEX = uEX+vEX*Pbar;
+   hE = uE+vE*Pbar;
 
    return 0;
 }
@@ -283,7 +283,7 @@ TRegular::MixMod()
 {
    long int ip, j, i1, i2;
    double dj, dk;
-   double gEX, vEX, hEX, sEX, cpEX, uEX;
+   double gE, vE, hE, sE, cpE, uE;
 
    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
            return 1;
@@ -313,24 +313,24 @@ TRegular::MixMod()
 	}
 
    // calculate bulk phase excess properties
-   gEX = 0.0;
-   vEX = 0.0;
-   hEX = 0.0;
-   sEX = 0.0;
-   cpEX = 0.0;
-   uEX = 0.0;
+   gE = 0.0;
+   vE = 0.0;
+   hE = 0.0;
+   sE = 0.0;
+   cpE = 0.0;
+   uE = 0.0;
 
    for (ip=0; ip<NPar; ip++)
    {
       i1 = aIPx[MaxOrd*ip];
       i2 = aIPx[MaxOrd*ip+1];
-      gEX += x[i1]*x[i2]*Wpt[ip];
-      vEX += x[i1]*x[i2]*Wv[ip];
-      uEX += x[i1]*x[i2]*Wu[ip];
-      sEX -= x[i1]*x[i2]*Ws[ip];
+      gE += x[i1]*x[i2]*Wpt[ip];
+      vE += x[i1]*x[i2]*Wv[ip];
+      uE += x[i1]*x[i2]*Wu[ip];
+      sE -= x[i1]*x[i2]*Ws[ip];
    }
 
-   hEX = uEX+vEX*Pbar;
+   hE = uE+vE*Pbar;
 
    return 0;
 }
@@ -433,7 +433,7 @@ TRedlichKister::MixMod()
    long int i1, i2, L, I, J;
    double LU, LS, LCP, LV, LPT;
    double L0, L1, L2, L3;
-   double gEX, vEX, hEX, sEX, cpEX, uEX;
+   double gE, vE, hE, sE, cpE, uE;
 
    if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
            return 1;
@@ -494,12 +494,12 @@ TRedlichKister::MixMod()
 	}
 
    	// calculate bulk phase excess properties
-   	gEX = 0.0;
-   	vEX = 0.0;
-   	hEX = 0.0;
-   	sEX = 0.0;
-   	cpEX = 0.0;
-   	uEX = 0.0;
+   	gE = 0.0;
+   	vE = 0.0;
+   	hE = 0.0;
+   	sE = 0.0;
+   	cpE = 0.0;
+   	uE = 0.0;
 
    	for (ip=0; ip<NPar; ip++)
    	{
@@ -528,14 +528,14 @@ TRedlichKister::MixMod()
       			+ (-Lcp[ip][2])*pow((x[i1]-x[i2]),2.)
       			+ (-Lcp[ip][3])*pow((x[i1]-x[i2]),3.);
 
-      	gEX += x[i1]*x[i2]*LPT;
-      	vEX += x[i1]*x[i2]*LV;
-      	uEX += x[i1]*x[i2]*LU;
-      	sEX += x[i1]*x[i2]*LS;
-      	cpEX += x[i1]*x[i2]*LCP;
+      	gE += x[i1]*x[i2]*LPT;
+      	vE += x[i1]*x[i2]*LV;
+      	uE += x[i1]*x[i2]*LU;
+      	sE += x[i1]*x[i2]*LS;
+      	cpE += x[i1]*x[i2]*LCP;
   	}
 
-   	hEX = uEX+vEX*Pbar;
+   	hE = uE+vE*Pbar;
    	return 0;
 }
 
@@ -579,6 +579,7 @@ void TNRTL::alloc_internal()
 	G = new double *[NComp];
 	dG = new double *[NComp];
 	d2G = new double *[NComp];
+
     for (long int j=0; j<NComp; j++)
     {
     	Tau[j] = new double [NComp];
@@ -591,7 +592,6 @@ void TNRTL::alloc_internal()
 		dG[j] = new double [NComp];
 		d2G[j] = new double [NComp];
 	}
-
 }
 
 
@@ -705,7 +705,7 @@ TNRTL::MixMod()
 	double K, L, M, N, O;
 	double U, dU, V, dV, d2U, d2V;
 	double g, dg, d2g, lnGam;
-	double gEX, vEX, hEX, sEX, cpEX;
+	double gE, vE, hE, sE, cpE;
 
 	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
@@ -735,11 +735,11 @@ TNRTL::MixMod()
 	}
 
 	// calculate bulk phase excess properties
-   	gEX = 0.0;
-   	vEX = 0.0;
-   	hEX = 0.0;
-   	sEX = 0.0;
-   	cpEX = 0.0;
+   	gE = 0.0;
+   	vE = 0.0;
+   	hE = 0.0;
+   	sE = 0.0;
+   	cpE = 0.0;
    	g = 0.0;
    	dg = 0.0;
    	d2g = 0.0;
@@ -768,10 +768,10 @@ TNRTL::MixMod()
 				- (dU*dV+U*d2V)*pow(V,2.)/pow(V,4.) + (U*dV)*(2.*V*dV)/pow(V,4.) );
 	}
 
-	gEX = g*R_CONST*Tk;
-	hEX = -R_CONST*pow(Tk,2.)*dg;
-	sEX = (hEX-gEX)/Tk;
-	cpEX = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+	gE = g*R_CONST*Tk;
+	hE = -R_CONST*pow(Tk,2.)*dg;
+	sE = (hE-gE)/Tk;
+	cpE = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
 	return 0;
 }
@@ -888,7 +888,7 @@ TWilson::MixMod( )
 	double K, L, M;
 	double U, dU, d2U;
 	double g, dg, d2g, lnGam;
-	double gEX, vEX, hEX, sEX, cpEX;
+	double gE, vE, hE, sE, cpE;
 
 	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
@@ -914,11 +914,11 @@ TWilson::MixMod( )
 	}
 
 	// calculate bulk phase excess properties
-	gEX = 0.0;
-	vEX = 0.0;
-	hEX = 0.0;
-	sEX = 0.0;
-	cpEX = 0.0;
+	gE = 0.0;
+	vE = 0.0;
+	hE = 0.0;
+	sE = 0.0;
+	cpE = 0.0;
 	g = 0.0;
 	dg = 0.0;
 	d2g = 0.0;
@@ -940,10 +940,10 @@ TWilson::MixMod( )
 	}
 
 	// final calculations and assignments
-	gEX = g*R_CONST*Tk;
-	hEX = -R_CONST*pow(Tk,2.)*dg;
-	sEX = (hEX-gEX)/Tk;
-	cpEX = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+	gE = g*R_CONST*Tk;
+	hE = -R_CONST*pow(Tk,2.)*dg;
+	sE = (hE-gE)/Tk;
+	cpE = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
 	return 0;
 }

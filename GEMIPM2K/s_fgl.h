@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1172 2008-12-22 16:12:17Z gems $
+// $Id: s_fgl.h 1175 2009-01-18 13:19:19Z wagner $
 //
 // Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -105,7 +105,7 @@ class EOSPARAM
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Added 07 March 2007 by TW and DK; extended 25.11.2008 by DK
 // Definition of a class for built-in solution models
 
@@ -182,7 +182,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Churakov & Gottschalk (2003) EOS calculations
 
 class TCGFcalc: public TSolMod
@@ -332,7 +332,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Added 19 July 2006 by T.Wagner and D.Kulik
 // Declaration of a class for Peng-Robinson-Stryjek-Vera (PRSV) EOS calculations for fluids
 // Incorporates a C++ program written by Thomas Wagner (Univ. Tuebingen)
@@ -409,7 +409,7 @@ protected:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Added 15 December 2008 by T. Wagner
 // Declaration of a class for Soave-Redlich-Kwong (SRK) EOS calculations for fluids
 // Incorporates a C++ program written by T. Wagner (ETH Zurich)
@@ -481,7 +481,7 @@ protected:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // SIT model reimplementation for aqueous electrolyte solutions
 
 class TSIT: public TSolMod
@@ -520,7 +520,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Van Laar model for solid solutions (c) TW March 2007
 // References:  Holland & Powell (2003)
 
@@ -559,7 +559,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Regular model for multicomponent solid solutions (c) TW March 2007
 // References: Holland & Powell (1993)
 
@@ -596,7 +596,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Redlich-Kister model for multicomponent solid solutions (c) TW March 2007
 // References: Hillert (1998)
 
@@ -634,8 +634,8 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// NRTL model for liquid solutions (c) TW June 2008
+// -------------------------------------------------------------------------------------
+// Non-random two liquid (NRTL) model for liquid solutions (c) TW June 2008
 // References: Renon and Prausnitz (1968), Prausnitz et al. (1997)
 
 class TNRTL: public TSolMod
@@ -676,7 +676,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Wilson model for liquid solutions (c) TW June 2008
 // References: Prausnitz et al. (1997)
 
@@ -712,7 +712,7 @@ public:
 
 
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// -------------------------------------------------------------------------------------
 // Pitzer model, Harvie-Moller-Weare (HMW) version, with explicit temperature dependence
 // References:
 
@@ -833,7 +833,7 @@ public:
     // Constructor
 	TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
 	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
-	         long int* arIPx, double* arIPc, double* arDCc,
+	         long int *arIPx, double *arIPc, double *arDCc,
 	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
 	         double dW, double eW );
 
@@ -853,29 +853,53 @@ public:
 	void Pitzer_test_out( const char *path );
 
 };
-/*
-#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
-#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
 
-#define mc( ii ) (aM[ xcx[(ii)] ])
-#define ma( ii ) (aM[ xax[(ii)] ])
-#define mn( ii ) (aM[ xnx[(ii)] ])
-#define zc( ii ) (aZ[ xcx[(ii)] ])
-#define za( ii ) (aZ[ xax[(ii)] ])
 
-#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
-#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
-#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
-#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
-#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
-#define Lam1( n,a )  ( aLam1[ ((n)*Na+(a)) ])
-#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
-#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
+// -------------------------------------------------------------------------------------
+// Extended universal quasi-chemical (EUNIQUAC) model for aqueous electrolyte solutions
+// References: Nicolaisen et al. (1993), Thomsen et al. (1996), Thomsen (2005)
 
-#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
-#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
-#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
-*/
+class TEUNIQUAC: public TSolMod
+{
+private:
+    double *Z;   // species charges
+    double *M;   // species molalities
+	double *R;   // volume parameter
+	double *Q;   // surface parameter
+	double *Phi;
+	double *Theta;
+	double **U;   // interaction energies
+	double **dU;   // first derivative
+	double **d2U;   // second derivative
+	double **Psi;
+	double **dPsi;
+	double **d2Psi;
+
+	void alloc_internal();
+	void free_internal();
+
+public:
+
+	// Constructor
+	TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int *arIPx, double *arIPc, double *arDCc,
+	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+	         double dW, double eW );
+
+	// Destructor
+	~TEUNIQUAC();
+
+	// Calculation of T,P corrected interaction parameters
+	long int PTparam();
+
+	// Calculation of activity coefficients
+	long int MixMod();
+
+};
+
+
+
 #endif
 
 
