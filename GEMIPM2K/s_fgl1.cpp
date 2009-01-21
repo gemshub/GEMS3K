@@ -34,17 +34,15 @@ using namespace std;
 
 // Generic constructor for the TSIT class
 TSIT::TSIT( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int NPperDC, char Mod_Code,
         long int* arIPx, double* arIPc, double* arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-        double dW, double eW ):
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, dW, eW )
+        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL )
 {
   aZ = arZ;
   aM =	arM;
-//  PTparam();
 }
 
 
@@ -139,13 +137,12 @@ long int TSIT::MixMod()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Generic constructor for the TPitzer class
 TPitzer::TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int NPperDC, char Mod_Code,
         long int* arIPx, double* arIPc, double* arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-        double dW, double eW ):
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, dW, eW )
+        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL)
 {
 	aZ = arZ;
 	aM = arM;
@@ -164,8 +161,10 @@ TPitzer::~TPitzer()
 }
 
 
-long int TPitzer::PTparam( )
+long int TPitzer::PTparam( double T_k, double P_bar, double dW, double eW)
 {
+	TSolMod::PTparam( T_k, P_bar, dW, eW);
+	
 	  // calculate vector of interaction parameters corrected to T,P of interest
 		PTcalc( Tk );
 
@@ -1069,13 +1068,12 @@ double TPitzer::lnGammaN(  long int N )
 
 // Generic constructor for the TEUNIQUAC class
 TEUNIQUAC::TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, double T_k, double P_bar, char Mod_Code,
+        long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-        double dW, double eW ):
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 T_k, P_bar, Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, dW, eW )
+        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL)
 {
 	alloc_internal();
 //	for (long int j=0; j<NComp; j++)
@@ -1149,11 +1147,13 @@ void TEUNIQUAC::free_internal()
 
 
 // Calculates T,P corrected binary interaction parameters
-long int TEUNIQUAC::PTparam()
+long int TEUNIQUAC::PTparam(double T_k, double P_bar, double dW, double eW)
 {
 	long int j, i, ip, i1, i2;
 	double u0, u1, u, du, d2u;
 	double psi, dpsi, d2psi, v, dv;
+	
+	TSolMod::PTparam( T_k, P_bar, dW, eW);
 
     if ( NPcoef < 2 || NPar < 1 || NP_DC < 2 )
        return 1;

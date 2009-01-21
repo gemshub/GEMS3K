@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1175 2009-01-18 13:19:19Z wagner $
+// $Id: s_fgl.h 1183 2009-01-21 10:24:15Z gems $
 //
 // Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -153,9 +153,9 @@ public:
 
 	// Generic constructor
     TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-         long int NPperDC, long int NPTPperDC, double T_k, double P_bar, char Mod_Code,
+         long int NPperDC, long int NPTPperDC, char Mod_Code,
          long int* arIPx, double* arIPc, double* arDCc,
-         double *arWx, double *arlnGam, double *aphVOL, double dW, double eW );
+         double *arWx, double *arlnGam, double *aphVOL );
 
     // Destructor
     virtual ~TSolMod();
@@ -163,8 +163,17 @@ public:
     virtual long int PureSpecies( )
 		{ return 0;}
 
-    virtual long int PTparam( )
-        { return 0;}
+    virtual long int PTparam( double T_k, double P_bar, double dW, double eW )
+        { 
+    	  RhoW = dW;
+    	  EpsW =eW; 
+    	  Tk = T_k;
+    	  Pbar = P_bar;  
+          return 0;
+        }
+
+    bool testSizes( long int NSpecies, long int NParams,	long int NPcoefs, 
+    		long int MaxOrder,  long int NPperDC, char Mod_Code );
 
     virtual long int MixMod( )
         { return 0;}
@@ -298,11 +307,10 @@ public:
 	 // Constructor
  	 TCGFcalc( long int NCmp, double Pp, double Tkp );
  	 TCGFcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-       long int NPperDC, double T_k, double P_bar, char Mod_Code,
+       long int NPperDC, char Mod_Code,
        long int *arIPx, double *arIPc, double *arDCc,
        double *arWx, double *arlnGam, double *aphVOL,
-       double *aPparc, double *aphWGT, double *arX, double *arGEX, double *arVol,
-       double dW, double eW );
+       double *aPparc, double *aphWGT, double *arX, double *arGEX, double *arVol );
 
  	 // Destructor
      ~TCGFcalc();
@@ -311,7 +319,7 @@ public:
      long int PureSpecies( );
 
      // Calculation of T,P corrected interaction parameters
-     long int PTparam();
+     long int PTparam(double T_k, double P_bar, double dW, double eW);
 
      // Calculation of activity coefficients
      long int MixMod();
@@ -366,10 +374,10 @@ class TPRSVcalc: public TSolMod
     // Constructor
     TPRSVcalc( long int NCmp, double Pp, double Tkp );
     TPRSVcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+         long int NPperDC, char Mod_Code,
          long int *arIPx, double *arIPc, double *arDCc,
          double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
-         double *arGEX, double *arVol, double dW, double eW );
+         double *arGEX, double *arVol );
 
     // Destructor
     ~TPRSVcalc();
@@ -378,7 +386,7 @@ class TPRSVcalc: public TSolMod
     long int PureSpecies( );
 
     // Calculates T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
     // Calculates activity coefficients
     long int MixMod();
@@ -443,10 +451,10 @@ class TSRKcalc: public TSolMod
     // Constructor
     TSRKcalc( long int NCmp, double Pp, double Tkp );
     TSRKcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+         long int NPperDC, char Mod_Code,
          long int *arIPx, double *arIPc, double *arDCc,
          double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
-         double *arGEX, double *arVol, double dW, double eW );
+         double *arGEX, double *arVol );
 
     // Destructor
     ~TSRKcalc();
@@ -455,7 +463,7 @@ class TSRKcalc: public TSolMod
     long int PureSpecies( );
 
     // Calculates T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
     // Calculates activity coefficients
     long int MixMod();
@@ -504,10 +512,9 @@ public:
 
 	// Constructor
 	TSIT( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ );
 
 	// Destructor
 	~TSIT() { }
@@ -515,7 +522,8 @@ public:
     long int MixMod();
 
     // Calculation of internal tables (at each GEM iteration)
-	long int PTparam() { return 0; }
+	long int PTparam(double T_k, double P_bar, double dW, double eW) 
+	 { return TSolMod::PTparam( T_k, P_bar, dW, eW); }
 };
 
 
@@ -541,16 +549,15 @@ public:
 
 	// Constructor
 	TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL );
 
 	// Destructor
 	~TVanLaar();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 	// Calculation of activity coefficients
     long int MixMod();
@@ -578,16 +585,15 @@ public:
 
 	// Constructor
 	TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL );
 
 	// Destructor
 	~TRegular();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 	// Calculation of activity coefficients
     long int MixMod();
@@ -616,16 +622,15 @@ public:
 
 	// Constructor
 	TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL );
 
 	// Destructor
 	~TRedlichKister();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 	// Calculation of activity coefficients
 	long int MixMod();
@@ -658,16 +663,15 @@ public:
 
 	// Constructor
 	TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL );
 
 	// Destructor
 	~TNRTL();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 	// Calculation of activity coefficients
 	long int MixMod();
@@ -694,16 +698,15 @@ public:
 
 	// Constructor
 	TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL );
 
 	// Destructor
 	~TWilson();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 	// Calculation of activity coefficients
 	long int MixMod();
@@ -832,16 +835,15 @@ public:
 
     // Constructor
 	TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ );
 
 	// Destructor
 	~TPitzer();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 
     long int MixMod()
@@ -882,16 +884,15 @@ public:
 
 	// Constructor
 	TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, double T_k, double P_bar, char Mod_Code,
+	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-	         double dW, double eW );
+	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ );
 
 	// Destructor
 	~TEUNIQUAC();
 
 	// Calculation of T,P corrected interaction parameters
-	long int PTparam();
+	long int PTparam(double T_k, double P_bar, double dW, double eW);
 
 	// Calculation of activity coefficients
 	long int MixMod();

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1121 2008-11-25 10:16:38Z gems $
+// $Id: ms_multi_file.cpp 1183 2009-01-21 10:24:15Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -1177,6 +1177,9 @@ else
     pm.Qd = 0;
 
  }
+ 
+ Alloc_TSolMod( pm.FIs );
+
 //  Added 16.11.2004 by Sveta
 //    if( pm.sitNcat*pm.sitNcat )
 //    { pm.sitE = new double[pm.sitNcat*pm.sitNan];
@@ -1345,6 +1348,7 @@ if( pm.D ) delete[] pm.D;
 //    if( pm.sitXan )    delete[] pm.sitXan;
 
     // optimization 08/02/2007
+    Free_TSolMod();
     Free_internal();
 }
 

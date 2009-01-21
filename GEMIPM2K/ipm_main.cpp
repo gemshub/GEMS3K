@@ -1117,11 +1117,11 @@ long int TMulti::SolverLinearEquations( long int N, bool initAppr )
   Array2D<double> A(N,N);
   Array1D<double> B(N);
 
-  for(int kk=0; kk<N; kk++)
-   for(int ii=0; ii<N; ii++ )
+  for( kk=0; kk<N; kk++)
+   for( ii=0; ii<N; ii++ )
       A[kk][ii] = (*(AA+(ii)+(kk)*N));
 
-   for(int ii=0; ii<N; ii++ )
+   for( ii=0; ii<N; ii++ )
      B[ii] = BB[ii];
   
 #endif
@@ -1518,7 +1518,7 @@ void TMulti::Free_internal()
 {
   Free_compressed_xAN();
   Free_A_B();
-  Free_TSolMod();
+//  Free_TSolMod();
 }
 
 void TMulti::Alloc_internal()
@@ -1526,6 +1526,6 @@ void TMulti::Alloc_internal()
 // optimization 08/02/2007
  Alloc_A_B( pmp->N );
  Build_compressed_xAN();
- Alloc_TSolMod( pmp->FIs );
+// Alloc_TSolMod( pmp->FIs );
 }
 //--------------------- End of ipm_main.cpp ---------------------------
