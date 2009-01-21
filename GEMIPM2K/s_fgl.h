@@ -897,6 +897,8 @@ public:
 	// Calculation of activity coefficients
 	long int MixMod();
 
+	void Euniquac_test_out( const char *path );
+
 };
 
 

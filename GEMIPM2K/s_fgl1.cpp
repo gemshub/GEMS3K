@@ -164,7 +164,7 @@ TPitzer::~TPitzer()
 long int TPitzer::PTparam( double T_k, double P_bar, double dW, double eW)
 {
 	TSolMod::PTparam( T_k, P_bar, dW, eW);
-	
+
 	  // calculate vector of interaction parameters corrected to T,P of interest
 		PTcalc( Tk );
 
@@ -1152,7 +1152,7 @@ long int TEUNIQUAC::PTparam(double T_k, double P_bar, double dW, double eW)
 	long int j, i, ip, i1, i2;
 	double u0, u1, u, du, d2u;
 	double psi, dpsi, d2psi, v, dv;
-	
+
 	TSolMod::PTparam( T_k, P_bar, dW, eW);
 
     if ( NPcoef < 2 || NPar < 1 || NP_DC < 2 )
@@ -1217,7 +1217,9 @@ long int TEUNIQUAC::PTparam(double T_k, double P_bar, double dW, double eW)
 	return 0;
 }
 
-
+double gammaDH[20];
+double gammaC[20];
+double gammaR[20];
 // Calculates activity coefficients and excess functions
 long int TEUNIQUAC::MixMod()
 {
@@ -1278,10 +1280,13 @@ long int TEUNIQUAC::MixMod()
 			}
 
 			gamDH = - pow(Z[j],2.)*A*sqrt(IS)/(1.+b*sqrt(IS));
+gammaDH[j] = gamDH;
 			gamC = log(Phi[j]/x[j]) - Phi[j]/x[j] - log(R[j]/R[w]) + R[j]/R[w]
 					- 5.0*Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
 					- log(R[j]*Q[w]/(R[w]*Q[j])) + R[j]*Q[w]/(R[w]*Q[j]) );
+gammaC[j] = gamC;
 			gamR = Q[j] * ( - log(K) - L + log(Psi[w][j]) + Psi[j][w] );
+gammaR[j] = gamR;
 			lnGam = gamDH + gamC + gamR;
 
 			// convert activity coefficient to molality scale
@@ -1308,8 +1313,11 @@ long int TEUNIQUAC::MixMod()
 			}
 
 			gamDH = Mw*2.*A/pow(b,3.) * ( 1. + b*sqrt(IS) - 1./(1.+b*sqrt(IS)) - 2*log(1.+b*sqrt(IS)) );
+gammaDH[j]=gamDH;
 			gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
+gammaC[j] = gamC;
 			gamR = Q[j] * (1. - log(K) - L );
+gammaR[j] = gamR;
 			lnGam = gamDH + gamC + gamR;
 			lnGamma[j] = lnGam;
 			Gam = exp(lnGam);
@@ -1346,6 +1354,53 @@ long int TEUNIQUAC::MixMod()
 	gE = ( gDH + gC + gR ) * R_CONST * Tk;
 
 	return 0;
+}
+
+
+
+// Output of test results into text file (standalone variant only)
+void TEUNIQUAC::Euniquac_test_out( const char *path )
+{
+
+	long int ii, c, a, n;
+
+//	const ios::open_mode OFSMODE = ios::out ¦ ios::app;
+	ofstream ff(path, ios::app );
+	ErrorIf( !ff.good() , path, "Fileopen error");
+
+	ff << endl << "Vector of interaction parameters corrected to T,P of interest" << endl;
+	for( ii=0; ii<NPar; ii++ )
+		ff << aIP[ii] << "  ";
+
+	ff << endl << "Debye-Hückel contribution to Activity Coefficients" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << gammaDH[ii] << "  ";
+
+	ff << endl << "Contribution of Combinatorial Term to Activity Coefficients" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << gammaC[ii] << "  ";
+
+	ff << endl << "Contribution of Residual Term to Activity Coefficients" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << gammaR[ii] << "  ";
+
+/*	ff << endl << "abet0" << endl;
+	for( c=0; c<Nc; c++ )
+	{	for( a=0; a<Na; a++ )
+			ff << abet0[c*Na+a] << "  ";
+		ff << endl;
+	}
+*/
+	ff << endl << "ln activity coefficients of end members" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << lnGamma[ii] << "  ";
+
+	ff << endl << "Activity coefficients of end members" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << exp(lnGamma[ii]) << "  ";
+	ff << endl;
+
+
 }
 
 
