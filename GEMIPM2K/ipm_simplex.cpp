@@ -58,7 +58,7 @@ void TMulti::SimplexInitialApproximation( )
         for(i=0;i<Q;i++)
         {
             DN[i]=pmp->DLL[i];
-            DU[i]=pmp->DUL[i];
+            DU[i]=/*1e+6;//*/pmp->DUL[i];
         }
 
         // for(i=Q;i<Q+pmp->N;i++) DU[i]=0.;
@@ -105,9 +105,13 @@ void TMulti::SimplexInitialApproximation( )
 
         // calculating initial quantities of phases
         TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
-
+  
         pmp->FX = GX( 0.0 ); // calculation of initial G(X) value
         MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+//        	for(long int i=0; i<pmp->N; i++)
+//             cout << i << " C " << pmp->C[i] << " B " << pmp->B[i] << endl; 
+
+
         // Deleting work arrays
         if( DN) delete[]DN;
         if( DU) delete[]DU;
@@ -239,6 +243,7 @@ MK3:
                 goto MK4;
         }
     }
+    
     for( J=1;J<J1;J++)
     {
         SPOS(P, STR, NMB, J-1, M, AA);
@@ -332,7 +337,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
         delete[] P;
         return;
     }
-    if(fabs(MIM)<fabs(UP[*J0-1])||fabs(UP[*J0-1])<EPS)
+    if((fabs(MIM)<fabs(UP[*J0-1]))||(fabs(UP[*J0-1])<EPS))
     {
         J=BASE[*I0-1];
         if((*Z==1&&Q[*I0]>0.)||(*Z==0&&Q[*I0]<0.))
@@ -345,8 +350,11 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
         for( I=0;I<=M;I++)
             if( I!=*I0)
                 *(A+I*(M+1))-=Q[I]*MIM;
+
         BASE[*I0-1]=*J0-1;
+        
         A1=1.E0/Q[*I0];
+        
         for( J=1;J<=M;J++)
             *(A+(*I0)*(M+1)+J)*=A1;
         for( I=0;I<*I0;I++)
@@ -361,8 +369,8 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
         for( I=0;I<=M;I++)
         {
             *(A+I*(M+1))-=UP[*J0-1]*Q[I];
-            UP[*J0-1]=-UP[*J0-1];
-        }
+        }   
+        UP[*J0-1] = -UP[*J0-1]; // Fixed error SD 23/01/2009
     }
     delete[] P;
 }
@@ -378,12 +386,14 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     double *P;
     P=  new double[M+1];
     ErrorIf( !P, "Simplex", "At FIN memory allocation error. ");
+
     for( J=0;J<N;J++)
     {
-        if( UP[J]>-EPS)
+        if( UP[J]>-EPS )
             UP[J]=0.;
         else UP[J]=fabs(UP[J]);
     }
+
     for( I=1;I<=M;I++)
     {
         UP[BASE[I-1]]=*(A+I*(M+1));
@@ -399,6 +409,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     }
     for( I=1;I<=M;I++)
         U[I-1]=-*(A+I);
+
     delete[] P;
 }
 

@@ -396,6 +396,7 @@ void TMulti::TotalPhases( double X[], double XF[], double XFA[] )
             XFA[k] = XFw;
         j=i;
     }
+
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

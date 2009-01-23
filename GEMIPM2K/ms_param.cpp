@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1125 2008-11-26 15:44:58Z gems $
+// $Id: ms_param.cpp 1186 2009-01-23 14:19:06Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -47,7 +47,7 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-  "GEMS-PSI v2.2.4: Controls and defaults for numeric modules",
+  "GEMS-PSI v2.3.0: Controls and defaults for numeric modules",
   {
         1,  /* PC */  3,     /* PD */   3,   /* PRD */
         1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
@@ -61,8 +61,8 @@ SPP_SETTING pa_ = {
         0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
         0.001, /* GAS */   12.05,  /* DNS */   1e-5,  /* XwMin, */
         1e-7,  /* ScMin, */  1e-19, /* DcMin, */   1e-10, /* PhMin, */
-        1e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
-        1e-5,  /* DKIN  */ 0,  /* tprn */
+        1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+        1e-10,  /* DKIN  */ 0,  /* tprn */
   },
 }; // SPP_SETTING
 

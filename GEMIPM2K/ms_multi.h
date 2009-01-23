@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1141 2008-12-09 10:29:43Z gems $
+// $Id: ms_multi.h 1150 2008-12-12 15:50:13Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -126,7 +126,7 @@ typedef struct
     logYFk,     // work variable
     YFk,        // Current number of moles in a multicomponent phase
     FitVar[5];  // internal; FitVar[0] is T,P-dependent b_gamma parameter
-                //       FitVar[4] is the AG smoothing parameter; 
+                //       FitVar[4] is the AG smoothing parameter;
                 //       FitVar[3] is the actual smoothing coefficient
   long int
     *L1,    // l_a vector - number of DCs included into each phase [Fi]
@@ -135,7 +135,7 @@ typedef struct
     *LsMdc, // Number of non-ideality coeffs per one DC in multicomponent phase[FIs]
     *IPx,   // List of indexes of interaction parameters for non-ideal solutions
             // ->LsMod[k,0] x LsMod[k,1]   added 07.12.2006   KD
-   *mui,   // IC indices in RMULTS IC list [N]
+    *mui,   // IC indices in RMULTS IC list [N]
     *muk,   // Phase indices in RMULTS phase list [FI]
     *muj;   // DC indices in RMULTS DC list [L]
   long int  (*SATX)[4]; // New: work table [Lads]: link indexes to surface type [XL_ST];
@@ -145,8 +145,8 @@ typedef struct
     *DMc,    // Non-ideality coefficients f(TPX) for DC -> LsMdc[k]
     *A,      // DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    // IC atomic (molar) mass, g/mole [0:N-1]
-   
- // Reconsider usage 
+
+ // Reconsider usage
      *Wb,     //Relative Born factors (HKF, reserved) [0:Ls-1]
      *Wabs,   // Absolute Born factors (HKF, reserved) [0:Ls-1]
      *Rion,   // Ionic or solvation radii, A (reserved) [0:Ls-1]
@@ -186,7 +186,7 @@ typedef struct
   double  (*MASDJ)[DFCN];  // Max. density, CD-music and isotherm params [Lads][DFCN]
                           // Contents defined in the enum below this structure
 // Other data
-  
+
   double
     *XFs,    // Current quantities of phases X_a at IPM iterations [0:FI-1]
     *Falps,  // Current Karpov criteria of phase stability  F_a [0:FI-1]
@@ -232,15 +232,15 @@ typedef struct
     *XFA,   // Quantity of carrier in asymmetric phases Xwa, moles [FIs]
     *YFA,   // Copy of Xwa from previous IPM iteration [0:FIs-1]
     *Falp;  // Karpov phase stability criteria F_a [0:FI-1]
-/*  
-  double (*VPh)[MIXPHPROPS],     // Volume properties for mixed phases [FIs] 
+/*
+  double (*VPh)[MIXPHPROPS],     // Volume properties for mixed phases [FIs]
          (*GPh)[MIXPHPROPS],     // Gibbs energy properties for mixed phases [FIs]
   		 (*HPh)[MIXPHPROPS],     // Enthalpy properties for mixed phases [FIs]
          (*SPh)[MIXPHPROPS],     // Entropy properties for mixed phases [FIs]
          (*CPh)[MIXPHPROPS],     // Heat capacity Cp properties for mixed phases [FIs]
          (*APh)[MIXPHPROPS],     // Helmholtz energy properties for mixed phases [FIs]
          (*UPh)[MIXPHPROPS];     // Internal energy properties for mixed phases [FIs]
-*/         
+*/
 // EDL models (data for electrostatic activity coefficients)
    double (*XetaA)[MST]; // Total EDL charge on A (0) EDL plane, moles [FIs][FIat]
    double (*XetaB)[MST]; // Total charge of surface species on B (1) EDL plane, moles[FIs][FIat]
@@ -300,10 +300,10 @@ typedef struct
 #ifdef IPMGEMPLUGIN
   double *Guns;  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
   double *Vuns;  //  mu.L work vector of uncertainty space increments to tp->Vm
-  double *tpp_G; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole 
+  double *tpp_G; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole
   double *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
-#endif  
+#endif
 }
 MULTI;
 
@@ -322,7 +322,7 @@ class TMulti
     MULTI *pmp;
 
 // Internal arrays for the performance optimization  (since version 2.0.0)
-   long int sizeN; /*, sizeL, sizeAN;*/ 
+   long int sizeN; /*, sizeL, sizeAN;*/
    double *AA;
    double *BB;
    long int *arrL;
@@ -336,10 +336,10 @@ class TMulti
 
    long int sizeFIs;     // current size of phSolMod
    TSolMod* (*phSolMod); // size current FIs -   number of multicomponent phases
-   
+
    void Alloc_TSolMod( long int newFIs );
    void Free_TSolMod();
-   
+
 #ifndef IPMGEMPLUGIN
 // These pointers and methods are only used in GEMS-PSI
     SYSTEM *syp;
@@ -411,7 +411,7 @@ class TMulti
     void IS_EtaCalc();
     void pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb );
     double SmoothingFactor( );
-    void SetSmoothingFactor( ); 
+    void SetSmoothingFactor( );
 // Main call for calculation of activity coefficients on IPM iterations
     long int GammaCalc( long int LinkMode );
 // Built-in activity coefficient models
@@ -450,7 +450,7 @@ void SolModExcessParam( long int k, char ModCode );
    void ZeroDCsOff( long int jStart, long int jEnd, long int k=-1 );
    void RaiseZeroedOffDCs( long int jStart, long int jEnd, double sfactor, long int k=-1 );
 //   void LagrangeMultiplier();
-   long int MetastabilityLagrangeMultiplier(); 
+   long int MetastabilityLagrangeMultiplier();
    void WeightMultipliers( bool square );
    long int SolverLinearEquations( long int N, bool initAppr );
    double calcDikin(  long int N, bool initAppr );
@@ -458,7 +458,7 @@ void SolModExcessParam( long int k, char ModCode );
    void Restoring_Y_YF();
    double calcSfactor();
    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
-   
+
    // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)
     void Simplex(long int M, long int N, long int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,
@@ -481,7 +481,7 @@ void SolModExcessParam( long int k, char ModCode );
 public:
 
     void set_def( long int i=0);
-    
+
 #ifndef IPMGEMPLUGIN
 // This is used only in GEMS-PSI
     TIArray<IPNCalc> qEp;
@@ -515,22 +515,22 @@ public:
 #else
 // this allocation is used only in standalone GEMIPM2K
    TMulti()
-   { 
+   {
 	 pmp = &pm;
-     sizeN = 0; 
+     sizeN = 0;
      AA = 0;
      BB = 0;
      arrL = 0;
      arrAN = 0;
-     
+
      sizeFIs = 0;
      phSolMod = 0;
 
      pmp->Guns = 0;
      pmp->Vuns = 0;
-     pmp->tpp_G = 0;  
-     pmp->tpp_S = 0; 
-     pmp->tpp_Vm = 0;     
+     pmp->tpp_G = 0;
+     pmp->tpp_S = 0;
+     pmp->tpp_Vm = 0;
    }
 
     void multi_realloc( char PAalp, char PSigm );
