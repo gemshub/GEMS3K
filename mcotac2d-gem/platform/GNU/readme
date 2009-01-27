@@ -1,8 +1,0 @@
-How to compile mcotac-gem
-
-1. Copy Makefile.lib to ../../GEMIPM2K, cd there and run
-   make -f Makefile.lib to produce gemipm2klib.a static library file
-
-2. cd mcotac-gem and run make to produce mcotacgem-gnu exe file
-
-   
