@@ -1462,19 +1462,22 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
     long int NComp, NPar, NPcoef, MaxOrd, NP_DC;
     double *aIPc, *aDCc, *aWx, *alnGam, *aphVOL, *aZ, *aM;
     long int *aIPx;
-    double RhoW, EpsW;
+//    double RhoW, EpsW;
 
     NComp = pmp->L1[k];          // Number of components in the phase
     NPar = pmp->LsMod[k*3];      // Number of interaction parameters
     NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
     MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
     NP_DC = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
-    RhoW = pmp->denW;		// added 04.06.2008 (TW)
-    EpsW = pmp->epsW;
+//    RhoW = pmp->denW;		// added 04.06.2008 (TW)
+//    EpsW = pmp->epsW;
 
     if( phSolMod[k])
     	if(	phSolMod[k]->testSizes( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode ) )
+    	{
+    		phSolMod[k]->UpdatePT(pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW);
     		return; // using old allocation 
+    	}
 
     aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
                               // -> NPar x MaxOrd   added 07.12.2006   KD
@@ -1494,7 +1497,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_VANLAAR:  // Van Laar solid solution
         {
         	TVanLaar* aPT = new TVanLaar( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL);
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW);
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1503,7 +1506,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_REGULAR:  // Regular solid solution
         {
         	TRegular* aPT = new TRegular( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1511,7 +1514,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_GUGGENM:  // Redlich-Kister solid solution
         {
         	TRedlichKister* aPT = new TRedlichKister( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1519,7 +1522,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_NRTLLIQ:  // NRTL liquid solution
         {
         	TNRTL* aPT = new TNRTL( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1527,7 +1530,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_WILSLIQ:  // Wilson liquid solution
         {
         	TWilson* aPT = new TWilson( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL);
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW);
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1535,7 +1538,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_AQPITZ:  // Pitzer aqueous electrolyte
         {
            	TPitzer* aPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
              break;
         }
@@ -1543,7 +1546,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_AQSIT:  // SIT aqueous electrolyte
         {
            	TSIT* aPT = new TSIT( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1551,7 +1554,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         case SM_AQEXUQ:  // EUNIQUAC aqueous electrolyte
         {
            	TEUNIQUAC* aPT = new TEUNIQUAC( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ );
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1560,7 +1563,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         {
         	TPRSVcalc* aPT = new TPRSVcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
-                    pmp->GEX+jb, pmp->Vol+jb );
+                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1570,7 +1573,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         	TCGFcalc* aPT = new TCGFcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,
                     pmp->Pparc+jb, pmp->FWGT+k, pmp->X+jb,
-                    pmp->GEX+jb, pmp->Vol+jb);
+                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW);
             aSM = (TSolMod*)aPT;
             break;
         }
@@ -1579,14 +1582,14 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
         {
         	TSRKcalc* aPT = new TSRKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
-                    pmp->GEX+jb, pmp->Vol+jb );
+                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
             aSM = (TSolMod*)aPT;
             break;
         }
 
         default:
 //            aSM = new TSolMod( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
-//                  aIPx, aIPc, aDCc,  aWx, alnGam );
+//                  aIPx, aIPc, aDCc,  aWx, alnGam,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
         	break;
     }
 
@@ -1617,7 +1620,7 @@ TMulti::SolModParPT( long int k, char ModCode )
         case SM_SRFLUID:
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
-              aSM->PTparam( pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
+              aSM->PTparam();
              break;
         }
         default:

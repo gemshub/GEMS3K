@@ -261,7 +261,7 @@ void TMulti::Set_DC_limits( long int Mode )
                 MpL = 1;
 
 if( k < pmp->FIs )
-{					// Temporary workaround - DK  13.12.2007         	
+{					// Temporary workaround - DK  13.12.2007
         if( pmp->RFLC[k] == NO_LIM && !MpL )
         { // check type restrictions on phase
             goto NEXT_PHASE;
@@ -296,7 +296,7 @@ if( k < pmp->FIs )
             XFL = 0.0;
             XFU = 1e6;
 //        }
-} 
+}
         for( j=jb; j<je; j++ )
         { // loop over DCs
             if( pmp->RLC[j] == NO_LIM )
@@ -410,7 +410,7 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
 {
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
-    double FactSur, FactSurT; 
+    double FactSur, FactSurT;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     Fold = pmp->F0[j];
@@ -527,16 +527,16 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
             }
         }
         if( Mk > 1e-9 )  // Mk is carrier molar mass in g/mkmol
-        {   // Correction for standard density, surface area and surface type fraction 
-        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054; 
-        	    // FactSur is adsorbed mole amount at st. surf. density per mole of solid carrier 
+        {   // Correction for standard density, surface area and surface type fraction
+        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054;
+        	    // FactSur is adsorbed mole amount at st. surf. density per mole of solid carrier
         	FactSurT = FactSur * (pmp->Nfsp[k][ist]);
         	if( pmp->SCM[k][ist] == SC_MXC || pmp->SCM[k][ist] == SC_NNE ||
                     pmp->SCM[k][ist] == SC_IEV )
  //               F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
 //                   (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
-                  F0 -= log( FactSurT ); 
-            else  F0 -= log( FactSurT ); 
+                  F0 -= log( FactSurT );
+            else  F0 -= log( FactSurT );
 //            	  F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
 //                  (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
             F0 -= FactSur / ( 1. + FactSur );
@@ -548,10 +548,10 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
     case DC_SUR_MINAL:  // constant charge of carrier - not completed
     case DC_SUR_CARRIER: // Mk is carrier molar mass in g/mkmol
        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054;
-        F0 -= FactSur / ( 1. + FactSur ); 
+        F0 -= FactSur / ( 1. + FactSur );
 //    	F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
 //              ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
-        F0 += FactSur; 
+        F0 += FactSur;
 //        F0 += (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054;
         break;
     }
@@ -574,8 +574,8 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of DC primal chemical potential F (return value)
 // from moles of DC Y[], total moles of phase YF[] and DC partial
-// molar Gibbs energy gT (obtained from pmp->G[]) which includes 
-// activity coefficient terms. 
+// molar Gibbs energy gT (obtained from pmp->G[]) which includes
+// activity coefficient terms.
 // On error returns F = +7777777.
 //
 double TMulti::PrimalDC_ChemPot(
@@ -681,8 +681,8 @@ double TMulti::KarpovCriterionDC(
     double logYF,  // ln Xa   (Xa is mole amount of the whole phase)
     double asTail, // asymmetry correction (0 for symmetric phases)
     double logYw,  // ln Xw   (Xw is mole amount of solvent)
-    double Wx,     // mole fraction of this DC 
-    char DCCW      // Generic class code of DC 
+    double Wx,     // mole fraction of this DC
+    char DCCW      // Generic class code of DC
 )
 {
     double Fj=0.0;  // output phase stability criterion
@@ -762,10 +762,10 @@ void TMulti::f_alpha()
             Yj = pmp->Y[j];
             Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
-            if( pmp->DUL[j] < pa->p.DKIN      // DKIN (1e-6) is used here as tolerance
-            	|| ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+            if( // pmp->DUL[j] < pa->p.DKIN  ||    // DKIN (1e-6) is used here as tolerance
+            	 ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
                 || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
-                KinConstr = true; // Avoiding phase with the amount lying on the non-trivial kinetic constraint 
+                KinConstr = true; // Avoiding phase with the amount lying on the non-trivial kinetic constraint
             Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
                             pmp->logXw, Wx, pmp->DCCW[j] );
             NMU[j] = dNuG;
@@ -784,7 +784,7 @@ void TMulti::f_alpha()
                 Yj = pmp->Y[j];
                 if( YF > pa->p.DS && Yj > pmp->lowPosNum )
                     Wx = Yj / YF; // calculating mole fraction of DC
-                if( pmp->DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
+                if( // pmp->DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
                 	( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
                     || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
                     KinConstr = true; // Avoiding DC with the amount lying on the non-=trivial kinetic constraint
@@ -792,10 +792,10 @@ void TMulti::f_alpha()
                 Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
                          pmp->logXw, Wx, pmp->DCCW[j] );
                 NMU[j] = dNuG;  // dNuG is stored for all DCs, not only those in L_S set
-// Experimental option - checking zeroed off DCs in multicomponent phases 
-// during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)                 
-if( pmp->pNP && !pmp->K2 )                
-{  // Checking L_S set and potentially stable zero DCs and phases 
+// Experimental option - checking zeroed off DCs in multicomponent phases
+// during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)
+if( pmp->pNP && !pmp->K2 )
+{  // Checking L_S set and potentially stable zero DCs and phases
    if( YF >= pa->p.DS )
    {                            // phase is there
 	   if( Yj > pmp->lowPosNum )
@@ -803,19 +803,19 @@ if( pmp->pNP && !pmp->K2 )
 		   if( KinConstr == false)
               pmp->Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
        }
-	   else {                  // DC is zeroed off  
+	   else {                  // DC is zeroed off
 		   if( Fj > pa->p.DF*100. )
 	          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
-	   }       
+	   }
        EMU[j] = Fj;
    }
    else {  // The whole phase is absent
 	   if( Fj > pa->p.DF*100. )
-          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?  
-       EMU[j] = Fj;              // To check values (remove this line later on) 
+          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
+       EMU[j] = Fj;              // To check values (remove this line later on)
    }
-}             
-else {   // Standard checking in the L_S set only              
+}
+else {   // Standard checking in the L_S set only
                 if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
                 {
 

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1183 2009-01-21 10:24:15Z gems $
+// $Id: s_fgl.cpp 1192 2009-01-26 14:30:38Z gems $
 //
 // Copyright (C) 2004-2008  T.Wagner, S.Churakov, D.Kulik
 //
@@ -36,17 +36,12 @@
 // Constructor
 TPRSVcalc::TPRSVcalc( long int NCmp, double Pp, double Tkp ):
     TSolMod( NCmp, 0, 0, 0, 0, 4, 'P',
-         0, 0, 0, 0, 0, 0  )
+         0, 0, 0, 0, 0, 0, Tkp, Pp, 0, 0  )
 
 {
     aGEX = 0;
     aVol = 0;
 	Pparc = 0;
-
-	RhoW = 0.;
-	EpsW = 0.; 
-	Tk = Tkp;
-	Pbar = Pp;  
 
 	alloc_internal();
 }
@@ -56,10 +51,10 @@ TPRSVcalc::TPRSVcalc( long int NSpecies, long int NParams, long int NPcoefs, lon
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL, double *arPparc,
-        double *arGEX, double *arVol ):
+        double *arGEX, double *arVol, double T_k, double P_bar, double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 4,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL )
+        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
 {
   Pparc = arPparc;
   aGEX = arGEX;
@@ -147,13 +142,12 @@ long int TPRSVcalc::PureSpecies()
 
 
 // Calculates T,P corrected binary interaction parameters
-long int TPRSVcalc::PTparam(double T_k, double P_bar, double dW, double eW)
+long int TPRSVcalc::PTparam()
 {
    long int j, i, ip;
    long int i1, i2;
    double p0, p1, p2;
    double k, dk, d2k;
-   TSolMod::PTparam( T_k, P_bar, dW, eW);
 
    PureSpecies();
 
@@ -695,18 +689,13 @@ long int TPRSVcalc::PRCalcFugPure( void )
 // Constructor
 TCGFcalc::TCGFcalc( long int NCmp, double Pp, double Tkp ):
     TSolMod( NCmp, 0, 0, 0, 0, 0, 'F',
-         0, 0, 0, 0, 0, 0 )
+         0, 0, 0, 0, 0, 0, Tkp, Pp, 0., 0. )
 {
 	Pparc = 0;
 	phWGT = 0;
 	aX = 0;
     aGEX = 0;
 	aVol = 0;
-
-	RhoW = 0.;
-	EpsW = 0.; 
-	Tk = Tkp;
-	Pbar = Pp;  
 
     set_internal();
 	alloc_internal();
@@ -718,10 +707,10 @@ TCGFcalc::TCGFcalc( long int NSpecies, long int NParams, long int NPcoefs, long 
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
         double * arPparc, double *arphWGT,double *arX,
-        double *arGEX, double *arVol ):
+        double *arGEX, double *arVol, double T_k, double P_bar, double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 8,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL )
+        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
 {
   Pparc = arPparc;
   phWGT = arphWGT;
@@ -878,12 +867,10 @@ long int TCGFcalc::PureSpecies()
 
 
 // Calculates T,P corrected binary interaction parameters
-long int TCGFcalc::PTparam(double T_k, double P_bar, double dW, double eW)
+long int TCGFcalc::PTparam()
 {
     long int i,j;
 
-    TSolMod::PTparam( T_k, P_bar, dW, eW);
-    
 	if( FugCoefs )  delete[]FugCoefs;
 	if( EoSparam )  delete[]EoSparam;
 	if( EoSparam1 ) delete[]EoSparam1;
@@ -2215,16 +2202,12 @@ long int EOSPARAM::ParamMix( double *Xin )
 // Constructor
 TSRKcalc::TSRKcalc( long int NCmp, double Pp, double Tkp ):
     TSolMod( NCmp, 0, 0, 0, 0, 4, 'E',
-         0, 0, 0, 0, 0, 0 )
+         0, 0, 0, 0, 0, 0, Tkp, Pp, 0., 0. )
 {
 	aGEX = 0;
 	aVol = 0;
 	Pparc = 0;
 
-	RhoW = 0.;
-	EpsW = 0.; 
-	Tk = Tkp;
-	Pbar = Pp;  
 	alloc_internal();
 }
 
@@ -2233,10 +2216,10 @@ TSRKcalc::TSRKcalc( long int NSpecies, long int NParams, long int NPcoefs, long 
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL, double *arPparc,
-        double *arGEX, double *arVol ):
+        double *arGEX, double *arVol, double T_k, double P_bar, double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 4,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL )
+        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
 {
 	Pparc = arPparc;
 	aGEX = arGEX;
@@ -2324,13 +2307,12 @@ long int TSRKcalc::PureSpecies()
 
 
 // Calculates T,P corrected binary interaction parameters
-long int TSRKcalc::PTparam(double T_k, double P_bar, double dW, double eW)
+long int TSRKcalc::PTparam()
 {
 	long int j, i, ip;
 	long int i1, i2;
 	double p0, p1, p2;
 	double k, dk, d2k;
-	TSolMod::PTparam( T_k, P_bar, dW, eW);
 
 	PureSpecies();
 

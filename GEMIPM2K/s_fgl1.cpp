@@ -36,10 +36,11 @@ using namespace std;
 TSIT::TSIT( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, char Mod_Code,
         long int* arIPx, double* arIPc, double* arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ ):
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+        double T_k, double P_bar, double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL )
+        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
 {
   aZ = arZ;
   aM =	arM;
@@ -139,10 +140,11 @@ long int TSIT::MixMod()
 TPitzer::TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, char Mod_Code,
         long int* arIPx, double* arIPc, double* arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ ):
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+        double T_k, double P_bar, double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL)
+        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
 {
 	aZ = arZ;
 	aM = arM;
@@ -161,10 +163,8 @@ TPitzer::~TPitzer()
 }
 
 
-long int TPitzer::PTparam( double T_k, double P_bar, double dW, double eW)
+long int TPitzer::PTparam( )
 {
-	TSolMod::PTparam( T_k, P_bar, dW, eW);
-
 	  // calculate vector of interaction parameters corrected to T,P of interest
 		PTcalc( Tk );
 
@@ -1070,17 +1070,13 @@ double TPitzer::lnGammaN(  long int N )
 TEUNIQUAC::TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ ):
+        double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+        double T_k, double P_bar, double dW, double eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL)
+        			 arlnGam, aphVOL, T_k, P_bar, dW, eW)
 {
 	alloc_internal();
-//	for (long int j=0; j<NComp; j++)
-//	{
-//		Z[j] = arZ[j];
-//		M[j] = arM[j];
-//	}
 	Z = arZ;
 	M = arM;
 }
@@ -1094,8 +1090,6 @@ TEUNIQUAC::~TEUNIQUAC()
 
 void TEUNIQUAC::alloc_internal()
 {
-	// Z = new double [NComp];
-	// M = new double [NComp];
 	R = new double [NComp];
 	Q = new double [NComp];
 	Phi = new double [NComp];
@@ -1131,8 +1125,6 @@ void TEUNIQUAC::free_internal()
 		delete[]dPsi[j];
 		delete[]d2Psi[j];
 	}
-	// delete[]Z;
-	// delete[]M;
 	delete[]R;
 	delete[]Q;
 	delete[]Phi;
@@ -1147,13 +1139,11 @@ void TEUNIQUAC::free_internal()
 
 
 // Calculates T,P corrected binary interaction parameters
-long int TEUNIQUAC::PTparam(double T_k, double P_bar, double dW, double eW)
+long int TEUNIQUAC::PTparam()
 {
 	long int j, i, ip, i1, i2;
 	double u0, u1, u, du, d2u;
 	double psi, dpsi, d2psi, v, dv;
-
-	TSolMod::PTparam( T_k, P_bar, dW, eW);
 
     if ( NPcoef < 2 || NPar < 1 || NP_DC < 2 )
        return 1;
@@ -1217,9 +1207,7 @@ long int TEUNIQUAC::PTparam(double T_k, double P_bar, double dW, double eW)
 	return 0;
 }
 
-double gammaDH[20];
-double gammaC[20];
-double gammaR[20];
+
 // Calculates activity coefficients and excess functions
 long int TEUNIQUAC::MixMod()
 {
@@ -1280,19 +1268,21 @@ long int TEUNIQUAC::MixMod()
 			}
 
 			gamDH = - pow(Z[j],2.)*A*sqrt(IS)/(1.+b*sqrt(IS));
-gammaDH[j] = gamDH;
 			gamC = log(Phi[j]/x[j]) - Phi[j]/x[j] - log(R[j]/R[w]) + R[j]/R[w]
 					- 5.0*Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
 					- log(R[j]*Q[w]/(R[w]*Q[j])) + R[j]*Q[w]/(R[w]*Q[j]) );
-gammaC[j] = gamC;
 			gamR = Q[j] * ( - log(K) - L + log(Psi[w][j]) + Psi[j][w] );
-gammaR[j] = gamR;
+
 			lnGam = gamDH + gamC + gamR;
 
 			// convert activity coefficient to molality scale
 			lnGam = lnGam + log(x[w]);
 			lnGamma[j] = lnGam;
 			Gam = exp(lnGam);
+			gammaDH[j] = gamDH;
+			gammaC[j] = gamC;
+			gammaR[j] = gamR;
+
 		}
 
 		// water solvent
@@ -1313,14 +1303,17 @@ gammaR[j] = gamR;
 			}
 
 			gamDH = Mw*2.*A/pow(b,3.) * ( 1. + b*sqrt(IS) - 1./(1.+b*sqrt(IS)) - 2*log(1.+b*sqrt(IS)) );
-gammaDH[j]=gamDH;
+
 			gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
-gammaC[j] = gamC;
+
 			gamR = Q[j] * (1. - log(K) - L );
-gammaR[j] = gamR;
+
 			lnGam = gamDH + gamC + gamR;
 			lnGamma[j] = lnGam;
 			Gam = exp(lnGam);
+			gammaDH[j]=gamDH;
+			gammaC[j] = gamC;
+			gammaR[j] = gamR;
 		}
 	}
 
@@ -1364,7 +1357,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
 
 	long int ii, c, a, n;
 
-//	const ios::open_mode OFSMODE = ios::out ¦ ios::app;
+//	const ios::open_mode OFSMODE = ios::out ï¿½ ios::app;
 	ofstream ff(path, ios::app );
 	ErrorIf( !ff.good() , path, "Fileopen error");
 
@@ -1372,7 +1365,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
 	for( ii=0; ii<NPar; ii++ )
 		ff << aIP[ii] << "  ";
 
-	ff << endl << "Debye-Hückel contribution to Activity Coefficients" << endl;
+	ff << endl << "Debye-Hï¿½ckel contribution to Activity Coefficients" << endl;
 	for( ii=0; ii<NComp; ii++ )
 		ff << gammaDH[ii] << "  ";
 
