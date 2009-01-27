@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 1122 2008-11-25 13:06:47Z gems $
+// $Id: m_const.h 1197 2009-01-27 14:32:28Z gems $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -89,7 +89,8 @@ enum solmod_switches { // indexes of keys of model solution
 // SM_IONEX = 'E',		// ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
-    SM_OTHER = 'O'		//  other models of non-ideal solutions (reserved)
+    SM_OTHER = 'O'		// other built-in phase-specific models of non-ideal solutions
+    	                //    (selected through phase name)
 };
 
 #ifndef _chbr_classes_h_

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1193 2009-01-27 08:20:24Z gems $
+// $Id: s_fgl.h 1197 2009-01-27 14:32:28Z gems $
 //
 // Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -18,6 +18,7 @@
 //-------------------------------------------------------------------
 //
 
+#include <string.h>
 #ifndef _s_fgl_h_
 #define _s_fgl_h_
 
@@ -107,12 +108,14 @@ class EOSPARAM
 // -------------------------------------------------------------------------------------
 // Added 07 March 2007 by TW and DK; extended 25.11.2008 by DK
 // Definition of a class for built-in solution models
+#define MAXPHASENAME 16
 
 class TSolMod
 {
 
 protected:
         char ModCode;   // Code of the mixing model
+char PhaseName[MAXPHASENAME+1];    // Phase name (for specific built-in models)
 
         long int NComp;    	// Number of components in the solution phase
         long int NPar;     	// Number of non-zero interaction parameters
@@ -184,6 +187,13 @@ public:
 
     // new access function to set new system state
     long int UpdatePT ( double T_k, double P_bar, double dW, double eW );
+
+    // Getting phase name into TSolMod class instance (no longer than 16 characters)
+    void GetPhaseName( const char *PhName )
+    {
+    	strncpy( PhaseName, PhName, MAXPHASENAME );
+    	PhaseName[MAXPHASENAME] = 0;
+    }
 
 };
 
@@ -913,7 +923,42 @@ public:
 
 };
 
+// -------------------------------------------------------------------------------------
+// Class for hardcoded models for solid solutions (c) TW January 2009
+// References:  Holland & Powell (2003)
 
+class TModOther: public TSolMod
+{
+private:
+	double *Wu;
+	double *Ws;
+	double *Wv;
+	double *Wpt;   // Interaction coeffs at P-T
+	double *Phi;   // Mixing terms
+	double *PsVol; // End member volume parameters
+
+	void alloc_internal();
+	void free_internal();
+
+public:
+
+	// Constructor
+	TModOther( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+	         long int NPperDC, char Mod_Code,
+	         long int *arIPx, double *arIPc, double *arDCc,
+	         double *arWx, double *arlnGam, double *aphVOL,
+	         double T_k, double P_bar, double dW, double eW );
+
+	// Destructor
+	~TModOther();
+
+	// Calculation of T,P corrected interaction parameters
+	long int PTparam();
+
+	// Calculation of activity coefficients
+    long int MixMod();
+
+};
 
 #endif
 
