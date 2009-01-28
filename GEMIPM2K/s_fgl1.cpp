@@ -1278,6 +1278,8 @@ long int TEUNIQUAC::MixMod()
 			// convert activity coefficient to molality scale
 			lnGam = lnGam + log(x[w]);
 			lnGamma[j] = lnGam;
+
+			// write debug results
 			Gam = exp(lnGam);
 			gammaDH[j] = gamDH;
 			gammaC[j] = gamC;
@@ -1310,6 +1312,8 @@ long int TEUNIQUAC::MixMod()
 
 			lnGam = gamDH + gamC + gamR;
 			lnGamma[j] = lnGam;
+
+			// write debug results
 			Gam = exp(lnGam);
 			gammaDH[j]=gamDH;
 			gammaC[j] = gamC;

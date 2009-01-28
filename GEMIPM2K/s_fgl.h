@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1197 2009-01-27 14:32:28Z gems $
+// $Id: s_fgl.h 1202 2009-01-28 10:41:00Z gems $
 //
 // Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -128,7 +128,6 @@ char PhaseName[MAXPHASENAME+1];    // Phase name (for specific built-in models)
         double R_CONST; // R constant
         double RhoW;	// Density of liquid water, added 04.06.2008 (TW)
         double EpsW;	// Dielectric constant of liquid water
-//        double IonStr;	// Ionic strength
         double Tk;    	// Temperature, K
         double Pbar;  	// Pressure, bar
 
@@ -139,7 +138,7 @@ char PhaseName[MAXPHASENAME+1];    // Phase name (for specific built-in models)
         double *x;    	// Pointer to mole fractions of end members (provided)
         double *phVOL;    // phase volumes, cm3/mol                   [0:FI-1]
 
-// Results
+        // Results
         double Gam;   	// work cell for activity coefficient of end member
         double lnGamRT;
         double lnGam;
@@ -160,40 +159,42 @@ public:
          double *arWx, double *arlnGam, double *aphVOL,
          double T_k, double P_bar, double dW, double eW );
 
-
     // Destructor
     virtual ~TSolMod();
 
-    virtual long int PureSpecies( )
-		{ return 0;}
+    virtual long int PureSpecies()
+    {
+    	return 0;
+    };
 
     virtual long int PTparam()
-        {  return 0;  }
+    {
+    	return 0;
+    };
 
-    bool testSizes( long int NSpecies, long int NParams,	long int NPcoefs,
-    		long int MaxOrder,  long int NPperDC, char Mod_Code );
+    virtual long int MixMod()
+    {
+    	return 0;
+    };
 
-    virtual long int MixMod( )
-        { return 0;}
+    virtual long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+    {
+    	Gex_ = Gex;
+    	Vex_ = Vex;
+    	Hex_ = Hex;
+    	Sex_ = Sex;
+    	CPex_ = CPex;
+    	return 0;
+    };
 
-    virtual void getExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_,
-    		double &CPex_ )
-    {  Gex_ = Gex;
-       Vex_ = Vex;
-       Hex_ = Hex;
-       Sex_ = Sex;
-	   CPex_ = CPex;
-	};
-
-    // new access function to set new system state
+    // set new system state
     long int UpdatePT ( double T_k, double P_bar, double dW, double eW );
 
-    // Getting phase name into TSolMod class instance (no longer than 16 characters)
-    void GetPhaseName( const char *PhName )
-    {
-    	strncpy( PhaseName, PhName, MAXPHASENAME );
-    	PhaseName[MAXPHASENAME] = 0;
-    }
+    bool testSizes( long int NSpecies, long int NParams, long int NPcoefs,
+    		long int MaxOrder, long int NPperDC, char Mod_Code );
+
+    // getting phase name
+    void GetPhaseName( const char *PhName );
 
 };
 
@@ -324,15 +325,17 @@ public:
  	 // Destructor
      ~TCGFcalc();
 
-     // Calculation of pure species properties (pure fugacities)
+     // calculates of pure species properties (pure fugacities)
      long int PureSpecies( );
 
-     // Calculation of T,P corrected interaction parameters
+     // calculates T,P corrected interaction parameters
      long int PTparam();
 
-     // Calculation of activity coefficients
+     // calculates activity coefficients
      long int MixMod();
 
+     // calculates excess properties
+     // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
      // CGofPureGases - Calc. fugacity for 1 species at X=1
      long int CGcalcFug( void );  // Calc. fugacity for 1 species at X=1
@@ -400,6 +403,9 @@ class TPRSVcalc: public TSolMod
 
     // Calculates activity coefficients
     long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
     // Calculates pure species properties (called from DCthermo)
     long int PRCalcFugPure( void );
@@ -478,6 +484,9 @@ class TSRKcalc: public TSolMod
     // Calculates activity coefficients
     long int MixMod();
 
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+
     // Calculates pure species properties (called from DCthermo)
     long int SRCalcFugPure( void );
 
@@ -530,11 +539,16 @@ public:
 	// Destructor
 	~TSIT() { }
 
+	// calculates activity coefficients
     long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
     // Calculation of internal tables (at each GEM iteration)
 	//long int PTparam()
 	// { return TSolMod::PTparam(); }
+
 };
 
 
@@ -568,11 +582,14 @@ public:
 	// Destructor
 	~TVanLaar();
 
-	// Calculation of T,P corrected interaction parameters
+	// calculates T,P corrected interaction parameters
 	long int PTparam();
 
-	// Calculation of activity coefficients
+	// calculates of activity coefficients
     long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -605,11 +622,14 @@ public:
 	// Destructor
 	~TRegular();
 
-	// Calculation of T,P corrected interaction parameters
+	// calculates T,P corrected interaction parameters
 	long int PTparam( );
 
-	// Calculation of activity coefficients
+	// calculates of activity coefficients
     long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -643,11 +663,14 @@ public:
 	// Destructor
 	~TRedlichKister();
 
-	// Calculation of T,P corrected interaction parameters
+	// calculates T,P corrected interaction parameters
 	long int PTparam();
 
-	// Calculation of activity coefficients
+	// calculates activity coefficients
 	long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -685,11 +708,14 @@ public:
 	// Destructor
 	~TNRTL();
 
-	// Calculation of T,P corrected interaction parameters
+	// calculates T,P corrected interaction parameters
 	long int PTparam();
 
-	// Calculation of activity coefficients
+	// calculates activity coefficients
 	long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -721,11 +747,14 @@ public:
 	// Destructor
 	~TWilson();
 
-	// Calculation of T,P corrected interaction parameters
+	// calculates T,P corrected interaction parameters
 	long int PTparam();
 
-	// Calculation of activity coefficients
+	// calculates activity coefficients
 	long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -862,11 +891,10 @@ public:
 	// Calculation of T,P corrected interaction parameters
 	long int PTparam();
 
-
     long int MixMod()
     { return Pitzer_calc_Gamma();}
 
-	// Calculation of activity coefficients
+	// calculates activity coefficients
 	long int Pitzer_calc_Gamma( );
 
 	void Pitzer_test_out( const char *path );
@@ -894,9 +922,9 @@ private:
 	double **dPsi;
 	double **d2Psi;
 
-	double gammaDH[20];
-	double gammaC[20];
-	double gammaR[20];
+	double gammaDH[200];
+	double gammaC[200];
+	double gammaR[200];
 
 	void alloc_internal();
 	void free_internal();
@@ -913,11 +941,14 @@ public:
 	// Destructor
 	~TEUNIQUAC();
 
-	// Calculation of T,P corrected interaction parameters
+	// calculates T,P corrected interaction parameters
 	long int PTparam();
 
-	// Calculation of activity coefficients
+	// calculates activity coefficients
 	long int MixMod();
+
+    // calculates excess properties
+    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 	void Euniquac_test_out( const char *path );
 
@@ -930,12 +961,16 @@ public:
 class TModOther: public TSolMod
 {
 private:
-	double *Wu;
-	double *Ws;
-	double *Wv;
-	double *Wpt;   // Interaction coeffs at P-T
-	double *Phi;   // Mixing terms
-	double *PsVol; // End member volume parameters
+
+	double PhVol;   // phase volume in cm3
+    double *Pparc;  // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+    double *aGEX;   // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+    double *aVol;   // DC molar volumes, cm3/mol [L]
+    double *Gdqf;	// DQF correction terms
+    double *Hdqf;
+    double *Sdqf;
+    double *CPdqf;
+    double *Vdqf;
 
 	void alloc_internal();
 	void free_internal();
@@ -952,11 +987,22 @@ public:
 	// Destructor
 	~TModOther();
 
-	// Calculation of T,P corrected interaction parameters
+    // calculates pure species properties (pure fugacities, DQF corrections)
+    long int PureSpecies();
+
+	// calculates T,P corrected interaction parameters
 	long int PTparam();
 
-	// Calculation of activity coefficients
+	// calculates activity coefficients
     long int MixMod();
+
+    // calculates excess properties
+    long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+
+    // functions for individual models
+    long int Feldspar1_PTParam();
+    long int Feldspar1_MixMod();
+    long int Feldspar1_ExcessProp();
 
 };
 

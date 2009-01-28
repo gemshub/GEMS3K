@@ -24,176 +24,122 @@
 #include "s_fgl.h"
 
 
-    //=============================================================================================
-    // Van Laar model for solid solutions (c) TW March 2007
-    // References:  Holland & Powell (2003)
-    //=============================================================================================
+//=============================================================================================
+// Customized solid-solution and fluid models (c) TW March 2009
+// References:
+//=============================================================================================
 
 
-    // Generic constructor for the TVanLaar class
-    TModOther::TModOther( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-            long int NPperDC, char Mod_Code,
-            long int *arIPx, double *arIPc, double *arDCc,
-            double *arWx, double *arlnGam, double *aphVOL,
-            double T_k, double P_bar, double dW, double eW ):
+// Generic constructor for the TVanLaar class
+TModOther::TModOther( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+		long int NPperDC, char Mod_Code,
+		long int *arIPx, double *arIPc, double *arDCc,
+		double *arWx, double *arlnGam, double *aphVOL,
+		double T_k, double P_bar, double dW, double eW ):
             	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-            			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-            			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
-    {
-      alloc_internal();
-
-    }
-
-
-    TModOther::~TModOther()
-    {
-      free_internal();
-    }
+            			Mod_Code, arIPx, arIPc, arDCc, arWx,
+            			arlnGam, aphVOL, T_k, P_bar, dW, eW )
+{
+	alloc_internal();
+}
 
 
-    void TModOther::alloc_internal()
-    {
-    	   Wu = new double [NPar];
-    	   Ws = new double [NPar];
-    	   Wv = new double [NPar];
-    	   Wpt = new double [NPar];
-    	   Phi = new double [NComp];
-    	   PsVol = new double [NComp];
-    }
+TModOther::~TModOther()
+{
+	free_internal();
+}
 
 
-    void TModOther::free_internal()
-    {
-    	 if(Wu)  delete[]Wu;
-    	 if(Ws)  delete[]Ws;
-    	 if(Wv)  delete[]Wv;
-    	 if(Wpt)  delete[]Wpt;
-    	 if(Phi)  delete[]Phi;
-    	 if(PsVol)  delete[]PsVol;
-    }
+void TModOther::alloc_internal()
+{
+    Gdqf = new double [NComp];
+    Hdqf = new double [NComp];
+    Sdqf = new double [NComp];
+    CPdqf = new double [NComp];
+    Vdqf = new double [NComp];
+}
 
 
-    // Calculates T,P corrected binary interaction parameters
-    long int TModOther::PTparam()
-    {
+void TModOther::free_internal()
+{
+	delete[]Gdqf;
+	delete[]Hdqf;
+	delete[]Sdqf;
+	delete[]CPdqf;
+	delete[]Vdqf;
+}
 
 
+// calculates pure species properties (pure fugacities, DQF corrections)
+long int TModOther::PureSpecies()
+{
+    /*
+	if( !strncmp( PhaseName, "FELDSPAR", 8 ) )
+	{
+		TModOther::PT_Feldspar();
+	}
 
-    	/*
-    	    if( !strncmp( PhaseName, "FELDSPAR", 8 ))
-    	    	{
-    	    		TModOther::PT_Feldspar();
-    	    	} else if{ !strncmp( PhaseName, "Garnet", 6 ))
-    	    	     TModOther::PT_Garnet();
-    	    	} esle if ....
-    	*/
-
-
-    	long int ip;
-
-        if ( NPcoef < 3 || NPar < 1 )
-           return 1;
-
-    // read P-T corrected interaction parameters
-    	   for (ip=0; ip<NPar; ip++)
-    	   {
-    	     Wu[ip] = aIPc[NPcoef*ip];
-    		 Ws[ip] = aIPc[NPcoef*ip+1];
-    		 Wv[ip] = aIPc[NPcoef*ip+2];
-    		 Wpt[ip] = Wu[ip]+ Ws[ip]*Tk + Wv[ip]*Pbar;
-    	     aIP[ip] = Wpt[ip];
-    		 // aIPc[NPcoef*ip+3] = Wpt[ip]; // obsolete
-    	   }
-    	   return 0;
-    }
+	else if{ !strncmp( PhaseName, "Garnet", 6 ) )
+	{
+		TModOther::PT_Garnet();
+	}
+    */
+	return 0;
+}
 
 
-    // Calculates activity coefficients and excess functions
-    long int TModOther::MixMod()
-    {
+// calculates T,P corrected binary interaction parameters
+long int TModOther::PTparam()
+{
+    /*
+	if( !strncmp( PhaseName, "FELDSPAR", 8 ) )
+	{
+		TModOther::PT_Feldspar();
+	}
+
+	else if{ !strncmp( PhaseName, "Garnet", 6 ) )
+	{
+		TModOther::PT_Garnet();
+	}
+    */
+	return 0;
+}
 
 
-       	/*
-        	    if( !strncmp( PhaseName, "FELDSPAR", 8 ))
-        	    	{
-        	    		TModOther::MixMod_Feldspar();
-        	    	} else if{ !strncmp( PhaseName, "Garnet", 6 ))
-        	    	     TModOther::MixMod_Garnet();
-        	    	} else if ....
-        	*/
+// calculates activity coefficients
+long int TModOther::MixMod()
+{
+    /*
+	if( !strncmp( PhaseName, "FELDSPAR", 8 ) )
+	{
+		TModOther::PT_Feldspar();
+	}
+
+	else if{ !strncmp( PhaseName, "Garnet", 6 ) )
+	{
+		TModOther::PT_Garnet();
+	}
+    */
+	return 0;
+}
 
 
-    	long int ip, j, i1, i2;
-       double dj, dk;
-       double sumPhi; // Sum of Phi terms
-       double gE, vE, hE, sE, cpE, uE;
+// calculates excess properties
+long int TModOther::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+{
+    /*
+	if( !strncmp( PhaseName, "FELDSPAR", 8 ) )
+	{
+		TModOther::PT_Feldspar();
+	}
 
-       if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-               return 1;
-
-       // calculating Phi values
-       sumPhi = 0.;
-       for (j=0; j<NComp; j++)
-       {
-           PsVol[j] = aDCc[NP_DC*j];  // reading pseudo-volumes
-           sumPhi +=  x[j]*PsVol[j];
-       }
-
-       if( fabs(sumPhi) < 1e-30 )
-           return 2;    // to prevent zerodivide!
-
-       for (j=0; j<NComp; j++)
-           Phi[j] = x[j]*PsVol[j]/sumPhi;
-
-       // calculate activity coefficients
-       for (j=0; j<NComp; j++)      // index end members with j
-       {
-    	lnGamRT = 0.;
-    	for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
-    	{
-            i1 = aIPx[MaxOrd*ip];
-    	    i2 = aIPx[MaxOrd*ip+1];
-
-       	    if( j == i1 )
-    		dj = 1.;
-    	    else
-    		dj = 0.;
-    	    if( j == i2 )
-    		dk = 1.;
-    	    else
-    		dk = 0.;
-    	    lnGamRT -= (dj-Phi[i1])*(dk-Phi[i2])*Wpt[ip]
-                             *2.*PsVol[j]/(PsVol[i1]+PsVol[i2]);
-    	}
-
-        lnGam = lnGamRT/(R_CONST*Tk);
-    	lnGamma[j] = lnGam;
-    	}
-
-       // calculate bulk phase excess properties
-       gE = 0.0;
-       vE = 0.0;
-       hE = 0.0;
-       sE = 0.0;
-       cpE = 0.0;
-       uE = 0.0;
-
-       for (ip=0; ip<NPar; ip++)
-       {
-          i1 = aIPx[MaxOrd*ip];
-          i2 = aIPx[MaxOrd*ip+1];
-          gE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
-          vE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
-          uE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
-          sE -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
-       }
-
-       hE = uE+vE*Pbar;
-
-       return 0;
-    }
-
-
+	else if{ !strncmp( PhaseName, "Garnet", 6 ) )
+	{
+		TModOther::PT_Garnet();
+	}
+    */
+	return 0;
+}
 
 
 

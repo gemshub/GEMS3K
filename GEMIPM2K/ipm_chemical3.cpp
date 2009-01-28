@@ -1168,138 +1168,6 @@ void TMulti::Davies03temp( long int jb, long int je, long int jpb, long int k )
     }
 }
 
-
-
-// non-ideal fluid mixtures
-// ---------------------------------------------------------------------
-// Churakov-Gottschalk (2004) calculation of pure gas/fluid component fugacity
-// Added by D.Kulik on 15.02.2007
-//
-/*
-void
-TMulti::CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb)
-{
-    double T, P, Fugacity = 0.1, Volume = 0.0, DeltaH=0, DeltaS=0;
-    double *Coeff;
-    double Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
-            Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
-    double X[1]={1.};
-    double roro;  // added, 21.06.2008 (TW)
-    long int jdc, j, retCode = 0;
-
-    P = pmp->Pc;
-    T = pmp->Tc;
-    TCGFcalc aCGF(1, P, T);
-
-    for( jdc=0, j=jb; j<je; jdc++,j++)
-    {
-        Coeff = pmp->DMc+jdb+jdc*24;
-
-        // Calling CG EoS for pure fugacity
-        if( T >= 273.15 && T < 1e4 && P >= 1e-6 && P < 1e5 )
-            retCode = aCGF.CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T, roro );
-        else {
-            Fugacity = pmp->Pc;
-            Volume = 8.31451*pmp->Tc/pmp->Pc;
-            Coeff[15] = Coeff[0];
-            if( Coeff[15] < 1. || Coeff[15] > 10. )
-                Coeff[15] = 1.;                 // foolproof temporary
-            Coeff[16] = Coeff[1];
-            Coeff[17] = Coeff[2];
-            Coeff[18] = Coeff[3];
-            return;
-        }
-
-        pmp->GEX[j] = log( Fugacity / pmp->Pc );   // now here (since 26.02.2008)  DK
-        pmp->Pparc[j] = Fugacity;          // Necessary only for performance
-        pmp->Vol[j] = Volume * 10.;       // molar volume of pure fluid component, J/bar to cm3
-
-        // passing corrected EoS coeffs to calculation of fluid mixtures
-        Coeff[15] = Eos4parPT[0];
-        if( Coeff[15] < 1. || Coeff[15] > 10. )
-            Coeff[15] = 1.;                            // foolproof temporary
-        Coeff[16] = Eos4parPT[1];
-        Coeff[17] = Eos4parPT[2];
-        Coeff[18] = Eos4parPT[3];
-
-        aCGF.CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*aCGF.GetDELTA(), roro );
-
-        // passing corrected EoS coeffs for T+T*DELTA
-        Coeff[19] = Eos4parPT1[0];
-        if( Coeff[15] < 1. || Coeff[15] > 10. )
-            Coeff[15] = 1.;                            // foolproof temporary
-        Coeff[20] = Eos4parPT1[1];
-        Coeff[21] = Eos4parPT1[2];
-        Coeff[22] = Eos4parPT1[3];
-
-        // Calculation of residual H and S
-        aCGF.CGEnthalpy( X, Eos4parPT, Eos4parPT1, 1, roro, T, DeltaH, DeltaS);  // changed, 21.06.2008 (TW)
-
-    } // jdc, j
-
-    if ( retCode )
-    {
-      char buf[150];
-      sprintf(buf, "CG2004Fluid(): bad calculation of pure fugacities");
-      Error( "E71IPM IPMgamma: ",  buf );
-    }
-    // set work structure
-    SolModParPT( jb, je, jpb, jdb, k, ipb, SM_CGFLUID );
-}
-
-
-#define MAXPRDCPAR 10
-*/
-// ---------------------------------------------------------------------
-// Entry to Peng-Robinson model for calculating pure gas fugacities
-// Added by D.Kulik on 15.02.2007
-//
-/*
-void
-TMulti::PRSVofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb  )
-{
-    double  *FugPure, * Fugcoeff, Volume, DeltaH, DeltaS;
-    double *Coeff; //  *BinPar;
-    double Eos2parPT[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 } ;
-    long int j, jdc, NComp, retCode = 0;
-
-    NComp = 1; // = pmp->L1[k];
-
-    TPRSVcalc aPRSV( NComp, pmp->Pc, pmp->Tc );
-    for( jdc=0, j=jb; j<je; jdc++,j++)
-    {
-         Coeff = pmp->DMc+jdb+jdc*12;	// increased from 10 to 12 (31.05.2008 TW)
-         // Calling PRSV EoS for pure fugacity
-         retCode = aPRSV.PRFugacityPT( pmp->Pc, pmp->Tc, Coeff,
-                 Eos2parPT, Fugcoeff, Volume, DeltaH, DeltaS );
-
-         pmp->GEX[j] = log( Fugcoeff );    // now here (since 26.02.2008) DK
-         pmp->Pparc[j] = Fugcoeff * pmp->Pc; // Necessary only for performance
-         pmp->Vol[j] = Volume * 10.;  // molar volume of pure fluid component, J/bar to cm3
-
-//  passing corrected EoS coeffs to calculation of fluid mixtures (3 added, 31.05.2008 TW)
-         Coeff[6] = Eos2parPT[0];	// a
-         Coeff[7] = Eos2parPT[1];	// b
-         Coeff[8] = Eos2parPT[2];	// sqrAL
-         Coeff[9] = Eos2parPT[3];	// ac
-         Coeff[10] = Eos2parPT[4];	// dALdT
-
-    } // jdc, j
-
-    if ( retCode )
-    {
-      char buf[150];
-      sprintf(buf, "PRSV Fluid(): bad calculation of pure fugacities");
-      Error( "E71IPM IPMgamma: ",  buf );
-    }
-    // set work structure
-    SolModParPT( jb, je, jpb, jdb, k, ipb, SM_PRFLUID );
-}
-*/
-
-
-
-
 //--------------------------------------------------------------------------------
 // Binary Redlich-Kister model - parameters (dimensionless)
 // Implemented by KD on 31 July 2003
@@ -1476,7 +1344,7 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
     	if(	phSolMod[k]->testSizes( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode ) )
     	{
     		phSolMod[k]->UpdatePT(pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW);
-    		return; // using old allocation 
+    		return; // using old allocation
     	}
 
     aIPx = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
@@ -1494,6 +1362,15 @@ TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long in
    // creating instances of subclasses of TSolMod base class
     switch( ModCode )
     {
+
+        case SM_OTHER:  // Hard-coded solid solution models (selected by phase name)
+            {
+            	TModOther* aPT = new TModOther( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
+                        aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW);
+                aPT->GetPhaseName( pmp->SF[k] );
+            	aSM = (TSolMod*)aPT;
+                break;
+        }
         case SM_VANLAAR:  // Van Laar solid solution
         {
         	TVanLaar* aPT = new TVanLaar( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode,
@@ -1680,7 +1557,7 @@ TMulti::SolModExcessParam( long int k, char ModCode )
         case SM_SRFLUID:
          {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
-              aSM->getExcessProp( Gex, Vex, Hex, Sex, CPex );
+              aSM->ExcessProp( Gex, Vex, Hex, Sex, CPex );
               break;
          }
 

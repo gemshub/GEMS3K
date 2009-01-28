@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 1143 2008-12-10 14:40:41Z gems $
+// $Id: v_user.h 1187 2009-01-23 16:42:05Z gems $
 //
 // Declaration of platform-specific utility functions and classes
 //
@@ -50,6 +50,8 @@ typedef TArrayF<gstring> TCStringArray;
 typedef unsigned int uint;
 
 #endif //  __noborl
+
+void Gcvt(double number, size_t ndigit, char *buf);
 
 inline
 int ROUND(double x )

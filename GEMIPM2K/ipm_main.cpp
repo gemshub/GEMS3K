@@ -51,7 +51,6 @@ void TMulti::MultiCalcMain( long int rLoop )
 fstream f_log("ipmlog.txt", ios::out|ios::app );
 #endif
     pmp->W1=0; pmp->K2=0;
-    
 
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
@@ -217,6 +216,34 @@ f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " AI
         );
          }     
           break;
+     case 4: // Mass balance broken after SLE slover
+         if( pmp->pNP )
+         {   // bad PIA mode - trying the AIA mode
+	        pmp->MK = 2;   // Set to check in calcMulti() later on
+	        goto FORCED_AIA;                                 
+         }  
+         else 
+         {
+             char buf[300]; 
+             sprintf( buf, "Mass balance broken after SLE solver for IC %-6.6s on iteration %ld",  
+            		 pmp->SB[pmp->Ec] , pmp->ITG );
+        	 Error( "E17IPM IPM-main():", buf );    	
+         }
+         break;
+     case 5: // Mass balance broken after DualTh recover of DC amounts
+         if( pmp->pNP )
+         {   // bad PIA mode - trying the AIA mode
+	        pmp->MK = 2;   // Set to check in calcMulti() later on
+	        goto FORCED_AIA;                                 
+         }  
+         else 
+         {
+             char buf[300]; 
+             sprintf( buf, "Mass balance broken in DualTH recover for DC&RC %-6.6s on iteration %d",  
+            		 pmp->SM[pmp->Ec] , pmp->ITG );
+        	 Error( "E18IPM IPM-main():", buf );    	
+         }
+         break;
    }
 
     pmp->FI1 = 0;
@@ -734,7 +761,13 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
             else  pmp->DX= 0.5 * pmp->PCI;
         }
 
-       MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+       int iB = CheckMassBalanceResiduals( pmp->X );
+       if( iB >= 0 )
+       {	
+    	   pmp->Ec=iB;
+    	   return 4L;
+       }	
+//       MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
 
        pmp->FX=FX1;
        // Main IPM iteration done
@@ -752,7 +785,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
         Restoring_Y_YF();
         
 if( pmp->pNP && rLoop < 0 && status )
-   	return 3;
+   	return 3L;
 
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
@@ -772,7 +805,10 @@ CONVERGED:
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
   if(pmp->PZ && pmp->W1)
-      Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );
+  { iRet =  Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );
+    if(iRet )
+ 	   return iRet;
+  }
 
   if( pmp->PD == 1 || pmp->PD == 2  /*|| pmp->PD == 3*/  )
         GammaCalc( LINK_UX_MODE );
@@ -780,7 +816,7 @@ CONVERGED:
   ConCalc( pmp->X, pmp->XF, pmp->XFA );
 
    MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
-   return 0;
+   return 0L;
 }
 
 
@@ -823,7 +859,7 @@ TMulti::CheckMassBalanceResiduals(double *Y )
 	double cutoff; 
 	
 	// cutoff = pmp->DHBM * 1e4;
-	cutoff = min (pmp->DHBM*1.0e5, 1.0e3 );	// changed, 28.08.2008 (TW,DK)
+	cutoff = min (pmp->DHBM*1.0e5, 1.0e-3 );	// changed, 28.08.2008 (TW,DK)
 	if( cutoff > 1e-3 )
 		cutoff = 1e-3;
 	MassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);

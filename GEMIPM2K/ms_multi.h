@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1150 2008-12-12 15:50:13Z gems $
+// $Id: ms_multi.h 1202 2009-01-28 10:41:00Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -37,6 +37,13 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #include "s_fgl.h"
 
+/*typedef enum {
+	MIXPHPROPS=3,
+	TOTALPHASE=0,
+	MECHMIXED =1,
+	INCREMENT =2
+} MULTI_PHASE_TABLES;
+*/
 typedef struct
 {  // MULTI is base structure to Project (local values)
   char
@@ -336,7 +343,7 @@ class TMulti
 
    long int sizeFIs;     // current size of phSolMod
    TSolMod* (*phSolMod); // size current FIs -   number of multicomponent phases
-
+   
    void Alloc_TSolMod( long int newFIs );
    void Free_TSolMod();
 
@@ -390,7 +397,7 @@ class TMulti
     double FreeEnergyIncr(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
     double GX( double LM  );
-    void Mol_u( double Y[], double X[], double XF[], double XFA[] );
+    long int  Mol_u( double Y[], double X[], double XF[], double XFA[] );
     void ConvertDCC();
     long int  getXvolume();
 
