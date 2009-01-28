@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: databr.h 1121 2008-11-25 10:16:38Z gems $
+// $Id: databr.h 1204 2009-01-28 14:34:08Z gems $
 //
 // DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
@@ -72,8 +72,8 @@ typedef struct
     Km,		// actual permeability, m2
     Kf,		// actual DARCY`s constant, m2/s
     S,		// specific storage compressibility coefficient, dimensionless (default 1.0)
-               //  if not 1.0 then can be used as mass scaling factor relative to Ms for the 
-               //  bulk composition/speciation of reactive sub-system in this node 
+               //  if not 1.0 then can be used as mass scaling factor relative to Ms for the
+               //  bulk composition/speciation of reactive sub-system in this node
     Tr,     // transmissivity m2/s
     h,		// actual hydraulic head (hydraulic potential), m
     rho,	// actual carrier density for density-driven flow, g/cm3
@@ -98,8 +98,13 @@ typedef struct
     *xDC,  // DC mole amounts at equilibrium [nDCb]       (+)    (+)     +     +
     *gam,  // activity coefficients of DC [nDCb]          (+)    (+)     +     +
 // Metastability/kinetic controls
-    *dul,  // upper kinetic restrictions on xDC [nDCb]     +      +      -     -
-    *dll,  // lower kinetic restrictions on xDC [nDCb]     +      +      -     -
+    *dul,  // upper metastability limit on xDC [nDCb]      +      +      -     -
+           //   Trivial (no limit): > 1e6 mol per 1 kg
+           //   of the reactive node mass; non-trivial:
+           //   positive amount compatible with bIC vector
+    *dll,  // lower metastability limit on xDC [nDCb]      +      +      -     -
+           //   Trivial (no limit): 0 mol; non-trivial:
+           //   positive amount compatible with bIC vector
 // Phases in reactive subsystem
     *aPH,  // Specific surface areas of phases (m2/g)      +      +      -     -
     *xPH,  // total mole amounts of phases [nPHb]          -      -      +     +
@@ -109,7 +114,7 @@ typedef struct
            //    [nPSb][nICb]                              -      -      +     +
     *xPA,  // amounts of solvent/sorbent in
            //    phases-solutions [nPSb]                   -      -      +     +
-// (+) can be used as input in "smart initial approximation" mode of GEM IPM-2 algorithm     
+// (+) can be used as input in "smart initial approximation" mode of GEM IPM-2 algorithm
 
     // Reserved data array pointer
     *dRes1;

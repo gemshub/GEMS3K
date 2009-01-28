@@ -1230,12 +1230,10 @@ void TNode::packDataBr( double ScFact )
    {
       CNode->xDC[ii] = pmm->X[ CSD->xDC[ii] ]  / ScFact;
       CNode->gam[ii] = pmm->Gamma[ CSD->xDC[ii] ];
-      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ];//??? only insert
-      CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ];//??? only insert
-      if( pmm->DUL[ CSD->xDC[ii] ] < 1e6 )
-    	  CNode->dul[ii] /= ScFact;
-      if( pmm->DLL[ CSD->xDC[ii] ] > 0 )
-    	  CNode->dll[ii] /= ScFact;
+      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ] / ScFact;  // bugfix 28.01.2009 DK
+      if( pmm->DLL[ CSD->xDC[ii] ] < 1e-20 )
+    	  CNode->dll[ii] = 0.;
+      else CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ] / ScFact;  //
    }
    for( ii=0; ii<CSD->nICb; ii++ )
    {  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ] / ScFact;//??? only insert
@@ -1355,12 +1353,16 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
   // Obligatory arrays - always unpacked!
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-    pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii];
-    if( CNode->dul[ii] < 1e6 )
-    	pmm->DUL[ CSD->xDC[ii] ] *= ScFact;
+    pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii]* ScFact;
+    if(	pmm->DUL[ CSD->xDC[ii] ] > 1e6 )		// 28.01.2009
+       pmm->DUL[ CSD->xDC[ii] ] = 1e6;          // Bugfix for upper metastability limit
+    if(	pmm->DUL[ CSD->xDC[ii] ] < TProfil::pm->pa.p.DKIN )
+    	pmm->DUL[ CSD->xDC[ii] ] = TProfil::pm->pa.p.DKIN;
+
     pmm->DLL[ CSD->xDC[ii] ] = CNode->dll[ii];
     if( CNode->dll[ii] > 0. )
     	pmm->DLL[ CSD->xDC[ii] ] *= ScFact;
+    pmm->DLL[ CSD->xDC[ii] ] = 0.;				  // Bugfix for lower metastability limit
   }
   for( ii=0; ii<CSD->nICb; ii++ )
     pmm->B[ CSD->xIC[ii] ] = CNode->bIC[ii] * ScFact;
