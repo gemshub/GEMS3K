@@ -1,0 +1,221 @@
+Begin Initialiation part
+End Initialiation part
+Begin Coupled Modelling part
+Start Tnode test: test_bug/MySystem-dat.lst test_bug/MySystem-dbr-0-0000.dat
+ nNodes = 2  nTimes = 1000  deltaC = 0.01 deltaS = 0.005
+xCa= 3 xSi=6 xO=5 xH=4 xCalcite=12 xSiO2=14
+  in = 0  it = 0 Cal= 1.19887 Silica= 0.000108335
+  in = 1  it = 0 Cal= 0.00358117 Silica= 0
+  in = 0  it = 10 Cal= 1.09709 Silica= 0
+  in = 1  it = 10 Cal= 0.00358117 Silica= 0
+  in = 0  it = 20 Cal= 0.996621 Silica= 0
+  in = 1  it = 20 Cal= 0.00358117 Silica= 0
+  in = 0  it = 30 Cal= 0.896404 Silica= 0
+  in = 1  it = 30 Cal= 0.00358117 Silica= 0
+  in = 0  it = 40 Cal= 0.796343 Silica= 0
+  in = 1  it = 40 Cal= 0.00358117 Silica= 0
+  in = 0  it = 50 Cal= 0.696401 Silica= 0
+  in = 1  it = 50 Cal= 0.00358117 Silica= 0
+  in = 0  it = 60 Cal= 0.596564 Silica= 0
+  in = 1  it = 60 Cal= 0.00358117 Silica= 0
+Error Calling GEMIPM calculation it = 67 Node 1 Ca= 0.648318 Si= -0.00213431
+  in = 0  it = 70 Cal= 0.49682 Silica= 0
+  in = 1  it = 70 Cal= 0.00358117 Silica= 0
+  in = 0  it = 80 Cal= 0.397179 Silica= 0
+  in = 1  it = 80 Cal= 0.00358117 Silica= 0
+  in = 0  it = 90 Cal= 0.297662 Silica= 0
+  in = 1  it = 90 Cal= 0.00358117 Silica= 0
+  in = 0  it = 100 Cal= 0.19828 Silica= 0
+  in = 1  it = 100 Cal= 0.00358117 Silica= 0
+  in = 0  it = 110 Cal= 0.0988093 Silica= 0
+  in = 1  it = 110 Cal= 0.00999093 Silica= 0
+Error Calling GEMIPM calculation it = 120 Node 0 Ca= -0.00104297 Si= 2.73143
+  in = 1  it = 120 Cal= 0.00999057 Silica= 0.120526
+  in = 0  it = 130 Cal= 0.0989066 Silica= 0
+  in = 1  it = 130 Cal= 0.00999056 Silica= 0.290517
+Error Calling GEMIPM calculation it = 132 Node 1 Ca= -0.0016817 Si= 0.322866
+  in = 0  it = 140 Cal= 0.198675 Silica= 0
+  in = 1  it = 140 Cal= 0.00999057 Silica= 0.268523
+  in = 0  it = 150 Cal= 0.298275 Silica= 0
+  in = 1  it = 150 Cal= 0.00999058 Silica= 0.198532
+  in = 0  it = 160 Cal= 0.39786 Silica= 0
+  in = 1  it = 160 Cal= 0.0099906 Silica= 0.128541
+  in = 0  it = 170 Cal= 0.497528 Silica= 0
+  in = 1  it = 170 Cal= 0.00999061 Silica= 0.0585504
+  in = 0  it = 180 Cal= 0.597282 Silica= 0
+  in = 1  it = 180 Cal= 0.0099909 Silica= 0
+  in = 0  it = 190 Cal= 0.697116 Silica= 0
+  in = 1  it = 190 Cal= 0.00999095 Silica= 0
+  in = 0  it = 200 Cal= 0.797032 Silica= 0
+  in = 1  it = 200 Cal= 0.00999096 Silica= 0
+  in = 0  it = 210 Cal= 0.89704 Silica= 0
+  in = 1  it = 210 Cal= 0.00999096 Silica= 0
+  in = 0  it = 220 Cal= 0.997173 Silica= 0
+  in = 1  it = 220 Cal= 0.00999097 Silica= 0
+  in = 0  it = 230 Cal= 0.917124 Silica= 0
+  in = 1  it = 230 Cal= 0.00999097 Silica= 0
+  in = 0  it = 240 Cal= 0.817207 Silica= 0
+  in = 1  it = 240 Cal= 0.00999097 Silica= 0
+  in = 0  it = 250 Cal= 0.717433 Silica= 0
+  in = 1  it = 250 Cal= 0.00999097 Silica= 0
+  in = 0  it = 260 Cal= 0.617807 Silica= 0
+  in = 1  it = 260 Cal= 0.00999067 Silica= 0.0765835
+  in = 0  it = 270 Cal= 0.518371 Silica= 0
+  in = 1  it = 270 Cal= 0.00999066 Silica= 0.226574
+  in = 0  it = 280 Cal= 0.418896 Silica= 0
+  in = 1  it = 280 Cal= 0.00999064 Silica= 0.296565
+  in = 0  it = 290 Cal= 0.318957 Silica= 0
+  in = 1  it = 290 Cal= 0.00999062 Silica= 0.366556
+  in = 0  it = 300 Cal= 0.218957 Silica= 0
+  in = 1  it = 300 Cal= 0.00999061 Silica= 0.436547
+  in = 0  it = 310 Cal= 0.118957 Silica= 0
+  in = 1  it = 310 Cal= 0.00999059 Silica= 0.506537
+  in = 0  it = 320 Cal= 0.018957 Silica= 0
+  in = 1  it = 320 Cal= 0.00999057 Silica= 0.576528
+Error Calling GEMIPM calculation it = 322 Node 0 Ca= -0.00104297 Si= 1.72143
+  in = 0  it = 330 Cal= 0.078957 Silica= 0
+  in = 1  it = 330 Cal= 0.00999056 Silica= 0.646519
+Error Calling GEMIPM calculation it = 334 Node 1 Ca= -0.0016817 Si= 0.672866
+  in = 0  it = 340 Cal= 0.178957 Silica= 0
+  in = 1  it = 340 Cal= 0.00999056 Silica= 0.572521
+  in = 0  it = 350 Cal= 0.278957 Silica= 0
+  in = 1  it = 350 Cal= 0.00999058 Silica= 0.40253
+  in = 0  it = 360 Cal= 0.378957 Silica= 0
+  in = 1  it = 360 Cal= 0.00999059 Silica= 0.232539
+  in = 0  it = 370 Cal= 0.478957 Silica= 0
+  in = 1  it = 370 Cal= 0.00999061 Silica= 0.0625485
+  in = 0  it = 380 Cal= 0.578955 Silica= 0
+  in = 1  it = 380 Cal= 0.00999094 Silica= 0
+  in = 0  it = 390 Cal= 0.678784 Silica= 0
+  in = 1  it = 390 Cal= 0.0035824 Silica= 0
+  in = 0  it = 400 Cal= 0.778364 Silica= 0
+  in = 1  it = 400 Cal= 0.00358118 Silica= 0
+  in = 0  it = 410 Cal= 0.878068 Silica= 0
+  in = 1  it = 410 Cal= 0.00358117 Silica= 0
+  in = 0  it = 420 Cal= 0.977933 Silica= 0
+  in = 1  it = 420 Cal= 0.00358117 Silica= 0
+  in = 0  it = 430 Cal= 0.938048 Silica= 0
+  in = 1  it = 430 Cal= 0.00358117 Silica= 0
+  in = 0  it = 440 Cal= 0.838464 Silica= 0
+  in = 1  it = 440 Cal= 0.00358117 Silica= 0
+  in = 0  it = 450 Cal= 0.738952 Silica= 0
+  in = 1  it = 450 Cal= 0.00358117 Silica= 0
+  in = 0  it = 460 Cal= 0.638957 Silica= 0
+  in = 1  it = 460 Cal= 0.00358117 Silica= 0
+Error Calling GEMIPM calculation it = 469 Node 1 Ca= 0.668318 Si= -0.00213431
+  in = 0  it = 470 Cal= 0.538957 Silica= 0
+  in = 1  it = 470 Cal= 0.00358117 Silica= 0
+  in = 0  it = 480 Cal= 0.438957 Silica= 0
+  in = 1  it = 480 Cal= 0.00358117 Silica= 0
+  in = 0  it = 490 Cal= 0.338957 Silica= 0
+  in = 1  it = 490 Cal= 0.00358117 Silica= 0
+  in = 0  it = 500 Cal= 0.238957 Silica= 0
+  in = 1  it = 500 Cal= 0.00358117 Silica= 0
+  in = 0  it = 510 Cal= 0.138957 Silica= 0
+  in = 1  it = 510 Cal= 0.00999093 Silica= 0
+  in = 0  it = 520 Cal= 0.038957 Silica= 0
+  in = 1  it = 520 Cal= 0.00999058 Silica= 0.0625301
+Error Calling GEMIPM calculation it = 524 Node 0 Ca= -0.00104297 Si= 0.711428
+  in = 0  it = 530 Cal= 0.058957 Silica= 0
+  in = 1  it = 530 Cal= 0.00999056 Silica= 0.232521
+Error Calling GEMIPM calculation it = 536 Node 1 Ca= -0.0016817 Si= 0.332866
+  in = 0  it = 540 Cal= 0.158957 Silica= 0
+  in = 1  it = 540 Cal= 0.00999056 Silica= 0.306519
+  in = 0  it = 550 Cal= 0.258957 Silica= 0
+  in = 1  it = 550 Cal= 0.00999057 Silica= 0.236528
+  in = 0  it = 560 Cal= 0.358957 Silica= 0
+  in = 1  it = 560 Cal= 0.00999059 Silica= 0.166537
+  in = 0  it = 570 Cal= 0.458957 Silica= 0
+  in = 1  it = 570 Cal= 0.00999061 Silica= 0.0965467
+  in = 0  it = 580 Cal= 0.558957 Silica= 0
+  in = 1  it = 580 Cal= 0.00999062 Silica= 0.0265559
+  in = 0  it = 590 Cal= 0.658957 Silica= 0
+  in = 1  it = 590 Cal= 0.00999095 Silica= 0
+  in = 0  it = 600 Cal= 0.758957 Silica= 0
+  in = 1  it = 600 Cal= 0.00999096 Silica= 0
+  in = 0  it = 610 Cal= 0.858957 Silica= 0
+  in = 1  it = 610 Cal= 0.00999096 Silica= 0
+  in = 0  it = 620 Cal= 0.958957 Silica= 0
+  in = 1  it = 620 Cal= 0.00999097 Silica= 0
+  in = 0  it = 630 Cal= 0.958957 Silica= 0
+  in = 1  it = 630 Cal= 0.00999097 Silica= 0
+  in = 0  it = 640 Cal= 0.858957 Silica= 0
+  in = 1  it = 640 Cal= 0.00999097 Silica= 0
+  in = 0  it = 650 Cal= 0.758957 Silica= 0
+  in = 1  it = 650 Cal= 0.00999097 Silica= 0
+  in = 0  it = 660 Cal= 0.658957 Silica= 0
+  in = 1  it = 660 Cal= 0.00999068 Silica= 0.0185875
+Error Calling GEMIPM calculation it = 667 Node 0 Ca= 0.588957 Si= -0.00357205
+  in = 0  it = 670 Cal= 0.558957 Silica= 0
+  in = 1  it = 670 Cal= 0.00999066 Silica= 0.188578
+  in = 0  it = 680 Cal= 0.458957 Silica= 0
+  in = 1  it = 680 Cal= 0.00999065 Silica= 0.258569
+  in = 0  it = 690 Cal= 0.358957 Silica= 0
+  in = 1  it = 690 Cal= 0.00999063 Silica= 0.32856
+  in = 0  it = 700 Cal= 0.258957 Silica= 0
+  in = 1  it = 700 Cal= 0.00999061 Silica= 0.39855
+  in = 0  it = 710 Cal= 0.158957 Silica= 0
+  in = 1  it = 710 Cal= 0.0099906 Silica= 0.468541
+  in = 0  it = 720 Cal= 0.058957 Silica= 0
+  in = 1  it = 720 Cal= 0.00999058 Silica= 0.538532
+Error Calling GEMIPM calculation it = 726 Node 0 Ca= -0.00104297 Si= 0.291428
+  in = 0  it = 730 Cal= 0.038957 Silica= 0
+  in = 1  it = 730 Cal= 0.00999057 Silica= 0.608523
+Error Calling GEMIPM calculation it = 738 Node 1 Ca= -0.0016817 Si= 0.662866
+  in = 0  it = 740 Cal= 0.138957 Silica= 0
+  in = 1  it = 740 Cal= 0.00999055 Silica= 0.630517
+  in = 0  it = 750 Cal= 0.238957 Silica= 0
+  in = 1  it = 750 Cal= 0.00999057 Silica= 0.460526
+  in = 0  it = 760 Cal= 0.338957 Silica= 0
+  in = 1  it = 760 Cal= 0.00999059 Silica= 0.290536
+  in = 0  it = 770 Cal= 0.438957 Silica= 0
+  in = 1  it = 770 Cal= 0.0099906 Silica= 0.120545
+  in = 0  it = 780 Cal= 0.538957 Silica= 0
+  in = 1  it = 780 Cal= 0.00999094 Silica= 0
+  in = 0  it = 790 Cal= 0.638957 Silica= 0
+  in = 1  it = 790 Cal= 0.00853089 Silica= 0
+  in = 0  it = 800 Cal= 0.738957 Silica= 0
+  in = 1  it = 800 Cal= 0.00358118 Silica= 0
+  in = 0  it = 810 Cal= 0.838957 Silica= 0
+  in = 1  it = 810 Cal= 0.00358117 Silica= 0
+  in = 0  it = 820 Cal= 0.938713 Silica= 0
+  in = 1  it = 820 Cal= 0.00358117 Silica= 0
+  in = 0  it = 830 Cal= 0.978436 Silica= 0
+  in = 1  it = 830 Cal= 0.00358117 Silica= 0
+  in = 0  it = 840 Cal= 0.878826 Silica= 0
+  in = 1  it = 840 Cal= 0.00358117 Silica= 0
+  in = 0  it = 850 Cal= 0.778957 Silica= 0
+  in = 1  it = 850 Cal= 0.00358117 Silica= 0
+  in = 0  it = 860 Cal= 0.678957 Silica= 0
+  in = 1  it = 860 Cal= 0.00358117 Silica= 0
+  in = 0  it = 870 Cal= 0.578957 Silica= 0
+  in = 1  it = 870 Cal= 0.00358117 Silica= 0
+Error Calling GEMIPM calculation it = 871 Node 1 Ca= 0.688318 Si= -0.00213431
+  in = 0  it = 880 Cal= 0.478957 Silica= 0
+  in = 1  it = 880 Cal= 0.00358117 Silica= 0
+  in = 0  it = 890 Cal= 0.378957 Silica= 0
+  in = 1  it = 890 Cal= 0.00358117 Silica= 0
+  in = 0  it = 900 Cal= 0.278957 Silica= 0
+  in = 1  it = 900 Cal= 0.00358117 Silica= 0
+  in = 0  it = 910 Cal= 0.178957 Silica= 0
+  in = 1  it = 910 Cal= 0.00358206 Silica= 0
+  in = 0  it = 920 Cal= 0.078957 Silica= 0
+  in = 1  it = 920 Cal= 0.00999058 Silica= 0.0045335
+Error Calling GEMIPM calculation it = 928 Node 0 Ca= -0.00104297 Si= 0.701428
+  in = 0  it = 930 Cal= 0.018957 Silica= 0
+  in = 1  it = 930 Cal= 0.00999057 Silica= 0.174525
+  in = 0  it = 940 Cal= 0.118957 Silica= 0
+Error Calling GEMIPM calculation it = 940 Node 1 Ca= -0.0016817 Si= 0.342866
+  in = 0  it = 950 Cal= 0.218957 Silica= 0
+  in = 1  it = 950 Cal= 0.00999057 Silica= 0.274525
+  in = 0  it = 960 Cal= 0.318957 Silica= 0
+  in = 1  it = 960 Cal= 0.00999058 Silica= 0.204534
+  in = 0  it = 970 Cal= 0.418957 Silica= 0
+  in = 1  it = 970 Cal= 0.0099906 Silica= 0.134543
+  in = 0  it = 980 Cal= 0.518957 Silica= 0
+  in = 1  it = 980 Cal= 0.00999062 Silica= 0.0645522
+  in = 0  it = 990 Cal= 0.618957 Silica= 0
+  in = 1  it = 990 Cal= 0.0099909 Silica= 0
+Total time of calculation  s; 12.49
+
+Finished Ok

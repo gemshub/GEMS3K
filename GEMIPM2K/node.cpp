@@ -1345,8 +1345,8 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 	 ScFact = 1e-6;
  if( ScFact > 1e6 )
 	 ScFact = 1e6;
- if( ScFact < 0. )
-	 ScFact = 1.;
+// if( ScFact < 0. ) SD 0 < 1e-6
+//	 ScFact = 1.;
   pmm->TCc = CNode->TC;
   pmm->Tc = CNode->TC+C_to_K;
   pmm->Pc  = CNode->P;
@@ -1363,9 +1363,27 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
     if( CNode->dll[ii] > 0. )
     	pmm->DLL[ CSD->xDC[ii] ] *= ScFact;
     pmm->DLL[ CSD->xDC[ii] ] = 0.;				  // Bugfix for lower metastability limit
+    
+    if( pmm->DUL[ CSD->xDC[ii] ] < pmm->DLL[ CSD->xDC[ii] ] )
+    {
+       char buf[300];
+       sprintf(buf, "Upper kinetic restrictions smolest than lower for DC&RC %-6.6s",  
+            		 pmm->SM[CSD->xDC[ii]] );
+    	Error("unpackDataBr", buf );
+    }	
   }
   for( ii=0; ii<CSD->nICb; ii++ )
+  {	  
     pmm->B[ CSD->xIC[ii] ] = CNode->bIC[ii] * ScFact;
+    if( ii < CSD->nICb-1 && pmm->B[ CSD->xIC[ii] ] < TProfil::pm->pa.p.DB )
+    {
+       char buf[300];
+       sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",  
+            		 pmm->SB[CSD->xIC[ii]], pmm->B[ CSD->xIC[ii] ] );
+    	Error("unpackDataBr", buf );
+    }	
+    
+  } 
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     if( CSD->nAalp >0 )
