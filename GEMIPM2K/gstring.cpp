@@ -126,7 +126,8 @@ gstring::gstring(const char* s, size_t pos, size_t len)
       //    s_len = strlen(s);// ? pos Changed SD 27/08/2007
      s_len = max( strlen(s)-pos , (size_t)0 );
     else
-        for(s_len = 0; s_len < len && s[s_len+pos]; s_len++ );
+        for(s_len = 0; s_len < len && s[s_len+pos]; s_len++ )
+        { }
 
     CHECK_LEN(s_len);
     ps = new str_val( s_len + OVERSIZE );
@@ -296,13 +297,13 @@ gstring::strip()
 {
     if( empty() )
         return;
-    size_t endp = length();
-    for( ; endp>0 && isSpace( ps->elem(endp-1) ); endp--);
+    size_t endp, ii;
+    for( endp = length(); endp>0 && isSpace( ps->elem(endp-1) ); endp--)
+       { }
 
     ps->count = endp;
-
-    size_t ii = 0;
-    for( ; ii<length() && isSpace( ps->elem(ii) ); ii++ );
+    for( ii = 0; ii<length() && isSpace( ps->elem(ii) ); ii++ )
+    { }
 
     if( ii == 0 || ii >= length() )
         return;

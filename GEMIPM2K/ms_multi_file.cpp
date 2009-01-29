@@ -268,7 +268,7 @@ pm.ITF = pm.ITG = 0;
 
 //---------------------------------------------------------//
 // writing MULTI to binary file
-void TMulti::to_file( GemDataStream& ff, gstring& path  )
+void TMulti::to_file( GemDataStream& ff  )
 {
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
         Error( GetName(), "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
@@ -484,17 +484,6 @@ ff.writeArray((double*)pm.D, MST*MST);
 //     ff.writeArray( pm.sitXcat, pm.sitNcat );
 //   if( pm.sitNan )
 //     ff.writeArray( pm.sitXan, pm.sitNan );
-
-/*   gstring Path_ = path;
-     gstring dir;
-     gstring name;
-     gstring ext;
-
-     u_splitpath( Path_, dir, name, ext );
-     Path_ = u_makepath( dir, name, "txt" );
-
-     to_text_file( path.c_str() );
-*/
 }
 
 // reading MULTI from binary file

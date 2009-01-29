@@ -239,7 +239,7 @@ f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " AI
          else 
          {
              char buf[300]; 
-             sprintf( buf, "Mass balance broken in DualTH recover for DC&RC %-6.6s on iteration %d",  
+             sprintf( buf, "Mass balance broken in DualTH recover for DC&RC %-6.6s on iteration %ld",  
             		 pmp->SM[pmp->Ec] , pmp->ITG );
         	 Error( "E18IPM IPM-main():", buf );    	
          }

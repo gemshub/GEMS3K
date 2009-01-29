@@ -552,7 +552,7 @@ public:
     {  return "Multi";  }
 
    //connection to mass transport
-    void to_file( GemDataStream& ff, gstring& path  );
+    void to_file( GemDataStream& ff );
     void to_text_file( const char *path );
     void from_file( GemDataStream& ff );
     void to_text_file_gemipm( const char *path, bool addMui, bool with_comments = true );

@@ -182,7 +182,7 @@ void TProfil::outMulti( GemDataStream& ff, gstring& path  )
 
 	ff.writeArray( arr, 10 );
     ff.writeArray( &pa.p.DG, 28 );
-    multi->to_file( ff, path );
+    multi->to_file( ff );
 }
 
 void TProfil::outMultiTxt( const char *path  )
@@ -334,7 +334,8 @@ void TMulti::CompG0Load()
 // GEM IPM calculation of equilibrium state in MULTI
 void TMulti::MultiCalcInit( const char* key )
 {
-  long int  j,k, jb, je=0;;
+  long int  j;
+
   SPP_SETTING *pa = &TProfil::pm->pa;
     strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
     pmp->Ec = pmp->K2 = pmp->MK = 0;
@@ -525,7 +526,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 // Get path
    gstring path_;
    gstring flst_name = f_name;
-   long int pos = flst_name.rfind("/");
+   unsigned long int pos = flst_name.rfind("/");
    path_ = "";
    if( pos < npos )
       path_ = flst_name.substr(0, pos+1);

@@ -146,7 +146,7 @@ void TMulti::phase_bfc( long int k, long int jj )
 //  Do we need this all in GEMIPM ?
 //
 void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
-              double Factor, double MMC, double Dsur, long int jb, long int je, long int k)
+              double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
     long int j, ii, i;
     double Muj, DsurT, SPmol, lnFmol=4.016535;

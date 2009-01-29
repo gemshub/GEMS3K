@@ -174,12 +174,12 @@ NEXT_PHASE:
     }  // k
 }
 
+#ifndef IPMGEMPLUGIN
 
 // Linking DOD for executing Phase mixing model scripts
 void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb )
 {
 
-#ifndef IPMGEMPLUGIN
     ErrorIf( k < 0 || k >= pmp->FIs , "GammaCalc", "Invalid link: k=0||>FIs" );
     aObj[ o_nsmod].SetPtr( pmp->sMod[k] );
     aObj[ o_nncp].SetPtr( pmp->LsMod+k*3 );
@@ -230,9 +230,13 @@ void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb
     aObj[o_nmju].SetN( pmp->L1[k]);
     aObj[ o_nqp].SetPtr( pmp->Qp+k*QPSIZE );
     aObj[ o_nqd].SetPtr( pmp->Qd+k*QDSIZE );   // Fixed 7.12.04 by KD
-#endif
 }
-
+#else
+// Linking DOD for executing Phase mixing model scripts
+void TMulti::pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ )
+{
+}
+#endif
 
 // Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
