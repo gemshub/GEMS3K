@@ -1236,6 +1236,7 @@ long int TEUNIQUAC::PTparam()
 }
 
 
+
 // Calculates activity coefficients and excess functions
 long int TEUNIQUAC::MixMod()
 {
@@ -1307,7 +1308,7 @@ long int TEUNIQUAC::MixMod()
 			lnGam = gamDH + gamC + gamR;
 
 			// convert activity coefficient to molality scale
-			lnGam = lnGam + log(x[w]);
+			//lnGam = lnGam + log(x[w]);
 			lnGamma[j] = lnGam;
 
 			// write debug results
@@ -1382,6 +1383,7 @@ long int TEUNIQUAC::MixMod()
 	gE = ( gDH + gC + gR ) * R_CONST * Tk;
 
 	return 0;
+
 }
 
 
@@ -1404,17 +1406,23 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 void TEUNIQUAC::Euniquac_test_out( const char *path )
 {
 
-	long int ii, c, a, n;
+	long int ii;
 
 //	const ios::open_mode OFSMODE = ios::out � ios::app;
 	ofstream ff(path, ios::app );
 	ErrorIf( !ff.good() , path, "Fileopen error");
 
-	ff << endl << "Vector of interaction parameters corrected to T,P of interest" << endl;
+
+
+/*	ff << endl << "Molality of NaCl = " << ++anz << endl;
 	for( ii=0; ii<NPar; ii++ )
 		ff << aIP[ii] << "  ";
-
-	ff << endl << "Debye-H�ckel contribution to Activity Coefficients" << endl;
+*/
+/*	ff << endl << "Vector of interaction parameters corrected to T,P of interest" << endl;
+	for( ii=0; ii<NPar; ii++ )
+		ff << aIP[ii] << "  ";
+*/
+	ff << endl << "Debye-Hueckel contribution to Activity Coefficients" << endl;
 	for( ii=0; ii<NComp; ii++ )
 		ff << gammaDH[ii] << "  ";
 
