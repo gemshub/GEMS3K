@@ -174,12 +174,12 @@ NEXT_PHASE:
     }  // k
 }
 
-#ifndef IPMGEMPLUGIN
 
 // Linking DOD for executing Phase mixing model scripts
 void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb )
 {
 
+#ifndef IPMGEMPLUGIN
     ErrorIf( k < 0 || k >= pmp->FIs , "GammaCalc", "Invalid link: k=0||>FIs" );
     aObj[ o_nsmod].SetPtr( pmp->sMod[k] );
     aObj[ o_nncp].SetPtr( pmp->LsMod+k*3 );
@@ -230,13 +230,9 @@ void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb
     aObj[o_nmju].SetN( pmp->L1[k]);
     aObj[ o_nqp].SetPtr( pmp->Qp+k*QPSIZE );
     aObj[ o_nqd].SetPtr( pmp->Qd+k*QDSIZE );   // Fixed 7.12.04 by KD
-}
-#else
-// Linking DOD for executing Phase mixing model scripts
-void TMulti::pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ )
-{
-}
 #endif
+}
+
 
 // Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
@@ -1175,152 +1171,177 @@ void TMulti::Davies03temp( long int jb, long int je, long int jpb, long int k )
 //--------------------------------------------------------------------------------
 // Binary Redlich-Kister model - parameters (dimensionless)
 // Implemented by KD on 31 July 2003
-void
-TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k )
+void TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k )
 {
-  double a0, a1, a2, lnGam1, lnGam2, X1, X2;
-  double gE, vE, hE, sE, cpE, uE;
+	double T, R_T;
+	double a0, a1, a2, lnGam1, lnGam2, X1, X2;
+	double gE, vE, hE, sE, cpE, uE;
+	double gI, sI, gi, si;
 
-  // load parameters
-  a0 = pmp->PMc[jpb+0];
-  a1 = pmp->PMc[jpb+1];  // in regular model should be 0
-  a2 = pmp->PMc[jpb+2];  // in regular model should be 0
+	// load parameters
+	T = pmp->Tc;
+	R_T = pmp->RT;
+	a0 = pmp->PMc[jpb+0];
+	a1 = pmp->PMc[jpb+1];  // in regular model should be 0
+	a2 = pmp->PMc[jpb+2];  // in regular model should be 0
 
-  // load mole fractions
-  X1 = pmp->X[jb] / pmp->XF[k];
-  X2 = pmp->X[jb+1] / pmp->XF[k];
+	// load mole fractions
+	X1 = pmp->X[jb] / pmp->XF[k];
+	X2 = pmp->X[jb+1] / pmp->XF[k];
 
-  // activity coeffs
-  lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
-  lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
+	// activity coefficients
+	lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
+	lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
 
-  // bulk phase excess properties (added by TW, 29.05.2008)
-  gE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
-  vE = 0.0;
-  uE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* pmp->RT;
-  sE = 0.0;
-  cpE = 0.0;
-  hE = uE;
+	// ideal mixing contributions, added 31.01.2009 (TW)
+	gi = X1*log(X1) + X2*log(X2);
+	si = X1*log(X1) + X2*log(X2);
+	gI = gi * R_T;
+	sI = - si * R_T / T;
 
-  // assignments
-  pmp->lnGam[jb] = lnGam1;
-  pmp->lnGam[jb+1] = lnGam2;
+	// excess properties, added 29.05.2008 (TW)
+	gE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* R_T;
+	vE = 0.0;
+	uE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* R_T;
+	sE = 0.0;
+	cpE = 0.0;
+	hE = uE;
+
+	// assignments
+	pmp->lnGam[jb] = lnGam1;
+	pmp->lnGam[jb+1] = lnGam2;
 }
 
 
 //--------------------------------------------------------------------------------
 // Binary Margules model
 // Implemented by KD on 31 July 2003
-void
-TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long int k )
+void TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long int k )
 {
-  double T, P, WU1, WS1, WV1, WU2, WS2, WV2, WG1, WG2,
-         a1, a2, lnGam1, lnGam2, X1, X2;
-  double gE, vE, hE, sE, cpE, uE;
+	double T, P, R_T;
+	double WU1, WS1, WV1, WU2, WS2, WV2, WG1, WG2,
+		a1, a2, lnGam1, lnGam2, X1, X2;
+	double gE, vE, hE, sE, cpE, uE;
+	double gI, sI, gi, si;
 
-  // load parameters
-  T = pmp->Tc;
-  P = pmp->Pc;
-  WU1 = pmp->PMc[jpb+0];
-  WS1 = pmp->PMc[jpb+1];  // in J/K/mol, if unknown should be 0
-  WV1 = pmp->PMc[jpb+2];  // in J/bar if unknown should be 0
-  WU2 = pmp->PMc[jpb+3];
-  WS2 = pmp->PMc[jpb+4];  // if unknown should be 0
-  WV2 = pmp->PMc[jpb+5];  // if unknown should be 0
+	// load parameters
+	T = pmp->Tc;
+	P = pmp->Pc;
+	R_T = pmp->RT;
+	WU1 = pmp->PMc[jpb+0];
+	WS1 = pmp->PMc[jpb+1];  // in J/K/mol, if unknown should be 0
+	WV1 = pmp->PMc[jpb+2];  // in J/bar if unknown should be 0
+	WU2 = pmp->PMc[jpb+3];
+	WS2 = pmp->PMc[jpb+4];  // if unknown should be 0
+	WV2 = pmp->PMc[jpb+5];  // if unknown should be 0
 
-  // calculate parameters at (T,P)
-  WG1 = WU1 - T*WS1 + P*WV1;
-  WG2 = WU2 - T*WS2 + P*WV2;
-  a1 = WG1 / pmp->RT;
-  a2 = WG2 / pmp->RT;
+	// calculate parameters at T,P
+	WG1 = WU1 - T*WS1 + P*WV1;
+	WG2 = WU2 - T*WS2 + P*WV2;
+	a1 = WG1 / R_T;
+	a2 = WG2 / R_T;
 
-  // load mole fractions
-  X1 = pmp->X[jb] / pmp->XF[k];
-  X2 = pmp->X[jb+1] / pmp->XF[k];
+	// load mole fractions
+	X1 = pmp->X[jb] / pmp->XF[k];
+	X2 = pmp->X[jb+1] / pmp->XF[k];
 
-  // activity coefficients
-  lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
-  lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
+	// activity coefficients
+	lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
+	lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
 
-  // bulk phase excess properties (extended by TW, 29.05.2008)
-  gE = X1*X2*( X2*WG1 + X1*WG2 );
-  vE = X1*X2*( X2*WV1 + X1*WV2 );
-  uE = X1*X2*( X2*WU1 + X1*WU2 );
-  sE = X1*X2*( X2*WS1 + X1*WS2 );
-  cpE = 0.0;
-  hE = uE+vE*P;
+	// ideal mixing contributions, added 31.01.2009 (TW)
+	gi = X1*log(X1) + X2*log(X2);
+	si = X1*log(X1) + X2*log(X2);
+	gI = gi * R_T;
+	sI = - si * R_T / T;
 
-  // assignments
-  pmp->lnGam[jb] = lnGam1;
-  pmp->lnGam[jb+1] = lnGam2;
-  pmp->FVOL[k] += vE*10.;  // make consistent with TSolMod
+	// excess properties, extended 29.05.2008 (TW)
+	gE = X1*X2*( X2*WG1 + X1*WG2 );
+	vE = X1*X2*( X2*WV1 + X1*WV2 );
+	uE = X1*X2*( X2*WU1 + X1*WU2 );
+	sE = X1*X2*( X2*WS1 + X1*WS2 );
+	cpE = 0.0;
+	hE = uE+vE*P;
 
- }
+	// assignments
+	pmp->lnGam[jb] = lnGam1;
+	pmp->lnGam[jb+1] = lnGam2;
+	pmp->FVOL[k] += vE*10.;  // make consistent with TSolMod
+
+}
 
 
 //--------------------------------------------------------------------------------
 // Ternary regular Margules model - parameters (in J/mol)
 // Implemented by KD on 31 July 2003
-void
-TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int k )
+void TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int k )
 {
-  double T, P, WU12, WS12, WV12, WU13, WS13, WV13, WU23, WS23, WV23,
-         WU123, WS123, WV123, WG12, WG13, WG23, WG123,
-         a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
-  double gE, vE, hE, sE, cpE, uE;
+	double T, P, R_T;
+	double WU12, WS12, WV12, WU13, WS13, WV13, WU23, WS23, WV23,
+		WU123, WS123, WV123, WG12, WG13, WG23, WG123,
+        a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
+	double gE, vE, hE, sE, cpE, uE;
+	double gI, sI, gi, si;
 
-  // load parameters
-  T = pmp->Tc;
-  P = pmp->Pc;
-  WU12 = pmp->PMc[jpb+0];
-  WS12 = pmp->PMc[jpb+1];  // if unknown should be 0
-  WV12 = pmp->PMc[jpb+2];  // if unknown should be 0
-  WU13 = pmp->PMc[jpb+3];
-  WS13 = pmp->PMc[jpb+4];  // if unknown should be 0
-  WV13 = pmp->PMc[jpb+5];  // if unknown should be 0
-  WU23 = pmp->PMc[jpb+6];
-  WS23 = pmp->PMc[jpb+7];  // if unknown should be 0
-  WV23 = pmp->PMc[jpb+8];  // if unknown should be 0
-  WU123 = pmp->PMc[jpb+9];
-  WS123 = pmp->PMc[jpb+10];  // if unknown should be 0
-  WV123 = pmp->PMc[jpb+11];  // if unknown should be 0
+	// load parameters
+	T = pmp->Tc;
+	P = pmp->Pc;
+	R_T = pmp->RT;
+	WU12 = pmp->PMc[jpb+0];
+	WS12 = pmp->PMc[jpb+1];
+	WV12 = pmp->PMc[jpb+2];
+	WU13 = pmp->PMc[jpb+3];
+	WS13 = pmp->PMc[jpb+4];
+	WV13 = pmp->PMc[jpb+5];
+	WU23 = pmp->PMc[jpb+6];
+	WS23 = pmp->PMc[jpb+7];
+	WV23 = pmp->PMc[jpb+8];
+	WU123 = pmp->PMc[jpb+9];
+	WS123 = pmp->PMc[jpb+10];
+	WV123 = pmp->PMc[jpb+11];
 
-  // calculate parameters at (T,P)
-  WG12 = WU12 - T*WS12 + P*WV12;
-  WG13 = WU13 - T*WS13 + P*WV13;
-  WG23 = WU23 - T*WS23 + P*WV23;
-  WG123 = WU123 - T*WS123 + P*WV123;
-  a12 = WG12 / pmp->RT;
-  a13 = WG13 / pmp->RT;
-  a23 = WG23 / pmp->RT;
-  a123 = WG123 / pmp->RT;
+	// calculate parameters at (T,P)
+	WG12 = WU12 - T*WS12 + P*WV12;
+	WG13 = WU13 - T*WS13 + P*WV13;
+	WG23 = WU23 - T*WS23 + P*WV23;
+	WG123 = WU123 - T*WS123 + P*WV123;
+	a12 = WG12 / R_T;
+	a13 = WG13 / R_T;
+	a23 = WG23 / R_T;
+	a123 = WG123 / R_T;
 
-  // load mole fractions
-  X1 = pmp->X[jb] / pmp->XF[k];
-  X2 = pmp->X[jb+1] / pmp->XF[k];
-  X3 = pmp->X[jb+2] / pmp->XF[k];
+	// load mole fractions
+	X1 = pmp->X[jb] / pmp->XF[k];
+	X2 = pmp->X[jb+1] / pmp->XF[k];
+	X3 = pmp->X[jb+2] / pmp->XF[k];
 
-  // activity coefficients
-  lnGam1 = a12*X2*(1.-X1) + a13*X3*(1.-X1) - a23*X2*X3
-           + a123*X2*X3*(1.-2.*X1);
-  lnGam2 = a23*X3*(1.-X2) + a12*X1*(1.-X2) - a13*X1*X3
-           + a123*X1*X3*(1.-2.*X2);
-  lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
-           + a123*X1*X2*(1.-2.*X3);
+	// activity coefficients
+	lnGam1 = a12*X2*(1.-X1) + a13*X3*(1.-X1) - a23*X2*X3
+				+ a123*X2*X3*(1.-2.*X1);
+	lnGam2 = a23*X3*(1.-X2) + a12*X1*(1.-X2) - a13*X1*X3
+				+ a123*X1*X3*(1.-2.*X2);
+	lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
+				+ a123*X1*X2*(1.-2.*X3);
 
-  // bulk phase excess properties (added by TW, 29.05.2008)
-  gE = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
-  vE = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
-  uE = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
-  sE = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
-  cpE = 0.0;
-  hE = uE+vE*P;
+	// ideal mixing contributions, added 31.01.2009 (TW)
+	gi = X1*log(X1) + X2*log(X2) + X3*log(X3);
+	si = X1*log(X1) + X2*log(X2) + X3*log(X3);
+	gI = gi * R_T;
+	sI = - si * R_T / T;
 
-  // assignments
-  pmp->lnGam[jb] = lnGam1;
-  pmp->lnGam[jb+1] = lnGam2;
-  pmp->lnGam[jb+2] = lnGam3;
-  pmp->FVOL[k] += vE*10.;  // make consistent with TSolMod
+	// excess properties, added 29.05.2008 (TW)
+	gE = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
+	vE = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
+	uE = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
+	sE = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
+	cpE = 0.0;
+	hE = uE+vE*P;
+
+	// assignments
+	pmp->lnGam[jb] = lnGam1;
+	pmp->lnGam[jb+1] = lnGam2;
+	pmp->lnGam[jb+2] = lnGam3;
+	pmp->FVOL[k] += vE*10.;  // make consistent with TSolMod
 
 }
 
@@ -1328,8 +1349,8 @@ TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, long int
 //--------------------------------------------------------------------------------
 // Wrapper calls for multi-component mixing models
 // uses TSolMod class
-void
-TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long int k, long int ipb, char ModCode )
+void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, long int k,
+		long int ipb, char ModCode )
 {
     long int NComp, NPar, NPcoef, MaxOrd, NP_DC;
     double *aIPc, *aDCc, *aWx, *alnGam, *aphVOL, *aZ, *aM;

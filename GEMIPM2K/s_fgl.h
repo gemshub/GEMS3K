@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1202 2009-01-28 10:41:00Z gems $
+// $Id: s_fgl.h 1208 2009-01-31 16:17:58Z wagner $
 //
-// Copyright (C) 2003-2007  S.Churakov, T.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (C) 2003-2009  T.Wagner, S.Churakov, D.Kulik, S.Dmitrieva
 //
-// Declaration of new implementation of Fluid EoS classes
-// (PRSV and CG EoS models)
+// Declaration of new versions of fluid, liquid, aquous
+// and solid-solution models
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
@@ -22,86 +22,7 @@
 #ifndef _s_fgl_h_
 #define _s_fgl_h_
 
-// Added 09 May 2003
-// Declaration of a class for CG EOS calculations for fluids
-// Incorporates a C++ program written by Sergey Churakov (CSCS ETHZ)
-// implementing papers by Churakov & Gottschalk 2003 GCA v.67 p. 2397-2414
-// and p. 2415-2425
-// Reference: http://people.web.psi.ch/churakov/, sergey.churakov@psi.ch
 
-/*-----------------07.11.99 12:14-------------------
- Structure of parameters for LJ and Shokmayer potential
- sig(A)=F1+F5*T*1E-4
- epsilon(K)=F2+F3*Exp(-F4*T*1E-3)
- polaris(A)=F6
- mu(debue)=F7+F8*Exp(F9*T)
---------------------------------------------------*/
-//#define MOLNUM (12)
-//#define MOLPOL (6)
-//#define MOLNONPOL (6)
-/* Ar CO2 CH4 O2 N2 H2 CO SO2 HCl H2O H2S NH3 */
-
-class EOSPARAM
-{
-  //static double Told;
-//  unsigned long int isize;  // int isize = NComp;
-   long int NComp;
-
-   double emix,s3mix;
-   double *epspar,*sig3par;
-   double *XX;
-   double *eps;
-   double *eps05;
-   double *sigpar;
-   double *mpar;
-   double *apar;
-   double *aredpar;
-   double *m2par;
-   double **mixpar;
-
-   void allocate();
-   void free();
-
-  public:
-
-   double *XX0;
-
-  //EOSPARAM():isize(0),emix(0),s3mix(0),NComp(0){};
-    //EOSPARAM(double*data, unsigned nn):isize(0){allocate(nn);init(data,nn);};
-
-    EOSPARAM( double *Xtmp, double *data, long int nn )
-    :NComp(nn), emix(0),s3mix(0)
-         { allocate(); init(Xtmp,data,nn);};
-
-  ~EOSPARAM()
-         { free(); }
-
-  void init( double*,double *, long int );
-  long int NCmp()   {return NComp;};
-
-  double EPS05( long int i){return eps05[i];};
-  double X( long int i)    {return XX[i];};
-  double EPS( long int i)  {return eps[i];};
-  double EMIX(void)                  {return emix;};
-  double S3MIX(void)                 {return s3mix;};
-  double MIXS3( long int i, long int j)
-  {
-    if (i==j) return sig3par[i];
-    if (i<j) return mixpar[i][j]; else return mixpar[j][i];
-  };
-
-  double MIXES3( long int i, long int j)
-  {
-    if ( i==j ) return epspar[i];
-    if (i<j) return mixpar[j][i]; else return mixpar[i][j];
-  };
-
-  double SIG3( long int i){return sig3par[i];};
-  double M2R( long int i) {return m2par[i];};
-  double A( long int i)   {return apar[i];};
-
-  long int ParamMix( double *Xin);
-};
 
 
 
@@ -113,9 +34,9 @@ class EOSPARAM
 class TSolMod
 {
 
-protected:
-        char ModCode;   // Code of the mixing model
-char PhaseName[MAXPHASENAME+1];    // Phase name (for specific built-in models)
+	protected:
+		char ModCode;   // Code of the mixing model
+        char PhaseName[MAXPHASENAME+1];    // Phase name (for specific built-in models)
 
         long int NComp;    	// Number of components in the solution phase
         long int NPar;     	// Number of non-zero interaction parameters
@@ -150,204 +71,282 @@ char PhaseName[MAXPHASENAME+1];    // Phase name (for specific built-in models)
         double *lnGamma;   // Pointer to ln activity coefficients of end members
                            // (memory must be provided from the calling program)
 
-public:
+	public:
 
-	// Generic constructor
-    TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-         long int NPperDC, long int NPTPperDC, char Mod_Code,
-         long int* arIPx, double* arIPc, double* arDCc,
-         double *arWx, double *arlnGam, double *aphVOL,
-         double T_k, double P_bar, double dW, double eW );
+		// Generic constructor
+		TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, long int NPTPperDC, char Mod_Code,
+				long int* arIPx, double* arIPc, double* arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-    // Destructor
-    virtual ~TSolMod();
+		// Destructor
+		virtual ~TSolMod();
 
-    virtual long int PureSpecies()
-    {
-    	return 0;
-    };
+		virtual long int PureSpecies()
+		{
+			return 0;
+		};
 
-    virtual long int PTparam()
-    {
-    	return 0;
-    };
+		virtual long int PTparam()
+		{
+			return 0;
+		};
 
-    virtual long int MixMod()
-    {
-    	return 0;
-    };
+		virtual long int MixMod()
+		{
+			return 0;
+		};
 
-    virtual long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
-    {
-    	Gex_ = Gex;
-    	Vex_ = Vex;
-    	Hex_ = Hex;
-    	Sex_ = Sex;
-    	CPex_ = CPex;
-    	return 0;
-    };
+		virtual long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+		{
+			Gex_ = Gex;
+			Vex_ = Vex;
+			Hex_ = Hex;
+			Sex_ = Sex;
+			CPex_ = CPex;
+			return 0;
+		};
 
-    // set new system state
-    long int UpdatePT ( double T_k, double P_bar, double dW, double eW );
+		// set new system state
+		long int UpdatePT ( double T_k, double P_bar, double dW, double eW );
 
-    bool testSizes( long int NSpecies, long int NParams, long int NPcoefs,
-    		long int MaxOrder, long int NPperDC, char Mod_Code );
+		bool testSizes( long int NSpecies, long int NParams, long int NPcoefs,
+				long int MaxOrder, long int NPperDC, char Mod_Code );
 
-    // getting phase name
-    void GetPhaseName( const char *PhName );
+		// getting phase name
+		void GetPhaseName( const char *PhName );
 
+};
+
+
+
+// Churakov & Gottschalk (2003) EOS calculations
+// declaration of EOSPARAM class (used by the TCGFcalc class)
+class EOSPARAM
+{
+	private:
+		//static double Told;
+		// unsigned long int isize;  // int isize = NComp;
+		long int NComp;
+		double emix, s3mix;
+		double *epspar,*sig3par;
+		double *XX;
+		double *eps;
+		double *eps05;
+		double *sigpar;
+		double *mpar;
+		double *apar;
+		double *aredpar;
+		double *m2par;
+		double **mixpar;
+
+		void allocate();
+		void free();
+
+	public:
+
+		double *XX0;
+
+		//EOSPARAM():isize(0),emix(0),s3mix(0),NComp(0){};
+		//EOSPARAM(double*data, unsigned nn):isize(0){allocate(nn);init(data,nn);};
+
+		EOSPARAM( double *Xtmp, double *data, long int nn )
+			:NComp(nn), emix(0),s3mix(0)
+			{ allocate(); init(Xtmp,data,nn);};
+
+		~EOSPARAM()
+			{ free(); }
+
+		void init( double*,double *, long int );
+		long int NCmp()   {return NComp;};
+
+		double EPS05( long int i)
+			{return eps05[i];};
+		double X( long int i)
+			{return XX[i];};
+		double EPS( long int i)
+			{return eps[i];};
+		double EMIX(void)
+			{return emix;};
+		double S3MIX(void)
+			{return s3mix;};
+
+		double MIXS3( long int i, long int j)
+		{
+			if (i==j) return sig3par[i];
+			if (i<j) return mixpar[i][j]; else return mixpar[j][i];
+		};
+
+		double MIXES3( long int i, long int j)
+		{
+			if ( i==j ) return epspar[i];
+			if (i<j) return mixpar[j][i]; else return mixpar[i][j];
+		};
+
+		double SIG3( long int i){return sig3par[i];};
+		double M2R( long int i) {return m2par[i];};
+		double A( long int i)   {return apar[i];};
+
+		long int ParamMix( double *Xin);
 };
 
 
 
 // -------------------------------------------------------------------------------------
-// Churakov & Gottschalk (2003) EOS calculations
+// Churakov and Gottschalk (2003) EOS calculations
+// Added 09 May 2003
+// Declaration of a class for CG EOS calculations for fluids
+// Incorporates a C++ program written by Sergey Churakov (CSCS ETHZ)
+// implementing papers by Churakov and Gottschalk (2003a, 2003b)
 
 class TCGFcalc: public TSolMod
 {
-  private:
+	private:
 
-  double
-          PI_1,    // pi
-          TWOPI,    // 2.*pi
-          PISIX,    // pi/6.
-          TWOPOW1SIX,   // 2^(1/6)
-          DELTA,
-          DELTAMOLLIM,
-          R,  NA,  P1,
-          PP2, P3, P4,
-          P5,  P6, P7,
-          P8,  P9, P10,
-          AA1, AA2, AA3,
-          A4, A5, A6,
-          BB1, BB2, BB3,
-          B4,  B5,  B6,
-          A00, A01, A10,
-          A11, A12, A21,
-          A22, A23, A31,
-          A32, A33, A34;
+		double
+        PI_1,    // pi
+        TWOPI,    // 2.*pi
+        PISIX,    // pi/6.
+        TWOPOW1SIX,   // 2^(1/6)
+        DELTA,
+        DELTAMOLLIM,
+        R,  NA,  P1,
+        PP2, P3, P4,
+        P5,  P6, P7,
+        P8,  P9, P10,
+        AA1, AA2, AA3,
+        A4, A5, A6,
+        BB1, BB2, BB3,
+        B4,  B5,  B6,
+        A00, A01, A10,
+        A11, A12, A21,
+        A22, A23, A31,
+        A32, A33, A34;
 
-  //  double PhVol;   // bar, T Kelvin, phase volume in cm3
-  double *Pparc;   // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
-  double *phWGT;
-  double *aX;  // DC quantities at eqstate x_j, moles - primal IPM solution [L]
-  double *aGEX;     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
-  double *aVol;     // DC molar volumes, cm3/mol [L]
+		//  double PhVol;  // bar, T Kelvin, phase volume in cm3
+		double *Pparc;     // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+		double *phWGT;
+		double *aX;        // DC quantities at eqstate x_j, moles - primal IPM solution [L]
+		double *aGEX;      // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+		double *aVol;      // DC molar volumes, cm3/mol [L]
 
-  // main work arrays
-  EOSPARAM *paar;
-  EOSPARAM *paar1;
+		// main work arrays
+		EOSPARAM *paar;
+		EOSPARAM *paar1;
+		double *FugCoefs;
+		double *EoSparam;
+		double *EoSparam1;
+		double *DepPh;     // bulk phase departure functions
 
-  double *FugCoefs;
-  double *EoSparam;
-  double *EoSparam1;
+		void alloc_internal();
+		void free_internal();
+		void set_internal();
 
-  void alloc_internal();
-  void free_internal();
-  void set_internal();
+		void choose( double *pres, double P,unsigned long int &x1,unsigned long int &x2 );
+		double Melt2( double T );
+		double Melt( double T );
 
-  void choose( double *pres, double P,unsigned long int &x1,unsigned long int &x2 );
-  double Melt2( double T );
-  double Melt( double T );
+		void copy( double* sours,double *dest,unsigned long int num );
+		void norm( double *X,unsigned long int mNum );
+		double RPA( double beta,double nuw );
+		double dHS( double beta,double ro );
 
-   void copy( double* sours,double *dest,unsigned long int num );
-   void norm( double *X,unsigned long int mNum );
-   double RPA( double beta,double nuw );
-   double dHS( double beta,double ro );
+		inline double fI1_6( double nuw )
+		{
+			return (1.+(A4+(A5+A6*nuw)*nuw)*nuw)/
+				((1.+(AA1+(AA2+AA3*nuw)*nuw)*nuw)*3.);
+		};
 
-inline double fI1_6( double nuw )
-{
-   return (1.+(A4+(A5+A6*nuw)*nuw)*nuw)/
-   ((1.+(AA1+(AA2+AA3*nuw)*nuw)*nuw)*3.);
-};
+		inline double fI1_12( double nuw )
+		{
+			return (1.+(B4+(B5+B6*nuw)*nuw)*nuw)/
+				((1.+(BB1+(BB2+BB3*nuw)*nuw)*nuw)*9.);
+		};
 
-inline double fI1_12( double nuw )
-{
-   return (1.+(B4+(B5+B6*nuw)*nuw)*nuw)/
-   ((1.+(BB1+(BB2+BB3*nuw)*nuw)*nuw)*9.);
-};
+		inline double fa0( double nuw ,double nu1w2 )
+		{
+			return (A00 + A01*nuw)/nu1w2;
+		};
 
-inline double fa0( double nuw ,double nu1w2 )
-{
-     return (A00 + A01*nuw)/nu1w2;
-};
+		inline double fa1( double nuw ,double nu1w3 )
+		{
+			return (A10+(A11+A12*nuw)*nuw)/nu1w3;
+		};
 
-inline double fa1( double nuw ,double nu1w3 )
-{
-     return (A10+(A11+A12*nuw)*nuw)/nu1w3;
-};
+		inline double fa2( double nuw ,double nu1w4 )
+		{
+			return ((A21+(A22+A23*nuw)*nuw)*nuw)/nu1w4;
+		};
 
-inline double fa2( double nuw ,double nu1w4 )
-{
-     return ((A21+(A22+A23*nuw)*nuw)*nuw)/nu1w4;
-};
+		inline double fa3( double nuw ,double nu1w5 )
+		{
+			return ((A31+(A32+(A33+A34*nuw)*nuw)*nuw)*nuw)/nu1w5;
+		};
 
-inline double fa3( double nuw ,double nu1w5 )
-{
-     return ((A31+(A32+(A33+A34*nuw)*nuw)*nuw)*nuw)/nu1w5;
-};
+		double DIntegral( double T, double ro, unsigned long int IType ); // not used
+		double LIntegral( double T, double ro, unsigned long int IType ); // not used
+		double KIntegral( double T, double ro, unsigned long int IType ); // not used
+		double K23_13( double T, double ro );
+		double J6LJ( double T,double ro );
+		double FDipPair( double T,double ro,double m2 ); // not used
+		double UWCANum( double T,double ro );
+		double ZWCANum( double T,double ro );
 
-   double DIntegral( double T, double ro, unsigned long int IType ); // not used
-   double LIntegral( double T, double ro, unsigned long int IType ); // not used
-   double KIntegral( double T, double ro, unsigned long int IType ); // not used
-   double K23_13( double T, double ro );
-   double J6LJ( double T,double ro );
-   double FDipPair( double T,double ro,double m2 ); // not used
-   double UWCANum( double T,double ro );
-   double ZWCANum( double T,double ro );
+		double FWCA( double T,double ro );
+		double FTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param );
+		double UTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param ); // not used
+		double ZTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param );
+		double PTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param );
+		double ROTOTALMIX( double P,double TT,EOSPARAM* param );
 
-   double FWCA( double T,double ro );
-   double FTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param );
-   double UTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param ); // not used
-   double ZTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param );
-   double PTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param );
-   double ROTOTALMIX( double P,double TT,EOSPARAM* param );
+		double PRESSURE( double *X, double *param, unsigned long int NN, double ro, double T ); // not used
+		double DENSITY( double *X,double *param, unsigned long int NN ,double Pbar, double T );
+		long int CGActivCoefRhoT( double *X,double *param, double *act, unsigned long int NN,
+				double ro, double T ); // not used
 
-   double PRESSURE( double *X, double *param, unsigned long int NN, double ro, double T ); // not used
-   double DENSITY( double *X,double *param, unsigned long int NN ,double Pbar, double T );
-   long int CGActivCoefRhoT( double *X,double *param, double *act, unsigned long int NN,
-     double ro, double T ); // not used
-   //
-   long int CGActivCoefPT(double *X,double *param,double *act, unsigned long int NN,
-              double Pbar, double T, double &roro );
+		long int CGActivCoefPT(double *X,double *param,double *act, unsigned long int NN,
+				double Pbar, double T, double &roro );
 
-public:
+	public:
 
-	 // Constructor
- 	 TCGFcalc( long int NCmp, double Pp, double Tkp );
- 	 TCGFcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-       long int NPperDC, char Mod_Code,
-       long int *arIPx, double *arIPc, double *arDCc,
-       double *arWx, double *arlnGam, double *aphVOL,
-       double *aPparc, double *aphWGT, double *arX, double *arGEX, double *arVol,
-       double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TCGFcalc( long int NCmp, double Pp, double Tkp );
+		TCGFcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double *aPparc, double *aphWGT, double *arX, double *arGEX, double *arVol,
+				double T_k, double P_bar, double dW, double eW );
 
- 	 // Destructor
-     ~TCGFcalc();
+		// Destructor
+		~TCGFcalc();
 
-     // calculates of pure species properties (pure fugacities)
-     long int PureSpecies( );
+		// calculates of pure species properties (pure fugacities)
+		long int PureSpecies( );
 
-     // calculates T,P corrected interaction parameters
-     long int PTparam();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-     // calculates activity coefficients
-     long int MixMod();
+		// calculates activity coefficients
+		long int MixMod();
 
-     // calculates excess properties
-     // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
-     // CGofPureGases - Calc. fugacity for 1 species at X=1
-     long int CGcalcFug( void );  // Calc. fugacity for 1 species at X=1
-     long int CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fugacity,
-    		double &Volume, double P, double T, double &roro );
-     // Calculates residual enthalpy and entropy
-     long int CGEnthalpy( double *X, double *param, double *param1, unsigned long int NN,
-         double ro, double T, double &H, double &S );
-     double GetDELTA( void )
-     {
-    	return DELTA;
-     };
+		// CGofPureGases - Calc. fugacity for 1 species at X=1
+		long int CGcalcFug( void );  // Calc. fugacity for 1 species at X=1
+		long int CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fugacity,
+				double &Volume, double P, double T, double &roro );
+
+		// calculates departure functions
+		long int CGDepartureFunct( double *X, double *param, double *param1, unsigned long int NN,
+				double ro, double T );
+
+		double GetDELTA( void )
+		{
+			return DELTA;
+		};
 };
 
 
@@ -360,74 +359,71 @@ public:
 class TPRSVcalc: public TSolMod
 
 {
-  private:
+	private:
 
-	 double PhVol;   // bar, T Kelvin, phase volume in cm3
-     double *Pparc;   // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
-     double *aGEX;     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
-     double *aVol;     // DC molar volumes, cm3/mol [L]
+		double PhVol;   // bar, T Kelvin, phase volume in cm3
+		double *Pparc;  // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+		double *aGEX;   // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+		double *aVol;   // DC molar volumes, cm3/mol [L]
 
-     // main work arrays
-     double (*Eosparm)[6];   // EoS parameters
-     double (*Pureparm)[4];  // Parameters a, b, da and d2a for cubic EoS
-     double (*Fugpure)[6];   // Fugacity parameters of pure gas species
-     double (*Fugci)[4];     // Fugacity parameters of species in the mixture
+		// main work arrays
+		double (*Eosparm)[6];   // EoS parameters
+		double (*Pureparm)[4];  // parameters a, b, da and d2a for cubic EoS
+		double (*Fugpure)[6];   // fugacity parameters of pure gas species
+		double (*Fugci)[4];     // fugacity parameters of species in the mixture
+		double *DepPh;  // bulk phase departure functions
 
-     double **KK;     // binary interaction parameter
-     double **dKK;    // derivative of interaction parameter
-     double **d2KK;   // second derivative
-     double **AA;     // binary a terms in the mixture
+		double **KK;     // binary interaction parameter
+		double **dKK;    // derivative of interaction parameter
+		double **d2KK;   // second derivative
+		double **AA;     // binary a terms in the mixture
 
- 	 void alloc_internal();
- 	 void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-    public:
+	public:
 
-    // Constructor
-    TPRSVcalc( long int NCmp, double Pp, double Tkp );
-    TPRSVcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-         long int NPperDC, char Mod_Code,
-         long int *arIPx, double *arIPc, double *arDCc,
-         double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
-         double *arGEX, double *arVol,
-         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TPRSVcalc( long int NCmp, double Pp, double Tkp );
+		TPRSVcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
+				double *arGEX, double *arVol,
+				double T_k, double P_bar, double dW, double eW );
 
-    // Destructor
-    ~TPRSVcalc();
+		// Destructor
+		~TPRSVcalc();
 
-    // Calculates pure species properties (pure fugacities)
-    long int PureSpecies( );
+		// Calculates pure species properties (pure fugacities)
+		long int PureSpecies( );
 
-    // Calculates T,P corrected interaction parameters
-	long int PTparam( );
+		// Calculates T,P corrected interaction parameters
+		long int PTparam( );
 
-    // Calculates activity coefficients
-    long int MixMod();
+		// Calculates activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
-    // Calculates pure species properties (called from DCthermo)
-    long int PRCalcFugPure( void );
+		// Calculates pure species properties (called from DCthermo)
+		long int PRCalcFugPure( void );
 
-protected:
+	protected:
 
-	// long int PureParam( long int i,double *params ); // calculates a and b arrays
-	long int AB( double Tcrit, double Pcrit, double omg, double k1, double k2, double k3,
-			double &apure, double &bpure, double &da, double &d2a );
-	// Calc. fugacity for 1 species at X=1
-	long int PRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
-	        double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
-	long int FugacityPure( long int j ); // Calculates the fugacity of pure species
-	long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
-	long int MixParam( double &amix, double &bmix );
-	long int FugacityMix( double amix, double bmix,
-     double &fugmix, double &zmix, double &vmix );
-	long int FugacitySpec( double *fugpure );
-
-	// long int GetEosParam( float *params ); // Loads EoS parameters for NComp species
-	// long int GetMoleFract( double *Wx ); // Loads mole fractions for NComp species
-	// double ObtainResults( double *ActCoef ); // returns activity coeffs and phase volume
+		// long int PureParam( long int i,double *params ); // calculates a and b arrays
+		long int AB( double Tcrit, double Pcrit, double omg, double k1, double k2, double k3,
+				double &apure, double &bpure, double &da, double &d2a );
+		// Calc. fugacity for 1 species at X=1
+		long int PRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
+				double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
+		long int FugacityPure( long int j ); // Calculates the fugacity of pure species
+		long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
+		long int MixParam( double &amix, double &bmix );
+		long int FugacityMix( double amix, double bmix, double &fugmix, double &zmix, double &vmix );
+		long int FugacitySpec( double *fugpure );
+		long int DepartureFunct( double *fugpure );
 
 };
 
@@ -441,113 +437,69 @@ protected:
 class TSRKcalc: public TSolMod
 
 {
-  private:
+	private:
 
-	 double PhVol;   // bar, T Kelvin, phase volume in cm3
-     double *Pparc;   // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
-     double *aGEX;     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
-     double *aVol;     // DC molar volumes, cm3/mol [L]
+		double PhVol;   // bar, T Kelvin, phase volume in cm3
+		double *Pparc;  // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+		double *aGEX;   // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+		double *aVol;   // DC molar volumes, cm3/mol [L]
 
-     // main work arrays
-     double (*Eosparm)[4];   // EoS parameters
-     double (*Pureparm)[4];  // Parameters a, b, sqrAl, ac, dAldT for cubic EoS
-     double (*Fugpure)[6];   // Fugacity parameters of pure gas species
-     double (*Fugci)[4];     // Fugacity parameters of species in the mixture
+		// main work arrays
+		double (*Eosparm)[4];   // EoS parameters
+		double (*Pureparm)[4];  // Parameters a, b, sqrAl, ac, dAldT for cubic EoS
+		double (*Fugpure)[6];   // Fugacity parameters of pure gas species
+		double (*Fugci)[4];     // Fugacity parameters of species in the mixture
+		double *DepPh;  // bulk phase departure functions
 
-     double **KK;    // binary interaction parameter
-     double **dKK;   // derivative of interaction parameter
-     double **d2KK;  // second derivative
-     double **AA;    // binary a terms in the mixture
+		double **KK;    // binary interaction parameter
+		double **dKK;   // derivative of interaction parameter
+		double **d2KK;  // second derivative
+		double **AA;    // binary a terms in the mixture
 
- 	 void alloc_internal();
- 	 void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-    public:
+	public:
 
-    // Constructor
-    TSRKcalc( long int NCmp, double Pp, double Tkp );
-    TSRKcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-         long int NPperDC, char Mod_Code,
-         long int *arIPx, double *arIPc, double *arDCc,
-         double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
-         double *arGEX, double *arVol, double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TSRKcalc( long int NCmp, double Pp, double Tkp );
+		TSRKcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
+				double *arGEX, double *arVol, double T_k, double P_bar, double dW, double eW );
 
-    // Destructor
-    ~TSRKcalc();
+		// Destructor
+		~TSRKcalc();
 
-    // Calculates pure species properties (pure fugacities)
-    long int PureSpecies( );
+		// Calculates pure species properties (pure fugacities)
+		long int PureSpecies( );
 
-    // Calculates T,P corrected interaction parameters
-	long int PTparam();
+		// Calculates T,P corrected interaction parameters
+		long int PTparam();
 
-    // Calculates activity coefficients
-    long int MixMod();
+		// Calculates activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
-    // Calculates pure species properties (called from DCthermo)
-    long int SRCalcFugPure( void );
+		// Calculates pure species properties (called from DCthermo)
+		long int SRCalcFugPure( void );
 
-protected:
+	protected:
 
-	long int AB( double Tcrit, double Pcrit, double omg, double N,
-			double &apure, double &bpure, double &da, double &d2a );
-	// Calc. fugacity for 1 species at X=1
-	long int SRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
-	        double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
-	long int FugacityPure( long int j ); // Calculates the fugacity of pure species
-	long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
-	long int MixParam( double &amix, double &bmix );
-	long int FugacityMix( double amix, double bmix,
-     double &fugmix, double &zmix, double &vmix );
-	long int FugacitySpec( double *fugpure );
-
-};
-
-
-
-// -------------------------------------------------------------------------------------
-// SIT model reimplementation for aqueous electrolyte solutions
-
-class TSIT: public TSolMod
-{
-private:
-
-	double *aZ;    // Vector of species charges (for aqueous models)
-	double *aM;    // Vector of species molality (for aqueous models)
-	double I;	// Ionic strength
-
-	inline double IonicStr()
-	{
-	    double Is=0.;
-		for(long int ii=0; ii<NComp; ii++ )
-		  Is += aZ[ii]*aZ[ii]*aM[ii];
-		return 0.5*Is;
-	}
-
-public:
-
-	// Constructor
-	TSIT( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-	         double T_k, double P_bar, double dW, double eW );
-
-	// Destructor
-	~TSIT() { }
-
-	// calculates activity coefficients
-    long int MixMod();
-
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
-
-    // Calculation of internal tables (at each GEM iteration)
-	//long int PTparam()
-	// { return TSolMod::PTparam(); }
+		long int AB( double Tcrit, double Pcrit, double omg, double N,
+				double &apure, double &bpure, double &da, double &d2a );
+		// Calc. fugacity for 1 species at X=1
+		long int SRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
+				double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
+		long int FugacityPure( long int j ); // Calculates the fugacity of pure species
+		long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
+		long int MixParam( double &amix, double &bmix );
+		long int FugacityMix( double amix, double bmix, double &fugmix, double &zmix, double &vmix );
+		long int FugacitySpec( double *fugpure );
+		long int DepartureFunct( double *fugpure );
 
 };
 
@@ -559,37 +511,37 @@ public:
 
 class TVanLaar: public TSolMod
 {
-private:
-	double *Wu;
-	double *Ws;
-	double *Wv;
-	double *Wpt;   // Interaction coeffs at P-T
-	double *Phi;   // Mixing terms
-	double *PsVol; // End member volume parameters
+	private:
+		double *Wu;
+		double *Ws;
+		double *Wv;
+		double *Wpt;   // Interaction coeffs at P-T
+		double *Phi;   // Mixing terms
+		double *PsVol; // End member volume parameters
 
-	void alloc_internal();
-	void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-public:
+	public:
 
-	// Constructor
-	TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Destructor
-	~TVanLaar();
+		// Destructor
+		~TVanLaar();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-	// calculates of activity coefficients
-    long int MixMod();
+		// calculates of activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -601,35 +553,35 @@ public:
 
 class TRegular: public TSolMod
 {
-private:
-   double *Wu;
-   double *Ws;
-   double *Wv;
-   double *Wpt;   // Interaction coeffs at P-T
+	private:
+		double *Wu;
+		double *Ws;
+		double *Wv;
+		double *Wpt;   // Interaction coeffs at P-T
 
-	void alloc_internal();
-	void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-public:
+	public:
 
-	// Constructor
-	TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Destructor
-	~TRegular();
+		// Destructor
+		~TRegular();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam( );
+		// calculates T,P corrected interaction parameters
+		long int PTparam( );
 
-	// calculates of activity coefficients
-    long int MixMod();
+		// calculates of activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -641,36 +593,36 @@ public:
 
 class TRedlichKister: public TSolMod
 {
-private:
-	   double (*Lu)[4];
-	   double (*Ls)[4];
-	   double (*Lcp)[4];
-	   double (*Lv)[4];
-	   double (*Lpt)[4];
+	private:
+		double (*Lu)[4];
+		double (*Ls)[4];
+		double (*Lcp)[4];
+		double (*Lv)[4];
+		double (*Lpt)[4];
 
-	void alloc_internal();
-	void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-public:
+	public:
 
-	// Constructor
-	TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Destructor
-	~TRedlichKister();
+		// Destructor
+		~TRedlichKister();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-	// calculates activity coefficients
-	long int MixMod();
+		// calculates activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -682,40 +634,40 @@ public:
 
 class TNRTL: public TSolMod
 {
-private:
-	double **Tau;
-	double **dTau;
-	double **d2Tau;
-	double **Alp;
-	double **dAlp;
-	double **d2Alp;
-	double **G;
-	double **dG;
-	double **d2G;
+	private:
+		double **Tau;
+		double **dTau;
+		double **d2Tau;
+		double **Alp;
+		double **dAlp;
+		double **d2Alp;
+		double **G;
+		double **dG;
+		double **d2G;
 
-	void alloc_internal();
-	void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-public:
+	public:
 
-	// Constructor
-	TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Destructor
-	~TNRTL();
+		// Destructor
+		~TNRTL();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-	// calculates activity coefficients
-	long int MixMod();
+		// calculates activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
 };
 
@@ -727,34 +679,77 @@ public:
 
 class TWilson: public TSolMod
 {
-private:
-	double **Lam;
-	double **dLam;
-	double **d2Lam;
+	private:
+		double **Lam;
+		double **dLam;
+		double **d2Lam;
 
-	void alloc_internal();
-	void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-public:
+	public:
 
-	// Constructor
-	TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Destructor
-	~TWilson();
+		// Destructor
+		~TWilson();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-	// calculates activity coefficients
-	long int MixMod();
+		// calculates activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+
+};
+
+
+
+// -------------------------------------------------------------------------------------
+// SIT model reimplementation for aqueous electrolyte solutions
+
+class TSIT: public TSolMod
+{
+	private:
+		double *aZ;    // Vector of species charges (for aqueous models)
+		double *aM;    // Vector of species molality (for aqueous models)
+		double I;	// Ionic strength
+
+		inline double IonicStr()
+		{
+			double Is=0.;
+			for(long int ii=0; ii<NComp; ii++ )
+				Is += aZ[ii]*aZ[ii]*aM[ii];
+			return 0.5*Is;
+		}
+
+	public:
+
+		// Constructor
+		TSIT( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+				double T_k, double P_bar, double dW, double eW );
+
+		// Destructor
+		~TSIT() { }
+
+		// calculates activity coefficients
+		long int MixMod();
+
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+
+		// Calculation of internal tables (at each GEM iteration)
+		//long int PTparam()
 
 };
 
@@ -897,9 +892,13 @@ public:
 	// calculates activity coefficients
 	long int Pitzer_calc_Gamma( );
 
+    // calculates excess properties
+    long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+
 	void Pitzer_test_out( const char *path );
 
 };
+
 
 
 // -------------------------------------------------------------------------------------
@@ -908,105 +907,108 @@ public:
 
 class TEUNIQUAC: public TSolMod
 {
-private:
-    double *Z;   // species charges
-    double *M;   // species molalities
-	double *R;   // volume parameter
-	double *Q;   // surface parameter
-	double *Phi;
-	double *Theta;
-	double **U;   // interaction energies
-	double **dU;   // first derivative
-	double **d2U;   // second derivative
-	double **Psi;
-	double **dPsi;
-	double **d2Psi;
+	private:
+		double *Z;   // species charges
+		double *M;   // species molalities
+		double *R;   // volume parameter
+		double *Q;   // surface parameter
+		double *Phi;
+		double *Theta;
+		double **U;   // interaction energies
+		double **dU;   // first derivative
+		double **d2U;   // second derivative
+		double **Psi;
+		double **dPsi;
+		double **d2Psi;
 
-	double gammaDH[200];
-	double gammaC[200];
-	double gammaR[200];
+		// only needed for debugging output
+		double gammaDH[200];
+		double gammaC[200];
+		double gammaR[200];
 
-	void alloc_internal();
-	void free_internal();
+		void alloc_internal();
+		void free_internal();
 
-public:
+	public:
 
-	// Constructor
-	TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-	         double T_k, double P_bar, double dW, double eW );
+		// Constructor
+		TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Destructor
-	~TEUNIQUAC();
+		// Destructor
+		~TEUNIQUAC();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-	// calculates activity coefficients
-	long int MixMod();
+		// calculates activity coefficients
+		long int MixMod();
 
-    // calculates excess properties
-    // long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
-	void Euniquac_test_out( const char *path );
+		void Euniquac_test_out( const char *path );
 
 };
+
+
 
 // -------------------------------------------------------------------------------------
 // Class for hardcoded models for solid solutions (c) TW January 2009
-// References:  Holland & Powell (2003)
+// References:
 
 class TModOther: public TSolMod
 {
-private:
+	private:
+		double PhVol;   // phase volume in cm3
+		double *Pparc;  // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+		double *aGEX;   // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+		double *aVol;   // DC molar volumes, cm3/mol [L]
+		double *Gdqf;	// DQF correction terms
+		double *Hdqf;
+		double *Sdqf;
+		double *CPdqf;
+		double *Vdqf;
 
-	double PhVol;   // phase volume in cm3
-    double *Pparc;  // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
-    double *aGEX;   // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
-    double *aVol;   // DC molar volumes, cm3/mol [L]
-    double *Gdqf;	// DQF correction terms
-    double *Hdqf;
-    double *Sdqf;
-    double *CPdqf;
-    double *Vdqf;
+		void alloc_internal();
+		void free_internal();
 
-	void alloc_internal();
-	void free_internal();
+	public:
 
-public:
+		// Constructor
+		TModOther( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code,
+				long int *arIPx, double *arIPc, double *arDCc,
+				double *arWx, double *arlnGam, double *aphVOL,
+				double T_k, double P_bar, double dW, double eW );
 
-	// Constructor
-	TModOther( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-	         long int NPperDC, char Mod_Code,
-	         long int *arIPx, double *arIPc, double *arDCc,
-	         double *arWx, double *arlnGam, double *aphVOL,
-	         double T_k, double P_bar, double dW, double eW );
+		// Destructor
+		~TModOther();
 
-	// Destructor
-	~TModOther();
+		// calculates pure species properties (pure fugacities, DQF corrections)
+		long int PureSpecies();
 
-    // calculates pure species properties (pure fugacities, DQF corrections)
-    long int PureSpecies();
+		// calculates T,P corrected interaction parameters
+		long int PTparam();
 
-	// calculates T,P corrected interaction parameters
-	long int PTparam();
+		// calculates activity coefficients
+		long int MixMod();
 
-	// calculates activity coefficients
-    long int MixMod();
+		// calculates excess properties
+		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
 
-    // calculates excess properties
-    long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
-
-    // functions for individual models
-    long int Feldspar1_PTParam();
-    long int Feldspar1_MixMod();
-    long int Feldspar1_ExcessProp();
+		// functions for individual models
+		long int Feldspar1_PTParam();
+		long int Feldspar1_MixMod();
+		long int Feldspar1_ExcessProp();
 
 };
 
-#endif
 
+
+#endif
 
 // _s_fgl_h

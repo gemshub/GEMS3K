@@ -1,9 +1,9 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl1.cpp 1140 2008-12-08 19:07:05Z wagner $
 //
-// Copyright (C) 2008    S.Dmitrieva, F.Hingerl, D.Kulik, Th.Wagner
+// Copyright (C) 2008-2009  S.Dmitrieva, F.Hingerl, T.Wagner, D.Kulik
 //
-// Implementation of TSIT and TPitzer class
+// Implementation of TSIT, TPitzer and TEUNIQUAC classes
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
@@ -123,6 +123,20 @@ long int TSIT::MixMod()
     } // j
 
     return 0;
+}
+
+
+long int TSIT::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+{
+	// add excess property calculations
+
+	// final assigments
+	Gex_ = Gex;
+	Vex_ = Vex;
+	Hex_ = Hex;
+	Sex_ = Sex;
+	CPex_ = CPex;
+	return 0;
 }
 
 
@@ -1059,6 +1073,20 @@ double TPitzer::lnGammaN(  long int N )
 }
 
 
+long int TPitzer::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+{
+	// add excess property calculations
+
+	// final assigments
+	Gex_ = Gex;
+	Vex_ = Vex;
+	Hex_ = Hex;
+	Sex_ = Sex;
+	CPex_ = CPex;
+	return 0;
+}
+
+
 
 //=============================================================================================
 // Extended universal quasi-chemical (EUNIQUAC) model for aqueous electrolyte solutions
@@ -1212,7 +1240,8 @@ long int TEUNIQUAC::PTparam()
 long int TEUNIQUAC::MixMod()
 {
 	int j, i, l, k, w;
-	double Mw, Xw, IS, A, b;
+	double Mw, Xw, IS, b, c;
+	double A, dAdT, dAdP, d2AdT2;
 	double RR, QQ, K, L, M, N;
 	double gamDH, gamC, gamR, lnGam, Gam;
 	double gE, hE, sE, cpE, vE, gDH, gC, gR;
@@ -1221,8 +1250,10 @@ long int TEUNIQUAC::MixMod()
 	w = NComp - 1;
 
 	// calculation of DH parameters
-	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
 	b = 1.5;
+	c = 1.3287e-5;
+	// A = c*sqrt(RhoW)/pow((EpsW*Tk),1.5);
+	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);  // valid only for temperatures below 200 deg. C and Psat
 
 	// calculation of ionic strength
 	IS = 0.0;
@@ -1350,6 +1381,20 @@ long int TEUNIQUAC::MixMod()
 	gR = - M;
 	gE = ( gDH + gC + gR ) * R_CONST * Tk;
 
+	return 0;
+}
+
+
+long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+{
+	// add excess property calculations
+
+	// final assigments
+	Gex_ = Gex;
+	Vex_ = Vex;
+	Hex_ = Hex;
+	Sex_ = Sex;
+	CPex_ = CPex;
 	return 0;
 }
 
