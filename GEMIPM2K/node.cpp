@@ -135,21 +135,34 @@ long int TNode::GEM_run( bool uPrimalSol )
 //    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
 // *********************************************************
 
-   if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-         CNode->NodeStatusCH = OK_GEM_AIA;
-   else
+    // test error result GEM IPM calculation of equilibrium state in MULTI
+    long int erCode = TProfil::pm->testMulti( CNode->NodeHandle );
+    
+    if( erCode )
+    {	
+        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+          CNode->NodeStatusCH = BAD_GEM_AIA;
+        else
+          CNode->NodeStatusCH = BAD_GEM_SIA;
+    }
+    else
+    {	
+      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+          CNode->NodeStatusCH = OK_GEM_AIA;
+      else
          CNode->NodeStatusCH = OK_GEM_SIA;
+    }     
 
    }
    catch(TError& err)
    {
     fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "Node " << CNode->NodeHandle << ": " <<
+    f_log << "Error Node " << CNode->NodeHandle << ": " <<
           err.title.c_str() << ": " << err.mess.c_str() << endl;
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-      CNode->NodeStatusCH = BAD_GEM_AIA;
+      CNode->NodeStatusCH = ERR_GEM_AIA;
     else
-      CNode->NodeStatusCH = BAD_GEM_SIA;
+      CNode->NodeStatusCH = ERR_GEM_SIA;
 
    }
    catch(...)
@@ -213,7 +226,7 @@ long int i;
    }
    // GEM IPM calculation of equilibrium state in MULTI
    CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
-// Extracting and packing GEM IPM results into work DATABR structure
+   // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr( ScFact );
     CNode->IterDone = NumIterFIA+NumIterIPM;
 //**************************************************************
@@ -221,22 +234,33 @@ long int i;
 //    GEM_write_dbr( "calculated_dbr.dat",  false );
 //    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
 // *********************************************************
-
-   if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-         CNode->NodeStatusCH = OK_GEM_AIA;
-   else
+    // test error result GEM IPM calculation of equilibrium state in MULTI
+    long int erCode = TProfil::pm->testMulti( CNode->NodeHandle );
+    
+    if( erCode )
+    {	
+        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+          CNode->NodeStatusCH = BAD_GEM_AIA;
+        else
+          CNode->NodeStatusCH = BAD_GEM_SIA;
+    }
+    else
+    {	
+      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+          CNode->NodeStatusCH = OK_GEM_AIA;
+      else
          CNode->NodeStatusCH = OK_GEM_SIA;
-
+    }     
    }
    catch(TError& err)
     {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Node " << CNode->NodeHandle << ": " <<
+     f_log << "Error Node " << CNode->NodeHandle << ": " <<
            err.title.c_str() << ": " << err.mess.c_str() << endl;
      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-       CNode->NodeStatusCH = BAD_GEM_AIA;
+       CNode->NodeStatusCH = ERR_GEM_AIA;
      else
-       CNode->NodeStatusCH = BAD_GEM_SIA;
+       CNode->NodeStatusCH = ERR_GEM_SIA;
 
     }
     catch(...)

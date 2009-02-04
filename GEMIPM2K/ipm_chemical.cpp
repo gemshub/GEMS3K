@@ -1077,6 +1077,8 @@ double TMulti::Cj_init_calc( double g0, long int j, long int k )
 //  using method and formulae from [Karpov et al., 2001]
 //  !!!!!  Attention !!!! XU[j] calculation for some classes of DCs may be in error!
 //
+// Return code  0 OK
+//              1 The dual solution appears bad, and the insertion of XU[j] will damage
 #define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
 //
 long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
@@ -1086,9 +1088,9 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
   double Ez, Psi;   // added by KD 23.11.01
   double  Dsur, DsurT, MMC, *XU;
   bool mbBroken = false;
+  char buf[300];
 
-  XU = new double[pmp->L];
-  ErrorIf( !XU, "Mol_u()", "Memory allocation error ");
+  XU = pmp->XU;
   for(j=0; j<pmp->L; j++ )
       XU[j] = 0.;
 
@@ -1160,23 +1162,11 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
          {
         	 // Checking restored value against vector b
         	 XU[j] = exp( XU[j] );
-//       	     for( i=arrL[j]; i<arrL[j+1]; i++ )
-//             {  ii = arrAN[i];
-//                if( ii< pmp->N-pmp->E )
-//                 {
-//                	if(  XU[j]*a(ii,j)  > pmp->B[ii]+cutoff )
-//                    {
-                		// Mass balance broken
-//        			 pmp->Ec  = j;
-//        			 mbBroken = true;
-//        		    }
-//                }
-//           }
          }
          else
              XU[j] = 0.0;
-         if( XU[j] <= pmp->lowPosNum )
-             XU[j]=0.;
+//         if( XU[j] <= pmp->lowPosNum )// Think 30/12/2009
+//             XU[j]=0.;
       }
       else
           XU[j]=0.;
@@ -1190,15 +1180,15 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
     for( j=0; j<pmp->L; j++ )
     { // DC loop
       ix=0;
-      if(TProfil::pm->pa.p.PLLG)
+      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009 
       { for( i=0; i<pmp->N-pmp->E; i++ )
         if(a(i,j) && pmp->B[i] < pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
         { ix=1; break; }
       }
       else
-        if(Y[j]<pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
+        if( Y[j]<pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
           ix=1;
-      if (ix)
+      if (ix && Y[j] > pmp->lowPosNum && XU[j] > pmp->lowPosNum )
       {   // Checking if the restored value breaks the mass balance
     	  for( i=arrL[j]; i<arrL[j+1]; i++ )
           {  ii = arrAN[i];
@@ -1207,8 +1197,19 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
              	if(  (XU[j]*a(ii,j))  > pmp->B[ii]+cutoff )
                 {
              	  // The dual solution appears bad, and the insertion of XU[j] will damage
-     			  pmp->Ec  = j;    // and the insertion of XU[j] will break the mass balance
-     			  mbBroken = true;  // Error state is activated
+     			  // and the insertion of XU[j] will break the mass balance
+     			  if(!mbBroken )
+     			  {
+      				 sprintf(buf, "Mass balance broken on iteration %ld in DualTh recover for DC&RC %16s",
+      						      pmp->ITG, pmp->SM[j] );
+     				 setErrorMessage( 15, "E15IPM IPM-main():",buf);
+                     mbBroken = true;  // Error state is activated
+     			  }
+     			  else
+     			  {
+      				 sprintf(buf,"  %16s" ,  pmp->SM[j] );
+     				 addErrorMessage(buf);
+     			  }
      		    }
              }
           }
@@ -1218,10 +1219,8 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
         X[j]=Y[j];
     }
 
-    delete[] XU;
-
     if( mbBroken )
-      return 5L;
+      return 1L;
 
     TotalPhases( X, XF, XFA );
     return 0L;

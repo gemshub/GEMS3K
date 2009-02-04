@@ -58,17 +58,17 @@
 <pa_DFM>         0.1
 
 # DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>         500
+<pa_DP>         150
 
 # IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
-<pa_IIM>        1000
+<pa_IIM>        500
 
 # PD: Control on calling built-in Debye-Hueckel() and other models for aqueous activity coefficients
 <pa_PD>            3
 
 # PRD: Positive: control of calling IPM_gamma() on iterations of GEM EFD and IPM (default 3)
 #      Negative: the number of additional EFD-IPM loops to improve the GEM final solution
-<pa_PRD>          -1
+<pa_PRD>          3
 
 # AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
 <pa_AG>          0.7
@@ -111,7 +111,7 @@
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
-<pa_DW>           15
+<pa_DW>           3
 # DT: Exponent for dual-thermodynamic restoring of low amounts of solutes (+2 to -5), relative to DHBM
 <pa_DT>           -3
 

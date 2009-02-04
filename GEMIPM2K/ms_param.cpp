@@ -100,6 +100,20 @@ TProfil::TProfil( TMulti* amulti )
     pmp = multi->GetPM();
 }
 
+// test result GEM IPM calculation of equilibrium state in MULTI
+long int TProfil::testMulti( long int nodeI )
+{
+  if( pmp->MK || pmp->PZ )	
+  {
+   fstream f_log("ipmlog.txt", ios::out|ios::app );
+   f_log << "Warning Node " << nodeI << ": " <<
+   pmp->errorCode << ": " << pmp->errorBuf << endl;
+   return 1L;	  
+  }
+
+  return 0L	;  
+}
+
 // GEM IPM calculation of equilibrium state in MULTI
 // Modified on 10.09.2007 to return elapsed GEMIPM2 runtime in seconds
 // Modified on 15.11.2007 to return more detailed info on FIA and IPM iterations
@@ -126,12 +140,15 @@ FORCED_AIA:
     {
     	multi->MultiCalcIterations( -1 );
     }
-    if( pmp->MK == 2 )
+    if( pmp->MK == 2 && pmp->pNP )
     {
     	pmp->pNP = 0; 
     	pmp->MK = 0;
     	goto FORCED_AIA;  // Trying again with AIA set after bad PIA 
     }    
+    if( pmp->MK || pmp->PZ ) // no good solution
+    	goto FINISHED;    
+
     RefinLoops_ = pmp->W1 + pmp->K2 - 1; // Prec.ref. + Selekt2() loops
     NumIterFIA_ = pmp->ITF;
     NumIterIPM_ = pmp->ITG;
@@ -151,6 +168,8 @@ ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
           }
           TotIT += pmp->IT - ITstart;
           TotW1 += pmp->W1+pmp->K2-1; 
+          if( pmp->MK || pmp->PZ ) // no good solution
+          	goto FINISHED;    
        }  // end pp loop
        
        pmp->pNP = pNPo;
@@ -160,8 +179,21 @@ ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
        NumIterFIA_ = pmp->ITF;  //   TotITF;
        NumIterIPM_ = pmp->ITG;  //   TotITG;
     }       
+
+FINISHED:    
+    if( pmp->MK || pmp->PZ ) // no good solution
+    {
+//cout << "Iter"  << " MK " << pmp->MK << " PZ " << pmp->PZ << " " << pmp->errorCode << endl;
+    }	
 pmp->t_end = clock();
 pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+// only test 30/01/2009 SD
+int iB = multi->CheckMassBalanceResiduals( pmp->X );
+if( iB >= 0 )
+{	
+   	    Error( "Point1  -  After Finish calculation",pmp->errorBuf );
+}	
+
 return pmp->t_elap_sec;
 }
 

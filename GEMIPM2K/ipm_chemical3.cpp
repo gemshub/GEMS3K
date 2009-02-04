@@ -312,7 +312,7 @@ TMulti::GammaCalc( long int LinkMode  )
     SPP_SETTING *pa = &TProfil::pm->pa;
 
 //  high-precision IPM-2 debugging
-//   if(pmp->PZ && pmp->W1 > 1 )
+//   if( pmp->W1 > 1 )
 //     goto END_LOOP;
 
     // calculating concentrations of species in multi-component phases
@@ -429,7 +429,7 @@ TMulti::GammaCalc( long int LinkMode  )
         } // k
         break;
     case LINK_UX_MODE:
-// pmp->FitVar[3] = TinkleSupressFactor( pmp->FitVar[4], pmp->IT );  // Getting actual smoothing parameter
+        // Getting actual smoothing parameter
     	SetSmoothingFactor();   // Changed 18.06.2008 by DK
     	// calculating DC concentrations after this IPM iteration
         ConCalc( pmp->X, pmp->XF, pmp->XFA );

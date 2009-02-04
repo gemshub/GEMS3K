@@ -114,6 +114,7 @@ public:
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
    double calcMulti( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
+   long int testMulti( long int nodeI );
 
 };
 

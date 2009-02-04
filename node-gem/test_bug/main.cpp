@@ -33,7 +33,7 @@
 
 int main( int argc, char* argv[] )
  {
-   long int nTimes = 1e3;   // Maximum number of time iteration steps
+   long int nTimes = 1e5;   // Maximum number of time iteration steps
 
 	// Analyzing command line arguments
      // Default arguments
@@ -227,7 +227,7 @@ int main( int argc, char* argv[] )
      {
        if( it > 0 )
        {
-           if( m_bIC[in*nIC+xCa] <= 1e-7 )
+           if( m_bIC[in*nIC+xCa] <= (1e-7+dC) )
         	   iC[in] = 1.;
            else
                if( m_bIC[in*nIC+xCa] > 1 )
@@ -237,7 +237,7 @@ int main( int argc, char* argv[] )
            m_bIC[in*nIC+xH] += 2.*dC*iC[in];
            m_bIC[in*nIC+xO] += 2.*dC*iC[in];
            
-           if( m_bIC[in*nIC+xSi] <= 1e-7 )
+           if( m_bIC[in*nIC+xSi] <= (1e-7+dS) )
         	   iS[in] = 1.;
            else
                if( m_bIC[in*nIC+xSi] > 1 )
@@ -254,7 +254,7 @@ int main( int argc, char* argv[] )
      for( in=0; in<nNodes; in++ )
      {
         m_NodeHandle[in] = in;
-        m_NodeStatusCH[in] = NEED_GEM_AIA; // or NEED_GEM_SIA
+        m_NodeStatusCH[in] = NEED_GEM_SIA; // or NEED_GEM_SIA
 
         // Setting input data for GEMIPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
@@ -262,7 +262,7 @@ int main( int argc, char* argv[] )
              m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
 
         // Calling GEMIPM calculation
-        m_NodeStatusCH[in] = node->GEM_run( 1., true );
+        m_NodeStatusCH[in] = node->GEM_run( 1., false );
         if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
                m_NodeStatusCH[in] == OK_GEM_SIA ) )
         {

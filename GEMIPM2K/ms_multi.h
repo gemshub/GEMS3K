@@ -311,6 +311,12 @@ typedef struct
   double *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
 #endif
+ 
+  // addition arrays for internal calculation in ipm_main  
+  double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
+  double *Uc; // Internal copy of IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
+  char errorCode[100]; //  code of error in IPM      (Ec number of error)
+  char errorBuf[500]; // description of error in IPM
 }
 MULTI;
 
@@ -346,6 +352,9 @@ class TMulti
    
    void Alloc_TSolMod( long int newFIs );
    void Free_TSolMod();
+   
+   void setErrorMessage( long int num, const char *code, const char * msg);
+   void addErrorMessage( const char * msg);
 
 #ifndef IPMGEMPLUGIN
 // These pointers and methods are only used in GEMS-PSI
@@ -452,7 +461,7 @@ void SolModExcessParam( long int k, char ModCode );
 // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
    void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                double *B, double *C );
-   long int CheckMassBalanceResiduals(double *Y );
+//   long int CheckMassBalanceResiduals(double *Y );
    double LMD( double LM );
    void ZeroDCsOff( long int jStart, long int jEnd, long int k=-1 );
    void RaiseZeroedOffDCs( long int jStart, long int jEnd, double sfactor, long int k=-1 );
@@ -566,7 +575,8 @@ public:
     void MultiCalcIterations( long int rLoop );
     void CompG0Load();
 
-double Cj_init_calc( double g0, long int j, long int k ); // Moved here on 16.05.2008
+   long int CheckMassBalanceResiduals(double *Y );
+   double Cj_init_calc( double g0, long int j, long int k ); // Moved here on 16.05.2008
 
 // connection to UnSpace
     double pb_GX( double *Gxx  );
