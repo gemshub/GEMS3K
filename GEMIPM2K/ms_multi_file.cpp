@@ -205,6 +205,7 @@ void TMulti::set_def( long int /*q*/)
         pm.lnSAC = 0;
         pm.B     = 0;
         pm.U     = 0;
+        pm.Uc     = 0;
         pm.U_r   = 0;
         pm.C     = 0;
         pm.IC_m  = 0;
@@ -223,6 +224,7 @@ void TMulti::set_def( long int /*q*/)
         pm.X     = 0;
         pm.Y     = 0;
         pm.XY    = 0;
+        pm.XU    = 0;
         pm.Qp    = 0;
         pm.Qd    = 0;
         pm.MU    = 0;

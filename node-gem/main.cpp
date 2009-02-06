@@ -29,11 +29,13 @@
 
 #include "node.h"
 
+int outTest = 0; 
+
 #define nNodes  2 // set here how many nodes you need
 
 int main( int argc, char* argv[] )
  {
-   long int nTimes = 1e5;   // Maximum number of time iteration steps
+   long int nTimes = 1e3;   // Maximum number of time iteration steps
 
 	// Analyzing command line arguments
      // Default arguments
@@ -130,7 +132,8 @@ int main( int argc, char* argv[] )
      dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
      // re-calculating equilibrium by calling GEMIPM
-     m_NodeStatusCH[in] = node->GEM_run();
+     m_NodeStatusCH[in] = node->GEM_run(1., false);
+
 
      if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
      {
@@ -161,10 +164,30 @@ int main( int argc, char* argv[] )
   {
    dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
+ /*  {	   
+       //     sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
+       //     cout << "  See output in the " << NextRecipeOutFileName << " file" << endl;
+           node->GEM_write_dbr( "dbr_159_1_before.out", false, false );
+       //      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+       //      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
+          node->GEM_print_ipm( "ipm_159__1_before.out"  );
+          outTest = 1;
+        
+   } */    
   // re-calculating equilibrium by calling GEMIPM
-   m_NodeStatusCH[in] = node->GEM_run();
+   m_NodeStatusCH[in] = node->GEM_run( 1., false );
 
-  if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
+  /* {	   
+               //     sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
+               //     cout << "  See output in the " << NextRecipeOutFileName << " file" << endl;
+                   node->GEM_write_dbr( "dbr_159_1_after.out", false, false );
+               //      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+               //      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
+                  node->GEM_print_ipm( "ipm_159_1_after.out"  );
+                  outTest = 0;
+   }*/     
+
+   if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
   {
  	 cout << "Bad task in Initialiation part";
      return 5;
@@ -184,7 +207,7 @@ int main( int argc, char* argv[] )
  }
 
    cout << "End Initialiation part" << endl;
- 
+
    clock_t t_start11, t_end11;
    t_start11 = clock();
 
@@ -199,14 +222,15 @@ int main( int argc, char* argv[] )
    long int xCalcite = node->Ph_name_to_xDB("Calcite");
    long int xSiO2 = node->Ph_name_to_xDB("Silica-amorph");
 
-   double dC, dS, iC[nNodes], iS[nNodes];
-   long int nC = 100, nS = 200; // Number of different point by Calcite and SiO2
-   dC = (1. - 1.e-7)/nC; 
-   dS = (1. - 1.e-7)/nS; 
+   double dC, dS, iC[nNodes], iS[nNodes], mass[nNodes];
+   double nC = 100, nS = 200; // Number of different point by Calcite and SiO2
+   dC = (1. - 0./*1.e-7*/)/nC; 
+   dS = (1. - 0./*1.e-7*/)/nS; 
    for( in=0; in<nNodes; in++ )
    {
-	   iC[in] =1.;
+	   iC[in] =1.;  
 	   iS[in] =-1.;
+	   mass[in] = 0.;
    }
    
    cout << "Start Tnode test: " << ipm_input_file_list_name << " "
@@ -237,6 +261,10 @@ int main( int argc, char* argv[] )
            m_bIC[in*nIC+xH] += 2.*dC*iC[in];
            m_bIC[in*nIC+xO] += 2.*dC*iC[in];
            
+           mass[in] += dC*iC[in] * dCH->ICmm[/*IC_xDB_to_xCH*/(xCa)];
+           mass[in] += 2. * dC*iC[in] * dCH->ICmm[/*IC_xDB_to_xCH*/(xH)];
+           mass[in] += 2. * dC*iC[in] * dCH->ICmm[/*IC_xDB_to_xCH*/(xO)];
+           
            if( m_bIC[in*nIC+xSi] <= (1e-7+dS) )
         	   iS[in] = 1.;
            else
@@ -245,32 +273,70 @@ int main( int argc, char* argv[] )
 
            m_bIC[in*nIC+xSi] += dS*iS[in];
            m_bIC[in*nIC+xO]  += 2.*dS*iS[in];
+           mass[in] += dS*iS[in] * dCH->ICmm[/*IC_xDB_to_xCH*/(xSi)];
+           mass[in] += 2. * dS*iS[in] * dCH->ICmm[/*IC_xDB_to_xCH*/(xO)];
        }
-     }
-     //cout << " it = " << it << "  dt = " << dt << "  tc = " << tc << endl;
+       else
+       {
+   		for (long int i=0;i<dCH->nICb;i++){
+    			mass[in] += m_bIC[in*nIC+i]*dCH->ICmm[i];
+       }
+      }
+     } 
 
+     //cout << " it = " << it << "  dt = " << dt << "  tc = " << tc << endl;
+     
      //     cout << " Chemical loop begins: " << endl;
      // Loop over nodes for calculating the chemical equilibration step
      for( in=0; in<nNodes; in++ )
      {
         m_NodeHandle[in] = in;
-        m_NodeStatusCH[in] = NEED_GEM_AIA; // or NEED_GEM_SIA
+        m_NodeStatusCH[in] = NEED_GEM_SIA; // or NEED_GEM_SIA
 
         // Setting input data for GEMIPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
              m_T[in], m_P[in], m_Vs[in], m_Ms[in],
              m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
 
+if( in == 1 && it == 363 )
+{	   
+    //     sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
+    //     cout << "  See output in the " << NextRecipeOutFileName << " file" << endl;
+        node->GEM_write_dbr( "dbr_363_before.out", false, false );
+    //      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+    //      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
+       node->GEM_print_ipm( "ipm_363_before.out"  );
+       outTest = 1;
+     
+}     
+        
         // Calling GEMIPM calculation
-        m_NodeStatusCH[in] = node->GEM_run( 1., false );
-        if( !( m_NodeStatusCH[in] == OK_GEM_AIA ||
-               m_NodeStatusCH[in] == OK_GEM_SIA ) )
+        m_NodeStatusCH[in] = node->GEM_run( mass[in]*1e-3, true );
+
+if( in == 1 && it == 363 )
+{	   
+            //     sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
+            //     cout << "  See output in the " << NextRecipeOutFileName << " file" << endl;
+                node->GEM_write_dbr( "dbr_363_after.out", false, false );
+            //      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+            //      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
+               node->GEM_print_ipm( "ipm_363_after.out"  );
+               outTest = 0;
+}     
+        if( ( m_NodeStatusCH[in] == ERR_GEM_AIA ||
+               m_NodeStatusCH[in] == ERR_GEM_SIA ) )
         {
         	cout << "Error Calling GEMIPM calculation it = " << it << " Node " << in 
             << " Ca= " << m_bIC[in*nIC+xCa] << " Si= " << m_bIC[in*nIC+xSi] << endl;
         }
         else
         {	
+            if( ( m_NodeStatusCH[in] == BAD_GEM_AIA ||
+                   m_NodeStatusCH[in] == BAD_GEM_SIA ) )
+            {
+            	cout << "Warning Calling GEMIPM calculation it = " << it << " Node " << in 
+                << " Ca= " << m_bIC[in*nIC+xCa] << " Si= " << m_bIC[in*nIC+xSi] << endl;
+            }	
         // Extracting GEMIPM output data to FMT part
           node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
           m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],

@@ -666,12 +666,12 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
           return 1;
         }
 
-        if( pmp->W1 || rLoop>=0 ) // no first loop
+        if( /*false &&*/ (pmp->W1 || rLoop>=0) ) // no first loop
         {
           for(J=0;J<pmp->N;J++)
           {  
       		 char buf[200]; 
-          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > 100. ) // broken dual solution
+          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > 10000. ) // broken dual solution
         	  {
         	     if( pmp->Ec != 14 )
         	     { sprintf( buf, "Dual solution (vector u) has changed too much "
@@ -746,7 +746,7 @@ if( pmp->pNP && rLoop < 0 && status )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif
-        if( pmp->PCI < pmp->DX )  // Dikin criterion satisfied - converged!
+        if( pmp->PCI < pmp->DX || pmp->PZ == 2 )  // Dikin criterion satisfied - converged!
             goto CONVERGED;
     } // end of main IPM cycle
 
@@ -766,7 +766,7 @@ CONVERGED:
  	   return 4L;
   }
 
-  if( pmp->PD == 1 || pmp->PD == 2  /*|| pmp->PD == 3*/  )
+  if( pmp->PD == 1 || pmp->PD == 2  || pmp->PD == 3  )
         GammaCalc( LINK_UX_MODE );
 //   else
   ConCalc( pmp->X, pmp->XF, pmp->XFA );

@@ -125,6 +125,7 @@ double TProfil::calcMulti( long int& RefinLoops_, long int& NumIterFIA_, long in
     pmp = multi->GetPM();
     pmp->t_start = clock();
     pmp->t_end = pmp->t_start;
+
 //    multi->MultiCalcInit( 0 );
     pmp->ITF = pmp->ITG = 0;  
 FORCED_AIA:
@@ -185,15 +186,16 @@ FINISHED:
     {
 //cout << "Iter"  << " MK " << pmp->MK << " PZ " << pmp->PZ << " " << pmp->errorCode << endl;
     }	
-pmp->t_end = clock();
-pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
-// only test 30/01/2009 SD
-int iB = multi->CheckMassBalanceResiduals( pmp->X );
-if( iB >= 0 )
-{	
-   	    Error( "Point1  -  After Finish calculation",pmp->errorBuf );
-}	
-
+    else // only test 30/01/2009 SD
+    {	int iB = multi->CheckMassBalanceResiduals( pmp->X );
+    	if( iB >= 0 )
+    	{	
+    	   	    Error( "Point1  -  After Finish calculation",pmp->errorBuf );
+    	}	
+ 	
+    }
+    pmp->t_end = clock();
+    pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
 return pmp->t_elap_sec;
 }
 
@@ -380,7 +382,11 @@ void TMulti::MultiCalcInit( const char* key )
     pmp->lowPosNum = pa->p.DcMin;
     pmp->logXw = -16.;
     pmp->logYFk = -9.;
-//    pmp->FitVar[4] = pa->p.AG;
+//    pmp->YFk = 0.;   // SD 05/02/2009
+//    pmp->Yw = 0.;   // SD 05/02/2009
+//    pmp->FitVar[3] = 1.0;  // SD 05/02/2009 
+//    pmp->FitVar[4] = pa->p.AG; // SD 05/02/2009
+
     pmp->FitVar[0] = 0.0640000030398369; // pa->aqPar[0]; setting T,P dependent b_gamma parameters 
 
     pmp->DX = pa->p.DK;

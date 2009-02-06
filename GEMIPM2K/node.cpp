@@ -192,6 +192,9 @@ long int TNode::GEM_run( bool uPrimalSol )
 // by providing a constant mass of the internal system regardless of
 // different node (reactive chemical system) sizes.
 //
+#include <iomanip>
+//extern int outTest; 
+
 long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
 {
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
@@ -224,6 +227,7 @@ long int i;
 	   pmm->pNP = 0; // As default setting AIA mode
 	   unpackDataBr( false, ScFact );
    }
+   
    // GEM IPM calculation of equilibrium state in MULTI
    CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
    // Extracting and packing GEM IPM results into work DATABR structure
