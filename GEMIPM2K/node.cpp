@@ -136,7 +136,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // *********************************************************
 
     // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = TProfil::pm->testMulti( CNode->NodeHandle );
+    long int erCode = TProfil::pm->testMulti();
     
     if( erCode )
     {	
@@ -157,7 +157,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    catch(TError& err)
    {
     fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "Error Node " << CNode->NodeHandle << ": " <<
+    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
           err.title.c_str() << ": " << err.mess.c_str() << endl;
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
       CNode->NodeStatusCH = ERR_GEM_AIA;
@@ -168,7 +168,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    catch(...)
    {
     fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "Node " << CNode->NodeHandle << ": "
+    f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " 
    		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
       if( CNode->NodeStatusCH  == NEED_GEM_AIA )
         CNode->NodeStatusCH = ERR_GEM_AIA;
@@ -239,7 +239,7 @@ long int i;
 //    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
 // *********************************************************
     // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = TProfil::pm->testMulti( CNode->NodeHandle );
+    long int erCode = TProfil::pm->testMulti();
     
     if( erCode )
     {	
@@ -259,7 +259,7 @@ long int i;
    catch(TError& err)
     {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Error Node " << CNode->NodeHandle << ": " <<
+     f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " << 
            err.title.c_str() << ": " << err.mess.c_str() << endl;
      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
        CNode->NodeStatusCH = ERR_GEM_AIA;
@@ -270,7 +270,7 @@ long int i;
     catch(...)
     {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Node " << CNode->NodeStatusCH << ": "
+     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " 
     		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
          CNode->NodeStatusCH = ERR_GEM_AIA;
@@ -1177,11 +1177,11 @@ void TNode::packDataBr()
    {
       CNode->xDC[ii] = pmm->X[ CSD->xDC[ii] ];
       CNode->gam[ii] = pmm->Gamma[ CSD->xDC[ii] ];
-      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ];//??? only insert
-      CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ];//??? only insert
+//      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
+//      CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
    }
    for( ii=0; ii<CSD->nICb; ii++ )
-   {  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ];//??? only insert
+   {//  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ];// 09/02/2009 SD only insert
       CNode->rMB[ii] = pmm->C[ CSD->xIC[ii] ];
       CNode->uIC[ii] = pmm->U[ CSD->xIC[ii] ];
    }
@@ -1258,13 +1258,13 @@ void TNode::packDataBr( double ScFact )
    {
       CNode->xDC[ii] = pmm->X[ CSD->xDC[ii] ]  / ScFact;
       CNode->gam[ii] = pmm->Gamma[ CSD->xDC[ii] ];
-      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ] / ScFact;  // bugfix 28.01.2009 DK
-      if( pmm->DLL[ CSD->xDC[ii] ] < 1e-20 )
-    	  CNode->dll[ii] = 0.;
-      else CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ] / ScFact;  //
+//      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ] / ScFact;  // 09/02/2009 SD
+//      if( pmm->DLL[ CSD->xDC[ii] ] < 1e-20 )
+//    	  CNode->dll[ii] = 0.;
+//      else CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ] / ScFact;  //
    }
    for( ii=0; ii<CSD->nICb; ii++ )
-   {  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ] / ScFact;//??? only insert
+   {  // CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ] / ScFact;// 09/02/2009 SD only insert
       CNode->rMB[ii] = pmm->C[ CSD->xIC[ii] ] / ScFact;
       CNode->uIC[ii] = pmm->U[ CSD->xIC[ii] ];
    }
@@ -1283,7 +1283,11 @@ void TNode::unpackDataBr( bool uPrimalSol )
  long int ii;
  //double Gamm;
 // numbers
-
+  
+ char buf[300];
+ sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
+ strncpy( pmm->stkey, buf, EQ_RKLEN );
+ 
 //  if( CNode->NodeStatusCH >= NEED_GEM_SIA )
 //   pmm->pNP = 1;
 //  else
@@ -1368,7 +1372,10 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 {
  long int ii;
  //double Gamm;
-
+ char buf[300];
+ sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
+ strncpy( pmm->stkey, buf, EQ_RKLEN );
+ 
  if( ScFact < 1e-6 )    // foolproof
 	 ScFact = 1e-6;
  if( ScFact > 1e6 )
@@ -1603,6 +1610,19 @@ void TNode::GEM_from_MT(
    if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
      CNode->NodeStatusCH = NEED_GEM_AIA;
    // Switch only if SIA is ordered, leave if simplex is ordered (KD)
+}
+
+// calculation mode: passing current FMT iteration information
+//                   into the work DATABR structure
+void TNode::GEM_set_MT(
+//   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
+//   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
+   double p_Tm,      // actual total simulation time, s                        +       -      -
+   double p_dt       // actual time step, s                          +       -      -
+)
+{
+  CNode->Tm = p_Tm;
+  CNode->dt = p_dt;
 }
 
 // readonly mode: passing input GEM data to FMT

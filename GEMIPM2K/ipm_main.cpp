@@ -671,7 +671,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
           for(J=0;J<pmp->N;J++)
           {  
       		 char buf[200]; 
-          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > 10000. ) // broken dual solution
+          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > 100. ) // broken dual solution
         	  {
         	     if( pmp->Ec != 14 )
         	     { sprintf( buf, "Dual solution (vector u) has changed too much "

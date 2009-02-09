@@ -164,28 +164,8 @@ int main( int argc, char* argv[] )
   {
    dBR->NodeStatusCH = NEED_GEM_AIA; // direct access to node DATABR structure
 
- /*  {	   
-       //     sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
-       //     cout << "  See output in the " << NextRecipeOutFileName << " file" << endl;
-           node->GEM_write_dbr( "dbr_159_1_before.out", false, false );
-       //      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
-       //      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
-          node->GEM_print_ipm( "ipm_159__1_before.out"  );
-          outTest = 1;
-        
-   } */    
   // re-calculating equilibrium by calling GEMIPM
    m_NodeStatusCH[in] = node->GEM_run( 1., false );
-
-  /* {	   
-               //     sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
-               //     cout << "  See output in the " << NextRecipeOutFileName << " file" << endl;
-                   node->GEM_write_dbr( "dbr_159_1_after.out", false, false );
-               //      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
-               //      cout << "See dump output in the " << NextRecipeOutFileName << " file" << endl;
-                  node->GEM_print_ipm( "ipm_159_1_after.out"  );
-                  outTest = 0;
-   }*/     
 
    if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
   {
@@ -297,6 +277,7 @@ int main( int argc, char* argv[] )
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
              m_T[in], m_P[in], m_Vs[in], m_Ms[in],
              m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
+        node->GEM_set_MT( (double)it, 1. );
 
 if( in == 1 && it == 363 )
 {	   
@@ -309,7 +290,6 @@ if( in == 1 && it == 363 )
        outTest = 1;
      
 }     
-        
         // Calling GEMIPM calculation
         m_NodeStatusCH[in] = node->GEM_run( mass[in]*1e-3, true );
 
@@ -353,7 +333,6 @@ if( in == 1 && it == 363 )
      }
     
      // Here the output for the current state at tc can be implemented
-
   }
 
    t_end11 = clock();

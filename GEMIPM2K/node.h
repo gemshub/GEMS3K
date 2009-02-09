@@ -232,6 +232,13 @@ void GEM_from_MT(
  double *p_gam   // DC activity coeffs [nDCb] - old primal s. +      -      -
 );
 
+// Passing current FMT iteration information into the work DATABR structure
+void GEM_set_MT(
+//   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
+//   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
+   double p_Tm,      // actual total simulation time, s                        +       -      -
+   double p_dt       // actual time step, s                          +       -      -
+);
 #endif
 
 // (3 alternative)

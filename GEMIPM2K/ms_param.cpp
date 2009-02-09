@@ -101,16 +101,15 @@ TProfil::TProfil( TMulti* amulti )
 }
 
 // test result GEM IPM calculation of equilibrium state in MULTI
-long int TProfil::testMulti( long int nodeI )
+long int TProfil::testMulti(  )
 {
   if( pmp->MK || pmp->PZ )	
   {
    fstream f_log("ipmlog.txt", ios::out|ios::app );
-   f_log << "Warning Node " << nodeI << ": " <<
+   f_log << "Warning " << pmp->stkey << " " <<
    pmp->errorCode << ": " << pmp->errorBuf << endl;
    return 1L;	  
   }
-
   return 0L	;  
 }
 
@@ -141,12 +140,6 @@ FORCED_AIA:
     {
     	multi->MultiCalcIterations( -1 );
     }
-    if( pmp->MK == 2 && pmp->pNP )
-    {
-    	pmp->pNP = 0; 
-    	pmp->MK = 0;
-    	goto FORCED_AIA;  // Trying again with AIA set after bad PIA 
-    }    
     if( pmp->MK || pmp->PZ ) // no good solution
     	goto FINISHED;    
 
@@ -170,7 +163,8 @@ ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
           TotIT += pmp->IT - ITstart;
           TotW1 += pmp->W1+pmp->K2-1; 
           if( pmp->MK || pmp->PZ ) // no good solution
-          	goto FINISHED;    
+            break;	 // goto FINISHED;
+          	
        }  // end pp loop
        
        pmp->pNP = pNPo;
@@ -182,6 +176,17 @@ ITstart = 10,        TotIT = pmp->IT;  //  ITold = pmp->IT,
     }       
 
 FINISHED:    
+
+	if( pmp->MK == 2 )
+	{	if( pmp->pNP )
+         {
+    	    pmp->pNP = 0; 
+    	    pmp->MK = 0;
+    	    goto FORCED_AIA;  // Trying again with AIA set after bad SIA 
+         }    
+    	else
+    		Error( pmp->errorCode ,pmp->errorBuf );	
+	}
     if( pmp->MK || pmp->PZ ) // no good solution
     {
 //cout << "Iter"  << " MK " << pmp->MK << " PZ " << pmp->PZ << " " << pmp->errorCode << endl;
@@ -371,7 +376,7 @@ void TMulti::MultiCalcInit( const char* key )
   long int  j;
 
   SPP_SETTING *pa = &TProfil::pm->pa;
-    strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
+   // SD 09/03/09 strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
     pmp->Ec = pmp->K2 = pmp->MK = 0;
     pmp->PZ = pa->p.DW; // IPM-2 default
     pmp->W1 = 0;
