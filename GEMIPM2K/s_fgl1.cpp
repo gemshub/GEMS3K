@@ -1128,6 +1128,7 @@ void TEUNIQUAC::alloc_internal()
 	Psi = new double *[NComp];
 	dPsi = new double *[NComp];
 	d2Psi = new double *[NComp];
+	Xi = new double *[NComp];
 
 	for (long int j=0; j<NComp; j++)
 	{
@@ -1137,6 +1138,7 @@ void TEUNIQUAC::alloc_internal()
 		Psi[j] = new double [NComp];
 		dPsi[j] = new double [NComp];
 		d2Psi[j] = new double [NComp];
+		Xi[j] = new double [NComp];
 	}
 }
 
@@ -1152,6 +1154,7 @@ void TEUNIQUAC::free_internal()
 		delete[]Psi[j];
 		delete[]dPsi[j];
 		delete[]d2Psi[j];
+		delete[]Xi[j];
 	}
 	delete[]R;
 	delete[]Q;
@@ -1163,6 +1166,7 @@ void TEUNIQUAC::free_internal()
 	delete[]Psi;
 	delete[]dPsi;
 	delete[]d2Psi;
+	delete[]Xi;
 }
 
 
@@ -1229,6 +1233,7 @@ long int TEUNIQUAC::PTparam()
 			Psi[j][i] = psi;
 			dPsi[j][i] = dpsi;
 			d2Psi[j][i] = d2psi;
+			Xi[j][i] = v;
 		}
 	}
 
@@ -1236,16 +1241,13 @@ long int TEUNIQUAC::PTparam()
 }
 
 
-
 // Calculates activity coefficients and excess functions
 long int TEUNIQUAC::MixMod()
 {
 	int j, i, l, k, w;
 	double Mw, Xw, IS, b, c;
-	double A, dAdT, dAdP, d2AdT2;
-	double RR, QQ, K, L, M, N;
+	double A, RR, QQ, K, L, M;
 	double gamDH, gamC, gamR, lnGam, Gam;
-	double gE, hE, sE, cpE, vE, gDH, gC, gR;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
@@ -1308,7 +1310,7 @@ long int TEUNIQUAC::MixMod()
 			lnGam = gamDH + gamC + gamR;
 
 			// convert activity coefficient to molality scale
-			//lnGam = lnGam + log(x[w]);
+			lnGam = lnGam + log(x[w]);
 			lnGamma[j] = lnGam;
 
 			// write debug results
@@ -1353,7 +1355,70 @@ long int TEUNIQUAC::MixMod()
 		}
 	}
 
-	// calculation of bulk phase excess properties (under construction)
+	return 0;
+}
+
+
+long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+{
+	// add excess property calculations
+	int j, i, w;
+	double Mw, Xw, IS, b, c;
+	double A, dAdT, dAdP, d2AdT2;
+	double phiti, phthi, RR, QQ, N, TPI, TPX, DTPX, CON;
+	double gI, sI, gi, si;
+	double gE, hE, sE, cpE, vE;
+	double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX;   // DH, C and R contributions to properties
+	double dg, d2g, dgRI, d2gRI, dgRX, d2gRX, dgDH, d2gDH;
+
+	// get index of water (assumes water is last species in phase)
+	w = NComp - 1;
+
+	// calculation of DH parameters
+	b = 1.5;
+	c = 1.3287e-5;
+	// A = c*sqrt(RhoW)/pow((EpsW*Tk),1.5);
+	// approximation valid only for temperatures below 200 deg. C and Psat
+	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
+	dAdT = (1.335e-3) + 2.*(1.164e-5)*(Tk-273.15);
+	d2AdT2 = 2.*(1.164e-5);
+
+	// calculation of ionic strength
+	IS = 0.0;
+	Mw = 0.018015;
+	Xw = x[w];
+	for (j=0; j<NComp; j++)
+	{
+		IS += 0.5*x[j]*pow(Z[j],2.)/(Xw*Mw);
+	}
+
+	// calculation of Phi and Theta terms
+	for (j=0; j<NComp; j++)
+	{
+		RR = 0.0;
+		QQ = 0.0;
+		for (i=0; i<NComp; i++)
+		{
+			RR += x[i]*R[i];
+			QQ += x[i]*Q[i];
+		}
+		Phi[j] = x[j]*R[j]/RR;
+		Theta[j] = x[j]*Q[j]/QQ;
+	}
+
+	// calculating bulk phase ideal mixing contributions
+	gi = 0.0;
+	si = 0.0;
+
+	for (j=0; j<NComp; j++)
+	{
+		gi += x[j]*log(x[j]);
+		si += x[j]*log(x[j]);
+	}
+	gI = R_CONST*Tk*gi;
+	sI = - R_CONST*si;
+
+	// calculation of bulk phase excess properties
 	gE = 0.0;
 	hE = 0.0;
 	sE = 0.0;
@@ -1361,42 +1426,70 @@ long int TEUNIQUAC::MixMod()
 	vE = 0.0;
 	gC = 0.0;
 	gR = 0.0;
+	hR = 0.0;
+	cpR = 0.0;
 
-	K = 0.0;
-	L = 0.0;
-	M = 0.0;
+	// infinite dilution part
+	gCI = 0.;
+	gRI = 0.;
+	dgRI = 0.;
+	d2gRI = 0.;
+
+	for (j=0; j<NComp; j++)
+	{
+		phiti = R[j]/R[w];
+		phthi = Q[j]/Q[w]*phiti;
+		gCI += 1.0 + log(phiti) - phiti - 5.*Q[j]*(1.+log(phthi)-phthi);
+		gRI += Q[j]*(1.-log(Psi[w][j])-Psi[j][w]);
+		dgRI += - x[j]*Q[j] * (Xi[w][j] + dPsi[j][w]);
+		d2gRI += - x[j]*Q[j] * (2.*(1./Tk)*(Xi[w][j]+dPsi[j][w])-Xi[j][w]*dPsi[j][w]);
+	}
+
+	// combinatorial and residual part
+	gCX = 0.;
+	gRX = 0.;
+	dgRX = 0.;
+	d2gRX = 0.;
+
 	for (j=0; j<NComp; j++)
 	{
 		N = 0.0;
+		TPI = 0.0;
+		TPX = 0.0;
+		DTPX = 0.0;
 		for (i=0; i<NComp; i++)
 		{
 			N += Theta[i]*Psi[i][j];
+			TPI += 1./N;
+			TPX += Theta[i]*dPsi[i][j]*TPI;
+			DTPX += - TPX*TPX + Theta[i]*d2Psi[i][j]*TPI;
 		}
-		K += x[j]*log(Phi[j]/x[j]);
-		L += Q[j]*x[j]*log(Phi[j]/Theta[j]);
-		M += x[j]*Q[j]*log(N);
+		gCX += x[j]*log(Phi[j]/x[j]) - 5.0*(Q[j]*x[j]*log(Phi[j]/Theta[j]));
+		gRX += ( - x[j]*Q[j]*log(N) );
+		dgRX += x[j]*Q[j]*TPX;
+		d2gRX += x[j]*Q[j]*DTPX;
 	}
 
-	gDH = - x[w]*Mw*4.*A/pow(b,3.) * ( log(1.+b*sqrt(IS)) - b*sqrt(IS) + 0.5*pow(b,2.)*IS );
-	gC = K - 5.0*L;
-	gR = - M;
-	gE = ( gDH + gC + gR ) * R_CONST * Tk;
+	// DH part
+	CON = - x[w]*Mw*4./pow(b,3.) * ( log(1.+b*sqrt(IS)) - b*sqrt(IS) + 0.5*pow(b,2.)*IS );
+	gDH = CON*A;
+	dgDH = - CON*dAdT;
+	d2gDH = - CON*d2AdT2;
 
-	return 0;
-
-}
-
-
-long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
-{
-	// add excess property calculations
+	// increment thermodynamic properties
+	dg = ( dgDH + dgRX + dgRI );
+	d2g = ( d2gDH + d2gRX + d2gRI );
+	gE = ( gDH + gRX + gCX + gRI + gCI ) * R_CONST * Tk;
+	hE = dg * pow(Tk,2.) * R_CONST;
+	cpE = ( 2.*Tk*dg + pow(Tk,2.)*d2g ) * R_CONST;
+	sE = (hE-gE)/Tk;
 
 	// final assigments
-	Gex_ = Gex;
-	Vex_ = Vex;
-	Hex_ = Hex;
-	Sex_ = Sex;
-	CPex_ = CPex;
+	Gex_ = gE + gI;
+	Vex_ = vE;
+	Hex_ = hE;
+	Sex_ = sE + sI;
+	CPex_ = cpE;
 	return 0;
 }
 
@@ -1406,23 +1499,17 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 void TEUNIQUAC::Euniquac_test_out( const char *path )
 {
 
-	long int ii;
+	long int ii, c, a, n;
 
 //	const ios::open_mode OFSMODE = ios::out � ios::app;
 	ofstream ff(path, ios::app );
 	ErrorIf( !ff.good() , path, "Fileopen error");
 
-
-
-/*	ff << endl << "Molality of NaCl = " << ++anz << endl;
+	ff << endl << "Vector of interaction parameters corrected to T,P of interest" << endl;
 	for( ii=0; ii<NPar; ii++ )
 		ff << aIP[ii] << "  ";
-*/
-/*	ff << endl << "Vector of interaction parameters corrected to T,P of interest" << endl;
-	for( ii=0; ii<NPar; ii++ )
-		ff << aIP[ii] << "  ";
-*/
-	ff << endl << "Debye-Hueckel contribution to Activity Coefficients" << endl;
+
+	ff << endl << "Debye-H�ckel contribution to Activity Coefficients" << endl;
 	for( ii=0; ii<NComp; ii++ )
 		ff << gammaDH[ii] << "  ";
 

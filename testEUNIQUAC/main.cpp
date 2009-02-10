@@ -34,6 +34,8 @@ int main( int argc, char* argv[] )
 	double aWx[6] = { 0.033894, 0.016947, 0.00847, 2e-9, 2e-9, 0.940686} ;
     double aZ[6] = { 1., -1., -2., -1., 1., 0};
 
+    double G, V, H, S, CP;
+
     long int MaxOrd = 2; // number of columns of aIPx
     long int NPcoef = 2; // r(i) and q(i)
 
@@ -123,6 +125,8 @@ cout << "TEUNIQUAC class instance initialized" << endl;
 		aWx[5] = aM[5]/sum;
 		aEU->MixMod();     //Euniquac_calc_Gamma();
 		cout << "Euniquac activity coefficients calculated" << " m(NaCl) = " << Y << endl;
+		aEU->ExcessProp( G, V, H, S, CP );     //Euniquac_calc_Gamma();
+
 		aEU->Euniquac_test_out( "Euniquac_test.out" );
 	}
 		cout << "See file 'Euniquac_test.out' for results..." << endl;
