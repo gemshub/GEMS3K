@@ -47,9 +47,9 @@ void TUnSpace::unsp_eqkey()
     sprintf(buf, "%.4d", usp->q);
     memset(usp->timep, 0, 5 );
     strncpy(usp->timep, buf, 4 );
-    gcvt( usp->Tc, 6,  usp->TCp );
-    gcvt( usp->Pc, 6,  usp->Pp );
-    gcvt( usp->Vc, 6,  usp->Bnamep );
+    Gcvt( usp->Tc, 6,  usp->TCp );
+    Gcvt( usp->Pc, 6,  usp->Pp );
+    Gcvt( usp->Vc, 6,  usp->Bnamep );
 
  //  rt[RT_SYSEQ].MakeKey( RT_UNSPACE,  usp->stkey, RT_UNSPACE, 0, RT_UNSPACE,1,
  //       RT_UNSPACE, 2, K_IMM, usp->timep, K_IMM, usp->Bnamep,
@@ -136,7 +136,9 @@ void TUnSpace::buildTestedArrays()
  int i;
  short Ip;
 
-
+#ifndef IPMGEMPLUGIN
+ showMss = 1L;
+#endif
  
  for( Ip=0; Ip<usp->Q; Ip++)
  {

@@ -27,6 +27,7 @@
 #include "service.h"
 #include "visor.h"
 
+
 #else
 
 #include <time.h>
@@ -316,7 +317,7 @@ bool TGEM2MT::CalcIPM( char mode, int start_node, int end_node, FILE* diffile )
 // NeedGEM = true;  // Mode = NEED_GEM_AIA;   // debugging - calculating all nodes with AIA!
      if( NeedGEM )
      {
-        RetCode = na->RunGEM( ii, Mode );
+    	 RetCode = na->RunGEM( ii, Mode );
         // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
         mtp->TimeGEM +=	na->GEM_CalcTime();
         // checking RetCode from GEM IPM calculation
@@ -532,6 +533,10 @@ bool TGEM2MT::Trans1D( char mode )
 FILE* logfile;
 FILE* ph_file;
 FILE* diffile = NULL;
+
+#ifndef IPMGEMPLUGIN
+   showMss = 0L;
+#endif
 
 if( mtp->PsDDc == S_ON && mtp->PsDIc == S_OFF )  // Set of DC transport using record switches
 	CompMode = true; 

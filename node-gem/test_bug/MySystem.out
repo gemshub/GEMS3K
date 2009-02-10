@@ -8,17 +8,17 @@ xCa= 3 xSi=6 xO=5 xH=4 xCalcite=12 xSiO2=14
   in = 1  it = 0 Cal= 0.00358117 Silica= 0
   in = 0  it = 10 Cal= 1.09709 Silica= 0
   in = 1  it = 10 Cal= 0.00358117 Silica= 0
-  in = 0  it = 20 Cal= 0.996624 Silica= 0
+  in = 0  it = 20 Cal= 0.996621 Silica= 0
   in = 1  it = 20 Cal= 0.00358117 Silica= 0
-  in = 0  it = 30 Cal= 0.896405 Silica= 0
+  in = 0  it = 30 Cal= 0.896404 Silica= 0
   in = 1  it = 30 Cal= 0.00358117 Silica= 0
-  in = 0  it = 40 Cal= 0.796345 Silica= 0
+  in = 0  it = 40 Cal= 0.796344 Silica= 0
   in = 1  it = 40 Cal= 0.00358117 Silica= 0
   in = 0  it = 50 Cal= 0.696401 Silica= 0
   in = 1  it = 50 Cal= 0.00358117 Silica= 0
   in = 0  it = 60 Cal= 0.596561 Silica= 0
   in = 1  it = 60 Cal= 0.00358117 Silica= 0
-  in = 0  it = 70 Cal= 0.496816 Silica= 0
+  in = 0  it = 70 Cal= 0.496819 Silica= 0
   in = 1  it = 70 Cal= 0.00358117 Silica= 0
   in = 0  it = 80 Cal= 0.397179 Silica= 0
   in = 1  it = 80 Cal= 0.00358117 Silica= 0
@@ -32,38 +32,33 @@ xCa= 3 xSi=6 xO=5 xH=4 xCalcite=12 xSiO2=14
   in = 1  it = 120 Cal= 0.00999057 Silica= 0.130527
   in = 0  it = 130 Cal= 0.118866 Silica= 0
   in = 1  it = 130 Cal= 0.00999056 Silica= 0.300517
-Warning Calling GEMIPM calculation it = 138 Node 1 Ca= 0.0783182 Si= 0.362866
   in = 0  it = 140 Cal= 0.218586 Silica= 0
   in = 1  it = 140 Cal= 0.00999057 Silica= 0.254525
   in = 0  it = 150 Cal= 0.318166 Silica= 0
   in = 1  it = 150 Cal= 0.00999058 Silica= 0.184534
-Warning Calling GEMIPM calculation it = 156 Node 1 Ca= 0.258318 Si= 0.452866
   in = 0  it = 160 Cal= 0.417767 Silica= 0
   in = 1  it = 160 Cal= 0.0099906 Silica= 0.114543
-Warning Calling GEMIPM calculation it = 163 Node 1 Ca= 0.328318 Si= 0.487866
   in = 0  it = 170 Cal= 0.517456 Silica= 0
   in = 1  it = 170 Cal= 0.00999062 Silica= 0.0445523
-  in = 0  it = 180 Cal= 0.617226 Silica= 0
+  in = 0  it = 180 Cal= 0.617229 Silica= 0
   in = 1  it = 180 Cal= 0.00999094 Silica= 0
 Error Calling GEMIPM calculation it = 181 Node 1 Ca= 0.508318 Si= 0.577866
   in = 0  it = 190 Cal= 0.71708 Silica= 0
   in = 1  it = 190 Cal= 0.00999095 Silica= 0
-  in = 0  it = 200 Cal= 0.81702 Silica= 0
+  in = 0  it = 200 Cal= 0.817015 Silica= 0
   in = 1  it = 200 Cal= 0.00999096 Silica= 0
-  in = 0  it = 210 Cal= 0.917047 Silica= 0
+  in = 0  it = 210 Cal= 0.917046 Silica= 0
   in = 1  it = 210 Cal= 0.00999096 Silica= 0
-  in = 0  it = 220 Cal= 0.997172 Silica= 0
+  in = 0  it = 220 Cal= 0.997173 Silica= 0
   in = 1  it = 220 Cal= 0.00999097 Silica= 0
   in = 0  it = 230 Cal= 0.89712 Silica= 0
   in = 1  it = 230 Cal= 0.00999097 Silica= 0
   in = 0  it = 240 Cal= 0.797229 Silica= 0
   in = 1  it = 240 Cal= 0.00999097 Silica= 0
-  in = 0  it = 250 Cal= 0.697482 Silica= 0
+  in = 0  it = 250 Cal= 0.697483 Silica= 0
   in = 1  it = 250 Cal= 0.00999097 Silica= 0
-Warning Calling GEMIPM calculation it = 259 Node 1 Ca= 0.728318 Si= 0.967866
   in = 0  it = 260 Cal= 0.597887 Silica= 0
   in = 1  it = 260 Cal= 0.00999067 Silica= 0.110582
-Warning Calling GEMIPM calculation it = 266 Node 1 Ca= 0.658318 Si= 1.00287
   in = 0  it = 270 Cal= 0.49848 Silica= 0
   in = 1  it = 270 Cal= 0.00999065 Silica= 0.240573
   in = 0  it = 280 Cal= 0.398931 Silica= 0
@@ -82,7 +77,6 @@ Warning Calling GEMIPM calculation it = 266 Node 1 Ca= 0.658318 Si= 1.00287
   in = 1  it = 340 Cal= 0.00999057 Silica= 0.514525
   in = 0  it = 350 Cal= 0.318957 Silica= 0
   in = 1  it = 350 Cal= 0.00999058 Silica= 0.344534
-Warning Calling GEMIPM calculation it = 359 Node 1 Ca= 0.288318 Si= 0.537866
   in = 0  it = 360 Cal= 0.418957 Silica= 0
   in = 1  it = 360 Cal= 0.0099906 Silica= 0.174543
 Error Calling GEMIPM calculation it = 363 Node 1 Ca= 0.328318 Si= 0.517866
@@ -99,7 +93,7 @@ Error Calling GEMIPM calculation it = 388 Node 1 Ca= 0.578318 Si= 0.392866
   in = 1  it = 410 Cal= 0.00358117 Silica= 0
   in = 0  it = 420 Cal= 0.997913 Silica= 0
   in = 1  it = 420 Cal= 0.00358117 Silica= 0
-  in = 0  it = 430 Cal= 0.898151 Silica= 0
+  in = 0  it = 430 Cal= 0.898148 Silica= 0
   in = 1  it = 430 Cal= 0.00358117 Silica= 0
   in = 0  it = 440 Cal= 0.79868 Silica= 0
   in = 1  it = 440 Cal= 0.00358117 Silica= 0
@@ -107,405 +101,76 @@ Error Calling GEMIPM calculation it = 388 Node 1 Ca= 0.578318 Si= 0.392866
   in = 1  it = 450 Cal= 0.00358117 Silica= 0
   in = 0  it = 460 Cal= 0.598957 Silica= 0
   in = 1  it = 460 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 467 Node 1 Ca= 0.648318 Si= 0.00786565
-Warning Calling GEMIPM calculation it = 470 Node 0 Ca= 0.498957 Si= 0.981428
   in = 0  it = 470 Cal= 0.498957 Silica= 0
   in = 1  it = 470 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 471 Node 0 Ca= 0.488957 Si= 0.976428
-Warning Calling GEMIPM calculation it = 472 Node 0 Ca= 0.478957 Si= 0.971428
-Warning Calling GEMIPM calculation it = 473 Node 0 Ca= 0.468957 Si= 0.966428
-Warning Calling GEMIPM calculation it = 474 Node 0 Ca= 0.458957 Si= 0.961428
-Warning Calling GEMIPM calculation it = 475 Node 0 Ca= 0.448957 Si= 0.956428
-Warning Calling GEMIPM calculation it = 476 Node 0 Ca= 0.438957 Si= 0.951428
-Warning Calling GEMIPM calculation it = 477 Node 0 Ca= 0.428957 Si= 0.946428
-Warning Calling GEMIPM calculation it = 478 Node 0 Ca= 0.418957 Si= 0.941428
-Warning Calling GEMIPM calculation it = 479 Node 0 Ca= 0.408957 Si= 0.936428
-Warning Calling GEMIPM calculation it = 480 Node 0 Ca= 0.398957 Si= 0.931428
   in = 0  it = 480 Cal= 0.398957 Silica= 0
   in = 1  it = 480 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 481 Node 0 Ca= 0.388957 Si= 0.926428
-Warning Calling GEMIPM calculation it = 482 Node 0 Ca= 0.378957 Si= 0.921428
-Warning Calling GEMIPM calculation it = 483 Node 0 Ca= 0.368957 Si= 0.916428
-Warning Calling GEMIPM calculation it = 484 Node 0 Ca= 0.358957 Si= 0.911428
-Warning Calling GEMIPM calculation it = 485 Node 0 Ca= 0.348957 Si= 0.906428
-Warning Calling GEMIPM calculation it = 486 Node 0 Ca= 0.338957 Si= 0.901428
-Warning Calling GEMIPM calculation it = 487 Node 0 Ca= 0.328957 Si= 0.896428
-Warning Calling GEMIPM calculation it = 488 Node 0 Ca= 0.318957 Si= 0.891428
-Warning Calling GEMIPM calculation it = 489 Node 0 Ca= 0.308957 Si= 0.886428
-Warning Calling GEMIPM calculation it = 490 Node 0 Ca= 0.298957 Si= 0.881428
   in = 0  it = 490 Cal= 0.298957 Silica= 0
   in = 1  it = 490 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 491 Node 0 Ca= 0.288957 Si= 0.876428
-Warning Calling GEMIPM calculation it = 492 Node 0 Ca= 0.278957 Si= 0.871428
-Warning Calling GEMIPM calculation it = 493 Node 0 Ca= 0.268957 Si= 0.866428
-Warning Calling GEMIPM calculation it = 494 Node 0 Ca= 0.258957 Si= 0.861428
-Warning Calling GEMIPM calculation it = 495 Node 0 Ca= 0.248957 Si= 0.856428
-Warning Calling GEMIPM calculation it = 496 Node 0 Ca= 0.238957 Si= 0.851428
-Warning Calling GEMIPM calculation it = 497 Node 0 Ca= 0.228957 Si= 0.846428
-Warning Calling GEMIPM calculation it = 498 Node 0 Ca= 0.218957 Si= 0.841428
-Warning Calling GEMIPM calculation it = 499 Node 0 Ca= 0.208957 Si= 0.836428
-Warning Calling GEMIPM calculation it = 500 Node 0 Ca= 0.198957 Si= 0.831428
   in = 0  it = 500 Cal= 0.198957 Silica= 0
   in = 1  it = 500 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 501 Node 0 Ca= 0.188957 Si= 0.826428
-Warning Calling GEMIPM calculation it = 502 Node 0 Ca= 0.178957 Si= 0.821428
-Warning Calling GEMIPM calculation it = 503 Node 0 Ca= 0.168957 Si= 0.816428
-Warning Calling GEMIPM calculation it = 504 Node 0 Ca= 0.158957 Si= 0.811428
-Warning Calling GEMIPM calculation it = 505 Node 0 Ca= 0.148957 Si= 0.806428
-Warning Calling GEMIPM calculation it = 506 Node 0 Ca= 0.138957 Si= 0.801428
-Warning Calling GEMIPM calculation it = 507 Node 0 Ca= 0.128957 Si= 0.796428
-Warning Calling GEMIPM calculation it = 508 Node 0 Ca= 0.118957 Si= 0.791428
-Warning Calling GEMIPM calculation it = 509 Node 0 Ca= 0.108957 Si= 0.786428
-Warning Calling GEMIPM calculation it = 510 Node 0 Ca= 0.0989569 Si= 0.781428
   in = 0  it = 510 Cal= 0.0989569 Silica= 0
   in = 1  it = 510 Cal= 0.00999093 Silica= 0
-Warning Calling GEMIPM calculation it = 511 Node 0 Ca= 0.0889569 Si= 0.776428
-Warning Calling GEMIPM calculation it = 512 Node 0 Ca= 0.0789569 Si= 0.771428
-Warning Calling GEMIPM calculation it = 513 Node 0 Ca= 0.0689569 Si= 0.766428
-Warning Calling GEMIPM calculation it = 514 Node 0 Ca= 0.0589569 Si= 0.761428
-Warning Calling GEMIPM calculation it = 515 Node 0 Ca= 0.0489569 Si= 0.756428
-Warning Calling GEMIPM calculation it = 516 Node 0 Ca= 0.0389569 Si= 0.751428
-Warning Calling GEMIPM calculation it = 517 Node 0 Ca= 0.0289569 Si= 0.746428
-Warning Calling GEMIPM calculation it = 518 Node 0 Ca= 0.0189569 Si= 0.741428
-Warning Calling GEMIPM calculation it = 519 Node 0 Ca= 0.00895691 Si= 0.736428
-Warning Calling GEMIPM calculation it = 520 Node 0 Ca= 0.0189569 Si= 0.731428
   in = 0  it = 520 Cal= 0.0189569 Silica= 0
-Warning Calling GEMIPM calculation it = 520 Node 1 Ca= 0.118318 Si= 0.272866
-  in = 1  it = 520 Cal= 0.00999057 Silica= 0.130526
-Warning Calling GEMIPM calculation it = 521 Node 0 Ca= 0.0289569 Si= 0.726428
-Warning Calling GEMIPM calculation it = 522 Node 0 Ca= 0.0389569 Si= 0.721428
-Warning Calling GEMIPM calculation it = 523 Node 0 Ca= 0.0489569 Si= 0.716428
-Warning Calling GEMIPM calculation it = 524 Node 0 Ca= 0.0589569 Si= 0.711428
-Warning Calling GEMIPM calculation it = 525 Node 0 Ca= 0.0689569 Si= 0.706428
-Warning Calling GEMIPM calculation it = 526 Node 0 Ca= 0.0789569 Si= 0.701428
-Warning Calling GEMIPM calculation it = 527 Node 0 Ca= 0.0889569 Si= 0.696428
-Warning Calling GEMIPM calculation it = 528 Node 0 Ca= 0.0989569 Si= 0.691428
-Warning Calling GEMIPM calculation it = 528 Node 1 Ca= 0.0383182 Si= 0.312866
-Warning Calling GEMIPM calculation it = 529 Node 0 Ca= 0.108957 Si= 0.686428
-Warning Calling GEMIPM calculation it = 530 Node 0 Ca= 0.118957 Si= 0.681428
+  in = 1  it = 520 Cal= 0.00999057 Silica= 0.130527
   in = 0  it = 530 Cal= 0.118957 Silica= 0
   in = 1  it = 530 Cal= 0.00999055 Silica= 0.300517
-Warning Calling GEMIPM calculation it = 531 Node 0 Ca= 0.128957 Si= 0.676428
 Error Calling GEMIPM calculation it = 531 Node 1 Ca= 0.00831823 Si= 0.327866
-Warning Calling GEMIPM calculation it = 533 Node 0 Ca= 0.148957 Si= 0.666428
-Warning Calling GEMIPM calculation it = 534 Node 0 Ca= 0.158957 Si= 0.661428
-Warning Calling GEMIPM calculation it = 535 Node 0 Ca= 0.168957 Si= 0.656428
-Warning Calling GEMIPM calculation it = 536 Node 0 Ca= 0.178957 Si= 0.651428
-Warning Calling GEMIPM calculation it = 537 Node 0 Ca= 0.188957 Si= 0.646428
-Warning Calling GEMIPM calculation it = 538 Node 0 Ca= 0.198957 Si= 0.641428
-Warning Calling GEMIPM calculation it = 539 Node 0 Ca= 0.208957 Si= 0.636428
-Warning Calling GEMIPM calculation it = 540 Node 0 Ca= 0.218957 Si= 0.631428
   in = 0  it = 540 Cal= 0.218957 Silica= 0
   in = 1  it = 540 Cal= 0.00999057 Silica= 0.254525
-Warning Calling GEMIPM calculation it = 541 Node 0 Ca= 0.228957 Si= 0.626428
-Warning Calling GEMIPM calculation it = 542 Node 0 Ca= 0.238957 Si= 0.621428
-Warning Calling GEMIPM calculation it = 543 Node 0 Ca= 0.248957 Si= 0.616428
-Warning Calling GEMIPM calculation it = 544 Node 0 Ca= 0.258957 Si= 0.611428
-Warning Calling GEMIPM calculation it = 545 Node 0 Ca= 0.268957 Si= 0.606428
-Warning Calling GEMIPM calculation it = 546 Node 0 Ca= 0.278957 Si= 0.601428
-Warning Calling GEMIPM calculation it = 547 Node 0 Ca= 0.288957 Si= 0.596428
-Warning Calling GEMIPM calculation it = 548 Node 0 Ca= 0.298957 Si= 0.591428
-Warning Calling GEMIPM calculation it = 549 Node 0 Ca= 0.308957 Si= 0.586428
-Warning Calling GEMIPM calculation it = 550 Node 0 Ca= 0.318957 Si= 0.581428
   in = 0  it = 550 Cal= 0.318957 Silica= 0
   in = 1  it = 550 Cal= 0.00999058 Silica= 0.184534
-Warning Calling GEMIPM calculation it = 551 Node 0 Ca= 0.328957 Si= 0.576428
-Warning Calling GEMIPM calculation it = 552 Node 0 Ca= 0.338957 Si= 0.571428
-Warning Calling GEMIPM calculation it = 553 Node 0 Ca= 0.348957 Si= 0.566428
-Warning Calling GEMIPM calculation it = 554 Node 0 Ca= 0.358957 Si= 0.561428
-Warning Calling GEMIPM calculation it = 554 Node 1 Ca= 0.238318 Si= 0.442866
-Warning Calling GEMIPM calculation it = 555 Node 0 Ca= 0.368957 Si= 0.556428
-Warning Calling GEMIPM calculation it = 556 Node 0 Ca= 0.378957 Si= 0.551428
-Warning Calling GEMIPM calculation it = 557 Node 0 Ca= 0.388957 Si= 0.546428
-Warning Calling GEMIPM calculation it = 558 Node 0 Ca= 0.398957 Si= 0.541428
-Warning Calling GEMIPM calculation it = 559 Node 0 Ca= 0.408957 Si= 0.536428
-Warning Calling GEMIPM calculation it = 560 Node 0 Ca= 0.418957 Si= 0.531428
   in = 0  it = 560 Cal= 0.418957 Silica= 0
   in = 1  it = 560 Cal= 0.0099906 Silica= 0.114543
-Warning Calling GEMIPM calculation it = 561 Node 0 Ca= 0.428957 Si= 0.526428
-Warning Calling GEMIPM calculation it = 562 Node 0 Ca= 0.438957 Si= 0.521428
-Warning Calling GEMIPM calculation it = 563 Node 0 Ca= 0.448957 Si= 0.516428
-Warning Calling GEMIPM calculation it = 564 Node 0 Ca= 0.458957 Si= 0.511428
-Warning Calling GEMIPM calculation it = 565 Node 0 Ca= 0.468957 Si= 0.506428
-Warning Calling GEMIPM calculation it = 565 Node 1 Ca= 0.348318 Si= 0.497866
-Warning Calling GEMIPM calculation it = 566 Node 0 Ca= 0.478957 Si= 0.501428
-Warning Calling GEMIPM calculation it = 567 Node 0 Ca= 0.488957 Si= 0.496428
-Warning Calling GEMIPM calculation it = 568 Node 0 Ca= 0.498957 Si= 0.491428
-Warning Calling GEMIPM calculation it = 569 Node 0 Ca= 0.508957 Si= 0.486428
-Warning Calling GEMIPM calculation it = 570 Node 0 Ca= 0.518957 Si= 0.481428
   in = 0  it = 570 Cal= 0.518957 Silica= 0
   in = 1  it = 570 Cal= 0.00999062 Silica= 0.0445523
-Warning Calling GEMIPM calculation it = 571 Node 0 Ca= 0.528957 Si= 0.476428
-Warning Calling GEMIPM calculation it = 572 Node 0 Ca= 0.538957 Si= 0.471428
-Warning Calling GEMIPM calculation it = 573 Node 0 Ca= 0.548957 Si= 0.466428
-Warning Calling GEMIPM calculation it = 574 Node 0 Ca= 0.558957 Si= 0.461428
-Warning Calling GEMIPM calculation it = 575 Node 0 Ca= 0.568957 Si= 0.456428
-Warning Calling GEMIPM calculation it = 576 Node 0 Ca= 0.578957 Si= 0.451428
-Warning Calling GEMIPM calculation it = 577 Node 0 Ca= 0.588957 Si= 0.446428
-Warning Calling GEMIPM calculation it = 578 Node 0 Ca= 0.598957 Si= 0.441428
-Warning Calling GEMIPM calculation it = 579 Node 0 Ca= 0.608957 Si= 0.436428
-Warning Calling GEMIPM calculation it = 580 Node 0 Ca= 0.618957 Si= 0.431428
   in = 0  it = 580 Cal= 0.618957 Silica= 0
   in = 1  it = 580 Cal= 0.00999094 Silica= 0
-Warning Calling GEMIPM calculation it = 581 Node 0 Ca= 0.628957 Si= 0.426428
-Warning Calling GEMIPM calculation it = 582 Node 0 Ca= 0.638957 Si= 0.421428
-Warning Calling GEMIPM calculation it = 583 Node 0 Ca= 0.648957 Si= 0.416428
-Warning Calling GEMIPM calculation it = 584 Node 0 Ca= 0.658957 Si= 0.411428
-Warning Calling GEMIPM calculation it = 585 Node 0 Ca= 0.668957 Si= 0.406428
-Warning Calling GEMIPM calculation it = 586 Node 0 Ca= 0.678957 Si= 0.401428
-Warning Calling GEMIPM calculation it = 587 Node 0 Ca= 0.688957 Si= 0.396428
-Warning Calling GEMIPM calculation it = 588 Node 0 Ca= 0.698957 Si= 0.391428
-Warning Calling GEMIPM calculation it = 589 Node 0 Ca= 0.708957 Si= 0.386428
-Warning Calling GEMIPM calculation it = 590 Node 0 Ca= 0.718957 Si= 0.381428
   in = 0  it = 590 Cal= 0.718957 Silica= 0
   in = 1  it = 590 Cal= 0.00999095 Silica= 0
-Warning Calling GEMIPM calculation it = 591 Node 0 Ca= 0.728957 Si= 0.376428
-Warning Calling GEMIPM calculation it = 592 Node 0 Ca= 0.738957 Si= 0.371428
-Warning Calling GEMIPM calculation it = 593 Node 0 Ca= 0.748957 Si= 0.366428
-Warning Calling GEMIPM calculation it = 594 Node 0 Ca= 0.758957 Si= 0.361428
-Warning Calling GEMIPM calculation it = 595 Node 0 Ca= 0.768957 Si= 0.356428
-Warning Calling GEMIPM calculation it = 596 Node 0 Ca= 0.778957 Si= 0.351428
-Warning Calling GEMIPM calculation it = 597 Node 0 Ca= 0.788957 Si= 0.346428
-Warning Calling GEMIPM calculation it = 598 Node 0 Ca= 0.798957 Si= 0.341428
-Warning Calling GEMIPM calculation it = 599 Node 0 Ca= 0.808957 Si= 0.336428
-Warning Calling GEMIPM calculation it = 600 Node 0 Ca= 0.818957 Si= 0.331428
   in = 0  it = 600 Cal= 0.818957 Silica= 0
   in = 1  it = 600 Cal= 0.00999096 Silica= 0
-Warning Calling GEMIPM calculation it = 601 Node 0 Ca= 0.828957 Si= 0.326428
-Warning Calling GEMIPM calculation it = 602 Node 0 Ca= 0.838957 Si= 0.321428
-Warning Calling GEMIPM calculation it = 603 Node 0 Ca= 0.848957 Si= 0.316428
-Warning Calling GEMIPM calculation it = 604 Node 0 Ca= 0.858957 Si= 0.311428
-Warning Calling GEMIPM calculation it = 605 Node 0 Ca= 0.868957 Si= 0.306428
-Warning Calling GEMIPM calculation it = 606 Node 0 Ca= 0.878957 Si= 0.301428
-Warning Calling GEMIPM calculation it = 607 Node 0 Ca= 0.888957 Si= 0.296428
-Warning Calling GEMIPM calculation it = 608 Node 0 Ca= 0.898957 Si= 0.291428
-Warning Calling GEMIPM calculation it = 609 Node 0 Ca= 0.908957 Si= 0.286428
-Warning Calling GEMIPM calculation it = 610 Node 0 Ca= 0.918957 Si= 0.281428
   in = 0  it = 610 Cal= 0.918957 Silica= 0
   in = 1  it = 610 Cal= 0.00999096 Silica= 0
-Warning Calling GEMIPM calculation it = 611 Node 0 Ca= 0.928957 Si= 0.276428
-Warning Calling GEMIPM calculation it = 612 Node 0 Ca= 0.938957 Si= 0.271428
-Warning Calling GEMIPM calculation it = 613 Node 0 Ca= 0.948957 Si= 0.266428
-Warning Calling GEMIPM calculation it = 614 Node 0 Ca= 0.958957 Si= 0.261428
-Warning Calling GEMIPM calculation it = 615 Node 0 Ca= 0.968957 Si= 0.256428
-Warning Calling GEMIPM calculation it = 616 Node 0 Ca= 0.978957 Si= 0.251428
-Warning Calling GEMIPM calculation it = 617 Node 0 Ca= 0.988957 Si= 0.246428
-Warning Calling GEMIPM calculation it = 618 Node 0 Ca= 0.998957 Si= 0.241428
-Warning Calling GEMIPM calculation it = 619 Node 0 Ca= 1.00896 Si= 0.236428
-Warning Calling GEMIPM calculation it = 620 Node 0 Ca= 0.998957 Si= 0.231428
   in = 0  it = 620 Cal= 0.998957 Silica= 0
   in = 1  it = 620 Cal= 0.00999097 Silica= 0
-Warning Calling GEMIPM calculation it = 621 Node 0 Ca= 0.988957 Si= 0.226428
-Warning Calling GEMIPM calculation it = 622 Node 0 Ca= 0.978957 Si= 0.221428
-Warning Calling GEMIPM calculation it = 623 Node 0 Ca= 0.968957 Si= 0.216428
-Warning Calling GEMIPM calculation it = 624 Node 0 Ca= 0.958957 Si= 0.211428
-Warning Calling GEMIPM calculation it = 625 Node 0 Ca= 0.948957 Si= 0.206428
-Warning Calling GEMIPM calculation it = 626 Node 0 Ca= 0.938957 Si= 0.201428
-Warning Calling GEMIPM calculation it = 627 Node 0 Ca= 0.928957 Si= 0.196428
-Warning Calling GEMIPM calculation it = 628 Node 0 Ca= 0.918957 Si= 0.191428
-Warning Calling GEMIPM calculation it = 629 Node 0 Ca= 0.908957 Si= 0.186428
-Warning Calling GEMIPM calculation it = 630 Node 0 Ca= 0.898957 Si= 0.181428
   in = 0  it = 630 Cal= 0.898957 Silica= 0
   in = 1  it = 630 Cal= 0.00999097 Silica= 0
-Warning Calling GEMIPM calculation it = 631 Node 0 Ca= 0.888957 Si= 0.176428
-Warning Calling GEMIPM calculation it = 632 Node 0 Ca= 0.878957 Si= 0.171428
-Warning Calling GEMIPM calculation it = 633 Node 0 Ca= 0.868957 Si= 0.166428
-Warning Calling GEMIPM calculation it = 634 Node 0 Ca= 0.858957 Si= 0.161428
-Warning Calling GEMIPM calculation it = 635 Node 0 Ca= 0.848957 Si= 0.156428
-Warning Calling GEMIPM calculation it = 636 Node 0 Ca= 0.838957 Si= 0.151428
-Warning Calling GEMIPM calculation it = 637 Node 0 Ca= 0.828957 Si= 0.146428
-Warning Calling GEMIPM calculation it = 638 Node 0 Ca= 0.818957 Si= 0.141428
-Warning Calling GEMIPM calculation it = 639 Node 0 Ca= 0.808957 Si= 0.136428
-Warning Calling GEMIPM calculation it = 640 Node 0 Ca= 0.798957 Si= 0.131428
   in = 0  it = 640 Cal= 0.798957 Silica= 0
   in = 1  it = 640 Cal= 0.00999097 Silica= 0
-Warning Calling GEMIPM calculation it = 641 Node 0 Ca= 0.788957 Si= 0.126428
-Warning Calling GEMIPM calculation it = 642 Node 0 Ca= 0.778957 Si= 0.121428
-Warning Calling GEMIPM calculation it = 643 Node 0 Ca= 0.768957 Si= 0.116428
-Warning Calling GEMIPM calculation it = 644 Node 0 Ca= 0.758957 Si= 0.111428
-Warning Calling GEMIPM calculation it = 645 Node 0 Ca= 0.748957 Si= 0.106428
-Warning Calling GEMIPM calculation it = 646 Node 0 Ca= 0.738957 Si= 0.101428
-Warning Calling GEMIPM calculation it = 647 Node 0 Ca= 0.728957 Si= 0.0964276
-Warning Calling GEMIPM calculation it = 648 Node 0 Ca= 0.718957 Si= 0.0914276
-Warning Calling GEMIPM calculation it = 649 Node 0 Ca= 0.708957 Si= 0.0864276
-Warning Calling GEMIPM calculation it = 650 Node 0 Ca= 0.698957 Si= 0.0814276
   in = 0  it = 650 Cal= 0.698957 Silica= 0
   in = 1  it = 650 Cal= 0.00999097 Silica= 0
-Warning Calling GEMIPM calculation it = 651 Node 0 Ca= 0.688957 Si= 0.0764276
-Warning Calling GEMIPM calculation it = 652 Node 0 Ca= 0.678957 Si= 0.0714276
-Warning Calling GEMIPM calculation it = 653 Node 0 Ca= 0.668957 Si= 0.0664276
-Warning Calling GEMIPM calculation it = 654 Node 0 Ca= 0.658957 Si= 0.0614276
-Warning Calling GEMIPM calculation it = 655 Node 0 Ca= 0.648957 Si= 0.0564276
-Warning Calling GEMIPM calculation it = 656 Node 0 Ca= 0.638957 Si= 0.0514276
-Warning Calling GEMIPM calculation it = 657 Node 0 Ca= 0.628957 Si= 0.0464276
-Warning Calling GEMIPM calculation it = 658 Node 0 Ca= 0.618957 Si= 0.0414276
-Warning Calling GEMIPM calculation it = 659 Node 0 Ca= 0.608957 Si= 0.0364276
-Warning Calling GEMIPM calculation it = 660 Node 0 Ca= 0.598957 Si= 0.0314276
   in = 0  it = 660 Cal= 0.598957 Silica= 0
   in = 1  it = 660 Cal= 0.00999067 Silica= 0.110582
-Warning Calling GEMIPM calculation it = 661 Node 0 Ca= 0.588957 Si= 0.0264276
-Warning Calling GEMIPM calculation it = 662 Node 0 Ca= 0.578957 Si= 0.0214276
-Warning Calling GEMIPM calculation it = 663 Node 0 Ca= 0.568957 Si= 0.0164276
-Warning Calling GEMIPM calculation it = 664 Node 0 Ca= 0.558957 Si= 0.0114276
-Warning Calling GEMIPM calculation it = 665 Node 0 Ca= 0.548957 Si= 0.00642762
-Warning Calling GEMIPM calculation it = 666 Node 0 Ca= 0.538957 Si= 0.00142762
-Warning Calling GEMIPM calculation it = 667 Node 0 Ca= 0.528957 Si= 0.00642762
-Warning Calling GEMIPM calculation it = 668 Node 0 Ca= 0.518957 Si= 0.0114276
-Warning Calling GEMIPM calculation it = 669 Node 0 Ca= 0.508957 Si= 0.0164276
-Warning Calling GEMIPM calculation it = 670 Node 0 Ca= 0.498957 Si= 0.0214276
   in = 0  it = 670 Cal= 0.498957 Silica= 0
   in = 1  it = 670 Cal= 0.00999065 Silica= 0.240573
-Warning Calling GEMIPM calculation it = 671 Node 0 Ca= 0.488957 Si= 0.0264276
-Warning Calling GEMIPM calculation it = 672 Node 0 Ca= 0.478957 Si= 0.0314276
-Warning Calling GEMIPM calculation it = 673 Node 0 Ca= 0.468957 Si= 0.0364276
-Warning Calling GEMIPM calculation it = 674 Node 0 Ca= 0.458957 Si= 0.0414276
-Warning Calling GEMIPM calculation it = 675 Node 0 Ca= 0.448957 Si= 0.0464276
 Error Calling GEMIPM calculation it = 675 Node 1 Ca= 0.568318 Si= 0.957866
-Warning Calling GEMIPM calculation it = 676 Node 1 Ca= 0.558318 Si= 0.952866
-Warning Calling GEMIPM calculation it = 677 Node 0 Ca= 0.428957 Si= 0.0564276
-Warning Calling GEMIPM calculation it = 678 Node 0 Ca= 0.418957 Si= 0.0614276
-Warning Calling GEMIPM calculation it = 679 Node 0 Ca= 0.408957 Si= 0.0664276
-Warning Calling GEMIPM calculation it = 680 Node 0 Ca= 0.398957 Si= 0.0714276
   in = 0  it = 680 Cal= 0.398957 Silica= 0
   in = 1  it = 680 Cal= 0.00999064 Silica= 0.310563
-Warning Calling GEMIPM calculation it = 681 Node 0 Ca= 0.388957 Si= 0.0764276
-Warning Calling GEMIPM calculation it = 682 Node 0 Ca= 0.378957 Si= 0.0814276
-Warning Calling GEMIPM calculation it = 682 Node 1 Ca= 0.498318 Si= 0.922866
-Warning Calling GEMIPM calculation it = 683 Node 0 Ca= 0.368957 Si= 0.0864276
-Warning Calling GEMIPM calculation it = 684 Node 0 Ca= 0.358957 Si= 0.0914276
-Warning Calling GEMIPM calculation it = 685 Node 0 Ca= 0.348957 Si= 0.0964276
-Warning Calling GEMIPM calculation it = 686 Node 0 Ca= 0.338957 Si= 0.101428
-Warning Calling GEMIPM calculation it = 687 Node 0 Ca= 0.328957 Si= 0.106428
-Warning Calling GEMIPM calculation it = 688 Node 0 Ca= 0.318957 Si= 0.111428
-Warning Calling GEMIPM calculation it = 689 Node 0 Ca= 0.308957 Si= 0.116428
-Warning Calling GEMIPM calculation it = 690 Node 0 Ca= 0.298957 Si= 0.121428
   in = 0  it = 690 Cal= 0.298957 Silica= 0
   in = 1  it = 690 Cal= 0.00999062 Silica= 0.380554
-Warning Calling GEMIPM calculation it = 691 Node 0 Ca= 0.288957 Si= 0.126428
-Warning Calling GEMIPM calculation it = 692 Node 0 Ca= 0.278957 Si= 0.131428
-Warning Calling GEMIPM calculation it = 693 Node 0 Ca= 0.268957 Si= 0.136428
-Warning Calling GEMIPM calculation it = 694 Node 0 Ca= 0.258957 Si= 0.141428
 Error Calling GEMIPM calculation it = 694 Node 1 Ca= 0.378318 Si= 0.862866
-Warning Calling GEMIPM calculation it = 696 Node 0 Ca= 0.238957 Si= 0.151428
-Warning Calling GEMIPM calculation it = 697 Node 0 Ca= 0.228957 Si= 0.156428
-Warning Calling GEMIPM calculation it = 698 Node 0 Ca= 0.218957 Si= 0.161428
-Warning Calling GEMIPM calculation it = 699 Node 0 Ca= 0.208957 Si= 0.166428
-Warning Calling GEMIPM calculation it = 700 Node 0 Ca= 0.198957 Si= 0.171428
   in = 0  it = 700 Cal= 0.198957 Silica= 0
   in = 1  it = 700 Cal= 0.0099906 Silica= 0.450545
-Warning Calling GEMIPM calculation it = 701 Node 0 Ca= 0.188957 Si= 0.176428
-Warning Calling GEMIPM calculation it = 702 Node 0 Ca= 0.178957 Si= 0.181428
-Warning Calling GEMIPM calculation it = 703 Node 0 Ca= 0.168957 Si= 0.186428
-Warning Calling GEMIPM calculation it = 704 Node 0 Ca= 0.158957 Si= 0.191428
-Warning Calling GEMIPM calculation it = 705 Node 0 Ca= 0.148957 Si= 0.196428
-Warning Calling GEMIPM calculation it = 706 Node 0 Ca= 0.138957 Si= 0.201428
-Warning Calling GEMIPM calculation it = 706 Node 1 Ca= 0.258318 Si= 0.802866
-Warning Calling GEMIPM calculation it = 707 Node 0 Ca= 0.128957 Si= 0.206428
-Warning Calling GEMIPM calculation it = 708 Node 0 Ca= 0.118957 Si= 0.211428
-Warning Calling GEMIPM calculation it = 709 Node 0 Ca= 0.108957 Si= 0.216428
-Warning Calling GEMIPM calculation it = 710 Node 0 Ca= 0.0989569 Si= 0.221428
   in = 0  it = 710 Cal= 0.0989569 Silica= 0
   in = 1  it = 710 Cal= 0.00999059 Silica= 0.520536
-Warning Calling GEMIPM calculation it = 711 Node 0 Ca= 0.0889569 Si= 0.226428
-Warning Calling GEMIPM calculation it = 712 Node 0 Ca= 0.0789569 Si= 0.231428
-Warning Calling GEMIPM calculation it = 713 Node 0 Ca= 0.0689569 Si= 0.236428
-Warning Calling GEMIPM calculation it = 714 Node 0 Ca= 0.0589569 Si= 0.241428
-Warning Calling GEMIPM calculation it = 715 Node 0 Ca= 0.0489569 Si= 0.246428
-Warning Calling GEMIPM calculation it = 716 Node 0 Ca= 0.0389569 Si= 0.251428
-Warning Calling GEMIPM calculation it = 717 Node 0 Ca= 0.0289569 Si= 0.256428
-Warning Calling GEMIPM calculation it = 718 Node 0 Ca= 0.0189569 Si= 0.261428
-Warning Calling GEMIPM calculation it = 719 Node 0 Ca= 0.00895691 Si= 0.266428
-Warning Calling GEMIPM calculation it = 720 Node 0 Ca= 0.0189569 Si= 0.271428
   in = 0  it = 720 Cal= 0.0189569 Silica= 0
   in = 1  it = 720 Cal= 0.00999057 Silica= 0.590527
-Warning Calling GEMIPM calculation it = 721 Node 0 Ca= 0.0289569 Si= 0.276428
-Warning Calling GEMIPM calculation it = 722 Node 0 Ca= 0.0389569 Si= 0.281428
-Warning Calling GEMIPM calculation it = 723 Node 0 Ca= 0.0489569 Si= 0.286428
-Warning Calling GEMIPM calculation it = 724 Node 0 Ca= 0.0589569 Si= 0.291428
-Warning Calling GEMIPM calculation it = 725 Node 0 Ca= 0.0689569 Si= 0.296428
-Warning Calling GEMIPM calculation it = 726 Node 0 Ca= 0.0789569 Si= 0.301428
-Warning Calling GEMIPM calculation it = 727 Node 0 Ca= 0.0889569 Si= 0.306428
-Warning Calling GEMIPM calculation it = 728 Node 0 Ca= 0.0989569 Si= 0.311428
-Warning Calling GEMIPM calculation it = 729 Node 0 Ca= 0.108957 Si= 0.316428
-Warning Calling GEMIPM calculation it = 730 Node 0 Ca= 0.118957 Si= 0.321428
   in = 0  it = 730 Cal= 0.118957 Silica= 0
   in = 1  it = 730 Cal= 0.00999056 Silica= 0.660517
-Warning Calling GEMIPM calculation it = 731 Node 0 Ca= 0.128957 Si= 0.326428
-Warning Calling GEMIPM calculation it = 732 Node 0 Ca= 0.138957 Si= 0.331428
-Warning Calling GEMIPM calculation it = 733 Node 0 Ca= 0.148957 Si= 0.336428
-Warning Calling GEMIPM calculation it = 734 Node 0 Ca= 0.158957 Si= 0.341428
-Warning Calling GEMIPM calculation it = 735 Node 0 Ca= 0.168957 Si= 0.346428
-Warning Calling GEMIPM calculation it = 736 Node 0 Ca= 0.178957 Si= 0.351428
-Warning Calling GEMIPM calculation it = 736 Node 1 Ca= 0.0583182 Si= 0.652866
-Warning Calling GEMIPM calculation it = 737 Node 0 Ca= 0.188957 Si= 0.356428
-Warning Calling GEMIPM calculation it = 738 Node 0 Ca= 0.198957 Si= 0.361428
-Warning Calling GEMIPM calculation it = 739 Node 0 Ca= 0.208957 Si= 0.366428
-Warning Calling GEMIPM calculation it = 740 Node 0 Ca= 0.218957 Si= 0.371428
   in = 0  it = 740 Cal= 0.218957 Silica= 0
   in = 1  it = 740 Cal= 0.00999057 Silica= 0.514525
-Warning Calling GEMIPM calculation it = 741 Node 0 Ca= 0.228957 Si= 0.376428
-Warning Calling GEMIPM calculation it = 742 Node 0 Ca= 0.238957 Si= 0.381428
-Warning Calling GEMIPM calculation it = 743 Node 0 Ca= 0.248957 Si= 0.386428
-Warning Calling GEMIPM calculation it = 744 Node 0 Ca= 0.258957 Si= 0.391428
-Warning Calling GEMIPM calculation it = 745 Node 0 Ca= 0.268957 Si= 0.396428
-Warning Calling GEMIPM calculation it = 745 Node 1 Ca= 0.148318 Si= 0.607866
-Warning Calling GEMIPM calculation it = 746 Node 0 Ca= 0.278957 Si= 0.401428
-Warning Calling GEMIPM calculation it = 747 Node 0 Ca= 0.288957 Si= 0.406428
-Warning Calling GEMIPM calculation it = 748 Node 0 Ca= 0.298957 Si= 0.411428
-Warning Calling GEMIPM calculation it = 749 Node 0 Ca= 0.308957 Si= 0.416428
-Warning Calling GEMIPM calculation it = 750 Node 0 Ca= 0.318957 Si= 0.421428
   in = 0  it = 750 Cal= 0.318957 Silica= 0
   in = 1  it = 750 Cal= 0.00999058 Silica= 0.344534
-Warning Calling GEMIPM calculation it = 751 Node 0 Ca= 0.328957 Si= 0.426428
-Warning Calling GEMIPM calculation it = 752 Node 0 Ca= 0.338957 Si= 0.431428
-Warning Calling GEMIPM calculation it = 753 Node 0 Ca= 0.348957 Si= 0.436428
-Warning Calling GEMIPM calculation it = 754 Node 0 Ca= 0.358957 Si= 0.441428
-Warning Calling GEMIPM calculation it = 755 Node 0 Ca= 0.368957 Si= 0.446428
-Warning Calling GEMIPM calculation it = 756 Node 0 Ca= 0.378957 Si= 0.451428
-Warning Calling GEMIPM calculation it = 757 Node 0 Ca= 0.388957 Si= 0.456428
-Warning Calling GEMIPM calculation it = 758 Node 0 Ca= 0.398957 Si= 0.461428
-Warning Calling GEMIPM calculation it = 759 Node 0 Ca= 0.408957 Si= 0.466428
-Warning Calling GEMIPM calculation it = 760 Node 0 Ca= 0.418957 Si= 0.471428
   in = 0  it = 760 Cal= 0.418957 Silica= 0
   in = 1  it = 760 Cal= 0.0099906 Silica= 0.174543
-Warning Calling GEMIPM calculation it = 761 Node 0 Ca= 0.428957 Si= 0.476428
-Warning Calling GEMIPM calculation it = 762 Node 0 Ca= 0.438957 Si= 0.481428
-Warning Calling GEMIPM calculation it = 763 Node 0 Ca= 0.448957 Si= 0.486428
-Warning Calling GEMIPM calculation it = 764 Node 0 Ca= 0.458957 Si= 0.491428
-Warning Calling GEMIPM calculation it = 765 Node 0 Ca= 0.468957 Si= 0.496428
-Warning Calling GEMIPM calculation it = 766 Node 0 Ca= 0.478957 Si= 0.501428
-Warning Calling GEMIPM calculation it = 767 Node 0 Ca= 0.488957 Si= 0.506428
-Warning Calling GEMIPM calculation it = 768 Node 0 Ca= 0.498957 Si= 0.511428
-Warning Calling GEMIPM calculation it = 769 Node 0 Ca= 0.508957 Si= 0.516428
-Warning Calling GEMIPM calculation it = 770 Node 0 Ca= 0.518957 Si= 0.521428
   in = 0  it = 770 Cal= 0.518957 Silica= 0
   in = 1  it = 770 Cal= 0.00999062 Silica= 0.00455228
-Warning Calling GEMIPM calculation it = 771 Node 0 Ca= 0.528957 Si= 0.526428
-Warning Calling GEMIPM calculation it = 772 Node 0 Ca= 0.538957 Si= 0.531428
-Warning Calling GEMIPM calculation it = 773 Node 0 Ca= 0.548957 Si= 0.536428
-Warning Calling GEMIPM calculation it = 774 Node 0 Ca= 0.558957 Si= 0.541428
-Warning Calling GEMIPM calculation it = 775 Node 0 Ca= 0.568957 Si= 0.546428
 Error Calling GEMIPM calculation it = 775 Node 1 Ca= 0.448318 Si= 0.457866
-Warning Calling GEMIPM calculation it = 777 Node 0 Ca= 0.588957 Si= 0.556428
-Warning Calling GEMIPM calculation it = 778 Node 0 Ca= 0.598957 Si= 0.561428
-Warning Calling GEMIPM calculation it = 779 Node 0 Ca= 0.608957 Si= 0.566428
-Warning Calling GEMIPM calculation it = 780 Node 0 Ca= 0.618957 Si= 0.571428
   in = 0  it = 780 Cal= 0.618957 Silica= 0
   in = 1  it = 780 Cal= 0.00999095 Silica= 0
-Warning Calling GEMIPM calculation it = 781 Node 0 Ca= 0.628957 Si= 0.576428
-Warning Calling GEMIPM calculation it = 782 Node 0 Ca= 0.638957 Si= 0.581428
-Warning Calling GEMIPM calculation it = 783 Node 0 Ca= 0.648957 Si= 0.586428
-Warning Calling GEMIPM calculation it = 784 Node 0 Ca= 0.658957 Si= 0.591428
-Warning Calling GEMIPM calculation it = 785 Node 0 Ca= 0.668957 Si= 0.596428
-Warning Calling GEMIPM calculation it = 786 Node 0 Ca= 0.678957 Si= 0.601428
-Warning Calling GEMIPM calculation it = 787 Node 0 Ca= 0.688957 Si= 0.606428
-Warning Calling GEMIPM calculation it = 788 Node 0 Ca= 0.698957 Si= 0.611428
-Warning Calling GEMIPM calculation it = 789 Node 0 Ca= 0.708957 Si= 0.616428
-Warning Calling GEMIPM calculation it = 790 Node 0 Ca= 0.718957 Si= 0.621428
   in = 0  it = 790 Cal= 0.718957 Silica= 0
   in = 1  it = 790 Cal= 0.0035815 Silica= 0
-Warning Calling GEMIPM calculation it = 791 Node 0 Ca= 0.728957 Si= 0.626428
-Warning Calling GEMIPM calculation it = 792 Node 0 Ca= 0.738957 Si= 0.631428
   in = 0  it = 800 Cal= 0.818957 Silica= 0
   in = 1  it = 800 Cal= 0.00358118 Silica= 0
   in = 0  it = 810 Cal= 0.918899 Silica= 0
@@ -516,173 +181,42 @@ Error Calling GEMIPM calculation it = 816 Node 1 Ca= 0.858318 Si= 0.252866
   in = 0  it = 830 Cal= 0.898805 Silica= 0
   in = 1  it = 830 Cal= 0.00358117 Silica= 0
 Error Calling GEMIPM calculation it = 834 Node 1 Ca= 0.978318 Si= 0.162866
+Error Calling GEMIPM calculation it = 836 Node 1 Ca= 0.958318 Si= 0.152866
   in = 0  it = 840 Cal= 0.798957 Silica= 0
   in = 1  it = 840 Cal= 0.00358117 Silica= 0
+Error Calling GEMIPM calculation it = 842 Node 1 Ca= 0.898318 Si= 0.122866
   in = 0  it = 850 Cal= 0.698957 Silica= 0
   in = 1  it = 850 Cal= 0.00358117 Silica= 0
   in = 0  it = 860 Cal= 0.598957 Silica= 0
   in = 1  it = 860 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 870 Node 0 Ca= 0.498957 Si= 0.981428
   in = 0  it = 870 Cal= 0.498957 Silica= 0
   in = 1  it = 870 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 871 Node 0 Ca= 0.488957 Si= 0.976428
-Warning Calling GEMIPM calculation it = 872 Node 0 Ca= 0.478957 Si= 0.971428
-Warning Calling GEMIPM calculation it = 873 Node 0 Ca= 0.468957 Si= 0.966428
-Warning Calling GEMIPM calculation it = 874 Node 0 Ca= 0.458957 Si= 0.961428
-Warning Calling GEMIPM calculation it = 875 Node 0 Ca= 0.448957 Si= 0.956428
-Warning Calling GEMIPM calculation it = 876 Node 0 Ca= 0.438957 Si= 0.951428
-Warning Calling GEMIPM calculation it = 877 Node 0 Ca= 0.428957 Si= 0.946428
-Warning Calling GEMIPM calculation it = 878 Node 0 Ca= 0.418957 Si= 0.941428
-Warning Calling GEMIPM calculation it = 879 Node 0 Ca= 0.408957 Si= 0.936428
-Warning Calling GEMIPM calculation it = 880 Node 0 Ca= 0.398957 Si= 0.931428
   in = 0  it = 880 Cal= 0.398957 Silica= 0
   in = 1  it = 880 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 881 Node 0 Ca= 0.388957 Si= 0.926428
-Warning Calling GEMIPM calculation it = 882 Node 0 Ca= 0.378957 Si= 0.921428
-Warning Calling GEMIPM calculation it = 883 Node 0 Ca= 0.368957 Si= 0.916428
-Warning Calling GEMIPM calculation it = 884 Node 0 Ca= 0.358957 Si= 0.911428
-Warning Calling GEMIPM calculation it = 885 Node 0 Ca= 0.348957 Si= 0.906428
-Warning Calling GEMIPM calculation it = 886 Node 0 Ca= 0.338957 Si= 0.901428
-Warning Calling GEMIPM calculation it = 887 Node 0 Ca= 0.328957 Si= 0.896428
-Warning Calling GEMIPM calculation it = 888 Node 0 Ca= 0.318957 Si= 0.891428
-Warning Calling GEMIPM calculation it = 889 Node 0 Ca= 0.308957 Si= 0.886428
-Warning Calling GEMIPM calculation it = 890 Node 0 Ca= 0.298957 Si= 0.881428
   in = 0  it = 890 Cal= 0.298957 Silica= 0
   in = 1  it = 890 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 891 Node 0 Ca= 0.288957 Si= 0.876428
-Warning Calling GEMIPM calculation it = 892 Node 0 Ca= 0.278957 Si= 0.871428
-Warning Calling GEMIPM calculation it = 893 Node 0 Ca= 0.268957 Si= 0.866428
-Warning Calling GEMIPM calculation it = 894 Node 0 Ca= 0.258957 Si= 0.861428
-Warning Calling GEMIPM calculation it = 895 Node 0 Ca= 0.248957 Si= 0.856428
-Warning Calling GEMIPM calculation it = 896 Node 0 Ca= 0.238957 Si= 0.851428
-Warning Calling GEMIPM calculation it = 897 Node 0 Ca= 0.228957 Si= 0.846428
-Warning Calling GEMIPM calculation it = 898 Node 0 Ca= 0.218957 Si= 0.841428
-Warning Calling GEMIPM calculation it = 899 Node 0 Ca= 0.208957 Si= 0.836428
-Warning Calling GEMIPM calculation it = 900 Node 0 Ca= 0.198957 Si= 0.831428
   in = 0  it = 900 Cal= 0.198957 Silica= 0
   in = 1  it = 900 Cal= 0.00358117 Silica= 0
-Warning Calling GEMIPM calculation it = 901 Node 0 Ca= 0.188957 Si= 0.826428
-Warning Calling GEMIPM calculation it = 902 Node 0 Ca= 0.178957 Si= 0.821428
-Warning Calling GEMIPM calculation it = 903 Node 0 Ca= 0.168957 Si= 0.816428
-Warning Calling GEMIPM calculation it = 904 Node 0 Ca= 0.158957 Si= 0.811428
-Warning Calling GEMIPM calculation it = 905 Node 0 Ca= 0.148957 Si= 0.806428
-Warning Calling GEMIPM calculation it = 906 Node 0 Ca= 0.138957 Si= 0.801428
-Warning Calling GEMIPM calculation it = 907 Node 0 Ca= 0.128957 Si= 0.796428
-Warning Calling GEMIPM calculation it = 908 Node 0 Ca= 0.118957 Si= 0.791428
-Warning Calling GEMIPM calculation it = 909 Node 0 Ca= 0.108957 Si= 0.786428
-Warning Calling GEMIPM calculation it = 910 Node 0 Ca= 0.0989569 Si= 0.781428
   in = 0  it = 910 Cal= 0.0989569 Silica= 0
   in = 1  it = 910 Cal= 0.00999093 Silica= 0
-Warning Calling GEMIPM calculation it = 911 Node 0 Ca= 0.0889569 Si= 0.776428
-Warning Calling GEMIPM calculation it = 912 Node 0 Ca= 0.0789569 Si= 0.771428
-Warning Calling GEMIPM calculation it = 913 Node 0 Ca= 0.0689569 Si= 0.766428
-Warning Calling GEMIPM calculation it = 914 Node 0 Ca= 0.0589569 Si= 0.761428
-Warning Calling GEMIPM calculation it = 915 Node 0 Ca= 0.0489569 Si= 0.756428
-Warning Calling GEMIPM calculation it = 916 Node 0 Ca= 0.0389569 Si= 0.751428
-Warning Calling GEMIPM calculation it = 917 Node 0 Ca= 0.0289569 Si= 0.746428
-Warning Calling GEMIPM calculation it = 918 Node 0 Ca= 0.0189569 Si= 0.741428
-Warning Calling GEMIPM calculation it = 919 Node 0 Ca= 0.00895691 Si= 0.736428
-Warning Calling GEMIPM calculation it = 919 Node 1 Ca= 0.128318 Si= 0.267866
-Warning Calling GEMIPM calculation it = 920 Node 0 Ca= 0.0189569 Si= 0.731428
   in = 0  it = 920 Cal= 0.0189569 Silica= 0
   in = 1  it = 920 Cal= 0.00999057 Silica= 0.130526
-Warning Calling GEMIPM calculation it = 921 Node 0 Ca= 0.0289569 Si= 0.726428
-Warning Calling GEMIPM calculation it = 922 Node 0 Ca= 0.0389569 Si= 0.721428
-Warning Calling GEMIPM calculation it = 923 Node 0 Ca= 0.0489569 Si= 0.716428
-Warning Calling GEMIPM calculation it = 924 Node 0 Ca= 0.0589569 Si= 0.711428
-Warning Calling GEMIPM calculation it = 925 Node 0 Ca= 0.0689569 Si= 0.706428
-Warning Calling GEMIPM calculation it = 926 Node 0 Ca= 0.0789569 Si= 0.701428
-Warning Calling GEMIPM calculation it = 927 Node 0 Ca= 0.0889569 Si= 0.696428
-Warning Calling GEMIPM calculation it = 928 Node 0 Ca= 0.0989569 Si= 0.691428
-Warning Calling GEMIPM calculation it = 929 Node 0 Ca= 0.108957 Si= 0.686428
-Warning Calling GEMIPM calculation it = 930 Node 0 Ca= 0.118957 Si= 0.681428
   in = 0  it = 930 Cal= 0.118957 Silica= 0
   in = 1  it = 930 Cal= 0.00999056 Silica= 0.300517
-Warning Calling GEMIPM calculation it = 931 Node 0 Ca= 0.128957 Si= 0.676428
-Warning Calling GEMIPM calculation it = 932 Node 0 Ca= 0.138957 Si= 0.671428
-Warning Calling GEMIPM calculation it = 933 Node 0 Ca= 0.148957 Si= 0.666428
-Warning Calling GEMIPM calculation it = 934 Node 0 Ca= 0.158957 Si= 0.661428
-Warning Calling GEMIPM calculation it = 935 Node 0 Ca= 0.168957 Si= 0.656428
-Warning Calling GEMIPM calculation it = 936 Node 0 Ca= 0.178957 Si= 0.651428
-Warning Calling GEMIPM calculation it = 936 Node 1 Ca= 0.0583182 Si= 0.352866
-Warning Calling GEMIPM calculation it = 937 Node 0 Ca= 0.188957 Si= 0.646428
-Warning Calling GEMIPM calculation it = 938 Node 0 Ca= 0.198957 Si= 0.641428
-Warning Calling GEMIPM calculation it = 939 Node 0 Ca= 0.208957 Si= 0.636428
-Warning Calling GEMIPM calculation it = 940 Node 0 Ca= 0.218957 Si= 0.631428
   in = 0  it = 940 Cal= 0.218957 Silica= 0
   in = 1  it = 940 Cal= 0.00999057 Silica= 0.254525
-Warning Calling GEMIPM calculation it = 941 Node 0 Ca= 0.228957 Si= 0.626428
-Warning Calling GEMIPM calculation it = 942 Node 0 Ca= 0.238957 Si= 0.621428
-Warning Calling GEMIPM calculation it = 943 Node 0 Ca= 0.248957 Si= 0.616428
-Warning Calling GEMIPM calculation it = 944 Node 0 Ca= 0.258957 Si= 0.611428
-Warning Calling GEMIPM calculation it = 945 Node 0 Ca= 0.268957 Si= 0.606428
-Warning Calling GEMIPM calculation it = 946 Node 0 Ca= 0.278957 Si= 0.601428
-Warning Calling GEMIPM calculation it = 947 Node 0 Ca= 0.288957 Si= 0.596428
-Warning Calling GEMIPM calculation it = 948 Node 0 Ca= 0.298957 Si= 0.591428
-Warning Calling GEMIPM calculation it = 949 Node 0 Ca= 0.308957 Si= 0.586428
-Warning Calling GEMIPM calculation it = 950 Node 0 Ca= 0.318957 Si= 0.581428
   in = 0  it = 950 Cal= 0.318957 Silica= 0
   in = 1  it = 950 Cal= 0.00999058 Silica= 0.184534
-Warning Calling GEMIPM calculation it = 951 Node 0 Ca= 0.328957 Si= 0.576428
-Warning Calling GEMIPM calculation it = 952 Node 0 Ca= 0.338957 Si= 0.571428
-Warning Calling GEMIPM calculation it = 952 Node 1 Ca= 0.218318 Si= 0.432866
-Warning Calling GEMIPM calculation it = 953 Node 0 Ca= 0.348957 Si= 0.566428
-Warning Calling GEMIPM calculation it = 954 Node 0 Ca= 0.358957 Si= 0.561428
-Warning Calling GEMIPM calculation it = 955 Node 0 Ca= 0.368957 Si= 0.556428
-Warning Calling GEMIPM calculation it = 956 Node 0 Ca= 0.378957 Si= 0.551428
-Warning Calling GEMIPM calculation it = 957 Node 0 Ca= 0.388957 Si= 0.546428
-Warning Calling GEMIPM calculation it = 958 Node 0 Ca= 0.398957 Si= 0.541428
-Warning Calling GEMIPM calculation it = 959 Node 0 Ca= 0.408957 Si= 0.536428
-Warning Calling GEMIPM calculation it = 960 Node 0 Ca= 0.418957 Si= 0.531428
   in = 0  it = 960 Cal= 0.418957 Silica= 0
   in = 1  it = 960 Cal= 0.0099906 Silica= 0.114543
-Warning Calling GEMIPM calculation it = 961 Node 0 Ca= 0.428957 Si= 0.526428
-Warning Calling GEMIPM calculation it = 962 Node 0 Ca= 0.438957 Si= 0.521428
-Warning Calling GEMIPM calculation it = 963 Node 0 Ca= 0.448957 Si= 0.516428
-Warning Calling GEMIPM calculation it = 964 Node 0 Ca= 0.458957 Si= 0.511428
-Warning Calling GEMIPM calculation it = 965 Node 0 Ca= 0.468957 Si= 0.506428
-Warning Calling GEMIPM calculation it = 966 Node 0 Ca= 0.478957 Si= 0.501428
-Warning Calling GEMIPM calculation it = 967 Node 0 Ca= 0.488957 Si= 0.496428
-Warning Calling GEMIPM calculation it = 968 Node 0 Ca= 0.498957 Si= 0.491428
-Warning Calling GEMIPM calculation it = 969 Node 0 Ca= 0.508957 Si= 0.486428
-Warning Calling GEMIPM calculation it = 969 Node 1 Ca= 0.388318 Si= 0.517866
-Warning Calling GEMIPM calculation it = 970 Node 0 Ca= 0.518957 Si= 0.481428
   in = 0  it = 970 Cal= 0.518957 Silica= 0
   in = 1  it = 970 Cal= 0.00999062 Silica= 0.0445523
-Warning Calling GEMIPM calculation it = 971 Node 0 Ca= 0.528957 Si= 0.476428
-Warning Calling GEMIPM calculation it = 972 Node 0 Ca= 0.538957 Si= 0.471428
-Warning Calling GEMIPM calculation it = 973 Node 0 Ca= 0.548957 Si= 0.466428
-Warning Calling GEMIPM calculation it = 974 Node 0 Ca= 0.558957 Si= 0.461428
-Warning Calling GEMIPM calculation it = 975 Node 0 Ca= 0.568957 Si= 0.456428
-Warning Calling GEMIPM calculation it = 976 Node 0 Ca= 0.578957 Si= 0.451428
-Warning Calling GEMIPM calculation it = 977 Node 0 Ca= 0.588957 Si= 0.446428
-Warning Calling GEMIPM calculation it = 978 Node 0 Ca= 0.598957 Si= 0.441428
-Warning Calling GEMIPM calculation it = 979 Node 0 Ca= 0.608957 Si= 0.436428
 Error Calling GEMIPM calculation it = 979 Node 1 Ca= 0.488318 Si= 0.567866
   in = 0  it = 980 Cal= 0.618957 Silica= 0
   in = 1  it = 980 Cal= 0.00999094 Silica= 0
-Warning Calling GEMIPM calculation it = 981 Node 0 Ca= 0.628957 Si= 0.426428
-Warning Calling GEMIPM calculation it = 982 Node 0 Ca= 0.638957 Si= 0.421428
-Warning Calling GEMIPM calculation it = 983 Node 0 Ca= 0.648957 Si= 0.416428
-Warning Calling GEMIPM calculation it = 984 Node 0 Ca= 0.658957 Si= 0.411428
 Error Calling GEMIPM calculation it = 984 Node 1 Ca= 0.538318 Si= 0.592866
-Warning Calling GEMIPM calculation it = 986 Node 0 Ca= 0.678957 Si= 0.401428
-Warning Calling GEMIPM calculation it = 987 Node 0 Ca= 0.688957 Si= 0.396428
-Warning Calling GEMIPM calculation it = 988 Node 0 Ca= 0.698957 Si= 0.391428
-Warning Calling GEMIPM calculation it = 989 Node 0 Ca= 0.708957 Si= 0.386428
-Warning Calling GEMIPM calculation it = 990 Node 0 Ca= 0.718957 Si= 0.381428
   in = 0  it = 990 Cal= 0.718957 Silica= 0
   in = 1  it = 990 Cal= 0.00999095 Silica= 0
-Warning Calling GEMIPM calculation it = 991 Node 0 Ca= 0.728957 Si= 0.376428
-Warning Calling GEMIPM calculation it = 992 Node 0 Ca= 0.738957 Si= 0.371428
-Warning Calling GEMIPM calculation it = 992 Node 1 Ca= 0.618318 Si= 0.632866
-Warning Calling GEMIPM calculation it = 993 Node 0 Ca= 0.748957 Si= 0.366428
-Warning Calling GEMIPM calculation it = 994 Node 0 Ca= 0.758957 Si= 0.361428
-Warning Calling GEMIPM calculation it = 995 Node 0 Ca= 0.768957 Si= 0.356428
-Warning Calling GEMIPM calculation it = 996 Node 0 Ca= 0.778957 Si= 0.351428
-Warning Calling GEMIPM calculation it = 997 Node 0 Ca= 0.788957 Si= 0.346428
-Warning Calling GEMIPM calculation it = 998 Node 0 Ca= 0.798957 Si= 0.341428
-Warning Calling GEMIPM calculation it = 999 Node 0 Ca= 0.808957 Si= 0.336428
-Total time of calculation  s; 15.26
+Total time of calculation  s; 16.84
 
 Finished Ok

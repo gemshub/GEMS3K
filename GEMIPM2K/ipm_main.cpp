@@ -54,7 +54,10 @@ fstream f_log("ipmlog.txt", ios::out|ios::app );
     pmp->W1=0; pmp->K2=0;               // internal counters 
     pmp->Ec = pmp->MK = pmp->PZ = 0;    // Return codes
     setErrorMessage( 0, "" , "");  // empty error info
-
+    if( TProfil::pm->pa.p.PLLG == 0 )  // SD 10/02/2009
+    	TProfil::pm->pa.p.PLLG = 32000;
+    	
+    
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
 
@@ -85,7 +88,7 @@ mEFD:
      }
 
      eRet = EnterFeasibleDomain( ); // Here the IPM-2 EFD() algorithm is called 
-
+     
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpC.txt" );   // Debugging 
 #endif	
@@ -615,7 +618,7 @@ STEP_POINT("FIA Iteration");
 long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 {
     long int N, IT1,J,Z,iRet,i;  
-    double LM=0., LM1, FX1;
+    double LM=0., LM1=1., FX1;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     status = 0;
@@ -671,7 +674,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
           for(J=0;J<pmp->N;J++)
           {  
       		 char buf[200]; 
-          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > 100. ) // broken dual solution
+          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > (double)(TProfil::pm->pa.p.PLLG)/*500.*/ ) // broken dual solution
         	  {
         	     if( pmp->Ec != 14 )
         	     { sprintf( buf, "Dual solution (vector u) has changed too much "
@@ -702,9 +705,9 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
        pmp->PCI=calcDikin( N, false );
 
        // Determination of the descent step size LM
-       LM = calcLM( false );
+	   LM = calcLM( false );
 
-       LM1=LMD( LM ); // Finding an optimal value of the descent step
+	   LM1=LMD( LM ); // Finding an optimal value of the descent step
        FX1=GX( LM1 ); // New G(X) value after the descent step
        pmp->PCI = sqrt(pmp->PCI); // Dikin criterion
 
@@ -757,6 +760,7 @@ STEP_POINT( "IPM Iteration" );
     return 2L; // bad convergence - too many IPM iterations!
 //----------------------------------------------------------------------------
 CONVERGED:
+ // cout << "LM " << LM << " LM1 "	 << LM1 << " PCI " << pmp->PCI << endl;
  // Final calculation of phase amounts and activity coefficients
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
@@ -855,7 +859,7 @@ double TMulti::LMD( double LM )
     double A,B,C,LM1,LM2,FX1,FX2;
     A=0.0;
     B=LM;
-    if( LM<2.)
+    if( LM<2. )
         C=.05*LM;
     else C=.1;
     if( B-A<C)
@@ -1205,7 +1209,7 @@ double TMulti::calcDikin(  long int N, bool initAppr )
 double TMulti::calcLM(  bool initAppr )
 {
    long int J, Z = -1;
-   double LM, LM1, Mu;
+   double LM=1., LM1=1., Mu;
 
    for(J=0;J<pmp->L;J++)
    {
@@ -1254,6 +1258,7 @@ double TMulti::calcLM(  bool initAppr )
   else
   {  if( Z == -1 )
        LM = 1./sqrt(pmp->PCI);
+     LM = min( LM, 10./pmp->DX );
   }
   return LM;
 }
@@ -1540,13 +1545,16 @@ void TMulti::setErrorMessage( long int num, const char *code, const char * msg)
 {
   pmp->Ec  = num;
   strncpy( pmp->errorCode, code, 99 );
+  pmp->errorCode[99] ='\0';
   strncpy( pmp->errorBuf,  msg,  499 ); 
+  pmp->errorBuf[499] ='\0';
 }
 
 void TMulti::addErrorMessage( const char * msg)
 {
   long int ln = strlen(pmp->errorBuf);
   strncpy(pmp->errorBuf+ln, msg, 499-ln  );
+  pmp->errorBuf[499] ='\0';
 }
 
 //--------------------- End of ipm_main.cpp ---------------------------

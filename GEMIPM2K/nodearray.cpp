@@ -179,7 +179,7 @@ AGAIN:
             }
 
 // get name
-   long int pos = name.rfind("-");
+   unsigned long int pos = name.rfind("-");
    if( pos != gstring::npos )
       name = name.substr(0, pos);
 

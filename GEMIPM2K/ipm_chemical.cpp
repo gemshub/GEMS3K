@@ -1180,12 +1180,12 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
     for( j=0; j<pmp->L; j++ )
     { // DC loop
       ix=0;
-      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009 
-      { for( i=0; i<pmp->N-pmp->E; i++ )
-        if(a(i,j) && pmp->B[i] < pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
-        { ix=1; break; }
-      }
-      else
+//      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009 
+//      { for( i=0; i<pmp->N-pmp->E; i++ )
+//        if(a(i,j) && pmp->B[i] < pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
+//        { ix=1; break; }
+//      }
+//      else 10/02/2009 SD
         if( Y[j]<pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
           ix=1;
       if (ix && Y[j] > pmp->lowPosNum && XU[j] > pmp->lowPosNum )

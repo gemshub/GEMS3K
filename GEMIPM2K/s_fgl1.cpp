@@ -1475,7 +1475,6 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	gDH = CON*A;
 	dgDH = - CON*dAdT;
 	d2gDH = - CON*d2AdT2;
-
 	// increment thermodynamic properties
 	dg = ( dgDH + dgRX + dgRI );
 	d2g = ( d2gDH + d2gRX + d2gRI );

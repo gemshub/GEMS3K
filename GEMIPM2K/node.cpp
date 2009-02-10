@@ -192,9 +192,6 @@ long int TNode::GEM_run( bool uPrimalSol )
 // by providing a constant mass of the internal system regardless of
 // different node (reactive chemical system) sizes.
 //
-#include <iomanip>
-//extern int outTest; 
-
 long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
 {
 //  fstream f_log("ipmlog.txt", ios::out|ios::app );
@@ -227,7 +224,6 @@ long int i;
 	   pmm->pNP = 0; // As default setting AIA mode
 	   unpackDataBr( false, ScFact );
    }
-   
    // GEM IPM calculation of equilibrium state in MULTI
    CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
    // Extracting and packing GEM IPM results into work DATABR structure
@@ -431,6 +427,8 @@ if( binary_f )
   {
 #ifdef IPMGEMPLUGIN
         profil->readMulti(mult_in.c_str());
+#else
+    TProfil::pm->readMulti(mult_in.c_str());
 #endif
   }
 
@@ -1177,11 +1175,11 @@ void TNode::packDataBr()
    {
       CNode->xDC[ii] = pmm->X[ CSD->xDC[ii] ];
       CNode->gam[ii] = pmm->Gamma[ CSD->xDC[ii] ];
-//      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
-//      CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
+      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
+      CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
    }
    for( ii=0; ii<CSD->nICb; ii++ )
-   {//  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ];// 09/02/2009 SD only insert
+   {  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ];// 09/02/2009 SD only insert
       CNode->rMB[ii] = pmm->C[ CSD->xIC[ii] ];
       CNode->uIC[ii] = pmm->U[ CSD->xIC[ii] ];
    }
@@ -1284,10 +1282,11 @@ void TNode::unpackDataBr( bool uPrimalSol )
  //double Gamm;
 // numbers
   
+#ifdef IPMGEMPLUGIN
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
- 
+#endif 
 //  if( CNode->NodeStatusCH >= NEED_GEM_SIA )
 //   pmm->pNP = 1;
 //  else
@@ -1372,9 +1371,11 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 {
  long int ii;
  //double Gamm;
+#ifdef IPMGEMPLUGIN
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
+#endif 
  
  if( ScFact < 1e-6 )    // foolproof
 	 ScFact = 1e-6;

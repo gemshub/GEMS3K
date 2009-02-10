@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1202 2009-01-28 10:41:00Z gems $
+// $Id: ms_multi.h 1216 2009-02-09 13:59:01Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -353,8 +353,6 @@ class TMulti
    void Alloc_TSolMod( long int newFIs );
    void Free_TSolMod();
    
-   void setErrorMessage( long int num, const char *code, const char * msg);
-   void addErrorMessage( const char * msg);
 
 #ifndef IPMGEMPLUGIN
 // These pointers and methods are only used in GEMS-PSI
@@ -574,6 +572,8 @@ public:
     bool AutoInitialApprox();
     void MultiCalcIterations( long int rLoop );
     void CompG0Load();
+    void setErrorMessage( long int num, const char *code, const char * msg);
+    void addErrorMessage( const char * msg);
 
    long int CheckMassBalanceResiduals(double *Y );
    double Cj_init_calc( double g0, long int j, long int k ); // Moved here on 16.05.2008

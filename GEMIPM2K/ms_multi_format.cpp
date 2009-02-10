@@ -513,7 +513,9 @@ void TMulti::from_text_file_gemipm( const char *path )
    double EpsW;
    double RoW;
 
+#ifdef IPMGEMPLUGIN
    set_def();
+#endif
   //mem_set( &pm.N, 0, 38*sizeof(long int));
   //mem_set( &pm.TC, 0, 55*sizeof(double));
   // get sizes from DATACH
@@ -612,6 +614,8 @@ void TMulti::from_text_file_gemipm( const char *path )
    //realloc memory
 #ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
+#else
+   dyn_new();
 #endif
 
 // get dynamic data from DATACH file
@@ -716,14 +720,22 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               getLsModsum( LsModSum, LsIPxSum );
               if(LsIPxSum )
               { rddar.readNext( "IPxPH");
-                if(!pmp->IPx )
-                  pmp->IPx = new long int[LsIPxSum];
+#ifdef IPMGEMPLUGIN
+              if(!pmp->IPx )
+                  pm.IPx = new long int[LsIPxSum];
+#else
+                 pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_); 
+#endif
                 rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
               }
               if(LsModSum )
               { rddar.readNext( "PMc");
-                if(!pmp->PMc )
-                  pmp->PMc = new double[LsModSum];
+#ifdef IPMGEMPLUGIN
+              if(!pmp->PMc )
+                  pm.PMc = new double[LsModSum];
+#else
+               pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
+#endif
                 rddar.readArray( "PMc", pmp->PMc,  LsModSum);
               }
               break;
@@ -735,9 +747,13 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                 getLsMdcsum( LsMdcSum );
                 if(LsMdcSum )
                 { rddar.readNext( "DMc");
-                  if(!pmp->DMc )
-                     pmp->DMc = new double[LsMdcSum];
-                  rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
+#ifdef IPMGEMPLUGIN
+                if(!pmp->DMc )
+                     pm.DMc = new double[LsMdcSum];
+#else
+                pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
+#endif
+                rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
                 }
                 break;
               }

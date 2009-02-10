@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1183 2009-01-21 10:24:15Z gems $
+// $Id: ms_multi_file.cpp 1222 2009-02-10 14:27:00Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -266,9 +266,6 @@ void TMulti::set_def( long int /*q*/)
 //    pm.sitE = 0;
 pm.IPx = 0;
 pm.ITF = pm.ITG = 0;
-// added SD 03/02/2009
-pm.XU   = 0;
-pm.Uc   = 0;
 }
 
 //---------------------------------------------------------//
@@ -523,6 +520,8 @@ void TMulti::from_file( GemDataStream& ff )
    //realloc memory
 #ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
+#else
+   dyn_new();
 #endif
 
    //dynamic values
@@ -610,9 +609,17 @@ void TMulti::from_file( GemDataStream& ff )
       long int LsMdcSum;
       getLsModsum( LsModSum, LsIPxSum );
       getLsMdcsum( LsMdcSum );
+      
+#ifdef IPMGEMPLUGIN
       pm.IPx = new long int[LsIPxSum];
       pm.PMc = new double[LsModSum];
       pm.DMc = new double[LsMdcSum];
+#else
+      pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);  // added 07.12.2006 KD
+      pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
+      pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
+#endif
+      
       ff.readArray(pm.IPx, LsIPxSum);
       ff.readArray(pm.PMc, LsModSum);
       ff.readArray(pm.DMc, LsMdcSum);
