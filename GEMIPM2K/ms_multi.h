@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1216 2009-02-09 13:59:01Z gems $
+// $Id: ms_multi.h 1227 2009-02-11 13:32:09Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -37,13 +37,6 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #include "s_fgl.h"
 
-/*typedef enum {
-	MIXPHPROPS=3,
-	TOTALPHASE=0,
-	MECHMIXED =1,
-	INCREMENT =2
-} MULTI_PHASE_TABLES;
-*/
 typedef struct
 {  // MULTI is base structure to Project (local values)
   char
@@ -118,8 +111,6 @@ typedef struct
     DSM,        // min value phase DS (IPM-2)
     GWAT,       // used in ipm_gamma()
     YMET,       // reserved
-    denW,denWg,  // Density of H2O(l) and steam for Tc,Pc
-    epsW,epsWg,  // Diel. constant of H2O(l) and steam for Tc,Pc
     PCI,        // Current value of Dikin criterion of IPM convergence DK>=DX
     DX,         // IPM convergence criterion threshold DX (1e-5)
     lnP,        // log Ptotal
@@ -135,6 +126,12 @@ typedef struct
     FitVar[5];  // internal; FitVar[0] is T,P-dependent b_gamma parameter
                 //       FitVar[4] is the AG smoothing parameter;
                 //       FitVar[3] is the actual smoothing coefficient
+double
+  denW[5],   // Density of water, first T, second T, first P, second P derivative for Tc,Pc
+  denWg[5],  // Density of steam for Tc,Pc
+  epsW[5],   // Diel. constant of H2O(l)for Tc,Pc
+  epsWg[5];  // Diel. constant of steam for Tc,Pc
+
   long int
     *L1,    // l_a vector - number of DCs included into each phase [Fi]
     *LsMod, // Number of interaction parameters, max. parameter order (cols in IPx),
@@ -161,14 +158,14 @@ typedef struct
      *ENT,    // reserved no object
 
  // Convert H0, A0, U0, S0, Cp0 to double
-    *H0,     // DC pmolar enthalpies, reserved [L]
-    *A0,     // DC molar Helmholtz energies, reserved [L]
-    *U0,     // DC molar internal energies, reserved [L]
-    *S0,     // DC molar entropies, reserved [L]
-    *Cp0,    // DC molar heat capacity, reserved [L]
+*H0,     // DC pmolar enthalpies, reserved [L]
+*A0,     // DC molar Helmholtz energies, reserved [L]
+*U0,     // DC molar internal energies, reserved [L]
+*S0,     // DC molar entropies, reserved [L]
+*Cp0,    // DC molar heat capacity, reserved [L]
     *Cv0,    // DC molar Cv, reserved [L]
   //
-    *VL,     // ln mole fraction of end members in phases-solutions
+    *VL,        // ln mole fraction of end members in phases-solutions
     *Xcond, 	// conductivity of phase carrier, sm/m2   [0:FI-1], reserved
     *Xeps,  	// diel.permeability of phase carrier (solvent) [0:FI-1], reserved
     *Aalp,  	// phase specific surface area m2/g       [0:FI-1]
@@ -239,7 +236,7 @@ typedef struct
     *XFA,   // Quantity of carrier in asymmetric phases Xwa, moles [FIs]
     *YFA,   // Copy of Xwa from previous IPM iteration [0:FIs-1]
     *Falp;  // Karpov phase stability criteria F_a [0:FI-1]
-/*
+
   double (*VPh)[MIXPHPROPS],     // Volume properties for mixed phases [FIs]
          (*GPh)[MIXPHPROPS],     // Gibbs energy properties for mixed phases [FIs]
   		 (*HPh)[MIXPHPROPS],     // Enthalpy properties for mixed phases [FIs]
@@ -247,7 +244,7 @@ typedef struct
          (*CPh)[MIXPHPROPS],     // Heat capacity Cp properties for mixed phases [FIs]
          (*APh)[MIXPHPROPS],     // Helmholtz energy properties for mixed phases [FIs]
          (*UPh)[MIXPHPROPS];     // Internal energy properties for mixed phases [FIs]
-*/
+
 // EDL models (data for electrostatic activity coefficients)
    double (*XetaA)[MST]; // Total EDL charge on A (0) EDL plane, moles [FIs][FIat]
    double (*XetaB)[MST]; // Total charge of surface species on B (1) EDL plane, moles[FIs][FIat]
@@ -311,8 +308,8 @@ typedef struct
   double *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
 #endif
- 
-  // addition arrays for internal calculation in ipm_main  
+
+  // addition arrays for internal calculation in ipm_main
   double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
   double *Uc; // Internal copy of IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
@@ -349,10 +346,10 @@ class TMulti
 
    long int sizeFIs;     // current size of phSolMod
    TSolMod* (*phSolMod); // size current FIs -   number of multicomponent phases
-   
+
    void Alloc_TSolMod( long int newFIs );
    void Free_TSolMod();
-   
+
 
 #ifndef IPMGEMPLUGIN
 // These pointers and methods are only used in GEMS-PSI

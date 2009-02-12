@@ -60,7 +60,7 @@ int main( int argc, char* argv[] )
    }
    catch(TError& err)
        {
-        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        fstream f_log("gem2mtlog.txt", ios::out|ios::app );
         f_log << err.title.c_str() << ": " << err.mess.c_str() << endl;
         return 1;
        }

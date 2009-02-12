@@ -63,7 +63,6 @@ void TGEM2MT::RecCalc( )
 int TGEM2MT::ReadTask( const char *unsp_in1 )
 {
  // read GEM2MT structure from file
-  fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
   {
    fstream ff(unsp_in1, ios::in );
@@ -73,6 +72,7 @@ int TGEM2MT::ReadTask( const char *unsp_in1 )
   }
   catch(TError& err)
   {
+	  fstream f_log("gem2mtlog.txt", ios::out|ios::app );
       f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
   }
   return 1;
@@ -82,7 +82,6 @@ int TGEM2MT::ReadTask( const char *unsp_in1 )
 int TGEM2MT::WriteTask( const char *unsp_in1 )
 {
  // read GEM2MT structure from file
-  fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
   {
    fstream ff(unsp_in1, ios::out );
@@ -97,6 +96,7 @@ int TGEM2MT::WriteTask( const char *unsp_in1 )
   }
   catch(TError& err)
   {
+	  fstream f_log("gem2mtlog.txt", ios::out|ios::app );
       f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
   }
   return 1;

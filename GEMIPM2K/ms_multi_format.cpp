@@ -46,7 +46,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" , 0 , 0 }
 };
 
-outField MULTI_dynamic_fields[67] =  {
+outField MULTI_dynamic_fields[68] =  {
 //read dynamic (array) data from the txt input file
    {  "sMod", 1 , 0 },
    {  "LsMod", 1 , 0 },
@@ -108,14 +108,15 @@ outField MULTI_dynamic_fields[67] =  {
    { "pa_DW", 0 , 0 },
    { "pa_DT", 0 , 0 },
    { "pa_GAS", 0 , 0 },
-{ "pa_DG", 0 , 0 },
+   { "pa_DG", 0 , 0 },
    { "pa_DNS" , 0 , 0 },
    { "pa_IEPS" , 0 , 0 },
    { "pKin" , 0 , 0 },
    { "pa_DKIN" , 0 , 0 },
    { "mui" , 0 , 0 },
    { "muk" , 0 , 0 },
-   { "muj" , 0 , 0 }
+   { "muj" , 0 , 0 },
+   { "pa_LLG" , 0 , 0 }
 };
 
 
@@ -251,7 +252,7 @@ ff << "\n<END_DIM>\n\n";
    ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa->p.AG << endl;
    ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa->p.DGC << endl;
    if( _comment )
-     ff << "\n# PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)" << endl;
+     ff << "\n# PSM: Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-incl. warnings " << endl;
    ff << left << setw(12) << "<pa_PSM> " <<  right << setw(8) << pa->p.PSM << endl;
    if( _comment )
      ff << "# Activity coefficient values for simplex(): GAR for major and GAH for minor components" << endl;
@@ -321,8 +322,9 @@ ff << "\n<END_DIM>\n\n";
    if( _comment )
      ff << "# DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) " << endl;
    ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa->p.DKIN << endl;
-//   ff << "# 'pa_PLLG'          0 used only in GEMS-PSI shell" << endl;
-//   ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
+   if( _comment )
+     ff << "# pa_PLLG: Tolerance for checking change in dual solution in refinement loops (1 to 1000 mol/mol), 0 - no check }" << endl;
+   ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
 
 //dynamic arrays
 if( pm.FIs > 0 && pm.Ls > 0 )
@@ -724,7 +726,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               if(!pmp->IPx )
                   pm.IPx = new long int[LsIPxSum];
 #else
-                 pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_); 
+                 pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
 #endif
                 rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
               }
@@ -910,6 +912,8 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       case 65: rddar.readArray("muk" , pmp->muk, pmp->FI);
                break;
       case 66: rddar.readArray("muj" , pmp->muj, pmp->L);
+               break;
+      case 67: rddar.readArray("pa_LLG" , &pa->p.PLLG, 1);
                break;
     }
     nfild = rddar.findNext();

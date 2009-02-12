@@ -103,7 +103,6 @@ bool  TNode::check_TP( double Tc, double P )
 //
 long int TNode::GEM_run( bool uPrimalSol )
 {
-//  fstream f_log("ipmlog.txt", ios::out|ios::app );
   CalcTime = 0.0;
   PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
 //
@@ -156,9 +155,14 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
    catch(TError& err)
    {
-    fstream f_log("ipmlog.txt", ios::out|ios::app );
-    f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-          err.title.c_str() << ": " << err.mess.c_str() << endl;
+	if( TProfil::pm->pa.p.PSM  )
+	{
+		fstream f_log("ipmlog.txt", ios::out|ios::app );
+        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+          err.title.c_str() << ":" << endl;
+       if( TProfil::pm->pa.p.PSM == 2  )
+          f_log  << err.mess.c_str() << endl;
+	}
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
       CNode->NodeStatusCH = ERR_GEM_AIA;
     else
@@ -194,7 +198,6 @@ long int TNode::GEM_run( bool uPrimalSol )
 //
 long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
 {
-//  fstream f_log("ipmlog.txt", ios::out|ios::app );
   CalcTime = 0.0;
   PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
 //  double ScFact = InternalMass/CNode->Ms; //bug: old mass from previous run will be taken
@@ -254,9 +257,14 @@ long int i;
    }
    catch(TError& err)
     {
-     fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " << 
-           err.title.c_str() << ": " << err.mess.c_str() << endl;
+	if( TProfil::pm->pa.p.PSM  )
+	{
+			fstream f_log("ipmlog.txt", ios::out|ios::app );
+	        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+	          err.title.c_str() << ":" << endl;
+	       if( TProfil::pm->pa.p.PSM == 2  )
+	          f_log  << err.mess.c_str() << endl;
+	}
      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
        CNode->NodeStatusCH = ERR_GEM_AIA;
      else

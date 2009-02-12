@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1216 2009-02-09 13:59:01Z gems $
+// $Id: ms_param.cpp 1232 2009-02-12 14:05:32Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -105,9 +105,12 @@ long int TProfil::testMulti(  )
 {
   if( pmp->MK || pmp->PZ )	
   {
-   fstream f_log("ipmlog.txt", ios::out|ios::app );
-   f_log << "Warning " << pmp->stkey << " " <<
-   pmp->errorCode << ": " << pmp->errorBuf << endl;
+	if( pa.p.PSM == 2 )
+	{		   
+      fstream f_log("ipmlog.txt", ios::out|ios::app );
+      f_log << "Warning " << pmp->stkey << ": " <<  pmp->errorCode << ":" << endl;
+      f_log << pmp->errorBuf << endl;
+	}  
    return 1L;	  
   }
   return 0L	;  
@@ -295,23 +298,23 @@ void TMulti::CompG0Load()
  {
    if( xTP >= 0 )
    {
-      pmp->denW = dCH->roW[xTP];
-      pmp->epsW = dCH->epsW[xTP];
+      pmp->denW[0] = dCH->roW[xTP];
+      pmp->epsW[0] = dCH->epsW[xTP];
    }
    else
    {
-       pmp->denW = LagranInterp( dCH->Pval, dCH->TCval, dCH->roW,
+       pmp->denW[0] = LagranInterp( dCH->Pval, dCH->TCval, dCH->roW,
                           P, TC, dCH->nTp, dCH->nPp,1 );
         //       pmp->denWg = tpp->RoV;
-       pmp->epsW = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsW,
+       pmp->epsW[0] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsW,
                           P, TC, dCH->nTp, dCH->nPp,1 );
        //       pmp->epsWg = tpp->EpsV;
    }
  }
  else
  {
-   pmp->denW = 1.;
-   pmp->epsW = 78.;
+   pmp->denW[0] = 1.;
+   pmp->epsW[0] = 78.;
  }
 
  pmp->RT = R_CONSTANT * pmp->Tc;

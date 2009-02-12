@@ -68,7 +68,7 @@ cout << "UnSpace success! Bye! " << endl << endl;
    }
    catch(TError& err)
        {
-        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        fstream f_log("unsplog.txt", ios::out|ios::app );
         f_log << err.title.c_str() << ": " << err.mess.c_str() << endl;
         return 1;
        }

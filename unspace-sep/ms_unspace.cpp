@@ -77,7 +77,7 @@ int TUnSpace::TaskSystemInit( const char *chbr_in1 )
   TNode::na->pCNode()->NodeStatusCH = NEED_GEM_AIA; // activating GEM IPM for automatic initial
                                     // approximation
 // re-calculating equilibrium by calling GEMIPM
-  TNode::na->GEM_run( false );
+  TNode::na->GEM_run( 1., false );
   // setup some internal data 
   pmu = TProfil::pm->pmp;
   
@@ -158,7 +158,6 @@ TUnSpace::CalcTask( const char *key )
 int TUnSpace::ReadTask( const char *unsp_in1 )
 {
  // read GEM2MT structure from file
-  fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
   {
    fstream ff(unsp_in1, ios::in );
@@ -168,6 +167,7 @@ int TUnSpace::ReadTask( const char *unsp_in1 )
   }
   catch(TError& err)
   {
+	  fstream f_log("unsplog.txt", ios::out|ios::app );
       f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
   }
   return 1;
@@ -178,7 +178,6 @@ int TUnSpace::ReadTask( const char *unsp_in1 )
 int TUnSpace::WriteTask( const char *unsp_out_file )
 {
  // write UnSpace task setup data to file
-  fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
   {
    fstream ff(unsp_out_file, ios::out );
@@ -193,6 +192,7 @@ int TUnSpace::WriteTask( const char *unsp_out_file )
   }
   catch(TError& err)
   {
+	  fstream f_log("unsplog.txt", ios::out|ios::app );
       f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
   }
   return 1;

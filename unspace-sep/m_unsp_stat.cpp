@@ -124,7 +124,7 @@ void TUnSpace::unsp_eqkey()
     TNode::na->pCNode()->NodeStatusCH = NEED_GEM_AIA; // activating GEM IPM for automatic initial
                                       // approximation
  // re-calculating equilibria by calling GEMIPM
-    TNode::na->GEM_run( false );
+    TNode::na->GEM_run( 1., false );
 #endif    
 
 }
@@ -447,9 +447,9 @@ void  TUnSpace::NexT(int J )
 //#endif
    if( usp->PsGen[0]== S_ON || usp->PsGen[1]== S_ON || usp->PsGen[5]== S_ON )
     for( j=0; j<usp->L; j++)
-     if(usp->PsGen[0]== S_ON && usp->NgLg[j]==i||
-        usp->PsGen[1]== S_ON && usp->NgLs[j]==i||
-        usp->PsGen[5]== S_ON && usp->NgLv[j]==i)
+     if( ( usp->PsGen[0]== S_ON && usp->NgLg[j]==i) ||
+          ( usp->PsGen[1]== S_ON && usp->NgLs[j]==i) ||
+        ( usp->PsGen[5]== S_ON && usp->NgLv[j]==i ) )
      {
 
       if(usp->PsGen[0]== S_ON && usp->NgLg[j]==i)
@@ -1304,8 +1304,8 @@ void TUnSpace::setPhaseAssemb( )
        for( j=i+1; j<usp->Q; j++)
        { fl=0;
          for( k=0; k<usp->Fi; k++ )
-          if( usp->vYF[i*usp->Fi+k] && !usp->vYF[j*usp->Fi+k]  ||
-             !usp->vYF[i*usp->Fi+k] && usp->vYF[j*usp->Fi+k]   )
+          if( (usp->vYF[i*usp->Fi+k] && !usp->vYF[j*usp->Fi+k])  ||
+             (!usp->vYF[i*usp->Fi+k] && usp->vYF[j*usp->Fi+k])   )
           { fl=1; break; }
          if(!fl)
            usp->sv[j] = usp->nPhA;

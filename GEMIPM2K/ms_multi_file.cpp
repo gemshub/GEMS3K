@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1222 2009-02-10 14:27:00Z gems $
+// $Id: ms_multi_file.cpp 1229 2009-02-11 17:06:10Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -47,7 +47,7 @@ void TMulti::set_def( long int /*q*/)
     pm.PunV = 'j';         // Units of volume  { j;  c L a reserved }
     pm.PunP = 'b';        // Units of pressure  { b;  B p P A reserved }
     pm.PunT = 'C';         // Units of temperature  { C; K F reserved }
- 	
+
     // mem_set( &pm.N, 0, 36*sizeof(long int));
     pm.N = 0;        	// N - number of IC in IPM problem
     pm.NR = 0;       	// NR - dimensions of R matrix
@@ -112,8 +112,10 @@ void TMulti::set_def( long int /*q*/)
     pm.DSM = 0.;        // min value phase DS (IPM-2)
     pm.GWAT = 0.;       // used in ipm_gamma()
     pm.YMET = 0.;       // reserved
-    pm.denW = pm.denWg = 0.;  // Density of H2O(l) and steam for Tc = 0.;Pc
-    pm.epsW = pm.epsWg = 0.;  // Diel. constant of H2O(l) and steam for Tc = 0.;Pc
+    fillValue( pm.denW, 0., 5 );
+    fillValue( pm.denWg, 0., 5 );
+    fillValue( pm.epsW, 0., 5 );
+    fillValue( pm.epsWg, 0., 5 );
     pm.PCI = 0.;        // Current value of Dikin criterion of IPM convergence DK>=DX
     pm.DX = 0.;         // IPM convergence criterion threshold DX (1e-5)
     pm.lnP = 0.;        // log Ptotal
@@ -126,8 +128,8 @@ void TMulti::set_def( long int /*q*/)
     pm.logXw = 0.;      // work variable
     pm.logYFk = 0.;     // work variable
     pm.YFk = 0.;        // Current number of moles in a multicomponent phase
-    pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.; 
-   
+    pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.;
+
     // pointers
     pm.sitNcat = 0;
     pm.sitNan = 0;
@@ -266,6 +268,14 @@ void TMulti::set_def( long int /*q*/)
 //    pm.sitE = 0;
 pm.IPx = 0;
 pm.ITF = pm.ITG = 0;
+pm.VPh = 0;
+pm.GPh = 0;
+pm.HPh = 0;
+pm.SPh = 0;
+pm.CPh = 0;
+pm.APh = 0;
+pm.UPh = 0;
+
 }
 
 //---------------------------------------------------------//
@@ -478,7 +488,6 @@ ff.writeArray((double*)pm.D, MST*MST);
       ff.writeArray(pm.Qp, pm.FIs*QPSIZE);
       ff.writeArray(pm.Qd, pm.FIs*QDSIZE);
    }
-
 //  Added 16.11.2004 by Sveta
 //   if( pm.sitNcat*pm.sitNcat )
 //     ff.writeArray( pm.sitE, pm.sitNcat*pm.sitNan );
@@ -609,7 +618,7 @@ void TMulti::from_file( GemDataStream& ff )
       long int LsMdcSum;
       getLsModsum( LsModSum, LsIPxSum );
       getLsMdcsum( LsMdcSum );
-      
+
 #ifdef IPMGEMPLUGIN
       pm.IPx = new long int[LsIPxSum];
       pm.PMc = new double[LsModSum];
@@ -619,7 +628,7 @@ void TMulti::from_file( GemDataStream& ff )
       pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
       pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
 #endif
-      
+
       ff.readArray(pm.IPx, LsIPxSum);
       ff.readArray(pm.PMc, LsModSum);
       ff.readArray(pm.DMc, LsMdcSum);
@@ -768,7 +777,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  pm.DCCW = new char[pm.L];
  pm.lnGmM = new double[pm.L];
  pm.GEX = new double[pm.L]; //24
- for( ii=0; ii<pm.L; ii++ )         
+ for( ii=0; ii<pm.L; ii++ )
  {
 	 pm.DUL[ii] = 1e6;
 	 pm.DLL[ii] = 0.0;
@@ -795,18 +804,18 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
      pm.lnGmM[ii] = 0.0;
      pm.GEX[ii] = 0.0;
  }
-  
+
  pm.A = new double[pm.N*pm.L];
- for( ii=0; ii<pm.N*pm.L; ii++ )         
+ for( ii=0; ii<pm.N*pm.L; ii++ )
 	 pm.A[ii] = 0.0;
- 
+
  pm.Awt = new double[pm.N];
  pm.B = new double[pm.N];
  pm.U = new double[pm.N];
  pm.U_r = new double[pm.N];
  pm.C = new double[pm.N];
  pm.ICC = new char[pm.N];  //6
- for( ii=0; ii<pm.N; ii++ )         
+ for( ii=0; ii<pm.N; ii++ )
  {
 	 pm.Awt[ii] = 0.0;
 	 pm.B[ii] = 0.0;
@@ -827,7 +836,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  pm.FWGT = new double[pm.FI]; //9
  for( ii=0; ii<pm.FI; ii++ )
  {
-	 pm.XFs[ii] = 0.0;	 
+	 pm.XFs[ii] = 0.0;
 	 pm.Falps[ii] = 0.0;
 	 pm.XF[ii] = 0.0;
 	 pm.YF[ii] = 0.0;
@@ -871,7 +880,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = new double[pm.L];
    pm.Gamma = new double[pm.L];
    pm.lnGmf = new double[pm.L]; //7
-   for( ii=0; ii<pm.L; ii++ )         
+   for( ii=0; ii<pm.L; ii++ )
    {
 	   pm.Y_la[ii] = 0.0;
 	   pm.Y_w[ii] = 0.0;
@@ -900,18 +909,18 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( pm.FIs > 0 && pm.Ls > 0 )
  {
    pm.BF = new double[pm.FIs*pm.N];
-   for( ii=0; ii<pm.FIs*pm.N; ii++ )         
+   for( ii=0; ii<pm.FIs*pm.N; ii++ )
 	   pm.BF[ii] = 0.0;
    pm.BFC = new double[pm.N];
-   for( ii=0; ii<pm.N; ii++ )         
+   for( ii=0; ii<pm.N; ii++ )
 	   pm.BFC[ii] = 0.0;
-   
+
    pm.XFA = new double[pm.FIs];
    pm.YFA = new double[pm.FIs];
    pm.LsMdc = new long int[pm.FIs];
    pm.PUL = new double[pm.FIs];
    pm.PLL = new double[pm.FIs]; //5
-   for( ii=0; ii<pm.FIs; ii++ )       
+   for( ii=0; ii<pm.FIs; ii++ )
    {
 	   pm.XFA[ii] = 0.0;
 	   pm.YFA[ii] = 0.0;
@@ -923,9 +932,9 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.PMc = 0;
    pm.DMc = 0;
    pm.LsMod = new long int[pm.FIs*3];
-   for( ii=0; ii<pm.FIs*3; ii++ )    
+   for( ii=0; ii<pm.FIs*3; ii++ )
      pm.LsMod[ii] =0;
-   
+
    pm.sMod = new char[pm.FIs][6];
    pm.RFLC = new char[pm.FIs];
    pm.RFSC = new char[pm.FIs];
@@ -958,12 +967,12 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( pm.LO > 1 )
  {
    pm.Y_m = new double[pm.L];
-   for( ii=0; ii<pm.L; ii++ )         
+   for( ii=0; ii<pm.L; ii++ )
 	   pm.Y_m[ii] = 0.0;
    pm.IC_m = new double[pm.N];
    pm.IC_lm = new double[pm.N];
    pm.IC_wm = new double[pm.N];
-   for( ii=0; ii<pm.N; ii++ )         
+   for( ii=0; ii<pm.N; ii++ )
    {
 	   pm.IC_m[ii] = 0.0;
 	   pm.IC_lm[ii] = 0.0;
@@ -982,11 +991,11 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( PAalp != S_OFF )
  {
    pm.Aalp = new double[pm.FI];
-   for( ii=0; ii<pm.FI; ii++ ) 
+   for( ii=0; ii<pm.FI; ii++ )
 	   pm.Aalp[ii] = 0.0;
    pm.Xr0h0 = new double[pm.FI][2];
-   for( ii=0; ii<pm.FI; ii++ ) 
-	  pm.Xr0h0[ii][0] =  pm.Xr0h0[ii][1] = 0.0; 
+   for( ii=0; ii<pm.FI; ii++ )
+	  pm.Xr0h0[ii][0] =  pm.Xr0h0[ii][1] = 0.0;
  }
  else
  {
@@ -997,7 +1006,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( PSigm != S_OFF )
  {   pm.Sigw = new double[pm.FI];
      pm.Sigg = new double[pm.FI];
-     for( ii=0; ii<pm.FI; ii++ ) 
+     for( ii=0; ii<pm.FI; ii++ )
      {
     	 pm.Sigw[ii] = 0.0;
     	 pm.Sigg[ii] = 0.0;
@@ -1011,11 +1020,11 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  if( pm.E )
  {
     pm.EZ = new double[pm.L];
-    for( ii=0; ii<pm.L; ii++ ) 
+    for( ii=0; ii<pm.L; ii++ )
     	pm.EZ[ii] = 0.0;
     pm.Xcond = new double[pm.FI];
     pm.Xeps = new double[pm.FI];
-    for( ii=0; ii<pm.FI; ii++ ) 
+    for( ii=0; ii<pm.FI; ii++ )
     {
         pm.Xcond[ii] = 0.0;
         pm.Xeps[ii] = 0.0;
@@ -1033,8 +1042,8 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.SATX = new long int[pm.Lads][4];
    pm.MASDJ = new double[pm.Lads][DFCN];
    pm.lnSAC = new double[pm.Lads][4];
-   for( ii=0; ii<pm.Lads; ii++ ) 
-   {  
+   for( ii=0; ii<pm.Lads; ii++ )
+   {
 	   pm.SATX[ii][0] = pm.SATX[ii][1] = pm.SATX[ii][2] = pm.SATX[ii][3] = 0;
 	   pm.lnSAC[ii][0] = pm.lnSAC[ii][1] = pm.lnSAC[ii][2] = pm.lnSAC[ii][3] = 0.0;
 	  for( jj=0; jj<MST; jj++ )
@@ -1058,7 +1067,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.Xetaf = new double[pm.FIs][MST];
    pm.XetaA = new double[pm.FIs][MST];
    pm.XetaB = new double[pm.FIs][MST];
-   pm.XetaD = new double[pm.FIs][MST]; 
+   pm.XetaD = new double[pm.FIs][MST];
    pm.XFTS = new double[pm.FIs][MST];  //19
    for( ii=0; ii<pm.FIs; ii++ )
    	  for( jj=0; jj<MST; jj++ )
@@ -1083,7 +1092,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
 	      pm.XetaD[ii][jj] = 0.0;
 	      pm.XFTS[ii][jj] = 0.0;
    	  }
-   
+
   pm.SATT = new char[pm.Lads];
   pm.SM3 = new char[pm.Lads][MAXDCNAME];
   pm.DCC3 = new char[pm.Lads];
@@ -1098,7 +1107,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
   for( ii=0; ii<MST; ii++ )
   	  for( jj=0; jj<MST; jj++ )
    	      pm.D[ii][jj] = 0.0;
-   
+
  }
 else
  { // ADSORPTION AND ION EXCHANGE
@@ -1166,7 +1175,7 @@ else
         {
             pm.Qp[ii] = 0.;
             pm.Qd[ii] = 0.;
-        	
+
         }
  }
  else
@@ -1178,7 +1187,7 @@ else
     pm.Qd = 0;
 
  }
- 
+
  // added SD 03/02/2009
  pm.XU = new double[pm.L];
  for( ii=0; ii<pm.L; ii++ )
@@ -1187,6 +1196,39 @@ else
   for( ii=0; ii<pm.N; ii++ )
   	  pm.Uc[ii] = 0.;
 
+  pm.Cp0   = new double[pm.L];
+  pm.H0    = new double[pm.L];
+  pm.U0    = new double[pm.L];
+  pm.S0    = new double[pm.L];
+  pm.A0    = new double[pm.L];
+  for( ii=0; ii<pm.L; ii++ )
+  {
+	  pm.Cp0[ii]   = 0.;
+	  pm.H0[ii]    = 0.;
+	  pm.U0[ii]    = 0.;
+	  pm.S0[ii]    = 0.;
+	  pm.A0[ii]    = 0.;
+	  
+  }
+  pm.VPh   = new double[pm.FIs][MIXPHPROPS];
+  pm.GPh   = new double[pm.FIs][MIXPHPROPS];
+  pm.HPh   = new double[pm.FIs][MIXPHPROPS];
+  pm.SPh   = new double[pm.FIs][MIXPHPROPS];
+  pm.CPh   = new double[pm.FIs][MIXPHPROPS];
+  pm.APh   = new double[pm.FIs][MIXPHPROPS];
+  pm.UPh   = new double[pm.FIs][MIXPHPROPS];
+  for( ii=0; ii<pm.FIs; ii++ )
+    for( jj=0; jj<MIXPHPROPS; jj++ )
+  {
+	  pm.VPh[ii][jj]  = 0.;
+	  pm.GPh[ii][jj]  = 0.;
+	  pm.HPh[ii][jj]  = 0.;
+	  pm.SPh[ii][jj]  = 0.;
+	  pm.CPh[ii][jj]  = 0.;
+	  pm.APh[ii][jj]  = 0.;
+	  pm.UPh[ii][jj]  = 0.;
+  }
+	  
  Alloc_TSolMod( pm.FIs );
 
 //  Added 16.11.2004 by Sveta
@@ -1355,7 +1397,21 @@ if( pm.D ) delete[] pm.D;
     if( pm.XU ) delete[] pm.XU;
     if( pm.Uc ) delete[] pm.Uc;
 
-//  Added 16.11.2004 by Sveta
+    if(pm.H0)  	delete[] pm.H0;
+    if(pm.A0)  	delete[] pm.A0;
+    if(pm.U0)  	delete[] pm.U0;
+    if(pm.S0)  	delete[] pm.S0;
+    if(pm.Cp0) 	delete[] pm.Cp0;
+
+    if(pm.VPh)  	delete[] pm.VPh;
+    if(pm.GPh)  	delete[] pm.GPh;
+    if(pm.HPh)  	delete[] pm.HPh;
+    if(pm.SPh)  	delete[] pm.SPh;
+    if(pm.CPh)  	delete[] pm.CPh;
+    if(pm.APh)  	delete[] pm.APh;
+    if(pm.UPh)  	delete[] pm.UPh;
+
+ //  Added 16.11.2004 by Sveta
 //    if( pm.sitE )     delete[] pm.sitE;
 //    if( pm.sitXcat )  delete[] pm.sitXcat;
 //    if( pm.sitXan )    delete[] pm.sitXan;
@@ -1531,7 +1587,7 @@ void TMulti::to_text_file( const char *path )
      prar.writeArray(  "Xetaf", &pm.Xetaf[0][0], pm.FIs*pm.FIat);
      prar.writeArray(  "XetaA", &pm.XetaA[0][0],  pm.FIs*pm.FIat);
      prar.writeArray(  "XetaB", &pm.XetaB[0][0],  pm.FIs*pm.FIat);
-     prar.writeArray(  "XetaD", &pm.XetaD[0][0],  pm.FIs*pm.FIat);   
+     prar.writeArray(  "XetaD", &pm.XetaD[0][0],  pm.FIs*pm.FIat);
      prar.writeArray(  "XFTS", &pm.XFTS[0][0],  pm.FIs*pm.FIat);
 
      prar.writeArray(  "SATX", &pm.SATX[0][0], pm.Lads*4);
@@ -1560,6 +1616,25 @@ void TMulti::to_text_file( const char *path )
      prar.writeArray(  "Qd", pm.Qd,  pm.FIs*QDSIZE);
 
     }
+
+    if(pm.H0)
+    	prar.writeArray("H0",pm.H0, pm.L);
+    if(pm.A0)
+    	prar.writeArray("A0",pm.A0, pm.L);
+    if(pm.U0)
+    	prar.writeArray("U0",pm.U0, pm.L);
+    if(pm.S0)
+    	prar.writeArray("S0",pm.S0, pm.L);
+    if(pm.Cp0)
+    	prar.writeArray("Cp0",pm.Cp0, pm.L);
+
+    prar.writeArray(  "VPh", &pm.VPh[0][0], pm.FIs*MIXPHPROPS);
+    prar.writeArray(  "GPh", &pm.GPh[0][0], pm.FIs*MIXPHPROPS);
+    prar.writeArray(  "HPh", &pm.HPh[0][0], pm.FIs*MIXPHPROPS);
+    prar.writeArray(  "SPh", &pm.SPh[0][0], pm.FIs*MIXPHPROPS);
+    prar.writeArray(  "CPh", &pm.CPh[0][0], pm.FIs*MIXPHPROPS);
+    prar.writeArray(  "APh", &pm.APh[0][0], pm.FIs*MIXPHPROPS);
+    prar.writeArray(  "UPh", &pm.UPh[0][0], pm.FIs*MIXPHPROPS);
 
 //  Added 16.11.2004 by Sveta
 //   if( pm.sitNcat*pm.sitNcat )

@@ -105,11 +105,11 @@ void TMulti::SimplexInitialApproximation( )
 
         // calculating initial quantities of phases
         TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
-  
+
         pmp->FX = GX( 0.0 ); // calculation of initial G(X) value
         MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
 //        	for(long int i=0; i<pmp->N; i++)
-//             cout << i << " C " << pmp->C[i] << " B " << pmp->B[i] << endl; 
+//             cout << i << " C " << pmp->C[i] << " B " << pmp->B[i] << endl;
 
 
         // Deleting work arrays
@@ -173,7 +173,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
             if( fabs(UP[J])<EPS)
                 UP[J]=EPS;
             else if( UP[J]<0.)
-                Error("E00IPM: Simplex", "Negative UP[J] value(s) in START() ");
+                Error("E00IPM: Simplex()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
         }
         SPOS(Q, STR, NMB, J, M, AA);
         for( I=0;I<M;I++)
@@ -214,7 +214,7 @@ void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,lo
     double MAX,A1;
     double *P;
     P= new double[M+1];
-    ErrorIf( !P, "Simplex", "At NEW memory allocation error ");
+    ErrorIf( !P, "Simplex()", "At NEW: memory allocation error ");
     J1=*J0;
     MAX=0.;
     for( J=J1+1;J<=N;J++)
@@ -243,7 +243,7 @@ MK3:
                 goto MK4;
         }
     }
-    
+
     for( J=1;J<J1;J++)
     {
         SPOS(P, STR, NMB, J-1, M, AA);
@@ -292,7 +292,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
     long int UN,J,I;
     double *P;
     P=  new double[M+1];
-    ErrorIf( !P, "Simplex", "At WORK memory allocation error. ");
+    ErrorIf( !P, "Simplex()", "At WORK: memory allocation error. ");
     *UNO=0;
     *ITER=*ITER+1;
     J=*J0-1;
@@ -352,9 +352,9 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
                 *(A+I*(M+1))-=Q[I]*MIM;
 
         BASE[*I0-1]=*J0-1;
-        
+
         A1=1.E0/Q[*I0];
-        
+
         for( J=1;J<=M;J++)
             *(A+(*I0)*(M+1)+J)*=A1;
         for( I=0;I<*I0;I++)
@@ -369,7 +369,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
         for( I=0;I<=M;I++)
         {
             *(A+I*(M+1))-=UP[*J0-1]*Q[I];
-        }   
+        }
         UP[*J0-1] = -UP[*J0-1]; // Fixed error SD 23/01/2009
     }
     delete[] P;
@@ -385,7 +385,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     long int /* K,*/I,J;
     double *P;
     P=  new double[M+1];
-    ErrorIf( !P, "Simplex", "At FIN memory allocation error. ");
+    ErrorIf( !P, "Simplex()", "At FIN: memory allocation error. ");
 
     for( J=0;J<N;J++)
     {
@@ -448,8 +448,8 @@ void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
         A=  new double[(M+1)*(M+1)];
         Q=  new double[M+1];
         BASE=  new long int[M];
-        ErrorIf( !A || !Q || !BASE, "Simplex", "Memory allocation error ");
-        
+        ErrorIf( !A || !Q || !BASE, "Simplex()", "Memory allocation error ");
+
         fillValue(A, 0., (M+1)*(M+1) );
         fillValue(Q, 0., (M+1) );
         fillValue(BASE, 0L, (M) );
@@ -468,7 +468,7 @@ void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
         }
         if( EPS > 1.0e-6 )
         {
-         Error( "E01IPM: Simplex",
+         Error( "E01IPM: Simplex()",
              "LP solution cannot be obtained with sufficient precision" );
         }
 FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);

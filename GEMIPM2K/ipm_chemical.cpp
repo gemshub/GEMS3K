@@ -348,18 +348,18 @@ if( k < pmp->FIs )
             {
  //               JJ = j;
 //                KK = k;
-                sprintf( tbuf, "Inconsistent upper metastability limits j=%ld k=%ld XU=%g XFU=%g",
+                sprintf( tbuf, "Inconsistent upper DC metastability limits j=%ld k=%ld XU=%g XFU=%g",
                          j, k, XU, XFU );
-                Error( "E11IPM Set_DC_limits(): ",tbuf.p );
+                Error( "E11IPM: Set_DC_limits(): ",tbuf.p );
 //                XU = XFU; // - pmp->lowPosNum;
             }
             if( XL < XFL )
             {
 //                JJ = j;
 //                KK = k;
-                sprintf( tbuf, "Inconsistent lower metastability limits j=%ld k=%ld XL=%g XFL=%g",
+                sprintf( tbuf, "Inconsistent lower DC metastability limits j=%ld k=%ld XL=%g XFL=%g",
                          j, k, XL, XFL );
-                Error( "E12IPM Set_DC_limits(): ",tbuf.p );
+                Error( "E12IPM: Set_DC_limits(): ",tbuf.p );
 //                XL = XFL; // - pmp->lowPosNum;
             }
             pmp->DUL[j]=XU;
@@ -640,8 +640,8 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
         {                 // error - will result in zerodivide!
            gstring pbuf(pmp->SF[k],0,20);
            char buf[200];
-           sprintf( buf, "Broken IPM solution: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
-           Error( "E13IPM PrimalChemicalPotentials():", buf);
+           sprintf( buf, "Broken phase amount from primal approximation: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
+           Error( "E13IPM: PrimalChemicalPotentials():", buf);
 //           Yf = pmp->YFk;
         }
         if( pmp->YFk > pmp->lowPosNum*10. )
@@ -1180,7 +1180,7 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
     for( j=0; j<pmp->L; j++ )
     { // DC loop
       ix=0;
-//      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009 
+//      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009
 //      { for( i=0; i<pmp->N-pmp->E; i++ )
 //        if(a(i,j) && pmp->B[i] < pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
 //        { ix=1; break; }
@@ -1200,9 +1200,10 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
      			  // and the insertion of XU[j] will break the mass balance
      			  if(!mbBroken )
      			  {
-      				 sprintf(buf, "Mass balance broken on iteration %ld in DualTh recover for DC&RC %16s",
+      				 sprintf(buf,
+      				"Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC|RC %16s",
       						      pmp->ITG, pmp->SM[j] );
-     				 setErrorMessage( 15, "E15IPM IPM-main():",buf);
+     				 setErrorMessage( 15, "E15IPM: IPM-main():", buf);
                      mbBroken = true;  // Error state is activated
      			  }
      			  else
@@ -1305,7 +1306,7 @@ void TMulti::ConvertDCC()
 NEXT_PHASE:
         j = i;
     }  // k
-    ErrorIf( iRet>0, "Multi", "Error in DCC code.");
+    ErrorIf( iRet>0, "E19IPM: ConvertDCC()", "Invalid DC class code. Memory corruption?");
 }
 
 // get the index of volume IC ("Vv") for volume balance constraint

@@ -217,6 +217,6 @@ Error Calling GEMIPM calculation it = 979 Node 1 Ca= 0.488318 Si= 0.567866
 Error Calling GEMIPM calculation it = 984 Node 1 Ca= 0.538318 Si= 0.592866
   in = 0  it = 990 Cal= 0.718957 Silica= 0
   in = 1  it = 990 Cal= 0.00999095 Silica= 0
-Total time of calculation  s; 16.84
+Total time of calculation  s; 17.33
 
 Finished Ok
