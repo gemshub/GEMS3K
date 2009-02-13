@@ -185,6 +185,11 @@ FINISHED:
          {
     	    pmp->pNP = 0; 
     	    pmp->MK = 0;
+cout << pmp->stkey << " return simplex W1 " <<  pmp->W1 << " pmp->Ec " << pmp->errorBuf << endl;
+//RefinLoops_ = pmp->W1 + pmp->K2 - 1; // Prec.ref. + Selekt2() loops
+//NumIterFIA_ = pmp->ITF;
+//NumIterIPM_ = pmp->ITG;
+//pmp->IT = pmp->ITG;   // This is to provide correct number of IPM iterations to upper levels
     	    goto FORCED_AIA;  // Trying again with AIA set after bad SIA 
          }    
     	else
@@ -192,7 +197,7 @@ FINISHED:
 	}
     if( pmp->MK || pmp->PZ ) // no good solution
     {
-//cout << "Iter"  << " MK " << pmp->MK << " PZ " << pmp->PZ << " " << pmp->errorCode << endl;
+cout << "Iter"  << " MK " << pmp->MK << " PZ " << pmp->PZ << " " << pmp->errorCode << endl;
     }	
     else // only test 30/01/2009 SD
     {	int iB = multi->CheckMassBalanceResiduals( pmp->X );
@@ -204,6 +209,7 @@ FINISHED:
     }
     pmp->t_end = clock();
     pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+//cout <<   "OK " << pmp->stkey << " IT FIA " <<  NumIterFIA_ << " IT IPM " << NumIterIPM_ << endl;
 return pmp->t_elap_sec;
 }
 

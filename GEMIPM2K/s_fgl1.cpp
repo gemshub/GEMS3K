@@ -1248,15 +1248,20 @@ long int TEUNIQUAC::MixMod()
 	double Mw, Xw, IS, b, c;
 	double A, RR, QQ, K, L, M;
 	double gamDH, gamC, gamR, lnGam, Gam;
+	double rho, eps;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
 
 	// calculation of DH parameters
+	rho = RhoW * 1000.;  // density in kg m-3
+	eps = EpsW;
 	b = 1.5;
-	c = 1.3287e-5;
-	// A = c*sqrt(RhoW)/pow((EpsW*Tk),1.5);
-	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);  // valid only for temperatures below 200 deg. C and Psat
+	c = 1.3287e+5;  // corrected
+	// A = c*sqrt(rho)/pow((eps*Tk),1.5);
+
+	// approximation valid only for temperatures below 200 deg. C and Psat
+	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
 
 	// calculation of ionic strength
 	IS = 0.0;
@@ -1370,14 +1375,18 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	double gE, hE, sE, cpE, vE;
 	double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX;   // DH, C and R contributions to properties
 	double dg, d2g, dgRI, d2gRI, dgRX, d2gRX, dgDH, d2gDH;
+	double rho, drho, d2rho, eps, deps, d2eps;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
 
 	// calculation of DH parameters
+	rho = RhoW * 1000.;  // density in kg m-3
+	eps = EpsW;
 	b = 1.5;
-	c = 1.3287e-5;
-	// A = c*sqrt(RhoW)/pow((EpsW*Tk),1.5);
+	c = 1.3287e+5;  // corrected
+	// A = c*sqrt(rho)/pow((eps*Tk),1.5);
+
 	// approximation valid only for temperatures below 200 deg. C and Psat
 	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
 	dAdT = (1.335e-3) + 2.*(1.164e-5)*(Tk-273.15);

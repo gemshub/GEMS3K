@@ -41,7 +41,7 @@
 <pa_DB>        1e-17
 
 # DHB: Maximum allowed mass balance residual (moles) for major independent components
-<pa_DHB>       1e-08
+<pa_DHB>       1e-07
 
 # EPS: Precision criterion of the simplex() procedure for automatic initial approximation
 <pa_EPS>       1e-07
@@ -75,7 +75,7 @@
 <pa_DGC>        0.07
 
 # PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)
-<pa_PSM>           1
+<pa_PSM>           2
 # Activity coefficient values for simplex(): GAR for major and GAH for minor components
 <pa_GAR>           1
 <pa_GAH>        1000
@@ -127,7 +127,7 @@
 # pKin: Flag for using metastability/kinetic constraints on calculated DC amounts (see dll, dul arrays)
 <pKin>             1
 # DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
-<pa_DKIN>      1e-05
+<pa_DKIN>      1e-07
 
 ## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # sMod: Codes for mixing models of multicomponent phases

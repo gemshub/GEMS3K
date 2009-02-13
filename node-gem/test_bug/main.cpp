@@ -35,7 +35,7 @@ int outTest = 0;
 
 int main( int argc, char* argv[] )
  {
-   long int nTimes = 1e3;   // Maximum number of time iteration steps
+   long int nTimes = 3e3;   // Maximum number of time iteration steps
 
 	// Analyzing command line arguments
      // Default arguments

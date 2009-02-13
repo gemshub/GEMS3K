@@ -499,12 +499,12 @@ long int TMulti::EnterFeasibleDomain()
     ErrorIf( !pmp->MU || !pmp->W, "EnterFeasibleDomain()",
                               "Error of memory allocation for pmp->MU or pmp->W." );
 
-    // Initial rough check of mass balance residuals
-    iB = CheckMassBalanceResiduals( pmp->Y );
-    if( iB >= 0 )
-    {  // Experimental
-      	 return 4;
-    }
+    // Initial rough check of mass balance residuals  - disabled by DK 13.02.2009
+//    iB = CheckMassBalanceResiduals( pmp->Y );
+//    if( iB >= 0 )
+//    {  // Experimental
+//      	 return 4;
+//    }
 
     // calculation of total mole amounts of phases
     TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
@@ -569,7 +569,7 @@ long int TMulti::EnterFeasibleDomain()
       {  // Experimental
           iRet = 3;
     	  setErrorMessage( 3, "E03IPM: EnterFeasibleDomain():",
-    			  "Too small LM step size - cannot converge (check Pa_DG).");
+    			  "Too small LM step size - cannot converge (check Pa_DG?).");
           break;
        }
       if( LM > 1.)
@@ -683,7 +683,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
         	  }
           }
           if( pmp->Ec == 14 )
-          {
+          {  // swapping the dual solution with its copy from previous refinement loop
             double uu;
         	  for( i=0; i<pmp->N; i++ )
         	  {  uu = pmp->U[i]; pmp->U[i] = pmp->Uc[i]; pmp->Uc[i] = uu;}
@@ -1249,8 +1249,9 @@ double TMulti::calcLM(  bool initAppr )
   }
   else
   {  if( Z == -1 )
-       LM = 1./sqrt(pmp->PCI);
-     LM = min( LM, 10./pmp->DX );
+       LM = 1./sqrt(pmp->PCI);  // Might cause infinite loop in LMD() if PCI is too low?
+//     LM = min( LM, 10./pmp->DX );
+       LM = min( LM, 1.0e10 );  // Set an empirical upper limit for LM to prevent freezing
   }
   return LM;
 }

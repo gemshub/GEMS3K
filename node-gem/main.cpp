@@ -35,7 +35,7 @@ int outTest = 0;
 
 int main( int argc, char* argv[] )
  {
-   long int nTimes = 1e3;   // Maximum number of time iteration steps
+   long int nTimes = 1e10;   // Maximum number of time iteration steps
 
 	// Analyzing command line arguments
      // Default arguments
@@ -212,6 +212,7 @@ int main( int argc, char* argv[] )
 	   iS[in] =-1.;
 	   mass[in] = 0.;
    }
+
    
    cout << "Start Tnode test: " << ipm_input_file_list_name << " "
           << dbr_input_file_name << endl;
@@ -270,13 +271,14 @@ int main( int argc, char* argv[] )
      // Loop over nodes for calculating the chemical equilibration step
      for( in=0; in<nNodes; in++ )
      {
-        m_NodeHandle[in] = in;
-        m_NodeStatusCH[in] = NEED_GEM_SIA; // or NEED_GEM_SIA
 
+        m_NodeHandle[in] = in;
+        m_NodeStatusCH[in] = NEED_GEM_AIA; // or NEED_GEM_SIA
         // Setting input data for GEMIPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
              m_T[in], m_P[in], m_Vs[in], m_Ms[in],
-             m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH );
+             m_bIC+in*nIC, m_dul+in*nDC, m_dll+in*nDC, m_aPH+in*nPH, m_xDC+in*nDC, m_gam+in*nDC );
+
         node->GEM_set_MT( (double)it, 1. );
 
 if( in == 1 && it == 363 )
@@ -291,7 +293,7 @@ if( in == 1 && it == 363 )
      
 }     
         // Calling GEMIPM calculation
-        m_NodeStatusCH[in] = node->GEM_run( mass[in]*1e-3, true );
+        m_NodeStatusCH[in] = node->GEM_run( 1./*mass[in]*1e-3*/, true );
 
 if( in == 1 && it == 363 )
 {	   
