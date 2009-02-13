@@ -1074,11 +1074,12 @@ double TMulti::Cj_init_calc( double g0, long int j, long int k )
 
 //----------------------------------------------------------------------------
 // KC: dual-thermo calculation of DC amount X(j) from A matrix and u vector
-//  using method and formulae from [Karpov et al., 2001]
-//  !!!!!  Attention !!!! XU[j] calculation for some classes of DCs may be in error!
+//  using method and formulae from [Karpov et al., 2001] with extensions
+//  !!!!!  Attention !!!! XU[j] calculation for some classes of DCs may need improvement!
 //
 // Return code  0 OK
 //              1 The dual solution appears bad, and the insertion of XU[j] will damage
+//                the mass balance
 #define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
 //
 long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
@@ -1126,8 +1127,7 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
          if( pmp->PHC[k] == PH_AQUEL )
          {
             if(j == pmp->LO)
-                ;     //     disabled by KD 23.11.01
-//                XU[j] += Dsur - 1. + 1. / ( 1.+ Dsur ) + log(XF[k]);
+                XU[j] += Dsur - 1. + 1. / ( 1.+ Dsur ) + log(XF[k]);  // fixed 13.02.09 DK
             else
                 XU[j] += Dsur + log(XFA[k]);
          }
@@ -1136,9 +1136,10 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
             if( pmp->DCC[j] == DC_PEL_CARRIER ||
                  pmp->DCC[j] == DC_SUR_CARRIER ||
                  pmp->DCC[j] == DC_SUR_MINAL )
-                ;    //     disabled by KD 23.11.01
-//                XU[j] += Dsur - 1.0 + 1.0 / ( 1.0 + Dsur )
-//                      - DsurT + DsurT / ( 1.0 + DsurT ) + log(XF[k]);
+                    //     disabled by KD 23.11.01    enabled for testing 13.02.09
+                XU[j] += // Dsur - 1.0 + 1.0 / ( 1.0 + Dsur )
+                      // - DsurT + DsurT / ( 1.0 + DsurT ) +
+                      log(XF[k]);
             else  {    // rewritten by KD  23.11.01
                ja = j - ( pmp->Ls - pmp->Lads );
                Ez = pmp->EZ[j];
@@ -1156,7 +1157,7 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
              }
          }
          else
-           XU[j] += log(XF[k]);
+           XU[j] += log(XF[k]);   // Check for non-ideal gases at P and DQF controlled species
 
          if( XU[j] > -54. && XU[j] < 13.815 )
          {
@@ -1167,6 +1168,12 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
              XU[j] = 0.0;
 //         if( XU[j] <= pmp->lowPosNum )// Think 30/12/2009
 //             XU[j]=0.;
+// Corrections for DCs with non-trivial metastability constraints
+if( XU[j] < pmp->DLL[j] )
+XU[j] = pmp->DLL[j];
+if( XU[j] > pmp->DUL[j] )
+XU[j] = pmp->DUL[j];
+
       }
       else
           XU[j]=0.;

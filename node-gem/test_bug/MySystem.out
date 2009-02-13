@@ -2,679 +2,235 @@ Begin Initialiation part
 End Initialiation part
 Begin Coupled Modelling part
 Start Tnode test: test_bug/MySystem-dat.lst test_bug/MySystem-dbr-0-0000.dat
- nNodes = 2  nTimes = 10000000000  deltaC = 0.01 deltaS = 0.005
+ nNodes = 2  nTimes = 100000  deltaC = 0.01 deltaS = 0.005
 xCa= 3 xSi=6 xO=5 xH=4 xCalcite=12 xSiO2=14
-  in = 0  it = 0 Cal= 1.19887 Silica= 0.000108333
+  in = 0  it = 0 Cal= 1.19887 Silica= 0.000108334
   in = 1  it = 0 Cal= 0.00358118 Silica= 0
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 575 Node 1 Ca= 0.448318 Si= 0.547866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 582 Node 1 Ca= 0.518318 Si= 0.582866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 1071 Node 1 Ca= 0.608318 Si= 0.977866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 2182 Node 1 Ca= 0.518318 Si= 0.582866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 3948 Node 1 Ca= 0.178318 Si= 0.592866
-Error Calling GEMIPM calculation it = 6346 Node 1 Ca= 0.158318 Si= 0.602866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 7393 Node 1 Ca= 0.628318 Si= 0.637866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 8671 Node 1 Ca= 0.608318 Si= 0.977866
-Error Calling GEMIPM calculation it = 8696 Node 1 Ca= 0.358318 Si= 0.852866
-Error Calling GEMIPM calculation it = 9046 Node 1 Ca= 0.858318 Si= 0.902866
-Error Calling GEMIPM calculation it = 9475 Node 1 Ca= 0.568318 Si= 0.957866
-Error Calling GEMIPM calculation it = 10113 Node 1 Ca= 0.188318 Si= 0.237866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 11057 Node 1 Ca= 0.748318 Si= 0.957866
-Error Calling GEMIPM calculation it = 11739 Node 1 Ca= 0.0883182 Si= 0.367866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 13107 Node 1 Ca= 0.248318 Si= 0.797866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 14384 Node 1 Ca= 0.538318 Si= 0.412866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 15731 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 16308 Node 1 Ca= 0.238318 Si= 0.792866
-Error Calling GEMIPM calculation it = 16569 Node 1 Ca= 0.388318 Si= 0.517866
-Error Calling GEMIPM calculation it = 16682 Node 1 Ca= 0.498318 Si= 0.922866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 17086 Node 1 Ca= 0.458318 Si= 0.902866
-Error Calling GEMIPM calculation it = 18552 Node 1 Ca= 0.218318 Si= 0.432866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 20099 Node 1 Ca= 0.328318 Si= 0.167866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 20131 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 22700 Node 1 Ca= 0.318318 Si= 0.832866
-Error Calling GEMIPM calculation it = 23119 Node 1 Ca= 0.128318 Si= 0.737866
-Error Calling GEMIPM calculation it = 23371 Node 1 Ca= 0.408318 Si= 0.527866
-Error Calling GEMIPM calculation it = 27594 Node 1 Ca= 0.638318 Si= 0.362866
-Error Calling GEMIPM calculation it = 29357 Node 1 Ca= 0.268318 Si= 0.457866
-Error Calling GEMIPM calculation it = 29716 Node 1 Ca= 0.158318 Si= 0.252866
-Error Calling GEMIPM calculation it = 29797 Node 1 Ca= 0.668318 Si= 0.657866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 30731 Node 1 Ca= 0.00831823 Si= 0.677866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 30973 Node 1 Ca= 0.428318 Si= 0.537866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 30975 Node 1 Ca= 0.448318 Si= 0.547866
-Error Calling GEMIPM calculation it = 31168 Node 1 Ca= 0.378318 Si= 0.492866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 31714 Node 1 Ca= 0.178318 Si= 0.242866
-Error Calling GEMIPM calculation it = 32542 Node 1 Ca= 0.118318 Si= 0.382866
-Error Calling GEMIPM calculation it = 33407 Node 1 Ca= 0.768318 Si= 0.707866
-Error Calling GEMIPM calculation it = 34687 Node 1 Ca= 0.448318 Si= 0.897866
-Error Calling GEMIPM calculation it = 35152 Node 1 Ca= 0.218318 Si= 0.572866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 35485 Node 1 Ca= 0.468318 Si= 0.907866
-Error Calling GEMIPM calculation it = 36180 Node 1 Ca= 0.498318 Si= 0.572866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 36679 Node 1 Ca= 0.528318 Si= 0.937866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 37906 Node 1 Ca= 0.258318 Si= 0.802866
-Error Calling GEMIPM calculation it = 38346 Node 1 Ca= 0.158318 Si= 0.602866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 38937 Node 1 Ca= 0.0683182 Si= 0.357866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 39494 Node 1 Ca= 0.378318 Si= 0.862866
-Error Calling GEMIPM calculation it = 40970 Node 1 Ca= 0.398318 Si= 0.522866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 41731 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 42353 Node 1 Ca= 0.228318 Si= 0.567866
-Error Calling GEMIPM calculation it = 43546 Node 1 Ca= 0.158318 Si= 0.602866
-Error Calling GEMIPM calculation it = 43934 Node 1 Ca= 0.0383182 Si= 0.662866
-Error Calling GEMIPM calculation it = 44199 Node 1 Ca= 0.688318 Si= 0.667866
-Error Calling GEMIPM calculation it = 44295 Node 1 Ca= 0.368318 Si= 0.857866
-Error Calling GEMIPM calculation it = 45470 Node 1 Ca= 0.618318 Si= 0.982866
-Error Calling GEMIPM calculation it = 45986 Node 1 Ca= 0.558318 Si= 0.402866
-Error Calling GEMIPM calculation it = 46312 Node 1 Ca= 0.198318 Si= 0.772866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 47081 Node 1 Ca= 0.508318 Si= 0.927866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 47131 Node 1 Ca= 0.00831823 Si= 0.677866
-Error Calling GEMIPM calculation it = 47515 Node 1 Ca= 0.168318 Si= 0.757866
-Error Calling GEMIPM calculation it = 47754 Node 1 Ca= 0.238318 Si= 0.442866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 48669 Node 1 Ca= 0.628318 Si= 0.987866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 48699 Node 1 Ca= 0.328318 Si= 0.837866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 49536 Node 1 Ca= 0.0583182 Si= 0.652866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 50265 Node 1 Ca= 0.668318 Si= 0.997866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 51931 Node 1 Ca= 0.00831823 Si= 0.677866
-Error Calling GEMIPM calculation it = 52318 Node 1 Ca= 0.138318 Si= 0.742866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 52329 Node 1 Ca= 0.0283182 Si= 0.687866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 52691 Node 1 Ca= 0.408318 Si= 0.877866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 53003 Node 1 Ca= 0.728318 Si= 0.687866
-Error Calling GEMIPM calculation it = 53056 Node 1 Ca= 0.758318 Si= 0.952866
-Error Calling GEMIPM calculation it = 53340 Node 1 Ca= 0.0983182 Si= 0.372866
-Error Calling GEMIPM calculation it = 55054 Node 1 Ca= 0.778318 Si= 0.942866
-Error Calling GEMIPM calculation it = 56145 Node 1 Ca= 0.148318 Si= 0.397866
-Error Calling GEMIPM calculation it = 56574 Node 1 Ca= 0.438318 Si= 0.542866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 57071 Node 1 Ca= 0.608318 Si= 0.977866
-Error Calling GEMIPM calculation it = 57153 Node 1 Ca= 0.228318 Si= 0.567866
-Error Calling GEMIPM calculation it = 57869 Node 1 Ca= 0.628318 Si= 0.987866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 59500 Node 1 Ca= 0.318318 Si= 0.832866
-Error Calling GEMIPM calculation it = 59936 Node 1 Ca= 0.0583182 Si= 0.652866
-Error Calling GEMIPM calculation it = 60538 Node 1 Ca= 0.0783182 Si= 0.362866
-Error Calling GEMIPM calculation it = 60957 Node 1 Ca= 0.268318 Si= 0.457866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 62687 Node 1 Ca= 0.448318 Si= 0.897866
-Error Calling GEMIPM calculation it = 63882 Node 1 Ca= 0.498318 Si= 0.922866
-Error Calling GEMIPM calculation it = 64300 Node 1 Ca= 0.318318 Si= 0.832866
-Error Calling GEMIPM calculation it = 64748 Node 1 Ca= 0.178318 Si= 0.592866
-Error Calling GEMIPM calculation it = 64770 Node 1 Ca= 0.398318 Si= 0.482866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 64982 Node 1 Ca= 0.518318 Si= 0.582866
-Error Calling GEMIPM calculation it = 65054 Node 1 Ca= 0.778318 Si= 0.942866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 65562 Node 1 Ca= 0.318318 Si= 0.522866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 65629 Node 1 Ca= 0.988318 Si= 0.187866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 65739 Node 1 Ca= 0.0883182 Si= 0.367866
-Error Calling GEMIPM calculation it = 66574 Node 1 Ca= 0.438318 Si= 0.542866
-Error Calling GEMIPM calculation it = 67340 Node 1 Ca= 0.0983182 Si= 0.372866
-Error Calling GEMIPM calculation it = 67726 Node 1 Ca= 0.0583182 Si= 0.302866
-Error Calling GEMIPM calculation it = 69500 Node 1 Ca= 0.318318 Si= 0.832866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 69900 Node 1 Ca= 0.318318 Si= 0.832866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 71001 Node 1 Ca= 0.708318 Si= 0.677866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 71360 Node 1 Ca= 0.298318 Si= 0.472866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 73023 Node 1 Ca= 0.928318 Si= 0.787866
-Error Calling GEMIPM calculation it = 73315 Node 1 Ca= 0.168318 Si= 0.247866
-Error Calling GEMIPM calculation it = 75459 Node 1 Ca= 0.728318 Si= 0.967866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 75923 Node 1 Ca= 0.0883182 Si= 0.717866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 77817 Node 1 Ca= 0.868318 Si= 0.757866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 79528 Node 1 Ca= 0.0383182 Si= 0.692866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 79862 Node 1 Ca= 0.698318 Si= 0.982866
-Error Calling GEMIPM calculation it = 80700 Node 1 Ca= 0.318318 Si= 0.832866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 80924 Node 1 Ca= 0.0783182 Si= 0.292866
-Error Calling GEMIPM calculation it = 81141 Node 1 Ca= 0.108318 Si= 0.627866
-Error Calling GEMIPM calculation it = 82788 Node 1 Ca= 0.578318 Si= 0.392866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 83731 Node 1 Ca= 0.00831823 Si= 0.327866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 84690 Node 1 Ca= 0.418318 Si= 0.882866
-Error Calling GEMIPM calculation it = 84744 Node 1 Ca= 0.138318 Si= 0.612866
-Error Calling GEMIPM calculation it = 86481 Node 1 Ca= 0.508318 Si= 0.0778657
-Error Calling GEMIPM calculation it = 86519 Node 1 Ca= 0.128318 Si= 0.267866
-Error Calling GEMIPM calculation it = 87462 Node 1 Ca= 0.698318 Si= 0.982866
-Error Calling GEMIPM calculation it = 87504 Node 1 Ca= 0.278318 Si= 0.812866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 88246 Node 1 Ca= 0.858318 Si= 0.902866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 89067 Node 1 Ca= 0.648318 Si= 0.997866
-Error Calling GEMIPM calculation it = 89768 Node 1 Ca= 0.378318 Si= 0.512866
-Error Calling GEMIPM calculation it = 89860 Node 1 Ca= 0.718318 Si= 0.972866
-Error Calling GEMIPM calculation it = 90283 Node 1 Ca= 0.488318 Si= 0.917866
-Error Calling GEMIPM calculation it = 95093 Node 1 Ca= 0.388318 Si= 0.867866
-Error Calling GEMIPM calculation it = 95325 Node 1 Ca= 0.0683182 Si= 0.297866
-Error Calling GEMIPM calculation it = 95442 Node 1 Ca= 0.898318 Si= 0.882866
-Error Calling GEMIPM calculation it = 95974 Node 1 Ca= 0.438318 Si= 0.462866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 97556 Node 1 Ca= 0.258318 Si= 0.552866
-Error Calling GEMIPM calculation it = 98310 Node 1 Ca= 0.218318 Si= 0.782866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 98970 Node 1 Ca= 0.398318 Si= 0.522866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 99855 Node 1 Ca= 0.768318 Si= 0.947866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 99918 Node 1 Ca= 0.138318 Si= 0.742866
-Error Calling GEMIPM calculation it = 101716 Node 1 Ca= 0.158318 Si= 0.252866
-Error Calling GEMIPM calculation it = 102361 Node 1 Ca= 0.308318 Si= 0.527866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 104350 Node 1 Ca= 0.198318 Si= 0.582866
-Error Calling GEMIPM calculation it = 105327 Node 1 Ca= 0.0483182 Si= 0.307866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 105536 Node 1 Ca= 0.0583182 Si= 0.652866
-Error Calling GEMIPM calculation it = 105858 Node 1 Ca= 0.738318 Si= 0.962866
-Error Calling GEMIPM calculation it = 105954 Node 1 Ca= 0.238318 Si= 0.562866
-Error Calling GEMIPM calculation it = 106310 Node 1 Ca= 0.218318 Si= 0.782866
-Error Calling GEMIPM calculation it = 106350 Node 1 Ca= 0.198318 Si= 0.582866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 106976 Node 1 Ca= 0.458318 Si= 0.552866
-Error Calling GEMIPM calculation it = 107765 Node 1 Ca= 0.348318 Si= 0.497866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 108310 Node 1 Ca= 0.218318 Si= 0.782866
-Error Calling GEMIPM calculation it = 110171 Node 1 Ca= 0.408318 Si= 0.527866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 110931 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 112565 Node 1 Ca= 0.348318 Si= 0.497866
-Error Calling GEMIPM calculation it = 112964 Node 1 Ca= 0.338318 Si= 0.492866
-Error Calling GEMIPM calculation it = 113761 Node 1 Ca= 0.308318 Si= 0.477866
-Error Calling GEMIPM calculation it = 113854 Node 1 Ca= 0.778318 Si= 0.942866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 114156 Node 1 Ca= 0.258318 Si= 0.452866
-Error Calling GEMIPM calculation it = 114170 Node 1 Ca= 0.398318 Si= 0.522866
-Error Calling GEMIPM calculation it = 114524 Node 1 Ca= 0.0783182 Si= 0.292866
-Error Calling GEMIPM calculation it = 115887 Node 1 Ca= 0.448318 Si= 0.897866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 115965 Node 1 Ca= 0.348318 Si= 0.507866
-Error Calling GEMIPM calculation it = 116370 Node 1 Ca= 0.398318 Si= 0.482866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 116584 Node 1 Ca= 0.538318 Si= 0.592866
-Error Calling GEMIPM calculation it = 119896 Node 1 Ca= 0.358318 Si= 0.852866
-Error Calling GEMIPM calculation it = 119927 Node 1 Ca= 0.0483182 Si= 0.697866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 120288 Node 1 Ca= 0.438318 Si= 0.892866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 121752 Node 1 Ca= 0.218318 Si= 0.432866
-Error Calling GEMIPM calculation it = 122635 Node 1 Ca= 0.968318 Si= 0.847866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 123067 Node 1 Ca= 0.648318 Si= 0.997866
-Error Calling GEMIPM calculation it = 125373 Node 1 Ca= 0.428318 Si= 0.537866
-Error Calling GEMIPM calculation it = 126123 Node 1 Ca= 0.0883182 Si= 0.287866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 126156 Node 1 Ca= 0.258318 Si= 0.452866
-Error Calling GEMIPM calculation it = 128571 Node 1 Ca= 0.408318 Si= 0.527866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 128872 Node 1 Ca= 0.598318 Si= 0.0328657
-Error Calling GEMIPM calculation it = 129089 Node 1 Ca= 0.428318 Si= 0.887866
-Error Calling GEMIPM calculation it = 129519 Node 1 Ca= 0.128318 Si= 0.737866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 129760 Node 1 Ca= 0.298318 Si= 0.472866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 129863 Node 1 Ca= 0.688318 Si= 0.987866
-Error Calling GEMIPM calculation it = 130115 Node 1 Ca= 0.168318 Si= 0.247866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 130131 Node 1 Ca= 0.00831823 Si= 0.327866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 130550 Node 1 Ca= 0.198318 Si= 0.422866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 131055 Node 1 Ca= 0.768318 Si= 0.947866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 131530 Node 1 Ca= 0.0183182 Si= 0.682866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 131891 Node 1 Ca= 0.408318 Si= 0.877866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 132531 Node 1 Ca= 0.00831823 Si= 0.327866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 132613 Node 1 Ca= 0.828318 Si= 0.737866
-Error Calling GEMIPM calculation it = 132669 Node 1 Ca= 0.628318 Si= 0.987866
-Error Calling GEMIPM calculation it = 133066 Node 1 Ca= 0.658318 Si= 1.00287
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 135108 Node 1 Ca= 0.238318 Si= 0.792866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 136392 Node 1 Ca= 0.618318 Si= 0.372866
-Error Calling GEMIPM calculation it = 137505 Node 1 Ca= 0.268318 Si= 0.807866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 137709 Node 1 Ca= 0.228318 Si= 0.217866
-Error Calling GEMIPM calculation it = 138279 Node 1 Ca= 0.528318 Si= 0.937866
-Error Calling GEMIPM calculation it = 138686 Node 1 Ca= 0.458318 Si= 0.902866
-Error Calling GEMIPM calculation it = 139341 Node 1 Ca= 0.108318 Si= 0.377866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 139869 Node 1 Ca= 0.628318 Si= 0.987866
-Error Calling GEMIPM calculation it = 139913 Node 1 Ca= 0.188318 Si= 0.767866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 140683 Node 1 Ca= 0.488318 Si= 0.917866
-Error Calling GEMIPM calculation it = 141473 Node 1 Ca= 0.588318 Si= 0.967866
-Error Calling GEMIPM calculation it = 141542 Node 1 Ca= 0.118318 Si= 0.622866
-Error Calling GEMIPM calculation it = 142236 Node 1 Ca= 0.958318 Si= 0.852866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 142727 Node 1 Ca= 0.0483182 Si= 0.697866
-Error Calling GEMIPM calculation it = 142941 Node 1 Ca= 0.108318 Si= 0.377866
-Error Calling GEMIPM calculation it = 143750 Node 1 Ca= 0.198318 Si= 0.422866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 143856 Node 1 Ca= 0.758318 Si= 0.952866
-Error Calling GEMIPM calculation it = 144289 Node 1 Ca= 0.428318 Si= 0.887866
-Error Calling GEMIPM calculation it = 144315 Node 1 Ca= 0.168318 Si= 0.757866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 144982 Node 1 Ca= 0.518318 Si= 0.582866
-Error Calling GEMIPM calculation it = 145146 Node 1 Ca= 0.158318 Si= 0.602866
-Error Calling GEMIPM calculation it = 145372 Node 1 Ca= 0.418318 Si= 0.532866
-Error Calling GEMIPM calculation it = 145912 Node 1 Ca= 0.198318 Si= 0.772866
-Error Calling GEMIPM calculation it = 146208 Node 1 Ca= 0.778318 Si= 0.712866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 146460 Node 1 Ca= 0.718318 Si= 0.0328657
-Error Calling GEMIPM calculation it = 147886 Node 1 Ca= 0.458318 Si= 0.902866
-Error Calling GEMIPM calculation it = 148151 Node 1 Ca= 0.208318 Si= 0.427866
-Error Calling GEMIPM calculation it = 148317 Node 1 Ca= 0.148318 Si= 0.747866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 148530 Node 1 Ca= 0.0183182 Si= 0.322866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 148934 Node 1 Ca= 0.0383182 Si= 0.342866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 149089 Node 1 Ca= 0.428318 Si= 0.887866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 149327 Node 1 Ca= 0.0483182 Si= 0.307866
-Error Calling GEMIPM calculation it = 149785 Node 1 Ca= 0.548318 Si= 0.597866
-Error Calling GEMIPM calculation it = 149870 Node 1 Ca= 0.618318 Si= 0.982866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 150534 Node 1 Ca= 0.0383182 Si= 0.342866
-Error Calling GEMIPM calculation it = 151755 Node 1 Ca= 0.248318 Si= 0.447866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 152259 Node 1 Ca= 0.728318 Si= 0.967866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 152272 Node 1 Ca= 0.598318 Si= 0.972866
-Error Calling GEMIPM calculation it = 153074 Node 1 Ca= 0.578318 Si= 0.962866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 153353 Node 1 Ca= 0.228318 Si= 0.437866
-Error Calling GEMIPM calculation it = 153488 Node 1 Ca= 0.438318 Si= 0.892866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 154552 Node 1 Ca= 0.218318 Si= 0.432866
-Error Calling GEMIPM calculation it = 154596 Node 1 Ca= 0.658318 Si= 0.652866
-Error Calling GEMIPM calculation it = 155125 Node 1 Ca= 0.0683182 Si= 0.707866
-Error Calling GEMIPM calculation it = 155674 Node 1 Ca= 0.578318 Si= 0.0428657
-Error Calling GEMIPM calculation it = 156956 Node 1 Ca= 0.258318 Si= 0.452866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 157860 Node 1 Ca= 0.718318 Si= 0.972866
-Error Calling GEMIPM calculation it = 158256 Node 1 Ca= 0.758318 Si= 0.952866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 159358 Node 1 Ca= 0.278318 Si= 0.462866
-Error Calling GEMIPM calculation it = 159855 Node 1 Ca= 0.768318 Si= 0.947866
-Error Calling GEMIPM calculation it = 160288 Node 1 Ca= 0.438318 Si= 0.892866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 160486 Node 1 Ca= 0.458318 Si= 0.102866
-Error Calling GEMIPM calculation it = 163861 Node 1 Ca= 0.708318 Si= 0.977866
-Error Calling GEMIPM calculation it = 164799 Node 1 Ca= 0.688318 Si= 0.337866
-Error Calling GEMIPM calculation it = 167081 Node 1 Ca= 0.508318 Si= 0.927866
-Error Calling GEMIPM calculation it = 167149 Node 1 Ca= 0.188318 Si= 0.587866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 167767 Node 1 Ca= 0.368318 Si= 0.507866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 168283 Node 1 Ca= 0.488318 Si= 0.917866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 169070 Node 1 Ca= 0.618318 Si= 0.982866
-Error Calling GEMIPM calculation it = 169081 Node 1 Ca= 0.508318 Si= 0.927866
-Error Calling GEMIPM calculation it = 169156 Node 1 Ca= 0.258318 Si= 0.552866
-Error Calling GEMIPM calculation it = 169894 Node 1 Ca= 0.378318 Si= 0.862866
-Error Calling GEMIPM calculation it = 169962 Node 1 Ca= 0.318318 Si= 0.522866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 170678 Node 1 Ca= 0.538318 Si= 0.942866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 171168 Node 1 Ca= 0.378318 Si= 0.492866
-Error Calling GEMIPM calculation it = 172136 Node 1 Ca= 0.0583182 Si= 0.352866
-Error Calling GEMIPM calculation it = 172314 Node 1 Ca= 0.178318 Si= 0.762866
-Error Calling GEMIPM calculation it = 174970 Node 1 Ca= 0.398318 Si= 0.522866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 175055 Node 1 Ca= 0.768318 Si= 0.947866
-Error Calling GEMIPM calculation it = 175326 Node 1 Ca= 0.0583182 Si= 0.302866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 176153 Node 1 Ca= 0.228318 Si= 0.437866
-Error Calling GEMIPM calculation it = 178365 Node 1 Ca= 0.348318 Si= 0.507866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 178669 Node 1 Ca= 0.628318 Si= 0.987866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 179234 Node 1 Ca= 0.978318 Si= 0.162866
-Error Calling GEMIPM calculation it = 179547 Node 1 Ca= 0.168318 Si= 0.597866
-Error Calling GEMIPM calculation it = 182351 Node 1 Ca= 0.208318 Si= 0.577866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 184552 Node 1 Ca= 0.218318 Si= 0.432866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 184834 Node 1 Ca= 0.978318 Si= 0.162866
-Error Calling GEMIPM calculation it = 186382 Node 1 Ca= 0.518318 Si= 0.422866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 187059 Node 1 Ca= 0.728318 Si= 0.967866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 187497 Node 1 Ca= 0.348318 Si= 0.847866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 187854 Node 1 Ca= 0.778318 Si= 0.942866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 189161 Node 1 Ca= 0.308318 Si= 0.527866
-Error Calling GEMIPM calculation it = 191168 Node 1 Ca= 0.378318 Si= 0.492866
-Error Calling GEMIPM calculation it = 191879 Node 1 Ca= 0.528318 Si= 0.937866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 192709 Node 1 Ca= 0.228318 Si= 0.787866
-Error Calling GEMIPM calculation it = 193063 Node 1 Ca= 0.688318 Si= 0.987866
-Error Calling GEMIPM calculation it = 193913 Node 1 Ca= 0.188318 Si= 0.767866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 197563 Node 1 Ca= 0.328318 Si= 0.517866
-Error Calling GEMIPM calculation it = 197773 Node 1 Ca= 0.428318 Si= 0.537866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 198391 Node 1 Ca= 0.608318 Si= 0.377866
-Error Calling GEMIPM calculation it = 198780 Node 1 Ca= 0.498318 Si= 0.432866
-Error Calling GEMIPM calculation it = 199089 Node 1 Ca= 0.428318 Si= 0.887866
-Error Calling GEMIPM calculation it = 199126 Node 1 Ca= 0.0583182 Si= 0.702866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 200334 Node 1 Ca= 0.0383182 Si= 0.662866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 200695 Node 1 Ca= 0.368318 Si= 0.857866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 201215 Node 1 Ca= 0.848318 Si= 0.257866
-Error Calling GEMIPM calculation it = 201456 Node 1 Ca= 0.758318 Si= 0.952866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 202196 Node 1 Ca= 0.658318 Si= 0.652866
-Error Calling GEMIPM calculation it = 202980 Node 1 Ca= 0.498318 Si= 0.572866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 203345 Node 1 Ca= 0.148318 Si= 0.397866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 203991 Node 1 Ca= 0.608318 Si= 0.377866
-Error Calling GEMIPM calculation it = 204255 Node 1 Ca= 0.768318 Si= 0.947866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 205136 Node 1 Ca= 0.0583182 Si= 0.652866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 205499 Node 1 Ca= 0.328318 Si= 0.837866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 205731 Node 1 Ca= 0.00831823 Si= 0.327866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 206256 Node 1 Ca= 0.758318 Si= 0.952866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 207321 Node 1 Ca= 0.108318 Si= 0.277866
-Error Calling GEMIPM calculation it = 207510 Node 1 Ca= 0.218318 Si= 0.782866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 207719 Node 1 Ca= 0.128318 Si= 0.267866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 207835 Node 1 Ca= 0.968318 Si= 0.847866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 209858 Node 1 Ca= 0.738318 Si= 0.962866
-Error Calling GEMIPM calculation it = 210271 Node 1 Ca= 0.608318 Si= 0.977866
-Error Calling GEMIPM calculation it = 212951 Node 1 Ca= 0.208318 Si= 0.427866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 212982 Node 1 Ca= 0.518318 Si= 0.582866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 214128 Node 1 Ca= 0.0383182 Si= 0.312866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 215881 Node 1 Ca= 0.508318 Si= 0.927866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 215903 Node 1 Ca= 0.288318 Si= 0.817866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 217499 Node 1 Ca= 0.328318 Si= 0.837866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 218237 Node 1 Ca= 0.948318 Si= 0.857866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 219589 Node 1 Ca= 0.588318 Si= 0.387866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 219708 Node 1 Ca= 0.238318 Si= 0.212866
-Error Calling GEMIPM calculation it = 219725 Node 1 Ca= 0.0683182 Si= 0.297866
-Error Calling GEMIPM calculation it = 219797 Node 1 Ca= 0.668318 Si= 0.657866
-Error Calling GEMIPM calculation it = 219917 Node 1 Ca= 0.148318 Si= 0.747866
-Error Calling GEMIPM calculation it = 220258 Node 1 Ca= 0.738318 Si= 0.962866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 222724 Node 1 Ca= 0.0783182 Si= 0.712866
-Error Calling GEMIPM calculation it = 226844 Node 1 Ca= 0.878318 Si= 0.112866
-Error Calling GEMIPM calculation it = 227706 Node 1 Ca= 0.258318 Si= 0.202866
-Error Calling GEMIPM calculation it = 228711 Node 1 Ca= 0.208318 Si= 0.777866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 229110 Node 1 Ca= 0.218318 Si= 0.782866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 230016 Node 1 Ca= 0.858318 Si= 0.252866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 230576 Node 1 Ca= 0.458318 Si= 0.552866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 231331 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 231539 Node 1 Ca= 0.0883182 Si= 0.637866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 232169 Node 1 Ca= 0.388318 Si= 0.517866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 232928 Node 1 Ca= 0.0383182 Si= 0.312866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 233866 Node 1 Ca= 0.658318 Si= 1.00287
-Error Calling GEMIPM calculation it = 234268 Node 1 Ca= 0.638318 Si= 0.992866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 236581 Node 1 Ca= 0.508318 Si= 0.577866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 236616 Node 1 Ca= 0.858318 Si= 0.752866
-Error Calling GEMIPM calculation it = 236643 Node 1 Ca= 0.888318 Si= 0.887866
-Error Calling GEMIPM calculation it = 238314 Node 1 Ca= 0.178318 Si= 0.762866
-Error Calling GEMIPM calculation it = 238519 Node 1 Ca= 0.128318 Si= 0.267866
-Error Calling GEMIPM calculation it = 239356 Node 1 Ca= 0.258318 Si= 0.452866
-Error Calling GEMIPM calculation it = 239493 Node 1 Ca= 0.388318 Si= 0.867866
-Error Calling GEMIPM calculation it = 240133 Node 1 Ca= 0.0283182 Si= 0.337866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 242565 Node 1 Ca= 0.348318 Si= 0.497866
-Error Calling GEMIPM calculation it = 242758 Node 1 Ca= 0.278318 Si= 0.542866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 243095 Node 1 Ca= 0.368318 Si= 0.857866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 243723 Node 1 Ca= 0.0883182 Si= 0.287866
-Error Calling GEMIPM calculation it = 243962 Node 1 Ca= 0.318318 Si= 0.522866
-Error Calling GEMIPM calculation it = 245109 Node 1 Ca= 0.228318 Si= 0.787866
-Error Calling GEMIPM calculation it = 245122 Node 1 Ca= 0.0983182 Si= 0.722866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 245160 Node 1 Ca= 0.298318 Si= 0.532866
-Error Calling GEMIPM calculation it = 245170 Node 1 Ca= 0.398318 Si= 0.482866
-Error Calling GEMIPM calculation it = 245512 Node 1 Ca= 0.198318 Si= 0.772866
-Error Calling GEMIPM calculation it = 245725 Node 1 Ca= 0.0683182 Si= 0.297866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 246675 Node 1 Ca= 0.568318 Si= 0.957866
-Error Calling GEMIPM calculation it = 246734 Node 1 Ca= 0.0383182 Si= 0.662866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 250273 Node 1 Ca= 0.588318 Si= 0.967866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 250303 Node 1 Ca= 0.288318 Si= 0.817866
-Error Calling GEMIPM calculation it = 250387 Node 1 Ca= 0.568318 Si= 0.397866
-Error Calling GEMIPM calculation it = 253091 Node 1 Ca= 0.408318 Si= 0.877866
-Error Calling GEMIPM calculation it = 253119 Node 1 Ca= 0.128318 Si= 0.737866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 254131 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 254272 Node 1 Ca= 0.598318 Si= 0.972866
-Error Calling GEMIPM calculation it = 254968 Node 1 Ca= 0.378318 Si= 0.512866
-Error Calling GEMIPM calculation it = 255454 Node 1 Ca= 0.778318 Si= 0.942866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 255731 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 260300 Node 1 Ca= 0.318318 Si= 0.832866
-Error Calling GEMIPM calculation it = 260946 Node 1 Ca= 0.158318 Si= 0.402866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 261466 Node 1 Ca= 0.658318 Si= 1.00287
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 261854 Node 1 Ca= 0.778318 Si= 0.942866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 262268 Node 1 Ca= 0.638318 Si= 0.992866
-Error Calling GEMIPM calculation it = 262544 Node 1 Ca= 0.138318 Si= 0.392866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 263541 Node 1 Ca= 0.108318 Si= 0.627866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 264582 Node 1 Ca= 0.518318 Si= 0.582866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 264990 Node 1 Ca= 0.598318 Si= 0.622866
-Error Calling GEMIPM calculation it = 265869 Node 1 Ca= 0.628318 Si= 0.987866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 265933 Node 1 Ca= 0.0283182 Si= 0.667866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 266715 Node 1 Ca= 0.168318 Si= 0.757866
-Error Calling GEMIPM calculation it = 267150 Node 1 Ca= 0.198318 Si= 0.582866
-Error Calling GEMIPM calculation it = 267488 Node 1 Ca= 0.438318 Si= 0.892866
-Error Calling GEMIPM calculation it = 267546 Node 1 Ca= 0.158318 Si= 0.602866
-Error Calling GEMIPM calculation it = 267866 Node 1 Ca= 0.658318 Si= 1.00287
-Error Calling GEMIPM calculation it = 269314 Node 1 Ca= 0.178318 Si= 0.242866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 269361 Node 1 Ca= 0.308318 Si= 0.477866
-Error Calling GEMIPM calculation it = 269844 Node 1 Ca= 0.878318 Si= 0.892866
-Error Calling GEMIPM calculation it = 269934 Node 1 Ca= 0.0383182 Si= 0.662866
-Error Calling GEMIPM calculation it = 270720 Node 1 Ca= 0.118318 Si= 0.732866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 271865 Node 1 Ca= 0.668318 Si= 0.997866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 271907 Node 1 Ca= 0.248318 Si= 0.797866
-Error Calling GEMIPM calculation it = 273764 Node 1 Ca= 0.338318 Si= 0.492866
-Error Calling GEMIPM calculation it = 276051 Node 1 Ca= 0.808318 Si= 0.0778657
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 276330 Node 1 Ca= 0.0183182 Si= 0.682866
-Error Calling GEMIPM calculation it = 276411 Node 1 Ca= 0.808318 Si= 0.277866
-Error Calling GEMIPM calculation it = 276952 Node 1 Ca= 0.218318 Si= 0.432866
-Error Calling GEMIPM calculation it = 276968 Node 1 Ca= 0.378318 Si= 0.512866
-Error Calling GEMIPM calculation it = 277480 Node 1 Ca= 0.518318 Si= 0.932866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 279354 Node 1 Ca= 0.238318 Si= 0.442866
-Error Calling GEMIPM calculation it = 279863 Node 1 Ca= 0.688318 Si= 0.987866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 281063 Node 1 Ca= 0.688318 Si= 0.987866
-Error Calling GEMIPM calculation it = 281255 Node 1 Ca= 0.768318 Si= 0.0578657
-Error Calling GEMIPM calculation it = 283096 Node 1 Ca= 0.358318 Si= 0.852866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 283161 Node 1 Ca= 0.308318 Si= 0.527866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 283382 Node 1 Ca= 0.518318 Si= 0.582866
-Error Calling GEMIPM calculation it = 283521 Node 1 Ca= 0.108318 Si= 0.727866
-Error Calling GEMIPM calculation it = 283767 Node 1 Ca= 0.368318 Si= 0.507866
-Error Calling GEMIPM calculation it = 283864 Node 1 Ca= 0.678318 Si= 0.992866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 285373 Node 1 Ca= 0.428318 Si= 0.537866
-Error Calling GEMIPM calculation it = 286269 Node 1 Ca= 0.628318 Si= 0.987866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 287244 Node 1 Ca= 0.878318 Si= 0.112866
-Error Calling GEMIPM calculation it = 288283 Node 1 Ca= 0.488318 Si= 0.917866
-Error Calling GEMIPM calculation it = 289335 Node 1 Ca= 0.0483182 Si= 0.347866
-Error Calling GEMIPM calculation it = 289520 Node 1 Ca= 0.118318 Si= 0.732866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 290293 Node 1 Ca= 0.388318 Si= 0.867866
-Error Calling GEMIPM calculation it = 291496 Node 1 Ca= 0.358318 Si= 0.852866
-Error Calling GEMIPM calculation it = 293101 Node 1 Ca= 0.308318 Si= 0.827866
-Error Calling GEMIPM calculation it = 293911 Node 1 Ca= 0.208318 Si= 0.777866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 294731 Node 1 Ca= 0.00831823 Si= 0.677866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 295082 Node 1 Ca= 0.498318 Si= 0.922866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 295095 Node 1 Ca= 0.368318 Si= 0.857866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 295461 Node 1 Ca= 0.708318 Si= 0.977866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 295512 Node 1 Ca= 0.198318 Si= 0.772866
-Error Calling GEMIPM calculation it = 298170 Node 1 Ca= 0.398318 Si= 0.522866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 298288 Node 1 Ca= 0.438318 Si= 0.892866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 298296 Node 1 Ca= 0.358318 Si= 0.852866
-Error Calling GEMIPM calculation it = 299170 Node 1 Ca= 0.398318 Si= 0.482866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 299362 Node 1 Ca= 0.318318 Si= 0.482866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 300131 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 300516 Node 1 Ca= 0.158318 Si= 0.252866
-Error Calling GEMIPM calculation it = 300937 Node 1 Ca= 0.0683182 Si= 0.357866
-Error Calling GEMIPM calculation it = 301207 Node 1 Ca= 0.768318 Si= 0.297866
-Error Calling GEMIPM calculation it = 302135 Node 1 Ca= 0.0483182 Si= 0.347866
-Error Calling GEMIPM calculation it = 302316 Node 1 Ca= 0.158318 Si= 0.752866
-Error Calling GEMIPM calculation it = 304176 Node 1 Ca= 0.458318 Si= 0.552866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 304329 Node 1 Ca= 0.0283182 Si= 0.687866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 304982 Node 1 Ca= 0.518318 Si= 0.582866
-Error Calling GEMIPM calculation it = 304988 Node 1 Ca= 0.578318 Si= 0.612866
-Error Calling GEMIPM calculation it = 305149 Node 1 Ca= 0.188318 Si= 0.587866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 307085 Node 1 Ca= 0.468318 Si= 0.907866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 307331 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 307365 Node 1 Ca= 0.348318 Si= 0.497866
-Error Calling GEMIPM calculation it = 307455 Node 1 Ca= 0.768318 Si= 0.947866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 307484 Node 1 Ca= 0.478318 Si= 0.912866
-Error Calling GEMIPM calculation it = 307740 Node 1 Ca= 0.0983182 Si= 0.372866
-Error Calling GEMIPM calculation it = 307953 Node 1 Ca= 0.228318 Si= 0.567866
-Error Calling GEMIPM calculation it = 308126 Node 1 Ca= 0.0583182 Si= 0.302866
-Error Calling GEMIPM calculation it = 308128 Node 1 Ca= 0.0383182 Si= 0.312866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 308574 Node 1 Ca= 0.438318 Si= 0.542866
-Error Calling GEMIPM calculation it = 309090 Node 1 Ca= 0.418318 Si= 0.882866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 309731 Node 1 Ca= 0.00831823 Si= 0.327866
-Error Calling GEMIPM calculation it = 309768 Node 1 Ca= 0.378318 Si= 0.512866
-Error Calling GEMIPM calculation it = 310146 Node 1 Ca= 0.158318 Si= 0.402866
-Error Calling GEMIPM calculation it = 311107 Node 1 Ca= 0.248318 Si= 0.797866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 312300 Node 1 Ca= 0.318318 Si= 0.832866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 312688 Node 1 Ca= 0.438318 Si= 0.892866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 313531 Node 1 Ca= 0.00831823 Si= 0.677866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 313750 Node 1 Ca= 0.198318 Si= 0.422866
-Error Calling GEMIPM calculation it = 314437 Node 1 Ca= 0.948318 Si= 0.147866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 314516 Node 1 Ca= 0.158318 Si= 0.252866
-Error Calling GEMIPM calculation it = 314735 Node 1 Ca= 0.0483182 Si= 0.657866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 314738 Node 1 Ca= 0.0783182 Si= 0.642866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 315231 Node 1 Ca= 1.00832 Si= 0.177866
-Error Calling GEMIPM calculation it = 315327 Node 1 Ca= 0.0483182 Si= 0.307866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 315476 Node 1 Ca= 0.558318 Si= 0.952866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 317420 Node 1 Ca= 0.898318 Si= 0.772866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 318716 Node 1 Ca= 0.158318 Si= 0.752866
-Error Calling GEMIPM calculation it = 319094 Node 1 Ca= 0.378318 Si= 0.862866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 319911 Node 1 Ca= 0.208318 Si= 0.777866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 319931 Node 1 Ca= 0.00831823 Si= 0.677866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 320297 Node 1 Ca= 0.348318 Si= 0.847866
-Error Calling GEMIPM calculation it = 320357 Node 1 Ca= 0.268318 Si= 0.547866
-Iter MK 0 PZ 3 W08IPM: PhaseSelect():
-Warning Calling GEMIPM calculation it = 320524 Node 1 Ca= 0.0783182 Si= 0.292866
-Error Calling GEMIPM calculation it = 320697 Node 1 Ca= 0.348318 Si= 0.847866
-Error Calling GEMIPM calculation it = 321096 Node 1 Ca= 0.358318 Si= 0.852866
-Error Calling GEMIPM calculation it = 321543 Node 1 Ca= 0.128318 Si= 0.617866
-Iter MK 0 PZ 2 W14IPM: IPM-main():
-Warning Calling GEMIPM calculation it = 322754 Node 1 Ca= 0.238318 Si= 0.562866
-Error Calling GEMIPM calculation it = 324129 Node 1 Ca= 0.0283182 Si= 0.317866
-Error Calling GEMIPM calculation it = 324277 Node 1 Ca= 0.548318 Si= 0.947866
+  in = 0  it = 1000 Cal= 0.818957 Silica= 0
+  in = 1  it = 1000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 1048 Node 1 Ca= 0.838318 Si= 0.912866
+  in = 0  it = 2000 Cal= 0.818957 Silica= 0
+  in = 1  it = 2000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 2291 Node 1 Ca= 0.408318 Si= 0.877866
+  in = 0  it = 3000 Cal= 0.818957 Silica= 0
+  in = 1  it = 3000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 4000 Cal= 0.818957 Silica= 0
+  in = 1  it = 4000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 5000 Cal= 0.818957 Silica= 0
+  in = 1  it = 5000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 6000 Cal= 0.818957 Silica= 0
+  in = 1  it = 6000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 7000 Cal= 0.818957 Silica= 0
+  in = 1  it = 7000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 8000 Cal= 0.818957 Silica= 0
+  in = 1  it = 8000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 9000 Cal= 0.818957 Silica= 0
+  in = 1  it = 9000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 10000 Cal= 0.818957 Silica= 0
+  in = 1  it = 10000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 11000 Cal= 0.818957 Silica= 0
+  in = 1  it = 11000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 12000 Cal= 0.818957 Silica= 0
+  in = 1  it = 12000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 13000 Cal= 0.818957 Silica= 0
+  in = 1  it = 13000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 14000 Cal= 0.818957 Silica= 0
+  in = 1  it = 14000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 15000 Cal= 0.818957 Silica= 0
+  in = 1  it = 15000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 16000 Cal= 0.818957 Silica= 0
+  in = 1  it = 16000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 17000 Cal= 0.818957 Silica= 0
+  in = 1  it = 17000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 18000 Cal= 0.818957 Silica= 0
+  in = 1  it = 18000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 19000 Cal= 0.818957 Silica= 0
+  in = 1  it = 19000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 19192 Node 1 Ca= 0.618318 Si= 0.372866
+  in = 0  it = 20000 Cal= 0.818957 Silica= 0
+  in = 1  it = 20000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 21000 Cal= 0.818957 Silica= 0
+  in = 1  it = 21000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 22000 Cal= 0.818957 Silica= 0
+  in = 1  it = 22000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 22894 Node 1 Ca= 0.378318 Si= 0.142866
+  in = 0  it = 23000 Cal= 0.818957 Silica= 0
+  in = 1  it = 23000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 24000 Cal= 0.818957 Silica= 0
+  in = 1  it = 24000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 25000 Cal= 0.818957 Silica= 0
+  in = 1  it = 25000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 25093 Node 1 Ca= 0.388318 Si= 0.867866
+  in = 0  it = 26000 Cal= 0.818957 Silica= 0
+  in = 1  it = 26000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 26995 Node 1 Ca= 0.648318 Si= 0.647866
+  in = 0  it = 27000 Cal= 0.818957 Silica= 0
+  in = 1  it = 27000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 28000 Cal= 0.818957 Silica= 0
+  in = 1  it = 28000 Cal= 0.00358117 Silica= 0
+Warning Calling GEMIPM calculation it = 28694 Node 1 Ca= 0.378318 Si= 0.862866
+  in = 0  it = 29000 Cal= 0.818957 Silica= 0
+  in = 1  it = 29000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 30000 Cal= 0.818957 Silica= 0
+  in = 1  it = 30000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 31000 Cal= 0.818957 Silica= 0
+  in = 1  it = 31000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 32000 Cal= 0.818957 Silica= 0
+  in = 1  it = 32000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 33000 Cal= 0.818957 Silica= 0
+  in = 1  it = 33000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 34000 Cal= 0.818957 Silica= 0
+  in = 1  it = 34000 Cal= 0.00358117 Silica= 0
+Warning Calling GEMIPM calculation it = 34170 Node 1 Ca= 0.398318 Si= 0.522866
+Warning Calling GEMIPM calculation it = 34171 Node 1 Ca= 0.408318 Si= 0.527866
+Warning Calling GEMIPM calculation it = 34307 Node 1 Ca= 0.248318 Si= 0.797866
+  in = 0  it = 35000 Cal= 0.818957 Silica= 0
+  in = 1  it = 35000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 36000 Cal= 0.818957 Silica= 0
+  in = 1  it = 36000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 37000 Cal= 0.818957 Silica= 0
+  in = 1  it = 37000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 38000 Cal= 0.818957 Silica= 0
+  in = 1  it = 38000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 38311 Node 1 Ca= 0.208318 Si= 0.777866
+  in = 0  it = 39000 Cal= 0.818957 Silica= 0
+  in = 1  it = 39000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 39271 Node 1 Ca= 0.608318 Si= 0.0278657
+  in = 0  it = 40000 Cal= 0.818957 Silica= 0
+  in = 1  it = 40000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 41000 Cal= 0.818957 Silica= 0
+  in = 1  it = 41000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 41465 Node 1 Ca= 0.668318 Si= 0.997866
+Warning Calling GEMIPM calculation it = 41466 Node 1 Ca= 0.658318 Si= 1.00287
+  in = 0  it = 42000 Cal= 0.818957 Silica= 0
+  in = 1  it = 42000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 43000 Cal= 0.818957 Silica= 0
+  in = 1  it = 43000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 43945 Node 1 Ca= 0.148318 Si= 0.607866
+  in = 0  it = 44000 Cal= 0.818957 Silica= 0
+  in = 1  it = 44000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 45000 Cal= 0.818957 Silica= 0
+  in = 1  it = 45000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 46000 Cal= 0.818957 Silica= 0
+  in = 1  it = 46000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 47000 Cal= 0.818957 Silica= 0
+  in = 1  it = 47000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 48000 Cal= 0.818957 Silica= 0
+  in = 1  it = 48000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 49000 Cal= 0.818957 Silica= 0
+  in = 1  it = 49000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 50000 Cal= 0.818957 Silica= 0
+  in = 1  it = 50000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 51000 Cal= 0.818957 Silica= 0
+  in = 1  it = 51000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 52000 Cal= 0.818957 Silica= 0
+  in = 1  it = 52000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 53000 Cal= 0.818957 Silica= 0
+  in = 1  it = 53000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 53774 Node 1 Ca= 0.438318 Si= 0.542866
+  in = 0  it = 54000 Cal= 0.818957 Silica= 0
+  in = 1  it = 54000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 55000 Cal= 0.818957 Silica= 0
+  in = 1  it = 55000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 56000 Cal= 0.818957 Silica= 0
+  in = 1  it = 56000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 57000 Cal= 0.818957 Silica= 0
+  in = 1  it = 57000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 58000 Cal= 0.818957 Silica= 0
+  in = 1  it = 58000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 58872 Node 1 Ca= 0.598318 Si= 0.0328657
+  in = 0  it = 59000 Cal= 0.818957 Silica= 0
+  in = 1  it = 59000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 60000 Cal= 0.818957 Silica= 0
+  in = 1  it = 60000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 61000 Cal= 0.818957 Silica= 0
+  in = 1  it = 61000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 62000 Cal= 0.818957 Silica= 0
+  in = 1  it = 62000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 63000 Cal= 0.818957 Silica= 0
+  in = 1  it = 63000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 64000 Cal= 0.818957 Silica= 0
+  in = 1  it = 64000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 64228 Node 1 Ca= 0.978318 Si= 0.812866
+  in = 0  it = 65000 Cal= 0.818957 Silica= 0
+  in = 1  it = 65000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 65921 Node 1 Ca= 0.108318 Si= 0.727866
+  in = 0  it = 66000 Cal= 0.818957 Silica= 0
+  in = 1  it = 66000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 67000 Cal= 0.818957 Silica= 0
+  in = 1  it = 67000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 68000 Cal= 0.818957 Silica= 0
+  in = 1  it = 68000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 68785 Node 1 Ca= 0.548318 Si= 0.407866
+  in = 0  it = 69000 Cal= 0.818957 Silica= 0
+  in = 1  it = 69000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 70000 Cal= 0.818957 Silica= 0
+  in = 1  it = 70000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 71000 Cal= 0.818957 Silica= 0
+  in = 1  it = 71000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 72000 Cal= 0.818957 Silica= 0
+  in = 1  it = 72000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 73000 Cal= 0.818957 Silica= 0
+  in = 1  it = 73000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 74000 Cal= 0.818957 Silica= 0
+  in = 1  it = 74000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 75000 Cal= 0.818957 Silica= 0
+  in = 1  it = 75000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 76000 Cal= 0.818957 Silica= 0
+  in = 1  it = 76000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 77000 Cal= 0.818957 Silica= 0
+  in = 1  it = 77000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 78000 Cal= 0.818957 Silica= 0
+  in = 1  it = 78000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 79000 Cal= 0.818957 Silica= 0
+  in = 1  it = 79000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 79219 Node 1 Ca= 0.888318 Si= 0.237866
+Warning Calling GEMIPM calculation it = 79704 Node 1 Ca= 0.278318 Si= 0.192866
+  in = 0  it = 80000 Cal= 0.818957 Silica= 0
+  in = 1  it = 80000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 81000 Cal= 0.818957 Silica= 0
+  in = 1  it = 81000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 82000 Cal= 0.818957 Silica= 0
+  in = 1  it = 82000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 82544 Node 1 Ca= 0.138318 Si= 0.392866
+  in = 0  it = 83000 Cal= 0.818957 Silica= 0
+  in = 1  it = 83000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 83448 Node 1 Ca= 0.838318 Si= 0.912866
+  in = 0  it = 84000 Cal= 0.818957 Silica= 0
+  in = 1  it = 84000 Cal= 0.00358117 Silica= 0
+  in = 0  it = 85000 Cal= 0.818957 Silica= 0
+  in = 1  it = 85000 Cal= 0.00999096 Silica= 0
+Warning Calling GEMIPM calculation it = 85838 Node 1 Ca= 0.938318 Si= 0.862866
+  in = 0  it = 86000 Cal= 0.818957 Silica= 0
+  in = 1  it = 86000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 87000 Cal= 0.818957 Silica= 0
+  in = 1  it = 87000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 88000 Cal= 0.818957 Silica= 0
+  in = 1  it = 88000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 89000 Cal= 0.818957 Silica= 0
+  in = 1  it = 89000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 90000 Cal= 0.818957 Silica= 0
+  in = 1  it = 90000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 91000 Cal= 0.818957 Silica= 0
+  in = 1  it = 91000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 92000 Cal= 0.818957 Silica= 0
+  in = 1  it = 92000 Cal= 0.00358117 Silica= 0
+Warning Calling GEMIPM calculation it = 92702 Node 1 Ca= 0.298318 Si= 0.822866
+  in = 0  it = 93000 Cal= 0.818957 Silica= 0
+  in = 1  it = 93000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 94000 Cal= 0.818957 Silica= 0
+  in = 1  it = 94000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 95000 Cal= 0.818957 Silica= 0
+  in = 1  it = 95000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 96000 Cal= 0.818957 Silica= 0
+  in = 1  it = 96000 Cal= 0.00358118 Silica= 0
+Warning Calling GEMIPM calculation it = 96240 Node 1 Ca= 0.918318 Si= 0.872866
+  in = 0  it = 97000 Cal= 0.818957 Silica= 0
+  in = 1  it = 97000 Cal= 0.00999096 Silica= 0
+  in = 0  it = 98000 Cal= 0.818957 Silica= 0
+  in = 1  it = 98000 Cal= 0.00358118 Silica= 0
+  in = 0  it = 99000 Cal= 0.818957 Silica= 0
+  in = 1  it = 99000 Cal= 0.00999096 Silica= 0
+Total time of calculation  s; 597.28
+
+Finished Ok

@@ -35,7 +35,7 @@ int outTest = 0;
 
 int main( int argc, char* argv[] )
  {
-   long int nTimes = 1e10;   // Maximum number of time iteration steps
+   long int nTimes = 1e5;   // Maximum number of time iteration steps
 
 	// Analyzing command line arguments
      // Default arguments
@@ -273,7 +273,7 @@ int main( int argc, char* argv[] )
      {
 
         m_NodeHandle[in] = in;
-        m_NodeStatusCH[in] = NEED_GEM_AIA; // or NEED_GEM_SIA
+        m_NodeStatusCH[in] = NEED_GEM_SIA; // or NEED_GEM_SIA
         // Setting input data for GEMIPM
         node->GEM_from_MT( m_NodeHandle[in], m_NodeStatusCH[in],
              m_T[in], m_P[in], m_Vs[in], m_Ms[in],
