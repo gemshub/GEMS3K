@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1232 2009-02-12 14:05:32Z gems $
+// $Id: ms_param.cpp 1239 2009-02-13 15:48:22Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -49,20 +49,20 @@ enum volume_code {  // Codes of volume parameter ???
 SPP_SETTING pa_ = {
   "GEMS-PSI v2.3.0: Controls and defaults for numeric modules",
   {
-        1,  /* PC */  3,     /* PD */   3,   /* PRD */
-        1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
-        0, /* DT */     0,   /* PLLG */   1,  /* PE */
-        500,   /* IIM */
-        1e-6, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
-        1e-4,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
-        1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
-        1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
-        1e-7, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
-        0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-        0.001, /* GAS */   12.05,  /* DNS */   1e-5,  /* XwMin, */
-        1e-7,  /* ScMin, */  1e-19, /* DcMin, */   1e-10, /* PhMin, */
-        1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-        1e-10,  /* DKIN  */ 0,  /* tprn */
+      1,  /* PC */  3,     /* PD */   3,   /* PRD */
+      1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
+      -2, /* DT */     200,   /* PLLG */   1,  /* PE */
+      500,   /* IIM */
+      1e-6, /* DG */   1e-7,  /* DHB */  1e-12,  /* DS */
+      1e-4,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
+      1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
+      1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
+      1e-7, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
+      0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+      0.001, /* GAS */   12.05,  /* DNS */   1e-5,  /* XwMin, */
+      1e-7,  /* ScMin, */  1e-19, /* DcMin, */   1e-10, /* PhMin, */
+      1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+      1e-7,  /* DKIN  */ 0,  /* tprn */
   },
 }; // SPP_SETTING
 

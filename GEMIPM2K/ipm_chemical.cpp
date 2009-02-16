@@ -1203,8 +1203,7 @@ XU[j] = pmp->DUL[j];
               {
              	if(  (XU[j]*a(ii,j))  > pmp->B[ii]+cutoff )
                 {
-             	  // The dual solution appears bad, and the insertion of XU[j] will damage
-     			  // and the insertion of XU[j] will break the mass balance
+             	  // The dual solution appears bad, and the insertion of XU[j] will damage the mass balance
      			  if(!mbBroken )
      			  {
       				 sprintf(buf,

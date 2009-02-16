@@ -381,21 +381,49 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 //
 bool TMulti::AutoInitialApprox(  )
 {
-    long int i, j, NN;
+    long int i, j, NN, eCode=-1L;
     double minB, sfactor;
+    char buf[300];
     SPP_SETTING *pa = &TProfil::pm->pa;
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpA.txt" );   // Debugging
 #endif
+
 // Scaling the IPM numerical controls for the system total amount and minimum b(IC)
     NN = pmp->N - pmp->E;
-    minB = pa->p.DB;
+    minB = pmp->B[0]; // pa->p.DB;
     for(i=0;i<NN;i++)
-      if( pmp->B[i] < minB )
-          minB = pmp->B[i];
+    {
+        if( pmp->B[i] < pa->p.DB )
+        {
+           if( eCode < 0  )
+    	   {
+              eCode = i;  // Error state is activated
+              pmp->PZ = 3;
+              sprintf(buf, "Too small input amount of independent component %-3.3s = %lg",
+            	pmp->SB[i], pmp->B[i] );
+    		  setErrorMessage( 20, "W20IPM: IPM-main():" ,buf);
+    	   }
+           else
+           {
+        	  sprintf(buf,"  %-3.3s = %lg" ,  pmp->SB[i], pmp->B[i] );
+        	  addErrorMessage( buf );
+           }
+           pmp->B[i] = pa->p.DB;
+        }
+    	if( pmp->B[i] < minB )
+           minB = pmp->B[i];      // Looking for the smallest IC amount
+    }
 
-//  check Ymin (cutoff)
+    if( eCode >= 0 )
+    {
+       TProfil::pm->testMulti();
+       pmp->PZ = 0;
+       setErrorMessage( -1, "" , "");
+    }
+
+    //  check Ymin (cutoff)
    if(pmp->lowPosNum>minB*0.01)
       pmp->lowPosNum=minB*0.01;
 
@@ -598,7 +626,7 @@ STEP_POINT("FIA Iteration");
    {  // Experimental
        iRet = 2;
  	   setErrorMessage( 4, "E04IPM: EnterFeasibleDomain(): " ,
-        "Maximum number of EFD loops exceeded! Too tight Pa_DHB tolerance for mass balance?\n ");
+        "Maximum allowed number of EnterFeasibleDomain() iterations exceeded!\n ");
     }
    return iRet;   // no solution
 }
