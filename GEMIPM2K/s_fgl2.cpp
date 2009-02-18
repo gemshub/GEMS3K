@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1209 2009-01-31 18:13:53Z wagner $
+// $Id: s_fgl2.cpp 1243 2009-02-18 15:12:43Z wagner $
 //
 // Copyright (c) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -30,10 +30,10 @@ TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long in
         long int NPperDC, long int NPTPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar ):
     ModCode(Mod_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
     MaxOrd(MaxOrder),  NP_DC(NPperDC), NPTP_DC(NPTPperDC), R_CONST(8.31451),
-    RhoW(dW), EpsW(eW), Tk(T_k), Pbar(P_bar)
+    Tk(T_k), Pbar(P_bar)
 
 {
     // pointer assignment
@@ -75,10 +75,8 @@ TSolMod::~TSolMod()
 }
 
 
-long int TSolMod::UpdatePT ( double T_k, double P_bar, double dW, double eW )
+long int TSolMod::UpdatePT ( double T_k, double P_bar )
 {
-	  RhoW = dW;
-	  EpsW =eW;
 	  Tk = T_k;
 	  Pbar = P_bar;
 	  return 0;
@@ -105,10 +103,10 @@ TVanLaar::TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long 
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -297,10 +295,10 @@ TRegular::TRegular( long int NSpecies, long int NParams, long int NPcoefs, long 
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -452,10 +450,10 @@ TRedlichKister::TRedlichKister( long int NSpecies, long int NParams, long int NP
         long int NPperDC,char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW)
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -687,10 +685,10 @@ TNRTL::TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int Ma
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -949,10 +947,10 @@ TWilson::TWilson( long int NSpecies, long int NParams, long int NPcoefs, long in
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }

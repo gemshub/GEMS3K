@@ -37,13 +37,15 @@ TSIT::TSIT( long int NSpecies, long int NParams, long int NPcoefs, long int MaxO
         long int NPperDC, char Mod_Code,
         long int* arIPx, double* arIPc, double* arDCc,
         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar, double *dW, double *eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
   aZ = arZ;
   aM =	arM;
+  RhoW = dW;
+  EpsW = eW;
 }
 
 
@@ -62,8 +64,8 @@ long int TSIT::MixMod()
 	  return 0;
     }
     T = Tk;
-    A = 1.82483e6 * sqrt( RhoW ) / pow( T*EpsW, 1.5 );
-    B = 50.2916 * sqrt( RhoW ) / sqrt( T*EpsW );
+    A = 1.82483e6 * sqrt( RhoW[0] ) / pow( T*EpsW[0], 1.5 );
+    B = 50.2916 * sqrt( RhoW[0] ) / sqrt( T*EpsW[0] );
 
     sqI = sqrt( I );
     ErrorIf( fabs(A) < 1e-9 || fabs(B) < 1e-9, "SIT",
@@ -155,13 +157,15 @@ TPitzer::TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long in
         long int NPperDC, char Mod_Code,
         long int* arIPx, double* arIPc, double* arDCc,
         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar, double *dW, double *eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW )
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	aZ = arZ;
 	aM = arM;
+	RhoW = dW;
+	EpsW = eW;
 
    // calculate sizes Nc, Na, Nn, Ns
    calcSizes();
@@ -459,7 +463,7 @@ void TPitzer::setIndexes()
 
 
 // put data from arIPx, arIPc, arDCc to internal structures
-void TPitzer::	setValues()
+void TPitzer::setValues()
 {
   long int ii, ic, ia,in, i;
 
@@ -734,6 +738,7 @@ double TPitzer::Z_Term()
 
 
 // Compute A-Factor
+// temperature and pressure dependence of EpsW and RhoW ignored (TW)
 double TPitzer::A_Factor( double T )
 {
 	// Fix parameters
@@ -1099,14 +1104,16 @@ TEUNIQUAC::TEUNIQUAC( long int NSpecies, long int NParams, long int NPcoefs, lon
         long int NPperDC, char Mod_Code,
         long int *arIPx, double *arIPc, double *arDCc,
         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-        double T_k, double P_bar, double dW, double eW ):
+        double T_k, double P_bar, double *dW, double *eW ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar, dW, eW)
+        			 arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 	Z = arZ;
 	M = arM;
+	RhoW = dW;
+	EpsW = eW;
 }
 
 
@@ -1249,8 +1256,8 @@ long int TEUNIQUAC::MixMod()
 	w = NComp - 1;
 
 	// calculation of DH parameters
-	rho = RhoW * 1000.;  // density in kg m-3
-	eps = EpsW;
+	rho = RhoW[0] * 1000.;  // density in kg m-3
+	eps = EpsW[0];
 	b = 1.5;
 	c = 1.3287e+5;  // corrected
 	// A = c*sqrt(rho)/pow((eps*Tk),1.5);
@@ -1377,11 +1384,11 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	w = NComp - 1;
 
 	// calculation of DH parameters
-	rho = RhoW * 1000.;  // density in kg m-3
+	rho = RhoW[0] * 1000.;  // density in kg m-3
 	drho = 0.;
 	d2rho = 0.;
 	drhoP = 0.;
-	eps = EpsW;
+	eps = EpsW[0];
 	deps = 0.;
 	d2eps = 0.;
 	depsP = 0.;

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1242 2009-02-18 13:43:28Z wagner $
+// $Id: s_fgl.h 1243 2009-02-18 15:12:43Z wagner $
 //
 // Copyright (C) 2003-2009  T.Wagner, S.Churakov, D.Kulik, S.Dmitrieva
 //
@@ -47,8 +47,8 @@ class TSolMod
         long int *aIPx;  	// Pointer to list of indexes of non-zero interaction parameters
 
         double R_CONST; // R constant
-        double RhoW;	// Density of liquid water, added 04.06.2008 (TW)
-        double EpsW;	// Dielectric constant of liquid water
+        // double RhoW;	// Density of liquid water, added 04.06.2008 (TW)
+        // double EpsW;	// Dielectric constant of liquid water
         double Tk;    	// Temperature, K
         double Pbar;  	// Pressure, bar
 
@@ -78,7 +78,7 @@ class TSolMod
 				long int NPperDC, long int NPTPperDC, char Mod_Code,
 				long int* arIPx, double* arIPc, double* arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		virtual ~TSolMod();
@@ -109,7 +109,7 @@ class TSolMod
 		};
 
 		// set new system state
-		long int UpdatePT ( double T_k, double P_bar, double dW, double eW );
+		long int UpdatePT ( double T_k, double P_bar );
 
 		bool testSizes( long int NSpecies, long int NParams, long int NPcoefs,
 				long int MaxOrder, long int NPperDC, char Mod_Code );
@@ -317,7 +317,7 @@ class TCGFcalc: public TSolMod
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
 				double *aPparc, double *aphWGT, double *arX, double *arGEX, double *arVol,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TCGFcalc();
@@ -390,7 +390,7 @@ class TPRSVcalc: public TSolMod
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
 				double *arGEX, double *arVol,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TPRSVcalc();
@@ -467,7 +467,7 @@ class TSRKcalc: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL, double *aPparc,
-				double *arGEX, double *arVol, double T_k, double P_bar, double dW, double eW );
+				double *arGEX, double *arVol, double T_k, double P_bar );
 
 		// Destructor
 		~TSRKcalc();
@@ -529,7 +529,7 @@ class TVanLaar: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TVanLaar();
@@ -569,7 +569,7 @@ class TRegular: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TRegular();
@@ -610,7 +610,7 @@ class TRedlichKister: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TRedlichKister();
@@ -655,7 +655,7 @@ class TNRTL: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TNRTL();
@@ -694,7 +694,7 @@ class TWilson: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar );
 
 		// Destructor
 		~TWilson();
@@ -720,6 +720,8 @@ class TSIT: public TSolMod
 	private:
 		double *aZ;    // Vector of species charges (for aqueous models)
 		double *aM;    // Vector of species molality (for aqueous models)
+		double *RhoW;  // water density properties
+		double *EpsW;  // water dielectrical properties
 		double I;	// Ionic strength
 
 		inline double IonicStr()
@@ -737,7 +739,7 @@ class TSIT: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar, double *dW, double *eW );
 
 		// Destructor
 		~TSIT() { }
@@ -773,6 +775,8 @@ private:
 	long int *xnx;   // list of indexes of Nn neutral species in aq phase
 	double *aZ;    // Vector of species charges (for aqueous models)
 	double *aM;    // Vector of species molality (for aqueous models)
+	double *RhoW;  // water density properties
+	double *EpsW;  // water dielectrical properties
 
     double Aphi; //----------- Computing A- Factor
 	double I;  //------------- Ionic Strength
@@ -878,7 +882,7 @@ public:
 	         long int NPperDC, char Mod_Code,
 	         long int *arIPx, double *arIPc, double *arDCc,
 	         double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-	         double T_k, double P_bar, double dW, double eW );
+	         double T_k, double P_bar, double *dW, double *eW );
 
 	// Destructor
 	~TPitzer();
@@ -910,6 +914,8 @@ class TEUNIQUAC: public TSolMod
 	private:
 		double *Z;   // species charges
 		double *M;   // species molalities
+		double *RhoW;  // water density properties
+		double *EpsW;  // water dielectrical properties
 		double *R;   // volume parameter
 		double *Q;   // surface parameter
 		double *Phi;
@@ -936,7 +942,7 @@ class TEUNIQUAC: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL, double *arM, double *arZ,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar, double *dW, double *eW );
 
 		// Destructor
 		~TEUNIQUAC();
@@ -983,7 +989,7 @@ class TModOther: public TSolMod
 				long int NPperDC, char Mod_Code,
 				long int *arIPx, double *arIPc, double *arDCc,
 				double *arWx, double *arlnGam, double *aphVOL,
-				double T_k, double P_bar, double dW, double eW );
+				double T_k, double P_bar, double *dW, double *eW );
 
 		// Destructor
 		~TModOther();
