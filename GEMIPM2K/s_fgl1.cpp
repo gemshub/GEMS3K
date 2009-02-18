@@ -1128,7 +1128,6 @@ void TEUNIQUAC::alloc_internal()
 	Psi = new double *[NComp];
 	dPsi = new double *[NComp];
 	d2Psi = new double *[NComp];
-	Xi = new double *[NComp];
 
 	for (long int j=0; j<NComp; j++)
 	{
@@ -1138,7 +1137,6 @@ void TEUNIQUAC::alloc_internal()
 		Psi[j] = new double [NComp];
 		dPsi[j] = new double [NComp];
 		d2Psi[j] = new double [NComp];
-		Xi[j] = new double [NComp];
 	}
 }
 
@@ -1154,7 +1152,6 @@ void TEUNIQUAC::free_internal()
 		delete[]Psi[j];
 		delete[]dPsi[j];
 		delete[]d2Psi[j];
-		delete[]Xi[j];
 	}
 	delete[]R;
 	delete[]Q;
@@ -1166,7 +1163,6 @@ void TEUNIQUAC::free_internal()
 	delete[]Psi;
 	delete[]dPsi;
 	delete[]d2Psi;
-	delete[]Xi;
 }
 
 
@@ -1233,7 +1229,6 @@ long int TEUNIQUAC::PTparam()
 			Psi[j][i] = psi;
 			dPsi[j][i] = dpsi;
 			d2Psi[j][i] = d2psi;
-			Xi[j][i] = v;
 		}
 	}
 
@@ -1370,22 +1365,43 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	int j, i, w;
 	double Mw, Xw, IS, b, c;
 	double A, dAdT, dAdP, d2AdT2;
-	double phiti, phthi, RR, QQ, N, TPI, TPX, DTPX, CON;
+	double phiti, phthi, RR, QQ, N, TPI, tpx, TPX, dtpx, DTPX, CON;
 	double gI, sI, gi, si;
 	double gE, hE, sE, cpE, vE;
 	double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX;   // DH, C and R contributions to properties
-	double dg, d2g, dgRI, d2gRI, dgRX, d2gRX, dgDH, d2gDH;
-	double rho, drho, d2rho, eps, deps, d2eps;
+	double dg, d2g, dgRI, d2gRI, dgRX, d2gRX, dgDH, d2gDH, dgDHdP;
+	double rho, drho, d2rho, drhoP, eps, deps, d2eps, depsP;
+	double X, Y, dXdT, dYdT, d2XdT2, d2YdT2, dXdP, dYdP;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
 
 	// calculation of DH parameters
 	rho = RhoW * 1000.;  // density in kg m-3
+	drho = 0.;
+	d2rho = 0.;
+	drhoP = 0.;
 	eps = EpsW;
+	deps = 0.;
+	d2eps = 0.;
+	depsP = 0.;
+
 	b = 1.5;
 	c = 1.3287e+5;  // corrected
-	// A = c*sqrt(rho)/pow((eps*Tk),1.5);
+	X = pow(rho,0.5);
+	Y = pow((eps*Tk),1.5);
+	dXdT = 0.5*pow(rho,(-0.5))*drho;
+	dYdT = 1.5*pow((eps*Tk),0.5) * (deps*Tk + eps);
+	d2XdT2 = 0.5*( -0.5*pow(rho,(-1.5))*drho*drho + pow(rho,(-0.5))*d2rho );
+	d2YdT2 = 1.5*( 0.5*pow((eps*Tk),(-0.5)) * (deps*Tk+eps)*(deps*Tk+eps)
+			+ pow((eps*Tk),(0.5)) * (d2eps*Tk+deps+deps) );
+	dXdP = 0.5*pow(rho,(-0.5))*drhoP;
+	dYdP = 1.5*pow((eps*Tk),(0.5))*(deps*Tk);
+	A = c*sqrt(rho)/pow((eps*Tk),1.5);
+	dAdT = c * (dXdT*Y-X*dYdT) / pow (Y,2.);
+	d2AdT2 = c * ( (d2XdT2*Y+dXdT*dYdT)*pow(Y,2.)/pow(Y,4.) - (dXdT*Y)*(2.*Y*dYdT)/pow(Y,4.)
+				- (dXdT*dYdT+X*d2YdT2)*pow(Y,2.)/pow(Y,4.) + (X*dYdT)*(2.*Y*dYdT)/pow(Y,4.) );
+	dAdP = c * (dXdP*Y-X*dYdP) / pow (Y,2.);
 
 	// approximation valid only for temperatures below 200 deg. C and Psat
 	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
@@ -1446,12 +1462,24 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 
 	for (j=0; j<NComp; j++)
 	{
-		phiti = R[j]/R[w];
-		phthi = Q[j]/Q[w]*phiti;
-		gCI += 1.0 + log(phiti) - phiti - 5.*Q[j]*(1.+log(phthi)-phthi);
-		gRI += Q[j]*(1.-log(Psi[w][j])-Psi[j][w]);
-		dgRI += - x[j]*Q[j] * (Xi[w][j] + dPsi[j][w]);
-		d2gRI += - x[j]*Q[j] * (2.*(1./Tk)*(Xi[w][j]+dPsi[j][w])-Xi[j][w]*dPsi[j][w]);
+		if (j ==w)
+		{
+			gCI += 0.;
+			gRI += 0.;
+			dgRI += 0.;
+			d2gRI += 0.;
+		}
+
+		else
+		{
+			phiti = R[j]/R[w];
+			phthi = R[j]*Q[w]/(Q[j]*R[w]);
+			gCI += x[j]*( 1.0 + log(phiti) - phiti - 5.*Q[j]*(1.+log(phthi)-phthi) );
+			gRI += x[j]*Q[j]*(1.-log(Psi[w][j])-Psi[j][w]);
+			dgRI += - x[j]*Q[j]*( pow(Psi[w][j],(-1.))*dPsi[w][j] + dPsi[j][w] ) ;
+			d2gRI += x[j]*Q[j]*( pow(Psi[w][j],(-2.))*dPsi[w][j]*dPsi[w][j]
+			           - pow(Psi[w][j],(-1.))*d2Psi[w][j] - d2Psi[j][w] );
+		}
 	}
 
 	// combinatorial and residual part
@@ -1464,15 +1492,19 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	{
 		N = 0.0;
 		TPI = 0.0;
+		tpx = 0.0;
 		TPX = 0.0;
+		dtpx = 0.0;
 		DTPX = 0.0;
 		for (i=0; i<NComp; i++)
 		{
 			N += Theta[i]*Psi[i][j];
-			TPI += 1./N;
-			TPX += Theta[i]*dPsi[i][j]*TPI;
-			DTPX += - TPX*TPX + Theta[i]*d2Psi[i][j]*TPI;
+			tpx += Theta[i]*dPsi[i][j];
+			dtpx += Theta[i]*d2Psi[i][j];
 		}
+		TPI = 1./N;
+		TPX = tpx*TPI;
+		DTPX = - TPX*TPX + dtpx*TPI;
 		gCX += x[j]*log(Phi[j]/x[j]) - 5.0*(Q[j]*x[j]*log(Phi[j]/Theta[j]));
 		gRX += ( - x[j]*Q[j]*log(N) );
 		dgRX += x[j]*Q[j]*TPX;
@@ -1484,14 +1516,16 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	gDH = CON*A;
 	dgDH = - CON*dAdT;
 	d2gDH = - CON*d2AdT2;
+	dgDHdP = CON*dAdP;
 
 	// increment thermodynamic properties
 	dg = ( dgDH + dgRX + dgRI );
 	d2g = ( d2gDH + d2gRX + d2gRI );
-	gE = ( gDH + gRX + gCX + gRI + gCI ) * R_CONST * Tk;
+	gE = ( gDH + gRX + gCX - gRI - gCI ) * R_CONST * Tk;
 	hE = dg * pow(Tk,2.) * R_CONST;
 	cpE = ( 2.*Tk*dg + pow(Tk,2.)*d2g ) * R_CONST;
 	sE = (hE-gE)/Tk;
+	vE = dgDHdP;
 
 	// final assigments
 	Gex_ = gE + gI;

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1224 2009-02-10 15:21:49Z wagner $
+// $Id: s_fgl.h 1242 2009-02-18 13:43:28Z wagner $
 //
 // Copyright (C) 2003-2009  T.Wagner, S.Churakov, D.Kulik, S.Dmitrieva
 //
@@ -920,7 +920,6 @@ class TEUNIQUAC: public TSolMod
 		double **Psi;
 		double **dPsi;
 		double **d2Psi;
-		double **Xi;
 
 		// only needed for debugging output
 		double gammaDH[200];
