@@ -54,7 +54,10 @@ long int TSIT::MixMod()
 {
     long int j, icat, ian, /*ic, ia,*/  index1, index2, ip;
     double T, A, B, sqI, bgi=0, Z2, lgGam, SumSIT;
+    double RHO, EPS;
 //    double nPolicy;
+    RHO = RhoW[0];
+    EPS = EpsW[0];
 
     I= IonicStr();
     if( I <  1e-6 /*TProfil::pm->pa.p.ICmin*/ )
@@ -64,8 +67,8 @@ long int TSIT::MixMod()
 	  return 0;
     }
     T = Tk;
-    A = 1.82483e6 * sqrt( RhoW[0] ) / pow( T*EpsW[0], 1.5 );
-    B = 50.2916 * sqrt( RhoW[0] ) / sqrt( T*EpsW[0] );
+    A = 1.82483e6 * sqrt( RHO ) / pow( T*EPS, 1.5 );
+    B = 50.2916 * sqrt( RHO ) / sqrt( T*EPS );
 
     sqI = sqrt( I );
     ErrorIf( fabs(A) < 1e-9 || fabs(B) < 1e-9, "SIT",
@@ -750,6 +753,10 @@ double TPitzer::A_Factor( double T )
 	double eps0 = 8.854187817e-12; // Dielectricity constant vacuum
 	double pi = 3.141592654;
     double Aphi;
+    double RHO, EPS;
+
+    RHO = RhoW[0];
+    EPS = EpsW[0];
 
 	//------------ Computing A- Factor
 	Aphi = (1./3.) * pow((2.*pi*N0*dens*1000.),0.5) * pow((el*el)/(eps*4.*pi*eps0*k*T),1.5);
@@ -1250,17 +1257,17 @@ long int TEUNIQUAC::MixMod()
 	double Mw, Xw, IS, b, c;
 	double A, RR, QQ, K, L, M;
 	double gamDH, gamC, gamR, lnGam, Gam;
-	double rho, eps;
+	double RHO, EPS;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
 
 	// calculation of DH parameters
-	rho = RhoW[0] * 1000.;  // density in kg m-3
-	eps = EpsW[0];
+	RHO = RhoW[0] * 1000.;  // density in kg m-3
+	EPS = EpsW[0];
 	b = 1.5;
 	c = 1.3287e+5;  // corrected
-	// A = c*sqrt(rho)/pow((eps*Tk),1.5);
+	// A = c*sqrt(RHO)/pow((EPS*Tk),1.5);
 
 	// approximation valid only for temperatures below 200 deg. C and Psat
 	A = 1.131 + (1.335e-3)*(Tk-273.15) + (1.164e-5)*pow( (Tk-273.15), 2.);
@@ -1377,34 +1384,35 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	double gE, hE, sE, cpE, vE;
 	double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX;   // DH, C and R contributions to properties
 	double dg, d2g, dgRI, d2gRI, dgRX, d2gRX, dgDH, d2gDH, dgDHdP;
-	double rho, drho, d2rho, drhoP, eps, deps, d2eps, depsP;
+	double RHO, dRdT, d2RdT2, dRdP, EPS, dEdT, d2EdT2, dEdP;
 	double X, Y, dXdT, dYdT, d2XdT2, d2YdT2, dXdP, dYdP;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
 
 	// calculation of DH parameters
-	rho = RhoW[0] * 1000.;  // density in kg m-3
-	drho = 0.;
-	d2rho = 0.;
-	drhoP = 0.;
-	eps = EpsW[0];
-	deps = 0.;
-	d2eps = 0.;
-	depsP = 0.;
+	RHO = RhoW[0] * 1000.;  // density in kg m-3
+	dRdT = RhoW[1];
+	d2RdT2 = RhoW[2];
+	dRdP = RhoW[3];
+	EPS = EpsW[0];
+	dEdT = EpsW[1];
+	d2EdT2 = EpsW[2];
+	dEdP = EpsW[3];
 
+	// DH term A and partial derivatives
 	b = 1.5;
 	c = 1.3287e+5;  // corrected
-	X = pow(rho,0.5);
-	Y = pow((eps*Tk),1.5);
-	dXdT = 0.5*pow(rho,(-0.5))*drho;
-	dYdT = 1.5*pow((eps*Tk),0.5) * (deps*Tk + eps);
-	d2XdT2 = 0.5*( -0.5*pow(rho,(-1.5))*drho*drho + pow(rho,(-0.5))*d2rho );
-	d2YdT2 = 1.5*( 0.5*pow((eps*Tk),(-0.5)) * (deps*Tk+eps)*(deps*Tk+eps)
-			+ pow((eps*Tk),(0.5)) * (d2eps*Tk+deps+deps) );
-	dXdP = 0.5*pow(rho,(-0.5))*drhoP;
-	dYdP = 1.5*pow((eps*Tk),(0.5))*(deps*Tk);
-	A = c*sqrt(rho)/pow((eps*Tk),1.5);
+	X = pow(RHO,0.5);
+	Y = pow((EPS*Tk),1.5);
+	dXdT = 0.5*pow(RHO,(-0.5))*dRdT;
+	dYdT = 1.5*pow((EPS*Tk),0.5) * (dEdT*Tk + EPS);
+	d2XdT2 = 0.5*( -0.5*pow(RHO,(-1.5))*dRdT*dRdT + pow(RHO,(-0.5))*d2RdT2 );
+	d2YdT2 = 1.5*( 0.5*pow((EPS*Tk),(-0.5)) * (dEdT*Tk+EPS)*(dEdT*Tk+EPS)
+			+ pow((EPS*Tk),(0.5)) * (d2EdT2*Tk+dEdT+dEdT) );
+	dXdP = 0.5*pow(RHO,(-0.5))*dRdP;
+	dYdP = 1.5*pow((EPS*Tk),(0.5))*(dEdP*Tk);
+	A = c*sqrt(RHO)/pow((EPS*Tk),1.5);
 	dAdT = c * (dXdT*Y-X*dYdT) / pow (Y,2.);
 	d2AdT2 = c * ( (d2XdT2*Y+dXdT*dYdT)*pow(Y,2.)/pow(Y,4.) - (dXdT*Y)*(2.*Y*dYdT)/pow(Y,4.)
 				- (dXdT*dYdT+X*d2YdT2)*pow(Y,2.)/pow(Y,4.) + (X*dYdT)*(2.*Y*dYdT)/pow(Y,4.) );
