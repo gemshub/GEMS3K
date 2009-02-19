@@ -1,2 +1,5 @@
-For testing, execute test.bat or test.sh from this directory.
+For testing, execute test.bat or test.sh from this directory. 
+See the ../main.cpp file for comments. 
+For further testing, you can change bulk composition of the system (bIC)
+by editing *dbr.dat files.  
 

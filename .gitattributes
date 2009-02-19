@@ -61,13 +61,6 @@ GEMIPM2K/platform/win32bcc/Makefile -text
 GEMIPM2K/s_fgl.cpp -text
 GEMIPM2K/s_fgl.h -text
 GEMIPM2K/s_fgl2.cpp -text
-GEMIPM2K/test/CalcColumn-dat.lst -text
-GEMIPM2K/test/CalcColumn-dbr-0-0000.dat -text
-GEMIPM2K/test/CalcColumn-dbr-0-0001.dat -text
-GEMIPM2K/test/CalcColumn-dbr-0-XXXX.dat -text
-GEMIPM2K/test/CalcColumn-dbr.lst -text
-GEMIPM2K/test/CalcColumn-dch.dat -text
-GEMIPM2K/test/CalcColumn-ipm.dat -text
 GEMIPM2K/test/Readme.1st -text
 GEMIPM2K/test/TEST.BAT -text
 GEMIPM2K/test/test.sh -text

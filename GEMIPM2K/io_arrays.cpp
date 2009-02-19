@@ -367,7 +367,7 @@ long int TReadArrays::findNext()
 
  long int ii = findFld( buf+1 );
  if(  ii < 0 )
-    Error( buf, "Format text read 01: Invalid label of data");
+    Error( buf, "Format text read 01: Data label was expected but not found");
 
  flds[ii].readed = 1;
  return ii;

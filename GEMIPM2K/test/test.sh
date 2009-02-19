@@ -1,1 +1,1 @@
-../gemcalc CalcColumn-dat.lst CalcColumn-dbr.lst > test.out
+exec ../gemcalc Test.lst Test-more.lst > Test.out

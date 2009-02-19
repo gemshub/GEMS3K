@@ -116,7 +116,7 @@ outField MULTI_dynamic_fields[68] =  {
    { "mui" , 0 , 0 },
    { "muk" , 0 , 0 },
    { "muj" , 0 , 0 },
-   { "pa_LLG" , 0 , 0 }
+   { "pa_PLLG" , 0 , 0 }
 };
 
 
@@ -675,7 +675,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   ConvertDCC();
 
 //reads dynamic values from txt file
-   TReadArrays  rddar( 67, MULTI_dynamic_fields, ff);
+   TReadArrays  rddar( 68, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
 
@@ -913,7 +913,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                break;
       case 66: rddar.readArray("muj" , pmp->muj, pmp->L);
                break;
-      case 67: rddar.readArray("pa_LLG" , &pa->p.PLLG, 1);
+      case 67: rddar.readArray("pa_PLLG" , &pa->p.PLLG, 1);
                break;
     }
     nfild = rddar.findNext();

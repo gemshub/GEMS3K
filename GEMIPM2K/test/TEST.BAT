@@ -1,2 +1,2 @@
 echo off 
-..\gemcalc CalcColumn-dat.lst CalcColumn-dbr.lst > test.out
+..\gemcalc Test-lst.lst Test-more.lst > Test.out

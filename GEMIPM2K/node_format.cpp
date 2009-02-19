@@ -125,9 +125,9 @@ outField DataCH_dynamic_fields[25] =  {
    { "epsW",  1, 0 },
    { "V0",  1, 0 },
    { "G0",  1, 0 },
-   { "H0", 1, 0 },    // Depending on iGrd flag
-   { "S0",  1, 0 },   // Depending on iGrd flag
-   { "Cp0",  1, 0 },  // Depending on iGrd flag
+   { "H0", 0, 0 },    // Depending on iGrd flag
+   { "S0",  0, 0 },   // Depending on iGrd flag
+   { "Cp0",  0, 0 },  // Depending on iGrd flag
    { "DD",  0, 0 }    // Depending on iGrd flag
 };
 
@@ -138,12 +138,12 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments )
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   _comment = with_comments;
-  
+
   TPrintArrays  prar(ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 2.2.4" << endl;
-      ff << "# Prototype 11.07.2008" << endl;
+   {  ff << "# GEMIPM2K v. 2.3.0" << endl;
+      ff << "# Prototype 16.02.2009" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -153,14 +153,14 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments )
       ff << "# Node identification handle (index of recipe)" << endl;
    ff << left << setw(17) << "<NodeHandle> " <<  CNode->NodeHandle << endl;
 if( CNode->NodeStatusFMT != No_transport )
-{	   
+{
    if( _comment )
       ff << "# Node type (hydraulic); see typedef NODETYPE" << endl;
    ff << left << setw(17) << "<NodeTypeHY> " <<  CNode->NodeTypeHY << endl;
    if( _comment )
       ff << "# Node type (mass transport); see typedef NODETYPE" << endl;
    ff << left << setw(17) << "<NodeTypeMT> " <<  CNode->NodeTypeMT << endl;
-}   
+}
    if( _comment )
       ff << "# Node status code FMT; see typedef NODECODEFMT" << endl;
    ff << left << setw(17) << "<NodeStatusFMT> " <<  CNode->NodeStatusFMT << endl;
@@ -183,7 +183,7 @@ if( CNode->NodeStatusFMT != No_transport )
          ff << "# Volume V of reactive subsystem, m3 (GEM output)" << endl;
    ff << left << setw(7) << "<Vs> " << CNode->Vs << endl;
 if( CNode->NodeStatusFMT != No_transport )
-{	
+{
    if( _comment )
          ff << "# Volume Vi of inert subsystem, m3" << endl;
    ff << left << setw(7) << "<Vi> " <<  CNode->Vi << endl;
@@ -192,7 +192,7 @@ if( CNode->NodeStatusFMT != No_transport )
          ff << "# Mass Ms of reactive subsystem,  kg (GEM output)" << endl;
    ff << left << setw(7) << "<Ms> " <<  CNode->Ms << endl;
 if( CNode->NodeStatusFMT != No_transport )
-{	
+{
    if( _comment )
          ff << "# Mass Mi of inert subsystem, kg" << endl;
    ff << left << setw(7) << "<Mi> " <<  CNode->Mi << endl;
@@ -201,7 +201,7 @@ if( CNode->NodeStatusFMT != No_transport )
          ff << "# Enthalpy Hs of reactive subsystem, J (GEM output, optional) " << endl;
    ff << left << setw(7) << "<Hs> " <<  CNode->Hs << endl;
 if( CNode->NodeStatusFMT != No_transport )
-{	
+{
    if( _comment )
          ff << "# Enthalpy Hi of inert subsystem, J " << endl;
    ff << left << setw(7) << "<Hi> " <<  CNode->Hi << endl;
@@ -226,7 +226,7 @@ if( CSD->ccPH[0] == PH_AQUEL )
 }
    ff << endl;
 if( CNode->NodeStatusFMT != No_transport )
-{	
+{
    if( _comment )
        ff << "## FMT scalar variables (used only in NodeArray, not used in GEM)" << endl;
    if( _comment )
@@ -478,12 +478,12 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments )
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
-  _comment = with_comments; 
+  _comment = with_comments;
   TPrintArrays  prar(ff);
 
   if( _comment )
-  {  ff << "# GEMIPM2K v. 2.2.4" << endl;
-     ff << "# Prototype 11.07.2008" << endl;
+  {  ff << "# GEMIPM2K v. 2.3.0" << endl;
+     ff << "# Prototype 16.02.2009" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
@@ -597,7 +597,7 @@ prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
   }
   ff << left << setw(7) << "<Ttol> " <<  CSD->Ttol;
   if( _comment )
-    ff << "\n# Tval: Grid temperatures for the interpolation";
+    ff << "\n# Tval: Lookup temperatures for the interpolation";
  prar.writeArray(  "TCval", CSD->TCval, CSD->nTp );
   if( _comment )
     ff << "\n\n# Ptol: Tolerance for the interpolation over pressure (K)" << endl;
@@ -608,46 +608,46 @@ prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
 
   if( CSD->ccPH[0] == PH_AQUEL )
   { if( _comment )
-      ff << "\n\n# roW: Grid array for the density of water-solvent (g/cm3)";
+      ff << "\n\n# roW: Lookup array for the density of water-solvent (g/cm3)";
    prar.writeArray(  "roW", CSD->roW, CSD->nPp*CSD->nTp );
     if( _comment )
-      ff << "\n\n# epsW: grid array for the dielectric constant of water-solvent";
+      ff << "\n\n# epsW: Lookup array for the dielectric constant of water-solvent";
    prar.writeArray(  "epsW", CSD->epsW,  CSD->nPp*CSD->nTp );
   }
   if( _comment )
-    ff << "\n\n# V0: Grid array for the molar volumes of Dependent Components (J/bar)";
+    ff << "\n\n# V0: Lookup array for the molar volumes of Dependent Components (J/bar)";
  prar.writeArray(  "V0", CSD->V0,  CSD->nDC*CSD->nPp*CSD->nTp,
                                        CSD->nPp*CSD->nTp );
   if( _comment )
-     ff << "\n\n# G0: Grid array for DC molar Gibbs energy function (J/mol)";
+     ff << "\n\n# G0: Lookup array for DC molar Gibbs energy function (J/mol)";
  prar.writeArray(  "G0", CSD->G0, CSD->nDC*CSD->nPp*CSD->nTp,
                                  CSD->nPp*CSD->nTp );
 
   if( CSD->iGrd > 0 )
   {
     if( _comment )
-      ff << "\n\n# H0: Grid array for DC molar enthalpy function (J/mol)";
+      ff << "\n\n# H0: Lookup array for DC molar enthalpy function (J/mol)";
    prar.writeArray(  "H0", CSD->H0,  CSD->nDC*CSD->nPp*CSD->nTp,
                                         CSD->nPp*CSD->nTp );
   }
   if( CSD->iGrd > 1 )
   {
     if( _comment )
-      ff << "\n\n# S0: Grid array for DC absolute entropy function (J/K/mol)";
+      ff << "\n\n# S0: Lookup array for DC absolute entropy function (J/K/mol)";
    prar.writeArray(  "S0", CSD->S0,CSD->nDC*CSD->nPp*CSD->nTp,
                                         CSD->nPp*CSD->nTp  );
   }
   if( CSD->iGrd > 2 )
   {
      if( _comment )
-      ff << "\n\n# Cp0: Grid array for DC heat capacity function (J/K/mol)";
+      ff << "\n\n# Cp0: Lookup array for DC heat capacity function (J/K/mol)";
     prar.writeArray(  "Cp0", CSD->Cp0,CSD->nDC*CSD->nPp*CSD->nTp,
                                         CSD->nPp*CSD->nTp  );
   }
   if( CSD->iGrd > 3 )
   {
   if( _comment )
-    ff << "\n\n# DD: Diffusion coefficients for DCs (reserved)";
+    ff << "\n\n# DD: Lookup array for diffusion coefficients of DCs (reserved)";
     prar.writeArray(  "DD", CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp,
                                           CSD->nPp*CSD->nTp);
   }
@@ -701,7 +701,7 @@ void TNode::datach_from_text_file(fstream& ff)
  // testing read
  gstring ret = rdar.testRead();
  if( !ret.empty() )
-  { ret += " - fields must be readed from DataCH structure";
+  { ret += " - fields must be read from DataCH structure";
     Error( "Error", ret);
   }
 
@@ -731,6 +731,15 @@ void TNode::datach_from_text_file(fstream& ff)
   if( CSD->DD )
     for( ii=0; ii< CSD->nDCs*CSD->nPp*CSD->nTp; ii++ )
        CSD->DD[ii] = 0.;
+  if( CSD->Cp0 )
+    for( ii=0; ii< CSD->nDCs*CSD->nPp*CSD->nTp; ii++ )
+       CSD->Cp0[ii] = 0.;
+  if( CSD->H0 )
+    for( ii=0; ii< CSD->nDCs*CSD->nPp*CSD->nTp; ii++ )
+       CSD->H0[ii] = 0.;
+  if( CSD->S0 )
+    for( ii=0; ii< CSD->nDCs*CSD->nPp*CSD->nTp; ii++ )
+       CSD->S0[ii] = 0.;
   CSD->Ttol = 0.1;
   CSD->Ptol = 0.1;
   if( CSD->nIC == CSD->nICb )
@@ -792,11 +801,11 @@ void TNode::datach_from_text_file(fstream& ff)
     case 16: rddar.readArray( "Pval", CSD->Pval, CSD->nPp );
               break;
     case 17: if( !CSD->roW )
-                   Error( "Error", "Array roW not used in task");
+                   Error( "Error", "Array roW is not allocated in DCH!");
              rddar.readArray( "roW", CSD->roW, CSD->nPp*CSD->nTp );
               break;
     case 18: if( !CSD->epsW )
-                   Error( "Error", "Array epsW not used in task");
+                   Error( "Error", "Array epsW is not allocated in DCH!");
              rddar.readArray( "epsW", CSD->epsW,  CSD->nPp*CSD->nTp );
             break;
     case 19: rddar.readArray( "V0", CSD->V0,  CSD->nDC*CSD->nPp*CSD->nTp );
@@ -804,19 +813,19 @@ void TNode::datach_from_text_file(fstream& ff)
     case 20: rddar.readArray( "G0", CSD->G0, CSD->nDC*CSD->nPp*CSD->nTp );
               break;
     case 21: if( !CSD->H0 )
-                   Error( "Error", "Array HO not used in task");
+                   Error( "Error", "Array HO is not allocated in DCH!");
             rddar.readArray( "H0", CSD->H0,  CSD->nDC*CSD->nPp*CSD->nTp);
             break;
     case 22: if( !CSD->S0 )
-                   Error( "Error", "Array SO not used in task");
+                   Error( "Error", "Array S0 is not allocated in DCH!");
             rddar.readArray( "S0", CSD->S0,CSD->nDC*CSD->nPp*CSD->nTp);
             break;
     case 23: if( !CSD->Cp0 )
-                   Error( "Error", "Array CpO not used in task");
+                   Error( "Error", "Array CpO is not allocated in DCH!");
             rddar.readArray( "Cp0", CSD->Cp0,CSD->nDC*CSD->nPp*CSD->nTp );
             break;
     case 24: if( !CSD->DD )
-                    Error( "Error", "Array DD not used in task");
+                    Error( "Error", "Array DD is not allocated in DCH!");
             rddar.readArray( "DD", CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp);
            break;
   }
@@ -954,7 +963,7 @@ void TNode::datach_realloc()
   CSD->A = new double[CSD->nIC*CSD->nDC];
   CSD->ICmm = new double[CSD->nIC];
   CSD->DCmm = new double[CSD->nDC];
-CSD->DCmm[0] = 0.0;   // Added by DK on 03.03.2007 
+CSD->DCmm[0] = 0.0;   // Added by DK on 03.03.2007
 
   CSD->TCval = new double[CSD->nTp];
   CSD->Pval = new double[CSD->nPp];
@@ -1195,7 +1204,7 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
 {
   if( CNode_ == 0)
     CNode_ = CNode;
-  
+
  if( CNode_->bIC )
  { delete[] CNode_->bIC;
    CNode_->bIC = 0;
@@ -1260,29 +1269,29 @@ void TNode::databr_reset( DATABR *CNode, long int level )
 {
 	//  FMT variables (units or dimensionsless) - to be used for storing them
 	//  at the nodearray level = 0.; normally not used in the single-node FMT-GEM coupling
-		CNode->Tm = 0.;    
-		CNode->dt = 0.;    
-		CNode->Dif = 0.;    
-		CNode->Vt = 0.;		
-		CNode->vp = 0.;		
-		CNode->eps = 0.;	
-		CNode->Km = 0.;		
-		CNode->Kf = 0.;		
-		CNode->S = 0.;	
-		CNode->Tr = 0.;     
-		CNode->h = 0.;		
-		CNode->rho = 0.;	
-		CNode->al = 0.;		
-		CNode->at = 0.;		
-		CNode->av = 0.;		
-		CNode->hDl = 0.;	
-		CNode->hDt = 0.;	
-		CNode->hDv = 0.;	
-		CNode->nto = 0.; //19	
+		CNode->Tm = 0.;
+		CNode->dt = 0.;
+		CNode->Dif = 0.;
+		CNode->Vt = 0.;
+		CNode->vp = 0.;
+		CNode->eps = 0.;
+		CNode->Km = 0.;
+		CNode->Kf = 0.;
+		CNode->S = 0.;
+		CNode->Tr = 0.;
+		CNode->h = 0.;
+		CNode->rho = 0.;
+		CNode->al = 0.;
+		CNode->at = 0.;
+		CNode->av = 0.;
+		CNode->hDl = 0.;
+		CNode->hDt = 0.;
+		CNode->hDv = 0.;
+		CNode->nto = 0.; //19
 
 		if(level <1 )
           return;
-		
+
    CNode->NodeHandle = 0;
    CNode->NodeTypeHY = normal;
    CNode->NodeTypeMT = normal;
@@ -1293,35 +1302,35 @@ void TNode::databr_reset( DATABR *CNode, long int level )
 // Chemical scalar variables
 	CNode->TC = 0.;
 	CNode->P = 0.;
-	CNode->Vs = 0.;  
-	CNode->Vi = 0.;   
-	CNode->Ms = 0.;   
-	CNode->Mi = 0.;    
-	CNode->Gs = 0.;    
-	CNode->Hs = 0.; 	
-	CNode->Hi = 0.;    
-	CNode->IC = 0.;    
-	CNode->pH = 0.;    
-	CNode->pe = 0.;     
-	CNode->Eh = 0.; //13     
+	CNode->Vs = 0.;
+	CNode->Vi = 0.;
+	CNode->Ms = 0.;
+	CNode->Mi = 0.;
+	CNode->Gs = 0.;
+	CNode->Hs = 0.;
+	CNode->Hi = 0.;
+	CNode->IC = 0.;
+	CNode->pH = 0.;
+	CNode->pe = 0.;
+	CNode->Eh = 0.; //13
 
 	if( level < 2 )
        return;
 
 // Data arrays - dimensions nICb, nDCb, nPHb, nPSb see in the DATACH structure
-	CNode->bIC = 0;  
-	CNode->rMB = 0;  
-	CNode->uIC = 0;  
-	CNode->xDC = 0;  
-	CNode->gam = 0; 
-   CNode->dul = 0;  
-   CNode->dll = 0; 
-   CNode->aPH = 0; 
-   CNode->xPH = 0;  
-   CNode->vPS = 0;  
-   CNode->mPS = 0;  
-   CNode->bPS = 0;                            
-   CNode->xPA = 0;                  
+	CNode->bIC = 0;
+	CNode->rMB = 0;
+	CNode->uIC = 0;
+	CNode->xDC = 0;
+	CNode->gam = 0;
+   CNode->dul = 0;
+   CNode->dll = 0;
+   CNode->aPH = 0;
+   CNode->xPH = 0;
+   CNode->vPS = 0;
+   CNode->mPS = 0;
+   CNode->bPS = 0;
+   CNode->xPA = 0;
    CNode->dRes1 = 0;
 }
 
@@ -1329,47 +1338,47 @@ void TNode::databr_reset( DATABR *CNode, long int level )
 void TNode::datach_reset()
 {
 	CSD->nIC = 0;
-	CSD->nDC = 0;    
-	CSD->nPH = 0;   
-	CSD->nPS = 0;    
-	CSD->nDCs = 0;   
-	CSD->nTp = 0;    
-	CSD->nPp = 0; 
+	CSD->nDC = 0;
+	CSD->nPH = 0;
+	CSD->nPS = 0;
+	CSD->nDCs = 0;
+	CSD->nTp = 0;
+	CSD->nPp = 0;
 	CSD->iGrd = 0;
-	CSD->nAalp = 0; 
-	CSD->nICb = 0;       
-	CSD->nDCb = 0;      	
-	CSD->nPHb = 0;     	
-	CSD->nPSb = 0;     
-	CSD->uRes1 = 0;     
+	CSD->nAalp = 0;
+	CSD->nICb = 0;
+	CSD->nDCb = 0;
+	CSD->nPHb = 0;
+	CSD->nPSb = 0;
+	CSD->uRes1 = 0;
 // Lists = 0; vectors and matrices
-	CSD->nDCinPH = 0; 
-	CSD->xIC = 0;   
-	CSD->xDC = 0;   
+	CSD->nDCinPH = 0;
+	CSD->xIC = 0;
+	CSD->xDC = 0;
 	CSD->xPH = 0;  //18
 
-	CSD->TCval = 0;  
-	CSD->Pval = 0; 
-	CSD->A = 0;   
-	CSD->Ttol = 0.;    
-	CSD->Ptol = 0.;    
-	CSD->dRes1 = 0.;   
-	CSD->dRes2 = 0.;  
-    CSD->ICmm = 0;  
-    CSD->DCmm = 0;  
-    CSD->DD = 0;    
-    CSD->roW = 0;  
-    CSD->epsW = 0;  
-    CSD->G0 = 0;   
-    CSD->V0 = 0;    
-    CSD->S0 = 0;   
-    CSD->H0 = 0;    
+	CSD->TCval = 0;
+	CSD->Pval = 0;
+	CSD->A = 0;
+	CSD->Ttol = 0.;
+	CSD->Ptol = 0.;
+	CSD->dRes1 = 0.;
+	CSD->dRes2 = 0.;
+    CSD->ICmm = 0;
+    CSD->DCmm = 0;
+    CSD->DD = 0;
+    CSD->roW = 0;
+    CSD->epsW = 0;
+    CSD->G0 = 0;
+    CSD->V0 = 0;
+    CSD->S0 = 0;
+    CSD->H0 = 0;
     CSD->Cp0 = 0;
     CSD->ICNL = 0;
     CSD->DCNL = 0;
     CSD->PHNL = 0;
-    CSD->ccIC = 0;  
-    CSD->ccDC = 0;  
-    CSD->ccPH = 0;  
+    CSD->ccIC = 0;
+    CSD->ccDC = 0;
+    CSD->ccPH = 0;
 }
 //-----------------------End of node_format.cpp--------------------------
