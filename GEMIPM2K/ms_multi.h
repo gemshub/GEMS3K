@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1246 2009-02-21 17:57:15Z wagner $
+// $Id: ms_multi.h 1248 2009-02-22 09:20:58Z wagner $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -455,10 +455,6 @@ class TMulti
     void IdealGas( long int jb, long int k, double *Zid );
     void IdealOneSite( long int jb, long int k, double *Zid );
     void IdealMultiSite( long int jb, long int k, double *Zid );
-    void IdealAqueous( long int jb, long int k, double *Zid );
-    void IdealSorption( long int jb, long int k, double *Zid );
-    void StandMoleFract();
-    void StandMolality();
 
 // ipm_main.cpp - numerical part of GEM IPM-2
     void MultiCalcMain( long int rLoop );

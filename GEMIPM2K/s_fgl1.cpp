@@ -153,7 +153,17 @@ long int TSIT::ExcessProp( double *Zex )
 // calculates ideal mixing properties
 long int TSIT::IdealProp( double *Zid )
 {
-	// add calculation here
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
 
 	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
@@ -1136,7 +1146,17 @@ long int TPitzer::ExcessProp( double *Zex )
 // calculates ideal mixing properties
 long int TPitzer::IdealProp( double *Zid )
 {
-	// add calculation here
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
 
 	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;

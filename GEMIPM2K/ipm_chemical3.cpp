@@ -1598,35 +1598,39 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 
     switch( ModCode )
     {
-		// check if gas, aqueous or other condensed solution phase (ideal gas?)
-		case SM_IDEAL:
-		case SM_REDKIS:
-		case SM_MARGB:
-		case SM_MARGT:
+		// check what solution phase (ideal gas?)
 		case SM_VANLAAR:
 		case SM_GUGGENM:
 		case SM_REGULAR:
 		case SM_NRTLLIQ:
 		case SM_WILSLIQ:
-		case SM_USERDEF:
 		case SM_OTHER:
-			IdealOneSite( jb, k, zid );
-			break;
 		case SM_CGFLUID:
 		case SM_PRFLUID:
 		case SM_SRFLUID:
-			IdealGas( jb, k, zid );
-			break;
+		case SM_AQSIT:
+		case SM_AQEXUQ:
+		case SM_AQPITZ:
+        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
+             TSolMod* aSM = phSolMod[k];
+             aSM->IdealProp( zid );
+              break;
+        }
+		case SM_IDEAL:
+		case SM_REDKIS:
+		case SM_MARGB:
+		case SM_MARGT:
 		case SM_AQDAV:
 		case SM_AQDH1:
 		case SM_AQDH2:
 		case SM_AQDH3:
 		case SM_AQDHH:
-		case SM_AQSIT:
-		case SM_AQEXUQ:
-		case SM_AQPITZ:
-			IdealAqueous( jb, k, zid );
+		case SM_USERDEF:
+		{
+			IdealOneSite( jb, k, zid );
 			break;
+		}
+
 		default:
 			break;
 
@@ -1636,7 +1640,7 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 }
 
 
-// Wrapper call for calculation of bulk phase ideal mixing properties
+// Wrapper call for retrieving bulk phase Darken quadratic terms
 void
 TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 {
@@ -1648,6 +1652,17 @@ TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 	{
 		zdq[j] = 0.0;
 	}
+
+	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+}
+
+
+// Wrapper call for retrieving bulk phase standard state terms
+void
+SolModStandProp ( long int jb, long int k, char ModCode )
+{
+	// order of phase properties: G, H, S, CP, V, A, U
+	// add if statement that checks DC class code (aqueous or not)
 
 	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
 }
@@ -1760,29 +1775,12 @@ void TMulti::IdealOneSite( long int jb, long int k, double *Zid )
 // calculates ideal mixing properties of condensed phases (multi-site mixing)
 void TMulti::IdealMultiSite( long int jb, long int k, double *Zid )
 {
-	// add calculation here
+	// reserved for future multi-site configurational property models
+
+	// add assignments to Zid here
 }
 
 
-// calculates ideal mixing properties of aqueous phases (molality scale)
-void TMulti::IdealAqueous( long int jb, long int k, double *Zid )
-{
-	// add calculation here
-}
-
-
-// calculates standard state properties of phase (mole fraction scale)
-void TMulti::StandMoleFract()
-{
-	// add calculation here
-}
-
-
-// calculates standard state properties of phase (molality scale)
-void TMulti::StandMolality()
-{
-	// add calculation here
-}
 
 
 
