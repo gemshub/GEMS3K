@@ -1611,6 +1611,7 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 		zid[j] = 0.0;
 	}
 
+	// needs to check for DC class state to catch ideal gas phase case
     switch( ModCode )
     {
 		// check what solution phase (ideal gas?)
@@ -1681,6 +1682,8 @@ TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 	{
 		zdq[j] = 0.0;
 	}
+
+	// data object for derivative properties needs to be added in Multi and DODs in scripts
 
 	// assignments
     Gdq = zdq[0];
@@ -1759,23 +1762,34 @@ void TMulti::Free_TSolMod()
 // calculates ideal mixing properties of gas phases
 void TMulti::IdealGas( long int jb, long int k, double *Zid )
 {
-	double T, P, R_T, R;
+	long int Nc, j;
+	double T, P, R_T, R, s, sc, sp;
 	double Gid, Hid, Sid, CPid, Vid, Aid, Uid;
+	double *X;
+
 	T = pmp->Tc;
 	P = pmp->Pc;
 	R_T = pmp->RT;
 	R = R_T / T;
+	Nc = pmp->L1[k];
+	X = pmp->Wx+jb;
 
-	// ideal gas changes from 1 bar to P (at T of interest)
+	s = 0.0;
+	for (j=0; j<Nc; j++)
+	{
+		s += X[j]*log(X[j]);
+	}
+	sc = (-1.)*R*s;
+	sp = (-1.)*R*log(P);
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
-	Sid = (-1.)*R*log(P);
-	Gid = Hid - T * Sid;
+	Sid = sc + sp;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*T;
 	Aid = Gid - Vid*P;
 	Uid = Hid - Vid*P;
-
-	// assignments
 	Zid[0] = Gid;
 	Zid[1] = Hid;
 	Zid[2] = Sid;
@@ -1783,7 +1797,6 @@ void TMulti::IdealGas( long int jb, long int k, double *Zid )
 	Zid[4] = Vid;
 	Zid[5] = Aid;
 	Zid[6] = Uid;
-
 }
 
 
@@ -1791,26 +1804,26 @@ void TMulti::IdealGas( long int jb, long int k, double *Zid )
 void TMulti::IdealOneSite( long int jb, long int k, double *Zid )
 {
 	long int Nc, j;
-	double *X;
-	double T, P, R_T, R, si;
+	double T, P, R_T, R, s;
 	double Gid, Hid, Sid, CPid, Vid, Aid, Uid;
-	Nc = pmp->L1[k];
-	X = pmp->Wx+jb;
+	double *X;
+
 	T = pmp->Tc;
 	P = pmp->Pc;
 	R_T = pmp->RT;
 	R = R_T / T;
+	Nc = pmp->L1[k];
+	X = pmp->Wx+jb;
 
-	// ideal mixing contributions
-	si = 0.0;
+	s = 0.0;
 	for (j=0; j<Nc; j++)
 	{
-		si += X[j]*log(X[j]);
+		s += X[j]*log(X[j]);
 	}
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
-	Sid = (-1.)*R*si;
+	Sid = (-1.)*R*s;
 	Gid = Hid - T * Sid;
 	Aid = Gid - Vid*P;
 	Uid = Hid - Vid*P;
@@ -1830,6 +1843,8 @@ void TMulti::IdealOneSite( long int jb, long int k, double *Zid )
 void TMulti::IdealMultiSite( long int jb, long int k, double *Zid )
 {
 	// reserved for future multi-site configurational property models
+	double Gid, Hid, Sid, CPid, Vid, Aid, Uid;
+
 
 	// add assignments to Zid here
 }

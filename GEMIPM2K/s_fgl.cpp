@@ -244,10 +244,20 @@ long int TPRSVcalc::ExcessProp( double *Zex )
 // calculates ideal mixing properties
 long int TPRSVcalc::IdealProp( double *Zid )
 {
+	long int j;
+	double s, sc, sp;
+
+	s = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		s += x[j]*log(x[j]);
+	}
+	sc = (-1.)*R_CONST*s;
+	sp = (-1.)*R_CONST*log(Pbar);
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
-	Sid = (-1.)*R_CONST*log(Pbar);
+	Sid = sc + sp;
 
 	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
@@ -1048,10 +1058,20 @@ long int TCGFcalc::ExcessProp( double *Zex )
 // calculates ideal mixing properties
 long int TCGFcalc::IdealProp( double *Zid )
 {
+	long int j;
+	double s, sc, sp;
+
+	s = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		s += x[j]*log(x[j]);
+	}
+	sc = (-1.)*R_CONST*s;
+	sp = (-1.)*R_CONST*log(Pbar);
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
-	Sid = (-1.)*R_CONST*log(Pbar);
+	Sid = sc + sp;
 
 	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
@@ -2538,10 +2558,20 @@ long int TSRKcalc::ExcessProp( double *Zex )
 // calculates ideal mixing properties
 long int TSRKcalc::IdealProp( double *Zid )
 {
+	long int j;
+	double s, sc, sp;
+
+	s = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		s += x[j]*log(x[j]);
+	}
+	sc = (-1.)*R_CONST*s;
+	sp = (-1.)*R_CONST*log(Pbar);
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
-	Sid = (-1.)*R_CONST*log(Pbar);
+	Sid = sc + sp;
 
 	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
