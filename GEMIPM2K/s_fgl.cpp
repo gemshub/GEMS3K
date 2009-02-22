@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1243 2009-02-18 15:12:43Z wagner $
+// $Id: s_fgl.cpp 1246 2009-02-21 17:57:15Z wagner $
 //
 // Copyright (C) 2004-2009  T.Wagner, S.Churakov, D.Kulik
 //
@@ -208,7 +208,7 @@ long int TPRSVcalc::MixMod()
 
 
 // High-level method to retrieve departure functions of the fluid mixture
-long int TPRSVcalc::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TPRSVcalc::ExcessProp( double *Zex )
 {
 	long int iRet;
 
@@ -221,14 +221,47 @@ long int TPRSVcalc::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
     	Error( "E71IPM IPMgamma: ",  buf );
     }
 
-	// assignments
-	Gex_ = DepPh[0];
-	Sex_ = DepPh[1];
-	Hex_ = DepPh[2];
-	CPex_ = DepPh[3];
-	Vex_ = DepPh[4];
+	// assignments (departure functions)
+	Gex = DepPh[0];
+	Sex = DepPh[1];
+	Hex = DepPh[2];
+	CPex = DepPh[3];
+	Vex = DepPh[4];
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
 
 	return iRet;
+}
+
+
+// calculates ideal mixing properties
+long int TPRSVcalc::IdealProp( double *Zid )
+{
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*log(Pbar);
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
 }
 
 
@@ -587,7 +620,7 @@ long int TPRSVcalc::DepartureFunct( double *fugpure )
     long int i, j, iRet=0;
 	double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0.;
 	double A, B;
-	double Gig, Hig, Sig, CPig, Gdep, Hdep, Sdep, CPdep;
+	double Gdep, Hdep, Sdep, CPdep;
 	double K, dK, d2K, Q, dQ, d2Q;
 	double damix, d2amix, ai, aj, dai, daj, d2ai, d2aj;
 	double cv, dPdT, dPdV, dVdT;
@@ -603,12 +636,6 @@ long int TPRSVcalc::DepartureFunct( double *fugpure )
 	iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix );
 	A = amix*Pbar/(pow(R_CONST, 2.)*pow(Tk, 2.));
 	B = bmix*Pbar/(R_CONST*Tk);
-
-	// ideal gas changes from 1 bar to P (at T of interest)
-	Hig = 0.;
-	Sig = (-1.)*R_CONST*log(Pbar);
-	Gig = Hig - Tk*Sig;
-	CPig = 0.;
 
 	// calculate total state functions of the mixture
 	damix = 0.;
@@ -654,9 +681,9 @@ long int TPRSVcalc::DepartureFunct( double *fugpure )
 	dVdT = (-1.)*(1./dPdV)*dPdT;
 	CPdep = cv + Tk*dPdT*dVdT - R_CONST;
 
-	// assignments
-	DepPh[0] = Gdep + Gig;
-	DepPh[1] = Sdep + Sig;
+	// assignments (departure functions)
+	DepPh[0] = Gdep;
+	DepPh[1] = Sdep;
 	DepPh[2] = Hdep;
 	DepPh[3] = CPdep;
 	DepPh[4] = vmix;
@@ -970,16 +997,9 @@ long int TCGFcalc::MixMod()
 }
 
 
-long int TCGFcalc::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TCGFcalc::ExcessProp( double *Zex )
 {
 	double roro; // changed, 21.06.2008 (TW)
-	double Gig, Sig, Hig, CPig;
-
-	// ideal gas changes from 1 bar to P (at T of interest)
-	Hig = 0.;
-	Sig = (-1.)*R_CONST*log(Pbar);
-	Gig = Hig - Tk*Sig;
-	CPig = 0.;
 
 	if( Tk >= 273.15 && Tk < 1e4 && Pbar >= 1e-6 && Pbar < 1e5 )
 	{
@@ -1005,12 +1025,45 @@ long int TCGFcalc::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double 
 		DepPh[4] = 0.;
 	}
 
-	// assignments
-	Gex_ = DepPh[0] + Gig;
-	Sex_ = DepPh[1] + Sig;
-	Hex_ = DepPh[2];
-	CPex_ = DepPh[3];
-	Vex_ = DepPh[4];
+	// assignments (departure functions)
+	Gex = DepPh[0];
+	Sex = DepPh[1];
+	Hex = DepPh[2];
+	CPex = DepPh[3];
+	Vex = DepPh[4];
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
+	return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TCGFcalc::IdealProp( double *Zid )
+{
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*log(Pbar);
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
 
 	return 0;
 }
@@ -1165,7 +1218,7 @@ long int TCGFcalc::CGDepartureFunct( double *X, double *param, double *param1, u
 	CPdep = 0.;
 	vmix = Z*R_CONST*Tk/Pbar;
 
-	// assignments
+	// assignments (departure functions)
 	DepPh[0] = Gdep;
 	DepPh[1] = Sdep;
 	DepPh[2] = Hdep;
@@ -2448,9 +2501,8 @@ long int TSRKcalc::MixMod()
 
 
 // High-level method to retrieve departure functions of the fluid mixture
-long int TSRKcalc::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TSRKcalc::ExcessProp( double *Zex )
 {
-	// add excess property calculations
 	long int iRet;
 
 	iRet = DepartureFunct( Pparc );
@@ -2462,15 +2514,48 @@ long int TSRKcalc::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double 
     	Error( "E71IPM IPMgamma: ",  buf );
     }
 
-	// assignments
-	Gex_ = DepPh[0];
-	Sex_ = DepPh[1];
-	Hex_ = DepPh[2];
-	CPex_ = DepPh[3];
-	Vex_ = DepPh[4];
+	// assignments (departure functions)
+	Gex = DepPh[0];
+	Sex = DepPh[1];
+	Hex = DepPh[2];
+	CPex = DepPh[3];
+	Vex = DepPh[4];
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
 
 	return iRet;
 
+}
+
+
+// calculates ideal mixing properties
+long int TSRKcalc::IdealProp( double *Zid )
+{
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*log(Pbar);
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
 }
 
 
@@ -2811,7 +2896,7 @@ long int TSRKcalc::DepartureFunct( double *fugpure )
 	long int i, j, iRet=0;
 	double fugmix=0., zmix=0., vmix=0., amix=0., bmix=0.;
 	double A, B;
-	double Gig, Hig, Sig, CPig, Gdep, Hdep, Sdep, CPdep;
+	double Gdep, Hdep, Sdep, CPdep;
 	double K, dK, d2K, Q, dQ, d2Q;
 	double damix, d2amix, ai, aj, dai, daj, d2ai, d2aj;
 	double cv, dPdT, dPdV, dVdT;
@@ -2827,12 +2912,6 @@ long int TSRKcalc::DepartureFunct( double *fugpure )
 	iRet = FugacityMix( amix, bmix, fugmix, zmix, vmix);
 	A = amix*Pbar/(pow(R_CONST, 2.)*pow(Tk, 2.));
 	B = bmix*Pbar/(R_CONST*Tk);
-
-	// ideal gas changes from 1 bar to P (at T of interest)
-	Hig = 0.;
-	Sig = (-1.)*R_CONST*log(Pbar);
-	Gig = Hig - Tk*Sig;
-	CPig = 0.;
 
 	// calculate total state functions of the mixture
 	damix = 0.;
@@ -2877,9 +2956,9 @@ long int TSRKcalc::DepartureFunct( double *fugpure )
 	dVdT = (-1.)*(1./dPdV)*dPdT;
 	CPdep = cv + Tk*dPdT*dVdT - R_CONST;
 
-	// assignments
-	DepPh[0] = Gdep + Gig;
-	DepPh[1] = Sdep + Sig;
+	// assignments (departure functions)
+	DepPh[0] = Gdep;
+	DepPh[1] = Sdep;
 	DepPh[2] = Hdep;
 	DepPh[3] = CPdep;
 	DepPh[4] = vmix;

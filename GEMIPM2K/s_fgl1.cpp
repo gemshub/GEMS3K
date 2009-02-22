@@ -131,18 +131,46 @@ long int TSIT::MixMod()
 }
 
 
-long int TSIT::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TSIT::ExcessProp( double *Zex )
 {
 	// add excess property calculations
 
-	// final assigments
-	Gex_ = Gex;
-	Vex_ = Vex;
-	Hex_ = Hex;
-	Sex_ = Sex;
-	CPex_ = CPex;
+	// assigments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
 	return 0;
 }
+
+
+// calculates ideal mixing properties
+long int TSIT::IdealProp( double *Zid )
+{
+	// add calculation here
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
 
 
 
@@ -153,6 +181,7 @@ long int TSIT::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex
 //    converted by s.Dmytrieva into C++ program
 //    in December 2008 for GEOTHERM CCES project
 //=============================================================================================
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Generic constructor for the TPitzer class
@@ -1085,18 +1114,46 @@ double TPitzer::lnGammaN(  long int N )
 }
 
 
-long int TPitzer::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TPitzer::ExcessProp( double *Zex )
 {
 	// add excess property calculations
 
-	// final assigments
-	Gex_ = Gex;
-	Vex_ = Vex;
-	Hex_ = Hex;
-	Sex_ = Sex;
-	CPex_ = CPex;
+	// assigments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
 	return 0;
 }
+
+
+// calculates ideal mixing properties
+long int TPitzer::IdealProp( double *Zid )
+{
+	// add calculation here
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
 
 
 
@@ -1373,15 +1430,13 @@ long int TEUNIQUAC::MixMod()
 }
 
 
-long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TEUNIQUAC::ExcessProp( double *Zex )
 {
 	// add excess property calculations
 	int j, i, w;
 	double Mw, Xw, IS, b, c;
 	double A, dAdT, dAdP, d2AdT2;
 	double phiti, phthi, RR, QQ, N, TPI, tpx, TPX, dtpx, DTPX, CON;
-	double gI, sI, gi, si;
-	double gE, hE, sE, cpE, vE;
 	double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX;   // DH, C and R contributions to properties
 	double dg, d2g, dgRI, d2gRI, dgRX, d2gRX, dgDH, d2gDH, dgDHdP;
 	double RHO, dRdT, d2RdT2, dRdP, EPS, dEdT, d2EdT2, dEdP;
@@ -1446,24 +1501,12 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 		Theta[j] = x[j]*Q[j]/QQ;
 	}
 
-	// calculating bulk phase ideal mixing contributions
-	gi = 0.0;
-	si = 0.0;
-
-	for (j=0; j<NComp; j++)
-	{
-		gi += x[j]*log(x[j]);
-		si += x[j]*log(x[j]);
-	}
-	gI = R_CONST*Tk*gi;
-	sI = - R_CONST*si;
-
 	// calculation of bulk phase excess properties
-	gE = 0.0;
-	hE = 0.0;
-	sE = 0.0;
-	cpE = 0.0;
-	vE = 0.0;
+	Gex = 0.0;
+	Hex = 0.0;
+	Sex = 0.0;
+	CPex = 0.0;
+	Vex = 0.0;
 	gC = 0.0;
 	gR = 0.0;
 	hR = 0.0;
@@ -1536,21 +1579,56 @@ long int TEUNIQUAC::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 	// increment thermodynamic properties
 	dg = ( dgDH + dgRX + dgRI );
 	d2g = ( d2gDH + d2gRX + d2gRI );
-	gE = ( gDH + gRX + gCX - gRI - gCI ) * R_CONST * Tk;
-	hE = dg * pow(Tk,2.) * R_CONST;
-	cpE = ( 2.*Tk*dg + pow(Tk,2.)*d2g ) * R_CONST;
-	sE = (hE-gE)/Tk;
-	vE = dgDHdP;
+	Gex = ( gDH + gRX + gCX - gRI - gCI ) * R_CONST * Tk;
+	Hex = dg * pow(Tk,2.) * R_CONST;
+	CPex = ( 2.*Tk*dg + pow(Tk,2.)*d2g ) * R_CONST;
+	Sex = (Hex-Gex)/Tk;
+	Vex = dgDHdP;
 
-	// final assigments
-	Gex_ = gE + gI;
-	Vex_ = vE;
-	Hex_ = hE;
-	Sex_ = sE + sI;
-	CPex_ = cpE;
+	// assigments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
 	return 0;
 }
 
+
+// calculates ideal mixing properties
+long int TEUNIQUAC::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
 
 
 // Output of test results into text file (standalone variant only)
@@ -1601,5 +1679,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
 
 
 
+
 //--------------------- End of s_fgl1.cpp ---------------------------
+
 

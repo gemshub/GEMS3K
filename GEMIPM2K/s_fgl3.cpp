@@ -125,7 +125,7 @@ long int TModOther::MixMod()
 
 
 // calculates excess properties
-long int TModOther::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TModOther::ExcessProp( double *Zex )
 {
     /*
 	if( !strncmp( PhaseName, "FELDSPAR", 8 ) )
@@ -138,9 +138,51 @@ long int TModOther::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double
 		TModOther::PT_Garnet();
 	}
     */
+
+	// assignments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
 	return 0;
 }
 
+
+// calculates ideal mixing properties
+long int TModOther::IdealProp( double *Zid )
+{
+    /*
+	if( !strncmp( PhaseName, "FELDSPAR", 8 ) )
+	{
+		TModOther::PT_Feldspar();
+	}
+
+	else if{ !strncmp( PhaseName, "Garnet", 6 ) )
+	{
+		TModOther::PT_Garnet();
+	}
+    */
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
 
 
 

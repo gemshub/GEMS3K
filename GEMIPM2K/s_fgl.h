@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1243 2009-02-18 15:12:43Z wagner $
+// $Id: s_fgl.h 1246 2009-02-21 17:57:15Z wagner $
 //
 // Copyright (C) 2003-2009  T.Wagner, S.Churakov, D.Kulik, S.Dmitrieva
 //
@@ -63,11 +63,9 @@ class TSolMod
         double Gam;   	// work cell for activity coefficient of end member
         double lnGamRT;
         double lnGam;
-        double Gex;   	// Molar excess Gibbs energy
-        double Vex;   	// Excess molar volume
-        double Hex;   	// Excess molar enthalpy
-        double Sex;   	// Excess molar entropy
-        double CPex;  	// Excess heat capacity
+        double Gex, Hex, Sex, CPex, Vex, Aex, Uex;   // molar excess properties
+        double Gid, Hid, Sid, CPid, Vid, Aid, Uid;   // molar ideal mixing properties
+        double Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq;   // molar Darken quadratic terms
         double *lnGamma;   // Pointer to ln activity coefficients of end members
                            // (memory must be provided from the calling program)
 
@@ -98,13 +96,33 @@ class TSolMod
 			return 0;
 		};
 
-		virtual long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+		virtual long int ExcessProp( double *Zex )
 		{
-			Gex_ = Gex;
-			Vex_ = Vex;
-			Hex_ = Hex;
-			Sex_ = Sex;
-			CPex_ = CPex;
+			Aex = Gex - Vex*Pbar;
+			Uex = Hex - Vex*Pbar;
+			Zex[0] = Gex;
+			Zex[1] = Hex;
+			Zex[2] = Sex;
+			Zex[3] = CPex;
+			Zex[4] = Vex;
+			Zex[5] = Aex;
+			Zex[6] = Uex;
+			return 0;
+		};
+
+		virtual long int IdealProp( double *Zid )
+		{
+			Gid = Hid - Sid*Tk;
+			Aid = Gid - Vid*Pbar;
+			Uid = Hid - Vid*Pbar;
+			Zid[0] = Gid;
+			Zid[1] = Hid;
+			Zid[2] = Sid;
+			Zid[3] = CPid;
+			Zid[4] = Vid;
+			Zid[5] = Aid;
+			Zid[6] = Uid;
+
 			return 0;
 		};
 
@@ -332,7 +350,10 @@ class TCGFcalc: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 		// CGofPureGases - Calc. fugacity for 1 species at X=1
 		long int CGcalcFug( void );  // Calc. fugacity for 1 species at X=1
@@ -405,7 +426,10 @@ class TPRSVcalc: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 		// Calculates pure species properties (called from DCthermo)
 		long int PRCalcFugPure( void );
@@ -482,7 +506,10 @@ class TSRKcalc: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 		// Calculates pure species properties (called from DCthermo)
 		long int SRCalcFugPure( void );
@@ -541,7 +568,10 @@ class TVanLaar: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 };
 
@@ -581,7 +611,10 @@ class TRegular: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 };
 
@@ -622,7 +655,10 @@ class TRedlichKister: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 };
 
@@ -667,7 +703,10 @@ class TNRTL: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 };
 
@@ -706,7 +745,10 @@ class TWilson: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 };
 
@@ -748,7 +790,10 @@ class TSIT: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 		// Calculation of internal tables (at each GEM iteration)
 		//long int PTparam()
@@ -897,7 +942,10 @@ public:
 	long int Pitzer_calc_Gamma( );
 
     // calculates excess properties
-    long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+    long int ExcessProp( double *Zex );
+
+	// calculates ideal mixing properties
+	long int IdealProp( double *Zid );
 
 	void Pitzer_test_out( const char *path );
 
@@ -954,7 +1002,10 @@ class TEUNIQUAC: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 		void Euniquac_test_out( const char *path );
 
@@ -1004,7 +1055,10 @@ class TModOther: public TSolMod
 		long int MixMod();
 
 		// calculates excess properties
-		long int ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ );
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
 
 		// functions for individual models
 		long int Feldspar1_PTParam();

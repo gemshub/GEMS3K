@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1227 2009-02-11 13:32:09Z gems $
+// $Id: ms_multi.h 1246 2009-02-21 17:57:15Z wagner $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -414,10 +414,12 @@ class TMulti
                     double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
     void ConCalc( double X[], double XF[], double XFA[]);
     long int GouyChapman(  long int jb, long int je, long int k );
+
 //  Surface activity coefficient terms
     long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
 //    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
     double PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag = 0L ); // Added 26.06.08
+
 // ipm_chemical3.cpp
     void IS_EtaCalc();
     void pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb );
@@ -432,20 +434,31 @@ class TMulti
     void DebyeHueckel2Kjel( long int jb, long int je, long int jpb, long int jdb, long int k );
     void DebyeHueckel1LL( long int jb, long int je, long int k );
     void Davies03temp( long int jb, long int je, long int jpb, long int k );
-// fluid mixtures
+// fluid mixtures (old functions)
 //    void ChurakovFluid( long int jb, long int je, long int jpb, long int jdb, long int k );
     void CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
 //    void PRSVFluid( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
     void PRSVofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
-// condensed mixtures
+// Condensed mixtures (old models)
     void RedlichKister( long int jb, long int je, long int jpb, long int jdb, long int k );
     void MargulesBinary( long int jb, long int je, long int jpb, long int jdb, long int k );
     void MargulesTernary( long int jb, long int je, long int jpb, long int jdb, long int k );
 // Generic solution model calls
-void SolModCreate( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
-void SolModParPT( long int k, char ModCode );
-void SolModActCoeff( long int k, char ModCode );
-void SolModExcessParam( long int k, char ModCode );
+    void SolModCreate( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb, char ModCode );
+    void SolModParPT( long int k, char ModCode );
+    void SolModActCoeff( long int k, char ModCode );
+    void SolModExcessProp( long int k, char ModCode );
+    void SolModIdealProp ( long int jb, long int k, char ModCode );
+    void SolModStandProp ( long int jb, long int k, char ModCode );
+    void SolModDarkenProp ( long int jb, long int k, char ModCode );
+// Specific phase property calculation functions
+    void IdealGas( long int jb, long int k, double *Zid );
+    void IdealOneSite( long int jb, long int k, double *Zid );
+    void IdealMultiSite( long int jb, long int k, double *Zid );
+    void IdealAqueous( long int jb, long int k, double *Zid );
+    void IdealSorption( long int jb, long int k, double *Zid );
+    void StandMoleFract();
+    void StandMolality();
 
 // ipm_main.cpp - numerical part of GEM IPM-2
     void MultiCalcMain( long int rLoop );

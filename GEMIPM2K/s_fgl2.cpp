@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1243 2009-02-18 15:12:43Z wagner $
+// $Id: s_fgl2.cpp 1246 2009-02-21 17:57:15Z wagner $
 //
 // Copyright (c) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -36,7 +36,7 @@ TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long in
     Tk(T_k), Pbar(P_bar)
 
 {
-    // pointer assignment
+    // pointer assignments
     aIPx = arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = arIPc;
     aIP = new double[ NPar ];
@@ -49,9 +49,33 @@ TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long in
     else aDC = 0;
     x = arWx;
     phVOL = aphVOL;
-//    aZ = arZ;
-//    aM =	arM;
     lnGamma = arlnGam;
+
+    // initialize phase properties
+    Gex = 0.0;
+    Hex = 0.0;
+    Sex = 0.0;
+    CPex = 0.0;
+    Vex = 0.0;
+    Aex = 0.0;
+    Uex = 0.0;
+
+    Gid = 0.0;
+    Hid = 0.0;
+    Sid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Aid = 0.0;
+    Uid = 0.0;
+
+    Gdq = 0.0;
+    Hdq = 0.0;
+    Sdq = 0.0;
+    CPdq = 0.0;
+    Vdq = 0.0;
+    Adq = 0.0;
+    Udq = 0.0;
+
 }
 
 
@@ -216,12 +240,11 @@ long int TVanLaar::MixMod()
 
 
 // calculates bulk phase excess properties
-long int TVanLaar::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TVanLaar::ExcessProp( double *Zex )
 {
 	long int ip, j, i1, i2;
 	double sumPhi; // Sum of Phi terms
-	double gE, vE, hE, sE, cpE, uE;
-	double gi, si, gI, sI;
+	double g, v, s, u;
 
 	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
@@ -240,47 +263,75 @@ long int TVanLaar::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double 
 	for (j=0; j<NComp; j++)
 	    Phi[j] = x[j]*PsVol[j]/sumPhi;
 
-	// calculating bulk phase ideal mixing contributions
-	gi = 0.0;
-	si = 0.0;
-
-	for (j=0; j<NComp; j++)
-	{
-		gi += x[j]*log(x[j]);
-		si += x[j]*log(x[j]);
-	}
-	gI = R_CONST*Tk*gi;
-	sI = - R_CONST*si;
-
 	// calculate bulk phase excess properties
-	gE = 0.0;
-	sE = 0.0;
-	hE = 0.0;
-	cpE = 0.0;
-	vE = 0.0;
-	uE = 0.0;
+	g = 0.0;
+	s = 0.0;
+	v = 0.0;
+	u = 0.0;
 
 	for (ip=0; ip<NPar; ip++)
 	{
 		i1 = aIPx[MaxOrd*ip];
 	    i2 = aIPx[MaxOrd*ip+1];
-	    gE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
-	    vE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
-	    uE += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
-	    sE -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
+	    g += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
+	    v += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
+	    u += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
+	    s -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
 	 }
 
-	 hE = uE+vE*Pbar;
+	 Gex = g;
+	 Sex = s;
+	 CPex = 0.0;
+	 Vex = v;
+	 Uex = u;
+	 Hex = Uex + Vex*Pbar;
 
-	 // assignments
-	 Gex_ = gE + gI;
-	 Sex_ = sE + sI;
-	 Hex_ = hE;
-	 CPex_ = cpE;
-	 Vex_ = vE;
+	 // assignments (excess properties)
+	 Aex = Gex - Vex*Pbar;
+	 Uex = Hex - Vex*Pbar;
+	 Zex[0] = Gex;
+	 Zex[1] = Hex;
+	 Zex[2] = Sex;
+	 Zex[3] = CPex;
+	 Zex[4] = Vex;
+	 Zex[5] = Aex;
+	 Zex[6] = Uex;
 
 	 return 0;
 }
+
+
+// calculates ideal mixing properties
+long int TVanLaar::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
 
 
 
@@ -386,56 +437,83 @@ long int TRegular::MixMod()
 
 
 // calculates bulk phase excess properties
-long int TRegular::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TRegular::ExcessProp( double *Zex )
 {
-	long int ip, j, i1, i2;
-	double gE, vE, hE, sE, cpE, uE;
-	double gI, sI, gi, si;
+	long int ip, i1, i2;
+	double g, v, s, u;
 
 	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
 
-	// calculating bulk phase ideal mixing contributions
-	gi = 0.0;
-	si = 0.0;
-
-	for (j=0; j<NComp; j++)
-	{
-		gi += x[j]*log(x[j]);
-		si += x[j]*log(x[j]);
-	}
-	gI = R_CONST*Tk*gi;
-	sI = - R_CONST*si;
-
 	// calculate bulk phase excess properties
-	gE = 0.0;
-	sE = 0.0;
-	hE = 0.0;
-	cpE = 0.0;
-	vE = 0.0;
-	uE = 0.0;
+	g = 0.0;
+	s = 0.0;
+	v = 0.0;
+	u = 0.0;
 
 	for (ip=0; ip<NPar; ip++)
 	{
 		i1 = aIPx[MaxOrd*ip];
 		i2 = aIPx[MaxOrd*ip+1];
-		gE += x[i1]*x[i2]*Wpt[ip];
-		vE += x[i1]*x[i2]*Wv[ip];
-		uE += x[i1]*x[i2]*Wu[ip];
-		sE -= x[i1]*x[i2]*Ws[ip];
+		g += x[i1]*x[i2]*Wpt[ip];
+		v += x[i1]*x[i2]*Wv[ip];
+		u += x[i1]*x[i2]*Wu[ip];
+		s -= x[i1]*x[i2]*Ws[ip];
 	}
 
-	hE = uE+vE*Pbar;
+	Gex = g;
+	Sex = s;
+	CPex = 0.0;
+	Vex = v;
+	Uex = u;
+	Hex = Uex + Vex*Pbar;
 
-	// assignments
-	Gex_ = gE + gI;
-	Sex_ = sE + sI;
-	Hex_ = hE;
-	CPex_ = cpE;
-	Vex_ = vE;
+	// assignments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
 
 	return 0;
 }
+
+
+// calculates ideal mixing properties
+long int TRegular::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
 
 
 
@@ -595,36 +673,22 @@ long int TRedlichKister::MixMod()
 
 
 // calculates bulk phase excess properties
-long int TRedlichKister::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TRedlichKister::ExcessProp( double *Zex )
 {
-	long int ip, j;
+	long int ip;
 	long int i1, i2;
 	double LU, LS, LCP, LV, LPT;
-	double gE, vE, hE, sE, cpE, uE;
-	double gI, sI, gi, si;
+	double g, v, s, cp, u;
 
 	if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
 
-	// calculating bulk phase ideal mixing contributions
-	gi = 0.0;
-	si = 0.0;
-
-	for (j=0; j<NComp; j++)
-	{
-		gi += x[j]*log(x[j]);
-		si += x[j]*log(x[j]);
-	}
-	gI = R_CONST*Tk*gi;
-	sI = - R_CONST*si;
-
    	// calculate bulk phase excess properties
-   	gE = 0.0;
-   	sE = 0.0;
-   	hE = 0.0;
-   	cpE = 0.0;
-   	vE = 0.0;
-   	uE = 0.0;
+   	g = 0.0;
+   	s = 0.0;
+   	cp = 0.0;
+   	v = 0.0;
+   	u = 0.0;
 
    	for (ip=0; ip<NPar; ip++)
    	{
@@ -653,24 +717,67 @@ long int TRedlichKister::ExcessProp( double &Gex_, double &Vex_, double &Hex_, d
       			+ (-Lcp[ip][2])*pow((x[i1]-x[i2]),2.)
       			+ (-Lcp[ip][3])*pow((x[i1]-x[i2]),3.);
 
-      	gE += x[i1]*x[i2]*LPT;
-      	vE += x[i1]*x[i2]*LV;
-      	uE += x[i1]*x[i2]*LU;
-      	sE += x[i1]*x[i2]*LS;
-      	cpE += x[i1]*x[i2]*LCP;
+      	g += x[i1]*x[i2]*LPT;
+      	v += x[i1]*x[i2]*LV;
+      	u += x[i1]*x[i2]*LU;
+      	s += x[i1]*x[i2]*LS;
+      	cp += x[i1]*x[i2]*LCP;
   	}
 
-   	hE = uE+vE*Pbar;
+	Gex = g;
+	Sex = s;
+	CPex = cp;
+	Vex = v;
+	Uex = u;
+	Hex = Uex + Vex*Pbar;
 
-	// assignments
-	Gex_ = gE + gI;
-	Sex_ = sE + sI;
-	Hex_ = hE;
-	CPex_ = cpE;
-	Vex_ = vE;
+	// assignments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
 
 	return 0;
 }
+
+
+// calculates ideal mixing properties
+long int TRedlichKister::IdealProp( double *Zid )
+{
+
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
 
 
 
@@ -861,35 +968,21 @@ long int TNRTL::MixMod()
 
 
 // calculates bulk phase excess properties
-long int TNRTL::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TNRTL::ExcessProp( double *Zex )
 {
 	long int  j, i;
 	double U, dU, V, dV, d2U, d2V;
 	double g, dg, d2g;
-	double gE, vE, hE, sE, cpE;
-	double gI, sI, gi, si;
 
 	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
 
-	// calculating bulk phase ideal mixing contributions
-	gi = 0.0;
-	si = 0.0;
-
-	for (j=0; j<NComp; j++)
-	{
-		gi += x[j]*log(x[j]);
-		si += x[j]*log(x[j]);
-	}
-	gI = R_CONST*Tk*gi;
-	sI = - R_CONST*si;
-
 	// calculate bulk phase excess properties
-   	gE = 0.0;
-   	sE = 0.0;
-   	hE = 0.0;
-   	cpE = 0.0;
-   	vE = 0.0;
+   	Gex = 0.0;
+   	Sex = 0.0;
+   	Hex = 0.0;
+   	CPex = 0.0;
+   	Vex = 0.0;
    	g = 0.0;
    	dg = 0.0;
    	d2g = 0.0;
@@ -919,20 +1012,57 @@ long int TNRTL::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Se
 	}
 
    	// final calculations
-	gE = g*R_CONST*Tk;
-	hE = -R_CONST*pow(Tk,2.)*dg;
-	sE = (hE-gE)/Tk;
-	cpE = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+	Gex = g*R_CONST*Tk;
+	Hex = -R_CONST*pow(Tk,2.)*dg;
+	Sex = (Hex-Gex)/Tk;
+	CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
-	// assignments
-	Gex_ = gE + gI;
-	Sex_ = sE + sI;
-	Hex_ = hE;
-	CPex_ = cpE;
-	Vex_ = vE;
+	// assignments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
 
 	return 0;
 }
+
+
+// calculates ideal mixing properties
+long int TNRTL::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
 
 
 
@@ -1068,35 +1198,21 @@ long int TWilson::MixMod()
 
 
 // calculates bulk phase excess properties
-long int TWilson::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &Sex_, double &CPex_ )
+long int TWilson::ExcessProp( double *Zex )
 {
 	long int  j, i;
 	double U, dU, d2U;
 	double g, dg, d2g;
-	double gE, vE, hE, sE, cpE;
-	double gI, sI, gi, si;
 
 	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
 
-	// calculating bulk phase ideal mixing contributions
-	gi = 0.0;
-	si = 0.0;
-
-	for (j=0; j<NComp; j++)
-	{
-		gi += x[j]*log(x[j]);
-		si += x[j]*log(x[j]);
-	}
-	gI = R_CONST*Tk*gi;
-	sI = - R_CONST*si;
-
 	// calculate bulk phase excess properties
-	gE = 0.0;
-	sE = 0.0;
-	hE = 0.0;
-	cpE = 0.0;
-	vE = 0.0;
+	Gex = 0.0;
+	Sex = 0.0;
+	Hex = 0.0;
+	CPex = 0.0;
+	Vex = 0.0;
 	g = 0.0;
 	dg = 0.0;
 	d2g = 0.0;
@@ -1118,21 +1234,60 @@ long int TWilson::ExcessProp( double &Gex_, double &Vex_, double &Hex_, double &
 	}
 
 	// final calculations
-	gE = g*R_CONST*Tk;
-	hE = -R_CONST*pow(Tk,2.)*dg;
-	sE = (hE-gE)/Tk;
-	cpE = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+	Gex = g*R_CONST*Tk;
+	Hex = -R_CONST*pow(Tk,2.)*dg;
+	Sex = (Hex-Gex)/Tk;
+	CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
-	// assignments
-	Gex_ = gE + gI;
-	Sex_ = sE + sI;
-	Hex_ = hE;
-	CPex_ = cpE;
-	Vex_ = vE;
+	// assignments (excess properties)
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
+	return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TWilson::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+
+	// assignments (ideal mixing properties)
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
 
 	return 0;
 }
 
 
 
+
+
 //--------------------- End of s_fgl2.cpp ---------------------------
+
+

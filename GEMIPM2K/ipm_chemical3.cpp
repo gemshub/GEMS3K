@@ -1173,13 +1173,13 @@ void TMulti::Davies03temp( long int jb, long int je, long int jpb, long int k )
 // Implemented by KD on 31 July 2003
 void TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long int k )
 {
-	double T, R_T;
+	double T, P, R_T;
 	double a0, a1, a2, lnGam1, lnGam2, X1, X2;
-	double gE, vE, hE, sE, cpE, uE;
-	double gI, sI, gi, si;
+	double gE, vE, hE, sE, cpE, aE, uE;
 
 	// load parameters
 	T = pmp->Tc;
+	P = pmp->Pc;
 	R_T = pmp->RT;
 	a0 = pmp->PMc[jpb+0];
 	a1 = pmp->PMc[jpb+1];  // in regular model should be 0
@@ -1193,19 +1193,14 @@ void TMulti::RedlichKister( long int jb, long int, long int jpb, long int, long 
 	lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
 	lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
 
-	// ideal mixing contributions, added 31.01.2009 (TW)
-	gi = X1*log(X1) + X2*log(X2);
-	si = X1*log(X1) + X2*log(X2);
-	gI = gi * R_T;
-	sI = - si * R_T / T;
-
 	// excess properties, added 29.05.2008 (TW)
 	gE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* R_T;
 	vE = 0.0;
 	uE = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* R_T;
 	sE = 0.0;
 	cpE = 0.0;
-	hE = uE;
+	hE = uE + vE*P;
+	aE = gE - vE*P;
 
 	// assignments
 	pmp->lnGam[jb] = lnGam1;
@@ -1221,8 +1216,7 @@ void TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long
 	double T, P, R_T;
 	double WU1, WS1, WV1, WU2, WS2, WV2, WG1, WG2,
 		a1, a2, lnGam1, lnGam2, X1, X2;
-	double gE, vE, hE, sE, cpE, uE;
-	double gI, sI, gi, si;
+	double gE, vE, hE, sE, cpE, aE, uE;
 
 	// load parameters
 	T = pmp->Tc;
@@ -1249,19 +1243,14 @@ void TMulti::MargulesBinary( long int jb, long int, long int jpb, long int, long
 	lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
 	lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
 
-	// ideal mixing contributions, added 31.01.2009 (TW)
-	gi = X1*log(X1) + X2*log(X2);
-	si = X1*log(X1) + X2*log(X2);
-	gI = gi * R_T;
-	sI = - si * R_T / T;
-
 	// excess properties, extended 29.05.2008 (TW)
 	gE = X1*X2*( X2*WG1 + X1*WG2 );
 	vE = X1*X2*( X2*WV1 + X1*WV2 );
 	uE = X1*X2*( X2*WU1 + X1*WU2 );
 	sE = X1*X2*( X2*WS1 + X1*WS2 );
 	cpE = 0.0;
-	hE = uE+vE*P;
+	hE = uE + vE*P;
+	aE = gE - vE*P;
 
 	// assignments
 	pmp->lnGam[jb] = lnGam1;
@@ -1280,8 +1269,7 @@ void TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, lon
 	double WU12, WS12, WV12, WU13, WS13, WV13, WU23, WS23, WV23,
 		WU123, WS123, WV123, WG12, WG13, WG23, WG123,
         a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
-	double gE, vE, hE, sE, cpE, uE;
-	double gI, sI, gi, si;
+	double gE, vE, hE, sE, cpE, aE, uE;
 
 	// load parameters
 	T = pmp->Tc;
@@ -1323,19 +1311,14 @@ void TMulti::MargulesTernary( long int jb, long int, long int jpb, long int, lon
 	lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
 				+ a123*X1*X2*(1.-2.*X3);
 
-	// ideal mixing contributions, added 31.01.2009 (TW)
-	gi = X1*log(X1) + X2*log(X2) + X3*log(X3);
-	si = X1*log(X1) + X2*log(X2) + X3*log(X3);
-	gI = gi * R_T;
-	sI = - si * R_T / T;
-
 	// excess properties, added 29.05.2008 (TW)
 	gE = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
 	vE = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
 	uE = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
 	sE = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
 	cpE = 0.0;
-	hE = uE+vE*P;
+	hE = uE + vE*P;
+	aE = gE - vE*P;
 
 	// assignments
 	pmp->lnGam[jb] = lnGam1;
@@ -1561,12 +1544,21 @@ TMulti::SolModActCoeff( long int k, char ModCode )
 // Wrapper call for calculation of bulk phase excess properties
 // uses TSolMod class
 void
-TMulti::SolModExcessParam( long int k, char ModCode )
+TMulti::SolModExcessProp( long int k, char ModCode )
 {
-	double Gex, Vex, Hex, Sex,  CPex;
+	// order of phase properties: G, H, S, CP, V, A, U
+	long int j;
+	double zex[7];
+
+	for (j =0; j<7; j++)
+	{
+		zex[j] = 0.0;
+	}
+
+	// insert cases for old solution and activity models
     switch( ModCode )
     {
-        case SM_VANLAAR:
+		case SM_VANLAAR:
         case SM_REGULAR:
         case SM_GUGGENM:
         case SM_NRTLLIQ:
@@ -1577,17 +1569,87 @@ TMulti::SolModExcessParam( long int k, char ModCode )
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
-         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
-              aSM->ExcessProp( Gex, Vex, Hex, Sex, CPex );
+              aSM->ExcessProp( zex );
               break;
-         }
-
+        }
         default:
               break;
     }
-    // To add handling of excess properties for the phase
-    // Gex, Vex, Hex, Sex, CPex
+
+    // add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+
+}
+
+
+// Wrapper call for calculation of bulk phase ideal mixing properties
+void
+TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
+{
+	// order of phase properties: G, H, S, CP, V, A, U
+	long int j;
+	double zid[7];
+
+	for (j=0; j<7; j++)
+	{
+		zid[j] = 0.0;
+	}
+
+    switch( ModCode )
+    {
+		// check if gas, aqueous or other condensed solution phase (ideal gas?)
+		case SM_IDEAL:
+		case SM_REDKIS:
+		case SM_MARGB:
+		case SM_MARGT:
+		case SM_VANLAAR:
+		case SM_GUGGENM:
+		case SM_REGULAR:
+		case SM_NRTLLIQ:
+		case SM_WILSLIQ:
+		case SM_USERDEF:
+		case SM_OTHER:
+			IdealOneSite( jb, k, zid );
+			break;
+		case SM_CGFLUID:
+		case SM_PRFLUID:
+		case SM_SRFLUID:
+			IdealGas( jb, k, zid );
+			break;
+		case SM_AQDAV:
+		case SM_AQDH1:
+		case SM_AQDH2:
+		case SM_AQDH3:
+		case SM_AQDHH:
+		case SM_AQSIT:
+		case SM_AQEXUQ:
+		case SM_AQPITZ:
+			IdealAqueous( jb, k, zid );
+			break;
+		default:
+			break;
+
+    }
+
+	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+}
+
+
+// Wrapper call for calculation of bulk phase ideal mixing properties
+void
+TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
+{
+	// order of phase properties: G, H, S, CP, V, A, U
+	long int j;
+	double zdq[7];
+
+	for (j=0; j<7; j++)
+	{
+		zdq[j] = 0.0;
+	}
+
+	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
 }
 
 
@@ -1622,6 +1684,104 @@ void TMulti::Free_TSolMod()
   }
   phSolMod = 0;
   sizeFIs = 0;
+}
+
+
+// calculates ideal mixing properties of gas phases
+void TMulti::IdealGas( long int jb, long int k, double *Zid )
+{
+	double T, P, R_T, R;
+	double Gid, Hid, Sid, CPid, Vid, Aid, Uid;
+	T = pmp->Tc;
+	P = pmp->Pc;
+	R_T = pmp->RT;
+	R = R_T / T;
+
+	// ideal gas changes from 1 bar to P (at T of interest)
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R*log(P);
+	Gid = Hid - T * Sid;
+	Aid = Gid - Vid*P;
+	Uid = Hid - Vid*P;
+
+	// assignments
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+}
+
+
+// calculates ideal mixing properties of condensed phases (one-site mixing)
+void TMulti::IdealOneSite( long int jb, long int k, double *Zid )
+{
+	long int Nc, j;
+	double *X;
+	double T, P, R_T, R, si;
+	double Gid, Hid, Sid, CPid, Vid, Aid, Uid;
+	Nc = pmp->L1[k];
+	X = pmp->Wx+jb;
+	T = pmp->Tc;
+	P = pmp->Pc;
+	R_T = pmp->RT;
+	R = R_T / T;
+
+	// ideal mixing contributions
+	si = 0.0;
+	for (j=0; j<Nc; j++)
+	{
+		si += X[j]*log(X[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R*si;
+	Gid = Hid - T * Sid;
+	Aid = Gid - Vid*P;
+	Uid = Hid - Vid*P;
+
+	// assignments
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+}
+
+
+// calculates ideal mixing properties of condensed phases (multi-site mixing)
+void TMulti::IdealMultiSite( long int jb, long int k, double *Zid )
+{
+	// add calculation here
+}
+
+
+// calculates ideal mixing properties of aqueous phases (molality scale)
+void TMulti::IdealAqueous( long int jb, long int k, double *Zid )
+{
+	// add calculation here
+}
+
+
+// calculates standard state properties of phase (mole fraction scale)
+void TMulti::StandMoleFract()
+{
+	// add calculation here
+}
+
+
+// calculates standard state properties of phase (molality scale)
+void TMulti::StandMolality()
+{
+	// add calculation here
 }
 
 
