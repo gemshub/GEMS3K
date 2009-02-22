@@ -1534,7 +1534,6 @@ TMulti::SolModActCoeff( long int k, char ModCode )
              aSM->MixMod();
              break;
         }
-
         default:
               break;
     }
@@ -1548,6 +1547,7 @@ TMulti::SolModExcessProp( long int k, char ModCode )
 {
 	// order of phase properties: G, H, S, CP, V, A, U
 	long int j;
+	double Gex, Hex, Sex, CPex, Vex, Aex, Uex;
 	double zex[7];
 
 	for (j =0; j<7; j++)
@@ -1578,7 +1578,21 @@ TMulti::SolModExcessProp( long int k, char ModCode )
               break;
     }
 
-    // add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+    // assignments
+    Gex = zex[0];
+    Hex = zex[1];
+    Sex = zex[2];
+    CPex = zex[3];
+    Vex = zex[4];
+    Aex = zex[5];
+    Uex = zex[6];
+    pmp->GPh[k][2] = Gex;
+    pmp->HPh[k][2] = Hex;
+    pmp->SPh[k][2] = Sex;
+    pmp->CPh[k][2] = CPex;
+    pmp->VPh[k][2] = Vex;
+    pmp->APh[k][2] = Aex;
+    pmp->UPh[k][2] = Uex;
 
 }
 
@@ -1589,6 +1603,7 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 {
 	// order of phase properties: G, H, S, CP, V, A, U
 	long int j;
+	double Gid, Hid, Sid, CPid, Vid, Aid, Uid;
 	double zid[7];
 
 	for (j=0; j<7; j++)
@@ -1630,13 +1645,26 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 			IdealOneSite( jb, k, zid );
 			break;
 		}
-
 		default:
 			break;
-
     }
 
-	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+    // assignments
+    Gid = zid[0];
+    Hid = zid[1];
+    Sid = zid[2];
+    CPid = zid[3];
+    Vid = zid[4];
+    Aid = zid[5];
+    Uid = zid[6];
+    pmp->GPh[k][1] = Gid;
+    pmp->HPh[k][1] = Hid;
+    pmp->SPh[k][1] = Sid;
+    pmp->CPh[k][1] = CPid;
+    pmp->VPh[k][1] = Vid;
+    pmp->APh[k][1] = Aid;
+    pmp->UPh[k][1] = Uid;
+
 }
 
 
@@ -1646,6 +1674,7 @@ TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 {
 	// order of phase properties: G, H, S, CP, V, A, U
 	long int j;
+	double Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq;
 	double zdq[7];
 
 	for (j=0; j<7; j++)
@@ -1653,18 +1682,43 @@ TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 		zdq[j] = 0.0;
 	}
 
-	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+	// assignments
+    Gdq = zdq[0];
+    Hdq = zdq[1];
+    Sdq = zdq[2];
+    CPdq = zdq[3];
+    Vdq = zdq[4];
+    Adq = zdq[5];
+    Udq = zdq[6];
+    pmp->GPh[k][3] = Gdq;
+    pmp->HPh[k][3] = Hdq;
+    pmp->SPh[k][3] = Sdq;
+    pmp->CPh[k][3] = CPdq;
+    pmp->VPh[k][3] = Vdq;
+    pmp->APh[k][3] = Adq;
+    pmp->UPh[k][3] = Udq;
+
 }
 
 
 // Wrapper call for retrieving bulk phase standard state terms
 void
-SolModStandProp ( long int jb, long int k, char ModCode )
+TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
 {
 	// order of phase properties: G, H, S, CP, V, A, U
+	double Gst, Hst, Sst, CPst, Vst, Ast, Ust;
+
 	// add if statement that checks DC class code (aqueous or not)
 
-	// add assignments to GPh, VPh, HPh, SPh, CPh, APh, UPh data objects
+	// assignments
+    pmp->GPh[k][0] = Gst;
+    pmp->HPh[k][0] = Hst;
+    pmp->SPh[k][0] = Sst;
+    pmp->CPh[k][0] = CPst;
+    pmp->VPh[k][0] = Vst;
+    pmp->APh[k][0] = Ast;
+    pmp->UPh[k][0] = Ust;
+
 }
 
 
