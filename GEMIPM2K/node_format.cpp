@@ -1260,7 +1260,7 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
     CNode_->xPA = 0;
   }
 
- delete[] CNode_;
+ delete CNode_;
  return NULL;
 }
 
