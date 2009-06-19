@@ -1400,13 +1400,16 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
     pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii]* ScFact;
     if(	pmm->DUL[ CSD->xDC[ii] ] > 1e6 )		// 28.01.2009
        pmm->DUL[ CSD->xDC[ii] ] = 1e6;          // Bugfix for upper metastability limit
-    if(	pmm->DUL[ CSD->xDC[ii] ] < TProfil::pm->pa.p.DKIN )
-    	pmm->DUL[ CSD->xDC[ii] ] = TProfil::pm->pa.p.DKIN;
+
+// kg44 19.06.2009 the condition below totally breaks calculation precipitation  kinetics for small amounts/rates!!!!
+//      
+//    if(	pmm->DUL[ CSD->xDC[ii] ] < TProfil::pm->pa.p.DKIN )
+//    	pmm->DUL[ CSD->xDC[ii] ] = TProfil::pm->pa.p.DKIN;
 
     pmm->DLL[ CSD->xDC[ii] ] = CNode->dll[ii];
     if( CNode->dll[ii] > 0. )
     	pmm->DLL[ CSD->xDC[ii] ] *= ScFact;
-    pmm->DLL[ CSD->xDC[ii] ] = 0.;				  // Bugfix for lower metastability limit
+//     pmm->DLL[ CSD->xDC[ii] ] = 0.;				  // Bugfix for lower metastability limit // kg44  19.06.2009 this is not a bugfix...it breaks dissolution kinetics!!!
     
     if( pmm->DUL[ CSD->xDC[ii] ] < pmm->DLL[ CSD->xDC[ii] ] )
     {
