@@ -447,6 +447,8 @@ void GEM_set_MT(
       double  Ph_Volume( const long int xBR );
      // Retrieval of Phase mass ( xBR is DBR phase index)
       double  Ph_Mass( const long int xBR );
+      // retrieval of activities (xCH is the DC DCH index)
+      double  Ph_Activity( const long int xCH );
      // Retrieval of Phase composition ( xBR is DBR phase index)
      // Returns pointer to ARout which may also be allocated inside of Ph_BC()
       double* Ph_BC( const long int xBR, double *ARout=0 );
