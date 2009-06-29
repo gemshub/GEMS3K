@@ -746,7 +746,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   //kg44 Retrieval of activity ( xBR the Ph DBR index)
   double  TNode::DC_Activity( const long int xCH )
    {
-	return 	pmm->Y_la[xCH];
+	return 	pow(10.0,pmm->Y_la[xCH]);
    }
 
   // Retrieval of Phase composition ( xBR the Ph DBR index)
