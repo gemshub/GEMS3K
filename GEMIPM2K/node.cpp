@@ -744,7 +744,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   }
 
   //kg44 Retrieval of activity ( xBR the Ph DBR index)
-  double  TNode::Ph_Activity( const long int xCH )
+  double  TNode::DC_Activity( const long int xCH )
    {
 	return 	pmm->Y_la[xCH];
    }
