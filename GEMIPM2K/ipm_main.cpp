@@ -447,16 +447,20 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 // Analyzing if the Simplex approximation is necessary
     if( !pmp->pNP  )
     {   // Preparing to call Simplex method
-        pmp->FitVar[4] = pa->p.AG;  //  initializing the smoothing parameter
+    	pmp->FitVar[4] = 1.0; // by default no smoothing
+//        pmp->FitVar[4] = pa->p.AG;  //  initializing the smoothing parameter
         pmp->ITaia = 0;             // resetting the previous number of AIA iterations
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 //      pmp->IC = 0.0;  For reproducibility of simplex FIA?
-        if( pmp->FIs )
+pmp->PCI = 1.0;
+pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
+	 pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
+		if( pmp->FIs )
             GammaCalc(LINK_FIA_MODE);
         if( pa->p.PC == 2 )
            XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
         pmp->IT = 0; pmp->ITF += 1; // Assuming simplex() time equal to one iteration of EFD()
-        pmp->PCI = 0;
+//        pmp->PCI = 0.0;
 
      // Calling the simplex method here
         SimplexInitialApproximation( );
@@ -486,6 +490,20 @@ STEP_POINT( "End Simplex" );
         for( j=0; j< pmp->L; j++ )
             pmp->X[j] = pmp->Y[j];
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+/*
+if( pmp->PCI < 1e-7 || pmp->PCI > 1e-3 )
+{ //   For new smoothing function - need PCI value already here
+  pmp->NR=pmp->N;
+  if( pmp->LO )
+  {   if( pmp->YF[0] < pmp->DSM && pmp->YFA[0] < pmp->lowPosNum*100.)
+        pmp->NR= pmp->N-1;
+  }
+  pmp->PCI = calcDikin( pmp->NR, false );
+  pmp->PCI = sqrt( pmp->PCI );
+}
+*/
+pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
+   	 pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
         if( pmp->PD==3 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
             GammaCalc( LINK_UX_MODE);
 
@@ -494,7 +512,7 @@ STEP_POINT( "End Simplex" );
            // Setting default trace amounts of DCs that were zeroed off
            RaiseZeroedOffDCs( 0, pmp->L, sfactor );
         }
-    }
+     }
 
 // STEPWISE (1) - stop point to see IA from old solution or raised simplex
 #ifndef IPMGEMPLUGIN
@@ -731,6 +749,10 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 	   LM1=LMD( LM ); // Finding an optimal value of the descent step
        FX1=GX( LM1 ); // New G(X) value after the descent step
        pmp->PCI = sqrt(pmp->PCI); // Dikin criterion
+// temporary
+for(i=4; i>0; i-- )
+   pmp->logCDvalues[i] = pmp->logCDvalues[i-1];
+pmp->logCDvalues[0] = log( pmp->PCI );  // updating CD sampler array
 
        if( (IT1 > 3) && (FX1 - pmp->FX > 10)  &&
           ( IT1 > pa->p.IIM/2 || pmp->PD==3 ) )
@@ -781,7 +803,8 @@ STEP_POINT( "IPM Iteration" );
 //----------------------------------------------------------------------------
 CONVERGED:
  // cout << "LM " << LM << " LM1 "	 << LM1 << " PCI " << pmp->PCI << endl;
- // Final calculation of phase amounts and activity coefficients
+pmp->PCI = pmp->DX * 0.999999; // temporary
+// Final calculation of phase amounts and activity coefficients
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
   if(!pmp->PZ && pmp->W1)

@@ -30,10 +30,9 @@
 //=============================================================================================
 
 
-// Generic constructor for the TVanLaar class
+// Generic constructor for the TModOther class
 TModOther::TModOther( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-		long int NPperDC, char Mod_Code,
-		long int *arIPx, double *arIPc, double *arDCc,
+		long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
 		double *arWx, double *arlnGam, double *aphVOL,
 		double T_k, double P_bar, double *dW, double *eW ):
             	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,

@@ -110,7 +110,7 @@ double LagranInterp(float *y, float *x, float *d, float yoi,
   xx = new double[M];
   for(int ii=0; ii<M; ii++ )
     xx[ii] = (double)x[ii];
- 
+
   res = LagranInterp( yy, xx, dd, (double)yoi, (double)xoi, M, N, pp );
 
  delete[] dd;
@@ -130,13 +130,81 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
   xx = new double[M];
   for(int ii=0; ii<M; ii++ )
       xx[ii] = (double)x[ii];
-   
+
   res = LagranInterp( yy, xx, d, (double)yoi, (double)xoi, M, N, pp );
 
  delete[] yy;
  delete[] xx;
  return res;
 }
+
+
+// 1st partial derivative of quotient of two functions
+double quot( double u, double v, double du, double dv )
+{
+	double derivative;
+	derivative = ( du*v - u*dv ) / pow (v,2.);
+
+	return derivative;
+}
+
+
+// 2nd partial derivative of quotient of two functions
+double quot( double u, double v, double du, double dv, double d2u, double d2v )
+{
+	double derivative;
+	derivative = (d2u*v + du*dv)*pow(v,2.)/pow(v,4.) - (du*v)*(2.*v*dv)/pow(v,4.)
+				- (du*dv + u*d2v)*pow(v,2.)/pow(v,4.) + (u*dv)*(2.*v*dv)/pow(v,4.);
+
+	return derivative;
+}
+
+
+// 1st partial derivative of product of two functions
+double prod2( double u, double v, double du, double dv )
+{
+	double derivative;
+	derivative = ( du*v + u*dv );
+
+	return derivative;
+}
+
+
+// 2nd partial derivative of product of two functions
+double prod2( double u, double v, double du, double dv, double d2u, double d2v )
+{
+	double derivative;
+	derivative = ( d2u*v + 2*du*dv + u*d2v );
+
+	return derivative;
+}
+
+
+// 1st partial derivative of product of three functions
+double prod3( double u, double v, double w, double du, double dv, double dw )
+{
+	double derivative;
+	derivative = ( du*v*w + u*dv*w + u*v*dw );
+
+	return derivative;
+}
+
+
+// 2nd partial derivative of product of three functions
+double prod3( double u, double v, double w, double du, double dv, double dw,
+		double d2u, double d2v, double d2w )
+{
+	double derivative;
+	derivative = ( d2u*v*w + du*dv*w + du*v*dw ) + ( du*dv*w + u*d2v*w + u*dv*dw )
+				+ ( du*v*w + u*dv*w + u*v*d2w );
+
+	return derivative;
+}
+
+
+
+
+
 //-----------------------End of num_methods.cpp--------------------------
 
 

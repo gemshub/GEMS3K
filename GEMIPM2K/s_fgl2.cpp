@@ -1,10 +1,12 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1246 2009-02-21 17:57:15Z wagner $
+// $Id: s_fgl2.cpp 1325 2009-07-01 10:47:42Z wagner $
 //
-// Copyright (c) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (C) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
 //
-// Implementation of the TSolMod class
-// and TVanLaar, TRegular, TRedlichKister, TNRTL and TWilson classes
+// Implementation of the TSolMod base class and subclasses
+// for activity models for condensed (solid and liquid) phases
+// subclasses: TVanLaar, TRegular, TRedlichKister, TNRTL, TWilson
+//				TMargulesTernary, TMargulesBinary, TGuggenheim
 // Started by Th.Wagner and D.Kulik on 07.03.2007
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
@@ -27,14 +29,11 @@
 // Generic constructor for the TSolMod class
 //
 TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, long int NPTPperDC, char Mod_Code,
-        long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar ):
-    ModCode(Mod_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
-    MaxOrd(MaxOrder),  NP_DC(NPperDC), NPTP_DC(NPTPperDC), R_CONST(8.31451),
-    Tk(T_k), Pbar(P_bar)
-
+        long int NPperDC, long int NPTPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
+        	ModCode(Mod_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
+        	MaxOrd(MaxOrder),  NP_DC(NPperDC), NPTP_DC(NPTPperDC), R_CONST(8.31451),
+        	Tk(T_k), Pbar(P_bar)
 {
     // pointer assignments
     aIPx = arIPx;   // Direct access to index list and parameter coeff arrays!
@@ -52,30 +51,10 @@ TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long in
     lnGamma = arlnGam;
 
     // initialize phase properties
-    Gex = 0.0;
-    Hex = 0.0;
-    Sex = 0.0;
-    CPex = 0.0;
-    Vex = 0.0;
-    Aex = 0.0;
-    Uex = 0.0;
-
-    Gid = 0.0;
-    Hid = 0.0;
-    Sid = 0.0;
-    CPid = 0.0;
-    Vid = 0.0;
-    Aid = 0.0;
-    Uid = 0.0;
-
-    Gdq = 0.0;
-    Hdq = 0.0;
-    Sdq = 0.0;
-    CPdq = 0.0;
-    Vdq = 0.0;
-    Adq = 0.0;
-    Udq = 0.0;
-
+    Gex = 0.0; Hex = 0.0; Sex = 0.0; CPex = 0.0; Vex = 0.0; Aex = 0.0; Uex = 0.0;
+    Gid = 0.0; Hid = 0.0; Sid = 0.0; CPid = 0.0; Vid = 0.0; Aid = 0.0; Uid = 0.0;
+    Gdq = 0.0; Hdq = 0.0; Sdq = 0.0; CPdq = 0.0; Vdq = 0.0; Adq = 0.0; Udq = 0.0;
+    Grs = 0.0; Hrs = 0.0; Srs = 0.0; CPrs = 0.0; Vrs = 0.0; Ars = 0.0; Urs = 0.0;
 }
 
 
@@ -116,6 +95,7 @@ void TSolMod::GetPhaseName( const char *PhName )
 
 
 
+
 //=============================================================================================
 // Van Laar model for solid solutions (c) TW March 2007
 // References:  Holland & Powell (2003)
@@ -124,10 +104,8 @@ void TSolMod::GetPhaseName( const char *PhName )
 
 // Generic constructor for the TVanLaar class
 TVanLaar::TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code,
-        long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar ):
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, T_k, P_bar )
@@ -155,12 +133,12 @@ void TVanLaar::alloc_internal()
 
 void TVanLaar::free_internal()
 {
-	if(Wu)  delete[]Wu;
-	if(Ws)  delete[]Ws;
-	if(Wv)  delete[]Wv;
-	if(Wpt)  delete[]Wpt;
-	if(Phi)  delete[]Phi;
-	if(PsVol)  delete[]PsVol;
+	if(Wu) delete[]Wu;
+	if(Ws) delete[]Ws;
+	if(Wv) delete[]Wv;
+	if(Wpt) delete[]Wpt;
+	if(Phi) delete[]Phi;
+	if(PsVol) delete[]PsVol;
 }
 
 
@@ -193,8 +171,7 @@ long int TVanLaar::PTparam()
 long int TVanLaar::MixMod()
 {
 	long int ip, j, i1, i2;
-	double dj, dk;
-	double sumPhi; // Sum of Phi terms
+	double dj, dk, sumPhi;
 
 	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
@@ -213,7 +190,7 @@ long int TVanLaar::MixMod()
 		Phi[j] = x[j]*PsVol[j]/sumPhi;
 
 	// calculate activity coefficients
-	for (j=0; j<NComp; j++)      // index end members with j
+	for (j=0; j<NComp; j++)
 	{
 		lnGamRT = 0.;
 		for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
@@ -243,8 +220,7 @@ long int TVanLaar::MixMod()
 long int TVanLaar::ExcessProp( double *Zex )
 {
 	long int ip, j, i1, i2;
-	double sumPhi; // Sum of Phi terms
-	double g, v, s, u;
+	double sumPhi, g, v, s, u;
 
 	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
@@ -264,10 +240,7 @@ long int TVanLaar::ExcessProp( double *Zex )
 	    Phi[j] = x[j]*PsVol[j]/sumPhi;
 
 	// calculate bulk phase excess properties
-	g = 0.0;
-	s = 0.0;
-	v = 0.0;
-	u = 0.0;
+	g = 0.0; s = 0.0; v = 0.0; u = 0.0;
 
 	for (ip=0; ip<NPar; ip++)
 	{
@@ -285,10 +258,10 @@ long int TVanLaar::ExcessProp( double *Zex )
 	 Vex = v;
 	 Uex = u;
 	 Hex = Uex + Vex*Pbar;
-
-	 // assignments (excess properties)
 	 Aex = Gex - Vex*Pbar;
 	 Uex = Hex - Vex*Pbar;
+
+	 // assignments (excess properties)
 	 Zex[0] = Gex;
 	 Zex[1] = Hex;
 	 Zex[2] = Sex;
@@ -309,17 +282,18 @@ long int TVanLaar::IdealProp( double *Zid )
 	si = 0.0;
 	for (j=0; j<NComp; j++)
 	{
-		si += x[j]*log(x[j]);
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
 	}
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
 	Sid = (-1.)*R_CONST*si;
-
-	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
 	Aid = Gid - Vid*Pbar;
 	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
 	Zid[0] = Gid;
 	Zid[1] = Hid;
 	Zid[2] = Sid;
@@ -343,10 +317,8 @@ long int TVanLaar::IdealProp( double *Zid )
 
 // Generic constructor for the TRegular class
 TRegular::TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code,
-        long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar ):
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, T_k, P_bar )
@@ -372,10 +344,10 @@ void TRegular::alloc_internal()
 
 void TRegular::free_internal()
 {
-	if(Wu)  delete[]Wu;
-	if(Ws)  delete[]Ws;
-	if(Wv)  delete[]Wv;
-	if(Wpt)  delete[]Wpt;
+	if(Wu) delete[]Wu;
+	if(Ws) delete[]Ws;
+	if(Wv) delete[]Wv;
+	if(Wpt) delete[]Wpt;
 }
 
 
@@ -409,7 +381,7 @@ long int TRegular::MixMod()
 		return 1;
 
 	// calculate activity coefficients
-	for (j=0; j<NComp; j++)      // index end members with j
+	for (j=0; j<NComp; j++)
 	{
 		lnGamRT = 0.;
 
@@ -446,10 +418,7 @@ long int TRegular::ExcessProp( double *Zex )
 		return 1;
 
 	// calculate bulk phase excess properties
-	g = 0.0;
-	s = 0.0;
-	v = 0.0;
-	u = 0.0;
+	g = 0.0; s = 0.0; v = 0.0; u = 0.0;
 
 	for (ip=0; ip<NPar; ip++)
 	{
@@ -467,10 +436,10 @@ long int TRegular::ExcessProp( double *Zex )
 	Vex = v;
 	Uex = u;
 	Hex = Uex + Vex*Pbar;
-
-	// assignments (excess properties)
 	Aex = Gex - Vex*Pbar;
 	Uex = Hex - Vex*Pbar;
+
+	// assignments (excess properties)
 	Zex[0] = Gex;
 	Zex[1] = Hex;
 	Zex[2] = Sex;
@@ -491,17 +460,18 @@ long int TRegular::IdealProp( double *Zid )
 	si = 0.0;
 	for (j=0; j<NComp; j++)
 	{
-		si += x[j]*log(x[j]);
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
 	}
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
 	Sid = (-1.)*R_CONST*si;
-
-	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
 	Aid = Gid - Vid*Pbar;
 	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
 	Zid[0] = Gid;
 	Zid[1] = Hid;
 	Zid[2] = Sid;
@@ -525,10 +495,8 @@ long int TRegular::IdealProp( double *Zid )
 
 // Generic constructor for the TRedlichKister class
 TRedlichKister::TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC,char Mod_Code,
-        long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar ):
+        long int NPperDC,char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, T_k, P_bar )
@@ -555,11 +523,11 @@ void TRedlichKister::alloc_internal()
 
 void TRedlichKister::free_internal()
 {
-	if(Lu)  delete[]Lu;
-	if(Ls)  delete[]Ls;
-	if(Lv)  delete[]Lv;
-	if(Lpt)  delete[]Lpt;
-	if(Lcp)  delete[]Lcp;
+	if(Lu) delete[]Lu;
+	if(Ls) delete[]Ls;
+	if(Lv) delete[]Lv;
+	if(Lpt) delete[]Lpt;
+	if(Lcp) delete[]Lcp;
 }
 
 
@@ -607,15 +575,14 @@ long int TRedlichKister::PTparam()
 // Calculates activity coefficients
 long int TRedlichKister::MixMod()
 {
-	long int ip, j;
-	long int i1, i2, L, I, J;
+	long int ip, j, i1, i2, L, I, J;
 	double L0, L1, L2, L3;
 
 	if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
 
-	// calculate activity coefficients
-	for (j=0; j<NComp; j++)      // index end members with j
+	// loop over species
+	for (j=0; j<NComp; j++)
 	{
 		lnGamRT = 0.;
 		for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
@@ -667,7 +634,8 @@ long int TRedlichKister::MixMod()
 
 		lnGam = lnGamRT/(R_CONST*Tk);
 		lnGamma[j] = lnGam;
-	}
+	} // j
+
    	return 0;
 }
 
@@ -675,20 +643,14 @@ long int TRedlichKister::MixMod()
 // calculates bulk phase excess properties
 long int TRedlichKister::ExcessProp( double *Zex )
 {
-	long int ip;
-	long int i1, i2;
-	double LU, LS, LCP, LV, LPT;
-	double g, v, s, cp, u;
+	long int ip, i1, i2;
+	double LU, LS, LCP, LV, LPT, g, v, s, cp, u;
 
 	if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 		return 1;
 
    	// calculate bulk phase excess properties
-   	g = 0.0;
-   	s = 0.0;
-   	cp = 0.0;
-   	v = 0.0;
-   	u = 0.0;
+   	g = 0.0; s = 0.0; cp = 0.0; v = 0.0; u = 0.0;
 
    	for (ip=0; ip<NPar; ip++)
    	{
@@ -730,10 +692,10 @@ long int TRedlichKister::ExcessProp( double *Zex )
 	Vex = v;
 	Uex = u;
 	Hex = Uex + Vex*Pbar;
-
-	// assignments (excess properties)
 	Aex = Gex - Vex*Pbar;
 	Uex = Hex - Vex*Pbar;
+
+	// assignments (excess properties)
 	Zex[0] = Gex;
 	Zex[1] = Hex;
 	Zex[2] = Sex;
@@ -755,17 +717,18 @@ long int TRedlichKister::IdealProp( double *Zid )
 	si = 0.0;
 	for (j=0; j<NComp; j++)
 	{
-		si += x[j]*log(x[j]);
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
 	}
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
 	Sid = (-1.)*R_CONST*si;
-
-	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
 	Aid = Gid - Vid*Pbar;
 	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
 	Zid[0] = Gid;
 	Zid[1] = Hid;
 	Zid[2] = Sid;
@@ -789,10 +752,8 @@ long int TRedlichKister::IdealProp( double *Zid )
 
 // Generic constructor for the TNRTL class
 TNRTL::TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code,
-        long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar ):
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, T_k, P_bar )
@@ -865,8 +826,7 @@ void TNRTL::free_internal()
 long int TNRTL::PTparam()
 {
 	long int ip, i, j, i1, i2;
-	double A, B, C, D, E, F;
-	double tau, dtau, d2tau, alp, dalp, d2alp;
+	double A, B, C, D, E, F, tau, dtau, d2tau, alp, dalp, d2alp;
 
     if ( NPcoef < 6 || NPar < 1 )
        return 1;
@@ -934,13 +894,12 @@ long int TNRTL::PTparam()
 long int TNRTL::MixMod()
 {
 	long int  j, i, k;
-	double K, L, M, N, O;
-	double lnGam;
+	double K, L, M, N, O, lnGam;
 
 	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
 
-	// calculate activity coefficients
+	// loop over species
 	for (j=0; j<NComp; j++)
 	{
 		lnGam = 0.0;
@@ -971,21 +930,14 @@ long int TNRTL::MixMod()
 long int TNRTL::ExcessProp( double *Zex )
 {
 	long int  j, i;
-	double U, dU, V, dV, d2U, d2V;
-	double g, dg, d2g;
+	double U, dU, V, dV, d2U, d2V, g, dg, d2g;
 
 	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
 
 	// calculate bulk phase excess properties
-   	Gex = 0.0;
-   	Sex = 0.0;
-   	Hex = 0.0;
-   	CPex = 0.0;
-   	Vex = 0.0;
-   	g = 0.0;
-   	dg = 0.0;
-   	d2g = 0.0;
+   	Gex = 0.0; Sex = 0.0; Hex = 0.0; CPex = 0.0; Vex = 0.0;
+   	g = 0.0; dg = 0.0; d2g = 0.0;
 
    	for (j=0; j<NComp; j++)
    	{
@@ -1016,10 +968,10 @@ long int TNRTL::ExcessProp( double *Zex )
 	Hex = -R_CONST*pow(Tk,2.)*dg;
 	Sex = (Hex-Gex)/Tk;
 	CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
-
-	// assignments (excess properties)
 	Aex = Gex - Vex*Pbar;
 	Uex = Hex - Vex*Pbar;
+
+	// assignments (excess properties)
 	Zex[0] = Gex;
 	Zex[1] = Hex;
 	Zex[2] = Sex;
@@ -1040,17 +992,18 @@ long int TNRTL::IdealProp( double *Zid )
 	si = 0.0;
 	for (j=0; j<NComp; j++)
 	{
-		si += x[j]*log(x[j]);
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
 	}
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
 	Sid = (-1.)*R_CONST*si;
-
-	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
 	Aid = Gid - Vid*Pbar;
 	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
 	Zid[0] = Gid;
 	Zid[1] = Hid;
 	Zid[2] = Sid;
@@ -1074,10 +1027,8 @@ long int TNRTL::IdealProp( double *Zid )
 
 // Generic constructor for the TWilson class
 TWilson::TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code,
-        long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL,
-        double T_k, double P_bar ):
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
         	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
         			 Mod_Code, arIPx, arIPc, arDCc, arWx,
         			 arlnGam, aphVOL, T_k, P_bar )
@@ -1126,8 +1077,7 @@ void TWilson::free_internal()
 long int TWilson::PTparam()
 {
 	long int ip, i, j, i1, i2;
-	double A, B, C, D;
-	double lam, dlam, d2lam;
+	double A, B, C, D, lam, dlam, d2lam;
 
     if ( NPcoef < 4 || NPar < 1 )
            return 1;
@@ -1167,13 +1117,12 @@ long int TWilson::PTparam()
 long int TWilson::MixMod()
 {
 	long int  j, i, k;
-	double K, L, M;
-	double lnGam;
+	double K, L, M, lnGam;
 
 	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
 
-	// calculate activity coefficients
+	// loop over species
 	for (j=0; j<NComp; j++)
 	{
 		lnGam = 0.0;
@@ -1201,22 +1150,16 @@ long int TWilson::MixMod()
 long int TWilson::ExcessProp( double *Zex )
 {
 	long int  j, i;
-	double U, dU, d2U;
-	double g, dg, d2g;
+	double U, dU, d2U, g, dg, d2g;
 
 	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
 	        return 1;
 
 	// calculate bulk phase excess properties
-	Gex = 0.0;
-	Sex = 0.0;
-	Hex = 0.0;
-	CPex = 0.0;
-	Vex = 0.0;
-	g = 0.0;
-	dg = 0.0;
-	d2g = 0.0;
+	Gex = 0.0; Sex = 0.0; Hex = 0.0; CPex = 0.0; Vex = 0.0;
+	g = 0.0; dg = 0.0; d2g = 0.0;
 
+	// loop over species
 	for (j=0; j<NComp; j++)
 	{
 		U = 0.0;
@@ -1230,7 +1173,7 @@ long int TWilson::ExcessProp( double *Zex )
 		}
 		g -= x[j]*log(U);
 		dg -= x[j]*(1./U)*dU;
-		d2g -= x[j] * ( (-1./pow(U,2.))*dU*dU + (1./U)*d2U );  // fixed, 11.06.2008 (TW)
+		d2g -= x[j] * ( (-1./pow(U,2.))*dU*dU + (1./U)*d2U );  // corrected 11.06.2008 (TW)
 	}
 
 	// final calculations
@@ -1262,17 +1205,18 @@ long int TWilson::IdealProp( double *Zid )
 	si = 0.0;
 	for (j=0; j<NComp; j++)
 	{
-		si += x[j]*log(x[j]);
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
 	}
 	Hid = 0.0;
 	CPid = 0.0;
 	Vid = 0.0;
 	Sid = (-1.)*R_CONST*si;
-
-	// assignments (ideal mixing properties)
 	Gid = Hid - Sid*Tk;
 	Aid = Gid - Vid*Pbar;
 	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
 	Zid[0] = Gid;
 	Zid[1] = Hid;
 	Zid[2] = Sid;
@@ -1283,6 +1227,425 @@ long int TWilson::IdealProp( double *Zid )
 
 	return 0;
 }
+
+
+
+
+
+//=============================================================================================
+// Ternary Margules (regular) model for solid solutions (c) TW June 2009
+// References: Anderson and Crerar (1993); Anderson (2006)
+//=============================================================================================
+
+
+// Generic constructor for the TRegular class
+TMargules::TMargules( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, T_k, P_bar )
+{
+	// empty constructor
+}
+
+
+TMargules::~TMargules()
+{
+	// empty destructor
+}
+
+
+// Calculates T,P corrected binary interaction parameters
+long int TMargules::PTparam()
+{
+	if ( NPcoef < 3 || NPar < 4 )
+	           return 1;
+
+	// load parameters
+	WU12 = aIPc[0];
+	WS12 = aIPc[1];
+	WV12 = aIPc[2];
+	WU13 = aIPc[3];
+	WS13 = aIPc[4];
+	WV13 = aIPc[5];
+	WU23 = aIPc[6];
+	WS23 = aIPc[7];
+	WV23 = aIPc[8];
+	WU123 = aIPc[9];
+	WS123 = aIPc[10];
+	WV123 = aIPc[11];
+
+	// calculate parameters at (T,P)
+	WG12 = WU12 - Tk*WS12 + Pbar*WV12;
+	WG13 = WU13 - Tk*WS13 + Pbar*WV13;
+	WG23 = WU23 - Tk*WS23 + Pbar*WV23;
+	WG123 = WU123 - Tk*WS123 + Pbar*WV123;
+
+	return 0;
+}
+
+
+// Calculates activity coefficients
+long int TMargules::MixMod()
+{
+	double a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
+
+	if ( NPcoef < 3 || NPar < 4 || NComp < 3 || !x || !lnGamma )
+		return 1;
+
+	a12 = WG12 / (R_CONST*Tk);
+	a13 = WG13 / (R_CONST*Tk);
+	a23 = WG23 / (R_CONST*Tk);
+	a123 = WG123 / (R_CONST*Tk);
+
+	X1 = x[0];
+	X2 = x[1];
+	X3 = x[2];
+
+	// activity coefficients (normalized by RT)
+	lnGam1 = a12*X2*(1.-X1) + a13*X3*(1.-X1) - a23*X2*X3
+				+ a123*X2*X3*(1.-2.*X1);
+	lnGam2 = a23*X3*(1.-X2) + a12*X1*(1.-X2) - a13*X1*X3
+				+ a123*X1*X3*(1.-2.*X2);
+	lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
+				+ a123*X1*X2*(1.-2.*X3);
+
+	// assignments
+	lnGamma[0] = lnGam1;
+	lnGamma[1] = lnGam2;
+	lnGamma[2] = lnGam3;
+
+	return 0;
+}
+
+
+// calculates bulk phase excess properties
+long int TMargules::ExcessProp( double *Zex )
+{
+	double X1, X2, X3;
+
+	X1 = x[0];
+	X2 = x[1];
+	X3 = x[2];
+
+	// excess properties
+	Gex = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
+	Vex = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
+	Uex = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
+	Sex = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
+	CPex = 0.0;
+	Hex = Uex + Vex*Pbar;
+	Aex = Gex - Vex*Pbar;
+
+	// assignments (excess properties)
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
+	return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TMargules::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
+
+
+
+//=============================================================================================
+// Binary Margules (subregular) model for solid solutions (c) TW June 2009
+// References: Anderson and Crerar (1993); Anderson (2006)
+//=============================================================================================
+
+
+// Generic constructor for the TRegular class
+TSubregular::TSubregular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, T_k, P_bar )
+{
+	// empty constructor
+}
+
+
+TSubregular::~TSubregular()
+{
+	// empty destructor
+}
+
+
+// Calculates T,P corrected binary interaction parameters
+long int TSubregular::PTparam()
+{
+	if ( NPcoef < 3 || NPar < 2 )
+	           return 1;
+
+	// load parameters
+	WU12 = aIPc[0];
+	WS12 = aIPc[1];
+	WV12 = aIPc[2];
+	WU21 = aIPc[3];
+	WS21 = aIPc[4];
+	WV21 = aIPc[5];
+
+	// calculate parameters at (T,P)
+	WG12 = WU12 - Tk*WS12 + Pbar*WV12;
+	WG21 = WU21 - Tk*WS21 + Pbar*WV21;
+
+	return 0;
+}
+
+
+// Calculates activity coefficients
+long int TSubregular::MixMod()
+{
+	double a1, a2, lnGam1, lnGam2, X1, X2;
+
+	if ( NPcoef < 3 || NPar < 2 || NComp < 2 || !x || !lnGamma )
+		return 1;
+
+	a1 = WG12 / (R_CONST*Tk);
+	a2 = WG21 / (R_CONST*Tk);
+
+	X1 = x[0];
+	X2 = x[1];
+
+	// activity coefficients (normalized by RT)
+	lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
+	lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
+
+	// assignments
+	lnGamma[0] = lnGam1;
+	lnGamma[1] = lnGam2;
+
+	return 0;
+}
+
+
+// calculates bulk phase excess properties
+long int TSubregular::ExcessProp( double *Zex )
+{
+	double X1, X2;
+
+	X1 = x[0];
+	X2 = x[1];
+
+	// excess properties
+	Gex = X1*X2*( X2*WG12 + X1*WG21 );
+	Vex = X1*X2*( X2*WV12 + X1*WV21 );
+	Uex = X1*X2*( X2*WU12 + X1*WU21 );
+	Sex = X1*X2*( X2*WS12 + X1*WS21 );
+	CPex = 0.0;
+	Hex = Uex + Vex*Pbar;
+	Aex = Gex - Vex*Pbar;
+
+	// assignments
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
+	return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TSubregular::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
+
+
+
+//=============================================================================================
+// Binary Guggenheim (Redlich-Kister) model for solid solutions (c) TW June 2009
+// References: Anderson and Crerar (1993); Anderson (2006)
+//=============================================================================================
+
+
+// Generic constructor for the TBinaryGuggenheim class
+TGuggenheim::TGuggenheim( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
+        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
+        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
+        			 arlnGam, aphVOL, T_k, P_bar )
+{
+	// empty constructor
+}
+
+
+TGuggenheim::~TGuggenheim()
+{
+	// empty destructor
+}
+
+
+// Calculates T,P corrected binary interaction parameters
+long int TGuggenheim::PTparam()
+{
+	if ( NPcoef < 3 || NPar < 1 )
+	           return 1;
+
+	// load parameters
+	a0 = aIPc[0];
+	a1 = aIPc[1];
+	a1 = aIPc[2];
+
+	return 0;
+}
+
+
+// Calculates activity coefficients
+long int TGuggenheim::MixMod()
+{
+	double lnGam1, lnGam2, X1, X2;
+
+	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || !x || !lnGamma )
+		return 1;
+
+	X1 = x[0];
+	X2 = x[1];
+
+	// activity coefficients (normalized by RT)
+	lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
+	lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
+
+	// assignments
+	lnGamma[0] = lnGam1;
+	lnGamma[1] = lnGam2;
+
+	return 0;
+}
+
+
+// calculates bulk phase excess properties
+long int TGuggenheim::ExcessProp( double *Zex )
+{
+	double X1, X2;
+
+	X1 = x[0];
+	X2 = x[1];
+
+	// excess properties
+	Gex = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* (R_CONST*Tk);
+	Vex = 0.0;
+	Uex = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* (R_CONST*Tk);
+	Sex = 0.0;
+	CPex = 0.0;
+	Hex = Uex + Vex*Pbar;
+	Aex = Gex - Vex*Pbar;
+
+	// assignments
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
+	return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TGuggenheim::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
 
 
 

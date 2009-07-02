@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1248 2009-02-22 09:20:58Z wagner $
+// $Id: ms_multi.h 1285 2009-05-22 14:41:03Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -309,11 +309,12 @@ double
   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
 #endif
 
-  // addition arrays for internal calculation in ipm_main
+  // additional arrays for internal calculation in ipm_main
   double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
   double *Uc; // Internal copy of IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
   char errorBuf[500]; // description of error in IPM
+  double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
 }
 MULTI;
 
@@ -424,16 +425,17 @@ class TMulti
     void IS_EtaCalc();
     void pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb );
     double SmoothingFactor( );
-    void SetSmoothingFactor( );
+    void SetSmoothingFactor( long int mode ); // new smoothing function (3 variants)
 // Main call for calculation of activity coefficients on IPM iterations
     long int GammaCalc( long int LinkMode );
 // Built-in activity coefficient models
-//  aqueous electrolyte
+/*  aqueous electrolyte
     void DebyeHueckel3Hel( long int jb, long int je, long int jpb, long int jdb, long int k );
     void DebyeHueckel3Karp( long int jb, long int je, long int jpb, long int jdb, long int k );
     void DebyeHueckel2Kjel( long int jb, long int je, long int jpb, long int jdb, long int k );
     void DebyeHueckel1LL( long int jb, long int je, long int k );
     void Davies03temp( long int jb, long int je, long int jpb, long int k );
+*/
 // fluid mixtures (old functions)
 //    void ChurakovFluid( long int jb, long int je, long int jpb, long int jdb, long int k );
     void CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
@@ -566,7 +568,7 @@ public:
 
    //connection to mass transport
     void to_file( GemDataStream& ff );
-    void to_text_file( const char *path );
+    void to_text_file( const char *path, bool append=false  );
     void from_file( GemDataStream& ff );
     void to_text_file_gemipm( const char *path, bool addMui, bool with_comments = true );
     void from_text_file_gemipm( const char *path );

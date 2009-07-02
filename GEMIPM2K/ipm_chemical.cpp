@@ -566,7 +566,7 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
         dF0 = F0 - Fold;
         if( pmp->X[j]>pmp->lowPosNum && fabs( dF0 ) >= 1e-5 ) // to be checked
 //           F0 = Fold + dF0 * pmp->FitVar[3];
-        	F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
+       	F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }  // FitVar[3] = TinkleSuppressFactor(); see GammaCalc()
     return F0;
 }
