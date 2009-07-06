@@ -153,8 +153,8 @@ double quot( double u, double v, double du, double dv )
 double quot( double u, double v, double du, double dv, double d2u, double d2v )
 {
 	double derivative;
-	derivative = (d2u*v + du*dv)*pow(v,2.)/pow(v,4.) - (du*v)*(2.*v*dv)/pow(v,4.)
-				- (du*dv + u*d2v)*pow(v,2.)/pow(v,4.) + (u*dv)*(2.*v*dv)/pow(v,4.);
+	derivative = (d2u*v + du*dv)/pow(v,2.) - (du*v)*(2.*dv)/pow(v,3.)
+				- (du*dv + u*d2v)/pow(v,2.) + (u*dv)*(2.*dv)/pow(v,3.);
 
 	return derivative;
 }

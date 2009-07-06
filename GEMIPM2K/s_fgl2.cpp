@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1325 2009-07-01 10:47:42Z wagner $
+// $Id: s_fgl2.cpp 1334 2009-07-05 11:57:43Z wagner $
 //
 // Copyright (C) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -959,8 +959,8 @@ long int TNRTL::ExcessProp( double *Zex )
 		}
 		g += x[j]*U/V;
 		dg += x[j] * (dU*V-U*dV)/pow(V,2.);
-		d2g += x[j] * ( (d2U*V+dU*dV)*pow(V,2.)/pow(V,4.) - (dU*V)*(2.*V*dV)/pow(V,4.)
-				- (dU*dV+U*d2V)*pow(V,2.)/pow(V,4.) + (U*dV)*(2.*V*dV)/pow(V,4.) );
+		d2g += x[j] * ( (d2U*V+dU*dV)/pow(V,2.) - (dU*V)*(2.*dV)/pow(V,3.)
+				- (dU*dV+U*d2V)/pow(V,2.) + (U*dV)*(2.*dV)/pow(V,3.) );
 	}
 
    	// final calculations

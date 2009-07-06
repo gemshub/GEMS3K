@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1328 2009-07-01 13:46:20Z wagner $
+// $Id: s_fgl.cpp 1335 2009-07-05 18:33:14Z wagner $
 //
 // Copyright (C) 2004-2009  T.Wagner, S.Churakov, D.Kulik
 //
@@ -144,7 +144,7 @@ long int TPRSVcalc::PureSpecies()
 long int TPRSVcalc::PTparam()
 {
 	long int j, i, ip, i1, i2;
-	double p0, p1, p2, k, dk, d2k;
+	double p0, p1, k, dk, d2k;
 
 	PureSpecies();
 
@@ -167,9 +167,16 @@ long int TPRSVcalc::PTparam()
 			i1 = aIPx[MaxOrd*ip];
 			i2 = aIPx[MaxOrd*ip+1];
 			p0 = aIPc[NPcoef*ip];
-			k = p0;
+			p1 = aIPc[NPcoef*ip+1];
+			k = p0 + p1*Tk;
+			dk = p1;
+			d2k = 0.;
 			KK[i1][i2] = k;
+			dKK[i1][i2] = dk;
+			d2KK[i1][i2] = d2k;
 			KK[i2][i1] = k;   // symmetric case
+			dKK[i2][i1] = dk;
+			d2KK[i2][i1] = d2k;
 		}
 	}
 
@@ -2427,7 +2434,7 @@ long int TSRKcalc::PureSpecies()
 long int TSRKcalc::PTparam()
 {
 	long int j, i, ip, i1, i2;
-	double p0, p1, p2, k, dk, d2k;
+	double p0, p1, k, dk, d2k;
 
 	PureSpecies();
 
@@ -2450,9 +2457,16 @@ long int TSRKcalc::PTparam()
 			i1 = aIPx[MaxOrd*ip];
 			i2 = aIPx[MaxOrd*ip+1];
 			p0 = aIPc[NPcoef*ip];
-			k = p0;
+			p1 = aIPc[NPcoef*ip+1];
+			k = p0 + p1*Tk;
+			dk = p1;
+			d2k = 0.;
 			KK[i1][i2] = k;
+			dKK[i1][i2] = dk;
+			d2KK[i1][i2] = d2k;
 			KK[i2][i1] = k;   // symmetric case
+			dKK[i2][i1] = dk;
+			d2KK[i2][i1] = d2k;
 		}
 	}
 	return 0;
