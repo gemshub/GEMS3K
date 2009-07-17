@@ -87,8 +87,7 @@ possible loop
 on input recipes begins<br>
 &nbsp;&nbsp; // (5) Reading the next DBR file with different input
 composition or temperature <br>
-&nbsp;&nbsp; node-&gt;GEM_read_dbr( NextRecipeFileName );
-      </p>
+&nbsp;&nbsp; node-&gt;GEM_read_dbr( NextRecipeFileName ); </p>
       <p style="font-family: monospace;">&nbsp;&nbsp; // Asking GEM
 IPM2 to
 run (faster) with smart initial approximation&nbsp; <br>
@@ -550,8 +549,8 @@ nNodes =
 data (real transport codes may do
 it differently) &nbsp;&nbsp; </span><br>
       <div style="margin-left: 40px;"><span
- style="font-family: monospace;">
-      </span><span style="font-family: monospace;">long int
+ style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">long int
 *m_NodeHandle,
 *m_NodeStatusCH,
 *m_IterDone;</span><br style="font-family: monospace;">
@@ -559,52 +558,51 @@ it differently) &nbsp;&nbsp; </span><br>
 [nNodes];</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">m_NodeStatusCH</span><span
  style="font-family: monospace;"> = new long int [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_IterDone </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_IterDone </span><span
  style="font-family: monospace;">= new long int [nNodes];</span><span
  style="font-family: monospace;"></span><br>
       <span style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-double *m_T, *m_P, *m_Vs,
+      <span style="font-family: monospace;">double *m_T, *m_P, *m_Vs,
 *m_Ms,</span><span style="font-family: monospace;"> *m_Gs, *m_Hs,
 *m_IC, *m_pH, *m_pe,</span><span style="font-family: monospace;"> *m_Eh;</span><br>
       <span style="font-family: monospace;"></span><span
  style="font-family: monospace;">m_T = new double [nNodes];</span><br>
-      <span style="font-family: monospace;">
-m_P</span><span style="font-family: monospace;"> = new double [nNodes];</span><span
+      <span style="font-family: monospace;">m_P</span><span
+ style="font-family: monospace;"> = new double [nNodes];</span><span
  style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-m_Vs </span><span style="font-family: monospace;">= new double
+      <span style="font-family: monospace;">m_Vs </span><span
+ style="font-family: monospace;">= new double
 [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_Ms </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_Ms </span><span
  style="font-family: monospace;">= new double [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><span
  style="font-family: monospace;">m_Gs </span><span
  style="font-family: monospace;">= new double [nNodes];</span><span
  style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-m_Hs </span><span style="font-family: monospace;">= new double
+      <span style="font-family: monospace;">m_Hs </span><span
+ style="font-family: monospace;">= new double
 [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_IC = </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_IC = </span><span
  style="font-family: monospace;">new double [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_pH </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_pH </span><span
  style="font-family: monospace;">= new double [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_pe </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_pe </span><span
  style="font-family: monospace;">= new double [nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><span
  style="font-family: monospace;">m_Eh </span><span
  style="font-family: monospace;">= new double [nNodes];</span><span
  style="font-family: monospace;"></span><br
  style="font-family: monospace;">
       <span style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-double **m_xDC, **m_gam, **m_xPH, **m_aPH, **m_vPS,
+      <span style="font-family: monospace;">double **m_xDC, **m_gam,
+**m_xPH, **m_aPH, **m_vPS,
 **m_mPS,**m_bPS,</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 **m_xPA, **m_dul,
@@ -613,32 +611,32 @@ double **m_xDC, **m_gam, **m_xPH, **m_aPH, **m_vPS,
 *[nNodes];</span><br>
       <span style="font-family: monospace;">m_gam </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_xPH </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_xPH </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_aPH </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_aPH </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_vPS </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_vPS </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_mPS </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_mPS </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_bPS </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_bPS </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_xPA </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_xPA </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_dul </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_dul </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">m_dll </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">m_dll </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><span
  style="font-family: monospace;"></span><span
  style="font-family: monospace;">m_bIC </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
@@ -648,12 +646,11 @@ double **m_xDC, **m_gam, **m_xPH, **m_aPH, **m_vPS,
       <span style="font-family: monospace;"></span><span
  style="font-family: monospace;">m_uIC </span><span
  style="font-family: monospace;">= new double *[nNodes];</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-for (long int in=0; in&lt;nNodes; in++)</span><br>
-      <span style="font-family: monospace;">
-{</span><br>
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><br>
+      <span style="font-family: monospace;">for (long int in=0;
+in&lt;nNodes; in++)</span><br>
+      <span style="font-family: monospace;">{</span><br>
       <span style="font-family: monospace;">&nbsp;&nbsp; m_bIC[in] =
 new
 double [nIC]; </span><br style="font-family: monospace;">
@@ -706,8 +703,8 @@ double [nIC]; </span><br style="font-family: monospace;">
  style="font-family: monospace;">[in]</span><span
  style="font-family: monospace;"> = </span><span
  style="font-family: monospace;">new double [nPS]; </span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">&nbsp;&nbsp; m_xPA</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">&nbsp;&nbsp; m_xPA</span><span
  style="font-family: monospace;">[in]</span><span
  style="font-family: monospace;"> = </span><span
  style="font-family: monospace;">new double [nPS]; </span><br
@@ -848,8 +845,7 @@ in one direction<br>
 transport models are much more complex, but essentially<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp; do similar things<br>
       </span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-}
-      </span><br style="font-family: monospace;">
+} </span><br style="font-family: monospace;">
       <br style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; //
       </span><span style="font-family: monospace;">Chemical
@@ -940,8 +936,7 @@ m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],</span><br
  style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_Eh[in],m_rMB[in], m_uIC[in], m_xDC[in], m_gam[in],</span><span
- style="font-family: monospace;"> m_xPH[in],
-      <br>
+ style="font-family: monospace;"> m_xPH[in], <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp; m_vPS[in], m_mPS[in],</span><span
  style="font-family: monospace;"> m_bPS[in], m_xPA[in] );<br>
@@ -971,10 +966,9 @@ here<br style="font-family: monospace;">
  style="font-family: monospace;"></span><span
  style="font-family: monospace;">// Deleting chemical data arrays for
 nodes </span><br>
-      <span style="font-family: monospace;">
-for (long int in=0; in&lt;nNodes; in++)</span><br>
-      <span style="font-family: monospace;">
-{</span><br>
+      <span style="font-family: monospace;">for (long int in=0;
+in&lt;nNodes; in++)</span><br>
+      <span style="font-family: monospace;">{</span><br>
       <span style="font-family: monospace;">&nbsp;&nbsp;
 delete[]m_bIC[in]; </span><br style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp; </span><span
@@ -1046,8 +1040,8 @@ delete[]m_bIC[in]; </span><br style="font-family: monospace;">
  style="font-family: monospace;">[in]</span><span
  style="font-family: monospace;">;</span><span
  style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">&nbsp;&nbsp; </span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">&nbsp;&nbsp; </span><span
  style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_xPA</span><span
  style="font-family: monospace;">[in]</span><span
@@ -1065,110 +1059,109 @@ delete[]m_bIC[in]; </span><br style="font-family: monospace;">
       <span style="font-family: monospace;"></span>}<br>
       <span style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_xDC;</span><br>
-      <span style="font-family: monospace;">
-delete[]</span><span style="font-family: monospace;">m_gam</span><span
+      <span style="font-family: monospace;">delete[]</span><span
+ style="font-family: monospace;">m_gam</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_xPH</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_aPH</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_vPS</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_mPS</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_bPS</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_xPA</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_dul</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_dll</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><span
  style="font-family: monospace;"></span><span
  style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_bIC</span><span
  style="font-family: monospace;">;</span><br>
       <span style="font-family: monospace;"></span><span
- style="font-family: monospace;">
-delete[]</span><span style="font-family: monospace;">m_rMB</span><span
+ style="font-family: monospace;">delete[]</span><span
+ style="font-family: monospace;">m_rMB</span><span
  style="font-family: monospace;">;</span><br>
       <span style="font-family: monospace;"></span><span
- style="font-family: monospace;">
-delete[]</span><span style="font-family: monospace;">m_uIC</span><span
+ style="font-family: monospace;">delete[]</span><span
+ style="font-family: monospace;">m_uIC</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><br>
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_NodeHandle;</span><br
  style="font-family: monospace;">
-      <span style="font-family: monospace;">
-delete[]</span><span style="font-family: monospace;">m_NodeStatusCH</span><span
+      <span style="font-family: monospace;">delete[]</span><span
+ style="font-family: monospace;">m_NodeStatusCH</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_IterDone</span><span
  style="font-family: monospace;">;</span><span
  style="font-family: monospace;"></span><br>
       <span style="font-family: monospace;"></span><span
  style="font-family: monospace;"></span><span
- style="font-family: monospace;">
-delete[]</span><span style="font-family: monospace;">m_T;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+ style="font-family: monospace;">delete[]</span><span
+ style="font-family: monospace;">m_T;</span><br>
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_P</span><span
  style="font-family: monospace;">;</span><span
  style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_Vs</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_Ms</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><span
  style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_Gs</span><span
  style="font-family: monospace;">;</span><span
  style="font-family: monospace;"></span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">
 m_Hs</span><span style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_IC</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_pH</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;">delete[]</span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_pe</span><span
  style="font-family: monospace;">;</span><br>
-      <span style="font-family: monospace;">
-      </span><span style="font-family: monospace;"></span><span
+      <span style="font-family: monospace;"> </span><span
+ style="font-family: monospace;"></span><span
  style="font-family: monospace;">delete[]</span><span
  style="font-family: monospace;">m_Eh</span><span
  style="font-family: monospace;">;</span><br>
@@ -1177,11 +1170,10 @@ m_Hs</span><span style="font-family: monospace;">;</span><br>
       <span style="font-family: monospace;">// deleting GEMIPM and data
 exchange memory structures</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">delete node;</span><br>
-      <span style="font-family: monospace;">
-      </span><br>
+      <span style="font-family: monospace;"> </span><br>
       <span style="font-family: monospace;"></span></div>
-      <span style="font-family: monospace;">
-// end of example<br style="font-family: monospace;">
+      <span style="font-family: monospace;">// end of example<br
+ style="font-family: monospace;">
       </span></td>
     </tr>
   </tbody>
@@ -1767,7 +1759,8 @@ C<br>
       <td style="vertical-align: top;">double <br>
       </td>
       <td style="vertical-align: top;">Pressure P,
-bar </td>
+bar Pa (1 Pa = 1e-5 bar) <br>
+      </td>
       <td style="vertical-align: top; font-family: monospace;">P<br>
       </td>
       <td style="vertical-align: top;"><br>
@@ -2178,11 +2171,15 @@ not (returns false)<br>
       <td style="vertical-align: top; font-family: monospace;"> long
 int&nbsp; check_grid_TP(&nbsp; double Tc,
 double P );</td>
-      <td style="vertical-align: top;">Test Tc and P as grid point for
+      <td style="vertical-align: top;">Tests Tc and P as a grid point
+for
 the interpolation
-of thermodynamic data using DATACH lookup arrays; returns -1L if
+of thermodynamic data using DATACH lookup arrays. Returns -1L if
 interpolation is needed, or 1D index of the lookup array element if Tc
-and P fit within the respective tolerances<br>
+and P fit within the respective tolerances. For producing lookup arrays
+(in GEMS), we recommend using step for temperature less or equal to 10
+degrees in order to assure good accuracy of interpolation especially
+for S0 and Cp0 of aqueous species. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;"> long
 int laX = node-&gt;check_grid_TP(&nbsp; 45., 5. ); <br>
@@ -2214,9 +2211,9 @@ nDC, </span><span style="font-family: monospace;">nPHb, nPH, </span><big><span
  style="font-family: monospace;"></span></span><small>that exist in the
 DCH file and DATACH structure. </small></big><big><br>
 </big>
-<p style="font-family: Helvetica,Arial,sans-serif;"><small><span
+<p style="font-family: Helvetica,Arial,sans-serif;"><small><big><span
  style="font-family: Times New Roman,Times,serif;">The trivial
-(default) case is when</span> </small> <span
+(default) case is when</span></big> </small> <span
  style="font-family: monospace;">nICb
 = nIC,</span><span style="font-family: monospace;">nDCb =
 nDC, </span><span style="font-family: monospace;">nPHb =
@@ -2999,7 +2996,8 @@ const double P, const double Tc,&nbsp; <span
 Gibbs energy G0(P,Tc) value for Dependent Component (in J/mol) from the
 DATACH
 structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature,
-C) or P (pressure, bar) parameters go beyond the valid lookup array
+C) or P (pressure, <span style="color: rgb(255, 102, 102);">Pa</span>)
+parameters go beyond the valid lookup array
 intervals or tolerances. Parameter<span style="font-family: monospace;">
 norm </span>defines in wnich units the value is returned: false - in
 J/mol; true (default) - in mol/mol. </td>
@@ -3014,7 +3012,8 @@ DC_V0(const long int xCH, const double P,
 const double Tc)<br>
       <span style="color: rgb(0, 0, 0);">was DC_V0_TP(</span><br>
       </td>
-      <td style="vertical-align: top;">Retrieves (interpolated) molar
+      <td style="vertical-align: top;">Retrieves (interpolated, if
+necessary) molar
 volume V0(P,Tc) value for Dependent Component (in J/bar) from the
 DATACH
 structure ( xCH is the DC DCH index) <span

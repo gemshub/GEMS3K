@@ -6,14 +6,14 @@
 // Works with DATACH and work DATABR structures
 // without using the Tnodearray class
 //
-// (c) 2006,2008 S.Dmytriyeva, D.Kulik
+// (c) 2006,2009 S.Dmytriyeva, D.Kulik
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
 // developed in the Laboratory for Waste Management,
 //   Paul Scherrer Institute
 
-// This file may be distributed under the licence terms
+// This file may be distributed under the license terms
 // defined in GEMIPM2K.QAL
 //
 // See also http://gems.web.psi.ch/
@@ -285,9 +285,9 @@ void GEM_set_MT(
 // if called in loop for each node), or in text format
 // (false or 0, default). Parameter with_comments, if true, tells that
 // the text file will be written with comments for all data entries.
-//   Parameter brief_mode, if true, tells that do not write data items 
+//   Parameter brief_mode, if true, tells that do not write data items
 //   that contain only default values in text format
-   void  GEM_write_dbr( const char* fname,  bool binary_f=false, 
+   void  GEM_write_dbr( const char* fname,  bool binary_f=false,
 		                  bool with_comments = true, bool brief_mode = false);
 
 // (5a) For detailed examination of GEM work data structure:

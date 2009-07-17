@@ -11,7 +11,7 @@
 <body>
 <h1><img alt="GEMS-icon" src="gems1.png"
  style="width: 48px; height: 48px;" align="left"> <font color="#000066">
-GEMIPM2K version 2.2.3</font> </h1>
+GEMIPM2K version 3</font> </h1>
 <h2>Standalone GEM-IPM-2 Solver of Chemical Equilibria by Gibbs Energy
 Minimization<br>
 </h2>
@@ -26,10 +26,10 @@ construction&gt;</span><br>
 Introduction<br>
   </a></font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#2-STRUCTURE">2.
-Structure of GEMIPM2K Code&nbsp; and its Data Exchange Intefaces <br>
+Structure of GEMIPM2K Code&nbsp; and its Data Exchange Interfaces <br>
   </a></font></p>
   <p><a href="#IPM2-OPERATION"><font face="Helvetica, Arial, sans-serif">2.1.
-Brief overview of GEM IPM2 module operation</font></a></p>
+Brief overview of GEM IPM2 Module Operation</font></a></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#KERNEL">2.2.
 The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM (Multi) </a><br>
   </font></p>
@@ -37,7 +37,7 @@ The GEM-IPM2 Kernel (GEMIPM2K) and its Work Data Structure IPM (Multi) </a><br>
 The DATACH Structure for Chemical System Definition (CSD)<br>
   </font></a></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#DATABR">2.4.
-The DATABR Structure for the Node Data Bridge Composition and
+The DATABR Structure for the Node Data Bridge Recipe and
 Speciation data</a> <br>
   <br>
   </font><font face="Helvetica, Arial, sans-serif"> <a href="#TNODE">2.5.
@@ -70,16 +70,10 @@ GNU C++ (gcc - gfortran)</a><br>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#PGICPP_FOR">4.2.
 Portland Group C++ (pgcc- pgf)</a><br>
   </font></p>
-  <p><font face="Helvetica, Arial, sans-serif"><a href="#MSVCPP_DIGIFOR">4.3.
-MS Visual C++ (with Digital Fortran)</a><br>
-  </font></p>
-  <p><font face="Helvetica, Arial, sans-serif"><a href="#BORLANDCPP">4.4.
-Borland C++</a><br>
-  </font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a
- href="#OTHER_COMPILERS">4.5. Other compilers and linkers</a><br>
+ href="#OTHER_COMPILERS">4.3. Other compilers and linkers</a><br>
   </font></p>
-  <p><font face="Helvetica, Arial, sans-serif"><a href="#SVN_REP">4.6.
+  <p><font face="Helvetica, Arial, sans-serif"><a href="#SVN_REP">4.4.
 Subversion Repository of GEMIPM2K</a><br>
   </font></p>
   <p><font face="Helvetica, Arial, sans-serif"><a href="#INPUT_FILES">5.
@@ -106,25 +100,27 @@ contaminants through aqueous and/or gas phase in subsurface, together
 with their
 interaction with wall-rock minerals by means of (ad)sorption,
 mineral (co)precipitation, dissolution, etc.&nbsp; These chemical
-processes depend on the redox state of the system, are inherently
-complex,
-and may involve many phases and chemical species, some of which are
-kinetically dependent. Such interactions may indirectly affect the mass
+processes are inherently
+complex; they depend on the redox state of the system, and may involve
+many phases and chemical species, some of which are
+kinetically dependent. Such interactions may adversely affect the mass
 transport
 via the porosity and permeability changes e.g. due to mineral
 dissolution or
 precipitation. </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Direct
 inclusion of all possible chemical reactions in the mass transport
-model may render it intractable in 2D or 3D space.
+model is possible (e.g.[<a href="#Ref_Steefel_2009">Steefel and Maher
+2009</a>]), but may render it intractable in 2D or 3D space.
 If this is the case, the chemical model must be dramatically simplified
 to a
 few reactions, which makes its chemical plausibility doubtful. The
-modeller must make (often arbitrary) decisions which chemical
-interactions are relevant and which can be neglected. <br>
+modeller must make (often arbitrary) decisions about which chemical
+interactions are relevant, and which ones can be neglected. <br>
   </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">An
-alternative approach would be to keep a complex enough chemical model
+alternative "operator-splitting" approach would be to keep a complex
+enough chemical model
 in a kind of "black box" which can be applied separately to each
 node of the FMT model at each given time point <span
  style="font-style: italic;">t</span>.&nbsp; The&nbsp; input of
@@ -140,26 +136,29 @@ could have been changed by the mass transport part on its previous
 iteration time step <span style="font-style: italic;">t-</span>1.&nbsp;
   <br>
   </p>
-  <p style="font-family: Helvetica,Arial,sans-serif;">Now, the
-"chemical black box" equilibration is applied
+  <p style="font-family: Helvetica,Arial,sans-serif;">The
+"chemical black box" equilibration is then applied
 to each node independently at time point <span
  style="font-style: italic;">t</span>,
 to produce changed speciation <span style="font-style: italic;">n</span>
 (amounts of chemical species in all reactive
-phases),&nbsp; new phase volumes, redox (Eh, pe of aqueous solution,
-gas fugacities), chemical potentials of components, etc. This
+phases),&nbsp; new phase volumes, redox state (expressed in values of
+Eh, pe of aqueous solution,
+gas fugacities, etc.), chemical potentials of components, and so on.
+This
 procedure can also detect a disappearance of some phases or
-appearance of some new phases in some nodes (e.g., by dissolution or
+appearance of some new phases in some nodes (e.g., due to dissolution
+or
 precipitation of solids). <br>
   </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">After the
 "chemistry" run over all nodes is
 finished, the next time step of the FMT algorithm can be done for the
 time point <span style="font-style: italic;">t</span>+1, using the
-updated concentrations of mobile species (also pH, Eh, f(H2), ... ) in
+updated concentrations of mobile species in
 aqueous
 and/or gas phases at time <span style="font-style: italic;">t.</span>
-The FMT part redistributes matter between nodes (under mass
+The FMT part redistributes the matter between nodes (subject to mass
 concervation), thus producing corrected compositions of reactive part
 of
 each node. So, the coupled RMT algorithm actually runs over all nodes
@@ -171,9 +170,9 @@ then&nbsp; by applying the "chemical black box" to each node at time <span
 which will be used by the FMT part at the next time point&nbsp; <span
  style="font-style: italic;">t</span>+1.</p>
   <p style="font-family: Helvetica,Arial,sans-serif;">This
-idea of "reactor-splitting" coupling is not really new and it has
+idea of "operator-splitting" coupling is not really new and it has
 already been implemented in a number of
-coupled codes (PHREEQC, RockFlow, MCOTAC, ....). These codes
+coupled codes (PHREEQC, GeoSys/RockFlow, MCOTAC, ....). These codes
 use different mass transport algorithms, but in most cases the same
 type of chemical
 solver based on the law of mass action (LMA) and the Newton-Raphson
@@ -184,7 +183,7 @@ be&nbsp;
 coupled with the FMT codes. </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Both LMA and
 GEM can solve the so-called&nbsp; forward
-chemical modeling problem, which consists in finding
+chemical modeling problem, which consists in finding the
 concentrations (or
 amounts) and activities of chemical species in aqueous and other phases
 present
@@ -202,7 +201,7 @@ are
 included in the mass balance; a typical case is the aqueous - solid
 solution (Aq-SS) system which also involves a non-ideal fluid (gas
 mixture) phase. Even more complex systems can be considered, e.g. those
-involving (ad)sorption on several co-existing stable or metastable
+involving (ad)sorption on several co-existing
 sorbents. </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Chemical
 speciation problems were traditionally solved with help of the LMA
@@ -229,14 +228,15 @@ ions) - this "input data economy" can also be viewed as an advantage in
 some cases.<br>
   <br>
   <a name="CRITIQUE-LMA"></a>However,
-solving with LMA code complex equilibria that involve the aqueous
-electrolyte phase, many possible condensed phases including solid
-solutions or fluids is,
-in general, an inefficient and awkward process. Different approaches
-are used in LMA chemical solvers. In the Geochemists Workbench [<a
- href="#Ref_Bethke-1996">Bethke,1996</a>],&nbsp; any pure mineral phase
+solving with LMA codes the complex equilibria that involve aqueous
+electrolyte, many possible condensed phases (including solid
+solutions or fluids) is,
+in general, an inefficient process. Different approaches
+to this problem are used in LMA chemical solvers. In the Geochemists
+Workbench [<a href="#Ref_Bethke-1996">Bethke,1996</a>],&nbsp; any pure
+mineral phase
 is taken as master species. Because there is no way to mix master
-species, this program cannot handle solid solutions or gas mixture at
+species, this program cannot handle solid solutions or gas mixtures at
 all. Other LMA codes (such as PHREEQC) consider minerals and gases as
 product species. As pointed by [<a href="#Ref_Reed-1982">Reed, 1982</a>],
 usually no solids are taken into mass balance in the initial speciation
@@ -249,8 +249,9 @@ supersaturated phases are left in the list. <br>
   <p style="font-family: Helvetica,Arial,sans-serif;">The real problem
 in LMA approach is how to determine the saturation index of the solid
 solution
-phase or the gas mixture. For the ideal (solid) solution, this can be
-done over iterations using ionic mole fractions
+phase or of the gas mixture. For the ideal (solid) solution, this can
+be
+done over iterations using ionic activities
 available from aqueous speciation. For non-ideal SS, this is a problem
 which has
 no general solution, as explained on Page 94 in [<a
@@ -265,7 +266,7 @@ test procedures for selecting (over)saturated solids one-by-one,
 without a theoretical guarantee of
 convergence to a unique result. This kind of retardation is difficult
 to evaluate, but, with a large list of possible condensed phases, more
-than ten LMA sub-runs may be required to include all stable solids
+than ten LMA loops may be required to include all stable solids
 into
 mass balance.&nbsp;<br>
   </p>
@@ -299,7 +300,7 @@ mass balance.&nbsp;<br>
  </o:OLEObject>
 </xml><![endif]-->
   <p style="font-family: Helvetica,Arial,sans-serif;">These drawbacks
-of LMA approach are not relevant in a
+of LMA approach do not exist in a
 complementary GEM approach [for details, see <a
  href="#Ref_Karpov-ea-1997">Karpov et
 al., 1997</a>; <a href="#Ref_Karpov-ea-2001">2001</a>; <a
@@ -313,16 +314,14 @@ charge <span style="font-style: italic;">n<sub>z</sub></span> comprise
 the
 input bulk composition of the chemical system expressed using <span
  style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>)
-independent components
+Independent Components
 (IC). All&nbsp; <span style="font-style: italic;">n</span>(<span
  style="font-style: italic;">L</span>) stoichiometrically
-feasible chemical species or dependent
-components (DC) are taken
+feasible chemical species or Dependent Components (DC) are taken
 into the mass balance
 through their chemical formulae and mole amounts <span
  style="font-style: italic;">n<sub>j</sub></span>. A given <span
- style="font-style: italic;">j</span>-th dependent
-component belongs to a single- or
+ style="font-style: italic;">j</span>-th DC belongs to a single- or
 multi-component aqueous, gaseous, fluid, liquid, solid, or sorption
 phase.
 The stability of <span style="font-style: italic;">j</span>-th DC at
@@ -332,22 +331,23 @@ of
 interest is defined by its molar Gibbs energy function <span
  style="font-style: italic;">g<sub>T,P</sub></span>. Activities and
 concentrations
-of dependent components are treated separately in each phase, taking
-into account the appropriate standard and
+of DCs are treated separately in each phase, taking
+into account appropriate standard and
 reference states, concentration scales, and models of (non)ideal
 mixing. </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Conversely,
 GEM
 algorithms can solve complex Aq-SS
-equilibria in one GEM run, in a
-straightforward way, without any supporting tools such as Lippmann
+equilibria in a
+straightforward way, without supporting tools such as Lippmann
 functions or semi-empirical iterative procedures required in LMA Aq-SS
 speciation
-models. The applicability of GEM to chemical systems is limited only by
+models. The applicability of GEM to chemical systems is thus limited
+only by
 the knowledge of
 standard-state molar properties of end-members and the non-ideal
 interaction
-parameters for each phase.</p>
+parameters of mixing model for each phase.</p>
   <p style="font-family: Helvetica,Arial,sans-serif;">The
 disadvantages of GEM in comparison with LMA codes are (i) slower
 convergence in simple aqueous speciation calculations
@@ -357,8 +357,8 @@ initial approximation
 for the new run (in "smart initial approximation" mode). The mass
 balance accuracy can be made comparable to that of LMA at the cost of a
 few additional
-GEM iterations (the IPM-2 algorithm), as described in [<a
- href="#Ref_TM-44-02-06">Chudnenko ea,
+GEM iterations (the IPM-2 algorithm), as described in a previous
+technical report [<a href="#Ref_TM-44-02-06">Chudnenko ea,
 2002</a>]. </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">Performance and
 chemical feasibility of GEM in complex Aq-SS multiphase
@@ -366,18 +366,19 @@ systems may be much better than that of LMA codes
 (though no
 direct benchmarking is yet available). Another advantage of
 GEM method (in "convex programming" variant) is that it yields two
-solutions - the "primal" <span style="font-style: italic;">n</span>
+solutions - the "primal" <span style="font-style: italic;">n(x)</span>
 for speciation
-(analogous to LMA) and the "dual" <span style="font-style: italic;">u</span>
+(analogous to LMA) and the "dual" <span style="font-style: italic;">u(b)</span>
 for chemical potentials of
 stoichiometry units (not available from LMA solvers). The dual solution
 may open
 innovative ways to constructing mass transport models for
 diffusion-dominated systems, since the
-diffusion of any component is driven by the gradient of its chemical
+diffusion of any component may be considered as being driven by the
+gradient of its chemical
 potential.</p>
   <p style="font-family: Helvetica,Arial,sans-serif;">The
-present program package GEMIPM2K is an implementation of GEM IPM-2
+present program GEMIPM2K is an implementation of GEM IPM-2
 chemical
 solver with a simple data exchange interface that makes it possible to
 couple any existing FMT code with the GEM&nbsp; "chemical black box" to
@@ -392,37 +393,44 @@ nodes is
 stored in the mass transport part which calls the chemical solver for
 each node one-by-one, is
 supported by the TNode C++ class (and its fortran interface). When a
-new FMT code is written, the whole data storage for all nodes can be
-organized using a TNodeArray C++ class into two node arrays (for time t
+new FMT code is written, the whole data storage for all nodes can also
+be
+organized (using a TNodeArray C++ class) into two node arrays (for time
+t
 and t-1), with each node accessible
 from the GEM IPM-2 routines or from the FMT program. </p>
   <p style="font-family: Helvetica,Arial,sans-serif;">This
 document describes the structure of GEMIPM2K program and the data
 exchange interface (DATACH and DATABR structures), followed by an
 overview of TNode and TNodeArray classes and examples of their
-usage. In a companion document <a href="gemipm2k-inp.html">gemipm2k-inp.html</a>,
+usage (see also another document&nbsp; <a
+ href="GEMIPM2K%20User%20Reference.html">GEMIPM2K User Reference.html</a>&nbsp;
+for detail on using TNode class functions). In a companion document <a
+ href="gemipm2k-inp.html">gemipm2k-inp.html</a>,
 the format of GEMIPM2K text input/output files is described together
-with the reference on data objects encountered in these files. Most of
-these data objects are the same as in GEM-Selektor; hyperlinks are
+with the reference for data objects encountered in these files. Most of
+these data objects are the same as in GEM-Selektor package or similar;
+links are
 provided wherever necessary. <br>
   </p>
   <p><br>
   </p>
   <hr size="2" width="100%">
-  <h2><br>
-  </h2>
   <h2><a name="2-STRUCTURE"></a>2. Structure of GEMIPM2K Code and
 its Data Exchange Inteface </h2>
   <p style="font-family: Helvetica,Arial,sans-serif;"><span
  style="font-size: 12pt; font-family: Helvetica,Arial,sans-serif;">GEMIPM2K
 package is a set of C++ classes and functions
-extracted from the <st1:stockticker w:st="on">GEMS</st1:stockticker>-<st1:stockticker
- w:st="on">PSI</st1:stockticker> code package for thermodynamic
-modelling by Gibbs energy minimization (<st1:stockticker w:st="on">GEM</st1:stockticker>).
-GEMIPM2K implements the GEM chemical solver linked to TMulti C++ class
+extracted from the <st1:stockticker w:st="on">GEM-S</st1:stockticker><st1:stockticker
+ w:st="on">elektor</st1:stockticker> code package for thermodynamic
+modelling by Gibbs energy minimization (<st1:stockticker w:st="on">GEM</st1:stockticker>),
+available at <a href="http://gems.web.psi.ch">http://gems.web.psi.ch</a>.
+The GEMIPM2K code implements the same GEM chemical solver as in GEMS,
+linked to TMulti C++ class
 and data structure, enhanced with <st1:stockticker w:st="on">RAM</st1:stockticker>-
 and file- data exchange interfaces implemented in TNode and TNodeArray
-classes. <br>
+classes, but cut from the GEMS graphical user interface, database
+engine, and script interpreter. <br>
   </span></p>
   <p style="font-family: Helvetica,Arial,sans-serif;"><span
  style="font-size: 12pt; font-family: Helvetica,Arial,sans-serif;"><st1:stockticker
@@ -466,7 +474,7 @@ single call (with
 internal parallelization possible). This may be suitable for developing
 of a
 new coupled code. The GEMIPM2K source code is expected to be
-distributed under
+distributed in future under
 LGPL or similar license.<br>
   <br style="font-family: Helvetica,Arial,sans-serif;">
   </span></p>
@@ -888,19 +896,27 @@ numerical&nbsp; solvers used in GEM IPM module <br>
         </td>
       </tr>
       <tr>
-        <td style="font-family: monospace;"><big>s_fgl.cpp</big></td>
-        <td style="vertical-align: top;">Implementation of buil-in
-non-ideal fluid and some solid solution models<br>
-        </td>
-      </tr>
-      <tr>
         <td style="font-family: monospace;"><big>s_fgl.h</big></td>
         <td style="vertical-align: top;">Headers for built-in non-ideal
-fluid and solution models<br>
-        </td>
+fluid and solution models </td>
+      </tr>
+      <tr>
+        <td style="font-family: monospace;"><big>s_fgl.cpp</big></td>
+        <td style="vertical-align: top;">Implementation of buil-in
+non-ideal fluid and some solid solution models </td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top; font-family: monospace;"><big>s_fgl1.cpp</big></td>
+        <td style="vertical-align: top;">Implementation of buil-in
+non-ideal fluid and some solid solution models</td>
       </tr>
       <tr>
         <td style="font-family: monospace;"><big>s_fgl2.cpp</big></td>
+        <td style="vertical-align: top;">Implementation of buil-in
+non-ideal fluid and some solid solution models</td>
+      </tr>
+      <tr>
+        <td style="vertical-align: top; font-family: monospace;"><big>s_fgl3.cpp</big></td>
         <td style="vertical-align: top;">Implementation of buil-in
 non-ideal fluid and some solid solution models</td>
       </tr>
@@ -1066,7 +1082,7 @@ allowed). Because of that, some restrictions apply in GEMIPM2K relative
 to GEMS-PSI code: <br>
   </span></p>
   <h4><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;DIfferences
-in functionality between GEMIPM2K program and the full GEMS-PSI code<br>
+in functionality between GEMIPM2K program and the full GEMS code<br>
   </span></h4>
   <table style="text-align: left; width: 100%;" border="1"
  cellpadding="2" cellspacing="2">
@@ -1079,55 +1095,81 @@ in functionality between GEMIPM2K program and the full GEMS-PSI code<br>
  style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">GEMIPM2K<br>
         </td>
         <td
- style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">GEMS-PSI<br>
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">GEM-Selektor<br>
         </td>
       </tr>
       <tr>
-        <td style="vertical-align: top;">Phase- and Process math scripts<br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Phase-
+and Process math scripts<br>
         </td>
-        <td style="vertical-align: top;">Not possible<br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Not
+possible<br>
         </td>
-        <td style="vertical-align: top;">Used<br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Used<br>
         </td>
       </tr>
       <tr>
-        <td style="vertical-align: top;">Built-in functions for
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Built-in
+functions for
 activity coefficients<br>
         </td>
-        <td style="vertical-align: top;">Used<br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Used<br>
         </td>
-        <td style="vertical-align: top;">Used<br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Used<br>
         </td>
       </tr>
       <tr>
-        <td style="vertical-align: top;">T-P corrections for input
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">T-P
+corrections for input
 thermodynamic data<br>
         </td>
-        <td style="vertical-align: top;">Interpolation using a lookup
-grid array <br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Interpolation
+using a lookup array (produced in GEMS)<br>
         </td>
-        <td style="vertical-align: top;">Direct access to thermodynamic
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Direct
+access to thermodynamic
 data base, built-in HKF EoS, CG EoS, PRSV EoS, Cp double integration,
 etc.<br>
         </td>
       </tr>
       <tr>
-        <td style="vertical-align: top;">Access to input, output and
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Access
+to input, output and
 work data<br>
         </td>
-        <td style="vertical-align: top;">Batch mode only (I/O files or
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Batch
+mode only (data exchange I/O files or
 in RAM)<br>
         </td>
-        <td style="vertical-align: top;">Direct GUI access, including
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Direct
+GUI access, including
 multithread stepwise mode<br>
         </td>
       </tr>
       <tr>
-        <td style="vertical-align: top;">Runtime help and tooltips <br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Runtime
+help and tooltips <br>
         </td>
-        <td style="vertical-align: top;">Not available<br>
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Not
+available<br>
         </td>
-        <td style="vertical-align: top;">Available as runtime HTML
+        <td
+ style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Available
+as runtime HTML
 help, either local or in internet<br>
         </td>
       </tr>
@@ -1136,7 +1178,7 @@ help, either local or in internet<br>
   <p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
 In principle,&nbsp; all the input data required for GEM IPM-2
 calculation can be provided in a human-made ASCII file. However,
-producing such file without a software front-end that can accessing the
+producing such file without a software front-end that can access the
 thermodynamic data base would be a difficult and error-prone
 process. <br>
   </span></p>
@@ -1235,7 +1277,8 @@ inside of the TNode class. <br>
   </span></p>
   <p><span style="font-family: Helvetica,Arial,sans-serif;">The
 advantage of having three kinds of input files instead of one is that
-in a typical RMT problem with hudreds of thousands of nodes, only one
+in a typical RMT problem with tens to hundreds of thousands of nodes,
+only one
 relatively large DCH and one IPM file is needed, while node-specific
 data are provided in many small and compact input-output DBR files
 without redundant information. As a consequence,&nbsp; higher
@@ -1248,7 +1291,8 @@ simply images of the respective memory data structures; they may be
 non-transferable between different computer architectures. The text
 stream files are transferable; they have a human-readable format with
 tags (keywords) followed with the data; comment lines are possible
-anywhere. For most data items, the input order is free, or they can be
+anywhere. For most data items, the input order is free; many data
+objects can be
 skipped if the program can substitute default values.&nbsp; Only&nbsp;
 dimenions necessary for internal data allocation must be present at the
 beginning of DCH and IPM files. More about the file structure of
