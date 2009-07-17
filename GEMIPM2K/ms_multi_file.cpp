@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1258 2009-03-12 14:58:08Z sveta $
+// $Id: ms_multi_file.cpp 1360 2009-07-15 13:37:30Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -288,21 +288,15 @@ void TMulti::to_file( GemDataStream& ff  )
    //static values
    char PAalp;
    char PSigm;
-   double EpsW;
-   double RoW;
 
 
 #ifndef IPMGEMPLUGIN
 
    PAalp = syp->PAalp;
    PSigm = syp->PSigm;
-   EpsW = TProfil::pm->tpp->EpsW;
-   RoW = TProfil::pm->tpp->RoW;
 #else
    PAalp = PAalp_;
    PSigm = PSigm_;
-   EpsW = EpsW_;
-   RoW = RoW_;
 #endif
 
 
@@ -311,8 +305,10 @@ void TMulti::to_file( GemDataStream& ff  )
    ff.writeArray(&pm.TC, 55);
    ff << PAalp;
    ff << PSigm;
-   ff << EpsW;
-   ff << RoW;
+   ff.writeArray( pm.denW, 5);
+   ff.writeArray( pm.denWg, 5);
+   ff.writeArray( pm.epsW, 5);
+   ff.writeArray( pm.epsWg, 5);
 
    //dynamic values
 
@@ -488,6 +484,12 @@ ff.writeArray((double*)pm.D, MST*MST);
       ff.writeArray(pm.Qp, pm.FIs*QPSIZE);
       ff.writeArray(pm.Qd, pm.FIs*QDSIZE);
    }
+   	ff.writeArray( pm.H0, pm.L);
+   	ff.writeArray( pm.A0, pm.L);
+   	ff.writeArray( pm.U0, pm.L);
+   	ff.writeArray( pm.S0, pm.L);
+   	ff.writeArray( pm.Cp0, pm.L);
+
 //  Added 16.11.2004 by Sveta
 //   if( pm.sitNcat*pm.sitNcat )
 //     ff.writeArray( pm.sitE, pm.sitNcat*pm.sitNan );
@@ -503,18 +505,16 @@ void TMulti::from_file( GemDataStream& ff )
    //static values
    char PAalp;
    char PSigm;
-   double EpsW;
-   double RoW;
 
    ff.readArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.readArray( &pm.N, 38);
    ff.readArray(&pm.TC, 55);
    ff >> PAalp;
    ff >> PSigm;
-   ff >> EpsW;
-   ff >> RoW;
-
-
+   ff.readArray( pm.denW, 5);
+   ff.readArray( pm.denWg, 5);
+   ff.readArray( pm.epsW, 5);
+   ff.readArray( pm.epsWg, 5);
 
 #ifndef IPMGEMPLUGIN
 //   syp->PAalp = PAalp;
@@ -522,8 +522,6 @@ void TMulti::from_file( GemDataStream& ff )
 #else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-   EpsW_ = EpsW;
-   RoW_ =  RoW;
 #endif
 
    //realloc memory
@@ -719,6 +717,11 @@ ff.readArray((double*)pm.D, MST*MST);
       ff.readArray(pm.Qp, pm.FIs*QPSIZE);
       ff.readArray(pm.Qd, pm.FIs*QDSIZE);
    }
+   	ff.readArray( pm.H0, pm.L);
+   	ff.readArray( pm.A0, pm.L);
+   	ff.readArray( pm.U0, pm.L);
+   	ff.readArray( pm.S0, pm.L);
+   	ff.readArray( pm.Cp0, pm.L);
 //  Added 16.11.2004 by Sveta
 //   if( pm.sitNcat*pm.sitNcat )
 //     ff.readArray( pm.sitE, pm.sitNcat*pm.sitNan );
@@ -1428,20 +1431,20 @@ void TMulti::to_text_file( const char *path, bool append )
     //static values
    char PAalp;
    char PSigm;
-   double EpsW;
-   double RoW;
+//   double EpsW;
+//   double RoW;
 
 
 #ifndef IPMGEMPLUGIN
    PAalp = syp->PAalp;
    PSigm = syp->PSigm;
-   EpsW = TProfil::pm->tpp->EpsW;
-   RoW = TProfil::pm->tpp->RoW;
+//   EpsW = TProfil::pm->tpp->EpsW;
+//   RoW = TProfil::pm->tpp->RoW;
 #else
    PAalp = PAalp_;
    PSigm = PSigm_;
-   EpsW = EpsW_;
-   RoW = RoW_;
+//   EpsW = EpsW_;
+//   RoW = RoW_;
 #endif
 
    ios::openmode mod = ios::out; 
@@ -1453,13 +1456,18 @@ void TMulti::to_text_file( const char *path, bool append )
   if( append ) 
    ff << "\nNext record" << endl;
   ff << pm.stkey << endl;
+//  TProfil::pm->pa.p.write(ff);
+  
+  TPrintArrays  prar(0,0,ff);
 
-  TPrintArrays  prar(ff);
-
+  prar.writeArray( "Short_PARAM",  &TProfil::pm->pa.p.PC, 10L );
+  prar.writeArray( "Double_PARAM",  &TProfil::pm->pa.p.DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 38L );
-  prar.writeArray(  "Double_Const",  &pm.TC, 55 );
-  prar.writeArray(  "EpsW", &EpsW, 1);
-  prar.writeArray(  "RoW", &RoW, 1);
+  prar.writeArray(  "Double_Const",  &pm.TC, 55, 20 );
+  prar.writeArray(  "EpsW", pm.epsW, 5);
+  prar.writeArray(  "EpsWg", pm.epsWg, 5);
+  prar.writeArray(  "DenW", pm.denW, 5);
+  prar.writeArray(  "DenWg", pm.denWg, 5);
   ff << endl << "Error Code " << pm.errorCode << endl;
   ff << "Error Message" << pm.errorBuf << endl;
 

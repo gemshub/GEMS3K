@@ -19,14 +19,67 @@
 #include  <fstream>
 #include "gstring.h"
 
-class TPrintArrays  // print fields of structure
-{
+struct outField
+ {
+   char name[20]; // name of field in structure
+   long int alws;    // 1 - must be read, 0 - default values can be used
+   long int readed;  // 0; set to 1 after reading the field from input file
+};
+
+class TRWArrays  // basic class for red/write fields of structure
+ {
+ protected:
     fstream& ff;
+    long int numFlds;
+    outField* flds;
+
+ public:
+
+	 TRWArrays( short aNumFlds, outField* aFlds, fstream& fin ):
+    	ff( fin ), numFlds(aNumFlds), flds(aFlds)
+    {}
+
+	virtual  long int findFld( const char *Name ); // find field by name
+
+    void  setNoAlws( long int ii )
+    {  flds[ii].alws = 0; }
+    void  setNoAlws( const char *Name )
+    {
+    	long int ii = findFld( Name );
+         if( ii >=0 )
+            setNoAlws(ii);
+    }
+    void  setAlws( long int ii )
+    {  flds[ii].alws = 1; }
+    void  setAlws( const char *Name )
+    {
+    	long int ii = findFld( Name );
+         if( ii >=0 )
+            setAlws(ii);
+    }
+
+    bool  getAlws( long int ii )
+    {  return (flds[ii].alws == 1); }
+    bool  getAlws( const char *Name )
+    {
+    	long int ii = findFld( Name );
+         if( ii >=0 )
+           return getAlws(ii);
+         else
+        return false;	 
+    }
+
+};
+
+
+class TPrintArrays: public  TRWArrays  // print fields of structure
+{
 
 public:
 
-    TPrintArrays( fstream& fout ):
-      ff( fout ){}
+    TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):
+    	TRWArrays( aNumFlds, aFlds, fout)
+    {}
 
     void writeArray( const char *name, char*   arr, long int size, long int arr_size );
     void writeArray( const char *name, float*  arr, long int size, long int l_size=-1L );
@@ -57,24 +110,14 @@ public:
 };
 
 
-struct outField
- {
-   char name[20]; // name of field in structure
-   long int alws;    // 1 - must be read, 0 - default values can be used
-   long int readed;  // 0; set to 1 after reading the field from input file
-};
-
- class TReadArrays  // read fields of structure
+ class TReadArrays : public  TRWArrays // read fields of structure
  {
 
-    fstream& ff;
-    long int numFlds;
-    outField* flds;
-
+ 
  public:
 
     TReadArrays( short aNumFlds, outField* aFlds, fstream& fin ):
-    	ff( fin ), numFlds(aNumFlds), flds(aFlds)
+    	TRWArrays( aNumFlds, aFlds, fin )
     {}
 
     void  skipSpace();
@@ -83,25 +126,6 @@ struct outField
     long int findFld( const char *Name ); // find field by name
     long int findNext();  // read next name from file and find in fields list
     void  readNext( const char* label);
-    void  setNoAlws( long int ii )
-    {  flds[ii].alws = 0; }
-
-    void  setNoAlws( const char *Name )
-    {
-    	long int ii = findFld( Name );
-         if( ii >=0 )
-            setNoAlws(ii);
-    }
-
-    void  setAlws( long int ii )
-    {  flds[ii].alws = 1; }
-
-    void  setAlws( const char *Name )
-    {
-    	long int ii = findFld( Name );
-         if( ii >=0 )
-            setAlws(ii);
-    }
 
     gstring testRead();   // test for reading all arrays
 

@@ -140,8 +140,9 @@ void  TNodeArray::setNodeArray( gstring& dbr_file, long int ndx, bool binary_f )
 
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
-gstring TNodeArray::PutGEM2MTFiles( QWidget* par, long int nIV,
-      bool addMui, bool bin_mode, bool putNodT1  )
+gstring TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
+		bool bin_mode, bool brief_mode, bool with_comments,
+	    bool putNodT1, bool addMui )
 {
   fstream fout;
   gstring Path_;
@@ -210,7 +211,7 @@ AGAIN:
 // output MULTI to txt file
     newname = name+"-ipm";
     Path_ = u_makepath( dir, newname, "dat" );
-    TProfil::pm->outMulti( Path_, addMui  );
+    TProfil::pm->outMulti( Path_, addMui,  with_comments, brief_mode );
   }
 
 // out dataCH to binary file
@@ -226,7 +227,7 @@ AGAIN:
    {  //newname = name+"-dch";
       Path_ = u_makepath( dir, newname, "dat" );
       fstream  f_ch2(Path_.c_str(), ios::out);
-      datach_to_text_file(f_ch2);
+      datach_to_text_file(f_ch2, with_comments, brief_mode );
       f_ch2.close();
    }
 
@@ -261,7 +262,7 @@ AGAIN:
         newname = name + "-dbr-0-" + buf;
         Path_ = u_makepath( dir, newname, "dat" );
         fstream  f_br2(Path_.c_str(), ios::out);
-        databr_to_text_file(f_br2);
+        databr_to_text_file(f_br2, with_comments, brief_mode);
         f_br2.close();
         if( !first )
            fout << ",";
@@ -290,7 +291,7 @@ AGAIN:
          newname = name + "-dbr-1-" + buf;
          Path_ = u_makepath( dir, newname, "dat" );
          fstream  f_br2(Path_.c_str(), ios::out);
-         databr_to_text_file(f_br2);
+         databr_to_text_file(f_br2, with_comments, brief_mode );
          f_br2.close();
 //         fout << ", \"" << newname.c_str() << ".dat\"";
       }

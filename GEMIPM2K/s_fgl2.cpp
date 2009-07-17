@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 1334 2009-07-05 11:57:43Z wagner $
+// $Id: s_fgl2.cpp 1355 2009-07-14 17:51:40Z wagner $
 //
 // Copyright (C) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
 //
@@ -29,16 +29,17 @@
 // Generic constructor for the TSolMod class
 //
 TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, long int NPTPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	ModCode(Mod_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
-        	MaxOrd(MaxOrder),  NP_DC(NPperDC), NPTP_DC(NPTPperDC), R_CONST(8.31451),
-        	Tk(T_k), Pbar(P_bar)
+		long int NPperDC, long int NPTPperDC, char Mod_Code, char Mix_Code,
+        long int *arIPx, double *arIPc, double *arDCc, double *arWx,
+        double *arlnGam, double *aphVOL, double T_k, double P_bar ):
+				ModCode(Mod_Code), MixCode(Mix_Code), NComp(NSpecies),  NPar(NParams), NPcoef(NPcoefs),
+				MaxOrd(MaxOrder),  NP_DC(NPperDC), NPTP_DC(NPTPperDC), R_CONST(8.31451),
+				Tk(T_k), Pbar(P_bar)
 {
     // pointer assignments
     aIPx = arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = arIPc;
-    aIP = new double[ NPar ];
+    aIP = new double[NPar];
     aDCc = arDCc;
     if( NPTP_DC )
     {	aDC = new double *[NComp];
@@ -59,7 +60,7 @@ TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long in
 
 
 bool TSolMod::testSizes( long int NSpecies, long int NParams,	long int NPcoefs,
-		long int MaxOrder,  long int NPperDC, char Mod_Code )
+		long int MaxOrder,  long int NPperDC, char Mod_Code, char Mix_Code )
 {
   return(  (ModCode == Mod_Code) && (NComp == NSpecies) && ( NPar == NParams) &&
 		    (NPcoef == NPcoefs) && (MaxOrd == MaxOrder) &&  ( NP_DC == NPperDC) );
@@ -104,11 +105,11 @@ void TSolMod::GetPhaseName( const char *PhName )
 
 // Generic constructor for the TVanLaar class
 TVanLaar::TVanLaar( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -317,11 +318,11 @@ long int TVanLaar::IdealProp( double *Zid )
 
 // Generic constructor for the TRegular class
 TRegular::TRegular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -495,11 +496,11 @@ long int TRegular::IdealProp( double *Zid )
 
 // Generic constructor for the TRedlichKister class
 TRedlichKister::TRedlichKister( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC,char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -752,11 +753,11 @@ long int TRedlichKister::IdealProp( double *Zid )
 
 // Generic constructor for the TNRTL class
 TNRTL::TNRTL( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -1027,11 +1028,11 @@ long int TNRTL::IdealProp( double *Zid )
 
 // Generic constructor for the TWilson class
 TWilson::TWilson( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	alloc_internal();
 }
@@ -1240,11 +1241,11 @@ long int TWilson::IdealProp( double *Zid )
 
 // Generic constructor for the TRegular class
 TMargules::TMargules( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	// empty constructor
 }
@@ -1394,11 +1395,11 @@ long int TMargules::IdealProp( double *Zid )
 
 // Generic constructor for the TRegular class
 TSubregular::TSubregular( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	// empty constructor
 }
@@ -1531,11 +1532,11 @@ long int TSubregular::IdealProp( double *Zid )
 
 // Generic constructor for the TBinaryGuggenheim class
 TGuggenheim::TGuggenheim( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-        long int NPperDC, char Mod_Code, long int *arIPx, double *arIPc, double *arDCc,
-        double *arWx, double *arlnGam, double *aphVOL, double T_k, double P_bar ):
-        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0,
-        			 Mod_Code, arIPx, arIPc, arDCc, arWx,
-        			 arlnGam, aphVOL, T_k, P_bar )
+        long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+        double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+        double *aphVOL, double T_k, double P_bar ):
+        	TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 0, Mod_Code, Mix_Code,
+						arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
 {
 	// empty constructor
 }

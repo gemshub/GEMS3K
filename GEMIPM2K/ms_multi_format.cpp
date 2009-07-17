@@ -3,7 +3,7 @@
 //
 // Implementation of text writing/reading IPM, DCH and DBR files
 //
-// Copyright (C) 2006-2007 S.Dmytriyeva
+// Copyright (C) 2006,2009 S.Dmytriyeva,D.Kulik
 //
 // This file is part of the GEM-Vizor library and GEMIPM2K
 // code package
@@ -122,30 +122,57 @@ outField MULTI_dynamic_fields[68] =  {
 
 //===================================================================
 
-void TMulti::to_text_file_gemipm( const char *path, bool addMui, bool with_comments )
+void TMulti::to_text_file_gemipm( const char *path, bool addMui, 
+		bool with_comments, bool brief_mode )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
    _comment = with_comments;
    //static values
    char PAalp;
    char PSigm;
-   double EpsW;
-   double RoW;
+//   double EpsW;
+//   double RoW;
 
 #ifndef IPMGEMPLUGIN
    PAalp = syp->PAalp;
    PSigm = syp->PSigm;
-   EpsW = TProfil::pm->tpp->EpsW;
-   RoW = TProfil::pm->tpp->RoW;
+//   EpsW = TProfil::pm->tpp->EpsW;
+//   RoW = TProfil::pm->tpp->RoW;
 #else
    PAalp = PAalp_;
    PSigm = PSigm_;
-   EpsW = EpsW_;
-   RoW = RoW_;
+//   EpsW = EpsW_;
+//   RoW = RoW_;
 #endif
   fstream ff( path, ios::out );
   ErrorIf( !ff.good() , path, "Fileopen error");
-  TPrintArrays  prar(ff);
+  TPrintArrays  prar( 68, MULTI_dynamic_fields, ff);
+// set up array flags for permanent fields
+   if( !( pm.FIs > 0 && pm.Ls > 0 ) )
+   {
+     prar.setNoAlws( (long int)(0) /*"sMod"*/);
+     prar.setNoAlws( 1 /*"LsMod"*/);
+     prar.setNoAlws( 2 /*"LsMdc"*/);
+   }
+   if( PSigm == S_OFF )
+   {
+     prar.setNoAlws( 13 /*"Sigw"*/);
+     prar.setNoAlws( 14 /*"Sigg"*/);
+   }
+   if( !( pm.FIat > 0 &&  pm.FIs > 0 ) )
+   { /* ADSORPTION AND ION EXCHANGE */
+     prar.setNoAlws( 16 /*"Nfsp"*/);
+     prar.setNoAlws( 17 /*"MASDT"*/);
+     prar.setNoAlws( 18 /*"C1"*/);
+     prar.setNoAlws( 19 /*"C2"*/);
+     prar.setNoAlws( 20 /*"C3"*/);
+     prar.setNoAlws( 21 /*"pCh"*/);
+     prar.setNoAlws( 22 /*"SATX"*/);
+     prar.setNoAlws( 23 /*"MASDJ"*/);
+     prar.setNoAlws( 24 /*"SCM"*/);
+     prar.setNoAlws( 25 /*"SACT"*/);
+     prar.setNoAlws( 26 /*"DCads"*/);
+   }
 
 if( _comment )
 {   ff << "# GEMIPM2K v. 2.3.0" << endl;
@@ -155,12 +182,13 @@ if( _comment )
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
-  ff << "\"" << pmp->stkey << "\"" << endl << endl;
+  ff << "\"" << pmp->stkey << "\"" << endl;
 
-if( _comment )
-{  ff << "## (1) Important flags that affect memory allocation" << endl;
-   ff << "# PE: Flag for using electroneutrality condition in GEM IPM calculations " << endl;
-}
+ if( !brief_mode ) 
+ { if( _comment )
+   {  ff << "\n## (1) Important flags that affect memory allocation" << endl;
+      ff << "# PE: Flag for using electroneutrality condition in GEM IPM calculations " << endl;
+   }
    ff << left << setw(12) << "<pa_PE> " <<  right << setw(8) << pa->p.PE << endl;
 //   ff << "# 'E'                1" << endl;
 //   ff << left << setw(12) << "<E> " <<  right << setw(8) << pmp->E << endl;
@@ -206,14 +234,17 @@ ff << left << setw(12) << "<FIat> " <<  right << setw(8) << pmp->FIat << endl <<
 //   ff << left << setw(12) << "<FIat> " <<  right << setw(8) << pmp->FIat << endl;
 //   ff << left << setw(12) << "<sitNc> " <<  right << setw(8) << pmp->sitNcat << endl;
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pmp->sitNan << endl;
-ff << "\n<END_DIM>\n\n";
+ } // brief_mode
+ff << "\n<END_DIM>\n";
 
 // static data not affected by dimensionalities
-  if( _comment )
-  { ff << "## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
-    ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
-    ff << "# DB: Cutoff minimum mole amount of Independent Component in the b vector (except charge Zz)" << endl;
-  }
+ if( !brief_mode  ) 
+ { 
+   if( _comment )
+   { ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
+     ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
+     ff << "# DB: Cutoff minimum mole amount of Independent Component in the b vector (except charge Zz)" << endl;
+   }  
    ff << left << setw(12) << "<pa_DB> " <<  right << setw(8) << pa->p.DB << endl;
    if( _comment )
      ff << "\n# DHB: Maximum allowed absolute mass balance residual (in moles) for independent components" << endl;
@@ -325,34 +356,35 @@ ff << "\n<END_DIM>\n\n";
    if( _comment )
      ff << "# pa_PLLG: IPM-2 tolerance for checking change in dual solution among GEM refinement loops { 0 to 1000 }" << endl;
    ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
+ } //   brief_mode  
 
 //dynamic arrays
 if( pm.FIs > 0 && pm.Ls > 0 )
 {
   if( _comment )
-  {   ff << "\n## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)" << endl;
-      ff << "# sMod: Codes for mixing models of multicomponent phases";
-  }
-  prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6L );
-
+    ff << "\n## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)" << endl;
+  if( _comment )
+     ff << "# sMod: Codes for mixing models of multicomponent phases";
+    prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6L );
+  
 long int LsModSum;
 long int LsIPxSum;
 long int LsMdcSum;
 getLsModsum( LsModSum, LsIPxSum );
 getLsMdcsum( LsMdcSum );
 
-  if( _comment )
-  {  ff << "\n\n# LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase" << endl;
-     ff << "# Number of parameters per phase";
-  }
-  prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3L);
-
-if(LsIPxSum )
- {
+   if( _comment )
+    {  ff << "\n\n# LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase" << endl;
+       ff << "# Number of parameters per phase";
+    }
+    prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3L);
+ 
+  if(LsIPxSum )
+  {
    if( _comment )
       ff << "\n\n# IPx: List of indexes of interaction parameters for non-ideal solutions ";
-  prar.writeArray(  "IPxPH", pmp->IPx,  LsIPxSum);
-}
+   prar.writeArray(  "IPxPH", pmp->IPx,  LsIPxSum);
+  }
   if(LsModSum )
    {
      if( _comment )
@@ -367,25 +399,35 @@ if(LsIPxSum )
           ff << "\n\n# DMc: Parameters of non-ideal mixing models for components in the phase ";
     prar.writeArray(  "DMc", pmp->DMc,  LsMdcSum);
    }
-  }
+} // sMod
   if( _comment )
   {  ff << "\n\n## (5) Some data arrays which are not provided in DATACH and DATABR files" << endl;
      ff << "# B: Full total bulk composition of the initial system (vector b) - see DATACH file for dimension nIC";
   }
   prar.writeArray(  "B", pmp->B,  pmp->N);
+
   if( _comment )
-   {  ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs" << endl;
-      ff << "# Pparc: Partial pressures (fugacities) of dependent components";
-   }
-  prar.writeArray(  "Pparc", pmp->Pparc,  pmp->L);
+     ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs" << endl;
+  
+  if(!brief_mode || prar.getAlws("Pparc" ))
+  { 
+	  if( _comment )
+	    ff << "# Pparc: Partial pressures (fugacities) of dependent components";
+      prar.writeArray(  "Pparc", pmp->Pparc,  pmp->L);
+  }    
  //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
  // prar.writeArray(  "G0", pmp->G0,  pmp->L);
+  if(!brief_mode || prar.getAlws("GEX" ))
+  { 
    if( _comment )
       ff << "\n\n# GEX: for dependent components, G0 increments";
-  prar.writeArray(  "GEX", pmp->GEX,  pmp->L);
-   if( _comment )
+   prar.writeArray(  "GEX", pmp->GEX,  pmp->L);
+  }
+  if(!brief_mode || prar.getAlws("lnGmf" ))
+  { if( _comment )
       ff << "\n\n# lnGmf:  Fixed (initial) activity coefficients";
-  prar.writeArray(  "lnGmf", pmp->lnGmf,  pmp->L);
+    prar.writeArray(  "lnGmf", pmp->lnGmf,  pmp->L);
+  }  
 //   if( pmp->E )
 //   {
 //     if( _comment )
@@ -393,81 +435,119 @@ if(LsIPxSum )
  //   prar.writeArray(  "EZ", pmp->EZ,  pmp->L);
 //   }
    if( _comment )
-   {  ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
-      ff << "# RLC: Codes of metastability/kinetic constraints for DCs";
-   }
-  prar.writeArray(  "RLC", pmp->RLC, pmp->L, 1L );
+     ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
+
+   if(!brief_mode || prar.getAlws("RLC" ))
+   {   if( _comment )
+         ff << "# RLC: Codes of metastability/kinetic constraints for DCs";
+     prar.writeArray(  "RLC", pmp->RLC, pmp->L, 1L );
+   }  
+   if(!brief_mode || prar.getAlws("RSC" ))
+   { if( _comment )
+      ff << "\n\n# RSC: Units of metastability/kinetic constraints for DCs (see vectors dul, dll)";
+     prar.writeArray(  "RSC", pmp->RSC, pmp->L, 1L );
+   }  
+   if(!brief_mode || prar.getAlws("DLL" ))
+   { if( _comment )
+        ff << "\n\n# DLL: Vector of lower metastability constraints on DC amounts in the system";
+     prar.writeArray(  "DLL", pmp->DLL,  pmp->L);
+   }  
+   if(!brief_mode || prar.getAlws("DUL" ))
+   {  if( _comment )
+       ff << "\n\n# DUL: Vector of upper metastability constraints on DC amounts in the system";
+      prar.writeArray(  "DUL", pmp->DUL,  pmp->L);
+   }   
    if( _comment )
-     ff << "\n\n# RSC: Units of metastability/kinetic constraints for DCs (see vectors dul, dll)";
-  prar.writeArray(  "RSC", pmp->RSC, pmp->L, 1L );
-   if( _comment )
-     ff << "\n\n# DLL: Vector of lower metastability constraints on DC amounts in the system";
-  prar.writeArray(  "DLL", pmp->DLL,  pmp->L);
-   if( _comment )
-     ff << "\n\n# DUL: Vector of upper metastability constraints on DC amounts in the system";
-  prar.writeArray(  "DUL", pmp->DUL,  pmp->L);
-   if( _comment )
-   {  ff << "\n\n# (7) Initial data for phases" << endl;
+     ff << "\n\n# (7) Initial data for phases" << endl;
+   if(!brief_mode || prar.getAlws("Aalp" ))
+   { if( _comment )
       ff << "\n# Aalp: Specific surface areas of phases (whole list), set 0 if unknown";
-   }
-  prar.writeArray(  "Aalp", pmp->Aalp,  pmp->FI);
+     prar.writeArray(  "Aalp", pmp->Aalp,  pmp->FI);
+   }  
    if( PSigm != S_OFF )
    {
-      if( _comment )
+     if(!brief_mode || prar.getAlws("Sigw" ))
+     { if( _comment )
          ff << "\n\n# Sigw Specific surface free energy for phase-water interface (J/m2; 0 if unknown)";
-     prar.writeArray(  "Sigw", pmp->Sigw,  pmp->FI);
-      if( _comment )
+        prar.writeArray(  "Sigw", pmp->Sigw,  pmp->FI);
+     }   
+     if(!brief_mode || prar.getAlws("Sigg" ))
+     { if( _comment )
          ff << "\n\n# Sigg Specific surface free energy for phase-gas interface (for future versions)";
-     prar.writeArray(  "Sigg", pmp->Sigg,  pmp->FI);
+       prar.writeArray(  "Sigg", pmp->Sigg,  pmp->FI);
+     }
    }
-   if( _comment )
-      ff << "\n\n# YOF: Surface energy or metastability parameters for phases (J/g)";
-  prar.writeArray(  "YOF", pmp->YOF,  pmp->FI);
+   if(!brief_mode || prar.getAlws("YOF" ))
+   {  if( _comment )
+        ff << "\n\n# YOF: Surface energy or metastability parameters for phases (J/g)";
+      prar.writeArray(  "YOF", pmp->YOF,  pmp->FI);
+   }   
    if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
     { /* ADSORPTION AND ION EXCHANGE */
       if( _comment )
-      {  ff << "\n\n# (8) Initial data for sorption" << endl;
+        ff << "\n\n# (8) Initial data for sorption" << endl;
+      if(!brief_mode || prar.getAlws("Nfsp" ))
+      { if( _comment )
          ff << "\n# Nfsp: Function of sorbent surface allocated to surface types";
-      }
-     prar.writeArray(  "Nfsp", &pmp->Nfsp[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      if( _comment )
-        ff << "\n# MASDT: Total maximum site  density per surface type, mkmol/g";
-     prar.writeArray(  "MASDT", &pmp->MASDT[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      if( _comment )
-        ff << "\n# C1: Inner capacitance density parameter C1 (TLM, BSM, CCM), F/m2";
-     prar.writeArray(  "C1", &pmp->XcapA[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      if( _comment )
-        ff << "\n# C2: Outer capacitance density parameter C2 (TLM, 3LM), F/m2";
-     prar.writeArray(  "C2", &pmp->XcapB[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      if( _comment )
-        ff << "\n# C3: Third capacitance density parameter C3 (reserved)";
-     prar.writeArray(  "C3", &pmp->XcapF[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      if( _comment )
-        ff << "\n# pCh: Density of permanent surface type charge (mkeq/m2)";
-     prar.writeArray(  "pCh", &pmp->Xetaf[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-
-     if( _comment )
-     {   ff << "\n# SATX: Setup of surface sites and specres: link to";
-         ff << "\n# [0] surface type; [1] sorbent emd member;";
-         ff << "\n# [2] surface site in surf. type; [3] surface EDL plane";
+        prar.writeArray(  "Nfsp", &pmp->Nfsp[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+      }  
+      if(!brief_mode || prar.getAlws("MASDT" ))
+      { if( _comment )
+         ff << "\n# MASDT: Total maximum site  density per surface type, mkmol/g";
+        prar.writeArray(  "MASDT", &pmp->MASDT[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+      }  
+      if(!brief_mode || prar.getAlws("C1" ))
+      { if( _comment )
+           ff << "\n# C1: Inner capacitance density parameter C1 (TLM, BSM, CCM), F/m2";
+        prar.writeArray(  "C1", &pmp->XcapA[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+      }  
+      if(!brief_mode || prar.getAlws("C2" ))
+      { if( _comment )
+          ff << "\n# C2: Outer capacitance density parameter C2 (TLM, 3LM), F/m2";
+        prar.writeArray(  "C2", &pmp->XcapB[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+      }  
+      if(!brief_mode || prar.getAlws("C3" ))
+      { if( _comment )
+          ff << "\n# C3: Third capacitance density parameter C3 (reserved)";
+        prar.writeArray(  "C3", &pmp->XcapF[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+      }  
+      if(!brief_mode || prar.getAlws("pCh" ))
+      { if( _comment )
+          ff << "\n# pCh: Density of permanent surface type charge (mkeq/m2)";
+       prar.writeArray(  "pCh", &pmp->Xetaf[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+      } 
+      if(!brief_mode || prar.getAlws("SATX" ))
+      { if( _comment )
+        {   ff << "\n# SATX: Setup of surface sites and specres: link to";
+            ff << "\n# [0] surface type; [1] sorbent emd member;";
+            ff << "\n# [2] surface site in surf. type; [3] surface EDL plane";
+        }
+       prar.writeArray(  "SATX", &pmp->SATX[0][0], pmp->Lads*4, 4L);
      }
-     prar.writeArray(  "SATX", &pmp->SATX[0][0], pmp->Lads*4, 4L);
-      if( _comment )
-      {  ff << "\n# MASDJ: Parameters of surface binding model:";
-         ff << "\n# [0] max site density mmol/g; [1] charge allocated to 0 plane;";
-         ff << "\n# [2] charge allocated to beta -or third plane; [3] Frumkin interaction parameter;";
-         ff << "\n# [4] dentateness or CN; [5] reserved isoterm parameter.";
-      }
-     prar.writeArray(  "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN, (long int)DFCN);
-      if( _comment )
+     if(!brief_mode || prar.getAlws("MASDJ" ))
+     { if( _comment )
+       {  ff << "\n# MASDJ: Parameters of surface binding model:";
+          ff << "\n# [0] max site density mmol/g; [1] charge allocated to 0 plane;";
+          ff << "\n# [2] charge allocated to beta -or third plane; [3] Frumkin interaction parameter;";
+          ff << "\n# [4] dentateness or CN; [5] reserved isoterm parameter.";
+       }
+       prar.writeArray(  "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN, (long int)DFCN);
+     }   
+     if(!brief_mode || prar.getAlws("SCM" ))
+     { if( _comment )
          ff << "\n# SCM: Classifier of EDL models applied to surface types.";
-     prar.writeArray(  "SCM", pmp->SCM[0], pmp->FIs, pmp->FIat );
-      if( _comment )
+       prar.writeArray(  "SCM", pmp->SCM[0], pmp->FIs, pmp->FIat );
+     }  
+     if(!brief_mode || prar.getAlws("SACT" ))
+     { if( _comment )
          ff << "\n# SACT: Classifier of applied SACT terms.";
-     prar.writeArray(  "SACT", pmp->SATT, pmp->Lads, 1L );
-      if( _comment )
+       prar.writeArray(  "SACT", pmp->SATT, pmp->Lads, 1L );
+     }  
+     if(!brief_mode || prar.getAlws("DCads" ))
+     { if( _comment )
          ff << "\n# DCads: Classifier of species in sorption phase.";
-     prar.writeArray(  "DCads", pmp->DCC3, pmp->Lads, 1L );
+      prar.writeArray(  "DCads", pmp->DCC3, pmp->Lads, 1L );
+     } 
     }
 //outArray( ff, "Vol", pmp->Vol,  pmp->L);
 //outArray( ff, "G0", pmp->G0,  pmp->L);
@@ -485,7 +565,7 @@ if(LsIPxSum )
      prar.writeArray(  "sitXa", pmp->sitXan, pmp->sitNan );
 */
 
-if( addMui )
+if( addMui && !brief_mode )
 {
   if( _comment )
     ff << "\n\n# mui: IC indices in RMULTS IC list";
@@ -497,9 +577,9 @@ if( addMui )
     ff << "\n\n# muj: DC indices in RMULTS DC list";
   prar.writeArray(  "muj", pmp->muj,  pmp->L);
 }
-
+ ff << endl;
  if( _comment )
-   ff << "\n\n# End of file" << endl;
+   ff << "\n# End of file" << endl;
 
 }
 
@@ -512,8 +592,8 @@ void TMulti::from_text_file_gemipm( const char *path )
    //static values
    char PAalp;
    char PSigm;
-   double EpsW;
-   double RoW;
+//   double EpsW;
+//   double RoW;
 
 #ifdef IPMGEMPLUGIN
    set_def();
@@ -528,6 +608,7 @@ void TMulti::from_text_file_gemipm( const char *path )
   pmp->L = dCH->nDC;
   pmp->FI = dCH->nPH;
   pmp->FIs = dCH->nPS;
+  //
   pmp->Ls = 0; //dCH->nDCs;
   for( ii=0; ii<dCH->nPS; ii++)
   {
@@ -594,13 +675,13 @@ void TMulti::from_text_file_gemipm( const char *path )
 
 //   if( dCH->ccPH[0] == PH_AQUEL )
 //   {
-//     RoW = dCH->roW[0];
+//     RoW = dCH->denW[0];
 //     EpsW = dCH->epsW[0];
 //   }
 //   else
 //  {
-    RoW = 0.99706137180;
-    EpsW = 78.245147705;
+//    RoW = 0.99706137180;
+//    EpsW = 78.245147705;
 //  }
 
 #ifndef IPMGEMPLUGIN
@@ -609,8 +690,8 @@ void TMulti::from_text_file_gemipm( const char *path )
 #else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-   EpsW_ = EpsW;
-   RoW_ =  RoW;
+//   EpsW_ = EpsW;
+//   RoW_ =  RoW;
 #endif
 
    //realloc memory

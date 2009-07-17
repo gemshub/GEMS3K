@@ -10,7 +10,7 @@
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
-// developed in the Laboratory for Waste Management, 
+// developed in the Laboratory for Waste Management,
 //   Paul Scherrer Institute
 
 // This file may be distributed under the licence terms
@@ -34,8 +34,8 @@ class QWidget;
 
 class TNode
 {
-  gstring dbr_file_name;  // place for the *dbr. I/O file name 
-  
+  gstring dbr_file_name;  // place for the *dbr. I/O file name
+
 protected:
    MULTI* pmm;  // Pointer to GEM IPM work data structure (see ms_multi.h)
 
@@ -50,12 +50,12 @@ protected:
          // used for exchanging input data and results between FMT and GEM IPM
 
     // These four values are set by the last GEM_run() call
-    double CalcTime;  // GEMIPM2 calculation time, s 
-    long int 
+    double CalcTime;  // GEMIPM2 calculation time, s
+    long int
         PrecLoops,    // Number of performed IPM-2 precision refinement loops
-        NumIterFIA,   // Total Number of performed FIA entry iterations 
+        NumIterFIA,   // Total Number of performed FIA entry iterations
         NumIterIPM;   // Total Number of performed IPM main iterations
-    
+
     // Tests Tc as a grid point for the interpolation of thermodynamic data
     // Returns index in the lookup grid array or -1  if it is not a grid point
     long int  check_grid_T( double Tc );
@@ -73,7 +73,7 @@ protected:
     void datach_reset();
     void databr_realloc();
     void databr_reset( DATABR *CNode, long int level=0 );
-    
+
     // deletes fields of DATABR structure indicated by data_BR_
     // and sets the pointer data_BR_ to NULL
     DATABR* databr_free( DATABR* data_BR_ =0);
@@ -90,13 +90,17 @@ protected:
     void databr_from_file( GemDataStream& ff );
 
     // Text i/o functions
-      // writes CSD (DATACH structure) to a text DCH file
-    void datach_to_text_file( fstream& ff, bool with_comments = true );
-      // reads CSD (DATACH structure) from a text DCH file
+    // writes CSD (DATACH structure) to a text DCH file
+    // brief_mode - Do not write data items that contain only default values
+    // with_comments -Write files with comments for all data entries ( in text mode)
+    void datach_to_text_file( fstream& ff, bool with_comments = true, bool brief_mode = false );
+    // reads CSD (DATACH structure) from a text DCH file
     void datach_from_text_file( fstream& ff);
-      // writes work node (DATABR structure) to a text DBR file
-    void databr_to_text_file(fstream& ff, bool with_comments = true );
-      // reads work node (DATABR structure) from a text DBR file
+    // writes work node (DATABR structure) to a text DBR file
+    // brief_mode - Do not write data items that contain only default values
+    // with_comments -Write files with comments for all data entries ( in text mode)
+    void databr_to_text_file(fstream& ff, bool with_comments = true, bool brief_mode = false  );
+     // reads work node (DATABR structure) from a text DBR file
     void databr_from_text_file(fstream& ff );
 
     // virtual functions for interaction with TNodeArray class (not used at TNode level)
@@ -108,13 +112,13 @@ protected:
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS-PSI GUI environment
     // Prepares and writes DCH and DBR files for reading into the coupled code
-    void makeStartDataChBR(
+    void makeStartDataChBR( QWidget* par,
          TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
          short nTp_, short nPp_, float Ttol_, float Ptol_,
          float *Tai, float *Pai );
 
-    // Creates lookup arrays for interpolation of thermodynamic data 
-    void G0_V0_H0_Cp0_DD_arrays(); // to be written into DCH file
+    // Creates lookup arrays for interpolation of thermodynamic data
+    void G0_V0_H0_Cp0_DD_arrays( QWidget* par ); // to be written into DCH file
 
     // Virtual function for interaction with TNodeArray class
     virtual void  setNodeArray( gstring& , long int , bool ) { }
@@ -131,8 +135,8 @@ static TNode* na;   // static pointer to this TNode class instance
   TNode();      // constructor for standalone GEMIPM2K or coupled program
 #endif
 
-  virtual ~TNode();      // destructor  
-  
+  virtual ~TNode();      // destructor
+
 // Typical sequence for using TNode class ----------------------------------
 // (1)
 // For separate coupled FMT-GEM programs that use GEMIPM2K module
@@ -207,7 +211,7 @@ void GEM_from_MT(
  double *p_aPH,   // Specific surface areas of phases (m2/g)   +       -      -
  double *p_xDC    // Mole amounts of DCs [nDCb] - will be convoluted
                   // and added to the bIC GEM input vector (if full speciation
-                  // and not just increments then p_bIC vector must be zeroed off - 
+                  // and not just increments then p_bIC vector must be zeroed off -
                   // it will be calculated from p_xDC and stoichiometry matrix A
 );
 
@@ -258,11 +262,11 @@ void GEM_set_MT(
 //
    long int  GEM_run( bool uPrimalSol );   // calls GEM for a work node
 //
-// Calls GEM for a work node - an overloaded variant which scales the system 
-//   provided in DATABR and DATACH multiplying by a factor InternalMass/Ms before 
+// Calls GEM for a work node - an overloaded variant which scales the system
+//   provided in DATABR and DATACH multiplying by a factor InternalMass/Ms before
 //   calling GEM and the results by Ms/InternalMass after the GEM calculation
-//   
-   long int  GEM_run( double InternalMass = 1., bool uPrimalSol = false  );   
+//
+   long int  GEM_run( double InternalMass = 1., bool uPrimalSol = false  );
 
 // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
    double GEM_CalcTime();
@@ -272,17 +276,19 @@ void GEM_set_MT(
 //    PrecLoops:  Number of performed IPM-2 precision refinement loops
 //    NumIterFIA: Total Number of performed FIA entry iterations
 //    NumIterIPM: Total Number of performed IPM main iterations
-   long int GEM_Iterations( long int& PrecLoops, long int& NumIterFIA, long int& NumIterIPM ); 
-   
+   long int GEM_Iterations( long int& PrecLoops, long int& NumIterFIA, long int& NumIterIPM );
+
 // (5) For interruption/debugging
 // Writes work node (DATABR structure) into a file path name fname
 // Parameter binary_f defines if the file is to be written in binary
 // format (true or 1, good for interruption of coupled modeling task
 // if called in loop for each node), or in text format
-// (false or 0, default). Parameter with_comments, if true, tells that 
-// the text file will be written with comments for all data entries. 
-//
-   void  GEM_write_dbr( const char* fname,  bool binary_f=false, bool with_comments = true);
+// (false or 0, default). Parameter with_comments, if true, tells that
+// the text file will be written with comments for all data entries.
+//   Parameter brief_mode, if true, tells that do not write data items 
+//   that contain only default values in text format
+   void  GEM_write_dbr( const char* fname,  bool binary_f=false, 
+		                  bool with_comments = true, bool brief_mode = false);
 
 // (5a) For detailed examination of GEM work data structure:
 // writes GEMIPM internal MULTI data structure into text file
@@ -344,11 +350,11 @@ void GEM_set_MT(
     // Setting node identification handle
     void setNodeHandle( long int jj )
     {      CNode->NodeHandle = jj;  }
-    
+
     // Resizes the node chemical system
     // Returns new node mass Ms
     double ResizeNode( double Factor );
-    
+
 // Useful methods facilitating the communication between DataCH (or FMT)
 // and DataBR (or node) data structures for components and phases
 // (i.e. between the chemical system definition and the node)
@@ -420,20 +426,20 @@ void GEM_set_MT(
     void packDataBr();   //  packs GEMIPM calculation results into work node structure
     void unpackDataBr( bool uPrimalSol ); //  unpacks work DATABR content into GEMIPM data structure
 
-    void packDataBr( double ScFact );  // Overloaded variant with scaling to constant mass of internal system 
-    void unpackDataBr( bool uPrimalSol, double ScFact );     
-    
+    void packDataBr( double ScFact );  // Overloaded variant with scaling to constant mass of internal system
+    void unpackDataBr( bool uPrimalSol, double ScFact );
+
     // Access to interpolated thermodynamic data from DCH structure
     // Checks if given Tc and P fit within the interpolation intervals
     bool  check_TP( double Tc, double P );
-    
+
     // Test Tc and P as grid point for the interpolation of thermodynamic data
     // Return index in grid matrix or -1
      long int  check_grid_TP(  double Tc, double P );
 
      // Access to interpolated G0 from DCH structure ( xCH is the DC DCH index)
      double  DC_G0_TP( const long int xCH, double Tc, double P );
-    
+
      // Access to interpolated V0 from DCH structure ( xCH is the DC DCH index)
      double  DC_V0_TP( const long int xCH, double Tc, double P );
 
@@ -443,13 +449,14 @@ void GEM_set_MT(
 //  DC_Cp0_TP
 //  DC_DD_TP
 
-     // Retrieval of Phase Volume ( xBR is DBR phase index)
+     // retrieval of activities (xCH is the DC DCH index)
+     double  DC_Activity( const long int xCH );
+
+     // Retrieval of Phase Volume ( xBR is DBR phase index), works also for pure phases
       double  Ph_Volume( const long int xBR );
-     // Retrieval of Phase mass ( xBR is DBR phase index)
+     // Retrieval of Phase mass ( xBR is DBR phase index), works also for pure phases
       double  Ph_Mass( const long int xBR );
-      // retrieval of activities (xCH is the DC DCH index)
-      double  DC_Activity( const long int xCH );
-     // Retrieval of Phase composition ( xBR is DBR phase index)
+     // Retrieval of multi-component Phase composition ( xBR is DBR phase index)
      // Returns pointer to ARout which may also be allocated inside of Ph_BC()
       double* Ph_BC( const long int xBR, double *ARout=0 );
 

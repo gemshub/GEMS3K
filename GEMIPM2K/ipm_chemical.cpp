@@ -492,8 +492,8 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
 // New CD version of TLM  added 25.10.2004
                if( fabs( CD0 ) > 1e-20 && fabs( CDb ) > 1e-20 )
                   F0 += ( psiA*CD0 + psiB*CDb )* pmp->FRT;
-// see also Table 4 in Zachara & Westall, 1999
-// Old version:  TLM Hayes & Leckie, 1987 uses the sign indicator at density
+             // see also Table 4 in Zachara & Westall, 1999
+             // Old version:  TLM Hayes & Leckie, 1987 uses the sign indicator at density
                 else {
                   if( ObS < 0 )
                   {
@@ -509,7 +509,7 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
             }
             else if( pmp->SCM[k][ist] == SC_BSM || pmp->SCM[k][ist] == SC_CCM )
             { // Basic Stern model, Christl & Kretzschmar, 1999
-// New CD version of TLM  added 25.10.2004
+            // New CD version of TLM  added 25.10.2004
                if( fabs( CD0 ) > 1e-20 && fabs( CDb ) > 1e-20 )
                   F0 += ( psiA*CD0 + psiB*CDb )* pmp->FRT;
                 else {
@@ -533,15 +533,15 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
         	FactSurT = FactSur * (pmp->Nfsp[k][ist]);
         	if( pmp->SCM[k][ist] == SC_MXC || pmp->SCM[k][ist] == SC_NNE ||
                     pmp->SCM[k][ist] == SC_IEV )
- //               F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
-//                   (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
+						// F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
+						// (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
                   F0 -= log( FactSurT );
             else  F0 -= log( FactSurT );
-//            	  F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
-//                  (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
+				// F0 -= log( Mk * (pmp->Nfsp[k][ist]) *
+				// (pmp->Aalp[k]) * pa->p.DNS*1.66054 );
             F0 -= FactSur / ( 1. + FactSur );
-//            F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
-//                  ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
+				// F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
+				// ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
         }
         break;
     case DC_PEL_CARRIER:
@@ -549,10 +549,10 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
     case DC_SUR_CARRIER: // Mk is carrier molar mass in g/mkmol
        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054;
         F0 -= FactSur / ( 1. + FactSur );
-//    	F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
-//              ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
+			// F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
+			// ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
         F0 += FactSur;
-//        F0 += (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054;
+			// F0 += (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054;
         break;
     }
     F0 += pmp->lnGam[j];
@@ -560,12 +560,12 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
     if( k >= pmp->FIs )
         return F0;
     // Smoothing procedure for highly non-ideal systems
-    if( pmp->sMod[k][SGM_MODE] != SM_IDEAL
-            || pmp->sMod[k][SCM_TYPE] != SC_NNE )
+    if( pmp->sMod[k][SGM_MODE] != SM_IDEAL )
+            // || pmp->sMod[k][SCM_TYPE] != SC_NNE )  // changed, 14.07.2009 (TW)
     {
         dF0 = F0 - Fold;
         if( pmp->X[j]>pmp->lowPosNum && fabs( dF0 ) >= 1e-5 ) // to be checked
-//           F0 = Fold + dF0 * pmp->FitVar[3];
+        	// F0 = Fold + dF0 * pmp->FitVar[3];
        	F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }  // FitVar[3] = TinkleSuppressFactor(); see GammaCalc()
     return F0;

@@ -107,8 +107,15 @@ public:
   // Prints MULTI, DATACH and DATABR files structure prepared from GEMS
   // for separate coupled FMT-GEM programs that use GEMIPM2K module
   // or if putNodT1 == true  as a break point for the running FMT calculation
+  // Parameters
+  // nIV - Number of allocated nodes
+  // bin_mode - Write IPM, DCH and DBR files in binary mode ( false - txt mode) 
+  // brief_mode - Do not write data items that contain only default values
+  // with_comments -Write files with comments for all data entries ( in text mode)
+  // addMui - Print internal indices in RMULTS to IPM file for reading into Gems back 
   gstring PutGEM2MTFiles(  QWidget* par, long int nIV,
-      bool multi_bin_mode, bool bin_mode, bool putNodT1=false );
+       bool bin_mode = false, bool brief_mode = false, bool with_comments = true,
+       bool putNodT1=false, bool addMui=false );
 
    // Reads DATABR files saved by GEMS as a break point of the FMT calculation
    // Copying data from work DATABR structure into the node array NodT0

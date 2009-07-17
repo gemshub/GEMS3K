@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 1197 2009-01-27 14:32:28Z gems $
+// $Id: m_const.h 1355 2009-07-14 17:51:40Z wagner $
 //
-// Copyright (C) 2006,2009  S.Dmitrieva, D.Kulik, T.Wagner
+// Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
 // Codes and parameters used in GEM IPM work structure (standalone version)
 //
@@ -44,30 +44,28 @@ const int 	MPP_TOT = 0,       // index of column with total mixed phase property
 	MPP_EX = 4,        // index of column with excess mixing property for the phases
 	MIXPHPROPS = 5;    // Number of columns in the property table for mixed phases
 
-enum solmod_switches { /* indexes of keys of model solution*/
+enum solmod_switches { // indexes of keys of model solution
     SPHAS_TYP,
     DCOMP_DEP,
     SPHAS_DEP,
     SGM_MODE,
     DCE_LINK,
-    SCM_TYPE,
-
-    // Link state of GammaCalc() calculation of activity coefficients
+    MIX_TYP,
+    // link state
     LINK_UX_MODE,
     LINK_TP_MODE,
     LINK_FIA_MODE,
-
-    // Posible modes of calculation of activity coefficients (private, public)
+    LINK_PHP_MODE,
+    // Posible values of �of keys of model solution - DCOMP_DEP, SPHAS_DEP
     SM_UNDEF = 'N',
     SM_TPDEP = 'T',
     SM_UXDEP = 'X',
     SM_PRIVATE_ = 'P',
     SM_PUBLIC = 'U',
-
-    // Posible modes of calculation of activity coefficients (built-in or scripted models)
-    SM_STNGAM = 'S',        // Built-in function for activity coefficients
+    // Posible modes calculating of activity coefficients SGM_MODE
+    SM_STNGAM = 'S',
     SM_NOSTGAM = 'N',
-
+    //  Possible values: (SPHAS_TYP)
     // Code to identify the mixing models used (during IPM iterations)
     SM_IDEAL =  'I',	// ideal solution or single-component phase;
     SM_REDKIS = 'G', 	// built-in binary Guggenheim (Redlich-Kister) solid-solution model
@@ -169,7 +167,7 @@ typedef enum {  // Classifications of DC
 //    This code defines standard state and reference scale of concentra-
 // tions for components of this phase. It is used by many subroutines
 // during calculations of equilibrium states
-enum PH_CLASSES{  /* Possible values */
+enum PH_CLASSES{  // Possible values
     PH_AQUEL    = 'a',  // aqueous electrolyte
     PH_GASMIX   = 'g',  // mixture of gases
     PH_FLUID    = 'f',  // fluid phase
@@ -177,7 +175,7 @@ enum PH_CLASSES{  /* Possible values */
     PH_LIQUID   = 'l',  // non-electrolyte liquid (melt)
     PH_SIMELT   = 'm',  // silicate (magmatic) melt or non-aqueous electrolyte
     PH_SORPTION = 'x',  // dilspersed solid with adsorption (ion exchange) in aqueous
-    PH_POLYEL   = 'y',  // colloidal poly- (oligo)electrolyte
+    PH_POLYEL = 'y',    // colloidal poly- (oligo)electrolyte
     PH_SINCOND  = 's',  // condenced solid phase, also multicomponent
     PH_SINDIS   = 'd',  // dispersed solid phase, also multicomponent
     PH_HCARBL   = 'h'   // mixture of condensed hydrocarbons
@@ -203,19 +201,20 @@ typedef enum {  // Limits on DC and phases
     DC_LIM_INIT = 0, DC_LIM_CURRENT = 1
 } DC_LIMITS;
 
+
 enum sorption_control {
-    /* EDL interface models - separate for site types in v. 3.1 */
+    // EDL interface models - separate for site types in v. 3.1
     SC_DDLM = 'D',  SC_CCM = 'C',     SC_TLM = 'T',   SC_MTL = 'M',
     SC_MXC = 'E',   SC_NNE = 'X',     SC_IEV  = 'I',  SC_BSM = 'S',
 SC_3LM = '3', SC_NOT_USED = 'N',
-    /* Methods of Surface Activity Terms calculation */
+    // Methods of Surface Activity Terms calculation
     SAT_COMP = 'C', SAT_NCOMP = 'N', SAT_SOLV = 'S', SAT_INDEF = 'I',
-/* New methods for surface activity coefficient terms (2004) */
+// New methods for surface activity coefficient terms (2004)
  SAT_L_COMP = 'L', SAT_QCA_NCOMP = 'Q', SAT_QCA1_NCOMP = '1',
  SAT_QCA2_NCOMP = '2', SAT_QCA3_NCOMP = '3', SAT_FREU_NCOMP = 'f',
  SAT_QCA4_NCOMP = '4', SAT_BET_NCOMP = 'B', SAT_VIR_NCOMP = 'W',
  SAT_FRUM_NCOMP = 'F', SAT_FRUM_COMP = 'R', SAT_PIVO_NCOMP = 'P',
-    /* Assignment of surtype to carrier (end-member) */
+    // Assignment of surtype to carrier (end-member)
     CCA_VOL = 'V', CCA_0 = '0', CCA_1, CCA_2, CCA_3, CCA_4, CCA_5,
     CCA_6, CCA_7, CCA_8, CCA_9, SPL_0='0', SPL_1, SPL_2, SPL_3,
     SPL_B = 'b', SPL_D = 'd', SPL_C = 'c',

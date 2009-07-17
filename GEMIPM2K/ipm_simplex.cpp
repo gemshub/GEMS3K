@@ -33,7 +33,11 @@ void TMulti::SimplexInitialApproximation( )
 
     try
     {  // Allocation of work arrays
-        pmp->Ec=0;
+
+        for( i=0; i<pmp->N; i++) // added SD 15/07/2009
+             pmp->U[i] = 0.;
+
+    	pmp->Ec=0;
         Q=pmp->L;
         DN= new double[Q];
         DU= new double[Q+pmp->N];
@@ -442,7 +446,6 @@ void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
     double LEVEL;
     long int *BASE=0;
     double *A=0,*Q=0;
-
     try
     {
         A=  new double[(M+1)*(M+1)];
@@ -483,6 +486,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
         if( BASE) delete[]BASE;
         Error( xcpt.title.c_str(), xcpt.mess.c_str());
     }
+
     // Done
 }
 

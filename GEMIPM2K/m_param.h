@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 1230 2009-02-11 17:41:06Z gems $
+// $Id: m_param.h 1360 2009-07-15 13:37:30Z gems $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -80,14 +80,14 @@ struct BASE_PARAM
     DKIN; // Range of lower to upper kinetic restrictions for DC { 1e-6 }
     char *tprn;       // internal
 
-    void write(ostream& oss);
+    void write(fstream& oss);
 };
 
 struct SPP_SETTING
 {   // Base Parametres of SP
     char ver[TDBVERSION]; // Version & Copyright 64
     BASE_PARAM p; //
-    void write(ostream& oss);
+    void write(fstream& oss);
 };
 
 
@@ -111,7 +111,7 @@ public:
     }
 
    void outMulti( GemDataStream& ff, gstring& path  );
-   void outMultiTxt( const char *path  );
+   void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
    double calcMulti( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );

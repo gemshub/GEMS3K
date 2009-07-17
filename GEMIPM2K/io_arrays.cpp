@@ -27,6 +27,15 @@
   istream& f_getline(istream& is, gstring& str, char delim);
 #endif
 
+long int TRWArrays::findFld( const char *Name )
+  {
+  	long int ii;
+
+   for( ii=0; ii < numFlds; ii++ )
+    if( !( strcmp( flds[ii].name, Name ) ))
+      return ii;
+   return -1;
+  }
 
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
@@ -367,7 +376,7 @@ long int TReadArrays::findNext()
 
  long int ii = findFld( buf+1 );
  if(  ii < 0 )
-    Error( buf, "Format text read 01: Data label was expected but not found");
+    Error( buf, "Format text read 01: Invalid label of data");
 
  flds[ii].readed = 1;
  return ii;

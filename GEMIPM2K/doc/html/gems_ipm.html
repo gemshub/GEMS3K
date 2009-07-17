@@ -150,7 +150,8 @@ calculation.&nbsp;</p>
 approximation of GEM IPM primal solution. In this mode, the program
 does more iterations, but requires no a priori information about the
 stable phase assemblage and equilibrium speciation in the system. <br>
-The SIA mode needs a previous GEM IPM solution for the same setup of
+</p>
+<p>The SIA mode needs a previous GEM IPM solution for the same setup of
 chemical system because it avoids the Simplex() step. In most cases,
 GEM IPM converges rapidly in this mode with up to 10 times gain in
 computation speed, and often more accurate result. However, there is no
@@ -241,7 +242,7 @@ kernel. <br>
 -
 Cutoff minimum mole amount of stable Phase present in IPM primal
 solution approximation {
-1e-10 }</dt>
+1e-12 }</dt>
   <dd>&nbsp;&nbsp;</dd>
   <dd>The IPM algorithm will automatically zero off the mole amount of
 any phase including all
@@ -532,7 +533,7 @@ Controls.</dd>
   <dd><br>
   </dd>
   <dt> <a name="Pa_DPV_0"></a><big><big><b><tt>Pa_DPV[0]</tt></b></big></big>
-- Maximal number of iterations in EntryFeasibleDomain() procedure { 100
+- Maximal number of iterations in EntryFeasibleDomain() procedure { 150
 }</dt>
   <dd> &nbsp;</dd>
   <dd>This control (DP in the source code) defines a maximum number of
@@ -593,7 +594,7 @@ small&nbsp; (e.g. less than&nbsp; 1e-14 mol).</dd>
   <dt> <a name="Pa_DPV_2"></a><big><b><big><tt>Pa_DPV[2]</tt></big></b></big>
 - IPM-2 cutoff exponent to recover small elements of the primal x
 vector using the
-dual solution vector u { -2 }</dt>
+dual solution vector u { -3 }</dt>
   <dd><br>
   </dd>
   <dd>This control (DT in the source code) defines the cutoff amount of
@@ -807,13 +808,16 @@ field above for explanation of the inconsistency case (1).&nbsp;<br>
   </dd>
   <dt> <a name="Pa_DK"></a><big><big><b><tt>Pa_DK</tt></b></big></big>
 -
-Tolerance threshold for the Dikin's criterion of IPM convergence { 1e-4
+Tolerance threshold for the Dikin's criterion of IPM convergence { 4e-5
 }</dt>
   <dd>&nbsp;&nbsp;</dd>
   <dd>This important criterion is used to decide whether the IPM
 minimization has converged.</dd>
   <dd><span style="text-decoration: underline;">Possible values</span>:
-1e-3 to 1e-6; default value 1e-4 is recommended.</dd>
+1e-3 to 1e-6; values between 1e-5 and 1e-4 are recommended. Too small
+tolerance (&lt; 1e-5) may cause dramatic increase in the number of GEM
+IPM loops or a non-convergence of the IPM algorithm. <br>
+  </dd>
   <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
     <a href="#E06IPM">E06IPM</a>.</dd>
   <dd><br>
@@ -841,12 +845,12 @@ multi-component highly non-ideal phases. <br>
   </dd>
   <dt> <a name="Pa_IIM"></a><big><big><b><tt>Pa_IIM</tt><small><small>&nbsp;
 - </small></small></b></big></big>Maximum allowed number of iterations
-in the GEM IPM-2 descent run { 400 }</dt>
+in the GEM IPM-2 descent run { 500 }</dt>
   <dd>&nbsp;&nbsp;</dd>
   <dd>Contains maximum number of total IPM descent algorithm iterations
 (including IPM-2 loops). If this number is exceeded, the program
 assumes that convergence is not achieved and IPM minimization failed.
-Possible values: 20 to 5000, default (recommended) value is 400.
+Possible values: 20 to 5000, default (recommended) value is 500.
 Convergence of IPM also
 strongly depends on the selected <big><a href="#Pa_DK"><tt>Pa_DK</tt></a></big>
 tolerance value.&nbsp;</dd>
@@ -881,15 +885,70 @@ descent iterations { 0.7 }</dt>
   <dd>This is an empirical initial value for the smoothing parameter
 which
 controls increments of excess chemical potentials of the non-ideal
-species between iterations of the IPM. After ca. 50th iteration, the
-value of smoothing parameter will be decreased depending on the&nbsp;<tt>
+species between iterations of the IPM. The smoothing function has the
+form&nbsp; SF = AG * ( 1 - pow(1-exp(-DGC*IT),60)). If SF &lt; 1e-6
+then SF is set to 1e-6.&nbsp; After ca. 50th iteration, the
+value of smoothing factor SF will be decreased down to 1e-6 more or
+less steep upon iterations, depending on the<tt>
 Pa_DGC</tt>
 value.</dd>
   <dd>&nbsp; <br>
   </dd>
   <dd>Possible values: 1.0 to 0.1. For ideal systems, 1.0 is
 recommended. Default value is 0.7. Too high or to low values may cause
-non-convergence of GEM IPM in highly non-ideal systems. <br>
+non-convergence of GEM IPM in highly non-ideal systems.</dd>
+</dl>
+<dl>
+  <dd>Two new variants of smoothing functions were added in April
+2009; both work well on various systems except those with sorption
+phases. <br>
+  </dd>
+  <dd>One smoothing function uses the logarithmic distance between the
+current index of IPM
+iteration and the maximum allowed number set in <a href="#Pa_IIM"><big><span
+ style="font-family: monospace;">Pa_IIM</span></big></a>. This function
+has the form <br>
+  </dd>
+</dl>
+<dl>
+  <dd>SF= DGC + ( AG - DGC ) / ( 1. + exp( log(1/IIM) - log(1/IT ) /
+DGC ) + exp( log( 1. - AG ) + log(1/IT) ). <br>
+  </dd>
+  <dd><br>
+  </dd>
+  <dd>It will be invoked when Pa_AG &lt;= -0.0001 and Pa_DGC &gt;
+-0.0001 (internally, the sign in Pa_AG is inverted to positive). The SF
+(smoothing factor) value will be truncated to 1.0 if it exceeds 1.0.
+Example: set Pa_AG to -1 and Pa_DGC to 0.7. <br>
+  </dd>
+</dl>
+<dl>
+  <dd>Another new smoothing function uses the logarithmic distance
+between the current Dikin criterion of IPM (CD) and the convergence
+threshold given in <a href="#Pa_DK"><big><span
+ style="font-family: monospace;">Pa_DK</span></big></a>.</dd>
+  <dd><br>
+  </dd>
+  <dd>SF = DGC + ( AG - DGC ) / ( 1. + exp( log(DK) - log(CD) ) / DGC )
++ exp( log( 1. - AG ) + log(CD) ).</dd>
+  <dd><br>
+  </dd>
+  <dd>The SF value will be truncated to 1.0 if it exceeds 1.0. This
+function is invoked when both Pa_AG and Pa_DGK are set less than
+-0.0001 (internally, both will have the sign inverted to positive).
+Example: set Pa_AG to -1 and Pa_DGC to -0.7; this gives very good
+convergence of IPM in systems containing&nbsp; highly non-ideal solid
+solutions, even without global IPM refinement loops (see <a
+ href="#Pa_PRD_1"><span style="font-family: monospace;">Pa_PRD[1]</span></a>).
+    <br>
+  </dd>
+  <dd><br>
+  </dd>
+  <dd>For both new functions, Pa_AG should usually be set to 1.0 (or
+-1.0). If set less than 1.0 then the smoothing will effectively begin
+after
+several IPM iterations.</dd>
+  <dd><br>
   </dd>
   <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
     <a href="gems_ipm.html#E06IPM">E06IPM</a>. <br>
@@ -898,10 +957,13 @@ non-convergence of GEM IPM in highly non-ideal systems. <br>
   <dd>&nbsp;<br>
   </dd>
   <dt> <a name="Pa_DGC"></a><big><b><big><tt>Pa_DGC</tt></big></b></big>
-- &nbsp;Exponent in the sigmoidal smoothing function { 0.07 }</dt>
+- &nbsp;Exponent in the sigmoidal smoothing function { 0.07 } or
+minimal smoothing factor in new functions<br>
+  </dt>
   <dd>&nbsp;&nbsp;</dd>
   <dd>This empirical parameter controls how strongly the smoothing
-parameter (Pa_AG) will be decreased as function of the number of
+parameter (<a href="#Pa_AG"><big><span style="font-family: monospace;">Pa_AG</span></big></a>)
+will be decreased as function of the number of
 performed IPM
 descent iterations. Possible values:&nbsp;</dd>
 </dl>
@@ -914,7 +976,32 @@ descent iterations. Possible values:&nbsp;</dd>
 </blockquote>
 <dl>
   <dd>Default value: 0.07. Too high or to low values may cause
-non-convergence of GEM IPM in highly non-ideal systems. </dd>
+non-convergence of GEM IPM in highly non-ideal systems and especially
+in systems with sorption phases.</dd>
+  <dd><br>
+  </dd>
+  <dd>In new smoothing functions (see<a href="#Pa_AG"><big><span
+ style="font-family: monospace;"> Pa_AG</span></big></a> above), the
+DGC parameter defines the smallest value of the smoothing factor SF
+reached when the IPM Dikin criterion CD becomes equal to <a
+ href="#Pa_DK"><big><span style="font-family: monospace;">Pa_DK</span></big></a>,
+or the number
+of IPM iterations IT approaches <a href="#Pa_IIM"><big><span
+ style="font-family: monospace;">Pa_IIM</span></big></a>. <br>
+  </dd>
+  <dd><br>
+  </dd>
+  <dd>In these cases, DGC should be set (in absolute value) between
+0.0001
+and Pa_AG. To invoke these new functions, just invert the sign of Pa_AG
+to negative (in the second variant, also Pa_DGC to negative)<br>
+  </dd>
+  <dd><br>
+  </dd>
+  <dd>Attention: for surface complexation models, only the old
+smoothing function with Pa_AG = 0.7 and Pa_DGC = 0.07 must be used.</dd>
+  <dd>&nbsp;<br>
+  </dd>
   <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
     <a href="gems_ipm.html#E06IPM">E06IPM</a>.&nbsp; </dd>
   <dd>&nbsp;&nbsp;</dd>
@@ -957,7 +1044,7 @@ GEM-Selektor, unless for debugging purposes. <br>
   </dd>
   <dt> <a name="Pa_PRD_1"></a><b><big><tt>Pa_PRD[1]</tt></big></b>
 -&nbsp; If negative: number of global GEM refinement loops for highly
-non-ideal systems (-1 to -50, -7 to -14 recommended)<br>
+non-ideal systems (-1 to -50, -7 recommended)<br>
   </dt>
   <dd> &nbsp; <br>
 Global GEM refinement loops may be necessary for systems with many
@@ -985,6 +1072,8 @@ refinement is not necessary and this control can be set to 3 (default).
   </dd>
   <dd>Possible values: -1 to -50, -7 to -14 recommended to set the
 number of global refinement loops as -Pa_PRD[1]. <br>
+  </dd>
+  <dd><br>
   </dd>
   <dd>Any positive value or 0: global refinement loops are disabled
 (default 3). <br>

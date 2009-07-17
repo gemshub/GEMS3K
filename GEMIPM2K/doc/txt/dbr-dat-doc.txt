@@ -35,7 +35,7 @@
 # chemical system, the same as in the companion dch-dat-doc.txt and ipm-dat-doc.txt files, and are given for 
 # illustration purposes. The numbers and name lists may change if a different CSD is constructed. 
 
-## Section (Scalar-1): controls of the GEM IPM operation and data exchange.
+## Section (1): controls of the GEM IPM operation and data exchange.
 # Node identification handle. Not used on TNode level; in TNodeArray, the node absolute index should be kept here 
 # (it can be used in diagnostic messages and output files). Default value: 0.
 <NodeHandle>     0
@@ -71,14 +71,14 @@ in DATABR.H must be given here (to be described in more detail). Default value: 
 # for GEM input. 
 <IterDone>       34
 
-## Section (Scalar-2): Chemical scalar variables
+## Section (2): Chemical scalar variables
 # *** Node Temperature T, C (GEM input). This value must always be provided. If this value differs by more than 
 # <Ttol> degrees from the temperature value used in previous GEM calculation, the GEMIPM2K program will first attempt
 # to interpolate thermodynamic data (if interpolation grid arrays were provided in DCH_DAT file or DATACH memory
 # structure). If a given <TC> value goes beyond the interpolation interval, it will be automatically replaced by 
 # the closest available temperature from the interpolation range (this can be checked in this data object after
 # GEMIPM returns control or writes the DBR_DAT file). 
-<TC>    298.15
+<TC>    25
 
 # *** Node Pressure P, bar (GEM input). This value must always be provided. If this value differs by more than 
 # <Ptol> bar from the pressure value used in previous GEM calculation, the GEMIPM2K program will first attempt
@@ -104,10 +104,10 @@ in DATABR.H must be given here (to be described in more detail). Default value: 
 # Total Gibbs energy of the reactive subsystem, J/RT (normalized), GEM output
 <Gs>   -5295.11
 
-# Enthalpy of reactive subsystem, J (reserved)
+# Total enthalpy of reactive subsystem, J (reserved)
 <Hs>   0
 
-# Enthalpy of inert subsystem, J (reserved, can be used only in FMT part) 
+# Total enthalpy of inert subsystem, J (reserved, can be used only in FMT part) 
 <Hi>   0
 
 # Effective aqueous ionic strength, molal (GEM output)
@@ -122,7 +122,7 @@ in DATABR.H must be given here (to be described in more detail). Default value: 
 # Eh of aqueous solution, V (GEM output)
 <Eh>   0.610284
 
-## Section (Scalar-3): FMT scalar variables (not used on the level of TNode, stored in DATABR structures and files
+## Section (3): FMT scalar variables (not used on the level of TNode, stored in DATABR structures and files
 ## on the level of TNodeArray). Default values are all zeros. 
 # Actual total simulation time, s
 <Tm>   0
