@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1360 2009-07-15 13:37:30Z gems $
+// $Id: ms_param.cpp 1369 2009-07-20 15:21:34Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -262,6 +262,116 @@ void TProfil::readMulti( const char* path )
 
  bool load = false;
 
+ #include "io_arrays.h"
+
+ void TProfil::test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP )
+ {
+   long int kk, jj, ii, l1, l2, xTP, lev = 11;
+   double cT, cP, dT, dP;
+   double *G0, *V0, *H0, *Cp0, *S0, *A0, *U0, *denW, *epsW, *denWg, *epsWg;
+   DATACH  *CSD = TNode::na->pCSD();
+   fstream ff("lagrange_T_11_3.out.txt", ios::out );
+   ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
+
+   G0 =  new double[CSD->nDC*nT*nP];
+//   V0 =  new double[CSD->nDC*nT*nP];
+//   H0 =  new double[TProfil::pm->mup->L*nT*nP];
+   Cp0 = new double[CSD->nDC*nT*nP];
+   S0 = new double[CSD->nDC*nT*nP];
+//   A0 = new double[TProfil::pm->mup->L*nT*nP];
+//   U0 = new double[TProfil::pm->mup->L*nT*nP];
+   denW =  new double[5*nT*nP];
+   epsW =  new double[5*nT*nP];
+
+   cT = CSD->TCval[0];
+   cP = CSD->Pval[0];
+   if(nT > 1)
+     dT = (CSD->TCval[CSD->nTp-1]-CSD->TCval[0])/(nT-1);
+   else
+	dT = 0;
+   if(nP > 1 )
+     dP = (CSD->Pval[CSD->nPp-1]-CSD->Pval[0])/(nP-1);
+   else
+	  dP = 0;
+   for(  ii=0; ii<nT; ii++)
+   {
+//     cT += dT;
+     for(  jj=0; jj<nP; jj++)
+     {
+//       cP += dP;
+       xTP = TNode::na->check_grid_TP( cT, cP );
+       for( kk=0; kk<5; kk++)
+       {
+         l1 = ( kk * nP + jj) * nT + ii;
+         l2  =  kk * CSD->nPp * CSD->nTp;
+
+         if( xTP >= 0 )
+          {
+           denW[l1] = CSD->denW[l2+xTP];
+           epsW[l1] = CSD->epsW[l2+xTP];
+          }
+          else
+          {
+            denW[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->denW+l2,
+                            cP, cT, CSD->nTp, CSD->nPp,lev );
+            epsW[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->epsW+l2,
+                            cP, cT, CSD->nTp, CSD->nPp,lev );
+          }
+       }
+       // copy to arrays
+       for( kk=0; kk<CSD->nDC; kk++)
+       {
+           l1 = ( kk * nP + jj) * nT + ii;
+           l2  =  kk * CSD->nPp * CSD->nTp;
+          if( xTP >= 0 )
+           {
+        	 G0[l1] = CSD->G0[ l2+xTP];
+           	 S0[l1] = CSD->S0[ l2+xTP];
+           	 Cp0[l1] = CSD->Cp0[ l2+xTP];
+            }
+            else
+            {
+              G0[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->G0+l2,
+                              cP, cT, CSD->nTp, CSD->nPp,lev );
+              S0[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->S0+l2,
+                              cP, cT, CSD->nTp, CSD->nPp,lev );
+              Cp0[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->Cp0+l2,
+                              cP, cT, CSD->nTp, CSD->nPp,lev );
+            }
+        }
+       cP += dP;
+     }
+     cT += dT;
+   }  
+ 
+//  fstream ff("lagrange_T_5_3.out.txt", ios::out );
+//  ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
+  TPrintArrays  prar(0, 0, ff);
+  prar.writeArray(  "denW", denW, /*5**/nP*nT, nP*nT );
+  prar.writeArray(  "epsW", epsW, /*5**/nP*nT, nP*nT );
+  prar.writeArray(  "S0_Ca+2", S0, nP*nT,  nP*nT ); //Ca+2
+  prar.writeArray(  "S0_H2O", S0+13*nP*nT, nP*nT, nP*nT); //H2O@
+  prar.writeArray(  "S0_Brc", S0+18*nP*nT, nP*nT, nP*nT ); //Brc
+  prar.writeArray(  "G0_Ca+2", G0, nP*nT, nP*nT ); //Ca+2
+  prar.writeArray(  "G0_H2O", G0+13*nP*nT, nP*nT, nP*nT ); //H2O@
+  prar.writeArray(  "G0_Brc", G0+18*nP*nT, nP*nT, nP*nT ); //Brc
+  prar.writeArray(  "Cp0_Ca+2", Cp0, nP*nT, nP*nT ); //Ca+2
+  prar.writeArray(  "Cp0_H2O", Cp0+13*nP*nT, nP*nT, nP*nT ); //H2O@
+  prar.writeArray(  "Cp0_Brc", Cp0+18*nP*nT, nP*nT, nP*nT ); //Brc
+//  prar.writeArray(  "V0", V0, CSD->nDC*nP*nT, nP*nT );
+//  prar.writeArray(  "G0", G0, CSD->nDC*nP*nT, nP*nT );
+
+   delete[] G0;
+//   delete[] V0;
+//   delete[] H0;
+   delete[] Cp0;
+   delete[] S0;
+//   delete[] A0;
+//   delete[] U0;
+   delete[] denW;
+   delete[] epsW;
+ }
+ 
 // Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 // (only used in standalone GEMIPM2K version)
  //
@@ -311,11 +421,11 @@ void TMulti::CompG0Load()
      else
      {
        pmp->denW[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->denW+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          P, TC, dCH->nTp, dCH->nPp,6 );// from test denW enough
        pmp->epsW[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsW+jj,
                           P, TC, dCH->nTp, dCH->nPp,5 );
        pmp->denWg[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->denWg+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          P, TC, dCH->nTp, dCH->nPp,5 ); // from test epsW enough
        pmp->epsWg[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsWg+jj,
                           P, TC, dCH->nTp, dCH->nPp,5 );
      }
@@ -355,15 +465,15 @@ void TMulti::CompG0Load()
      else
      {
        Go = LagranInterp( dCH->Pval, dCH->TCval, dCH->G0+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          P, TC, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough 
        Vv = LagranInterp( dCH->Pval, dCH->TCval, dCH->V0+jj,
                           P, TC, dCH->nTp, dCH->nPp, 5 );
        if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->S0+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          P, TC, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough 
        if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->H0+jj,
                           P, TC, dCH->nTp, dCH->nPp,5 );
        if( dCH->Cp0 ) Cp0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->Cp0+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          P, TC, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
        if( dCH->A0 ) a0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->A0+jj,
                           P, TC, dCH->nTp, dCH->nPp,5 );
        if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->U0+jj,

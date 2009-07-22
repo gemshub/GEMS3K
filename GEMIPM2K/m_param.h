@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 1360 2009-07-15 13:37:30Z gems $
+// $Id: m_param.h 1369 2009-07-20 15:21:34Z gems $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -116,7 +116,7 @@ public:
    void readMulti( const char* path );
    double calcMulti( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
    long int testMulti( );
-
+   void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );
 };
 
 // Work DC classifier codes  pm->DCCW

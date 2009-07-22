@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_const.h 1355 2009-07-14 17:51:40Z wagner $
+// $Id: m_const.h 1366 2009-07-18 20:54:59Z wagner $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -79,16 +79,17 @@ enum solmod_switches { // indexes of keys of model solution
     SM_CGFLUID = 'F',	// built-in multi-component Churakov-Gottschalk (CG) fluid EOS model
     SM_PRFLUID = 'P',	// built-in Peng-Robinson-Stryjek-Vera (PRSV) fluid EOS model
     SM_SRFLUID = 'E',	// built-in Soave-Redlich-Kwong (SRK) fluid EOS model
+    SM_PR78FL = '7',	// built-in Peng-Robinson (PR78) fluid EoS model (under construction)
     SM_AQDAV = 'D',		// built-in Davies model (with 0.3) for aqueous electrolytes
     SM_AQDH1 = '1',		// built-in Debye-Hueckel limiting law for aqueous electrolytes
     SM_AQDH2 = '2',		// built-in 2-term Debye-Hueckel model for aqueous electrolytes
     SM_AQDH3 = '3',		// built-in 3-term Debye-Hueckel model for aqueous electrolytes (Karpov version)
     SM_AQDHH = 'H',		// built-in 3-term Debye-Hueckel model for aqueous electrolytes (Helgeson version)
-    SM_AQDHS = 'Y',		// built-in 3-term Debye-Hueckel model for aqueous electrolytes (Shvarov version), reserved
+    SM_AQDHS = 'Y',		// built-in 3-term Debye-Hueckel model for aqueous electrolytes (Shvarov version)
     SM_AQSIT = 'S',		// built-in SIT model for aqueous electrolytes
     SM_AQEXUQ = 'Q',    // built-in EUNIQUAC model for aqueous electrolytes
     SM_AQPITZ = 'Z',    // built-in Pitzer HMW model for aqueous electrolytes
-// SM_IONEX = 'E',		// ion exchange (Donnan, Nikolskii) (reserved)
+		// SM_IONEX = 'X',		// ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
     SM_OTHER = 'O'		// other built-in phase-specific models of non-ideal solutions

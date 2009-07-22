@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1359 2009-07-15 09:00:11Z wagner $
+// $Id: s_fgl.h 1371 2009-07-21 20:49:16Z wagner $
 //
 // Copyright (C) 2003-2009  T.Wagner, D.Kulik, S.Dmitrieva, S.Churakov
 //
@@ -335,13 +335,13 @@ class TCGFcalc: public TSolMod
 		// calculates ideal mixing properties
 		long int IdealProp( double *Zid );
 
-		// CGofPureGases - Calc. fugacity for 1 species at X=1
-		long int CGcalcFug( void );  // Calc. fugacity for 1 species at X=1
+		// CGofPureGases, calculates fugacity for 1 species at (X=1)
+		long int CGcalcFugPure( double Tmin, float *Cemp, double *FugProps );  // called from DCthermo
 		long int CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fugacity,
 				double &Volume, double P, double T, double &roro );
 
 		// calculates departure functions
-		long int CGDepartureFunct( double *X, double *param, double *param1, unsigned long int NN,
+		long int CGResidualFunct( double *X, double *param, double *param1, unsigned long int NN,
 				double ro, double T );
 
 		double GetDELTA( void )
@@ -353,8 +353,8 @@ class TCGFcalc: public TSolMod
 
 
 // -------------------------------------------------------------------------------------
-// Added 19 July 2006 by T.Wagner and D.Kulik
-// Declaration of a class for Peng-Robinson-Stryjek-Vera (PRSV) EOS calculations for fluids
+// Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures  (c) TW July 2006
+// References: Stryjek and Vera (1986)
 // Incorporates a C++ program written by Thomas Wagner (Univ. Tuebingen)
 
 class TPRSVcalc: public TSolMod
@@ -387,14 +387,13 @@ class TPRSVcalc: public TSolMod
 		void free_internal();
 		long int AB( double Tcrit, double Pcrit, double omg, double k1, double k2, double k3,
 				double &apure, double &bpure, double &da, double &d2a );
-		long int PRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
-				double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
+		long int FugacityPT( long int i, double *EoSparam );
 		long int FugacityPure( long int j ); // Calculates the fugacity of pure species
 		long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
 		long int MixParam( double &amix, double &bmix );
 		long int FugacityMix( double amix, double bmix, double &fugmix, double &zmix, double &vmix );
 		long int FugacitySpec( double *fugpure );
-		long int DepartureFunct( double *fugpure );
+		long int ResidualFunct( double *fugpure );
 		long int MixingWaals();
 		long int MixingConst();
 		long int MixingTemp();
@@ -428,16 +427,15 @@ class TPRSVcalc: public TSolMod
 		long int IdealProp( double *Zid );
 
 		// Calculates pure species properties (called from DCthermo)
-		long int PRCalcFugPure( void );
+		long int PRSVCalcFugPure( double Tmin, float *Cpg, double *FugProps );
 
 };
 
 
 
 // -------------------------------------------------------------------------------------
-// Added 15 December 2008 by T. Wagner
-// Declaration of a class for Soave-Redlich-Kwong (SRK) EOS calculations for fluids
-// Incorporates a C++ program written by T. Wagner (ETH Zurich)
+// Soave-Redlich-Kwong (SRK) model for fluid mixtures (c) TW December 2008
+// References: Soave (1972); Soave (1993)
 
 class TSRKcalc: public TSolMod
 
@@ -467,14 +465,13 @@ class TSRKcalc: public TSolMod
 		void free_internal();
 		long int AB( double Tcrit, double Pcrit, double omg, double N,
 				double &apure, double &bpure, double &da, double &d2a );
-		long int SRFugacityPT( long int i, double P, double Tk, double *EoSparam, double *Eos2parPT,
-				double &Fugacity, double &Volume, double &DeltaH, double &DeltaS );
+		long int FugacityPT( long int i, double *EoSparam );
 		long int FugacityPure( long int j ); // Calculates the fugacity of pure species
 		long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
 		long int MixParam( double &amix, double &bmix );
 		long int FugacityMix( double amix, double bmix, double &fugmix, double &zmix, double &vmix );
 		long int FugacitySpec( double *fugpure );
-		long int DepartureFunct( double *fugpure );
+		long int ResidualFunct( double *fugpure );
 		long int MixingWaals();
 		long int MixingConst();
 		long int MixingTemp();
@@ -508,7 +505,85 @@ class TSRKcalc: public TSolMod
 		long int IdealProp( double *Zid );
 
 		// Calculates pure species properties (called from DCthermo)
-		long int SRCalcFugPure( void );
+		long int SRKCalcFugPure( double Tmin, float *Cpg, double *FugProps );
+
+};
+
+
+
+// -------------------------------------------------------------------------------------
+// Peng-Robinson (PR78) model for fluid mixtures  (c) TW July 2009
+// References: Peng and Robinson (1976); Peng and Robinson (1978)
+
+class TPR78calc: public TSolMod
+
+{
+	private:
+
+		double PhVol;   // phase volume in cm3
+		double *Pparc;  // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+		double *aGEX;   // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+		double *aVol;   // DC molar volumes, cm3/mol [L]
+
+		// main work arrays
+		double (*Eosparm)[4];   // EoS parameters
+		double (*Pureparm)[4];  // Parameters a, b, da/dT, d2a/dT2 for cubic EoS
+		double (*Fugpure)[6];   // Fugacity parameters of pure gas species
+		double (*Fugci)[4];     // Fugacity parameters of species in the mixture
+
+		double **a;		// arrays of generic parameters
+		double **b;
+		double **KK;    // binary interaction parameter
+		double **dKK;   // derivative of interaction parameter
+		double **d2KK;  // second derivative
+		double **AA;    // binary a terms in the mixture
+
+		// internal functions
+		void alloc_internal();
+		void free_internal();
+		long int AB( double Tcrit, double Pcrit, double omg, double N,
+				double &apure, double &bpure, double &da, double &d2a );
+		long int FugacityPT( long int i, double *EoSparam );
+		long int FugacityPure( long int j ); // Calculates the fugacity of pure species
+		long int Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 );
+		long int MixParam( double &amix, double &bmix );
+		long int FugacityMix( double amix, double bmix, double &fugmix, double &zmix, double &vmix );
+		long int FugacitySpec( double *fugpure );
+		long int ResidualFunct( double *fugpure );
+		long int MixingWaals();
+		long int MixingConst();
+		long int MixingTemp();
+
+	public:
+
+		// Constructor
+		TPR78calc( long int NCmp, double Pp, double Tkp );
+		TPR78calc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+				long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+				double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+				double *aphVOL, double *aPparc, double *arGEX, double *arVol,
+				double T_k, double P_bar );
+
+		// Destructor
+		~TPR78calc();
+
+		// Calculates pure species properties (pure fugacities)
+		long int PureSpecies();
+
+		// Calculates T,P corrected interaction parameters
+		long int PTparam();
+
+		// Calculates activity coefficients
+		long int MixMod();
+
+		// calculates excess properties
+		long int ExcessProp( double *Zex );
+
+		// calculates ideal mixing properties
+		long int IdealProp( double *Zid );
+
+		// Calculates pure species properties (called from DCthermo)
+		long int PR78CalcFugPure( double Tmin, float *Cpg, double *FugProps );
 
 };
 

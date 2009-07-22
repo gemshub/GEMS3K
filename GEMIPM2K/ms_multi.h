@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1355 2009-07-14 17:51:40Z wagner $
+// $Id: ms_multi.h 1369 2009-07-20 15:21:34Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -558,6 +558,8 @@ public:
 
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
+  //  void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );
+     
 
 #endif
 

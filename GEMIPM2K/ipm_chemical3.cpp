@@ -586,6 +586,8 @@ TMulti::GammaCalc( long int LinkMode  )
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
                  if( sMod[SPHAS_TYP] == SM_SRFLUID )  // SRK EoS fluid model
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
+                 if( sMod[SPHAS_TYP] == SM_PR78FL )  // PR78 EoS fluid model
+                     SolModActCoeff( k, sMod[SPHAS_TYP] );
              }
              goto END_LOOP;
              break;
@@ -1014,6 +1016,15 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
             break;
         }
 
+        case SM_PR78FL:  // PR78 fluid mixture (multicomponent)
+        {
+        	TPR78calc* aPT = new TPR78calc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
+                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
+            aSM = (TSolMod*)aPT;
+            break;
+        }
+
         default:
         	// aSM = new TSolMod( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
         	// aIPx, aIPc, aDCc,  aWx, alnGam, pmp->Tc, pmp->Pc );
@@ -1063,6 +1074,7 @@ TMulti::SolModParPT( long int k, char ModCode )
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
+        case SM_PR78FL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
@@ -1111,6 +1123,7 @@ TMulti::SolModActCoeff( long int k, char ModCode )
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
+        case SM_PR78FL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
              TSolMod* aSM = phSolMod[k];
@@ -1170,6 +1183,7 @@ TMulti::SolModExcessProp( long int k, char ModCode )
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
+        case SM_PR78FL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* aSM = phSolMod[k];
@@ -1246,6 +1260,7 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
         case SM_PRFLUID:
         case SM_CGFLUID:
         case SM_SRFLUID:
+        case SM_PR78FL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
              TSolMod* aSM = phSolMod[k];
