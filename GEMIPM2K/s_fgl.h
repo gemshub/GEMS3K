@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1371 2009-07-21 20:49:16Z wagner $
+// $Id: s_fgl.h 1380 2009-07-30 11:07:06Z wagner $
 //
 // Copyright (C) 2003-2009  T.Wagner, D.Kulik, S.Dmitrieva, S.Churakov
 //
@@ -878,7 +878,7 @@ private:
 	long int Na;     // Number of anions
 	long int Nn;     // Number of neutral species
 	long int Ns;     // Total number of aqueous species (without H2O); index of H2O in aq phase
-	             // Conversion of species indexes between aq phase and Pitzer parameter tables
+					 // Conversion of species indexes between aq phase and Pitzer parameter tables
 	long int *xcx;   // list of indexes of Nc cations in aqueous phase
 	long int *xax;   // list of indexes of Na anions in aq phase
 	long int *xnx;   // list of indexes of Nn neutral species in aq phase
@@ -887,13 +887,13 @@ private:
 	double *RhoW;  // water density properties
 	double *EpsW;  // water dielectrical properties
 
-    double Aphi; //----------- Computing A- Factor
-	double I;  //------------- Ionic Strength
-	double Is;  //------------ Ionic Strength square root
-	double Ffac; //----------- F-Factor
-	double Zfac; //----------- Z- Term
+    double Aphi, dAphidT, d2AphidT2, dAphidP;  // Computing A-Factor
+	double I;  // Ionic Strength
+	double Is;  // Ionic Strength square root
+	double Ffac; // F-Factor
+	double Zfac; // Z-Term
 
-				// Input parameter arrays
+	// Input parameter arrays
 	double *abet0;    // Beta0 table for cation-anion interactions [Nc][Na]
 	double *abet1;    // Beta1 table for cation-anion interactions [Nc][Na]
 	double *abet2;    // Beta2 table for cation-anion interactions [Nc][Na]
@@ -906,44 +906,28 @@ private:
 	double *aPsi1;    // Psi1 array for anion-anion-cation interactions [Na][Na][Nc]
 	double *aZeta;    // Zeta array for neutral-cation-anion interactions [Nn][Nc][Na]
 
-                  // Work parameter arrays
-/*	double *B1;      // B' table for cation-anion interactions corrected for IS [Nc][Na]
-	double *B2;      // B table for cation-anion interactions corrected for IS [Nc][Na]
-	double *B3;      // B_phi table for cation-anion interactions corrected for IS [Nc][Na]
-	double *Phi1;    // Phi' table for anion-anion interactions corrected for IS [Na][Na]
-	double *Phi2;    // Phi table for cation-cation interactions corrected for IS [Nc][Nc]
-	double *Phi3;    // PhiPhi table for anion-anion interactions corrected for IS [Na][Na]
-	double *C;       // C table for cation-anion interactions corrected for charge [Nc][Na]
-	double *Etheta;  // Etheta table for cation-cation interactions [Nc][Nc]
-	double *Ethetap; // Etheta' table for anion-anion interactions [Na][Na]
-	double bk[21];   // work space
-	double dk[21];   // work space
-*/
+        // Work parameter arrays
+		// double *B1;      // B' table for cation-anion interactions corrected for IS [Nc][Na]
+		// double *B2;      // B table for cation-anion interactions corrected for IS [Nc][Na]
+		// double *B3;      // B_phi table for cation-anion interactions corrected for IS [Nc][Na]
+		// double *Phi1;    // Phi' table for anion-anion interactions corrected for IS [Na][Na]
+		// double *Phi2;    // Phi table for cation-cation interactions corrected for IS [Nc][Nc]
+		// double *Phi3;    // PhiPhi table for anion-anion interactions corrected for IS [Na][Na]
+		// double *C;       // C table for cation-anion interactions corrected for charge [Nc][Na]
+		// double *Etheta;  // Etheta table for cation-cation interactions [Nc][Nc]
+		// double *Ethetap; // Etheta' table for anion-anion interactions [Na][Na]
+		// double bk[21];   // work space
+		// double dk[21];   // work space
+
+	// McInnes parameter array and gamma values
+	double McI_PT_array[13];
+	double *GammaMcI;
 
 	enum eTableType
-	{ bet0_ = -10, bet1_ = -11, bet2_ = -12, Cphi_ = -20, Lam_ = -30, Lam1_ = -31,
-	  Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60
+	{
+		bet0_ = -10, bet1_ = -11, bet2_ = -12, Cphi_ = -20, Lam_ = -30, Lam1_ = -31,
+		Theta_ = -40,  Theta1_ = -41, Psi_ = -50, Psi1_ = -51, Zeta_ = -60
 	};
-
-	// internal calculations
-	// Calculation of Etheta and Ethetap values
-	void Ecalc( double z, double z1, double I, double Aphi,
-			double& Etheta, double& Ethetap);
-	inline long int getN() const
-	 { return Nc+Na+Nn; }
-
-	double Z_Term();
-	double A_Factor( double T );
-	double IonicStr( double& I );
-	void getAlp( long int c, long int a, double& alp, double& alp1 );
-	double F_Factor( double Aphi, double I, double Is );
-	double lnGammaN(  long int N );
-	double lnGammaM(  long int M );
-	double lnGammaX(  long int X );
-	double lnGammaH2O();
-
-	// calc vector of interaction parameters corrected to T,P of interest
-	void PTcalc( double T );
 
 	// internal setup
 	void calcSizes();
@@ -953,6 +937,37 @@ private:
 	// build conversion of species indexes between aq phase and Pitzer parameter tables
 	void setIndexes();
 	void setValues();
+
+	// internal calculations
+	// Calculation of Etheta and Ethetap values
+	void Ecalc( double z, double z1, double I, double Aphi,
+					double& Etheta, double& Ethetap );
+	inline long int getN() const
+	{
+		return Nc+Na+Nn;
+	}
+
+	double Z_Term();
+	double A_Factor( double T );
+	double IonicStr( double& I );
+	void getAlp( long int c, long int a, double& alp, double& alp1 );
+	double get_g( double x_alp );
+	double get_gp( double x_alp);
+	double F_Factor( double Aphi, double I, double Is );
+	double lnGammaN( long int N );
+	double lnGammaM( long int M );
+	// double lnGammaM( long int M, double Aphi );
+	double lnGammaX( long int X );
+	// double lnGammaX( long int X, double Aphi );
+	double lnGammaH2O();
+
+	// calc vector of interaction parameters corrected to T,P of interest
+	void PTcalc( double T );
+	void McInnes_PTcalc( double T ); // corrects parameters for McInnes scaling
+	void Gex_PTcalc( double T );     // corrects parameters for Gex calculation
+
+	// calculation KCl activity coefficients for McInnes scaling
+	double McInnes_KCl();
 
 	inline long int getIc( long int jj )
     {
@@ -1000,12 +1015,13 @@ public:
 
 	// Calculation of T,P corrected interaction parameters
 	long int PTparam();
+	long int McInnes_PTparam();
 
-    long int MixMod()
-    { return Pitzer_calc_Gamma();}
+    long int MixMod();
 
 	// calculates activity coefficients
-	long int Pitzer_calc_Gamma( );
+	long int Pitzer_calc_Gamma();
+	long int Pitzer_McInnes_KCl();
 
     // calculates excess properties
     long int ExcessProp( double *Zex );

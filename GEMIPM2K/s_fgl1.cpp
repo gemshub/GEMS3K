@@ -408,6 +408,29 @@ double TSIT::IonicStrength()
 //    in December 2008 for GEOTHERM CCES project
 //=============================================================================================
 
+// Moved macros here from header to hide them from the TSolMod watchdog
+#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
+#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
+
+#define mc( ii ) (aM[ xcx[(ii)] ])
+#define ma( ii ) (aM[ xax[(ii)] ])
+#define mn( ii ) (aM[ xnx[(ii)] ])
+#define zc( ii ) (aZ[ xcx[(ii)] ])
+#define za( ii ) (aZ[ xax[(ii)] ])
+
+#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
+#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
+#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
+#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
+#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
+#define Lam1( n,a )  ( aLam1[ ((n)*Na+(a)) ])     // Bug fixed by SD 26.12.2008
+#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
+#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
+
+#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
+#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
+#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Generic constructor for the TPitzer class
@@ -435,146 +458,6 @@ TPitzer::TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long in
 TPitzer::~TPitzer()
 {
 	free_internal();
-}
-
-
-long int TPitzer::PTparam( )
-{
-	// calculate vector of interaction parameters corrected to T,P of interest
-	PTcalc( Tk );
-
-	// build conversion of species indexes between aqueous phase and Pitzer parameter tables
-	setIndexes();
-
-	// put data from arIPx, arIPc to internal structure
-	setValues();
-
-    return 0;
-}
-
-
-// Calculation of activity coefficients
-long int TPitzer::Pitzer_calc_Gamma( )
-{
-	long int M, N, X;
-
-	// Computing A- Factor
-	Aphi = A_Factor( Tk );
-
-	// Ionic Strength
-	Is = IonicStr( I );
-
-	// F-Factor, Pitzer-Toughreact Report 2006 equation (A6)
-	Ffac = F_Factor( Aphi, I, Is );
-
-	// Z- Term, Pitzer-Toughreact Report 2006 equation (A8)
-	Zfac = Z_Term();
-
-	lnGamma[Ns] = lnGammaH2O();
-
-	for( M=0; M<Nc; M++ )
-	{	lnGamma[xcx[M]] = lnGammaM( M );
-		// cout << "indexC = " <<	xcx[M] << " NComp " << NComp << endl;
-	}
-
-	for( X=0; X<Na; X++ )
-	{	lnGamma[xax[X]] = lnGammaX( X );
-		// cout << "indexA = " <<	xax[X] << " NComp " << lnGamma[xax[X]] << endl;
-    }
-
-	if( Nn > 0 )
-		for( N=0; N<Nn; N++ )
-			lnGamma[xnx[N]] = lnGammaN( N );
-	// Pitzer_test_out( "test111.dat ");
-
-    return 0;
-}
-
-
-// Moved macros here from s_fgl.h to restrict their visibility
-// in other files (DK)
-#define IPc( ii, jj )  ( aIPc[ (ii) * NPcoef + (jj) ])
-#define IPx( ii, jj )  ( aIPx[ (ii) * MaxOrd + (jj) ])
-
-#define mc( ii ) (aM[ xcx[(ii)] ])
-#define ma( ii ) (aM[ xax[(ii)] ])
-#define mn( ii ) (aM[ xnx[(ii)] ])
-#define zc( ii ) (aZ[ xcx[(ii)] ])
-#define za( ii ) (aZ[ xax[(ii)] ])
-
-#define bet0( c,a ) ( abet0[ ((c)*Na+(a)) ])
-#define bet1( c,a ) ( abet1[ ((c)*Na+(a)) ])
-#define bet2( c,a ) ( abet2[ ((c)*Na+(a)) ])
-#define Cphi( c,a ) ( aCphi[ ((c)*Na+(a)) ])
-#define Lam( n,c )  ( aLam[ ((n)*Nc+(c)) ])
-#define Lam1( n,a )  ( aLam1[ ((n)*Na+(a)) ])     // Bug fixed by SD 26.12.2008
-#define Theta( c,c1 )  ( aTheta[ ((c)*Nc+(c1)) ])
-#define Theta1( a,a1 ) ( aTheta1[ ((a)*Na+(a1)) ])
-
-#define Psi( c,c1,a )  ( aPsi[(( (c) * Nc + (c1)  ) * Na + (a)) ])
-#define Psi1( a,a1,c ) ( aPsi1[(( (a) * Na + (a1) ) * Nc + (c)) ])
-#define Zeta( n,c,a )  ( aZeta[(( (n) * Nc + (c)  ) * Na + (a)) ])
-//
-
-
-// Output of test results into text file (standalone variant only)
-void TPitzer::Pitzer_test_out( const char *path )
-{
-
-	long int ii, c, a, n;
-
-	fstream ff(path, ios::out );
-	ErrorIf( !ff.good() , path, "Fileopen error");
-
-	ff << "Vector of interaction parameters corrected to T,P of interest" << endl;
-	for( ii=0; ii<NPar; ii++ )
-		ff << aIP[ii] << "  ";
-
-	ff << endl << "list of indexes of Nc cations in aqueous phase" << endl;
-	for( ii=0; ii<Nc; ii++ )
-		ff << xcx[ii] << "  ";
-
-	ff << endl << "list of indexes of Na anions in aq phase" << endl;
-	for( ii=0; ii<Na; ii++ )
-		ff << xax[ii] << "  ";
-
-	ff << endl << "list of indexes of Nn neutral species in aq phase" << endl;
-	for( ii=0; ii<Nn; ii++ )
-		ff << xnx[ii] << "  ";
-
-	ff << endl << "abet0" << endl;
-	for( c=0; c<Nc; c++ )
-	{	for( a=0; a<Na; a++ )
-			ff << abet0[c*Na+a] << "  ";
-		ff << endl;
-	}
-
-	ff << endl << "Theta" << endl;
-	for( c=0; c<Nc; c++ )
-	{	for( a=0; a<Na; a++ )
-			ff << aTheta[c*Nc+a] << "  ";
-		ff << endl;
-	}
-
-	ff << endl << "Lam1" << endl;
-	for( n=0; n<Nn; n++ )
-	{	for( a=0; a<Na; a++ )
-			ff << Lam1( n,a ) << "  ";
-		ff << endl;
-	}
-
-	ff << "\nAphi = " << Aphi << " I = " << I << " Is = " << Is <<
-	       " Ffac = " << Ffac << " Zfac = " << Zfac  << endl;
-
-	ff << endl << "ln activity coefficients of end members" << endl;
-	for( ii=0; ii<NComp; ii++ )
-		ff << lnGamma[ii] << "  ";
-	ff << endl;
-
-	ff << endl << "Activity coefficients of end members" << endl;
-	for( ii=0; ii<NComp; ii++ )
-		ff << exp(lnGamma[ii]) << "  ";
-
 }
 
 
@@ -655,6 +538,117 @@ void TPitzer::free_internal()
 	if( aLam ) delete[] aLam;
 	if( aLam1 ) delete[] aLam1;
 	if( aZeta ) delete[] aZeta;
+}
+
+
+long int TPitzer::PTparam( )
+{
+	// calculate vector of interaction parameters corrected to T,P of interest
+	PTcalc( Tk );
+
+	// build conversion of species indexes between aqueous phase and Pitzer parameter tables
+	setIndexes();
+
+	// put data from arIPx, arIPc to internal structure
+	setValues();
+
+    return 0;
+}
+
+
+long int TPitzer::MixMod()
+{
+	return Pitzer_calc_Gamma();
+}
+
+
+long int TPitzer::ExcessProp( double *Zex )
+{
+	// add excess property calculations
+
+	Aex = Gex - Vex*Pbar;
+	Uex = Hex - Vex*Pbar;
+
+	// assigments (excess properties)
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
+
+	return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TPitzer::IdealProp( double *Zid )
+{
+	long int j;
+	double si;
+	si = 0.0;
+	for (j=0; j<NComp; j++)
+	{
+		if ( x[j] > 1.0e-32 )
+			si += x[j]*log(x[j]);
+	}
+	Hid = 0.0;
+	CPid = 0.0;
+	Vid = 0.0;
+	Sid = (-1.)*R_CONST*si;
+	Gid = Hid - Sid*Tk;
+	Aid = Gid - Vid*Pbar;
+	Uid = Hid - Vid*Pbar;
+
+	// assignments (ideal mixing properties)
+	Zid[0] = Gid;
+	Zid[1] = Hid;
+	Zid[2] = Sid;
+	Zid[3] = CPid;
+	Zid[4] = Vid;
+	Zid[5] = Aid;
+	Zid[6] = Uid;
+
+	return 0;
+}
+
+
+// Calculation of activity coefficients
+long int TPitzer::Pitzer_calc_Gamma( )
+{
+	long int M, N, X;
+
+	// Computing A- Factor
+	Aphi = A_Factor( Tk );
+
+	// Ionic Strength
+	Is = IonicStr( I );
+
+	// F-Factor, Pitzer-Toughreact Report 2006 equation (A6)
+	Ffac = F_Factor( Aphi, I, Is );
+
+	// Z- Term, Pitzer-Toughreact Report 2006 equation (A8)
+	Zfac = Z_Term();
+
+	lnGamma[Ns] = lnGammaH2O();
+
+	for( M=0; M<Nc; M++ )
+	{	lnGamma[xcx[M]] = lnGammaM( M );
+		// cout << "indexC = " <<	xcx[M] << " NComp " << NComp << endl;
+	}
+
+	for( X=0; X<Na; X++ )
+	{	lnGamma[xax[X]] = lnGammaX( X );
+		// cout << "indexA = " <<	xax[X] << " NComp " << lnGamma[xax[X]] << endl;
+    }
+
+	if( Nn > 0 )
+		for( N=0; N<Nn; N++ )
+			lnGamma[xnx[N]] = lnGammaN( N );
+	// Pitzer_test_out( "test111.dat ");
+
+    return 0;
 }
 
 
@@ -1403,55 +1397,64 @@ double TPitzer::lnGammaN(  long int N )
 }
 
 
-long int TPitzer::ExcessProp( double *Zex )
+// Output of test results into text file (standalone variant only)
+void TPitzer::Pitzer_test_out( const char *path )
 {
-	// add excess property calculations
 
-	Aex = Gex - Vex*Pbar;
-	Uex = Hex - Vex*Pbar;
+	long int ii, c, a, n;
 
-	// assigments (excess properties)
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+	fstream ff(path, ios::out );
+	ErrorIf( !ff.good() , path, "Fileopen error");
 
-	return 0;
-}
+	ff << "Vector of interaction parameters corrected to T,P of interest" << endl;
+	for( ii=0; ii<NPar; ii++ )
+		ff << aIP[ii] << "  ";
 
+	ff << endl << "list of indexes of Nc cations in aqueous phase" << endl;
+	for( ii=0; ii<Nc; ii++ )
+		ff << xcx[ii] << "  ";
 
-// calculates ideal mixing properties
-long int TPitzer::IdealProp( double *Zid )
-{
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
+	ff << endl << "list of indexes of Na anions in aq phase" << endl;
+	for( ii=0; ii<Na; ii++ )
+		ff << xax[ii] << "  ";
+
+	ff << endl << "list of indexes of Nn neutral species in aq phase" << endl;
+	for( ii=0; ii<Nn; ii++ )
+		ff << xnx[ii] << "  ";
+
+	ff << endl << "abet0" << endl;
+	for( c=0; c<Nc; c++ )
+	{	for( a=0; a<Na; a++ )
+			ff << abet0[c*Na+a] << "  ";
+		ff << endl;
 	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+	ff << endl << "Theta" << endl;
+	for( c=0; c<Nc; c++ )
+	{	for( a=0; a<Na; a++ )
+			ff << aTheta[c*Nc+a] << "  ";
+		ff << endl;
+	}
 
-	return 0;
+	ff << endl << "Lam1" << endl;
+	for( n=0; n<Nn; n++ )
+	{	for( a=0; a<Na; a++ )
+			ff << Lam1( n,a ) << "  ";
+		ff << endl;
+	}
+
+	ff << "\nAphi = " << Aphi << " I = " << I << " Is = " << Is <<
+	       " Ffac = " << Ffac << " Zfac = " << Zfac  << endl;
+
+	ff << endl << "ln activity coefficients of end members" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << lnGamma[ii] << "  ";
+	ff << endl;
+
+	ff << endl << "Activity coefficients of end members" << endl;
+	for( ii=0; ii<NComp; ii++ )
+		ff << exp(lnGamma[ii]) << "  ";
+
 }
 
 
