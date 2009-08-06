@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: datach.h 1353 2009-07-14 14:13:35Z gems $
+// $Id: datach.h 1381 2009-07-31 13:37:13Z gems $
 //
 // DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.
@@ -30,94 +30,81 @@ const long int
     MaxDCN =      16,     // DC name length
     MaxPHN =      16;     // PH name length
 
-typedef struct
-{  // Structure DataCH
-// Dimensionalities
-  long int     // changed from short on 26.06.2008   DK
+typedef struct   // Structure DataCH
+{  
+  long int     // Dimensionalities chemical system definition
 //  These dimensionalities should be the same as in the GEMIPM work structure (MULTI)
-    nIC,    // Total number of IC (independent components) in the reactive part
-    nDC,    // Total number of DC (chemical species) in the reactive part
-    nPH,    // Total number of phases included into the GEM IPM problem
-    nPS,    // Number of multicomponent phases, nPS <= nPH
-    nDCs,   // Total Number of DC in phases-solutions
-    nTp,    // Number of temperature points in grid arrays
-	    //       for the interpolation of thermodynamic data
-    nPp,    // Number of pressure points in grid arrays
-            //       for the interpolation of thermodynamic data
-    iGrd,   // flag for grid array setup: 0 - only V0 and G0
-            //    1 - V0, G0 and DD (diffusion coefficients in aq, reserved)
-    nAalp,  // Flag for considering surface areas of phases
+    nIC,    // Number of Independent Components (stoichiometry units, usually chemical elements and charge)
+    nDC,    // Total number of Dependent Components (chemical species made of Independent Components)
+    nPH,    // Number of phases (into which Dependent Components are grouped) 
+    nPS,    // Number of phases-solutions (multicomponent phases) in the chemical system definition, nPS <= nPH
+    nDCs,   // Number of Dependent Components in phases-solutions (multicomponent phases) 
+    nTp,    // Number of temperature grid points in interpolation lookup arrays, 1 or more
+    nPp,    // Number of pressure grid points in interpolation lookup arrays, 1 or more
+    iGrd,   // Flag for selection Diffusition coefficients array provided in the DCH file. (0 or 1)
+    nAalp,  // Flag for keeping specific surface areas of phases in DATABR structure (1) or ignoring them (0)
 
   // These dimensionalities define sizes of packed arrays in DATABR structures
   // describing nodes. They are needed to save on the storage demand for nodes.
   // Connection between any node and DATACH occurs through the xIC, xPH and xDC
   // index lists (see below)
-    nICb,       // number of IC (stoichiometry units) (<= nIC) used in nodes
-    nDCb,      	// number of DC (chemical species, <= nDC) used in nodes
-    nPHb,     	// number of Phases (<= nPH) used in nodes
-    nPSb,       // number of Phases-solutions (<= nPS) used in nodes
-    uRes1,      // reserved
+    nICb,   // Number of Independent Components kept in the DBR file and DATABR memory structure (<= nIC) 
+    nDCb,  	// Number of Dependent Components kept in the DBR file and DATABR memory structure (<=nDC) 
+    nPHb,   // Number of Phases to be kept in the DBR file and DATABR structure (<= nPH) 
+    nPSb,   // Number of Phases-solutions (multicomponent phases) to be kept in the DBR file and DATABR memory structure (<= nPS) 
+    uRes1,  // reserved
 
 // Lists, vectors and matrices
-    *nDCinPH,  // number of DC included into each phase, [nPH] elements
+    *nDCinPH,  // This vector tells how many Dependent Components is included in each phase [nPH] 
 
-// Indices connecting the lists used in nodes (DATABR structure), see
-//    databr.h, with the lists in this (DATACH) structure
-    *xIC,   // IC name indices in DATABR IC vectors, [nICb] elements
-    *xDC,   // DC name indices in DATABR DC vectors, [nDCb] elements
-    *xPH;   // PH name indices in DATABR Phase vectors, [nPHb] elements
-            // see below definitions of the ICNL, DCNL and PHNL lists
-
-  double  // changed from float on 26.06.2008   DK
-    *TCval,   // discrete values of Temperature (C), [nTp] elements,
- // that correspond to grid arrays for the interpolation of thermodynamic data
-    *Pval,   // discrete values of Pressure (bar), [nPp] elements,
- // that correspond to grid arrays for the interpolation of thermodynamic data
-    *A;      // Stoichiometry matrix A containing elemental stoichiometries
-             // of Dependent Components, [nIC][nDC] elements
- double
-    Ttol,    // Temperature tolerance (K) for interpolation of thermodynamic data
-    Ptol,    // Pressure tolerance (bar) for interpolation of thermodynamic data
+  // Indices connecting the lists used in nodes (DATABR structure), see
+  //    databr.h, with the lists in this (DATACH) structure
+    *xic,   // DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb]
+    *xdc,   // DATACH access index list of DC kept in the DATABR  structure and in DBR files [nDCb] 
+    *xph;   // DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]
+            
+  double
+    Ttol,    // Tolerance for the temperature interpolation (C, K)
+    Ptol,    // Tolerance for the pressure interpolation (Pa)
     dRes1,   // reserved
     dRes2,   // reserved
 
 // Data vectors - must be loaded before calling GEMIPM2K
+    *TCval,  // Temperature values for the interpolation grid (C) for the lookup arrays of thermodynamic data [nTp] 
+    *Pval,   // Pressure values for the interpolation grid (Pa) for the lookup arrays of thermodynamic data [nPp] 
+    *A,      // Stoichiometry matrix A for Dependent Components. [nIC][nDC] elements
 
-// Values for IC (independent components)
-    *ICmm,   // IC atomic (molar) mass, g/mol, [nIC] elements
+   // Values for IC (independent components)
+    *ICmm,   // Atomic (molar) masses of Independent Components  (kg/mol) [nIC] 
 
-// DC - related values
-    *DCmm,   // DC molar mass, g/mol, [nDC] elements
-    *DD,     // Diffusition coefficients, [nDC][nPp][nTp] elements, for now constant
+    // DC - related values
+    *DCmm,   // Molar masses of Dependent Components (kg/mol) [nDC] 
+    *DD,     // Lookup array for diffusion coefficients of DCs (reserved) [nDC][nPp][nTp]  for now constant
 
-// Look-up grid arrays of thermodynamic data
-// Require a Lagrange interpolation subroutine to extract data
-// for a given P,T point (new interpolation is done when P or T differs
-// from the previous P,T by more than Ptol, Ttol)
-*denW,   // density of water-solvent, g/cm3, [5][ nPp][nTp] elements
-*denWg,   // density of water-solvent, g/cm3 (vapor), [5][ nPp][nTp] elements
-*epsW,  // dielectric  constant of water-solvent , [5][nPp][nTp] elements
-*epsWg,  // dielectric  constant of water-solvent (vapor), [5][nPp][nTp] elements
-    *G0,    // G0 standard molar Gibbs energy of DC, J/mol, [nDC][nPp][nTp] elements
-    *V0,    // V0 standard molar volume of DC, J/bar, [nDC][nPp][nTp] elements
-    *S0,    // S0 standard molar entropy of DC, J/K/mol, [nDC][nPp][nTp] elements
-    *H0,    // H0 standard molar enthalpy of DC, J/mol, reserved, [nDC][nPp][nTp] elements
-    *Cp0,   // Cp0 molar heat capacity of DC, J/K/mol, [nDC][nPp][nTp] elements
- *A0,    // Helmholtz energy of DC, J/mol, reserved, [nDC][nPp][nTp] elements
- *U0;   // Internal energy of DC, J/K/mol, [nDC][nPp][nTp] elements
+    // Look-up grid arrays of thermodynamic data require a Lagrange interpolation subroutine to extract data
+    // for a given P,T point (new interpolation is done when P or T differs
+    // from the previous P,T by more than Ptol, Ttol)
+    *denW,  // Lookup array for the density of water-solvent (kg/m3) [5][nPp][nTp] 
+    *denWg, // Optional lookup array for the density of water vapour (kg/m3) [5][nPp][nTp]
+    *epsW,  // Lookup array for the dielectric constant of water-solvent (dimensionless) [5][nPp][nTp] 
+    *epsWg, // Optional lookup array for the dielectric constant of water vapour [5][nPp][nTp] 
+    *G0,    // Obligatory lookup array for DC molar Gibbs energy function g(T,P) (J/mol) [nDC][nPp][nTp] 
+    *V0,    // Obligatory lookup array for (standard) molar volumes of DC (J/Pa) [nDC][nPp][nTp] 
+    *S0,    // Optional lookup array for the DC absolute entropy function (J/K/mol) [nDC][nPp][nTp] 
+    *H0,    // Optional lookup array for DC molar enthalpy h(T,P) (J/mol) [nDC][nPp][nTp]
+    *Cp0,   // Optional lookup array for DC heat capacity function (J/K/mol) [nDC][nPp][nTp] 
+    *A0,    // Optional lookup array for Helmholtz energy of DC (J/mol) reserved, [nDC][nPp][nTp] 
+    *U0;    // Optional lookup array for Internal energy of DC (J/K/mol) [nDC][nPp][nTp] 
 
 // Name lists
-   // List of IC names in the system, [nIC] elements of MaxICN length
- char (*ICNL)[MaxICN];
-   // List of DC names in the system, [nDC] elements of MaxDCN length
- char (*DCNL)[MaxDCN];
-   // List of phase names in the system, [nPH] elements of MaxPHN length
- char (*PHNL)[MaxPHN];
+  char (*ICNL)[MaxICN]; // List of IC names in the system, [nIC]  of MaxICN length
+  char (*DCNL)[MaxDCN]; // List of DC names in the system, [nDC] of MaxDCN length
+  char (*PHNL)[MaxPHN]; // List of Phase names  [nPH]  of MaxPHN length
 
 // Class code lists
- char   *ccIC,   // Class codes of IC, see  enum ICL_CLASSES  ([nIC] elements)
-        *ccDC,   // Class codes of DC, see  enum DCL_CLASSES  ([nDC] elements)
-        *ccPH;   // Class codes of phases, see enum PHL_CLASSES ([nPH] elements)
+   char *ccIC,   // Class codes of IC, see  enum ICL_CLASSES  [nIC]
+         *ccDC,   // Type codes of DC, see  enum DCL_CLASSES  [nDC] 
+         *ccPH;   // Class codes of phases, see enum PHL_CLASSES [nPH] 
 }
 DATACH;
 
@@ -159,6 +146,7 @@ typedef enum {  // Classes of dependent components DC used in ccDC code list
     DC_AQ_PROTON   = 'T',      // hydrogen ion H+
     DC_AQ_ELECTRON = 'E',      // electron (as a DC)
     DC_AQ_SPECIES  = 'S',      // other aqueous species (ions, complexes and ion pairs)
+    DC_AQ_SURCOMP = 'K',     // Surface complex represented as aqueous species
     DC_AQ_SOLVENT  = 'W',      // water H2O (major solvent)
     DC_AQ_SOLVCOM  = 'L',      // other components of a solvent (eg. alcohol)
 
@@ -212,18 +200,18 @@ typedef enum {  // Classes of Phases used in ccPH code list
 
 #endif
 #endif
-
+/*
 // Codes allowed in Generic DC code list ccDCW (structure MULTI)
 enum SolDCLcodes {
     DCl_SINGLE = 'U',        // This DC is a single-component (pure) phase
     DCl_SYMMETRIC = 'I',     // This DC is symmetric component (end member)
-	                           // of a solution phase or a gas mixture
+	                         // of a solution phase or a gas mixture
     DCl_ASYM_SPECIES = 'S',  // This DC is asymmetric component
-                  // (solute, sorbate species) in a solution or sorption phase
+                             // (solute, sorbate species) in a solution or sorption phase
     DCl_ASYM_CARRIER = 'W'   // This is a solvent or carrier in a solution
-                  // (sorption) phase
+                             // (sorption) phase
 };
-
+*/
 #endif
 // -----------------------------------------------------------------------------
 // End of datach.h

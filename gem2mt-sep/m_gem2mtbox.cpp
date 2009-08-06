@@ -297,7 +297,7 @@ TGEM2MT::CalcNewStates(  int Ni, int pr, double tcur, double step)
    for( q=0; q <mtp->nC; q++ )
 	 for(i =0; i< mtp->Nf; i++ )
 	 {
-		node1_bIC(q, i) += dMb( q, i) / nodeCH_ICmm( i ) * mtp->dTau;
+		node1_bIC(q, i) += dMb( q, i) / TNode::na->ICmm( i ) * mtp->dTau;
 		if( i == mtp->Nf-1 )
 			node1_bIC(q, i) = 0.0;  // Provisorial - zeroing-off charge
 		else if( node1_bIC(q, i) < 1e-12 )   
@@ -344,7 +344,7 @@ TGEM2MT::CalcNewStates(  int Ni, int pr, double tcur, double step)
   // Calculation of current box reactive IC masses in g   
      for( q=0; q <mtp->nC; q++ )
 		 for(i=0; i<mtp->Nf; i++ )
-			 Mb( q, i) = node1_bIC( q, i ) * nodeCH_ICmm( i );
+			 Mb( q, i) = node1_bIC( q, i ) * TNode::na->ICmm( i );
   
   // Calculation of MPG bulk compoisitions
      for( q=0; q <mtp->nC; q++ )
@@ -378,8 +378,8 @@ TGEM2MT::CalcNewStates(  int Ni, int pr, double tcur, double step)
    return iRet;  
 }
 
-#undef dMB
-#undef MB
+#undef dMb
+#undef Mb
 
 //Calculate record
 bool TGEM2MT::CalcBoxModel( char mode )
@@ -714,7 +714,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments )
 {
   _comment = with_comments;
   
-  TPrintArrays  prar(ff);
+  TPrintArrays  prar(0, 0, ff);
 
    if( _comment )
    {  ff << "# GEMIPM2K v. 2.2.4" << endl;

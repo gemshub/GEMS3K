@@ -203,7 +203,7 @@ public:
 
    //---------------------------------------------------------
    // Methods for working with node arrays (access to data from DBR)
-   // Calculate phase (carrier) mass, g  of single component phase
+   // Calculate phase (carrier) mass, kg  of single component phase
    double get_mPH( long int ia, long int nodex, long int PHx );
    // Calculate phase volume, cm3  of single component phase
    double get_vPH( long int ia, long int nodex, long int PHx );

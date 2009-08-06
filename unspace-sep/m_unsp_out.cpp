@@ -511,7 +511,7 @@ void TUnSpace::to_text_file( fstream& ff, bool with_comments )
 {
   _comment = with_comments;
   
-  TPrintArrays  prar(ff);
+  TPrintArrays  prar(0, 0, ff);
 
    if( _comment )
    {  ff << "# GEMIPM2K v. 2.2.4" << endl;
@@ -777,7 +777,7 @@ void TUnSpace::result_to_text_file( fstream& ff, bool with_comments )
 {
   _comment = with_comments;
   
-  TPrintArrays  prar(ff);
+  TPrintArrays  prar(0, 0, ff);
 
   if( _comment )
    ff << "\n# table of normalised coordinates of points in uncertainty space";

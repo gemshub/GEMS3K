@@ -74,7 +74,7 @@ void TMulti::IS_EtaCalc()
 
             switch( pmp->DCC[j] ) // select expressions for species classes
             {
-            case DC_AQ_ELECTRON:    case DC_AQ_PROTON:    case DC_AQ_SPECIES:
+            case DC_AQ_ELECTRON:    case DC_AQ_PROTON:    case DC_AQ_SPECIES:  case DC_AQ_SURCOMP:
                 XetaW += pmp->X[j]*pmp->EZ[j];
             case DC_AQ_SOLVCOM:    case DC_AQ_SOLVENT:
                 break;
@@ -768,12 +768,21 @@ if( pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
                pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
         	}
         }
+        else if(LinkMode == LINK_FIA_MODE )  // Bugfix for reproducibility 23.07.09 DK
+        {
+        	for( j=jb; j<je; j++ )
+        	{
+        		pmp->G[j] = pmp->G0[j]+ pmp->lnGam[j];
+            }
+        }
         else
         { // Real mode for activity coefficients
           double lnGamG;
 	      for( j=jb; j<je; j++ )
           {
-          	lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
+if( pmp->DCC[j] == DC_AQ_SURCOMP )  // Workaround for aqueous surface complexes DK 22.07.09
+	pmp->lnGam[j] = 0.0;
+	    	lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
           	// if( fabs( 1.0-pmp->Gamma[j] ) > 1e-9
           	// && pmp->Gamma[j] > 3.3e-37 && pmp->Gamma[j] < 3.03e+36 )   // > 1e-35 before 26.02.08
           	// pmp->lnGam[j] += log( pmp->Gamma[j] );

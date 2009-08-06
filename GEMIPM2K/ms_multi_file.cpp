@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1360 2009-07-15 13:37:30Z gems $
+// $Id: ms_multi_file.cpp 1386 2009-08-06 12:43:51Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -505,7 +505,7 @@ void TMulti::from_file( GemDataStream& ff )
    //static values
    char PAalp;
    char PSigm;
-
+   
    ff.readArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.readArray( &pm.N, 38);
    ff.readArray(&pm.TC, 55);
@@ -532,7 +532,6 @@ void TMulti::from_file( GemDataStream& ff )
 #endif
 
    //dynamic values
-
     // Part 1
 
     /* need  always to alloc vectors */

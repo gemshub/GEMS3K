@@ -540,7 +540,7 @@ void TNodeArray::CopyNodeFromTo( long int ndx, long int nNod,
 //---------------------------------------------------------
 // Methods for working with node arrays (access to data from DBR)
 
-// Calculate phase (carrier) mass, g  of single component phase
+// Calculate phase (carrier) mass, kg  of single component phase
 double TNodeArray::get_mPH( long int ia, long int nodex, long int PHx )
 {
   long int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
@@ -579,7 +579,7 @@ double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
       P = pNodT1()[(nodex)]->P;
       val = pNodT1()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
      }
-     val *= DC_V0_TP( DCx, T, P )*10.;  // from j/bar to cm3/mol
+     val *= DC_V0( DCx, T, P );  
   }
   return val;
 }
@@ -593,7 +593,7 @@ double TNodeArray::get_bPH( long int ia, long int nodex, long int PHx, long int 
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
   {
-    val = pCSD()->A[ pCSD()->xIC[ICx] + DCx * pCSD()->nIC];
+    val = pCSD()->A[ pCSD()->xic[ICx] + DCx * pCSD()->nIC];
     if( ia == 0)
      val *= pNodT0()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
     else
@@ -784,7 +784,7 @@ double TNodeArray::GetNodeMass( long int ndx,
      switch( tcode )
      {
         case DISSOLVED: // mass of dissolved matter in aqueous solution
-                        xWatCH = dch->nDCinPH[dch->xPH[0]]-1; // CH index of water
+                        xWatCH = dch->nDCinPH[dch->xph[0]]-1; // CH index of water
 //                       mass = node1_mPS(ndx,ips); // - node1_xPA(ndx,ips)*dch->DCmm[xWatCH];
                         mass = node1_xPA(ndx,ips)*dch->DCmm[xWatCH]; // Mass of aq-solvent
                         break;
@@ -798,7 +798,7 @@ double TNodeArray::GetNodeMass( long int ndx,
                           mass = node1_mPH( ndx, ips );
                        break;
         case DIFFUSIVE: // mass of the diffusing species
-                        mass = nodeCH_DCmm( ips ) * node1_xDC( ndx, ips );
+                        mass = DCmm( ips ) * node1_xDC( ndx, ips );
                         break;
         default: break;
      }
@@ -822,7 +822,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
    long int xWatCH=0, ic, ips = (long int)iips;
    if( tcode == DISSOLVED || tcode == ADVECTIVE || tcode == DIFFUSIVE )
    {
-	   xWatCH = CSD->nDCinPH[CSD->xPH[0]]-1; // CH index of water
+	   xWatCH = CSD->nDCinPH[CSD->xph[0]]-1; // CH index of water
 //	   mWat = node1_xDC( ndx_from, xWatCH )* CSD->DCmm[xWatCH]; 
 	   mWat = node1_xPA(ndx_from, ips) * CSD->DCmm[xWatCH];  // Mass of water-solvent
 	   fmolal = 1.0; // 1000./mWat;              // molality conversion factor
@@ -847,7 +847,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                        mass = node1_mPH( ndx_from, ips );
                    break;
     case DIFFUSIVE: // gets the mass of diffusing species in the phase
-                   mass = nodeCH_DCmm( ips ) * node1_xDC( ndx_from, ips );
+                   mass = DCmm( ips ) * node1_xDC( ndx_from, ips );
                    break;
     }
    coeff = m_v/mass; // mass of particle/mass of phase (solvent). Is this reasonable? 
@@ -892,7 +892,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
     		  node1_xDC( ndx_from, jc ) -= mol;   // Correcting species amount in source node at T1 
     		  for( ic=0; ic<CSD->nICb; ic++)  // incrementing independent components
     		  {
-    			  aji = nodeCH_A( jc, ic );
+    			  aji = DCaJI( jc, ic );
     			  if( aji )
     				  node1_bIC(ndx_from, ic) -= aji * mol;
     		  }
@@ -904,7 +904,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
  	  			  node1_xDC( ndx_to, jc ) += mol;
  	  			  for( ic=0; ic<CSD->nICb; ic++)  // incrementing independent components
  	  			  {
- 	  				  aji = nodeCH_A( jc, ic );
+ 	  				  aji = DCaJI( jc, ic );
  	  				  if( aji )
  	  					  node1_bIC(ndx_to, ic) += aji * mol;
  	  			  }	
@@ -942,7 +942,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                              mol = node1_bPH( ndx_from, ips, ie ) * coeff;
                         break;
         case DIFFUSIVE: // moving IC of diffusing species
-                        mol = node1_xDC( ndx_from, ips ) * nodeCH_A( ips, ie )
+                        mol = node1_xDC( ndx_from, ips ) * DCaJI( ips, ie )
                                 * coeff * fmolal;
                         break;
      }

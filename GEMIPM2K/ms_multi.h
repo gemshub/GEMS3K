@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1369 2009-07-20 15:21:34Z gems $
+// $Id: ms_multi.h 1383 2009-08-04 16:49:18Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -54,7 +54,7 @@ typedef struct
     LO,       	// LO -   index of water-solvent in IPM DC list
     PG,       	// PG -   number of DC in gas phase
     PSOL,     	// PSOL - number of DC in liquid hydrocarbon phase
-    Lads,     	// Lads - number of DC in sorption phases
+    Lads,     	// Total number of DC in sorption phases included into this system.
     FI,       	// FI -   number of phases in IPM problem
     FIs,      	// FIs -   number of multicomponent phases
     FIa,      	// FIa -   number of sorption phases
@@ -64,7 +64,7 @@ typedef struct
     IT,      // It - number of completed IPM iterations
     E,       // PE - flag of electroneutrality constraint { 0 1 }
     PD,      // PD - mode of calling GammaCalc() { 0 1 2 3 4 }
-    PV,      // PV - flag of system volume constraint { 0 1 }
+    PV,      // Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat { 0 1 }
     PLIM,    // PU - flag of activation of DC/phase restrictions { 0 1 }
     Ec,    // GammaCalc() return code: 0 (OK) or 1 (error)
     K2,    // Number of Selekt2() loops
@@ -136,16 +136,16 @@ double
     *L1,    // l_a vector - number of DCs included into each phase [Fi]
     *LsMod, // Number of interaction parameters, max. parameter order (cols in IPx),
         // and number of coefficients per parameter in PMc table [3*FIs]
-    *LsMdc, // Number of non-ideality coeffs per one DC in multicomponent phase[FIs]
-    *IPx,   // List of indexes of interaction parameters for non-ideal solutions
-            // ->LsMod[k,0] x LsMod[k,1]   added 07.12.2006   KD
+    *LsMdc, // Number of parameters per component of the phase for the non-ideal mixing models [FIs]
+    *IPx,   // Collected indexation table for interaction parameters of non-ideal solutions
+            // ->LsMod[k,0] x LsMod[k,1]   over FIs
     *mui,   // IC indices in RMULTS IC list [N]
     *muk,   // Phase indices in RMULTS phase list [FI]
     *muj;   // DC indices in RMULTS DC list [L]
-  long int  (*SATX)[4]; // New: work table [Lads]: link indexes to surface type [XL_ST];
-            // sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
+  long int  (*SATX)[4]; // Setup of surface sites and species (will be applied separately within each sorption phase) [Lads]
+             // link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
   double
-    *PMc,    // Non-ideality coefficients f(TP) -> LsMod[k,0] x LsMod[k,2]
+    *PMc,    // Collected interaction parameter coefficients for the (built-in) non-ideal mixing models -> LsMod[k,0] x LsMod[k,2]
     *DMc,    // Non-ideality coefficients f(TPX) for DC -> LsMdc[k]
     *A,      // DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    // IC atomic (molar) mass, g/mole [0:N-1]
@@ -168,16 +168,16 @@ double
     *VL,        // ln mole fraction of end members in phases-solutions
     *Xcond, 	// conductivity of phase carrier, sm/m2   [0:FI-1], reserved
     *Xeps,  	// diel.permeability of phase carrier (solvent) [0:FI-1], reserved
-    *Aalp,  	// phase specific surface area m2/g       [0:FI-1]
-    *Sigw,  	// st.surface free energy in water,J/m2   [0:FI-1]
-    *Sigg  	// st.surface free energy in air,J/m2     [0:FI-1], reserved
+    *Aalp,  	// Full vector of specific surface areas of phases (m2/g) [0:FI-1]
+    *Sigw,  	// Specific surface free energy for phase-water interface (J/m2)   [0:FI-1]
+    *Sigg  	// Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
     ;
 
 
 //  Data for surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   // mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
-  double  (*Nfsp)[MST];  // area fraction of surface types At/A  [FIs][FIat]
-  double  (*MASDT)[MST]; // Max. surface species density Gamma_C, mkmol/g [FIs][FIat]
+  double  (*Nfsp)[MST];  // Fractions of the sorbent specific surface area allocated to surface types  [FIs][FIat]
+  double  (*MASDT)[MST]; // Total maximum site  density per surface type (mkmol/g)  [FIs][FIat]
   double  (*XcapF)[MST]; // Capacitance density of Ba EDL layer F/m2 [FIs][FIat]
   double  (*XcapA)[MST]; // Capacitance density of 0 EDL layer, F/m2 [FIs][FIat]
   double  (*XcapB)[MST]; // Capacitance density of B EDL layer, F/m2 [FIs][FIat]
@@ -186,8 +186,8 @@ double
   double  (*XdlB)[MST];  // Effective thickness of B EDL layer, nm [FIs][FIat], reserved
   double  (*XdlD)[MST];  // Effective thickness of diffuse layer, nm [FIs][FIat], reserved
   double  (*XlamA)[MST]; // Factor of EDL discretness  A < 1 [FIs][FIat], reserved
-  double  (*Xetaf)[MST]; // Permanent charge density at surface type, C/m2 [FIs][FIat]
-  double  (*MASDJ)[DFCN];  // Max. density, CD-music and isotherm params [Lads][DFCN]
+  double  (*Xetaf)[MST]; // Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [FIs][FIat]
+  double  (*MASDJ)[DFCN];  // Parameters of surface species in surface complexation models [Lads][DFCN]
                           // Contents defined in the enum below this structure
 // Other data
 
@@ -203,18 +203,18 @@ double
     *GEX,     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
     *PUL,  // Vector of upper restrictions to phases amounts X_a (reserved)[FIs]
     *PLL,  // Vector of lower restrictions to phases amounts X_a (reserved)[FIs]
-    *YOF,     // Phase metastability parameter (spec.surf.energy), in J/g [FI !!!!]
+    *YOF,     // Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
     *Vol,     // DC molar volumes, cm3/mol [L]
     *MM,      // DC molar masses, g/mol [L]
-    *Pparc,   // DC partial pressures/ pure fugacities, bar (Pc by default) [0:L-1]
+    *Pparc,   // Partial pressures or fugacities of pure DC, bar (Pc by default) [0:L-1]
     *Y_m,     // Molalities of aqueous species and sorbates [0:Ls-1]
     *Y_la,    // log activity of DC in multi-component phases (mju-mji0) [0:Ls-1]
     *Y_w,     // Mass concentrations of DC in multi-component phases,%(ppm)[Ls]
     *Gamma,   // DC activity coefficients in molal or other phase-specific scale [0:L-1]
-    *lnGmf,   // ln of initial DC activity coefficients [0:L-1]
+    *lnGmf,   // ln of initial DC activity coefficients for correcting G0 [0:L-1]
     *lnGmM,   // ln of DC pure gas fugacity (or metastability) coeffs or DDF correction [0:L-1]
     *EZ,      // Formula charge of DC in multi-component phases [0:Ls-1]
-    *FVOL,    // phase volumes, cm3/mol                   [0:FI-1]
+    *FVOL,    // phase volumes, cm3 comment corrected DK 04.08.2009  [0:FI-1]
     *FWGT,    // phase (carrier) masses, g                [0:FI-1]
 //
     *G,    // Normalized DC energy function c(j), mole/mole [0:L-1]
@@ -269,28 +269,28 @@ double
     *F0;  // Excess Gibbs energies for (metastable) DC, mole/mole [L]
    double (*D)[MST];  // Reserved; new work array for calc. surface act.coeff.
 // Name lists
-  char  (*sMod)[6];   // Codes of models of multicomponent phases [FIs]
+  char  (*sMod)[6];   // Codes for built-in mixing models of multicomponent phases [FIs]
   char  (*SB)[MAXICNAME+MAXSYMB]; // List of IC names in the system [N]
   char  (*SB1)[MAXICNAME]; // List of IC names in the system [N]
   char  (*SM)[MAXDCNAME];  // List of DC names in the system [L]
   char  (*SF)[MAXPHNAME+MAXSYMB];  // List of phase names in the system [FI]
   char  (*SM2)[MAXDCNAME];  // List of multicomp. phase DC names in the system [Ls]
   char  (*SM3)[MAXDCNAME];  // List of adsorption DC names in the system [Lads]
-  char  *DCC3;   // Classifier of DC in sorption phases [Lads]
+  char  *DCC3;   // Classifier of DCs involved in sorption phases [Lads]
   char  (*SF2)[MAXPHNAME+MAXSYMB]; // List of multicomp. phase names in the syst [FIs]
   char  (*SFs)[MAXPHNAME+MAXSYMB];
     // List of phases currently present in non-zero quantities [FI]
   char  *pbuf, 	// Text buffer for table printouts
 // Class codes
-    *RLC,   // Classifier of restriction types for x_j [L]
-    *RSC,   // Classifier of restriction scales for x_j [L]
+    *RLC,   // Code of metastability constraints for DCs [L] enum DC_LIMITS
+    *RSC,   // Units of metastability/kinetic constraints for DCs  [L] 
     *RFLC,  // Classifier of restriction types for XF_a [FIs]
     *RFSC,  // Classifier of restriction scales for XF_a [FIs]
     *ICC,   // Classifier of IC { e o h a z v i <int> } [N]
     *DCC,   // Classifier of DC { TESWGVCHNIJMDRAB0123XYZPQO } [L]
     *PHC;   // Classifier of phases { a g f p m l x d h } [FI]
-  char  (*SCM)[MST]; // Classifier of adsorption models for sur types [FIs][FIat]
-  char  *SATT,  // classifier of methods of SAT calculation [Lads]
+  char  (*SCM)[MST]; // Classifier of built-in electrostatic models applied to surface types in sorption phases [FIs][FIat]
+  char  *SATT,  // Classifier of applied SACT equations (isotherm corrections) [Lads]
     *DCCW;  // internal DC class codes [L]
 //  long int
 //     *sitXcat, // SIT: indices of cations (may be changed soon)
@@ -318,8 +318,10 @@ double
 }
 MULTI;
 
-enum { // link indexes to surface type [XL_ST] sorbent em [XL_EM]
-//  surf.site [XL-SI] and EDL plane [XL_SP]
+enum { 
+	//[0] - max site density in mkmol/(g sorbent); [1] - species charge allocated to 0 plane; 
+	//[2] - surface species charge allocated to beta -or third plane; [3] - Frumkin interaction parameter; 
+	//[4] species denticity or coordination number; [5]  - reserved parameter (e.g. species charge on 3rd EIL plane)]
    XL_ST = 0, XL_EM, XL_SI, XL_SP
 };
 
@@ -374,8 +376,8 @@ class TMulti
     int find_acnum( char *name, int LNmode );
 #else
 
-   char PAalp_;
-   char PSigm_;
+   char PAalp_; // Flag for using (+) or ignoring (-) specific surface areas of phases
+   char PSigm_; // Flag for using (+) or ignoring (-) specific surface free energies 
  //  double EpsW_;
  //  double RoW_;
 

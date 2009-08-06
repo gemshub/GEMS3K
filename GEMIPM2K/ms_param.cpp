@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1369 2009-07-20 15:21:34Z gems $
+// $Id: ms_param.cpp 1379 2009-07-29 14:53:22Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -379,27 +379,27 @@ void TMulti::CompG0Load()
 {
   long int j, jj, k, xTP, jb, je=0;
   double Go, Gg, Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
-  double TC, P;
+  double TC, P, PPa;
 
   DATACH  *dCH = TNode::na->pCSD();
 //  DATABR  *dBR = TNodeArray::na->pCNode();
 
   TC = TNode::na->cTC();
-  P = TNode::na->cP();
-
+  PPa = TNode::na->cP();
+  P = PPa/bar_to_Pa;
 // if( dCH->nTp <=1 && dCH->nPp <=1 )
-  if( dCH->nTp <1 || dCH->nPp <1 || TNode::na->check_TP( TC, P ) == false )
+  if( dCH->nTp <1 || dCH->nPp <1 || TNode::na->check_TP( TC, PPa ) == false )
   {
 	  char buff[256];
 	  sprintf( buff, " Temperature %g or pressure %g out of range, or no T/D data are provided\n",
-			  TC, P );
+			  TC, PPa );
 	  Error( "ECompG0Load: " , buff );
       return;
   }
-   xTP = TNode::na->check_grid_TP( TC, P );
+  xTP = TNode::na->check_grid_TP( TC, PPa );
 
- if( load && fabs( pmp->TC - TC ) < 1.e-10 &&
-            fabs( pmp->P - P ) < 1.e-10 )
+ if( load && fabs( pmp->TC - TC ) < dCH->Ttol /*1.e-10*/ &&
+            fabs( pmp->P - P ) < dCH->Ptol/bar_to_Pa /*1.e-10*/ )
    return;    //T, P not changed - problematic for UnSpace!
 
  pmp->T = pmp->Tc = TC + C_to_K;
@@ -413,21 +413,21 @@ void TMulti::CompG0Load()
      jj =  k * dCH->nPp * dCH->nTp;
      if( xTP >= 0 )
       {
-       pmp->denW[k] = dCH->denW[jj+xTP];
+       pmp->denW[k] = dCH->denW[jj+xTP]/1e3;
        pmp->epsW[k] = dCH->epsW[jj+xTP];
-       pmp->denWg[k] = dCH->denWg[jj+xTP];
+       pmp->denWg[k] = dCH->denWg[jj+xTP]/1e3;
        pmp->epsWg[k] = dCH->epsWg[jj+xTP];
       }
      else
      {
        pmp->denW[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->denW+jj,
-                          P, TC, dCH->nTp, dCH->nPp,6 );// from test denW enough
+                          PPa, TC, dCH->nTp, dCH->nPp,6 )/1e3;// from test denW enough
        pmp->epsW[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsW+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          PPa, TC, dCH->nTp, dCH->nPp,5 );// from test epsW enough
        pmp->denWg[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->denWg+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 ); // from test epsW enough
+                          PPa, TC, dCH->nTp, dCH->nPp,5 )/1e3; 
        pmp->epsWg[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsWg+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          PPa, TC, dCH->nTp, dCH->nPp,5 );
      }
   }
 // }  
@@ -455,7 +455,7 @@ void TMulti::CompG0Load()
       if( xTP >= 0 )
       {
         Go = dCH->G0[ jj+xTP];
-        Vv = dCH->V0[ jj+xTP];
+        Vv = dCH->V0[ jj+xTP]*1e5;
         if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];	
         if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];	
         if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];	
@@ -465,19 +465,19 @@ void TMulti::CompG0Load()
      else
      {
        Go = LagranInterp( dCH->Pval, dCH->TCval, dCH->G0+jj,
-                          P, TC, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough 
+                          PPa, TC, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough 
        Vv = LagranInterp( dCH->Pval, dCH->TCval, dCH->V0+jj,
-                          P, TC, dCH->nTp, dCH->nPp, 5 );
+                          PPa, TC, dCH->nTp, dCH->nPp, 5 )*1e5;
        if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->S0+jj,
-                          P, TC, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough 
+                          PPa, TC, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough 
        if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->H0+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          PPa, TC, dCH->nTp, dCH->nPp,5 );
        if( dCH->Cp0 ) Cp0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->Cp0+jj,
-                          P, TC, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
+                          PPa, TC, dCH->nTp, dCH->nPp, 3 ); // from test Cp0[Ca+2] not more
        if( dCH->A0 ) a0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->A0+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          PPa, TC, dCH->nTp, dCH->nPp,5 );
        if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->U0+jj,
-                          P, TC, dCH->nTp, dCH->nPp,5 );
+                          PPa, TC, dCH->nTp, dCH->nPp,5 );
      }
      if( pmp->tpp_G )
     	  pmp->tpp_G[j] = Go;

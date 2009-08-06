@@ -452,7 +452,7 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
     	    	 node1_xDC( ii, jc ) -= dc;			 
             	 for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
             	 {
-            		 aji = nodeCH_A( jc, ic );
+            		 aji = TNode::na->DCaJI( jc, ic );
             		 if( aji )
             		     node1_bIC(ii, ic) -= aji * dc;
             	 }
@@ -462,7 +462,7 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
     	    	 dc = c0/fmolal - mtp->cez;
     	    	 for( ic=0; ic<CH->nICb; ic++)  // incrementing independent components
             	 {
-            		 aji = nodeCH_A( jc, ic );
+            		 aji = TNode::na->DCaJI( jc, ic );
             		 if( aji )
             		     node1_bIC(ii, ic) -= aji * dc;
             	 }
@@ -474,7 +474,7 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
     	 fmolal = 55.5084/node1_xDC( ii, CH->nDCinPH[0]-1 ); // molality factor
     	 for( ic=0; ic < CH->nICb; ic++)  // splitting for independent components
     	 {                        
-    		 niw = node1_xDC( ii, CH->nDCinPH[0]-1 )* nodeCH_A( CH->nDCinPH[0]-1, ic );
+    		 niw = node1_xDC( ii, CH->nDCinPH[0]-1 )* TNode::na->DCaJI( CH->nDCinPH[0]-1, ic );
     		    // IC amount in H2O
     		 // Chemical compositions may become inconsistent with time
     		 // It has to be checked on minimal allowed c0 value

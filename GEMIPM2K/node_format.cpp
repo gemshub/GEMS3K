@@ -104,9 +104,9 @@ outField DataCH_static_fields[13] =  {
 };
 
 outField DataCH_dynamic_fields[29] =  { //+4
-   { "xIC",  1, 0 },
-   { "xDC",  1, 0 },
-   { "xPH",  1, 0 },
+   { "xic",  1, 0 },
+   { "xdc",  1, 0 },
+   { "xph",  1, 0 },
    { "ICNL",  1, 0 },
    { "ccIC",  1, 0 },
    { "ICmm",  1, 0 },
@@ -156,305 +156,305 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
    }
    if(!brief_mode || prar.getAlws("NodeHandle" ))
    {  if( _comment )
-        ff << "# Node identification handle (index of recipe)" << endl;
+        ff << "# NodeHandle: Node identification handle" << endl;
       ff << left << setw(17) << "<NodeHandle> " <<  CNode->NodeHandle << endl;
    }   
 if( CNode->NodeStatusFMT != No_transport )
 {
   if(!brief_mode || prar.getAlws("NodeTypeHY" ))
   {  if( _comment )
-       ff << "# Node type (hydraulic); see typedef NODETYPE" << endl;
+       ff << "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level ; see typedef NODETYPE" << endl;
      ff << left << setw(17) << "<NodeTypeHY> " <<  CNode->NodeTypeHY << endl;
   }   
   if(!brief_mode || prar.getAlws("NodeTypeMT" ))
   { if( _comment )
-      ff << "# Node type (mass transport); see typedef NODETYPE" << endl;
+      ff << "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" << endl;
     ff << left << setw(17) << "<NodeTypeMT> " <<  CNode->NodeTypeMT << endl;
   }  
 }
   if(!brief_mode || prar.getAlws("NodeStatusFMT" ))
   { if( _comment )
-      ff << "# Node status code FMT; see typedef NODECODEFMT" << endl;
+      ff << "# NodeStatusFMT:  Node status code in FMT part, not used on TNode level; see typedef NODECODEFMT" << endl;
     ff << left << setw(17) << "<NodeStatusFMT> " <<  CNode->NodeStatusFMT << endl;
   }  
   if(!brief_mode || prar.getAlws("NodeStatusCH" ))
   {  
     if( _comment )
-      ff << "# Node status code CH;  see typedef NODECODECH" << endl;
+      ff << "# NodeStatusCH: Node status code in GEM (input and output); see typedef NODECODECH" << endl;
     ff << left << setw(17) << "<NodeStatusCH> " <<  CNode->NodeStatusCH << endl;
   }  
   if(!brief_mode || prar.getAlws("NodeStatusCH" ))
   {  
    if( _comment )
-      ff << "# Number of iterations performed by IPM algorithm (GEM output)" << endl;
+      ff << "# IterDone:  Number of iterations performed by GEM IPM in the last run - GEM output" << endl;
    ff << left << setw(17) << "<IterDone> " <<  CNode->IterDone << endl;
   }
   if( _comment )
-      ff << "\n##Section (scalar-2): Chemical scalar variables" << endl;
+      ff << "\n## (2) Chemical scalar variables" << endl;
   if(!brief_mode || prar.getAlws("TC" ))
   { if( _comment )
-         ff << "# Temperature T, C (GEM input)" << endl;
+         ff << "# TC: Node temperature T (C). This value must always be provided - GEM input." << endl;
     ff << left << setw(7) << "<TC> " <<  CNode->TC << endl;
   }  
   if(!brief_mode || prar.getAlws("P" ))
   {  if( _comment )
-         ff << "# Pressure P, bar (GEM input)" << endl;
+         ff << "# P:  Node Pressure P (Pa)  GEM input" << endl;
      ff << left << setw(7) << "<P> " <<  CNode->P << endl;
   }
   if(!brief_mode || prar.getAlws("Vs" ))
   { if( _comment )
-         ff << "# Volume V of reactive subsystem, m3 (GEM output)" << endl;
+         ff << "# Vs: Volume V of reactive subsystem (m3)" << endl;
     ff << left << setw(7) << "<Vs> " << CNode->Vs << endl;
   }  
 if( CNode->NodeStatusFMT != No_transport )
 {
   if(!brief_mode || prar.getAlws("Vi" ))
   { if( _comment )
-         ff << "# Volume Vi of inert subsystem, m3" << endl;
+         ff << "# Vi: Volume of inert subsystem (m3)" << endl;
     ff << left << setw(7) << "<Vi> " <<  CNode->Vi << endl;
   }  
 }
   if(!brief_mode || prar.getAlws("Ms" ))
   { if( _comment )
-         ff << "# Mass Ms of reactive subsystem,  kg (GEM output)" << endl;
+         ff << "# Ms:  Mass of reactive subsystem (kg) - GEM output" << endl;
     ff << left << setw(7) << "<Ms> " <<  CNode->Ms << endl;
   }  
 if( CNode->NodeStatusFMT != No_transport )
 {
   if(!brief_mode || prar.getAlws("Mi" ))
   { if( _comment )
-         ff << "# Mass Mi of inert subsystem, kg" << endl;
+         ff << "# Mi: Mass of inert subsystem (kg)" << endl;
     ff << left << setw(7) << "<Mi> " <<  CNode->Mi << endl;
   } 
 }
   if(!brief_mode || prar.getAlws("Hs" ))
   { if( _comment )
-         ff << "# Enthalpy Hs of reactive subsystem, J (GEM output, optional) " << endl;
+         ff << "# Hs:  Total enthalpy of reactive subsystem (J) (reserved)" << endl;
     ff << left << setw(7) << "<Hs> " <<  CNode->Hs << endl;
   }  
 if( CNode->NodeStatusFMT != No_transport )
 {
   if(!brief_mode || prar.getAlws("Hi" ))
   { if( _comment )
-         ff << "# Enthalpy Hi of inert subsystem, J " << endl;
+         ff << "# Hi:  Total enthalpy of inert subsystem (J) (reserved, can be used only in FMT part) " << endl;
     ff << left << setw(7) << "<Hi> " <<  CNode->Hi << endl;
   } 
 }
   if(!brief_mode || prar.getAlws("Gs" ))
   { if( _comment )
-         ff << "# Gibbs energy Gs of reactive subsystem, J (GEM output)" << endl;
+         ff << "# Gs: Total Gibbs energy of the reactive subsystem (J/RT) (normalized) - GEM output" << endl;
     ff << left << setw(7) << "<Gs> " <<  CNode->Gs << endl;
   }  
 if( CSD->ccPH[0] == PH_AQUEL )
 {
   if(!brief_mode || prar.getAlws("IS" ))
   {	if( _comment )
-         ff << "# Effective aqueous ionic strength IS, molal (GEM output)" << endl;
+         ff << "# IS: Effective aqueous ionic strength (molal)  - GEM output" << endl;
     ff << left << setw(7) << "<IS> " <<  CNode->IC << endl;
   } 
   if(!brief_mode || prar.getAlws("pH" ))
   { if( _comment )
-         ff << "# pH of aqueous solution (GEM output)" << endl;
+         ff << "# pH: pH of aqueous solution in the activity scale - GEM output" << endl;
     ff << left << setw(7) << "<pH> " <<  CNode->pH << endl;
   } 
   if(!brief_mode || prar.getAlws("pe" ))
   {    if( _comment )
-         ff << "# pe of aqueous solution (GEM output)" << endl;
+         ff << "# pe: pe of aqueous solution in the activity scale - GEM output " << endl;
      ff << left << setw(7) << "<pe> " <<  CNode->pe << endl;
   }   
   if(!brief_mode || prar.getAlws("Eh" ))
   { if( _comment )
-         ff << "# Eh of aqueous solution, V (GEM output)" << endl;
+         ff << "# Eh: Eh of aqueous solution (V) - GEM output" << endl;
     ff << left << setw(7) << "<Eh> " <<  CNode->Eh << endl;
   }  
 }
 if( CNode->NodeStatusFMT != No_transport )
 {
 	if( _comment )
-	    ff << "\n## FMT scalar variables (used only in NodeArray, not used in GEM)" << endl;
+	    ff << "\n## (3) FMT scalar variables (used only in NodeArray, not used in GEM)" << endl;
 	if(!brief_mode || prar.getAlws("Tm" ))
     {  if( _comment )
-          ff << "# actual total simulation time Tm, s" << endl;
+          ff << "# Tm: Actual total simulation time (s)" << endl;
        ff << left << setw(7) << "<Tm> " <<  CNode->Tm << endl;
     }   
 	if(!brief_mode || prar.getAlws("dt" ))
     {  if( _comment )
-        ff << "# actual time step dt, s" << endl;
+        ff << "# dt:  Actual time step (s)" << endl;
       ff << left << setw(7) << "<dt> " <<  CNode->dt << endl;
     }   
 	if(!brief_mode || prar.getAlws("Dif" ))
     { if( _comment )
-       ff << "# General diffusivity Dif of disolved matter in the mode, m2/s" << endl;
+       ff << "# Dif: General diffusivity of disolved matter (m2/s)" << endl;
      ff << left << setw(7) << "<Dif> " <<  CNode->Dif << endl;
     }
 	if(!brief_mode || prar.getAlws("Vt" ))
     { if( _comment )
-       ff << "# total volume Vt of the node (voxel), m3" << endl;
+       ff << "# Vt: Total volume of the node (m3)" << endl;
      ff << left << setw(7) << "<Vt> " <<  CNode->Vt << endl;
     }  
 	if(!brief_mode || prar.getAlws("vp" ))
     { if( _comment )
-       ff << "# advection velocity vp in this node, m/s" << endl;
+       ff << "# vp:  Advection velocity (in pores)  (m/s)" << endl;
       ff << left << setw(7) << "<vp> " <<  CNode->vp << endl;
     }  
 	if(!brief_mode || prar.getAlws("eps" ))
     { if( _comment )
-       ff << "#  effective (actual) porosity eps, normalized to 1" << endl;
+       ff << "#  eps: Effective (actual) porosity normalized to 1" << endl;
       ff << left << setw(7) << "<eps> " <<  CNode->eps << endl;
     }  
 	if(!brief_mode || prar.getAlws("Km" ))
     { if( _comment )
-       ff << "# actual permeability Km, m2" << endl;
+       ff << "# Km: Actual permeability (m2)" << endl;
       ff << left << setw(7) << "<Km> " <<  CNode->Km << endl;
     }  
 	if(!brief_mode || prar.getAlws("Kf" ))
     { if( _comment )
-       ff << "# actual DARCY`s constant Kf, m2/s" << endl;
+       ff << "# Kf: Actual Darcy`s constant (m2/s)" << endl;
      ff << left << setw(7) << "<Kf> " <<  CNode->Kf << endl;
     } 
 	if(!brief_mode || prar.getAlws("S" ))
     { if( _comment )
-       ff << "# specific storage coefficient S, dimensionless" << endl;
+       ff << "# S: Specific storage coefficient, dimensionless" << endl;
       ff << left << setw(7) << "<S> " <<  CNode->S << endl;
     }  
 	if(!brief_mode || prar.getAlws("Tr" ))
     { if( _comment )
-       ff << "# transmissivity Tr, m2/s" << endl;
+       ff << "# Tr:  Transmissivity (m2/s)" << endl;
       ff << left << setw(7) << "<Tr> " <<  CNode->Tr << endl;
     }  
 	if(!brief_mode || prar.getAlws("h" ))
     { if( _comment )
-       ff << "# actual hydraulic head h (hydraulic potential), m" << endl;
+       ff << "# h:  Actual hydraulic head (hydraulic potential) (m)" << endl;
       ff << left << setw(7) << "<h> " <<  CNode->h << endl;
     }  
 	if(!brief_mode || prar.getAlws("rho" ))
     { if( _comment )
-       ff << "# actual carrier density rho for density-driven flow, kg/m3" << endl;
+       ff << "# rho:  Actual carrier density for density-driven flow (kg/m3)" << endl;
      ff << left << setw(7) << "<rho> " <<  CNode->rho << endl;
     }  
 	if(!brief_mode || prar.getAlws("al" ))
     { if( _comment )
-       ff << "# specific longitudinal dispersivity al of porous media, m" << endl;
+       ff << "# al: Specific longitudinal dispersivity of porous media (m)" << endl;
       ff << left << setw(7) << "<al> " <<  CNode->al << endl;
     }  
 	if(!brief_mode || prar.getAlws("at" ))
     { if( _comment )
-       ff << "# specific transversal dispersivity at of porous media, m" << endl;
+       ff << "# at:  Specific transversal dispersivity of porous media (m)." << endl;
      ff << left << setw(7) << "<at> " <<  CNode->at << endl;
     } 
 	if(!brief_mode || prar.getAlws("av" ))
     { if( _comment )
-       ff << "# specific vertical dispersivity av of porous media, m" << endl;
+       ff << "# av:  Specific vertical dispersivity of porous media (m). " << endl;
      ff << left << setw(7) << "<av> " <<  CNode->av << endl;
     } 
 	if(!brief_mode || prar.getAlws("hDl" ))
     { if( _comment )
-       ff << "# hydraulic longitudinal dispersivity hDl, m2/s" << endl;
+       ff << "# hDl: Hydraulic longitudinal dispersivity (m2/s)" << endl;
      ff << left << setw(7) << "<hDl> " <<  CNode->hDl << endl;
     }  
 	if(!brief_mode || prar.getAlws("hDt" ))
     { if( _comment )
-       ff << "# hydraulic transversal dispersivity hDt, m2/s" << endl;
+       ff << "# hDt: Hydraulic transversal dispersivity (m2/s)" << endl;
      ff << left << setw(7) << "<hDt> " <<  CNode->hDt << endl;
     } 
 	if(!brief_mode || prar.getAlws("hDv" ))
     { if( _comment )
-       ff << "# hydraulic vertical dispersivity hDv, m2/s" << endl;
+       ff << "# hDv: Hydraulic vertical dispersivity (m2/s)" << endl;
      ff << left << setw(7) << "<hDv> " <<  CNode->hDv << endl;
     }  
 	if(!brief_mode || prar.getAlws("nto" ))
     { if( _comment )
-       ff << "# tortuosity factor nto, dimensionless" << endl;
+       ff << "# nto:  Tortuosity factor (dimensionless)" << endl;
       ff << left << setw(7) << "<nto> " <<  CNode->nto << endl;
     }   
 }
    if( _comment )
    {   ff << "\n### Arrays - for dimensions and index lists, see Section (2) of DATACH file" << endl << endl;
-       ff << "## IC data section";
+       ff << "## (4) IC data section";
        prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
        ff << endl; 
    }
   if(!brief_mode || prar.getAlws("bIC" ))
   {  if( _comment )
-       ff << "# Bulk composition bIC of the reactive part of the node (GEM input, moles)";
+       ff << "# bIC:  Bulk composition of (reactive part of) the system - main GEM input (amounts of IC in moles) [nICb]";
      prar.writeArray(  "bIC",  CNode->bIC, CSD->nICb );
   }   
   if(!brief_mode || prar.getAlws("rMB" ))
   { if( _comment )
-       ff << "\n\n# Mass balance residuals rMB of GEM solution (GEM output, moles)";
+       ff << "\n\n# rMB: Mass balance residuals (moles) [nICb] - GEM output";
     prar.writeArray(  "rMB",  CNode->rMB, CSD->nICb );
   }  
   if(!brief_mode || prar.getAlws("uIC" ))
   { if( _comment )
-       ff << "\n\n# Dual chemical potentials uIC (GEM output, normalized)";
+       ff << "\n\n# uIC: Chemical potentials of ICs (dual GEM solution) - GEM output, normalized scale [nICb]";
     prar.writeArray(  "uIC",  CNode->uIC, CSD->nICb );
   }  
 
   if( _comment )
-  {    ff << "\n\n## DC data section";
+  {    ff << "\n\n## (5) DC data section";
        prar.writeArray(  NULL, CSD->DCNL[0], CSD->nDC, MaxDCN );
        ff << endl; 
   }
 
   if(!brief_mode || prar.getAlws("xDC" ))
   { if( _comment )
-      ff << "# Speciation xDC (amounts of DCs in equilibrium state), moles - GEM output, input in PIA mode";
+      ff << "# xDC:  Speciation - amounts of DCs in equilibrium state - primal GEM solution (moles) [nDCb] - GEM output";
     prar.writeArray(  "xDC",  CNode->xDC, CSD->nDCb );
   }
   if(!brief_mode || prar.getAlws("gam" ))
   { if( _comment )
-       ff << "\n\n# Activity coefficients gam of Dependent Components, GEM output, input in PIA mode";
+       ff << "\n\n# gam:  Activity coefficients of DCs in their respective phases [nDCb] - GEM output";
     prar.writeArray(  "gam",  CNode->gam, CSD->nDCb );
   }  
   if(!brief_mode || prar.getAlws("dll" ))
   { if( _comment )
-       ff << "\n\n# Lower metastability constraints dll on amounts in xDC, moles (GEM optional input)";
+       ff << "\n\n# dll: Lower metastability constraints on amounts of DCs (moles) [nDCb] - GEM input";
     prar.writeArray(  "dll",  CNode->dll, CSD->nDCb );
   }  
   if(!brief_mode || prar.getAlws("dul" ))
   { if( _comment )
-       ff << "\n\n# Upper metastability constraints dul on amounts in xDC, moles (GEM optional input)";
+       ff << "\n\n# dul:  Upper metastability constraints on amounts of DCs (moles) [nDCb] - GEM input";
     prar.writeArray(  "dul",  CNode->dul, CSD->nDCb );
   }  
    if( _comment )
-   {    ff << "\n\n## Phase data section";
+   {    ff << "\n\n## (6) Phase data section";
         prar.writeArray(  NULL, CSD->PHNL[0], CSD->nPH, MaxPHN );
         ff << endl; 
    }
   if(!brief_mode || prar.getAlws("aPH" ))
   {
     if( _comment )
-     ff << "# Specific surface areas of phases aPH (m2/g) - GEM optional input";
+     ff << "# aPH: Specific surface areas of phases (m2/kg) [nPHb] - GEM input";
     prar.writeArray(  "aPH",  CNode->aPH, CSD->nPHb );
   }  
   if(!brief_mode || prar.getAlws("xPH" ))
   { if( _comment )
-        ff << "\n\n# Amounts of phases in equilibrium state xPH (GEM output, moles)";
+        ff << "\n\n# xPH: Amounts of phases in equilibrium state (moles) [nPHb] - GEM output";
     prar.writeArray(  "xPH",  CNode->xPH, CSD->nPHb );
   }  
   if(!brief_mode || prar.getAlws("vPS" ))
   { if( _comment )
-        ff << "\n\n# Volumes of the multicomponent phases vPS, cm3 (GEM output)";
+        ff << "\n\n# vPS: Volumes of multicomponent phases (m3) [nPSb] - GEM output";
     prar.writeArray(  "vPS",  CNode->vPS, CSD->nPSb );
   }  
   if(!brief_mode || prar.getAlws("mPS" ))
   { if( _comment )
-        ff << "\n\n# Masses of the multicomponent phases mPS, g (GEM output)";
+        ff << "\n\n# mPS: Masses of multicomponent phases (kg) [nPSb] - GEM output";
     prar.writeArray(  "mPS",  CNode->mPS, CSD->nPSb );
   }  
   if(!brief_mode || prar.getAlws("xPA" ))
   { if( _comment )
-       ff << "\n\n# Amounts of carrier xPA (sorbent or solvent) in multicomponent phases";
+       ff << "\n\n# xPA: Amount of carrier (sorbent or solvent) in multicomponent phases [nPSb] - GEM output";
     prar.writeArray(  "xPA",  CNode->xPA, CSD->nPSb );
   }  
   if(!brief_mode || prar.getAlws("bPS" ))
   {  if( _comment )
      {
-	  ff << "\n\n# Bulk elemental compositions of multicomponent phases bPS (GEM output, moles)";
+	  ff << "\n\n# bPS: Bulk elemental compositions of multicomponent phases (moles) [nPSb*nICb]- GEM output";
 	  prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
 //	  ff << endl;
       }
-     prar.writeArray(  "bPS",  CNode->bPS, CSD->nPSb*CSD->nICb );
+     prar.writeArray(  "bPS",  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb );
   }   
  ff << endl;
   if( _comment )
@@ -610,51 +610,51 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
      ff << "\n## (1) Dimensions for memory allocation" << endl;
-     ff << "# nIC: Number of Independent Components"<< endl;
+     ff << "# nIC: Number of Independent Components (stoichiometry units, usually chemical elements and charge)"<< endl;
   }
   ff << left << setw(7) << "<nIC> " <<  CSD->nIC << endl;
   if( _comment )
-     ff << "# nDC: Number of Dependent Components" << endl;
+     ff << "# nDC: Total number of Dependent Components (chemical species made of Independent Components)" << endl;
   ff << left << setw(7) << "<nDC> " <<  CSD->nDC << endl;
   if( _comment )
-     ff << "# nPH: Number of Phases" << endl;
+     ff << "# nPH: Number of phases (into which Dependent Components are grouped)" << endl;
   ff << left << setw(7) << "<nPH> " <<  CSD->nPH << endl;
   if( _comment )
-     ff << "# nPS: Number of Phases-solutions (<= nPH)" << endl;
+     ff << "# nPS: Number of phases-solutions (multicomponent phases) in the chemical system definition (<= nPH)" << endl;
   ff << left << setw(7) << "<nPS> " <<  CSD->nPS << endl;
   if( _comment )
-     ff << "# nDCs: Number of Dependent Components in Phases-solutions" << endl;
+     ff << "# nDCs: Number of Dependent Components in phases-solutions (multicomponent phases)" << endl;
   ff << left << setw(7) << "<nDCs> " <<  CSD->nDCs << endl;
 
   if( _comment )
   {  ff << "\n## (2) Databridge configuration section (for memory allocation)" << endl;
-     ff << "# nICb: number of ICs to be kept in DATABR structure (<= nIC)" << endl;
+     ff << "# nICb: Number of Independent Components kept in the DBR file and DATABR memory structure (<= nIC)" << endl;
   }
   ff << left << setw(7) << "<nICb> " <<  CSD->nICb << endl;
   if( _comment )
-     ff << "# nDCb: number of DCs to be kept in DATABR structure (<=nDC)" << endl;
+     ff << "# nDCb: Number of Dependent Components kept in the DBR file and DATABR memory structure (<=nDC)" << endl;
   ff << left << setw(7) << "<nDCb> " <<  CSD->nDCb << endl;
   if( _comment )
-     ff << "# nPHb: number of Phases to be kept in DATABR structure (<=nPH)" << endl;
+     ff << "# nPHb: Number of Phases to be kept in the DBR file and DATABR structure (<=nPH)" << endl;
   ff << left << setw(7) << "<nPHb> " <<  CSD->nPHb << endl;
   if( _comment )
-     ff << "# nPSb: number of Phases-solutions to be kept in DATABR structure" << endl;
+     ff << "# nPSb: Number of Phases-solutions to be kept in the DBR file and DATABR memory structure (<=nPS)" << endl;
   ff << left << setw(7) << "<nPSb> " <<  CSD->nPSb << endl;
 
   if( _comment )
   {   ff << "\n## (3) Dimensions for thermodynamic data arrays" << endl;
-      ff << "# nTp: Number of temperature points in the interpolation grid array" << endl;
+      ff << "# nTp: Number of temperature grid points in interpolation lookup arrays, 1 or more" << endl;
   }
   ff << left << setw(7) << "<nTp> " <<  CSD->nTp << endl;
   if( _comment )
-     ff << "# nPp: Number of pressure points in the interpolation grid array" << endl;
+     ff << "# nPp: Number of pressure grid points in interpolation lookup arrays, 1 or more" << endl;
   ff << left << setw(7) << "<nPp> " <<  CSD->nPp << endl;
   if( _comment )
-   {  ff << "# iGrd: flag for DD array setup" << endl;
+   {  ff << "# iGrd: Flag for selection Diffusition coefficients array provided in the DCH file." << endl;
    }
   ff << left << setw(7) << "<iGrd> " <<  CSD->iGrd << endl;
   if( _comment )
-    ff << "# fAalp: Flag for keeping specific surface areas in DATABR structures/files" << endl;
+    ff << "# fAalp: Flag for keeping specific surface areas of phases in DATABR structure (1) or ignoring them (0)" << endl;
   ff << left << setw(7) << "<fAalp> " <<  CSD->nAalp << endl;
 
   ff<< "\n<END_DIM>\n";
@@ -664,18 +664,18 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
      ff << "\n## (4) Databridge configuration section (for memory allocation)";
   if(!brief_mode || prar.getAlws("xIC" ))
   { if( _comment )
-      ff << "\n# xIC: indexes of ICs to be kept in DATABR structure";
-    prar.writeArray(  "xIC", CSD->xIC, CSD->nICb);
+      ff << "\n# xIC: DATACH access index list for Independent Components kept in the DATABR structure and in DBR files [nICb]";
+    prar.writeArray(  "xic", CSD->xic, CSD->nICb);
   }  
   if(!brief_mode || prar.getAlws("xDC" ))
   { if( _comment )
-     ff << "\n# xDC: indexes of DCs to be kept in DATABR structure";
-    prar.writeArray(  "xDC", CSD->xDC, CSD->nDCb);
+     ff << "\n# xDC: DATACH access index list of Dependent Components kept in the DATABR  structure and in DBR files [nDCb]";
+    prar.writeArray(  "xdc", CSD->xdc, CSD->nDCb);
   }  
   if(!brief_mode || prar.getAlws("xPH" ))
   { if( _comment )
-      ff << "\n# xPH: indexes of Phases to be kept in DATABR structure";
-    prar.writeArray(  "xPH", CSD->xPH, CSD->nPHb);
+      ff << "\n# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]";
+    prar.writeArray(  "xph", CSD->xph, CSD->nPHb);
   }  
 
   if( _comment )
@@ -683,52 +683,52 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if(!brief_mode || prar.getAlws("ICNL" ))
   { 
      if( _comment )
-         ff << "\n# ICNL: List of names of Independent Components";
+         ff << "\n# ICNL: Name list of Independent Components (up to 4 characters per name) [nIC]";
       prar.writeArray(  "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
   }    
   if(!brief_mode || prar.getAlws("ccIC" ))
   { if( _comment )
-      ff << "\n# ccIC: List of class codes for Independent Components";
+      ff << "\n# ccIC: Codes of Independent Components [nIC]";
     prar.writeArray(  "ccIC", CSD->ccIC, CSD->nIC, 1L );
   }  
   if(!brief_mode || prar.getAlws("ICmm" ))
   { if( _comment )
-      ff << "\n# ICmm: Atomic (molar) masses of Independent Components, g/mol";
+      ff << "\n# ICmm: Atomic (molar) masses of Independent Components  (kg/mol) [nIC]";
     prar.writeArray(  "ICmm", CSD->ICmm, CSD->nIC);
   }  
 
   if( _comment )
-    ff << "\n\n## (6) Dependent components section (codes and names)";
+    ff << "\n\n## (6) Dependent Components section (codes and names)";
   if(!brief_mode || prar.getAlws("DCNL" ))
   {	  if( _comment )
-       ff << "\n# DCNL: List of names of Dependent Components";
+       ff << "\n# DCNL: Name list of Dependent Components (up to 16 characters per name) [nDC]";
      prar.writeArray(  "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
   }   
   if(!brief_mode || prar.getAlws("ccDC" ))
   { if( _comment )
-     ff << "\n# ccDC: class codes of Dependent Components";
+     ff << "\n# ccDC: Type codes of Dependent Components [nDC]";
     prar.writeArray(  "ccDC", CSD->ccDC, CSD->nDC, 1L );
   }  
   if(!brief_mode || prar.getAlws("DCmm" ))
   { if( _comment )
-      ff << "\n\n# DCmm: Molar masses of DCs ";
+      ff << "\n\n# DCmm: Molar masses of Dependent Components (kg/mol) [nDC]";
      prar.writeArray(  "DCmm", CSD->DCmm, CSD->nDC);
   }   
   if( _comment )
     ff << "\n\n## (7) Phases section" << endl;
   if(!brief_mode || prar.getAlws("PHNL" ))
   { if( _comment )
-      ff << "# PHNL: Phase name list (without a g s ...)";
+      ff << "# PHNL: List of Phase names (up to 16 characters per name) [nPH]";
     prar.writeArray(  "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
   }  
   if(!brief_mode || prar.getAlws("ccPH" ))
   { if( _comment )
-      ff << "\n# ccPH: Phase aggregate state code list";
+      ff << "\n# ccPH: Phase aggregate state codes [nPH]";
     prar.writeArray(  "ccPH", CSD->ccPH, CSD->nPH, 1L );
   }  
   if(!brief_mode || prar.getAlws("nDCinPH" ))
   {  if( _comment )
-       ff << "\n# nDCinPH: Vector L1 telling how many DCs is included in each phase";
+       ff << "\n# nDCinPH: This vector tells how many Dependent Components is included in each phase [nPH]";
      prar.writeArray(  "nDCinPH", CSD->nDCinPH, CSD->nPH);
   }   
 
@@ -736,31 +736,31 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
     ff << "\n\n# (8) Data section for DCs";
   if(!brief_mode || prar.getAlws("A" ))
   { if( _comment )
-     ff << "\n# A: Stoichiometry matrix for DCs - one column per IC, row per DC";
+     ff << "\n# A: Stoichiometry matrix A for Dependent Components, [nDC*nIC]";
     prar.writeArray(  "A", CSD->A, CSD->nDC*CSD->nIC, CSD->nIC );
   }  
   ff << endl; 
   if( _comment )
-    ff << "\n## (8) Thermodynamic data section";
+    ff << "\n## (9) Thermodynamic data section";
   if(!brief_mode || prar.getAlws("Ttol" ))
   { if( _comment )
-     ff << "\n# Ttol: Tolerance for the interpolation over temperature (K)" << endl;
+     ff << "\n# Ttol: Tolerance for the temperature interpolation (C, K)" << endl;
     ff << left << setw(7) << "<Ttol> " <<  CSD->Ttol;
   }  
   if(!brief_mode || prar.getAlws("TCval" ))
   { if( _comment )
-      ff << "\n# Tval: Lookup temperatures for the interpolation";
+      ff << "\n# Tval: Temperature values for the interpolation grid (C) for the lookup arrays of thermodynamic data [nTp]";
     prar.writeArray(  "TCval", CSD->TCval, CSD->nTp );
   }  
   ff << endl;
   if(!brief_mode || prar.getAlws("Ptol" ))
   {  if( _comment )
-      ff << "\n# Ptol: Tolerance for the interpolation over pressure (K)" << endl;
+      ff << "\n# Ptol: Tolerance for the pressure interpolation (Pa)" << endl;
     ff << left << setw(7) << "<Ptol> " <<  CSD->Ptol;
   }  
   if(!brief_mode || prar.getAlws("Pval" ))
   { if( _comment )
-      ff << "\n# Grid pressures for the interpolation";
+      ff << "\n# Pval: Pressure values for the interpolation grid (Pa) for the lookup arrays of thermodynamic data [nPp]";
     prar.writeArray(  "Pval", CSD->Pval, CSD->nPp );
   }  
 
@@ -768,75 +768,67 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   { 
     if(!brief_mode || prar.getAlws("denW" ))
     {  if( _comment )
-         ff << "\n\n# denW: Lookup array for the density of water-solvent (g/cm3)";
+         ff << "\n\n# denW: Lookup array for the density of water-solvent (kg/m3) [5*nPp*nTp]";
       prar.writeArray(  "denW", CSD->denW, 5*(CSD->nPp*CSD->nTp), CSD->nPp*CSD->nTp );
     }  
     if(!brief_mode || prar.getAlws("denWg" ))
     {  if( _comment )
-         ff << "\n\n# denWg: Lookup array for the density of water-solvent (g/cm3) (vapor)";
+         ff << "\n\n# denWg: Optional lookup array for the density of water vapour (kg/m3) [5*nPp*nTp]";
       prar.writeArray(  "denWg", CSD->denWg, 5*(CSD->nPp*CSD->nTp), CSD->nPp*CSD->nTp );
     }  
     if(!brief_mode || prar.getAlws("epsW" ))
     {  if( _comment )
-        ff << "\n\n# epsW: Lookup array for the dielectric constant of water-solvent";
+        ff << "\n\n# epsW: Lookup array for the dielectric constant of water-solvent (dimensionless) [5*nPp*nTp]";
       prar.writeArray(  "epsW", CSD->epsW,  5*(CSD->nPp*CSD->nTp), CSD->nPp*CSD->nTp );
     }  
     if(!brief_mode || prar.getAlws("epsWg" ))
     {  if( _comment )
-        ff << "\n\n# epsWg: Lookup array for the dielectric constant of water-solvent (vapor)";
+        ff << "\n\n# epsWg: Optional lookup array for the dielectric constant of water vapour [5*nPp*nTp]";
       prar.writeArray(  "epsWg", CSD->epsWg, 5*(CSD->nPp*CSD->nTp),  CSD->nPp*CSD->nTp );
     }  
   }
   if(!brief_mode || prar.getAlws("V0" ))
   { if( _comment )
-      ff << "\n\n# V0: Lookup array for the molar volumes of Dependent Components (J/bar)";
-    prar.writeArray(  "V0", CSD->V0,  CSD->nDC*CSD->nPp*CSD->nTp,
-                                       CSD->nPp*CSD->nTp );
+      ff << "\n\n# V0: Obligatory lookup array for (standard) molar volumes of Dependent Components (J/Pa) [nDC*nPp*nTp]";
+    prar.writeArray(  "V0", CSD->V0,  CSD->nDC*CSD->nPp*CSD->nTp, CSD->nPp*CSD->nTp );
   } 
   if(!brief_mode || prar.getAlws("G0" ))
   { if( _comment )
-     ff << "\n\n# G0: Lookup array for DC molar Gibbs energy function (J/mol)";
-    prar.writeArray(  "G0", CSD->G0, CSD->nDC*CSD->nPp*CSD->nTp,
-                                 CSD->nPp*CSD->nTp );
+     ff << "\n\n# G0: Obligatory lookup array for DC molar Gibbs energy function g(T,P) (J/mol) [nDC*nPp*nTp]";
+    prar.writeArray(  "G0", CSD->G0, CSD->nDC*CSD->nPp*CSD->nTp, CSD->nPp*CSD->nTp );
   }
  if(!brief_mode || prar.getAlws("H0" ))
     {  if( _comment )
-        ff << "\n\n# H0: Lookup array for DC molar enthalpy function (J/mol)";
-       prar.writeArray(  "H0", CSD->H0,  CSD->nDC*CSD->nPp*CSD->nTp,
-                                        CSD->nPp*CSD->nTp );
+        ff << "\n\n# H0: Optional lookup array for DC molar enthalpy h(T,P) (J/mol) [nDC*nPp*nTp]";
+       prar.writeArray(  "H0", CSD->H0,  CSD->nDC*CSD->nPp*CSD->nTp,CSD->nPp*CSD->nTp );
     }   
   if(!brief_mode || prar.getAlws("S0" ))
     { if( _comment )
-       ff << "\n\n# S0: Lookup array for DC absolute entropy function (J/K/mol)";
-      prar.writeArray(  "S0", CSD->S0,CSD->nDC*CSD->nPp*CSD->nTp,
-                                        CSD->nPp*CSD->nTp  );
+       ff << "\n\n# S0: Optional lookup array for the DC absolute entropy function (J/K/mol) [nDC*nPp*nTp] ";
+      prar.writeArray(  "S0", CSD->S0,CSD->nDC*CSD->nPp*CSD->nTp,  CSD->nPp*CSD->nTp  );
     }  
   if(!brief_mode || prar.getAlws("Cp0" ))
 	 {  if( _comment )
-            ff << "\n\n# Cp0: Lookup array for DC heat capacity function (J/K/mol)";
-        prar.writeArray(  "Cp0", CSD->Cp0,CSD->nDC*CSD->nPp*CSD->nTp,
-                                        CSD->nPp*CSD->nTp  );
+            ff << "\n\n# Cp0: Optional lookup array for DC heat capacity function (J/K/mol) [nDC*nPp*nTp]";
+        prar.writeArray(  "Cp0", CSD->Cp0,CSD->nDC*CSD->nPp*CSD->nTp, CSD->nPp*CSD->nTp  );
 	 }   
  if(!brief_mode || prar.getAlws("A0" ))
 	 {  if( _comment )
-            ff << "\n\n# A0: Helmholtz energy of DC, J/mol, reserved";
-        prar.writeArray(  "A0", CSD->A0, CSD->nDC*CSD->nPp*CSD->nTp,
-                                         CSD->nPp*CSD->nTp  );
+            ff << "\n\n# A0: Optional lookup array for Helmholtz energy of DC (J/mol) reserved [nDC*nPp*nTp]";
+        prar.writeArray(  "A0", CSD->A0, CSD->nDC*CSD->nPp*CSD->nTp, CSD->nPp*CSD->nTp  );
 	 }   
  if(!brief_mode || prar.getAlws("U0" ))
 	 {  if( _comment )
-            ff << "\n\n# U0: Internal energy of DC, J/K/mol";
-        prar.writeArray(  "U0", CSD->U0, CSD->nDC*CSD->nPp*CSD->nTp,
-                                        CSD->nPp*CSD->nTp  );
+            ff << "\n\n# U0: Optional lookup array for Internal energy of DC (J/K/mol) [nDC*nPp*nTp]";
+        prar.writeArray(  "U0", CSD->U0, CSD->nDC*CSD->nPp*CSD->nTp, CSD->nPp*CSD->nTp  );
 	 }   
  
   if( CSD->iGrd  )
   {
     if(!brief_mode || prar.getAlws("DD" ))
     { if( _comment )
-        ff << "\n\n# DD: Lookup array for diffusion coefficients of DCs (reserved)";
-      prar.writeArray(  "DD", CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp,
-                                          CSD->nPp*CSD->nTp);
+        ff << "\n\n# DD: Lookup array for diffusion coefficients of DCs (reserved) [nDC*nPp*nTp]";
+      prar.writeArray(  "DD", CSD->DD, CSD->nDCs*CSD->nPp*CSD->nTp,  CSD->nPp*CSD->nTp);
     }  
   }
   ff << endl;
@@ -924,24 +916,24 @@ void TNode::datach_from_text_file(fstream& ff)
     if( CSD->U0 ) CSD->U0[ii] = 0.;
   }  
   CSD->Ttol = 0.1;
-  CSD->Ptol = 0.1;
+  CSD->Ptol = 10000;
   if( CSD->nIC == CSD->nICb )
   {
-    rddar.setNoAlws( "xIC");
+    rddar.setNoAlws( "xic" );
     for( ii=0; ii< CSD->nICb; ii++ )
-      CSD->xIC[ii] = ii;
+      CSD->xic[ii] = ii;
   }
   if(CSD->nDC == CSD->nDCb )
   {
-    rddar.setNoAlws( 1 /*"xDC"*/);
+    rddar.setNoAlws( 1 /*"xdc"*/);
     for( ii=0; ii< CSD->nDCb; ii++ )
-      CSD->xDC[ii] = ii;
+      CSD->xdc[ii] = ii;
   }
   if(CSD->nPH == CSD->nPHb )
   {
-    rddar.setNoAlws( 2 /*"xPH"*/);
+    rddar.setNoAlws( 2 /*"xph"*/);
     for( ii=0; ii< CSD->nPHb; ii++ )
-      CSD->xPH[ii] = ii;
+      CSD->xph[ii] = ii;
   }
 
   nfild = rddar.findNext();
@@ -949,11 +941,11 @@ void TNode::datach_from_text_file(fstream& ff)
   {
    switch( nfild )
    {
-    case 0: rddar.readArray( "xIC", CSD->xIC, CSD->nICb);
+    case 0: rddar.readArray( "xic", CSD->xic, CSD->nICb);
             break;
-    case 1: rddar.readArray( "xDC", CSD->xDC, CSD->nDCb);
+    case 1: rddar.readArray( "xdc", CSD->xdc, CSD->nDCb);
             break;
-    case 2: rddar.readArray( "xPH", CSD->xPH, CSD->nPHb);
+    case 2: rddar.readArray( "xph", CSD->xph, CSD->nPHb);
             break;
     case 3: rddar.readArray( "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
             break;
@@ -1062,9 +1054,9 @@ void TNode::datach_to_file( GemDataStream& ff )
 //dynamic data
    ff.writeArray( CSD->nDCinPH, CSD->nPH );
 //   if( CSD->nICb >0 )
-   ff.writeArray( CSD->xIC, CSD->nICb );
-   ff.writeArray( CSD->xDC, CSD->nDCb );
-   ff.writeArray( CSD->xPH, CSD->nPHb );
+   ff.writeArray( CSD->xic, CSD->nICb );
+   ff.writeArray( CSD->xdc, CSD->nDCb );
+   ff.writeArray( CSD->xph, CSD->nPHb );
 
    ff.writeArray( CSD->A, CSD->nIC*CSD->nDC );
    ff.writeArray( CSD->ICmm, CSD->nIC );
@@ -1111,9 +1103,9 @@ void TNode::datach_from_file( GemDataStream& ff )
 //dynamic data
    ff.readArray( CSD->nDCinPH, CSD->nPH );
 //   if( CSD->nICb >0 )
-   ff.readArray( CSD->xIC, CSD->nICb );
-   ff.readArray( CSD->xDC, CSD->nDCb );
-   ff.readArray( CSD->xPH, CSD->nPHb );
+   ff.readArray( CSD->xic, CSD->nICb );
+   ff.readArray( CSD->xdc, CSD->nDCb );
+   ff.readArray( CSD->xph, CSD->nPHb );
 
    ff.readArray( CSD->A, CSD->nIC*CSD->nDC );
    ff.readArray( CSD->ICmm, CSD->nIC );
@@ -1156,14 +1148,14 @@ void TNode::datach_realloc()
  CSD->nDCinPH = new long int[CSD->nPH];
 
  if( CSD->nICb >0 )
-   CSD->xIC = new long int[CSD->nICb];
- else  CSD->xIC = 0;
+   CSD->xic = new long int[CSD->nICb];
+ else  CSD->xic = 0;
  if( CSD->nDCb >0 )
-   CSD->xDC = new long int[CSD->nDCb];
- else  CSD->xDC = 0;
+   CSD->xdc = new long int[CSD->nDCb];
+ else  CSD->xdc = 0;
  if( CSD->nPHb >0 )
-   CSD->xPH = new long int[CSD->nPHb];
- else  CSD->xPH = 0;
+   CSD->xph = new long int[CSD->nPHb];
+ else  CSD->xph = 0;
 
   CSD->A = new double[CSD->nIC*CSD->nDC];
   CSD->ICmm = new double[CSD->nIC];
@@ -1206,17 +1198,17 @@ void TNode::datach_free()
   { delete[] CSD->nDCinPH;
     CSD->nDCinPH = 0;
   }
- if( CSD->xIC )
-  { delete[] CSD->xIC;
-    CSD->xIC = 0;
+ if( CSD->xic )
+  { delete[] CSD->xic;
+    CSD->xic = 0;
   }
- if( CSD->xDC )
-  { delete[] CSD->xDC;
-    CSD->xDC = 0;
+ if( CSD->xdc )
+  { delete[] CSD->xdc;
+    CSD->xdc = 0;
   }
- if( CSD->xPH )
-  { delete[] CSD->xPH;
-    CSD->xPH = 0;
+ if( CSD->xph )
+  { delete[] CSD->xph;
+    CSD->xph = 0;
   }
  if( CSD->A )
   { delete[] CSD->A;
@@ -1568,9 +1560,9 @@ void TNode::datach_reset()
 	CSD->uRes1 = 0;
 // Lists = 0; vectors and matrices
 	CSD->nDCinPH = 0;
-	CSD->xIC = 0;
-	CSD->xDC = 0;
-	CSD->xPH = 0;  //18
+	CSD->xic = 0;
+	CSD->xdc = 0;
+	CSD->xph = 0;  //18
 
 	CSD->TCval = 0;
 	CSD->Pval = 0;

@@ -417,7 +417,7 @@ void  TUnSpace::NexT(int J )
 #ifdef IPMGEMPLUGIN
  DATABR* dBR = TNode::na->pCNode();
  //TC = TNode::na->cTC();
- //P = TNode::na->cP();
+ //P = TNode::na->cP()/bar_to_Pa;
 #endif
  
   k1 = k2 = k3 = 1;

@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 1187 2009-01-23 16:42:05Z gems $
+// $Id: v_user.h 1373 2009-07-22 12:25:22Z gems $
 //
 // Declaration of platform-specific utility functions and classes
 //
@@ -52,6 +52,9 @@ typedef unsigned int uint;
 #endif //  __noborl
 
 void Gcvt(double number, size_t ndigit, char *buf);
+double NormDoubleRound(double aVal, int digits);
+void NormDoubleRound(double *aArr, int size, int digits);
+void NormFloatRound(float *aArr, int size, int digits);
 
 inline
 int ROUND(double x )
@@ -89,6 +92,15 @@ void copyValues( double* arr, float* data, int size )
 }
 
 inline
+void copyValues( float* arr, double* data, int size )
+{
+  if( !arr || !data )
+    return;
+  for(int ii=0; ii<size; ii++)
+    arr[ii] = (float)data[ii];
+}
+
+inline
 void copyValues( long int* arr, short* data, int size )
 {
   if( !arr || !data )
@@ -119,7 +131,7 @@ ChangeforTempl( gstring& data_str,  const gstring& from_templ1,
 gstring curDate();
 
 // Returns string representation of current date in dd/mm/yy format
-gstring curDateSmol();
+gstring curDateSmol(char ch = '/');
 
 // Returns string representation of current time in HH:MM  format
 gstring curTime();

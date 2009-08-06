@@ -37,26 +37,28 @@
 
 TNode* TNode::na;
 
-// This function proves whether the given Tc and P values fit within
-// the interpolation regions.
-// true is returned if Tc and P fit within the regions.
-// Otherwise false is returned
-// Important: removed parameter access per reference om 26.06.2008 (DK)
-//
+// Conversion factors
+const double bar_to_Pa = 1e5,
+               m3_to_cm3 = 1e6,
+               kg_to_g = 1e3;
+
+
+// Checks if given temperature Tc and pressure P fit within the interpolation 
+//intervals of the DATACH lookup arrays (returns true) or not (returns false)
 bool  TNode::check_TP( double Tc, double P )
 {
    bool okT = true, okP = true;
    double T_, P_;
 
-   if( Tc <= (double)CSD->TCval[0] - CSD->Ttol )
+   if( Tc <= CSD->TCval[0] - CSD->Ttol )
    { 				// Lower boundary of T interpolation interval
 	 okT = false;
-     T_ = (double)CSD->TCval[0] - CSD->Ttol;
+     T_ = CSD->TCval[0] - CSD->Ttol;
    }
-   if( Tc >= (double)CSD->TCval[CSD->nTp-1] + CSD->Ttol )
+   if( Tc >= CSD->TCval[CSD->nTp-1] + CSD->Ttol )
    {
 	 okT = false;
-     T_ = (double)CSD->TCval[CSD->nTp-1] + CSD->Ttol;
+     T_ = CSD->TCval[CSD->nTp-1] + CSD->Ttol;
    }
    if( okT == false )
    {
@@ -66,15 +68,15 @@ bool  TNode::check_TP( double Tc, double P )
      		<< T_ << endl;
    }
 
-   if( P <= (double)CSD->Pval[0] - CSD->Ptol )
+   if( P <= CSD->Pval[0] - CSD->Ptol )
    {
 	  okP = false;
-      P_ = (double)CSD->Pval[0] - CSD->Ptol;
+      P_ = CSD->Pval[0] - CSD->Ptol;
    }
-   if( P >= (double)CSD->Pval[CSD->nPp-1] + CSD->Ptol )
+   if( P >= CSD->Pval[CSD->nPp-1] + CSD->Ptol )
    {
 	  okP = false;
-      P_ = (double)CSD->Pval[CSD->nPp-1] + CSD->Ptol;
+      P_ = CSD->Pval[CSD->nPp-1] + CSD->Ptol;
    }
    if( !okP )
    {
@@ -86,21 +88,114 @@ bool  TNode::check_TP( double Tc, double P )
    return ( okT && okP );
 }
 
-//-------------------------------------------------------------------------
-// GEM_run()
-// GEM IPM calculation of equilibrium state for the work node.
-//   mode of GEM calculation is taken from the DATABR work structure
-//
-//  if uPrimalSol == true then the primal solution (vectors x, gamma, IC etc.)
-//    will be unpacked before GEMIPM calculation - as an option for the PIA mode
-//    with previous GEM solution taken from the same node.
-//  If uPrimalSol == false then the primal solution data will not be unpacked
-//    into the MULTI structure (AIA mode or PIA mode with primal solution retained
-//    in the MULTI structure from any previous IPM calculation)
-//
-//   Function returns: NodeStatusCH code from DATABR structure
-//   ( OK; GEMIPM2K calculation error; system error )
-//
+//-------------------------------------------------------------------------------------------------------------------------------
+// (2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure 
+//   and metastability constraints provided in the work instance of DATABR structure.  
+//   Actual calculation will be performed only when dBR->NodeStatusCH == NEED_GEM_SIA (5) or dBR->NodeStatusCH = NEED_GEM_AIA (1).
+//   By other values of NodeStatusCH, no calculation will be performed and the status will remain unchanged.
+//  In "smart initial approximation" (SIA) mode, the program can automatically switch into the "automatic initial
+//  approximation" (AIA) mode and return  OK_GEM_AIA instead of OK_GEM_SIA.
+//  The variant with one function parameter performs no internal scaling of the mass of the system. 
+//   Parameters:
+//   uPrimalSol  flag to define the mode of GEM smart initial approximation
+//               (only if dBR->NodeStatusCH = NEED_GEM_SIA has been set before GEM_run() call).
+//               false  (0) -  use speciation and activity coefficients from previous GEM_run() calculation
+//               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)  
+//  InternalMass Mass (kg) to which the input bulk composition (provided in DATABR memory structure) will be scaled 
+//               internally during the GEM IPM calculation (results will be scaled back to the original mass).
+//               Default value - 1 kg, reasonable range from 0.01 to 100 kg. This scaling is used for achieving
+//               better convergence and balance accuracy of GEM IPM2 algorithm.
+//  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
+long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
+{
+  CalcTime = 0.0;
+  PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
+  
+  double mass_temp=0.0, ScFact=0.0;
+  long int i;
+
+  for (i=0;i<CSD->nICb;i++)
+  {
+	mass_temp += CNode->bIC[i]*CSD->ICmm[IC_xDB_to_xCH(i)];
+  }
+ // mass_temp *= 1e-3;
+  CNode->Ms=mass_temp;
+  ScFact = InternalMass/mass_temp; // changed to scaling via newly calculated mass from bIC vector,
+
+  try
+  {
+// f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
+//---------------------------------------------
+// Checking T and P  for interpolation intervals
+   check_TP( CNode->TC, CNode->P);
+// Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
+// setting up up PIA or AIA mode
+   if( CNode->NodeStatusCH == NEED_GEM_SIA )
+   {
+	   pmm->pNP = 1;
+	   unpackDataBr( uPrimalSol, ScFact );
+   }
+   else if( CNode->NodeStatusCH == NEED_GEM_AIA )
+         {
+	        pmm->pNP = 0; // As default setting AIA mode
+	       unpackDataBr( false, ScFact );
+         }
+        else 
+	           return CNode->NodeStatusCH;
+   // GEM IPM calculation of equilibrium state in MULTI
+   CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
+   // Extracting and packing GEM IPM results into work DATABR structure
+    packDataBr( ScFact );
+    CNode->IterDone = NumIterFIA+NumIterIPM;
+//**************************************************************
+// only for testing output results for files
+//    GEM_write_dbr( "calculated_dbr.dat",  false );
+//    GEM_print_ipm( "calc_multi.ipm" );
+// *********************************************************
+    // test error result GEM IPM calculation of equilibrium state in MULTI
+    long int erCode = TProfil::pm->testMulti();
+
+    if( erCode )
+    {
+        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+          CNode->NodeStatusCH = BAD_GEM_AIA;
+        else
+          CNode->NodeStatusCH = BAD_GEM_SIA;
+    }
+    else
+    {
+      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+          CNode->NodeStatusCH = OK_GEM_AIA;
+      else
+         CNode->NodeStatusCH = OK_GEM_SIA;
+    }
+   }
+   catch(TError& err)
+    {
+	if( TProfil::pm->pa.p.PSM  )
+	{
+			fstream f_log("ipmlog.txt", ios::out|ios::app );
+	        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+	          err.title.c_str() << ":" << endl;
+	       if( TProfil::pm->pa.p.PSM == 2  )
+	          f_log  << err.mess.c_str() << endl;
+	}
+     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+       CNode->NodeStatusCH = ERR_GEM_AIA;
+     else
+       CNode->NodeStatusCH = ERR_GEM_SIA;
+
+    }
+    catch(...)
+    {
+     fstream f_log("ipmlog.txt", ios::out|ios::app );
+     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
+    		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
+     CNode->NodeStatusCH = T_ERROR_GEM;
+    }
+   return CNode->NodeStatusCH;
+}
+
 long int TNode::GEM_run( bool uPrimalSol )
 {
   CalcTime = 0.0;
@@ -119,10 +214,12 @@ long int TNode::GEM_run( bool uPrimalSol )
 	   pmm->pNP = 1;
 	   unpackDataBr( uPrimalSol );
    }
-   else {
-	   pmm->pNP = 0; // As default setting AIA mode
-	   unpackDataBr( false );
-   }
+   else if( CNode->NodeStatusCH == NEED_GEM_AIA )
+	     {  pmm->pNP = 0; // As default setting AIA mode
+	        unpackDataBr( false );
+         }
+        else
+	       return CNode->NodeStatusCH;
    // GEM IPM calculation of equilibrium state in MULTI
    CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
@@ -131,7 +228,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 //**************************************************************
 // only for testing output results for files
 //    GEM_write_dbr( "calculated_dbr.dat",  false );
-//    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
+//    GEM_print_ipm( "calc_multi.ipm" );
 // *********************************************************
 
     // test error result GEM IPM calculation of equilibrium state in MULTI
@@ -174,130 +271,30 @@ long int TNode::GEM_run( bool uPrimalSol )
     fstream f_log("ipmlog.txt", ios::out|ios::app );
     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
    		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
-      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-        CNode->NodeStatusCH = ERR_GEM_AIA;
-      else
-        CNode->NodeStatusCH = ERR_GEM_SIA;
-   }
-   return CNode->NodeStatusCH;
-}
-
-// Main call for GEM IPM calculation, returns p_NodeStatusCH value
-// see databr.h for p_NodeStatusCH flag values
-// Before calling GEM_run(), make sure that the node data are
-// loaded using GEM_from_MT() call; after calling GEM_run(),
-// check the return code and retrieve chemical speciation etc.
-// using the GEM_to_MT() call
-// This is an overloaded variant which scales extensive properties of the system
-// provided in DATABR and DATACH to the given internal mass (InternalMass) in kg
-// by multiplying by a factor ScalingCoef/Ms before calling GEM and the results
-// by Ms/ScalingCoef after the GEM calculation.
-// This method may help stabilizing convergence of GEMIPM2 algorithm
-// by providing a constant mass of the internal system regardless of
-// different node (reactive chemical system) sizes.
-//
-long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
-{
-  CalcTime = 0.0;
-  PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
-//  double ScFact = InternalMass/CNode->Ms; //bug: old mass from previous run will be taken
-double mass_temp=0.0, ScFact=0.0;
-long int i;
-	for (i=0;i<CSD->nICb;i++){
-		mass_temp += CNode->bIC[i]*CSD->ICmm[IC_xDB_to_xCH(i)];
-	}
-	mass_temp *= 1e-3;
-	CNode->Ms=mass_temp;
-	ScFact = InternalMass/mass_temp; // changed to scaling via newly calculated mass from bIC vector,
-//
-  try
-  {
-// f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
-//---------------------------------------------
-// Checking T and P  for interpolation intervals
-   check_TP( CNode->TC, CNode->P);
-// Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
-// setting up up PIA or AIA mode
-   if( CNode->NodeStatusCH == NEED_GEM_SIA )
-   {
-	   pmm->pNP = 1;
-	   unpackDataBr( uPrimalSol, ScFact );
-   }
-   else {
-	   pmm->pNP = 0; // As default setting AIA mode
-	   unpackDataBr( false, ScFact );
-   }
-   // GEM IPM calculation of equilibrium state in MULTI
-   CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
-   // Extracting and packing GEM IPM results into work DATABR structure
-    packDataBr( ScFact );
-    CNode->IterDone = NumIterFIA+NumIterIPM;
-//**************************************************************
-// only for testing output results for files
-//    GEM_write_dbr( "calculated_dbr.dat",  false );
-//    GEM_printf( "calc_multi.ipm", "calculated_dbr.dat", "calculated.dbr" );
-// *********************************************************
-    // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = TProfil::pm->testMulti();
-
-    if( erCode )
-    {
-        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-          CNode->NodeStatusCH = BAD_GEM_AIA;
-        else
-          CNode->NodeStatusCH = BAD_GEM_SIA;
-    }
-    else
-    {
-      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-          CNode->NodeStatusCH = OK_GEM_AIA;
-      else
-         CNode->NodeStatusCH = OK_GEM_SIA;
-    }
-   }
-   catch(TError& err)
-    {
-	if( TProfil::pm->pa.p.PSM  )
-	{
-			fstream f_log("ipmlog.txt", ios::out|ios::app );
-	        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-	          err.title.c_str() << ":" << endl;
-	       if( TProfil::pm->pa.p.PSM == 2  )
-	          f_log  << err.mess.c_str() << endl;
-	}
-     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-       CNode->NodeStatusCH = ERR_GEM_AIA;
-     else
-       CNode->NodeStatusCH = ERR_GEM_SIA;
-
-    }
-    catch(...)
-    {
-     fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-    		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
-       if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-         CNode->NodeStatusCH = ERR_GEM_AIA;
-       else
-         CNode->NodeStatusCH = ERR_GEM_SIA;
+    CNode->NodeStatusCH = T_ERROR_GEM;
     }
    return CNode->NodeStatusCH;
 }
 
 
-//-----------------------------------------------------------------------
-// Returns calculation time after the last GEM_run() call
-//
+
+// Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() - 
+// can be used for monitoring the performance of calculations.
+// Return value:  double number, may contain 0.0 if the calculation time is less than the 
+//                internal time resolution of C/C++ function
 double TNode::GEM_CalcTime()
 {
   return CalcTime;
 }
 
-// Returns total number of FIA + IPM iterations after the last call to GEM_run()
-// More detailed info is returned via parameters by reference:
-//    PrecLoops:  Number of performed IPM-2 precision refinement loops
-//    NumIterFIA: Total Number of performed FIA entry iterations
-//    NumIterIPM: Total Number of performed IPM main iterations
+// To obtain the number of GEM IPM2 iterations performed during the last call of GEM_run() e.g. for monitoring the
+// performance of GEMIPM2K in AIA or SIA modes, or for problem diagnostics.   
+// Parameters:  long int variables per reference (must be allocated before calling GEM_Iterations(), previous values will be lost. See Return values.
+// Return values:
+//   Function         Total number of EFD + IPM iterations from the last call to GEM_run()
+//   PrecLoops        Number of performed IPM-2 precision refinement loops
+//   NumIterFIA       Total number of performed EnterFeasibleDomain() (EFD) iterations to obtain a feasible initial approximation for the IPM algorithm.
+//   NumIterIPM       Total number of performed IPM main descent algorithm iterations.
 long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
 	PrecLoops_ = PrecLoops;
@@ -306,8 +303,12 @@ long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, lon
 	return NumIterFIA+NumIterIPM;
 }
 
-// ----------------------------------------------------------------------
-// reads work node (DATABR structure) from a  file
+// (5) Reads another DBR file (with input system composition, T,P etc.). The DBR file must be compatible with 
+// the currently loaded IPM and DCH files (see description  of GEM_init() function call).
+// Parameters:
+//    fname       Null-terminated (C) string containing a full path to the input DBR disk file.
+//    binary_f    Flag defining whether the file specified in fname is in text fromat (false or 0, default) or in binary format (true or 1)
+// Return values:     0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred. 
 long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 {
   try
@@ -326,8 +327,11 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 
     dbr_file_name = fname;
 
-  } catch(TError& /*err*/)
+  } catch(TError& err)
     {
+	  fstream f_log("ipmlog.txt", ios::out|ios::app );
+      f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+        err.title.c_str() << ":" <<  err.mess.c_str() << endl;
       return 1;
     }
     catch(...)
@@ -338,9 +342,8 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 }
 
 //-------------------------------------------------------------------
-// GEM_init()
-// reads in the data from IPM_DAT, DCH_DAT, DBR_DAT files (prepared by hand or
-// using the GEMS-PSI GEM2MT module).
+// (1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs 
+//  that use GEMIPM2K module. Also reads in the IPM, DCH and DBR text input files. 
 //  Parameters:
 //  ipmfiles_lst_name - name of a text file that contains:
 //    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name1>,
@@ -353,7 +356,8 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //    node array. If -t flag or nothing is specified then all data files must
 //    be in text (ASCII) format; if -b flag is specified then all data files
 //    are  assumed to be binary (little-endian) files.
-//  nodeTypes[nNodes] - array of node type (fortran) indexes of DBR_DAT files
+//  nodeTypes[nNodes] - optional parameter used only on the TNodeArray level,
+//    array of node type (fortran) indexes of DBR_DAT files
 //    in the ipmfiles_lst_name list. This array (handle for each FMT node),
 //    specifies from which DBR_DAT file the initial chemical system should
 //    be taken.
@@ -363,7 +367,6 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
 //
 //-------------------------------------------------------------------
-
 long int  TNode::GEM_init( const char* ipmfiles_lst_name,
                           long int* nodeTypes, bool getNodT1)
 {
@@ -375,7 +378,6 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #else
       size_t npos = gstring::npos;
 #endif
-//     bool binary_mult = true;
      bool binary_f = false;
      gstring lst_in = ipmfiles_lst_name;
 
@@ -394,7 +396,6 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 
 //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
 //       "<DBR_DAT file1 name>" [, ... , "<DBR_DAT fileN name>"]
-// Rearranged in logical shape by KD on 12.01.2007
 
 //Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
       pos = datachbr_fn.find( '-');
@@ -416,6 +417,8 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
       if( binary_f )
       {  GemDataStream f_ch(dat_ch, ios::in|ios::binary);
          datach_from_file(f_ch);
+//fstream  f_ch2("dch.out", ios::out);
+//datach_to_text_file(f_ch2, true, false );      // only test 06.08.2009 SD   
        }
       else
       { fstream f_ch(dat_ch.c_str(), ios::in );
@@ -429,6 +432,7 @@ if( binary_f )
    GemDataStream f_m(mult_in, ios::in|ios::binary);
 #ifdef IPMGEMPLUGIN
     profil->readMulti(f_m);
+// multi->to_text_file_gemipm(  "ipm.out", true,  true, false );
 #else
     TProfil::pm->readMulti(f_m);
 #endif
@@ -464,6 +468,8 @@ if( binary_f )
          {
              GemDataStream in_br(dbr_file, ios::in|ios::binary);
              databr_from_file(in_br);
+//fstream  f_br2("dbr.out", ios::out);
+//databr_to_text_file(f_br2, true, false );      // only test 06.08.2009 SD
           }
          else
           {   fstream in_br(dbr_file.c_str(), ios::in );
@@ -517,7 +523,8 @@ if( binary_f )
 //-----------------------------------------------------------------
 // work with lists
 
-// Return DCH index of IC by Name or -1 if name not found
+//Returns DCH index of IC given the IC Name string (null-terminated) 
+// or -1 if no such name was found in the DATACH IC name list
 long int TNode::IC_name_to_xCH( const char *Name )
 {
   long int ii, len = strlen( Name );
@@ -530,9 +537,10 @@ long int TNode::IC_name_to_xCH( const char *Name )
   return -1;
 }
 
-// Return DCH index of DC by Name or -1 if name not found
-long int TNode::DC_name_to_xCH( const char *Name )
-{
+// Returns DCH index of DC given the DC Name string
+// or -1 if no such name was found in the DATACH DC name list
+ long int TNode::DC_name_to_xCH( const char *Name )
+ {
   long int ii, len = strlen( Name );
   len =  min(len,MaxDCN);
 
@@ -541,9 +549,10 @@ long int TNode::DC_name_to_xCH( const char *Name )
         if( len == MaxDCN || CSD->DCNL[ii][len] == ' ' || CSD->DCNL[ii][len] == '\0' )
          return ii;
   return -1;
-}
+ }
 
-// Return DCH index of Ph by Name or -1 if name not found
+// Returns DCH index of Phase given the Phase Name string
+// or -1 if no such name was found in the DATACH Phase name list
 long int TNode::Ph_name_to_xCH( const char *Name )
 {
   long int ii, len = strlen( Name );
@@ -556,34 +565,37 @@ long int TNode::Ph_name_to_xCH( const char *Name )
   return -1;
 }
 
-// Return for IComp DBR index from DCH index or -1 if IComp is not used in the data bridge
+// Converts the IC DCH index into the IC DBR index
+// or returns -1 if this IC is not used in the data bridge
 long int TNode::IC_xCH_to_xDB( const long int xCH )
 {
   for(long int ii = 0; ii<CSD->nICb; ii++ )
-       if( CSD->xIC[ii] == xCH )
+       if( CSD->xic[ii] == xCH )
          return ii;
   return -1;
 }
 
-// Return for DComp DBR index from DCH index or -1 if not used in the data bridge
+// Converts the DC DCH index into the DC DBR index
+// or returns -1 if this DC is not used in the data bridge
 long int TNode::DC_xCH_to_xDB( const long int xCH )
 {
   for(long int ii = 0; ii<CSD->nDCb; ii++ )
-       if( CSD->xDC[ii] == xCH )
+       if( CSD->xdc[ii] == xCH )
          return ii;
   return -1;
 }
 
-// Return for Ph DBR index from DCH index or -1 if not used in the data bridge
+// Converts the Phase DCH index into the Phase DBR index
+// or returns -1 if this Phase is not used in the data bridge
 long int TNode::Ph_xCH_to_xDB( const long int xCH )
 {
   for(long int ii = 0; ii<CSD->nPHb; ii++ )
-       if( CSD->xPH[ii] == xCH )
+       if( CSD->xph[ii] == xCH )
          return ii;
   return -1;
 }
 
-// Converts the Phase DCH index into the DC DCH index
+// Returns the DCH index of the first DC belonging to the phase with DCH index Phx 
  long int  TNode::Phx_to_DCx( const long int Phx )
  {
    long int k, DCx = 0;
@@ -596,8 +608,22 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    return DCx;
  }
 
-// Converts the Phase DCH index into the DC DCH index (1-st)
-// returns into nDCinPh number of DC included into Phx phase
+ // Returns the DCH index of the Phase that Dependent Components xdc was included  
+  long int  TNode::DCtoPh_DCH( const long int xdc )
+  {
+    long int k, DCx = 0;
+    for( k=0; k<CSD->nPHb; k++ )
+    {
+    	DCx += CSD->nDCinPH[ k];
+        if( xdc < DCx )
+          break;	
+    }
+    return k;
+  }
+
+ 
+ // Returns the DCH index of the first DC belonging to the phase with DCH index Phx, 
+ // plus returns through the nDCinPh (reference) parameter the number of DCs included into this phase 
  long int  TNode::PhtoDC_DCH( const long int Phx, long int& nDCinPh )
  {
    long int k, DCx = 0;
@@ -611,8 +637,16 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    return DCx;
  }
 
-// Converts the Phase DBR index into the DC DBR index (1-st selected )
-// returns into nDCinPh number of DC selected into Phx phase
+ // Returns the DBR index of the Phase that Dependent Components xdc was included  
+  long int  TNode::DCtoPh_DBR( const long int xBR )
+  {
+    long int DCxCH = DC_xDB_to_xCH( xBR );
+    long int PhxCH = DCtoPh_DCH( DCxCH );
+    return Ph_xCH_to_xDB(PhxCH);
+  }
+
+// Returns the DBR index of the first DC belonging to the phase with DBR index Phx, 
+//plus returns through the nDCinPh (reference) parameter the number of DCs included into DBR for this phase
  long int  TNode::PhtoDC_DBR( const long int Phx, long int& nDCinPh )
  {
    long int ii, DCx, DCxCH, PhxCH, nDCinPhCH;
@@ -624,9 +658,9 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    nDCinPh = 0;
    for( ii = 0; ii<CSD->nDCb; ii++ )
    {
-      if( CSD->xDC[ii] >= DCxCH )
+      if( CSD->xdc[ii] >= DCxCH )
       {
-        if( CSD->xDC[ii] >= DCxCH+nDCinPhCH  )
+        if( CSD->xdc[ii] >= DCxCH+nDCinPhCH  )
           break;
         nDCinPh++;
         if( DCx == -1)
@@ -658,10 +692,11 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    return -1;
  }
 
- // Test if Tc and P are in the vicinity of a grid point of the lookup array
- //   for the interpolation of thermodynamic data
- // Returns the index of the grid node in the lookup array or -1 if interpolation is needed
- //
+ // Tests Tc and P as a grid point for the interpolation of thermodynamic data using DATACH 
+ // lookup arrays. Returns -1L if interpolation is needed, or 1D index of the lookup array element 
+ // if Tc and P fit within the respective tolerances. 
+ // For producing lookup arrays (in GEMS), we recommend using step for temperature less or equal to 10 degrees 
+ // in order to assure good accuracy of interpolation especially for S0 and Cp0 of aqueous species.     
   long int  TNode::check_grid_TP(  double Tc, double P )
   {
     long int xT, xP, ndx=-1;
@@ -673,11 +708,12 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     return ndx;
   }
 
- // Returns the (interpolated) G0 value for Tc, P from the DCH structure in J/mol
- //    ( xCH is the DC index in DATACH)
- //  In the case of error (e.g. Tc and P out of range) returns 7777777.
-  double  TNode::DC_G0_TP( const long int xCH, double Tc, double P )
-  {
+  //Retrieves (interpolated) molar Gibbs energy G0(P,Tc) value for Dependent Component  
+  //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C) 
+  // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances. 
+  // Parameter norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
+   double TNode::DC_G0(const long int xCH, const double P, const double Tc,  bool norm )
+   {
     long int xTP, jj;
     double G0;
 
@@ -691,20 +727,24 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
        G0 = CSD->G0[ jj + xTP ];
     else
        G0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->G0+jj,
-               P, Tc, CSD->nTp, CSD->nPp, 1 );
-    return G0;
- }
+               P, Tc, CSD->nTp, CSD->nPp, 6 );
+    
+    if( norm )
+      return G0/(R_CONSTANT * (Tc + C_to_K));
+    else
+      return G0;
+   }
 
-  // Access to interpolated V0 for Tc, P from the DCH structure (in J/bar)
-  //   (xCH the DC DCH index)
-  // If error (e.g. Tc or P out of range) returns -777
-  double  TNode::DC_V0_TP( const long int xCH, double Tc, double P )
-  {
+   // Retrieves (interpolated, if necessary) molar volume V0(P,Tc) value for Dependent Component (in J/Pa) 
+   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C) 
+   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances. 
+   double TNode::DC_V0(const long int xCH, const double P, const double Tc)
+   {
     long int xTP, jj;
     double V0;
 
     if( check_TP( Tc, P ) == false )
-    	return -777.;
+    	return 0.;
 
     xTP = check_grid_TP( Tc, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
@@ -713,11 +753,208 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
        V0 = CSD->V0[ jj + xTP ];
     else
        V0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->V0+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 1 );
+                P, Tc, CSD->nTp, CSD->nPp, 5 );
     return V0;
-}
+   }
 
- // Retrieval of Phase Volume ( xBR the Ph DBR index)
+   
+   // Retrieves (interpolated) molar enthalpy H0(P,Tc) value for Dependent Component (in J/mol) 
+   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C) 
+   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.  
+   double TNode::DC_H0(const long int xCH, const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double H0;
+
+    if( check_TP( Tc, P ) == false )
+    	return 7777777.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj =  xCH * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+       H0 = CSD->H0[ jj + xTP ];
+    else
+       H0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->H0+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    return H0;
+   }
+   
+   // Retrieves (interpolated) absolute molar enropy S0(P,Tc) value for Dependent Component (in J/K/mol) 
+   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C) 
+   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.  
+   double TNode::DC_S0(const long int xCH, const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double s0;
+
+    if( check_TP( Tc, P ) == false )
+    	return 0.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj =  xCH * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+       s0 = CSD->S0[ jj + xTP ];
+    else
+       s0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->S0+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 4 );
+    return s0;
+   }
+   
+   // Retrieves (interpolated) constant-pressure heat capacity Cp0(P,Tc) value for Dependent Component (in J/K/mol)
+   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C) 
+   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::DC_Cp0(const long int xCH, const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double cp0;
+
+    if( check_TP( Tc, P ) == false )
+    	return 0.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj =  xCH * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+       cp0 = CSD->Cp0[ jj + xTP ];
+    else
+       cp0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->Cp0+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 3 );
+    return cp0;
+   }
+   
+   // Retrieves (interpolated) Helmholtz energy  of Dependent Component (in J/mol) 
+   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C)
+   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::DC_A0(const long int xCH, const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double a0;
+
+    if( check_TP( Tc, P ) == false )
+    	return 7777777.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj =  xCH * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+       a0 = CSD->A0[ jj + xTP ];
+    else
+       a0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->A0+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    return a0;
+   }
+   
+   // Retrieves (interpolated) Internal energy of  Dependent Component (in J/mol) 
+   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C)
+   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::DC_U0(const long int xCH, const double P, const double Tc)
+   {
+       long int xTP, jj;
+       double u0;
+
+       if( check_TP( Tc, P ) == false )
+       	return 7777777.;
+
+       xTP = check_grid_TP( Tc, P );
+       jj =  xCH * CSD->nPp * CSD->nTp;
+
+       if( xTP >= 0 )
+          u0 = CSD->U0[ jj + xTP ];
+       else
+          u0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->U0+jj,
+                   P, Tc, CSD->nTp, CSD->nPp, 5 );
+       return u0;
+  }
+
+   
+   // Retrieves (interpolated) dielectric constant of liquid water at (P,Tc) from the DATACH structure or 0.0, 
+   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::EpsH2Ow(const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double epsW;
+
+    if( check_TP( Tc, P ) == false )
+    	return 0.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj = 0; // 0 * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+    	epsW = CSD->epsW[ jj + xTP ];
+    else
+    	epsW = LagranInterp( CSD->Pval, CSD->TCval, CSD->epsW+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    return epsW;
+   }
+   
+   // Retrieves (interpolated) density of liquid water (in kg/m3) at (P,Tc) from the DATACH structure or 0.0,
+   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances. 
+   double TNode::DenH2Ow(const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double denW;
+
+    if( check_TP( Tc, P ) == false )
+    	return 0.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj = 0; // 0 * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+    	denW = CSD->denW[ jj + xTP ];
+    else
+    	denW = LagranInterp( CSD->Pval, CSD->TCval, CSD->denW+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    return denW;
+   }
+   
+   // Retrieves (interpolated) dielectric constant of H2O vapor at (P,Tc) from the DATACH structure or 0.0, 
+   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::EpsH2Og(const double P, const double Tc)
+   {
+     long int xTP, jj;
+     double epsWg;
+
+     if( check_TP( Tc, P ) == false )
+     	return 0.;
+
+     xTP = check_grid_TP( Tc, P );
+     jj = 0; // 0 * CSD->nPp * CSD->nTp;
+
+     if( xTP >= 0 )
+     	epsWg = CSD->epsWg[ jj + xTP ];
+     else
+     	epsWg = LagranInterp( CSD->Pval, CSD->TCval, CSD->epsWg+jj,
+                 P, Tc, CSD->nTp, CSD->nPp, 5 );
+     return epsWg;
+    }
+   
+   // Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,Tc) from the DATACH structure or 0.0, 
+   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::DenH2Og(const double P, const double Tc)
+   {
+    long int xTP, jj;
+    double denWg;
+
+    if( check_TP( Tc, P ) == false )
+    	return 0.;
+
+    xTP = check_grid_TP( Tc, P );
+    jj = 0; // 0 * CSD->nPp * CSD->nTp;
+
+    if( xTP >= 0 )
+    	denWg = CSD->denWg[ jj + xTP ];
+    else
+    	denWg = LagranInterp( CSD->Pval, CSD->TCval, CSD->denWg+jj,
+                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    return denWg;
+   }
+
+ //Retrieves the current phase volume in m3 ( xph is DBR phase index) in the reactive sub-system.
+ // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
  double  TNode::Ph_Volume( const long int xBR )
  {
    double vol;
@@ -726,13 +963,14 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    else
    {
      long int xDC = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
-     vol = DC_V0_TP( xDC, CNode->TC, CNode->P )*10.; // from J/bar to cm3/mol
+     vol = DC_V0( xDC, CNode->P, CNode->TC ); 
      vol *= CNode->xDC[DC_xCH_to_xDB(xDC)];
    }
    return vol;
  }
 
-  // Retrieval of Phase mass ( xBR the Ph DBR index)
+  // Retrieves the phase mass in kg ( xph is DBR phase index). 
+  // Works for multicomponent and for single-component phases. Returns 0.0 if phase amount is zero.
   double  TNode::Ph_Mass( const long int xBR )
   {
      double mass;
@@ -746,13 +984,31 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     return mass;
   }
 
-  //kg44 Retrieval of activity ( xCH is the DCH index of the dependent component)
-  double  TNode::DC_Activity( const long int xCH )
-   {
-	return 	pow(10.0,pmm->Y_la[xCH]);
-   }
-
-  // Retrieval of bulk Phase composition ( xBR the Ph DBR index), works also for pure phases
+  // Retrieves the phase saturation index ( xph is DBR phase index). Works for multicomponent and for 
+  // single-component phases. Returns 0.0 if phase amount is zero.
+  double TNode::Ph_SatInd(const long int xph )
+  {
+    double SatInd=0.;
+    long int jj, dcx1, Ndc;
+    dcx1 = PhtoDC_DBR( xph, Ndc );	
+    
+    if( xph < CSD->nPSb )
+	{   
+        for( jj=dcx1; jj<Ndc+dcx1; jj++)
+        	SatInd +=  Get_aDC( jj )/Get_gDC(jj);	
+	}
+	else
+	{
+	  SatInd = Get_aDC( dcx1 );	  
+	}
+    return SatInd;
+  }
+  
+  // Retrieval of the phase bulk composition ( xph is DBR phase index) into memory indicated by 
+  // ARout (array of at least [dCH->nICb elements]). Returns pointer to ARout which may also be 
+  // allocated inside of Ph_BC() in the case if parameter ARout = NULL is specified;
+  // to avoid a memory leak, you will have to free this memory wherever appropriate. 
+  // This function works for multicomponent and for single-component phases
   double *TNode::Ph_BC( const long int xBR, double* ARout )
   {
     long int ii;
@@ -772,6 +1028,212 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       }
     }
     return ARout;
+  }
+
+  // Retrieval of (dual-thermodynamic) chemical potential of the DC (xdc is the DC DBR index).
+  // Parameter norm defines the scale: if true (1) then in mol/mol, otherwise in J/mol
+  double TNode::Get_muDC( const long int xdc, bool norm )
+  {	long int xCH, ii;
+	double muDC = 0;
+  
+	xCH = DC_xDB_to_xCH(xdc);
+    for( ii=0; ii<pCSD()->nICb; ii++ )
+           muDC += CSD->A[  xCH * CSD->nIC + IC_xDB_to_xCH(ii) ] * CNode->uIC[ ii ];
+    
+    if( norm )
+      return muDC;
+    else
+      return muDC*(R_CONSTANT * (CNode->TC + C_to_K));
+  }
+
+  //Retrieval of (dual-thermodynamic) activity of the DC (xdc is the DC DBR index)
+  double TNode::Get_aDC( const long int xdc )
+   {
+	 double Mj  = Get_muDC( xdc, true );
+	 double Mj0 = DC_G0( DC_xDB_to_xCH(xdc), CNode->P, CNode->TC,  true );
+     return exp(Mj-Mj0); 
+	 // return 	pow(10.0,pmm->Y_la[xCH]);
+  }
+
+  //Retrieves concentration of DC (xdc is the DC DBR index) in its phase 
+  // in the respective concentration scale 
+  double TNode::Get_cDC( const long int xdc )
+  {
+    long int xph = DCtoPh_DBR( xdc);
+    long int DCxCH = DC_xDB_to_xCH(xdc);
+	double DCcon = 0.;
+	
+    switch( CSD->ccDC[DCxCH] ) 
+	    {
+	     case DC_SCP_CONDEN:
+	    	 
+	     case DC_AQ_SOLVENT: 
+	     case DC_AQ_SOLVCOM: 
+	    	 
+         case DC_SOL_IDEAL:
+	     case DC_SOL_MINOR: 
+	     case DC_SOL_MAJOR: 
+
+	     case DC_PEL_CARRIER:
+	     case DC_SUR_MINAL:
+	     case DC_SUR_CARRIER: 
+	    	                  DCcon =  CNode->xDC[xdc]/CNode->xPH[xph];  //pmp->Wx[xCH];   
+	                          break;
+	      case DC_GAS_COMP:
+	      case DC_GAS_H2O:
+	      case DC_GAS_CO2:   
+	      case DC_GAS_H2:    
+	      case DC_GAS_N2:    DCcon =  CNode->xDC[xdc]/CNode->xPH[xph]*CNode->P;  //pmp->Wx[xCH]*(pmp->P*bar_to_Pa);   
+	                          break;
+	     case DC_AQ_PROTON:  
+	     case DC_AQ_SPECIES: 
+	     case DC_AQ_SURCOMP: 
+	    	 
+	      case DC_SUR_GROUP:
+	      case DC_SSC_A0:
+	      case DC_SSC_A1:
+	      case DC_SSC_A2:
+	      case DC_SSC_A3:
+	      case DC_SSC_A4:
+	      case DC_WSC_A0:
+	      case DC_WSC_A1:
+	      case DC_WSC_A2:
+	      case DC_WSC_A3:
+	      case DC_WSC_A4:  
+	      case DC_SUR_COMPLEX:
+	      case DC_SUR_IPAIR:
+	      case DC_IESC_A:
+	      case DC_IEWC_B: 
+	          {
+	            double MMC = 0., Factor;
+	            long int PhxCH_aquel = Ph_xDB_to_xCH(0);
+	            long int H2Obr, jj;
+
+	            if(CSD->ccPH[PhxCH_aquel] != PH_AQUEL )
+	            	break;                                  // no aquel phase in DATABR
+	        	
+	            if( CNode->xPA[0] > 1e-19 )
+	            {
+	                for(jj=0; jj<CSD->nDCinPH[PhxCH_aquel]; jj++)
+	                    if( CSD->ccDC[jj] == DC_AQ_SOLVENT || CSD->ccDC[jj] == DC_AQ_SOLVCOM )
+	                    {  H2Obr = DC_xCH_to_xDB(jj);
+	                       if( H2Obr >= 0 )
+	                      	  MMC += CSD->DCmm[jj]*CNode->xDC[H2Obr]/CNode->xPA[0];
+	                    }	
+	            }
+	            else MMC=18.01528; // Assuming water-solvent
+	            if( (CNode->xPA[0] > 1e-19) && (MMC > 1e-19) )
+	                Factor = 1./MMC/CNode->xPA[0]; // molality
+	            else Factor = 0.0;
+
+	    	    DCcon =  CNode->xDC[xdc]*Factor;  //pmp->Y_m[xCH];
+	          }              
+	          break;
+	      default:
+	          break; // error in DC class code
+	      }
+	   return DCcon;  
+  }
+  
+  // Access to equilibrium properties of phases and components using DATACH indexation
+
+  // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index) 
+  // directly from GEM IPM2 work structure. Also activity of a DC not included into DATABR list 
+  // can be retrieved. If DC has zero amount, its dual-thermodynamic activity is returned anyway.
+  // For single condensed phase component, this value has a meaning of the saturation index, 
+  // also in the presence of metastability constraint(s).
+  double TNode::DC_a(const long int xCH)
+  {
+	 //double Mj  = DC_mu( xCH, true );
+	 //double Mj0 = DC_G0( xCH, CNode->P, CNode->TC,  true );
+	 //return (Mj-Mj0)/2.302585093; 
+	 return 	pow(10.0,pmm->Y_la[xCH]);
+  }
+  
+  // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) 
+  // in its phase directly from GEM IPM2 work structure.Also activity of a DC not included 
+  // into DATABR list can be retrieved. For aqueous species, molality is returned; 
+  // for gas species, partial pressure; for surface complexes - density in mol/m2;
+  // for other phases - mole fraction. If DC has zero amount, the function returns 0.0.
+  double TNode::DC_c(const long int xCH)
+  {
+    double DCcon = 0.;
+	switch( pmm->DCC[xCH] ) 
+    {
+     case DC_SCP_CONDEN: DCcon =  pmm->Wx[xCH];   
+                          break;
+     case DC_AQ_PROTON:  
+     case DC_AQ_SPECIES: 
+     case DC_AQ_SURCOMP: DCcon =  pmm->Y_m[xCH];   
+                          break;
+     case DC_AQ_SOLVENT: 
+     case DC_AQ_SOLVCOM: DCcon =  pmm->Wx[xCH];   
+                          break;
+      case DC_GAS_COMP:
+      case DC_GAS_H2O:
+      case DC_GAS_CO2:   
+      case DC_GAS_H2:    
+      case DC_GAS_N2:    DCcon =  pmm->Wx[xCH]*(pmm->P*bar_to_Pa);   
+                          break;
+      case DC_SOL_IDEAL:
+      case DC_SOL_MINOR: 
+      case DC_SOL_MAJOR: DCcon =  pmm->Wx[xCH];   
+                          break;
+      case DC_SUR_GROUP:
+      case DC_SSC_A0:
+      case DC_SSC_A1:
+      case DC_SSC_A2:
+      case DC_SSC_A3:
+      case DC_SSC_A4:
+      case DC_WSC_A0:
+      case DC_WSC_A1:
+      case DC_WSC_A2:
+      case DC_WSC_A3:
+      case DC_WSC_A4:  
+      case DC_SUR_COMPLEX:
+      case DC_SUR_IPAIR:
+      case DC_IESC_A:
+      case DC_IEWC_B:     DCcon =  pmm->Y_m[xCH];   
+                          break;
+      case DC_PEL_CARRIER:
+      case DC_SUR_MINAL:
+      case DC_SUR_CARRIER: DCcon =  pmm->Wx[xCH];   
+                           break;
+      default:
+          break; // error in DC class code
+      }
+   return DCcon;  
+  }
+
+  // Retrieves the current (dual-thermodynamic) chemical potential of DC (xCH is DC DCH index)
+  // directly from GEM IPM2 work structure, also for any DC not included into DATABR or having zero amount.
+  // Parameter norm defines in wnich units the chemical potential value is returned:
+  // false - in J/mol; true (default) - in mol/mol
+  double TNode::DC_mu(const long int xCH, bool norm)
+  {	
+	double muDC = pmm->Fx[xCH];
+ //  for(long ii=0; ii<CSD->nIC; ii++ )
+ //    muDC += pmm->A[  xCH * CSD->nIC + ii ] * (pmm->U[ii]);
+    if( norm )
+        return muDC/pmm->RT; // (R_CONSTANT * (CNode->TC + C_to_K));
+    else
+        return muDC;
+  }
+
+  // Retrieves the standard chemical potential of DC (xCH is DC DCH index) directly
+  // from GEM IPM2 work structure at current pressure and temperature,
+  // also for any DC not included into DATABR or having zero amount. 
+  // Parameter norm defines in which units the chemical potential value is returned: 
+  // false - in J/mol; true (default) - in mol/mol
+  double TNode::DC_mu0(const long int xCH, bool norm)
+  {
+	return  DC_G0( xCH, CNode->P, CNode->TC, norm );
+	/*double  G0 = pmm->G0[xCH];  
+    if( norm )
+      return G0;
+    else
+      return G0*pmm->RT;
+    */  
   }
 
 //---------------------------------------------------------//
@@ -934,7 +1396,7 @@ void TNode::makeStartDataChBR( QWidget* par,
   CSD->dRes2 = 0.;
 
   CSD->Ttol = Ttol_;
-  CSD->Ptol = Ptol_;
+  CSD->Ptol = Ptol_*bar_to_Pa;
 
 // realloc structures DataCh&DataBr
 
@@ -944,11 +1406,11 @@ void TNode::makeStartDataChBR( QWidget* par,
 // set dynamic data to DataCH
 
   for( ii=0; ii< selIC.GetCount(); ii++ )
-    CSD->xIC[ii] = (long int)selIC[ii];
+    CSD->xic[ii] = (long int)selIC[ii];
   for( ii=0; ii< selDC.GetCount(); ii++ )
-    CSD->xDC[ii] = (long int)selDC[ii];
+    CSD->xdc[ii] = (long int)selDC[ii];
   for( ii=0; ii< selPH.GetCount(); ii++ )
-    CSD->xPH[ii] = (long int)selPH[ii];
+    CSD->xph[ii] = (long int)selPH[ii];
 
   for( i1=0; i1< CSD->nIC*CSD->nDC; i1++ )
     CSD->A[i1] = pmm->A[i1];
@@ -962,13 +1424,13 @@ void TNode::makeStartDataChBR( QWidget* par,
   }
   for( i1=0; i1< CSD->nIC; i1++ )
   {
-    CSD->ICmm[i1] = pmm->Awt[i1];
+    CSD->ICmm[i1] = pmm->Awt[i1]/kg_to_g;
     CSD->ccIC[i1] = pmm->ICC[i1];
     copyValues( CSD->ICNL[i1], pmm->SB[i1] , min(MaxICN,(long int)MAXICNAME) );
   }
   for( i1=0; i1< CSD->nDC; i1++ )
   {
-    CSD->DCmm[i1] = pmm->MM[i1];
+    CSD->DCmm[i1] = pmm->MM[i1]/kg_to_g;
     CSD->ccDC[i1] = pmm->DCC[i1];
     copyValues( CSD->DCNL[i1], pmm->SM[i1] , min(MaxDCN,(long int)MAXDCNAME) );
   }
@@ -990,22 +1452,22 @@ void TNode::makeStartDataChBR( QWidget* par,
     CNode->NodeStatusCH = NEED_GEM_SIA;
 
   CNode->TC = pmm->TCc; //25
-  CNode->P = pmm->Pc; //1
+  CNode->P = pmm->Pc*bar_to_Pa; //1
   CNode->Ms = pmm->MBX; // in kg
 
 // arrays
    for( i1=0; i1<CSD->nICb; i1++ )
-    CNode->bIC[i1] = pmm->B[ CSD->xIC[i1] ];
+    CNode->bIC[i1] = pmm->B[ CSD->xic[i1] ];
 
    for( i1=0; i1<CSD->nDCb; i1++ )
    {
-     CNode->dul[i1] = pmm->DUL[ CSD->xDC[i1] ];
-     CNode->dll[i1] = pmm->DLL[ CSD->xDC[i1] ];
+     CNode->dul[i1] = pmm->DUL[ CSD->xdc[i1] ];
+     CNode->dll[i1] = pmm->DLL[ CSD->xdc[i1] ];
     }
 
    if( CSD->nAalp >0 )
       for( i1=0; i1< CSD->nPHb; i1++ )
-        CNode->aPH[i1] = pmm->Aalp[CSD->xPH[i1]];
+        CNode->aPH[i1] = pmm->Aalp[CSD->xph[i1]]*kg_to_g;
 
 // puts calculated & dynamic data to DataBR
    packDataBr();
@@ -1018,6 +1480,9 @@ void TNode::makeStartDataChBR( QWidget* par,
     CSD->Pval[i1] = Pai[i1];
 
    G0_V0_H0_Cp0_DD_arrays( par );
+
+   for( i1=0; i1<CSD->nPp; i1++ )
+    CSD->Pval[i1] = Pai[i1]*bar_to_Pa;
 
    if(  CSD->iGrd  )
      for( i1=0; i1< CSD->nDCs*CSD->nPp*CSD->nTp; i1++ )
@@ -1057,9 +1522,9 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
      for( kk=0; kk<5; kk++)
      {
         ll = ( kk * CSD->nPp + jj) * CSD->nTp + ii;
-        CSD->denW[ ll ] = denW[kk];
+        CSD->denW[ ll ] = denW[kk]*1e3;
         CSD->epsW[ ll ] = epsW[kk];
-        CSD->denWg[ ll ] = denWg[kk];
+        CSD->denWg[ ll ] = denWg[kk]*1e3;
         CSD->epsWg[ ll ] = epsWg[kk];
       }
       // copy to arrays
@@ -1067,7 +1532,7 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
       {
          ll = ( kk * CSD->nPp + jj) * CSD->nTp + ii;
          CSD->G0[ll] =  G0[pmm->muj[kk]]; //
-         CSD->V0[ll] =  V0[pmm->muj[kk]];
+         CSD->V0[ll] =  V0[pmm->muj[kk]]*1e-5;
          CSD->H0[ll] = H0[pmm->muj[kk]];
          CSD->Cp0[ll] = Cp0[pmm->muj[kk]];
          CSD->S0[ll] = S0[pmm->muj[kk]];
@@ -1099,6 +1564,7 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
   delete[] U0;
 }
 
+//Constructor of the class instance in memory
 TNode::TNode( MULTI *apm  )
 {
     pmm = apm;
@@ -1107,10 +1573,11 @@ TNode::TNode( MULTI *apm  )
     allocMemory();
     na = this;
     dbr_file_name = "dbr_file_name";
+    internalScFact =  1.; 
 }
 
 #else
-
+// Constructor of the class instance in memory for standalone GEMIPM2K or coupled program
 TNode::TNode()
 {
   CSD = 0;
@@ -1118,6 +1585,7 @@ TNode::TNode()
   allocMemory();
   na = this;
   dbr_file_name = "dbr_file_name";
+  internalScFact =  1.; 
 }
 
 #endif
@@ -1133,30 +1601,23 @@ TNode::~TNode()
 void TNode::packDataBr()
 {
  long int ii;
-
+ internalScFact = 1.; 
+ 
 // set default data to DataBr
 #ifndef IPMGEMPLUGIN
    CNode->NodeHandle = 0;
 //   CNode->NodeTypeHY = normal;
    CNode->NodeTypeMT = normal;
    CNode->NodeStatusFMT = Initial_RUN;
-   //   CNode->NodeStatusCH = NEED_GEM_AIA;
+#endif
+//   CNode->NodeStatusCH = NEED_GEM_AIA;
    if( pmm->pNP == 0 )
     CNode->NodeStatusCH = NEED_GEM_AIA;
   else
      CNode->NodeStatusCH = NEED_GEM_SIA;
-//#else
-//
- // numbers
-//  if( pmm->pNP == 0 )
-//    CNode->NodeStatusCH = OK_GEM_AIA;
-//  else
-//    CNode->NodeStatusCH = OK_GEM_SIA;
-//
-#endif
 
    CNode->TC = pmm->TCc; //25
-   CNode->P = pmm->Pc; //1
+   CNode->P = pmm->Pc*bar_to_Pa; //1
 //   CNode->IterDone = pmm->IT;
    CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
 // values
@@ -1172,32 +1633,32 @@ void TNode::packDataBr()
 
   // arrays
    for( ii=0; ii<CSD->nPHb; ii++ )
-   {  CNode->xPH[ii] = pmm->XF[ CSD->xPH[ii] ];
+   {  CNode->xPH[ii] = pmm->XF[ CSD->xph[ii] ];
       if( CSD->nAalp >0 )
-       CNode->aPH[ii] = pmm->Aalp[ CSD->xPH[ii] ];//??? only insert
+       CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
-   {   CNode->vPS[ii] = pmm->FVOL[ CSD->xPH[ii] ];
-       CNode->mPS[ii] = pmm->FWGT[ CSD->xPH[ii] ];
-       CNode->xPA[ii] = pmm->XFA[ CSD->xPH[ii] ];
+   {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3;
+       CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/kg_to_g;
+       CNode->xPA[ii] = pmm->XFA[ CSD->xph[ii] ];
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
    for(long int jj=0; jj<CSD->nICb; jj++ )
    { long int   new_ndx= (ii*CSD->nICb)+jj,
-           mul_ndx = ( CSD->xPH[ii]*CSD->nIC )+ CSD->xIC[jj];
+           mul_ndx = ( CSD->xph[ii]*CSD->nIC )+ CSD->xic[jj];
      CNode->bPS[new_ndx] = pmm->BF[ mul_ndx ];
    }
    for( ii=0; ii<CSD->nDCb; ii++ )
    {
-      CNode->xDC[ii] = pmm->X[ CSD->xDC[ii] ];
-      CNode->gam[ii] = pmm->Gamma[ CSD->xDC[ii] ];
-      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
-      CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ];// 09/02/2009 SD only insert
+      CNode->xDC[ii] = pmm->X[ CSD->xdc[ii] ];
+      CNode->gam[ii] = pmm->Gamma[ CSD->xdc[ii] ];
+      CNode->dul[ii] = pmm->DUL[ CSD->xdc[ii] ];// always for GEM2MT init
+      CNode->dll[ii] = pmm->DLL[ CSD->xdc[ii] ];// always for GEM2MT init
    }
    for( ii=0; ii<CSD->nICb; ii++ )
-   {  CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ];// 09/02/2009 SD only insert
-      CNode->rMB[ii] = pmm->C[ CSD->xIC[ii] ];
-      CNode->uIC[ii] = pmm->U[ CSD->xIC[ii] ];
+   {  CNode->bIC[ii] = pmm->B[ CSD->xic[ii] ]; // always for GEM2MT  init
+      CNode->rMB[ii] = pmm->C[ CSD->xic[ii] ];
+      CNode->uIC[ii] = pmm->U[ CSD->xic[ii] ];
    }
 }
 
@@ -1214,31 +1675,22 @@ void TNode::packDataBr( double ScFact )
  	 ScFact = 1e-6;
   if( ScFact > 1e6 )
  	 ScFact = 1e6;
-  if( ScFact < 0. )
- 	 ScFact = 1.;
+  internalScFact =  ScFact; 
  // set default data to DataBr
 #ifndef IPMGEMPLUGIN
    CNode->NodeHandle = 0;
 //   CNode->NodeTypeHY = normal;
    CNode->NodeTypeMT = normal;
    CNode->NodeStatusFMT = Initial_RUN;
+#endif
    //   CNode->NodeStatusCH = NEED_GEM_AIA;
    if( pmm->pNP == 0 )
     CNode->NodeStatusCH = NEED_GEM_AIA;
   else
      CNode->NodeStatusCH = NEED_GEM_SIA;
-//#else
-//
- // numbers
-//  if( pmm->pNP == 0 )
-//    CNode->NodeStatusCH = OK_GEM_AIA;
-//  else
-//    CNode->NodeStatusCH = OK_GEM_SIA;
-//
-#endif
 
    CNode->TC = pmm->TCc; //25
-   CNode->P = pmm->Pc; //1
+   CNode->P = pmm->Pc*bar_to_Pa; //1
    CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
 // values
   CNode->Vs = pmm->VXc*1.e-6 / ScFact; // from cm3 to m3
@@ -1253,34 +1705,34 @@ void TNode::packDataBr( double ScFact )
 
   // arrays
    for( ii=0; ii<CSD->nPHb; ii++ )
-   {  CNode->xPH[ii] = pmm->XF[ CSD->xPH[ii] ] / ScFact;
+   {  CNode->xPH[ii] = pmm->XF[ CSD->xph[ii] ] / ScFact;
       if( CSD->nAalp >0 )
-       CNode->aPH[ii] = pmm->Aalp[ CSD->xPH[ii] ];//??? only insert
+       CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
-   {   CNode->vPS[ii] = pmm->FVOL[ CSD->xPH[ii] ]  / ScFact;
-       CNode->mPS[ii] = pmm->FWGT[ CSD->xPH[ii] ]  / ScFact;
-       CNode->xPA[ii] = pmm->XFA[ CSD->xPH[ii] ]  / ScFact;
+   {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3  / ScFact;
+       CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/ kg_to_g / ScFact;
+       CNode->xPA[ii] = pmm->XFA[ CSD->xph[ii] ] / ScFact;
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
    for(long int jj=0; jj<CSD->nICb; jj++ )
    { long int   new_ndx= (ii*CSD->nICb)+jj,
-           mul_ndx = ( CSD->xPH[ii]*CSD->nIC )+ CSD->xIC[jj];
+           mul_ndx = ( CSD->xph[ii]*CSD->nIC )+ CSD->xic[jj];
      CNode->bPS[new_ndx] = pmm->BF[ mul_ndx ]  / ScFact;
    }
    for( ii=0; ii<CSD->nDCb; ii++ )
    {
-      CNode->xDC[ii] = pmm->X[ CSD->xDC[ii] ]  / ScFact;
-      CNode->gam[ii] = pmm->Gamma[ CSD->xDC[ii] ];
-//      CNode->dul[ii] = pmm->DUL[ CSD->xDC[ii] ] / ScFact;  // 09/02/2009 SD
-//      if( pmm->DLL[ CSD->xDC[ii] ] < 1e-20 )
+      CNode->xDC[ii] = pmm->X[ CSD->xdc[ii] ]  / ScFact;
+      CNode->gam[ii] = pmm->Gamma[ CSD->xdc[ii] ];
+//      CNode->dul[ii] = pmm->DUL[ CSD->xdc[ii] ] / ScFact;  // 09/02/2009 SD
+//      if( pmm->DLL[ CSD->xdc[ii] ] < 1e-20 )
 //    	  CNode->dll[ii] = 0.;
-//      else CNode->dll[ii] = pmm->DLL[ CSD->xDC[ii] ] / ScFact;  //
+//      else CNode->dll[ii] = pmm->DLL[ CSD->xdc[ii] ] / ScFact;  //
    }
    for( ii=0; ii<CSD->nICb; ii++ )
-   {  // CNode->bIC[ii] = pmm->B[ CSD->xIC[ii] ] / ScFact;// 09/02/2009 SD only insert
-      CNode->rMB[ii] = pmm->C[ CSD->xIC[ii] ] / ScFact;
-      CNode->uIC[ii] = pmm->U[ CSD->xIC[ii] ];
+   {  // CNode->bIC[ii] = pmm->B[ CSD->xic[ii] ] / ScFact;// 09/02/2009 SD only insert
+      CNode->rMB[ii] = pmm->C[ CSD->xic[ii] ] / ScFact;
+      CNode->uIC[ii] = pmm->U[ CSD->xic[ii] ];
    }
 }
 
@@ -1295,34 +1747,29 @@ void TNode::packDataBr( double ScFact )
 void TNode::unpackDataBr( bool uPrimalSol )
 {
  long int ii;
- //double Gamm;
-// numbers
+ internalScFact =  1.; 
 
 #ifdef IPMGEMPLUGIN
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
 #endif
-//  if( CNode->NodeStatusCH >= NEED_GEM_SIA )
-//   pmm->pNP = 1;
-//  else
-//   pmm->pNP = 0; //  NEED_GEM_AIA;
-//  CNode->IterDone = 0;
   pmm->TCc = CNode->TC;
   pmm->Tc = CNode->TC+C_to_K;
-  pmm->Pc  = CNode->P;
+  pmm->Pc  = CNode->P/bar_to_Pa;
+  pmm->VXc = CNode->Vs/1.e-6; // from cm3 to m3
   // Obligatory arrays - always unpacked!
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-    pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii];
-    pmm->DLL[ CSD->xDC[ii] ] = CNode->dll[ii];
+    pmm->DUL[ CSD->xdc[ii] ] = CNode->dul[ii];
+    pmm->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
   }
   for( ii=0; ii<CSD->nICb; ii++ )
-    pmm->B[ CSD->xIC[ii] ] = CNode->bIC[ii];
+    pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     if( CSD->nAalp >0 )
-        pmm->Aalp[ CSD->xPH[ii] ] = CNode->aPH[ii];
+        pmm->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
   }
 
  if( !uPrimalSol )
@@ -1331,46 +1778,45 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   pmm->IT = 0;
  }
  else {   // Unpacking primal solution provided in the node DATABR structure
-   pmm->IT = 0;
+  pmm->IT = 0;
   pmm->MBX = CNode->Ms;
   pmm->IC = CNode->IC;
-//  pmm->FitVar[3] = CNode->Eh;  Bugfix 19.12.2006  KD
   pmm->Eh = CNode->Eh;
   for( ii=0; ii<CSD->nDCb; ii++ )
-  /*    pmm->X[ CSD->xDC[ii] ] = */
-        pmm->Y[ CSD->xDC[ii] ] = CNode->xDC[ii];
+  /*    pmm->X[ CSD->xdc[ii] ] = */
+        pmm->Y[ CSD->xdc[ii] ] = CNode->xDC[ii];
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-     pmm->lnGam[ CSD->xDC[ii] ] = log( CNode->gam[ii] );
+     pmm->lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
   //       Gamm = CNode->gam[ii];
-  //      pmm->Gamma[ CSD->xDC[ii] ] = Gamm;
-  //      pmm->lnGmo[ CSD->xDC[ii] ] = pmm->lnGam[ CSD->xDC[ii] ] = log(Gamm);
+  //      pmm->Gamma[ CSD->xdc[ii] ] = Gamm;
+  //      pmm->lnGmo[ CSD->xdc[ii] ] = pmm->lnGam[ CSD->xdc[ii] ] = log(Gamm);
   }
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FVOL[ CSD->xPH[ii] ] = CNode->vPS[ii];
+   pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FWGT[ CSD->xPH[ii] ] = CNode->mPS[ii];
+   pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
 
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
-    pmm->XF[ CSD->xPH[ii] ] =
-    pmm->YF[ CSD->xPH[ii] ] = CNode->xPH[ii];
+    pmm->XF[ CSD->xph[ii] ] =
+    pmm->YF[ CSD->xph[ii] ] = CNode->xPH[ii];
   }
 
   for( long int k=0; k<CSD->nPSb; k++ )
   for(long int i=0; i<CSD->nICb; i++ )
   { long int dbr_ndx= (k*CSD->nICb)+i,
-          mul_ndx = ( CSD->xPH[k]*CSD->nIC )+ CSD->xIC[i];
+          mul_ndx = ( CSD->xph[k]*CSD->nIC )+ CSD->xic[i];
     pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
   }
 
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->XFA[ CSD->xPH[ii] ] = pmm->YFA[ CSD->xPH[ii] ] = CNode->xPA[ii];
+   pmm->XFA[ CSD->xph[ii] ] = pmm->YFA[ CSD->xph[ii] ] = CNode->xPA[ii];
 
   for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->C[ CSD->xIC[ii] ] = CNode->rMB[ii];
+   pmm->C[ CSD->xic[ii] ] = CNode->rMB[ii];
   for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->U[ CSD->xIC[ii] ] = CNode->uIC[ii];
+   pmm->U[ CSD->xic[ii] ] = CNode->uIC[ii];
  }
 //  End
 }
@@ -1386,7 +1832,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 {
  long int ii;
- //double Gamm;
+
 #ifdef IPMGEMPLUGIN
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
@@ -1397,44 +1843,39 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 	 ScFact = 1e-6;
  if( ScFact > 1e6 )
 	 ScFact = 1e6;
-// if( ScFact < 0. ) SD 0 < 1e-6
-//	 ScFact = 1.;
+ internalScFact =  ScFact; 
+
   pmm->TCc = CNode->TC;
   pmm->Tc = CNode->TC+C_to_K;
-  pmm->Pc  = CNode->P;
+  pmm->Pc  = CNode->P/bar_to_Pa;
+  pmm->VXc = CNode->Vs /1.e-6 *ScFact; // from cm3 to m3
   // Obligatory arrays - always unpacked!
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-    pmm->DUL[ CSD->xDC[ii] ] = CNode->dul[ii]* ScFact;
-    if(	pmm->DUL[ CSD->xDC[ii] ] > 1e6 )		// 28.01.2009
-       pmm->DUL[ CSD->xDC[ii] ] = 1e6;          // Bugfix for upper metastability limit
+    pmm->DUL[ CSD->xdc[ii] ] = CNode->dul[ii]* ScFact;
+    if(	pmm->DUL[ CSD->xdc[ii] ] > 1e6 )		
+       pmm->DUL[ CSD->xdc[ii] ] = 1e6;          // Bugfix for upper metastability limit
 
-// kg44 19.06.2009 the condition below totally breaks calculation precipitation  kinetics for small amounts/rates!!!!
-//
-//    if(	pmm->DUL[ CSD->xDC[ii] ] < TProfil::pm->pa.p.DKIN )
-//    	pmm->DUL[ CSD->xDC[ii] ] = TProfil::pm->pa.p.DKIN;
-
-    pmm->DLL[ CSD->xDC[ii] ] = CNode->dll[ii];
+    pmm->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
     if( CNode->dll[ii] > 0. )
-    	pmm->DLL[ CSD->xDC[ii] ] *= ScFact;
-//     pmm->DLL[ CSD->xDC[ii] ] = 0.;				  // Bugfix for lower metastability limit // kg44  19.06.2009 this is not a bugfix...it breaks dissolution kinetics!!!
+    	pmm->DLL[ CSD->xdc[ii] ] *= ScFact;
 
-    if( pmm->DUL[ CSD->xDC[ii] ] < pmm->DLL[ CSD->xDC[ii] ] )
+    if( pmm->DUL[ CSD->xdc[ii] ] < pmm->DLL[ CSD->xdc[ii] ] )
     {
        char buf[300];
        sprintf(buf, "Upper kinetic restrictions smolest than lower for DC&RC %-6.6s",
-            		 pmm->SM[CSD->xDC[ii]] );
+            		 pmm->SM[CSD->xdc[ii]] );
     	Error("unpackDataBr", buf );
     }
   }
   for( ii=0; ii<CSD->nICb; ii++ )
   {
-    pmm->B[ CSD->xIC[ii] ] = CNode->bIC[ii] * ScFact;
-    if( ii < CSD->nICb-1 && pmm->B[ CSD->xIC[ii] ] < TProfil::pm->pa.p.DB )
+    pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii] * ScFact;
+    if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < TProfil::pm->pa.p.DB )
     {
        char buf[300];
        sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
-            		 pmm->SB[CSD->xIC[ii]], pmm->B[ CSD->xIC[ii] ] );
+            		 pmm->SB[CSD->xic[ii]], pmm->B[ CSD->xic[ii] ] );
     	Error("unpackDataBr", buf );
     }
 
@@ -1442,7 +1883,7 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     if( CSD->nAalp >0 )
-        pmm->Aalp[ CSD->xPH[ii] ] = CNode->aPH[ii];
+        pmm->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
   }
 
  if( !uPrimalSol )
@@ -1456,37 +1897,37 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 //  pmm->FitVar[3] = CNode->Eh;  Bugfix 19.12.2006  KD
   pmm->Eh = CNode->Eh;
   for( ii=0; ii<CSD->nDCb; ii++ )
-  /*    pmm->X[ CSD->xDC[ii] ] = */
-        pmm->Y[ CSD->xDC[ii] ] = CNode->xDC[ii] * ScFact;
+  /*    pmm->X[ CSD->xdc[ii] ] = */
+        pmm->Y[ CSD->xdc[ii] ] = CNode->xDC[ii] * ScFact;
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-     pmm->lnGam[ CSD->xDC[ii] ] = log( CNode->gam[ii] );
+     pmm->lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
   }
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FVOL[ CSD->xPH[ii] ] = CNode->vPS[ii] * ScFact;
+   pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]* m3_to_cm3 * ScFact;
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FWGT[ CSD->xPH[ii] ] = CNode->mPS[ii] * ScFact;
+   pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii] *kg_to_g * ScFact;
 
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
-    pmm->XF[ CSD->xPH[ii] ] =
-    pmm->YF[ CSD->xPH[ii] ] = CNode->xPH[ii] * ScFact;
+    pmm->XF[ CSD->xph[ii] ] =
+    pmm->YF[ CSD->xph[ii] ] = CNode->xPH[ii] * ScFact;
   }
 
   for( long int k=0; k<CSD->nPSb; k++ )
   for(long int i=0; i<CSD->nICb; i++ )
   { long int dbr_ndx= (k*CSD->nICb)+i,
-          mul_ndx = ( CSD->xPH[k]*CSD->nIC )+ CSD->xIC[i];
+          mul_ndx = ( CSD->xph[k]*CSD->nIC )+ CSD->xic[i];
     pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx] * ScFact;
   }
 
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->XFA[ CSD->xPH[ii] ] = pmm->YFA[ CSD->xPH[ii] ] = CNode->xPA[ii] * ScFact;
+   pmm->XFA[ CSD->xph[ii] ] = pmm->YFA[ CSD->xph[ii] ] = CNode->xPA[ii] * ScFact;
 
   for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->C[ CSD->xIC[ii] ] = CNode->rMB[ii] * ScFact;  // Is this really needed?
+   pmm->C[ CSD->xic[ii] ] = CNode->rMB[ii] * ScFact;  // Is this really needed?
   for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->U[ CSD->xIC[ii] ] = CNode->uIC[ii];
+   pmm->U[ CSD->xic[ii] ] = CNode->uIC[ii];
  }
 //  End
 }
@@ -1541,15 +1982,18 @@ double TNode::ResizeNode( double Factor )
     return CNode->Ms;
 }
 
-// (5) For interruption/debugging
-// Writes work node (DATABR structure) into a file path name fname
-// Parameter binary_f defines if the file is to be written in binary
-// format (true or 1, good for interruption of coupled modeling task
-// if called in loop for each node), or in text format
-// (false or 0, default)
-//
-   void  TNode::GEM_write_dbr( const char* fname, bool binary_f,
-		   bool with_comments, bool brief_mode )
+// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
+//   Parameters: 
+//   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+//                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
+//                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+//   binary_f      defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task
+//                 if called in the loop for each node), or in text format (false or 0, default).
+//   with_comments (text format only): defines the mode of output of comments written before each data tag and  content 
+//                 in the DBR file. If set to true (1), the comments will be written for all data entries (default). 
+//                 If   false (0), comments will not be written. 
+//  brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments, bool brief_mode )
    {
        gstring str_file;
        if( fname == 0)
@@ -1570,11 +2014,12 @@ double TNode::ResizeNode( double Factor )
       }
    }
 
-// (5a) For detailed examination of GEM work data structure:
-// writes GEMIPM internal MULTI data structure into text file
-// path name fname in debugging format (different from MULTI input format).
-// This file cannot be read back with GEM_init()!
-//
+// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure. 
+// This call is useful when GEM_run() returns with a NodeStatusCH value indicating a GEM calculation error
+// (see  above).  Another use is for a detailed comparison of a test system calculation after the version upgrade of GEMIPM2K.
+// Parameters: fname   null-terminated (C) string containing a full path to the disk file to be written.
+//                     NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
+//                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
    void  TNode::GEM_print_ipm( const char* fname )
    {
      gstring str_file;
@@ -1588,77 +2033,32 @@ double TNode::ResizeNode( double Factor )
 
 #ifdef IPMGEMPLUGIN
 
-// calculation mode: passing input GEM data changed on previous FMT iteration
-//                   into the work DATABR structure
-void TNode::GEM_from_MT(
-   long int  p_NodeHandle,   // Node identification handle
-   long int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
-                    //                                     GEM input output  FMT control
-   double p_TC,      // Temperature T, K                         +       -      -
-   double p_P,      // Pressure P, bar                          +       -      -
-   double p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
-   double p_Ms,     // Mass of reactive subsystem, kg           -       -      +
-   double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
-   double *p_dul,   // upper kinetic restrictions [nDCb]        +       -      -
-   double *p_dll,   // lower kinetic restrictions [nDCb]        +       -      -
-   double *p_aPH  // Specific surface areas of phases (m2/g)    +       -      -
-)
-{
-  long int ii;
-  bool useSimplex = false;
-
-  CNode->NodeHandle = p_NodeHandle;
-  CNode->NodeStatusCH = p_NodeStatusCH;
-  CNode->TC = p_TC;
-  CNode->P = p_P;
-  CNode->Vs = p_Vs;
-  CNode->Ms = p_Ms;
-// Checking if no-simplex IA is Ok
-   for( ii=0; ii<CSD->nICb; ii++ )
-   {  //  SD 11/02/05 for test
-      //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
-       //     useSimplex = true;
-     CNode->bIC[ii] = p_bIC[ii];
-   }
-   for( ii=0; ii<CSD->nDCb; ii++ )
-   {
-     CNode->dul[ii] = p_dul[ii];
-     CNode->dll[ii] = p_dll[ii];
-   }
-    if( CSD->nAalp >0 )
-     for( ii=0; ii<CSD->nPHb; ii++ )
-         CNode->aPH[ii] = p_aPH[ii];
-   if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
-     CNode->NodeStatusCH = NEED_GEM_AIA;
-   // Switch only if SIA is ordered, leave if simplex is ordered (KD)
-}
-
-// calculation mode: passing current FMT iteration information
-//                   into the work DATABR structure
+// (9) Optional, for passing the current mass transport iteration information into the work 
+// DATABR structure (e.g. for using it in tracing/debugging or in writing DBR files for nodes)
 void TNode::GEM_set_MT(
-//   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
-//   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
-   double p_Tm,      // actual total simulation time, s                        +       -      -
-   double p_dt       // actual time step, s                          +       -      -
+   double p_Tm,      // actual total simulation time, s          +       -      -
+   double p_dt       // actual time step, s                      +       -      -
 )
 {
   CNode->Tm = p_Tm;
   CNode->dt = p_dt;
 }
 
-// readonly mode: passing input GEM data to FMT
+// (6) Passes (copies) the GEMIPM2K input data from the work instance of DATABR structure. 
+//  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
+//   chemical data for all nodes used in the mass-transport model. 
 void TNode::GEM_restore_MT(
-   long int  &p_NodeHandle,   // Node identification handle
-   long int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
-                    //                                     GEM input output  FMT control
-   double &p_TC,     // Temperature T, K                         +       -      -
-   double &p_P,      // Pressure P, bar                          +       -      -
-   double &p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
-   double &p_Ms,     // Mass of reactive subsystem, kg           -       -      +
-   double *p_bIC,    // bulk mole amounts of IC [nICb]           +       -      -
-   double *p_dul,    // upper kinetic restrictions [nDCb]        +       -      -
-   double *p_dll,    // lower kinetic restrictions [nDCb]        +       -      -
-   double *p_aPH     // Specific surface areas of phases (m2/g)  +       -      -
+    long int  &p_NodeHandle,   // Node identification handle
+    long int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                      //                                    GEM input output  FMT control
+    double &p_TC,      // Temperature T, C                            +       -      -
+    double &p_P,      // Pressure P,  Pa                              +       -      -
+    double &p_Vs,     // Volume V of reactive subsystem,  m3         (+)      -      +
+    double &p_Ms,     // Mass of reactive subsystem, kg               -       -      +
+    double *p_bIC,    // Bulk mole amounts of IC  [nICb]              +       -      -
+    double *p_dul,    // Upper restrictions to amounts of DC [nDCb]   +       -      -
+    double *p_dll,    // Lower restrictions to amounts of DC [nDCb]   +       -      -
+    double *p_aPH     // Specific surface areas of phases,m2/kg[nPHb] +       -      -
    )
 {
   long int ii;
@@ -1680,33 +2080,34 @@ void TNode::GEM_restore_MT(
         p_aPH[ii] = CNode->aPH[ii];
 }
 
-// Copying results that must be returned into the FMT part into provided call parameters
+// (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
+//   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond
+//   to those in currently existing DATACH memory structure.
 void TNode::GEM_to_MT(
-       long int &p_NodeHandle,    // Node identification handle
-       long int &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH
-       long int &p_IterDone,      // Number of iterations performed by GEM IPM
-                         //                                     GEM input output  FMT control
-       // Chemical scalar variables
-       double &p_Vs,    // Volume V of reactive subsystem, cm3     -      -      +     +
-       double &p_Ms,    // Mass of reactive subsystem, kg          -      -      +     +
-       double &p_Gs,    // Gibbs energy of reactive subsystem (J)  -      -      +     +
-       double &p_Hs,    // Enthalpy of reactive subsystem (J)      -      -      +     +
-       double &p_IC,    // Effective molal aq ionic strength       -      -      +     +
-       double &p_pH,    // pH of aqueous solution                  -      -      +     +
-       double &p_pe,    // pe of aqueous solution                  -      -      +     +
-       double &p_Eh,    // Eh of aqueous solution, V               -      -      +     +
-       // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
-       // exchange of values occurs through lists of indices, e.g. xDC, xPH
-       double  *p_rMB,  // MB Residuals from GEM IPM [nICb]             -      -      +     +
-       double  *p_uIC,  // IC chemical potentials (mol/mol)[nICb]       -      -      +     +
-       double  *p_xDC,    // DC mole amounts at equilibrium [nDCb]      -      -      +     +
-       double  *p_gam,    // activity coeffs of DC [nDCb]               -      -      +     +
-       double  *p_xPH,  // total mole amounts of phases [nPHb]          -      -      +     +
-       double  *p_vPS,  // phase volume, cm3/mol        [nPSb]          -      -      +     +
-       double  *p_mPS,  // phase (carrier) mass, g      [nPSb]          -      -      +     +
-       double  *p_bPS,  // bulk compositions of phases  [nPSb][nICb]    -      -      +     +
-       double  *p_xPA  // amount of carrier in phases  [nPSb] ??       -      -      +     +
-)
+   long int &p_NodeHandle,    // Node identification handle
+   long int &p_NodeStatusCH,  // Node status code (changed after GEM calculation); see typedef NODECODECH
+   long int &p_IterDone,      // Number of iterations performed in the last GEM IPM calculation
+                         //                                                  GEM input output  FMT control
+    // Chemical scalar variables
+    double &p_Vs,    // Total volume V of reactive subsystem at given P,T, m3    -      -      +     +
+    double &p_Ms,    // Total mass of the reactive subsystem, kg                 -      -      +     +
+    double &p_Gs,    // Total Gibbs energy of the reactive subsystem, J          -      -      +     +
+    double &p_Hs,    // Total enthalpy of reactive subsystem, J (reserved)       -      -      +     +
+    double &p_IC,    // Effective aqueous ionic strength, molal                  -      -      +     +
+    double &p_pH,    // pH of aqueous solution                                   -      -      +     +
+    double &p_pe,    // pe of aqueous solution                                   -      -      +     +
+    double &p_Eh,    // Eh of aqueous solution, V                                -      -      +     +
+    // Dynamic data - dimensions see in DATACH.H structure
+    double  *p_rMB,  // Mole balance residuals for Independent Components [nICb] -      -       +     +
+    double  *p_uIC,  // Dual solution: IC chemical potentials, mol/mol [nICb]    -      -       +     +
+    double  *p_xDC,  // Primal solution: DC mole amounts  [nDCb]                 -      -       +     +
+    double  *p_gam,  // External activity coefficients of DC [nDCb]              -      -       +     +
+    double  *p_xPH,  // Total mole amounts of all phases [nPHb]                  -      -       +     +
+    double  *p_vPS,  // Total volumes of multicomponent phases, m3   [nPSb]      -      -       +     +
+    double  *p_mPS,  // Total mass of multicomponent phase (carrier),kg [nPSb]   -      -       +     +
+    double  *p_bPS,  // Bulk compositions of phases  [nPSb][nICb]                -      -       +     +
+    double  *p_xPA   //Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -       +     +
+ )   
 {
    long int ii;
    p_NodeHandle = CNode->NodeHandle;
@@ -1744,24 +2145,70 @@ void TNode::GEM_to_MT(
     p_bPS[ii] = CNode->bPS[ii];
 }
 
-// Overloaded variant - takes input to bIC vector also from the speciation
-//     vector xDC.     Added by DK on 09.07.2007
-// calculation mode: passing input GEM data changed on previous FMT iteration
-//                   into the work DATABR structure
+// (8) Loads the GEMIPM2K input data for a given mass-transport node into the work instance of DATABR structure.  
+//     This call is usually preceeding the GEM_run() call
 void TNode::GEM_from_MT(
-   long int  p_NodeHandle,   // Node identification handle
-   long int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
-                    //                                     GEM input output  FMT control
-   double p_TC,      // Temperature T, K                         +       -      -
-   double p_P,      // Pressure P, bar                          +       -      -
-   double p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
-   double p_Ms,     // Mass of reactive subsystem, kg           -       -      +
-   double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
-   double *p_dul,   // upper kinetic restrictions [nDCb]        +       -      -
-   double *p_dll,   // lower kinetic restrictions [nDCb]        +       -      -
-   double *p_aPH,  // Specific surface areas of phases (m2/g)    +       -      -
-   double *p_xDC  // Optional: mole amounts of DCs [nDCb] - will be convoluted
-                    // and added to the bIC GEM input vector
+  long int  p_NodeHandle,   // Node identification handle
+  long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                    //                                              GEM input output  FMT control
+  double p_TC,     // Temperature T, C                                 +       -      -
+  double p_P,      // Pressure P, Pa                                   +       -      -
+  double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
+  double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
+  double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_aPH    // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ )
+ {
+     long int ii;
+     bool useSimplex = false;
+
+     CNode->NodeHandle = p_NodeHandle;
+     CNode->NodeStatusCH = p_NodeStatusCH;
+     CNode->TC = p_TC;
+     CNode->P = p_P;
+     CNode->Vs = p_Vs;
+     CNode->Ms = p_Ms;
+   // Checking if no-simplex IA is Ok
+      for( ii=0; ii<CSD->nICb; ii++ )
+      {  //  SD 11/02/05 for test
+         //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
+          //     useSimplex = true;
+        CNode->bIC[ii] = p_bIC[ii];
+      }
+      for( ii=0; ii<CSD->nDCb; ii++ )
+      {
+        CNode->dul[ii] = p_dul[ii];
+        CNode->dll[ii] = p_dll[ii];
+      }
+       if( CSD->nAalp >0 )
+        for( ii=0; ii<CSD->nPHb; ii++ )
+            CNode->aPH[ii] = p_aPH[ii];
+      if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
+        CNode->NodeStatusCH = NEED_GEM_AIA;
+      // Switch only if SIA is ordered, leave if simplex is ordered (KD)
+}
+
+//(8a) Loads the GEMIPM2K input data for a given mass-transport node into the work instance of DATABR structure.
+//This overloaded variant uses the xDC speciation vector for setting the 
+// new bulk chemical composition to be used in the next GEM_run() calculation. 
+void TNode::GEM_from_MT(  
+ long int  p_NodeHandle,   // Node identification handle
+ long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                  //                                              GEM input output  FMT control
+ double p_TC,     // Temperature T, C                                 +       -      -
+ double p_P,      // Pressure P, Pa                                   +       -      -
+ double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
+ double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
+ double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_aPH,    // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_xDC    // Mole amounts of DCs [nDCb] - will be convoluted
+                  // and added to the bIC GEM input vector (if full speciation
+                  // and not just increments then p_bIC vector must be zeroed off -
+                  // it will be calculated from p_xDC and stoichiometry matrix A
 )
 {
   long int ii;
@@ -1797,31 +2244,29 @@ void TNode::GEM_from_MT(
       for( jj=0; jj<CSD->nDCb; jj++ )
         if( p_xDC[jj] )
           for( ii=0; ii<CSD->nICb; ii++ )
-            CNode->bIC[ii] += p_xDC[jj] * nodeCH_A( jj, ii );
+            CNode->bIC[ii] += p_xDC[jj] * DCaJI( jj, ii );
    }
 }
 
-// Overloaded variant - uses xDC and gam vectors as old primal solution
-// for the node in GEM IPM2 input when NEED_GEM_SIA flag is set for calculation
-// Important! This variant works only when DATACH contains a full list of DCs
-// with passed through the DATABR structure.
-// added by DK on 17.09.2007
-// calculation mode: passing input GEM data changed on previous FMT iteration
-//                   into the work DATABR structure
+//(8b) Loads the GEMIPM2K input data for a given mass-transport node into the work instance of DATABR structure.
+//In addition, provides access to speciation vector p_xDC and DC activity coefficients p_gam that will be used in
+// GEM "smart initial approximation" SIA mode if dBR->NodeStatusCH == NEED_GEM_SIA (5) and
+// uPrimalSol = true are set for the GEM_run() call (see Section 2) . This works only when the DATACH
+//  structure contains a full list of Dependent Components used in GEM IPM2 calculations. 
 void TNode::GEM_from_MT(
-   long int  p_NodeHandle,   // Node identification handle
-   long int  p_NodeStatusCH, // Node status code;  see typedef NODECODECH
-                    //                                     GEM input output  FMT control
-   double p_TC,      // Temperature T, K                         +       -      -
-   double p_P,      // Pressure P, bar                          +       -      -
-   double p_Vs,     // Volume V of reactive subsystem, cm3      -       -      +
-   double p_Ms,     // Mass of reactive subsystem, kg           -       -      +
-   double *p_bIC,    // bulk mole amounts of IC [nICb]          +       -      -
-   double *p_dul,   // upper kinetic restrictions [nDCb]        +       -      -
-   double *p_dll,   // lower kinetic restrictions [nDCb]        +       -      -
-   double *p_aPH,  // Specific surface areas of phases (m2/g)    +       -      -
-   double *p_xDC,  // Amounts of DCs [nDCb] - old primal soln.  +      -      -
-   double *p_gam   // DC activity coeffs [nDCb] - old primal s. +      -      -
+ long int  p_NodeHandle,   // Node identification handle
+ long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                  //                                              GEM input output  FMT control
+ double p_TC,     // Temperature T, C                                 +       -      -
+ double p_P,      // Pressure P, Pa                                   +       -      -
+ double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
+ double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
+ double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_aPH,   // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_xDC,  // Mole amounts of DCs [nDCb] - old primal soln.     +      -      -
+ double *p_gam   // DC activity coefficients [nDCb] - old primal s.   +      -      -
 )
 {
   long int ii;

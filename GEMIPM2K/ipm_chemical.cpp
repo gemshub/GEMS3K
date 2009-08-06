@@ -432,6 +432,7 @@ double TMulti::Ej_init_calc( double, long int j, long int k)
     case DC_AQ_PROTON:
     case DC_AQ_ELECTRON:
     case DC_AQ_SPECIES:
+case DC_AQ_SURCOMP:
     case DC_GAS_COMP:
     case DC_GAS_H2O:
     case DC_GAS_CO2:
@@ -1010,6 +1011,7 @@ double TMulti::Cj_init_calc( double g0, long int j, long int k )
     case DC_AQ_PROTON:
     case DC_AQ_ELECTRON:
     case DC_AQ_SPECIES:
+case DC_AQ_SURCOMP:
         G += pmp->ln5551;
         // calculate molar mass of solvent
     case DC_AQ_SOLVCOM:
@@ -1269,6 +1271,7 @@ void TMulti::ConvertDCC()
             case DC_AQ_PROTON:
             case DC_AQ_ELECTRON:
             case DC_AQ_SPECIES:
+            case DC_AQ_SURCOMP:
                 DCCW = DC_ASYM_SPECIES;
                 break;
             case DC_AQ_SOLVCOM:

@@ -96,8 +96,7 @@ following command line: <br>
 &lt;TaskName&gt;.out</span><br>
   <br>
 where <span style="font-family: monospace;">&lt;TestDir&gt;</span> is
-an optional subdirectory path relative to that where the executable
-file is located; <span style="font-family: monospace;">&lt;TaskName&gt;</span>
+an optional subdirectory path; <span style="font-family: monospace;">&lt;TaskName&gt;</span>
 should be substituted by a string denoting the
 problem name, e.g. <span style="font-family: monospace;">"MyTask"</span>.
   <span style="font-family: monospace;"></span><span
@@ -238,25 +237,29 @@ descriptions of free-input file formats found in the accompanying files
   <p>The <a href="#FREEDATA">format of
 these file types</a> is essentially the same, only the data tags and
 fields
-differ. The file consists of two sections - the "dimensions" section
+differ. <span style="color: rgb(204, 102, 0);">The file consists of
+two sections - the "dimensions" section
 where the data needed for memory allocation in GEMIPM2K are provided,
 and the "free-data" section which follows next. The two sections are
-separated by a keyword tag<br>
+separated by a keyword tag</span><br style="color: rgb(204, 102, 0);">
   </p>
-  <p style="font-family: monospace;">&lt;END_DIM&gt;</p>
-  <p>Each data object consists of a name tag (e.g., &lt;nDCinPH&gt;),
+  <p style="font-family: monospace; color: rgb(204, 102, 0);">&lt;END_DIM&gt;</p>
+  <p style="color: rgb(204, 102, 0);">Each data object consists of a
+name tag (e.g., &lt;nDCinPH&gt;),
 followed by space- or end-line -separated data elements (numbers,
 strings etc.), quantity and order of which is defined by the object and
 its dimensionality. When text files are printed from GEMS-PSI, each
 data object entry also has a comment line that begins with '#'
 character. So, the data object entry typically looks like this: <br>
   </p>
-  <p><span style="font-family: monospace;"># nDCinPH: Vector L1 telling
+  <p><span style="font-family: monospace; color: rgb(204, 102, 0);">#
+nDCinPH: Vector L1 telling
 how many DCs is included in each phase</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">&lt;nDCinPH&gt;</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">19 4 1 1 1 1 1 </span><br>
+ style="font-family: monospace; color: rgb(204, 102, 0);">
+  <span style="font-family: monospace; color: rgb(204, 102, 0);">&lt;nDCinPH&gt;</span><br
+ style="font-family: monospace; color: rgb(204, 102, 0);">
+  <span style="font-family: monospace; color: rgb(204, 102, 0);">19 4 1
+1 1 1 1 </span><br>
   </p>
   <p>The data object entries can follow in any order if they are
 located after the <span style="font-family: monospace;">&lt;END_DIM&gt;</span>
@@ -274,7 +277,7 @@ are marked accordingly in the file format documentation files).<br>
   </p>
   <h3><a name="DATACH"></a>2.1. The DCH File with
 Chemical System Definition</h3>
-  <p>The DCH text input file should be be read before the IPM
+  <p>The DCH text input file should be read before the IPM
 file and the DBR files.<br>
   </p>
   <p>The file &lt;TaskName&gt;-dch.dat contains parts of chemical
@@ -289,10 +292,13 @@ are needed for reading and accessing the DBR (node description)
 files like &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat. Finally, the DCH
 file and structure contains grid arrays of thermodynamic data used
 later on for automatic interpolation of gibbs energies G0, molar
-volumes V0 of components to given values of temperature T and pressure
+volumes V0<span style="color: rgb(0, 153, 0);">, absolute entropy
+function S0 and other look-up grid arrays of thermodynamic data&nbsp;</span>
+of components to given values of temperature T and pressure
 P in GEM IPM calculations for any node and time. </p>
   <p> The DCH text input file consists of nine sections, of which
-sections (1), (2),&nbsp; (3) and (4) contain dimensions needed for
+sections (1), (2)<span style="color: rgb(0, 153, 0);">,&nbsp; and (3)</span>
+contain dimensions needed for
 memory allocation must appear before the <span
  style="text-decoration: underline;">&lt;END_DIM&gt;</span> tag. Any
 other data object fields can appear after this tag in any order, and
@@ -301,11 +307,14 @@ in the input file, its elements will be assigned default values, if
 possible. <br>
   </p>
   <p>It is recommended to place the input data&nbsp; in logical
-sections as printed from the GEMS code. The section (5) contains
-names and some data for independent components (IC), section (6)
-contains names and data for the dependent components (DC), section (7)
-contains names and data for phases, the section (8) contains data for
-Dependent Components, and the section (9) contains the lookup arrays
+sections as printed from the GEMS code. The section (4) <span
+ style="color: rgb(0, 153, 0);">contains databridge configuration
+section</span>; section (5) contains
+names and some data for independent components (IC); section (6)
+contains names and data for the dependent components (DC); section (7)
+contains names and data for phases; the section (8) <span
+ style="color: rgb(0, 153, 0);">stoichiometry matrix A</span>, and the
+section (9) contains the lookup arrays
 for interpolation of thermodynamic data for DCs. <br>
   <br>
   </p>
@@ -330,14 +339,18 @@ contains parts of chemical system definitions (CSD) that are&nbsp; used
 by GEM IPM part but should not visible to the FMT part of the coupled
 code. <br>
   <br>
-The IPM text input file consists of six sections, of which&nbsp;
+The IPM text input file consists of <span
+ style="color: rgb(0, 153, 0);">eight </span>sections, of which&nbsp;
 section (1) contains numerical controls of GEM IPM algorithm
 operation&nbsp; and convergence; section (2) contains dimensionalities
 for additional memory allocation for surface complexes (main
 dimensionalities of the&nbsp; chemical system are given in DATACH
-file); section (3) defines the presence and data for mixing models of
+file); section <span style="color: rgb(0, 153, 0);">(3) contains
+tolerances and controls of the numerical behavior of GEM IPM-2 kernel;
+section (4) defines the presence and data for mixing models of
 multi-component phases and,&nbsp; if necessary, the arrays of
-non-ideality parameters; sections (4) to (6) provides some complete
+non-ideality parameters; sections (5)</span> to (6) provides some
+complete
 data arrays that may be incomplete in DATABR file(s); section (7)
 contains some initial data for phases; and, finally, section (8)
 contains initial data for sorption (surface&nbsp; complexation) phases,
@@ -396,6 +409,15 @@ two sections even though these tags are not present in the DBR file;
 it is assumed&nbsp; that the DATACH structure exists and is correctly
 filled out before any operation with DBR files or DATABR structures. <br>
   <br>
+  <span style="color: rgb(0, 153, 0);">The DBR text input file consists
+of six&nbsp; sections, of which&nbsp;
+section (1) contains controls of the GEM IPM operation and data
+exchange; section (2) contains chemical scalar variables; section (3)
+FMT scalar variablesl; section (4) is independent component data
+section;sections (5) is dependent component data section; and, finally,
+section (7)
+contains some&nbsp; data for phases.</span><br>
+  <br>
 There is no <span style="text-decoration: underline;">&lt;END_DIM&gt;</span>
 tag in the DBR file. Any other data object fields can appear in any
 order, and some data objects can be skipped. If the data object tag is
@@ -438,13 +460,17 @@ forms; the string values must be taken in quotes ' ' or " ", e.g.
 An example of the data object with comment
 lines is given below:<br>
   </p>
-  <p style="margin-left: 40px; font-family: monospace;"># Bulk
+  <p
+ style="margin-left: 40px; font-family: monospace; color: rgb(204, 102, 0);">#
+Bulk
 composition of (reactive part of) the system - GEM input (moles)<br>
 # Number of elements: &lt;nICb&gt;; order of IC: defined in &lt;xIC&gt;
 index list<br>
 # in the DCH-DAT file. <br>
   </p>
-  <p style="margin-left: 40px; font-family: monospace;"># This vector
+  <p
+ style="margin-left: 40px; font-family: monospace; color: rgb(204, 102, 0);">#
+This vector
 is the main input of GEM IPM. Inconsistent data in &lt;bIC&gt; <br>
 # may cause bad convergence or failure of the GEM IPM algorithm. <br>
 # *** This data object cannot be skipped from the DBR-DAT file!<br>
@@ -464,7 +490,8 @@ example, the <span style="font-family: monospace;">&lt;nICb&gt;</span>
 item has been provided in the companion DCH file, where it looks
 like: <br>
   </p>
-  <p style="margin-left: 40px;"><span style="font-family: monospace;">#
+  <p style="margin-left: 40px; color: rgb(204, 102, 0);"><span
+ style="font-family: monospace;">#
 *** Number of Independent Components kept in the DATABR structure, nICb
 &lt;= nIC</span><br style="font-family: monospace;">
   <span style="font-family: monospace;">&lt;nICb&gt; 7</span><br>
@@ -472,37 +499,41 @@ like: <br>
   <p><br>
 To see which value in the <span style="font-family: monospace;">&lt;bIC&gt;</span>
 vector corresponds to which Independent Component, check the <span
- style="font-family: monospace;">&lt;xIC&gt;</span> index list and the <span
+ style="font-family: monospace;">&lt;xic&gt;</span> index list and the <span
  style="font-family: monospace;">&lt;ICNL&gt;</span> name list in the
 DCH file:<br>
   </p>
-  <p style="margin-left: 40px; font-family: monospace;"># DATACH index
+  <p
+ style="margin-left: 40px; font-family: monospace; color: rgb(204, 102, 0);">#
+DATACH index
 list of Independent Component kept in the DATABR structure.<br>
 # *** xIC Size: see &lt;nICb&gt;<br>
   <span style="font-weight: bold;">&lt;xIC&gt;</span><br
  style="font-weight: bold;">
   <span style="font-weight: bold;">0 1 2 3 4 5 6 </span><br>
   </p>
-  <p style="margin-left: 40px; font-family: monospace;">.......<br>
+  <p
+ style="margin-left: 40px; font-family: monospace; color: rgb(204, 102, 0);">.......<br>
   </p>
-  <div style="margin-left: 40px;"><span style="font-family: monospace;"></span><span
- style="font-family: monospace;"></span><span
- style="font-family: monospace;"># Names in the ICNL list must be
-alphabetically sorted.</span><span style="font-family: monospace;">
+  <div style="margin-left: 40px;"><span
+ style="font-family: monospace; color: rgb(204, 102, 0);"># Names in
+the ICNL list must be
+alphabetically sorted.
 Size of the list: see &lt;nIC&gt;. <br>
-# *** Data in all other arrays involving ICs</span><span
- style="font-family: monospace;"> must follow the order given in this
-list.</span><br style="font-family: monospace;">
-  <span style="font-family: monospace;">&lt;ICNL&gt;</span><br
- style="font-family: monospace;">
-  <span style="font-family: monospace;">'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz'
-  </span><br>
+# *** Data in all other arrays involving ICs must follow the order
+given in this
+list.</span><br style="font-family: monospace; color: rgb(204, 102, 0);">
+  <span style="font-family: monospace; color: rgb(204, 102, 0);">&lt;ICNL&gt;</span><br
+ style="font-family: monospace; color: rgb(204, 102, 0);">
+  <span style="font-family: monospace; color: rgb(204, 102, 0);">'C'
+'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' </span><br>
   </div>
   <p>So, in this example, the <span style="font-family: monospace;">&lt;bIC&gt;</span>
 data object in the DBR file can be represented like this (the
 second line is a comment for readability):: <br>
   </p>
-  <p style="margin-left: 40px; font-family: monospace;"><span
+  <p
+ style="margin-left: 40px; font-family: monospace; color: rgb(204, 102, 0);"><span
  style="font-weight: bold;">&lt;bIC&gt;&nbsp;</span> <span
  style="font-weight: bold;">3.31e-04&nbsp; 3.31e-04&nbsp;
 2.0e-07&nbsp; 110.6837&nbsp; 1.0e-07&nbsp; 55.34286&nbsp; 0 <br>
@@ -545,7 +576,7 @@ can be condensed as shown below: <br>
         <td style="vertical-align: top;"><span
  style="font-weight: bold; text-decoration: underline;">DCH<br>
         </span></td>
-        <td style="vertical-align: top;">
+        <td style="vertical-align: top; color: rgb(204, 102, 0);">
         <p style="margin-left: 40px; font-family: monospace;">&lt;nIC&gt;&nbsp;
 7&nbsp;&nbsp; &lt;nDC&gt;&nbsp; 28&nbsp;&nbsp; &lt;nPH&gt;&nbsp;
 7&nbsp;&nbsp; &lt;nPS&gt;&nbsp; 2&nbsp; &lt;nDCs&gt; 23<br>
@@ -670,31 +701,12 @@ can be condensed as shown below: <br>
 0.1&nbsp; &lt;TCval&gt; 5.0&nbsp;&nbsp; &lt;Ptol&gt;
 1.0&nbsp;&nbsp;
 &lt;Pval&gt; 1.0&nbsp;&nbsp; <br>
-        <span style="color: rgb(255, 102, 102);"><span
- style="color: rgb(0, 0, 0);">&lt;denW&gt; </span><span
- style="color: rgb(0, 0, 0);">0.9999926 </span><span
- style="color: rgb(0, 0, 0);">-1.13584e-005 </span><span
- style="color: rgb(0, 0, 0);">-1.659036e-005 </span><span
- style="color: rgb(0, 0, 0);">4.916706e-005 </span><span
- style="color: rgb(0, 0, 0);">0</span><br style="color: rgb(0, 0, 0);">
-        <span style="color: rgb(0, 0, 0);">&lt;denWg&gt; </span><span
- style="color: rgb(0, 0, 0);">0</span><span style="color: rgb(0, 0, 0);">
-0 </span><span style="color: rgb(0, 0, 0);">0 </span><span
- style="color: rgb(0, 0, 0);">0 0</span><span
- style="color: rgb(0, 0, 0);"> </span><br style="color: rgb(0, 0, 0);">
-        <span style="color: rgb(0, 0, 0);">&lt;epsW&gt; </span><span
- style="color: rgb(0, 0, 0);">85.59333 </span><span
- style="color: rgb(0, 0, 0);">-0.378109</span><span
- style="color: rgb(0, 0, 0);"> 0.0008208 </span><span
- style="color: rgb(0, 0, 0);">0.0046386 0</span><span
- style="color: rgb(0, 0, 0);"> </span><br style="color: rgb(0, 0, 0);">
-        <span style="color: rgb(0, 0, 0);">&lt;epsWg&gt; </span><span
- style="color: rgb(0, 0, 0);">0 </span><span
- style="color: rgb(0, 0, 0);">0 </span><span
- style="color: rgb(0, 0, 0);">0 </span><span
- style="color: rgb(0, 0, 0);">0 </span><span
- style="color: rgb(0, 0, 0);">0</span> <br>
-        </span>&lt;V0&gt;
+&lt;denW&gt; 0.9999926 -1.13584e-005 -1.659036e-005 4.916706e-005 0<br>
+&lt;denWg&gt; 0
+0 0 0 0 <br>
+&lt;epsW&gt; 85.59333 -0.378109 0.0008208 0.0046386 0 <br>
+&lt;epsWg&gt; 0 0 0 0 0 <br>
+&lt;V0&gt;
 -1.568198&nbsp; 1.202911&nbsp; 0.4794548 -1.675791 0.8217261 -2.200911
 8.536497e-02 3.064951<br>
 &nbsp;-0.6493417 2.208085 3.503861 3.904007 1.624488 2.343719 2.844305
@@ -718,7 +730,8 @@ can be condensed as shown below: <br>
         <td style="vertical-align: top;"><span
  style="font-weight: bold; text-decoration: underline;">IPM<br>
         </span></td>
-        <td style="vertical-align: top; font-family: monospace;">
+        <td
+ style="vertical-align: top; font-family: monospace; color: rgb(204, 102, 0);">
         <div style="margin-left: 40px;">"CalDolCol:G:CalcColumn:1001:0:1:5:000:"<br>
 &lt;pa_PE&gt;&nbsp;&nbsp; 1 &nbsp; &lt;PV&gt;&nbsp; 0&nbsp;&nbsp;
 &lt;PSOL&gt;&nbsp;&nbsp; 0&nbsp;&nbsp; &lt;PAalp&gt;&nbsp;
@@ -737,7 +750,8 @@ can be condensed as shown below: <br>
         <td style="vertical-align: top;"><span
  style="font-weight: bold; text-decoration: underline;">DBR<br>
         </span></td>
-        <td style="vertical-align: top; font-family: monospace;">
+        <td
+ style="vertical-align: top; font-family: monospace; color: rgb(204, 102, 0);">
         <div style="margin-left: 40px;">&lt;NodeHandle&gt;&nbsp;&nbsp;&nbsp;&nbsp;
 0<br>
 &lt;NodeStatusCH&gt;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; &lt;TC&gt;
@@ -845,6 +859,32 @@ contains the formula charge for ion or complex.<br>
       </tr>
       <tr>
         <td
+ style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;A0&gt;<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"> f0<br>
+        <br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><a
+ href="gemipm2k-inp.html#TAG_nDC">nDC</a>*<a
+ href="gemipm2k-inp.html#TAG_nPp">nPp</a><br>
+*<a href="gemipm2k-inp.html#TAG_nTp">nTp</a> </td>
+        <td style="vertical-align: top;"><span
+ style="font-weight: bold; color: rgb(0, 153, 0);">Optional lookup
+array for Helmholtz energy of DC (J/mol) reserved. </span><span
+ style="color: rgb(0, 153, 0);">This array has a 3-D
+organization which is a sequence of 2D tables,
+each corresponding to one DC.Tables for DCs follow in the same order as
+the names in the &lt;DCNL&gt; list. Each table has &lt;nPp&gt; rows and
+&lt;nTp&gt; columns, in total, &lt;nPp&gt;*&lt;nTp&gt; values. Each row
+in the DC table corresponds to a certain value of pressure from the
+&lt;Pval&gt; vector. Data in the row refer to this pressure and to
+temperatures in a sequence defined in the &lt;Tval&gt; vector.</span> </td>
+        <td style="vertical-align: top; font-family: monospace;">DCH<br>
+(9)<br>
+        </td>
+      </tr>
+      <tr>
+        <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;Aalp&gt;
         <br>
         </td>
@@ -856,8 +896,7 @@ contains the formula charge for ion or complex.<br>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Full vector of specific
 surface areas of phases (m2/g)</span>. Default value: 0 m2/g. Part or
-all <br>
-values may be also set up in the DBR file(s).<br>
+all values may be also set up in the DBR file(s).<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (7)<br>
@@ -874,12 +913,12 @@ values may be also set up in the DBR file(s).<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Specific surface areas of
-phases (m2/g) - GEM input.</span> Number of elements: &lt;nPHb&gt;;
+phases (m2/kg) - GEM input.</span> Number of elements: &lt;nPHb&gt;;
 order of
-phases: defined in &lt;xPH&gt; index list in the DATACH file/structure.
+phases: defined in &lt;xph&gt; index list in the DATACH file/structure.
 This vector should be provided only if&nbsp; the &lt;fAalp&gt; = 1 in
 the DATACH file, otherwise the data will be ignored. Default values: 0
-m2/g. <br>
+m2/kg. <br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (6)<br>
@@ -895,7 +934,8 @@ m2/g. <br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Specific longitudinal
-dispersivity of porous media, m.</span> Not used on the level of TNode,
+dispersivity of porous media (m).</span> Not used on the level of
+TNode,
 stored
 in DATABR structures and files on the level of TNodeArray. Default
 value is 0.0.</td>
@@ -913,7 +953,8 @@ value is 0.0.</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Specific transversal
-dispersivity of porous media, m.</span> Not used on the level of TNode,
+dispersivity of porous media (m).</span> Not used on the level of
+TNode,
 stored
 in DATABR structures and files on the level of TNodeArray. Default
 value is 0.0.</td>
@@ -930,7 +971,7 @@ value is 0.0.</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Specific vertical dispersivity
-of porous media, m. </span>Not used on the level of TNode, stored in
+of porous media (m). </span>Not used on the level of TNode, stored in
 DATABR
 structures and files on the level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -946,7 +987,7 @@ structures and files on the level of TNodeArray. Default value is 0.0.</td>
  href="#TAG_nIC">nIC</a> </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Full total bulk composition of
-the initial system (vector b), moles.</span><br>
+the initial system (vector b)&nbsp; (moles).</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (5) </td>
@@ -963,7 +1004,7 @@ the initial system (vector b), moles.</span><br>
  style="font-weight: bold;">Bulk composition of (reactive
 part of) the system - main GEM input (amounts of IC in moles). </span>This
 vector has &lt;nICb&gt; elements; order of IC: defined in&nbsp; the
-&lt;xIC&gt; index list. All numbers in &lt;bIC&gt; must be positive,
+&lt;xic&gt; index list. All numbers in &lt;bIC&gt; must be positive,
 between 1e-14 and&nbsp; 9.9999e+5 mol, except the last number (for the
 charge balance) which is usually set to zero. This vector is the main
 input of GEM IPM. Inconsistent data in
@@ -983,10 +1024,11 @@ calculation. This vector must always be provided in GEMIPM2K input. </td>
         <a href="gemipm2k-inp.html#TAG_nICb">&lt;nICb&gt;</a> </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Bulk elemental compositions of
-multicomponent phases - GEM output, moles. </span><br>
-Order of phases ( &lt;nPSb&gt; rows): defined in &lt;xPH&gt; index list
+multicomponent phases </span><span style="font-weight: bold;">(moles) </span><span
+ style="font-weight: bold;">- GEM output. </span><br>
+Order of phases ( &lt;nPSb&gt; rows): defined in &lt;xph&gt; index list
 in the DATACH file/structure; order of ICs ( &lt;nICb&gt; columns):
-defined in the &lt;xIC&gt; index list in DATACH. The whole row of zeros
+defined in the &lt;xic&gt; index list in DATACH. The whole row of zeros
 means that the respective phase is not present in the equilibrium
 state.This GEM output table is important for the FMT part because it
 contains the bulk composition of fluid phase(s) changed after
@@ -1031,14 +1073,15 @@ File<br>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;C1&gt;<br>
         </td>
-        <td style="vertical-align: top; font-family: monospace;">XcapA_<br>
+        <td
+ style="vertical-align: top; font-family: monospace; color: rgb(0, 153, 0);">capA<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="#TAG_nPS">nPS</a>*6<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Inner capacitance density
-parameter C1 , F/m2</span> (used in electrostatic surface complexation
+parameter C1 (F/m2)</span> (used in electrostatic surface complexation
 models TLM,
 BSM, CCM). All rows related to aqueous and/or gas phases must be
 filled with zeros. The row for any sorption phase contains six C1
@@ -1053,13 +1096,14 @@ be ignored and can be set to zero. <br>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;C2&gt;<br>
         </td>
-        <td style="vertical-align: top; font-family: monospace;">XcapB_<br>
+        <td
+ style="vertical-align: top; font-family: monospace; color: rgb(0, 153, 0);">capB<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="gemipm2k-inp.html#TAG_nPS">nPS</a>*6 </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Outer capacitance density
-parameter C2, F/m2</span> (used in TLM, 3LM electrostatic surface
+parameter C2 (F/m2</span>) (used in TLM, 3LM electrostatic surface
 complexation
 models). All rows related to aqueous and/or gas phases must be
 filled with
@@ -1073,13 +1117,15 @@ surface types. For unused surface types, set C2 = 0.0. </td>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;C3&gt;<br>
         </td>
-        <td style="vertical-align: top; font-family: monospace;"><br>
+        <td
+ style="vertical-align: top; font-family: monospace; color: rgb(0, 153, 0);">capF<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="gemipm2k-inp.html#TAG_nPS">nPS</a>*6 </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Third capacitance density
-parameter C3 , F/m2</span> (to be used in CD 3LM for anions), reserved
+parameter C3&nbsp; (F/m2)</span> (to be used in CD 3LM for anions),
+reserved
 for
 future implementations of surface complexation models. Must be filled
 with zeros. <br>
@@ -1098,8 +1144,8 @@ with zeros. <br>
  href="#TAG_nDC">nDC</a><br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Type codes of Dependent
-components:</span> 'S' - aqueous solute; 'T' - aqueous H+ ion; 'W' -
+ style="font-weight: bold;">Type codes of Dependent Components:</span>
+'S' - aqueous solute; 'T' - aqueous H+ ion; 'W' -
 water-solvent; 'G' - component of the gas mixture or fluid; 'I' -
 component of ideal non-electrolyte solution; 'M' - major component of
 (solid) colution; 'J' - minor component of solid solution; 'Q' -
@@ -1124,8 +1170,8 @@ scaling factors, etc.<br>
  href="#TAG_nIC">nIC</a><br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Codes of independent
-components:</span> 'e' - chemical element; 'h' - hydrogen; 'o' -
+ style="font-weight: bold;">Codes of Independent Components:</span> 'e'
+- chemical element; 'h' - hydrogen; 'o' -
 oxygen, 'z' -
 electric charge (used in GEM IPM calculations).<br>
         </td>
@@ -1147,9 +1193,11 @@ electric charge (used in GEM IPM calculations).<br>
 aqueous electrolyte; 'g' - gas mixture; 'f' - non-ideal
 fluid; 's' - solid; 'l' - liquid non-electrolyte; 'm' - silicate
 melt;&nbsp; 'x' - sorption phase. These codes are used in
-GEM IPM for the selection of mixing models, scaling factors etc. The
+GEM IPM for the selection of mixing models, scaling factors etc.<span
+ style="color: rgb(51, 51, 255);"> <span
+ style="color: rgb(204, 102, 0);">The
 ordering in &lt;ccPH&gt; list must correspond to that in the
-&lt;PHNL&gt; list.<br>
+&lt;PHNL&gt; list.</span></span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (7)<br>
@@ -1244,10 +1292,10 @@ sorbent. <br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Molar masses of Dependent
-Components (in g/mol</span><span
- style="color: rgb(255, 102, 102); font-weight: bold;"> kg/mol?</span><span
+Components (kg/mol</span><span
+ style="color: rgb(255, 102, 102); font-weight: bold;"></span><span
  style="font-weight: bold;">)</span>
-used in calculation of mass concentrations or masses of phases. if
+used in calculation of mass concentrations or masses of phases. If
 skipped from the DATACH file, this vector will be restored
 automatically from the input &lt;A&gt; and &lt;ICmm&gt; data objects<br>
         </td>
@@ -1265,8 +1313,8 @@ automatically from the input &lt;A&gt; and &lt;ICmm&gt; data objects<br>
  href="#TAG_nDC">nDC</a><br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Name list of dependent
-components (up to 16 characters per name). </span>Names can contain
+ style="font-weight: bold;">Name list of Dependent Components (up to 16
+characters per name). </span>Names can contain
 Latin
 letters, digits, @, -, +, =, _ symbols; spaces are not allowed. Data in
 all other data arrays for DC in DATACH/IPM structures must follow the
@@ -1280,6 +1328,25 @@ phases, and then components of pure phases. </td>
         </td>
       </tr>
       <tr>
+        <td style="vertical-align: top; color: rgb(0, 153, 0);"><span
+ style="font-family: monospace;">&lt;DD&gt;</span><br>
+        </td>
+        <td style="vertical-align: top; color: rgb(0, 153, 0);"><br>
+        </td>
+        <td style="vertical-align: top; color: rgb(0, 153, 0);"><span
+ style="font-family: monospace;">nDCs*nPp*nTp</span><br>
+        </td>
+        <td style="vertical-align: top; color: rgb(0, 153, 0);">&nbsp;<span
+ style="font-weight: bold;">Lookup array for diffusion coefficients of
+DCs (reserved).</span><br>
+        </td>
+        <td style="vertical-align: top; color: rgb(0, 153, 0);"><span
+ style="font-family: monospace;">DCH</span><br
+ style="font-family: monospace;">
+        <span style="font-family: monospace;">(9)</span><br>
+        </td>
+      </tr>
+      <tr>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;denW&gt;<br>
         </td>
@@ -1290,8 +1357,8 @@ phases, and then components of pure phases. </td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Lookup array for the density
-of water-solvent (g/cm3&nbsp; </span><span
- style="color: rgb(255, 102, 102); font-weight: bold;">kg/m3?</span><span
+of water-solvent (kg/m3</span><span
+ style="color: rgb(255, 102, 102); font-weight: bold;"></span><span
  style="font-weight: bold;">),</span>
 required if the aqueous electrolyte phase is included in chemical
 system definition. In the general case, this array consists of five 2D
@@ -1319,8 +1386,8 @@ the &lt;Tval&gt; vector. </td>
  href="gemipm2k-inp.html#TAG_nTp">nTp</a> </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Optional lookup array for the
-density of water vapour (g/cm3&nbsp; </span><span
- style="color: rgb(255, 102, 102); font-weight: bold;">kg/m3?</span><span
+density of water vapour (kg/m3</span><span
+ style="color: rgb(255, 102, 102); font-weight: bold;"></span><span
  style="font-weight: bold;">),</span> used if the aqueous
 electrolyte phase or H2O,gas is included in the chemical system
 definition. This array has the same structure as &lt;denW&gt; array </td>
@@ -1338,7 +1405,8 @@ definition. This array has the same structure as &lt;denW&gt; array </td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">General diffusivity of
-disolved matter in the node, m2/s</span>. Not used on the level of
+disolved matter <span style="color: rgb(204, 102, 0);">in the node</span>
+(m2/s)</span>. Not used on the level of
 TNode,
 stored in DATABR structures and files on the level of TNodeArray.
 Default value is 0.0.</td>
@@ -1378,8 +1446,10 @@ DATABR if not all DCs were selected to be kept there. Default: 0 (moles)<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Lower metastability
-constraints on amounts of DCs - GEM input, moles.</span> Order of
-elements is defined in the &lt;xDC&gt; index list
+constraints on amounts of DCs </span><span style="font-weight: bold;">(moles)
+        </span><span style="font-weight: bold;">- GEM input .</span>
+Order of
+elements is defined in the &lt;xdc&gt; index list
 in the DATACH file/structure. Trivial (default) value: 0 moles. This
 input vector allows the simulation of various kinetic controls, e.g.
 dissolution kinetics, as function of time and solution composition. In
@@ -1423,8 +1493,9 @@ DATABR if not all DCs were selected to be kept there. Default: 1e6
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Upper metastability
-constraints on amounts of DCs - GEM input, moles.</span> Order of
-elements is defined in the &lt;xDC&gt; index list
+constraints on amounts of DCs (</span><span style="font-weight: bold;">moles</span><span
+ style="font-weight: bold;">) - GEM input.</span> Order of
+elements is defined in the &lt;xdc&gt; index list
 in DATACH file/structure. Trivial (default) value: 1.0e+06 moles.This
 input vector allows the simulation of various kinetic controls, e.g.
 precipitation kinetics, as function of time and solution composition.<br>
@@ -1466,7 +1537,7 @@ DCH file). The tables for phase components are all collected in the
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Actual time step, s.</span> Not used
+ style="font-weight: bold;">Actual time step (s).</span> Not used
 on the level of TNode, stored in DATABR structures and files on the
 level of TNodeArray. Default value is 0.0. </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -1514,8 +1585,8 @@ File<br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Eh of aqueous solution, V (GEM
-output)</span><br>
+ style="font-weight: bold;">Eh of aqueous solution, V - GEM
+output</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)<br>
@@ -1650,7 +1721,7 @@ file. </td>
         </td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
-        <td style="vertical-align: top;"><span
+        <td style="vertical-align: top; color: rgb(204, 102, 0);"><span
  style="font-weight: bold;">Maximum number of
 surface types per adsorption phase (if FIa &gt; 0, FIat must be set to
 default value of 6).</span> </td>
@@ -1701,7 +1772,7 @@ in their respective phases - GEM output. </span>This vector is also
 required
 as input at &lt;NodeStatusCH&gt; = 5 when the old GEM solution is used
 as an initial&nbsp; approximation. Number of elements: &lt;nDCb&gt;;
-order of DC is defined in the &lt;xDC&gt; index list in the DATACH
+order of DC is defined in the &lt;xdc&gt; index list in the DATACH
 structure. Trivial (default) value: 1.0. Activity coefficient
 multiplied by species concentration in the respective phase yields
 primal activity of this chemical species.</td>
@@ -1750,7 +1821,7 @@ G0 values of Dependent Components in J/mol/(RT) (normalized units)</td>
         <td style="vertical-align: top; font-family: monospace;">1</td>
         <td style="vertical-align: top; font-weight: bold;">Total Gibbs
 energy of the
-reactive subsystem, J/RT (normalized), GEM output</td>
+reactive subsystem (J/RT) (normalized) - GEM output</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)</td>
       </tr>
@@ -1764,7 +1835,8 @@ reactive subsystem, J/RT (normalized), GEM output</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Actual hydraulic head
-(hydraulic potential), m.</span> Not used on the level of TNode, stored
+(hydraulic potential) (m).</span> Not used on the level of TNode,
+stored
 in
 DATABR structures and files on the level of TNodeArray. Default value
 is 0.0. </td>
@@ -1807,7 +1879,7 @@ temperatures in a sequence defined in the &lt;Tval&gt; vector. </td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Total enthalpy of inert
-subsystem, J (reserved, can be used only in FMT part)</span><br>
+subsystem (J) (reserved, can be used only in FMT part)</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)<br>
@@ -1823,7 +1895,7 @@ subsystem, J (reserved, can be used only in FMT part)</span><br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Hydraulic longitudinal
-dispersivity, m2/s. </span>Not used on the level of TNode, stored in
+dispersivity (m2/s). </span>Not used on the level of TNode, stored in
 DATABR
 structures and files on the level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -1840,7 +1912,7 @@ structures and files on the level of TNodeArray. Default value is 0.0.</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Hydraulic transversal
-dispersivity, m2/s. </span>Not used on the level of TNode, stored in
+dispersivity (m2/s). </span>Not used on the level of TNode, stored in
 DATABR
 structures and files on the level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -1856,7 +1928,7 @@ structures and files on the level of TNodeArray. Default value is 0.0.</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Hydraulic vertical
-dispersivity, m2/s. </span>Not used on the level of TNode, stored in
+dispersivity (m2/s). </span>Not used on the level of TNode, stored in
 DATABR
 structures and files on the level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -1872,7 +1944,7 @@ structures and files on the level of TNodeArray. Default value is 0.0.</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Total enthalpy of reactive
-subsystem, J (reserved)</span><br>
+subsystem (J) (reserved)</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)<br>
@@ -1921,8 +1993,8 @@ File<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Atomic (molar) masses of
-Independent Components, in g/mol </span><span
- style="color: rgb(255, 102, 102); font-weight: bold;">(kg/mol?)</span><br>
+Independent Components&nbsp; (kg/mol) </span><span
+ style="color: rgb(255, 102, 102); font-weight: bold;"></span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (5)<br>
@@ -1938,8 +2010,8 @@ Independent Components, in g/mol </span><span
  href="#TAG_nIC">nIC</a> <br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Name list of independent
-components (up to 4 characters per name). </span>Name must begin with
+ style="font-weight: bold;">Name list of Independent Components (up to
+4 characters per name). </span>Name must begin with
 a capital
 letter and contain no digits or other special characters except _
 (underscore). 'Zz' is a special name for the electric charge IC which
@@ -1961,9 +2033,9 @@ list.<br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Flag for selection of lookup
-arrays provided in the DCH file: 0 - minimum set ( V0, G0 and H2O
-properties);&nbsp; 1 - all arrays</span><br>
+ style="font-weight: bold; color: rgb(0, 153, 0);">Flag for selection
+Diffusition coefficients
+array provided in the DCH file.</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DCH (3)<br>
         </td>
@@ -2029,7 +2101,7 @@ input.<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Effective aqueous ionic
-strength, molal (GEM output)</span><br>
+strength (molal)&nbsp; - GEM output</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)<br>
@@ -2044,7 +2116,7 @@ strength, molal (GEM output)</span><br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Actual Darcy`s constant, m2/s.</span>
+ style="font-weight: bold;">Actual Darcy`s constant (m2/s).</span>
 Not used on the level of TNode, stored in DATABR structures and files
 on the level of TNodeArray. Default value is 0.0. </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -2059,7 +2131,7 @@ on the level of TNodeArray. Default value is 0.0. </td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Actual permeability, m2. </span>Not
+ style="font-weight: bold;">Actual permeability (m2). </span>Not
 used on the level of TNode, stored in DATABR structures and files on
 the level of TNodeArray. Default value is 0.0. </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -2121,15 +2193,18 @@ IPM file. This item cannot be skipped from the IPM file.<br>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;lnGmf&gt;<br>
         </td>
-        <td style="vertical-align: top; font-family: monospace;"><br>
+        <td style="vertical-align: top; font-family: monospace;"><span
+ style="color: rgb(0, 153, 0);">lngmf</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="#TAG_nDC">nDC</a><br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Natural logarithms of DC
-"activity coefficients" to be used for correcting g0(T,P) values before
-simplex() initial approximation. </span>Default value: 0 for all
+"activity coefficients" to be used for correcting g0(T,P) <span
+ style="color: rgb(204, 102, 0);">values before
+simplex() initial approximation</span>. </span>Default value: 0 for
+all
 components
 except minor 'J' end members and surface complexes, for which the
 default is ln(&lt;pa_GAH&gt;) = 6.907755375. <br>
@@ -2220,8 +2295,9 @@ number; column [5]&nbsp; - reserved parameter (e.g. species charge on
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Total maximum site&nbsp;
-density per surface type, mkmol/g (maximum 6 surface types can be
-considered per one sorption phase).</span> Used in SACT corrections for
+density per surface type (mkmol/g) </span>(maximum 6 surface types can
+be
+considered per one sorption phase). Used in SACT corrections for
 competitive adsorption; for all species involved in such competition
 for sites of the given type on a surface type,&nbsp; the same value as
 here must be set in column [0] of the MASDJ table. All unused elements
@@ -2240,7 +2316,7 @@ phases).&nbsp; <br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Mass of inert subsystem, kg </span>(used
+ style="font-weight: bold;">Mass of inert subsystem (kg) </span>(used
 only in FMT part and stored here on the TNodeArray
 level).
 Default value 0.0. </td>
@@ -2255,8 +2331,8 @@ Default value 0.0. </td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Mass of reactive subsystem, kg
-(GEM output).</span> Will be automatically calculated from the input
+ style="font-weight: bold;">Mass of reactive subsystem (kg) - GEM
+output.</span> Will be automatically calculated from the input
 bulk
 composition vector &lt;bIC&gt; using the &lt;ICmm&gt; vector. Dividing
 &lt;Ms&gt; by &lt;Vs&gt; gives the mean density of the reactive part in
@@ -2273,13 +2349,13 @@ kg/m3. </td>
  href="gemipm2k-inp.html#TAG_nPSb">nPSb</a> </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Masses of multicomponent
-phases (</span><span
- style="color: rgb(255, 102, 102); font-weight: bold;">kg</span><span
- style="font-weight: bold;">)</span>, GEM output. Number of elements:
+phases (kg</span><span
+ style="color: rgb(255, 102, 102); font-weight: bold;"></span><span
+ style="font-weight: bold;">) - GEM output</span>. Number of elements:
 &lt;nPSb&gt;; order of
-phases: defined # in the &lt;xPH&gt; index list in the DATACH
+phases: defined in the &lt;xph&gt; index list in the DATACH
 file/structure.The density of a multicomponent phase can be obtained as
-&lt;mPS&gt;/&lt;vPS&gt; in g/cm3. </td>
+&lt;mPS&gt;/&lt;vPS&gt; in kg/m3. </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (6) </td>
       </tr>
@@ -2356,7 +2432,8 @@ cause the program crash or lead to meaningless results<br>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Total number of Dependent
 Components (chemical species made of independent components) in the
-chemical system definition </span>(DATACH structure)<br>
+chemical system definition </span><span style="color: rgb(0, 0, 0);">(DATACH
+structure)</span><br>
         </td>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">DCH<br>
@@ -2506,7 +2583,7 @@ Dependent Components are grouped) in the chemical system definition</span>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Number of Phases to be kept in
-DBR file and DATABR structure</span>, nPHb &lt;= nPH<br>
+the DBR file and DATABR structure</span>, nPHb &lt;= nPH<br>
         </td>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">DCH<br>
@@ -2544,8 +2621,8 @@ in interpolation lookup arrays, 1 or more</span><br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Number of phases-solutions
-(multicomponent phases) in the chemical system definition (DATACH
-structure)</span>, nPS &lt;= nPH<br>
+(multicomponent phases) in the chemical system definition </span>(DATACH
+structure), nPS &lt;= nPH<br>
         </td>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">DCH<br>
@@ -2565,7 +2642,7 @@ structure)</span>, nPS &lt;= nPH<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Number of Phases-solutions
-(multicomponent phases) to be kept in DBR file and DATABR memory
+(multicomponent phases) to be kept in the DBR file and DATABR memory
 structure</span>, nPSb &lt;= nPHb </td>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">DCH<br>
@@ -2642,7 +2719,7 @@ files. Default value: 0.<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Node status code in GEM (input
-and output); see typedef NODECODECH in the DATABR.H.</span> This code
+and output)</span>; see typedef NODECODECH in the DATABR.H. This code
 sets the
 mode of operation of GEMIPM and returns how GEM has converged (at GEM
 output). <br>
@@ -2845,7 +2922,7 @@ GEMIPM2K (e.g. memory corruption). Restart is required.&nbsp; </td>
   </p>
   <a name="TAB_09"></a>Table 9 (P)<br>
   <br>
-  <table style="text-align: left; width: 886px; height: 978px;"
+  <table style="text-align: left; width: 842px; height: 976px;"
  border="1" cellpadding="2" cellspacing="2">
     <tbody>
       <tr>
@@ -2878,17 +2955,19 @@ or PG[2]<br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Node Pressure P, bar (GEM
-input).</span> This value must always be provided. If this value
+ style="font-weight: bold;">Node Pressure P (Pa)&nbsp; GEM
+input.</span> This value must always be provided. If this value
 differs by
 more than &lt;Ptol&gt; bar from the pressure value used in previous GEM
 calculation, the GEMIPM2K program will attempt to interpolate
 thermodynamic data (if interpolation grid arrays were provided in DCH
-file or DATACH memory structure). If a given P value goes beyond the
-interpolation interval, it will be automatically replaced by the
-closest available pressure from the interpolation range; whether this
-happened, can be checked in this data object after GEMIPM returns
-control or writes the DBR file<br>
+file or DATACH memory structure). <span style="color: rgb(0, 153, 0);">If
+a given P value goes beyond the
+interpolation interval&nbsp; calculation will be stoped and&nbsp;
+NodeStatusCH setted to<br>
+        </span><span
+ style="font-family: monospace; color: rgb(0, 153, 0);">ERR_GEM_AIA or
+ERR_GEM_SIA.</span><span style="color: rgb(204, 102, 0);"></span>&nbsp;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR (2)<br>
         </td>
@@ -2907,7 +2986,7 @@ control or writes the DBR file<br>
 non-ideal increments to primal chemical
 potentials between
 IPM
-descent iterations.</span> Possible values: 1.0 to 0.1. For ideal
+descent iterations.</span> Possible values: from 1.0 to 0.1. For ideal
 systems, 1.0
 is
 recommended. Default value is 0.7; too high or to low values may cause
@@ -2932,7 +3011,7 @@ several IPM iterations. More in <a href="gems_ipm.html#Pa_AG">gems_ipm.html</a>.
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Minimum amount of Independent
-Component in the bulk system composition (except charge "Zz"), moles </span>(may
+Component in the bulk system composition (except charge "Zz") (moles) </span>(may
 be set in the interval 1e-17 &lt; DB &lt; 1e-7).
 Default value:
 1e-17. More in <a href="gems_ipm.html#Pa_DB">gems_ipm.html</a>. <br>
@@ -2952,7 +3031,7 @@ Default value:
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Cutoff mole amount for
-elimination of solution- or surface species (default 1e-20)</span> </td>
+elimination of solution- or surface species </span>(default 1e-20) </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
         </td>
@@ -3005,7 +3084,7 @@ More in <a href="gems_ipm.html#Pa_DF_1">gems_ipm.html</a>.<br>
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYw&gt;<br>
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYw&gt;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[0]<br>
         </td>
@@ -3022,7 +3101,7 @@ after the simplex() initial approximation in EnterFeasibleDomain()
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYaq&gt;<br>
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYaq&gt;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[1]</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
@@ -3038,7 +3117,7 @@ after the simplex() initial approximation in EnterFeasibleDomain()
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYid&gt;<br>
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYid&gt;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[2]</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
@@ -3054,7 +3133,7 @@ after the simplex() initial approximation in EnterFeasibleDomain()
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYr&gt;<br>
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYr&gt;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[3]</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
@@ -3070,7 +3149,7 @@ EnterFeasibleDomain()&nbsp; (default 1e-6)<br>
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYh&gt;&nbsp;
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYh&gt;&nbsp;
         <br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[4]</td>
@@ -3087,7 +3166,7 @@ after the simplex() initial approximation in EnterFeasibleDomain()
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYc&gt;<br>
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYc&gt;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[5]</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
@@ -3102,7 +3181,7 @@ after the simplex() initial approximation in EnterFeasibleDomain()
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFYs&gt;<br>
+ style="vertical-align: top; font-family: monospace; font-weight: bold; color: rgb(204, 153, 51);">&lt;pa_DFYs&gt;<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">Pa_DFY[6]<br>
         </td>
@@ -3122,7 +3201,7 @@ PhaseSelect() for a condensed phase component </span>(default value is
   <br>
 Table 10 (P)<br>
   <br>
-  <table style="text-align: left; width: 886px; height: 912px;"
+  <table style="text-align: left; width: 848px; height: 990px;"
  border="1" cellpadding="2" cellspacing="2">
     <tbody>
       <tr>
@@ -3201,7 +3280,8 @@ Affects convergence in AIA mode. <br>
  style="font-weight: bold;">Exponent in the sigmoidal
 smoothing function, or
 minimal smoothing factor in new functions.</span> Possible values: 0
-(smoothing is disabled if also <tt>Pa_AG</tt> is set to 1); 0.01 to
+(smoothing is disabled if also <tt>Pa_AG</tt> is set to 1); from 0.01
+to
 0.1 to enable smoothing. Default value: 0.07. To invoke new
 smoothing functions, just invert the sign of Pa_AG
 to negative. For surface complexation models, only the old
@@ -3264,10 +3344,11 @@ in <a href="gems_ipm.html#Pa_DKI">gems_ipm.html</a> file.<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Standard surface density
-(nm-2) for calculating activity of surface species</span> (do not
+(nm-2) for calculating activity of surface species</span> (<span
+ style="color: rgb(204, 102, 0);">do not
 change
 unless a different standard value is used in the supplied thermodynamic
-database). Default is 12.05 nm-2.<br>
+database</span>). Default is 12.05 nm-2.<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3306,7 +3387,8 @@ stoichiometry.&nbsp; More in <a href="gems_ipm.html#Pa_DPV_0">gems_ipm.html</a>.
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Cutoff minimum mole amount of
 stable Phase present in the IPM primal
-solution. Default value is 1e-12. </span>Elimination of a phase&nbsp;
+solution. </span>Default value is 1e-12.<span
+ style="font-weight: bold;"> </span>Elimination of a phase&nbsp;
 means
 that amounts of all its components in the X vector (primal solution)
 will be set to zero and calculation of activity coefficients skipped on
@@ -3333,7 +3415,8 @@ vector using the
 dual solution vector u.</span> The cutoff amount is
 calculated as DHBM*10^DT (for example, if DHBM = 1e-7 and DT = -2 then
 the cutoff amount will be 1e-9). Default value is -3. More in <a
- href="gems_ipm.html#Pa_DPV_2">gems_ipm.html</a> file.&nbsp; </td>
+ href="gems_ipm.html#Pa_DPV_2">gems_ipm.html</a> file.&nbsp; <br>
+        </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
         </td>
@@ -3520,7 +3603,8 @@ between
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Maximum allowed number of
-iterations in the MainIPM_Descent() procedure.&nbsp; Default value:
+iterations in the <span style="color: rgb(204, 102, 0);">MainIPM_Descent()
+        </span>procedure.&nbsp; Default value:
 500.&nbsp;</span> This parameter is also used in new smoothing
 functions (see
 Pa_AG). More details in <a href="gems_ipm.html#Pa_IIM">gems_ipm.html</a>.</td>
@@ -3540,6 +3624,23 @@ Pa_AG). More details in <a href="gems_ipm.html#Pa_IIM">gems_ipm.html</a>.</td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Mode of PhaseSelect()
 operation. Default value 1. </span>Reserved for future versions<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;">IPM<br>
+(3)<br>
+        </td>
+      </tr>
+      <tr>
+        <td
+ style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PD&gt;<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><a
+ href="gems_ipm.html#Pa_PRD_0">Pa_PRD[0]</a><br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;">1<br>
+        </td>
+        <td style="vertical-align: top;"><span
+ style="font-weight: bold;">Mode of execution of the
+built-in DebyeHueckel()/Davies() functions (default value: 3)</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3586,23 +3687,6 @@ components</span> (default 1e-10).&nbsp; <br>
       </tr>
       <tr>
         <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PD&gt;<br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><a
- href="gems_ipm.html#Pa_PRD_0">Pa_PRD[0]</a><br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;">1<br>
-        </td>
-        <td style="vertical-align: top;"><span
- style="font-weight: bold;">Mode of execution of the
-built-in DebyeHueckel()/Davies() functions (default value: 3)</span><br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;">IPM<br>
-(3)<br>
-        </td>
-      </tr>
-      <tr>
-        <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PLLG&gt;</td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="gems_ipm.html#Pa_LLG">Pa_LLG</a></td>
@@ -3629,12 +3713,15 @@ loops.</span> Defaul value is 200. More in <a
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Negative number (from -1 to
--20): the number |PRD| of additional full IPM-2 loops to improve the
+ style="font-weight: bold;"><span style="color: rgb(0, 153, 0);">Negative
+number (from -1 to
+-50):</span> the number |PRD| of additional full IPM-2 loops to improve
+the
 GEM final solution </span>in highly non-ideal systems (especially
 around the
-critial point in some phases). <span style="font-weight: bold;">Positive
-number: no additional loops, </span>IPM_gamma() is called on each GEM
+critial point in some phases). <span style="font-weight: bold;"><span
+ style="color: rgb(0, 153, 0);">Otherwise no additional loops</span>, </span>IPM_gamma()
+is called on each GEM
 iteration. Default
 value: 3.&nbsp;
 More in <a href="gems_ipm.html#Pa_PRD_1">gems_ipm.html</a>.<br>
@@ -3752,7 +3839,8 @@ definition. <br>
         <td
  style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pCh&gt;<br>
         </td>
-        <td style="vertical-align: top; font-family: monospace;"><br>
+        <td style="vertical-align: top; font-family: monospace;"><span
+ style="color: rgb(0, 153, 0);">etaF</span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="#TAG_nPS">nPS</a>*6<br>
@@ -3765,24 +3853,6 @@ corresponding to aqueous and gas phases.<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (8)</td>
-      </tr>
-      <tr>
-        <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pKin&gt;<br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;"><br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;">1<br>
-        </td>
-        <td style="vertical-align: top;"><span
- style="font-weight: bold;">Flag for using metastability
-constraints on calculated amounts of Dependent Components</span> (see
-&lt;DLL&gt;, &lt;DUL&gt; arrays). Possible values: 1 (on) or 0 (off).
-Default value is 1 (on).&nbsp; <br>
-        </td>
-        <td style="vertical-align: top; font-family: monospace;">IPM<br>
-(3)<br>
-        </td>
       </tr>
       <tr>
         <td
@@ -3807,6 +3877,24 @@ the Phase names in this list<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (7)<br>
+        </td>
+      </tr>
+      <tr>
+        <td
+ style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pKin&gt;<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;">1<br>
+        </td>
+        <td style="vertical-align: top;"><span
+ style="font-weight: bold;">Flag for using metastability
+constraints on calculated amounts of Dependent Components</span> (see
+&lt;DLL&gt;, &lt;DUL&gt; arrays). Possible values: 1 (on) or 0 (off).
+Default value is 1 (on).&nbsp; <br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;">IPM<br>
+(3)<br>
         </td>
       </tr>
       <tr>
@@ -3880,9 +3968,9 @@ interfaces; default value is '+'. <br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Tolerance for the pressure
-interpolation (bar).</span> Thermodynamic data will be interpolated in
+interpolation (Pa).</span> Thermodynamic data will be interpolated in
 GEMIPM2K only if the current pressure is more than Ptol different than
-the previous one used in GEM IPM run. Default value: 0.1 bar.<br>
+the previous one used in GEM IPM run. Default value: 10000 Pa.<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (9)<br>
@@ -3898,8 +3986,8 @@ the previous one used in GEM IPM run. Default value: 0.1 bar.<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Flag for the volume balance
-constraint (on Vol IC) - for indifferent equilibria at P_Sat </span><br>
-(not used in this version). If PV = 1 then the Independent Component
+constraint (on Vol IC) - for indifferent equilibria at P_Sat </span>(not
+used in this version). If PV = 1 then the Independent Component
 "Vol" must be included&nbsp; for the volume balance. The usual
 (default) value of PV is 0. <br>
         </td>
@@ -3918,7 +4006,7 @@ constraint (on Vol IC) - for indifferent equilibria at P_Sat </span><br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Pressure values for the
-interpolation grid (bar) for the lookup arrays of thermodynamic data</span>,
+interpolation grid (Pa) for the lookup arrays of thermodynamic data</span>,
 must be given in the ascending order<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DCH<br>
@@ -3998,7 +4086,7 @@ File<br>
         </td>
         <td style="vertical-align: top; font-weight: bold;">Actual
 carrier density for
-density-driven flow, kg/m3</td>
+density-driven flow (kg/m3)</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (3)</td>
       </tr>
@@ -4013,7 +4101,7 @@ density-driven flow, kg/m3</td>
  style="font-weight: bold;">Mass balance residuals - GEM
 output (moles).</span> This vector has &lt;nICb&gt; elements in the
 order of
-IC defined in the &lt;xIC&gt; index list. Good mass balance residuals
+IC defined in the &lt;xic&gt; index list. Good mass balance residuals
 must be less than 1e-7 mol or &lt; 0.1% of the respective element of
 the total bulk composition &lt;bIC&gt; which is less than 1e-7. This
 vector can
@@ -4170,7 +4258,8 @@ reserved.&nbsp; <br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Specific surface free energy
-for phase-gas interface (not yet used).</span> Default: 0 J/m2.&nbsp; <br>
+for phase-gas interface (J/m2</span><span style="font-weight: bold;">)
+(not yet used).</span> Default: 0 J/m2.&nbsp; <br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (7)<br>
@@ -4259,17 +4348,20 @@ TC[1]</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Node temperature T, C (GEM
-input). This value must always be provided.</span> If this value
+ style="font-weight: bold;">Node temperature T (C) . This value must
+always be provided</span> (<span style="font-weight: bold;">GEM
+input). </span>If this value
 differs by
 more than &lt;Ttol&gt; degrees from the temperature value used in
 previous GEM calculation, the GEMIPM2K program will attempt to
 interpolate thermodynamic data if lookup arrays were provided in DCH
-file or DATACH memory structure. If a given &lt;TC&gt; value goes
-beyond the interpolation interval, it will be automatically replaced by
-the closest available temperature from the interpolation range. Whether
-this happened, can be checked in this data object after the GEMIPM2K
-returns control or writes the DBR file.</td>
+file or DATACH memory structure. <span style="color: rgb(0, 153, 0);">If
+a given TC value goes beyond the
+interpolation interval&nbsp; calculation will be stoped and&nbsp;
+NodeStatusCH setted to </span><span
+ style="font-family: monospace; color: rgb(0, 153, 0);">ERR_GEM_AIA or
+ERR_GEM_SIA.</span><span style="color: rgb(204, 102, 0);"></span> <br>
+        </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)</td>
       </tr>
@@ -4281,7 +4373,7 @@ returns control or writes the DBR file.</td>
         <td style="vertical-align: top; font-family: monospace;"><a
  href="gemipm2k-inp.html#TAG_nTp">nTp</a></td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Temperature values, C for the
+ style="font-weight: bold;">Temperature values (C) for the
 interpolation grid in lookup arrays;</span> the values must be given in
 the
 ascending order</td>
@@ -4297,7 +4389,8 @@ ascending order</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Tolerance for the temperature
-interpolation over temperature (C, K).</span> Thermodynamic data will
+interpolation <span style="color: rgb(204, 102, 0);">over temperature</span>
+(C, K).</span> Thermodynamic data will
 be
 interpolated only if current temperature is more than Ttol different
 than the previous one used in GEM IPM run. Default value: 0.1 degree</td>
@@ -4312,8 +4405,8 @@ than the previous one used in GEM IPM run. Default value: 0.1 degree</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Actual total simulation time,
-s. Not used on the level of TNode</span>, stored in DATABR structures
+ style="font-weight: bold;">Actual total simulation time (s). </span>Not
+used on the level of TNode, stored in DATABR structures
 and
 files
 on the level of TNodeArray. Default value is 0.0.</td>
@@ -4328,12 +4421,38 @@ on the level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Transmissivity, m2/s. Not used
-on the level of TNode</span>, stored in DATABR structures and files on
+ style="font-weight: bold;">Transmissivity (m2/s). </span>Not used
+on the level of TNode, stored in DATABR structures and files on
 the
 level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (3)</td>
+      </tr>
+      <tr>
+        <td
+ style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;U0&gt;<br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"> u0<br>
+        <br>
+        </td>
+        <td style="vertical-align: top; font-family: monospace;"><a
+ href="gemipm2k-inp.html#TAG_nDC">nDC</a>*<a
+ href="gemipm2k-inp.html#TAG_nPp">nPp</a><br>
+*<a href="gemipm2k-inp.html#TAG_nTp">nTp</a> </td>
+        <td style="vertical-align: top;"><span
+ style="font-weight: bold; color: rgb(0, 153, 0);">Optional lookup
+array for Internal energy of DC (J/K/mol). </span><span
+ style="color: rgb(0, 153, 0);">This array has a 3-D
+organization which is a sequence of 2D tables,
+each corresponding to one DC.Tables for DCs follow in the same order as
+the names in the &lt;DCNL&gt; list. Each table has &lt;nPp&gt; rows and
+&lt;nTp&gt; columns, in total, &lt;nPp&gt;*&lt;nTp&gt; values. Each row
+in the DC table corresponds to a certain value of pressure from the
+&lt;Pval&gt; vector. Data in the row refer to this pressure and to
+temperatures in a sequence defined in the &lt;Tval&gt; vector.</span> </td>
+        <td style="vertical-align: top; font-family: monospace;">DCH<br>
+(9)<br>
+        </td>
       </tr>
       <tr>
         <td
@@ -4347,7 +4466,7 @@ level of TNodeArray. Default value is 0.0.</td>
  style="font-weight: bold;">Chemical potentials of ICs
 (dual GEM solution) - GEM output, normalized scale. </span>Order of
 elements
-is defined in the &lt;xIC&gt; index list. This vector contains
+is defined in the &lt;xic&gt; index list. This vector contains
 normalized chemical potentials of Independent Components, from which
 and the stoichiometry matrix &lt;A&gt; the chemical potential of any DC
 in this chemical system can be algebraically calculated. </td>
@@ -4365,7 +4484,7 @@ in this chemical system can be algebraically calculated. </td>
 *<a href="#TAG_nTp">nTp</a> </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Obligatory lookup array for
-(standard) molar volumes of Dependent Components (in J/bar).</span>
+(standard) molar volumes of Dependent Components (J/Pa).</span>
 This array
 has a 3-D organization which is a sequence of 2D tables, each
 corresponding to one DC in the same order as in the &lt;DCNL&gt; list.
@@ -4388,7 +4507,7 @@ the &lt;Tval&gt; vector. <br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Volume of inert subsystem, m3</span>
+ style="font-weight: bold;">Volume of inert subsystem (m3)</span>
 (used only in FMT part and stored here on the TNodeArray level).<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -4404,8 +4523,9 @@ the &lt;Tval&gt; vector. <br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Advection velocity (in pores)
-in this node, m/s. Not used on the level of TNode</span>, stored in
+ style="font-weight: bold;">Advection velocity (in pores) <span
+ style="color: rgb(204, 102, 0);">in this node</span>
+(m/s). </span>Not used on the level of TNode, stored in
 DATABR
 structures and files on the level of TNodeArray. Default value is 0.0.</td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -4423,8 +4543,8 @@ structures and files on the level of TNodeArray. Default value is 0.0.</td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Volumes of multicomponent
-phases (cm3), GEM output. </span>Order of phases: defined in the
-&lt;xPH&gt;
+phases (m3) (GEM output). </span>Order of phases: defined in the
+&lt;xph&gt;
 index list in the DATACH file/structure.<br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -4440,8 +4560,9 @@ index list in the DATACH file/structure.<br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Volume V of reactive subsystem
-in the node, m3 (GEM output)</span><br>
+ style="font-weight: bold;">Volume V of reactive subsystem <span
+ style="color: rgb(204, 102, 0);">in the node</span> (m3) <span
+ style="color: rgb(204, 102, 0);">(GEM output)</span></span><br>
         </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)<br>
@@ -4456,8 +4577,9 @@ in the node, m3 (GEM output)</span><br>
         <td style="vertical-align: top; font-family: monospace;">1<br>
         </td>
         <td style="vertical-align: top;"><span
- style="font-weight: bold;">Total volume of the node, m3.
-Not used on the level of TNode</span>, stored in DATABR structures and
+ style="font-weight: bold;">Total volume of the node (m3). </span>Not
+used on the level of TNode, stored in DATABR
+structures and
 files
 on the level of TNodeArray. Default value is 0.0. </td>
         <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -4509,11 +4631,11 @@ File<br>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Speciation - amounts of DCs in
-equilibrium state - primal GEM solution (GEM output), moles. </span>This
+equilibrium state - primal GEM solution (moles) (GEM output). </span>This
 vector is also required as input at &lt;NodeStatusCH&gt; = 5 when the
 old GEM solution is used as an initial approximation. Number of
 elements: &lt;nDCb&gt;; order of DC elements is defined in the
-&lt;xDC&gt; index list in the DATACH structure.The &lt;xDC&gt; vector
+&lt;xdc&gt; index list in the DATACH structure.The &lt;xDC&gt; vector
 is the standard result of equilibrium speciation calculations, from
 which concentrations of all chemical species (or their activities using
 the &lt;gam&gt; output vector) can be computed. Zeros in this vector
@@ -4589,8 +4711,9 @@ DATACH/IPM lists) </td>
         </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Amounts of phases in
-equilibrium state - GEM output (moles).</span> Number of elements:
-&lt;nPHb&gt;; order: defined&nbsp; in the &lt;xPH&gt; index list in the
+equilibrium state </span><span style="font-weight: bold;">(moles)</span><span
+ style="font-weight: bold;"> - GEM output .</span> Number of elements:
+&lt;nPHb&gt;; order: defined&nbsp; in the &lt;xph&gt; index list in the
 DATACH file/structure. Zero element value means that the respective
 phase&nbsp; is unstable and is not present in the equilibrium state
 mass balance. This data object is not used as GEM IPM input. <br>
@@ -4612,7 +4735,7 @@ mass balance. This data object is not used as GEM IPM input. <br>
  style="font-weight: bold;">Amount of carrier (sorbent or
 solvent) in multicomponent phases (GEM output). </span>Order of
 phases:
-defined in &lt;xPH&gt; index list in the DATACH file/structure. This
+defined in &lt;xph&gt; index list in the DATACH file/structure. This
 data object may be very useful e.g. in calculation of molal
 concentrations of aqueous species. <br>
         </td>
@@ -4630,7 +4753,7 @@ concentrations of aqueous species. <br>
  href="#TAG_nPH">nPH</a> </td>
         <td style="vertical-align: top;"><span
  style="font-weight: bold;">Surface free energy parameter for phases
-(in J/g to accomodate for variable phase composition).</span> Default:
+(J/g) ( to accomodate for variable phase composition).</span> Default:
 0.0 J/g. </td>
         <td style="vertical-align: top;"><span
  style="font-family: monospace;">IPM</span><br

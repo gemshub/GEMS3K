@@ -177,7 +177,7 @@ pmp->Wx[j] = 0.0;
                case DC_SCP_CONDEN: // to: ln_a_j = Mju_j - g0_j (removed pmp->GEX everywhere)  DK, TW
                     pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* -pmp->GEX[j] */);
                     break;
-               case DC_AQ_ELECTRON: case DC_AQ_PROTON:  case DC_AQ_SPECIES:
+               case DC_AQ_ELECTRON: case DC_AQ_PROTON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
                     pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] /* -pmp->GEX[j] */
                                       /* + Dsur */ + lnFmol);
                     break;
@@ -243,7 +243,7 @@ pmp->Wx[j] = 0.0;
             break;
         case DC_AQ_PROTON:  // in molal scale!
             pmp->pH = -ln_to_lg*(Muj-pmp->G0[j] /* -pmp->GEX[j] + Dsur */ + lnFmol );
-        case DC_AQ_SPECIES:
+        case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
             SPmol = X[j]*Factor;  // molality
             pmp->IC +=  // increment to effective molal ionic strength
                 0.5* SPmol *(pmp->EZ[j]*pmp->EZ[j]);
@@ -1317,7 +1317,7 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
 
 	    switch( pmp->DCC[j] )
 	    { // Aqueous electrolyte
-	      case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES:
+	      case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
 // NonLogTerm =0.;
 	        lnGamS += NonLogTerm;    // Correction by asymmetry term
 	        break;
@@ -1357,7 +1357,7 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
 
 		switch( pmp->DCC[j] )
         { // Aqueous electrolyte
-		   case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES:
+		   case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
 // NonLogTerm =0.;
 		        lnGam -= NonLogTerm;  // Correction by asymmetry term
 		    	break;
