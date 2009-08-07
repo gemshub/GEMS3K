@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1386 2009-08-06 12:43:51Z gems $
+// $Id: ms_multi_file.cpp 1388 2009-08-07 14:44:31Z gems $
 //
 // Implementation of writing/reading IPM work data structure files
 //
@@ -222,7 +222,7 @@ void TMulti::set_def( long int /*q*/)
         pm.Falp  = 0;
         pm.XetaA = 0;
         pm.XetaB = 0;
-        pm.XetaD = 0;         // added 12.09.05  KD
+        pm.XetaD = 0;       
         pm.X     = 0;
         pm.Y     = 0;
         pm.XY    = 0;
@@ -242,11 +242,11 @@ void TMulti::set_def( long int /*q*/)
      //   pm.R1    = 0;
         pm.sMod  = 0;
         pm.SB    = 0;
-        pm.SB1    = 0; // added Sveta 6/07/2001
+        pm.SB1    = 0; 
         pm.SM    = 0;
         pm.SF    = 0;
         pm.SFs   = 0;
-        pm.pbuf  = 0; //
+        pm.pbuf  = 0; 
         pm.RLC   = 0;
         pm.RSC   = 0;
         pm.RFLC  = 0;
@@ -453,7 +453,7 @@ void TMulti::to_file( GemDataStream& ff  )
       ff.writeArray((double*)pm.Xetaf, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XetaA, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XetaB, pm.FIs*pm.FIat);
-ff.writeArray((double*)pm.XetaD, pm.FIs*pm.FIat);     // added 12.09.05   KD
+      ff.writeArray((double*)pm.XetaD, pm.FIs*pm.FIat);    
       ff.writeArray((double*)pm.XFTS, pm.FIs*pm.FIat);
 
 ff.writeArray((long int*)pm.SATX, pm.Lads*4);
@@ -621,7 +621,7 @@ void TMulti::from_file( GemDataStream& ff )
       pm.PMc = new double[LsModSum];
       pm.DMc = new double[LsMdcSum];
 #else
-      pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);  // added 07.12.2006 KD
+      pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_); 
       pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
       pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
 #endif
@@ -684,7 +684,7 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray((double*)pm.Xetaf, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XetaA, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XetaB, pm.FIs*pm.FIat);
-ff.readArray((double*)pm.XetaD, pm.FIs*pm.FIat);    // added 12.09.05  by KD
+      ff.readArray((double*)pm.XetaD, pm.FIs*pm.FIat);    
       ff.readArray((double*)pm.XFTS, pm.FIs*pm.FIat);
 
 ff.readArray((long int*)pm.SATX, pm.Lads*4);
@@ -1430,20 +1430,13 @@ void TMulti::to_text_file( const char *path, bool append )
     //static values
    char PAalp;
    char PSigm;
-//   double EpsW;
-//   double RoW;
-
 
 #ifndef IPMGEMPLUGIN
    PAalp = syp->PAalp;
    PSigm = syp->PSigm;
-//   EpsW = TProfil::pm->tpp->EpsW;
-//   RoW = TProfil::pm->tpp->RoW;
 #else
    PAalp = PAalp_;
    PSigm = PSigm_;
-//   EpsW = EpsW_;
-//   RoW = RoW_;
 #endif
 
    ios::openmode mod = ios::out; 
@@ -1657,5 +1650,6 @@ void TMulti::to_text_file( const char *path, bool append )
 //     prar.writeArray(  "sitXan", pm.sitXan, pm.sitNan );
 }
 
+//--------------------- End of ms_multi_file.cpp ---------------------------
 
 

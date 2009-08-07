@@ -654,8 +654,6 @@ void TMulti::from_text_file_gemipm( const char *path )
    //static values
    char PAalp;
    char PSigm;
-//   double EpsW;
-//   double RoW;
 
 #ifdef IPMGEMPLUGIN
    set_def();
@@ -735,25 +733,12 @@ void TMulti::from_text_file_gemipm( const char *path )
     Error( "Error", ret);
   }
 
-//   if( dCH->ccPH[0] == PH_AQUEL )
-//   {
-//     RoW = dCH->denW[0];
-//     EpsW = dCH->epsW[0];
-//   }
-//   else
-//  {
-//    RoW = 0.99706137180;
-//    EpsW = 78.245147705;
-//  }
-
 #ifndef IPMGEMPLUGIN
 //   syp->PAalp = PAalp;
 //   syp->PSigm = PSigm;
 #else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-//   EpsW_ = EpsW;
-//   RoW_ =  RoW;
 #endif
 
    //realloc memory

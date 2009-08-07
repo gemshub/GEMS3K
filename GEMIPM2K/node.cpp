@@ -421,8 +421,6 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
       if( binary_f )
       {  GemDataStream f_ch(dat_ch, ios::in|ios::binary);
          datach_from_file(f_ch);
-//fstream  f_ch2("dch.out", ios::out);
-//datach_to_text_file(f_ch2, true, false );      // only test 06.08.2009 SD   
        }
       else
       { fstream f_ch(dat_ch.c_str(), ios::in );
@@ -436,7 +434,6 @@ if( binary_f )
    GemDataStream f_m(mult_in, ios::in|ios::binary);
 #ifdef IPMGEMPLUGIN
     profil->readMulti(f_m);
-// multi->to_text_file_gemipm(  "ipm.out", true,  true, false );
 #else
     TProfil::pm->readMulti(f_m);
 #endif
@@ -472,8 +469,6 @@ if( binary_f )
          {
              GemDataStream in_br(dbr_file, ios::in|ios::binary);
              databr_from_file(in_br);
-//fstream  f_br2("dbr.out", ios::out);
-//databr_to_text_file(f_br2, true, false );      // only test 06.08.2009 SD
           }
          else
           {   fstream in_br(dbr_file.c_str(), ios::in );

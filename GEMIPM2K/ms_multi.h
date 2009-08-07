@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi.h 1383 2009-08-04 16:49:18Z gems $
+// $Id: ms_multi.h 1388 2009-08-07 14:44:31Z gems $
 //
 // Declaration of TMulti class, configuration, and related functions
 // based on the IPM work data structure MULTI that represents chemical
@@ -367,7 +367,6 @@ class TMulti
                             int car_l[], int car_c, int Cjs );
     void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
     void SolModLoad();
-//    double *PackSITcoeffs( int k, int JB, int JE, int jb, int je, int nCxA );
     gstring PressSolMod( int nP );
     char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
     int find_icnum( char *name, int LNmode );
@@ -378,8 +377,6 @@ class TMulti
 
    char PAalp_; // Flag for using (+) or ignoring (-) specific surface areas of phases
    char PSigm_; // Flag for using (+) or ignoring (-) specific surface free energies 
- //  double EpsW_;
- //  double RoW_;
 
 #endif
 
@@ -431,22 +428,6 @@ class TMulti
 // Main call for calculation of activity coefficients on IPM iterations
     long int GammaCalc( long int LinkMode );
 // Built-in activity coefficient models
-/*  aqueous electrolyte
-    void DebyeHueckel3Hel( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void DebyeHueckel3Karp( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void DebyeHueckel2Kjel( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void DebyeHueckel1LL( long int jb, long int je, long int k );
-    void Davies03temp( long int jb, long int je, long int jpb, long int k );
-*/
-// fluid mixtures (old functions)
-//    void ChurakovFluid( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void CGofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
-//    void PRSVFluid( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
-    void PRSVofPureGases( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb );
-// Condensed mixtures (old models)
-    void RedlichKister( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void MargulesBinary( long int jb, long int je, long int jpb, long int jdb, long int k );
-    void MargulesTernary( long int jb, long int je, long int jpb, long int jdb, long int k );
 // Generic solution model calls
     void SolModCreate( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb,
     		char ModCode, char MixCode );
@@ -560,8 +541,6 @@ public:
 
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
-  //  void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );
-     
 
 #endif
 
@@ -590,7 +569,7 @@ public:
     void addErrorMessage( const char * msg);
 
    long int CheckMassBalanceResiduals(double *Y );
-   double Cj_init_calc( double g0, long int j, long int k ); // Moved here on 16.05.2008
+   double Cj_init_calc( double g0, long int j, long int k ); 
 
 // connection to UnSpace
     double pb_GX( double *Gxx  );

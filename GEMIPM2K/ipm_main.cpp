@@ -810,7 +810,6 @@ STEP_POINT( "IPM Iteration" );
     return 2L; // bad convergence - too many IPM iterations!
 //----------------------------------------------------------------------------
 CONVERGED:
- // cout << "LM " << LM << " LM1 "	 << LM1 << " PCI " << pmp->PCI << endl;
 pmp->PCI = pmp->DX * 0.999999; // temporary
 // Final calculation of phase amounts and activity coefficients
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );

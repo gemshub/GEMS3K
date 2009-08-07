@@ -46,7 +46,7 @@ void TMulti::SimplexInitialApproximation( )
         for( i=0; i<pmp->N; i++)
              DU[i+Q] = 0.;
         EPS = TProfil::pm->pa.p.EPS; //  13.10.00  KC  DK
-        GZ = 1./EPS;    //  13.10.00
+        GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
         for(i=0;i<pmp->L;i++)
