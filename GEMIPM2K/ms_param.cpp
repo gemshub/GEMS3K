@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1379 2009-07-29 14:53:22Z gems $
+// $Id: ms_param.cpp 1387 2009-08-07 12:31:14Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -51,17 +51,17 @@ SPP_SETTING pa_ = {
   {
       1,  /* PC */  3,     /* PD */   3,   /* PRD */
       1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
-      -2, /* DT */     200,   /* PLLG */   1,  /* PE */
+      -3, /* DT */     200,   /* PLLG */   1,  /* PE */
       500,   /* IIM */
-      1e-6, /* DG */   1e-7,  /* DHB */  1e-12,  /* DS */
+      1e-5, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
       1e-4,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
       1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
       1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
       1e-7, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
       0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-      0.001, /* GAS */   12.05,  /* DNS */   1e-5,  /* XwMin, */
-      1e-7,  /* ScMin, */  1e-19, /* DcMin, */   1e-10, /* PhMin, */
-      1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+      0.001, /* GAS */   12.05,  /* DNS */   1e-9,  /* XwMin, */
+      1e-7,  /* ScMin, */  1e-20, /* DcMin, */   1e-10, /* PhMin, */
+      3e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
       1e-7,  /* DKIN  */ 0,  /* tprn */
   },
 }; // SPP_SETTING
@@ -208,7 +208,7 @@ FINISHED:
 return pmp->t_elap_sec;
 }
 
-void TProfil::outMulti( GemDataStream& ff, gstring& path  )
+void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
 {
 	 short arr[10];
 
@@ -268,7 +268,7 @@ void TProfil::readMulti( const char* path )
  {
    long int kk, jj, ii, l1, l2, xTP, lev = 11;
    double cT, cP, dT, dP;
-   double *G0, *V0, *H0, *Cp0, *S0, *A0, *U0, *denW, *epsW, *denWg, *epsWg;
+   double *G0, /**V0, *H0,*/ *Cp0, *S0, /**A0, *U0,*/ *denW, *epsW/*, *denWg, *epsWg*/;
    DATACH  *CSD = TNode::na->pCSD();
    fstream ff("lagrange_T_11_3.out.txt", ios::out );
    ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
@@ -514,7 +514,7 @@ void TMulti::CompG0Load()
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
-void TMulti::MultiCalcInit( const char* key )
+void TMulti::MultiCalcInit( const char* /*key*/ )
 {
   long int  j;
 

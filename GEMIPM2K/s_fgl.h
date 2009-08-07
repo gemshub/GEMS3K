@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.h 1380 2009-07-30 11:07:06Z wagner $
+// $Id: s_fgl.h 1387 2009-08-07 12:31:14Z gems $
 //
 // Copyright (C) 2003-2009  T.Wagner, D.Kulik, S.Dmitrieva, S.Churakov
 //
@@ -97,12 +97,12 @@ class TSolMod
 			return 0;
 		};
 
-		virtual long int ExcessProp( double *Zex )
+		virtual long int ExcessProp( double */*Zex*/ )
 		{
 			return 0;
 		};
 
-		virtual long int IdealProp( double *Zid )
+		virtual long int IdealProp( double */*Zid*/ )
 		{
 			return 0;
 		};

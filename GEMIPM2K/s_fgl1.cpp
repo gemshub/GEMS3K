@@ -1139,9 +1139,10 @@ double TPitzer::lnGammaH2O( )
 	double OC = (1.+OCges) / OCmol;
 	// Activity of Water, Pitzer-Toughreact Report 2006, equation (A1)
 	double Lna =(-18.1/1000.)*OC*OCmol;
-	double activityH2O = exp(Lna);
-
+	
+	//double activityH2O = exp(Lna);
 	// lnGamma[Ns] = activityH2O/molefractionH2O;
+
 	return Lna-log(x[Ns]);
 }
 
@@ -1289,7 +1290,7 @@ double TPitzer::lnGammaM(  long int M )
 
 	// Term GM
 	double GM = GM1+GM2+GM3+GM4+GM5+GM6;
-	double actcoeffM = exp(GM);
+	//double actcoeffM = exp(GM);
 
 	return GM;
 }
@@ -1362,7 +1363,7 @@ double TPitzer::lnGammaX(  long int X )
 
 	// Term GX
 	double GX=GX1+GX2+GX3+GX4+GX5+GX6;
-    double actcoeffX = exp(GX);
+    //double actcoeffX = exp(GX);
 
     return GX;
 }
@@ -1391,7 +1392,7 @@ double TPitzer::lnGammaN(  long int N )
 
 	// Term GN
 	double GN=GN1+GN2+GN3;
-	double actcoeffN = exp(GN);
+	//double actcoeffN = exp(GN);
 
   return GN;
 }
@@ -1907,7 +1908,7 @@ long int TEUNIQUAC::IonicStrength()
 // Output of test results into text file (standalone variant only)
 void TEUNIQUAC::Euniquac_test_out( const char *path )
 {
-	long int ii, c, a, n;
+	long int ii;//, c, a, n;
 
 	// const ios::open_mode OFSMODE = ios::out � ios::app;
 	ofstream ff(path, ios::app );
@@ -4680,7 +4681,7 @@ long int TShvarov::MixMod()
 }
 
 
-long int TShvarov::ExcessProp( double *Zex )
+long int TShvarov::ExcessProp( double */*Zex*/ )
 {
 	long int j, k, w;
 	double sqI, Z2, Nw, xw, msum, C, dCdT, d2CdT2, dCdP, lg_to_ln,

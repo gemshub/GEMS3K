@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 1381 2009-07-31 13:37:13Z gems $
+// $Id: m_param.h 1387 2009-08-07 12:31:14Z gems $
 //
 // Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
 //
@@ -91,6 +91,7 @@ struct SPP_SETTING
     void write(fstream& oss);
 };
 
+extern SPP_SETTING pa_;
 
 // Module TParam ( +MULTY )
 class TProfil //: public TCModule

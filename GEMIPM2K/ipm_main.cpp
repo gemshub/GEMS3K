@@ -545,7 +545,7 @@ STEP_POINT("Before FIA");
 long int TMulti::EnterFeasibleDomain()
 {
     long int IT1;
-    long int I, J, Z,  N, sRet, iRet=0, jK, iB;
+    long int I, J, Z,  N, sRet, iRet=0, jK;//, iB;
     double LM;
     SPP_SETTING *pa = &TProfil::pm->pa;
 

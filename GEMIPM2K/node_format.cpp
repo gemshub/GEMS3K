@@ -597,11 +597,11 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   _comment = with_comments;
   TPrintArrays  prar(29, DataCH_dynamic_fields, ff);
   if( CSD->nIC == CSD->nICb )
-	  prar.setNoAlws( "xIC");
+	  prar.setNoAlws( "xic");
   if(CSD->nDC == CSD->nDCb )
-	  prar.setNoAlws( 1 /*"xDC"*/);
+	  prar.setNoAlws( 1 /*"xdc"*/);
   if(CSD->nPH == CSD->nPHb )
-	  prar.setNoAlws( 2 /*"xPH"*/);
+	  prar.setNoAlws( 2 /*"xph"*/);
 
   if( _comment )
   {  ff << "# GEMIPM2K v. 2.3.0" << endl;

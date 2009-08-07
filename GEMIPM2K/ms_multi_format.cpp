@@ -178,15 +178,20 @@ if( _comment )
   ff << "\"" << pmp->stkey << "\"" << endl;
 
  if( _comment )
-   {  ff << "\n## (1) Important flags that affect memory allocation" << endl;
+     ff << "\n## (1) Important flags that affect memory allocation" << endl;
+
+ if(!brief_mode || pa->p.PE != pa_.p.PE )
+ { if( _comment )
       ff << "# PE: Flag for using electroneutrality condition in GEM IPM calculations " << endl;
-   }
    ff << left << setw(12) << "<pa_PE> " <<  right << setw(8) << pa->p.PE << endl;
+ }  
+
 //   ff << "# 'E'                1" << endl;
 //   ff << left << setw(12) << "<E> " <<  right << setw(8) << pmp->E << endl;
-   if( _comment )
+ if( _comment )
      ff << "\n# PV: Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat" << endl;
    ff << left << setw(12) << "<PV> " <<  right << setw(8) << pmp->PV << endl;
+   
 //   ff << "# These dimensions can be calculated from the DATACH information" << endl;
 //   ff << "# 'Ls'              23" << endl;
 //   ff << "# 'LO'              18" << endl;
@@ -226,129 +231,200 @@ if( _comment )
    ff << "\n<END_DIM>\n";
 
 // static data not affected by dimensionalities
- if( !brief_mode  ) 
- { 
    if( _comment )
-   { ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
-     ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
-     ff << "# DB: Minimum amount of Independent Component in the bulk system composition (except charge Zz) (moles)" << endl;
+   {  ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
+      ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
+   }   
+   if(!brief_mode || pa->p.DB != pa_.p.DB )
+   { if( _comment )
+       ff << "# DB: Minimum amount of Independent Component in the bulk system composition (except charge Zz) (moles)" << endl;
+     ff << left << setw(12) << "<pa_DB> " <<  right << setw(8) << pa->p.DB << endl;
    }  
-   ff << left << setw(12) << "<pa_DB> " <<  right << setw(8) << pa->p.DB << endl;
-   if( _comment )
-     ff << "\n# DHB: Maximum allowed mass balance residual (moles) for major Independent Components" << endl;
-   ff << left << setw(12) << "<pa_DHB> " << right << setw(8) <<  pa->p.DHB << endl;
-   if( _comment )
-     ff << "\n# EPS: Precision criterion of the simplex() procedure to obtain the automatic initial approximation { 1e-7 }" << endl;
-   ff << left << setw(12) << "<pa_EPS> " <<  right << setw(8) << pa->p.EPS << endl;
-   if( _comment )
-     ff << "\n# DK: IPM-2 convergence threshold for the Dikin criterion  (1e-6 < DK < 1e-3, default 1e-4)" << endl;
-   ff << left << setw(12) << "<pa_DK> " <<  right << setw(8) << pa->p.DK << endl;
-   if( _comment )
-     ff << "\n# DS: Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }" << endl;
-   ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
-   if( _comment )
-     ff << "\n# DF: Threshold for the application of the Karpov phase stability criterion f_a" << endl;
-   ff << left << setw(12) << "<pa_DF> " <<  right << setw(8) << pa->p.DF << endl;
-   if( _comment )
-     ff << "# DFM: Threshold for Karpov stability criterion f_a for insertion of a phase" << endl;
-   ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
-   if( _comment )
-     ff << "\n# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure" << endl;
-   ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
-   if( _comment )
-     ff << "\n# IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure { 500 }" << endl;
-   ff << left << setw(12) << "<pa_IIM> " << right << setw(8) <<  pa->p.IIM << endl;
-   if( _comment )
-     ff << "\n# PD: Mode of execution of the built-in DebyeHueckel()/Davies() functions { 3 }" << endl;
-   ff << left << setw(12) << "<pa_PD> " <<  right << setw(8) << pa->p.PD << endl;
-   if( _comment )
-   { ff << "\n# PRD: Negative number (from -1 to -50): the number  of additional full IPM-2 loops, otherwise no additional loops" << endl;
-     ff <<   "#      Positive or 0: no global refinement loops" << endl;
+   if(!brief_mode || pa->p.DHB != pa_.p.DHB )
+   { if( _comment )
+      ff << "\n# DHB: Maximum allowed mass balance residual (moles) for major Independent Components" << endl;
+     ff << left << setw(12) << "<pa_DHB> " << right << setw(8) <<  pa->p.DHB << endl;
+   }  
+   if(!brief_mode || pa->p.EPS != pa_.p.EPS )
+   { if( _comment )
+      ff << "\n# EPS: Precision criterion of the simplex() procedure to obtain the automatic initial approximation { 1e-7 }" << endl;
+    ff << left << setw(12) << "<pa_EPS> " <<  right << setw(8) << pa->p.EPS << endl;
    }
-   ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa->p.PRD << endl;
-   if( _comment )
-     ff << "\n# AG: Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations." << endl;
-   ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa->p.AG << endl;
-   if( _comment )
-     ff << "\n# DGC: Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions." << endl;
-   ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa->p.DGC << endl;
-   if( _comment )
-     ff << "\n# PSM: Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }" << endl;
-   ff << left << setw(12) << "<pa_PSM> " <<  right << setw(8) << pa->p.PSM << endl;
-   if( _comment )
-     ff << "# GAR: Initial activity coefficient value for major (M) species in a solution phase before Simplex() approximation { 1 }" << endl;
-   ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa->p.GAR << endl;
-   if( _comment )
-     ff << "# GAH: Initial activity coefficient value for minor (J) species in a solution phase before Simplex() approximation { 1000 }" << endl;
-   ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa->p.GAH << endl;
-   if( _comment )
-   {  ff << "\n# _Min: Cutoff mole amounts for elimination of: Xw - water-solvent { 1e-9 }; Sc - solid sorbent {1e-7}; " << endl;
-      ff <<   "#       Dc - solution- or surface species { 1e-20 }; Ph - non-electrolyte solution phase with all its components { 1e-10 }" << endl;
+   if(!brief_mode || pa->p.DK != pa_.p.DK )
+   { if( _comment )
+      ff << "\n# DK: IPM-2 convergence threshold for the Dikin criterion  (1e-6 < DK < 1e-3, default 1e-4)" << endl;
+     ff << left << setw(12) << "<pa_DK> " <<  right << setw(8) << pa->p.DK << endl;
+   }  
+   if(!brief_mode || pa->p.DS != pa_.p.DS )
+   { if( _comment )
+      ff << "\n# DS: Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }" << endl;
+     ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
+   }  
+   if(!brief_mode || pa->p.DF != pa_.p.DF )
+   { if( _comment )
+      ff << "\n# DF: Threshold for the application of the Karpov phase stability criterion f_a" << endl;
+     ff << left << setw(12) << "<pa_DF> " <<  right << setw(8) << pa->p.DF << endl;
+   }  
+   if(!brief_mode || pa->p.DFM != pa_.p.DFM )
+   { if( _comment )
+      ff << "# DFM: Threshold for Karpov stability criterion f_a for insertion of a phase" << endl;
+     ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
+   }  
+   if(!brief_mode || pa->p.DP != pa_.p.DP )
+   {  if( _comment )
+       ff << "\n# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure" << endl;
+     ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
+   }  
+   if(!brief_mode || pa->p.IIM != pa_.p.IIM )
+   { if( _comment )
+      ff << "\n# IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure { 500 }" << endl;
+     ff << left << setw(12) << "<pa_IIM> " << right << setw(8) <<  pa->p.IIM << endl;
+   }  
+   if(!brief_mode || pa->p.PD != pa_.p.PD )
+   { if( _comment )
+      ff << "\n# PD: Mode of execution of the built-in DebyeHueckel()/Davies() functions { 3 }" << endl;
+     ff << left << setw(12) << "<pa_PD> " <<  right << setw(8) << pa->p.PD << endl;
+   }  
+   if(!brief_mode || pa->p.PRD != pa_.p.PRD )
+   { if( _comment )
+     { ff << "\n# PRD: Negative number (from -1 to -50): the number  of additional full IPM-2 loops, otherwise no additional loops" << endl;
+       ff <<   "#      Positive or 0: no global refinement loops" << endl;
+     }
+     ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa->p.PRD << endl;
+   }  
+   if(!brief_mode || pa->p.AG != pa_.p.AG )
+   { if( _comment )
+      ff << "\n# AG: Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations." << endl;
+     ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa->p.AG << endl;
+   }  
+   if(!brief_mode || pa->p.DGC != pa_.p.DGC )
+   { if( _comment )
+      ff << "\n# DGC: Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions." << endl;
+     ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa->p.DGC << endl;
+   }  
+   if(!brief_mode || pa->p.PSM != pa_.p.PSM )
+   { if( _comment )
+      ff << "\n# PSM: Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }" << endl;
+     ff << left << setw(12) << "<pa_PSM> " <<  right << setw(8) << pa->p.PSM << endl;
+   }  
+   if(!brief_mode || pa->p.GAR != pa_.p.GAR )
+   { if( _comment )
+      ff << "# GAR: Initial activity coefficient value for major (M) species in a solution phase before Simplex() approximation { 1 }" << endl;
+     ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa->p.GAR << endl;
+   }  
+   if(!brief_mode || pa->p.GAH != pa_.p.GAH )
+   { if( _comment )
+      ff << "# GAH: Initial activity coefficient value for minor (J) species in a solution phase before Simplex() approximation { 1000 }" << endl;
+     ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa->p.GAH << endl;
+   } 
+   if(!brief_mode)
+    if( _comment )
+     {  ff << "\n# _Min: Cutoff mole amounts for elimination of: Xw - water-solvent { 1e-9 }; Sc - solid sorbent {1e-7}; " << endl;
+        ff <<   "#       Dc - solution- or surface species { 1e-20 }; Ph - non-electrolyte solution phase with all its components { 1e-10 }" << endl;
+     }
+   if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
+    ff << left << setw(12) << "<pa_XwMin> " <<  right << setw(8) << pa->p.XwMin << endl;
+   if(!brief_mode || pa->p.ScMin != pa_.p.ScMin )
+     ff << left << setw(12) << "<pa_ScMin> " <<  right << setw(8) << pa->p.ScMin << endl;
+   if(!brief_mode || pa->p.DcMin != pa_.p.DcMin )
+     ff << left << setw(12) << "<pa_DcMin> " <<  right << setw(8) << pa->p.DcMin << endl;
+   if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
+     ff << left << setw(12) << "<pa_PhMin> " <<  right << setw(8) << pa->p.PhMin << endl;
+   
+   if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
+   { if( _comment )
+      ff << "\n# ICmin: Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }" << endl;
+     ff << left << setw(12) << "<pa_ICmin> " <<  right << setw(8) << pa->p.ICmin << endl;
    }
-   ff << left << setw(12) << "<pa_XwMin> " <<  right << setw(8) << pa->p.XwMin << endl;
-   ff << left << setw(12) << "<pa_ScMin> " <<  right << setw(8) << pa->p.ScMin << endl;
-   ff << left << setw(12) << "<pa_DcMin> " <<  right << setw(8) << pa->p.DcMin << endl;
-   ff << left << setw(12) << "<pa_PhMin> " <<  right << setw(8) << pa->p.PhMin << endl;
+   if(!brief_mode || pa->p.PC != pa_.p.PC )
+   { if( _comment )
+      ff << "\n# PC: Mode of PhaseSelect() operation  { 1 }" << endl;
+     ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
+   }  
    if( _comment )
-     ff << "\n# ICmin: Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }" << endl;
-   ff << left << setw(12) << "<pa_ICmin> " <<  right << setw(8) << pa->p.ICmin << endl;
-   if( _comment )
-     ff << "\n# PC: Mode of PhaseSelect() operation  { 1 }" << endl;
-   ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
-   if( _comment )
-   {  ff << "# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm" << endl;
+      ff << "# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm" << endl;
+   if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
+   { if( _comment )
       ff << "# DFYw: Insertion mole amount for water-solvent" << endl;
+      ff << left << setw(12) << "<pa_DFYw> " <<  right << setw(8) << pa->p.DFYw << endl;
    }
-   ff << left << setw(12) << "<pa_DFYw> " <<  right << setw(8) << pa->p.DFYw << endl;
+   if(!brief_mode || pa->p.DFYaq != pa_.p.DFYaq )
+   { if( _comment )
+      ff << "# DFYaq: Insertion mole amount for aqueous species" << endl;
+     ff << left << setw(12) << "<pa_DFYaq> " <<  right << setw(8) << pa->p.DFYaq << endl;
+   }
+   if(!brief_mode || pa->p.DFYid != pa_.p.DFYid )
+   { if( _comment )
+      ff << "\n# DFYid: Insertion mole amount for ideal solution components" << endl;
+     ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa->p.DFYid << endl;
+   } 
+   if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
+   { if( _comment )
+      ff << "# DFYr: Insertion mole amount for major solution components" << endl;
+    ff << left << setw(12) << "<pa_DFYr> " <<  right << setw(8) << pa->p.DFYr << endl;
+   }
+   if(!brief_mode || pa->p.DFYh != pa_.p.DFYh )
+   { if( _comment )
+      ff << "# DFYh: Insertion mole amount for minor solution components" << endl;
+     ff << left << setw(12) << "<pa_DFYh> " <<  right << setw(8) << pa->p.DFYh << endl;
+   }
+   if(!brief_mode || pa->p.DFYc != pa_.p.DFYc )
+   { if( _comment )
+      ff << "# DFYc:  Insertion mole amount for single-component phase" << endl;
+     ff << left << setw(12) << "<pa_DFYc> " <<  right << setw(8) << pa->p.DFYc << endl;
+   }
+   if(!brief_mode || pa->p.DFYs != pa_.p.DFYs )
+   { if( _comment )
+      ff << "# DFYs: Insertion mole amount used in PhaseSelect() for a condensed phase component" << endl;
+     ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa->p.DFYs << endl;
+   }  
    if( _comment )
-     ff << "# DFYaq: Insertion mole amount for aqueous species" << endl;
-   ff << left << setw(12) << "<pa_DFYaq> " <<  right << setw(8) << pa->p.DFYaq << endl;
-   if( _comment )
-     ff << "\n# DFYid: Insertion mole amount for ideal solution components" << endl;
-//   ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
-   ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa->p.DFYid << endl;
-   if( _comment )
-     ff << "# DFYr: Insertion mole amount for major solution components" << endl;
-   ff << left << setw(12) << "<pa_DFYr> " <<  right << setw(8) << pa->p.DFYr << endl;
-   if( _comment )
-     ff << "# DFYh: Insertion mole amount for minor solution components" << endl;
-   ff << left << setw(12) << "<pa_DFYh> " <<  right << setw(8) << pa->p.DFYh << endl;
-   if( _comment )
-     ff << "# DFYc:  Insertion mole amount for single-component phase" << endl;
-   ff << left << setw(12) << "<pa_DFYc> " <<  right << setw(8) << pa->p.DFYc << endl;
-   if( _comment )
-     ff << "# DFYs: Insertion mole amount used in PhaseSelect() for a condensed phase component" << endl;
-   ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa->p.DFYs << endl;
-   if( _comment )
-   {  ff << "\n# Parameters for high-accuracy IPM-2 algorithm " << endl;
+     ff << "\n# Parameters for high-accuracy IPM-2 algorithm " << endl;
+   if(!brief_mode || pa->p.DW != pa_.p.DW )
+   {    if( _comment )
       ff << "# DW: Maximum number of allowed IPM-2 mass balance accuracy improvement loops (from 0 to 15) { 15 }" << endl;
-   }
    ff << left << setw(12) << "<pa_DW> " << right << setw(8) << pa->p.DW  << endl;
-   if( _comment )
-     ff << "# DT: IPM-2 cutoff exponent to recover small elements of the primal x vector using the dual solution vector u { -3 }" << endl;
-   ff << left << setw(12) << "<pa_DT> " << right << setw(8) << pa->p.DT  << endl;
-   if( _comment )
-     ff << "\n# GAS: IPM-2 balance accuracy control ratio DHBM[i]/b[i], determines the maximum allowed mass balance residual for minor IC { 1e-3 }" << endl;
-   ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa->p.GAS << endl;
-   if( _comment )
-	 ff << "# DG: Threshold for minimum descent step size Lambda in EntryFeasibleDomain()" << endl;
-   ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
-   if( _comment )
-     ff << "# DNS: Standard surface density (nm-2) for calculating activity of surface species { 12.05 nm-2 }" << endl;
-   ff << left << setw(12) << "<pa_DNS> " <<  right << setw(8) << pa->p.DNS << endl;
-   if( _comment )
-     ff << "# IEPS: Convergence parameter of SACT calculation in sorption/surface complexation models { 0.001 }" << endl;
-   ff << left << setw(12) << "<pa_IEPS> " <<  right << setw(8) << pa->p.IEPS << endl;
-   if( _comment )
-     ff << "\n# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } " << endl;
-   ff << left << setw(12) << "<pKin> " <<  right << setw(8) << pmp->PLIM << endl;
-   if( _comment )
-     ff << "# DKIN: Tolerance on the amount of DC with two-side metastability constraints  (moles) { 1e-7 } " << endl;
-   ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa->p.DKIN << endl;
-   if( _comment )
-     ff << "# pa_PLLG: TIPM-2 tolerance for checking change in dual solution among GEM refinement loops { 200 }" << endl;
-   ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
- } //   brief_mode  
+   }
+   if(!brief_mode || pa->p.DT != pa_.p.DT )
+   { if( _comment )
+      ff << "# DT: IPM-2 cutoff exponent to recover small elements of the primal x vector using the dual solution vector u { -3 }" << endl;
+     ff << left << setw(12) << "<pa_DT> " << right << setw(8) << pa->p.DT  << endl;
+   }  
+   if(!brief_mode || pa->p.GAS != pa_.p.GAS )
+   { if( _comment )
+       ff << "\n# GAS: IPM-2 balance accuracy control ratio DHBM[i]/b[i], determines the maximum allowed mass balance residual for minor IC { 1e-3 }" << endl;
+     ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa->p.GAS << endl;
+   }  
+   if(!brief_mode || pa->p.DG != pa_.p.DG )
+   { if( _comment )
+	  ff << "# DG: Threshold for minimum descent step size Lambda in EntryFeasibleDomain()" << endl;
+     ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
+   }  
+   if(!brief_mode || pa->p.DNS != pa_.p.DNS )
+   { if( _comment )
+       ff << "# DNS: Standard surface density (nm-2) for calculating activity of surface species { 12.05 nm-2 }" << endl;
+     ff << left << setw(12) << "<pa_DNS> " <<  right << setw(8) << pa->p.DNS << endl;
+   }  
+   if(!brief_mode || pa->p.IEPS != pa_.p.IEPS )
+   { if( _comment )
+       ff << "# IEPS: Convergence parameter of SACT calculation in sorption/surface complexation models { 0.001 }" << endl;
+     ff << left << setw(12) << "<pa_IEPS> " <<  right << setw(8) << pa->p.IEPS << endl;
+   }  
+   if(!brief_mode )
+   { if( _comment )
+       ff << "\n# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } " << endl;
+     ff << left << setw(12) << "<pKin> " <<  right << setw(8) << pmp->PLIM << endl;
+   }  
+   if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
+   { if( _comment )
+      ff << "# DKIN: Tolerance on the amount of DC with two-side metastability constraints  (moles) { 1e-7 } " << endl;
+     ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa->p.DKIN << endl;
+   }  
+   if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
+   { if( _comment )
+       ff << "# pa_PLLG: TIPM-2 tolerance for checking change in dual solution among GEM refinement loops { 200 }" << endl;
+     ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
+   }  
 
 //dynamic arrays
 if( pm.FIs > 0 && pm.Ls > 0 )
