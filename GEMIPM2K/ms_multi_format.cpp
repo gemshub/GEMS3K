@@ -122,7 +122,7 @@ outField MULTI_dynamic_fields[68] =  {
 
 //===================================================================
 
-void TMulti::to_text_file_gemipm( const char *path, bool addMui, 
+void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 		bool with_comments, bool brief_mode )
 {
   SPP_SETTING *pa = &TProfil::pm->pa;
@@ -168,8 +168,8 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{   ff << "# GEMIPM2K v. 2.3.0" << endl;
-   ff << "# Prototype 16.02.2009" << endl;
+{   ff << "# GEMIPM2K v. 2.3.1" << endl;
+   ff << "# Prototype 13.08.2009" << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
@@ -184,14 +184,14 @@ if( _comment )
  { if( _comment )
       ff << "# PE: Flag for using electroneutrality condition in GEM IPM calculations " << endl;
    ff << left << setw(12) << "<pa_PE> " <<  right << setw(8) << pa->p.PE << endl;
- }  
+ }
 
 //   ff << "# 'E'                1" << endl;
 //   ff << left << setw(12) << "<E> " <<  right << setw(8) << pmp->E << endl;
  if( _comment )
      ff << "\n# PV: Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat" << endl;
    ff << left << setw(12) << "<PV> " <<  right << setw(8) << pmp->PV << endl;
-   
+
 //   ff << "# These dimensions can be calculated from the DATACH information" << endl;
 //   ff << "# 'Ls'              23" << endl;
 //   ff << "# 'LO'              18" << endl;
@@ -213,7 +213,7 @@ if( _comment )
     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
    ff << left << setw(12) << "<PSigm> " <<  right << setw(6) <<
       "\'" << PSigm << "\'" << endl;
-  if( !brief_mode || pmp->FIat > 0 || pmp->Lads > 0 ) 
+  if( !brief_mode || pmp->FIat > 0 || pmp->Lads > 0 )
   { if( _comment )
     {  ff << "\n## (2) Important dimensionalities that affect memory allocation" << endl;
        ff << "# Lads: Total number of Dependent Components in sorption phases included into this system" << endl;
@@ -234,17 +234,17 @@ if( _comment )
    if( _comment )
    {  ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
       ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
-   }   
+   }
    if(!brief_mode || pa->p.DB != pa_.p.DB )
    { if( _comment )
        ff << "# DB: Minimum amount of Independent Component in the bulk system composition (except charge Zz) (moles)" << endl;
      ff << left << setw(12) << "<pa_DB> " <<  right << setw(8) << pa->p.DB << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DHB != pa_.p.DHB )
    { if( _comment )
       ff << "\n# DHB: Maximum allowed mass balance residual (moles) for major Independent Components" << endl;
      ff << left << setw(12) << "<pa_DHB> " << right << setw(8) <<  pa->p.DHB << endl;
-   }  
+   }
    if(!brief_mode || pa->p.EPS != pa_.p.EPS )
    { if( _comment )
       ff << "\n# EPS: Precision criterion of the simplex() procedure to obtain the automatic initial approximation { 1e-7 }" << endl;
@@ -254,69 +254,69 @@ if( _comment )
    { if( _comment )
       ff << "\n# DK: IPM-2 convergence threshold for the Dikin criterion  (1e-6 < DK < 1e-3, default 1e-4)" << endl;
      ff << left << setw(12) << "<pa_DK> " <<  right << setw(8) << pa->p.DK << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DS != pa_.p.DS )
    { if( _comment )
       ff << "\n# DS: Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }" << endl;
      ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DF != pa_.p.DF )
    { if( _comment )
       ff << "\n# DF: Threshold for the application of the Karpov phase stability criterion f_a" << endl;
      ff << left << setw(12) << "<pa_DF> " <<  right << setw(8) << pa->p.DF << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DFM != pa_.p.DFM )
    { if( _comment )
       ff << "# DFM: Threshold for Karpov stability criterion f_a for insertion of a phase" << endl;
      ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DP != pa_.p.DP )
    {  if( _comment )
        ff << "\n# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure" << endl;
      ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
-   }  
+   }
    if(!brief_mode || pa->p.IIM != pa_.p.IIM )
    { if( _comment )
       ff << "\n# IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure { 500 }" << endl;
      ff << left << setw(12) << "<pa_IIM> " << right << setw(8) <<  pa->p.IIM << endl;
-   }  
+   }
    if(!brief_mode || pa->p.PD != pa_.p.PD )
    { if( _comment )
       ff << "\n# PD: Mode of execution of the built-in DebyeHueckel()/Davies() functions { 3 }" << endl;
      ff << left << setw(12) << "<pa_PD> " <<  right << setw(8) << pa->p.PD << endl;
-   }  
+   }
    if(!brief_mode || pa->p.PRD != pa_.p.PRD )
    { if( _comment )
      { ff << "\n# PRD: Negative number (from -1 to -50): the number  of additional full IPM-2 loops, otherwise no additional loops" << endl;
        ff <<   "#      Positive or 0: no global refinement loops" << endl;
      }
      ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa->p.PRD << endl;
-   }  
+   }
    if(!brief_mode || pa->p.AG != pa_.p.AG )
    { if( _comment )
       ff << "\n# AG: Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations." << endl;
      ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa->p.AG << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DGC != pa_.p.DGC )
    { if( _comment )
       ff << "\n# DGC: Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions." << endl;
      ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa->p.DGC << endl;
-   }  
+   }
    if(!brief_mode || pa->p.PSM != pa_.p.PSM )
    { if( _comment )
       ff << "\n# PSM: Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }" << endl;
      ff << left << setw(12) << "<pa_PSM> " <<  right << setw(8) << pa->p.PSM << endl;
-   }  
+   }
    if(!brief_mode || pa->p.GAR != pa_.p.GAR )
    { if( _comment )
       ff << "# GAR: Initial activity coefficient value for major (M) species in a solution phase before Simplex() approximation { 1 }" << endl;
      ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa->p.GAR << endl;
-   }  
+   }
    if(!brief_mode || pa->p.GAH != pa_.p.GAH )
    { if( _comment )
       ff << "# GAH: Initial activity coefficient value for minor (J) species in a solution phase before Simplex() approximation { 1000 }" << endl;
      ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa->p.GAH << endl;
-   } 
+   }
    if(!brief_mode)
     if( _comment )
      {  ff << "\n# _Min: Cutoff mole amounts for elimination of: Xw - water-solvent { 1e-9 }; Sc - solid sorbent {1e-7}; " << endl;
@@ -330,7 +330,7 @@ if( _comment )
      ff << left << setw(12) << "<pa_DcMin> " <<  right << setw(8) << pa->p.DcMin << endl;
    if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
      ff << left << setw(12) << "<pa_PhMin> " <<  right << setw(8) << pa->p.PhMin << endl;
-   
+
    if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
    { if( _comment )
       ff << "\n# ICmin: Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }" << endl;
@@ -340,7 +340,7 @@ if( _comment )
    { if( _comment )
       ff << "\n# PC: Mode of PhaseSelect() operation  { 1 }" << endl;
      ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
-   }  
+   }
    if( _comment )
       ff << "# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm" << endl;
    if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
@@ -357,7 +357,7 @@ if( _comment )
    { if( _comment )
       ff << "\n# DFYid: Insertion mole amount for ideal solution components" << endl;
      ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa->p.DFYid << endl;
-   } 
+   }
    if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
    { if( _comment )
       ff << "# DFYr: Insertion mole amount for major solution components" << endl;
@@ -377,7 +377,7 @@ if( _comment )
    { if( _comment )
       ff << "# DFYs: Insertion mole amount used in PhaseSelect() for a condensed phase component" << endl;
      ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa->p.DFYs << endl;
-   }  
+   }
    if( _comment )
      ff << "\n# Parameters for high-accuracy IPM-2 algorithm " << endl;
    if(!brief_mode || pa->p.DW != pa_.p.DW )
@@ -389,42 +389,42 @@ if( _comment )
    { if( _comment )
       ff << "# DT: IPM-2 cutoff exponent to recover small elements of the primal x vector using the dual solution vector u { -3 }" << endl;
      ff << left << setw(12) << "<pa_DT> " << right << setw(8) << pa->p.DT  << endl;
-   }  
+   }
    if(!brief_mode || pa->p.GAS != pa_.p.GAS )
    { if( _comment )
        ff << "\n# GAS: IPM-2 balance accuracy control ratio DHBM[i]/b[i], determines the maximum allowed mass balance residual for minor IC { 1e-3 }" << endl;
      ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa->p.GAS << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DG != pa_.p.DG )
    { if( _comment )
 	  ff << "# DG: Threshold for minimum descent step size Lambda in EntryFeasibleDomain()" << endl;
      ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DNS != pa_.p.DNS )
    { if( _comment )
        ff << "# DNS: Standard surface density (nm-2) for calculating activity of surface species { 12.05 nm-2 }" << endl;
      ff << left << setw(12) << "<pa_DNS> " <<  right << setw(8) << pa->p.DNS << endl;
-   }  
+   }
    if(!brief_mode || pa->p.IEPS != pa_.p.IEPS )
    { if( _comment )
        ff << "# IEPS: Convergence parameter of SACT calculation in sorption/surface complexation models { 0.001 }" << endl;
      ff << left << setw(12) << "<pa_IEPS> " <<  right << setw(8) << pa->p.IEPS << endl;
-   }  
+   }
    if(!brief_mode )
    { if( _comment )
        ff << "\n# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } " << endl;
      ff << left << setw(12) << "<pKin> " <<  right << setw(8) << pmp->PLIM << endl;
-   }  
+   }
    if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
    { if( _comment )
       ff << "# DKIN: Tolerance on the amount of DC with two-side metastability constraints  (moles) { 1e-7 } " << endl;
      ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa->p.DKIN << endl;
-   }  
+   }
    if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
    { if( _comment )
        ff << "# pa_PLLG: TIPM-2 tolerance for checking change in dual solution among GEM refinement loops { 200 }" << endl;
      ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
-   }  
+   }
 
 //dynamic arrays
 if( pm.FIs > 0 && pm.Ls > 0 )
@@ -434,7 +434,7 @@ if( pm.FIs > 0 && pm.Ls > 0 )
   if( _comment )
      ff << "# sMod: Codes for built-in mixing models of multicomponent phases [nPS*6]";
     prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6L );
-  
+
 long int LsModSum;
 long int LsIPxSum;
 long int LsMdcSum;
@@ -446,7 +446,7 @@ getLsMdcsum( LsMdcSum );
 
     }
     prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3L);
- 
+
   if(LsIPxSum )
   {
    if( _comment )
@@ -476,17 +476,17 @@ getLsMdcsum( LsMdcSum );
 
   if( _comment )
      ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs" << endl;
-  
+
   if(!brief_mode || prar.getAlws("Pparc" ))
-  { 
+  {
 	  if( _comment )
 	    ff << "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC]";
       prar.writeArray(  "Pparc", pmp->Pparc,  pmp->L);
-  }    
+  }
  //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
  // prar.writeArray(  "G0", pmp->G0,  pmp->L);
   if(!brief_mode || prar.getAlws("GEX" ))
-  { 
+  {
    if( _comment )
       ff << "\n\n# GEX: Increments for adjustment of G0 values of Dependent Components in (J/mol/(RT)) (normalized units) [nDC]";
    prar.writeArray(  "GEX", pmp->GEX,  pmp->L);
@@ -495,7 +495,7 @@ getLsMdcsum( LsMdcSum );
   { if( _comment )
       ff << "\n\n# lnGmf:  Natural logarithms of DC (activity coefficients) to be used for correcting g0(T,P) [nDC]";
     prar.writeArray(  "lnGmf", pmp->lnGmf,  pmp->L);
-  }  
+  }
   if( _comment )
      ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
 
@@ -503,36 +503,36 @@ getLsMdcsum( LsMdcSum );
    {   if( _comment )
          ff << "# RLC: Code of metastability constraints for DCs [nDC]";
      prar.writeArray(  "RLC", pmp->RLC, pmp->L, 1L );
-   }  
+   }
    if(!brief_mode || prar.getAlws("RSC" ))
    { if( _comment )
       ff << "\n\n# RSC: Units of metastability/kinetic constraints for DCs [nDC]";
      prar.writeArray(  "RSC", pmp->RSC, pmp->L, 1L );
-   }  
+   }
    if(!brief_mode || prar.getAlws("DLL" ))
    { if( _comment )
         ff << "\n\n# DLL: Full vector of lower metastability constraints on DC amounts <xDC> in the system (moles) [nDC]";
      prar.writeArray(  "DLL", pmp->DLL,  pmp->L);
-   }  
+   }
    if(!brief_mode || prar.getAlws("DUL" ))
    {  if( _comment )
        ff << "\n\n# DUL:Full vector of upper metastability constraints on DC amounts <xDC> in the system (moles) [nDC]";
       prar.writeArray(  "DUL", pmp->DUL,  pmp->L);
-   }   
+   }
    if( _comment )
      ff << "\n\n# (7) Initial data for phases" << endl;
    if(!brief_mode || prar.getAlws("Aalp" ))
    { if( _comment )
       ff << "\n# Aalp: Full vector of specific surface areas of phases (m2/g) [nPH]";
      prar.writeArray(  "Aalp", pmp->Aalp,  pmp->FI);
-   }  
+   }
    if( PSigm != S_OFF )
    {
      if(!brief_mode || prar.getAlws("Sigw" ))
      { if( _comment )
          ff << "\n\n# Sigw: Specific surface free energy for phase-water interface (J/m2) [nPH]";
         prar.writeArray(  "Sigw", pmp->Sigw,  pmp->FI);
-     }   
+     }
      if(!brief_mode || prar.getAlws("Sigg" ))
      { if( _comment )
          ff << "\n\n# Sigg: Specific surface free energy for phase-gas interface (J/m2) (not yet used) [nPH]";
@@ -543,7 +543,7 @@ getLsMdcsum( LsMdcSum );
    {  if( _comment )
         ff << "\n\n# YOF: Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition)  [nPH]";
       prar.writeArray(  "YOF", pmp->YOF,  pmp->FI);
-   }   
+   }
    if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
     { /* ADSORPTION AND ION EXCHANGE */
       if( _comment )
@@ -552,32 +552,32 @@ getLsMdcsum( LsMdcSum );
       { if( _comment )
          ff << "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]";
         prar.writeArray(  "Nfsp", &pmp->Nfsp[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      }  
+      }
       if(!brief_mode || prar.getAlws("MASDT" ))
       { if( _comment )
          ff << "\n# MASDT: Total maximum site  density per surface type (mkmol/g) [nPS*6]";
         prar.writeArray(  "MASDT", &pmp->MASDT[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      }  
+      }
       if(!brief_mode || prar.getAlws("C1" ))
       { if( _comment )
            ff << "\n# C1: Inner capacitance density parameter C1 (F/m2) [nPS*6]";
         prar.writeArray(  "C1", &pmp->XcapA[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      }  
+      }
       if(!brief_mode || prar.getAlws("C2" ))
       { if( _comment )
           ff << "\n# C2: Outer capacitance density parameter C2 (F/m2) [nPS*6]";
         prar.writeArray(  "C2", &pmp->XcapB[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      }  
+      }
       if(!brief_mode || prar.getAlws("C3" ))
       { if( _comment )
           ff << "\n# C3: Third capacitance density parameter C3  (F/m2) [nPS*6]";
         prar.writeArray(  "C3", &pmp->XcapF[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      }  
+      }
       if(!brief_mode || prar.getAlws("pCh" ))
       { if( _comment )
           ff << "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]";
        prar.writeArray(  "pCh", &pmp->Xetaf[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
-      } 
+      }
       if(!brief_mode || prar.getAlws("SATX" ))
       { if( _comment )
         {   ff << "\n# SATX: Setup of surface sites and species (will be applied separately within each sorption phase) [Lads*4]";
@@ -594,22 +594,22 @@ getLsMdcsum( LsMdcSum );
           ff << "\n# [4] dentateness or CN; [5] reserved isoterm parameter.";
        }
        prar.writeArray(  "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN, (long int)DFCN);
-     }   
+     }
      if(!brief_mode || prar.getAlws("SCM" ))
      { if( _comment )
          ff << "\n# SCM: Classifier of built-in electrostatic models applied to surface types in sorption phases [nPS*6]";
        prar.writeArray(  "SCM", pmp->SCM[0], pmp->FIs, pmp->FIat );
-     }  
+     }
      if(!brief_mode || prar.getAlws("SACT" ))
      { if( _comment )
          ff << "\n# SACT: Classifier of applied SACT equations (isotherm corrections) [Lads].";
        prar.writeArray(  "SACT", pmp->SATT, pmp->Lads, 1L );
-     }  
+     }
      if(!brief_mode || prar.getAlws("DCads" ))
      { if( _comment )
          ff << "\n# DCads: Classifier of DCs involved in sorption phases [Lads]";
       prar.writeArray(  "DCads", pmp->DCC3, pmp->Lads, 1L );
-     } 
+     }
     }
 /*
  * outArray( ff, "Vol", pmp->Vol,  pmp->L);

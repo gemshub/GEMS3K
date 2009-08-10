@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------
 // $Id: node.cpp 684 2005-11-23 13:17:15Z gems $
 //
-// Implementation of Tnode class including initialization and
+// Implementation of TNode class including initialization and
 // execution of GEMIPM2 kernel
 
-// Works whith DATACH and DATABR structures
+// Works with DATACH and DATABR structures
 //
 // Copyright (C) 2005,2009 S.Dmytriyeva, D.Kulik, G.Kosakowski
 //

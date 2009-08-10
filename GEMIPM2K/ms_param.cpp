@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1387 2009-08-07 12:31:14Z gems $
+// $Id: ms_param.cpp 1392 2009-08-10 13:39:26Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -47,7 +47,7 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-  "GEMS-PSI v2.3.0: Controls and defaults for numeric modules",
+  "GEMS-PSI v2.3.1: Controls and defaults for numeric modules",
   {
       1,  /* PC */  3,     /* PD */   3,   /* PRD */
       1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
@@ -342,8 +342,8 @@ void TProfil::readMulti( const char* path )
        cP += dP;
      }
      cT += dT;
-   }  
- 
+   }
+
 //  fstream ff("lagrange_T_5_3.out.txt", ios::out );
 //  ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
   TPrintArrays  prar(0, 0, ff);
@@ -371,7 +371,7 @@ void TProfil::readMulti( const char* path )
    delete[] denW;
    delete[] epsW;
  }
- 
+
 // Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 // (only used in standalone GEMIPM2K version)
  //
@@ -405,11 +405,11 @@ void TMulti::CompG0Load()
  pmp->T = pmp->Tc = TC + C_to_K;
  pmp->TC = pmp->TCc = TC;
  pmp->P = pmp->Pc = P;
- 
+
 // if( dCH->ccPH[0] == PH_AQUEL )
 // {
    for( k=0; k<5; k++ )
-   {	 
+   {
      jj =  k * dCH->nPp * dCH->nTp;
      if( xTP >= 0 )
       {
@@ -425,12 +425,12 @@ void TMulti::CompG0Load()
        pmp->epsW[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsW+jj,
                           PPa, TC, dCH->nTp, dCH->nPp,5 );// from test epsW enough
        pmp->denWg[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->denWg+jj,
-                          PPa, TC, dCH->nTp, dCH->nPp,5 )/1e3; 
+                          PPa, TC, dCH->nTp, dCH->nPp,5 )/1e3;
        pmp->epsWg[k] = LagranInterp( dCH->Pval, dCH->TCval, dCH->epsWg+jj,
                           PPa, TC, dCH->nTp, dCH->nPp,5 );
      }
   }
-// }  
+// }
 // else
 // {
 //   pmp->denW[0] = 1.;
@@ -456,20 +456,20 @@ void TMulti::CompG0Load()
       {
         Go = dCH->G0[ jj+xTP];
         Vv = dCH->V0[ jj+xTP]*1e5;
-        if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];	
-        if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];	
-        if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];	
-        if( dCH->A0 ) a0 = dCH->A0[ jj+xTP];	
-        if( dCH->U0 ) h0 = dCH->U0[ jj+xTP];	
+        if( dCH->S0 ) S0 = dCH->S0[ jj+xTP];
+        if( dCH->H0 ) h0 = dCH->H0[ jj+xTP];
+        if( dCH->Cp0 ) Cp0 = dCH->Cp0[ jj+xTP];
+        if( dCH->A0 ) a0 = dCH->A0[ jj+xTP];
+        if( dCH->U0 ) h0 = dCH->U0[ jj+xTP];
       }
      else
      {
        Go = LagranInterp( dCH->Pval, dCH->TCval, dCH->G0+jj,
-                          PPa, TC, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough 
+                          PPa, TC, dCH->nTp, dCH->nPp, 6 ); // from test G0[Ca+2] enough
        Vv = LagranInterp( dCH->Pval, dCH->TCval, dCH->V0+jj,
                           PPa, TC, dCH->nTp, dCH->nPp, 5 )*1e5;
        if( dCH->S0 ) S0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->S0+jj,
-                          PPa, TC, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough 
+                          PPa, TC, dCH->nTp, dCH->nPp, 4 ); // from test S0[Ca+2] enough
        if( dCH->H0 ) h0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->H0+jj,
                           PPa, TC, dCH->nTp, dCH->nPp,5 );
        if( dCH->Cp0 ) Cp0 =  LagranInterp( dCH->Pval, dCH->TCval, dCH->Cp0+jj,
