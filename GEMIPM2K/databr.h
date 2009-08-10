@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: databr.h 1381 2009-07-31 13:37:13Z gems $
+// $Id: databr.h 1390 2009-08-10 09:20:12Z gems $
 //
 // DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
@@ -9,7 +9,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 //
-// Copyright (C) 2003,2008 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
+// Copyright (C) 2003,2009 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
@@ -26,8 +26,8 @@
 #define _DataBr_H_
 
 typedef struct  // DATABR - template node data bridge structure
-{  
-   long int    
+{
+   long int
      NodeHandle,    // Node identification handle, not used in calculaions on TNode level
      NodeTypeHY,    // Node type code (hydraulic), not used on TNode level; see typedef NODETYPE
      NodeTypeMT,    // Node type (mass transport), not used on TNode level; see typedef NODETYPE
@@ -37,10 +37,10 @@ typedef struct  // DATABR - template node data bridge structure
 
 /*  these important data array dimensions are provided in the DATACH structure
    long int
-    nICb,       // Number of Independent Components kept in the DATABR memory structure (<= nIC) 
-    nDCb,      	// Number of Dependent Components kept in the DATABR memory structure (<=nDC) 
-    nPHb,     	// Number of Phases to be kept in the DATABR structure (<= nPH) 
-    nPSb,       // Number of Phases-solutions (multicomponent phases) to be kept in the DATABR memory structure (<= nPS) 
+    nICb,       // Number of Independent Components kept in the DATABR memory structure (<= nIC)
+    nDCb,      	// Number of Dependent Components kept in the DATABR memory structure (<=nDC)
+    nPHb,     	// Number of Phases to be kept in the DATABR structure (<= nPH)
+    nPSb,       // Number of Phases-solutions (multicomponent phases) to be kept in the DATABR memory structure (<= nPS)
 */
 //      Usage of this variable (DB - data bridge)      	               MT-DB DB-GEM GEM-DB DB-MT
    double
@@ -79,7 +79,7 @@ typedef struct  // DATABR - template node data bridge structure
     rho,	// Actual carrier density for density-driven flow (kg/m3)
     al,		// Specific longitudinal dispersivity of porous media (m)
     at,		// Specific transversal dispersivity of porous media (m)
-    av,		// Specific vertical dispersivity of porous media (m) 
+    av,		// Specific vertical dispersivity of porous media (m)
     hDl,	// Hydraulic longitudinal dispersivity (m2/s)
     hDt,	// Hydraulic transversal dispersivity (m2/s)
     hDv,	// Hydraulic vertical dispersivity (m2/s)

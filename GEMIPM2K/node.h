@@ -431,14 +431,14 @@ void GEM_set_MT(
    // plus returns through the nDCinPh (reference) parameter the number of DCs included into this phase 
     long int  PhtoDC_DCH( const long int Phx, long int& nDCinPh );
 
-   // Returns the DCH index of the Phase that Dependent Components xCH was included  
+   // Returns the DCH index of the Phase to which the Dependent Component with index xCH belongs  
     long int  DCtoPh_DCH( const long int xCH );
     
    // Returns the DBR index of the first DC belonging to the phase with DBR index Phx, 
    //plus returns through the nDCinPh (reference) parameter the number of DCs included into DBR for this phase
     long int  PhtoDC_DBR( const long int Phx, long int& nDCinPh );
 
-   // Returns the DBR index of the Phase that Dependent Components xBR was included  
+   // Returns the DBR index of the Phase to which the  Dependent Component with index xBR belongs
      long int  DCtoPh_DBR( const long int xBR );
 
     // Data exchange methods between GEMIPM and work node DATABR structure
@@ -566,8 +566,10 @@ void GEM_set_MT(
       //Retrieval of (dual-thermodynamic) activity of the DC (xdc is the DC DBR index)
       double Get_aDC( const long int xdc);
       
-      //Retrieves concentration of DC (xdc is the DC DBR index) in its phase 
-      // in the respective concentration scale 
+      // Retrieves concentration of Dependent Component (xdc is the DC DBR index) in its phase
+      // in the respective concentration scale. For aqueous species, molality is returned;
+      // for gas species, partial pressure; for surface complexes - density in mol/m2; 
+      // for species in other phases - mole fraction. If DC has zero amount, the function returns 0.0.
       double Get_cDC( const long int xdc ); 
       
       // Retrieves the activity coefficient of Dependent Component (xdc is the DC DBR index) 
@@ -584,7 +586,7 @@ void GEM_set_MT(
       inline double ICmm( const long int xic ) const
       { return CSD->ICmm[ CSD->xic[xic]]; }
       
-      //Retrieves the stoichiometry coefficient A[j][i] of IC (xic is IC DBR index) 
+      //Retrieves the stoichiometry coefficient a[j][i] of IC (xic is IC DBR index) 
       // in the formula of DC (xdc is DC DBR index)
       inline double DCaJI( const long int xdc, const long int xic) const
       { return CSD->A[ CSD->xic[xic] + CSD->xdc[xdc] * CSD->nIC ]; }
@@ -598,39 +600,39 @@ void GEM_set_MT(
       { return pmm->B[xCH]/internalScFact; }
             
       // Retrieves the current mole amount of DC (xCH is DC DCH index) directly from 
-      // GEM IPM2 work structure. Also amount of DCs not included into DATABR 
+      // GEM IPM work structure. Also amount of DCs not included into DATABR 
       // list can be retrieved. Internal re-scaling to mass of the system is applied.
       inline double DC_n(const long int xCH) const
       {  return pmm->X[xCH]/internalScFact; }
       
       // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index) 
-      // directly from GEM IPM2 work structure. Also activity of a DC not included into DATABR list 
+      // directly from GEM IPM work structure. Also activity of a DC not included into DATABR list 
       // can be retrieved. If DC has zero amount, its dual-thermodynamic activity is returned anyway.
       // For single condensed phase component, this value has a meaning of the saturation index, 
       // also in the presence of metastability constraint(s).
       double DC_a(const long int xCH);
       
-      // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) 
-      // in its phase directly from GEM IPM2 work structure.Also activity of a DC not included 
-      // into DATABR list can be retrieved. For aqueous species, molality is returned; 
-      // for gas species, partial pressure; for surface complexes - density in mol/m2;
-      // for other phases - mole fraction. If DC has zero amount, the function returns 0.0.
+      // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its
+      // phase directly from GEM IPM work structure.Also activity of a DC not included into 
+      // DATABR list can be retrieved. For aqueous species, molality is returned; for gas species, 
+      // partial pressure; for surface complexes - density in mol/m2; for species in other phases - 
+      // mole fraction. If DC has zero amount, the function returns 0.0. 
       double DC_c(const long int xCH);
       
       // Retrieves the current activity coefficient of DC (xCH is DC DCH index) in its phase 
-      // directly from GEM IPM2 work structure. Also activity coefficient of a DC not included 
+      // directly from GEM IPM work structure. Also activity coefficient of a DC not included 
       // into DATABR list can be retrieved. If DC has zero amount, this function returns 1.0.
       inline double DC_g(const long int xCH) const
       {  return pmm->Gamma[xCH];  }
       
       // Retrieves the current (dual-thermodynamic) chemical potential of DC (xCH is DC DCH index)
-      // directly from GEM IPM2 work structure, also for any DC not included into DATABR or having zero amount.
+      // directly from GEM IPM work structure, also for any DC not included into DATABR or having zero amount.
       // Parameter norm defines in wnich units the chemical potential value is returned:
       // false - in J/mol; true (default) - in mol/mol
       double DC_mu(const long int xCH, bool norm=true);
       
       // Retrieves the standard chemical potential of DC (xCH is DC DCH index) directly
-      // from GEM IPM2 work structure at current pressure and temperature,
+      // from GEM IPM work structure at current pressure and temperature,
       // also for any DC not included into DATABR or having zero amount. 
       // Parameter norm defines in which units the chemical potential value is returned: 
       // false - in J/mol; true (default) - in mol/mol
