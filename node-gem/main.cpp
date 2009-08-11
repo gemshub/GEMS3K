@@ -34,12 +34,12 @@ int main( int argc, char* argv[] )
  {
    // Analyzing command line arguments ( Default arguments)
      char ipm_input_file_list_name[256] = "system-dat.lst";
-//     char dbr_input_file_name[256] = "system-dbr.dat";
+     char dbr_input_file_name[256] = "system-dbr.dat";
 
      if (argc >= 2 )  // list of files needed as input for initializing GEMIPM2K
        strncpy( ipm_input_file_list_name, argv[1], 256);
-//     if (argc >= 3 ) // input file for boundary conditions
-//       strncpy( dbr_input_file_name, argv[2], 256);
+     if (argc >= 3 ) // input file for boundary conditions
+       strncpy( dbr_input_file_name, argv[2], 256);
 
      // Creates TNode structure instance accessible trough the "node" pointer
       TNode* node  = new TNode();
@@ -118,20 +118,20 @@ int main( int argc, char* argv[] )
          m_bPS[in] = new double [nIC*nPS];
       }
 
-cout << "Begin Initialiation part" << endl;
       // Initialization of GEMIPM2K and chemical information for nodes kept in the FMT part
       long int in;
-      for(  in=0; in<nNodes; in++ )
+      for(  in=1; in<nNodes; in++ )
       {
     	  // Asking GEM to run with automatic initial approximation
     	  dBR->NodeStatusCH = NEED_GEM_AIA;
     	  // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
-          m_NodeStatusCH[in] = node->GEM_run(1., false);
+          m_NodeStatusCH[in] = node->GEM_run( false);
           if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
           {
               cout << "Error occured during re-calculating equilibrium" ;
               return 5;
           }
+
           // (6) Extracting GEMIPM input data to mass-transport program arrays
           node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_T[in], m_P[in],
             m_Vs[in], m_Ms[in], m_bIC[in], m_dul[in], m_dll[in], m_aPH[in] );
@@ -147,35 +147,69 @@ cout << "Begin Initialiation part" << endl;
           // Here the file output for the initial conditions can be implemented
         }
 
-cout << "End Initialiation part" << endl;
-        int xCalcite = node->Ph_name_to_xDB("Calcite");
-        int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
+      // Read DATABR structure from text file (read boundary condition)
+      node->GEM_read_dbr( dbr_input_file_name );
+
+      for(  in=0; in<1; in++ )
+      {
+    	  // Asking GEM to run with automatic initial approximation
+    	  dBR->NodeStatusCH = NEED_GEM_AIA;
+    	  // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
+          m_NodeStatusCH[in] = node->GEM_run( false);
+          if( !( m_NodeStatusCH[in] == OK_GEM_AIA || m_NodeStatusCH[in] == OK_GEM_SIA ) )
+          {
+              cout << "Error occured during re-calculating equilibrium" ;
+              return 5;
+          }
+
+          // (6) Extracting GEMIPM input data to mass-transport program arrays
+          node->GEM_restore_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_T[in], m_P[in],
+            m_Vs[in], m_Ms[in], m_bIC[in], m_dul[in], m_dll[in], m_aPH[in] );
+          
+          // (7) Extracting GEMIPM output data to mass-transport program arrays
+          node->GEM_to_MT( m_NodeHandle[in], m_NodeStatusCH[in], m_IterDone[in],
+            m_Vs[in], m_Ms[in], m_Gs[in], m_Hs[in], m_IC[in], m_pH[in], m_pe[in],
+            m_Eh[in], m_rMB[in], m_uIC[in], m_xDC[in], m_gam[in], m_xPH[in],
+            m_vPS[in], m_mPS[in], m_bPS[in], m_xPA[in] );
+
+          // Here the setup of initial differences between node compositions,
+          //    temperatures, etc. can be implemented
+          // Here the file output for the initial conditions can be implemented
+     }
       
       // Main loop - iterations over nTimes time steps
+        int xCalcite = node->Ph_name_to_xDB("Calcite");
+        int xAq_gen = node->Ph_name_to_xDB("aq_gen");
+        int ICndx[3];
+        ICndx[0] = node->IC_name_to_xDB("Ca");
+        ICndx[1] = node->IC_name_to_xDB("C");
+        ICndx[2] = node->IC_name_to_xDB("O");
+        double parcel[3];
+        
+        // Checking indexes
+        cout << "xCa= " << ICndx[0] << " xC=" << ICndx[1] << " xO=" << ICndx[2]
+             << " xCalcite=" << xCalcite << " xAq_gen=" << xAq_gen << endl;
+
       long int it, nTimes = 99;
       for( it=0; it<nTimes; it++ ) 
       {
-         // Mass transport loop over nodes (here not a real transport model)
-         double parcel[3];
-         for (int i=0; i<3; i++)
-         {
-            parcel[i] = 0.01*m_bIC[0][i];
+          cout << "Time step  " << it << endl;
+          // Mass transport loop over nodes (here not a real transport model)
+          for(  in=1; in<nNodes; in++ )
+          {
+               // some operators that change in some nodes some amounts of some migrating chemical species (m_xDC array)
+               // (or  some amounts of migrating chemical elements in m_bIC array), possibly using data from other arrays
+               // in such a way that the mass conservation within the whole array of nodes  is retained
+            for (int i=0; i<3; i++)
+            {
+         	  parcel[i] = 0.01*m_bIC[in-1][ICndx[i]];
+         	  m_bIC[in][ICndx[i]] += parcel[i];
+              if( in > 1 )  m_bIC[in-1][ICndx[i]] -= parcel[i];
+            }
+            // The above example loop implements a zero-order flux of CaO and C in one direction.
+            // real advective/diffusive transport models are much more complex, but essentially
+            //   do similar things
          }
-         for(  in=1; in<nNodes; in++ )
-         {
-              // some operators that change in some nodes some amounts of some migrating chemical species (m_xDC array)
-              // (or  some amounts of migrating chemical elements in m_bIC array), possibly using data from other arrays
-              // in such a way that the mass conservation within the whole array of nodes  is retained
-           for (int i=0; i<3; i++)
-           {
-              m_bIC[in][i] += parcel[i];
-              m_bIC[in-1][i] -= parcel[i];
-           }
-           // The above example loop implements a zero-order flux of the first three
-           //   chemical elements in one direction
-           // real advective/diffusive transport models are much more complex, but essentially
-           //   do similar things
-        }
 
         // Chemical equilibration loop over nodes
         for( in=0; in<nNodes; in++ )
@@ -193,14 +227,15 @@ cout << "End Initialiation part" << endl;
           // Calling GEMIPM calculation
           m_NodeStatusCH[in] = node->GEM_run( 1., true );
 
-       	  if( ( m_NodeStatusCH[in] == ERR_GEM_AIA || m_NodeStatusCH[in] == ERR_GEM_SIA ) )
+       	  if( ( m_NodeStatusCH[in] == ERR_GEM_AIA || m_NodeStatusCH[in] == ERR_GEM_SIA ||
+          		m_NodeStatusCH[in] ==  T_ERROR_GEM ) )
           {
               cout << "Error: GEM calculation results are not retrieved. Time step"
                  << it << " node " << in << endl;
           }
            else
            {   
-            if( ( m_NodeStatusCH[in] == BAD_GEM_AIA || m_NodeStatusCH[in] == BAD_GEM_SIA ) )
+            if( ( m_NodeStatusCH[in] == BAD_GEM_AIA || m_NodeStatusCH[in] == BAD_GEM_SIA  ) )
             {
                cout << "Warning about insufficient quality of GEM solution, but GEM results are retrieved"
                << it << " node " << in << endl;
@@ -213,9 +248,9 @@ cout << "End Initialiation part" << endl;
            }
      // Here, the output upon completion of the time step is usually implemented
      //  to monitor the coupled simulation or collect results
-        cout << "Time step" << it << " node " << in ;
-        cout << " Cal= " << m_xPH[in][xCalcite] <<
-                " Dol= " << m_xPH[in][xDolomite] <<
+        cout << "  Node " << in ;
+        cout << " Aq= " << m_xPH[in][xAq_gen] <<
+                " Cal= " << m_xPH[in][xCalcite] <<
                 " pH= " << m_pH[in] << endl;
         }
    }
@@ -224,7 +259,6 @@ cout << "End Initialiation part" << endl;
 
    // Final output e.g. of total simulation time or of the final distribution of
    //  components and phases in all nodes can be implemented here
-cout << " End Coupled Modelling part" << endl;
 
    // Deleting chemical data arrays for nodes
    for (long int in=0; in<nNodes; in++)  

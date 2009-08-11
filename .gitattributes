@@ -7,6 +7,8 @@ GEMIPM2K/Makefile.lib -text
 GEMIPM2K/array.h -text
 GEMIPM2K/databr.h -text
 GEMIPM2K/datach.h -text
+GEMIPM2K/doc/html/IPM-Flowchart.png -text
+GEMIPM2K/doc/html/SIT-Phase-page3.png -text
 GEMIPM2K/doc/html/gemipm2k-inp.html -text
 GEMIPM2K/doc/html/gemipm2k-man.html -text
 GEMIPM2K/doc/html/gems1.png -text
