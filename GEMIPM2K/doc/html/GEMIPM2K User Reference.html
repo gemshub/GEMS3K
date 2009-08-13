@@ -13,27 +13,37 @@ GEMIPM2K version 3.0.0</font> </h1>
 GEMIPM2K<span style=""></span><span style=""> </span>in a coupled
 modeling code
 (on TNode level)</h1>
-<p>The input files to start calculations with GEMIPM2K can be obtained
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The input
+files to start calculations with GEMIPM2K can be obtained
 from running the GEM-Selektor package as described in Section 2.4 of
-the Technical Report, and
+the </span><a style="font-family: Helvetica,Arial,sans-serif;"
+ href="gemipm2k-man.html">gemipm2k-man.html</a><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file (or in
+Technical Report), and
 can also be modified using any ASCII text editor. The file formats are
-described in detail in <a href="gemipm2k-inp.html">gemipm2k-inp.html</a>
+described in detail in </span><a
+ style="font-family: Helvetica,Arial,sans-serif;"
+ href="gemipm2k-inp.html">gemipm2k-inp.html</a><span
+ style="font-family: Helvetica,Arial,sans-serif;">
 file.&nbsp;
 The names of IPM, DCH and one or several DBR files should be collected
 in
 a list (txt file) with the file name/path given as a string in the
 first parameter of GEM_init() function call. Contents of this list
-usually look like this: <br>
+usually look like this: </span><br>
 </p>
 <p><span style="font-family: monospace;">-t "Test-dch.dat"
 "Test-ipm.dat" "Test-dbr-0.dat"<br>
 </span><br>
-These files should be
-located in the same directory where&nbsp; the list file is located.<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">These files
+should be
+located in the same directory where&nbsp; the list file is located.</span><br>
 </p>
 <h2>1. The simplest case: data exchange using disk files only</h2>
-<p>Programming example fragment (see full example in
-/GEMIPM2K/main.cpp): <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Programming
+example fragment (see full example in
+</span><big><span style="font-family: monospace;">/GEMIPM2K/main.cpp</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">): </span><br>
 <span style="font-family: monospace;"></span><span
  style="font-family: monospace;"></span></p>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
@@ -129,7 +139,8 @@ on input recipes <br>
 </table>
 <span style="font-family: monospace;"><br>
 </span>
-<p>Description of function calls (see also "node.h" file) <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Description
+of function calls (see also "node.h" file) </span><br>
 </p>
 <h3>(1)&nbsp; GEM_init()<br>
 </h3>
@@ -137,11 +148,13 @@ on input recipes <br>
 *ipmfiles_lst_name,&nbsp; long int *nodeTypes = 0, bool getNodT1 =
 false );</span><br>
 </p>
-<p>Purpose: Initialization of GEM IPM2 data structures in coupled
+<p style="font-family: Helvetica,Arial,sans-serif;">Purpose:
+Initialization of GEM IPM2 data structures in coupled
 FMT-GEM programs that use GEMIPM2K module. Also reads in the IPM, DCH
 and DBR text input files. <br>
 </p>
-<p>Parameters:&nbsp; <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:&nbsp;
+</span><br>
 &nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">ipmfiles_lst_name&nbsp;&nbsp;&nbsp;
 </span>pointer to a null-terminated C string with a path to a text file
 containing the list of names of<br>
@@ -182,7 +195,8 @@ modeling task interruption <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; in
 GEM-Selektor (not used in this example)<br>
 </p>
-<p>Return values: &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+values: </span>&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
 0&nbsp; if successful; 1 if input file(s) were not found or corrupt; -1
 if internal memory allocation error occurred. <br>
 &nbsp;&nbsp;&nbsp; <br>
@@ -194,7 +208,8 @@ uPrimalSol );&nbsp; </span><br style="font-family: monospace;">
 <span style="font-family: monospace;"> long int&nbsp; GEM_run( double
 InternalMass = 1., bool uPrimalSol = false&nbsp; );&nbsp;&nbsp; </span><br>
 </p>
-<p>Purpose:&nbsp;&nbsp; Main call for GEM IPM calculations using the
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;
+Main call for GEM IPM calculations using the
 input bulk composition, temperature, pressure and metastability
 constraints <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
@@ -222,7 +237,7 @@ OK_GEM_AIA instead of OK_GEM_SIA. <br>
 The variant with one function parameter performs no internal scaling of
 the mass of the system. <br>
 </p>
-<p>Parameters:<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">uPrimalSol&nbsp;&nbsp;</span>&nbsp;&nbsp;
 flag to define the mode of GEM smart initial approximation <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
@@ -257,8 +272,9 @@ This scaling is used for achieving <br>
 convergence and balance
 accuracy of GEM IPM2 algorithm. <br>
 </p>
-<p>Return values:&nbsp;&nbsp;&nbsp; <span
- style="font-family: monospace;">NodeStatusCH</span>&nbsp; (the same as
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return values:</span>&nbsp;&nbsp;&nbsp;
+<span style="font-family: monospace;">NodeStatusCH</span>&nbsp; (the
+same as
 set in dBR-&gt;NodeStatusCH). Possible values (see "databr.h" file for
 the full list): <span style="font-family: monospace;"><br>
 &nbsp;<br>
@@ -286,9 +302,13 @@ calculation with no-simplex (smart) IA<span
 &nbsp;T_ERROR_GEM&nbsp; ( 9 ) &nbsp; </span>Terminal error has
 occurred in
 GEMIPM2K (e.g. memory corruption). Restart is required.&nbsp; </p>
-<p>We recommend checking the NodeStatusCH immediately after the
-GEM_run() call, as shown in the above code example.<br>
-&nbsp;<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">We recommend
+checking the NodeStatusCH immediately after the
+</span><big><span style="font-family: monospace;">GEM_run()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> call, as shown in
+the above code example.</span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><br>
 </p>
 <h3>(3) GEM_write_dbr()
 </h3>
@@ -296,11 +316,13 @@ GEM_run() call, as shown in the above code example.<br>
 char* fname,&nbsp; bool binary_f=false, bool with_comments = true, bool
 brief_mode = false )<span style="color: rgb(0, 153, 0);">;</span></span><br>
 <br>
-Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Writes the contents
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Writes the contents
 of the work instance of DATABR structure into a disk file with path
 name&nbsp; <span style="font-family: monospace;">fname</span>.<br>
 <br>
-Parameters:&nbsp;&nbsp;&nbsp;&nbsp; <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp;&nbsp;&nbsp;&nbsp;
+<br>
 &nbsp;&nbsp; <span style="font-family: monospace;">fname </span>&nbsp;&nbsp;
 &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
 null-terminated (C) string containing a full path to the DBR disk file
@@ -353,16 +375,24 @@ written. <br>
 if true, tells that the data objects/items which contain only
 default values will be skipped from the text format file<br>
 <br>
-Any DBR file written using GEM_write_dbr() can be read as input file
-using GEM_init() or GEM_read_dbr() as long as it is consistent with the
+<span style="font-family: Helvetica,Arial,sans-serif;">Any DBR file
+written using </span><big><span style="font-family: monospace;">GEM_write_dbr()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> can be read as input
+file
+using </span><big><span style="font-family: monospace;">GEM_init()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> or </span><big><span
+ style="font-family: monospace;">GEM_read_dbr()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> as long as it is
+consistent with the
 same set of IPM and DCH files that contain parameters of solution
-models and chemical system definition, respectively. <br>
+models and chemical system definition, respectively. </span><br>
 <br>
 <h3>(4) GEM_print_ipm()</h3>
 <p><span style="font-family: monospace;">void&nbsp; GEM_print_ipm(
 const char* fname )</span><br>
 </p>
-<p>Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Produces a formatted text
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Produces a formatted text
 file with detailed contents (scalars and arrays) of the GEM IPM work
 structure.&nbsp; <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
@@ -375,7 +405,8 @@ calculation after the<br>
 &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; version upgrade of GEMIPM2K.<br>
 </p>
-<p>Parameters: <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>
+<br>
 </p>
 <p>&nbsp;&nbsp; <span style="font-family: monospace;">fname </span>&nbsp;&nbsp;
 &nbsp; null-terminated (C) string containing a full path to the disk
@@ -390,8 +421,10 @@ field of the TNode class instance will be used, <br>
 dbr_file_name </span>field contains the path to the last input DBR
 file. <br>
 </p>
-<p>Attention:&nbsp;&nbsp;&nbsp; the text file produced by this function
-call cannot be read back with GEM_init() because it has a format
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Attention:&nbsp;</span>&nbsp;&nbsp;
+the text file produced by this function
+call cannot be read back with <span style="font-family: monospace;">GEM_init()</span>
+because it has a format
 different<br>
 &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; from that of
@@ -401,7 +434,8 @@ IPM, DCH and DBR input file formats.<br>
 <h3>(5) GEM_read_dbr()</h3>
 <p style="font-family: monospace;"> long int GEM_read_dbr( const char*
 fname, bool binary_f=false );</p>
-<p>Purpose: &nbsp;&nbsp;&nbsp; Reads another DBR file (with input
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose: </span>&nbsp;&nbsp;&nbsp;
+Reads another DBR file (with input
 system composition, T,P etc.) with a path name <span
  style="font-family: monospace;">fname. <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; </span>The
@@ -413,7 +447,7 @@ loaded IPM and DCH files (see description <br>
 function call).
 <br>
 </p>
-<p>Parameters:<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span><br>
 &nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">fname&nbsp;&nbsp;</span>&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Null-terminated (C) string containing a
 full path to the input DBR disk file. <br>
@@ -421,26 +455,34 @@ full path to the input DBR disk file. <br>
 Flag defining whether the file specified in fname is in text fromat
 (false or 0, default) or in binary format (true or 1)<br>
 </p>
-<p>Return values: &nbsp;&nbsp;&nbsp; 0&nbsp; if successful; 1 if input
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+values: </span>&nbsp;&nbsp;&nbsp; 0&nbsp; if successful; 1 if input
 file(s) has not found been or is corrupt; -1
 if internal memory allocation error occurred. </p>
-<p>The input DBR file may have been produced earlier from GEM-Selektor
-or via the GEM_write_dbr() call and then modified <br>
-using a text editor so that the format (data object tags,
-number of elements in arrays, etc.) remains intact. <br>
-&nbsp;<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The input DBR
+file may have been produced earlier from GEM-Selektor
+or via the </span><big><span style="font-family: monospace;">GEM_write_dbr()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">call and then
+modified </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">using a text
+editor so that the format (data object tags,
+number of elements in arrays, etc.) remains intact. </span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><br>
 </p>
 <h3>Optional: GEM_CalcTime() and GEM_Iterations()
 &nbsp;</h3>
 <p style="font-family: monospace;">double GEM_CalcTime();</p>
-<p>Purpose:&nbsp;&nbsp;&nbsp;&nbsp; Returns GEMIPM2 calculation time in
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;</span>&nbsp;&nbsp;&nbsp;
+Returns GEMIPM2 calculation time in
 seconds elapsed during the last call of <span
  style="font-family: monospace;">GEM_run() </span>- can be used for
 monitoring <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; the performance of calculations.<br>
 </p>
-<p>Return value:&nbsp; double number, may contain 0.0 if the
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+value:&nbsp;</span> double number, may contain 0.0 if the
 calculation time is less than the internal time resolution of C/C++
 function <br>
 &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
@@ -452,17 +494,20 @@ for a particular processor and operation system. <br>
 <span style="font-family: monospace;">long int GEM_Iterations( long
 int&amp; PrecLoops, long int&amp; NumIterFIA, long int&amp; NumIterIPM
 );</span> </p>
-<p>Purpose: &nbsp;&nbsp;&nbsp;&nbsp; To obtain the number of GEM IPM2
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>
+&nbsp;&nbsp;&nbsp;&nbsp; To obtain the number of GEM IPM2
 iterations performed during the last call of <span
  style="font-family: monospace;">GEM_run()</span> e.g. for monitoring
 the <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp; performance of GEMIPM2K in AIA or SIA modes, or for
 problem diagnostics.&nbsp; &nbsp; </p>
-<p>Parameters:&nbsp; long int variables per reference (must be
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp;
+long int variables per reference (must be
 allocated before calling GEM_Iterations(), previous values will be
 lost. See Return values.</p>
-<p>Return values: <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+values: </span><br>
 &nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">Function&nbsp;&nbsp;
 &nbsp;&nbsp; &nbsp;&nbsp; </span>Total number of EFD + IPM iterations
 from the last call to GEM_run()<br>
@@ -483,16 +528,19 @@ algorithm iterations. <br>
 <br>
 </p>
 <h2>2. The case of data exchange in computer memory </h2>
-This case is typical for coupling GEMIPM2K with an existing reactive
+<span style="font-family: Helvetica,Arial,sans-serif;">This case is
+typical for coupling GEMIPM2K with an existing reactive
 mass transport code that has its own data structure for keeping
 chemical information (e.g. speciation, bulk composition of the system)
 for each node. As in the previous example, it uses one work instance of
 DATABR
 structure for the exchange with internal GEM IPM data structures.
-&nbsp; <br>
+&nbsp; </span><br>
 <br>
-Simplified programming example (see full example in
-<span style="font-family: monospace;">/node_gem/main.cpp</span>): <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Simplified
+programming example (see full example in</span>
+<big><span style="font-family: monospace;">/node_gem/main.cpp</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">): </span><br>
 <span style="font-family: monospace;"><br>
 </span>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
@@ -1233,8 +1281,11 @@ exchange memory structures</span><br style="font-family: monospace;">
  style="font-family: monospace;"></span><span
  style="font-family: monospace;"></span><br
  style="font-family: monospace;">
-<big><span style="text-decoration: underline;">Description of function
-calls</span></big> (continued, see also "node.h" file) <br>
+<big style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="text-decoration: underline;">Description of function
+calls</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
+(continued, see also "node.h" file) </span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
 <br>
 <h3>(6) GEM_restore_MT()</h3>
 <p>&nbsp;
@@ -1246,7 +1297,8 @@ double &amp;p_TC,&nbsp; double &amp;p_P, double &amp;p_Vs, double
 &amp;p_Ms, </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 double *p_bIC, double *p_dul, double *p_dll, double *p_aPH );</span></p>
-<p>Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Passes (copies) the GEMIPM2K
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;
+Passes (copies) the GEMIPM2K
 input data from the work instance of DATABR structure.&nbsp; <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
 &nbsp;&nbsp; This call is useful after the GEM_init()&nbsp; and
@@ -1261,7 +1313,7 @@ GEMIPM2K work structures (see details above in Section 1).<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; The GEM_run() call (details in Section
 2) calculates the full chemical speciation.&nbsp; <br>
 </p>
-<p>Parameters: <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters: </span><br>
 </p>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -1398,10 +1450,17 @@ elements]<br>
     </tr>
   </tbody>
 </table>
-<p>In GEM_restore_MT(), all parameters are output parameters( i.e.
-previous contents of memory given to parameters will be lost).<br>
-Contents of the work DATABR structure remain unchanged. This function
-is a reverse of&nbsp; GEM_from_MT(), see Section 8. <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">In </span><span
+ style="font-family: monospace;">GEM_restore_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, all parameters are
+output parameters( i.e.
+previous contents of memory given to parameters will be lost).</span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">Contents of the
+work DATABR structure remain unchanged. This function
+is a reverse of&nbsp; </span><span style="font-family: monospace;">GEM_from_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, see Section 8.</span>
+<br>
 </p>
 <br>
 <h3>(7) GEM_to_MT()</h3>
@@ -1420,7 +1479,8 @@ double *p_xPH,&nbsp; </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double
 *p_vPS,&nbsp; double *p_mPS, double *p_bPS, double *p_xPA&nbsp; );</span><br>
 <br>
-Purpose:&nbsp;&nbsp; Retrieves the GEMIPM2 chemical speciation
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;
+Retrieves the GEMIPM2 chemical speciation
 calculation results from the work DATABR structure instance <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; into memory provided by the mass
 transport part. Dimensions and order of elements in the arrays must
@@ -1428,7 +1488,8 @@ correspond <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; to those in currently existing
 DATACH memory structure.<br>
 <br>
-Parameters:&nbsp; <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:&nbsp;</span>
+<br>
 <br>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -1646,12 +1707,18 @@ a multicomponent asymmetric phase&nbsp; [<span
     </tr>
   </tbody>
 </table>
-<p>In GEM_to_MT(), all parameters are output parameters ( i.e. previous
-contents of memory given to parameters will be lost).<br>
-&nbsp;&nbsp;&nbsp; Contents of the work DATABR structure remain
-unchanged. <br>
-Parameter IDs for the most important GEMIPM2 output data are
-underlined. <br>
+<p>I<span style="font-family: Helvetica,Arial,sans-serif;">n </span><span
+ style="font-family: monospace;">GEM_to_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, all parameters are
+output parameters ( i.e. previous
+contents of memory given to parameters will be lost).</span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">Contents of the
+work DATABR structure remain
+unchanged. </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameter IDs
+for the most important GEMIPM2 output data are
+underlined. </span><br>
 </p>
 <br>
 <h3>(8) GEM_from_MT()</h3>
@@ -1664,13 +1731,14 @@ int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br
 double p_Vs, double p_Ms, </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 double *p_bIC, double *p_dul, double *p_dll, double *p_aPH );</span></p>
-<p>Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Loads the GEMIPM2K input data
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+Loads the GEMIPM2K input data
 for a given mass-transport node into the work instance of DATABR
 structure. &nbsp; <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
 &nbsp;&nbsp; This call is usually preceeding the GEM_run() call<br>
 </p>
-<p>Parameters: <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters: </span><br>
 </p>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -1835,17 +1903,28 @@ approximation for this node <br>
     </tr>
   </tbody>
 </table>
-<p>In GEM_from_MT(), all parameters are input ( i.e. contents of memory
-given to parameters will remain unchanged). <br>
-Most frequently used input parameters are underlined in the above
-table. <br>
-This function is a reverse of&nbsp; GEM_restore_MT(), see Section
-6.&nbsp; <br>
-To retrieve, if necessary, the internally changed&nbsp; <span
- style="font-family: monospace;">Vs</span> or <span
- style="font-family: monospace;">Ms</span> values after GEM_run(), use
-GEM_restore_MT() <br>
-or GEM_to_MT() calls.<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">In </span><span
+ style="font-family: monospace;">GEM_from_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, all parameters are
+input ( i.e. contents of memory
+given to parameters will remain unchanged). </span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">Most frequently
+used input parameters are underlined in the above
+table. </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">This function is
+a reverse of&nbsp; </span><span style="font-family: monospace;">GEM_restore_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, see Section
+6.&nbsp; </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">To retrieve, if
+necessary, the internally changed&nbsp; Vs or Ms values after </span><span
+ style="font-family: monospace;">GEM_run()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;">, use
+</span><span style="font-family: monospace;">GEM_restore_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> </span><span
+ style="font-family: Helvetica,Arial,sans-serif;">or </span><span
+ style="font-family: monospace;">GEM_to_MT()</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> calls.</span><br>
 <br>
 </p>
 <h3>(8a) GEM_from_MT() overload call </h3>
@@ -1859,7 +1938,8 @@ double p_Vs, double p_Ms, </span><br style="font-family: monospace;">
 double *p_bIC, double *p_dul, double *p_dll, double *p_aPH, </span><span
  style="font-family: monospace;">double *p_xDC</span><span
  style="font-family: monospace;"> );</span>
-<p>Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Loads the GEMIPM2K input data
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the GEMIPM2K input data
 for a given mass-transport node into the work instance of DATABR
 structure. &nbsp; <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
@@ -1929,7 +2009,8 @@ vector <br>
 &nbsp;&nbsp; must be filled with zeros because its new content will be
 completely retrieved from the x_DC vector.&nbsp; <br>
 </p>
-<p>Parameters:&nbsp; see Table in Section (8) - all are input
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp;
+see Table in Section (8) - all are input
 parameters. <br>
 <br>
 </p>
@@ -1947,7 +2028,8 @@ double p_Vs, double p_Ms, </span><span style="font-family: monospace;">double
 double *p_gam</span><span style="font-family: monospace;"> );<br>
 <br>
 </span><br>
-Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Loads the GEMIPM2K input data
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+Loads the GEMIPM2K input data
 for a given mass-transport node into the work instance of DATABR
 structure. <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
@@ -1964,23 +2046,27 @@ DATACH <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; structure contains a full list
 of Dependent Components used in GEM IPM2 calculations. <br>
 <br>
-Parameters:&nbsp; see Table in Section (8) - all are input parameters. <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp;
+see Table in Section (8) - all are input parameters. <br>
 <br>
-Open issue: shall p_xDC content used for updating bIC content in the
-same way as in variant (8a)? <br>
+<span style="color: rgb(204, 0, 0);">Open issue: shall p_xDC content
+used for updating bIC content in the
+same way as in variant (8a)?</span> <br>
 <br>
 <h3>(9) GEM_set_MT()</h3>
 <span style="font-family: monospace;">void GEM_set_MT( double p_Tm,
 double p_dt );</span><br>
 <br>
-Purpose:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Optional, for passing the
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Optional, for passing the
 current mass transport iteration information into the work DATABR
 structure<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (e.g. for using it in tracing/debugging
 or in writing DBR files for nodes).<br>
 <br>
-Parameters:&nbsp; <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:&nbsp;
+</span><br>
 &nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">p_Tm</span>&nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Actual total
 simulation time,
@@ -1994,14 +2080,16 @@ s&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&
 <br>
 <h2>3. Miscellaneous methods for accessing the GEMIPM2K data from the
 mass transport part </h2>
-These public methods of access to particular elements of TNode class
+<span style="font-family: Helvetica,Arial,sans-serif;">These public
+methods of access to particular elements of TNode class
 data require that the "node.h" header is included. Usage of these
 public methods is strongly preferred instead of direct access to fields
-of the DATABR, DATACH and MULTI memory sturctures. <br>
+of the DATABR, DATACH and MULTI memory sturctures. </span><br>
 <br>
 <h4>3.1. Whole node chemical system</h4>
-Table 3.1. Access to properties of the whole chemical system assigned
-to the node<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.1.
+Access to properties of the whole chemical system assigned
+to the node</span><br>
 <br>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -2366,7 +2454,8 @@ is provided. Data access methods using either DBR or DCH indexation are
 summarized in Tables 3.3, 3.4 and so on.&nbsp; <br>
 <br>
 <br>
-Table 3.2. Retrieval of indexes for components and phases<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.2.
+Retrieval of indexes for components and phases</span><br>
 <br>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -2615,8 +2704,9 @@ even
 those not included in DATABR lists, see Table 3.4.<br>
 <br>
 <br>
-Table 3.3. Access to equilibrium properties of phases and components
-using DATABR indexation<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.3.
+Access to equilibrium properties of phases and components
+using DATABR indexation</span><br>
 <br>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -2891,13 +2981,10 @@ coefficient <span style="color: rgb(0, 0, 0);">a[j][i]</span> of IC
 <br>
 <br>
 <br>
-Table 3.4. Access to thermodynamic and equilibrium properties of phases
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.4.
+Access to thermodynamic and equilibrium properties of phases
 and components
-using DATACH indexation<br>
-<br>
-Some functions (marked with *) access the IPM work data structure
-directly and can be used only for the current work node immediately
-after the GEM IPM run.<br>
+using DATACH indexation</span><br>
 <br>
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2"
  cellspacing="2">
@@ -3234,6 +3321,9 @@ denW g= node-&gt;DenH2Og( 1e5, 25); </td>
   </tbody>
 </table>
 <span style="color: rgb(204, 102, 0);"></span><br>
+Some functions (marked with *) access the IPM work data structure
+directly and can be used only for the current work node immediately
+after the GEM IPM run.<br>
 <br>
 <br>
 3.4. Access to integral properties of phases-solutions (under
