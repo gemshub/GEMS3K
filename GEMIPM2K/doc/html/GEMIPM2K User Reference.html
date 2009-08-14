@@ -2998,9 +2998,25 @@ using DATACH indexation</span><br>
  style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Example</td>
     </tr>
     <tr>
+      <td style="vertical-align: top; color: rgb(204, 0, 0);"><span
+ style="font-family: monospace;">void Set_IC_b( const double b_val,
+const long int xCH)</span><br>
+      </td>
+      <td style="vertical-align: top; color: rgb(204, 0, 0);">(*) Sets
+the amount of
+Independent Component (xCH is IC DCH index) when this IC index is not
+included into DATABR. Internal re-scaling to mass of the system is
+applied, but only to mass of that part which is included in DATABR.</td>
+      <td style="vertical-align: top; color: rgb(204, 0, 0);"> l<span
+ style="font-family: monospace;">ong int xSi = </span><span
+ style="font-family: monospace;">node-&gt;</span><span
+ style="font-family: monospace;">IC_name_to_xCH("Si");<br>
+double moles_Si = 0.003; Set_IC_b( moles_Si, xSi );</span></td>
+    </tr>
+    <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
-IC_b(const long int xCH);</td>
+IC_b(const long int xCH)</td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">(*)
 Retrieves the current amount of
 Independent Component (xCH is IC DCH index). Also amount of ICs not
