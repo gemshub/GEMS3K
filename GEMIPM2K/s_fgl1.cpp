@@ -1139,7 +1139,7 @@ double TPitzer::lnGammaH2O( )
 	double OC = (1.+OCges) / OCmol;
 	// Activity of Water, Pitzer-Toughreact Report 2006, equation (A1)
 	double Lna =(-18.1/1000.)*OC*OCmol;
-	
+
 	//double activityH2O = exp(Lna);
 	// lnGamma[Ns] = activityH2O/molefractionH2O;
 
@@ -4681,7 +4681,7 @@ long int TShvarov::MixMod()
 }
 
 
-long int TShvarov::ExcessProp( double */*Zex*/ )
+long int TShvarov::ExcessProp( double *Zex )
 {
 	long int j, k, w;
 	double sqI, Z2, Nw, xw, msum, C, dCdT, d2CdT2, dCdP, lg_to_ln,
@@ -4853,6 +4853,15 @@ long int TShvarov::ExcessProp( double */*Zex*/ )
 	Vex = (R_CONST*Tk) * dgp;
 	Aex = Gex - Vex*Pbar;
 	Uex = Hex - Vex*Pbar;
+
+	// assigments (excess properties)
+	Zex[0] = Gex;
+	Zex[1] = Hex;
+	Zex[2] = Sex;
+	Zex[3] = CPex;
+	Zex[4] = Vex;
+	Zex[5] = Aex;
+	Zex[6] = Uex;
 
 	return 0;
 }

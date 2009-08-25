@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: datach.h 1390 2009-08-10 09:20:12Z gems $
+// $Id: datach.h 1413 2009-08-24 11:36:21Z gems $
 //
 // DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.
@@ -10,7 +10,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 
-// Copyright (C) 2003,2009 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
+// Copyright (C) 2003,2009 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
 // developed in the Laboratory for Waste Management, Paul Scherrer Institute

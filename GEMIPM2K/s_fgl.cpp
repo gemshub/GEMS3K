@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl.cpp 1387 2009-08-07 12:31:14Z gems $
+// $Id: s_fgl.cpp 1396 2009-08-16 16:22:04Z wagner $
 //
 // Copyright (C) 2004-2009  T.Wagner, S.Churakov, D.Kulik
 //
@@ -2789,7 +2789,7 @@ long int TSRKcalc::FugacityPT( long int i, double *EoSparam )
 
 // Calculates attractive (a) and repulsive (b) parameter of SRK equation of state
 // and partial derivatives of alpha function
-long int TSRKcalc::AB( double Tcrit, double Pcrit, double omg, double /*N*/,
+long int TSRKcalc::AB( double Tcrit, double Pcrit, double omg, double N,
 		double &apure, double &bpure, double &da, double &d2a )
 {
 	double Tred, m, alph, ac, sqa, dsqa, d2sqa;
@@ -3577,7 +3577,7 @@ long int TPR78calc::FugacityPT( long int i, double *EoSparam )
 
 // Calculates attractive (a) and repulsive (b) parameter of SRK equation of state
 // and partial derivatives of alpha function
-long int TPR78calc::AB( double Tcrit, double Pcrit, double omg, double /*N*/,
+long int TPR78calc::AB( double Tcrit, double Pcrit, double omg, double N,
 		double &apure, double &bpure, double &da, double &d2a )
 {
 	double Tred, k, alph, ac, sqa, dsqa, d2sqa;
