@@ -1409,7 +1409,12 @@ In both cases, some numerical subroutines from the </span><a
 solving SLE are employed. The list of source code files common to both
 GEMS-PSI
 and GEMIPM2K programs is provided below.<br>
-</span>&nbsp;<o:p></o:p></p>
+&nbsp;
+</span><br>
+</p>
+<h3><a name="TAG_SOURCE_FILELIST"></a>Lists of GEMIPM2K source code
+files</h3>
+<p class="MsoNormal"><o:p></o:p></p>
 <p style="font-family: Helvetica,Arial,sans-serif;"> </p>
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
   <tbody>
@@ -1687,49 +1692,13 @@ batch calculations of chemical equilibria<br>
     </tr>
   </tbody>
 </table>
-<p style="font-family: Helvetica,Arial,sans-serif;">&nbsp;are
-provided only in the GEMIPM2K code. The file&nbsp; <big><span
- style="font-family: monospace;">main.cpp</span></big>&nbsp; is needed
+<p><span style="font-family: Helvetica,Arial,sans-serif;">are
+provided only in the GEMIPM2K code. The file&nbsp; </span><big
+ style="font-family: Helvetica,Arial,sans-serif;">main.cpp</big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; is needed
 for compiling an example of usage of GEMIPM2K. This file can be changed
-according to your tasks. <br>
-</p>
-<p style="font-family: Helvetica,Arial,sans-serif;">There are two
-alternative make files, provided for different arcitectures in the
-./platforms subdirectory. <br>
-</p>
-<table border="1" cellpadding="2" cellspacing="2" width="100%">
-  <tbody>
-    <tr>
-      <td style="font-family: monospace;"><big>Makefile</big></td>
-      <td style="vertical-align: top;">make script for building test
-example with file I/O as a standalone executable file <br>
-      </td>
-    </tr>
-    <tr>
-      <td style="font-family: monospace;"><big>Makefile.lib</big></td>
-      <td style="vertical-align: top;">make script for creating a
-static library for subsequent linking with other parts of the coupled
-FMT-GEM code<br>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p><big><span style="font-family: monospace;">Makefile</span></big><span
- style="font-family: Helvetica,Arial,sans-serif;"> is used for building
-a static executable file </span><big><span
- style="font-family: monospace;">gemcalc(.exe)</span></big><span
- style="font-family: Helvetica,Arial,sans-serif;"> for the test
-example. <br>
-</span><big><span style="font-family: monospace;">Makefile.lib</span></big><span
- style="font-family: Helvetica,Arial,sans-serif;"> can be used for
-building a static library&nbsp; </span><big><span
- style="font-family: monospace;">gemipm2k.a</span></big><span
- style="font-family: Helvetica,Arial,sans-serif;">&nbsp; (or </span><big><span
- style="font-family: monospace;">gemipm2k.lib</span></big><span
- style="font-family: Helvetica,Arial,sans-serif;">) which can be linked
-to the mass-transport&nbsp; part to produce a coupled code later on.<br>
-</span></p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+according to your tasks.</span> <br>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
 The GEM
 IPM-2 algorithm is implemented as a set of C++ functions belonging to
 the TMulti class that all use data and lists provided in a single
@@ -4185,12 +4154,15 @@ described in a <a href="GEM2MT-sep.man.html">separate document</a>). <br>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h2><a name="TAG_PROGRAMMING"></a>4. Programming technical issues</h2>
-<p>The program source code is compatible with ANSI
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The program
+source code is compatible with ANSI
 C++ and can be compiled on many computer platforms (Windows, Linux, HPC
 Merlin, Cray XT, etc.) using several optimizing
 compilers (GNU C++, PGI C++, Intel
 C++, Microsoft C++, &#8230; ). The make scripts for some of this platforms
-are located in "~/standalone/GEMIPM2K/platform/".&nbsp; </p>
+are located in "/GEMIPM2K/platform" subdirectories. </span><br>
+<br>
+</p>
 <h3><a name="TAG_SVN"></a>4.1.
 Subversion repository of GEMIPM2K<br>
 </h3>
@@ -4204,13 +4176,42 @@ source code files used in the </span><a
  style="font-family: Helvetica,Arial,sans-serif;"> The list of source
 code files common to both
 GEMS-PSI
-and GEMIPM2K programs is provided before (in Chapter 3).</span>
+and GEMIPM2K programs is provided <a href="#TAG_SOURCE_FILELIST">above
+in this file</a>. <br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The GEMIPM2K
+source code tree resides in the Subversion repository at LES PSI on the
+server les-svn.psi.ch. This server can only be accessed through the SSH
+protocol (in Subversion client checkout, the URL should begin with </span><big><span
+ style="font-family: monospace;">svn+ssh://</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">). For the user
+account and details about accessing the repository, please ask the <a
+ href="http://gems.web.psi.ch">GEMS Development Team</a>.
+Alternatively, you can get from the authors a zipped working copy
+(GEMIPM2K-standalone.zip), then simply unpack it into your home or
+development directory. <br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The source
+code is located in the </span><big><span
+ style="font-family: monospace;">\standalone</span><span
+ style="font-family: monospace;">\GEMIPM2K </span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">subdirectory, the
+node-gem example - in the </span><big><span
+ style="font-family: monospace;">\standalone</span><span
+ style="font-family: monospace;">\node-gem</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">. <br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">This
+documentation file (with others) can be found in the </span><big><span
+ style="font-family: monospace;">\standalone</span><span
+ style="font-family: monospace;">\GEMIPM2K\doc\html</span> <small
+ style="font-family: Helvetica,Arial,sans-serif;">directory.&nbsp;</small></big>
 </p>
 <h3><a name="TAG_FMT_CPP"></a>4.2. Mass transport part in C++<br>
 </h3>
-<p>If you mass transport part is written in C++, you can added&nbsp;
-this sub-set of C++&nbsp; source code to you project<br>
-or Makefile and compile all files at the same time. Impotant: you must
+<p>If you mass transport part is written in C++, you can add&nbsp;
+this sub-set of C++&nbsp; source code to you project or Makefile and
+compile all files at the same time. Important: you must
 define "IPMGEMPLUGIN".<br>
 <br>
 </p>
@@ -4225,41 +4226,129 @@ to your program.<br>
 </p>
 <h3><a name="TAG_BUILD"></a>4.4. Building GEMIPM2K executables<br>
 </h3>
+<span style="font-family: Helvetica,Arial,sans-serif;">The easiest way
+to build GEMIPM2K is to use the standard make command (available in
+most platforms) together with GNU C++ compiler suite v. 4.1 or higher.
+In Windows XP or Vista we recommend to download and use the MinGW port
+of GNU tools (<a href="http://www.mingw.org">http://www.mingw.org</a>).
+In Linux or&nbsp; Mac OS X, the GNU tools are provided by default (in
+Linux, take care that the main Development rpm or deb packages are
+installed). </span><br>
+<p style="font-family: Helvetica,Arial,sans-serif;">There are two
+alternative make files in GEMIPM2K source code tree, provided each pair
+for different arcitectures in the
+./platforms subdirectories. <br>
+</p>
+<table border="1" cellpadding="2" cellspacing="2" width="100%">
+  <tbody>
+    <tr>
+      <td style="font-family: monospace;"><big>Makefile</big></td>
+      <td style="vertical-align: top;">make script for building test
+example with file I/O as a standalone executable file <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="font-family: monospace;"><big>Makefile.lib</big></td>
+      <td style="vertical-align: top;">make script for creating a
+static library for subsequent linking with other parts of the coupled
+FMT-GEM code<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<big><span style="font-family: monospace;"><br>
+Makefile</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> script file is used
+for building
+a static executable file </span><big><span
+ style="font-family: monospace;">gemcalc(.exe)</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> for the test
+example.<br>
+&nbsp;<br>
+</span><big><span style="font-family: monospace;">Makefile.lib</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> script file can be
+used for
+building a static library&nbsp; </span><big><span
+ style="font-family: monospace;">gemipm2k.a</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; (or </span><big><span
+ style="font-family: monospace;">gemipm2k.lib</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">) which can be linked
+to the mass-transport&nbsp; part to produce a coupled code later on. <br>
 <br>
+&lt;Georg: can you elaborate on this with an example?&gt;<br>
+<br>
+</span>
 <h4><a name="TAG_GNU"></a>4.4.1.
 GNU C++ (gcc - gfortran) on Linux, Mac OS X, and MinGW (Windows)</h4>
-<h3><small><span style="font-weight: normal;">GEMIPM2K is a
-comprehensive cross-platform C++ application framework.</span></small><br>
-</h3>
-We recomended use GNU C++ on Linux, Mac OS X&nbsp; and MinGW (Windows).<br>
-You need to install corresponding software (MinGW or GNU C++ for Linux)
-and setted system path in&nbsp; Windows to MinGW/bin directory.<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">GEMIPM2K is
+developed using GNU C++ (version 3.5 or higher) and related tools under
+Linux, MacOS X and Windows (32) XP (MinGW). The latest version of CNU
+C++ (4.4.x) is recommended for use. Before trying to compile GEMIPM2K
+for the first time, make sure that you have the GNU C++ compiler,
+binutils, libraries, debugger and other related tools installed and
+accessible through system environment variables. </span><br>
+</p>
+<span style="font-family: Helvetica,Arial,sans-serif;">The make scripts
+are located in</span>
+"<big><span style="font-family: monospace;">~/standalone/GEMIPM2K/platform/win32MinGW</span></big>"
+<span style="font-family: Helvetica,Arial,sans-serif;">for Windows,</span>
+"<big><span style="font-family: monospace;">~/standalone/GEMIPM2K/platform/Linux-GNU</span></big>"
+<span style="font-family: Helvetica,Arial,sans-serif;">for Linux, and</span>
+"<big><span style="font-family: monospace;">~/standalone/GEMIPM2K/platform/MacOSX</span></big>"
+<span style="font-family: Helvetica,Arial,sans-serif;">for Mac OS X.
+Copy the corresponding Makefile to the working
+directory</span> "<big><span style="font-family: monospace;">~/standalone/GEMIPM2K</span></big>".<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">From this
+directory, different build modes can be invoked by typing a console
+command </span><br>
 <br>
-The make scripts are located in
-"~/standalone/GEMIPM2K/platform/win32MinGW" for Widows, <br>
-"~/standalone/GEMIPM2K/platform/Linux-GNU" for Linux and
-"~/standalone/GEMIPM2K/platform/MacOSX" for Mac OS X.<br>
-To change platform copy&nbsp; corresponding Makefile to working
-directory "~/standalone/GEMIPM2K".<br>
-From this directory, different modes can be invoked by &nbsp;
-typing&nbsp; "make &lt;target&gt;" &nbsp;&nbsp; (or mingw32-make for
+<big><span style="font-family: monospace;">"make &lt;target&gt;"</span></big>
+&nbsp;&nbsp; (or <big><span style="font-family: monospace;">mingw32-make
+&lt;target&gt;</span></big> for
 MinGW)<br>
 <br>
-The parameter &lt;target&gt; may be one of the following:&nbsp; <br>
-&nbsp; all:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-create executable file<br>
-&nbsp; clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; remove all object files
-files<br>
-&nbsp; distclean: do clean and remove executable file <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">The parameter
+&lt;target&gt; may be one of the following: <br>
+<br style="font-family: Helvetica,Arial,sans-serif;">
+</span><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big><span
+ style="font-family: monospace;">all</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+create object files and the executable file</span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big><span
+ style="font-family: monospace;">clean</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; remove all object files</span><br
+ style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big><span
+ style="font-family: monospace;">distclean</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp;&nbsp; clean
+and remove executable file </span><br>
 <br>
-To create the executable file, type<br>
-&nbsp;make<br>
-&nbsp;&nbsp;&nbsp; or<br>
-&nbsp;make all<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">For instance, to
+create the executable file, type</span><br>
 <br>
-If you need to rebuild programm, type before<br>
-&nbsp;make clean<br>
+&nbsp;<big><span style="font-family: monospace;">make</span></big>&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ( or &nbsp; &nbsp;&nbsp; <big><span
+ style="font-family: monospace;">make all )</span></big><br>
 <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">To rebuild the
+executable file after performing optimized compile, edit Makefile
+(change there compiler key</span> <big><span
+ style="font-family: monospace;">-g</span></big> <span
+ style="font-family: Helvetica,Arial,sans-serif;">to</span> <span
+ style="font-family: monospace;">-O2</span> ) <span
+ style="font-family: Helvetica,Arial,sans-serif;">and then type </span><br>
+<br>
+<big><span style="font-family: monospace;">make clean</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">make</span></big><br>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">To edit and
+debug source code, use an integrated development environment (IDE) such
+as eclipse, KDevelop, QtCreator or similar. Modern IDEs can usually
+make projects from Makefile. </span><br>
+&nbsp;<br>
 <h4><a name="TAG_PGI"></a>4.4.2.
 Portland Group C++ (pgcc- pgf) on Linux<br>
 </h4>
