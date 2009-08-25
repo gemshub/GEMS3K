@@ -4185,30 +4185,81 @@ described in a <a href="GEM2MT-sep.man.html">separate document</a>). <br>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h2><a name="TAG_PROGRAMMING"></a>4. Programming technical issues</h2>
-<p><br>
-</p>
+<p>The program source code is compatible with ANSI
+C++ and can be compiled on many computer platforms (Windows, Linux, HPC
+Merlin, Cray XT, etc.) using several optimizing
+compilers (GNU C++, PGI C++, Intel
+C++, Microsoft C++, &#8230; ). The make scripts for some of this platforms
+are located in "~/standalone/GEMIPM2K/platform/".&nbsp; </p>
 <h3><a name="TAG_SVN"></a>4.1.
 Subversion repository of GEMIPM2K<br>
 </h3>
-<p><br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The GEMIPM2K
+program
+source code comprises a sub-set of C++
+source code files used in the </span><a
+ style="font-family: Helvetica,Arial,sans-serif;"
+ href="http://gems.web.psi.ch/">GEMS-PSI package</a><span
+ style="font-family: Helvetica,Arial,sans-serif;">.&nbsp;&nbsp;</span><span
+ style="font-family: Helvetica,Arial,sans-serif;"> The list of source
+code files common to both
+GEMS-PSI
+and GEMIPM2K programs is provided before (in Chapter 3).</span>
 </p>
 <h3><a name="TAG_FMT_CPP"></a>4.2. Mass transport part in C++<br>
 </h3>
-<p><br>
+<p>If you mass transport part is written in C++, you can added&nbsp;
+this sub-set of C++&nbsp; source code to you project<br>
+or Makefile and compile all files at the same time. Impotant: you must
+define "IPMGEMPLUGIN".<br>
+<br>
 </p>
 <h3><a name="TAG_FMT_FORTRAN"></a>4.3. Mass transport part in Fortran <br>
 </h3>
-<p><br>
+<p>If you mass transport part is written in Fortran, you can
+added&nbsp; this sub-set of C++&nbsp; source code to you project (do
+not forget to define IPMGEMPLUGIN) or make a library (see as exemple
+"~/standalone/GEMIPM2K/platform/Linux-GNU/Makefile.lib" ) and link it
+to your program.<br>
+<br>
 </p>
 <h3><a name="TAG_BUILD"></a>4.4. Building GEMIPM2K executables<br>
 </h3>
-<p><br>
-</p>
+<br>
 <h4><a name="TAG_GNU"></a>4.4.1.
-GNU C++ (gcc - gfortran) on Linux, Mac OS X, and MinGW (Windows)<br>
-</h4>
-<p><br>
-</p>
+GNU C++ (gcc - gfortran) on Linux, Mac OS X, and MinGW (Windows)</h4>
+<h3><small><span style="font-weight: normal;">GEMIPM2K is a
+comprehensive cross-platform C++ application framework.</span></small><br>
+</h3>
+We recomended use GNU C++ on Linux, Mac OS X&nbsp; and MinGW (Windows).<br>
+You need to install corresponding software (MinGW or GNU C++ for Linux)
+and setted system path in&nbsp; Windows to MinGW/bin directory.<br>
+<br>
+The make scripts are located in
+"~/standalone/GEMIPM2K/platform/win32MinGW" for Widows, <br>
+"~/standalone/GEMIPM2K/platform/Linux-GNU" for Linux and
+"~/standalone/GEMIPM2K/platform/MacOSX" for Mac OS X.<br>
+To change platform copy&nbsp; corresponding Makefile to working
+directory "~/standalone/GEMIPM2K".<br>
+From this directory, different modes can be invoked by &nbsp;
+typing&nbsp; "make &lt;target&gt;" &nbsp;&nbsp; (or mingw32-make for
+MinGW)<br>
+<br>
+The parameter &lt;target&gt; may be one of the following:&nbsp; <br>
+&nbsp; all:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+create executable file<br>
+&nbsp; clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; remove all object files
+files<br>
+&nbsp; distclean: do clean and remove executable file <br>
+<br>
+To create the executable file, type<br>
+&nbsp;make<br>
+&nbsp;&nbsp;&nbsp; or<br>
+&nbsp;make all<br>
+<br>
+If you need to rebuild programm, type before<br>
+&nbsp;make clean<br>
+<br>
 <h4><a name="TAG_PGI"></a>4.4.2.
 Portland Group C++ (pgcc- pgf) on Linux<br>
 </h4>
@@ -4216,9 +4267,33 @@ Portland Group C++ (pgcc- pgf) on Linux<br>
 </p>
 <h4><a name="TAG_OTHER_COMP"></a>4.4.3. Other compilers and linkers</h4>
 <p> </p>
+<span style="font-family: Helvetica,Arial,sans-serif;"></span>The make
+scripts are located in "~/standalone/GEMIPM2K/platform/".<br>
+To change platform copy&nbsp; corresponding Makefile to working
+directory "~/standalone/GEMIPM2K".<br>
+From this directory, different modes can be invoked by &nbsp;
+typing&nbsp; "make &lt;target&gt;" &nbsp;&nbsp; ( nmake for msvc.net )<br>
+<br>
+The parameter &lt;target&gt; may be one of the following:&nbsp; <br>
+&nbsp; all:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+create executable file<br>
+&nbsp; clean:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; remove all object files
+files<br>
+&nbsp; distclean: do clean and remove executable file <br>
+<br>
+To create the executable file, type<br>
+&nbsp;make<br>
+&nbsp;&nbsp;&nbsp; or<br>
+&nbsp;make all<br>
+<br>
+If you need to rebuild programm, type before<br>
+&nbsp;make clean<br>
+<br>
+If you can not find approptiate make script (Makefile), you can write
+it from existing, by<br>
+changing compilers and linkers with there options. <br>
+<br>
 <span style="font-family: Helvetica,Arial,sans-serif;"><br>
-<br>
-<br>
 <br>
 </span>
 <hr style="width: 100%; height: 2px;"><br>

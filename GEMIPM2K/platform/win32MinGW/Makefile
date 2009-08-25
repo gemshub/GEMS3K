@@ -31,9 +31,6 @@ LFLAGS   = -static
 LIBS     = $(SUBLIBS)  
 AR       = ar cqs
 RANLIB   = 
-MOC      = 
-UIC      = 
-QMAKE    = 
 TAR      = tar -cf
 GZIP     = gzip -9f
 COPY     = cp -f
@@ -78,7 +75,10 @@ HEADERS = array.h \
 SOURCES = gstring.cpp \
 		gdatastream.cpp \
 		s_fgl.cpp \
+		s_fgl1.cpp \
 		s_fgl2.cpp \
+		s_fgl3.cpp \
+		s_fgl4.cpp \
 		node.cpp \
 		node_format.cpp \
 		ms_multi_file.cpp \
@@ -95,7 +95,10 @@ SOURCES = gstring.cpp \
 OBJECTS = obj/gstring.o \
 		obj/gdatastream.o \
 		obj/s_fgl.o \
+		obj/s_fgl1.o \
 		obj/s_fgl2.o \
+		obj/s_fgl3.o \
+		obj/s_fgl4.o \
 		obj/node.o \
 		obj/node_format.o \
 		obj/ms_multi_file.o \
@@ -109,15 +112,10 @@ OBJECTS = obj/gstring.o \
 		obj/main.o \
 		obj/ms_param.o \
 		obj/num_methods.o
-FORMS = 
-UICDECLS = 
-UICIMPLS = 
-SRCMOC   = 
-OBJMOC = 
-DIST	   = gem_node-sep.pro
-QMAKE_TARGET = gemnode.exe
+
+QMAKE_TARGET = gemcalc.exe
 DESTDIR  = 
-TARGET   = gemnode.exe
+TARGET   = gemcalc.exe
 
 first: all
 ####### Implicit rules
@@ -141,22 +139,10 @@ first: all
 
 ####### Build rules
 
-all: Makefile $(TARGET)
+all: $(TARGET)
 
 $(TARGET):  $(UICDECLS) $(OBJECTS) $(OBJMOC)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJMOC) $(OBJCOMP) $(LIBS)
-
-mocables: $(SRCMOC)
-uicables: $(UICDECLS) $(UICIMPLS)
-
-$(MOC): 
-	( cd $(QTDIR)/src/moc && $(MAKE) )
-
-qmake: 
-	@$(QMAKE) -o Makefile gem_node-sep.pro
-
-dist: 
-	@mkdir -p obj/gemnode && $(COPY_FILE) --parents $(SOURCES) $(HEADERS) $(FORMS) $(DIST) obj/gemnode/ && ( cd `dirname obj/gemnode` && $(TAR) gemnode.tar gemnode && $(GZIP) gemnode.tar ) && $(MOVE) `dirname obj/gemnode`/gemnode.tar.gz . && $(DEL_FILE) -r obj/gemnode
 
 clean: 
 #	-$(DEL_FILE) $(OBJECTS)
@@ -164,7 +150,10 @@ clean:
 	-$(DEL_FILE) obj\gstring.o 
 	-$(DEL_FILE) obj\gdatastream.o 
 	-$(DEL_FILE) obj\s_fgl.o 
+	-$(DEL_FILE) obj\s_fgl1.o 
 	-$(DEL_FILE) obj\s_fgl2.o 
+	-$(DEL_FILE) obj\s_fgl3.o
+	-$(DEL_FILE) obj\s_fgl4.o  
 	-$(DEL_FILE) obj\node.o 
 	-$(DEL_FILE) obj\node_format.o 
 	-$(DEL_FILE) obj\ms_multi_file.o 
@@ -207,6 +196,14 @@ obj/s_fgl.o: s_fgl.cpp s_fgl.h \
 		array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl.o s_fgl.cpp
 
+obj/s_fgl1.o: s_fgl1.cpp s_fgl.h \
+		m_const.h \
+		verror.h \
+		v_user.h \
+		gstring.h \
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl1.o s_fgl1.cpp
+	
 obj/s_fgl2.o: s_fgl2.cpp s_fgl.h \
 		m_const.h \
 		verror.h \
@@ -214,6 +211,22 @@ obj/s_fgl2.o: s_fgl2.cpp s_fgl.h \
 		gstring.h \
 		array.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl2.o s_fgl2.cpp
+
+obj/s_fgl3.o: s_fgl3.cpp s_fgl.h \
+		m_const.h \
+		verror.h \
+		v_user.h \
+		gstring.h \
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl3.o s_fgl3.cpp
+	
+obj/s_fgl4.o: s_fgl4.cpp s_fgl.h \
+		m_const.h \
+		verror.h \
+		v_user.h \
+		gstring.h \
+		array.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/s_fgl4.o s_fgl4.cpp
 
 obj/node.o: node.cpp node.h \
 		gdatastream.h \
