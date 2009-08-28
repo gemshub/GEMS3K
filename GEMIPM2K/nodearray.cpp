@@ -453,8 +453,8 @@ void TNodeArray::CopyWorkNodeFromArray( long int ii, long int nNodes, DATABRPTR*
   pCNode()->NodeStatusFMT = arr_BR[ii]->NodeStatusFMT;
   pCNode()->NodeStatusCH = arr_BR[ii]->NodeStatusCH;
   pCNode()->IterDone = arr_BR[ii]->IterDone;      //6
-  // mem_cpy( &pCNode()->TC, &arr_BR[ii]->TC, 32*sizeof(double));
-	pCNode()->TC = arr_BR[ii]->TC;
+  // mem_cpy( &pCNode()->TK, &arr_BR[ii]->TK, 32*sizeof(double));
+	pCNode()->TK = arr_BR[ii]->TK;
 	pCNode()->P = arr_BR[ii]->P;
 	pCNode()->Vs = arr_BR[ii]->Vs;  
 	pCNode()->Vi = arr_BR[ii]->Vi;   
@@ -569,13 +569,13 @@ double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
      double T, P;
      if( ia == 0 )
      {
-      T = pNodT0()[(nodex)]->TC;
+      T = pNodT0()[(nodex)]->TK;
       P = pNodT0()[(nodex)]->P;
       val = pNodT0()[nodex]->xDC[DC_xCH_to_xDB(DCx)]; // number of moles
      }
      else
      {
-      T = pNodT1()[(nodex)]->TC;
+      T = pNodT1()[(nodex)]->TK;
       P = pNodT1()[(nodex)]->P;
       val = pNodT1()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
      }
@@ -816,7 +816,7 @@ double TNodeArray::GetNodeMass( long int ndx,
 void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
        char /*type*/, char CompMode, char tcode, unsigned char iips, double m_v )
 {
-   double mass = 0., coeff, mol, mWat, fmolal, aji;
+   double mass = 0., coeff, mol, mWat=0., fmolal=1., aji;
    DATABR* dbr = NodT1[ndx_from];
    DATACH* dch = CSD;
    long int xWatCH=0, ic, ips = (long int)iips;

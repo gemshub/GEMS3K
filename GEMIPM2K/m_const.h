@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: m_const.h 1374 2009-07-23 16:18:58Z gems $
 //
-// Copyright (C) 2006,2007  S.Dmitrieva, D.Kulik
+// Copyright (C) 2006,2009  S.Dmitrieva, D.Kulik
 //
 // Codes and parameters used in GEM IPM work structure (standalone version)
 //
@@ -265,7 +265,7 @@ typedef enum { // Units of measurement of quantities and concentrations
     PVT_CELS = 'C',   // degrees Celsius (C)
     PVT_KELVIN = 'K', // Kelvins (K), 0 C = 273.15 K
     PVT_FAREN = 'F',  // degrees Fahrenheit (F)
-    //Attention: Only C code can be used in this version.
+    //Attention: Only C code can be used in this version of GEM IPM algorithm.
 
     // Units of measurement of energy values { j c J C n N }
     TDAT_JOUL = 'j',  // Joules (J/mole)

@@ -800,8 +800,9 @@ if( pmp->pNP && rLoop < 0 && status )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif
-        if( pmp->PCI < pmp->DX || pmp->PZ == 2 )  // Dikin criterion satisfied - converged!
-            goto CONVERGED;
+//        if( pmp->PCI < pmp->DX || pmp->PZ == 2 )  // Dikin criterion satisfied - converged!
+        if( pmp->PCI < pmp->DX*0.05 || pmp->PZ == 2 )  // Bugfix 27.08.2009 - to keep old Pa_DK values
+        	goto CONVERGED;
     } // end of main IPM cycle
 
     setErrorMessage( 6, "E06IPM: IPM-main(): " ,
@@ -910,7 +911,8 @@ TMulti::CheckMassBalanceResiduals(double *Y )
 //
 double TMulti::LMD( double LM )
 {
-    double A,B,C,LM1,LM2,FX1,FX2;
+    double A,B,C,LM1,LM2;
+    double FX1,FX2;
     A=0.0;
     B=LM;
     if( LM<2. )
@@ -1226,14 +1228,14 @@ long int TMulti::SolverLinearEquations( long int N, bool initAppr )
 }
 #undef a
 
-// Calculation of MU values (dual DC chemical potentials) and Dikin criterion
+// Calculation of MU values (dual DC chemical potentials) and the Dikin criterion
 // Parameters:
-// bool initAppr - Inital approximation (true) or main iteration of IPM (false)
+// bool initAppr - Initial approximation (true) or main iteration of IPM (false)
 // int N - dimension of the matrix R (number of equations)
-double TMulti::calcDikin(  long int N, bool initAppr )
+double TMulti::calcDikin( long int N, bool initAppr )
 {
   long int  J;
-  double Mu, PCI=0.;
+  double Mu, qMu, PCI=0.;
 
   for(J=0;J<pmp->L;J++)
   {
@@ -1242,7 +1244,9 @@ double TMulti::calcDikin(  long int N, bool initAppr )
       Mu = DualChemPot( pmp->U, pmp->A+J*pmp->N, N, J );
       if( !initAppr )
         Mu -= pmp->F[J];
-      PCI += Mu*pmp->W[J]*Mu;
+      qMu = pmp->W[J]*Mu;
+      PCI += qMu*qMu;      // 27.08.2009 DK  pmp->DX must be made 20-50 times smaller! see line 804
+//      PCI += Mu*pmp->W[J]*Mu;       Important bugfix - see Karpov ea 1997; Chudnenko ea 2001
       pmp->MU[J] = Mu*pmp->W[J];
     }
     else

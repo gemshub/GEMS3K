@@ -43,27 +43,27 @@ const double bar_to_Pa = 1e5,
                kg_to_g = 1e3;
 
 
-// Checks if given temperature Tc and pressure P fit within the interpolation
+// Checks if given temperature TK and pressure P fit within the interpolation
 //intervals of the DATACH lookup arrays (returns true) or not (returns false)
-bool  TNode::check_TP( double Tc, double P )
+bool  TNode::check_TP( double TK, double P )
 {
    bool okT = true, okP = true;
-   double T_, P_;
+   double T_=TK, P_=P;
 
-   if( Tc <= CSD->TCval[0] - CSD->Ttol )
+   if( TK <= CSD->TKval[0] - CSD->Ttol )
    { 				// Lower boundary of T interpolation interval
 	 okT = false;
-     T_ = CSD->TCval[0] - CSD->Ttol;
+     T_ = CSD->TKval[0] - CSD->Ttol;
    }
-   if( Tc >= CSD->TCval[CSD->nTp-1] + CSD->Ttol )
+   if( TK >= CSD->TKval[CSD->nTp-1] + CSD->Ttol )
    {
 	 okT = false;
-     T_ = CSD->TCval[CSD->nTp-1] + CSD->Ttol;
+     T_ = CSD->TKval[CSD->nTp-1] + CSD->Ttol;
    }
    if( okT == false )
    {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "In node "<< CNode->NodeHandle << ",  Given TC= "<<  Tc <<
+     f_log << "In node "<< CNode->NodeHandle << ",  Given TK= "<<  TK <<
              "  is beyond the interpolation range for thermodynamic data near boundary T_= "
      		<< T_ << endl;
    }
@@ -127,7 +127,7 @@ long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
 // f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
 //---------------------------------------------
 // Checking T and P  for interpolation intervals
-   check_TP( CNode->TC, CNode->P);
+   check_TP( CNode->TK, CNode->P);
 // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
 // setting up up PIA or AIA mode
    if( CNode->NodeStatusCH == NEED_GEM_SIA )
@@ -206,7 +206,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
 //---------------------------------------------
 // Checking T and P  for interpolation intervals
-   check_TP( CNode->TC, CNode->P);
+   check_TP( CNode->TK, CNode->P);
 // Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
 // setting up up PIA or AIA mode
    if( CNode->NodeStatusCH == NEED_GEM_SIA )
@@ -669,13 +669,13 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    return DCx;
  }
 
- // Test Tc as lying in the vicinity of a grid point for the interpolation of thermodynamic data
+ // Test TK as lying in the vicinity of a grid point for the interpolation of thermodynamic data
  // Return index of the node in lookup array or -1
- long int  TNode::check_grid_T( double Tc )
+ long int  TNode::check_grid_T( double TK )
  {
    long int jj;
    for( jj=0; jj<CSD->nTp; jj++)
-     if( fabs( Tc - CSD->TCval[jj] ) < CSD->Ttol )
+     if( fabs( TK - CSD->TKval[jj] ) < CSD->Ttol )
         return jj;
    return -1;
  }
@@ -691,264 +691,264 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    return -1;
  }
 
- // Tests Tc and P as a grid point for the interpolation of thermodynamic data using DATACH
+ // Tests TK and P as a grid point for the interpolation of thermodynamic data using DATACH
  // lookup arrays. Returns -1L if interpolation is needed, or 1D index of the lookup array element
- // if Tc and P fit within the respective tolerances.
+ // if TK and P fit within the respective tolerances.
  // For producing lookup arrays (in GEMS), we recommend using step for temperature less or equal to 10 degrees
  // in order to assure good accuracy of interpolation especially for S0 and Cp0 of aqueous species.
-  long int  TNode::check_grid_TP(  double Tc, double P )
+  long int  TNode::check_grid_TP(  double TK, double P )
   {
     long int xT, xP, ndx=-1;
 
-    xT = check_grid_T( Tc );
+    xT = check_grid_T( TK );
     xP = check_grid_P( P );
     if( xT >=0 && xP>= 0 )
      ndx =  xP * CSD->nTp + xT;
     return ndx;
   }
 
-  //Retrieves (interpolated) molar Gibbs energy G0(P,Tc) value for Dependent Component
-  //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C)
+  //Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
+  //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
   // Parameter norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
-   double TNode::DC_G0(const long int xCH, const double P, const double Tc,  bool norm )
+   double TNode::DC_G0(const long int xCH, const double P, const double TK,  bool norm )
    {
     long int xTP, jj;
     double G0;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 7777777.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
        G0 = CSD->G0[ jj + xTP ];
     else
-       G0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->G0+jj,
-               P, Tc, CSD->nTp, CSD->nPp, 6 );
+       G0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->G0+jj,
+               P, TK, CSD->nTp, CSD->nPp, 6 );
 
     if( norm )
-      return G0/(R_CONSTANT * (Tc + C_to_K));
+      return G0/(R_CONSTANT * (TK));
     else
       return G0;
    }
 
-   // Retrieves (interpolated, if necessary) molar volume V0(P,Tc) value for Dependent Component (in J/Pa)
-   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C)
+   // Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
+   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_V0(const long int xCH, const double P, const double Tc)
+   double TNode::DC_V0(const long int xCH, const double P, const double TK)
    {
     long int xTP, jj;
     double V0;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 0.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
        V0 = CSD->V0[ jj + xTP ];
     else
-       V0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->V0+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 5 );
+       V0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->V0+jj,
+                P, TK, CSD->nTp, CSD->nPp, 5 );
     return V0;
    }
 
 
-   // Retrieves (interpolated) molar enthalpy H0(P,Tc) value for Dependent Component (in J/mol)
-   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C)
+   // Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol)
+   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_H0(const long int xCH, const double P, const double Tc)
+   double TNode::DC_H0(const long int xCH, const double P, const double TK)
    {
     long int xTP, jj;
     double H0;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 7777777.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
        H0 = CSD->H0[ jj + xTP ];
     else
-       H0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->H0+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 5 );
+       H0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->H0+jj,
+                P, TK, CSD->nTp, CSD->nPp, 5 );
     return H0;
    }
 
-   // Retrieves (interpolated) absolute molar enropy S0(P,Tc) value for Dependent Component (in J/K/mol)
-   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C)
+   // Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol)
+   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_S0(const long int xCH, const double P, const double Tc)
+   double TNode::DC_S0(const long int xCH, const double P, const double TK)
    {
     long int xTP, jj;
     double s0;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 0.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
        s0 = CSD->S0[ jj + xTP ];
     else
-       s0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->S0+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 4 );
+       s0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->S0+jj,
+                P, TK, CSD->nTp, CSD->nPp, 4 );
     return s0;
    }
 
-   // Retrieves (interpolated) constant-pressure heat capacity Cp0(P,Tc) value for Dependent Component (in J/K/mol)
-   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C)
+   // Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in J/K/mol)
+   // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_Cp0(const long int xCH, const double P, const double Tc)
+   double TNode::DC_Cp0(const long int xCH, const double P, const double TK)
    {
     long int xTP, jj;
     double cp0;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 0.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
        cp0 = CSD->Cp0[ jj + xTP ];
     else
-       cp0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->Cp0+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 3 );
+       cp0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->Cp0+jj,
+                P, TK, CSD->nTp, CSD->nPp, 3 );
     return cp0;
    }
 
    // Retrieves (interpolated) Helmholtz energy  of Dependent Component (in J/mol)
-   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C)
+   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_A0(const long int xCH, const double P, const double Tc)
+   double TNode::DC_A0(const long int xCH, const double P, const double TK)
    {
     long int xTP, jj;
     double a0;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 7777777.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj =  xCH * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
        a0 = CSD->A0[ jj + xTP ];
     else
-       a0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->A0+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 5 );
+       a0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->A0+jj,
+                P, TK, CSD->nTp, CSD->nPp, 5 );
     return a0;
    }
 
    // Retrieves (interpolated) Internal energy of  Dependent Component (in J/mol)
-   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature, C)
+   // from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_U0(const long int xCH, const double P, const double Tc)
+   double TNode::DC_U0(const long int xCH, const double P, const double TK)
    {
        long int xTP, jj;
        double u0;
 
-       if( check_TP( Tc, P ) == false )
+       if( check_TP( TK, P ) == false )
        	return 7777777.;
 
-       xTP = check_grid_TP( Tc, P );
+       xTP = check_grid_TP( TK, P );
        jj =  xCH * CSD->nPp * CSD->nTp;
 
        if( xTP >= 0 )
           u0 = CSD->U0[ jj + xTP ];
        else
-          u0 = LagranInterp( CSD->Pval, CSD->TCval, CSD->U0+jj,
-                   P, Tc, CSD->nTp, CSD->nPp, 5 );
+          u0 = LagranInterp( CSD->Pval, CSD->TKval, CSD->U0+jj,
+                   P, TK, CSD->nTp, CSD->nPp, 5 );
        return u0;
   }
 
 
-   // Retrieves (interpolated) dielectric constant of liquid water at (P,Tc) from the DATACH structure or 0.0,
-   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::EpsH2Ow(const double P, const double Tc)
+   // Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::EpsH2Ow(const double P, const double TK)
    {
     long int xTP, jj;
     double epsW;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 0.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj = 0; // 0 * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
     	epsW = CSD->epsW[ jj + xTP ];
     else
-    	epsW = LagranInterp( CSD->Pval, CSD->TCval, CSD->epsW+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    	epsW = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+jj,
+                P, TK, CSD->nTp, CSD->nPp, 5 );
     return epsW;
    }
 
-   // Retrieves (interpolated) density of liquid water (in kg/m3) at (P,Tc) from the DATACH structure or 0.0,
-   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DenH2Ow(const double P, const double Tc)
+   // Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::DenH2Ow(const double P, const double TK)
    {
     long int xTP, jj;
     double denW;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 0.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj = 0; // 0 * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
     	denW = CSD->denW[ jj + xTP ];
     else
-    	denW = LagranInterp( CSD->Pval, CSD->TCval, CSD->denW+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    	denW = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+jj,
+                P, TK, CSD->nTp, CSD->nPp, 5 );
     return denW;
    }
 
-   // Retrieves (interpolated) dielectric constant of H2O vapor at (P,Tc) from the DATACH structure or 0.0,
-   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::EpsH2Og(const double P, const double Tc)
+   // Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::EpsH2Og(const double P, const double TK)
    {
      long int xTP, jj;
      double epsWg;
 
-     if( check_TP( Tc, P ) == false )
+     if( check_TP( TK, P ) == false )
      	return 0.;
 
-     xTP = check_grid_TP( Tc, P );
+     xTP = check_grid_TP( TK, P );
      jj = 0; // 0 * CSD->nPp * CSD->nTp;
 
      if( xTP >= 0 )
      	epsWg = CSD->epsWg[ jj + xTP ];
      else
-     	epsWg = LagranInterp( CSD->Pval, CSD->TCval, CSD->epsWg+jj,
-                 P, Tc, CSD->nTp, CSD->nPp, 5 );
+     	epsWg = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsWg+jj,
+                 P, TK, CSD->nTp, CSD->nPp, 5 );
      return epsWg;
     }
 
-   // Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,Tc) from the DATACH structure or 0.0,
-   // if Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DenH2Og(const double P, const double Tc)
+   // Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::DenH2Og(const double P, const double TK)
    {
     long int xTP, jj;
     double denWg;
 
-    if( check_TP( Tc, P ) == false )
+    if( check_TP( TK, P ) == false )
     	return 0.;
 
-    xTP = check_grid_TP( Tc, P );
+    xTP = check_grid_TP( TK, P );
     jj = 0; // 0 * CSD->nPp * CSD->nTp;
 
     if( xTP >= 0 )
     	denWg = CSD->denWg[ jj + xTP ];
     else
-    	denWg = LagranInterp( CSD->Pval, CSD->TCval, CSD->denWg+jj,
-                P, Tc, CSD->nTp, CSD->nPp, 5 );
+    	denWg = LagranInterp( CSD->Pval, CSD->TKval, CSD->denWg+jj,
+                P, TK, CSD->nTp, CSD->nPp, 5 );
     return denWg;
    }
 
@@ -962,7 +962,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    else
    {
      long int xDC = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
-     vol = DC_V0( xDC, CNode->P, CNode->TC );
+     vol = DC_V0( xDC, CNode->P, CNode->TK );
      vol *= CNode->xDC[DC_xCH_to_xDB(xDC)];
    }
    return vol;
@@ -1042,14 +1042,14 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     if( norm )
       return muDC;
     else
-      return muDC*(R_CONSTANT * (CNode->TC + C_to_K));
+      return muDC*(R_CONSTANT * (CNode->TK));
   }
 
   //Retrieval of (dual-thermodynamic) activity of the DC (xdc is the DC DBR index)
   double TNode::Get_aDC( const long int xdc )
    {
 	 double Mj  = Get_muDC( xdc, true );
-	 double Mj0 = DC_G0( DC_xDB_to_xCH(xdc), CNode->P, CNode->TC,  true );
+	 double Mj0 = DC_G0( DC_xDB_to_xCH(xdc), CNode->P, CNode->TK,  true );
      return exp(Mj-Mj0);
 	 // return 	pow(10.0,pmm->Y_la[xCH]);
   }
@@ -1146,7 +1146,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   double TNode::DC_a(const long int xCH)
   {
 	 //double Mj  = DC_mu( xCH, true );
-	 //double Mj0 = DC_G0( xCH, CNode->P, CNode->TC,  true );
+	 //double Mj0 = DC_G0( xCH, CNode->P, CNode->TK,  true );
 	 //return (Mj-Mj0)/2.302585093;
 	 return 	pow(10.0,pmm->Y_la[xCH]);
   }
@@ -1216,7 +1216,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
  //  for(long ii=0; ii<CSD->nIC; ii++ )
  //    muDC += pmm->A[  xCH * CSD->nIC + ii ] * (pmm->U[ii]);
     if( norm )
-        return muDC/pmm->RT; // (R_CONSTANT * (CNode->TC + C_to_K));
+        return muDC/pmm->RT; // (R_CONSTANT * (CNode->TK));
     else
         return muDC;
   }
@@ -1228,7 +1228,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   // false - in J/mol; true (default) - in mol/mol
   double TNode::DC_mu0(const long int xCH, bool norm)
   {
-	return  DC_G0( xCH, CNode->P, CNode->TC, norm );
+	return  DC_G0( xCH, CNode->P, CNode->TK, norm );
 	/*double  G0 = pmm->G0[xCH];
     if( norm )
       return G0;
@@ -1438,7 +1438,7 @@ void TNode::makeStartDataChBR( QWidget* par,
 //  fillValue( CSD->DD, 0., CSD->nDCs);
 
 // set default data to DataBr
-  // mem_set( &CNode->TC, 0, 32*sizeof(double));
+  // mem_set( &CNode->TK, 0, 32*sizeof(double));
   // CNode->NodeHandle = 0;
   // CNode->NodeTypeHY = normal;
   // CNode->NodeTypeMT = normal;
@@ -1452,7 +1452,7 @@ void TNode::makeStartDataChBR( QWidget* par,
   else
     CNode->NodeStatusCH = NEED_GEM_SIA;
 
-  CNode->TC = pmm->TCc; //25
+  CNode->TK = pmm->TCc+C_to_K; //25
   CNode->P = pmm->Pc*bar_to_Pa; //1
   CNode->Ms = pmm->MBX; // in kg
 
@@ -1476,7 +1476,7 @@ void TNode::makeStartDataChBR( QWidget* par,
 // must be changed to matrix structure  ???????
 // setted CSD->nPp*CSD->nTp = 1
    for( i1=0; i1<CSD->nTp; i1++ )
-    CSD->TCval[i1] = Tai[i1];
+    CSD->TKval[i1] = Tai[i1]+C_to_K;
    for( i1=0; i1<CSD->nPp; i1++ )
     CSD->Pval[i1] = Pai[i1];
 
@@ -1509,7 +1509,7 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
 
   for(  ii=0; ii<CSD->nTp; ii++)
   {
-    cT = CSD->TCval[ii];
+    cT = CSD->TKval[ii]-C_to_K;
     for(  jj=0; jj<CSD->nPp; jj++)
     {
      if( par )
@@ -1617,7 +1617,7 @@ void TNode::packDataBr()
   else
      CNode->NodeStatusCH = NEED_GEM_SIA;
 
-   CNode->TC = pmm->TCc; //25
+   CNode->TK = pmm->TCc+C_to_K; //25
    CNode->P = pmm->Pc*bar_to_Pa; //1
 //   CNode->IterDone = pmm->IT;
    CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
@@ -1690,7 +1690,7 @@ void TNode::packDataBr( double ScFact )
   else
      CNode->NodeStatusCH = NEED_GEM_SIA;
 
-   CNode->TC = pmm->TCc; //25
+   CNode->TK = pmm->TCc+C_to_K; //25
    CNode->P = pmm->Pc*bar_to_Pa; //1
    CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
 // values
@@ -1755,8 +1755,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
 #endif
-  pmm->TCc = CNode->TC;
-  pmm->Tc = CNode->TC+C_to_K;
+  pmm->TCc = CNode->TK-C_to_K;
+  pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;
   pmm->VXc = CNode->Vs/1.e-6; // from cm3 to m3
   // Obligatory arrays - always unpacked!
@@ -1846,8 +1846,8 @@ void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
 	 ScFact = 1e6;
  internalScFact =  ScFact;
 
-  pmm->TCc = CNode->TC;
-  pmm->Tc = CNode->TC+C_to_K;
+  pmm->TCc = CNode->TK-C_to_K;
+  pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;
   pmm->VXc = CNode->Vs /1.e-6 *ScFact; // from cm3 to m3
   // Obligatory arrays - always unpacked!
@@ -2052,7 +2052,7 @@ void TNode::GEM_restore_MT(
     long int  &p_NodeHandle,   // Node identification handle
     long int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                       //                                    GEM input output  FMT control
-    double &p_TC,      // Temperature T, C                            +       -      -
+    double &p_TK,      // Temperature T, Kelvin                       +       -      -
     double &p_P,      // Pressure P,  Pa                              +       -      -
     double &p_Vs,     // Volume V of reactive subsystem,  m3         (+)      -      +
     double &p_Ms,     // Mass of reactive subsystem, kg               -       -      +
@@ -2065,7 +2065,7 @@ void TNode::GEM_restore_MT(
   long int ii;
   p_NodeHandle = CNode->NodeHandle;
   p_NodeStatusCH = CNode->NodeStatusCH;
-  p_TC = CNode->TC;
+  p_TK = CNode->TK;
   p_P = CNode->P;
   p_Vs = CNode->Vs;
   p_Ms = CNode->Ms;
@@ -2152,7 +2152,7 @@ void TNode::GEM_from_MT(
   long int  p_NodeHandle,   // Node identification handle
   long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
                     //                                              GEM input output  FMT control
-  double p_TC,     // Temperature T, C                                 +       -      -
+  double p_TK,     // Temperature T, Kelvin                            +       -      -
   double p_P,      // Pressure P, Pa                                   +       -      -
   double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
   double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
@@ -2167,7 +2167,7 @@ void TNode::GEM_from_MT(
 
      CNode->NodeHandle = p_NodeHandle;
      CNode->NodeStatusCH = p_NodeStatusCH;
-     CNode->TC = p_TC;
+     CNode->TK = p_TK;
      CNode->P = p_P;
      CNode->Vs = p_Vs;
      CNode->Ms = p_Ms;
@@ -2198,7 +2198,7 @@ void TNode::GEM_from_MT(
  long int  p_NodeHandle,   // Node identification handle
  long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
                   //                                              GEM input output  FMT control
- double p_TC,     // Temperature T, C                                 +       -      -
+ double p_TK,     // Temperature T, Kelvin                            +       -      -
  double p_P,      // Pressure P, Pa                                   +       -      -
  double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
  double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
@@ -2217,7 +2217,7 @@ void TNode::GEM_from_MT(
 
   CNode->NodeHandle = p_NodeHandle;
   CNode->NodeStatusCH = p_NodeStatusCH;
-  CNode->TC = p_TC;
+  CNode->TK = p_TK;
   CNode->P = p_P;
   CNode->Vs = p_Vs;
   CNode->Ms = p_Ms;
@@ -2258,7 +2258,7 @@ void TNode::GEM_from_MT(
  long int  p_NodeHandle,   // Node identification handle
  long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
                   //                                              GEM input output  FMT control
- double p_TC,     // Temperature T, C                                 +       -      -
+ double p_TK,     // Temperature T, Kelvin                            +       -      -
  double p_P,      // Pressure P, Pa                                   +       -      -
  double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
  double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
@@ -2274,7 +2274,7 @@ void TNode::GEM_from_MT(
 
   CNode->NodeHandle = p_NodeHandle;
   CNode->NodeStatusCH = p_NodeStatusCH;
-  CNode->TC = p_TC;
+  CNode->TK = p_TK;
   CNode->P = p_P;
   CNode->Vs = p_Vs;
   CNode->Ms = p_Ms;

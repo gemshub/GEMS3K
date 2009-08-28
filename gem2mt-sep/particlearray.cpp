@@ -411,7 +411,7 @@ long int TParticleArray::FCellWalkIteration( long int /*Mode*/, bool /* CompMode
  // stub call for coupled mass transport calculation
 long int TParticleArray::GEMPARTRACK( long int Mode, bool ComponentMode, double t0_, double t1_ )
 {
-	long int iRet;
+        long int iRet=0;
 
   t0 = t0_;
   t1 = t1_;

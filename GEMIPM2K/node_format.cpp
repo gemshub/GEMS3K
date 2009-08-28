@@ -39,7 +39,7 @@ outField DataBR_fields[51] =  {
   { "NodeStatusFMT",  1, 0 },
   { "NodeStatusCH",  1, 0 },
   { "IterDone",  0, 0 },
-  { "TC",   1, 0 },
+  { "TK",   1, 0 },
   { "P",  1, 0 },
   { "Vs",  0, 0 },
   { "Vi",   0, 0 },
@@ -118,13 +118,14 @@ outField DataCH_dynamic_fields[29] =  { //+4
    { "nDCinPH",  1, 0 },
    { "A",  1, 0 },
    { "Ttol",  0, 0 },
-   { "TCval",  1, 0 },
+   { "TKval",  1, 0 },
    { "Ptol",  0, 0 },
    { "Pval",  1, 0 },
    { "denW",  1, 0 },
    { "denWg",  1, 0 },
    { "epsW",  1, 0 },
    { "epsWg",  1, 0 },
+//   { "visW",  1, 0 },
    { "V0",  1, 0 },
    { "G0",  1, 0 },
    { "H0", 0, 0 },
@@ -147,8 +148,8 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   TPrintArrays  prar(51, DataBR_fields, ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 2.3.1" << endl;
-      ff << "# Prototype 13.08.2009" << endl;
+   {  ff << "# GEMIPM2K v. 3.0.0" << endl;
+      ff << "# Prototype 28.08.2009" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -191,10 +192,10 @@ if( CNode->NodeStatusFMT != No_transport )
   }
   if( _comment )
       ff << "\n## (2) Chemical scalar variables" << endl;
-  if(!brief_mode || prar.getAlws("TC" ))
+  if(!brief_mode || prar.getAlws("TK" ))
   { if( _comment )
-         ff << "# TC: Node temperature T (C). This value must always be provided - GEM input." << endl;
-    ff << left << setw(7) << "<TC> " <<  CNode->TC << endl;
+         ff << "# TK: Node temperature T (Kelvin). This value must always be provided - GEM input." << endl;
+    ff << left << setw(7) << "<TK> " <<  CNode->TK << endl;
   }
   if(!brief_mode || prar.getAlws("P" ))
   {  if( _comment )
@@ -489,7 +490,7 @@ void TNode::databr_from_text_file( fstream& ff )
             break;
     case 5: rdar.readArray( "IterDone",  &CNode->IterDone, 1);
             break;
-    case 6: rdar.readArray( "TC",  &CNode->TC, 1);
+    case 6: rdar.readArray( "TK",  &CNode->TK, 1);
             break;
     case 7: rdar.readArray( "P",  &CNode->P, 1);
             break;
@@ -604,8 +605,8 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 	  prar.setNoAlws( 2 /*"xph"*/);
 
   if( _comment )
-  {  ff << "# GEMIPM2K v. 2.3.1" << endl;
-     ff << "# Prototype 13.08.2009" << endl;
+  {  ff << "# GEMIPM2K v. 3.0.0" << endl;
+     ff << "# Prototype 28.08.2009" << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
@@ -744,13 +745,13 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
     ff << "\n## (9) Thermodynamic data section";
   if(!brief_mode || prar.getAlws("Ttol" ))
   { if( _comment )
-     ff << "\n# Ttol: Tolerance for the temperature interpolation (C, K)" << endl;
+     ff << "\n# Ttol: Tolerance for the temperature interpolation (K)" << endl;
     ff << left << setw(7) << "<Ttol> " <<  CSD->Ttol;
   }
-  if(!brief_mode || prar.getAlws("TCval" ))
+  if(!brief_mode || prar.getAlws("TKval" ))
   { if( _comment )
-      ff << "\n# Tval: Temperature values for the interpolation grid (C) for the lookup arrays of thermodynamic data [nTp]";
-    prar.writeArray(  "TCval", CSD->TCval, CSD->nTp );
+      ff << "\n# Tval: Temperature values for the interpolation grid (K) for the lookup arrays of thermodynamic data [nTp]";
+    prar.writeArray(  "TKval", CSD->TKval, CSD->nTp );
   }
   ff << endl;
   if(!brief_mode || prar.getAlws("Ptol" ))
@@ -969,7 +970,7 @@ void TNode::datach_from_text_file(fstream& ff)
             break;
     case 13: rddar.readArray( "Ttol", &CSD->Ttol, 1);
             break;
-    case 14: rddar.readArray( "TCval", CSD->TCval, CSD->nTp );
+    case 14: rddar.readArray( "TKval", CSD->TKval, CSD->nTp );
             break;
     case 15: rddar.readArray( "Ptol", &CSD->Ptol, 1);
             break;
@@ -1062,7 +1063,7 @@ void TNode::datach_to_file( GemDataStream& ff )
    ff.writeArray( CSD->ICmm, CSD->nIC );
    ff.writeArray( CSD->DCmm, CSD->nDC );
 
-   ff.writeArray( CSD->TCval,  CSD->nTp );
+   ff.writeArray( CSD->TKval,  CSD->nTp );
    ff.writeArray( CSD->Pval,  CSD->nPp );
 
    ff.writeArray( CSD->ccIC, CSD->nIC );
@@ -1111,7 +1112,7 @@ void TNode::datach_from_file( GemDataStream& ff )
    ff.readArray( CSD->ICmm, CSD->nIC );
    ff.readArray( CSD->DCmm, CSD->nDC );
 
-   ff.readArray( CSD->TCval,  CSD->nTp );
+   ff.readArray( CSD->TKval,  CSD->nTp );
    ff.readArray( CSD->Pval,  CSD->nPp );
 
    ff.readArray( CSD->ccIC, CSD->nIC );
@@ -1162,7 +1163,7 @@ void TNode::datach_realloc()
   CSD->DCmm = new double[CSD->nDC];
 CSD->DCmm[0] = 0.0;   // Added by DK on 03.03.2007
 
-  CSD->TCval = new double[CSD->nTp];
+  CSD->TKval = new double[CSD->nTp];
   CSD->Pval = new double[CSD->nPp];
 
   CSD->denW = new double[ 5*CSD->nPp*CSD->nTp];
@@ -1223,9 +1224,9 @@ void TNode::datach_free()
     CSD->DCmm = 0;
   }
 
- if( CSD->TCval )
-  { delete[] CSD->TCval;
-    CSD->TCval = 0;
+ if( CSD->TKval )
+  { delete[] CSD->TKval;
+    CSD->TKval = 0;
   }
  if( CSD->Pval )
   { delete[] CSD->Pval;
@@ -1314,7 +1315,7 @@ void TNode::databr_to_file( GemDataStream& ff )
 {
 // const data
    ff.writeArray( &CNode->NodeHandle, 6 );
-   ff.writeArray( &CNode->TC, 32 );
+   ff.writeArray( &CNode->TK, 32 );
 
 //dynamic data
    ff.writeArray( CNode->bIC, CSD->nICb );
@@ -1344,7 +1345,7 @@ void TNode::databr_from_file( GemDataStream& ff )
 {
 // const data
    ff.readArray( &CNode->NodeHandle, 6 );
-   ff.readArray( &CNode->TC, 32 );
+   ff.readArray( &CNode->TK, 32 );
 
 //dynamic data
    ff.readArray( CNode->bIC, CSD->nICb );
@@ -1507,7 +1508,7 @@ void TNode::databr_reset( DATABR *CNode, long int level )
    CNode->IterDone = 0;      //6
 
 // Chemical scalar variables
-	CNode->TC = 0.;
+	CNode->TK = 0.;
 	CNode->P = 0.;
 	CNode->Vs = 0.;
 	CNode->Vi = 0.;
@@ -1564,7 +1565,7 @@ void TNode::datach_reset()
 	CSD->xdc = 0;
 	CSD->xph = 0;  //18
 
-	CSD->TCval = 0;
+	CSD->TKval = 0;
 	CSD->Pval = 0;
 	CSD->A = 0;
 	CSD->Ttol = 0.;

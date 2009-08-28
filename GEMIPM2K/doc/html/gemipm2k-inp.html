@@ -5,7 +5,7 @@
  content="text/html; charset=iso-8859-1">
   <meta name="GENERATOR"
  content="Mozilla/4.7 [en] (WinNT; I) [Netscape]">
-  <title>GEMIPM2K File Formats</title>
+  <title>GEMIPM2K Input/Output File Formats</title>
   <meta name="description" content="Version 3.0.0-PSI">
 </head>
 <body>
@@ -682,7 +682,7 @@ can be condensed as shown below: <br>
 0.0&nbsp;&nbsp;&nbsp; <br>
       </p>
       <p style="margin-left: 40px; font-family: monospace;">&lt;Ttol&gt;
-0.1&nbsp; &lt;TCval&gt; 5.0&nbsp;&nbsp; &lt;Ptol&gt;
+0.1&nbsp; &lt;TKval&gt; 278.15 &nbsp; &lt;Ptol&gt;
 1.0&nbsp;&nbsp;
 &lt;Pval&gt; 1.0&nbsp;&nbsp; <br>
 &lt;denW&gt; 0.9999926 -1.13584e-005 -1.659036e-005 4.916706e-005 0<br>
@@ -738,8 +738,8 @@ can be condensed as shown below: <br>
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">
       <div style="margin-left: 40px;">&lt;NodeHandle&gt;&nbsp;&nbsp;&nbsp;&nbsp;
 0<br>
-&lt;NodeStatusCH&gt;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; &lt;TC&gt;
-5&nbsp;&nbsp; &lt;P&gt;&nbsp; 1<br>
+&lt;NodeStatusCH&gt;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; &lt;TK&gt; 298.15
+&nbsp; &lt;P&gt;&nbsp; 1<br>
 &lt;bIC&gt;&nbsp; 3.31e-04 3.31e-04 2.0e-07 1.106837e+02 1.0e-07
 5.534286e+01 0</div>
       </td>
@@ -754,8 +754,9 @@ on the TNodeArray level).&nbsp; These DBR files normally have different
 bulk
 compositions (&lt;bIC&gt;) and&nbsp; &lt;NodeHandle&gt; values. If the
 DCH file
-contains lookup arrays for thermodynamic data, also &lt;T&gt; and
+contains lookup arrays for thermodynamic data, also &lt;TK&gt; and
 &lt;P&gt; values can vary from node to node. <br>
+<br>
 </p>
 <hr size="2" width="100%"><br>
 <p> </p>
@@ -4173,7 +4174,7 @@ list. Each 2D table has &lt;nPp&gt; rows and &lt;nTp&gt; columns, in
 total, &lt;nPp&gt;*&lt;nTp&gt; elements. Each row in the table
 corresponds to a certain value of pressure from the &lt;Pval&gt;
 vector. Data in the row referto this pressure and temperatures in the
-sequence defined in the &lt;Tval&gt; vector. </td>
+sequence defined in the &lt;TKval&gt; vector. </td>
       <td style="vertical-align: top; font-family: monospace;">DCH <br>
 (9)<br>
       </td>
@@ -4343,14 +4344,14 @@ File<br>
     </tr>
     <tr>
       <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;TC&gt;</td>
+ style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;TK&gt;</td>
       <td style="vertical-align: top; font-family: monospace;">TC[0] <br>
 or<br>
 TC[1]</td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Node
-temperature T (C) . This value must
+temperature T (K) . This value must
 always be provided</span> (<span style="font-weight: bold;">GEM
 input). </span>If this value
 differs by
@@ -4358,7 +4359,7 @@ more than &lt;Ttol&gt; degrees from the temperature value used in
 previous GEM calculation, the GEMIPM2K program will attempt to
 interpolate thermodynamic data if lookup arrays were provided in DCH
 file or DATACH memory structure. If
-a given TC value is outside of the
+a given TK value is outside of the
 interpolation interval then calculations will stop and NodeStatusCH
 will be set to <span style="font-family: monospace;">ERR_GEM_AIA or
 ERR_GEM_SIA.</span><span style="color: rgb(204, 102, 0);"></span> <br>
@@ -4368,13 +4369,13 @@ ERR_GEM_SIA.</span><span style="color: rgb(204, 102, 0);"></span> <br>
     </tr>
     <tr>
       <td
- style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;TCval&gt;</td>
+ style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;TKval&gt;</td>
       <td style="vertical-align: top; font-family: monospace;"><br>
       </td>
       <td style="vertical-align: top; font-family: monospace;"><a
  href="gemipm2k-inp.html#TAG_nTp">nTp</a></td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Temperature
-values (C) for the
+values (K) for the
 interpolation grid in lookup arrays;</span> the values must be given in
 the
 ascending order</td>
@@ -4449,7 +4450,7 @@ the names in the &lt;DCNL&gt; list. Each table has &lt;nPp&gt; rows and
 &lt;nTp&gt; columns, in total, &lt;nPp&gt;*&lt;nTp&gt; values. Each row
 in the DC table corresponds to a certain value of pressure from the
 &lt;Pval&gt; vector. Data in the row refer to this pressure and to
-temperatures in a sequence defined in the &lt;Tval&gt; vector. </td>
+temperatures in a sequence defined in the &lt;TKval&gt; vector. </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (9)<br>
       </td>
@@ -4492,7 +4493,7 @@ Each 2D table has &lt;nPp&gt; rows and &lt;nTp&gt; columns, in total,
 &lt;nPp&gt;*&lt;nTp&gt; elements. Each row in the table corresponds to
 a certain value of pressure from the &lt;Pval&gt; vector. Data in the
 row refer to this pressure and temperatures in the sequence defined in
-the &lt;Tval&gt; vector. <br>
+the &lt;TKval&gt; vector. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (9)<br>

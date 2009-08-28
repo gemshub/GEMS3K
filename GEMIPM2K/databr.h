@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: databr.h 1390 2009-08-10 09:20:12Z gems $
+// $Id: databr.h 1430 2009-08-27 17:02:11Z gems $
 //
 // DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.
@@ -9,7 +9,7 @@
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
 //
-// Copyright (C) 2003,2009 by D.Kulik, S.Dmytriyeva, W.Pfingsten, F.Enzmann
+// Copyright (C) 2003,2009 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
 //
 // This file is part of GEMIPM2K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
@@ -45,7 +45,7 @@ typedef struct  // DATABR - template node data bridge structure
 //      Usage of this variable (DB - data bridge)      	               MT-DB DB-GEM GEM-DB DB-MT
    double
 // Chemical scalar variables
-    TC,     // Node temperature T (C)                       	          +      +      -     -
+    TK,     // Node temperature T (Kelvin)                     	          +      +      -     -
     P, 	    // Node Pressure P (Pa)                         	          +      +      -     -
     Vs,     // Volume V of reactive subsystem  (m3)                      (+)    (+)     +     +
     Vi,     // Volume of inert subsystem (m3)          	                  +      -      -     +

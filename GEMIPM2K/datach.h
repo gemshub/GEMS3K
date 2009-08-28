@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: datach.h 1413 2009-08-24 11:36:21Z gems $
+// $Id: datach.h 1430 2009-08-27 17:02:11Z gems $
 //
 // DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.
@@ -64,13 +64,13 @@ typedef struct   // Structure DataCH
     *xph;   // DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]
 
   double
-    Ttol,    // Tolerance for the temperature interpolation (C, K)
+    Ttol,    // Tolerance for the temperature interpolation (K)
     Ptol,    // Tolerance for the pressure interpolation (Pa)
     dRes1,   // reserved
     dRes2,   // reserved
 
 // Data vectors - must be loaded before calling GEMIPM2K
-    *TCval,  // Temperature values for the interpolation grid (C) for the lookup arrays of thermodynamic data [nTp]
+    *TKval,  // Temperature values for the interpolation grid (Kelvin) for the lookup arrays of thermodynamic data [nTp]
     *Pval,   // Pressure values for the interpolation grid (Pa) for the lookup arrays of thermodynamic data [nPp]
     *A,      // Stoichiometry matrix A for Dependent Components. [nIC][nDC] elements
 
@@ -86,13 +86,14 @@ typedef struct   // Structure DataCH
     // from the previous P,T by more than Ptol, Ttol)
     *denW,  // Lookup array for the density of water-solvent (kg/m3) [5][nPp][nTp]
     *denWg, // Optional lookup array for the density of water vapour (kg/m3) [5][nPp][nTp]
+//  *visW, // Optional lookup array for the viscosity of liquid water (units?) [5][nPp][nTp] reserved
     *epsW,  // Lookup array for the dielectric constant of water-solvent (dimensionless) [5][nPp][nTp]
     *epsWg, // Optional lookup array for the dielectric constant of water vapour [5][nPp][nTp]
     *G0,    // Obligatory lookup array for DC molar Gibbs energy function g(T,P) (J/mol) [nDC][nPp][nTp]
-    *V0,    // Obligatory lookup array for (standard) molar volumes of DC (J/Pa) [nDC][nPp][nTp]
-    *S0,    // Optional lookup array for the DC absolute entropy function (J/K/mol) [nDC][nPp][nTp]
+    *V0,    // Obligatory lookup array for (standard) molar volumes of DC V(T,P) (J/Pa) [nDC][nPp][nTp]
+    *S0,    // Optional lookup array for the DC absolute entropy function S(T,P) (J/K/mol) [nDC][nPp][nTp]
     *H0,    // Optional lookup array for DC molar enthalpy h(T,P) (J/mol) [nDC][nPp][nTp]
-    *Cp0,   // Optional lookup array for DC heat capacity function (J/K/mol) [nDC][nPp][nTp]
+    *Cp0,   // Optional lookup array for DC heat capacity function Cp(T,P) (J/K/mol) [nDC][nPp][nTp]
     *A0,    // Optional lookup array for Helmholtz energy of DC (J/mol) reserved, [nDC][nPp][nTp]
     *U0;    // Optional lookup array for Internal energy of DC (J/K/mol) [nDC][nPp][nTp]
 
@@ -103,8 +104,8 @@ typedef struct   // Structure DataCH
 
 // Class code lists
    char *ccIC,   // Class codes of IC, see  enum ICL_CLASSES  [nIC]
-         *ccDC,   // Type codes of DC, see  enum DCL_CLASSES  [nDC]
-         *ccPH;   // Class codes of phases, see enum PHL_CLASSES [nPH]
+        *ccDC,   // Type codes of DC, see  enum DCL_CLASSES  [nDC]
+        *ccPH;   // Class codes of phases, see enum PHL_CLASSES [nPH]
 }
 DATACH;
 

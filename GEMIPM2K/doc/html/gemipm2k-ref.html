@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
-  <title>GEMIPM2K User Manual</title>
+  <title>GEMIPM2K User Reference</title>
 </head>
 <body>
 <h1><img alt="GEMS icon"
@@ -1293,7 +1293,7 @@ calls</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
 int&nbsp; &amp;p_NodeHandle,&nbsp; long int&nbsp; &amp;p_NodeStatusCH, </span><br
  style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-double &amp;p_TC,&nbsp; double &amp;p_P, double &amp;p_Vs, double
+double &amp;p_TK,&nbsp; double &amp;p_P, double &amp;p_Vs, double
 &amp;p_Ms, </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 double *p_bIC, double *p_dul, double *p_dll, double *p_aPH );</span></p>
@@ -1357,13 +1357,12 @@ code (see Section 2 for possible codes)<br>
     </tr>
     <tr>
       <td style="vertical-align: top;"><span
- style="font-family: monospace;">p_TC</span></td>
+ style="font-family: monospace;">p_TK</span></td>
       <td style="vertical-align: top;">double &amp;<br>
       </td>
-      <td style="vertical-align: top;">Temperature T,
-C&nbsp; <br>
+      <td style="vertical-align: top;">Temperature T, Kelvins <br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;">TC<br>
+      <td style="vertical-align: top; font-family: monospace;">TK<br>
       </td>
     </tr>
     <tr>
@@ -1727,7 +1726,7 @@ underlined. </span><br>
 int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br
  style="font-family: monospace;">
 <span style="font-family: monospace;">
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TC,&nbsp; double p_P,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TK,&nbsp; double p_P,
 double p_Vs, double p_Ms, </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 double *p_bIC, double *p_dul, double *p_dll, double *p_aPH );</span></p>
@@ -1782,11 +1781,10 @@ GEM_run() <br>
     </tr>
     <tr>
       <td style="vertical-align: top; text-decoration: underline;"><span
- style="font-family: monospace;">p_TC</span></td>
+ style="font-family: monospace;">p_TK</span></td>
       <td style="vertical-align: top;">double <br>
       </td>
-      <td style="vertical-align: top;">Temperature T,
-C<br>
+      <td style="vertical-align: top;">Temperature T, Kelvin<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">TC<br>
       </td>
@@ -1932,7 +1930,7 @@ necessary, the internally changed&nbsp; Vs or Ms values after </span><span
 int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br
  style="font-family: monospace;">
 <span style="font-family: monospace;">
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TC,&nbsp; double p_P,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TK,&nbsp; double p_P,
 double p_Vs, double p_Ms, </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 double *p_bIC, double *p_dul, double *p_dll, double *p_aPH, </span><span
@@ -2020,7 +2018,7 @@ parameters. <br>
 int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br
  style="font-family: monospace;">
 <span style="font-family: monospace;">
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TC,&nbsp; double p_P,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TK,&nbsp; double p_P,
 double p_Vs, double p_Ms, </span><span style="font-family: monospace;">double
 *p_bIC, <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; double *p_dul, double *p_dll, double
@@ -2146,12 +2144,22 @@ node-&gt;pCNode();</span></td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;"> double
-cTC() </td>
+cTK() </td>
       <td style="vertical-align: top;">Get
-current node Temperature T, C</td>
-      <td style="vertical-align: top; font-family: monospace;">double
-TC = node-&gt;cTC(); <br>
+current node Temperature T, Kelvin<br>
       </td>
+      <td style="vertical-align: top; font-family: monospace;">double
+TK = node-&gt;cTK(); <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;"> double
+cTC()</td>
+      <td style="vertical-align: top;">Get
+current node Temperature T, Celsius<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">double
+TC = node-&gt;cTC();</td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;"> double
@@ -2187,23 +2195,24 @@ node-&gt;ResizeNode( 3.0 ); </span><br>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;">bool&nbsp;
-check_TP( double Tc, double P );</td>
-      <td style="vertical-align: top;">Checks if given temperature Tc
-and pressure P fit within the
+check_TP( double T, double P );</td>
+      <td style="vertical-align: top;">Checks if given temperature T
+(K) and pressure P (Pa) fit within the
 interpolation intervals of the DATACH lookup arrays (returns true) or
 not (returns false)<br>
       </td>
       <td style="vertical-align: top;"><span
- style="font-family: monospace;">if(!node-&gt;checkTP(47.,2.))</span><br
+ style="font-family: monospace;">if(!node-&gt;checkTP(320.,2e5))</span><br
  style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return 1;</span><br>
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;"> long
-int&nbsp; check_grid_TP(&nbsp; double Tc,
+int&nbsp; check_grid_TP(&nbsp; double T,
 double P );</td>
-      <td style="vertical-align: top;">Tests Tc and P as a grid point
+      <td style="vertical-align: top;">Tests T (K) and P as a grid
+point
 for
 the interpolation
 of thermodynamic data using DATACH lookup arrays. Returns -1L if
@@ -2214,7 +2223,7 @@ degrees in order to assure good accuracy of interpolation especially
 for S0 and Cp0 of aqueous species. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;"> long
-int laX = node-&gt;check_grid_TP(&nbsp; 45., 5. ); <br>
+int laX = node-&gt;check_grid_TP(&nbsp; 400., 5e5 ); <br>
       </td>
     </tr>
   </tbody>
@@ -2998,16 +3007,16 @@ using DATACH indexation</span><br>
  style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">Example</td>
     </tr>
     <tr>
-      <td style="vertical-align: top; color: rgb(204, 0, 0);"><span
+      <td style="vertical-align: top;"><span
  style="font-family: monospace;">void Set_IC_b( const double b_val,
 const long int xCH)</span><br>
       </td>
-      <td style="vertical-align: top; color: rgb(204, 0, 0);">(*) Sets
+      <td style="vertical-align: top;">(*) Sets
 the amount of
 Independent Component (xCH is IC DCH index) when this IC index is not
 included into DATABR. Internal re-scaling to mass of the system is
 applied, but only to mass of that part which is included in DATABR.</td>
-      <td style="vertical-align: top; color: rgb(204, 0, 0);"> l<span
+      <td style="vertical-align: top;"> l<span
  style="font-family: monospace;">ong int xSi = </span><span
  style="font-family: monospace;">node-&gt;</span><span
  style="font-family: monospace;">IC_name_to_xCH("Si");<br>
@@ -3138,14 +3147,14 @@ node-&gt;DC_mu0(xCa_ion, false);</span></td>
  style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);"><span
  style="color: rgb(0, 0, 0);">double
 DC_G0(const long int xCH,
-const double P, const double Tc,&nbsp; bool norm=true)</span><br>
+const double P, const double TK,&nbsp; bool norm=true)</span><br>
       <span style="color: rgb(0, 0, 0);"></span><br>
       </td>
       <td style="vertical-align: top;">Retrieves (interpolated) molar
-Gibbs energy G0(P,Tc) value for Dependent Component from the
+Gibbs energy G0(P,TK value for Dependent Component from the
 DATACH
-structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature,
-C) or P (pressure, <span style="color: rgb(0, 0, 0);">Pa</span>)
+structure ( xCH is the DC DCH index) or 7777777., if TK (temperature,
+K) or P (pressure, <span style="color: rgb(0, 0, 0);">Pa</span>)
 parameters go beyond the valid lookup array
 intervals or tolerances. Parameter<span style="font-family: monospace;">
 norm </span>defines in wnich units the value is returned: <span
@@ -3154,23 +3163,23 @@ J/mol; true (default) - in mol/mol.</span> </td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double g0_Ca_ion = node-&gt;DC_G0(
 xCa_ion, 1e5,
-25, false);</span></td>
+298, false);</span></td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);"><span
  style="color: rgb(0, 0, 0);">double
 DC_V0(const long int xCH, const double P,
-const double Tc)</span><br>
+const double TK)</span><br>
       <span style="color: rgb(0, 0, 0);"></span><br>
       </td>
       <td style="vertical-align: top;">Retrieves (interpolated, if
 necessary) molar
-volume V0(P,Tc) value for Dependent Component (in J/Pa or m3/mol) from
+volume V0(P,TK) value for Dependent Component (in J/Pa or m3/mol) from
 the
 DATACH
 structure ( xCH is the DC DCH index) <span style="color: rgb(0, 0, 0);">or
-0., if Tc (temperature, C)
+0., if TK (temperature, K)
 or P (pressure, Pa) parameters go beyond the valid lookup array
 intervals or tolerances.&nbsp; </span><span
  style="color: rgb(204, 102, 0);"></span><br>
@@ -3178,168 +3187,166 @@ intervals or tolerances.&nbsp; </span><span
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double v0_Ca_ion = node-&gt;DC_V0(
 xCa_ion, 1e5,
-25 );</span> </td>
+298. );</span> </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
 DC_H0(const long int xCH,
-const double P, const double Tc)</td>
+const double P, const double TK)</td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
 (interpolated) molar
-enthalpy H0(P,Tc) value for Dependent Component (in J/mol) from the
+enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the
 DATACH
-structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature,
-C) or P (pressure, Pa) parameters go
+structure ( xCH is the DC DCH index) or 7777777., if TK (temperature,
+K) or P (pressure, Pa) parameters go
 beyond the valid lookup array intervals or tolerances.</td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double h0_Ca_ion = node-&gt;DC_H0(
 xCa_ion, 1e5,
-25 );</span> </td>
+298. );</span> </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
 DC_S0(const long int xCH,
-const double P, const double Tc)</td>
+const double P, const double TK)</td>
       <td style="vertical-align: top;">Retrieves (interpolated)
-absolute molar enropy S0(P,Tc) value for Dependent Component (in
+absolute molar enropy S0(P,TK) value for Dependent Component (in
 J/K/mol)
 from the DATACH
 structure ( xCH is the DC DCH index)<span style="color: rgb(0, 153, 0);">
-      <span style="color: rgb(0, 0, 0);">or 0.0, if Tc
-(temperature, C) or P (pressure, Pa) parameters go beyond the valid
+      <span style="color: rgb(0, 0, 0);">or 0.0, if TK
+(temperature, K) or P (pressure, Pa) parameters go beyond the valid
 lookup array intervals or tolerances.</span></span></td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double s0_Ca_ion = node-&gt;DC_S0(
 xCa_ion, 1e5,
-25 );</span> </td>
+298. );</span> </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
 DC_Cp0(const long int xCH, const double P,
-const double Tc)</td>
+const double TK)</td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
 (interpolated)
-constant-pressure heat capacity Cp0(P,Tc) value for Dependent Component
+constant-pressure heat capacity Cp0(P,TK) value for Dependent Component
 (in J/K/mol) from the
 DATACH
-structure ( xCH is the DC DCH index) or 0.0, if Tc (temperature, C)
+structure ( xCH is the DC DCH index) or 0.0, if TK (temperature, K)
 or P (pressure, Pa) parameters go beyond the valid lookup array
 intervals or tolerances.</td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double cp0_Ca_ion = node-&gt;DC_Cp0(
 xCa_ion,
-1e5, 25 );</span> </td>
+1e5, 298. );</span> </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;">double
 DC_A0(const long int xCH,
-const double P, const double Tc)</td>
+const double P, const double TK)</td>
       <td style="vertical-align: top;">Retrieves
 (interpolated) Helmholtz energy&nbsp; of Dependent Component (in J/mol)
 from the
 DATACH
-structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature,
-C) or P (pressure, Pa) parameters go
+structure ( xCH is the DC DCH index) or 7777777., if TK (temperature,
+K) or P (pressure, Pa) parameters go
 beyond the valid lookup array intervals or tolerances.</td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double u0_Ca_ion = node-&gt;DC_U0(
 xCa_ion, 1e5,
-25 );</span> </td>
+298.15 );</span> </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;">double
 DC_U0(const long int xCH,
-const double P, const double Tc)</td>
+const double P, const double TK)</td>
       <td style="vertical-align: top;">Retrieves
 (interpolated) Internal energy of Dependent Component (in J/K/mol) from
 the
 DATACH
 structure ( xCH is the DC DCH index) or 7777777., if Tc (temperature,
-C) or P (pressure, Pa) parameters go
+K) or P (pressure, Pa) parameters go
 beyond the valid lookup array intervals or tolerances.</td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">double a0_Ca_ion = node-&gt;DC_A0(
-xCa_ion, 1e5,
-25 );</span> </td>
+xCa_ion, 1e6, 350. );</span> </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
-EpsH2Ow(const double P, const double Tc)</td>
+EpsH2Ow(const double P, const double TK)</td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
 (interpolated)
-dielectric constant of liquid water at (P,Tc) from the DATACH
-structure&nbsp; or 0.0, if Tc (temperature, C)
+dielectric constant of liquid water at (P,TK) from the DATACH
+structure&nbsp; or 0.0, if TK (temperature, K)
 or P (pressure, Pa) parameters go beyond the valid lookup array
 intervals or tolerances.</td>
       <td style="vertical-align: top; font-family: monospace;">double
-epsW = node-&gt;EpsH2Ow( 1e5, 25); </td>
+epsW = node-&gt;EpsH2Ow( 1e6, 350.); </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);"><span
  style="color: rgb(0, 0, 0);">double
-DenH2Ow(const double P, const double Tc)</span><br>
+DenH2Ow(const double P, const double TK)</span><br>
       </td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
 (interpolated) density
 of liquid water (in kg/m3)
-at (P,Tc) from the DATACH
+at (P,TK) from the DATACH
 structure or 0.0, if
-Tc (temperature, C) or P (pressure, Pa) parameters go beyond the valid
+TK (temperature, K) or P (pressure, Pa) parameters go beyond the valid
 lookup array intervals or tolerances.</td>
       <td style="vertical-align: top; font-family: monospace;">double
-denW = node-&gt;DenH2Ow( 1e5, 25); </td>
+denW = node-&gt;DenH2Ow( 1e6, 350.); </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);">double
-VisH2Ow(const double P, const double Tc)</td>
+VisH2Ow(const double P, const double TK)</td>
       <td style="vertical-align: top; color: rgb(255, 0, 0);">Retrieves
 (interpolated)
-viscosity (units???) of liquid water at (P,Tc) from the DATACH
-structure or 0.0, if Tc (temperature, C)
+viscosity (units???) of liquid water at (P,TK) from the DATACH
+structure or 0.0, if TK (temperature, K)
 or P (pressure, Pa) parameters go beyond the valid lookup array
 intervals or tolerances.</td>
       <td style="vertical-align: top; font-family: monospace;">double
-visW = node-&gt;VisH2Ow( 1e5, 25); </td>
+visW = node-&gt;VisH2Ow( 1e6, 350.); </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
-EpsH2Og(const double P, const double Tc)</td>
+EpsH2Og(const double P, const double TK)</td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
 (interpolated)
-dielectric constant of H2O vapor at (P,Tc) from the DATACH
-structure or 0.0, if Tc (temperature, C)
+dielectric constant of H<sub>2</sub>O vapor at (P,TK) from the DATACH
+structure or 0.0, if TK (temperature, K)
 or P (pressure, Pa) parameters go beyond the valid lookup array
 intervals or tolerances.</td>
       <td style="vertical-align: top; font-family: monospace;">double
-epsWg = node-&gt;EpsH2Og( 1e5, 25); </td>
+epsWg = node-&gt;EpsH2Og( 1e6, 350.); </td>
     </tr>
     <tr>
       <td
  style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
-DenH2Og(const double P, const double Tc)</td>
+DenH2Og(const double P, const double TK)</td>
       <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
 (interpolated) density
-of H2O vapor (in kg/m3)
-at (P,Tc) from the DATACH
-structure or 0.0, if Tc (temperature, C)
+of H<sub>2</sub>O vapor (in kg/m<sup>3</sup>)
+at (P,TK) from the DATACH
+structure or 0.0, if TK (temperature, K)
 or P (pressure, Pa) parameters go beyond the valid lookup array
 intervals or tolerances.</td>
       <td style="vertical-align: top; font-family: monospace;">double
-denW g= node-&gt;DenH2Og( 1e5, 25); </td>
+denW g= node-&gt;DenH2Og( 1e6, 350.); </td>
     </tr>
   </tbody>
 </table>
 <span style="color: rgb(204, 102, 0);"></span><br>
 Some functions (marked with *) access the IPM work data structure
-directly and can be used only for the current work node immediately
-after the GEM IPM run.<br>
+directly and can be used only for the current work node.<br>
 <br>
 <br>
 3.4. Access to integral properties of phases-solutions (under

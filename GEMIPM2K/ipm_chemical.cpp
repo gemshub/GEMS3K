@@ -225,7 +225,7 @@ double TMulti::DualChemPot( double U[], double AL[], long int N, long int j )
 //
 void TMulti::Set_DC_limits( long int Mode )
 {
-    double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL, XU;
+    double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
     long int jb, je, j,k, MpL;
     vstr tbuf(80);
 

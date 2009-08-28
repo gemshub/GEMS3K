@@ -5,7 +5,7 @@
  content="text/html; charset=iso-8859-1">
   <meta name="GENERATOR"
  content="Mozilla/4.7 [en] (WinNT; I) [Netscape]">
-  <title>GEMIPM2K Description</title>
+  <title>GEMIPM2K User Manual</title>
   <meta name="description" content="Version 3.0.0-PSI">
 </head>
 <body>
@@ -550,7 +550,6 @@ into account appropriate standard and
 reference states, concentration scales, and models of (non)ideal
 mixing.<br>
 </p>
-<p style="font-family: Helvetica,Arial,sans-serif;"></p>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: justify;"><span
  style="font-family: Helvetica,Arial,sans-serif;">The <st2:stockticker
  w:st="on">GEM</st2:stockticker>
@@ -597,8 +596,9 @@ that:</span><o:p></o:p></span></p>
 input vector of amounts of independent components (IC,
 stoichiometry units, master species) with indexes belonging to the set</span>
 </span><big><i style="">N</i>; <i>A </i>= <st1:citation w:st="on">{<i>a<sub>ij</sub></i>,
-<i>i </i><span style="font-family: Symbol;"><span style="">&Icirc;</span></span>
-<i>N, j </i><span style="font-family: Symbol;"><span style="">&Icirc;</span></span>
+<i>i </i><span style="font-family: Symbol;"><span style="">belongs to</span></span>
+<i>N, j </i><span style="font-family: Symbol;"><span style="">belongs
+to</span></span>
 <i>L</i>}</st1:citation></big><i><span style=""> </span></i><span
  style=""><span style="font-family: Helvetica,Arial,sans-serif;">is a
 matrix made of the formula stoichiometry
@@ -1162,7 +1162,6 @@ implementation of the GEM
 IPM-2 algorithm<span
  style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><br>
 </span></h3>
-<p></p>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">Algorithms
 described in the previous section &#8211; the GEMIPM2 kernel - are
@@ -1174,7 +1173,6 @@ structures
 and functions. Before starting the GEM IPM calculation, all input data
 arrays
 in the MULTI work instance must be filled out. </p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">In
 the GEM-Selektor
@@ -1191,7 +1189,6 @@ information
 into the MULTI structure, the data for all components and phases that
 have been
 switched off will be skipped. </p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">In
 the GEMIPM2K
@@ -1206,7 +1203,6 @@ another way (used in coupled reactive transport codes) is to exchange
 data directly
 in computer memory (see GEMIPM2K_User_Reference.html
 documentation file; see also Appendix 1 in this report). </p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">The
 format
@@ -1237,7 +1233,6 @@ files using the
 GEM-Selektor package<span
  style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"></span></h3>
 <h3><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"></span></h3>
-<p></p>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">It
 is
@@ -1249,7 +1244,6 @@ least once. Refer to GEMS documentation and online screenshot tutorial
 (http://gems.web.psi.ch) for learning how to make a GEMS modeling
 project and
 set up the chemical system of your interest. </p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">When
 this is
@@ -1285,10 +1279,9 @@ in binary format (e.g. for subsequent reading them back).</p>
 <p><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><br>
 </span></p>
 <h2><a name="TAG_GEMIPM2K"></a>3. GEMIPM2K &#8211; a standalone GEM IPM-2
-solver with the data exchange interface<span
+solver with simple data exchange interface<span
  style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><br>
 </span></h2>
-<p></p>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; font-family: Helvetica,Arial,sans-serif; text-align: left;">The
 GEM IPM2 algorithm described in Section II is
@@ -1312,7 +1305,6 @@ which is easy to couple with existing fluid-mass-transport codes in the
 &#8220;operator-splitting&#8221;
 fashion, as well as to compile and launch them on high-performance
 computers.&nbsp; </p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; font-family: Helvetica,Arial,sans-serif; text-align: left;">Because
 GEMIPM2K implemented as a &#8220;node-gem&#8221; example has no overhead on calling
@@ -1323,14 +1315,12 @@ well as to locate parts of the code where most of the time is spent (in
 IT
 jargon, this procedure is called &#8220;profiling&#8221;).&nbsp;
 </p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; font-family: Helvetica,Arial,sans-serif; text-align: left;">The
 GEMIPM2K
 is a program package (available as a standalone variant from the
 authors) arranged
 in three C++ classes: TMulti, TNode and TNodeArray. </p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; font-family: Helvetica,Arial,sans-serif; text-align: left;">The
 TMulti class is based on the MULTI
@@ -1353,7 +1343,6 @@ parameters and coefficients of
 built-in non-ideal mixing models in phases-solutions, all implemented
 in the TSolMod class (documentation about input parameters
 is given in g_tsolmod.html file). </p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; font-family: Helvetica,Arial,sans-serif; text-align: left;">The
 TNode class provides a simple non-GUI interface for
@@ -1366,7 +1355,6 @@ extracting calculated speciation into the DATABR structure
 (or DBR file). Description of TNode functions is provided in
 GEMIPM2K_User_Reference.html
 file.</p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; font-family: Helvetica,Arial,sans-serif; text-align: left;">The
 TNodeArray class, built on top of the TNode class, can store both
@@ -2285,12 +2273,12 @@ G0 and DD (modes 1,2,3,4,-1 reserved)</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"><big>double[]</big></td>
-      <td style="font-family: monospace;"><big> TCval</big></td>
+      <td style="font-family: monospace;"><big> TKval</big></td>
       <td style="font-family: monospace;"><big> nTp</big></td>
       <td>[nTp] discrete values of temperature <span
- style="font-style: italic;">T</span>, in C,&nbsp; in ascending order<br>
+ style="font-style: italic;">T</span>, in K,&nbsp; in ascending order<br>
       </td>
-      <td style="font-family: monospace;"><big>TCval<br>
+      <td style="font-family: monospace;"><big>TKval<br>
       </big></td>
     </tr>
     <tr>
@@ -2370,7 +2358,8 @@ derivatives<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">[nPp][nTp][5]</td>
       <td style="vertical-align: top;">Viscosity of water-solvent, with
-its T and P derivatives</td>
+its T and P derivatives (units?)<br>
+      </td>
       <td style="vertical-align: top;"><big><span
  style="font-family: monospace;">visW</span></big><br>
       </td>
@@ -2488,7 +2477,7 @@ of lookup is when <big><span style="font-family: monospace;">nTp</span></big>
 1. In this case, each thermodynamic data lookup array (see
 the table above) must contain one
 value per DC for a single temperature <big><span
- style="font-family: monospace;">TCval[0]</span></big> and pressure <big><span
+ style="font-family: monospace;">TKval[0]</span></big> and pressure <big><span
  style="font-family: monospace;">Pval[0]</span></big>. Conversely, no
 variations in <span style="font-style: italic;">T,P</span> between the
 nodes or with
@@ -2510,7 +2499,7 @@ case is when the pressure is fixed (<big><span
  style="font-family: monospace;">nTp</span></big>=
 8). Then the <big><span style="font-family: monospace;">Pval</span></big>
 array must contain a single value of pressure (e.g.
-1 MPa) and the <big><span style="font-family: monospace;">Tval</span></big>
+1 MPa) and the <big><span style="font-family: monospace;">TKval</span></big>
 array must contain 8 values of temperature in ascending order
 (e.g. 5, 25, 45, 65, 85, 105, 125, 145 <sup>o</sup>C). These values
 define the overall temperature interval
@@ -2520,14 +2509,14 @@ must not
 necessarily be equal. According to this setup, the <big><span
  style="font-family: monospace;">roW</span></big> and similar arrays
 must contain 8 values each that correspond to 1 MPa pressure and the
-temperatures given in <big><span style="font-family: monospace;">Tval</span></big>
+temperatures given in <big><span style="font-family: monospace;">TKval</span></big>
 array. Provided that there are 40 dependent
 components in the DCH list, the <big><span
  style="font-family: monospace;">G0</span></big> array will consist of
 8 values per
 DC, i.e. total 320 numbers, the first 8 contain <span
  style="font-style: italic;">G</span><sup>o</sup> values for the first
-species (for temperatures in <big><span style="font-family: monospace;">Tval</span></big>),
+species (for temperatures in <big><span style="font-family: monospace;">TKval</span></big>),
 next 8 values - for the second
 species, and so on. The <big><span style="font-family: monospace;">V0</span></big>
 and other arrays should be organized likewise. The
@@ -2546,7 +2535,7 @@ pressures and several discrete temperatures. Then the <big><span
  style="font-family: monospace;">epsW</span></big>
 arrays are actually&nbsp; tables made of rows each containing values
 for different
-temperatures from <big><span style="font-family: monospace;">Tval</span></big>
+temperatures from <big><span style="font-family: monospace;">TKval</span></big>
 but one pressure value from <big><span style="font-family: monospace;">Pval</span></big>.
 The <big><span style="font-family: monospace;">G0 </span></big>and <big><span
  style="font-family: monospace;">V0</span></big>
@@ -2570,7 +2559,7 @@ data for any current <span style="font-style: italic;">T</span> and <span
  style="font-style: italic;">T</span> and <span
  style="font-style: italic;">P</span> are
 within the respective ranges set in </span><big><span
- style="font-family: monospace;">TCval</span></big><span
+ style="font-family: monospace;">TKval</span></big><span
  style="font-family: Helvetica,Arial,sans-serif;"> and </span><big><span
  style="font-family: monospace;">Pval</span></big><span
  style="font-family: Helvetica,Arial,sans-serif;"> lists. </span><span
@@ -2934,16 +2923,16 @@ DBR file</td>
     </tr>
     <tr>
       <td style="font-weight: bold;"><big><span
- style="font-family: monospace;">TC</span></big></td>
-      <td> Temperature T,
-C</td>
+ style="font-family: monospace;">TK</span></big></td>
+      <td> Temperature T, K<br>
+      </td>
       <td style="vertical-align: top;">25<br>
       </td>
       <td style="font-family: monospace; text-align: center;"><big> +</big></td>
       <td style="font-family: monospace; text-align: center;"><big> +</big></td>
       <td style="font-family: monospace; text-align: center;"><big> -</big></td>
       <td style="font-family: monospace; text-align: center;"><big> -</big></td>
-      <td style="font-family: monospace;"><big>TC<br>
+      <td style="font-family: monospace;"><big>TK<br>
       </big></td>
     </tr>
     <tr>
@@ -3588,8 +3577,10 @@ GEMIPM2K. Most important situations (at simple TNode level of coupling):<br>
   <tbody>
     <tr>
       <td style="vertical-align: top;"><span
- style="font-family: Helvetica,Arial,sans-serif;">AIA
-(simplex) initial approximation mode of GEM calculations (slow but more
+ style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="font-weight: bold;">AIA
+(simplex) </span>initial approximation mode of GEM calculations (slow
+but more
 accurate and reproducible results)</span></td>
       <td style="vertical-align: top;"><span
  style="font-family: Helvetica,Arial,sans-serif;">Before calling GEM:
@@ -3619,7 +3610,8 @@ IPM-2 kernel.</span></td>
     </tr>
     <tr>
       <td style="vertical-align: top;"><span
- style="font-family: Helvetica,Arial,sans-serif;">SIA (smart)
+ style="font-family: Helvetica,Arial,sans-serif;"><span
+ style="font-weight: bold;">SIA (smart)</span>
 initial approximation mode of GEM calculations (fast but results may be
 less accurate and, in general, not exactly reproducible)</span></td>
       <td style="vertical-align: top;"><span
@@ -3758,7 +3750,6 @@ programming examples. The format of GEMIPM2K input IPM, DCH and DBR
 files is
 described in detail in a companion <a href="gemipm2k-inp.html">gemipm2k-inp.html</a>
 document.</span> </p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">The</span>&nbsp; <a
  href="../../main.cpp"><span
@@ -3772,7 +3763,6 @@ data given in DCH, IPM and one or more DBR files; the results are
 written into
 DBR files or (optionally) into a dump text output file.</span>&nbsp;<span
  style=""> </span></p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">The</span> <a
  href="../../../node-gem/main.cpp"><span
@@ -3795,14 +3785,12 @@ from one time
 step to another. The modification to &#8220;real&#8221; mass transport method is
 straightforward, although this would make the example program too
 complicated.</span>&nbsp;<span style=""> </span></p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">In
 these examples,
 some options are shown that may significantly improve performance and
 accuracy
 of GEMIPM2K.<span style="">&nbsp; </span></p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">In some
 mass-transport problems, the nodes may be very large (cubic metres) or
@@ -3828,7 +3816,6 @@ large. In order
 to eliminate potential troubles, an internal re-scaling mechanism was
 built
 into the TNode class implementation.</span> </p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">This internal
 re-scaling is activated when the GEM calculation is launched via the</span>
@@ -3853,7 +3840,6 @@ activity
 coefficients, concentrations of species in phases,
 activities/fugacities, pH,
 Eh, etc.) are not affected by re-scaling. </span></p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">As the mass
 transport part has no direct access to internal IPM work data, the
@@ -3867,7 +3853,6 @@ from 0.01 to
 100 kg. The use of internal re-scaling mechanism may lead, in general,
 to a much
 better convergence of GEMIPM2 and to higher accuracy of its results.</span></p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">The current
 chemical speciation (</span><span
@@ -3886,7 +3871,6 @@ maybe, </span><i style="font-family: Helvetica,Arial,sans-serif;">T</i>
 and/or <i style="font-family: Helvetica,Arial,sans-serif;">P</i><span
  style="font-family: Helvetica,Arial,sans-serif;"> in every node, and
 this must be sufficient.&nbsp; &nbsp;&nbsp;</span></p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">However, in many
 existing advection/diffusion transport codes (e.g. GeoSys/
@@ -3911,7 +3895,6 @@ turn, this would require access to several data objects (such as the </span><spa
  style="font-size: 11pt; font-family: Helvetica,Arial,sans-serif;">A</span><span
  style="font-family: Helvetica,Arial,sans-serif;"> stoichiometry
 matrix) in the DATACH structure.</span> </p>
-<div style="text-align: left;"></div>
 <p style="margin: 0cm 0cm 6pt; text-align: left;">I<span
  style="font-family: Helvetica,Arial,sans-serif;">n order to make this
 unnecessary, the TNode class provides
@@ -3968,7 +3951,6 @@ filled with zeros because its new content will be completely retrieved
 from the</span>
 p_<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>
 <span style="font-family: Helvetica,Arial,sans-serif;">vector.</span></p>
-<div style="text-align: left;"></div>
 <p style="margin: 0cm 0cm 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">Concerning the &#8220;Smart
 Initial Approximation&#8221; (SIA) mode,
@@ -3994,7 +3976,6 @@ temperature T have had changed. This mode is set by the default</span> <span
 <span style="font-family: Helvetica,Arial,sans-serif;">parameter value</span>
 (<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">false</span>).
 </p>
-<div style="text-align: left;"></div>
 <p style="margin: 0cm 0cm 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">Another, more
 efficient variant</span> (<span
@@ -4019,7 +4000,6 @@ of the number of GEM iterations and total computing time</span>. <span
 SIA mode works only when the
 DATACH structure contains a full list of Dependent Components used in
 GEM calculations.</span></p>
-<div style="text-align: left;"></div>
 <p class="MsoNormal"
  style="margin-bottom: 6pt; text-align: left; font-family: Helvetica,Arial,sans-serif;">The
 TNode
@@ -4029,7 +4009,6 @@ of these public methods is strongly preferred over direct access to
 fields of
 the DATABR and DATACH memory structures. The
 provided methods use either DATABR or DATACH indexation. </p>
-<div style="text-align: left; font-family: Helvetica,Arial,sans-serif;"></div>
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><span
  style="font-family: Helvetica,Arial,sans-serif;">In DBR files
 and DATABR structure, the results for volumes, masses and bulk
@@ -4103,7 +4082,6 @@ when the time step is accepted, the data for each node are copied from
 C1 layer into
 the respective DATABR structures in the C0 node array layer. <br>
 </span></p>
-<p></p>
 <p><span style="font-family: Helvetica,Arial,sans-serif;">The </span><b
  style="font-family: Helvetica,Arial,sans-serif;"><span
  style="font-size: 10pt;">TNodeArray</span></b><span
