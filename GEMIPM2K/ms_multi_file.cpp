@@ -117,14 +117,14 @@ void TMulti::set_def( long int /*q*/)
     fillValue( pm.epsW, 0., 5 );
     fillValue( pm.epsWg, 0., 5 );
     pm.PCI = 0.;        // Current value of Dikin criterion of IPM convergence DK>=DX
-    pm.DX = 0.;         // IPM convergence criterion threshold DX (1e-5)
+    pm.DXM = 0.;         // IPM convergence criterion threshold DX (1e-5)
     pm.lnP = 0.;        // log Ptotal
     pm.RT = 0.;         // RT: 8.31451*T (J/mole/K)
     pm.FRT = 0.;        // F/RT = 0.; F - Faraday constant = 96485.309 C/mol
     pm.Yw = 0.;         // Current number of moles of solvent in aqueous phase
     pm.ln5551 = 0.;     // ln(55.508373) = 4.0165339
     pm.aqsTail = 0.;    // v_j asymmetry correction factor for aqueous species
-    pm.lowPosNum = 0.;  // Minimum DC amount defining the Ls set (1e-19)
+    pm.lowPosNum = 0.;  // Minimum physical DC amount (1.66e-24 mol)
     pm.logXw = 0.;      // work variable
     pm.logYFk = 0.;     // work variable
     pm.YFk = 0.;        // Current number of moles in a multicomponent phase
@@ -222,7 +222,7 @@ void TMulti::set_def( long int /*q*/)
         pm.Falp  = 0;
         pm.XetaA = 0;
         pm.XetaB = 0;
-        pm.XetaD = 0;       
+        pm.XetaD = 0;
         pm.X     = 0;
         pm.Y     = 0;
         pm.XY    = 0;
@@ -242,11 +242,11 @@ void TMulti::set_def( long int /*q*/)
      //   pm.R1    = 0;
         pm.sMod  = 0;
         pm.SB    = 0;
-        pm.SB1    = 0; 
+        pm.SB1    = 0;
         pm.SM    = 0;
         pm.SF    = 0;
         pm.SFs   = 0;
-        pm.pbuf  = 0; 
+        pm.pbuf  = 0;
         pm.RLC   = 0;
         pm.RSC   = 0;
         pm.RFLC  = 0;
@@ -453,7 +453,7 @@ void TMulti::to_file( GemDataStream& ff  )
       ff.writeArray((double*)pm.Xetaf, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XetaA, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XetaB, pm.FIs*pm.FIat);
-      ff.writeArray((double*)pm.XetaD, pm.FIs*pm.FIat);    
+      ff.writeArray((double*)pm.XetaD, pm.FIs*pm.FIat);
       ff.writeArray((double*)pm.XFTS, pm.FIs*pm.FIat);
 
 ff.writeArray((long int*)pm.SATX, pm.Lads*4);
@@ -505,7 +505,7 @@ void TMulti::from_file( GemDataStream& ff )
    //static values
    char PAalp;
    char PSigm;
-   
+
    ff.readArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.readArray( &pm.N, 38);
    ff.readArray(&pm.TC, 55);
@@ -621,7 +621,7 @@ void TMulti::from_file( GemDataStream& ff )
       pm.PMc = new double[LsModSum];
       pm.DMc = new double[LsMdcSum];
 #else
-      pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_); 
+      pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
       pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
       pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
 #endif
@@ -684,7 +684,7 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray((double*)pm.Xetaf, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XetaA, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XetaB, pm.FIs*pm.FIat);
-      ff.readArray((double*)pm.XetaD, pm.FIs*pm.FIat);    
+      ff.readArray((double*)pm.XetaD, pm.FIs*pm.FIat);
       ff.readArray((double*)pm.XFTS, pm.FIs*pm.FIat);
 
 ff.readArray((long int*)pm.SATX, pm.Lads*4);
@@ -1210,7 +1210,7 @@ else
 	  pm.U0[ii]    = 0.;
 	  pm.S0[ii]    = 0.;
 	  pm.A0[ii]    = 0.;
-	  
+
   }
   pm.VPh   = new double[pm.FIs][MIXPHPROPS];
   pm.GPh   = new double[pm.FIs][MIXPHPROPS];
@@ -1230,7 +1230,7 @@ else
 	  pm.APh[ii][jj]  = 0.;
 	  pm.UPh[ii][jj]  = 0.;
   }
-	  
+
  Alloc_TSolMod( pm.FIs );
 
 //  Added 16.11.2004 by Sveta
@@ -1439,17 +1439,17 @@ void TMulti::to_text_file( const char *path, bool append )
    PSigm = PSigm_;
 #endif
 
-   ios::openmode mod = ios::out; 
-    if( append ) 
-     mod = ios::out|ios::app; 
+   ios::openmode mod = ios::out;
+    if( append )
+     mod = ios::out|ios::app;
   fstream ff(path, mod );
   ErrorIf( !ff.good() , path, "Fileopen error");
 
-  if( append ) 
+  if( append )
    ff << "\nNext record" << endl;
   ff << pm.stkey << endl;
 //  TProfil::pm->pa.p.write(ff);
-  
+
   TPrintArrays  prar(0,0,ff);
 
   prar.writeArray( "Short_PARAM",  &TProfil::pm->pa.p.PC, 10L );

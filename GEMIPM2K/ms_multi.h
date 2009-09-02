@@ -22,6 +22,13 @@
 #ifndef _ms_multi_h_
 #define _ms_multi_h_
 
+#ifdef Use_qd_real
+// QD_real
+#include <qd/qd_real.h>
+#else
+#define qd_real double
+#endif
+
 #ifndef IPMGEMPLUGIN
 
 #include "m_param.h"
@@ -112,14 +119,14 @@ typedef struct
     GWAT,       // used in ipm_gamma()
     YMET,       // reserved
     PCI,        // Current value of Dikin criterion of IPM convergence DK>=DX
-    DX,         // IPM convergence criterion threshold DX (1e-5)
+    DXM,        // IPM convergence criterion threshold DX (1e-5)
     lnP,        // log Ptotal
     RT,         // RT: 8.31451*T (J/mole/K)
     FRT,        // F/RT, F - Faraday constant = 96485.309 C/mol
     Yw,         // Current number of moles of solvent in aqueous phase
-    ln5551,     // ln(55.508373) = 4.0165339
+    ln5551,     // ln(55.50837344)
     aqsTail,    // v_j asymmetry correction factor for aqueous species
-    lowPosNum,  // Minimum DC amount defining the Ls set (1e-19)
+    lowPosNum,  // Minimum mole amount considered in GEM calculations (MinPhysAmount = 1.66e-24)
     logXw,      // work variable
     logYFk,     // work variable
     YFk,        // Current number of moles in a multicomponent phase
@@ -283,7 +290,7 @@ double
   char  *pbuf, 	// Text buffer for table printouts
 // Class codes
     *RLC,   // Code of metastability constraints for DCs [L] enum DC_LIMITS
-    *RSC,   // Units of metastability/kinetic constraints for DCs  [L] 
+    *RSC,   // Units of metastability/kinetic constraints for DCs  [L]
     *RFLC,  // Classifier of restriction types for XF_a [FIs]
     *RFSC,  // Classifier of restriction scales for XF_a [FIs]
     *ICC,   // Classifier of IC { e o h a z v i <int> } [N]
@@ -315,12 +322,30 @@ double
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
   char errorBuf[500]; // description of error in IPM
   double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
+  qd_real qdFX;    	// Current Gibbs potential of the system in IPM, moles
+
+  // Experimental: modified cutoff and insertion values (DK 30.08.2009)
+  double
+// cutoffs (rescaled to system size)
+  XwMinM,// Cutoff mole amount for elimination of water-solvent { 1e-9 }
+  ScMinM,// Cutoff mole amount for elimination of solid sorbent {1e-7}
+  DcMinM,// Cutoff mole amount for elimination of solution- or surface species { 1e-20 }
+  PhMinM,// Cutoff mole amount for elimination of non-electrolyte condensed phase { 1e-14 }
+// insertion values (re-scaled to system size)
+  DFYwM, // Insertion mole amount for water-solvent { 1e-6 }
+  DFYaqM,// Insertion mole amount for aqueous and surface species { 1e-6 }
+  DFYidM,// Insertion mole amount for ideal solution components { 1e-6 }
+  DFYrM, // Insertion mole amount for major solution components (incl. sorbent) { 1e-6 }
+  DFYhM, // Insertion mole amount for minor solution components { 1e-6 }
+  DFYcM, // Insertion mole amount for single-component phase { 1e-6 }
+  DFYsM, // Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
+  SizeFactor; // factor for re-scaling the cutoffs/insertions to the system size
 }
 MULTI;
 
-enum { 
-	//[0] - max site density in mkmol/(g sorbent); [1] - species charge allocated to 0 plane; 
-	//[2] - surface species charge allocated to beta -or third plane; [3] - Frumkin interaction parameter; 
+enum {
+	//[0] - max site density in mkmol/(g sorbent); [1] - species charge allocated to 0 plane;
+	//[2] - surface species charge allocated to beta -or third plane; [3] - Frumkin interaction parameter;
 	//[4] species denticity or coordination number; [5]  - reserved parameter (e.g. species charge on 3rd EIL plane)]
    XL_ST = 0, XL_EM, XL_SI, XL_SP
 };
@@ -338,6 +363,8 @@ class TMulti
    long int sizeN; /*, sizeL, sizeAN;*/
    double *AA;
    double *BB;
+   qd_real *qdAA;
+   qd_real *qdBB;
    long int *arrL;
    long int *arrAN;
 
@@ -376,7 +403,7 @@ class TMulti
 #else
 
    char PAalp_; // Flag for using (+) or ignoring (-) specific surface areas of phases
-   char PSigm_; // Flag for using (+) or ignoring (-) specific surface free energies 
+   char PSigm_; // Flag for using (+) or ignoring (-) specific surface free energies
 
 #endif
 
@@ -453,16 +480,18 @@ class TMulti
                                double *B, double *C );
 //   long int CheckMassBalanceResiduals(double *Y );
    double LMD( double LM );
-   void ZeroDCsOff( long int jStart, long int jEnd, long int k=-1 );
-   void RaiseZeroedOffDCs( long int jStart, long int jEnd, double sfactor, long int k=-1 );
-//   void LagrangeMultiplier();
+   void ZeroDCsOff( long int jStart, long int jEnd, long int k=-1L );
+   void RaiseZeroedOffDCs( long int jStart, long int jEnd, /*double sfactor,*/ long int k=-1L );
+   double RaiseDC_Value( const long int j );
+   //   void LagrangeMultiplier();
    long int MetastabilityLagrangeMultiplier();
    void WeightMultipliers( bool square );
    long int SolverLinearEquations( long int N, bool initAppr );
    double calcDikin(  long int N, bool initAppr );
    double calcLM(  bool initAppr );
    void Restoring_Y_YF();
-   double calcSfactor();
+//   double calcSfactor();
+   double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
 
    // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)
@@ -483,6 +512,16 @@ class TMulti
     void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
              long int BASE[],double UND[],double UP[],double U[],
              double AA[],double *A,double Q[],long int *ITER);
+
+// QD_real
+    // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
+       void qdMassBalanceResiduals( long int N, long int L, double *A, double *Y,
+                                   double *B, double *C );
+       qd_real qdGX( double LM  );
+       long int qdSolverLinearEquations( long int N, bool initAppr );
+       double qdLMD( double LM );
+       double qdcalcDikin(  long int N, bool initAppr );
+
 
 public:
 
@@ -569,7 +608,7 @@ public:
     void addErrorMessage( const char * msg);
 
    long int CheckMassBalanceResiduals(double *Y );
-   double Cj_init_calc( double g0, long int j, long int k ); 
+   double Cj_init_calc( double g0, long int j, long int k );
 
 // connection to UnSpace
     double pb_GX( double *Gxx  );

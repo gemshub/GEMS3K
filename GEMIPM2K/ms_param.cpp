@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_param.cpp 1430 2009-08-27 17:02:11Z gems $
+// $Id: ms_param.cpp 1392 2009-08-10 13:39:26Z gems $
 //
 // Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
@@ -40,7 +40,9 @@ const double R_CONSTANT = 8.31451,
                       cal_to_J = 4.184,
                         C_to_K = 273.15,
                           lg_to_ln = 2.302585093,
-                            ln_to_lg = 0.434294481;
+                            ln_to_lg = 0.434294481,
+                             H2O_mol_to_kg = 55.50837344,
+                               Min_phys_amount = 1.66e-24;
 
 enum volume_code {  // Codes of volume parameter ???
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
@@ -526,24 +528,19 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     pmp->is = 0;
     pmp->js = 0;
     pmp->next  = 0;
-    pmp->ln5551 = 4.016533882;  //  ln(55.50837344)  4.0165339;
-    pmp->lowPosNum = pa->p.DcMin;
+    pmp->ln5551 = log( H2O_mol_to_kg ); //  4.016533882  ln(55.50837344)  4.0165339;
+//    pmp->lowPosNum = pa->p.DcMin;  obsolete
+    pmp->lowPosNum = Min_phys_amount;
     pmp->logXw = -16.;
     pmp->logYFk = -9.;
-//    pmp->YFk = 0.;   // SD 05/02/2009
-//    pmp->Yw = 0.;   // SD 05/02/2009
-//    pmp->FitVar[3] = 1.0;  // SD 05/02/2009
-//    pmp->FitVar[4] = pa->p.AG; // SD 05/02/2009
-
     pmp->FitVar[0] = 0.0640000030398369; // pa->aqPar[0]; setting T,P dependent b_gamma parameters
-
-    pmp->DX = pa->p.DK;
-
+    pmp->DXM = pa->p.DK;
+    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
     pmp->T0 = 273.15;    // not used anywhere
     pmp->FX = 7777777.;
     pmp->YMET = 0;
 //    pmp->PCI = 0.0;
-pmp->PCI = 1.0;
+    pmp->PCI = 1.0;
 
     // calculating mass of the system
     pmp->MBX = 0.0;
@@ -554,7 +551,6 @@ pmp->PCI = 1.0;
     pmp->MBX /= 1000.;
 
     // optimization 08/02/2007 - allocation of A matrix index lists and IPM work arrays
-
     Alloc_internal(); // performance optimization 08/02/2007
 
     if(  pmp->pNP )     // Checking if this is SIA or AIA mode
@@ -573,10 +569,7 @@ pmp->PCI = 1.0;
     		pmp->X[j] = pmp->Y[j] = pmp->lnGam[j] = pmp->lnGmo[j] = 0.0;
     		pmp->Gamma[j] = 1.0;
     	}
-//    	pmp->FitVar[4] = pa->p.AG;
-//        pmp->IT = 0;     // needed here to clean LINK_TP_MODE
     }
-
     CompG0Load(); // Loading thermodynamic data into MULTI structure
 
     // multicomponent phases and mixing models
@@ -592,13 +585,12 @@ pmp->PCI = 1.0;
         {
             pmp->lnGmo[j] = pmp->lnGam[j];
             if( fabs( pmp->lnGam[j] ) <= 84. )
-//                pmp->Gamma[j] = exp( pmp->lnGam[j] );
          	  pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
             else pmp->Gamma[j] = 1.0;
         } // j
      }  // k
      pmp->PD = abs(pa->p.PD);
-	 //           SolModLoad();   Scripts cannot be used here!
+	 //           SolModLoad() and Phase scripts cannot be used here!
     // Calculate Eh, pe, pH,and other stuff
     if( pmp->E && pmp->LO && pmp->pNP )
     {
@@ -613,29 +605,19 @@ pmp->PCI = 1.0;
     	      if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
     	      {
     		     if( pmp->PHC[0] == PH_AQUEL && pmp->XF[k] > pmp->DSM
-    		       && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin ))
-    		       GouyChapman( jb, je, k );  // getting PSIs - elecrtic potentials on surface planes
+    		       && (pmp->XFA[0] > pmp->ScMinM && pmp->XF[0] > pmp->XwMinM ))  // fixed 30.08.2009 DK
+    		       GouyChapman( jb, je, k );  // getting PSIs - electrical potentials on surface planes
     	      }
     	   }
         }
     }
-    //   double FitVar3 = pmp->FitVar[3];  // Reset the smoothing factor
-    //   pmp->FitVar[3] = 1.0;
-        GammaCalc( LINK_TP_MODE);   // Computing DQF, FugPure and G wherever necessary
+    GammaCalc( LINK_TP_MODE);   // Computing DQF, FugPure and G wherever necessary
                                        // Activity coeffs are restored from lnGmo
-    //   pmp->FitVar[3]=FitVar3;
-}
-
+ }
     // recalculate kinetic restrictions for DC quantities
     if( pmp->pULR && pmp->PLIM )
          Set_DC_limits(  DC_LIM_INIT );
 
-// dynamic demo arrays - do we need it here at all? - DK  14.03.2008
-//    for( k=0; k<pmp->FI; k++ )
-//    {
-//       pmp->XFs[k] = pmp->YF[k];
-//        pmp->Falps[k] = pmp->Falp[k];
-//    }
 }
 
 //-------------------------------------------------------------------------

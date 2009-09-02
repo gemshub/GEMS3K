@@ -21,6 +21,7 @@
 //-------------------------------------------------------------------
 //
 #include <math.h>
+#include<iomanip>
 #include "m_param.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -45,7 +46,7 @@ void TMulti::XmaxSAT_IPM2()
 
     if( pmp->XFA[k] < pmp->DSM ) // No sorbent retained by the IPM
         continue;
-    if( pmp->XF[k]-pmp->XFA[k] < pmp->lowPosNum /* *10. */ )
+    if( pmp->XF[k]-pmp->XFA[k] < fmin( pmp->lowPosNum, pmp->DcMinM ) ) // may need qd_real in subtraction!
         continue;  // No surface species
 
     for(i=0; i<6; i++)
@@ -68,7 +69,7 @@ void TMulti::XmaxSAT_IPM2()
 
     for( j=jb; j<je; j++ )
     { // Loop over DCs
-        if( pmp->X[j] <= pmp->lowPosNum /* *10. */ )
+        if( pmp->X[j] <= fmin( pmp->lowPosNum, pmp->DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
         rIEPS = TProfil::pm->pa.p.IEPS;
         ja = j - ( pmp->Ls - pmp->Lads );
@@ -273,8 +274,8 @@ if( k < pmp->FIs )
             XFU = Mode? pmp->XF[k]: pmp->PUL[k];
             break;
         case CON_MOLAL:
-            XFL = Mode? pmp->XF[k]: pmp->PLL[k]*pmp->GWAT/55.508373;
-            XFU = Mode? pmp->XF[k]: pmp->PUL[k]*pmp->GWAT/55.508373;
+            XFL = Mode? pmp->XF[k]: pmp->PLL[k]*pmp->GWAT/H2O_mol_to_kg;
+            XFU = Mode? pmp->XF[k]: pmp->PUL[k]*pmp->GWAT/H2O_mol_to_kg;
             break;
         case CON_MOLFR:
             XFL = Mode? pmp->XF[k]: pmp->PLL[k]*XFS;
@@ -315,8 +316,8 @@ if( k < pmp->FIs )
                     XL = pmp->DLL[j];
                     break;
                 case CON_MOLAL:
-                    XU = pmp->DUL[j]*pmp->GWAT/55.508373;
-                    XL = pmp->DLL[j]*pmp->GWAT/55.508373;
+                    XU = pmp->DUL[j]*pmp->GWAT/H2O_mol_to_kg;
+                    XL = pmp->DLL[j]*pmp->GWAT/H2O_mol_to_kg;
                     break;
                 case CON_MOLFR:
                     XU = pmp->DUL[j]*XFU;
@@ -565,9 +566,9 @@ case DC_AQ_SURCOMP:
             // || pmp->sMod[k][SCM_TYPE] != SC_NNE )  // changed, 14.07.2009 (TW)
     {
         dF0 = F0 - Fold;
-        if( pmp->X[j]>pmp->lowPosNum && fabs( dF0 ) >= 1e-5 ) // to be checked
+        if( pmp->X[j] > fmin( pmp->lowPosNum, pmp->DcMinM ) && fabs( dF0 ) >= 1e-5 ) // to be checked
         	// F0 = Fold + dF0 * pmp->FitVar[3];
-       	F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
+       	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }  // FitVar[3] = TinkleSuppressFactor(); see GammaCalc()
     return F0;
 }
@@ -629,8 +630,12 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
     for( k=0; k<pmp->FI; k++ )
     { // loop over phases
         i=j+pmp->L1[k];
-        if( YF[k] <= pmp->lowPosNum*100. || ( pmp->PHC[k] == PH_AQUEL &&
-        ( YF[k] <= TProfil::pm->pa.p.XwMin || Y[pmp->LO] <= pmp->lowPosNum*1e3 )))
+//        if( YF[k] <= pmp->lowPosNum*100. || ( pmp->PHC[k] == PH_AQUEL &&
+//        ( YF[k] <= TProfil::pm->pa.p.XwMin || Y[pmp->LO] <= pmp->lowPosNum*1e3 )))
+        if( pmp->L1[k] == 1L && YF[k] < pmp->PhMinM )
+        	goto NEXT_PHASE;
+        if( YF[k] <= pmp->DSM || ( pmp->PHC[k] == PH_AQUEL &&
+            ( YF[k] <= pmp->DSM || Y[pmp->LO] <= pmp->XwMinM )))
             goto NEXT_PHASE;
 
         pmp->YFk = 0.0;
@@ -645,7 +650,10 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
            Error( "E13IPM: PrimalChemicalPotentials():", buf);
 //           Yf = pmp->YFk;
         }
-        if( pmp->YFk > pmp->lowPosNum*10. )
+//        if( pmp->YFk > pmp->lowPosNum*10. )
+        if( ( pmp->PHC[k] == PH_AQUEL && pmp->YFk >= pmp->XwMinM )
+        		|| ( pmp->PHC[k] == PH_SORPTION && pmp->YFk >= pmp->ScMinM )
+        		|| ( pmp->PHC[k] == PH_POLYEL && pmp->YFk >= pmp->ScMinM ) )
         {
             pmp->logXw = log(pmp->YFk);
             pmp->aqsTail = 1.- pmp->YFk / Yf;
@@ -654,12 +662,12 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
         {
             pmp->logYFk = log( Yf );
         }
-        if( pmp->PHC[k] == PH_AQUEL)
+        if( pmp->PHC[k] == PH_AQUEL )
             // ln moles of solvent in aqueous phase
             pmp->Yw = pmp->YFk;
         for( ; j<i; j++ )
         { //  cycle by DC
-            if( Y[j] < pmp->lowPosNum )
+            if( Y[j] < fmin( pmp->DcMinM, pmp->lowPosNum ))
                 continue;  // exception by minimum DC quantity
                            // calculate chemical potential of j-th DC
             v = PrimalDC_ChemPot( pmp->G[j], log(Y[j]), pmp->logYFk,
@@ -669,7 +677,7 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
 NEXT_PHASE:
         j = i;
     }  // k
-    if( pmp->Yw > pmp->lowPosNum*1e3 )
+    if( pmp->Yw >= pmp->DSM ) // pmp->lowPosNum*1e3 )
         pmp->logXw = log(pmp->Yw);
 }
 
@@ -783,7 +791,8 @@ void TMulti::f_alpha()
                 dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
                 Wx = 0.0;
                 Yj = pmp->Y[j];
-                if( YF > pa->p.DS && Yj > pmp->lowPosNum )
+//                if( YF > pa->p.DS && Yj > pmp->lowPosNum )
+                if( YF > pmp->DSM && Yj > pmp->DcMinM )
                     Wx = Yj / YF; // calculating mole fraction of DC
                 if( // pmp->DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
                 	( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
@@ -797,9 +806,9 @@ void TMulti::f_alpha()
 // during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)
 if( pmp->pNP && !pmp->K2 )
 {  // Checking L_S set and potentially stable zero DCs and phases
-   if( YF >= pa->p.DS )
+   if( YF >= pmp->DSM ) // pa->p.DS )
    {                            // phase is there
-	   if( Yj > pmp->lowPosNum )
+	   if( Yj >= fmin(pmp->lowPosNum, pmp->DcMinM ) )
        {	                    // DC is there
 		   if( KinConstr == false)
               pmp->Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
@@ -817,15 +826,15 @@ if( pmp->pNP && !pmp->K2 )
    }
 }
 else {   // Standard checking in the L_S set only
-                if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
-                {
-
-                    if( KinConstr == false )
-                        pmp->Falp[k] += Fj; // incrementing Karpov stability criterion for the phase
+//       if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
+         if( YF >= pmp->DSM && Yj >= fmin( pmp->lowPosNum, pmp->DcMinM ) )  // Checking L_S set
+         {
+             if( KinConstr == false )
+                 pmp->Falp[k] += Fj; // incrementing Karpov stability criterion for the phase
                     EMU[j] = Fj;
-                }
-                else
-                    EMU[j] = 0;   // This DC is not in L_S set
+             }
+             else
+                    EMU[j] = 0;   // This DC is not in L_S set: e.g. metastability constrained
 }
              }   // j
         }
@@ -878,18 +887,19 @@ double TMulti::GX( double LM  )
 {
     long int i, j, k;
     double x, XF, XFw, FX, Gi; // debug variable
-    double const1= pmp->lowPosNum*10.,
-           const2 = pmp->lowPosNum*1000.;
+//    double const1= pmp->lowPosNum*10.,
+//           const2 = pmp->lowPosNum*1000.;
 
-    if( LM<pmp->lowPosNum )     // copy vector Y into X
+    if( LM < pmp->lowPosNum )     // copy vector Y into X
         for(i=0;i<pmp->L;i++)
             pmp->X[i]=pmp->Y[i];
     else  // calculate new values of X
         for(i=0;i<pmp->L;i++ )
         {  // vector pmp->MU - the direction of descent!
             pmp->X[i]=pmp->Y[i]+LM*pmp->MU[i];
-            if( pmp->X[i] <  pmp->lowPosNum )
-                pmp->X[i]=0.;
+//            if( pmp->X[i] <  pmp->lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
+            if( pmp->X[i] <  pmp->DcMinM )
+            	pmp->X[i]=0.;
         }
     // calculate new total quantities of phases
     TotalPhases( pmp->X, pmp->XF, pmp->XFA );
@@ -900,26 +910,35 @@ double TMulti::GX( double LM  )
     for( k=0; k<pmp->FI; k++ )
     { // loop for phases
         i=j+pmp->L1[k];
+        pmp->logXw = -101.;
         XFw = 0.0;  // calculating mole amount of the solvent/sorbent
         if( pmp->FIs && k<pmp->FIs )
             XFw = pmp->XFA[k];
-        if( XFw > const1 )
-            pmp->logXw = log( XFw );
+ //       if( XFw > const1 )
+        if( ( pmp->PHC[k] == PH_AQUEL && XFw >= pmp->XwMinM )
+        		|| ( pmp->PHC[k] == PH_SORPTION && XFw >= pmp->ScMinM )
+        		|| ( pmp->PHC[k] == PH_POLYEL && XFw >= pmp->ScMinM ) )
+             pmp->logXw = log( XFw );
         /*   */
         XF = pmp->XF[k];
-        if( XF <= const2 ||
-                (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
-                || XFw <= TProfil::pm->pa.p.XwMin) )
-                || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
-            goto NEXT_PHASE;
+        if( !(pmp->FIs && k < pmp->FIs) )
+        {
+        	if( XF < pmp->PhMinM )
+        		goto NEXT_PHASE;
+        }
+        else if( XF < pmp->DSM && pmp->logXw < -100. )
+        	goto NEXT_PHASE;
+//        if( XF <= const2 ||
+//                (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
+//                || XFw <= TProfil::pm->pa.p.XwMin) )
+//                || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
+//            goto NEXT_PHASE;
         pmp->logYFk = log( XF );
-//        if( XFw > const1 )
-//            pmp->logXw = log( XFw );
 
         for( ; j<i; j++ )
         { // DCs (species)
             x = pmp->X[j];
-            if( x < const1 )
+            if( x < pmp->DcMinM )
                 continue;
             // calculating increment of G(x)
             // Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
@@ -945,6 +964,95 @@ double TMulti::GX( double LM  )
 NEXT_PHASE:
         j = i;
     }  // k
+//    cout << "GX  " << setprecision(16) << scientific <<  FX << endl;
+    return(FX);
+}
+
+// Experimental variant with summation of G(X) with qd_real precision
+// Added by SD, DK on 27.08.2009
+qd_real TMulti::qdGX( double LM  )
+{
+    long int i, j, k;
+    double x, XF, XFw, Gi; // debug variable
+    qd_real FX;
+//    double const1= pmp->lowPosNum*10.,
+//           const2 = pmp->lowPosNum*1000.;
+    if( LM < pmp->lowPosNum )     // copy vector Y into X
+        for(i=0;i<pmp->L;i++)
+            pmp->X[i]=pmp->Y[i];
+    else  // calculate new values of X
+        for(i=0;i<pmp->L;i++ )
+        {  // vector pmp->MU - the direction of descent!
+            pmp->X[i]=pmp->Y[i] + LM*pmp->MU[i];
+//            if( pmp->X[i] <  pmp->lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
+            if( pmp->X[i] <  pmp->DcMinM )
+            	pmp->X[i]=0.;
+        }
+    // calculate new total quantities of phases
+    TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+
+    // calculating G(X)
+    FX=0.;
+    j=0;
+    for( k=0; k<pmp->FI; k++ )
+    { // loop for phases
+        i=j+pmp->L1[k];
+        pmp->logXw = -101.;
+        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
+        if( pmp->FIs && k<pmp->FIs )
+            XFw = pmp->XFA[k];
+ //       if( XFw > const1 )
+        if( ( pmp->PHC[k] == PH_AQUEL && XFw >= pmp->XwMinM )
+        		|| ( pmp->PHC[k] == PH_SORPTION && XFw >= pmp->ScMinM )
+        		|| ( pmp->PHC[k] == PH_POLYEL && XFw >= pmp->ScMinM ) )
+             pmp->logXw = log( XFw );
+        /*   */
+        XF = pmp->XF[k];
+        if( !(pmp->FIs && k < pmp->FIs) )
+        {
+        	if( XF < pmp->PhMinM )
+        		goto NEXT_PHASE;
+        }
+        else if( XF < pmp->DSM && pmp->logXw < -100. )
+        	goto NEXT_PHASE;
+//        if( XF <= const2 ||
+//                (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
+//                || XFw <= TProfil::pm->pa.p.XwMin) )
+//                || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
+//            goto NEXT_PHASE;
+        pmp->logYFk = log( XF );
+
+        for( ; j<i; j++ )
+        { // DCs (species)
+            x = pmp->X[j];
+            if( x < pmp->DcMinM )
+                continue;
+            // calculating increment of G(x)
+            // Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+            //                     pmp->DCCW[j] );
+            // call replaced here by inline variant for higher performance
+            switch( pmp->DCCW[j] )
+            {
+             case DC_ASYM_SPECIES:
+                    Gi = x * ( pmp->G[j] + log(x) - pmp->logXw );
+                    break;
+            case DC_ASYM_CARRIER:
+            case DC_SYMMETRIC:
+                   Gi = x * ( pmp->G[j] + log(x) - pmp->logYFk );
+                   break;
+            case DC_SINGLE:
+                   Gi = pmp->G[j] * x;
+                   break;
+           default:
+                    Gi = 7777777.;
+           }
+          FX += Gi;
+        }   // j
+NEXT_PHASE:
+        j = i;
+    }  // k
+    pmp->qdFX = FX;
+//    cout << "qdGX " << setprecision(20) << scientific << FX << endl;
     return(FX);
 }
 
@@ -956,6 +1064,7 @@ double TMulti::pb_GX( double *Gxx  )
 {
     long int i, j, k;
     double Gi, x, XF, XFw, FX;
+    SPP_SETTING *pa = &TProfil::pm->pa;
 
     // calculating G(X)
     FX=0.;
@@ -963,24 +1072,30 @@ double TMulti::pb_GX( double *Gxx  )
     for( k=0; k<pmp->FI; k++ )
     { // phase loop
         i=j+pmp->L1[k];
-        XFw = 0.0;  // calculating amount of carrier
+        pmp->logXw = -101.;
+        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
         if( pmp->FIs && k<pmp->FIs )
             XFw = pmp->XFA[k];
-        if( XFw > pmp->lowPosNum*10. )
-            pmp->logXw = log( XFw );
-        // calculating new amount of phase  */
+ //       if( XFw > const1 )
+        if( ( pmp->PHC[k] == PH_AQUEL && XFw >= pa->p.XwMin )
+                        || ( pmp->PHC[k] == PH_SORPTION && XFw >= pa->p.ScMin )
+                        || ( pmp->PHC[k] == PH_POLYEL && XFw >= pa->p.ScMin ) )
+             pmp->logXw = log( XFw );
+        /*   */
         XF = pmp->XF[k];
-        if( XF <= pmp->lowPosNum*1000. ||
-           (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
-                || XFw <= TProfil::pm->pa.p.XwMin) )
-                || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
-            goto NEXT_PHASE;
+        if( !(pmp->FIs && k < pmp->FIs) )
+        {
+                if( XF < pa->p.PhMin )
+        		goto NEXT_PHASE;
+        }
+        else if( XF < pa->p.DS && pmp->logXw < 100. )
+        	goto NEXT_PHASE;
         pmp->logYFk = log( XF );
 
         for( ; j<i; j++ )
         { // DC loop
             x = pmp->X[j];
-            if( x < pmp->lowPosNum*10. )
+            if( x < pa->p.DcMin )
                 continue;
             // calculating DC increment to G(x)
             Gi = FreeEnergyIncr( Gxx[j], x, pmp->logYFk, pmp->logXw,
@@ -1102,10 +1217,10 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
   { // loop over phases
       je=jb+pmp->L1[k];
       Dsur=0.0; DsurT=0.0;
-      if( pmp->PHC[k] == PH_AQUEL && XF[k] > pmp->lowPosNum )
+      if( pmp->PHC[k] == PH_AQUEL && XF[k] >= pmp->DSM && XFA[k] >= pmp->XwMinM )
         Dsur = XFA[k]/XF[k] - 1.0;              // Asymmetry correction term
-      if( (pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL)
-            && XFA[k] > pmp->lowPosNum )
+      if( (pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
+            && XFA[k] > pmp->ScMinM )
       {
          MMC = 0.0; // calculation of molar mass of the sorbent
          for( jj=jb; jj<je; jj++ )
@@ -1168,8 +1283,6 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
          }
          else
              XU[j] = 0.0;
-//         if( XU[j] <= pmp->lowPosNum )// Think 30/12/2009
-//             XU[j]=0.;
 // Corrections for DCs with non-trivial metastability constraints
 if( XU[j] < pmp->DLL[j] )
 XU[j] = pmp->DLL[j];
@@ -1197,7 +1310,7 @@ XU[j] = pmp->DUL[j];
 //      else 10/02/2009 SD
         if( Y[j]<pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
           ix=1;
-      if (ix && Y[j] > pmp->lowPosNum && XU[j] > pmp->lowPosNum )
+      if (ix && Y[j] > pmp->DcMinM && XU[j] > pmp->DcMinM )
       {   // Checking if the restored value breaks the mass balance
     	  for( i=arrL[j]; i<arrL[j+1]; i++ )
           {  ii = arrAN[i];

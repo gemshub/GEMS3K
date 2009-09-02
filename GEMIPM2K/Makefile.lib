@@ -1,13 +1,13 @@
-CC = gcc-4.3
-CXX = gcc-4.3
-FORT = gfortran-4.3
-CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins -D__unix 
+CC = gcc
+CXX = gcc
+FORT = gfortran
+CFLAGS = -c  -g -O2 -pedantic -fno-nonansi-builtins -D__unix -DUse_qd_real
 # -lstd -lC -lpgc -lrt -Msecond_underscore
-CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
-CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix
+CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -DUse_qd_real
+CCFLAGS1 =   -c -g -O2 -DIPMGEMPLUGIN -D__unix -DUse_qd_real
 FFLAGS = -c -g -O2 -fbounds-check -fno-underscoring -D__unix -D__GNU
-LINK = gcc-4.3
-LFLAGS = -lstdc++ -lgfortran
+LINK = gcc
+LFLAGS = -lstdc++ -lqd -lgfortran
 LIB = libgemipm2k.a
 
 ${LIB}:  gstring.o gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o \

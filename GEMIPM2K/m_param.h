@@ -31,7 +31,7 @@
 
 // Physical constants - see ms_param.cpp
 extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
-    e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg;
+    e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
 //
 
 struct BASE_PARAM
@@ -40,7 +40,7 @@ struct BASE_PARAM
     PC,   // Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
     PD,   // Mode of execution of the built-in DebyeHueckel()/Davies() functions { 3 }
           // Mode of DHH():0-invoke,1-at FIA only,2-last IPM it. 3-every IPM it.
-    PRD,  //  Negative number (from -1 to -50): the number |PRD| of additional full IPM-2 loops 
+    PRD,  //  Negative number (from -1 to -50): the number |PRD| of additional full IPM-2 loops
           //  to improve the GEM final solution, else  no additional loops, { 3 }
     PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }
     DP,   // Maximum allowed number of iterations in the EnterFeasibleDomain() procedure {  150 }

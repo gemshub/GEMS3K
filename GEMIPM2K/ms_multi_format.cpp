@@ -203,7 +203,7 @@ if( _comment )
        ff << "\n# PSOL: Total number of DCs in liquid hydrocarbon phases" << endl;
    ff << left << setw(12) << "<PSOL> " <<  right << setw(8) << pmp->PSOL << endl;
 //   ff << "# Do not know if this stuff is really necessary" << endl;
-//   ff << "# 'GWAT'         55.51" << endl;
+//   ff << "# 'GWAT'         55.50837344" << endl;
 //   ff << left << setw(12) << "<GWAT> " <<  right << setw(8) << pmp->GWAT << endl;
    if( _comment )
      ff << "\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " << endl;

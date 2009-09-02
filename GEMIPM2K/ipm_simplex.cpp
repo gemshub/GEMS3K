@@ -70,7 +70,7 @@ void TMulti::SimplexInitialApproximation( )
         AA= new double[T];
         STR= new long int[T];
         NMB= new long int[Q+1];
-        ErrorIf( !AA || !STR || !NMB, "SimplexInitialApproximation",
+        ErrorIf( !AA || !STR || !NMB, "SimplexInitialApproximation()",
             "Memory allocation error #2");
         for( k=0; k<T; k++)
          STR[k] = 0;
@@ -110,8 +110,15 @@ void TMulti::SimplexInitialApproximation( )
         // calculating initial quantities of phases
         TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
 
-        pmp->FX = GX( 0.0 ); // calculation of initial G(X) value
-        MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+        if( TProfil::pm->pa.p.PD > 0)
+        {    pmp->FX = GX( 0.0 ); // calculation of initial G(X) value
+             MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+        }
+        else
+        {   pmp->FX = to_double(qdGX( 0.0 )); // calculation of initial G(X) value
+        	qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+        }
+        	
 //        	for(long int i=0; i<pmp->N; i++)
 //             cout << i << " C " << pmp->C[i] << " B " << pmp->B[i] << endl;
 

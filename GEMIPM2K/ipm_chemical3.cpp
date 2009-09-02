@@ -31,7 +31,7 @@ void TMulti::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
     double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     for( k=0; k<pmp->FIs; k++ )
     { // loop over phases
@@ -45,9 +45,9 @@ void TMulti::IS_EtaCalc()
             }
 
         if( pmp->XF[k] <= pmp->DSM ||
-                (pmp->PHC[k] == PH_AQUEL && ( pmp->X[pmp->LO] <= pa->p.XwMin
+                (pmp->PHC[k] == PH_AQUEL && ( pmp->X[pmp->LO] <= pmp->XwMinM //  pa->p.XwMin
                  || pmp->XF[k] <= pmp->DHBM ) )
-             || (pmp->PHC[k] == PH_SORPTION && pmp->XF[k] <= pa->p.ScMin) )
+             || (pmp->PHC[k] == PH_SORPTION && pmp->XF[k] <= pmp->ScMinM ) ) //  pa->p.ScMin) )
             goto NEXT_PHASE;
 
         switch( pmp->PHC[k] )
@@ -308,7 +308,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     	double dk, cd;   long int i;
     	dg = fabs( dg );
     	ag = fabs( ag );
-    	dk = log( pmp->DX );
+    	dk = log( pmp->DXM );
     	// Checking the mode where it is called
     	switch( mode )
     	{
@@ -377,11 +377,11 @@ TMulti::GammaCalc( long int LinkMode  )
     case LINK_FIA_MODE: // Initial approximation mode
         if( pmp->LO )
         {
-            pmp->GWAT = 55.51;
+            pmp->GWAT = H2O_mol_to_kg;
             pmp->XF[0] = pmp->GWAT;
             for( j=0; j<pmp->L; j++ )
-                if( pmp->X[j] < pmp->lowPosNum )
-                    pmp->X[j] = pa->p.DFYaq;
+                if( pmp->X[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )
+                    pmp->X[j] = pmp->DFYaqM; // pa->p.DFYaq;
             ConCalc( pmp->X, pmp->XF, pmp->XFA );
             // pmp->IC = max( pmp->MOL, pmp->IC );
             pmp->IC = 0.0;  // Important for the simplex FIA reproducibility
@@ -434,7 +434,7 @@ TMulti::GammaCalc( long int LinkMode  )
    		    double nxk = 1./pmp->L1[k];
             for( j= jb; j<je; j++ )
     		{
-            	if(pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
+            	if(pmp->XF[k] < fmin( pmp->DSM, pmp->PhMinM ) ) // pmp->lowPosNum )   // workaround 10.03.2008 DK
             		pmp->Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
             	pmp->GEX[j] =0.0;  // cleaning GEX in TP mode!
             	pmp->lnGmo[j] = pmp->lnGam[j]; // saving activity coefficients in TP mode
@@ -555,7 +555,8 @@ TMulti::GammaCalc( long int LinkMode  )
         switch( pmp->PHC[k] )
         {  // calculating activity coefficients using built-in functions
           case PH_AQUEL:   // DH III variant consistent with HKF
-             if( pmpXFk > pa->p.XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin )
+//              if( pmpXFk > pmp->XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin )
+             if( pmpXFk > pmp->DSM && pmp->X[pmp->LO] > pmp->XwMinM && pmp->IC > pa->p.ICmin )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
@@ -620,8 +621,10 @@ TMulti::GammaCalc( long int LinkMode  )
              break;
         case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
         case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
-            if( pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
-                && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin ))
+//            if( pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
+//                && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin ))
+        	if( pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
+                && (pmp->XFA[0] > pmp->XwMinM && pmp->XF[0] > pmp->DSM ))
             {
 					// ConCalc( pmp->X, pmp->XF, pmp->XFA  );  Debugging
                     if( pmp->E )
@@ -702,7 +705,8 @@ TMulti::GammaCalc( long int LinkMode  )
             switch( pmp->PHC[k] )
             {  //
               case PH_AQUEL:
-                 if(!(pmpXFk > pa->p.XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin ))
+//                  if(!(pmpXFk > pa->p.XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin ))
+            	  if(!(pmpXFk > pmp->DSM && pmp->X[pmp->LO] > pmp->XwMinM && pmp->IC > pa->p.ICmin ))
                 	 goto END_LOOP;
                  break;
               case PH_GASMIX:
@@ -721,9 +725,11 @@ TMulti::GammaCalc( long int LinkMode  )
                  break;
             case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
             case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
-                if( !(pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
-                    && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin )))
-                    goto END_LOOP;
+//                if( !(pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
+//                    && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin )))
+                  if( !(pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
+                      && (pmp->XFA[0] > pmp->XwMinM && pmp->XF[0] > pmp->DSM )))
+                	goto END_LOOP;
                 break;
              default:
                 goto END_LOOP;
@@ -758,8 +764,9 @@ END_LOOP:
         {
         	for( j=jb; j<je; j++ )
         	{
-if( pmp->XF[k] < pmp->lowPosNum )   // workaround 10.03.2008 DK
-	pmp->Wx[j] = 0.0;               //
+//        		if( pmp->XF[k] < pmp->lowPosNum )
+        	   if( pmp->XF[k] < pmp->DSM )   // workaround 10.03.2008 DK
+        			pmp->Wx[j] = 0.0;               //
         	   LnGam = pmp->lnGmo[j];
                pmp->lnGam[j] = LnGam;
                if( /* fabs( LnGam ) > 1e-9 && */ fabs( LnGam ) < 84. )

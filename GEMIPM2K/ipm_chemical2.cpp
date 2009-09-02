@@ -163,10 +163,11 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
         Muj = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
         pmp->Fx[j] = Muj * pmp->RT;     // el-chem potential
 
-        if( X[j] <= pmp->lowPosNum )
+//        if( X[j] <= pmp->lowPosNum )
+        if( X[j] <= pmp->DcMinM )
         { // zeroing off
 //            pmp->Wx[j] = pmp->lowPosNum; // 0.0;  debugging 29.11.05
-pmp->Wx[j] = 0.0;
+            pmp->Wx[j] = 0.0;
             pmp->VL[j] = log( pmp->lowPosNum );
             pmp->Y_w[j] = 0.0;
             pmp->lnGam[j] = 0.0;
@@ -219,7 +220,7 @@ pmp->Wx[j] = 0.0;
         }
         // calculation of the mole fraction
         pmp->Wx[j] = X[j]/XF[k];
-        if( pmp->Wx[j] > pmp->lowPosNum )
+        if( X[j] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
             pmp->VL[j] = log( pmp->Wx[j] );     // this is used nowhere except in some scripts. Remove?
         else pmp->VL[j] = log( pmp->lowPosNum );   // debugging 29.11.05 KD
         pmp->Y_la[j] = 0.0;
@@ -323,7 +324,8 @@ pmp->Wx[j] = 0.0;
         case DC_SUR_CARRIER: // sorbent
             pmp->Y_m[j] = X[j]*Factor; // molality
             pmp->Y_w[j] = 0.0;
-            if(pmp->FWGT[0]>pmp->lowPosNum)
+//            if( pmp->FWGT[0]>pmp->lowPosNum )
+            if( pmp->YF[0] >= pmp->DSM )
               pmp->Y_w[j] = // mg of sorbent per kg aq solution
                 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[0];
             DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
@@ -408,9 +410,12 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 pmp->IC_wm[ii] = 0.0;
             }
 
+//        if( XF[k] <= pmp->DSM ||
+//     (pmp->PHC[k] == PH_AQUEL && ( XFA[k] <= pmp->lowPosNum*1e3 || XF[k] <= pa->p.XwMin ) )
+//                || ( pmp->PHC[k] == PH_SORPTION && XFA[k] <= pa->p.ScMin ))
         if( XF[k] <= pmp->DSM ||
-     (pmp->PHC[k] == PH_AQUEL && ( XFA[k] <= pmp->lowPosNum*1e3 || XF[k] <= pa->p.XwMin ) )
-                || ( pmp->PHC[k] == PH_SORPTION && XFA[k] <= pa->p.ScMin ))
+            (pmp->PHC[k] == PH_AQUEL && ( XFA[k] <= pmp->XwMinM || XF[k] <= pmp->DSM ) )
+                || ( pmp->PHC[k] == PH_SORPTION && XFA[k] <= pmp->ScMinM ))
         {
             for( jj=0; jj<pmp->N; jj++)
              pmp->BF[k*pmp->N+jj] = 0.;
@@ -442,7 +447,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
             MMC = 0.0; // molar mass of carrier */
             //                     Dsur = XF[k] - XFA[k];
             Dsur = XFA[k]/XF[k] - 1.0; // Asymm.corr. - aq only!
-            if( XFA[k] > pmp->lowPosNum )
+//            if( XFA[k] > pmp->lowPosNum )
+            if( XFA[k] > pmp->XwMinM )
             {
                 for(jj=j; jj<i; jj++)
                     if( pmp->DCC[jj] == DC_AQ_SOLVENT ||
@@ -450,7 +456,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                         MMC += pmp->MM[jj]*X[jj]/XFA[k];
             }
             else MMC=18.01528; // Assuming water-solvent
-            if( (XFA[k] > pmp->lowPosNum) && (MMC > pmp->lowPosNum) )
+//            if( (XFA[k] > pmp->lowPosNum) && (MMC > pmp->lowPosNum) )
+            if( (XFA[k] > pmp->XwMinM) && (MMC > pmp->lowPosNum) )
                 Factor = 1000./MMC/XFA[k]; // molality
             else Factor = 0.0;
             pmp->IC=0.;
@@ -468,7 +475,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
             pmp->YFk = XF[k];
             for(jj=j; jj<i; jj++)
             {
-                if( X[jj] > pmp->lowPosNum)
+                if( X[jj] > pmp->DcMinM)      // fixed 30.08.2009 DK
                     pmp->FWGT[k] += X[jj]*pmp->MM[jj];
             }
             break;
@@ -479,7 +486,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
 
             for( ist=0; ist<pmp->FIat; ist++ )
                 pmp->XFTS[k][ist] = 0.0;
-            if( XFA[k] < pmp->lowPosNum ) XFA[k] = pmp->lowPosNum;
+//           if( XFA[k] < pmp->lowPosNum ) XFA[k] = pmp->lowPosNum;
+            if( XFA[k] < pmp->ScMinM ) XFA[k] = pmp->ScMinM;
             for( jj=j; jj<i; jj++ )
             {
                jja = jj - ( pmp->Ls - pmp->Lads );
@@ -509,7 +517,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
 
 NEXT_PHASE:
         pmp->VXc += pmp->FVOL[k];
-        if( pmp->PHC[k] == PH_AQUEL && XF[k] > pa->p.XwMin && XFA[k] > pmp->lowPosNum*1e3 )
+//        if( pmp->PHC[k] == PH_AQUEL && XF[k] > pa->p.XwMin && XFA[k] > pmp->lowPosNum*1e3 )
+        if( pmp->PHC[k] == PH_AQUEL && XF[k] > pmp->DSM && XFA[k] > pmp->XwMinM )
             for( ii=0; ii<pmp->NR; ii++ )
             {
                if( pmp->LO  )
@@ -544,13 +553,13 @@ TMulti::GouyChapman(  long int, long int, long int k )
     long int ist, status=0;
     double SigA=0., SigD=0., SigB=0., SigDDL=0.,
       XetaA[MST], XetaB[MST], XetaD[MST], f1, f3, A, Sig, F2RT, I, Cap;
-    if( pmp->XF[k] <  TProfil::pm->pa.p.ScMin )
+    if( pmp->XF[k] < pmp->ScMinM ) // TProfil::pm->pa.p.ScMin )
         return status; // no sorbent
 
     // sorbent mass in grams
     pmp->YFk = pmp->FWGT[k];
-    if(pmp->YFk < pmp->lowPosNum*100.)
-       pmp->YFk = pmp->lowPosNum*100.;
+    if( pmp->XF[k] < pmp->DSM )
+       pmp->YFk = pmp->lowPosNum;
 
     for( ist=0; ist<pmp->FIat; ist++ )  // loop over surface types
     {
@@ -559,15 +568,15 @@ TMulti::GouyChapman(  long int, long int, long int k )
         if( pmp->SCM[k][ist] == SC_NOT_USED || pmp->Nfsp[k][ist] < 1e-9  )
             continue;
         // Calculation of charge densities
-        if( fabs( pmp->XetaA[k][ist]) > pmp->lowPosNum*100. )
+        if( fabs( pmp->XetaA[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. )
             XetaA[ist] = pmp->XetaA[k][ist]*F_CONSTANT/pmp->YFk/
                 pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
         else XetaA[ist] = 0.0;
-        if( fabs( pmp->XetaB[k][ist]) > pmp->lowPosNum*100. )   // moles
+        if( fabs( pmp->XetaB[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. )   // moles
             XetaB[ist] = pmp->XetaB[k][ist] *F_CONSTANT/pmp->YFk/
                 pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
         else XetaB[ist] = 0.0;
- if( fabs( pmp->XetaD[k][ist]) > pmp->lowPosNum*100. ) // moles
+ if( fabs( pmp->XetaD[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. ) // moles
      XetaD[ist] = pmp->XetaD[k][ist] *F_CONSTANT/pmp->YFk/
                pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
  else XetaD[ist] = 0.0;
@@ -594,9 +603,9 @@ TMulti::GouyChapman(  long int, long int, long int k )
             XetaD[ist] = XetaD[ist] < 0.0 ? -1.4: 1.4;
             status = 62;
         }
-        if( fabs( XetaA[ist] ) < pmp->lowPosNum*1e6 &&
-               fabs( XetaB[ist] ) < pmp->lowPosNum*1e6 &&
-               fabs( XetaD[ist] ) < pmp->lowPosNum*1e6 )
+        if( fabs( XetaA[ist] ) < pmp->DHBM  && // pmp->lowPosNum*1e6 &&
+               fabs( XetaB[ist] ) < pmp->DHBM && // pmp->lowPosNum*1e6 &&
+               fabs( XetaD[ist] ) < pmp->DHBM ) // pmp->lowPosNum*1e6 )
             goto GEMU_CALC;  // skipping at near-zero charge
 
         SigD = 0.;
@@ -920,7 +929,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
     for( j=jb; j<je; j++ )
     { // Main loop for DCs - surface complexes
         lnGamjo = pmp->lnGmo[j];             // bugfix 16.03.2008 DK
-    	if( pmp->X[j] <= pmp->lowPosNum )
+    	if( pmp->X[j] < fmin( pmp->DcMinM, pmp->lowPosNum ) )
             continue;  // This surface DC has been killed by IPM
 //        OSAT = pmp->lnGmo[j]; // added 6.07.01 by KDA
         ja = j - ( pmp->Ls - pmp->Lads );
@@ -950,7 +959,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
             else
             { // Assigned to one of the sorbent end-members
                 XVk = pmp->X[Cj];
-                if( XVk < pmp->DSM*0.1 )
+                if( XVk < pmp->ScMinM ) // pmp->DSM*0.1 )
                     continue;    // This end-member is zeroed off by IPM
                 Mm = pmp->MM[Cj] * XVk/pmp->XFA[k];  // mol.mass
             }

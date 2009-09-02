@@ -5,18 +5,18 @@
 
 ####### Compiler, tools and options
 
-CC       = gcc-4.3
-CXX      = g++-4.3
+CC       = gcc
+CXX      = g++
 LEX      = flex
 YACC     = yacc
-CFLAGS   = -pipe -Wall -W -g  -DIPMGEMPLUGIN -D__unix
-CXXFLAGS = -pipe -Wall -W -g  -DIPMGEMPLUGIN -D__unix
+CFLAGS   = -pipe -Wall -W -g  -DIPMGEMPLUGIN -D__unix -DUse_qd_real
+CXXFLAGS = -pipe -Wall -W -g  -DIPMGEMPLUGIN -D__unix -DUse_qd_real
 LEXFLAGS = 
 YACCFLAGS= -d
 INCPATH  = -I.
-LINK     = gcc-4.3
+LINK     = gcc
 LFLAGS   = -lstdc++
-LIBS     = $(SUBLIBS)  
+LIBS     = $(SUBLIBS) -lqd 
 AR       = ar cqs
 RANLIB   = 
 TAR      = tar -cf
