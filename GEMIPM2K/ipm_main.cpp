@@ -800,8 +800,8 @@ if( pmp->pNP && rLoop < 0 && status )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif
-//        if( pmp->PCI < pmp->DX || pmp->PZ == 2 )  // Dikin criterion satisfied - converged!
-        if( pmp->PCI < pmp->DX*0.05 || pmp->PZ == 2 )  // Bugfix 27.08.2009 - to keep old Pa_DK values
+        if( pmp->PCI < pmp->DX || pmp->PZ == 2 )  // Dikin criterion satisfied - converged!
+//        if( pmp->PCI < pmp->DX*0.05 || pmp->PZ == 2 )  // Bugfix 27.08.2009 - to keep old Pa_DK values
         	goto CONVERGED;
     } // end of main IPM cycle
 
@@ -1245,8 +1245,8 @@ double TMulti::calcDikin( long int N, bool initAppr )
       if( !initAppr )
         Mu -= pmp->F[J];
       qMu = pmp->W[J]*Mu;
-      PCI += qMu*qMu;      // 27.08.2009 DK  pmp->DX must be made 20-50 times smaller! see line 804
-//      PCI += Mu*pmp->W[J]*Mu;       Important bugfix - see Karpov ea 1997; Chudnenko ea 2001
+//      PCI += qMu*qMu;      // 27.08.2009 DK  pmp->DX must be made 20-50 times smaller! see line 804
+      PCI += Mu*pmp->W[J]*Mu;   //    Important bugfix - see Karpov ea 1997; Chudnenko ea 2001
       pmp->MU[J] = Mu*pmp->W[J];
     }
     else
