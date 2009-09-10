@@ -23,10 +23,11 @@
 #define _ms_multi_h_
 
 #ifdef Use_qd_real
-// QD_real
+// QD_real is enabled only if the above compiler key is used (experimental)
 #include <qd/qd_real.h>
 #else
-#define qd_real double
+typedef double qd_real;
+#define to_double (double)
 #endif
 
 #ifndef IPMGEMPLUGIN
