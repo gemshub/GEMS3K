@@ -593,12 +593,12 @@ void TPitzer::free_internal()
 		delete[]Bet1[i];
 		delete[]Bet2[i];
 		delete[]Cphi[i];
-		delete[]Theta1[i];
+		delete[]Theta[i];
 	}
 
-	for( i=0; i<Nc ; i++)
+	for( i=0; i<Na ; i++)
 	{
-		delete[]Theta[i];
+		delete[]Theta1[i];
 	}
 
 	delete[]Bet0;
