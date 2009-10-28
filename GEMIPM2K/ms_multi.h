@@ -579,6 +579,9 @@ public:
      pmp->tpp_Vm = 0;
    }
 
+    ~TMulti()
+    {  multi_free(); }
+
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
 

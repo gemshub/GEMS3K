@@ -989,7 +989,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.IC_wm = 0;
  }
 
- // dispersion and sorbtion phases
+ // dispersion and sorption phases
  if( PAalp != S_OFF )
  {
    pm.Aalp = new double[pm.FI];
