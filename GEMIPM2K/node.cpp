@@ -384,12 +384,15 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #endif
      bool binary_f = false;
      gstring lst_in = ipmfiles_lst_name;
-
+     gstring Path = " ";
 // Get path
-      size_t pos = lst_in.rfind("/");
-      gstring Path = "";
-      if( pos < npos )
-       Path = lst_in.substr(0, pos+1);
+#ifdef _WIN32
+      size_t pos = lst_in.rfind("\\");// HS keep this on windows
+#else      
+	  size_t pos = lst_in.rfind("/"); // HS keep this on linux
+#endif
+	  if( pos < npos )
+      Path = lst_in.substr(0, pos+1);
 
 //  open file stream for the file names list file
       fstream f_lst( lst_in.c_str(), ios::in );
@@ -1262,7 +1265,8 @@ void TNode::allocMemory()
 void TNode::freeMemory()
 {
    datach_free();
-   CSD = 0;
+   // CSD = 0;
+   delete CSD;
    CNode = databr_free( CNode );
 
 #ifdef IPMGEMPLUGIN
@@ -2107,7 +2111,8 @@ void TNode::GEM_to_MT(
     double  *p_vPS,  // Total volumes of multicomponent phases, m3   [nPSb]      -      -       +     +
     double  *p_mPS,  // Total mass of multicomponent phase (carrier),kg [nPSb]   -      -       +     +
     double  *p_bPS,  // Bulk compositions of phases  [nPSb][nICb]                -      -       +     +
-    double  *p_xPA   //Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -       +     +
+    double  *p_xPA,   //Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -       +     +
+    double  *p_aPH   //surface area for                                 phase[nPSb]-    -       +     +
  )
 {
    long int ii;
@@ -2135,7 +2140,10 @@ void TNode::GEM_to_MT(
     p_gam[ii] = CNode->gam[ii];
   }
   for( ii=0; ii<CSD->nPHb; ii++ )
+  {
     p_xPH[ii] = CNode->xPH[ii];
+    p_aPH[ii] = CNode->aPH[ii];
+  }
   for( ii=0; ii<CSD->nPSb; ii++ )
   {
     p_vPS[ii] = CNode->vPS[ii];
