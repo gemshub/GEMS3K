@@ -25,7 +25,7 @@
 enum fluid_mix_rules {  // Codes to identify specific mixing rules in EoS models (see also m_phase.h)
     MR_WAAL_ = 'W',		// Basic Van der Waals mixing rules in cubic EoS models
     MR_CONST_ = 'C',    // Constant one-term interaction parameter kij
-    MR_TEMP_ = 'T',		// Temperature-dependent one-term interaction parameter kij (Jaubert et al. 2005)
+    MR_TEMP_ = 'T'		// Temperature-dependent one-term interaction parameter kij (Jaubert et al. 2005)
 };
 
 
