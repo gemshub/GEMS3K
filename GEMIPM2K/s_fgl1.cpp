@@ -685,7 +685,7 @@ void TPitzer::free_internal()
 void TPitzer::Pitzer_test_out( const char *path, double Y )
 {
 
-	long int ii, c, a, n;
+//	long int ii, c, a, n;
 
 	ofstream ff(path, ios::app );
 	ErrorIf( !ff.good() , path, "Fileopen error");
@@ -713,7 +713,23 @@ long int TPitzer::PTparam( )
 
 long int TPitzer::MixMod()
 {
-	return Pitzer_calc_Gamma();
+    // Refreshing molalities of cations, anions, and neutral species
+    // Added by DK on 01.Dec.2009
+    long int ic, ia, in;
+    for( ic=0; ic<Nc; ic++){
+        mc[ic] = aM[xcx[ic]];
+        zc[ic] = aZ[xcx[ic]];
+    }
+
+    for(ia=0; ia<Na; ia++){
+        ma[ia] = aM[xax[ia]];
+        za[ia] = aZ[xax[ia]];
+    }
+
+    for(in=0; in>Nn; in++){
+        mn[in] = aM[xnx[in]];
+    }
+    return Pitzer_calc_Gamma();
 }
 
 
@@ -1857,7 +1873,7 @@ double TPitzer::McInnes_KCl( )
 	double Cphi_HCl = McI_PT_array[8];
 	double Theta_KH = McI_PT_array[9];
 	double Psi_KHCl = McI_PT_array[10];
-	double Theta_ClOH = McI_PT_array[11];
+//	double Theta_ClOH = McI_PT_array[11];
 	double Psi_ClOHK = McI_PT_array[12];
 
 	double C_KCl, C_KOH, C_HCl;
@@ -2028,7 +2044,7 @@ long int TPitzer::ExcessProp( double *Zex )
 	}
 
 	// Excess heat capacity
-	double Cpex = (-4.)*Sex -2.*Gex/Tk + R_CONST*Tk*Tk*(catCPex + aniCPex + neutCPex);
+        CPex = (-4.)*Sex -2.*Gex/Tk + R_CONST*Tk*Tk*(catCPex + aniCPex + neutCPex);
 
 	// Assignments
 	Aex = Gex - Vex*Pbar;
