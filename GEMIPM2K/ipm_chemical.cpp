@@ -565,8 +565,9 @@ case DC_AQ_SURCOMP:
     if( pmp->sMod[k][SGM_MODE] != SM_IDEAL )
             // || pmp->sMod[k][SCM_TYPE] != SC_NNE )  // changed, 14.07.2009 (TW)
     {
+        double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
-        if( pmp->X[j] > fmin( pmp->lowPosNum, pmp->DcMinM ) && fabs( dF0 ) >= 1e-5 ) // to be checked
+        if( pmp->X[j] > fmin( pmp->lowPosNum, pmp->DcMinM ) && fabs( dF0 ) >= SmoSensT )
         	// F0 = Fold + dF0 * pmp->FitVar[3];
        	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }  // FitVar[3] = TinkleSuppressFactor(); see GammaCalc()
@@ -1113,7 +1114,7 @@ NEXT_PHASE:
 // k - index of phase, j - index DC in phase
 // if error code, returns 777777777.
 //
-double TMulti::Cj_init_calc( double g0, long int j, long int k )
+double TMulti:: Cj_init_calc( double g0, long int j, long int k )
 {
     double G, YOF=0;
 
@@ -1431,10 +1432,10 @@ NEXT_PHASE:
     ErrorIf( iRet>0, "E19IPM: ConvertDCC()", "Invalid DC class code. Memory corruption?");
 }
 
-// get the index of volume IC ("Vv") for volume balance constraint
+// get the index of volume IC ("Vv") for the volume balance constraint
 long int TMulti::getXvolume()
 {
- long int ii, ret = 0;
+ long int ii, ret = -1;
  for( ii = pmp->N-1; ii>=0; ii--)
  {
   if( pmp->ICC[ii] == IC_VOLUME )

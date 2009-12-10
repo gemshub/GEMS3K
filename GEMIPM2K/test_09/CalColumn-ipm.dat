@@ -47,7 +47,7 @@
 <pa_EPS>       1e-10
 
 # DK: IPM-2 convergence threshold for the Dikin criterion  (1e-6 < DK < 1e-3, default 1e-4)
-<pa_DK>        1e-06
+<pa_DK>        3e-07
 
 # DS: Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
 <pa_DS>        1e-14
@@ -58,13 +58,13 @@
 <pa_DFM>         0.1
 
 # DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>          250
+<pa_DP>          300
 
 # IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure { 500 }
-<pa_IIM>         500
+<pa_IIM>         1000
 
 # PD: Mode of execution of the built-in DebyeHueckel()/Davies() functions { 3 }
-<pa_PD>           3
+<pa_PD>           2
 
 # PRD: Negative number (from -1 to -50): the number  of additional full IPM-2 loops, otherwise no additional loops
 #      Positive or 0: no global refinement loops
@@ -87,7 +87,7 @@
 #       Dc - solution- or surface species { 1e-20 }; Ph - non-electrolyte solution phase with all its components { 1e-10 }
 <pa_XwMin>     1e-09
 <pa_ScMin>     1e-07
-<pa_DcMin>     1e-23
+<pa_DcMin>     1e-24
 <pa_PhMin>     1e-14
 
 # ICmin: Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
@@ -114,9 +114,9 @@
 
 # Parameters for high-accuracy IPM-2 algorithm 
 # DW: Maximum number of allowed IPM-2 mass balance accuracy improvement loops (from 0 to 15) { 15 }
-<pa_DW>           15
+<pa_DW>           30
 # DT: IPM-2 cutoff exponent to recover small elements of the primal x vector using the dual solution vector u { -3 }
-<pa_DT>           -3
+<pa_DT>           -2
 
 # GAS: IPM-2 balance accuracy control ratio DHBM[i]/b[i], determines the maximum allowed mass balance residual for minor IC { 1e-3 }
 <pa_GAS>       0.001
@@ -132,7 +132,7 @@
 # DKIN: Tolerance on the amount of DC with two-side metastability constraints  (moles) { 1e-7 } 
 <pa_DKIN>      1e-07
 # pa_PLLG: TIPM-2 tolerance for checking change in dual solution among GEM refinement loops { 200 }
-<pa_PLLG>        200
+<pa_PLLG>        2000
 
 ## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # sMod: Codes for built-in mixing models of multicomponent phases [nPS*6]

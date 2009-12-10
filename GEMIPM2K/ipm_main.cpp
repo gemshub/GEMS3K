@@ -21,7 +21,7 @@
 //
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch; chud@igc.irk.ru
-//------------------------------------------------------------------
+//-------------------------------------------------------------------
 //
 
 #include "m_param.h"
@@ -37,7 +37,7 @@ using namespace JAMA;
 #include "node.h"
 #include<iomanip>
 
-//#define GEMITERTRACE
+// #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main sequence of IPM calculations
@@ -187,7 +187,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
         }
 
     if( !pa->p.PC || pmp->PZ )    //  No PhaseSelect() operation allowed or
-    {   if( pmp->PD >= 2 )           //  pmp->PZ == 2 no impotant error
+    {   if( pmp->PD >= 2 )           //  pmp->PZ == 2 not very important error
            for( i=0; i<pmp->L; i++)
              pmp->G[i] = pmp->G0[i];
         return;  // solved
@@ -385,7 +385,7 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 //
 bool TMulti::AutoInitialApprox(  )
 {
-    long int i, j, NN, eCode=-1L;
+    long int i, j, k, NN, eCode=-1L;
     double minB, sfactor;
     char buf[300];
     SPP_SETTING *pa = &TProfil::pm->pa;
@@ -445,22 +445,54 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 
 // Analyzing if the Simplex approximation is necessary
     if( !pmp->pNP  )
-    {   // Preparing to call Simplex method
+    {   // Preparing to call Simplex method - "cold start"
     	pmp->FitVar[4] = 1.0; // by default no smoothing
 //        pmp->FitVar[4] = pa->p.AG;  //  initializing the smoothing parameter
         pmp->ITaia = 0;             // resetting the previous number of AIA iterations
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-//      pmp->IC = 0.0;  For reproducibility of simplex FIA?
-pmp->PCI = 1.0;
-pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
-	 pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
-		if( pmp->FIs )
-            GammaCalc(LINK_FIA_MODE);
-        if( pa->p.PC == 2 )
-           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
+        //      pmp->IC = 0.0;  For reproducibility of simplex FIA?
+        pmp->PCI = 1.0;
+        pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
+              pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
+
+        // Cleaning vectors of  activity coefficients (provisory taken from GammaCalc(LINK_FIA_MODE)
+        for( j=0; j<pmp->L; j++ )
+        {
+            if( pmp->lnGmf[j] )
+                pmp->lnGam[j] = pmp->lnGmf[j]; // setting up fixed act.coeff. for simplex IA
+            else pmp->lnGam[j] = 0.;   // + pmp->lnGmm[j];
+            pmp->Gamma[j] = 1.;
+        }
+        for( j=0; j<pmp->L; j++)
+            pmp->G[j] = pmp->G0[j] + pmp->lnGam[j];  // Provisory cleanup 4.12.2009 DK
+        if( pmp->LO )
+        {
+           ConCalc( pmp->X, pmp->XF, pmp->XFA );  // cleanup for aq phase?
+           pmp->IC = 0.0;  // Important for the simplex FIA reproducibility
+           if( pmp->E && pmp->FIat > 0 )
+           {
+              for( k=0; k<pmp->FIs; k++ )
+              {
+                 long int ist;
+                 if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
+                     for( ist=0; ist<pmp->FIat; ist++ ) // loop over surface types
+                     {
+                        pmp->XetaA[k][ist] = 0.0;
+                        pmp->XetaB[k][ist] = 0.0;
+                        pmp->XpsiA[k][ist] = 0.0;
+                        pmp->XpsiB[k][ist] = 0.0;
+                        pmp->XpsiD[k][ist] = 0.0;
+                        pmp->XcapD[k][ist] = 0.0;
+                     }  // ist
+              }  // k
+           } // FIat
+        }   // LO
+//        if( pmp->FIs )    //  seems obsolete - can be changed to provide activity coeffs for EFD()!
+//            GammaCalc(LINK_FIA_MODE);
+//        if( pa->p.PC == 2 )
+//           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
         pmp->IT = 0; pmp->ITF += 1; // Assuming simplex() time equal to one iteration of EFD()
 //        pmp->PCI = 0.0;
-
      // Calling the simplex method here
         SimplexInitialApproximation( );
 
@@ -468,41 +500,39 @@ pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalu
 #ifndef IPMGEMPLUGIN
 STEP_POINT( "End Simplex" );
 #endif
-
-        // no multi-component phases?
         if( !pmp->FIs )
+        {                       // no multi-component phases!
+            for( j=0; j< pmp->L; j++ )
+                pmp->X[j] = pmp->Y[j];
+            TotalPhases( pmp->X, pmp->XF, pmp->XFA );
             return true; // If so, the GEM problem is already solved !
-
+        }
         // Setting default trace amounts to DCs that were zeroed off
         RaiseZeroedOffDCs( 0, pmp->L /*, sfactor */ );
         // this operation greatly affects the accuracy of mass balance!
-
         TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
-
         for( j=0; j< pmp->L; j++ )
             pmp->X[j] = pmp->Y[j];
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+        //        if( pa->p.PC == 2 )
+        //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
+        if( pmp->PD == 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
+        {
+            ConCalc( pmp->X, pmp->XF, pmp->XFA );  // calculation of concentrations
+            GammaCalc( LINK_UX_MODE);    // Very experimental!
+        }
+#ifdef GEMITERTRACE
+to_text_file( "MultiDumpAA.txt" );   // Debugging
+#endif
     }
     else  // Taking previous GEMIPM result as an initial approximation
     {
-		TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
+        TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
         for( j=0; j< pmp->L; j++ )
             pmp->X[j] = pmp->Y[j];
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-/*
-if( pmp->PCI < 1e-7 || pmp->PCI > 1e-3 )
-{ //   For new smoothing function - need PCI value already here
-  pmp->NR=pmp->N;
-  if( pmp->LO )
-  {   if( pmp->YF[0] < pmp->DSM && pmp->YFA[0] < pmp->XwMinM )
-        pmp->NR= pmp->N-1;
-  }
-  pmp->PCI = calcDikin( pmp->NR, false );
-  pmp->PCI = sqrt( pmp->PCI );
-}
-*/
 
-pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
+         pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
    	 pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
         if( pmp->PD >= 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
         {
@@ -542,7 +572,7 @@ STEP_POINT("Before FIA");
 long int TMulti::EnterFeasibleDomain()
 {
     long int IT1;
-    long int I, J, Z,  N, sRet, iRet=0, jK;//, iB;
+    long int I, J, Z,  N, sRet, iRet=0, j, jK;
     double LM;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -597,10 +627,22 @@ long int TMulti::EnterFeasibleDomain()
          if( fabs(pmp->C[I]) > pmp->DHBM  ||
              ( pmp->W1 && fabs(pmp->C[I]) > pmp->B[I] * pa->p.GAS ) )
            break;
-       if( I == Z ) // OK
-         return iRet;       // OK
+       if( I == Z ) // balance residuals OK
+       {   // very experimental - updating activity coefficients
+           for( j=0; j< pmp->L; j++ )
+               pmp->X[j] = pmp->Y[j];
+           TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+           //        if( pa->p.PC == 2 )
+           //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
+           if( pmp->PD == 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
+           {
+               ConCalc( pmp->X, pmp->XF, pmp->XFA );  // calculation of concentrations
+               GammaCalc( LINK_UX_MODE);    // Very experimental!
+           }
+           return iRet;       // OK
+       }
 
-       WeightMultipliers( true );
+       WeightMultipliers( true );  // creating R matrix
 
        // Assembling and solving the system of linearized equations
        if( pa->p.PC > 0)
@@ -781,7 +823,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
        else
        {
     	   LM1=qdLMD( LM ); // Finding an optimal value of the descent step
-   	       FX1=to_double(qdGX( LM1 )); // New G(X) value after the descent step
+           FX1=to_double(qdGX( LM1 )); // New G(X) value after the descent step
        }
 
        pmp->PCI = sqrt(pmp->PCI); // Dikin criterion
@@ -805,8 +847,8 @@ pmp->logCDvalues[0] = log( pmp->PCI );  // updating CD sampler array
 
        pmp->FX=FX1;
        // Main IPM iteration done
-       // Calculation of activity coefficients
-        if( pmp->PD==3 )
+       // Main calculation of activity coefficients
+        if( pmp->PD == 2  || pmp->PD == 3 || pmp->PD == 4 )
             status = GammaCalc( LINK_UX_MODE );
 
         if( pmp->PHC[0] == PH_AQUEL && pmp->XF[0] < pmp->DSM &&
@@ -851,13 +893,13 @@ pmp->PCI = pmp->DXM * 0.999999; // temporary
  	   return 4L;
   }
 
-  if( pmp->PD == 1 || pmp->PD == 2  || pmp->PD == 3  )
+  if( pmp->PD == 1 || pmp->PD == 2  || pmp->PD == 3  || pmp->PD == 4 )
   {
 	  GammaCalc( LINK_UX_MODE );
 		  // if( pmp->PD >= 3 )
 		  // GammaCalc( LINK_PHP_MODE );  // Temporarily disabled (DK 06.07.2009)
   }
-//   else
+
   ConCalc( pmp->X, pmp->XF, pmp->XFA );
 
   if( pa->p.PD > 0 )
@@ -953,7 +995,7 @@ TMulti::CheckMassBalanceResiduals(double *Y )
 	   if( iRet < 0  )
 	   {
           iRet = i;  // Error state is activated
-		  sprintf(buf, "Mass balance broken on iteration %ld  for independent components %-3.3s",
+                  sprintf(buf, "Mass balance is broken on iteration %ld  for independent components %-3.3s",
 					     pmp->ITG, pmp->SB[i] );
 		  setErrorMessage( 2, "E02IPM: IPM-main():" ,buf);
 		}

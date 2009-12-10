@@ -49,22 +49,22 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-  "GEMS-PSI v2.3.1: Controls and defaults for numeric modules",
-  {
-      1,  /* PC */  3,     /* PD */   3,   /* PRD */
-      1,  /* PSM  */ 150,  /* DP */   15,   /* DW */
-      -3, /* DT */     200,   /* PLLG */   1,  /* PE */
-      500,   /* IIM */
-      1e-5, /* DG */   1e-8,  /* DHB */  1e-12,  /* DS */
-      1e-4,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
-      1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
-      1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
-      1e-7, /* DFYs, */  1e-17,  /* DB */   0.7,   /* AG */
-      0.07,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-      0.001, /* GAS */   12.05,  /* DNS */   1e-9,  /* XwMin, */
-      1e-7,  /* ScMin, */  1e-20, /* DcMin, */   1e-10, /* PhMin, */
-      3e-5,  /* ICmin */   1e-7,  /* EPS */   1e-3,  /* IEPS */
-      1e-7,  /* DKIN  */ 0,  /* tprn */
+    "GEM-Selektor v3.0.0: Numerical flags, controls and thresholds",
+    {   // Typical default set (interim, 08.12.2009)
+        1,  /* PC */  2,     /* PD */   3,   /* PRD */
+        1,  /* PSM  */ 300,  /* DP */   30,   /* DW */
+        -2, /* DT */     200,   /* PLLG */   1,  /* PE */
+        1000,   /* IIM */
+        1e-5, /* DG */   1e-11,  /* DHB */  1e-13,  /* DS */
+        7e-7,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
+        1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
+        1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
+        1e-7, /* DFYs, */  1e-17,  /* DB */   -1.0,   /* AG */
+        -0.5,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+        0.001, /* GAS */   12.05,  /* DNS */   1e-9,  /* XwMin, */
+        1e-7,  /* ScMin, */  1e-23, /* DcMin, */   1e-13, /* PhMin, */
+        3e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+        1e-7,  /* DKIN  */ 0,  /* tprn */
   },
 }; // SPP_SETTING
 
@@ -554,13 +554,32 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     Alloc_internal(); // performance optimization 08/02/2007
 
     if(  pmp->pNP )     // Checking if this is SIA or AIA mode
-    {
+    {   //  Smart Initial Approximation mode
         for( j=0; j< pmp->L; j++ )
           pmp->X[j] = pmp->Y[j];
  //       pmp->IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
         ConCalc( pmp->X, pmp->XF, pmp->XFA);
  //       pmp->IT = pmp->ITaia;
+       if( pmp->FIs )
+       {
+           // Load activity coeffs for phases-solutions
+          long int k, jb, je=0;
+             for( k=0; k<pmp->FIs; k++ )
+         { // loop on solution phases
+            jb = je;
+            je += pmp->L1[k];
+            // Load activity coeffs for phases-solutions
+            for( j=jb; j< je; j++ )
+            {
+               pmp->lnGmo[j] = pmp->lnGam[j];
+               if( fabs( pmp->lnGam[j] ) <= 84. )
+      //                pmp->Gamma[j] = exp( pmp->lnGam[j] );
+                      pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
+               else pmp->Gamma[j] = 1.0;
+             } // j
+          }  // k
+       }
     }
     else // Simplex initial approximation to be done (AIA mode)
     {
@@ -568,35 +587,34 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     	{                           // cleaning work vectors
     		pmp->X[j] = pmp->Y[j] = pmp->lnGam[j] = pmp->lnGmo[j] = 0.0;
     		pmp->Gamma[j] = 1.0;
+                pmp->MU[j] = 0.;// SD 06/12/2009
+                pmp->XU[j] = 0.;// SD 06/12/2009
+                pmp->EMU[j] = 0.;// SD 06/12/2009
+                pmp->NMU[j] = 0.;// SD 06/12/2009
+                pmp->W[j] = 0.;// SD 06/12/2009
+                pmp->F[j] = 0.;// SD 06/12/2009
+                pmp->F0[j] = 0.;// SD 06/12/2009
     	}
     }
     CompG0Load(); // Loading thermodynamic data into MULTI structure
 
-    // multicomponent phases and mixing models
- if( pmp->FIs )
- {
-     long int k, jb, je=0;
-	 for( k=0; k<pmp->FIs; k++ )
-     { // loop on solution phases
-         jb = je;
-         je += pmp->L1[k];
-	 // Load activity coeffs for phases-solutions
-    	for( j=jb; j< je; j++ )
-        {
-            pmp->lnGmo[j] = pmp->lnGam[j];
-            if( fabs( pmp->lnGam[j] ) <= 84. )
-         	  pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-            else pmp->Gamma[j] = 1.0;
-        } // j
-     }  // k
+ 
      pmp->PD = abs(pa->p.PD);
 	 //           SolModLoad() and Phase scripts cannot be used here!
-    // Calculate Eh, pe, pH,and other stuff
+    
+    // recalculating kinetic restrictions for DC amounts
+     if( pmp->pULR && pmp->PLIM )
+          Set_DC_limits(  DC_LIM_INIT );
+    if( pmp->FIs )
+    {
+      long int k, jb, je=0;
+     // Calc Eh, pe, pH,and other stuff
     if( pmp->E && pmp->LO && pmp->pNP )
     {
     	ConCalc( pmp->X, pmp->XF, pmp->XFA);
     	IS_EtaCalc();
         if( pmp->Lads )  // Calling this only when sorption models are present
+
         {
     	   for( k=0; k<pmp->FIs; k++ )
     	   { // loop on solution phases
@@ -612,14 +630,14 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
         }
     }
     GammaCalc( LINK_TP_MODE);   // Computing DQF, FugPure and G wherever necessary
-                                       // Activity coeffs are restored from lnGmo
+                                      // Activity coeffs are restored from lnGmo
  }
-    // recalculate kinetic restrictions for DC quantities
-    if( pmp->pULR && pmp->PLIM )
-         Set_DC_limits(  DC_LIM_INIT );
+   else {  // no multi-component phases
+        pmp->PD = 0;
+  //      pmp->pIPN = 1;
+    }
 
 }
-
 //-------------------------------------------------------------------------
 // internal functions
 

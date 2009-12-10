@@ -384,12 +384,19 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #endif
      bool binary_f = false;
      gstring lst_in = ipmfiles_lst_name;
-     gstring Path = " ";
+     gstring Path = "";         // was " "   fixed 10.12.2009 by DK
 // Get path
 #ifdef _WIN32
       size_t pos = lst_in.rfind("\\");// HS keep this on windows
 #else      
-	  size_t pos = lst_in.rfind("/"); // HS keep this on linux
+      //#ifdef _WIN32
+            size_t pos = lst_in.rfind("\\");// HS keep this on windows
+      //#else
+            if( pos == npos )
+               pos = lst_in.rfind("/"); // HS keep this on linux
+            else
+               pos = max(pos, lst_in.rfind("/") );
+      //#endif
 #endif
 	  if( pos < npos )
       Path = lst_in.substr(0, pos+1);
@@ -412,7 +419,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
             binary_f = true;
          f_getline( f_lst, datachbr_fn, ' ');
       }
-
+ //     f_getline( f_lst, datachbr_fn, ' ');
       // Reading name of DCH_DAT file
       gstring dat_ch = Path + datachbr_fn;
 

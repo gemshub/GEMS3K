@@ -18,8 +18,10 @@ CC       = g++
 CXX      = g++
 LEX      = flex
 YACC     = yacc
-CFLAGS   = -g -DIPMGEMPLUGIN -DUse_qd_real 
-CXXFLAGS = -g -DIPMGEMPLUGIN -DUse_qd_real
+CFLAGS   = -g -DIPMGEMPLUGIN
+#  -DUse_qd_real 
+CXXFLAGS = -g -DIPMGEMPLUGIN
+#  -DUse_qd_real
 LEXFLAGS = 
 YACCFLAGS= -d
 INCPATH  =  -I.

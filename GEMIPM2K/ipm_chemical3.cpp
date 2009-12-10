@@ -25,152 +25,8 @@
 #include "m_param.h"
 #include "s_fgl.h"
 
-//--------------------------------------------------------------------------------
-// Calculation of surface charge densities on multi-surface sorption phase
-void TMulti::IS_EtaCalc()
-{
-    long int k, i, ist, isp, j=0, ja;
-    double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
 
-    for( k=0; k<pmp->FIs; k++ )
-    { // loop over phases
-        i=j+pmp->L1[k];
-        if( pmp->FIat > 0 )
-            for( ist=0; ist<pmp->FIat; ist++ )
-            {
-                pmp->XetaA[k][ist] = 0.0;
-                pmp->XetaB[k][ist] = 0.0;
-                pmp->XetaD[k][ist] = 0.0;     // added 12.09.05  KD
-            }
-
-        if( pmp->XF[k] <= pmp->DSM ||
-                (pmp->PHC[k] == PH_AQUEL && ( pmp->X[pmp->LO] <= pmp->XwMinM //  pa->p.XwMin
-                 || pmp->XF[k] <= pmp->DHBM ) )
-             || (pmp->PHC[k] == PH_SORPTION && pmp->XF[k] <= pmp->ScMinM ) ) //  pa->p.ScMin) )
-            goto NEXT_PHASE;
-
-        switch( pmp->PHC[k] )
-        {  // initialization according to the phase class
-        case PH_AQUEL:  // aqueous solution
-            pmp->Yw = pmp->XFA[k];
-            XetaW = 0.0;
-            break;
-        case PH_PLASMA:
-        case PH_SIMELT:
-            XetaS = 0.0;
-            break;
-        case PH_POLYEL:
-        case PH_SORPTION: // reserved
-            break;
-        default:
-            break;
-        }
-        for( ; j<i; j++ )
-        { // loop over DC for calculating total phase charge
-            if( pmp->X[j] <= pmp->lowPosNum*100. )
-                continue; // Skipping too low concentrations
-            ja = j - ( pmp->Ls - pmp->Lads );
-
-            switch( pmp->DCC[j] ) // select expressions for species classes
-            {
-            case DC_AQ_ELECTRON:    case DC_AQ_PROTON:    case DC_AQ_SPECIES:  case DC_AQ_SURCOMP:
-                XetaW += pmp->X[j]*pmp->EZ[j];
-            case DC_AQ_SOLVCOM:    case DC_AQ_SOLVENT:
-                break;
-            case DC_PEL_CARRIER:  case DC_SUR_MINAL:
-            case DC_SUR_CARRIER: // charge of carrier: ???????
-                                 // pmp->XetaA[k] += pmp->X[j]*pmp->EZ[j];
-                break;
-                // surface species
-            case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2:  case DC_SSC_A3:
-            case DC_SSC_A4: case DC_WSC_A0: case DC_WSC_A1:  case DC_WSC_A2:
-            case DC_WSC_A3: case DC_WSC_A4:
-            case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:
-            case DC_IESC_A:
-            case DC_IEWC_B: // Get ist - index of surface type
-                            // and  isp - index of surface plane
-                ist = pmp->SATX[ja][XL_ST]; // / MSPN;
-                isp = pmp->SATX[ja][XL_SP]; // % MSPN;
-                        // isp  index of outer surface charge allocation  (new)
-                // Getting charge distribution information
-                CD0 = pmp->MASDJ[ja][PI_CD0];
-                    // species charge that goes into 0 plane
-                CDb = pmp->MASDJ[ja][PI_CDB];
-          // species charge that goes into 1, 2 or 3 plane according to isp value
-                Ez = pmp->EZ[j];  // take formula charge as default
-                if( !isp )
-                { // This is the 0 (A) plane only - no charge distribution!
-                    if( fabs( CD0 ) > 1e-20 ) // Only if 0-plane charge is given in the table
-                       Ez = CD0;
-                    pmp->XetaA[k][ist] += pmp->X[j]*Ez;
-                }
-                else
-                { // The charge distribution (CD) is specified
-                    if( pmp->SCM[k][ist] == SC_MTL )
-                    {   // Modified TL: Robertson, 1997; also XTLM Kulik 2002
-//                        if( fabs( CDb ) > 1e-20 )  // Doubtful...
-//                           Ez = CDb;
-                        pmp->XetaB[k][ist] += pmp->X[j]*CDb;
-                    }
-                    else if( pmp->SCM[k][ist] == SC_TLM )
-                    {
-// New CD version of TLM Hayes & Leckie, 1987  added 25.10.2004
-                        pmp->XetaB[k][ist] += pmp->X[j] * CDb;
-                        pmp->XetaA[k][ist] += pmp->X[j] * CD0;
-                    }
-                    else if( pmp->SCM[k][ist] == SC_3LM )
-                    {
-// CD 3-layer model (Hiemstra e.a. 1996) added 12.09.2005 by KD
-                        if( isp == 1 )
-                            pmp->XetaB[k][ist] += pmp->X[j] * CDb;
-                        if( isp == 2 )
-                            pmp->XetaD[k][ist] += pmp->X[j] * CDb;
-                        pmp->XetaA[k][ist] += pmp->X[j] * CD0;
-                    }
-                    else if( pmp->SCM[k][ist] == SC_BSM )
-                    { // Basic Stern model Christl & Kretzschmar, 1999
-// New CD version of BSM  added 25.10.2004
-                        pmp->XetaB[k][ist] += pmp->X[j] * CDb;
-                        pmp->XetaA[k][ist] += pmp->X[j] * CD0;
-                    }
-                    else if( pmp->SCM[k][ist] == SC_MXC )
-                    { // BSM for ion exchange on perm.charge surface
-                        if( fabs( CDb ) > 1e-20 )  // Doubtful...
-                           Ez = CDb;
-                        pmp->XetaB[k][ist] += pmp->X[j]*Ez;
-                        pmp->XetaA[k][ist] += pmp->X[j]*CD0;  // added for testing
-                    }
-                    else if( pmp->SCM[k][ist] == SC_CCM )
-                    { // Added 25.07.03 to implement the extended CCM Nilsson ea 1996
-// New CD version of BSM  added 25.10.2004
-                           pmp->XetaB[k][ist] += pmp->X[j] * CDb;
-                           pmp->XetaA[k][ist] += pmp->X[j] * CD0;
-                    }
-                 //    case DC_SUR_DL_ION:  XetaS += pmp->X[j]*pmp->EZ[j];
-                }
-                break;
-            default:
-                XetaS += pmp->X[j]*pmp->EZ[j];
-                break;
-            }
-        }   // j
-        // compare pmp->Xetaf[k]+pmp->XetaA[k]+pmp->XetaB[k] and XetaS
-        // Test XetaW
-NEXT_PHASE:
-        j = i;
-        if( pmp->LO && !k && pmp->FIat > 0 )
-        {
-            pmp->XetaA[k][0] = XetaW;
-            pmp->XetaB[k][0] = XetaW;
-            pmp->XetaD[k][0] = XetaW;
-        }
-        if( (pmp->PHC[k] == PH_PLASMA || pmp->PHC[k] == PH_SIMELT)
-                && pmp->FIat)
-            pmp->XetaA[k][0] = XetaS;
-    }  // k
-}
-
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Linking DOD for executing Phase mixing model scripts
 #ifdef IPMGEMPLUGIN
    void TMulti::pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ )
@@ -339,11 +195,141 @@ void TMulti::SetSmoothingFactor( long int mode )
 //    return TF;
 }
 
-static double ICold=0.;
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//   New function for converting internal lnGam[j] value into an external (phase-scale-specific)
+//      Gamma[j] if DirFlag = 0 or external into internal value if DirFlag = 1
+//  Returns the respectively corrected external gamma activity coefficient or internal lnGam
+//  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
+//    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components???????????)
+//
+double
+TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
+{
+    double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
+//    double NonLogTermDS = 0., NonLogTermD = 0., DsurT = 0.,
+//    SPP_SETTING *pa = &TProfil::pm->pa;
 
+    switch( pmp->PHC[k] )
+    {
+      case PH_AQUEL:
+           if( pmp->XF[k] && pmp->XFA[k] )
+           {
+                NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];
+                NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
+           }
+           break;
+      case PH_GASMIX:  case PH_FLUID:   case PH_PLASMA:   case PH_SIMELT:
+      case PH_HCARBL:  case PH_SINCOND:  case PH_SINDIS:  case PH_LIQUID:
+           break;
+      case PH_POLYEL:
+      case PH_SORPTION: // only sorbent end-members!
+           if( pmp->XF[k] && pmp->XFA[k] )
+           {
+              for( long int jj=jb; jj<je; jj++ )
+              {
+                if( pmp->DCC[jj] == DC_SUR_CARRIER ||
+                    pmp->DCC[jj] == DC_SUR_MINAL || pmp->DCC[jj] == DC_PEL_CARRIER )
+                    MMC += pmp->MM[jj]*pmp->X[jj]/pmp->XFA[k];
+                    // Weighted-average sorbent mole mass
+              }
+              NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];  // Also for sorption phases
+              NonLogTermS = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
+//    	      DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+//    	      NonLogTermD = - DsurT/( 1.0+DsurT );  // seems obsolete 05.12.2009
+//    	      NonLogTermDS = DsurT - DsurT/(1+DsurT);
+           }
+           break;
+       default:
+          break; // Phase class code error!
+    }
+
+        if( DirFlag == 0 )
+        {	 // Converting lnGam[j] into Gamma[j]
+                if( !pmp->X[j] )
+                        return 1.;
+                double Gamma = 1.;
+                double lnGamS = pmp->lnGam[j];
+
+            switch( pmp->DCC[j] )
+            { // Aqueous electrolyte
+              case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
+// NonLogTerm =0.;
+                lnGamS += NonLogTerm;    // Correction by asymmetry term
+                break;
+                // calculate molar mass of solvent
+            case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
+                lnGamS += NonLogTermW;
+                break;
+            case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:
+            case DC_GAS_H2: case DC_GAS_N2:
+                break;
+            case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR:
+            break;
+                // non-electrolyte condensed mixtures
+            case DC_SCP_CONDEN: case DC_SUR_MINAL:
+                break;
+            case DC_SUR_CARRIER: case DC_PEL_CARRIER:
+                lnGamS += NonLogTermS;
+ //               lnGamS += NonLogTermS + NonLogTermDS;
+                break;
+                // Sorption phases
+            case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
+            case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
+            case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
+            case DC_IEWC_B:
+                lnGamS += NonLogTerm;
+ //               lnGamS += NonLogTerm + NonLogTermD;
+                break;
+            default:
+                break;
+            }
+        Gamma = exp( lnGamS );
+            return Gamma;
+        }
+        else { // Converting Gamma[j] into lnGam[j]
+                if( !pmp->X[j] )
+                        return 0.;
+                double Gamma = pmp->Gamma[j];
+                double lnGam = 0.0;  // Cleanup by DK on 5.12.2009
+                if( Gamma != 1.0 && Gamma > pmp->lowPosNum )
+                    lnGam = log( Gamma );
+                switch( pmp->DCC[j] )
+        { // Aqueous electrolyte
+                   case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
+// NonLogTerm =0.;
+                        lnGam -= NonLogTerm;  // Correction by asymmetry term
+                        break;
+                   case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
+                        lnGam -= NonLogTermW;
+                        break;
+               case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
+                                break;
+                   case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR:
+                        break;
+               case DC_SCP_CONDEN: case DC_SUR_MINAL:
+                            break;
+               case DC_SUR_CARRIER: case DC_PEL_CARRIER:
+                        lnGam -= NonLogTermS;
+//                      lnGam -= NonLogTermS + NonLogTermDS;   // seems obsolete 05.12.2009
+                            break;
+                                // Sorption phases
+               case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
+                   case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
+                   case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
+                   case DC_IEWC_B:
+                        lnGam -= NonLogTerm;
+//                      lnGam -= NonLogTerm + NonLogTermD;  // seems obsolete 05.12.2009
+                        break;
+                    default:
+                        break;
+                }
+            return lnGam;
+        }
+}
 
 //--------------------------------------------------------------------------------
+static double ICold=0.;
 // Main call point for calculation of DC activity coefficients (lnGam vector)
 // Controls various built-in models, as well as generic Phase script calculation
 //
@@ -357,11 +343,10 @@ static double ICold=0.;
 //    	or activity coefficients (for detecting bad PIA case)
 // LINK_PHP_MODE - calculation of integral phase properties after GEMIPM has converged
 //		needs to be implemented
-
 long int
 TMulti::GammaCalc( long int LinkMode  )
 {
-    long int k, j, jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
+    long int k, j, jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0, ja;
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
@@ -377,13 +362,16 @@ TMulti::GammaCalc( long int LinkMode  )
     case LINK_FIA_MODE: // Initial approximation mode
         if( pmp->LO )
         {
-            pmp->GWAT = H2O_mol_to_kg;
-            pmp->XF[0] = pmp->GWAT;
-            for( j=0; j<pmp->L; j++ )
-                if( pmp->X[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )
+            if( pmp->XF[0] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+            {                           // warm start case (after simplex?)
+               pmp->GWAT = H2O_mol_to_kg;
+               pmp->XF[0] = pmp->GWAT;
+               for( j=0; j<pmp->L; j++ )
+                 if( pmp->X[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )
                     pmp->X[j] = pmp->DFYaqM; // pa->p.DFYaq;
-            ConCalc( pmp->X, pmp->XF, pmp->XFA );
-            // pmp->IC = max( pmp->MOL, pmp->IC );
+               ConCalc( pmp->X, pmp->XF, pmp->XFA );
+               // pmp->IC = max( pmp->MOL, pmp->IC );
+            }
             pmp->IC = 0.0;  // Important for the simplex FIA reproducibility
             if( pmp->E && pmp->FIat > 0 )
             {
@@ -393,8 +381,10 @@ TMulti::GammaCalc( long int LinkMode  )
                  if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
                    for( ist=0; ist<pmp->FIat; ist++ ) // loop over surface types
                    {
+                     pmp->XFTS[k][ist] = 0.0;  //SD 06/12/2009
                      pmp->XetaA[k][ist] = 0.0;
                      pmp->XetaB[k][ist] = 0.0;
+                     pmp->XetaD[k][ist] = 0.0; // SD 06/12/2009
                      pmp->XpsiA[k][ist] = 0.0;
                      pmp->XpsiB[k][ist] = 0.0;
                      pmp->XpsiD[k][ist] = 0.0;
@@ -410,6 +400,15 @@ TMulti::GammaCalc( long int LinkMode  )
                 pmp->lnGam[j] = pmp->lnGmf[j]; // setting up fixed act.coeff. for simplex IA
             else pmp->lnGam[j] = 0.;   // + pmp->lnGmm[j];
             pmp->Gamma[j] = 1.;
+            // Cleaning vectors lnSAC SD 06/12/2009
+            ja = (short)(j-(pmp->Ls-pmp->Lads));
+            if( pmp->lnSAC && ja < pmp->Lads && ja >= 0 )
+            {
+                pmp->lnSAC[ja][0] = 0.;
+                pmp->lnSAC[ja][1] = 0.;
+                pmp->lnSAC[ja][2] = 0.;
+                pmp->lnSAC[ja][3] = pmp->DUL[j]; // Copy of DUL for SACT refining
+            }
         }
         break;      // added as bugfix 04.03.2008  DK
 
@@ -448,7 +447,7 @@ TMulti::GammaCalc( long int LinkMode  )
             switch( pmp->PHC[k] )
             {
                case PH_AQUEL:
-			   case PH_LIQUID:
+               case PH_LIQUID:
                case PH_SINCOND:
                case PH_SINDIS:
                case PH_HCARBL:
@@ -773,8 +772,8 @@ END_LOOP:
             	   // pmp->Gamma[j] = exp( LnGam );
             	  pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
                else pmp->Gamma[j] = 1.0;
-               pmp->F0[j] = Ej_init_calc( 0.0, j, k );
-               pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
+//               pmp->F0[j] = Ej_init_calc( 0.0, j, k );          // Temporary for debugging 07.12.2009
+//               pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
         	}
         }
         else if(LinkMode == LINK_FIA_MODE )  // Bugfix for reproducibility 23.07.09 DK
@@ -786,34 +785,34 @@ END_LOOP:
         }
         else
         { // Real mode for activity coefficients
-          double lnGamG;
-	      for( j=jb; j<je; j++ )
-          {
-if( pmp->DCC[j] == DC_AQ_SURCOMP )  // Workaround for aqueous surface complexes DK 22.07.09
-	pmp->lnGam[j] = 0.0;
-	    	lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
+           double lnGamG;
+           for( j=jb; j<je; j++ )
+           {
+             if( pmp->DCC[j] == DC_AQ_SURCOMP )  // Workaround for aqueous surface complexes DK 22.07.09
+                pmp->lnGam[j] = 0.0;
+             lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
           	// if( fabs( 1.0-pmp->Gamma[j] ) > 1e-9
           	// && pmp->Gamma[j] > 3.3e-37 && pmp->Gamma[j] < 3.03e+36 )   // > 1e-35 before 26.02.08
           	// pmp->lnGam[j] += log( pmp->Gamma[j] );
           	// if( fabs( lnGamG ) > 1e-9 )
           	// pmp->lnGam[j] += lnGamG;
-            LnGam = pmp->lnGam[j];
-            if( fabs( lnGamG ) > 1e-9 )
+             LnGam = pmp->lnGam[j];
+             if( fabs( lnGamG ) > 1e-9 )
             	LnGam += lnGamG;
-            pmp->lnGmo[j] = LnGam;
-            if( /*fabs( LnGam ) > 1e-9 &&*/ fabs( LnGam ) < 84. )   // before 26.02.08: < 42.
+             pmp->lnGmo[j] = LnGam;
+             if( /*fabs( LnGam ) > 1e-9 &&*/ fabs( LnGam ) < 84. )   // before 26.02.08: < 42.
             	// pmp->Gamma[j] = exp( LnGam );
           	    pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-            else pmp->Gamma[j] = 1.0;
-            pmp->F0[j] = Ej_init_calc( 0.0, j, k );
-            pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
-          }
+             else pmp->Gamma[j] = 1.0;
+             pmp->F0[j] = Ej_init_calc( 0.0, j, k );
+             pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
+           }
         }
     }  // k - end loop over phases
     //  if( wn[W_EQCALC].status )
     //  aSubMod[MD_EQCALC]->ModUpdate("PM_ipms   EqCalc() converged");
     if( statusGC )
-        	return statusGC;
+        return statusGC;
     if( statusSACT )
     	return statusSACT;
     return statusGam;

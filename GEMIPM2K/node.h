@@ -341,7 +341,7 @@ void GEM_set_MT(
     double  *p_mPS,  // Total mass of multicomponent phase (carrier),kg [nPSb]   -      -       +     +
     double  *p_bPS,  // Bulk compositions of phases  [nPSb][nICb]                -      -       +     +
     double  *p_xPA,  //Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -       +     +
-    double  *p_aPH 
+    double  *p_aPH   // Specific surface areas of phases
  );
 
 #endif

@@ -24,71 +24,6 @@
 #include "m_param.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating demo partial pressures of gases (works only in GEMS-PSI)
-//
-void TMulti::GasParcP()
-{
-#ifndef IPMGEMPLUGIN
-
-	long int k,  i, jj=0;
-    long int jb, je, j;
-
-    if( !pmp->PG )
-        return;
-
-  char (*SMbuf)[MAXDCNAME] =
-      (char (*)[MAXDCNAME])aObj[ o_w_tprn].Alloc( pmp->PG, 1, MAXDCNAME );
-  pm.Fug = (double *)aObj[ o_wd_fug].Alloc( pm.PG, 1, D_ );
-  pm.Fug_l = (double *)aObj[ o_wd_fugl].Alloc( pm.PG, 1, D_ );
-  pm.Ppg_l = (double *)aObj[ o_wd_ppgl].Alloc( pm.PG, 1, D_ );
-
-    for( k=0, je=0; k<pmp->FIs; k++ ) // phase
-    {
-        jb = je;
-        je = jb+pmp->L1[k];
-        if( pmp->PHC[k] == PH_GASMIX || pmp->PHC[k] == PH_PLASMA
-           || pmp->PHC[k] == PH_FLUID )
-        {
-            for( j=jb; j<je; j++,jj++ )
-            {  // fixed 02.03.98 DK
-
-            	copyValues(SMbuf[jj], pmp->SM[j], MAXDCNAME );
-                pmp->Fug_l[jj] = -(pmp->G0[j]+pmp->GEX[j]);
-                if( pmp->Pc > 1e-9 )
-                    pmp->Fug_l[jj] += log(pmp->Pc);
-                for( i=0; i<pmp->N; i++ )
-                    pmp->Fug_l[jj] += *(pmp->A+j*pmp->N+i) * pmp->U[i];
-                if( pmp->Fug_l[jj] > -37. && pmp->Fug_l[jj] < 16. )
-                    pmp->Fug[jj] = exp( pmp->Fug_l[jj] );
-                else  pmp->Fug[jj] = 0.0;
-                // Partial pressure
-                pmp->Ppg_l[jj] = pmp->Fug_l[jj] - pmp->lnGam[j];
-                pmp->Fug_l[jj] *= .43429448;
-                pmp->Ppg_l[jj] *= .43429448;
-            }
-            // break;
-        }
-    }
-#endif
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of pH via activities of H2O and OH-
-// Suggested by V.A.Sinitsyn, Apr 7, 1997
-// Not used !!! SD
-// double TMulti::pH_via_hydroxyl( double x[], double Factor, long int j)
-// {
-//    double lnaH;
-//    long int jwa, jhy;
-//    jwa = j+1;
-//    jhy = j-1;                      // Dangerous !
-//    lnaH = - pmp->G0[jhy] + 4.016534 + pmp->G0[jwa] + pmp->lnGam[jwa]
-//           - pmp->lnGam[jhy] - log( x[jhy]*Factor );
-//    x[j] = exp( lnaH - pmp->lnGam[j] ) / Factor;
-//    return (-lnaH *ln_to_lg);
-// }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculating bulk stoichiometry of a multicomponent phase
 //
 void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
@@ -149,8 +84,8 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
               double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
     long int j, ii, i;
-    double Muj, DsurT, SPmol, lnFmol=4.016535;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    double Muj, /* DsurT=0.0,*/ SPmol, lnFmol=4.016535;
+//    SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( pmp->PHC[0] == PH_AQUEL )
     {  // mole fraction to molality conversion
@@ -166,7 +101,6 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
 //        if( X[j] <= pmp->lowPosNum )
         if( X[j] <= pmp->DcMinM )
         { // zeroing off
-//            pmp->Wx[j] = pmp->lowPosNum; // 0.0;  debugging 29.11.05
             pmp->Wx[j] = 0.0;
             pmp->VL[j] = log( pmp->lowPosNum );
             pmp->Y_w[j] = 0.0;
@@ -176,42 +110,37 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
             switch( pmp->DCC[j] ) // choice of expressions
             {                      // since 10.03.2008, changed the concept of DualTh activity
                case DC_SCP_CONDEN: // to: ln_a_j = Mju_j - g0_j (removed pmp->GEX everywhere)  DK, TW
-                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* -pmp->GEX[j] */);
+                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // -pmp->GEX[j]
                     break;
                case DC_AQ_ELECTRON: case DC_AQ_PROTON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
-                    pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] /* -pmp->GEX[j] */
-                                      /* + Dsur */ + lnFmol);
+                    pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] + lnFmol ); // -pmp->GEX[j] + Dsur
                     break;
                case DC_AQ_SOLVENT: case DC_AQ_SOLVCOM:
-                    pmp->Y_la[j] = ln_to_lg* (Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                      ); //  + Dsur - 1. + 1. / ( 1.+Dsur ) );
+                    pmp->Y_la[j] = ln_to_lg* (Muj - pmp->G0[j] ); // - pmp->GEX[j] + Dsur - 1. + 1. / ( 1.+Dsur )
                     break;
-               case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   /* gases */
+               case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   // gases
                case DC_GAS_H2: case DC_GAS_N2:
-                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
+                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j]
                     if( pmp->Pc > 1e-9 )
                         pmp->Y_la[j] += log10( pmp->Pc );
                     break;
                case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR:
-                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
+                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j]
                     break;
                case DC_SUR_GROUP:
-                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                       /*  + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
+//                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] + lnFmol ); // - pmp->GEX[j] + Dsur + DsurT/( 1.0+DsurT )
                     break;
                case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3:
                case DC_SSC_A4: case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2:
                case DC_WSC_A3: case DC_WSC_A4: case DC_SUR_COMPLEX:
                case DC_SUR_IPAIR: case DC_IESC_A: case DC_IEWC_B:
-                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                       /*  + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
-                    break; // Coulombic term needs to be considered !!!!!!!!!!
+//                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] + lnFmol ); // - pmp->GEX[j] + Dsur + DsurT/( 1.0+DsurT )
+                    break;
                case DC_PEL_CARRIER: case DC_SUR_MINAL: case DC_SUR_CARRIER: // sorbent
-                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                      /* + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT) */ );
+//                    DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+                    pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j] + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT)
                     break;
                default:
                     break; // error in DC class code
@@ -234,7 +163,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
             else pmp->Y_m[j] = 0.0;
             pmp->Y_w[j] = // mass % of the system
                 1e2 * X[j] * pmp->MM[j] / pmp->MBX;
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j]
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
             break;
         case DC_AQ_ELECTRON:
@@ -243,58 +172,53 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
             pmp->Y_w[j] = 0.0;
             break;
         case DC_AQ_PROTON:  // in molal scale!
-            pmp->pH = -ln_to_lg*(Muj-pmp->G0[j] /* -pmp->GEX[j] + Dsur */ + lnFmol );
+            pmp->pH = -ln_to_lg*(Muj-pmp->G0[j] + lnFmol ); // -pmp->GEX[j] + Dsur
         case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
             SPmol = X[j]*Factor;  // molality
-            pmp->IC +=  // increment to effective molal ionic strength
-                0.5* SPmol *(pmp->EZ[j]*pmp->EZ[j]);
+            pmp->IC += 0.5* SPmol *(pmp->EZ[j]*pmp->EZ[j]); // increment to effective molal ionic strength
 //    pmp->FVOL[k] += pmp->Vol[j]*SPmol;  Error - found by B.Lothenbach 03.02.03
           pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 04.02.03 KD
             pmp->Y_m[j] = SPmol;
-            pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] /* -pmp->GEX[j] */
-                           /* + Dsur */ + lnFmol); //    Yes - Without Dsur!
+            pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] + lnFmol ); // -pmp->GEX[j] + Dsur
             pmp->Y_w[j] = 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[k];
 //  Optimized for performance - calculation inline
             for( i=arrL[j]; i<arrL[j+1]; i++ )
             {  ii = arrAN[i];
                if( ii>= pmp->NR )
                 continue;
-                pmp->IC_m[ii] += SPmol* a(j,ii);
-                pmp->IC_wm[ii] += X[j]* a(j,ii);  // moles of element in aq spec
+                pmp->IC_m[ii] += SPmol* a(j,ii);  // total aqueous molality
+                pmp->IC_wm[ii] += X[j]* a(j,ii);  // total aqueous mass concentration
             }
             break;
-        case DC_AQ_SOLVENT: // mole fractions in solvent
+        case DC_AQ_SOLVENT: // mole fractions of solvent
         case DC_AQ_SOLVCOM:
             pmp->Y_m[j] = X[j]/XFA[k];
             pmp->Y_w[j] = 1e3*X[j]*pmp->MM[j]/pmp->FWGT[k];
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
-            pmp->Y_la[j] = ln_to_lg* (Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                                       /* + Dsur - 1. + 1. / ( 1.+Dsur ) */ );
+            pmp->Y_la[j] = ln_to_lg* (Muj - pmp->G0[j] ); // - pmp->GEX[j] + Dsur - 1. + 1. / ( 1.+Dsur ) */ );
             break;
         case DC_GAS_COMP:
         case DC_GAS_H2O:
         case DC_GAS_CO2:   // gases
-        case DC_GAS_H2:    // volume
+        case DC_GAS_H2:
         case DC_GAS_N2:
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j]
             if( pmp->Pc > 1e-9 )
                 pmp->Y_la[j] += log10( pmp->Pc );
             break;
         case DC_SOL_IDEAL:
-        case DC_SOL_MINOR:   // volume
+        case DC_SOL_MINOR:   //solution end member
         case DC_SOL_MAJOR:
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */ );
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j]
             break;
-            // adsorption: Simplified by DK 11.01.00
-        case DC_SUR_GROUP:
+        case DC_SUR_GROUP: // adsorption:
             pmp->Y_m[j] = X[j]*Factor; // molality
             pmp->Y_w[j] =  // mg/g sorbent
                 1e3 * X[j] * pmp->MM[j] / (MMC*XFA[k]);
-            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                               /*   + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
+//            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] + lnFmol ); // - pmp->GEX[j] + Dsur + DsurT/( 1.0+DsurT
             pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 11.03.2008 KD
             break;
         case DC_SSC_A0:
@@ -314,9 +238,8 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
             pmp->Y_m[j] = X[j]*Factor; // molality
             pmp->Y_w[j] =  // mg/g sorbent
                 1e3 * X[j] * pmp->MM[j] / (MMC*XFA[k]);
-            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                              /*   + Dsur + DsurT/( 1.0+DsurT ) */ + lnFmol );
+//           DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] + lnFmol ); // - pmp->GEX[j] + Dsur + DsurT/( 1.0+DsurT )
             pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 11.03.2008   KD
             break;
         case DC_PEL_CARRIER:
@@ -328,9 +251,8 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
             if( pmp->YF[0] >= pmp->DSM )
               pmp->Y_w[j] = // mg of sorbent per kg aq solution
                 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[0];
-            DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] /* - pmp->GEX[j] */
-                         /*  + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT) */ );
+//           DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
+            pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j] + Dsur - 1. + 1./(1.+Dsur) - DsurT + DsurT/(1+DsurT)
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
             break;
         default:
@@ -352,8 +274,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
     double Factor=0.0, Dsur=0.0, MMC=0.0;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-   // Kostya: debug calculating x from dual solution
-      if( pmp->Ls < 2 || !pmp->FIs )
+    if( pmp->Ls < 2 || !pmp->FIs )
         return;
 
     for( i=0; i< pmp->N; i++ )
@@ -373,9 +294,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
         pmp->FVOL[k] = 0.0;
         //   Dsur = 0.0;
 
-      if( XF[k] > pmp->DSM &&
-        !( pmp->PHC[k] == PH_SORPTION && XFA[k] <= pa->p.ScMin ))
-       phase_bfc( k, j );
+        if( XF[k] > pmp->DSM && !( pmp->PHC[k] == PH_SORPTION && XFA[k] <= pa->p.ScMin ))
+           phase_bfc( k, j );
 
         if( k >= pmp->FIs || pmp->L1[k] == 1 )
         { // this is a single- component phase
@@ -385,7 +305,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                     pmp->Y_m[j] = 0.0;
                 pmp->Y_w[j] = 0.0;
                 pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
-                pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] /* -pmp->GEX[j] */ );
+                pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] ); // -pmp->GEX[j]
                 pmp->Fx[j] *= pmp->RT;     // el-chem potential
                 goto NEXT_PHASE;
             }
@@ -396,7 +316,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
             pmp->Y_w[j] = // mass % in the system
                 1e2 * X[j] * pmp->MM[j] / pmp->MBX;
             pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
-            pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] /* - pmp->GEX[j] */ );
+            pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] ); // - pmp->GEX[j]
             pmp->Fx[j] *= pmp->RT;     // el-chem potential
             pmp->FWGT[k] += X[j] * pmp->MM[j];
             pmp->FVOL[k] += X[j] * pmp->Vol[j];
@@ -438,15 +358,13 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
             goto NEXT_PHASE;
         }
         // calculate bulk stoichiometry of a multicomponent phase
-        phase_bcs( pmp->N, pmp->L1[k], j, pmp->A+j*pmp->N, pmp->X+j,
-                   pmp->BF+k*pmp->N );
+        phase_bcs( pmp->N, pmp->L1[k], j, pmp->A+j*pmp->N, pmp->X+j, pmp->BF+k*pmp->N );
 
         switch( pmp->PHC[k] )
         {
         case PH_AQUEL:
-            MMC = 0.0; // molar mass of carrier */
-            //                     Dsur = XF[k] - XFA[k];
-            Dsur = XFA[k]/XF[k] - 1.0; // Asymm.corr. - aq only!
+            MMC = 0.0; // molar mass of carrier
+//            Dsur = XFA[k]/XF[k] - 1.0; // Asymm.corr. - aq only!
 //            if( XFA[k] > pmp->lowPosNum )
             if( XFA[k] > pmp->XwMinM )
             {
@@ -461,7 +379,6 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 Factor = 1000./MMC/XFA[k]; // molality
             else Factor = 0.0;
             pmp->IC=0.;
-            // Factor = 0.5*55.508373/pmp->Yw;
             pmp->pe = ln_to_lg* pmp->U[pmp->N-1];
             pmp->Eh = 0.000086 * pmp->U[pmp->N-1] * pmp->T;
         case PH_GASMIX:
@@ -506,8 +423,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 }
             }
             pmp->logYFk = log(pmp->YFk);
-            Dsur = XFA[k]/XF[k] - 1.0;  // Also for sorption phases
-            if( Dsur <= -1.0 ) Dsur = -0.999999; // Debugging!!!!!
+//            Dsur = XFA[k]/XF[k] - 1.0;  // Also for sorption phases
+//            if( Dsur <= -1.0 ) Dsur = -0.999999;
             break;
         default:
              return; // Phase class code error!
@@ -537,6 +454,154 @@ NEXT_PHASE:
 
 }
 
+
+//--------------------------------------------------------------------------------
+// Calculation of surface charge densities on multi-surface sorption phase
+void TMulti::IS_EtaCalc()
+{
+    long int k, i, ist, isp, j=0, ja;
+    double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
+//    SPP_SETTING *pa = &TProfil::pm->pa;
+
+    for( k=0; k<pmp->FIs; k++ )
+    { // loop over phases
+        i=j+pmp->L1[k];
+        if( pmp->FIat > 0 )
+            for( ist=0; ist<pmp->FIat; ist++ )
+            {
+                pmp->XetaA[k][ist] = 0.0;
+                pmp->XetaB[k][ist] = 0.0;
+                pmp->XetaD[k][ist] = 0.0;     // added 12.09.05  KD
+            }
+
+        if( pmp->XF[k] <= pmp->DSM ||
+                (pmp->PHC[k] == PH_AQUEL && ( pmp->X[pmp->LO] <= pmp->XwMinM //  pa->p.XwMin
+                 || pmp->XF[k] <= pmp->DHBM ) )
+             || (pmp->PHC[k] == PH_SORPTION && pmp->XF[k] <= pmp->ScMinM ) ) //  pa->p.ScMin) )
+            goto NEXT_PHASE;
+
+        switch( pmp->PHC[k] )
+        {  // initialization according to the phase class
+        case PH_AQUEL:  // aqueous solution
+            pmp->Yw = pmp->XFA[k];
+            XetaW = 0.0;
+            break;
+        case PH_PLASMA:
+        case PH_SIMELT:
+            XetaS = 0.0;
+            break;
+        case PH_POLYEL:
+        case PH_SORPTION: // reserved
+            break;
+        default:
+            break;
+        }
+        for( ; j<i; j++ )
+        { // loop over DC for calculating total phase charge
+            if( pmp->X[j] <= pmp->lowPosNum*100. )
+                continue; // Skipping too low concentrations
+            ja = j - ( pmp->Ls - pmp->Lads );
+
+            switch( pmp->DCC[j] ) // select expressions for species classes
+            {
+            case DC_AQ_ELECTRON:    case DC_AQ_PROTON:    case DC_AQ_SPECIES:  case DC_AQ_SURCOMP:
+                XetaW += pmp->X[j]*pmp->EZ[j];
+            case DC_AQ_SOLVCOM:    case DC_AQ_SOLVENT:
+                break;
+            case DC_PEL_CARRIER:  case DC_SUR_MINAL:
+            case DC_SUR_CARRIER: // charge of carrier: ???????
+                                 // pmp->XetaA[k] += pmp->X[j]*pmp->EZ[j];
+                break;
+                // surface species
+            case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2:  case DC_SSC_A3:
+            case DC_SSC_A4: case DC_WSC_A0: case DC_WSC_A1:  case DC_WSC_A2:
+            case DC_WSC_A3: case DC_WSC_A4:
+            case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:
+            case DC_IESC_A:
+            case DC_IEWC_B: // Get ist - index of surface type
+                            // and  isp - index of surface plane
+                ist = pmp->SATX[ja][XL_ST]; // / MSPN;
+                isp = pmp->SATX[ja][XL_SP]; // % MSPN;
+                        // isp  index of outer surface charge allocation  (new)
+                // Getting charge distribution information
+                CD0 = pmp->MASDJ[ja][PI_CD0];
+                    // species charge that goes into 0 plane
+                CDb = pmp->MASDJ[ja][PI_CDB];
+          // species charge that goes into 1, 2 or 3 plane according to isp value
+                Ez = pmp->EZ[j];  // take formula charge as default
+                if( !isp )
+                { // This is the 0 (A) plane only - no charge distribution!
+                    if( fabs( CD0 ) > 1e-20 ) // Only if 0-plane charge is given in the table
+                       Ez = CD0;
+                    pmp->XetaA[k][ist] += pmp->X[j]*Ez;
+                }
+                else
+                { // The charge distribution (CD) is specified
+                    if( pmp->SCM[k][ist] == SC_MTL )
+                    {   // Modified TL: Robertson, 1997; also XTLM Kulik 2002
+//                        if( fabs( CDb ) > 1e-20 )  // Doubtful...
+//                           Ez = CDb;
+                        pmp->XetaB[k][ist] += pmp->X[j]*CDb;
+                    }
+                    else if( pmp->SCM[k][ist] == SC_TLM )
+                    {
+// New CD version of TLM Hayes & Leckie, 1987  added 25.10.2004
+                        pmp->XetaB[k][ist] += pmp->X[j] * CDb;
+                        pmp->XetaA[k][ist] += pmp->X[j] * CD0;
+                    }
+                    else if( pmp->SCM[k][ist] == SC_3LM )
+                    {
+// CD 3-layer model (Hiemstra e.a. 1996) added 12.09.2005 by KD
+                        if( isp == 1 )
+                            pmp->XetaB[k][ist] += pmp->X[j] * CDb;
+                        if( isp == 2 )
+                            pmp->XetaD[k][ist] += pmp->X[j] * CDb;
+                        pmp->XetaA[k][ist] += pmp->X[j] * CD0;
+                    }
+                    else if( pmp->SCM[k][ist] == SC_BSM )
+                    { // Basic Stern model Christl & Kretzschmar, 1999
+// New CD version of BSM  added 25.10.2004
+                        pmp->XetaB[k][ist] += pmp->X[j] * CDb;
+                        pmp->XetaA[k][ist] += pmp->X[j] * CD0;
+                    }
+                    else if( pmp->SCM[k][ist] == SC_MXC )
+                    { // BSM for ion exchange on perm.charge surface
+                        if( fabs( CDb ) > 1e-20 )  // Doubtful...
+                           Ez = CDb;
+                        pmp->XetaB[k][ist] += pmp->X[j]*Ez;
+                        pmp->XetaA[k][ist] += pmp->X[j]*CD0;  // added for testing
+                    }
+                    else if( pmp->SCM[k][ist] == SC_CCM )
+                    { // Added 25.07.03 to implement the extended CCM Nilsson ea 1996
+// New CD version of BSM  added 25.10.2004
+                           pmp->XetaB[k][ist] += pmp->X[j] * CDb;
+                           pmp->XetaA[k][ist] += pmp->X[j] * CD0;
+                    }
+                 //    case DC_SUR_DL_ION:  XetaS += pmp->X[j]*pmp->EZ[j];
+                }
+                break;
+            default:
+                XetaS += pmp->X[j]*pmp->EZ[j];
+                break;
+            }
+        }   // j
+        // compare pmp->Xetaf[k]+pmp->XetaA[k]+pmp->XetaB[k] and XetaS
+        // Test XetaW
+NEXT_PHASE:
+        j = i;
+        if( pmp->LO && !k && pmp->FIat > 0 )
+        {
+            pmp->XetaA[k][0] = XetaW;
+            pmp->XetaB[k][0] = XetaW;
+            pmp->XetaD[k][0] = XetaW;
+        }
+        if( (pmp->PHC[k] == PH_PLASMA || pmp->PHC[k] == PH_SIMELT)
+                && pmp->FIat)
+            pmp->XetaA[k][0] = XetaS;
+    }  // k
+}
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of the surface potential pm[q].XpsiD[k] on diffuse
 // layer plane on k-th sorption phase from total charge pmp->Xeta[k]
@@ -563,23 +628,20 @@ TMulti::GouyChapman(  long int, long int, long int k )
 
     for( ist=0; ist<pmp->FIat; ist++ )  // loop over surface types
     {
-        double PsiD, PSIo, PsiA, PsiB;
+        double PsiD=0.0, PSIo=0.0, PsiA=0.0, PsiB=0.0; // Cleanup 05.12.2009 DK
+        double ConvFactor = 1.;
 
+        XetaA[ist] = XetaB[ist] = XetaD[ist] = 0.0;
         if( pmp->SCM[k][ist] == SC_NOT_USED || pmp->Nfsp[k][ist] < 1e-9  )
             continue;
-        // Calculation of charge densities
+        ConvFactor = F_CONSTANT / pmp->YFk / pmp->Aalp[k] / pmp->Nfsp[k][ist];
+        // Calculation of charge densities (now limited to total charges > max. balance residual)
         if( fabs( pmp->XetaA[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. )
-            XetaA[ist] = pmp->XetaA[k][ist]*F_CONSTANT/pmp->YFk/
-                pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
-        else XetaA[ist] = 0.0;
+            XetaA[ist] = pmp->XetaA[k][ist] * ConvFactor; // in C/m2
         if( fabs( pmp->XetaB[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. )   // moles
-            XetaB[ist] = pmp->XetaB[k][ist] *F_CONSTANT/pmp->YFk/
-                pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
-        else XetaB[ist] = 0.0;
- if( fabs( pmp->XetaD[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. ) // moles
-     XetaD[ist] = pmp->XetaD[k][ist] *F_CONSTANT/pmp->YFk/
-               pmp->Aalp[k]/pmp->Nfsp[k][ist]; // C/m2
- else XetaD[ist] = 0.0;
+            XetaB[ist] = pmp->XetaB[k][ist] * ConvFactor; // C/m2
+        if( fabs( pmp->XetaD[k][ist]) > pmp->DHBM ) // pmp->lowPosNum*100. ) // moles
+            XetaD[ist] = pmp->XetaD[k][ist] * ConvFactor; // C/m2
 
         // Limit maximum charge densities to prevent divergence
         if( fabs(XetaA[ist]) > 1.4 )
@@ -603,12 +665,13 @@ TMulti::GouyChapman(  long int, long int, long int k )
             XetaD[ist] = XetaD[ist] < 0.0 ? -1.4: 1.4;
             status = 62;
         }
+
+        SigA = 0.;  SigB = 0.;   SigD = 0.;  SigDDL = 0.; // Cleanup 07.12.2009 DK
+        pmp->XcapD[k][ist] = 0.0;  pmp->XpsiD[k][ist] = 0.0;
         if( fabs( XetaA[ist] ) < pmp->DHBM  && // pmp->lowPosNum*1e6 &&
                fabs( XetaB[ist] ) < pmp->DHBM && // pmp->lowPosNum*1e6 &&
                fabs( XetaD[ist] ) < pmp->DHBM ) // pmp->lowPosNum*1e6 )
             goto GEMU_CALC;  // skipping at near-zero charge
-
-        SigD = 0.;
         // calculating charge density at diffuse layer
         switch( pmp->SCM[k][ist] )
         {
@@ -649,10 +712,6 @@ TMulti::GouyChapman(  long int, long int, long int k )
             SigDDL = -SigA - XetaB[ist];
             break;
         case SC_NNE:  // Non-Electrostatic
-            SigA = 0;
-            SigB = 0;
-            SigD = 0;
-            SigDDL = 0;
             break;
         default:
             continue;
@@ -884,9 +943,9 @@ long int
 TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
 {
 	long int status = 0;
-	long int i, ii, j, ja, ist, iss, dent, Cj, iSite[6];
+        long int i, ii, j, ja, ist=0, iss, dent, Cj, iSite[MST];
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
-           SATst, xjn, q1, q2, aF, cN, eF, lnGamjo;
+           SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     if( pmp->XF[k] <= pmp->DSM ) // No sorbent retained by the IPM - phase killed
@@ -971,7 +1030,9 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
             if( pmp->MASDJ )
             {
                cN = pmp->MASDJ[ja][PI_P2];  // Frumkin/Pivovarov water coord. number
-               dent = cN;                      // dentateness for L and QCA isoterms
+               if( cN > 0 )
+                   dent = cN;   // denticity for L and QCA isoterms
+               else dent = 1;   // Cleanup DK 07.12.2009
                aF = pmp->MASDJ[ja][PI_P1];  // Frumkin lateral interaction energy term
             //   bet = pmp->MASDJ[ja][PI_P3];   // BET beta parameter (reserved)
             }
@@ -1263,137 +1324,88 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                 break;
             }
         }
-        if( fabs( lnGamjo - pmp->lnGam[j] ) > 2. ) // 7.4 times
-    	   status = 101;   // the SACT has changed too much; threshold needs adjustment!
+
+        if( lnGamjo > pmp->DHBM )
+        {                               // Workaround DK 07.12.2009
+            lnFactor = 0.2;
+            lnDiff = pmp->lnGam[j] - lnGamjo;
+            if( fabs( lnDiff ) > fabs( lnFactor ) ) // e times
+            {
+                if( fabs( lnDiff ) > 6.907755 )  // 1000 times
+                    status = 101;   // the SACT has changed too much;
+                            // the threshold pa->p.IEPS needs adjustment!
+                // Smoothing (provisional)
+                pmp->lnGam[j] = lnDiff > 0? lnGamjo + lnDiff - lnFactor:
+                                lnGamjo + lnDiff + lnFactor;
+            }
+        }
     }  // j
    return status;
 }
 
-//   New function for converting general (rational) mol-fr lnGam[j] value into a
-//      practical (phase-scale-specific) Gamma[j] if DirFlag = 0
-//      or the other way round if DirFlag = 1
-//  Returns the respectively corrected practical or ln(rational) activity coefficient
-//  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
-//    amount is zero (X[j] == 0)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Calculating demo partial pressures of gases (works only in GEMS-PSI)
 //
-double
-TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
+void TMulti::GasParcP()
 {
-    double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., NonLogTermDS = 0.,
-           NonLogTermD = 0., DsurT = 0., MMC = 0.;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+#ifndef IPMGEMPLUGIN
 
-    switch( pmp->PHC[k] )
+        long int k,  i, jj=0;
+    long int jb, je, j;
+
+    if( !pmp->PG )
+        return;
+
+  char (*SMbuf)[MAXDCNAME] =
+      (char (*)[MAXDCNAME])aObj[ o_w_tprn].Alloc( pmp->PG, 1, MAXDCNAME );
+  pm.Fug = (double *)aObj[ o_wd_fug].Alloc( pm.PG, 1, D_ );
+  pm.Fug_l = (double *)aObj[ o_wd_fugl].Alloc( pm.PG, 1, D_ );
+  pm.Ppg_l = (double *)aObj[ o_wd_ppgl].Alloc( pm.PG, 1, D_ );
+
+    for( k=0, je=0; k<pmp->FIs; k++ ) // phase
     {
-      case PH_AQUEL:
-           if( pmp->XF[k] && pmp->XFA[k] )
-           {
-             	NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];
-    	       	NonLogTermW = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
-    	   }
-           break;
-      case PH_GASMIX:  case PH_FLUID:   case PH_PLASMA:   case PH_SIMELT:
-      case PH_HCARBL:  case PH_SINCOND:  case PH_SINDIS:  case PH_LIQUID:
-           break;
-      case PH_POLYEL:
-      case PH_SORPTION: // only sorbent end-members!
-           if( pmp->XF[k] && pmp->XFA[k] )
-           {
-              for( long int jj=jb; jj<je; jj++ )
-              {
-                if( pmp->DCC[jj] == DC_SUR_CARRIER ||
-                    pmp->DCC[jj] == DC_SUR_MINAL || pmp->DCC[jj] == DC_PEL_CARRIER )
-                    MMC += pmp->MM[jj]*pmp->X[jj]/pmp->XFA[k];
-                    // Weighted-average sorbent mole mass
-              }
-              NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];  // Also for sorption phases
-       	      NonLogTermS = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
-    	      DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-    	      NonLogTermD = - DsurT/( 1.0+DsurT );
-    	      NonLogTermDS = DsurT - DsurT/(1+DsurT);
-           }
-    	   break;
-       default:
-          break; // Phase class code error!
+        jb = je;
+        je = jb+pmp->L1[k];
+        if( pmp->PHC[k] == PH_GASMIX || pmp->PHC[k] == PH_PLASMA
+           || pmp->PHC[k] == PH_FLUID )
+        {
+            for( j=jb; j<je; j++,jj++ )
+            {  // fixed 02.03.98 DK
+
+                copyValues(SMbuf[jj], pmp->SM[j], MAXDCNAME );
+                pmp->Fug_l[jj] = -(pmp->G0[j]+pmp->GEX[j]);
+                if( pmp->Pc > 1e-9 )
+                    pmp->Fug_l[jj] += log(pmp->Pc);
+                for( i=0; i<pmp->N; i++ )
+                    pmp->Fug_l[jj] += *(pmp->A+j*pmp->N+i) * pmp->U[i];
+                if( pmp->Fug_l[jj] > -37. && pmp->Fug_l[jj] < 16. )
+                    pmp->Fug[jj] = exp( pmp->Fug_l[jj] );
+                else  pmp->Fug[jj] = 0.0;
+                // Partial pressure
+                pmp->Ppg_l[jj] = pmp->Fug_l[jj] - pmp->lnGam[j];
+                pmp->Fug_l[jj] *= .43429448;
+                pmp->Ppg_l[jj] *= .43429448;
+            }
+            // break;
+        }
     }
-
-	if( DirFlag == 0 )
-	{	 // Converting lnGam[j] into Gamma[j]
-		if( !pmp->X[j] )
-			return 1.;
-		double Gamma = 1.;
-		double lnGamS = pmp->lnGam[j];
-
-	    switch( pmp->DCC[j] )
-	    { // Aqueous electrolyte
-	      case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
-// NonLogTerm =0.;
-	        lnGamS += NonLogTerm;    // Correction by asymmetry term
-	        break;
-	    	// calculate molar mass of solvent
-	    case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
-	    	lnGamS += NonLogTermW;
-	        break;
-	    case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:
-	    case DC_GAS_H2: case DC_GAS_N2:
-	    	break;
-	    case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR:
-            break;
-	    	// non-electrolyte condensed mixtures
-	    case DC_SCP_CONDEN: case DC_SUR_MINAL:
-	        break;
-	    case DC_SUR_CARRIER: case DC_PEL_CARRIER:
-	        lnGamS += NonLogTermS + NonLogTermDS;
-	    	break;
-	        // Sorption phases
-	    case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
-	    case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
-	    case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
-	    case DC_IEWC_B:
-	    	lnGamS += NonLogTerm + NonLogTermD;
-	    	break;
-	    default:
-	        break;
-	    }
-        Gamma = exp( lnGamS );
-	    return Gamma;
-	}
-	else { // Converting Gamma[j] into lnGam[j]
-		if( !pmp->X[j] )
-			return 0.;
-		double Gamma = pmp->Gamma[j];
-		double lnGam = log( Gamma );
-
-		switch( pmp->DCC[j] )
-        { // Aqueous electrolyte
-		   case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
-// NonLogTerm =0.;
-		        lnGam -= NonLogTerm;  // Correction by asymmetry term
-		    	break;
-		   case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
-		    	lnGam -= NonLogTermW;
-		        break;
-   	       case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
-			   	break;
-		   case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR:
-		        break;
-   	       case DC_SCP_CONDEN: case DC_SUR_MINAL:
-			    break;
-		   case DC_SUR_CARRIER: case DC_PEL_CARRIER:
-			    lnGam -= NonLogTermS + NonLogTermDS;
-			    break;
-			        // Sorption phases
-	       case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
-		   case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
-		   case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
-		   case DC_IEWC_B:
-		        lnGam -= NonLogTerm + NonLogTermD;
-		    	break;
-		    default:
-		        break;
-		}
-	    return lnGam;
-	}
+#endif
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Calculation of pH via activities of H2O and OH-
+// Suggested by V.A.Sinitsyn, Apr 7, 1997
+// Not used !!! SD
+// double TMulti::pH_via_hydroxyl( double x[], double Factor, long int j)
+// {
+//    double lnaH;
+//    long int jwa, jhy;
+//    jwa = j+1;
+//    jhy = j-1;                      // Dangerous !
+//    lnaH = - pmp->G0[jhy] + 4.016534 + pmp->G0[jwa] + pmp->lnGam[jwa]
+//           - pmp->lnGam[jhy] - log( x[jhy]*Factor );
+//    x[j] = exp( lnaH - pmp->lnGam[j] ) / Factor;
+//    return (-lnaH *ln_to_lg);
+// }
 
 //--------------------- End of ipm_chemical2.cpp ---------------------------
