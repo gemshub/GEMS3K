@@ -386,17 +386,18 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
      gstring lst_in = ipmfiles_lst_name;
      gstring Path = "";         // was " "   fixed 10.12.2009 by DK
 // Get path
+#ifdef IPMGEMPLUGIN
 #ifdef _WIN32
       size_t pos = lst_in.rfind("\\");// HS keep this on windows
 #else      
-      //#ifdef _WIN32
-            size_t pos = lst_in.rfind("\\");// HS keep this on windows
-      //#else
-            if( pos == npos )
-               pos = lst_in.rfind("/"); // HS keep this on linux
-            else
-               pos = max(pos, lst_in.rfind("/") );
-      //#endif
+      size_t pos = lst_in.rfind("/"); // HS keep this on linux
+#endif
+#else
+      size_t pos = lst_in.rfind("\\");
+      if( pos == npos )
+         pos = lst_in.rfind("/");
+      else
+         pos = max(pos, lst_in.rfind("/") );
 #endif
 	  if( pos < npos )
       Path = lst_in.substr(0, pos+1);
