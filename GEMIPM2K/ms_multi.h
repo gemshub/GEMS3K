@@ -108,7 +108,7 @@ typedef struct
     CpX_,CpXc,  // reserved
     CvX_,CvXc,  // reserved
     T0,         // reserved
-    VE,         // reserved
+    VE,         // Volume to constrain aquatic system in two-phase region (P = Psat)
     MBX,        // Total mass of the system, kg
     FX,    	// Current Gibbs potential of the system in IPM, moles
     IC,         // Effective molal ionic strength of aqueous electrolyte
@@ -321,7 +321,7 @@ double
   double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
   double *Uc; // Internal copy of IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
-  char errorBuf[500]; // description of error in IPM
+  char errorBuf[1024]; // description of error in IPM
   double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
   qd_real qdFX;    	// Current Gibbs potential of the system in IPM, moles
 

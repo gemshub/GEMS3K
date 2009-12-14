@@ -1980,15 +1980,18 @@ void TMulti::setErrorMessage( long int num, const char *code, const char * msg)
   pmp->Ec  = num;
   strncpy( pmp->errorCode, code, 99 );
   pmp->errorCode[99] ='\0';
-  strncpy( pmp->errorBuf,  msg,  499 );
-  pmp->errorBuf[499] ='\0';
+  strncpy( pmp->errorBuf,  msg,  1023 );
+  pmp->errorBuf[1023] ='\0';
 }
 
 void TMulti::addErrorMessage( const char * msg)
 {
   long int ln = strlen(pmp->errorBuf);
-  strncpy(pmp->errorBuf+ln, msg, 499-ln  );
-  pmp->errorBuf[499] ='\0';
+  if( ln < 1023 )
+  {
+    strncpy(pmp->errorBuf+ln, msg, 1023-ln  );
+    pmp->errorBuf[1023] ='\0';
+  }
 }
 
 //--------------------- End of ipm_main.cpp ---------------------------

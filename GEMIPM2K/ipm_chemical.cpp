@@ -1207,7 +1207,7 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
   double Ez, Psi;   // added by KD 23.11.01
   double  Dsur, DsurT, MMC, *XU;
   bool mbBroken = false;
-  char buf[300];
+  char dcnbuf[18], buf[256];
 
   XU = pmp->XU;
   for(j=0; j<pmp->L; j++ )
@@ -1319,19 +1319,24 @@ XU[j] = pmp->DUL[j];
               {
              	if(  (XU[j]*a(ii,j))  > pmp->B[ii]+cutoff )
                 {
-             	  // The dual solution appears bad, and the insertion of XU[j] will damage the mass balance
+                    char *dcne;
+                    dcnbuf[16] = ' ';
+                    strncpy( dcnbuf, pmp->SM[j], 16 );
+                    dcne = strpbrk(dcnbuf, " ");
+                    *dcne = 0;
+                    // The dual solution appears bad, and the insertion of XU[j] will damage the mass balance
      			  if(!mbBroken )
      			  {
       				 sprintf(buf,
-      				"Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC|RC %16s",
-      						      pmp->ITG, pmp->SM[j] );
+                                "Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC %s",
+                                                      pmp->ITG, dcnbuf );
      				 setErrorMessage( 15, "E15IPM: IPM-main():", buf);
                      mbBroken = true;  // Error state is activated
      			  }
      			  else
      			  {
-      				 sprintf(buf,"  %16s" ,  pmp->SM[j] );
-     				 addErrorMessage(buf);
+                                 sprintf(buf," %s",  dcnbuf );
+                                 addErrorMessage(buf);
      			  }
      		    }
              }
