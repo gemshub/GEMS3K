@@ -1191,10 +1191,10 @@ case DC_AQ_SURCOMP:
 }
 
 //----------------------------------------------------------------------------
-// KC: dual-thermo calculation of DC amount X(j) from A matrix and u vector
+// KC: dual-thermo calculation of DC amounts X(j) from A matrix and u vector
 //  using method and formulae from [Karpov et al., 2001] with extensions
 //  !!!!!  Attention !!!! XU[j] calculation for some classes of DCs may need improvement!
-//
+//    Now for DCs in multicomponent phases only!
 // Return code  0 OK
 //              1 The dual solution appears bad, and the insertion of XU[j] will damage
 //                the mass balance
@@ -1206,15 +1206,15 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
   long int isp, ist;
   double Ez, Psi;   // added by KD 23.11.01
   double  Dsur, DsurT, MMC, *XU;
-  bool mbBroken = false;
-  char dcnbuf[18], buf[256];
+  // bool mbBroken = false;
+  char dcnbuf[MAXDCNAME+4], buf[256];
 
   XU = pmp->XU;
   for(j=0; j<pmp->L; j++ )
       XU[j] = 0.;
 
   jb=0;
-  for( k=0; k<pmp->FI; k++ )
+  for( k=0; k<pmp->FIs; k++ )  // important change from FI to FIs 16.12.2009 DK
   { // loop over phases
       je=jb+pmp->L1[k];
       Dsur=0.0; DsurT=0.0;
@@ -1270,16 +1270,16 @@ long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
                    Psi = pmp->XpsiA[k][ist];
                else // This is the B or another plane
                    Psi = pmp->XpsiB[k][ist];
-               XU[j] += Dsur + DsurT/( 1.0 + DsurT ) + log(XFA[k])+
+               XU[j] += Dsur /*+ DsurT/( 1.0 + DsurT )*/ + log(XFA[k])+  // changed 0n 16.12.2009 DK
                log( DsurT * (pmp->Nfsp[k][ist]) ) - pmp->FRT * Ez * Psi;
              }
          }
          else
            XU[j] += log(XF[k]);   // Check for non-ideal gases at P and DQF controlled species
 
-         if( XU[j] > -54. && XU[j] < 13.815 )
+         if( XU[j] > -69. && XU[j] < 13.81551 )
          {
-        	 // Checking restored value against vector b
+                 // Checking if a restored amount will be in a feasible interval
         	 XU[j] = exp( XU[j] );
          }
          else
@@ -1299,8 +1299,8 @@ XU[j] = pmp->DUL[j];
 
   double cutoff;
   cutoff = min (pmp->DHBM*1.0e6, 1.0e-3 );	// changed, 28.02.2009 (DK,SD)
-
-    for( j=0; j<pmp->L; j++ )
+// cutoff = min (pmp->DHBM*10., 1.0e-6 );     // Cutoff value may need to be adjusted!!!!
+    for( j=0; j<pmp->Ls; j++ )   // important change from L to Ls 16.12.2009 DK
     { // DC loop
       ix=0;
 //      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009
@@ -1316,41 +1316,45 @@ XU[j] = pmp->DUL[j];
     	  for( i=arrL[j]; i<arrL[j+1]; i++ )
           {  ii = arrAN[i];
              if( ii< pmp->N-pmp->E )
-              {
+             {
              	if(  (XU[j]*a(ii,j))  > pmp->B[ii]+cutoff )
                 {
-                    char *dcne;
-                    dcnbuf[16] = ' ';
-                    strncpy( dcnbuf, pmp->SM[j], 16 );
-                    dcne = strpbrk(dcnbuf, " ");
-                    *dcne = 0;
+                    char *dcne;  // extracting DC name
+                    strncpy( dcnbuf, pmp->SM[j], MAXDCNAME );
+                    dcnbuf[MAXDCNAME] = ' '; dcnbuf[MAXDCNAME+1] = '\0';
+                    dcne = strpbrk(dcnbuf, " \0");
+                    if( dcne != NULL && (dcne - dcnbuf) < MAXDCNAME )
+                        *dcne = '\0';
+                    else dcnbuf[MAXDCNAME] = '\0';
                     // The dual solution appears bad, and the insertion of XU[j] will damage the mass balance
-     			  if(!mbBroken )
+                          if(pmp->Ec != 15 )
      			  {
       				 sprintf(buf,
                                 "Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC %s",
                                                       pmp->ITG, dcnbuf );
-     				 setErrorMessage( 15, "E15IPM: IPM-main():", buf);
-                     mbBroken = true;  // Error state is activated
+                                 setErrorMessage( 15, "E15IPM: IPM-main():", buf); // also sets pmp->Ec = 15
+//                     mbBroken = true;  // Error state is activated
      			  }
      			  else
      			  {
-                                 sprintf(buf," %s",  dcnbuf );
+                                 sprintf(buf,", %s",  dcnbuf );
                                  addErrorMessage(buf);
      			  }
-     		    }
+                    break;
+                }
              }
-          }
-    	  X[j]=XU[j];
+          } // for i
+          if( pmp->Ec != 15 )
+              X[j]=XU[j];
+          else X[j]=Y[j];
       }
       else
-        X[j]=Y[j];
-    }
-
-    if( mbBroken )
-      return 1L;
+         X[j]=Y[j];
+    } // for j
 
     TotalPhases( X, XF, XFA );
+    if( pmp->Ec == 15 )
+      return 1L;
     return 0L;
 }
 

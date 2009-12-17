@@ -827,16 +827,16 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
        }
 
        pmp->PCI = sqrt(pmp->PCI); // Dikin criterion
-// temporary
-for(i=4; i>0; i-- )
-   pmp->logCDvalues[i] = pmp->logCDvalues[i-1];
-pmp->logCDvalues[0] = log( pmp->PCI );  // updating CD sampler array
+       // temporary
+       for(i=4; i>0; i-- )
+            pmp->logCDvalues[i] = pmp->logCDvalues[i-1];
+       pmp->logCDvalues[0] = log( pmp->PCI );  // updating CD sampler array
 
-       if( (IT1 > 3) && (FX1 - pmp->FX > 10)  &&
-          ( IT1 > pa->p.IIM/2 || pmp->PD==3 ) )
+       if( (IT1 > 3) && (FX1 - pmp->FX > 10.)  &&   // doubtful
+          ( IT1 > pa->p.IIM/2 || pmp->PD >= 2 ) )
         {                                 // Adjusting Dikin threshold
-            if( pmp->LO && pmp->X[pmp->LO]>pmp->XwMinM && abs(pmp->PD) == 3 ) //
-                pmp->PD= pmp->PD > 0? pmp->PD = 2: pmp->PD = -2; //  Check if this is really needed!!!!! DK
+            if( pmp->LO && pmp->X[pmp->LO]>pmp->XwMinM && pmp->PD >= 2 ) //
+                pmp->PD = pmp->PD > 0? pmp->PD = 1: pmp->PD = -1; //  Check if this is really needed!!!!! DK
             else  pmp->DXM = 0.5 * pmp->PCI;
         }
 
@@ -848,7 +848,7 @@ pmp->logCDvalues[0] = log( pmp->PCI );  // updating CD sampler array
        pmp->FX=FX1;
        // Main IPM iteration done
        // Main calculation of activity coefficients
-        if( pmp->PD == 2  || pmp->PD == 3 || pmp->PD == 4 )
+        if( pmp->PD >= 2 )
             status = GammaCalc( LINK_UX_MODE );
 
         if( pmp->PHC[0] == PH_AQUEL && pmp->XF[0] < pmp->DSM &&
@@ -887,13 +887,13 @@ pmp->PCI = pmp->DXM * 0.999999; // temporary
 // Final calculation of phase amounts and activity coefficients
   TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
-  if(!pmp->PZ && pmp->W1)
+  if(!pmp->PZ && pmp->W1 && pmp->FIs )   // Important - added pmp->FIs in if() on 16.12.2009 DK
   { iRet =  Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );
     if(iRet )
  	   return 4L;
   }
 
-  if( pmp->PD == 1 || pmp->PD == 2  || pmp->PD == 3  || pmp->PD == 4 )
+  if( pmp->PD >= 1 )
   {
 	  GammaCalc( LINK_UX_MODE );
 		  // if( pmp->PD >= 3 )
@@ -1986,11 +1986,12 @@ void TMulti::setErrorMessage( long int num, const char *code, const char * msg)
 
 void TMulti::addErrorMessage( const char * msg)
 {
-  long int ln = strlen(pmp->errorBuf);
-  if( ln < 1023 )
+  long int len = strlen(pmp->errorBuf);
+  long int lenm = strlen( msg );
+  if( len + lenm < 1023 )
   {
-    strncpy(pmp->errorBuf+ln, msg, 1023-ln  );
-    pmp->errorBuf[1023] ='\0';
+    strcpy(pmp->errorBuf+len, msg ); // , lenm  );
+//    pmp->errorBuf[len+lenm] ='\0';
   }
 }
 

@@ -366,6 +366,12 @@ void GEM_set_MT(
     double cP() const     // Get current node Pressure P, Pa
     {        return CNode->P;   }
 
+    double cMs() const     // Get current node mass in kg (reactive part)
+    {        return CNode->Ms;   }
+
+    double cVs() const     // Get current node volume in m3 (reactive part)
+    {        return CNode->Vs;   }
+
     // Set current node identification handle to value of parameter jj
     void setNodeHandle( long int jj )
     {      CNode->NodeHandle = jj;  }
