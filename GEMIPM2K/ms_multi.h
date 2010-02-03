@@ -395,12 +395,14 @@ class TMulti
                             int car_l[], int car_c, int Cjs );
     void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
     void SolModLoad();
+    bool CompressPhaseIpxt( int kPH );
     gstring PressSolMod( int nP );
     char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
     int find_icnum( char *name, int LNmode );
     int find_dcnum( char *name, int jb, int je, int LNmode );
     int find_phnum( char *name, int LNmode );
     int find_acnum( char *name, int LNmode );
+
 #else
 
    char PAalp_; // Flag for using (+) or ignoring (-) specific surface areas of phases
@@ -556,6 +558,7 @@ public:
     void MultiRemake( const char *key );
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
      tget_ndx *get_ndx = 0 );
+    void getNamesList( int nO, TCStringArray& lst );
 
    class UserCancelException {};
 #else

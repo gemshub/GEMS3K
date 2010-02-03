@@ -190,7 +190,7 @@ long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
     {
      fstream f_log("ipmlog.txt", ios::out|ios::app );
      f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-    		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
+                << "gems3: Unknown exception: GEM calculation aborted" << endl;
      CNode->NodeStatusCH = T_ERROR_GEM;
     }
    return CNode->NodeStatusCH;
@@ -270,7 +270,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    {
     fstream f_log("ipmlog.txt", ios::out|ios::app );
     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-   		<< "gems2: Unknown exception: GEM calculation aborted" << endl;
+                << "gems3: Unknown exception: GEM calculation aborted" << endl;
     CNode->NodeStatusCH = T_ERROR_GEM;
     }
    return CNode->NodeStatusCH;

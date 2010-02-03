@@ -14,7 +14,7 @@
 // QA Licence (GEMSPSI.QAL)
 //
 // See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch; chud@igc.irk.ru
+// E-mail: gems2.support@psi.ch
 //------------------------------------------------------------------
 //
 

@@ -17,11 +17,12 @@
 // QA Licence (GEMSPSI.QAL)
 //
 // See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch; chud@igc.irk.ru
+// E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
 #include <math.h>
 #include<iomanip>
+
 #include "m_param.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -462,6 +463,8 @@ case DC_AQ_SURCOMP:
     case DC_SUR_IPAIR:
     case DC_IESC_A:
     case DC_IEWC_B:
+        if( !pmp->Lads || !pmp->FIat )   // Foolproof - to prevent crash DK 22.12.2009
+            break;
         F0 = pmp->lnGmM[j]; /* + pmp->lnGam[j]; */
         // get ist - index of surface type and isp - index of surface plane
 /*!!!!!*/  ist = pmp->SATX[ja][XL_ST];  // / MSPN;
@@ -549,6 +552,8 @@ case DC_AQ_SURCOMP:
     case DC_PEL_CARRIER:
     case DC_SUR_MINAL:  // constant charge of carrier - not completed
     case DC_SUR_CARRIER: // Mk is carrier molar mass in g/mkmol
+        if( !pmp->Lads || !pmp->FIat )   // Foolproof - to prevent crash DK 22.12.2009
+            break;
        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054;
         F0 -= FactSur / ( 1. + FactSur );
 			// F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /

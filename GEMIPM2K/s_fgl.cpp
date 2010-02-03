@@ -14,7 +14,7 @@
 // QA Licence (GEMSPSI.QAL)
 //
 // See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch; chud@igc.irk.ru
+// E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 
 #include <math.h>
@@ -2054,7 +2054,7 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
      double a,b;
      double inttofloat;
      double f[4],x[4],ff,dens[5],pres[5];
-     unsigned long int x1,x2;
+     unsigned long int x1=0L,x2=0L;
 // double ptmp;
 
      T = TT/param->EMIX();
