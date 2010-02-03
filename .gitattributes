@@ -1,6 +1,7 @@
 * text=auto !eol
 GEMIPM2K/.cproject -text
 GEMIPM2K/.project -text
+GEMIPM2K/GEMIPM2K.pro -text
 GEMIPM2K/Makefile -text
 GEMIPM2K/Makefile.MinGW -text
 GEMIPM2K/Makefile.lib -text
@@ -65,6 +66,7 @@ GEMIPM2K/platform/win32bcc/Makefile -text
 GEMIPM2K/s_fgl.cpp -text
 GEMIPM2K/s_fgl.h -text
 GEMIPM2K/s_fgl2.cpp -text
+GEMIPM2K/standalone.pri -text
 GEMIPM2K/test/Readme.1st -text
 GEMIPM2K/test/TEST.BAT -text
 GEMIPM2K/test/test.sh -text
