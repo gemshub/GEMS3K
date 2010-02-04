@@ -4,8 +4,8 @@
 
 TEMPLATE	= app
 LANGUAGE        = C++
-TARGET		= gemIPM2K
-VERSION         = 2.2.2
+TARGET		= gemcalc
+VERSION         = 3.0.0
 
 CONFIG		-= qt
 CONFIG		+=  warn_on debug windows

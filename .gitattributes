@@ -1,8 +1,5 @@
 * text=auto !eol
-GEMIPM2K/.cproject -text
-GEMIPM2K/.project -text
 GEMIPM2K/GEMIPM2K.pro -text
-GEMIPM2K/Makefile -text
 GEMIPM2K/Makefile.MinGW -text
 GEMIPM2K/Makefile.lib -text
 GEMIPM2K/array.h -text
@@ -28,6 +25,7 @@ GEMIPM2K/doc/txt/filelist-doc.txt -text
 GEMIPM2K/doc/txt/ipm-dat-doc.txt -text
 GEMIPM2K/gdatastream.cpp -text
 GEMIPM2K/gdatastream.h -text
+GEMIPM2K/gemipm2k.pri -text
 GEMIPM2K/gstring.cpp -text
 GEMIPM2K/gstring.h -text
 GEMIPM2K/io_arrays.cpp -text
@@ -66,7 +64,6 @@ GEMIPM2K/platform/win32bcc/Makefile -text
 GEMIPM2K/s_fgl.cpp -text
 GEMIPM2K/s_fgl.h -text
 GEMIPM2K/s_fgl2.cpp -text
-GEMIPM2K/standalone.pri -text
 GEMIPM2K/test/Readme.1st -text
 GEMIPM2K/test/TEST.BAT -text
 GEMIPM2K/test/test.sh -text
@@ -76,7 +73,6 @@ GEMIPM2K/tnt_array2d.h -text
 GEMIPM2K/tnt_i_refvec.h -text
 GEMIPM2K/v_user.h -text
 GEMIPM2K/verror.h -text
-GEMIPM2K/win32-run.bat -text
 gem2mt-sep/CalcColumn.BAT -text
 gem2mt-sep/Makefile -text
 gem2mt-sep/Makefile.MinGW -text

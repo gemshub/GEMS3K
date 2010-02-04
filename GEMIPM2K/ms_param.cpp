@@ -270,7 +270,7 @@ void TProfil::readMulti( const char* path )
  {
    long int kk, jj, ii, l1, l2, xTP, lev = 11;
    double cT, cP, dT, dP;
-   double *G0, /**V0, *H0,* *Cp0, *S0, /**A0, *U0,* *denW, *epsW/*, *denWg, *epsWg*;
+   double *G0, *V0, *H0,* *Cp0, *S0, *A0, *U0,* *denW, *epsW, *denWg, *epsWg;
    DATACH  *CSD = TNode::na->pCSD();
    fstream ff("lagrange_T_11_3.out.txt", ios::out );
    ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
@@ -349,8 +349,8 @@ void TProfil::readMulti( const char* path )
 //  fstream ff("lagrange_T_5_3.out.txt", ios::out );
 //  ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
   TPrintArrays  prar(0, 0, ff);
-  prar.writeArray(  "denW", denW, /*5**nP*nT, nP*nT );
-  prar.writeArray(  "epsW", epsW, /*5**nP*nT, nP*nT );
+  prar.writeArray(  "denW", denW, 5**nP*nT, nP*nT );
+  prar.writeArray(  "epsW", epsW, 5**nP*nT, nP*nT );
   prar.writeArray(  "S0_Ca+2", S0, nP*nT,  nP*nT ); //Ca+2
   prar.writeArray(  "S0_H2O", S0+13*nP*nT, nP*nT, nP*nT); //H2O@
   prar.writeArray(  "S0_Brc", S0+18*nP*nT, nP*nT, nP*nT ); //Brc
