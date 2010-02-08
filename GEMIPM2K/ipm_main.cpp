@@ -395,7 +395,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 #endif
 
 // Scaling the IPM numerical controls for the system total amount and minimum b(IC)
-    NN = pmp->N - pmp->E;
+    NN = pmp->N - pmp->E;    // Charge is not checked!
     minB = pmp->B[0]; // pa->p.DB;
     for(i=0;i<NN;i++)
     {

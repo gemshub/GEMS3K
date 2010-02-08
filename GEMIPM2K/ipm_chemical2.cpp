@@ -159,10 +159,12 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
             pmp->Wx[j] = 1;
             pmp->VL[j] = 0.0;
             if( pmp->LO )
+            {   //  bugfix DK 08.02.10
                 pmp->Y_m[j] = X[j]*Factor; // molality
-            else pmp->Y_m[j] = 0.0;
+                // else pmp->Y_m[j] = 0.0;
+            }
             pmp->Y_w[j] = // mass % of the system
-                1e2 * X[j] * pmp->MM[j] / pmp->MBX;
+                          1e2 * X[j] * pmp->MM[j] / pmp->MBX;
             pmp->Y_la[j] = ln_to_lg * ( Muj - pmp->G0[j] ); // - pmp->GEX[j]
             pmp->FVOL[k] += pmp->Vol[j]*X[j];
             break;
