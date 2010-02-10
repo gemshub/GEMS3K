@@ -11,6 +11,7 @@
                     $$GEMIPM2K_H/jama_lu.h \
                     $$GEMIPM2K_H/num_methods.h \
                     $$GEMIPM2K_H/s_fgl.h \
+                    $$GEMIPM2K_H/m_param.h  \
                     $$GEMIPM2K_H/ms_multi.h \
                     $$GEMIPM2K_H/databr.h \
                     $$GEMIPM2K_H/datach.h \
