@@ -134,23 +134,29 @@ double TProfil::calcMulti( long int& RefinLoops_, long int& NumIterFIA_, long in
     pmp->ITF = pmp->ITG = 0;
 FORCED_AIA:
     multi->MultiCalcInit( "GEMIPM2K" );
-	if( pmp->pNP )
+    if( pmp->pNP )
     {
 	   if( pmp->ITaia <=30 )       // Foolproof
 		  pmp->IT = 30;
 	   else
 		  pmp->IT = pmp->ITaia;     // Setting number of iterations for the smoothing parameter
     }
-	if( multi->AutoInitialApprox( ) == false )
+    bool IAstatus;
+    IAstatus = multi->AutoInitialApprox( );
+    if( IAstatus == false )
     {
-    	multi->MultiCalcIterations( -1 );
+        multi->MultiCalcIterations(-1 );    // Calling main IPM2 sequence
     }
-    if( pmp->MK || pmp->PZ ) // no good solution
-    	goto FINISHED;
-
-    RefinLoops_ = pmp->W1 + pmp->K2 - 1; // Prec.ref. + Selekt2() loops
+    RefinLoops_ = pmp->W1 + pmp->K2 - 1;
     NumIterFIA_ = pmp->ITF;
     NumIterIPM_ = pmp->ITG;
+
+    if( IAstatus == true )
+        goto FINISHED;  // Only pure phases - simplex solution is Ok
+
+    if( pmp->MK || pmp->PZ ) // no good solution
+        goto FINISHED;
+
     pmp->IT = pmp->ITG;   // This is to provide correct number of IPM iterations to upper levels
 
     if( pa.p.PRD < 0 && pa.p.PRD > -50 ) // max 50 loops
@@ -518,7 +524,7 @@ void TMulti::CompG0Load()
 // GEM IPM calculation of equilibrium state in MULTI
 void TMulti::MultiCalcInit( const char* /*key*/ )
 {
-  long int  j;
+  long int  j,k;
 
   SPP_SETTING *pa = &TProfil::pm->pa;
    // SD 09/03/09 strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
@@ -564,7 +570,7 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
        if( pmp->FIs )
        {
            // Load activity coeffs for phases-solutions
-          long int k, jb, je=0;
+          long int jb, je=0;
              for( k=0; k<pmp->FIs; k++ )
          { // loop on solution phases
             jb = je;
@@ -605,9 +611,15 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
     // recalculating kinetic restrictions for DC amounts
      if( pmp->pULR && pmp->PLIM )
           Set_DC_limits(  DC_LIM_INIT );
-    if( pmp->FIs )
+
+     bool AllPhasesPure = true;
+     // checking if all phases are pure
+     for( k=0; k < pmp->FI; k++ )
+         if( pmp->L1[k] > 1 )
+             AllPhasesPure = false;
+     if( !AllPhasesPure )     // bugfix DK 09.03.2010   was if(!pmp->FIs)
     {
-      long int k, jb, je=0;
+      long int jb, je=0;
      // Calc Eh, pe, pH,and other stuff
     if( pmp->E && pmp->LO && pmp->pNP )
     {
@@ -633,7 +645,7 @@ void TMulti::MultiCalcInit( const char* /*key*/ )
                                       // Activity coeffs are restored from lnGmo
  }
    else {  // no multi-component phases
-        pmp->PD = 0;
+        pmp->PD = 0;  pmp->pNP = 0;
   //      pmp->pIPN = 1;
     }
 

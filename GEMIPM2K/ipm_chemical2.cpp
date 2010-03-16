@@ -276,8 +276,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
     double Factor=0.0, Dsur=0.0, MMC=0.0;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-    if( pmp->Ls < 2 || !pmp->FIs )
-        return;
+//    if( pmp->Ls < 2 || !pmp->FIs )  Temporary disabled  09.03.2010 DK
+//        return;
 
     for( i=0; i< pmp->N; i++ )
      pmp->BFC[i] = 0.;

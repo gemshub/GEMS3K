@@ -25,6 +25,7 @@
 #ifdef Use_qd_real
 // QD_real is enabled only if the above compiler key is used (experimental)
 #include <qd/qd_real.h>
+#include <qd/fpu.h>
 #else
 typedef double qd_real;
 #define to_double (double)

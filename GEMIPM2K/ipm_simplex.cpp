@@ -115,9 +115,18 @@ void TMulti::SimplexInitialApproximation( )
              MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
         }
         else
-        {   pmp->FX = to_double(qdGX( 0.0 )); // calculation of initial G(X) value
-        	qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
-        }
+        {
+#ifdef Use_qd_real
+            unsigned int old_cw;
+            fpu_fix_start(&old_cw);
+#endif
+            pmp->FX = to_double(qdGX( 0.0 )); // calculation of initial G(X) value
+#ifdef Use_qd_real
+            fpu_fix_end(&old_cw);
+#endif
+                  qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+
+         }
         	
 //        	for(long int i=0; i<pmp->N; i++)
 //             cout << i << " C " << pmp->C[i] << " B " << pmp->B[i] << endl;

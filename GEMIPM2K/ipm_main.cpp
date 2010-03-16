@@ -37,7 +37,7 @@ using namespace JAMA;
 #include "node.h"
 #include<iomanip>
 
-// #define GEMITERTRACE
+#define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main sequence of IPM calculations
@@ -387,7 +387,7 @@ bool TMulti::AutoInitialApprox(  )
 {
     long int i, j, k, NN, eCode=-1L;
     double minB, sfactor;
-    char buf[300];
+    char buf[512];
     SPP_SETTING *pa = &TProfil::pm->pa;
 
 #ifdef GEMITERTRACE
@@ -442,8 +442,15 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
    pVisor->Update(false);
 #endif
 #endif
+   bool AllPhasesPure = true;   // Added by DK on 09.03.2010
+   // checking if all phases are pure
+   for( k=0; k < pmp->FI; k++ )
+       if( pmp->L1[k] > 1 )
+           AllPhasesPure = false;
+   if( AllPhasesPure == true )  // Provisional
+       pmp->pNP = 0;  // Simplex calculation also in SIA mode!
 
-// Analyzing if the Simplex approximation is necessary
+   // Analyzing if the Simplex approximation is necessary
     if( !pmp->pNP  )
     {   // Preparing to call Simplex method - "cold start"
     	pmp->FitVar[4] = 1.0; // by default no smoothing
@@ -495,17 +502,46 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 //        pmp->PCI = 0.0;
      // Calling the simplex method here
         SimplexInitialApproximation( );
-
 //  STEPWISE (0) - stop point for examining results from simplex IA
 #ifndef IPMGEMPLUGIN
 STEP_POINT( "End Simplex" );
 #endif
-        if( !pmp->FIs )
+        if( AllPhasesPure )     // bugfix DK 09.03.2010   was if(!pmp->FIs)
         {                       // no multi-component phases!
+            TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
             for( j=0; j< pmp->L; j++ )
                 pmp->X[j] = pmp->Y[j];
             TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-            return true; // If so, the GEM problem is already solved !
+            // Calculation of mass-balance residuals
+            if( pa->p.PD > 0 )
+                 MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
+            else
+                qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
+            ConCalc( pmp->X, pmp->XF, pmp->XFA );  // Calculation of ln activities (DualTh)
+            f_alpha( );  // calculation of Karpov phase stability criteria
+            pmp->W1=0; pmp->K2=0;               // set internal counters
+            pmp->Ec = pmp->MK = pmp->PZ = 0;
+#ifdef GEMITERTRACE
+to_text_file( "MultiDumpAA.txt" );   // Debugging
+#endif
+
+#ifndef IPMGEMPLUGIN
+   pmp->t_end = clock();
+   pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+#ifndef Use_mt_mode
+   pVisor->Update( false );
+#endif
+#endif
+          pmp->FI1 = 0;
+          pmp->FI1s = 0;
+          for( i=0; i<pmp->FI; i++ )
+          if( pmp->YF[i] > 1e-18 )
+          {
+           pmp->FI1++;
+           if( i < pmp->FIs )
+               pmp->FI1s++;
+           }
+           return true; // If so, the GEM problem is already solved !
         }
         // Setting default trace amounts to DCs that were zeroed off
         RaiseZeroedOffDCs( 0, pmp->L /*, sfactor */ );
@@ -735,8 +771,16 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
     if( pa->p.PD > 0 )
       pmp->FX=GX( LM  );  // calculation of G(x)
     else
-      pmp->FX=to_double(qdGX( LM  ));  // calculation of G(x)
-
+    {
+#ifdef Use_qd_real
+        unsigned int old_cw;
+        fpu_fix_start(&old_cw);
+#endif
+        pmp->FX=to_double(qdGX( LM  ));  // calculation of G(x)
+#ifdef Use_qd_real
+        fpu_fix_end(&old_cw);
+#endif
+    }
 
     if( pmp->FIs ) // multicomponent phases are present
       for(Z=0; Z<pmp->FIs; Z++)
@@ -823,7 +867,14 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
        else
        {
     	   LM1=qdLMD( LM ); // Finding an optimal value of the descent step
+#ifdef Use_qd_real
+           unsigned int old_cw;
+           fpu_fix_start(&old_cw);
+#endif
            FX1=to_double(qdGX( LM1 )); // New G(X) value after the descent step
+#ifdef Use_qd_real
+           fpu_fix_end(&old_cw);
+#endif
        }
 
        pmp->PCI = sqrt(pmp->PCI); // Dikin criterion
@@ -923,6 +974,10 @@ void
 TMulti::qdMassBalanceResiduals( long int N, long int L, double *A, double *Y, double *B,
          double *C )
 {
+#ifdef Use_qd_real
+    unsigned int old_cw;
+    fpu_fix_start(&old_cw);
+#endif
     long int ii, jj, i;
     qd_real AjixYj;
     qd_real* qdC = new qd_real[N];
@@ -941,6 +996,9 @@ TMulti::qdMassBalanceResiduals( long int N, long int L, double *A, double *Y, do
 //        cout << setprecision(20) << scientific << qdC[ii] << endl;
     }
     delete qdC;
+#ifdef Use_qd_real
+    fpu_fix_end(&old_cw);
+#endif
 }
 
 void
@@ -971,10 +1029,11 @@ TMulti::CheckMassBalanceResiduals(double *Y )
     long int iRet = -1L;
     char buf[300];
 
-	// cutoff = pmp->DHBM * 1e4;
-	cutoff = min (pmp->DHBM*1.0e5, 1.0e-3 );	// changed, 28.08.2008 (TW,DK)
-	if( cutoff > 1e-3 )
-		cutoff = 1e-3;
+        // cutoff = pmp->DHBM * 1e4; pmp->DFYwM*100.?
+//	cutoff = min (pmp->DHBM*1.0e8, 1.0e-3 );	// changed, 28.08.2008 (TW,DK)
+        cutoff = min (pmp->DFYwM*pmp->L, 1.0e-3 );	// changed, 09.02.2010 (DK)
+//        if( cutoff > 1e-3 )
+//		cutoff = 1e-3;
 
 	if(TProfil::pm->pa.p.PD > 0 )
 		MassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);
@@ -1064,6 +1123,10 @@ OCT:
 
 double TMulti::qdLMD( double LM )
 {
+#ifdef Use_qd_real
+    unsigned int old_cw;
+    fpu_fix_start(&old_cw);
+#endif
     double A,B,C,LM1,LM2;
     qd_real FX1,FX2;
     A=0.0;
@@ -1104,6 +1167,9 @@ SH3:
     goto SH1;
 OCT:
     LM1=A+(B-A)/2;
+#ifdef Use_qd_real
+    fpu_fix_end(&old_cw);
+#endif
     return(LM1);
 }
 
@@ -1515,6 +1581,10 @@ double TMulti::calcDikin(  long int N, bool initAppr )
 
 double TMulti::qdcalcDikin(  long int N, bool initAppr )
 {
+#ifdef Use_qd_real
+    unsigned int old_cw;
+    fpu_fix_start(&old_cw);
+#endif
   long int  J;
   double Mu, pp;
   qd_real PCI=0.;
@@ -1543,6 +1613,9 @@ double TMulti::qdcalcDikin(  long int N, bool initAppr )
   double PCI_ = to_double(PCI);
 //  cout << "qdcalcDikin ";
 //  cout << setprecision(20) << scientific << PCI << endl;
+#ifdef Use_qd_real
+  fpu_fix_end(&old_cw);
+#endif
   return PCI_;
 }
 
