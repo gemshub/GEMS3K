@@ -1,0 +1,220 @@
+# GEMIPM2K v. 3.0.0
+# Prototype 28.08.2009
+# Comments can be marked with # $ ; as the first character in the line
+
+# Template for the ipm-dat text input file for the internal MULTI data
+# (should be read after the DATACH file and before DATABR files)
+
+# ID key of the initial chemical system definition
+"CalDolCol G  CalColumn   1000 0       1       25      000 "
+
+## (1) Important flags that affect memory allocation
+# PE: Flag for using electroneutrality condition in GEM IPM calculations 
+<pa_PE>            1
+
+# PV: Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat
+<PV>               0
+
+# PSOL: Total number of DCs in liquid hydrocarbon phases
+<PSOL>             0
+
+# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases 
+<PAalp>          '+'
+
+# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  
+<PSigm>          '+'
+
+## (2) Important dimensionalities that affect memory allocation
+# Lads: Total number of Dependent Components in sorption phases included into this system
+<Lads>             0
+# FIa: Number of sorption phases included in this system (0 if no sorption phases are included)
+<FIa>              0
+# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, FIat must be set to default value of 6)
+<FIat>             0
+
+
+<END_DIM>
+
+## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel
+#      - Need to be changed only in rare special cases (see gems_ipm.html)
+# DB: Minimum amount of Independent Component in the bulk system composition (except charge Zz) (moles)
+<pa_DB>        1e-17
+
+# DHB: Maximum allowed mass balance residual (moles) for major Independent Components
+<pa_DHB>       1e-12
+
+# EPS: Precision criterion of the simplex() procedure to obtain the automatic initial approximation { 1e-7 }
+<pa_EPS>       1e-10
+
+# DK: IPM-2 convergence threshold for the Dikin criterion  (1e-6 < DK < 1e-3, default 1e-4)
+<pa_DK>        3e-07
+
+# DS: Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
+<pa_DS>        1e-14
+
+# DF: Threshold for the application of the Karpov phase stability criterion f_a
+<pa_DF>         0.01
+# DFM: Threshold for Karpov stability criterion f_a for insertion of a phase
+<pa_DFM>         0.1
+
+# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
+<pa_DP>          300
+
+# IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure { 500 }
+<pa_IIM>         1000
+
+# PD: Mode of execution of the built-in DebyeHueckel()/Davies() functions { 3 }
+<pa_PD>           2
+
+# PRD: Negative number (from -1 to -50): the number  of additional full IPM-2 loops, otherwise no additional loops
+#      Positive or 0: no global refinement loops
+<pa_PRD>           3
+
+# AG: Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations.
+<pa_AG>            1
+
+# DGC: Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions.
+<pa_DGC>        -0.8
+
+# PSM: Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }
+<pa_PSM>           1
+# GAR: Initial activity coefficient value for major (M) species in a solution phase before Simplex() approximation { 1 }
+<pa_GAR>           1
+# GAH: Initial activity coefficient value for minor (J) species in a solution phase before Simplex() approximation { 1000 }
+<pa_GAH>        1000
+
+# _Min: Cutoff mole amounts for elimination of: Xw - water-solvent { 1e-9 }; Sc - solid sorbent {1e-7}; 
+#       Dc - solution- or surface species { 1e-20 }; Ph - non-electrolyte solution phase with all its components { 1e-10 }
+<pa_XwMin>     1e-09
+<pa_ScMin>     1e-07
+<pa_DcMin>     1e-24
+<pa_PhMin>     1e-14
+
+# ICmin: Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
+<pa_ICmin>     3e-05
+
+# PC: Mode of PhaseSelect() operation  { 1 }
+<pa_PC>            1
+# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm
+# DFYw: Insertion mole amount for water-solvent
+<pa_DFYw>      1e-06
+# DFYaq: Insertion mole amount for aqueous species
+<pa_DFYaq>     1e-06
+
+# DFYid: Insertion mole amount for ideal solution components
+<pa_DFYid>     1e-06
+# DFYr: Insertion mole amount for major solution components
+<pa_DFYr>      1e-06
+# DFYh: Insertion mole amount for minor solution components
+<pa_DFYh>      1e-06
+# DFYc:  Insertion mole amount for single-component phase
+<pa_DFYc>      1e-06
+# DFYs: Insertion mole amount used in PhaseSelect() for a condensed phase component
+<pa_DFYs>      1e-07
+
+# Parameters for high-accuracy IPM-2 algorithm 
+# DW: Maximum number of allowed IPM-2 mass balance accuracy improvement loops (from 0 to 15) { 15 }
+<pa_DW>           30
+# DT: IPM-2 cutoff exponent to recover small elements of the primal x vector using the dual solution vector u { -3 }
+<pa_DT>           -2
+
+# GAS: IPM-2 balance accuracy control ratio DHBM[i]/b[i], determines the maximum allowed mass balance residual for minor IC { 1e-3 }
+<pa_GAS>       0.001
+# DG: Threshold for minimum descent step size Lambda in EntryFeasibleDomain()
+<pa_DG>        1e-05
+# DNS: Standard surface density (nm-2) for calculating activity of surface species { 12.05 nm-2 }
+<pa_DNS>       12.05
+# IEPS: Convergence parameter of SACT calculation in sorption/surface complexation models { 0.001 }
+<pa_IEPS>      0.001
+
+# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } 
+<pKin>             1
+# DKIN: Tolerance on the amount of DC with two-side metastability constraints  (moles) { 1e-7 } 
+<pa_DKIN>      1e-07
+# pa_PLLG: TIPM-2 tolerance for checking change in dual solution among GEM refinement loops { 200 }
+<pa_PLLG>        2000
+
+## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
+# sMod: Codes for built-in mixing models of multicomponent phases [nPS*6]
+<sMod>
+'DNNSNN' 
+
+# LsMod: Dimensions of <IPxPH> and <PMc> arrays [nPS*3]
+
+<LsMod>
+2 0 4 
+
+# PMc: Collected interaction parameter coefficients for the (built-in) non-ideal mixing models
+<PMc>
+0 0 1 0 0 0 0 0 
+
+# LsMdc: Number of parameters per component of the phase for the non-ideal mixing models [nPS]
+<LsMdc>
+0 
+
+## (5) Some data arrays which are not provided in DATACH and DATABR files
+# B: Full total bulk composition of the initial system (vector b)  (moles) [nIC]
+<B>
+0.000329999997196746 0.000329999997196746 1.99999994666525e-07 110.683692172569 9.99999973332623e-08 55.3428360862761 0 
+
+# Initial data for DCs - see DATACH file for dimensions nDC, nDCs
+# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC]
+<Pparc>
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+
+# GEX: Increments for adjustment of G0 values of Dependent Components in (J/mol/(RT)) (normalized units) [nDC]
+<GEX>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# lnGmf:  Natural logarithms of DC (activity coefficients) to be used for correcting g0(T,P) [nDC]
+<lnGmf>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# (6) Section for metastability/ kinetic constraints
+# RLC: Code of metastability constraints for DCs [nDC]
+<RLC>
+'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+
+# RSC: Units of metastability/kinetic constraints for DCs [nDC]
+<RSC>
+'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+
+# DLL: Full vector of lower metastability constraints on DC amounts <xDC> in the system (moles) [nDC]
+<DLL>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# DUL:Full vector of upper metastability constraints on DC amounts <xDC> in the system (moles) [nDC]
+<DUL>
+1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
+
+# (7) Initial data for phases
+
+# Aalp: Full vector of specific surface areas of phases (m2/g) [nPH]
+<Aalp>
+0 0 0 0 0 0 
+
+# Sigw: Specific surface free energy for phase-water interface (J/m2) [nPH]
+<Sigw>
+0 0 0 0 0 0 
+
+# Sigg: Specific surface free energy for phase-gas interface (J/m2) (not yet used) [nPH]
+<Sigg>
+0 0 0 0 0 0 
+
+# YOF: Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition)  [nPH]
+<YOF>
+0 0 0 0 0 0 
+
+# mui: IC indices in RMULTS IC list
+<mui>
+0 1 2 3 4 5 6 
+
+# muk: Phase indices in RMULTS phase list
+<muk>
+0 2 4 5 6 8 
+
+# muj: DC indices in RMULTS DC list
+<muj>
+2 3 6 7 8 9 10 11 13 14 15 16 17 18 23 25 26 27 29 
+
+# End of file

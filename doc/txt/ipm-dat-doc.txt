@@ -1,0 +1,438 @@
+Description of the IPM_DAT file format and example of the input IPM_DAT file
+
+# GEMIPM2K v. 0.98
+# Prototype 12.12.2006
+# Comment lines are marked with '#' and will be ignored when reading the file
+
+# The IPM_DAT text input file contains data that are used only within the GEM-IPM-2 numerical algorithm
+# but not exchanged between the FMT and GEM parts. Among this input data, the most important are 
+# numerical controls of GEM-IPM-2 operation and convergence, as well as the parameters and flags 
+# defining the non-ideal solution and sorption models. 
+
+# The easiest way to obtain an initial IPM_DAT file is to generate it together with the DCH_DAT file 
+# and DBR_DAT file(s) using the GEMS-PSI GEM2MT module (or the "Data" "Write IPM files" menu command 
+# on the "Single Chemical System" dialog). 
+
+# The GEMIPM2K program reads the IPM_DAT file only once, after the DCH_DAT file and before any DBR_DAT
+# files. Entire content of the IPM_DAT file will be placed in the IPM (MULTI) internal work structure 
+# of GEM IPM-2, not visible outside of it. 
+
+# The IPM-DAT text input file consists of several logical sections, of which:
+# sections (1) and (2) contain flags and dimensionalities for additional memory allocation for 
+# surface complexes (main dimensionalities of the chemical system are given in the DCH_DAT file);
+# section (3) contains numerical controls of GEM IPM algorithm operation and convergence;  
+# section (4) defines the presence and data for mixing models of multi-component phases and, 
+# if necessary, the arrays of non-ideality parameters; 
+# sections (5) and (6) provide some complete data arrays that may be incomplete in DATABR file(s); 
+# section (7) contains some initial data for phases; and, finally, section (8) contains initial data 
+# for sorption (surface complexation) phases, present if the respective flags and dimensionalities 
+# are set in section (2). 
+
+# The IPM-DAT file consists of one or more input data objects (fields) and comment lines. A comment 
+# line begins with the '#' character in the first position; by reading the file, anything after '#' 
+# will be ignored until the line end code(s). Any data object field begins with a tag - an identifier
+# in angle brackets <>. The tag is followed by one or more values, depending on the type and dimensions 
+# of the data object. The data objects which define dimensionalities for other data objects must 
+# always be provided in the beginning of file, before the reserved tag <END_DIM>. 
+# Other data objects may follow in any order (although it is recommended to keep them in logical 
+# sections, as seen after printing the file from the GEMS code and described below). 
+# Many data data objects located after the <END_DIM> tag can be skipped from the input IPM_DAT file; 
+# if the data object is omitted, its tag must be absent together all values; part of values cannot 
+# be skipped. When a data object is not present in the input file, the default values will be assigned 
+# to all its elements in the in the program memory. 
+# However, if some optional dimensions are set (e.g. <Lads>) before the <END_DIM> tag then at least 
+# obligatory data objects connected to it must also be provided in rest of the input file.
+
+# Obligatory data objects that cannot be skipped are marked below with "***" in the comment line.   
+
+# The actual numbers in this description are related to a particular example of the chemical system 
+# and are given for illustration purposes. The numbers and name lists may change if a different 
+# Chemical System Definition (CSD) will be constructed. 
+
+# *** ID key of the initial chemical system definition (is printed from GEMS in GEMS SysEq record key 
+# format, can also be entered by hand as any string shorter than 64 characters taken in ""). 
+# This string is used only for identification purposes in output files printed from GEMIPM2K, 
+# or for debugging. 
+"CalDolCol G  CalcColumn  1001 0       1       25      000 "
+
+## (Section 1) Important flags that affect memory allocation.
+# *** Flag for using electroneutrality condition in GEM IPM calculations (should be set to 1 if 
+# an Independent Component "charge" ("Zz") is present in the system definition; this flag may be
+# automatically switched off to 0 during GEM calculation if e.g. aqueous phase has been eliminated)
+<pa_PE>            1
+
+# Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat 
+# (not used in this version). If PV = 1 then the Independent Component "Vol" must be included 
+# for the volume balance. The usual (default) value of PV is 0.
+<PV>               0
+
+# Total number of DCs in liquid hydrocarbon phases (for the old FGL module, will soon be obsolete).
+# Default value is 0. 
+<PSOL>             0
+
+## The following two flags must be set on (+) if sorption phases are present in the system definition.
+# Flag for using (+) or ignoring (-) specific surface areas of phases; default value is '+'. 
+<PAalp>          '+'
+
+# Flag for using (+) or ignoring (-) specific surface free energies of phase-aqueous and phase-gas # interfaces; default value is '+'. 
+<PSigm>          '+'
+
+## Section (2) Important additional dimensionalities that affect memory allocation in the MULTI 
+# data structure. 
+# *** Total number of Dependent Components in sorption phases included into this system. If Lads > 0 
+# and FIa > 0 then the data section (7) must be provided at the end of this file (see also # the "scm-ipm-dat-doc.txt" file as an example).
+<Lads>             0
+
+# *** Number of sorption phases included in this system (0 if no sorption phases are included).
+<FIa>              0
+
+# *** Actual maximum number of surface types per adsorption phase (if FIa > 0, <FIat> must be set to 6). 
+<FIat>             0
+
+<END_DIM>
+
+## Section (3): Controls of operation of the GEM IPM numerical algorithm. These settings should 
+## be changed carefully, only if you know what you are doing. Wrong control values and flags may 
+## strongly affect convergence, accuracy and performance of GEM IPM-2, cause it to crash or produce 
+## meaningless results. In most cases, the default values work just fine. 
+#
+# Minimum amount of Independent Component in the bulk system composition (except charge "Zz"), moles 
+# (may be set in the interval 1e-17 < DB < 1e-7). Default value: 1e-17. 
+# This parameter is used in the IPM-2 balance precision controls. 
+<pa_DB>        1e-17
+
+# Maximum allowed mass balance residual (moles) for major Independent Components (may be set in 
+# the interval 1e-10 < DHB < 1e-6). Default value: 1e-8. 
+<pa_DHB>       1e-08
+
+# Precision criterion of the simplex() procedure to obtain the automatic initial approximation 
+# (may be set in the interval 1e-10 < EPS < 1e-6). Default value: 1e-7. 
+<pa_EPS>       1e-07  
+
+# IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-3, 
+# the default value of 1e-4 is strongly recommended). 
+# Setting too low DK < 1e-5 may dramatically increase the number of IPM iterations, slow the 
+# convergence down, and deteriorate the quality and mass balance precision of the GEM IPM result.
+# Too large DK value may result in wrong GEM solution or unrealistic phase assemblage.   
+<pa_DK>       0.0001
+
+# Threshold for the application of the Karpov phase stability criterion f_a (diagnostic criterion 
+# for determining which phases are stable (|f_a| <= DF) and which are not (|f_a| > DF). Used in 
+# Selekt-2 procedure for checking the correctness of stable phase assemblage. 
+# Default is 0.01; it is not recommended to change this value. 
+<pa_DF>         0.01
+
+# Maximum allowed number of iterations in the EnterFeasibleDomain() procedure (can be set 
+# between 10 and 200). Default value: 144. If the procedure has not converged in DP iterations, 
+# this usually means that chemical system definition (CSD) is wrong or there are errors in 
+# stoichiometry of some Dependent Components. 
+<pa_DP>          144
+
+# Maximum allowed number of iterations in the MainIPM_Descent() procedure. Usual number of IPM 
+# iterations after the simplex() initial approximation is between 20 and 100, after reading 
+# the previous GEM solution as initial approximation - ca. 10 to 20 times less. 
+# In highly non-ideal systems with fluid(s) and many solid solutions, more than 300 iterations 
+# may be required. If GEM IPM-2 algorithm has not converged in IIM iterations, this usually 
+# means that chemical system definition (CSD) or thermodynamic data is inconsistent, or 
+# there are problems with some non-ideal mixing models. Another reason may be that <pa_DK> is 
+# set too low. Default IIM value: 500. 
+<pa_IIM>         500
+
+# Control on calling built-in Debye-Hueckel() and other models for aqueous activity coefficients 
+(internal control, do not change). Default value: 3. 
+<pa_PD>            3
+
+# Negative number (from -1 to -20): the number |PRD| of additional full IPM-2 loops to improve 
+# the GEM final solution in highly non-ideal systems (especially around the critial point in some
+# phases). Positive number: no additional loops, IPM_gamma() is called on each GEM iteration.
+# Default value: 3.  
+<pa_PRD>          -1
+
+# Smoothing parameters controlling IPM convergence in highly non-ideal systems. AG can be set 
+# between 0.7 and 1.0; DGC between 0.01 and 0.1. If there are no non-ideal solutions in the system 
+# then it is best to set AG = 1. Default values: AG = 0.7; DGC = 0.07. 
+<pa_AG>            1
+<pa_DGC>        0.07
+
+# Flag for using initial activity coefficients <lnGmf> for simplex() initial approximation 
+# (1-enable, 0-disable). Default value: 1. See <lnGmf> and <pa_GAH> for more details. 
+<pa_PSM>           1
+
+# Initial activity coefficient values for simplex() initial approximation: GAR for major 
+# components (default 1) and GAH for minor components (default 1000).  
+<pa_GAR>           1
+<pa_GAH>        1000
+
+# Cutoff threshold for the elimination of a phase if its amount goes below this threshold. 
+# Values can be set between 1e-7 and 1e-12 mol. Default value: 1e-12. Elimination of a phase 
+# means that amounts of all its components in the X vector (primal solution) will be set to 
+# zero and calculation of activity coefficients skipped on remaining GEM iterations. Elimination 
+# of phases and components (if DS > 1e-10) may significantly affect the mass balance residuals. 
+<pa_DS>        1e-09
+
+# Cutoffs for elimination of: Xw water solvent (default 1e-9); Sc - solid sorbent (default
+# 1e-7); Dc - solution or surface species (default 1e-20); Ph - non-electrolyte solution phases 
+# (default 1e-10). Elimination of the sorbent or solvent results in the elimination of the whole
+# aqueous or sorption phase.  
+<pa_XwMin>     1e-09
+<pa_ScMin>     1e-07
+<pa_DcMin>     1e-20
+<pa_PhMin>     1e-10
+
+# Minimal effective ionic strength (molal), below which the activity coefficients for aqueous 
+# species are set to 1. Default value: 3e-5. 
+<pa_ICmin>     3e-05
+
+# Mode of Selekt2() procedure operation (do not change the default value 1). To be completed. 
+<pa_PC>            1
+
+# Threshold of Karpov stability criterion f_a for insertion of a phase in Selekt2() procedure. 
+# After completion of the main IPM descent, this procedure calculates the Karpov phase stability
+# criterion f_a for each (also eliminated from mass balance) phase. If any phase with f_a > DFM 
+# ("oversaturation") is detected, the Selekt2() procedure inserts its components into the X and 
+# XF vectors and passes the control to EnterFeasibleDomain(). This loop can be repeated up to 3 
+# times; usually, a consistent solution is obtained in 1 or 2 Selekt2() loops. If not, then, most 
+# probably, thermodynamic data is inconsistent.    
+<pa_DFM>        0.1
+
+# Insertion amounts (moles) used after the simplex() initial approximation and in the Selekt2() 
+# procedure for zeroed-off species and phases (usually no need to change):
+# DFYw - water solvent (default 1e-6);
+<pa_DFYw>      1e-06
+# DFYaq - aqueous species (default 1e-6);
+<pa_DFYaq>     1e-06
+# DFYid - ideal solution components (default 1e-6);
+<pa_DFYid>     1e-06
+# DFYr - major solution components (default 1e-6);
+<pa_DFYr>      1e-06
+# DFYh - minor solution components (default 1e-6);
+<pa_DFYh>      1e-06
+# DFYc - single-component phase (default 1e-6); 
+<pa_DFYc>      1e-06
+# Insertion amount of single-component phase in Selekt2() algorithm only (default 1e-6).
+<pa_DFYs>      1e-06
+# The above insertion amounts determine the mass balance residuals in the "normal-precision" 
+# IPM-1 algorithm, and the behavior of the high-precision IPM-2 refinement algorithm. More 
+# about these precision refinements can be found in the pdf documentation on GEMS-PSI web page.  
+
+## Parameters and controls of the high-accuracy IPM-2 algorithm. In principle, they are needed
+## only if some total amounts of Independent Components (except charge) are less than 1e-5 mol.
+# Number of the IPM-2 enhancement loops for obtaining the high-accuracy improved mass balance 
+# (from 0 to 15), default value 14. 
+<pa_DW>            0
+
+# Exponent for dual-thermodynamic restoring of very low amounts of solutes (+2 to -5), relative to 
+# <pa_DHBM> (default 0 or -2 for sorption models). 
+<pa_DT>            0
+
+# IPM-2 balance accuracy control ratio DHBM[i]/b[i], determines the maximum allowed mass balance 
+# residual for minor Independent Components (value of 0.001 means 1% residual relative to the total
+# IC amount in the system). Minor ICs are those with total amount less than 1e-5 mol.  
+<pa_GAS>       0.001
+
+## Controls for surface complexation models
+# Standard surface density (nm-2) for calculating activity of surface species (do not change 
+# unless a different standard value is used in the supplied thermodynamic database). 
+# Default is 12.05 nm-2. 
+<pa_DNS>       12.05
+
+# Convergence parameter of SACT calculation in sorption/surface complexation models (can be 
+set between 0.01 and 0.000001). Default value is 0.001. 
+<pa_IEPS>      0.001
+
+# Flag for using metastability/kinetic constraints on calculated amounts of Dependent Components
+# (see <DLL>, <DUL> arrays). Possible values: 1 (on) or 0 (off). Default value is 1 (on). 
+<pKin>             1
+
+# Tolerance on the amount of DC with two-side metastability constraints if set equal in 
+# <DLL>, <DUL> arrays. The program will use lower constrains DLL[j]-DKIN and upper constraints 
+# DUL[j]+DKIN (in moles).  
+<pa_DKIN>     0.0001
+
+## (Section 4) Initial data for multicomponent phases (see DCH_DAT file for the dimension <nPS>) 
+## and optional mixing model parameters. See another example in the "ipm-ss-dat-doc.txt" file. 
+# *** Codes for mixing models of multicomponent phases: six characters per phase. Of these six 
+# characters, the second, third and fifth must be set to 'N'. The fourth character can be 
+# either 'I' (ideal mixing) or 'S' (the built-in subroutine will be used for the non-ideal model). 
+# Note that only built-in mixing models are allowed in GEMIPM2K (i.e. no phase scripts).
+# The sixth character is either 'N' or code of the most complex EDL model used in sorption phases
+# (e.g. 'T'). The first character can be 'I' (ideal solution) or another character which defines 
+# the built-in subroutine for calculation of activity coefficients on GEM IPM iterations to be 
+# used for this phase. The 'I' code implies <LsMdc>[0] = 0 and <LsMod>[0] = 0.
+# Some possible built-in subroutine codes (under revision, may be changed soon):  
+# 'G' - binary Guggenheim (Redlich-Kister) subregular solid solution; requires <LsMod>[k] = 3 
+#       and 3 parameters (a0, a1, a2) to be provided in the <PMc> array for this phase;
+# 'M' - binary Margules subregular solid solution with T,P dependent parameters; requires 
+#       <LsMod>[k] = 6 and 3 parameters (Wu, Ws, Wv) per end-member to be provided in the <PMc> 
+#       array for this phase;
+# 'T' - ternary Margules regular solid solution with T,P dependent parameters; requires 
+#       <LsMod>[k] = 12 and 4 x 3 parameters (Wu, Ws, Wv) to be provided in the <PMc> array 
+#       for this phase;
+# 'H' - Extended Debye-Hueckel equation for aqueous species with common ion-size parameter a0 
+#       (Angstrom) and common b_gamma parameter; requires <LsMod>[0] = 8; the parameters are 
+#       given in <PMc>[5] (a0) and <PMc>[6] (b_gamma), respectively (<PMc> indexation starts 
+#       from [0], requires <LsMod>[0] = 8);
+# '3' - Extended Debye-Hueckel equation for aqueous species with individual (Kielland) ion-size 
+#       parameter a0 (Angstrom), provided in the <DMc> vector (<LsMdc>[0] = 1), and common b_gamma 
+#       parameter given in <PMc>[6] (<PMc> indexation starts from [0], requires <LsMod>[0] = 8);
+# '2' - Debye-Hueckel equation for aqueous species with individual (Kielland) ion-size parameter 
+#       a0 (Angstrom), taken from <DMc> vector (requires <LsMdc>[0] = 1 and <LsMod>[0] = 0);
+# '1' - Debye-Hueckel limiting law for aqueous species, without the ion-size parameter 
+#      (requires <LsMdc>[0] = 0 and <LsMod>[0] = 0);
+# 'D' - Davies equation for aqueous species (requires <LsMdc>[0] = 0 and <LsMod>[0] = 0);
+# 'A' - built-in SACT and EDL calculations in CD-MUSIC or NEM surface complexation model (for 
+#       sorption phases only, <LsMdc>[0] = 0 and <LsMod>[0] = 0).
+# More codes will be added soon!
+<sMod>
+'DNNSNN' 'INNINN' 
+
+# *** Dimensions of <IPxPH> and <PMc> arrays - three per multicomponent phase, i.e. the <LsMod> 
+# array has <nPS> rows (see DCH_DAT file) and 3 columns. In each row, the first number is the 
+# number of parameters of non-ideal mixing model per this multicomponent phase (i.e. number of 
+# rows in <IPxPH> and <PMc> arrays). The second number is the number of columns in the <IPxPH>
+# array, i.e. the maximum order of interaction parameter; the third number is the number of 
+# columns in the <PMc> array, i.e. the number of P,T coefficients per interaction parameter. 
+# If at least one element in <LsMod> is not zero then the <IPxPH> and <PMc> arrays must be 
+# provided hereafter. 
+<LsMod>
+0 0 0 
+0 0 0  
+
+# IPxPH: Collected indexation tables for interaction parameters of non-ideal solutions given in 
+# rows of <PMc> array. Number of parameters used by k-th phase model is given in <LsMod>[k][0] and 
+# their maximum order (number of columns in IPxPH) is given in <LsMod>[k][1]. Uncomment this and 
+# provide DC indexes that each interaction parameter connects for the phase(s) for which the row 
+# in <LsMod> is not zeros. If order of the interaction parameter is less than <LsMod>[k][1], 
+# fill the remaining elements in the IPxPH row with -1. The tables for phases are all collected 
+# in the <IPxPH> object row-by-row (under construction).  
+# <IPxPH>
+# DC index 1, DC index 2, ...
+
+# Collected parameters per phase for the non-ideal mixing models. Number of parameters used by 
+# k-th phase model is given in <LsMod>[k][0] and the number of T,P coefficients per parameter - 
+# in <LsMod>[k][2]. Uncomment the tag below and provide necessary coefficients if at least one 
+# row in <LsMod> is not zeros. The tables for phases are all collected in the <PMc> object 
+# row-by-row (under construction).  
+# <PMc> 
+# parameter1, parameter2, ...
+
+# *** Number of parameters per component of the phase for the non-ideal mixing models; depends on 
+# the code in <sMod>. If at least one element in <LsMdc> is not zero then the <DMc> vector must 
+# be provided after this data object.
+<LsMdc>
+0 
+0 
+
+# Collected parameters per phase component for the non-ideal mixing models. Number of parameters 
+# per component used by k-th phase model is given in <LsMdc>[k]. Uncomment the tag below and 
+# provide necessary numbers if at least one element in <LsMdc> is not zero. Total number of 
+# parameters per phase in <DMc> is <LsMdc>[k] times the number of Dependent Components included 
+# in the phase. Total number of "rows" in <DMc> is <nDCs> (see DCH_DAT file). The tables for 
+# phase components are all collected in the <DMc> object row-by-row (under construction).  
+# <DMc> 
+# parameter1, parameter2, ...
+
+## Section (5): Some data arrays which are not provided in DCH_DAT file or may be provided 
+## incomplete in DBR_DAT files when not all ICs, DCs or phases were selected to be kept there 
+## (if so then amounts of unselected ICs given here will remain constant in all nodes and times).
+#
+# Full total bulk composition of the initial system (vector b) (see DCH_DAT file for dimension 
+# <nIC> and list of ICs <ICNL>)
+<B>
+3.31e-04 3.31e-04 2.0e-07 1.106837e+02 1.0e-07 5.534286e+01 0.0e+00 
+
+## Initial data for DCs - see DCH_DAT file for dimensions <nDC>, <nDCs> and the list of 
+## DC names <DCNL>
+
+# Partial pressures or fugacities of pure Dependent Components (for setting constant chemical 
+# potentials or pure gas fugacity). Default values: total pressure P (bar). Size: <nDC>
+# (under construction). 
+<Pparc>
+1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 
+1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 
+1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 1.0e+00 
+
+# Increments for adjustment of G0 values of Dependent Components in J/mol/(RT) (normalized 
+# units). Size: <nDC>. Default value: 0.  
+<GEX>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Natural logarithms of activity coefficients to be used at simplex() initial approximation 
+# in GEM IPM (default 0 for all components except minor 'J' end members and surface complexes 
+# for which the default is ln(<pa_GAH>) = 6.907755375). Size: <nDC>.
+<lnGmf>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+## Section (6): Metastability/ kinetic constraints on amounts of Dependent Components (<xDC>) 
+## in GEM IPM result. Applied if <pKin> flag is set to 1. 
+# Code of metastability/kinetic constraints for DCs: 'B' - both side (<DLL> and <DUL>) constraints
+#  are used (default); 'L' - from below only (<DUL> is taken trivial values of 1e6 mol); 
+# 'U' - from above only (<DLL> is taken trivial values of 0 mol). Size: <nDC>.
+<RLC>
+'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+
+# Units of metastability/kinetic constraints for DCs (see vectors <DUL>, <DLL>). 
+# By now, only 'M' (moles) code can be accepted. Size: <nDC>. Under construction. 
+<RSC>
+'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+
+# Full vector of lower metastability constraints on DC amounts <xDC> in the system. 
+# Entered here because this data may be provided incomplete in DATABR file(s) if not
+# all DCs were selected to be kept there. Size: <nDC>. Default value: 0 mol.
+<DLL>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Full vector of upper metastability constraints on DC amounts <xDC> in the system. 
+# Entered here because this data may be provided incomplete in DATABR file(s) if not
+# all DCs were selected to be kept there. Size: <nDC>. Default value: 1e6 mol.
+<DUL>
+1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 
+1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 
+1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 1.0e+06 
+
+## Section (7): Initial data for phases
+# Full vector of specific surface areas of phases. Default value: 0 m2/g. Part or all 
+# values may be set up in the DBR_DAT file(s). Size: <nPH> (see DCH_DAT file).
+<Aalp>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Specific surface free energy for phase-water interface (J/m2). Cannot be set in DBR_DAT
+# or DCH_DAT files - only here! Size: <nPH>. Default value 0 J/m2.
+<Sigw>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Specific surface free energy for phase-gas interface (not yet used). Default: 0 J/m2. 
+# Size: <nPH>.
+<Sigg>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Surface free energy or metastability parameters for phases (in J/g to accomodate for 
+# variable phase composition). Default: 0 J/g. Size: <nPH>. Under construction. 
+<YOF>
+0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 0.0e+00 
+
+# Section (8): Setup of surface complexation models. Should be provided only if sorption 
+# phase(s) are included in the system definition (<FIa> > 0 and <Lads> > 0 and <FIat> > 0). 
+# In this data example, sorption is not included. See another example in the 
+# "ipm-scm-dat-doc.txt" file. 
+# <Nfsp>
+# <MASDT>
+# <C1>
+# <C2>
+# <C3>
+# <pCh>
+# <SATX>
+# <MASDJ>
+# <SCM>
+# <SACT>
+# <DCads>
+
+# End of file
