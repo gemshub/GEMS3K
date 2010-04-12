@@ -321,6 +321,7 @@ double
   // additional arrays for internal calculation in ipm_main
   double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
   double *Uc; // Internal copy of IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
+  double *Uefd; // Internal copy of IC chemical potentials u_i (mole/mole) - EFD function [N]
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
   char errorBuf[1024]; // description of error in IPM
   double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
@@ -475,7 +476,7 @@ class TMulti
 
 // ipm_main.cpp - numerical part of GEM IPM-2
     void MultiCalcMain( long int rLoop );
-    long int EnterFeasibleDomain( );
+    long int EnterFeasibleDomain( long int WhereCalledFrom );
     long int InteriorPointsMethod( long int &status, long int rLoop );
     void SimplexInitialApproximation( );
 
@@ -496,6 +497,7 @@ class TMulti
    void Restoring_Y_YF();
 //   double calcSfactor();
    double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
+   long int CleanupSpeciation( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
 
    // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)

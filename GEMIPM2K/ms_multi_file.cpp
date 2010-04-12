@@ -208,6 +208,7 @@ void TMulti::set_def( long int /*q*/)
         pm.B     = 0;
         pm.U     = 0;
         pm.Uc     = 0;
+        pm.Uefd     = 0;
         pm.U_r   = 0;
         pm.C     = 0;
         pm.IC_m  = 0;
@@ -1195,8 +1196,12 @@ else
  for( ii=0; ii<pm.L; ii++ )
  	  pm.XU[ii] = 0.;
  pm.Uc = new double[pm.N];
+ pm.Uefd = new double[pm.N];
   for( ii=0; ii<pm.N; ii++ )
-  	  pm.Uc[ii] = 0.;
+  {
+      pm.Uc[ii] = 0.;
+      pm.Uefd[ii] = 0.;
+  }
 
   pm.Cp0   = new double[pm.L];
   pm.H0    = new double[pm.L];
@@ -1398,6 +1403,7 @@ if( pm.D ) delete[] pm.D;
    // added SD 03/02/2009
     if( pm.XU ) delete[] pm.XU;
     if( pm.Uc ) delete[] pm.Uc;
+    if( pm.Uefd ) delete[] pm.Uefd;
 
     if(pm.H0)  	delete[] pm.H0;
     if(pm.A0)  	delete[] pm.A0;
@@ -1488,6 +1494,7 @@ void TMulti::to_text_file( const char *path, bool append )
   prar.writeArray(  "B", pm.B,  pm.N);
   prar.writeArray(  "U", pm.U,  pm.N);
   prar.writeArray(  "Uc", pm.Uc,  pm.N);
+  prar.writeArray(  "Uefd", pm.Uefd,  pm.N);
   prar.writeArray(  "U_r", pm.U_r,  pm.N);
   prar.writeArray(  "C", pm.C,  pm.N);
   prar.writeArray(  "XF", pm.XF,  pm.FI);

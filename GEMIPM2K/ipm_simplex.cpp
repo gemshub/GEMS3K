@@ -428,7 +428,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
             Q[I]+=UP[J-1]*P[I];
     }
     for( I=1;I<=M;I++)
-        U[I-1]=-*(A+I);
+        U[I-1] -= *(A+I);  // was =- *(A+I)
 
     delete[] P;
 }
