@@ -200,7 +200,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
       for( j=0; j<pmp->L; j++ )
           pmp->XY[j]=pmp->Y[j];    // Storing a copy of speciation vector
       csRet = CleanupSpeciation( AmountThreshold, ChemPotDiffCutoff );
-      if( csRet == 1 || csRet == -1 )
+      if( csRet == 1 || csRet == 2 || csRet == -1 || csRet == -2 )
       {  //  Significant cleanup has been done - mass balance refinement is necessary
          TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
          for( j=0; j<pmp->L; j++ )
@@ -1847,7 +1847,7 @@ double TMulti::RescaleToSize( bool standard_size )
 long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double MjuDiffCutoff )
 {
     long int NeedToImproveMassBalance = 0, L1k, L1kZeroDCs, k, j, jb = 0;
-    double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff, YjCleaned;
+    double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
     double CutoffDistortionMBR = 0.1 * pmp->DHBM;
     bool KinConstr, Degenerated = false;
     SPP_SETTING *pa = &TProfil::pm->pa;
@@ -1863,7 +1863,7 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
             L1kZeroDCs = 0;
             for(j=jb; j<jb+L1k; j++)
             {
-               Yj = pmp->Y[j];
+               Yj = YjCleaned = pmp->Y[j];
                KinConstr = false;
                 // Detecting the DC having the non-trivial kinetic constraint
                // Fixing a very small component constrained from below
@@ -1884,47 +1884,61 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
                        NeedToImproveMassBalance = 1;
                    if( YjDiff > AmountCorrectionThreshold )
                        NeedToImproveMassBalance = 2;
-                   continue;   // skipping if non-trivial metastability constraint
+//                   continue;   // skipping if non-trivial metastability constraint
                }
-               if( Yj >= pmp->DcMinM )
+               else if( Yj >= pmp->DcMinM )
                {   // we check in the Ls set only, except metastability constraints
                   MjuPrimal = pmp->F[j];   // normalized
                   MjuDual = pmp->Fx[j]/pmp->RT;
                   MjuDiff = MjuPrimal - MjuDual;
                   if( fabs( MjuDiff ) > MjuDiffCutoff )
                   {
-                      if( L1k == 1 )
+                      if( L1k == 1 && MjuDiff > 0. )
                       {  // Pure phase
-                         if( MjuDiff > 0. )
-                            YjCleaned = 0.0; // Cleaning out "phantom" pure phase
-//                        else  // rare case when amount of phase is less than should be
-//                           YjCleaned = Yj / exp( MjuDiff );
+                         YjCleaned = 0.0; // Cleaning out a "phantom" pure phase
                       }
-                      else {  // Component of solution phase
+                      if(L1k > 1)
+                      {  // Component of a solution phase
                          // The species is present in a larger or smaller amount than necessary
                            YjCleaned = Yj / exp( MjuDiff );
                       }
-                      YjDiff = fabs( Yj - YjCleaned );
-                      if( YjDiff > CutoffDistortionMBR )
-                          NeedToImproveMassBalance = 1;
-                      if( YjDiff > AmountCorrectionThreshold )
-                          NeedToImproveMassBalance = 2;
-                      if( YjCleaned < pmp->DcMinM )
+                      YjDiff = YjCleaned - Yj;
+                      if( fabs( YjDiff ) > CutoffDistortionMBR )
                       {
+                          NeedToImproveMassBalance = 1;
+                          if( fabs( YjDiff ) > AmountCorrectionThreshold )
+                          {   // Correction was too large
+                              NeedToImproveMassBalance = 2;
+                              // Temporary: only correction of the size of threshold
+                              if( YjDiff > 0. )
+                                pmp->Y[j] += AmountCorrectionThreshold;
+                              else
+                                pmp->Y[j] -= AmountCorrectionThreshold;
+                          }
+                          else {  // Reasonable correction
+                              pmp->Y[j] = YjCleaned;
+                          }
+                      }
+                      else {  // Correction that does not affect the mass balance
+                          pmp->Y[j] = YjCleaned;
+                      }
+                      if( pmp->Y[j] < pmp->DcMinM )
+                      {  // Corrected amount is too small - zeroed off
                          pmp->Y[j] = 0.;
                          L1kZeroDCs++;
                       }
-                      else {
-                         pmp->Y[j] = YjCleaned;
-                      }
                   }
                }
-               else
+               else if( Yj < pmp->DcMinM )
+               {  // already zero
                    L1kZeroDCs++;
+               }
             }  // for j
             if(( pmp->L1[k] - L1kZeroDCs <= 1 && k < pmp->FIs )
                 ||( pmp->L1[k] - L1kZeroDCs == 0 && k >= pmp->FIs ))
-                Degenerated = true;
+            {   Degenerated = true;
+                NeedToImproveMassBalance = 1;
+            }
        }
        jb+=pmp->L1[k];
    }
@@ -1932,8 +1946,10 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
    { // diagnostics to be implemented
       if( Degenerated && NeedToImproveMassBalance == 1 )
           NeedToImproveMassBalance = -1;
-      // if( NeedToImproveMassBalance == 2 )
-      // Make diagnostic output here
+      if( Degenerated && NeedToImproveMassBalance == 2 )
+      {  // Diagnostic output here
+          NeedToImproveMassBalance = -2;
+      }
    }
    return NeedToImproveMassBalance;
 }
