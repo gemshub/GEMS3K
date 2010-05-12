@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl.cpp 1396 2009-08-16 16:22:04Z wagner $
 //
-// Copyright (C) 2004-2009  T.Wagner, S.Churakov, D.Kulik
+// Copyright (C) 2004-2010  T.Wagner, S.Churakov, D.Kulik
 //
 // Implementation of subclasses of TSolMod for fluid models
-// subclasses: TPRSVcalc, TCGFcalc and TSRKcalc classes
+// subclasses: TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc and TCORKcalc classes
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
 // environment for thermodynamic modeling in geochemistry
@@ -31,7 +31,7 @@
 //=======================================================================================================
 // Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures
 // References: Stryjek and Vera (1986), Proust and Vera (1989)
-// Implementation of the TPRSVcalc class
+// Implementation of the TPRSVcalc class (c) TW July 2006
 //=======================================================================================================
 
 // Generic constructor
@@ -2388,7 +2388,7 @@ long int EOSPARAM::ParamMix( double *Xin )
 //=======================================================================================================
 // Soave-Redlich-Kwong (SRK) model for fluid mixtures
 // References: Soave (1972), Soave (1993)
-// Implementation of the TSRKcalc class
+// Implementation of the TSRKcalc class (c) TW December 2008
 //=======================================================================================================
 
 // Constructor
@@ -3174,9 +3174,9 @@ long int TSRKcalc::SRKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 
 
 //=======================================================================================================
-// Peng-Robinson (PR78) model for fluid mixtures  (c) TW July 2009
-// References: Peng and Robinson (1976); Peng and Robinson (1978)
-// Implementation of the TPR78calc class
+// Peng-Robinson (PR78) model for fluid mixtures
+// References: Peng and Robinson (1976), Peng and Robinson (1978)
+// Implementation of the TPR78calc class (c) TW July 2009
 //=======================================================================================================
 
 // Constructor
@@ -3966,6 +3966,679 @@ long int TPR78calc::PR78CalcFugPure( double Tmin, float *Cpg, double *FugProps )
 }
 
 #endif
+
+
+
+
+
+//=======================================================================================================
+// Compensated Redlich-Kwong (CORK) model for fluid mixtures
+// References: Holland and Powell (1991)
+// Implementation of the TCORKcalc class (c) TW May 2010
+//=======================================================================================================
+
+// Constructor
+TCORKcalc::TCORKcalc( long int NCmp, double Pp, double Tkp, char *Eos_Code ):
+    TSolMod( NCmp, 0, 0, 0, 0, 4, '8', 0,
+         0, 0, 0, 0, 0, 0, Tkp, Pp )
+{
+    aGEX = 0;
+    aVol = 0;
+    Pparc = 0;
+    alloc_internal();
+    EosCode = Eos_Code;
+}
+
+
+TCORKcalc::TCORKcalc( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
+    long int NPperDC, char Mod_Code, char Mix_Code, long int *arIPx,
+    double *arIPc, double *arDCc, double *arWx, double *arlnGam,
+    double *aphVOL, double *arPparc, double *arGEX, double *arVol,
+    double T_k, double P_bar, char *Eos_Code ):
+                TSolMod( NSpecies, NParams, NPcoefs, MaxOrder, NPperDC, 4, Mod_Code, Mix_Code,
+                arIPx, arIPc, arDCc, arWx, arlnGam, aphVOL, T_k, P_bar )
+{
+    Pparc = arPparc;
+    aGEX = arGEX;
+    aVol = arVol;
+    alloc_internal();
+    EosCode = Eos_Code;
+}
+
+
+TCORKcalc::~TCORKcalc()
+{
+    free_internal();
+}
+
+
+// allocate work arrays for pure fluid and fluid mixture properties
+void TCORKcalc::alloc_internal()
+{
+    RR = 0.00831451;
+    Pkb = Pbar/1000.;   // pressure in kbar
+    Eosparm = new double [NComp][2];
+    Fugpure = new double [NComp][6];
+    Fugci = new double [NComp][4];
+    Phi = new double [NComp];
+    A = new double *[NComp];
+    W = new double *[NComp];
+    dW = new double *[NComp];
+    d2W = new double *[NComp];
+    dWp = new double *[NComp];
+
+    for (long int i=0; i<NComp; i++)
+    {
+        A[i] = new double[NComp];
+        W[i] = new double[NComp];
+        dW[i] = new double[NComp];
+        d2W[i] = new double[NComp];
+        dWp[i] = new double[NComp];
+    }
+}
+
+
+void TCORKcalc::free_internal()
+{
+    long int i;
+
+    for (i=0; i<NComp; i++)
+    {
+        delete[]A[i];
+        delete[]W[i];
+        delete[]dW[i];
+        delete[]d2W[i];
+        delete[]dWp[i];
+    }
+
+    delete[]Eosparm;
+    delete[]Fugpure;
+    delete[]Fugci;
+    delete[]Phi;
+    delete[]A;
+    delete[]W;
+    delete[]dW;
+    delete[]d2W;
+    delete[]dWp;
+}
+
+
+// High-level method to retrieve pure fluid fugacities
+long int TCORKcalc::PureSpecies()
+{
+    long int j, retCode = 0;
+
+    for( j=0; j<NComp; j++ )
+    {
+        // Calling CORK EoS for pure fugacity
+        retCode =  FugacityPT( j, aDCc+j*NP_DC );
+        aGEX[j] = log( Fugpure[j][0] );
+        Pparc[j] = Fugpure[j][0] * Pbar;  // required only for performance
+        aVol[j] = Fugpure[j][4] * 10.;  // molar volume of pure fluid component, J/bar to cm3
+    } // j
+
+    if ( retCode )
+    {
+            char buf[150];
+            sprintf(buf, "CORK fluid: calculation of pure fluid fugacity failed");
+                    Error( "E71IPM IPMgamma: ",  buf );
+    }
+
+    return 0;
+}
+
+
+// High-level method to calculate T,P corrected binary interaction parameters
+long int TCORKcalc::PTparam()
+{
+    long int j, i, ip, i1, i2;
+    double a;
+
+    PureSpecies();
+
+    // set all interaction parameters zero
+    for( j=0; j<NComp; j++ )
+    {
+        for( i=0; i<NComp; i++ )
+        {
+            A[j][i] = 0.;
+            W[j][i] = 0.;
+            dW[j][i] = 0.;
+            d2W[j][i] = 0.;
+            dWp[j][i] = 0.;
+        }
+    }
+
+    // transfer interaction parameters that have non-standard value
+    if( NPcoef > 0 )
+    {
+        for ( ip=0; ip<NPar; ip++ )
+        {
+            i1 = aIPx[MaxOrd*ip];
+            i2 = aIPx[MaxOrd*ip+1];
+            a = aIPc[NPcoef*ip];
+            A[i1][i2] = a;
+            A[i2][i1] = a;  // symmetric case
+        }
+    }
+
+    return 0;
+}
+
+
+// High-level method to retrieve activity coefficients of the fluid mixture
+long int TCORKcalc::MixMod()
+{
+    long int i, j, k;
+    double dj, dk, sumPhi, lnGam, Gam;
+
+    // calculate phi values
+    sumPhi = 0.;
+    for ( j=0; j<NComp; j++ )
+    {
+        sumPhi = sumPhi + x[j]*Fugpure[j][4];  // volume
+    }
+    for ( j=0; j<NComp; j++ )
+    {
+        Phi[j] = x[j]*Fugpure[j][4]/sumPhi;
+    }
+
+    // corrected interaction parameters
+    for ( i=0; i<NComp; i++ )
+    {
+        for ( j=i+1; j<NComp; j++ )
+        {
+            W[i][j] = A[i][j]*(Fugpure[i][4]+Fugpure[j][4])/(Fugpure[i][4]*Fugpure[j][4]);
+        }
+    }
+
+    // activity coefficients
+    for ( i=0; i<NComp; i++ )
+    {
+        lnGam = 0.;
+        for ( j=0; j<NComp; j++ )
+        {
+            for ( k=j+1; k<NComp; k++ )
+            {
+                if (i==j)
+                    dj = 1.;
+                else
+                    dj = 0.;
+                if (i==k)
+                    dk = 1.;
+                else
+                    dk = 0.;
+                lnGam = lnGam - (dj-Phi[j])*(dk-Phi[k])*W[j][k]*2.*Fugpure[i][4]/(Fugpure[j][4]+Fugpure[k][4]);
+            }
+        }
+        Gam = exp(lnGam/(R_CONST*Tk));
+        Fugci[i][0] = Gam;
+        if( Fugci[i][0] > 1e-23 )
+            lnGamma[i] = log( Fugci[i][0] );
+        else
+            lnGamma[i] = 0.;
+    }  // i
+
+    return 0;
+}
+
+
+// High-level method to retrieve residual functions of the fluid mixture
+long int TCORKcalc::ExcessProp( double *Zex )
+{
+    long int iRet;
+
+    iRet = ResidualFunct();
+
+    if ( iRet )
+    {
+        char buf[150];
+        sprintf(buf, "CORK fluid: calculation failed");
+        Error( "E71IPM IPMgamma: ",  buf );
+    }
+
+    Ars = Grs - Vrs*Pbar;
+    Urs = Hrs - Vrs*Pbar;
+
+    // assignments (residual functions)
+    Zex[0] = Grs;
+    Zex[1] = Hrs;
+    Zex[2] = Srs;
+    Zex[3] = CPrs;
+    Zex[4] = Vrs;
+    Zex[5] = Ars;
+    Zex[6] = Urs;
+
+    return iRet;
+}
+
+
+// calculates ideal mixing properties
+long int TCORKcalc::IdealProp( double *Zid )
+{
+    long int j;
+    double s, sc, sp;
+
+    s = 0.0;
+    for ( j=0; j<NComp; j++ )
+    {
+        if ( x[j] > 1.0e-32 )
+            s += x[j]*log(x[j]);
+    }
+    sc = (-1.)*R_CONST*s;
+    sp = (-1.)*R_CONST*log(Pbar);
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = sc + sp;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
+
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
+
+    return 0;
+}
+
+
+// High-level method to retrieve pure fluid properties
+long int TCORKcalc::FugacityPT( long int j, double *EoSparam )
+{
+    long int iRet = 0;
+
+    // reads EoS parameters from database into work array
+    if( !EoSparam )
+        return -1;  // Memory alloc error
+    Eosparm[j][0] = EoSparam[0];  // critical temperature in K
+    Eosparm[j][1] = EoSparam[1];  // critical pressure in bar
+
+    // select subroutines for different fluid types
+    switch ( EosCode[j] )
+    {
+            case DC_GAS_H2O_:  // H2O
+                    iRet = FugacityH2O( j );
+                    break;
+            case DC_GAS_CO2_:  // CO2
+                    iRet = FugacityCO2( j );
+                    break;
+            case DC_GAS_COMP_:  // other fluids
+            case DC_GAS_H2_:
+            case DC_GAS_N2:
+                    iRet = FugacityCorresponding( j );
+                    break;
+            default:
+                    iRet = -1;
+                    break;
+    }
+
+    return iRet;
+}
+
+
+long int TCORKcalc::FugacityH2O( long int j )
+{
+    // calculates fugacity and state functions of H2O
+    long int phState;   // 1: vapor, 2: liquid
+    double a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a;
+    double b, c0, c1, c, d0, d1, d, e0, e;
+    double p0, Psat, vol, fc, v, g1, g2, g3;
+
+    a0 = 1113.4;
+    a1 = -0.88517;
+    a2 = 4.53e-3;
+    a3 = -1.3183e-5;
+    a4 = -0.22291;
+    a5 = -3.8022e-4;
+    a6 = 1.7791e-7;
+    a7 = 5.8487;
+    a8 = -2.1370e-2;
+    a9 = 6.8133e-5;
+    b = 1.465;
+    c0 = -8.909e-2;
+    c1 = 0.;
+    d0 = 1.9853e-3;
+    d1 = 0.;
+    e0 = 8.0331e-2;
+    c = c0 + c1*Tk;
+    d = d0 + d1*Tk;
+    e = e0;
+    p0 = 2.;
+
+    if (Tk > 695.)   // supercritical fluid phase
+    {
+        phState = 1;
+        a = a0 + a4*(Tk-673.) + a5*pow((Tk-673.),2.) + a6*pow((Tk-673.),3.);
+        VolumeFugacity( phState, Pkb, p0, a, b, c, d, e, vol, fc );
+     }
+
+     else   // subcritical region
+     {
+         Psat = (-13.627e-3) + (7.29395e-7)*pow(Tk,2.) - (2.34622e-9)*pow(Tk,3.) + (4.83607e-15)*pow(Tk,5.);
+         if (Pkb < Psat)
+         {
+             phState = 1;   // vapor
+             if (Tk < 673.)
+                 a = a0 + a7*(673.-Tk) + a8*pow((673.-Tk),2.) + a9*pow((673.-Tk),3.);
+              else
+                  a = a0 + a4*(Tk-673.) + a5*pow((Tk-673.),2.) + a6*pow((Tk-673.),3.);
+              VolumeFugacity( phState, Pkb, p0, a, b, c, d, e, vol, fc );
+          }
+          else
+          {
+              phState = 1;   // gaseous phase at Psat
+              if (Tk < 673.)
+                  a = a0 + a7*(673.-Tk) + a8*pow((673.-Tk),2.) + a9*pow((673.-Tk),3.);
+              else
+                  a = a0 + a4*(Tk-673.) + a5*pow((Tk-673.),2.) + a6*pow((Tk-673.),3.);
+              VolumeFugacity( phState, Psat, p0, a, b, c, d, e, v, g1 );
+              phState = 2; // liquid phase at Psat
+              if (Tk < 673.)
+                  a = a0 + a1*(673.-Tk) + a2*pow((673.-Tk),2.) + a3*pow((673.-Tk),3.);
+              else
+                  a = a0 + a4*(Tk-673.) + a5*pow((Tk-673.),2.) + a6*pow((Tk-673.),3.);
+              VolumeFugacity( phState, Psat, p0, a, b, c, d, e, v, g2 );
+              phState = 2; // fluid phase at Pkb
+              if (Tk < 673.)
+                  a = a0 + a1*(673.-Tk) + a2*pow((673.-Tk),2.) + a3*pow((673.-Tk),3.);
+              else
+                  a = a0 + a4*(Tk-673.) + a5*pow((Tk-673.),2.) + a6*pow((Tk-673.),3.);
+              VolumeFugacity( phState, Pkb, Psat, a, b, c, d, e, vol, g3 );
+              fc = g1/g2*g3;
+          }
+     }
+
+     Fugpure[j][0] = fc;  // fugacity coefficient
+     Fugpure[j][1] = R_CONST*Tk*log(fc);  // Gres
+     Fugpure[j][2] = 0.;  // Hres (under construction)
+     Fugpure[j][3] = 0.;  // Sres (under construction)
+     Fugpure[j][4] = vol;  // volume
+     Fugpure[j][5] = 0.;  // CPres (under construction)
+
+     return 0;
+}
+
+
+long int TCORKcalc::FugacityCO2( long int j )
+{
+    // calculates fugacity and state functions of CO2
+    long int phState;
+    double a0, a1, a2, a, b, c0, c1, c, d0, d1, d, e0, e;
+    double p0, vol, fc;
+
+    a0 = 659.8;
+    a1 = 0.21078;
+    a2 = -6.3976e-4;
+    b = 3.057;
+    c0 = -1.78198e-1;
+    c1 = 2.45317e-5;
+    d0 = 5.40776e-3;
+    d1 = -1.59046e-6;
+    e0 = 0.;
+    a = a0 + a1*Tk + a2*pow(Tk,2.);
+    c = c0 + c1*Tk;
+    d = d0 + d1*Tk;
+    e = e0;
+    p0 = 5.;
+
+    phState = 1;
+    VolumeFugacity( phState, Pkb, p0, a, b, c, d, e, vol, fc );
+
+    Fugpure[j][0] = fc;  // fugacity coefficient
+    Fugpure[j][1] = R_CONST*Tk*log(fc);  // Gres
+    Fugpure[j][2] = 0.;  // Hres (under construction)
+    Fugpure[j][3] = 0.;  // Sres (under construction)
+    Fugpure[j][4] = vol;  // volume
+    Fugpure[j][5] = 0.;  // CPres (under construction)
+
+    return 0;
+}
+
+
+long int TCORKcalc::FugacityCorresponding( long int j )
+{
+    // calculates fugacity and state functions of other gases
+    double a0, a1, a, b0, b, c0, c1, c, d0, d1, d, tcr, pcr;
+    double vol, fc, rtlnf, fug;
+
+    a0 = 5.45963e-5;
+    a1 = -8.6392e-6;
+    b0 = 9.18301e-4;
+    c0 = -3.30558e-5;
+    c1 = 2.30524e-6;
+    d0 = 6.93054e-7;
+    d1 = -8.38293e-8;
+    tcr = Eosparm[j][0];
+    pcr = Eosparm[j][1]/1000.;  // kbar
+
+    a = a0*pow(tcr,2.)*sqrt(tcr)/pcr + a1*tcr*sqrt(tcr)/pcr*Tk;
+    b = b0*tcr/pcr;
+    c = c0*tcr/(pcr*sqrt(pcr)) + c1/(pcr*sqrt(pcr))*Tk;
+    d = d0*tcr/pow(pcr,2.) + d1/pow(pcr,2.)*Tk;
+    vol = RR*Tk/Pkb + b - a*RR*sqrt(Tk)/((RR*Tk+b*Pkb)*(RR*Tk+2.*b*Pkb)) + c*sqrt(Pkb) + d*Pkb;
+    rtlnf = RR*Tk*log(1000*Pkb) + b*Pkb + a/(b*sqrt(Tk))*(log(RR*Tk+b*Pkb) - log(RR*Tk+2*b*Pkb))
+                + (2./3.)*c*Pkb*sqrt(Pkb) + (d/2.)*pow(Pkb,2.);
+    fug = exp(rtlnf/(RR*Tk));
+    fc = exp(rtlnf/(RR*Tk))/(1000*Pkb);
+
+    Fugpure[j][0] = fc;  // fugacity coefficient
+    Fugpure[j][1] = R_CONST*Tk*log(fc);  // Gres
+    Fugpure[j][2] = 0.;  // Hres (under construction)
+    Fugpure[j][3] = 0.;  // Sres (under construction)
+    Fugpure[j][4] = vol;  // volume
+    Fugpure[j][5] = 0.;  // CPres (under construction)
+
+    return 0;
+}
+
+
+long int TCORKcalc::VolumeFugacity( long int phState, double pp, double p0, double a, double b, double c,
+        double d, double e, double &vol, double &fc )
+{
+    // calculate volume and fugacity coefficient
+    double cb, cc, cd, v1, v2, v3, vmrk, vvir, lng, lnvir;
+
+    cb = (-1.)*RR*Tk/pp;
+    cc = (-1.)*(b*RR*Tk+pow(b,2.)*pp-a/sqrt(Tk))/pp;
+    cd = (-1.)*a*b/(sqrt(Tk)*pp);
+    Cardano(cb, cc, cd, v1, v2, v3);
+
+    if ( phState == 1 )   // vapor root
+    {
+        if (v1>0.)
+            vmrk = v1;
+        else if (v2>0.)
+            vmrk = v2;
+        else
+            vmrk = v3;
+        if (v2>vmrk)
+            vmrk = v2;
+        if (v3>vmrk)
+            vmrk=v3;
+    }
+
+    else   // liquid root
+    {
+        if (v1>0.)
+            vmrk = v1;
+        else if (v2>0.)
+            vmrk = v2;
+        else
+            vmrk = v3;
+        if ( (v2<vmrk) && (v2>0.) )
+            vmrk = v2;
+        if ( (v3<vmrk) && (v2>0.) )
+            vmrk = v3;
+    }
+
+    // calculate fugacity coefficient
+    lng = pp*vmrk/(RR*Tk) - 1. - log((vmrk-b)*pp/(RR*Tk)) - a/(b*RR*Tk*sqrt(Tk))*log(1.+b/vmrk);
+    if (pp>p0)
+    {
+        vvir = c*sqrt(pp-p0) + d*(pp-p0) + e*sqrt(sqrt(pp-p0));
+        lnvir = ((2./3.)*c*(pp-p0)*sqrt(pp-p0) + d/2.*pow((pp-p0),2.) + (4./5.)*e*(pp-p0)*sqrt(sqrt(pp-p0)))/(RR*Tk);
+    }
+    else
+    {
+        vvir = 0.;
+        lnvir = 0.;
+    }
+
+    vol = vmrk + vvir;
+    lng = lng + lnvir;
+    fc = exp(lng);
+    return 0;
+}
+
+
+long int TCORKcalc::Cardano(double cb, double cc, double cd, double &v1, double &v2, double &v3)
+{
+    // finds roots of cubic equation
+    double co, cp, cq, cr, cp2, cq3;
+
+    cp = (2.*pow(cb,3.)-9.*cb*cc+27.*cd)/54.;
+    cq = (pow(cb,2.)-3.*cc)/9.;
+    cp2 = pow(cp,2.);
+    cq3 = pow(cq,3.);
+
+    if ( (cp2-cq3)>0. )  // one real root
+    {
+        cr = -cp/fabs(cp)*pow(fabs(cp)+sqrt(cp2-cq3),1./3.);
+        if (cr!=0)
+        {
+            v1 = cr + cq/cr - cb/3.;
+            v2 = cr + cq/cr - cb/3.;
+            v3 = cr + cq/cr - cb/3.;
+        }
+        else
+        {
+            v1 = -cb/3.;
+            v2 = -cb/3.;
+            v3 = -cb/3.;
+        }
+    }
+
+    else  //three real roots
+    {
+        co = atan(sqrt(1.-cp2/(cq3))/(cp/sqrt(cq3)));
+        if (co<0.)
+            co = co + 3.1415927;
+        v1 = (-2.)*sqrt(cq)*cos(co/3.) - cb/3.;
+        v2 = (-2.)*sqrt(cq)*cos((co+2.*3.1415927)/3.) - cb/3.;
+        v3 = (-2.)*sqrt(cq)*cos((co-2.*3.1415927)/3.) - cb/3.;
+    }
+
+    return 0;
+}
+
+
+long int TCORKcalc::ResidualFunct()
+{
+    long int i, j, k;
+    double dj, dk, sumPhi, lnGam, Gam, sumg, sumf;
+
+    // calculate phi values
+    sumPhi = 0.;
+    for ( j=0; j<NComp; j++ )
+    {
+        sumPhi = sumPhi + x[j]*Fugpure[j][4];  // volume
+    }
+    for ( j=0; j<NComp; j++ )
+    {
+        Phi[j] = x[j]*Fugpure[j][4]/sumPhi;
+    }
+
+    // corrected interaction parameters
+    for ( i=0; i<NComp; i++ )
+    {
+        for ( j=i+1; j<NComp; j++ )
+        {
+            W[i][j] = A[i][j]*(Fugpure[i][4]+Fugpure[j][4])/(Fugpure[i][4]*Fugpure[j][4]);
+        }
+    }
+
+    // activity coefficients
+    sumg = 0.;
+    sumf = 0.;
+    for ( i=0; i<NComp; i++ )
+    {
+        lnGam = 0.;
+        for ( j=0; j<NComp; j++ )
+        {
+            for ( k=j+1; k<NComp; k++ )
+            {
+                if (i==j)
+                    dj = 1.;
+                else
+                    dj = 0.;
+                if (i==k)
+                    dk = 1.;
+                else
+                    dk = 0.;
+                lnGam = lnGam - (dj-Phi[j])*(dk-Phi[k])*W[j][k]*2.*Fugpure[i][4]/(Fugpure[j][4]+Fugpure[k][4]);
+            }
+        }
+        Gam = exp(lnGam/(R_CONST*Tk));
+        Fugci[i][0] = Gam;
+        if( Fugci[i][0] > 1e-23 )
+            lnGamma[i] = log( Fugci[i][0] );
+        else
+            lnGamma[i] = 0.;
+        sumg += x[i]*lnGamma[i];
+        sumf += x[i]*log( Fugpure[i][0] );
+    }  // i
+
+    // residual properties (under construction)
+    Grs = (sumg+sumf)*R_CONST*Tk;
+    Hrs = 0.;
+    Srs = 0.;
+    Vrs = 0.;
+    CPrs = 0.;
+
+    return 0;
+}
+
+
+#ifndef IPMGEMPLUGIN
+
+// Calculates properties of pure fluids when called from DCthermo
+long int TCORKcalc::CORKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
+{
+        long int retCode = 0;
+        double Coeff[7];
+
+        for( int ii=0; ii<7; ii++ )
+                Coeff[ii] = (double)Cpg[ii];
+
+        if( (Tk >= Tmin) && (Tk < 1e4) && (Pbar >= 1e-5) && (Pbar < 1e5) )
+        {
+                retCode = FugacityPT( 0, Coeff );
+                for( int i=0; i<6; i++ )
+                        FugProps[i] = Fugpure[0][i];
+                return retCode;
+        }
+
+        else
+        {
+                for( int i=1; i<6; i++ )
+                        FugProps[i] = 0.;
+                FugProps[0] = 1.;
+                FugProps[4] = 8.31451*Tk/Pbar;
+                return -1;
+        }
+}
+
+#endif
+
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl1.cpp 1140 2008-12-08 19:07:05Z wagner $
 //
-// Copyright (C) 2008-2009  T.Wagner, S.Dmitrieva, F.Hingerl, D.Kulik
+// Copyright (C) 2008-2010  T.Wagner, S.Dmitrieva, F.Hingerl, D.Kulik
 //
 // Implementation of subclasses of TSolMod for aqueous activity models
 // subclasses: TSIT, TPitzer, TEUNIQUAC, THelgeson, TDavies,
@@ -400,13 +400,11 @@ double TSIT::IonicStrength()
 
 //=============================================================================================
 // Pitzer model for aqueous electrolyte solutions, Harvie-Moller-Weare (HMW) version
-// References: Zhang et al. (2006)  Pitzer-Toughreact report
-// Implemented by F.F.Hingerl as Matlab script,
-//    converted by s.Dmytrieva into C++ program
-//    in December 2008 for GEOTHERM CCES project
+// References: Zhang et al. (2006)
+// (c) FH/SD December 2008
 //=============================================================================================
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 // Generic constructor for the TPitzer class
 TPitzer::TPitzer( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
         long int NPperDC, char Mod_Code, char Mix_Code,
@@ -2066,6 +2064,7 @@ long int TPitzer::ExcessProp( double *Zex )
 //=============================================================================================
 // Extended universal quasi-chemical (EUNIQUAC) model for aqueous electrolyte solutions
 // References: Nicolaisen et al. (1993), Thomsen et al. (1996), Thomsen (2005)
+// (c) TW/FH February 2009
 //=============================================================================================
 
 

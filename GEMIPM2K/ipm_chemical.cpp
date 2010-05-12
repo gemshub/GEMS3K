@@ -24,6 +24,12 @@
 #include<iomanip>
 
 #include "m_param.h"
+#ifndef IPMGEMPLUGIN
+#include "service.h"
+#include "stepwise.h"
+#endif
+
+// #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of max.moles of surface species for SACT stabilization
@@ -688,167 +694,6 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of Karpov stability criteria for a DC
-// Modified for kinetic constraints 05.11.2007 by DK
-//
-double TMulti::KarpovCriterionDC(
-    double *dNuG,  // Nu[j]-c[j] difference - is modified here
-    double logYF,  // ln Xa   (Xa is mole amount of the whole phase)
-    double asTail, // asymmetry correction (0 for symmetric phases)
-    double logYw,  // ln Xw   (Xw is mole amount of solvent)
-    double Wx,     // mole fraction of this DC
-    char DCCW      // Generic class code of DC
-)
-{
-    double Fj=0.0;  // output phase stability criterion
-
-    if( logYF > -35. && Wx > 1e-18 )    // Check thresholds!
-        switch( DCCW ) // expressions for fj
-        {
-        default: // error code would be needed here !!!
-            *dNuG = 36.;
-        case DC_SINGLE:
-            Wx = 1.0;
-        case DC_SYMMETRIC:
-            break;
-        case DC_ASYM_SPECIES:
-            *dNuG += logYw - logYF - asTail;
-            break;
-        case DC_ASYM_CARRIER:
-            *dNuG += 1.0/(1.0 - asTail) - asTail - 1.0;
-        }
-    if( fabs( *dNuG ) > 35.)
-        Fj = ( *dNuG > 0 )? 1.5860135e15: 6.305117e-16;
-    else Fj = exp( *dNuG );
-    Fj -= Wx;                    // If Wx = 0 then this DC is not in L_S set
-
-    return Fj;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// calculation of Karpov stability criteria for all phases
-//
-void TMulti::f_alpha()
-{
-    bool KinConstr;
-    long int k, j, ii;
-    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj;
-    SPP_SETTING *pa = &TProfil::pm->pa;
-
-    EMU = pmp->EMU;
-    NMU = pmp->NMU;
-    for(ii=0; ii<pmp->L; ii++ )
-    	EMU[ii] = NMU[ii]=0.0;
-    j=0;
-    pmp->YMET = 0.0;
-    for( k=0; k<pmp->FI; k++ )
-    { // phases
-        ii=j+pmp->L1[k];
-        pmp->Falp[k] = pmp->YMET; // metastability parameter
-        pmp->logXw = -35.;
-        pmp->logYFk = -35.;
-
-        pmp->YFk = 0.0;
-        YF= pmp->YF[k]; // moles of carrier
-        if( pmp->FIs && k<pmp->FIs )
-            pmp->YFk = pmp->YFA[k];
-        if( pmp->YFk > 6.305117e-16 )   // check threshold!
-        {
-            pmp->logXw = log(pmp->YFk);
-            pmp->aqsTail = 1.- pmp->YFk / YF;
-        }
-        else
-        {
-            pmp->logXw = -35.;
-            pmp->aqsTail = 0.0;
-        }
-
-        if( pmp->L1[k] > 1 && YF > 6.305117e-16 )
-            pmp->logYFk = log( YF );
-        else pmp->logYFk = -35.;
-        if( pmp->PHC[k] == PH_AQUEL) // number of moles of solvent
-            pmp->Yw = pmp->YFk;
-
-// The code below was re-arranged by DK on 2.11.2007
-        if(pmp->L1[k] == 1 )
-        {   // This is a single-component phase - always included in L_S set
-            KinConstr = false;
-            Wx = 1.0;
-            Yj = pmp->Y[j];
-            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
-            dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
-            if( // pmp->DUL[j] < pa->p.DKIN  ||    // DKIN (1e-6) is used here as tolerance
-            	 ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
-                || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
-                KinConstr = true; // Avoiding phase with the amount lying on the non-trivial kinetic constraint
-            Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
-                            pmp->logXw, Wx, pmp->DCCW[j] );
-            NMU[j] = dNuG;
-            EMU[j] = Fj;
-            if( KinConstr == false )
-                pmp->Falp[k] = Fj;   // Karpov criterion of pure phase
-        }
-        else {
-        // This is a multi-component phase
-            for( ; j<ii; j++ )
-            {
-                KinConstr = false;
-                Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
-                dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
-                Wx = 0.0;
-                Yj = pmp->Y[j];
-//                if( YF > pa->p.DS && Yj > pmp->lowPosNum )
-                if( YF > pmp->DSM && Yj > pmp->DcMinM )
-                    Wx = Yj / YF; // calculating mole fraction of DC
-                if( // pmp->DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
-                	( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
-                    || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
-                    KinConstr = true; // Avoiding DC with the amount lying on the non-=trivial kinetic constraint
-                // calculating Karpov stability criteria for DCs
-                Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
-                         pmp->logXw, Wx, pmp->DCCW[j] );
-                NMU[j] = dNuG;  // dNuG is stored for all DCs, not only those in L_S set
-// Experimental option - checking zeroed off DCs in multicomponent phases
-// during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)
-if( pmp->pNP && !pmp->K2 )
-{  // Checking L_S set and potentially stable zero DCs and phases
-   if( YF >= pmp->DSM ) // pa->p.DS )
-   {                            // phase is there
-	   if( Yj >= fmin(pmp->lowPosNum, pmp->DcMinM ) )
-       {	                    // DC is there
-		   if( KinConstr == false)
-              pmp->Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
-       }
-	   else {                  // DC is zeroed off
-		   if( Fj > pa->p.DF*100. )
-	          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
-	   }
-       EMU[j] = Fj;
-   }
-   else {  // The whole phase is absent
-	   if( Fj > pa->p.DF*100. )
-          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
-       EMU[j] = Fj;              // To check values (remove this line later on)
-   }
-}
-else {   // Standard checking in the L_S set only
-//       if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
-         if( YF >= pmp->DSM && Yj >= fmin( pmp->lowPosNum, pmp->DcMinM ) )  // Checking L_S set
-         {
-             if( KinConstr == false )
-                 pmp->Falp[k] += Fj; // incrementing Karpov stability criterion for the phase
-                    EMU[j] = Fj;
-             }
-             else
-                    EMU[j] = 0;   // This DC is not in L_S set: e.g. metastability constrained
-}
-             }   // j
-        }
-        j = ii;
-    }  // k
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of a species increment to total Gibbs energy G(X)
 //  of the system (return value).
 //  On error returns +7777777.
@@ -882,7 +727,8 @@ double TMulti::FreeEnergyIncr(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of the total Gibbs energy of the system G(X).
+// Calculation of the total Gibbs energy of the system G(X)
+// and copying of Y, YF vectors into X,XF, respectively.
 //  Parameter LM is the IPM step size for calculation of new
 //  quantities of all species (vector X[]) using the direction
 //  of descent (MU[] vector). If LM == 0, this function
@@ -901,7 +747,7 @@ double TMulti::GX( double LM  )
             pmp->X[i]=pmp->Y[i];
     else  // calculate new values of X
         for(i=0;i<pmp->L;i++ )
-        {  // vector pmp->MU - the direction of descent!
+        {  // gradient vector pmp->MU - the direction of descent!
             pmp->X[i]=pmp->Y[i]+LM*pmp->MU[i];
 //            if( pmp->X[i] <  pmp->lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
             if( pmp->X[i] <  pmp->DcMinM )
@@ -934,11 +780,7 @@ double TMulti::GX( double LM  )
         }
         else if( XF < pmp->DSM && pmp->logXw < -100. )
         	goto NEXT_PHASE;
-//        if( XF <= const2 ||
-//                (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
-//                || XFw <= TProfil::pm->pa.p.XwMin) )
-//                || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
-//            goto NEXT_PHASE;
+
         pmp->logYFk = log( XF );
 
         for( ; j<i; j++ )
@@ -1195,174 +1037,6 @@ case DC_AQ_SURCOMP:
     return G;
 }
 
-//----------------------------------------------------------------------------
-// KC: dual-thermo calculation of DC amounts X(j) from A matrix and u vector
-//  using method and formulae from [Karpov et al., 2001] with extensions
-//  !!!!!  Attention !!!! XU[j] calculation for some classes of DCs may need improvement!
-//    Now for DCs in multicomponent phases only!
-// Return code  0 OK
-//              1 The dual solution appears bad, and the insertion of XU[j] will damage
-//                the mass balance
-#define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
-//
-long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
-{
-  long int i,j,ja,jj,ii,ix, jb,je,k;
-  long int isp, ist;
-  double Ez, Psi;   // added by KD 23.11.01
-  double  Dsur, DsurT, MMC, *XU;
-  // bool mbBroken = false;
-  char dcnbuf[MAXDCNAME+4], buf[256];
-
-  XU = pmp->XU;
-  for(j=0; j<pmp->L; j++ )
-      XU[j] = 0.;
-
-  jb=0;
-  for( k=0; k<pmp->FIs; k++ )  // important change from FI to FIs 16.12.2009 DK
-  { // loop over phases
-      je=jb+pmp->L1[k];
-      Dsur=0.0; DsurT=0.0;
-      if( pmp->PHC[k] == PH_AQUEL && XF[k] >= pmp->DSM && XFA[k] >= pmp->XwMinM )
-        Dsur = XFA[k]/XF[k] - 1.0;              // Asymmetry correction term
-      if( (pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
-            && XFA[k] > pmp->ScMinM )
-      {
-         MMC = 0.0; // calculation of molar mass of the sorbent
-         for( jj=jb; jj<je; jj++ )
-         {
-            if( pmp->DCC[jj] == DC_SUR_CARRIER ||
-                pmp->DCC[jj] == DC_SUR_MINAL ||
-                pmp->DCC[jj] == DC_PEL_CARRIER )
-                    MMC += pmp->MM[jj]*X[jj]/XFA[k];
-         }
-         Dsur = XFA[k]/XF[k] - 1.0;
-         DsurT = MMC * (pmp->Aalp[k]) * TProfil::pm->pa.p.DNS*1.66054e-6;
-      }
-
-    for(j=jb;j<je;j++)
-    {
-      if( XF[k] >= pmp->DSM )
-      {
- //        XU[j] = -pmp->G0[j] -pmp->lnGam[j]  changed 5.12.2006
-         XU[j] = -pmp->G0[j] - pmp->lnGam[j] - pmp->GEX[j]
-                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
-         if( pmp->PHC[k] == PH_AQUEL )
-         {
-            if(j == pmp->LO)
-                XU[j] += Dsur - 1. + 1. / ( 1.+ Dsur ) + log(XF[k]);  // fixed 13.02.09 DK
-            else
-                XU[j] += Dsur + log(XFA[k]);
-         }
-         else if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
-         {
-            if( pmp->DCC[j] == DC_PEL_CARRIER ||
-                 pmp->DCC[j] == DC_SUR_CARRIER ||
-                 pmp->DCC[j] == DC_SUR_MINAL )
-                    //     disabled by KD 23.11.01    enabled for testing 13.02.09
-                XU[j] += // Dsur - 1.0 + 1.0 / ( 1.0 + Dsur )
-                      // - DsurT + DsurT / ( 1.0 + DsurT ) +
-                      log(XF[k]);
-            else  {    // rewritten by KD  23.11.01
-               ja = j - ( pmp->Ls - pmp->Lads );
-               Ez = pmp->EZ[j];
-               // Get ist - index of surface type
-               ist = pmp->SATX[ja][XL_ST];
-               // and isp - index of surface plane
-               isp = pmp->SATX[ja][XL_SP];
-               if( !isp )
-                   // This is the A (0) plane
-                   Psi = pmp->XpsiA[k][ist];
-               else // This is the B or another plane
-                   Psi = pmp->XpsiB[k][ist];
-               XU[j] += Dsur /*+ DsurT/( 1.0 + DsurT )*/ + log(XFA[k])+  // changed 0n 16.12.2009 DK
-               log( DsurT * (pmp->Nfsp[k][ist]) ) - pmp->FRT * Ez * Psi;
-             }
-         }
-         else
-           XU[j] += log(XF[k]);   // Check for non-ideal gases at P and DQF controlled species
-
-         if( XU[j] > -69. && XU[j] < 13.81551 )
-         {
-                 // Checking if a restored amount will be in a feasible interval
-        	 XU[j] = exp( XU[j] );
-         }
-         else
-             XU[j] = 0.0;
-// Corrections for DCs with non-trivial metastability constraints
-if( XU[j] < pmp->DLL[j] )
-XU[j] = pmp->DLL[j];
-if( XU[j] > pmp->DUL[j] )
-XU[j] = pmp->DUL[j];
-
-      }
-      else
-          XU[j]=0.;
-    }
-    jb = je;
-  }  // k
-
-  double cutoff;
-  cutoff = min (pmp->DHBM*1.0e6, 1.0e-3 );	// changed, 28.02.2009 (DK,SD)
-// cutoff = min (pmp->DHBM*10., 1.0e-6 );     // Cutoff value may need to be adjusted!!!!
-    for( j=0; j<pmp->Ls; j++ )   // important change from L to Ls 16.12.2009 DK
-    { // DC loop
-      ix=0;
-//      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009
-//      { for( i=0; i<pmp->N-pmp->E; i++ )
-//        if(a(i,j) && pmp->B[i] < pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
-//        { ix=1; break; }
-//      }
-//      else 10/02/2009 SD
-        if( Y[j]<pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
-          ix=1;
-      if (ix && Y[j] > pmp->DcMinM && XU[j] > pmp->DcMinM )
-      {   // Checking if the restored value breaks the mass balance
-    	  for( i=arrL[j]; i<arrL[j+1]; i++ )
-          {  ii = arrAN[i];
-             if( ii< pmp->N-pmp->E )
-             {
-             	if(  (XU[j]*a(ii,j))  > pmp->B[ii]+cutoff )
-                {
-                    char *dcne;  // extracting DC name
-                    strncpy( dcnbuf, pmp->SM[j], MAXDCNAME );
-                    dcnbuf[MAXDCNAME] = ' '; dcnbuf[MAXDCNAME+1] = '\0';
-                    dcne = strpbrk(dcnbuf, " \0");
-                    if( dcne != NULL && (dcne - dcnbuf) < MAXDCNAME )
-                        *dcne = '\0';
-                    else dcnbuf[MAXDCNAME] = '\0';
-                    // The dual solution appears bad, and the insertion of XU[j] will damage the mass balance
-                          if(pmp->Ec != 15 )
-     			  {
-      				 sprintf(buf,
-                                "Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC %s",
-                                                      pmp->ITG, dcnbuf );
-                                 setErrorMessage( 15, "E15IPM: IPM-main():", buf); // also sets pmp->Ec = 15
-//                     mbBroken = true;  // Error state is activated
-     			  }
-     			  else
-     			  {
-                                 sprintf(buf,", %s",  dcnbuf );
-                                 addErrorMessage(buf);
-     			  }
-                    break;
-                }
-             }
-          } // for i
-          if( pmp->Ec != 15 )
-              X[j]=XU[j];
-          else X[j]=Y[j];
-      }
-      else
-         X[j]=Y[j];
-    } // for j
-
-    TotalPhases( X, XF, XFA );
-    if( pmp->Ec == 15 )
-      return 1L;
-    return 0L;
-}
-
 // Converting DC class codes into generic internal codes of IPM
 //
 void TMulti::ConvertDCC()
@@ -1456,6 +1130,874 @@ long int TMulti::getXvolume()
   { ret = ii; break; }
  }
  return ret;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Calculation of Karpov stability criteria for a DC
+// Modified for kinetic constraints 05.11.2007 by DK
+//
+double TMulti::KarpovCriterionDC(
+    double *dNuG,  // Nu[j]-c[j] difference - is modified here
+    double logYF,  // ln Xa   (Xa is mole amount of the whole phase)
+    double asTail, // asymmetry correction (0 for symmetric phases)
+    double logYw,  // ln Xw   (Xw is mole amount of solvent)
+    double Wx,     // mole fraction of this DC
+    char DCCW      // Generic class code of DC
+)
+{
+    double Fj=0.0;  // output phase stability criterion
+
+    if( logYF > -35. && Wx > 1e-18 )    // Check thresholds!
+        switch( DCCW ) // expressions for fj
+        {
+        default: // error code would be needed here !!!
+            *dNuG = 36.;
+        case DC_SINGLE:
+            Wx = 1.0;
+        case DC_SYMMETRIC:
+            break;
+        case DC_ASYM_SPECIES:
+            *dNuG += logYw - logYF - asTail;
+            break;
+        case DC_ASYM_CARRIER:
+            *dNuG += 1.0/(1.0 - asTail) - asTail - 1.0;
+        }
+    if( fabs( *dNuG ) > 35.)
+        Fj = ( *dNuG > 0 )? 1.5860135e15: 6.305117e-16;
+    else Fj = exp( *dNuG );
+    Fj -= Wx;                    // If Wx = 0 then this DC is not in L_S set
+
+    return Fj;
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// calculation of Karpov stability criteria for all phases
+//
+void TMulti::f_alpha()
+{
+    bool KinConstr;
+    long int k, j, ii;
+    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj;
+    SPP_SETTING *pa = &TProfil::pm->pa;
+
+    EMU = pmp->EMU;
+    NMU = pmp->NMU;
+    for(ii=0; ii<pmp->L; ii++ )
+        EMU[ii] = NMU[ii]=0.0;
+    j=0;
+    pmp->YMET = 0.0;
+    for( k=0; k<pmp->FI; k++ )
+    { // phases
+        ii=j+pmp->L1[k];
+        pmp->Falp[k] = pmp->YMET; // metastability parameter
+        pmp->logXw = -35.;
+        pmp->logYFk = -35.;
+
+        pmp->YFk = 0.0;
+        YF= pmp->YF[k]; // moles of carrier
+        if( pmp->FIs && k<pmp->FIs )
+            pmp->YFk = pmp->YFA[k];
+        if( pmp->YFk > 6.305117e-16 )   // check threshold!
+        {
+            pmp->logXw = log(pmp->YFk);
+            pmp->aqsTail = 1.- pmp->YFk / YF;
+        }
+        else
+        {
+            pmp->logXw = -35.;
+            pmp->aqsTail = 0.0;
+        }
+
+        if( pmp->L1[k] > 1 && YF > 6.305117e-16 )
+            pmp->logYFk = log( YF );
+        else pmp->logYFk = -35.;
+        if( pmp->PHC[k] == PH_AQUEL) // number of moles of solvent
+            pmp->Yw = pmp->YFk;
+
+// The code below was re-arranged by DK on 2.11.2007
+        if(pmp->L1[k] == 1 )
+        {   // This is a single-component phase - always included in L_S set
+            KinConstr = false;
+            Wx = 1.0;
+            Yj = pmp->Y[j];
+            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+            dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
+            if( // pmp->DUL[j] < pa->p.DKIN  ||    // DKIN (1e-6) is used here as tolerance
+                 ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+                || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
+                KinConstr = true; // Avoiding phase with the amount lying on the non-trivial kinetic constraint
+            Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
+                            pmp->logXw, Wx, pmp->DCCW[j] );
+            NMU[j] = dNuG;
+            EMU[j] = Fj;
+            if( KinConstr == false )
+                pmp->Falp[k] = Fj;   // Karpov criterion of pure phase
+        }
+        else {
+        // This is a multi-component phase
+            for( ; j<ii; j++ )
+            {
+                KinConstr = false;
+                Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+                dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
+                Wx = 0.0;
+                Yj = pmp->Y[j];
+//                if( YF > pa->p.DS && Yj > pmp->lowPosNum )
+                if( YF > pmp->DSM && Yj > pmp->DcMinM )
+                    Wx = Yj / YF; // calculating mole fraction of DC
+                if( // pmp->DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
+                        ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+                    || ( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) ) )
+                    KinConstr = true; // Avoiding DC with the amount lying on the non-=trivial kinetic constraint
+                // calculating Karpov stability criteria for DCs
+                Fj = KarpovCriterionDC( &dNuG, pmp->logYFk, pmp->aqsTail,
+                         pmp->logXw, Wx, pmp->DCCW[j] );
+                NMU[j] = dNuG;  // dNuG is stored for all DCs, not only those in L_S set
+// Experimental option - checking zeroed off DCs in multicomponent phases
+// during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)
+if( pmp->pNP && !pmp->K2 )
+{  // Checking L_S set and potentially stable zero DCs and phases
+   if( YF >= pmp->DSM ) // pa->p.DS )
+   {                            // phase is there
+           if( Yj >= fmin(pmp->lowPosNum, pmp->DcMinM ) )
+       {	                    // DC is there
+                   if( KinConstr == false)
+              pmp->Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
+       }
+           else {                  // DC is zeroed off
+                   if( Fj > pa->p.DF*100. )
+                  pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
+           }
+       EMU[j] = Fj;
+   }
+   else {  // The whole phase is absent
+           if( Fj > pa->p.DF*100. )
+          pmp->Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
+       EMU[j] = Fj;              // To check values (remove this line later on)
+   }
+}
+else {   // Standard checking in the L_S set only
+//       if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
+         if( YF >= pmp->DSM && Yj >= fmin( pmp->lowPosNum, pmp->DcMinM ) )  // Checking L_S set
+         {
+             if( KinConstr == false )
+                 pmp->Falp[k] += Fj; // incrementing Karpov stability criterion for the phase
+                    EMU[j] = Fj;
+             }
+             else
+                    EMU[j] = 0;   // This DC is not in L_S set: e.g. metastability constrained
+}
+             }   // j
+        }
+        j = ii;
+    }  // k
+}
+
+//===================================================================
+// Parameters:
+//     AmountCorrectionThreshold - the maximum DC amount correction that can be cleaned ( 1e-5 )
+//     MjuDiffCutoff - normalized chem.pot. difference threshold (dMu = ln a - ln a,dual)
+//
+// Returns 0 if no subsequent refinement of mass balance is needed;
+//         1 if species amounts were cleaned up to more than requested overall mass balance accuracy
+//        -1 if cleanup has been done and the degeneration of the chemical system occurred
+//         2 solution is seriously distorted and full PhaseSelect3() loop is necessary
+//
+long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double MjuDiffCutoff )
+{
+    long int NeedToImproveMassBalance = 0, L1k, L1kZeroDCs, k, j, jb = 0;
+    double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
+    double CutoffDistortionMBR = 0.1 * pmp->DHBM;
+    bool KinConstr, Degenerated = false;
+    SPP_SETTING *pa = &TProfil::pm->pa;
+
+    PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
+//  iRet =  Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );  // to be tested
+    jb=0;
+    for(k=0;k<pmp->FI;k++)
+    {
+       if( ( pmp->YF[k] >= pmp->DcMinM ) ) // Only in phase present in mass balance!
+       {                            // (acc. to definition of the L_S set)
+            L1k = pmp->L1[k]; // Number of components in the phase
+            L1kZeroDCs = 0;
+            for(j=jb; j<jb+L1k; j++)
+            {
+               Yj = YjCleaned = pmp->Y[j];
+               KinConstr = false;
+                // Detecting the DC having the non-trivial kinetic constraint
+               // Fixing a very small component constrained from below
+               if( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+               {
+                   pmp->Y[j] = pmp->DUL[j];
+                   KinConstr = true;
+               }
+               if( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
+               { // Fixing a small component constrained from above
+                   pmp->Y[j] = pmp->DLL[j];
+                   KinConstr = true;
+               }
+               if( KinConstr == true )
+               {
+                   YjDiff = fabs( pmp->Y[j] -Yj );
+                   if( YjDiff > CutoffDistortionMBR )
+                       NeedToImproveMassBalance = 1;
+                   if( YjDiff > AmountCorrectionThreshold )
+                       NeedToImproveMassBalance = 2;
+//                   continue;   // skipping if non-trivial metastability constraint
+               }
+               else if( Yj >= pmp->DcMinM )
+               {   // we check in the Ls set only, except metastability constraints
+                  MjuPrimal = pmp->F[j];   // normalized
+                  MjuDual = pmp->Fx[j]/pmp->RT;
+                  MjuDiff = MjuPrimal - MjuDual;
+                  if( fabs( MjuDiff ) > MjuDiffCutoff )
+                  {
+                      if( L1k == 1 && MjuDiff > 0. )
+                      {  // Pure phase
+                         YjCleaned = 0.0; // Cleaning out a "phantom" pure phase
+                      }
+                      if(L1k > 1)
+                      {  // Component of a solution phase
+                         // The species is present in a larger or smaller amount than necessary
+                           YjCleaned = Yj / exp( MjuDiff );
+                      }
+                      YjDiff = YjCleaned - Yj;
+                      if( fabs( YjDiff ) > CutoffDistortionMBR )
+                      {
+                          NeedToImproveMassBalance = 1;
+                          if( fabs( YjDiff ) > AmountCorrectionThreshold )
+                          {   // Correction was too large
+                              NeedToImproveMassBalance = 2;
+                              // Temporary: only correction of the size of threshold
+                              if( YjDiff > 0. )
+                                pmp->Y[j] += AmountCorrectionThreshold;
+                              else
+                                pmp->Y[j] -= AmountCorrectionThreshold;
+                          }
+                          else {  // Reasonable correction
+                              pmp->Y[j] = YjCleaned;
+                          }
+                      }
+                      else {  // Correction that does not affect the mass balance
+                          pmp->Y[j] = YjCleaned;
+                      }
+                      if( pmp->Y[j] < pmp->DcMinM )
+                      {  // Corrected amount is too small - zeroed off
+                         pmp->Y[j] = 0.;
+                         L1kZeroDCs++;
+                      }
+                  }
+               }
+               else if( Yj < pmp->DcMinM )
+               {  // already zero
+                   L1kZeroDCs++;
+               }
+            }  // for j
+            if(( pmp->L1[k] - L1kZeroDCs <= 1 && k < pmp->FIs )
+                ||( pmp->L1[k] - L1kZeroDCs == 0 && k >= pmp->FIs ))
+            {   Degenerated = true;
+                NeedToImproveMassBalance = 1;
+            }
+       }
+       jb+=pmp->L1[k];
+   }
+   if( NeedToImproveMassBalance )
+   { // diagnostics to be implemented
+      if( Degenerated && NeedToImproveMassBalance == 1 )
+          NeedToImproveMassBalance = -1;
+      if( Degenerated && NeedToImproveMassBalance == 2 )
+      {  // Diagnostic output here
+          NeedToImproveMassBalance = -2;
+      }
+   }
+   return NeedToImproveMassBalance;
+}
+
+//====================================================================================
+// New simplified PhaseSelection() algorithm   DK 01.05.2010
+// Only looks for phases to be inserted, also checks if some solution phases
+// are unstable. Removal of unstable phases is done afterwards in
+// CleanupSpeciation() function.
+// As phase stability criterion, uses (log) phase stability (saturation) index
+// computed from DualTh activities of components and activity coefficients
+// returns 1L if Ok; 0 if one more IPM loop should be done;
+//        -1L if 3 loops did not fix the problem
+//
+long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupStatus ) //  rLoop )
+{
+    double logSI, PhaseAmount, AmThExp, AmountThreshold = 0.;
+    double Yj, YjDiff, YjCleaned=0., MjuPrimal, MjuDual, MjuDiff;
+    double RestoredAmount, CutoffDistortionMBR = 0.1 * pmp->DHBM;
+    bool KinConstrDC, KinConstrPh;
+    bool MassBalanceViolation = false;
+    bool NeedToImproveMassBalance = false;
+    long int L1k, L1kZeroDCs, k, j, jb = 0, status,
+        DCinserted = 0, DCremoved = 0, PHinserted = 0, PHremoved = 0;
+    double MjuDiffCutoff = 1e-3; // InsValue;
+    SPP_SETTING *pa = &TProfil::pm->pa;
+    if( pa->p.GAS > 1e-6 )
+         MjuDiffCutoff = pa->p.GAS;
+    AmThExp = (double)abs( pa->p.PRD );
+    if( AmThExp && AmThExp < 4.)
+    {
+        AmThExp = 4.;
+    }
+    AmountThreshold = pow(10.,-AmThExp);
+
+    kfr = -1; kur = -1;
+    (pmp->K2)++;
+    for( j=0; j<pmp->L; j++ )
+        pmp->XY[j]=pmp->Y[j];    // Storing a copy of the new speciation vector
+
+    PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
+    StabilityIndexes( ); // Calculation of phase stability criteria
+
+    for(k=0;k<pmp->FI;k++)
+    {
+       L1k = pmp->L1[k]; // Number of components in the phase
+       KinConstrPh = false;
+       for(j=jb; j<jb+L1k; j++)
+       {  // Checking if a DC in phase is under kinetic control
+          Yj = pmp->Y[j];
+          KinConstrDC = false;
+          // Detecting the DC having the non-trivial kinetic constraint
+          if( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+              KinConstrDC = true;
+          if( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
+              KinConstrDC = true;
+       } //  j
+       if( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL
+           || KinConstrPh == true )
+           goto NextPhase;  // Temporary workaround
+       PhaseAmount = pmp->XF[k];
+       logSI = pmp->Falp[k];
+       if( logSI > -pa->p.DFM && logSI < pa->p.DF && PhaseAmount < pmp->DSM )
+       {  // Phase is stable and present in zero or less than DS amount - zeroing off
+          bool RemFlagDC = false;
+          for(j=jb; j<jb+L1k; j++)
+          {
+             if( pmp->Y[j] )
+             {
+                DCremoved++; RemFlagDC = true;
+             }
+             pmp->Y[j] = 0.;
+          }
+          if( RemFlagDC == true )
+             PHremoved++;
+          goto NextPhase;
+       }
+       if( logSI >= pa->p.DF )  // 2 - INSERTION CASE
+       {  // this phase is stable or over-stable
+           if( PhaseAmount < pmp->DSM ) // pmp->DFYsM )
+           {  // phase appears to be lost - insertion of all components of the phase
+               RaiseZeroedOffDCs( jb, jb+L1k, /* sfactor, */ k );
+               DCinserted += L1k;
+               PHinserted++;
+               kfr = k;
+               MassBalanceViolation = true;
+           }
+           goto NextPhase;
+       }
+       if( logSI <= -pa->p.DFM )  // 3 - ELIMINATION CASE
+       {
+//         bool Incomplete = false;
+           if( PhaseAmount >= pmp->DcMinM )
+           {  // this phase is present - checking elimination if unstable
+             kur = k;
+             if( PhaseAmount <= AmountThreshold )
+             {   // can be zeroed off
+                for(j=jb; j<jb+L1k; j++)
+                {
+                    if( pmp->Y[j] >= pmp->DcMinM )
+                        DCremoved++;
+                    pmp->Y[j] = 0.;
+                }
+             }
+             else { // Phase amount too high - elimination may break the mass balance
+                MassBalanceViolation = true;
+                for(j=jb; j<jb+L1k; j++)
+                {
+                    if( pmp->Y[j] >= pmp->DcMinM )
+                        DCremoved++;
+                    pmp->Y[j] = 0.;
+//                    if( pmp->Y[j] >= pmp->DcMinM && pmp->Y[j] <= AmountThreshold )
+//                        DCremoved++;
+//                    else Incomplete = true; // INCOMPLETELY REMOVED - error condition may be necessary
+//                    pmp->Y[j] -= AmountThreshold;
+//                    if( pmp->Y[j] < 0. )
+//                        pmp->Y[j] = 0.;
+                }
+             }
+//             if( Incomplete == false )
+             PHremoved++;
+          }
+          goto NextPhase;
+       }
+     NextPhase: jb+=pmp->L1[k];
+   } // k
+   // First loop on phases finished
+   if( pa->p.PRD && MassBalanceViolation == false )  // Cleanup mode (amount threshold exponent)
+   {
+     jb = 0;
+     for(k=0;k<pmp->FI;k++)  // Cleanup loop on phases
+     {
+       L1k = pmp->L1[k]; // Number of components in the phase
+       KinConstrPh = false;
+       for(j=jb; j<jb+L1k; j++)
+       {  // Checking if a DC in phase is under kinetic control
+          Yj = pmp->Y[j];
+          KinConstrDC = false;
+          // Detecting the DC having the non-trivial kinetic constraint
+          if( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+          { // Fixing a very small component constrained from below
+              pmp->Y[j] = pmp->DUL[j];
+              KinConstrDC = true;
+          }
+          if( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
+          { // Fixing a small component constrained from above
+              pmp->Y[j] = pmp->DLL[j];
+              KinConstrDC = true;
+          }
+          if( KinConstrDC == true )
+          {
+             YjDiff = fabs( pmp->Y[j] -Yj );
+             if( YjDiff > CutoffDistortionMBR )
+                  NeedToImproveMassBalance = true;
+             if( YjDiff > AmountThreshold )
+                  MassBalanceViolation = true;
+             KinConstrPh = true;
+          }
+       } //  j
+       if( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL || KinConstrPh == true )
+       {  // Temporary workaround
+          goto NextPhaseC;
+       }
+       logSI = pmp->Falp[k];  // phase stability criterion
+       if( logSI >= pa->p.DF || logSI <= -pa->p.DFM )
+           goto NextPhaseC;  // Already done in previous part
+       PhaseAmount = pmp->XF[k];
+       if( logSI > -pa->p.DFM && PhaseAmount >= pmp->DSM )
+       { // Cleaning up a phase which is (over)stable and present in mass balance
+          bool Degenerated = false;
+          L1kZeroDCs = 0;
+          for(j=jb; j<jb+L1k; j++)
+          {
+//                if( pmp->DUL[j] < 1e6 || pmp->DLL[j] > 0 )
+//                    continue; // metastability-controlled DCs are already fixed
+            Yj = pmp->Y[j];
+            if( Yj >= pmp->DcMinM )
+            {  // we check in the Ls set only, except metastability constraints
+              MjuPrimal = pmp->F[j];   // normalized
+              MjuDual = pmp->Fx[j]/pmp->RT;
+              MjuDiff = MjuPrimal - MjuDual;
+              if( fabs( MjuDiff ) > MjuDiffCutoff )
+              {
+                 if( L1k == 1 )
+                 {  // Pure phase - correction using estimated mole fraction
+                    YjCleaned = Yj / exp( MjuDiff );
+//                         YjCleaned = Yj * pmp->EMU[j];
+//                         YjCleaned = Yj * pow( 10., logSI );
+                 }
+                 else {  // Component of a solution phase
+                  // The species is present in a larger or smaller amount than necessary
+//                         YjCleaned = Yj * pmp->EMU[j]/pmp->Wx[j]; // alternative - via the estimated mole fraction
+                    YjCleaned = Yj / exp( MjuDiff );
+                 }
+                 YjDiff = YjCleaned - Yj;
+                 if( fabs( YjDiff ) > CutoffDistortionMBR )
+                 {
+                    NeedToImproveMassBalance = true;
+                    if( fabs( YjDiff ) > AmountThreshold )
+                    {   // Correction was too large
+                       kur = k;
+                       MassBalanceViolation = true;
+                      // Temporary: only correction of the size of threshold
+                       if( YjDiff > 0. )
+                          pmp->Y[j] += AmountThreshold;
+                       else
+                          pmp->Y[j] -= AmountThreshold;
+                    }
+                    else {  // Reasonable correction
+                      pmp->Y[j] = YjCleaned;
+                  }
+               }
+               else {  // Correction that does not affect the mass balance
+                  pmp->Y[j] = YjCleaned;
+               }
+               if( pmp->Y[j] < pmp->DcMinM )
+               {  // Corrected amount is too small - zeroed off
+                  pmp->Y[j] = 0.;
+                  DCremoved++;
+                  L1kZeroDCs++;
+               }
+             }
+          }
+          else if( Yj < pmp->DcMinM )
+          {  // already zero
+             if( L1k == 1 )
+               L1kZeroDCs++;
+             else { // check for possible loss of DC in a solution phase
+              RestoredAmount = pmp->EMU[j]*pmp->YF[k];
+              if( RestoredAmount > pmp->DcMinM )
+              {
+                 if( RestoredAmount < fmin( RaiseDC_Value( j ), pmp->YF[k] ))
+                 {  // restored from estimated mole fraction
+                    pmp->Y[j] = RestoredAmount;
+                 }
+                 else { // large insertion - needs one more IPM loop
+                    pmp->Y[j] = fmin( RaiseDC_Value( j ), pmp->YF[k] );
+                    MassBalanceViolation = true;
+                    kur = k;
+                 }
+                 DCinserted++;
+                 NeedToImproveMassBalance = true;
+              }
+              else L1kZeroDCs++;
+            }
+          }
+       }  // for j
+       if( L1k - L1kZeroDCs <= 1 && L1k > 1 )
+       {
+          if( L1k - L1kZeroDCs )
+              Degenerated = true;
+          else
+              PHremoved++;
+          NeedToImproveMassBalance = true;
+       }
+       if( L1k - L1kZeroDCs == 0 && L1k == 1 )
+       {
+           PHremoved++;
+           NeedToImproveMassBalance = true;
+       }
+       goto NextPhaseC;
+     }
+  NextPhaseC: jb+=pmp->L1[k];
+  } // k
+}
+
+#ifndef IPMGEMPLUGIN
+    STEP_POINT("Select3()");
+#ifndef Use_mt_mode
+        pVisor->Update(false);  // "PhaseSelection()"
+#endif
+#endif
+    // Analysis of phase selection and cleanup status
+// PZ    // Indicator of PhaseSelection() status (since r1594):
+//            0 untouched, 1 phase(s) inserted, 2 insertion done after 3 major IPM loops
+// W1     // Indicator of CleanupSpeciation() status (since r1594) 0 untouched,
+//           -1 phase(s) removed, 1 some DCs inserted
+// K2     // Number of IPM loops performed ( >1 up to 3 because of PhaseSelection() )
+    status = 1L;
+    CleanupStatus = 0;
+    if( !PHinserted )
+    {  // No phases were inserted back to mass balance - only cleanup
+       status = 1L;
+       if( DCinserted )
+       {  // some DC in multicomponent phases were restored
+          CleanupStatus = 1L;
+       }
+       else if( NeedToImproveMassBalance )
+       {
+          CleanupStatus = -1L;
+       }
+       if( MassBalanceViolation )
+       {
+           if( pmp->K2 < 6 )
+              status = 0L;  // attempt will be done to improve by doing one more IPM loop
+           else
+              status = -1L;  // violation persistent - bail out
+       }
+       if( PHremoved || DCremoved )
+           CleanupStatus = -1L;
+    }
+    else { // phases were inserted - go to another IPM loop
+       if( pmp->K2 < 6 )
+          status = 0L;
+       else
+          status = -1L;
+    }
+    if( status == -1L )
+    {  // changes in Y vector are not accepted - restore (too many IPM loops)
+       for(j=0;j<pmp->L;j++)
+          pmp->Y[j]=pmp->XY[j];
+    }
+    return status;
+}
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// calculation of (logarithmic) stability indexes for all phases
+//
+void TMulti::StabilityIndexes( void )
+{
+    long int L1k, k, j, jb = 0;
+    double ln_ax_dual, gamma_primal, x_estimate, StabIndex, logSI;
+    double lnFmol = log( H2O_mol_to_kg );  // may not work with mixed-solvent electrolyte
+    double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0.; // AqsTail = 0.;
+
+    if( pmp->Pc > 1e-29 )
+       lnPc = log( pmp->Pc );
+    if( pmp->PHC[0] == PH_AQUEL && pmp->YFA[0] >= pmp->XwMinM  ) // number of moles of solvent
+    {
+        Xw = pmp->YFA[0] / pmp->YF[0];
+//        AqsTail = 1. - Xw;
+        lnXw = log( Xw );
+    }
+    jb=0;
+    for(k=0;k<pmp->FI;k++)
+    {
+       L1k = pmp->L1[k]; // Number of components in the phase
+       StabIndex = 0.;
+       for(j=jb; j<jb+L1k; j++)
+       {  // calculation for all components in all phases
+          gamma_primal = pmp->Gamma[j];  // primal (external) activity coefficient
+          if( gamma_primal < 1e-33 || gamma_primal > 1e33 )
+              gamma_primal = 1.;
+          ln_ax_dual = lg_to_ln * pmp->Y_la[j];  // DualTh activity
+          if( ln_ax_dual < -777. )
+              ln_ax_dual = -777.;
+          lnFugPur = pmp->GEX[j];  // Pure fugacity or DQF parameter
+
+          switch( pmp->DCC[j] ) // choice of corrections for estimated mole fractions
+          {
+             case DC_AQ_ELECTRON: case DC_AQ_PROTON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
+                  ln_ax_dual -= lnFmol - lnXw;
+                  break;
+             case DC_AQ_SOLVENT: case DC_AQ_SOLVCOM:
+                  break;
+             case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   // gases
+             case DC_GAS_H2: case DC_GAS_N2:
+                  ln_ax_dual -= lnPc + lnFugPur;
+                  break;
+             case DC_SCP_CONDEN: case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR:
+                  ln_ax_dual -= lnFugPur;
+                  break;
+             case DC_SUR_GROUP:
+                  ln_ax_dual -= lnFmol;   // maybe more correction is needed for surface species
+                  break;
+             case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3:
+             case DC_SSC_A4: case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2:
+             case DC_WSC_A3: case DC_WSC_A4: case DC_SUR_COMPLEX:
+             case DC_SUR_IPAIR: case DC_IESC_A: case DC_IEWC_B:
+                  ln_ax_dual -= lnFmol;
+  //                gamma_primal = exp( pmp->F0[j] );
+                 break;
+             case DC_PEL_CARRIER: case DC_SUR_MINAL: case DC_SUR_CARRIER: // sorbent
+                  ln_ax_dual -= lnFugPur;
+  //                gamma_primal = exp( pmp->F0[j] );
+                  break;
+             default:
+                  break; // error in DC class code
+          }
+          x_estimate = exp( ln_ax_dual )/gamma_primal;   // estimate of DC concentration
+          StabIndex += x_estimate;  // Increment to stability index
+          pmp->NMU[j] = log( x_estimate );  // may be used for something more constructive
+          pmp->EMU[j] = x_estimate;         // stored the estimated mole fraction of phase component
+       }  // for j
+       logSI = log10( StabIndex );
+       if( logSI < -333. )
+           logSI = -333.;
+       if( fabs( logSI ) < 1e-9 )
+           logSI = 0.;
+       pmp->Falp[k] = logSI; // NormDoubleRound( logSI, 3 );
+       jb += pmp->L1[k];
+    }  // for k
+}
+
+//===================================================================
+// Checking Karpov phase stability criteria Fa for phases and DCs
+//  using Selekt2() algorithm by Karpov & Chudnenko (1989)
+//  modified by DK in 1995 and in 2007
+//  Returns 0, if some phases were inserted and a new IPM loop is needed
+//             (up to 3 loops possible);
+//          1, if the IPM solution is final and consistent, no phases were inserted
+//          -1, if the IPM solution is inconsistent after 3 Selekt2() loops
+//  In this case, the index of most problematic phase is passed through kf or
+//  ku parameter (parameter value -1 means that no problematic phases were found)
+//
+long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStatus ) //  rLoop )
+{
+    long int k, j, jb, kf, ku;
+    double F1, F2, *F0; // , sfactor;
+    SPP_SETTING *pa = &TProfil::pm->pa;
+int rLoop = CleanupStatus;
+rLoop = -1;
+//    sfactor = calcSfactor();
+//    sfactor = pmp->SizeFactor;
+    f_alpha( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
+    F0 = pmp->Falp;
+
+    (pmp->K2)++;
+    kf = -1; ku = -1;  // Index for phase diagnostics
+    F1 = pa->p.DF;  // Fixed 29.10.2007  DK
+    F2 = -pa->p.DFM;  // Meaning of DFM changed 02.11.2007
+
+    for(k=0;k<pmp->FI;k++)
+    {
+        if( F0[k] > F1 && pmp->YF[k] < pmp->DSM ) //  pa->p.DS )  // < pmp->lowPosNum?
+        {            // stable phase not in mass balance - to be inserted
+            F1=F0[k];
+            kf=k;
+        }
+        if( F0[k] < F2 && pmp->YF[k] >= pmp->DSM ) // pa->p.DS )  // Fixed 2.11.2007
+        {            // unstable phase in mass balance - to be excluded
+            F2=F0[k];
+            ku=k;
+        }
+    }
+kfr = kf;
+kur = ku;
+    if( kfr < 0 && kur < 0 )
+    {    // No phases to insert/exclude or no Fa distortions found
+          // Successful end of iterations of SELEKT2()
+        return 1L;
+    }
+
+    if( (F2 < -pa->p.DFM ) && ( ku >= 0 ) )
+    {
+        if( pmp->K2 > 4 ) // Three Selekt2() loops have already been done!
+                return -1L;   // Persistent presence of unstable phase(s) - bad system!
+
+        // Excluding problematic phases
+        do
+        {  // excluding all phases with  F2 < DF*sfactor
+            for( jb=0, k=0; k < ku; k++ )
+                 jb += pmp->L1[k];
+
+            ZeroDCsOff( jb, jb+pmp->L1[ku], ku ); // Zeroing the phase off
+            pmp->FI1--;
+            // find a new phase to exclude, if any exists
+            F2= -pa->p.DFM;
+            ku = -1;
+            for( k=0; k<pmp->FI; k++ )
+                if( F0[k] < F2 && pmp->YF[k] >= pmp->DSM )
+                {
+                    F2=F0[k];
+                    ku=k;
+                }
+        }
+        while( ( F2 <= -pa->p.DFM ) && ( ku >= 0 ) );
+    } //if ku
+
+    // Inserting problematic phases
+    if( F1 > pa->p.DF && kf >= 0 )
+    {
+        if( pmp->K2 > 4 )
+           return -1L;   // Persistent absence of stable phase(s) - bad system!
+
+        // There is a phase for which DF*sfactor threshold is exceeded
+        do
+        {   // insert this phase and set Y[j] for its components
+            // with account for asymmetry and non-ideality
+            for( jb=0, k=0; k < kf; k++ )
+                 jb += pmp->L1[k];
+
+            RaiseZeroedOffDCs( jb, jb+pmp->L1[kf], /* sfactor, */ kf );
+
+            pmp->FI1++;  // check phase rule
+
+            if( pmp->FI1 >= pmp->NR+1 )
+               break;   // No more phases can be inserted
+
+            // find a new phase to insert, if any exists
+            F1= pmp->lowPosNum; // was about 1e-16
+            kf = -1;
+            for( k=0; k<pmp->FI; k++ )
+                if( F0[k] > F1 && pmp->YF[k] < pmp->DSM )
+                {
+                    F1=F0[k];
+                    kf=k;
+                }
+        }
+        while( F1 > pa->p.DF && kf >= 0 );
+        // end of insertion cycle
+    } // if kf changed SD 03/02/2009
+// Raise zeros in DC amounts in phases-solutions in the case if some phases
+// were inserted or excluded                          - experimental option!
+//        double RaiseZeroVal = pmp->DHBM;  // Added 29.10.07  by DK
+        jb=0;
+        for(k=0;k<pmp->FIs;k++)
+        {
+            if( ( pmp->YF[k] >= pmp->DSM ) || ( pmp->pNP && rLoop < 0 ) ) // Only in phase present in mass balance!
+            {                            // (acc. to definition of L_S set) PIA only if initial!
+                 pmp->YF[k]=0.;
+                 for(j=jb;j<jb+pmp->L1[k];j++)
+                 {
+                    if( pmp->Y[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )  // fixed 30.08.2009
+                        pmp->Y[j] = RaiseDC_Value( j ); // bugfix 29.10.07
+                    pmp->YF[k] += pmp->Y[j]; // calculate new amounts of phases
+                 }
+            }
+            jb+=pmp->L1[k];
+        }
+    // } SD 03/02/2009
+#ifndef IPMGEMPLUGIN
+    STEP_POINT("Select2()");
+#ifndef Use_mt_mode
+        pVisor->Update(false);  // "PhaseSelection"
+#endif
+#endif
+    if( pmp->K2 > 1 )
+    { // more then the first step - but the IPM solution has not been improved
+//      double RaiseZeroVal = pmp->DHBM*0.1;   // experimental
+       for(j=0;j<pmp->L;j++)
+          if( fabs(pmp->Y[j]- pmp->XY[j]) > RaiseDC_Value( j ) ) //
+               goto S6;
+       // pmp->PZ=2; // No significant change has been done by Selekt2()
+       return 1L;
+    }
+S6: // copy of X vector has been changed by Selekt2() algorithm - store
+    for(j=0;j<pmp->L;j++)
+        pmp->XY[j]=pmp->Y[j];
+
+    return 0L;  // Another loop is needed
+}
+
+// New function to improve on raising zero values in PhaseSelect() and after Simplex() 30.08.2009 DK
+double TMulti::RaiseDC_Value( const long int j )
+{
+        double RaiseZeroVal = pmp->DFYsM;
+
+        switch(pmp->DCC[j] )
+        {
+    case DC_AQ_PROTON:
+    case DC_AQ_ELECTRON:
+    case DC_AQ_SPECIES:
+    case DC_AQ_SURCOMP:	RaiseZeroVal = pmp->DFYaqM;
+                                                break;
+    case DC_SOL_IDEAL:
+    case DC_GAS_COMP:
+    case DC_GAS_H2O:
+    case DC_GAS_CO2:
+    case DC_GAS_H2:
+    case DC_GAS_N2:	RaiseZeroVal = pmp->DFYidM;
+                                                break;
+    case DC_AQ_SOLVENT:
+    case DC_AQ_SOLVCOM: RaiseZeroVal = pmp->DFYwM;
+                                                break;
+    case DC_SOL_MINOR:	RaiseZeroVal = pmp->DFYhM;
+                                                break;
+    case DC_SOL_MAJOR: RaiseZeroVal = pmp->DFYrM;
+                                                break;
+        // adsorption
+    case DC_SSC_A0:    case DC_SSC_A1:    case DC_SSC_A2:    case DC_SSC_A3:    case DC_SSC_A4: // obsolete
+    case DC_WSC_A0:	   case DC_WSC_A1:    case DC_WSC_A2:    case DC_WSC_A3:    case DC_WSC_A4: // obsolete
+    case DC_SUR_GROUP:
+    case DC_SUR_COMPLEX:
+    case DC_SUR_IPAIR:
+    case DC_IESC_A:
+    case DC_IEWC_B:		RaiseZeroVal = pmp->DFYaqM;
+                                                break;
+    case DC_PEL_CARRIER:
+    case DC_SUR_MINAL:
+    case DC_SUR_CARRIER: RaiseZeroVal = pmp->DFYrM;
+                                                 break;
+    case DC_SCP_CONDEN:	 RaiseZeroVal = pmp->DFYcM;
+                                                 break;
+    default:
+                 break;
+        }
+        return RaiseZeroVal;
 }
 
 //--------------------- End of ipm_chemical.cpp ---------------------------

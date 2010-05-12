@@ -590,6 +590,8 @@ TMulti::GammaCalc( long int LinkMode  )
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
                  if( sMod[SPHAS_TYP] == SM_PR78FL )  // PR78 EoS fluid model
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
+                 if( sMod[SPHAS_TYP] == SM_CORKFL )  // CORK EoS fluid model
+                     SolModActCoeff( k, sMod[SPHAS_TYP] );
              }
              goto END_LOOP;
              break;
@@ -791,26 +793,20 @@ END_LOOP:
              if( pmp->DCC[j] == DC_AQ_SURCOMP )  // Workaround for aqueous surface complexes DK 22.07.09
                 pmp->lnGam[j] = 0.0;
              lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
-          	// if( fabs( 1.0-pmp->Gamma[j] ) > 1e-9
-          	// && pmp->Gamma[j] > 3.3e-37 && pmp->Gamma[j] < 3.03e+36 )   // > 1e-35 before 26.02.08
-          	// pmp->lnGam[j] += log( pmp->Gamma[j] );
-          	// if( fabs( lnGamG ) > 1e-9 )
-          	// pmp->lnGam[j] += lnGamG;
              LnGam = pmp->lnGam[j];
              if( fabs( lnGamG ) > 1e-9 )
             	LnGam += lnGamG;
              pmp->lnGmo[j] = LnGam;
-             if( /*fabs( LnGam ) > 1e-9 &&*/ fabs( LnGam ) < 84. )   // before 26.02.08: < 42.
-            	// pmp->Gamma[j] = exp( LnGam );
+             if( fabs( LnGam ) < 84. )   // before 26.02.08: < 42.
           	    pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
              else pmp->Gamma[j] = 1.0;
+
              pmp->F0[j] = Ej_init_calc( 0.0, j, k );
              pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
            }
         }
     }  // k - end loop over phases
-    //  if( wn[W_EQCALC].status )
-    //  aSubMod[MD_EQCALC]->ModUpdate("PM_ipms   EqCalc() converged");
+
     if( statusGC )
         return statusGC;
     if( statusSACT )
@@ -829,6 +825,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
     long int NComp, NPar, NPcoef, MaxOrd, NP_DC;
     double *aIPc, *aDCc, *aWx, *alnGam, *aphVOL, *aZ, *aM;
     long int *aIPx;
+    char *DCCp;
 
     NComp = pmp->L1[k];          // Number of components in the phase
     NPar = pmp->LsMod[k*3];      // Number of interaction parameters
@@ -852,8 +849,9 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
     aM = pmp->Y_m+jb;
     aZ = pmp->EZ+jb;
     aphVOL = pmp->FVOL+k;
+    DCCp = pmp->DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
 
-    TSolMod* aSM = 0;
+    TSolMod* mySM = 0;
 
    // creating instances of subclasses of TSolMod base class
     switch( ModCode )
@@ -861,196 +859,205 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
 
         case SM_OTHER:  // Hard-coded solid solution models (selected by phase name)
         {
-            TModOther* aPT = new TModOther( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
-            		aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
-            aPT->GetPhaseName( pmp->SF[k] );
-            aSM = (TSolMod*)aPT;
-            break;
+                TModOther* myPT = new TModOther( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
+                myPT->GetPhaseName( pmp->SF[k] );
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_VANLAAR:  // Van Laar solid solution model (multicomponent)
         {
-        	TVanLaar* aPT = new TVanLaar( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TVanLaar* myPT = new TVanLaar( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
              // break;
 
         case SM_REGULAR:  // Regular solid solution model (multicomponent)
         {
-        	TRegular* aPT = new TRegular( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TRegular* myPT = new TRegular( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_GUGGENM:  // Redlich-Kister solid solution model (multicomponent)
         {
-        	TRedlichKister* aPT = new TRedlichKister( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TRedlichKister* myPT = new TRedlichKister( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_NRTLLIQ:  // NRTL liquid solution model (multicomponent)
         {
-        	TNRTL* aPT = new TNRTL( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TNRTL* myPT = new TNRTL( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_WILSLIQ:  // Wilson liquid solution model (multicomponent)
         {
-        	TWilson* aPT = new TWilson( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TWilson* myPT = new TWilson( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_MARGT:  // Margules ternary (regular) solid solution model
         {
-        	TMargules* aPT = new TMargules( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TMargules* myPT = new TMargules( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_MARGB:  // Margules binary (subregular) solid solution model
         {
-        	TSubregular* aPT = new TSubregular( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TSubregular* myPT = new TSubregular( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_REDKIS:  // Gugenheim binary (REdlich-Kister) solid solution
         {
-        	TGuggenheim* aPT = new TGuggenheim( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TGuggenheim* myPT = new TGuggenheim( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_AQPITZ:  // Pitzer aqueous electrolyte model (multicomponent)
         {
-           	TPitzer* aPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TPitzer* myPT = new TPitzer( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
-             break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_AQSIT:  // SIT aqueous electrolyte model (multicomponent)
         {
-           	TSIT* aPT = new TSIT( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TSIT* myPT = new TSIT( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_AQEXUQ:  // EUNIQUAC aqueous electrolyte model (multicomponent)
         {
-           	TEUNIQUAC* aPT = new TEUNIQUAC( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TEUNIQUAC* myPT = new TEUNIQUAC( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc, pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_AQDH3:  // extended Debye-Hueckel aqueous electrolyte model (Karpov version)
         {
-           	TKarpov* aPT = new TKarpov( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TKarpov* myPT = new TKarpov( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc,  pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
+                mySM = (TSolMod*)myPT;
         	break;
         }
 
         case SM_AQDH2:   // Debye-Hueckel aqueous electrolyte model
         {
-           	TDebyeHueckel* aPT = new TDebyeHueckel( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TDebyeHueckel* myPT = new TDebyeHueckel( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc,  pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
+                mySM = (TSolMod*)myPT;
         	break;
         }
 
         case SM_AQDH1:   // Debye-Hueckel limiting law aqueous electrolyte model
         {
-           	TLimitingLaw* aPT = new TLimitingLaw( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TLimitingLaw* myPT = new TLimitingLaw( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc,  pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
+                mySM = (TSolMod*)myPT;
         	break;
         }
 
         case SM_AQDHS:  // extended Debye-Hueckel aqueous electrolyte model (Shvarov version)
         {
-           	TShvarov* aPT = new TShvarov( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TShvarov* myPT = new TShvarov( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc,  pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
+                mySM = (TSolMod*)myPT;
         	break;
         }
 
         case SM_AQDHH:  // extended Debye-Hueckel aqueous electrolyte model (Helgeson version)
         {
-           	THelgeson* aPT = new THelgeson( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                THelgeson* myPT = new THelgeson( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc,  pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
+                mySM = (TSolMod*)myPT;
         	break;
         }
 
         case SM_AQDAV:  // Davies aqueous electrolyte model (in NEA TDB version)
         {
-           	TDavies* aPT = new TDavies( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TDavies* myPT = new TDavies( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, aM, aZ, pmp->Tc, pmp->Pc,  pmp->denW, pmp->epsW );
-            aSM = (TSolMod*)aPT;
+                mySM = (TSolMod*)myPT;
         	break;
         }
 
         case SM_PRFLUID:  // PRSV fluid mixture (multicomponent)
         {
-        	TPRSVcalc* aPT = new TPRSVcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TPRSVcalc* myPT = new TPRSVcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
                     pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_CGFLUID:  // CG fluid mixture (multicomponent)
         {
-        	TCGFcalc* aPT = new TCGFcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TCGFcalc* myPT = new TCGFcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,
                     pmp->Pparc+jb, pmp->FWGT+k, pmp->X+jb,
                     pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_SRFLUID:  // SRK fluid mixture (multicomponent)
         {
-        	TSRKcalc* aPT = new TSRKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TSRKcalc* myPT = new TSRKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
                     pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         case SM_PR78FL:  // PR78 fluid mixture (multicomponent)
         {
-        	TPR78calc* aPT = new TPR78calc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                TPR78calc* myPT = new TPR78calc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
                     pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
-            aSM = (TSolMod*)aPT;
-            break;
+                mySM = (TSolMod*)myPT;
+                break;
+        }
+
+        case SM_CORKFL:  // CORK fluid mixture (multicomponent)
+        {
+                TCORKcalc* myPT = new TCORKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                    aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
+                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc, DCCp );
+                mySM = (TSolMod*)myPT;
+                break;
         }
 
         default:
-        	// aSM = new TSolMod( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
+                // mySM = new TSolMod( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
         	// aIPx, aIPc, aDCc,  aWx, alnGam, pmp->Tc, pmp->Pc );
         	break;
     }
 
   	if(phSolMod[k])
    	  delete phSolMod[k];
-   	phSolMod[k] = aSM; // set up new pointer for the solution model
+        phSolMod[k] = mySM; // set up new pointer for the solution model
 }
 
 
@@ -1092,10 +1099,11 @@ TMulti::SolModParPT( long int k, char ModCode )
         case SM_CGFLUID:
         case SM_SRFLUID:
         case SM_PR78FL:
+        case SM_CORKFL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
-              TSolMod* aSM = phSolMod[k];
-              aSM->PTparam();
+              TSolMod* mySM = phSolMod[k];
+              mySM->PTparam();
              break;
         }
         default:
@@ -1141,10 +1149,11 @@ TMulti::SolModActCoeff( long int k, char ModCode )
         case SM_CGFLUID:
         case SM_SRFLUID:
         case SM_PR78FL:
+        case SM_CORKFL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
-             TSolMod* aSM = phSolMod[k];
-             aSM->MixMod();
+             TSolMod* mySM = phSolMod[k];
+             mySM->MixMod();
              break;
         }
         default:
@@ -1201,10 +1210,11 @@ TMulti::SolModExcessProp( long int k, char ModCode )
         case SM_CGFLUID:
         case SM_SRFLUID:
         case SM_PR78FL:
+        case SM_CORKFL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
-              TSolMod* aSM = phSolMod[k];
-              aSM->ExcessProp( zex );
+              TSolMod* mySM = phSolMod[k];
+              mySM->ExcessProp( zex );
               break;
         }
         default:
@@ -1278,10 +1288,11 @@ TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
         case SM_CGFLUID:
         case SM_SRFLUID:
         case SM_PR78FL:
+        case SM_CORKFL:
 
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
-             TSolMod* aSM = phSolMod[k];
-             aSM->IdealProp( zid );
+             TSolMod* mySM = phSolMod[k];
+             mySM->IdealProp( zid );
               break;
         }
 		case SM_IDEAL:

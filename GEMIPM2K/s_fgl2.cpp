@@ -1,12 +1,12 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl2.cpp 1396 2009-08-16 16:22:04Z wagner $
 //
-// Copyright (C) 2007-2009  T.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (C) 2007-2010  T.Wagner, D.Kulik, S.Dmitrieva
 //
 // Implementation of the TSolMod base class and subclasses
 // for activity models for condensed (solid and liquid) phases
 // subclasses: TVanLaar, TRegular, TRedlichKister, TNRTL, TWilson
-//				TMargulesTernary, TMargulesBinary, TGuggenheim
+//		TMargulesTernary, TMargulesBinary, TGuggenheim
 // Started by Th.Wagner and D.Kulik on 07.03.2007
 //
 // This file is part of a GEM-Selektor (GEMS) v.2.x.x program
@@ -24,10 +24,12 @@
 #include "m_const.h"
 
 
+//=============================================================================================
+// TSolMod base class (c) DK/TW 2006
+//=============================================================================================
 
-//--------------------------------------------------------------------------------------------------------------
-// Generic constructor for the TSolMod class
-//
+
+// generic constructor
 TSolMod::TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
 		long int NPperDC, long int NPTPperDC, char Mod_Code, char Mix_Code,
         long int *arIPx, double *arIPc, double *arDCc, double *arWx,
@@ -100,7 +102,7 @@ void TSolMod::GetPhaseName( const char *PhName )
 
 //=============================================================================================
 // Van Laar model for solid solutions (c) TW March 2007
-// References:  Holland & Powell (2003)
+// References: Holland and Powell (2003)
 //=============================================================================================
 
 
@@ -313,7 +315,7 @@ long int TVanLaar::IdealProp( double *Zid )
 
 //=============================================================================================
 // Regular model for multicomponent solid solutions (c) TW March 2007
-// References:  Holland & Powell (1993)
+// References:  Holland and Powell (1993)
 //=============================================================================================
 
 
@@ -1236,7 +1238,7 @@ long int TWilson::IdealProp( double *Zid )
 
 //=============================================================================================
 // Ternary Margules (regular) model for solid solutions (c) TW June 2009
-// References: Anderson and Crerar (1993); Anderson (2006)
+// References: Anderson and Crerar (1993), Anderson (2006)
 //=============================================================================================
 
 
@@ -1390,7 +1392,7 @@ long int TMargules::IdealProp( double *Zid )
 
 //=============================================================================================
 // Binary Margules (subregular) model for solid solutions (c) TW June 2009
-// References: Anderson and Crerar (1993); Anderson (2006)
+// References: Anderson and Crerar (1993), Anderson (2006)
 //=============================================================================================
 
 
@@ -1527,7 +1529,7 @@ long int TSubregular::IdealProp( double *Zid )
 
 //=============================================================================================
 // Binary Guggenheim (Redlich-Kister) model for solid solutions (c) TW June 2009
-// References: Anderson and Crerar (1993); Anderson (2006)
+// References: Anderson and Crerar (1993), Anderson (2006)
 //=============================================================================================
 
 
@@ -1558,9 +1560,8 @@ long int TGuggenheim::PTparam()
 	// load parameters
 	a0 = aIPc[0];
 	a1 = aIPc[1];
-	a1 = aIPc[2];
-
-	return 0;
+        a2 = aIPc[2]; // Bugfix was a1 = aIPc[2];
+        return 0;
 }
 
 
@@ -1582,7 +1583,6 @@ long int TGuggenheim::MixMod()
 	// assignments
 	lnGamma[0] = lnGam1;
 	lnGamma[1] = lnGam2;
-
 	return 0;
 }
 

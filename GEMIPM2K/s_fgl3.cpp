@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: s_fglbred.cpp 1140 2008-12-08 19:07:05Z wagner $
 //
-// Copyright (C) 2008-2009  T.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (C) 2008-2010  T.Wagner, D.Kulik, S.Dmitrieva
 //
 // Implementation of  class
 //

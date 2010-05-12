@@ -76,9 +76,9 @@ typedef struct
     PV,      // Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat { 0 1 }
     PLIM,    // PU - flag of activation of DC/phase restrictions { 0 1 }
     Ec,    // GammaCalc() return code: 0 (OK) or 1 (error)
-    K2,    // Number of Selekt2() loops
-    PZ,    // Indicator of IPM-2 precision algorithm activation
-//     funT, sysT,
+    K2,    // Number of IPM loops performed ( >1 up to 3 because of PhaseSelection() )
+    PZ,    // Indicator of PhaseSelection() status (since r1594): 0 untouched, 1 phase(s) inserted
+              // 2 insertion done after 3 major IPM loops
     pNP, //Mode of FIA selection: 0-auto-SIMPLEX,1-old eqstate,-1-user's choice
     pESU,  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pIPN,  // State of IPN-arrays:  0-create; 1-available; -1 remake
@@ -89,7 +89,7 @@ typedef struct
     ITaia,  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
     FIat,   // max. number of surface site types
     MK,     // PM return code: 0 - continue;  1 - converged
-    W1,     // internal IPM-2 indicator
+    W1,     // Indicator of CleanupSpeciation() status (since r1594) 0 untouched, -1 phase(s) removed, 1 some DCs inserted
     is,     // is - index of IC for IPN equations ( GammaCalc() )
     js,     // js - index of DC for IPN equations ( GammaCalc() )
     next,
@@ -241,10 +241,10 @@ double
     *BF,    //Output bulk compositions of multicomponent phases bf_ai[FIs][N]
     *BFC,   //Total output bulk compositions of all solid phases[1][N]
     *XF,    // Output total number of moles of phases Xa[0:FI-1]
-    *YF,    // Copy of X_a from previous IPM iteration [0:FI-1]
+    *YF,    // Approximation of X_a in the next IPM iteration [0:FI-1]
     *XFA,   // Quantity of carrier in asymmetric phases Xwa, moles [FIs]
-    *YFA,   // Copy of Xwa from previous IPM iteration [0:FIs-1]
-    *Falp;  // Karpov phase stability criteria F_a [0:FI-1]
+    *YFA,   // Approximation of XFA in the next IPM iteration [0:FIs-1]
+    *Falp;  // Karpov phase stability criteria F_a [0:FI-1] or phase stability index (PC==2)
 
   double (*VPh)[MIXPHPROPS],     // Volume properties for mixed phases [FIs]
          (*GPh)[MIXPHPROPS],     // Gibbs energy properties for mixed phases [FIs]
@@ -327,13 +327,13 @@ double
   double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
   qd_real qdFX;    	// Current Gibbs potential of the system in IPM, moles
 
-  // Experimental: modified cutoff and insertion values (DK 30.08.2009)
+  // Experimental: modified cutoff and insertion values (DK 28.04.2010)
   double
 // cutoffs (rescaled to system size)
-  XwMinM,// Cutoff mole amount for elimination of water-solvent { 1e-9 }
-  ScMinM,// Cutoff mole amount for elimination of solid sorbent {1e-7}
-  DcMinM,// Cutoff mole amount for elimination of solution- or surface species { 1e-20 }
-  PhMinM,// Cutoff mole amount for elimination of non-electrolyte condensed phase { 1e-14 }
+  XwMinM,// Cutoff mole amount for elimination of water-solvent { 1e-13 }
+  ScMinM,// Cutoff mole amount for elimination of solid sorbent { 1e-13 }
+  DcMinM,// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
+  PhMinM,// Cutoff mole amount for elimination of non-electrolyte condensed phase { 1e-23 }
 // insertion values (re-scaled to system size)
   DFYwM, // Insertion mole amount for water-solvent { 1e-6 }
   DFYaqM,// Insertion mole amount for aqueous and surface species { 1e-6 }
@@ -430,6 +430,7 @@ class TMulti
     double KarpovCriterionDC( double *dNuG, double logYF, double asTail,
                  double logYw, double Wx,  char DCCW );
     void f_alpha();
+    void  StabilityIndexes( );   // added 01.05.2010 DK
     double FreeEnergyIncr(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
     double GX( double LM  );
@@ -498,6 +499,7 @@ class TMulti
 //   double calcSfactor();
    double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
    long int CleanupSpeciation( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
+   long int PhaseSelection( long int &k_miss, long int &k_unst, long int rLoop );  // added 01.05.10 DK
    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
 
    // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)

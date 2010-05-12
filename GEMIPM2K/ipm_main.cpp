@@ -57,7 +57,7 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
     // calculation of demo data for gases
     for( long int ii=0; ii<pmp->N; ii++ )
         pmp->U_r[ii] = pmp->U[ii]*pmp->RT;
-    GasParcP();
+    GasParcP();  // do we really need it?
 
 }
 
@@ -70,22 +70,22 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 //
 void TMulti::MultiCalcMain( long int rLoop )
 {
-    long int i, j, k, eRet, iB, status=0; long int csRet=0;
+    long int i, j, k, eRet, status=0; long int csRet=0;
 // bool CleanAfterIPM = true;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-    pmp->W1=0; pmp->K2=0;               // internal counters
+    pmp->W1=0; pmp->K2=0;         // internal counters and indicators
     pmp->Ec = pmp->MK = pmp->PZ = 0;    // Return codes
     setErrorMessage( 0, "" , "");  // empty error info
     if( TProfil::pm->pa.p.PLLG == 0 )  // SD 10/02/2009
-    	TProfil::pm->pa.p.PLLG = 32000;
+        TProfil::pm->pa.p.PLLG = 20;  // Changed 28.04.2010 KD
 
 
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
 
-//    if( rLoop < 0 )
-//    {   // cleaning the f_alpha vector (phase stability criteria) - not done during refinement loops
+    if( !pmp->pNP )
+    {   // cleaning the f_alpha vector (phase stability criteria) - not done in SIA modes
         for( k=0; k<pmp->FI; k++ )
             pmp->Falp[k] = 0.0;
         for( j=0; j<pmp->L; j++ )
@@ -93,11 +93,11 @@ void TMulti::MultiCalcMain( long int rLoop )
         	pmp->EMU[j] = 0.0;
         	pmp->NMU[j] = 0.0;
         }
-//    }
+    }
 
     // testing the entry into feasible domain
 mEFD:
-     eRet = EnterFeasibleDomain( 0 ); // Here the IPM-2 EFD() algorithm is called
+     eRet = EnterFeasibleDomain( pmp->PZ ); // Here the IPM-2 EFD() algorithm is called
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpC.txt" );   // Debugging
@@ -110,7 +110,6 @@ to_text_file( "MultiDumpC.txt" );   // Debugging
 // STEPWISE (2)  - stop point to examine output from EFD()
 STEP_POINT("After FIA");
 #endif
-
     switch( eRet )
     {
      case 0:  // OK
@@ -121,7 +120,7 @@ STEP_POINT("After FIA");
      case 2:  // max number of iterations has been exceeded in EnterFeasibleDomain()
      case 1: // degeneration in R matrix  for EnterFeasibleDomain()
    	         if( pmp->pNP )
-   	         {   // bad PIA mode - trying the AIA mode
+                 {   // bad SIA mode - trying the AIA mode
        	        pmp->MK = 2;   // Set to check in calcMulti() later on
 #ifdef GEMITERTRACE
 //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E04IPM" << endl;
@@ -163,11 +162,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 #endif
 	        goto FORCED_AIA;
          }
-//         else
-//        	 if( pmp->DXM < 1e-4 || pmp->DHBM < 1e-6 )
-//             {  // Attempt to get result using most tolerant thresholds for convergence and balance accuracy
-//        	    pmp->DXM = 1e-4;
-//                pmp->DHBM = 1e-6;
+
 //#ifdef GEMITERTRACE
 //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " AIA: DX->1e-4, DHBM->1e-6 on E06IPM" << endl;
 //#endif
@@ -186,10 +181,134 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
          break;
    }
 
-   if( pa->p.PRD != 0 )    // This block is calling an experimental cleanup speciation function
+   // Here the entry to new PhaseSelection() module controlled by PC = 2
+   if( pa->p.PC >= 2 )
+   {
+       long int ps_rcode, k_miss, k_unst;
+
+       ps_rcode = PhaseSelection( k_miss, k_unst, csRet );
+
+/*
+       if( ( ps_rcode == 1L || ps_rcode == 0 ) && csRet )
+       {
+           TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
+           for( j=0; j<pmp->L; j++ )
+               pmp->X[j]=pmp->Y[j];
+           TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+           ConCalc( pmp->X, pmp->XF, pmp->XFA );  // Calculation of ln activities (DualTh)
+  #ifndef IPMGEMPLUGIN
+  #ifndef Use_mt_mode
+      pVisor->Update(false);
+  #endif
+  // STEPWISE (3)  - stop point to examine output from CleanupSpeciation()
+     STEP_POINT("After PhaseSelection()");
+  #endif
+       }
+*/
+       switch( ps_rcode )  // analyzing return code of PhaseSelection()
+       {
+             case 1:   // IPM solution is final and consistent, no phases were inserted
+                       pmp->PZ = 0;
+                       break;
+             case 0:   // some phases were inserted and a new IPM loop is needed
+       #ifdef GEMITERTRACE
+       //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " K2=" << pmp->K2 <<
+       //      " k_miss=" << k_miss << " k_unst=" << k_unst <<  " ! (new Selekt loop)" << endl;
+       #endif
+                      pmp->PZ = 1;
+                      goto mEFD;
+             default:
+             case -1:  // the IPM solution is inconsistent after 5 phase insertion loops
+             {
+                 gstring pmbuf("");
+                 if(k_miss >=0 )
+                  pmbuf = gstring(pmp->SF[k_miss],0,20);
+                 gstring pubuf("");
+                 if(k_unst >=0 )
+                 pubuf = gstring(pmp->SF[k_unst],0,20);
+                 char buf[400];
+                 sprintf( buf,
+          " The phase assemblage remains inconsistent after 5 PhaseSelection() loops.\n"
+          " Problematic phase(s): %ld %s   %ld %s \n"
+          " Input thermodynamic data may be inconsistent, or some relevant species missing.",
+                          k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
+                 setErrorMessage( 8, "W08IPM: PhaseSelection():", buf );
+                 if( pmp->pNP )
+                 {   // bad PIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
+                         pmp->MK = 2;   // Set to check in calcMulti() later on
+       #ifdef GEMITERTRACE
+       //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
+       //      " k_miss=" << k_miss << " k_unst=" << k_unst << " ! PIA->AIA on E08IPM (Selekt)" << endl;
+       #endif
+                         goto FORCED_AIA;
+                 }
+                 else
+                 { pmp->PZ = 2; // IPM solution could not be improved in PhaseSelect() -
+                                //   therefore, some inconsistent phases remain
+                   // return;
+                 }
+             }
+       } // end switch
+
+   }
+   else if( pa->p.PC == 1 ) // Old PhaseSelect() mode PC = 1
+   {
+       //=================== calling old Phase Selection algorithm =====================
+        long int ps_rcode, k_miss, k_unst;
+
+        ps_rcode = PhaseSelect( k_miss, k_unst, csRet );
+
+        switch( ps_rcode )
+           {
+              case 1:   // IPM solution is final and consistent, no phases were inserted
+                        pmp->PZ = 0;
+                        break;
+              case 0:   // some phases were inserted and a new IPM loop is needed
+        #ifdef GEMITERTRACE
+        //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " K2=" << pmp->K2 <<
+        //      " k_miss=" << k_miss << " k_unst=" << k_unst <<  " ! (new Selekt loop)" << endl;
+        #endif
+                       pmp->PZ = 1;
+                       goto mEFD;
+              default:
+              case -1:  // the IPM solution is inconsistent after 3 Selekt2() loops
+              {
+                  gstring pmbuf("");
+                  if(k_miss >=0 )
+                   pmbuf = gstring(pmp->SF[k_miss],0,20);
+                  gstring pubuf("");
+                  if(k_unst >=0 )
+                  pubuf = gstring(pmp->SF[k_unst],0,20);
+                  char buf[400];
+                  sprintf( buf,
+           " The computed phase assemblage remains inconsistent after 3 PhaseSelect() loops.\n"
+           " Problematic phase(s): %ld %s   %ld %s \n"
+           " Probably, vector b is not balanced, or DC stoichiometries\n"
+           " or standard g0 are wrong, or some relevant phases or DCs are missing.",
+                           k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
+                  setErrorMessage( 8, "W08IPM: PhaseSelect():", buf );
+                  if( pmp->pNP )
+                  {   // bad PIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
+                          pmp->MK = 2;   // Set to check in calcMulti() later on
+        #ifdef GEMITERTRACE
+        //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
+        //      " k_miss=" << k_miss << " k_unst=" << k_unst << " ! PIA->AIA on E08IPM (Selekt)" << endl;
+        #endif
+                          goto FORCED_AIA;
+                  }
+                  else
+                  { pmp->PZ = 2; // IPM solution could not be improved in PhaseSelect() -
+                                 //   therefore, some inconsistent phases remain
+                    // return;
+                  }
+              }
+        } // end switch
+   }
+
+   if( pa->p.PRD != 0 && pa->p.PC != 2 ) // This block is calling the cleanup speciation function
    {
       double AmThExp, AmountThreshold, ChemPotDiffCutoff = 1e-2;
-      long int eRet;
+//      long int eRet;
 
       AmThExp = (double)abs(pa->p.PRD);
       if( AmThExp < 4.)
@@ -207,11 +326,6 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
              pmp->X[j]=pmp->Y[j];
          TotalPhases( pmp->X, pmp->XF, pmp->XFA );
          ConCalc( pmp->X, pmp->XF, pmp->XFA );  // Calculation of ln activities (DualTh)
-//         if( pmp->PD == 2 )
-//         {
-//             GammaCalc( LINK_UX_MODE);    // Very experimental!
-//        }
-//         f_alpha( );
 
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
@@ -221,127 +335,63 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    STEP_POINT("After Cleanup");
 #endif
 
-         eRet = EnterFeasibleDomain( 1 ); // Here the mass balance improvement is called
+      }
+      if( csRet != 0 )  {   // Cleanup removed something
+ //         for( j=0; j<pmp->L; j++ )   // restoring the Y vector
+ //             pmp->Y[j]=pmp->XY[j];
+          pmp->W1 = 1;
+//          goto mEFD;   // Forced after cleanup ( check what to do with pmp->K2 )
+      }
+   } // end cleanup
 
-         switch( eRet )
-         {
-          case 0:  // OK
-                 for( j=0; j<pmp->L; j++ )
-                    pmp->X[j]=pmp->Y[j];
-                 TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-                 ConCalc( pmp->X, pmp->XF, pmp->XFA );  // Calculation of ln activities (DualTh)
-                 if( pmp->PD >= 2 )
-                 {
-                         GammaCalc( LINK_UX_MODE);
-                 }
-                 f_alpha( );  // calculation of Karpov phase stability criteria
-                 break;
-          case 5:  // Cleaned-up Lagrange multiplier for metastability broken for DC
-          case 4:  // Cleaned-up mass balance broken for IC
-          case 3:  // too small step length in MB refinement algorithm after cleanup
-          case 2:  // max number of iterations has been exceeded in EnterFeasibleDomain() after cleanup
-          case 1: // degeneration in R matrix in EnterFeasibleDomain() after cleanup
-                      if( pmp->pNP )
-                      {   // bad PIA mode - trying the AIA mode
-                     pmp->MK = 2;   // Set to check in calcMulti() later on
+   if( pa->p.PC == 3 )
+        XmaxSAT_IPM2();  // Install upper limits to xj of surface species (check if really needed)!
+/*
+  if( pa->p.PC >= 2 && pa->p.PRD )
+   {  // Checking rude violation of mass balance after PhaseSelection() with Cleanup()
+     iB = CheckMassBalanceResiduals( pmp->Y );
+     if( iB >= 0 )
+     {
+        addErrorMessage( " (After PhaseSelection())" );
+        if( pmp->pNP )
+        {   // bad PIA mode - trying the AIA mode
+           pmp->MK = 2;   // Set to check in calcMulti() later on
+           goto FORCED_AIA;
+        }
+        Error( pmp->errorCode ,pmp->errorBuf );  // Alternative: restore from XY vector?
+     }
+  } */
+  // if( pmp->W1 )
+  eRet = EnterFeasibleDomain( pmp->PZ ); // Mass balance improvement in all normal cases
+  switch( eRet )
+  {
+    case 0:  // OK
+        for( j=0; j<pmp->L; j++ )
+           pmp->X[j]=pmp->Y[j];
+        TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+        ConCalc( pmp->X, pmp->XF, pmp->XFA );  // Calculation of ln activities (DualTh)
+        if( pmp->PD >= 2 )
+        {
+                GammaCalc( LINK_UX_MODE);
+        }
+        break;
+   case 5:  // Cleaned-up Lagrange multiplier for metastability broken for DC
+   case 4:  // Cleaned-up mass balance broken for IC
+   case 3:  // too small step length in MB refinement algorithm after cleanup
+   case 2:  // max number of iterations has been exceeded in EnterFeasibleDomain() after cleanup
+   case 1: // degeneration in R matrix in EnterFeasibleDomain() after cleanup
+             if( pmp->pNP )
+             {   // bad PIA mode - trying the AIA mode
+            pmp->MK = 2;   // Set to check in calcMulti() later on
 #ifdef GEMITERTRACE
 //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E04IPM" << endl;
 #endif
-                    goto FORCED_AIA;
-                      }
-                      else
-                              Error( pmp->errorCode ,pmp->errorBuf );
-                   break;
-         }
-      }
-      else if( csRet == 2 )  {   // Cleanup was too serious - PhaseSelect() check and another IPM loop is needed!
-          for( j=0; j<pmp->L; j++ )   // restoring the Y vector
-              pmp->Y[j]=pmp->XY[j];
-      }
-   }
-
-    pmp->FI1 = 0;
-    pmp->FI1s = 0;
-    for( i=0; i<pmp->FI; i++ )
-        if( pmp->YF[i] > 1e-18 )
-        {
-            pmp->FI1++;
-            if( i < pmp->FIs )
-                pmp->FI1s++;
-        }
-
-    if( !pa->p.PC || pmp->PZ )    //  No PhaseSelect() operation allowed or
-    {   if( pmp->PD >= 2 )           //  pmp->PZ == 2 not very important error
-           for( i=0; i<pmp->L; i++)
-             pmp->G[i] = pmp->G0[i];
-        return;  // solved
-    }
-
-    if( pa->p.PC == 2 )
-        XmaxSAT_IPM2();  // Install upper limits to xj of surface species
-
-
-//=================== calling Phase Selection algorithm =====================
-   long int ps_rcode, k_miss, k_unst;
-
-    ps_rcode = PhaseSelect( k_miss, k_unst, csRet );   //  rLoop );
-
-iB = CheckMassBalanceResiduals( pmp->X );
-if( iB >= 0 )
-{
-    addErrorMessage( " (After PhaseSelect())" );
-    if( pmp->pNP )
-    {   // bad PIA mode - trying the AIA mode
-       pmp->MK = 2;   // Set to check in calcMulti() later on
-       goto FORCED_AIA;
-    }
-  	Error( pmp->errorCode ,pmp->errorBuf );
-}
-    //   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
-
-   switch( ps_rcode )
-   {
-      case 1:   // IPM solution is final and consistent, no phases were inserted
-                break;
-      case 0:   // some phases were inserted and a new IPM loop is needed
-#ifdef GEMITERTRACE
-//f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " K2=" << pmp->K2 <<
-//      " k_miss=" << k_miss << " k_unst=" << k_unst <<  " ! (new Selekt loop)" << endl;
-#endif
-    	        goto mEFD;
-      default:
-      case -1:  // the IPM solution is inconsistent after 3 Selekt2() loops
-      {
-          gstring pmbuf("");
-          if(k_miss >=0 )
-           pmbuf = gstring(pmp->SF[k_miss],0,20);
-          gstring pubuf("");
-          if(k_unst >=0 )
-          pubuf = gstring(pmp->SF[k_unst],0,20);
-          char buf[400];
-          sprintf( buf,
-   " The computed phase assemblage remains inconsistent after 3 PhaseSelect() loops.\n"
-   " Problematic phase(s): %ld %s   %ld %s \n"
-   " Probably, vector b is not balanced, or DC stoichiometries\n"
-   " or standard g0 are wrong, or some relevant phases or DCs are missing.",
-                   k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
-          setErrorMessage( 8, "W08IPM: PhaseSelect():", buf );
-    	  if( pmp->pNP )
-    	  {   // bad PIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
-        	  pmp->MK = 2;   // Set to check in calcMulti() later on
-#ifdef GEMITERTRACE
-//f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
-//      " k_miss=" << k_miss << " k_unst=" << k_unst << " ! PIA->AIA on E08IPM (Selekt)" << endl;
-#endif
-        	  goto FORCED_AIA;
-    	  }
-    	  else
-          { pmp->PZ = 3; // IPM solution could not be improved in PhaseSelect() -
-                         //   therefore, some inconsistent phases remain
-    	    return;
-          }
-      }
-   }
+           goto FORCED_AIA;
+             }
+             else
+                     Error( pmp->errorCode ,pmp->errorBuf );
+          break;
+ }
 
 #ifndef IPMGEMPLUGIN
    pmp->t_end = clock();
@@ -352,8 +402,8 @@ if( iB >= 0 )
    pVisor->Update( false );
 #endif
 #endif
-   if( pmp->MK == 2 )
-       goto FORCED_AIA;
+//   if( pmp->MK == 2 )
+//       goto FORCED_AIA;
 
 #ifdef GEMITERTRACE
 /*f_log << "ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " MBPRL="
@@ -364,10 +414,21 @@ if( iB >= 0 )
 	   f_log << " Ok after AIA" << endl;*/
 #endif
 
-FORCED_AIA:
+FORCED_AIA:   // Finish
+   pmp->FI1 = 0;  // Recomputing the number of non-zeroed-off phases
+   pmp->FI1s = 0;
+   for( i=0; i<pmp->FI; i++ )
+   {
+       if( pmp->YF[i] >= fmin( pmp->PhMinM, 1e-18 ) )  // Check 1e-18 !!!!!
+       {
+            pmp->FI1++;
+            if( i < pmp->FIs )
+                pmp->FI1s++;
+       }
+   }
    for( i=0; i<pmp->L; i++)
       pmp->G[i] = pmp->G0[i];
-   // Normal return after successful improvement of the mass balance precision
+   // At pmp->MK == 1, normal return after successful improvement of mass balance precision
    pmp->t_end = clock();   // Fix pure runtime
    pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
 }
@@ -449,7 +510,8 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 
    // Analyzing if the Simplex approximation is necessary
     if( !pmp->pNP  )
-    {   // Preparing to call Simplex method - "cold start"
+    {
+        // Preparing to call Simplex method - "cold start"
     	pmp->FitVar[4] = 1.0; // by default no smoothing
 //        pmp->FitVar[4] = pa->p.AG;  //  initializing the smoothing parameter
         pmp->ITaia = 0;             // resetting the previous number of AIA iterations
@@ -491,8 +553,6 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
               }  // k
            } // FIat
         }   // LO
-//        if( pmp->FIs )    //  seems obsolete - can be changed to provide activity coeffs for EFD()!
-//            GammaCalc(LINK_FIA_MODE);
 //        if( pa->p.PC == 2 )
 //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
         pmp->IT = 0; pmp->ITF += 1; // Assuming simplex() time equal to one iteration of EFD()
@@ -557,7 +617,7 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
         //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
         if( pmp->PD == 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
         {
-            ConCalc( pmp->X, pmp->XF, pmp->XFA );  // calculation of concentrations
+//            ConCalc( pmp->X, pmp->XF, pmp->XFA );  // calculation of concentrations
             GammaCalc( LINK_UX_MODE);    // Very experimental!
         }
 #ifdef GEMITERTRACE
@@ -571,9 +631,11 @@ to_text_file( "MultiDumpAA.txt" );   // Debugging
             pmp->X[j] = pmp->Y[j];
         TotalPhases( pmp->X, pmp->XF, pmp->XFA );
 
+pmp->PCI = 1.; // SD 05/05/2010 for smaler number of iterations for systems with adsorbtion
+
          pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
    	 pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
-        if( pmp->PD >= 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
+     if( pmp->PD >= 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
         {
         	GammaCalc( LINK_UX_MODE);
 				// if( pmp->PD >= 3 )
@@ -619,7 +681,7 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
 {
     long int IT1;
     long int I, J, Z,  N, sRet, iRet=0, j, jK;
-    double LM;
+    double LM, pmp_PCI;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     ErrorIf( !pmp->MU || !pmp->W, "EnterFeasibleDomain()",
@@ -633,7 +695,6 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
 
     // Adjustment of primal approximation according to kinetic constraints
     // Now returns <0 (OK) or index of DC that caused a problem
-    //
     jK = MetastabilityLagrangeMultiplier();
     if( jK >= 0 )
     {  // Experimental
@@ -643,6 +704,7 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
 		setErrorMessage( 17, "E17IPM: EnterFeasibleDomain(): ", buf);
       	return 5;
     }
+
 
 //----------------------------------------------------------------------------
 // BEGIN:  main loop
@@ -689,7 +751,7 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
            //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
            if( pmp->PD == 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
            {
-               ConCalc( pmp->X, pmp->XF, pmp->XFA );  // calculation of concentrations
+//               ConCalc( pmp->X, pmp->XF, pmp->XFA );  // calculation of concentrations
                GammaCalc( LINK_UX_MODE);    // Very experimental!
            }
            return iRet;       // mass balance refinement finished OK
@@ -698,7 +760,7 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
        WeightMultipliers( true );  // creating R matrix
 
        // Assembling and solving the system of linearized equations
-       if( pa->p.PC > 0)
+       if( pa->p.PD > 0)
            sRet = SolverLinearEquations( N, true );
        else
            sRet = qdSolverLinearEquations( N, true );
@@ -715,9 +777,11 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
 
       // SOLVED: solution of linear matrix has been obtained
       if(pa->p.PD > 0 )
-          pmp->PCI = calcDikin( N, true);  // calc of MU values and Dikin criterion
+//          pmp->PCI = calcDikin( N, true);
+          pmp_PCI = calcDikin( N, true);  // calc of MU values and Dikin criterion
        else
-          pmp->PCI = qdcalcDikin( N, true);  // calc of MU values and Dikin criterion
+//          pmp->PCI = qdcalcDikin( N, true);
+          pmp_PCI = qdcalcDikin( N, true);  // calc of MU values and Dikin criterion
 
       LM = calcLM( true ); // Calculation of descent step size LM
 
@@ -735,7 +799,7 @@ long int TMulti::EnterFeasibleDomain( long int WhereCalledFrom )
 //      cout << "LM " << LM << endl;
 
       // calculation of new primal solution approximation
-      // from step size LM and the descent vector MU
+      // from step size LM and the gradient vector MU
       for(J=0;J<pmp->L;J++)
             pmp->Y[J] += LM * pmp->MU[J];
 
@@ -749,8 +813,9 @@ STEP_POINT("FIA Iteration");
 }  /* End loop on IT1 */
 //----------------------------------------------------------------------------
     //  Prescribed mass balance precision cannot be reached
-   if( pa->p.DW )  // Now controlled by DW flag
-   {  // Experimental
+                    // Temporary workaround for pathological systems 06.05.2010 DK
+   if( pa->p.DW && ( WhereCalledFrom == 0L || pmp->pNP ) )  // Now controlled by DW flag
+   {  // Strict mode of mass balance control
        iRet = 2;
        char buf[320];
        sprintf( buf, "(EFD(%ld)) Maximum allowed number of EFD() iterations (%d) exceeded! ",
@@ -772,6 +837,7 @@ STEP_POINT("FIA Iteration");
 //          4, Mass balance broken  in DualTH (Mol_u)
 long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 {
+    bool StatusDivg;
     long int N, IT1,J,Z,iRet,i;
     double LM=0., LM1=1., FX1;
     SPP_SETTING *pa = &TProfil::pm->pa;
@@ -781,10 +847,11 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
       for( J=0; J<pmp->Ls; J++ )
             pmp->lnGmo[J] = pmp->lnGam[J];
 
-    for(J=0;J<pmp->N;J++)
-    {   pmp->U[J]=0.;
-        pmp->C[J]=0.;
-    }
+//    for(J=0;J<pmp->N;J++)
+//    {   pmp->U[J]=0.;
+//        pmp->Uc[J]=0.; // 04/05/2010 SD
+//        pmp->C[J]=0.;
+//    }
 
     if( pa->p.PD > 0 )
       pmp->FX=GX( LM  );  // calculation of G(x)
@@ -808,6 +875,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 //  Main loop of IPM iterations
     for( IT1 = 0; IT1 < pa->p.IIM; IT1++, pmp->IT++, pmp->ITG++ )
     {
+        StatusDivg = false;
         pmp->NR=pmp->N;
         if( pmp->LO ) // water-solvent is present
         {
@@ -818,6 +886,12 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 
         PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
+        // Saving previous content of the U vector to Uc vector
+        if( pmp->PCI <= pmp->DXM * 10. ) // only at low enough Dikin criterion values
+        {
+           for(J=0;J<pmp->N;J++)
+              pmp->Uc[J] = pmp->U[J];
+        }
         // Setting weight multipliers for DC
         WeightMultipliers( false );
 
@@ -835,52 +909,53 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
           return 1;
         }
 
-        if( /*false &&*/ (pmp->W1 || rLoop>=0) ) // no first loop
+        if( pmp->PCI <= pmp->DXM * 10.  ) // Checking divergence of U vector at low enough PCI
         {
+          bool Status1st = false;
+          char buf[200];
           for(J=0;J<pmp->N;J++)
           {
-      		 char buf[200];
-          	  if( fabs(pmp->U[J]-pmp->Uc[J] ) > (double)(TProfil::pm->pa.p.PLLG)/*500.*/ ) // broken dual solution
-        	  {
-        	     if( pmp->Ec != 14 )
-        	     { sprintf( buf, "Dual solution (vector u) has changed too much "
-        	    		 " in a refinement loop %ld:%ld for IC %3.3s ",
-        	    		 pmp->W1, rLoop, pmp->SB[J] );
+              if( fabs(pmp->U[J]-pmp->Uc[J] ) > (double)(TProfil::pm->pa.p.PLLG)/*1. to 100.*/ )
+              {   // broken dual solution
+                  StatusDivg = true;
+                  if( pmp->PZ ) // error message only after phase insertion
+                  {
+                     if( !Status1st )
+                     {
+                           sprintf( buf, "Dual solution (vector u) has changed too much "
+                                 " in PhaseSelection() loop %ld IPM iter.%ld for IC %3.3s ",
+                                 pmp->K2, pmp->ITG, pmp->SB[J] );
         		   setErrorMessage( 14, "W14IPM: IPM-main():", buf);
-        	     }
-    			  else
-    			  {
-     				 sprintf(buf,"  %-3.3s" ,  pmp->SB[J] );
-    				 addErrorMessage(buf);
-    			  }
-        	  }
-          }
-//          if( pmp->Ec == 14 )
-//          {  // swapping the dual solution with its copy from previous refinement loop
-//            double uu;
-//        	  for( i=0; i<pmp->N; i++ )
-//        	  {  uu = pmp->U[i]; pmp->U[i] = pmp->Uc[i]; pmp->Uc[i] = uu;}
-//             pmp->PZ = 2;
-//             goto CONVERGED;
-//          }
+                     }
+                     else {
+                           sprintf(buf,"  %-3.3s" ,  pmp->SB[J] );
+                           addErrorMessage(buf);
+                     }
+                  }
+              }
+           } // for J
+           if( StatusDivg && pmp->PZ )
+           {
+               // Divergence of dual solution in IPM after PhaseSelection()
+               for(J=0;J<pmp->N;J++)
+                  pmp->U[J] = pmp->Uc[J];  // restoring U from previous IPM run
+           }
         }
 
-//SOLVED: got the dual solution u vector - calculating the Dikin criterion
-//    of GEM IPM convergence
-//       f_alpha( );  commented out 30.10.2007  DK
-
+// Got the dual solution u vector - calculating the Dikin criterion of GEM IPM convergence
        if( pa->p.PD > 0 )
            pmp->PCI=calcDikin( N, false );
         else
             pmp->PCI=qdcalcDikin( N, false );
 
-       // Determination of the descent step size LM
-	   LM = calcLM( false );
+       // Determination of the acceptable descent step size LM (not to break the balances)
+       LM = calcLM( false );
 
        if( pa->p.PD > 0 )
        {
     	   LM1=LMD( LM ); // Finding an optimal value of the descent step
-    	   FX1=GX( LM1 ); // New G(X) value after the descent step
+           FX1=GX( LM1 ); // Calculation of the total Gibbs energy of the system G(X)
+                          // and copying of Y, YF vectors into X,XF, respectively.
        }
        else
        {
@@ -889,47 +964,36 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
            unsigned int old_cw;
            fpu_fix_start(&old_cw);
 #endif
-           FX1=to_double(qdGX( LM1 )); // New G(X) value after the descent step
+           FX1=to_double(qdGX( LM1 ));  // Calculation of the total Gibbs energy of the system G(X)
+                                        // and copying of Y, YF vectors into X,XF, respectively.
 #ifdef Use_qd_real
            fpu_fix_end(&old_cw);
 #endif
        }
-
-//       pmp->PCI = sqrt(pmp->PCI); // Dikin criterion - comm. out because sqrt(abs(del)) added
+       pmp->FX=FX1;
        // temporary
        for(i=4; i>0; i-- )
             pmp->logCDvalues[i] = pmp->logCDvalues[i-1];
        pmp->logCDvalues[0] = log( pmp->PCI );  // updating CD sampler array
 
-       if( (IT1 > 3) && (FX1 - pmp->FX > 10.)  &&   // doubtful
-          ( IT1 > pa->p.IIM/2 || pmp->PD >= 2 ) )
-        {                                 // Adjusting Dikin threshold
-            if( pmp->LO && pmp->X[pmp->LO]>pmp->XwMinM && pmp->PD >= 2 ) //
-                pmp->PD = pmp->PD > 0? pmp->PD = 1: pmp->PD = -1; //  Check if this is really needed!!!!! DK
-            else  pmp->DXM = 0.5 * pmp->PCI;
-        }
-
+       if( pmp->PHC[0] == PH_AQUEL && ( pmp->XF[0] < pmp->DSM ||
+            pmp->X[pmp->LO] <= pmp->XwMinM ))    // fixed 28.04.2010 DK
+       {
+           pmp->XF[0] = 0.;  // elimination of aqueous phase if too little
+           pmp->XFA[0] = 0.;
+       }
+/*
        if( pa->p.PD > 0 )
-           MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+           MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C );
        else
-           qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
-
-       pmp->FX=FX1;
+           qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C );
+*/
        // Main IPM iteration done
        // Main calculation of activity coefficients
-        if( pmp->PD >= 2 )
+        if( pmp->PD >= 2 || pmp->PD == -2 )
             status = GammaCalc( LINK_UX_MODE );
 
-        if( pmp->PHC[0] == PH_AQUEL && pmp->XF[0] < pmp->DSM &&
-             pmp->X[pmp->LO] <= pmp->XwMinM )    // fixed 30.08.2009 DK
-        {
-            pmp->XF[0] = 0.;  // elimination of aqueous phase
-            pmp->XFA[0] = 0.;
-        }
-        // Restoring vectors Y and YF
-        Restoring_Y_YF();
-
-if( pmp->pNP && rLoop < 0 && status )
+if( pmp->pNP && status ) // && rLoop < 0  )
 {
 	setErrorMessage( 18, "E18IPM: IPM-main():", "Bad GammaCalc() status in SIA mode");
 	return 3L;
@@ -942,43 +1006,23 @@ if( pmp->pNP && rLoop < 0 && status )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif
-        if( pmp->PCI < pmp->DXM /* *0.07 */ || pmp->PZ == 2 )  // Dikin criterion satisfied - converged!
-            goto CONVERGED;                            // Pa_DK threshold must be decreased 20-50 times after bugfix in calcDikin()!!!
-    } // end of main IPM cycle
-
+        if( ( pmp->PCI <= pmp->DXM ) || ( StatusDivg /*&& !pmp->PZ*/ ) )  // Dikin criterion satisfied - converged!
+            goto CONVERGED;
+        // Restoring vectors Y and YF from X and XF for the next IPM iteration
+        Restoring_Y_YF();
+    } // end of the main IPM cycle
+    // DXM was not reached in IPM iterations
     setErrorMessage( 6, "E06IPM: IPM-main(): " ,
             "IPM convergence criterion threshold (Pa_DK) could not be reached"
     		" (more than Pa_IIM iterations done);\n" );
-    return 2L; // bad convergence - too many IPM iterations!
+    return 2L; // bad convergence - too many IPM iterations or divergence of dual solution!
 //----------------------------------------------------------------------------
 CONVERGED:
-pmp->PCI = pmp->DXM * 0.999999; // temporary
-// Final calculation of phase amounts and activity coefficients
-  TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+if( !StatusDivg )
+   pmp->PCI = pmp->DXM * 0.999999; // temporary - for smoothing
+return 0L;
 
-  if(!pmp->PZ && pmp->W1 && pmp->FIs )   // Important - added pmp->FIs in if() on 16.12.2009 DK
-  { iRet =  Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );
-    if(iRet )
- 	   return 4L;
-  }
-
-  if( pmp->PD >= 1 )
-  {
-	  GammaCalc( LINK_UX_MODE );
-		  // if( pmp->PD >= 3 )
-		  // GammaCalc( LINK_PHP_MODE );  // Temporarily disabled (DK 06.07.2009)
-  }
-
-  ConCalc( pmp->X, pmp->XF, pmp->XFA );
-
-  if( pa->p.PD > 0 )
-	   MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
-  else
-	   qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->X, pmp->B, pmp->C);
-
-  return 0L;
 }
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculation of mass-balance residuals in GEM IPM CSD
@@ -1036,43 +1080,32 @@ TMulti::MassBalanceResiduals( long int N, long int L, double *A, double *Y, doub
 //        cout << setprecision(16) << scientific<< C[ii] << endl;
 }
 
-// Diagnostics for a severe break of mass balance in the initial approximation
-// or after GEM IPM PhaseSelect() (when pmp->X is passed as parameter)
-// Returns -1 (Ok) or index of the chemical element for which the balance is
+// Diagnostics for a severe break of mass balance (abs.moles)
+// after GEM IPM PhaseSelect() (when pmp->X is passed as parameter)
+// Returns -1 (Ok) or index of the first IC for which the balance is
 // broken
 long int
 TMulti::CheckMassBalanceResiduals(double *Y )
 {
-	double cutoff;
+    double cutoff;
     long int iRet = -1L;
     char buf[300];
 
-        // cutoff = pmp->DHBM * 1e4; pmp->DFYwM*100.?
-//	cutoff = min (pmp->DHBM*1.0e8, 1.0e-3 );	// changed, 28.08.2008 (TW,DK)
-        cutoff = min (pmp->DFYwM*pmp->L, 1.0e-3 );	// changed, 09.02.2010 (DK)
-//        if( cutoff > 1e-3 )
-//		cutoff = 1e-3;
+        cutoff = min( pmp->DHBM * 1e10, 1e-2 );  // 11.05.2010 DK
 
 	if(TProfil::pm->pa.p.PD > 0 )
 		MassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);
 	else
 		qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, Y, pmp->B, pmp->C);
 
-	for(long int i=0; i<pmp->N; i++)
+        for(long int i=0; i<(pmp->N - pmp->E); i++)
 	{
-	   if( pmp->B[i] > cutoff )
-	   {	   // Major IC
-		  if( fabs( pmp->C[i] ) < pmp->B[i] )
-			  continue;
-	   }
-	   else {  // Trace IC - less than (cutoff) mol
-	      if( fabs( pmp->C[i] ) < cutoff )
+           if( fabs( pmp->C[i] ) < cutoff )
 	    	  continue;
-	   }
 	   if( iRet < 0  )
 	   {
-          iRet = i;  // Error state is activated
-                  sprintf(buf, "Mass balance is broken on iteration %ld  for independent components %-3.3s",
+              iRet = i;  // Error state is activated
+                  sprintf(buf, "Mass balance is broken on iteration %ld  for ICs %-3.3s",
 					     pmp->ITG, pmp->SB[i] );
 		  setErrorMessage( 2, "E02IPM: IPM-main():" ,buf);
 		}
@@ -1081,7 +1114,7 @@ TMulti::CheckMassBalanceResiduals(double *Y )
 		 sprintf(buf," %-3.3s" ,  pmp->SB[i] );
 		 addErrorMessage( buf );
 		 }
-	}
+        } // i
 	return iRet;
 }
 
@@ -1834,322 +1867,6 @@ double TMulti::RescaleToSize( bool standard_size )
 //   return sfactor;
 // }
 
-//===================================================================
-// Parameters:
-//     AmountCorrectionThreshold - the maximum DC amount correction that can be cleaned ( 1e-5 )
-//     MjuDiffCutoff - normalized chem.pot. difference threshold (dMu = ln a - ln a,dual)
-//
-// Returns 0 if no subsequent refinement of mass balance is needed;
-//         1 if species amounts were cleaned up to more than requested overall mass balance accuracy
-//        -1 if cleanup has been done and the degeneration of the chemical system occurred
-//         2 solution is seriously distorted and full PhaseSelect3() loop is necessary
-//
-long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double MjuDiffCutoff )
-{
-    long int NeedToImproveMassBalance = 0, L1k, L1kZeroDCs, k, j, jb = 0;
-    double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
-    double CutoffDistortionMBR = 0.1 * pmp->DHBM;
-    bool KinConstr, Degenerated = false;
-    SPP_SETTING *pa = &TProfil::pm->pa;
-
-    PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
-//  iRet =  Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );  // to be tested
-    jb=0;
-    for(k=0;k<pmp->FI;k++)
-    {
-       if( ( pmp->YF[k] >= pmp->DcMinM ) ) // Only in phase present in mass balance!
-       {                            // (acc. to definition of the L_S set)
-            L1k = pmp->L1[k]; // Number of components in the phase
-            L1kZeroDCs = 0;
-            for(j=jb; j<jb+L1k; j++)
-            {
-               Yj = YjCleaned = pmp->Y[j];
-               KinConstr = false;
-                // Detecting the DC having the non-trivial kinetic constraint
-               // Fixing a very small component constrained from below
-               if( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
-               {
-                   pmp->Y[j] = pmp->DUL[j];
-                   KinConstr = true;
-               }
-               if( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
-               { // Fixing a small component constrained from above
-                   pmp->Y[j] = pmp->DLL[j];
-                   KinConstr = true;
-               }
-               if( KinConstr == true )
-               {
-                   YjDiff = fabs( pmp->Y[j] -Yj );
-                   if( YjDiff > CutoffDistortionMBR )
-                       NeedToImproveMassBalance = 1;
-                   if( YjDiff > AmountCorrectionThreshold )
-                       NeedToImproveMassBalance = 2;
-//                   continue;   // skipping if non-trivial metastability constraint
-               }
-               else if( Yj >= pmp->DcMinM )
-               {   // we check in the Ls set only, except metastability constraints
-                  MjuPrimal = pmp->F[j];   // normalized
-                  MjuDual = pmp->Fx[j]/pmp->RT;
-                  MjuDiff = MjuPrimal - MjuDual;
-                  if( fabs( MjuDiff ) > MjuDiffCutoff )
-                  {
-                      if( L1k == 1 && MjuDiff > 0. )
-                      {  // Pure phase
-                         YjCleaned = 0.0; // Cleaning out a "phantom" pure phase
-                      }
-                      if(L1k > 1)
-                      {  // Component of a solution phase
-                         // The species is present in a larger or smaller amount than necessary
-                           YjCleaned = Yj / exp( MjuDiff );
-                      }
-                      YjDiff = YjCleaned - Yj;
-                      if( fabs( YjDiff ) > CutoffDistortionMBR )
-                      {
-                          NeedToImproveMassBalance = 1;
-                          if( fabs( YjDiff ) > AmountCorrectionThreshold )
-                          {   // Correction was too large
-                              NeedToImproveMassBalance = 2;
-                              // Temporary: only correction of the size of threshold
-                              if( YjDiff > 0. )
-                                pmp->Y[j] += AmountCorrectionThreshold;
-                              else
-                                pmp->Y[j] -= AmountCorrectionThreshold;
-                          }
-                          else {  // Reasonable correction
-                              pmp->Y[j] = YjCleaned;
-                          }
-                      }
-                      else {  // Correction that does not affect the mass balance
-                          pmp->Y[j] = YjCleaned;
-                      }
-                      if( pmp->Y[j] < pmp->DcMinM )
-                      {  // Corrected amount is too small - zeroed off
-                         pmp->Y[j] = 0.;
-                         L1kZeroDCs++;
-                      }
-                  }
-               }
-               else if( Yj < pmp->DcMinM )
-               {  // already zero
-                   L1kZeroDCs++;
-               }
-            }  // for j
-            if(( pmp->L1[k] - L1kZeroDCs <= 1 && k < pmp->FIs )
-                ||( pmp->L1[k] - L1kZeroDCs == 0 && k >= pmp->FIs ))
-            {   Degenerated = true;
-                NeedToImproveMassBalance = 1;
-            }
-       }
-       jb+=pmp->L1[k];
-   }
-   if( NeedToImproveMassBalance )
-   { // diagnostics to be implemented
-      if( Degenerated && NeedToImproveMassBalance == 1 )
-          NeedToImproveMassBalance = -1;
-      if( Degenerated && NeedToImproveMassBalance == 2 )
-      {  // Diagnostic output here
-          NeedToImproveMassBalance = -2;
-      }
-   }
-   return NeedToImproveMassBalance;
-}
-
-
-//===================================================================
-// Checking Karpov phase stability criteria Fa for phases and DCs
-//  using Selekt2() algorithm by Karpov & Chudnenko (1989)
-//  modified by DK in 1995 and in 2007
-//  Returns 0, if some phases were inserted and a new IPM loop is needed
-//             (up to 3 loops possible);
-//          1, if the IPM solution is final and consistent, no phases were inserted
-//          -1, if the IPM solution is inconsistent after 3 Selekt2() loops
-//  In this case, the index of most problematic phase is passed through kf or
-//  ku parameter (parameter value -1 means that no problematic phases were found)
-//
-long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStatus ) //  rLoop )
-{
-    long int k, j, jb, kf, ku;
-    double F1, F2, *F0; // , sfactor;
-    SPP_SETTING *pa = &TProfil::pm->pa;
-int rLoop = CleanupStatus;
-rLoop = -1;
-//    sfactor = calcSfactor();
-//    sfactor = pmp->SizeFactor;
-    f_alpha( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
-    F0 = pmp->Falp;
-
-    (pmp->K2)++;
-    kf = -1; ku = -1;  // Index for phase diagnostics
-    F1 = pa->p.DF;  // Fixed 29.10.2007  DK
-    F2 = -pa->p.DFM;  // Meaning of DFM changed 02.11.2007
-
-    for(k=0;k<pmp->FI;k++)
-    {
-        if( F0[k] > F1 && pmp->YF[k] < pmp->DSM ) //  pa->p.DS )  // < pmp->lowPosNum?
-        {            // stable phase not in mass balance - to be inserted
-            F1=F0[k];
-            kf=k;
-        }
-        if( F0[k] < F2 && pmp->YF[k] >= pmp->DSM ) // pa->p.DS )  // Fixed 2.11.2007
-        {            // unstable phase in mass balance - to be excluded
-            F2=F0[k];
-            ku=k;
-        }
-    }
-kfr = kf;
-kur = ku;
-    if( kfr < 0 && kur < 0 )
-    {    // No phases to insert/exclude or no Fa distortions found
-          // Successful end of iterations of SELEKT2()
-        return 1L;
-    }
-
-    if( (F2 < -pa->p.DFM ) && ( ku >= 0 ) )
-    {
-        if( pmp->K2 > 4 ) // Three Selekt2() loops have already been done!
-        	return -1L;   // Persistent presence of unstable phase(s) - bad system!
-
-        // Excluding problematic phases
-        do
-        {  // excluding all phases with  F2 < DF*sfactor
-            for( jb=0, k=0; k < ku; k++ )
-                 jb += pmp->L1[k];
-
-            ZeroDCsOff( jb, jb+pmp->L1[ku], ku ); // Zeroing the phase off
-            pmp->FI1--;
-            // find a new phase to exclude, if any exists
-            F2= -pa->p.DFM;
-            ku = -1;
-            for( k=0; k<pmp->FI; k++ )
-                if( F0[k] < F2 && pmp->YF[k] >= pmp->DSM )
-                {
-                    F2=F0[k];
-                    ku=k;
-                }
-        }
-        while( ( F2 <= -pa->p.DFM ) && ( ku >= 0 ) );
-    } //if ku
-
-    // Inserting problematic phases
-    if( F1 > pa->p.DF && kf >= 0 )
-    {
-        if( pmp->K2 > 4 )
-           return -1L;   // Persistent absence of stable phase(s) - bad system!
-
-        // There is a phase for which DF*sfactor threshold is exceeded
-        do
-        {   // insert this phase and set Y[j] for its components
-            // with account for asymmetry and non-ideality
-            for( jb=0, k=0; k < kf; k++ )
-                 jb += pmp->L1[k];
-
-            RaiseZeroedOffDCs( jb, jb+pmp->L1[kf], /* sfactor, */ kf );
-
-            pmp->FI1++;  // check phase rule
-
-            if( pmp->FI1 >= pmp->NR+1 )
-               break;   // No more phases can be inserted
-
-            // find a new phase to insert, if any exists
-            F1= pmp->lowPosNum; // was about 1e-16
-            kf = -1;
-            for( k=0; k<pmp->FI; k++ )
-                if( F0[k] > F1 && pmp->YF[k] < pmp->DSM )
-                {
-                    F1=F0[k];
-                    kf=k;
-                }
-        }
-        while( F1 > pa->p.DF && kf >= 0 );
-        // end of insertion cycle
-    } // if kf changed SD 03/02/2009
-// Raise zeros in DC amounts in phases-solutions in the case if some phases
-// were inserted or excluded                          - experimental option!
-//        double RaiseZeroVal = pmp->DHBM;  // Added 29.10.07  by DK
-        jb=0;
-        for(k=0;k<pmp->FIs;k++)
-        {
-            if( ( pmp->YF[k] >= pmp->DSM ) || ( pmp->pNP && rLoop < 0 ) ) // Only in phase present in mass balance!
-            {                            // (acc. to definition of L_S set) PIA only if initial!
-                 pmp->YF[k]=0.;
-                 for(j=jb;j<jb+pmp->L1[k];j++)
-                 {
-                    if( pmp->Y[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )  // fixed 30.08.2009
-                        pmp->Y[j] = RaiseDC_Value( j ); // bugfix 29.10.07
-                    pmp->YF[k] += pmp->Y[j]; // calculate new amounts of phases
-                 }
-            }
-            jb+=pmp->L1[k];
-        }
-    // } SD 03/02/2009
-#ifndef IPMGEMPLUGIN
-    STEP_POINT("Select2()");
-#ifndef Use_mt_mode
-        pVisor->Update(false);  // "PhaseSelection"
-#endif
-#endif
-    if( pmp->K2 > 1 )
-    { // more then the first step - but the IPM solution has not been improved
-//      double RaiseZeroVal = pmp->DHBM*0.1;   // experimental
-       for(j=0;j<pmp->L;j++)
-          if( fabs(pmp->Y[j]- pmp->XY[j]) > RaiseDC_Value( j ) ) //
-               goto S6;
-       // pmp->PZ=2; // No significant change has been done by Selekt2()
-       return 1L;
-    }
-S6: // copy of X vector has been changed by Selekt2() algorithm - store
-    for(j=0;j<pmp->L;j++)
-        pmp->XY[j]=pmp->Y[j];
-
-    return 0L;  // Another loop is needed
-}
-
-// New function to improve on raising zero values in PhaseSelect() and after Simplex() 30.08.2009 DK
-double TMulti::RaiseDC_Value( const long int j )
-{
-	double RaiseZeroVal = pmp->DFYsM;
-
-	switch(pmp->DCC[j] )
-	{
-    case DC_AQ_PROTON:
-    case DC_AQ_ELECTRON:
-    case DC_AQ_SPECIES:
-    case DC_AQ_SURCOMP:	RaiseZeroVal = pmp->DFYaqM;
-						break;
-    case DC_SOL_IDEAL:
-    case DC_GAS_COMP:
-    case DC_GAS_H2O:
-    case DC_GAS_CO2:
-    case DC_GAS_H2:
-    case DC_GAS_N2:		RaiseZeroVal = pmp->DFYidM;
-						break;
-    case DC_AQ_SOLVENT:
-    case DC_AQ_SOLVCOM: RaiseZeroVal = pmp->DFYwM;
-						break;
-    case DC_SOL_MINOR:	RaiseZeroVal = pmp->DFYhM;
-						break;
-    case DC_SOL_MAJOR: RaiseZeroVal = pmp->DFYrM;
-						break;
-        // adsorption
-    case DC_SSC_A0:    case DC_SSC_A1:    case DC_SSC_A2:    case DC_SSC_A3:    case DC_SSC_A4: // obsolete
-    case DC_WSC_A0:	   case DC_WSC_A1:    case DC_WSC_A2:    case DC_WSC_A3:    case DC_WSC_A4: // obsolete
-    case DC_SUR_GROUP:
-    case DC_SUR_COMPLEX:
-    case DC_SUR_IPAIR:
-    case DC_IESC_A:
-    case DC_IEWC_B:		RaiseZeroVal = pmp->DFYaqM;
-						break;
-    case DC_PEL_CARRIER:
-    case DC_SUR_MINAL:
-    case DC_SUR_CARRIER: RaiseZeroVal = pmp->DFYrM;
-						 break;
-    case DC_SCP_CONDEN:	 RaiseZeroVal = pmp->DFYcM;
-						 break;
-    default:
-	         break;
-	}
-	return RaiseZeroVal;
-}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Internal memory allocation for IPM performance optimization

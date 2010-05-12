@@ -50,19 +50,19 @@ enum volume_code {  // Codes of volume parameter ???
 
 SPP_SETTING pa_ = {
     "GEM-Selektor v3.0.0: Numerical flags, controls and thresholds",
-    {   // Typical default set (interim, 28.04.2010)
-        1,  /* PC */  2,     /* PD */   -6,   /* PRD */
-        1,  /* PSM  */ 60,  /* DP */   1,   /* DW */
+    {    // Typical default set (interim, 04.05.2010) new PhaseSelection( logSI )
+        2,  /* PC */  2,     /* PD */   -5,   /* PRD */
+        1,  /* PSM  */ 90,  /* DP */   1,   /* DW */
         1, /* DT */     10,   /* PLLG */   1,  /* PE */
         1000,   /* IIM */
         1e-6, /* DG */   1e-11,  /* DHB */  1e-23,  /* DS */
-        1e-5,  /* DK */  0.01,  /* DF */  0.1,  /* DFM */
+        1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
         1e-6,  /* DFYw */  1e-6,  /* DFYaq */    1e-6,  /* DFYid */
         1e-6,  /* DFYr,*/  1e-6,  /* DFYh,*/   1e-6,  /* DFYc,*/
         1e-7, /* DFYs, */  1e-17,  /* DB */   -1.0,   /* AG */
         -0.98,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-        1e-4, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
-        1e-13,  /* ScMin, */  1e-30, /* DcMin, */   1e-23, /* PhMin, */
+        1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
+        1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-23, /* PhMin, */
         1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
         1e-9,  /* DKIN  */ 0,  /* tprn */
   },
