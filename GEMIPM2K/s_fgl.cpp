@@ -4094,6 +4094,8 @@ long int TCORKcalc::PTparam()
     long int j, i, ip, i1, i2;
     double a;
 
+    Pkb = Pbar/1000.;
+
     PureSpecies();
 
     // set all interaction parameters zero
@@ -4349,7 +4351,7 @@ long int TCORKcalc::FugacityH2O( long int j )
                   a = a0 + a1*(673.-Tk) + a2*pow((673.-Tk),2.) + a3*pow((673.-Tk),3.);
               else
                   a = a0 + a4*(Tk-673.) + a5*pow((Tk-673.),2.) + a6*pow((Tk-673.),3.);
-              VolumeFugacity( phState, Pkb, Psat, a, b, c, d, e, vol, g3 );
+              VolumeFugacity( phState, Pkb, p0, a, b, c, d, e, vol, g3 );
               fc = g1/g2*g3;
           }
      }
