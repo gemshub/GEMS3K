@@ -46,7 +46,7 @@ double prod3 ( double u, double v, double w, double du, double dv, double dw,
 		double d2u, double d2v, double d2w );
 
 
-
+double GoldenSection( double param[3], double funct[2], double (f_proc)(double val));
 
 
 #endif   // _num_methods_h_

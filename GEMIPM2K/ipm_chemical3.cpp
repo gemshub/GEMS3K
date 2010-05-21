@@ -93,6 +93,10 @@
 // added 18.06.2008 DK
 double TMulti::SmoothingFactor( )
 {
+   if( pmp->FitVar[4] < 0 )
+   {  // To start SIA mode (smart initial approximation)
+      return 1.0;
+   }
    if( pmp->FitVar[3] > 0 )
 	   return pmp->FitVar[3];
    else
@@ -189,8 +193,10 @@ void TMulti::SetSmoothingFactor( long int mode )
       	    al = 1.;
         TF = al;
     }
-
-    pmp->FitVar[3] = TF;
+//    if( pmp->IT )
+      pmp->FitVar[3] = TF;
+//    else    // Workaround for SIA if smoothing is used
+//      pmp->FitVar[3] = 1.;
 //    pmp->pRR1 = Level;
 //    return TF;
 }

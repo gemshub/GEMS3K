@@ -40,94 +40,100 @@
 # DB - Minimum amount of independent component in bulk composition (except charge Zz), moles
 <pa_DB>        1e-17
 
-# DHB: Maximum allowed mass balance residual (moles) for major independent components
-<pa_DHB>       1e-08
+# DHB: Maximum allowed relative mass balance residual for ICs ( 1e-9 to 1e-15 ) { 1e-11 } 
+<pa_DHB>       1e-11
 
-# EPS: Precision criterion of the simplex() procedure for automatic initial approximation
-<pa_EPS>       1e-09
+# EPS: Tolerance of the Simplex() LP solver convergence (1e-6 to 1e-14) { 1e-10 }
+<pa_EPS>       1e-10
 
-# DK: IPM convergence threshold for the Dikin criterion (1e-6 < DK < 1e-4)
-<pa_DK>       0.0001
+# DK: Tolerance threshold for the Dikin's criterion of IPM convergence (1e-6 to 1e-4) { 1e-5 }
+<pa_DK>        1e-06
 
-# DB: Cutoff (threshold) for the amount of phase for phase elimination 
-<pa_DS>        1e-12
+# DS: Cutoff min. amount of stable phase in GEM IPM primal solution (1e-8 to 1e-24) { 1e-23 }
+<pa_DS>        1e-23
 
-# DF: Threshold for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted
+# DF: Tolerance DF for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted { 0.01 }
 <pa_DF>         0.01
-# DFM: Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated
-<pa_DFM>         0.5
+# DFM: Tolerance for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated
+<pa_DFM>        0.01
 
-# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
-<pa_DP>          150
+# DP: Maximal number of iterations in EnterFeasibleDomain() procedure (20 to 120) { 30 }
+<pa_DP>           60
 
-# IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
-<pa_IIM>         500
+# Maximum allowed number of iterations in one GEM IPM descent run (100 to 9999) { 1000 }
+<pa_IIM>        1000
 
-# PD: Control on calling built-in Debye-Hueckel() and other models for aqueous activity coefficients
-<pa_PD>            3
+# PD: Mode of calculation of activity coefficients (-2 +Qd; 1 -IPM, 2 +EFD, 3 IPM ) { 2 } 
+<pa_PD>            2
 
-# PRD: Positive: control of calling IPM_gamma() on iterations of GEM EFD and IPM (default 3)
-#      Negative: the number of additional EFD-IPM loops to improve the GEM final solution
-<pa_PRD>           -1
+# PRD: Disable (0) or activate (-5 or less- max.dec.exp.for DC amount correction) CleanupSpeciation() { -6 }
+<pa_PRD>          -5
 
-# AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
-<pa_AG>          0.7
-<pa_DGC>        0.07
+# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments -1 to +1 { -1.0 or 0.7 for adsorption }
+<pa_AG>            1
 
-# PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)
+# DGC: Smoothing parameter 2 (exponent in smoothing function (-1 to +1) { -0.9 or 0.07 for adsorption }
+<pa_DGC>           0
+
+# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- normal; 2-including warnings }
 <pa_PSM>           1
-# Activity coefficient values for simplex(): GAR for major and GAH for minor components
+# GAR: Initial activity coefficient value for major (M) species in a solution phase at Simplex() { 1 }
 <pa_GAR>           1
+# GAH: Initial activity coefficient value for minor (J) species in a solution phase at Simplex() { 1000 }
 <pa_GAH>        1000
 
-# _Min: Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; 
-# Ph - non-electrolyte solution phases
+# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-9 }; Sc - solid sorbent {1e-7}; 
+#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-23 }
 <pa_XwMin>     1e-09
 <pa_ScMin>     1e-07
-<pa_DcMin>     1e-20
-<pa_PhMin>     1e-09
+<pa_DcMin>     1e-30
+<pa_PhMin>     1e-23
 
-# ICmin: Minimal ionic strength, below which the aqueous activity coefficients are set to 1
-<pa_ICmin>     3e-05
+# ICmin: Cutoff value of effective molal ionic strength to disable aq-gamma calculation (1e-6 to 1e-3) { 1e-5 }
+<pa_ICmin>     3e-06
 
-# PC: Mode of Selekt2() procedure operation
-<pa_PC>            1
-# DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
-# DFYw - water solvent;
+# PC: Mode of PhaseSelect() operation  { 1 }
+<pa_PC>            2
+# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm
+# DFYw: Insertion mole amount for water-solvent at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }
 <pa_DFYw>      1e-06
-# DFYaq - aqueous species;
+# DFYaq: Insertion mole amount for aqueous species at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }
 <pa_DFYaq>     1e-06
 
-# DFYid - ideal solution components;
+# DFYid: Insertion mole amount for species of ideal solutions at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }
 <pa_DFYid>     1e-06
-# DFYr - major solution components;
+# DFYr: Insertion mole amount for a major species in a solution at Simplex()->EnterFeasibleDomain()bridge { 1e-6 }
 <pa_DFYr>      1e-06
-# DFYh - minor solution components;
+# DFYh: Insertion mole amount for a junior species in a solution at Simplex()->EnterFeasibleDomain() bridge{ 1e-6 }
 <pa_DFYh>      1e-06
-# DFYc - single-component phase; 
+# DFYc:  Insertion mole amount for a single-component phase at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }
 <pa_DFYc>      1e-06
-# Insertion amount of single-component phase (Selekt2() algorithm only)
+# DFYs: Insertion mole amount for a single-component phase in PhaseSelect() { 1e-7 }
 <pa_DFYs>      1e-07
 
-# Parameters for high-accuracy IPM-2 algorithm 
-# DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
-<pa_DW>           15
-# DT: Exponent for dual-thermodynamic restoring of low amounts of solutes (+2 to -5), relative to DHBM
-<pa_DT>           -2
+# Parameters for high-accuracy IPM algorithm 
+# DW: Activate (1) or disable (0) the error condition on DP - maximum allowed number of EFD() iterations { 1 }
+<pa_DW>            1
+# DT: DHB is rel.max.MB cutoff for all ICs (0) or for major ICs: dec.exponent (<-6) of abs.MB cutoff; (1) for DHB also as abs.cutoff { 0 }
+<pa_DT>            1
 
-# GAS: IPM2 balance accuracy control factor DHBM[i]/b[i]
-<pa_GAS>       0.001
-# DG: Minimal step length in the initial approximation EFD() procedure, 1e-7 
-<pa_DG>        1e-7
-# DNS: Standard surface density (nm-2) for calculating activity of surface species
+# GAS: Threshold for primal-dual norm.chem.pot.difference used in CleanupSpeciation() { 0.0001 }
+<pa_GAS>      0.0001
+# DG: Standart total moles { 1e5 }
+<pa_DG>            0
+# DNS: Standard surface density (nm-2) for calculating activity of surface species { 12.05 nm-2 }
 <pa_DNS>       12.05
-# IEPS: Control parameter of SACT calculation in sorption/surface complexation models
+# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species (1e-6 to 1e-2) { 1e-3 }
 <pa_IEPS>      0.001
 
-# pKin: Flag for using metastability/kinetic constraints on calculated DC amounts (see dll, dul arrays)
+# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } 
 <pKin>             1
-# DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
-<pa_DKIN>     0.0001
+# DKIN: Tolerance for non-trivial metastability restrictions on amounts of dependent components, moles { 1e-7 } 
+<pa_DKIN>      1e-09
+# pa_PLLG: Tolerance for checking changes in dual solution after PhaseSelect(), 1 to 3000 { 10 }
+<pa_PLLG>         10
+# tMin: Type of thermodynamic potential to minimize
+<tMin>             0
 
 ## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
 # sMod: Codes for mixing models of multicomponent phases

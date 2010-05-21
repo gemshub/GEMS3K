@@ -4272,7 +4272,7 @@ long int TCORKcalc::FugacityPT( long int j, double *EoSparam )
                     break;
             case DC_GAS_COMP_:  // other fluids
             case DC_GAS_H2_:
-            case DC_GAS_N2:
+            case DC_GAS_N2_:
                     iRet = FugacityCorresponding( j );
                     break;
             default:

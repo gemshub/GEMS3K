@@ -67,7 +67,7 @@ int main( int argc, char* argv[] )
    dBR->NodeStatusCH = NEED_GEM_AIA;
 
    // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
-   int NodeStatusCH = node->GEM_run( 3., false );
+   int NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
@@ -105,7 +105,7 @@ int main( int argc, char* argv[] )
         // Asking GEM IPM2 to run (faster) with smart initial approximation 
         dBR->NodeStatusCH = NEED_GEM_SIA;       
 
-        NodeStatusCH = node->GEM_run( 3., false );
+        NodeStatusCH = node->GEM_run( false );
 
         if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
         {    

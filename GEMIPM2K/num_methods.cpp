@@ -202,6 +202,78 @@ double prod3( double u, double v, double w, double du, double dv, double dw,
 }
 
 
+// Method of Gold Section
+//   param[3],  parameter x    - start, end, tolerance
+//   funct[2],  function  f(x) - value, tolerance
+//
+double GoldenSection( double param[3], double funct[2], double (f_proc)(double val))
+{
+    double Fa, Fb, Fx1, Fx2, a, b, x1, x2;
+
+    x1 = param[0];
+    x2 = param[1];
+    a = min( x1, x2 );
+    b = max( x1, x2 );
+    if( (b-a) < param[2]) goto DONE;
+    x1 = a + .382*(b-a);
+    x2 = a + .618*(b-a);
+    Fa = f_proc( a);
+    if( fabs(Fa) < funct[1] )
+    {
+        b = a;
+        goto DONE;
+    }
+    Fb = f_proc( b);
+    if(  fabs(Fb) < funct[1] )
+    {
+        a = b;
+        goto DONE;
+    }
+    if( (Fa*Fb) > 0)
+        Error( "GoldenSection",
+  "W01PEexec: No result in specified interval! Change interval!");
+    Fx1 = f_proc( x1);
+    Fx2 = f_proc( x2);
+    do
+    {
+        if( fabs( Fx1 ) < funct[1] )
+        {
+            a = b = x1;
+            goto DONE;
+        }
+        if( fabs( Fx2 ) < funct[1] )
+        {
+            a = b = x2;
+            goto DONE;
+        }
+        if( fabs( Fx1) > fabs( Fx2) )
+        {
+            a = x1;
+            if( (b-a) < param[2])
+                goto DONE;
+            x1 = x2;
+            Fx1 = Fx2;
+            x2 = a + .618*(b-a);
+            Fx2 = f_proc( x2);
+        }
+        else
+        {
+            b = x2;
+            if( (b-a) < param[2])
+                goto DONE;
+            x2 = x1;
+            Fx2 = Fx1;
+            x1 = a + .382*(b-a);
+            Fx1 = f_proc( x1);
+        }
+    }
+    while( (b-a) > param[2] );
+DONE:
+    x1 = (a+b)/2;
+    return x1;
+}
+
+
 
 
 

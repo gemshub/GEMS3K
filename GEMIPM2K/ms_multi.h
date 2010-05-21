@@ -26,9 +26,6 @@
 // QD_real is enabled only if the above compiler key is used (experimental)
 #include <qd/qd_real.h>
 #include <qd/fpu.h>
-#else
-typedef double qd_real;
-#define to_double (double)
 #endif
 
 #ifndef IPMGEMPLUGIN
@@ -83,7 +80,7 @@ typedef struct
     pESU,  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pIPN,  // State of IPN-arrays:  0-create; 1-available; -1 remake
     pBAL,  // State of reloading CSD:  1- BAL only; 0-whole CSD
-    pFAG_,  // reserved SD
+tMin,  // Type of thermodynamic potential to minimize
     pTPD,  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
     pULR,  // Start recalc kinetic constraints (0-do not, 1-do )internal
     ITaia,  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
@@ -108,16 +105,16 @@ typedef struct
     SX_,SXc, 	// Total entropy of the system S(X), reserved
     CpX_,CpXc,  // reserved
     CvX_,CvXc,  // reserved
-    T0,         // reserved
-    VE,         // Volume to constrain aquatic system in two-phase region (P = Psat)
+    TMols,      // Input total moles in b vector before rescaling
+    SMols,      // Standart total moles (upscaled) {1000}
     MBX,        // Total mass of the system, kg
     FX,    	// Current Gibbs potential of the system in IPM, moles
     IC,         // Effective molal ionic strength of aqueous electrolyte
     pH,         // pH of aqueous solution
     pe,         // pe of aqueous solution
     Eh,         // Eh of aqueous solution, V
-    DHBM,       // Adjusted balance precision criterion (IPM-2 )
-    DSM,        // min value phase DS (IPM-2)
+    DHBM,       // balance (relative) precision criterion
+    DSM,        // min amount of phase DS
     GWAT,       // used in ipm_gamma()
     YMET,       // reserved
     PCI,        // Current value of Dikin criterion of IPM convergence DK>=DX
@@ -132,7 +129,8 @@ typedef struct
     logXw,      // work variable
     logYFk,     // work variable
     YFk,        // Current number of moles in a multicomponent phase
-    FitVar[5];  // internal; FitVar[0] is T,P-dependent b_gamma parameter
+    FitVar[5];  // internal; FitVar[0] is total mass (g) of solids in the system (sum over the BFC array)
+                //      FitVar[1], [2] reserved
                 //       FitVar[4] is the AG smoothing parameter;
                 //       FitVar[3] is the actual smoothing coefficient
 double
@@ -325,7 +323,11 @@ double
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
   char errorBuf[1024]; // description of error in IPM
   double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
-  qd_real qdFX;    	// Current Gibbs potential of the system in IPM, moles
+//  qd_real qdFX;    	// Current Gibbs potential of the system in IPM, moles
+
+  double // Iterators for MTP interpolation (do not load/unload for IPM)
+Pai[4],  // Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol
+Tai[4];  // Temperature T, C: start, end, increment for MTP array in DataCH , Ttol
 
   // Experimental: modified cutoff and insertion values (DK 28.04.2010)
   double
@@ -366,8 +368,10 @@ class TMulti
    long int sizeN; /*, sizeL, sizeAN;*/
    double *AA;
    double *BB;
+#ifdef Use_qd_real
    qd_real *qdAA;
    qd_real *qdBB;
+#endif
    long int *arrL;
    long int *arrAN;
 
@@ -390,6 +394,7 @@ class TMulti
     MTPARM *tpp;
     RMULTS *mup;
 
+    void MultiSystemInit();
     void multi_sys_dc();
     void multi_sys_ph();
     void ph_sur_param( int k, int kk );
@@ -442,7 +447,7 @@ class TMulti
     void GasParcP();
     void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
     void phase_bfc( long int k, long int jj );
-    //double pH_via_hydroxyl( double x[], double Factor, long int j);
+    double bfc_mass( void );
     void ConCalcDC( double X[], double XF[], double XFA[],
                     double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
     void ConCalc( double X[], double XF[], double XFA[]);
@@ -501,6 +506,7 @@ class TMulti
    long int CleanupSpeciation( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
    long int PhaseSelection( long int &k_miss, long int &k_unst, long int rLoop );  // added 01.05.10 DK
    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
+   bool AutoInitialApprox();
 
    // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)
     void Simplex(long int M, long int N, long int T, double GZ, double EPS,
@@ -520,7 +526,15 @@ class TMulti
     void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
              long int BASE[],double UND[],double UP[],double U[],
              double AA[],double *A,double Q[],long int *ITER);
+    void GibbsMinimization();
+    double calcTotalMoles( );
+    void ScaleMulti(  double ScFact );
+    void RescaleMulti(  double ScFact );
+    void MultiConstInit(); // from MultiRemake
+    void MultiCalcInit();
 
+
+#ifdef Use_qd_real
 // QD_real
     // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
        void qdMassBalanceResiduals( long int N, long int L, double *A, double *Y,
@@ -529,7 +543,7 @@ class TMulti
        long int qdSolverLinearEquations( long int N, bool initAppr );
        double qdLMD( double LM );
        double qdcalcDikin(  long int N, bool initAppr );
-
+#endif
 
 public:
 
@@ -559,8 +573,8 @@ public:
     void loadData( bool newRec );
     void unpackData();
 
+    void MultiKeyInit( const char*key );
     void EqstatExpand( const char *key );
-    void MultiRemake( const char *key );
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
      tget_ndx *get_ndx = 0 );
     void getNamesList( int nO, TCStringArray& lst );
@@ -612,9 +626,8 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
-    void MultiCalcInit( const char *key );
-    bool AutoInitialApprox();
-    void MultiCalcIterations( long int rLoop );
+    double calcEqustat( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
+    void MultiInit();
     void CompG0Load();
     void setErrorMessage( long int num, const char *code, const char * msg);
     void addErrorMessage( const char * msg);
@@ -625,6 +638,28 @@ public:
 // connection to UnSpace
     double pb_GX( double *Gxx  );
 };
+
+// ???? syp->PGmax
+typedef enum {  // Symbols of thermodynamic potential to minimize
+    G_TP    =  'G',   // Gibbs energy minimization G(T,P)
+    A_TV    =  'A',   // Helmholts energy minimization A(T,V)
+    U_SV    =  'U',   // isochoric-isentropicor internal energy at isochoric conditions U(S,V)
+    H_PS    =  'H',   // isobaric-isentropic or enthalpy H(P,S)
+    _S_PH   =  '1',   // negative entropy at isobaric conditions and fixed enthalpy -S(P,H)
+    _S_UV   =  '2'    // negative entropy at isochoric conditions and fixed internal energy -S(P,H)
+
+} THERM_POTENTIALS;
+
+typedef enum {  // Symbols of thermodynamic potential to minimize
+    G_TP_    =  0,   // Gibbs energy minimization G(T,P)
+    A_TV_    =  1,   // Helmholts energy minimization A(T,V)
+    U_SV_    =  2,   // isochoric-isentropicor internal energy at isochoric conditions U(S,V)
+    H_PS_    =  3,   // isobaric-isentropic or enthalpy H(P,S)
+    _S_PH_   =  4,   // negative entropy at isobaric conditions and fixed enthalpy -S(P,H)
+    _S_UV_   =  5    // negative entropy at isochoric conditions and fixed internal energy -S(P,H)
+
+} NUM_POTENTIALS;
+
 
 #endif   //_ms_multi_h
 

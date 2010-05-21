@@ -95,107 +95,12 @@ bool  TNode::check_TP( double TK, double P )
 //   By other values of NodeStatusCH, no calculation will be performed and the status will remain unchanged.
 //  In "smart initial approximation" (SIA) mode, the program can automatically switch into the "automatic initial
 //  approximation" (AIA) mode and return  OK_GEM_AIA instead of OK_GEM_SIA.
-//  The variant with one function parameter performs no internal scaling of the mass of the system.
-//   Parameters:
+//  Parameter:
 //   uPrimalSol  flag to define the mode of GEM smart initial approximation
 //               (only if dBR->NodeStatusCH = NEED_GEM_SIA has been set before GEM_run() call).
 //               false  (0) -  use speciation and activity coefficients from previous GEM_run() calculation
 //               true  (1)  -  use speciation provided in the DATABR memory structure (e.g. after reading the DBR file)
-//  InternalMass Mass (kg) to which the input bulk composition (provided in DATABR memory structure) will be scaled
-//               internally during the GEM IPM calculation (results will be scaled back to the original mass).
-//               Default value - 1 kg, reasonable range from 0.01 to 100 kg. This scaling is used for achieving
-//               better convergence and balance accuracy of GEM IPM2 algorithm.
 //  Return values:    NodeStatusCH  (the same as set in dBR->NodeStatusCH). Possible values (see "databr.h" file for the full list)
-long int TNode::GEM_run( double InternalMass,  bool uPrimalSol )
-{
-  CalcTime = 0.0;
-  PrecLoops = 0; NumIterFIA = 0; NumIterIPM = 0;
-
-  double mass_temp=0.0, ScFact=0.0;
-  long int i;
-
-  for (i=0;i<CSD->nICb;i++)
-  {
-	mass_temp += CNode->bIC[i]*CSD->ICmm[IC_xDB_to_xCH(i)];
-  }
- // mass_temp *= 1e-3;
-  CNode->Ms=mass_temp;
-  ScFact = InternalMass/mass_temp; // changed to scaling via newly calculated mass from bIC vector,
-
-  try
-  {
-// f_log << " GEM_run() begin Mode= " << p_NodeStatusCH endl;
-//---------------------------------------------
-// Checking T and P  for interpolation intervals
-   check_TP( CNode->TK, CNode->P);
-// Unpacking work DATABR structure into MULTI (GEM IPM structure): uses DATACH
-// setting up up PIA or AIA mode
-   if( CNode->NodeStatusCH == NEED_GEM_SIA )
-   {
-	   pmm->pNP = 1;
-	   unpackDataBr( uPrimalSol, ScFact );
-   }
-   else if( CNode->NodeStatusCH == NEED_GEM_AIA )
-         {
-	        pmm->pNP = 0; // As default setting AIA mode
-	       unpackDataBr( false, ScFact );
-         }
-        else
-	           return CNode->NodeStatusCH;
-   // GEM IPM calculation of equilibrium state in MULTI
-   CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
-   // Extracting and packing GEM IPM results into work DATABR structure
-    packDataBr( ScFact );
-    CNode->IterDone = NumIterFIA+NumIterIPM;
-//**************************************************************
-// only for testing output results for files
-//    GEM_write_dbr( "calculated_dbr.dat",  false );
-//    GEM_print_ipm( "calc_multi.ipm" );
-// *********************************************************
-    // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = TProfil::pm->testMulti();
-
-    if( erCode )
-    {
-        if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-          CNode->NodeStatusCH = BAD_GEM_AIA;
-        else
-          CNode->NodeStatusCH = BAD_GEM_SIA;
-    }
-    else
-    {
-      if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-          CNode->NodeStatusCH = OK_GEM_AIA;
-      else
-         CNode->NodeStatusCH = OK_GEM_SIA;
-    }
-   }
-   catch(TError& err)
-    {
-	if( TProfil::pm->pa.p.PSM  )
-	{
-			fstream f_log("ipmlog.txt", ios::out|ios::app );
-	        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-	          err.title.c_str() << ":" << endl;
-	       if( TProfil::pm->pa.p.PSM == 2  )
-	          f_log  << err.mess.c_str() << endl;
-	}
-     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-       CNode->NodeStatusCH = ERR_GEM_AIA;
-     else
-       CNode->NodeStatusCH = ERR_GEM_SIA;
-
-    }
-    catch(...)
-    {
-     fstream f_log("ipmlog.txt", ios::out|ios::app );
-     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-                << "gems3: Unknown exception: GEM calculation aborted" << endl;
-     CNode->NodeStatusCH = T_ERROR_GEM;
-    }
-   return CNode->NodeStatusCH;
-}
-
 long int TNode::GEM_run( bool uPrimalSol )
 {
   CalcTime = 0.0;
@@ -1586,7 +1491,6 @@ TNode::TNode( MULTI *apm  )
     allocMemory();
     na = this;
     dbr_file_name = "dbr_file_name";
-    internalScFact =  1.;
 }
 
 #else
@@ -1598,7 +1502,6 @@ TNode::TNode()
   allocMemory();
   na = this;
   dbr_file_name = "dbr_file_name";
-  internalScFact =  1.;
 }
 
 #endif
@@ -1614,7 +1517,6 @@ TNode::~TNode()
 void TNode::packDataBr()
 {
  long int ii;
- internalScFact = 1.;
 
 // set default data to DataBr
 #ifndef IPMGEMPLUGIN
@@ -1675,80 +1577,6 @@ void TNode::packDataBr()
    }
 }
 
-
-// Extracting and packing GEM IPM results into work DATABR structure
-// with re-scaling the internal constant-mass MULTI system definition
-// back to real node size
-//
-void TNode::packDataBr( double ScFact )
-{
-  long int ii;
-
-  if( ScFact < 1e-6 )    // foolproof
- 	 ScFact = 1e-6;
-  if( ScFact > 1e6 )
- 	 ScFact = 1e6;
-  internalScFact =  ScFact;
- // set default data to DataBr
-#ifndef IPMGEMPLUGIN
-   CNode->NodeHandle = 0;
-//   CNode->NodeTypeHY = normal;
-   CNode->NodeTypeMT = normal;
-   CNode->NodeStatusFMT = Initial_RUN;
-#endif
-   //   CNode->NodeStatusCH = NEED_GEM_AIA;
-   if( pmm->pNP == 0 )
-    CNode->NodeStatusCH = NEED_GEM_AIA;
-  else
-     CNode->NodeStatusCH = NEED_GEM_SIA;
-
-   CNode->TK = pmm->TCc+C_to_K; //25
-   CNode->P = pmm->Pc*bar_to_Pa; //1
-   CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
-// values
-  CNode->Vs = pmm->VXc*1.e-6 / ScFact; // from cm3 to m3
-  CNode->Gs = pmm->FX  / ScFact;
-  CNode->Hs = pmm->HXc  / ScFact;
-  CNode->IC = pmm->IC;
-  CNode->pH = pmm->pH;
-  CNode->pe = pmm->pe;
-//  CNode->Eh = pmm->FitVar[3];  Bugfix 19.12.2006  KD
-  CNode->Eh = pmm->Eh;
-  CNode->Ms = pmm->MBX / ScFact;
-
-  // arrays
-   for( ii=0; ii<CSD->nPHb; ii++ )
-   {  CNode->xPH[ii] = pmm->XF[ CSD->xph[ii] ] / ScFact;
-      if( CSD->nAalp >0 )
-       CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
-   }
-   for( ii=0; ii<CSD->nPSb; ii++ )
-   {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3  / ScFact;
-       CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/ kg_to_g / ScFact;
-       CNode->xPA[ii] = pmm->XFA[ CSD->xph[ii] ] / ScFact;
-   }
-   for( ii=0; ii<CSD->nPSb; ii++ )
-   for(long int jj=0; jj<CSD->nICb; jj++ )
-   { long int   new_ndx= (ii*CSD->nICb)+jj,
-           mul_ndx = ( CSD->xph[ii]*CSD->nIC )+ CSD->xic[jj];
-     CNode->bPS[new_ndx] = pmm->BF[ mul_ndx ]  / ScFact;
-   }
-   for( ii=0; ii<CSD->nDCb; ii++ )
-   {
-      CNode->xDC[ii] = pmm->X[ CSD->xdc[ii] ]  / ScFact;
-      CNode->gam[ii] = pmm->Gamma[ CSD->xdc[ii] ];
-//      CNode->dul[ii] = pmm->DUL[ CSD->xdc[ii] ] / ScFact;  // 09/02/2009 SD
-//      if( pmm->DLL[ CSD->xdc[ii] ] < 1e-20 )
-//    	  CNode->dll[ii] = 0.;
-//      else CNode->dll[ii] = pmm->DLL[ CSD->xdc[ii] ] / ScFact;  //
-   }
-   for( ii=0; ii<CSD->nICb; ii++ )
-   {  // CNode->bIC[ii] = pmm->B[ CSD->xic[ii] ] / ScFact;// 09/02/2009 SD only insert
-      CNode->rMB[ii] = pmm->C[ CSD->xic[ii] ] / ScFact;
-      CNode->uIC[ii] = pmm->U[ CSD->xic[ii] ];
-   }
-}
-
 // Unpacking work DATABR structure into MULTI
 //(GEM IPM work structure): uses DATACH
 //  if uPrimalSol is true then the primal solution (vectors x, gamma, IC etc.)
@@ -1760,7 +1588,6 @@ void TNode::packDataBr( double ScFact )
 void TNode::unpackDataBr( bool uPrimalSol )
 {
  long int ii;
- internalScFact =  1.;
 
 #ifdef IPMGEMPLUGIN
  char buf[300];
@@ -1776,9 +1603,26 @@ void TNode::unpackDataBr( bool uPrimalSol )
   {
     pmm->DUL[ CSD->xdc[ii] ] = CNode->dul[ii];
     pmm->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
+    if( pmm->DUL[ CSD->xdc[ii] ] < pmm->DLL[ CSD->xdc[ii] ] )
+    {
+       char buf[300];
+       sprintf(buf, "Upper kinetic restrictions smolest than lower for DC&RC %-6.6s",
+                         pmm->SM[CSD->xdc[ii]] );
+       Error("unpackDataBr", buf );
+    }
   }
   for( ii=0; ii<CSD->nICb; ii++ )
-    pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
+  {
+      pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
+      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < TProfil::pm->pa.p.DB )
+      {
+         char buf[300];
+         sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
+                           pmm->SB[CSD->xic[ii]], pmm->B[ CSD->xic[ii] ] );
+          Error("unpackDataBr", buf );
+      }
+
+  }
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     if( CSD->nAalp >0 )
@@ -1801,9 +1645,6 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
      pmm->lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
-  //       Gamm = CNode->gam[ii];
-  //      pmm->Gamma[ CSD->xdc[ii] ] = Gamm;
-  //      pmm->lnGmo[ CSD->xdc[ii] ] = pmm->lnGam[ CSD->xdc[ii] ] = log(Gamm);
   }
   for( ii=0; ii<CSD->nPSb; ii++ )
    pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
@@ -1834,166 +1675,6 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //  End
 }
 
-// Unpacking work DATABR structure into internally scaled constant mass MULTI
-//(GEM IPM work structure): uses DATACH
-//  if uPrimalSol is true then the primal solution (vectors x, gamma, IC etc.)
-//  will be unpacked - as an option for PIA mode with previous GEM solution from
-//  the same node.
-//  If uPrimalSol = false then the primal solution data will not be unpacked
-//  into the MULTI structure (AIA mode or SIA mode with primal solution retained
-//    in the MULTI structure from previous IPM calculation)
-void TNode::unpackDataBr( bool uPrimalSol, double ScFact )
-{
- long int ii;
-
-#ifdef IPMGEMPLUGIN
- char buf[300];
- sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
- strncpy( pmm->stkey, buf, EQ_RKLEN );
-#endif
-
- if( ScFact < 1e-6 )    // foolproof
-	 ScFact = 1e-6;
- if( ScFact > 1e6 )
-	 ScFact = 1e6;
- internalScFact =  ScFact;
-
-  pmm->TCc = CNode->TK-C_to_K;
-  pmm->Tc = CNode->TK;
-  pmm->Pc  = CNode->P/bar_to_Pa;
-  pmm->VXc = CNode->Vs /1.e-6 *ScFact; // from cm3 to m3
-  // Obligatory arrays - always unpacked!
-  for( ii=0; ii<CSD->nDCb; ii++ )
-  {
-    pmm->DUL[ CSD->xdc[ii] ] = CNode->dul[ii]* ScFact;
-    if(	pmm->DUL[ CSD->xdc[ii] ] > 1e6 )
-       pmm->DUL[ CSD->xdc[ii] ] = 1e6;          // Bugfix for upper metastability limit
-
-    pmm->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
-    if( CNode->dll[ii] > 0. )
-    	pmm->DLL[ CSD->xdc[ii] ] *= ScFact;
-
-    if( pmm->DUL[ CSD->xdc[ii] ] < pmm->DLL[ CSD->xdc[ii] ] )
-    {
-       char buf[300];
-       sprintf(buf, "Upper kinetic restrictions smolest than lower for DC&RC %-6.6s",
-            		 pmm->SM[CSD->xdc[ii]] );
-    	Error("unpackDataBr", buf );
-    }
-  }
-  for( ii=0; ii<CSD->nICb; ii++ )
-  {
-    pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii] * ScFact;
-    if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < TProfil::pm->pa.p.DB )
-    {
-       char buf[300];
-       sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
-            		 pmm->SB[CSD->xic[ii]], pmm->B[ CSD->xic[ii] ] );
-    	Error("unpackDataBr", buf );
-    }
-
-  }
-  for( ii=0; ii<CSD->nPHb; ii++ )
-  {
-    if( CSD->nAalp >0 )
-        pmm->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
-  }
-
- if( !uPrimalSol )
- {    //  Using primal solution retained in the MULTI structure instead -
-    ; // the primal solution data from the DATABR structure are not unpacked
-//   pmm->IT = 0;
- }
- else {   // Unpacking primal solution provided in the node DATABR structure
-  pmm->MBX = CNode->Ms * ScFact;
-  pmm->IC = CNode->IC;
-//  pmm->FitVar[3] = CNode->Eh;  Bugfix 19.12.2006  KD
-  pmm->Eh = CNode->Eh;
-  for( ii=0; ii<CSD->nDCb; ii++ )
-  /*    pmm->X[ CSD->xdc[ii] ] = */
-        pmm->Y[ CSD->xdc[ii] ] = CNode->xDC[ii] * ScFact;
-  for( ii=0; ii<CSD->nDCb; ii++ )
-  {
-     pmm->lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
-  }
-  for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]* m3_to_cm3 * ScFact;
-  for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii] *kg_to_g * ScFact;
-
-  for( ii=0; ii<CSD->nPHb; ii++ )
-  {
-    pmm->XF[ CSD->xph[ii] ] =
-    pmm->YF[ CSD->xph[ii] ] = CNode->xPH[ii] * ScFact;
-  }
-
-  for( long int k=0; k<CSD->nPSb; k++ )
-  for(long int i=0; i<CSD->nICb; i++ )
-  { long int dbr_ndx= (k*CSD->nICb)+i,
-          mul_ndx = ( CSD->xph[k]*CSD->nIC )+ CSD->xic[i];
-    pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx] * ScFact;
-  }
-
-  for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->XFA[ CSD->xph[ii] ] = pmm->YFA[ CSD->xph[ii] ] = CNode->xPA[ii] * ScFact;
-
-  for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->C[ CSD->xic[ii] ] = CNode->rMB[ii] * ScFact;  // Is this really needed?
-  for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->U[ CSD->xic[ii] ] = CNode->uIC[ii];
- }
-//  End
-}
-
-// Resizes the work node chemical system
-// Returns new node mass Ms
-double TNode::ResizeNode( double Factor )
-{
-   long int ii;
-	if( Factor < 1e-6 )    // foolproof
-		 Factor = 1e-6;
-	 if( Factor > 1e6 )
-		 Factor = 1e6;
-	 if( Factor < 0. )
-
-     for( ii=0; ii<CSD->nDCb; ii++ )
-	{
-	   if( CNode->dul[ii] < 1e6 )
-		   CNode->dul[ii] *= Factor;
-       if( CNode->dll[ii] > 0. )
-    	   CNode->dll[ii] *= Factor;
-	}
-	for( ii=0; ii<CSD->nICb; ii++ )
-	      CNode->bIC[ii] *= Factor;
-    CNode->Ms *= Factor;
-    CNode->Vs *= Factor;
-    CNode->Gs *= Factor;
-    CNode->Hs *= Factor;
-
-	for( ii=0; ii<CSD->nDCb; ii++ )
-	     CNode->xDC[ii] *= Factor;
-	for( ii=0; ii<CSD->nPSb; ii++ )
-	     CNode->vPS[ii] *= Factor;
-	for( ii=0; ii<CSD->nPSb; ii++ )
-	     CNode->mPS[ii] *= Factor;
-
-	for( ii=0; ii<CSD->nPHb; ii++ )
-	     CNode->xPH[ii] *= Factor;
-
-    for( long int k=0; k<CSD->nPSb; k++ )
-    	for(long int i=0; i<CSD->nICb; i++ )
-		{
-    		long int dbr_ndx= (k*CSD->nICb)+i;
-		    CNode->bPS[dbr_ndx] *= Factor;
-		}
-
-    for( ii=0; ii<CSD->nPSb; ii++ )
-	    CNode->xPA[ii] *= Factor;
-	for( ii=0; ii<CSD->nICb; ii++ )
-		CNode->rMB[ii] *= Factor;  // Is this really needed?
-		//  End
-    return CNode->Ms;
-}
 
 // (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
 //   Parameters:

@@ -87,7 +87,7 @@ with automatic initial approximation&nbsp; <br>
       <p style="font-family: monospace;">&nbsp;&nbsp; // (2)
 re-calculating
 equilibrium by calling GEMIPM2K, getting the status back<br>
-&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run( 3., false );<br>
+&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run( false );<br>
       </p>
       <p style="font-family: monospace;">&nbsp;&nbsp; if( NodeStatusCH
 ==
@@ -116,7 +116,7 @@ run (faster) with smart initial approximation&nbsp; <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       </p>
       <p style="font-family: monospace;">&nbsp;&nbsp; NodeStatusCH =
-node-&gt;GEM_run( 3., false );</p>
+node-&gt;GEM_run( false );</p>
       <p style="font-family: monospace;">&nbsp;&nbsp; if( NodeStatusCH
 ==
 OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )<br>
@@ -204,10 +204,8 @@ if internal memory allocation error occurred. <br>
 </h3>
 <p><span style="font-family: monospace;"> long int&nbsp; GEM_run( bool
 uPrimalSol );&nbsp; </span><br style="font-family: monospace;">
-<span style="font-family: monospace;"> long int&nbsp; GEM_run( double
-InternalMass = 1., bool uPrimalSol = false&nbsp; );&nbsp;&nbsp; </span><br>
-</p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;
+<span style="font-family: monospace;"></span><br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;
 Main call for GEM IPM calculations using the
 input bulk composition, temperature, pressure and metastability
 constraints <br>
@@ -231,12 +229,8 @@ program can automatically switch into the "automatic initial<br>
 &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; approximation" (AIA) mode and
 return&nbsp;
-OK_GEM_AIA instead of OK_GEM_SIA. <br>
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
-The variant with one function parameter performs no internal scaling of
-the mass of the system. <br>
-</p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span><br>
+OK_GEM_AIA instead of OK_GEM_SIA.&nbsp; <br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameter:</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">uPrimalSol&nbsp;&nbsp;</span>&nbsp;&nbsp;
 flag to define the mode of GEM smart initial approximation <br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
@@ -252,26 +246,7 @@ speciation and activity coefficients from previous GEM_run() calculation<br>
  style="font-family: monospace;"> true&nbsp;</span> (1)&nbsp; -&nbsp;
 use speciation provided in the DATABR memory structure (e.g. after
 reading the DBR file) &nbsp; <br>
-&nbsp;&nbsp;&nbsp; <br>
-&nbsp;&nbsp;&nbsp;<span style="font-family: monospace;">
-InternalMass&nbsp;</span> Mass (kg) to which the input bulk composition
-(provided in DATABR memory structure) will be scaled&nbsp; <br>
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; internally during the GEM IPM
-calculation (results will be scaled back to the original mass). <br>
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Default
-value - 1 kg, reasonable range from 0.01 to 100 kg.
-This scaling is used for achieving <br>
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; better
-convergence and balance
-accuracy of GEM IPM2 algorithm. <br>
-</p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">Return values:</span>&nbsp;&nbsp;&nbsp;
+<span style="font-family: Helvetica,Arial,sans-serif;">Return values:</span>&nbsp;&nbsp;&nbsp;
 <span style="font-family: monospace;">NodeStatusCH</span>&nbsp; (the
 same as
 set in dBR-&gt;NodeStatusCH). Possible values (see "databr.h" file for
@@ -812,7 +787,7 @@ in&lt;nNodes; in++ )</span><br style="font-family: monospace;">
 equilibrium by calling GEMIPM2K, getting the status back</span><br
  style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
-m_NodeStatusCH[in] = node-&gt;GEM_run(1.,
+m_NodeStatusCH[in] = node-&gt;GEM_run(
 false);</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
 if( !(
@@ -978,7 +953,7 @@ node-&gt;GEM_set_MT(
 // Calling GEMIPM calculation</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 m_NodeStatusCH[in] =
-node-&gt;GEM_run( 1., true );</span><br style="font-family: monospace;">
+node-&gt;GEM_run( true );</span><br style="font-family: monospace;">
       <br style="font-family: monospace;">
       <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 if( ( m_NodeStatusCH[in] ==
@@ -2200,18 +2175,6 @@ handle to value of parameter jj<br>
       </td>
       <td style="vertical-align: top;"><span
  style="font-family: monospace;">node-&gt;setNodeHandle( 4L );</span><br>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top; font-family: monospace;">double
-ResizeNode( double Factor );</td>
-      <td style="vertical-align: top;">Resizes the node chemical system
-size by factor Factor; returns new mass of the chemical system in <span
- style="color: rgb(0, 0, 0);">kg</span><br>
-      </td>
-      <td style="vertical-align: top;"><span
- style="font-family: monospace;">double NewMass&nbsp; =
-node-&gt;ResizeNode( 3.0 ); </span><br>
       </td>
     </tr>
     <tr>

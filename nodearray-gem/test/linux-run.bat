@@ -1,3 +1,3 @@
 cd ..
-./gemnodar test/Speed15ic-dat.lst > test/Speed15ic.out1OC
+./nodearrs test/Speed15ic-dat.lst > test/Speed15ic.out1OC
 cd test

@@ -77,8 +77,6 @@ class TNodeArray : public TNode
     char* tcNode;      // Node type codes (see databr.h), size anNodes
     bool* iaNode;      // GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_SIA)
     
-    double IPM_InternalMass;  // Mass (in kg) to scale system internally in IPM MULTI
-    						  // If <= 0 then no scaling is performed
     void allocMemory();
     void freeMemory();
 
@@ -179,12 +177,6 @@ public:
     
     char* ptcNode() const // get pointer to boundary condition codes for nodes
     { return tcNode; }
-    
-    double GetIPM_InternalMass()    // get current IPM internal mass (in kg), default 1 kg
-    { return IPM_InternalMass; }
-    
-    void SetIPM_InternalMass (const double NewMass ) // set new IPM internal mass (kg), 
-    { IPM_InternalMass = NewMass; }        // NewMass <= 0. disables the IPM system size rescaling
     
     // Calls GEM IPM calculation for a node with absolute index ndx
     long int RunGEM( long int ndx, long int Mode );

@@ -75,7 +75,7 @@ void TMulti::set_def( long int /*q*/)
     pm.pESU = 0;  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pm.pIPN = 0;  // State of IPN-arrays:  0-create; 1-available; -1 remake
     pm.pBAL = 0;  // State of reloading CSD:  1- BAL only; 0-whole CSD
-    pm.pFAG_ = 0;  // reserved SD
+    pm.tMin = G_TP;  // Type of thermodynamic potential to minimize
     pm.pTPD = 0;  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
     pm.pULR = 0;  // Start recalc kinetic constraints (0-do not = 0; 1-do )internal
     pm.ITaia = 0;  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
@@ -100,8 +100,8 @@ void TMulti::set_def( long int /*q*/)
     pm.SX_ = pm.SXc = 0.; 	// Total entropy of the system S(X) = 0.; reserved
     pm.CpX_ = pm.CpXc = 0.;  // reserved
     pm.CvX_ = pm.CvXc = 0.;  // reserved
-    pm.T0 = 0.;         // reserved
-    pm.VE = 0.;         // reserved
+    pm.TMols = 0.;         // input total moles in b vector before rescaling
+    pm.SMols = 0.;         // Standart total moles (upscaled) {10000}
     pm.MBX = 0.;        // Total mass of the system = 0.; kg
     pm.FX = 0.;    	// Current Gibbs potential of the system in IPM = 0.; moles
     pm.IC = 0.;         // Effective molal ionic strength of aqueous electrolyte
@@ -129,6 +129,9 @@ void TMulti::set_def( long int /*q*/)
     pm.logYFk = 0.;     // work variable
     pm.YFk = 0.;        // Current number of moles in a multicomponent phase
     pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.;
+    fillValue( pm.Tai, 0., 4 );
+    fillValue( pm.Pai, 0., 4 );
+    pm.SizeFactor = 1.; // using in TNode class
 
     // pointers
     pm.sitNcat = 0;
@@ -532,7 +535,7 @@ void TMulti::from_file( GemDataStream& ff )
    dyn_new();
 #endif
 
-   //dynamic values
+      //dynamic values
     // Part 1
 
     /* need  always to alloc vectors */

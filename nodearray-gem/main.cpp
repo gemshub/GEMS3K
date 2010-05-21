@@ -185,7 +185,7 @@ int main( int argc, char* argv[] )
      // Loop over nodes for calculating the chemical equilibration step
      for( in=0; in<nNodes; in++ )
      {
-        cout << "      in = " << in << "  T = " << C1[in]->TC;
+        cout << "      in = " << in << "  T = " << C1[in]->TK;
         // You can switch between AIA and SIA GEM initial approximation modes
         if( iaN[in] )
             C1[in]->NodeStatusCH = NEED_GEM_AIA;    // Auto (simplex) initial approximation 

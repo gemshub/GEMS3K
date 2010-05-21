@@ -64,10 +64,7 @@ long int retCode;
 
 // GEM IPM calculation of equilibrium state in MULTI
   pCNode()->NodeStatusCH = abs(Mode);
-  if( IPM_InternalMass > 0. )
-	  retCode = GEM_run( IPM_InternalMass, uPrimalSol );
-  else  // no scaling to internal mass
-	  retCode = GEM_run( uPrimalSol );
+  retCode = GEM_run( uPrimalSol );
 
 // Copying data for node iNode back from work DATABR structure into the node array
 //   if( retCode == OK_GEM_AIA ||
@@ -377,7 +374,6 @@ TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):TNode( apm )
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
     iaNode = 0;
-    IPM_InternalMass = 1.;
     allocMemory();
     na = this;
 }
@@ -391,7 +387,6 @@ TNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
-  IPM_InternalMass = 1.;
   allocMemory();
   na = this;
 }
@@ -409,7 +404,6 @@ TNodeArray::TNodeArray( long int nNod  ):
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
-  IPM_InternalMass = 1.;
   allocMemory();
   na = this;
 }
@@ -423,7 +417,6 @@ sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
-  IPM_InternalMass = 1.;
   allocMemory();
   na = this;
 }

@@ -49,16 +49,17 @@ void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating total bulk stoichiometry of  solid phases
-// Added on request by TW in November 2006
+// Adds phase to total bulk stoichiometry of all solid phases in the system
+// Done on request by TW in November 2006
 //
 void TMulti::phase_bfc( long int k, long int jj )
 {
     long int ii, i, j;
     double Xx;
 
-    if( pmp->PHC[k] == PH_AQUEL  || pmp->PHC[k] == PH_GASMIX ||
-        pmp->PHC[k] == PH_FLUID  || pmp->PHC[k] == PH_PLASMA )
+    if( pmp->PHC[k] == PH_AQUEL || pmp->PHC[k] == PH_GASMIX ||
+        pmp->PHC[k] == PH_FLUID || pmp->PHC[k] == PH_PLASMA ||
+        pmp->PHC[k] == PH_SIMELT || pmp->PHC[k] == PH_LIQUID )
         return;
     for( j=0; j<pmp->L1[k]; j++ )
     {
@@ -70,6 +71,15 @@ void TMulti::phase_bfc( long int k, long int jj )
            pmp->BFC[i] += pmp->A[i+(jj+j)*pmp->N] * Xx;
         }
     }
+}
+
+// returns mass of all solid phases in grams (from the BFC vector)
+double TMulti::bfc_mass( void )
+{
+   double TotalMass = 0.;
+   for(long int i = 0; i<pmp->N; i++ )
+     TotalMass += pmp->BFC[i]*pmp->Awt[i];
+   return TotalMass;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

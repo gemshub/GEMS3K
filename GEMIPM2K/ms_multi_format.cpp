@@ -46,7 +46,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" , 0 , 0 }
 };
 
-outField MULTI_dynamic_fields[68] =  {
+outField MULTI_dynamic_fields[69] =  {
 //read dynamic (array) data from the txt input file
    {  "sMod", 1 , 0 },
    {  "LsMod", 1 , 0 },
@@ -116,7 +116,8 @@ outField MULTI_dynamic_fields[68] =  {
    { "mui" , 0 , 0 },
    { "muk" , 0 , 0 },
    { "muj" , 0 , 0 },
-   { "pa_PLLG" , 0 , 0 }
+   { "pa_PLLG" , 0 , 0 },
+   { "tMin" , 0 , 0 }
 };
 
 
@@ -139,7 +140,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 #endif
   fstream ff( path, ios::out );
   ErrorIf( !ff.good() , path, "Fileopen error");
-  TPrintArrays  prar( 68, MULTI_dynamic_fields, ff);
+  TPrintArrays  prar( 69, MULTI_dynamic_fields, ff);
 // set up array flags for permanent fields
    if( !( pm.FIs > 0 && pm.Ls > 0 ) )
    {
@@ -242,7 +243,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DHB != pa_.p.DHB )
    { if( _comment )
-      ff << "\n# DHB: Maximum allowed relative mass balance residual for ICs ( 1e-9 to 1e-15 ) { 1e-11 } " << endl;
+      ff << "\n# DHB: Maximum allowed relative mass balance residual for ICs ( 1e-9 to 1e-15 ) { 1e-12 } " << endl;
      ff << left << setw(12) << "<pa_DHB> " << right << setw(8) <<  pa->p.DHB << endl;
    }
    if(!brief_mode || pa->p.EPS != pa_.p.EPS )
@@ -257,7 +258,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DS != pa_.p.DS )
    { if( _comment )
-      ff << "\n# DS: Cutoff min. amount of stable phase in GEM IPM primal solution (1e-8 to 1e-24) { 1e-23 }" << endl;
+      ff << "\n# DS: Cutoff min. amount of stable phase in GEM IPM primal solution (1e-8 to 1e-24) { 1e-20 }" << endl;
      ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
    }
    if(!brief_mode || pa->p.DF != pa_.p.DF )
@@ -267,37 +268,37 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DFM != pa_.p.DFM )
    { if( _comment )
-      ff << "# DFM: Tolerance for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated" << endl;
+       ff << "# DFM: Tolerance for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated { 0.01 } " << endl;
      ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
    }
    if(!brief_mode || pa->p.DP != pa_.p.DP )
    {  if( _comment )
-       ff << "\n# DP: Maximal number of iterations in EnterFeasibleDomain() procedure (20 to 120) { 30 }" << endl;
+       ff << "\n# DP: Maximal number of iterations in EnterFeasibleDomain() procedure (20 to 130) { 90 }" << endl;
      ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
    }
    if(!brief_mode || pa->p.IIM != pa_.p.IIM )
    { if( _comment )
-      ff << "\n# Maximum allowed number of iterations in one GEM IPM descent run (100 to 9999) { 1000 }" << endl;
+      ff << "\n# Maximum allowed number of iterations in one GEM IPM descent run (100 to 9999) { 7000 }" << endl;
      ff << left << setw(12) << "<pa_IIM> " << right << setw(8) <<  pa->p.IIM << endl;
    }
    if(!brief_mode || pa->p.PD != pa_.p.PD )
    { if( _comment )
-       ff << "\n# PD: Mode of calculation of activity coefficients (-2 +Qd; 1 -IPM, 2 +EFD, 3 IPM ) { 2 } " << endl;
+       ff << "\n# PD: Mode of calculation of activity coefficients ( 1 -IPM, 2 +EFD, 3 IPM ) { 2 } " << endl;
      ff << left << setw(12) << "<pa_PD> " <<  right << setw(8) << pa->p.PD << endl;
    }
    if(!brief_mode || pa->p.PRD != pa_.p.PRD )
    { if( _comment )
-       ff << "\n# PRD: Disable (0) or activate (-5 or less- max.dec.exp.for DC amount correction) CleanupSpeciation() { -6 }" << endl;
+       ff << "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) CleanupSpeciation() { -4 }" << endl;
      ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa->p.PRD << endl;
    }
    if(!brief_mode || pa->p.AG != pa_.p.AG )
    { if( _comment )
-      ff << "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments -1 to +1 { -1.0 or 0.7 for adsorption }" << endl;
+      ff << "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments -1 to +1 { 1.0 }" << endl;
      ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa->p.AG << endl;
    }
    if(!brief_mode || pa->p.DGC != pa_.p.DGC )
    { if( _comment )
-      ff << "\n# DGC: Smoothing parameter 2 (exponent in smoothing function (-1 to +1) { -0.9 or 0.07 for adsorption }" << endl;
+      ff << "\n# DGC: Smoothing parameter 2 (exponent in smoothing function (-1 to +1) { -0.98 or 0.001 for adsorption }" << endl;
      ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa->p.DGC << endl;
    }
    if(!brief_mode || pa->p.PSM != pa_.p.PSM )
@@ -317,8 +318,8 @@ if( _comment )
    }
    if(!brief_mode)
     if( _comment )
-     {  ff << "\n# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-9 }; Sc - solid sorbent {1e-7}; " << endl;
-        ff <<   "#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-23 }" << endl;
+     {  ff << "\n# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-11 }; Sc - solid sorbent {1e-11}; " << endl;
+        ff <<   "#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-20 }" << endl;
      }
    if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
     ff << left << setw(12) << "<pa_XwMin> " <<  right << setw(8) << pa->p.XwMin << endl;
@@ -336,44 +337,44 @@ if( _comment )
    }
    if(!brief_mode || pa->p.PC != pa_.p.PC )
    { if( _comment )
-      ff << "\n# PC: Mode of PhaseSelect() operation  { 1 }" << endl;
+      ff << "\n# PC: Mode of PhaseSelection() operation (1 old, 2 new)  { 2 }" << endl;
      ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
    }
    if( _comment )
       ff << "# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm" << endl;
    if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
    { if( _comment )
-      ff << "# DFYw: Insertion mole amount for water-solvent at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }" << endl;
+      ff << "# DFYw: Insertion mole amount for water-solvent at Simplex()->EnterFeasibleDomain() bridge { 1e-5 }" << endl;
       ff << left << setw(12) << "<pa_DFYw> " <<  right << setw(8) << pa->p.DFYw << endl;
    }
    if(!brief_mode || pa->p.DFYaq != pa_.p.DFYaq )
    { if( _comment )
-      ff << "# DFYaq: Insertion mole amount for aqueous species at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }" << endl;
+      ff << "# DFYaq: Insertion mole amount for aqueous species at Simplex()->EFD() bridge { 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYaq> " <<  right << setw(8) << pa->p.DFYaq << endl;
    }
    if(!brief_mode || pa->p.DFYid != pa_.p.DFYid )
    { if( _comment )
-      ff << "\n# DFYid: Insertion mole amount for species of ideal solutions at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }" << endl;
+      ff << "\n# DFYid: Insertion mole amount for species of ideal solutions at Simplex()->EFD() bridge { 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa->p.DFYid << endl;
    }
    if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
    { if( _comment )
-      ff << "# DFYr: Insertion mole amount for a major species in a solution at Simplex()->EnterFeasibleDomain()bridge { 1e-6 }" << endl;
+      ff << "# DFYr: Insertion mole amount for a major species in a solution at Simplex()->EFD()bridge { 1e-5 }" << endl;
     ff << left << setw(12) << "<pa_DFYr> " <<  right << setw(8) << pa->p.DFYr << endl;
    }
    if(!brief_mode || pa->p.DFYh != pa_.p.DFYh )
    { if( _comment )
-      ff << "# DFYh: Insertion mole amount for a junior species in a solution at Simplex()->EnterFeasibleDomain() bridge{ 1e-6 }" << endl;
+      ff << "# DFYh: Insertion mole amount for a junior species in a solution at Simplex()->EFD() bridge{ 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYh> " <<  right << setw(8) << pa->p.DFYh << endl;
    }
    if(!brief_mode || pa->p.DFYc != pa_.p.DFYc )
    { if( _comment )
-      ff << "# DFYc:  Insertion mole amount for a single-component phase at Simplex()->EnterFeasibleDomain() bridge { 1e-6 }" << endl;
+      ff << "# DFYc:  Insertion mole amount for a single-component phase at Simplex()->EFD() bridge { 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYc> " <<  right << setw(8) << pa->p.DFYc << endl;
    }
    if(!brief_mode || pa->p.DFYs != pa_.p.DFYs )
    { if( _comment )
-      ff << "# DFYs: Insertion mole amount for a single-component phase in PhaseSelect() { 1e-7 }" << endl;
+      ff << "# DFYs: Insertion mole amount for a single-component phase in PhaseSelection() { 1e-6 }" << endl;
      ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa->p.DFYs << endl;
    }
    if( _comment )
@@ -385,7 +386,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DT != pa_.p.DT )
    { if( _comment )
-      ff << "# DT: DHB is rel.max.MB cutoff for all ICs (0) or for major ICs: dec.exponent (<-6) of abs.MB cutoff; (1) for DHB also as abs.cutoff { 0 }" << endl;
+      ff << "# DT: DHB is rel.max.MB cutoff for all ICs (0) or for major ICs: dec.exponent (<-6) of abs.MB cutoff; (1) for DHB also as abs.cutoff { 1 }" << endl;
      ff << left << setw(12) << "<pa_DT> " << right << setw(8) << pa->p.DT  << endl;
    }
    if(!brief_mode || pa->p.GAS != pa_.p.GAS )
@@ -395,7 +396,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DG != pa_.p.DG )
    { if( _comment )
-          ff << "# DG: Threshold for minimum allowed descent step size in EntryFeasibleDomain(){ 1e-6 }" << endl;
+          ff << "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1e3 }" << endl;
      ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
    }
    if(!brief_mode || pa->p.DNS != pa_.p.DNS )
@@ -405,7 +406,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.IEPS != pa_.p.IEPS )
    { if( _comment )
-       ff << "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species (1e-6 to 1e-2) { 1e-3 }" << endl;
+       ff << "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }" << endl;
      ff << left << setw(12) << "<pa_IEPS> " <<  right << setw(8) << pa->p.IEPS << endl;
    }
    if(!brief_mode )
@@ -415,13 +416,19 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
    { if( _comment )
-      ff << "# DKIN: Tolerance for non-trivial metastability restrictions on amounts of dependent components, moles { 1e-7 } " << endl;
+      ff << "# DKIN: Tolerance for non-trivial metastability restrictions on amounts of dependent components, moles { 1e-8 } " << endl;
      ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa->p.DKIN << endl;
    }
    if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
    { if( _comment )
-       ff << "# pa_PLLG: Tolerance for checking changes in dual solution after PhaseSelect(), 1 to 3000 { 10 }" << endl;
+       ff << "# pa_PLLG: Tolerance for checking changes in dual solution after PhaseSelect(), 1 to 100 { 10 }" << endl;
      ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
+   }
+
+   if(!brief_mode || pmp->tMin != G_TP_ )
+   { if( _comment )
+       ff << "# tMin: Type of thermodynamic potential to minimize" << endl;
+     ff << left << setw(12) << "<tMin> " <<  right << setw(8) << pmp->tMin << endl;
    }
 
 //dynamic arrays
@@ -676,6 +683,23 @@ void TMulti::from_text_file_gemipm( const char *path )
     if( dCH->ccPH[ii] == 'g' || dCH->ccPH[ii] == 'p' || dCH->ccPH[ii] == 'f')
       pmp->PG = dCH->nDCinPH[ii];
   }
+
+  // copy intervals for minimizatiom
+  if(  dCH->nPp > 1  )
+  {
+     pmp->Pai[0] = dCH->Pval[0];
+     pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
+     pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+  }
+  pmp->Pai[3] = dCH->Ptol;
+  if(  dCH->nTp > 1  )
+  {
+     pmp->Tai[0] = dCH->TKval[0];
+     pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
+     pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+  }
+  pmp->Tai[3] = dCH->Ttol;
+
   // setup default constants
   pa->p.PE =  pmp->E = 1;
   pmp->PV = 0;
@@ -801,7 +825,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   ConvertDCC();
 
 //reads dynamic values from txt file
-   TReadArrays  rddar( 68, MULTI_dynamic_fields, ff);
+   TReadArrays  rddar( 69, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
 
@@ -1041,6 +1065,8 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                break;
       case 67: rddar.readArray("pa_PLLG" , &pa->p.PLLG, 1);
                break;
+      case 68: rddar.readArray("tMin" , &pmp->tMin, 1);
+             break;
     }
     nfild = rddar.findNext();
   }

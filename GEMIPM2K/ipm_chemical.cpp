@@ -238,7 +238,7 @@ void TMulti::Set_DC_limits( long int Mode )
     vstr tbuf(80);
 
     if( !pmp->PLIM )
-        return;  // no limits
+        return;  // no metastability limits to be set
 // ???????????????????????????????????????
     ConCalc( pmp->X, pmp->XF, pmp->XFA );
 
@@ -816,6 +816,7 @@ NEXT_PHASE:
     return(FX);
 }
 
+#ifdef Use_qd_real
 // Experimental variant with summation of G(X) with qd_real precision
 // Added by SD, DK on 27.08.2009
 qd_real TMulti::qdGX( double LM  )
@@ -899,10 +900,11 @@ qd_real TMulti::qdGX( double LM  )
 NEXT_PHASE:
         j = i;
     }  // k
-    pmp->qdFX = FX;
+//    pmp->qdFX = FX;
 //    cout << "qdGX " << setprecision(20) << scientific << FX << endl;
     return(FX);
 }
+#endif
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Variant of GX() function for use in the UnSpace module (non-optimized)
@@ -1425,9 +1427,9 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
 //
 long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupStatus ) //  rLoop )
 {
-    double logSI, PhaseAmount, AmThExp, AmountThreshold = 0.;
+    double logSI, PhaseAmount = 0., AmThExp, AmountThreshold = 0.;
     double Yj, YjDiff, YjCleaned=0., MjuPrimal, MjuDual, MjuDiff;
-    double RestoredAmount, CutoffDistortionMBR = 0.1 * pmp->DHBM;
+    double CutoffDistortionMBR = 0.1 * pmp->DHBM;
     bool KinConstrDC, KinConstrPh;
     bool MassBalanceViolation = false;
     bool NeedToImproveMassBalance = false;
@@ -1490,12 +1492,15 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
        {  // this phase is stable or over-stable
            if( PhaseAmount < pmp->DSM ) // pmp->DFYsM )
            {  // phase appears to be lost - insertion of all components of the phase
-               RaiseZeroedOffDCs( jb, jb+L1k, /* sfactor, */ k );
+               if( L1k > 1 )
+                  RaiseZeroedOffDCs( jb, jb+L1k, /* sfactor, */ k );
+               else
+                  pmp->Y[jb] = pmp->DFYsM; // Spec. value for pure phase insertion
                DCinserted += L1k;
                PHinserted++;
                kfr = k;
                MassBalanceViolation = true;
-           }
+           } // otherwise (if present), the phase is cleaned up
            goto NextPhase;
        }
        if( logSI <= -pa->p.DFM )  // 3 - ELIMINATION CASE
@@ -1520,24 +1525,17 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
                     if( pmp->Y[j] >= pmp->DcMinM )
                         DCremoved++;
                     pmp->Y[j] = 0.;
-//                    if( pmp->Y[j] >= pmp->DcMinM && pmp->Y[j] <= AmountThreshold )
-//                        DCremoved++;
-//                    else Incomplete = true; // INCOMPLETELY REMOVED - error condition may be necessary
-//                    pmp->Y[j] -= AmountThreshold;
-//                    if( pmp->Y[j] < 0. )
-//                        pmp->Y[j] = 0.;
                 }
              }
-//             if( Incomplete == false )
              PHremoved++;
           }
           goto NextPhase;
        }
      NextPhase: jb+=pmp->L1[k];
    } // k
-   // First loop on phases finished
-   if( pa->p.PRD && MassBalanceViolation == false )  // Cleanup mode (amount threshold exponent)
-   {
+   // First loop over phases finished
+   if( pa->p.PRD && MassBalanceViolation == false )  // Cleanup mode (PRD: amount threshold exponent)
+   {  //  not done if insertion or elimination of some phases requires another IPM loop
      jb = 0;
      for(k=0;k<pmp->FI;k++)  // Cleanup loop on phases
      {
@@ -1568,12 +1566,12 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
              KinConstrPh = true;
           }
        } //  j
-       if( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL || KinConstrPh == true )
-       {  // Temporary workaround
-          goto NextPhaseC;
-       }
+       if( KinConstrPh == true ) // || pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
+          goto NextPhaseC;  // Temporary workaround
+
        logSI = pmp->Falp[k];  // phase stability criterion
-       if( logSI >= pa->p.DF || logSI <= -pa->p.DFM )
+       if( (logSI >= pa->p.DF || logSI <= -pa->p.DFM )
+           && !(( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL) && PhaseAmount < pmp->DSM ))
            goto NextPhaseC;  // Already done in previous part
        PhaseAmount = pmp->XF[k];
        if( logSI > -pa->p.DFM && PhaseAmount >= pmp->DSM )
@@ -1584,95 +1582,81 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
           {
 //                if( pmp->DUL[j] < 1e6 || pmp->DLL[j] > 0 )
 //                    continue; // metastability-controlled DCs are already fixed
-            Yj = pmp->Y[j];
+            Yj = YjCleaned = pmp->Y[j];
             if( Yj >= pmp->DcMinM )
-            {  // we check in the Ls set only, except metastability constraints
-              MjuPrimal = pmp->F[j];   // normalized
-              MjuDual = pmp->Fx[j]/pmp->RT;
-              MjuDiff = MjuPrimal - MjuDual;
-              if( fabs( MjuDiff ) > MjuDiffCutoff )
-              {
-                 if( L1k == 1 )
-                 {  // Pure phase - correction using estimated mole fraction
-                    YjCleaned = Yj / exp( MjuDiff );
-//                         YjCleaned = Yj * pmp->EMU[j];
-//                         YjCleaned = Yj * pow( 10., logSI );
-                 }
-                 else {  // Component of a solution phase
-                  // The species is present in a larger or smaller amount than necessary
-//                         YjCleaned = Yj * pmp->EMU[j]/pmp->Wx[j]; // alternative - via the estimated mole fraction
-                    YjCleaned = Yj / exp( MjuDiff );
-                 }
-                 YjDiff = YjCleaned - Yj;
-                 if( fabs( YjDiff ) > CutoffDistortionMBR )
-                 {
+            {  // we check here in the Ls set only, except metastability constraints
+               MjuPrimal = pmp->F[j];   // normalized
+               MjuDual = pmp->Fx[j]/pmp->RT;
+               MjuDiff = MjuPrimal - MjuDual;
+               if( fabs( MjuDiff ) > MjuDiffCutoff )
+               {
+                  YjCleaned = Yj / exp( MjuDiff ); // also applies to a DC in a solution phase
+                  if( L1k == 1 )
+                  {  // Pure phase
+                      if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold )
+                          YjCleaned = 0.;
+                      if( logSI >= pa->p.DF && YjCleaned < pmp->DFYsM )
+                      {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
+                          YjCleaned = pmp->DFYsM;
+                          kfr = k;
+                          MassBalanceViolation = true;
+                      }
+                  }
+               }
+             }
+             else if( !(pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL)  )
+             {  // component is out of the Ls set - primal chemical potential not defined
+                  if( L1k == 1 )
+                     ; // L1kZeroDCs++; No way to improve for pure substance
+                  else  // possibly lost DC in a solution phase (only estimated mole fraction available)
+                     YjCleaned = pmp->EMU[j]*pmp->YF[k]; // does not work for adsorption yet
+             }
+             YjDiff = YjCleaned - Yj;
+             if( fabs( YjDiff ) > CutoffDistortionMBR )
+             {
                     NeedToImproveMassBalance = true;
                     if( fabs( YjDiff ) > AmountThreshold )
-                    {   // Correction was too large
+                    {   // Correction was too large - next IPM loop required
                        kur = k;
                        MassBalanceViolation = true;
-                      // Temporary: only correction of the size of threshold
+                      // Provisional: only correction up to the amount threshold
                        if( YjDiff > 0. )
                           pmp->Y[j] += AmountThreshold;
                        else
                           pmp->Y[j] -= AmountThreshold;
                     }
-                    else {  // Reasonable correction
+                    else {  // Reasonable correction - no balance violation expected
                       pmp->Y[j] = YjCleaned;
-                  }
-               }
-               else {  // Correction that does not affect the mass balance
+                    }
+              }
+              else {  // Correction that does not affect the mass balance at all
                   pmp->Y[j] = YjCleaned;
-               }
-               if( pmp->Y[j] < pmp->DcMinM )
-               {  // Corrected amount is too small - zeroed off
+              }
+              if( pmp->Y[j] < pmp->DcMinM )
+              {  // Corrected amount is too small - DC amount is zeroed off
                   pmp->Y[j] = 0.;
                   DCremoved++;
                   L1kZeroDCs++;
-               }
-             }
-          }
-          else if( Yj < pmp->DcMinM )
-          {  // already zero
-             if( L1k == 1 )
-               L1kZeroDCs++;
-             else { // check for possible loss of DC in a solution phase
-              RestoredAmount = pmp->EMU[j]*pmp->YF[k];
-              if( RestoredAmount > pmp->DcMinM )
-              {
-                 if( RestoredAmount < fmin( RaiseDC_Value( j ), pmp->YF[k] ))
-                 {  // restored from estimated mole fraction
-                    pmp->Y[j] = RestoredAmount;
-                 }
-                 else { // large insertion - needs one more IPM loop
-                    pmp->Y[j] = fmin( RaiseDC_Value( j ), pmp->YF[k] );
-                    MassBalanceViolation = true;
-                    kur = k;
-                 }
-                 DCinserted++;
-                 NeedToImproveMassBalance = true;
               }
-              else L1kZeroDCs++;
-            }
-          }
-       }  // for j
-       if( L1k - L1kZeroDCs <= 1 && L1k > 1 )
-       {
-          if( L1k - L1kZeroDCs )
+
+        }  // for j
+        if( L1k - L1kZeroDCs <= 1 && L1k > 1 )
+        {
+           if( L1k - L1kZeroDCs )
               Degenerated = true;
-          else
+           else
               PHremoved++;
-          NeedToImproveMassBalance = true;
-       }
-       if( L1k - L1kZeroDCs == 0 && L1k == 1 )
-       {
+           NeedToImproveMassBalance = true;
+        }
+        if( L1k - L1kZeroDCs == 0 && L1k == 1 )
+        {
            PHremoved++;
            NeedToImproveMassBalance = true;
-       }
-       goto NextPhaseC;
+        }
+//        goto NextPhaseC;
      }
-  NextPhaseC: jb+=pmp->L1[k];
-  } // k
+     NextPhaseC: jb+=pmp->L1[k];
+   } // k
 }
 
 #ifndef IPMGEMPLUGIN
@@ -1683,7 +1667,7 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
 #endif
     // Analysis of phase selection and cleanup status
 // PZ    // Indicator of PhaseSelection() status (since r1594):
-//            0 untouched, 1 phase(s) inserted, 2 insertion done after 3 major IPM loops
+//            0 untouched, 1 phase(s) inserted, 2 insertion done after 5 major IPM loops
 // W1     // Indicator of CleanupSpeciation() status (since r1594) 0 untouched,
 //           -1 phase(s) removed, 1 some DCs inserted
 // K2     // Number of IPM loops performed ( >1 up to 3 because of PhaseSelection() )
@@ -1705,7 +1689,7 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
            if( pmp->K2 < 6 )
               status = 0L;  // attempt will be done to improve by doing one more IPM loop
            else
-              status = -1L;  // violation persistent - bail out
+              status = -1L;  // five loops done, violation persistent - bail out
        }
        if( PHremoved || DCremoved )
            CleanupStatus = -1L;
@@ -1724,9 +1708,8 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
     return status;
 }
 
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// calculation of (logarithmic) stability indexes for all phases
+// calculation of (logarithmic) stability indexes logSI for all phases
 //
 void TMulti::StabilityIndexes( void )
 {
@@ -1765,8 +1748,7 @@ void TMulti::StabilityIndexes( void )
                   break;
              case DC_AQ_SOLVENT: case DC_AQ_SOLVCOM:
                   break;
-             case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:   // gases
-             case DC_GAS_H2: case DC_GAS_N2:
+             case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
                   ln_ax_dual -= lnPc + lnFugPur;
                   break;
              case DC_SCP_CONDEN: case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR:
@@ -1775,10 +1757,9 @@ void TMulti::StabilityIndexes( void )
              case DC_SUR_GROUP:
                   ln_ax_dual -= lnFmol;   // maybe more correction is needed for surface species
                   break;
-             case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3:
-             case DC_SSC_A4: case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2:
-             case DC_WSC_A3: case DC_WSC_A4: case DC_SUR_COMPLEX:
-             case DC_SUR_IPAIR: case DC_IESC_A: case DC_IEWC_B:
+             case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
+             case DC_WSC_A0: case DC_WSC_A1: case DC_WSC_A2: case DC_WSC_A3: case DC_WSC_A4:
+             case DC_SUR_COMPLEX: case DC_SUR_IPAIR: case DC_IESC_A: case DC_IEWC_B:
                   ln_ax_dual -= lnFmol;
   //                gamma_primal = exp( pmp->F0[j] );
                  break;
@@ -1804,7 +1785,7 @@ void TMulti::StabilityIndexes( void )
     }  // for k
 }
 
-//===================================================================
+//=================================================================== old ===========================
 // Checking Karpov phase stability criteria Fa for phases and DCs
 //  using Selekt2() algorithm by Karpov & Chudnenko (1989)
 //  modified by DK in 1995 and in 2007
@@ -1823,7 +1804,6 @@ long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStat
 int rLoop = CleanupStatus;
 rLoop = -1;
 //    sfactor = calcSfactor();
-//    sfactor = pmp->SizeFactor;
     f_alpha( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
     F0 = pmp->Falp;
 

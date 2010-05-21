@@ -51,7 +51,7 @@ struct BASE_PARAM
            PE,   // Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
            IIM   // Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
            ;
-         double DG,   // Threshold for minimum descent step size Lambda in EntryFeasibleDomain() { 1e-5 }
+         double DG,   // Standart total moles { 1e5 }
            DHB,  // Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
            DS,   // Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
            DK,   // IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
@@ -159,7 +159,7 @@ struct BASE_PARAM
     PE,   // Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
     IIM   // Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
     ;
-  double DG,   // Threshold for minimum descent step size Lambda in EntryFeasibleDomain() { 1e-5 }
+  double DG,   // Standart total moles { 1e5 }
     DHB,  // Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
     DS,   // Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
     DK,   // IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
@@ -375,6 +375,10 @@ TMulti *pmulti;
 
     // Multi make functions
     void PMtest( const char *key );
+    void CheckMtparam();
+//    void CheckMtparamFromLookup();
+//    void BuildLookupArrays();
+
     void LoadFromMtparm(double T, double P,double *G0,  double *V0,
     		double *H0, double *S0, double *Cp0, double *A0, double *U0,
     		double denW[5], double epsW[5], double denWg[5], double epsWg[5], int* tp_mark );
