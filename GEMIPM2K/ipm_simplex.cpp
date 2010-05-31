@@ -604,6 +604,7 @@ void TMulti::ScaleMulti(  double ScFact )
 
   pmp->SizeFactor = ScFact;
   pmp->MBX *= ScFact;
+  pmp->FitVar[0] *= ScFact;  // added: bugfix by DK 31.05.2010
   pmp->VXc *= ScFact;
   pmp->HXc *= ScFact;
   pmp->HX_ *= ScFact;
@@ -677,6 +678,7 @@ void TMulti::RescaleMulti(  double ScFact )
  long int i, j, k;
 
   pmp->MBX /= ScFact;
+  pmp->FitVar[0] /= ScFact;  // added: bugfix by DK 31.05.2010
   pmp->VXc /= ScFact;
   pmp->HXc /= ScFact;
   pmp->HX_ /= ScFact;
@@ -706,7 +708,6 @@ void TMulti::RescaleMulti(  double ScFact )
         pmp->B[i] /= ScFact;
         pmp->C[i] /= ScFact;
         pmp->BFC[i] /= ScFact;
-
   }
 
   for( k=0; k<pmp->FI; k++ )
@@ -745,7 +746,7 @@ void TMulti::RescaleMulti(  double ScFact )
               pmp->XFTS[k][j]  /= ScFact;
           }
 
-  pmp->SizeFactor = 1.; // using in TNode class
+  pmp->SizeFactor = 1.;   // using in TNode class
 }
 
 //========================================================================================
