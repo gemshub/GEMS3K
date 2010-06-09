@@ -609,6 +609,7 @@ void TMulti::ScaleMulti(  double ScFact )
   pmp->HXc *= ScFact;
   pmp->HX_ *= ScFact;
   pmp->FX  *= ScFact;
+  pmp->Yw  *= ScFact;  // added 08.06.10 DK
 
   for( j=0; j<pmp->L; j++ )
   {
@@ -685,7 +686,7 @@ void TMulti::RescaleMulti(  double ScFact )
   pmp->FX  /= ScFact;
   // added SV
   //pmp->YFk /= ScFact;
-  //pmp->Yw /= ScFact;
+  pmp->Yw /= ScFact;  // added 08.06.10 DK
 
   for( j=0; j<pmp->L; j++ )
   {
