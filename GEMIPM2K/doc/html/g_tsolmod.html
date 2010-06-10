@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta http-equiv="Content-Type"
- content="text/html; charset=iso-8859-1">
+ content="text/html; charset=ISO-8859-1">
   <meta name="GENERATOR"
  content="Mozilla/4.72 [en]C-BLUEWIN-CH20 (Win98; I) [Netscape]">
   <title>GEMS-TSolMod Users Manual</title>
@@ -51,7 +51,9 @@ Davies model</a><br>
  face="Helvetica, Arial, sans-serif"><a href="#TAG_DHK">Debye-Hueckel
 equations (Kielland setup)</a><br>
 </font><font face="Helvetica, Arial, sans-serif"><a href="#TAG_DHH">5.1.3.
-Debye-Hueckel equations (Helgeson setup)</a>
+Debye-Hueckel
+equations
+(Helgeson setup)</a>
 <br>
 <br>
 <a href="#TAG_SIT_MODELS">5.2.
@@ -115,7 +117,9 @@ built-in non-ideality models. <br>
 <br>
 </font></p>
 <h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_TSOLMOD"></a>2.
-The TSolMod class structure and functionality<br>
+The
+TSolMod
+class structure and functionality<br>
 </font></h3>
 <p><font face="Helvetica, Arial, sans-serif">&lt;overview
 to be written
@@ -126,7 +130,9 @@ by TW &gt;<br>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_SETUP"></a>3.
-Setup and transfer of of non-ideality parameters </font></h3>
+Setup
+and
+transfer of of non-ideality parameters </font></h3>
 <p style="font-family: Helvetica,Arial,sans-serif;">There
 are two major
 variants of setting up the Phase definitions for ideal or non-ideal
@@ -222,7 +228,9 @@ are given for particular models.</span><br>
 <br>
 </p>
 <h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_PARAM_ARRAYS"></a>4.
-Collected parameter arrays in MULTI data structure and IPM files<br>
+Collected
+parameter
+arrays in MULTI data structure and IPM files<br>
 </font></h3>
 <p style="font-family: Helvetica,Arial,sans-serif;">The
 model selection
@@ -243,7 +251,9 @@ data object for
 each multi-component phase
 will be copied into a respective row of the&nbsp; <big
  style="font-weight: bold;"><span style="font-family: monospace;">smod</span></big>&nbsp;
-array in the IPM (MULTI) work
+array
+in
+the IPM (MULTI) work
 data structure. In parallel, the dimensions of <big
  style="font-weight: bold;"><span style="font-family: monospace;">ipxT</span></big>
 and <big style="font-weight: bold;"><span
@@ -277,16 +287,22 @@ sum of each non-zero element in the <big style="font-weight: bold;"><span
 array times the number
 of phase components over all multicomponent phases. The&nbsp; <big
  style="font-weight: bold;"><span style="font-family: monospace;">pmc</span></big>&nbsp;
-array will be allocated next, with total number of elements equal to
+array
+will
+be allocated next, with total number of elements equal to
 the sum of products&nbsp; <big style="font-weight: bold;"><span
  style="font-family: monospace;">Lsmod[k][0]*Lsmod[k][2]</span></big>&nbsp;
-for all multicomponent phases. The <big style="font-weight: bold;"><span
+for
+all
+multicomponent phases. The <big style="font-weight: bold;"><span
  style="font-family: monospace;">ipx </span></big>index
 array will be
 allocated with total number of elements equal to the sum of
 products&nbsp; <big style="font-weight: bold;"><span
  style="font-family: monospace;">Lsmod[k][0]*Lsmod[k][1]</span></big>&nbsp;
-for all multicomponent phases.<br>
+for
+all
+multicomponent phases.<br>
 </p>
 <p style="font-family: Helvetica,Arial,sans-serif;">Finally,
 the Phase
@@ -391,7 +407,9 @@ multi-component phases and solution models.</span>
 <br>
 </p>
 <h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_SELECTION"></a>5.
-Selection (codes) of built-in non-ideality models and setup of their
+Selection
+(codes)
+of built-in non-ideality models and setup of their
 parameters</font><br>
 </h3>
 <p></p>
@@ -482,7 +500,9 @@ Angstroms<br>
  style="font-size: 11pt;"><span style="">&nbsp; </span>(third)
 DH
 parameter (default value 0.064); </span><span style="font-size: 11pt;">molality
-correction by default. </span><span style="font-size: 11pt;">Autophase&nbsp;
+correction
+by
+default. </span><span style="font-size: 11pt;">Autophase&nbsp;
 setup.</span><span style="font-size: 11pt;"> <o:p></o:p></span></p>
       </td>
     </tr>
@@ -508,8 +528,10 @@ Debye-H&uuml;ckel (Helgeson)</a><o:p></o:p></span></p>
  valign="top" width="340">
       <p><i style=""><span style="font-size: 11pt;"></span></i><span
  style="font-size: 11pt;">Common ion-size parameter <i style="">&aring;</i>&nbsp;
-(default value 3.72 Angstrom); common <i style="">b</i></span><i
- style=""><sub><span style="font-size: 11pt;"><span style="">g</span></span></sub></i><span
+(default
+value
+3.72 Angstrom); common <i style="">b</i></span><i style=""><sub><span
+ style="font-size: 11pt;"><span style="">g</span></span></sub></i><span
  style="font-size: 11pt;"><span style="">&nbsp; </span>parameter
 (default value 0.064); </span><span style="font-size: 11pt;">molality
 correction by default. </span><span style="font-size: 11pt;">Autophase&nbsp;
@@ -558,7 +580,8 @@ Autophase&nbsp; setup.</span><span style="font-size: 11pt;"><o:p></o:p></span></
  style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;"
  valign="top" width="136">
       <p><span style="font-size: 11pt;"><a href="#TAG_DHK">Debye-H&uuml;ckel
-limiting law</a><o:p></o:p></span></p>
+limiting
+law</a><o:p></o:p></span></p>
       </td>
       <td
  style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;"
@@ -767,7 +790,9 @@ array)</span>
  style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 242.95pt; height: 2cm;"
  valign="top" width="324">
       <p class="MsoNormal"><span style="font-size: 11pt;"><o:p></o:p>one
-constant binary interaction parameter (provided in </span><b style=""><span
+constant
+binary
+interaction parameter (provided in </span><b style=""><span
  style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;"><span
  style="">&nbsp; </span>array)</span><span style="font-size: 11pt;">
 between species whose indexes are given in the <span
@@ -801,10 +826,12 @@ array)</span></p>
  style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 242.95pt; height: 2cm;"
  valign="top" width="324">
       <p class="MsoNormal"><span style="font-size: 11pt;"><o:p></o:p>one
-constant binary interaction parameter </span><span
- style="font-size: 11pt;">(provided in </span><b style=""><span
- style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;"><span
- style="">&nbsp; </span>array)</span><span style="font-size: 11pt;">
+constant
+binary
+interaction parameter </span><span style="font-size: 11pt;">(provided
+in </span><b style=""><span style="font-size: 11pt;">ph_cf</span></b><span
+ style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span
+ style="font-size: 11pt;">
 between species whose indexes are given in the <span
  style="font-weight: bold;">ipxT</span>
 array.</span><b style=""><span style="font-size: 11pt;"></span></b><span
@@ -1170,17 +1197,22 @@ parameters*<o:p></o:p></span></p>
   </tbody>
 </table>
 <p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal"><o:p>&nbsp;*Not
-available in GEMIPM2K code<br>
+available
+in
+GEMIPM2K code<br>
 </o:p></p>
 <p><br>
 <font face="Helvetica, Arial, sans-serif">&nbsp;<br>
 </font></p>
 <h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_ION_ASSOC"></a>5.1.
-Ion-association aqueous electrolyte model (autophase)</font></h4>
+Ion-association
+aqueous
+electrolyte model (autophase)</font></h4>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_DAVIES"></a>5.1.1.
-Davies model</font></h5>
+Davies
+model</font></h5>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_DHK"></a>5.1.2.
@@ -1190,7 +1222,9 @@ equations (Kielland setup)</font></h5>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_DHH"></a>5.1.3.
-Debye-Hueckel equations (Helgeson setup) </font></h5>
+Debye-Hueckel
+equations
+(Helgeson setup) </font></h5>
 <p><br>
 </p>
 <h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_SIT_MODELS"></a>5.2.
@@ -1214,8 +1248,11 @@ range of the EUNIQUAC model is still a matter of investigation. </span><br>
 &nbsp;<br>
 </p>
 <h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_SIT"></a>5.2.1.
-SIT (Broensted-Guggenheim<font face="Helvetica, Arial, sans-serif">-Scatchard</font>)
-model (NEA TDB variant)<br>
+SIT
+(Broensted-Guggenheim<font face="Helvetica, Arial, sans-serif">-Scatchard</font>)
+model
+(NEA
+TDB variant)<br>
 </font></h5>
 <p><font face="Helvetica, Arial, sans-serif">The built-in SIT
 model for
@@ -1446,7 +1483,9 @@ parameters per component of the phase for the non-ideal mixing models
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_PITZER"></a>5.2.2.
-Pitzer (Harvie-Moller-Weare) model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+Pitzer
+(Harvie-Moller-Weare)
+model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
 &nbsp; &nbsp; &nbsp;&nbsp;</font></h5>
 <font face="Helvetica, Arial, sans-serif">We
 have implemented the Pitzer model version of Harvie-Moller-Weare
@@ -1467,15 +1506,15 @@ The Phase
 window
 screenshot below shows an example of a Pitzer model setup for an
 aqueous
-phase containing 21 species (-&gt;&nbsp;</font><big><span
+phase containing 6 species (-&gt;&nbsp;</font><big><span
  style="font-family: monospace;">Ph_Nc</span></big><font
- face="Helvetica, Arial, sans-serif"> = 21). </font><br>
+ face="Helvetica, Arial, sans-serif"> = 6). </font><br>
 <p><font face="Helvetica, Arial, sans-serif"><img
- style="width: 854px; height: 702px;"
- alt="Pitzer Model: Phase Record, page 3" src="Pitzer_Phase_page3.png"></font>
+ src="Pitzer_Phase_page3.png" alt="Pitzer Model: Phase Record, page 3"
+ style="width: 854px; height: 702px;"></font>
 <br>
 <small>Pitzer Model: page 3
-of phase record input mask</small>
+of phase record input mask&nbsp;</small>
 <br>
 </p>
 <p>The arrays shown on the screenshot contain following values:<br>
@@ -1493,7 +1532,7 @@ intern parameter code is collected in the fourth column.<br>
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; In the
 above example, "0" stands for Ca<sup>+2</sup>
 and&nbsp;
-"9" for Cl<sup>-</sup>
+"1" for Cl<sup>-</sup>
 &nbsp;(see&nbsp;<big><span style="font-family: monospace;">plsCat </span>and<span
  style="font-family: monospace;"> </span></big><big><span
  style="font-family: monospace;">plsAn</span></big><big><span
@@ -1501,7 +1540,11 @@ and&nbsp;
 As mentioned, "-1"&nbsp;indicates that
 only binary interaction is &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;described. "-10" is the
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+described. "-10" is the
 code for the &#946;<sup>0</sup><sub>ca</sub>
 interaction coefficient (see following table).<br>
 -&nbsp;<big><span style="font-family: monospace;">ph_cf</span></big>:
@@ -1510,7 +1553,10 @@ the temperature
 correction function of
 the interaction parameters. We have implemented a 5 and a 8 parameter
 version &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;of&nbsp;the T
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; of&nbsp;the T
 correction function.&nbsp;Fields
 left empty are automatically assigned the value 0.<br>
 -&nbsp;<big><span style="font-family: monospace;">plsCat</span></big>:
@@ -1537,8 +1583,12 @@ Furthermore, the two vectors&nbsp;<big><span
 following content: <big><span style="font-family: monospace;"></span></big><big><span
  style="font-family: monospace;"></span></big><br>
 - <big><span style="font-family: monospace;">Ph_ncp[a][b]</span></big>:&nbsp;&nbsp;&nbsp;
-Dimensions of the <big><span style="font-family: monospace;">ph_cf </span></big>interaction
-parameter data array, with a = number of rows and b = number of columns
+Dimensions
+of
+the <big><span style="font-family: monospace;">ph_cf </span></big>interaction
+parameter
+data
+array, with a = number of rows and b = number of columns
 (coefficients per parameter)<br>
 - <big><span style="font-family: monospace;">Ph_npx</span></big><big><span
  style="font-family: monospace;">[c]</span></big>&nbsp; &nbsp;
@@ -1674,17 +1724,199 @@ only shown for illustration here, as they are fixed internally).<br>
 <p><small>&nbsp;
 &nbsp; with: a1
 = a + 1, c1 = c + 1,&nbsp;c
-= cation,&nbsp;a = anion, n = neutral species</small></p>
+= cation,&nbsp;a = anion, n = neutral species<br>
+</small></p>
+<p><font face="Helvetica, Arial, sans-serif">An example chemical system
+that included the above Pitzer aqueous model was
+constructed in GEM-Selektor and printed into GEMIPM2K files. Fragments
+of these files are given below. The numbers of components and phases
+with the
+respective name lists are seen in the fragments of the DCH file. <br>
+</font></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">## (1) Dimensions for memory
+allocation<br>
+# nIC: Number of Independent Components (stoichiometry units, usually
+chemical elements and charge)<br>
+&lt;nIC&gt;&nbsp; 5<br>
+# nDC: Total number of Dependent Components (chemical species made of
+Independent Components)<br>
+&lt;nDC&gt;&nbsp; 10<br>
+# nPH: Number of phases (into which Dependent Components are grouped)<br>
+&lt;nPH&gt;&nbsp; 3<br>
+# nPS: Number of phases-solutions (multicomponent phases) in the
+chemical system definition (&lt;= nPH)<br>
+&lt;nPS&gt;&nbsp; 2<br>
+# nDCs: Number of Dependent Components in phases-solutions
+(multicomponent phases)<br>
+&lt;nDCs&gt; 9<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">## (5) Independent components
+section<br>
+# ICNL: Name list of Independent Components (up to 4 characters per
+name) [nIC] (Zz stands for electric charge)<br>
+&lt;ICNL&gt;<br>
+'Ca' 'Cl' 'H' 'O' 'Zz'<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">## (6) Dependent Components
+section (codes and names)<br>
+# DCNL: Name list of Dependent Components (up to 16 characters per
+name) [nDC]<br>
+&lt;DCNL&gt;<br>
+'Ca+2' 'Cl-' 'O2@' 'OH-' 'H+' 'H2O@' 'H2' 'O2' 'H2O' 'Lim'<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">## (7) Phases section<br>
+# PHNL: List of Phase names (up to 16 characters per name) [nPH]. The
+included phases are a gas mixture ('gas_gen'), the mineral lime and the
+aqueous phase 'data0ypf', which contains the relevant Pitzer #
+parameters. <br>
+&lt;PHNL&gt;<br>
+'data0ypf' 'gas_gen'
+'Lime'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <br>
+# ccPH: Phase aggregate state codes [nPH] -&gt; 'data0ypf' is an
+aqueous phase, 'gas_gen' a gas phase, and lime a solid phase.<br>
+&lt;ccPH&gt;<br>
+'a' 'g' 's' <br>
+# nDCinPH: This vector tells how many Dependent Components is included
+in each phase [nPH]<br>
+&lt;nDCinPH&gt;<br>
+6 3 1<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><font face="Helvetica, Arial, sans-serif">In the corresponding IPM
+file fragment , the </font><big><span style="font-family: monospace;">LsMdc</span></big><font
+ face="Helvetica, Arial, sans-serif"> object contains
+zeros (no
+individual parameters of Dependent components in any muticomponent
+phase). Because of this, there is no need to provide the </font><big><span
+ style="font-family: monospace;">DMc</span></big><font
+ face="Helvetica, Arial, sans-serif"> array. The </font><big><span
+ style="font-family: monospace;">LsMod</span></big><font
+ face="Helvetica, Arial, sans-serif"> object defines
+that there are 16
+interaction parameters, each represented by 5
+coefficients of which each one is defined by 4 parameters given in the </font><big><span
+ style="font-family: monospace;">IPxPH</span></big><font
+ face="Helvetica, Arial, sans-serif"> </font><font
+ face="Helvetica, Arial, sans-serif">. The </font><big><span
+ style="font-family: monospace;">IPxPH</span></big><font
+ face="Helvetica, Arial, sans-serif"> data object</font><font
+ face="Helvetica, Arial, sans-serif"> contains the indexes of
+interacting ions</font><font face="Helvetica, Arial, sans-serif">, and
+the </font><big><span style="font-family: monospace;">PMc</span></big><font
+ face="Helvetica, Arial, sans-serif"> data object contains the
+corresponding </font><font face="Helvetica, Arial, sans-serif">parameter
+values</font><big><span style="font-family: monospace;"></span></big><font
+ face="Helvetica, Arial, sans-serif">.</font></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2"
+ cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">## (4) Initial data for
+multicomponent phases (see DATACH file for dimension nPHs)<br>
+# sMod: Codes for built-in mixing models of multicomponent phases
+[nPS*6]<br>
+&lt;sMod&gt;<br>
+'ZNNSNN' 'INNINN' <br>
+      <br>
+# LsMod: Dimensions of &lt;IPxPH&gt; and &lt;PMc&gt; arrays [nPS*3]<br>
+      <br>
+&lt;LsMod&gt;<br>
+16 4 5 <br>
+0 0 0 <br>
+      <br>
+# IPxPH:&nbsp; Collected indexation table for interaction parameters of
+non-ideal solutions. For further details concerning indexing and coding
+numbering please refer to the above screenshot explanations.&nbsp; <br>
+&lt;IPxPH&gt;<br>
+0 1 -1 -10<br>
+0 1 -1 -11 <br>
+0 1 -1 -12 <br>
+0 1 -1 -20 <br>
+4 1 -1 -10 <br>
+4 1 -1 -11 <br>
+4 1
+-1 -12 <br>
+4 1 -1 -20 <br>
+0 4 -1 -40 <br>
+1 3 -1 -41 <br>
+2 0 -1 -30 <br>
+2 4 -1 -30 <br>
+2 1 -1 -31 <br>
+2 3 -1 -31 <br>
+2 0 1 -60 <br>
+2 4 1 -60 <br>
+      <br>
+# PMc: Collected interaction parameter coefficients for the (built-in)
+non-ideal mixing models. <br>
+# Example: first line in IPxPH array describes binary interactions
+between species 0 and species 1. The interaction parameter of interest
+carries the code "-10" (which stands for &#946;<sup>0</sup><sub>ca</sub>,
+see above screenshot # explanations). This &#946;<sup>0</sup><sub>ca </sub>is
+given by a set of five parameters which are shown in the equivalent
+first line of the PMc array. <br>
+&lt;PMc&gt;<br>
+0.446009993553162 220.960006713867 1.60600005516542e-11
+0.000227619995712303 0<br>
+&nbsp;-1.66100001335144 -8832.099609375
+7.09510020180382e-11 -0.0249470006674528 0<br>
+&nbsp;0 0 0 0 0 <br>
+-0.0172739997506142 -12.9870004653931 -3.87069987606986e-13
+-3.15010001941118e-05 0 <br>
+0.177000999450684 -33.4776992797852
+-0.262214988470078 0.000125777994981036 0 <br>
+0.292921990156174
+3402.46997070312 19.7936000823975 -0.0279387999325991 0 <br>
+0 0 0 0 0 <br>
+0.000361999991582707 -2.91037992317111e-11 0 -3.03600008919602e-05 0 <br>
+0.0920000001788139 0 0 0 0 <br>
+-0.0500000007450581 0 0 0 0 <br>
+0.249699994921684 0 0 0 0 <br>
+0.0352846011519432 81.4499969482422
+-8.09460970474518e-11 1.21205996628238e-13 0 <br>
+0 0 0 0 0 <br>
+0.052225399762392 15.5710000991821 -2.74031991542856e-10
+4.10102995399703e-13 0 <br>
+-0.0168999992311001 0 0 0 0 <br>
+-0.00769999995827675
+0 0 0 0 <br>
+      <br>
+# LsMdc: Number of parameters per component of the phase for the
+non-ideal mixing models [nPS]. This array is empty, since ion-specific
+parameters do not exist in the Pitzer model.<br>
+&lt;LsMdc&gt;<br>
+0 0<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><small><br>
+</small></p>
 <p><small></small></p>
 <h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_EQUNIQUAC"></a>5.2.3.
-Extended UNIQUAC model<br>
+Extended
+UNIQUAC
+model<br>
 </font></h5>
 <p><br>
 </p>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 <h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_GASFLUID"></a>5.3.
-Gas/fluid models&nbsp;<br>
+Gas/fluid
+models&nbsp;<br>
 </font></h4>
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
