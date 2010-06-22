@@ -148,8 +148,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   TPrintArrays  prar(51, DataBR_fields, ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 3.0.0" << endl;
-      ff << "# Prototype 28.08.2009" << endl;
+   {  ff << "# GEMIPM2K v. 3.0 rev. 456(1658)" << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
