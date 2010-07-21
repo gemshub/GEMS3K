@@ -235,7 +235,7 @@ void TMulti::Set_DC_limits( long int Mode )
 {
     double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
     long int jb, je, j,k, MpL;
-    vstr tbuf(80);
+    vstr tbuf(150);
 
     if( !pmp->PLIM )
         return;  // no metastability limits to be set
@@ -1460,13 +1460,15 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
        KinConstrPh = false;
        for(j=jb; j<jb+L1k; j++)
        {  // Checking if a DC in phase is under kinetic control
-          Yj = pmp->Y[j];
+//          Yj = pmp->Y[j];
           KinConstrDC = false;
           // Detecting the DC having the non-trivial kinetic constraint
-          if( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+          if( pmp->DUL[j] < 1e6 ) // && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
               KinConstrDC = true;
-          if( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
+          if( pmp->DLL[j] > 0.0 ) // && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
               KinConstrDC = true;
+          if( KinConstrDC == true ) // Bug fixed 21.07.2010 DK
+              KinConstrPh = true;
        } //  j
        if( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL
            || KinConstrPh == true )
@@ -1546,14 +1548,18 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
           Yj = pmp->Y[j];
           KinConstrDC = false;
           // Detecting the DC having the non-trivial kinetic constraint
-          if( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
-          { // Fixing a very small component constrained from below
-              pmp->Y[j] = pmp->DUL[j];
+          if( pmp->DUL[j] < 1e6 ) // && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
+          {
+              if( Yj > pmp->DUL[j] )
+                  // Fixing a very small component constrained from above
+                  pmp->Y[j] = pmp->DUL[j];
               KinConstrDC = true;
           }
-          if( pmp->DLL[j] > 0 && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
-          { // Fixing a small component constrained from above
-              pmp->Y[j] = pmp->DLL[j];
+          if( pmp->DLL[j] > 0 ) // && Yj <= ( pmp->DLL[j] + pa->p.DKIN ) )
+          {
+              if( Yj < pmp->DLL[j] )
+              // Fixing a small component constrained from below
+                 pmp->Y[j] = pmp->DLL[j];
               KinConstrDC = true;
           }
           if( KinConstrDC == true )
