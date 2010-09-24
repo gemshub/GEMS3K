@@ -30,7 +30,8 @@ LFLAGS   =
 LFLAGS   = -static
 # static flag for pgi linker
 # LFLAGS   = -Bstatic
-LIBS     = $(SUBLIBS) -lqd  
+LIBS     = $(SUBLIBS)
+# -lqd  
 AR       = ar cqs
 RANLIB   = 
 TAR      = tar -cf
@@ -78,7 +79,7 @@ SOURCES = gstring.cpp \
 		gdatastream.cpp \
 		s_fgl.cpp \
 		s_fgl1.cpp \
-	    s_fgl2.cpp \
+	        s_fgl2.cpp \
 		s_fgl3.cpp \
 		s_fgl4.cpp \
 		node.cpp \
