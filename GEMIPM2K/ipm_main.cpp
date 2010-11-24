@@ -450,7 +450,7 @@ FORCED_AIA:   // Finish
    pmp->FI1s = 0;
    for( i=0; i<pmp->FI; i++ )
    {
-       if( pmp->YF[i] >= fmin( pmp->PhMinM, 1e-22 ) )  // Check 1e-22 !!!!!
+       if( pmp->YF[i] >= min( pmp->PhMinM, 1e-22 ) )  // Check 1e-22 !!!!!
        {
             pmp->FI1++;
             if( i < pmp->FIs )
@@ -1375,7 +1375,7 @@ long int TMulti::MetastabilityLagrangeMultiplier()
     {
         if( pmp->Y[J] < 0. )   // negative number of moles!
         	return J;
-    	if( pmp->Y[J] < fmin( pmp->lowPosNum, pmp->DcMinM ))
+        if( pmp->Y[J] < min( pmp->lowPosNum, pmp->DcMinM ))
             continue;
 
         switch( pmp->RLC[J] )
@@ -1484,7 +1484,7 @@ long int TMulti::SolverLinearEquations( long int N, bool initAppr )
       (*(AA+(ii)+(kk)*N)) = 0.;
 
   for( jj=0; jj<pmp->L; jj++ )
-   if( pmp->Y[jj] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+   if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
    {
       for( k=arrL[jj]; k<arrL[jj+1]; k++)
         for( i=arrL[jj]; i<arrL[jj+1]; i++ )
@@ -1504,7 +1504,7 @@ long int TMulti::SolverLinearEquations( long int N, bool initAppr )
          for( ii=0; ii<N; ii++ )
             BB[ii] = 0.;
           for( jj=0; jj<pmp->L; jj++)
-           if( pmp->Y[jj] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+           if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
               for( i=arrL[jj]; i<arrL[jj+1]; i++ )
               {  ii = arrAN[i];
                  if( ii>= N )
@@ -1579,7 +1579,7 @@ long int TMulti::qdSolverLinearEquations( long int N, bool initAppr )
       (*(qdAA+(ii)+(kk)*N)) = 0.;
 
   for( jj=0; jj<pmp->L; jj++ )
-   if( pmp->Y[jj] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+   if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
    {
       for( k=arrL[jj]; k<arrL[jj+1]; k++)
         for( i=arrL[jj]; i<arrL[jj+1]; i++ )
@@ -1599,7 +1599,7 @@ long int TMulti::qdSolverLinearEquations( long int N, bool initAppr )
          for( ii=0; ii<N; ii++ )
             qdBB[ii] = 0.;
           for( jj=0; jj<pmp->L; jj++)
-           if( pmp->Y[jj] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+           if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
               for( i=arrL[jj]; i<arrL[jj+1]; i++ )
               {  ii = arrAN[i];
                  if( ii>= N )
@@ -1684,7 +1684,7 @@ double TMulti::calcDikin(  long int N, bool initAppr )
 
   for(J=0;J<pmp->L;J++)
   {
-    if( pmp->Y[J] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+    if( pmp->Y[J] > min( pmp->lowPosNum, pmp->DcMinM ) )
     {
       if( initAppr )
       {
@@ -1739,7 +1739,7 @@ double TMulti::qdcalcDikin(  long int N, bool initAppr )
 
   for(J=0;J<pmp->L;J++)
   {
-    if( pmp->Y[J] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+    if( pmp->Y[J] > min( pmp->lowPosNum, pmp->DcMinM ) )
     {
       if( initAppr )
       {

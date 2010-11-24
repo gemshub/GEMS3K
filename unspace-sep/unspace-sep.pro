@@ -53,9 +53,7 @@ INCLUDEPATH   +=;.;$$KERNEL_H;$$LIBS_H;$$GEMIPM_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS
 
 OBJECTS_DIR       = obj
 
-       HEADERS	 += $$LIBS_H/array.h \
-                    $$LIBS_H/verror.h  \
-                    $$LIBS_H/gstring.h  \
+       HEADERS	 += $$LIBS_H/verror.h  \
                     $$LIBS_H/gdatastream.h  \
                     $$KERNEL_H/v_user.h \
                     $$MODS_H/s_fgl.h \
@@ -77,8 +75,7 @@ OBJECTS_DIR       = obj
                     $$NUMERICS_H/num_methods.h \
  		    ms_unspace.h 
 
-        SOURCES	  +=  $$LIBS_CPP/gstring.cpp  \
-                      $$LIBS_CPP/gdatastream.cpp  \
+        SOURCES	  +=  $$LIBS_CPP/gdatastream.cpp  \
                     $$NUMERICS_CPP/num_methods.cpp \
                      $$MODS_CPP/s_fgl.cpp \
                      $$MODS_CPP/s_fgl1.cpp \

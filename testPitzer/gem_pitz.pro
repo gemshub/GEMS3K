@@ -29,14 +29,11 @@ INCLUDEPATH += ;.;../GEMIPM2K
    
    HEADERS	 += 	../GEMIPM2K/s_fgl.h \
                     ../GEMIPM2K/verror.h   \
-                    ../GEMIPM2K/array.h \
-                    ../GEMIPM2K/v_user.h  \
-                    ../GEMIPM2K/gstring.h 
+                    ../GEMIPM2K/v_user.h 
    
    SOURCES	 +=     ../GEMIPM2K/s_fgl.cpp \
           			../GEMIPM2K/s_fgl1.cpp  \
           			../GEMIPM2K/s_fgl2.cpp \
           			../GEMIPM2K/s_fgl3.cpp  \
           			../GEMIPM2K/s_fgl4.cpp  \
-                    ../GEMIPM2K/gstring.cpp \ 
                     main.cpp 

@@ -21,13 +21,10 @@
 
 #include <algorithm>
 #include <iostream>
-
 using namespace std;
 
-#include "gstring.h"
-#include "array.h"
+#include "string.h"
 #include "verror.h"
-
 
 #ifdef __APPLE__
 
@@ -42,8 +39,6 @@ typedef unsigned int uint;
 #endif
 
 const int MAXKEYWD = 6+1;
-typedef TArrayF<gstring> TCStringArray;
-
 
 #ifndef  __unix
 
@@ -111,6 +106,7 @@ void copyValues( long int* arr, short* data, int size )
 
 #ifndef IPMGEMPLUGIN
 
+#include "array.h"
 
 inline
 bool
@@ -180,13 +176,7 @@ inline char* gcvt(double num, int digit, char* buf)
 #ifdef __APPLE__
 #include <algobase.h>
 #endif
-#else
 
-#define max( a, b )  ( (a) >( b) ? (a) : (b) )
-#define min( a, b )  ( (a) <( b) ? (a) : (b) )
-
-
-#endif    // IPMGEMPLUGIN
 
 // dynamically allocates temporary 'char*'
 // for simple string manipulations
@@ -220,6 +210,14 @@ private:
 
 };
 
+#else
+
+//#define max( a, b )  ( (a) >( b) ? (a) : (b) )
+//#define min( a, b )  ( (a) <( b) ? (a) : (b) )
+
+
+#endif    // IPMGEMPLUGIN
+
 // Combines path, directory, name and extension to full pathname
 gstring
 u_makepath(const gstring& dir,
@@ -234,6 +232,7 @@ u_splitpath(const gstring& Path, gstring& dir,
 // Get Path of file and Reading list of file names from it, return number of files 
 char  (* f_getfiles(const char *f_name, char *Path, 
 		long int& nElem, char delim ))[fileNameLength];
+
 
 
 #endif

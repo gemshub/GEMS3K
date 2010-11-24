@@ -1,6 +1,4 @@
-       HEADERS	 += $$GEMIPM2K_H/array.h \
-                    $$GEMIPM2K_H/verror.h  \
-                    $$GEMIPM2K_H/gstring.h  \
+       HEADERS	 += $$GEMIPM2K_H/verror.h  \
                     $$GEMIPM2K_H/gdatastream.h  \
                     $$GEMIPM2K_H/v_user.h \
                     $$GEMIPM2K_H/tnt_i_refvec.h \
@@ -20,8 +18,7 @@
 #                    $$GEMIPM2K_H/particlearray.h \
                     $$GEMIPM2K_H/io_arrays.h
 
-        SOURCES	  +=  $$GEMIPM2K_CPP/gstring.cpp  \
-                      $$GEMIPM2K_CPP/gdatastream.cpp  \
+        SOURCES	  +=  $$GEMIPM2K_CPP/gdatastream.cpp  \
                       $$GEMIPM2K_CPP/num_methods.cpp \
                       $$GEMIPM2K_CPP/s_fgl.cpp \
                       $$GEMIPM2K_CPP/s_fgl1.cpp \

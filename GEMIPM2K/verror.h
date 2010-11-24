@@ -18,7 +18,23 @@
 #ifndef _verror_h_
 #define _verror_h_
 
+#ifdef IPMGEMPLUGIN
+
+#include <string>
+
+using namespace std;
+typedef string gstring;
+static const size_t npos = string::npos;
+//   static const size_t npos = static_cast<size_t>(-1);
+//   static  const size_t npos=32767;   /wp sergey 2004 from below assignment
+
+void strip(string& str);
+
+#else
+
 #include "gstring.h"
+
+#endif
 
 struct TError
 {

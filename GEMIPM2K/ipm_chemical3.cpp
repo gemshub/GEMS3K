@@ -368,12 +368,12 @@ TMulti::GammaCalc( long int LinkMode  )
     case LINK_FIA_MODE: // Initial approximation mode
         if( pmp->LO )
         {
-            if( pmp->XF[0] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+            if( pmp->XF[0] > min( pmp->lowPosNum, pmp->DcMinM ) )
             {                           // warm start case (after simplex?)
                pmp->GWAT = H2O_mol_to_kg;
                pmp->XF[0] = pmp->GWAT;
                for( j=0; j<pmp->L; j++ )
-                 if( pmp->X[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )
+                 if( pmp->X[j] < min( pmp->lowPosNum, pmp->DcMinM ) )
                     pmp->X[j] = pmp->DFYaqM; // pa->p.DFYaq;
                ConCalc( pmp->X, pmp->XF, pmp->XFA );
                // pmp->IC = max( pmp->MOL, pmp->IC );
@@ -439,7 +439,7 @@ TMulti::GammaCalc( long int LinkMode  )
    		    double nxk = 1./pmp->L1[k];
             for( j= jb; j<je; j++ )
     		{
-            	if(pmp->XF[k] < fmin( pmp->DSM, pmp->PhMinM ) ) // pmp->lowPosNum )   // workaround 10.03.2008 DK
+                if(pmp->XF[k] < min( pmp->DSM, pmp->PhMinM ) ) // pmp->lowPosNum )   // workaround 10.03.2008 DK
             		pmp->Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
             	pmp->GEX[j] =0.0;  // cleaning GEX in TP mode!
             	pmp->lnGmo[j] = pmp->lnGam[j]; // saving activity coefficients in TP mode

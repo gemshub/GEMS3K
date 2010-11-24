@@ -28,11 +28,9 @@ win32-borland {
 INCLUDEPATH += .
 
 # Input
-HEADERS += array.h \
-           databr.h \
+HEADERS += databr.h \
            datach.h \
            gdatastream.h \
-           gstring.h \
            io_arrays.h \
            jama_cholesky.h \
            jama_lu.h \
@@ -50,7 +48,6 @@ HEADERS += array.h \
            verror.h 
 
 SOURCES += gdatastream.cpp \
-           gstring.cpp \
            io_arrays.cpp \
            ipm_chemical.cpp \
            ipm_chemical2.cpp \

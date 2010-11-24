@@ -24,7 +24,29 @@
 #include "v_user.h"
 
 #ifdef IPMGEMPLUGIN
-  istream& f_getline(istream& is, gstring& str, char delim);
+
+istream& f_getline(istream& is, gstring& str, char delim);
+
+//    This constants should be 'defined' to satisfy all compilers
+#define SHORT_EMPTY 	   -32768
+#define LONG_EMPTY             -2147483648L
+#define FLOAT_EMPTY	          1.17549435e-38F
+#define DOUBLE_EMPTY         2.2250738585072014e-308
+#define CHAR_EMPTY   	     '`'
+
+inline bool IsFloatEmpty( const float v )
+{
+    return ( v>0. && v <= FLOAT_EMPTY);
+}
+inline bool IsDoubleEmpty( const double v )
+{
+    return ( v>0. && v <= DOUBLE_EMPTY);
+}
+
+#else
+
+#include "v_vals.h"
+
 #endif
 
 long int TRWArrays::findFld( const char *Name )
@@ -39,6 +61,24 @@ long int TRWArrays::findFld( const char *Name )
 
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
+inline void TPrintArrays::writeValue(float val)
+    {
+      if( IsFloatEmpty( val ))
+        ff << CHAR_EMPTY << " ";
+      else
+    //    ff << setprecision(10) << scientific << arr[ii] << " ";
+       ff << setprecision(7) << val << " ";
+    }
+
+inline void TPrintArrays::writeValue(double val)
+    {
+      if( IsDoubleEmpty( val ))
+        ff << CHAR_EMPTY << " ";
+      else
+//    ff << setprecision(18) << scientific << arr[ii] << " ";
+    ff << setprecision(15) << val << " ";
+    }
+
 // If the first parameter is given as NULL then the char array
 // will be printed as a comment
 void TPrintArrays::writeArray( const char *name, char* arr,
@@ -60,7 +100,11 @@ void TPrintArrays::writeArray( const char *name, char* arr,
     	  ff << "#  ";
     }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
+#ifdef IPMGEMPLUGIN // 24/08/2010
+    strip(str);
+#else
     str.strip();
+#endif
     ff  << "\'" << str.c_str() << "\'" << " ";
  }
 }
@@ -84,7 +128,11 @@ void TPrintArrays::writeArray( const char *name, char* arr,
     	  ff << "#  ";
     }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
+#ifdef IPMGEMPLUGIN // 24/08/2010
+    strip(str);
+#else
     str.strip();
+#endif
     ff  << "\'" << str.c_str() << "\'" << " ";
  }
 }
@@ -101,8 +149,7 @@ void TPrintArrays::writeArray( const char *name,  float* arr,
  {
     if(jj == sz)
     { jj=0;  ff << endl;}
-//    ff << setprecision(10) << scientific << arr[ii] << " ";
-    ff << setprecision(7) << arr[ii] << " ";
+    writeValue(arr[ii]);
  }
 }
 
@@ -118,8 +165,7 @@ void TPrintArrays::writeArray( const char *name,  float* arr,
  {
     if(jj == sz)
     { jj=0;  ff << endl;}
-//    ff << setprecision(10) << scientific << arr[ii] << " ";
-    ff << setprecision(7) << arr[ii] << " ";
+    writeValue(arr[ii]);
  }
 }
 
@@ -135,8 +181,7 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
  {
     if(jj == sz)
     { jj=0;  ff << endl;}
-//    ff << setprecision(18) << scientific << arr[ii] << " ";
-    ff << setprecision(15) << arr[ii] << " ";
+    writeValue(arr[ii]);
  }
 }
 
@@ -152,8 +197,7 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
  {
     if(jj == sz)
     { jj=0;  ff << endl;}
-//    ff << setprecision(18) << scientific << arr[ii] << " ";
-    ff << setprecision(15) << arr[ii] << " ";
+    writeValue(arr[ii]);
  }
 }
 
@@ -201,14 +245,13 @@ void TPrintArrays::writeArray( const char *name,  float* arr,
  ff << endl << "<" << name << ">" << endl;
  for( long int ii=0, jj=0; ii<size; ii++  )
  {
-	for(long int cc=0; cc<nColumns; cc++ )
+    for(long int cc=0; cc<nColumns; cc++ )
     {
     	if(jj == sz)
 	    { jj=0;  ff << endl;}
-   	//    ff << setprecision(10) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
-   	    ff << setprecision(7) << arr[selArr[ii]*nColumns+cc] << " ";
-	   	jj++;
-	}
+         writeValue(arr[selArr[ii]*nColumns+cc]);
+        jj++;
+   }
  }
 }
 
@@ -223,14 +266,13 @@ void TPrintArrays::writeArray( const char *name,  float* arr,
  ff << endl << "<" << name << ">" << endl;
  for( int ii=0, jj=0; ii<size; ii++  )
  {
-	for( int cc=0; cc<nColumns; cc++ )
+   for( int cc=0; cc<nColumns; cc++ )
     {
     	if(jj == sz)
 	    { jj=0;  ff << endl;}
-   	//    ff << setprecision(10) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
-   	    ff << setprecision(7) << arr[selArr[ii]*nColumns+cc] << " ";
-	   	jj++;
-	}
+       writeValue(arr[selArr[ii]*nColumns+cc]);
+        jj++;
+    }
  }
 }
 
@@ -245,14 +287,13 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
  ff << endl << "<" << name << ">" << endl;
  for( long int ii=0, jj=0; ii<size; ii++  )
  {
-		for(long int cc=0; cc<nColumns; cc++ )
-	    {
-			if(jj == sz)
+    for(long int cc=0; cc<nColumns; cc++ )
+        {
+              if(jj == sz)
 	        { jj=0;  ff << endl;}
-		    //    ff << setprecision(18) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
-		    ff << setprecision(15) << arr[selArr[ii]*nColumns+cc] << " ";
-	    	jj++;
-	    }
+              writeValue(arr[selArr[ii]*nColumns+cc]);
+              jj++;
+        }
  }
 }
 
@@ -267,14 +308,13 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
  ff << endl << "<" << name << ">" << endl;
  for( int ii=0, jj=0; ii<size; ii++  )
  {
-		for( int cc=0; cc<nColumns; cc++ )
-	    {
-			if(jj == sz)
-	        { jj=0;  ff << endl;}
-		    //    ff << setprecision(18) << scientific << arr[selArr[ii]*nColumns+cc] << " ";
-		    ff << setprecision(15) << arr[selArr[ii]*nColumns+cc] << " ";
-	    	jj++;
-	    }
+     for( int cc=0; cc<nColumns; cc++ )
+        {
+           if(jj == sz)
+           { jj=0;  ff << endl;}
+             writeValue(arr[selArr[ii]*nColumns+cc]);
+             jj++;
+           }
  }
 }
 
@@ -320,8 +360,39 @@ void TPrintArrays::writeArray( const char *name, short* arr,
     }
  }
 }
+
 //-------------------------------------------------------------------------
 //------------------------------------------------------------------
+
+ inline void TReadArrays::readValue(float& val)
+ {
+   char input;
+   skipSpace();
+
+   ff.get( input );
+   if( input == CHAR_EMPTY )
+      val = FLOAT_EMPTY;
+   else
+      {
+        ff.putback(input);
+        ff >> val;
+      }
+  }
+
+ inline void TReadArrays::readValue(double& val)
+ {
+   char input;
+   skipSpace();
+
+   ff.get( input );
+   if( input == CHAR_EMPTY )
+      val = DOUBLE_EMPTY;
+   else
+      {
+        ff.putback(input);
+        ff >> val;
+      }
+ }
 
 // skip  ' ',  '\n', '\t' and comments (from '#' to end of line)
 void  TReadArrays::skipSpace()
@@ -430,19 +501,14 @@ void TReadArrays::readArray( const char*, long int* arr, long int size )
 void TReadArrays::readArray( const char*, float* arr, long int size )
 {
  for( long int ii=0; ii<size; ii++  )
- {
-     skipSpace();
-     ff >> arr[ii];
- }
+    readValue(arr[ii]);
 }
 
 void TReadArrays::readArray( const char*, double* arr, long int size )
 {
+ //ff << setprecision(15);
  for( long int ii=0; ii<size; ii++  )
- {
-     skipSpace();
-     ff >> arr[ii];
- }
+    readValue(arr[ii]);
 }
 
 void TReadArrays::readArray( const char*, char* arr, long int size, long int el_size )

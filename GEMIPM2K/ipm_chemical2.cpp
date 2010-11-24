@@ -156,7 +156,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
         }
         // calculation of the mole fraction
         pmp->Wx[j] = X[j]/XF[k];
-        if( X[j] > fmin( pmp->lowPosNum, pmp->DcMinM ) )
+        if( X[j] > min( pmp->lowPosNum, pmp->DcMinM ) )
             pmp->VL[j] = log( pmp->Wx[j] );     // this is used nowhere except in some scripts. Remove?
         else pmp->VL[j] = log( pmp->lowPosNum );   // debugging 29.11.05 KD
         pmp->Y_la[j] = 0.0;
@@ -990,7 +990,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
     for( j=jb; j<je; j++ )
     { // Main loop for DCs - surface complexes
         lnGamjo = pmp->lnGmo[j];             // bugfix 16.03.2008 DK
-    	if( pmp->X[j] < fmin( pmp->DcMinM, pmp->lowPosNum ) )
+        if( pmp->X[j] < min( pmp->DcMinM, pmp->lowPosNum ) )
             continue;  // This surface DC has been killed by IPM
 //        OSAT = pmp->lnGmo[j]; // added 6.07.01 by KDA
         ja = j - ( pmp->Ls - pmp->Lads );

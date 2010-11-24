@@ -17,7 +17,16 @@
 //-------------------------------------------------------------------
 
 #include  <fstream>
+
+#ifdef IPMGEMPLUGIN
+
+#include "verror.h"
+
+#else
+
 #include "gstring.h"
+
+#endif
 
 struct outField
  {
@@ -74,6 +83,8 @@ class TRWArrays  // basic class for red/write fields of structure
 
 class TPrintArrays: public  TRWArrays  // print fields of structure
 {
+    inline void writeValue(float val);
+    inline void writeValue(double val);
 
 public:
 
@@ -84,14 +95,12 @@ public:
     void writeArray( const char *name, char*   arr, long int size, long int arr_size );
     void writeArray( const char *name, float*  arr, long int size, long int l_size=-1L );
     void writeArray( const char *name, double* arr, long int size, long int l_size=-1L );
- //   void writeArray( const char *name, short* arr, long int size, long int l_size=-1L  );
     void writeArray( const char *name, long* arr, long int size, long int l_size=-1L  );
 
     void writeArray( const char *name, char*   arr, int size, int arr_size );
     void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
     void writeArray( const char *name, double* arr, int size, int l_size=-1 );
     void writeArray( const char *name, short* arr, int size, int l_size=-1  );
-//    void writeArray( const char *name, long* arr, int size, int l_size=-1  );
 
     void writeArray( const char *name, float*  arr, long int size, long int* selAr,
     		long int nColumns=1L, long int l_size=-1L );
@@ -112,7 +121,8 @@ public:
 
  class TReadArrays : public  TRWArrays // read fields of structure
  {
-
+    inline void readValue(float& val);
+    inline void readValue(double& val);
  
  public:
 

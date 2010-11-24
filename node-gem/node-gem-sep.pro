@@ -51,9 +51,7 @@ INCLUDEPATH   +=;.;$$GEMIPM_H;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS
 
 OBJECTS_DIR       = obj
 
-       HEADERS	 += $$LIBS_H/array.h \
-                    $$LIBS_H/verror.h  \
-                    $$LIBS_H/gstring.h  \
+       HEADERS	 += $$LIBS_H/verror.h  \
                     $$LIBS_H/gdatastream.h  \
                     $$KERNEL_H/v_user.h \
                     $$MODS_H/s_fgl.h \
@@ -72,8 +70,7 @@ OBJECTS_DIR       = obj
                     $$NUMERICS_H/jama_cholesky.h \
                     $$NUMERICS_H/jama_lu.h
 
-        SOURCES	  +=  $$LIBS_CPP/gstring.cpp  \
-                      $$LIBS_CPP/gdatastream.cpp  \
+        SOURCES	  +=  $$LIBS_CPP/gdatastream.cpp  \
                      $$MODS_CPP/s_fgl.cpp \
                      $$MODS_CPP/s_fgl1.cpp \
                      $$MODS_CPP/s_fgl2.cpp \

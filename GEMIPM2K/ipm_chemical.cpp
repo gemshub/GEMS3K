@@ -53,7 +53,7 @@ void TMulti::XmaxSAT_IPM2()
 
     if( pmp->XFA[k] < pmp->DSM ) // No sorbent retained by the IPM
         continue;
-    if( pmp->XF[k]-pmp->XFA[k] < fmin( pmp->lowPosNum, pmp->DcMinM ) ) // may need qd_real in subtraction!
+    if( pmp->XF[k]-pmp->XFA[k] < min( pmp->lowPosNum, pmp->DcMinM ) ) // may need qd_real in subtraction!
         continue;  // No surface species
 
     for(i=0; i<6; i++)
@@ -76,7 +76,7 @@ void TMulti::XmaxSAT_IPM2()
 
     for( j=jb; j<je; j++ )
     { // Loop over DCs
-        if( pmp->X[j] <= fmin( pmp->lowPosNum, pmp->DcMinM ) )
+        if( pmp->X[j] <= min( pmp->lowPosNum, pmp->DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
         rIEPS = TProfil::pm->pa.p.IEPS;
         ja = j - ( pmp->Ls - pmp->Lads );
@@ -235,7 +235,7 @@ void TMulti::Set_DC_limits( long int Mode )
 {
     double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
     long int jb, je, j,k, MpL;
-    vstr tbuf(150);
+    char tbuf[150];
 
     if( !pmp->PLIM )
         return;  // no metastability limits to be set
@@ -358,7 +358,7 @@ if( k < pmp->FIs )
 //                KK = k;
                 sprintf( tbuf, "Inconsistent upper DC metastability limits j=%ld k=%ld XU=%g XFU=%g",
                          j, k, XU, XFU );
-                Error( "E11IPM: Set_DC_limits(): ",tbuf.p );
+                Error( "E11IPM: Set_DC_limits(): ",tbuf );
 //                XU = XFU; // - pmp->lowPosNum;
             }
             if( XL < XFL )
@@ -367,7 +367,7 @@ if( k < pmp->FIs )
 //                KK = k;
                 sprintf( tbuf, "Inconsistent lower DC metastability limits j=%ld k=%ld XL=%g XFL=%g",
                          j, k, XL, XFL );
-                Error( "E12IPM: Set_DC_limits(): ",tbuf.p );
+                Error( "E12IPM: Set_DC_limits(): ",tbuf );
 //                XL = XFL; // - pmp->lowPosNum;
             }
             pmp->DUL[j]=XU;
@@ -578,7 +578,7 @@ case DC_AQ_SURCOMP:
     {
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
-        if( pmp->X[j] > fmin( pmp->lowPosNum, pmp->DcMinM ) && fabs( dF0 ) >= SmoSensT )
+        if( pmp->X[j] > min( pmp->lowPosNum, pmp->DcMinM ) && fabs( dF0 ) >= SmoSensT )
         	// F0 = Fold + dF0 * pmp->FitVar[3];
        	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }  // FitVar[3] = TinkleSuppressFactor(); see GammaCalc()
@@ -679,13 +679,13 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
             pmp->Yw = pmp->YFk;
         for( ; j<i; j++ )
         { //  cycle by DC
-            if( Y[j] < fmin( pmp->DcMinM, pmp->lowPosNum ))
+            if( Y[j] < min( pmp->DcMinM, pmp->lowPosNum ))
                 continue;  // exception by minimum DC quantity
                            // calculate chemical potential of j-th DC
             v = PrimalDC_ChemPot( pmp->G[j], log(Y[j]), pmp->logYFk,
                               pmp->aqsTail, pmp->logXw, pmp->DCCW[j] );
             F[j] = v;
-        }   // j
+       }   // j
 NEXT_PHASE:
         j = i;
     }  // k
@@ -1261,7 +1261,7 @@ if( pmp->pNP && !pmp->K2 )
 {  // Checking L_S set and potentially stable zero DCs and phases
    if( YF >= pmp->DSM ) // pa->p.DS )
    {                            // phase is there
-           if( Yj >= fmin(pmp->lowPosNum, pmp->DcMinM ) )
+           if( Yj >= min(pmp->lowPosNum, pmp->DcMinM ) )
        {	                    // DC is there
                    if( KinConstr == false)
               pmp->Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
@@ -1280,7 +1280,7 @@ if( pmp->pNP && !pmp->K2 )
 }
 else {   // Standard checking in the L_S set only
 //       if( YF >= pa->p.DS && Yj > pmp->lowPosNum )  // Checking L_S set
-         if( YF >= pmp->DSM && Yj >= fmin( pmp->lowPosNum, pmp->DcMinM ) )  // Checking L_S set
+         if( YF >= pmp->DSM && Yj >= min( pmp->lowPosNum, pmp->DcMinM ) )  // Checking L_S set
          {
              if( KinConstr == false )
                  pmp->Falp[k] += Fj; // incrementing Karpov stability criterion for the phase
@@ -1909,7 +1909,7 @@ kur = ku;
                  pmp->YF[k]=0.;
                  for(j=jb;j<jb+pmp->L1[k];j++)
                  {
-                    if( pmp->Y[j] < fmin( pmp->lowPosNum, pmp->DcMinM ) )  // fixed 30.08.2009
+                    if( pmp->Y[j] < min( pmp->lowPosNum, pmp->DcMinM ) )  // fixed 30.08.2009
                         pmp->Y[j] = RaiseDC_Value( j ); // bugfix 29.10.07
                     pmp->YF[k] += pmp->Y[j]; // calculate new amounts of phases
                  }
