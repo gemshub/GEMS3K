@@ -49,24 +49,24 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-    "GEM-Selektor v3: Numerical flags, controls and thresholds",
-    {  // internal rescaling to/from 1000 total moles
-       // Typical default set (16.05.2010) new PhaseSelection( logSI )
-                2,  /* PC */  2,     /* PD */   -4,   /* PRD */
-                1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-                1, /* DT */     10,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-                1000., /* DG */   1e-11,  /* DHB */  1e-20,  /* DS */
-                1e-5,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
-                1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
-                1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-                1e-6, /* DFYs, */  1e-17,  /* DB */   -1.,   /* AG */
-                -0.98,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-                1e-3, /* GAS */   12.05,  /* DNS */   1e-11,  /* XwMin, */
-                1e-11,  /* ScMin, */  1e-30, /* DcMin, */   1e-20, /* PhMin, */
-                1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-                1e-8,  /* DKIN  */ 0,  /* tprn */
-  },
+    "GEM-Selektor v3.0u-1707.496: Numerical controls & thresholds",
+    {   // Typical default set (29.11.2010) new PhaseSelection( logSI )
+        2,  /* PC */  2,     /* PD */   -4,   /* PRD */
+        1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
+        1, /* DT */     10,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+        1000., /* DG */   1e-11,  /* DHB */  1e-20,  /* DS */
+        1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+        1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
+        1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
+        1e-6, /* DFYs, */  1e-17,  /* DB */   -1.,   /* AG */
+        -0.98,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+        1e-5, /* GAS */   12.05,  /* DNS */   1e-11,  /* XwMin, */
+        1e-11,  /* ScMin, */  1e-30, /* DcMin, */   1e-20, /* PhMin, */
+        1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+        1e-9,  /* DKIN  */ 0,  /* tprn */
+    },
 }; // SPP_SETTING
+
 
 
 void BASE_PARAM::write(fstream& oss)
@@ -84,9 +84,9 @@ void BASE_PARAM::write(fstream& oss)
   arr[8] = PE;
   arr[9] = IIM;
 
-	oss.write( (char*)arr, 10*sizeof(short) );
-    oss.write( (char*)&DG, 28*sizeof(double) );
-    oss.write( (char*)&tprn, sizeof(char*) );
+  oss.write( (char*)arr, 10*sizeof(short) );
+  oss.write( (char*)&DG, 28*sizeof(double) );
+  oss.write( (char*)&tprn, sizeof(char*) );
 }
 
 void SPP_SETTING::write(fstream& oss)
@@ -153,6 +153,7 @@ void TProfil::outMultiTxt( const char *path, bool append  )
 void TProfil::readMulti( GemDataStream& ff )
 {
     DATACH  *dCH = TNode::na->pCSD();
+    //DATACH  *dCH =  multi->node->pCSD();
     short arr[10];
 
 	 ff.readArray( arr, 10 );
