@@ -160,7 +160,7 @@ gstring TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
 AGAIN:
       // open file to output
    if( vfChooseFileSave(par, path,
-          "Please, enter IPM work structure file name", "*.lst" ) == false )
+          "Please, edit the GEMIPM2K filelist name", "*.lst" ) == false )
                return "";
    u_splitpath( path, dir, name, newname );
    if( !access(path.c_str(), 0 ) ) //file exists

@@ -1067,6 +1067,113 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	 return 	pow(10.0,pmm->Y_la[xCH]);
   }
 
+    
+  // Functions needed by GEM_FIT. Setting parameters for activity coefficient models.
+    //     aIPx     = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
+    //                               // -> NPar x MaxOrd   added 07.12.2006   KD
+    //     aIPc     = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+    //     aDCc     = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+    //     NComp    = pmp->L1[k];          // Number of components in the phase
+    //     NPar     = pmp->LsMod[k*3];      // Number of interaction parameters
+    //     NPcoef   = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+    //     MaxOrd   = pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
+    //     NP_DC    = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
+  void TNode::Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase)
+  {
+    long ip_IPx=0; long ip_IPc=0; long ip_DCc=0;
+    for(int k=0;k<((*index_phase)+1);k++)
+    {
+        *index_phase_aIPx = ip_IPx;
+        ip_IPx          += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
+        *index_phase_aIPc = ip_IPc;
+        ip_IPc          += pmm->LsMod[k*3] * pmm->LsMod[k*3+2];
+        *index_phase_aDCc = ip_DCc;
+        ip_DCc          += pmm->LsMdc[k] * pmm->L1[k];
+    }
+  }
+
+  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase )
+  {
+    *NPar   = pmm->LsMod[(*index_phase)*3];
+    *NPcoef = pmm->LsMod[(*index_phase)*3+2];
+    *MaxOrd = pmm->LsMod[(*index_phase)*3+1];
+    *NComp  = pmm->L1[(*index_phase)];
+    *NP_DC  = pmm->LsMdc[(*index_phase)];
+    cout<<"*NPcoef in node.cpp = "<<*NPcoef<<endl;
+  }
+
+  void TNode::Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase )
+  { 
+    int rc, NPar, NPcoef;
+    NPar = pmm->LsMod[(*index_phase)*3];
+    NPcoef =  pmm->LsMod[(*index_phase)*3+2];
+    for ( rc=0;rc<(NPar*NPcoef);rc++ )
+    {
+        (pmm->PMc[(*index_phase_aIPc)+rc]) = aIPc[rc];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+    }
+  }
+
+  void TNode::Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase )
+  { 
+    int i; long NPar, NPcoef;
+    NPar   = pmm->LsMod[(*index_phase)*3];
+    NPcoef = pmm->LsMod[(*index_phase)*3+2];
+    i = 0;
+    while (i<(NPar*NPcoef))
+    {
+      *(aIPc + i)   = pmm->PMc[(*index_phase_aIPc) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      i++;
+    }
+  }
+
+  void TNode::Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase )
+  {
+    int i; long NPar, MaxOrd;
+    NPar   = pmm->LsMod[(*index_phase)*3];
+    MaxOrd = pmm->LsMod[(*index_phase)*3+1];
+    i = 0;
+    while (i<(NPar*MaxOrd))
+    {
+      *(aIPx + i)   = pmm->IPx[(*index_phase_aIPx) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      i++;
+    }
+  }
+
+  void TNode::Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase )
+  { 
+    int rc, NComp, NP_DC;
+    NComp = pmm->L1[(*index_phase)];
+    NP_DC = pmm->LsMdc[(*index_phase)];
+    for ( rc=0;rc<NComp*NP_DC;rc++ )
+    {
+        (pmm->DMc[(*index_phase_aDCc)+rc]) = aDCc[rc];		// end-member param coeffs, NComp * NP_DC
+    }
+  }
+
+  void TNode::Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase )
+  {
+    int i; long NComp, NP_DC;
+    NComp = pmm->L1[(*index_phase)];
+    NP_DC = pmm->LsMdc[(*index_phase)];
+    i = 0;
+    while (i<(NComp*NP_DC))
+    {
+      *(aDCc + i)   = pmm->DMc[(*index_phase_aDCc)+i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      i++;
+    }
+  }
+
+  void TNode::Set_Tk   ( double* T_k)
+  {
+      CNode->TK = *T_k;
+  }
+
+  void TNode::Set_Pb   ( double* P_b)
+  {
+      CNode->P = *P_b;
+  }
+
+
   // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its
   // phase directly from GEM IPM work structure.Also activity of a DC not included into 
   // DATABR list can be retrieved. For aqueous species, molality is returned; for gas species, 

@@ -616,6 +616,20 @@ void GEM_set_MT(
       // also in the presence of metastability constraint(s).
       double DC_a(const long int xCH);
 
+      
+      // Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
+      // Sets values of LsMod and LsMdc array
+      void Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase);
+      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase );
+      void Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase );
+      void Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase );
+      void Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase );
+      void Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase ); 		// Set values of aIPc array
+      void Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase );		// Set values of  aDCc array
+      // These methods get contents of fields in the work node structure
+      void Set_Tk   ( double* T_k);
+      void Set_Pb   ( double* P_b);
+
       // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its
       // phase directly from GEM IPM work structure.Also activity of a DC not included into
       // DATABR list can be retrieved. For aqueous species, molality is returned; for gas species,

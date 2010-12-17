@@ -1,10 +1,7 @@
-#qmake -spec  win32-borland gemsipm2k.pro > a
-#qmake -spec win32-msvc.net gemsipm2k.pro > a
-
 TEMPLATE	= app
 LANGUAGE        = C++
 TARGET		= gemnode
-VERSION         = 2.2.3
+VERSION         = 3.0
 
 CONFIG		-= qt
 CONFIG		+=  warn_on debug windows
@@ -12,16 +9,8 @@ CONFIG		+= console
 
 DEFINES         += IPMGEMPLUGIN
 
-
 !win32 {
   DEFINES += __unix
-}
-
-win32-borland {
-       	DEFINES += __win32_borland
-        #  Debug, RTTI, exceptions, Visual C - compatible
-        QMAKE_CFLAGS += -x -xd -xp -VM -RT
-        QMAKE_CXXFLAGS += -x -xd -xp -VM -RT
 }
 
 #LIBS_CPP       =  ../../vizor/libs
@@ -42,12 +31,26 @@ KERNEL_H     =  $$KERNEL_CPP
 LIBS_H       =  $$LIBS_CPP
 MODS_H       =  $$MODS_CPP
 SUBMOD_H     =  $$SUBMOD_CPP
-NUMERICS_H     =  $$NUMERICS_CPP
+NUMERICS_H   =  $$NUMERICS_CPP
 GEMIPM_H     =  $$GEMIPM_CPP
 
+DEPENDPATH   +=
+DEPENDPATH   += .
+DEPENDPATH   += $$GEMIPM_H
+DEPENDPATH   += $$KERNEL_H
+DEPENDPATH   += $$LIBS_H
+DEPENDPATH   += $$MODS_H
+DEPENDPATH   += $$SUBMOD_H
+DEPENDPATH   += $$NUMERICS_H
 
-DEPENDPATH   += ;.;$$GEMIPM_H;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
-INCLUDEPATH   +=;.;$$GEMIPM_H;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
+INCLUDEPATH   +=
+INCLUDEPATH   += .
+INCLUDEPATH   += $$GEMIPM_H
+INCLUDEPATH   += $$KERNEL_H
+INCLUDEPATH   += $$LIBS_H
+INCLUDEPATH   += $$MODS_H
+INCLUDEPATH   += $$SUBMOD_H
+INCLUDEPATH   += $$NUMERICS_H
 
 OBJECTS_DIR       = obj
 
@@ -68,7 +71,8 @@ OBJECTS_DIR       = obj
                     $$NUMERICS_H/tnt_array2d.h \
                     $$NUMERICS_H/tnt.h \
                     $$NUMERICS_H/jama_cholesky.h \
-                    $$NUMERICS_H/jama_lu.h
+                    $$NUMERICS_H/jama_lu.h \
+    main.h
 
         SOURCES	  +=  $$LIBS_CPP/gdatastream.cpp  \
                      $$MODS_CPP/s_fgl.cpp \

@@ -1175,13 +1175,15 @@ else
         pm.Wabs[ii] = 0.;
         pm.Rion[ii] = 0.;
     }
-    pm.Qp = new double[pm.FIs*QPSIZE];
-    pm.Qd = new double[pm.FIs*QDSIZE];
+    pm.Qp = new double[pm.FIs*QPSIZE]; 
     for( ii=0; ii<pm.FIs*QPSIZE; ii++ )
         {
             pm.Qp[ii] = 0.;
+        }
+    pm.Qd = new double[pm.FIs*QDSIZE];
+    for( ii=0; ii<pm.FIs*QDSIZE; ii++ )
+        {
             pm.Qd[ii] = 0.;
-
         }
  }
  else
@@ -1241,25 +1243,6 @@ else
 
  Alloc_TSolMod( pm.FIs );
 
-//  Added 16.11.2004 by Sveta
-//    if( pm.sitNcat*pm.sitNcat )
-//    { pm.sitE = new double[pm.sitNcat*pm.sitNan];
-//      fillValue(pm.sitE, 0, pm.sitNcat*pm.sitNan);
-//    }
-//    else
-//       pm.sitE = 0;
-//    if( pm.sitNcat )
-//    {  pm.sitXcat = new long int[pm.sitNcat];
-//       fillValue(pm.sitXcat, 0, pm.sitNcat);
-//     }
-//    else
-//       pm.sitXcat = 0;
-//    if( pm.sitNan )
-//    {   pm.sitXan = new long int[pm.sitNan];
-//        fillValue(pm.sitXan, 0, pm.sitNan);
-//    }
-//    else
-//       pm.sitXan = 0;
 }
 
 
