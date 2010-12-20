@@ -1,6 +1,6 @@
 TEMPLATE	= app
 LANGUAGE        = C++
-TARGET		= gemnode
+TARGET		= node-gem
 VERSION         = 3.0
 
 CONFIG		-= qt

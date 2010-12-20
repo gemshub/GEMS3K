@@ -188,7 +188,6 @@ int main( int argc, char* argv[] )
 
   // deleting GEMIPM and data exchange memory structures
   delete node;
-  mt.~TMyTransport();
   // end of example
   return 0;
 }
@@ -266,10 +265,8 @@ TMyTransport::~TMyTransport()
         delete[]auIC[in];
         delete[]axDC[in];
         delete[]agam[in];
-
         delete[]adul[in];
         delete[]adll[in];
-
         delete[]aaPH[in];
         delete[]axPH[in];
         delete[]avPS[in];

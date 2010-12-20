@@ -70,7 +70,7 @@ int main( int argc, char* argv[] )
    int NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
-   {    // (3) Writing results in default DBR file
+   {    // (3) Writing results in the default DBR file
        node->GEM_write_dbr( NULL, false, true );
 //       node->GEM_print_ipm( NULL );   // possible debugging printout
    }
