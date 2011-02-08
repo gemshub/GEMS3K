@@ -354,7 +354,6 @@ TMulti *pmulti;
     void set_def(int i=0);
     void DeleteRecord( const char *key, bool errinNo=true );
     void MakeQuery();
-    //void CmHelp();
     const char* GetHtml();
 
     // Setup one of 5 default IPM numerical settings
