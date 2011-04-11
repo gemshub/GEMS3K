@@ -69,14 +69,14 @@ typedef struct
     FI1a,    // FI1a -   number of sorption phases present in eqstate
     IT,      // It - number of completed IPM iterations
     E,       // PE - flag of electroneutrality constraint { 0 1 }
-    PD,      // PD - mode of calling GammaCalc() { 0 1 2 3 4 }
+    PD,      // PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
     PV,      // Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat { 0 1 }
     PLIM,    // PU - flag of activation of DC/phase restrictions { 0 1 }
-    Ec,    // GammaCalc() return code: 0 (OK) or 1 (error)
-    K2,    // Number of IPM loops performed ( >1 up to 3 because of PhaseSelection() )
-    PZ,    // Indicator of PhaseSelection() status (since r1594): 0 untouched, 1 phase(s) inserted
+    Ec,    // CalculateActivityCoefficients() return code: 0 (OK) or 1 (error)
+    K2,    // Number of IPM loops performed ( >1 up to 6 because of PSSC() )
+    PZ,    // Indicator of PSSC() status (since r1594): 0 untouched, 1 phase(s) inserted
               // 2 insertion done after 3 major IPM loops
-    pNP, //Mode of FIA selection: 0-auto-SIMPLEX,1-old eqstate,-1-user's choice
+    pNP, //Mode of FIA selection: 0-automatic-LPP, 1-old eqstate, -1-user's choice
     pESU,  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pIPN,  // State of IPN-arrays:  0-create; 1-available; -1 remake
     pBAL,  // State of reloading CSD:  1- BAL only; 0-whole CSD
@@ -87,8 +87,8 @@ tMin,  // Type of thermodynamic potential to minimize
     FIat,   // max. number of surface site types
     MK,     // PM return code: 0 - continue;  1 - converged
     W1,     // Indicator of CleanupSpeciation() status (since r1594) 0 untouched, -1 phase(s) removed, 1 some DCs inserted
-    is,     // is - index of IC for IPN equations ( GammaCalc() )
-    js,     // js - index of DC for IPN equations ( GammaCalc() )
+    is,     // is - index of IC for IPN equations ( CalculateActivityCoefficients() )
+    js,     // js - index of DC for IPN equations ( CalculateActivityCoefficients() )
     next,
     sitNcat,    // SIT: number of cations
     sitNan      // SIT: number of anions
@@ -348,11 +348,11 @@ Tai[4];  // Temperature T, C: start, end, increment for MTP array in DataCH , Tt
 }
 MULTI;
 
-enum {
+enum {  // Indexation in a row of the pmp->SATX[][] array
 	//[0] - max site density in mkmol/(g sorbent); [1] - species charge allocated to 0 plane;
 	//[2] - surface species charge allocated to beta -or third plane; [3] - Frumkin interaction parameter;
 	//[4] species denticity or coordination number; [5]  - reserved parameter (e.g. species charge on 3rd EIL plane)]
-   XL_ST = 0, XL_EM, XL_SI, XL_SP
+   XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
 // Data of MULTI
@@ -424,23 +424,23 @@ class TMulti
 
 // ipm_chemical.cpp
     void XmaxSAT_IPM2();
-    void XmaxSAT_IPM2_reset();
-    double DualChemPot( double U[], double AL[], long int N, long int j );
+//    void XmaxSAT_IPM2_reset();
+    double DC_DualChemicalPotential( double U[], double AL[], long int N, long int j );
     void Set_DC_limits( long int Mode );
-    void TotalPhases( double X[], double XF[], double XFA[] );
-    double Ej_init_calc( double, long int j, long int k);
-    double  PrimalDC_ChemPot(  double G,  double logY,  double logYF,
+    void TotalPhasesAmounts( double X[], double XF[], double XFA[] );
+    double DC_PrimalChemicalPotentialUpdate( long int j, long int k );
+    double  DC_PrimaChemicalPotential( double G,  double logY,  double logYF,
                            double asTail,  double logYw,  char DCCW );
     void PrimalChemicalPotentials( double F[], double Y[],
                                   double YF[], double YFA[] );
     double KarpovCriterionDC( double *dNuG, double logYF, double asTail,
                  double logYw, double Wx,  char DCCW );
-    void f_alpha();
+    void KarpovCriterionPH();
     void  StabilityIndexes( );   // added 01.05.2010 DK
-    double FreeEnergyIncr(   double G,  double x,  double logXF,
+    double DC_GibbsEnergyContribution(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
     double GX( double LM  );
-    long int  Mol_u( double Y[], double X[], double XF[], double XFA[] );
+
     void ConvertDCC();
     long int  getXvolume();
 
@@ -449,9 +449,9 @@ class TMulti
     void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
     void phase_bfc( long int k, long int jj );
     double bfc_mass( void );
-    void ConCalcDC( double X[], double XF[], double XFA[],
-                    double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
-    void ConCalc( double X[], double XF[], double XFA[]);
+    void PH_CalculateConcentrations( double X[], double XF[], double XFA[],
+         double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
+    void CalculateConcentrations( double X[], double XF[], double XFA[]);
     long int GouyChapman(  long int jb, long int je, long int k );
 
 //  Surface activity coefficient terms
@@ -465,7 +465,7 @@ class TMulti
     double SmoothingFactor( );
     void SetSmoothingFactor( long int mode ); // new smoothing function (3 variants)
 // Main call for calculation of activity coefficients on IPM iterations
-    long int GammaCalc( long int LinkMode );
+    long int CalculateActivityCoefficients( long int LinkMode );
 // Built-in activity coefficient models
 // Generic solution model calls
     void SolModCreate( long int jb, long int je, long int jpb, long int jdb, long int k, long int ipb,
@@ -482,35 +482,35 @@ class TMulti
     void IdealMultiSite( long int jb, long int k, double *Zid );
 
 // ipm_main.cpp - numerical part of GEM IPM-2
-    void MultiCalcMain( long int rLoop );
-    long int EnterFeasibleDomain( long int WhereCalledFrom );
+    void GEM_IPM( long int rLoop );
+    long int MassBalanceRefinement( long int WhereCalledFrom );
     long int InteriorPointsMethod( long int &status, long int rLoop );
-    void SimplexInitialApproximation( );
+    void LPP_InitialApproximation( );
 
 // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
    void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                double *B, double *C );
 //   long int CheckMassBalanceResiduals(double *Y );
-   double LMD( double LM );
-   void ZeroDCsOff( long int jStart, long int jEnd, long int k=-1L );
-   void RaiseZeroedOffDCs( long int jStart, long int jEnd, /*double sfactor,*/ long int k=-1L );
+   double OptimizeStepSize( double LM );
+   void DC_ZeroOff( long int jStart, long int jEnd, long int k=-1L );
+   void DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k=-1L );
    double RaiseDC_Value( const long int j );
    //   void LagrangeMultiplier();
    long int MetastabilityLagrangeMultiplier();
    void WeightMultipliers( bool square );
-   long int SolverLinearEquations( long int N, bool initAppr );
-   double calcDikin(  long int N, bool initAppr );
-   double calcLM(  bool initAppr );
-   void Restoring_Y_YF();
-//   double calcSfactor();
+   long int MakeAndSolveSLE( long int N, bool initAppr );
+   double DikinsCriterion(  long int N, bool initAppr );
+   double StepSizeEstimate( bool initAppr );
+   void Restore_Y_YF_Vectors();
+
    double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
    long int CleanupSpeciation( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
-   long int PhaseSelection( long int &k_miss, long int &k_unst, long int rLoop );  // added 01.05.10 DK
+   long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
-   bool AutoInitialApprox();
+   bool GEM_IPM_InitialApproximation();
 
-   // IPM_SIMPLEX.CPP Simplex method with two-sided constralong ints (Karpov ea 1997)
-    void Simplex(long int M, long int N, long int T, double GZ, double EPS,
+   // IPM_SIMPLEX.CPP Simplex method modified with two-sided constraints (Karpov ea 1997)
+    void SolveSimplexLPP(long int M, long int N, long int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,
                  double *AA, long int *STR, long int *NMB );
     void SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[]);
@@ -527,12 +527,12 @@ class TMulti
     void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
              long int BASE[],double UND[],double UP[],double U[],
              double AA[],double *A,double Q[],long int *ITER);
-    void GibbsMinimization();
-    double calcTotalMoles( );
-    void ScaleMulti(  double ScFact );
-    void RescaleMulti(  double ScFact );
+    void GibbsEnergyMinimization();
+    double SystemTotalMolesIC( );
+    void NormalizeSystemToInternal(  double ScFact );
+    void RenormalizeSystemFromInternal(  double ScFact );
     void MultiConstInit(); // from MultiRemake
-    void MultiCalcInit();
+    void GEM_IPM_Init();
 
 
 #ifdef Use_qd_real
@@ -541,9 +541,9 @@ class TMulti
        void qdMassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                    double *B, double *C );
        qd_real qdGX( double LM  );
-       long int qdSolverLinearEquations( long int N, bool initAppr );
-       double qdLMD( double LM );
-       double qdcalcDikin(  long int N, bool initAppr );
+       long int qdMakeAndSolveSLE( long int N, bool initAppr );
+       double qdOptimizeStepSize( double LM );
+       double qdDikinsCriterion(  long int N, bool initAppr );
 #endif
 
 public:
@@ -551,7 +551,7 @@ public:
     void set_def( long int i=0);
 
 #ifndef IPMGEMPLUGIN
-// This is used only in GEMS-PSI
+// This is used only in GEM-Selektor
     TIArray<IPNCalc> qEp;
     TIArray<IPNCalc> qEd;
 
@@ -627,14 +627,14 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
-    double calcEqustat( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
+    double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
     void MultiInit();
-    void CompG0Load();
+    void DC_LoadThermodynamicData();
     void setErrorMessage( long int num, const char *code, const char * msg);
     void addErrorMessage( const char * msg);
 
-   long int CheckMassBalanceResiduals(double *Y );
-   double Cj_init_calc( double g0, long int j, long int k );
+    long int CheckMassBalanceResiduals(double *Y );
+    double DC_ConvertGj_toUniform_cj( double g0, long int j, long int k );
 
 // connection to UnSpace
     double pb_GX( double *Gxx  );

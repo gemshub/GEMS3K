@@ -125,8 +125,8 @@ long int TNode::GEM_run( bool uPrimalSol )
          }
         else
 	       return CNode->NodeStatusCH;
-   // GEM IPM calculation of equilibrium state in MULTI
-   CalcTime = TProfil::pm->calcMulti( PrecLoops, NumIterFIA, NumIterIPM );
+   // GEM IPM calculation of equilibrium state
+   CalcTime = TProfil::pm->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
     CNode->IterDone = NumIterFIA+NumIterIPM;
@@ -198,7 +198,7 @@ double TNode::GEM_CalcTime()
 // Return values:
 //   Function         Total number of EFD + IPM iterations from the last call to GEM_run()
 //   PrecLoops        Number of performed IPM-2 precision refinement loops
-//   NumIterFIA       Total number of performed EnterFeasibleDomain() (EFD) iterations to obtain a feasible initial approximation for the IPM algorithm.
+//   NumIterFIA       Total number of performed MBR() iterations to obtain a feasible initial approximation for the IPM algorithm.
 //   NumIterIPM       Total number of performed IPM main descent algorithm iterations.
 long int TNode::GEM_Iterations( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
@@ -1348,7 +1348,7 @@ void TNode::MakeNodeStructures( QWidget* par, bool select_all,
     }
     if( !select_all  )
       aSelIC = vfMultiChoice(par, aList,
-          "Please, mark independent components for selection into DataBridge");
+          "Please, mark Independent Components for selection into DataBridge");
 
     aList.Clear();
     for(int ii=0; ii< pmm->L; ii++ )
@@ -1359,7 +1359,7 @@ void TNode::MakeNodeStructures( QWidget* par, bool select_all,
     }
     if( !select_all  )
        aSelDC = vfMultiChoice(par, aList,
-         "Please, mark dependent components for selection into DataBridge");
+         "Please, mark Dependent Components for selection into DataBridge");
 
     aList.Clear();
     for(int ii=0; ii< pmm->FI; ii++ )
@@ -1370,7 +1370,7 @@ void TNode::MakeNodeStructures( QWidget* par, bool select_all,
     }
     if( !select_all  )
        aSelPH = vfMultiChoice(par, aList,
-         "Please, mark phases for selection into DataBridge");
+         "Please, mark Phases for selection into DataBridge");
 
 
 // set default data and realloc arrays
@@ -1869,7 +1869,7 @@ void TNode::GEM_restore_MT(
   p_P = CNode->P;
   p_Vs = CNode->Vs;
   p_Ms = CNode->Ms;
-// Checking if no-simplex IA is Ok
+// Checking if no-LPP IA is Ok
    for( ii=0; ii<CSD->nICb; ii++ )
      p_bIC[ii] = CNode->bIC[ii];
    for( ii=0; ii<CSD->nDCb; ii++ )
@@ -1975,7 +1975,7 @@ void TNode::GEM_from_MT(
      CNode->P = p_P;
      CNode->Vs = p_Vs;
      CNode->Ms = p_Ms;
-   // Checking if no-simplex IA is Ok
+   // Checking if no-LPP IA is Ok
       for( ii=0; ii<CSD->nICb; ii++ )
       {  //  SD 11/02/05 for test
          //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
@@ -1992,7 +1992,7 @@ void TNode::GEM_from_MT(
             CNode->aPH[ii] = p_aPH[ii];
       if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
         CNode->NodeStatusCH = NEED_GEM_AIA;
-      // Switch only if SIA is ordered, leave if simplex is ordered (KD)
+      // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
 }
 
 //(8a) Loads the GEMIPM2K input data for a given mass-transport node into the work instance of DATABR structure.
@@ -2082,7 +2082,7 @@ void TNode::GEM_from_MT(
   CNode->P = p_P;
   CNode->Vs = p_Vs;
   CNode->Ms = p_Ms;
-// Checking if no-simplex IA is Ok
+// Checking if no-LPP IA is Ok
    for( ii=0; ii<CSD->nICb; ii++ )
    {
      CNode->bIC[ii] = p_bIC[ii];

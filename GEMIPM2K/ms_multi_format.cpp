@@ -247,7 +247,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.EPS != pa_.p.EPS )
    { if( _comment )
-      ff << "\n# EPS: Tolerance of the Simplex() LP solver convergence (1e-6 to 1e-14) { 1e-10 }" << endl;
+      ff << "\n# EPS: Tolerance of the SolveSimplexLPP() convergence (1e-6 to 1e-14) { 1e-10 }" << endl;
     ff << left << setw(12) << "<pa_EPS> " <<  right << setw(8) << pa->p.EPS << endl;
    }
    if(!brief_mode || pa->p.DK != pa_.p.DK )
@@ -272,7 +272,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.DP != pa_.p.DP )
    {  if( _comment )
-       ff << "\n# DP: Maximal number of iterations in EnterFeasibleDomain() procedure (20 to 130) { 90 }" << endl;
+       ff << "\n# DP: Maximal number of iterations in MassBalanceRefinement() procedure (20 to 130) { 90 }" << endl;
      ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
    }
    if(!brief_mode || pa->p.IIM != pa_.p.IIM )
@@ -307,12 +307,12 @@ if( _comment )
    }
    if(!brief_mode || pa->p.GAR != pa_.p.GAR )
    { if( _comment )
-      ff << "# GAR: Initial activity coefficient value for major (M) species in a solution phase at Simplex() { 1 }" << endl;
+      ff << "# GAR: Initial activity coefficient value for major (M) species in a solution phase at LPP AIA { 1 }" << endl;
      ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa->p.GAR << endl;
    }
    if(!brief_mode || pa->p.GAH != pa_.p.GAH )
    { if( _comment )
-      ff << "# GAH: Initial activity coefficient value for minor (J) species in a solution phase at Simplex() { 1000 }" << endl;
+      ff << "# GAH: Initial activity coefficient value for minor (J) species in a solution phase at LPP AIA { 1000 }" << endl;
      ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa->p.GAH << endl;
    }
    if(!brief_mode)
@@ -336,51 +336,51 @@ if( _comment )
    }
    if(!brief_mode || pa->p.PC != pa_.p.PC )
    { if( _comment )
-      ff << "\n# PC: Mode of PhaseSelection() operation (1 old, 2 new)  { 2 }" << endl;
+      ff << "\n# PC: Mode of Phase Selection: 1 old (Select-2), 2 new (PSSC)  { 2 }" << endl;
      ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
    }
    if( _comment )
-      ff << "# DFY: Insertion mole amounts used after the simplex() initial approximation and in Selekt2() algorithm" << endl;
+      ff << "# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
    if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
    { if( _comment )
-      ff << "# DFYw: Insertion mole amount for water-solvent at Simplex()->EnterFeasibleDomain() bridge { 1e-5 }" << endl;
+      ff << "# DFYw: Insertion mole amount for water-solvent at Simplex()->MassBalanceRefinement() bridge { 1e-5 }" << endl;
       ff << left << setw(12) << "<pa_DFYw> " <<  right << setw(8) << pa->p.DFYw << endl;
    }
    if(!brief_mode || pa->p.DFYaq != pa_.p.DFYaq )
    { if( _comment )
-      ff << "# DFYaq: Insertion mole amount for aqueous species at Simplex()->EFD() bridge { 1e-5 }" << endl;
+      ff << "# DFYaq: Insertion mole amount for aqueous species at Simplex()->MBR() bridge { 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYaq> " <<  right << setw(8) << pa->p.DFYaq << endl;
    }
    if(!brief_mode || pa->p.DFYid != pa_.p.DFYid )
    { if( _comment )
-      ff << "\n# DFYid: Insertion mole amount for species of ideal solutions at Simplex()->EFD() bridge { 1e-5 }" << endl;
+      ff << "\n# DFYid: Insertion mole amount for species of ideal solutions at Simplex()->MBR() bridge { 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa->p.DFYid << endl;
    }
    if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
    { if( _comment )
-      ff << "# DFYr: Insertion mole amount for a major species in a solution at Simplex()->EFD()bridge { 1e-5 }" << endl;
+      ff << "# DFYr: Insertion mole amount for a major species in a solution at Simplex()->MBR()bridge { 1e-5 }" << endl;
     ff << left << setw(12) << "<pa_DFYr> " <<  right << setw(8) << pa->p.DFYr << endl;
    }
    if(!brief_mode || pa->p.DFYh != pa_.p.DFYh )
    { if( _comment )
-      ff << "# DFYh: Insertion mole amount for a junior species in a solution at Simplex()->EFD() bridge{ 1e-5 }" << endl;
+      ff << "# DFYh: Insertion mole amount for a junior species in a solution at Simplex()->MBR() bridge{ 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYh> " <<  right << setw(8) << pa->p.DFYh << endl;
    }
    if(!brief_mode || pa->p.DFYc != pa_.p.DFYc )
    { if( _comment )
-      ff << "# DFYc:  Insertion mole amount for a single-component phase at Simplex()->EFD() bridge { 1e-5 }" << endl;
+      ff << "# DFYc:  Insertion mole amount for a single-component phase at Simplex()->MBR() bridge { 1e-5 }" << endl;
      ff << left << setw(12) << "<pa_DFYc> " <<  right << setw(8) << pa->p.DFYc << endl;
    }
    if(!brief_mode || pa->p.DFYs != pa_.p.DFYs )
    { if( _comment )
-      ff << "# DFYs: Insertion mole amount for a single-component phase in PhaseSelection() { 1e-6 }" << endl;
+      ff << "# DFYs: Insertion mole amount for a single-component phase in PSSC() { 1e-6 }" << endl;
      ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa->p.DFYs << endl;
    }
    if( _comment )
      ff << "\n# Parameters for high-accuracy IPM algorithm " << endl;
    if(!brief_mode || pa->p.DW != pa_.p.DW )
    {    if( _comment )
-      ff << "# DW: Activate (1) or disable (0) the error condition on DP - maximum allowed number of EFD() iterations { 1 }" << endl;
+      ff << "# DW: Activate (1) or disable (0) the error condition on DP - maximum allowed number of MBR() iterations { 1 }" << endl;
    ff << left << setw(12) << "<pa_DW> " << right << setw(8) << pa->p.DW  << endl;
    }
    if(!brief_mode || pa->p.DT != pa_.p.DT )

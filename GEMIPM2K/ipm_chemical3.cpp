@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: ipm_chemical3.cpp 690 2006-03-29 07:10:23Z gems $
 //
-// Copyright (C) 1992-2009  D.Kulik, T.Wagner, S.Dmitrieva, K.Chudnenko
+// Copyright (C) 1992-2011  D.Kulik, T.Wagner, S.Dmitrieva, K.Chudnenko
 //
 // Implementation of chemistry-specific functions (concentrations,
 // activity coefficients, adsorption models etc.)
@@ -9,11 +9,11 @@
 // (Karpov, Chudnenko, Kulik (1997): American Journal of Science
 //  v.297 p. 767-806); Kulik (2000), Geoch.Cosmoch.Acta 64,3161-3179
 //
-// This file is part of a GEM-Selektor (GEMS) v.2.x.x program
+// This file is part of a GEM-Selektor (GEMS) v.3.x program
 // environment for thermodynamic modeling in geochemistry and of the
-// standalone GEMIPM2K code (define IPMGEMPLUGIN).
+// standalone GEMS3K code (define IPMGEMPLUGIN).
 //
-// This file may be distributed under the terms of the GEMS-PSI
+// This file may be distributed under the terms of the GEM-Selektor
 // QA Licence (GEMSPSI.QAL)
 //
 // See http://gems.web.psi.ch/ for more information
@@ -35,7 +35,7 @@
 	void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb )
 	{
 
-	ErrorIf( k < 0 || k >= pmp->FIs , "GammaCalc", "Invalid link: k=0||>FIs" );
+        ErrorIf( k < 0 || k >= pmp->FIs , "CalculateActivityCoefficients():", "Invalid link: k=0||>FIs" );
     aObj[ o_nsmod].SetPtr( pmp->sMod[k] );
     aObj[ o_nncp].SetPtr( pmp->LsMod+k*3 );
     aObj[ o_nncd].SetPtr( pmp->LsMdc+k );
@@ -111,7 +111,7 @@ double TMulti::SmoothingFactor( )
 //                            AG <= -0.0001 and DGC <= -0.0001: new f(1/CD)
 // mode: 0 - taking single log(CD) value for calculation of smoothing factor SF;
 //       1, 2, ...  taking log(CD) average from the moving window of length mode
-// (up to 5 consecutive values)
+//       (up to 5 consecutive values)
 //
 void TMulti::SetSmoothingFactor( long int mode )
 {
@@ -125,7 +125,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     iim = (double)TProfil::pm->pa.p.IIM;
 
     if( dg > -0.0001 && ag >= 0.0001 ) // Smoothing used in the IPM-2 algorithm
-    {								// with some improvements
+    {					// with some improvements
         if(ag>1) ag=1;
         if(ag<0.1) ag=0.1;
         if(dg>0.15) dg=0.15;
@@ -152,19 +152,9 @@ void TMulti::SetSmoothingFactor( long int mode )
         if( al > 1. )
       	    al = 1.;
         TF = al;
-    // Obsolete smoothing for solid solutions: -1.0 < pa.p.DGC < 0
-    //   Level = (long int)pmp->FitVar[2];
-    //   itq = ir/60;
-    //   dg = fabs( dg );
-    //   itqF = ir/(60/(itq+1))-itq;  // 0,1,2,4,5,6...
-    //   if( itqF < Level )
-    //       itqF = Level;
-    //   TF = ag * pow( dg, itqF );
-    //   Level = itqF;
-    //   pmp->FitVar[2] = (double)Level;
     }
     else if( dg <= -0.0001 && ag <= -0.0001 )
-    {
+    {  // New sigmoid smoothing function of DK - CD
     	double dk, cd;   long int i;
     	dg = fabs( dg );
     	ag = fabs( ag );
@@ -173,7 +163,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     	switch( mode )
     	{
     	  default:
-    	  case 0: // EnterFeasibleDomain() after simplex
+          case 0: // MassBalanceRefinement() after SolveSimplexLPP()
     	  	     cd = log( pmp->PCI );
     	   	     break;
     	  case 1:
@@ -195,25 +185,20 @@ void TMulti::SetSmoothingFactor( long int mode )
     }
 //    if( pmp->IT )
       pmp->FitVar[3] = TF;
-//    else    // Workaround for SIA if smoothing is used
-//      pmp->FitVar[3] = 1.;
-//    pmp->pRR1 = Level;
-//    return TF;
 }
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//   New function for converting internal lnGam[j] value into an external (phase-scale-specific)
+//   Function for converting internal lnGam[j] value into an external (phase-scale-specific)
 //      Gamma[j] if DirFlag = 0 or external into internal value if DirFlag = 1
 //  Returns the respectively corrected external gamma activity coefficient or internal lnGam
 //  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
-//    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components???????????)
+//    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components?)
 //
 double
 TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
-//    double NonLogTermDS = 0., NonLogTermD = 0., DsurT = 0.,
 //    SPP_SETTING *pa = &TProfil::pm->pa;
 
     switch( pmp->PHC[k] )
@@ -241,13 +226,10 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
               }
               NonLogTerm = 1. - pmp->XFA[k]/pmp->XF[k];  // Also for sorption phases
               NonLogTermS = 2. - pmp->XFA[k]/pmp->XF[k] - pmp->XF[k]/pmp->XFA[k];
-//    	      DsurT = MMC * pmp->Aalp[k] * pa->p.DNS*1.66054e-6;
-//    	      NonLogTermD = - DsurT/( 1.0+DsurT );  // seems obsolete 05.12.2009
-//    	      NonLogTermDS = DsurT - DsurT/(1+DsurT);
            }
            break;
        default:
-          break; // Phase class code error!
+          break; // Phase class code error should be generated here!
     }
 
         if( DirFlag == 0 )
@@ -260,7 +242,6 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
             switch( pmp->DCC[j] )
             { // Aqueous electrolyte
               case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
-// NonLogTerm =0.;
                 lnGamS += NonLogTerm;    // Correction by asymmetry term
                 break;
                 // calculate molar mass of solvent
@@ -271,13 +252,12 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
             case DC_GAS_H2: case DC_GAS_N2:
                 break;
             case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR:
-            break;
+                break;
                 // non-electrolyte condensed mixtures
             case DC_SCP_CONDEN: case DC_SUR_MINAL:
                 break;
             case DC_SUR_CARRIER: case DC_PEL_CARRIER:
                 lnGamS += NonLogTermS;
- //               lnGamS += NonLogTermS + NonLogTermDS;
                 break;
                 // Sorption phases
             case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
@@ -285,7 +265,6 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
             case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
             case DC_IEWC_B:
                 lnGamS += NonLogTerm;
- //               lnGamS += NonLogTerm + NonLogTermD;
                 break;
             default:
                 break;
@@ -297,13 +276,12 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
                 if( !pmp->X[j] )
                         return 0.;
                 double Gamma = pmp->Gamma[j];
-                double lnGam = 0.0;  // Cleanup by DK on 5.12.2009
+                double lnGam = 0.0;  // Cleanup by DK 5.12.2009
                 if( Gamma != 1.0 && Gamma > pmp->lowPosNum )
                     lnGam = log( Gamma );
                 switch( pmp->DCC[j] )
         { // Aqueous electrolyte
                    case DC_AQ_PROTON: case DC_AQ_ELECTRON:  case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
-// NonLogTerm =0.;
                         lnGam -= NonLogTerm;  // Correction by asymmetry term
                         break;
                    case DC_AQ_SOLVCOM:	    case DC_AQ_SOLVENT:
@@ -317,7 +295,6 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
                             break;
                case DC_SUR_CARRIER: case DC_PEL_CARRIER:
                         lnGam -= NonLogTermS;
-//                      lnGam -= NonLogTermS + NonLogTermDS;   // seems obsolete 05.12.2009
                             break;
                                 // Sorption phases
                case DC_SSC_A0: case DC_SSC_A1: case DC_SSC_A2: case DC_SSC_A3: case DC_SSC_A4:
@@ -325,7 +302,6 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
                    case DC_SUR_GROUP: case DC_SUR_COMPLEX: case DC_SUR_IPAIR:  case DC_IESC_A:
                    case DC_IEWC_B:
                         lnGam -= NonLogTerm;
-//                      lnGam -= NonLogTerm + NonLogTermD;  // seems obsolete 05.12.2009
                         break;
                     default:
                         break;
@@ -337,20 +313,18 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
 //--------------------------------------------------------------------------------
 static double ICold=0.;
 // Main call point for calculation of DC activity coefficients (lnGam vector)
+//    formerly GammaCalc()
 // Controls various built-in models, as well as generic Phase script calculation
-//
 // LinkMode is a parameter indicating the status of Gamma calculations:
 // LINK_TP_MODE - calculation of equations depending on TP only;
 // LINK_UX_MODE - calculation of equations depending on current
 //      IPM approximation of the equilibrium state;
-// LINK_FIA_MODE - calculation of Gammas on the initial approximation (FIA).
-// 		Added 13.03.2008 by DK: returns int value showing (if not 0)
-//    	that some extreme values were obtained for some SACTs, PSIs,
-//    	or activity coefficients (for detecting bad PIA case)
-// LINK_PHP_MODE - calculation of integral phase properties after GEMIPM has converged
+// LINK_PP_MODE - calculation of integral phase properties after GEMIPM has converged
 //		needs to be implemented
+// Returns: status code (0 if o.k., non-zero values if there were problems
+//     with surface complexation models)
 long int
-TMulti::GammaCalc( long int LinkMode  )
+TMulti::CalculateActivityCoefficients( long int LinkMode  )
 {
     long int k, j, jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0, ja;
     char *sMod;
@@ -358,67 +332,10 @@ TMulti::GammaCalc( long int LinkMode  )
     double LnGam, pmpXFk;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
-// high-precision IPM-2 debugging
-//   if( pmp->W1 > 1 )
-//     goto END_LOOP;
-
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
     {
-    case LINK_FIA_MODE: // Initial approximation mode
-        if( pmp->LO )
-        {
-            if( pmp->XF[0] > min( pmp->lowPosNum, pmp->DcMinM ) )
-            {                           // warm start case (after simplex?)
-               pmp->GWAT = H2O_mol_to_kg;
-               pmp->XF[0] = pmp->GWAT;
-               for( j=0; j<pmp->L; j++ )
-                 if( pmp->X[j] < min( pmp->lowPosNum, pmp->DcMinM ) )
-                    pmp->X[j] = pmp->DFYaqM; // pa->p.DFYaq;
-               ConCalc( pmp->X, pmp->XF, pmp->XFA );
-               // pmp->IC = max( pmp->MOL, pmp->IC );
-            }
-            pmp->IC = 0.0;  // Important for the simplex FIA reproducibility
-            if( pmp->E && pmp->FIat > 0 )
-            {
-               for( k=0; k<pmp->FIs; k++ )
-               {
-                 long int ist;
-                 if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
-                   for( ist=0; ist<pmp->FIat; ist++ ) // loop over surface types
-                   {
-                     pmp->XFTS[k][ist] = 0.0;  //SD 06/12/2009
-                     pmp->XetaA[k][ist] = 0.0;
-                     pmp->XetaB[k][ist] = 0.0;
-                     pmp->XetaD[k][ist] = 0.0; // SD 06/12/2009
-                     pmp->XpsiA[k][ist] = 0.0;
-                     pmp->XpsiB[k][ist] = 0.0;
-                     pmp->XpsiD[k][ist] = 0.0;
-                     pmp->XcapD[k][ist] = 0.0;
-                   }  // ist
-               }  // k
-            } // FIat
-        }   // LO
-        // Cleaning vectors of  activity coefficients
-        for( j=0; j<pmp->L; j++ )
-        {
-            if( pmp->lnGmf[j] )
-                pmp->lnGam[j] = pmp->lnGmf[j]; // setting up fixed act.coeff. for simplex IA
-            else pmp->lnGam[j] = 0.;   // + pmp->lnGmm[j];
-            pmp->Gamma[j] = 1.;
-            // Cleaning vectors lnSAC SD 06/12/2009
-            ja = (short)(j-(pmp->Ls-pmp->Lads));
-            if( pmp->lnSAC && ja < pmp->Lads && ja >= 0 )
-            {
-                pmp->lnSAC[ja][0] = 0.;
-                pmp->lnSAC[ja][1] = 0.;
-                pmp->lnSAC[ja][2] = 0.;
-                pmp->lnSAC[ja][3] = pmp->DUL[j]; // Copy of DUL for SACT refining
-            }
-        }
-        break;      // added as bugfix 04.03.2008  DK
-
-    case LINK_TP_MODE:  // Built-in functions depending on T,P only
+      case LINK_TP_MODE:  // Built-in functions depending on T,P only
          pmp->FitVar[3] = 1.0;  // resetting the IPM smoothing factor
 
          for( k=0; k<pmp->FIs; k++ )
@@ -464,13 +381,13 @@ TMulti::GammaCalc( long int LinkMode  )
             	    SolModCreate( jb, je, jpb, jdb, k, ipb, sMod[SPHAS_TYP], sMod[MIX_TYP] ); // new solution models (TW, DK 2007)
             	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
-				default:
-					break;
+              default:
+                    break;
             }
         } // k
         break;
 
-    case LINK_PHP_MODE: // Mode of calculation of integral solution phase properties
+      case LINK_PP_MODE: // Mode of calculation of integral solution phase properties
     	for( k=0; k<pmp->FIs; k++ )
         { // loop on solution phases
             jb = je;
@@ -492,18 +409,17 @@ TMulti::GammaCalc( long int LinkMode  )
            	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
            	       SolModDarkenProp( jb, k, sMod[SPHAS_TYP] );
            	       break;
-			  default:
-					break;
+              default:
+                       break;
             }
        } // k
        break;
 
     case LINK_UX_MODE:
     	// Getting actual smoothing parameter
-    	// SetSmoothingFactor();   // Changed 18.06.2008 by DK
     	SetSmoothingFactor( SmMode );
     	// calculating DC concentrations after this IPM iteration
-        ConCalc( pmp->X, pmp->XF, pmp->XFA );
+        CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA );
         // cleaning activity coefficients
         for( j=0; j<pmp->L; j++ )
         {
@@ -529,7 +445,7 @@ TMulti::GammaCalc( long int LinkMode  )
          } // pmp->E
         break;
     default:
-        Error("GammaCalc","Invalid Link Mode 1");
+        Error("CalculateActivityCoefficients()","Invalid LinkMode for a built-in solution model");
     }
 
     jpe=0; jde=0; ipe=0; je=0;
@@ -548,10 +464,10 @@ TMulti::GammaCalc( long int LinkMode  )
         if( pmp->XF[k] < pmp->DSM ) // Bugfix by KD 09.08.2005 (bug report Th.Matschei)
             pmp->XF[k] = pmpXFk;
         // Indexes for extracting data from IPx, PMc and DMc arrays
-        ipb = ipe;                  // added 07.12.2006 by KD
+        ipb = ipe;
         ipe += pmp->LsMod[k*3]*pmp->LsMod[k*3+1];
         jpb = jpe;
-        jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];  // Changed 07.12.2006  by KD
+        jpe += pmp->LsMod[k*3]*pmp->LsMod[k*3+2];
         jdb = jde;
         jde += pmp->LsMdc[k]*pmp->L1[k];
 
@@ -560,7 +476,6 @@ TMulti::GammaCalc( long int LinkMode  )
         switch( pmp->PHC[k] )
         {  // calculating activity coefficients using built-in functions
           case PH_AQUEL:   // DH III variant consistent with HKF
-//              if( pmpXFk > pmp->XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin )
              if( pmpXFk > pmp->DSM && pmp->X[pmp->LO] > pmp->XwMinM && pmp->IC > pa->p.ICmin )
              {
                 switch( sMod[SPHAS_TYP] )
@@ -628,24 +543,18 @@ TMulti::GammaCalc( long int LinkMode  )
              break;
         case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
         case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
-//            if( pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
-//                && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin ))
         	if( pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
                 && (pmp->XFA[0] > pmp->XwMinM && pmp->XF[0] > pmp->DSM ))
-            {
-					// ConCalc( pmp->X, pmp->XF, pmp->XFA  );  Debugging
+                {
                     if( pmp->E )
                     {
-                    	// IS_EtaCalc();
                        statusGC = GouyChapman( jb, je, k );
                     // PoissonBoltzmann( q, jb, je, k )
                     }
                     // Calculating surface activity coefficient terms
                     statusSACT = SurfaceActivityCoeff(  jb, je, jpb, jdb, k );
-            }
-            // if( sMod[SGM_MODE] == SM_IDEAL )
-            // goto END_LOOP;
-            break;
+                }
+                break;
          default:
             goto END_LOOP;
        } // end switch
@@ -682,15 +591,11 @@ TMulti::GammaCalc( long int LinkMode  )
             }
         	break;
 
-        case LINK_FIA_MODE: // cold start approximation
-            goto END_LOOP;
-        	break;
-
-        case LINK_PHP_MODE: // Mode of calculation of integral solution phase properties
+        case LINK_PP_MODE: // Mode of calculation of integral solution phase properties
         		switch( pmp->PHC[k] )
                 {
                   case PH_AQUEL:
-    			  case PH_LIQUID:
+                  case PH_LIQUID:
                   case PH_SINCOND:
                   case PH_SINDIS:
                   case PH_HCARBL:
@@ -703,16 +608,15 @@ TMulti::GammaCalc( long int LinkMode  )
                 	  // SolModStandProp( jb, k, sMod[SPHAS_TYP] );
                 	  // SolModDarkenProp( jb, k, sMod[SPHAS_TYP] );
                	       break;
-    			  default:
-    					break;
+                  default:
+                       break;
                 }
-             break;
+                break;
 
         case LINK_UX_MODE:  // the model is dependent on current concentrations on IPM iteration
             switch( pmp->PHC[k] )
             {  //
               case PH_AQUEL:
-//                  if(!(pmpXFk > pa->p.XwMin && pmp->X[pmp->LO] > pmp->lowPosNum*1e3 && pmp->IC > pa->p.ICmin ))
             	  if(!(pmpXFk > pmp->DSM && pmp->X[pmp->LO] > pmp->XwMinM && pmp->IC > pa->p.ICmin ))
                 	 goto END_LOOP;
                  break;
@@ -732,8 +636,6 @@ TMulti::GammaCalc( long int LinkMode  )
                  break;
             case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
             case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
-//                if( !(pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
-//                    && (pmp->XFA[0] > pmp->lowPosNum && pmp->XF[0] > pa->p.XwMin )))
                   if( !(pmp->PHC[0] == PH_AQUEL && pmpXFk > pmp->DSM
                       && (pmp->XFA[0] > pmp->XwMinM && pmp->XF[0] > pmp->DSM )))
                 	goto END_LOOP;
@@ -762,7 +664,7 @@ TMulti::GammaCalc( long int LinkMode  )
                 ICold = pmp->IC;
             break;
         default:
-            Error("GammaCalc","Invalid LinkMode 2");
+            Error("CalculateActivityCoefficients()","Invalid LinkMode for a scripted solution model");
         } // end switch
 #endif
 
@@ -771,27 +673,16 @@ END_LOOP:
         {
         	for( j=jb; j<je; j++ )
         	{
-//        		if( pmp->XF[k] < pmp->lowPosNum )
         	   if( pmp->XF[k] < pmp->DSM )   // workaround 10.03.2008 DK
         			pmp->Wx[j] = 0.0;               //
         	   LnGam = pmp->lnGmo[j];
-               pmp->lnGam[j] = LnGam;
-               if( /* fabs( LnGam ) > 1e-9 && */ fabs( LnGam ) < 84. )
-            	   // pmp->Gamma[j] = exp( LnGam );
-            	  pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-               else pmp->Gamma[j] = 1.0;
-//               pmp->F0[j] = Ej_init_calc( 0.0, j, k );          // Temporary for debugging 07.12.2009
-//               pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
+                   pmp->lnGam[j] = LnGam;
+                   if(  fabs( LnGam ) < 84. )
+                       pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
+                   else pmp->Gamma[j] = 1.0;
         	}
         }
-        else if(LinkMode == LINK_FIA_MODE )  // Bugfix for reproducibility 23.07.09 DK
-        {
-        	for( j=jb; j<je; j++ )
-        	{
-        		pmp->G[j] = pmp->G0[j]+ pmp->lnGam[j];
-            }
-        }
-        else
+        else if(LinkMode == LINK_UX_MODE )  // Bugfix! DK 06.04.11
         { // Real mode for activity coefficients
            double lnGamG;
            for( j=jb; j<je; j++ )
@@ -807,7 +698,7 @@ END_LOOP:
           	    pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
              else pmp->Gamma[j] = 1.0;
 
-             pmp->F0[j] = Ej_init_calc( 0.0, j, k );
+             pmp->F0[j] = DC_PrimalChemicalPotentialUpdate( j, k );
              pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
            }
         }
@@ -837,7 +728,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
     NPar = pmp->LsMod[k*3];      // Number of interaction parameters
     NPcoef = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
     MaxOrd =  pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
-    NP_DC = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
+    NP_DC = pmp->LsMdc[k];       // Number of non-ideality coeffs per one DC in multicomponent phase
 
     if( phSolMod[k])
     	if(	phSolMod[k]->testSizes( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode ) )
@@ -1186,8 +1077,8 @@ TMulti::SolModExcessProp( long int k, char ModCode )
 	// insert cases for old solution and activity models
     switch( ModCode )
     {
-		// solid and liquid solutions
-		case SM_VANLAAR:
+        // solid and liquid solutions
+        case SM_VANLAAR:
         case SM_REGULAR:
         case SM_GUGGENM:
         case SM_NRTLLIQ:

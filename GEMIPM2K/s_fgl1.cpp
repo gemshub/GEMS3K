@@ -175,7 +175,7 @@ long int TSIT::MixMod()
     sqI = sqrt(I);
     lgI = log10(I);
 
-    // check already performed in GammaCalc()
+    // this check was already performed in CalculateActivityCoefficients()
     if( I < 1e-6 )
     {
     	for( j=0; j<NComp; j++)

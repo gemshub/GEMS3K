@@ -183,7 +183,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pmp->IT << " j= " << j << " oDUL=" << oDUL 
   } // k
 }
 
-// clearing pmp->DUL constraints!
+/* // clearing pmp->DUL constraints!
 void TMulti::XmaxSAT_IPM2_reset()
 {
     long int j, ja, k, jb, je=0;
@@ -206,12 +206,12 @@ void TMulti::XmaxSAT_IPM2_reset()
     }  // j
   } // k
 }
-
+*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculating value of dual chemical potential
 //     performance optimized version  (February 2007)
 //
-double TMulti::DualChemPot( double U[], double AL[], long int N, long int j )
+double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, long int j )
 {
     long int i, ii;
     double Nu = 0.0;
@@ -240,7 +240,7 @@ void TMulti::Set_DC_limits( long int Mode )
     if( !pmp->PLIM )
         return;  // no metastability limits to be set
 // ???????????????????????????????????????
-    ConCalc( pmp->X, pmp->XF, pmp->XFA );
+    CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA );
 
     for(k=0; k<pmp->FI; k++)
         XFS+=pmp->XF[k];  // calculate sum of moles in all phases
@@ -381,7 +381,7 @@ NEXT_PHASE:
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculating total amounts of phases
 //
-void TMulti::TotalPhases( double X[], double XF[], double XFA[] )
+void TMulti::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
 {
     long int jj, j, i, k;
     double XFw, XFs, x;
@@ -410,11 +410,11 @@ void TMulti::TotalPhases( double X[], double XF[], double XFA[] )
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Corrections to primal chemical potentials F0[j]
 //  of j-th species in k-th phase among IPM main iterations
-//  Returns double - value of corrected chem. potential.
+//  Returns double value of corrected chem. potential.
 //  If error, returns +7777777 J/mole.
 //  Last modif. 05 Jan 2000 by DK to include BSM EDL model.
 //
-double TMulti::Ej_init_calc( double, long int j, long int k)
+double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
 {
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
@@ -562,10 +562,7 @@ case DC_AQ_SURCOMP:
             break;
        	FactSur = Mk * (pmp->Aalp[k]) * pa->p.DNS*1.66054;
         F0 -= FactSur / ( 1. + FactSur );
-			// F0 -= (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 /
-			// ( 1.0 + (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054 );
         F0 += FactSur;
-			// F0 += (pmp->Aalp[k])*Mk*pa->p.DNS*1.66054;
         break;
     }
     F0 += pmp->lnGam[j];
@@ -573,15 +570,14 @@ case DC_AQ_SURCOMP:
     if( k >= pmp->FIs )
         return F0;
     // Smoothing procedure for highly non-ideal systems
-    if( pmp->sMod[k][SGM_MODE] != SM_IDEAL )
+    if( pmp->sMod[k][SGM_MODE] != SM_IDEAL )  // check this condition for sublattice SS models!
             // || pmp->sMod[k][SCM_TYPE] != SC_NNE )  // changed, 14.07.2009 (TW)
     {
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
         if( pmp->X[j] > min( pmp->lowPosNum, pmp->DcMinM ) && fabs( dF0 ) >= SmoSensT )
-        	// F0 = Fold + dF0 * pmp->FitVar[3];
        	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
-    }  // FitVar[3] = TinkleSuppressFactor(); see GammaCalc()
+    }
     return F0;
 }
 
@@ -592,7 +588,7 @@ case DC_AQ_SURCOMP:
 // activity coefficient terms.
 // On error returns F = +7777777.
 //
-double TMulti::PrimalDC_ChemPot(
+double TMulti::DC_PrimaChemicalPotential(
     double G,      // gT0+gEx
     double logY,   // ln x
     double logYF,  // ln Xa
@@ -682,7 +678,7 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
             if( Y[j] < min( pmp->DcMinM, pmp->lowPosNum ))
                 continue;  // exception by minimum DC quantity
                            // calculate chemical potential of j-th DC
-            v = PrimalDC_ChemPot( pmp->G[j], log(Y[j]), pmp->logYFk,
+            v = DC_PrimaChemicalPotential( pmp->G[j], log(Y[j]), pmp->logYFk,
                               pmp->aqsTail, pmp->logXw, pmp->DCCW[j] );
             F[j] = v;
        }   // j
@@ -694,11 +690,11 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of a species increment to total Gibbs energy G(X)
+// Calculation of a species contribution to the total Gibbs energy G(X)
 //  of the system (return value).
 //  On error returns +7777777.
 //
-double TMulti::FreeEnergyIncr(
+double TMulti::DC_GibbsEnergyContribution(
     double G,      // gT0+gEx
     double x,      // x - mole amount of species
     double logXF,  // ln Xa - mole amount of phase
@@ -754,7 +750,7 @@ double TMulti::GX( double LM  )
             	pmp->X[i]=0.;
         }
     // calculate new total quantities of phases
-    TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+    TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
 
     // calculating G(X)
     FX=0.;
@@ -789,7 +785,7 @@ double TMulti::GX( double LM  )
             if( x < pmp->DcMinM )
                 continue;
             // calculating increment of G(x)
-            // Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+            // Gi = DC_GibbsEnergyContribution( pmp->G[j], x, pmp->logYFk, pmp->logXw,
             //                     pmp->DCCW[j] );
             // call replaced here by inline variant for higher performance
             switch( pmp->DCCW[j] )
@@ -838,7 +834,7 @@ qd_real TMulti::qdGX( double LM  )
             	pmp->X[i]=0.;
         }
     // calculate new total quantities of phases
-    TotalPhases( pmp->X, pmp->XF, pmp->XFA );
+    TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
 
     // calculating G(X)
     FX=0.;
@@ -877,7 +873,7 @@ qd_real TMulti::qdGX( double LM  )
             if( x < pmp->DcMinM )
                 continue;
             // calculating increment of G(x)
-            // Gi = FreeEnergyIncr( pmp->G[j], x, pmp->logYFk, pmp->logXw,
+            // Gi = DC_GibbsEnergyContribution( pmp->G[j], x, pmp->logYFk, pmp->logXw,
             //                     pmp->DCCW[j] );
             // call replaced here by inline variant for higher performance
             switch( pmp->DCCW[j] )
@@ -948,7 +944,7 @@ double TMulti::pb_GX( double *Gxx  )
             if( x < pa->p.DcMin )
                 continue;
             // calculating DC increment to G(x)
-            Gi = FreeEnergyIncr( Gxx[j], x, pmp->logYFk, pmp->logXw,
+            Gi = DC_GibbsEnergyContribution( Gxx[j], x, pmp->logYFk, pmp->logXw,
                                  pmp->DCCW[j] );
             FX += Gi;
         }   // j
@@ -959,11 +955,11 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of cj (corrected G0) value for DC from its molar g(T,P)
+// Conversion of g(T,P) value for DCs into the uniform cj scale
 // k - index of phase, j - index DC in phase
 // if error code, returns 777777777.
 //
-double TMulti:: Cj_init_calc( double g0, long int j, long int k )
+double TMulti:: DC_ConvertGj_toUniform_cj( double g0, long int j, long int k )
 {
     double G, YOF=0;
 
@@ -1175,7 +1171,7 @@ double TMulti::KarpovCriterionDC(
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // calculation of Karpov stability criteria for all phases
 //
-void TMulti::f_alpha()
+void TMulti::KarpovCriterionPH()
 {
     bool KinConstr;
     long int k, j, ii;
@@ -1222,7 +1218,7 @@ void TMulti::f_alpha()
             KinConstr = false;
             Wx = 1.0;
             Yj = pmp->Y[j];
-            Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+            Nu = DC_DualChemicalPotential( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
             if( // pmp->DUL[j] < pa->p.DKIN  ||    // DKIN (1e-6) is used here as tolerance
                  ( pmp->DUL[j] < 1e6 && Yj >= ( pmp->DUL[j] - pa->p.DKIN ) )
@@ -1240,7 +1236,7 @@ void TMulti::f_alpha()
             for( ; j<ii; j++ )
             {
                 KinConstr = false;
-                Nu = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+                Nu = DC_DualChemicalPotential( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
                 dNuG = Nu - pmp->G[j]; // this is -s_j (6pot paper 1)
                 Wx = 0.0;
                 Yj = pmp->Y[j];
@@ -1314,7 +1310,6 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
-//  iRet =  Mol_u( pmp->Y, pmp->X, pmp->XF, pmp->XFA );  // to be tested
     jb=0;
     for(k=0;k<pmp->FI;k++)
     {
@@ -1416,16 +1411,16 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
 }
 
 //====================================================================================
-// New simplified PhaseSelection() algorithm   DK 01.05.2010
-// Only looks for phases to be inserted, also checks if some solution phases
-// are unstable. Removal of unstable phases is done afterwards in
+// New simplified PSSC() algorithm   DK 01.05.2010
+// PhaseSelection() part only looks for phases to be inserted, also checks if some
+// solution phases are unstable. Removal of unstable phases is done afterwards in
 // CleanupSpeciation() function.
 // As phase stability criterion, uses (log) phase stability (saturation) index
 // computed from DualTh activities of components and activity coefficients
 // returns 1L if Ok; 0 if one more IPM loop should be done;
 //        -1L if 3 loops did not fix the problem
 //
-long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupStatus ) //  rLoop )
+long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, long int CleanupStatus )
 {
     double logSI, PhaseAmount = 0., AmThExp, AmountThreshold = 0.;
     double Yj, YjDiff, YjCleaned=0., MjuPrimal, MjuDual, MjuDiff;
@@ -1495,7 +1490,7 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
            if( PhaseAmount < pmp->DSM ) // pmp->DFYsM )
            {  // phase appears to be lost - insertion of all components of the phase
                if( L1k > 1 )
-                  RaiseZeroedOffDCs( jb, jb+L1k, /* sfactor, */ k );
+                  DC_RaiseZeroedOff( jb, jb+L1k, k );
                else
                   pmp->Y[jb] = pmp->DFYsM; // Spec. value for pure phase insertion
                DCinserted += L1k;
@@ -1574,12 +1569,12 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
        } //  j
        if( KinConstrPh == true ) // || pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
           goto NextPhaseC;  // Temporary workaround
-
+       PhaseAmount = pmp->XF[k];                           // bugfix 04.04.2011 DK
        logSI = pmp->Falp[k];  // phase stability criterion
        if( (logSI >= pa->p.DF || logSI <= -pa->p.DFM )
            && !(( pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL) && PhaseAmount < pmp->DSM ))
            goto NextPhaseC;  // Already done in previous part
-       PhaseAmount = pmp->XF[k];
+//       PhaseAmount = pmp->XF[k];                         // bugfix 04.04.2011 DK
        if( logSI > -pa->p.DFM && PhaseAmount >= pmp->DSM )
        { // Cleaning up a phase which is (over)stable and present in mass balance
           bool Degenerated = false;
@@ -1666,9 +1661,9 @@ long int TMulti::PhaseSelection( long int &kfr, long int &kur, long int CleanupS
 }
 
 #ifndef IPMGEMPLUGIN
-    STEP_POINT("Select3()");
+    STEP_POINT("PSSC()");
 #ifndef Use_mt_mode
-        pVisor->Update(false);  // "PhaseSelection()"
+        pVisor->Update(false);  // "PhaseSelectionSpeciationCleanup()"
 #endif
 #endif
     // Analysis of phase selection and cleanup status
@@ -1810,7 +1805,7 @@ long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStat
 int rLoop = CleanupStatus;
 rLoop = -1;
 //    sfactor = calcSfactor();
-    f_alpha( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
+    KarpovCriterionPH( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
     F0 = pmp->Falp;
 
     (pmp->K2)++;
@@ -1850,7 +1845,7 @@ kur = ku;
             for( jb=0, k=0; k < ku; k++ )
                  jb += pmp->L1[k];
 
-            ZeroDCsOff( jb, jb+pmp->L1[ku], ku ); // Zeroing the phase off
+            DC_ZeroOff( jb, jb+pmp->L1[ku], ku ); // Zeroing the phase off
             pmp->FI1--;
             // find a new phase to exclude, if any exists
             F2= -pa->p.DFM;
@@ -1878,7 +1873,7 @@ kur = ku;
             for( jb=0, k=0; k < kf; k++ )
                  jb += pmp->L1[k];
 
-            RaiseZeroedOffDCs( jb, jb+pmp->L1[kf], /* sfactor, */ kf );
+            DC_RaiseZeroedOff( jb, jb+pmp->L1[kf], kf );
 
             pmp->FI1++;  // check phase rule
 
@@ -1939,7 +1934,7 @@ S6: // copy of X vector has been changed by Selekt2() algorithm - store
     return 0L;  // Another loop is needed
 }
 
-// New function to improve on raising zero values in PhaseSelect() and after Simplex() 30.08.2009 DK
+// New function to improve on raising zero values in PhaseSelect() and after SolveSimplexLPP()
 double TMulti::RaiseDC_Value( const long int j )
 {
         double RaiseZeroVal = pmp->DFYsM;

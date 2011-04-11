@@ -90,7 +90,7 @@ double TMulti::bfc_mass( void )
 //
 //  Do we need this all in GEMIPM ?
 //
-void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
+void TMulti::PH_CalculateConcentrations( double X[], double XF[], double XFA[],
               double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
     long int j, ii, i;
@@ -105,7 +105,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
 
     for( j=jb; j<je; j++ )
     { // loop over DC - with important bugfixes from 02.04.2003
-        Muj = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+        Muj = DC_DualChemicalPotential( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
         pmp->Fx[j] = Muj * pmp->RT;     // el-chem potential
 
 //        if( X[j] <= pmp->lowPosNum )
@@ -272,7 +272,7 @@ void TMulti::ConCalcDC( double X[], double XF[], double XFA[],
 // This function has to be rewritten using new set of built-in
 // chemical functions.
 //
-void TMulti::ConCalc( double X[], double XF[], double XFA[])
+void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
@@ -309,7 +309,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 if( pmp->LO )
                     pmp->Y_m[j] = 0.0;
                 pmp->Y_w[j] = 0.0;
-                pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+                pmp->Fx[j] = DC_DualChemicalPotential( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
                 pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] ); // -pmp->GEX[j]
                 pmp->Fx[j] *= pmp->RT;     // el-chem potential
                 goto NEXT_PHASE;
@@ -320,7 +320,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 pmp->Y_m[j] = X[j] * 1000./18.01528/XFA[0]; // molality
             pmp->Y_w[j] = // mass % in the system
                 1e2 * X[j] * pmp->MM[j] / pmp->MBX;
-            pmp->Fx[j] = DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
+            pmp->Fx[j] = DC_DualChemicalPotential( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
             pmp->Y_la[j] = ln_to_lg * ( pmp->Fx[j] - pmp->G0[j] ); // - pmp->GEX[j]
             pmp->Fx[j] *= pmp->RT;     // el-chem potential
             pmp->FWGT[k] += X[j] * pmp->MM[j];
@@ -351,7 +351,7 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
                 if( pmp->LO )
                     pmp->Y_m[jj] = 0.0;
                 pmp->Y_w[jj] = 0.0;
-                pmp->Fx[jj] = DualChemPot( pmp->U, pmp->A+jj*pmp->N, pmp->NR, jj );
+                pmp->Fx[jj] = DC_DualChemicalPotential( pmp->U, pmp->A+jj*pmp->N, pmp->NR, jj );
                 pmp->Y_la[jj] = ln_to_lg * ( pmp->Fx[jj] - pmp->G0[jj] );
                 if(pmp->PHC[k] == PH_AQUEL || pmp->PHC[k] == PH_SORPTION )
                    pmp->Y_la[jj] += 1.74438;
@@ -434,8 +434,8 @@ void TMulti::ConCalc( double X[], double XF[], double XFA[])
         default:
              return; // Phase class code error!
         }
-        // calculation of species concentrations in a phase
-        ConCalcDC( X, XF, XFA, Factor, MMC, Dsur, j, i, k );
+        // calculation of species concentrations in k-th phase
+        PH_CalculateConcentrations( X, XF, XFA, Factor, MMC, Dsur, j, i, k );
 
 NEXT_PHASE:
         pmp->VXc += pmp->FVOL[k];
@@ -1394,173 +1394,4 @@ void TMulti::GasParcP()
 #endif
 }
 
-/* Obsolete
-//----------------------------------------------------------------------------
-// KC: dual-thermo calculation of DC amounts X(j) from A matrix and u vector
-//  using method and formulae from [Karpov et al., 2001] with extensions
-//  !!!!!  Attention !!!! XU[j] calculation for some classes of DCs may need improvement!
-//    Now for DCs in multicomponent phases only!
-// Return code  0 OK
-//              1 The dual solution appears bad, and the insertion of XU[j] will damage
-//                the mass balance
-#define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
-//
-long int TMulti::Mol_u( double Y[], double X[], double XF[], double XFA[] )
-{
-  long int i,j,ja,jj,ii,ix, jb,je,k;
-  long int isp, ist;
-  double Ez, Psi;   // added by KD 23.11.01
-  double  Dsur, DsurT, MMC, *XU;
-  // bool mbBroken = false;
-  char dcnbuf[MAXDCNAME+4], buf[256];
-
-  XU = pmp->XU;
-  for(j=0; j<pmp->L; j++ )
-      XU[j] = 0.;
-
-  jb=0;
-  for( k=0; k<pmp->FIs; k++ )  // important change from FI to FIs 16.12.2009 DK
-  { // loop over phases
-      je=jb+pmp->L1[k];
-      Dsur=0.0; DsurT=0.0;
-      if( pmp->PHC[k] == PH_AQUEL && XF[k] >= pmp->DSM && XFA[k] >= pmp->XwMinM )
-        Dsur = XFA[k]/XF[k] - 1.0;              // Asymmetry correction term
-      if( (pmp->PHC[k] == PH_SORPTION || pmp->PHC[k] == PH_POLYEL )
-            && XFA[k] > pmp->ScMinM )
-      {
-         MMC = 0.0; // calculation of molar mass of the sorbent
-         for( jj=jb; jj<je; jj++ )
-         {
-            if( pmp->DCC[jj] == DC_SUR_CARRIER ||
-                pmp->DCC[jj] == DC_SUR_MINAL ||
-                pmp->DCC[jj] == DC_PEL_CARRIER )
-                    MMC += pmp->MM[jj]*X[jj]/XFA[k];
-         }
-         Dsur = XFA[k]/XF[k] - 1.0;
-         DsurT = MMC * (pmp->Aalp[k]) * TProfil::pm->pa.p.DNS*1.66054e-6;
-      }
-
-    for(j=jb;j<je;j++)
-    {
-      if( XF[k] >= pmp->DSM )
-      {
- //        XU[j] = -pmp->G0[j] -pmp->lnGam[j]  changed 5.12.2006
-         XU[j] = -pmp->G0[j] - pmp->lnGam[j] - pmp->GEX[j]
-                  + DualChemPot( pmp->U, pmp->A+j*pmp->N, pmp->NR, j );
-         if( pmp->PHC[k] == PH_AQUEL )
-         {
-            if(j == pmp->LO)
-                XU[j] += Dsur - 1. + 1. / ( 1.+ Dsur ) + log(XF[k]);  // fixed 13.02.09 DK
-            else
-                XU[j] += Dsur + log(XFA[k]);
-         }
-         else if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
-         {
-            if( pmp->DCC[j] == DC_PEL_CARRIER ||
-                 pmp->DCC[j] == DC_SUR_CARRIER ||
-                 pmp->DCC[j] == DC_SUR_MINAL )
-                    //     disabled by KD 23.11.01    enabled for testing 13.02.09
-                XU[j] += // Dsur - 1.0 + 1.0 / ( 1.0 + Dsur )
-                      // - DsurT + DsurT / ( 1.0 + DsurT ) +
-                      log(XF[k]);
-            else  {    // rewritten by KD  23.11.01
-               ja = j - ( pmp->Ls - pmp->Lads );
-               Ez = pmp->EZ[j];
-               // Get ist - index of surface type
-               ist = pmp->SATX[ja][XL_ST];
-               // and isp - index of surface plane
-               isp = pmp->SATX[ja][XL_SP];
-               if( !isp )
-                   // This is the A (0) plane
-                   Psi = pmp->XpsiA[k][ist];
-               else // This is the B or another plane
-                   Psi = pmp->XpsiB[k][ist];
-               XU[j] += Dsur + log(XFA[k])+  // changed 0n 16.12.2009 DK
-               log( DsurT * (pmp->Nfsp[k][ist]) ) - pmp->FRT * Ez * Psi;
-             }
-         }
-         else
-           XU[j] += log(XF[k]);   // Check for non-ideal gases at P and DQF controlled species
-
-         if( XU[j] > -69. && XU[j] < 13.81551 )
-         {
-                 // Checking if a restored amount will be in a feasible interval
-                 XU[j] = exp( XU[j] );
-         }
-         else
-             XU[j] = 0.0;
-// Corrections for DCs with non-trivial metastability constraints
-if( XU[j] < pmp->DLL[j] )
-XU[j] = pmp->DLL[j];
-if( XU[j] > pmp->DUL[j] )
-XU[j] = pmp->DUL[j];
-
-      }
-      else
-          XU[j]=0.;
-    }
-    jb = je;
-  }  // k
-
-  double cutoff;
-  cutoff = min (pmp->DHBM*1.0e6, 1.0e-3 );	// changed, 28.02.2009 (DK,SD)
-// cutoff = min (pmp->DHBM*10., 1.0e-6 );     // Cutoff value may need to be adjusted!!!!
-    for( j=0; j<pmp->Ls; j++ )   // important change from L to Ls 16.12.2009 DK
-    { // DC loop
-      ix=0;
-//      if(TProfil::pm->pa.p.PLLG)  // bad place 30/01/2009
-//      { for( i=0; i<pmp->N-pmp->E; i++ )
-//        if(a(i,j) && pmp->B[i] < pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
-//        { ix=1; break; }
-//      }
-//      else 10/02/2009 SD
-        if( Y[j]<pmp->DHBM*pow(10.,TProfil::pm->pa.p.DT))
-          ix=1;
-      if (ix && Y[j] > pmp->DcMinM && XU[j] > pmp->DcMinM )
-      {   // Checking if the restored value breaks the mass balance
-          for( i=arrL[j]; i<arrL[j+1]; i++ )
-          {  ii = arrAN[i];
-             if( ii< pmp->N-pmp->E )
-             {
-                if(  (XU[j]*a(ii,j))  > pmp->B[ii]+cutoff )
-                {
-                    char *dcne;  // extracting DC name
-                    strncpy( dcnbuf, pmp->SM[j], MAXDCNAME );
-                    dcnbuf[MAXDCNAME] = ' '; dcnbuf[MAXDCNAME+1] = '\0';
-                    dcne = strpbrk(dcnbuf, " \0");
-                    if( dcne != NULL && (dcne - dcnbuf) < MAXDCNAME )
-                        *dcne = '\0';
-                    else dcnbuf[MAXDCNAME] = '\0';
-                    // The dual solution appears bad, and the insertion of XU[j] will damage the mass balance
-                          if(pmp->Ec != 15 )
-                          {
-                                 sprintf(buf,
-                                "Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC %s",
-                                                      pmp->ITG, dcnbuf );
-                                 setErrorMessage( 15, "E15IPM: IPM-main():", buf); // also sets pmp->Ec = 15
-//                     mbBroken = true;  // Error state is activated
-                          }
-                          else
-                          {
-                                 sprintf(buf,", %s",  dcnbuf );
-                                 addErrorMessage(buf);
-                          }
-                    break;
-                }
-             }
-          } // for i
-          if( pmp->Ec != 15 )
-              X[j]=XU[j];
-          else X[j]=Y[j];
-      }
-      else
-         X[j]=Y[j];
-    } // for j
-
-    TotalPhases( X, XF, XFA );
-    if( pmp->Ec == 15 )
-      return 1L;
-    return 0L;
-}
-*/
 //--------------------- End of ipm_chemical2.cpp ---------------------------

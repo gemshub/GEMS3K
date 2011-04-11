@@ -38,12 +38,12 @@ struct BASE_PARAM
 { // Flags and thresholds for numeric modules
    long int
            PC,   // Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
-           PD,   // abs(PD): Mode of execution of GammaCalc() functions { 2 }
-                 // Mode of GammaCalc(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.
+           PD,   // abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }
+                 // Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
                  // if PD < 0 then use test qd_real accuracy mode
            PRD,  // Since r1583/r409: Disable (0) or activate (-5 or less) the CleanupSpeciation() procedure { -5 }
            PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }
-           DP,   // Maximum allowed number of iterations in the EnterFeasibleDomain() procedure {  30 }
+           DP,   // Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
            DW,   // Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
            DT,   // Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
            PLLG, // TIPM-2 tolerance for checking change in dual solution after PhaseSelect() { 20 }
@@ -67,8 +67,8 @@ struct BASE_PARAM
            DB,   // Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
            AG,   // Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
            DGC,  // Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
-           GAR,  // Initial activity coefficient value for major (M) species in a solution phase before Simplex() approximation { 1 }
-           GAH,  // Initial activity coefficient value for minor (J) species in a solution phase before Simplex() approximation { 1000 }
+           GAR,  // Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
+           GAH,  // Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
            GAS,  // Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in CleanupSpeciation() { 1e-3 }
                  // before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
            DNS,  // Standard surface density (nm-2) for calculating activity of surface species (12.05)
@@ -77,7 +77,7 @@ struct BASE_PARAM
            DcMin,// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
            PhMin,// Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
            ICmin,// Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
-           EPS,  // Precision criterion of the simplex() procedure to obtain the automatic initial approximation ( 1e-6 to 1e-14 ) { 1e-10 }
+           EPS,  // Precision criterion of the SolveSimplexLPP() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
            IEPS, // Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
            DKIN; // Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
     char *tprn;       // internal
@@ -118,7 +118,7 @@ public:
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
 
-   double calcMulti( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
+   double ComputeEquilibriumState( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
    long int testMulti( );
    void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );
 };
@@ -146,12 +146,12 @@ struct BASE_PARAM
 { // Flags and thresholds for numeric modules
   short
     PC,   // Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
-    PD,   // abs(PD): Mode of execution of GammaCalc() functions { 2 }
-          // Mode of GammaCalc(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.
+    PD,   // abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }
+          // Mode of CalculateActivityCoefficients(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.
           // if PD < 0 then use test qd_real accuracy mode
     PRD,  // Since r1583/r409: Disable (0) or activate (-5 or less) the CleanupSpeciation() procedure { -5 }
     PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }
-    DP,   // Maximum allowed number of iterations in the EnterFeasibleDomain() procedure {  30 }
+    DP,   // Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
     DW,   // Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
     DT,   // Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
     PLLG, // TIPM-2 tolerance for checking change in dual solution after PhaseSelect() { 20 }
@@ -175,8 +175,8 @@ struct BASE_PARAM
     DB,   // Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
     AG,   // Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
     DGC,  // Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
-    GAR,  // Initial activity coefficient value for major (M) species in a solution phase before Simplex() approximation { 1 }
-    GAH,  // Initial activity coefficient value for minor (J) species in a solution phase before Simplex() approximation { 1000 }
+    GAR,  // Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
+    GAH,  // Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
     GAS,  // Since r1583: threshold for primal-dual chem.pot.difference (mol/mol) used in CleanupSpeciation() { 1e-3 }
           // before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
     DNS,  // Standard surface density (nm-2) for calculating activity of surface species (12.05)
@@ -185,7 +185,7 @@ struct BASE_PARAM
     DcMin,// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
     PhMin,// Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
     ICmin,// Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
-    EPS,  // Precision criterion of the simplex() procedure to obtain the automatic initial approximation ( 1e-6 to 1e-14 ) { 1e-10 }
+    EPS,  // Precision criterion of the SolveSimplexLPP() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
     IEPS, // Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
     DKIN; // Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
     char *tprn;       // internal
@@ -410,7 +410,7 @@ TMulti *pmulti;
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path );
    void CmReadMulti( QWidget* par, const char* path );
-   double calcMulti( long int& NumPrecLoops, long int& NumIterFIA, long int& NumIterIPM );
+   double ComputeEquilibriumState( long int& NumPrecLoops, long int& NumIterFIA, long int& NumIterIPM );
    long int testMulti();
 
 };

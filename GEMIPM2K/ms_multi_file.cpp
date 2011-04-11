@@ -65,13 +65,13 @@ void TMulti::set_def( long int /*q*/)
     pm.FI1a = 0;    // FI1a -   number of sorption phases present in eqstate
     pm.IT = 0;      // It - number of completed IPM iterations
     pm.E = 0;       // PE - flag of electroneutrality constraint { 0 1 }
-    pm.PD = 0;      // PD - mode of calling GammaCalc() { 0 1 2 3 4 }
+    pm.PD = 0;      // PD - mode of calling CalculateActivityCoefficients() { 0 1 2 3 4 }
     pm.PV = 0;      // PV - flag of system volume constraint { 0 1 }
     pm.PLIM = 0;    // PU - flag of activation of DC/phase restrictions { 0 1 }
-    pm.Ec = 0;    // GammaCalc() return code: 0 (OK) or 1 (error)
+    pm.Ec = 0;    // CalculateActivityCoefficients() return code: 0 (OK) or 1 (error)
     pm.K2 = 0;    // Number of Selekt2() loops
     pm.PZ = 0;    // Indicator of IPM-2 precision algorithm activation    funT = 0; sysT = 0;
-    pm.pNP = 0; //Mode of FIA selection: 0-auto-SIMPLEX = 0;1-old eqstate = 0;-1-user's choice
+    pm.pNP = 0; //Mode of FIA selection: 0- automatic-LPP = 0; 1- old eqstate = 0; -1-user's choice
     pm.pESU = 0;  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pm.pIPN = 0;  // State of IPN-arrays:  0-create; 1-available; -1 remake
     pm.pBAL = 0;  // State of reloading CSD:  1- BAL only; 0-whole CSD
@@ -82,8 +82,8 @@ void TMulti::set_def( long int /*q*/)
     pm.FIat = 0;   // max. number of surface site types
     pm.MK = 0;     // PM return code: 0 - continue;  1 - converged
     pm.W1 = 0;     // internal IPM-2 indicator
-    pm.is = 0;     // is - index of IC for IPN equations ( GammaCalc() )
-    pm.js = 0;     // js - index of DC for IPN equations ( GammaCalc() )
+    pm.is = 0;     // is - index of IC for IPN equations ( CalculateActivityCoefficients() )
+    pm.js = 0;     // js - index of DC for IPN equations ( CalculateActivityCoefficients() )
     pm.next = 0;
     pm.sitNcat = 0;    // SIT: number of cations
     pm.sitNan = 0;     // SIT: number of anions

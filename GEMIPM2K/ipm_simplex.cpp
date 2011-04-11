@@ -22,10 +22,10 @@
 
 #include "m_param.h"
 
-// Calculation of Simplex initial approximation of the primal vector x
-// using modified simplex method with two-side constraints on x
+// Calculation of LPP-based automatic initial approximation of the primal vector x
+// using the modified simplex method with two-side constraints on x
 //
-void TMulti::SimplexInitialApproximation( )
+void TMulti::LPP_InitialApproximation( )
 {
     long int T,Q,*STR=0,*NMB=0;
     long int i,j,k;
@@ -42,7 +42,7 @@ void TMulti::SimplexInitialApproximation( )
         DN= new double[Q];
         DU= new double[Q+pmp->N];
         B1= new double[pmp->N];
-        ErrorIf( !DN || !DU || !B1, "SimplexInitialApproximation()", "Memory alloc error." );
+        ErrorIf( !DN || !DU || !B1, "LPP_InitialApproximation()", "Memory alloc error." );
         for( i=0; i<pmp->N; i++)
              DU[i+Q] = 0.;
         EPS = TProfil::pm->pa.p.EPS; //  13.10.00  KC  DK
@@ -70,7 +70,7 @@ void TMulti::SimplexInitialApproximation( )
         AA= new double[T];
         STR= new long int[T];
         NMB= new long int[Q+1];
-        ErrorIf( !AA || !STR || !NMB, "SimplexInitialApproximation()",
+        ErrorIf( !AA || !STR || !NMB, "LPP_InitialApproximation()",
             "Memory allocation error #2");
         for( k=0; k<T; k++)
          STR[k] = 0;
@@ -101,14 +101,14 @@ void TMulti::SimplexInitialApproximation( )
         }
         NMB[Q]=T+1;
         // Calling generic simplex solver
-        Simplex(pmp->N,Q,T,GZ,EPS,DN,DU,B1,pmp->U,AA,STR,NMB);
+        SolveSimplexLPP(pmp->N,Q,T,GZ,EPS,DN,DU,B1,pmp->U,AA,STR,NMB);
 
         // unloading simplex solution into a copy of x vector
         for(i=0;i<pmp->L;i++)
             pmp->Y[i]=DU[i];
 
         // calculating initial quantities of phases
-        TotalPhases( pmp->Y, pmp->YF, pmp->YFA );
+        TotalPhasesAmounts( pmp->Y, pmp->YF, pmp->YFA );
 
 #ifdef Use_qd_real
         if( TProfil::pm->pa.p.PD > 0)
@@ -193,7 +193,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
             if( fabs(UP[J])<EPS)
                 UP[J]=EPS;
             else if( UP[J]<0.)
-                Error("E00IPM: Simplex()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
+                Error("E00IPM: SolveSimplexLPP()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
         }
         SPOS(Q, STR, NMB, J, M, AA);
         for( I=0;I<M;I++)
@@ -234,7 +234,7 @@ void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,lo
     double MAX,A1;
     double *P;
     P= new double[M+1];
-    ErrorIf( !P, "Simplex()", "At NEW: memory allocation error ");
+    ErrorIf( !P, "SolveSimplexLPP()", "At NEW: memory allocation error ");
     J1=*J0;
     MAX=0.;
     for( J=J1+1;J<=N;J++)
@@ -312,7 +312,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
     long int UN,J,I;
     double *P;
     P=  new double[M+1];
-    ErrorIf( !P, "Simplex()", "At WORK: memory allocation error. ");
+    ErrorIf( !P, "SolveSimplexLPP()", "At WORK: memory allocation error. ");
     *UNO=0;
     *ITER=*ITER+1;
     J=*J0-1;
@@ -405,7 +405,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     long int /* K,*/I,J;
     double *P;
     P=  new double[M+1];
-    ErrorIf( !P, "Simplex()", "At FIN: memory allocation error. ");
+    ErrorIf( !P, "SolveSimplexLPP()", "At FIN: memory allocation error. ");
 
     for( J=0;J<N;J++)
     {
@@ -454,7 +454,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
 //         1 if inconsistent input constraints;
 //        -1 if memory allocation error;
 //
-void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
+void TMulti::SolveSimplexLPP(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
                       double *AA, long int *STR, long int *NMB )
 {
@@ -467,7 +467,7 @@ void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
         A=  new double[(M+1)*(M+1)];
         Q=  new double[M+1];
         BASE=  new long int[M];
-        ErrorIf( !A || !Q || !BASE, "Simplex()", "Memory allocation error ");
+        ErrorIf( !A || !Q || !BASE, "SolveSimplexLPP()", "Memory allocation error ");
 
         fillValue(A, 0., (M+1)*(M+1) );
         fillValue(Q, 0., (M+1) );
@@ -487,7 +487,7 @@ void TMulti::Simplex(long int M, long int N, long int T, double GZ, double EPS,
         }
         if( EPS > 1.0e-6 )
         {
-         Error( "E01IPM: Simplex()",
+         Error( "E01IPM: SolveSimplexLPP()",
              "LP solution cannot be obtained with sufficient precision" );
         }
 FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
@@ -511,7 +511,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
 // Main call to GEM IPM calculation of equilibrium state in MULTI
 // (with internal re-scaling of the system)
 //
-double TMulti::calcEqustat( long int typeMin, long int& NumIterFIA, long int& NumIterIPM )
+double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM )
 {
  // const char *key;
   double ScFact=1.;
@@ -533,8 +533,8 @@ double TMulti::calcEqustat( long int typeMin, long int& NumIterFIA, long int& Nu
 
 if( TProfil::pm->pa.p.DG > 1e-5 )
 {
-   ScFact = calcTotalMoles();
-   ScaleMulti( ScFact );
+   ScFact = SystemTotalMolesIC();
+   NormalizeSystemToInternal( ScFact );
 }
 
 try{
@@ -547,7 +547,7 @@ try{
        case  _S_UV_:
                 break;
        case  G_TP_:
-       default: GibbsMinimization();
+       default: GibbsEnergyMinimization();
             break;
         }
   }
@@ -555,7 +555,7 @@ try{
   {
 
       if( TProfil::pm->pa.p.DG > 1e-5 )
-         RescaleMulti(  ScFact );
+         RenormalizeSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
       NumIterFIA = pmp->ITF;
@@ -567,7 +567,7 @@ try{
   }
 
   if( TProfil::pm->pa.p.DG > 1e-5 )
-       RescaleMulti(  ScFact );
+       RenormalizeSystemFromInternal(  ScFact );
 
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
@@ -580,9 +580,9 @@ try{
 }
 
 
-// Calculate total moles in b vector and
-// return scaling factor
-double TMulti::calcTotalMoles( )
+// Calculate total IC mole amounts in b vector and
+// return the scaling factor
+double TMulti::SystemTotalMolesIC( )
 {
   double ScFact, mass_temp = 0.0;
 
@@ -598,7 +598,7 @@ double TMulti::calcTotalMoles( )
 }
 
 // Resizes MULTI (GEM IPM work structure) data into internally scaled constant mass
-void TMulti::ScaleMulti(  double ScFact )
+void TMulti::NormalizeSystemToInternal(  double ScFact )
 {
  long int i, j, k;
 
@@ -674,7 +674,7 @@ void TMulti::ScaleMulti(  double ScFact )
 
 // Re-scaling the internal constant-mass MULTI system definition
 // back to real size
-void TMulti::RescaleMulti(  double ScFact )
+void TMulti::RenormalizeSystemFromInternal(  double ScFact )
 {
  long int i, j, k;
 
@@ -791,13 +791,13 @@ void TMulti::MultiInit( ) // Reset internal data
 
    if( pmp->pTPD < 2 )
    {
-      CompG0Load(); // Loading thermodynamic data into MULTI structure
+      DC_LoadThermodynamicData(); // Loading thermodynamic data into MULTI structure
      // In future build/rebuild internal lookup arrays
    }
 
 #else
 
-      CompG0Load(); // Loading thermodynamic data into MULTI structure
+      DC_LoadThermodynamicData(); // Loading thermodynamic data into MULTI structure
 
 #endif
 
@@ -828,8 +828,8 @@ void TMulti::MultiInit( ) // Reset internal data
      for( j=0; j< pmp->L; j++ )
          pmp->X[j] = pmp->Y[j];
 //       pmp->IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
-      TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-      ConCalc( pmp->X, pmp->XF, pmp->XFA);             // 13.03.2008  DK
+      TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
+      CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA);  // 13.03.2008  DK
        // test multicomponent phases and load data for mixing models
        if( pmp->FIs && AllPhasesPure == false )
        {
@@ -895,7 +895,7 @@ void TMulti::MultiConstInit() // from MultiRemake
 }
 
 //Calculation by IPM (internal step initialization)
-void TMulti::MultiCalcInit()
+void TMulti::GEM_IPM_Init()
 {
    int i,j,k;
 
@@ -943,7 +943,7 @@ void TMulti::MultiCalcInit()
         // Calc Eh, pe, pH,and other stuff
        if( pmp->E && pmp->LO && pmp->pNP )
        {
-            ConCalc( pmp->X, pmp->XF, pmp->XFA);
+            CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA);
             IS_EtaCalc();
             if( pmp->Lads )  // Calling this only when sorption models are present
             {
@@ -961,8 +961,8 @@ void TMulti::MultiCalcInit()
                }
            }
        }
-       GammaCalc( LINK_TP_MODE);   // Computing DQF, FugPure and G wherever necessary
-                                   // Activity coeffs are restored from lnGmo
+       CalculateActivityCoefficients( LINK_TP_MODE);
+       // Computing DQF, FugPure and G wherever necessary; Activity coeffs are restored from lnGmo
     }
     else {  // no multi-component phases
         pmp->PD = 0;

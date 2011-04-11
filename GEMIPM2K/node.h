@@ -280,7 +280,7 @@ void GEM_set_MT(
 // Return values:
 //   Function         Total number of EFD + IPM iterations from the last call to GEM_run()
 //   PrecLoops        Number of performed IPM-2 precision refinement loops
-//   NumIterFIA       Total number of performed EnterFeasibleDomain() (EFD) iterations to obtain a feasible initial approximation for the IPM algorithm.
+//   NumIterFIA       Total number of performed MBR() iterations to obtain a feasible initial approximation for the IPM algorithm.
 //   NumIterIPM       Total number of performed IPM main descent algorithm iterations.
    long int GEM_Iterations( long int& PrecLoops, long int& NumIterFIA, long int& NumIterIPM );
 

@@ -118,16 +118,16 @@ typedef DATABR*  DATABRPTR;
 
 typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
  NO_GEM_SOLVER= 0,   // No GEM re-calculation needed for this node
- NEED_GEM_AIA = 1,   // Need GEM calculation with simplex (automatic) initial approximation (IA)
- OK_GEM_AIA   = 2,   // OK after GEM calculation with simplex (automatic) IA
- BAD_GEM_AIA  = 3,   // Bad (not fully trustful) result after GEM calculation with simplex (automatic) IA
- ERR_GEM_AIA  = 4,   // Failure (no result) in GEM calculation with simplex (automatic) IA
- NEED_GEM_SIA = 5,   // Need GEM calculation with no-simplex (smart) IA
-                     //   the previous GEM solution (full DATABR lists only)
- OK_GEM_SIA   = 6,   // OK after GEM calculation with no-simplex (smart) IA
- BAD_GEM_SIA  = 7,   // Bad (not fully trustful) result after GEM calculation with no-simplex (smart) IA
- ERR_GEM_SIA  = 8,   // Failure (no result) in GEM calculation with no-simplex (smart) IA
- T_ERROR_GEM  = 9    // Terminal error has occurred in GEMIPM2K (e.g. memory corruption). Restart is required.
+ NEED_GEM_AIA = 1,   // Need GEM calculation with LPP (automatic) initial approximation (AIA)
+ OK_GEM_AIA   = 2,   // OK after GEM calculation with LPP AIA
+ BAD_GEM_AIA  = 3,   // Bad (not fully trustful) result after GEM calculation with LPP AIA
+ ERR_GEM_AIA  = 4,   // Failure (no result) in GEM calculation with LPP AIA
+ NEED_GEM_SIA = 5,   // Need GEM calculation with no-LPP (smart) IA, SIA
+                     //   using the previous speciation (full DATABR lists only)
+ OK_GEM_SIA   = 6,   // OK after GEM calculation with SIA
+ BAD_GEM_SIA  = 7,   // Bad (not fully trustful) result after GEM calculation with SIA
+ ERR_GEM_SIA  = 8,   // Failure (no result) in GEM calculation with SIA
+ T_ERROR_GEM  = 9    // Terminal error has occurred in GEMS3K (e.g. memory corruption). Restart is required.
 } NODECODECH;
 
 typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part
