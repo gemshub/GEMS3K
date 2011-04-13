@@ -210,7 +210,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
   #ifndef Use_mt_mode
       pVisor->Update(false);
   #endif
-  // STEPWISE (3)  - stop point to examine output from CleanupSpeciation()
+  // STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
      STEP_POINT("After PSSC()");
   #endif
 */
@@ -327,7 +327,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
            ChemPotDiffCutoff = pa->p.GAS;
       for( j=0; j<pmp->L; j++ )
           pmp->XY[j]=pmp->Y[j];    // Storing a copy of speciation vector
-      csRet = CleanupSpeciation( AmountThreshold, ChemPotDiffCutoff );
+      csRet = SpeciationCleanup( AmountThreshold, ChemPotDiffCutoff );
       if( csRet == 1 || csRet == 2 || csRet == -1 || csRet == -2 )
       {  //  Significant cleanup has been done - mass balance refinement is necessary
          TotalPhasesAmounts( pmp->Y, pmp->YF, pmp->YFA );
@@ -340,7 +340,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 #ifndef Use_mt_mode
     pVisor->Update(false);
 #endif
-// STEPWISE (3)  - stop point to examine output from CleanupSpeciation()
+// STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
    STEP_POINT("After Cleanup");
 #endif
 
@@ -497,12 +497,12 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
        if( pmp->L1[k] > 1 )
            AllPhasesPure = false;
    if( AllPhasesPure == true )  // Provisional
-       pmp->pNP = 0;  // call SolveSimplexLPP() also in SIA mode!
+       pmp->pNP = 0;  // call SolveSimplex() also in SIA mode!
 
    // Analyzing if the Simplex LPP approximation is necessary
     if( !pmp->pNP  )
     {
-        // Preparing to call SolveSimplexLPP() - "cold start"
+        // Preparing to call SolveSimplex() - "cold start"
 //    	pmp->FitVar[4] = 1.0; // Debugging: no smoothing
 //        pmp->FitVar[4] = pa->p.AG;  //  initializing the smoothing parameter
         pmp->ITaia = 0;             // resetting the previous number of AIA iterations
@@ -516,7 +516,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         for( j=0; j<pmp->L; j++ )
         {
             if( pmp->lnGmf[j] )
-                pmp->lnGam[j] = pmp->lnGmf[j]; // setting up fixed act.coeff. for SolveSimplexLPP()
+                pmp->lnGam[j] = pmp->lnGmf[j]; // setting up fixed act.coeff. for SolveSimplex()
             else pmp->lnGam[j] = 0.;
             pmp->Gamma[j] = 1.;
         }
@@ -546,10 +546,10 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         }   // LO
 //        if( pa->p.PC == 2 )
 //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
-        pmp->IT = 0; pmp->ITF += 1; // Assuming SolveSimplexLPP() time equal to one iteration of MBR()
+        pmp->IT = 0; pmp->ITF += 1; // Assuming SolveSimplex() time equal to one iteration of MBR()
 //        pmp->PCI = 0.0;
      // Calling the simplex LP approximation here
-        LPP_InitialApproximation( );
+        AutoInitialApproximation( );
 // experimental 15.03.10 (probably correct)
         TotalPhasesAmounts( pmp->Y, pmp->YF, pmp->YFA );
         for( j=0; j< pmp->L; j++ )
@@ -568,7 +568,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 
 #ifndef IPMGEMPLUGIN
         if( pa->p.PC == 1 )
-            KarpovCriterionPH( );  // calculation of Karpov phase stability criteria
+            KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria
         else if( pa->p.PC >= 2 )
             StabilityIndexes(); // calculation of new phase stability indexes
 #ifndef Use_mt_mode
@@ -645,7 +645,7 @@ pmp->PCI = 1.; // SD 05/05/2010 for smaller number of iterations for systems wit
         }
 
         if( pmp->pNP <= -1 )
-        {  // With raising species and phases zeroed off by SolveSimplexLPP()
+        {  // With raising species and phases zeroed off by SolveSimplex()
            // Setting default trace amounts of DCs that were zeroed off
            DC_RaiseZeroedOff( 0, pmp->L );
         }
@@ -666,7 +666,7 @@ STEP_POINT("Before FIA");
 // (Appendix B)
 //
 // Parameter: WhereCalledFrom, 0 - at entry after automatic LPP-based IA;
-//                             1 - at entry in SIA (start without SolveSimplexLPP()
+//                             1 - at entry in SIA (start without SolveSimplex()
 //                             2 - after post-IPM cleanup
 //                             3 - additional (after PhaseSelection)
 // Control: MaxResidualRatio, 0 (deactivated), > DHBM and < 1 - accuracy for
@@ -832,7 +832,7 @@ STEP_POINT("FIA Iteration");
    {  // Strict mode of mass balance control
        iRet = 2;
        char buf[320];
-       sprintf( buf, "(EFD(%ld)) Maximum allowed number of EFD() iterations (%d) exceeded! ",
+       sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR() iterations (%d) exceeded! ",
                 WhereCalledFrom, pa->p.DP );
        setErrorMessage( 4, "E04IPM: MassBalanceRefinement(): ", buf );
     }
@@ -891,6 +891,10 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
                 pmp->NR=pmp->N-1;
         }
         N = pmp->NR;
+
+#ifdef GEMITERTRACE
+to_text_file( "MultiDumpDC1.txt" );   // Debugging
+#endif
 
         PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
 
@@ -963,7 +967,11 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
             pmp->PCI = qdDikinsCriterion( N, false );
 #endif
 
-       // Initial estimate of IPM descent step size LM
+#ifdef GEMITERTRACE
+to_text_file( "MultiDumpDC.txt" );   // Debugging
+#endif
+
+        // Initial estimate of IPM descent step size LM
        LM = StepSizeEstimate( false );
 
 #ifdef Use_qd_real
@@ -1244,7 +1252,7 @@ void TMulti::DC_ZeroOff( long int jStart, long int jEnd, long int k )
      pmp->Y[j] =  0.0;
 }
 
-// Inserting minor quantities of DC which were zeroed off by SolveSimplexLPP()
+// Inserting minor quantities of DC which were zeroed off by SolveSimplex()
 // (important for the automatic initial approximation with solution phases
 //  (k = -1)  or inserting a solution phase after PhaseSelect() (k >= 0)
 //
@@ -1843,14 +1851,14 @@ double TMulti::RescaleToSize( bool standard_size )
     pmp->ScMinM = SizeFactor * pa->p.ScMin;  // cutoff for amount of the sorbent
     pmp->DcMinM = SizeFactor * pa->p.DcMin;  // cutoff for Ls set (amount of solution phase component)
     pmp->PhMinM = SizeFactor * pa->p.PhMin;  // cutoff for single-comp.phase amount and its DC
-  // insertion values before SolveSimplexLPP() (re-scaled to system size)
+  // insertion values before SolveSimplex() (re-scaled to system size)
     pmp->DFYwM = SizeFactor * pa->p.DFYw;
     pmp->DFYaqM = SizeFactor * pa->p.DFYaq;
     pmp->DFYidM = SizeFactor * pa->p.DFYid;
     pmp->DFYrM = SizeFactor * pa->p.DFYr;
     pmp->DFYhM = SizeFactor * pa->p.DFYh;
     pmp->DFYcM = SizeFactor * pa->p.DFYc;
-    // Insertion value for PhaseSelect()
+    // Insertion value for PhaseSelection()
     pmp->DFYsM = SizeFactor * pa->p.DFYs; // pure condenced phase and its DC
 
     return SizeFactor;

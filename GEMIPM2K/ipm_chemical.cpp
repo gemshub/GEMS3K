@@ -426,6 +426,9 @@ double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     {
         ja = j - ( pmp->Ls - pmp->Lads );
         jc = pmp->SATX[ja][XL_EM];
+// Workaround 08.02.2011 by DK to prevent crash on inconsistent sorption DC
+        if( jc >= pmp->L1[k] )
+            jc = -1;
     }
     if( k < pmp->FIs && pmp->XFA[k] > 1e-12)
     {
@@ -959,7 +962,7 @@ NEXT_PHASE:
 // k - index of phase, j - index DC in phase
 // if error code, returns 777777777.
 //
-double TMulti:: DC_ConvertGj_toUniform_cj( double g0, long int j, long int k )
+double TMulti:: ConvertGj_toUniformStandardState( double g0, long int j, long int k )
 {
     double G, YOF=0;
 
@@ -1171,7 +1174,7 @@ double TMulti::KarpovCriterionDC(
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // calculation of Karpov stability criteria for all phases
 //
-void TMulti::KarpovCriterionPH()
+void TMulti::KarpovsPhaseStabilityCriteria()
 {
     bool KinConstr;
     long int k, j, ii;
@@ -1301,7 +1304,7 @@ else {   // Standard checking in the L_S set only
 //        -1 if cleanup has been done and the degeneration of the chemical system occurred
 //         2 solution is seriously distorted and full PhaseSelect3() loop is necessary
 //
-long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double MjuDiffCutoff )
+long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double MjuDiffCutoff )
 {
     long int NeedToImproveMassBalance = 0, L1k, L1kZeroDCs, k, j, jb = 0;
     double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
@@ -1414,7 +1417,7 @@ long int TMulti::CleanupSpeciation( double AmountCorrectionThreshold, double Mju
 // New simplified PSSC() algorithm   DK 01.05.2010
 // PhaseSelection() part only looks for phases to be inserted, also checks if some
 // solution phases are unstable. Removal of unstable phases is done afterwards in
-// CleanupSpeciation() function.
+// SpeciationCleanup subroutine.
 // As phase stability criterion, uses (log) phase stability (saturation) index
 // computed from DualTh activities of components and activity coefficients
 // returns 1L if Ok; 0 if one more IPM loop should be done;
@@ -1669,7 +1672,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
     // Analysis of phase selection and cleanup status
 // PZ    // Indicator of PhaseSelection() status (since r1594):
 //            0 untouched, 1 phase(s) inserted, 2 insertion done after 5 major IPM loops
-// W1     // Indicator of CleanupSpeciation() status (since r1594) 0 untouched,
+// W1     // Indicator of SpeciationCleanup() status (since r1594) 0 untouched,
 //           -1 phase(s) removed, 1 some DCs inserted
 // K2     // Number of IPM loops performed ( >1 up to 3 because of PhaseSelection() )
     status = 1L;
@@ -1805,7 +1808,7 @@ long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStat
 int rLoop = CleanupStatus;
 rLoop = -1;
 //    sfactor = calcSfactor();
-    KarpovCriterionPH( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
+    KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria (in pmp->Falp)
     F0 = pmp->Falp;
 
     (pmp->K2)++;
@@ -1934,7 +1937,7 @@ S6: // copy of X vector has been changed by Selekt2() algorithm - store
     return 0L;  // Another loop is needed
 }
 
-// New function to improve on raising zero values in PhaseSelect() and after SolveSimplexLPP()
+// New function to improve on raising zero values in PhaseSelect() and after SolveSimplex()
 double TMulti::RaiseDC_Value( const long int j )
 {
         double RaiseZeroVal = pmp->DFYsM;

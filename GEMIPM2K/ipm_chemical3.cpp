@@ -75,7 +75,7 @@
         aObj[ o_nxast].SetPtr( 0 );
         aObj[ o_nxcec].SetPtr( 0 );
     }
-    /* */
+    //
     aObj[ o_nbmol].SetPtr( pmp->FVOL+k );  // phase volume
     aObj[ o_nxx].SetPtr(  pmp->X+jb );
     aObj[o_nxx].SetN( pmp->L1[k]);
@@ -154,7 +154,7 @@ void TMulti::SetSmoothingFactor( long int mode )
         TF = al;
     }
     else if( dg <= -0.0001 && ag <= -0.0001 )
-    {  // New sigmoid smoothing function of DK - CD
+    {
     	double dk, cd;   long int i;
     	dg = fabs( dg );
     	ag = fabs( ag );
@@ -163,7 +163,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     	switch( mode )
     	{
     	  default:
-          case 0: // MassBalanceRefinement() after SolveSimplexLPP()
+          case 0: // MassBalanceRefinement() after SolveSimplex()
     	  	     cd = log( pmp->PCI );
     	   	     break;
     	  case 1:
@@ -396,7 +396,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     		switch( pmp->PHC[k] )
             {
               case PH_AQUEL:
-			  case PH_LIQUID:
+              case PH_LIQUID:
               case PH_SINCOND:
               case PH_SINDIS:
               case PH_HCARBL:
@@ -472,7 +472,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
         jde += pmp->LsMdc[k]*pmp->L1[k];
 
    if( LinkMode == LINK_UX_MODE && sMod[SGM_MODE] == SM_STNGAM )
-   {                             // check that SGM_MODE for adsorption is not SM_IDEAL in Phase records!
+   {    // check that SGM_MODE for adsorption or multi-site ideal SS is not SM_IDEAL in Phase records!
         switch( pmp->PHC[k] )
         {  // calculating activity coefficients using built-in functions
           case PH_AQUEL:   // DH III variant consistent with HKF

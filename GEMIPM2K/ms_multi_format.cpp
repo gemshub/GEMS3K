@@ -169,7 +169,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{   ff << "# GEMIPM2K v. 3.0 rev. 460(1660)" << endl;
+{   ff << "# GEMIPM2K v. 3.0 rev. 530(1848)" << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
@@ -247,7 +247,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.EPS != pa_.p.EPS )
    { if( _comment )
-      ff << "\n# EPS: Tolerance of the SolveSimplexLPP() convergence (1e-6 to 1e-14) { 1e-10 }" << endl;
+      ff << "\n# EPS: Tolerance of the SolveSimplex() convergence (1e-6 to 1e-14) { 1e-10 }" << endl;
     ff << left << setw(12) << "<pa_EPS> " <<  right << setw(8) << pa->p.EPS << endl;
    }
    if(!brief_mode || pa->p.DK != pa_.p.DK )
@@ -287,7 +287,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.PRD != pa_.p.PRD )
    { if( _comment )
-       ff << "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) CleanupSpeciation() { -4 }" << endl;
+       ff << "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -4 }" << endl;
      ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa->p.PRD << endl;
    }
    if(!brief_mode || pa->p.AG != pa_.p.AG )
@@ -390,7 +390,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.GAS != pa_.p.GAS )
    { if( _comment )
-       ff << "\n# GAS: Threshold for primal-dual norm.chem.pot.difference used in CleanupSpeciation() { 0.0001 }" << endl;
+       ff << "\n# GAS: Threshold for primal-dual norm.chem.pot.difference used in SpeciationCleanup() { 0.0001 }" << endl;
      ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa->p.GAS << endl;
    }
    if(!brief_mode || pa->p.DG != pa_.p.DG )

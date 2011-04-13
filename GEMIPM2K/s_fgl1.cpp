@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl1.cpp 1140 2008-12-08 19:07:05Z wagner $
 //
-// Copyright (C) 2008-2010  T.Wagner, S.Dmitrieva, F.Hingerl, D.Kulik
+// Copyright (C) 2008-2011  T.Wagner, S.Dmitrieva, F.Hingerl, D.Kulik
 //
 // Implementation of subclasses of TSolMod for aqueous activity models
 // subclasses: TSIT, TPitzer, TEUNIQUAC, THelgeson, TDavies,
@@ -34,6 +34,7 @@ using namespace std;
 //=============================================================================================
 // SIT model (NEA version) reimplementation for aqueous electrolyte solutions
 // References:
+// (c) DK/TW June 2009
 //=============================================================================================
 
 
@@ -2545,9 +2546,10 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
 
 
 //=============================================================================================
-// Extended Debye-Hueckel (EDH) model for aqueous solutions, Helgeson version (c) TW May 2009
+// Extended Debye-Hueckel (EDH) model for aqueous solutions, Helgeson version
 // References: Helgeson et al. (1981); Oelkers and Helgeson (1990);
 // Pokrovskii and Helgeson (1995; 1997a; 1997b)
+// (c) TW May 2009
 //=============================================================================================
 
 
@@ -3256,8 +3258,9 @@ long int THelgeson::GShok2( double T, double P, double D, double beta,
 
 
 //=============================================================================================
-// Extended Debye-Hueckel (EDH) model for aqueous solutions, Davies version (c) TW May 2009
+// Extended Debye-Hueckel (EDH) model for aqueous solutions, Davies version
 // References: Langmuir (1997)
+// (c) TW May 2009
 //=============================================================================================
 
 
@@ -3610,8 +3613,9 @@ long int TDavies::IonicStrength()
 
 
 //=============================================================================================
-// Debye-Hueckel (DH) limiting law for aqueous solutions (c) TW May 2009
+// Debye-Hueckel (DH) limiting law for aqueous solutions
 // References: Langmuir (1997)
+// ((c) TW May 2009
 //=============================================================================================
 
 
@@ -3940,9 +3944,10 @@ long int TLimitingLaw::IonicStrength()
 
 
 //=============================================================================================
-// Debye-Hueckel (DH) two term model for aqueous solutions (c) TW May 2009
+// Debye-Hueckel (DH) two term model for aqueous solutions
 // References: Helgeson et al. (1981)
 // uses individual ion-size parameters, optionally individual salting-out coefficients
+// (c) TW May 2009
 //=============================================================================================
 
 
@@ -4405,9 +4410,10 @@ long int TDebyeHueckel::IonicStrength()
 
 
 //=============================================================================================
-// Extended Debye-Hueckel (EDH) model for aqueous solutions, Karpov version (c) TW May 2009
+// Extended Debye-Hueckel (EDH) model for aqueous solutions, Karpov version
 // References: Karpov et al. (1997); Helgeson et al. (1981); Oelkers and Helgeson (1990);
 // Pokrovskii and Helgeson (1995; 1997a; 1997b)
+// (c) TW May 2009
 //=============================================================================================
 
 
@@ -5080,9 +5086,10 @@ long int TKarpov::GShok2( double T, double P, double D, double beta,
 
 
 //=============================================================================================
-// Extended Debye-Hueckel (EDH) model for aqueous solutions, Shvarov version (c) TW June 2009
+// Extended Debye-Hueckel (EDH) model for aqueous solutions, Shvarov version
 // References: Shvarov (2007); Oelkers and Helgeson (1990);
 // Pokrovskii and Helgeson (1995; 1997a; 1997b)
+// (c) TW June 2009
 //=============================================================================================
 
 

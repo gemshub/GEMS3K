@@ -25,7 +25,7 @@
 // Calculation of LPP-based automatic initial approximation of the primal vector x
 // using the modified simplex method with two-side constraints on x
 //
-void TMulti::LPP_InitialApproximation( )
+void TMulti::AutoInitialApproximation( )
 {
     long int T,Q,*STR=0,*NMB=0;
     long int i,j,k;
@@ -42,7 +42,7 @@ void TMulti::LPP_InitialApproximation( )
         DN= new double[Q];
         DU= new double[Q+pmp->N];
         B1= new double[pmp->N];
-        ErrorIf( !DN || !DU || !B1, "LPP_InitialApproximation()", "Memory alloc error." );
+        ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pmp->N; i++)
              DU[i+Q] = 0.;
         EPS = TProfil::pm->pa.p.EPS; //  13.10.00  KC  DK
@@ -70,7 +70,7 @@ void TMulti::LPP_InitialApproximation( )
         AA= new double[T];
         STR= new long int[T];
         NMB= new long int[Q+1];
-        ErrorIf( !AA || !STR || !NMB, "LPP_InitialApproximation()",
+        ErrorIf( !AA || !STR || !NMB, "AutoInitialApproximation()",
             "Memory allocation error #2");
         for( k=0; k<T; k++)
          STR[k] = 0;
@@ -101,7 +101,7 @@ void TMulti::LPP_InitialApproximation( )
         }
         NMB[Q]=T+1;
         // Calling generic simplex solver
-        SolveSimplexLPP(pmp->N,Q,T,GZ,EPS,DN,DU,B1,pmp->U,AA,STR,NMB);
+        SolveSimplex(pmp->N,Q,T,GZ,EPS,DN,DU,B1,pmp->U,AA,STR,NMB);
 
         // unloading simplex solution into a copy of x vector
         for(i=0;i<pmp->L;i++)
@@ -193,7 +193,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
             if( fabs(UP[J])<EPS)
                 UP[J]=EPS;
             else if( UP[J]<0.)
-                Error("E00IPM: SolveSimplexLPP()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
+                Error("E00IPM: SolveSimplex()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
         }
         SPOS(Q, STR, NMB, J, M, AA);
         for( I=0;I<M;I++)
@@ -234,7 +234,7 @@ void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,lo
     double MAX,A1;
     double *P;
     P= new double[M+1];
-    ErrorIf( !P, "SolveSimplexLPP()", "At NEW: memory allocation error ");
+    ErrorIf( !P, "SolveSimplex()", "At NEW: memory allocation error ");
     J1=*J0;
     MAX=0.;
     for( J=J1+1;J<=N;J++)
@@ -312,7 +312,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
     long int UN,J,I;
     double *P;
     P=  new double[M+1];
-    ErrorIf( !P, "SolveSimplexLPP()", "At WORK: memory allocation error. ");
+    ErrorIf( !P, "SolveSimplex()", "At WORK: memory allocation error. ");
     *UNO=0;
     *ITER=*ITER+1;
     J=*J0-1;
@@ -405,7 +405,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     long int /* K,*/I,J;
     double *P;
     P=  new double[M+1];
-    ErrorIf( !P, "SolveSimplexLPP()", "At FIN: memory allocation error. ");
+    ErrorIf( !P, "SolveSimplex()", "At FIN: memory allocation error. ");
 
     for( J=0;J<N;J++)
     {
@@ -454,7 +454,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
 //         1 if inconsistent input constraints;
 //        -1 if memory allocation error;
 //
-void TMulti::SolveSimplexLPP(long int M, long int N, long int T, double GZ, double EPS,
+void TMulti::SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
                       double *AA, long int *STR, long int *NMB )
 {
@@ -467,7 +467,7 @@ void TMulti::SolveSimplexLPP(long int M, long int N, long int T, double GZ, doub
         A=  new double[(M+1)*(M+1)];
         Q=  new double[M+1];
         BASE=  new long int[M];
-        ErrorIf( !A || !Q || !BASE, "SolveSimplexLPP()", "Memory allocation error ");
+        ErrorIf( !A || !Q || !BASE, "SolveSimplex()", "Memory allocation error ");
 
         fillValue(A, 0., (M+1)*(M+1) );
         fillValue(Q, 0., (M+1) );
@@ -487,7 +487,7 @@ void TMulti::SolveSimplexLPP(long int M, long int N, long int T, double GZ, doub
         }
         if( EPS > 1.0e-6 )
         {
-         Error( "E01IPM: SolveSimplexLPP()",
+         Error( "E01IPM: SolveSimplex()",
              "LP solution cannot be obtained with sufficient precision" );
         }
 FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
@@ -522,7 +522,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 //  key = "GEMIPM2K";
 //#endif
 
-  MultiInit();
+  InitalizeGEM_IPM_Data();
 
   pmp->t_start = clock();
   pmp->t_end = pmp->t_start;
@@ -534,7 +534,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 if( TProfil::pm->pa.p.DG > 1e-5 )
 {
    ScFact = SystemTotalMolesIC();
-   NormalizeSystemToInternal( ScFact );
+   ScaleSystemToInternal( ScFact );
 }
 
 try{
@@ -555,7 +555,7 @@ try{
   {
 
       if( TProfil::pm->pa.p.DG > 1e-5 )
-         RenormalizeSystemFromInternal( ScFact );
+         RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
       NumIterFIA = pmp->ITF;
@@ -567,7 +567,7 @@ try{
   }
 
   if( TProfil::pm->pa.p.DG > 1e-5 )
-       RenormalizeSystemFromInternal(  ScFact );
+       RescaleSystemFromInternal(  ScFact );
 
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
@@ -598,7 +598,7 @@ double TMulti::SystemTotalMolesIC( )
 }
 
 // Resizes MULTI (GEM IPM work structure) data into internally scaled constant mass
-void TMulti::NormalizeSystemToInternal(  double ScFact )
+void TMulti::ScaleSystemToInternal(  double ScFact )
 {
  long int i, j, k;
 
@@ -674,7 +674,7 @@ void TMulti::NormalizeSystemToInternal(  double ScFact )
 
 // Re-scaling the internal constant-mass MULTI system definition
 // back to real size
-void TMulti::RenormalizeSystemFromInternal(  double ScFact )
+void TMulti::RescaleSystemFromInternal(  double ScFact )
 {
  long int i, j, k;
 
@@ -757,7 +757,7 @@ void TMulti::RenormalizeSystemFromInternal(  double ScFact )
 //Calculation by IPM (preparing for calculation, unpacking data)
 // parameter "key" contains SysEq record key
 // In IPM
-void TMulti::MultiInit( ) // Reset internal data
+void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit()
 {
 
    MultiConstInit();

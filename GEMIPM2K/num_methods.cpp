@@ -20,6 +20,34 @@
 #include "num_methods.h"
 #include "verror.h"
 
+// Calculate number of points from iterators
+long int  getNpoints( double Tai[4] )
+{
+  long int nPoints = 0;
+
+  if( fabs(Tai[2]) <= 1e-30 )
+          nPoints = 1;
+  else
+          nPoints = (long int)( (Tai[1]-Tai[0]) / Tai[2] )+1;
+
+  if( nPoints < 1 )
+     nPoints = 1;
+
+   return nPoints;
+}
+
+double getStep( double *Tai, int nPoints )
+{
+  double step;
+
+  if( nPoints <=1 )
+   step = (Tai[1]-Tai[0]);
+  else
+    step = (Tai[1]-Tai[0])/(double)(nPoints-1);
+  return step;
+}
+
+
 /*-----------------------------------------------------------------*/
 // Interpolation over tabulated values (2D array d) using Lagrange method
 //  y[N] - discrete values of argument over rows (ascending order)
@@ -202,78 +230,125 @@ double prod3( double u, double v, double w, double du, double dv, double dw,
 }
 
 
-// Method of Gold Section
-//   param[3],  parameter x    - start, end, tolerance
-//   funct[2],  function  f(x) - value, tolerance
-//
-double GoldenSection( double param[3], double funct[2], double (f_proc)(double val))
+// Method of Golden Section 1D and 2D (reimplemented)
+//   xstart, xend, xtol,  parameter x    - start, end, tolerance
+//   ftol  function tolerance
+//   f_proc function to minimize ( f(x)=>0 )
+double GoldenSelection::getMinimumDat( GoldenSelectionData dat,  double val2 )
 {
-    double Fa, Fb, Fx1, Fx2, a, b, x1, x2;
-
-    x1 = param[0];
-    x2 = param[1];
-    a = min( x1, x2 );
-    b = max( x1, x2 );
-    if( (b-a) < param[2]) goto DONE;
-    x1 = a + .382*(b-a);
-    x2 = a + .618*(b-a);
-    Fa = f_proc( a);
-    if( fabs(Fa) < funct[1] )
+    if( (dat.b-dat.a) < dat.Xtol)
+        goto DONE;
+    dat.Fa = calcFunction( dat.a,  val2);
+    if( fabs(dat.Fa) < Ftol )
     {
-        b = a;
+        dat.b = dat.a;
         goto DONE;
     }
-    Fb = f_proc( b);
-    if(  fabs(Fb) < funct[1] )
+    dat.Fb = calcFunction( dat.b, val2);
+    if(  fabs(dat.Fb) < Ftol )
     {
-        a = b;
+        dat.a = dat.b;
         goto DONE;
     }
-    if( (Fa*Fb) > 0)
+    if( (dat.Fa*dat.Fb) > 0)
         Error( "GoldenSection",
   "W01PEexec: No result in specified interval! Change interval!");
-    Fx1 = f_proc( x1);
-    Fx2 = f_proc( x2);
+    dat.x1 = dat.a + .382*(dat.b-dat.a);
+    dat.x2 = dat.a + .618*(dat.b-dat.a);
+    dat.Fx1 = calcFunction( dat.x1, val2 );
+    dat.Fx2 = calcFunction( dat.x2, val2 );
     do
     {
-        if( fabs( Fx1 ) < funct[1] )
+        if( fabs( dat.Fx1 ) < Ftol )
         {
-            a = b = x1;
+            dat.a = dat.b = dat.x1;
             goto DONE;
         }
-        if( fabs( Fx2 ) < funct[1] )
+        if( fabs( dat.Fx2 ) < Ftol )
         {
-            a = b = x2;
+            dat.a = dat.b =dat. x2;
             goto DONE;
         }
-        if( fabs( Fx1) > fabs( Fx2) )
+        if( fabs( dat.Fx1) > fabs( dat.Fx2) )
         {
-            a = x1;
-            if( (b-a) < param[2])
+            dat.a = dat.x1;
+            if( (dat.b-dat.a) < dat.Xtol)
                 goto DONE;
-            x1 = x2;
-            Fx1 = Fx2;
-            x2 = a + .618*(b-a);
-            Fx2 = f_proc( x2);
+            dat.x1 = dat.x2;
+            dat.Fx1 = dat.Fx2;
+            dat.x2 = dat.a + .618*(dat.b-dat.a);
+            dat.Fx2 = calcFunction( dat.x2, val2);
         }
         else
         {
-            b = x2;
-            if( (b-a) < param[2])
+            dat.b = dat.x2;
+            if( (dat.b-dat.a) < dat.Xtol)
                 goto DONE;
-            x2 = x1;
-            Fx2 = Fx1;
-            x1 = a + .382*(b-a);
-            Fx1 = f_proc( x1);
+            dat.x2 = dat.x1;
+            dat.Fx2 = dat.Fx1;
+            dat.x1 = dat.a + .382*(dat.b-dat.a);
+            dat.Fx1 = calcFunction( dat.x1, val2);
         }
     }
-    while( (b-a) > param[2] );
+    while( (dat.b-dat.a) > dat.Xtol );
 DONE:
-    x1 = (a+b)/2;
-    return x1;
+    dat.x1 = (dat.a+dat.b)/2;
+    return dat.x1;
 }
 
 
+double GoldenSelectionTwo::calcFunction( double x, double y )
+{
+    if( nOperand == 1 )
+        return minF( x, y );
+    else
+        return minF( y, x );
+}
+
+double GoldenSelectionTwo::getMinimum( double val2 )
+{
+   double x, y=dat2.a, Fxy, Fay, Fxa;
+
+   nOperand = 1;
+
+   do{
+     x = getMinimumDat( dat1, y );
+     Fxy = calcFunction( x, y );
+     if( fabs(Fxy)< Ftol )
+         goto DONE;
+
+     nOperand = 2;
+     y = getMinimumDat( dat2, x );
+     Fxy = calcFunction( y, x );
+     if( fabs(Fxy)< Ftol )
+        goto DONE;
+
+     nOperand = 1;   // must be tested??????
+     Fay = calcFunction( dat1.a, y );
+     if( Fay*Fxy > 0)
+        dat1.a = x;
+     else
+        dat1.b = x;
+
+     Fxa = calcFunction( x, dat2.a );
+     if( Fxa*Fxy > 0)
+        dat2.a = y;
+     else
+        dat2.b = y;
+  }
+  while( (dat1.b-dat1.a) > dat1.Xtol || (dat2.b-dat2.a) > dat2.Xtol );
+
+   x = (dat1.a+dat1.b)/2;
+   y = (dat2.a+dat2.b)/2;
+
+  DONE:
+
+   nOperand = 1;
+   minX = x;
+   minY = y;
+
+   return x;
+}
 
 
 
