@@ -208,24 +208,23 @@ void TMulti::XmaxSAT_IPM2_reset()
 }
 */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating value of dual chemical potential
+// Calculating value of dual chemical potential of j-th dependent component
 //     performance optimized version  (February 2007)
-//
 double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, long int j )
 {
-    long int i, ii;
-    double Nu = 0.0;
-//    for(long int i=; i<N; i++ )
-//    Nu += AL[i]? U[i]*(AL[i]): 0.0;
-   for( i=arrL[j]; i<arrL[j+1]; i++ )
+   long int i, ii;
+   double Nu = 0.0;
+   for( i = arrL[j]; i < arrL[j+1]; i++ )
    {  ii = arrAN[i];
-      if( ii>= N )
+      if( ii >= N )
        continue;
        Nu += U[ii]*(AL[ii]);
    }
    return Nu;
 }
-
+//    for( long int i=0; i<N; i++ )  // obsolete straightforward loop
+//         Nu += U[i]*AL[i];
+//
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  This procedure sets kinetic constraints according to a given
 //  concentration units

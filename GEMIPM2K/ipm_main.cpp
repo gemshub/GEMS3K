@@ -769,10 +769,10 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
  #ifdef Use_qd_real
        if( pa->p.PD > 0)
 #endif
-           sRet = MakeAndSolveSLE( N, true );
+           sRet = MakeAndSolveSystemOfLinearEquations( N, true );
 #ifdef Use_qd_real
        else
-           sRet = qdMakeAndSolveSLE( N, true );
+           sRet = qdMakeAndSolveSystemOfLinearEquations( N, true );
 #endif
 
        if( sRet == 1 )  // error: no SLE solution!
@@ -911,10 +911,10 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
 #ifdef Use_qd_real
         if( pa->p.PD> 0 )
 #endif
-            iRet = MakeAndSolveSLE( N, false );
+            iRet = MakeAndSolveSystemOfLinearEquations( N, false );
 #ifdef Use_qd_real
         else
-                iRet = qdMakeAndSolveSLE( N, false );
+                iRet = qdMakeAndSolveSystemOfLinearEquations( N, false );
 #endif
         if( iRet == 1 )
         {
@@ -1425,67 +1425,61 @@ void TMulti::WeightMultipliers( bool square )
 //                1  - no solution, degenerated or inconsistent system
 //
 #define  a(j,i) ((*(pmp->A+(i)+(j)*Na)))
-//#define  a(j,i) ((*(pmp->A+(i)+(j)*N)))  obsolete
-long int TMulti::MakeAndSolveSLE( long int N, bool initAppr )
+long int TMulti::MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr )
 {
-  long int ii,i, jj, kk, k, Na = pmp->N;
-//  double aa;
+  long int ii, i, jj, kk, k, Na = pmp->N;
   Alloc_A_B( N );
 
   // Making the  matrix of IPM linear equations
-  for( kk=0; kk<N; kk++)
-   for( ii=0; ii<N; ii++ )
+  for( kk = 0; kk < N; kk++)
+   for( ii=0; ii < N; ii++ )
       (*(AA+(ii)+(kk)*N)) = 0.;
 
-  for( jj=0; jj<pmp->L; jj++ )
+  for( jj=0; jj < pmp->L; jj++ )
    if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
    {
-      for( k=arrL[jj]; k<arrL[jj+1]; k++)
-        for( i=arrL[jj]; i<arrL[jj+1]; i++ )
+      for( k = arrL[jj]; k < arrL[jj+1]; k++)
+        for( i = arrL[jj]; i < arrL[jj+1]; i++ )
         { ii = arrAN[i];
           kk = arrAN[k];
-          if( ii>= N || kk>= N )
+          if( ii >= N || kk >= N )
            continue;
           (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pmp->W[jj];
         }
-    }
+   }
 
    if( initAppr )
-     for( ii=0; ii<N; ii++ )
+     for( ii = 0; ii < N; ii++ )
          BB[ii] = pmp->C[ii];
-   else
-      {
-         for( ii=0; ii<N; ii++ )
-            BB[ii] = 0.;
-          for( jj=0; jj<pmp->L; jj++)
-           if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
-              for( i=arrL[jj]; i<arrL[jj+1]; i++ )
-              {  ii = arrAN[i];
-                 if( ii>= N )
-                  continue;
-                 BB[ii] += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
-              }
-      }
+   else {
+     for( ii = 0; ii < N; ii++ )
+         BB[ii] = 0.;
+     for( jj=0; jj < pmp->L; jj++ )
+        if( pmp->Y[jj] > min( pmp->lowPosNum, pmp->DcMinM ) )
+           for( i = arrL[jj]; i < arrL[jj+1]; i++ )
+           {  ii = arrAN[i];
+              if( ii >= N )
+                continue;
+              BB[ii] += pmp->F[jj] * a(jj,ii) * pmp->W[jj];
+           }
+    }
 
 #ifndef PGf90
-
-  Array2D<double> A(N,N, AA);
-  Array1D<double> B(N, BB);
-
+  Array2D<double> A( N, N, AA );
+  Array1D<double> B( N, BB );
 #else
+  Array2D<double> A( N, N);
+  Array1D<double> B( N );
 
-  Array2D<double> A(N,N);
-  Array1D<double> B(N);
-
-  for( kk=0; kk<N; kk++)
-   for( ii=0; ii<N; ii++ )
+  for( kk = 0; kk < N; kk++)
+   for( ii = 0; ii < N; ii++ )
       A[kk][ii] = (*(AA+(ii)+(kk)*N));
-
-   for( ii=0; ii<N; ii++ )
+   for( ii = 0; ii < N; ii++ )
      B[ii] = BB[ii];
-
 #endif
-// this routine constructs its Cholesky decomposition, A = L x LT .
+// From here on, the NIST TNT Jama/C++ linear algebra package is used
+//    (credit: http://math.nist.gov/tnt/download.html)
+// this routine constructs the Cholesky decomposition, A = L x LT .
   Cholesky<double>  chol(A);
 
   if( chol.is_spd() )  // is positive definite A.
@@ -1504,25 +1498,25 @@ long int TMulti::MakeAndSolveSLE( long int N, bool initAppr )
 // of square systems of simultaneous linear equations.
 // This will fail if isNonsingular() returns false.
    if( !lu.isNonsingular() )
-     return 1; // Singular matrix - it's a pity.
+     return 1; // Singular matrix - too bad! No solution ...
 
   B = lu.solve( B );
   }
 
 if( initAppr )
 {
-   for( ii=0; ii<N; ii++ )
+   for( ii = 0; ii < N; ii++ )
      pmp->Uefd[ii] = B[(int)ii];
 }
 else {
-  for( ii=0; ii<N; ii++ )
+  for( ii = 0; ii < N; ii++ )
      pmp->U[ii] = B[(int)ii];
 }
   return 0;
 }
 
 #ifdef Use_qd_real
-long int TMulti::qdMakeAndSolveSLE( long int N, bool initAppr )
+long int TMulti::qdMakeAndSolveSystemOfLinearEquations( long int N, bool initAppr )
 {
   long int ii,i, jj, kk, k, Na = pmp->N;
   Alloc_A_B( N );
@@ -1870,7 +1864,7 @@ double TMulti::RescaleToSize( bool standard_size )
 //
 void TMulti::Alloc_A_B( long int newN )
 {
-  if( AA && BB && (newN==sizeN) )
+  if( AA && BB && (newN == sizeN) )
     return;
   Free_A_B();
   AA = new  double[newN*newN];
@@ -1897,15 +1891,11 @@ void TMulti::Free_A_B()
   sizeN = 0;
 }
 
-
 // Building an index list of non-zero elements of the matrix pmp->A
 #define  a(j,i) ((*(pmp->A+(i)+(j)*pmp->N)))
 void TMulti::Build_compressed_xAN()
 {
  long int ii, jj, k;
-
- //if( arrL && arrAN && (sizeL == pmp->L+1) && ( sizeAN == pmp->N ) )
- //  return; // The index arrays are intact - no need to remake (added by DK 27.05.08)  SD 26/11/2008
 
  // Calculate number of non-zero elements in A matrix
  k = 0;
@@ -1918,8 +1908,8 @@ void TMulti::Build_compressed_xAN()
     Free_compressed_xAN();
 
    // Allocate memory
-   arrL = new long int[pmp->L+1]; // sizeL = pmp->L+1;
-   arrAN = new long int[k];       // sizeAN = pmp->N; // sizeAN = k;
+   arrL = new long int[pmp->L+1];
+   arrAN = new long int[k];
 
    // Set indexes in the index arrays
    k = 0;

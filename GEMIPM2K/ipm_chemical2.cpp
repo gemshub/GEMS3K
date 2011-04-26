@@ -90,7 +90,7 @@ double TMulti::bfc_mass( void )
 //
 //  Do we need this all in GEMIPM ?
 //
-void TMulti::PH_CalculateConcentrations( double X[], double XF[], double XFA[],
+void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
               double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
     long int j, ii, i;
@@ -435,7 +435,7 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
              return; // Phase class code error!
         }
         // calculation of species concentrations in k-th phase
-        PH_CalculateConcentrations( X, XF, XFA, Factor, MMC, Dsur, j, i, k );
+        CalculateConcentrationsInPhase( X, XF, XFA, Factor, MMC, Dsur, j, i, k );
 
 NEXT_PHASE:
         pmp->VXc += pmp->FVOL[k];

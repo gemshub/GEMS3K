@@ -445,7 +445,7 @@ class TMulti
     void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
     void phase_bfc( long int k, long int jj );
     double bfc_mass( void );
-    void PH_CalculateConcentrations( double X[], double XF[], double XFA[],
+    void CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
          double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
     void CalculateConcentrations( double X[], double XF[], double XFA[]);
     long int GouyChapman(  long int jb, long int je, long int k );
@@ -494,7 +494,7 @@ class TMulti
    //   void LagrangeMultiplier();
    long int MetastabilityLagrangeMultiplier();
    void WeightMultipliers( bool square );
-   long int MakeAndSolveSLE( long int N, bool initAppr );
+   long int MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr );
    double DikinsCriterion(  long int N, bool initAppr );
    double StepSizeEstimate( bool initAppr );
    void Restore_Y_YF_Vectors();
@@ -537,7 +537,7 @@ class TMulti
        void qdMassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                    double *B, double *C );
        qd_real qdGX( double LM  );
-       long int qdMakeAndSolveSLE( long int N, bool initAppr );
+       long int qdMakeAndSolveSystemOfLinearEquations( long int N, bool initAppr );
        double qdOptimizeStepSize( double LM );
        double qdDikinsCriterion(  long int N, bool initAppr );
 #endif
