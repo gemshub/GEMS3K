@@ -614,7 +614,7 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
         TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
         //        if( pa->p.PC == 2 )
         //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
-        if( pmp->PD == 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
+        if( pmp->PD == 2 /* && pmp->Lads==0 */ )
         {
             pmp->FitVar[4] = -1.0;   // To avoid smoothing when F0[j] is calculated first time
             CalculateActivityCoefficients( LINK_UX_MODE);
@@ -635,7 +635,7 @@ pmp->PCI = 1.; // SD 05/05/2010 for smaller number of iterations for systems wit
 
          pmp->logCDvalues[0] = pmp->logCDvalues[1] = pmp->logCDvalues[2] = pmp->logCDvalues[3] =
    	 pmp->logCDvalues[4] = log( pmp->PCI );  // reset CD sampler array
-     if( pmp->PD >= 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
+     if( pmp->PD >= 2 /* && pmp->Lads==0 */ )
         {
                 pmp->FitVar[4] = -1.0;   // To avoid smoothing when F0[j] is calculated first time
                 CalculateActivityCoefficients( LINK_UX_MODE );
@@ -755,10 +755,10 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
            TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
            //        if( pa->p.PC == 2 )
            //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
-           if( pmp->PD == 2 /* && pmp->Lads==0 */ )    // added for stability at PIA 06.03.2008 DK
+           if( pmp->PD == 2 /* && pmp->Lads==0 */ )
            {
 //               CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA );
-               CalculateActivityCoefficients( LINK_UX_MODE);    // Very experimental!
+               CalculateActivityCoefficients( LINK_UX_MODE);
            }
            return iRet;       // mass balance refinement finished OK
        }
@@ -835,8 +835,20 @@ STEP_POINT("FIA Iteration");
        sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR() iterations (%d) exceeded! ",
                 WhereCalledFrom, pa->p.DP );
        setErrorMessage( 4, "E04IPM: MassBalanceRefinement(): ", buf );
-    }
-   return iRet;   // no solution
+       return iRet; // no MBR() solution
+   }
+   // very experimental - updating activity coefficients after MBR()
+   for( j=0; j< pmp->L; j++ )
+         pmp->X[j] = pmp->Y[j];
+   TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
+              //        if( pa->p.PC == 2 )
+              //           XmaxSAT_IPM2_reset();  // Reset upper limits for surface species
+   if( pmp->PD == 2 /* && pmp->Lads==0 */ )
+   {
+   //        CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA );
+         CalculateActivityCoefficients( LINK_UX_MODE);
+   }
+   return iRet;   // inaccurate MBR() solution
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1001,7 +1013,7 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
        if( pmp->PHC[0] == PH_AQUEL && ( pmp->XF[0] < pmp->DSM ||
             pmp->X[pmp->LO] <= pmp->XwMinM ))    // fixed 28.04.2010 DK
        {
-           pmp->XF[0] = 0.;  // elimination of aqueous phase if too little
+           pmp->XF[0] = 0.;  // elimination of aqueous phase if too little amount
            pmp->XFA[0] = 0.;
        }
 
