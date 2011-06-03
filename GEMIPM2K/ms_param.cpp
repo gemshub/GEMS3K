@@ -119,9 +119,9 @@ long int TProfil::testMulti(  )
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
-double TProfil::calcMulti( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
+double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
- return multi->calcEqustat( 0, NumIterFIA_, NumIterIPM_ );
+ return multi->CalculateEquilibriumState( 0, NumIterFIA_, NumIterIPM_ );
 }
 
 void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
@@ -200,7 +200,7 @@ void TProfil::readMulti( const char* path )
 // Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 // (only used in standalone GEMIPM2K version)
  //
-void TMulti::CompG0Load()
+void TMulti::DC_LoadThermodynamicData()
 {
   long int j, jj, k, xTP, jb, je=0;
   double Go, Gg, Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
@@ -310,7 +310,7 @@ void TMulti::CompG0Load()
            Gg = pmp->Guns[j];
      else
            Gg = 0.;
-     pmp->G0[j] = Cj_init_calc( Go+Gg, j, k ); // Inside this function, pmp->YOF[k] can be added!
+     pmp->G0[j] = ConvertGj_toUniformStandardState( Go+Gg, j, k ); // Inside this function, pmp->YOF[k] can be added!
      switch( pmp->PV )
      { // put mol volumes of components into A matrix or into the vector of molar volumes
        // to be checked!
