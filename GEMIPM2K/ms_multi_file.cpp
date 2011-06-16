@@ -145,7 +145,7 @@ void TMulti::set_def( long int /*q*/)
     pm.SATX =0;
     pm.DUL   = 0;
     pm.DLL   = 0;
-    pm.GEX   = 0;
+    pm.fDQF   = 0;
     pm.PUL   = 0;
     pm.PLL   = 0;
     pm.YOF   = 0;
@@ -370,7 +370,7 @@ void TMulti::to_file( GemDataStream& ff  )
    ff.writeArray( pm.DCCW, pm.L);
 
    ff.writeArray( pm.lnGmM, pm.L);
-   ff.writeArray( pm.GEX,   pm.L);
+   ff.writeArray( pm.fDQF,  pm.L);
    ff.writeArray( pm.FVOL, pm.FI);
    ff.writeArray( pm.FWGT, pm.FI);
 
@@ -590,7 +590,7 @@ void TMulti::from_file( GemDataStream& ff )
    ff.readArray( pm.DCCW, pm.L);
 
    ff.readArray( pm.lnGmM, pm.L);
-   ff.readArray( pm.GEX,   pm.L);
+   ff.readArray( pm.fDQF, pm.L);
    ff.readArray( pm.FVOL, pm.FI);
    ff.readArray( pm.FWGT, pm.FI);
 
@@ -1500,7 +1500,7 @@ void TMulti::to_text_file( const char *path, bool append )
 
 
   prar.writeArray(  "lnGmM", pm.lnGmM,  pm.L);
-  prar.writeArray(  "GEX", pm.GEX,  pm.L);
+  prar.writeArray(  "fDQF", pm.fDQF,  pm.L);
   prar.writeArray(  "FVOL", pm.FVOL,  pm.FI);
   prar.writeArray(  "FWGT", pm.FWGT,  pm.FI);
 

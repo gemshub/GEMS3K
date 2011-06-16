@@ -55,7 +55,7 @@
     aObj[ o_nppar].SetPtr(pmp->G0+jb );  // changed 10.12.2008 by DK
     aObj[o_nppar].SetN(  pmp->L1[k]);
 //    aObj[ o_ngtn].SetPtr( pmp->G0+jb );
-    aObj[ o_ngtn].SetPtr( pmp->GEX+jb );     // changed 05.12.2006 by DK
+    aObj[ o_ngtn].SetPtr( pmp->fDQF+jb );     // changed 05.12.2006 by DK
     aObj[o_ngtn].SetN( pmp->L1[k] );
     aObj[ o_ngam].SetPtr( pmp->Gamma+jb ); // Gamma calculated
     aObj[o_ngam].SetN( pmp->L1[k] );
@@ -174,7 +174,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     	  	     cd = 0.0;
     	   	     for(i=0; i < mode; i++ )
     	   	    	 cd += pmp->logCDvalues[i];
-    	   	     cd /= 5.;
+                     cd /= (double)mode; // 5. - bugfix
     	   	     break;
     	}
         al = dg + ( ag - dg ) / ( 1. + exp( dk - cd ) / dg );
@@ -358,7 +358,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     		{
                 if(pmp->XF[k] < min( pmp->DSM, pmp->PhMinM ) ) // pmp->lowPosNum )   // workaround 10.03.2008 DK
             		pmp->Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
-            	pmp->GEX[j] =0.0;  // cleaning GEX in TP mode!
+                pmp->fDQF[j] =0.0;  // cleaning fDQF in TP mode!
             	pmp->lnGmo[j] = pmp->lnGam[j]; // saving activity coefficients in TP mode
        	    }
             if( sMod[SGM_MODE] != SM_STNGAM )
@@ -699,7 +699,7 @@ END_LOOP:
              else pmp->Gamma[j] = 1.0;
 
              pmp->F0[j] = DC_PrimalChemicalPotentialUpdate( j, k );
-             pmp->G[j] = pmp->G0[j] + pmp->GEX[j] + pmp->F0[j];
+             pmp->G[j] = pmp->G0[j] + pmp->fDQF[j] + pmp->F0[j];
            }
         }
     }  // k - end loop over phases
@@ -904,7 +904,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
         {
                 TPRSVcalc* myPT = new TPRSVcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
-                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
+                    pmp->fDQF+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
                 mySM = (TSolMod*)myPT;
                 break;
         }
@@ -914,7 +914,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
                 TCGFcalc* myPT = new TCGFcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL,
                     pmp->Pparc+jb, pmp->FWGT+k, pmp->X+jb,
-                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
+                    pmp->fDQF+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
                 mySM = (TSolMod*)myPT;
                 break;
         }
@@ -923,7 +923,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
         {
                 TSRKcalc* myPT = new TSRKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
-                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
+                    pmp->fDQF+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
                 mySM = (TSolMod*)myPT;
                 break;
         }
@@ -932,7 +932,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
         {
                 TPR78calc* myPT = new TPR78calc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
-                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
+                    pmp->fDQF+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc );
                 mySM = (TSolMod*)myPT;
                 break;
         }
@@ -941,7 +941,7 @@ void TMulti::SolModCreate( long int jb, long int, long int jpb, long int jdb, lo
         {
                 TCORKcalc* myPT = new TCORKcalc( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
                     aIPx, aIPc, aDCc, aWx, alnGam, aphVOL, pmp->Pparc+jb,
-                    pmp->GEX+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc, DCCp );
+                    pmp->fDQF+jb, pmp->Vol+jb, pmp->Tc, pmp->Pc, DCCp );
                 mySM = (TSolMod*)myPT;
                 break;
         }

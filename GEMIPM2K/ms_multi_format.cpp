@@ -492,8 +492,8 @@ getLsMdcsum( LsMdcSum );
   if(!brief_mode || prar.getAlws("GEX" ))
   {
    if( _comment )
-      ff << "\n\n# GEX: Increments for adjustment of G0 values of Dependent Components in (J/mol/(RT)) (normalized units) [nDC]";
-   prar.writeArray(  "GEX", pmp->GEX,  pmp->L);
+      ff << "\n\n# fDQF: DQF parameters or pure gas fugacities in (J/mol/(RT) [nDC]";
+   prar.writeArray(  "fDQF", pmp->fDQF,  pmp->L);
   }
   if(!brief_mode || prar.getAlws("lnGmf" ))
   { if( _comment )
@@ -914,7 +914,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               break;
       case 5: rddar.readArray( "Pparc", pmp->Pparc,  pmp->L);
               break;
-      case 6: rddar.readArray( "GEX", pmp->GEX,  pmp->L);
+      case 6: rddar.readArray( "fDQF", pmp->fDQF,  pmp->L);
               break;
       case 7: rddar.readArray( "lnGmf", pmp->lnGmf,  pmp->L);
               break;

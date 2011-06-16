@@ -1375,7 +1375,7 @@ void TMulti::GasParcP()
             {  // fixed 02.03.98 DK
 
                 copyValues(SMbuf[jj], pmp->SM[j], MAXDCNAME );
-                pmp->Fug_l[jj] = -(pmp->G0[j]+pmp->GEX[j]);
+                pmp->Fug_l[jj] = -(pmp->G0[j] + pmp->fDQF[j]);
                 if( pmp->Pc > 1e-9 )
                     pmp->Fug_l[jj] += log(pmp->Pc);
                 for( i=0; i<pmp->N; i++ )

@@ -207,7 +207,7 @@ double
 
     *DUL,     // VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     // NG Vector of lower kinetic restrictions to x_j, moles [L]
-    *GEX,     // Increments to molar G0 values of DCs from pure fugacities or DQF terms, normalized [L]
+    *fDQF,     // Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
     *PUL,  // Vector of upper restrictions to phases amounts X_a (reserved)[FIs]
     *PLL,  // Vector of lower restrictions to phases amounts X_a (reserved)[FIs]
     *YOF,     // Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]

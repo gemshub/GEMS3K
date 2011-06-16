@@ -1742,7 +1742,7 @@ void TMulti::StabilityIndexes( void )
           ln_ax_dual = lg_to_ln * pmp->Y_la[j];  // DualTh activity
           if( ln_ax_dual < -777. )
               ln_ax_dual = -777.;
-          lnFugPur = pmp->GEX[j];  // Pure fugacity or DQF parameter
+          lnFugPur = pmp->fDQF[j];  // Pure gas fugacity or end-member DQF parameter
 
           switch( pmp->DCC[j] ) // choice of corrections for estimated mole fractions
           {
