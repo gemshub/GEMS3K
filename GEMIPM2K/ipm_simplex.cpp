@@ -802,6 +802,7 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 #endif
 
    Alloc_internal();
+   Alloc_uDD( pmp->N);      // Added 06.05.2011 DK
 
   // calculate mass of the system
    pmp->MBX = 0.0;

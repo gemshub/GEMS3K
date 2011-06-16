@@ -49,11 +49,11 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-    "GEM-Selektor v3.0u-1707.496: Numerical controls & thresholds",
-    {   // Typical default set (29.11.2010) new PhaseSelection( logSI )
+    "GEM-Selektor v3.0u-1858.546: Numerical controls & thresholds",
+    {   // Typical default set (16.06.2011) new PhaseSelection( logSI ) & uDD
         2,  /* PC */  2,     /* PD */   -4,   /* PRD */
         1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-        1, /* DT */     10,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+        1, /* DT */     0,   /* PLLG */   1,  /* PE */  7000, /* IIM */
         1000., /* DG */   1e-11,  /* DHB */  1e-20,  /* DS */
         1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
         1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */

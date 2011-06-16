@@ -279,7 +279,6 @@ pm.SPh = 0;
 pm.CPh = 0;
 pm.APh = 0;
 pm.UPh = 0;
-
 }
 
 //---------------------------------------------------------//
@@ -493,14 +492,6 @@ ff.writeArray((double*)pm.D, MST*MST);
    	ff.writeArray( pm.U0, pm.L);
    	ff.writeArray( pm.S0, pm.L);
    	ff.writeArray( pm.Cp0, pm.L);
-
-//  Added 16.11.2004 by Sveta
-//   if( pm.sitNcat*pm.sitNcat )
-//     ff.writeArray( pm.sitE, pm.sitNcat*pm.sitNan );
-//   if( pm.sitNcat )
-//     ff.writeArray( pm.sitXcat, pm.sitNcat );
-//   if( pm.sitNan )
-//     ff.writeArray( pm.sitXan, pm.sitNan );
 }
 
 // reading MULTI from binary file
@@ -725,13 +716,6 @@ ff.readArray((double*)pm.D, MST*MST);
    	ff.readArray( pm.U0, pm.L);
    	ff.readArray( pm.S0, pm.L);
    	ff.readArray( pm.Cp0, pm.L);
-//  Added 16.11.2004 by Sveta
-//   if( pm.sitNcat*pm.sitNcat )
-//     ff.readArray( pm.sitE, pm.sitNcat*pm.sitNan );
-//   if( pm.sitNcat )
-//     ff.readArray( pm.sitXcat, pm.sitNcat );
-//   if( pm.sitNan )
-//     ff.readArray( pm.sitXan, pm.sitNan );
 }
 
 
@@ -782,7 +766,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  pm.DCC = new char[pm.L];
  pm.DCCW = new char[pm.L];
  pm.lnGmM = new double[pm.L];
- pm.GEX = new double[pm.L]; //24
+ pm.fDQF = new double[pm.L]; //24
  for( ii=0; ii<pm.L; ii++ )
  {
 	 pm.DUL[ii] = 1e6;
@@ -808,7 +792,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
      pm.DCC[ii] = 0;
      pm.DCCW[ii] = 0;
      pm.lnGmM[ii] = 0.0;
-     pm.GEX[ii] = 0.0;
+     pm.fDQF[ii] = 0.0;
  }
 
  pm.A = new double[pm.N*pm.L];
@@ -1200,11 +1184,12 @@ else
  pm.XU = new double[pm.L];
  for( ii=0; ii<pm.L; ii++ )
  	  pm.XU[ii] = 0.;
- pm.Uc = new double[pm.N];
+ pm.Uc = new double[pm.N][2];
  pm.Uefd = new double[pm.N];
   for( ii=0; ii<pm.N; ii++ )
   {
-      pm.Uc[ii] = 0.;
+      pm.Uc[ii][0] = 0.;
+      pm.Uc[ii][1] = 0.;
       pm.Uefd[ii] = 0.;
   }
 
@@ -1301,7 +1286,7 @@ void TMulti::multi_free()
  if(   pm.PHC ) delete[] pm.PHC;
  if(   pm.DCCW ) delete[] pm.DCCW;
  if( pm.lnGmM ) delete[] pm.lnGmM;
- if( pm.GEX ) delete[] pm.GEX;
+ if( pm.fDQF ) delete[] pm.fDQF;
  if( pm.FVOL ) delete[] pm.FVOL;
  if( pm.FWGT ) delete[] pm.FWGT;
 
@@ -1413,6 +1398,7 @@ if( pm.D ) delete[] pm.D;
     // optimization 08/02/2007
     Free_TSolMod();
     Free_internal();
+    Free_uDD();
 }
 
 #endif
@@ -1479,7 +1465,7 @@ void TMulti::to_text_file( const char *path, bool append )
   prar.writeArray(  "lnGmo", pm.lnGmo,  pm.L);
   prar.writeArray(  "B", pm.B,  pm.N);
   prar.writeArray(  "U", pm.U,  pm.N);
-  prar.writeArray(  "Uc", pm.Uc,  pm.N);
+  prar.writeArray(  "Uc", &pm.Uc[0][0],  pm.N*2);
   prar.writeArray(  "Uefd", pm.Uefd,  pm.N);
   prar.writeArray(  "U_r", pm.U_r,  pm.N);
   prar.writeArray(  "C", pm.C,  pm.N);
@@ -1634,13 +1620,6 @@ void TMulti::to_text_file( const char *path, bool append )
     prar.writeArray(  "APh", &pm.APh[0][0], pm.FIs*MIXPHPROPS);
     prar.writeArray(  "UPh", &pm.UPh[0][0], pm.FIs*MIXPHPROPS);
 
-//  Added 16.11.2004 by Sveta
-//   if( pm.sitNcat*pm.sitNcat )
-//    prar.writeArray(  "sitE", pm.sitE, pm.sitNcat*pm.sitNan );
-//   if( pm.sitNcat )
-//    prar.writeArray(  "sitXcat", pm.sitXcat, pm.sitNcat );
-//   if( pm.sitNan )
-//     prar.writeArray(  "sitXan", pm.sitXan, pm.sitNan );
 }
 
 //--------------------- End of ms_multi_file.cpp ---------------------------

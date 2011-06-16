@@ -75,8 +75,8 @@ typedef struct
     Ec,    // CalculateActivityCoefficients() return code: 0 (OK) or 1 (error)
     K2,    // Number of IPM loops performed ( >1 up to 6 because of PSSC() )
     PZ,    // Indicator of PSSC() status (since r1594): 0 untouched, 1 phase(s) inserted
-              // 2 insertion done after 3 major IPM loops
-    pNP, //Mode of FIA selection: 0-automatic-LPP, 1-old eqstate, -1-user's choice
+              // 2 insertion done after 5 major IPM loops
+    pNP,   // Mode of FIA selection: 0-automatic-LP AIA, 1-smart SIA, -1-user's choice
     pESU,  // Unpack old eqstate from EQSTAT record?  0-no 1-yes
     pIPN,  // State of IPN-arrays:  0-create; 1-available; -1 remake
     pBAL,  // State of reloading CSD:  1- BAL only; 0-whole CSD
@@ -85,13 +85,13 @@ tMin,  // Type of thermodynamic potential to minimize
     pULR,  // Start recalc kinetic constraints (0-do not, 1-do )internal
     ITaia,  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
     FIat,   // max. number of surface site types
-    MK,     // PM return code: 0 - continue;  1 - converged
+    MK,     // IPM return code: 0 - continue;  1 - converged
     W1,     // Indicator ofSpeciationCleanup() status (since r1594) 0 untouched, -1 phase(s) removed, 1 some DCs inserted
     is,     // is - index of IC for IPN equations ( CalculateActivityCoefficients() )
     js,     // js - index of DC for IPN equations ( CalculateActivityCoefficients() )
-    next,
-    sitNcat,    // SIT: number of cations
-    sitNan      // SIT: number of anions
+    next,   // for IPN equations (is it really necessary? TW please check!
+    sitNcat,    // Can be re-used
+    sitNan      // Can be re-used
     ;
   double
     TC,TCc, 	// Temperature T, min.-max. (0,2000 C)
@@ -314,7 +314,7 @@ double
 
   // additional arrays for internal calculation in ipm_main
   double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
-  double *Uc; // Internal copy of IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
+  double (*Uc)[2]; // Internal copy of IC chemical potentials u_i (mole/mole) at r-1 and r-2 [N][2]
   double *Uefd; // Internal copy of IC chemical potentials u_i (mole/mole) - EFD function [N]
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
   char errorBuf[1024]; // description of error in IPM
@@ -383,6 +383,20 @@ class TMulti
    void Alloc_TSolMod( long int newFIs );
    void Free_TSolMod();
 
+// Added for implementation of divergence detection in dual solution 06.05.2011 DK
+   long int nNu;  // number of ICs in the system
+   long int cnr;  // current IPM iteration
+   long int nCNud; // number of IC names for divergent dual chemical potentials
+   double *U_mean; // Cumulative mean dual solution approximation [nNu]
+   double *U_M2;   // Cumulative sum of squares [nNu]
+   double *U_CVo;  // Cumulative Coefficient of Variation for dual solution approximation r-1 [nNu]
+   double *U_CV;   //Cumulative Coefficient of Variation for r-th dual solution approximation [nNu]
+   long int *ICNud; // List of IC indexes for divergent dual chemical potentials [nNu]
+   void Alloc_uDD( long int newN );
+   void Free_uDD();
+   void Reset_uDD(long int cr, bool trace = false );
+   void Increment_uDD( long int r, bool trace = false );
+   long int Check_uDD( long int mode, double DivTol, bool trace = false );
 
 #ifndef IPMGEMPLUGIN
 // These pointers and methods are only used in GEMS-PSI
@@ -587,6 +601,12 @@ public:
      BB = 0;
      arrL = 0;
      arrAN = 0;
+
+ U_mean = 0;
+ U_M2 = 0;
+ U_CVo = 0;
+ U_CV = 0;
+ ICNud = 0;
 
      sizeFIs = 0;
      phSolMod = 0;

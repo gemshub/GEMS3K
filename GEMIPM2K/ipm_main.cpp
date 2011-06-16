@@ -38,6 +38,7 @@ using namespace JAMA;
 #include<iomanip>
 
 // #define GEMITERTRACE
+#define uDDtrace false
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Call to GEM IPM calculation of equilibrium state in MULTI
@@ -45,9 +46,9 @@ using namespace JAMA;
 void TMulti::GibbsEnergyMinimization()
 {
   bool IAstatus;
-
+  Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 FORCED_AIA:
-   GEM_IPM_Init();
+    GEM_IPM_Init();
    if( pmp->pNP )
    {
       if( pmp->ITaia <=30 )       // Foolproof
@@ -74,13 +75,20 @@ FORCED_AIA:
    // testing results
    if( pmp->MK == 2 )
    {	if( pmp->pNP )
-        {
+        {                     // SIA mode failed
             pmp->pNP = 0;
             pmp->MK = 0;
+            Reset_uDD( 0L, uDDtrace );  // resetting u divergence detector
             goto FORCED_AIA;  // Trying again with AIA set after bad SIA
          }
-        else
-           Error( pmp->errorCode ,pmp->errorBuf );
+        else {                 // AIA mode failed
+           if( nCNud <= 0L )   // Generic AIA IPM failure, except the case of u divergence
+               Error( pmp->errorCode ,pmp->errorBuf );
+           // Now trying again with AIA down to cnr-2 IPM iteration, no PhaseSelection()
+           // and possibly cleanup only for species with much lower activity than concentration
+           pmp->ITG = 0;
+           goto FORCED_AIA;
+       }
    }
    pmp->FitVar[0] = bfc_mass();  // getting total mass of solid phases in the system
    if( pmp->MK || pmp->PZ ) // no good solution
@@ -106,10 +114,10 @@ void TMulti::GEM_IPM( long int rLoop )
 
     pmp->W1=0; pmp->K2=0;         // internal counters and indicators
     pmp->Ec = pmp->MK = pmp->PZ = 0;    // Return codes
-    setErrorMessage( 0, "" , "");  // empty error info
-    if( TProfil::pm->pa.p.PLLG == 0 )  // SD 10/02/2009
-        TProfil::pm->pa.p.PLLG = 20;  // Changed 28.04.2010 KD
-
+    if(!nCNud && !cnr )
+        setErrorMessage( 0, "" , "");  // empty error info
+ //   if( TProfil::pm->pa.p.PLLG == 0 )  // Disabled by DK 11.05.2011
+ //       TProfil::pm->pa.p.PLLG = 20;  // Changed 28.04.2010 KD
 
     if( pmp->pULR && pmp->PLIM )
         Set_DC_limits( DC_LIM_INIT );
@@ -186,21 +194,30 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 //#endif
 //                goto mEFD;
 //             }
-       	 Error( pmp->errorCode ,pmp->errorBuf );
+         Error( pmp->errorCode, pmp->errorBuf );
          break;
      case 3:  // bad CalculateActivityCoefficients() status in SIA mode
      case 4: // Mass balance broken after DualTh recover of DC amounts
          if( pmp->pNP )
-         {   // bad PIA mode - trying the AIA mode
+         {   // bad SIA mode - trying the AIA mode
                 pmp->MK = 2;   // Set to check in ComputeEquilibriumState() later on
 	        goto FORCED_AIA;
          }
-       	 Error( pmp->errorCode ,pmp->errorBuf );
+         Error( pmp->errorCode, pmp->errorBuf );
+         break;
+     case 5: // Divergence in dual solution approximation
+                // no or only partial cleanup can be done
+         pmp->MK = 2;   // Set to check in ComputeEquilibriumState() later on
+         if( pmp->pNP )
+         {   // bad SIA mode - trying the AIA mode 
+              goto FORCED_AIA;
+         }
+         goto FORCED_AIA; // even if in AIA, start over and go until r-1 then finish and do MBR
          break;
    }
 
    // Here the entry to new PSSC() module controlled by PC = 2
-   if( pa->p.PC >= 2 )
+   if( pa->p.PC >= 2 && nCNud <= 0 )   // only if there is no divergence in the dual solution
    {
        long int ps_rcode, k_miss, k_unst;
 
@@ -243,7 +260,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
                           k_miss, pmbuf.c_str(), k_unst, pubuf.c_str() );
                  setErrorMessage( 8, "W08IPM: PSSC():", buf );
                  if( pmp->pNP )
-                 {   // bad PIA mode - there are inconsistent phases after 3 attempts. Attempting AIA mode
+                 {   // bad SIA mode - there are inconsistent phases after 5 attempts. Attempting AIA mode
                          pmp->MK = 2;   // Set to check in ComputeEquilibriumState() later on
        #ifdef GEMITERTRACE
        //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT <<
@@ -260,7 +277,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
        } // end switch
 
    }
-   else if( pa->p.PC == 1 ) // Old PhaseSelect() mode PC = 1
+   else if( pa->p.PC == 1 && nCNud <= 0 ) // Old PhaseSelect() mode PC = 1
    {
        //=================== calling old Phase Selection algorithm =====================
         long int ps_rcode, k_miss, k_unst;
@@ -314,7 +331,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
         } // end switch
    }
 
-   if( pa->p.PRD != 0 && pa->p.PC != 2 ) // This block is calling the cleanup speciation function
+   if( pa->p.PRD != 0 && pa->p.PC != 2 && nCNud <= 0 ) // This block is calling the cleanup speciation function
    {
       double AmThExp, AmountThreshold, ChemPotDiffCutoff = 1e-2;
 //      long int eRet;
@@ -356,11 +373,11 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    if( pa->p.PC == 3 )
         XmaxSAT_IPM2();  // Install upper limits to xj of surface species (questionable)!
 
-  // if( pmp->W1 )
-  eRet = MassBalanceRefinement( pmp->K2 ); // Mass balance improvement in all normal cases
-  switch( eRet )
-  {
-    case 0:  // OK - refinement of concentrations and activity coefficients
+  if( nCNud <= 0 )
+  {  eRet = MassBalanceRefinement( pmp->K2 ); // Mass balance improvement in all normal cases
+     switch( eRet )
+    {
+      case 0:  // OK - refinement of concentrations and activity coefficients
         for( j=0; j<pmp->L; j++ )
            pmp->X[j]=pmp->Y[j];
         TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
@@ -370,13 +387,13 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
            CalculateActivityCoefficients( LINK_UX_MODE);
         }
         break;
-   case 5:  // Cleaned-up Lagrange multiplier for metastability broken for DC
-   case 4:  // Cleaned-up mass balance broken for IC
-   case 3:  // too small step length in MB refinement algorithm after cleanup
-   case 2:  // max number of iterations has been exceeded in MassBalanceRefinement()
-   case 1: // degeneration of R matrix in MassBalanceRefinement() after cleanup
+     case 5:  // Cleaned-up Lagrange multiplier for metastability broken for DC
+     case 4:  // Cleaned-up mass balance broken for IC
+     case 3:  // too small step length in MB refinement algorithm after cleanup
+     case 2:  // max number of iterations has been exceeded in MassBalanceRefinement()
+     case 1: // degeneration of R matrix in MassBalanceRefinement() after cleanup
              if( pmp->pNP )
-             {   // bad PIA mode - trying the AIA mode
+             {   // bad SIA mode - trying the AIA mode
             pmp->MK = 2;   // Set to check in ComputeEquilibriumState() later on
 #ifdef GEMITERTRACE
 //f_log << " ITF=" << pmp->ITF << " ITG=" << pmp->ITG << " IT=" << pmp->IT << " ! PIA->AIA on E04IPM" << endl;
@@ -386,6 +403,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
              else
                Error( pmp->errorCode ,pmp->errorBuf );
           break;
+   }
  }
 
 #ifndef IPMGEMPLUGIN
@@ -861,11 +879,13 @@ STEP_POINT("FIA Iteration");
 //              or user's interruption
 //          3, CalculateActivityCoefficients() returns bad (non-zero) status
 //          4, Mass balance broken  in DualTH (Mol_u)
+//     5, Divergence in dual solution u vector has been detected
+//
 long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 {
     bool StatusDivg;
-    long int N, IT1,J,Z,iRet,i;
-    double LM=0., LM1=1., FX1;
+    long int N, IT1,J,Z,iRet,i,  nDivIC;
+    double LM=0., LM1=1., FX1,    DivTol;
     SPP_SETTING *pa = &TProfil::pm->pa;
 
     status = 0;
@@ -914,7 +934,7 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
         if( pmp->PCI <= pmp->DXM * 10. ) // only at low enough Dikin criterion values
         {
            for(J=0;J<pmp->N;J++)
-              pmp->Uc[J] = pmp->U[J];
+              pmp->Uc[J][0] = pmp->U[J];
         }
         // Setting weight multipliers for DC
         WeightMultipliers( false );
@@ -936,38 +956,39 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
           return 1;
         }
 
-        if( pmp->PCI <= pmp->DXM * 10.  ) // Checking divergence of U vector at low enough PCI
+   if( !nCNud && TProfil::pm->pa.p.PLLG )   // disabled if PLLG = 0
+   { // Experimental - added 06.05.2011 by DK
+      Increment_uDD( pmp->ITG, uDDtrace );
+//   DivTol = pow( 10., -fabs( (double)TProfil::pm->pa.p.PLLG ) );
+      DivTol = (double)TProfil::pm->pa.p.PLLG;
+//      if( pmp->ITG )
+//          DivTol /= pmp->ITG;
+//       DivTol -= log(pmp->ITG);
+//      if( DivTol < 0.3 )
+//          DivTol = 0.3;
+      // Checking the dual solution for divergence
+      if(DivTol < 0. )
+         nDivIC = Check_uDD( 0, -DivTol, uDDtrace );
+      else
+         nDivIC = Check_uDD( 1, DivTol, uDDtrace );
+
+      if( nDivIC )
+      { // Printing error message
+        char buf[512];
+        StatusDivg = true;
+        sprintf( buf, "Divergence in dual solution approx. (u) \n at IPM iteration %ld with gen.tolerance %g "
+             "for %ld ICs:   %-6.5s", pmp->ITG, DivTol, nDivIC, pmp->SB[ICNud[0]] );
+        setErrorMessage( 14, "W14IPM: IPM-main():", buf);
+        for( Z =1; Z<nCNud; Z++ )
         {
-          bool Status1st = false;
-          char buf[200];
-          for(J=0;J<pmp->N;J++)
-          {
-              if( fabs(pmp->U[J]-pmp->Uc[J] ) > (double)(TProfil::pm->pa.p.PLLG)/*1. to 100.*/ )
-              {   // broken dual solution
-                  StatusDivg = true;
-                  if( pmp->PZ ) // error message only after phase insertion
-                  {
-                     if( !Status1st )
-                     {
-                           sprintf( buf, "Dual solution (vector u) has changed too much "
-                                 " in PhaseSelection() loop %ld IPM iter.%ld for IC %3.3s ",
-                                 pmp->PZ, pmp->ITG, pmp->SB[J] );
-        		   setErrorMessage( 14, "W14IPM: IPM-main():", buf);
-                     }
-                     else {
-                           sprintf(buf,"  %-3.3s" ,  pmp->SB[J] );
-                           addErrorMessage(buf);
-                     }
-                  }
-              }
-           } // for J
-           if( StatusDivg && pmp->PZ )
-           {
-               // Divergence of dual solution in IPM after PhaseSelection()
-               for(J=0;J<pmp->N;J++)
-                  pmp->U[J] = pmp->Uc[J];  // restoring U from previous IPM run
-           }
+            sprintf(buf,"%-6.5s",  pmp->SB[ICNud[Z]] );
+            addErrorMessage( buf );
         }
+      }
+   }
+ //  else if( TProfil::pm->pa.p.PLLG ) { // this time we don't check for the divergence
+ //      cout << " Divergent U at cnr= " << cnr << " start over: ITG= " << pmp->ITG << endl;
+ //  }
 
 // Got the dual solution u vector - calculating the Dikin's Criterion of IPM convergence
 #ifdef Use_qd_real
@@ -983,7 +1004,10 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
 to_text_file( "MultiDumpDC.txt" );   // Debugging
 #endif
 
-        // Initial estimate of IPM descent step size LM
+       if( StatusDivg )
+           return 5L;
+
+       // Initial estimate of IPM descent step size LM
        LM = StepSizeEstimate( false );
 
 #ifdef Use_qd_real
@@ -1035,8 +1059,11 @@ if( pmp->pNP && status ) // && rLoop < 0  )
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif
-        if( ( pmp->PCI <= pmp->DXM ) || ( StatusDivg /*&& !pmp->PZ*/ ) )  // Dikin criterion satisfied - converged!
+
+        if( pmp->PCI <= pmp->DXM )  // Dikin criterion satisfied - converged!
             goto CONVERGED;
+        if( nCNud > 0L && (IT1 >= cnr-2 && IT1 >= 2 ) )  // finish here because u vector diverges at further IPM iterations
+            goto CONDITIONALLY_CONVERGED;
         // Restoring vectors Y and YF from X and XF for the next IPM iteration
         Restore_Y_YF_Vectors();
     } // end of the main IPM cycle
@@ -1044,13 +1071,15 @@ STEP_POINT( "IPM Iteration" );
     setErrorMessage( 6, "E06IPM: IPM-main(): " ,
             "IPM convergence criterion threshold (Pa_DK) could not be reached"
     		" (more than Pa_IIM iterations done);\n" );
-    return 2L; // bad convergence - too many IPM iterations or deterioration of dual solution!
+    return 2L;  // bad convergence - too many IPM iterations or deterioration of dual solution!
 //----------------------------------------------------------------------------
 CONVERGED:
-if( !StatusDivg )
+// if( !StatusDivg )
    pmp->PCI = pmp->DXM * 0.999999; // temporary - for smoothing
-return 0L;
-
+  return 0L;
+CONDITIONALLY_CONVERGED:
+   pmp->PZ = 5; // Evtl. do something to reconfigure or circumvent PSSC()
+  return 0L;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1962,11 +1991,18 @@ void TMulti::Alloc_internal()
 // add09
 void TMulti::setErrorMessage( long int num, const char *code, const char * msg)
 {
+  long int len_code, len_msg;
   pmp->Ec  = num;
-  strncpy( pmp->errorCode, code, 99 );
-  pmp->errorCode[99] ='\0';
-  strncpy( pmp->errorBuf,  msg,  1023 );
-  pmp->errorBuf[1023] ='\0';
+  len_code = strlen(code);
+  if(len_code > 99)
+      len_code = 99;
+  strncpy( pmp->errorCode, code, len_code );
+  pmp->errorCode[len_code] ='\0';
+  len_msg = strlen(msg);
+  if(len_msg > 1023)
+      len_msg = 1023;
+  strncpy( pmp->errorBuf,  msg,  len_msg );
+  pmp->errorBuf[len_msg] ='\0';
 }
 
 void TMulti::addErrorMessage( const char * msg)
@@ -1978,6 +2014,186 @@ void TMulti::addErrorMessage( const char * msg)
     strcpy(pmp->errorBuf+len, msg ); // , lenm  );
 //    pmp->errorBuf[len+lenm] ='\0';
   }
+}
+
+// Added for implementation of divergence detection in dual solution 06.05.2011 DK
+void TMulti::Alloc_uDD( long int newN )
+{
+    if( U_mean && U_M2 && U_CVo && U_CV && ICNud && (newN == nNu) )
+      return;
+    Free_uDD();
+    U_mean = new  double[newN]; // w3 u mean values for r
+    U_M2 = new  double[newN];   // w3 u mean values for r-1
+    U_CVo = new  double[newN];  // w3 u mean difference for r-1
+    U_CV = new  double[newN];   // w3 u mean difference for r
+    ICNud = new long int[newN];
+    nNu = newN;
+}
+
+void TMulti::Free_uDD()
+{
+    if( U_mean  )
+      { delete[] U_mean; U_mean = 0; }
+    if( U_M2  )
+      { delete[] U_M2; U_M2 = 0; }
+    if( U_CVo  )
+      { delete[] U_CVo; U_CVo = 0; }
+    if( U_CV  )
+      { delete[] U_CV; U_CV = 0; }
+    if( ICNud )
+      { delete[] ICNud; ICNud = 0; }
+    nNu = 0;
+}
+
+// initializing data for u divergence detection
+void TMulti::Reset_uDD( long int nr, bool trace )
+{
+    long int i;
+    cnr = nr;
+    for( i=0; i<nNu; i++)
+    {
+      U_mean[i] = 0.; U_M2[i] = 0.;
+      U_CVo[i] = 0.; U_CV[i] = 0;
+      ICNud[i] = -1L;
+    }
+    nCNud = 0;
+    if ( trace )
+    {
+       cout << " UD3 trace: " << pmp->stkey << " SIA= " << pmp->pNP << endl;
+       cout << " Itr   C_D:   " << pmp->SB1[0] ;
+    }
+}
+
+// incrementing mean u values for r-th (current) IPM iteration
+void TMulti::Increment_uDD( long int r, bool trace )
+{
+    long int i;
+    double delta;
+    cnr = r; // r+1;
+    if( cnr == 0 )
+        return;
+    if( trace )
+       cout << r << " " << pmp->PCI << " ";
+    for( i=0; i<nNu; i++)
+    {
+// Calculating moving average of three u_i values
+      switch( cnr )
+      {
+          case 1: U_mean[i] = pmp->U[i];
+                  U_M2[i] = U_mean[i];
+                  U_CV[i] = 0.;
+                  pmp->Uc[i][0] = pmp->U[i];
+                  pmp->Uc[i][1] = pmp->U[i];
+                  break;
+          case 2: U_M2[i] = U_mean[i];
+                  U_mean[i] = (pmp->U[i] + pmp->Uc[i][0] + pmp->Uc[i][0] )/3.;
+                  pmp->Uc[i][1] = pmp->Uc[i][0];
+                  pmp->Uc[i][0] = pmp->U[i];
+                  break;
+          default:U_M2[i] = U_mean[i];
+                  U_mean[i] = (pmp->U[i] + pmp->Uc[i][0] + pmp->Uc[i][1])/3.;
+                  pmp->Uc[i][1] = pmp->Uc[i][0];
+                  pmp->Uc[i][0] = pmp->U[i];
+                  break;
+      }
+      U_CVo[i] = U_CV[i];
+      U_CV[i] = U_mean[i] - U_M2[i];
+      delta = fabs(U_CV[i] - U_CVo[i]);
+      if( trace )
+      {
+        cout << pmp->U[i] << " ";
+//      cout << U_CV[i] << " ";
+//      cout << delta << " ";
+      }
+//      delta = pmp->U[i] - U_mean[i];
+//      U_mean[i] += delta / cnr;
+//      U_M2[i] += delta * ( pmp->U[i] - U_mean[i] );
+//      if( cnr > 2 )
+//          U_CVo[i] = U_CV[i];
+//      U_CV[i] = sqrt( U_M2[i]/cnr ) / fabs( U_mean[i] );
+//      if( cnr < 2 )
+//          U_CVo[i] = U_mean[i];
+      // Copy of dual solution approximation
+//      if( cnr < 2 )
+//          pmp->Uc[i][0] = pmp->U[i];
+//
+    } // end for i
+//  if( trace )
+//      cout << endl;
+}
+
+// Checking for divergence in coef.variation of dual solution approximation
+// Compares with CV value tolerance (mode = 0) or with CV increase
+//          tolerance (mode = 1)
+// returns:  0 if no divergence has been detected
+//          >0 - number of diverging dual chemical potentials
+//            (their IC names are collected in the ICNud list)
+//
+long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
+{
+    long int i, nNu1;
+    double delta, tol_gen, tolerance, log_bi;
+    bool FirstTime = true;
+    char buf[MAXICNAME+2];
+
+    //    tolerance = DivTol / fabs(log(pmp->PCI));
+    tol_gen = DivTol;
+    if( pmp->PCI < 1 )
+    tol_gen *= pmp->PCI;
+    if( trace )
+          cout << " Tol= " << tol_gen << " |" << endl;
+    if( cnr <= 1 )
+        return 0;
+
+  //  Check here that pmp->PCI is reasonable (i.e. C_D < 1)?
+  //
+    for( i=0; i<nNu; i++)
+    {    
+      // Checking absolute ranges of u[i] - to be checked for 'exotic' systems!
+      if( i == nNu-1 && pmp->E && pmp->U[i] >= -50. && pmp->U[i] <= 100.) // charge
+          continue;
+      else if( pmp->U[i] >= -600. && pmp->U[i] <= 400. ) // range for other ICs
+      {
+        tolerance = tol_gen;
+        log_bi = log( pmp->B[i] ) - 4.6;
+        if( log_bi > 1 )
+            tolerance = tol_gen / log_bi;
+        if( log_bi < -1 )
+             tolerance = tol_gen * -log_bi;
+        if( !mode ) // Monitor difference between new and old mean3 u_i
+        {
+            // Calculation of abs.difference of moving averages at r and r-1
+            delta = fabs(U_mean[i] - U_M2[i]);
+            if( delta <= tolerance || cnr <= 2 )
+                continue;
+        }
+        if( mode ) // Monitor the difference between differences between new and old mean3 u_i
+        {
+            // Calculation of abs.difference of moving average differences at r and r-1
+            delta = fabs(U_CV[i] - U_CVo[i]);
+            if( delta <= tolerance || cnr <= 2 )
+                 continue;
+        }
+      }
+      // Divergence detected
+      ICNud[nCNud++] = i;
+      if(FirstTime)
+      {
+         if( trace )
+            cout << "uDD ITG= " << pmp->ITG << " Tol= " << tol_gen << " |" << " Divergent ICs: ";
+         FirstTime = false;
+      }
+      if( trace )
+      {
+          memcpy(buf, pmp->SB[i], MAXICNAME );
+          buf[MAXICNAME] = '\0';
+          cout << buf << " ";
+      }
+    } // for i
+    if( FirstTime == false )
+        if( trace )
+           cout << " |" << endl;
+    return nCNud;
 }
 
 //--------------------- End of ipm_main.cpp ---------------------------

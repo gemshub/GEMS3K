@@ -54,7 +54,7 @@ outField MULTI_dynamic_fields[69] =  {
    {  "B", 1 , 0 },
    {  "DCCW", 0 , 0 },  // placeholder - something else can be used here
    {  "Pparc", 0 , 0 },
-   {  "GEX", 0 , 0 },
+   {  "fDQF", 0 , 0 },
    {  "lnGmf", 0 , 0 },
    {  "RLC", 0 , 0 },
    {  "RSC", 0 , 0 },
@@ -169,7 +169,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{   ff << "# GEMIPM2K v. 3.0 rev. 530(1848)" << endl;
+{   ff << "# GEMIPM2K v. 3.1.0 rev 546 (1858)" << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
@@ -420,7 +420,7 @@ if( _comment )
    }
    if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
    { if( _comment )
-       ff << "# pa_PLLG: Tolerance for checking changes in dual solution after PhaseSelect(), 1 to 100 { 10 }" << endl;
+       ff << "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 1000 { 3000 }, 0 disables" << endl;
      ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
    }
 
