@@ -42,12 +42,11 @@ struct BASE_PARAM
                  // Modes: 0-invoke, 1-at MBR only, 2-every MBR it, every IPM it. 3-not MBR, every IPM it.
                  // if PD < 0 then use test qd_real accuracy mode
            PRD,  // Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
-           PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }
+           PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
            DP,   // Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
            DW,   // Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
            DT,   // Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
-           PLLG, // TIPM-2 tolerance for checking change in dual solution after PhaseSelect() { 20 }
-                 //      { 0 to 1000 mol/mol, default 0 or 32000 means no check }
+           PLLG, // IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
            PE,   // Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
            IIM   // Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
            ;
@@ -150,12 +149,11 @@ struct BASE_PARAM
           // Mode of CalculateActivityCoefficients(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.
           // if PD < 0 then use test qd_real accuracy mode
     PRD,  // Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
-    PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-including warnings { 1 }
+    PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
     DP,   // Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
     DW,   // Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
     DT,   // Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
-    PLLG, // TIPM-2 tolerance for checking change in dual solution after PhaseSelect() { 20 }
-          //      { 0 to 1000 mol/mol, default 0 or 32000 means no check }
+    PLLG, // IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
     PE,   // Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
     IIM   // Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
     ;

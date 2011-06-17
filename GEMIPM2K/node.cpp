@@ -162,7 +162,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 		fstream f_log("ipmlog.txt", ios::out|ios::app );
         f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
           err.title.c_str() << ":" << endl;
-       if( TProfil::pm->pa.p.PSM == 2  )
+       if( TProfil::pm->pa.p.PSM >= 2  )
           f_log  << err.mess.c_str() << endl;
 	}
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )

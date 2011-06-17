@@ -961,6 +961,8 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
       Increment_uDD( pmp->ITG, uDDtrace );
 //   DivTol = pow( 10., -fabs( (double)TProfil::pm->pa.p.PLLG ) );
       DivTol = (double)TProfil::pm->pa.p.PLLG;
+      if( fabs(DivTol) >= 30000. )
+          DivTol = 1e6;  // this is to allow complete tracing in the case of divergence
 //      if( pmp->ITG )
 //          DivTol /= pmp->ITG;
 //       DivTol -= log(pmp->ITG);
@@ -986,9 +988,6 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
         }
       }
    }
- //  else if( TProfil::pm->pa.p.PLLG ) { // this time we don't check for the divergence
- //      cout << " Divergent U at cnr= " << cnr << " start over: ITG= " << pmp->ITG << endl;
- //  }
 
 // Got the dual solution u vector - calculating the Dikin's Criterion of IPM convergence
 #ifdef Use_qd_real
@@ -2062,6 +2061,12 @@ void TMulti::Reset_uDD( long int nr, bool trace )
        cout << " UD3 trace: " << pmp->stkey << " SIA= " << pmp->pNP << endl;
        cout << " Itr   C_D:   " << pmp->SB1[0] ;
     }
+    if( TProfil::pm->pa.p.PSM >= 3 )
+    {
+      fstream f_log("ipmlog.txt", ios::out|ios::app );
+      f_log << " UD3 trace: " << pmp->stkey << " SIA= " << pmp->pNP << endl;
+      f_log << " Itr   C_D:   " << pmp->SB1[0] ;
+    }
 }
 
 // incrementing mean u values for r-th (current) IPM iteration
@@ -2072,8 +2077,14 @@ void TMulti::Increment_uDD( long int r, bool trace )
     cnr = r; // r+1;
     if( cnr == 0 )
         return;
+    if( TProfil::pm->pa.p.PSM >= 3 )
+    {
+       fstream f_log("ipmlog.txt", ios::out|ios::app );
+       f_log << r << " " << pmp->PCI << " ";
+    }
     if( trace )
        cout << r << " " << pmp->PCI << " ";
+
     for( i=0; i<nNu; i++)
     {
 // Calculating moving average of three u_i values
@@ -2101,9 +2112,18 @@ void TMulti::Increment_uDD( long int r, bool trace )
       delta = fabs(U_CV[i] - U_CVo[i]);
       if( trace )
       {
-        cout << pmp->U[i] << " ";
+//      cout << pmp->U[i] << " ";
+        cout << U_mean[i] << " ";
 //      cout << U_CV[i] << " ";
 //      cout << delta << " ";
+      }
+      if( TProfil::pm->pa.p.PSM >= 3 )
+      {
+          fstream f_log("ipmlog.txt", ios::out|ios::app );
+          f_log << U_mean[i] << " ";
+  //      f_log << pmp->U[i] << " ";
+  //      f_log << U_CV[i] << " ";
+  //      f_log << delta << " ";
       }
 //      delta = pmp->U[i] - U_mean[i];
 //      U_mean[i] += delta / cnr;
@@ -2131,7 +2151,7 @@ void TMulti::Increment_uDD( long int r, bool trace )
 //
 long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
 {
-    long int i, nNu1;
+    long int i;
     double delta, tol_gen, tolerance, log_bi;
     bool FirstTime = true;
     char buf[MAXICNAME+2];
@@ -2140,6 +2160,11 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
     tol_gen = DivTol;
     if( pmp->PCI < 1 )
     tol_gen *= pmp->PCI;
+    if( TProfil::pm->pa.p.PSM >= 3 )
+    {
+        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        f_log << " Tol= " << tol_gen << " |" << endl;
+    }
     if( trace )
           cout << " Tol= " << tol_gen << " |" << endl;
     if( cnr <= 1 )
@@ -2149,6 +2174,8 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
   //
     for( i=0; i<nNu; i++)
     {    
+      if( DivTol >= 1e6 )
+          continue;     // Disabling divergence checks for complete tracing
       // Checking absolute ranges of u[i] - to be checked for 'exotic' systems!
       if( i == nNu-1 && pmp->E && pmp->U[i] >= -50. && pmp->U[i] <= 100.) // charge
           continue;
@@ -2156,10 +2183,12 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
       {
         tolerance = tol_gen;
         log_bi = log( pmp->B[i] ) - 4.6;
-        if( log_bi > 1 )
+        if( log_bi > 1. )
             tolerance = tol_gen / log_bi;
-        if( log_bi < -1 )
+        if( log_bi < -1. )
              tolerance = tol_gen * -log_bi;
+        if( tolerance < 1. )
+            tolerance = 1.;     // To prevent too low tolerances DK 17.06.2011
         if( !mode ) // Monitor difference between new and old mean3 u_i
         {
             // Calculation of abs.difference of moving averages at r and r-1
@@ -2177,10 +2206,15 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
       }
       // Divergence detected
       ICNud[nCNud++] = i;
-      if(FirstTime)
+      if( FirstTime )
       {
          if( trace )
             cout << "uDD ITG= " << pmp->ITG << " Tol= " << tol_gen << " |" << " Divergent ICs: ";
+         if( TProfil::pm->pa.p.PSM >= 3 )
+         {
+            fstream f_log("ipmlog.txt", ios::out|ios::app );
+            f_log << "uDD ITG= " << pmp->ITG << " Tol= " << tol_gen << " |" << " Divergent ICs: ";
+         }
          FirstTime = false;
       }
       if( trace )
@@ -2189,10 +2223,23 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
           buf[MAXICNAME] = '\0';
           cout << buf << " ";
       }
+      if( TProfil::pm->pa.p.PSM >= 3 )
+      {
+          fstream f_log("ipmlog.txt", ios::out|ios::app );
+          memcpy(buf, pmp->SB[i], MAXICNAME );
+          buf[MAXICNAME] = '\0';
+          f_log << buf << " ";
+      }
     } // for i
-    if( FirstTime == false )
-        if( trace )
+    if( !FirstTime )
+    {    if( trace )
            cout << " |" << endl;
+         if( TProfil::pm->pa.p.PSM >= 3 )
+         {
+             fstream f_log("ipmlog.txt", ios::out|ios::app );
+             f_log << " |" << endl;
+         }
+    }
     return nCNud;
 }
 
