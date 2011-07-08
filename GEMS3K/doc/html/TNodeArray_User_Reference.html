@@ -1,0 +1,514 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
+  <title>GEMIPM2K User Manual</title>
+</head>
+<body>
+<h1><img alt="GEMS icon"
+ src="file:///c:/Developer/work/gems2/mods/gemipm/doc/html/gems1.png"
+ style="width: 48px; height: 48px;" align="left"> <font color="#000066">
+GEMIPM2K version 3</font> </h1>
+<h1>Function calls needed for using
+GEMIPM2K<span style=""></span><span style=""> </span>in a coupled
+modeling code
+(on TNodeArray level)</h1>
+<p><big style="color: rgb(255, 0, 0);"><big>&lt;Under Construction&gt;</big></big><br>
+<span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The input
+files to start calculations with GEMIPM2K can be obtained
+from running the GEM-Selektor package as described in Section 2.4 of
+the </span><a style="font-family: Helvetica,Arial,sans-serif;"
+ href="gemipm2k-man.html">gemipm2k-man.html</a><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file (or in
+Technical Report), and
+can also be modified using any ASCII text editor. The file formats are
+described in detail in </span><a
+ style="font-family: Helvetica,Arial,sans-serif;"
+ href="gemipm2k-inp.html">gemipm2k-inp.html</a><span
+ style="font-family: Helvetica,Arial,sans-serif;">
+file.&nbsp;
+The names of IPM, DCH and one or several DBR files should be collected
+in
+a list (txt file) with the file name/path given as a string in the
+first parameter of GEM_init() function call. Contents of this list
+usually look like this: </span><br>
+</p>
+<p><span style="font-family: monospace;">-t "Test-dch.dat"
+"Test-ipm.dat" "Test-dbr-0.dat"<br>
+</span><br>
+<span style="font-family: Helvetica,Arial,sans-serif;">These files
+should be
+located in the same directory where&nbsp; the list file is located.<br>
+</span></p>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Programming
+example fragment (see full example in
+</span><big><span style="font-family: monospace;">/GEMIPM2K/main.cpp</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">): <br>
+</span></p>
+<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Code
+fragments below illustrate how the TNodeArray functionality can be used
+in implementing a new coupled RMT code (see also </span><big><span
+ style="font-family: monospace;">main.cpp</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">&nbsp; file in&nbsp; </span><big><span
+ style="font-family: monospace;">nodearray-gem/</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> subdirectory).&nbsp;
+At the first step, two node arrays are allocated using the TNodeArray
+constructor. Then the initial distribution index list </span><big><span
+ style="font-family: monospace;">nodeIn[] </span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">is defined, and the
+GEMIPM2K input files are read in.&nbsp; The contents of</span><big><span
+ style="font-family: monospace;"> nodeIn</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> tell the program
+where to copy the contents of just read DBR file. In this way, the </span><big><span
+ style="font-family: monospace;">GEM_init()</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> function initializes
+the </span><big><span style="font-family: monospace;">C0&nbsp;</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> layer of the node
+array. <br>
+</span></p>
+<p style="font-family: monospace;">#include "nodearray.h"<br>
+const int nNodes =&nbsp; 10;&nbsp;&nbsp; // set here how many nodes you
+need<br>
+const int nTimes = 20;&nbsp;&nbsp;&nbsp; // set here how many time
+loops will be performed<br>
+<br>
+int main( int argc, char* argv[] )<br>
+{<br>
+&nbsp;&nbsp;&nbsp; . . . . . . . . . . . . . . <span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"><br>
+&nbsp;&nbsp;&nbsp; TNodeArray* na;</span><span
+ style="font-family: monospace;"><br>
+&nbsp;&nbsp;&nbsp; // The NodeArray must be allocated here</span><span
+ style="font-family: monospace;"><br>
+&nbsp;&nbsp;&nbsp; TNodeArray::na = na = new TNodeArray( nNodes );</span><br
+ style="font-family: monospace;">
+</p>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Prepare
+the index array for initial node system and boundary condition codes</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; int
+nodeIn[nNodes] = { 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 };</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; int Mode,
+RetCode; </span><br style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Here we
+read the IPM, DCH and DBR files prepared from GEMS_PSI</span><span
+ style="font-family: monospace;">. <br>
+&nbsp;&nbsp;&nbsp; // There must be two DBR files prepared - the first
+will be loaded into <br>
+&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp; the node 0 and </span><span
+ style="font-family: monospace;">the second - into nodes 1 until 9. </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; if(
+na-&gt;GEM_init( ipm_input_file_list_name, nodeIn ) )</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return 1;&nbsp;&nbsp; // error reading files</span><br
+ style="font-family: monospace;">
+<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The next
+step usually consists in getting direct access to node array layers: </span><br>
+<span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; DATABRPTR*
+C0 = na-&gt;pNodT0();&nbsp; // nodes at previous time point</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; DATABRPTR*
+C1 = na-&gt;pNodT1();&nbsp; // nodes at next time point</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; bool* iaN =
+na-&gt;piaNode();&nbsp;&nbsp;&nbsp;&nbsp; // indicators for AIA (true)
+or SIA (false) for the nodes</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;</span><br
+ style="font-family: monospace;">
+<br style="font-family: monospace;">
+<span style="font-family: Helvetica,Arial,sans-serif;">After that,
+the mass transport parameters can be set for each node. For instance,
+your own input file can be read here. The data for each node are
+inserted in the node array as follows:</span><span
+ style="font-family: monospace;"><br>
+</span><span style="font-family: monospace;">&nbsp;&nbsp; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; for( int
+in=0; in&lt;nNodes; in++) // Loading mass transport parameters</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;NodeTypeHY = normal; </span><span
+ style="font-family: monospace;"><br>
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; C0[in]-&gt;Vt =
+1.;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;vp = 1e-7;&nbsp; // cin &gt;&gt; </span><span
+ style="font-family: monospace;">C0[in]-&gt;vp; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;eps = 0;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;Km = 0;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;al = 0;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;Dif = 0;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;hDl = 0; //
+C0[j]-&gt;al*C0[j]-&gt;vp+C0[j]-&gt;Dif;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C0[in]-&gt;nto = 0;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // </span><span
+ style="font-family: monospace;">cin &gt;&gt; C0[in]-&gt;TC;</span><br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+iaN[in] = true;&nbsp; <br style="font-family: monospace;">
+</span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+C0[0]-&gt;NodeTypeHY = NBC3source; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+C0[nNodes-1]-&gt;NodeTypeHY = NBC3sink; </span><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span> </p>
+<p><big><span style="font-family: monospace;">C0[in] </span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">is here a </span><big><span
+ style="font-family: monospace;">DATABR</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> pointer to the node
+with index </span><big><span style="font-family: monospace;">in</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;">. Hence, the
+identifiers like </span><big><span style="font-family: monospace;">vp</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> or </span><big><span
+ style="font-family: monospace;">Dif</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> are just names of </span><big><span
+ style="font-family: monospace;">DATABR </span></big><br>
+<span style="font-family: Helvetica,Arial,sans-serif;">structure
+fields (see </span><big><span style="font-family: monospace;">databr.h</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> file). In this loop,
+additional modifications to bulk composition or temperature can be
+added, if necessary. The nodes from 1 to 8 are set as normal nodes. The
+node with </span><big><span style="font-family: monospace;">in=0</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> is set as a Cauchy
+source and the node with </span><big><span
+ style="font-family: monospace;">in=9</span></big><span
+ style="font-family: Helvetica,Arial,sans-serif;"> - as a Cauchy sink
+boundary condition. <br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">To complete
+initialization of node array layers, a loop over nodes is performed,
+where the nodes are copied from level C0 to level C1, and chemical
+equilibria are initially calculated:<br>
+</span></p>
+<p><span style="font-family: monospace;">&nbsp;&nbsp; for ( int in=0;
+in&lt;nNodes; in++)&nbsp; // Copying node layer 0 to node layer 1&nbsp;
+</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;
+{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// (for MT models that can reset time step dt) </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mode = NEED_GEM_AIA; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; na-&gt;CopyNodeFromTo( in, nNodes, C0, C1 )</span><span
+ style="font-family: monospace;">;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+RetCode = na-&gt;RunGEM( in, Mode ); // running GEM for the in-th node</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return 5; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style="font-family: monospace;">na-&gt;CopyNodeFromTo(
+in, nNodes, C1, C0 )</span><span style="font-family: monospace;">;</span><br>
+<span style="font-family: monospace;">&nbsp;&nbsp; } </span><br
+ style="font-family: monospace;">
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; <br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Now both
+layers are identical at time 0. The transport simulation time loop can
+begin. <br>
+<br>
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp; . . . . . . . . . . . . .
+. . . . . <br>
+&nbsp;&nbsp; bool TimeStepAccept; // Flag set to true if the time step
+dt is accepted</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; double ct = 0., dt
+= 1.;<br>
+&nbsp;&nbsp; int xiSr = na-&gt;IC_name_to_xDB("Sr");&nbsp; //
+Retrieving DATABR index for independent component Sr <br>
+&nbsp;&nbsp; int xiCl = na-&gt;IC_name_to_xDB("Cl");&nbsp; // same for
+Cl (assuming that both are present in DCH <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; // and DBR files)<br>
+&nbsp;&nbsp; if( xiSr &lt; 0 || xiCl &lt; 0 )<br>
+&nbsp; &nbsp; &nbsp; return 4; &nbsp;&nbsp; // error - data for one of
+these elements is not present in DATABR<br>
+</span></p>
+<p><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp; FILE*
+logfile;&nbsp;&nbsp;&nbsp; // Opening file for logging results <br>
+&nbsp;&nbsp; logfile = fopen( logging_file_name, "w+" );&nbsp;&nbsp; <br>
+&nbsp;&nbsp; if( !logfile)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return -1;</span></p>
+<p><span style="font-family: monospace;">&nbsp;&nbsp; for( int it=0;
+it&lt;nTimes; it++ )&nbsp; // iterations over time</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; int
+in;&nbsp; // node index</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; ct +=
+dt;&nbsp; // current time increment</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; iaN[0]
+= false; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; // Loop over
+nodes for calculating the mass transport step</span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+for(&nbsp; in=1; in&lt;nNodes; in++ )</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+iaN[in] = false; // true;&nbsp; // SIA mode of GEMIPM2 is allowed for
+this node </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// In this place, add operators as function of tc and dt that transfer
+the matter </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// between the nodes according to transport model of choice. <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; // Take care about the mass
+conservation. </span><span style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// in this example, we add SrCl2 to the old bIC vector of the previous
+node at </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// previous time to modify composition in this node at the next time
+step</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+node1_bIC( in, xiSr ) = node0_bIC( in-1, xiSr ) += dt *</span><span
+ style="font-family: monospace;"> C0[in]-&gt;vp</span><span
+ style="font-family: monospace;"> * 1.; </span><span
+ style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;
+node1_bIC( in, xiCl ) = node0_bIC( in-1, xiCl ) += dt *</span><span
+ style="font-family: monospace;"> C0[in]-&gt;vp</span><span
+ style="font-family: monospace;"> * 2.;<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; . . . . . . . . . . . . . . . . .
+. . </span><br>
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp; Uncomment this to test variable pressures and temperatures</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp; C1[in]-&gt;TC = C0[in-1]-&gt;TC + 0.2;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp; C1[in]-&gt;P = C0[in-1]-&gt;P + 2.;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp; . . . . . . . . . . . . . . . . . . </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; // </span><span
+ style="font-family: monospace;">The above loop can be replaced by a
+function call that performs the MT integration step</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; //
+Here the file output may be inserted<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; . . . . . . . . . . . . . . . . . . . .
+<br style="font-family: monospace;">
+</span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+// Loop over nodes for calculating the chemical equilibration step</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; for(
+in=0; in&lt;nNodes; in++ )</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; {</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( iaN[in] )</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C1[in]-&gt;NodeStatusCH = NEED_GEM_AIA; // Automatic (simplex) initial
+approximation AIA</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+else</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; C1[in]-&gt;NodeStatusCH = NEED_GEM_SIA; // Smart
+initial approximation SIA - faster</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Here we can also check if the GEM calculation for this node is
+needed at all</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// e.g. by comparing this node in C1 layer with that in C0 layer</span><span
+ style="font-family: monospace;"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( in == 0 )&nbsp; // First node
+(Cauchy source) is not re-equilibrated since it is not changed</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+NeedGEM = false;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+else NeedGEM = true; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+node1_bIC( in, xiZz ) = 0.;&nbsp;&nbsp; // zeroing charge off in node
+bulk composition</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( !NeedGEM ) </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{&nbsp;&nbsp; // GEM calculation for this node not needed</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; C1[in]-&gt;IterDone = 0; // number of GEMIPM iterations is
+set to 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+else {// Calling GEM IPM2 calculation</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; Mode = C1[in]-&gt;NodeStatusCH; // mode
+of initial aproximation </span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp; RetCode = na-&gt;RunGEM( in, Mode ); //
+running GEM for the node in (node layer C1) </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))</span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;">return 5; </span><span
+ style="font-family: monospace;">&nbsp; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}&nbsp;&nbsp;&nbsp; </span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><span
+ style="font-family: monospace;"></span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; } //
+end of node equilibration loop</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; . . .
+. . . . . . . . . . . . . . .</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; //
+Here back-coupling of phase equilibrium data with transport parameters,<br>
+&nbsp; &nbsp;&nbsp; // as well as various checks for the acceptance of
+the time step can be performed </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+TimeStepAccept = true;&nbsp; // false; </span><span
+ style="font-family: monospace;"><br>
+&nbsp; &nbsp;&nbsp; . . . . . . . . . . . . . . . . . . &nbsp;&nbsp; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; if(
+TimeStepAccept ) // Time step accepted </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for ( in=1; in&lt;nNodes; in++)&nbsp; // Copying node layer C1 to node
+layer C0 </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+na-&gt;CopyNodeFromTo( in, nNodes, C1, C0 );</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; else { </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; if(dt &gt; 1e-3) </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ct-= dt;</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; dt /= 2.; // Trying the time loop
+again with twice smaller time step</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+else <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return 6; </span><span style="font-family: monospace;">// Error: Time
+step dt becomes too small&nbsp;&nbsp;&nbsp;&nbsp; </span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; }</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; //
+Here the output for the current state at tc can be implemented</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; . . .
+. . . . . . . . . . . . . . . .<br>
+</span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+na-&gt;logProfileAqIC( logfile, it, ct, nNodes, 5 ); // logging
+elemental molarity profiles over <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; // for every fifth time step <br>
+&nbsp;&nbsp;&nbsp;&nbsp; // </span><span
+ style="font-family: monospace;">na-&gt;logProfilePhVol( logfile, it,
+ct, nNodes, 5 );</span><span style="font-family: monospace;"> //
+logging phase volumes at time step<br style="font-family: monospace;">
+</span><span style="font-family: monospace;"></span><span
+ style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; . . . . . . .
+. . . . . . . . . . . .<br>
+&nbsp; &nbsp;&nbsp; dt = 1; &nbsp; // re-setting time step</span><br
+ style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; } // End of time
+loop&nbsp; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; </span><br
+ style="font-family: monospace;">
+</p>
+<p style="font-family: Helvetica,Arial,sans-serif;">When the coupled
+modeling is finished, the whole cleanup of node array with its dynamic
+data is done by calling the destructor:</p>
+<p style="margin-left: 40px;"><span style="font-family: monospace;">delete
+na;</span><br>
+</p>
+As seen from the
+above code fragments, the TNodeArray class takes care of the most
+routine operations, thus letting the developer concentrate mainly on
+the transport and back-coupling model. The <big><span
+ style="font-family: monospace;">node.h</span></big> and <big><span
+ style="font-family: monospace;">nodearray.h</span></big> files contain
+many functions and macroses for accessing most of the chemical data
+stored for nodes at C0 and C1 levels. &nbsp; <br>
+<hr style="width: 100%; height: 2px;"><span
+ style="font-family: monospace;">End of File</span><br>
+<br>
+</body>
+</html>

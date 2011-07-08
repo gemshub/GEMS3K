@@ -1,0 +1,2859 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+
+
+
+
+
+  <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type"><title>GEMIPM2K User Reference</title></head><body>
+<h1><img alt="GEMS icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font color="#000066">
+GEMIPM2K version 3</font> </h1>
+<h1>Function calls needed for using
+GEMIPM2K<span style=""></span><span style=""> </span>in a coupled
+modeling code
+(on TNode level)</h1>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The input
+files to start calculations with GEMIPM2K can be obtained
+from running the GEM-Selektor package as described in Section 2.4 of
+the </span><a style="font-family: Helvetica,Arial,sans-serif;" href="gemipm2k-man.html">gemipm2k-man.html</a><span style="font-family: Helvetica,Arial,sans-serif;"> file, and
+can also be modified using any ASCII text editor. The file formats are
+described in detail in the </span><a style="font-family: Helvetica,Arial,sans-serif;" href="gemipm2k-inp.html">gemipm2k-inp.html</a><span style="font-family: Helvetica,Arial,sans-serif;">
+file.&nbsp;The names of IPM, DCH and at least one&nbsp;DBR files should
+be collected
+in
+a list (txt file) with the file name/path given as a string in the
+first parameter of </span><span style="font-family: monospace;">GEM_init()</span><span style="font-family: Helvetica,Arial,sans-serif;"> function call. Contents of this list
+usually look like this: </span><br>
+</p>
+<p><span style="font-family: monospace;">-t "Test-dch.dat"
+"Test-ipm.dat" "Test-dbr-0.dat"<br>
+</span><br>
+<span style="font-family: Helvetica,Arial,sans-serif;">If more than one
+DBR file names are given, they should be comma-separated. All these
+These files
+should be
+located in the same directory where&nbsp; the list file is located.
+When coupling is performed on the TNode level, only one instance of
+DATABR structure exists in RAM, therefore, only the contents of the
+last DBR file in the list will be available after the </span><span style="font-family: monospace;">GEM_init()
+</span><span style="font-family: Helvetica,Arial,sans-serif;">call.&nbsp; </span><br>
+</p>
+<h2>1. The simplest case: data exchange using disk files only</h2>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Programming
+example fragment (see full example in
+</span><big><span style="font-family: monospace;">/GEMIPM2K/main.cpp</span></big><span style="font-family: Helvetica,Arial,sans-serif;">): </span><br>
+<span style="font-family: monospace;"></span><span style="font-family: monospace;"></span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">#include "node.h"<br>
+      <br style="font-family: monospace;">
+      </span><span style="font-family: monospace;">&nbsp;&nbsp; <br>
+&nbsp;&nbsp; //
+Creates
+TNode structure instance accessible trough the "node" pointer</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp; TNode*
+node&nbsp; =
+new TNode();</span><br style="font-family: monospace;">
+      <p style="font-family: monospace;">&nbsp;&nbsp; // (1)
+Initialization
+of GEMIPM2K internal data by reading&nbsp; files <br>
+&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp; whose names are given in the
+input_system_file_list_name <br>
+&nbsp;<span style="color: rgb(0, 153, 0);">&nbsp; </span>if(
+node-&gt;GEM_init( input_system_file_list_name ) )<br>
+&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// error occured during reading the files<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return 1;<br>
+&nbsp;&nbsp; }<br style="color: rgb(0, 153, 0);">
+      <span style="color: rgb(0, 153, 0);">&nbsp;&nbsp; </span><br>
+&nbsp;&nbsp; // Getting direct
+access to work node DATABR structure which exchanges the <br>
+&nbsp;&nbsp; // data with GEM IPM2 (already filled out by reading the
+DBR input file)<br>
+&nbsp;&nbsp; DATABR* dBR = node-&gt;pCNode();&nbsp;<br>
+      </p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; // Asking GEM to
+run
+with automatic initial approximation&nbsp; <br>
+&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA; <br>
+      </p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; // (2)
+re-calculating
+equilibrium by calling GEMIPM2K, getting the status back<br>
+&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run( false );<br>
+      </p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; if( NodeStatusCH
+==
+OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (3) Writing results in the default
+DBR file <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_write_dbr( NULL,
+false, true );<br>
+&nbsp;&nbsp; else { <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (4) possible return status analysis,
+error message <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NULL
+);&nbsp;&nbsp; // possible debugging printout<br>
+&nbsp;&nbsp; }<br>
+      </p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; // Here a
+possible loop
+on input recipes begins<br>
+&nbsp;&nbsp; // (5) Reading the next DBR file with different input
+composition or temperature <br>
+&nbsp;&nbsp; node-&gt;GEM_read_dbr( NextRecipeFileName ); </p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; // Asking GEM
+IPM2 to
+run (faster) with smart initial approximation&nbsp; <br>
+&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_SIA;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      </p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; NodeStatusCH =
+node-&gt;GEM_run( false );</p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; if( NodeStatusCH
+==
+OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_write_dbr(
+NextRecipeFileName_out, false, true );<br>
+&nbsp;&nbsp; else { <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error message, debugging
+printout can be added here<br>
+&nbsp;&nbsp; }</p>
+      <p style="font-family: monospace;">&nbsp;&nbsp; // end of
+possible loop
+on input recipes <br>
+      </p>
+      <span style="font-family: monospace;">&nbsp;&nbsp; delete node;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"><br>
+</span></td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: monospace;"><br>
+</span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Description
+of function calls (see also "node.h" file) </span><br>
+</p>
+<h3>(1)&nbsp; GEM_init()<br>
+</h3>
+<p><span style="font-family: monospace;">long int GEM_init( const char
+*ipmfiles_lst_name,&nbsp; long int *nodeTypes = 0, bool getNodT1 =
+false );</span><br>
+</p>
+<p style="font-family: Helvetica,Arial,sans-serif;">Purpose: <br>
+</p>
+<p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><span style="font-family: Times New Roman,Times,serif;">Initialization of GEM IPM data structures in coupled
+FMT-GEM programs that use GEMIPM2K module. Also reads in the IPM, DCH
+and DBR text input files. </span><br>
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;ipmfiles_lst_name <br>
+      </span></td>
+      <td style="vertical-align: top;">Pointer to a null-terminated C string with a path to a text file
+containing the list of names of GEMIPM2K input files.<br>
+&nbsp;Example: file <span style="font-family: monospace;">"test.lst"</span> with a
+content:&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">-t
+"dch.dat" "ipm.dat" "dbr-0.dat"</span>&nbsp; <br>
+&nbsp;(<span style="font-family: monospace;">-t</span>&nbsp; tells that input files
+are in text format)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;nodeTypes <br>
+      </span></td>
+      <td style="vertical-align: top;">Optional parameter used only on the TNodeClass
+level to create nodeArray (not used in
+this document)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;getNodT1 <br>
+      </span></td>
+      <td style="vertical-align: top;">Optional parameter used only when reading multiple DBR files after
+modeling task interruption <br>
+in
+GEM-Selektor (not used in this document)</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+values: </span>&nbsp;&nbsp; &nbsp;&nbsp; <br>
+</p>
+<div style="margin-left: 40px;">0&nbsp; if successful; 1 if input file(s) were not found or corrupt; -1
+if internal memory allocation error occurred. <br>
+</div>
+<p>
+&nbsp;&nbsp;&nbsp; <br>
+</p>
+
+<h3>(2) GEM_run()<br>
+</h3>
+<p><span style="font-family: monospace;"> long int&nbsp; GEM_run( bool
+uPrimalSol );&nbsp; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><br>
+</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;
+<span style="font-family: Times New Roman,Times,serif;"><br>
+</span></p>
+<p><span style="font-family: Times New Roman,Times,serif;">Main call for GEM IPM calculations using the
+input bulk composition, temperature, pressure and metastability
+constraints provided in the work instance of
+DATABR structure.&nbsp; Actual
+calculation will be performed only when </span><br style="font-family: Times New Roman,Times,serif;"></p>
+<p>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">dBR-&gt;NodeStatusCH </span>==
+<span style="font-family: monospace;">NEED_GEM_SIA
+(5)</span> or <span style="font-family: monospace;">dBR-&gt;NodeStatusCH</span> = <span style="font-family: monospace;">NEED_GEM_AIA (1)</span>. </p>
+<p style="font-family: Times New Roman,Times,serif;">By other
+values of <span style="font-family: monospace;">NodeStatusCH</span>, no calculation will be performed and the status
+will remain unchanged. </p>
+<p><span style="font-family: Times New Roman,Times,serif;">In the "smart initial approximation" (SIA) mode,
+the
+program can automatically switch into the "automatic initial approximation" (AIA) mode and
+return&nbsp;
+</span><span style="font-family: monospace;">OK_GEM_AIA</span><span style="font-family: Times New Roman,Times,serif;"> instead of </span><span style="font-family: monospace;">OK_GEM_SIA</span><span style="font-family: Times New Roman,Times,serif;">,&nbsp; if&nbsp; the previous speciation is not feasible as initial approximation.  <br>
+</span></p>
+<p style="font-family: Helvetica,Arial,sans-serif;"> </p>
+<p style="font-family: Helvetica,Arial,sans-serif;">
+</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameter:</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;uPrimalSol <br>
+      </span></td>
+      <td style="vertical-align: top;">Flag to define the mode of GEM smart initial approximation (only if
+      <span style="font-family: monospace;">dBR-&gt;NodeStatusCH</span> = <span style="font-family: monospace;">NEED_GEM_SIA</span> has been set before <span style="font-family: monospace;">GEM_run()</span> call):<br>
+      <br>
+
+&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">false</span>&nbsp; (0) -&nbsp; use
+speciation and activity coefficients from previous <span style="font-family: monospace;">GEM_run()</span> calculation;<br>
+
+&nbsp;&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">true&nbsp;</span> (1)&nbsp; -&nbsp;
+use speciation provided in the DATABR memory structure <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(e.g. after
+reading the DBR file)</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p>
+<span style="font-family: Helvetica,Arial,sans-serif;">Return values:</span>&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;"><span style="font-family: monospace;">NodeStatusCH</span>&nbsp; (the
+same as
+set in <span style="font-family: monospace;">dBR-&gt;NodeStatusCH</span>). Possible values (see "databr.h" file for
+the full list): <span style="font-family: monospace;"><br>
+&nbsp;<br>
+&nbsp;OK_GEM_AIA&nbsp;&nbsp; ( 2 ) &nbsp; </span>OK after GEM
+calculation with
+simplex (automatic) initial approximation (IA)<span style="font-family: monospace;"><br>
+&nbsp;BAD_GEM_AIA&nbsp; ( 3 ) &nbsp; </span>Bad (not fully trustful)
+result after GEM
+calculation with simplex (automatic) IA<span style="font-family: monospace;"><br>
+&nbsp;ERR_GEM_AIA&nbsp; ( 4 ) &nbsp; </span>Failure (no result) in GEM
+calculation with simplex (automatic) IA<span style="font-family: monospace;"><br>
+&nbsp;OK_GEM_SIA&nbsp;&nbsp; ( 6 ) &nbsp; </span>OK after GEM
+calculation with
+no-simplex (smart) IA<span style="font-family: monospace;"><br>
+&nbsp;BAD_GEM_SIA&nbsp; ( 7 ) &nbsp; </span>Bad (not fully trustful)
+result after GEM
+calculation with no-simplex (smart) IA<span style="font-family: monospace;"><br>
+&nbsp;ERR_GEM_SIA&nbsp; ( 8 ) &nbsp; </span>Failure (no result) in GEM
+calculation with no-simplex (smart) IA<span style="font-family: monospace;"><br>
+&nbsp;T_ERROR_GEM&nbsp; ( 9 ) &nbsp; </span>Terminal error has
+occurred in
+GEMIPM2K (e.g. memory corruption). Restart is required.&nbsp; </p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">We recommend
+checking the </span><span style="font-family: monospace;">NodeStatusCH</span><span style="font-family: Helvetica,Arial,sans-serif;"> immediately after the
+</span><span style="font-family: monospace;">GEM_run()</span><small style="font-family: monospace;"> </small><span style="font-family: Helvetica,Arial,sans-serif;">call, as shown in
+the above code snippet.</span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><br>
+</p>
+<h3>(3) GEM_write_dbr()
+</h3>
+<span style="font-family: monospace;">void&nbsp; GEM_write_dbr( const
+char* fname,&nbsp; bool binary_f=false, bool with_comments = true, bool
+brief_mode = false )<span style="color: rgb(0, 153, 0);">;</span></span><br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</p>
+<p style="margin-left: 40px;">Writes the contents
+of the work instance of DATABR structure into a disk file with path
+name&nbsp; <span style="font-family: monospace;">fname</span>.</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span> <br>
+</p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">fname</span></td>
+      <td style="vertical-align: top;">Null-terminated (C) string containing a full path to the DBR disk file
+to be written. If NULL&nbsp; than the disk file name path stored in the&nbsp; <span style="font-family: monospace;">dbr_file_name</span>&nbsp; field of
+the TNode class instance will be used, extended with ".out".&nbsp; Usually, the<span style="font-family: monospace;"> dbr_file_name </span>field contains
+the path to the last input DBR file.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;binary_f <br>
+      </span></td>
+      <td style="vertical-align: top;">defines if the file is to be
+written in the binary format (true or 1, good for interruption of coupled
+modeling task if called in the loop for each node), or in the text
+format (false or 0, default). </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;with_comments&nbsp;  <br>
+      </span></td>
+      <td style="vertical-align: top;">(Text format only): defines the mode of output of comments written
+before each data tag and content in the DBR file. <br>
+
+&nbsp;&nbsp;&nbsp; If set to true (1), the
+comments will be written for all data entries (default).&nbsp;
+      <br>
+
+&nbsp;&nbsp;&nbsp; If&nbsp;&nbsp; false (0), comments will not be
+written. </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;brief_mode&nbsp; </span><span style="font-family: monospace;"></span></td>
+      <td style="vertical-align: top;">If true, tells that the data objects/items which contain only
+default values will be skipped from the text-format file (false is the default)<br>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+Any DBR file
+written using </span><span style="font-family: monospace;">GEM_write_dbr()</span><span style="font-family: Helvetica,Arial,sans-serif;"> can be read as input
+file
+using </span><span style="font-family: monospace;">GEM_init()</span><span style="font-family: Helvetica,Arial,sans-serif;"> or </span><span style="font-family: monospace;">GEM_read_dbr()</span><span style="font-family: Helvetica,Arial,sans-serif;"> as long as it is
+consistent with the
+same set of IPM and DCH files that contain parameters of solution
+models and chemical system definition, respectively. </span><br>
+<br>
+<h3>(4) GEM_print_ipm()</h3>
+<p><span style="font-family: monospace;">void&nbsp; GEM_print_ipm(
+const char* fname )</span><br>
+</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">Produces a formatted text
+file with detailed contents (scalars and arrays) of the GEM IPM work
+structure.&nbsp; </p>
+<p style="margin-left: 40px;">This call may be useful when <span style="font-family: monospace;">GEM_run()</span>
+returns with a
+<span style="font-family: monospace;">NodeStatusCH</span> value indicating a GEM calculation error (see&nbsp;
+above).&nbsp; Another possible use is for a detailed comparison of a
+test system calculation after the version upgrade of GEMIPM2K.<br>
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span> <br>
+</p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;fname&nbsp;  <br>
+      </span></td>
+      <td style="vertical-align: top;">Null-terminated (C) string containing a full path to the disk
+file to be written. If&nbsp; NULL&nbsp; then the disk file name path stored in
+the&nbsp; <span style="font-family: monospace;">dbr_file_name</span>&nbsp;
+field of the <span style="font-family: monospace;">TNode</span> class instance will be used, extended with
+".dump.out".&nbsp; Usually, the<span style="font-family: monospace;">
+dbr_file_name </span>field contains the path to the last input DBR
+file. </td>
+    </tr>
+  </tbody>
+</table>
+&nbsp;<br>
+
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Attention: the text file produced by this function
+call cannot be read back with </span><span style="font-family: monospace;">GEM_init()
+</span><span style="font-family: Helvetica,Arial,sans-serif;">because it has a format </span><span style="font-family: Helvetica,Arial,sans-serif;">that is incompatible with that of
+IPM, DCH and DBR input file formats.</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span></p>
+
+<h3>(5) GEM_read_dbr()</h3>
+<p style="font-family: monospace;"> long int GEM_read_dbr( const char*
+fname, bool binary_f=false );</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose: </span>&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">Reads another node data bridge (DBR) file with input
+system composition, T,P etc., from a path name <span style="font-family: monospace;">fname. </span>The
+DBR file must be
+compatible with the currently
+loaded IPM and DCH files (see description of <span style="font-family: monospace;">GEM_init()</span>
+function call).
+<br>
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;fname</span></td>
+      <td style="vertical-align: top;">Null-terminated (C) string containing a
+full path to the input DBR disk file.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;binary_f<br>
+      </span></td>
+      <td style="vertical-align: top;">Flag defining whether the file specified in fname is in text fromat
+(false or 0, default) <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; or in binary format (true or 1)</td>
+    </tr>
+  </tbody>
+</table>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+values: </span>&nbsp;&nbsp;&nbsp; 0&nbsp; if successful; <br>
+</p>
+<p>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 1 if input
+file(s) has not found been or is corrupt; </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-1
+if internal memory allocation error occurred. </p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">The input DBR
+file may have been produced earlier from GEM-Selektor
+or via the </span><span style="font-family: monospace;">GEM_write_dbr()</span><span style="font-family: Helvetica,Arial,sans-serif;">call and then
+modified </span><span style="font-family: Helvetica,Arial,sans-serif;">using a text
+editor or another program so that the format (data object tags,
+number of elements in arrays, etc.) remains intact and compatible with the IPM and DCH files. </span></p>
+<p>
+<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><br>
+</p>
+
+<h3>Optional: GEM_CalcTime() and GEM_Iterations()
+&nbsp;</h3>
+<p style="font-family: monospace;">double GEM_CalcTime();</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;</span>&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">Returns GEM IPM calculation time in
+seconds elapsed during the last call of <span style="font-family: monospace;">GEM_run()</span> - can be used for
+monitoring the performance of calculations.<br>
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+value:&nbsp;</span> <br>
+</p>
+<p style="margin-left: 40px;">Double number, may contain 0.0 if the
+calculation time is less than the internal time resolution of C/C++
+function&nbsp; <span style="font-family: monospace;">clock() </span>defined
+in the value of the system variable <span style="font-family: monospace;">CLOCKS_PER_SEC</span>
+for a particular processor and operation system. <br>
+</p>
+
+<p><br>
+<span style="font-family: monospace;">long int GEM_Iterations( long
+int&amp; PrecLoops, long int&amp; NumIterFIA, long int&amp; NumIterIPM
+);</span> </p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>
+&nbsp;&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">To obtain the number of MBR (mass balance refinement) and GEM IPM
+iterations performed during the last call of <span style="font-family: monospace;">GEM_run()</span> e.g. for monitoring
+the performance of GEM IPM in AIA or SIA modes, or for
+the diagnostics of problems.&nbsp; &nbsp; </p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">Function value, as well as <span style="font-family: monospace;">long int</span> variables per reference (must be
+allocated before calling <span style="font-family: monospace;">GEM_Iterations()</span>), previous values will be
+lost. See Return values.</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return
+values:</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;Function&nbsp; <br>
+      </span></td>
+      <td style="vertical-align: top;">Total number of MBR + IPM iterations
+from the last call to <span style="font-family: monospace;">GEM_run()</span>.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;PrecLoops&nbsp; <br>
+      </span></td>
+      <td style="vertical-align: top;">Total Number of performed phase selection + cleanup + MBR loops.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;NumIterFIA&nbsp; <br>
+      </span></td>
+      <td style="vertical-align: top;">Total number of performed
+MBR (Entry Feasible Domain) iterations to obtain accurate initial
+approximation for the IPM algorithm.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;NumIterIPM&nbsp; <br>
+      </span></td>
+      <td style="vertical-align: top;">Total number of performed GEM IPM main descent
+algorithm iterations. </td>
+    </tr>
+  </tbody>
+</table>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+ </span></p>
+
+<h2>2. The case of data exchange in computer memory </h2>
+<span style="font-family: Helvetica,Arial,sans-serif;">This case is
+typical for coupling GEMIPM2K with an existing reactive
+mass transport code that has its own data structure for keeping
+chemical information (e.g. speciation, bulk composition of the system)
+for each node. As in the previous example, it uses one work instance of
+the </span><span style="font-family: monospace;">DATABR</span><span style="font-family: Helvetica,Arial,sans-serif;">
+memory structure as data bridge for the exchange with internal GEM IPM data structures.
+<br></span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">
+This example code consists of two C++ files: "main.h" and "main.cpp". The former file contains a definition of </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;">
+class representing a typical dynamic memory structure used for
+keeping current chemical composition and speciation for all nodes
+involved in the reactive mass transport system. The latter file contains
+an implementation of some public methods of </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> class, as well as the main function which shows the sequence of calls to </span><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;">
+class functions, necessary to perform coupled reactive transport
+calculations based on the "operator splitting" approach. <br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">This example
+is designed to help learning how to couple the existing transport code
+with GEMIPM2K in a simple way, and it does not contain a 'real' transport
+code which would make the example difficult to observe. Instead, parts
+of the example code only mimick the mass transport and should be
+considered as placeholders, where the 'real' calls to mass transport
+calculations can be inserted. </span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<span style="font-family: Helvetica,Arial,sans-serif;">
+</span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Here is a code snippet with the</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> class</span><span style="font-family: Helvetica,Arial,sans-serif;"> definition (see complete code in</span>
+<span style="font-family: monospace;">/node_gem/main.h</span><span style="font-family: Helvetica,Arial,sans-serif;">): </span><span style="font-family: monospace;"></span></p>
+
+
+<span style="font-family: monospace;">
+</span><span style="font-family: Helvetica,Arial,sans-serif;">
+
+
+</span>
+<table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><br>
+class TMyTransport<br>
+{<br>
+&nbsp;public:<br>
+&nbsp;&nbsp;&nbsp; long int nNodes,&nbsp; // Number of mass transport nodes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; nTimes,&nbsp;&nbsp; // Number of time steps<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nIC,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical independent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nDC,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical dependent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nPH,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nPS;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical
+phases-solutions<br>
+      <br>
+&nbsp;&nbsp;&nbsp; long int *aNodeHandle,&nbsp;&nbsp;&nbsp;&nbsp; // Node identification handles<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aNodeStatusCH,&nbsp;&nbsp; // Node status codes (changed after GEM
+calculation)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aIterDone;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of GEM IPM
+iterations performed for each node<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp;&nbsp; at the last time step<br>
+      <br>
+&nbsp;&nbsp;&nbsp; double *aT,&nbsp;&nbsp;&nbsp;&nbsp; // Array of node temperatures T, Kelvin<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *aP,&nbsp;&nbsp;&nbsp;&nbsp; // Array of node pressures P, Pa<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aVs,&nbsp;&nbsp;&nbsp; // Array of node volume V of reactive
+subsystem, m3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aMs,&nbsp;&nbsp;&nbsp; // Array of node mass of reactive subsystem, kg<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aGs,&nbsp;&nbsp;&nbsp; // Array of node total Gibbs energy of reactive
+subsystems, J<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aHs,&nbsp;&nbsp;&nbsp; // Array of node total enthalpy of reactive
+subsystems, J (reserved)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+*aIC,&nbsp;&nbsp;&nbsp; // Array of node effective aqueous ionic
+strengths, molal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *apH,&nbsp;&nbsp;&nbsp; // Array of node pH of aqueous solutions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *ape,&nbsp;&nbsp;&nbsp; // Array of node pe of aqueous solutions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *aEh;&nbsp;&nbsp;&nbsp; // Array of node Eh of aqueous solution, V<br>
+      <br>
+&nbsp;&nbsp;&nbsp; double **axDC,&nbsp; // Array of node mole amounts of dependent components (speciation)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**agam,&nbsp; // Array of node activity coefficients of dependent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**axPH,&nbsp; // Array of node total mole amounts of all reactive phases<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**aaPH,&nbsp; // Array of node specific surface areas of phases, m2/kg<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**avPS,&nbsp; // Array of node total volumes of multicomponent phases,
+m3<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**amPS,&nbsp; // Array of node total masses of multicomponent phases,kg<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**abPS,&nbsp; // Array of node bulk compositions of multicomponent
+phases, moles<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**axPA,&nbsp; // Array of node amount of carrier in asymmetric phases,
+moles<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **aaPh,&nbsp; // Array of node surface areas of phases, m2<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**adul,&nbsp; // Array of node upper restrictions to amounts of
+dependent components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**adll,&nbsp; // Array of node lower restrictions to amounts of
+dependent components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**abIC,&nbsp; // Array of node bulk mole amounts of independent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**arMB,&nbsp; // Array of node mole balance residuals for independent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**auIC;&nbsp; // Array of node chemical potentials of independent
+components (norm.)<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TMyTransport(&nbsp;&nbsp; // Constructor (dynamic memory allocation)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int p_nNod,&nbsp;&nbsp;&nbsp; // Number of nodes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int p_nTim,&nbsp;&nbsp;&nbsp; // Number of time steps<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+p_nIC,&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical independent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+p_nDC,&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical dependent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+p_nPH,&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+p_nPS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases -
+solutions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ~TMyTransport();&nbsp; // Destructor of dynamic memory<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; void OneTimeStepRun(&nbsp;&nbsp; // Placeholder function for one transport time step<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double
+*stoich,&nbsp;&nbsp;&nbsp;&nbsp; // Stoichiometry coefficients<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+*ICndx,&nbsp;&nbsp;&nbsp; // Indexes of mobile independent components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+nICndx&nbsp;&nbsp;&nbsp;&nbsp; // Number of mobile independent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );<br>
+};<br>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">All data and
+methods in this class are declared as 'public' to make the example
+program more straightforward. The three functions belonging to</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> class are implemented in the</span><span style="font-family: Helvetica,Arial,sans-serif;"></span>
+<span style="font-family: monospace;">/node_gem/main.cpp</span><span style="font-family: Helvetica,Arial,sans-serif;"> file as follows:</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>
+<table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><br>
+#include "main.h"<br>
+      <br>
+TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int p_nPH, long int p_nPS )<br>
+{<br>
+      <br>
+&nbsp;&nbsp;&nbsp; nNodes = p_nNod;<br>
+&nbsp;&nbsp;&nbsp; nTimes = p_nTim;<br>
+&nbsp;&nbsp;&nbsp; nIC = p_nIC;<br>
+&nbsp;&nbsp;&nbsp; nDC = p_nDC;<br>
+&nbsp;&nbsp;&nbsp; nPH = p_nPH;<br>
+&nbsp;&nbsp;&nbsp; nPS = p_nPS;<br>
+      <br>
+&nbsp;&nbsp;&nbsp; aNodeHandle = new long int [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aNodeStatusCH = new long int [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aIterDone = new long int [nNodes];<br>
+      <br>
+&nbsp;&nbsp;&nbsp; aT = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aP = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aVs = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aMs = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aGs = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aHs = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aIC = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; apH = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; ape = new double [nNodes];<br>
+&nbsp;&nbsp;&nbsp; aEh = new double [nNodes];<br>
+      <br>
+&nbsp;&nbsp;&nbsp; axDC = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; agam = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; axPH = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; aaPH = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; avPS = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; amPS = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; abPS = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; axPA = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; aaPh = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; adul = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; adll = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; abIC = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; arMB = new double *[nNodes];<br>
+&nbsp;&nbsp;&nbsp; auIC = new double *[nNodes];<br>
+      <br>
+&nbsp;&nbsp;&nbsp; for (long int in=0; in&lt;nNodes; in++)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abIC[in] = new double [nIC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; arMB[in] = new double [nIC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; auIC[in] = new double [nIC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; axDC[in] = new double [nDC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; agam[in] = new double [nDC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; adul[in] = new double [nDC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; adll[in] = new double [nDC];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aaPH[in] = new double [nPH];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; axPH[in] = new double [nPH];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; avPS[in] = new double [nPS];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; amPS[in] = new double [nPS];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; axPA[in] = new double [nPS];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; aaPh[in] = new double [nPH];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abPS[in] = new double [nIC*nPS];<br>
+&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+}<br>
+      <br>
+TMyTransport::~TMyTransport()<br>
+{<br>
+&nbsp; &nbsp; // Deleting chemical data arrays for nodes<br>
+&nbsp;&nbsp;&nbsp; for (long int in=0; in&lt;nNodes; in++)<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]abIC[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]arMB[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]auIC[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]axDC[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]agam[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]adul[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]adll[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]aaPH[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]axPH[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]avPS[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]amPS[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]axPA[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]aaPh[in];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; delete[]abPS[in];<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; delete[]axDC;<br>
+&nbsp;&nbsp;&nbsp; delete[]agam;<br>
+&nbsp;&nbsp;&nbsp; delete[]axPH;<br>
+&nbsp;&nbsp;&nbsp; delete[]aaPH;<br>
+&nbsp;&nbsp;&nbsp; delete[]avPS;<br>
+&nbsp;&nbsp;&nbsp; delete[]amPS;<br>
+&nbsp;&nbsp;&nbsp; delete[]abPS;<br>
+&nbsp;&nbsp;&nbsp; delete[]axPA;<br>
+&nbsp;&nbsp;&nbsp; delete[]aaPh;<br>
+&nbsp;&nbsp;&nbsp; delete[]adul;<br>
+&nbsp;&nbsp;&nbsp; delete[]adll;<br>
+&nbsp;&nbsp;&nbsp; delete[]abIC;<br>
+&nbsp;&nbsp;&nbsp; delete[]arMB;<br>
+&nbsp;&nbsp;&nbsp; delete[]auIC;<br>
+      <br>
+&nbsp;&nbsp;&nbsp; delete[]aNodeHandle;<br>
+&nbsp;&nbsp;&nbsp; delete[]aNodeStatusCH;<br>
+&nbsp;&nbsp;&nbsp; delete[]aIterDone;<br>
+&nbsp;&nbsp;&nbsp; delete[]aT;<br>
+&nbsp;&nbsp;&nbsp; delete[]aP;<br>
+&nbsp;&nbsp;&nbsp; delete[]aVs;<br>
+&nbsp;&nbsp;&nbsp; delete[]aMs;<br>
+&nbsp;&nbsp;&nbsp; delete[]aGs;<br>
+&nbsp;&nbsp;&nbsp; delete[]aHs;<br>
+&nbsp;&nbsp;&nbsp; delete[]aIC;<br>
+&nbsp;&nbsp;&nbsp; delete[]apH;<br>
+&nbsp;&nbsp;&nbsp; delete[]ape;<br>
+&nbsp;&nbsp;&nbsp; delete[]aEh;<br>
+}<br>
+      <br>
+// Very simple example of transport<br>
+void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nICndx )<br>
+{<br>
+&nbsp;&nbsp;&nbsp; double parcel[nICndx];<br>
+&nbsp;&nbsp;&nbsp; long int in;<br>
+&nbsp;&nbsp;&nbsp; for(&nbsp; in=1; in&lt; nNodes; in++ )<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp; // some operators that change in some nodes some amounts of some migrating<br>
+&nbsp;&nbsp;&nbsp; // chemical species (axDC array or&nbsp; some amounts of migrating chemical<br>
+&nbsp;&nbsp;&nbsp; // elements in abIC array), possibly using data from other arrays in such<br>
+&nbsp;&nbsp;&nbsp; // a way that the mass conservation within the whole array of nodes is retained<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i=0; i&lt;nICndx; i++)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; parcel[i] = 0.01* stoicf[i]*abIC[in-1][ICndx[i]];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abIC[in][ICndx[i]] += parcel[i];<br>
+//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( in &gt; 1 )<br>
+//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abIC[in-1][ICndx[i]] -= parcel[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; // The above example loop implements a zero-order flux of MgCl2 in one direction.<br>
+&nbsp;&nbsp;&nbsp; // Real advective/diffusive transport models are much more complex, but essentially<br>
+&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp; do similar things<br>
+&nbsp;&nbsp;&nbsp; }<br>
+}<br>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span><span style="font-family: Helvetica,Arial,sans-serif;">The last function </span><span style="font-family: monospace;">OneTimeStepRun()</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: Helvetica,Arial,sans-serif;">is
+not an implementation of a 'real' mass transport integration time step,
+but otherwise, it does the same, i.e. modifies bulk chemical
+composition of nodes by shifting some amounts of elements from one node
+to another, using the zeroth node as an infinite source of constant
+composition - MgCl<sub>2</sub> solution. And it is called from the same
+place of the example coupled code where the code performing the
+transport time step should be called from (see below). <br>
+&nbsp;&nbsp;</span><span style="font-family: Helvetica,Arial,sans-serif;"> &nbsp;  </span><br>
+<span style="font-family: Helvetica,Arial,sans-serif;">The first part of main.cpp (see full example in</span>
+<span style="font-family: monospace;">/node_gem/main.cpp</span><span style="font-family: Helvetica,Arial,sans-serif;">) creates the TNode class instance and initializes it by reading three GEMIPM2K input files (provided in </span><span style="font-family: monospace;">/node_gem/test_data/</span><span style="font-family: Helvetica,Arial,sans-serif;">), which it extracts from the file list passed through the first command line argument. Then the </span><span style="font-family: Helvetica,Arial,sans-serif;">instance of</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> class is created, and its </span><span style="font-family: Helvetica,Arial,sans-serif;">constructor is called to allocate dynamic memory arrays for storing information for all nodes. If necessary, another instance </span><span style="font-family: Helvetica,Arial,sans-serif;">of</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> class</span><span style="font-family: Helvetica,Arial,sans-serif;">
+could be created and initialized here, for example, if the state of the
+system at previous time step is needed to calculate mass transport at
+the current time step.<br>
+ <br>
+</span>
+<table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><br>
+#include "node.h"<br>
+#include "main.h"<br>
+      <br>
+//The case of data exchange in computer memory<br>
+int main( int argc, char* argv[] )<br>
+{<br>
+&nbsp;&nbsp; // Analyzing command line arguments (default arguments)<br>
+&nbsp;&nbsp; char ipm_input_file_list_name[256] = "system-dat.lst";<br>
+&nbsp;&nbsp; char dbr_input_file_name[256] = "system-dbr.dat";<br>
+      <br>
+&nbsp;&nbsp; if (argc &gt;= 2 )&nbsp; // list of files needed as input for initializing GEMIPM2K<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( ipm_input_file_list_name, argv[1], 256);<br>
+&nbsp;&nbsp; if (argc &gt;= 3 ) // input file for boundary conditions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( dbr_input_file_name, argv[2], 256);<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // Creates a TNode structure instance accessible through the "node" pointer<br>
+&nbsp;&nbsp;&nbsp; TNode* node&nbsp; = new TNode();<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // (1) Initialization of GEMIPM2K internal data by reading&nbsp; files<br>
+&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp; whose names are given in the ipm_input_system_file_list_name<br>
+&nbsp;&nbsp;&nbsp; if( node-&gt;GEM_init( ipm_input_file_list_name ) )<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Error occured during reading the files";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;<br>
+&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // Getting direct access to work node DATABR structure which exchanges the<br>
+&nbsp;&nbsp;&nbsp; // data with GEMIPM2K (already filled out by reading the DBR input file)<br>
+&nbsp;&nbsp;&nbsp; DATABR* dBR = node-&gt;pCNode();<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // Getting direct access to the DataCH structure in GEMIPM2K instance memory<br>
+&nbsp;&nbsp;&nbsp; DATACH* dCH = node-&gt;pCSD();<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // Creating memory for mass transport nodes<br>
+&nbsp;&nbsp;&nbsp; // 11 nodes, 99 time steps<br>
+&nbsp;&nbsp;&nbsp; TMyTransport mt( 11, 100, dCH-&gt;nICb, dCH-&gt;nDCb, dCH-&gt;nPHb, dCH-&gt;nPSb );<br>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+<br>
+The next part of the example sets the initial state of the mass
+transport system by taking the data for the chemical system from
+GEMIPM2K. These data were read in upon initialization of the </span><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;">
+class instance (see above) and are copied into all nodes but the zeroth
+one. After the GEM calculation for each node, the node status code
+is checked in order to assess quality of GEM solution. Initialization
+of nodes is done in the same loop with GEM calculations, even
+though the bulk composition of the system is constant. This is because,
+in general, temperature T and pressure P may change between the nodes,
+hence the chemical speciation must be made consistent by recalculating
+chemical equilibrium at the respective T and P. In real transport
+codes,
+this part - setting initial conditions and composition in all nodes -
+is much more complex. <br>
+<br>
+One initial chemical system is read separately in a </span><span style="font-family: monospace;">GEM_read_dbr() </span><span style="font-family: Helvetica,Arial,sans-serif;">call,
+then (after calculation of equilibrium at desired T,P) the data is
+copied into mass transport arrays for the node with index 0. This node has
+a different composition and will be used by the transport part as a
+constant infinite source of MgCl<sub>2</sub>, moved into other nodes (containing calcium carbonate) over time steps.  </span><br>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>
+<table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; // Initialization of GEMIPM2K and chemical information for nodes kept in the FMT part<br>
+&nbsp;&nbsp;&nbsp; long int in;<br>
+&nbsp;&nbsp;&nbsp; for(&nbsp; in=1; in&lt; mt.nNodes; in++ )<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM to run with automatic initial approximation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( false);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cout &lt;&lt; "Error occured during re-calculating equilibrium" ;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Extracting GEMIPM input data to mass-transport program arrays<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_restore_MT(
+mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in],
+mt.aaPH[in] );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Extracting GEMIPM output data to mass-transport program arrays<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in],
+mt.ape[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in],
+mt.axPH[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in] );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here the setup of initial differences between node compositions,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; temperatures, etc. can be implemented<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here the file output for the initial conditions can be implemented<br>
+&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // Read DATABR structure from text file (read boundary condition on the left)<br>
+&nbsp;&nbsp;&nbsp; node-&gt;GEM_read_dbr( dbr_input_file_name );<br>
+      <br>
+&nbsp;&nbsp;&nbsp; for(&nbsp; in=0; in&lt;1; in++ )<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM to run with automatic initial approximation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (2) Re-calculating chemical equilibrium by calling GEM<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( false );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cout &lt;&lt; "Error occured during re-calculating chemical
+equilibrium" ;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (6) Extracting GEMIPM input data to mass-transport program arrays<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_restore_MT(
+mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in],
+mt.aaPH[in] );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (7) Extracting GEMIPM output data to mass-transport program arrays<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in],
+mt.ape[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in],
+mt.axPH[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in] );<br>
+&nbsp;&nbsp;&nbsp; }<br>
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+<br>
+</span><span style="font-family: monospace;"></span><span style="font-family: monospace;"></span><span style="font-family: monospace;"><br>
+</span><span style="text-decoration: underline; font-family: Helvetica,Arial,sans-serif;">Description of used function
+calls</span><span style="font-family: Helvetica,Arial,sans-serif;">
+(continued, see also "node.h" file from GEMIPM2K) </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<br>
+<h3>(6) GEM_restore_MT()</h3>
+<p>&nbsp;
+<span style="font-family: monospace;">void GEM_restore_MT(&nbsp; long
+int&nbsp; &amp;p_NodeHandle,&nbsp; long int&nbsp; &amp;p_NodeStatusCH, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+double &amp;p_TK,&nbsp; double &amp;p_P, double &amp;p_Vs, double
+&amp;p_Ms, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+double *p_bIC, double *p_dul, double *p_dll, double *p_aPH );</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">Passes (copies) the GEMIPM2K
+input data from the work instance of DATABR structure.&nbsp; </p>
+
+
+<p style="margin-left: 40px;">This call is useful after the GEM_init()&nbsp; and
+GEM_run() calls to initialize the arrays which keep the chemical data for all nodes used
+in the mass-transport model. The GEM_init() call reads the IPM, DCH and DBR file into the
+GEMIPM2K work structures (see details above). The GEM_run() call (details below) calculates the full chemical speciation.&nbsp; <br>
+
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters: </span><br>
+</p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Parameter ID<br>
+      </td>
+      
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Explanation<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;Tag in the <br>
+DBR file<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_NodeHandle</span></td>
+      
+      <td style="vertical-align: top;">Node identification handle</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">NodeHandle</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_NodeStatusCH</span></td>
+      
+      <td style="vertical-align: top;">Node status
+code (see Section 2 for possible codes)<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">NodeStatusCH</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_TK</span></td>
+      
+      <td style="vertical-align: top;">Temperature T, Kelvins <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">TK<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_P</span></td>
+      
+      <td style="vertical-align: top;">Pressure P,&nbsp; <span style="color: rgb(0, 0, 0);">Pa&nbsp;</span> <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">P<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_Vs</span></td>
+      
+      <td style="vertical-align: top;">Volume
+V of reactive subsystem,&nbsp; <span style="color: rgb(0, 0, 0);">m3</span><br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Vs<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_Ms</span></td>
+      
+      <td style="vertical-align: top;">Mass of
+reactive subsystem,
+kg&nbsp; <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Ms<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_bIC</span></td>
+      
+      <td style="vertical-align: top;">Bulk mole
+amounts of Independent Components
+[<span style="font-family: monospace;">dCH-&gt;nICb</span> elements]</td>
+      <td style="vertical-align: top; font-family: monospace;">bIC<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_dul</span></td>
+      
+      <td style="vertical-align: top;">Upper restrictions to amounts of
+Dependent Components [<span style="font-family: monospace;">dCH-&gt;nDCb</span>
+elements]<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">dul<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_dll</span></td>
+      
+      <td style="vertical-align: top;">Lower restrictions to amounts of
+Dependent Components [<span style="font-family: monospace;">dCH-&gt;nDCb</span>
+elements] <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">dll<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_aPH</span></td>
+      
+      <td style="vertical-align: top;">Specific
+surface areas of phases, <span style="color: rgb(0, 0, 0);">m2/kg</span>
+[<span style="font-family: monospace;">dCH-&gt;nPHb</span>
+elements]<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">aPH<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return values:</span></p>
+<p style="margin-left: 40px;"><span style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Times New Roman,Times,serif;">All values are returned via parameters (pointers).</span><br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">In </span><span style="font-family: monospace;">GEM_restore_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;">, all parameters are
+output data, i.e.
+previous contents of memory given to parameters will be lost.</span><span style="font-family: Helvetica,Arial,sans-serif;"> Contents of the
+work DATABR structure (source of data) remain unchanged. This function
+is a reverse of&nbsp; </span><span style="font-family: monospace;">GEM_from_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;">, see Section (8).</span>
+<br>
+</p>
+
+<br>
+<h3>(7) GEM_to_MT()</h3>
+<span style="font-family: monospace;"> void GEM_to_MT( long int
+&amp;p_NodeHandle, long int &amp;p_NodeStatusCH, long int
+&amp;p_IterDone, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double
+&amp;p_Vs, double &amp;p_Ms, double &amp;p_Gs, double &amp;p_Hs, double
+&amp;p_IC,&nbsp; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double
+&amp;p_pH, double &amp;p_pe, double &amp;p_Eh,&nbsp; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double
+*p_rMB,&nbsp; double *p_uIC,&nbsp; double *p_xDC,&nbsp; double *p_gam,
+double *p_xPH,&nbsp; </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double
+*p_vPS,&nbsp; double *p_mPS, double *p_bPS, double *p_xPA</span><span style="font-family: monospace;">, double *p_aPh</span><span style="font-family: monospace;">&nbsp; );</span><br>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span><br>
+<p style="margin-left: 40px;">Retrieves the GEMIPM2 chemical speciation
+calculation results from the work DATABR structure instance into memory provided by the mass
+transport part. Dimensions and order of elements in the arrays must
+correspond to those in currently existing
+DATACH memory structure.</p>
+
+
+
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:&nbsp;</span>
+<br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Parameter
+ID<br>
+      </td>
+      
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Explanation<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;Tag in the <br>
+DBR file<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_NodeHandle</span></td>
+      
+      <td style="vertical-align: top;">Node identification handle</td>
+      <td style="vertical-align: top; font-family: monospace;">NodeHandle</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-decoration: underline;"><span style="font-family: monospace;">&nbsp;p_NodeStatusCH&nbsp; <br>
+</span></td>
+      
+      <td style="vertical-align: top;">Node status
+code (see Section 2 for possible codes)<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">NodeStatusCH<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_IterDone</td>
+      
+      <td style="vertical-align: top;">Number of iterations performed
+in the last GEM IPM calculation<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">IterDone<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_Vs</td>
+      
+      <td style="vertical-align: top;">Total volume
+V of reactive subsystem at given P,T,&nbsp; <span style="color: rgb(0, 0, 0);">m3</span> <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Vs<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_Ms</td>
+      
+      <td style="vertical-align: top;">Total mass of
+the reactive subsystem,
+kg&nbsp; <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Ms<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_Gs</td>
+      
+      <td style="vertical-align: top;">Total Gibbs energy
+of the reactive subsystem<span style="color: black;">, J</span><br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Gs<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_Hs</td>
+      
+      <td style="vertical-align: top;">Total enthalpy of
+reactive subsystem, J (reserved)<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Hs<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_IC</td>
+      
+      <td style="vertical-align: top;">Effective aqueous ionic
+strength, molal (0 if no aqueous electrolyte phase)<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">IC<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_pH</td>
+      
+      <td style="vertical-align: top;">pH of aqueous
+solution (0 if no aqueous electrolyte phase)</td>
+      <td style="vertical-align: top; font-family: monospace;">pH<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_pe</td>
+      
+      <td style="vertical-align: top;">pe of aqueous
+solution (0 if no aqueous electrolyte phase)</td>
+      <td style="vertical-align: top; font-family: monospace;">pe<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_Eh</td>
+      
+      <td style="vertical-align: top;">Eh of aqueous
+solution,
+V (0 if no aqueous electrolyte phase)</td>
+      <td style="vertical-align: top; font-family: monospace;">Eh<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_rMB</td>
+      
+      <td style="vertical-align: top;">Mole balance residuals for
+Independent Components [<span style="font-family: monospace;">dCH-&gt;nICb</span>
+elements]</td>
+      <td style="vertical-align: top; font-family: monospace;">rMB </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_uIC</td>
+      
+      <td style="vertical-align: top;"><span style="font-style: italic;">Dual
+solution</span>: chemical
+potentials of independent components, mol/mol [<span style="font-family: monospace;">dCH-&gt;nICb</span>
+elements]<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">uIC </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_xDC</td>
+      
+      <td style="vertical-align: top;"><span style="font-style: italic;">Primal
+solution</span>: mole
+amounts of dependent components (equilibrium speciation) [<span style="font-family: monospace;">dCH-&gt;nDCb</span>
+elements] <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">xDC </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_gam</td>
+      
+      <td style="vertical-align: top;">External activity
+coefficients of dependent components [<span style="font-family: monospace;">dCH-&gt;nDCb</span>
+elements] </td>
+      <td style="vertical-align: top; font-family: monospace;">gam</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_xPH</td>
+      
+      <td style="vertical-align: top;">Total mole amounts of
+all phases [<span style="font-family: monospace;">dCH-&gt;nPHb</span>
+elements]<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">xPH </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_vPS</td>
+      
+      <td style="vertical-align: top;">Total volumes of multicomponent
+phases, <span style="color: rgb(0, 0, 0);">m3</span> [<span style="font-family: monospace;">dCH-&gt;nPSb</span>
+elements]&nbsp;&nbsp; <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">vPS</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_mPS</td>
+      
+      <td style="vertical-align: top;">Total mass of multicomponent
+phase,&nbsp; <span style="color: rgb(0, 0, 0);">kg</span>
+[<span style="font-family: monospace;">dCH-&gt;nPSb</span>
+elements]&nbsp; <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">mPS</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; text-decoration: underline;">&nbsp;p_bPS</td>
+      
+      <td style="vertical-align: top;">Bulk compositions of
+phases [<span style="font-family: monospace;">dCH-&gt;nPSb*dCH-&gt;nICb</span>
+elements]</td>
+      <td style="vertical-align: top; font-family: monospace;">bPS</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_xPA</td>
+      
+      <td style="vertical-align: top;">Amount of carrier in
+a multicomponent asymmetric phase&nbsp; [<span style="font-family: monospace;">dCH-&gt;nPSb</span> elements] </td>
+      <td style="vertical-align: top; font-family: monospace;">xPA</td>
+    </tr><tr>
+      <td style="vertical-align: top;">&nbsp;<span style="font-family: monospace;">p_aPh</span></td>
+      <td style="vertical-align: top;">Surface areas of phases, m2 [<span style="font-family: monospace;">dCH-&gt;nPHb</span>
+elements]</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">aPh</span><br>
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return values:</span></p>
+
+<p style="margin-left: 40px;"><span style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Times New Roman,Times,serif;">All values are returned via parameters (pointers).</span><br>
+</span></p>
+
+<p>I<span style="font-family: Helvetica,Arial,sans-serif;">n </span><span style="font-family: monospace;">GEM_to_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;">, all parameters are
+output parameters ( i.e. previous
+contents of memory given to parameters will be lost).</span><span style="font-family: Helvetica,Arial,sans-serif;"> Contents of the
+work DATABR structure remain
+unchanged. </span><span style="font-family: Helvetica,Arial,sans-serif;">Parameter IDs
+for the most important GEM IPM output data are
+underlined. </span><br>
+</p>
+
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">The last code snippet below shows how the main loop of coupled calculations is organized.&nbsp; <br>
+<br>
+Firstly, the use of access methods for extracting indexes of
+independent chemical components and phases is shown.&nbsp; Then, the
+stoichiometry of matter to be transported is defined using the </span><span style="font-family: monospace;">stoich[5]</span><span style="font-family: Helvetica,Arial,sans-serif;"> work array. Next, the 'time loop' begins with the 'mass transport' as such represented as a single </span><span style="font-family: monospace;">mt.OneTimeStepRun() </span><span style="font-family: Helvetica,Arial,sans-serif;">function call; in principle, in this function, also temperature of each node may change. <br>
+<br>
+After that, the nested 'chemical equilibriation loop'&nbsp; performs
+re-calculation of equilibria in all nodes whose bulk composition had
+just been modified at the 'mass transport' stage at this time step.
+This loop also demonstrates how to use the 'smart initial
+approximation' (SIA) mode of GEM IPM. After some output indicating
+changes in chemical speciation at this time step in each node,
+the&nbsp; chemical equilibration loop is closed, and control goes to
+the mass transport time loop. Note that at this stage, various
+back-coupling calculations, i.e. how precipitation/dissolution of some
+phases has affected the porosity and transport properties, can be
+implemented&nbsp; (in a real coupling, of course). </span><br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Main loop - iterations over mt.nTimes time steps</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp; int xCalcite = node-&gt;Ph_name_to_xDB("Calcite");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; int xDolomite = node-&gt;Ph_name_to_xDB("Dolomite-dis");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; int xAq_gen = node-&gt;Ph_name_to_xDB("aq_gen");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; long int ICndx[5];</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[0] = node-&gt;IC_name_to_xDB("Ca");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[1] = node-&gt;IC_name_to_xDB("C");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[2] = node-&gt;IC_name_to_xDB("O");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[3] = node-&gt;IC_name_to_xDB("Mg");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[4] = node-&gt;IC_name_to_xDB("Cl");</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Checking indexes</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; cout
+&lt;&lt; "xCa= " &lt;&lt; ICndx[0] &lt;&lt; " xC=" &lt;&lt; ICndx[1]
+&lt;&lt; " xO=" &lt;&lt; ICndx[2] &lt;&lt; " xMg="</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&lt; ICndx[3] &lt;&lt; " xCl=" &lt;&lt; ICndx[4] &lt;&lt; endl
+&lt;&lt; " xCalcite=" &lt;&lt; xCalcite</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&lt; " xDolomite=" &lt;&lt; xDolomite &lt;&lt; " xAq_gen=" &lt;&lt;
+xAq_gen &lt;&lt; endl &lt;&lt; endl;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double stoich[5] = { 0., 0., 0., 1., 2. }; // defines what is 'transported'</span><br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; long int it;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; for( it=0; it&lt; mt.nTimes; it++ )</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Time step&nbsp; " &lt;&lt; it &lt;&lt; endl;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Mass transport loop over nodes (not a real transport model)</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.OneTimeStepRun( stoich, ICndx, 5 );</span><br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Chemical equilibration loop over nodes</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for( in=0; in&lt; mt.nNodes; in++ )</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeHandle[in] = in;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = NEED_GEM_SIA;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (8) Setting input data for GEMIPM to use available node speciation as</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // initial approximation</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in], mt.axDC[in],
+mt.agam[in] );</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// (9)&nbsp;&nbsp; Passing current FMT iteration information into the
+work DATABR structure</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_set_MT( (double)it, 1. );</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Calling GEMIPM calculation</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( true );</span><br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( ( mt.aNodeStatusCH[in] == ERR_GEM_AIA || mt.aNodeStatusCH[in] ==
+ERR_GEM_SIA ||</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aNodeStatusCH[in] ==&nbsp; T_ERROR_GEM ) )</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cout &lt;&lt; "Error: GEM calculation results are not retrieved. Time
+step"</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&lt; it &lt;&lt; " node " &lt;&lt; in &lt;&lt; endl;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( ( mt.aNodeStatusCH[in] == BAD_GEM_AIA || mt.aNodeStatusCH[in] ==
+BAD_GEM_SIA&nbsp; ) )</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cout &lt;&lt; "Insufficient quality of GEM solution, but GEM results
+are retrieved"</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&lt; it &lt;&lt; " node " &lt;&lt; in &lt;&lt; endl;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // (7) Extracting GEMIPM output data to FMT part</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
+mt.aIterDone[in],</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in],
+mt.ape[in],</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aEh[in],mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in],
+mt.axPH[in],</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in] );</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Here, the output upon completion of the time step is usually
+implemented</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp; to monitor the coupled simulation or collect results</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "&nbsp; Node " &lt;&lt; in ;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cout &lt;&lt; ": Aq= " &lt;&lt; mt.axPH[in][xAq_gen] &lt;&lt; " pH= "
+&lt;&lt; mt.apH[in] &lt;&lt;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"&nbsp; Calcite= " &lt;&lt; mt.axPH[in][xCalcite] &lt;&lt; endl;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; }</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; // Calculations finished - end time step reached</span><br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; // Final output, e.g. of total simulation time or of the final distribution of</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; //&nbsp; components and phases in all nodes, can be implemented here</span><br style="font-family: monospace;">
+      <br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; // deleting GEMIPM2K and data exchange memory structures</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; delete node;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; // end of example</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp; return 0;<br>
+&nbsp; // no need to call the TMyTransport destructor in this case<br>
+}<br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<span style="text-decoration: underline; font-family: Helvetica,Arial,sans-serif;">Description of used function
+calls</span><span style="font-family: Helvetica,Arial,sans-serif;">
+(continued, see also "node.h" file from GEMIPM2K)</span><br>
+<br>
+<h3>(8) GEM_from_MT()</h3>
+<p>&nbsp;
+<span style="font-family: monospace;">void GEM_from_MT(&nbsp; long
+int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TK,&nbsp; double p_P,
+double p_Vs, double p_Ms, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+double *p_bIC, double *p_dul, double *p_dll, double *p_aPH );</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;&nbsp;</span>&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">
+Loads the GEMIPM2K input data
+for a given mass-transport node into the work instance of DATABR
+structure.&nbsp; This call is usually preceeding the GEM_run() call<br>
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters: </span><br>
+</p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Parameter
+ID<br>
+      </td>
+      
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Explanation<br>
+      </td>
+      <td style="vertical-align: top;">&nbsp;Tag in the <br>
+DBR file<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_NodeHandle</span></td>
+      
+      <td style="vertical-align: top;">Node identification handle<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">NodeHandle
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-decoration: underline;"><span style="font-family: monospace;">&nbsp;p_NodeStatusCH&nbsp; <br>
+</span></td>
+      
+      <td style="vertical-align: top;">Node status
+code (NEED_GEM_SIA or NEED_GEM_AIA), will be changed internally after
+GEM_run() <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">NodeStatusCH
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-decoration: underline;"><span style="font-family: monospace;">&nbsp;p_TK</span></td>
+      
+      <td style="vertical-align: top;">Temperature T, Kelvin<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">TC<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-decoration: underline;"><span style="font-family: monospace;">&nbsp;p_P</span></td>
+      
+      <td style="vertical-align: top;">Pressure P,&nbsp; Pa <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">P<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_Vs</span></td>
+      
+      <td style="vertical-align: top;">Volume
+V of reactive subsystem, m3, may change in GEM_run() internally<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">Vs<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_Ms</span></td>
+      
+      <td style="vertical-align: top;">Mass of
+reactive subsystem,
+kg; may be updated&nbsp; in GEM_run() internally </td>
+      <td style="vertical-align: top; font-family: monospace;">Ms<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; text-decoration: underline;"><span style="font-family: monospace;">&nbsp;p_bIC</span></td>
+      
+      <td style="vertical-align: top;">Bulk mole
+amounts of Independent Components
+[<span style="font-family: monospace;">dCH-&gt;nICb</span> elements]</td>
+      <td style="vertical-align: top; font-family: monospace;">bIC<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_dul</span></td>
+      
+      <td style="vertical-align: top;">Upper restrictions to amounts of
+Dependent Components [<span style="font-family: monospace;">dCH-&gt;nDCb</span>
+elements]<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">dul<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_dll</span></td>
+      
+      <td style="vertical-align: top;">Lower restrictions to amounts of
+Dependent Components [<span style="font-family: monospace;">dCH-&gt;nDCb</span>
+elements] <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">dll<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_aPH</span></td>
+      
+      <td style="vertical-align: top;">Specific
+surface areas of phases, <span style="color: rgb(0, 0, 0);">m2/kg</span>
+[<span style="font-family: monospace;">dCH-&gt;nPHb</span>
+elements]<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">aPH<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;p_xDC</td>
+      
+      <td style="vertical-align: top;">Mole amounts of DCs [<span style="font-family: monospace;">dCH-&gt;</span><span style="font-family: monospace;">nDCb</span>] -
+will be internally convoluted and added to the <span style="font-family: monospace;">bIC</span> GEM input vector&nbsp;
+(only in the overloaded call, see Section 8a below)<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xDC</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_gam</span> <br>
+      </td>
+      
+      <td style="vertical-align: top;">DC activity coefficients [<span style="font-family: monospace;">dCH-&gt;</span><span style="font-family: monospace;">nDCb</span>] - used only in the
+overloaded call (see Section 8b) together with the <span style="font-family: monospace;">p_xDC</span> data as GEM initial
+approximation for this node <br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">gam</span><br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Return values: <span style="font-family: Times New Roman,Times,serif;">none.</span><br>
+</span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">In </span><span style="font-family: monospace;">GEM_from_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;">, all parameters are
+input ( i.e. contents of memory
+given to parameters will remain unchanged). </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;">Most frequently changed input parameters are underlined in the above
+table. </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">This function is
+a reverse of&nbsp; </span><span style="font-family: monospace;">GEM_restore_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;">, see Section
+(6).&nbsp; </span><br style="font-family: Helvetica,Arial,sans-serif;">
+<span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">To retrieve, if
+necessary, the changed&nbsp; </span><span style="font-family: monospace;">Vs</span><span style="font-family: Helvetica,Arial,sans-serif;"> or </span><span style="font-family: monospace;">Ms</span><span style="font-family: Helvetica,Arial,sans-serif;"> values after the </span><span style="font-family: monospace;">GEM_run()</span><span style="font-family: Helvetica,Arial,sans-serif;">, use
+</span><span style="font-family: monospace;">GEM_restore_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: Helvetica,Arial,sans-serif;">or </span><span style="font-family: monospace;">GEM_to_MT()</span><span style="font-family: Helvetica,Arial,sans-serif;"> calls.</span><br>
+<br>
+</p>
+
+<h3>(8a) GEM_from_MT() overload call </h3>
+<span style="font-family: monospace;">void GEM_from_MT(&nbsp; long
+int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TK,&nbsp; double p_P,
+double p_Vs, double p_Ms, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+double *p_bIC, double *p_dul, double *p_dll, double *p_aPH, </span><span style="font-family: monospace;">double *p_xDC</span><span style="font-family: monospace;"> );</span>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p style="margin-left: 40px;">Loads the GEMIPM2K input data
+for a given mass-transport node into the work instance of DATABR
+structure. In advection/diffusion transport codes (such as
+OpenGeoSys),&nbsp; not the total
+amounts of elements, but the amounts of aqueous species are usually
+moved between nodes. Conversely, after the mass transport step, only
+the speciation vector <span style="font-family: monospace;">xDC</span> is changed in each node,
+and an additional step would be needed to compute a corrected <span style="font-family: monospace;">bIC</span> vector (i.e. elemental bulk
+composition) in each node, which is the GEM input to compute the new speciation. With the 8a variant of GEM_from_MT()
+call, this task is performed by GEMIPM2K, so that there is no need to do it in the mass transport
+part. <br>
+This overloaded variant uses the <span style="font-family: monospace;">xDC</span> speciation vector (provided
+as the last parameter in the function call list) for setting the new bulk chemical
+composition to be used in the next GEM_run() calculation. Whatever
+total charge value is computed from the <span style="font-family: monospace;">xDC</span> data, it will be set to
+zero in the last element of <span style="font-family: monospace;">bIC</span>
+vector. Actually, total amounts of chemical elements are
+calculated from stoichiometries of Dependent Components (as provided in the A matrix in DATACH
+structure) and their amounts (in the <span style="font-family: monospace;">xDC</span> vector), and then added to
+the amounts given in the <span style="font-family: monospace;">bIC</span> vector (passed through the <span style="font-family: monospace;">p_bIC</span> parameter). <br>
+Hence, two
+cases are possible. One case is when the mass trasport step puts
+in the <span style="font-family: monospace;">p_xDC</span> parameter the <span style="text-decoration: underline;">differences</span>
+between the new and the old speciation in the node chemical system. In this
+case, the old <span style="font-family: monospace;">p_bIC</span> content (e.g. unchanged since the last GEM
+calculation for this node) must be provided - then it will be
+automatically corrected.&nbsp; Another case is when the mass-transport part delivers in <span style="font-family: monospace;">p_xDC</span> the complete new
+speciation after the transport time step. In this case, the <span style="font-family: monospace;">p_bIC</span>
+vector must be filled out with zeros, because its new content will be
+completely retrieved from the <span style="font-family: monospace;">x_DC</span> vector.&nbsp; <br>
+</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp;
+see Table in Section (8) - all are input
+parameters. <br>
+<br>
+</p>
+<h3>(8b) GEM_from_MT() overload call
+</h3>
+<span style="font-family: monospace;">void GEM_from_MT(&nbsp; long
+int&nbsp; p_NodeHandle,&nbsp; long int&nbsp; p_NodeStatusCH, </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double p_TK,&nbsp; double p_P,
+double p_Vs, double p_Ms, </span><span style="font-family: monospace;">double
+*p_bIC, <br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; double *p_dul, double *p_dll, double
+*p_aPH, </span><span style="font-family: monospace;">double *p_xDC,
+double *p_gam</span><span style="font-family: monospace;"> );<br>
+<br>
+</span><br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+<br>
+<p style="margin-left: 40px;">Loads the GEMIPM2K input data
+for a given mass-transport node into the work instance of DATABR
+structure. </p>
+
+
+<p style="margin-left: 40px;">In addition, it provides access to speciation vector <span style="font-family: monospace;">p_xDC</span>
+and species activity coefficients <span style="font-family: monospace;">p_gam</span>&nbsp; that will be used in GEM IPM "smart initial approximation" SIA mode if <span style="font-family: monospace;">dBR-&gt;NodeStatusCH</span> ==
+<span style="font-family: monospace;">NEED_GEM_SIA
+(5)</span> and <span style="font-family: monospace;">uPrimalSol = true </span>are
+set for the <span style="font-family: monospace;">GEM_run() </span>call (see Section 2) . This works only when the
+DATACH structure contains a full list
+of dependent components used in GEM IPM calculations. </p>
+
+
+
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:</span>&nbsp;
+see Table in Section (8) - all are input parameters. <br>
+<br>
+<span style="color: rgb(204, 0, 0);">Open issue: shall p_xDC content
+be used for updating bIC content in the
+same way as in variant (8a)?</span> <br>
+<br>
+<h3>(9) GEM_set_MT()</h3>
+<span style="font-family: monospace;">void GEM_set_MT( double p_Tm,
+double p_dt );</span><br>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Purpose:</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>
+<br>
+<div style="margin-left: 40px;">Optional, for passing the
+current mass transport iteration information into the work DATABR
+structure (e.g. for using it in tracing/debugging
+or in writing DBR files for nodes using TNode functions).<br>
+</div>
+
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Parameters:&nbsp;
+</span><br><br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_Tm&nbsp; <br>
+      </span></td>
+      <td style="vertical-align: top;">Actual total
+simulation time,
+s</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;p_dt&nbsp; <br>
+      </span></td>
+      <td style="vertical-align: top;">Actual
+time step,
+s</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<span style="font-family: monospace;"></span><br>
+<br>
+<h2>3. Miscellaneous methods for accessing the GEM IPM data from the
+mass transport part </h2>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">These public
+methods of access to particular elements of the TNode class
+data require that the "node.h" header is included. Usage of these
+public methods is strongly preferred instead of direct access to fields
+of the DATABR, DATACH and MULTI memory sturctures. The lists may be
+incomplete, as new data item access methods can be added in future
+versions of GEMIPM2K and TNode class interface. </span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">In the following, acronyms 'IC' and 'DC' mean 'independent component' and 'dependent component', respectively. </span></p>
+
+
+<h4>3.1. The whole node chemical system</h4>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.1.
+Access to the properties of the whole chemical system assigned
+to the node</span><br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Access method<br>
+      </td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Function<br>
+      </td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Example<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;TNode*
+TNode();</td>
+      <td style="vertical-align: top;">Constructor of the class
+instance in memory<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;TNode* node =
+new TNode();</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;double&nbsp; <br>
+&nbsp;GEM_CalcTime();</span> <br>
+      </td>
+      <td style="vertical-align: top;">Returns GEMIPM calculation time
+in s, elapsed during the last call to
+GEM_run()</td>
+      <td style="vertical-align: top;"><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;DATACH*
+pCSD() </td>
+      <td style="vertical-align: top;">Get the pointer to
+chemical system definition data structure</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;DATACH* dCH =
+node-&gt;pCSD();</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;DATABR*
+pCNode() </td>
+      <td style="vertical-align: top;">Get pointer to work
+node data structure (not recommended on TNodearray level)<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;DATABR* dBR =
+      <br>
+&nbsp;&nbsp; node-&gt;pCNode();</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+cTK() </td>
+      <td style="vertical-align: top;">Get
+current node Temperature T, in Kelvins<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+TK = node-&gt;cTK(); <br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+cTC()</td>
+      <td style="vertical-align: top;">Get
+current node Temperature T, in degrees Celsius<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+TC = node-&gt;cTC();</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+cP()</td>
+      <td style="vertical-align: top;">Get
+current node Pressure P,&nbsp; <span style="color: rgb(0, 0, 0);">in Pa</span>
+      <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double P
+= node-&gt;cP(); </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;double cMs()</span><br>
+      </td>
+      <td style="vertical-align: top;">Get current mass of reactive
+part, in kg<br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+Mass
+= node-&gt;cMs();</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;double cVs()</span><br>
+      </td>
+      <td style="vertical-align: top;">Get current volume of reactive
+part, in m<sup>3</sup><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;double Vol_L =&nbsp; <br>
+&nbsp;&nbsp; node-&gt;cVs*1000.;</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;void
+setNodeHandle( long int jj )</td>
+      <td style="vertical-align: top;">Set current node identification
+handle to value of parameter jj<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;node-&gt;setNodeHandle( 4L );</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;bool
+check_TP( double T, double P );</td>
+      <td style="vertical-align: top;">Checks, if the given temperature T
+(K) and the pressure P (Pa) fit within the
+interpolation intervals of the DATACH lookup arrays (returns true) or
+not (returns false)<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;if(!node-&gt;checkTP(320.,2e5))</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; return 1;</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int&nbsp; check_grid_TP(&nbsp; double T,
+double P );</td>
+      <td style="vertical-align: top;">Tests whether T (K) and P (bar) is a grid
+point
+of the DATACH lookup array for
+the interpolation
+of thermodynamic data. Returns -1L if
+the interpolation is needed, or uni-dimensional index of the lookup array grid point if T
+and P fit within the respective tolerances. For producing lookup arrays
+(in GEM-Selektor), we recommend using the step for temperature less or equal to 10
+degrees in order to assure good accuracy of interpolation, especially
+for S0 and Cp0 of aqueous species. <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int laX =<br>
+&nbsp;node-&gt;check_grid_TP( 400., 5e5 ); <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+&nbsp;&nbsp;&nbsp; <br>
+<h4>3.2. Manipulations with phase- and component indexes</h4>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">
+In GEMIPM2K code, two indexation systems for phases and components are
+maintained. One pertains to the complete definition of chemical system
+as expressed in the input DCH and IPM files and, accordingly, in DATACH
+and MULTI memory structures (the latter is used for keeping all internal data in GEM IPM
+calculations). Another indexation system defines which phases and components
+are involved in the data exchange via the DBR input/output files and the DATABR memory structure in the work
+TNode class instance. The two indexation systems are connected through
+the index mapping lists</span> <big><span style="font-family: monospace;"><span style="font-family: monospace;">xIC, xDC</span></span><span style="font-family: Times New Roman,Times,serif;"> <small>and </small></span><span style="font-family: monospace;"><span style="font-family: monospace;">xPH
+</span></span><small><span style="font-family: Helvetica,Arial,sans-serif;">(and the respective counters</span> </small></big><span style="font-family: monospace;">nICb, nIC, </span><span style="font-family: monospace;">nDCb,
+nDC, </span><span style="font-family: monospace;">nPHb, nPH, </span><big><span style="font-family: monospace;"><small>nPSb, nPS</small></span></big><big style="font-family: Helvetica,Arial,sans-serif;"><small>)
+</small></big><big><small><span style="font-family: Helvetica,Arial,sans-serif;">that exist in the
+DCH file and DATACH structure.</span> </small></big></p>
+<p><big>
+</big></p>
+
+<p style="font-family: Helvetica,Arial,sans-serif;"><small><big style="font-family: Helvetica,Arial,sans-serif;">The trivial
+(default) case is when</big> </small> <span style="font-family: monospace;">nICb
+= nIC,</span><span style="font-family: monospace;">nDCb =
+nDC, </span><span style="font-family: monospace;">nPHb =
+nPH, </span><big><span style="font-family: monospace;"><small>nPSb =
+nPS.<span style="font-family: Helvetica,Arial,sans-serif;"> </span></small></span><small style="font-family: Helvetica,Arial,sans-serif;">In this
+case, the data arrays in the DATABR structure <span style="text-decoration: underline;">exactly map</span> the
+corresponding data arrays in DATACH and MULTI structures. For
+instance, the bulk chemical composition of the system - vector</small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">b</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></small></span><small style="font-family: Helvetica,Arial,sans-serif;">in the MULTI
+structure - is the
+same as the vector</small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">bIC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></small></span><small style="font-family: Helvetica,Arial,sans-serif;">provided in the
+DATABR structure or in the DBR file. The index mapping lists</small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xIC, xDC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></small></span><small style="font-family: Times New Roman,Times,serif;">and</small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xPH</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></small></span><small style="font-family: Helvetica,Arial,sans-serif;">will also be
+trivial. For instance, given 7 independent components in the system</small><small style="font-family: Helvetica,Arial,sans-serif;"> </small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;">(</span><span style="font-family: monospace;">nIC</span><span style="font-family: Helvetica,Arial,sans-serif;"> = 7), </span></small></span><small style="font-family: Helvetica,Arial,sans-serif;">the</small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xIC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></small></span><small style="font-family: Helvetica,Arial,sans-serif;">array will simply
+contain seven ascending indexes</small><span style="font-family: monospace;"><small><span style="font-family: Helvetica,Arial,sans-serif;"> (</span><span style="font-family: monospace;">0,1,2,3,4,5,6</span></small><span style="font-family: Helvetica,Arial,sans-serif;"><small>). </small><br>
+</span></span></big></p>
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Helvetica,Arial,sans-serif;">During the
+development of GEMIPM2K, it was foreseen that the usage of
+index mapping lists</span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span></span><span style="font-family: monospace;"><span style="font-family: monospace;">xIC,xDC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span><span style="font-family: Times New Roman,Times,serif;">and</span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xPH</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span><span style="font-family: Helvetica,Arial,sans-serif;">may significantly
+accelerate data exchange and reduce memory size of the
+coupled FMT-GEM problem when some ICs, DCs and phases are not
+considered in the data exchange and/or in transport between the nodes.
+For example, the
+break-through columns
+in experiments are often filled with quartz sand, dissolution of which
+can be neglected, so the transport of dissolved silica can also be
+neglected.&nbsp; For a system involving calcium and magnesium,
+carbonate, and chloride, the&nbsp; DATACH lists in this case will look
+like:</span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><span style="font-family: monospace;"><span style="font-family: monospace;">&lt;nIC&gt;
+8&nbsp;&nbsp; &lt;nDC&gt; 27&nbsp;&nbsp; &lt;nPH&gt; 8&nbsp;&nbsp;
+&lt;nPS&gt; 2<br>
+&lt;ICNL&gt;</span><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span style="font-family: monospace;">'C' 'Ca' 'Cl' 'H' 'Mg' 'O' <span style="color: rgb(204, 0, 0);">'Si'</span> <span style="color: rgb(204, 0, 0);">'Zz'</span></span><span style="font-family: Helvetica,Arial,sans-serif;"> &nbsp;&nbsp; ( NB: </span><span style="font-family: monospace;">'Zz'</span><span style="font-family: Helvetica,Arial,sans-serif;"> stays for electrical
+charge). <br>
+</span><span style="font-family: monospace;">&lt;DCNL&gt;</span><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span style="font-family: monospace;">'Ca+2' 'CaOH+' <span style="color: rgb(204, 0, 0);">'Ca(HSiO3)+'</span> <span style="color: rgb(204, 0, 0);">'CaSiO3@'</span> 'Mg+2' 'MgOH+' <span style="color: rgb(204, 0, 0);">'HSiO3-' 'SiO2@' 'SiO3-2'</span> 'CO2@'
+'CO3-2' 'HCO3-' <span style="color: rgb(153, 51, 153);">'CH4@'</span>
+'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' <span style="color: rgb(204, 0, 0);">'H2' 'O2'</span> <span style="color: rgb(153, 51, 153);">'Gr'</span> 'Cal' 'Dis-Dol' <span style="color: rgb(153, 51, 153);">'Portlandite' 'Brc'</span> <span style="color: rgb(204, 0, 0);">'Qtz'</span></span><span style="font-family: Helvetica,Arial,sans-serif;">. <br>
+</span><span style="font-family: monospace;">&lt;PHNL&gt;</span><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><span style="font-family: monospace;"> 'aq_gen' <span style="color: rgb(204, 0, 0);">'gas_gen'</span> <span style="color: rgb(153, 51, 153);">'Graphite'</span> 'Calcite'
+'Dolomite-dis' <span style="color: rgb(153, 51, 153);">'Portlandite'
+'Brucite'</span><span style="color: rgb(204, 0, 0);"> 'Quartz'</span></span><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span><span style="font-family: monospace;">&lt;nDCinPH&gt;</span><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span style="font-family: monospace;">19 2 1 1 1 1 1 1</span><span style="font-family: Helvetica,Arial,sans-serif;"> <br>
+</span></span></p>
+
+      <span style="font-family: Times New Roman,Times,serif;"><span style="font-family: Helvetica,Arial,sans-serif;"></span></span></td>
+    </tr>
+  </tbody>
+</table>
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">
+</span></span></p>
+
+
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Times New Roman,Times,serif;"><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span></span></p>
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Times New Roman,Times,serif;"><span style="font-family: Helvetica,Arial,sans-serif;">Now, suppose that
+our
+mass transport model does not consider the transport of gas phase,
+electric charge, and of dissolved silicium species (non-transported
+components and species are marked red in the lists above). Some
+aqueous species and solids are very unlikely to appear (marked in pink)
+and thus
+can also be considered irrelevant for the MT model . Then&nbsp;
+the&nbsp; respective arrays of the DATABR structure can be made
+smaller, and values in them re-mapped to DATACH or MULTI structure as
+follows:</span><br>
+</span></p>
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Times New Roman,Times,serif;"></span></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><span style="font-family: monospace;"><span style="font-family: monospace;">&lt;nICb&gt;
+6 &nbsp; &lt;nDCb&gt; 15 &nbsp; &lt;nPHb&gt; 3 &nbsp; &lt;nPSb&gt; 1<br>
+&lt;xIC&gt;&nbsp; 0 1 2 3 4 5 <br>
+&lt;xDC&gt;&nbsp; 0 1&nbsp; 4 5&nbsp; 9 10 11&nbsp; 13 14 15 16 17
+18&nbsp; 22 23 <br>
+&lt;xPH&gt;&nbsp; 0&nbsp; 3 4 <br>
+</span></span></p>
+
+      <span style="font-family: Times New Roman,Times,serif;"></span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Helvetica,Arial,sans-serif;">It is important
+to realize that the re-mapping does not affect any dimensions in the
+MULTI structure and any DATACH lists and arrays (the latter remain
+accessible in full also from the mass transport part of the coupled
+code).
+Values for components and phases marked red (non-transported) are
+skipped only from data arrays in all instances of the DATABR structure,
+but
+these components and phases are still present in DATACH and MULTI
+structures and may take part in the chemical equilibration modeled in
+GEM IPM2 runs. In the above example,
+the size of a DATABR instance (and DBR file) becomes 30% less
+compared with the trivial (complete) index mapping case.&nbsp; This
+decrease can be even more dramatic for some transport algorithms where
+only a certain tracers move, or where the advection strongly prevails
+over the diffusion. In the latter case, only the bulk aqueous solution
+is migrated as the whole between the nodes, so all dependent components
+of the aqueous phase can be skipped from the DATABR mapping. In the
+above example, this would make the DATABR instance ca. 3-4 times
+smaller
+than in the trivial mapping case. </span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span></span></p>
+<p style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Helvetica,Arial,sans-serif;">It can be stated
+that
+the presence of DATABR index mapping to DATACH structure provides a
+great flexibility in defining various coupling schemes between the FMT
+and the GEM parts. A natural question is - how the bulk composition of
+the node system can be set up when the mapping list</span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xIC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span><span style="font-family: Helvetica,Arial,sans-serif;">is incomplete?&nbsp;
+A straightforward answer is - the full</span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">b</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span><span style="font-family: Helvetica,Arial,sans-serif;">vector can always be
+provided in the IPM file (from where it is directly loaded into the
+MULTI structure). </span><span style="font-family: Times New Roman,Times,serif;"><span style="font-family: Helvetica,Arial,sans-serif;">The</span> </span><span style="font-family: monospace;"><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span><span style="font-family: Helvetica,Arial,sans-serif;">class also has
+methods for the direct access to the</span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">b</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span><span style="font-family: Helvetica,Arial,sans-serif;">vector using the
+DATACH/MULTI indexation, which can be used e.g. for setting in all
+nodes the initial amounts of ICs skipped from the DATABR index mapping.
+Use of this functionality makes sense in 2-D or 3-D FMT problems with
+relatively large chemical system definition, where it may result in
+considerably less memory demand and higher performance of data
+exchange. However, the use of SIA initial approximation mode of GEM
+IPM2 may be restricted in this case. Hence, for 1-D columns, we
+still recommend
+using the trivial (complete) one-to-one mapping in DATABR and DBR
+files.</span><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></p><span style="font-family: Helvetica,Arial,sans-serif;">
+In Table 3.2 below, the description of TNode class fnctionality for
+manipulating the&nbsp; indexes of phases and components (also by names)
+is provided. Data access methods using either DBR or DCH indexation are
+summarized in Tables 3.3, 3.4 and so on.</span>&nbsp; <br>
+<br>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.2.
+Retrieval of indexes for components and phases</span><br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Access method<br>
+      </td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Function<br>
+      </td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Example<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int IC_name_to_xCH(const char *Name);</td>
+      <td style="vertical-align: top; font-family: Times New Roman,Times,serif;">Returns
+DCH index of IC given the IC <span style="font-family: monospace;">Name</span> string
+(null-terminated) or -1 if no such name was found in the DATACH IC name
+list</td>
+      <td style="vertical-align: top; font-family: Times New Roman,Times,serif;">l<span style="font-family: monospace;">ong int xCa =
+node-&gt;IC_name_to_xCH("Ca");</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+DC_name_to_xCH(const char *Name);</td>
+      <td style="vertical-align: top;"> Returns
+DCH index of DC given
+the DC <span style="font-family: monospace;">Name</span> string
+(null-terminated) or -1 if no such name was found in the DATACH DC name
+list</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xCa_ion = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DC_name_to_xCH("Ca+2");</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int Ph_name_to_xCH(const char *Name);</td>
+      <td style="vertical-align: top;"> Returns DCH index of Phase
+given the Phase <span style="font-family: monospace;">Name</span> string or -1 if no such name was found in the
+DATACH Phase
+name list</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xCalcite = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_name_to_xCH("Calcite");</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+IC_name_to_xDB(const char *Name)</td>
+      <td style="vertical-align: top;">Returns DBR index of IC given
+the IC <span style="font-family: monospace;">Name</span> string or -1 if no such name was found in the DATACH IC
+name
+list</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xbCa = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">IC_name_to_xDB("Ca");</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+DC_name_to_xDB(const char *Name)</td>
+      <td style="vertical-align: top;">Returns DBR index of DC given
+the DC <span style="font-family: monospace;">Name</span> string or -1 if no such name was found in the DATACH DC
+name
+list</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xbCa_ion = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DC_name_to_xDB("Ca+2");</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+Ph_name_to_xDB(const char *Name)</td>
+      <td style="vertical-align: top;"> Returns DBR index of Phase
+given the Phase <span style="font-family: monospace;">Name</span> string or -1 if no such name was found in the
+DATACH phase
+name list</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xbCalcite = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_name_to_xDB("Calcite");</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+IC_xCH_to_xDB(const long int xCH);<br>
+      </td>
+      <td style="vertical-align: top;">Converts the IC DCH index <span style="font-family: monospace;">xCH</span>
+into the IC DBR index (return value) or returns -1 if this IC is not
+used in the data bridge</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xbCa = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">IC_xCH_to_xDB(xCa);</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int DC_xCH_to_xDB(const long int xCH );</td>
+      <td style="vertical-align: top;"> Converts the DC DCH index <span style="font-family: monospace;">xCH</span> into
+the DC DBR index (return value) or returns -1 if this DC is not used in
+the data bridge</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xbCa_ion = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DC_xCH_to_xDB(xCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int Ph_xCH_to_xDB(const long int xCH );</td>
+      <td style="vertical-align: top;"> Converts the Phase DCH index
+      <span style="font-family: monospace;">xCH</span> into the Phase DBR index (return value) or returns -1 if this phase is
+not used in the data
+bridge</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xbCalcite = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_xCH_to_xDB(xCalcite);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+IC_xDB_to_xCH(const long int xBR )</td>
+      <td style="vertical-align: top;"> Converts the IC DBR index <span style="font-family: monospace;">xBR</span>
+into the IC DCH index (return value)</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xCa = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">IC_xDB_to_xCH(xbCa);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+DC_xDB_to_xCH( const long int xBR )</td>
+      <td style="vertical-align: top;">Converts the DC DBR index <span style="font-family: monospace;">xBR</span>
+into the DC DCH index (return value)</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xCa_ion = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DC_xDB_to_xCH(xbCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long int
+Ph_xDB_to_xCH( const long int xBR )</td>
+      <td style="vertical-align: top;">Converts the Phase DBR index <span style="font-family: monospace;">xBR</span>
+into the Phase DCH index (return value)</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">xCalcite = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_xDB_to_xCH(xbCalcite);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int Phx_to_DCx( const long int Phx );</td>
+      <td style="vertical-align: top;">Returns the DCH index of the
+first DC belonging to the phase with DCH index <span style="font-family: monospace;">Phx</span> <br>
+      </td>
+      <td style="vertical-align: top;">l<span style="font-family: monospace;">ong int xCal = node-&gt;Phx_to_DCx(
+xCalcite );</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int PhtoDC_DCH( const long int Phx, long
+int&amp; nDCinPh );</td>
+      <td style="vertical-align: top;">Returns the DCH index of the
+first DC belonging to the phase with DCH index <span style="font-family: monospace;">Phx</span>, plus returns
+through the <span style="font-family: monospace;">nDCinPh</span> (reference) parameter the number of DCs included
+into this
+phase <br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">long int nDCGas;<br>
+long int xGas = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_name_to_xCH("Gasmix");</span><br>
+      <span style="font-family: monospace;">long int xCH4 =
+node-&gt;Phx_to_DCx(xGas,nDCGas);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int DCtoPh_DCH( const long int xCH )</td>
+      <td style="vertical-align: top; color: rgb(0, 153, 0);"><span style="color: rgb(0, 0, 0);">Returns
+the DCH index of the Phase to which the DC with index
+      <span style="font-family: monospace;">xCH</span> belongs</span><br>
+      </td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">xPh = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DCtoPh_DCH(xCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;long
+int PhtoDC_DBR( const long int Phx, long
+int&amp; nDCinPh );</td>
+      <td style="vertical-align: top;">Returns the DBR index of the
+first DC belonging to the phase with DBR index <span style="font-family: monospace;">Phx</span>, plus returns
+through the <span style="font-family: monospace;">nDCinPh</span> (reference) parameter the number of DCs included
+into DBR for this
+phase&nbsp;</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">long int nbDCGas;<br>
+long int xbGas = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_name_to_xDB("Gasmix");</span><br>
+      <span style="font-family: monospace;">long int xbCH4 =
+node-&gt;Phx_to_DCx(xbGas,nbDCGas);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; color: rgb(0, 153, 0);"><span style="font-family: monospace; color: rgb(0, 0, 0);">&nbsp;long int
+DCtoPh_DBR( const long
+int xBR )</span><br>
+      </td>
+      <td style="vertical-align: top; color: rgb(0, 153, 0);"><span style="color: rgb(0, 0, 0);">Returns
+the DBR index of the Phase to which the&nbsp; DC with
+index <span style="font-family: monospace;">xBR</span> belongs</span><br>
+      </td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">xbPh = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DCtoPh_DCH(xbCa_ion);</span></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<h4>3.3. Manipulations with phase- and component properties</h4>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">
+In DBR files and in the DATABR structure, results for volumes, masses and bulk
+compositions for phases are only provided for multi-component phases
+because for pure phases, they can be easily retrieved from other input
+data and results. Nevertheless,
+public functions</span> <span style="font-family: monospace;">Ph_Volume(), Ph_Mass(), Ph_BC()</span> and <span style="font-family: monospace;">Ph_SatInd() </span><span style="font-family: Helvetica,Arial,sans-serif;">are provided
+in TNode class that work both for multi- and single-component phases.
+This is done in order to make access to such data from the side of
+mass-transport part of the program as simple as possible. </span><br style="font-family: Helvetica,Arial,sans-serif;">
+</p>
+<p style="font-family: Helvetica,Arial,sans-serif;">All functions
+in Table 3.3 actually access only data in the work DATABR structure;
+this has to be kept in mind when not all components and phases are
+exchanged through DATABR or DBR files.
+For the full access to DATACH/MULTI data for phases and components,
+even
+those not included in DATABR lists, see Table 3.4.</p>
+
+<br>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.3.
+Access to equilibrium properties of phases and components
+using DATABR (DBR file) indexation</span><br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Access method<br>
+      </td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Function<br>
+      </td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Example<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+Ph_Volume( const long int
+xph );</td>
+      <td style="vertical-align: top;">Retrieves the current phase
+volume in <span style="color: rgb(0, 0, 0);">m3</span> ( <span style="font-family: monospace;">xph</span> is
+DBR
+phase index) in the reactive sub-system. Works both for multicomponent
+and for single-component phases.
+Returns 0.0 if the phase mole amount is zero.<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;"> long int xbCalcite = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">Ph_name_to_xDB("Calcite");<br>
+double CalVol = node-&gt;Ph_Volume(xbCalcite);<br>
+      </span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+Ph_Mass( const long int xph
+);</td>
+      <td style="vertical-align: top;">Retrieves the phase mass in kg
+( <span style="font-family: monospace;">xph</span> is DBR phase
+index). Works for multicomponent and for single-component phases.
+Returns 0.0 if phase amount is zero.</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double CalM =
+node-&gt;Ph_Mass(xbCalcite); </span><span style="font-family: monospace;">double CalDen = </span><span style="font-family: monospace;">CalM / CalVol;&nbsp;</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+Ph_SatInd( const long int xph);</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
+the phase saturation
+index
+( <span style="font-family: monospace;">xph</span> is DBR phase
+index). Works for multicomponent and for single-component phases.
+Returns 0.0 if phase amount is zero.</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double CalOmg = Ph_SatInd(xbCalcite);</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double*
+Ph_BC( const long int xph,
+double *ARout=0 );</td>
+      <td style="vertical-align: top;">Retrieval of the phase bulk
+composition ( <span style="font-family: monospace;">xph</span> is DBR
+phase index) into memory indicated by <span style="font-family: monospace;">ARout</span> (array of at least [<span style="font-family: monospace;">dCH-&gt;nICb</span> elements]).
+Returns pointer to <span style="font-family: monospace;">ARout</span> which may also be
+allocated inside of <span style="font-family: monospace;">Ph_BC()</span> in the case if parameter <span style="font-family: monospace;">ARout = NULL</span> is
+specified; to avoid a memory leak, you will have to free this memory
+wherever appropriate. This function works for multicomponent and for
+single-component phases</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double* PhB; <br>
+PhB = new double [</span><span style="font-family: monospace;">dCH-&gt;nICb</span><span style="font-family: monospace;">];<br>
+node-&gt;Ph_BC( xbCalcite, PhB );<br>
+. . . . . . . . . . . . <br>
+delete[]PhB;<br>
+      </span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">&nbsp;void
+Set_bIC( const
+long int xic, const double bIC);</span></td>
+      <td style="vertical-align: top;">Sets the amount of IC (<span style="font-family: monospace;">xic</span> is the IC DBR index) in the respective element of the <span style="font-family: monospace;">bIC</span> input vector of the work
+DATABR structure</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xbCa =
+node-&gt;</span><span style="font-family: monospace;">IC_name_to_xDB("Ca");<br>
+node-&gt;Set_bIC(xbCa, 0.1 );<br>
+      </span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">&nbsp;double
+Get_bIC(const
+long int xic);</span></td>
+      <td style="vertical-align: top;">Retrieves the current amount of
+IC (<span style="font-family: monospace;">xic</span> is IC DBR index)</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double bIC =
+node-&gt;Get_bIC(xbCa);</span><br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">&nbsp;void
+Set_dll( const
+long int xdc, const double dll);</span></td>
+      <td style="vertical-align: top;">Sets the metastability
+constraint from below to the mole amount of DC (<span style="font-family: monospace;">xdc</span> is DC
+DBR index) in the <span style="font-family: monospace;">dll </span>vector
+of the work DATABR structure</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xbCa_ion = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DC_name_to_xDB("Ca+2");<br>
+      </span><span style="font-family: monospace;">node-&gt;Set_dll(</span><span style="font-family: monospace;">xbCa_ion</span><span style="font-family: monospace;">, 0.001 );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">&nbsp;void
+Set_dul( const
+long int xdc, const double dll);</span></td>
+      <td style="vertical-align: top;">Sets the metastability
+constraint from above to the mole amount of DC (<span style="font-family: monospace;">xdc</span> is DC
+DBR index) in the <span style="font-family: monospace;">dul </span>vector
+of the work DATABR structure</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">node-&gt;Set_dul(</span><span style="font-family: monospace;">xbCa_ion</span><span style="font-family: monospace;">, 1e5 );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"><span style="font-family: monospace;">&nbsp;void
+Set_nDC( const
+long int xdc, const double nDC);</span></td>
+      <td style="vertical-align: top;">Sets the mole amount of DC (<span style="font-family: monospace;">xdc</span> is DC DBR index) in the <span style="font-family: monospace;">xDC</span> vector of the work DATABR
+structure<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">node-&gt;Set_nDC(</span><span style="font-family: monospace;">xbCa_ion</span><span style="font-family: monospace;">, 1e-5 );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+Get_nDC(const
+long int xdc);</span><br>
+      </td>
+      <td style="vertical-align: top;">Retrieves the current mole
+amount of DC (<span style="font-family: monospace;">xdc</span> is DC DBR index) from the <span style="font-family: monospace;">xDC</span> vector of the work DATABR
+structure
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double nDC =
+node-&gt;Get_nDC(xbCa_ion);</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+Get_muDC( const long int
+xDC, bool norm=true );</td>
+      <td style="vertical-align: top;">Retrieves the
+DC (dual-solution) chemical potential&nbsp; (<span style="font-family: monospace;">xdc</span>
+is the
+DC DBR index). Parameter <span style="font-family: monospace;">norm</span> defines the scale: <span style="color: rgb(0, 0, 0);">if <span style="font-family: monospace;">true</span> (1) then in
+mol/mol, otherwise in J/mol</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double muDC =
+node-&gt;Get_muDC( xbCa_ion);</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;"><span style="color: rgb(255, 102, 102);"><span style="color: rgb(0, 0, 0);">&nbsp;double
+Get_aDC( const long int xdc);</span> </span><br>
+      </td>
+      <td style="vertical-align: top;">Retrieves the
+(dual-thermodynamic)
+activity of the Dependent Component (<span style="font-family: monospace;">xdc</span> is the
+DC DBR index) <br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double aDC =
+node-&gt;Get_aDC( xbCa_ion);</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;"><span style="color: rgb(0, 0, 0);">&nbsp;double Get_cDC( const long int xdc);</span><br>
+      </td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">Retrieves
+the DC concentration (<span style="font-family: monospace;">xdc</span> is the
+DC DBR index) in its phase in the respective concentration scale. For
+aqueous species,
+molality is returned; for gas
+species, partial pressure; for surface species - density in mol/m<sup>2</sup>;
+for species in other phases - mole fraction. If DC has a zero amount, the
+function
+returns 0.0. </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double cDC =
+node-&gt;Get_cDC( xbCa_ion);</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;"><span style="color: rgb(0, 0, 0);">&nbsp;double Get_gDC( const long int xDC);</span>
+      <br>
+      </td>
+      <td style="vertical-align: top;">Retrieves the DC external activity
+coefficient (<span style="font-family: monospace;">xdc</span> is the
+DC DBR index) in its phase in the respective scale. Returns 1.0 if
+the amount of this DC is 0.0<br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double gDC =
+node-&gt;Get_gDC( xbCa_ion);</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DCmm( const long int xdc );</td>
+      <td style="vertical-align: top;">Retrieves the DC molar mass (<span style="font-family: monospace;">xdc</span> is DC DBR index) in <span style="color: rgb(0, 0, 0);">kg/mol</span><br>
+      </td>
+      <td style="vertical-align: top;"> <span style="font-family: monospace;">double mm =
+node-&gt;DCmm( xbCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+ICmm( const long int xic );</td>
+      <td style="vertical-align: top;">Retrieves the IC atomic (molar) mass&nbsp; (<span style="font-family: monospace;">xic</span> is IC DBR index) in <span style="color: rgb(0, 0, 0);">kg/mol</span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double mm =
+node-&gt;ICmm( xbCa );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DCaJI( const long int xdc, const long int xic);</span><br>
+      </td>
+      <td style="vertical-align: top;">Retrieves the stoichiometry
+coefficient <span style="color: rgb(0, 0, 0);">a[j][i]</span> of IC
+(<span style="font-family: monospace;">xic</span> is IC DBR index) in the formula of DC
+(<span style="font-family: monospace;">xdc</span> is DC DBR index) </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double aij = node-&gt;</span><span style="font-family: monospace;">DCaJI( <br>
+      </span><span style="font-family: monospace;">xbCa_ion</span><span style="font-family: monospace;">,&nbsp;</span><span style="font-family: monospace;"> xbCa );</span> </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<br>
+<span style="font-family: Helvetica,Arial,sans-serif;">Table 3.4.
+Access to thermodynamic and equilibrium properties of phases
+and components
+using DATACH (DCH file) indexation</span><br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Access method</td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Function</td>
+      <td style="vertical-align: top; font-family: Helvetica,Arial,sans-serif;">&nbsp;Example</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;void Set_IC_b( const double b_val,
+const long int xCH)</span><br>
+      </td>
+      <td style="vertical-align: top;">(*) Sets
+the amount of
+IC (<span style="font-family: monospace;">xCH</span> is IC DCH index) when this IC index is not
+included into DATABR. Internal re-scaling to mass of the system is
+applied, but only to mass of that part which is included in the DATABR.</td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xSi = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">IC_name_to_xCH("Si");<br>
+double moles_Si = 0.003; Set_IC_b( moles_Si, xSi );</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+IC_b(const long int xCH)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(*)
+Retrieves the current amount of
+IC (<span style="font-family: monospace;">xCH</span> is IC DCH index). Also amount of ICs not
+included into DATABR list
+can be retrieved. Internal re-scaling to mass of the system is
+applied. </td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);"> l<span style="font-family: monospace;">ong int xCa = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">IC_name_to_xCH("Ca");<br>
+double moles_Ca = IC_b(xCa);</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_n(const long int xCH)</td>
+      <td style="vertical-align: top;">(*) Retrieves the current mole
+amount of DC (<span style="font-family: monospace;">xCH</span> is DC DCH index) directly from <span style="color: rgb(255, 102, 102);"><span style="color: rgb(0, 0, 0);">GEM
+IPM</span> </span>work structure. Also amount of DCs not included into
+DATABR
+list
+can be retrieved. Internal re-scaling to mass of the system is
+applied.<span style="color: rgb(204, 102, 204);"></span><br>
+      </td>
+      <td style="vertical-align: top;"> l<span style="font-family: monospace;">ong int xCa_ion = </span><span style="font-family: monospace;">node-&gt;</span><span style="font-family: monospace;">DC_name_to_xCH("Ca+2");<br>
+double moles_Ca_ion = node-&gt;DC_n(xCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_a(const long int xCH)</td>
+      <td style="vertical-align: top;">(*) Retrieves the current
+(dual-thermodynamic) activity of DC (<span style="font-family: monospace;">xCH</span> is DC DCH
+index) directly from <span style="color: rgb(0, 0, 0);">GEM IPM</span>
+work structure. Also activity of a DC not
+included into DATABR list can be retrieved. If DC has zero amount, its
+dual-thermodynamic activity is returned anyway. For single condensed
+phase component, this value has a meaning of the saturation index, also
+in the presence of metastability constraint(s). <br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double a_Ca_ion =
+node-&gt;DC_a(xCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_c(const long int xCH)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(*)
+Retrieves the current
+concentration of DC (<span style="font-family: monospace;">xCH</span> is DC DCH index) in its phase directly from GEM IPM
+work structure. Also activity of a DC not included into DATABR list can
+be retrieved. For aqueous species, molality is returned; for gas
+species, partial pressure; for surface species - density in mol/m<sup>2</sup>;
+for species in other phases - mole fraction. If DC has zero amount, the
+function
+returns 0.0. <br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double m_Ca_ion = DC_c(xCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_g(const long int xCH)</td>
+      <td style="vertical-align: top;">(*) Retrieves the current
+DC external activity
+coefficient&nbsp; (<span style="font-family: monospace;">xCH</span> is DC DCH index) in its phase directly from <span style="color: rgb(0, 0, 0);">GEM IPM</span>
+work structure. Also activity coefficient of a DC not included into
+DATABR list can
+be retrieved. If DC has zero amount, this function returns 1.0. </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double gamma_Ca_ion =
+node-&gt;DC_g(xCa_ion);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_mu(const long int xCH, bool norm=true)</td>
+      <td style="vertical-align: top;">(*) Retrieves the current
+(dual-solution) chemical potential of DC (<span style="font-family: monospace;">xCH</span> is
+DC DCH index) directly from <span style="color: rgb(0, 0, 0);">GEM
+IPM </span>work structure, also for any DC
+not included into DATABR or having zero amount. Parameter<span style="font-family: monospace;"> norm </span>defines in wnich units
+the chemical potential value is returned: <span style="font-family: monospace;">false </span>- in J/mol; <span style="font-family: monospace;">true</span>
+(default) - in mol/mol. <br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double mu_Ca_ion_J_mol =
+node-&gt;DC_mu(xCa_ion, false);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_mu0(const long int xCH, bool norm=true)</td>
+      <td style="vertical-align: top;">(*) Retrieves the standard-state
+chemical
+potential of DC (<span style="font-family: monospace;">xCH</span> is DC DCH index) directly from <span style="color: rgb(0, 0, 0);">GEM IPM</span> work
+structure at current pressure and temperature, also for
+any DC not included into DATABR or having zero amount. Parameter<span style="font-family: monospace;"> norm </span>defines, in which units
+the chemical potential value is returned: <span style="font-family: monospace;">false</span> - in J/mol; <span style="font-family: monospace;">true</span>
+(default) - in mol/mol. </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double mu0_Ca_ion_J_mol =
+node-&gt;DC_mu0(xCa_ion, false);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);"><span style="color: rgb(0, 0, 0);">&nbsp;double
+DC_G0(const long int xCH,
+const double P, const double TK,&nbsp; bool norm=true)</span><br>
+      <span style="color: rgb(0, 0, 0);"></span><br>
+      </td>
+      <td style="vertical-align: top;">Retrieves (interpolated) molar
+Gibbs energy G0(P,TK) value for DC from the
+DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index) or 7777777., if <span style="font-family: monospace;">TK</span> (temperature,
+K) or <span style="font-family: monospace;">P</span> (pressure, <span style="color: rgb(0, 0, 0);">Pa</span>)
+parameters go beyond the valid lookup array
+intervals or tolerances. Parameter<span style="font-family: monospace;">
+norm </span>defines, in wnich units the value is returned: <span style="color: rgb(0, 0, 0);">false - in
+J/mol; true (default) - in mol/mol.</span> </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double g0_Ca_ion = node-&gt;DC_G0(
+xCa_ion, 1e5,
+298, false);</span></td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);"><span style="color: rgb(0, 0, 0);">&nbsp;double
+DC_V0(const long int xCH, const double P,
+const double TK)</span><br>
+      <span style="color: rgb(0, 0, 0);"></span><br>
+      </td>
+      <td style="vertical-align: top;">Retrieves (interpolated, if
+necessary) molar
+volume V0(P,TK) value for DC (in J/Pa or m<sup>3</sup>/mol) from
+the
+DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index) <span style="color: rgb(0, 0, 0);">or
+0., if <span style="font-family: monospace;">TK</span> (temperature, K)
+or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid lookup array
+intervals or tolerances.&nbsp; </span><span style="color: rgb(204, 102, 0);"></span><br>
+      </td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double v0_Ca_ion = node-&gt;DC_V0(
+xCa_ion, 1e5,
+298. );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_H0(const long int xCH,
+const double P, const double TK)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(**) Retrieves
+(interpolated) molar
+enthalpy H0(P,TK) value for DC (in J/mol) from the
+DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index) or 7777777., if <span style="font-family: monospace;">TK</span> (temperature,
+K) or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go
+beyond the valid lookup array intervals or tolerances.</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double h0_Ca_ion = node-&gt;DC_H0(
+xCa_ion, 1e5,
+298. );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DC_S0(const long int xCH,
+const double P, const double TK)</td>
+      <td style="vertical-align: top;">(**) Retrieves (interpolated)
+absolute molar enropy S0(P,TK) value for DC (in
+J/K/mol)
+from the DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index)<span style="color: rgb(0, 153, 0);">
+      <span style="color: rgb(0, 0, 0);">or 0.0, if <span style="font-family: monospace;">TK</span>
+(temperature, K) or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid
+lookup array intervals or tolerances.</span></span></td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double s0_Ca_ion = node-&gt;DC_S0(
+xCa_ion, 1e5,
+298. );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">double
+DC_Cp0(const long int xCH, const double P,
+const double TK)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(**) Retrieves
+(interpolated)
+constant-pressure heat capacity Cp0(P,TK) value for DC
+(in J/K/mol) from the
+DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index) or 0.0, if <span style="font-family: monospace;">TK</span> (temperature, K)
+or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid lookup array
+intervals or tolerances.</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double cp0_Ca_ion = node-&gt;DC_Cp0(
+xCa_ion,
+1e5, 298. );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+DC_A0(const long int xCH,
+const double P, const double TK)</td>
+      <td style="vertical-align: top;">(**) Retrieves
+(interpolated) Helmholtz energy of DC (in J/mol)
+from the
+DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index) or 7777777., if <span style="font-family: monospace;">TK</span> (temperature,
+K) or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go
+beyond the valid lookup array intervals or tolerances.</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double u0_Ca_ion = node-&gt;DC_U0(
+xCa_ion, 1e5,
+298.15 );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">&nbsp;double
+DC_U0(const long int xCH,
+const double P, const double TK)</td>
+      <td style="vertical-align: top;">(**) Retrieves
+(interpolated) Internal energy of DC (in J/K/mol) from
+the
+DATACH
+structure ( <span style="font-family: monospace;">xCH</span> is the DC DCH index) or 7777777., if Tc (temperature,
+K) or P (pressure, Pa) parameters go
+beyond the valid lookup array intervals or tolerances.</td>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">double a0_Ca_ion = node-&gt;DC_A0(
+xCa_ion, 1e6, 350. );</span> </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+EpsH2Ow(const double P, const double TK)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(**) Retrieves
+(interpolated)
+dielectric constant of liquid water at (P,TK) from the DATACH
+structure&nbsp; or 0.0, if <span style="font-family: monospace;">TK</span> (temperature, K)
+or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid lookup array
+intervals or tolerances.</td>
+      <td style="vertical-align: top; font-family: monospace;">double
+epsW = node-&gt;EpsH2Ow( 1e6, 350.); </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);"><span style="color: rgb(0, 0, 0);">&nbsp;double
+DenH2Ow(const double P, const double TK)</span><br>
+      </td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(**) Retrieves
+(interpolated) density
+of liquid water (in kg/m<sup>3</sup>)
+at (P,TK) from the DATACH
+structure or 0.0, if
+      <span style="font-family: monospace;">TK</span> (temperature, K) or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid
+lookup array intervals or tolerances.</td>
+      <td style="vertical-align: top; font-family: monospace;">double
+denW = node-&gt;DenH2Ow( 1e6, 350.); </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(255, 102, 102);">&nbsp;<span style="color: black;">double
+VisH2Ow(const double P, const double TK)</span></td>
+      <td style="vertical-align: top; color: black;">(**) Retrieves
+(interpolated)
+viscosity (<span style="color: red;">units???</span>) of liquid water at (P,TK) from the DATACH
+structure or 0.0, if <span style="font-family: monospace;">TK</span> (temperature, K)
+or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid lookup array
+intervals or tolerances.</td>
+      <td style="vertical-align: top; font-family: monospace;">double
+visW = node-&gt;VisH2Ow( 1e6, 350.); </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+EpsH2Og(const double P, const double TK)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(**) Retrieves
+(interpolated)
+dielectric constant of H<sub>2</sub>O vapor at (P,TK) from the DATACH
+structure or 0.0, if <span style="font-family: monospace;">TK</span> (temperature, K)
+or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid lookup array
+intervals or tolerances.</td>
+      <td style="vertical-align: top; font-family: monospace;">double
+epsWg = node-&gt;EpsH2Og( 1e6, 350.); </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace; color: rgb(0, 0, 0);">&nbsp;double
+DenH2Og(const double P, const double TK)</td>
+      <td style="vertical-align: top; color: rgb(0, 0, 0);">(**) Retrieves
+(interpolated) density
+of H<sub>2</sub>O vapor (in kg/m<sup>3</sup>)
+at (P,TK) from the DATACH
+structure or 0.0, if <span style="font-family: monospace;">TK</span> (temperature, K)
+or <span style="font-family: monospace;">P</span> (pressure, Pa) parameters go beyond the valid lookup array
+intervals or tolerances.</td>
+      <td style="vertical-align: top; font-family: monospace;">double
+denW g= node-&gt;DenH2Og( 1e6, 350.); </td>
+    </tr>
+  </tbody>
+</table>
+<span style="color: rgb(204, 102, 0);"></span><br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Some functions (marked with *) access the IPM work data structure
+directly and can be used only for the current work node, if several</span> <span style="font-family: monospace;">TNode</span> <span style="font-family: Helvetica,Arial,sans-serif;">class instances exist in the program</span>.</p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Functions
+marked with (**) can only be used if the respective lookup arrays are
+available from the DCH file and allocated in the DATACH structure in the</span> <span style="font-family: monospace;">TNode</span> <span style="font-family: Helvetica,Arial,sans-serif;">class work instance.</span></p>
+
+<br><span style="font-weight: bold;">
+3.4. Access to integral properties of phases-solutions</span> (under
+construction)<br>
+<br>
+Only access via DCH indexation (will be added in next versions)<br>
+<br>
+<hr style="width: 100%; height: 2px;"><span style="font-family: monospace;">Last edited: Dec.19,2010 DK<br>
+End of File</span><br>
+<br>
+
+</body></html>
