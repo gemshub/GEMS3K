@@ -326,7 +326,7 @@ static double ICold=0.;
 long int
 TMulti::CalculateActivityCoefficients( long int LinkMode  )
 {
-    long int k, j, jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0, ja;
+    long int k, j, jb, je=0, jpb, jpe=0, jdb, jde=0, ipb, ipe=0;
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;

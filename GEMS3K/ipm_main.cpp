@@ -2181,14 +2181,17 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
           continue;
       else if( pmp->U[i] >= -600. && pmp->U[i] <= 400. ) // range for other ICs
       {
-        tolerance = tol_gen;
-        log_bi = log( pmp->B[i] ) - 4.6;
-        if( log_bi > 1. )
-            tolerance = tol_gen / log_bi;
-        if( log_bi < -1. )
-             tolerance = tol_gen * -log_bi;
-        if( tolerance < 1. )
-            tolerance = 1.;     // To prevent too low tolerances DK 17.06.2011
+          tolerance = tol_gen;
+          log_bi = log( pmp->B[i] );  // Fixed 11.07.2011 DK
+          if( log_bi > 0. )
+              tolerance = tol_gen / log_bi;
+          if( log_bi < 0. )
+               tolerance = tol_gen * -log_bi;
+          if( tolerance < 1. )
+              tolerance = 1.;     // To prevent dangerous low tolerances
+          if( tolerance > DivTol)
+              tolerance = DivTol; // To prevent useless high tolerances
+
         if( !mode ) // Monitor difference between new and old mean3 u_i
         {
             // Calculation of abs.difference of moving averages at r and r-1

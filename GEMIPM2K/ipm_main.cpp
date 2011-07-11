@@ -850,7 +850,7 @@ STEP_POINT("FIA Iteration");
    {  // Strict mode of mass balance control
        iRet = 2;
        char buf[320];
-       sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR() iterations (%d) exceeded! ",
+       sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR() iterations (%ld) exceeded! ",
                 WhereCalledFrom, pa->p.DP );
        setErrorMessage( 4, "E04IPM: MassBalanceRefinement(): ", buf );
        return iRet; // no MBR() solution
