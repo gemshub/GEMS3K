@@ -489,7 +489,7 @@ getLsMdcsum( LsMdcSum );
   }
  //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
  // prar.writeArray(  "G0", pmp->G0,  pmp->L);
-  if(!brief_mode || prar.getAlws("GEX" ))
+  if(!brief_mode || prar.getAlws("fDQF" )) // was   prar.getAlws("GEX" ))
   {
    if( _comment )
       ff << "\n\n# fDQF: DQF parameters or pure gas fugacities in (J/mol/(RT) [nDC]";
