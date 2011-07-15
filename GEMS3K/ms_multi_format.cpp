@@ -169,7 +169,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{   ff << "# GEMIPM2K v. 3.0.0 rev 550 (1864)" << endl;
+{   ff << "# GEMIPM2K v. 3.0.0 rev 570 (1920)" << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
