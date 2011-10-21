@@ -181,20 +181,26 @@ void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA
             break;
         case DC_AQ_PROTON:  // in molal scale!
             pmp->pH = -ln_to_lg*(Muj-pmp->G0[j] + lnFmol );
-        case DC_AQ_SPECIES: case DC_AQ_SURCOMP:
+        case DC_AQ_SPECIES:
+
+            pmp->IC += 0.5* X[j]*Factor *(pmp->EZ[j]*pmp->EZ[j]); // increment to effective molal ionic strength
+        case DC_AQ_SURCOMP:
             SPmol = X[j]*Factor;  // molality
-            pmp->IC += 0.5* SPmol *(pmp->EZ[j]*pmp->EZ[j]); // increment to effective molal ionic strength
+ //           pmp->IC += 0.5* SPmol *(pmp->EZ[j]*pmp->EZ[j]); // Bugfix DK 21.10.2011 'K' species don't count here!
             pmp->FVOL[k] += pmp->Vol[j]*X[j]; // fixed 04.02.03 KD
             pmp->Y_m[j] = SPmol;
             pmp->Y_la[j] = ln_to_lg*(Muj - pmp->G0[j] + lnFmol );
             pmp->Y_w[j] = 1e6 * X[j] * pmp->MM[j] / pmp->FWGT[k];
-//  Optimized for performance - calculation inline
-            for( i=arrL[j]; i<arrL[j+1]; i++ )
-            {  ii = arrAN[i];
-               if( ii>= pmp->NR )
-                continue;
-                pmp->IC_m[ii] += SPmol* a(j,ii);  // total aqueous molality
-                pmp->IC_wm[ii] += X[j]* a(j,ii);  // total aqueous mass concentration
+            if(  pmp->DCC[j] != DC_AQ_SURCOMP ) 
+            {  // Bugfix 21.10.2011  DK - excluding 'K' species from total IC molality
+               //  Optimized for performance - calculation inline
+               for( i=arrL[j]; i<arrL[j+1]; i++ )
+               {  ii = arrAN[i];
+                  if( ii>= pmp->NR )
+                    continue;
+                  pmp->IC_m[ii] += SPmol* a(j,ii);  // total aqueous molality
+                  pmp->IC_wm[ii] += X[j]* a(j,ii);  // total aqueous mass concentration
+               } 
             }
             break;
         case DC_AQ_SOLVENT: // mole fractions of solvent
