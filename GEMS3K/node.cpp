@@ -1811,7 +1811,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
       else
       {  fstream out_br(str_file.c_str(), ios::out );
          ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
-         databr_to_text_file(out_br, with_comments, brief_mode);
+         databr_to_text_file(out_br, with_comments, brief_mode, str_file.c_str() );
       }
    }
 

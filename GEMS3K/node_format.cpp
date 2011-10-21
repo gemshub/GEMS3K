@@ -23,6 +23,7 @@
 #include "gdatastream.h"
 
 extern bool _comment;
+extern const char* _GEMIPM_version_stamp;
 
 //===============================================================
 // in the arrays below, the first field of each structure contains a string
@@ -139,7 +140,7 @@ outField DataCH_dynamic_fields[29] =  { //+4
 
 //===============================================================
 
-void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mode )
+void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mode, const char* path )
 {
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -148,7 +149,8 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   TPrintArrays  prar(51, DataBR_fields, ff);
 
    if( _comment )
-   {  ff << "# GEMIPM2K v. 3.0 rev. 460(1660)" << endl;
+   { 
+      ff << _GEMIPM_version_stamp << endl << " File: " << path << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -590,7 +592,8 @@ void TNode::databr_from_text_file( fstream& ff )
   }
 }
 
-void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mode )
+
+void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mode, const char* path )
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -604,8 +607,8 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 	  prar.setNoAlws( 2 /*"xph"*/);
 
   if( _comment )
-  {  ff << "# GEMIPM2K v. 3.0.0" << endl;
-     ff << "# Prototype 28.08.2009" << endl;
+  {  
+     ff << _GEMIPM_version_stamp << endl << " File: " << path << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;

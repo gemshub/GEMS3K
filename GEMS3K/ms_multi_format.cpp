@@ -26,6 +26,7 @@
 #endif
 
 bool _comment = true;
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.0 r.582 (trunk) ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -169,7 +170,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{   ff << "# GEMIPM2K v. 3.0.0 rev 570 (1920)" << endl;
+{  ff << _GEMIPM_version_stamp << endl << " File: " << path << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
@@ -454,13 +455,13 @@ getLsMdcsum( LsMdcSum );
   if(LsIPxSum )
   {
    if( _comment )
-      ff << "\n\n# IPxPH:  Collected indexation table for interaction parameters of non-ideal solutions.";
+      ff << "\n\n# IPxPH:  TSolMod collected indexation table for interaction parameters of non-ideal solutions.";
    prar.writeArray(  "IPxPH", pmp->IPx,  LsIPxSum);
   }
   if(LsModSum )
    {
      if( _comment )
-        ff << "\n\n# PMc: Collected interaction parameter coefficients for the (built-in) non-ideal mixing models";
+        ff << "\n\n# PMc: TSolMod collected interaction parameter coefficients for non-ideal  models of mixing";
     prar.writeArray(  "PMc", pmp->PMc,  LsModSum);
    }
    if( _comment )
@@ -468,7 +469,7 @@ getLsMdcsum( LsMdcSum );
    prar.writeArray(  "LsMdc", pmp->LsMdc, pmp->FIs);
    if(LsMdcSum )
    {   if( _comment )
-          ff << "\n\n# DMc: Collected parameters per phase component for the non-ideal mixing models ";
+          ff << "\n\n# DMc: TSolMod collected parameters per phase component for the non-ideal models of mixing";
     prar.writeArray(  "DMc", pmp->DMc,  LsMdcSum);
    }
 } // sMod
@@ -1069,14 +1070,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
     }
     nfild = rddar.findNext();
   }
-/*
-   if( pm.sitNcat*pm.sitNcat )
-     rddar.readArray( "sitE", pmp->sitE, pmp->sitNcat*pmp->sitNan );
-   if( pm.sitNcat )
-     rddar.readArray( "sitXc", pmp->sitXcat, pmp->sitNcat );
-   if( pm.sitNan )
-     rddar.readArray( "sitXa", pmp->sitXan, pmp->sitNan );
-*/
+
  // testing read
  ret = rddar.testRead();
  if( !ret.empty() )

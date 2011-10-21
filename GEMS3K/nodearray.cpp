@@ -224,7 +224,7 @@ AGAIN:
    {  //newname = name+"-dch";
       Path_ = u_makepath( dir, newname, "dat" );
       fstream  f_ch2(Path_.c_str(), ios::out);
-      datach_to_text_file(f_ch2, with_comments, brief_mode );
+      datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
       f_ch2.close();
    }
 
@@ -259,7 +259,7 @@ AGAIN:
         newname = name + "-dbr-0-" + buf;
         Path_ = u_makepath( dir, newname, "dat" );
         fstream  f_br2(Path_.c_str(), ios::out);
-        databr_to_text_file(f_br2, with_comments, brief_mode);
+        databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
         f_br2.close();
         if( !first )
            fout << ",";
@@ -288,7 +288,7 @@ AGAIN:
          newname = name + "-dbr-1-" + buf;
          Path_ = u_makepath( dir, newname, "dat" );
          fstream  f_br2(Path_.c_str(), ios::out);
-         databr_to_text_file(f_br2, with_comments, brief_mode );
+         databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
          f_br2.close();
 //         fout << ", \"" << newname.c_str() << ".dat\"";
       }

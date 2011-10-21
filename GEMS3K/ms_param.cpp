@@ -49,21 +49,21 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-    "GEM-Selektor v3.0u-1858.546: Numerical controls & thresholds",
-    {   // Typical default set (16.06.2011) new PhaseSelection( logSI ) & uDD
+    "GEM-Selektor v3.0t-1930.580: Numerical controls & thresholds",
+    {   // Typical default set (07.10.2011) new PhaseSelection( logSI ) & uDD()
         2,  /* PC */  2,     /* PD */   -4,   /* PRD */
         1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-        1, /* DT */     0,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-        1000., /* DG */   1e-11,  /* DHB */  1e-20,  /* DS */
-        1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+        0, /* DT */     3000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+        1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
+        3e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
         1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
         1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-        1e-6, /* DFYs, */  1e-17,  /* DB */   -1.,   /* AG */
-        -0.98,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-        1e-5, /* GAS */   12.05,  /* DNS */   1e-11,  /* XwMin, */
-        1e-11,  /* ScMin, */  1e-30, /* DcMin, */   1e-20, /* PhMin, */
+        1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
+        1.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+        1e-5, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
+        1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
         1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-        1e-9,  /* DKIN  */ 0,  /* tprn */
+        1e-10,  /* DKIN  */ 0,  /* tprn */
     },
 }; // SPP_SETTING
 
