@@ -4,7 +4,7 @@
 // C/C++ interface for writing/reading DBR and DCH files
 // Works  with DATACH and DATABR structures
 //
-// Copyright (C) 2006-2007 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2006,2011 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization and of the GEMIPM2K code
@@ -149,8 +149,8 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   TPrintArrays  prar(51, DataBR_fields, ff);
 
    if( _comment )
-   { 
-      ff << _GEMIPM_version_stamp << endl << " File: " << path << endl;
+   {
+      ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
       ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
@@ -607,8 +607,8 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 	  prar.setNoAlws( 2 /*"xph"*/);
 
   if( _comment )
-  {  
-     ff << _GEMIPM_version_stamp << endl << " File: " << path << endl;
+  {
+     ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
      ff << "# Comments are marked with # $ ;" << endl;
      ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
      ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;

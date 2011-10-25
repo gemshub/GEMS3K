@@ -3,7 +3,7 @@
 //
 // Implementation of text writing/reading IPM, DCH and DBR files
 //
-// Copyright (C) 2006,2009 S.Dmytriyeva,D.Kulik
+// Copyright (C) 2006,2011 S.Dmytriyeva,D.Kulik
 //
 // This file is part of the GEM-Vizor library and GEMIPM2K
 // code package
@@ -26,7 +26,7 @@
 #endif
 
 bool _comment = true;
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.0 r.582 (trunk) ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.0 r.586 (trunk) ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -170,7 +170,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{  ff << _GEMIPM_version_stamp << endl << " File: " << path << endl;
+{  ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
    ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
