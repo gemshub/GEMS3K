@@ -1279,6 +1279,7 @@ void TNode::allocMemory()
     pmm = multi->GetPM();
     profil = new TProfil( multi );
     TProfil::pm = profil;
+    multi->setProfil(profil);
 #endif
 }
 
