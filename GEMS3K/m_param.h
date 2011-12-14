@@ -115,7 +115,7 @@ public:
    void outMulti( GemDataStream& ff, gstring& path  );
    void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff );
-   void readMulti( const char* path );
+   void readMulti(  TNode *na, const char* path );
 
    double ComputeEquilibriumState( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
    long int testMulti( );
@@ -406,7 +406,7 @@ TMulti *pmulti;
    void makeGEM2MTFiles(QWidget* par);
    void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff );
-   void readMulti( const char* path );
+   void readMulti(  TNode *na,const char* path );
    void CmReadMulti( QWidget* par, const char* path );
    double ComputeEquilibriumState( long int& NumPrecLoops, long int& NumIterFIA, long int& NumIterIPM );
    long int testMulti();

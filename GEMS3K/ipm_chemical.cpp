@@ -78,7 +78,7 @@ void TMulti::XmaxSAT_IPM2()
     { // Loop over DCs
         if( pmp->X[j] <= min( pmp->lowPosNum, pmp->DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
-        rIEPS = TProfil::pm->pa.p.IEPS;
+        rIEPS = prof->pa.p.IEPS;
         ja = j - ( pmp->Ls - pmp->Lads );
 
         switch( pmp->DCC[j] )  // code of species class
@@ -165,7 +165,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pmp->IT << " j= " << j << " oDUL=" << oDUL 
 */                break;
 
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
-                rIEPS = TProfil::pm->pa.p.IEPS;
+                rIEPS = prof->pa.p.IEPS;
                 XS0 = (max( pmp->MASDT[k][ist], pmp->MASDJ[ja][PI_DEN] ));
                 XS0 = XS0 * XVk * Mm / 1e6 * pmp->Nfsp[k][ist]; // in moles
 
@@ -333,9 +333,9 @@ if( k < pmp->FIs )
 //Ask DK! 20/04/2002
 #ifndef IPMGEMPLUGIN
                     XU = pmp->DUL[j]*XFU*MWXW /
-         TProfil::pm->MolWeight(pmp->N, pmp->Awt, pmp->A+j*pmp->N );
+         prof->MolWeight(pmp->N, pmp->Awt, pmp->A+j*pmp->N );
                     XL = pmp->DLL[j]*XFL*MWXW /
-         TProfil::pm->MolWeight(pmp->N, pmp->Awt, pmp->A+j*pmp->N );
+         prof->MolWeight(pmp->N, pmp->Awt, pmp->A+j*pmp->N );
 
 #endif
                     break;
@@ -418,7 +418,7 @@ double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
     double FactSur, FactSurT;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
     Fold = pmp->F0[j];
     if( pmp->FIat > 0 && j < pmp->Ls && j >= pmp->Ls - pmp->Lads )
@@ -641,7 +641,7 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
     { // loop over phases
         i=j+pmp->L1[k];
 //        if( YF[k] <= pmp->lowPosNum*100. || ( pmp->PHC[k] == PH_AQUEL &&
-//        ( YF[k] <= TProfil::pm->pa.p.XwMin || Y[pmp->LO] <= pmp->lowPosNum*1e3 )))
+//        ( YF[k] <= prof->pa.p.XwMin || Y[pmp->LO] <= pmp->lowPosNum*1e3 )))
         if( pmp->L1[k] == 1L && YF[k] < pmp->PhMinM )
         	goto NEXT_PHASE;
         if( YF[k] <= pmp->DSM || ( pmp->PHC[k] == PH_AQUEL &&
@@ -864,8 +864,8 @@ qd_real TMulti::qdGX( double LM  )
         	goto NEXT_PHASE;
 //        if( XF <= const2 ||
 //                (pmp->PHC[k] == PH_AQUEL && (XF <= pmp->DHBM
-//                || XFw <= TProfil::pm->pa.p.XwMin) )
-//                || ( pmp->PHC[k] == PH_SORPTION && XFw <= TProfil::pm->pa.p.ScMin ))
+//                || XFw <= prof->pa.p.XwMin) )
+//                || ( pmp->PHC[k] == PH_SORPTION && XFw <= prof->pa.p.ScMin ))
 //            goto NEXT_PHASE;
         pmp->logYFk = log( XF );
 
@@ -912,7 +912,7 @@ double TMulti::pb_GX( double *Gxx  )
 {
     long int i, j, k;
     double Gi, x, XF, XFw, FX;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
     // calculating G(X)
     FX=0.;
@@ -1178,7 +1178,7 @@ void TMulti::KarpovsPhaseStabilityCriteria()
     bool KinConstr;
     long int k, j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
     EMU = pmp->EMU;
     NMU = pmp->NMU;
@@ -1309,7 +1309,7 @@ long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double Mju
     double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
     double CutoffDistortionMBR = 0.1 * pmp->DHBM;
     bool KinConstr, Degenerated = false;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
     PrimalChemicalPotentials( pmp->F, pmp->Y, pmp->YF, pmp->YFA );
     jb=0;
@@ -1433,7 +1433,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
     long int L1k, L1kZeroDCs, k, j, jb = 0, status,
         DCinserted = 0, DCremoved = 0, PHinserted = 0, PHremoved = 0;
     double MjuDiffCutoff = 1e-3; // InsValue;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
     if( pa->p.GAS > 1e-6 )
          MjuDiffCutoff = pa->p.GAS;
     AmThExp = (double)abs( pa->p.PRD );
@@ -1803,7 +1803,7 @@ long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStat
 {
     long int k, j, jb, kf, ku;
     double F1, F2, *F0; // , sfactor;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 int rLoop = CleanupStatus;
 rLoop = -1;
 //    sfactor = calcSfactor();

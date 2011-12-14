@@ -190,9 +190,9 @@ void TProfil::readMulti( GemDataStream& ff )
   }
 
 // Reading structure MULTI (GEM IPM work structure)
-void TProfil::readMulti( const char* path )
+void TProfil::readMulti( TNode *na, const char* path )
 {
-      multi->from_text_file_gemipm( path);
+      multi->from_text_file_gemipm( na, path);
 }
 
  bool load = false;

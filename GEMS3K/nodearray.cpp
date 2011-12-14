@@ -201,14 +201,14 @@ AGAIN:
 //  putting MULTI to binary file
     Path_ = u_makepath( dir, name, "ipm" );
     GemDataStream  ff(Path_, ios::out|ios::binary);
-    TProfil::pm->outMulti( ff, Path_  );
+    profil->outMulti( ff, Path_  );
   }
  else
   {
 // output MULTI to txt file
     newname = name+"-ipm";
     Path_ = u_makepath( dir, newname, "dat" );
-    TProfil::pm->outMulti( Path_, addMui,  with_comments, brief_mode );
+    profil->outMulti( Path_, addMui,  with_comments, brief_mode );
   }
 
 // out dataCH to binary file

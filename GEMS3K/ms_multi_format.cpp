@@ -127,7 +127,7 @@ outField MULTI_dynamic_fields[69] =  {
 void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 		bool with_comments, bool brief_mode )
 {
-  SPP_SETTING *pa = &TProfil::pm->pa;
+  SPP_SETTING *pa = &prof->pa;
    _comment = with_comments;
    char PAalp;
    char PSigm;
@@ -650,10 +650,10 @@ getLsMdcsum( LsMdcSum );
 
 }
 
-void TMulti::from_text_file_gemipm( const char *path )
+void TMulti::from_text_file_gemipm( TNode *na, const char *path )
 {
-  SPP_SETTING *pa = &TProfil::pm->pa;
-  DATACH  *dCH = TNode::na->pCSD();
+  SPP_SETTING *pa = &prof->pa;
+  DATACH  *dCH = na->pCSD();
   long int ii, nfild;
 
    //static values

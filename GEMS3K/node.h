@@ -42,11 +42,12 @@ class TNode
 
 protected:
    MULTI* pmm;  // Pointer to GEM IPM work data structure (see ms_multi.h)
+   TProfil* profil;
 
 #ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMIPM2K programs
     TMulti* multi;
-    TProfil* profil;
+//    TProfil* profil;
 #endif
 
     DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)

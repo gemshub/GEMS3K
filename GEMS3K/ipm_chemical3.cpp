@@ -120,9 +120,9 @@ void TMulti::SetSmoothingFactor( long int mode )
 
     ir = pmp->IT;
     irf = (double)ir;
-    ag = TProfil::pm->pa.p.AG; // pmp->FitVar[4];
-    dg = TProfil::pm->pa.p.DGC;
-    iim = (double)TProfil::pm->pa.p.IIM;
+    ag = prof->pa.p.AG; // pmp->FitVar[4];
+    dg = prof->pa.p.DGC;
+    iim = (double)prof->pa.p.IIM;
 
     if( dg > -0.0001 && ag >= 0.0001 ) // Smoothing used in the IPM-2 algorithm
     {					// with some improvements
@@ -199,7 +199,7 @@ double
 TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
+//    SPP_SETTING *pa = &prof->pa;
 
     switch( pmp->PHC[k] )
     {
@@ -330,7 +330,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )

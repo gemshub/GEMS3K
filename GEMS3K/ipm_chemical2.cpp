@@ -95,7 +95,7 @@ void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA
 {
     long int j, ii, i;
     double Muj, /* DsurT=0.0,*/ SPmol, lnFmol=4.016535;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
+//    SPP_SETTING *pa = &prof->pa;
 
     if( pmp->PHC[0] == PH_AQUEL )
     {  // mole fraction to molality conversion
@@ -282,7 +282,7 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
 //    if( pmp->Ls < 2 || !pmp->FIs )  Temporary disabled  09.03.2010 DK
 //        return;
@@ -469,7 +469,7 @@ void TMulti::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
     double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
-//    SPP_SETTING *pa = &TProfil::pm->pa;
+//    SPP_SETTING *pa = &prof->pa;
 
     for( k=0; k<pmp->FIs; k++ )
     { // loop over phases
@@ -626,7 +626,7 @@ TMulti::GouyChapman(  long int, long int, long int k )
     long int ist, status=0;
     double SigA=0., SigD=0., SigB=0., SigDDL=0.,
       XetaA[MST], XetaB[MST], XetaD[MST], f1, f3, A, Sig, F2RT, I, Cap;
-    if( pmp->XF[k] < pmp->ScMinM ) // TProfil::pm->pa.p.ScMin )
+    if( pmp->XF[k] < pmp->ScMinM ) // prof->pa.p.ScMin )
         return status; // no sorbent
 
     // sorbent mass in grams
@@ -954,7 +954,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
         long int i, ii, j, ja, ist=0, iss, dent, Cj, iSite[MST];
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = &prof->pa;
 
     if( pmp->XF[k] <= pmp->DSM ) // No sorbent retained by the IPM - phase killed
         return status;

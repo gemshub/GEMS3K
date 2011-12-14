@@ -45,7 +45,7 @@ void TMulti::AutoInitialApproximation( )
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pmp->N; i++)
              DU[i+Q] = 0.;
-        EPS = TProfil::pm->pa.p.EPS; //  13.10.00  KC  DK
+        EPS = prof->pa.p.EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
@@ -111,7 +111,7 @@ void TMulti::AutoInitialApproximation( )
         TotalPhasesAmounts( pmp->Y, pmp->YF, pmp->YFA );
 
 #ifdef Use_qd_real
-        if( TProfil::pm->pa.p.PD > 0)
+        if( prof->pa.p.PD > 0)
         {
 #endif
             pmp->FX = GX( 0.0 ); // calculation of initial G(X) value
@@ -531,7 +531,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 
 //  to_text_file( "MultiDump1.txt" );   // Debugging
 
-if( TProfil::pm->pa.p.DG > 1e-5 )
+if( prof->pa.p.DG > 1e-5 )
 {
    ScFact = SystemTotalMolesIC();
    ScaleSystemToInternal( ScFact );
@@ -554,7 +554,7 @@ try{
   catch( TError& xcpt )
   {
 
-      if( TProfil::pm->pa.p.DG > 1e-5 )
+      if( prof->pa.p.DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
@@ -566,7 +566,7 @@ try{
      Error( xcpt.title, xcpt.mess);
   }
 
-  if( TProfil::pm->pa.p.DG > 1e-5 )
+  if( prof->pa.p.DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
 
 //  to_text_file( "MultiDump3.txt" );   // Debugging
@@ -591,7 +591,7 @@ double TMulti::SystemTotalMolesIC( )
 
   pmp->TMols = mass_temp;
 
-  pmp->SMols = TProfil::pm->pa.p.DG;
+  pmp->SMols = prof->pa.p.DG;
   ScFact = pmp->SMols/pmp->TMols;
 
   return ScFact;
@@ -783,7 +783,7 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
       if( pmp->pESU == 0 )
            pmp->pNP = 0;
 
-      TProfil::pm->CheckMtparam(); //load tpp structure
+      prof->CheckMtparam(); //load tpp structure
 
 //      cout << "Init pmp->pTPD " << pmp->pTPD << endl;
 //      cout << "Init pmp->P " << pmp->P << endl;
@@ -859,7 +859,7 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 // Do it before calculations
 void TMulti::MultiConstInit() // from MultiRemake
 {
-  SPP_SETTING *pa = &TProfil::pm->pa;
+  SPP_SETTING *pa = &prof->pa;
 
   pmp->FI1 = 0;
   pmp->FI1s = 0;
@@ -936,7 +936,7 @@ void TMulti::GEM_IPM_Init()
        if( pmp->pIPN <=0 )  // mixing models finalized in any case (AIA or SIA)
        {
              // not done if these models are already present in MULTI !
-           pmp->PD = abs(TProfil::pm->pa.p.PD);
+           pmp->PD = abs(prof->pa.p.PD);
            SolModLoad();   // Call point to loading scripts for mixing models
        }
        pmp->pIPN = 1;

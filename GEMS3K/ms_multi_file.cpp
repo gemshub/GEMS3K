@@ -1426,12 +1426,12 @@ void TMulti::to_text_file( const char *path, bool append )
   if( append )
    ff << "\nNext record" << endl;
   ff << pm.stkey << endl;
-//  TProfil::pm->pa.p.write(ff);
+//  prof->pa.p.write(ff);
 
   TPrintArrays  prar(0,0,ff);
 
-  prar.writeArray( "Short_PARAM",  &TProfil::pm->pa.p.PC, 10L );
-  prar.writeArray( "Double_PARAM",  &TProfil::pm->pa.p.DG, 28L );
+  prar.writeArray( "Short_PARAM",  &prof->pa.p.PC, 10L );
+  prar.writeArray( "Double_PARAM",  &prof->pa.p.DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 38L );
   prar.writeArray(  "Double_Const",  &pm.TC, 55, 20 );
   prar.writeArray(  "EpsW", pm.epsW, 5);

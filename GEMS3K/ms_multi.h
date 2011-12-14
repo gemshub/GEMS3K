@@ -30,6 +30,9 @@
 
 #ifndef IPMGEMPLUGIN
 
+class TProfil;
+class TNode;
+
 #include "m_param.h"
 #include "v_ipnc.h"
 // Internal subroutine for ET_translate() to process Phase scripts
@@ -38,7 +41,8 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 #else
 #include <time.h>
 #include "m_const.h"
-
+class TProfil;
+class TNode;
 #endif
 
 #include "s_fgl.h"
@@ -359,6 +363,7 @@ class TMulti
 {
     MULTI pm;
     MULTI *pmp;
+    TProfil *prof;
 
 // Internal arrays for the performance optimization  (since version 2.0.0)
    long int sizeN; /*, sizeL, sizeAN;*/
@@ -629,6 +634,11 @@ public:
     MULTI* GetPM()
     { return &pm; }
 
+    void setProfil( TProfil *aProf )
+    {
+      prof = aProf;
+    }
+
     const char* GetName() const
     {  return "Multi";  }
 
@@ -638,7 +648,7 @@ public:
     void from_file( GemDataStream& ff );
     void to_text_file_gemipm( const char *path, bool addMui,
     		bool with_comments = true, bool brief_mode = false );
-    void from_text_file_gemipm( const char *path );
+    void from_text_file_gemipm(  TNode *na,const char *path );
 
     // EXTERNAL FUNCTIONS
     // MultiCalc

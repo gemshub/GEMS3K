@@ -126,7 +126,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         else
 	       return CNode->NodeStatusCH;
    // GEM IPM calculation of equilibrium state
-   CalcTime = TProfil::pm->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
+   CalcTime = profil->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
     CNode->IterDone = NumIterFIA+NumIterIPM;
@@ -137,7 +137,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // *********************************************************
 
     // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = TProfil::pm->testMulti();
+    long int erCode = profil->testMulti();
 
     if( erCode )
     {
@@ -157,12 +157,12 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
    catch(TError& err)
    {
-	if( TProfil::pm->pa.p.PSM  )
+        if( profil->pa.p.PSM  )
 	{
 		fstream f_log("ipmlog.txt", ios::out|ios::app );
         f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
           err.title.c_str() << ":" << endl;
-       if( TProfil::pm->pa.p.PSM >= 2  )
+       if( profil->pa.p.PSM >= 2  )
           f_log  << err.mess.c_str() << endl;
 	}
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
@@ -348,19 +348,19 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 if( binary_f )
  {
    GemDataStream f_m(mult_in, ios::in|ios::binary);
-#ifdef IPMGEMPLUGIN
-    profil->readMulti(f_m);
-#else
-    TProfil::pm->readMulti(f_m);
-#endif
+//#ifdef IPMGEMPLUGIN
+//    profil->readMulti(f_m);
+//#else
+    profil->readMulti( f_m);
+//#endif
   }
   else
   {
-#ifdef IPMGEMPLUGIN
-        profil->readMulti(mult_in.c_str());
-#else
-    TProfil::pm->readMulti(mult_in.c_str());
-#endif
+//#ifdef IPMGEMPLUGIN
+//        profil->readMulti(mult_in.c_str());
+//#else
+    profil->readMulti( this, mult_in.c_str());
+//#endif
   }
 
 // Prepare for reading DBR_DAT files
@@ -1332,7 +1332,7 @@ void TNode::MakeNodeStructures( QWidget* par, bool select_all,
     short nTp_, short nPp_, float Ttol_, float Ptol_  )
 {
 
-  //MULTI *mult = TProfil::pm->pmp;
+  //MULTI *mult = profil->pmp;
   TCStringArray aList;
   TCIntArray aSelIC;
   TCIntArray aSelDC;
@@ -1521,15 +1521,15 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
   double *G0, *V0, *H0, *Cp0, *S0, *A0, *U0, denW[5], epsW[5], denWg[5], epsWg[5];
   int *tp_mark;
 
-  G0 =  new double[TProfil::pm->mup->L];
-  V0 =  new double[TProfil::pm->mup->L];
-  H0 =  new double[TProfil::pm->mup->L];
-  Cp0 = new double[TProfil::pm->mup->L];
-  S0 = new double[TProfil::pm->mup->L];
-  A0 = new double[TProfil::pm->mup->L];
-  U0 = new double[TProfil::pm->mup->L];
-  tp_mark = new int[TProfil::pm->mup->L];
-  fillValue( tp_mark, 0, TProfil::pm->mup->L);
+  G0 =  new double[profil->mup->L];
+  V0 =  new double[profil->mup->L];
+  H0 =  new double[profil->mup->L];
+  Cp0 = new double[profil->mup->L];
+  S0 = new double[profil->mup->L];
+  A0 = new double[profil->mup->L];
+  U0 = new double[profil->mup->L];
+  tp_mark = new int[profil->mup->L];
+  fillValue( tp_mark, 0, profil->mup->L);
 
   for(  ii=0; ii<CSD->nTp; ii++)
   {
@@ -1542,7 +1542,7 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
 
      cP = CSD->Pval[jj];
      // calculates new G0, V0, H0, Cp0, S0
-    TProfil::pm->LoadFromMtparm( cT, cP, G0, V0, H0, S0, Cp0,
+    profil->LoadFromMtparm( cT, cP, G0, V0, H0, S0, Cp0,
     		 A0, U0, denW, epsW, denWg, epsWg, tp_mark);
      for( kk=0; kk<5; kk++)
      {
@@ -1593,6 +1593,7 @@ void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
 TNode::TNode( MULTI *apm  )
 {
     pmm = apm;
+    profil = TProfil::pm;
     CSD = 0;
     CNode = 0;
     allocMemory();
@@ -1721,7 +1722,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nICb; ii++ )
   {
       pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
-      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < TProfil::pm->pa.p.DB )
+      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil->pa.p.DB )
       {
          char buf[300];
          sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
@@ -1829,7 +1830,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
      else
            str_file = fname;
 
-	   TProfil::pm->outMultiTxt( str_file.c_str()  );
+           profil->outMultiTxt( str_file.c_str()  );
    }
 
 #ifdef IPMGEMPLUGIN

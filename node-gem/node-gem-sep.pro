@@ -20,12 +20,12 @@ DEFINES         += IPMGEMPLUGIN
 #NUMERICS_CPP     =  ../numerics
 #GEMIPM_CPP     =  ../gemipm
 
-LIBS_CPP       =  ../GEMIPM2K
-KERNEL_CPP     =  ../GEMIPM2K
-MODS_CPP       =  ../GEMIPM2K
-SUBMOD_CPP     =  ../GEMIPM2K
-NUMERICS_CPP   =  ../GEMIPM2K
-GEMIPM_CPP     =  ../GEMIPM2K
+LIBS_CPP       =  ../GEMS3K
+KERNEL_CPP     =  ../GEMS3K
+MODS_CPP       =  ../GEMS3K
+SUBMOD_CPP     =  ../GEMS3K
+NUMERICS_CPP   =  ../GEMS3K
+GEMIPM_CPP     =  ../GEMS3K
 
 KERNEL_H     =  $$KERNEL_CPP
 LIBS_H       =  $$LIBS_CPP
