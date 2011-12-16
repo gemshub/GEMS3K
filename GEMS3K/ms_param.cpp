@@ -195,7 +195,6 @@ void TProfil::readMulti( TNode *na, const char* path )
       multi->from_text_file_gemipm( na, path);
 }
 
- bool load = false;
 
 // Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 // (only used in standalone GEMIPM2K version)

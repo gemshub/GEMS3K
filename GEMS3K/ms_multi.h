@@ -621,6 +621,7 @@ public:
      pmp->tpp_G = 0;
      pmp->tpp_S = 0;
      pmp->tpp_Vm = 0;
+ load=false;
    }
 
     ~TMulti()
@@ -656,6 +657,7 @@ public:
     double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
     void DC_LoadThermodynamicData();
+ bool load; // used in DC_LoadThermodynamicData to indicate if data was loaded at least once
     void setErrorMessage( long int num, const char *code, const char * msg);
     void addErrorMessage( const char * msg);
 
