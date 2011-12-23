@@ -27,31 +27,32 @@
 #include "m_param.h"
 #include "datach.h"
 #include "databr.h"
-
-#ifndef IPMGEMPLUGIN
-class QWidget;
-#endif
+#include "ms_multi.h"
 
 extern const double bar_to_Pa,
                m3_to_cm3,
                kg_to_g;
 
-class TNode
+class TNode : public TMulti
 {
   gstring dbr_file_name;  // place for the *dbr. I/O file name
 
 protected:
-   MULTI* pmm;  // Pointer to GEM IPM work data structure (see ms_multi.h)
-   TProfil* profil;
+//   MULTI* pmm;  // Pointer to GEM IPM work data structure (see ms_multi.h)
+ //  TProfil* profil;
+//from TProfil
+ //   static TProfil* pm;
 
-#ifdef IPMGEMPLUGIN
+ //   TMulti* multi;
+  //  MULTI *pmp;
+  SPP_SETTING pa;
+
+ //   TProfil( TMulti* amulti );
+ 
        // These pointers are only used in standalone GEMIPM2K programs
-    TMulti* multi;
-//    TProfil* profil;
-#endif
 
-    DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)
-    DATABR* CNode;  // Pointer to a work node data bridge structure (node)
+//    TProfil* profil;
+
          // used for exchanging input data and results between FMT and GEM IPM
 
     // These four values are set by the last GEM_run() call
@@ -114,32 +115,16 @@ protected:
     virtual long int nNodes()  const // virtual call for interaction with TNodeArray class
     { return 1; }
 
-#ifndef IPMGEMPLUGIN
-    // Integration in GEMS-PSI GUI environment
-    // Prepares and writes DCH and DBR files for reading into the coupled code
-    void makeStartDataChBR( QWidget* par,
-         TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-         short nTp_, short nPp_, float Ttol_, float Ptol_,
-         float *Tai, float *Pai );
-
-    // Creates lookup arrays for interpolation of thermodynamic data
-    void G0_V0_H0_Cp0_DD_arrays( QWidget* par ); // to be written into DCH file
-
-    // Virtual function for interaction with TNodeArray class
-    virtual void  setNodeArray( gstring& , long int , bool ) { }
-#endif
 
 public:
 
-static TNode* na;   // static pointer to this TNode class instance
+//static TNode* na;   // static pointer to this TNode class instance
+TMulti* multi;
+    DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)
+    DATABR* CNode;  // Pointer to a work node data bridge structure (node)
 
-#ifndef IPMGEMPLUGIN
-// Constructor of the class instance in memory in GEMS environment
-  TNode( MULTI *apm );
-#else
   // Constructor of the class instance in memory for standalone GEMIPM2K or coupled program
   TNode();
-#endif
 
   virtual ~TNode();      // destructor
 
@@ -160,7 +145,7 @@ static TNode* na;   // static pointer to this TNode class instance
     long int  GEM_init( const char *ipmfiles_lst_name,
                    long int *nodeTypes = 0, bool getNodT1 = false);
 
-#ifdef IPMGEMPLUGIN
+
 //  Calls for direct coupling of a FMT code with GEMIPM2K
 
 // (6) Passes (copies) the GEMIPM2K input data from the work instance of DATABR structure.
@@ -246,7 +231,7 @@ void GEM_set_MT(
    double p_Tm,      // Actual total simulation time, s                        +       -      -
    double p_dt       // Actual time step, s                          +       -      -
 );
-#endif
+
 
 // (5) Reads another DBR file (with input system composition, T,P etc.). The DBR file must be compatible with
 // the currently loaded IPM and DCH files (see description  of GEM_init() function call).
@@ -307,7 +292,7 @@ void GEM_set_MT(
 //                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
    void  GEM_print_ipm( const char* fname );
 
-#ifdef IPMGEMPLUGIN
+
 // (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
 //   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond
 //   to those in currently existing DATACH memory structure.
@@ -338,7 +323,6 @@ void GEM_set_MT(
     double  *p_aPH   // Calculated surface areas of phases (m2) [nPHb]           -      -       +     +
  );
 
-#endif
 
 // Access methods for direct or protected manipulation of CSD and DBR data
 //
@@ -596,19 +580,19 @@ void GEM_set_MT(
       // Also amount of ICs not included into DATABR list can be retrieved.
       // Internal re-scaling to mass of the system is applied
       inline void Set_IC_b( const double b_val, const long int xCH)
-      { pmm->B[xCH] = b_val; }
+      { pm.B[xCH] = b_val; }
 
       // Retrieves the current total amount of Independent Component (xCH is IC DCH index).
       // Also amount of ICs not included into DATABR list can be retrieved.
       // Internal re-scaling to mass of the system is applied
       inline double IC_b(const long int xCH) const
-      { return pmm->B[xCH]; }
+      { return pm.B[xCH]; }
 
       // Retrieves the current mole amount of DC (xCH is DC DCH index) directly from
       // GEM IPM work structure. Also amount of DCs not included into DATABR
       // list can be retrieved. Internal re-scaling to mass of the system is applied.
       inline double DC_n(const long int xCH) const
-      {  return pmm->X[xCH]; }
+      {  return pm.X[xCH]; }
 
       // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index)
       // directly from GEM IPM work structure. Also activity of a DC not included into DATABR list
@@ -642,7 +626,7 @@ void GEM_set_MT(
       // directly from GEM IPM work structure. Also activity coefficient of a DC not included
       // into DATABR list can be retrieved. If DC has zero amount, this function returns 1.0.
       inline double DC_g(const long int xCH) const
-      {  return pmm->Gamma[xCH];  }
+      {  return pm.Gamma[xCH];  }
 
       // Retrieves the current (dual-thermodynamic) chemical potential of DC (xCH is DC DCH index)
       // directly from GEM IPM work structure, also for any DC not included into DATABR or having zero amount.
@@ -657,25 +641,6 @@ void GEM_set_MT(
       // false - in J/mol; true (default) - in mol/mol
       double DC_mu0(const long int xCH, bool norm=true);
 
-#ifndef IPMGEMPLUGIN
-// These calls are used only inside the GEMS-PSI GEM2MT module
-
-    // Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
-    // interaction variant (the user must select ICs, DCs and phases to be included
-    // in DATABR lists)
-    void MakeNodeStructures( QWidget* par, bool select_all,
-             float *Tai, float *Pai, short nTp_ = 1 ,
-             short nPp_ = 1 , float Ttol_ = 1., float Ptol_ =1. );
-
-    // Overloaded variant - takes lists of ICs, DCs and phases according to
-    // already existing index vectors axIC, axDC, axPH (with anICb, anDCb,
-    // anPHb, respectively)
-    void MakeNodeStructures(  short anICb, short anDCb,  short anPHb,
-    		short* axIC, short* axDC,  short* axPH,
-             float* Tai, float* Pai,  short nTp_,
-             short nPp_, float Ttol_, float Ptol_  );
-
-#endif
 };
 
 // Redo into a function with interpolation

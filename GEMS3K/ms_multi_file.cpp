@@ -19,6 +19,7 @@
 
 #include "io_arrays.h"
 #include "m_param.h"
+#include "ms_multi.h"
 #include "gdatastream.h"
 
 void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
@@ -293,15 +294,8 @@ void TMulti::to_file( GemDataStream& ff  )
    char PSigm;
 
 
-#ifndef IPMGEMPLUGIN
-
-   PAalp = syp->PAalp;
-   PSigm = syp->PSigm;
-#else
    PAalp = PAalp_;
    PSigm = PSigm_;
-#endif
-
 
    ff.writeArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.writeArray( &pm.N, 38);
@@ -511,20 +505,9 @@ void TMulti::from_file( GemDataStream& ff )
    ff.readArray( pm.epsW, 5);
    ff.readArray( pm.epsWg, 5);
 
-#ifndef IPMGEMPLUGIN
-//   syp->PAalp = PAalp;
-//   syp->PSigm = PSigm;
-#else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-#endif
-
-   //realloc memory
-#ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
-#else
-   dyn_new();
-#endif
 
       //dynamic values
     // Part 1
@@ -611,15 +594,9 @@ void TMulti::from_file( GemDataStream& ff )
       getLsModsum( LsModSum, LsIPxSum );
       getLsMdcsum( LsMdcSum );
 
-#ifdef IPMGEMPLUGIN
       pm.IPx = new long int[LsIPxSum];
       pm.PMc = new double[LsModSum];
       pm.DMc = new double[LsMdcSum];
-#else
-      pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
-      pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
-      pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
-#endif
 
       ff.readArray(pm.IPx, LsIPxSum);
       ff.readArray(pm.PMc, LsModSum);
@@ -719,7 +696,6 @@ ff.readArray((double*)pm.D, MST*MST);
 }
 
 
-#ifdef IPMGEMPLUGIN
 
 // realloc dynamic memory
 void TMulti::multi_realloc( char PAalp, char PSigm )
@@ -1236,6 +1212,7 @@ void TMulti::multi_free()
 {
     // Part 1
      // need  always to alloc vectors
+/*     if (pm) delete pm;
  if( pm.L1) delete[] pm.L1;
  if( pm.muk) delete[] pm.muk;
  if( pm.mui) delete[] pm.mui;
@@ -1389,7 +1366,7 @@ if( pm.D ) delete[] pm.D;
     if(pm.CPh)  	delete[] pm.CPh;
     if(pm.APh)  	delete[] pm.APh;
     if(pm.UPh)  	delete[] pm.UPh;
-
+*/
  //  Added 16.11.2004 by Sveta
 //    if( pm.sitE )     delete[] pm.sitE;
 //    if( pm.sitXcat )  delete[] pm.sitXcat;
@@ -1401,7 +1378,6 @@ if( pm.D ) delete[] pm.D;
     Free_uDD();
 }
 
-#endif
 
 void TMulti::to_text_file( const char *path, bool append )
 {
@@ -1409,13 +1385,8 @@ void TMulti::to_text_file( const char *path, bool append )
    char PAalp;
    char PSigm;
 
-#ifndef IPMGEMPLUGIN
-   PAalp = syp->PAalp;
-   PSigm = syp->PSigm;
-#else
    PAalp = PAalp_;
    PSigm = PSigm_;
-#endif
 
    ios::openmode mod = ios::out;
     if( append )
@@ -1430,8 +1401,8 @@ void TMulti::to_text_file( const char *path, bool append )
 
   TPrintArrays  prar(0,0,ff);
 
-  prar.writeArray( "Short_PARAM",  &prof->pa.p.PC, 10L );
-  prar.writeArray( "Double_PARAM",  &prof->pa.p.DG, 28L );
+  prar.writeArray( "Short_PARAM",  &pa_.p.PC, 10L );
+  prar.writeArray( "Double_PARAM",  &pa_.p.DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 38L );
   prar.writeArray(  "Double_Const",  &pm.TC, 55, 20 );
   prar.writeArray(  "EpsW", pm.epsW, 5);

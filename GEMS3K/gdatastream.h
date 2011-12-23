@@ -22,15 +22,10 @@
 
 #include <fstream>
 
-#ifdef IPMGEMPLUGIN
 
 #include "verror.h"
 
-#else
 
-#include "gstring.h"
-
-#endif
 
 class GemDataStream				// data stream class
 {
@@ -115,32 +110,7 @@ public:
     void writeArray( float* arr, int size );
     void writeArray( double* arr, int size );
 
-#ifndef IPMGEMPLUGIN
-
-    template <class T> void writeArray( T* arr, int size );
-    template <class T> void readArray( T* arr, int size );
-#endif
 };
 
-#ifndef IPMGEMPLUGIN
 
-template <class T>
-void GemDataStream::writeArray( T* arr, int size )
-{
-  if( !arr )
-    return;
-  for(int ii=0; ii<size; ii++)
-   *this << arr[ii];
-}
-
-template <class T>
-void GemDataStream::readArray( T* arr, int size )
-{
-  if( !arr )
-    return;
-  for(int ii=0; ii<size; ii++)
-   *this >> arr[ii];
-}
-
-#endif
 #endif

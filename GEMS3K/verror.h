@@ -18,7 +18,7 @@
 #ifndef _verror_h_
 #define _verror_h_
 
-#ifdef IPMGEMPLUGIN
+
 
 #include <string>
 
@@ -30,11 +30,6 @@ static const size_t npos = string::npos;
 
 void strip(string& str);
 
-#else
-
-#include "gstring.h"
-
-#endif
 
 struct TError
 {

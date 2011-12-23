@@ -29,7 +29,7 @@
 #include "gdatastream.h"
 #include "node.h"
 
-TProfil* TProfil::pm;
+// TProfil* TProfil::pm;
 
 const double R_CONSTANT = 8.31451,
               NA_CONSTANT = 6.0221367e23,
@@ -48,27 +48,10 @@ enum volume_code {  // Codes of volume parameter ???
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
 };
 
-SPP_SETTING pa_ = {
-    "GEM-Selektor v3.0t-1930.580: Numerical controls & thresholds",
-    {   // Typical default set (07.10.2011) new PhaseSelection( logSI ) & uDD()
-        2,  /* PC */  2,     /* PD */   -4,   /* PRD */
-        1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-        0, /* DT */     3000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-        1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
-        3e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
-        1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
-        1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-        1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
-        1.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-        1e-5, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
-        1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
-        1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-        1e-10,  /* DKIN  */ 0,  /* tprn */
-    },
-}; // SPP_SETTING
 
 
 
+/*
 void BASE_PARAM::write(fstream& oss)
 {
   short arr[10];
@@ -79,7 +62,7 @@ void BASE_PARAM::write(fstream& oss)
   arr[3] = PSM;
   arr[4] = DP;
   arr[5] = DW;
-  arr[6] = DT;
+//   arr[6] = DT
   arr[7] = PLLG;
   arr[8] = PE;
   arr[9] = IIM;
@@ -91,27 +74,27 @@ void BASE_PARAM::write(fstream& oss)
 
 void SPP_SETTING::write(fstream& oss)
 {
-    oss.write( ver, TDBVERSION );
+    oss.write( ver, TDBVERSION );SPP
     p.write( oss );
 }
-
-TProfil::TProfil( TMulti* amulti )
-{
-    pa= pa_;
-    multi = amulti;
-    pmp = multi->GetPM();
-}
+*/
+//TProfil::TProfil( TMulti* amulti )
+//{
+//    pa= pa_;
+//    multi = amulti;
+//    pm = multi->GetPM();
+//}
 
 // test result GEM IPM calculation of equilibrium state in MULTI
-long int TProfil::testMulti(  )
+long int TMulti::testMulti(  )
 {
-  if( pmp->MK || pmp->PZ )
+  if( pm.MK || pm.PZ )
   {
-	if( pa.p.PSM == 2 )
+	if( pa_.p.PSM == 2 )
 	{
       fstream f_log("ipmlog.txt", ios::out|ios::app );
-      f_log << "Warning " << pmp->stkey << ": " <<  pmp->errorCode << ":" << endl;
-      f_log << pmp->errorBuf << endl;
+      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
+      f_log << pm.errorBuf << endl;
 	}
    return 1L;
   }
@@ -119,12 +102,12 @@ long int TProfil::testMulti(  )
 }
 
 // GEM IPM calculation of equilibrium state in MULTI
-double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
+double TMulti::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ , TNode* mynode)
 {
- return multi->CalculateEquilibriumState( 0, NumIterFIA_, NumIterIPM_ );
+ return CalculateEquilibriumState( 0, NumIterFIA_, NumIterIPM_ , mynode);
 }
 
-void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
+void TMulti::outMulti( GemDataStream& ff, gstring& /*path*/  )
 {
 	 short arr[10];
 
@@ -141,19 +124,18 @@ void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
 
 	ff.writeArray( arr, 10 );
     ff.writeArray( &pa.p.DG, 28 );
-    multi->to_file( ff );
+    to_file( ff );
 }
 
-void TProfil::outMultiTxt( const char *path, bool append  )
+void TMulti::outMultiTxt( const char *path, bool append  )
 {
-    multi->to_text_file( path, append );
+    to_text_file( path, append );
 }
 
 // Reading structure MULTI (GEM IPM work structure)
-void TProfil::readMulti( GemDataStream& ff )
+void TMulti::readMulti( GemDataStream& ff , TNode* mynode)
 {
-    DATACH  *dCH = TNode::na->pCSD();
-    //DATACH  *dCH =  multi->node->pCSD();
+    DATACH  *dCH = mynode->pCSD();
     short arr[10];
 
 	 ff.readArray( arr, 10 );
@@ -169,50 +151,50 @@ void TProfil::readMulti( GemDataStream& ff )
 	  pa.p.IIM = arr[9];
 
       ff.readArray( &pa.p.DG, 28 );
-      multi->from_file( ff );
+      from_file( ff );
 
       // copy intervals for minimizatiom
       if(  dCH->nPp > 1  )
       {
-         pmp->Pai[0] = dCH->Pval[0];
-         pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
-         pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+         pm.Pai[0] = dCH->Pval[0];
+         pm.Pai[1] = dCH->Pval[dCH->nPp-1];
+         pm.Pai[2] = (pm.Pai[1]-pm.Pai[0])/(double)dCH->nPp;
       }
-      pmp->Pai[3] = dCH->Ptol;
+      pm.Pai[3] = dCH->Ptol;
       if(  dCH->nTp > 1  )
       {
-         pmp->Tai[0] = dCH->TKval[0];
-         pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
-         pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+         pm.Tai[0] = dCH->TKval[0];
+         pm.Tai[1] = dCH->TKval[dCH->nTp-1];
+         pm.Tai[2] = (pm.Tai[1]-pm.Tai[0])/(double)dCH->nTp;
       }
-      pmp->Tai[3] = dCH->Ttol;
+      pm.Tai[3] = dCH->Ttol;
 
   }
 
 // Reading structure MULTI (GEM IPM work structure)
-void TProfil::readMulti( TNode *na, const char* path )
+void TMulti::readMulti( TNode *na, const char* path )
 {
-      multi->from_text_file_gemipm( na, path);
+      from_text_file_gemipm( na, path);
 }
 
 
 // Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 // (only used in standalone GEMIPM2K version)
  //
-void TMulti::DC_LoadThermodynamicData()
+void TMulti::DC_LoadThermodynamicData(TNode* mynode)
 {
   long int j, jj, k, xTP, jb, je=0;
   double Go, Gg, Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
   double TK, P, PPa;
 
-  DATACH  *dCH = TNode::na->pCSD();
+  DATACH  *dCH = mynode->pCSD();
 //  DATABR  *dBR = TNodeArray::na->pCNode();
 
-  TK = TNode::na->cTK();
-  PPa = TNode::na->cP();
+  TK = mynode->cTK();
+  PPa = mynode->cP();
   P = PPa/bar_to_Pa;
 // if( dCH->nTp <=1 && dCH->nPp <=1 )
-  if( dCH->nTp <1 || dCH->nPp <1 || TNode::na->check_TP( TK, PPa ) == false )
+  if( dCH->nTp <1 || dCH->nPp <1 || mynode->check_TP( TK, PPa ) == false )
   {
 	  char buff[256];
 	  sprintf( buff, " Temperature %g or pressure %g out of range, or no T/D data are provided\n",
@@ -220,15 +202,15 @@ void TMulti::DC_LoadThermodynamicData()
 	  Error( "ECompG0Load: " , buff );
       return;
   }
-  xTP = TNode::na->check_grid_TP( TK, PPa );
+  xTP = mynode->check_grid_TP( TK, PPa );
 
- if( load && fabs( pmp->Tc - TK ) < dCH->Ttol /*1.e-10*/ &&
-            fabs( pmp->P - P ) < dCH->Ptol /*1.e-10*/ )
+ if( load && fabs( pm.Tc - TK ) < dCH->Ttol /*1.e-10*/ &&
+            fabs( pm.P - P ) < dCH->Ptol /*1.e-10*/ )
    return;    //T, P not changed - problematic for UnSpace!
 
- pmp->T = pmp->Tc = TK;
- pmp->TC = pmp->TCc = TK-C_to_K;
- pmp->P = pmp->Pc = P;
+ pm.T = pm.Tc = TK;
+ pm.TC = pm.TCc = TK-C_to_K;
+ pm.P = pm.Pc = P;
 
 // if( dCH->ccPH[0] == PH_AQUEL )
 // {
@@ -237,40 +219,40 @@ void TMulti::DC_LoadThermodynamicData()
      jj =  k * dCH->nPp * dCH->nTp;
      if( xTP >= 0 )
       {
-       pmp->denW[k] = dCH->denW[jj+xTP]/1e3;
-       pmp->epsW[k] = dCH->epsW[jj+xTP];
-       pmp->denWg[k] = dCH->denWg[jj+xTP]/1e3;
-       pmp->epsWg[k] = dCH->epsWg[jj+xTP];
+       pm.denW[k] = dCH->denW[jj+xTP]/1e3;
+       pm.epsW[k] = dCH->epsW[jj+xTP];
+       pm.denWg[k] = dCH->denWg[jj+xTP]/1e3;
+       pm.epsWg[k] = dCH->epsWg[jj+xTP];
       }
      else
      {
-       pmp->denW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denW+jj,
+       pm.denW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denW+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,6 )/1e3;// from test denW enough
-       pmp->epsW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsW+jj,
+       pm.epsW[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsW+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,5 );// from test epsW enough
-       pmp->denWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denWg+jj,
+       pm.denWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->denWg+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,5 )/1e3;
-       pmp->epsWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsWg+jj,
+       pm.epsWg[k] = LagranInterp( dCH->Pval, dCH->TKval, dCH->epsWg+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,5 );
      }
   }
 // }
 // else
 // {
-//   pmp->denW[0] = 1.;
-//   pmp->epsW[0] = 78.;
+//   pm.denW[0] = 1.;
+//   pm.epsW[0] = 78.;
 // }
 
- pmp->RT = R_CONSTANT * pmp->Tc;
- pmp->FRT = F_CONSTANT/pmp->RT;
- pmp->lnP = 0.;
+ pm.RT = R_CONSTANT * pm.Tc;
+ pm.FRT = F_CONSTANT/pm.RT;
+ pm.lnP = 0.;
  if( P != 1. ) // ???????
-   pmp->lnP = log( P );
+   pm.lnP = log( P );
 
- for( k=0; k<pmp->FI; k++ )
+ for( k=0; k<pm.FI; k++ )
  {
    jb = je;
-   je += pmp->L1[k];
+   je += pm.L1[k];
    // load t/d data from DC - to be extended for DCH->H0, DCH->S0, DCH->Cp0, DCH->DD
    // depending on the presence of these arrays in DATACH and Multi structures
     for( j=jb; j<je; j++ )
@@ -303,35 +285,35 @@ void TMulti::DC_LoadThermodynamicData()
        if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,5 );
      }
-     if( pmp->tpp_G )
-    	  pmp->tpp_G[j] = Go;
-     if( pmp->Guns )
-           Gg = pmp->Guns[j];
+     if( pm.tpp_G )
+    	  pm.tpp_G[j] = Go;
+     if( pm.Guns )
+           Gg = pm.Guns[j];
      else
            Gg = 0.;
-     pmp->G0[j] = ConvertGj_toUniformStandardState( Go+Gg, j, k ); // Inside this function, pmp->YOF[k] can be added!
-     switch( pmp->PV )
+     pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg, j, k ); // Inside this function, pm.YOF[k] can be added!
+     switch( pm.PV )
      { // put mol volumes of components into A matrix or into the vector of molar volumes
        // to be checked!
        case VOL_CONSTR:
-           if( pmp->Vuns )
-              Vv += pmp->Vuns[jj];
-           // pmp->A[j*pmp->N+xVol] = tpp->Vm[jj]+Vv;
-             pmp->A[j*pmp->N] = Vv; // !!  error
+           if( pm.Vuns )
+              Vv += pm.Vuns[jj];
+           // pm.A[j*pm.N+xVol] = tpp->Vm[jj]+Vv;
+             pm.A[j*pm.N] = Vv; // !!  error
        case VOL_CALC:
        case VOL_UNDEF:
-    	     if( pmp->tpp_Vm )
-    	    	  pmp->tpp_Vm[j] = Vv;
-              if( pmp->Vuns )
-                     Vv += pmp->Vuns[j];
- 	          pmp->Vol[j] = Vv  * 10.;
+    	     if( pm.tpp_Vm )
+    	    	  pm.tpp_Vm[j] = Vv;
+              if( pm.Vuns )
+                     Vv += pm.Vuns[j];
+ 	          pm.Vol[j] = Vv  * 10.;
               break;
      }
-     if( pmp->S0 ) pmp->S0[j] = S0;
-     if( pmp->H0 ) pmp->H0[j] = h0;
-     if( pmp->Cp0 ) pmp->Cp0[j] = Cp0;
-     if( pmp->A0 ) pmp->A0[j] = a0;
-     if( pmp->U0 ) pmp->U0[j] = u0;
+     if( pm.S0 ) pm.S0[j] = S0;
+     if( pm.H0 ) pm.H0[j] = h0;
+     if( pm.Cp0 ) pm.Cp0[j] = Cp0;
+     if( pm.A0 ) pm.A0[j] = a0;
+     if( pm.U0 ) pm.U0[j] = u0;
    }
  }
  load = true;
@@ -462,257 +444,4 @@ char  (* f_getfiles(const char *f_name, char *Path,
 
   return filesList;
 }
-
-//====================================================================================================
-// old functions
-
-
-//#include "io_arrays.h"
-/*
-void TProfil::test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP )
-{
-  long int kk, jj, ii, l1, l2, xTP, lev = 11;
-  double cT, cP, dT, dP;
-  double *G0, *V0, *H0,* *Cp0, *S0, *A0, *U0,* *denW, *epsW, *denWg, *epsWg;
-  DATACH  *CSD = TNode::na->pCSD();
-  fstream ff("lagrange_T_11_3.out.txt", ios::out );
-  ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
-
-  G0 =  new double[CSD->nDC*nT*nP];
-//   V0 =  new double[CSD->nDC*nT*nP];
-//   H0 =  new double[TProfil::pm->mup->L*nT*nP];
-  Cp0 = new double[CSD->nDC*nT*nP];
-  S0 = new double[CSD->nDC*nT*nP];
-//   A0 = new double[TProfil::pm->mup->L*nT*nP];
-//   U0 = new double[TProfil::pm->mup->L*nT*nP];
-  denW =  new double[5*nT*nP];
-  epsW =  new double[5*nT*nP];
-
-  cT = CSD->TCval[0];
-  cP = CSD->Pval[0];
-  if(nT > 1)
-    dT = (CSD->TCval[CSD->nTp-1]-CSD->TCval[0])/(nT-1);
-  else
-       dT = 0;
-  if(nP > 1 )
-    dP = (CSD->Pval[CSD->nPp-1]-CSD->Pval[0])/(nP-1);
-  else
-         dP = 0;
-  for(  ii=0; ii<nT; ii++)
-  {
-//     cT += dT;
-    for(  jj=0; jj<nP; jj++)
-    {
-//       cP += dP;
-      xTP = TNode::na->check_grid_TP( cT, cP ); // changed to Kelvin
-      for( kk=0; kk<5; kk++)
-      {
-        l1 = ( kk * nP + jj) * nT + ii;
-        l2  =  kk * CSD->nPp * CSD->nTp;
-
-        if( xTP >= 0 )
-         {
-          denW[l1] = CSD->denW[l2+xTP];
-          epsW[l1] = CSD->epsW[l2+xTP];
-         }
-         else
-         {
-           denW[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->denW+l2,
-                           cP, cT, CSD->nTp, CSD->nPp,lev );
-           epsW[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->epsW+l2,
-                           cP, cT, CSD->nTp, CSD->nPp,lev );
-         }
-      }
-      // copy to arrays
-      for( kk=0; kk<CSD->nDC; kk++)
-      {
-          l1 = ( kk * nP + jj) * nT + ii;
-          l2  =  kk * CSD->nPp * CSD->nTp;
-         if( xTP >= 0 )
-          {
-                G0[l1] = CSD->G0[ l2+xTP];
-                S0[l1] = CSD->S0[ l2+xTP];
-                Cp0[l1] = CSD->Cp0[ l2+xTP];
-           }
-           else
-           {
-             G0[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->G0+l2,
-                             cP, cT, CSD->nTp, CSD->nPp,lev );
-             S0[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->S0+l2,
-                             cP, cT, CSD->nTp, CSD->nPp,lev );
-             Cp0[l1] = LagranInterp( CSD->Pval, CSD->TCval, CSD->Cp0+l2,
-                             cP, cT, CSD->nTp, CSD->nPp,lev );
-           }
-       }
-      cP += dP;
-    }
-    cT += dT;
-  }
-
-//  fstream ff("lagrange_T_5_3.out.txt", ios::out );
-//  ErrorIf( !ff.good() , "lagrange.out", "Fileopen error");
- TPrintArrays  prar(0, 0, ff);
- prar.writeArray(  "denW", denW, 5**nP*nT, nP*nT );
- prar.writeArray(  "epsW", epsW, 5**nP*nT, nP*nT );
- prar.writeArray(  "S0_Ca+2", S0, nP*nT,  nP*nT ); //Ca+2
- prar.writeArray(  "S0_H2O", S0+13*nP*nT, nP*nT, nP*nT); //H2O@
- prar.writeArray(  "S0_Brc", S0+18*nP*nT, nP*nT, nP*nT ); //Brc
- prar.writeArray(  "G0_Ca+2", G0, nP*nT, nP*nT ); //Ca+2
- prar.writeArray(  "G0_H2O", G0+13*nP*nT, nP*nT, nP*nT ); //H2O@
- prar.writeArray(  "G0_Brc", G0+18*nP*nT, nP*nT, nP*nT ); //Brc
- prar.writeArray(  "Cp0_Ca+2", Cp0, nP*nT, nP*nT ); //Ca+2
- prar.writeArray(  "Cp0_H2O", Cp0+13*nP*nT, nP*nT, nP*nT ); //H2O@
- prar.writeArray(  "Cp0_Brc", Cp0+18*nP*nT, nP*nT, nP*nT ); //Brc
-//  prar.writeArray(  "V0", V0, CSD->nDC*nP*nT, nP*nT );
-//  prar.writeArray(  "G0", G0, CSD->nDC*nP*nT, nP*nT );
-
-  delete[] G0;
-//   delete[] V0;
-//   delete[] H0;
-  delete[] Cp0;
-  delete[] S0;
-//   delete[] A0;
-//   delete[] U0;
-  delete[] denW;
-  delete[] epsW;
-}
-*/
-
-//=============================================================================================
-/* GEM IPM calculation of equilibrium state in MULTI
-void TMulti::MultiCalcInit( const char* *key* )
-{
-  long int  j,k;
-
-  SPP_SETTING *pa = &TProfil::pm->pa;
-   // SD 09/03/09 strncpy( pmp->stkey, key, EQ_RKLEN );  // needed for the ipmlog error diagnostics
-    pmp->Ec = pmp->K2 = pmp->MK = 0;
-    pmp->PZ = pa->p.DW; // IPM-2 default
-    pmp->W1 = 0;
-    pmp->is = 0;
-    pmp->js = 0;
-    pmp->next  = 0;
-    pmp->ln5551 = log( H2O_mol_to_kg ); //  4.016533882  ln(55.50837344)  4.0165339;
-//    pmp->lowPosNum = pa->p.DcMin;  obsolete
-    pmp->lowPosNum = Min_phys_amount;
-    pmp->logXw = -16.;
-    pmp->logYFk = -9.;
-    pmp->FitVar[0] = 0.0640000030398369; // pa->aqPar[0]; setting T,P dependent b_gamma parameters
-    pmp->DXM = pa->p.DK;
-    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
-    pmp->T0 = 273.15;    // not used anywhere
-    pmp->FX = 7777777.;
-    pmp->YMET = 0;
-//    pmp->PCI = 0.0;
-    pmp->PCI = 1.0;
-
-    // calculating mass of the system
-    pmp->MBX = 0.0;
-    for(long int i=0; i<pmp->N; i++ )
-    {
-        pmp->MBX += pmp->B[i] * pmp->Awt[i];
-    }
-    pmp->MBX /= 1000.;
-
-    // optimization 08/02/2007 - allocation of A matrix index lists and IPM work arrays
-    Alloc_internal(); // performance optimization 08/02/2007
-
-    if(  pmp->pNP )     // Checking if this is SIA or AIA mode
-    {   //  Smart Initial Approximation mode
-        for( j=0; j< pmp->L; j++ )
-          pmp->X[j] = pmp->Y[j];
- //       pmp->IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
-        TotalPhases( pmp->X, pmp->XF, pmp->XFA );
-        ConCalc( pmp->X, pmp->XF, pmp->XFA);
- //       pmp->IT = pmp->ITaia;
-       if( pmp->FIs )
-       {
-           // Load activity coeffs for phases-solutions
-          long int jb, je=0;
-             for( k=0; k<pmp->FIs; k++ )
-         { // loop on solution phases
-            jb = je;
-            je += pmp->L1[k];
-            // Load activity coeffs for phases-solutions
-            for( j=jb; j< je; j++ )
-            {
-               pmp->lnGmo[j] = pmp->lnGam[j];
-               if( fabs( pmp->lnGam[j] ) <= 84. )
-      //                pmp->Gamma[j] = exp( pmp->lnGam[j] );
-                      pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-               else pmp->Gamma[j] = 1.0;
-             } // j
-          }  // k
-       }
-    }
-    else // Simplex initial approximation to be done (AIA mode)
-    {
-        for( j=0; j<pmp->L; j++ )
-        {                           // cleaning work vectors
-                pmp->X[j] = pmp->Y[j] = pmp->lnGam[j] = pmp->lnGmo[j] = 0.0;
-                pmp->Gamma[j] = 1.0;
-                pmp->MU[j] = 0.;// SD 06/12/2009
-                pmp->XU[j] = 0.;// SD 06/12/2009
-                pmp->EMU[j] = 0.;// SD 06/12/2009
-                pmp->NMU[j] = 0.;// SD 06/12/2009
-                pmp->W[j] = 0.;// SD 06/12/2009
-                pmp->F[j] = 0.;// SD 06/12/2009
-                pmp->F0[j] = 0.;// SD 06/12/2009
-        }
-    }
-    CompG0Load(); // Loading thermodynamic data into MULTI structure
-
-
-     pmp->PD = abs(pa->p.PD);
-         //           SolModLoad() and Phase scripts cannot be used here!
-
-    // recalculating kinetic restrictions for DC amounts
-     if( pmp->pULR && pmp->PLIM )
-          Set_DC_limits(  DC_LIM_INIT );
-
-     bool AllPhasesPure = true;
-     // checking if all phases are pure
-     for( k=0; k < pmp->FI; k++ )
-         if( pmp->L1[k] > 1 )
-             AllPhasesPure = false;
-     if( !AllPhasesPure )     // bugfix DK 09.03.2010   was if(!pmp->FIs)
-    {
-      long int jb, je=0;
-     // Calc Eh, pe, pH,and other stuff
-    if( pmp->E && pmp->LO && pmp->pNP )
-    {
-        ConCalc( pmp->X, pmp->XF, pmp->XFA);
-        IS_EtaCalc();
-        if( pmp->Lads )  // Calling this only when sorption models are present
-
-        {
-           for( k=0; k<pmp->FIs; k++ )
-           { // loop on solution phases
-              jb = je;
-              je += pmp->L1[k];
-              if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
-              {
-                     if( pmp->PHC[0] == PH_AQUEL && pmp->XF[k] > pmp->DSM
-                       && (pmp->XFA[0] > pmp->ScMinM && pmp->XF[0] > pmp->XwMinM ))  // fixed 30.08.2009 DK
-                       GouyChapman( jb, je, k );  // getting PSIs - electrical potentials on surface planes
-              }
-           }
-        }
-    }
-    GammaCalc( LINK_TP_MODE);   // Computing DQF, FugPure and G wherever necessary
-                                      // Activity coeffs are restored from lnGmo
- }
-   else {  // no multi-component phases
-        pmp->PD = 0;  pmp->pNP = 0;
-  //      pmp->pIPN = 1;
-    }
-
-}
-*/
-
-
-// ------------------ End of ms_param.cpp -----------------------
-
-
-
 

@@ -22,28 +22,15 @@
 #ifndef _ms_multi_h_
 #define _ms_multi_h_
 
-#ifdef Use_qd_real
-// QD_real is enabled only if the above compiler key is used (experimental)
-#include <qd/qd_real.h>
-#include <qd/fpu.h>
-#endif
 
-#ifndef IPMGEMPLUGIN
 
-class TProfil;
-class TNode;
+#include <time.h>
 
 #include "m_param.h"
-#include "v_ipnc.h"
-// Internal subroutine for ET_translate() to process Phase scripts
-typedef int (tget_ndx)( int nI, int nO, int Xplace );
-
-#else
-#include <time.h>
 #include "m_const.h"
+
 class TProfil;
 class TNode;
-#endif
 
 #include "s_fgl.h"
 
@@ -308,13 +295,11 @@ double
          ITG;        // Number of completed GEM IPM iterations
   clock_t t_start, t_end;
   double t_elap_sec;  // work variables for determining IPM calculation time
-#ifdef IPMGEMPLUGIN
   double *Guns;  //  mu.L work vector of uncertainty space increments to tp->G + sy->GEX
   double *Vuns;  //  mu.L work vector of uncertainty space increments to tp->Vm
   double *tpp_G; // Partial molar(molal) Gibbs energy g(TP) (always), J/mole
   double *tpp_S;    // Partial molar(molal) entropy s(TP), J/mole/K
   double *tpp_Vm;   // Partial molar(molal) volume Vm(TP) (always), J/bar
-#endif
 
   // additional arrays for internal calculation in ipm_main
   double *XU; //dual-thermo calculation of DC amount X(j) from A matrix and u vector [L]
@@ -357,22 +342,16 @@ enum {  // Indexation in a row of the pmp->SATX[][] array
 
 // Data of MULTI
 class TMulti
-#ifndef IPMGEMPLUGIN
-  : public TSubModule
-#endif
-{
-    MULTI pm;
-    MULTI *pmp;
-    TProfil *prof;
 
+{
+   // MULTI *pmp;
+
+   SPP_SETTING pa, pa_;
 // Internal arrays for the performance optimization  (since version 2.0.0)
    long int sizeN; /*, sizeL, sizeAN;*/
    double *AA;
    double *BB;
-#ifdef Use_qd_real
-   qd_real *qdAA;
-   qd_real *qdBB;
-#endif
+
    long int *arrL;
    long int *arrAN;
 
@@ -403,35 +382,10 @@ class TMulti
    void Increment_uDD( long int r, bool trace = false );
    long int Check_uDD( long int mode, double DivTol, bool trace = false );
 
-#ifndef IPMGEMPLUGIN
-// These pointers and methods are only used in GEMS-PSI
-    SYSTEM *syp;
-    MTPARM *tpp;
-    RMULTS *mup;
-
-    void MultiSystemInit();
-    void multi_sys_dc();
-    void multi_sys_ph();
-    void ph_sur_param( int k, int kk );
-    void ph_surtype_assign( int k, int kk, int jb, int je,
-                            int car_l[], int car_c, int Cjs );
-    void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
-    void SolModLoad();
-    bool CompressPhaseIpxt( int kPH );
-    gstring PressSolMod( int nP );
-    char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
-    int find_icnum( char *name, int LNmode );
-    int find_dcnum( char *name, int jb, int je, int LNmode, char *stmt  );
-    int find_phnum( char *name, int LNmode );
-    int find_acnum( char *name, int LNmode );
-    const char* GetHtml();
-
-#else
 
    char PAalp_; // Flag for using (+) or ignoring (-) specific surface areas of phases
    char PSigm_; // Flag for using (+) or ignoring (-) specific surface free energies
 
-#endif
 
 // Internal functions for SCMs
    void getLsModsum( long int& LsModSum, long int& LsIPxSum );
@@ -550,57 +504,14 @@ class TMulti
     void GEM_IPM_Init();
 
 
-#ifdef Use_qd_real
-// QD_real
-    // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
-       void qdMassBalanceResiduals( long int N, long int L, double *A, double *Y,
-                                   double *B, double *C );
-       qd_real qdGX( double LM  );
-       long int qdMakeAndSolveSystemOfLinearEquations( long int N, bool initAppr );
-       double qdOptimizeStepSize( double LM );
-       double qdDikinsCriterion(  long int N, bool initAppr );
-#endif
-
 public:
+    MULTI pm;
 
-    void set_def( long int i=0);
+  void set_def( long int i=0);
 
-#ifndef IPMGEMPLUGIN
-// This is used only in GEM-Selektor
-    TIArray<IPNCalc> qEp;
-    TIArray<IPNCalc> qEd;
-
-    TMulti( int nrt, SYSTEM* sy_, MTPARM *tp_, RMULTS *mu_ );
-    ~TMulti()
-    {  Free_internal(); };
-
-
-    void ods_link( int i=0);
-    void dyn_set( int i=0);
-    void dyn_kill( int i=0);
-    void dyn_new( int i=0);
-//    void set_def( int i=0);
-//    void sit_dyn_new();
-
-    // ms_muleq.cpp
-    void packData();
-    void packData( TCIntArray PHon, TCIntArray DCon );
-    void setSizes();
-    void loadData( bool newRec );
-    void unpackData();
-
-    void MultiKeyInit( const char*key );
-    void EqstatExpand( const char *key );
-    void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
-     tget_ndx *get_ndx = 0 );
-    void getNamesList( int nO, TCStringArray& lst );
-
-   class UserCancelException {};
-#else
 // this allocation is used only in standalone GEMIPM2K
    TMulti()
    {
-	 pmp = &pm;
      sizeN = 0;
      AA = 0;
      BB = 0;
@@ -616,12 +527,56 @@ public:
      sizeFIs = 0;
      phSolMod = 0;
 
-     pmp->Guns = 0;
-     pmp->Vuns = 0;
-     pmp->tpp_G = 0;
-     pmp->tpp_S = 0;
-     pmp->tpp_Vm = 0;
+     pm.Guns = 0;
+     pm.Vuns = 0;
+     pm.tpp_G = 0;
+     pm.tpp_S = 0;
+     pm.tpp_Vm = 0;
  load=false;
+ _comment=true;
+ 
+ 
+        pa.ver = "GEM-Selektor v3.0t-1930.580: Numerical controls & thresholds";
+	pa.p.PC=2;  /* PC */  
+	pa.p.PD=2;     /* PD */  
+	pa.p.PRD=-4;   /* PRD */
+        pa.p.PSM=1;  /* PSM  */
+        pa.p.DP=130;  /* DP */
+        pa.p.DW=1;   /* DW */
+        pa.p.DT=0; /* DT */    
+        pa.p.PLLG=3000;   /* PLLG */   
+        pa.p.PE=1;  /* PE */  
+        pa.p.IIM=7000; /* IIM */
+        pa.p.DG=1000.; /* DG */ 
+        pa.p.DHB=1e-13;  /* DHB */  
+        pa.p.DS=1e-20;  /* DS */
+        pa.p.DK=3e-6;  /* DK */  
+        pa.p.DF=0.01;  /* DF */  
+        pa.p.DFM=0.01;  /* DFM */
+        pa.p.DFYw=1e-5;  /* DFYw */  
+        pa.p.DFYaq=1e-5;  /* DFYaq */    
+        pa.p.DFYid=1e-5;  /* DFYid */
+        pa.p.DFYr=1e-5;  /* DFYr,*/  
+        pa.p.DFYh=1e-5;  /* DFYh,*/   
+        pa.p.DFYc=1e-5;  /* DFYc,*/
+        pa.p.DFYs=1e-6; /* DFYs, */  
+        pa.p.DB=1e-17;  /* DB */   
+        pa.p.AG=1.;   /* AG */
+        pa.p.DGC=1.;   /* DGC */   
+        pa.p.GAR=1.0;   /* GAR */  
+        pa.p.GAH=1000.; /* GAH */
+        pa.p.GAS=1e-5; /* GAS */   
+        pa.p.DNS=12.05;  /* DNS */   
+        pa.p.XwMin=1e-13;  /* XwMin, */
+        pa.p.ScMin=1e-13;  /* ScMin, */  
+        pa.p.DcMin=1e-33; /* DcMin, */   
+        pa.p.PhMin=1e-20; /* PhMin, */
+        pa.p.ICmin=1e-5;  /* ICmin */   
+        pa.p.EPS=1e-10;  /* EPS */   
+        pa.p.IEPS=1e-3;  /* IEPS */
+        pa.p.DKIN=1e-10;  /* DKIN  */ 
+
+pa_=pa;
    }
 
     ~TMulti()
@@ -630,15 +585,14 @@ public:
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
 
-#endif
 
     MULTI* GetPM()
     { return &pm; }
 
-    void setProfil( TProfil *aProf )
-    {
-      prof = aProf;
-    }
+//    void setProfil( TProfil *aProf )
+//    {
+//      prof = aProf;
+//    }
 
     const char* GetName() const
     {  return "Multi";  }
@@ -654,10 +608,11 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
-    double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
-    void InitalizeGEM_IPM_Data();
-    void DC_LoadThermodynamicData();
+    double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM , TNode* mynode);
+    void InitalizeGEM_IPM_Data(TNode* mynode);
+    void DC_LoadThermodynamicData(TNode* mynode);
  bool load; // used in DC_LoadThermodynamicData to indicate if data was loaded at least once
+ bool _comment; // write dbr files with full comments
     void setErrorMessage( long int num, const char *code, const char * msg);
     void addErrorMessage( const char * msg);
 
@@ -666,6 +621,18 @@ public:
 
 // connection to UnSpace
     double pb_GX( double *Gxx  );
+    
+    // from TProfil
+   void outMulti( GemDataStream& ff, gstring& path  );
+   void outMultiTxt( const char *path, bool append=false  );
+   void readMulti( GemDataStream& ff , TNode* mynode);
+   void readMulti(  TNode *na, const char* path );
+
+   double ComputeEquilibriumState( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ , TNode* mynode);
+   long int testMulti( );
+   void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );
+   
+
 };
 
 // ???? syp->PGmax

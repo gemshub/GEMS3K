@@ -144,7 +144,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 {
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
-  _comment = with_comments;
+  bool _comment = with_comments;
 
   TPrintArrays  prar(51, DataBR_fields, ff);
 
@@ -597,7 +597,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
-  _comment = with_comments;
+  bool _comment = with_comments;
   TPrintArrays  prar(29, DataCH_dynamic_fields, ff);
   if( CSD->nIC == CSD->nICb )
 	  prar.setNoAlws( "xic");

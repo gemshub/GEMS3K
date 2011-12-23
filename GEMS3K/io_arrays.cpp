@@ -23,7 +23,6 @@
 #include "verror.h"
 #include "v_user.h"
 
-#ifdef IPMGEMPLUGIN
 
 istream& f_getline(istream& is, gstring& str, char delim);
 
@@ -43,11 +42,6 @@ inline bool IsDoubleEmpty( const double v )
     return ( v>0. && v <= DOUBLE_EMPTY);
 }
 
-#else
-
-#include "v_vals.h"
-
-#endif
 
 long int TRWArrays::findFld( const char *Name )
   {
@@ -100,11 +94,7 @@ void TPrintArrays::writeArray( const char *name, char* arr,
     	  ff << "#  ";
     }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
-#ifdef IPMGEMPLUGIN // 24/08/2010
     strip(str);
-#else
-    str.strip();
-#endif
     ff  << "\'" << str.c_str() << "\'" << " ";
  }
 }
@@ -128,11 +118,7 @@ void TPrintArrays::writeArray( const char *name, char* arr,
     	  ff << "#  ";
     }
     gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
-#ifdef IPMGEMPLUGIN // 24/08/2010
     strip(str);
-#else
-    str.strip();
-#endif
     ff  << "\'" << str.c_str() << "\'" << " ";
  }
 }

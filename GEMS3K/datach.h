@@ -109,7 +109,7 @@ typedef struct   // Structure DataCH
 }
 DATACH;
 
-#ifdef IPMGEMPLUGIN
+
 
 #ifndef _chbr_classes_h_
 #define _chbr_classes_h_
@@ -213,7 +213,7 @@ enum SolDCLcodes {
                              // (sorption) phase
 };
 */
-#endif
+
 // -----------------------------------------------------------------------------
 // End of datach.h
 

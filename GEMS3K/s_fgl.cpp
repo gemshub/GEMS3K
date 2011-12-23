@@ -22,9 +22,7 @@
 
 #include "s_fgl.h"
 #include "verror.h"
-#ifndef IPMGEMPLUGIN
-  #include "m_const.h"
-#endif
+
 
 
 
@@ -797,37 +795,6 @@ long int TPRSVcalc::ResidualFunct( double *fugpure )
 	return iRet;
 }
 
-
-#ifndef IPMGEMPLUGIN
-
-// Calculates properties of pure fluids when called from DCthermo
-long int TPRSVcalc::PRSVCalcFugPure( double Tmin, float *Cpg, double *FugProps )
-{
-	long int retCode = 0;
-	double Coeff[7];
-
-	for( int ii=0; ii<7; ii++ )
-		Coeff[ii] = (double)Cpg[ii];
-
-	if( (Tk >= Tmin) && (Tk < 1e4) && (Pbar >= 1e-5) && (Pbar < 1e5) )
-	{
-		retCode = FugacityPT( 0, Coeff );
-		for( int i=0; i<6; i++ )
-			FugProps[i] = Fugpure[0][i];
-		return retCode;
-	}
-
-	else
-	{
-		for( int i=1; i<6; i++ )
-			FugProps[i] = 0.;
-		FugProps[0] = 1.;
-		FugProps[4] = 8.31451*Tk/Pbar;
-		return -1;
-	}
-}
-
-#endif
 
 
 
@@ -2202,52 +2169,6 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
  }
 
 
-#ifndef IPMGEMPLUGIN
-
-// Calculates properties of pure fluids when called from DCthermo
-long int TCGFcalc::CGcalcFugPure( double Tmin, float *Cemp, double *FugProps )
-{
-	long int retCode = 0;
-	double T, P, Fugacity = 0.1, Volume = 0.0;
-	double X[1] = {1.};
-	double roro = 1.;  // added 21.06.2008 (TW)
-	double Coeff[12];  // MAXEOSPARAM = 20;
-	double Eos4parPT[4] = { 0.0, 0.0, 0.0, 0.0 },
-		Eos4parPT1[4] = { 0.0, 0.0, 0.0, 0.0 } ;
-
-	T = Tk;
-	P = Pbar;
-
-	for(long int ii=0; ii<12; ii++ )
-		Coeff[ii] = (double)Cemp[ii];
-
-	// Calling CG EoS functions here
-	if( (Tk >= Tmin) && (Tk < 1e4) && (Pbar >= 1e-6) && (Pbar < 1e5) )
-	{
-		retCode = CGFugacityPT( Coeff, Eos4parPT, Fugacity, Volume, P, T, roro );
-		FugProps[0] = Fugacity/Pbar;
-		FugProps[1] = 8.31451 * Tk * log( Fugacity / P );
-		FugProps[4] = Volume;
-		retCode = CGFugacityPT( Coeff, Eos4parPT1, Fugacity, Volume, P, T+T*DELTA, roro );
-		CGResidualFunct( X, Eos4parPT, Eos4parPT1, 1, roro, T );
-		FugProps[2] = Hrs;
-		FugProps[3] = Srs;
-		return retCode;
-	}
-
-	else
-	{
-		for( int i=1; i<6; i++ )
-			FugProps[i] = 0.;
-		FugProps[0] = 1.;
-		FugProps[4] = 8.31451*Tk/Pbar;
-		return -1;
-	}
-}
-
-#endif
-
-
 
 //=======================================================================================================
 // Implementation of EOSPARAM class (used by TCGFcalc class)
@@ -3138,40 +3059,6 @@ long int TSRKcalc::ResidualFunct( double *fugpure )
 }
 
 
-#ifndef IPMGEMPLUGIN
-
-// Calculates properties of pure fluids when called from DCthermo
-long int TSRKcalc::SRKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
-{
-	long int retCode = 0;
-	double Coeff[7];
-
-	for( int ii=0; ii<7; ii++ )
-		Coeff[ii] = (double)Cpg[ii];
-
-	if( (Tk >= Tmin) && (Tk < 1e4) && (Pbar >= 1e-5) && (Pbar < 1e5) )
-	{
-		retCode = FugacityPT( 0, Coeff );
-		for( int i=0; i<6; i++ )
-			FugProps[i] = Fugpure[0][i];
-		return retCode;
-	}
-
-	else
-	{
-		for( int i=1; i<6; i++ )
-			FugProps[i] = 0.;
-		FugProps[0] = 1.;
-		FugProps[4] = 8.31451*Tk/Pbar;
-		return -1;
-	}
-}
-
-#endif
-
-
-
-
 
 //=======================================================================================================
 // Peng-Robinson (PR78) model for fluid mixtures
@@ -3936,40 +3823,6 @@ long int TPR78calc::ResidualFunct( double *fugpure )
 }
 
 
-#ifndef IPMGEMPLUGIN
-
-// Calculates properties of pure fluids when called from DCthermo
-long int TPR78calc::PR78CalcFugPure( double Tmin, float *Cpg, double *FugProps )
-{
-	long int retCode = 0;
-	double Coeff[7];
-
-	for( int ii=0; ii<7; ii++ )
-		Coeff[ii] = (double)Cpg[ii];
-
-	if( (Tk >= Tmin) && (Tk < 1e4) && (Pbar >= 1e-5) && (Pbar < 1e5) )
-	{
-		retCode = FugacityPT( 0, Coeff );
-		for( int i=0; i<6; i++ )
-			FugProps[i] = Fugpure[0][i];
-		return retCode;
-	}
-
-	else
-	{
-		for( int i=1; i<6; i++ )
-			FugProps[i] = 0.;
-		FugProps[0] = 1.;
-		FugProps[4] = 8.31451*Tk/Pbar;
-		return -1;
-	}
-}
-
-#endif
-
-
-
-
 
 //=======================================================================================================
 // Compensated Redlich-Kwong (CORK) model for fluid mixtures
@@ -4605,40 +4458,6 @@ long int TCORKcalc::ResidualFunct()
 
     return 0;
 }
-
-
-#ifndef IPMGEMPLUGIN
-
-// Calculates properties of pure fluids when called from DCthermo
-long int TCORKcalc::CORKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
-{
-        long int retCode = 0;
-        double Coeff[7];
-
-        for( int ii=0; ii<7; ii++ )
-                Coeff[ii] = (double)Cpg[ii];
-
-        if( (Tk >= Tmin) && (Tk < 1e4) && (Pbar >= 1e-5) && (Pbar < 1e5) )
-        {
-                retCode = FugacityPT( 0, Coeff );
-                for( int i=0; i<6; i++ )
-                        FugProps[i] = Fugpure[0][i];
-                return retCode;
-        }
-
-        else
-        {
-                for( int i=1; i<6; i++ )
-                        FugProps[i] = 0.;
-                FugProps[0] = 1.;
-                FugProps[4] = 8.31451*Tk/Pbar;
-                return -1;
-        }
-}
-
-#endif
-
-
 
 
 

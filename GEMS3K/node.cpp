@@ -28,14 +28,9 @@
 #include <io.h>
 #endif
 
-#ifndef IPMGEMPLUGIN
-  #include "service.h"
-  #include "visor.h"
-#else
   istream& f_getline(istream& is, gstring& str, char delim);
-#endif
 
-TNode* TNode::na;
+// TNode* TNode::na;
 
 // Conversion factors
 const double bar_to_Pa = 1e5,
@@ -116,17 +111,17 @@ long int TNode::GEM_run( bool uPrimalSol )
 // setting up up PIA or AIA mode
    if( CNode->NodeStatusCH == NEED_GEM_SIA )
    {
-	   pmm->pNP = 1;
+	   pm.pNP = 1;
 	   unpackDataBr( uPrimalSol );
    }
    else if( CNode->NodeStatusCH == NEED_GEM_AIA )
-	     {  pmm->pNP = 0; // As default setting AIA mode
+	     {  pm.pNP = 0; // As default setting AIA mode
 	        unpackDataBr( false );
          }
         else
 	       return CNode->NodeStatusCH;
    // GEM IPM calculation of equilibrium state
-   CalcTime = profil->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
+   CalcTime = ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM , this);
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
     CNode->IterDone = NumIterFIA+NumIterIPM;
@@ -137,7 +132,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // *********************************************************
 
     // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = profil->testMulti();
+    long int erCode = testMulti();
 
     if( erCode )
     {
@@ -157,12 +152,12 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
    catch(TError& err)
    {
-        if( profil->pa.p.PSM  )
+        if( pa.p.PSM  )
 	{
 		fstream f_log("ipmlog.txt", ios::out|ios::app );
         f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
           err.title.c_str() << ":" << endl;
-       if( profil->pa.p.PSM >= 2  )
+       if( pa.p.PSM >= 2  )
           f_log  << err.mess.c_str() << endl;
 	}
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
@@ -273,38 +268,22 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name,
-#ifdef IPMGEMPLUGIN
                           long int* nodeTypes, bool /*getNodT1*/)
-#else
-                          long int* nodeTypes, bool getNodT1)
-#endif
 {
   long int i;
-#ifdef IPMGEMPLUGIN
   fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
     {
-#else
-      size_t npos = gstring::npos;
-#endif
      bool binary_f = false;
      gstring lst_in = ipmfiles_lst_name;
      gstring Path = "";         // was " "   fixed 10.12.2009 by DK
 // Get path
-#ifdef IPMGEMPLUGIN
 #ifdef _WIN32
       size_t pos = lst_in.rfind("\\");// HS keep this on windows
 #else      
       size_t pos = lst_in.rfind("/"); // HS keep this on linux
 #endif
-#else
-      size_t pos = lst_in.rfind("\\");
-      if( pos == npos )
-         pos = lst_in.rfind("/");
-      else
-         pos = max(pos, lst_in.rfind("/") );
-#endif
-	  if( pos < npos )
+      if( pos < npos )
       Path = lst_in.substr(0, pos+1);
 
 //  open file stream for the file names list file
@@ -348,19 +327,11 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 if( binary_f )
  {
    GemDataStream f_m(mult_in, ios::in|ios::binary);
-//#ifdef IPMGEMPLUGIN
-//    profil->readMulti(f_m);
-//#else
-    profil->readMulti( f_m);
-//#endif
+    readMulti( f_m, this);
   }
   else
   {
-//#ifdef IPMGEMPLUGIN
-//        profil->readMulti(mult_in.c_str());
-//#else
-    profil->readMulti( this, mult_in.c_str());
-//#endif
+    readMulti( this, mult_in.c_str());
   }
 
 // Prepare for reading DBR_DAT files
@@ -368,11 +339,6 @@ if( binary_f )
      while( !f_lst.eof() )  // For all DBR_DAT files listed
      {
 
-#ifndef IPMGEMPLUGIN
-   pVisor->Message( 0, "GEM2MT node array",
-      "Reading from disk a set of node array files to resume an interrupted RMT task.\n"
-           "Please, wait...", i, nNodes() );
-#endif
 
 // Reading DBR_DAT file into work DATABR structure
          if( i )  // Comma only after the first DBR_DAT file!
@@ -397,14 +363,6 @@ if( binary_f )
 // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
 //    unpackDataBr();
 
-#ifndef IPMGEMPLUGIN
-        if( getNodT1 )  // optional parameter used only when reading multiple
-        	// DBR files after coupled modeling task interruption in GEM-Selektor
-        {
-           setNodeArray( dbr_file, i, binary_f );
-        }
-        else
-#endif
         {
 // Copying data from work DATABR structure into the node array
 // (as specified in nodeTypes array)
@@ -412,16 +370,12 @@ if( binary_f )
          }
           i++;
      }  // end while()
-#ifndef IPMGEMPLUGIN
-   pVisor->CloseMessage();
-#endif
 
     ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
     checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
 
    return 0;
 
-#ifdef IPMGEMPLUGIN
     }
     catch(TError& err)
     {
@@ -432,7 +386,6 @@ if( binary_f )
         return -1;
     }
     return 1;
-#endif
 }
 
 //-----------------------------------------------------------------
@@ -931,12 +884,12 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       ARout = new double[ CSD->nICb ];   // Potential memory leak ! ! ! ! ! ! ! !
 
     if( xBR < CSD->nPSb )
-       for( ii=0; ii<pCSD()->nICb; ii++ )
+       for( ii=0; ii<CSD->nICb; ii++ )
          ARout[ii] = CNode->bPS[ xBR * CSD->nICb + ii ];
     else
     {
       long int DCx = Phx_to_DCx( Ph_xDB_to_xCH(xBR) );
-      for( ii=0; ii<pCSD()->nICb; ii++ )
+      for( ii=0; ii<CSD->nICb; ii++ )
       {
          ARout[ii] = CSD->A[ IC_xDB_to_xCH(ii) + DCx * CSD->nIC];
          ARout[ii] *= CNode->xDC[ DC_xCH_to_xDB(DCx) ];
@@ -952,7 +905,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	double muDC = 0;
 
 	xCH = DC_xDB_to_xCH(xdc);
-    for( ii=0; ii<pCSD()->nICb; ii++ )
+    for( ii=0; ii<CSD->nICb; ii++ )
            muDC += CSD->A[  xCH * CSD->nIC + IC_xDB_to_xCH(ii) ] * CNode->uIC[ ii ];
 
     if( norm )
@@ -967,7 +920,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	 double Mj  = Get_muDC( xdc, true );
 	 double Mj0 = DC_G0( DC_xDB_to_xCH(xdc), CNode->P, CNode->TK,  true );
      return exp(Mj-Mj0);
-	 // return 	pow(10.0,pmm->Y_la[xCH]);
+	 // return 	pow(10.0,pm.Y_la[xCH]);
   }
 
   // Retrieves concentration of Dependent Component (xdc is the DC DBR index) in its phase
@@ -994,13 +947,13 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	     case DC_PEL_CARRIER:
 	     case DC_SUR_MINAL:
 	     case DC_SUR_CARRIER:
-	    	                  DCcon =  CNode->xDC[xdc]/CNode->xPH[xph];  //pmp->Wx[xCH];
+	    	                  DCcon =  CNode->xDC[xdc]/CNode->xPH[xph];  //pm.Wx[xCH];
 	                          break;
 	      case DC_GAS_COMP:
 	      case DC_GAS_H2O:
 	      case DC_GAS_CO2:
 	      case DC_GAS_H2:
-	      case DC_GAS_N2:    DCcon =  CNode->xDC[xdc]/CNode->xPH[xph]*CNode->P;  //pmp->Wx[xCH]*(pmp->P*bar_to_Pa);
+	      case DC_GAS_N2:    DCcon =  CNode->xDC[xdc]/CNode->xPH[xph]*CNode->P;  //pm.Wx[xCH]*(pm.P*bar_to_Pa);
 	                          break;
 	     case DC_AQ_PROTON:
 	     case DC_AQ_SPECIES:
@@ -1043,7 +996,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	                Factor = 1./MMC/CNode->xPA[0]; // molality
 	            else Factor = 0.0;
 
-	    	    DCcon =  CNode->xDC[xdc]*Factor;  //pmp->Y_m[xCH];
+	    	    DCcon =  CNode->xDC[xdc]*Factor;  //pm.Y_m[xCH];
 	          }
 	          break;
 	      default:
@@ -1064,64 +1017,64 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	 //double Mj  = DC_mu( xCH, true );
 	 //double Mj0 = DC_G0( xCH, CNode->P, CNode->TK,  true );
 	 //return (Mj-Mj0)/2.302585093;
-	 return 	pow(10.0,pmm->Y_la[xCH]);
+	 return 	pow(10.0,pm.Y_la[xCH]);
   }
 
     
   // Functions needed by GEM_FIT. Setting parameters for activity coefficient models.
-    //     aIPx     = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
+    //     aIPx     = pm.IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
     //                               // -> NPar x MaxOrd   added 07.12.2006   KD
-    //     aIPc     = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
-    //     aDCc     = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
-    //     NComp    = pmp->L1[k];          // Number of components in the phase
-    //     NPar     = pmp->LsMod[k*3];      // Number of interaction parameters
-    //     NPcoef   = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
-    //     MaxOrd   = pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
-    //     NP_DC    = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
+    //     aIPc     = pm.PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
+    //     aDCc     = pm.DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
+    //     NComp    = pm.L1[k];          // Number of components in the phase
+    //     NPar     = pm.LsMod[k*3];      // Number of interaction parameters
+    //     NPcoef   = pm.LsMod[k*3+2];  // and number of coefs per parameter in PMc table
+    //     MaxOrd   = pm.LsMod[k*3+1];  // max. parameter order (cols in IPx)
+    //     NP_DC    = pm.LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
   void TNode::Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase)
   {
     long ip_IPx=0; long ip_IPc=0; long ip_DCc=0;
     for(int k=0;k<((*index_phase)+1);k++)
     {
         *index_phase_aIPx = ip_IPx;
-        ip_IPx          += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
+        ip_IPx          += pm.LsMod[k*3] * pm.LsMod[k*3+1];
         *index_phase_aIPc = ip_IPc;
-        ip_IPc          += pmm->LsMod[k*3] * pmm->LsMod[k*3+2];
+        ip_IPc          += pm.LsMod[k*3] * pm.LsMod[k*3+2];
         *index_phase_aDCc = ip_DCc;
-        ip_DCc          += pmm->LsMdc[k] * pmm->L1[k];
+        ip_DCc          += pm.LsMdc[k] * pm.L1[k];
     }
   }
 
   void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase )
   {
-    *NPar   = pmm->LsMod[(*index_phase)*3];
-    *NPcoef = pmm->LsMod[(*index_phase)*3+2];
-    *MaxOrd = pmm->LsMod[(*index_phase)*3+1];
-    *NComp  = pmm->L1[(*index_phase)];
-    *NP_DC  = pmm->LsMdc[(*index_phase)];
+    *NPar   = pm.LsMod[(*index_phase)*3];
+    *NPcoef = pm.LsMod[(*index_phase)*3+2];
+    *MaxOrd = pm.LsMod[(*index_phase)*3+1];
+    *NComp  = pm.L1[(*index_phase)];
+    *NP_DC  = pm.LsMdc[(*index_phase)];
     cout<<"*NPcoef in node.cpp = "<<*NPcoef<<endl;
   }
 
   void TNode::Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase )
   { 
     int rc, NPar, NPcoef;
-    NPar = pmm->LsMod[(*index_phase)*3];
-    NPcoef =  pmm->LsMod[(*index_phase)*3+2];
+    NPar = pm.LsMod[(*index_phase)*3];
+    NPcoef =  pm.LsMod[(*index_phase)*3+2];
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
     {
-        (pmm->PMc[(*index_phase_aIPc)+rc]) = aIPc[rc];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+        (pm.PMc[(*index_phase_aIPc)+rc]) = aIPc[rc];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
     }
   }
 
   void TNode::Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase )
   { 
     int i; long NPar, NPcoef;
-    NPar   = pmm->LsMod[(*index_phase)*3];
-    NPcoef = pmm->LsMod[(*index_phase)*3+2];
+    NPar   = pm.LsMod[(*index_phase)*3];
+    NPcoef = pm.LsMod[(*index_phase)*3+2];
     i = 0;
     while (i<(NPar*NPcoef))
     {
-      *(aIPc + i)   = pmm->PMc[(*index_phase_aIPc) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      *(aIPc + i)   = pm.PMc[(*index_phase_aIPc) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
@@ -1129,12 +1082,12 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   void TNode::Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase )
   {
     int i; long NPar, MaxOrd;
-    NPar   = pmm->LsMod[(*index_phase)*3];
-    MaxOrd = pmm->LsMod[(*index_phase)*3+1];
+    NPar   = pm.LsMod[(*index_phase)*3];
+    MaxOrd = pm.LsMod[(*index_phase)*3+1];
     i = 0;
     while (i<(NPar*MaxOrd))
     {
-      *(aIPx + i)   = pmm->IPx[(*index_phase_aIPx) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      *(aIPx + i)   = pm.IPx[(*index_phase_aIPx) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
@@ -1142,23 +1095,23 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   void TNode::Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase )
   { 
     int rc, NComp, NP_DC;
-    NComp = pmm->L1[(*index_phase)];
-    NP_DC = pmm->LsMdc[(*index_phase)];
+    NComp = pm.L1[(*index_phase)];
+    NP_DC = pm.LsMdc[(*index_phase)];
     for ( rc=0;rc<NComp*NP_DC;rc++ )
     {
-        (pmm->DMc[(*index_phase_aDCc)+rc]) = aDCc[rc];		// end-member param coeffs, NComp * NP_DC
+        (pm.DMc[(*index_phase_aDCc)+rc]) = aDCc[rc];		// end-member param coeffs, NComp * NP_DC
     }
   }
 
   void TNode::Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase )
   {
     int i; long NComp, NP_DC;
-    NComp = pmm->L1[(*index_phase)];
-    NP_DC = pmm->LsMdc[(*index_phase)];
+    NComp = pm.L1[(*index_phase)];
+    NP_DC = pm.LsMdc[(*index_phase)];
     i = 0;
     while (i<(NComp*NP_DC))
     {
-      *(aDCc + i)   = pmm->DMc[(*index_phase_aDCc)+i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      *(aDCc + i)   = pm.DMc[(*index_phase_aDCc)+i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
@@ -1182,26 +1135,26 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   double TNode::DC_c(const long int xCH)
   {
     double DCcon = 0.;
-	switch( pmm->DCC[xCH] )
+	switch( pm.DCC[xCH] )
     {
-     case DC_SCP_CONDEN: DCcon =  pmm->Wx[xCH];
+     case DC_SCP_CONDEN: DCcon =  pm.Wx[xCH];
                           break;
      case DC_AQ_PROTON:
      case DC_AQ_SPECIES:
-     case DC_AQ_SURCOMP: DCcon =  pmm->Y_m[xCH];
+     case DC_AQ_SURCOMP: DCcon =  pm.Y_m[xCH];
                           break;
      case DC_AQ_SOLVENT:
-     case DC_AQ_SOLVCOM: DCcon =  pmm->Wx[xCH];
+     case DC_AQ_SOLVCOM: DCcon =  pm.Wx[xCH];
                           break;
       case DC_GAS_COMP:
       case DC_GAS_H2O:
       case DC_GAS_CO2:
       case DC_GAS_H2:
-      case DC_GAS_N2:    DCcon =  pmm->Wx[xCH]*(pmm->P*bar_to_Pa);
+      case DC_GAS_N2:    DCcon =  pm.Wx[xCH]*(pm.P*bar_to_Pa);
                           break;
       case DC_SOL_IDEAL:
       case DC_SOL_MINOR:
-      case DC_SOL_MAJOR: DCcon =  pmm->Wx[xCH];
+      case DC_SOL_MAJOR: DCcon =  pm.Wx[xCH];
                           break;
       case DC_SUR_GROUP:
       case DC_SSC_A0:
@@ -1217,11 +1170,11 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       case DC_SUR_COMPLEX:
       case DC_SUR_IPAIR:
       case DC_IESC_A:
-      case DC_IEWC_B:     DCcon =  pmm->Y_m[xCH];
+      case DC_IEWC_B:     DCcon =  pm.Y_m[xCH];
                           break;
       case DC_PEL_CARRIER:
       case DC_SUR_MINAL:
-      case DC_SUR_CARRIER: DCcon =  pmm->Wx[xCH];
+      case DC_SUR_CARRIER: DCcon =  pm.Wx[xCH];
                            break;
       default:
           break; // error in DC class code
@@ -1235,11 +1188,11 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   // false - in J/mol; true (default) - in mol/mol
   double TNode::DC_mu(const long int xCH, bool norm)
   {
-	double muDC = pmm->Fx[xCH];
+	double muDC = pm.Fx[xCH];
  //  for(long ii=0; ii<CSD->nIC; ii++ )
- //    muDC += pmm->A[  xCH * CSD->nIC + ii ] * (pmm->U[ii]);
+ //    muDC += pm.A[  xCH * CSD->nIC + ii ] * (pm.U[ii]);
     if( norm )
-        return muDC/pmm->RT; // (R_CONSTANT * (CNode->TK));
+        return muDC/pm.RT; // (R_CONSTANT * (CNode->TK));
     else
         return muDC;
   }
@@ -1252,11 +1205,11 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   double TNode::DC_mu0(const long int xCH, bool norm)
   {
 	return  DC_G0( xCH, CNode->P, CNode->TK, norm );
-	/*double  G0 = pmm->G0[xCH];
+	/*double  G0 = pm.G0[xCH];
     if( norm )
       return G0;
     else
-      return G0*pmm->RT;
+      return G0*pm.RT;
     */
   }
 
@@ -1273,14 +1226,13 @@ void TNode::allocMemory()
     // mem_set( CNode, 0, sizeof(DATABR) );
     databr_reset( CNode, 2 );
 
-#ifdef IPMGEMPLUGIN
 // internal structures
     multi = new TMulti();
-    pmm = multi->GetPM();
-    profil = new TProfil( multi );
-    TProfil::pm = profil;
-    multi->setProfil(profil);
-#endif
+//    pm = multi->GetPM();
+//    profil = new TProfil( multi );
+//    TProfil::pm = profil;
+    
+  //  multi->setProfil(profil);
 }
 
 void TNode::freeMemory()
@@ -1290,336 +1242,25 @@ void TNode::freeMemory()
    delete CSD;
    CNode = databr_free( CNode );
 
-#ifdef IPMGEMPLUGIN
   delete multi;
-  delete profil;
-#endif
 }
 
-#ifndef IPMGEMPLUGIN
-
-// Makes start DATACH and DATABR data from GEMS internal data (MULTI and other)
-void TNode::MakeNodeStructures(
-		short anICb,       // number of stoichiometry units (<= nIC) used in the data bridge
-		short anDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
-		short anPHb,     	// number of phases (<= nPH) used in the data bridge
-		short* axIC,   // ICNL indices in DATABR IC vectors [nICb]
-		short* axDC,   // DCNL indices in DATABR DC list [nDCb]
-		short* axPH,   // PHNL indices in DATABR phase vectors [nPHb]
-    float* Tai, float* Pai,
-    short nTp_, short nPp_, float Ttol_, float Ptol_  )
-{
-  int ii;
-  TCIntArray aSelIC;
-  TCIntArray aSelDC;
-  TCIntArray aSelPH;
-
-// make lists
-  for( ii=0; ii<anICb; ii++)
-     aSelIC.Add( axIC[ii] );
-  for( ii=0; ii<anDCb; ii++)
-     aSelDC.Add( axDC[ii] );
-  for( ii=0; ii<anPHb; ii++)
-     aSelPH.Add( axPH[ii] );
-
-// set default data and realloc arrays
-   makeStartDataChBR( 0, aSelIC, aSelDC, aSelPH,
-                      nTp_, nPp_, Ttol_, Ptol_, Tai, Pai );
-}
-
-// Make start DATACH and DATABR data from GEMS internal data (MULTI and other)
-void TNode::MakeNodeStructures( QWidget* par, bool select_all,
-    float *Tai, float *Pai,
-    short nTp_, short nPp_, float Ttol_, float Ptol_  )
-{
-
-  //MULTI *mult = profil->pmp;
-  TCStringArray aList;
-  TCIntArray aSelIC;
-  TCIntArray aSelDC;
-  TCIntArray aSelPH;
-
-// select lists
-    aList.Clear();
-    for(int ii=0; ii< pmm->N; ii++ )
-    {  if( select_all )
-         aSelIC.Add( ii );
-       else
-         aList.Add( gstring( pmm->SB[ii], 0, MAXICNAME+MAXSYMB));
-    }
-    if( !select_all  )
-      aSelIC = vfMultiChoice(par, aList,
-          "Please, mark Independent Components for selection into DataBridge");
-
-    aList.Clear();
-    for(int ii=0; ii< pmm->L; ii++ )
-    {  if( select_all )
-         aSelDC.Add( ii );
-       else
-       aList.Add( gstring( pmm->SM[ii], 0, MAXDCNAME));
-    }
-    if( !select_all  )
-       aSelDC = vfMultiChoice(par, aList,
-         "Please, mark Dependent Components for selection into DataBridge");
-
-    aList.Clear();
-    for(int ii=0; ii< pmm->FI; ii++ )
-    {  if( select_all )
-         aSelPH.Add( ii );
-       else
-       aList.Add( gstring( pmm->SF[ii], 0, MAXPHNAME+MAXSYMB));
-    }
-    if( !select_all  )
-       aSelPH = vfMultiChoice(par, aList,
-         "Please, mark Phases for selection into DataBridge");
-
-
-// set default data and realloc arrays
-   makeStartDataChBR( par, aSelIC, aSelDC, aSelPH,
-                      nTp_, nPp_, Ttol_, Ptol_, Tai, Pai );
-}
-
-
-// Writing dataCH structure to binary file
-void TNode::makeStartDataChBR( QWidget* par,
-  TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-  short nTp_, short nPp_, float Ttol_, float Ptol_,
-  float *Tai, float *Pai )
-{
-// set sizes for DataCh
-  uint ii;
-  int i1;
-// reallocates memory for     DATACH  *CSD;  and  DATABR  *CNode;
-  if( !CSD )
-     CSD = new DATACH;
-  if( !CNode )
-     CNode = new DATABR;
-
-  CSD->nIC = pmm->N;
-  CSD->nDC = pmm->L;
-  CSD->nDCs = pmm->Ls;
-  CSD->nPH = pmm->FI;
-  CSD->nPS = pmm->FIs;
-  CSD->nTp = nTp_;
-  CSD->nPp = nPp_;
-  if( pmm->Aalp )
-    CSD->nAalp = 1;
-  else
-    CSD->nAalp = 0;
-  CSD->iGrd = 0;
-
-// These dimensionalities define sizes of dynamic data in DATABR structure!!!
-
-  CSD->nICb = (long int)selIC.GetCount();
-  CSD->nDCb = (long int)selDC.GetCount();
-  CSD->nPHb = (long int)selPH.GetCount();
-  CSD->nPSb = 0;
-  for( ii=0; ii< selPH.GetCount(); ii++, CSD->nPSb++ )
-   if( selPH[ii] >= pmm->FIs )
-       break;
-  CSD->uRes1 = 0;
-  CSD->dRes1 = 0.;
-  CSD->dRes2 = 0.;
-
-  CSD->Ttol = Ttol_;
-  CSD->Ptol = Ptol_*bar_to_Pa;
-
-// realloc structures DataCh&DataBr
-
-  datach_realloc();
-  databr_realloc();
-
-// set dynamic data to DataCH
-
-  for( ii=0; ii< selIC.GetCount(); ii++ )
-    CSD->xic[ii] = (long int)selIC[ii];
-  for( ii=0; ii< selDC.GetCount(); ii++ )
-    CSD->xdc[ii] = (long int)selDC[ii];
-  for( ii=0; ii< selPH.GetCount(); ii++ )
-    CSD->xph[ii] = (long int)selPH[ii];
-
-  for( i1=0; i1< CSD->nIC*CSD->nDC; i1++ )
-    CSD->A[i1] = pmm->A[i1];
-
-  for( i1=0; i1< CSD->nPH; i1++ )
-  {
-    CSD->nDCinPH[i1] = pmm->L1[i1];
-    CSD->ccPH[i1] = pmm->PHC[i1];
-    fillValue( CSD->PHNL[i1], ' ', MaxPHN );
-    copyValues( CSD->PHNL[i1], pmm->SF[i1]+MAXSYMB, min(MaxPHN,(long int)MAXPHNAME) );
-  }
-  for( i1=0; i1< CSD->nIC; i1++ )
-  {
-    CSD->ICmm[i1] = pmm->Awt[i1]/kg_to_g;
-    CSD->ccIC[i1] = pmm->ICC[i1];
-    copyValues( CSD->ICNL[i1], pmm->SB[i1] , min(MaxICN,(long int)MAXICNAME) );
-  }
-  for( i1=0; i1< CSD->nDC; i1++ )
-  {
-    CSD->DCmm[i1] = pmm->MM[i1]/kg_to_g;
-    CSD->ccDC[i1] = pmm->DCC[i1];
-    copyValues( CSD->DCNL[i1], pmm->SM[i1] , min(MaxDCN,(long int)MAXDCNAME) );
-  }
-//  fillValue( CSD->DD, 0., CSD->nDCs);
-
-// set default data to DataBr
-  // mem_set( &CNode->TK, 0, 32*sizeof(double));
-  // CNode->NodeHandle = 0;
-  // CNode->NodeTypeHY = normal;
-  // CNode->NodeTypeMT = normal;
-  // CNode->NodeStatusFMT = Initial_RUN;
-  //   CNode->NodeStatusCH = NEED_GEM_AIA;
-  // CNode->IterDone = 0;
-  databr_reset( CNode, 1 );
-
-  if( pmm->pNP == 0 )
-   CNode->NodeStatusCH = NEED_GEM_AIA;
-  else
-    CNode->NodeStatusCH = NEED_GEM_SIA;
-
-  CNode->TK = pmm->TCc+C_to_K; //25
-  CNode->P = pmm->Pc*bar_to_Pa; //1
-  CNode->Ms = pmm->MBX; // in kg
-
-// arrays
-   for( i1=0; i1<CSD->nICb; i1++ )
-    CNode->bIC[i1] = pmm->B[ CSD->xic[i1] ];
-
-   for( i1=0; i1<CSD->nDCb; i1++ )
-   {
-     CNode->dul[i1] = pmm->DUL[ CSD->xdc[i1] ];
-     CNode->dll[i1] = pmm->DLL[ CSD->xdc[i1] ];
-    }
-
-   if( CSD->nAalp >0 )
-      for( i1=0; i1< CSD->nPHb; i1++ )
-        CNode->aPH[i1] = pmm->Aalp[CSD->xph[i1]]*kg_to_g;
-
-// puts calculated & dynamic data to DataBR
-   packDataBr();
-
-// must be changed to matrix structure  ???????
-// setted CSD->nPp*CSD->nTp = 1
-   for( i1=0; i1<CSD->nTp; i1++ )
-    CSD->TKval[i1] = Tai[i1]+C_to_K;
-   for( i1=0; i1<CSD->nPp; i1++ )
-    CSD->Pval[i1] = Pai[i1];
-
-   G0_V0_H0_Cp0_DD_arrays( par );
-
-   for( i1=0; i1<CSD->nPp; i1++ )
-    CSD->Pval[i1] = Pai[i1]*bar_to_Pa;
-
-   if(  CSD->iGrd  )
-     for( i1=0; i1< CSD->nDCs*CSD->nPp*CSD->nTp; i1++ )
-       CSD->DD[i1] = 0.;
-}
-
-void TNode::G0_V0_H0_Cp0_DD_arrays( QWidget* par )
-{
-  int kk, jj, ii, ll;
-  double cT, cP;
-  double *G0, *V0, *H0, *Cp0, *S0, *A0, *U0, denW[5], epsW[5], denWg[5], epsWg[5];
-  int *tp_mark;
-
-  G0 =  new double[profil->mup->L];
-  V0 =  new double[profil->mup->L];
-  H0 =  new double[profil->mup->L];
-  Cp0 = new double[profil->mup->L];
-  S0 = new double[profil->mup->L];
-  A0 = new double[profil->mup->L];
-  U0 = new double[profil->mup->L];
-  tp_mark = new int[profil->mup->L];
-  fillValue( tp_mark, 0, profil->mup->L);
-
-  for(  ii=0; ii<CSD->nTp; ii++)
-  {
-    cT = CSD->TKval[ii]-C_to_K;
-    for(  jj=0; jj<CSD->nPp; jj++)
-    {
-     if( par )
-    	pVisor->Message( par, "Building lookup arrays",
-            "Loading thermodynamic data", ii*CSD->nPp+jj, CSD->nTp*CSD->nPp );
-
-     cP = CSD->Pval[jj];
-     // calculates new G0, V0, H0, Cp0, S0
-    profil->LoadFromMtparm( cT, cP, G0, V0, H0, S0, Cp0,
-    		 A0, U0, denW, epsW, denWg, epsWg, tp_mark);
-     for( kk=0; kk<5; kk++)
-     {
-        ll = ( kk * CSD->nPp + jj) * CSD->nTp + ii;
-        CSD->denW[ ll ] = denW[kk]*1e3;
-        CSD->epsW[ ll ] = epsW[kk];
-        CSD->denWg[ ll ] = denWg[kk]*1e3;
-        CSD->epsWg[ ll ] = epsWg[kk];
-      }
-      // copy to arrays
-     for( kk=0; kk<CSD->nDC; kk++)
-      {
-         ll = ( kk * CSD->nPp + jj) * CSD->nTp + ii;
-         CSD->G0[ll] =  G0[pmm->muj[kk]]; //
-         CSD->V0[ll] =  V0[pmm->muj[kk]]*1e-5;
-         CSD->H0[ll] = H0[pmm->muj[kk]];
-         CSD->Cp0[ll] = Cp0[pmm->muj[kk]];
-         CSD->S0[ll] = S0[pmm->muj[kk]];
-         CSD->A0[ll] = A0[pmm->muj[kk]];
-         CSD->U0[ll] = U0[pmm->muj[kk]];
-      }
-     }
-  }
- if( par )
-  pVisor->CloseMessage();
-  gstring err = "";
-  for( ii =0, kk=0; kk<CSD->nDC; kk++)
-   {
-	  if( tp_mark[pmm->muj[kk]]==1 )
-	  {	  err +=" ";
-	      err += gstring(CSD->DCNL[kk],0, MaxDCN);
-	      if(!((++ii)%5)) err += "\n";
-	  }
-  }
-  if( !err.empty() )
-	  vfMessage(par,"Not quality for TP dependencies of DC", err.c_str());
-  // free memory
-  delete[] G0;
-  delete[] V0;
-  delete[] H0;
-  delete[] Cp0;
-  delete[] S0;
-  delete[] A0;
-  delete[] U0;
-}
-
-//Constructor of the class instance in memory
-TNode::TNode( MULTI *apm  )
-{
-    pmm = apm;
-    profil = TProfil::pm;
-    CSD = 0;
-    CNode = 0;
-    allocMemory();
-    na = this;
-    dbr_file_name = "dbr_file_name";
-}
-
-#else
 // Constructor of the class instance in memory for standalone GEMIPM2K or coupled program
 TNode::TNode()
 {
   CSD = 0;
   CNode = 0;
   allocMemory();
-  na = this;
+//  na = this;
   dbr_file_name = "dbr_file_name";
 }
 
-#endif
 
 
 TNode::~TNode()
 {
    freeMemory();
-   na = 0;
+   // na = 0;
 }
 
 // Extracting and packing GEM IPM results into work DATABR structure
@@ -1628,61 +1269,55 @@ void TNode::packDataBr()
  long int ii;
 
 // set default data to DataBr
-#ifndef IPMGEMPLUGIN
-   CNode->NodeHandle = 0;
-//   CNode->NodeTypeHY = normal;
-   CNode->NodeTypeMT = normal;
-   CNode->NodeStatusFMT = Initial_RUN;
-#endif
 //   CNode->NodeStatusCH = NEED_GEM_AIA;
-   if( pmm->pNP == 0 )
+   if( pm.pNP == 0 )
     CNode->NodeStatusCH = NEED_GEM_AIA;
   else
      CNode->NodeStatusCH = NEED_GEM_SIA;
 
-   CNode->TK = pmm->TCc+C_to_K; //25
-   CNode->P = pmm->Pc*bar_to_Pa; //1
-//   CNode->IterDone = pmm->IT;
-   CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
+   CNode->TK = pm.TCc+C_to_K; //25
+   CNode->P = pm.Pc*bar_to_Pa; //1
+//   CNode->IterDone = pm.IT;
+   CNode->IterDone = pm.ITF+pm.IT;   // Now complete number of FIA and IPM iterations
 // values
-  CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
-  CNode->Gs = pmm->FX;
-  CNode->Hs = pmm->HXc;
-  CNode->IC = pmm->IC;
-  CNode->pH = pmm->pH;
-  CNode->pe = pmm->pe;
-//  CNode->Eh = pmm->FitVar[3];  Bugfix 19.12.2006  KD
-  CNode->Eh = pmm->Eh;
-  CNode->Ms = pmm->MBX;
+  CNode->Vs = pm.VXc*1.e-6; // from cm3 to m3
+  CNode->Gs = pm.FX;
+  CNode->Hs = pm.HXc;
+  CNode->IC = pm.IC;
+  CNode->pH = pm.pH;
+  CNode->pe = pm.pe;
+//  CNode->Eh = pm.FitVar[3];  Bugfix 19.12.2006  KD
+  CNode->Eh = pm.Eh;
+  CNode->Ms = pm.MBX;
 
   // arrays
    for( ii=0; ii<CSD->nPHb; ii++ )
-   {  CNode->xPH[ii] = pmm->XF[ CSD->xph[ii] ];
+   {  CNode->xPH[ii] = pm.XF[ CSD->xph[ii] ];
       if( CSD->nAalp >0 )
-       CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
+       CNode->aPH[ii] = pm.Aalp[ CSD->xph[ii] ]*kg_to_g;
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
-   {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3;
-       CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/kg_to_g;
-       CNode->xPA[ii] = pmm->XFA[ CSD->xph[ii] ];
+   {   CNode->vPS[ii] = pm.FVOL[ CSD->xph[ii] ]/m3_to_cm3;
+       CNode->mPS[ii] = pm.FWGT[ CSD->xph[ii] ]/kg_to_g;
+       CNode->xPA[ii] = pm.XFA[ CSD->xph[ii] ];
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
    for(long int jj=0; jj<CSD->nICb; jj++ )
    { long int   new_ndx= (ii*CSD->nICb)+jj,
            mul_ndx = ( CSD->xph[ii]*CSD->nIC )+ CSD->xic[jj];
-     CNode->bPS[new_ndx] = pmm->BF[ mul_ndx ];
+     CNode->bPS[new_ndx] = pm.BF[ mul_ndx ];
    }
    for( ii=0; ii<CSD->nDCb; ii++ )
    {
-      CNode->xDC[ii] = pmm->X[ CSD->xdc[ii] ];
-      CNode->gam[ii] = pmm->Gamma[ CSD->xdc[ii] ];
-      CNode->dul[ii] = pmm->DUL[ CSD->xdc[ii] ];// always for GEM2MT init
-      CNode->dll[ii] = pmm->DLL[ CSD->xdc[ii] ];// always for GEM2MT init
+      CNode->xDC[ii] = pm.X[ CSD->xdc[ii] ];
+      CNode->gam[ii] = pm.Gamma[ CSD->xdc[ii] ];
+      CNode->dul[ii] = pm.DUL[ CSD->xdc[ii] ];// always for GEM2MT init
+      CNode->dll[ii] = pm.DLL[ CSD->xdc[ii] ];// always for GEM2MT init
    }
    for( ii=0; ii<CSD->nICb; ii++ )
-   {  CNode->bIC[ii] = pmm->B[ CSD->xic[ii] ]; // always for GEM2MT  init
-      CNode->rMB[ii] = pmm->C[ CSD->xic[ii] ];
-      CNode->uIC[ii] = pmm->U[ CSD->xic[ii] ];
+   {  CNode->bIC[ii] = pm.B[ CSD->xic[ii] ]; // always for GEM2MT  init
+      CNode->rMB[ii] = pm.C[ CSD->xic[ii] ];
+      CNode->uIC[ii] = pm.U[ CSD->xic[ii] ];
    }
 }
 
@@ -1698,36 +1333,34 @@ void TNode::unpackDataBr( bool uPrimalSol )
 {
  long int ii;
 
-#ifdef IPMGEMPLUGIN
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
- strncpy( pmm->stkey, buf, EQ_RKLEN );
-#endif
-  pmm->TCc = CNode->TK-C_to_K;
-  pmm->Tc = CNode->TK;
-  pmm->Pc  = CNode->P/bar_to_Pa;
-  pmm->VXc = CNode->Vs/1.e-6; // from cm3 to m3
+ strncpy( pm.stkey, buf, EQ_RKLEN );
+  pm.TCc = CNode->TK-C_to_K;
+  pm.Tc = CNode->TK;
+  pm.Pc  = CNode->P/bar_to_Pa;
+  pm.VXc = CNode->Vs/1.e-6; // from cm3 to m3
   // Obligatory arrays - always unpacked!
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-    pmm->DUL[ CSD->xdc[ii] ] = CNode->dul[ii];
-    pmm->DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
-    if( pmm->DUL[ CSD->xdc[ii] ] < pmm->DLL[ CSD->xdc[ii] ] )
+    pm.DUL[ CSD->xdc[ii] ] = CNode->dul[ii];
+    pm.DLL[ CSD->xdc[ii] ] = CNode->dll[ii];
+    if( pm.DUL[ CSD->xdc[ii] ] < pm.DLL[ CSD->xdc[ii] ] )
     {
        char buf[300];
        sprintf(buf, "Upper kinetic restrictions smolest than lower for DC&RC %-6.6s",
-                         pmm->SM[CSD->xdc[ii]] );
+                         pm.SM[CSD->xdc[ii]] );
        Error("unpackDataBr", buf );
     }
   }
   for( ii=0; ii<CSD->nICb; ii++ )
   {
-      pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
-      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil->pa.p.DB )
+      pm.B[ CSD->xic[ii] ] = CNode->bIC[ii];
+      if( ii < CSD->nICb-1 && pm.B[ CSD->xic[ii] ] < pa.p.DB )
       {
          char buf[300];
          sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
-                           pmm->SB[CSD->xic[ii]], pmm->B[ CSD->xic[ii] ] );
+                           pm.SB[CSD->xic[ii]], pm.B[ CSD->xic[ii] ] );
           Error("unpackDataBr", buf );
       }
 
@@ -1735,51 +1368,51 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     if( CSD->nAalp >0 )
-        pmm->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
+        pm.Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
   }
 
  if( !uPrimalSol )
  {    //  Using primal solution retained in the MULTI structure instead -
     ; // the primal solution data from the DATABR structure are not unpacked
-//   pmm->IT = 0;
+//   pm.IT = 0;
  }
  else {   // Unpacking primal solution provided in the node DATABR structure
-  pmm->IT = 0;
-  pmm->MBX = CNode->Ms;
-  pmm->IC = CNode->IC;
-  pmm->Eh = CNode->Eh;
+  pm.IT = 0;
+  pm.MBX = CNode->Ms;
+  pm.IC = CNode->IC;
+  pm.Eh = CNode->Eh;
   for( ii=0; ii<CSD->nDCb; ii++ )
-  /*    pmm->X[ CSD->xdc[ii] ] = */
-        pmm->Y[ CSD->xdc[ii] ] = CNode->xDC[ii];
+  /*    pm.X[ CSD->xdc[ii] ] = */
+        pm.Y[ CSD->xdc[ii] ] = CNode->xDC[ii];
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
-     pmm->lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
+     pm.lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
   }
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
+   pm.FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
+   pm.FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
 
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
-    pmm->XF[ CSD->xph[ii] ] =
-    pmm->YF[ CSD->xph[ii] ] = CNode->xPH[ii];
+    pm.XF[ CSD->xph[ii] ] =
+    pm.YF[ CSD->xph[ii] ] = CNode->xPH[ii];
   }
 
   for( long int k=0; k<CSD->nPSb; k++ )
   for(long int i=0; i<CSD->nICb; i++ )
   { long int dbr_ndx= (k*CSD->nICb)+i,
           mul_ndx = ( CSD->xph[k]*CSD->nIC )+ CSD->xic[i];
-    pmm->BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
+    pm.BF[ mul_ndx ] = CNode->bPS[dbr_ndx];
   }
 
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->XFA[ CSD->xph[ii] ] = pmm->YFA[ CSD->xph[ii] ] = CNode->xPA[ii];
+   pm.XFA[ CSD->xph[ii] ] = pm.YFA[ CSD->xph[ii] ] = CNode->xPA[ii];
 
   for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->C[ CSD->xic[ii] ] = CNode->rMB[ii];
+   pm.C[ CSD->xic[ii] ] = CNode->rMB[ii];
   for( ii=0; ii<CSD->nICb; ii++ )
-   pmm->U[ CSD->xic[ii] ] = CNode->uIC[ii];
+   pm.U[ CSD->xic[ii] ] = CNode->uIC[ii];
  }
 //  End
 }
@@ -1831,10 +1464,9 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
      else
            str_file = fname;
 
-           profil->outMultiTxt( str_file.c_str()  );
+           outMultiTxt( str_file.c_str()  );
    }
 
-#ifdef IPMGEMPLUGIN
 
 // (9) Optional, for passing the current mass transport iteration information into the work
 // DATABR structure (e.g. for using it in tracing/debugging or in writing DBR files for nodes)
@@ -2122,7 +1754,6 @@ void TNode::GEM_from_MT(
 
 }
 
-#endif
 //-----------------------End of node.cpp--------------------------
 
 
