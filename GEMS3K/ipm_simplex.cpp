@@ -34,38 +34,38 @@ void TMulti::AutoInitialApproximation( )
     try
     {  // Allocation of work arrays
 
-        for( i=0; i<pmp->N; i++) // added SD 15/07/2009
-             pmp->U[i] = 0.;
+        for( i=0; i<pm.N; i++) // added SD 15/07/2009
+             pm.U[i] = 0.;
 
-    	pmp->Ec=0;
-        Q=pmp->L;
+        pm.Ec=0;
+        Q=pm.L;
         DN= new double[Q];
-        DU= new double[Q+pmp->N];
-        B1= new double[pmp->N];
+        DU= new double[Q+pm.N];
+        B1= new double[pm.N];
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
-        for( i=0; i<pmp->N; i++)
+        for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
         EPS = prof->pa.p.EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
-        for(i=0;i<pmp->L;i++)
-            if(fabs(pmp->G[i])>1E-19)
+        for(i=0;i<pm.L;i++)
+            if(fabs(pm.G[i])>1E-19)
                 T++;
-        for(j=0;j<pmp->N;j++)
-            for(i=0;i<pmp->L;i++)
-                if(fabs(*(pmp->A+i*pmp->N+j))>1E-19)
+        for(j=0;j<pm.N;j++)
+            for(i=0;i<pm.L;i++)
+                if(fabs(*(pm.A+i*pm.N+j))>1E-19)
                     T++;
-        if( pmp->PLIM ) // Setting constraints on x elements
+        if( pm.PLIM ) // Setting constraints on x elements
             Set_DC_limits(  DC_LIM_INIT );
 
         for(i=0;i<Q;i++)
         {
-            DN[i]=pmp->DLL[i];
-            DU[i]=/*1e+6;//*/pmp->DUL[i];
+            DN[i]=pm.DLL[i];
+            DU[i]=/*1e+6;//*/pm.DUL[i];
         }
 
-        // for(i=Q;i<Q+pmp->N;i++) DU[i]=0.;
+        // for(i=Q;i<Q+pm.N;i++) DU[i]=0.;
         // Allocation of arrays on T
         AA= new double[T];
         STR= new long int[T];
@@ -79,57 +79,57 @@ void TMulti::AutoInitialApproximation( )
         //   aSubMod[MD_EQCALC]->ModUpdate(" SIMPLEX Approximation ");
 
         // Copying vector b
-        for(j=0;j<pmp->N;j++)
-            B1[j]=pmp->B[j];
+        for(j=0;j<pm.N;j++)
+            B1[j]=pm.B[j];
         k=-1;
-        for(i=0;i<pmp->L;i++)
+        for(i=0;i<pm.L;i++)
         {  // Loading non-zero values
-            if(fabs(pmp->G[i])>1E-19)
+            if(fabs(pm.G[i])>1E-19)
             {
                 k++;
-                AA[k]=-pmp->G[i];
+                AA[k]=-pm.G[i];
                 NMB[i]=k+1;
             }
             else NMB[i]=k+2;
-            for(j=0;j<pmp->N;j++)
-                if(fabs(*(pmp->A+i*pmp->N+j))>1E-19)
+            for(j=0;j<pm.N;j++)
+                if(fabs(*(pm.A+i*pm.N+j))>1E-19)
                 {
                     k++;
-                    AA[k]=*(pmp->A+i*pmp->N+j);
+                    AA[k]=*(pm.A+i*pm.N+j);
                     STR[k]=j+1;
                 }
         }
         NMB[Q]=T+1;
         // Calling generic simplex solver
-        SolveSimplex(pmp->N,Q,T,GZ,EPS,DN,DU,B1,pmp->U,AA,STR,NMB);
+        SolveSimplex(pm.N,Q,T,GZ,EPS,DN,DU,B1,pm.U,AA,STR,NMB);
 
         // unloading simplex solution into a copy of x vector
-        for(i=0;i<pmp->L;i++)
-            pmp->Y[i]=DU[i];
+        for(i=0;i<pm.L;i++)
+            pm.Y[i]=DU[i];
 
         // calculating initial quantities of phases
-        TotalPhasesAmounts( pmp->Y, pmp->YF, pmp->YFA );
+        TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
 
 #ifdef Use_qd_real
         if( prof->pa.p.PD > 0)
         {
 #endif
-            pmp->FX = GX( 0.0 ); // calculation of initial G(X) value
-            MassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+            pm.FX = GX( 0.0 ); // calculation of initial G(X) value
+            MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
 #ifdef Use_qd_real
         }
         else
         {
             unsigned int old_cw;
             fpu_fix_start(&old_cw);
-            pmp->FX = to_double(qdGX( 0.0 )); // calculation of initial G(X) value
+            pm.FX = to_double(qdGX( 0.0 )); // calculation of initial G(X) value
             fpu_fix_end(&old_cw);
-            qdMassBalanceResiduals( pmp->N, pmp->L, pmp->A, pmp->Y, pmp->B, pmp->C );
+            qdMassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
         }
 #endif
 
-//        	for(long int i=0; i<pmp->N; i++)
-//             cout << i << " C " << pmp->C[i] << " B " << pmp->B[i] << endl;
+//        	for(long int i=0; i<pm.N; i++)
+//             cout << i << " C " << pm.C[i] << " B " << pm.B[i] << endl;
 
 
         // Deleting work arrays
@@ -524,10 +524,10 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 
   InitalizeGEM_IPM_Data();
 
-  pmp->t_start = clock();
-  pmp->t_end = pmp->t_start;
-  pmp->t_elap_sec = 0.0;
-  pmp->ITF = pmp->ITG = 0;
+  pm.t_start = clock();
+  pm.t_end = pm.t_start;
+  pm.t_elap_sec = 0.0;
+  pm.ITF = pm.ITG = 0;
 
 //  to_text_file( "MultiDump1.txt" );   // Debugging
 
@@ -538,7 +538,7 @@ if( prof->pa.p.DG > 1e-5 )
 }
 
 try{
-       switch( pmp->tMin )
+       switch( pm.tMin )
        {
        case  A_TV_:
        case  U_SV_:
@@ -558,10 +558,10 @@ try{
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
-      NumIterFIA = pmp->ITF;
-      NumIterIPM = pmp->ITG;
-      pmp->t_end = clock();
-      pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+      NumIterFIA = pm.ITF;
+      NumIterIPM = pm.ITG;
+      pm.t_end = clock();
+      pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
 
      Error( xcpt.title, xcpt.mess);
   }
@@ -571,12 +571,12 @@ try{
 
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
-  NumIterFIA = pmp->ITF;
-  NumIterIPM = pmp->ITG;
-  pmp->t_end = clock();
-  pmp->t_elap_sec = double(pmp->t_end - pmp->t_start)/double(CLOCKS_PER_SEC);
+  NumIterFIA = pm.ITF;
+  NumIterIPM = pm.ITG;
+  pm.t_end = clock();
+  pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
 
-  return pmp->t_elap_sec;
+  return pm.t_elap_sec;
 }
 
 
@@ -586,13 +586,13 @@ double TMulti::SystemTotalMolesIC( )
 {
   double ScFact, mass_temp = 0.0;
 
-  for( int i=0; i<pmp->N - pmp->E; i++ ) //?????
-         mass_temp +=pmp->B[i];
+  for( int i=0; i<pm.N - pm.E; i++ ) //?????
+         mass_temp +=pm.B[i];
 
-  pmp->TMols = mass_temp;
+  pm.TMols = mass_temp;
 
-  pmp->SMols = prof->pa.p.DG;
-  ScFact = pmp->SMols/pmp->TMols;
+  pm.SMols = prof->pa.p.DG;
+  ScFact = pm.SMols/pm.TMols;
 
   return ScFact;
 }
@@ -602,74 +602,74 @@ void TMulti::ScaleSystemToInternal(  double ScFact )
 {
  long int i, j, k;
 
-  pmp->SizeFactor = ScFact;
-  pmp->MBX *= ScFact;
-  pmp->FitVar[0] *= ScFact;  // added: bugfix by DK 31.05.2010
-  pmp->VXc *= ScFact;
-  pmp->HXc *= ScFact;
-  pmp->HX_ *= ScFact;
-  pmp->FX  *= ScFact;
-  pmp->Yw  *= ScFact;  // added 08.06.10 DK
+  pm.SizeFactor = ScFact;
+  pm.MBX *= ScFact;
+  pm.FitVar[0] *= ScFact;  // added: bugfix by DK 31.05.2010
+  pm.VXc *= ScFact;
+  pm.HXc *= ScFact;
+  pm.HX_ *= ScFact;
+  pm.FX  *= ScFact;
+  pm.Yw  *= ScFact;  // added 08.06.10 DK
 
-  for( j=0; j<pmp->L; j++ )
+  for( j=0; j<pm.L; j++ )
   {
-    if(	pmp->DUL[j] < 1e6  )
-       pmp->DUL[j] *= ScFact;
+    if(	pm.DUL[j] < 1e6  )
+       pm.DUL[j] *= ScFact;
 
-    // if( pmp->DLL[j] > 0.0  )
-       pmp->DLL[j] *= ScFact;
+    // if( pm.DLL[j] > 0.0  )
+       pm.DLL[j] *= ScFact;
 
-        pmp->Y[j] *= ScFact;
-        pmp->X[j] *= ScFact;
-        pmp->XY[j] *= ScFact;
-        pmp->XU[j] *= ScFact;
+        pm.Y[j] *= ScFact;
+        pm.X[j] *= ScFact;
+        pm.XY[j] *= ScFact;
+        pm.XU[j] *= ScFact;
   }
 
-  for( i=0; i<pmp->N; i++ )
+  for( i=0; i<pm.N; i++ )
   {
-        pmp->B[i] *= ScFact;
-  //      pmp->C[i] *= ScFact;
-        pmp->BFC[i] *= ScFact;
+        pm.B[i] *= ScFact;
+  //      pm.C[i] *= ScFact;
+        pm.BFC[i] *= ScFact;
   }
 
-  for( k=0; k<pmp->FI; k++ )
+  for( k=0; k<pm.FI; k++ )
   {
-    pmp->XFs[k] *= ScFact;
-    pmp->XF[k] *= ScFact;
-    pmp->YF[k] *= ScFact;
-    pmp->FVOL[k] *= ScFact;
-    pmp->FWGT[k] *= ScFact;
+    pm.XFs[k] *= ScFact;
+    pm.XF[k] *= ScFact;
+    pm.YF[k] *= ScFact;
+    pm.FVOL[k] *= ScFact;
+    pm.FWGT[k] *= ScFact;
   }
 
-  for( k=0; k<pmp->FIs; k++ )
+  for( k=0; k<pm.FIs; k++ )
   {
-      pmp->XFA[k] *= ScFact;
-      pmp->YFA[k] *= ScFact;
+      pm.XFA[k] *= ScFact;
+      pm.YFA[k] *= ScFact;
 
-      if( pmp->PUL )
-        if( pmp->PUL[k] < 1e6  )
-         pmp->PUL[k] *= ScFact;
+      if( pm.PUL )
+        if( pm.PUL[k] < 1e6  )
+         pm.PUL[k] *= ScFact;
 
-      if( pmp->PLL )
-      // if( pmp->PLL[k] > 0.0  )
-         pmp->PLL[k] *= ScFact;
+      if( pm.PLL )
+      // if( pm.PLL[k] > 0.0  )
+         pm.PLL[k] *= ScFact;
 
-      for( i=0; i<pmp->N; i++ )
-           pmp->BF[k*pmp->N+i] *= ScFact;
+      for( i=0; i<pm.N; i++ )
+           pm.BF[k*pm.N+i] *= ScFact;
   }
- if( pmp->FIat > 0 /*&& pm.Lads > 0*/ && pmp->FIs > 0 )
+ if( pm.FIat > 0 /*&& pm.Lads > 0*/ && pm.FIs > 0 )
   {
-  for( k=0; k<pmp->FIs; k++ )
+  for( k=0; k<pm.FIs; k++ )
      for( j=0; j<MST; j++ )
           {
-              pmp->XetaA[k][j] *= ScFact;
-              pmp->XetaB[k][j] *= ScFact;
-              pmp->XetaD[k][j] *= ScFact;
-              pmp->XFTS[k][j] *= ScFact;
+              pm.XetaA[k][j] *= ScFact;
+              pm.XetaB[k][j] *= ScFact;
+              pm.XetaD[k][j] *= ScFact;
+              pm.XFTS[k][j] *= ScFact;
           }
 }
 
- pmp->SizeFactor = ScFact;
+ pm.SizeFactor = ScFact;
 }
 
 // Re-scaling the internal constant-mass MULTI system definition
@@ -678,76 +678,76 @@ void TMulti::RescaleSystemFromInternal(  double ScFact )
 {
  long int i, j, k;
 
-  pmp->MBX /= ScFact;
-  pmp->FitVar[0] /= ScFact;  // added: bugfix by DK 31.05.2010
-  pmp->VXc /= ScFact;
-  pmp->HXc /= ScFact;
-  pmp->HX_ /= ScFact;
-  pmp->FX  /= ScFact;
+  pm.MBX /= ScFact;
+  pm.FitVar[0] /= ScFact;  // added: bugfix by DK 31.05.2010
+  pm.VXc /= ScFact;
+  pm.HXc /= ScFact;
+  pm.HX_ /= ScFact;
+  pm.FX  /= ScFact;
   // added SV
-  //pmp->YFk /= ScFact;
-  pmp->Yw /= ScFact;  // added 08.06.10 DK
+  //pm.YFk /= ScFact;
+  pm.Yw /= ScFact;  // added 08.06.10 DK
 
-  for( j=0; j<pmp->L; j++ )
+  for( j=0; j<pm.L; j++ )
   {
-    if(	pmp->DUL[j] < 1e6  )
-       pmp->DUL[j] /= ScFact;
+    if(	pm.DUL[j] < 1e6  )
+       pm.DUL[j] /= ScFact;
 
-    // if( pmp->DLL[j] > 0.0  )
-       pmp->DLL[j] /= ScFact;
+    // if( pm.DLL[j] > 0.0  )
+       pm.DLL[j] /= ScFact;
 
-        pmp->Y[j] /= ScFact;
-        pmp->X[j] /= ScFact;
-        pmp->XY[j] /= ScFact;
-        pmp->XU[j] /= ScFact;
-    //    pmp->MU[j] /= ScFact;
-    //    pmp->W[j] /= ScFact;
+        pm.Y[j] /= ScFact;
+        pm.X[j] /= ScFact;
+        pm.XY[j] /= ScFact;
+        pm.XU[j] /= ScFact;
+    //    pm.MU[j] /= ScFact;
+    //    pm.W[j] /= ScFact;
   }
 
-  for( i=0; i<pmp->N; i++ )
+  for( i=0; i<pm.N; i++ )
   {
-        pmp->B[i] /= ScFact;
-        pmp->C[i] /= ScFact;
-        pmp->BFC[i] /= ScFact;
+        pm.B[i] /= ScFact;
+        pm.C[i] /= ScFact;
+        pm.BFC[i] /= ScFact;
   }
 
-  for( k=0; k<pmp->FI; k++ )
+  for( k=0; k<pm.FI; k++ )
   {
-    pmp->XFs[k] /= ScFact;
-    pmp->XF[k] /= ScFact;
-    pmp->YF[k] /= ScFact;
-    pmp->FVOL[k] /= ScFact;
-    pmp->FWGT[k] /= ScFact;
+    pm.XFs[k] /= ScFact;
+    pm.XF[k] /= ScFact;
+    pm.YF[k] /= ScFact;
+    pm.FVOL[k] /= ScFact;
+    pm.FWGT[k] /= ScFact;
   }
 
-  for( k=0; k<pmp->FIs; k++ )
+  for( k=0; k<pm.FIs; k++ )
   {
-      pmp->XFA[k] /= ScFact;
-      pmp->YFA[k] /= ScFact;
+      pm.XFA[k] /= ScFact;
+      pm.YFA[k] /= ScFact;
 
-      if( pmp->PUL )
-        if( pmp->PUL[k] < 1e6  )
-         pmp->PUL[k] /= ScFact;
+      if( pm.PUL )
+        if( pm.PUL[k] < 1e6  )
+         pm.PUL[k] /= ScFact;
 
-      if( pmp->PLL )
-      // if( pmp->PLL[k] > 0.0  )
-         pmp->PLL[k] /= ScFact;
+      if( pm.PLL )
+      // if( pm.PLL[k] > 0.0  )
+         pm.PLL[k] /= ScFact;
 
-      for( i=0; i<pmp->N; i++ )
-           pmp->BF[k*pmp->N+i] /= ScFact;
+      for( i=0; i<pm.N; i++ )
+           pm.BF[k*pm.N+i] /= ScFact;
   }
 
-  if( pmp->FIat > 0 /*&& pm.Lads > 0*/ && pmp->FIs > 0 )
-   for( k=0; k<pmp->FIs; k++ )
+  if( pm.FIat > 0 /*&& pm.Lads > 0*/ && pm.FIs > 0 )
+   for( k=0; k<pm.FIs; k++ )
           for( j=0; j<MST; j++ )
           {
-              pmp->XetaA[k][j] /= ScFact;
-              pmp->XetaB[k][j] /= ScFact;
-              pmp->XetaD[k][j] /= ScFact;
-              pmp->XFTS[k][j]  /= ScFact;
+              pm.XetaA[k][j] /= ScFact;
+              pm.XetaB[k][j] /= ScFact;
+              pm.XetaD[k][j] /= ScFact;
+              pm.XFTS[k][j]  /= ScFact;
           }
 
-  pmp->SizeFactor = 1.;   // using in TNode class
+  pm.SizeFactor = 1.;   // using in TNode class
 }
 
 //========================================================================================
@@ -768,28 +768,28 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
    //   MultiKeyInit( key ); //into PMtest
 
-   if( pmp->pBAL < 2  )
+   if( pm.pBAL < 2  )
    {
      // Allocating list of phases currently present in non-zero quantities
      MultiSystemInit( );
    }
 
    // Allocating list of phases currently present in non-zero quantities
-     if( !pmp->SFs )
-        pmp->SFs = (char (*)[MAXPHNAME+MAXSYMB])aObj[ o_wd_sfs].Alloc(
-                    pmp->FI, 1, MAXPHNAME+MAXSYMB );
+     if( !pm.SFs )
+        pm.SFs = (char (*)[MAXPHNAME+MAXSYMB])aObj[ o_wd_sfs].Alloc(
+                    pm.FI, 1, MAXPHNAME+MAXSYMB );
 
    // no old solution => must be simplex
-      if( pmp->pESU == 0 )
-           pmp->pNP = 0;
+      if( pm.pESU == 0 )
+           pm.pNP = 0;
 
       prof->CheckMtparam(); //load tpp structure
 
-//      cout << "Init pmp->pTPD " << pmp->pTPD << endl;
-//      cout << "Init pmp->P " << pmp->P << endl;
-//      cout << "Init pmp->T " << pmp->T << endl;
+//      cout << "Init pm.pTPD " << pm.pTPD << endl;
+//      cout << "Init pm.P " << pm.P << endl;
+//      cout << "Init pm.T " << pm.T << endl;
 
-   if( pmp->pTPD < 2 )
+   if( pm.pTPD < 2 )
    {
       DC_LoadThermodynamicData(); // Loading thermodynamic data into MULTI structure
      // In future build/rebuild internal lookup arrays
@@ -802,17 +802,17 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 #endif
 
    Alloc_internal();
-   Alloc_uDD( pmp->N);      // Added 06.05.2011 DK
+   Alloc_uDD( pm.N);      // Added 06.05.2011 DK
 
   // calculate mass of the system
-   pmp->MBX = 0.0;
-  for(int i=0; i<pmp->N; i++ )
-   pmp->MBX += pmp->B[i] * pmp->Awt[i];
-   pmp->MBX /= 1000.;
+   pm.MBX = 0.0;
+  for(int i=0; i<pm.N; i++ )
+   pm.MBX += pm.B[i] * pm.Awt[i];
+   pm.MBX /= 1000.;
 
    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
 
-   if(  pmp->pNP )
+   if(  pm.pNP )
     {  //  Smart Initial Approximation mode
        long int j,k;
 
@@ -822,32 +822,32 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
      bool AllPhasesPure = true;   // Added by DK on 09.03.2010
      // checking if all phases are pure
-     for( k=0; k < pmp->FI; k++ )
-     if( pmp->L1[k] > 1 )
+     for( k=0; k < pm.FI; k++ )
+     if( pm.L1[k] > 1 )
         AllPhasesPure = false;
 
-     for( j=0; j< pmp->L; j++ )
-         pmp->X[j] = pmp->Y[j];
-//       pmp->IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
-      TotalPhasesAmounts( pmp->X, pmp->XF, pmp->XFA );
-      CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA);  // 13.03.2008  DK
+     for( j=0; j< pm.L; j++ )
+         pm.X[j] = pm.Y[j];
+//       pm.IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
+      TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+      CalculateConcentrations( pm.X, pm.XF, pm.XFA);  // 13.03.2008  DK
        // test multicomponent phases and load data for mixing models
-       if( pmp->FIs && AllPhasesPure == false )
+       if( pm.FIs && AllPhasesPure == false )
        {
            // Load activity coeffs for phases-solutions
          int k, jb, je=0;
-         for( k=0; k<pmp->FIs; k++ )
+         for( k=0; k<pm.FIs; k++ )
          { // loop on solution phases
             jb = je;
-            je += pmp->L1[k];
+            je += pm.L1[k];
             // Load activity coeffs for phases-solutions
             for( j=jb; j< je; j++ )
             {
-               pmp->lnGmo[j] = pmp->lnGam[j];
-               if( fabs( pmp->lnGam[j] ) <= 84. )
-      //                pmp->Gamma[j] = exp( pmp->lnGam[j] );
-                      pmp->Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-               else pmp->Gamma[j] = 1.0;
+               pm.lnGmo[j] = pm.lnGam[j];
+               if( fabs( pm.lnGam[j] ) <= 84. )
+      //                pm.Gamma[j] = exp( pm.lnGam[j] );
+                      pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
+               else pm.Gamma[j] = 1.0;
              } // j
           }  // k
        }
@@ -861,36 +861,36 @@ void TMulti::MultiConstInit() // from MultiRemake
 {
   SPP_SETTING *pa = &prof->pa;
 
-  pmp->FI1 = 0;
-  pmp->FI1s = 0;
-  pmp->FI1a = 0;
-  pmp->ITF = 0; pmp->ITG = 0;
-  pmp->PD = abs(pa->p.PD);
-  pmp->Ec = pmp->K2 = pmp->MK = 0;
-  pmp->W1 = 0;
-  pmp->is = 0;
-  pmp->js = 0;
-  pmp->next  = 0;
-  pmp->ln5551 = log( H2O_mol_to_kg );             // constant corrected 30.08.2008
-  pmp->lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
-  pmp->logXw = -16.;
-  pmp->logYFk = -9.;
-  pmp->DXM = pa->p.DK;
+  pm.FI1 = 0;
+  pm.FI1s = 0;
+  pm.FI1a = 0;
+  pm.ITF = 0; pm.ITG = 0;
+  pm.PD = abs(pa->p.PD);
+  pm.Ec = pm.K2 = pm.MK = 0;
+  pm.W1 = 0;
+  pm.is = 0;
+  pm.js = 0;
+  pm.next  = 0;
+  pm.ln5551 = log( H2O_mol_to_kg );             // constant corrected 30.08.2008
+  pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
+  pm.logXw = -16.;
+  pm.logYFk = -9.;
+  pm.DXM = pa->p.DK;
 
   //  ???????
-  pmp->FX = 7777777.;
-  pmp->pH = pmp->Eh = pmp->pe = 0.0;
-  pmp->YMET = 0;                      // always 0.0 ????
-  pmp->PCI = 1.0;
-  pmp->FitVar[4] = 1.0;
+  pm.FX = 7777777.;
+  pm.pH = pm.Eh = pm.pe = 0.0;
+  pm.YMET = 0;                      // always 0.0 ????
+  pm.PCI = 1.0;
+  pm.FitVar[4] = 1.0;
 
 #ifndef IPMGEMPLUGIN
-  pmp->PZ = 0; // IPM default
-//  pmp->FitVar[0] = pa->aqPar[0]; // setting T,P dependent b_gamma parameters
-  pmp->pH = pmp->Eh = pmp->pe = 0.0;
+  pm.PZ = 0; // IPM default
+//  pm.FitVar[0] = pa->aqPar[0]; // setting T,P dependent b_gamma parameters
+  pm.pH = pm.Eh = pm.pe = 0.0;
 #else
-  pmp->PZ = pa->p.DW;  // in IPM
-//  pmp->FitVar[0] = 0.0640000030398369;
+  pm.PZ = pa->p.DW;  // in IPM
+//  pm.FitVar[0] = 0.0640000030398369;
 #endif
 
 }
@@ -900,63 +900,63 @@ void TMulti::GEM_IPM_Init()
 {
    int i,j,k;
 
-   for( i=0; i<pmp->N; i++ )
-     pmp->Uefd[i] = 0.;
+   for( i=0; i<pm.N; i++ )
+     pm.Uefd[i] = 0.;
 
    bool AllPhasesPure = true;   // Added by DK on 09.03.2010
   // checking if all phases are pure
-  for( k=0; k < pmp->FI; k++ )
-    if( pmp->L1[k] > 1 )
+  for( k=0; k < pm.FI; k++ )
+    if( pm.L1[k] > 1 )
         AllPhasesPure = false;
 
-   if(!pmp->pNP) // Simplex initial approximation to be done
+   if(!pm.pNP) // Simplex initial approximation to be done
     {
-        for( j=0; j<pmp->L; j++ )
+        for( j=0; j<pm.L; j++ )
         {                           // cleaning work vectors
-                pmp->X[j] = pmp->Y[j] = pmp->lnGam[j] = pmp->lnGmo[j] = 0.0;
-                pmp->Gamma[j] = 1.0;
-                pmp->MU[j] = 0.;
-                pmp->XU[j] = 0.;
-                pmp->EMU[j] = 0.;
-                pmp->NMU[j] = 0.;
-                pmp->W[j] = 0.;
-                pmp->F[j] = 0.;
-                pmp->F0[j] = 0.;
+                pm.X[j] = pm.Y[j] = pm.lnGam[j] = pm.lnGmo[j] = 0.0;
+                pm.Gamma[j] = 1.0;
+                pm.MU[j] = 0.;
+                pm.XU[j] = 0.;
+                pm.EMU[j] = 0.;
+                pm.NMU[j] = 0.;
+                pm.W[j] = 0.;
+                pm.F[j] = 0.;
+                pm.F0[j] = 0.;
            }
     }
 
     // recalculating kinetic restrictions for DC amounts
-//     if( pmp->pULR && pmp->PLIM )
+//     if( pm.pULR && pm.PLIM )
 //          Set_DC_limits(  DC_LIM_INIT );
 
-    if( pmp->FIs && AllPhasesPure == false )   /// line must be tested !pmp->FIs
+    if( pm.FIs && AllPhasesPure == false )   /// line must be tested !pm.FIs
     {
 #ifndef IPMGEMPLUGIN
 //????? problematic point
-       if( pmp->pIPN <=0 )  // mixing models finalized in any case (AIA or SIA)
+       if( pm.pIPN <=0 )  // mixing models finalized in any case (AIA or SIA)
        {
              // not done if these models are already present in MULTI !
-           pmp->PD = abs(prof->pa.p.PD);
+           pm.PD = abs(prof->pa.p.PD);
            SolModLoad();   // Call point to loading scripts for mixing models
        }
-       pmp->pIPN = 1;
+       pm.pIPN = 1;
 #endif
         // Calc Eh, pe, pH,and other stuff
-       if( pmp->E && pmp->LO && pmp->pNP )
+       if( pm.E && pm.LO && pm.pNP )
        {
-            CalculateConcentrations( pmp->X, pmp->XF, pmp->XFA);
+            CalculateConcentrations( pm.X, pm.XF, pm.XFA);
             IS_EtaCalc();
-            if( pmp->Lads )  // Calling this only when sorption models are present
+            if( pm.Lads )  // Calling this only when sorption models are present
             {
                int k, jb, je=0;
-               for( k=0; k<pmp->FIs; k++ )
+               for( k=0; k<pm.FIs; k++ )
                { // loop on solution phases
                   jb = je;
-                  je += pmp->L1[k];
-                  if( pmp->PHC[k] == PH_POLYEL || pmp->PHC[k] == PH_SORPTION )
+                  je += pm.L1[k];
+                  if( pm.PHC[k] == PH_POLYEL || pm.PHC[k] == PH_SORPTION )
                   {
-                       if( pmp->PHC[0] == PH_AQUEL && pmp->XF[k] > pmp->DSM
-                           && (pmp->XFA[0] > pmp->ScMinM && pmp->XF[0] > pmp->XwMinM )) // fixed 30.08.2009 DK
+                       if( pm.PHC[0] == PH_AQUEL && pm.XF[k] > pm.DSM
+                           && (pm.XFA[0] > pm.ScMinM && pm.XF[0] > pm.XwMinM )) // fixed 30.08.2009 DK
                            GouyChapman( jb, je, k );  // getting PSIs - electrical potentials on surface planes
                   }
                }
@@ -966,22 +966,22 @@ void TMulti::GEM_IPM_Init()
        // Computing DQF, FugPure and G wherever necessary; Activity coeffs are restored from lnGmo
     }
     else {  // no multi-component phases
-        pmp->PD = 0;
-        pmp->pNP = 0;
-        pmp->pIPN = 1;
+        pm.PD = 0;
+        pm.pNP = 0;
+        pm.pIPN = 1;
     }
 
     // recalculating kinetic restrictions for DC amounts
-     if( pmp->pULR && pmp->PLIM )
+     if( pm.pULR && pm.PLIM )
           Set_DC_limits(  DC_LIM_INIT );
 
 #ifndef IPMGEMPLUGIN
     // dynamic work arrays - loading initial data
-    for( k=0; k<pmp->FI; k++ )
+    for( k=0; k<pm.FI; k++ )
     {
-        pmp->XFs[k] = pmp->YF[k];
-        pmp->Falps[k] = pmp->Falp[k];
-        memcpy( pmp->SFs[k], pmp->SF[k], MAXPHNAME+MAXSYMB );
+        pm.XFs[k] = pm.YF[k];
+        pm.Falps[k] = pm.Falp[k];
+        memcpy( pm.SFs[k], pm.SF[k], MAXPHNAME+MAXSYMB );
     }
 #endif
 }

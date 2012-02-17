@@ -22,10 +22,6 @@
 
 #include "s_fgl.h"
 #include "verror.h"
-#ifndef IPMGEMPLUGIN
-  #include "m_const.h"
-#endif
-
 
 
 //=======================================================================================================

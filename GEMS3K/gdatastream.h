@@ -22,15 +22,10 @@
 
 #include <fstream>
 
-#ifdef IPMGEMPLUGIN
 
 #include "verror.h"
 
-#else
 
-#include "gstring.h"
-
-#endif
 
 class GemDataStream				// data stream class
 {

@@ -176,7 +176,7 @@ if( _comment )
    ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
-  ff << "\"" << pmp->stkey << "\"" << endl;
+  ff << "\"" << pm.stkey << "\"" << endl;
 
  if( _comment )
      ff << "\n## (1) Important flags that affect memory allocation" << endl;
@@ -188,24 +188,24 @@ if( _comment )
  }
 
 //   ff << "# 'E'                1" << endl;
-//   ff << left << setw(12) << "<E> " <<  right << setw(8) << pmp->E << endl;
+//   ff << left << setw(12) << "<E> " <<  right << setw(8) << pm.E << endl;
  if( _comment )
      ff << "\n# PV: Flag for the volume balance constraint (on Vol IC) - for indifferent equilibria at P_Sat" << endl;
-   ff << left << setw(12) << "<PV> " <<  right << setw(8) << pmp->PV << endl;
+   ff << left << setw(12) << "<PV> " <<  right << setw(8) << pm.PV << endl;
 
 //   ff << "# These dimensions can be calculated from the DATACH information" << endl;
 //   ff << "# 'Ls'              23" << endl;
 //   ff << "# 'LO'              18" << endl;
 //   ff << "# 'PG'               4" << endl;
-//   ff << left << setw(12) << "<Ls> " <<  right << setw(8) << pmp->Ls << endl;
-//   ff << left << setw(12) << "<LO> " <<  right << setw(8) << pmp->LO << endl;
-//   ff << left << setw(12) << "<PG> " <<  right << setw(8) << pmp->PG << endl;
+//   ff << left << setw(12) << "<Ls> " <<  right << setw(8) << pm.Ls << endl;
+//   ff << left << setw(12) << "<LO> " <<  right << setw(8) << pm.LO << endl;
+//   ff << left << setw(12) << "<PG> " <<  right << setw(8) << pm.PG << endl;
    if( _comment )
        ff << "\n# PSOL: Total number of DCs in liquid hydrocarbon phases" << endl;
-   ff << left << setw(12) << "<PSOL> " <<  right << setw(8) << pmp->PSOL << endl;
+   ff << left << setw(12) << "<PSOL> " <<  right << setw(8) << pm.PSOL << endl;
 //   ff << "# Do not know if this stuff is really necessary" << endl;
 //   ff << "# 'GWAT'         55.50837344" << endl;
-//   ff << left << setw(12) << "<GWAT> " <<  right << setw(8) << pmp->GWAT << endl;
+//   ff << left << setw(12) << "<GWAT> " <<  right << setw(8) << pm.GWAT << endl;
    if( _comment )
      ff << "\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " << endl;
    ff << left << setw(12) << "<PAalp> " <<  right << setw(6) <<
@@ -214,20 +214,20 @@ if( _comment )
     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
    ff << left << setw(12) << "<PSigm> " <<  right << setw(6) <<
       "\'" << PSigm << "\'" << endl;
-  if( !brief_mode || pmp->FIat > 0 || pmp->Lads > 0 )
+  if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
   { if( _comment )
     {  ff << "\n## (2) Important dimensionalities that affect memory allocation" << endl;
        ff << "# Lads: Total number of Dependent Components in sorption phases included into this system" << endl;
     }
-   ff << left << setw(12) << "<Lads> " <<  right << setw(8) << pmp->Lads << endl;
+   ff << left << setw(12) << "<Lads> " <<  right << setw(8) << pm.Lads << endl;
    if( _comment )
      ff << "# FIa: Number of sorption phases included in this system (0 if no sorption phases are included)" << endl;
-   ff << left << setw(12) << "<FIa> " <<  right << setw(8) << pmp->FIa << endl;
+   ff << left << setw(12) << "<FIa> " <<  right << setw(8) << pm.FIa << endl;
    if( _comment )
       ff << "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, FIat must be set to default value of 6)" << endl;
-   ff << left << setw(12) << "<FIat> " <<  right << setw(8) << pmp->FIat << endl << endl;
-//   ff << left << setw(12) << "<sitNc> " <<  right << setw(8) << pmp->sitNcat << endl;
-//   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pmp->sitNan << endl;
+   ff << left << setw(12) << "<FIat> " <<  right << setw(8) << pm.FIat << endl << endl;
+//   ff << left << setw(12) << "<sitNc> " <<  right << setw(8) << pm.sitNcat << endl;
+//   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
    ff << "\n<END_DIM>\n";
 
@@ -412,7 +412,7 @@ if( _comment )
    if(!brief_mode )
    { if( _comment )
        ff << "\n# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } " << endl;
-     ff << left << setw(12) << "<pKin> " <<  right << setw(8) << pmp->PLIM << endl;
+     ff << left << setw(12) << "<pKin> " <<  right << setw(8) << pm.PLIM << endl;
    }
    if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
    { if( _comment )
@@ -425,10 +425,10 @@ if( _comment )
      ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
    }
 
-   if(!brief_mode || pmp->tMin != G_TP_ )
+   if(!brief_mode || pm.tMin != G_TP_ )
    { if( _comment )
        ff << "# tMin: Type of thermodynamic potential to minimize" << endl;
-     ff << left << setw(12) << "<tMin> " <<  right << setw(8) << pmp->tMin << endl;
+     ff << left << setw(12) << "<tMin> " <<  right << setw(8) << pm.tMin << endl;
    }
 
 //dynamic arrays
@@ -438,7 +438,7 @@ if( pm.FIs > 0 && pm.Ls > 0 )
     ff << "\n## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)" << endl;
   if( _comment )
      ff << "# sMod: Codes for built-in mixing models of multicomponent phases [nPS*6]";
-    prar.writeArray(  "sMod", pmp->sMod[0], pmp->FIs, 6L );
+    prar.writeArray(  "sMod", pm.sMod[0], pm.FIs, 6L );
 
 long int LsModSum;
 long int LsIPxSum;
@@ -450,34 +450,34 @@ getLsMdcsum( LsMdcSum );
     {  ff << "\n\n# LsMod: Dimensions of <IPxPH> and <PMc> arrays [nPS*3]" << endl;
 
     }
-    prar.writeArray(  "LsMod", pmp->LsMod, pmp->FIs*3, 3L);
+    prar.writeArray(  "LsMod", pm.LsMod, pm.FIs*3, 3L);
 
   if(LsIPxSum )
   {
    if( _comment )
       ff << "\n\n# IPxPH:  TSolMod collected indexation table for interaction parameters of non-ideal solutions.";
-   prar.writeArray(  "IPxPH", pmp->IPx,  LsIPxSum);
+   prar.writeArray(  "IPxPH", pm.IPx,  LsIPxSum);
   }
   if(LsModSum )
    {
      if( _comment )
         ff << "\n\n# PMc: TSolMod collected interaction parameter coefficients for non-ideal  models of mixing";
-    prar.writeArray(  "PMc", pmp->PMc,  LsModSum);
+    prar.writeArray(  "PMc", pm.PMc,  LsModSum);
    }
    if( _comment )
      ff << "\n\n# LsMdc: Number of parameters per component of the phase for the non-ideal mixing models [nPS]";
-   prar.writeArray(  "LsMdc", pmp->LsMdc, pmp->FIs);
+   prar.writeArray(  "LsMdc", pm.LsMdc, pm.FIs);
    if(LsMdcSum )
    {   if( _comment )
           ff << "\n\n# DMc: TSolMod collected parameters per phase component for the non-ideal models of mixing";
-    prar.writeArray(  "DMc", pmp->DMc,  LsMdcSum);
+    prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
    }
 } // sMod
   if( _comment )
   {  ff << "\n\n## (5) Some data arrays which are not provided in DATACH and DATABR files" << endl;
      ff << "# B: Full total bulk composition of the initial system (vector b)  (moles) [nIC]";
   }
-  prar.writeArray(  "B", pmp->B,  pmp->N);
+  prar.writeArray(  "B", pm.B,  pm.N);
 
   if( _comment )
      ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs" << endl;
@@ -486,20 +486,20 @@ getLsMdcsum( LsMdcSum );
   {
 	  if( _comment )
 	    ff << "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC]";
-      prar.writeArray(  "Pparc", pmp->Pparc,  pmp->L);
+      prar.writeArray(  "Pparc", pm.Pparc,  pm.L);
   }
  //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
- // prar.writeArray(  "G0", pmp->G0,  pmp->L);
+ // prar.writeArray(  "G0", pm.G0,  pm.L);
   if(!brief_mode || prar.getAlws("fDQF" )) // was   prar.getAlws("GEX" ))
   {
    if( _comment )
       ff << "\n\n# fDQF: DQF parameters or pure gas fugacities in (J/mol/(RT) [nDC]";
-   prar.writeArray(  "fDQF", pmp->fDQF,  pmp->L);
+   prar.writeArray(  "fDQF", pm.fDQF,  pm.L);
   }
   if(!brief_mode || prar.getAlws("lnGmf" ))
   { if( _comment )
       ff << "\n\n# lnGmf:  Natural logarithms of DC (activity coefficients) to be used for correcting g0(T,P) [nDC]";
-    prar.writeArray(  "lnGmf", pmp->lnGmf,  pmp->L);
+    prar.writeArray(  "lnGmf", pm.lnGmf,  pm.L);
   }
   if( _comment )
      ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
@@ -507,47 +507,47 @@ getLsMdcsum( LsMdcSum );
    if(!brief_mode || prar.getAlws("RLC" ))
    {   if( _comment )
          ff << "# RLC: Code of metastability constraints for DCs [nDC]";
-     prar.writeArray(  "RLC", pmp->RLC, pmp->L, 1L );
+     prar.writeArray(  "RLC", pm.RLC, pm.L, 1L );
    }
    if(!brief_mode || prar.getAlws("RSC" ))
    { if( _comment )
       ff << "\n\n# RSC: Units of metastability/kinetic constraints for DCs [nDC]";
-     prar.writeArray(  "RSC", pmp->RSC, pmp->L, 1L );
+     prar.writeArray(  "RSC", pm.RSC, pm.L, 1L );
    }
    if(!brief_mode || prar.getAlws("DLL" ))
    { if( _comment )
         ff << "\n\n# DLL: Full vector of lower metastability constraints on DC amounts <xDC> in the system (moles) [nDC]";
-     prar.writeArray(  "DLL", pmp->DLL,  pmp->L);
+     prar.writeArray(  "DLL", pm.DLL,  pm.L);
    }
    if(!brief_mode || prar.getAlws("DUL" ))
    {  if( _comment )
        ff << "\n\n# DUL:Full vector of upper metastability constraints on DC amounts <xDC> in the system (moles) [nDC]";
-      prar.writeArray(  "DUL", pmp->DUL,  pmp->L);
+      prar.writeArray(  "DUL", pm.DUL,  pm.L);
    }
    if( _comment )
      ff << "\n\n# (7) Initial data for phases" << endl;
    if(!brief_mode || prar.getAlws("Aalp" ))
    { if( _comment )
       ff << "\n# Aalp: Full vector of specific surface areas of phases (m2/g) [nPH]";
-     prar.writeArray(  "Aalp", pmp->Aalp,  pmp->FI);
+     prar.writeArray(  "Aalp", pm.Aalp,  pm.FI);
    }
    if( PSigm != S_OFF )
    {
      if(!brief_mode || prar.getAlws("Sigw" ))
      { if( _comment )
          ff << "\n\n# Sigw: Specific surface free energy for phase-water interface (J/m2) [nPH]";
-        prar.writeArray(  "Sigw", pmp->Sigw,  pmp->FI);
+        prar.writeArray(  "Sigw", pm.Sigw,  pm.FI);
      }
      if(!brief_mode || prar.getAlws("Sigg" ))
      { if( _comment )
          ff << "\n\n# Sigg: Specific surface free energy for phase-gas interface (J/m2) (not yet used) [nPH]";
-       prar.writeArray(  "Sigg", pmp->Sigg,  pmp->FI);
+       prar.writeArray(  "Sigg", pm.Sigg,  pm.FI);
      }
    }
    if(!brief_mode || prar.getAlws("YOF" ))
    {  if( _comment )
         ff << "\n\n# YOF: Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition)  [nPH]";
-      prar.writeArray(  "YOF", pmp->YOF,  pmp->FI);
+      prar.writeArray(  "YOF", pm.YOF,  pm.FI);
    }
    if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
     { /* ADSORPTION AND ION EXCHANGE */
@@ -556,32 +556,32 @@ getLsMdcsum( LsMdcSum );
       if(!brief_mode || prar.getAlws("Nfsp" ))
       { if( _comment )
          ff << "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]";
-        prar.writeArray(  "Nfsp", &pmp->Nfsp[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+        prar.writeArray(  "Nfsp", &pm.Nfsp[0][0], pm.FIs*pm.FIat, pm.FIat);
       }
       if(!brief_mode || prar.getAlws("MASDT" ))
       { if( _comment )
          ff << "\n# MASDT: Total maximum site  density per surface type (mkmol/g) [nPS*6]";
-        prar.writeArray(  "MASDT", &pmp->MASDT[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+        prar.writeArray(  "MASDT", &pm.MASDT[0][0], pm.FIs*pm.FIat, pm.FIat);
       }
       if(!brief_mode || prar.getAlws("C1" ))
       { if( _comment )
            ff << "\n# C1: Inner capacitance density parameter C1 (F/m2) [nPS*6]";
-        prar.writeArray(  "C1", &pmp->XcapA[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+        prar.writeArray(  "C1", &pm.XcapA[0][0], pm.FIs*pm.FIat, pm.FIat);
       }
       if(!brief_mode || prar.getAlws("C2" ))
       { if( _comment )
           ff << "\n# C2: Outer capacitance density parameter C2 (F/m2) [nPS*6]";
-        prar.writeArray(  "C2", &pmp->XcapB[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+        prar.writeArray(  "C2", &pm.XcapB[0][0], pm.FIs*pm.FIat, pm.FIat);
       }
       if(!brief_mode || prar.getAlws("C3" ))
       { if( _comment )
           ff << "\n# C3: Third capacitance density parameter C3  (F/m2) [nPS*6]";
-        prar.writeArray(  "C3", &pmp->XcapF[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+        prar.writeArray(  "C3", &pm.XcapF[0][0], pm.FIs*pm.FIat, pm.FIat);
       }
       if(!brief_mode || prar.getAlws("pCh" ))
       { if( _comment )
           ff << "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]";
-       prar.writeArray(  "pCh", &pmp->Xetaf[0][0], pmp->FIs*pmp->FIat, pmp->FIat);
+       prar.writeArray(  "pCh", &pm.Xetaf[0][0], pm.FIs*pm.FIat, pm.FIat);
       }
       if(!brief_mode || prar.getAlws("SATX" ))
       { if( _comment )
@@ -589,7 +589,7 @@ getLsMdcsum( LsMdcSum );
             ff << "\n# [0] surface type; [1] sorbent emd member;";
             ff << "\n# [2] surface site in surf. type; [3] surface EDL plane";
         }
-       prar.writeArray(  "SATX", &pmp->SATX[0][0], pmp->Lads*4, 4L);
+       prar.writeArray(  "SATX", &pm.SATX[0][0], pm.Lads*4, 4L);
      }
      if(!brief_mode || prar.getAlws("MASDJ" ))
      { if( _comment )
@@ -598,51 +598,51 @@ getLsMdcsum( LsMdcSum );
           ff << "\n# [2] charge allocated to beta -or third plane; [3] Frumkin interaction parameter;";
           ff << "\n# [4] dentateness or CN; [5] reserved isoterm parameter.";
        }
-       prar.writeArray(  "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN, (long int)DFCN);
+       prar.writeArray(  "MASDJ", &pm.MASDJ[0][0], pm.Lads*DFCN, (long int)DFCN);
      }
      if(!brief_mode || prar.getAlws("SCM" ))
      { if( _comment )
          ff << "\n# SCM: Classifier of built-in electrostatic models applied to surface types in sorption phases [nPS*6]";
-       prar.writeArray(  "SCM", pmp->SCM[0], pmp->FIs, pmp->FIat );
+       prar.writeArray(  "SCM", pm.SCM[0], pm.FIs, pm.FIat );
      }
      if(!brief_mode || prar.getAlws("SACT" ))
      { if( _comment )
          ff << "\n# SACT: Classifier of applied SACT equations (isotherm corrections) [Lads].";
-       prar.writeArray(  "SACT", pmp->SATT, pmp->Lads, 1L );
+       prar.writeArray(  "SACT", pm.SATT, pm.Lads, 1L );
      }
      if(!brief_mode || prar.getAlws("DCads" ))
      { if( _comment )
          ff << "\n# DCads: Classifier of DCs involved in sorption phases [Lads]";
-      prar.writeArray(  "DCads", pmp->DCC3, pmp->Lads, 1L );
+      prar.writeArray(  "DCads", pm.DCC3, pm.Lads, 1L );
      }
     }
 /*
- * outArray( ff, "Vol", pmp->Vol,  pmp->L);
-   outArray( ff, "G0", pmp->G0,  pmp->L);
-   outArray( ff, "PUL", pmp->PUL,  pmp->L);
-   outArray( ff, "PLL", pmp->PLL,  pmp->L);
-   outArray( ff, "lnGam", pmp->lnGam,  pmp->L);
-   outArray( ff, "F0", pmp->F0,  pmp->L);
+ * outArray( ff, "Vol", pm.Vol,  pm.L);
+   outArray( ff, "G0", pm.G0,  pm.L);
+   outArray( ff, "PUL", pm.PUL,  pm.L);
+   outArray( ff, "PLL", pm.PLL,  pm.L);
+   outArray( ff, "lnGam", pm.lnGam,  pm.L);
+   outArray( ff, "F0", pm.F0,  pm.L);
 
    if( pm.sitNcat*pm.sitNcat )
-    prar.writeArray(  "sitE", pmp->sitE, pmp->sitNcat*pmp->sitNan );
+    prar.writeArray(  "sitE", pm.sitE, pm.sitNcat*pm.sitNan );
    if( pm.sitNcat )
-    prar.writeArray(  "sitXc", pmp->sitXcat, pmp->sitNcat );
+    prar.writeArray(  "sitXc", pm.sitXcat, pm.sitNcat );
    if( pm.sitNan )
-     prar.writeArray(  "sitXa", pmp->sitXan, pmp->sitNan );
+     prar.writeArray(  "sitXa", pm.sitXan, pm.sitNan );
 */
 
  if( addMui && !brief_mode )
  {
    if( _comment )
      ff << "\n\n# mui: IC indices in RMULTS IC list";
-   prar.writeArray(  "mui", pmp->mui,  pmp->N);
+   prar.writeArray(  "mui", pm.mui,  pm.N);
    if( _comment )
      ff << "\n\n# muk: Phase indices in RMULTS phase list";
-   prar.writeArray(  "muk", pmp->muk,  pmp->FI);
+   prar.writeArray(  "muk", pm.muk,  pm.FI);
    if( _comment )
      ff << "\n\n# muj: DC indices in RMULTS DC list";
-   prar.writeArray(  "muj", pmp->muj,  pmp->L);
+   prar.writeArray(  "muj", pm.muj,  pm.L);
  }
  ff << endl;
  if( _comment )
@@ -666,50 +666,50 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
   //mem_set( &pm.N, 0, 38*sizeof(long int));
   //mem_set( &pm.TC, 0, 55*sizeof(double));
   // get sizes from DATACH
-  pmp->TC = pmp->TCc = 25.;
-  pmp->T = pmp->Tc =298.15;
-  pmp->P = pmp->Pc = 1.;
-  pmp->N = pmp->NR = dCH->nIC;
-  pmp->L = dCH->nDC;
-  pmp->FI = dCH->nPH;
-  pmp->FIs = dCH->nPS;
+  pm.TC = pm.TCc = 25.;
+  pm.T = pm.Tc =298.15;
+  pm.P = pm.Pc = 1.;
+  pm.N = pm.NR = dCH->nIC;
+  pm.L = dCH->nDC;
+  pm.FI = dCH->nPH;
+  pm.FIs = dCH->nPS;
   //
-  pmp->Ls = 0; //dCH->nDCs;
+  pm.Ls = 0; //dCH->nDCs;
   for( ii=0; ii<dCH->nPS; ii++)
   {
-    pmp->Ls += dCH->nDCinPH[ii];
+    pm.Ls += dCH->nDCinPH[ii];
     if( dCH->ccPH[ii] == 'a' )
-     pmp->LO = pmp->Ls-1;
+     pm.LO = pm.Ls-1;
     if( dCH->ccPH[ii] == 'g' || dCH->ccPH[ii] == 'p' || dCH->ccPH[ii] == 'f')
-      pmp->PG = dCH->nDCinPH[ii];
+      pm.PG = dCH->nDCinPH[ii];
   }
 
   // copy intervals for minimizatiom
   if(  dCH->nPp > 1  )
   {
-     pmp->Pai[0] = dCH->Pval[0];
-     pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
-     pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+     pm.Pai[0] = dCH->Pval[0];
+     pm.Pai[1] = dCH->Pval[dCH->nPp-1];
+     pm.Pai[2] = (pm.Pai[1]-pm.Pai[0])/(double)dCH->nPp;
   }
-  pmp->Pai[3] = dCH->Ptol;
+  pm.Pai[3] = dCH->Ptol;
   if(  dCH->nTp > 1  )
   {
-     pmp->Tai[0] = dCH->TKval[0];
-     pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
-     pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+     pm.Tai[0] = dCH->TKval[0];
+     pm.Tai[1] = dCH->TKval[dCH->nTp-1];
+     pm.Tai[2] = (pm.Tai[1]-pm.Tai[0])/(double)dCH->nTp;
   }
-  pmp->Tai[3] = dCH->Ttol;
+  pm.Tai[3] = dCH->Ttol;
 
   // setup default constants
-  pa->p.PE =  pmp->E = 1;
-  pmp->PV = 0;
-  pmp->PSOL = 0;
+  pa->p.PE =  pm.E = 1;
+  pm.PV = 0;
+  pm.PSOL = 0;
   PAalp = '+';
   PSigm = '+';
-  pmp->Lads = 0;
-  pmp->FIa = 0;
-  pmp->FIat = 0; //6
-  pmp->PLIM  = 1;
+  pm.Lads = 0;
+  pm.FIa = 0;
+  pm.FIat = 0; //6
+  pm.PLIM  = 1;
 
   // reads sizes and constants from txt file
   fstream ff( path, ios::in );
@@ -720,7 +720,7 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
    gstring str;
    rdar.skipSpace();
    f_getline( ff, str, '\n');
-   copyValues( pmp->stkey, (char * )str.c_str(), EQ_RKLEN );
+   copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
 
    nfild = rdar.findNext();
    while( nfild >=0 )
@@ -728,21 +728,21 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
      switch( nfild )
      {
        case 0: rdar.readArray("pa_PE" , &pa->p.PE, 1);
-                 pmp->E = pa->p.PE;
+                 pm.E = pa->p.PE;
               break;
-       case 1: rdar.readArray("PV" , &pmp->PV, 1);
+       case 1: rdar.readArray("PV" , &pm.PV, 1);
               break;
-       case 2: rdar.readArray("PSOL" , &pmp->PSOL, 1);
+       case 2: rdar.readArray("PSOL" , &pm.PSOL, 1);
               break;
        case 3: rdar.readArray("PAalp" , &PAalp, 1, 1);
               break;
        case 4: rdar.readArray("PSigm" , &PSigm, 1, 1);
               break;
-       case 5: rdar.readArray("Lads" , &pmp->Lads, 1);
+       case 5: rdar.readArray("Lads" , &pm.Lads, 1);
               break;
-       case 6: rdar.readArray("FIa" , &pmp->FIa, 1);
+       case 6: rdar.readArray("FIa" , &pm.FIa, 1);
               break;
-       case 7: rdar.readArray("FIat" , &pmp->FIat, 1);
+       case 7: rdar.readArray("FIat" , &pm.FIat, 1);
               break;
     }
    nfild = rdar.findNext();
@@ -772,12 +772,12 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
 
 // get dynamic data from DATACH file
   for( ii=0; ii<dCH->nPH; ii++)
-    pmp->L1[ii] = dCH->nDCinPH[ii];
+    pm.L1[ii] = dCH->nDCinPH[ii];
 
   for( ii=0; ii<dCH->nIC*dCH->nDC; ii++)
-    pmp->A[ii] = dCH->A[ii];
+    pm.A[ii] = dCH->A[ii];
 
-  if( pmp->EZ )
+  if( pm.EZ )
   { long int iZ=-1;
     for(  ii=0; ii<dCH->nDC; ii++ )
      if( dCH->ccIC[ii] == IC_CHARGE )
@@ -785,16 +785,16 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
     if( ii< dCH->nDC )
     { iZ = ii;
       for( ii=0; ii<dCH->nDC; ii++)
-          pmp->EZ[ii] = pmp->A[pmp->N*ii+iZ];
+          pm.EZ[ii] = pm.A[pm.N*ii+iZ];
     }
   }
 
   for( ii=0; ii< dCH->nIC; ii++ )
-  { pmp->Awt[ii]  = dCH->ICmm[ii]*1e3;
-    fillValue(pmp->SB[ii], ' ', MaxICN );
-    copyValues( pmp->SB[ii], dCH->ICNL[ii], min(MaxICN,(long int)MAXICNAME));
-    pmp->SB[ii][MaxICN] = dCH->ccIC[ii];
-    pmp->ICC[ii] =  dCH->ccIC[ii];
+  { pm.Awt[ii]  = dCH->ICmm[ii]*1e3;
+    fillValue(pm.SB[ii], ' ', MaxICN );
+    copyValues( pm.SB[ii], dCH->ICNL[ii], min(MaxICN,(long int)MAXICNAME));
+    pm.SB[ii][MaxICN] = dCH->ccIC[ii];
+    pm.ICC[ii] =  dCH->ccIC[ii];
   }
 
 if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
@@ -807,20 +807,20 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
 
   for( ii=0; ii< dCH->nDC; ii++ )
   {
-    pmp->MM[ii] = dCH->DCmm[ii]*1e3;
-    pmp->DCC[ii] = dCH->ccDC[ii];
-    copyValues( pmp->SM[ii], dCH->DCNL[ii], min(MaxDCN,(long int)MAXDCNAME) );
+    pm.MM[ii] = dCH->DCmm[ii]*1e3;
+    pm.DCC[ii] = dCH->ccDC[ii];
+    copyValues( pm.SM[ii], dCH->DCNL[ii], min(MaxDCN,(long int)MAXDCNAME) );
   }
 
   for( ii=0; ii< dCH->nPH; ii++ )
   {
-	  fillValue( pmp->SF[ii], ' ', MAXPHNAME+MAXSYMB );
-	  copyValues( pmp->SF[ii]+MAXSYMB, dCH->PHNL[ii], min(MaxPHN,(long int)MAXPHNAME) );
-     pmp->SF[ii][0] = dCH->ccPH[ii];
-     pmp->PHC[ii] = dCH->ccPH[ii];
+          fillValue( pm.SF[ii], ' ', MAXPHNAME+MAXSYMB );
+          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], min(MaxPHN,(long int)MAXPHNAME) );
+     pm.SF[ii][0] = dCH->ccPH[ii];
+     pm.PHC[ii] = dCH->ccPH[ii];
   }
 
-// !!!!  copyValues( pmp->DCCW, dCH->ccDCW, dCH->nDC);
+// !!!!  copyValues( pm.DCCW, dCH->ccDCW, dCH->nDC);
   // set up DCCW
   ConvertDCC();
 
@@ -860,128 +860,128 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   while( nfild >=0 )
   {
     switch( nfild )
-    { case 0: if( !pmp->sMod )
+    { case 0: if( !pm.sMod )
                 Error( "Error", "Array sMod is not used in this problem");
-              rddar.readArray( "sMod" , pmp->sMod[0], pmp->FIs, 6 );
+              rddar.readArray( "sMod" , pm.sMod[0], pm.FIs, 6 );
               break;
-      case 1:{ if( !pmp->LsMod )
+      case 1:{ if( !pm.LsMod )
                 Error( "Error", "Array LsMod is not used in this problem");
-              rddar.readArray( "LsMod" , pmp->LsMod, pmp->FIs*3) ;
+              rddar.readArray( "LsMod" , pm.LsMod, pm.FIs*3) ;
               long int LsModSum;
               long int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
               if(LsIPxSum )
               { rddar.readNext( "IPxPH");
 #ifdef IPMGEMPLUGIN
-              if(!pmp->IPx )
+              if(!pm.IPx )
                   pm.IPx = new long int[LsIPxSum];
 #else
                  pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
 #endif
-                rddar.readArray( "IPxPH", pmp->IPx,  LsIPxSum);
+                rddar.readArray( "IPxPH", pm.IPx,  LsIPxSum);
               }
               if(LsModSum )
               { rddar.readNext( "PMc");
 #ifdef IPMGEMPLUGIN
-              if(!pmp->PMc )
+              if(!pm.PMc )
                   pm.PMc = new double[LsModSum];
 #else
                pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
 #endif
-                rddar.readArray( "PMc", pmp->PMc,  LsModSum);
+                rddar.readArray( "PMc", pm.PMc,  LsModSum);
               }
               break;
              }
-      case 2: { if( !pmp->LsMdc )
+      case 2: { if( !pm.LsMdc )
                    Error( "Error", "Array LsMdc not used in this problem");
-                rddar.readArray( "LsMdc" , pmp->LsMdc, pmp->FIs );
+                rddar.readArray( "LsMdc" , pm.LsMdc, pm.FIs );
                 long int LsMdcSum;
                 getLsMdcsum( LsMdcSum );
                 if(LsMdcSum )
                 { rddar.readNext( "DMc");
 #ifdef IPMGEMPLUGIN
-                if(!pmp->DMc )
+                if(!pm.DMc )
                      pm.DMc = new double[LsMdcSum];
 #else
                 pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
 #endif
-                rddar.readArray( "DMc", pmp->DMc,  LsMdcSum);
+                rddar.readArray( "DMc", pm.DMc,  LsMdcSum);
                 }
                 break;
               }
-      case 3: rddar.readArray( "B", pmp->B,  pmp->N);
+      case 3: rddar.readArray( "B", pm.B,  pm.N);
               break;
-      case 4: rddar.readArray( "DCCW", pmp->DCCW,  pmp->L, 1);
+      case 4: rddar.readArray( "DCCW", pm.DCCW,  pm.L, 1);
               break;
-      case 5: rddar.readArray( "Pparc", pmp->Pparc,  pmp->L);
+      case 5: rddar.readArray( "Pparc", pm.Pparc,  pm.L);
               break;
-      case 6: rddar.readArray( "fDQF", pmp->fDQF,  pmp->L);
+      case 6: rddar.readArray( "fDQF", pm.fDQF,  pm.L);
               break;
-      case 7: rddar.readArray( "lnGmf", pmp->lnGmf,  pmp->L);
+      case 7: rddar.readArray( "lnGmf", pm.lnGmf,  pm.L);
               break;
-      case 8: rddar.readArray( "RLC", pmp->RLC, pmp->L, 1 );
+      case 8: rddar.readArray( "RLC", pm.RLC, pm.L, 1 );
               break;
-      case 9: rddar.readArray( "RSC", pmp->RSC, pmp->L, 1 );
+      case 9: rddar.readArray( "RSC", pm.RSC, pm.L, 1 );
               break;
-      case 10: rddar.readArray( "DLL", pmp->DLL,  pmp->L);
+      case 10: rddar.readArray( "DLL", pm.DLL,  pm.L);
               break;
-      case 11: rddar.readArray( "DUL", pmp->DUL,  pmp->L);
+      case 11: rddar.readArray( "DUL", pm.DUL,  pm.L);
               break;
-      case 12: rddar.readArray( "Aalp", pmp->Aalp,  pmp->FI);
+      case 12: rddar.readArray( "Aalp", pm.Aalp,  pm.FI);
               break;
-      case 13: if( !pmp->Sigw )
+      case 13: if( !pm.Sigw )
                 Error( "Error", "Array Sigw not used in this problem");
-              rddar.readArray( "Sigw", pmp->Sigw,  pmp->FI);
+              rddar.readArray( "Sigw", pm.Sigw,  pm.FI);
               break;
-      case 14: if( !pmp->Sigg )
+      case 14: if( !pm.Sigg )
                 Error( "Error", "Array Sigg not used in this problem");
-              rddar.readArray( "Sigg", pmp->Sigg,  pmp->FI);
+              rddar.readArray( "Sigg", pm.Sigg,  pm.FI);
               break;
-      case 15: rddar.readArray( "YOF", pmp->YOF,  pmp->FI);
+      case 15: rddar.readArray( "YOF", pm.YOF,  pm.FI);
               break;
-      case 16: if( !pmp->Nfsp )
+      case 16: if( !pm.Nfsp )
                 Error( "Error", "Array Nfsp not used in this problem");
-              rddar.readArray( "Nfsp", &pmp->Nfsp[0][0], pmp->FIs*pmp->FIat);
+              rddar.readArray( "Nfsp", &pm.Nfsp[0][0], pm.FIs*pm.FIat);
               break;
-      case 17: if( !pmp->MASDT )
+      case 17: if( !pm.MASDT )
                 Error( "Error", "Array MASDT not used in this problem");
-              rddar.readArray( "MASDT", &pmp->MASDT[0][0], pmp->FIs*pmp->FIat);
+              rddar.readArray( "MASDT", &pm.MASDT[0][0], pm.FIs*pm.FIat);
               break;
-      case 18: if( !pmp->XcapA )
+      case 18: if( !pm.XcapA )
                 Error( "Error", "Array XcapA not used in this problem");
-              rddar.readArray( "C1", &pmp->XcapA[0][0], pmp->FIs*pmp->FIat);
+              rddar.readArray( "C1", &pm.XcapA[0][0], pm.FIs*pm.FIat);
               break;
-      case 19: if( !pmp->XcapB )
+      case 19: if( !pm.XcapB )
                 Error( "Error", "Array XcapB not used in this problem");
-              rddar.readArray( "C2", &pmp->XcapB[0][0], pmp->FIs*pmp->FIat);
+              rddar.readArray( "C2", &pm.XcapB[0][0], pm.FIs*pm.FIat);
               break;
-      case 20: if( !pmp->XcapF )
+      case 20: if( !pm.XcapF )
                 Error( "Error", "Array XcapF not used in this problem");
-              rddar.readArray( "C3", &pmp->XcapF[0][0], pmp->FIs*pmp->FIat);
+              rddar.readArray( "C3", &pm.XcapF[0][0], pm.FIs*pm.FIat);
               break;
-      case 21: if( !pmp->Xetaf )
+      case 21: if( !pm.Xetaf )
                 Error( "Error", "Array Xetaf not used in this problem");
-              rddar.readArray( "pCh", &pmp->Xetaf[0][0], pmp->FIs*pmp->FIat);
+              rddar.readArray( "pCh", &pm.Xetaf[0][0], pm.FIs*pm.FIat);
               break;
-      case 22: if( !pmp->SATX )
+      case 22: if( !pm.SATX )
                 Error( "Error", "Array SATX not used in this problem");
-              rddar.readArray( "SATX", &pmp->SATX[0][0], pmp->Lads*4);
+              rddar.readArray( "SATX", &pm.SATX[0][0], pm.Lads*4);
               break;
-      case 23: if( !pmp->MASDJ )
+      case 23: if( !pm.MASDJ )
                 Error( "Error", "Array MASDJ not used in this problem");
-              rddar.readArray( "MASDJ", &pmp->MASDJ[0][0], pmp->Lads*DFCN);
+              rddar.readArray( "MASDJ", &pm.MASDJ[0][0], pm.Lads*DFCN);
               break;
-      case 24: if( !pmp->SCM )
+      case 24: if( !pm.SCM )
                 Error( "Error", "Array SCM not used in this problem");
-              rddar.readArray( "SCM", pmp->SCM[0], pmp->FIs, pmp->FIat );
+              rddar.readArray( "SCM", pm.SCM[0], pm.FIs, pm.FIat );
               break;
-      case 25: if( !pmp->SATT )
+      case 25: if( !pm.SATT )
                 Error( "Error", "Array SATT not used in this problem");
-              rddar.readArray( "SACT", pmp->SATT, pmp->Lads, 1 );
+              rddar.readArray( "SACT", pm.SATT, pm.Lads, 1 );
               break;
-      case 26: if( !pmp->DCC3 )
+      case 26: if( !pm.DCC3 )
                 Error( "Error", "Array DCC3 not used in this problem");
-               rddar.readArray( "DCads", pmp->DCC3, pmp->Lads, 1 );
+               rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
                break;
       case 27: rddar.readArray( "pa_DB" , &pa->p.DB, 1);
                break;
@@ -1053,19 +1053,19 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                break;
       case 61: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
                break;
-      case 62: rddar.readArray("pKin" , &pmp->PLIM, 1);
+      case 62: rddar.readArray("pKin" , &pm.PLIM, 1);
                break;
       case 63: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
                break;
-      case 64: rddar.readArray("mui" , pmp->mui, pmp->N);
+      case 64: rddar.readArray("mui" , pm.mui, pm.N);
                break;
-      case 65: rddar.readArray("muk" , pmp->muk, pmp->FI);
+      case 65: rddar.readArray("muk" , pm.muk, pm.FI);
                break;
-      case 66: rddar.readArray("muj" , pmp->muj, pmp->L);
+      case 66: rddar.readArray("muj" , pm.muj, pm.L);
                break;
       case 67: rddar.readArray("pa_PLLG" , &pa->p.PLLG, 1);
                break;
-      case 68: rddar.readArray("tMin" , &pmp->tMin, 1);
+      case 68: rddar.readArray("tMin" , &pm.tMin, 1);
              break;
     }
     nfild = rddar.findNext();

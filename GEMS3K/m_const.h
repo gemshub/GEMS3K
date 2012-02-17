@@ -162,7 +162,15 @@ DC_AQ_SURCOMP = 'K',     // Surface complex represented as aqueous species
     DC_SUR_IPAIR   = 'Z',   // Weak sur complex B plane -> '1'
 
     // Single-component phases:
-    DC_SCP_CONDEN  = 'O'   // DC forming a single-component phase
+    DC_SCP_CONDEN  = 'O',   // DC forming a single-component phase
+
+    // Special class codes for diffusing species etc. (reserved)
+    DCaquoCATION   = 'c',
+    DCaquoANION    = 'n',
+    DCaquoLIGAND   = 'l',
+    DCaquoCOMPLEX  = 'x',
+    DCaquoIONPAIR  = 'p',
+    DCaquoGAS      = 'g'
 
 } DC_CLASSES;
 
@@ -281,6 +289,93 @@ const char S_OFF = '-',
                    S_ON = '+',
                           S_REM = '*',
                                   A_NUL ='?';
+/*
+typedef enum {  // classes of independent components IC used in ccIC code list
+    IC_ELEMENT  =  'e',  // chemical element (except oxygen and hydrogen)
+    IC_OXYGEN   =  'o',  // oxygen
+    IC_HYDROGEN =  'h',  // hydrogen (natural mixture of isotopes) H
+    IC_PROTIUM   = 'p',  // protium Hp (reserved)
+    IC_DEYTERIUM = 'd',  // deuterium D (reserved)
+    IC_TRITIUM  =  't',  // tritium T (reserved)
+    IC_FORMULA  =  'f',  // formula unit (eg. for Sio - a symbol of SiO2)
+    IC_METALION =  'm',  // metal ion (cation), reserved
+    IC_LIGAND   =  'l',  // ligand (anion), reserved
+    IC_ADDIT    =  'a',  // IC with unknown stoichiometry (eg: Hum - humate ligand)
+    IC_ISOTOPE  =  'i',  // isotope of chemical element (mass from 1 to 250)
+    IC_OXYGEN16 =  'q',  // q  - oxygen 16O (reserved)
+    IC_OXYGEN18 =  'r',  // r  - oxygen 18O (reserved)
+    IC_CHARGE   =  'z',  // z  - electrical charge
+    IC_VOLUME   =  'v',  // volume (for the volume balance constraint)
+    IC_SITE     =  's'   // sorption site for site balance constraint (reserved)
+} ICL_CLASSES;
+
+typedef enum {  // Classes of dependent components DC used in ccDC code list
+
+        // Single-component (pure) condensed phases:
+    DC_SCP_CONDEN  = 'O',       // DC forming a single-component phase
+
+        // Solid/liquid non-electrolyte multicomponent phases:
+    DC_SOL_IDEAL   = 'I',   // ideal end-member component (Raoult)
+    DC_SOL_MINOR   = 'J',   // junior (minor) component (Henry)
+    DC_SOL_MAJOR   = 'M',   // major component (Raoult)
+
+        // Aqueous electrolyte phase:
+    DC_AQ_PROTON   = 'T',      // hydrogen ion H+
+    DC_AQ_ELECTRON = 'E',      // electron (as a DC)
+    DC_AQ_SPECIES  = 'S',      // other aqueous species (ions, complexes and ion pairs)
+    DC_AQ_SURCOMP = 'K',     // Surface complex represented as aqueous species
+    DC_AQ_SOLVENT  = 'W',      // water H2O (major solvent)
+    DC_AQ_SOLVCOM  = 'L',      // other components of a solvent (eg. alcohol)
+
+        // Gas phase ( G code can be used for all gases; V,C,H,N codes are reserved
+    // for future use in the built-in equations of state):
+    DC_GAS_COMP    = 'G',      // other gases
+    DC_GAS_H2O     = 'V',      // H2O steam
+    DC_GAS_CO2     = 'C',      // CO2 (carbon dioxide)
+    DC_GAS_H2      = 'H',      // H2 hydrogen
+    DC_GAS_N2      = 'N',      // N2 nitrogen
+
+        // Sorption phases and poly(oligo)electrolytes
+    DC_SUR_CARRIER = 'Q',   // Principal end-member of solid carrier (sorbent)
+    DC_SUR_MINAL   = 'P',   // Minor end-member of solid carrier (sorbent)
+    DC_PEL_CARRIER = 'R',   // Carrier of poly(oligo)electrolyte (for future use)
+
+    // GEM CD-MUSIC and NE surface complexation models
+    DC_SUR_GROUP   = 'X',   // Surface group (surface solvent), also fictive
+    DC_SUR_COMPLEX = 'Y',   // Inner-sphere (strong) surface complex, the same as '0' code
+    DC_SUR_IPAIR   = 'Z',   // Outer-sphere (weak) surface complex, surface ion pair,
+                                  // exchange ion (the same as '1')
+
+    // Obsolete codes for old GEM SCMs - usage in newly created models is not recommended
+    DC_SSC_A0 = '0', DC_SSC_A1 = '2', DC_SSC_A2 = '4', DC_SSC_A3 = '6',
+    DC_SSC_A4 = '8',        // Strong surface complex on site type 0,1,2,3,4 - A plane
+    DC_WSC_A0 = '1', DC_WSC_A1 = '3', DC_WSC_A2 = '5', DC_WSC_A3 = '7',
+    DC_WSC_A4 = '9',        // Weak surface complex on site type 0,1,2,3,4 - B plane
+    DC_IESC_A  = 'A',       // Strong exchange ion const-charge plane
+    DC_IEWC_B  = 'B',       // Weak exchange ion const-charge plane
+
+    // Special class codes for diffusing species etc. (reserved)
+    DCaquoCATION   = 'c',
+    DCaquoANION    = 'n',
+    DCaquoLIGAND   = 'l',
+    DCaquoCOMPLEX  = 'x',
+    DCaquoIONPAIR  = 'p',
+    DCaquoGAS      = 'g',
+
+} DCL_CLASSES;
+
+
+typedef enum {  // Classes of Phases used in ccPH code list
+    PH_AQUEL    = 'a',  // aqueous electrolyte (also with HKF EoS)
+    PH_GASMIX   = 'g',  // mixture of gases (also corresponding states theory)
+    PH_FLUID    = 'f',  // supercritical fluid phase with special EoS
+    PH_LIQUID   = 'l',  // non-electrolyte liquid (melt)
+    PH_SORPTION = 'x',  // dispersed solid with adsorption (ion exchange) in aqueous system
+    PH_POLYEL   = 'y',  // colloidal poly- (oligo)electrolyte (reserved)
+    PH_SINCOND  = 's',  // condenced solid phase, also multicomponent (solid solution)
+    PH_SINDIS   = 'd',  // dispersed solid phase, also multicomponent
+} PHL_CLASSES;
+*/
 
 #endif
 // m_const.h in GEMIPM2K
