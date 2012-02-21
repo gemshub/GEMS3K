@@ -30,7 +30,7 @@ void TMulti::AutoInitialApproximation( )
 {
     long int T,Q,*STR=0,*NMB=0;
     long int i,j,k;
-    double GZ,EPS,*DN=0,*DU=0,*AA=0,*B1=0;
+    double GZ,EPS,*DN=0,*DU=0,*AAA=0,*B1=0;
 
     try
     {  // Allocation of work arrays
@@ -46,7 +46,7 @@ void TMulti::AutoInitialApproximation( )
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
-        EPS = pa_.p.EPS; //  13.10.00  KC  DK
+        EPS = pa.p.EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
@@ -68,10 +68,10 @@ void TMulti::AutoInitialApproximation( )
 
         // for(i=Q;i<Q+pm.N;i++) DU[i]=0.;
         // Allocation of arrays on T
-        AA= new double[T];
+        AAA= new double[T];
         STR= new long int[T];
         NMB= new long int[Q+1];
-        ErrorIf( !AA || !STR || !NMB, "AutoInitialApproximation()",
+        ErrorIf( !AAA || !STR || !NMB, "AutoInitialApproximation()",
             "Memory allocation error #2");
         for( k=0; k<T; k++)
          STR[k] = 0;
@@ -88,7 +88,7 @@ void TMulti::AutoInitialApproximation( )
             if(fabs(pm.G[i])>1E-19)
             {
                 k++;
-                AA[k]=-pm.G[i];
+                AAA[k]=-pm.G[i];
                 NMB[i]=k+1;
             }
             else NMB[i]=k+2;
@@ -96,13 +96,13 @@ void TMulti::AutoInitialApproximation( )
                 if(fabs(*(pm.A+i*pm.N+j))>1E-19)
                 {
                     k++;
-                    AA[k]=*(pm.A+i*pm.N+j);
+                    AAA[k]=*(pm.A+i*pm.N+j);
                     STR[k]=j+1;
                 }
         }
         NMB[Q]=T+1;
         // Calling generic simplex solver
-        SolveSimplex(pm.N,Q,T,GZ,EPS,DN,DU,B1,pm.U,AA,STR,NMB);
+        SolveSimplex(pm.N,Q,T,GZ,EPS,DN,DU,B1,pm.U,AAA,STR,NMB);
 
         // unloading simplex solution into a copy of x vector
         for(i=0;i<pm.L;i++)
@@ -111,23 +111,9 @@ void TMulti::AutoInitialApproximation( )
         // calculating initial quantities of phases
         TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
 
-#ifdef Use_qd_real
-        if( pa_.p.PD > 0)
-        {
-#endif
+
             pm.FX = GX( 0.0 ); // calculation of initial G(X) value
             MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
-#ifdef Use_qd_real
-        }
-        else
-        {
-            unsigned int old_cw;
-            fpu_fix_start(&old_cw);
-            pm.FX = to_double(qdGX( 0.0 )); // calculation of initial G(X) value
-            fpu_fix_end(&old_cw);
-            qdMassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C );
-        }
-#endif
 
 //        	for(long int i=0; i<pm.N; i++)
 //             cout << i << " C " << pm.C[i] << " B " << pm.B[i] << endl;
@@ -136,7 +122,7 @@ void TMulti::AutoInitialApproximation( )
         // Deleting work arrays
         if( DN) delete[]DN;
         if( DU) delete[]DU;
-        if( AA) delete[]AA;
+        if( AAA) delete[]AAA;
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
@@ -145,7 +131,7 @@ void TMulti::AutoInitialApproximation( )
     {
         if( DN) delete[]DN;
         if( DU) delete[]DU;
-        if( AA) delete[]AA;
+        if( AAA) delete[]AAA;
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
@@ -157,7 +143,7 @@ void TMulti::AutoInitialApproximation( )
 // Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 //  SPOS function
 //
-void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[])
+void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AAA[])
 {
     long int I,K;
     K=0;
@@ -165,7 +151,7 @@ void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int 
     {
         if( I==STR[NMB[J]+K-1])
         {
-            *(P+I)=AA[NMB[J]+K-1];
+            *(P+I)=AAA[NMB[J]+K-1];
             if( NMB[J]+K+1!=NMB[J+1])
                 K++;
         }
@@ -178,7 +164,7 @@ void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int 
 //
 void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB[],
            double GZ,double EPS,long int STR[],long int *BASE, double B[],
-           double UND[],double UP[],double AA[],double *A, double *Q )
+           double UND[],double UP[],double AAA[],double *A, double *Q )
 {
     long int I,J;
 
@@ -196,7 +182,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
             else if( UP[J]<0.)
                 Error("E00IPM: SolveSimplex()", "Inconsistent LP problem (negative UP[J] value(s) in START()) ");
         }
-        SPOS(Q, STR, NMB, J, M, AA);
+        SPOS(Q, STR, NMB, J, M, AAA);
         for( I=0;I<M;I++)
             B[I]-=Q[I+1]*UND[J];
     }
@@ -207,7 +193,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
             B[I]=fabs(B[I]);
             for( J=0;J<T;J++)
                 if(STR[J]==I)
-                    AA[J]=-AA[J];
+                    AAA[J]=-AAA[J];
         }
     }
     *A=0.;
@@ -229,7 +215,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
 //
 void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
                   long int *Z,long int STR[], long int NMB[], double UP[],
-                  double AA[], double *A)
+                  double AAA[], double *A)
 {
     long int I,J,J1;
     double MAX,A1;
@@ -240,7 +226,7 @@ void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,lo
     MAX=0.;
     for( J=J1+1;J<=N;J++)
     {
-        SPOS( P, STR, NMB, J-1, M, AA);
+        SPOS( P, STR, NMB, J-1, M, AAA);
         A1=-P[0];
         for( I=1;I<=M;I++)
             A1+=P[I]*(*(A+I));
@@ -267,7 +253,7 @@ MK3:
 
     for( J=1;J<J1;J++)
     {
-        SPOS(P, STR, NMB, J-1, M, AA);
+        SPOS(P, STR, NMB, J-1, M, AAA);
         A1=-P[0];
         for( I=1;I<=M;I++)
             A1+=P[I]*(*(A+I));
@@ -306,7 +292,7 @@ MK4:
 //  WORK function
 //
 void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
-                   long int M, long int STR[],long int NMB[],double AA[],
+                   long int M, long int STR[],long int NMB[],double AAA[],
                    long int BASE[],long int *UNO,double UP[],double *A,double Q[])
 {
     double MIM,A1;
@@ -317,7 +303,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
     *UNO=0;
     *ITER=*ITER+1;
     J=*J0-1;
-    SPOS(P, STR, NMB, J, M, AA);
+    SPOS(P, STR, NMB, J, M, AAA);
     for( I=0;I<=M;I++)
     {
         Q[I]=0.;
@@ -401,7 +387,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
 //
 void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
                   long int BASE[],double UND[],double UP[],double U[],
-                  double AA[],double *A,double Q[],long int * /*ITER*/)
+                  double AAA[],double *A,double Q[],long int * /*ITER*/)
 {
     long int /* K,*/I,J;
     double *P;
@@ -423,7 +409,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     Q[0]=0.;
     for( J=1;J<=N;J++)
     {
-        SPOS( P, STR, NMB, J-1, M, AA);
+        SPOS( P, STR, NMB, J-1, M, AAA);
         UP[J-1]+=UND[J-1];
         for( I=0;I<=M;I++)
             Q[I]+=UP[J-1]*P[I];
@@ -457,7 +443,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
 //
 void TMulti::SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
-                      double *AA, long int *STR, long int *NMB )
+                      double *AAA, long int *STR, long int *NMB )
 {
     long int IT=200,I0=0,J0=0,Z,UNO,OPT=0,ITER, i;
     double LEVEL;
@@ -475,14 +461,14 @@ void TMulti::SolveSimplex(long int M, long int N, long int T, double GZ, double 
         fillValue(BASE, 0L, (M) );
 
         LEVEL=GZ;
-        START( T, &ITER, M, N, NMB, GZ, EPS, STR, BASE, B,  UND, UP, AA, A, Q );
+        START( T, &ITER, M, N, NMB, GZ, EPS, STR, BASE, B,  UND, UP, AAA, A, Q );
 
         for( i=0; i<IT; i++ )   // while(1) fixed  03.11.00
         {
-            NEW( &OPT, N, M,EPS, &LEVEL, &J0, &Z, STR, NMB, UP, AA, A);
+            NEW( &OPT, N, M,EPS, &LEVEL, &J0, &Z, STR, NMB, UP, AAA, A);
             if( OPT)
                 goto FINISH;  // Converged
-            WORK( GZ, EPS, &I0, &J0, &Z, &ITER, M, STR, NMB, AA, BASE, &UNO, UP, A, Q);
+            WORK( GZ, EPS, &I0, &J0, &Z, &ITER, M, STR, NMB, AAA, BASE, &UNO, UP, A, Q);
             if( UNO)
                 goto FINISH; // Solution at boundary of the constraints polyhedron
         }
@@ -491,7 +477,7 @@ void TMulti::SolveSimplex(long int M, long int N, long int T, double GZ, double 
          Error( "E01IPM: SolveSimplex()",
              "LP solution cannot be obtained with sufficient precision" );
         }
-FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
+FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AAA, A, Q, &ITER);
         delete[] A;
         delete[] Q;
         delete[] BASE;
@@ -532,7 +518,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 
 //  to_text_file( "MultiDump1.txt" );   // Debugging
 
-if( pa_.p.DG > 1e-5 )
+if( pa.p.DG > 1e-5 )
 {
    ScFact = SystemTotalMolesIC();
    ScaleSystemToInternal( ScFact );
@@ -555,7 +541,7 @@ try{
   catch( TError& xcpt )
   {
 
-      if( pa_.p.DG > 1e-5 )
+      if( pa.p.DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
@@ -567,7 +553,7 @@ try{
      Error( xcpt.title, xcpt.mess);
   }
 
-  if( pa_.p.DG > 1e-5 )
+  if( pa.p.DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
 
 //  to_text_file( "MultiDump3.txt" );   // Debugging
@@ -592,7 +578,7 @@ double TMulti::SystemTotalMolesIC( )
 
   pm.TMols = mass_temp;
 
-  pm.SMols = pa_.p.DG;
+  pm.SMols = pa.p.DG;
   ScFact = pm.SMols/pm.TMols;
 
   return ScFact;
@@ -611,7 +597,6 @@ void TMulti::ScaleSystemToInternal(  double ScFact )
   pm.HX_ *= ScFact;
   pm.FX  *= ScFact;
   pm.Yw  *= ScFact;  // added 08.06.10 DK
-
   for( j=0; j<pm.L; j++ )
   {
     if(	pm.DUL[j] < 1e6  )
@@ -822,13 +807,12 @@ void TMulti::InitalizeGEM_IPM_Data( TNode* mynode) // Reset internal data former
 // Do it before calculations
 void TMulti::MultiConstInit() // from MultiRemake
 {
-  SPP_SETTING *pa = &pa_;
 
   pm.FI1 = 0;
   pm.FI1s = 0;
   pm.FI1a = 0;
   pm.ITF = 0; pm.ITG = 0;
-  pm.PD = abs(pa->p.PD);
+  pm.PD = abs(pa.p.PD);
   pm.Ec = pm.K2 = pm.MK = 0;
   pm.W1 = 0;
   pm.is = 0;
@@ -838,7 +822,7 @@ void TMulti::MultiConstInit() // from MultiRemake
   pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
   pm.logXw = -16.;
   pm.logYFk = -9.;
-  pm.DXM = pa->p.DK;
+  pm.DXM = pa.p.DK;
 
   //  ???????
   pm.FX = 7777777.;
@@ -847,7 +831,7 @@ void TMulti::MultiConstInit() // from MultiRemake
   pm.PCI = 1.0;
   pm.FitVar[4] = 1.0;
 
-  pm.PZ = pa->p.DW;  // in IPM
+  pm.PZ = pa.p.DW;  // in IPM
 //  pm.FitVar[0] = 0.0640000030398369;
 
 }

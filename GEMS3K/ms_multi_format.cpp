@@ -124,7 +124,6 @@ outField MULTI_dynamic_fields[69] =  {
 void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 		bool with_comments, bool brief_mode )
 {
-  SPP_SETTING *pa = &pa_;
    _comment = with_comments;
    char PAalp;
    char PSigm;
@@ -178,10 +177,10 @@ if( _comment )
  if( _comment )
      ff << "\n## (1) Important flags that affect memory allocation" << endl;
 
- if(!brief_mode || pa->p.PE != pa_.p.PE )
+ if(!brief_mode || pa.p.PE != pa.p.PE )
  { if( _comment )
       ff << "# PE: Flag for using electroneutrality condition in GEM IPM calculations " << endl;
-   ff << left << setw(12) << "<pa_PE> " <<  right << setw(8) << pa->p.PE << endl;
+   ff << left << setw(12) << "<pa_PE> " <<  right << setw(8) << pa.p.PE << endl;
  }
 
 //   ff << "# 'E'                1" << endl;
@@ -233,193 +232,193 @@ if( _comment )
    {  ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
       ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
    }
-   if(!brief_mode || pa->p.DB != pa_.p.DB )
+   if(!brief_mode || pa.p.DB != pa.p.DB )
    { if( _comment )
        ff << "# DB: Minimum amount of Independent Component in the bulk system composition (except charge Zz) (moles)" << endl;
-     ff << left << setw(12) << "<pa_DB> " <<  right << setw(8) << pa->p.DB << endl;
+     ff << left << setw(12) << "<pa_DB> " <<  right << setw(8) << pa.p.DB << endl;
    }
-   if(!brief_mode || pa->p.DHB != pa_.p.DHB )
+   if(!brief_mode || pa.p.DHB != pa.p.DHB )
    { if( _comment )
       ff << "\n# DHB: Maximum allowed relative mass balance residual for ICs ( 1e-9 to 1e-15 ) { 1e-12 } " << endl;
-     ff << left << setw(12) << "<pa_DHB> " << right << setw(8) <<  pa->p.DHB << endl;
+     ff << left << setw(12) << "<pa_DHB> " << right << setw(8) <<  pa.p.DHB << endl;
    }
-   if(!brief_mode || pa->p.EPS != pa_.p.EPS )
+   if(!brief_mode || pa.p.EPS != pa.p.EPS )
    { if( _comment )
       ff << "\n# EPS: Tolerance of the SolveSimplex() convergence (1e-6 to 1e-14) { 1e-10 }" << endl;
-    ff << left << setw(12) << "<pa_EPS> " <<  right << setw(8) << pa->p.EPS << endl;
+    ff << left << setw(12) << "<pa_EPS> " <<  right << setw(8) << pa.p.EPS << endl;
    }
-   if(!brief_mode || pa->p.DK != pa_.p.DK )
+   if(!brief_mode || pa.p.DK != pa.p.DK )
    { if( _comment )
       ff << "\n# DK: Tolerance threshold for the Dikin's criterion of IPM convergence (1e-6 to 1e-4) { 1e-5 }" << endl;
-     ff << left << setw(12) << "<pa_DK> " <<  right << setw(8) << pa->p.DK << endl;
+     ff << left << setw(12) << "<pa_DK> " <<  right << setw(8) << pa.p.DK << endl;
    }
-   if(!brief_mode || pa->p.DS != pa_.p.DS )
+   if(!brief_mode || pa.p.DS != pa.p.DS )
    { if( _comment )
       ff << "\n# DS: Cutoff min. amount of stable phase in GEM IPM primal solution (1e-8 to 1e-24) { 1e-20 }" << endl;
-     ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa->p.DS << endl;
+     ff << left << setw(12) << "<pa_DS> " << right << setw(8) <<  pa.p.DS << endl;
    }
-   if(!brief_mode || pa->p.DF != pa_.p.DF )
+   if(!brief_mode || pa.p.DF != pa.p.DF )
    { if( _comment )
       ff << "\n# DF: Tolerance DF for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted { 0.01 }" << endl;
-     ff << left << setw(12) << "<pa_DF> " <<  right << setw(8) << pa->p.DF << endl;
+     ff << left << setw(12) << "<pa_DF> " <<  right << setw(8) << pa.p.DF << endl;
    }
-   if(!brief_mode || pa->p.DFM != pa_.p.DFM )
+   if(!brief_mode || pa.p.DFM != pa.p.DFM )
    { if( _comment )
        ff << "# DFM: Tolerance for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated { 0.01 } " << endl;
-     ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa->p.DFM << endl;
+     ff << left << setw(12) << "<pa_DFM> " <<  right << setw(8) << pa.p.DFM << endl;
    }
-   if(!brief_mode || pa->p.DP != pa_.p.DP )
+   if(!brief_mode || pa.p.DP != pa.p.DP )
    {  if( _comment )
        ff << "\n# DP: Maximal number of iterations in MassBalanceRefinement() procedure (20 to 130) { 90 }" << endl;
-     ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa->p.DP << endl;
+     ff << left << setw(12) << "<pa_DP> " << right << setw(8) << pa.p.DP << endl;
    }
-   if(!brief_mode || pa->p.IIM != pa_.p.IIM )
+   if(!brief_mode || pa.p.IIM != pa.p.IIM )
    { if( _comment )
       ff << "\n# Maximum allowed number of iterations in one GEM IPM descent run (100 to 9999) { 7000 }" << endl;
-     ff << left << setw(12) << "<pa_IIM> " << right << setw(8) <<  pa->p.IIM << endl;
+     ff << left << setw(12) << "<pa_IIM> " << right << setw(8) <<  pa.p.IIM << endl;
    }
-   if(!brief_mode || pa->p.PD != pa_.p.PD )
+   if(!brief_mode || pa.p.PD != pa.p.PD )
    { if( _comment )
        ff << "\n# PD: Mode of calculation of activity coefficients ( 1 -IPM, 2 +EFD, 3 IPM ) { 2 } " << endl;
-     ff << left << setw(12) << "<pa_PD> " <<  right << setw(8) << pa->p.PD << endl;
+     ff << left << setw(12) << "<pa_PD> " <<  right << setw(8) << pa.p.PD << endl;
    }
-   if(!brief_mode || pa->p.PRD != pa_.p.PRD )
+   if(!brief_mode || pa.p.PRD != pa.p.PRD )
    { if( _comment )
        ff << "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -4 }" << endl;
-     ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa->p.PRD << endl;
+     ff << left << setw(12) << "<pa_PRD> " <<  right << setw(8) << pa.p.PRD << endl;
    }
-   if(!brief_mode || pa->p.AG != pa_.p.AG )
+   if(!brief_mode || pa.p.AG != pa.p.AG )
    { if( _comment )
       ff << "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments -1 to +1 { 1.0 }" << endl;
-     ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa->p.AG << endl;
+     ff << left << setw(12) << "<pa_AG> " <<  right << setw(8) << pa.p.AG << endl;
    }
-   if(!brief_mode || pa->p.DGC != pa_.p.DGC )
+   if(!brief_mode || pa.p.DGC != pa.p.DGC )
    { if( _comment )
       ff << "\n# DGC: Smoothing parameter 2 (exponent in smoothing function (-1 to +1) { -0.98 or 0.001 for adsorption }" << endl;
-     ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa->p.DGC << endl;
+     ff << left << setw(12) << "<pa_DGC> " <<  right << setw(8) << pa.p.DGC << endl;
    }
-   if(!brief_mode || pa->p.PSM != pa_.p.PSM )
+   if(!brief_mode || pa.p.PSM != pa.p.PSM )
    { if( _comment )
       ff << "\n# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- normal; 2-including warnings }" << endl;
-     ff << left << setw(12) << "<pa_PSM> " <<  right << setw(8) << pa->p.PSM << endl;
+     ff << left << setw(12) << "<pa_PSM> " <<  right << setw(8) << pa.p.PSM << endl;
    }
-   if(!brief_mode || pa->p.GAR != pa_.p.GAR )
+   if(!brief_mode || pa.p.GAR != pa.p.GAR )
    { if( _comment )
       ff << "# GAR: Initial activity coefficient value for major (M) species in a solution phase at LPP AIA { 1 }" << endl;
-     ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa->p.GAR << endl;
+     ff << left << setw(12) << "<pa_GAR> " <<  right << setw(8) << pa.p.GAR << endl;
    }
-   if(!brief_mode || pa->p.GAH != pa_.p.GAH )
+   if(!brief_mode || pa.p.GAH != pa.p.GAH )
    { if( _comment )
       ff << "# GAH: Initial activity coefficient value for minor (J) species in a solution phase at LPP AIA { 1000 }" << endl;
-     ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa->p.GAH << endl;
+     ff << left << setw(12) << "<pa_GAH> " <<  right << setw(8) << pa.p.GAH << endl;
    }
    if(!brief_mode)
     if( _comment )
      {  ff << "\n# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-11 }; Sc - solid sorbent {1e-11}; " << endl;
         ff <<   "#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-20 }" << endl;
      }
-   if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
-    ff << left << setw(12) << "<pa_XwMin> " <<  right << setw(8) << pa->p.XwMin << endl;
-   if(!brief_mode || pa->p.ScMin != pa_.p.ScMin )
-     ff << left << setw(12) << "<pa_ScMin> " <<  right << setw(8) << pa->p.ScMin << endl;
-   if(!brief_mode || pa->p.DcMin != pa_.p.DcMin )
-     ff << left << setw(12) << "<pa_DcMin> " <<  right << setw(8) << pa->p.DcMin << endl;
-   if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
-     ff << left << setw(12) << "<pa_PhMin> " <<  right << setw(8) << pa->p.PhMin << endl;
+   if(!brief_mode || pa.p.XwMin != pa.p.XwMin )
+    ff << left << setw(12) << "<pa_XwMin> " <<  right << setw(8) << pa.p.XwMin << endl;
+   if(!brief_mode || pa.p.ScMin != pa.p.ScMin )
+     ff << left << setw(12) << "<pa_ScMin> " <<  right << setw(8) << pa.p.ScMin << endl;
+   if(!brief_mode || pa.p.DcMin != pa.p.DcMin )
+     ff << left << setw(12) << "<pa_DcMin> " <<  right << setw(8) << pa.p.DcMin << endl;
+   if(!brief_mode || pa.p.PhMin != pa.p.PhMin )
+     ff << left << setw(12) << "<pa_PhMin> " <<  right << setw(8) << pa.p.PhMin << endl;
 
-   if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
+   if(!brief_mode || pa.p.ICmin != pa.p.ICmin )
    { if( _comment )
       ff << "\n# ICmin: Cutoff value of effective molal ionic strength to disable aq-gamma calculation (1e-6 to 1e-3) { 1e-5 }" << endl;
-     ff << left << setw(12) << "<pa_ICmin> " <<  right << setw(8) << pa->p.ICmin << endl;
+     ff << left << setw(12) << "<pa_ICmin> " <<  right << setw(8) << pa.p.ICmin << endl;
    }
-   if(!brief_mode || pa->p.PC != pa_.p.PC )
+   if(!brief_mode || pa.p.PC != pa.p.PC )
    { if( _comment )
       ff << "\n# PC: Mode of Phase Selection: 1 old (Select-2), 2 new (PSSC)  { 2 }" << endl;
-     ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa->p.PC << endl;
+     ff << left << setw(12) << "<pa_PC> " <<  right << setw(8) << pa.p.PC << endl;
    }
    if( _comment )
       ff << "# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
-   if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
+   if(!brief_mode || pa.p.DFYw != pa.p.DFYw )
    { if( _comment )
       ff << "# DFYw: Insertion mole amount for water-solvent at Simplex()->MassBalanceRefinement() bridge { 1e-5 }" << endl;
-      ff << left << setw(12) << "<pa_DFYw> " <<  right << setw(8) << pa->p.DFYw << endl;
+      ff << left << setw(12) << "<pa_DFYw> " <<  right << setw(8) << pa.p.DFYw << endl;
    }
-   if(!brief_mode || pa->p.DFYaq != pa_.p.DFYaq )
+   if(!brief_mode || pa.p.DFYaq != pa.p.DFYaq )
    { if( _comment )
       ff << "# DFYaq: Insertion mole amount for aqueous species at Simplex()->MBR() bridge { 1e-5 }" << endl;
-     ff << left << setw(12) << "<pa_DFYaq> " <<  right << setw(8) << pa->p.DFYaq << endl;
+     ff << left << setw(12) << "<pa_DFYaq> " <<  right << setw(8) << pa.p.DFYaq << endl;
    }
-   if(!brief_mode || pa->p.DFYid != pa_.p.DFYid )
+   if(!brief_mode || pa.p.DFYid != pa.p.DFYid )
    { if( _comment )
       ff << "\n# DFYid: Insertion mole amount for species of ideal solutions at Simplex()->MBR() bridge { 1e-5 }" << endl;
-     ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa->p.DFYid << endl;
+     ff << left << setw(12) << "<pa_DFYid> " <<  right << setw(8) << pa.p.DFYid << endl;
    }
-   if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
+   if(!brief_mode || pa.p.DFYr != pa.p.DFYr )
    { if( _comment )
       ff << "# DFYr: Insertion mole amount for a major species in a solution at Simplex()->MBR()bridge { 1e-5 }" << endl;
-    ff << left << setw(12) << "<pa_DFYr> " <<  right << setw(8) << pa->p.DFYr << endl;
+    ff << left << setw(12) << "<pa_DFYr> " <<  right << setw(8) << pa.p.DFYr << endl;
    }
-   if(!brief_mode || pa->p.DFYh != pa_.p.DFYh )
+   if(!brief_mode || pa.p.DFYh != pa.p.DFYh )
    { if( _comment )
       ff << "# DFYh: Insertion mole amount for a junior species in a solution at Simplex()->MBR() bridge{ 1e-5 }" << endl;
-     ff << left << setw(12) << "<pa_DFYh> " <<  right << setw(8) << pa->p.DFYh << endl;
+     ff << left << setw(12) << "<pa_DFYh> " <<  right << setw(8) << pa.p.DFYh << endl;
    }
-   if(!brief_mode || pa->p.DFYc != pa_.p.DFYc )
+   if(!brief_mode || pa.p.DFYc != pa.p.DFYc )
    { if( _comment )
       ff << "# DFYc:  Insertion mole amount for a single-component phase at Simplex()->MBR() bridge { 1e-5 }" << endl;
-     ff << left << setw(12) << "<pa_DFYc> " <<  right << setw(8) << pa->p.DFYc << endl;
+     ff << left << setw(12) << "<pa_DFYc> " <<  right << setw(8) << pa.p.DFYc << endl;
    }
-   if(!brief_mode || pa->p.DFYs != pa_.p.DFYs )
+   if(!brief_mode || pa.p.DFYs != pa.p.DFYs )
    { if( _comment )
       ff << "# DFYs: Insertion mole amount for a single-component phase in PSSC() { 1e-6 }" << endl;
-     ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa->p.DFYs << endl;
+     ff << left << setw(12) << "<pa_DFYs> " << right << setw(8) <<  pa.p.DFYs << endl;
    }
    if( _comment )
      ff << "\n# Parameters for high-accuracy IPM algorithm " << endl;
-   if(!brief_mode || pa->p.DW != pa_.p.DW )
+   if(!brief_mode || pa.p.DW != pa.p.DW )
    {    if( _comment )
       ff << "# DW: Activate (1) or disable (0) the error condition on DP - maximum allowed number of MBR() iterations { 1 }" << endl;
-   ff << left << setw(12) << "<pa_DW> " << right << setw(8) << pa->p.DW  << endl;
+   ff << left << setw(12) << "<pa_DW> " << right << setw(8) << pa.p.DW  << endl;
    }
-   if(!brief_mode || pa->p.DT != pa_.p.DT )
+   if(!brief_mode || pa.p.DT != pa.p.DT )
    { if( _comment )
       ff << "# DT: DHB is rel.max.MB cutoff for all ICs (0) or for major ICs: dec.exponent (<-6) of abs.MB cutoff; (1) for DHB also as abs.cutoff { 1 }" << endl;
-     ff << left << setw(12) << "<pa_DT> " << right << setw(8) << pa->p.DT  << endl;
+     ff << left << setw(12) << "<pa_DT> " << right << setw(8) << pa.p.DT  << endl;
    }
-   if(!brief_mode || pa->p.GAS != pa_.p.GAS )
+   if(!brief_mode || pa.p.GAS != pa.p.GAS )
    { if( _comment )
        ff << "\n# GAS: Threshold for primal-dual norm.chem.pot.difference used in SpeciationCleanup() { 0.0001 }" << endl;
-     ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa->p.GAS << endl;
+     ff << left << setw(12) << "<pa_GAS> " << right << setw(8) <<  pa.p.GAS << endl;
    }
-   if(!brief_mode || pa->p.DG != pa_.p.DG )
+   if(!brief_mode || pa.p.DG != pa.p.DG )
    { if( _comment )
           ff << "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1e3 }" << endl;
-     ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa->p.DG << endl;
+     ff << left << setw(12) << "<pa_DG> " <<  right << setw(8) << pa.p.DG << endl;
    }
-   if(!brief_mode || pa->p.DNS != pa_.p.DNS )
+   if(!brief_mode || pa.p.DNS != pa.p.DNS )
    { if( _comment )
        ff << "# DNS: Standard surface density (nm-2) for calculating activity of surface species { 12.05 nm-2 }" << endl;
-     ff << left << setw(12) << "<pa_DNS> " <<  right << setw(8) << pa->p.DNS << endl;
+     ff << left << setw(12) << "<pa_DNS> " <<  right << setw(8) << pa.p.DNS << endl;
    }
-   if(!brief_mode || pa->p.IEPS != pa_.p.IEPS )
+   if(!brief_mode || pa.p.IEPS != pa.p.IEPS )
    { if( _comment )
        ff << "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }" << endl;
-     ff << left << setw(12) << "<pa_IEPS> " <<  right << setw(8) << pa->p.IEPS << endl;
+     ff << left << setw(12) << "<pa_IEPS> " <<  right << setw(8) << pa.p.IEPS << endl;
    }
    if(!brief_mode )
    { if( _comment )
        ff << "\n# pKin:Flag for using metastability constraints on calculated amounts of Dependent Components { 1 } " << endl;
      ff << left << setw(12) << "<pKin> " <<  right << setw(8) << pm.PLIM << endl;
    }
-   if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
+   if(!brief_mode || pa.p.DKIN != pa.p.DKIN )
    { if( _comment )
       ff << "# DKIN: Tolerance for non-trivial metastability restrictions on amounts of dependent components, moles { 1e-8 } " << endl;
-     ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa->p.DKIN << endl;
+     ff << left << setw(12) << "<pa_DKIN> " <<  right << setw(8) << pa.p.DKIN << endl;
    }
-   if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
+   if(!brief_mode || pa.p.PLLG != pa.p.PLLG )
    { if( _comment )
        ff << "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 1000 { 3000 }, 0 disables" << endl;
-     ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa->p.PLLG << endl;
+     ff << left << setw(12) << "<pa_PLLG> " <<  right << setw(8) << pa.p.PLLG << endl;
    }
 
    if(!brief_mode || pm.tMin != G_TP_ )
@@ -649,7 +648,6 @@ getLsMdcsum( LsMdcSum );
 
 void TMulti::from_text_file_gemipm( TNode *na, const char *path )
 {
-  SPP_SETTING *pa = &pa_;
   DATACH  *dCH = na->pCSD();
   long int ii, nfild;
 
@@ -697,7 +695,7 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
   pm.Tai[3] = dCH->Ttol;
 
   // setup default constants
-  pa->p.PE =  pm.E = 1;
+  pa.p.PE =  pm.E = 1;
   pm.PV = 0;
   pm.PSOL = 0;
   PAalp = '+';
@@ -723,8 +721,8 @@ void TMulti::from_text_file_gemipm( TNode *na, const char *path )
    {
      switch( nfild )
      {
-       case 0: rdar.readArray("pa_PE" , &pa->p.PE, 1);
-                 pm.E = pa->p.PE;
+       case 0: rdar.readArray("pa_PE" , &pa.p.PE, 1);
+                 pm.E = pa.p.PE;
               break;
        case 1: rdar.readArray("PV" , &pm.PV, 1);
               break;
@@ -963,79 +961,79 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                 Error( "Error", "Array DCC3 not used in this problem");
                rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
                break;
-      case 27: rddar.readArray( "pa_DB" , &pa->p.DB, 1);
+      case 27: rddar.readArray( "pa_DB" , &pa.p.DB, 1);
                break;
-      case 28: rddar.readArray("pa_DHB", &pa->p.DHB, 1);
+      case 28: rddar.readArray("pa_DHB", &pa.p.DHB, 1);
                break;
-      case 29: rddar.readArray("pa_EPS" , &pa->p.EPS, 1);
+      case 29: rddar.readArray("pa_EPS" , &pa.p.EPS, 1);
                break;
-      case 30: rddar.readArray("pa_DK" , &pa->p.DK, 1);
+      case 30: rddar.readArray("pa_DK" , &pa.p.DK, 1);
                break;
-      case 31: rddar.readArray("pa_DF" , &pa->p.DF, 1);
+      case 31: rddar.readArray("pa_DF" , &pa.p.DF, 1);
                break;
-      case 32: rddar.readArray("pa_DP", &pa->p.DP, 1);
+      case 32: rddar.readArray("pa_DP", &pa.p.DP, 1);
                break;
-      case 33: rddar.readArray("pa_IIM", &pa->p.IIM, 1);
+      case 33: rddar.readArray("pa_IIM", &pa.p.IIM, 1);
                break;
-      case 34: rddar.readArray("pa_PD" , &pa->p.PD, 1);
+      case 34: rddar.readArray("pa_PD" , &pa.p.PD, 1);
                break;
-      case 35: rddar.readArray("pa_PRD" , &pa->p.PRD, 1);
+      case 35: rddar.readArray("pa_PRD" , &pa.p.PRD, 1);
                break;
-      case 36: rddar.readArray("pa_AG" , &pa->p.AG, 1);
+      case 36: rddar.readArray("pa_AG" , &pa.p.AG, 1);
                break;
-      case 37: rddar.readArray("pa_DGC" , &pa->p.DGC, 1);
+      case 37: rddar.readArray("pa_DGC" , &pa.p.DGC, 1);
                break;
-      case 38: rddar.readArray("pa_PSM" , &pa->p.PSM, 1);
+      case 38: rddar.readArray("pa_PSM" , &pa.p.PSM, 1);
                break;
-      case 39: rddar.readArray("pa_GAR" , &pa->p.GAR, 1);
+      case 39: rddar.readArray("pa_GAR" , &pa.p.GAR, 1);
                break;
-      case 40: rddar.readArray("pa_GAH" , &pa->p.GAH, 1);
+      case 40: rddar.readArray("pa_GAH" , &pa.p.GAH, 1);
                break;
-      case 41: rddar.readArray("pa_DS", &pa->p.DS, 1);
+      case 41: rddar.readArray("pa_DS", &pa.p.DS, 1);
                break;
-      case 42: rddar.readArray("pa_XwMin" , &pa->p.XwMin, 1);
+      case 42: rddar.readArray("pa_XwMin" , &pa.p.XwMin, 1);
                break;
-      case 43: rddar.readArray("pa_ScMin" , &pa->p.ScMin, 1);
+      case 43: rddar.readArray("pa_ScMin" , &pa.p.ScMin, 1);
                break;
-      case 44: rddar.readArray("pa_DcMin" , &pa->p.DcMin, 1);
+      case 44: rddar.readArray("pa_DcMin" , &pa.p.DcMin, 1);
                break;
-      case 45: rddar.readArray("pa_PhMin" , &pa->p.PhMin, 1);
+      case 45: rddar.readArray("pa_PhMin" , &pa.p.PhMin, 1);
                break;
-      case 46: rddar.readArray("pa_ICmin" , &pa->p.ICmin, 1);
+      case 46: rddar.readArray("pa_ICmin" , &pa.p.ICmin, 1);
                break;
-      case 47: rddar.readArray("pa_PC" , &pa->p.PC, 1);
+      case 47: rddar.readArray("pa_PC" , &pa.p.PC, 1);
                break;
-      case 48: rddar.readArray("pa_DFM" , &pa->p.DFM, 1);
+      case 48: rddar.readArray("pa_DFM" , &pa.p.DFM, 1);
                break;
-      case 49: rddar.readArray("pa_DFYw" , &pa->p.DFYw, 1);
+      case 49: rddar.readArray("pa_DFYw" , &pa.p.DFYw, 1);
                break;
-      case 50: rddar.readArray("pa_DFYaq" , &pa->p.DFYaq, 1);
+      case 50: rddar.readArray("pa_DFYaq" , &pa.p.DFYaq, 1);
                break;
-      case 51: rddar.readArray("pa_DFYid" , &pa->p.DFYid, 1);
+      case 51: rddar.readArray("pa_DFYid" , &pa.p.DFYid, 1);
                break;
-      case 52: rddar.readArray("pa_DFYr" , &pa->p.DFYr, 1);
+      case 52: rddar.readArray("pa_DFYr" , &pa.p.DFYr, 1);
                break;
-      case 53: rddar.readArray("pa_DFYh" , &pa->p.DFYh, 1);
+      case 53: rddar.readArray("pa_DFYh" , &pa.p.DFYh, 1);
                break;
-      case 54: rddar.readArray("pa_DFYc" , &pa->p.DFYc, 1);
+      case 54: rddar.readArray("pa_DFYc" , &pa.p.DFYc, 1);
                break;
-      case 55: rddar.readArray("pa_DFYs", &pa->p.DFYs, 1);
+      case 55: rddar.readArray("pa_DFYs", &pa.p.DFYs, 1);
                break;
-      case 56: rddar.readArray("pa_DW", &pa->p.DW , 1);
+      case 56: rddar.readArray("pa_DW", &pa.p.DW , 1);
                break;
-      case 57: rddar.readArray("pa_DT", &pa->p.DT , 1);
+      case 57: rddar.readArray("pa_DT", &pa.p.DT , 1);
                break;
-      case 58: rddar.readArray("pa_GAS", &pa->p.GAS, 1);
+      case 58: rddar.readArray("pa_GAS", &pa.p.GAS, 1);
                break;
-      case 59: rddar.readArray("pa_DG" , &pa->p.DG, 1);
+      case 59: rddar.readArray("pa_DG" , &pa.p.DG, 1);
                break;
-      case 60: rddar.readArray("pa_DNS" , &pa->p.DNS, 1);
+      case 60: rddar.readArray("pa_DNS" , &pa.p.DNS, 1);
                break;
-      case 61: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
+      case 61: rddar.readArray("pa_IEPS" , &pa.p.IEPS, 1);
                break;
       case 62: rddar.readArray("pKin" , &pm.PLIM, 1);
                break;
-      case 63: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
+      case 63: rddar.readArray("pa_DKIN" , &pa.p.DKIN, 1);
                break;
       case 64: rddar.readArray("mui" , pm.mui, pm.N);
                break;
@@ -1043,7 +1041,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
                break;
       case 66: rddar.readArray("muj" , pm.muj, pm.L);
                break;
-      case 67: rddar.readArray("pa_PLLG" , &pa->p.PLLG, 1);
+      case 67: rddar.readArray("pa_PLLG" , &pa.p.PLLG, 1);
                break;
       case 68: rddar.readArray("tMin" , &pm.tMin, 1);
              break;

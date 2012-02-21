@@ -45,7 +45,7 @@ protected:
 
  //   TMulti* multi;
   //  MULTI *pmp;
-  SPP_SETTING pa;
+   // SPP_SETTING pa; is part of tmulti
 
  //   TProfil( TMulti* amulti );
  

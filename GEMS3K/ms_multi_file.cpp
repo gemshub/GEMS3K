@@ -134,8 +134,8 @@ void TMulti::set_def( long int /*q*/)
     fillValue( pm.Pai, 0., 4 );
     pm.SizeFactor = 1.; // using in TNode class
 
-    // pointers
-    pm.sitNcat = 0;
+    // pointers  KG44 ....should be correctly initialized ....
+/*    pm.sitNcat = 0;
     pm.sitNan = 0;
     pm.L1    = 0;
     pm.LsMod = 0;
@@ -280,6 +280,7 @@ pm.SPh = 0;
 pm.CPh = 0;
 pm.APh = 0;
 pm.UPh = 0;
+*/ // KG44 end of pointers....
 }
 
 //---------------------------------------------------------//
@@ -415,6 +416,7 @@ void TMulti::to_file( GemDataStream& ff  )
     if( PAalp != S_OFF )
     {
       ff.writeArray(pm.Aalp, pm.FI);
+          //  cout << "DEBUG write1 pm.aalp" << endl;
       ff.writeArray((double *)pm.Xr0h0, pm.FI*2);
     }
 
@@ -621,8 +623,10 @@ void TMulti::from_file( GemDataStream& ff )
     if( PAalp != S_OFF )
     {
       ff.readArray(pm.Aalp, pm.FI);
+    //  cout << "DEBUG read pm.aalp" << endl;
       ff.readArray((double *)pm.Xr0h0, pm.FI*2);
     }
+    else cout << "DEBUG did nor read sorption phase" << endl;
 
    if( PSigm != S_OFF )
       ff.readArray(pm.Sigw, pm.FI);
@@ -701,11 +705,12 @@ ff.readArray((double*)pm.D, MST*MST);
 void TMulti::multi_realloc( char PAalp, char PSigm )
 {
   long int ii, jj ;
+ cout << " DEBUG multi realloc" << endl;
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
         Error( GetName(), "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
 
     // Part 1
-     // need  always to alloc vectors
+     // need  always to alloc vectors 
  pm.L1 = new long int[pm.FI];
  pm.muk = new long int[pm.FI];
  for( ii=0; ii<pm.FI; ii++)
@@ -846,6 +851,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = new double[pm.L];
    pm.Gamma = new double[pm.L];
    pm.lnGmf = new double[pm.L]; //7
+ //  cout << "DEBUG pm.lnGmf will be initialized " << pm.L<< endl;
    for( ii=0; ii<pm.L; ii++ )
    {
 	   pm.Y_la[ii] = 0.0;
@@ -858,7 +864,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    }
    //   pm.D = new double[pm.L];
  }
- else
+ else // KG44 this pointer stuff is crap
  {
    pm.Y_la = 0;
    pm.Y_w = 0;
@@ -867,6 +873,8 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = 0;
    pm.Gamma = 0;
    pm.lnGmf = 0;
+ //  cout << "DEBUG pm.lnGmf will be not initialized " << pm.L<< endl;
+   exit(1); // KG44 DEBUG..lets exit here
 //   pm.D = 0;
  }
 
@@ -912,7 +920,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    }
 
  }
- else
+ else // KGG pointer ...better remove
  {
    pm.BF = 0;
    pm.BFC = 0;
@@ -928,6 +936,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.sMod = 0;
    pm.RFLC = 0;
    pm.RFSC = 0;
+   exit(1); //KG44 lets better exit here
  }
 
  if( pm.LO > 1 )
@@ -945,18 +954,20 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
 	   pm.IC_wm[ii] = 0.0;
    }
  }
- else
+ else // more pointers
  {
    pm.Y_m = 0;
    pm.IC_m = 0;
    pm.IC_lm = 0;
    pm.IC_wm = 0;
+      exit(1); //KG44 lets better exit here
  }
 
  // dispersion and sorption phases
  if( PAalp != S_OFF )
  {
    pm.Aalp = new double[pm.FI];
+     cout << "DEBUG new pm.aalp" << endl;
    for( ii=0; ii<pm.FI; ii++ )
 	   pm.Aalp[ii] = 0.0;
    pm.Xr0h0 = new double[pm.FI][2];
@@ -967,6 +978,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
  {
    pm.Aalp = 0;
    pm.Xr0h0 = 0;
+   exit(1); // better exit here
  }
 
  if( PSigm != S_OFF )
@@ -996,11 +1008,12 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
         pm.Xeps[ii] = 0.0;
     }
  }
- else
+ else // pointer
  {
     pm.EZ = 0;
     pm.Xcond = 0;
     pm.Xeps = 0;
+       exit(1); //KG44 lets better exit here
  }
 
  if( pm.FIat > 0 /*&& pm.Lads > 0*/ && pm.FIs > 0 )
@@ -1075,7 +1088,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    	      pm.D[ii][jj] = 0.0;
 
  }
-else
+else  // KG44 pointers
  { // ADSORPTION AND ION EXCHANGE
    pm.SCM  = 0;
     pm.Nfsp = 0;
@@ -1102,6 +1115,7 @@ else
     pm.SM3 = 0;
     pm.DCC3 = 0;
     pm.D = 0;
+       exit(1); //KG44 lets better exit here
  }
 
  if( pm.PG > 0 )
@@ -1116,11 +1130,12 @@ else
 	  pm.Ppg_l[ii] = 0.;
   }
  }
-else
+else // pointer
  {
   pm.Fug = 0;
   pm.Fug_l = 0;
   pm.Ppg_l = 0;
+     exit(1); //KG44 lets better exit here
  }
 
    // Part 3
@@ -1146,14 +1161,14 @@ else
             pm.Qd[ii] = 0.;
         }
  }
- else
+ else // pointer
  {
     pm.Wb = 0;
     pm.Wabs = 0;
     pm.Rion = 0;
     pm.Qp = 0;
     pm.Qd = 0;
-
+   exit(1); //KG44 lets better exit here
  }
 
  // added SD 03/02/2009
@@ -1201,7 +1216,6 @@ else
 	  pm.APh[ii][jj]  = 0.;
 	  pm.UPh[ii][jj]  = 0.;
   }
-
  Alloc_TSolMod( pm.FIs );
 
 }
@@ -1210,10 +1224,13 @@ else
 // Reallocation of dynamic memory
 void TMulti::multi_free()
 {
+      // KG44 somewhere we have to add the surface complexation stuff
+ cout << "DEBUG call multi_free" << endl;
+
     // Part 1
      // need  always to alloc vectors
-/*     if (pm) delete pm;
- if( pm.L1) delete[] pm.L1;
+ //   if (pm) delete pm;
+/* if( pm.L1) delete[] pm.L1;
  if( pm.muk) delete[] pm.muk;
  if( pm.mui) delete[] pm.mui;
  if( pm.muj) delete[] pm.muj;
@@ -1401,8 +1418,8 @@ void TMulti::to_text_file( const char *path, bool append )
 
   TPrintArrays  prar(0,0,ff);
 
-  prar.writeArray( "Short_PARAM",  &pa_.p.PC, 10L );
-  prar.writeArray( "Double_PARAM",  &pa_.p.DG, 28L );
+  prar.writeArray( "Short_PARAM",  &pa.p.PC, 10L );
+  prar.writeArray( "Double_PARAM",  &pa.p.DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 38L );
   prar.writeArray(  "Double_Const",  &pm.TC, 55, 20 );
   prar.writeArray(  "EpsW", pm.epsW, 5);
@@ -1508,6 +1525,7 @@ void TMulti::to_text_file( const char *path, bool append )
     if( PAalp != S_OFF )
     {
      prar.writeArray(  "Aalp", pm.Aalp, pm.FI);
+       //    cout << "DEBUG write pm.aalp" << endl;
      prar.writeArray(  "Xr0h0", &pm.Xr0h0[0][0],  pm.FI*2);
     }
 

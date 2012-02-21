@@ -373,7 +373,13 @@ if( binary_f )
 
     ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
     checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
-
+    // KG44 somewhere we have to add the surface complexation stuff
+/*  if( pm.Aalp ) {
+    CSD->nAalp = 1; cout << "DEBUG work with surface complextion" << endl;
+  }
+  else {
+    CSD->nAalp = 0;cout << "DEBUG work without surface complextion" << endl;
+  } */
    return 0;
 
     }
@@ -385,7 +391,8 @@ if( binary_f )
     {
         return -1;
     }
-    return 1;
+
+  return 1;
 }
 
 //-----------------------------------------------------------------
@@ -1290,11 +1297,15 @@ void TNode::packDataBr()
   CNode->Eh = pm.Eh;
   CNode->Ms = pm.MBX;
 
+
   // arrays
    for( ii=0; ii<CSD->nPHb; ii++ )
    {  CNode->xPH[ii] = pm.XF[ CSD->xph[ii] ];
-      if( CSD->nAalp >0 )
+      if( CSD->nAalp >0 ){
        CNode->aPH[ii] = pm.Aalp[ CSD->xph[ii] ]*kg_to_g;
+	    //	cout << "packDBR DEBUG node p_apPH ->aPH " <<  pm.Aalp[ CSD->xph[ii] ] << " " <<  CNode->aPH[ii] << "nd p_aPH[ii] "<< endl;
+      }
+        //    cout << "DEBUG node pm.aalp1" << endl;
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
    {   CNode->vPS[ii] = pm.FVOL[ CSD->xph[ii] ]/m3_to_cm3;
@@ -1365,10 +1376,13 @@ void TNode::unpackDataBr( bool uPrimalSol )
       }
 
   }
-  for( ii=0; ii<CSD->nPHb; ii++ )
+
+  for( ii=0; ii<CSD->nPHb; ii++ ) //here we miss the data...!!!
   {
-    if( CSD->nAalp >0 )
+    if( CSD->nAalp >0 ){
         pm.Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
+	   // 	cout << " unpackdbr DEBUG node p_apPH ->aPH " <<  pm.Aalp[ CSD->xph[ii] ] << " aph " <<  CNode->aPH[ii] << " nd p_aPH[ii]" << endl;
+    }
   }
 
  if( !uPrimalSol )
@@ -1510,9 +1524,12 @@ void TNode::GEM_restore_MT(
    {  p_dul[ii] = CNode->dul[ii];
       p_dll[ii] = CNode->dll[ii];
    }
+
    if( CSD->nAalp >0 )
-     for( ii=0; ii<CSD->nPHb; ii++ )
+     for( ii=0; ii<CSD->nPHb; ii++ ) {
         p_aPH[ii] = CNode->aPH[ii];
+	    //	cout << "GEM_restore_MT DEBUG  p_apPH ->aPH " <<  pm.Aalp[ CSD->xph[ii] ] << " aph " <<  CNode->aPH[ii] << "p_aph " << p_aPH[ii] << endl;
+     }
 }
 
 // (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
@@ -1621,9 +1638,12 @@ void TNode::GEM_from_MT(
         CNode->dul[ii] = p_dul[ii];
         CNode->dll[ii] = p_dll[ii];
       }
+
        if( CSD->nAalp >0 )
-        for( ii=0; ii<CSD->nPHb; ii++ )
+        for( ii=0; ii<CSD->nPHb; ii++ ){
             CNode->aPH[ii] = p_aPH[ii];
+	    //	cout << "GEM_FROM_MT DEBUG node p_apPH ->aPH " <<  pm.Aalp[ CSD->xph[ii] ] << " " <<  CNode->aPH[ii] << " " << p_aPH[ii] << endl;
+	}
       if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
         CNode->NodeStatusCH = NEED_GEM_AIA;
       // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
@@ -1669,9 +1689,12 @@ void TNode::GEM_from_MT(
      CNode->dul[ii] = p_dul[ii];
      CNode->dll[ii] = p_dll[ii];
    }
-    if( CSD->nAalp >0 )
-     for( ii=0; ii<CSD->nPHb; ii++ )
+
+   if( CSD->nAalp >0 )
+     for( ii=0; ii<CSD->nPHb; ii++ ){
          CNode->aPH[ii] = p_aPH[ii];
+	    //	cout << "DEBUG GEM_FROM_MT 2 node p_apPH ->aPH " <<  pm.Aalp[ CSD->xph[ii] ] << " " <<  CNode->aPH[ii] << " " << p_aPH[ii] << endl;
+     }
    if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
      CNode->NodeStatusCH = NEED_GEM_AIA;
    // Switch only if SIA is ordered, leave if simplex is ordered (KD)
@@ -1726,10 +1749,13 @@ void TNode::GEM_from_MT(
      CNode->dul[ii] = p_dul[ii];
      CNode->dll[ii] = p_dll[ii];
    }
-    if( CSD->nAalp >0 )
-     for( ii=0; ii<CSD->nPHb; ii++ )
-         CNode->aPH[ii] = p_aPH[ii];
 
+
+   if( CSD->nAalp >0 )
+     for( ii=0; ii<CSD->nPHb; ii++ ){
+         CNode->aPH[ii] = p_aPH[ii];
+	    //	cout << "DEBUG GEM_FROM_MT 3 node p_apPH ->aPH " <<  pm.Aalp[ CSD->xph[ii] ] << " " <<  CNode->aPH[ii] << " " << p_aPH[ii] << endl;
+     }
    // Optional part - copying old primal solution from p_xDC and p_gam vectors
    if( p_xDC && p_gam )
    {

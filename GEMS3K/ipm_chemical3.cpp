@@ -65,9 +65,9 @@ void TMulti::SetSmoothingFactor( long int mode )
 
     ir = pm.IT;
     irf = (double)ir;
-    ag = pa_.p.AG; // pm.FitVar[4];
-    dg = pa_.p.DGC;
-    iim = (double)pa_.p.IIM;
+    ag = pa.p.AG; // pm.FitVar[4];
+    dg = pa.p.DGC;
+    iim = (double)pa.p.IIM;
 
     if( dg > -0.0001 && ag >= 0.0001 ) // Smoothing used in the IPM-2 algorithm
     {					// with some improvements
@@ -275,8 +275,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmXFk;
-    SPP_SETTING *pa = &pa_;
-
+    double nxk ;
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
     {
@@ -298,7 +297,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             jde += pm.LsMdc[k]*pm.L1[k];
             sMod = pm.sMod[k];
 
-   		    double nxk = 1./pm.L1[k];
+            nxk = 1./pm.L1[k];
             for( j= jb; j<je; j++ )
     		{
                 if(pm.XF[k] < min( pm.DSM, pm.PhMinM ) ) // pm.lowPosNum )   // workaround 10.03.2008 DK
@@ -421,7 +420,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
         switch( pm.PHC[k] )
         {  // calculating activity coefficients using built-in functions
           case PH_AQUEL:   // DH III variant consistent with HKF
-             if( pmXFk > pm.DSM && pm.X[pm.LO] > pm.XwMinM && pm.IC > pa->p.ICmin )
+             if( pmXFk > pm.DSM && pm.X[pm.LO] > pm.XwMinM && pm.IC > pa.p.ICmin )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
@@ -446,7 +445,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
           case PH_GASMIX:
           case PH_PLASMA:
           case PH_FLUID:
-             if( pmXFk > pm.DSM && pm.XF[k] > pa->p.PhMin )
+             if( pmXFk > pm.DSM && pm.XF[k] > pa.p.PhMin )
              {
                  if( sMod[SPHAS_TYP] == SM_CGFLUID )  // CG EoS fluid model
                      SolModActCoeff( k, sMod[SPHAS_TYP] );
@@ -539,6 +538,7 @@ END_LOOP:
 
              pm.F0[j] = DC_PrimalChemicalPotentialUpdate( j, k );
              pm.G[j] = pm.G0[j] + pm.fDQF[j] + pm.F0[j];
+	     if (isnan(pm.G[j])) cout << "DEBUG: activity (chemical 3) " <<  pm.G[j] << " pm.G0[j] "<<pm.G0[j]<<  " pm.fDQF[j] "<< pm.fDQF[j] << " pm.F0[j] "<< pm.F0[j] << endl;
            }
         }
     }  // k - end loop over phases

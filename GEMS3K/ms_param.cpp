@@ -51,46 +51,13 @@ enum volume_code {  // Codes of volume parameter ???
 
 
 
-/*
-void BASE_PARAM::write(fstream& oss)
-{
-  short arr[10];
-
-  arr[0] = PC;
-  arr[1] = PD;
-  arr[2] = PRD;
-  arr[3] = PSM;
-  arr[4] = DP;
-  arr[5] = DW;
-//   arr[6] = DT
-  arr[7] = PLLG;
-  arr[8] = PE;
-  arr[9] = IIM;
-
-  oss.write( (char*)arr, 10*sizeof(short) );
-  oss.write( (char*)&DG, 28*sizeof(double) );
-  oss.write( (char*)&tprn, sizeof(char*) );
-}
-
-void SPP_SETTING::write(fstream& oss)
-{
-    oss.write( ver, TDBVERSION );SPP
-    p.write( oss );
-}
-*/
-//TProfil::TProfil( TMulti* amulti )
-//{
-//    pa= pa_;
-//    multi = amulti;
-//    pm = multi->GetPM();
-//}
 
 // test result GEM IPM calculation of equilibrium state in MULTI
 long int TMulti::testMulti(  )
 {
   if( pm.MK || pm.PZ )
   {
-	if( pa_.p.PSM == 2 )
+	if( pa.p.PSM == 2 )
 	{
       fstream f_log("ipmlog.txt", ios::out|ios::app );
       f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;

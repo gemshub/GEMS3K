@@ -171,7 +171,6 @@ double
     *Sigg  	// Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
     ;
 
-
 //  Data for surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   // mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
   double  (*Nfsp)[MST];  // Fractions of the sorbent specific surface area allocated to surface types  [FIs][FIat]
@@ -308,7 +307,6 @@ double
   char errorCode[100]; //  code of error in IPM      (Ec number of error)
   char errorBuf[1024]; // description of error in IPM
   double logCDvalues[5]; // Collection of lg Dikin crit. values for the new smoothing equation
-//  qd_real qdFX;    	// Current Gibbs potential of the system in IPM, moles
 
   double // Iterators for MTP interpolation (do not load/unload for IPM)
 Pai[4],  // Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol
@@ -346,7 +344,6 @@ class TMulti
 {
    // MULTI *pmp;
 
-   SPP_SETTING pa, pa_;
 // Internal arrays for the performance optimization  (since version 2.0.0)
    long int sizeN; /*, sizeL, sizeAN;*/
    double *AA;
@@ -506,6 +503,7 @@ class TMulti
 
 public:
     MULTI pm;
+    SPP_SETTING pa;
 
   void set_def( long int i=0);
 
@@ -544,7 +542,7 @@ public:
         pa.p.DP=130;  /* DP */
         pa.p.DW=1;   /* DW */
         pa.p.DT=0; /* DT */    
-        pa.p.PLLG=3000;   /* PLLG */   
+        pa.p.PLLG=0;   /* PLLG */   // KG44 divergence detection disabled per default
         pa.p.PE=1;  /* PE */  
         pa.p.IIM=7000; /* IIM */
         pa.p.DG=1000.; /* DG */ 
@@ -576,7 +574,6 @@ public:
         pa.p.IEPS=1e-3;  /* IEPS */
         pa.p.DKIN=1e-10;  /* DKIN  */ 
 
-pa_=pa;
    }
 
     ~TMulti()

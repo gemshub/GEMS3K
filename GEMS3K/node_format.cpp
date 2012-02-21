@@ -1397,8 +1397,8 @@ for(  j=0; j<CSD->nDCb; j++ )
     for( long int k=0; k<CSD->nPHb; k++ )
       CNode->aPH[k] = 0.0;       // default assignment
  }
- else
-    CNode->aPH = 0;
+// else
+//    CNode->aPH = 0;
 
  CNode->xPH = new double[CSD->nPHb];
  CNode->vPS = new double[CSD->nPSb];

@@ -74,7 +74,7 @@ void TMulti::XmaxSAT_IPM2()
     { // Loop over DCs
         if( pm.X[j] <= min( pm.lowPosNum, pm.DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
-        rIEPS = pa_.p.IEPS;
+        rIEPS = pa.p.IEPS;
         ja = j - ( pm.Ls - pm.Lads );
 
         switch( pm.DCC[j] )  // code of species class
@@ -161,7 +161,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL <<
 */                break;
 
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
-                rIEPS = pa_.p.IEPS;
+                rIEPS = pa.p.IEPS;
                 XS0 = (max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
                 XS0 = XS0 * XVk * Mm / 1e6 * pm.Nfsp[k][ist]; // in moles
 
@@ -179,30 +179,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL <<
   } // k
 }
 
-/* // clearing pm.DUL constraints!
-void TMulti::XmaxSAT_IPM2_reset()
-{
-    long int j, ja, k, jb, je=0;
 
-  if(!pm.DUL )   // no upper kinetic constraints!
-      return;
-
-  for( k=0; k<pm.FIs; k++ )
-  { // loop on phases
-     jb = je;
-     je += pm.L1[k];
-     if( pm.PHC[k] != PH_SORPTION )
-          continue;
-
-    for( j=jb; j<je; j++ )
-    { // Loop for DC
-      ja = j - ( pm.Ls - pm.Lads );
-      if( pm.lnSAC && ja >= 0 && ja < pm.Lads )
-          pm.DUL[j] = pm.lnSAC[ja][3];  // temp. storing initial DUL constr.
-    }  // j
-  } // k
-}
-*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Calculating value of dual chemical potential of j-th dependent component
 //     performance optimized version  (February 2007)
@@ -407,7 +384,6 @@ double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
     double FactSur, FactSurT;
-    SPP_SETTING *pa = &pa_;
 
     Fold = pm.F0[j];
     if( pm.FIat > 0 && j < pm.Ls && j >= pm.Ls - pm.Lads )
@@ -528,30 +504,33 @@ case DC_AQ_SURCOMP:
                }
             }
         }
+
         if( Mk > 1e-9 )  // Mk is carrier molar mass in g/mkmol
         {   // Correction for standard density, surface area and surface type fraction
-        	FactSur = Mk * (pm.Aalp[k]) * pa->p.DNS*1.66054;
+        	FactSur = Mk * (pm.Aalp[k]) * pa.p.DNS*1.66054;
         	    // FactSur is adsorbed mole amount at st. surf. density per mole of solid carrier
         	FactSurT = FactSur * (pm.Nfsp[k][ist]);
         	if( pm.SCM[k][ist] == SC_MXC || pm.SCM[k][ist] == SC_NNE ||
                     pm.SCM[k][ist] == SC_IEV )
 						// F0 -= log( Mk * (pm.Nfsp[k][ist]) *
-						// (pm.Aalp[k]) * pa->p.DNS*1.66054 );
+						// (pm.Aalp[k]) * pa.p.DNS*1.66054 );
                   F0 -= log( FactSurT );
             else  F0 -= log( FactSurT );
 				// F0 -= log( Mk * (pm.Nfsp[k][ist]) *
-				// (pm.Aalp[k]) * pa->p.DNS*1.66054 );
+				// (pm.Aalp[k]) * pa.p.DNS*1.66054 );
             F0 -= FactSur / ( 1. + FactSur );
-				// F0 -= (pm.Aalp[k])*Mk*pa->p.DNS*1.66054 /
-				// ( 1.0 + (pm.Aalp[k])*Mk*pa->p.DNS*1.66054 );
+				// F0 -= (pm.Aalp[k])*Mk*pa.p.DNS*1.66054 /
+				// ( 1.0 + (pm.Aalp[k])*Mk*pa.p.DNS*1.66054 );
         }
+  //  if (isnan(F0)) cout << "DEBUG: DC_PRIMALCHemicalPotentialUpdate 1 j " << j << " " << F0 << " pm.lnGam[j] " <<  pm.lnGam[j]  <<"  pm.lnGmM[j] " <<  pm.lnGmM[j]<< endl;
         break;
     case DC_PEL_CARRIER:
     case DC_SUR_MINAL:  // constant charge of carrier - not completed
     case DC_SUR_CARRIER: // Mk is carrier molar mass in g/mkmol
         if( !pm.Lads || !pm.FIat )   // Foolproof - to prevent crash DK 22.12.2009
-            break;
-       	FactSur = Mk * (pm.Aalp[k]) * pa->p.DNS*1.66054;
+            break;	
+       	FactSur = Mk * (pm.Aalp[k]) * pa.p.DNS*1.66054;
+	// cout << "DEBUG: DC_PRIMALCHemicalPotentialUpdate j " << j << " FactSur " << FactSur << " pm.Aalp[k] " <<  pm.Aalp[k]  << " " << pa.p.DNS <<endl;
         F0 -= FactSur / ( 1. + FactSur );
         F0 += FactSur;
         break;
@@ -569,6 +548,7 @@ case DC_AQ_SURCOMP:
         if( pm.X[j] > min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
        	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }
+  //  if (isnan(F0)) cout << "DEBUG: DC_PRIMALCHemicalPotentialUpdate last: " << F0 << endl;
     return F0;
 }
 
@@ -755,11 +735,13 @@ double TMulti::GX( double LM  )
             XFw = pm.XFA[k];
  //       if( XFw > const1 )
         if( ( pm.PHC[k] == PH_AQUEL && XFw >= pm.XwMinM )
-        		|| ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
+        		|| ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM ) 
         		|| ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
-             pm.logXw = log( XFw );
-        /*   */
+             pm.logXw = log( XFw ); 
+
+
         XF = pm.XF[k];
+
         if( !(pm.FIs && k < pm.FIs) )
         {
         	if( XF < pm.PhMinM )
@@ -786,16 +768,18 @@ double TMulti::GX( double LM  )
                     break;
             case DC_ASYM_CARRIER:
             case DC_SYMMETRIC:
-                   Gi = x * ( pm.G[j] + log(x) - pm.logYFk );
+                   Gi = x * ( pm.G[j] + log(x) - pm.logYFk );	   
                    break;
             case DC_SINGLE:
                    Gi = pm.G[j] * x;
-                   break;
+	          break;
            default:
                     Gi = 7777777.;
            }
           FX += Gi;
-        }   // j
+           //     if (isnan(Gi)) cout << "DEBUG GX: j,k  " << j << " " << k<< " Gi " << Gi <<" x " << x << " pm.G[j] " << pm.G[j] << " log(x) " << log(x) << " pm.logYFk  " << pm.logYFk  <<   endl;	
+	  
+	}   // j
 NEXT_PHASE:
         j = i;
     }  // k
@@ -803,95 +787,6 @@ NEXT_PHASE:
     return(FX);
 }
 
-#ifdef Use_qd_real
-// Experimental variant with summation of G(X) with qd_real precision
-// Added by SD, DK on 27.08.2009
-qd_real TMulti::qdGX( double LM  )
-{
-    long int i, j, k;
-    double x, XF, XFw, Gi; // debug variable
-    qd_real FX;
-//    double const1= pm.lowPosNum*10.,
-//           const2 = pm.lowPosNum*1000.;
-    if( LM < pm.lowPosNum )     // copy vector Y into X
-        for(i=0;i<pm.L;i++)
-            pm.X[i]=pm.Y[i];
-    else  // calculate new values of X
-        for(i=0;i<pm.L;i++ )
-        {  // vector pm.MU - the direction of descent!
-            pm.X[i]=pm.Y[i] + LM*pm.MU[i];
-//            if( pm.X[i] <  pm.lowPosNum )   // this is the Ls set cutoff !!!!!!!!!!
-            if( pm.X[i] <  pm.DcMinM )
-            	pm.X[i]=0.;
-        }
-    // calculate new total quantities of phases
-    TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-
-    // calculating G(X)
-    FX=0.;
-    j=0;
-    for( k=0; k<pm.FI; k++ )
-    { // loop for phases
-        i=j+pm.L1[k];
-        pm.logXw = -101.;
-        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
-        if( pm.FIs && k<pm.FIs )
-            XFw = pm.XFA[k];
- //       if( XFw > const1 )
-        if( ( pm.PHC[k] == PH_AQUEL && XFw >= pm.XwMinM )
-        		|| ( pm.PHC[k] == PH_SORPTION && XFw >= pm.ScMinM )
-        		|| ( pm.PHC[k] == PH_POLYEL && XFw >= pm.ScMinM ) )
-             pm.logXw = log( XFw );
-        /*   */
-        XF = pm.XF[k];
-        if( !(pm.FIs && k < pm.FIs) )
-        {
-        	if( XF < pm.PhMinM )
-        		goto NEXT_PHASE;
-        }
-        else if( XF < pm.DSM && pm.logXw < -100. )
-        	goto NEXT_PHASE;
-//        if( XF <= const2 ||
-//                (pm.PHC[k] == PH_AQUEL && (XF <= pm.DHBM
-//                || XFw <= prof->pa.p.XwMin) )
-//                || ( pm.PHC[k] == PH_SORPTION && XFw <= prof->pa.p.ScMin ))
-//            goto NEXT_PHASE;
-        pm.logYFk = log( XF );
-
-        for( ; j<i; j++ )
-        { // DCs (species)
-            x = pm.X[j];
-            if( x < pm.DcMinM )
-                continue;
-            // calculating increment of G(x)
-            // Gi = DC_GibbsEnergyContribution( pm.G[j], x, pm.logYFk, pm.logXw,
-            //                     pm.DCCW[j] );
-            // call replaced here by inline variant for higher performance
-            switch( pm.DCCW[j] )
-            {
-             case DC_ASYM_SPECIES:
-                    Gi = x * ( pm.G[j] + log(x) - pm.logXw );
-                    break;
-            case DC_ASYM_CARRIER:
-            case DC_SYMMETRIC:
-                   Gi = x * ( pm.G[j] + log(x) - pm.logYFk );
-                   break;
-            case DC_SINGLE:
-                   Gi = pm.G[j] * x;
-                   break;
-           default:
-                    Gi = 7777777.;
-           }
-          FX += Gi;
-        }   // j
-NEXT_PHASE:
-        j = i;
-    }  // k
-//    pm.qdFX = FX;
-//    cout << "qdGX " << setprecision(20) << scientific << FX << endl;
-    return(FX);
-}
-#endif
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Variant of GX() function for use in the UnSpace module (non-optimized)
@@ -901,7 +796,6 @@ double TMulti::pb_GX( double *Gxx  )
 {
     long int i, j, k;
     double Gi, x, XF, XFw, FX;
-    SPP_SETTING *pa = &pa_;
 
     // calculating G(X)
     FX=0.;
@@ -914,25 +808,25 @@ double TMulti::pb_GX( double *Gxx  )
         if( pm.FIs && k<pm.FIs )
             XFw = pm.XFA[k];
  //       if( XFw > const1 )
-        if( ( pm.PHC[k] == PH_AQUEL && XFw >= pa->p.XwMin )
-                        || ( pm.PHC[k] == PH_SORPTION && XFw >= pa->p.ScMin )
-                        || ( pm.PHC[k] == PH_POLYEL && XFw >= pa->p.ScMin ) )
+        if( ( pm.PHC[k] == PH_AQUEL && XFw >= pa.p.XwMin )
+                        || ( pm.PHC[k] == PH_SORPTION && XFw >= pa.p.ScMin )
+                        || ( pm.PHC[k] == PH_POLYEL && XFw >= pa.p.ScMin ) )
              pm.logXw = log( XFw );
         /*   */
         XF = pm.XF[k];
         if( !(pm.FIs && k < pm.FIs) )
         {
-                if( XF < pa->p.PhMin )
+                if( XF < pa.p.PhMin )
         		goto NEXT_PHASE;
         }
-        else if( XF < pa->p.DS && pm.logXw < 100. )
+        else if( XF < pa.p.DS && pm.logXw < 100. )
         	goto NEXT_PHASE;
         pm.logYFk = log( XF );
 
         for( ; j<i; j++ )
         { // DC loop
             x = pm.X[j];
-            if( x < pa->p.DcMin )
+            if( x < pa.p.DcMin )
                 continue;
             // calculating DC increment to G(x)
             Gi = DC_GibbsEnergyContribution( Gxx[j], x, pm.logYFk, pm.logXw,
@@ -1161,7 +1055,6 @@ void TMulti::KarpovsPhaseStabilityCriteria()
     bool KinConstr;
     long int k, j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj;
-    SPP_SETTING *pa = &pa_;
 
     EMU = pm.EMU;
     NMU = pm.NMU;
@@ -1205,9 +1098,9 @@ void TMulti::KarpovsPhaseStabilityCriteria()
             Yj = pm.Y[j];
             Nu = DC_DualChemicalPotential( pm.U, pm.A+j*pm.N, pm.NR, j );
             dNuG = Nu - pm.G[j]; // this is -s_j (6pot paper 1)
-            if( // pm.DUL[j] < pa->p.DKIN  ||    // DKIN (1e-6) is used here as tolerance
-                 ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
-                || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) ) )
+            if( // pm.DUL[j] < pa.p.DKIN  ||    // DKIN (1e-6) is used here as tolerance
+                 ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa.p.DKIN ) )
+                || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa.p.DKIN ) ) )
                 KinConstr = true; // Avoiding phase with the amount lying on the non-trivial kinetic constraint
             Fj = KarpovCriterionDC( &dNuG, pm.logYFk, pm.aqsTail,
                             pm.logXw, Wx, pm.DCCW[j] );
@@ -1225,12 +1118,12 @@ void TMulti::KarpovsPhaseStabilityCriteria()
                 dNuG = Nu - pm.G[j]; // this is -s_j (6pot paper 1)
                 Wx = 0.0;
                 Yj = pm.Y[j];
-//                if( YF > pa->p.DS && Yj > pm.lowPosNum )
+//                if( YF > pa.p.DS && Yj > pm.lowPosNum )
                 if( YF > pm.DSM && Yj > pm.DcMinM )
                     Wx = Yj / YF; // calculating mole fraction of DC
-                if( // pm.DUL[j] < pa->p.DKIN ||      // DKIN (1e-6) is used here as tolerance
-                        ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
-                    || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) ) )
+                if( // pm.DUL[j] < pa.p.DKIN ||      // DKIN (1e-6) is used here as tolerance
+                        ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa.p.DKIN ) )
+                    || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa.p.DKIN ) ) )
                     KinConstr = true; // Avoiding DC with the amount lying on the non-=trivial kinetic constraint
                 // calculating Karpov stability criteria for DCs
                 Fj = KarpovCriterionDC( &dNuG, pm.logYFk, pm.aqsTail,
@@ -1240,7 +1133,7 @@ void TMulti::KarpovsPhaseStabilityCriteria()
 // during the first PhaseSelect() run in the PIA mode of GEMIPM  (DK 11.01.2008)
 if( pm.pNP && !pm.K2 )
 {  // Checking L_S set and potentially stable zero DCs and phases
-   if( YF >= pm.DSM ) // pa->p.DS )
+   if( YF >= pm.DSM ) // pa.p.DS )
    {                            // phase is there
            if( Yj >= min(pm.lowPosNum, pm.DcMinM ) )
        {	                    // DC is there
@@ -1248,19 +1141,19 @@ if( pm.pNP && !pm.K2 )
               pm.Falp[k] += Fj; // incrementing Karpov stability criterion (only positive)
        }
            else {                  // DC is zeroed off
-                   if( Fj > pa->p.DF*100. )
+                   if( Fj > pa.p.DF*100. )
                   pm.Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
            }
        EMU[j] = Fj;
    }
    else {  // The whole phase is absent
-           if( Fj > pa->p.DF*100. )
+           if( Fj > pa.p.DF*100. )
           pm.Falp[k] += Fj;    // we are interested only in a potentially stable DC with Fj >> DF ?
        EMU[j] = Fj;              // To check values (remove this line later on)
    }
 }
 else {   // Standard checking in the L_S set only
-//       if( YF >= pa->p.DS && Yj > pm.lowPosNum )  // Checking L_S set
+//       if( YF >= pa.p.DS && Yj > pm.lowPosNum )  // Checking L_S set
          if( YF >= pm.DSM && Yj >= min( pm.lowPosNum, pm.DcMinM ) )  // Checking L_S set
          {
              if( KinConstr == false )
@@ -1292,7 +1185,6 @@ long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double Mju
     double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
     double CutoffDistortionMBR = 0.1 * pm.DHBM;
     bool KinConstr, Degenerated = false;
-    SPP_SETTING *pa = &pa_;
 
     PrimalChemicalPotentials( pm.F, pm.Y, pm.YF, pm.YFA );
     jb=0;
@@ -1308,12 +1200,12 @@ long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double Mju
                KinConstr = false;
                 // Detecting the DC having the non-trivial kinetic constraint
                // Fixing a very small component constrained from below
-               if( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
+               if( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa.p.DKIN ) )
                {
                    pm.Y[j] = pm.DUL[j];
                    KinConstr = true;
                }
-               if( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) )
+               if( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa.p.DKIN ) )
                { // Fixing a small component constrained from above
                    pm.Y[j] = pm.DLL[j];
                    KinConstr = true;
@@ -1416,10 +1308,10 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
     long int L1k, L1kZeroDCs, k, j, jb = 0, status,
         DCinserted = 0, DCremoved = 0, PHinserted = 0, PHremoved = 0;
     double MjuDiffCutoff = 1e-3; // InsValue;
-    SPP_SETTING *pa = &pa_;
-    if( pa->p.GAS > 1e-6 )
-         MjuDiffCutoff = pa->p.GAS;
-    AmThExp = (double)abs( pa->p.PRD );
+
+    if( pa.p.GAS > 1e-6 )
+         MjuDiffCutoff = pa.p.GAS;
+    AmThExp = (double)abs( pa.p.PRD );
     if( AmThExp && AmThExp < 4.)
     {
         AmThExp = 4.;
@@ -1443,9 +1335,9 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
 //          Yj = pm.Y[j];
           KinConstrDC = false;
           // Detecting the DC having the non-trivial kinetic constraint
-          if( pm.DUL[j] < 1e6 ) // && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
+          if( pm.DUL[j] < 1e6 ) // && Yj >= ( pm.DUL[j] - pa.p.DKIN ) )
               KinConstrDC = true;
-          if( pm.DLL[j] > 0.0 ) // && Yj <= ( pm.DLL[j] + pa->p.DKIN ) )
+          if( pm.DLL[j] > 0.0 ) // && Yj <= ( pm.DLL[j] + pa.p.DKIN ) )
               KinConstrDC = true;
           if( KinConstrDC == true ) // Bug fixed 21.07.2010 DK
               KinConstrPh = true;
@@ -1455,7 +1347,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
            goto NextPhase;  // Temporary workaround
        PhaseAmount = pm.XF[k];
        logSI = pm.Falp[k];
-       if( logSI > -pa->p.DFM && logSI < pa->p.DF && PhaseAmount < pm.DSM )
+       if( logSI > -pa.p.DFM && logSI < pa.p.DF && PhaseAmount < pm.DSM )
        {  // Phase is stable and present in zero or less than DS amount - zeroing off
           bool RemFlagDC = false;
           for(j=jb; j<jb+L1k; j++)
@@ -1470,7 +1362,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
              PHremoved++;
           goto NextPhase;
        }
-       if( logSI >= pa->p.DF )  // 2 - INSERTION CASE
+       if( logSI >= pa.p.DF )  // 2 - INSERTION CASE
        {  // this phase is stable or over-stable
            if( PhaseAmount < pm.DSM ) // pm.DFYsM )
            {  // phase appears to be lost - insertion of all components of the phase
@@ -1485,7 +1377,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
            } // otherwise (if present), the phase is cleaned up
            goto NextPhase;
        }
-       if( logSI <= -pa->p.DFM )  // 3 - ELIMINATION CASE
+       if( logSI <= -pa.p.DFM )  // 3 - ELIMINATION CASE
        {
 //         bool Incomplete = false;
            if( PhaseAmount >= pm.DcMinM )
@@ -1516,7 +1408,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
      NextPhase: jb+=pm.L1[k];
    } // k
    // First loop over phases finished
-   if( pa->p.PRD && MassBalanceViolation == false )  // Cleanup mode (PRD: amount threshold exponent)
+   if( pa.p.PRD && MassBalanceViolation == false )  // Cleanup mode (PRD: amount threshold exponent)
    {  //  not done if insertion or elimination of some phases requires another IPM loop
      jb = 0;
      for(k=0;k<pm.FI;k++)  // Cleanup loop on phases
@@ -1528,14 +1420,14 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
           Yj = pm.Y[j];
           KinConstrDC = false;
           // Detecting the DC having the non-trivial kinetic constraint
-          if( pm.DUL[j] < 1e6 ) // && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
+          if( pm.DUL[j] < 1e6 ) // && Yj >= ( pm.DUL[j] - pa.p.DKIN ) )
           {
               if( Yj > pm.DUL[j] )
                   // Fixing a very small component constrained from above
                   pm.Y[j] = pm.DUL[j];
               KinConstrDC = true;
           }
-          if( pm.DLL[j] > 0 ) // && Yj <= ( pm.DLL[j] + pa->p.DKIN ) )
+          if( pm.DLL[j] > 0 ) // && Yj <= ( pm.DLL[j] + pa.p.DKIN ) )
           {
               if( Yj < pm.DLL[j] )
               // Fixing a small component constrained from below
@@ -1556,11 +1448,11 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
           goto NextPhaseC;  // Temporary workaround
        PhaseAmount = pm.XF[k];                           // bugfix 04.04.2011 DK
        logSI = pm.Falp[k];  // phase stability criterion
-       if( (logSI >= pa->p.DF || logSI <= -pa->p.DFM )
+       if( (logSI >= pa.p.DF || logSI <= -pa.p.DFM )
            && !(( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL) && PhaseAmount < pm.DSM ))
            goto NextPhaseC;  // Already done in previous part
 //       PhaseAmount = pm.XF[k];                         // bugfix 04.04.2011 DK
-       if( logSI > -pa->p.DFM && PhaseAmount >= pm.DSM )
+       if( logSI > -pa.p.DFM && PhaseAmount >= pm.DSM )
        { // Cleaning up a phase which is (over)stable and present in mass balance
           bool Degenerated = false;
           L1kZeroDCs = 0;
@@ -1581,7 +1473,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
                   {  // Pure phase
                       if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold )
                           YjCleaned = 0.;
-                      if( logSI >= pa->p.DF && YjCleaned < pm.DFYsM )
+                      if( logSI >= pa.p.DF && YjCleaned < pm.DFYsM )
                       {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
                           YjCleaned = pm.DFYsM;
                           kfr = k;
@@ -1780,7 +1672,7 @@ long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int CleanupStat
 {
     long int k, j, jb, kf, ku;
     double F1, F2, *F0; // , sfactor;
-    SPP_SETTING *pa = &pa_;
+
 int rLoop = CleanupStatus;
 rLoop = -1;
 //    sfactor = calcSfactor();
@@ -1789,17 +1681,17 @@ rLoop = -1;
 
     (pm.K2)++;
     kf = -1; ku = -1;  // Index for phase diagnostics
-    F1 = pa->p.DF;  // Fixed 29.10.2007  DK
-    F2 = -pa->p.DFM;  // Meaning of DFM changed 02.11.2007
+    F1 = pa.p.DF;  // Fixed 29.10.2007  DK
+    F2 = -pa.p.DFM;  // Meaning of DFM changed 02.11.2007
 
     for(k=0;k<pm.FI;k++)
     {
-        if( F0[k] > F1 && pm.YF[k] < pm.DSM ) //  pa->p.DS )  // < pm.lowPosNum?
+        if( F0[k] > F1 && pm.YF[k] < pm.DSM ) //  pa.p.DS )  // < pm.lowPosNum?
         {            // stable phase not in mass balance - to be inserted
             F1=F0[k];
             kf=k;
         }
-        if( F0[k] < F2 && pm.YF[k] >= pm.DSM ) // pa->p.DS )  // Fixed 2.11.2007
+        if( F0[k] < F2 && pm.YF[k] >= pm.DSM ) // pa.p.DS )  // Fixed 2.11.2007
         {            // unstable phase in mass balance - to be excluded
             F2=F0[k];
             ku=k;
@@ -1813,7 +1705,7 @@ kur = ku;
         return 1L;
     }
 
-    if( (F2 < -pa->p.DFM ) && ( ku >= 0 ) )
+    if( (F2 < -pa.p.DFM ) && ( ku >= 0 ) )
     {
         if( pm.K2 > 4 ) // Three Selekt2() loops have already been done!
                 return -1L;   // Persistent presence of unstable phase(s) - bad system!
@@ -1827,7 +1719,7 @@ kur = ku;
             DC_ZeroOff( jb, jb+pm.L1[ku], ku ); // Zeroing the phase off
             pm.FI1--;
             // find a new phase to exclude, if any exists
-            F2= -pa->p.DFM;
+            F2= -pa.p.DFM;
             ku = -1;
             for( k=0; k<pm.FI; k++ )
                 if( F0[k] < F2 && pm.YF[k] >= pm.DSM )
@@ -1836,11 +1728,11 @@ kur = ku;
                     ku=k;
                 }
         }
-        while( ( F2 <= -pa->p.DFM ) && ( ku >= 0 ) );
+        while( ( F2 <= -pa.p.DFM ) && ( ku >= 0 ) );
     } //if ku
 
     // Inserting problematic phases
-    if( F1 > pa->p.DF && kf >= 0 )
+    if( F1 > pa.p.DF && kf >= 0 )
     {
         if( pm.K2 > 4 )
            return -1L;   // Persistent absence of stable phase(s) - bad system!
@@ -1869,7 +1761,7 @@ kur = ku;
                     kf=k;
                 }
         }
-        while( F1 > pa->p.DF && kf >= 0 );
+        while( F1 > pa.p.DF && kf >= 0 );
         // end of insertion cycle
     } // if kf changed SD 03/02/2009
 // Raise zeros in DC amounts in phases-solutions in the case if some phases
