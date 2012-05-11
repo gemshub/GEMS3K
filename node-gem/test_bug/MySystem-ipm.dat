@@ -1,0 +1,223 @@
+# GEMIPM2K v. 2.2.3
+# Prototype 31.03.2008
+# Comments can be marked with # $ ; as the first character in the line
+
+# Template for the ipm-dat text input file for the internal MULTI data
+# (should be read after the DATACH file and before DATABR files)
+
+# ID key of the initial chemical system definition
+"CemTon1   G  Cem_Solid   0    0       1       25      0   "
+
+## (1) Important flags that affect memory allocation
+# PE: Flag for using electroneutrality condition in GEM IPM calculations 
+<pa_PE>            1
+
+# PV: Flag for the volume balance constraint (on Vol IC)
+<PV>               0
+
+# PSOL: Total number of DCs in liquid hydrocarbon phases
+<PSOL>             0
+
+# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases 
+<PAalp>          '+'
+
+# PSigm: Flag for using (+) or ignoring (-) specific surface free energies of phase interfaces 
+<PSigm>          '+'
+
+## (2) Important dimensionalities that affect memory allocation
+# Lads: Total number of dependent components in sorption phases included in this system
+<Lads>             0
+# FIa: Number of sorption phases included in this system
+<FIa>              0
+# FIat: Allowed number of surface types per adsorption phase (default: 6 if FIa > 0)
+<FIat>             0
+
+
+<END_DIM>
+
+## (3) Controls of the numerical behavior of the GEM IPM algorithm
+#      - Need to be changed only in rare special cases
+# DB - Minimum amount of independent component in bulk composition (except charge Zz), moles
+<pa_DB>        1e-17
+
+# DHB: Maximum allowed mass balance residual (moles) for major independent components
+<pa_DHB>       1e-07
+
+# EPS: Precision criterion of the simplex() procedure for automatic initial approximation
+<pa_EPS>       1e-07
+
+# DK: IPM convergence threshold for the Dikin criterion (1e-6 < DK < 1e-4)
+<pa_DK>       0.0001
+
+# DB: Cutoff (threshold) for the amount of phase for phase elimination 
+<pa_DS>        1e-09
+
+# DF: Threshold for Karpov's criterion (Fa > DF) for a lost stable phase to be inserted
+<pa_DF>         0.01
+# DFM: Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase to be eliminated
+<pa_DFM>         0.1
+
+# DP: Maximum allowed number of iterations in the EnterFeasibleDomain() procedure
+<pa_DP>         500
+
+# IIM: Maximum allowed number of iterations in the MainIPM_Descent() procedure
+<pa_IIM>        1000
+
+# PD: Control on calling built-in Debye-Hueckel() and other models for aqueous activity coefficients
+<pa_PD>            3
+
+# PRD: Positive: control of calling IPM_gamma() on iterations of GEM EFD and IPM (default 3)
+#      Negative: the number of additional EFD-IPM loops to improve the GEM final solution
+<pa_PRD>          -1
+
+# AG,DGC: Smoothing parameters controlling convergence in highly non-ideal systems 
+<pa_AG>          0.7
+<pa_DGC>        0.07
+
+# PSM: Flag for using initial activity coefficients in simplex() approximation (1-enable, 0-disable)
+<pa_PSM>           2
+# Activity coefficient values for simplex(): GAR for major and GAH for minor components
+<pa_GAR>           1
+<pa_GAH>        1000
+
+# _Min: Cutoffs for elimination of: Xw water solvent; Sc - solid sorbent; Dc - solution or surface species; 
+# Ph - non-electrolyte solution phases
+<pa_XwMin>     1e-05
+<pa_ScMin>     1e-07
+<pa_DcMin>     1e-19
+<pa_PhMin>     1e-10
+
+# ICmin: Minimal ionic strength, below which the aqueous activity coefficients are set to 1
+<pa_ICmin>     1e-05
+
+# PC: Mode of Selekt2() procedure operation
+<pa_PC>            1
+# DFY: Insertion amounts used after the simplex() initial approximation and in Selekt2() algorithm
+# DFYw - water solvent;
+<pa_DFYw>      1e-06
+# DFYaq - aqueous species;
+<pa_DFYaq>     1e-06
+
+# DFYid - ideal solution components;
+<pa_DFYid>     1e-06
+# DFYr - major solution components;
+<pa_DFYr>      1e-06
+# DFYh - minor solution components;
+<pa_DFYh>      1e-06
+# DFYc - single-component phase; 
+<pa_DFYc>      1e-06
+# Insertion amount of single-component phase (Selekt2() algorithm only)
+<pa_DFYs>      1e-07
+
+# Parameters for high-accuracy IPM-2 algorithm 
+# DW: Number of the IPM-2 enhancement loops for high-accuracy mass balance (from 0 to 14)
+<pa_DW>           15
+# DT: Exponent for dual-thermodynamic restoring of low amounts of solutes (+2 to -5), relative to DHBM
+<pa_DT>           -3
+
+# GAS: IPM2 balance accuracy control factor DHBM[i]/b[i]
+<pa_GAS>        0.01
+# DG: Minimal step length in the initial approximation EFD() procedure, 1e-7 
+<pa_DG>        1e-06
+# DNS: Standard surface density (nm-2) for calculating activity of surface species
+<pa_DNS>       12.05
+# IEPS: Control parameter of SACT calculation in sorption/surface complexation models
+<pa_IEPS>      0.001
+
+# pKin: Flag for using metastability/kinetic constraints on calculated DC amounts (see dll, dul arrays)
+<pKin>             1
+# DKIN: Tolerance on amount of DC with two-side metastability constraints set in dll, dul (moles) 
+<pa_DKIN>      1e-07
+
+## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
+# sMod: Codes for mixing models of multicomponent phases
+<sMod>
+'DNNSNN' 'INNINN' 
+
+# LsMod: Dimensions for parameters of non-ideal mixing models for each multicomponent phase
+# Number of parameters per phase
+<LsMod>
+2 0 4 
+0 0 0 
+
+<PMc>
+0 0 0 0 0 0 0 1
+
+# LsMdc: Number of parameters per component of the phase
+<LsMdc>
+0 0 
+
+## (5) Some data arrays which are not provided in DATACH and DATABR files
+# B: Full total bulk composition of the initial system (vector b) - see DATACH file for dimension nIC
+<B>
+0.0128199226206249 0.001 0.00999130757308329 0.698318234371255 7.8550849276017 16.928754062196 0.332865651573555 5.79922478089982 0 
+
+# Initial data for DCs - see DATACH file for dimensions nDC, nDCs
+# Pparc: Partial pressures (fugacities) of dependent components
+<Pparc>
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 
+1 1 
+
+# GEX: for dependent components, G0 increments
+<GEX>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 
+
+# lnGmf:  Fixed (initial) activity coefficients
+<lnGmf>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 
+
+# (6) Section for metastability/ kinetic constraints
+# RLC: Codes of metastability/kinetic constraints for DCs
+<RLC>
+'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+'B' 'B' 
+
+# RSC: Units of metastability/kinetic constraints for DCs (see vectors dul, dll)
+<RSC>
+'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+'M' 'M' 
+
+# DLL: Vector of lower metastability constraints on DC amounts in the system
+<DLL>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 
+
+# DUL: Vector of upper metastability constraints on DC amounts in the system
+<DUL>
+1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
+1000000 1000000 
+
+# (7) Initial data for phases
+
+# Aalp: Specific surface areas of phases (whole list), set 0 if unknown
+<Aalp>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# Sigw Specific surface free energy for phase-water interface (J/m2; 0 if unknown)
+<Sigw>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# Sigg Specific surface free energy for phase-gas interface (for future versions)
+<Sigg>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# YOF: Surface energy or metastability parameters for phases (J/g)
+<YOF>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# mui: IC indices in RMULTS IC list
+<mui>
+0 1 2 3 4 5 6 7 8 
+
+# muk: Phase indices in RMULTS phase list
+<muk>
+0 3 4 5 6 7 8 10 11 12 14 15 16 17 19 20 
+
+# muj: DC indices in RMULTS DC list
+<muj>
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 32 33 34 35 36 37 38 40 41 42 44 45 46 47 
+49 50 
+
+# End of file
