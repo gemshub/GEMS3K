@@ -1,0 +1,49 @@
+Structure of the file list for starting FMT-GEM coupled modeling run 
+(on the TnodeArray level)
+
+<!!!!!!!! To be completed !!!!!!!!>
+
+The test example starts with the following command line: 
+
+gemnode.exe tp_test/<TaskName>-dat.lst tp_test/<TaskName>-dbr-<node0>.dat > test.out
+
+where <TaskName> should be substituted by a string denoting the problem name, e.g. MyTask.
+
+The file <TaskName>-dbr-<node0>.dat will be additionally read by the Tnode example. 
+The file "test.out" will contain console output during operation of the Tnode example. 
+
+The file <TaskName>-dat.lst has the following structure:
+
+-t "<TaskName>-ipm.dat" -t "<TaskName>-dch.dat", "<TaskName>-dbr-<node0>.dat", "<TaskName>-dbr-<node1>.dat" 
+[, ... ]
+
+The first -t key tells that the following file "<TaskName>-ipm.dat" is to be read in text format 
+(see decription of the file format in file ipm-dat-doc.txt). Alternative key: -b (the ipm file should be 
+read in binary format). 
+
+The second -t key tells that the following "<TaskName>-dch.dat", "<TaskName>-dbr-<node0>.dat" and so on should be read in text format. The formats are described in files dch-dat-doc.txt and dbr-dat-doc.txt, respectively. There can be many comma-separated file names of dbr (node description) type, which will be read sequentially, 
+but only the last one will remain loaded in this Tnode example. 
+
+GEMIPM2K kernel will read specified input files in the following order: 
+
+<TaskName>-dat.lst
+<TaskName>-dch.dat
+<TaskName>-ipm.dat
+<TaskName>-dbr-<node0>.dat
+............
+<TaskName>-dbr-<nodeN>.dat
+
+The file <TaskName>-dch.dat contains parts of chemical system definitions (CSD) that can be requested both by GEM and by the FMT parts of the coupled code. Contents of this file will be placed in two memory data structures: (1) DATACH structure visible from both GEMIPM and the FMT part and (2) MULTI structure - the internal work structure of GEMIPM, not visible from the FMT part. The <TaskName>-dch.dat (and the DATACH structure) also contain dimensions and index lists that are needed for reading and accessing the DATABR (node description) files like <TaskName>-dbr-<node0>.dat. Finally, the DATACH file and structure contains grid arrays of thermodynamic data used later on for automatic interpolation of gibbs energies G0, molar volumes 
+V0 of components to given values of temperature T and pressure P in GEM IPM calculations for any node and time. 
+
+The file <TaskName>-ipm.dat contains additional data and numerical controls from the MULTI data strucutre that are necessary for the GEM IPM algorithm but are irrelevant for the FMT part. As an option, the whole binary MULTI structure can be read from the <TaskName>.ipm binary file if the -b key is set at the beginning in the <TaskName>-dat.lst file.
+
+The file <TaskName>-dbr-<node0>.dat (read into the DATABR memory structure) contains parts of the chemical system definition that may be changed by the FMT part (input data of GEM such as T, P, bulk composition, metastability constraints) or are returned after the GEM IPM calculation and be utilized by the FMT part on the next time iteration. The <TaskName>-dat.lst file may contain any number of (comma-separated) DATABR file names. These files will be read one-by-one: (a) into the same work DATABR structure on the level of Tnode example and coupling of GEMIPM with already existing FMT codes; (b) distributed into different DATABR structures for many nodes on the level of Tnodearray example (and coupled FMT-GEM codes written on the basis of TNodearray); see documentation to the Tnodearray example for more information in this respect.  
+
+As an option, the DATACH and DATABR files can be read in in the binary format (after changing the second -t key to -b in the file <TaskName>-dat.lst. 
+
+The whole collection of GEM IPM input files describing the chemical system for starting the coupled examples can be written directly from the GEMS-PSI code (either in GEM2MT module or, for a single equilibrium system, from the GEMS Single Thermodynamic System dialog, "Data" "Write IPM ..." menu command. 
+
+Later on, the text input files can be modified by the user according to descriptions of file formats found in the accompanying files dch-dat-doc.txt, ipm-dat-doc.txt, and dbr-dat-doc.txt. The format in three file types is essentially the same, only the data tags and fields differ. 
+
+
