@@ -1,0 +1,87 @@
+  Working in Linux Cluster, compiling with PGI compilers (Parallel Fortran and C++ )
+
+  This applies to node-gem, nodearray-gem, rockflow-gem and mcotac-gem modules.
+
+     1.	To connect to PGI server:
+
+       Open a Linux terminal (console).
+
+       Open there a SSH terminal:
+
+         ssh <username>@llc
+          <userpassword>
+
+     2.	Go to the project work directory
+
+         cd /afs/psi.ch/project/gems/standalone/node-gem
+    or
+         cd /afs/psi.ch/project/gems/standalone/mcotac-gem
+    or
+         cd /afs/psi.ch/project/gems/standalone/nodearray-gem
+    or
+         cd /afs/psi.ch/project/gems/standalone/rockflow-gem
+
+     3.	To update the source code in the respective subdirectory, execute
+
+         svn update
+          <user_password_on_svn_server>
+
+     4.	To Build the executable file, copy the required Makefile, e.g.
+
+         cp /afs/psi.ch/project/gems/standalone/mcotac-gem/platform/Linux-PGI/Makefile .
+
+        and execute
+
+          make
+
+	To re-compile, type
+
+          make clean
+
+        (or in mcotac-gem, remove *.ti and *.o files by rm *.ti and rm *.o )
+
+         and execute
+
+          make
+
+     5. To save changes in source code or test input files on SVN server, execute
+
+          svn commit –m<"Text comment">
+            <user_password_on_svn_server>
+
+     8.	To finish session on Linux Cluster, type
+
+        exit
+
+
+
+  Working in PSI AFS Linux Cluster with PGI profiler and pgprof utility
+
+  This applies to node-gem and nodearray-gem modules.
+
+     1.	To generate the special executable file, copy the Makefile.prof into the
+        current directory
+
+         cp /afs/psi.ch/project/gems/standalone/node-gem/platform/Linux-PGI/Makefile.prof .
+
+        then rename Makefile.prof to Makefile
+
+	To re-compile the executable file, type
+
+          make clean
+
+         and execute
+
+          make
+
+    2.  To generate a profile data file ( pgprof.out ), the profiled program must be
+
+        called as usual.
+
+    3. The PGPROF tool interprets the pgprof.out file to display the profile data. Type
+
+        pgprof
+
+       Then use commands: help, print [ > filename ], quit, ... according to the
+         PGI Profiler documentation.
+

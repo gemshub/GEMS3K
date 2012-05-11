@@ -1,0 +1,220 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html><head>
+  
+  
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+
+  
+  
+<meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20  (Win98; I) [Netscape]">
+
+  
+<title>GEMS3K Solver of Chemical Equilibria</title>
+
+
+  
+</head><body>
+<h1><img src="gems1.png" align="left" height="48" width="48">
+GEMS3K Solver of GeoChemical Equilibria <br>
+</h1>
+
+
+<p> </p>
+
+
+<h2>About Standalone GEMS3K Program<br>
+</h2>
+<hr style="width: 100%; height: 2px;">
+<h3>Contents</h3>
+<p style="margin-left: 40px;"><a href="#WHAT_IS">1. What does GEMS3K</a><br>
+</p>
+<p style="margin-left: 40px;"><a href="#OVERVIEW">2. Overview</a></p>
+<p style="margin-left: 40px;"><a href="#DOCUMENTATION">3. Documentation Files<br>
+  </a></p>
+<p style="margin-left: 40px;"><a href="#LICENSING">4. Licensing</a></p>
+<p style="margin-left: 40px;"><a href="#DEVELOPERS">5. Developers</a></p>
+<p style="margin-left: 40px;"><a href="#CREDITS">6. Credits</a></p>
+<p style="margin-left: 40px;"><a href="#REFERENCES">7. References</a></p>
+<br>
+
+
+<hr size="2" width="100%">
+<h3><a name="WHAT_IS"></a>1. What does GEMS3K</h3>
+<ul>
+  <li>
+    <p>GEMS3K equilibrium solver can model complex (geo)chemical systems with many nonideal solutions.</p>
+  </li>
+  <li>
+    <p>GEMS3K C/C++ code includes many substantial improvements of Gibbs Energy Minimization algorithm.</p>
+  </li>
+  <li>
+    <p>GEMS3K is fast, delivers accurate chemically plausible results, excellent mass balance precision.</p>
+  </li>
+  <li>
+    <p>GEMS3K is the numerical kernel of the GEM-Selektor package for geochemical modeling.</p>
+  </li>
+  <li>
+    <p>GEMS3K can be used in developing a new generation of coupled reactive mass transport simulation codes.</p>
+  </li>
+</ul>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h3><a name="OVERVIEW"></a>2. Overview</h3>
+<p>GEMS3K (formerly GEMIPM2K) is a C/C++ code implementing the efficient numerical kernel <a href="gems3k-ipm.html">IPM-3</a>
+ of the GEM-Selektor v.3 package for geochemical&nbsp; thermodynamic 
+modeling of complex heterogeneous multicomponent-multiphase&nbsp; 
+systems. GEMS3K results from substantial improvements of convex 
+programming Gibbs energy minimization algorithms achieved since 2000, 
+when development and support of GEMS was taken over by LES PSI (since 
+2008 jointly with IGP ETHZ).</p>
+<p>The standalone variant of GEMS3K code can be coupled to reactive mass transport simulation codes, in particular, <span style="color: rgb(204, 0, 0);">OpenGeoSys</span>,
+ also running on high-performance computers. Input files (in text 
+format) for GEMS3K can be exported with a few mouse-clicks from the 
+GEM-Selektor v.3&nbsp; code (<a href="gems3k-ipm.html#TO_STANDALONE">more...</a>), or prepared manually using a simple ASCII text editor. Data exchange with the mass transport part of the coupled code can be 
+implemented in computer memory using TNode class functions (<a href="gems3k-nodelev.html">more...</a>).&nbsp; <br>
+</p>
+<p>The standalone GEMS3K code is foreseen to be <a href="#LICENSING">licensed</a>
+ as the open-source software in order to promote its broad application 
+in hydrothermal-/ waste geochemistry and related research communities. 
+Other potential areas of GEMS3K application include coupled parameter 
+fitting codes and phase diagram tools. </p>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h3><a name="DOCUMENTATION"></a>3. Documentation Files</h3>
+<p>The documentation of standalone GEMS3K code consists of HTML files located in "/standalone/GEMS3K/doc/html" folder in the GEMS3K subversion repository. <br>
+</p>
+<p></p>
+<table style="text-align: left; width: 974px; height: 222px;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-manual.html">gems3k-manual.html</a> </p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>The standalone GEMS3K code and how to use it</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-iofiles.html">gems3k-iofiles.html</a></p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>Formats of GEMS3K text input/output files (TNode level) </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-tsolmod.html">gems3k-tsolmod.html</a></p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>Built-in models of non-ideal phases and their parameters in GEMS3K input files</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-nodelev.html">gems3k-nodelev.html</a></p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>How to couple codes with GEMS3K on the simple TNode level</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-useref.html">gems3k-useref.html</a></p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>GEMS3K function calls and access methods at the TNode level</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-tests.html">gems3k-tests.html</a> </p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>Test examples and benchmarks for the "gemnode" - GEMS3K test program (+ input and output files)<br>
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k-nodearray.html">gems3k-nodearray.html</a></p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>How to couple with GEMS3K on the TNodeArray level </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;">
+        <p><a href="gems3k_ipm.html">gems3k-ipm.html</a></p>
+      </td>
+      <td style="vertical-align: top;">
+        <p>Operation of GEM-Selektor IPM kernel, numerical controls and errors, export of GEM task to GEMS3K input files.&nbsp; </p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>The recommended way to prepare GEMS3K input files consists in 
+creating a modeling project in GEM-Selektor, creating and calculating 
+chemical systems (equilibria), and then exporting the GEM tasks to 
+GEMS3K files. Details about this process can be found <br>
+</p>
+<p><br>
+</p>
+<!--EndFragment-->
+
+<hr style="width: 100%; height: 2px;">
+<h3><a name="LICENSING"></a>4. Licensing</h3>
+<p>&lt;TBD&gt;<br>
+</p>
+<hr style="width: 100%; height: 2px;">
+<h3><a name="DEVELOPERS"></a>5. Developers</h3>
+<p>&lt;TBD&gt;<br>
+</p>
+<hr style="width: 100%; height: 2px;">
+<h3><a name="CREDITS"></a>6. Credits</h3>
+<p>&lt;TBD&gt;<br>
+</p>
+<hr style="width: 100%; height: 2px;">
+<h3><a name="REFERENCES"></a>7. References</h3>
+<p>Kulik D.A., Wagner T., Dmytrieva S.V., Kosakowski G., Chudnenko K.V.,
+ Berner U. (2012). GEM-Selektor geochemical modeling package: Numerical 
+kernel GEMS3K for coupled simulation codes (submitted).</p>
+<p>Wagner T., Kulik D.A., Hingerl F.F., Dmytrieva S.V. (2012). 
+GEM-Selektor geochemical modeling package: TSolMod C++ class library and
+ data interface for multicomponent phase models (submitted).</p>
+<p>Shao H., Dmytrieva S.V., Kolditz O., Kulik D.A., Pfingsten W., 
+Kosakowski G. (2009): Modeling reactive transport in non-ideal 
+aqueous&#8211;solid solution system. Applied Geochemistry 24, 1287-1300.</p>
+<p>Kulik D.A. (2006): Dual-thermodynamic estimation of stoichiometry and
+ stability of solid solution end members in aqueous - solid solution 
+systems. Chemical Geology 225(2-3),189&#8211; 212.</p>
+<p>Karpov I.K., Chudnenko K.V., Kulik D.A. and Bychinskii V.A. (2002): 
+The convex programming minimization of five thermodynamic potentials 
+other than Gibbs energy in geochemical modeling. American Journal of 
+Science 302, 281-311. </p>
+<p>Karpov I.K., Chudnenko K.V., Kulik D.A., Avchenko O.V. and Bychinski 
+V.A. (2001). Minimization of Gibbs free energy in geochemical systems by
+ convex programming. Geochemistry International 39(11). </p>
+<p>Karpov I.K., Chudnenko K.V. and Kulik D.A. (1997): Modeling chemical 
+mass-transfer in geochemical processes: Thermodynamic relations, 
+conditions of equilibria and numerical algorithms. American Journal of 
+Science 297, 767-806.</p>
+<br>
+
+
+<hr size="2" width="100%">
+<p> </p>
+
+
+<p><tt>end of file</tt> <br>
+</p>
+<p>Last modified: March 30, 2012 (DK)&nbsp; </p>
+
+
+<br>
+
+
+<br>
+
+</body></html>

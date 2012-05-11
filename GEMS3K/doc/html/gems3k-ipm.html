@@ -1,0 +1,2771 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html><head>
+  
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+
+
+
+
+
+
+  
+<meta name="GENERATOR" content="Mozilla/4.72 [en] (Win98; I) [Netscape]">
+
+
+
+
+
+
+
+  
+<title>GEM Task Data and IPM-3 Kernel Manual</title>
+
+
+
+
+
+
+
+  
+<meta name="description" content="Version 2.0.0-PSI">
+
+
+
+
+
+
+
+</head>
+<body>
+<h1><img src="gems1.png" align="left" height="48" width="48"> <font color="#000066"> GEM-Selektor version 3<br>
+</font></h1>
+
+
+
+
+
+
+
+<p> </p>
+
+
+
+
+
+
+
+<h2> GEM Task Data Structure and IPM-3 Kernel Program<br>
+</h2>
+
+
+
+
+
+
+
+<hr size="2" width="100%">
+<h3>Contents </h3>
+
+
+
+
+
+
+
+
+
+
+
+
+<p><a href="#MULTI_INTRO">1.
+The Gem Task (Multi) Data Structure</a>&nbsp; </p>
+
+
+
+
+
+
+
+<p><a href="#MULTI_GEMIPM3">2.
+The GEM Algorithm and IPM-3 Kernel Program</a></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;"><a href="#PROCEDURE_AIA">2.1. Stage 1:
+AIA Procedure</a></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;"><a href="#PROCEDURE_MBR">2.2. Stage 2:
+MBR Procedure</a></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;"><a href="#PROCEDURE_IPM">2.3. Stage 3:
+IPM Descent Procedure</a></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;"><a href="#PROCEDURE_PSSC">2.4. Stage 4:
+PSSC Procedure</a></p>
+
+
+
+
+
+
+
+<p><a href="#MULTI_MWINDOW">3.
+Multi: (Details for Experts) Submodule Window</a></p>
+
+
+
+
+
+
+
+
+  
+<p style="margin-left: 40px;"><a href="#MWPAGE_1">3.1.
+Multi: Window "Gamma" Page</a></p>
+
+
+
+  
+<p style="margin-left: 40px;"><a href="#MWPAGE_2">3.2. Multi: Window "Phases"
+Page</a> </p>
+
+
+
+  
+<p style="margin-left: 40px;"><a href="#MWPAGE_3">3.3. Multi: Window "Species"
+Page</a> </p>
+
+
+
+  
+<p style="margin-left: 40px;"><a href="#MWPAGE_4">3.4. Multi: Window "Basis"
+Page</a> </p>
+
+
+
+
+
+
+
+
+<p><a href="#GEMIPM3_CONTROLS">4.
+Numerical Settings&nbsp; to Control IPM-3 Kernel Operation</a> </p>
+
+
+
+
+
+
+
+<p><a href="#GEMIPM3_ERRORS">5.
+Warnings and Error Messages</a></p>
+
+
+
+
+
+
+
+
+
+
+
+<p><a href="#TO_STANDALONE">6. Connection with Standalone GEMS3K
+Program (and Coupled Codes)</a></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;"><a href="#TO_STANDALONE_FROM_SYSEQ">6.1.
+How to Write and
+Read GEMS3K I/O Files from Single System Dialog</a></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;"><a href="#TO_STANDALONE_FROM_GEM2MT">6.2.
+How to Export Many Initial Systems to GEMS3K I/O Files from GEM2MT
+Module</a></p>
+
+
+
+
+
+ <br>
+<hr style="width: 100%; height: 2px;"> 
+
+
+
+
+
+
+<h2><a name="MULTI_INTRO"></a>1. The GEM Task (Multi) Data Structure<br>
+</h2>
+
+
+
+
+
+
+
+<p>The GEM Task ("Multi") data structure is dynamically allocated in
+computer memory and keeps all scalars and arrays containing input, work
+and output data of the GEM IPM-3 algorithm (<a href="theory_gem.html">more...</a>)
+
+used
+in calculation of an equilibrium state. Contents of the Multi
+structure can also be exported into GEMS3K input files and used in
+standalone coupled code calculations (<a href="gems_sys.html#MULTI_INTRO">more...</a>). In
+a standalone GEMS3K program, the Multi data structure is created and
+filled out by reading DCH and IPM input data files; it remains
+intact during the whole runtime of GEMS3K instance. </p>
+
+
+
+
+
+
+
+<p>This manual provides a short overview of the GEM algorithm and IPM-3
+kernel program, the main work data in the Multi structure accessible in
+Multi: window pages, and describes the <a href="#GEMIPM3_CONTROLS">numerical
+settings</a> that control
+the operation of the GEM IPM-3 algorithm. The output
+(equilibrium speciation etc.) data is described in detail <a href="gems_sys.html">elsewhere</a>.&nbsp;&nbsp; </p>
+
+
+
+
+
+
+
+<p>After the whole GEM IPM-3 algorithm sequence has converged, and the
+GEM-Selektor
+user has clicked
+the "Accept" button, the Multi data structure remains intact in the
+memory, whereas
+the CSD and GEM Task results will be automatically collected,
+compressed, and saved into a SysEq
+database record. In standalone GEMS3K program, the Multi data structure
+remains in memory, and the GEM Task results will be
+returned to the calling program. <br>
+<br>
+There are two main modes of operation of GEM IPM-3 kernel: the
+"automatic initial approximation" mode (AIA) and the "smart initial
+approximation mode" (SIA). The operation mode can be set in
+GEM-Selektor Single System dialog (menu "Calculate"), as well as in
+Process and GEM2MT
+wizards. In GEMS3K, it can be set before every call of GEM
+calculation.&nbsp;</p>
+
+
+
+
+
+
+
+<p>The AIA mode always uses the LP simplex procedure to get initial
+approximation of the GEM primal solution. In this mode, the MBR and IPM
+algorithms
+do more iterations, but require no a priori information about the
+stable phase assemblage and equilibrium speciation in the system. <br>
+</p>
+<p>
+
+
+
+
+
+
+The SIA mode needs a previous GEM task solution for the same setup of
+chemical system because it avoids the LP simplex step. In most cases,
+GEM IPM converges rapidly in this mode with a 10-20 times gain in
+computation speed. However, there is no
+guarantee that the previous GEM task result is a good initial
+approximation for a system with changed bulk composition, temperature,
+pressure, or metastability constraints. There is no universal criterion
+to check this before performing the whole GEM IPM
+calculation; at every step, it may turn out that the initial
+approximation was bad, leading to inconsistent results or to divergence
+in IPM or MBR numerical algorithm. At any such error condition, the
+program will automatically switch to the AIA mode
+for this task only. If the mode was
+already AIA, the GEM IPM calculation is stopped and an error message is
+generated (<a href="#GEMIPM3_ERRORS">more...</a>).
+</p>
+
+
+
+
+
+
+
+<hr size="2" width="100%">
+<h2><a name="MULTI_GEMIPM3"></a> 2. The GEM Algorithm and IPM-3 Kernel
+Program<br>
+</h2>
+
+
+
+
+
+
+
+<p>The operation of GEM IPM-3 module proceeds in four (AIA mode) or
+three (SIA mode) main stages, as shown on the flow chart (<span style="color: rgb(204, 0, 0);">Kulik et al., 2012</span>) below.&nbsp;</p>
+
+
+
+
+
+
+
+<p>To start calculations, the Multi data structure must be correctly
+filled out with input data (<a href="gems_bcc.html">BCC etc.</a>),
+including a feasible initial approximation (FIA) of the GEM primal
+solution.&nbsp; FIA is the speciation (amounts of Dependent Components)
+that is compatible with the equilibrium phase assemblage, mass balance
+and metastability constraints and is close enough to the Gibbs energy
+minimum so that the IPM algorithm can reach it and not another (local)
+minimum in a strongly non-ideal system. If FIA is available e.g. from a
+previously computed equilibrium state in a similar system, the AIA
+procedure can be skipped and calculation proceeds in "Smart Initial
+Approximation" (SIA) mode. Otherwise, the IPM-3 algorithm begins from
+the AIA procedure in the "cold-start" Automatic Initial Approximation
+(AIA) mode. &nbsp; &nbsp; </p>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<p><img style="width: 640px; height: 780px;" alt="FlowChartOfIPM-3-Algorithm.png" src="FlowChartOfIPM-3-Algorithm.png"><br>
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3><a name="PROCEDURE_AIA"></a>Stage 1: AIA Procedure<br>
+</h3>
+
+
+
+
+
+
+
+<p>An automatic initial approximation (AIA) must be used in all cases
+when the stable phase assemblage or the redox state is going to be
+(very) different from the previously computed equilibrium state, or if
+the latter is not available. In the generic non-linear GEM problem is
+first truncated into a LP (linear programming) subproblem<br>
+by cutting off the concentration and activity coefficient terms in
+chemical potential expressions for all dependent components. In this
+case, each dependent component (species) is treated as a separate pure
+phase. This LP sub-problem is then solved using a modified simplex
+algorithm with two-side (metastability) constraints. There are two
+controls - <a href="gems_ipm.html#Pa_EPS_0"><tt>Pa_EPS[0]</tt></a>
+and <tt><a href="gems_ipm.html#Pa_GAN_1">Pa_GAN[1]</a></tt>
+- that influence the precision
+and the result of the Simplex calculation, respectively.</p>
+
+
+
+
+
+
+
+<p>The GEM calculation is completed at this point, if no solution
+phases (having two or more dependent components) are present in the
+chemical system definition. Otherwise, the original non-linear GEM
+problem is restored, and the "Fill-out" step is applied. This step
+ensures that no thermodynamically stable phases and species will not be
+eliminated from the final GEM result, even though their amounts were
+set to zeros after simplex LP calculation. The program goes through the
+whole primal solution approximation vector and checks each element
+against the respective <a href="#Pa_DFY_0">Pa_DFY</a> value. If the
+data element contains a value equal or greater than Pa_DFY then it
+remains unchanged; otherwise the Pa_DFY value is inserted. <br>
+</p>
+
+
+
+
+
+
+
+<p>Note that this Fill-out procedure makes the mass balance precision
+worse and its improvement within the MBR procedure mandatory. Too large
+insertion constants in Pa_DFY can result in MBR algorithm failure,
+whereas some DCs can be lost upon GEM IPM descent iterations after too
+small fill-out insertions. &nbsp; <br>
+</p>
+
+
+
+
+
+
+
+<h3><a name="PROCEDURE_MBR"></a>Stage 2: MBR Procedure<br>
+</h3>
+
+
+
+
+
+
+
+<p>In order to obtain a FIA before starting the main IPM descent loop,
+the mass balance precision must be checked and improved, if necessary
+(especially in the AIA mode). This is done within the MBR (Mass Balance
+Refinement) procedure that iteratively adjusts some DC amounts in such
+a way that the approximation remains in the feasible domain, until any
+mass balance residual for <span style="font-style: italic;">i</span>-th
+IC
+does not exceed a small value <span style="font-style: italic;">b<sub>i</sub></span>*
+
+Pa_DHB.
+The MBR algorithm tries first to adjust larger amounts of DCs,
+if possible. MBR iterations are sensitive to several tolerances - <tt><a href="#Pa_DHB">Pa_DHB</a>,<a href="#Pa_DFY_0"> Pa_DFY</a>, <a href="#Pa_DPV_0">Pa_DPV</a></tt> - which
+also define the final precision of
+GEM IPM
+results.&nbsp;</p>
+
+
+
+
+
+
+
+<h3><a name="PROCEDURE_IPM"></a>Stage 3: GEM IPM Descent Procedure</h3>
+
+
+
+
+
+
+
+<p>After successful convergence of MBR, The Main IPM Descent procedure
+iteratively adjusts both the primal and the dual solution vectors,
+while trying to decrease the total Gibbs energy function of the system
+GX. At each iteration, first the descent-direction vector is obtained,
+then the optimal step length is estimated, and finally the primal
+solution approximation is corrected by adding products of descent
+direction (gradient) and step length for each DC. <br>
+</p>
+
+
+
+
+
+
+
+<p>Optionally, after each IPM iteration, the dual solution
+approximation (vector <span style="font-style: italic;">u</span>) can
+be checked for divergence (as controlled by <a style="font-family: monospace;" href="#Pa_LLG">Pa_LLG</a> tolerance).
+This check actually compares how chemical potentials of ICs vary
+between IPM iterations. In well-posed chemical systems, such variations
+occur rather monotonously, whereas in an ill-defined system (e.g. with
+respect to redox state), some chemical potentials may change
+erratically because there is not enough internal constraints to fix
+them. In this case, the Divergence Detector issues a warning; further
+IPM iterations will not improve but worsen the GEM task results. <br>
+</p>
+
+
+
+
+
+
+
+<p>The minimization problem is considered as solved, when
+the calculated value of the Dikin convergence criterion CD becomes
+smaller than the <a href="#Pa_DK"><tt>Pa_DK</tt></a> tolerance, and
+the
+maximum allowed total number of IPM iterations <a href="#Pa_IIM"><tt>Pa_IIM</tt></a>
+is not yet exceeded. At each IPM iteration, the
+CalculateActivityCoefficients() subroutine is called to update DC
+activity coefficients (and optionally electrostatic terms) in
+multi-component phases. This calculation&nbsp; is controlled by <tt><a href="#Pa_AG">Pa_AG</a>, <a href="#Pa_DGC">Pa_DGC</a>, <a href="#Pa_PRD_0">Pa_PRD</a></tt> settings.
+In the course of IPM iterations, some phases and components can be
+eliminated (zeroed-off), if their quantities become smaller than the
+respective
+tolerances in <a href="#Pa_DS"><tt>Pa_DS</tt></a> and <a href="#Pa_XMI_0"><tt>Pa_XMI</tt></a> fields. Changing these tolerances
+beyond recommended limits can strongly affect IPM convergence and
+precision of GEM IPM calculation results. <br>
+</p>
+
+
+
+
+
+
+
+<h3><a name="PROCEDURE_PSSC"></a>Stage 4: Phase Selection Procedure<br>
+</h3>
+
+
+
+
+
+
+
+<p>After convergence of the Main IPM descent, the control goes to
+the PSSC (Phase Selection and Speciation Cleanup) procedure that
+calculates stability
+criteria for all species and phases, and
+checks whether some phases have been lost from the x and
+Xa vectors and must be restored. If this was the case, the control will
+go back to <a href="#PROCEDURE_MBR">MBR Procedure</a>; the whole loop
+can be repeated up to up
+to five times. Behavior of the PSSC() algorithm mainly depends on the <a href="#Pa_PC"><tt>Pa_PC</tt></a> and <a href="#Pa_DF_0"><tt>Pa_DF</tt></a>
+controls. <br>
+</p>
+
+
+
+
+
+
+
+<p>In addition, the mass balance precision of the
+GEM IPM result is analyzed using the <tt><a href="#Pa_DHB">Pa_DHB</a>,
+<a href="#Pa_GAN_0">Pa_GAN</a>, <a href="#Pa_DPV_0">Pa_DPV</a></tt>
+controls. For each multi-component phase present in non-zero amount,
+the amount of each DC with trivial metastability constraints is checked
+for consistency with dual solution (see <a style="font-family: monospace;" href="#Pa_GAN_2">Pa_GAN[2]</a> and <a style="font-family: monospace;" href="#Pa_PRD_1">Pa_PRD[1]</a>
+tolerances). If an inconsistency is found, it will be corrected and, if
+the correction is too strong, the control goes to <a href="#PROCEDURE_MBR">MBR Procedure</a> again.</p>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h2><font face="Helvetica, Arial, sans-serif"><a name="MULTI_MWINDOW"></a>3.
+MULTI
+(Details
+for Experts) Submodule Window</font></h2>
+<p>This window can be opened in Equilibria Calculation mode from the
+Single System (SysEq) dialog, using "View" "Details for experts..."
+menu commands. The purpose of this window is to provide a detailed
+access to some Multi data in addition to the <a href="gems_sys.html#EQDEMO_MWINDOW">EqDemo window</a> and <a href="gems_sys.html#TAB_RESULTS">"Results:" tab</a>. For example, such
+access can be necessary in case of problems with calculation of
+activity coefficients, or when GEM IPM does not converge, or by
+persistent messages about inconsistent phases in the system, or to
+follow how the Multi data changes in step-by-step MBR and IPM
+calculations.</p>
+
+
+
+
+
+
+
+<p>The MULTI window contains four pages - Gamma, Phases, Species, and
+Basis - shortly summarized below.</p>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<hr style="width: 100%; height: 2px;">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_1"></a>3.1.
+MULTI
+Window
+"Gamma" Page</font></h3>
+
+
+
+
+
+
+
+<p>This page shows a table with the list of Dependent Component names (<a href="gems_sys.html#DCnam">DCnam</a>), their charges (<a href="gems_sys.html#ez">ez</a>),&nbsp; DQF constant/pure fugacity
+values (<a href="gems_sys.html#fDQF">fDQF</a>), as well as currently
+available molar excess Gibbs energies (<a href="gems_sys.html#vEx">vEx</a>),
+internal
+(<a href="gems_sys.html#lnGam">lnGam</a>) and external (<a href="gems_sys.html#gamma">gamma</a>) activity coefficients. Note that
+vEx and lnGam values may differ significantly in the case if (strong)
+smoothing in a strongly non-ideal system because vEx shows the values
+affected by smoothing, especially at the beginning of the IPM iteration
+process. <br>
+</p>
+
+
+
+
+
+
+
+<p>Below this table, two tables <a href="gems_sys.html#qd">qd</a> and <a href="gems_sys.html#qp">qp</a> with work data cells for built-in or
+scripted models of mixing in multi-component phases appear (one row per
+phase). <br>
+</p>
+
+
+
+
+
+
+
+<p>The next table below shows phase names (PHnam2) with model codes (<a href="gems_sys.html#smod">smod</a>) and their parameter
+dimensionalities (<a href="gems_sys.html#Lsmod">Lsmod</a> and <a href="gems_sys.html#Lsmdc">Lsmdc</a>). Below, the arrays <a href="gems_sys.html#MoiSN">MoiSN</a>, <a href="gems_sys.html#SitFr">SitFr</a>,
+<a href="gems_sys.html#dmc">dmc</a>, <a href="gems_sys.html#IPxPM">IPxPM,</a>
+and <a href="gems_sys.html#pmc">pmc</a> appear that contain all data
+necessary for models of mixing in multi-component phases, arranged
+according to dimensionalities in Lsmod and Lsmdc. <br>
+</p>
+
+
+
+
+
+
+
+ <br>
+
+
+
+
+
+
+
+
+<hr style="width: 100%; height: 2px;">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_2"></a>3.2.
+</font><font face="Helvetica, Arial, sans-serif">MULTI Window "Phases"
+Page</font></h3>
+
+
+
+
+
+
+
+<p>This page shows details and some intermediate and output properties
+of multi-component phases. The first two tables (<a href="gems_sys.html#denW">denW</a> and <a href="gems_sys.html#epsW">epsW</a>)
+contain
+density and dielectric constants (and their derivatives) of H<sub>2</sub>O
+at
+T,P of interest, if the aqueous phase is included in the GEM task. <br>
+</p>
+
+
+
+
+
+
+
+<p>Next, the table shows the list of phase names <a href="gems_sys.html#PHnam">PHnam</a>, the numbers of DCs in each phase
+<a href="gems_sys.html#L1">L1</a>, the amounts of phases <a href="gems_sys.html#Xa">Xa</a>, amounts of solvent/sorbent in
+asymmetric phases <a href="gems_sys.html#Xwa">Xwa</a>, specific
+surface areas of phases <a href="gems_sys.html#Aalp">Aalp</a>, and
+specific (surface) energy increments <a href="gems_sys.html#Yof">Yof</a>.&nbsp;
+To
+the right of this table, an optional table with sorption model
+parameters for phases is shown (<span style="color: rgb(204, 0, 0);">under
+construction</span>).</p>
+
+
+
+
+
+
+
+<p>The remaining five tables below, VPh, GPh, HPh, SPh, CPh, show
+integral properties of multi-component phases (<span style="color: rgb(204, 0, 0);">under construction</span>). These
+properties are important in highly non-ideal systems for calculation of
+the respective integral properties of the whole system, Vx, GX, Hx, Sx,
+Cpx.<br>
+</p>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<hr style="width: 100%; height: 2px;">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_3"></a>3.3.
+</font><font face="Helvetica, Arial, sans-serif">MULTI Window "Species"
+Page</font></h3>
+
+
+
+
+
+
+
+<p>This page shows the list <a href="gems_sys.html#DCnam">DCnam</a> of
+Dependent Component (DCs) names included in this GEM task. To the left (<a href="gems_sys.html#muj">muj</a>) , the indexes of DCs in the project
+basis system can be seen. To the right, the primal solution (<a href="gems_sys.html#x">x</a>), its initial approximation (<a href="gems_sys.html#y">y</a>), and DC amounts restored using the dual
+solution (<a href="gems_sys.html#XU">XU</a>) can be seen, followed by
+lower- and upper metastability constraints (<a href="gems_sys.html#dll">dll</a>,
+<a href="gems_sys.html#dul">dul</a>). &nbsp; <br>
+</p>
+
+
+
+
+
+
+
+<p>Next table (below) provides (in normalized scale, at T,P of
+interest): the standard Gibbs energy functions of DCs (<a href="gems_sys.html#g0">g0</a>);&nbsp; the sum of g0, smoothed excess <a href="gems_sys.html#vEx">vEx</a>, and <a href="gems_sys.html#gDQF">gDQF</a>
+terms of primal chemical potentials (<a href="gems_sys.html#c">c</a>);&nbsp;
+the
+primal (<a href="gems_sys.html#v">v</a>) and dual (<a href="gems_sys.html#fx">fx</a>) chemical potentials of DCs, as well as
+the IPM direction of descent vector (<a href="gems_sys.html#mu">mu</a>)
+and DC weight multipliers (<a href="gems_sys.html#W">W</a>). This
+information is important to observe especially in the stepwise mode of
+GEM IPM calculations. <br>
+</p>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<hr style="width: 100%; height: 2px;">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_4"></a>3.4.
+</font><font face="Helvetica, Arial, sans-serif">MULTI Window "Basis"
+Page</font></h3>
+
+
+
+
+
+
+
+<p>This page consists of two tables. The upper table presents some data
+for Independent Components: their names and types (<a href="gems_sys.html#ICnam">ICnam</a>), atomic/molar masses (<a href="gems_sys.html#icM">icM</a>), the input bulk composition of the
+system (<a href="gems_sys.html#b">b</a>), the mass balance deviations.
+Three columns that follow (<a href="gems_sys.html#u">u</a>, <a href="gems_sys.html#uc">uc</a>[0], uc[1]) represent the dual solution
+values (Lagrange multipliers) from this and two earlier IPM iterations.
+The <a href="gems_sys.html#uefd">uefd</a> column contains Lagrange
+multipliers for the Mass Balance Refinement (MBR) task.</p>
+
+
+
+
+
+
+
+<p>The lower table begins with coefficients of the stoichiometry matrix
+<a href="gems_sys.html#A">A</a> (rows for DCs/species, columns for
+ICs), followed by the DC names list (<a href="gems_sys.html#DCnam">DCnam</a>),
+the
+primal GEM solution vector (<a href="gems_sys.html#x">x</a>), the
+standard Gibbs energy functions of DCs (<a href="gems_sys.html#g0">g0</a>),
+as
+well as molar masses of DCs (<a href="gems_sys.html#mmDC">mmDC</a>)
+and molar volumes of DCs (<a href="gems_sys.html#vol">vol</a>). <br>
+</p>
+
+
+
+
+
+
+
+<p>Taken together, these two tables represent most of the GEM Task
+setup input and relevant output data. The A table can be used for
+checking DC stoichiometries, as well as mass balance (together with the
+x vector). The three consecutive approximations of the dual solution u
+(upper table) can be useful to see where the dual solution diverges in
+the case of warnings, and how chemical potential approximations for ICs
+change between IPM iterations.&nbsp; <br>
+</p>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<hr size="2" width="100%">
+<h2><a name="GEMIPM3_CONTROLS"></a>4. Numerical Settings to Control GEM
+IPM-3 Kernel
+Operation</h2>
+
+
+
+
+
+
+
+<p> The data objects listed below control the operation of GEM
+IPM-3 kernel program. They are saved in the modelling
+project database record and can be changed any time in the "Equilibria
+Calculation" mode upon opening the Project window and editing its <a href="gm_project.html#MWPAGE_2">"Controls" page</a>.&nbsp; If you
+will&nbsp;
+change any field there, but not save the Project record, then your
+changes will apply only until the project session is closed; after
+that, the changes
+will be lost. To make the changes persistent, save the Project
+record to database by clicking on the "Save" toolbar button (or
+"Record" "Save" menu command). <br>
+</p>
+
+
+
+
+
+
+
+<p>For the standalone GEMS3K program, the numerical settings are
+exported as part of the IPM
+input file and can be edited there, if necessary. They remain valid
+for the whole duration of GEMS3K instance in computer memory. Only
+numerical settings that differ from defaults may be exported to IPM
+file (<span style="color: rgb(204, 0, 0);">more ...</span>). <br>
+</p>
+
+
+
+
+
+
+
+<p>Note that usually, there is no need to change default numerical
+settings. The default values below
+correspond to aqueous systems of 1000 total moles
+of independent components in the internal Multi <span style="font-style: italic;">b</span> vector; re-scaling from-to actual
+BCC occurs automatically within the IPM-3 kernel program. Ad-hoc
+changes of the IPM-3 numerical
+controls, especially setting
+them beyond the indicated validity intervals, may
+cause the program to crash, freeze, or produce meaningless
+results. However, some controls must be adjusted for certain types of
+systems.<b> <br>
+</b></p>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<hr style="width: 100%; height: 2px;">
+<dl>
+
+
+
+
+
+
+
+
+  <dt> <a name="Pa_DB"></a><big><b><big><tt>Pa_DB</tt></big></b></big>
+- Tolerance for minimum mole amount of Independent Component in the
+b vector { 1e-17 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This cutoff number of moles of IC is used in calculation of the
+input bulk chemical composition BCC (vector <a href="gems_sys.html#b"><tt>b</tt></a>)
+of
+the
+chemical system to be solved for the equilibrium state the using
+the GEM IPM-3 kernel. <br>
+
+  </dd>
+  <dd>In
+the GEM-Selektor <a href="gems_bcc.html">CSD setup recipe calculation</a>,
+if
+the
+calculated
+mole amount&nbsp; <i>b<sub>i</sub></i>&nbsp;
+of i-th Independent
+Component is less than <tt>Pa_DB</tt>, this IC will be automatically
+turned off in the CSD and excluded from the (compressed) GEM task data
+structure. <br>
+
+  </dd>
+  <dd>In the GEMS3K program, it is checked that any element <i>b<sub>i</sub></i>&nbsp;
+of
+the input BCC (<a href="gems_sys.html#b">b</a>) vector is
+greater
+than or equal to Pa_DB tolerance; if not, this <i>b<sub>i</sub></i>&nbsp;
+will
+be set to Pa_DB value, the warning <a href="#E20IPM">W20IPM</a>
+will be issued, and the GEM calculations will continue.&nbsp;</dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-8 to 1e-20,
+default 1e-17
+mol.</dd>
+  <dd><span style="text-decoration: underline;">Related warning</span>:
+    <a href="#E20IPM">W20IPM</a>. <br>
+</dd>
+  <dd> <br>
+
+  </dd>
+  <dt> <a name="Pa_DS"></a><big><b><big><tt>Pa_DS</tt></big></b></big>
+- Tolerance for minimum mole amount of stable pure phase present in GEM
+primal
+solution {1e-20}<br>
+
+  </dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>The GEM IPM algorithm will automatically eliminate (zero off) the
+mole amount of
+any pure (single-component) phase in <a href="gems_sys.html#Xa">Xa</a>
+vector, including all
+its species in the primal
+solution vector <a href="gems_sys.html#x">x</a>, if current total
+number
+of moles of DCs in this phase becomes less than <tt>Pa_DS</tt> . <br>
+
+  </dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-8 to 1e-30 mol, recommended is 1e-20 mol (default).</dd>
+  <dd><span style="text-decoration: underline;">Related&nbsp; error</span>:&nbsp;
+
+
+    <a href="#E13IPM">E13IPM</a>.</dd>
+  
+  <dd>The IPM elimination criteria for special cases (multi-component
+phases of different kinds and their species) are given as <tt>Pa_XMI</tt>&nbsp;
+tolerances
+described below.&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_XMI_0"></a><big><b><tt>Pa_XMI[0]</tt></b></big>
+-&nbsp; Mole amount tolerance for water-solvent at aqueous phase
+elimination{
+1e-13 }</dt>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dd>The aqueous electrolyte phase will be eliminated (zeroed off) if
+the amount of water-solvent goes below this tolerance.&nbsp; <span style="text-decoration: underline;">Possible
+range</span>: 1e-8 to 1e-30 mol.<br>
+
+  </dd>
+  
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_XMI_1"></a><big><b><tt>Pa_XMI[1]</tt></b></big>
+- Mole amount tolerance for the solid sorbent at sorption phase
+elimination { 1e-13 }</dt>
+  <dd>&nbsp;</dd>
+  <dd>The sorption phase will be eliminated (zeroed off), if the amount
+of solid sorbent goes below this tolerance. <span style="text-decoration: underline;">Possible range</span>: 1e-8 to
+1e-30 mol.</dd>
+  
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_XMI_2"></a><b><big><tt>Pa_XMI[2]</tt></big></b> -
+Mole amount tolerance for elimination of solute (sorbate) species {
+1e-33 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This value defines, which DCs in multi-component phases will be
+excluded from the the <i>L<sub>S</sub></i>&nbsp; set (see Karpov et
+al.,
+1997). Any element x<sub>j</sub> in the GEM primal solution
+approximation with the amount below this tolerance will be set to zero.
+&nbsp;</dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-17 to 1e-99;&nbsp; default value is 1e-33
+moles. <br>
+
+  </dd>
+  <dd>Setting this tolerance to lower values (1e-60 and less) may be
+necessary, if some minor species with general activities (lga) in the
+range 1e-10 - 1e-15 have zero amounts in the phase present in a
+significant amount in equilibrium state. This means that these species
+were eliminated at some early iterations of IPM and have not been
+restored in the Speciation Cleanup procedure (perhaps because it has
+been deactivated). <br>
+
+  </dd>
+  
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_XMI_3"></a><big><b><tt>Pa_XMI[3]</tt></b></big> -
+Mole amount tolerance for elimination of solution phases other than
+aqueous { 1e-20 }</dt>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dd>This value defines, which non-aqueous multi-component phases will
+be excluded from the mass balance if their amounts in the <a href="gems_sys.html#Xa">Xa</a> vector fall below this tolerance after
+some IPM Main Descent iteration.</dd>
+  
+  <dd><span style="text-decoration: underline;">Possible range</span>:
+1e-8 to 1e-30 mol, recommended is 1e-20 mol
+(default), the same as in <a href="#Pa_DS">Pa_DS</a>. &nbsp; &nbsp; <br>
+
+  </dd>
+  <dd>&nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_XMI_4"></a><b><big><tt>Pa_XMI[4]</tt></big></b> -
+Tolerance for the effective molal ionic strength to calculate
+aqueous activity coefficients { 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>Calculation of activity coefficients of aqueous species is
+performed only when the effective molal ionic
+strength <span style="font-style: italic;"><a href="gems_sys.html#IS">IS</a>
+    </span>is not less than this value. <br>
+
+  </dd>
+  <dd>Otherwise, the internal activity coefficients will be set to 1.0
+regardless of&nbsp; the used aqueous model. <br>
+
+  </dd>
+  <dd><span style="text-decoration: underline;">Possible range</span>:
+1e-3 to 1e-10; default 1e-5. &nbsp; <br>
+
+  </dd>
+  
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_DHB"></a><big><big><b><tt>Pa_DHB</tt></b></big></big>
+- Maximum allowed relative mass balance residual for Independent
+Components { 1e-13 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This tolerance defines a relative value of mass balance residuals
+for all independent components that must be reached in the Mass Balance
+Refinement (MBR) step and maintained by the Main IPM Descent step of
+the GEM algorithm. Actually, this is the tolerance for the convergence
+criterion of the MBR algorithm for entering the feasible domain of the
+initial approximation of GEM primal solution (<span style="color: rgb(204, 0, 0);">more...</span>)&nbsp; <br>
+
+  </dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-10 to 1e-15, default is 1e-13 (for a system of 1000 total moles in
+BCC).&nbsp;</dd>
+  <dd><span style="text-decoration: underline;">Related error conditions</span>:
+
+
+    <a href="#E02IPM">E02IPM</a>;&nbsp; <a href="#W09IPM">W09IPM</a>;&nbsp;
+
+
+    <a href="#E10IPM">E10IPM</a>.</dd>
+  
+  <dd>&nbsp;Exact application of this tolerance within the MBR
+procedure depends on the <a href="#Pa_DPV_2">Pa_DPV[2]</a> control
+parameter. Maximum allowed number of MBR iterations can be set in <a href="#Pa_DPV_0">Pa_DPV[0]</a>; reaction of the program on reaching
+this number of iterations is defined by a flag in <a href="#Pa_DPV_1">Pa_DPV[1]</a>.&nbsp;&nbsp;&nbsp; <br>
+</dd>
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_0"></a><b><big><tt>Pa_DFY[0]</tt></big></b> -
+Insertion mole amount for water-solvent in the AIA Fill-Out procedure {
+1e-5 }</dt>
+  <dd>&nbsp; &nbsp;&nbsp;</dd>
+  <dd>This and following controls are used in the Fill-Out procedure,
+which is applied immediately after obtaining the AIA LP simplex initial
+approximation <a href="gems_sys.html#y">y</a> of the GEM primal
+solution
+(<a href="#MULTI_GEMIPM3">more...</a>).&nbsp; Separate insertion
+constants may be applied to components of certain phase types (see
+below).&nbsp; <br>
+
+  </dd>
+  <dd>This must be done because to obtain a LP simplex initial
+speciation, each Dependent Component is temporarily considered as a
+separate pure phase; according to Gibbs phase rule, the number
+of non-zero quantities of such phases in isobaric-isothermal
+equilibrium cannot exceed the number of Independent Components. <br>
+
+  </dd>
+  <dd>In a real chemical multi-system containing aqueous and several
+other
+multi-component phases, much more dependent components may be present
+in
+positive quantities at equilibrium, but it is not known at the
+beginning, which of them will be present in significant amounts. <br>
+
+  </dd>
+  <dd>For this reason, the Fill-Out procedure is applied on each
+element of the y vector: If&nbsp; <i>y<sub>j</sub></i>&nbsp;
+&lt;&nbsp; Pa_DFY then&nbsp; <i>y<sub>j</sub>&nbsp; </i>is set equal
+to Pa_DFY. This procedure actually violates the mass balance that must
+be improved in the MBR procedure to make sure that the initial
+appeoximation lies within the 'Fesible Domain'. <br>
+
+  </dd>
+  <dd>Magnitudes of Pa_DFY insertion values
+have a major impact on the convergence of the MBR procedure and on the
+whole GEM task calculation result. <br>
+
+  </dd>
+  <dd>Too low values may lead to missing solution phases or some
+components in them, which may render the GEM task solution infeasible. <br>
+
+  </dd>
+  <dd>Too large
+Pa_DFY values may prevent MBR algorithm convergence and cause
+persistent&nbsp; errors&nbsp; <a href="#E04IPM">E04IPM</a> or <a href="#E05IPM">E05IPM</a>. <br>
+
+  </dd>
+  
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-4 to 1e-7, default is 1e-5 (for a system of 1000 total moles in
+BCC).&nbsp;&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_1"></a><b><big><tt>Pa_DFY[1]</tt></big></b>
+&nbsp;- Insertion mole amount&nbsp; for aqueous species in the AIA
+Fill-Out procedure { 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_2"></a><b><big><tt>Pa_DFY[2]</tt></big></b>
+-&nbsp;Insertion mole amount for species of ideal solutions in the AIA
+Fill-Out procedure { 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_3"></a><b><big><tt>Pa_DFY[3]</tt></big></b> -
+Insertion mole amount for a major species in a solution in the AIA
+Fill-Out procedure { 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_4"></a><b><big><tt>Pa_DFY[4] </tt></big></b>-
+Insertion mole amount for a junior species in a solution in the AIA
+Fill-Out procedure { 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_5"></a><b><big><tt>Pa_DFY[5]</tt></big></b> -
+Insertion mole amount for a single-component phase in the AIA Fill-Out
+procedure { 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_DFY_6"></a><b><big><tt>Pa_DFY[6]</tt></big></b>
+-&nbsp;Insertion mole amount for a single-component phase in
+the PhaseSelection procedure { 1e-7 }</dt>
+  <dd>&nbsp;</dd>
+  <dd>In the Phase Selection procedure (<span style="color: rgb(204, 0, 0);">more...</span>), a phase can be
+detected that is not present in positive amount in <a href="gems_sys.html#Xa">Xa</a> vector, but shows a significant
+positive value of the phase stability criterion in the <a href="gems_sys.html#Fa">Fa</a> vector.&nbsp; In this case, the amounts
+of all DCs components will be set to this insertion value, and the
+control goes to MBR procedure and then again to the main IPM Descent
+algorithm.&nbsp; Because the primal solution is very close to reality
+in this case, much lower insertion constants will be tolerated in
+comparison with the AIA Fill-Out procedure. <br>
+
+  </dd>
+  
+  <dd>&nbsp; &nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_EPS_0"></a><big><b><tt>Pa_EPS[0]</tt></b></big> -
+Tolerance of the mass balance for the LP simplex solver convergence { 1e-10
+}</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This criterion defines the desired absolute mass balance precision for
+the LP simplex calculation of the automatic initial approximation
+(AIA). <br>
+
+  </dd>
+  <dd>Too low tolerances may cause
+persistent <a href="#E01IPM">E01IPM</a> errors. <br>
+
+  </dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-7 to 1e-14, default is 1e-10 (for a system of 1000 total moles in
+BCC). <br>
+</dd>
+  <dd>Usually there is no need to adjust this tolerance.&nbsp;&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_EPS_1"></a><big><b><tt>Pa_EPS[1]</tt></b><small> -</small></big>
+Tolerance for calculation of the surface activity coefficient terms
+(SACT) for
+surface species
+{ 1e-3 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This is an experimental value for smoothing the stiff numerical
+behavior of SACT at high surface coverages. <br>
+
+  </dd>
+  
+  <dd>In most cases, the value between
+1e-4 and 1e-2 should be sufficient (<span style="color: rgb(204, 0, 0);">under
+construction</span>).&nbsp; <br>
+
+  </dd>
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_GAN_0"></a><big><b><tt>Pa_GAN[0] </tt></b><small><small><tt>-</tt></small></small></big>
+Fictive
+activity coefficient for a major (M) species in a solution phase, used
+only in AIA LP simplex calculation&nbsp; { 1 }</dt>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dd>This value can usually be set to 1.&nbsp;<span style="text-decoration: underline;"></span></dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+0.0001
+to 1. <br>
+
+  </dd>
+  <dd>See also comments for Pa_GAN[1] below. <br>
+
+  </dd>
+  
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_GAN_1"></a><big><b><tt>Pa_GAN[1] -&nbsp;</tt></b></big>Fictive
+activity
+coefficient
+for a minor (J) species in a solution phase, used only in
+AIA LP simplex calculation { 1000 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>The Pa_GAN[1] and perhaps Pa_GAN[0] controls are important for
+highly positively non-ideal
+solution systems that may potentially produce miscibility gaps
+(see "/Resources/doc/pdf/ActivityCoeffs.pdf" documentation file for
+details). <br>
+
+  </dd>
+  <dd>In this case, two or more phase definitions for a given
+solution model must be included in the system setup. The initial
+approximation must be chosen within the miscibility (single-phase)
+region for each possible
+phase. If the initial approximation is chosen in the middle of the
+miscibility gap, the GEM algorithm will converge to an incorrect
+metastable single-phase solution (the same as if only one solution
+phase definition would have been included in the system). <br>
+
+  </dd>
+  <dd>In the AIA mode, this means that some end members must be
+temporary made less
+stable at the step of LP simplex initial approximation. In the Phase
+definition and in the GEMS3K kernel program, this
+is achieved by denoting such end members as "junior" 'J', and those
+that
+should not be suppressed - as "major" 'M'.
+These codes result in automatic insertion of&nbsp; ln(PA_GAN[1]) for
+'J' and&nbsp; ln(PA_GAN[0]) for 'M' end members into <a href="gems_bcc.html#lngmf_">lngmf_</a> input data vector, then copied
+into the <a href="gems_sys.html#lngmf">lngmf</a> input data vector in
+the GEM task data structure. <br>
+
+  </dd>
+  <dd>&nbsp;Before starting the LP simplex procedure, the molar Gibbs
+energy
+values G0 (in dimensionless ln a scale) of DCs are automatically
+corrected by adding the respective <a href="gems_sys.html#lngmf">lngmf</a>
+values. These
+corrections are automatically removed after the LP simplex calculation
+is finished, the mixing models are restored, and the control goes to
+Fill-Out and then MBR procedures.<br>
+
+  </dd>
+  
+  <dd><span style="text-decoration: underline;">Possible values</span>:&nbsp;
+10 to 100000, default
+1000.&nbsp;  <br>
+
+  </dd>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_GAN_2"></a><big><b><tt>Pa_GAN[2]</tt></b></big>
+-&nbsp;
+Threshold for primal-dual normalized chemical potential difference used
+in Speciation Cleanup&nbsp;
+{ 1e-5 }</dt>
+  <dd>&nbsp;&nbsp;&nbsp;</dd>
+  <dd>In all multi-component phases present in the primal solution in
+positive amounts, the Speciation Cleanup procedure compares the amounts
+of DCs in the primal solution vector <a href="gems_sys.html#x">x</a>
+with their amounts restored using the dual solution vector <a href="gems_sys.html#u">u</a> and DC chemical formula (<span style="color: rgb(204, 0, 0);">more...</span>).&nbsp; The comparison
+is done by calculating the difference of primal (v) and dual (Fx)
+chemical potential (in dimensionless scale); if for j-th DC this
+difference is greater than this threshold, then the x<sub>j</sub> value is
+replaced by that <a href="gems_sys.html#XU">XU</a><sub>j</sub>
+restored from the dual solution, if the correction is not too strong,
+e.g. log10(|XU<sub>j</sub> - x<sub>j</sub>|) does not exceed the
+Pa_PRD[1] threshold. <br>
+
+  </dd>
+  
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+0.001 to 1e-7 (default 1e-5). See also <a href="#Pa_PRD_1">Pa_PRD[1]</a>
+control. &nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_DG"></a><b><big><tt>Pa_DG</tt></big></b> -
+Total number of moles used in internal re-scaling of the GEM task
+system { 1000 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>Most numerical settings of the GEM IPM algorithm must be slightly
+adjusted if the size (mass) of the system changes significantly. In
+order to allow more accurate settings that ensure the most stable
+optimal convergence of IPM, the GEM task is automatically re-scaled to
+total number of moles in the <a href="gems_sys.html#b">b</a> vector
+equal to that given in this control setting. When the GEM IPM
+calculation is finished, the results (i.e. all extensive properties of
+the system, phases and components) are automatically re-scaled back to
+the original size of the system from the CSD.&nbsp; <br>
+
+  </dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+0.001 to 10000, default 1000. <br>
+
+  </dd>
+  <dd>At large Pa_DG values, take care that the amount of any DC after
+up-scaling&nbsp; does not exceed 0.999999e6 moles (the trivial
+metastability constraint from above). &nbsp; <br>
+
+  </dd>
+  <dd> Note that default values of other numerical settings in this
+document correspond to the default value of Pa_DG = 1000. If this value
+is changed, many settings may need to be re-adjusted to achieve optimal
+convergence and precision of GEM IPM algorithm. <br>
+
+  </dd>
+  
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DPV_0"></a><big><big><b><tt>Pa_DPV[0]</tt></b></big></big>
+- Maximal number of iterations allowed in the Mass Balance Refinement
+procedure { 130
+}</dt>
+  <dd> &nbsp;</dd>
+  <dd>This setting defines a maximum number of MBR iterations. <br>
+
+  </dd>
+  <dd>If the procedure did not converge
+until this control has been reached, the error condition <a href="#E04IPM">E04IPM</a> is activated, which declares that the IPM
+feasible domain cannot be entered at the requested mass balance
+accuracy, as defined by the <big><a href="#Pa_DHB"><tt>Pa_DHB</tt></a></big>&nbsp;
+threshold.
+    <br>
+
+  </dd>
+  <dd>Most chemical systems require 1 to 6 iterations,
+but some systems with many non-ideal phases need 300 iterations or
+more. <br>
+
+  </dd>
+  
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+10 to 1000, recommended value: 15, default
+value: 130.&nbsp;&nbsp;&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_DPV_1"></a><big><b><big><tt>Pa_DPV[1]</tt></big></b></big>
+- Activate (1) of disable (0) the <a href="#E04IPM">E04IPM</a> error
+condition on maximum
+number of MBR iterations {
+1 }</dt>
+  <dd> <br>
+
+  </dd>
+  <dd>&nbsp;If the error condition is activated (set to 1), and MBR
+procedure did not converge in Pa_DPV[0] iterations, the error <a href="#E04IPM">E04IPM</a> is
+issued and the GEM task calculation stopped, declared as failed.</dd>
+  
+  <dd>If the error condition is disabled (set to 0) then the control
+goes to IPM Main Descent procedure, even if the MBR procedure did not
+converge properly, with the risk of the IPM Descent failure.&nbsp;&nbsp; <br>
+
+  </dd>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_DPV_2"></a><big><b><big><tt>Pa_DPV[2]</tt></big></b></big>
+- Mode for applying the tolerances to mass balance residuals in the MBR procedure { 0 }</dt>
+  <dd><br>
+
+  </dd>
+  <dd>This setting defines how relative mass balance residual tolerances
+(see <a href="#Pa_DHB">Pa_DHB</a>) will be applied to ICs present in large amounts in the BCC (b vector)&nbsp; in the Mass Balance
+Refinement (MBR) procedure.</dd>
+  <dd>If this setting is 0 (default) then the MBR procedure will try to 
+satisfy relative tolerances for all ICs mass balance residuals (<a href="gems_sys.html#Cb">Cb</a>) regardless of their amounts in the <a href="gems_sys.html#b">b</a> vector. <br>
+  </dd>
+  <dd>If this setting is +1 or -1 then Pa_DHB value will be interpreted 
+as relative or absolute tolerance for the residuals. This means that MBR
+ iterations continue if at least for one ICs except charge 'Zz', the 
+residual exceeds Pa_DHB or exceeds b<sub>i</sub>*Pa_DHB. Sometimes using
+ this mode leads to better precision for major elements such as H, O, 
+Si, Ca, Mg etc. in aquatic and rock systems.&nbsp; <br>
+  </dd>
+  <dd>If this setting is +2, -2, +3, -3, ..., +12, -12 then the residuals are checked only against the absolute tolerance equal to 10<sup>|Pa_DPV[2]|</sup>&nbsp; instead of Pa_DHB. This corresponds to absolute criteria used in early versions of Selektor code.&nbsp; &nbsp; &nbsp; </dd>
+
+  
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+integer, 0 (default); +1, -1 to +12, -12.<br>
+
+  </dd>
+  
+  <dd><span style="text-decoration: underline;">Related error conditions</span>:
+
+
+    <a href="gems_ipm.html#W09IPM">W09IPM</a>; <a href="gems_ipm.html#E10IPM">E10IPM</a>; <a href="#E09IPM">E09IPM</a>.&nbsp; <br>
+
+  </dd>
+  <dd>&nbsp; &nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_LLG"></a><big><big><b><tt>Pa_LLG</tt></b></big></big>
+- Tolerance for checking divergence in the GEM dual solution between IPM iterations { 13000 or 0 (disable) }</dt>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dd>
+
+
+    In certain chemical systems, some
+chemical potentials are not well constrained by physically significant amounts
+of relevant chemical species. This leads to indefinite values of some IC chemical potentials in the dual solution vector <a href="gems_sys.html#u">u</a> and numerically stiff behavior in GEM IPM iterations. The resulting IPM solution may strongly depend on the chosen
+values of numerical tolerances and on the parameters of smoothing (<span style="color: rgb(204, 0, 0);">more...</span>).
+ Therefore, early detection of such divergence saves time and helps 
+identify problems with the setup or composition of the system. The 
+detection is performed within the Check-uDD algorithm, starting from 2nd
+ IPM Main Descent iteration. The Check_uDD procedure actually monitors 
+how strongly chemical potentials of ICs change between IPM iterations (<span style="color: rgb(204, 0, 0);">more...</span>) by means of calculating moving averages of u<sub>i</sub> values over 3 IPM iterations for each i-th IC (see <a href="gems_sys.html#uc">uc</a>). <br>
+  </dd>
+  <dd>This tolerance is used for finding ICs that exhibit too large 
+variations of chemical potential. There are two modes: one, set by 
+negative value of Pa_LLG, checks that the absolute difference of moving 
+average for this and previous IPM iteration is not greater than -Pa_LLG *
+ <a href="gems_sys.html#Psi_DK_0">Psi_DK[0]</a>; another, set by 
+positive Pa_LLG, checks that the absolute difference of moving average 
+differences for iterations r (this), r-1 and r-2 is not greater than Pa_LLG * Psi_DK[0]. <br>
+  </dd>
+  <dd>&nbsp;If a divergence is detected then the symbol of IC is added to the list in the warning <a href="#W14IPM">W14IPM</a>, and the warning is issued after all ICs have been checked. <br>
+
+  </dd>
+
+  
+  <dd style="text-decoration: underline;">Possible values:<br>
+</dd>
+
+
+    <dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 - disables the divergence
+ detection (in stiff systems, failure of GEM IPM algorithm may occur); <br>
+
+</dd><dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 32001 or -32001 - enables divergence detection in the 
+respective mode, but blocks the warning message (to export data for 
+plotting changes in the dual solution on IPM iterations at <a href="#Pa_PRD_2">Pa_PRD[2]</a> = 3); <br>
+
+  </dd>
+<dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; other values between 1 and 
+32000 or -1 and -32000 enable the divergence detection and warning 
+W14IPM. <br>
+
+</dd><dd>Default value: 13000. &nbsp; &nbsp; <br>
+
+
+    </dd>
+
+  
+
+
+
+
+  
+  <dd>&nbsp; <br>
+
+</dd>
+  
+  <dt> <a name="Pa_DF_0"></a><big><big><b><tt>Pa_DF[0]</tt></b></big></big>
+- Tolerance DF for the stability index (logSI &gt;= DF) or Karpov 
+criterion (|Fa| &gt;= DF) for a lost stable phase to be inserted { 0.01 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This numerical tolerance is used after
+the main IPM descent in the Phase Selection procedure to check stability
+ of all pure (single-component)
+phases
+absent from the system mass balance. A k-th phase is declared stable, if
+ all its components have only trivial metastability constraints; its 
+amount <a href="gems_sys.html#Xa">Xa</a>[k] is greater than or equal to 0; its stability index <a href="gems_sys.html#Fa">Fa</a>[k] is greater than 0 but less than or equal to Pa_DF[0]. <br>
+</dd>
+  
+  <dd>If a phase has Xa[k] = 0 and Fa[k] &gt; Pa_DF[0], this means 
+that&nbsp; this is phase is stable, but IPM has lost it from the mass 
+balance. DCs in this phase will be inserted in Pa_DFY[6] amounts; after 
+checking of all phases is finished, the MBR + IPM loop will be repeated 
+up to 5 times. If the situation persists then the stability
+and/or stoichiometry of this phase has to be checked.</dd><dd><span style="text-decoration: underline;">Recommended value</span>: 0.01.  In many internally consistent and non-stiff
+systems, a tighter tolerance of 0.001 can be used.
+
+  </dd>
+  <dd>Related error conditions: <a href="gems_ipm.html#W08IPM">W08IPM</a>; <a href="gems_ipm.html#E04IPM">E04IPM</a>.&nbsp;&nbsp; 
+
+  </dd>
+
+
+<dd>&nbsp; <br>
+</dd>
+  
+  <dt> <a name="Pa_DF_1"></a><big><big><b><tt>Pa_DF[1]</tt></b></big></big>
+- Tolerance DFM for the stability index (logSI &lt;= -DFM) for a present unstable phase to be eliminated { 0.01 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This numerical tolerance is used after
+the main IPM descent in the Phase Selection procedure to check stability
+ of all
+phases present in the system mass balance. A k-th phase is declared stable, if
+ all its components have only trivial metastability constraints; its 
+amount <a href="gems_sys.html#Xa">Xa</a>[k] equals to 0; its stability index <a href="gems_sys.html#Fa">Fa</a>[k] is less than -Pa_DF[1]. <br>
+
+</dd>
+<dd>If a phase has Xa[k] &gt; 0 and Fa[k] &lt; Pa_DF[1], this means that&nbsp;
+ this is phase is unstable, but IPM did not eliminate it from the mass balance. Amounts of DCs
+ in this phase will be set to zero; after checking of all phases is finished, the MBR + IPM 
+loop will be repeated up to 5 times. If the situation persists then the stability
+and/or stoichiometry of this phase has to be checked.&nbsp;&nbsp; <br>
+
+
+
+  </dd>
+<dd>Recommended value: 0.01. <br>
+
+
+  </dd>
+
+  
+  <dd>Related error conditions: <a href="gems_ipm.html#W08IPM">W08IPM</a>; <a href="gems_ipm.html#E04IPM">E04IPM</a>.&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp; <br>
+
+  </dd>
+  <dt> <a name="Pa_DNS"></a><big><b><tt>Pa_DNS</tt></b></big> -
+&nbsp;Default reference density of surface species at standard state {
+12.05 nm<sup>-2</sup> }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>&nbsp;Set to 12.05 nm<sup>-2</sup> (as defined in Kulik,
+2002) (<span style="color: rgb(204, 0, 0);">under construction</span>).<br>
+</dd>
+  
+  <dd><br>
+
+  </dd>
+  <dt> <a name="Pa_DK"></a><big><big><b><tt>Pa_DK</tt></b></big></big>
+-
+Tolerance threshold for the Dikin criterion CD of IPM convergence { 3e-6
+}</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This tolerance (copied to <a href="gems_sys.html#Psi_DK_1">Psi_DK[1]</a>) is compared with the current value of Dikin criterion (<a href="gems_sys.html#Psi_DK_0">Psi_DK[0]</a>) at each IPM iteration in order to decide whether the IPM Main Descent
+minimization procedure has converged (<a href="theory_gem.html">more...</a>).<br>
+</dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+1e-3 to 1e-9; values between 1e-6 and 1e-5 are recommended in most cases. <br>
+</dd><dd>Too small
+tolerance (&lt; 1e-7) may cause dramatic increase in the number of GEM
+IPM iterations or a non-convergence of the IPM algorithm. <br>
+
+  </dd>
+
+  <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
+
+
+    <a href="#E06IPM">E06IPM</a>.</dd>
+  
+  
+  
+  <dd>The tolerance Pa_DK is given here for systems of approximately 1000 total moles in the BCC vector (see <a href="#Pa_DG">Pa_DG</a> setting). The optimal Pa_DK value will be different for systems of significantly different size.<br>
+
+  </dd>
+  
+  <dd> <br>
+
+  </dd>
+  <dt> <a name="Pa_IIM"></a><big><big><b><tt>Pa_IIM</tt><small><small>&nbsp;
+-
+
+    </small></small></b></big></big>Maximum allowed number of
+iterations
+in one GEM IPM Main Descent run { 7000 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>If this number is exceeded, the program
+assumes that IPM convergence is not achieved and the GEM task has 
+failed.
+Possible values: 20 to 9999, default (recommended) value is 7000 (needed
+ to resolve highly non-ideal systems in the vicinity of critical 
+points). <br>
+</dd><dd>Convergence of IPM also
+strongly depends on the selected <big><a href="#Pa_DK"><tt>Pa_DK</tt></a></big>
+tolerance value&nbsp; and on the smoothing parameters (Pa_AG, Pa_DGC). <br>
+</dd>
+
+  
+  <dd>Usually in aquatic systems, the IPM algorithm converges in 20 to 130 iterations in the AIA (LP simplex
+automatic initial approximation) mode, or in 0 to 30 iterations in the SIA (smart initial approximation) mode, when a previous
+GEM IPM result for this system setup was used as an initial
+approximation. <br>
+</dd><dd>Note that in the SIA case, the correctness of IPM results are not guaranteed if the
+input
+bulk composition or temperature were changed so that some new phases must appear in the equilibrium state. <br>
+</dd>
+<dd>The SIA mode uses a number of criteria and IPM
+error conditions to obtain a correct GEM IPM solution by automatically
+switching to AIA mode, whenever
+necessary.</dd>
+
+  
+  
+  <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
+
+
+    <a href="gems_ipm.html#E06IPM">E06IPM</a>. &nbsp;&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp;<br>
+
+  </dd>
+  <dt> <a name="Pa_AG"></a><big><big><b><tt>Pa_AG</tt></b></big></big>
+- Smoothing parameter AG for excess chemical potential increments (-1 to +1) { 1; -1.0 or 0.7 for adsorption }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>In some highly non-ideal systems, the IPM convergence may not be 
+achieved due to rather strong dependence of excess part of DC chemical 
+potentials on the phase composition. Therefore, smoothing of the excess 
+part (composed from ln(gamma) terms) may be necessary before adding it 
+to the primal chemical potential. In GEM-Selektor, three smoothing 
+functions are available. <br>
+
+  </dd>
+  <dd>One smoothing function uses the logarithmic distance between the
+current index of IPM
+iteration IT and the maximum allowed number of iterations IIM in <a href="#Pa_IIM"><big><span style="font-family: monospace;">Pa_IIM</span></big></a>. This function
+has the form <br>
+
+  </dd>
+
+  <dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SF= DGC + ( AG - DGC ) / ( 1. + exp( log(1/IIM) - log(1/IT ) /
+DGC ) + exp( log( 1. - AG ) + log(1/IT) ). <br>
+  </dd>
+  
+  <dd>This function will be invoked when Pa_AG &lt;= -0.0001 and Pa_DGC &gt;
+-0.0001 (internally, the sign of AG is inverted to positive). The SF
+(smoothing factor) value will be truncated to 1.0 if it exceeds 1.0.
+Example: set Pa_AG to -1 and Pa_DGC to 0.7. <br>
+  </dd>
+
+  <dd>Another smoothing function uses the logarithmic distance
+between the current Dikin criterion CD (<a href="gems_sys.html#Psi_DK_0">Psi_DK[0]</a>) and the convergence
+threshold given in <a href="#Pa_DK"><big><span style="font-family: monospace;">Pa_DK</span></big></a>.</dd>
+  
+  <dd>&nbsp; &nbsp; &nbsp;&nbsp; SF = DGC + ( AG - DGC ) / ( 1. + exp( log(DK) - log(CD) ) / DGC )
++ exp( log( 1. - AG ) + log(CD) ).</dd>
+  
+  <dd>The SF value will be truncated to 1.0 if it exceeds 1.0. This
+function is invoked when both Pa_AG and Pa_DGK are set less than
+-0.0001 (internally, both will have the sign inverted to positive).
+Example: set Pa_AG to -1 and Pa_DGC to -0.7; this gives very good
+convergence of IPM in systems containing&nbsp; highly non-ideal solid
+solutions, even without global IPM refinement loops (see <a href="#Pa_PRD_1"><span style="font-family: monospace;">Pa_PRD[1]</span></a>).
+
+
+    <br>
+  </dd>
+  
+  <dd>For both functions, Pa_AG should usually be set to
+-1.0. If |AG| is set less than 1.0 then the smoothing will effectively begin
+after
+several IPM iterations.</dd>
+  <dd>The third (old) smoothing function is retained mainly for surface 
+complexation models with Langmuir-type surface activity coefficient 
+terms. It has the form&nbsp; <br>
+</dd><dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SF = AG * ( 1 - pow(1-exp(-DGC*IT),60)). <br>
+  </dd>
+  <dd>If SF &lt; 1e-6 then SF is set to 1e-6.&nbsp; After ca. 50th 
+iteration, the value of smoothing factor SF will be decreased down to 
+1e-6 more or less steep upon iterations, depending on the Pa_DGC value. 
+This function is chosen when 0.0001 &lt; Pa_AG &lt; 0.9999 and 0.0001 
+&lt; Pa_DGC &lt; 0.1. Typical setting for adsorption models: Pa_AG = 0.7
+ and Pa_DGC = 0.07. <br>
+  </dd>
+  <dd>Setting Pa_AG to 1 and Pa_DGC to 0 disables smoothing.&nbsp; Default value of Pa_AG is 1.0. <br>
+  </dd>
+
+  
+  <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
+
+
+    <a href="gems_ipm.html#E06IPM">E06IPM</a>. &nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp;<br>
+  </dd>
+  <dt> <a name="Pa_DGC"></a><big><b><big><tt>Pa_DGC</tt></big></b></big>
+-&nbsp; Smoothing parameter DGC - smoothing function exponent (-1 to +1) { 0; -0.9 or 0.07 for adsorption }<br>
+  </dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This empirical parameter controls how strongly the smoothing
+parameter (<a href="#Pa_AG"><big><span style="font-family: monospace;">Pa_AG</span></big></a>)
+will
+be
+decreased as function of the number of
+performed IPM
+descent iterations. Possible values:&nbsp;</dd>
+
+    <dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 (smoothing is disabled if also <tt>Pa_AG</tt> is set to 1);<br>
+    </dd>
+    <dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0001 to 0.9999 (or -0.9999 to -0.0001) to enable smoothing.&nbsp;</dd>
+ 
+  <dd>Default value: 0. Too high or to low values may cause
+non-convergence of GEM IPM in highly non-ideal systems and especially
+in systems with sorption phases.</dd>
+  
+  <dd>In some smoothing functions (see<a href="#Pa_AG"><big><span style="font-family: monospace;"> Pa_AG</span></big></a> above), the
+DGC parameter defines the smallest value of the smoothing factor SF
+reached when the IPM Dikin criterion CD becomes equal to <a href="#Pa_DK"><big><span style="font-family: monospace;">Pa_DK</span></big></a>,
+or
+the
+number
+of IPM iterations IT approaches <a href="#Pa_IIM"><big><span style="font-family: monospace;">Pa_IIM</span></big></a>. <br>
+  </dd>
+  
+  <dd>In these cases, DGC should be set (in absolute value) between
+0.0001
+and Pa_AG. To invoke these new functions, just invert the sign of Pa_AG
+to negative (in the second function, also Pa_DGC to negative).<br>
+  </dd>
+  
+  <dd>Attention: for surface complexation models, provisionally the old
+smoothing function with Pa_AG = 0.7 and Pa_DGC = 0.07 must be used.</dd>
+  
+  
+  <dd><span style="text-decoration: underline;">Related error condition</span>:&nbsp;
+
+
+    <a href="gems_ipm.html#E06IPM">E06IPM</a>.&nbsp;&nbsp; <br>
+</dd>
+  <dd>&nbsp; <br>
+  </dd>
+  <dt> <a name="Pa_PE"></a><big><big><b><tt>Pa_PE</tt></b></big></big>
+-
+Include electroneutrality condition? { 1 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>Possible values: <br>
+</dd><dd>&nbsp;&nbsp; &nbsp;&nbsp; 1 - electroneutrality balance equation is
+included (required for systems containing aqueous electrolyte,
+adsorption or plasma); <br>
+  </dd>
+  <dd>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0 - charge balance is excluded from the GEM task formulation. <br>
+  </dd>
+  <dd>The program can change this flag automatically if
+e.g. the aqueous phase has been eliminated during the IPM descent
+iterations.&nbsp;</dd>
+
+  
+  <dd>&nbsp;&nbsp;</dd>
+  <dt><a name="Pa_PC"></a><b><big><tt>Pa_PC</tt></big></b> -
+Mode of Phase Selection operation, old (1) and new (2) variants&nbsp; { 2 }</dt>
+  <dd>&nbsp; <br>
+  </dd>
+  <dd>This flag defines the behavior of Phase Selection procedure (<a href="theory_gem.html">more...</a>) (disabled when this flag is set to 0). <br>
+</dd>
+  <dd>&nbsp;&nbsp;&nbsp;&nbsp; The new Phase Selection algorithm uses stability (saturation) indexes of phases (see also <a href="#Pa_DF_0">Pa_DF[0]</a> and <a href="#Pa_DF_1">Pa_DF[1]</a>) to check for consistency. <br>
+</dd><dd>&nbsp;&nbsp;&nbsp;&nbsp; The old mode uses Karpov <span style="font-style: italic;">f<sub>alpha</sub></span> phase stability criteria to check phases for consistency (if Pa_PC is set to 1). <br>
+  </dd>
+
+  <dd>Default value: 2.&nbsp; <br>
+</dd>
+  <dd>&nbsp; <br>
+  </dd>
+  <dt> <a name="Pa_PRD_0"></a><big><b><tt>Pa_PRD[0]</tt></b></big> - Mode of calculation of activity coefficients and metastability factors (2, 3) { 2 }&nbsp;
+  <br>
+</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>Possible values (under construction): </dd><dd>&nbsp;&nbsp;&nbsp;&nbsp; 2 - at each MBR and IPM Descent iteration;</dd>
+  <dd>&nbsp;&nbsp;&nbsp;&nbsp; 3 - reserved.</dd>
+
+  <dd>This mode should be fixed to 2 in the present version of
+GEM-Selektor. <br>
+  </dd>
+  
+  <dd><br>
+  </dd>
+  <dt> <a name="Pa_PRD_1"></a><b><big><tt>Pa_PRD[1]</tt></big></b>
+-&nbsp; Decimal exponent for maximal DC amount correction in Speciation Cleanup { -5; 0 disables }<br>
+  </dt>
+  <dd> &nbsp; <br>
+  </dd>
+  <dd> In all multi-component phases present in the primal solution in
+positive amounts, the Speciation Cleanup procedure compares the amounts
+of DCs in the primal solution vector <a href="gems_sys.html#x">x</a>
+with their amounts restored using the dual solution vector <a href="gems_sys.html#u">u</a> and DC chemical formula (see also <a href="#Pa_GAN_2">Pa_GAN[2]</a>). In the case of discrepancy, the x<sub>j</sub> value is
+replaced by that <a href="gems_sys.html#XU">XU</a><sub>j</sub>
+restored from the dual solution, if the correction is not going to be too large, i.e. log10(|XU<sub>j</sub> - x<sub>j</sub>|) does not exceed the
+Pa_PRD[1] threshold. If ir does then  x<sub>j</sub> value is
+replaced by 10<sup>Pa_PRD[1]</sup>. <br>
+</dd><dd>This tolerance is especially useful if the detection of divergence in the dual GEM solution is disabled (see <a href="#Pa_LLG">Pa_LLG</a>). <br>
+  </dd>
+
+  
+  
+  <dd><span style="text-decoration: underline;">Possible values</span>:
+from -7 to -3; default exponent is
+-5; 0 disables the Speciation Cleanup procedure.&nbsp;<i>&nbsp; <br>
+</i></dd>
+  <dd><i><br>
+    </i></dd>
+  <dt> <a name="Pa_PRD_2"></a><b><big><tt>Pa_PRD[2]</tt></big></b> -
+Level of diagnostic messages: 0- disabled (no ipmlog.txt file); 1 - normal;
+2 - with warnings; 3 - with uDD output { 1 } <br>
+</dt>
+  <dd> &nbsp; </dd>
+  <dd>This flag controls writing of the
+diagnostic information into the "ipmlog.txt" file (important for coupled
+codes that use the GEMS3K program). The file can be found in the work directory of GEMS executable or of the coupled code. <br>
+  </dd>
+  <dd><span style="text-decoration: underline;">Possible values</span>: 0-disabled: nothing is written in
+"ipmlog.txt" file; <br>
+  </dd>
+  <dd>1 - normal: only error codes and no warnings are written in
+"ipmlog.txt" e.g.as <big>E04IPM:</big> MBR();<br>
+</dd>
+  
+  <dd>2 - extended: both error messages and warnings will be written
+in "ipmlog.txt" as error codes and brief explanations, e.g. <big>as E04IPM:</big>
+EnterFeasibleDomain(): Maximum allowed number of Mass Balance Refinement iterations
+exceeded!;</dd><dd>3 - the same as 2 plus the trace output of triplicate
+ dual solution values used in Dual Solution Divergence Detection (uDD) 
+procedure (see also <a href="#Pa_LLG">Pa_LLG</a>).&nbsp; <br>
+  </dd>
+
+  <dd>Default value: 1. </dd>
+  
+  <dd>&nbsp;<br>
+  </dd>
+  <dt> <a name="Pa_DKI"></a><big><b><tt>Pa_DKI</tt></b></big> -
+Tolerance for non-trivial metastability restrictions on amounts of Dependent Components,
+moles { 1e-10 }</dt>
+  <dd>&nbsp;&nbsp;</dd>
+  <dd>This tolerance defines minimum allowed restriction from above
+(DUL) and minimum slackness between DUL and the restriction from below
+(DLL) if both set to the same value. The DLL value must be consistent
+with bulk chemical composition of the system. <br>
+</dd><dd>For example, if total
+amount of Si in the system is 2 mol then DLL for quarts SiO<sub>2</sub> cannot be
+set to a value that exceeds 2 - Pa_DKI moles. <br>
+  </dd>
+  <dd>If DUL for a j-th DC is set to
+zero then the primal solution amount will be automatically set to x<sub>j</sub> = 0. <br>
+  </dd>
+  <dd>If DUL for a j-th DC is set to any non-zero number less than Pa_DKI then the primal solution amount x<sub>j</sub> will be less than or equal to Pa_DKI. <br>
+  </dd>
+
+  
+  <dd><span style="text-decoration: underline;">Possible values:</span>
+1e-8 to 1e-11.</dd>
+  <dd>Recommended value: 1e-10.</dd>
+  <dd><span style="text-decoration: underline;">Related errors:</span> <a href="#E11IPM">E11IPM</a>; <a href="#E12IPM">E12IPM</a>; <a href="#E16IPM">E16IPM</a>; <a href="#E17IPM">E17IPM</a>. <br>
+  </dd>
+</dl>
+
+
+
+
+
+
+
+<tt><br>
+<br>
+</tt>
+<hr size="2" width="100%">
+<h2><a name="GEMIPM3_ERRORS"></a>5. Warnings and Error Messages</h2>
+
+
+
+
+
+
+
+<p>Warnings (indicated by 'W') mean that the result of GEM IPM-3
+calculation is conditionally valid, but not of the best quality, hence
+it must be used with precautions. <br>
+</p>
+
+
+
+
+
+
+
+<p>Most GEM-IPM error messages (indicated by 'E') have one of the
+following reasons:</p>
+
+
+
+
+
+
+
+<ul>
+
+
+
+
+
+
+
+  <li>Bulk composition vector b is not well (charge) balanced</li>
+  <li>Some DC stoichiometries are in error </li>
+  <li>Some standard-state thermodynamic data for DCs are inconsistent</li>
+  <li>Some relevant phases or DCs are missing from chemical system
+definition</li>
+  <li>Some metastability constraints on DC are inconsistent</li>
+  <li>Some numerical thresholds or tolerances are too tight</li>
+  <li>The system is too small or too large (numerical settings are
+optimized for ca. 1000 moles in total in the BCC <a href="gems_sys.html#b">b</a> vector) &nbsp;&nbsp;&nbsp; </li>
+</ul>
+
+
+
+
+
+
+
+<p>We recommend checking these issues before proceeding with further
+calculations.<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E00IPM"></a><big style="font-weight: bold;">E00IPM:</big>
+SolveSimplex()&nbsp;&nbsp;&nbsp; Inconsistent LP problem (negative UP[J]
+value(s) in START()) <br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Very rare error in the LP simplex AIA procedure; may occur when some DLL
+metastability restrictions for DCs are incompatible with the system
+bulk composition.<br>
+&nbsp;<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E01IPM"></a><big style="font-weight: bold;">E01IPM:</big>
+SolveSimplex()&nbsp;&nbsp;&nbsp; LP simplex solution cannot be obtained with required mass balance precision</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">This error in LP simplex AIA procedure usually shows that the <a href="#Pa_EPS_0">Pa_EPS[0]</a> tolerance for the mass balance is set too low; increase and try
+again. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">If this tolerance is already set to 1e-6 
+mol or greater, this may be due to an inconsistent CSD or BCC; perhaps, 
+invalid stoichiometry of
+some DC. <br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E02IPM"></a><big style="font-weight: bold;">E02IPM:</big> PSSC(): &nbsp;&nbsp; Mass balance is broken on iteration
+&lt;It&gt; for Independent Components &lt;IC1&gt; {, &lt;IC2&gt;, ... }<br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">This error message occurs when, after 
+corrections and cleanup of the primal solution x in Phase Selection or 
+Speciation Cleanup procedures, some mass balance residuals in Cb vector 
+exceed Pa_DHB * 1e10 or 0.01, whatever is less. Such mismatch usually 
+occurs upon divergence in the GEM dual solution and cannot be improved 
+in the MBR procedure, hence no GEM
+solution can be obtained for a given system defiition. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">If this error occurs, try first to enable the detection of the divergence in GEM dual solution approximation (see <a href="#Pa_LLG">Pa_LLG</a>), and run GEM calculation again. If the <a href="#W14IPM">W14IPM</a>
+ warning appears, this means that the system or bulk composition 
+definition must be revised to ensure robust redox and alkalinity states (<span style="color: rgb(204, 0, 0);">more...</span>).<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E03IPM"></a><big style="font-weight: bold;">E03IPM: </big>Mass Balance Refinement: &nbsp; (MBR(&lt;It&gt;)): &nbsp;
+Too
+small
+LM step size - cannot converge (check Pa_DG?)</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">This error occurs rarely if the mass balance precision tolerance <a href="#Pa_DHB">Pa_DHB</a> is inconsistent with the system size. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">Check also <a href="#Pa_DG">Pa_DG</a> setting. <br>
+</p>
+
+
+
+
+
+
+<p><br>
+<a name="E04IPM"></a><big style="font-weight: bold;">E04IPM:</big> Mass Balance Refinement: &nbsp; (MBR(&lt;CallPointID&gt;)) Maximum allowed number of MBR iterations &lt;Pa_DPV[0]&gt;
+exceeded! <br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">This error shows that the MBR procedure could not reach the requested mass balance
+precision, as defined by the <big><a href="gems_ipm.html#Pa_DHB"><tt>Pa_DHB</tt></a></big> tolerance. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">The &lt;CallPointID&gt; indicates from 
+where the MBR procedure has been started: 0 - after the AIA LP simplex 
+and Fill-Out procedure; 1 - at the SIA entry (skipped LP simplex and 
+Fill-Out); 2 - after the pust-IPM Speciation Cleanup; 3 - after Phase 
+Selection. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">If this error condition occurs in SIA mode, the program
+automatically turns into AIA mode and starts the GEM calculation again without dispaying this error message. Other possible
+reasons: <br>
+</p>
+
+
+
+
+
+
+
+<div style="margin-left: 80px;">Too low <a href="#Pa_DHB">Pa_DHB</a>
+tolerance for mass balance residuals (check, set higher, and try
+again); <br>
+Too small maximum number of MBR iterations in&nbsp; <a href="#Pa_DPV_0">Pa_DPV[0]</a> control (increase
+and try again). <br>
+<br>
+</div>
+
+
+
+
+
+
+
+
+<p><big style="font-weight: bold;"><a name="E05IPM"></a>E05IPM:</big> Mass Balance Refinement:&nbsp;&nbsp; (MBR(&lt;CallPointID&gt;))&nbsp; Degeneration in R matrix (fault
+in SLE solver). Not possible to proceed.</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Indicates problematic chemical
+system definition, inappropriate use of SIA mode, or divergence in GEM dual solution approximation (see <a href="#Pa_LLG">Pa_LLG</a>). <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">&lt;CallPointID&gt; indicates from 
+where the MBR procedure has been started: 0 - after the AIA LP simplex 
+and Fill-Out procedure; 1 - at the SIA entry (skipped LP simplex and 
+Fill-Out); 2 - after the pust-IPM Speciation Cleanup; 3 - after Phase 
+Selection. <br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">If this error condition occurs in SIA mode, the program
+automatically turns into AIA mode and starts the GEM calculation again without dispaying this error message.</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">To fix the problem, check input chemical system definition and bulk chemical composition, and try again (in AIA mode).<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E06IPM"></a><big style="font-weight: bold;">E06IPM:</big>
+IPM Main Descent: &nbsp;&nbsp; IPM convergence criterion tolerance
+(<a href="#Pa_DK">Pa_DK</a>) could not be reached (more than <a href="#Pa_IIM">Pa_IIM</a> iterations done)</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">This error indicates that the GEM task solution is incomplete because the Dikin criterion tolerance has not been reached. 
+This can occur in some highly no-ideal systems with composition and 
+temperature falling near critical points (then 6000 iterations or more 
+can be necessary), or when strong smoothing is used (see <a href="#Pa_AG">Pa_AG</a>). <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">In the AIA (LP simplex) mode, try increasing <a href="#Pa_DK">Pa_DK</a> and/or <a href="#Pa_IIM">Pa_IIM</a> and run
+the GEM task calculation again. If this does not help then reconsider chemical
+system definition (or look for inconsistent input thermodynamic data). <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">In the SIA mode, this error condition causes the
+program to try automatically in the AIA mode (which is failed too, if you see this errror message).<br>
+&nbsp;<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E07IPM"></a><big style="font-weight: bold;">E07IPM:</big>
+IPM Main Descent: &nbsp;&nbsp; Degeneration in R matrix (fault in the
+linearized system solver). It is not possible to obtain a valid GEM IPM
+solution.&nbsp;&nbsp;&nbsp;<br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Indicates problematic setup of chemical
+system definition or corrupt input data. Occurs also upon divergence in the dual solution (see <a href="#Pa_LLG">Pa_LLG</a>).<br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">Check input data or reconsider
+the CSD and the recipe, and try again.<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="W08IPM"></a><big style="font-weight: bold;">W08IPM: </big>PSSC(): &nbsp;&nbsp; Computed
+phase assemblage remains inconsistent after 5 phase selection loops. Problematic phase(s):&nbsp; &lt;Ph1&gt;
+{,&lt;Ph2&gt;, ...}<br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Phase Selection procedure finds violations
+ of phase stability criteria which persist after 5 refinement
+loops for indicated phases. The GEM IPM result is not perfect and can be
+ used only provisionally (Speciation Cleanup could make it still 
+useful). </p>
+<p style="margin-left: 40px;">
+One possible reason is that one of tolerances <a href="#Pa_DF_0">Pa_DF[0]</a>&nbsp;
+or
+  <a href="#Pa_DF_1">Pa_DF[1]</a>&nbsp; is not optimal. </p>
+<p style="margin-left: 40px;">
+A more probable reason is that thermodynamic data or mixing models for
+some phases are inconsistent, or some relevant phases or components were
+not included in the chemical system definition.</p>
+<p style="margin-left: 40px;">
+In the SIA mode, this warning condition causes an
+automatic attempt to solve the problem using the AIA (LP simplex). This usually happens when a relevant multricomponent
+phase was absent in the previous GEM primal solution used as initial
+approximation, because Phase Selection algorithm is not allowed to insert
+multicomponent phases. </p>
+
+
+
+
+
+
+
+
+
+<p><a name="W09IPM"></a><big style="font-weight: bold;">W09IPM:</big>
+Phase Selection: &nbsp;&nbsp; Computed
+phase assemblage remains inconsistent after 3 phase selection loops. Problematic phase(s):&nbsp; &lt;Ph1&gt;
+{,&lt;Ph2&gt;, ...}
+</p>
+
+
+
+
+
+
+
+<div style="margin-left: 40px;">Phase Selection procedure using the old 
+Karpov stability criteria finds violations of phase stability criteria 
+which persist after 3 refinement
+loops for indicated phases. <br>
+Otherwise, the same as W08IPM (see above). <br>
+&nbsp;<br>
+</div>
+
+
+
+
+
+
+
+<p><a name="E10IPM"></a><big style="font-weight: bold;">E10IPM: </big>under construction<br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction. <br>
+<br>
+<a href="gems_ipm.html#Pa_DHB"> </a></p>
+
+
+
+
+
+
+
+<p><a name="E11IPM"></a><big style="font-weight: bold;">E11IPM:</big>
+Set_DC_limits()&nbsp;&nbsp;&nbsp; Inconsistent upper DC metastability
+limits &lt;j&gt;&nbsp; &lt;k&gt; XU= &lt;value&gt; XFU=&lt;value&gt;</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction.<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E12IPM"></a><big style="font-weight: bold;">E12IPM:</big>
+Set_DC_limits()&nbsp;&nbsp;&nbsp; Inconsistent lower DC metastability
+limits &lt;j&gt;&nbsp; &lt;k&gt; XL= &lt;value&gt; XFL=&lt;value&gt;</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction.<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E13IPM"></a><big style="font-weight: bold;">E13IPM:</big>
+PrimalChemicalPotentials()&nbsp;&nbsp;&nbsp; Broken phase amount from
+primal approximation: Phase &lt;Ph&gt; Yf= &lt;value&gt;</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction; probable reason is the divergence in GEM dual solution.<br>
+</p>
+
+
+
+
+
+
+<p><br>
+<a name="W14IPM"></a><big style="font-weight: bold;">W14IPM: </big>IPM 
+Main Descent &nbsp;&nbsp; Divergence in dual solution approximation (u) 
+at IPM iteration &lt;It&gt; with gen.tolerance &lt;LLG&gt; for &lt;n&gt;
+ ICs: &lt;IC1&gt;, &lt;IC2&gt;, ...<br>
+</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">This warning indicates a stiff behavior of
+the chemical system, manifested in detected divergence of dual solution values (vector u) between IPM iterations (see <a href="#Pa_LLG">Pa_LLG</a>). Usually, some ui values will be unrealistically large. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">At best, the chemical system definition should be
+re-considered such that redox-controlling species would appear in amounts not less than 1e-10 mol. <br>
+</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;">In SIA mode, this warning is not issued, and the program automatically tries the AIA mode. <br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E15IPM"></a><big style="font-weight: bold;">E15IPM: under construction</big></p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E16IPM"></a><big style="font-weight: bold;">E16IPM:</big>
+IPM Main Descent: &nbsp; Error in codes of some DC metastability
+constraints</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction</p>
+
+
+
+
+
+
+<p style="margin-left: 40px;"><br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E17IPM"></a><big style="font-weight: bold;">E17IPM:</big> Mass Balance Refinement: &nbsp;&nbsp; Invalid initial Lagrange
+multiplier for metastability-constrained DC &lt;DC&gt;</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Under construction.<br>
+<br>
+</p>
+
+
+
+
+
+
+
+<p><a name="E18IPM"></a><big><span style="font-weight: bold;">E18IPM:</span></big>
+IPM Main Descent: &nbsp;&nbsp; Bad CalculateActivityCoefficients() status in SIA mode</p>
+
+
+
+
+
+
+
+<p style="margin-left: 40px;">Error code returned by CalculateActivityCoefficients() -
+problem with calculation of activity coefficients. Incompatible system
+used as initial approximation? </p>
+<p style="margin-left: 40px;">
+Reconfigure the system definition and restart it with the AIA initial approximation.</p>
+
+<br>
+
+
+
+
+
+
+
+
+<p><a name="E19IPM"></a><big style="font-weight: bold;">E19IPM:</big>
+ConvertDCC()&nbsp;&nbsp;&nbsp; Invalid DC class code. Memory corruption?</p>
+
+
+
+
+
+
+
+<p><br>
+<a name="E20IPM"></a><big style="font-weight: bold;">W20IPM: </big>IPM Main Descent: &nbsp;&nbsp;
+Too
+small
+input amount of independent component &lt;IC1&gt; {,
+&lt;IC2&gt;, ... }</p>
+
+
+
+
+
+
+
+<div style="margin-left: 40px;">
+  <p>This warning (occurs in GEMS3K code) means that at least one
+independent component&nbsp; in the bulk composition of the system
+(except charge) has been provided in an amount less than Pa_DB&nbsp;
+(usually 1e-17 mol). All such amounts are automatically set to current
+    <a href="#Pa_DB">Pa_DB</a> value. </p>
+  <p>
+No action is required, although it is
+worth checking how
+the input bulk composition of the system has been defined when GEMS3K
+code is used from the mass transport modeling algorithm. </p>
+
+<br>
+</div>
+
+
+
+
+
+
+
+<tt>
+</tt>
+<hr size="2" width="100%"><tt><br>
+</tt>
+<h2><a name="TO_STANDALONE"></a>6. Connection with Standalone GEMS3K
+Program (and Coupled Codes)<br>
+</h2>
+
+
+
+
+
+
+
+<p>&lt;under construction&gt;</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">
+  </span></p>
+
+
+
+
+
+
+
+<h3><a name="TO_STANDALONE_FROM_SYSEQ"></a><a name="WRITEIPMFILES"></a>6.1.
+How
+to Write and Read GEMS3K I/O Files
+From Single System Dialog</h3>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+&lt;under construction&gt;<br>
+
+<h3><tt><a name="TO_STANDALONE_FROM_GEM2MT"></a></tt>6.2. How to Export
+Many Initial Systems to GEMS3K I/O Files from GEM2MT Module</h3>
+
+
+
+
+
+
+
+&lt;under construction&gt;<br>
+<tt>
+&nbsp;
+</tt> <tt><br>
+</tt>
+<hr style="width: 100%; height: 2px;"><tt><br>
+end of file</tt> <br>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+Last change: DK, March 28, 2012<br>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+<br>
+
+
+
+
+
+
+
+
+
+</body></html>

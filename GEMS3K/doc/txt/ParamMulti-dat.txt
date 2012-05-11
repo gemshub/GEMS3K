@@ -1,0 +1,230 @@
+
+// Controls and thresholds for numeric modules of GEMIPM kernel
+    
+    Name   used In                  Values         Comment, related error messages 
+--------------------------------------------------------------------------------------------------------------- 
+!!! PC     SurfaceActivityCoeff     (0, 1, 2, !2)  // Mode of PhaseSelect() (Selekt2) operation ( 0 1 2 ... )
+           MultiCalcMain            !pa->p.PC      //  No PhaseSelect() operation allowed
+                                    pa->p.PC==2    // Use upper limits to xj of surface species
+    
+    PD     (pmp->PD = pa->p.PD)                    // Mode of GammaCalc():0-invoke,1-at FIA only,2-last IPM it. 3-every IPM it.
+               see below 			     "E18IPM: IPM-main():" "E19IPM: ConvertDCC()"
+    
+    PRD    Use only                 -1 - -50       // Negative: number of additional EFD-IPM improvement loops (-1 to -50 )
+                                    3 			  // Positive: do not use improvement loops (usually set to 3)
+    
+    PSM                              1              //  Level of diagnostic messages: 0- disabled (no ipmlog file); 1- normal; 2-incl. warnings
+    
+    DP     EnterFeasibleDomain      15 - 500       //  Max number of EnterFeasibleDomain() iterations { default 144 }
+							"E05IPM: EnterFeasibleDomain(): " "E04IPM: EnterFeasibleDomain(): " "E17IPM: EnterFeasibleDomain(): " 
+
+   
+    DW     MultiCalcMain()          0 - 15         // IPM-2 balance precision refinement mode: 0- disable >=1  - enable (number of loops, default 15)
+            
+    DT     Mol_u()                                 // Exponent for recovering x_j from dual solution {-5 to +2, default 0}
+							"E15IPM: IPM-main():" 
+
+
+    PLLG   MultiCalcMain()          0 to 32000     // Tolerance for checking change in dual solution on refinement loops { 0 to 1000 mol/mol, default 0 - no check }
+							"W14IPM: IPM-main():" 
+
+   
+    PE     ( pmp->E = pa->p.PE )                   // Include electroneutrality condition? { 0 1 }
+              see below
+    
+    IIM    InteriorPointsMethod     500            // Maximum number of iterations in the main IPM algorithm run { 500 }
+							"E06IPM: IPM-main(): " "E07IPM: IPM-main(): " 
+
+    
+------------------------------------------------------------------------------------------------------------------------    
+    
+    DG     EnterFeasibleDomain()    1e-4 - 1e-7    // Threshold for minimum allowed descent step size Lambda { 1e-5 }
+							"E03IPM: EnterFeasibleDomain():" 
+
+    
+    DHB    pmp->DHBM = sfactor * pa->p.DHB         // Threshold for mass balance residuals at EFD() { 1e-8 }
+             see below					"E02IPM: IPM-main(): " "W09IPM: IPM-main(): " "E10IPM: IPM-main(): " 
+    
+    DS     pmp->DSM = pa->p.DS      1e-8 - 1e-12   // Cutoff number of moles of a phase present in primal solution { 1e-10 }
+							"E13IPM: PrimalChemicalPotentials():" 
+
+    
+    DK     pmp->DX = pa->p.DK       1e-4 - 1e-5    // Threshold of Dikin criterion of IPM convergence { 1e-4 }
+							"E06IPM: IPM-main(): " "E07IPM: IPM-main(): " 
+    
+    DF     f_alpha()                0.001 - 0.1    // Threshold for Karpov's criterion (Fa > DF) for a lost stable phase { 0.01 }
+           PhaseSelect()       
+    DFM    PhaseSelect()      	    0.01 - 0.3     // Threshold for Karpov's criterion (Fa < -DFM) for a present unstable phase { 0.1 }
+							"W08IPM: PhaseSelect():" 
+
+    DFYw   RaiseZeroedOffDCs                       // N of moles of H2O-solvent for phase insertion { 1e-6 }
+    DFYaq  RaiseZeroedOffDCs                       // N of moles of aqueous DC for phase insertion { 1e-6 }
+           GammaCalc()
+    DFYid  RaiseZeroedOffDCs                       // N of moles of DC in ideal solution for phase insertion { 1e-6 }
+    DFYr   RaiseZeroedOffDCs                       // Insertion moles of major DC in non-ideal solution { 1e-6 }
+    DFYh   RaiseZeroedOffDCs                       // Insertion moles of junior DC in non-ideal solution { 1e-6 }
+    DFYc   RaiseZeroedOffDCs                       // N of moles for insertion of single-component phase { 1e-6 }
+    DFYs   RaiseZeroedOffDCs                       // Moles of DC to insert a single-component phase in Selekt2() { 1e-8 }
+
+    DB     AutoInitialApprox()      1e-8 to 1e-17  // Cutoff number of moles of IC in the system stoichiometry (1e-17)
+           ConCalc()
+
+    AG     SetSmoothingFactor()     0.7 - 1.0      //Smoothing parameter for free energy increments on iterations {0.7}
+    DGC    SetSmoothingFactor()     0.05 - 0.1     // Power to raise Pa_AG on steps of smoothing { 0.07 }
+
+??  GAR    TSyst::make_syst_sizes()                // Initial activity coefficient of major DC in a phase (FIA) { 1 }
+??  GAN    TSyst::make_syst_sizes()                // Initial activity coefficient of minor DC in phase (FIA) { 1000 }
+   
+    GAS    MultiCalcMain()  
+           fabs(pmp->C[I])>  pmp->B[I] * pa->p.GAS // IPM-2 precision factor (DHB[i] / b[i]) { 1e-3 }
+
+
+    
+    DNS    Ej_init_calc()                          // Default standard surface site density 1/nm2 (12.05)
+           Mol_u()
+           ConCalcDC()
+           SurfaceActivityCoeff()
+         
+    XwMin  PrimalChemicalPotentials()              // Cutoff N of moles of water in aqueous phase { 1e-5 }
+           GX() and pb_GX()
+           ConCalc()
+           IS_EtaCalc()
+           GammaCalc()
+          InteriorPointsMethod()
+               
+    DcMin  pmp->lowPosNum = pa->p.DcMin            // Cutoff N of moles of solute (sorbate) { 1e-19 }
+    
+    PhMin  GammaCalc()                             // Cutoff N of moles of a solution phase { 1e-12 }  = DS?
+      
+    ICmin  GammaCalc()              1e-6 - 1e-3    // Cutoff value of ionic strength to run DH equation { 1e-5 }
+    
+    EPS    SimplexInitialApproximation()   1e-9    // Precision of SIMPLEX method primal solution { 1e-7 to 1e-15 }
+							"E00IPM: Simplex()", "E01IPM: Simplex()", 
+  
+    IEPS   XmaxSAT_IPM2()           1e-5 - 1e-2    // Accuracy of cutoff limits 1+eps for surface activity terms {1e-3}
+           SurfaceActivityCoeff()
+    
+    DKIN   f_alpha()		    1e-5 - 1e-8   // Range of lower to upper kinetic restrictions for DC ???????
+           MetastabilityLagrangeMultiplier()      // Minimum upper metastability constraint (moles) { 1e-7 } 
+							"E11IPM: Set_DC_limits(): " "E12IPM: Set_DC_limits(): " "E16IPM: IPM-main():" 
+
+--------------------------------------------------------------------------------------------------------------------------
+// MULTI is base structure to Project (local values)
+--------------------------------------------------------------------------------------------------------------------------
+
+    pNP                                             //Mode of FIA selection: 0-auto-SIMPLEX,1-old eqstate,-1-user's choice
+    pULR     MultiCalcInit&MultiCalcMain   0, 1     // Start recalc kinetic constraints (0-do not, 1-do )internal
+    PLIM     MultiCalcInit&MultiCalcMain   0, 1     // Flag of activation of DC/phase restrictions { 0 1 }
+    ITaia                                           // Number of IPM iterations completed in AIA mode (renamed from pRR1)
+    IT       InteriorPointsMethod                   // IIM - number of completed IPM iterations
+    E                                      0 or 1         // PE - flag of electroneutrality constraint { 0 1 }
+
+??  PV       CompG0Load()                           // Codes of volume parameter { 0, 1, 2 )
+
+!   PD       MultiCalcMain                 >= 2     // PD - mode of calling GammaCalc() { 0 1 2 3 4 }
+             AutoInitialApprox             3
+             InteriorPointsMethod          3, 2, 1
+------------------------------------------------------------------------------------------------------
+
+    K2       calcMulti()               0 - 3       // current PhaseSelect() loop
+             f_alpha()
+             PhaseSelect()                                
+
+    W1       MultiCalcMain             0 - pa.DW   // current internal IPM-2 loop
+             SurfaceActivityCoeff
+         
+    PZ       PhaseSelect               0, 1, 2, 3  // current warning status
+                                                   // 0 - OK
+                                                   // 1  "W09IPM IPM-main(): "
+                                                   // 2   "W14IPM IPM-main():"
+                                                   // 3 -"W08IPM: PhaseSelect():"
+
+    MK       PhaseSelect               0 or 2      // PM return code: 0 - OK 
+                                        //  2 - Try again with Simplex (start calc) or warning in addition loops for pa.p.PRD
+
+    Ec                                             // Internal code: 0 (OK) or >0 (error number ) 
+
+------------------------------------------------------------------------------------------------------
+!!  DHBM     MultiCalcMain            change           // Adjusted balance precision criterion (IPM-2 )
+             AutoInitialApprox        set
+!!  DSM      MultiCalcInit         pmp->DSM = pa->p.DS // min value phase DS (IPM-2)
+             ConCalc and other                         // in some cases used DHBM for phases too  
+             XmaxSAT_IPM2()                            // ones compare pmp->DSM/10.0 
+    
+    PCI                                                // Current value of Dikin criterion of IPM convergence DK>=DX
+    DX       MultiCalcMain               change        // pa.DK IPM convergence criterion threshold DX (1e-5)
+             InteriorPointsMethod        change, check
+             AutoInitialApprox           set
+
+!!  lowPosNum                                          // Minimum DC amount defining the Ls set (1e-19)
+                                                       // test in all program
+
+------------------------------------------------------------------------------------------------------
+
+!    important
+!!   must be checked
+!!!  use must be changed 
+!!!! usage is wrong
+
+
+-----------------------------------------------------------------------------------------------------------
+
+List of IPM error messages
+
+"E00IPM: Simplex()", "Inconsistent LP problem (negative UP[J] value(s) in START()) "
+
+"E01IPM: Simplex()", "LP solution cannot be obtained with sufficient precision"
+
+"E02IPM: IPM-main():" "Mass balance broken on iteration %ld  for independent components %-3.3s"
+
+"E03IPM: EnterFeasibleDomain():" "Too small LM step size - cannot converge (check Pa_DG)."
+
+"E04IPM: EnterFeasibleDomain(): " "Maximum number of EFD loops exceeded! Too tight Pa_DHB tolerance for mass balance?"
+
+"E05IPM: EnterFeasibleDomain(): " "Degeneration in R matrix (fault in the linearized system solver). Invalid initial approximation, cannot start IPM."
+
+"E06IPM: IPM-main(): " "IPM convergence criterion threshold (Pa_DK) could not be reached (more than Pa_IIM iterations done)"
+
+"E07IPM: IPM-main(): " " Degeneration in R matrix (fault in the linearized system solver). It is not possible to obtain a valid GEMIPM solution."    
+
+"W08IPM: PhaseSelect():" " The computed phase assemblage remains inconsistent after 3 PhaseSelect() loops. Problematic phase(s):  "
+
+"W09IPM: IPM-main(): " "Prescribed mass balance accuracy cannot be reached for trace independent components:  %-2.2s ... "
+
+"E10IPM: IPM-main(): " "Inconsistent GEM solution: Inaccurate mass balance for some major independent components"
+
+"E11IPM: Set_DC_limits(): " "Inconsistent upper DC metastability limits j=%ld k=%ld XU=%g XFU=%g"
+
+"E12IPM: Set_DC_limits(): " "Inconsistent lower DC metastability limits j=%ld k=%ld XL=%g XFL=%g"
+
+"E13IPM: PrimalChemicalPotentials():" "Broken phase amount from primal approximation: Phase %s  Yf= %lg"
+
+"W14IPM: IPM-main():" "Dual solution (vector u) has changed too much in a refinement loop %ld:%ld for IC %3.3s "
+
+"E15IPM: IPM-main():" "Mass balance broken on iteration %ld in DualTh recover of amount x_j for DC|RC %16s"
+
+"E16IPM: IPM-main():" "Error in codes of some DC metastability constraints"
+
+"E17IPM: EnterFeasibleDomain(): " "Invalid initial Lagrange multiplier for metastability-constrained DC %16s "
+
+"E18IPM: IPM-main():", "Bad GammaCalc() status in SIA mode"
+
+"E19IPM: ConvertDCC()", "Invalid DC class code. Memory corruption?"
+
+
+General recommendation: most of IPM error messages have one of the following reasons:
+
+       (1) bulk composition vector b is not well (charge) balanced
+       (2) some DC stoichiometries are in error 
+       (3) some standard-state thermodynamic data for DCs are inconsistent
+       (4) some relevant phases or DCs are missing from chemical system definition
+       (5) some metastability constraints on DC are inconsistent
+       (6) some numerical thresholds or tolerances are too tight
+       (7) the system is too small or too large (numerical settings are optimized for ca. 1 kg or 60 moles in total) 	
+
+We recommend checking these issues before proceeding with further calculations. 
+
+
+
+
+                           
