@@ -1,0 +1,14 @@
+Here, the internal documentation must be collected
+
+Compile of the program tested under: 
+
+Win32: 
+Borland C++ v. 5.5.1 and 5.6.1 
+Microsoft Visual C++ 6.0  and .NET 2003
+
+Linux: 
+gcc 3.6 
+gcc 4.1
+
+pgCC 
+

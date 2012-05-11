@@ -1,0 +1,32 @@
+Compile of the program has been tested under: 
+
+Win32: 
+Borland C++ v. 5.5.1 and 5.6.1 
+Microsoft Visual C++ 6.0  and .NET 2003
+
+Linux: 
+gcc 3.6 
+gcc 4.1
+pgCC 
+
+Linux Cluster (PGI):
+pgCC
+
+The respective Makefiles are located in \platform\<compiler>. 
+Just copy the appropriate one in the main module directory 
+over the existing Makefile. Use "make" or "nmake" to build 
+the exe file. 
+
+Launch the example with "CalcColumn.bat" (Win32) or 
+"linux-run.sh" for Linux/Unix. 
+
+The input data files (in ASCII text format) are located in 
+the \test_data subdirectory. Description of the format of 
+input files is given here (in dbr-dat-doc.txt and other
+files).
+
+Before launching the test under Linux/PGI, do "dos2unix *.dat" 
+and "dos2unix *.lst" command line commands in order to convert 
+the input data files from Win32 (CR/LF) to Unix (LF) text 
+format.
+

@@ -1,0 +1,153 @@
+# GEMIPM2K v. 2.3.1
+# Prototype 13.08.2009
+# Comments can be marked with # $ ;
+
+# Template for the dbr-dat text input file for DATABR (node) data
+# (should be read only after the DATACH and the IPM-DAT files)
+
+#Section (scalar-1): Controls of the GEM IPM operation and data exchange
+# NodeHandle: Node identification handle
+<NodeHandle>     0
+# NodeTypeHY:  Node type code (hydraulic), not used on TNode level ; see typedef NODETYPE
+<NodeTypeHY>     0
+# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE
+<NodeTypeMT>     0
+# NodeStatusFMT:  Node status code in FMT part, not used on TNode level; see typedef NODECODEFMT
+<NodeStatusFMT>  1
+# NodeStatusCH: Node status code in GEM (input and output); see typedef NODECODECH
+<NodeStatusCH>   1
+# IterDone:  Number of iterations performed by GEM IPM in the last run - GEM output
+<IterDone>       13
+
+## (2) Chemical scalar variables
+# TK: Node temperature T (Kelvin). This value must always be provided - GEM input.
+<TK>   298.15
+# P:  Node Pressure P (Pa)  GEM input
+<P>    100000
+# Vs: Volume V of reactive subsystem (m3)
+<Vs>   0.000999954
+# Vi: Volume of inert subsystem (m3)
+<Vi>   0
+# Ms:  Mass of reactive subsystem (kg) - GEM output
+<Ms>   0.997036
+# Mi: Mass of inert subsystem (kg)
+<Mi>   0
+# Hs:  Total enthalpy of reactive subsystem (J) (reserved)
+<Hs>   0
+# Hi:  Total enthalpy of inert subsystem (J) (reserved, can be used only in FMT part) 
+<Hi>   0
+# Gs: Total Gibbs energy of the reactive subsystem (J/RT) (normalized) - GEM output
+<Gs>   -5295.11
+# IS: Effective aqueous ionic strength (molal)  - GEM output
+<IS>   6.94914e-06
+# pH: pH of aqueous solution in the activity scale - GEM output
+<pH>   8.90931
+# pe: pe of aqueous solution in the activity scale - GEM output 
+<pe>   11.586
+# Eh: Eh of aqueous solution (V) - GEM output
+<Eh>   0.684042
+
+## (3) FMT scalar variables (used only in NodeArray, not used in GEM)
+# Tm: Actual total simulation time (s)
+<Tm>   0
+# dt:  Actual time step (s)
+<dt>   0
+# Dif: General diffusivity of disolved matter (m2/s)
+<Dif>  0
+# Vt: Total volume of the node (m3)
+<Vt>   0
+# vp:  Advection velocity (in pores)  (m/s)
+<vp>   0
+#  eps: Effective (actual) porosity normalized to 1
+<eps>  0
+# Km: Actual permeability (m2)
+<Km>   0
+# Kf: Actual Darcy`s constant (m2/s)
+<Kf>   0
+# S: Specific storage coefficient, dimensionless
+<S>    0
+# Tr:  Transmissivity (m2/s)
+<Tr>   0
+# h:  Actual hydraulic head (hydraulic potential) (m)
+<h>    0
+# rho:  Actual carrier density for density-driven flow (kg/m3)
+<rho>  0
+# al: Specific longitudinal dispersivity of porous media (m)
+<al>   0
+# at:  Specific transversal dispersivity of porous media (m).
+<at>   0
+# av:  Specific vertical dispersivity of porous media (m). 
+<av>   0
+# hDl: Hydraulic longitudinal dispersivity (m2/s)
+<hDl>  0
+# hDt: Hydraulic transversal dispersivity (m2/s)
+<hDt>  0
+# hDv: Hydraulic vertical dispersivity (m2/s)
+<hDv>  0
+# nto:  Tortuosity factor (dimensionless)
+<nto>  0
+
+### Arrays - for dimensions and index lists, see Section (2) of DATACH file
+
+## (4) IC data section
+#  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+# bIC:  Bulk composition of (reactive part of) the system - main GEM input (amounts of IC in moles) [nICb]
+<bIC>
+0.000329999997196746 0.000329999997196746 1.99999994666525e-07 110.683692172569 9.99999973332623e-08 55.3430360862761 0 
+
+# rMB: Mass balance residuals (moles) [nICb] - GEM output
+<rMB>
+7.48099499014998e-18 5.42101086242752e-20 0 -8.38440428196918e-13 6.61744490042422e-24 2.38311974321004e-14 -2.11758236813575e-21 
+
+# uIC: Chemical potentials of ICs (dual GEM solution) - GEM output, normalized scale [nICb]
+<uIC>
+-168.125863100906 -283.513345235217 -41.70564414279 -47.1922366505824 -251.184788938166 -1.29287611132413 26.6777856718832 
+
+## (5) DC data section
+#  'Ca+2' 'CaOH+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'Gr' 'Cal' 'Dis-Dol' 'Portlandite' 'Brc' 
+# xDC:  Speciation - amounts of DCs in equilibrium state - primal GEM solution (moles) [nDCb] - GEM output
+<xDC>
+1.28887024664869e-06 1.17316007829091e-06 6.48214498275993e-08 3.5178547505663e-08 5.53255650047586e-07 1.03900607731421e-06 8.69765492512081e-07 3.10505825870271e-12 1.99999994666525e-07 2.04807301981422e-08 0.00010001024634993 1.38781862590601e-06 6.19874248963893e-07 55.3418440228995 0 0.000327537966871807 0 0 0 
+
+# gam:  Activity coefficients of DCs in their respective phases [nDCb] - GEM output
+<gam>
+1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 1.00000193817858 0.999999999996243 1 1 1 1 1 
+
+# dll: Lower metastability constraints on amounts of DCs (moles) [nDCb] - GEM input
+<dll>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+
+# dul:  Upper metastability constraints on amounts of DCs (moles) [nDCb] - GEM input
+<dul>
+1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
+
+## (6) Phase data section
+#  'aq_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' 
+# aPH: Specific surface areas of phases (m2/kg) [nPHb] - GEM input
+<aPH>
+0 0 0 0 0 0 
+
+# xPH: Amounts of phases in equilibrium state (moles) [nPHb] - GEM output
+<xPH>
+55.3419512853801 0 0.000327537966871807 0 0 0 
+
+# vPS: Volumes of multicomponent phases (m3) [nPSb] - GEM output
+<vPS>
+0.000999941481295709 
+
+# mPS: Masses of multicomponent phases (kg) [nPSb] - GEM output
+<mPS>
+0.997003417579943 
+
+# xPA: Amount of carrier (sorbent or solvent) in multicomponent phases [nPSb] - GEM output
+<xPA>
+55.3418440228995 
+
+# bPS: Bulk elemental compositions of multicomponent phases (moles) [nPSb*nICb]- GEM output
+#  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
+<bPS>
+2.46203032493214e-06 2.4620303249396e-06 1.99999994666525e-07 110.68369217257 9.99999973332623e-08 55.3420534723755 2.11758236813575e-21 
+
+# reserved
+
+# End of file

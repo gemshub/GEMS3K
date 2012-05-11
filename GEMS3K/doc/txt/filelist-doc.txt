@@ -1,0 +1,84 @@
+GEMIPM2K
+
+Structure of the file list for starting FMT-GEM coupled modeling run (on the TNode level)
+
+The test example (compiled in Win32) starts with the following command line (to be executed 
+from the \standalone\node_gem subdirectory): 
+
+### gemnode.exe tp_test/<TaskName>-dat.lst tp_test/<TaskName>-dbr-<node0>.dat > test.out
+gemnode.exe tp_test/<TaskName>-dat.lst > test.out
+
+where <TaskName> should be substituted by a string denoting the task name, e.g. MyTask.
+
+## The file <TaskName>-dbr-<node0>.dat will be additionally read by the TNode example. 
+
+The file "test.out" will contain console output during operation of the TNode example. 
+
+The file <TaskName>-dat.lst has the following structure:
+
+##-t "<TaskName>-ipm.dat" -t "<TaskName>-dch.dat", "<TaskName>-dbr-<node0>.dat", ## "<TaskName>-dbr-<node1>.dat" 
+##[, ... ]
+
+-t "<TaskName>-dch.dat" "<TaskName>-ipm.dat" "<TaskName>-dbr-<node0>.dat", "<TaskName>-dbr-<node1>.dat" 
+[, ... ]
+
+The -t key tells that the following files "<TaskName>-dch.dat", "<TaskName>-ipm.dat",
+"<TaskName>-dbr-<node0>.dat" and so on are in free-text input format (see decription of the 
+format in dch-dat-doc.txt, ipm-dat-doc.txt, and dbr-dat-doc.txt files). Alternative key: 
+-b defines that the input files should be read in binary format (for instance, after the 
+coupled problem has been interrupted and GEM files were written on disk in binary format). 
+
+The order of files in the list is fixed: DCH_DAT file, IPM_DAT file, then DBR_DAT file (in TNode 
+mode) or many DBR_DAT file names (comma-separated, in TNodeArray mode). The DBR-DAT files are 
+used to set up initial composition and state in the nodes (one work node in TNode mode or many 
+nodes in TNodeArray mode).   
+
+The GEMIPM2K kernel will read specified input files in the following order: 
+
+<TaskName>-dat.lst
+<TaskName>-dch.dat
+<TaskName>-ipm.dat
+<TaskName>-dbr-<node0>.dat
+............
+<TaskName>-dbr-<nodeN>.dat
+
+There can be many comma-separated files of DBR_DAT (node description) type, which will 
+be read sequentially, but only the last one will remain loaded in the TNode example. 
+
+The DCH_DAT file <TaskName>-dch.dat contains parts of chemical system definition (CSD) that can be 
+requested both by GEM and by the FMT parts of the coupled code. Contents of this file will be placed 
+in two memory data structures: (1) DATACH structure visible from both GEMIPM and the FMT part and 
+(2) IPM (MULTI) structure - the internal work structure of GEMIPM2, not visible from the FMT part. 
+The <TaskName>-dch.dat (and the DATACH structure) also contain dimensions and index lists that 
+are needed for reading and accessing the DBR_DAT (node description) files like <TaskName>-dbr-<node0>.dat. Finally, the DATACH file and structure contains grid arrays of thermodynamic data used later on 
+for automatic interpolation of gibbs energies G0, molar volumes V0 of components using given values 
+of temperature T and pressure P in GEM IPM calculations for any node and time. 
+
+The IPM_DAT file <TaskName>-ipm.dat contains additional data and numerical controls from the MULTI 
+data strucutre that are necessary for the GEM IPM algorithm but are irrelevant for the FMT part. 
+
+##As an option, the whole binary MULTI structure can be read from the <TaskName>.ipm binary file if 
+##the -b key is set at the beginning in the <TaskName>-dat.lst file.
+
+The file <TaskName>-dbr-<node0>.dat (read into the DATABR memory structure) contains parts of the 
+chemical system definition that may be changed by the FMT part (input data of GEM such as T, P, 
+bulk composition, metastability constraints) or are returned after the GEM IPM calculation to be 
+utilized by the FMT part on the next time iteration. 
+
+The <TaskName>-dat.lst file may contain any number of (comma-separated) DATABR file names. 
+These files will be read one-by-one: (a) into the same work DATABR structure on the level of TNode 
+examples and coupling of GEMIPM with already existing FMT codes; (b) to be distributed into 
+different DATABR structures for many nodes on the level of TNodeArray example (and coupled FMT-GEM 
+codes written on the basis of TNodeArray); see documentation to the TNodeArray example for more 
+information in this respect.  
+
+The whole collection of GEMIPM2 input files describing the chemical system for starting the 
+coupled examples can be obtained directly from the GEMS-PSI code (either in GEM2MT module or, 
+for a single equilibrium system, from the GEMS Single Thermodynamic System dialog, using the
+"Data" "Write IPM ..." menu command after calulation of the equilibrium state). 
+Later on, the text input files can be modified by the user according to descriptions of file 
+formats found in the accompanying files dch-dat-doc.txt, ipm-dat-doc.txt, and dbr-dat-doc.txt. 
+The format in three file types is essentially the same, only the data tags and fields differ. 
+
+# End of GEMIPM2K filelist-doc.txt file
+

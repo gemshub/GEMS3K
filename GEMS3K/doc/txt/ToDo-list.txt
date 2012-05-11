@@ -1,0 +1,26 @@
+
+Yet to be done in GEMIPM2K package
+ 
+Started from version 2.2.3 (build 186) in the process ow writing doc html files
+
+26.05.2008 DK
+
+   The code in TMulti::CompG0Load() in ms_param.cpp to be extended for 
+   data eaxtraction/interpolation from DCH->H0, DCH->S0, DCH->Cp0, DCH->DD 
+   lookup arrays depending on their presence DATACH structure. The iGrd flag
+   in DATACH should be used here and for allocation of MULTI structure. 
+
+
+26.05.2008 DK 
+   
+   To implement in GEMS and GEMIPM2K control flag(s) for the output of comments
+   in DCH, IPM and DBR files (on/off), as well as output of data items with all 
+   default values (on/off) and data formatting (the latter to discuss)
+
+
+30.05.2008 DK
+    
+   Rewrite main.cpp in /nodearray-gem to use node array instead of the 
+   direct memory array allocation as in the /node-gem example
+
+ 

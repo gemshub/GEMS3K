@@ -1,0 +1,1 @@
+..\gem2mts CalcColumn-dat.lst testA.dat > testA.out
