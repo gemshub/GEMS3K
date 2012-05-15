@@ -39,7 +39,7 @@ extern const char* _GEMIPM_version_stamp;
 // the text of the comment for this data object, optionally written into the
 // text-format output DBR or DCH file.
 //
-outField DataBR_fields[58] =  {
+outField DataBR_fields[f_lga+1/*58*/] =  {
   { "NodeHandle",  0, 0, 1, "# NodeHandle: Node identification handle"},
   { "NodeTypeHY",  0, 0, 1, "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE" },
   { "NodeTypeMT",  0, 0, 1, "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" },
@@ -62,6 +62,7 @@ outField DataBR_fields[58] =  {
 // Scalar parameters below are only used at TNodeArray level
   { "Tm",   0, 0, 1, "# Tm: Actual total simulation time, s (mass transport)" },
   { "dt",   0, 0, 1, "# dt: Actual time step, s (mass transport)" },
+//#ifdef NODEARRAYLEVEL
   { "Dif",  0, 0, 1, "# Dif: General diffusivity of disolved matter, m2/s (mass transport)" },
   { "Vt",   0, 0, 1, "# Vt: Total volume of the node, m3 (mass transport)" },
   { "vp",   0, 0, 1, "# vp: Advection velocity in pores, m/s (mass transport)" },
@@ -79,7 +80,8 @@ outField DataBR_fields[58] =  {
   { "hDt",  0, 0, 1, "# hDt: Hydraulic transversal dispersivity, m2/s (mass transport)" },
   { "hDv",  0, 0, 1, "# hDv: Hydraulic vertical dispersivity, m2/s (mass transport)" },
   { "nto",  0, 0, 1, "# nto: Tortuosity factor, dimensionless (mass transport)" },
-// dynamic arrays (51-38=13)
+//#endif
+ // dynamic arrays (52-38=14)
   { "bIC",  1, 0, nICbi, "# bIC: Bulk composition of reactive subsystem (main GEM input), moles of ICs [nICb]" },
   { "rMB",  0, 0, nICbi, "\n\n# rMB: Mass balance residuals, moles (GEM output) [nICb]" },
   { "uIC",  0, 0, nICbi, "\n\n# uIC: Chemical potentials of ICs in equilibrium (dual solution), J/(RT) (GEM output) [nICb]" },
@@ -163,7 +165,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   bool _comment = with_comments;
 
-  TPrintArrays  prar(52, DataBR_fields, ff);
+  TPrintArrays  prar(f_bSP+1/*52*/, DataBR_fields, ff);
 
    if( _comment )
    {
@@ -174,12 +176,12 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
       ff << "#Section (scalar-1): Controls of the GEM IPM operation and data exchange" << endl;
    }
 
+#ifndef NODEARRAYLEVEL
+   CNode->NodeStatusFMT = No_nodearray;
+#endif
    prar.writeField(f_NodeHandle, CNode->NodeHandle, _comment, brief_mode  );
-   if( CNode->NodeStatusFMT != No_transport )
-   {
-     prar.writeField(f_NodeTypeHY, CNode->NodeTypeHY, _comment, brief_mode  );
-     prar.writeField(f_NodeTypeMT, CNode->NodeTypeMT, _comment, brief_mode  );
-   }
+   prar.writeField(f_NodeTypeHY, CNode->NodeTypeHY, _comment, brief_mode  );
+   prar.writeField(f_NodeTypeMT, CNode->NodeTypeMT, _comment, brief_mode  );
    prar.writeField(f_NodeStatusFMT, CNode->NodeStatusFMT, _comment, brief_mode  );
    prar.writeField(f_NodeStatusCH, CNode->NodeStatusCH, _comment, brief_mode  );
    prar.writeField(f_IterDone, CNode->IterDone, _comment, brief_mode  );
@@ -189,26 +191,16 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 
   prar.writeField(f_TK, CNode->TK, _comment, brief_mode  );
   prar.writeField(f_P, CNode->P, _comment, brief_mode  );
-  prar.writeField(f_Vs, CNode->Vs, _comment, brief_mode  );
 
-if( CNode->NodeStatusFMT != No_transport )
-{
+  prar.writeField(f_Vs, CNode->Vs, _comment, brief_mode  );
   prar.writeField(f_Vi, CNode->Vi, _comment, brief_mode  );
-}
 
   prar.writeField(f_Ms, CNode->Ms, _comment, brief_mode  );
-
-if( CNode->NodeStatusFMT != No_transport )
-{
   prar.writeField(f_Mi, CNode->Mi, _comment, brief_mode  );
-}
+
 
   prar.writeField(f_Hs, CNode->Hs, _comment, brief_mode  );
-
-if( CNode->NodeStatusFMT != No_transport )
-{
-    prar.writeField(f_Hi, CNode->Hi, _comment, brief_mode  );
-}
+  prar.writeField(f_Hi, CNode->Hi, _comment, brief_mode  );
 
   prar.writeField(f_Gs, CNode->Gs, _comment, brief_mode  );
 
@@ -218,17 +210,16 @@ if( CNode->NodeStatusFMT != No_transport )
      prar.writeField(f_pH, CNode->pH, _comment, brief_mode  );
      prar.writeField(f_pe, CNode->pe, _comment, brief_mode  );
      prar.writeField(f_Eh, CNode->Eh, _comment, brief_mode  );
-}
+ }
 
-if( CNode->NodeStatusFMT != No_transport )
-{
-   if( _comment )
+  if( _comment )
       ff << "\n## (3) FMT scalar variables (used only in NodeArray, not used in GEM)" << endl;
 
    prar.writeField(f_Tm, CNode->Tm, _comment, brief_mode  );
    prar.writeField(f_dt, CNode->dt, _comment, brief_mode  );
+
 #ifdef NODEARRAYLEVEL
-  if( TNodeArray::na->nNodes() > 1 )
+  if( CNode->NodeStatusFMT != No_nodearray /*TNodeArray::na->nNodes() > 1*/ )
   {
    prar.writeField(f_Dif, CNode->Dif, _comment, brief_mode  );
    prar.writeField(f_Vt, CNode->Vt, _comment, brief_mode  );
@@ -249,8 +240,8 @@ if( CNode->NodeStatusFMT != No_transport )
    prar.writeField(f_nto, CNode->nto, _comment, brief_mode  );
   }
 #endif
-}
-   if( _comment )
+
+  if( _comment )
    {   ff << "\n### Arrays - for dimensions and index lists, see Section (2) of DATACH file" << endl << endl;
        ff << "## (4) IC data section";
        prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
@@ -304,12 +295,13 @@ if( CNode->NodeStatusFMT != No_transport )
 // Reading work dataBR structure from text file
 void TNode::databr_from_text_file( fstream& ff )
 {
+   double tmpVal;
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
  // mem_set( &CNode->Tm, 0, 19*sizeof(double));
  databr_reset( CNode );
- TReadArrays  rdar( 52, DataBR_fields, ff);
+ TReadArrays  rdar(f_bSP+1/*52*/, DataBR_fields, ff);
  long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
@@ -358,7 +350,7 @@ void TNode::databr_from_text_file( fstream& ff )
     case f_dt: rdar.readArray( "dt",  &CNode->dt, 1);
             break;
 #ifdef NODEARRAYLEVEL
-    case f_Dif: rdar.readArray( "Dif",  &CNode->Dif, 1);
+   case f_Dif: rdar.readArray( "Dif",  &CNode->Dif, 1);
             break;
     case f_Vt: rdar.readArray( "Vt",  &CNode->Vt, 1);
             break;
@@ -391,6 +383,41 @@ void TNode::databr_from_text_file( fstream& ff )
     case f_hDv: rdar.readArray( "hDv",  &CNode->hDv, 1);
             break;
     case f_nto: rdar.readArray( "nto",  &CNode->nto, 1);
+            break;
+#else
+   case f_Dif: rdar.readArray( "Dif",  &tmpVal, 1);
+            break;
+    case f_Vt: rdar.readArray( "Vt",  &tmpVal, 1);
+            break;
+    case f_vp: rdar.readArray( "vp",  &tmpVal, 1);
+            break;
+    case f_eps: rdar.readArray( "eps",  &tmpVal, 1);
+            break;
+    case f_Km: rdar.readArray( "Km",  &tmpVal, 1);
+            break;
+    case f_Kf: rdar.readArray( "Kf",  &tmpVal, 1);
+            break;
+    case f_S: rdar.readArray( "S",  &tmpVal, 1);
+            break;
+    case f_Tr: rdar.readArray( "Tr",  &tmpVal, 1);
+            break;
+    case f_h: rdar.readArray( "h",  &tmpVal, 1);
+            break;
+    case f_rho: rdar.readArray( "rho",  &tmpVal, 1);
+            break;
+    case f_al: rdar.readArray( "al",  &tmpVal, 1);
+            break;
+    case f_at: rdar.readArray( "at",  &tmpVal, 1);
+            break;
+    case f_av: rdar.readArray( "av",  &tmpVal, 1);
+            break;
+    case f_hDl: rdar.readArray( "hDl",  &tmpVal, 1);
+            break;
+    case f_hDt: rdar.readArray( "hDt",  &tmpVal, 1);
+            break;
+    case f_hDv: rdar.readArray( "hDv",  &tmpVal, 1);
+            break;
+    case f_nto: rdar.readArray( "nto",  &tmpVal, 1);
             break;
 #endif
     case f_bIC: rdar.readArray( "bIC",  CNode->bIC, CSD->nICb );
@@ -1040,9 +1067,21 @@ void TNode::datach_free()
 // writing DataBR to binary file
 void TNode::databr_to_file( GemDataStream& ff )
 {
+
+#ifndef NODEARRAYLEVEL
+   CNode->NodeStatusFMT = No_nodearray;
+#endif
 // const data
    ff.writeArray( &CNode->NodeHandle, 6 );
-   ff.writeArray( &CNode->TK, 32 );
+
+#ifdef NODEARRAYLEVEL
+   if( CNode->NodeStatusFMT != No_nodearray )
+       ff.writeArray( &CNode->TK, 32 );
+   else
+      ff.writeArray( &CNode->TK, 15 );
+#else
+      ff.writeArray( &CNode->TK, 15 );
+#endif
 
 //dynamic data
    ff.writeArray( CNode->bIC, CSD->nICb );
@@ -1071,8 +1110,17 @@ void TNode::databr_from_file( GemDataStream& ff )
 {
 // const data
    ff.readArray( &CNode->NodeHandle, 6 );
-   ff.readArray( &CNode->TK, 32 );
 
+#ifdef NODEARRAYLEVEL
+   if( CNode->NodeStatusFMT != No_nodearray )
+       ff.readArray( &CNode->TK, 32 );
+   else
+      ff.readArray( &CNode->TK, 15 );
+#else
+   ErrorIf(CNode->NodeStatusFMT != No_nodearray, ff.GetPath(),
+     "Error reading work dataBR structure from binary file (No_nodearray)");
+   ff.readArray( &CNode->TK, 15 );
+#endif
 //dynamic data
    ff.readArray( CNode->bIC, CSD->nICb );
    ff.readArray( CNode->rMB, CSD->nICb );
@@ -1353,7 +1401,7 @@ void TNode::datach_reset()
 void TNode::databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, long int ndx )
 {
 
-  TPrintArrays  prar(58, DataBR_fields, ff);
+  TPrintArrays  prar(f_lga+1/*58*/, DataBR_fields, ff);
 
   switch( nfild )
   {

@@ -131,6 +131,7 @@ typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
 } NODECODECH;
 
 typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part
+ No_nodearray  = -1,
  No_transport  = 0,  // Chemical calculations only, no transport coupled
  Initial_RUN   = 1,
  OK_Hydraulic  = 2,
@@ -172,12 +173,12 @@ f_IterDone, f_TK, f_P, f_Vs,f_Vi,
 f_Ms, f_Mi, f_Hs, f_Hi, f_Gs,
 f_IS, f_pH, f_pe, f_Eh,
 f_Tm, f_dt,
-#ifdef NODEARRAYLEVEL
+//#ifdef NODEARRAYLEVEL
 f_Dif,f_Vt, f_vp, f_eps,
 f_Km, f_Kf, f_S,  f_Tr, f_h,
 f_rho,f_al, f_at, f_av, f_hDl,
 f_hDt, f_hDv, f_nto,
-#endif
+//#endif
     // dynamic arrays (52-38=14)
 f_bIC, f_rMB, f_uIC, f_xDC, f_gam,
 f_dll, f_dul, f_aPH, f_xPH, f_vPS,

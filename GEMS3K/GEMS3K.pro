@@ -12,7 +12,7 @@ CONFIG		+=  warn_on debug windows
 CONFIG		+= console
 
 DEFINES         += IPMGEMPLUGIN
-# DEFINES         += NODEARRAYLEVEL
+#DEFINES         += NODEARRAYLEVEL
 
 !win32 {
   DEFINES += __unix
