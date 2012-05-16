@@ -250,6 +250,7 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
   } catch(TError& err)
     {
 	  fstream f_log("ipmlog.txt", ios::out|ios::app );
+      f_log << "GEMS3K input : file " << fname << endl;
       f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
         err.title.c_str() << ":" <<  err.mess.c_str() << endl;
       return 1;
@@ -295,6 +296,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #endif
 {
   long int i;
+  gstring curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
   fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
@@ -349,6 +351,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
       gstring mult_in = Path + datachbr_fn;
 
 // Reading DCH_DAT file in binary or text format
+      curPath = dat_ch;
       if( binary_f )
       {  GemDataStream f_ch(dat_ch, ios::in|ios::binary);
          datach_from_file(f_ch);
@@ -360,6 +363,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
       }
 
 // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
+curPath = mult_in;
 if( binary_f )
  {
    GemDataStream f_m(mult_in, ios::in|ios::binary);
@@ -413,6 +417,7 @@ if( binary_f )
             f_getline( f_lst, datachbr_fn, ' ');
 
          gstring dbr_file = Path + datachbr_fn;
+         curPath = dbr_file;
          if( binary_f )
          {
              GemDataStream in_br(dbr_file, ios::in|ios::binary);
@@ -424,6 +429,7 @@ if( binary_f )
                     "DBR_DAT fileopen error");
                databr_from_text_file(in_br);
           }
+         curPath = "";
           if(!i)
         	  dbr_file_name = dbr_file;
 // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
@@ -457,6 +463,8 @@ if( binary_f )
     }
     catch(TError& err)
     {
+      if( !curPath.empty() )
+          f_log << "GEMS3K input : file " << curPath.c_str() << endl;
       f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
     }
     catch(...)

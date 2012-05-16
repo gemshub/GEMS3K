@@ -455,6 +455,13 @@ void TPrintArrays::writeArray( const char *name, short* arr,
       }
   }
 
+ inline void TReadArrays::setCurrentArray( const char* name, long int size )
+ {
+   char buf[200];
+   sprintf( buf, "After successfully read <%s> %d data items", name, size);
+   curArray = buf;
+ }
+
  inline void TReadArrays::readValue(double& val)
  {
    char input;
@@ -523,7 +530,12 @@ long int TReadArrays::findNext()
 
  long int ii = findFld( buf+1 );
  if(  ii < 0 )
-    Error( buf, "Format text read 01: Invalid label of data");
+ {
+    gstring msg = buf;
+          msg += " - Invalid label of data.\n";
+          msg += curArray;
+     Error( "Formatted read error 01", msg );
+ }
 
  flds[ii].readed = 1;
  return ii;
@@ -533,10 +545,16 @@ long int TReadArrays::findNext()
 void TReadArrays::readNext( const char* label)
 {
  char buf[200];
+ gstring msg;
  skipSpace();
 
  if( ff.eof() )
-   Error( label, "Format text read 02: No data where expected");
+ {
+    msg = label;
+    msg += " - No data where expected.\n";
+    msg += curArray;
+    Error( "Formatted read error 02", msg );
+ }
 
  ff >> buf;
  gstring str = buf+1;
@@ -545,11 +563,17 @@ void TReadArrays::readNext( const char* label)
 
  if( !( strcmp( label, str.c_str() ) ))
      return;
- Error( buf, "Format text read 03: Invalid label of data");
+
+ msg = buf;
+ msg += " - Invalid label of data.\n";
+ msg += curArray;
+ Error( "Formatted read error 03", msg );
+
 }
 
-void TReadArrays::readArray( const char*, short* arr, long int size )
+void TReadArrays::readArray( const char* name, short* arr, long int size )
 {
+ setCurrentArray( name, size);
  for( long int ii=0; ii<size; ii++  )
  {
    skipSpace();
@@ -557,8 +581,9 @@ void TReadArrays::readArray( const char*, short* arr, long int size )
  }
 }
 
-void TReadArrays::readArray( const char*, int* arr, long int size )
+void TReadArrays::readArray( const char* name, int* arr, long int size )
 {
+ setCurrentArray( name, size);
  for( long int ii=0; ii<size; ii++  )
  {
    skipSpace();
@@ -566,32 +591,36 @@ void TReadArrays::readArray( const char*, int* arr, long int size )
  }
 }
 
-void TReadArrays::readArray( const char*, long int* arr, long int size )
+void TReadArrays::readArray( const char* name, long int* arr, long int size )
 {
+ setCurrentArray( name, size);
  for( long int ii=0; ii<size; ii++  )
  {
    skipSpace();
    ff >> arr[ii];
  }
 }
-void TReadArrays::readArray( const char*, float* arr, long int size )
+void TReadArrays::readArray( const char* name, float* arr, long int size )
 {
+ setCurrentArray( name, size);
  for( long int ii=0; ii<size; ii++  )
     readValue(arr[ii]);
 }
 
-void TReadArrays::readArray( const char*, double* arr, long int size )
+void TReadArrays::readArray( const char* name, double* arr, long int size )
 {
+ setCurrentArray( name, size);
  //ff << setprecision(15);
  for( long int ii=0; ii<size; ii++  )
     readValue(arr[ii]);
 }
 
-void TReadArrays::readArray( const char*, char* arr, long int size, long int el_size )
+void TReadArrays::readArray( const char* name, char* arr, long int size, long int el_size )
 {
  char ch;
  char buf[200];
 
+ setCurrentArray( name, size);
  for( long int ii=0; ii<size; ii++  )
  {
    skipSpace();

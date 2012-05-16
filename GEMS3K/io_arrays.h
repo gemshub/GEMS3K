@@ -132,13 +132,15 @@ public:
 
  class TReadArrays : public  TRWArrays // read fields of structure
  {
+    gstring curArray;
     inline void readValue(float& val);
     inline void readValue(double& val);
+    inline void setCurrentArray( const char* name, long int size );
  
  public:
 
     TReadArrays( short aNumFlds, outField* aFlds, fstream& fin ):
-    	TRWArrays( aNumFlds, aFlds, fin )
+        TRWArrays( aNumFlds, aFlds, fin ), curArray("")
     {}
 
     void  skipSpace();
