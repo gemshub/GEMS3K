@@ -44,7 +44,7 @@ outField DataBR_fields[f_lga+1/*58*/] =  {
   { "NodeTypeHY",  0, 0, 1, "# NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE" },
   { "NodeTypeMT",  0, 0, 1, "# NodeTypeMT:  Node type (mass transport), not used on TNode level; see typedef NODETYPE" },
   { "NodeStatusFMT",  1, 0, 1, "# NodeStatusFMT:  Node status code in FMT part, not used on TNode level; see typedef NODECODEFMT" },
-  { "NodeStatusCH",  1, 0, 1, "# NodeStatusCH: Node status code and control in GEM (input and output); see typedef NODECODECH"},
+  { "NodeStatusCH",  1, 0, 1, "# NodeStatusCH: Node status code and control in GEM input and output; see typedef NODECODECH"},
   { "IterDone",  0, 0, 1, "# IterDone:  Number of iterations performed by GEM IPM in the last run (GEM output)" },
   { "TK",   1, 0, 1, "# TK: Node temperature T, Kelvin. This value must always be provided (GEM input)"  },
   { "P",    1, 0, 1, "# P:  Node Pressure P, Pa. This value must always be provided (GEM input)" },
@@ -59,10 +59,10 @@ outField DataBR_fields[f_lga+1/*58*/] =  {
   { "pH",   0, 0, 1, "# pH: pH of aqueous solution in molal activity scale (GEM output)" },
   { "pe",   0, 0, 1, "# pe: pe of aqueous solution in molal activity scale (GEM output)" },
   { "Eh",   0, 0, 1, "# Eh: Eh of aqueous solution, V (GEM output)" },
-// Scalar parameters below are only used at TNodeArray level
-  { "Tm",   0, 0, 1, "# Tm: Actual total simulation time, s (mass transport)" },
-  { "dt",   0, 0, 1, "# dt: Actual time step, s (mass transport)" },
+  { "Tm",   0, 0, 1, "# Tm: Actual total simulation time, s (kinetics, metastability, transport)" },
+  { "dt",   0, 0, 1, "# dt: Actual time step, s (kinetics, metastability, transport)" },
 //#ifdef NODEARRAYLEVEL
+// Scalar parameters below are only used at TNodeArray level
   { "Dif",  0, 0, 1, "# Dif: General diffusivity of disolved matter, m2/s (mass transport)" },
   { "Vt",   0, 0, 1, "# Vt: Total volume of the node, m3 (mass transport)" },
   { "vp",   0, 0, 1, "# vp: Advection velocity in pores, m/s (mass transport)" },
@@ -172,7 +172,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
       ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
       ff << "# Comments can be marked with # $ ;" << endl << endl;
       ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
-      ff << "# (should be read only after the DATACH and the IPM-DAT files)" << endl << endl;
+      ff << "# (should be read only after the DCH and the IPM files)" << endl << endl;
       ff << "#Section (scalar-1): Controls of the GEM IPM operation and data exchange" << endl;
    }
 
@@ -212,15 +212,14 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
      prar.writeField(f_Eh, CNode->Eh, _comment, brief_mode  );
  }
 
-  if( _comment )
-      ff << "\n## (3) FMT scalar variables (used only in NodeArray, not used in GEM)" << endl;
-
-   prar.writeField(f_Tm, CNode->Tm, _comment, brief_mode  );
-   prar.writeField(f_dt, CNode->dt, _comment, brief_mode  );
+  prar.writeField(f_Tm, CNode->Tm, _comment, brief_mode  );
+  prar.writeField(f_dt, CNode->dt, _comment, brief_mode  );
 
 #ifdef NODEARRAYLEVEL
   if( CNode->NodeStatusFMT != No_nodearray /*TNodeArray::na->nNodes() > 1*/ )
   {
+   if( _comment )
+      ff << "\n## (3) FMT scalars (can be used only in NodeArray, not used in GEM)" << endl;
    prar.writeField(f_Dif, CNode->Dif, _comment, brief_mode  );
    prar.writeField(f_Vt, CNode->Vt, _comment, brief_mode  );
    prar.writeField(f_vp, CNode->vp, _comment, brief_mode  );
@@ -242,7 +241,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 #endif
 
   if( _comment )
-   {   ff << "\n### Arrays - for dimensions and index lists, see Section (2) of DATACH file" << endl << endl;
+   {   ff << "\n### Arrays: for dimensions and index lists, see Section (2) of DATACH file" << endl << endl;
        ff << "## (4) IC data section";
        prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
        ff << endl;
