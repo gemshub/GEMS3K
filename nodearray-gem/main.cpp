@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 199 2008-06-04 09:06:21Z gems $
+// $Id$
 //
 // nodearray-gem example, gemnodar(.exe)
 // Demo of usage of the TNodeArray class for implementing a simple

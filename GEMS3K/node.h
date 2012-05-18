@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: node.h 1066 2008-05-16 14:16:59Z gems $
+// $Id$
 //
 // TNode class - implements a simple C/C++ interface
 // between GEM IPM and FMT codes

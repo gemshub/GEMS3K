@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ipm_simplex.cpp 705 2006-04-28 19:39:01Z gems $
+// $Id$
 //
 // Copyright (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //

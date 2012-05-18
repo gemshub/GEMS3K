@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_file.cpp 1388 2009-08-07 14:44:31Z gems $
+// $Id$
 //
 // Implementation of writing/reading IPM work data structure files
 //

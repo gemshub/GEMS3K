@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 517 2010-12-16 08:06:21Z gems $
+// $Id$
 //
 // Demo test of usage of the TNode class for implementing a simple
 // direct coupling scheme between FMT and GEM in a single-GEM-call

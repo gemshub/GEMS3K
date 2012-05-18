@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ipm_chemical3.cpp 690 2006-03-29 07:10:23Z gems $
+// $Id$
 //
 // Copyright (C) 1992-2011  D.Kulik, T.Wagner, S.Dmitrieva, K.Chudnenko
 //

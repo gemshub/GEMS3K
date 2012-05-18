@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: num_methods.cpp 705 2006-04-28 19:39:01Z gems $
+// $Id$
 //
 // C/C++ Numerical Methods (Lagrange interpolation)
 // used in GEMS-PSI and GEMS3K

@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id: node_format.cpp 684 2005-11-23 13:17:15Z gems $
+// $Id$
 //
 // C/C++ interface for writing/reading DBR and DCH files
 // Works  with DATACH and DATABR structures

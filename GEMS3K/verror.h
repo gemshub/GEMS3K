@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: verror.h 968 2007-12-13 13:23:32Z gems $
+// $Id$
 //
 // Error handling: classes TError and TFatalError
 //

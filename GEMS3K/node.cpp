@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: node.cpp 684 2005-11-23 13:17:15Z gems $
+// $Id$
 //
 // Implementation of TNode class including initialization and
 // execution of GEMIPM2 kernel

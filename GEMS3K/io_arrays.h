@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: io_arrays.h 774 2006-07-26 08:45:45Z gems $
+// $Id$
 //
 // Service functions for writing/reading arrays in files
 //

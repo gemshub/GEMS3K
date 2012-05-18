@@ -16,34 +16,34 @@ Docs/txt/ipm-dat-doc.txt -text
 GEMS3K/GEMS3K.pro -text
 GEMS3K/Makefile.MinGW -text
 GEMS3K/Makefile.lib -text
-GEMS3K/databr.h -text
-GEMS3K/datach.h -text
-GEMS3K/gdatastream.cpp -text
-GEMS3K/gdatastream.h -text
+GEMS3K/databr.h -text svn_keywords=Id
+GEMS3K/datach.h -text svn_keywords=Id
+GEMS3K/gdatastream.cpp -text svn_keywords=Id
+GEMS3K/gdatastream.h -text svn_keywords=Id
 GEMS3K/gems3k.pri -text
-GEMS3K/io_arrays.cpp -text
-GEMS3K/io_arrays.h -text
-GEMS3K/ipm_chemical.cpp -text
-GEMS3K/ipm_chemical2.cpp -text
-GEMS3K/ipm_chemical3.cpp -text
-GEMS3K/ipm_main.cpp -text
-GEMS3K/ipm_simplex.cpp -text
+GEMS3K/io_arrays.cpp -text svn_keywords=Id
+GEMS3K/io_arrays.h -text svn_keywords=Id
+GEMS3K/ipm_chemical.cpp -text svn_keywords=Id
+GEMS3K/ipm_chemical2.cpp -text svn_keywords=Id
+GEMS3K/ipm_chemical3.cpp -text svn_keywords=Id
+GEMS3K/ipm_main.cpp -text svn_keywords=Id
+GEMS3K/ipm_simplex.cpp -text svn_keywords=Id
 GEMS3K/jama_cholesky.h -text
 GEMS3K/jama_lu.h -text
-GEMS3K/m_const.h -text
+GEMS3K/m_const.h -text svn_keywords=Id
 GEMS3K/m_param.h -text svn_keywords=Id
-GEMS3K/main.cpp -text
-GEMS3K/ms_multi.h -text
-GEMS3K/ms_multi_file.cpp -text
-GEMS3K/ms_multi_format.cpp -text
-GEMS3K/ms_param.cpp -text
-GEMS3K/node.cpp -text
-GEMS3K/node.h -text
-GEMS3K/node_format.cpp -text
-GEMS3K/nodearray.cpp -text
-GEMS3K/nodearray.h -text
-GEMS3K/num_methods.cpp -text
-GEMS3K/num_methods.h -text
+GEMS3K/main.cpp -text svn_keywords=Id
+GEMS3K/ms_multi.h -text svn_keywords=Id
+GEMS3K/ms_multi_file.cpp -text svn_keywords=Id
+GEMS3K/ms_multi_format.cpp -text svn_keywords=Id
+GEMS3K/ms_param.cpp -text svn_keywords=Id
+GEMS3K/node.cpp -text svn_keywords=Id
+GEMS3K/node.h -text svn_keywords=Id
+GEMS3K/node_format.cpp -text svn_keywords=Id
+GEMS3K/nodearray.cpp -text svn_keywords=Id
+GEMS3K/nodearray.h -text svn_keywords=Id
+GEMS3K/num_methods.cpp -text svn_keywords=Id
+GEMS3K/num_methods.h -text svn_keywords=Id
 GEMS3K/platform/CRAYXT3-catamount/Makefile -text
 GEMS3K/platform/Linux-GNU/Makefile -text
 GEMS3K/platform/Linux-GNU/Makefile.lib -text
@@ -55,29 +55,29 @@ GEMS3K/platform/MacOSX/Makefile.lib -text
 GEMS3K/platform/other/Makefile -text
 GEMS3K/platform/win32MinGW/Makefile -text
 GEMS3K/platform/win32bcc/Makefile -text
-GEMS3K/s_fgl.cpp -text
-GEMS3K/s_fgl.h -text
-GEMS3K/s_fgl1.cpp -text
-GEMS3K/s_fgl2.cpp -text
-GEMS3K/s_fgl3.cpp -text
-GEMS3K/s_fgl4.cpp -text
-GEMS3K/s_kinmet.cpp -text
-GEMS3K/s_kinmet.h -text
-GEMS3K/s_sorption.cpp -text
-GEMS3K/s_sorption.h -text
+GEMS3K/s_fgl.cpp -text svn_keywords=Id
+GEMS3K/s_fgl.h -text svn_keywords=Id
+GEMS3K/s_fgl1.cpp -text svn_keywords=Id
+GEMS3K/s_fgl2.cpp -text svn_keywords=Id
+GEMS3K/s_fgl3.cpp -text svn_keywords=Id
+GEMS3K/s_fgl4.cpp -text svn_keywords=Id
+GEMS3K/s_kinmet.cpp -text svn_keywords=Id
+GEMS3K/s_kinmet.h -text svn_keywords=Id
+GEMS3K/s_sorption.cpp -text svn_keywords=Id
+GEMS3K/s_sorption.h -text svn_keywords=Id
 GEMS3K/tnt.h -text
 GEMS3K/tnt_array1d.h -text
 GEMS3K/tnt_array2d.h -text
 GEMS3K/tnt_i_refvec.h -text
-GEMS3K/v_user.h -text
-GEMS3K/verror.h -text
+GEMS3K/v_user.h -text svn_keywords=Id
+GEMS3K/verror.h -text svn_keywords=Id
 node-gem/Makefile.MinGW -text
 node-gem/doc/Readme.1st -text
 node-gem/doc/scm-dbr-dat-doc.txt -text
 node-gem/doc/scm-dch-dat-doc.txt -text
 node-gem/doc/scm-ipm-dat-doc.txt -text
 node-gem/linux-run.bat -text
-node-gem/main.cpp -text
+node-gem/main.cpp -text svn_keywords=Id
 node-gem/main.h -text
 node-gem/node-gem-sep.pro -text
 node-gem/node-gem3-sep.pro -text
@@ -201,7 +201,7 @@ node-gem/tp_test/main.cpp -text
 nodearray-gem/LINUX-RUN.BAT -text
 nodearray-gem/doc/Readme.1st -text
 nodearray-gem/doc/filelist-doc.txt -text
-nodearray-gem/main.cpp -text
+nodearray-gem/main.cpp -text svn_keywords=Id
 nodearray-gem/main.cpp.template -text
 nodearray-gem/nodearray-gem.pro -text
 nodearray-gem/nodearray-gem3.pro -text

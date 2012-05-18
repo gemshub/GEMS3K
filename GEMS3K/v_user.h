@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: v_user.h 1373 2009-07-22 12:25:22Z gems $
+// $Id$
 //
 // Declaration of platform-specific utility functions and classes
 //

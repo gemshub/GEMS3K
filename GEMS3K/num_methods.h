@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: num_methods.h 705 2006-04-28 19:39:01Z gems $
+// $Id$
 //
 // C/C++ Numerical Methods used in GEMS-PSI and GEMS3K
 // (c) 2006,2011 S.Dmytriyeva, D.Kulik

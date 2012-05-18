@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: databr.h 1430 2009-08-27 17:02:11Z gems $
+// $Id$
 //
 // DataBRidge - defines the structure of node-dependent data for
 // exchange between the coupled GEM IPM and FMT code parts.

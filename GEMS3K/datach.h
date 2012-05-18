@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: datach.h 1430 2009-08-27 17:02:11Z gems $
+// $Id$
 //
 // DataCHemistry - contains chemical system definitions common to all
 // nodes for the exchange between the GEM IPM and the FMT code parts.

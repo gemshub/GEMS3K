@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: gdatastream.cpp 968 2007-12-13 13:23:32Z gems $
+// $Id$
 //
 // Implementation of stream binary file operations extended for endianness
 // (e.g. for compatibility between Intel- and old Mac processors)

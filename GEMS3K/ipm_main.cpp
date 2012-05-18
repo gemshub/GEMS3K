@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ipm_main.cpp 705 2006-04-28 19:39:01Z gems $
+// $Id$
 //
 // Copyright (C) 1992,2010  D.Kulik, S.Dmitrieva, K.Chudnenko, I.Karpov
 //

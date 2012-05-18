@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: ms_multi_format.cpp 774 2006-07-26 08:45:45Z gems $
+// $Id$
 //
 // Implementation of text writing/reading IPM, DCH and DBR files
 //
