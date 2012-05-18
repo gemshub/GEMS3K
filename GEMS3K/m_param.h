@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------
-// $Id: m_param.h 1406 2009-08-21 08:37:56Z gems $
+// $Id$
 //
 // Declaration of TProfil class, config and calculation functions
 //
 // Rewritten from C to C++ by S.Dmytriyeva
-// Copyright (C) 1995-2007 S.Dmytriyeva, D.Kulik
+// Copyright (C) 1995,2012 S.Dmytriyeva, D.Kulik
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization
