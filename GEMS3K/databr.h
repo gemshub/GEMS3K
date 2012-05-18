@@ -131,7 +131,7 @@ typedef enum {  // NodeStatus codes with respect to GEMIPM calculations
 } NODECODECH;
 
 typedef enum {  // Node status codes set by the FMT (FluidMassTransport) part
- No_nodearray  = -1,
+ No_nodearray  = -1, // Indicates that no node transport properties are present in this DATABR and DBR file
  No_transport  = 0,  // Chemical calculations only, no transport coupled
  Initial_RUN   = 1,
  OK_Hydraulic  = 2,
