@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright (C) 2010  D.Kulik, T.Wagner
+// Copyright (C) 2010,2012 D.Kulik, T.Wagner
 //
 // Declaration of new versions of sorption models (TSorpMod class)
-//  Uses: s_fgl.h (declarations of TSolMod class)
+//  Template: s_fgl.h (declarations of TSolMod class)
 //
 // This file is part of a GEM-Selektor (GEMS) v.3.x program
 // environment for thermodynamic modeling in geochemistry
