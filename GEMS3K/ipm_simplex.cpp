@@ -52,7 +52,7 @@ void TMulti::AutoInitialApproximation( )
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
-        EPS = TProfil::pm->pa.p.EPS; //  13.10.00  KC  DK
+        EPS = paTProfil->p.EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
@@ -519,7 +519,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 
 //  to_text_file( "MultiDump1.txt" );   // Debugging
 
-if( TProfil::pm->pa.p.DG > 1e-5 )
+if( paTProfil->p.DG > 1e-5 )
 {
    ScFact = SystemTotalMolesIC();
    ScaleSystemToInternal( ScFact );
@@ -556,7 +556,7 @@ try{
   catch( TError& xcpt )
   {
 
-      if( TProfil::pm->pa.p.DG > 1e-5 )
+      if( paTProfil->p.DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
@@ -568,7 +568,7 @@ try{
      Error( xcpt.title, xcpt.mess);
   }
 
-  if( TProfil::pm->pa.p.DG > 1e-5 )
+  if( paTProfil->p.DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
 
 //  to_text_file( "MultiDump3.txt" );   // Debugging
@@ -593,7 +593,7 @@ double TMulti::SystemTotalMolesIC( )
 
   pm.TMols = mass_temp;
 
-  pm.SMols = TProfil::pm->pa.p.DG;
+  pm.SMols = paTProfil->p.DG;
   ScFact = pm.SMols/pm.TMols;
 
   return ScFact;
@@ -819,7 +819,8 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
 #else
 
-   TProfil::pm->CheckMtparam(); //test load thermodynamic data before
+   //TProfil::pm->CheckMtparam(); //test load thermodynamic data before
+   CheckMtparam(); //test load thermodynamic data before
 
 
 #endif
@@ -888,7 +889,7 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 // Do it before calculations
 void TMulti::MultiConstInit() // from MultiRemake
 {
-  SPP_SETTING *pa = &TProfil::pm->pa;
+  SPP_SETTING *pa = paTProfil;
 
   pm.FI1 = 0;
   pm.FI1s = 0;
@@ -1210,7 +1211,9 @@ double TMulti::HelmholtzEnergy( double x )
 
 double A_P( double x, double )
 {
-    return TProfil::pm->HelmholtzEnergy(x);
+#ifndef IPMGEMPLUGIN
+  return TProfil::pm->HelmholtzEnergy(x);
+#endif
 }
 
 
@@ -1226,7 +1229,9 @@ double TMulti::InternalEnergy( double TC, double P )
 
 double U_TP( double TC, double P)
 {
+#ifndef IPMGEMPLUGIN
   return TProfil::pm->InternalEnergy(  TC,  P );
+#endif
 }
 
 //--------------------- End of ipm_simplex.cpp ---------------------------

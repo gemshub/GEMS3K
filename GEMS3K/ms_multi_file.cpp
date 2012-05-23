@@ -19,6 +19,7 @@
 
 #include "io_arrays.h"
 #include "m_param.h"
+#include "node.h"
 #include "gdatastream.h"
 
 void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
@@ -44,6 +45,64 @@ void TMulti::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitS
        LsSitSum += (pm.LsMdc[i*3+1]*pm.LsMdc[i*3+2]);
    }
  }
+
+void TMulti::setPa( TProfil *prof)
+{
+    paTProfil = &prof->pa;
+}
+
+#ifdef IPMGEMPLUGIN
+
+long int TMulti::testMulti( )
+{
+  if( pm.MK || pm.PZ )
+  {
+    if( paTProfil->p.PSM == 2 )
+    {
+      fstream f_log("ipmlog.txt", ios::out|ios::app );
+      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
+      f_log << pm.errorBuf << endl;
+    }
+   return 1L;
+  }
+  return 0L	;
+}
+
+#else
+
+long int TMulti::testMulti()
+{
+  //MULTI *pmp = multi->GetPM();
+  if( pm.MK || pm.PZ )
+  {
+   if( paTProfil->p.PSM >= 2 )
+   {
+     fstream f_log("ipmlog.txt", ios::out|ios::app );
+     f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
+     f_log << pm.errorBuf << endl;
+   }
+   if( showMss )
+   {
+           addErrorMessage(" \nContinue?");
+      switch( vfQuestion3(0, pm.errorCode, pm.errorBuf,
+                           "&Yes", "&No", "&Yes to All" ))
+       {
+       case VF3_3:
+           showMss=0l;
+       case VF3_1:
+           break;
+       case VF3_2:
+           Error(pmp->errorCode, pmp->errorBuf);
+       }
+   }
+
+   return 1L;
+  }
+
+  return 0L	;
+}
+
+#endif
 
 //---------------------------------------------------------//
 //set default information
@@ -1459,8 +1518,8 @@ void TMulti::to_text_file( const char *path, bool append )
 
   TPrintArrays  prar(0,0,ff);
 
-  prar.writeArray( "Short_PARAM",  &TProfil::pm->pa.p.PC, 10L );
-  prar.writeArray( "Double_PARAM",  &TProfil::pm->pa.p.DG, 28L );
+  prar.writeArray( "Short_PARAM",  &paTProfil->p.PC, 10L );
+  prar.writeArray( "Double_PARAM",  &paTProfil->p.DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 38L );
   prar.writeArray(  "Double_Const",  &pm.TC, 55, 20 );
   prar.writeArray(  "EpsW", pm.epsW, 5);

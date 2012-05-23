@@ -29,7 +29,7 @@
 #include "gdatastream.h"
 #include "node.h"
 
-TProfil* TProfil::pm;
+//TProfil* TProfil::pm;
 
 const double R_CONSTANT = 8.31451,
               NA_CONSTANT = 6.0221367e23,
@@ -102,7 +102,7 @@ TProfil::TProfil( TMulti* amulti )
     pmp = multi->GetPM();
 }
 
-// test result GEM IPM calculation of equilibrium state in MULTI
+/* test result GEM IPM calculation of equilibrium state in MULTI
 long int TProfil::testMulti(  )
 {
   if( pmp->MK || pmp->PZ )
@@ -117,6 +117,9 @@ long int TProfil::testMulti(  )
   }
   return 0L	;
 }
+
+moved to TMulti class */
+
 
 // GEM IPM calculation of equilibrium state in MULTI
 double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
@@ -196,10 +199,13 @@ void TProfil::readMulti( const char* path, DATACH  *dCH )
 }
 
 
-bool load = false;
+// bool load = false; moved to TMulti class
 
 // Load Thermodynamic data from Database
-void TProfil::CheckMtparam()
+// moved to multi from Project
+
+// Load Thermodynamic data from Database
+void TMulti::CheckMtparam()
 {
   double TK, P, PPa;
 
@@ -207,21 +213,20 @@ void TProfil::CheckMtparam()
   //TK = TNode::na->cTK();
   //PPa = TNode::na->cP();
 
-  DATACH  *dCH = multi->node->pCSD();
-  TK = multi->node->cTK();
-  PPa = multi->node->cP();
+  DATACH  *dCH = node->pCSD();
+  TK = node->cTK();
+  PPa = node->cP();
 
   P = PPa/bar_to_Pa;
 
  //pmp->pTPD = 2;
 
- if( !load || fabs( pmp->Tc - TK ) > dCH->Ttol
-           || fabs( pmp->P - P )  > dCH->Ptol  )
-     pmp->pTPD = 0;      //T, P is changed - problematic for UnSpace!
+ if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
+           || fabs( pm.P - P )  > dCH->Ptol  )
+     pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
 
   load = true;
 }
-
 
 
 /* Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator

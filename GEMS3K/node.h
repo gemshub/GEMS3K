@@ -46,8 +46,10 @@ protected:
 #ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMS3K programs
     TMulti* multi;
-    TProfil* profil;
+//    TProfil* profil;
 #endif
+    TProfil* profil;
+
 
     DATACH* CSD;  // Pointer to chemical system data structure CSD (DATACH)
     DATABR* CNode;  // Pointer to a work node data bridge structure (node)

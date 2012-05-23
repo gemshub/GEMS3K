@@ -97,7 +97,7 @@ FORCED_AIA:
    }
    pm.FitVar[0] = bfc_mass();  // getting total mass of solid phases in the system
    if( pm.MK || pm.PZ ) // no good solution
-       TProfil::pm->testMulti();
+       /*TProfil::pm->*/testMulti();
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -111,7 +111,7 @@ void TMulti::GEM_IPM( long int rLoop )
 {
     long int i, j, eRet, status=0; long int csRet=0;
 // bool CleanAfterIPM = true;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = paTProfil;
 
 #ifdef GEMITERTRACE
   to_text_file( "MultiDumpB.txt" );   // Debugging
@@ -506,7 +506,7 @@ bool TMulti::GEM_IPM_InitialApproximation(  )
     long int i, j, k, NN, eCode=-1L;
     double minB, sfactor;
     char buf[512];
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = paTProfil;
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpA.txt" );   // Debugging
@@ -540,7 +540,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 
     if( eCode >= 0 )
     {
-       TProfil::pm->testMulti();
+       /*TProfil::pm->*/testMulti();
        pm.PZ = 0;
        setErrorMessage( -1, "" , "");
     }
@@ -739,7 +739,7 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
     long int IT1;
     long int I, J, Z,  N, sRet, iRet=0, j, jK;
     double LM, pmp_PCI;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = paTProfil;
 
     ErrorIf( !pm.MU || !pm.W, "MassBalanceRefinement()",
                               "Error of memory allocation for pm.MU or pm.W." );
@@ -900,7 +900,7 @@ long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
     bool StatusDivg;
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = paTProfil;
 
     status = 0;
     if( pm.FIs )
@@ -951,11 +951,11 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
           return 1;
         }
 
-   if( !nCNud && TProfil::pm->pa.p.PLLG )   // disabled if PLLG = 0
+   if( !nCNud && paTProfil->p.PLLG )   // disabled if PLLG = 0
    { // Experimental - added 06.05.2011 by DK
       Increment_uDD( pm.ITG, uDDtrace );
 //   DivTol = pow( 10., -fabs( (double)TProfil::pm->pa.p.PLLG ) );
-      DivTol = (double)TProfil::pm->pa.p.PLLG;
+      DivTol = (double)paTProfil->p.PLLG;
       if( fabs(DivTol) >= 30000. )
           DivTol = 1e6;  // this is to allow complete tracing in the case of divergence
 //      if( pm.ITG )
@@ -1249,7 +1249,7 @@ void TMulti::DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k )
 // Adjustment of primal approximation according to kinetic constraints
 long int TMulti::MetastabilityLagrangeMultiplier()
 {
-    double E = TProfil::pm->pa.p.DKIN; //1E-8;  Default min value of Lagrange multiplier p
+    double E = paTProfil->p.DKIN; //1E-8;  Default min value of Lagrange multiplier p
 //    E = 1E-30;
 
     for(long int J=0;J<pm.L;J++)
@@ -1569,7 +1569,7 @@ void TMulti::Restore_Y_YF_Vectors()
  {
    if( pm.XF[Z] <= pm.DSM ||
        ( pm.PHC[Z] == PH_SORPTION &&
-       ( pm.XFA[Z] < TProfil::pm->pa.p.ScMin) ) )
+       ( pm.XFA[Z] < paTProfil->p.ScMin) ) )
    {
       pm.YF[Z]= 0.;
       if( pm.FIs && Z<pm.FIs )
@@ -1598,7 +1598,7 @@ void TMulti::Restore_Y_YF_Vectors()
 double TMulti::RescaleToSize( bool standard_size )
 {
     double SizeFactor=1.;
-    SPP_SETTING *pa = &TProfil::pm->pa;
+    SPP_SETTING *pa = paTProfil;
 
     pm.SizeFactor = 1.;
 //  re-scaling numeric settings
@@ -1781,7 +1781,7 @@ void TMulti::Reset_uDD( long int nr, bool trace )
        cout << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
        cout << " Itr   C_D:   " << pm.SB1[0] ;
     }
-    if( TProfil::pm->pa.p.PSM >= 3 )
+    if( paTProfil->p.PSM >= 3 )
     {
       fstream f_log("ipmlog.txt", ios::out|ios::app );
       f_log << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
@@ -1797,7 +1797,7 @@ void TMulti::Increment_uDD( long int r, bool trace )
     cnr = r; // r+1;
     if( cnr == 0 )
         return;
-    if( TProfil::pm->pa.p.PSM >= 3 )
+    if( paTProfil->p.PSM >= 3 )
     {
        fstream f_log("ipmlog.txt", ios::out|ios::app );
        f_log << r << " " << pm.PCI << " ";
@@ -1837,7 +1837,7 @@ void TMulti::Increment_uDD( long int r, bool trace )
 //      cout << U_CV[i] << " ";
 //      cout << delta << " ";
       }
-      if( TProfil::pm->pa.p.PSM >= 3 )
+      if( paTProfil->p.PSM >= 3 )
       {
           fstream f_log("ipmlog.txt", ios::out|ios::app );
           f_log << U_mean[i] << " ";
@@ -1879,7 +1879,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
     tol_gen = DivTol;
     if( pm.PCI < 1 )
     tol_gen *= pm.PCI;
-    if( TProfil::pm->pa.p.PSM >= 3 )
+    if( paTProfil->p.PSM >= 3 )
     {
         fstream f_log("ipmlog.txt", ios::out|ios::app );
         f_log << " Tol= " << tol_gen << " |" << endl;
@@ -1932,7 +1932,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
       {
          if( trace )
             cout << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
-         if( TProfil::pm->pa.p.PSM >= 3 )
+         if( paTProfil->p.PSM >= 3 )
          {
             fstream f_log("ipmlog.txt", ios::out|ios::app );
             f_log << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
@@ -1945,7 +1945,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
           buf[MAXICNAME] = '\0';
           cout << buf << " ln_bi= " << log_bi << " Tol= " << tolerance << " ";
       }
-      if( TProfil::pm->pa.p.PSM >= 3 )
+      if( paTProfil->p.PSM >= 3 )
       {
           fstream f_log("ipmlog.txt", ios::out|ios::app );
           memcpy(buf, pm.SB[i], MAXICNAME );
@@ -1956,7 +1956,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
     if( !FirstTime )
     {    if( trace )
            cout << " |" << endl;
-         if( TProfil::pm->pa.p.PSM >= 3 )
+         if( paTProfil->p.PSM >= 3 )
          {
              fstream f_log("ipmlog.txt", ios::out|ios::app );
              f_log << " |" << endl;

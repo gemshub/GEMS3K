@@ -141,7 +141,7 @@ long int TNode::GEM_run( bool uPrimalSol )
         else
 	       return CNode->NodeStatusCH;
    // GEM IPM calculation of equilibrium state
-   CalcTime = TProfil::pm->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
+   CalcTime = profil->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
     CNode->IterDone = NumIterFIA+NumIterIPM;
@@ -152,7 +152,11 @@ long int TNode::GEM_run( bool uPrimalSol )
 // *********************************************************
 
     // test error result GEM IPM calculation of equilibrium state in MULTI
-    long int erCode = TProfil::pm->testMulti();
+#ifndef IPMGEMPLUGIN
+    long int erCode = TMulti::sm->testMulti();
+#else
+    long int erCode = multi->testMulti();
+#endif
 
     if( erCode )
     {
@@ -172,12 +176,12 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
    catch(TError& err)
    {
-	if( TProfil::pm->pa.p.PSM  )
+    if( profil->pa.p.PSM  )
 	{
 		fstream f_log("ipmlog.txt", ios::out|ios::app );
         f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
           err.title.c_str() << ":" << endl;
-       if( TProfil::pm->pa.p.PSM >= 2  )
+       if( profil->pa.p.PSM >= 2  )
           f_log  << err.mess.c_str() << endl;
 	}
     if( CNode->NodeStatusCH  == NEED_GEM_AIA )
@@ -1357,7 +1361,10 @@ void TNode::allocMemory()
     multi = new TMulti( this );
     pmm = multi->GetPM();
     profil = new TProfil( multi );
-    TProfil::pm = profil;
+    multi->setPa(profil);
+    //TProfil::pm = profil;
+#else
+    profil = TProfil::pm;
 #endif
 }
 
@@ -1822,7 +1829,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nICb; ii++ )
   {
       pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
-      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < TProfil::pm->pa.p.DB )
+      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil->pa.p.DB )
       {
          char buf[300];
          sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
@@ -1930,7 +1937,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
      else
            str_file = fname;
 
-	   TProfil::pm->outMultiTxt( str_file.c_str()  );
+       profil->outMultiTxt( str_file.c_str()  );
    }
 
 #ifdef IPMGEMPLUGIN

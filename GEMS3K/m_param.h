@@ -93,13 +93,14 @@ struct SPP_SETTING
 
 extern SPP_SETTING pa_;
 
+
 // Module TParam ( +MULTY )
 class TProfil //: public TCModule
 {
 
 public:
 
-    static TProfil* pm;
+    //static TProfil* pm;
 
     TMulti* multi;
     MULTI *pmp;
@@ -117,9 +118,9 @@ public:
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path,  DATACH  *dCH );
 
-   void CheckMtparam();
+   //void CheckMtparam();
    double ComputeEquilibriumState( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
-   long int testMulti( );
+   //long int testMulti( );
 
    inline double HelmholtzEnergy( double x )
    {
@@ -427,7 +428,7 @@ public:
    void readMulti( const char* path,  DATACH  *dCH );
    void CmReadMulti( QWidget* par, const char* path );
    double ComputeEquilibriumState( long int& NumPrecLoops, long int& NumIterFIA, long int& NumIterIPM );
-   long int testMulti( );
+   //long int testMulti( );
    bool CompareProjectName( const char* SysKey );
    void SetSysSwitchesFromMulti( );
 };

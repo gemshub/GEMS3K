@@ -38,7 +38,6 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #include "s_fgl.h"
 // #include "s_sorption.h"
-class TNode;
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
@@ -355,6 +354,10 @@ enum {  // Indexation in a row of the pmp->SATX[][] array
    XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
+struct SPP_SETTING;
+class TProfil;
+class TNode;
+
 // Data of MULTI
 class TMulti
 #ifndef IPMGEMPLUGIN
@@ -363,6 +366,7 @@ class TMulti
 {
     MULTI pm;
     MULTI *pmp;
+    SPP_SETTING *paTProfil;
 
 // Internal arrays for the performance optimization  (since version 2.0.0)
    long int sizeN; /*, sizeL, sizeAN;*/
@@ -431,6 +435,7 @@ class TMulti
 
 #else
 
+   bool load; // internal value
    char PAalp_; // Flag for using (+) or ignoring (-) specific surface areas of phases
    char PSigm_; // Flag for using (+) or ignoring (-) specific surface free energies
 
@@ -621,6 +626,8 @@ public:
      pmp->tpp_G = 0;
      pmp->tpp_S = 0;
      pmp->tpp_Vm = 0;
+
+     load = false;
    }
 
     ~TMulti()
@@ -629,10 +636,15 @@ public:
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
 
+    void CheckMtparam(); //test load thermodynamic data before
+
 #endif
 
     MULTI* GetPM()
     { return &pm; }
+
+    void setPa( TProfil *prof);
+    long int testMulti( );
 
     const char* GetName() const
     {  return "Multi";  }

@@ -23,7 +23,7 @@
   istream& f_getline(istream& is, gstring& str, char delim);
 #endif
 
-bool _comment = true;
+//bool _comment = true;
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.641 (rc) ";
 
 //===================================================================
@@ -139,8 +139,8 @@ outField MULTI_dynamic_fields[70] =  {
 void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 		bool with_comments, bool brief_mode )
 {
-  SPP_SETTING *pa = &TProfil::pm->pa;
-   _comment = with_comments;
+  SPP_SETTING *pa = paTProfil;
+   bool _comment = with_comments;
    char PAalp;
    char PSigm;
 
@@ -440,7 +440,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 
 void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
 {
-  SPP_SETTING *pa = &TProfil::pm->pa;
+  SPP_SETTING *pa = paTProfil;
   //DATACH  *dCH = /*TNode::*/node->pCSD();  // 19/05/2010 error line
   long int ii, nfild, len;
 
@@ -648,6 +648,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               long int LsModSum;
               long int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
+              cout << "LsModSum " << LsModSum<< "LsIPxSum " <<LsIPxSum<< endl;
               if(LsIPxSum )
               { rddar.readNext( "IPxPH");
 #ifdef IPMGEMPLUGIN
