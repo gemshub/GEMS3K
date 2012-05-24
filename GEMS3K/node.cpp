@@ -1612,7 +1612,7 @@ void TNode::setupDataChBR( TCIntArray& selIC, TCIntArray& selDC, TCIntArray& sel
        CSD->DD[i1] = 0.;
 }
 
-// Prepares and writes DCH and DBR files for reading into the coupled code
+/// Prepares and writes DCH and DBR files for reading into the coupled code
 void TNode::makeStartDataChBR( QWidget* par, bool no_interpolat,
   TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
   short nTp_, short nPp_, float Ttol_, float Ptol_,
@@ -1639,7 +1639,7 @@ void TNode::makeStartDataChBR( QWidget* par, bool no_interpolat,
 
 }
 
-// Prepares and writes DCH and DBR files for reading into the coupled code
+/// Prepares and writes DCH and DBR files for reading into the coupled code
 void TNode::makeStartDataChBR( QWidget* par,
   TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
   double Tai[4], double Pai[4] )

@@ -143,7 +143,7 @@ gstring curDateTime()
 istream& u_getline(istream& instream, gstring& dst_string, char delimit = '\n');
 istream& f_getline(istream& is, gstring& str, char delim);
 
-/*! returns pointer after spaces in gstring 's'*/
+/* returns pointer after spaces in gstring 's'*/
 /*
 inline
 const char* fastLeftStrip(const char* s)
@@ -152,7 +152,7 @@ const char* fastLeftStrip(const char* s)
 }
 */
 
-/*! returns length of fgstring without right blanks*/
+/* returns length of fgstring without right blanks*/
 /*
 inline
 unsigned int lenWithRightStrip(const char* s)
@@ -218,18 +218,18 @@ private:
 
 #endif    // IPMGEMPLUGIN
 
-// Combines path, directory, name and extension to full pathname
+/// Combines path, directory, name and extension to full pathname
 gstring
 u_makepath(const gstring& dir,
            const gstring& name, const gstring& ext);
 
-// Splits full pathname to path, directory, name and extension
+/// Splits full pathname to path, directory, name and extension
 void
 u_splitpath(const gstring& Path, gstring& dir,
             gstring& name, gstring& ext);
 
 #define fileNameLength 64
-// Get Path of file and Reading list of file names from it, return number of files 
+/// Get Path of file and Reading list of file names from it, return number of files
 char  (* f_getfiles(const char *f_name, char *Path, 
 		long int& nElem, char delim ))[fileNameLength];
 

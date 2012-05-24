@@ -29,8 +29,8 @@ enum volume_code {  // Codes of volume parameter ???
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
 };
 #endif
-// Calculation of LPP-based automatic initial approximation of the primal vector x
-// using the modified simplex method with two-side constraints on x
+/// Calculation of LPP-based automatic initial approximation of the primal vector x.
+/// Use the modified simplex method with two-side constraints on x
 //
 void TMulti::AutoInitialApproximation( )
 {
@@ -141,8 +141,8 @@ void TMulti::AutoInitialApproximation( )
     }
 }
 
-// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
-//  SPOS function
+/// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
+///  SPOS function
 //
 void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[])
 {
@@ -160,8 +160,8 @@ void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int 
     }
 }
 
-// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
-//  START function
+/// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
+///  START function
 //
 void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB[],
            double GZ,double EPS,long int STR[],long int *BASE, double B[],
@@ -211,8 +211,8 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
     }
 }
 
-// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
-//  NEW function
+/// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
+///  NEW function
 //
 void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
                   long int *Z,long int STR[], long int NMB[], double UP[],
@@ -289,8 +289,8 @@ MK4:
 }
 
 
-// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
-//  WORK function
+/// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
+///  WORK function
 //
 void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
                    long int M, long int STR[],long int NMB[],double AA[],
@@ -383,8 +383,8 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
     delete[] P;
 }
 
-// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
-//  FIN function
+/// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
+///  FIN function
 //
 void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
                   long int BASE[],double UND[],double UP[],double U[],
@@ -421,26 +421,26 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
     delete[] P;
 }
 
-// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
-//  Main function
+/// Generic simplex method with two sided constraints (c) K.Chudnenko 1992.
+///  Main function
 //
-//  M  - number of independent components
-//  N  - number of unknowns
-//  T  - dimension of a work vector AA[] containing all non-zero
-//        values of vector GT[] and A[][] matrix (over lines)
-//  GZ - Limiting value of the unknown
-//  EPS - precision (convergence) criterion (default 1e-9)
-//  UND - vector of lower constraints to unknowns
-//  UP - input vector of upper constraints to unknowns;
-//        output vector of unknowns (simplex solution) (N+M)
-//  B -  M input values of independent components (bulk composition)
-//  U -  output vector of the dual solution (M)
-//  AA - work array (T)
-//  STR - markup vector of values in AA array (T)
-//  NMB - indices of values in AA
-// returns 0 if OK;
-//         1 if inconsistent input constraints;
-//        -1 if memory allocation error;
+///  \param M  - number of independent components
+///  \param N  - number of unknowns
+///  \param T  - dimension of a work vector AA[] containing all non-zero
+///        values of vector GT[] and A[][] matrix (over lines)
+///  \param GZ - Limiting value of the unknown
+///  \param EPS - precision (convergence) criterion (default 1e-9)
+///  \param UND - vector of lower constraints to unknowns
+///  \param UP - input vector of upper constraints to unknowns;
+///        output vector of unknowns (simplex solution) (N+M)
+///  \param B -  M input values of independent components (bulk composition)
+///  \param U -  output vector of the dual solution (M)
+///  \param AA - work array (T)
+///  \param STR - markup vector of values in AA array (T)
+///  \param NMB - indices of values in AA
+/// \return 0 if OK;
+///         1 if inconsistent input constraints;
+///        -1 if memory allocation error;
 //
 void TMulti::SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
@@ -496,8 +496,8 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
 
 
 //-----------------------------------------------------------------------
-// Main call to GEM IPM calculation of equilibrium state in MULTI
-// (with internal re-scaling of the system)
+/// Main call to GEM IPM calculation of equilibrium state in MULTI
+/// (with internal re-scaling of the system).
 //
 double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM )
 {
@@ -582,8 +582,8 @@ try{
 }
 
 
-// Calculate total IC mole amounts in b vector and
-// return the scaling factor
+/// Calculate total IC mole amounts in b vector and
+/// return the scaling factor
 double TMulti::SystemTotalMolesIC( )
 {
   double ScFact, mass_temp = 0.0;
@@ -599,7 +599,7 @@ double TMulti::SystemTotalMolesIC( )
   return ScFact;
 }
 
-// Resizes MULTI (GEM IPM work structure) data into internally scaled constant mass
+/// Resizes MULTI (GEM IPM work structure) data into internally scaled constant mass
 void TMulti::ScaleSystemToInternal(  double ScFact )
 {
  long int i, j, k;
@@ -674,8 +674,8 @@ void TMulti::ScaleSystemToInternal(  double ScFact )
  pm.SizeFactor = ScFact;
 }
 
-// Re-scaling the internal constant-mass MULTI system definition
-// back to real size
+/// Re-scaling the internal constant-mass MULTI system definition
+/// back to real size
 void TMulti::RescaleSystemFromInternal(  double ScFact )
 {
  long int i, j, k;
@@ -756,9 +756,8 @@ void TMulti::RescaleSystemFromInternal(  double ScFact )
 // Multi initialization part 10/05/2010
 
 // Before Calculations
-//Calculation by IPM (preparing for calculation, unpacking data)
-// parameter "key" contains SysEq record key
-// In IPM
+/// Calculation by IPM (preparing for calculation, unpacking data)
+/// In IPM
 void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit()
 {
 
@@ -885,8 +884,8 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 }
 
 
-// Setup/copy flags and thresholds for numeric modules to TMulti structure
-// Do it before calculations
+/// Setup/copy flags and thresholds for numeric modules to TMulti structure.
+/// Do it before calculations
 void TMulti::MultiConstInit() // from MultiRemake
 {
   SPP_SETTING *pa = paTProfil;
@@ -925,7 +924,7 @@ void TMulti::MultiConstInit() // from MultiRemake
 
 }
 
-//Calculation by IPM (internal step initialization)
+/// Calculation by IPM (internal step initialization)
 void TMulti::GEM_IPM_Init()
 {
    int i,j,k;
@@ -1016,10 +1015,7 @@ void TMulti::GEM_IPM_Init()
 #endif
 }
 
-// Test 21/05/2010
-// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
-// (only used in standalone GEMS3K version)
- //
+/// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 void TMulti::DC_LoadThermodynamicData() // formerly CompG0Load()
 {
   long int j, jj, k, xTP, jb, je=0;
@@ -1200,7 +1196,8 @@ void TMulti::DC_LoadThermodynamicData() // formerly CompG0Load()
 //===========================================================================================
 // Calls to minimization of other system potentials (A, ...)
 
-// calc function for Method of golden section
+/// Calls to minimization of other system potentials - HelmholtzEnergy.
+/// Calc function for Method of golden section (only in GEMS ).
 double TMulti::HelmholtzEnergy( double x )
 {
     pm.P = x;
@@ -1217,6 +1214,8 @@ double A_P( double x, double )
 }
 
 
+/// Calls to minimization of other system potentials - InternalEnergy.
+/// Calc function for Method of golden section (only in GEMS ).
 double TMulti::InternalEnergy( double TC, double P )
 {
     pm.P = P;

@@ -32,9 +32,9 @@
 // #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of max.moles of surface species for SACT stabilization
-//  to improve IPM-2 convergence at high SACT values  KD 08.03.02
-//  xj0 values are placed as upper kinetic constraints
+/// Calculation of max.moles of surface species for SACT stabilization
+///  to improve IPM-2 convergence at high SACT values.
+///  xj0 values are placed as upper kinetic constraints
 //
 void TMulti::XmaxSAT_IPM2()
 {
@@ -208,8 +208,8 @@ void TMulti::XmaxSAT_IPM2_reset()
 }
 */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating value of dual chemical potential of j-th dependent component
-//     performance optimized version  (February 2007)
+/// Calculating value of dual chemical potential of j-th dependent component
+///     performance optimized version  (February 2007)
 double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, long int j )
 {
    long int i, ii;
@@ -226,8 +226,8 @@ double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, lo
 //         Nu += U[i]*AL[i];
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//  This procedure sets kinetic constraints according to a given
-//  concentration units
+///  This procedure sets kinetic constraints according to a given
+///  concentration units.
 //  Needs much more work, elaboration, and performance optimization
 //
 void TMulti::Set_DC_limits( long int Mode )
@@ -378,7 +378,7 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating total amounts of phases
+/// Calculating total amounts of phases
 //
 void TMulti::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
 {
@@ -407,12 +407,11 @@ void TMulti::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Corrections to primal chemical potentials F0[j]
-//  of j-th species in k-th phase among IPM main iterations
-//  Returns double value of corrected chem. potential.
-//  If error, returns +7777777 J/mole.
+/// Corrections to primal chemical potentials F0[j]
+///  of j-th species in k-th phase among IPM main iterations.
+///  Returns double value of corrected chem. potential.
+///  If error, returns +7777777 J/mole.
 //  Last modif. 05 Jan 2000 by DK to include BSM EDL model.
-//
 double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
 {
     long int ja=0, ist, isp, jc=-1;
@@ -586,19 +585,18 @@ case DC_AQ_SURCOMP:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of DC primal chemical potential F (return value)
-// from moles of DC Y[], total moles of phase YF[] and DC partial
-// molar Gibbs energy gT (obtained from pm.G[]) which includes
-// activity coefficient terms.
-// On error returns F = +7777777.
-//
+/// Calculation of DC primal chemical potential F.
+/// From moles of DC Y[], total moles of phase YF[] and DC partial
+/// molar Gibbs energy gT (obtained from pm.G[]) which includes
+/// activity coefficient terms.
+/// On error returns F = +7777777.
 double TMulti::DC_PrimalChemicalPotential(
-    double G,      // gT0+gEx
-    double logY,   // ln x
-    double logYF,  // ln Xa
-    double asTail, // asymmetry non-log term or 0 for symmetric phases
-    double logYw,  // ln Xv
-    char DCCW      // generalized species class code
+    double G,      ///< gT0+gEx
+    double logY,   ///< ln x
+    double logYF,  ///< ln Xa
+    double asTail, ///< asymmetry non-log term or 0 for symmetric phases
+    double logYw,  ///< ln Xv
+    char DCCW      ///< generalized species class code
 )
 {
     double F;
@@ -627,7 +625,7 @@ double TMulti::DC_PrimalChemicalPotential(
 // Kernel functions of IPM - rewritten by DK for adsorption
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// VJ - Update of primal chemical potentials
+/// VJ - Update of primal chemical potentials
 //
 void
 TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
@@ -694,16 +692,15 @@ NEXT_PHASE:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of a species contribution to the total Gibbs energy G(X)
-//  of the system (return value).
-//  On error returns +7777777.
+/// Calculation of a species contribution to the total Gibbs energy G(X)
+/// of the system. On error returns +7777777.
 //
 double TMulti::DC_GibbsEnergyContribution(
-    double G,      // gT0+gEx
-    double x,      // x - mole amount of species
-    double logXF,  // ln Xa - mole amount of phase
-    double logXw,  // ln Xv - mole amount of the solvent/sorbent
-    char DCCW      // generalized species class code
+    double G,      ///< gT0+gEx
+    double x,      ///< x - mole amount of species
+    double logXF,  ///< ln Xa - mole amount of phase
+    double logXw,  ///< ln Xv - mole amount of the solvent/sorbent
+    char DCCW      /// generalized species class code
 )
 {
     double Gi;
@@ -727,13 +724,13 @@ double TMulti::DC_GibbsEnergyContribution(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of the total Gibbs energy of the system G(X)
-// and copying of Y, YF vectors into X,XF, respectively.
-//  Parameter LM is the IPM step size for calculation of new
-//  quantities of all species (vector X[]) using the direction
-//  of descent (MU[] vector). If LM == 0, this function
-//  just copies vector Y[] into X[].
-//  Returns value of G(X) in moles.
+/// Calculation of the total Gibbs energy of the system G(X)
+/// and copying of Y, YF vectors into X,XF, respectively.
+///  Parameter LM is the IPM step size for calculation of new
+///  quantities of all species (vector X[]) using the direction
+///  of descent (MU[] vector). If LM == 0, this function
+///  just copies vector Y[] into X[].
+///  \return of G(X) in moles.
 //
 double TMulti::GX( double LM  )
 {
@@ -816,6 +813,7 @@ NEXT_PHASE:
     return(FX);
 }
 
+#ifndef IPMGEMPLUGIN
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Variant of GX() function for use in the UnSpace module (non-optimized)
 // Should not be called from within GEMIPM!
@@ -867,11 +865,13 @@ NEXT_PHASE:
     }  // k
     return(FX);
 }
+#endif
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Conversion of g(T,P) value for DCs into the uniform cj scale
-// k - index of phase, j - index DC in phase
-// if error code, returns 777777777.
+/// Conversion of g(T,P) value for DCs into the uniform cj scale.
+/// \param k - index of phase, \param j - index DC in phase
+/// \return if error code, returns 777777777.
 //
 double TMulti:: ConvertGj_toUniformStandardState( double g0, long int j, long int k )
 {
@@ -951,7 +951,7 @@ case DC_AQ_SURCOMP:
     return G;
 }
 
-// Converting DC class codes into generic internal codes of IPM
+/// Converting DC class codes into generic internal codes of IPM
 //
 void TMulti::ConvertDCC()
 {
@@ -1036,7 +1036,7 @@ NEXT_PHASE:
     ErrorIf( iRet>0, "E19IPM: ConvertDCC()", "Invalid DC class code. Memory corruption?");
 }
 
-// get the index of volume IC ("Vv") for the volume balance constraint
+/// Get the index of volume IC ("Vv") for the volume balance constraint
 long int TMulti::getXvolume()
 {
  long int ii, ret = -1;
@@ -1049,7 +1049,7 @@ long int TMulti::getXvolume()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of Karpov stability criteria for a DC
+/// Calculation of Karpov stability criteria for a DC
 // Modified for kinetic constraints 05.11.2007, 16.04.2012 by DK
 //
 double TMulti::KarpovCriterionDC(
@@ -1089,7 +1089,7 @@ double TMulti::KarpovCriterionDC(
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of Karpov stability criteria for all phases
+/// Calculation of Karpov stability criteria for all phases
 // Modifications for metastability-controlled components: DK 16.04.2012
 //
 void TMulti::KarpovsPhaseStabilityCriteria()
@@ -1164,15 +1164,15 @@ void TMulti::KarpovsPhaseStabilityCriteria()
 }
 
 //===================================================================
-// Parameters:
-//     AmountCorrectionThreshold - the maximum DC amount correction that can be cleaned ( 1e-5 )
-//     MjuDiffCutoff - normalized chem.pot. difference threshold (dMu = ln a - ln a,dual)
+/// Speciation cleanup subroutine if CleanupStatus is not zero
+/// \param  AmountCorrectionThreshold - the maximum DC amount correction that can be cleaned ( 1e-5 )
+/// \param  MjuDiffCutoff - normalized chem.pot. difference threshold (dMu = ln a - ln a,dual)
 //
-// Returns 0 if no subsequent refinement of mass balance is needed;
-//         1 if species amounts were cleaned up to more than requested overall mass balance accuracy
-//        -1 if cleanup has been done and the degeneration of the chemical system occurred
-//         2 solution is seriously distorted and full PhaseSelect3() loop is necessary
-//
+/// \return 0 if no subsequent refinement of mass balance is needed;
+///         1 if species amounts were cleaned up to more than requested overall mass balance accuracy
+///        -1 if cleanup has been done and the degeneration of the chemical system occurred
+///         2 solution is seriously distorted and full PhaseSelect3() loop is necessary
+///
 long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double MjuDiffCutoff )
 {
     long int NeedToImproveMassBalance = 0, L1k, L1kZeroDCs, k, j, jb = 0;
@@ -1292,14 +1292,14 @@ long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double Mju
 }
 
 //====================================================================================
-// New simplified PSSC() algorithm   DK 01.05.2010
-// PhaseSelection() part only looks for phases to be inserted, also checks if some
-// solution phases are unstable. Removal of unstable phases is done afterwards in
-// SpeciationCleanup subroutine if CleanupStatus is not zero.
-// As phase stability criterion, uses (log) phase stability (saturation) index
-// computed from DualTh activities of components and activity coefficients
-// returns 1L if Ok; 0 if one more IPM loop should be done;
-//        -1L if 3 loops did not fix the problem
+/// New simplified PSSC() algorithm   DK 01.05.2010.
+/// PhaseSelection() part only looks for phases to be inserted, also checks if some
+/// solution phases are unstable. Removal of unstable phases is done afterwards in
+/// SpeciationCleanup subroutine if CleanupStatus is not zero.
+/// As phase stability criterion, uses (log) phase stability (saturation) index
+/// computed from DualTh activities of components and activity coefficients
+/// \return 1L if Ok; 0 if one more IPM loop should be done;
+///          -1L if 3 loops did not fix the problem
 //
 long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, long int CleanupStatus )
 {
@@ -1633,7 +1633,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// calculation of (logarithmic) stability indexes logSI for all phases
+/// Calculation of (logarithmic) stability indexes logSI for all phases
 //
 void TMulti::StabilityIndexes( void )
 {
@@ -1709,17 +1709,17 @@ void TMulti::StabilityIndexes( void )
 }
 
 //=================================================================== old ===========================
-// Checking Karpov phase stability criteria Fa for phases and DCs
-//  using Selekt2() algorithm by Karpov & Chudnenko (1989)
-//  modified by DK in 1995 and in 2007, 2012
-//  RaiseStatus: if 1 then zeroed-off DCs are raised to constant in solution phases present
-//   in eq state, otherwise (0) this is skipped assuming that SpeciationCleanup will be done.
-//  Returns 0, if some phases were inserted and a new IPM loop is needed
-//             (up to 3 loops possible);
-//          1, if the IPM solution is final and consistent, no phases were inserted
-//          -1, if the IPM solution is inconsistent after 3 Selekt2() loops
-//  In this case, the index of most problematic phase is passed through kfr or
-//  kur parameter (parameter value -1 means that no problematic phases were found)
+/// Checking Karpov phase stability criteria Fa for phases and DCs.
+///  Using Selekt2() algorithm by Karpov & Chudnenko (1989)
+///  modified by DK in 1995 and in 2007, 2012
+///  RaiseStatus: if 1 then zeroed-off DCs are raised to constant in solution phases present
+///  in eq state, otherwise (0) this is skipped assuming that SpeciationCleanup will be done.
+///  \return 0, if some phases were inserted and a new IPM loop is needed
+///             (up to 3 loops possible);
+///           1, if the IPM solution is final and consistent, no phases were inserted
+///          -1, if the IPM solution is inconsistent after 3 Selekt2() loops
+///  In this case, the index of most problematic phase is passed through kfr or
+///  kur parameter (parameter value -1 means that no problematic phases were found)
 //
 long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int RaiseStatus ) //  rLoop )
 {
@@ -1859,7 +1859,7 @@ S6: // copy of X vector has been changed by Selekt2() algorithm - store
     return 0L;  // Another loop is needed
 }
 
-// New function to improve on raising zero values in PhaseSelect() and after SolveSimplex()
+/// New function to improve on raising zero values in PhaseSelect() and after SolveSimplex()
 double TMulti::RaiseDC_Value( const long int j )
 {
         double RaiseZeroVal = pm.DFYsM;

@@ -53,6 +53,7 @@ void TMulti::setPa( TProfil *prof)
 
 #ifdef IPMGEMPLUGIN
 
+/// Output to "ipmlog.txt" file Warnings
 long int TMulti::testMulti( )
 {
   if( pm.MK || pm.PZ )
@@ -105,7 +106,7 @@ long int TMulti::testMulti()
 #endif
 
 //---------------------------------------------------------//
-//set default information
+/// Set default information
 void TMulti::set_def( long int /*q*/)
 {
     //mem_cpy( &pm.PunE, "jjbC", 4 );
@@ -351,7 +352,7 @@ pm.UPh = 0;
 }
 
 //---------------------------------------------------------//
-// writing MULTI to binary file
+/// Writing MULTI to binary file
 void TMulti::to_file( GemDataStream& ff  )
 {
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
@@ -568,7 +569,7 @@ ff.writeArray((double*)pm.D, MST*MST);
    	ff.writeArray( pm.Cp0, pm.L);
 }
 
-// reading MULTI from binary file
+/// Reading MULTI from binary file
 void TMulti::from_file( GemDataStream& ff )
 {
    //static values
@@ -803,7 +804,7 @@ ff.readArray((double*)pm.D, MST*MST);
 
 #ifdef IPMGEMPLUGIN
 
-// realloc dynamic memory
+/// Realloc dynamic memory
 void TMulti::multi_realloc( char PAalp, char PSigm )
 {
   long int ii, jj ;
@@ -1316,7 +1317,7 @@ else
 }
 
 
-// Reallocation of dynamic memory
+/// Reallocation of dynamic memory
 void TMulti::multi_free()
 {
     // Part 1
@@ -1491,6 +1492,7 @@ if( pm.D ) delete[] pm.D;
 
 #endif
 
+/// Writing structure MULTI ( free format file  )
 void TMulti::to_text_file( const char *path, bool append )
 {
     //static values

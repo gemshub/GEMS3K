@@ -25,7 +25,7 @@
 #include "m_param.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Linking DOD for executing Phase mixing model scripts
+/// Linking DOD for executing Phase mixing model scripts
 #ifdef IPMGEMPLUGIN
    void TMulti::pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ )
    {
@@ -97,7 +97,7 @@
 }
 
 
-// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
+/// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
 double TMulti::SmoothingFactor( )
 {
@@ -112,15 +112,15 @@ double TMulti::SmoothingFactor( )
 }
 
 
-// New correction of smoothing factor for highly non-ideal systems
+/// New correction of smoothing factor for highly non-ideal systems.
 // re-written 18.04.2009 DK+TW
-// Smoothing function choice: AG >= 0.0001 and DGC > -0.0001: old f(IT)
-//                            AG >= 0.0001 and DGC <= -0.0001: new f(1/IT)
-//                            AG <= -0.0001 and DGC <= -0.0001: new f(1/CD)
-// mode: 0 - taking single log(CD) value for calculation of smoothing factor SF;
-//       1, 2, ...  taking log(CD) average from the moving window of length mode
-//       (up to 5 consecutive values)
-//
+/// Smoothing function choice: AG >= 0.0001 and DGC > -0.0001: old f(IT)
+///                            AG >= 0.0001 and DGC <= -0.0001: new f(1/IT)
+///                            AG <= -0.0001 and DGC <= -0.0001: new f(1/CD)
+/// \param mode 0 - taking single log(CD) value for calculation of smoothing factor SF;
+///       1, 2, ...  taking log(CD) average from the moving window of length mode
+///       (up to 5 consecutive values)
+///
 void TMulti::SetSmoothingFactor( long int mode )
 {
     double TF=1., al, ag, dg, iim, irf; // rg=0.0;
@@ -197,11 +197,11 @@ void TMulti::SetSmoothingFactor( long int mode )
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//   Function for converting internal lnGam[j] value into an external (phase-scale-specific)
-//      Gamma[j] if DirFlag = 0 or external into internal value if DirFlag = 1
-//  Returns the respectively corrected external gamma activity coefficient or internal lnGam
-//  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
-//    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components?)
+///  Function for converting internal lnGam[j] value into an external (phase-scale-specific)
+///      Gamma[j] if DirFlag = 0 or external into internal value if DirFlag = 1.
+///  Returns the respectively corrected external gamma activity coefficient or internal lnGam
+///  Returns trivial values (lnGam = 0 or Gamma = 1) when the respective component
+///    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components?)
 //
 double
 TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
@@ -320,17 +320,17 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
 
 //--------------------------------------------------------------------------------
 static double ICold=0.;
-// Main call point for calculation of DC activity coefficients (lnGam vector)
-//    formerly GammaCalc()
-// Controls various built-in models, as well as generic Phase script calculation
-// LinkMode is a parameter indicating the status of Gamma calculations:
-// LINK_TP_MODE - calculation of equations depending on TP only;
-// LINK_UX_MODE - calculation of equations depending on current
-//      IPM approximation of the equilibrium state;
-// LINK_PP_MODE - calculation of integral phase properties after GEMIPM has converged
-//		needs to be implemented
-// Returns: status code (0 if o.k., non-zero values if there were problems
-//     with surface complexation models)
+/// Main call point for calculation of DC activity coefficients (lnGam vector)
+///    formerly GammaCalc().
+/// Controls various built-in models, as well as generic Phase script calculation
+/// LinkMode is a parameter indicating the status of Gamma calculations:
+/// LINK_TP_MODE - calculation of equations depending on TP only;
+/// LINK_UX_MODE - calculation of equations depending on current
+///      IPM approximation of the equilibrium state;
+/// LINK_PP_MODE - calculation of integral phase properties after GEMIPM has converged
+///		needs to be implemented
+/// \return status code (0 if o.k., non-zero values if there were problems
+///     with surface complexation models)
 long int
 TMulti::CalculateActivityCoefficients( long int LinkMode  )
 {
@@ -737,8 +737,8 @@ END_LOOP:
 
 
 //--------------------------------------------------------------------------------
-// Wrapper calls for creating multi-component mixing models for phases
-// using  TSolMod class (now including multi-site ideal and scripted models)
+/// Wrapper calls for creating multi-component mixing models for phases
+/// using  TSolMod class. Now including multi-site ideal and scripted models
 //
 void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                            long int k, long int ipb, char ModCode, char MixCode )
@@ -997,8 +997,8 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
 
 
 
-// Wrapper call for calculation of temperature and pressure correction
-// uses TSolMod class
+/// Wrapper call for calculation of temperature and pressure correction
+/// uses TSolMod class
 void TMulti::SolModParPT( long int k, char ModCode )
 {
     // Extended constructor to connect to params, coeffs, and mole fractions
@@ -1053,8 +1053,8 @@ void TMulti::SolModParPT( long int k, char ModCode )
 
 
 
-// Wrapper call for calculation of activity coefficients
-// uses TSolMod class
+/// Wrapper call for calculation of activity coefficients
+/// uses TSolMod class
 void TMulti::SolModActCoeff( long int k, char ModCode )
 {
     switch( ModCode )
@@ -1108,8 +1108,8 @@ void TMulti::SolModActCoeff( long int k, char ModCode )
 
 
 
-// Wrapper call for calculation of bulk phase excess properties
-// uses TSolMod class
+/// Wrapper call for calculation of bulk phase excess properties
+/// uses TSolMod class
 void TMulti::SolModExcessProp( long int k, char ModCode )
 {
 
@@ -1189,7 +1189,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
 }
 
 
-// Wrapper call for calculation of bulk phase ideal mixing properties
+/// Wrapper call for calculation of bulk phase ideal mixing properties
 void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
@@ -1274,7 +1274,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 }
 
 
-// Wrapper call for retrieving bulk phase Darken quadratic terms
+/// Wrapper call for retrieving bulk phase Darken quadratic terms
 void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
@@ -1308,7 +1308,7 @@ void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 }
 
 
-// Wrapper call for retrieving bulk phase standard state terms
+/// Wrapper call for retrieving bulk phase standard state terms
 void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
@@ -1330,9 +1330,8 @@ void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
 
 
 //-------------------------------------------------------------------------
-// Internal memory allocation for TSolMod performance optimization
-// (since version 2.3.0)
-// added 26.11.2008 (SD)
+/// Internal memory allocation for TSolMod performance optimization
+/// (since version 2.3.0)
 void TMulti::Alloc_TSolMod( long int newFIs )
 {
   if(  phSolMod && ( newFIs == sizeFIs) )

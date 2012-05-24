@@ -136,6 +136,7 @@ outField MULTI_dynamic_fields[70] =  {
 
 //===================================================================
 
+/// Writing structure MULTI (GEM IPM work structure)
 void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 		bool with_comments, bool brief_mode )
 {
@@ -438,6 +439,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 
 }
 
+/// Reading structure MULTI (GEM IPM work structure)
 void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
 {
   SPP_SETTING *pa = paTProfil;
@@ -648,7 +650,6 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               long int LsModSum;
               long int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
-              cout << "LsModSum " << LsModSum<< "LsIPxSum " <<LsIPxSum<< endl;
               if(LsIPxSum )
               { rddar.readNext( "IPxPH");
 #ifdef IPMGEMPLUGIN

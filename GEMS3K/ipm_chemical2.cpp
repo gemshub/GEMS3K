@@ -24,7 +24,7 @@
 #include "m_param.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating bulk stoichiometry of a multicomponent phase
+/// Calculating bulk stoichiometry of a multicomponent phase
 //
 void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
 {
@@ -49,7 +49,7 @@ void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Adds phase to total bulk stoichiometry of all solid phases in the system
+/// Adds phase to total bulk stoichiometry of all solid phases in the system
 // Done on request by TW in November 2006
 //
 void TMulti::phase_bfc( long int k, long int jj )
@@ -73,7 +73,7 @@ void TMulti::phase_bfc( long int k, long int jj )
     }
 }
 
-// returns mass of all solid phases in grams (from the BFC vector)
+/// Returns mass of all solid phases in grams (from the BFC vector)
 double TMulti::bfc_mass( void )
 {
    double TotalMass = 0.;
@@ -84,8 +84,8 @@ double TMulti::bfc_mass( void )
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define  a(j,i) ((*(pm.A+(i)+(j)*pm.N)))
-// Calculation of dual chemical potentials, activities, and primal
-// concentrations for DCs (indexed jb to je) in a k-th phase.
+/// Calculation of dual chemical potentials, activities, and primal
+/// concentrations for DCs (indexed jb to je) in a k-th phase.
 // Input arrays X, XF, XFA,  input factors: Factor, MMC
 //
 //  Do we need this all in GEMIPM ?
@@ -279,8 +279,8 @@ void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of derived values (concentrations etc.) on IPM iteration
-//  from X,XF, and XFA vectors. Also calculates pH, pe, Eh
+/// Calculation of derived values (concentrations etc.) on IPM iteration
+///  from X,XF, and XFA vectors. Also calculates pH, pe, Eh
 // This function has to be rewritten using new set of built-in
 // chemical functions.
 //
@@ -467,7 +467,7 @@ NEXT_PHASE:
 }
 
 //--------------------------------------------------------------------------------
-// Calculation of surface charge densities on multi-surface sorption phase
+/// Calculation of surface charge densities on multi-surface sorption phase
 void TMulti::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
@@ -614,14 +614,14 @@ NEXT_PHASE:
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of the surface potential pm[q].XpsiD[k] on diffuse
-// layer plane on k-th sorption phase from total charge pm.Xeta[k]
-// ( in moles ) using Gouy-Chapman equation.
-// Strictly valid at PSI < 30 mV. Modified by DAK 5 Jan 2000
-// to add a Basic Stern EDL model.
-//    Added 13.03.2008 by DK: returns int value showing (if not 0)
-//    that some extreme values were reached for charge densities or
-//    electric potentials (for detecting bad PIA), 0 otherwise
+/// Calculation of the surface potential pm[q].XpsiD[k] on diffuse.
+/// layer plane on k-th sorption phase. From total charge pm.Xeta[k]
+/// ( in moles ) using Gouy-Chapman equation.
+/// Strictly valid at PSI < 30 mV. Modified by DAK 5 Jan 2000
+/// to add a Basic Stern EDL model.
+///    Added 13.03.2008 by DK: returns int value showing (if not 0)
+///    that some extreme values were reached for charge densities or
+///    electric potentials (for detecting bad PIA), 0 otherwise
 //
 long int
 TMulti::GouyChapman(  long int, long int, long int k )
@@ -933,22 +933,22 @@ GEMU_CALC:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//  Calculation of new surface activity coefficient terms SACT (Kulik, 2004)
+///  Calculation of new surface activity coefficient terms SACT (Kulik, 2004)
 //
-//  Revised by KD in April 2004 (PSI) to introduce new activity
-//  coefficient terms SACT rigorously derived from Langmuir and QCA
-//  isotherms (Kulik 2006, Radiochimica Acta).
+///  Revised by KD in April 2004 (PSI) to introduce new activity
+///  coefficient terms SACT rigorously derived from Langmuir and QCA
+///  isotherms (Kulik 2006, Radiochimica Acta).
 //
-//  SACT are placed into pm.lnGam[j], as other activity coefficients except
-//  relative surface potentials (Coulombic terms) kept separately.
+///  SACT are placed into pm.lnGam[j], as other activity coefficients except
+///  relative surface potentials (Coulombic terms) kept separately.
 //
-//  Old (obsolete) SAT calculations (Kulik 2000, 2002) are retained.
+///  Old (obsolete) SAT calculations (Kulik 2000, 2002) are retained.
 //
-//  pm.lnSAC[*][3] vector is now used to keep original DUL[j] to restore
-//  them after IPM-2 refinements for surface complexes.
-//    Added 13.03.2008 by DK: returns int value showing (if true)
-//    that some extreme values were obtained for some SACTs,
-//    0 otherwise (for detecting bad PIA)
+///  pm.lnSAC[*][3] vector is now used to keep original DUL[j] to restore
+///  them after IPM-2 refinements for surface complexes.
+///    Added 13.03.2008 by DK: returns int value showing (if true)
+///    that some extreme values were obtained for some SACTs,
+///    0 otherwise (for detecting bad PIA)
 //
 long int
 TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
@@ -1355,7 +1355,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculating demo partial pressures of gases (works only in GEMS-PSI)
+/// Calculating demo partial pressures of gases (works only in GEMS-PSI)
 //
 void TMulti::GasParcP()
 {

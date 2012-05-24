@@ -19,7 +19,7 @@
 #include "v_user.h"
 #include "num_methods.h"
 
-// Calculate number of points from iterators
+/// Calculate number of points from iterators
 long int  getNpoints( double Tai[4] )
 {
   long int nPoints = 0;
@@ -48,17 +48,17 @@ double getStep( double *Tai, int nPoints )
 
 
 /*-----------------------------------------------------------------*/
-// Interpolation over tabulated values (2D array d) using Lagrange method
-//  y[N] - discrete values of argument over rows (ascending order)
-//  x[M] - discrete values of arguments over columns (ascending order)
-//  d[N][M] - discrete values of a function of x and y arguments
-//  yoi - row (y) argument of interest ( y[0] <= yi <= y[N-1] )
-//  xoi - column (x) argument of interest ( x[0] <= xi <= x[M-1] )
-//  M - number of rows in y array
-//  N - number of columns in y array
-//  pp  -level of interpolation ( default 1)
-//  Function returns an interpolated value of d(yoi,xoi) or error if
-//  yoi or xoi are out of range
+/// Interpolation over tabulated values (2D array d) using Lagrange method.
+///  y[N] - discrete values of argument over rows (ascending order)
+///  x[M] - discrete values of arguments over columns (ascending order)
+///  d[N][M] - discrete values of a function of x and y arguments
+///  yoi - row (y) argument of interest ( y[0] <= yi <= y[N-1] )
+///  xoi - column (x) argument of interest ( x[0] <= xi <= x[M-1] )
+///  M - number of rows in y array
+///  N - number of columns in y array
+///  pp  -level of interpolation ( default 1)
+///  Function returns an interpolated value of d(yoi,xoi) or error if
+///  yoi or xoi are out of range
 //
 double LagranInterp(double *y, double *x, double *d, double yoi,
                     double xoi, long int M, long int N, long int pp )
@@ -166,7 +166,7 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
 }
 
 
-// 1st partial derivative of quotient of two functions
+/// 1st partial derivative of quotient of two functions
 double quot( double u, double v, double du, double dv )
 {
 	double derivative;
@@ -176,7 +176,7 @@ double quot( double u, double v, double du, double dv )
 }
 
 
-// 2nd partial derivative of quotient of two functions
+/// 2nd partial derivative of quotient of two functions
 double quot( double u, double v, double du, double dv, double d2u, double d2v )
 {
 	double derivative;
@@ -187,7 +187,7 @@ double quot( double u, double v, double du, double dv, double d2u, double d2v )
 }
 
 
-// 1st partial derivative of product of two functions
+/// 1st partial derivative of product of two functions
 double prod2( double u, double v, double du, double dv )
 {
 	double derivative;
@@ -197,7 +197,7 @@ double prod2( double u, double v, double du, double dv )
 }
 
 
-// 2nd partial derivative of product of two functions
+/// 2nd partial derivative of product of two functions
 double prod2( double u, double v, double du, double dv, double d2u, double d2v )
 {
 	double derivative;
@@ -207,7 +207,7 @@ double prod2( double u, double v, double du, double dv, double d2u, double d2v )
 }
 
 
-// 1st partial derivative of product of three functions
+/// 1st partial derivative of product of three functions
 double prod3( double u, double v, double w, double du, double dv, double dw )
 {
 	double derivative;
@@ -217,7 +217,7 @@ double prod3( double u, double v, double w, double du, double dv, double dw )
 }
 
 
-// 2nd partial derivative of product of three functions
+/// 2nd partial derivative of product of three functions
 double prod3( double u, double v, double w, double du, double dv, double dw,
 		double d2u, double d2v, double d2w )
 {
@@ -229,10 +229,10 @@ double prod3( double u, double v, double w, double du, double dv, double dw,
 }
 
 
-// Method of Golden Section 1D and 2D (reimplemented)
-//   xstart, xend, xtol,  parameter x    - start, end, tolerance
-//   ftol  function tolerance
-//   f_proc function to minimize ( f(x)=>0 )
+/// Method of Golden Section 1D and 2D (reimplemented)
+///   xstart, xend, xtol,  parameter x    - start, end, tolerance
+///   ftol  function tolerance
+///   f_proc function to minimize ( f(x)=>0 )
 double GoldenSection::getMinimumDat( GoldenSectionData dat,  double val2 )
 {
     if( (dat.b-dat.a) < dat.Xtol)

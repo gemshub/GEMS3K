@@ -1,10 +1,11 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Stream binary file operations extended for endianness (e.g.
-// for compatibility between Intel- and old Mac processors)
+/// \class  GemDataStream  gdatastream.h
+/// Stream binary file operations extended for endianness
+/// (e.g. for compatibility between Intel- and old Mac processors )
 //
-// Copyright (C) 1996-2004 A.Rysin, S.Dmytriyeva
+/// \author (C) 1996-2004 A.Rysin, S.Dmytriyeva
 // Uses  gstring class (C) A.Rysin 1999
 //
 // This file is part of the GEM-Selektor GUI library and GEMS3K

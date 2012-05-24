@@ -52,6 +52,7 @@ double prod3 ( double u, double v, double w, double du, double dv, double dw,
 
 typedef double (*minFunction)(double x, double y );
 
+/// Data for minimization of convex one parameter function ( f(x)=>0 )
 struct GoldenSectionData
 {
     double Fa;
@@ -77,8 +78,8 @@ struct GoldenSectionData
  };
 
 
-// Class for minimization of convex one parameter function ( f(x)=>0 )
-// Method of Gold Selection
+/// Class for minimization of convex one parameter function ( f(x)=>0 )
+/// Method of Gold Selection
 class GoldenSection
 {
 protected:
@@ -89,8 +90,8 @@ protected:
 
 public:
 
-  // Golden Selection in interval x1 to x2, to minimize function f_proc
-  // xtol, ftol tolerance for the parameter and function
+  /// Golden Selection in interval x1 to x2, to minimize function f_proc
+  /// xtol, ftol tolerance for the parameter and function
   GoldenSection( double x1, double x2, double xtol, double ftol,
                    double (f_proc)(double val, double val2 )):
    dat1(x1,x2,xtol),Ftol(ftol)
@@ -112,8 +113,8 @@ public:
 
 };
 
-// Class for minimization of convex two parameter function ( f(x,y)=>0 )
-// Method of Gold Selection
+/// Class for minimization of convex two parameter function ( f(x,y)=>0 )
+/// Method of Gold Selection
 class GoldenSectionTwo : public GoldenSection
 {
   GoldenSectionData dat2;
@@ -123,8 +124,8 @@ class GoldenSectionTwo : public GoldenSection
 
 public:
 
-  // Golden Selection in intervals x1 to x2, y1 to y2 to minimize function f_proc
-  // xtol, ytol, ftol tolerance for the parameters and function
+  /// Golden Selection in intervals x1 to x2, y1 to y2 to minimize function f_proc
+  /// xtol, ytol, ftol tolerance for the parameters and function
   GoldenSectionTwo( double x1, double x2, double xtol,
                       double y1, double y2, double ytol,
                       double ftol, double (f_proc)(double val, double val2 )):

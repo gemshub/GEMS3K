@@ -42,8 +42,8 @@ using namespace JAMA;
 #define uDDtrace false
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Call to GEM IPM calculation of equilibrium state in MULTI
-// (with already scaled GEM problem)
+/// Call to GEM IPM calculation of equilibrium state in MULTI
+/// (with already scaled GEM problem)
 void TMulti::GibbsEnergyMinimization()
 {
   bool IAstatus;
@@ -101,11 +101,11 @@ FORCED_AIA:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Main sequence of GEM IPM algorithm implementation
-//  Main place for implementation of diagnostics and setup
-//  of IPM precision and convergence
-//  rLoop is the index of the primal solution refinement loop (for tracing)
-//   or -1 if this is main GEM_IPM call
+/// Main sequence of GEM IPM algorithm implementation.
+///  Main place for implementation of diagnostics and setup
+///  of IPM precision and convergence
+///  rLoop is the index of the primal solution refinement loop (for tracing)
+///   or -1 if this is main GEM_IPM call
 //
 void TMulti::GEM_IPM( long int rLoop )
 {
@@ -494,12 +494,12 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 }
 
 // ------------------------------------------------------------------------------------------------------
-// Finding out whether the automatic initial approximation is necessary for
-// launching the IPM algorithm.
-// Uses a modified simplex method with two-side constraints (Karpov ea 1997)
-// Return code:
-// false - OK for IPM
-// true  - OK solved (pure phases only in the system)
+/// Finding out whether the automatic initial approximation is necessary for
+/// launching the IPM algorithm.
+/// Uses a modified simplex method with two-side constraints (Karpov ea 1997)
+/// \return
+/// false - OK for IPM
+/// true  - OK solved (pure phases only in the system)
 //
 bool TMulti::GEM_IPM_InitialApproximation(  )
 {
@@ -715,24 +715,25 @@ STEP_POINT("Before FIA");
 }
 
 // ------------------- ------------------ ----------------
-// Calculation of a feasible IPM approximation, refinement of the mass balance
+/// Calculation of a feasible IPM approximation, refinement of the mass balance.
 //
-// Algorithm: see Karpov, Chudnenko, Kulik 1997 Amer.J.Sci. vol 297 p. 798-799
-// (Appendix B)
+/// Algorithm: see Karpov, Chudnenko, Kulik 1997 Amer.J.Sci. vol 297 p. 798-799
+/// (Appendix B)
 //
-// Parameter: WhereCalledFrom, 0 - at entry after automatic LPP-based IA;
-//                             1 - at entry in SIA (start without SolveSimplex()
-//                             2 - after post-IPM cleanup
-//                             3 - additional (after PhaseSelection)
-// Control: MaxResidualRatio, 0 (deactivated), > DHBM and < 1 - accuracy for
-//     "trace" independent components (max residual for i should not exceed
-//     B[i]*MaxResidualRatio)
-// Returns: 0 -  OK,
-//          1 -  no SLE colution at the specified precision pa.p.DHB
-//          2  - used up more than pa.p.DP iterations
-//          3  - too small step length (< 1e-6), no descent possible
-//          4  - error in Initial mass balance residuals (debugging)
-//          5  - error in MetastabilityLagrangeMultiplier() (debugging)
+/// Control: MaxResidualRatio, 0 (deactivated), > DHBM and < 1 - accuracy for
+///     "trace" independent components (max residual for i should not exceed
+///     B[i]*MaxResidualRatio)
+//
+/// \param WhereCalledFrom, 0 - at entry after automatic LPP-based IA;
+///                         1 - at entry in SIA (start without SolveSimplex()
+///                         2 - after post-IPM cleanup
+///                         3 - additional (after PhaseSelection)
+/// \return  0 -  OK,
+///          1 -  no SLE colution at the specified precision pa.p.DHB
+///          2  - used up more than pa.p.DP iterations
+///          3  - too small step length (< 1e-6), no descent possible
+///          4  - error in Initial mass balance residuals (debugging)
+///          5  - error in MetastabilityLagrangeMultiplier() (debugging)
 //
 long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
 {
@@ -884,16 +885,16 @@ STEP_POINT("FIA Iteration");
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of chemical equilibrium using the Interior Points
-//  Method algorithm (see Karpov et al., 1997, p. 785-786)
-//  GEM IPM
-// Returns: 0, if converged;
-//          1, in the case of R matrix degeneration
-//          2, (more than max iteration) - no convergence
-//              or user's interruption
-//          3, CalculateActivityCoefficients() returns bad (non-zero) status
-//          4, Mass balance broken  in DualTH (Mol_u)
-//     5, Divergence in dual solution u vector has been detected
+/// Calculation of chemical equilibrium using the Interior Points
+///  Method algorithm (see Karpov et al., 1997, p. 785-786)
+///  GEM IPM
+/// \return  0, if converged;
+///          1, in the case of R matrix degeneration
+///          2, (more than max iteration) - no convergence
+///              or user's interruption
+///          3, CalculateActivityCoefficients() returns bad (non-zero) status
+///          4, Mass balance broken  in DualTH (Mol_u)
+///          5, Divergence in dual solution u vector has been detected
 //
 long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
 {
@@ -1054,13 +1055,13 @@ CONDITIONALLY_CONVERGED:
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of mass-balance residuals in GEM IPM CSD
-//  Params: N - number of IC in IPM problem
-//          L -   number of DC in IPM problem
-//          A - DC stoichiometry matrix (LxN)
-//          Y - moles  DC quantities in IPM solution (L)
-//          B - Input bulk chem. compos. (N)
-//          C - mass balance residuals (N)
+/// Calculation of mass-balance residuals in GEM IPM CSD.
+/// \param   N - number of IC in IPM problem
+/// \param   L -   number of DC in IPM problem
+/// \param   A - DC stoichiometry matrix (LxN)
+/// \param   Y - moles  DC quantities in IPM solution (L)
+/// \param   B - Input bulk chem. compos. (N)
+/// \param   C - mass balance residuals (N)
 void TMulti::MassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                    double *B, double *C )
 {
@@ -1078,10 +1079,9 @@ void TMulti::MassBalanceResiduals( long int N, long int L, double *A, double *Y,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Diagnostics for a severe break of mass balance (abs.moles)
-// after GEM IPM PhaseSelect() (when pm.X is passed as parameter)
-// Returns -1 (Ok) or index of the first IC for which the balance is
-// broken
+/// Diagnostics for a severe break of mass balance (abs.moles)
+/// after GEM IPM PhaseSelect(). When pm.X is passed as parameter
+/// \return -1 (Ok) or index of the first IC for which the balance is broken
 long int
 TMulti::CheckMassBalanceResiduals(double *Y )
 {
@@ -1113,13 +1113,13 @@ TMulti::CheckMassBalanceResiduals(double *Y )
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Interior Points Method:
-// subroutine for unconditional optimization of the descent step length
-// on the interval 0 to LM
-// uses the "Golden Section" algorithm
-// Formerly called LMD()
-// Returns: optimal value of LM which provides the largest possible monotonous
-// decrease in G(X)
+/// Interior Points Method
+/// subroutine for unconditional optimization of the descent step length
+/// on the interval 0 to LM.
+/// uses the "Golden Section" algorithm
+/// Formerly called LMD()
+/// \return optimal value of LM which provides the largest possible monotonous
+/// decrease in G(X)
 //
 double TMulti::OptimizeStepSize( double LM )
 {
@@ -1168,8 +1168,7 @@ OCT:
 
 //===================================================================
 
-// Cleaning the unstable phase with index k >= 0 (if k < 0 only DC will be cleaned)
-
+/// Cleaning the unstable phase with index k >= 0 (if k < 0 only DC will be cleaned)
 void TMulti::DC_ZeroOff( long int jStart, long int jEnd, long int k )
 {
   if( k >=0 )
@@ -1179,9 +1178,9 @@ void TMulti::DC_ZeroOff( long int jStart, long int jEnd, long int k )
      pm.Y[j] =  0.0;
 }
 
-// Inserting minor quantities of DC which were zeroed off by SolveSimplex()
-// (important for the automatic initial approximation with solution phases
-//  (k = -1)  or inserting a solution phase after PhaseSelect() (k >= 0)
+/// Inserting minor quantities of DC which were zeroed off by SolveSimplex().
+/// Important for the automatic initial approximation with solution phases
+///  (k = -1)  or inserting a solution phase after PhaseSelect() (k >= 0)
 //
 void TMulti::DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k )
 {
@@ -1246,7 +1245,7 @@ void TMulti::DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k )
    } // i
 }
 
-// Adjustment of primal approximation according to kinetic constraints
+/// Adjustment of primal approximation according to kinetic constraints
 long int TMulti::MetastabilityLagrangeMultiplier()
 {
     double E = paTProfil->p.DKIN; //1E-8;  Default min value of Lagrange multiplier p
@@ -1293,7 +1292,7 @@ long int TMulti::MetastabilityLagrangeMultiplier()
     return -1L;
 }
 
-// Calculation of weight multipliers for DCs
+/// Calculation of weight multipliers for DCs
 void TMulti::WeightMultipliers( bool square )
 {
   long int J;
@@ -1336,22 +1335,21 @@ void TMulti::WeightMultipliers( bool square )
   } // J
 }
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Make and Solve a system of linear equations to find the dual vector
-// approximation using a method of Cholesky Decomposition (good if a
-// square matrix R happens to be symmetric and positive defined).
-// If Cholesky Decomposition does not solve the problem, an attempt is done
-// to solve the SLE using method of LU Decomposition
-// (A = L*U , L is lower triangular ( has elements only on the diagonal and below )
-//   U is is upper triangular ( has elements only on the diagonal and above))
-// Parameters:
-// bool initAppr - Inital approximation point(true) or iteration of IPM (false)
-// int N - dimension of the matrix R (number of equations)
-// pm.U - dual solution vector (N).
-// Return values: 0  - solved OK;
-//                1  - no solution, degenerated or inconsistent system
-//
 #define  a(j,i) ((*(pm.A+(i)+(j)*Na)))
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+/// Make and Solve a system of linear equations to find the dual vector
+/// approximation using a method of Cholesky Decomposition. Good if a
+/// square matrix R happens to be symmetric and positive defined.
+/// If Cholesky Decomposition does not solve the problem, an attempt is done
+/// to solve the SLE using method of LU Decomposition
+/// (A = L*U , L is lower triangular ( has elements only on the diagonal and below )
+///   U is is upper triangular ( has elements only on the diagonal and above))
+/// \param
+///    initAppr - Inital approximation point(true) or iteration of IPM (false)
+///    N - dimension of the matrix R (number of equations)
+/// \return 0  - solved OK;
+///         1  - no solution, degenerated or inconsistent system
 long int TMulti::MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr )
 {
   long int ii, i, jj, kk, k, Na = pm.N;
@@ -1445,10 +1443,9 @@ else {
 #undef a
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Calculation of MU values (in the vector of direction of descent) and Dikin criterion
-// Parameters:
-// bool initAppr - use in MassBalanceRefinement() (true) or main iteration of IPM (false)
-// int N - dimension of the matrix R (number of equations)
+/// Calculation of MU values (in the vector of direction of descent) and Dikin criterion
+/// \param initAppr - use in MassBalanceRefinement() (true) or main iteration of IPM (false)
+/// \param N - dimension of the matrix R (number of equations)
 double TMulti::DikinsCriterion(  long int N, bool initAppr )
 {
   long int  J;
@@ -1499,9 +1496,8 @@ double TMulti::DikinsCriterion(  long int N, bool initAppr )
   return PCI;
 }
 
-// Estimation of the descent step length LM
-// Parameters:
-// bool initAppr - MBR() (true) or iteration of IPM (false)
+/// Estimation of the descent step length LM
+/// \param initAppr - MBR() (true) or iteration of IPM (false)
 double TMulti::StepSizeEstimate(  bool initAppr )
 {
    long int J, Z = -1;
@@ -1560,7 +1556,7 @@ double TMulti::StepSizeEstimate(  bool initAppr )
   return LM;
 }
 
-// Restoring primal vectors Y and YF
+/// Restoring primal vectors Y and YF
 void TMulti::Restore_Y_YF_Vectors()
 {
  long int Z, I, JJ = 0;
@@ -1593,8 +1589,8 @@ void TMulti::Restore_Y_YF_Vectors()
 
 }
 
-// Calculation of the system size scaling factor and modified thresholds/cutoffs/insertion values
-// Replaces calcSfactor()
+/// Calculation of the system size scaling factor and modified thresholds/cutoffs/insertion values
+/// Replaces calcSfactor()
 double TMulti::RescaleToSize( bool standard_size )
 {
     double SizeFactor=1.;
@@ -1625,8 +1621,8 @@ double TMulti::RescaleToSize( bool standard_size )
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Internal memory allocation for IPM performance optimization
-// (since version 2.2.0)
+/// Internal memory allocation for IPM performance optimization
+/// (since version 2.2.0)
 //
 void TMulti::Alloc_A_B( long int newN )
 {
@@ -1647,8 +1643,8 @@ void TMulti::Free_A_B()
   sizeN = 0;
 }
 
-// Building an index list of non-zero elements of the matrix pm.A
 #define  a(j,i) ((*(pm.A+(i)+(j)*pm.N)))
+/// Building an index list of non-zero elements of the matrix pm.A
 void TMulti::Build_compressed_xAN()
 {
  long int ii, jj, k;
@@ -1700,6 +1696,7 @@ void TMulti::Free_internal()
 #endif
  }
 
+/// Internal memory allocation for IPM performance optimization
 void TMulti::Alloc_internal()
 {
 // optimization 08/02/2007
@@ -1735,7 +1732,7 @@ void TMulti::addErrorMessage( const char * msg)
   }
 }
 
-// Added for implementation of divergence detection in dual solution 06.05.2011 DK
+/// Added for implementation of divergence detection in dual solution 06.05.2011 DK
 void TMulti::Alloc_uDD( long int newN )
 {
     if( U_mean && U_M2 && U_CVo && U_CV && ICNud && (newN == nNu) )
@@ -1764,7 +1761,7 @@ void TMulti::Free_uDD()
     nNu = 0;
 }
 
-// initializing data for u divergence detection
+/// initializing data for u divergence detection
 void TMulti::Reset_uDD( long int nr, bool trace )
 {
     long int i;
@@ -1789,7 +1786,7 @@ void TMulti::Reset_uDD( long int nr, bool trace )
     }
 }
 
-// incrementing mean u values for r-th (current) IPM iteration
+/// Incrementing mean u values for r-th (current) IPM iteration
 void TMulti::Increment_uDD( long int r, bool trace )
 {
     long int i;
@@ -1862,13 +1859,13 @@ void TMulti::Increment_uDD( long int r, bool trace )
 //      cout << endl;
 }
 
-// Checking for divergence in coef.variation of dual solution approximation
-// Compares with CV value tolerance (mode = 0) or with CV increase
-//          tolerance (mode = 1)
-// returns:  0 if no divergence has been detected
-//          >0 - number of diverging dual chemical potentials
-//            (their IC names are collected in the ICNud list)
-//
+/// Checking for divergence in coef.variation of dual solution approximation.
+/// Compares with CV value tolerance (mode = 0) or with CV increase
+///          tolerance (mode = 1)
+/// \return  0 if no divergence has been detected
+///          >0 - number of diverging dual chemical potentials
+///            (their IC names are collected in the ICNud list)
+///
 long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
 {
     long int i;
