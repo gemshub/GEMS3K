@@ -60,12 +60,15 @@ long int TRWArrays::findFld( const char *Name )
 
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
+
+/// Write long value to file
 /*inline*/ void TPrintArrays::writeValue(long val)
     {
 
        ff << val << " ";
     }
 
+/// Write float value to file
 /*inline*/ void TPrintArrays::writeValue(float val)
     {
       if( IsFloatEmpty( val ))
@@ -75,6 +78,7 @@ long int TRWArrays::findFld( const char *Name )
        ff << setprecision(7) << val << " ";
     }
 
+/// Write double value to file
 /*inline*/ void TPrintArrays::writeValue(double val)
     {
       if( IsDoubleEmpty( val ))
@@ -155,8 +159,8 @@ long int TRWArrays::findFld( const char *Name )
      }
  }
 
-// If the first parameter is given as NULL then the char array
-// will be printed as a comment
+/// If the first parameter is given as NULL then the char array
+/// will be printed as a comment
 void TPrintArrays::writeArray( const char *name, char* arr,
 		long int size, long int arr_siz )
 {

@@ -64,7 +64,7 @@ void TModOther::free_internal()
 }
 
 
-// calculates pure species properties (pure fugacities, DQF corrections)
+/// calculates pure species properties (pure fugacities, DQF corrections)
 long int TModOther::PureSpecies()
 {
     /*
@@ -82,7 +82,7 @@ long int TModOther::PureSpecies()
 }
 
 
-// calculates T,P corrected binary interaction parameters
+/// calculates T,P corrected binary interaction parameters
 long int TModOther::PTparam()
 {
     /*
@@ -100,7 +100,7 @@ long int TModOther::PTparam()
 }
 
 
-// calculates activity coefficients
+/// calculates activity coefficients
 long int TModOther::MixMod()
 {
     /*
@@ -118,7 +118,7 @@ long int TModOther::MixMod()
 }
 
 
-// calculates excess properties
+/// calculates excess properties
 long int TModOther::ExcessProp( double *Zex )
 {
     /*
@@ -148,7 +148,7 @@ long int TModOther::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TModOther::IdealProp( double *Zid )
 {
     /*

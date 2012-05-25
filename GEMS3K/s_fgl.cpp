@@ -63,7 +63,7 @@ TPRSVcalc::~TPRSVcalc()
 
 
 
-// allocate work arrays for pure fluid and fluid mixture properties
+/// allocate work arrays for pure fluid and fluid mixture properties
 void TPRSVcalc::alloc_internal()
 {
 	Eosparm = new double [NComp][6];
@@ -117,7 +117,7 @@ void TPRSVcalc::free_internal()
 
 
 
-// high-level method to retrieve pure fluid fugacities
+/// high-level method to retrieve pure fluid fugacities
 long int TPRSVcalc::PureSpecies()
 {
     long int j, retCode = 0;
@@ -142,7 +142,7 @@ long int TPRSVcalc::PureSpecies()
 
 
 
-// high-level method to calculate T,P corrected binary interaction parameters
+/// high-level method to calculate T,P corrected binary interaction parameters
 long int TPRSVcalc::PTparam()
 {
 	long int j, i;
@@ -180,7 +180,7 @@ long int TPRSVcalc::PTparam()
 
 
 
-// high-level method to retrieve activity coefficients of the fluid mixture
+/// high-level method to retrieve activity coefficients of the fluid mixture
 long int TPRSVcalc::MixMod()
 {
 	long int j, iRet;
@@ -207,7 +207,7 @@ long int TPRSVcalc::MixMod()
 
 
 
-// high-level method to retrieve residual functions of the fluid mixture
+/// high-level method to retrieve residual functions of the fluid mixture
 long int TPRSVcalc::ExcessProp( double *Zex )
 {
 	long int iRet;
@@ -238,7 +238,7 @@ long int TPRSVcalc::ExcessProp( double *Zex )
 
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TPRSVcalc::IdealProp( double *Zid )
 {
 	long int j;
@@ -274,7 +274,7 @@ long int TPRSVcalc::IdealProp( double *Zid )
 
 
 
-// basic van der waals mixing rule
+/// basic van der waals mixing rule
 long int TPRSVcalc::MixingWaals()
 {
 	// currently no calculations
@@ -284,7 +284,7 @@ long int TPRSVcalc::MixingWaals()
 
 
 
-// constant one-term interaction parameter
+/// constant one-term interaction parameter
 long int TPRSVcalc::MixingConst()
 {
 	long int ip, i1, i2;
@@ -314,7 +314,7 @@ long int TPRSVcalc::MixingConst()
 
 
 
-// temperature dependent one-term interaction parameter
+/// temperature dependent one-term interaction parameter
 long int TPRSVcalc::MixingTemp()
 {
 	long int i, j, ip, i1, i2;
@@ -399,7 +399,7 @@ long int TPRSVcalc::MixingTemp()
 
 
 
-// retrieve pure fluid properties
+/// retrieve pure fluid properties
 long int TPRSVcalc::FugacityPT( long int i, double *EoSparam )
 {
 	long int iRet = 0;
@@ -438,8 +438,8 @@ long int TPRSVcalc::FugacityPT( long int i, double *EoSparam )
 
 
 
-// calculates attractive (a) and repulsive (b) parameter of PRSV equation of state
-// and partial derivatives of alpha function
+/// calculates attractive (a) and repulsive (b) parameter of PRSV equation of state
+/// and partial derivatives of alpha function
 long int TPRSVcalc::AB( double Tcrit, double Pcrit, double omg, double k1, double k2, double k3,
 		double &apure, double &bpure, double &da, double &d2a )
 {
@@ -473,7 +473,7 @@ long int TPRSVcalc::AB( double Tcrit, double Pcrit, double omg, double k1, doubl
 
 
 
-// calculates fugacities and residual functions of pure fluid species
+/// calculates fugacities and residual functions of pure fluid species
 long int TPRSVcalc::FugacityPure( long int i )
 {
 	double Tcrit, Pcrit, Tred, aprsv, bprsv, alph, da, d2a, k, A, B, a2, a1, a0,
@@ -572,7 +572,7 @@ long int TPRSVcalc::FugacityPure( long int i )
 
 
 
-// cubic equation root solver based on Cardanos method
+/// cubic equation root solver based on Cardanos method
 long int TPRSVcalc::Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 )
 {
 	double q, rc, q3, rc2, theta, ac, bc;
@@ -604,7 +604,7 @@ long int TPRSVcalc::Cardano( double a2, double a1, double a0, double &z1, double
 
 
 
-// calculates mixing properties of the fluid mixture
+/// calculates mixing properties of the fluid mixture
 long int TPRSVcalc::MixParam( double &amix, double &bmix )
 {
 	long int i, j;
@@ -638,7 +638,7 @@ long int TPRSVcalc::MixParam( double &amix, double &bmix )
 
 
 
-// calculates fugacity of the bulk fluid mixture
+/// calculates fugacity of the bulk fluid mixture
 long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, double &zmix,
 		double &vmix )
 {
@@ -695,7 +695,7 @@ long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, doubl
 
 
 
-// calculates fugacities and activities of fluid species in the mixture,
+/// calculates fugacities and activities of fluid species in the mixture,
 long int TPRSVcalc::FugacitySpec( double *fugpure )
 {
     long int i, j, iRet=0;
@@ -740,7 +740,7 @@ long int TPRSVcalc::FugacitySpec( double *fugpure )
 
 
 
-// calculates residual functions in the mixture
+/// calculates residual functions in the mixture
 long int TPRSVcalc::ResidualFunct( double *fugpure )
 {
     long int i, j, iRet=0;
@@ -812,7 +812,7 @@ long int TPRSVcalc::ResidualFunct( double *fugpure )
 
 #ifndef IPMGEMPLUGIN
 
-// calculates properties of pure fluids when called from DCthermo
+/// calculates properties of pure fluids when called from DCthermo
 long int TPRSVcalc::PRSVCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
 	long int retCode = 0;
@@ -852,7 +852,7 @@ long int TPRSVcalc::PRSVCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 //=======================================================================================================
 
 
-// Generic constructor
+/// Generic constructor
 TCGFcalc::TCGFcalc( long int NCmp, double Pp, double Tkp ):
     TSolMod( NCmp, 'F', Tkp, Pp )
 {
@@ -890,7 +890,7 @@ TCGFcalc::~TCGFcalc()
 
 
 
-// set internally used parameters
+/// set internally used parameters
 void TCGFcalc::set_internal()
 {
 	PI_1 = 3.141592653589793120;  // pi
@@ -965,7 +965,7 @@ void TCGFcalc::free_internal()
 
 
 
-// high-level method to retrieve pure fluid fugacities
+/// high-level method to retrieve pure fluid fugacities
 long int TCGFcalc::PureSpecies()
 {
 	double Fugacity = 0.1, Volume = 0.0;
@@ -1033,7 +1033,7 @@ long int TCGFcalc::PureSpecies()
 
 
 
-// calculates T,P corrected binary interaction parameters
+/// calculates T,P corrected binary interaction parameters
 long int TCGFcalc::PTparam()
 {
 	long int i, j;
@@ -1061,7 +1061,7 @@ long int TCGFcalc::PTparam()
 
 
 
-// high-level method to retrieve activity coefficients in the fluid mixture
+/// high-level method to retrieve activity coefficients in the fluid mixture
 long int TCGFcalc::MixMod()
 {
 	long int j;
@@ -1098,7 +1098,7 @@ long int TCGFcalc::MixMod()
 
 
 
-// high-level method to calculate residual functions
+/// high-level method to calculate residual functions
 long int TCGFcalc::ExcessProp( double *Zex )
 {
 	double roro; // changed, 21.06.2008 (TW)
@@ -1144,7 +1144,7 @@ long int TCGFcalc::ExcessProp( double *Zex )
 
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TCGFcalc::IdealProp( double *Zid )
 {
 	long int j;
@@ -1180,7 +1180,7 @@ long int TCGFcalc::IdealProp( double *Zid )
 
 
 
-// high-level method to retrieve pure fluid properties
+/// high-level method to retrieve pure fluid properties
 long int TCGFcalc::CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fugacity,
         double &Volume, double P, double T, double &roro )
 {
@@ -1294,7 +1294,7 @@ long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
 
 
 
-// calculate residual functions through numerical derivative
+/// calculate residual functions through numerical derivative
 long int TCGFcalc::CGResidualFunct( double *X, double *param, double *param1, unsigned long int NN,
 		double ro, double T )
 {
@@ -2037,7 +2037,7 @@ double TCGFcalc::PTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param )
 
 
 
-// melting density
+/// melting density
 double TCGFcalc::Melt( double T )
  {
 
@@ -2251,7 +2251,7 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
 
 
 
-// calculates properties of pure fluids when called from DCthermo
+/// calculates properties of pure fluids when called from DCthermo
 long int TCGFcalc::CGcalcFugPure( double Tmin, float *Cemp, double *FugProps )
 {
 	long int retCode = 0;
@@ -2474,7 +2474,7 @@ TSRKcalc::~TSRKcalc()
 
 
 
-// allocate work arrays for pure fluid and fluid mixture properties
+/// allocate work arrays for pure fluid and fluid mixture properties
 void TSRKcalc::alloc_internal()
 {
 	Eosparm = new double [NComp][4];
@@ -2530,7 +2530,7 @@ void TSRKcalc::free_internal()
 
 
 
-// high-level method to retrieve pure fluid fugacities
+/// high-level method to retrieve pure fluid fugacities
 long int TSRKcalc::PureSpecies()
 {
     long int j, retCode = 0;
@@ -2556,7 +2556,7 @@ long int TSRKcalc::PureSpecies()
 
 
 
-// high-level method to calculate T,P corrected binary interaction parameters
+/// high-level method to calculate T,P corrected binary interaction parameters
 long int TSRKcalc::PTparam()
 {
 	long int j, i;
@@ -2594,7 +2594,7 @@ long int TSRKcalc::PTparam()
 
 
 
-// high-level method to retrieve activity coefficients of the fluid mixture
+/// high-level method to retrieve activity coefficients of the fluid mixture
 long int TSRKcalc::MixMod()
 {
 	long int j, iRet;
@@ -2620,7 +2620,7 @@ long int TSRKcalc::MixMod()
 
 
 
-// high-level method to retrieve residual functions of the fluid mixture
+/// high-level method to retrieve residual functions of the fluid mixture
 long int TSRKcalc::ExcessProp( double *Zex )
 {
 	long int iRet;
@@ -2652,7 +2652,7 @@ long int TSRKcalc::ExcessProp( double *Zex )
 
 
 
-// basic van der waals mixing rule
+/// basic van der waals mixing rule
 long int TSRKcalc::MixingWaals()
 {
 	// currently no calculations
@@ -2662,7 +2662,7 @@ long int TSRKcalc::MixingWaals()
 
 
 
-// constant one-term interaction parameter
+/// constant one-term interaction parameter
 long int TSRKcalc::MixingConst()
 {
 	long int ip, i1, i2;
@@ -2692,7 +2692,7 @@ long int TSRKcalc::MixingConst()
 
 
 
-// temperature dependent one-term interaction parameter
+/// temperature dependent one-term interaction parameter
 long int TSRKcalc::MixingTemp()
 {
 	long int i, j, ip, i1, i2;
@@ -2777,7 +2777,7 @@ long int TSRKcalc::MixingTemp()
 
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TSRKcalc::IdealProp( double *Zid )
 {
 	long int j;
@@ -2813,7 +2813,7 @@ long int TSRKcalc::IdealProp( double *Zid )
 
 
 
-// High-level method to retrieve pure fluid properties
+/// High-level method to retrieve pure fluid properties
 long int TSRKcalc::FugacityPT( long int i, double *EoSparam )
 {
 	long int iRet = 0;
@@ -2848,8 +2848,8 @@ long int TSRKcalc::FugacityPT( long int i, double *EoSparam )
 
 
 
-// Calculates attractive (a) and repulsive (b) parameter of SRK equation of state
-// and partial derivatives of alpha function
+/// Calculates attractive (a) and repulsive (b) parameter of SRK equation of state
+/// and partial derivatives of alpha function
 long int TSRKcalc::AB( double Tcrit, double Pcrit, double omg, double N,
 		double &apure, double &bpure, double &da, double &d2a )
 {
@@ -2872,7 +2872,7 @@ long int TSRKcalc::AB( double Tcrit, double Pcrit, double omg, double N,
 
 
 
-// Calculates fugacities and residual functions of pure fluid species
+/// Calculates fugacities and residual functions of pure fluid species
 long int TSRKcalc::FugacityPure( long int i )
 {
 	double Tcrit, Pcrit, Tred, asrk, bsrk, da, d2a, A, B, a2, a1, a0,
@@ -2964,7 +2964,7 @@ long int TSRKcalc::FugacityPure( long int i )
 
 
 
-// Cubic equation root solver based on Cardanos method
+/// Cubic equation root solver based on Cardanos method
 long int TSRKcalc::Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 )
 {
 	double q, rc, q3, rc2, theta, ac, bc;
@@ -2998,7 +2998,7 @@ long int TSRKcalc::Cardano( double a2, double a1, double a0, double &z1, double 
 
 
 
-// Calculates mixing properties of the fluid mixture
+/// Calculates mixing properties of the fluid mixture
 long int TSRKcalc::MixParam( double &amix, double &bmix )
 {
 	long int i, j;
@@ -3033,7 +3033,7 @@ long int TSRKcalc::MixParam( double &amix, double &bmix )
 
 
 
-// Calculates fugacity of the bulk fluid mixture
+/// Calculates fugacity of the bulk fluid mixture
 long int TSRKcalc::FugacityMix( double amix, double bmix,
     double &fugmix, double &zmix, double &vmix )
 {
@@ -3089,7 +3089,7 @@ long int TSRKcalc::FugacityMix( double amix, double bmix,
 
 
 
-// Calculates fugacities and activities of fluid species in the mixture,
+///  Calculates fugacities and activities of fluid species in the mixture,
 long int TSRKcalc::FugacitySpec( double *fugpure )
 {
 	long int i, j, iRet=0;
@@ -3137,7 +3137,7 @@ long int TSRKcalc::FugacitySpec( double *fugpure )
 
 
 
-// calculates residual functions in the mixture
+///  calculates residual functions in the mixture
 long int TSRKcalc::ResidualFunct( double *fugpure )
 {
 	long int i, j, iRet=0;
@@ -3208,7 +3208,7 @@ long int TSRKcalc::ResidualFunct( double *fugpure )
 
 #ifndef IPMGEMPLUGIN
 
-// Calculates properties of pure fluids when called from DCthermo
+/// Calculates properties of pure fluids when called from DCthermo
 long int TSRKcalc::SRKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
 	long int retCode = 0;
@@ -3278,7 +3278,7 @@ TPR78calc::~TPR78calc()
 
 
 
-// allocate work arrays for pure fluid and fluid mixture properties
+///  allocate work arrays for pure fluid and fluid mixture properties
 void TPR78calc::alloc_internal()
 {
 	Eosparm = new double [NComp][4];
@@ -3334,7 +3334,7 @@ void TPR78calc::free_internal()
 
 
 
-// High-level method to retrieve pure fluid fugacities
+///  High-level method to retrieve pure fluid fugacities
 long int TPR78calc::PureSpecies()
 {
     long int j, retCode = 0;
@@ -3359,7 +3359,7 @@ long int TPR78calc::PureSpecies()
 }
 
 
-// High-level method to calculate T,P corrected binary interaction parameters
+///    High-level method to calculate T,P corrected binary interaction parameters
 long int TPR78calc::PTparam()
 {
 	long int j, i;
@@ -3397,7 +3397,7 @@ long int TPR78calc::PTparam()
 
 
 
-// High-level method to retrieve activity coefficients of the fluid mixture
+/// High-level method to retrieve activity coefficients of the fluid mixture
 long int TPR78calc::MixMod()
 {
 	long int j, iRet;
@@ -3423,7 +3423,7 @@ long int TPR78calc::MixMod()
 
 
 
-// High-level method to retrieve residual functions of the fluid mixture
+/// High-level method to retrieve residual functions of the fluid mixture
 long int TPR78calc::ExcessProp( double *Zex )
 {
 	long int iRet;
@@ -3455,7 +3455,7 @@ long int TPR78calc::ExcessProp( double *Zex )
 
 
 
-// basic van der waals mixing rule
+/// basic van der waals mixing rule
 long int TPR78calc::MixingWaals()
 {
 	// currently no calculations
@@ -3465,7 +3465,7 @@ long int TPR78calc::MixingWaals()
 
 
 
-// constant one-term interaction parameter
+/// constant one-term interaction parameter
 long int TPR78calc::MixingConst()
 {
 	long int ip, i1, i2;
@@ -3495,7 +3495,7 @@ long int TPR78calc::MixingConst()
 
 
 
-// temperature dependent one-term interaction parameter
+/// temperature dependent one-term interaction parameter
 long int TPR78calc::MixingTemp()
 {
 	long int i, j, ip, i1, i2;
@@ -3580,7 +3580,7 @@ long int TPR78calc::MixingTemp()
 
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TPR78calc::IdealProp( double *Zid )
 {
 	long int j;
@@ -3616,7 +3616,7 @@ long int TPR78calc::IdealProp( double *Zid )
 
 
 
-// High-level method to retrieve pure fluid properties
+/// High-level method to retrieve pure fluid properties
 long int TPR78calc::FugacityPT( long int i, double *EoSparam )
 {
 	long int iRet = 0;
@@ -3651,8 +3651,8 @@ long int TPR78calc::FugacityPT( long int i, double *EoSparam )
 
 
 
-// Calculates attractive (a) and repulsive (b) parameter of SRK equation of state
-// and partial derivatives of alpha function
+/// Calculates attractive (a) and repulsive (b) parameter of SRK equation of state
+/// and partial derivatives of alpha function
 long int TPR78calc::AB( double Tcrit, double Pcrit, double omg, double N,
 		double &apure, double &bpure, double &da, double &d2a )
 {
@@ -3679,7 +3679,7 @@ long int TPR78calc::AB( double Tcrit, double Pcrit, double omg, double N,
 
 
 
-// Calculates fugacities and residual functions of pure fluid species
+/// Calculates fugacities and residual functions of pure fluid species
 long int TPR78calc::FugacityPure( long int i )
 {
 	double Tcrit, Pcrit, Tred, apr, bpr, alph, da, d2a, k, A, B, a2, a1, a0,
@@ -3778,7 +3778,7 @@ long int TPR78calc::FugacityPure( long int i )
 
 
 
-// Cubic equation root solver based on Cardanos method
+/// Cubic equation root solver based on Cardanos method
 long int TPR78calc::Cardano( double a2, double a1, double a0, double &z1, double &z2, double &z3 )
 {
 	double q, rc, q3, rc2, theta, ac, bc;
@@ -3810,7 +3810,7 @@ long int TPR78calc::Cardano( double a2, double a1, double a0, double &z1, double
 
 
 
-// Calculates mixing properties of the fluid mixture
+/// Calculates mixing properties of the fluid mixture
 long int TPR78calc::MixParam( double &amix, double &bmix )
 {
 	long int i, j;
@@ -3846,7 +3846,7 @@ long int TPR78calc::MixParam( double &amix, double &bmix )
 
 
 
-// Calculates fugacity of the bulk fluid mixture
+/// Calculates fugacity of the bulk fluid mixture
 long int TPR78calc::FugacityMix( double amix, double bmix,
     double &fugmix, double &zmix, double &vmix )
 {
@@ -3904,7 +3904,7 @@ long int TPR78calc::FugacityMix( double amix, double bmix,
 
 
 
-// Calculates fugacities and activities of fluid species in the mixture,
+/// Calculates fugacities and activities of fluid species in the mixture,
 long int TPR78calc::FugacitySpec( double *fugpure )
 {
     long int i, j, iRet=0;
@@ -3949,7 +3949,7 @@ long int TPR78calc::FugacitySpec( double *fugpure )
 
 
 
-// calculates residual functions in the mixture
+/// calculates residual functions in the mixture
 long int TPR78calc::ResidualFunct( double *fugpure )
 {
     long int i, j, iRet=0;
@@ -4021,7 +4021,7 @@ long int TPR78calc::ResidualFunct( double *fugpure )
 
 #ifndef IPMGEMPLUGIN
 
-// Calculates properties of pure fluids when called from DCthermo
+/// Calculates properties of pure fluids when called from DCthermo
 long int TPR78calc::PR78CalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
 	long int retCode = 0;
@@ -4101,7 +4101,7 @@ TCORKcalc::~TCORKcalc()
 
 
 
-// allocate work arrays for pure fluid and fluid mixture properties
+/// allocate work arrays for pure fluid and fluid mixture properties
 void TCORKcalc::alloc_internal()
 {
     EosCode = new char[NComp];
@@ -4166,7 +4166,7 @@ void TCORKcalc::free_internal()
 
 
 
-// high-level method to retrieve pure fluid fugacities
+/// high-level method to retrieve pure fluid fugacities
 long int TCORKcalc::PureSpecies()
 {
     long int j, retCode = 0;
@@ -4192,7 +4192,7 @@ long int TCORKcalc::PureSpecies()
 
 
 
-// high-level method to calculate T,P corrected binary interaction parameters
+/// high-level method to calculate T,P corrected binary interaction parameters
 long int TCORKcalc::PTparam()
 {
     long int j, i, ip, i1, i2;
@@ -4234,7 +4234,7 @@ long int TCORKcalc::PTparam()
 
 
 
-// high-level method to retrieve activity coefficients of the fluid mixture
+/// high-level method to retrieve activity coefficients of the fluid mixture
 long int TCORKcalc::MixMod()
 {
     long int i, j, k;
@@ -4300,7 +4300,7 @@ long int TCORKcalc::MixMod()
 
 
 
-// high-level method to retrieve residual functions of the fluid mixture
+/// high-level method to retrieve residual functions of the fluid mixture
 long int TCORKcalc::ExcessProp( double *Zex )
 {
     long int iRet;
@@ -4331,7 +4331,7 @@ long int TCORKcalc::ExcessProp( double *Zex )
 
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TCORKcalc::IdealProp( double *Zid )
 {
     long int j;
@@ -4367,7 +4367,7 @@ long int TCORKcalc::IdealProp( double *Zid )
 
 
 
-// high-level method to retrieve pure fluid properties
+/// high-level method to retrieve pure fluid properties
 long int TCORKcalc::FugacityPT( long int j, double *EoSparam )
 {
     long int iErr = 0;
@@ -4412,7 +4412,7 @@ long int TCORKcalc::FugacityPT( long int j, double *EoSparam )
 
 
 
-// calculates fugacity and state functions of H2O
+/// calculates fugacity and state functions of H2O
 long int TCORKcalc::FugacityH2O( long int j )
 {
     long int phState;   // 1: vapor, 2: liquid
@@ -4579,7 +4579,7 @@ long int TCORKcalc::FugacityH2O( long int j )
 
 
 
-// calculates fugacity and state functions of CO2
+/// calculates fugacity and state functions of CO2
 long int TCORKcalc::FugacityCO2( long int j )
 {
     long int phState;
@@ -4662,7 +4662,7 @@ long int TCORKcalc::FugacityCO2( long int j )
 
 
 
-// calculates fugacity and state functions of fluids other than H2O and CO2
+/// calculates fugacity and state functions of fluids other than H2O and CO2
 long int TCORKcalc::FugacityCorresponding( long int j )
 {
     double a0, a1, a, b0, b, c0, c1, c, d0, d1, d, tcr, pcr, da, dc, dd, vc, fc, rtlnf, rho;
@@ -4767,7 +4767,7 @@ long int TCORKcalc::FugacityCorresponding( long int j )
 
 
 
-// calculate volume and fugacity coefficient
+/// calculate volume and fugacity coefficient
 long int TCORKcalc::VolumeFugacity( long int phState, double pp, double p0, double a, double b, double c,
         double d, double e, double &vol, double &fc )
 {
@@ -4827,7 +4827,7 @@ long int TCORKcalc::VolumeFugacity( long int phState, double pp, double p0, doub
 
 
 
-// finds roots of cubic equation
+/// finds roots of cubic equation
 long int TCORKcalc::Cardano(double cb, double cc, double cd, double &v1, double &v2, double &v3)
 {
     double co, cp, cq, cr, cp2, cq3;
@@ -4869,7 +4869,7 @@ long int TCORKcalc::Cardano(double cb, double cc, double cd, double &v1, double 
 
 
 
-// calculates excess state functions of the fluid mixture
+/// calculates excess state functions of the fluid mixture
 long int TCORKcalc::ResidualFunct()
 {
     long int i, j;
@@ -4993,7 +4993,7 @@ long int TCORKcalc::ResidualFunct()
 
 #ifndef IPMGEMPLUGIN
 
-// Calculates properties of pure fluids when called from DCthermo
+/// Calculates properties of pure fluids when called from DCthermo
 long int TCORKcalc::CORKCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
         long int retCode = 0;
@@ -5083,7 +5083,7 @@ TSTPcalc::~TSTPcalc()
 
 
 
-// allocate work arrays for pure fluid and fluid mixture properties
+/// allocate work arrays for pure fluid and fluid mixture properties
 void TSTPcalc::alloc_internal()
 {
     long int k;
@@ -5195,7 +5195,7 @@ void TSTPcalc::free_internal()
 
 
 
-// set model specific parameters
+/// set model specific parameters
 void TSTPcalc::set_internal()
 {
     long int j, k;
@@ -5255,7 +5255,7 @@ long int TSTPcalc::UpdateTauP()
 
 
 
-// Calculates pure species properties (pure fugacities)
+/// Calculates pure species properties (pure fugacities)
 long int TSTPcalc::PureSpecies()
 {
     long int j, iErr = 0;
@@ -5286,7 +5286,7 @@ long int TSTPcalc::PureSpecies()
 
 
 
-// Calculates T,P corrected interaction parameters
+/// Calculates T,P corrected interaction parameters
 long int TSTPcalc::PTparam()
 {
     long int j, i, ip, i1, i2;
@@ -5328,7 +5328,7 @@ long int TSTPcalc::PTparam()
 
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TSTPcalc::MixMod()
 {
     long int i, j, k;
@@ -5389,7 +5389,7 @@ long int TSTPcalc::MixMod()
 
 
 
-// calculates excess properties
+/// calculates excess properties
 long int TSTPcalc::ExcessProp( double *Zex )
 {
     long int iErr;
@@ -5420,7 +5420,7 @@ long int TSTPcalc::ExcessProp( double *Zex )
 
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TSTPcalc::IdealProp( double *Zid )
 {
     long int j;
@@ -5456,7 +5456,7 @@ long int TSTPcalc::IdealProp( double *Zid )
 
 
 
-// high-level method to retrieve pure fluid properties
+/// high-level method to retrieve pure fluid properties
 long int TSTPcalc::FugacityPT( long int j, double *EoSparam )
 {
     long int iErr = 0;
@@ -5503,7 +5503,7 @@ long int TSTPcalc::FugacityPT( long int j, double *EoSparam )
 
 
 
-// calculates fugacity and state functions of H2O
+/// calculates fugacity and state functions of H2O
 long int TSTPcalc::FugacityH2O( long int j )
 {
     long int k, maxit, iErr = 0;
@@ -5614,7 +5614,7 @@ long int TSTPcalc::FugacityH2O( long int j )
 
 
 
-// calculates fugacity and state functions of CO2
+/// calculates fugacity and state functions of CO2
 long int TSTPcalc::FugacityCO2( long int j )
 {
     long int k, maxit, iErr = 0;
@@ -5724,8 +5724,8 @@ long int TSTPcalc::FugacityCO2( long int j )
 
 
 
-// calculates fugacity and state functions of fluids other than H2O and CO2
-// adapted from CORK fluid model for consistency with Thermocalc
+/// calculates fugacity and state functions of fluids other than H2O and CO2
+/// adapted from CORK fluid model for consistency with Thermocalc
 long int TSTPcalc::FugacityCorresponding( long int j )
 {
     double a0, a1, a, b0, b, c0, c1, c, d0, d1, d, tcr, pcr, da, dc, dd, vc, fc, rtlnf, rho;
@@ -5831,7 +5831,7 @@ long int TSTPcalc::FugacityCorresponding( long int j )
 
 
 
-// calculates and returns density guess for pure fluids
+/// calculates and returns density guess for pure fluids
 long int TSTPcalc::DensityGuess( long int j, double &Rhoguess )
 {
     double tred, pred, rhomin, rhomax, rhoguess;
@@ -5901,7 +5901,7 @@ long int TSTPcalc::DensityGuess( long int j, double &Rhoguess )
 
 
 
-// calculates pressure (P) and first density derivative (dP/dRho)
+/// calculates pressure (P) and first density derivative (dP/dRho)
 long int TSTPcalc::Pressure ( double rho, double &p, double &dpdrho, double **cf )
 {
     long int k;
@@ -5934,7 +5934,7 @@ long int TSTPcalc::Pressure ( double rho, double &p, double &dpdrho, double **cf
 
 
 
-// calculates reduced Helmholtz energy and derivatives
+/// calculates reduced Helmholtz energy and derivatives
 long int TSTPcalc::Helmholtz( long int j, double rho, double **cf )
 {
     long int k;
@@ -6027,7 +6027,7 @@ long int TSTPcalc::Helmholtz( long int j, double rho, double **cf )
 
 
 
-// calculates residual state functions of the fluid mixture
+/// calculates residual state functions of the fluid mixture
 long int TSTPcalc::ResidualFunct()
 {
     long int i, j;
@@ -6151,7 +6151,7 @@ long int TSTPcalc::ResidualFunct()
 
 
 
-// calculates saturation pressure of H2O (required only for initial density guess)
+/// calculates saturation pressure of H2O (required only for initial density guess)
 long int TSTPcalc::PsatH2O( long int j )
 {
     double Rhoc, a1, a2, a3, a4, a5, a6, b1, b2, b3, b4, b5, b6, c1, c2, c3, c4, c5, c6,
@@ -6197,7 +6197,7 @@ long int TSTPcalc::PsatH2O( long int j )
 
 
 
-// calculates saturation pressure of CO2 (required only for initial density guess)
+/// calculates saturation pressure of CO2 (required only for initial density guess)
 long int TSTPcalc::PsatCO2( long int j )
 {
     double Rhoc, a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, c5, tau, ppc, psat,
@@ -6238,7 +6238,7 @@ long int TSTPcalc::PsatCO2( long int j )
 
 #ifndef IPMGEMPLUGIN
 
-// Calculates pure species properties (called from DCthermo)
+/// Calculates pure species properties (called from DCthermo)
 long int TSTPcalc::STPCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 {
     long int iErr = 0;

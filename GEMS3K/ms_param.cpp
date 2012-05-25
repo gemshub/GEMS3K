@@ -102,31 +102,13 @@ TProfil::TProfil( TMulti* amulti )
     pmp = multi->GetPM();
 }
 
-/* test result GEM IPM calculation of equilibrium state in MULTI
-long int TProfil::testMulti(  )
-{
-  if( pmp->MK || pmp->PZ )
-  {
-	if( pa.p.PSM == 2 )
-	{
-      fstream f_log("ipmlog.txt", ios::out|ios::app );
-      f_log << "Warning " << pmp->stkey << ": " <<  pmp->errorCode << ":" << endl;
-      f_log << pmp->errorBuf << endl;
-	}
-   return 1L;
-  }
-  return 0L	;
-}
-
-moved to TMulti class */
-
-
-// GEM IPM calculation of equilibrium state in MULTI
+/// GEM IPM calculation of equilibrium state in MULTI
 double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
  return multi->CalculateEquilibriumState( 0, NumIterFIA_, NumIterIPM_ );
 }
 
+/// Writing structure MULTI (GEM IPM work structure) to binary file
 void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
 {
 	 short arr[10];
@@ -147,12 +129,13 @@ void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
     multi->to_file( ff );
 }
 
+/// Writing structure MULTI ( free format file  )
 void TProfil::outMultiTxt( const char *path, bool append  )
 {
     multi->to_text_file( path, append );
 }
 
-// Reading structure MULTI (GEM IPM work structure)
+/// Reading structure MULTI (GEM IPM work structure) from binary file
 void TProfil::readMulti( GemDataStream& ff )
 {
     //DATACH  *dCH = TNode::na->pCSD();
@@ -192,14 +175,12 @@ void TProfil::readMulti( GemDataStream& ff )
 
   }
 
-// Reading structure MULTI (GEM IPM work structure)
+/// Reading structure MULTI (GEM IPM work structure)
 void TProfil::readMulti( const char* path, DATACH  *dCH )
 {
       multi->from_text_file_gemipm( path, dCH);
 }
 
-
-// bool load = false; moved to TMulti class
 
 // Load Thermodynamic data from Database
 // moved to multi from Project

@@ -161,7 +161,7 @@ long int TSIT::PTparam()
 }
 
 
-// Calculates activity coefficients in SIT (NEA) model
+/// Calculates activity coefficients in SIT (NEA) model
 long int TSIT::MixMod()
 {
 	long int j, i1, i2, ip;
@@ -350,7 +350,7 @@ long int TSIT::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TSIT::IdealProp( double *Zid )
 {
 	long int j;
@@ -382,7 +382,7 @@ long int TSIT::IdealProp( double *Zid )
 }
 
 
-// calculates true ionic strength
+/// calculates true ionic strength
 double TSIT::IonicStrength()
 {
 	double Is = 0.;
@@ -673,7 +673,7 @@ void TPitzer::free_internal()
 }
 
 
-// Output of test results into text file (standalone variant only)
+/// Output of test results into text file (standalone variant only)
 void TPitzer::Pitzer_test_out( const char *path, double Y )
 {
 
@@ -727,7 +727,7 @@ long int TPitzer::MixMod()
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TPitzer::IdealProp( double *Zid )
 {
 	long int j;
@@ -759,7 +759,7 @@ long int TPitzer::IdealProp( double *Zid )
 }
 
 
-// Calculation of activity coefficients
+/// Calculation of activity coefficients
 long int TPitzer::Pitzer_calc_Gamma( )
 {
 	long int M, N, X;
@@ -804,7 +804,7 @@ long int TPitzer::Pitzer_calc_Gamma( )
 }
 
 
-// calculation of activity coefficient of KCl
+/// calculation of activity coefficient of KCl
 long int TPitzer::Pitzer_McInnes_KCl( )
 {
 	McInnes_KCl( );
@@ -812,10 +812,10 @@ long int TPitzer::Pitzer_McInnes_KCl( )
 }
 
 
-// build conversion of species indexes
-// list of indexes of Nc cations in aqueous phase
-// list of indexes of Na anions in aq phase
-// list of indexes of Nn neutral species in aq phase
+/// Build conversion of species indexes.
+/// list of indexes of Nc cations in aqueous phase
+/// list of indexes of Na anions in aq phase
+/// list of indexes of Nn neutral species in aq phase
 void TPitzer::setIndexes()
 {
 	long int jj, ic, ia, in;
@@ -860,7 +860,7 @@ void TPitzer::setIndexes()
 }
 
 
-// Pitzer parameters at T of interest (5 term)
+/// Pitzer parameters at T of interest (5 term)
 double TPitzer::G_ex_par5(long int ii)
 {
 	double Tr, G_ex_par;
@@ -873,7 +873,7 @@ double TPitzer::G_ex_par5(long int ii)
 }
 
 
-// Pitzer parameters at T of interest (5 term)
+/// Pitzer parameters at T of interest (5 term)
 double TPitzer::G_ex_par8(long int ii)
 {
 	double G_ex_par;
@@ -886,7 +886,7 @@ double TPitzer::G_ex_par8(long int ii)
 }
 
 
-// first T derivative of Pitzer parameters (5-term)
+/// first T derivative of Pitzer parameters (5-term)
 double TPitzer::S_ex_par5(long int ii)
 {
 	double S_ex_par;
@@ -898,7 +898,7 @@ double TPitzer::S_ex_par5(long int ii)
 }
 
 
-// first T derivative of Pitzer parameters (8-term)
+/// first T derivative of Pitzer parameters (8-term)
 double TPitzer::S_ex_par8(long int ii)
 {
 	double S_ex_par;
@@ -911,7 +911,7 @@ double TPitzer::S_ex_par8(long int ii)
 }
 
 
-// second T derivative of Pitzer parameters (5-term)
+/// second T derivative of Pitzer parameters (5-term)
 double TPitzer::CP_ex_par5(long int ii)
 {
 	double CP_ex_par;
@@ -923,7 +923,7 @@ double TPitzer::CP_ex_par5(long int ii)
 }
 
 
-// second T derivative of Pitzer parameters (8-term)
+/// second T derivative of Pitzer parameters (8-term)
 double TPitzer::CP_ex_par8(long int ii)
 {
 	double CP_ex_par;
@@ -983,7 +983,7 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
 }
 
 
-// Copy data from arIPx, arIPc, arDCc to internal structures
+/// Copy data from arIPx, arIPc, arDCc to internal structures
 void TPitzer::PTcalc( int Gex_or_Sex )
 {
 	// if G_or_ex == 1, then the parameters used in the activity coefficient calculation
@@ -1271,8 +1271,8 @@ void TPitzer::calcSizes()
 
 
 
-// Calculate Etheta and Ethetap factors
-// Reference: Anderson (2005), p. 610
+/// Calculate Etheta and Ethetap factors.
+/// Reference: Anderson (2005), p. 610
 void TPitzer::Ecalc( double z, double z1, double I, double DH_term,
 		double& Etheta, double& Ethetap)
 {
@@ -1366,7 +1366,7 @@ void TPitzer::Ecalc( double z, double z1, double I, double DH_term,
 }
 
 
-// Calculate Z-Term, Pitzer-Toughreact Report 2006, equation (A8)
+/// Calculate Z-Term, Pitzer-Toughreact Report 2006, equation (A8)
 double TPitzer::Z_Term()
 {
 	double Zan=0., Zca=0., Z;
@@ -1384,7 +1384,7 @@ double TPitzer::Z_Term()
 }
 
 
-// Calculate Ionic Strength
+/// Calculate Ionic Strength
 double TPitzer::IonicStr( double& I )
 {
 	double Ia=0., Ic=0., IS;
@@ -1403,7 +1403,7 @@ double TPitzer::IonicStr( double& I )
 }
 
 
-// Calculate osmotic coefficient, activity, and activity coefficient of water-solvent
+/// Calculate osmotic coefficient, activity, and activity coefficient of water-solvent
 double TPitzer::lnGammaH2O( double DH_term )
 {
 	double OC1, OC2, alp, alp1, C, h1, h2, B3, OC3, OC3a, z, z1, Phiphi,
@@ -1517,7 +1517,7 @@ double TPitzer::lnGammaH2O( double DH_term )
 }
 
 
-// retrieve Alpha parameter
+/// retrieve Alpha parameter
 void TPitzer::getAlp( long int c, long int a, double& alp, double& alp1 )
 {
 	if( zc[c] == 1. || za[a] == -1. )
@@ -1539,7 +1539,7 @@ void TPitzer::getAlp( long int c, long int a, double& alp, double& alp1 )
 }
 
 
-// calculate g
+/// calculate g
 double TPitzer::get_g( double x_alp )
 {
 	double g;
@@ -1554,7 +1554,7 @@ double TPitzer::get_g( double x_alp )
 }
 
 
-// calculate gp
+/// calculate gp
 double TPitzer::get_gp( double x_alp )
 {
 	double gp;
@@ -1567,7 +1567,7 @@ double TPitzer::get_gp( double x_alp )
 }
 
 
-// Calculate F-Factor, Pitzer-Toughreact Report 2006, equation (A6)
+/// Calculate F-Factor, Pitzer-Toughreact Report 2006, equation (A6)
 double TPitzer::F_Factor( double DH_term )
 {
 	long int c, c1, a, a1;
@@ -1628,7 +1628,7 @@ double TPitzer::F_Factor( double DH_term )
 }
 
 
-// Calculate lnGammaM - activity coefficient of a cation with index X
+/// Calculate lnGammaM - activity coefficient of a cation with index X
 double TPitzer::lnGammaM( long int M, double DH_term  )
 {
 	double Etheta=0., Ethetap=0.;
@@ -1723,7 +1723,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
 }
 
 
-// Calculate lnGammaX - activity coefficient of an anion with index X
+/// Calculate lnGammaX - activity coefficient of an anion with index X
 double TPitzer::lnGammaX( long int X, double DH_term )
 {
 	double Etheta=0., Ethetap=0.;
@@ -1818,7 +1818,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
 }
 
 
-// Calculate lngammaN - activity coefficient of a neutral species with index N
+/// Calculate lngammaN - activity coefficient of a neutral species with index N
 double TPitzer::lnGammaN( long int N )
 {
 	long int c, a;
@@ -1853,8 +1853,8 @@ double TPitzer::lnGammaN( long int N )
 }
 
 
-// mean activity coefficient of KCl in binary system KCl-H2O at system ionic Strength
-//	 	and temperature
+/// mean activity coefficient of KCl in binary system KCl-H2O at system ionic Strength
+///	 	and temperature
 double TPitzer::McInnes_KCl( )
 {
 	double gammaK, gammaKCl, ln_gammaK; // ln_gammaCl, gammaCl;
@@ -1950,7 +1950,7 @@ double TPitzer::McInnes_KCl( )
 }
 
 
-// Calculation of bulk Excess Gibbs Energy per kilogram of water
+/// Calculation of bulk Excess Gibbs Energy per kilogram of water
 long int TPitzer::ExcessProp( double *Zex )
 {
 	long int M, N, X;
@@ -2138,7 +2138,7 @@ void TEUNIQUAC::free_internal()
 }
 
 
-// Calculates T,P corrected binary interaction parameters
+///  Calculates T,P corrected binary interaction parameters
 long int TEUNIQUAC::PTparam()
 {
 	long int j, i, ip, i1, i2;
@@ -2234,7 +2234,7 @@ long int TEUNIQUAC::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TEUNIQUAC::MixMod()
 {
 	long int j, i, l, k, w;
@@ -2454,7 +2454,7 @@ long int TEUNIQUAC::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TEUNIQUAC::IdealProp( double *Zid )
 {
 	long int j;
@@ -2486,7 +2486,7 @@ long int TEUNIQUAC::IdealProp( double *Zid )
 }
 
 
-// Calculate ionic strength
+/// Calculate ionic strength
 long int TEUNIQUAC::IonicStrength()
 {
 	long int j;
@@ -2503,7 +2503,7 @@ long int TEUNIQUAC::IonicStrength()
 }
 
 
-// Output of test results into text file (standalone variant only)
+/// Output of test results into text file (standalone variant only)
 void TEUNIQUAC::Euniquac_test_out( const char *path )
 {
 	long int ii;//, c, a, n;
@@ -2564,7 +2564,7 @@ TELVIS::~TELVIS()
 }
 
 #ifndef ELVIS_SPEED
-// declaration and initialization of dynamic storage
+/// declaration and initialization of dynamic storage
 void TELVIS::alloc_internal()
 {
         IS = 0.0;
@@ -2744,7 +2744,7 @@ void TELVIS::free_internal(){}
 
 
 
-// Initialization of vectors/arrays and calculation of T,P corrected binary interaction parameters
+/// Initialization of vectors/arrays and calculation of T,P corrected binary interaction parameters
 long int TELVIS::PTparam()
 {
         long j, i, ip, i1, i2;
@@ -2880,7 +2880,7 @@ D*/
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TELVIS::MixMod()
 {
         long int j;
@@ -3004,7 +3004,7 @@ cout<<"m["<<j<<"] = "<<m[j]<<endl;
 return DactDm * m_j; // for the Bjerrum relation, multiply the derivative with m_j (integrand)
 }
 
-// partial molar excess volume of solute
+/// partial molar excess volume of solute
 double TELVIS::FinDiffVol( double m_j, int j )
 {
     double lnGam_high, lnGam_low, FinDiff_cation, FinDiff_anion, FinDiff;
@@ -3122,9 +3122,9 @@ double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int
 }
 
 
-//	Returns the integral of the function func from a to b. The parameters EPS can be set to the
-//	desired fractional accuracy and JMAX so that 2 to the power JMAX-1 is the maximum allowed
-//	number of steps. Integration is performed by Simpson’s rule.
+///	Returns the integral of the function func from a to b. The parameters EPS can be set to the
+///	desired fractional accuracy and JMAX so that 2 to the power JMAX-1 is the maximum allowed
+///	number of steps. Integration is performed by Simpson’s rule.
 double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species, int select)
 {
 
@@ -3636,7 +3636,7 @@ long int TELVIS::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TELVIS::IdealProp( double *Zid )
 {
         long int j;
@@ -3668,7 +3668,7 @@ long int TELVIS::IdealProp( double *Zid )
 }
 
 
-// Calculate ionic strength
+/// Calculate ionic strength
 long int TELVIS::IonicStrength()
 {
         long int j;
@@ -3685,7 +3685,7 @@ long int TELVIS::IonicStrength()
 }
 
 
-// Output of test results into text file (standalone variant only)
+/// Output of test results into text file (standalone variant only)
 void TELVIS::TELVIS_test_out( const char *path, const double M ) const
 {
         long int ii;//, c, a, n;
@@ -3793,7 +3793,7 @@ void THelgeson::free_internal()
 }
 
 
-// Calculates T,P corrected parameters
+/// Calculates T,P corrected parameters
 long int THelgeson::PTparam()
 {
 	double alp, bet, dal, rho, eps, dedt, d2edt2, dedp;
@@ -3850,7 +3850,7 @@ long int THelgeson::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int THelgeson::MixMod()
 {
 	long int j, k, w;
@@ -3940,7 +3940,7 @@ long int THelgeson::MixMod()
 }
 
 
-// calculates excess properties
+/// calculates excess properties
 long int THelgeson::ExcessProp( double *Zex )
 {
 	long int j, k, w;
@@ -4156,7 +4156,7 @@ long int THelgeson::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int THelgeson::IdealProp( double *Zid )
 {
 	long int j;
@@ -4187,7 +4187,7 @@ long int THelgeson::IdealProp( double *Zid )
 }
 
 
-// calculates true ionic strength
+/// calculates true ionic strength
 long int THelgeson::IonicStrength()
 {
 	long int j;
@@ -4213,7 +4213,7 @@ long int THelgeson::IonicStrength()
 }
 
 
-// calculates TP dependence of b_gamma (and derivatives)
+/// calculates TP dependence of b_gamma (and derivatives)
 long int THelgeson::BgammaTP()
 {
 	// ni: stoichiometric number of moles of ions in one mole of electrolyte
@@ -4300,7 +4300,7 @@ long int THelgeson::BgammaTP()
 }
 
 
-// calculates TP dependence of a_not (and derivatives)
+/// calculates TP dependence of a_not (and derivatives)
 long int THelgeson::IonsizeTP()
 {
 	double nc, na, ni, zc, za, c;
@@ -4337,7 +4337,7 @@ long int THelgeson::IonsizeTP()
 }
 
 
-// wrapper for g-function
+/// wrapper for g-function
 long int THelgeson::Gfunction()
 {
 	double T, P, D, beta, alpha, daldT, g, dgdP, dgdT, d2gdT2;
@@ -4372,7 +4372,7 @@ long int THelgeson::Gfunction()
 }
 
 
-// calculates g-function and derivatives
+/// calculates g-function and derivatives
 long int THelgeson::GShok2( double T, double P, double D, double beta,
 		double alpha, double daldT, double &g, double &dgdP, double &dgdT, double &d2gdT2 )
 {
@@ -4497,7 +4497,7 @@ void TDavies::free_internal()
 }
 
 
-// Calculates T,P corrected parameters
+/// Calculates T,P corrected parameters
 long int TDavies::PTparam()
 {
 	double alp, bet, dal, rho, eps, dedt, d2edt2, dedp;
@@ -4525,7 +4525,7 @@ long int TDavies::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TDavies::MixMod()
 {
 	long int j, k, w;
@@ -4615,7 +4615,7 @@ long int TDavies::MixMod()
 }
 
 
-// calculates excess properties
+/// calculates excess properties
 long int TDavies::ExcessProp( double *Zex )
 {
 	long int j, k, w;
@@ -4744,7 +4744,7 @@ long int TDavies::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TDavies::IdealProp( double *Zid )
 {
 	long int j;
@@ -4775,7 +4775,7 @@ long int TDavies::IdealProp( double *Zid )
 }
 
 
-// calculates true ionic strength
+/// calculates true ionic strength
 long int TDavies::IonicStrength()
 {
 	long int j;
@@ -4846,7 +4846,7 @@ void TLimitingLaw::free_internal()
 }
 
 
-// Calculates T,P corrected parameters
+/// Calculates T,P corrected parameters
 long int TLimitingLaw::PTparam()
 {
 	double alp, bet, dal, rho, eps, dedt, d2edt2, dedp;
@@ -4874,7 +4874,7 @@ long int TLimitingLaw::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TLimitingLaw::MixMod()
 {
 	long int j, k, w;
@@ -4952,7 +4952,7 @@ long int TLimitingLaw::MixMod()
 }
 
 
-// calculates excess properties
+/// calculates excess properties
 long int TLimitingLaw::ExcessProp( double *Zex )
 {
 	long int j, k, w;
@@ -5070,7 +5070,7 @@ long int TLimitingLaw::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TLimitingLaw::IdealProp( double *Zid )
 {
 	long int j;
@@ -5101,7 +5101,7 @@ long int TLimitingLaw::IdealProp( double *Zid )
 }
 
 
-// calculates true ionic strength
+/// calculates true ionic strength
 long int TLimitingLaw::IonicStrength()
 {
 	long int j;
@@ -5179,7 +5179,7 @@ void TDebyeHueckel::free_internal()
 }
 
 
-// Calculates T,P corrected parameters
+/// Calculates T,P corrected parameters
 long int TDebyeHueckel::PTparam()
 {
 	long int j;
@@ -5219,7 +5219,7 @@ long int TDebyeHueckel::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TDebyeHueckel::MixMod()
 {
 	long int j, k, w;
@@ -5315,7 +5315,7 @@ long int TDebyeHueckel::MixMod()
 }
 
 
-// calculates excess properties
+/// calculates excess properties
 long int TDebyeHueckel::ExcessProp( double *Zex )
 {
 	// (under construction)
@@ -5525,7 +5525,7 @@ long int TDebyeHueckel::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TDebyeHueckel::IdealProp( double *Zid )
 {
 	long int j;
@@ -5556,7 +5556,7 @@ long int TDebyeHueckel::IdealProp( double *Zid )
 }
 
 
-// calculates true ionic strength
+/// calculates true ionic strength
 long int TDebyeHueckel::IonicStrength()
 {
 	long int j;
@@ -5641,7 +5641,7 @@ void TKarpov::free_internal()
 }
 
 
-// Calculates T,P corrected parameters
+/// Calculates T,P corrected parameters
 long int TKarpov::PTparam()
 {
 	long int j;
@@ -5699,7 +5699,7 @@ long int TKarpov::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TKarpov::MixMod()
 {
 	long int j, k, w;
@@ -5789,7 +5789,7 @@ long int TKarpov::MixMod()
 }
 
 
-// calculates excess properties
+/// calculates excess properties
 long int TKarpov::ExcessProp( double *Zex )
 {
 	long int j, k, w;
@@ -5997,7 +5997,7 @@ long int TKarpov::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TKarpov::IdealProp( double *Zid )
 {
 	long int j;
@@ -6028,7 +6028,7 @@ long int TKarpov::IdealProp( double *Zid )
 }
 
 
-// calculates true ionic strength
+/// calculates true ionic strength
 long int TKarpov::IonicStrength()
 {
 	long int j;
@@ -6058,7 +6058,7 @@ long int TKarpov::IonicStrength()
 }
 
 
-// calculates TP dependence of b_gamma (and derivatives)
+/// calculates TP dependence of b_gamma (and derivatives)
 long int TKarpov::BgammaTP()
 {
 	// ni: stoichiometric number of moles of ions in one mole of electrolyte
@@ -6145,7 +6145,7 @@ long int TKarpov::BgammaTP()
 }
 
 
-// wrapper for g-function
+/// wrapper for g-function
 long int TKarpov::Gfunction()
 {
 	double T, P, D, beta, alpha, daldT, g, dgdP, dgdT, d2gdT2;
@@ -6180,7 +6180,7 @@ long int TKarpov::Gfunction()
 }
 
 
-// calculates g-function and derivatives
+/// calculates g-function and derivatives
 long int TKarpov::GShok2( double T, double P, double D, double beta,
 		double alpha, double daldT, double &g, double &dgdP, double &dgdT, double &d2gdT2 )
 {

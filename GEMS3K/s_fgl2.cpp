@@ -29,7 +29,7 @@
 // (c) DK/TW November 2010 (version 2)
 //=============================================================================================
 
-// generic constructor (new)
+/// generic constructor (new)
 TSolMod::TSolMod( SolutionData *sd ):
         ModCode(sd->Mod_Code), MixCode(sd->Mix_Code), NComp(sd->NSpecies),  NPar(sd->NParams),
         NPcoef(sd->NPcoefs), MaxOrd(sd->MaxOrder),  NP_DC(sd->NPperDC), /*NPTP_DC(NPTPperDC),*/
@@ -68,7 +68,7 @@ TSolMod::TSolMod( SolutionData *sd ):
 }
 
 
-// generic constructor (new) for calling from DComp/DCthermo calculations
+/// generic constructor (new) for calling from DComp/DCthermo calculations
 TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
         ModCode(Mod_Code), MixCode(0), NComp(NSpecies),  NPar(0),
         NPcoef(0), MaxOrd(0),  NP_DC(0), /*NPTP_DC(NPTPperDC),*/
@@ -125,7 +125,7 @@ TSolMod::~TSolMod()
 }
 
 
-// allocates memory for multisite data
+/// allocates memory for multisite data
 void TSolMod::alloc_multisite()
 {
    long int j, s;
@@ -151,9 +151,9 @@ void TSolMod::alloc_multisite()
 }
 
 
-// returns 0 if Ok or this is not a multi-site model;
-// returns j >=1 - end member index for which the total site multiplicity is different
-// from that for the previous end member (this is an error)
+/// returns 0 if Ok or this is not a multi-site model;
+/// returns j >=1 - end member index for which the total site multiplicity is different
+/// from that for the previous end member (this is an error)
 long int TSolMod::init_multisite()
 {
     long int j, s, m, k=0;
@@ -193,7 +193,7 @@ long int TSolMod::init_multisite()
     return 0;
 }
 
-// frees memory for sublattice data
+/// frees memory for sublattice data
 void TSolMod::free_multisite()
 {
     long int j, s;
@@ -221,7 +221,7 @@ void TSolMod::free_multisite()
 }
 
 
-// site fractions
+/// site fractions
 void TSolMod::return_sitefr()
 {
     long int s, m, k=0;
@@ -236,7 +236,7 @@ void TSolMod::return_sitefr()
 }
 
 
-// site fractions
+/// site fractions
 void TSolMod::retrieve_sitefr()
 {
     long int s, m, k=0;
@@ -251,7 +251,7 @@ void TSolMod::retrieve_sitefr()
 }
 
 
-// updates P and T in TSolMod if those have changed
+/// updates P and T in TSolMod if those have changed
 long int TSolMod::UpdatePT ( double T_k, double P_bar )
 {
 	  Tk = T_k;
@@ -260,7 +260,7 @@ long int TSolMod::UpdatePT ( double T_k, double P_bar )
 }
 
 
-// gets phase name for specific built-in models (class TModOther)
+/// gets phase name for specific built-in models (class TModOther)
 void TSolMod::GetPhaseName( const char *PhName )
 {
 	 strncpy( PhaseName, PhName, MAXPHASENAME );
@@ -268,9 +268,9 @@ void TSolMod::GetPhaseName( const char *PhName )
 }
 
 
-// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov.2010
-// Based upon the formalism of Price (1985)
-// Returns 0 if calculated o.k., or 1 if this is not a multi-site model
+/// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov. 2010
+/// Based upon the formalism of Price (1985)
+/// Returns 0 if calculated o.k., or 1 if this is not a multi-site model
 long int TSolMod::IdealMixing()
 {
     long int j,s,m;
@@ -321,7 +321,7 @@ long int TSolMod::IdealMixing()
     return 0;
 }
 
-// configurational entropy
+/// configurational entropy
 double TSolMod::ideal_conf_entropy()
 {
     long int j,s,m;
@@ -382,9 +382,9 @@ long int TIdeal::PTparam()
 }
 
 
-// Calculates ideal configurational terms in case of multi-site mixing
-// to preserve values computed in Phase scripts
-// Only increments lnGamma[j] - may need to be cleaned before running MixMod
+/// Calculates ideal configurational terms in case of multi-site mixing
+/// to preserve values computed in Phase scripts.
+/// Only increments lnGamma[j] - may need to be cleaned before running MixMod
 long int TIdeal::MixMod()
 {
    long int retCode, j;
@@ -399,7 +399,7 @@ long int TIdeal::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TIdeal::ExcessProp( double *Zex )
 {
 
@@ -416,7 +416,7 @@ long int TIdeal::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TIdeal::IdealProp( double *Zid )
 {
         Hid = 0.0;
@@ -485,7 +485,7 @@ void TVanLaar::free_internal()
 }
 
 
-// Calculates T,P corrected binary interaction parameters
+/// Calculates T,P corrected binary interaction parameters
 long int TVanLaar::PTparam()
 {
 	long int j, ip;
@@ -510,7 +510,7 @@ long int TVanLaar::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TVanLaar::MixMod()
 {
 	long int ip, j, i1, i2;
@@ -568,7 +568,7 @@ long int TVanLaar::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TVanLaar::ExcessProp( double *Zex )
 {
 	long int ip, j, i1, i2;
@@ -626,7 +626,7 @@ long int TVanLaar::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TVanLaar::IdealProp( double *Zid )
 {
 //	long int j;
@@ -698,7 +698,7 @@ void TRegular::free_internal()
 }
 
 
-// Calculates T,P corrected binary interaction parameters
+/// Calculates T,P corrected binary interaction parameters
 long int TRegular::PTparam()
 {
         long int ip;
@@ -718,7 +718,7 @@ long int TRegular::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TRegular::MixMod()
 {
         long int ip, j, i1, i2;
@@ -764,7 +764,7 @@ long int TRegular::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TRegular::ExcessProp( double *Zex )
 {
 	long int ip, i1, i2;
@@ -808,7 +808,7 @@ long int TRegular::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TRegular::IdealProp( double *Zid )
 {
 //	long int j;
@@ -884,7 +884,7 @@ void TRedlichKister::free_internal()
 }
 
 
-//   Calculates T,P corrected binary interaction parameters
+///   Calculates T,P corrected binary interaction parameters
 long int TRedlichKister::PTparam()
 {
 	long int ip;
@@ -925,7 +925,7 @@ long int TRedlichKister::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TRedlichKister::MixMod()
 {
 	long int ip, j, i1, i2, L, I, J;
@@ -993,7 +993,7 @@ long int TRedlichKister::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TRedlichKister::ExcessProp( double *Zex )
 {
 	long int ip, i1, i2;
@@ -1061,7 +1061,7 @@ long int TRedlichKister::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TRedlichKister::IdealProp( double *Zid )
 {
 
@@ -1171,7 +1171,7 @@ void TNRTL::free_internal()
 }
 
 
-//   Calculates T,P corrected binary interaction parameters
+///   Calculates T,P corrected binary interaction parameters
 long int TNRTL::PTparam()
 {
 	long int ip, i, j, i1, i2;
@@ -1239,7 +1239,7 @@ long int TNRTL::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TNRTL::MixMod()
 {
 	long int  j, i, k;
@@ -1275,7 +1275,7 @@ long int TNRTL::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TNRTL::ExcessProp( double *Zex )
 {
 	long int  j, i;
@@ -1333,7 +1333,7 @@ long int TNRTL::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TNRTL::IdealProp( double *Zid )
 {
 	long int j;
@@ -1418,7 +1418,7 @@ void TWilson::free_internal()
 }
 
 
-// Calculates T-corrected interaction parameters
+/// Calculates T-corrected interaction parameters
 long int TWilson::PTparam()
 {
 	long int ip, i, j, i1, i2;
@@ -1458,7 +1458,7 @@ long int TWilson::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TWilson::MixMod()
 {
 	long int  j, i, k;
@@ -1491,7 +1491,7 @@ long int TWilson::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TWilson::ExcessProp( double *Zex )
 {
 	long int  j, i;
@@ -1542,7 +1542,7 @@ long int TWilson::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TWilson::IdealProp( double *Zid )
 {
 	long int j;
@@ -1597,7 +1597,7 @@ TMargules::~TMargules()
 }
 
 
-// Calculates T,P corrected binary interaction parameters
+/// Calculates T,P corrected binary interaction parameters
 long int TMargules::PTparam()
 {
 	if ( NPcoef < 3 || NPar < 4 )
@@ -1627,7 +1627,7 @@ long int TMargules::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TMargules::MixMod()
 {
 	double a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
@@ -1661,7 +1661,7 @@ long int TMargules::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TMargules::ExcessProp( double *Zex )
 {
 	double X1, X2, X3;
@@ -1692,7 +1692,7 @@ long int TMargules::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TMargules::IdealProp( double *Zid )
 {
 	long int j;
@@ -1747,7 +1747,7 @@ TSubregular::~TSubregular()
 }
 
 
-// Calculates T,P corrected binary interaction parameters
+/// Calculates T,P corrected binary interaction parameters
 long int TSubregular::PTparam()
 {
 	if ( NPcoef < 3 || NPar < 2 )
@@ -1769,7 +1769,7 @@ long int TSubregular::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TSubregular::MixMod()
 {
 	double a1, a2, lnGam1, lnGam2, X1, X2;
@@ -1795,7 +1795,7 @@ long int TSubregular::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TSubregular::ExcessProp( double *Zex )
 {
 	double X1, X2;
@@ -1825,7 +1825,7 @@ long int TSubregular::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TSubregular::IdealProp( double *Zid )
 {
 	long int j;
@@ -1880,7 +1880,7 @@ TGuggenheim::~TGuggenheim()
 }
 
 
-// Calculates T,P corrected binary interaction parameters
+/// Calculates T,P corrected binary interaction parameters
 long int TGuggenheim::PTparam()
 {
 	if ( NPcoef < 3 || NPar < 1 )
@@ -1894,7 +1894,7 @@ long int TGuggenheim::PTparam()
 }
 
 
-// Calculates activity coefficients
+/// Calculates activity coefficients
 long int TGuggenheim::MixMod()
 {
 	double lnGam1, lnGam2, X1, X2;
@@ -1916,7 +1916,7 @@ long int TGuggenheim::MixMod()
 }
 
 
-// calculates bulk phase excess properties
+/// calculates bulk phase excess properties
 long int TGuggenheim::ExcessProp( double *Zex )
 {
 	double X1, X2;
@@ -1946,7 +1946,7 @@ long int TGuggenheim::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TGuggenheim::IdealProp( double *Zid )
 {
 	long int j;
@@ -2042,7 +2042,7 @@ void TBerman::free_internal()
 }
 
 
-// Calculates T-corrected interaction parameters
+/// Calculates T-corrected interaction parameters
 long int TBerman::PTparam( )
 {
     long int ip, j;
@@ -2079,7 +2079,7 @@ long int TBerman::PTparam( )
 }
 
 
-// Calculates ideal config. term and activity coefficients
+/// Calculates ideal config. term and activity coefficients
 long int TBerman::MixMod()
 {
     long int retCode, j;
@@ -2108,7 +2108,7 @@ long int TBerman::MixMod()
 }
 
 
-// calculates bulk phase excess properties - to be done yet!
+/// calculates bulk phase excess properties - to be done yet!
 long int TBerman::ExcessProp( double *Zex )
 {
 
@@ -2154,7 +2154,7 @@ long int TBerman::ExcessProp( double *Zex )
 }
 
 
-// calculates ideal mixing properties
+/// calculates ideal mixing properties
 long int TBerman::IdealProp( double *Zid )
 {
         Hid = 0.0;
@@ -2178,9 +2178,9 @@ long int TBerman::IdealProp( double *Zid )
 }
 
 
-// calculates part of activity coefficients related to reciprocal energies
-// (interactions between moieties on different sublattices)
-// for now, only one term (quaternary model)?
+/// calculates part of activity coefficients related to reciprocal energies.
+/// (interactions between moieties on different sublattices)
+/// for now, only one term (quaternary model)?
 long int TBerman::ReciprocalPart()
 {
     long int j,s,m;
@@ -2203,9 +2203,9 @@ long int TBerman::ReciprocalPart()
 }
 
 
-// calculates part of activity coefficients related to interaction energies
-// between moieties on the same sublattice
-// (DK/TW June 2011)
+/// calculates part of activity coefficients related to interaction energies
+/// between moieties on the same sublattice.
+/// (DK/TW June 2011)
 long int TBerman::ExcessPart()
 {
     long int ip, sp, j, s, m, d, e, f;
