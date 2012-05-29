@@ -5,7 +5,7 @@
 // batch-like calculation of equilibria using text file input and
 // GEMIPM2 numerical kernel
 
-// TNode class implements a  simple C/C++ interface of GEMIPM2K.
+// TNode class implements a  simple C/C++ interface of GEMS3K.
 // It works with DATACH and work DATABR structures and respective
 // DCH (chemical system definition) and DBR (recipe or data bridge)
 // data files. In addition, the program reads an IPM inlut file which 
@@ -14,11 +14,11 @@
 //
 // Copyright (C) 2007,2008 D.Kulik, S.Dmitrieva
 //
-// This file is part of GEMIPM2K code for thermodynamic modelling
+// This file is part of GEMS3K code for thermodynamic modelling
 // by Gibbs energy minimization
 
 // This file may be distributed under the licence terms defined
-// in GEMIPM2K.QAL
+// in GEMS3K.QAL
 //
 // See also http://gems.web.psi.ch
 // mailto://gems2.support@psi.ch
@@ -45,12 +45,12 @@ int main( int argc, char* argv[] )
    
    if (argc >= 2 )
        strncpy( input_system_file_list_name, argv[1], 256);
-   // list of DCH, IPM and DBR input files for initializing GEMIPM2K
+   // list of DCH, IPM and DBR input files for initializing GEMS3K
    
    // Creates TNode structure instance accessible trough the "node" pointer
    TNode* node  = new TNode();
   
-   // (1) Initialization of GEMIPM2K internal data by reading  files
+   // (1) Initialization of GEMS3K internal data by reading  files
    //     whose names are given in the input_system_file_list_name
   if( node->GEM_init( input_system_file_list_name ) )
   {
@@ -85,7 +85,7 @@ int main( int argc, char* argv[] )
    // Asking GEM to run with automatic initial approximation 
    dBR->NodeStatusCH = NEED_GEM_AIA;
 
-   // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
+   // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
    int NodeStatusCH = node->GEM_run(  false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )

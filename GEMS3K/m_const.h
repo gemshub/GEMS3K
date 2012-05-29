@@ -5,7 +5,7 @@
 //
 // Codes and parameters used in GEM IPM work structure (standalone version)
 //
-// This file is part of the standalone GEMIPM2K code
+// This file is part of the standalone GEMS3K code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -393,4 +393,4 @@ typedef enum {  // Classes of Phases used in ccPH code list
 #endif*/
 
 #endif
-// m_const.h in GEMIPM2K
+// m_const.h in GEMS3K

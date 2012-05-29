@@ -1,16 +1,16 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright  (C) 1992,2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
+// Copyright  (C) 1992,2012 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
 //
 // Implementation  of parts of the Interior Points Method (IPM) module
 // for convex programming Gibbs energy minimization, described in:
 // (Karpov, Chudnenko, Kulik (1997): American Journal of Science
 //  v.297 p. 767-806)
 //
-// This file is part of a GEM-Selektor (GEMS) v.2.x.x program
+// This file is part of a GEM-Selektor (GEMS) v.3.x.x program
 // environment for thermodynamic modeling in geochemistry and
-// of the GEMIPM2K standalone code
+// of the GEMS3K standalone code
 //
 // This file may be distributed under the terms of the GEMS-PSI
 // QA Licence (GEMSPSI.QAL)
@@ -49,21 +49,21 @@ enum volume_code {  // Codes of volume parameter ???
 };
 
 SPP_SETTING pa_ = {
-    " GEMS-GUI v.3.1 r.2083 (rc) " " GEMS3K v.3.1 r.635 (rc) ",
-    {   // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
-        2,  /* PC */  2,     /* PD */   -5,   /* PRD */
-        1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-        0, /* DT */     13000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
-        1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
-        1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
-        1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
-        1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
-        1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
-        0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
-        1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
-        1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
-        1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
-        1e-10,  /* DKIN  */ 0,  /* tprn */
+    " GEMS-GUI v.3.1 r.2147 (rc) " " GEMS3K v.3.1 r.681 (rc) ",
+    {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
+         2,  /* PC */  2,     /* PD */   -5,   /* PRD */
+         1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
+         0, /* DT */     13000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+         1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
+         1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
+         1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
+         1e-5,  /* DFYr,*/  1e-5,  /* DFYh,*/   1e-5,  /* DFYc,*/
+         1e-6, /* DFYs, */  1e-17,  /* DB */   1.,   /* AG */
+         0.,   /* DGC */   1.0,   /* GAR */  1000., /* GAH */
+         1e-3, /* GAS */   12.05,  /* DNS */   1e-13,  /* XwMin, */
+         1e-13,  /* ScMin, */  1e-33, /* DcMin, */   1e-20, /* PhMin, */
+         1e-5,  /* ICmin */   1e-10,  /* EPS */   1e-3,  /* IEPS */
+         1e-10,  /* DKIN  */ 0,  /* tprn */
     },
 }; // SPP_SETTING
 
@@ -129,7 +129,7 @@ void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
     multi->to_file( ff );
 }
 
-/// Writing structure MULTI ( free format file  )
+/// Writing structure MULTI ( free format text file  )
 void TProfil::outMultiTxt( const char *path, bool append  )
 {
     multi->to_text_file( path, append );
@@ -175,7 +175,7 @@ void TProfil::readMulti( GemDataStream& ff )
 
   }
 
-/// Reading structure MULTI (GEM IPM work structure)
+/// Reading structure MULTI (GEM IPM work structure) from text file
 void TProfil::readMulti( const char* path, DATACH  *dCH )
 {
       multi->from_text_file_gemipm( path, dCH);
@@ -185,7 +185,7 @@ void TProfil::readMulti( const char* path, DATACH  *dCH )
 // Load Thermodynamic data from Database
 // moved to multi from Project
 
-/// Test and load Thermodynamic data
+/// Test and load thermodynamic data
 void TMulti::CheckMtparam()
 {
   double TK, P, PPa;
