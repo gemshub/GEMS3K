@@ -162,11 +162,12 @@ long int
 // TSorpMod stuff
 *LsESmo, // new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
 *LsISmo, // new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
-*PsDiS,  // new: Collected array of DC denticity and indexes of binding sites (-> L1[k]*LsISmo[k][3]+1] )
+*xSMd,   // new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
 // TKinMet stuff
-*LsKin,  // new: number of kin.regions; rate constants/coeffs [Fi][2]
+*LsKin,  // new: number of faces; number of kin.regions; rate constants/coeffs; reserved [Fi][4]
 *LsUpt,  // new: number of uptake model coeffs; reserved [Fis][2]
-*jCrDC,  // new: Collected array of aq/gas/sorption species indexes used in rate regions (-> += LsKin[k][0])
+*jCrDC,  // new: Collected array of aq/gas/sorption species indexes used in rate regions (-> += LsKin[k][1]*LsKin[k][2])
+*xfaces, // new: Collected array of indexes of faces for parameter sets in rate regions (-> += LsKin[k][0]*LsKin[k][1])
 ;
   double
     // TSolMod stuff
@@ -214,7 +215,8 @@ long int
 *IsoPc, // new: Collected isotherm coefficients per DC k -> += L1[k]*LsISmo[k][2];
 *IsoSc, // new: Collected isotherm coeffs per site k -> += LsISmo[k][0]*LsISmo[k][1];
 // TKinMet stuff
-*Krpc,  // new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][1];
+*fSak,  // new: Collected array of fractions of surface area by different faces k-> += LsKin[k][0]
+*Krpc,  // new: Collected array of kinetic rate constants k-> += LsKin[k][1]*LsKin[k][2];
 *UMpc,  // new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
     ;
 //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])

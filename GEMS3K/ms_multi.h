@@ -238,10 +238,10 @@ double
     *FVOL,    ///< phase volumes, cm3 comment corrected DK 04.08.2009  [0:FI-1]
     *FWGT,    ///< phase (carrier) masses, g                [0:FI-1]
 //
-    *G,    ///< Normalized DC energy function c(j), mole/mole [0:L-1]
-    *G0,   ///< Input normalized g0_j(T,P) for DC at unified standard scale[L]
-    *lnGam, ///< ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]
-    *lnGmo; ///< Copy of lnGam from previous IPM iteration (reserved)
+    *G,       ///< Normalized DC energy function c(j), mole/mole [0:L-1]
+    *G0,      ///< Input normalized g0_j(T,P) for DC at unified standard scale[L]
+    *lnGam,   ///< ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]
+    *lnGmo;   ///< Copy of lnGam from previous IPM iteration (reserved)
   double  (*lnSAC)[4]; ///< former lnSAT ln surface activity coeff and Coulomb's term  [Lads][4]
   double  *B,  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
     *U,  ///< IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
