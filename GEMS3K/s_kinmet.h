@@ -25,6 +25,10 @@ const int   MAXDCNAME =      16, MAXPHNAME = 16;
 
 struct KinMetData {
 
+    char  KinModCod_;   // Type code of the kinetic/metastability model, see KINMETTYPECODES
+    char  UptModCod_;   // Type code of Tr uptake model (solution/sorption phases only), see UPTMTYPECODES
+    char  PhasNam_[MAXPHNAME];      // Phase name (for specific built-in models)
+
     long int NSpec_; // Number of components in the phase
     long int nlPh_;  // number of linked phases (cf. lPh), default 0.
     long int nReg_;  // number of kinetic regions (and catalyzing aqueous species)
@@ -32,9 +36,6 @@ struct KinMetData {
     long int numpC_; // number of uptake model parameter coefficients (per end member)
     long int kins_,  // kinetic state: -1 dissolution +1 precipitation ...
     ;
-    char  KinModCod_;   // Type code of the kinetic/metastability model, see KINMETTYPECODES
-    char  UptModCod_;   // Type code of Tr uptake model (solution/sorption phases only), see UPTMTYPECODES
-    char* PhasNam_;      // Phase name (for specific built-in models)
 
     double T_k_;         // Temperature, K (initial)
     double P_bar_;       // Pressure, bar (initial)
@@ -63,23 +64,23 @@ struct KinMetData {
     double *nPll_; // lower restriction to this phase amount, mol (calculated here)
     double *sGP_;  // surface free energy of the phase, J (YOF*PhM)
 
-    double arKrpc_;  // pointer to input array of kinetic rate constants [nReg][nrpC]
-    double arUmpc_;  // pointer to input array of uptake model coefficients [nComp][numpC]
+    double *arKrpc_;  // pointer to input array of kinetic rate constants [nReg][nrpC]
+    double *arUmpc_;  // pointer to input array of uptake model coefficients [nComp][numpC]
 
     char  (*SM_)[MAXDCNAME];  // pointer to the list of DC names in the phase [NComp] read-only
     char  arDCC_;   // pointer to the classifier of DCs involved in sorption phase [NComp] read-only
 
-    long int arjCrDC_;  // pointer to input array of DC indexes used in rate regions [nReg]
+    long int *arjCrDC_;  // pointer to input array of DC indexes used in rate regions [nReg]
 
-    double arrRc_;   // Pointer to input array of kinetic rate region coeffs [nReg][nrpC]
+    double *arrRc_;   // Pointer to input array of kinetic rate region coeffs [nReg][nrpC]
 
-    double arym_;    // Pointer to molalities of all species in MULTI, read-only
-    double arla_;   // Pointer to lg activities of all species in MULTI, read-only
+    double *arym_;    // Pointer to molalities of all species in MULTI, read-only
+    double *arla_;   // Pointer to lg activities of all species in MULTI, read-only
 
-    double arnx_;    // Pointer to mole amounts of phase components (provided) [NComp] read-only
+    double *arnx_;    // Pointer to mole amounts of phase components (provided) [NComp] read-only
 
-    double arnxul_;     // Vector of upper kinetic restrictions to nx, moles [L]  (DUL) output
-    double arnxll_;     // Vector of lower kinetic restrictions to nx, moles [L]  (DLL) output
+    double *arnxul_;     // Vector of upper kinetic restrictions to nx, moles [L]  (DUL) output
+    double *arnxll_;     // Vector of lower kinetic restrictions to nx, moles [L]  (DLL) output
 
 //    double *arWx_;       // Species (end member) mole fractions ->NSpecies
 //    double *arVol_;      // molar volumes of end-members (species) cm3/mol ->NSpecies
@@ -176,14 +177,15 @@ class TKinMet  // Base class for kinetics and metastability models
         *arUmpc,  // entry pointer to array of uptake model coefficients [nComp][numpC]
         ;
         char  (*arSM)[MAXDCNAME];  // pointer to the list of DC names in the phase [NComp] read-only
-        char  *arDCC;   // pointer to the classifier of DCs involved in sorption phase [NComp] read-only
+        char  *arDCC;   // pointer to the classifier of DCs involved in this phase [NComp] read-only
 
         long int *arjCrDC;  // pointer to input array of DC indexes used in rate regions [nReg]
+        long int *arPhLin;  // indexes of linked phases and link type codes [nlPh*2] read-only
 
         double *arrRc;   // Pointer to input array of kinetic rate region coeffs [nReg][nrpC]
 
         double *arym;     // molalities of all species in MULTI, read-only
-        double *arla;    // lg activities of all species in MULTI, read-only
+        double *arla;     // lg activities of all species in MULTI, read-only
         double *arnx;     // Pointer to mole amounts of phase components (provided) [NComp] read-only
 //        double *arWx;   // Species (end member) mole fractions ->NSpecies
 //        double *arVol;  // molar volumes of end-members (species) cm3/mol ->NSpecies

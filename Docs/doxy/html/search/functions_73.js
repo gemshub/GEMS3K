@@ -25,7 +25,6 @@ var searchData=
   ['solmodidealprop',['SolModIdealProp',['../class_t_multi.html#a611349957815ac7f4ee0be4c9fb74382',1,'TMulti']]],
   ['solmodparpt',['SolModParPT',['../class_t_multi.html#ac3ab154fdef266b0c3f1fa81c9dbc17f',1,'TMulti']]],
   ['solmodstandprop',['SolModStandProp',['../class_t_multi.html#a74386f9c13949493b3a28afcc5218a2e',1,'TMulti']]],
-  ['solve',['solve',['../class_j_a_m_a_1_1_cholesky.html#af0f727e2b0e989f7606cdb49de69f119',1,'JAMA::Cholesky::solve(const Array1D&lt; Real &gt; &amp;B)'],['../class_j_a_m_a_1_1_cholesky.html#a8a3c0067663955146713a9aa3b8a3413',1,'JAMA::Cholesky::solve(const Array2D&lt; Real &gt; &amp;B)'],['../class_j_a_m_a_1_1_l_u.html#abf011e4d8405ec35412a7fc06bd7c9a8',1,'JAMA::LU::solve(const Array2D&lt; Real &gt; &amp;B)'],['../class_j_a_m_a_1_1_l_u.html#abe62763addfd25c019f09b5420198d33',1,'JAMA::LU::solve(const Array1D&lt; Real &gt; &amp;b)']]],
   ['solvesimplex',['SolveSimplex',['../class_t_multi.html#ad3a6b3872de4edcecd60e6850536cee6',1,'TMulti']]],
   ['speciationcleanup',['SpeciationCleanup',['../class_t_multi.html#ad8826f14b647c15202974c46a9cf4e1f',1,'TMulti']]],
   ['spos',['SPOS',['../class_t_multi.html#aaa8725bf873dddf69f14a1c8840835fe',1,'TMulti']]],
@@ -34,7 +33,6 @@ var searchData=
   ['start',['START',['../class_t_multi.html#ac0b3e32d2e7bb968c35153d7b7b1e8d0',1,'TMulti']]],
   ['stepsizeestimate',['StepSizeEstimate',['../class_t_multi.html#ac7ddcf02e7b9c26fdc310738c7450d12',1,'TMulti']]],
   ['stpcalcfugpure',['STPCalcFugPure',['../class_t_s_t_pcalc.html#a88adac68b3b2c184a9fb3bc7031eaf29',1,'TSTPcalc']]],
-  ['subarray',['subarray',['../class_t_n_t_1_1_array2_d.html#accf36569414a2570497d2a3f9fe68f52',1,'TNT::Array2D']]],
   ['surfaceactivitycoeff',['SurfaceActivityCoeff',['../class_t_multi.html#ab41f91ff6ae502782679542f01818b63',1,'TMulti']]],
   ['systemtotalmolesic',['SystemTotalMolesIC',['../class_t_multi.html#a3343721a032a13c6772a2a92f3fca78b',1,'TMulti']]]
 ];

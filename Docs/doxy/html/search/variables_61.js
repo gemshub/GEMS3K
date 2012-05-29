@@ -13,7 +13,7 @@ var searchData=
   ['alws',['alws',['../structout_field.html#a157c2ef6902805674e0a7da92cd44d10',1,'outField']]],
   ['amoisn',['aMoiSN',['../class_t_sol_mod.html#a3bd410f78ce3ca55e0db249993a8d064',1,'TSolMod']]],
   ['annodes',['anNodes',['../class_t_node_array.html#a6a2bf145e077e6913235dd90d14eb58c',1,'TNodeArray']]],
-  ['aph',['aPH',['../struct_d_a_t_a_b_r.html#a6ccc9c05020354dfb39141688c0556a9',1,'DATABR::aPH()'],['../struct_m_u_l_t_i.html#aa670d11b534e1d69e471be2677c89f21',1,'MULTI::APh()']]],
+  ['aph',['APh',['../struct_m_u_l_t_i.html#aa670d11b534e1d69e471be2677c89f21',1,'MULTI::APh()'],['../struct_d_a_t_a_b_r.html#a6ccc9c05020354dfb39141688c0556a9',1,'DATABR::aPH()']]],
   ['aphvol',['aphVOL',['../struct_solution_data.html#af398f6c52b7d15caa58216672847b260',1,'SolutionData']]],
   ['apparc',['aPparc',['../class_t_sol_mod.html#a02fcd64fa845734547a61ce6acd09ee9',1,'TSolMod']]],
   ['aqstail',['aqsTail',['../struct_m_u_l_t_i.html#abbce12659d94c13f198367865468aebf',1,'MULTI']]],

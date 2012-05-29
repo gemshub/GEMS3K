@@ -20,8 +20,6 @@ var searchData=
   ['checkmassbalanceresiduals',['CheckMassBalanceResiduals',['../class_t_multi.html#aaebbf6d96e7cf89e432688a584819253',1,'TMulti']]],
   ['checkmtparam',['CheckMtparam',['../class_t_multi.html#a6665896960549e2dc0818f94c4c51506',1,'TMulti']]],
   ['checknodearray',['checkNodeArray',['../class_t_node_array.html#a6b72453a75bc4e4d81eccd751dae7dea',1,'TNodeArray']]],
-  ['cholesky',['Cholesky',['../class_j_a_m_a_1_1_cholesky.html',1,'JAMA']]],
-  ['cholesky',['Cholesky',['../class_j_a_m_a_1_1_cholesky.html#af859c41220c4313470d28fa13706ff63',1,'JAMA::Cholesky']]],
   ['cms',['cMs',['../class_t_node.html#a1ee5d7097eff1026e99ec811b20990c0',1,'TNode']]],
   ['cnode',['CNode',['../class_t_node.html#af9972ec005d9d422c78445eb330471cd',1,'TNode']]],
   ['cnr',['cnr',['../class_t_multi.html#a59b2cd0f36cf308ebb952457585ab4d1',1,'TMulti']]],

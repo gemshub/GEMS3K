@@ -22,55 +22,29 @@
 
 //#include "s_fgl.h"
 
-const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6; // number of surface types
-
-struct SorptionData {
-    long int NSpecies;  // Number of species (end members) in the phase
-    long int NParams;   // Total number of non-zero interaction parameters
-    long int NPcoefs;   // Number of coefficients per interaction parameter
-    long int MaxOrder;  // Maximum order of interaction parameters
-    long int NPperDC;   // Number of parameters per species (DC)
-    long int NSublat;   // number of sublattices nS
-    long int NMoiet;    // number of moieties nM
-    char Mod_Code;      // Code of the mixing model
-    char Mix_Code;      // Code for specific EoS mixing rule
-    char *DC_Codes;     // DC class codes for species -> NSpecies
-    char (*TP_Code)[6]; // Codes for TP correction methods for species ->NSpecies
-    long int *arIPx;    // Pointer to list of indexes of non-zero interaction parameters
-    double *arIPc;      // Table of interaction parameter coefficients
-    double *arDCc;      // End-member properties coefficients
-    double *arMoiSN;    // End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
-    double *arSitFr;    // Tables of sublattice site fractions for moieties -> NSublat x NMoiet
- // TBD   double *arSitFj; // Table of end member sublattice activity coefficients -> NSpecies x NSublat
-    double *arGEX;      // Reciprocal energies, Darken terms, pure fugacities -> NSpecies
-    double *arPparc;    // Partial pressures -> NSpecies
-    double *arWx;       // Species (end member) mole fractions ->NSpecies
-    double *arlnGam;    // Output: activity coefficients of species (end members)
-    double *arVol;      // molar volumes of end-members (species) cm3/mol ->NSpecies
-    double *aphVOL;     // phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
-    double T_k;         // Temperature, K (initial)
-    double P_bar;       // Pressure, bar (initial)
-};
-
+const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6, MAXEILAYERS = 4;
 
 struct SorptionSiteData {
     char  SiteT;   // Site type code, see SITETYPECODES
     char  SACTC;   // SACT equation code, see SACTCODES
-    long int NSpecies;  // Number of surface species on this site (>=1; 0 if site to be ignored)
+    long int NSpecies;  // Number of surface species that can bind to this site (>=1; 0 if the site ignored)
+
     double  qCp;          //  site capacity parameter in mol/kg (CEC in eq/kg)
     double  GamCp;        //  site density parameter in mol/m2  (CEC in eq/m2)
     double  AlphaFp;      //  Frumkin interaction parameter;
-    double  BETip;        //  BET isotherm parameter
-    double  BETiq;        //  BET isotherm parameter
-    double  *dent;        //  Species denticity or coordination number [NSpecies]
-    double  *spDUL;       // temporary upper constraint on species amount for SAT calculations [NSpecies]
-    double  *nxs;         // moles of surface species on this site (direct access) [NSpecies]
-    long int *xst;        // Index of surface species on surface tile (phase)  [NSpecies]
-    double *lnSACT;       // ln of SACT [NSpecies] - output (direct access, incremental)
-    double *lnGamF;       // ln of SACT [NSpecies] - output (direct access, incremental)
+    double  BETip;        //  BET isotherm parameter p
+    double  BETiq;        //  BET isotherm parameter q
 
+    double  *arDent;        // Species denticity or coordination number on this site type [NSpecies]
+    double  *arSpDUL;       // temporary upper constraint on species amount for SAT calculations [NSpecies]
+    double  *ar_nxs;         // moles of sites taken by a surface species [NSpecies]
+    long int *ar_xst;        // Index of surface species on surface tile (phase)  [NSpecies]
+    double *arlnSACT;       // ln of SACT [NSpecies] - output (direct access, incremental)
+    double *arlnGamF;       // ln of Frumkin or BET term [NSpecies] - output (direct access, incremental)
+
+    double *OccTot;       // Total amount of occupied sites (output scalar)
+    double *FreTot;       // Total amount of free sites (output scalar)
 };
-
 
 class TSurfSiteMod
 {
@@ -88,7 +62,9 @@ double  qC,          //  site capacity parameter in mol/kg (CEC in eq/kg)
         BETq;        //  BET isotherm parameter
 
 double  XSsI,        // total mole amount of surface species on this site
-        XSsM;        // maximum (limiting) amount of sites
+        XSsM,        // maximum (limiting) amount of sites
+        OcTot,       // Total amount of occupied sites
+        FrTot;       // Total amount of free sites
 
 // double MASDJ[DFCN]; Parameters of surface species in surface complexation models
 // enum {
@@ -98,8 +74,8 @@ double  XSsI,        // total mole amount of surface species on this site
 //   XL_ST = 0, XL_EM, XL_SI, XL_SP
 // };
 
-   double dent[];     //  Species denticity or coordination number [NSpec]
-   double spDUL[];    // temporary upper constraint on species amount for SAT calculations [NSpec]
+   double Dent[];     //  Species denticity or coordination number [NSpec]
+   double SpDUL[];    // temporary upper constraint on species amount for SAT calculations [NSpec]
    double nxs[];      // moles of surface species on this site (picked up) [NSpec]
    long int xst[];    // Index of surface species on surface tile (phase)  [NSpec]
 // results
@@ -119,42 +95,77 @@ public:
     // Destructor
     virtual ~TSurfSiteMod();
 
+    // Other methods
+
 };
 
 struct SorptionData {
 
-    char Mod_Code;     // Code of the sorption phase model - see SORPPHASECODES
-    char EIL_Code;	  // Code for specific EIL model- see EILMODCODES  (before: SCMC)
-//    char Sorbent[MAXPHASENAME+1]; // Name of the external phase (particulate sorbent or porous medium)
+char Mod_Code;    // Code of the sorption phase model - see SORPPHASECODES
+char EIL_Code;	  // Code for specific EIL model- see EILMODCODES  (before: SCMC)
+char  PhasNam_[MAXPHASENAME];      // Phase name (for specific built-in models)
+
+long int NSpec_;  // Total number of species assigned to this surface tile or Donnan phase
+long int nlPh_;   // number of linked phases (cf. lPh), default 1 (the sorbent phase)
+long int nlPhC_;  // number of linked phase parameter coefficient per link (default 0)
+
+long int nEIml_; // number of EIL model layers (default 0, maximum MAXEILAYERS);
+long int nEIpl_; // number of EIL params per layer (default 0);
+long int nCDcf_; // number of CD coefs per DC (default 0);
+long int nEIres_; // reserved
+
+long int NsiteTs_; // number of surface sites; (default 1)
+long int nISTcf_;  // number of isotherm coeffs per site (default 1)
+long int nISDcf_;  // number of isotherm coeffs per DC (default 1)
+long int DelMax_;  // max.denticity of DC (default 1)
+
     long int kSorPh; // Index of the sorbent phase in GEM IPM work structure (MULTI)
-                     // if -1 then this is a site-balance based approach; Sarea or Volum must be given explicitly
-    long int Nspecies;   // Total number of species assigned to this surface tile
-    long int NsiteTs;   // Number of surface site types per surface patch type (min 1 max 6), for Donnan 1
+                     // if -1 then this is a site-balance based approach; SSa_ or sVp_ must be provided
+
+long int NsiteTs;   // Number of surface site types per surface patch type (min 1 max 6), for Donnan 1
                      //   (if 0 then this sorption phase model is ignored)
-    long int *xsM;  // index of surface site per surface species (site allocation) [NspT]
+long int *xsM;  // index of surface site per surface species (site allocation) [NSpec_]
 
+long int *arPsDiS;  // array of DC denticity and indexes of binding sites [NSpec*(DelMax+1)]
 
-    long int NParams;   // Total number of non-zero interaction parameters
-    long int NPcoefs;   // Number of coefficients per interaction parameter
-    long int MaxOrder;  // Maximum order of interaction parameters
-    long int NPperDC;   // Number of parameters per species (DC)
-    long int NSublat;   // number of sublattices nS
-    long int NMoiet;    // number of moieties nM
+char *DC_Cods_;     // DC class codes for species [NSpec_]
+char *IsoCt_;   // isotherm and SATC codes for surface site types [2*NsiteTs_]
 
-    char Mod_Code;      // Code of the mixing model
-    char Mix_Code;      // Code for specific EoS mixing rule
-    char *DC_Codes;     // DC class codes for species -> NSpecies
-    char (*TP_Code)[6]; // Codes for TP correction methods for species ->NSpecies
+long int *arPhLin;  // indexes of linked (sorbent) phase(s) and link type code(s) [nlPh*2] read-only
 
-    long int *arIPx;    // Pointer to list of indexes of non-zero interaction parameters
+    double T_k_;         // Temperature, K (initial)
+    double P_bar_;       // Pressure, bar (initial)
+    double IS_;          // Effective molal ionic strength of aqueous electrolyte
+    double pH_;         // pH of aqueous solution
+    double pe_;         // pe of aqueous solution
+    double Eh_;         // Eh of aqueous solution, V
 
-    double T_k;         // Temperature, K (initial)
-    double P_bar;       // Pressure, bar (initial)
-    double N_C_st;      // Standard surface number density, 1/nm2"
-    double Gam_C_st;    // Standard surface density, mol/m2
-    double q_C_st;      // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent)
+// This is taken over from the aSorMc[16] piece from MULTI
+    double *arSorMc;
+//    double sSA_,  // Specific surface area, m2/g, default: 0.
+//           sgw_, // Standard mean surface energy of solid-aqueous interface, J/m2
+//           sgg_, // Standard mean surface energy of gas-aqueous interface, J/m2
+//           rX0_,    // Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
+//           hX0_,    // Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
+    //
+//           sVp_,  // Specific pore volume of phase, m3/g (default: 0)
+//           frSA_,   // reactive fraction of surface area (def. 1)
 
-    double Nfsp,     // Fraction of the sorbent specific surface area or volume allocated to surface type (>0 <10000)
+//           nPh_,  // current amount of this phase, mol (read-only)
+//           mPh_,  // current mass of this phase, g (read-only)
+//           vPh_,  // current volume of this phase, cm3 (read-only)
+//           sAPh_,  // current surface of this phase, m2
+//           OmPh_,  // phase stability index (lg scale), input
+        //
+//           *nPul_, // pointer to upper restriction to this phase amount, mol (calculated here)
+//           *nPll_, // pointer to lower restriction to this phase amount, mol (calculated here)
+//           *sGP_;  // pointer to surface free energy of the phase, J (YOF*PhM)
+
+double N_Cst_;    // Standard surface number density, 1/nm2
+double G_Cst_;    // Standard surface density, mol/m2
+double q_Cst_;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent)
+
+    double Nfsp_,     // Fraction of the sorbent specific surface area or volume allocated to surface type (>0 <10000)
            MASDT,    // Total sorption capacity for this surface type (mol/kg), before was (mkmol/g)
            XetaC,    // Total permanent charge capacity CEC, mol/kg
            VetaP,    // Total permanent volume charge density (eq/m3)
@@ -162,6 +173,7 @@ struct SorptionData {
            ValP,     // Porosity of the Donnan sorbent (d/less)
            ParD1,    // Donnan model parameter 1
            ParD2,    // Donnan model parameter 2
+
            XcapA,    // Capacitance density of 0 EIL layer, F/m2
            XcapB,    // Capacitance density of B (1) EIL layer, F/m2
            XcapL,    // Capacitance density of L (2) EIL layer, F/m2
@@ -173,36 +185,94 @@ struct SorptionData {
            XlamA;    // Factor of EDL discretness  A < 1, reserved
     double (*CD)[3];    // Species charges allocated to 0, 1 and 2 planes [NspT]
 
-    double *arIPc;      // Table of interaction parameter coefficients
-    double *arDCc;      // End-member properties coefficients
-    double *arMoiSN;    // End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
-    double *arSitFr;    // Tables of sublattice site fractions for moieties -> NSublat x NMoiet
- // TBD   double *arSitFj; // Table of end member sublattice activity coefficients -> NSpecies x NSublat
-    double *arGEX;      // Reciprocal energies, Darken terms, pure fugacities -> NSpecies
-    double *arPparc;    // Partial pressures -> NSpecies
-    double *arWx;       // Species (end member) mole fractions ->NSpecies
-    double *arlnGam;    // Output: activity coefficients of species (end members)
-    double *arVol;      // molar volumes of end-members (species) cm3/mol ->NSpecies
-    double *aphVOL;     // phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
+double *arlPhc;  // array of phase link parameters (sum(LsPhl[k][1] over Fi)
 
-    double T_k;         // Temperature, K (initial)
-    double P_bar;       // Pressure, bar (initial)
+double *arEImc;  // EIL model coefficients table [nEIml_*nEIpl]
+double *armCDc;  // CD EIL model coefficients table [NSpec_*nCDcf_]
+double *IsoPc;   // Isotherm equation coefficients table [NSpec_*nISDcf_]
+double *IsoSc;   // Isotherm equation coeffs per surface site type [NsiteTs*nISTcf_]
+
+double *arPparc;    // Partial pressures -> NSpecies
+double *arWx;       // Species mole fractions ->NSpec_ read-only
+double *arnx;     // Pointer to mole amounts of phase components (provided) [NSpec_] read-only
+// output
+double *arlnScalT;   // Surface/volume scaling activity correction terms [NSpec_]
+double *arlnSACT;    // Pointer to ln SACT for surface species [NSpec_]
+double *arlnGammaF;  // Pointer to Frumkin or BET non-electrostatic activity coefficients [NSpec_]
+double *arCTerms;    // Pointer to Coulombic correction terms (electrostatic activity coefficients) [NSpec_]
+double *arlnGamma;   // Pointer to ln activity coefficients of sorption phase components mixing [NSpec_]
+                   // (memory under pointers must be provided from the calling program)
+
+double *arVol;      // molar volumes of end-members (species) cm3/mol [NSpec_] read-inly
+char  (*arSM)[MAXDCNAME];  // pointer to the list of DC names in the phase [NSpec_] read-only
+char  *arDCC;   // pointer to the classifier of DCs involved in this phase [NSpec_] read-only
+
 };
-
 
 class TSorpMod
 {     // Treatment of surface tile (patch) or Donnan volume phases in sorption models
 protected:
-    char ModCode;     // Code of the sorption phase model - see SORPPHASECODES
-    char EILCode;	  // Code for specific EIL model- see EILMODCODES  (before: SCMC)
-    char Sorbent[MAXPHASENAME+1]; // Name of the external phase (particulate sorbent or porous medium)
+
+    char Mod_Code;    // Code of the sorption phase model - see SORPPHASECODES
+    char EIL_Code;	  // Code for specific EIL model- see EILMODCODES  (before: SCMC)
+    char  PhasNam_[MAXPHASENAME];      // Phase name (for specific built-in models)
+
+    long int NSpec;  // Total number of species assigned to this surface tile or Donnan phase
+    long int nlPh;   // number of linked phases (cf. lPh), default 1 (the sorbent phase)
+    long int nlPhC;  // number of linked phase parameter coefficient per link (default 0)
+
+    long int nEIml;  // number of EIL model layers (default 0);
+    long int nEIpl;  // number of EIL params per layer (default 0);
+    long int nCDc_;  // number of CD coefs per DC (default 0);
+    long int nEIres; // reserved
+
+    long int NsiteTs; // number of surface sites; (default 1)
+    long int nISTcf;  // number of isotherm coeffs per site (default 1)
+    long int nISDcf;  // number of isotherm coeffs per DC (default 1)
+    long int DelMax;  // max.denticity of DC (default 1)
 
     long int kSorPh; // Index of the sorbent phase in GEM IPM work structure (MULTI)
-                     // if -1 then this is a site-balance based approach; Sarea or Volum must be given explicitly
-    long int NspT;   // Total number of species assigned to this surface tile
-    long int NsiT;   // Number of surface site types per surface patch type (min 1 max 6), for Donnan 1
-                     //   (if 0 then this sorption phase model is ignored)
-    long int xsM[];  // index of surface site per surface species (site allocation) [NspT]
+                     // if -1 then this is a site-balance based approach; SSa_ or sVp_ must be provided
+
+    long int NsiteTs; // Number of surface site types per surface patch type (min 1 max 6), for Donnan 1
+                      //   (if 0 then this sorption phase model is ignored)
+//    long int *xsM;  // index of surface site per surface species (site allocation) [Nspec]
+    long int **PsDS;  // array of DC denticity and indexes of binding sites [NSpec][DelMax+1]
+    long int **PhLin; // indexes of linked (sorbent) phase(s) and link type code(s) [nlPh][2] read-only
+    char *DCCs;   // DC class codes for species [NSpec_]
+    char **IsoCt;    // isotherm and SATC codes for surface site types NsiteTs][2]
+
+    double T_k;        // Temperature, K (initial)
+    double P_bar;      // Pressure, bar (initial)
+    double IS;         // Effective molal ionic strength of aqueous electrolyte
+    double pH;         // pH of aqueous solution
+    double pe;         // pe of aqueous solution
+    double Eh;         // Eh of aqueous solution, V
+
+// This is taken over from the aSorMc[16] piece from MULTI
+    double sSA,  // Specific surface area, m2/g, default: 0.
+           sgw, // Standard mean surface energy of solid-aqueous interface, J/m2
+           sgg, // Standard mean surface energy of gas-aqueous interface, J/m2
+//           rX0,    // Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
+//           hX0,    // Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
+    //
+           sVp,  // Specific pore volume of phase, m3/g (default: 0)
+           frSA,   // reactive fraction of surface area (def. 1)
+
+//           nPh,  // current amount of this phase, mol (read-only)
+//           mPh,  // current mass of this phase, g (read-only)
+//           vPh,  // current volume of this phase, cm3 (read-only)
+//           sAPh,  // current surface of this phase, m2
+//           OmPh,  // phase stability index (lg scale), input
+        //
+           *sGP_;  // pointer to surface free energy of the phase, J (YOF*PhM)
+
+double N_Cst;    // Standard surface number density, 1/nm2
+double G_Cst;    // Standard surface density, mol/m2
+double q_Cst;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent)
+
+
+
 
 // EIL models (data for electrostatic activity coefficients)
 //       double (*XetaA)[MST]; // Total EDL charge on A (0) EDL plane, moles [FIs][FIat]
@@ -213,20 +283,10 @@ protected:
 //       double (*XpsiD)[MST]; // Relative potential at D (2) plane,V [FIs][FIat]
 //       double (*XFTS)[MST];  // Total number of moles of surface DC at surface type [FIs][FIat]
 
-    double Tk;    	  // Temperature, K
-    double Pbar;  	  // Pressure, bar
+
     double R_CONST;   // R constant
     double F_CONST;   // F (Faraday's) constant
-    double N_C_st;    // Standard surface number density, 1/nm2"
-    double Gam_C_st;  // Standard surface density, mol/m2
-    double q_C_st;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent)
-    double Xcond, 	// conductivity of phase carrier, sm/m2, reserved
-           Xeps,  	// rel. diel. permeability of phase carrier (solvent), reserved
-           Aalp,  	// Specific surface area of phase carrier (sorbent) (m2/g) !!! m2/kg
-           Sigw,  	// Specific surface free energy for phase-water interface (J/m2)
-           Sigg,  	// Specific surface free energy for phase-gas interface (J/m2) (not yet used)
-           Xr0,   // Mean radius r0 for (spherical or cylindrical) particles, nm (reserved) Xr0h0[2]
-           Xh0;   // Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
+
 
     // model parameters
     double Nfsp,     // Fraction of the sorbent specific surface area or volume allocated to surface type (>0 <10000)

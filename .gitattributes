@@ -13,10 +13,6 @@ Docs/doxy/html/class_golden_section.png -text
 Docs/doxy/html/class_golden_section_two-members.html -text
 Docs/doxy/html/class_golden_section_two.html -text
 Docs/doxy/html/class_golden_section_two.png -text
-Docs/doxy/html/class_j_a_m_a_1_1_cholesky-members.html -text
-Docs/doxy/html/class_j_a_m_a_1_1_cholesky.html -text
-Docs/doxy/html/class_j_a_m_a_1_1_l_u-members.html -text
-Docs/doxy/html/class_j_a_m_a_1_1_l_u.html -text
 Docs/doxy/html/class_t_berman-members.html -text
 Docs/doxy/html/class_t_berman.html -text
 Docs/doxy/html/class_t_berman.png -text
@@ -64,12 +60,6 @@ Docs/doxy/html/class_t_multi.html -text
 Docs/doxy/html/class_t_n_r_t_l-members.html -text
 Docs/doxy/html/class_t_n_r_t_l.html -text
 Docs/doxy/html/class_t_n_r_t_l.png -text
-Docs/doxy/html/class_t_n_t_1_1_array1_d-members.html -text
-Docs/doxy/html/class_t_n_t_1_1_array1_d.html -text
-Docs/doxy/html/class_t_n_t_1_1_array2_d-members.html -text
-Docs/doxy/html/class_t_n_t_1_1_array2_d.html -text
-Docs/doxy/html/class_t_n_t_1_1i__refvec-members.html -text
-Docs/doxy/html/class_t_n_t_1_1i__refvec.html -text
 Docs/doxy/html/class_t_node-members.html -text
 Docs/doxy/html/class_t_node.html -text
 Docs/doxy/html/class_t_node.png -text
@@ -182,7 +172,6 @@ Docs/doxy/html/functions_func_0x76.html -text
 Docs/doxy/html/functions_func_0x77.html -text
 Docs/doxy/html/functions_func_0x78.html -text
 Docs/doxy/html/functions_func_0x7e.html -text
-Docs/doxy/html/functions_type.html -text
 Docs/doxy/html/functions_vars.html -text
 Docs/doxy/html/functions_vars_0x62.html -text
 Docs/doxy/html/functions_vars_0x63.html -text
@@ -212,8 +201,6 @@ Docs/doxy/html/gems1.png -text
 Docs/doxy/html/hierarchy.html -text
 Docs/doxy/html/index.html -text
 Docs/doxy/html/io__arrays_8h_source.html -text
-Docs/doxy/html/jama__cholesky_8h_source.html -text
-Docs/doxy/html/jama__lu_8h_source.html -text
 Docs/doxy/html/jquery.js -text
 Docs/doxy/html/m__const_8h_source.html -text
 Docs/doxy/html/m__param_8h_source.html -text
@@ -434,10 +421,6 @@ Docs/doxy/html/tab_b.png -text
 Docs/doxy/html/tab_h.png -text
 Docs/doxy/html/tab_s.png -text
 Docs/doxy/html/tabs.css -text
-Docs/doxy/html/tnt_8h_source.html -text
-Docs/doxy/html/tnt__array1d_8h_source.html -text
-Docs/doxy/html/tnt__array2d_8h_source.html -text
-Docs/doxy/html/tnt__i__refvec_8h_source.html -text
 Docs/doxy/html/v__user_8h_source.html -text
 Docs/doxy/html/verror_8h_source.html -text
 Docs/html/FlowChartOfIPM-3-Algorithm.png -text

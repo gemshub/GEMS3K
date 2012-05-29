@@ -55,7 +55,6 @@ var searchData=
   ['denh2ow',['DenH2Ow',['../class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c',1,'TNode']]],
   ['denw',['denW',['../struct_d_a_t_a_c_h.html#a8a68ab8a2c156ff74160c36e56630429',1,'DATACH::denW()'],['../struct_m_u_l_t_i.html#ac70763b06e35d003131d60ce6e92aa0f',1,'MULTI::denW()']]],
   ['denwg',['denWg',['../struct_d_a_t_a_c_h.html#a3441c33ba4a47ce1569162b0a44d8037',1,'DATACH::denWg()'],['../struct_m_u_l_t_i.html#a7cf675ce122bb10adbf5c2a345679f28',1,'MULTI::denWg()']]],
-  ['det',['det',['../class_j_a_m_a_1_1_l_u.html#a954d514e3e802da2fc8a422d15df5cfd',1,'JAMA::LU']]],
   ['df',['DF',['../struct_b_a_s_e___p_a_r_a_m.html#a9795dac9acac7cf187c34b998ef76258',1,'BASE_PARAM']]],
   ['dfm',['DFM',['../struct_b_a_s_e___p_a_r_a_m.html#a8a3825f92beeb2fb4db378e25a48cafd',1,'BASE_PARAM']]],
   ['dfyaq',['DFYaq',['../struct_b_a_s_e___p_a_r_a_m.html#a347e8b12476050350bff6a04726bf834',1,'BASE_PARAM']]],

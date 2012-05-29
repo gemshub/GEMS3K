@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['i_5frefvec',['i_refvec',['../class_t_n_t_1_1i__refvec.html#af331cca09a3d6ec6ba51cff9fd4a3c1f',1,'TNT::i_refvec']]],
   ['ic_5fb',['IC_b',['../class_t_node.html#abe260b0ba07f67f415b0a9b08492c678',1,'TNode']]],
   ['ic_5fname_5fto_5fxch',['IC_name_to_xCH',['../class_t_node.html#a242db0953e1e2125e432c0952cc2972e',1,'TNode']]],
   ['ic_5fname_5fto_5fxdb',['IC_name_to_xDB',['../class_t_node.html#afc747ebf3dac420af73670c5ab029781',1,'TNode']]],
@@ -20,7 +19,5 @@ var searchData=
   ['interiorpointsmethod',['InteriorPointsMethod',['../class_t_multi.html#ae0ce862b92fb59c63df3badc9a0c0eb1',1,'TMulti']]],
   ['internalenergy',['InternalEnergy',['../class_t_multi.html#a12af02446fdc8df715cc57f4a348415a',1,'TMulti']]],
   ['is_5fetacalc',['IS_EtaCalc',['../class_t_multi.html#a6e7660cf3c63beff3eb765efc7de399c',1,'TMulti']]],
-  ['is_5fspd',['is_spd',['../class_j_a_m_a_1_1_cholesky.html#ab8ac7d6f0c9ef4e0fb74b001fe03ff90',1,'JAMA::Cholesky']]],
-  ['islocationinnode',['isLocationInNode',['../class_t_node_array.html#acdf2bb8db77fd402603e7229fdf975c1',1,'TNodeArray::isLocationInNode(long int ii, long int jj, long int kk, LOCATION cxyz) const '],['../class_t_node_array.html#a34307fdc8bba8794a3dbf6690d086e24',1,'TNodeArray::isLocationInNode(long int iNode, LOCATION cxyz) const ']]],
-  ['isnonsingular',['isNonsingular',['../class_j_a_m_a_1_1_l_u.html#afc7269c15f48fbbefdcb067bf71cc179',1,'JAMA::LU']]]
+  ['islocationinnode',['isLocationInNode',['../class_t_node_array.html#acdf2bb8db77fd402603e7229fdf975c1',1,'TNodeArray::isLocationInNode(long int ii, long int jj, long int kk, LOCATION cxyz) const '],['../class_t_node_array.html#a34307fdc8bba8794a3dbf6690d086e24',1,'TNodeArray::isLocationInNode(long int iNode, LOCATION cxyz) const ']]]
 ];

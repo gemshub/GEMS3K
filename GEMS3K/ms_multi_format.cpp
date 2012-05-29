@@ -3,7 +3,7 @@
 //
 // Implementation of text writing/reading IPM, DCH and DBR files
 //
-// Copyright (C) 2006,2011 S.Dmytriyeva,D.Kulik
+// Copyright (C) 2006,2012 S.Dmytriyeva,D.Kulik
 //
 // This file is part of the GEM-Selektor GUI library and GEMS3K
 // code package
@@ -24,7 +24,7 @@
 #endif
 
 //bool _comment = true;
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.641 (rc) ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.680 (rc) ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string

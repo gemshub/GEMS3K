@@ -26,7 +26,5 @@ var searchData=
   ['lowposnum',['lowPosNum',['../struct_m_u_l_t_i.html#affcda3fae8422d9e6eff0a68c82c2683',1,'MULTI']]],
   ['ls',['Ls',['../struct_m_u_l_t_i.html#a94e4ead47e34d20f4194d5017b536f7b',1,'MULTI']]],
   ['lsmdc',['LsMdc',['../struct_m_u_l_t_i.html#aafdbe89aaab8de7ffd02e2ed63218c8d',1,'MULTI']]],
-  ['lsmod',['LsMod',['../struct_m_u_l_t_i.html#a6b2a5a871ce8f55ce4c9716172f2f500',1,'MULTI']]],
-  ['lu',['LU',['../class_j_a_m_a_1_1_l_u.html',1,'JAMA']]],
-  ['lu',['LU',['../class_j_a_m_a_1_1_l_u.html#af280c292fc2801a6fa5e5c0a84f15685',1,'JAMA::LU']]]
+  ['lsmod',['LsMod',['../struct_m_u_l_t_i.html#a6b2a5a871ce8f55ce4c9716172f2f500',1,'MULTI']]]
 ];

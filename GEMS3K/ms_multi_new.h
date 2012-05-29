@@ -204,6 +204,7 @@ long int
 *lPhc,  // new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
 *DQFc,  // new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc[k][3]
 *rcpc,  // new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc[k][4]
+
 // TSorpMod & TKinMet stuff
 *SorMc, // new: Phase-related kinetics and sorption model parameters: [Fis][16]
            // in the same order as from Asur until fRes2 in TPhase
@@ -216,7 +217,6 @@ long int
 *Krpc,  // new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][1];
 *UMpc,  // new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
     ;
-
 //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   // mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
   double  (*Nfsp)[MST];  // Fractions of the sorbent specific surface area allocated to surface types  [FIs][FIat]
@@ -233,7 +233,6 @@ long int
   double  (*MASDJ)[DFCN];  // Parameters of surface species in surface complexation models [Lads][DFCN]
                           // Contents defined in the enum below this structure
 // Other data
-
   double
     *XFs,    // Current quantities of phases X_a at IPM iterations [0:FI-1]
     *Falps,  // Current Karpov criteria of phase stability  F_a [0:FI-1]
@@ -269,6 +268,17 @@ long int
    // Old sorption models stuff
   double  (*lnSAC)[4]; // former lnSAT ln surface activity coeff and Coulomb's term  [Lads][4]
 
+// TSolMod stuff (detailed output on partial energies of mixing)
+double *lnDQFt; // new: DQF terms adding to overall activity coefficients [Ls_]
+double *lnRcpt; // new: reciprocal terms adding to overall activity coefficients [Ls_]
+double *lnEXt;  // new: excess energy terms adding to overall activity coefficients [Ls_]
+double *lnCnft; // new: configurational terms adding to overall activity [Ls_]
+// TSorpMod stuff
+double *lnScalT;  // new: Surface/volume scaling activity correction terms [Ls_]
+double *lnSACT;   // new: ln isotherm-specific SACT for surface species [Ls_]
+double *lnGammF;  // new: Frumkin or BET non-electrostatic activity coefficients [Ls_]
+double *CTerms;   // new: Coulombic terms (electrostatic activity coefficients) [Ls_]
+
   double  *B,  // Input bulk chem. compos. of the system - b vector, moles of IC[N]
     *U,  // IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
     *U_r,  // IC chemical potentials u_i (J/mole) [0:N-1]
@@ -283,7 +293,7 @@ long int
     *XFA,   // Quantity of carrier in asymmetric phases Xwa, moles [FIs]
     *YFA,   // Approximation of XFA in the next IPM iteration [0:FIs-1]
     *Falp;  // Karpov phase stability criteria F_a [0:FI-1] or phase stability index (PC==2)
-   // TSolMod stuff (TBC)
+
   double (*VPh)[MIXPHPROPS],     // Volume properties for mixed phases [FIs]
          (*GPh)[MIXPHPROPS],     // Gibbs energy properties for mixed phases [FIs]
          (*HPh)[MIXPHPROPS],     // Enthalpy properties for mixed phases [FIs]

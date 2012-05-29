@@ -1,11 +1,5 @@
 var searchData=
 [
-  ['i_5frefvec',['i_refvec',['../class_t_n_t_1_1i__refvec.html',1,'TNT']]],
-  ['i_5frefvec',['i_refvec',['../class_t_n_t_1_1i__refvec.html#af331cca09a3d6ec6ba51cff9fd4a3c1f',1,'TNT::i_refvec']]],
-  ['i_5frefvec_3c_20int_20_3e',['i_refvec< int >',['../class_t_n_t_1_1i__refvec.html',1,'TNT']]],
-  ['i_5frefvec_3c_20real_20_2a_20_3e',['i_refvec< Real * >',['../class_t_n_t_1_1i__refvec.html',1,'TNT']]],
-  ['i_5frefvec_3c_20real_20_3e',['i_refvec< Real >',['../class_t_n_t_1_1i__refvec.html',1,'TNT']]],
-  ['i_5frefvec_3c_20t_20_2a_20_3e',['i_refvec< T * >',['../class_t_n_t_1_1i__refvec.html',1,'TNT']]],
   ['ianode',['iaNode',['../class_t_node_array.html#aed745861d8cfedc874e4c0c3844edc15',1,'TNodeArray']]],
   ['ic',['IC',['../struct_d_a_t_a_b_r.html#a2d3ff4ea3226f5633f3b377674415ee6',1,'DATABR::IC()'],['../struct_m_u_l_t_i.html#a64607bc5c3104b2264826f9bab4cb73e',1,'MULTI::IC()']]],
   ['ic_5fb',['IC_b',['../class_t_node.html#abe260b0ba07f67f415b0a9b08492c678',1,'TNode']]],
@@ -40,9 +34,7 @@ var searchData=
   ['ipx',['IPx',['../struct_m_u_l_t_i.html#a979aa4a848d27af2e65d7ca0757e8ea2',1,'MULTI']]],
   ['is',['is',['../struct_m_u_l_t_i.html#acb393319826f44682fdc58edae07d534',1,'MULTI']]],
   ['is_5fetacalc',['IS_EtaCalc',['../class_t_multi.html#a6e7660cf3c63beff3eb765efc7de399c',1,'TMulti']]],
-  ['is_5fspd',['is_spd',['../class_j_a_m_a_1_1_cholesky.html#ab8ac7d6f0c9ef4e0fb74b001fe03ff90',1,'JAMA::Cholesky']]],
   ['islocationinnode',['isLocationInNode',['../class_t_node_array.html#acdf2bb8db77fd402603e7229fdf975c1',1,'TNodeArray::isLocationInNode(long int ii, long int jj, long int kk, LOCATION cxyz) const '],['../class_t_node_array.html#a34307fdc8bba8794a3dbf6690d086e24',1,'TNodeArray::isLocationInNode(long int iNode, LOCATION cxyz) const ']]],
-  ['isnonsingular',['isNonsingular',['../class_j_a_m_a_1_1_l_u.html#afc7269c15f48fbbefdcb067bf71cc179',1,'JAMA::LU']]],
   ['it',['IT',['../struct_m_u_l_t_i.html#a730212bc8ee81361c2a86056a76d1790',1,'MULTI']]],
   ['itaia',['ITaia',['../struct_m_u_l_t_i.html#a4122bb5637e83ee822907ab4b6b72805',1,'MULTI']]],
   ['iterdone',['IterDone',['../struct_d_a_t_a_b_r.html#a6626c3a6f818bb078d4013acb39d2b1b',1,'DATABR']]],

@@ -734,7 +734,19 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is 
 # run.
 
-EXCLUDE                = 
+EXCLUDE                = ../../GEMS3K/jama_lu.h \
+                         ../../GEMS3K/jama_cholesky.h \
+                         ../../GEMS3K/s_kinmet.cpp \
+                         ../../GEMS3K/s_kinmet.h \
+                         ../../GEMS3K/s_sorption.cpp \
+                         ../../GEMS3K/s_sorption.h \
+                         ../../GEMS3K/tnt.h \
+                         ../../GEMS3K/tnt_array1d.h \
+                         ../../GEMS3K/tnt_array2d.h \
+                         ../../GEMS3K/tnt_i_refvec.h \
+                         ../../GEMS3K/ms_multi_new.h \
+                         ../../GEMS3K/platform \
+                         ../../GEMS3K/s_fgl_new.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or 
 # directories that are symbolic links (a Unix file system feature) are excluded 

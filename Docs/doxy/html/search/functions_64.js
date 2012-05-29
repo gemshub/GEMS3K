@@ -40,6 +40,5 @@ var searchData=
   ['dctoph_5fdch',['DCtoPh_DCH',['../class_t_node.html#a33ea7b8aac27af7a1a6e844bfe2ac710',1,'TNode']]],
   ['denh2og',['DenH2Og',['../class_t_node.html#aa5f5fa762cb44dcc8902816854dcaf94',1,'TNode']]],
   ['denh2ow',['DenH2Ow',['../class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c',1,'TNode']]],
-  ['det',['det',['../class_j_a_m_a_1_1_l_u.html#a954d514e3e802da2fc8a422d15df5cfd',1,'JAMA::LU']]],
   ['dikinscriterion',['DikinsCriterion',['../class_t_multi.html#a0245f972e785fcb412ab228d6194b1fa',1,'TMulti']]]
 ];
