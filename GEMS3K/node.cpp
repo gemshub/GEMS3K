@@ -1857,10 +1857,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nDCb; ii++ )
   /*    pmm->X[ CSD->xdc[ii] ] = */
         pmm->Y[ CSD->xdc[ii] ] = CNode->xDC[ii];
-  for( ii=0; ii<CSD->nDCb; ii++ )
-  {
-     pmm->lnGam[ CSD->xdc[ii] ] = log( CNode->gam[ii] );
-  }
+
   for( ii=0; ii<CSD->nPSb; ii++ )
    pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
   for( ii=0; ii<CSD->nPSb; ii++ )
@@ -1886,7 +1883,30 @@ void TNode::unpackDataBr( bool uPrimalSol )
    pmm->C[ CSD->xic[ii] ] = CNode->rMB[ii];
   for( ii=0; ii<CSD->nICb; ii++ )
    pmm->U[ CSD->xic[ii] ] = CNode->uIC[ii];
+
+  for( ii=0; ii<CSD->nDCb; ii++ )
+  {
+     pmm->Gamma[ CSD->xdc[ii] ] = CNode->gam[ii];
+  }
+
+  long int jb, je = 0;
+  for( long int k=0; k<pmm->FIs; k++ )
+  { // loop on solution phases
+     jb = je;
+     je += pmm->L1[ k ];
+     // Load activity coeffs for phases-solutions
+     for( ii=jb; ii<je; ii++ )
+     {
+#ifndef IPMGEMPLUGIN
+        pmm->lnGam[ii] = TMulti::sm->PhaseSpecificGamma( ii, jb, je, k, 1L );
+#else
+        pmm->lnGam[ii] = multi->PhaseSpecificGamma( ii, jb, je, k, 1L );
+#endif
+      } // ii
+   }
  }
+
+
 //  End
 }
 

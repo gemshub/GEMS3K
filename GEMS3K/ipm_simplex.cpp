@@ -1016,14 +1016,19 @@ void TMulti::GEM_IPM_Init()
 }
 
 /// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
-void TMulti::DC_LoadThermodynamicData() // formerly CompG0Load()
+//
+void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
   long int j, jj, k, xTP, jb, je=0;
   double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
   double T, TK, P, PPa;
 
 #ifndef IPMGEMPLUGIN
-  TNode* na = node;
+  TNode* na;
+  if( aNa )
+   na = aNa;// for reading GEMIPM files task
+  else
+   na = node;
   TK =  pm.TC+C_to_K;
   PPa = pm.P*bar_to_Pa;
 
@@ -1037,8 +1042,10 @@ void TMulti::DC_LoadThermodynamicData() // formerly CompG0Load()
   T = TK-C_to_K;
 
 #ifndef IPMGEMPLUGIN
-  TMTparm::sm->GetTP()->curT=T;
-  TMTparm::sm->GetTP()->curP=P;
+  if( !aNa )
+  {  TMTparm::sm->GetTP()->curT=T;
+     TMTparm::sm->GetTP()->curP=P;
+   }
 #endif
 
   if( dCH->nTp <1 || dCH->nPp <1 || na->check_TP( TK, PPa ) == false )

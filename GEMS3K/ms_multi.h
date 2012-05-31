@@ -504,7 +504,6 @@ protected:
 //  Surface activity coefficient terms
     long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
 //    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
-    double PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag = 0L ); // Added 26.06.08
 
 // ipm_chemical3.cpp
     void IS_EtaCalc();
@@ -690,10 +689,11 @@ public:
     void Alloc_internal();
     double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
-    void DC_LoadThermodynamicData();
+    void DC_LoadThermodynamicData( TNode* aNa = 0 );
 
     long int CheckMassBalanceResiduals(double *Y );
     double ConvertGj_toUniformStandardState( double g0, long int j, long int k );
+    double PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag = 0L ); // Added 26.06.08
 
     double HelmholtzEnergy( double x );
     double InternalEnergy( double TC, double P );

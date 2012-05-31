@@ -427,6 +427,7 @@ public:
    double ComputeEquilibriumState( long int& NumPrecLoops, long int& NumIterFIA, long int& NumIterIPM );
    //long int testMulti( );
    bool CompareProjectName( const char* SysKey );
+   void ChangeTPinKey( double T, double P );
    void SetSysSwitchesFromMulti( );
 };
 
