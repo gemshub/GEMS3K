@@ -32,6 +32,22 @@
 #include <iomanip>
 
 
+
+
+/// \mainpage Demo test of usage of the TNode class for implementing
+/// Demo test of usage of the TNode class for implementing a simple
+/// batch-like calculation of equilibria using text file input and
+/// GEMIPM2 numerical kernel
+/// TNode class implements a  simple C/C++ interface of GEMS3K.
+/// It works with DATACH and work DATABR structures and respective
+/// DCH (chemical system definition) and DBR (recipe or data bridge)
+/// data files. In addition, the program reads an IPM inlut file which
+/// can be used for tuning up numerical controls of GEM IPM2 algorithm
+/// and for setting up the parameters of non-ideal mixing models.
+
+
+
+
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
  {
