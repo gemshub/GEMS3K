@@ -239,7 +239,10 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
        default:
           break; // Phase class code error should be generated here!
     }
-
+#ifdef NOMUPNONLOGTERM
+NonLogTerm = 0.0;
+NonLogTermS = 0.0;
+#endif
         if( DirFlag == 0 )
         {	 // Converting lnGam[j] into Gamma[j]
             if( !pm.X[j] && !pm.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012

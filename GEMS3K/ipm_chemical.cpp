@@ -667,6 +667,9 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
         {
             pm.logXw = log(pm.YFk);
             pm.aqsTail = 1.- pm.YFk / Yf;
+#ifdef NOMUPNONLOGTERM
+pm.aqsTail = 0.0;
+#endif
         }
         if( pm.L1[k] > 1 )
         {
@@ -1116,15 +1119,20 @@ void TMulti::KarpovsPhaseStabilityCriteria()
         YF= pm.YF[k]; // moles of carrier
         if( pm.FIs && k<pm.FIs )
             pm.YFk = pm.YFA[k];
-        if( pm.YFk > 1e-33 )   // amount of phase or carrier cannot be less than 1e-33 mol!
-        {
-            pm.logXw = log(pm.YFk);
-            pm.aqsTail = 1.- pm.YFk / YF;
-        }
-        else {
-            pm.logXw = -76.;
-            pm.aqsTail = 0.0;
-        }
+//        if( pm.PHC[k] == PH_AQUEL ) {
+            if( pm.YFk > 1e-33 )   // amount of phase or carrier cannot be less than 1e-33 mol!
+            {
+               pm.logXw = log(pm.YFk);
+               pm.aqsTail = 1.- pm.YFk / YF;
+#ifdef NOMUPNONLOGTERM
+pm.aqsTail = 0.0;
+#endif
+            }
+            else {
+               pm.logXw = -76.;
+               pm.aqsTail = 0.0;
+            }
+//        }
         if( pm.L1[k] > 1 && YF > 1e-33 )
             pm.logYFk = log( YF );
         else pm.logYFk = -76.;
