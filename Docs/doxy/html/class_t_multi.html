@@ -25,8 +25,6 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
@@ -82,7 +80,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerator</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -126,7 +124,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a7870f0d4f146b5c0a8866d6cd3f5ce18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reallocation of dynamic memory. <br/></td></tr>
 <tr class="memitem:a6665896960549e2dc0818f94c4c51506"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6665896960549e2dc0818f94c4c51506"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#a6665896960549e2dc0818f94c4c51506">CheckMtparam</a> ()</td></tr>
-<tr class="memdesc:a6665896960549e2dc0818f94c4c51506"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test and load thermodynamic data. <br/></td></tr>
+<tr class="memdesc:a6665896960549e2dc0818f94c4c51506"><td class="mdescLeft">&#160;</td><td class="mdescRight">Test and load thermodynamic data from GEMS project database. <br/></td></tr>
 <tr class="memitem:ae3eb99cf39d95a47dcf6933901014206"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3eb99cf39d95a47dcf6933901014206"></a>
 <a class="el" href="struct_m_u_l_t_i.html">MULTI</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>GetPM</b> ()</td></tr>
 <tr class="memitem:a9e4178f2931cfd5c9cc8acc70d14ec57"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9e4178f2931cfd5c9cc8acc70d14ec57"></a>
@@ -161,7 +159,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a11854dd39bbc3530debddde81bc94c42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculation by IPM (preparing for calculation, unpacking data) In IPM. <br/></td></tr>
 <tr class="memitem:acd7417b0053280565ddfa235c9c8bfe2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd7417b0053280565ddfa235c9c8bfe2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#acd7417b0053280565ddfa235c9c8bfe2">DC_LoadThermodynamicData</a> (<a class="el" href="class_t_node.html">TNode</a> *aNa=0)</td></tr>
-<tr class="memdesc:acd7417b0053280565ddfa235c9c8bfe2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load Thermodynamic Data from <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> to <a class="el" href="struct_m_u_l_t_i.html" title="Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm.">MULTI</a> using Lagrangian Interpolator. <br/></td></tr>
+<tr class="memdesc:acd7417b0053280565ddfa235c9c8bfe2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load Thermodynamic Data from <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> to <a class="el" href="struct_m_u_l_t_i.html" title="Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm.">MULTI</a> using Lagrangian Interpolator. <br/></td></tr>
 <tr class="memitem:aaebbf6d96e7cf89e432688a584819253"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#aaebbf6d96e7cf89e432688a584819253">CheckMassBalanceResiduals</a> (double *Y)</td></tr>
 <tr class="memdesc:aaebbf6d96e7cf89e432688a584819253"><td class="mdescLeft">&#160;</td><td class="mdescRight">Diagnostics for a severe break of mass balance (abs.moles) after GEM IPM <a class="el" href="class_t_multi.html#ab0987119ad690a52fb5ee10922f19a8d" title="Checking Karpov phase stability criteria Fa for phases and DCs.">PhaseSelect()</a>.  <a href="#aaebbf6d96e7cf89e432688a584819253"></a><br/></td></tr>
 <tr class="memitem:a365fdf25b48d55278da79c12e339eeb3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#a365fdf25b48d55278da79c12e339eeb3">ConvertGj_toUniformStandardState</a> (double g0, long int j, long int k)</td></tr>
@@ -172,8 +170,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:af8cd7213884c0420eb1e86b850c06254"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls to minimization of other system potentials - HelmholtzEnergy.  <a href="#af8cd7213884c0420eb1e86b850c06254"></a><br/></td></tr>
 <tr class="memitem:a12af02446fdc8df715cc57f4a348415a"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#a12af02446fdc8df715cc57f4a348415a">InternalEnergy</a> (double TC, double P)</td></tr>
 <tr class="memdesc:a12af02446fdc8df715cc57f4a348415a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls to minimization of other system potentials - InternalEnergy.  <a href="#a12af02446fdc8df715cc57f4a348415a"></a><br/></td></tr>
-<tr class="memitem:a1407798a9f7d38b6878361c2d33ea545"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1407798a9f7d38b6878361c2d33ea545"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Free_TSolMod</b> ()</td></tr>
 <tr><td colspan="2"><h2><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a63c50cdd567188eafb223578491d1e84"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63c50cdd567188eafb223578491d1e84"></a>
@@ -183,6 +179,8 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:ae5f83210424898c637d9d88eccdd9c05"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5f83210424898c637d9d88eccdd9c05"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#ae5f83210424898c637d9d88eccdd9c05">Alloc_TSolMod</a> (long int newFIs)</td></tr>
 <tr class="memdesc:ae5f83210424898c637d9d88eccdd9c05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Internal memory allocation for <a class="el" href="class_t_sol_mod.html">TSolMod</a> performance optimization (since version 2.3.0) <br/></td></tr>
+<tr class="memitem:a1407798a9f7d38b6878361c2d33ea545"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1407798a9f7d38b6878361c2d33ea545"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Free_TSolMod</b> ()</td></tr>
 <tr class="memitem:a5f6682afde0e31bdc6f60d9d83e74fcf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f6682afde0e31bdc6f60d9d83e74fcf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_multi.html#a5f6682afde0e31bdc6f60d9d83e74fcf">Alloc_uDD</a> (long int newN)</td></tr>
 <tr class="memdesc:a5f6682afde0e31bdc6f60d9d83e74fcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Added for implementation of divergence detection in dual solution 06.05.2011 DK. <br/></td></tr>
@@ -1770,21 +1768,21 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a></li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ipm_chemical.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ipm_chemical2.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ipm_chemical3.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ipm_main.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ipm_simplex.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ms_multi_file.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ms_multi_format.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/ms_param.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a></li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_chemical.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_chemical2.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_chemical3.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_main.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_simplex.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi_file.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi_format.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/ms_param.cpp</li>
 </ul>
 </div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 10:02:22 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 1 2012 16:11:39 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

@@ -152,6 +152,8 @@ Generating code for file C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h...
 Generating code for file C:/DevelGEMS/trunk/standalone/GEMS3K/v_user.h...
 Generating code for file C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h...
 Generating file documentation...
+Generating docs for file C:/DevelGEMS/trunk/standalone/GEMS3K/datach.h...
+Generating docs for file C:/DevelGEMS/trunk/standalone/GEMS3K/node.h...
 Generating page documentation...
 Generating group documentation...
 Generating class documentation...
@@ -160,10 +162,19 @@ Generating docs for compound DATABR...
 Generating docs for compound DATACH...
 Generating docs for compound EOSPARAM...
 Generating docs for compound GemDataStream...
+C:/DevelGEMS/trunk/standalone/GEMS3K/datach.h:33: warning: the name `-' supplied as the argument of the \class, \struct, \union, or \include command is not an input file
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:58: warning: the name `GEMS3K' supplied as the argument of the \class, \struct, \union, or \include command is not an input file
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:101: warning: Compound TSolMod is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:59: warning: Compound TFatalError is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:40: warning: Compound TError is not documented.
 Project logo 'C:/DevGEMS/trunk/standalone/Docs/html/gems1.png' specified by PROJECT_LOGO does not exist!
+C:/DevelGEMS/trunk/standalone/GEMS3K/datach.h:115: warning: Member DATACH_STATIC_FIELDS (enumeration) of file datach.h is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/datach.h:121: warning: Member DATACH_DYNAMIC_FIELDS (enumeration) of file datach.h is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/datach.h:30: warning: Member MaxDCN (variable) of file datach.h is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/datach.h:31: warning: Member MaxPHN (variable) of file datach.h is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:54: warning: Member bar_to_Pa (variable) of file node.h is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:55: warning: Member m3_to_cm3 (variable) of file node.h is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:56: warning: Member kg_to_g (variable) of file node.h is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:84: warning: Member write(fstream &oss) (function) of class BASE_PARAM is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:280: warning: Member EOSPARAM(double *Xtmp, double *data, long int nn) (function) of class EOSPARAM is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:285: warning: Member init(double *, double *, long int) (function) of class EOSPARAM is not documented.
@@ -210,7 +221,8 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:77: warning: Member operator>
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:78: warning: Member operator>>(unsigned long &i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:79: warning: Member operator>>(float &f) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:80: warning: Member operator>>(double &f) (function) of class GemDataStream is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:83: warning: Member operator<<(char i) (function) of class GemDataStream is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:83: warning: Member operGenerating docs for compound GoldenSection...
+ator<<(char i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:84: warning: Member operator<<(unsigned char i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:85: warning: Member operator<<(signed char i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:86: warning: Member operator<<(short i) (function) of class GemDataStream is not documented.
@@ -218,9 +230,7 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:87: warning: Member operator<
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:88: warning: Member operator<<(int i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:89: warning: Member operator<<(unsigned int i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:90: warning: Member operator<<(long i) (function) of class GemDataStream is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:91: warning: Member operator<<(unsigned long i) (function) ofGenerating docs for compound GoldenSection...
-Generating docs for compound GoldenSectionData...
- class GemDataStream is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:91: warning: Member operator<<(unsigned long i) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:92: warning: Member operator<<(float f) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:93: warning: Member operator<<(double f) (function) of class GemDataStream is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/gdatastream.h:96: warning: Member readArray(char *arr, int size) (function) of class GemDataStream is not documented.
@@ -239,16 +249,8 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:103: warning: Member calcFunc
 C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:108: warning: Member getMinimum(double val2=0) (function) of class GoldenSection is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:87: warning: Member dat1 (variable) of class GoldenSection is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:88: warning: Member Ftol (variable) of class GoldenSection is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:89: warning: Member minF (variable) of class GoldenSection is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:70: warning: Member GoldenSectionData(double xstart, double xend, double Xtol_) (function) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:58: warning: Member Fa (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:59: warning: Member Fb (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:60: warning: Member Fx1 (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:61: warning: Member Fx2 (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:62: warning: Member a (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:63: warning: Member b (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:64: warning: Member x1 (variable) of class GoldenSectionData is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:65: warning: Member x2 (variable) oGenerating docs for compound GoldenSectionTwo...
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:89: warning: Member minF (variable) of class GoldenSecGenerating docs for compound GoldenSectionData...
+Generating docs for compound GoldenSectionTwo...
 Generating docs for compound LOCATION...
 Generating docs for compound MULTI...
 Generating docs for compound outField...
@@ -261,16 +263,16 @@ Generating docs for compound TDavies...
 Generating docs for compound TDebyeHueckel...
 Generating docs for compound TELVIS...
 Generating docs for compound TError...
-Generating docs for compound TEUNIQUAC...
-Generating docs for compound TFatalError...
-Generating docs for compound TGuggenheim...
-Generating docs for compound THelgeson...
-Generating docs for compound TIdeal...
-Generating docs for compound TKarpov...
-Generating docs for compound TLimitingLaw...
-Generating docs for compound TMargules...
-Generating docs for compound TModOther...
-f class GoldenSectionData is not documented.
+tion is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:70: warning: Member GoldenSectionData(double xstart, double xend, double Xtol_) (function) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:58: warning: Member Fa (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:59: warning: Member Fb (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:60: warning: Member Fx1 (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:61: warning: Member Fx2 (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:62: warning: Member a (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:63: warning: Member b (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:64: warning: Member x1 (variable) of class GoldenSectionData is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:65: warning: Member x2 (variable) of class GoldenSectionData is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:66: warning: Member Xtol (variable) of class GoldenSectionData is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:135: warning: Member calcFunction(double x, double y) (function) of class GoldenSectionTwo is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h:136: warning: Member getMinimum(double val2=0) (function) of class GoldenSectionTwo is not documented.
@@ -291,7 +293,18 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:440: warning: Member TCGFcalc(Solut
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:470: warning: Member GetDELTA(void) (function) of class TCGFcalc is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:752: warning: Member TCORKcalc(SolutionData *sd) (function) of class TCORKcalc is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1527: warning: Member CalcAct() (function) of class TELVIS is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:49: warning: Member TError(const gstring &titl, const gstring &msg) (function) of class TError is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:49: warning: Member TError(const gstring &titl, const gstring &msg) (function) of class TError is not documenteGenerating docs for compound TEUNIQUAC...
+Generating docs for compound TFatalError...
+Generating docs for compound TGuggenheim...
+Generating docs for compound THelgeson...
+Generating docs for compound TIdeal...
+Generating docs for compound TKarpov...
+Generating docs for compound TLimitingLaw...
+Generating docs for compound TMargules...
+Generating docs for compound TModOther...
+Generating docs for compound TMulti...
+Generating docs for compound TNode...
+d.
 C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:41: warning: Member mess (variable) of class TError is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:42: warning: Member title (variable) of class TError is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/verror.h:65: warning: Member TFatalError(TError &err) (function) of class TFatalError is not documented.
@@ -301,18 +314,16 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1984: warning: Member Biotite1() (f
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1985: warning: Member Chlorite1() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1986: warning: Member Clinopyroxene1() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1987: warning: Member Feldspar1() (function) of class TModOther is not documented.
-C:/DevelGEMS/trunk/sGenerating docs for compound TMulti...
-Generating docs for compound TNode...
-tandalone/GEMS3K/s_fgl.h:1988: warning: Member Feldspar2() (function) of class TModOther is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1988: warning: Member Feldspar2() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1989: warning: Member Garnet1() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1990: warning: Member Muscovite1() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1991: warning: Member Orthopyroxene1() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1992: warning: Member Staurolite1() (function) of class TModOther is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:1993: warning: Member Talc() (function) of class TModOther is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:672: warning: Member GetPM() (function) of class TMulti is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:674: warning: Member setPa(TProfil *prof) (function) of class TMulti is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:678: warning: Member GetName() const  (function) of class TMulti is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:586: warning: Member node (variable) of class TMulti is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:671: warning: Member GetPM() (function) of class TMulti is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:673: warning: Member setPa(TProfil *prof) (function) of class TMulti is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:677: warning: Member GetName() const  (function) of class TMulti is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:585: warning: Member node (variable) of class TMulti is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:440: warning: Member Free_TSolMod() (function) of class TMulti is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:453: warning: Member Free_uDD() (function) of class TMulti is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/ms_multi.h:466: warning: Member getLsModsum(long int &LsModSum, long int &LsIPxSum) (function) of class TMulti is not documented.
@@ -324,60 +335,58 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_chemical.cpp:872: warning: The followin
 C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_main.cpp:1341: warning: The following parameters of TMulti::MakeAndSolveSystemOfLinearEquations(long int N, bool initAppr) are not documented:
   parameter 'N'
 C:/DevelGEMS/trunk/standalone/GEMS3K/ipm_main.cpp:727: warning: argument '0' of command @param is not found in the argument list of TMulti::MassBalanceRefinement(long int WhereCalledFrom)
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:713: warning: Member Get_IPc_IPx_DCc_indices(long *index_phase_aIPx, long *index_phase_aIPc, long *index_phase_aDCc, long *index_phase) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:714: warning: Member Get_NPar_NPcoef_MaxOrd_NComp_NP_DC(long *NPar, long *NPcoef, long *MaxOrd, long *NComp, long *NP_DC, long *index_phase) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:715: warning: Member Get_aIPc(double *aIPc, long *index_phase_aIPc, long *index_phase) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:716: warning: Member Get_aIPx(long *aIPx, long *index_phase_aIPx, long *index_phase) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:717: warning: Member Get_aDCc(double *aDCc, long *index_phase_aDCc, long *index_phase) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:718: warning: Member Set_aIPc(double *aIPc, long *index_phase_aIPc, long *index_phase) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:719: warning: Member Set_aDCc(const double *aDCc, long *index_phase_aDCc, long *index_phase) (functi
-on) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:721: warning: Member Set_Tk(double *T_k) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:722: warning: Member Set_Pb(double *P_b) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:65: warning: Member allocMemory() (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:66: warning: Member freeMemory() (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:69: warning: Member datach_realloc() (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:70: warning: Member datach_free() (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:71: warning: Member datach_reset() (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:72: warning: Member databr_realloc() (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:73: warning: Member databr_reset(DATABR *CNode, long int level=0) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:104: warning: Member databr_element_to_vtk(fstream &ff, DATABR *CNode_, long int nfild, long int ndx) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:105: warning: Member databr_name_to_vtk(fstream &ff, long int nfild, long int ndx, long int ndx2=0) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:106: warning: Member databr_size_to_vtk(long int nfild, long int &nel, long int &nel2) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:108: warning: Member databr_head_to_vtk(fstream &ff, const char *name, double time, long cycle, long nx=1, long ny=1, long nz=1) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:111: warning: Member setNodeArray(long int, long int *) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:112: warning: Member checkNodeArray(long int, long int *, const char *) (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:114: warning: Member nNodes() const  (function) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:48: warning: Member multi (variable) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:51: warning: Member profil (variable) of class TNode is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:97: warning: The following parameters of TNode::databr_to_text_file(fstream &ff, bool with_comments=true, bool brief_mode=false, const char *path=" ") are not documented:
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:736: warning: Member Get_IPc_IPx_DCc_indices(long *index_phase_aIPx, long *index_phase_aIPc, long *index_phase_aDCc, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:737: warning: Member Get_NPar_NPcoef_MaxOrd_NComp_NP_DC(long *NPar, long *NPcoef, long *MaxOrd, long *NComp, long *NP_DC, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:738: warning: Member Get_aIPc(double *aIPc, long *index_phase_aIPc, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:739: warning: Member Get_aIPx(long *aIPx, long *index_phase_aIPx, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:740: warning: Member Get_aDCc(double *aDCc, long *index_phase_aDCc, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:741: warning: Member Set_aIPc(double *aIPc, long *index_phase_aIPc, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:742: warning: Member Set_aDCc(const double *aDCc, long *index_phase_aDCc, long *index_phase) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:744: warning: Member Set_Tk(double *T_k) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:745: warning: Member Set_Pb(double *P_b) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:88: warning: Member allocMemory() (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:89: warning: Member freeMemory() (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:92: warning: Member datach_realloc() (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:93: warning: Member datach_free() (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:94: warning: Member datach_reset() (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:95: warning: Member databr_realloc() (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:96: warning: Member databr_reset(DATABR *CNode, long int level=0) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:127: warning: Member databr_element_to_vtk(fstream &ff, DATABR *CNode_, long int nfild, long int ndx) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:128: warning: Member databr_name_to_vtk(fstream &ff, long int nfild, long int ndx, long int ndx2=0) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:129: warning: Member databr_size_to_vtk(long int nfild, long int &nel, long int &nel2) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:131: warning: Member databr_head_to_vtk(fstream &ff, const char *name, double time, long cycle, long nx=1, long ny=1, long nz=1) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:134: warning: Member setNodeArray(long int, long int *) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:135: warning: Member checkNodeArray(long int, long int *, const char *) (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:137: warning: Member nNodes() const  (function) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:71: warning: Member multi (variable) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:74: warning: Member profil (variable) of class TNode is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:120: warning: The following parameters of TNode::databr_to_text_file(fstream &ff, bool with_comments=true, bool brief_mode=false, const char *path=" ") are not documented:
   parameter 'ff'
-  parameter 'path'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:91: warning: The following parameters of TNode::datach_to_text_file(fstream &ff, bool with_comments=true, bool brief_mode=false, const char *path=" ") are not documented:
-  parameter 'ff'
-  parameter 'path'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:634: warning: argument 'xdc' of command @param is not found in the argument list of TNode::Get_muDC(const long int xDC, bool norm=true)
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:634: warning: The following parameters of TNode::Get_muDC(const long int xDC, bool norm=true) are not documented:
-  parameter 'xDC'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:576: warning: argument 'xph' of command @param is not found in the argument list of TNode::Ph_Mass(const long int xBR)
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:576: warning: The following parameters of TNode::Ph_Mass(const long int xBR) are not documented:
-  parameter 'xBR'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:568: warning: argument 'xph' of command @param is not found in the argument list of TNode::Ph_Volume(const long int xBR)
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:568: warning: The following parameters of TNode::Ph_Volume(const long intGenerating docs for compound TNodeArray...
+  parameter 'pGenerating docs for compound TNodeArray...
 Generating docs for compound TNRTL...
 Generating docs for compound TPitzer...
 Generating docs for compound TPR78calc...
 Generating docs for compound TPrintArrays...
-Generating docs for compound TProfil...
- xBR) are not documented:
+ath'
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:114: warning: The following parameters of TNode::datach_to_text_file(fstream &ff, bool with_comments=true, bool brief_mode=false, const char *path=" ") are not documented:
+  parameter 'ff'
+  parameter 'path'
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:657: warning: argument 'xdc' of command @param is not found in the argument list of TNode::Get_muDC(const long int xDC, bool norm=true)
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:657: warning: The following parameters of TNode::Get_muDC(const long int xDC, bool norm=true) are not documented:
+  parameter 'xDC'
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:599: warning: argument 'xph' of command @param is not found in the argument list of TNode::Ph_Mass(const long int xBR)
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:599: warning: The following parameters of TNode::Ph_Mass(const long int xBR) are not documented:
   parameter 'xBR'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:612: warning: The following parameters of TNode::Set_dll(const long int xdc, const double dll) are not documented:
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:591: warning: argument 'xph' of command @param is not found in the argument list of TNode::Ph_Volume(const long int xBR)
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:591: warning: The following parameters of TNode::Ph_Volume(const long int xBR) are not documented:
+  parameter 'xBR'
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:635: warning: The following parameters of TNode::Set_dll(const long int xdc, const double dll) are not documented:
   parameter 'dll'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:618: warning: The following parameters of TNode::Set_dul(const long int xdc, const double dul) are not documented:
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:641: warning: The following parameters of TNode::Set_dul(const long int xdc, const double dul) are not documented:
   parameter 'dul'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:677: warning: The following parameters of TNode::Set_IC_b(const double b_val, const long int xCH) are not documented:
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:700: warning: The following parameters of TNode::Set_IC_b(const double b_val, const long int xCH) are not documented:
   parameter 'b_val'
-C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:624: warning: The following parameters of TNode::Set_nDC(const long int xdc, const double nDC) are not documented:
+C:/DevelGEMS/trunk/standalone/GEMS3K/node.h:647: warning: The following parameters of TNode::Set_nDC(const long int xdc, const double nDC) are not documented:
   parameter 'nDC'
 C:/DevelGEMS/trunk/standalone/GEMS3K/nodearray.h:83: warning: Member allocMemory() (function) of class TNodeArray is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/nodearray.h:84: warning: Member freeMemory() (function) of class TNodeArray is not documented.
@@ -402,7 +411,16 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:150: warning: The following par
 C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:108: warning: The following parameters of TPrintArrays::writeField(long f_num, long value, bool with_comments, bool brief_mode) are not documented:
   parameter 'f_num'
   parameter 'value'
-C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:114: warning: The following parameters of TPrintArrays::writeField(long f_num, short value, bool with_comments, bool brief_mode) are not documented:
+C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:114: warning: The following parameters of TPrintArrays::writeField(long f_num, short value, bool with_comments, bGenerating docs for compound TProfil...
+Generating docs for compound TPRSVcalc...
+Generating docs for compound TReadArrays...
+Generating docs for compound TRedlichKister...
+Generating docs for compound TRegular...
+Generating docs for compound TRWArrays...
+Generating docs for compound TShvarov...
+Generating docs for compound TSIT...
+Generating docs for compound TSolMod...
+ool brief_mode) are not documented:
   parameter 'f_num'
   parameter 'value'
 C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:120: warning: The following parameters of TPrintArrays::writeField(long f_num, double value, bool with_comments, bool brief_mode) are not documented:
@@ -414,15 +432,7 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:123: warning: Member HelmholtzEne
 C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:128: warning: Member InternalEnergy(double TC, double P) (function) of class TProfil is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:104: warning: Member multi (variable) of class TProfil is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:105: warning: Member pmp (variable) of class TProfil is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:106: warning: Member pa (variable) of class TProfil Generating docs for compound TPRSVcalc...
-Generating docs for compound TReadArrays...
-Generating docs for compound TRedlichKister...
-Generating docs for compound TRegular...
-Generating docs for compound TRWArrays...
-Generating docs for compound TShvarov...
-Generating docs for compound TSIT...
-Generating docs for compound TSolMod...
-is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h:106: warning: Member pa (variable) of class TProfil is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:526: warning: Member TPRSVcalc(SolutionData *sd) (function) of class TPRSVcalc is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:223: warning: Member skipSpace() (function) of class TReadArrays is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h:214: warning: Member setCurrentArray(const char *name, long int size) (function) of class TReadArrays is not documented.
@@ -445,18 +455,7 @@ C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:141: warning: Member Sid (variable)
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:141: warning: Member CPid (variable) of class TSolMod is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:141: warning: Member Vid (variable) of class TSolMod is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:141: warning: Member Aid (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Gdq (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Hdq (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Sdq (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member CPdq (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Vdq (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Adq (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Grs (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Hrs (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Srs (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member CPrs (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Vrs (variable) of class TSolMod is not documented.
-C:/DevelGEMS/trunk/standalone
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Gdq (variable) of class TSolMod is
 Generating docs for compound TSRKcalc...
 Generating docs for compound TSTPcalc...
 Generating docs for compound TSubregular...
@@ -477,10 +476,21 @@ Generating file index...
 Generating file member index...
 Generating example index...
 finalizing index lists...
-symbol cache used 2627/65536 hits=129414 misses=2627
-lookup cache used 2655/65536 hits=11400 misses=2684
+symbol cache used 2627/65536 hits=129886 misses=2627
+lookup cache used 2658/65536 hits=11405 misses=2687
 finished...
-/GEMS3K/s_fgl.h:143: warning: Member Ars (variable) of class TSolMod is not documented.
+not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Hdq (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Sdq (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member CPdq (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Vdq (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:142: warning: Member Adq (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Grs (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Hrs (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Srs (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member CPrs (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Vrs (variable) of class TSolMod is not documented.
+C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:143: warning: Member Ars (variable) of class TSolMod is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:144: warning: Member lnGamConf (variable) of class TSolMod is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:144: warning: Member lnGamRecip (variable) of class TSolMod is not documented.
 C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h:600: warning: Member TSRKcalc(SolutionData *sd) (function) of class TSRKcalc is not documented.

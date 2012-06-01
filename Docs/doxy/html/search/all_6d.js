@@ -5,6 +5,7 @@ var searchData=
   ['masdt',['MASDT',['../struct_m_u_l_t_i.html#af7a7393a40db6d7da252fa49b817f674',1,'MULTI']]],
   ['massbalancerefinement',['MassBalanceRefinement',['../class_t_multi.html#aa21ef549ee562d688a3aa1e84f2f8c9a',1,'TMulti']]],
   ['massbalanceresiduals',['MassBalanceResiduals',['../class_t_multi.html#ac29d91460e0a7fbd4ea989352348af45',1,'TMulti']]],
+  ['maxicn',['MaxICN',['../datach_8h.html#a88451b49096f525871ce7213eb2099fa',1,'datach.h']]],
   ['maxord',['MaxOrd',['../class_t_sol_mod.html#aa3d9af979ee9b840062964790cbd8c48',1,'TSolMod']]],
   ['maxorder',['MaxOrder',['../struct_solution_data.html#aa0e288690dfc16c42e3330e98cba7f9f',1,'SolutionData']]],
   ['mbx',['MBX',['../struct_m_u_l_t_i.html#ac9eb028667ae1b78ddb9463224e16056',1,'MULTI']]],

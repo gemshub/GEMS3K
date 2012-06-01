@@ -25,8 +25,6 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
@@ -82,7 +80,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Variables</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerator</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -102,10 +100,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Implements a simple C/C++ interface between GEM IPM and FMT codes.  
+<p>) Implements a simple C/C++ interface between GEM IPM and FMT codes.  
  <a href="class_t_node.html#details">More...</a></p>
-
-<p><code>#include &lt;<a class="el" href="node_8h_source.html">node.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for TNode:</div>
 <div class="dyncontent">
@@ -177,22 +173,22 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <tr class="memdesc:a70b297f3e4e8bff1654188544a87ca1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set current node identification handle to value of.  <a href="#a70b297f3e4e8bff1654188544a87ca1e"></a><br/></td></tr>
 <tr class="memitem:a242db0953e1e2125e432c0952cc2972e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a242db0953e1e2125e432c0952cc2972e"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a242db0953e1e2125e432c0952cc2972e">IC_name_to_xCH</a> (const char *Name)</td></tr>
-<tr class="memdesc:a242db0953e1e2125e432c0952cc2972e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DCH index of IC given the IC Name string (null-terminated) or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> IC name list. <br/></td></tr>
+<tr class="memdesc:a242db0953e1e2125e432c0952cc2972e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DCH index of IC given the IC Name string (null-terminated) or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> IC name list. <br/></td></tr>
 <tr class="memitem:a40d14d1cc3dff8196d16c1c0f907281a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40d14d1cc3dff8196d16c1c0f907281a"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a40d14d1cc3dff8196d16c1c0f907281a">DC_name_to_xCH</a> (const char *Name)</td></tr>
-<tr class="memdesc:a40d14d1cc3dff8196d16c1c0f907281a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DCH index of DC given the DC Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> DC name list. <br/></td></tr>
+<tr class="memdesc:a40d14d1cc3dff8196d16c1c0f907281a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DCH index of DC given the DC Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> DC name list. <br/></td></tr>
 <tr class="memitem:aa732ba0048e34dcfad9b10d8ef128503"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa732ba0048e34dcfad9b10d8ef128503"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aa732ba0048e34dcfad9b10d8ef128503">Ph_name_to_xCH</a> (const char *Name)</td></tr>
-<tr class="memdesc:aa732ba0048e34dcfad9b10d8ef128503"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DCH index of Phase given the Phase Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> Phase name list. <br/></td></tr>
+<tr class="memdesc:aa732ba0048e34dcfad9b10d8ef128503"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DCH index of Phase given the Phase Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> Phase name list. <br/></td></tr>
 <tr class="memitem:afc747ebf3dac420af73670c5ab029781"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc747ebf3dac420af73670c5ab029781"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#afc747ebf3dac420af73670c5ab029781">IC_name_to_xDB</a> (const char *Name)</td></tr>
-<tr class="memdesc:afc747ebf3dac420af73670c5ab029781"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DBR index of IC given the IC Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> IC name list. <br/></td></tr>
+<tr class="memdesc:afc747ebf3dac420af73670c5ab029781"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DBR index of IC given the IC Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> IC name list. <br/></td></tr>
 <tr class="memitem:a8e33d3a97b4bfecc452dab2c1e6e1e8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e33d3a97b4bfecc452dab2c1e6e1e8c"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a8e33d3a97b4bfecc452dab2c1e6e1e8c">DC_name_to_xDB</a> (const char *Name)</td></tr>
-<tr class="memdesc:a8e33d3a97b4bfecc452dab2c1e6e1e8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DBR index of DC given the DC Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> DC name list. <br/></td></tr>
+<tr class="memdesc:a8e33d3a97b4bfecc452dab2c1e6e1e8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DBR index of DC given the DC Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> DC name list. <br/></td></tr>
 <tr class="memitem:a287f81d6eff449b02c546c439d25cf4b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a287f81d6eff449b02c546c439d25cf4b"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a287f81d6eff449b02c546c439d25cf4b">Ph_name_to_xDB</a> (const char *Name)</td></tr>
-<tr class="memdesc:a287f81d6eff449b02c546c439d25cf4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DBR index of Phase given the Phase Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> Phase name list. <br/></td></tr>
+<tr class="memdesc:a287f81d6eff449b02c546c439d25cf4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns DBR index of Phase given the Phase Name string or -1 if no such name was found in the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> Phase name list. <br/></td></tr>
 <tr class="memitem:aa983bc0d23c7de73d36929f292d6ce21"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa983bc0d23c7de73d36929f292d6ce21"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aa983bc0d23c7de73d36929f292d6ce21">IC_xCH_to_xDB</a> (const long int xCH)</td></tr>
 <tr class="memdesc:aa983bc0d23c7de73d36929f292d6ce21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts the IC DCH index into the IC DBR index or returns -1 if this IC is not used in the data bridge. <br/></td></tr>
@@ -234,40 +230,40 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a090a174a1dec22e2cffd1446a756ea08"><td class="mdescLeft">&#160;</td><td class="mdescRight">unpacks work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> content into GEMIPM data structure <br/></td></tr>
 <tr class="memitem:a507d05a8ab3d3965aa0a27fc19f34c80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a507d05a8ab3d3965aa0a27fc19f34c80"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a507d05a8ab3d3965aa0a27fc19f34c80">check_TP</a> (double T, double P)</td></tr>
-<tr class="memdesc:a507d05a8ab3d3965aa0a27fc19f34c80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if given temperature T (K) and pressure P (Pa) fit within the interpolation intervals of the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> lookup arrays (returns true) or not (returns false) <br/></td></tr>
+<tr class="memdesc:a507d05a8ab3d3965aa0a27fc19f34c80"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if given temperature T (K) and pressure P (Pa) fit within the interpolation intervals of the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> lookup arrays (returns true) or not (returns false) <br/></td></tr>
 <tr class="memitem:aac069202444c7a0dccbfac40a779de4f"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aac069202444c7a0dccbfac40a779de4f">check_grid_T</a> (double TK)</td></tr>
 <tr class="memdesc:aac069202444c7a0dccbfac40a779de4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tests TK as a grid point for the interpolation of thermodynamic data.  <a href="#aac069202444c7a0dccbfac40a779de4f"></a><br/></td></tr>
 <tr class="memitem:a773180f7d931f2f2a3b5a70bbc26dff0"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a773180f7d931f2f2a3b5a70bbc26dff0">check_grid_P</a> (double P)</td></tr>
 <tr class="memdesc:a773180f7d931f2f2a3b5a70bbc26dff0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tests P as a grid point for the interpolation of thermodynamic data.  <a href="#a773180f7d931f2f2a3b5a70bbc26dff0"></a><br/></td></tr>
 <tr class="memitem:ac32d5bbf0bb791d1d40b69f9fc7b3f78"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ac32d5bbf0bb791d1d40b69f9fc7b3f78">check_grid_TP</a> (double T, double P)</td></tr>
-<tr class="memdesc:ac32d5bbf0bb791d1d40b69f9fc7b3f78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> lookup arrays.  <a href="#ac32d5bbf0bb791d1d40b69f9fc7b3f78"></a><br/></td></tr>
+<tr class="memdesc:ac32d5bbf0bb791d1d40b69f9fc7b3f78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> lookup arrays.  <a href="#ac32d5bbf0bb791d1d40b69f9fc7b3f78"></a><br/></td></tr>
 <tr class="memitem:ae3a6ef1b3df13da8198695204ba72683"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3a6ef1b3df13da8198695204ba72683"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683">gridTP</a> () const </td></tr>
 <tr class="memdesc:ae3a6ef1b3df13da8198695204ba72683"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns number of temperature and pressure grid points for one dependent component. <br/></td></tr>
 <tr class="memitem:a7afac572263e12640835279830ca60e4"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a7afac572263e12640835279830ca60e4">DC_G0</a> (const long int xCH, const double P, const double TK, bool norm=true)</td></tr>
-<tr class="memdesc:a7afac572263e12640835279830ca60e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a7afac572263e12640835279830ca60e4"></a><br/></td></tr>
+<tr class="memdesc:a7afac572263e12640835279830ca60e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a7afac572263e12640835279830ca60e4"></a><br/></td></tr>
 <tr class="memitem:a63c87c39f33bfd636d523c03a2cd6b9f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a63c87c39f33bfd636d523c03a2cd6b9f">DC_V0</a> (const long int xCH, const double P, const double TK)</td></tr>
-<tr class="memdesc:a63c87c39f33bfd636d523c03a2cd6b9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a63c87c39f33bfd636d523c03a2cd6b9f"></a><br/></td></tr>
+<tr class="memdesc:a63c87c39f33bfd636d523c03a2cd6b9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a63c87c39f33bfd636d523c03a2cd6b9f"></a><br/></td></tr>
 <tr class="memitem:abd4439e8fdd785e70d25a9de13dadbf9"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#abd4439e8fdd785e70d25a9de13dadbf9">DC_H0</a> (const long int xCH, const double P, const double TK)</td></tr>
-<tr class="memdesc:abd4439e8fdd785e70d25a9de13dadbf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#abd4439e8fdd785e70d25a9de13dadbf9"></a><br/></td></tr>
+<tr class="memdesc:abd4439e8fdd785e70d25a9de13dadbf9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#abd4439e8fdd785e70d25a9de13dadbf9"></a><br/></td></tr>
 <tr class="memitem:aa1b34ac12bacd643440441ababa5e949"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aa1b34ac12bacd643440441ababa5e949">DC_S0</a> (const long int xCH, const double P, const double TK)</td></tr>
-<tr class="memdesc:aa1b34ac12bacd643440441ababa5e949"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#aa1b34ac12bacd643440441ababa5e949"></a><br/></td></tr>
+<tr class="memdesc:aa1b34ac12bacd643440441ababa5e949"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#aa1b34ac12bacd643440441ababa5e949"></a><br/></td></tr>
 <tr class="memitem:a69d602fcf4335702caaf3e68c700df48"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a69d602fcf4335702caaf3e68c700df48">DC_Cp0</a> (const long int xCH, const double P, const double TK)</td></tr>
-<tr class="memdesc:a69d602fcf4335702caaf3e68c700df48"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a69d602fcf4335702caaf3e68c700df48"></a><br/></td></tr>
+<tr class="memdesc:a69d602fcf4335702caaf3e68c700df48"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a69d602fcf4335702caaf3e68c700df48"></a><br/></td></tr>
 <tr class="memitem:a1e6c17e719376669403af8d7149bf529"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a1e6c17e719376669403af8d7149bf529">DC_A0</a> (const long int xCH, const double P, const double TK)</td></tr>
-<tr class="memdesc:a1e6c17e719376669403af8d7149bf529"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a1e6c17e719376669403af8d7149bf529"></a><br/></td></tr>
+<tr class="memdesc:a1e6c17e719376669403af8d7149bf529"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a1e6c17e719376669403af8d7149bf529"></a><br/></td></tr>
 <tr class="memitem:a5b87fb908873d158d2f9e965be39b274"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a5b87fb908873d158d2f9e965be39b274">DC_U0</a> (const long int xCH, const double P, const double TK)</td></tr>
-<tr class="memdesc:a5b87fb908873d158d2f9e965be39b274"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a5b87fb908873d158d2f9e965be39b274"></a><br/></td></tr>
+<tr class="memdesc:a5b87fb908873d158d2f9e965be39b274"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a5b87fb908873d158d2f9e965be39b274"></a><br/></td></tr>
 <tr class="memitem:ac52e8e98b3dee1af3f63b348eacedb08"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ac52e8e98b3dee1af3f63b348eacedb08">EpsH2Ow</a> (const double P, const double TK)</td></tr>
-<tr class="memdesc:ac52e8e98b3dee1af3f63b348eacedb08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#ac52e8e98b3dee1af3f63b348eacedb08"></a><br/></td></tr>
+<tr class="memdesc:ac52e8e98b3dee1af3f63b348eacedb08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#ac52e8e98b3dee1af3f63b348eacedb08"></a><br/></td></tr>
 <tr class="memitem:abdc7cfbd1f11c337568536ad0c7f4e6c"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c">DenH2Ow</a> (const double P, const double TK)</td></tr>
-<tr class="memdesc:abdc7cfbd1f11c337568536ad0c7f4e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#abdc7cfbd1f11c337568536ad0c7f4e6c"></a><br/></td></tr>
+<tr class="memdesc:abdc7cfbd1f11c337568536ad0c7f4e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#abdc7cfbd1f11c337568536ad0c7f4e6c"></a><br/></td></tr>
 <tr class="memitem:a9e9d8f6870dcdb13c8da55cc854fded3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a9e9d8f6870dcdb13c8da55cc854fded3">VisH2Ow</a> (const double P, const double TK)</td></tr>
-<tr class="memdesc:a9e9d8f6870dcdb13c8da55cc854fded3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) viscosity of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a9e9d8f6870dcdb13c8da55cc854fded3"></a><br/></td></tr>
+<tr class="memdesc:a9e9d8f6870dcdb13c8da55cc854fded3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) viscosity of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a9e9d8f6870dcdb13c8da55cc854fded3"></a><br/></td></tr>
 <tr class="memitem:a0069ac15df83325d5fb5267d96a83a2f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a0069ac15df83325d5fb5267d96a83a2f">EpsH2Og</a> (const double P, const double TK)</td></tr>
-<tr class="memdesc:a0069ac15df83325d5fb5267d96a83a2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#a0069ac15df83325d5fb5267d96a83a2f"></a><br/></td></tr>
+<tr class="memdesc:a0069ac15df83325d5fb5267d96a83a2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a0069ac15df83325d5fb5267d96a83a2f"></a><br/></td></tr>
 <tr class="memitem:aa5f5fa762cb44dcc8902816854dcaf94"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aa5f5fa762cb44dcc8902816854dcaf94">DenH2Og</a> (const double P, const double TK)</td></tr>
-<tr class="memdesc:aa5f5fa762cb44dcc8902816854dcaf94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure.  <a href="#aa5f5fa762cb44dcc8902816854dcaf94"></a><br/></td></tr>
+<tr class="memdesc:aa5f5fa762cb44dcc8902816854dcaf94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#aa5f5fa762cb44dcc8902816854dcaf94"></a><br/></td></tr>
 <tr class="memitem:a3a069c368580b0022cd129c773024123"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a3a069c368580b0022cd129c773024123">Ph_Volume</a> (const long int xBR)</td></tr>
 <tr class="memdesc:a3a069c368580b0022cd129c773024123"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current phase volume in m3 in the reactive sub-system.  <a href="#a3a069c368580b0022cd129c773024123"></a><br/></td></tr>
 <tr class="memitem:a0d062bd5340b9cd939a3b9aa9aa25ae3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a0d062bd5340b9cd939a3b9aa9aa25ae3">Ph_Mass</a> (const long int xBR)</td></tr>
@@ -362,10 +358,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_reset</b> (<a 
 <tr class="memdesc:a437937793c27ab7d61e220a155a9cd21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deletes fields of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure indicated by data_BR_ and sets the pointer data_BR_ to NULL. <br/></td></tr>
 <tr class="memitem:a0480e836c29ca3bba3292ef9c55080f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0480e836c29ca3bba3292ef9c55080f4"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a0480e836c29ca3bba3292ef9c55080f4">datach_to_file</a> (<a class="el" href="class_gem_data_stream.html">GemDataStream</a> &amp;ff)</td></tr>
-<tr class="memdesc:a0480e836c29ca3bba3292ef9c55080f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure) to a binary DCH file. <br/></td></tr>
+<tr class="memdesc:a0480e836c29ca3bba3292ef9c55080f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure) to a binary DCH file. <br/></td></tr>
 <tr class="memitem:a381aa28d2c37aea07ade6001e6b28291"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a381aa28d2c37aea07ade6001e6b28291"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a381aa28d2c37aea07ade6001e6b28291">datach_from_file</a> (<a class="el" href="class_gem_data_stream.html">GemDataStream</a> &amp;ff)</td></tr>
-<tr class="memdesc:a381aa28d2c37aea07ade6001e6b28291"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure) from a binary DCH file. <br/></td></tr>
+<tr class="memdesc:a381aa28d2c37aea07ade6001e6b28291"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure) from a binary DCH file. <br/></td></tr>
 <tr class="memitem:a9dfad792becac5edf02b0752cdb3cb15"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9dfad792becac5edf02b0752cdb3cb15"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a9dfad792becac5edf02b0752cdb3cb15">databr_to_file</a> (<a class="el" href="class_gem_data_stream.html">GemDataStream</a> &amp;ff)</td></tr>
 <tr class="memdesc:a9dfad792becac5edf02b0752cdb3cb15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes node (work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure) to a binary DBR file. <br/></td></tr>
@@ -373,10 +369,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ad37b775d10edc55c8eadc7cd258a4150">databr_from_file</a> (<a class="el" href="class_gem_data_stream.html">GemDataStream</a> &amp;ff)</td></tr>
 <tr class="memdesc:ad37b775d10edc55c8eadc7cd258a4150"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads node (work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure) from a binary DBR file. <br/></td></tr>
 <tr class="memitem:a447f73a26e9d75394f8787eee614a658"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a447f73a26e9d75394f8787eee614a658">datach_to_text_file</a> (fstream &amp;ff, bool with_comments=true, bool brief_mode=false, const char *path=&quot; &quot;)</td></tr>
-<tr class="memdesc:a447f73a26e9d75394f8787eee614a658"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure) to a text DCH file.  <a href="#a447f73a26e9d75394f8787eee614a658"></a><br/></td></tr>
+<tr class="memdesc:a447f73a26e9d75394f8787eee614a658"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure) to a text DCH file.  <a href="#a447f73a26e9d75394f8787eee614a658"></a><br/></td></tr>
 <tr class="memitem:a869a4049095ae23cd526af8f25beb925"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a869a4049095ae23cd526af8f25beb925"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a869a4049095ae23cd526af8f25beb925">datach_from_text_file</a> (fstream &amp;ff)</td></tr>
-<tr class="memdesc:a869a4049095ae23cd526af8f25beb925"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure) from a text DCH file. <br/></td></tr>
+<tr class="memdesc:a869a4049095ae23cd526af8f25beb925"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure) from a text DCH file. <br/></td></tr>
 <tr class="memitem:a39693def930385e78f2f5505eb889b77"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a39693def930385e78f2f5505eb889b77">databr_to_text_file</a> (fstream &amp;ff, bool with_comments=true, bool brief_mode=false, const char *path=&quot; &quot;)</td></tr>
 <tr class="memdesc:a39693def930385e78f2f5505eb889b77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes work node (<a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure) to a text DBR file.  <a href="#a39693def930385e78f2f5505eb889b77"></a><br/></td></tr>
 <tr class="memitem:a57090e326754aa926aac627e4c24e3a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a57090e326754aa926aac627e4c24e3a1"></a>
@@ -407,7 +403,7 @@ Protected Attributes</h2></td></tr>
 <a class="el" href="class_t_profil.html">TProfil</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>profil</b></td></tr>
 <tr class="memitem:a1fe698e7e08f635eea7c7c8d60aaf791"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1fe698e7e08f635eea7c7c8d60aaf791"></a>
 <a class="el" href="struct_d_a_t_a_c_h.html">DATACH</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791">CSD</a></td></tr>
-<tr class="memdesc:a1fe698e7e08f635eea7c7c8d60aaf791"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to chemical system data structure CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a>) <br/></td></tr>
+<tr class="memdesc:a1fe698e7e08f635eea7c7c8d60aaf791"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to chemical system data structure CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>) <br/></td></tr>
 <tr class="memitem:af9972ec005d9d422c78445eb330471cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_d_a_t_a_b_r.html">DATABR</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd">CNode</a></td></tr>
 <tr class="memdesc:af9972ec005d9d422c78445eb330471cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to a work node data bridge structure (node)  <a href="#af9972ec005d9d422c78445eb330471cd"></a><br/></td></tr>
 <tr class="memitem:ad5eaeefbaf3d25e876f06e6b69d898e6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad5eaeefbaf3d25e876f06e6b69d898e6"></a>
@@ -424,8 +420,8 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a78bcefa08d965128e3929298d765c57d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total Number of performed IPM main iterations. <br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>Implements a simple C/C++ interface between GEM IPM and FMT codes. </p>
-<p>Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures without using the TNodearray class. </p>
+<div class="textblock"><p>) Implements a simple C/C++ interface between GEM IPM and FMT codes. </p>
+<p>Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures without using the TNodearray class. </p>
 </div><hr/><h2>Member Function Documentation</h2>
 <a class="anchor" id="a773180f7d931f2f2a3b5a70bbc26dff0"></a>
 <div class="memitem">
@@ -492,7 +488,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> lookup arrays. </p>
+<p>Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> lookup arrays. </p>
 <dl class="section return"><dt>Returns:</dt><dd>-1L if interpolation is needed, or 1D index of the lookup array element if TK and P fit within the respective tolerances. </dd></dl>
 
 </div>
@@ -582,7 +578,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Writes CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure) to a text DCH file. </p>
+<p>Writes CSD (<a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure) to a text DCH file. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">brief_mode</td><td>- Do not write data items that contain only default values </td></tr>
@@ -650,7 +646,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -720,7 +716,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -796,7 +792,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -841,7 +837,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -985,7 +981,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -1029,7 +1025,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -1073,7 +1069,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">xCH</td><td>is the DC DCH index </td></tr>
@@ -1172,7 +1168,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">P</td><td>pressure, Pa </td></tr>
@@ -1209,7 +1205,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">P</td><td>pressure, Pa </td></tr>
@@ -1246,7 +1242,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">P</td><td>pressure, Pa </td></tr>
@@ -1283,7 +1279,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">P</td><td>pressure, Pa </td></tr>
@@ -1593,7 +1589,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <div class="memdoc">
 
 <p>(8b) Loads the GEMS3K input data for a given mass-transport node into the work instance of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure. </p>
-<p>In addition, provides access to speciation vector p_xDC and DC activity coefficients p_gam that will be used in GEM "smart initial approximation" SIA mode if dBR-&gt;NodeStatusCH == NEED_GEM_SIA (5) and uPrimalSol = true are set for the <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> call (see Section 2) . This works only when the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure contains a full list of Dependent Components used in GEM IPM2 calculations. </p>
+<p>In addition, provides access to speciation vector p_xDC and DC activity coefficients p_gam that will be used in GEM "smart initial approximation" SIA mode if dBR-&gt;NodeStatusCH == NEED_GEM_SIA (5) and uPrimalSol = true are set for the <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> call (see Section 2) . This works only when the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure contains a full list of Dependent Components used in GEM IPM2 calculations. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">p_NodeHandle</td><td>Node identification handle </td></tr>
@@ -1723,7 +1719,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <p>This call is useful when <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> returns with a NodeStatusCH value indicating a GEM calculation error (see above). Another use is for a detailed comparison of a test system calculation after the version upgrade of GEMS3K. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".dump.out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
+    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".dump.out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
   </table>
   </dd>
 </dl>
@@ -2072,7 +2068,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <div class="memdoc">
 
 <p>(7) Retrieves the GEMIPM2 chemical speciation calculation results from the work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure instance into memory provided by the mass transport part. </p>
-<p>Dimensions and order of elements in the arrays must correspond to those in currently existing <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> memory structure. </p>
+<p>Dimensions and order of elements in the arrays must correspond to those in currently existing <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> memory structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">p_NodeHandle</td><td>Node identification handle </td></tr>
@@ -2143,7 +2139,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <p>(3) Writes the contents of the work instance of the <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure into a disk file with path name fname. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the DBR disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
+    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the DBR disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
     <tr><td class="paramname">binary_f</td><td>defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task if called in the loop for each node), or in text format (false or 0, default). </td></tr>
     <tr><td class="paramname">with_comments</td><td>(text format only): defines the mode of output of comments written before each data tag and content in the DBR file. If set to true (1), the comments will be written for all data entries (default). If false (0), comments will not be written. </td></tr>
     <tr><td class="paramname">brief_mode</td><td>if true, tells that do not write data items, that contain only default values in text format </td></tr>
@@ -2289,7 +2285,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns:</dt><dd>total dissolved aqueous molality or 0.0, if there is no water in the node or no aqueous phase in <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a>. </dd></dl>
+<dl class="section return"><dt>Returns:</dt><dd>total dissolved aqueous molality or 0.0, if there is no water in the node or no aqueous phase in <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>. </dd></dl>
 
 </div>
 </div>
@@ -2751,7 +2747,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>Retrieves (interpolated) viscosity of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="DataCHemistry contains chemical system definitions common to all nodes for the exchange between the G...">DATACH</a> structure. </p>
+<p>Retrieves (interpolated) viscosity of liquid water (in kg/m3) at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">P</td><td>pressure, Pa </td></tr>
@@ -2781,15 +2777,15 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="node_8h_source.html">node.h</a></li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/node.cpp</li>
-<li>C:/DevGEMS/trunk/standalone/GEMS3K/node_format.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/<a class="el" href="node_8h_source.html">node.h</a></li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/node.cpp</li>
+<li>C:/DevelGEMS/trunk/standalone/GEMS3K/node_format.cpp</li>
 </ul>
 </div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 10:02:22 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jun 1 2012 16:11:39 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

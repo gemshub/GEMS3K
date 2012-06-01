@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['x',['x',['../class_t_sol_mod.html#a342ab6fc595ed41197251658fc866909',1,'TSolMod::x()'],['../struct_m_u_l_t_i.html#aecd97d558c7bc2cc28406af90ed1b7f4',1,'MULTI::X()']]],
+  ['x',['X',['../struct_m_u_l_t_i.html#aecd97d558c7bc2cc28406af90ed1b7f4',1,'MULTI::X()'],['../class_t_sol_mod.html#a342ab6fc595ed41197251658fc866909',1,'TSolMod::x()']]],
   ['xcapa',['XcapA',['../struct_m_u_l_t_i.html#a90f7d5fb30a5f257474b94d00a786d42',1,'MULTI']]],
   ['xcapb',['XcapB',['../struct_m_u_l_t_i.html#adc7dd299968efafbfe03beb984beb13d',1,'MULTI']]],
   ['xcapd',['XcapD',['../struct_m_u_l_t_i.html#a55c3f4a1ea5c93bcbc75ed7e936bdffb',1,'MULTI']]],

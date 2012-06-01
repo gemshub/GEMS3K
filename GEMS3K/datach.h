@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-/// \struct DATACH  datach.h
+/// \file datach.h
 /// DataCHemistry contains chemical system definitions common to all
 /// nodes for the exchange between the GEM IPM and the FMT code parts.
 /// Contains dimensions and index lists for ICs, DCs, Phases in DATABR structure.
@@ -10,7 +10,7 @@
 //
 //      CH: chemical structure in GEM IPM
 //      FMT: fluid mass transport
-/// \author (c) 2003,2009 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
+/// (c) 2003,2012 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
 // This file is part of GEMS3K and GEMS-PSI codes for
 // thermodynamic modelling by Gibbs energy minimization
 // developed in the Laboratory for Waste Management, Paul Scherrer Institute
@@ -30,9 +30,10 @@ const long int
     MaxDCN =      16,     // DC name length
     MaxPHN =      16;     // PH name length
 
-typedef struct   // Structure DataCH
+/// \struct DATACH - The Data for CHemistry data structure
+typedef struct
 {
-  long int     // Dimensionalities chemical system definition
+  long int     // Dimensionalities of chemical system definition
 //  These dimensionalities should be the same as in the GEMIPM work structure (MULTI)
     nIC,    ///< Number of Independent Components (stoichiometry units, usually chemical elements and charge)
     nDC,    ///< Total number of Dependent Components (chemical species made of Independent Components)
