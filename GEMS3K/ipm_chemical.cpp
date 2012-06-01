@@ -631,7 +631,7 @@ void
 TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
 {
     long int i,j,k;
-    double v, Yf; // v is debug variable
+    double NonLogTerm=0., v, Yf; // v is debug variable
 
     for( j=0; j<pm.L; j++)
        F[j] =0;
@@ -666,9 +666,9 @@ TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YF
                         || ( pm.PHC[k] == PH_POLYEL && pm.YFk >= pm.ScMinM ) )
         {
             pm.logXw = log(pm.YFk);
-            pm.aqsTail = 1.- pm.YFk / Yf;
+            NonLogTerm = 1.- pm.YFk / Yf;
 #ifdef NOMUPNONLOGTERM
-pm.aqsTail = 0.0;
+NonLogTerm = 0.0;
 #endif
         }
         if( pm.L1[k] > 1 )
@@ -676,15 +676,17 @@ pm.aqsTail = 0.0;
             pm.logYFk = log( Yf );
         }
         if( pm.PHC[k] == PH_AQUEL )
-            // ln moles of solvent in aqueous phase
+        {    // ln moles of solvent in aqueous phase
             pm.Yw = pm.YFk;
+            pm.aqsTail = NonLogTerm;
+        }
         for( ; j<i; j++ )
         { //  cycle by DC
             if( Y[j] < min( pm.DcMinM, pm.lowPosNum ))
                 continue;  // exception by minimum DC quantity
                            // calculate chemical potential of j-th DC
             v = DC_PrimalChemicalPotential( pm.G[j], log(Y[j]), pm.logYFk,
-                              pm.aqsTail, pm.logXw, pm.DCCW[j] );
+                              NonLogTerm, pm.logXw, pm.DCCW[j] );
             F[j] = v;
        }   // j
 NEXT_PHASE:
@@ -1099,7 +1101,7 @@ void TMulti::KarpovsPhaseStabilityCriteria()
 {
     bool KinConstr;
     long int k, j, ii;
-    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx;
+    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, NonLogTerm = 0.;
     SPP_SETTING *pa = paTProfil;
 
     EMU = pm.EMU;
@@ -1123,22 +1125,24 @@ void TMulti::KarpovsPhaseStabilityCriteria()
             if( pm.YFk > 1e-33 )   // amount of phase or carrier cannot be less than 1e-33 mol!
             {
                pm.logXw = log(pm.YFk);
-               pm.aqsTail = 1.- pm.YFk / YF;
+               NonLogTerm = 1.- pm.YFk / YF;
 #ifdef NOMUPNONLOGTERM
-pm.aqsTail = 0.0;
+NonLogTerm = 0.0;
 #endif
             }
             else {
                pm.logXw = -76.;
-               pm.aqsTail = 0.0;
+               NonLogTerm = 0.0;
             }
 //        }
         if( pm.L1[k] > 1 && YF > 1e-33 )
             pm.logYFk = log( YF );
         else pm.logYFk = -76.;
         if( pm.PHC[k] == PH_AQUEL) // number of moles of solvent
+        {
             pm.Yw = pm.YFk;
-
+            pm.aqsTail = NonLogTerm;
+        }
 // The code below was re-arranged by DK on 2.11.2007, streamlined on 16.04.2012
         sumWx = 0.0;
         for( ; j<ii; j++ )
@@ -1154,7 +1158,7 @@ pm.aqsTail = 0.0;
                 || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) ) )
                 KinConstr = true; // DC with the amount lying on the non-trivial kinetic constraint
             // calculating Karpov stability criteria for DCs
-            Fj = KarpovCriterionDC( &dNuG, pm.logYFk, pm.aqsTail,
+            Fj = KarpovCriterionDC( &dNuG, pm.logYFk, NonLogTerm,
                      pm.logXw, Wx, pm.DCCW[j] );
             NMU[j] = dNuG;  // dNuG is stored for all DCs, not only those in L_S set
             EMU[j] = Fj + Wx; // fix dual mole fraction estimate DK 13.04.2012
@@ -1648,14 +1652,13 @@ void TMulti::StabilityIndexes( void )
     long int L1k, k, j, jb = 0;
     double ln_ax_dual, gamma_primal, x_estimate, StabIndex, logSI;
     double lnFmol = log( H2O_mol_to_kg );  // may not work with mixed-solvent electrolyte
-    double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0.; // AqsTail = 0.;
+    double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0.;
 
     if( pm.Pc > 1e-29 )
        lnPc = log( pm.Pc );
     if( pm.PHC[0] == PH_AQUEL && pm.YFA[0] >= pm.XwMinM  ) // number of moles of solvent
     {
         Xw = pm.YFA[0] / pm.YF[0];
-//        AqsTail = 1. - Xw;
         lnXw = log( Xw );
     }
     jb=0;
