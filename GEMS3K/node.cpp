@@ -410,7 +410,7 @@ if( binary_f )
 
 #ifndef IPMGEMPLUGIN
    pVisor->Message( 0, "GEM2MT node array",
-      "Reading from disk a set of node array files to resume an interrupted RMT task.\n"
+      "Reading from disk a set of node array files to resume an interrupted RMT task. "
            "Please, wait...", i, nNodes() );
 #endif
 

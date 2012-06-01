@@ -237,7 +237,7 @@ AGAIN:
       continue;
 
    pVisor->Message( par, "GEM2MT node array",
-      "Writing to disk a set of node array files from interrupted RMT task.\n"
+      "Writing to disk a set of node array files from interrupted RMT task. "
            "Please, wait...", ii, nIV );
    // Save databr
    CopyWorkNodeFromArray( ii, anNodes, NodT0 );
