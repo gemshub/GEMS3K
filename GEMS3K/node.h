@@ -141,15 +141,15 @@ protected:
     // Prepares and writes DCH and DBR files for reading into the coupled code
     void makeStartDataChBR( QWidget* par, bool no_interpolat,
          TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-         short nTp_, short nPp_, float Ttol_, float Ptol_,
-         float *Tai, float *Pai );
+         long int nTp_, long int nPp_, double Ttol_, double Ptol_,
+         double *Tai, double *Pai );
     void makeStartDataChBR( QWidget* par,
       TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
       double Tai[4], double Pai[4] );
 
     // Building internal dataCH and DataBR structures from Multi
     void setupDataChBR( TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-                               short nTp_, short nPp_, bool use_grid );
+                               long int nTp_, long int nPp_, bool use_grid );
     // Build lists names of components for selection into DataBridge
     void getDataBridgeNames( QWidget* par, bool select_all,
         TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH  );
@@ -786,8 +786,8 @@ void GEM_set_MT(
     /// interaction variant. The user must select ICs, DCs and phases to be included
     /// in DATABR lists
     void MakeNodeStructures( QWidget* par, bool select_all,bool no_interpolat,
-             float *Tai, float *Pai, short nTp_ = 1 ,
-             short nPp_ = 1 , float Ttol_ = 1., float Ptol_ =1. );
+             double *Tai, double *Pai, long int nTp_ = 1 ,
+             long int nPp_ = 1 , double Ttol_ = 1., double Ptol_ =1. );
     /// Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
     /// interaction variant. The user must select ICs, DCs and phases to be included
     /// in DATABR lists
@@ -799,10 +799,10 @@ void GEM_set_MT(
     /// Overloaded variant - takes lists of ICs, DCs and phases according to
     /// already existing index vectors axIC, axDC, axPH (with anICb, anDCb,
     /// anPHb, respectively)
-    void MakeNodeStructures(  short anICb, short anDCb,  short anPHb,
-                short* axIC, short* axDC,  short* axPH, bool no_interpolat,
-             float* Tai, float* Pai,  short nTp_,
-             short nPp_, float Ttol_, float Ptol_  );
+    void MakeNodeStructures(  long int anICb, long int anDCb,  long int anPHb,
+                long int* axIC, long int* axDC,  long int* axPH, bool no_interpolat,
+             double* Tai, double* Pai,  long int nTp_,
+             long int nPp_, double Ttol_, double Ptol_  );
 
     /// Test temperature and pressure values for the interpolation grid
     bool TestTPGrid(  double Tai[4], double Pai[4] );
@@ -810,8 +810,8 @@ void GEM_set_MT(
 #endif
 
     /// Writes work node (DATABR structure) to a text VTK file
-    virtual void databr_to_vtk( fstream& ff, const char*name, double time, long cycle,
-                              long nFilds, short (*Flds)[2]);
+    virtual void databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+                              long int nFilds, long int (*Flds)[2]);
 
 };
 

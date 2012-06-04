@@ -1164,7 +1164,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   void TNode::Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase)
   {
     long ip_IPx=0; long ip_IPc=0; long ip_DCc=0;
-    for(int k=0;k<((*index_phase)+1);k++)
+    for(long int k=0;k<((*index_phase)+1);k++)
     {
         *index_phase_aIPx = ip_IPx;
         ip_IPx          += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
@@ -1187,7 +1187,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   void TNode::Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase )
   { 
-    int rc, NPar, NPcoef;
+    long int rc, NPar, NPcoef;
     NPar = pmm->LsMod[(*index_phase)*3];
     NPcoef =  pmm->LsMod[(*index_phase)*3+2];
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
@@ -1198,7 +1198,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   void TNode::Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase )
   { 
-    int i; long NPar, NPcoef;
+    long int i; long NPar, NPcoef;
     NPar   = pmm->LsMod[(*index_phase)*3];
     NPcoef = pmm->LsMod[(*index_phase)*3+2];
     i = 0;
@@ -1211,7 +1211,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   void TNode::Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase )
   {
-    int i; long NPar, MaxOrd;
+    long int i; long NPar, MaxOrd;
     NPar   = pmm->LsMod[(*index_phase)*3];
     MaxOrd = pmm->LsMod[(*index_phase)*3+1];
     i = 0;
@@ -1224,7 +1224,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   void TNode::Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase )
   { 
-    int rc, NComp, NP_DC;
+    long int rc, NComp, NP_DC;
     NComp = pmm->L1[(*index_phase)];
     NP_DC = pmm->LsMdc[(*index_phase)];
     for ( rc=0;rc<NComp*NP_DC;rc++ )
@@ -1235,7 +1235,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   void TNode::Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase )
   {
-    int i; long NComp, NP_DC;
+    long int i; long NComp, NP_DC;
     NComp = pmm->L1[(*index_phase)];
     NP_DC = pmm->LsMdc[(*index_phase)];
     i = 0;
@@ -1385,17 +1385,17 @@ void TNode::freeMemory()
 
 // Makes start DATACH and DATABR data from GEMS internal data (MULTI and other)
 void TNode::MakeNodeStructures(
-		short anICb,       // number of stoichiometry units (<= nIC) used in the data bridge
-		short anDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
-		short anPHb,     	// number of phases (<= nPH) used in the data bridge
-		short* axIC,   // ICNL indices in DATABR IC vectors [nICb]
-		short* axDC,   // DCNL indices in DATABR DC list [nDCb]
-		short* axPH,   // PHNL indices in DATABR phase vectors [nPHb]
+        long int anICb,       // number of stoichiometry units (<= nIC) used in the data bridge
+        long int anDCb,      	// number of DC (chemical species, <= nDC) used in the data bridge
+        long int anPHb,     	// number of phases (<= nPH) used in the data bridge
+        long int* axIC,   // ICNL indices in DATABR IC vectors [nICb]
+        long int* axDC,   // DCNL indices in DATABR DC list [nDCb]
+        long int* axPH,   // PHNL indices in DATABR phase vectors [nPHb]
     bool no_interpolat,
-    float* Tai, float* Pai,
-    short nTp_, short nPp_, float Ttol_, float Ptol_  )
+    double* Tai, double* Pai,
+    long int nTp_, long int nPp_, double Ttol_, double Ptol_  )
 {
-  int ii;
+  long int ii;
   TCIntArray aSelIC;
   TCIntArray aSelDC;
   TCIntArray aSelPH;
@@ -1416,8 +1416,8 @@ void TNode::MakeNodeStructures(
 // Make start DATACH and DATABR data from GEMS internal data (MULTI and other)
 // Lookup arrays from arrays
 void TNode::MakeNodeStructures( QWidget* par, bool select_all,bool no_interpolat,
-    float *Tai, float *Pai,
-    short nTp_, short nPp_, float Ttol_, float Ptol_  )
+    double *Tai, double *Pai,
+    long int nTp_, long int nPp_, double Ttol_, double Ptol_  )
 {
   TCIntArray aSelIC;
   TCIntArray aSelDC;
@@ -1457,7 +1457,7 @@ void TNode::getDataBridgeNames( QWidget* par, bool select_all,
 
 // select lists
     aList.Clear();
-    for(int ii=0; ii< pmm->N; ii++ )
+    for(long int ii=0; ii< pmm->N; ii++ )
     {  if( select_all )
          aSelIC.Add( ii );
        else
@@ -1468,7 +1468,7 @@ void TNode::getDataBridgeNames( QWidget* par, bool select_all,
           "Please, mark independent components for selection into DataBridge");
 
     aList.Clear();
-    for(int ii=0; ii< pmm->L; ii++ )
+    for(long int ii=0; ii< pmm->L; ii++ )
     {  if( select_all )
          aSelDC.Add( ii );
        else
@@ -1479,7 +1479,7 @@ void TNode::getDataBridgeNames( QWidget* par, bool select_all,
          "Please, mark dependent components for selection into DataBridge");
 
     aList.Clear();
-    for(int ii=0; ii< pmm->FI; ii++ )
+    for(long int ii=0; ii< pmm->FI; ii++ )
     {  if( select_all )
          aSelPH.Add( ii );
        else
@@ -1493,11 +1493,11 @@ void TNode::getDataBridgeNames( QWidget* par, bool select_all,
 
 // Building internal dataCH and DataBR structures from Multi
 void TNode::setupDataChBR( TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-                           short nTp_, short nPp_, bool no_interpolation )
+                           long int nTp_, long int nPp_, bool no_interpolation )
 {
 // set sizes for DataCh
   uint ii;
-  int i1;
+  long int i1;
 // reallocates memory for     DATACH  *CSD;  and  DATABR  *CNode;
   if( !CSD )
      CSD = new DATACH;
@@ -1615,10 +1615,10 @@ void TNode::setupDataChBR( TCIntArray& selIC, TCIntArray& selDC, TCIntArray& sel
 /// Prepares and writes DCH and DBR files for reading into the coupled code
 void TNode::makeStartDataChBR( QWidget* par, bool no_interpolat,
   TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-  short nTp_, short nPp_, float Ttol_, float Ptol_,
-  float *Tai, float *Pai )
+  long int  nTp_, long int  nPp_, double Ttol_, double Ptol_,
+  double *Tai, double *Pai )
 {
-  int i1;
+  long int  i1;
 
   setupDataChBR( selIC, selDC, selPH, nTp_, nPp_, no_interpolat );
 
@@ -1644,7 +1644,7 @@ void TNode::makeStartDataChBR( QWidget* par,
   TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
   double Tai[4], double Pai[4] )
 {
-    int nT, nP, i1;
+    long int nT, nP, i1;
     double cT, cP;
 
   nT = getNpoints( Tai );

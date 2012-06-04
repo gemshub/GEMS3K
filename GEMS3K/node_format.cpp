@@ -1615,8 +1615,8 @@ void TNode::databr_head_to_vtk( fstream& ff, const char*name, double time, long 
  ff << "POINT_DATA " << nx*ny*nz << endl;
 }
 
-void TNode::databr_to_vtk( fstream& ff, const char*name, double time, long cycle,
-                          long nFilds, short (*Flds)[2])
+void TNode::databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+                          long int  nFilds, long int  (*Flds)[2])
 {
    bool all = false;
    long int kk, ii, nf, nel, nel2;

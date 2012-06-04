@@ -1132,8 +1132,8 @@ void TNodeArray::logProfilePhVol( FILE* logfile, long int t, double at, long int
   fprintf( logfile, "\n" );
 }
 
-void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long cycle,
-                          long nFilds, short (*Flds)[2])
+void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+                          long int  nFilds, long int  (*Flds)[2])
 {
    bool all = false;
    long int kk, ii, nf, nel, nel2;

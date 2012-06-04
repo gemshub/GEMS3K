@@ -278,7 +278,7 @@ public:
 
      /// Writes work node (DATABR structure) to a text VTK file
      void databr_to_vtk( fstream& ff, const char*name, double time, long cycle,
-                               long nFields=0, short (*Flds)[2]=0);
+                               long int nFields=0, long int (*Flds)[2]=0);
 
 };
 
