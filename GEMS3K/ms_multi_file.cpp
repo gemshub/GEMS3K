@@ -479,7 +479,7 @@ void TMulti::to_file( GemDataStream& ff  )
       ff.writeArray(pm.PUL, pm.FIs);
       ff.writeArray(pm.PLL, pm.FIs);
 
-      ff.writeArray((char*)pm.sMod, 6*pm.FIs);
+      ff.writeArray((char*)pm.sMod, 8*pm.FIs);
       ff.writeArray( pm.RFLC, pm.FIs);
       ff.writeArray( pm.RFSC, pm.FIs);
     }
@@ -710,7 +710,7 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray(pm.PUL, pm.FIs);
       ff.readArray(pm.PLL, pm.FIs);
 
-      ff.readArray((char*)pm.sMod, 6*pm.FIs);
+      ff.readArray((char*)pm.sMod, 8*pm.FIs);
       ff.readArray( pm.RFLC, pm.FIs);
       ff.readArray( pm.RFSC, pm.FIs);
     }
@@ -1013,12 +1013,12 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
        pm.LsMdc[ii] = 0;
    }
 
-   pm.sMod = new char[pm.FIs][6];
+   pm.sMod = new char[pm.FIs][8];
    pm.RFLC = new char[pm.FIs];
    pm.RFSC = new char[pm.FIs];
    for( ii=0; ii<pm.FIs; ii++)
    {
- 	  fillValue( pm.sMod[ii], '\0', 6);
+      fillValue( pm.sMod[ii], '\0', 8);
  	  pm.RFLC[ii] = 0;
       pm.RFSC[ii] = 0;
    }

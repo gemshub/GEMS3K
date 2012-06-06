@@ -117,6 +117,10 @@ typedef struct
     CpXc,  ///< reserved
     CvX_,  ///< reserved
     CvXc,  ///< reserved
+  // TKinMet stuff
+  kTau,  ///< current time, s (kinetics)
+  kdT,   ///< current time step, s (kinetics)
+
     TMols,      ///< Input total moles in b vector before rescaling
     SMols,      ///< Standart total moles (upscaled) {1000}
     MBX,        ///< Total mass of the system, kg
@@ -153,9 +157,11 @@ double
 
   long int
     *L1,    ///< l_a vector - number of DCs included into each phase [Fi]
-    *LsMod, ///< Number of interaction parameters. Max parameter order (cols in IPx),
+  // TSolMod stuff
+  *LsMod, ///< Number of interaction parameters. Max parameter order (cols in IPx),
             ///< and number of coefficients per parameter in PMc table [3*FIs]
     *LsMdc, ///<  for multi-site models: [3*FIs] - number of nonid. params per component; number of sublattices nS; number of moieties nM.
+ *LsMdc2, ///<  new: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member; reserved.
     *IPx,   ///< Collected indexation table for interaction parameters of non-ideal solutions
             ///< ->LsMod[k,0] x LsMod[k,1]   over FIs
     *mui,   ///< IC indices in RMULTS IC list [N]
@@ -163,12 +169,27 @@ double
     *muj;   ///< DC indices in RMULTS DC list [L]
   long int  (*SATX)[4]; ///< Setup of surface sites and species (will be applied separately within each sorption phase) [Lads]
              // link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
+  long int
+  *LsPhl,  ///< new: Number of phase links; link parameters; [Fi][2]
+  *PhLin,  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
+  // TSorpMod stuff
+  *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
+  *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
+  *xSMd,   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
+  // TKinMet stuff
+  *LsKin,  ///< new: number of faces; number of kin.regions; rate constants/coeffs; reserved [Fi][4]
+  *LsUpt,  ///< new: number of uptake model coeffs; reserved [Fis][2]
+  *jCrDC,  ///< new: Collected array of aq/gas/sorption species indexes used in rate regions (-> += LsKin[k][1]*LsKin[k][2])
+  *xfaces; ///< new: Collected array of indexes of faces for parameter sets in rate regions (-> += LsKin[k][0]*LsKin[k][1])
+
   double
+   // TSolMod stuff
     *PMc,    ///< Collected interaction parameter coefficients for the (built-in) non-ideal mixing models -> LsMod[k,0] x LsMod[k,2]
     *DMc,    ///< Non-ideality coefficients f(TPX) for DC -> L1[k] x LsMdc[k][0]
     *MoiSN,  ///< End member moiety- site multiplicity number tables ->  L1[k] x LsMdc[k][1] x LsMdc[k][2]
     *SitFr,  ///< Tables of sublattice site fractions for moieties -> LsMdc[k][1] x LsMdc[k][2]
-    *A,      ///< DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
+  // Stoichiometry basis
+    *A,   ///< DC stoichiometry matrix A composed of a_ji [0:N-1][0:L-1]
     *Awt,    ///< IC atomic (molar) mass, g/mole [0:N-1]
 
  // Reconsider usage
@@ -187,15 +208,31 @@ double
      *Cv0,    ///< DC molar Cv, reserved [L]
 
     *VL,      ///< ln mole fraction of end members in phases-solutions
+  // Old sorption stuff
     *Xcond,   ///< conductivity of phase carrier, sm/m2   [0:FI-1], reserved
     *Xeps,    ///< diel.permeability of phase carrier (solvent) [0:FI-1], reserved
     *Aalp,    ///< Full vector of specific surface areas of phases (m2/g) [0:FI-1]
     *Sigw,    ///< Specific surface free energy for phase-water interface (J/m2)   [0:FI-1]
-    *Sigg  	/// Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
-    ;
+    *Sigg,  	///< Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
+  // TSolMod stuff
+  *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
+  *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc[k][3]
+  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc[k][4]
 
-
-//  Data for surface comlexation and sorption models (new variant [Kulik,2006])
+  // TSorpMod & TKinMet stuff
+  *SorMc, ///< new: Phase-related kinetics and sorption model parameters: [Fis][16]
+          ///< in the same order as from Asur until fRes2 in TPhase
+  // TSorpMod stuff
+  *EImc,  ///< new: Collected EIL model coefficients k -> += LsESmo[k][0]*LsESmo[k][1]
+  *mCDc,  ///< new: Collected CD EIL model coefficients per DC k -> += L1[k]*LsESmo[k][2]
+  *IsoPc, ///< new: Collected isotherm coefficients per DC k -> += L1[k]*LsISmo[k][2];
+  *IsoSc, ///< new: Collected isotherm coeffs per site k -> += LsISmo[k][0]*LsISmo[k][1];
+  // TKinMet stuff
+  *fSak,  ///< new: Collected array of fractions of surface area by different faces k-> += LsKin[k][0]
+  *Krpc,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][1]*LsKin[k][2];
+  *UMpc,  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
+      ;
+  //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   ///< mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
   double  (*Nfsp)[MST];  ///< Fractions of the sorbent specific surface area allocated to surface types  [FIs][FIat]
   double  (*MASDT)[MST]; ///< Total maximum site  density per surface type (mkmol/g)  [FIs][FIat]
@@ -222,6 +259,7 @@ double
     *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
+  // TKinMet stuff (old DODs, new contents
     *PUL,  ///< Vector of upper restrictions to phases amounts X_a (reserved)[FIs]
     *PLL,  ///< Vector of lower restrictions to phases amounts X_a (reserved)[FIs]
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
@@ -243,6 +281,18 @@ double
     *lnGam,   ///< ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]
     *lnGmo;   ///< Copy of lnGam from previous IPM iteration (reserved)
   double  (*lnSAC)[4]; ///< former lnSAT ln surface activity coeff and Coulomb's term  [Lads][4]
+
+  // TSolMod stuff (detailed output on partial energies of mixing)
+  double *lnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
+  double *lnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
+  double *lnEXt;  ///< new: excess energy terms adding to overall activity coefficients [Ls_]
+  double *lnCnft; ///< new: configurational terms adding to overall activity [Ls_]
+  // TSorpMod stuff
+  double *lnScalT;  ///< new: Surface/volume scaling activity correction terms [Ls_]
+  double *lnSACT;   ///< new: ln isotherm-specific SACT for surface species [Ls_]
+  double *lnGammF;  ///< new: Frumkin or BET non-electrostatic activity coefficients [Ls_]
+  double *CTerms;   ///< new: Coulombic terms (electrostatic activity coefficients) [Ls_]
+
   double  *B,  ///< Input bulk chem. compos. of the system - b vector, moles of IC[N]
     *U,  ///< IC chemical potentials u_i (mole/mole) - dual IPM solution [N]
     *U_r,  ///< IC chemical potentials u_i (J/mole) [0:N-1]
@@ -266,7 +316,7 @@ double
          (*APh)[MIXPHPROPS],     ///< Helmholtz energy properties for mixed phases [FIs]
          (*UPh)[MIXPHPROPS];     ///< Internal energy properties for mixed phases [FIs]
 
-// EDL models (data for electrostatic activity coefficients)
+// old sorption models - EDL models (data for electrostatic activity coefficients)
    double (*XetaA)[MST]; ///< Total EDL charge on A (0) EDL plane, moles [FIs][FIat]
    double (*XetaB)[MST]; ///< Total charge of surface species on B (1) EDL plane, moles[FIs][FIat]
    double (*XetaD)[MST]; ///< Total charge of surface species on D (2) EDL plane, moles[FIs][FIat]
@@ -288,9 +338,11 @@ double
     *Wx,  ///< Mole fractions Wx of DC in multi-component phases [L]
     *F,   ///<Primal DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
     *F0;  ///< Excess Gibbs energies for (metastable) DC, mole/mole [L]
+// Old sorption models
    double (*D)[MST];  ///< Reserved; new work array for calc. surface act.coeff.
 // Name lists
-  char  (*sMod)[6];   ///< Codes for built-in mixing models of multicomponent phases [FIs]
+  char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]
+  char (*kMod)[4];  ///< new: Codes for built-in kinetic models [Fi]
   char  (*dcMod)[6];   ///< Codes for PT corrections for dependent component data [L]
   char  (*SB)[MAXICNAME+MAXSYMB]; ///< List of IC names in the system [N]
   char  (*SB1)[MAXICNAME]; ///< List of IC names in the system [N]
@@ -313,6 +365,8 @@ double
   char  (*SCM)[MST]; ///< Classifier of built-in electrostatic models applied to surface types in sorption phases [FIs][FIat]
   char  *SATT,  ///< Classifier of applied SACT equations (isotherm corrections) [Lads]
     *DCCW;  ///< internal DC class codes [L]
+  // TSorpMod stuff
+  char *IsoCt; ///< new: Collected isotherm and SATC codes for surface site types k -> += 2*LsISmo[k][0]
 
 //  SolutionData *asd; ///< Array of data structures to pass info to TSolMod [FIs]
 
