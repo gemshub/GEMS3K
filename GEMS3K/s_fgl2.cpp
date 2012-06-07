@@ -35,6 +35,22 @@ TSolMod::TSolMod( SolutionData *sd ):
         NPcoef(sd->NPcoefs), MaxOrd(sd->MaxOrder),  NP_DC(sd->NPperDC), /*NPTP_DC(NPTPperDC),*/
         NSub(sd->NSublat), NMoi(sd->NMoiet), R_CONST(8.31451), Tk(sd->T_k), Pbar(sd->P_bar)
 {
+    NlPh = sd->NlPhs;
+    NlPc = sd->NlPhC;
+    NDQFpc = sd->NDQFpDC;
+    NrcPpc = sd->NrcPpDC;
+    lPhcf = sd->lPhc;
+    DQFcf = sd->DQFc;
+    rcpcf = sd->rcpc;
+    //PhLin = sd->arPhLin;
+    PhLin = new long int[NlPh][2];
+    for (long int i=0; i<NlPh; i++)
+    {
+        PhLin[i][0] = sd->arPhLin[2*i];
+        PhLin[i][1] = sd->arPhLin[2*i+1];
+    }
+    //aSitFj = sd->arSitFj;
+
     // pointer assignments
     aIPx = sd->arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = sd->arIPc;

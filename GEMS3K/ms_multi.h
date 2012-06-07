@@ -581,7 +581,8 @@ protected:
 // Built-in activity coefficient models
 // Generic solution model calls
     void SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
-                       long int k, long int ipb, char ModCode, char MixCode );
+                       long int k, long int ipb, char ModCode, char MixCode,
+                       long int jphl, long int jlphc, long int jdqfc, long int  jrcpc );
     void SolModParPT( long int k, char ModCode );
     void SolModActCoeff( long int k, char ModCode );
     void SolModExcessProp( long int k, char ModCode );

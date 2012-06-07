@@ -337,7 +337,9 @@ static double ICold=0.;
 long int
 TMulti::CalculateActivityCoefficients( long int LinkMode  )
 {
-    long int k, j, jb, je=0, jpb, jpe=0, jmb, jme=0,jdb, jde=0, ipb, ipe=0, jsb, jse=0;
+    long int k, j, jb, je=0, jpb, jdb, ipb,  jpe=0, jde=0, ipe=0;
+    //long int  jmb, jme=0, jsb, jse=0;
+    //long int jphl=0, jlphc=0, jdqfc=0,  jrcpc=0;
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
@@ -347,7 +349,11 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     switch( LinkMode )
     {
       case LINK_TP_MODE:  // Built-in functions depending on T,P only
-         pm.FitVar[3] = 1.0;  // resetting the IPM smoothing factor
+      {
+        long int jphl=0, jlphc=0, jdqfc=0,  jrcpc=0;
+        long int  jmb, jme=0, jsb, jse=0;
+
+        pm.FitVar[3] = 1.0;  // resetting the IPM smoothing factor
 
          for( k=0; k<pm.FIs; k++ )
          { // loop on solution phases
@@ -394,13 +400,22 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                case PH_GASMIX:
                case PH_PLASMA:
                case PH_FLUID:
-                    SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb, sMod[SPHAS_TYP], sMod[MIX_TYP] ); // new solution models (TW, DK 2007)
+                    SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
+                      sMod[SPHAS_TYP], sMod[MIX_TYP], jphl, jlphc, jdqfc,  jrcpc  ); // new solution models (TW, DK 2007)
             	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
               default:
                     break;
             }
-        } // k
+
+            // move pointers
+            jphl  += (pm.LsPhl[k*2]*2);
+            jlphc += (pm.LsPhl[k*2]*pm.LsPhl[k*2+1]);
+            jdqfc += (pm.LsMdc2[k*3]*pm.L1[k]);
+            jrcpc += (pm.LsMdc2[k*3+1]*pm.L1[k]);
+
+          } // k
+        }
         break;
 
       case LINK_PP_MODE: // Mode of calculation of integral solution phase properties
@@ -464,7 +479,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
         Error("CalculateActivityCoefficients()","Invalid LinkMode for a built-in solution model");
     }
 
-    jpe=0; jde=0; ipe=0; je=0;
+    jpe=0; jde=0; ipe=0;
+    je=0;
     for( k=0; k<pm.FI; k++ )
     { // loop on phases
         jb = je;
@@ -487,10 +503,10 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
         jpe += pm.LsMod[k*3]*pm.LsMod[k*3+2];  // Changed 07.12.2006  by KD
         jdb = jde;
         jde += pm.LsMdc[k*3]*pm.L1[k];
-        jmb = jme;
-        jme += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2]*pm.L1[k];
-        jsb = jse;
-        jse += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2];
+        //jmb = jme;
+        //jme += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2]*pm.L1[k];
+        //jsb = jse;
+        //jse += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2];
 
    if( LinkMode == LINK_UX_MODE && sMod[SGM_MODE] == SM_STNGAM )
    {    // check that SGM_MODE for adsorption or multi-site ideal SS is not SM_IDEAL in Phase records!
@@ -744,7 +760,8 @@ END_LOOP:
 /// using  TSolMod class. Now including multi-site ideal and scripted models
 //
 void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
-                           long int k, long int ipb, char ModCode, char MixCode )
+                           long int k, long int ipb, char ModCode, char MixCode,
+                           long int jphl, long int jlphc, long int jdqfc, long int  jrcpc)
 {
     double *aZ, *aM;//, *aVol;
     //long int *aIPx;
@@ -760,6 +777,13 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     sd.NMoiet = pm.LsMdc[k*3+2];     // Number of moieties for multi-site SS model
     sd.Mod_Code = ModCode;
     sd.Mix_Code = MixCode;
+
+    //new objects to Phase 06/06/12
+    sd.NlPhs = pm.LsPhl[k*2];
+    sd.NlPhC = pm.LsPhl[k*2+1];
+    sd.NDQFpDC = pm.LsMdc2[k*3];
+    sd.NrcPpDC = pm.LsMdc2[k*3+1];
+
 
     if( phSolMod[k])
         if(  // phSolMod[k]->testSizes( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode )
@@ -784,6 +808,13 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     sd.TP_Code = &pm.dcMod[jb];
     sd.T_k = pm.Tc;
     sd.P_bar = pm.Pc;
+
+    //new objects to Phase 06/06/12
+    sd.arPhLin = pm.PhLin+jphl;
+    sd.lPhc = pm.lPhc+ jlphc;
+    sd.DQFc = pm.DQFc+ jdqfc;
+    sd.rcpc = pm.rcpc+ jrcpc;
+    //sd.arSitFj =
 
     // specific properties
     aM = pm.Y_m+jb;

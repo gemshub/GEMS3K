@@ -76,24 +76,38 @@ struct SolutionData {
     long int NPperDC;   ///< Number of parameters per species (DC)
     long int NSublat;   ///< number of sublattices nS
     long int NMoiet;    ///< number of moieties nM
-    char Mod_Code;      ///< Code of the mixing model
-    char Mix_Code;      ///< Code for specific EoS mixing rule
-    char *DC_Codes;     ///< DC class codes for species -> NSpecies
-    char (*TP_Code)[6]; ///< Codes for TP correction methods for species ->NSpecies
-    long int *arIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
-    double *arIPc;      ///< Table of interaction parameter coefficients
-    double *arDCc;      ///< End-member properties coefficients
-    double *arMoiSN;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
-    double *arSitFr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
- // TBD   double *arSitFj; ///< Table of end member sublattice activity coefficients -> NSpecies x NSublat
-    double *arGEX;      ///< Reciprocal energies, Darken terms, pure fugacities -> NSpecies
-    double *arPparc;    ///< Partial pressures -> NSpecies
-    double *arWx;       ///< Species (end member) mole fractions ->NSpecies
-    double *arlnGam;    ///< Output: activity coefficients of species (end members)
-    double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
-    double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
-    double T_k;         ///< Temperature, K (initial)
-    double P_bar;       ///< Pressure, bar (initial)
+
+    long int NlPhs;     ///< new: Number of linked phases
+    long int NlPhC;     ///< new: Number of linked phase parameter coefficient per link (default 0)
+    long int NDQFpDC;   ///< new: Number of DQF parameters per species (end member)
+    long int NrcPpDC;   ///< new: Number of reciprocal parameters per species (end member)
+
+        char Mod_Code;      ///< Code of the mixing model
+        char Mix_Code;      ///< Code for specific EoS mixing rule
+        char *DC_Codes;     ///< DC class codes for species -> NSpecies
+        char (*TP_Code)[6]; ///< Codes for TP correction methods for species ->NSpecies
+        long int *arIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
+
+    long int *arPhLin;  ///< new: indexes of linked phase and link type codes [NlPhs*2] read-only
+
+        double *arIPc;      ///< Table of interaction parameter coefficients
+        double *arDCc;      ///< End-member properties coefficients
+        double *arMoiSN;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
+        double *arSitFr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
+    double *arSitFj; ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
+        double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
+
+    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
+    double *DQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
+    double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
+
+        double *arPparc;    ///< Partial pressures -> NSpecies
+        double *arWx;       ///< Species (end member) mole fractions ->NSpecies
+        double *arlnGam;    ///< Output: activity coefficients of species (end members)
+        double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
+        double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
+        double T_k;         ///< Temperature, K (initial)
+        double P_bar;       ///< Pressure, bar (initial)
 };
 
 
@@ -113,8 +127,15 @@ class TSolMod
         long int NP_DC;    ///< Number of coeffs per one DC in the phase (columns in aDCc)
         long int NSub;     ///< number of sublattices nS
         long int NMoi;     ///< number of moieties nM
-//        long int NPTP_DC;  ///< Number of properties per one DC at T,P of interest (columns in aDC)  !!!! Move to CG EOS subclass
-        long int *aIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
+
+   long int NlPh;     ///< new: Number of linked phases
+   long int NlPc;     ///< new: Number of linked phase parameter coefficient per link (default 0)
+   long int NDQFpc;   ///< new: Number of DQF parameters per species (end member)
+   long int NrcPpc;   ///< new: Number of reciprocal parameters per species (end member)
+
+        //        long int NPTP_DC;  // Number of properties per one DC at T,P of interest (columns in aDC)  !!!! Move to CG EOS subclass
+                long int *aIPx;    // Pointer to list of indexes of non-zero interaction parameters
+   long int (*PhLin)[2];  ///< new: indexes of linked phase and link type codes [NlPhs][2] read-only
 
         double R_CONST; ///< R constant
         double Tk;    	///< Temperature, K
@@ -128,7 +149,11 @@ class TSolMod
         double **aDC;   ///< Table of corrected end member properties at T,P of interest  !!!!!! Move to GC EOS subclass!
         double *aMoiSN; ///< End member moiety- site multiplicity number tables -> NComp x NSub x NMoi
         double *aSitFR; ///< Table of sublattice site fractions for moieties -> NSub x NMoi
-// TBD        double *aSitFj; ///< Table of site activity coefficients [NComp][NSub]
+
+    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
+    double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
+    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpc; (read-only)
+
         double *x;      ///< Pointer to mole fractions of end members (provided)
         double *aVol;   ///< molar volumes of species (end members)
         double *phVOL;  ///< phase volume, cm3/mol (now obsolete) !!!!!!!!!!!! Check usage!
@@ -147,7 +172,8 @@ class TSolMod
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
         double ***mn;     ///< array of end member moiety-site multiplicity numbers [NComp][NSub][NMoi]
         double *mns;      ///< array of total site multiplicities [NSub]
-   double **fjs;     ///< array of site activity coefficients [NComp][NSub]
+        double **fjs;     ///< array of site activity coefficients [NComp][NSub]
+   double *aSitFj; ///< new: pointer to return table of site activity coefficients NComp x NSub
 
         // functions for calculation of configurational term for multisite ideal mixing
         void alloc_multisite();

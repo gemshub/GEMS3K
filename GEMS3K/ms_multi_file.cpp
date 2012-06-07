@@ -54,7 +54,7 @@ void TMulti::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
    for(long int i=0; i<pm.FI; i++)
    {
        PhLinSum += (pm.LsPhl[i*2]*2);
-       lPhcSum += (pm.LsPhl[i*2+1]);
+       lPhcSum += (pm.LsPhl[i*2]*pm.LsPhl[i*2+1]);
 
    }
  }
