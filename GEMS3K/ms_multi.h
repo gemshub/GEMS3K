@@ -519,6 +519,18 @@ protected:
 // Internal functions for SCMs
    void getLsModsum( long int& LsModSum, long int& LsIPxSum );
    void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+   /// Get dimensions from LsPhl array
+   void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
+   /// Get dimensions from LsMdc2 array
+   void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
+   /// Get dimensions from LsISmo array
+   void getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum );
+   /// Get dimensions from LsESmo array
+   void getLsESmosum( long int& EImcSum,long int& mCDcSum );
+   /// Get dimensions from LsKin array
+   void getLsKinsum( long int& fSakSum,long int& KrpcSum, long int& jCrDCSum,long int& xfacesSum );
+   /// Get dimensions from LsUpot array
+   void getLsUptsum( long int& UMpcSum );
 
    void setErrorMessage( long int num, const char *code, const char * msg);
    void addErrorMessage( const char * msg);

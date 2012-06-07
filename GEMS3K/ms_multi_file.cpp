@@ -46,6 +46,85 @@ void TMulti::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitS
    }
  }
 
+// dimensions from LsPhl array
+void TMulti::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
+{  PhLinSum = 0;
+   lPhcSum = 0;
+
+   for(long int i=0; i<pm.FI; i++)
+   {
+       PhLinSum += (pm.LsPhl[i*2]*2);
+       lPhcSum += (pm.LsPhl[i*2+1]);
+
+   }
+ }
+
+// dimensions from LsMdc2 array
+void TMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
+{  DQFcSum = 0;
+   rcpcSum = 0;
+
+   for(long int i=0; i<pm.FIs; i++)
+   {
+       DQFcSum += (pm.LsMdc2[i*3]*pm.L1[i]);
+       rcpcSum += (pm.LsMdc2[i*3+1]*pm.L1[i]);
+   }
+ }
+
+// dimensions from LsISmo array
+void TMulti::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum )
+{  IsoCtSum = 0;
+   IsoScSum = 0;
+   IsoPcSum = 0;
+   xSMdSum = 0;
+
+   for(long int i=0; i<pm.FIs; i++)
+   {
+       IsoCtSum += (pm.LsISmo[i*4]*2);
+       IsoScSum += (pm.LsISmo[i*4]*pm.LsISmo[i*4+1]);
+       IsoPcSum += (pm.LsISmo[i*4+2]*pm.L1[i]);
+       xSMdSum += (pm.LsISmo[i*4+3]*pm.L1[i]);
+   }
+ }
+
+// dimensions from LsESmo array
+void TMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
+{  EImcSum = 0;
+   mCDcSum = 0;
+
+   for(long int i=0; i<pm.FIs; i++)
+   {
+       mCDcSum += (pm.LsESmo[i*4+2]*pm.L1[i]);
+       EImcSum += (pm.LsESmo[i*4]*pm.LsESmo[i*4+1]);
+   }
+ }
+
+// dimensions from LsKin array
+void TMulti::getLsKinsum( long int& fSakSum,long int& KrpcSum, long int& jCrDCSum,long int& xfacesSum )
+{  fSakSum = 0;
+   KrpcSum = 0;
+   jCrDCSum = 0;
+   xfacesSum = 0;
+
+   for(long int i=0; i<pm.FI; i++)
+   {
+       fSakSum += (pm.LsKin[i*4]);
+       KrpcSum += (pm.LsKin[i*4+1]*pm.LsKin[i*4+2]);
+       jCrDCSum += (pm.LsKin[i*4+1]*pm.LsKin[i*4+2]); //== KrpcSum
+       xfacesSum += (pm.LsKin[i*4]*pm.LsKin[i*4+1]);
+   }
+ }
+
+// dimensions from LsUpt array
+void TMulti::getLsUptsum( long int& UMpcSum )
+{  UMpcSum = 0;
+   for(long int i=0; i<pm.FIs; i++)
+   {
+       UMpcSum += (pm.LsUpt[i*2]*pm.L1[i]);
+
+   }
+ }
+
 void TMulti::setPa( TProfil *prof)
 {
     paTProfil = &prof->pa;
@@ -336,19 +415,54 @@ void TMulti::set_def( long int /*q*/)
         pm.SM3    = 0;
         pm.SF2    = 0;
         pm.DCC3   = 0;
-//  Added 16.11.2004 by Sveta
-//    pm.sitXcat = 0;
-//    pm.sitXan = 0;
-//    pm.sitE = 0;
-pm.IPx = 0;
-pm.ITF = pm.ITG = 0;
-pm.VPh = 0;
-pm.GPh = 0;
-pm.HPh = 0;
-pm.SPh = 0;
-pm.CPh = 0;
-pm.APh = 0;
-pm.UPh = 0;
+        pm.IPx = 0;
+        pm.ITF =  pm.ITG = 0;
+        pm.VPh = 0;
+        pm.GPh = 0;
+        pm.HPh = 0;
+        pm.SPh = 0;
+        pm.CPh = 0;
+        pm.APh = 0;
+        pm.UPh = 0;
+
+
+// New phase stuff 06/06/12
+        pm.LsMdc2  = 0;
+        pm.LsPhl   = 0;
+        pm.PhLin   = 0;
+// TSolMod stuff
+        pm.lPhc   = 0;
+        pm.DQFc   = 0;
+        pm.rcpc   = 0;
+        pm.lnDQFt   = 0;
+        pm.lnRcpt   = 0;
+        pm.lnEXt   = 0;
+        pm.lnCnft   = 0;
+//TSorpMod & TKinMet stuff
+        pm.SorMc   = 0;
+// TSorpMod stuff
+        pm.LsESmo   = 0;
+        pm.LsISmo   = 0;
+        pm.xSMd   = 0;
+        pm.EImc   = 0;
+        pm.mCDc   = 0;
+        pm.IsoPc   = 0;
+        pm.IsoSc   = 0;
+        pm.lnScalT   = 0;
+        pm.lnSACT   = 0;
+        pm.lnGammF   = 0;
+        pm.CTerms   = 0;
+        pm.IsoCt   = 0;
+// TKinMet stuff
+        pm.LsKin   = 0;
+        pm.LsUpt   = 0;
+        pm.jCrDC   = 0;
+        pm.xfaces   = 0;
+        pm.fSak   = 0;
+        pm.Krpc   = 0;
+        pm.UMpc   = 0;
+        pm.kMod   = 0;
+
 }
 
 //---------------------------------------------------------//
