@@ -477,6 +477,7 @@ class TMulti
     int find_dcnum( char *name, int jb, int je, int LNmode, char *stmt  );
     int find_phnum( char *name, int LNmode );
     int find_acnum( char *name, int LNmode );
+    int find_phnum_multi( const char *name);
     const char* GetHtml();
 
 #else
