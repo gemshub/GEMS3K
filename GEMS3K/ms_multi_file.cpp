@@ -578,6 +578,8 @@ void TMulti::to_file( GemDataStream& ff  )
       ff.writeArray(pm.YFA, pm.FIs);
       ff.writeArray(pm.LsMod, pm.FIs*3);
       ff.writeArray(pm.LsMdc, pm.FIs*3);
+      ff.writeArray(pm.LsMdc2, pm.FIs*3);
+      ff.writeArray(pm.LsPhl, pm.FI*2);
       long int LsModSum;
       long int LsIPxSum;
       long int LsMdcSum;
@@ -590,6 +592,15 @@ void TMulti::to_file( GemDataStream& ff  )
       ff.writeArray(pm.DMc, LsMdcSum);
       ff.writeArray(pm.MoiSN, LsMsnSum);
       ff.writeArray(pm.SitFr, LsSitSum);
+      long int DQFcSum, rcpcSum;
+      getLsMdc2sum( DQFcSum, rcpcSum );
+      ff.writeArray(pm.DQFc, DQFcSum);
+      ff.writeArray(pm.rcpc, rcpcSum);
+      long int PhLinSum, lPhcSum;
+      getLsPhlsum( PhLinSum,lPhcSum );
+      ff.writeArray(pm.PhLin, PhLinSum);
+      ff.writeArray(pm.lPhc, lPhcSum);
+
       ff.writeArray(pm.PUL, pm.FIs);
       ff.writeArray(pm.PLL, pm.FIs);
 
@@ -795,6 +806,9 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray(pm.YFA, pm.FIs);
       ff.readArray(pm.LsMod, pm.FIs*3);
       ff.readArray(pm.LsMdc, pm.FIs*3);
+      ff.writeArray(pm.LsMdc2, pm.FIs*3);
+      ff.writeArray(pm.LsPhl, pm.FI*2);
+
       long int LsModSum;
       long int LsIPxSum;
       long int LsMdcSum;
@@ -802,18 +816,32 @@ void TMulti::from_file( GemDataStream& ff )
       long int LsSitSum;
       getLsModsum( LsModSum, LsIPxSum );
       getLsMdcsum( LsMdcSum,LsMsnSum, LsSitSum );
+      long int DQFcSum, rcpcSum;
+      getLsMdc2sum( DQFcSum, rcpcSum );
+      long int PhLinSum, lPhcSum;
+      getLsPhlsum( PhLinSum,lPhcSum );
+
 #ifdef IPMGEMPLUGIN
       pm.IPx = new long int[LsIPxSum];
       pm.PMc = new double[LsModSum];
       pm.DMc = new double[LsMdcSum];
       pm.MoiSN = new double[LsMsnSum];
       pm.SitFr = new double[LsSitSum];
+      pm.DQFc = new double[DQFcSum];
+      pm.rcpc = new double[rcpcSum];
+      pm.PhLin = new long int[PhLinSum];
+      pm.lPhc = new double[lPhcSum];
+
 #else
       pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
       pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
       pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
       pm.MoiSN = (double *)aObj[ o_wi_moisn].Alloc( LsMsnSum, 1, D_ );
       pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
+      pm.DQFc = (double *)aObj[ o_wi_dqfc].Alloc( DQFcSum, 1, D_ );
+      pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
+      pm.PhLin = (long int *)aObj[ o_wi_phlin].Alloc( PhLinSum, 1, L_ );
+      pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
 #endif
 
       ff.readArray(pm.IPx, LsIPxSum);
@@ -821,6 +849,11 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray(pm.DMc, LsMdcSum);
       ff.readArray(pm.MoiSN, LsMsnSum);
       ff.readArray(pm.SitFr, LsSitSum);
+      ff.readArray(pm.DQFc, DQFcSum);
+      ff.readArray(pm.rcpc, rcpcSum);
+      ff.readArray(pm.PhLin, PhLinSum);
+      ff.readArray(pm.lPhc, lPhcSum);
+
       ff.readArray(pm.PUL, pm.FIs);
       ff.readArray(pm.PLL, pm.FIs);
 
@@ -1105,7 +1138,6 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
 
    pm.XFA = new double[pm.FIs];
    pm.YFA = new double[pm.FIs];
-   pm.LsMdc = new long int[pm.FIs*3];
    pm.PUL = new double[pm.FIs];
    pm.PLL = new double[pm.FIs]; //5
    for( ii=0; ii<pm.FIs; ii++ )
@@ -1120,12 +1152,22 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.DMc = 0;
    pm.MoiSN = 0;
    pm.SitFr = 0;
+   pm.DQFc = 0;
+   pm.rcpc  = 0;
    pm.LsMod = new long int[pm.FIs*3];
+   pm.LsMdc = new long int[pm.FIs*3];
+   pm.LsMdc2 = new long int[pm.FIs*3];
    for( ii=0; ii<pm.FIs*3; ii++ )
    {
        pm.LsMod[ii] =0;
        pm.LsMdc[ii] = 0;
+       pm.LsMdc2[ii] = 0;
    }
+   pm.PhLin = 0;
+   pm.lPhc  = 0;
+   pm.LsPhl = new long int[pm.FI*2];
+   for( ii=0; ii<pm.FI*2; ii++ )
+       pm.LsPhl[ii] =0;
 
    pm.sMod = new char[pm.FIs][8];
    pm.RFLC = new char[pm.FIs];
@@ -1150,6 +1192,12 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.DMc = 0;
    pm.MoiSN = 0;
    pm.SitFr = 0;
+   pm.DQFc = 0;
+   pm.rcpc  = 0;
+   pm.LsMdc2 = 0;
+   pm.PhLin = 0;
+   pm.lPhc  = 0;
+   pm.LsPhl = 0;
    pm.PUL = 0;
    pm.PLL = 0;
 
@@ -1513,6 +1561,14 @@ if( pm.BFC ) delete[] pm.BFC;
    if( pm.DMc ) delete[] pm.DMc;
    if(pm.MoiSN) delete[] pm.MoiSN;
    if(pm.SitFr) delete[] pm.SitFr;
+
+   if(pm.DQFc) delete[] pm.DQFc;
+   if(pm.rcpc) delete[] pm.rcpc;
+   if(pm.LsMdc2) delete[] pm.LsMdc2;
+   if(pm.PhLin) delete[] pm.PhLin;
+   if(pm.lPhc) delete[] pm.lPhc;
+   if(pm.LsPhl) delete[] pm.LsPhl;
+
    if( pm.PUL ) delete[] pm.PUL;
    if( pm.PLL ) delete[] pm.PLL;
    if( pm.sMod ) delete[] pm.sMod;
@@ -1727,10 +1783,19 @@ void TMulti::to_text_file( const char *path, bool append )
      prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
      prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
      prar.writeArray(  "SitFr", pm.SitFr,  LsSitSum);
+     long int PhLinSum, lPhcSum;
+     long int DQFcSum, rcpcSum;
+     getLsPhlsum( PhLinSum,lPhcSum );
+     getLsMdc2sum( DQFcSum, rcpcSum );
+     prar.writeArray(  "LsMdc2", pm.LsMdc2, pm.FIs*3);
+     prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
+     prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
+     prar.writeArray(  "LsPhl", pm.LsPhl, pm.FI*2);
+     prar.writeArray(  "PhLin", pm.PhLin,  PhLinSum);
+     prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
 
      prar.writeArray(  "PUL", pm.PUL,  pm.FIs);
      prar.writeArray(  "PLL", pm.PLL,  pm.FIs);
-
     }
 
     if( pm.LO > 1 )

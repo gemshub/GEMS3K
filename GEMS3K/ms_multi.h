@@ -814,7 +814,9 @@ typedef enum {  // Field index into outField structure
   f_pa_DFYr,  f_pa_DFYh,  f_pa_DFYc,  f_pa_DFYs,  f_pa_DW,
   f_pa_DT,  f_pa_GAS,  f_pa_DG,  f_pa_DNS,  f_pa_IEPS,
   f_pKin,  f_pa_DKIN,  f_mui,  f_muk,  f_muj,
-  f_pa_PLLG,  f_tMin,  f_dcMod
+  f_pa_PLLG,  f_tMin,  f_dcMod,
+//new
+   f_LsPhl,  f_LsMdc2
 } MULTI_DYNAMIC_FIELDS;
 
 

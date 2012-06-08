@@ -47,7 +47,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" ,  0 , 0, 0, "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, set FIat = 6)" }
 };
 
-outField MULTI_dynamic_fields[70] =  {
+outField MULTI_dynamic_fields[72] =  {
 // write/read dynamic (array) data to/from the text-format IPM file
    {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]" },
    {  "LsMod", 1 , 0, 0, "\n\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
@@ -77,7 +77,7 @@ outField MULTI_dynamic_fields[70] =  {
    {  "C3",    1 , 0, 0, "\n# C3: Third capacitance density parameter C3, F/m2 [nPS*6]" },
    {  "pCh",   1 , 0, 0, "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]" },
    {  "SATX",  1 , 0, 0, "\n# SATX: Setup of surface sites and species (will be applied separately within each sorption phase) [Lads*4]"
-                        "\n# [0] surface type; [1] sorbent emd member; [2] surface site in surf. type; [3] surface EDL plane" },
+                         "\n# [0] surface type; [1] sorbent emd member; [2] surface site in surf. type; [3] surface EDL plane" },
    {  "MASDJ", 1 , 0, 0, "\n# MASDJ: Parameters of surface species in surface complexation models [Lads*6]"
                          "\n# [0] max site density mmol/g; [1] species charge allocated to 0 plane;"
                          "\n# [2] species charge allocated to beta -or third plane; [3] Frumkin isotherm interaction parameter;"
@@ -129,7 +129,10 @@ outField MULTI_dynamic_fields[70] =  {
    { "muj" ,     0 , 0, 0,  "\n\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
    { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables" },
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
-   { "dcMod",    0 , 0, 0,  "\n# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
+   { "dcMod",    0 , 0, 0,  "\n# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
+   {  "LsPhl",   0 , 0, 0, "\n\n# LsPhl: new: Number of phase links; link parameters; [Fi][2]" },
+   {  "LsMdc2",  0 , 0, 0, "\n\n# LsMdc2: new: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member; reserved." },
+
 };
 
 
@@ -155,7 +158,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
   fstream ff( path, ios::out );
   ErrorIf( !ff.good() , path, "Fileopen error");
   TPrintArrays  prar1( 8, MULTI_static_fields, ff);
-  TPrintArrays  prar( 70, MULTI_dynamic_fields, ff);
+  TPrintArrays  prar( 72, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
    if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -163,6 +166,8 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
      prar.setNoAlws( (long int)(f_sMod ) );
      prar.setNoAlws( f_LsMod );
      prar.setNoAlws( f_LsMdc );
+     prar.setNoAlws( f_LsMdc2 );
+     prar.setNoAlws( f_LsPhl );
    }
    if( PSigm == S_OFF )
    {
@@ -338,8 +343,12 @@ long int LsIPxSum;
 long int LsMdcSum;
 long int LsMsnSum;
 long int LsSitSum;
+long int PhLinSum, lPhcSum;
+long int DQFcSum, rcpcSum;
 getLsModsum( LsModSum, LsIPxSum );
 getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
+getLsPhlsum( PhLinSum,lPhcSum );
+getLsMdc2sum( DQFcSum, rcpcSum );
 
    prar.writeArray(  f_LsMod, pm.LsMod, pm.FIs*3, 3L, _comment, brief_mode);
 
@@ -366,6 +375,32 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
           ff << "\n\n# MoiSN: TSolMod collected end member moiety / site multiplicity number tables ";
     prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
    }
+
+   prar.writeArray(  f_LsMdc2, pm.LsMdc2, pm.FIs*3, 3L, _comment, brief_mode);
+   if(DQFcSum )
+   {   if( _comment )
+          ff << "\n\n# DQFc: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc[k][3]";
+    prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
+   }
+   if(rcpcSum )
+   {   if( _comment )
+          ff << "\n\n# rcpc: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc[k][4]";
+    prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
+   }
+
+   prar.writeArray(  f_LsPhl, pm.LsPhl, pm.FI*2, 2L, _comment, brief_mode);
+   if(PhLinSum )
+   {   if( _comment )
+          ff << "\n\n# PhLin: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)";
+    prar.writeArray(  "PhLin", pm.PhLin,  PhLinSum);
+   }
+   if(lPhcSum )
+   {   if( _comment )
+          ff << "\n\n# lPhc: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)";
+    prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
+   }
+
+
 } // sMod
   if( _comment )
     ff << "\n\n## (5) Some data arrays which are not provided in DATACH and DATABR files" << endl;
@@ -605,7 +640,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   ConvertDCC();
 
 //reads dynamic values from txt file
-   TReadArrays  rddar( 70, MULTI_dynamic_fields, ff);
+   TReadArrays  rddar( 72, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
 
@@ -614,6 +649,8 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
    rddar.setNoAlws( (long int)(f_sMod ));
    rddar.setNoAlws( f_LsMod );
    rddar.setNoAlws( f_LsMdc );
+   rddar.setNoAlws( f_LsMdc2 );
+   rddar.setNoAlws( f_LsPhl );
  }
  if( PSigm == S_OFF )
  {
@@ -704,6 +741,60 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               }
               break;
             }
+    case f_LsMdc2: { if( !pm.LsMdc2 )
+                 Error( "Error", "Array LsMdc2 not used in this problem");
+              rddar.readArray( "LsMdc2" , pm.LsMdc2, pm.FIs*3 );
+              long int DQFcSum, rcpcSum;
+              getLsMdc2sum( DQFcSum, rcpcSum );
+              if(DQFcSum )
+              { rddar.readNext( "DQFc");
+#ifdef IPMGEMPLUGIN
+              if(!pm.DQFc )
+                   pm.DQFc = new double[DQFcSum];
+#else
+              pm.DQFc = (double *)aObj[ o_wi_dqfc].Alloc( DQFcSum, 1, D_ );
+#endif
+              rddar.readArray( "DQFc", pm.DQFc,  DQFcSum);
+              }
+            if( rcpcSum )
+            { rddar.readNext( "rcpc");
+#ifdef IPMGEMPLUGIN
+            if(!pm.rcpc )
+                   pm.rcpc = new double[rcpcSum];
+#else
+            pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
+#endif
+            rddar.readArray( "rcpc", pm.rcpc,  rcpcSum);
+            }
+            break;
+          }
+    case f_LsPhl: { if( !pm.LsPhl )
+                 Error( "Error", "Array LsPhl not used in this problem");
+              rddar.readArray( "LsPhl" , pm.LsPhl, pm.FI*2 );
+              long int PhLinSum, lPhcSum;
+              getLsPhlsum( PhLinSum, lPhcSum );
+              if(PhLinSum )
+              { rddar.readNext( "PhLin");
+#ifdef IPMGEMPLUGIN
+              if(!pm.PhLin )
+                   pm.PhLin = new long int[PhLinSum];
+#else
+              pm.PhLin = (long int *)aObj[ o_wi_phlin].Alloc( PhLinSum, 1, L_ );
+#endif
+              rddar.readArray( "PhLin", pm.PhLin,  PhLinSum);
+              }
+            if( lPhcSum )
+            { rddar.readNext( "lPhc");
+#ifdef IPMGEMPLUGIN
+            if(!pm.lPhc )
+                   pm.lPhc = new double[lPhcSum];
+#else
+            pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
+#endif
+            rddar.readArray( "lPhc", pm.lPhc,  lPhcSum);
+            }
+            break;
+          }
       case f_B: rddar.readArray( "B", pm.B,  pm.N);
               break;
       case f_DCCW: rddar.readArray( "DCCW", pm.DCCW,  pm.L, 1);
