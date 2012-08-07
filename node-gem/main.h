@@ -65,7 +65,8 @@ class TMyTransport
            **adll,
            **abIC,
            **arMB,
-           **auIC;
+           **auIC,
+           **abSP;
 
         TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,
                       long int p_nPH, long int p_nPS );

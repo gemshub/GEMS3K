@@ -487,6 +487,14 @@ GEMS3K/tnt_array2d.h -text
 GEMS3K/tnt_i_refvec.h -text
 GEMS3K/v_user.h -text svn_keywords=Id
 GEMS3K/verror.h -text svn_keywords=Id
+node-gem-build/CalcColumn.BAT -text
+node-gem-build/Makefile -text
+node-gem-build/linux-run.bat -text
+node-gem-build/tp_test/CalcColumn-dat.lst -text
+node-gem-build/tp_test/CalcColumn-dbr-0-0000.dat -text
+node-gem-build/tp_test/CalcColumn-dbr-0-0001.dat -text
+node-gem-build/tp_test/CalcColumn-dch.dat -text
+node-gem-build/tp_test/CalcColumn-ipm.dat -text
 node-gem/Makefile.MinGW -text
 node-gem/doc/Readme.1st -text
 node-gem/doc/scm-dbr-dat-doc.txt -text

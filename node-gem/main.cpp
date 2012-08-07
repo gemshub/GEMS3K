@@ -77,7 +77,7 @@ int main( int argc, char* argv[] )
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
             mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
             mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
-            mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in] );
+            mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
 
         // Here the setup of initial differences between node compositions,
         //    temperatures, etc. can be implemented
@@ -108,7 +108,7 @@ int main( int argc, char* argv[] )
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
             mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
             mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
-            mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in] );
+            mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
 
         // Here the setup of initial differences between node compositions,
         //    temperatures, etc. can be implemented
@@ -172,7 +172,7 @@ int main( int argc, char* argv[] )
               node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
                 mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
                 mt.aEh[in],mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
-                mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in] );
+                mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
           }
           // Here, the output upon completion of the time step is usually implemented
           //  to monitor the coupled simulation or collect results
@@ -234,6 +234,7 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
     abIC = new double *[nNodes];
     arMB = new double *[nNodes];
     auIC = new double *[nNodes];
+    abSP = new double *[nNodes];
 
     for (long int in=0; in<nNodes; in++)
     {
@@ -251,6 +252,7 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
          axPA[in] = new double [nPS];
          aaPh[in] = new double [nPH];
          abPS[in] = new double [nIC*nPS];
+         abSP[in] = new double [nIC];
     }
 
 }
@@ -277,6 +279,7 @@ TMyTransport::~TMyTransport()
         delete[]axPA[in];
         delete[]aaPh[in];
         delete[]abPS[in];
+        delete[]abSP[in];
     }
 // return;
     delete[]axDC;
@@ -293,6 +296,7 @@ TMyTransport::~TMyTransport()
     delete[]abIC;
     delete[]arMB;
     delete[]auIC;
+    delete[]abSP;
 
     delete[]aNodeHandle;
     delete[]aNodeStatusCH;
