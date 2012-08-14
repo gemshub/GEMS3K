@@ -2395,8 +2395,7 @@ void EOSPARAM::init( double *Xinp, double * data, long int nn )
 			mixpar[j][i] = tmp*eps05[i]*eps05[j];
 		}
 	}
-};
-
+}
 
 
 long int EOSPARAM::ParamMix( double *Xin )
@@ -2432,8 +2431,6 @@ long int EOSPARAM::ParamMix( double *Xin )
     emix = emix/s3mix;
     return NComp;
   }
-
-
 
 
 

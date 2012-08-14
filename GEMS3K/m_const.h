@@ -99,7 +99,7 @@ SM_BERMAN = 'B',    // built-in multicomponent microscopic (a)symmetric solid-so
     SM_IONEX = 'X',     // ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
-    SM_OTHER = 'O',	// other built-in phase-specific models of non-ideal solutions (selected by phase name)
+    SM_OTHER = 'O'  	// other built-in phase-specific models of non-ideal solutions (selected by phase name)
     	                //    (selected through phase name)
 };
 
