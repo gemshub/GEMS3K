@@ -188,7 +188,7 @@ int main( int argc, char* argv[] )
 
   // deleting GEMIPM and data exchange memory structures
   delete node;
-  mt.~TMyTransport();
+//  mt.~TMyTransport();
   // end of example
   return 0;
 }
