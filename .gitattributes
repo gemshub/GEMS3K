@@ -429,7 +429,6 @@ Docs/txt/f_gem_node.h -text
 Docs/txt/f_gem_node.inc -text
 Docs/txt/filelist-doc.txt -text
 Docs/txt/ipm-dat-doc.txt -text
-GEMS3K/GEMS3K.pro -text
 GEMS3K/Makefile.MinGW -text
 GEMS3K/Makefile.lib -text
 GEMS3K/databr.h -text svn_keywords=Id
