@@ -16,7 +16,7 @@
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
-
+#ifdef NODEARRAYLEVEL
 #ifndef NOPARTICLEARRAY
 #include "particlearray.h"
 #endif
@@ -1178,6 +1178,6 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
        }
    }
 }
-
+#endif
 //-----------------------End of nodearray.cpp--------------------------
 

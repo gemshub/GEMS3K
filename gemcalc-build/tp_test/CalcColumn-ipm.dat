@@ -1,0 +1,87 @@
+"CalDolCol2G  CalcColumn  0009 0       3       55      000 "
+<pa_PE>  1
+<PV>  1
+<PSOL>  0
+<PAalp>          '+'
+<PSigm>          '+'
+<Lads>  0
+<FIa>  0
+<FIat>  0
+
+<END_DIM>
+<pa_DB>  1e-017
+<pa_DHB>  1e-014
+<pa_EPS>  1e-010
+<pa_DK>  1e-006
+<pa_DS>  1e-020
+<pa_DF>  0.01
+<pa_DFM>  0.01
+<pa_DP>  130
+<pa_IIM>  7000
+<pa_PD>  2
+<pa_PRD>  -5
+<pa_AG>  1
+<pa_DGC>  0
+<pa_PSM>  1
+<pa_GAR>  1
+<pa_GAH>  1000
+<pa_XwMin>  1e-013
+<pa_ScMin>  1e-013
+<pa_DcMin>  1e-033
+<pa_PhMin>  1e-020
+<pa_ICmin>  1e-005
+<pa_PC>  2
+<pa_DFYw>  1e-005
+<pa_DFYaq>  1e-005
+<pa_DFYid>  1e-005
+<pa_DFYr>  1e-005
+<pa_DFYh>  1e-005
+<pa_DFYc>  1e-005
+<pa_DFYs>  1e-006
+<pa_DW>  1
+<pa_DT>  0
+<pa_GAS>  0.001
+<pa_DG>  1000
+<pa_DNS>  12.05
+<pa_IEPS>  0.001
+<pKin>  1
+<pa_DKIN>  1e-010
+<pa_PLLG>  10000
+<tMin>  0
+
+<sMod>
+'DNNSNN' 'INNINN' 
+<LsMod>
+2 0 4 
+0 0 0 
+<PMc>
+0 0 1 1 0 0 0 0 
+<LsMdc>
+0 0 0 
+0 0 0 
+<B>
+0.000331 0.000331 2e-007 110.683696417673 1e-007 55.3428612088366 0 
+<Pparc>
+3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 
+<fDQF>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+<lnGmf>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+<RLC>
+'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
+<RSC>
+'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
+<DLL>
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+<DUL>
+1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
+<Aalp>
+0 0 0 0 0 0 0 
+<Sigw>
+0 0 0 0 0 0 0 
+<Sigg>
+0 0 0 0 0 0 0 
+<YOF>
+0 0 0 0 0 0 0 
+<dcMod>
+'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HWF' 'CSN' 'CSN' 'CSN' 'CSN' 'CSC' 'CSC' 'CSC' 'CSC' 'CSC' 

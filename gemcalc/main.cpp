@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------
-// $Id$
+// $Id: main.cpp 686 2012-06-01 14:10:22Z kulik $
 //
 // Demo test of usage of the TNode class for implementing a simple
 // batch-like calculation of equilibria using text file input and

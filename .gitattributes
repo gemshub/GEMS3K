@@ -448,7 +448,6 @@ GEMS3K/jama_cholesky.h -text
 GEMS3K/jama_lu.h -text
 GEMS3K/m_const.h -text svn_keywords=Id
 GEMS3K/m_param.h -text svn_keywords=Id
-GEMS3K/main.cpp -text svn_keywords=Id
 GEMS3K/ms_multi.h -text svn_keywords=Id
 GEMS3K/ms_multi_file.cpp -text svn_keywords=Id
 GEMS3K/ms_multi_format.cpp -text svn_keywords=Id
@@ -488,7 +487,6 @@ GEMS3K/tnt_i_refvec.h -text
 GEMS3K/v_user.h -text svn_keywords=Id
 GEMS3K/verror.h -text svn_keywords=Id
 node-gem-build/CalcColumn.BAT -text
-node-gem-build/Makefile -text
 node-gem-build/linux-run.bat -text
 node-gem-build/tp_test/CalcColumn-dat.lst -text
 node-gem-build/tp_test/CalcColumn-dbr-0-0000.dat -text
@@ -503,7 +501,6 @@ node-gem/doc/scm-ipm-dat-doc.txt -text
 node-gem/linux-run.bat -text
 node-gem/main.cpp -text svn_keywords=Id
 node-gem/main.h -text
-node-gem/node-gem3-sep.pro -text
 node-gem/platform/CRAYXT3-catamount/Makefile -text
 node-gem/platform/Linux-GNU/Makefile -text
 node-gem/platform/Linux-Intel/Makefile -text

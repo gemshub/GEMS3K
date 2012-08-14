@@ -1,18 +1,22 @@
+# Simple makefile to create a GEMS3K runtime library on linux
+# For other platforms, specific compiler/linker keys may be necessary 
 CXX = g++
 CCFLAGS =   -c -g -O2 -DIPMGEMPLUGIN -D__unix 
+# -DNODEARRAYLEVEL
 LINK = ar
-LIB = libgemipm2k.a
+#LIB = libgemipm2k.a
+LIB = libgems3k.a
 
-${LIB}:  gstring.o gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o \
-       node.o node_format.o ms_multi_file.o \
-       ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
-       ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
-# mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o 
-             
-	$(LINK) -rvs ${LIB} gstring.o gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o \
-	   node.o node_format.o ms_multi_file.o \
-       ms_multi_format.o ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
-       ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
+${LIB}:  gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o \
+           node.o node_format.o ms_multi_file.o ms_multi_format.o \
+           ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
+           ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
+# mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o gstring.o
+
+$(LINK) -rvs ${LIB} gdatastream.o s_fgl.o s_fgl1.o s_fgl2.o s_fgl3.o s_fgl4.o 
+           node.o node_format.o ms_multi_file.o ms_multi_format.o 
+           ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
+           ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o
 
 gstring.o: gstring.cpp gstring.h \
 		v_user.h \

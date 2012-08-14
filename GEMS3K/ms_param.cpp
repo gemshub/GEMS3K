@@ -19,6 +19,7 @@
 // E-mail: gems2.support@psi.ch
 //-------------------------------------------------------------------
 //
+#ifdef IPMGEMPLUGIN
 #ifdef __unix__
 #include <unistd.h>
 #endif
@@ -330,7 +331,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 
   return filesList;
 }
-
+#endif
 // ------------------ End of ms_param.cpp -----------------------
 
 
