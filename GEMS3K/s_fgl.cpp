@@ -162,7 +162,8 @@ long int TPRSVcalc::PTparam()
 
 	switch ( MixCode )
 	{
-		case MR_WAAL_:
+        case MR_UNDEF_:
+        case MR_WAAL_:
 			MixingWaals();
 			break;
 		case MR_CONST_:
@@ -2573,7 +2574,8 @@ long int TSRKcalc::PTparam()
 
 	switch ( MixCode )
 	{
-		case MR_WAAL_:
+        case MR_UNDEF_:
+        case MR_WAAL_:
 			MixingWaals();
 			break;
 		case MR_CONST_:
@@ -3376,7 +3378,8 @@ long int TPR78calc::PTparam()
 
 	switch ( MixCode )
 	{
-		case MR_WAAL_:
+        case MR_UNDEF_:
+        case MR_WAAL_:
 			MixingWaals();
 			break;
 		case MR_CONST_:

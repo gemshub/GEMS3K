@@ -29,6 +29,7 @@
 // re-declaration of enums below required for GEMS3K
 // dc_class_codes for fluids will be replaced by tp_codes
 enum fluid_mix_rules {  /// codes for mixing rules in EoS models (see m_phase.h)
+    MR_UNDEF_ = 'N',
     MR_WAAL_ = 'W',
     MR_CONST_ = 'C',
     MR_TEMP_ = 'T',
