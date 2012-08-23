@@ -377,7 +377,7 @@ void GEM_set_MT(
 
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
-    {  return CNode->TK+C_to_K;   }
+    {  return CNode->TK-C_to_K;   }
 
     // These methods get contents of fields in the work node structure
     double cTK() const     /// Get current node Temperature T, Kelvin
