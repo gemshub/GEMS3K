@@ -1101,7 +1101,7 @@ void TMulti::KarpovsPhaseStabilityCriteria()
 {
     bool KinConstr;
     long int k, j, ii;
-    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, NonLogTerm = 0.;
+    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, fDQF, NonLogTerm = 0.;
     SPP_SETTING *pa = paTProfil;
 
     EMU = pm.EMU;
@@ -1143,7 +1143,7 @@ NonLogTerm = 0.0;
             pm.Yw = pm.YFk;
             pm.aqsTail = NonLogTerm;
         }
-// The code below was re-arranged by DK on 2.11.2007, streamlined on 16.04.2012
+// The code below streamlined on 16.04.2012 by DK
         sumWx = 0.0;
         for( ; j<ii; j++ )
         {
@@ -1152,8 +1152,13 @@ NonLogTerm = 0.0;
             dNuG = Nu - pm.G[j]; // this is -s_j (6pot paper 1)
             Wx = 0.0;
             Yj = pm.Y[j];
-            if( YF > pm.DSM && Yj > pm.DcMinM )
-                Wx = Yj / YF; // calculating primal mole fraction of DC
+            if( YF > pm.DSM )  // if-else rearranged 24.08.2012 DK
+            {
+                if( Yj > pm.DcMinM )
+                   Wx = Yj / YF; // calculating primal mole fraction of DC
+            }
+            else  // if phase is removed, DQF or fugpure cannot be used in Karpovs Fa
+                dNuG += pm.fDQF[j];   // bugfix 24.08.2012 DK
             if( ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
                 || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) ) )
                 KinConstr = true; // DC with the amount lying on the non-trivial kinetic constraint
