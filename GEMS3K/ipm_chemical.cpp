@@ -1321,7 +1321,7 @@ long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double Mju
 long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, long int CleanupStatus )
 {
     double logSI, PhaseAmount = 0., AmThExp, AmountThreshold = 0.;
-    double Yj, YjDiff, YjCleaned=0., MjuPrimal, MjuDual, MjuDiff;
+    double YFcleaned, Yj, YjDiff, YjCleaned=0., MjuPrimal, MjuDual, MjuDiff;
     double CutoffDistortionMBR = 0.1 * pm.DHBM;
     bool KinConstrDC, KinConstrPh;
     bool MassBalanceViolation = false;
@@ -1436,8 +1436,8 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
        if( logSI <= -pa->p.DFM )  // 3 - ELIMINATION CASE
        {
 //         bool Incomplete = false;
-           if( PhaseAmount >= pm.DcMinM )
-           {  // this phase is present - checking elimination if unstable
+          if( PhaseAmount >= pm.DcMinM )
+          {  // this phase is present - checking elimination if unstable
              kur = k;
              if( PhaseAmount <= AmountThreshold )
              {   // can be zeroed off
@@ -1473,6 +1473,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
      {
        L1k = pm.L1[k]; // Number of components in the phase
        KinConstrPh = false;
+       YFcleaned = 0.0;
        for(j=jb; j<jb+L1k; j++)
        {  // Checking if a DC in phase is under kinetic control
           Yj = pm.Y[j];
@@ -1501,9 +1502,10 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
                   MassBalanceViolation = true;
              KinConstrPh = true;
           }
+          YFcleaned += pm.Y[j];  // Added by DK 27.08.2012
        } //  j
-//       if( KinConstrPh == true ) // || pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL )
-//          goto NextPhaseC;  // Temporary workaround  - temporarily disabled DK 13.04.2012
+       if( YFcleaned == 0. )     // No cleanup in the eliminated phase!
+          goto NextPhaseC;       // Added by DK 27.08.2012
        PhaseAmount = pm.XF[k];                           // bugfix 04.04.2011 DK
        logSI = pm.Falp[k];  // phase stability criterion
        if( !KinConstrPh && ( logSI >= pa->p.DF || logSI <= -pa->p.DFM ) // DK 13.04.2012
@@ -1689,7 +1691,8 @@ void TMulti::StabilityIndexes( void )
              case DC_AQ_SOLVENT: case DC_AQ_SOLVCOM:
                   break;
              case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
-                  ln_ax_dual -= lnPc + lnFugPur;
+                  ln_ax_dual -= lnPc;
+                  ln_ax_dual -= lnFugPur;
                   break;
              case DC_SCP_CONDEN: case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR:
              case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
