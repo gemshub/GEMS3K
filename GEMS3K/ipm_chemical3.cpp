@@ -247,8 +247,8 @@ NonLogTermS = 0.0;
         {	 // Converting lnGam[j] into Gamma[j]
             if( !pm.X[j] && !pm.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012
                         return 1.;
-                double Gamma = 1.;
-                double lnGamS = pm.lnGam[j];
+            double Gamma = 1.;
+            double lnGamS = pm.lnGam[j];
 
             switch( pm.DCC[j] )
             { // Aqueous electrolyte

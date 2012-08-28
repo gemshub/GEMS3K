@@ -54,7 +54,7 @@ SPP_SETTING pa_ = {
     {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
          2,  /* PC */  2,     /* PD */   -5,   /* PRD */
          1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-         0, /* DT */     13000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+         0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
          1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
          1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
          1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */

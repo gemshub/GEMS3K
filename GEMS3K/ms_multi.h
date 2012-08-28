@@ -9,7 +9,7 @@
 /// Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm
 //
 // Rewritten from C to C++ by S.Dmytriyeva
-/// \author Copyright (C) 1995,2008 S.Dmytriyeva, D.Kulik
+/// \author Copyright (C) 1995,2012 S.Dmytriyeva, D.Kulik, T.Wagner
 //
 // This file is part of a GEM-Selektor library for thermodynamic
 // modelling by Gibbs energy minimization and of the
@@ -335,7 +335,7 @@ double
   char errorCode[100]; ///<  code of error in IPM      (Ec number of error)
   char errorBuf[1024]; ///< description of error in IPM
   double logCDvalues[5]; ///< Collection of lg Dikin crit. values for the new smoothing equation
-//  qd_real qdFX;    	///< Current Gibbs potential of the system in IPM, moles
+double *GamFs;   ///< Copy of activity coefficients Gamma before the first enter in PhaseSelection() [L] new
 
   double // Iterators for MTP interpolation (do not load/unload for IPM)
   Pai[4],    ///< Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol

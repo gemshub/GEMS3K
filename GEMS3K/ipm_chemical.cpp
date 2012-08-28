@@ -1099,7 +1099,7 @@ double TMulti::KarpovCriterionDC(
 //
 void TMulti::KarpovsPhaseStabilityCriteria()
 {
-    bool KinConstr;
+    bool KinConstr, fRestore;
     long int k, j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, fDQF, NonLogTerm = 0.;
     SPP_SETTING *pa = paTProfil;
@@ -1144,7 +1144,7 @@ NonLogTerm = 0.0;
             pm.aqsTail = NonLogTerm;
         }
 // The code below streamlined on 16.04.2012 by DK
-        sumWx = 0.0;
+        sumWx = 0.0; fRestore = false;
         for( ; j<ii; j++ )
         {
             KinConstr = false;
@@ -1152,13 +1152,29 @@ NonLogTerm = 0.0;
             dNuG = Nu - pm.G[j]; // this is -s_j (6pot paper 1)
             Wx = 0.0;
             Yj = pm.Y[j];
-            if( YF > pm.DSM )  // if-else rearranged 24.08.2012 DK
+if( YF > pm.DSM )  // if-else rearranged 24.08.2012 DK
+{
+    if( Yj > pm.DcMinM )
+        Wx = Yj / YF; // calculating primal mole fraction of DC
+}
+else  { // if phase is removed then a saved copy of activity coefficients is used
+        //   dNuG += pm.fDQF[j];   // bugfix 28.08.2012 DK
+            if( pm.K2 && pm.lnGam[j] == 0. && pm.GamFs[j] != 0 )
+                dNuG -= pm.GamFs[j];
+            if( pm.GamFs[j] != 0 )
             {
-                if( Yj > pm.DcMinM )
-                   Wx = Yj / YF; // calculating primal mole fraction of DC
+                fRestore = true;
+                Wx = pow( 10., (pm.Y_la[j] - pm.GamFs[j]/lg_to_ln ));
             }
-            else  // if phase is removed, DQF or fugpure cannot be used in Karpovs Fa
-                dNuG += pm.fDQF[j];   // bugfix 24.08.2012 DK
+            if( pm.L1[k] > 1 && pm.sMod )
+            {
+                if( pm.sMod[k][SPHAS_TYP] == SM_IDEAL )
+                {
+                   Wx = pow( 10., pm.Y_la[j] );
+                   fRestore = true; // can always insert a simple ideal solution phase
+                }
+            }
+      }
             if( ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
                 || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) ) )
                 KinConstr = true; // DC with the amount lying on the non-trivial kinetic constraint
@@ -1177,6 +1193,8 @@ NonLogTerm = 0.0;
         pm.Falp[k] = sumWx - 1.;  // generalized Karpov critetion with metastable components
         if( fabs( pm.Falp[k] ) < pm.DSM )
             pm.Falp[k] = 0.;
+if( pm.L1[k] > 1 && YF <= pm.DSM && fRestore == false )
+    pm.Falp[k] = -1.;   // provisional - set to
     }  // k
 }
 
@@ -1340,12 +1358,17 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
     AmountThreshold = pow(10.,-AmThExp);
 
     kfr = -1; kur = -1;
-    (pm.K2)++;
+    if( !pm.K2 )
+        for( j=0; j<pm.L; j++ )
+        {                               // only after the first GEM run
+            pm.GamFs[j]=pm.Gamma[j];    // storing a copy of the activity coefficients
+        }
     for( j=0; j<pm.L; j++ )
         pm.XY[j]=pm.Y[j];    // Storing a copy of the new speciation vector
 
     PrimalChemicalPotentials( pm.F, pm.Y, pm.YF, pm.YFA );
     StabilityIndexes( ); // Calculation of phase stability criteria
+    (pm.K2)++;
 
     for(k=0;k<pm.FI;k++)
     {
@@ -1659,7 +1682,8 @@ void TMulti::StabilityIndexes( void )
     long int L1k, k, j, jb = 0;
     double ln_ax_dual, gamma_primal, x_estimate, StabIndex, logSI;
     double lnFmol = log( H2O_mol_to_kg );  // may not work with mixed-solvent electrolyte
-    double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0.;
+    double lnPc = 0., Xw = 1., lnXw = 0., lnFugPur=0., YFk;
+    bool fRestore; char sModPT = SM_UNDEF;
 
     if( pm.Pc > 1e-29 )
        lnPc = log( pm.Pc );
@@ -1672,12 +1696,30 @@ void TMulti::StabilityIndexes( void )
     for(k=0;k<pm.FI;k++)
     {
        L1k = pm.L1[k]; // Number of components in the phase
+       YFk = pm.YF[k];
        StabIndex = 0.;
+       fRestore = false;
        for(j=jb; j<jb+L1k; j++)
        {  // calculation for all components in all phases
           gamma_primal = pm.Gamma[j];  // primal (external) activity coefficient
+if( YFk <= pm.DSM )
+{
+    if( !pm.K2 && gamma_primal != 1.0 ) // can insert because gamma is available
+       fRestore = true;
+    if( pm.K2 && pm.GamFs[j] != 1.0 && pm.Gamma[j] == 1.0 )
+    {
+       gamma_primal = pm.GamFs[j];  // taking saved gamma if the phase was removed
+       fRestore = true;
+    }
+    if( L1k > 1 && pm.sMod )
+        sModPT =  pm.sMod[k][SPHAS_TYP];
+    if( sModPT == SM_IDEAL )
+       fRestore = true; // can always insert a simple ideal solution phase
+}
+else fRestore = true;
           if( gamma_primal < 1e-33 || gamma_primal > 1e33 )
               gamma_primal = 1.;
+
           ln_ax_dual = lg_to_ln * pm.Y_la[j];  // DualTh activity
           if( ln_ax_dual < -777. )
               ln_ax_dual = -777.;
@@ -1723,6 +1765,8 @@ void TMulti::StabilityIndexes( void )
        if( fabs( logSI ) < log10( pm.DSM ) )
            logSI = 0.;
        pm.Falp[k] = logSI; // NormDoubleRound( logSI, 3 );
+       if( L1k > 1 && fRestore == false && YFk < pm.DSM )
+           pm.Falp[k] = -1.; // provisional - to indicate impossibility to restore
        jb += pm.L1[k];
     }  // for k
 }
@@ -1747,6 +1791,12 @@ long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int RaiseStatus
     SPP_SETTING *pa = paTProfil;
     int rLoop = -1;
 //    sfactor = calcSfactor();
+    if( !pm.K2 )
+        for( j=0; j<pm.L; j++ )
+        {                               // only after the first GEM run
+            pm.GamFs[j]=pm.lnGam[j];    // Storing a copy of the ln activity coefficients term
+        }
+
     KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria (in pm.Falp)
     F0 = pm.Falp;
 

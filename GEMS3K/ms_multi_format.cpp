@@ -24,7 +24,7 @@
 #endif
 
 //bool _comment = true;
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.692 (rc) ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.710 (rc) ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
