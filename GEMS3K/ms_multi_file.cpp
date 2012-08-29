@@ -266,6 +266,7 @@ void TMulti::set_def( long int /*q*/)
     pm.A     = 0;
     pm.XFs   = 0;
         pm.Falps = 0;
+pm.GamFs = 0;
         pm.Fug   = 0;
         pm.Fug_l = 0;
         pm.Ppg_l = 0;
