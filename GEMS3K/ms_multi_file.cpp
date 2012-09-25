@@ -955,6 +955,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = new double[pm.L];
    pm.Gamma = new double[pm.L];
    pm.lnGmf = new double[pm.L]; //7
+pm.GamFs = new double[pm.L];
    for( ii=0; ii<pm.L; ii++ )
    {
 	   pm.Y_la[ii] = 0.0;
@@ -964,6 +965,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
 	   pm.VL[ii] = 0.0;
 	   pm.Gamma[ii] = 0.0;
 	   pm.lnGmf[ii] = 0.0;
+       pm.GamFs[ii] = 0.0;
    }
    //   pm.D = new double[pm.L];
  }
@@ -976,6 +978,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = 0;
    pm.Gamma = 0;
    pm.lnGmf = 0;
+pm.GamFs = 0;
 //   pm.D = 0;
  }
 
@@ -1385,6 +1388,7 @@ void TMulti::multi_free()
    if( pm.VL ) delete[] pm.VL;
    if( pm.Gamma ) delete[] pm.Gamma;
    if( pm.lnGmf ) delete[] pm.lnGmf;
+if( pm.GamFs ) delete[] pm.GamFs;
 //   if( pm.D ) delete[] pm.D;
 
    // Part 2  not requited arrays
