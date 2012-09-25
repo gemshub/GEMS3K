@@ -485,8 +485,16 @@ GEMS3K/tnt_array2d.h -text
 GEMS3K/tnt_i_refvec.h -text
 GEMS3K/v_user.h -text svn_keywords=Id
 GEMS3K/verror.h -text svn_keywords=Id
+gemcalc-build/debug/libgcc_s_dw2-1.dll -text
+gemcalc-build/debug/mingwm10.dll -text
+gemcalc-build/release/libgcc_s_dw2-1.dll -text
+gemcalc-build/release/mingwm10.dll -text
 node-gem-build/CalcColumn.BAT -text
+node-gem-build/debug/libgcc_s_dw2-1.dll -text
+node-gem-build/debug/mingwm10.dll -text
 node-gem-build/linux-run.bat -text
+node-gem-build/release/libgcc_s_dw2-1.dll -text
+node-gem-build/release/mingwm10.dll -text
 node-gem-build/tp_test/CalcColumn-dat.lst -text
 node-gem-build/tp_test/CalcColumn-dbr-0-0000.dat -text
 node-gem-build/tp_test/CalcColumn-dbr-0-0001.dat -text
