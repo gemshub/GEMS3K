@@ -1,7 +1,7 @@
 ##########################################################################################
-#      qmake project file for generation of static GEMS3K library				 #
-#  configure release version:		qmake "CONFIG += release" LIB_GEMS3K.pro     #
-#  configure debug version:	            	qmake "CONFIG += debug" LIB_GEMS3K.pro       #
+#      qmake project file for generation of static GEMS3K library	  	         #
+#  configure release version:		qmake "CONFIG += release" lib-gems3k-a.pro       #
+#  configure debug version:	        qmake "CONFIG += debug" lib-gems3k-a.pro         #
 #   for optional debug output of the ELVIS model add DEFINES += ELVIS_DEBUG              #
 ##########################################################################################
 
@@ -18,17 +18,17 @@ CONFIG		+= console
 QMAKE_CC	= gcc
 QMAKE_CXX	= g++
 
-CONFIG( release,  debug|release ) {
-	message( "Configuring for release build ..." )	
-	QMAKE_CFLAGS_RELEASE = -O2
-	QMAKE_CXXFLAGS_RELEASE = -O2
-}
+#CONFIG( release,  debug|release ) {
+#	message( "Configuring for release build ..." )
+#       QMAKE_CFLAGS_RELEASE = -O2
+#	QMAKE_CXXFLAGS_RELEASE = -O2
+#}
 
-CONFIG( debug,  debug|release ) {
-	message( "Configuring for debug build ..." )	
-	QMAKE_CFLAGS_DEBUG   = -g -Wall -pedantic -fexceptions
-	QMAKE_CXXFLAGS_DEBUG = -g -Wall -pedantic -fexceptions
-}
+#CONFIG( debug,  debug|release ) {
+#	message( "Configuring for debug build ..." )
+#	QMAKE_CFLAGS_DEBUG   = -g -Wall -pedantic -fexceptions
+#	QMAKE_CXXFLAGS_DEBUG = -g -Wall -pedantic -fexceptions
+#}
 
 DEFINES += IPMGEMPLUGIN
 #DEFINES += NODEARRAYLEVEL

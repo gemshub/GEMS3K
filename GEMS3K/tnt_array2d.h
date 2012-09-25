@@ -402,7 +402,7 @@ Array2D<T> Array2D<T>::subarray(int i0, int i1, int j0, int j1)
 	int m = i1-i0+1;
 	int n = j1-j0+1;
 
-	/* if either length is zero or negative, this is an invalide
+    /* if either length is zero or negative then this is an invalid
 		subarray. return a null view.
 	*/
 	if (m<1 || n<1)

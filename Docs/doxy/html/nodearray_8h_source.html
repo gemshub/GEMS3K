@@ -96,7 +96,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: nodearray.h 679 2012-05-25 12:24:24Z dmitrieva $</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: nodearray.h 690 2012-06-04 12:00:59Z dmitrieva $</span>
 <a name="l00003"></a>00003 <span class="comment">//</span>
 <a name="l00009"></a>00009 <span class="comment"></span><span class="comment">//</span>
 <a name="l00010"></a>00010 <span class="comment">// Written by S.Dmytriyeva,  D.Kulik</span>
@@ -181,7 +181,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00094"></a>00094 
 <a name="l00095"></a>00095 <span class="keyword">public</span>:
 <a name="l00096"></a>00096 
-<a name="l00097"></a><a class="code" href="class_t_node_array.html#a276b6c298aae5d330c59afec38506576">00097</a>   <span class="keyword">static</span> <a class="code" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT ...">TNodeArray</a>* <a class="code" href="class_t_node_array.html#a276b6c298aae5d330c59afec38506576" title="static pointer to this class">na</a>;   
+<a name="l00097"></a><a class="code" href="class_t_node_array.html#a17447c77e35c2f6f2cf7c0090cf7b9dd">00097</a>   <span class="keyword">static</span> <a class="code" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT ...">TNodeArray</a>* <a class="code" href="class_t_node_array.html#a17447c77e35c2f6f2cf7c0090cf7b9dd" title="static pointer to this class">na</a>;   
 <a name="l00098"></a>00098 
 <a name="l00099"></a>00099 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
 <a name="l00100"></a>00100 <span class="preprocessor"></span><span class="comment">// These calls are used only inside of GEMS-PSI GEM2MT module</span>
@@ -312,8 +312,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00276"></a>00276      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#ae1358d1a2b583f3629b987c896a19ba9" title="Move a mass m_v from node ndx_from to node ind_to, for particle type.">MoveParticleMass</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx_from, <span class="keywordtype">long</span> <span class="keywordtype">int</span> ind_to, <span class="keywordtype">char</span> type, <span class="keywordtype">char</span> ComponentMode, 
 <a name="l00277"></a>00277                  <span class="keywordtype">char</span> tcode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> ips, <span class="keywordtype">double</span> m_v );
 <a name="l00278"></a>00278 
-<a name="l00280"></a>00280      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#af14a72a805b9ca20dd84d564b7219835" title="Writes work node (DATABR structure) to a text VTK file.">databr_to_vtk</a>( fstream&amp; ff, <span class="keyword">const</span> <span class="keywordtype">char</span>*name, <span class="keywordtype">double</span> time, <span class="keywordtype">long</span> cycle,
-<a name="l00281"></a>00281                                <span class="keywordtype">long</span> nFields=0, <span class="keywordtype">short</span> (*Flds)[2]=0);
+<a name="l00280"></a>00280      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a491ed02c17f7feb6d0a3fa74387b4db8" title="Writes work node (DATABR structure) to a text VTK file.">databr_to_vtk</a>( fstream&amp; ff, <span class="keyword">const</span> <span class="keywordtype">char</span>*name, <span class="keywordtype">double</span> time, <span class="keywordtype">long</span> cycle,
+<a name="l00281"></a>00281                                <span class="keywordtype">long</span> <span class="keywordtype">int</span> nFields=0, <span class="keywordtype">long</span> <span class="keywordtype">int</span> (*Flds)[2]=0);
 <a name="l00282"></a>00282 
 <a name="l00283"></a>00283 };
 <a name="l00284"></a>00284 
@@ -405,7 +405,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 16:58:54 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Sep 24 2012 13:51:35 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

@@ -96,7 +96,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: ms_multi.h 684 2012-05-31 08:29:03Z dmitrieva $</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: ms_multi.h 709 2012-08-28 16:45:07Z kulik $</span>
 <a name="l00003"></a>00003 <span class="comment">//</span>
 <a name="l00007"></a>00007 <span class="comment"></span><span class="comment">//</span>
 <a name="l00010"></a>00010 <span class="comment"></span><span class="comment">//</span>
@@ -426,7 +426,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00335"></a><a class="code" href="struct_m_u_l_t_i.html#a81f098af8e52fab56063dbc791975c20">00335</a>   <span class="keywordtype">char</span> errorCode[100]; 
 <a name="l00336"></a><a class="code" href="struct_m_u_l_t_i.html#a3054564b562df4c9b4073f457c9a2153">00336</a>   <span class="keywordtype">char</span> errorBuf[1024]; 
 <a name="l00337"></a><a class="code" href="struct_m_u_l_t_i.html#a0ed7ac7e0acc90040ad63e5b7b680ef6">00337</a>   <span class="keywordtype">double</span> logCDvalues[5]; 
-<a name="l00338"></a>00338 <span class="comment">//  qd_real qdFX;       ///&lt; Current Gibbs potential of the system in IPM, moles</span>
+<a name="l00338"></a><a class="code" href="struct_m_u_l_t_i.html#a277829cdcd26a457e1d4dd3ae43ccf52">00338</a> <span class="keywordtype">double</span> *<a class="code" href="struct_m_u_l_t_i.html#a277829cdcd26a457e1d4dd3ae43ccf52" title="Copy of activity coefficients Gamma before the first enter in PhaseSelection() [L] new...">GamFs</a>;   
 <a name="l00339"></a>00339 
 <a name="l00340"></a>00340   <span class="keywordtype">double</span> <span class="comment">// Iterators for MTP interpolation (do not load/unload for IPM)</span>
 <a name="l00341"></a><a class="code" href="struct_m_u_l_t_i.html#aa07e46cb3c891046f9b7d8d1b0a85cd7">00341</a>   Pai[4],    
@@ -840,7 +840,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 16:58:53 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Sep 24 2012 13:51:35 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>
