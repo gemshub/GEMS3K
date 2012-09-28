@@ -500,6 +500,12 @@ void GEM_set_MT(
            return (CSD->nPp * CSD->nTp);
      }
 
+	
+	 /// Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input file
+	 double get_Ppa_sat( double Tk );
+
+	 /// Returns index of Tk point - Psat point pair 
+	 long int get_grid_index_Ppa_sat( double Tk );
 
     /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
     /// from the DATACH structure.
@@ -557,6 +563,21 @@ void GEM_set_MT(
      /// \param TK temperature, Kelvin
      /// \return Internal energy (in J/mol) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
      double DC_U0(const long int xCH, const double P, const double TK);
+
+     /// Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+     /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+	 /// \param P refers to the pressure in Pascal
+	 /// \param TK refers to the temperature in Kelvin
+	 /// \param DensAW contains the density of water (at P and Tk) and its temperature and pressure derivatives 
+     void DensArrayH2Ow( const double P, const double TK, vector<double>& DensAW );
+
+     /// Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+     /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+     /// \param P refers to the pressure in Pascal
+	 /// \param TK refers to the temperature in Kelvin
+	 /// \param DensAW contains the permittivity of water (at P and Tk) and its temperature and pressure derivatives 
+	 void EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW );
+
 
      /// Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure.
      /// \param P pressure, Pa
@@ -731,18 +752,18 @@ void GEM_set_MT(
       double DC_a(const long int xCH);
 
       
-      // Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
-      // Sets values of LsMod and LsMdc array
-      void Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase);
-      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase );
-      void Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase );
-      void Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase );
-      void Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase );
-      void Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase ); 		// Set values of aIPc array
-      void Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase );		// Set values of  aDCc array
-      // These methods get contents of fields in the work node structure
-      void Set_Tk   ( double* T_k);
-      void Set_Pb   ( double* P_b);
+      /// Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
+      /// Sets values of LsMod and LsMdc array
+      void Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase);
+      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase );
+      void Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase );
+      void Get_aIPx ( vector<long> &aIPx,   const long &index_phase_aIPx, const long &index_phase );
+      void Get_aDCc ( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase );
+      void Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase ); 		// Set values of aIPc array
+      void Set_aDCc ( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase );		// Set values of  aDCc array
+      /// These methods set contents of fields in the work node structure
+      void Set_Tk   ( double &T_k);
+      void Set_Pb   ( double &P_b);
 
 
       /// Retrieves the current concentration of Dependent Component in its
@@ -761,6 +782,13 @@ void GEM_set_MT(
       /// \param xCH is DC DCH index
       inline double DC_g(const long int xCH) const
       {  return pmm->Gamma[xCH];  }
+
+
+	  /// Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH
+	  /// \param xCH index of species DCH
+	  inline double DC_lng( const long int xCH ) const
+	  {  return pmm->lnGam[ xCH ]; } 	
+
 
       /// Retrieves the current (dual-thermodynamic) chemical potential of DC
       /// directly from GEM IPM work structure. Also for any DC not included into DATABR or having zero amount.

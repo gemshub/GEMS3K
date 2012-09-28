@@ -42,6 +42,49 @@ const double bar_to_Pa = 1e5,
                kg_to_g = 1e3;
 
 
+double TNode::get_Ppa_sat( double Tk )
+{
+	long int i=0;
+	for( i=0; i<CSD->nTp; i++ )
+	{
+		if( (CSD->TKval[i] + CSD->Ttol) > Tk && (CSD->TKval[i] - CSD->Ttol) < Tk )
+		{
+			if( CSD->Psat[i] > 1.1e-5 )
+			{
+				return CSD->Psat[i];
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+
+}
+
+long int TNode::get_grid_index_Ppa_sat( double Tk )
+{
+	long int i=0;
+	long int r=-1;
+	for( i=0; i<CSD->nTp; i++ )
+	{
+		if( (CSD->TKval[i] + CSD->Ttol) > Tk && (CSD->TKval[i] - CSD->Ttol) < Tk )
+		{
+			if( CSD->Psat[i] > 1.1e-5 )
+			{
+				return i;
+			}
+			else
+			{
+				return r;
+			}
+		}
+	}
+
+}
+
+
+
 // Checks if given temperature TK and pressure P fit within the interpolation
 //intervals of the DATACH lookup arrays (returns true) or not (returns false)
 bool  TNode::check_TP( double TK, double P )
@@ -841,6 +884,86 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
        return u0;
   }
 
+   // Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   void TNode::EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW )
+   {
+		long int xTP;
+		EpsAW.resize(5);
+		long int nTP = CSD->nTp;
+
+		if( check_TP( TK, P ) == false )
+			return;
+
+		xTP = check_grid_TP( TK, P );
+
+		if( xTP >= 0 )
+		{
+			EpsAW[0] = CSD->epsW[ 0*nTP + xTP ];
+			EpsAW[1] = CSD->epsW[ 1*nTP + xTP ];
+			EpsAW[2] = CSD->epsW[ 2*nTP + xTP ];
+			EpsAW[3] = CSD->epsW[ 3*nTP + xTP ];
+			EpsAW[4] = CSD->epsW[ 4*nTP + xTP ];
+		}    
+		else
+		{
+			EpsAW[0] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+0*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[1] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+1*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[2] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+2*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[3] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+3*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[4] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+4*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+		}
+
+   }
+
+
+   // Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   void TNode::DensArrayH2Ow( const double P, const double TK, vector<double>& DensAW )
+   {
+		long int xTP;
+		DensAW.resize(5);
+		long int nTP = CSD->nTp;
+
+		if( check_TP( TK, P ) == false )
+				if( P > 1e-5 )
+					return;
+
+		
+		xTP = check_grid_TP( TK, P );
+		
+		if( xTP < 0 )
+			xTP = get_grid_index_Ppa_sat( TK );
+		
+
+		if( xTP >= 0 )
+		{
+			DensAW[0] = CSD->denW[ 0*nTP + xTP ];
+			DensAW[1] = CSD->denW[ 1*nTP + xTP ];
+			DensAW[2] = CSD->denW[ 2*nTP + xTP ];
+			DensAW[3] = CSD->denW[ 3*nTP + xTP ];
+			DensAW[4] = CSD->denW[ 4*nTP + xTP ];
+		}    
+		else
+		{
+			DensAW[0] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+0*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[1] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+1*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[2] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+2*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[3] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+3*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[4] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+4*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+		}
+   }
+
 
    // Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure or 0.0,
    // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
@@ -1151,9 +1274,10 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   }
 
     
-  // Functions needed by GEM_FIT. Setting parameters for activity coefficient models.
+
+    
+  // Functions needed by GEMSFIT. Setting parameters for activity coefficient models.
     //     aIPx     = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
-    //                               // -> NPar x MaxOrd   added 07.12.2006   KD
     //     aIPc     = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
     //     aDCc     = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
     //     NComp    = pmp->L1[k];          // Number of components in the phase
@@ -1161,100 +1285,127 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     //     NPcoef   = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
     //     MaxOrd   = pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
     //     NP_DC    = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
-  void TNode::Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase)
+  
+  // IN: index_phase -> index of phase of interest | OUT: start index of phase in aIPx, aIPc and aDCc arrays.   	
+  void TNode::Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase )
   {
     long ip_IPx=0; long ip_IPc=0; long ip_DCc=0;
-    for(long int k=0;k<((*index_phase)+1);k++)
+    for( int k=0;k<index_phase; k++ ) 
     {
-        *index_phase_aIPx = ip_IPx;
         ip_IPx          += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
-        *index_phase_aIPc = ip_IPc;
         ip_IPc          += pmm->LsMod[k*3] * pmm->LsMod[k*3+2];
-        *index_phase_aDCc = ip_DCc;
         ip_DCc          += pmm->LsMdc[k] * pmm->L1[k];
     }
+    index_phase_aIPx = ip_IPx;
+    index_phase_aIPc = ip_IPc;
+    index_phase_aDCc = ip_DCc;
   }
 
-  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase )
+  // IN: index_phase -> index of phase of interest | OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC. 
+  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase )
   {
-    *NPar   = pmm->LsMod[(*index_phase)*3];
-    *NPcoef = pmm->LsMod[(*index_phase)*3+2];
-    *MaxOrd = pmm->LsMod[(*index_phase)*3+1];
-    *NComp  = pmm->L1[(*index_phase)];
-    *NP_DC  = pmm->LsMdc[(*index_phase)];
-    cout<<"*NPcoef in node.cpp = "<<*NPcoef<<endl;
+    NPar   = pmm->LsMod[(index_phase)*3];
+    NPcoef = pmm->LsMod[(index_phase)*3+2];
+    MaxOrd = pmm->LsMod[(index_phase)*3+1];
+    NComp  = pmm->L1[(index_phase)];
+    NP_DC  = pmm->LsMdc[(index_phase)];
   }
 
-  void TNode::Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase )
+  void TNode::Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase )
   { 
-    long int rc, NPar, NPcoef;
-    NPar = pmm->LsMod[(*index_phase)*3];
-    NPcoef =  pmm->LsMod[(*index_phase)*3+2];
+    int rc, NPar, NPcoef;
+    NPar = pmm->LsMod[ index_phase * 3 ];
+    NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
+    if( aIPc.size() != (NPar*NPcoef) )
+    {
+		cout<<endl;
+		cout<<" in node.cpp (TNode::Set_aIPc()): vector aIPc does not have the dimensions specified by the GEMS3K input file (NPar*NPcoef) !!!! "<<endl;
+		cout<<" aIPc.size() = "<<aIPc.size()<<", NPar*NPcoef = "<<NPar*NPcoef<<endl;
+		cout<<" bailing out now ... "<<endl;
+		cout<<endl;
+		exit(1);
+    }
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
     {
-        (pmm->PMc[(*index_phase_aIPc)+rc]) = aIPc[rc];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+        (pmm->PMc[ index_phase_aIPc + rc ]) = aIPc[ rc ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
     }
   }
 
-  void TNode::Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase )
+  void TNode::Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase )
   { 
-    long int i; long NPar, NPcoef;
-    NPar   = pmm->LsMod[(*index_phase)*3];
-    NPcoef = pmm->LsMod[(*index_phase)*3+2];
+    int i; long NPar, NPcoef;
+    NPar   = pmm->LsMod[ index_phase * 3 ];
+    NPcoef = pmm->LsMod[ index_phase * 3 + 2 ];
+    aIPc.clear();
+    aIPc.resize( (NPar*NPcoef) );	
     i = 0;
     while (i<(NPar*NPcoef))
     {
-      *(aIPc + i)   = pmm->PMc[(*index_phase_aIPc) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aIPc[ i ]   = pmm->PMc[ index_phase_aIPc + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase )
+  void TNode::Get_aIPx ( vector<long> &aIPx, const long &index_phase_aIPx, const long &index_phase )
   {
-    long int i; long NPar, MaxOrd;
-    NPar   = pmm->LsMod[(*index_phase)*3];
-    MaxOrd = pmm->LsMod[(*index_phase)*3+1];
+    int i; long NPar, MaxOrd;
+    NPar   = pmm->LsMod[ index_phase * 3 ];
+    MaxOrd = pmm->LsMod[ index_phase * 3 + 1 ];
+    aIPx.clear();
+    aIPx.resize( (NPar*MaxOrd) );	
     i = 0;
     while (i<(NPar*MaxOrd))
     {
-      *(aIPx + i)   = pmm->IPx[(*index_phase_aIPx) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aIPx[ i ]   = pmm->IPx[ index_phase_aIPx + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase )
+  void TNode::Set_aDCc( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase )
   { 
-    long int rc, NComp, NP_DC;
-    NComp = pmm->L1[(*index_phase)];
-    NP_DC = pmm->LsMdc[(*index_phase)];
-    for ( rc=0;rc<NComp*NP_DC;rc++ )
+    int rc, NComp, NP_DC;
+    NComp = pmm->L1[ index_phase ];
+    NP_DC = pmm->LsMdc[ index_phase ];
+    if( aDCc.size() != (NComp*NP_DC) )
     {
-        (pmm->DMc[(*index_phase_aDCc)+rc]) = aDCc[rc];		// end-member param coeffs, NComp * NP_DC
+		cout<<endl;
+		cout<<" node class: vector aDCc does not have the dimensions specified by the GEMS3K input file (NComp*NP_DC) !!!! "<<endl;
+		cout<<" aDCc.size() = "<<aDCc.size()<<", NComp*NP_DC = "<<NComp*NP_DC<<endl;
+		cout<<" bailing out now ... "<<endl;
+		cout<<endl;
+		exit(1);
+    }
+    for ( rc=0;rc<(NComp*NP_DC);rc++ )
+    {
+        (pmm->DMc[ index_phase_aDCc + rc ]) = aDCc[ rc ];		// end-member param coeffs, NComp * NP_DC
     }
   }
 
-  void TNode::Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase )
+  void TNode::Get_aDCc( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase )
   {
-    long int i; long NComp, NP_DC;
-    NComp = pmm->L1[(*index_phase)];
-    NP_DC = pmm->LsMdc[(*index_phase)];
+    int i; long NComp, NP_DC;
+    NComp = pmm->L1[ index_phase ];
+    NP_DC = pmm->LsMdc[ index_phase ];
+    aDCc.clear();
+    aDCc.resize( (NComp*NP_DC) );
     i = 0;
     while (i<(NComp*NP_DC))
     {
-      *(aDCc + i)   = pmm->DMc[(*index_phase_aDCc)+i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aDCc[ i ]   = pmm->DMc[ index_phase_aDCc + i ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Set_Tk   ( double* T_k)
+  void TNode::Set_Tk( double &T_k )
   {
-      CNode->TK = *T_k;
+      CNode->TK = T_k;
   }
 
-  void TNode::Set_Pb   ( double* P_b)
+  void TNode::Set_Pb( double &P_b )
   {
-      CNode->P = *P_b;
+      CNode->P = P_b;
   }
+
 
 
   // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its

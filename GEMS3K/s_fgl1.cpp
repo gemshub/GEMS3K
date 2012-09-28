@@ -2555,6 +2555,10 @@ TELVIS::TELVIS( SolutionData *sd, double *arM, double *arZ, double *dW, double *
     m = arM;
     RhoW = dW;
     EpsW = eW;
+
+#ifdef GEMSFIT_DEBUG
+cout<<" in TELVIS::TELVIS constructor "<<endl;
+#endif
 }
 
 
@@ -2564,93 +2568,155 @@ TELVIS::~TELVIS()
 }
 
 #ifndef ELVIS_SPEED
-/// declaration and initialization of dynamic storage
+// declaration and initialization of dynamic storage
 void TELVIS::alloc_internal()
 {
+        long i,j;
         IS = 0.0;
+
+		beta0.resize(extents[NComp][NComp]);
+		beta1.resize(extents[NComp][NComp]);
+		alpha.resize(extents[NComp][NComp]);
+		coord.resize(extents[NComp][NComp]);
+		RC.resize(extents[NComp][NComp]);
+		RA.resize(extents[NComp][NComp]);
+		QC.resize(extents[NComp][NComp]);
+		QA.resize(extents[NComp][NComp]);
+
+	
+
+        for( j=0; j<NComp; j++ )
+        {
+            for( i=0; i<NComp; i++ )
+            {
+				beta0[j][i] = 0.0;
+				beta1[j][i] = 0.0;
+				alpha[j][i] = 0.0;	
+				coord[j][i] = 0.0;
+				RA[j][i]    = 0.0;
+				RC[j][i]    = 0.0;
+				QA[j][i]    = 0.0;
+				QC[j][i]    = 0.0;
+			}
+		}
 
         R = new double [NComp];
         Q = new double [NComp];
         Phi = new double [NComp];
         Theta = new double [NComp];
 
-        for (long j=0; j<NComp; j++){
-                R[j]     = 0.0;
-                Q[j]     = 0.0;
-                Phi[j]   = 0.0;
-            Theta[j] = 0.0;
+		dRdP = new double [NComp];
+		dRdT = new double [NComp];
+		d2RdT2 = new double [NComp];
+		dQdP = new double [NComp];
+		dQdT = new double [NComp];
+		d2QdT2 = new double [NComp];
+
+
+        for( j=0; j<NComp; j++ )
+        {
+            R[j]      = 0.0;
+            Q[j]      = 0.0;
+            Phi[j]    = 0.0;
+            Theta[j]  = 0.0;
+			dRdP[j]   = 0.0;
+			dRdT[j]   = 0.0;
+			d2RdT2[j] = 0.0;
+			dQdP[j]   = 0.0;
+			dQdT[j]   = 0.0;
+			d2QdT2[j] = 0.0;
         }
 
-        //EffRad  = new double [(NComp-1)];
         EffRad  = new double [NComp];
 
-        ELVIS_logGam_DH = new double [(NComp-1)];
-        ELVIS_logGam_Born = new double [(NComp-1)];
-        ELVIS_OsmCoeff_DH = new double [(NComp-1)];
+        ELVIS_lnGam_DH      = new double [NComp];
+        ELVIS_lnGam_Born    = new double [NComp];
+        ELVIS_OsmCoeff_DH   = new double [NComp];
+        ELVIS_lnGam_UNIQUAC = new double [NComp];
 
-
-        for (long j=0; j<(NComp-1); j++){
-                //EffRad[j] 	     = 0.0;
-                ELVIS_logGam_DH[j]   = 0.0;
-                ELVIS_logGam_Born[j] = 0.0;
-                ELVIS_OsmCoeff_DH[j] = 0.0;
-        }
-
-        WEps  = new double *[NComp];
-        U = new double *[NComp];
-        dU = new double *[NComp];
-        d2U = new double *[NComp];
-        Psi = new double *[NComp];
-        dPsi = new double *[NComp];
-        d2Psi = new double *[NComp];
-        TR = new double *[NComp];
-
-        for (long j=0; j<NComp; j++)
+        for( j=0; j<NComp; j++ )
         {
-                EffRad[j]	= 0.0;
-                WEps[j]  = new double [NComp];
-                U[j] = new double [NComp];
-                dU[j] = new double [NComp];
-                d2U[j] = new double [NComp];
-                Psi[j] = new double [NComp];
-                dPsi[j] = new double [NComp];
-                d2Psi[j] = new double [NComp];
-                TR[j]    = new double [4];
-        }
-        for (long j=0; j<NComp; j++)
-        {
-                for (long i=0; i<NComp; i++)
-                {
-                        WEps[j][i] = 0.0;
-                        U[j][i] = 0.0;
-                        dU[j][i] = 0.0;
-                        d2U[j][i] = 0.0;
-                        Psi[j][i] = 1.0;
-                        dPsi[j][i] = 0.0;
-                        d2Psi[j][i] = 0.0;
-                }
+            ELVIS_lnGam_DH[j]      = 0.0;
+            ELVIS_lnGam_Born[j]    = 0.0;
+            ELVIS_OsmCoeff_DH[j]   = 0.0;
+            ELVIS_lnGam_UNIQUAC[j] = 0.0;
         }
 
-        for (long j=0; j<NComp;j++){
-                for (long i=0; i<4; i++){
-                        TR[j][i]     = 0.0;
-                }
+        WEps   = new double *[NComp];
+        U      = new double *[NComp];
+        dU     = new double *[NComp];
+        d2U    = new double *[NComp];
+        Psi    = new double *[NComp];
+        dPsi   = new double *[NComp];
+        d2Psi  = new double *[NComp];
+        TR     = new double *[NComp];
+
+        dUdP   = new double *[NComp];
+        dUdT   = new double *[NComp];
+        d2UdT2 = new double *[NComp];
+
+
+        for( j=0; j<NComp; j++ )
+        {
+            EffRad[j] = 0.0;
+            WEps[j]   = new double [NComp];
+            U[j]      = new double [NComp];
+            dU[j]     = new double [NComp];
+            d2U[j]    = new double [NComp];
+            Psi[j]    = new double [NComp];
+            dPsi[j]   = new double [NComp];
+            d2Psi[j]  = new double [NComp];
+            TR[j]     = new double [4];
+		
+			dUdP[j]   = new double [NComp];
+			dUdT[j]   = new double [NComp];
+			d2UdT2[j] = new double [NComp];
+        }
+        for( j=0; j<NComp; j++ )
+        {
+            for( i=0; i<NComp; i++ )
+            {
+                WEps[j][i] = 0.0;
+                U[j][i] = 0.0;
+                dU[j][i] = 0.0;
+                d2U[j][i] = 0.0;
+                Psi[j][i] = 1.0;
+                dPsi[j][i] = 0.0;
+                d2Psi[j][i] = 0.0;
+
+				dUdP[j][i]   = 0.0;
+				dUdT[j][i]   = 0.0;
+				d2UdT2[j][i] = 0.0;
+            }
+        }
+
+        for( j=0; j<NComp;j++ )
+        {
+            for( i=0; i<4; i++ )
+            {
+                TR[j][i]     = 0.0;
+            }
         }
 }
 
 
 void TELVIS::free_internal()
 {
-        for (long j=0; j<NComp; j++)
+    long j;
+        for( j=0; j<NComp; j++ )
         {
-                delete[]WEps[j];
-                delete[]U[j];
-                delete[]dU[j];
-                delete[]d2U[j];
-                delete[]Psi[j];
-                delete[]dPsi[j];
-                delete[]d2Psi[j];
-                delete[]TR[j];
+            delete[]WEps[j];
+            delete[]U[j];
+            delete[]dU[j];
+            delete[]d2U[j];
+            delete[]Psi[j];
+            delete[]dPsi[j];
+            delete[]d2Psi[j];
+            delete[]TR[j];
+
+		    delete[]dUdP[j];
+		    delete[]dUdT[j];
+		    delete[]d2UdT2[j];
         }
 
         delete[]R;
@@ -2658,13 +2724,21 @@ void TELVIS::free_internal()
         delete[]Phi;
         delete[]Theta;
 
+		delete[]dRdP;
+		delete[]dRdT;
+		delete[]d2RdT2;
+		delete[]dQdP;
+		delete[]dQdT;
+		delete[]d2QdT2;
+
         delete[]WEps;
         delete[]TR;
         delete[]EffRad;
 
-        delete[]ELVIS_logGam_DH;
-        delete[]ELVIS_logGam_Born;
+        delete[]ELVIS_lnGam_DH;
+        delete[]ELVIS_lnGam_Born;
         delete[]ELVIS_OsmCoeff_DH;
+        delete[]ELVIS_lnGam_UNIQUAC;
 
         delete[]U;
         delete[]dU;
@@ -2673,18 +2747,34 @@ void TELVIS::free_internal()
         delete[]dPsi;
         delete[]d2Psi;
 
+	    delete[]dUdP;
+	    delete[]dUdT;
+	    delete[]d2UdT2;
+
         R=NULL;
         Q=NULL;
         Phi=NULL;
         Theta=NULL;
 
+		dRdP=NULL;
+		dRdT=NULL;
+		d2RdT2=NULL;
+		dQdP=NULL;
+		dQdT=NULL;
+		d2QdT2=NULL;
+
+        U=NULL;
+        dU=NULL;
+        d2U=NULL;
+
         WEps=NULL;
         TR=NULL;
         EffRad=NULL;
 
-        ELVIS_logGam_DH=NULL;
-        ELVIS_logGam_Born=NULL;
+        ELVIS_lnGam_DH=NULL;
+        ELVIS_lnGam_Born=NULL;
         ELVIS_OsmCoeff_DH=NULL;
+        ELVIS_lnGam_UNIQUAC=NULL;
 
         U=NULL;
         dU=NULL;
@@ -2692,6 +2782,11 @@ void TELVIS::free_internal()
         Psi=NULL;
         dPsi=NULL;
         d2Psi=NULL;
+
+	    dUdP=NULL;
+	    dUdT=NULL;
+	    d2UdT2=NULL;
+
 }
 #endif
 
@@ -2701,40 +2796,51 @@ void TELVIS::alloc_internal()
         long i,j;
         for( j=0; j<ELVIS_NCOMP; j++ )
         {
-                R[j]     = 0.0;
-                Q[j]     = 0.0;
-                Phi[j]   = 0.0;
+            R[j]     = 0.0;
+            Q[j]     = 0.0;
+            Phi[j]   = 0.0;
             Theta[j] = 0.0;
-        }
-
-        for( j=0; j<ELVIS_NCOMP; j++)
-        {
-                EffRad[j] 	     	 = 0.0;
-                ELVIS_logGam_DH[j]   = 0.0;
-                ELVIS_logGam_Born[j] = 0.0;
-                ELVIS_OsmCoeff_DH[j] = 0.0;
+			dRdP[j]   = 0.0;
+			dRdT[j]   = 0.0;
+			d2RdT2[j] = 0.0;
+			dQdP[j]   = 0.0;
+			dQdT[j]   = 0.0;
+			d2QdT2[j] = 0.0;
         }
 
         for( j=0; j<ELVIS_NCOMP; j++ )
         {
-                for( i=0; i<ELVIS_NCOMP; i++ )
-                {
-                        WEps[j][i] = 0.0;
-                        U[j][i] = 0.0;
-                        dU[j][i] = 0.0;
-                        d2U[j][i] = 0.0;
-                        Psi[j][i] = 1.0;
-                        dPsi[j][i] = 0.0;
-                        d2Psi[j][i] = 0.0;
-                }
+            EffRad[j] 	     	 	= 0.0;
+            ELVIS_lnGam_DH[j]       = 0.0;
+            ELVIS_lnGam_Born[j]     = 0.0;
+            ELVIS_OsmCoeff_DH[j]    = 0.0;
+            ELVIS_lnGam_UNIQUAC[j]  = 0.0;
+        }
+
+        for( j=0; j<ELVIS_NCOMP; j++ )
+        {
+            for( i=0; i<ELVIS_NCOMP; i++ )
+            {
+                WEps[j][i] 	= 0.0;
+                U[j][i] 	= 0.0;
+                dU[j][i] 	= 0.0;
+                d2U[j][i] 	= 0.0;
+                Psi[j][i] 	= 1.0;
+                dPsi[j][i] 	= 0.0;
+                d2Psi[j][i] = 0.0;
+
+ 				dUdP[j][i]   = 0.0;
+				dUdT[j][i]   = 0.0;
+				d2UdT2[j][i] = 0.0;
+           }
         }
 
         for( j=0; j<ELVIS_NCOMP;j++ )
         {
-                for( i=0; i<4; i++ )
-                {
-                        TR[j][i]     = 0.0;
-                }
+            for( i=0; i<4; i++ )
+            {
+                 TR[j][i]   = 0.0;
+            }
         }
 }
 
@@ -2744,153 +2850,331 @@ void TELVIS::free_internal(){}
 
 
 
-/// Initialization of vectors/arrays and calculation of T,P corrected binary interaction parameters
+// Initialization of vectors/arrays and calculation of T,P corrected binary interaction parameters
 long int TELVIS::PTparam()
 {
-        long j, i, ip, i1, i2;
-        double u, psi, v, weps;
-        u = 0.0; psi = 0.0; weps = 0.0;
-
-//        cout<<"Pbar in PTparam() = "<< Pbar <<endl;
-
-    if ( NPcoef < 1 || NPar < 1 || NP_DC < 2 )
-       return 1;
-        // read and transfer species-dependent parameters
-        for (j=0; j<NComp; j++)
-        {
-                // Temperaure correction for effective radius (= volume term in UNIQUAC)
-
-                // volume parameter related to r_eff by volume equation for a sphere
-                //R[j] = (4.0/3.0)*pi*aDCc[NP_DC*j+1]*aDCc[NP_DC*j+1]*aDCc[NP_DC*j+1];
-
-                //R[j] = aDCc[NP_DC*j+1];
-                R[j] = aDCc[NP_DC*j+1] + aDCc[NP_DC*j+2]*Tk + aDCc[NP_DC*j+3]*Pbar +  aDCc[NP_DC*j+4]*Tk*Tk + aDCc[NP_DC*j+5]*Tk*Pbar +	aDCc[NP_DC*j+6]*Tk*Tk*Tk + aDCc[NP_DC*j+7]*Tk*Tk*Pbar;
-
-                //	Hardcoded Chlorine and Sodium Ion parameters
-                //	R[1] = 7.036 + (-0.03452)*Tk + 0.001275*Pbar +  0.00008134*Tk*Tk + (-0.000006346)*Tk*Pbar +	(-0.00000006675)*Tk*Tk*Tk + 0.000000007849*Tk*Tk*Pbar;
-
-                // !!!!!!!!!!!!!!!!! ONLY FOR DEBUGGING !!!!!!!!!!!!!
-                R[2] = 1e-10;
-                R[3] = 1e-10;
-                R[4] = 1.4;
-                // !!!!!!!!!!!!!!!!! ONLY FPR DEBUGGING !!!!!!!!!!!!!
-
-                Q[j] = aDCc[NP_DC*j];   // surface parameter q of UNIQUAC term
-                //cout<<"R["<<j<<"] = "<<R[j]<<endl;
-        }
-
-
-        for (j=0; j<(NComp-1); j++)
-        {
-            EffRad[j]	= R[j];
-        //  cout<<"TELVIS:PTparam()		EffRad["<<j<<"] = "<<EffRad[j]<<endl;
-        }
-
-        int ii;
-        for (j=0; j<(NComp-1); j++)
-        {
-          for (i=0; i<4; i++)
-          {
-            ii = 3+i;
-            TR[j][i] = aDCc[NP_DC*j+ii];
-          }
-        }
-
-#ifdef ELVIS_DEBUG
-        ofstream myaIPc;
-        myaIPc.open ("myaIPc_aDCc.txt");
-        for (ip=0; ip<NPar; ip++)
-                {
-                myaIPc<<"aIPc["<<NPcoef<<"*"<<ip<<"+(0..7)] = "<<aIPc[NPcoef*ip]<<" "<<aIPc[NPcoef*ip+1]<<" "<<aIPc[NPcoef*ip+2]<<" "<<aIPc[NPcoef*ip+3]<<" "<<aIPc[NPcoef*ip+4]<<" "<<aIPc[NPcoef*ip+5]<<" "<<aIPc[NPcoef*ip+6]<<endl;
-                        myaIPc.flush();
-                }
-        myaIPc<<endl;
-
-                for( ip=0; ip<(NComp-1); ip++ )
-                                myaIPc<<"aDcc["<<NP_DC<<"*"<<ip<<"+(0..7)] = "<<aDCc[NP_DC*ip+0]<<" "<<aDCc[NP_DC*ip+1]<<" "<<aDCc[NP_DC*ip+2]<<" "<<aDCc[NP_DC*ip+3]<<" "<<aDCc[NP_DC*ip+4]<<" "<<aDCc[NP_DC*ip+5]<<" "<<aDCc[NP_DC*ip+6]<<endl;
-        myaIPc.close();
+#ifdef GEMSFIT_DEBUG
+cout<<" in TELVIS::PTparam()"<<endl;
 #endif
 
-        for (ip=0; ip<NPar; ip++)
-        {
-                weps = 0.0; u = 0.0;
-                i1 		= aIPx[MaxOrd*ip];
-                i2 		= aIPx[MaxOrd*ip+1];
-                if (aIPc[NPcoef*ip]>0.99 && aIPc[NPcoef*ip]<1.01)
-                {	// Temperature correction for interaction parameter
-                                u = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*pow(Tk, aIPc[NPcoef*ip+3]);
+	molfrac_update();
+	IonicStrength();
 
-                                //u = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*Tk + aIPc[NPcoef*ip+3]*Pbar + aIPc[NPcoef*ip+4]*Tk*Tk + aIPc[NPcoef*ip+5]*Tk*Pbar + aIPc[NPcoef*ip+6]*Tk*Tk*Tk +aIPc[NPcoef*ip+7]*Tk*Tk*Pbar;
 
-                                //u = aIPc[NPcoef*ip+1];
+	#ifdef GEMSFIT_DEBUG
+	cout << "ELVIS 		PTparam():	Tk = " << Tk << endl; 
+	cout << "ELVIS 		PTparam():	Pbar = " << Pbar << endl; 
+	#endif
 
-                                U[i1][i2] 	    = u;
-                                U[i2][i1] 	    = u;
+	long j, i, ip, i1, i2;
+	int ii;
+	double bet0, bet1, alp, cn, ra_, rc_, qa_, qc_;
+	double u, psi, v, weps, diffU, Xw = 0.;
+	double dudp, dudt, d2udt2;	
+	double* spec_frac = new double [NComp-1];
+	double spec_sum = 0.0;
+	u = 0.0; psi = 0.0; weps = 0.0;
 
-                }else if(aIPc[NPcoef*ip]>1.99 && aIPc[NPcoef*ip]<2.01)
-                {	// Temperature correction for permittivity term
-                        //	weps = aIPc[NPcoef*ip+1];
-                                weps = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*Tk + aIPc[NPcoef*ip+3]*Pbar + aIPc[NPcoef*ip+4]*Tk*Tk + aIPc[NPcoef*ip+5]*Tk*Pbar + aIPc[NPcoef*ip+6]*Tk*Tk*Tk +aIPc[NPcoef*ip+7]*Tk*Tk*Pbar;
+	if ( NPcoef < 1 || NPar < 1 || NP_DC < 2 )
+	   return 1;
 
-                                WEps[i1][i2] 	= weps;
-                                WEps[i2][i1]	= weps;
-                }
+	// get index of water (assumes water is last species in phase)
+	Xw = x[ NComp - 1 ];
 
-    }
+	// read and transfer species-dependent parameters
+	for (j=0; j<NComp; j++)
+	{
+		// Temperaure and pressure correction for effective radius
+
+		//R[j] = aDCc[NP_DC*j+2] + aDCc[NP_DC*j+3]*(1-Xw)*(1-Xw);
+		//R[j] = aDCc[NP_DC*j+1] + aDCc[NP_DC*j+2]*Tk*1e-02 + aDCc[NP_DC*j+3]*Pbar*1e-03 +  aDCc[NP_DC*j+4]*Tk*Tk*1e-04 + aDCc[NP_DC*j+5]*Tk*Pbar*1e-06 +	aDCc[NP_DC*j+6]*Tk*Tk*Tk*1e-08 + aDCc[NP_DC*j+7]*Tk*Tk*Pbar*1e-08;
+
+		//cout<<aDCc[NP_DC*j+1]<<" "<<aDCc[NP_DC*j+2]*Tk<<" "<<aDCc[NP_DC*j+3]*Pbar<<" "<< aDCc[NP_DC*j+4]*Tk*Tk<<" "<< aDCc[NP_DC*j+5]*Tk*Pbar<<" "<<	aDCc[NP_DC*j+6]*Tk*Tk*Tk<<" "<< aDCc[NP_DC*j+7]*Tk*Tk*Pbar <<endl;
+
+		//	Hardcoded Chlorine and Sodium Ion parameters
+		//R[1] = 7.036 + (-0.03452)*Tk + 0.001275*Pbar +  0.00008134*Tk*Tk + (-0.000006346)*Tk*Pbar +	(-0.00000006675)*Tk*Tk*Tk + 0.000000007849*Tk*Tk*Pbar;
+
+		// Concentration and temperature dependence on volume parameter
+		R[j] = abs( aDCc[NP_DC*j+4] + aDCc[NP_DC*j+5]*Tk + aDCc[NP_DC*j+6]*Tk*Tk + \
+	           (aDCc[NP_DC*j+7] + aDCc[NP_DC*j+8]*Tk + aDCc[NP_DC*j+9]*Tk*Tk) * (1.-Xw) + \
+	           (aDCc[NP_DC*j+10] + aDCc[NP_DC*j+11]*Tk + aDCc[NP_DC*j+12]*Tk*Tk) * (1.-Xw)*(1.-Xw) );
+
+		if( R[j]<0. )
+		{
+			cout << "R["<<j<<"] = " << R[j] << endl;
+			cout << "	A = " << aDCc[NP_DC*j+4] + aDCc[NP_DC*j+5]*Tk + aDCc[NP_DC*j+6]*Tk*Tk << endl;
+	        cout << "	B = " << (aDCc[NP_DC*j+7] + aDCc[NP_DC*j+8]*Tk + aDCc[NP_DC*j+9]*Tk*Tk) * (1.-Xw) << endl;
+	        cout << "	C = " << (aDCc[NP_DC*j+10] + aDCc[NP_DC*j+11]*Tk + aDCc[NP_DC*j+12]*Tk*Tk) * (1.-Xw)*(1.-Xw) << endl;
+		
+		}
+
+
+
+		// ONLY concentration dependence on volume parameter
+//		R[j] = aDCc[NP_DC*j+2] + \
+//		       aDCc[NP_DC*j+3] * (1-Xw) + \
+//		       aDCc[NP_DC*j+4] * (1-Xw)*(1-Xw);
+
+		Q[j] = abs( aDCc[NP_DC*j] + aDCc[NP_DC*j+2]*Tk + aDCc[NP_DC*j+3]*Tk*Tk );   // surface parameter q of UNIQUAC term
+
+		if( Q[j]<0. )
+		{		
+			cout << "Q["<<j<<"] = " << Q[j] << endl;
+		}
+
+
+
+// !!!!!!!!!!!!!!!!!!!!!!   ATTENTION  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //		
+		R[1] = R[0];
+		Q[1] = Q[0];
+// !!!!!!!!!!!!!!!!!!!!!!   ATTENTION  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //		
+
+
+
+		// !!!!!!!  For single T-P point fitting !!!!!!! :
+		dRdP[j]   = aDCc[NP_DC*j+2];
+		dRdT[j]   = aDCc[NP_DC*j+2];
+		d2RdT2[j] = aDCc[NP_DC*j+2];
+
+		dQdP[j]   = aDCc[NP_DC*j];
+		dQdT[j]   = aDCc[NP_DC*j];
+		d2QdT2[j] = aDCc[NP_DC*j];
+
+	}
+
+	for( j=0; j<(NComp-1); j++ )
+	{
+		EffRad[j] = aDCc[NP_DC*j+1];
+	}
+	
+
+	for( ip=0; ip<NPar; ip++ )
+	{
+	    weps = 0.0; u = 0.0; bet0 = 0.; bet1 = 0.; cn = 0.;
+	    i1 		= aIPx[MaxOrd*ip];
+	    i2 		= aIPx[MaxOrd*ip+1];
+	    if( aIPc[NPcoef*ip]>0.99 && aIPc[NPcoef*ip]<1.01 )
+	    {	
+			// Temperature correction for interaction parameter
+			// u = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*pow((Tk-298.15), aIPc[NPcoef*ip+3]);
+
+			// u = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*Tk + aIPc[NPcoef*ip+3]*Pbar + aIPc[NPcoef*ip+4]*Tk*Tk + aIPc[NPcoef*ip+5]*Tk*Pbar + aIPc[NPcoef*ip+6]*Tk*Tk*Tk +aIPc[NPcoef*ip+7]*Tk*Tk*Pbar;
+
+			// Temperature dependence on interaction parameter
+			u = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*Tk + aIPc[NPcoef*ip+3]*Tk*Tk;
+			
+
+//			u = aIPc[NPcoef*ip+1];
+
+			u = aIPc[NPcoef*ip+1];
+			U[i1][i2] 	    = u;
+			U[i2][i1] 	    = u;
+
+			weps = aIPc[NPcoef*ip+2];	// for Born term
+			WEps[i1][i2] 	= weps;
+	        	WEps[i2][i1]	= weps;
+
+			cn = aIPc[NPcoef*ip+2] + aIPc[NPcoef*ip+3] * IS;		// variable coordination number
+			coord[i1][i2] 	= weps;
+	        	coord[i2][i1]	= weps;
+/*			
+			bet0 = aIPc[NPcoef*ip+4];	// for Pitzer term
+			beta0[i1][i2]   = bet0; 
+			beta0[i2][i1]   = bet0; 
+
+			bet1 = aIPc[NPcoef*ip+5];	// for Pitzer term
+			beta1[i1][i2]   = bet1; 
+			beta1[i2][i1]   = bet1; 
+
+			alp = aIPc[NPcoef*ip+4];	// for Pitzer term
+			alpha[i1][i2]   = alp; 
+			alpha[i2][i1]   = alp; 
+*/
+
+			ra_ = aIPc[NPcoef*ip+4];	// for UNIQUAC term
+			RA[i1][i2]   = ra_; 
+			RA[i2][i1]   = ra_; 
+
+			rc_ = aIPc[NPcoef*ip+5];	// for UNIQUAC term
+			RC[i1][i2]   = rc_; 
+			RC[i2][i1]   = rc_; 
+
+			qa_ = aIPc[NPcoef*ip+6];	// for UNIQUAC term
+			QA[i1][i2]   = qa_; 
+			QA[i2][i1]   = qa_; 
+
+			qc_ = aIPc[NPcoef*ip+7];	// for UNIQUAC term
+			QC[i1][i2]   = qc_; 
+			QC[i2][i1]   = qc_; 
+
+
+/*				// Pressure and temperature derivatives of interaction parameter
+			dudp   = aIPc[NPcoef*ip+3] + aIPc[NPcoef*ip+5]*Tk + aIPc[NPcoef*ip+7]*Tk*Tk;
+			dUdP[i1][i2] 	    = dudp;
+			dUdP[i2][i1] 	    = dudp;
+
+			dudt   = aIPc[NPcoef*ip+2] + aIPc[NPcoef*ip+4]*Tk + aIPc[NPcoef*ip+5]*Pbar + aIPc[NPcoef*ip+6]*Tk*Tk + aIPc[NPcoef*ip+7]*Tk*Pbar;
+			dUdT[i1][i2] 	    = dudt;
+			dUdT[i2][i1] 	    = dudt;
+
+			d2udt2 = aIPc[NPcoef*ip+4] + aIPc[NPcoef*ip+6]*Tk + aIPc[NPcoef*ip+7]*Pbar;
+			d2UdT2[i1][i2] 	    = d2udt2;
+			d2UdT2[i2][i1] 	    = d2udt2;
+*/
+			// !!!!!!!  For single T-P point fitting !!!!!!! :
+			dudp   = aIPc[NPcoef*ip+1];
+			dUdP[i1][i2] 	    = dudp;
+			dUdP[i2][i1] 	    = dudp;
+
+			dudt   = aIPc[NPcoef*ip+1];
+			dUdT[i1][i2] 	    = dudt;
+			dUdT[i2][i1] 	    = dudt;
+
+			d2udt2 = aIPc[NPcoef*ip+1];
+			d2UdT2[i1][i2] 	    = d2udt2;
+			d2UdT2[i2][i1] 	    = d2udt2;
+		}
+	    else if( aIPc[NPcoef*ip]>1.99 && aIPc[NPcoef*ip]<2.01 )
+	    {	// Temperature correction for permittivity term
+
+//                                weps = aIPc[NPcoef*ip+1] + aIPc[NPcoef*ip+2]*(Tk-298.15)*1e-02 + aIPc[NPcoef*ip+3]*(Pbar-1.)*1e-03 + aIPc[NPcoef*ip+4]*(Tk-298.15)*(Tk-298.15)*1e-04 + aIPc[NPcoef*ip+5]*(Tk-298.15)*(Pbar-1.)*1e-06 + aIPc[NPcoef*ip+6]*(Tk-298.15)*(Tk-298.15)*(Tk-298.15)*1e-08 +aIPc[NPcoef*ip+7]*(Tk-298.15)*(Tk-298.15)*(Pbar-1.)*1e-08;
+	        weps = aIPc[NPcoef*ip+1];
+	        
+			WEps[i1][i2] 	= weps;
+	        WEps[i2][i1]	= weps;
+
+	    }
+	}
 
 #ifdef ELVIS_DEBUG
-        for( ip=0; ip<NPar; ip++ )
-        {
-                i1 		= aIPx[MaxOrd*ip];
-                i2 		= aIPx[MaxOrd*ip+1];
-                cout<<"code = "<<aIPc[NPcoef*ip]<<" | WEps["<<i1<<"]["<<i2<<"] = "<<WEps[i1][i2]<<" | u["<<i1<<"]["<<i2<<"] = "<<U[i1][i2]<<endl;
-                cout<<"i1 = "<<i1<<" | i2 = "<<i2<<endl;
-        }
+	for( ip=0; ip<NPar; ip++ )
+	{
+	    i1 		= aIPx[MaxOrd*ip];
+	    i2 		= aIPx[MaxOrd*ip+1];
+	    cout<<"code = "<<aIPc[NPcoef*ip]<<" | WEps["<<i1<<"]["<<i2<<"] = "<<WEps[i1][i2]<<" | u["<<i1<<"]["<<i2<<"] = "<<U[i1][i2]<<endl;
+	    cout<<"i1 = "<<i1<<" | i2 = "<<i2<<endl;
+	}
 #endif
 
-        // calculate Psi and its partial derivatives
-        double diffU;
-        for (j=0; j<NComp; j++)
-        {
-                for (i=0; i<NComp; i++)
-                {
-                        diffU = U[j][i]-U[i][i];
-/*D			if( diffU<(-1e35) ){
-                                diffU = -1e35;
-                        }
-                        else if( diffU>1e35  ){
-                                diffU = 1e35;
-                        }
-                        else if( fabs(diffU)<1e-35 ){
-                                diffU = 1e-35;
-                        }
-D*/
-                        psi = exp( -diffU/Tk );
-                        v = (U[j][i]-U[i][i])/pow(Tk,2.) - (dU[j][i]-dU[i][i])/Tk;
-                        //dv = (-2.)*(U[j][i]-U[i][i])/pow(Tk,3.) + 2.*(dU[j][i]-dU[i][i])/pow(Tk,2.)
-                        //		- (d2U[j][i]-d2U[i][i])/Tk;
-                        //dpsi = psi * v;
-                        //d2psi = dpsi*v + psi*dv;
-                        Psi[j][i] = psi;
-                        //dPsi[j][i] = dpsi;
-                        //d2Psi[j][i] = d2psi;
-                }
-        }
-        return 0;
+	// calculate Psi and its partial derivatives
+	for( j=0; j<NComp; j++ )
+	{
+	    for (i=0; i<NComp; i++)
+	    {
+	        diffU = U[j][i]-U[i][i];
+	        psi = exp( -diffU/Tk );
+	        v = (U[j][i]-U[i][i])/pow(Tk,2.) - (dU[j][i]-dU[i][i])/Tk;
+	        Psi[j][i] = psi;
+	    }
+	}
+
+// ------------------------------------------------------------------------------------- //
+/*
+	double cat_sum = 0., ani_sum = 0.; 
+
+	for( i=0;i<(NComp-1);i++ )
+	{
+		if( m[i] > 0. )
+		{
+			cat_sum += m[i];
+		}
+		if( m[i] < 0. )
+		{
+			ani_sum += m[i];
+		}	
+	}
+
+	for( i=0;i<(NComp-1);i++ )
+	{
+		R[i] = 0.; 
+		
+		Q[i] = 0.;
+		for( int k=0;k<(NComp-1);k++ )
+		{	
+			if( m[k] > 0. )
+			{
+				R[i] = R[i] + m[k]*RA[i][k]/cat_sum; 
+				Q[i] = Q[i] + m[k]*QA[i][k]/cat_sum; 
+			}
+			if( m[k] < 0. )
+			{
+				R[i] = R[i] + m[k]*RC[i][k]/ani_sum;
+				Q[i] = Q[i] + m[k]*QC[i][k]/ani_sum;
+			}
+		}
+		
+
+	}	
+	
+*/
+// ------------------------------------------------------------------------------------- //
+
+	// Debye-Huckel Term functions
+
+	// species fractions:
+	for( i=0;i<(NComp-1);i++ )
+	{
+	    spec_sum += m[i];
+	}
+	for( i=0;i<(NComp-1);i++ )
+	{
+	    spec_frac[i]=m[i]/spec_sum;
+	}
+
+	aDH = 0.0;
+	for( i=0;i<(NComp-1);i++ )
+	{
+	    // multiply by 2 to get electrolyte size (valid for 1:1, 2:2 electrolytes)
+	    aDH += 2 * EffRad[i]*spec_frac[i];
+#ifdef ELVIS_DEBUG
+	    cout<<"EffRad = "<<EffRad[i]<<endl;
+	    cout<<"aDH = "<<aDH<<endl;
+#endif
+	}
+
+	A = 1.824829238E6 * pow(RhoW[0],0.5) / pow(EpsW[0]*Tk, 3./2.);
+	//dAdP	= 0.5*1.824829238E6 * Tk * (EpsW[0]*RhoW[3]-3*RhoW[0]*EpsW[3]) / ( Tk*Tk*EpsW[0]*EpsW[0] * sqrt(RhoW[0]) );
+
+	dAdP	= A * ( 0.5*RhoW[3]/RhoW[0] - 1.5*EpsW[3]/EpsW[0] );
+
+	dAdT	= A * ( RhoW[1] / ( 2*RhoW[0]*pow(Tk,1.5) ) - 1.5*( EpsW[0] + Tk * EpsW[1]) / (EpsW[0]*pow(Tk,2.5)) );
+	d2AdT2	= - 1.5 * A * ( EpsW[0] + Tk * EpsW[1] ) * RhoW[1] /( EpsW[0] * Tk * RhoW[0] ) + 3.75 * A * ( EpsW[0] + Tk * EpsW[1] ) * ( EpsW[0] + Tk * EpsW[1] ) / (Tk * EpsW[0] * Tk * EpsW[0]) - 1.5 * ( 2*EpsW[1] + Tk*EpsW[2] ) / pow(EpsW[0]*Tk, 2.5) + A * ( RhoW[2] / (2*sqrt(RhoW[0])) - RhoW[1] / (4*pow(RhoW[0],1.5)) ) / sqrt(RhoW[0]);  
+
+	B = 50.29158649E8 * pow(RhoW[0],0.5) / pow(EpsW[0]*Tk, 0.5);
+	//dBdP	= 0.5*50.29158649E8 * Tk * (EpsW[0]*RhoW[3]-RhoW[0]*EpsW[3]) / ( pow(Tk*EpsW[0],1.5) * sqrt(RhoW[0]) );
+
+	dBdP	= 0.5 * B * ( RhoW[3] / RhoW[0] - EpsW[3] / EpsW[0] );
+
+	dBdT	= B * ( RhoW[1] / ( 2*RhoW[0] ) - 0.5*( EpsW[0] + Tk * EpsW[1]) / (EpsW[0]*Tk) );
+	d2BdT2	= - B / (Tk*EpsW[0]) * ( RhoW[1]*( EpsW[0] + Tk * EpsW[1] ) / RhoW[0] + 0.75 * ( EpsW[0] + Tk * EpsW[1] ) * ( EpsW[0] + Tk * EpsW[1] ) / ( Tk * EpsW[0] ) - 0.5 * ( 2 * EpsW[1] + Tk * EpsW[2] ) + sqrt(Tk*EpsW[0]) * ( RhoW[2] / (2*RhoW[0]) - RhoW[1] * RhoW[1] / (4 * pow(RhoW[0],1.5)) ) ); 
+
+	aDH = aDH*1e-8;
+
+	delete[]spec_frac;
+    return 0;
 }
 
 
-/// Calculates activity coefficients
+// Calculates activity coefficients
 long int TELVIS::MixMod()
 {
         long int j;
         double osmcoeff, msum;
+
+//#ifdef GEMSFIT_DEBUG
+//cout << " TELVIS::MixMod():	m[0] = "<<m[0]<<endl;
+//#endif
 
 /*	// compute osmotic coefficient of solvent
         osmcoeff = Int_OsmCoeff();
 */
         // compute activity coefficients of solute species
         CalcAct();
+
+//#ifdef GEMSFIT_DEBUG
+//cout<<" TELVIS::MixMod():	lnGamma[0] = "<<lnGamma[0]<<endl;
+//cout<<" TELVIS::MixMod()	lnGamma[1] = "<<lnGamma[1]<<endl;
+//#endif
 
   /*      msum = 0.0;
         for (j=0; j<(NComp-2); j++)
@@ -2905,319 +3189,90 @@ long int TELVIS::MixMod()
                  cout<<"lnGamma[j] = "<<lnGamma[j]<<endl;
         }
 */
-
+		// Penalty function
+		/*if( R[0]<1e-10 || R[0]>100 || Q[0]<1e-10 || Q[0]>100 )
+		{
+			lnGamma[0] = 1e5;
+		}
         // ONLY FOR DEBUG SET gam(H+) and gam(OH-) to 1 !!!!
         lnGamma[2] = 0.0;
         lnGamma[3] = 0.0;
         lnGamma[4] = 0.0;
-
+		*/
 return 0;
 }
 
 
-double TELVIS::Int_OsmCoeff()
-{
-        double osm_coeff   = 0.0;
-        double m_infdil    = 1.1e-6;
-        double bjerrum     = 0.0;
-        // calc osmotic coefficient via Bjerrum relation
-        long int j = 0;
-
-        // bjerrum : \int_{m_k=0}^{m_k=m[j]} m_k  d log_gam(m_k)
-        bjerrum = qsimp( m_infdil, m[j], j, 0 );
-//		cout<<" integral between "<<m_infdil<<" and "<<m[j]<<" is : "<<bjerrum<<endl;
-        osm_coeff = 1 + bjerrum/m[j];
-        cout<<" Osmotic coefficient = "<<osm_coeff<<endl;
-return osm_coeff;
-}
-
-double TELVIS::App_molar_volume()
-{
-        // add to app_molar_vol_part the stst molar volume of the electrolyte (outside ELVIS class) !!!!
-        long int j      = 0;
-        double m_infdil = 1.1e-6;
-        double m_mean 	= m[j]; 	// mean concentration of electrolyte
-
-        double app_molar_vol_part = R_CONST*Tk* qsimp( m_infdil, m[j], j, 1 )/m_mean;
-
-        cout<<"app_molar_vol_part = "<< app_molar_vol_part <<endl;
-
-        // partial molar excess volume
-        double part_molar_excess_vol = R_CONST*Tk*FinDiffVol( m[j], j );
-        cout<<"part_molar_excess_vol = "<<part_molar_excess_vol<<endl;
-
-return app_molar_vol_part;
-}
-
-
-
-double TELVIS::FinDiff( double m_j, int j )
-{
-        double h = 1e-4;
-        double DactDm;
-        double m_old1 = m[j];
-        double m_old2 = m[j+1];
-/*	// Central Finite Difference
-cout<<"m["<<j<<"] = "<<m[j]<<endl;
-        m[j] = m_j - h;
-cout<<"m["<<j<<"] = "<<m[j]<<endl;
-        CalcAct();
-        act_low = lnGamma[j];
-        m[j] = m_j + h;
-cout<<"m["<<j<<"] = "<<m[j]<<endl;
-        CalcAct();
-        DactDm = (lnGamma[j]-act_low)/(2*h);
-*/
-        // Forward Finite Difference
-        double gam_1,gam_2,gam_3;
-//cout<<"FD base 	m["<<j<<"] = "<<m[j]<<endl;
-        m[j] 	= m_j;
-        m[j+1] 	= m_j;
-        molfrac_update();
-//cout<<"FD 1 	m["<<j<<"] = "<<m[j]<<endl;
-        lnGamma[j] = 0.0;
-        CalcAct();
-        gam_1 = 0.5*(lnGamma[j]+lnGamma[j+1]);
-
-        m[j] 	= m_j + h;
-        m[j+1]	= m_j + h;
-        molfrac_update();
-        lnGamma[j] = 0.0;
-        lnGamma[j] = 0.0;
-//cout<<"FD 2		m["<<j<<"] = "<<m[j]<<endl;
-        CalcAct();
-        gam_2 = 0.5*(lnGamma[j]+lnGamma[j+1]);
-
-        m[j] 	= m_j + h + h;
-        m[j+1]	= m_j + h + h;
-        molfrac_update();
-        lnGamma[j] 		= 0.0;
-        lnGamma[j+1] 	= 0.0;
-//cout<<"FD 3 	m["<<j<<"] = "<<m[j]<<endl;
-        CalcAct();
-        gam_3 = 0.5*(lnGamma[j]+lnGamma[j+1]);
-
-        DactDm = (-3*gam_1 + 4*gam_2 - gam_3)/(2*h);
-
-        m[j] 	= m_old1;
-        m[j+1] 	= m_old2;
-return DactDm * m_j; // for the Bjerrum relation, multiply the derivative with m_j (integrand)
-}
-
-/// partial molar excess volume of solute
-double TELVIS::FinDiffVol( double m_j, int j )
-{
-    double lnGam_high, lnGam_low, FinDiff_cation, FinDiff_anion, FinDiff;
-    double P_diff = Pbar*0.5;	// pressure in bar
-    double P_old  = Pbar;
-    int stoic_cation = 1;               // stoichiometric of cation in electrolyte
-    int stoic_anion  = 1;               // stoichiometric of anion in electrolyte
-
-    m[j] 	= m_j;
-    m[j+1] 	= m_j;
-   cout<<"m[j] FinDiffVol = "<< m[j] <<endl;
-
-    // Cation contribution
-    Pbar 			= P_old + P_diff;
-    molfrac_update();
-    PTparam();
-    CalcAct();
-    lnGam_high = lnGamma[j];
-//    cout<<"lnGam_high = "<< lnGam_high <<endl;
-    Pbar			= P_old - P_diff;
-    molfrac_update();
-    PTparam();
-    CalcAct();
-    lnGam_low	= lnGamma[j];
-//    cout<<"lnGam_low = "<< lnGam_low <<endl;
-    FinDiff_cation 		= (lnGam_high - lnGam_low)/(2*P_diff);
-
-    // Anion contribution
-    Pbar 			= P_old + P_diff;
-    molfrac_update();
-    PTparam();
-    CalcAct();
-    lnGam_high = lnGamma[j+1];
-//    cout<<"lnGam_high = "<< lnGam_high <<endl;
-    Pbar			= P_old - P_diff;
-    molfrac_update();
-    PTparam();
-    CalcAct();
-    lnGam_low	= lnGamma[j+1];
-//    cout<<"lnGam_low = "<< lnGam_low <<endl;
-    FinDiff_anion 		= (lnGam_high - lnGam_low)/(2*P_diff);
-
-    // Sum
-//    FinDiff = (stoic_cation+stoic_anion)*(stoic_cation*FinDiff_cation + stoic_anion*FinDiff_anion);
-    FinDiff = (stoic_cation*FinDiff_cation + stoic_anion*FinDiff_anion);
-
-    Pbar  = P_old;
-    PTparam();
-
-    return FinDiff;
-}
-
-void TELVIS::molfrac_update()
-{
-    double sum;int i;
-    for (i=0; i<NComp; i++)
-    {    sum += m[i];   }
-
-    for (i=0; i<NComp; i++)
-    {    x[i] = m[i]/sum;    }
-}
-
-
-
-double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int& species, int select)
-{
-        double x,tnm,sum,del;
-        static double s = 0.;
-        int it,j;
-
-//        cout<<"trapzd:	m_infdil = "<<m_infdil<<" | m_j = "<<m_j<<" | n = "<<n<<" | species = "<<species<<endl;
-
-        // select = 0: Finite diefferences over molality of electrolyte -> compute osmotic coefficient
-        if (select == 0)
-        {
-                if (n == 1) {
-                        return (s=0.5*(m_j-m_infdil)*(FinDiff(m_infdil,species)+FinDiff(m_j,species)));
-                } else {
-                        for (it=1,j=1;j<n-1;j++) it <<= 1;
-                        tnm=it;
-                        del=(m_j-m_infdil)/tnm;
-        //		This is the spacing of the points to be added.
-                        x=m_infdil+0.5*del;
-                        for (sum=0.0,j=1;j<=it;j++,x+=del) sum += FinDiff(x,species);
-                        s=0.5*(s+(m_j-m_infdil)*sum/tnm);
-        //		This replaces s by its refined value.
-                                return s;
-                }
-        }
-        // select = 1: Finite differences over pressure -> compute apparent molar volume
-        else if (select == 1)
-        {
-
-                if (n == 1)
-                {
-                        double lower_bound = FinDiffVol(m_infdil,species);
-                        double upper_bound = FinDiffVol(m_j,species);
-                        return (s=0.5*(m_j-m_infdil)*(lower_bound+upper_bound));
-                }
-                else
-                {
-                        for (it=1,j=1;j<n-1;j++) it <<= 1;
-                        tnm=it;
-                        del=(m_j-m_infdil)/tnm;
-        //		This is the spacing of the points to be added.
-                        x=m_infdil+0.5*del;
-                        for (sum=0.0,j=1;j<=it;j++,x+=del) sum += FinDiffVol(x,species);
-                        s=0.5*(s+(m_j-m_infdil)*sum/tnm);
-        //		This replaces s by its refined value.
-                                return s;
-                }
-
-        }
-        return s;
-}
-
-
-///	Returns the integral of the function func from a to b. The parameters EPS can be set to the
-///	desired fractional accuracy and JMAX so that 2 to the power JMAX-1 is the maximum allowed
-///	number of steps. Integration is performed by Simpson’s rule.
-double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species, int select)
-{
-
-    cout<<"qsimp:	m_infdil = "<<m_infdil<<" | m_j = "<<m_j<<" | species = "<<species<<endl;
-
-        int k;
-        double s,st,ost,os,EPS,JMAX;
-        EPS = 1.0e-8;
-        JMAX = 20;
-        ost = os = -1.0e30;
-
-        for (k=1;k<=JMAX;k++) {
-            cout<<"qsimp 3115:	m_infdil = "<<m_infdil<<" | m_j = "<<m_j<<" | k = "<<k<<endl;
-                st=trapzd(m_infdil,m_j,k,species,select);
-                s=(4.0*st-ost)/3.0;
-                        if (k > 6)
-                //		Avoid spurious early convergence.
-                                if (fabs(s-os) < EPS*fabs(os) ||
-                                                (s == 0.0 && os == 0.0)) return s;
-                os=s;
-                ost=st;
-        }
-        throw "Too many steps in routine qsimp";
-
-        return 0.0;
-}
-
 
 long int TELVIS::CalcAct()
 {
+        int j = 0;
         // calculation of ionic strength
         IonicStrength();
 
         // DH, Born and UNIQUAC contributions to activity coefficients
-        ELVIS_DH(ELVIS_logGam_DH, ELVIS_OsmCoeff_DH);
-        ELVIS_Born(ELVIS_logGam_Born);
-        ELVIS_UNIQUAC(ELVIS_logGam_UNIQUAC);
+        ELVIS_DH(ELVIS_lnGam_DH, ELVIS_OsmCoeff_DH);
+// 		ELVIS_Born(ELVIS_lnGam_Born);
+        ELVIS_UNIQUAC(ELVIS_lnGam_UNIQUAC);
 
         // Solvent activity
         molT = 0.;
-        for (int j=0; j<(NComp-1); j++)
+        for( j=0; j<(NComp-1); j++ )
         {
           molT += m[j];
         }
         double Gamma_gamma = log(1.+0.001801*molT);
         int w = NComp - 1;
 
-
-        for (int j=0;j<(NComp-1);j++)
+        for( j=0;j<NComp;j++ )
         {
                 // Assembling of activity coefficient contributions and converting to molality scale
-                lnGamma[j]   = ELVIS_logGam_DH[j] + ELVIS_logGam_Born[j] + ELVIS_logGam_UNIQUAC[j] + log(x[w]);
-
-                // write debug results
-                gammaDH[j]   = ELVIS_logGam_DH[j];
-                gammaBorn[j] = ELVIS_logGam_Born[j];
-                gammaQUAC[j] = ELVIS_logGam_UNIQUAC[j];
+                //lnGamma[j]   = ELVIS_lnGam_DH[j] + ELVIS_lnGam_Born[j] + ELVIS_lnGam_UNIQUAC[j] + log(x[w]);
+                lnGamma[j]   = ELVIS_lnGam_DH[j] + ELVIS_lnGam_UNIQUAC[j] + ELVIS_lnGam_Born[j];
+                
+				// write debug results
+                gammaDH[j]   = ELVIS_lnGam_DH[j];
+                //gammaBorn[j] = ELVIS_lnGam_Born[j];
+                gammaQUAC[j] = ELVIS_lnGam_UNIQUAC[j];
 
 #ifdef ELVIS_DEBUG
-                cout<<"lnGamma["<<j<<"]	= "<<lnGamma[j]<<endl;
-                cout<<"gammaDH["<<j<<"]	= "<<gammaDH[j]<<endl;
-                cout<<"gammaBorn["<<j<<"]	= "<<gammaBorn[j]<<endl;
-                cout<<"gammaQUAC["<<j<<"]	= "<<gammaQUAC[j]<<endl;
+				cout<<"ELVIS	Tk = "<<Tk<<endl;
+				cout<<"ELVIS	Pbar = "<<Pbar<<endl;
+                cout<<"ELVIS	m["<<j<<"] = "<<m[j]<<endl;
+				cout<<"ELVIS	lnGamma["<<j<<"]	= "<<lnGamma[j]<<endl;
+                cout<<"ELVIS	gammaDH["<<j<<"]	= "<<gammaDH[j]<<endl;
+                //cout<<"ELVIS	gammaBorn["<<j<<"]	= "<<gammaBorn[j]<<endl;
+                cout<<"ELVIS	gammaQUAC["<<j<<"]	= "<<gammaQUAC[j]<<endl;
 #endif
 
         }
 
+
 #ifdef ELVIS_DEBUG
-                for (int j=0;j<(NComp-1);j++)
-                {
-                        DUMP_ELVIS(lnGamma[j]);
-                        cout<<"lnGamma["<<j<<"] = "<<lnGamma[j]<<endl;
-                }
-                int fieldwidth = 20;
-                ofstream my_gemactcoef;
-                my_gemactcoef.open("my_gemactcoef.txt",ios::app);
-                my_gemactcoef.width(fieldwidth);
-                my_gemactcoef.precision(12);
-                my_gemactcoef 	<< right << setw(fieldwidth) << "lnGamma"   << right << setw(fieldwidth) << "gammaDH" \
-                                << right << setw(fieldwidth) << "gammaBorn" << right << setw(fieldwidth) << "gammaQUAC" \
-                                << right << setw(fieldwidth) << "gammaC"    << right << setw(fieldwidth) << "gammaR" \
-                                << right << setw(fieldwidth) << "m[0]" << right << setw(fieldwidth) << "m[1]" \
-                                << endl;
-                for( int i=0; i<(NComp-1); i++)
-                {
-                   my_gemactcoef << right << setw(fieldwidth) << lnGamma[i] 	 << right << setw(fieldwidth) << gammaDH[i] \
-                                 << right << setw(fieldwidth) << gammaBorn[i] << right << setw(fieldwidth) << gammaQUAC[i] \
-                                 << right << setw(fieldwidth) << gammaC[i] 	 << right << setw(fieldwidth) << gammaR[i] \
-                                 << right << setw(fieldwidth) << m[0]         << right << setw(fieldwidth) << m[1] \
-                                 << endl;
-                }
-                my_gemactcoef<<endl;
-                my_gemactcoef.close();
+        for( j=0;j<(NComp-1);j++ )
+        {
+                cout<<"lnGamma["<<j<<"] = "<<lnGamma[j]<<endl;
+        }
+        int fieldwidth = 20;
+        ofstream my_gemactcoef;
+        my_gemactcoef.open("my_gemactcoef.txt",ios::app);
+        my_gemactcoef.width(fieldwidth);
+        my_gemactcoef.precision(12);
+        my_gemactcoef 	<< right << setw(fieldwidth) << "lnGamma"   << right << setw(fieldwidth) << "gammaDH" \
+                       /* << right << setw(fieldwidth) << "gammaBorn"*/ << right << setw(fieldwidth) << "gammaQUAC" \
+                        << right << setw(fieldwidth) << "gammaC"    << right << setw(fieldwidth) << "gammaR" \
+                        << right << setw(fieldwidth) << "m[0]" << right << setw(fieldwidth) << "m[1]" \
+                        << endl;
+        for(int i=0; i<(NComp-1); i++ )
+        {
+           my_gemactcoef << right << setw(fieldwidth) << lnGamma[i] 	 << right << setw(fieldwidth) << gammaDH[i] \
+                         /*<< right << setw(fieldwidth) << gammaBorn[i]*/ << right << setw(fieldwidth) << gammaQUAC[i] \
+                         << right << setw(fieldwidth) << gammaC[i] 	 << right << setw(fieldwidth) << gammaR[i] \
+                         << right << setw(fieldwidth) << m[0]         << right << setw(fieldwidth) << m[1] \
+                         << endl;
+        }
+        my_gemactcoef<<endl;
+        my_gemactcoef.close();
 #endif
 
 return 0;
@@ -3231,73 +3286,527 @@ void TELVIS::get_lnGamma( vector<double> &ln_gamma )
 }
 
 
-void TELVIS::ELVIS_DH(double* ELVIS_logGam_DH, double* ELVIS_OsmCoeff_DH)
+void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
 {
-        // Debye-Huckel Term
-        double a0, A_gamma, B_gamma, lambda, b, xbx, rhow, epsw;
-        int i,j;
+	// Debye-Huckel Term
+	double a0, A_gamma, B_gamma, lambda, b, xbx, rhow, epsw;
+	int i,j;
+	double Mw = 0.01801528;
 
-        rhow = RhoW[0];
-        epsw  = EpsW[0];
+	rhow = RhoW[0];
+	epsw  = EpsW[0];
 
-        // species fractions:
-        double* spec_frac = new double [NComp-1];
-        double spec_sum = 0.0;
-        for( i=0;i<(NComp-1);i++ )
-        {
-                spec_sum += m[i];
-        }
-        for( i=0;i<(NComp-1);i++ )
-        {
-                spec_frac[i]=m[i]/spec_sum;
+
+	// species fractions:
+	double* spec_frac = new double [NComp-1];
+	double spec_sum = 0.0;
+	for( i=0;i<(NComp-1);i++ )
+	{
+		    spec_sum += m[i];
+	}
+	for( i=0;i<(NComp-1);i++ )
+	{
+		    spec_frac[i]=m[i]/spec_sum;
+	#ifdef ELVIS_DEBUG
+		cout<<"spec_frac = "<<spec_frac[i]<<endl;
+	#endif
+	}
+	a0 = 0.0;
+	for( i=0;i<(NComp-1);i++ )
+	{
+		    // multiply by 2 to get electrolyte size (valid for 1:1, 2:2 electrolytes)
+		    a0 += 2 * EffRad[i]*spec_frac[i];
+			//a0 = 1*EffRad[0] + 2*EffRad[1];
+	#ifdef ELVIS_DEBUG
+		    cout<<"EffRad = "<<EffRad[i]<<endl;
+		    cout<<"a0 = "<<a0<<endl;
+	#endif
+	}
+	// A_gamma referring to log10 Debye Huckel term
+	A_gamma = 1.824829238E6 * pow(rhow,0.5) / pow(epsw*Tk, 3./2.);
+	B_gamma = 50.29158649E8 * pow(rhow,0.5) / pow(epsw*Tk, 0.5);
+
+	// Conversion from log10 to ln Debye Huckel term 
+	A_gamma = A_gamma * log( 10 );
+
+
+	a0 = a0*1e-8;
+	//lambda = (1.+a0*B_gamma*sqrt(IS));
+	b = a0*B_gamma;
+
+	// ONLY FOR DEBUGGING
+	//	b = 1.5;
+	// 
+
+	lambda = (1.+b*sqrt(IS));
+
+
 #ifdef ELVIS_DEBUG
-            cout<<"spec_frac = "<<spec_frac[i]<<endl;
+	cout<<"Helgeson "<<" | a0 = "<<a0<<" | A_gamma = "<<A_gamma<<" | B_gamma = "<<B_gamma<<" | b = "<<b<<endl;
 #endif
-        }
-        a0 = 0.0;
-        for( i=0;i<(NComp-1);i++ )
-        {
-                // multiply by 2 to get electrolyte size (valid for 1:1, 2:2 electrolytes)
-                a0 += 2 * EffRad[i]*spec_frac[i];
+
+	// solutes
+	for( j=0; j<(NComp-1); j++ )
+	{
+		ELVIS_lnGam_DH[j] = ( -A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda ); // / log10(exp(1.0));//* log(10); // + Gamma_gamma;
 #ifdef ELVIS_DEBUG
-                cout<<"EffRad = "<<EffRad[i]<<endl;
-                cout<<"a0 = "<<a0<<endl;
+	cout<<" ELVIS: A_gamma = "<<A_gamma<<", B_gamma = "<<B_gamma<<", b = "<<b<<", loggam_DH["<<j<<"] = "<<ELVIS_lnGam_DH[j]<<endl;
+	cout<<"lggamDM Helgeson 1982 = "<< (-A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda) * log(10) <<endl; // + Gamma_gamma;
 #endif
-        }
-        A_gamma = 1.824829238E6 * pow(rhow,0.5) / pow(epsw*Tk, 3./2.);
-        B_gamma = 50.29158649E8 * pow(rhow,0.5) / pow(epsw*Tk, 0.5);
+	}
 
-        a0 = a0*1e-8;
-        lambda = (1.+a0*B_gamma*sqrt(IS));
-        b = a0*B_gamma;
-#ifdef ELVIS_DEBUG
-        cout<<"Helgeson "<<" | a0 = "<<a0<<" | A_gamma = "<<A_gamma<<" | B_gamma = "<<B_gamma<<" | b = "<<b<<endl;
-#endif
-        // solutes
-        for (j=0; j<(NComp-1); j++)
-        {
-          ELVIS_logGam_DH[j] = ( -A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda ) * log(10) ; // + Gamma_gamma;
-#ifdef ELVIS_DEBUG
-                cout<<"lggamDM Helgeson 1982 = "<< (-A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda) * log(10) <<endl; // + Gamma_gamma;
-#endif
-        }
+	// solvent water
+	xbx = 1+b*pow(IS,0.5);
 
-        // solvent water
-        xbx = 1+b*pow(IS,0.5);
-        // solvent: activity: formula form dissertation of Kaj Thomsen (1997)
-        //ELVIS_logGam_DH[NComp] = (Mw*2*A_gammaELVIS/(b*b*b))*(xbx - 1/xbx - 2*log(xbx));
+	// solvent: activity: formula form dissertation of Kaj Thomsen (1997)
+	ELVIS_lnGam_DH[NComp-1] = (Mw*2*A_gamma/(b*b*b))*(xbx - 1/xbx - 2*log(xbx));
 
-        // solvent: osmotic coefficient, formula form helgeson 1981, p. 1355
-        for (j=0; j<(NComp-1); j++)
-        {
-                  ELVIS_OsmCoeff_DH[j] = z[j]*z[j]*(A_gamma * pow(IS,0.5)*(xbx- (1./(xbx)) - 2.*log(xbx))) / ( pow(IS,(3./2.)) *b*b*b);
-        }
+	// solvent: osmotic coefficient, formula form helgeson 1981, p. 1355
+	for( j=0; j<(NComp-1); j++ )
+	{
+	      ELVIS_OsmCoeff_DH[j] = z[j]*z[j]*(A_gamma * pow(IS,0.5)*(xbx- (1./(xbx)) - 2.*log(xbx))) / ( pow(IS,(3./2.)) *b*b*b);
+	}
 
-        delete[] spec_frac;
+	delete[] spec_frac;
 }
 
 
-void TELVIS::ELVIS_Born(double* ELVIS_logGam_Born)
+
+void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
+{
+        int j, i, l, k, w;
+        double Mw, Xw, b, RR, QQ, K, L, M;
+        double gamC = 0.0; double gamR = 0.0;
+        double lnGam = 0.0; double Gam = 0.0;
+        b = 1.5; Mw = 0.01801528;
+
+        // get index of water (assumes water is last species in phase)
+        w = NComp - 1;
+        Xw = x[w];
+
+        // calculation of Phi and Theta terms
+        for( j=0; j<NComp; j++ )
+        {
+            RR = 0.0;
+            QQ = 0.0;
+            for( i=0; i<NComp; i++ )
+            {
+                RR += x[i]*R[i];
+                QQ += x[i]*Q[i];
+            }
+            Phi[j] = x[j]*R[j]/RR;
+
+#ifdef ELVIS_DEBUG
+	cout<<"Phi["<<j<<"] = "<<Phi[j]<<endl; 
+	cout<<"x["<<j<<"] = "<<x[j]<<endl; 
+	cout<<"R["<<j<<"] = "<<R[j]<<endl; 
+#endif
+
+            Theta[j] = x[j]*Q[j]/QQ;
+        }
+
+
+// -------------------------------- COORDINATION NUMBER --------------------------------------------- //
+		// species fractions:
+		double spec_sum=0.;
+		CN = 0.;
+		vector<double> spec_frac((NComp-1),0);
+
+		CN = 5.;		
+/*
+		for( i=0;i<(NComp-1);i++ )
+		{
+			if( z[i] != 0 )
+			{
+				spec_sum += m[i];
+			}
+		}
+		for( i=0;i<(NComp-1);i++ )
+		{
+			spec_frac[i]=m[i]/spec_sum;
+		}
+		for( i=0;i<(NComp-1);i++ )
+		{
+			for( j=i+1;j<(NComp-1);j++ )
+			{
+				CN += (spec_frac[i]*spec_frac[j]) * coord[i][j];
+			}
+		}
+*/
+// -------------------------------- COORDINATION NUMBER --------------------------------------------- //
+
+
+        // loop over species
+        for( j=0; j<NComp; j++ )
+        {
+                // species other than water solvent
+                if (j < w)
+                {
+                        K = 0.0;
+                        L = 0.0;
+                        for( k=0; k<NComp; k++ )
+                        {
+                                M = 0.0;
+                                for( l=0; l<NComp; l++ )
+                                {
+                                        M += Theta[l]*Psi[l][k];
+                                }
+                                if( fabs(M) < 1e-20 )
+                                {
+                                        M = 1e-20;
+                                }
+                                K += Theta[k]*Psi[k][j];
+                                L += Theta[k]*Psi[j][k]/M;
+                        }
+//			gamDH = - pow(z[j],2.)*A*sqrt(IS)/(1.+b*sqrt(IS));
+
+                        const int DivideByZero_or_NegativeLogarithm = 10;
+                        try
+                        {
+/*								if( R[j]<1e-10 || Q[j]<1e-10 )
+								{
+  */                               //if( Phi[j]<0.0 || x[j]<=0.0 || R[j]<0.0 || (Phi[j]/Theta[j])<0.0 || (R[j]*Q[w]/(R[w]*Q[j]))<0.0 || K<0.0 || Psi[w][j]<0.0 ){
+                                 //       cout<<"Phi["<<j<<"] = "<<Phi[j]<<", x["<<j<<"] = "<<x[j]<<", Theta["<<j<<"] = "<<Theta[j]<<endl;
+                                 //       cout<<"R["<<j<<"] = "<<R[j]<<", Q["<<j<<"] = "<<Q[j]<<", Q["<<w<<"] = "<<Q[w]<<", R["<<w<<"] = "<<R[w]<<endl;
+                                 //       cout<<"K = "<<K<<", Psi["<<w<<"]["<<j<<"] = "<<Psi[w][j]<<endl;
+/*									if( Phi[j]<1e-20 ){ Phi[j] = 1e-20; }
+									if( Theta[j]<1e-20 ){ Theta[j] = 1e-20; }
+                                    throw DivideByZero_or_NegativeLogarithm;
+								}
+								if( Psi[w][j]<1e-20 ){ Psi[w][j] = 1e-20; }
+*/
+
+                                gamC = log(Phi[j]/x[j]) - Phi[j]/x[j] - log(R[j]/R[w]) + R[j]/R[w]
+                                       //         - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
+                                                - CN * Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
+                                                - log(R[j]*Q[w]/(R[w]*Q[j])) + R[j]*Q[w]/(R[w]*Q[j]) );
+                                gamR = Q[j] * ( - log(K) - L + log(Psi[w][j]) + Psi[j][w] );
+
+                                if( R[j]<1e-10 ){
+                                //        gamC = 1e40;
+                                }
+
+                        }
+                        catch( int err )
+                        {
+                                if( err==DivideByZero_or_NegativeLogarithm )
+                                {
+									cerr<<" R["<<j<<"] = "<<R[j]<<" | Q["<<j<<"] = "<<Q[j]<<endl;
+                                //    cerr<<": Careful: a zero-divide or negative-logarithm occured in the UNIQUAC part of ELVIS !!!! Check your interaction and component specific parameters !!!! "<<" R["<<j<<"] = "<<R[j]<<endl;
+                                }
+                        }
+
+
+                        ELVIS_lnGam_UNIQUAC[j] = gamC + gamR;
+
+                        gammaC[j] = gamC;
+                        gammaR[j] = gamR;
+
+#ifdef ELVIS_DEBUG
+                    	if( j==0 || j==1 )
+						{	
+							cout<<"m[0] = "<<m[0]<<", m[1] = "<<m[1]<<endl;
+							cout<<"x[0] = "<<x[0]<<", x[1] = "<<x[1]<<endl;							
+							cout<<"IS = "<<IS<<endl;
+							cout<<"z["<<j<<"] = "<<z[j]<<endl;
+							cout<<"RhoW[0] = "<<RhoW[0]<<endl;
+							cout<<"EpsW[0] = "<<EpsW[0]<<endl;
+							cout<<"A = "<<A<<endl;
+							cout<<"R["<<j<<"] = "<<R[j]<<endl;
+							cout<<"Q["<<j<<"] = "<<Q[j]<<endl;
+							cout<<"x["<<j<<"] = "<<x[j]<<endl;
+							cout<<"Phi["<<j<<"] = "<<Phi[j]<<endl;
+							cout<<"Theta["<<j<<"] = "<<Theta[j]<<endl; 
+							cout<<"gammaC["<<j<<"] = "<<gammaC[j]<<endl;
+							cout<<"gammaR["<<j<<"] = "<<gammaR[j]<<endl;
+						}
+#endif
+
+                }
+
+                // water solvent
+                else
+                {
+                        K = 0.0;
+                        L = 0.0;
+                        for (k=0; k<NComp; k++)
+                        {
+                                M = 0.0;
+                                for (l=0; l<NComp; l++)
+                                {
+                                        M += Theta[l]*Psi[l][k];
+                                }
+
+                                K += Theta[k]*Psi[k][j];
+                                L += Theta[k]*Psi[j][k]/M;
+                        }
+
+//			gamDH = Mw*2.*A/pow(b,3.) * ( 1. + b*sqrt(IS) - 1./(1.+b*sqrt(IS)) - 2*log(1.+b*sqrt(IS)) );
+//                        gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
+                        gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - CN * Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
+                        gamR = Q[j] * (1. - log(K) - L );
+                        lnGam = gamC + gamR;
+#ifdef ELVIS_DEBUG
+							cout<<"z["<<j<<"] = "<<z[j]<<endl;
+							cout<<"R["<<j<<"] = "<<R[j]<<endl;
+							cout<<"Q["<<j<<"] = "<<Q[j]<<endl;
+							cout<<"x["<<j<<"] = "<<x[j]<<endl;
+							cout<<"Phi["<<j<<"] = "<<Phi[j]<<endl;
+							cout<<"Theta["<<j<<"] = "<<Theta[j]<<endl; 
+							cout<<"gammaC["<<j<<"] = "<<gammaC[j]<<endl;
+							cout<<"gammaR["<<j<<"] = "<<gammaR[j]<<endl;
+#endif
+
+
+ 						// Add combinatorial and residual terms without infinite dilution terms (!!!!)
+ 						ELVIS_lnGam_UNIQUAC[j] = gamC + gamR;
+
+						// write debug results
+                        Gam 	  = exp(lnGam);
+                }
+        }
+
+}
+
+
+long int TELVIS::ExcessProp( double *Zex )
+{
+    long int j, i, k, w;
+    double Mw, Xw;
+    double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX, dg, d2g;
+	double DHTv, CTv, RTv, rtv1;		
+	double DHTg, CTg, RTg, rtg;		
+	double SRI = 0.0, xr = 0.0, xq = 0.0, xDrDp = 0.0, xDqDp = 0.0; 
+    Gex = 0.0; Hex = 0.0; Sex = 0.0; CPex = 0.0; Vex = 0.0;
+    gC  = 0.0; gR  = 0.0; hR  = 0.0; cpR  = 0.0;
+	DHTv = 0.0; CTv  = 0.0; RTv  = 0.0; rtv1 = 0.0;		
+	DHTg = 0.0; CTg  = 0.0; RTg  = 0.0; rtg  = 0.0;		
+
+	vector<double> thetapsi;
+	thetapsi.resize(NComp);
+ 
+    Mw = 0.01801528;
+
+    // get index of water (assumes water is last species in phase)
+    w = NComp -1;
+    Xw = x[w];
+
+    // calculation of ionic strength
+    IonicStrength();
+
+	SRI = sqrt(IS);
+
+    // calculation of Phi and Theta terms
+    for( j=0; j<NComp; j++ )
+    {
+        xr = 0.0;
+        xq = 0.0;
+        xDrDp = 0.0;
+        xDqDp = 0.0;
+        for (i=0; i<NComp; i++)
+        {
+            xr += x[i]*R[i];
+            xq += x[i]*Q[i];
+            xDrDp += x[i]*dRdP[i];
+            xDqDp += x[i]*dQdP[i];
+        }
+        Phi[j] = x[j]*R[j]/xr;
+        Theta[j] = x[j]*Q[j]/xq;
+    }
+
+    for( i=0; i<NComp; i++ )
+    {
+        thetapsi[i] = 0.0;
+        for( j=0; j<NComp; j++ )
+        {
+            thetapsi[i] += Theta[j] * Psi[j][i];
+        }
+    }
+
+
+	// Bulk excess volume and enthalpy 
+
+/*
+cout << "ExcessProp() Rhow[0] = " << RhoW[0] << endl;
+cout << "ExcessProp() Rhow[1] = " << RhoW[1] << endl;
+cout << "ExcessProp() Rhow[2] = " << RhoW[2] << endl;
+cout << "ExcessProp() Rhow[3] = " << RhoW[3] << endl;
+*/
+
+	// Debye Huckel term
+	DHTg = - Xw * Mw * 4 * A / ( aDH*aDH*aDH*B*B*B ) * ( log(1 + aDH*B*SRI ) - aDH*B*SRI + aDH*aDH*B*B*IS/2 ) ;			
+	DHTv = ( 4 * Xw * Mw /pow((aDH*B),3) ) * ( ( - dAdP + 3 * A * dBdP / B ) * ( -aDH*B*SRI + 0.5*aDH*aDH*B*B*IS + log( 1 + aDH*B*SRI) ) - A * ( -aDH*dBdP*SRI + aDH*aDH*B*dBdP*IS + aDH*SRI*dBdP/(1 + aDH*B*SRI) ) );
+
+	// outer species loop
+	for( i=0; i<NComp; i++ )
+	{
+		//	inner species loop
+		for( k=0; k<NComp; k++ )
+		{
+			rtv1 += Theta[k] * Psi[k][i] * dQdP[k] / Q[k] - Theta[k] * Psi[k][i] * xDqDp / xq + Theta[k] * Psi[k][i] * ( dUdP[i][i] - dUdP[k][i] ) / Tk;
+			rtg  += Theta[k] * Psi[k][i];
+		}	
+
+		// Combinatorial term
+		CTv += x[i] * ( dRdP[i] - R[i] * xDrDp / xr ) - 5 * ( x[i] * dQdP[i] * log( Phi[i] / Theta[i] ) + Theta[i]*x[i]*Q[i]/Phi[i] * ( - Phi[i]*dQdP[i]/(Theta[i]*Q[i]) + Phi[i]*xDqDp/(x[i]*Q[i]) + x[i]*dRdP[i]/(Theta[i]*xr) - Phi[i]*xDrDp/(Theta[i]*xr) ) );
+		CTg += x[i] * log( Phi[i]/x[i] ) - 5 * Q[i]*x[i]*log( Phi[i]/Theta[i] );
+
+		// Residual term
+		RTv += - ( x[i] * dQdP[i] * log( thetapsi[i] ) + x[i] * Q[i] * rtv1 / thetapsi[i] );
+		RTg += Q[i]*x[i]*log( rtg );
+
+	}
+	Gex = ( DHTg + CTg - RTg ) * R_CONST * Tk; 
+
+	Vex = DHTv /*+ CTv + RTv*/;
+
+cout << "Vex = " << Vex << endl;
+
+/*	
+cout << "Gex = " << Gex << endl;
+cout << "Vex = " << Vex << endl;
+*/
+
+    // increment thermodynamic properties
+    //Gex = ( gDH + gRX + gCX - gRI - gCI ) * R_CONST * Tk;
+    Hex = dg * pow(Tk,2.) * R_CONST;
+    CPex = ( 2.*Tk*dg + pow(Tk,2.)*d2g ) * R_CONST;
+    Sex = (Hex-Gex)/Tk;
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
+
+    // assigments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
+
+    return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TELVIS::IdealProp( double *Zid )
+{
+        long int j;
+        double si;
+        si = 0.0;
+        for (j=0; j<NComp; j++)
+        {
+                if ( x[j] > 1.0e-32 )
+                        si += x[j]*log(x[j]);
+        }
+        Hid = 0.0;
+        CPid = 0.0;
+        Vid = 0.0;
+        Sid = (-1.)*R_CONST*si;
+        Gid = Hid - Sid*Tk;
+        Aid = Gid - Vid*Pbar;
+        Uid = Hid - Vid*Pbar;
+
+        // assignments (ideal mixing properties)
+        Zid[0] = Gid;
+        Zid[1] = Hid;
+        Zid[2] = Sid;
+        Zid[3] = CPid;
+        Zid[4] = Vid;
+        Zid[5] = Aid;
+        Zid[6] = Uid;
+
+        return 0;
+}
+
+
+// Calculate ionic strength
+long int TELVIS::IonicStrength()
+{
+        long int j;
+        double Mw, Xw;
+        IS = 0.0; Mw = 0.01801528;
+        Xw = x[NComp-1];
+
+        for (j=0; j<(NComp-1); j++)
+        {
+                IS += 0.5*x[j]*pow(z[j],2.)/(Xw*Mw);
+        }
+
+        return 0;
+}
+
+
+void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
+{
+	int i=0,j=0;
+
+/*	double x=0.;
+	double part1=0., part2=0.;
+
+	// from Pitzer F-term
+	for( i=0; i<(NComp-1); i++ )
+	{
+		if( m[i] > 0. )
+		{	
+			for( j=0; j<(NComp-1); j++ )
+			{
+				if( m[j] < 0. )
+				{	
+					x = alpha[i][j] * sqrt(IS);
+					part1 += m[i]*m[j]*( -beta1[i][j] * 2 * (1 - (1+x+x*x/2.) * exp(-x) ) / (x*x*IS) );
+				}
+			}	
+		}
+	}
+
+	// 
+	for( i=0; i<(NComp-1); i++ )
+	{
+		part2 = 0.;
+		for( j=0; j<(NComp-1); j++ )
+		{
+			if( m[i]<0. && m[j]>0. || m[i]>0. && m[j]<0. )
+			{	
+				x = alpha[i][j] * sqrt(IS);
+				part2 += 2 * m[j] * ( beta0[i][j] * beta1[i][j] * 2*(1-(1+x)*exp(-x))/(x*x) );
+			}
+		}
+		ELVIS_lnGam_Born[ i ] = z[i] * z[i] * part1 + part2;
+	}
+*/
+
+		// species fractions:
+		double spec_sum=0.;
+		double EP = 0.;
+		vector<double> spec_frac((NComp-1),0);
+
+		for( i=0;i<(NComp-1);i++ )
+		{
+			if( z[i] != 0 )
+			{
+				spec_sum += m[i];
+			}
+		}
+		for( i=0;i<(NComp-1);i++ )
+		{
+			spec_frac[i]=m[i]/spec_sum;
+		}
+		for( i=0;i<(NComp-1);i++ )
+		{
+			for( j=i+1;j<(NComp-1);j++ )
+			{
+				EP += (spec_frac[i]*spec_frac[j]) * ( beta0[i][j] + beta1[i][j]*IS*IS );
+			}
+		}
+
+
+		ELVIS_lnGam_Born[ i ] = EP;
+
+}
+
+
+/*void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
 {
         // Solvation Term from Helgeson Model (HKF, 1981; Shock 1992)
 
@@ -3372,320 +3881,259 @@ void TELVIS::ELVIS_Born(double* ELVIS_logGam_Born)
 
         for( j=0; j<(NComp-1); j++ )
         {
-            ELVIS_logGam_Born[j] = (omega[j]*epsilon_sum);
+            ELVIS_lnGam_Born[j] = (omega[j]*epsilon_sum);
         }
 
 
         delete[] spec_frac;
         delete[] omega;
         delete[] omega1;
+}*/
+
+
+
+double TELVIS::Int_OsmCoeff()
+{
+        double osm_coeff   = 0.0;
+        double m_infdil    = 1.1e-6;
+        double bjerrum     = 0.0;
+        // calc osmotic coefficient via Bjerrum relation
+        long int j = 0;
+
+        // bjerrum : \int_{m_k=0}^{m_k=m[j]} m_k  d log_gam(m_k)
+        bjerrum = qsimp( m_infdil, m[j], j, 0 );
+//		cout<<" integral between "<<m_infdil<<" and "<<m[j]<<" is : "<<bjerrum<<endl;
+        osm_coeff = 1 + bjerrum/m[j];
+        cout<<" Osmotic coefficient = "<<osm_coeff<<endl;
+return osm_coeff;
 }
 
 
-void TELVIS::ELVIS_UNIQUAC( double* ELVIS_logGam_UNIQUAC )
+double TELVIS::App_molar_volume()
 {
-        int j, i, l, k, w;
-        double Mw, Xw, b, RR, QQ, K, L, M;
-        double gamC = 0.0; double gamR = 0.0;
-        double lnGam = 0.0; double Gam = 0.0;
-        b = 1.5; Mw = 0.01801528;
+        // add to app_molar_vol_part the stst molar volume of the electrolyte (outside ELVIS class) !!!!
+        long int j      = 0;
+        double m_infdil = 1.1e-6;
+        double m_el 	= m[j]; 	// concentration of electrolyte
+		double result, error;
 
-        // get index of water (assumes water is last species in phase)
-        w = NComp - 1;
-        Xw = x[w];
+		double app_molar_vol_part = R_CONST*Tk* qsimp( m_infdil, m[j], j, 1 )/m_el;
 
-        // calculation of Phi and Theta terms
-        for( j=0; j<NComp; j++ )
+        // partial molar excess volume
+        // double part_molar_excess_vol = R_CONST*Tk*FinDiffVol( m[j], j );
+        //cout<<"part_molar_excess_vol = "<<part_molar_excess_vol<<endl;
+
+return app_molar_vol_part; // To get the apparent molar volume of the solute, add the stst partial molar volume to 'app_molar_vol_part'
+}
+
+
+
+double TELVIS::FinDiff( double m_j, int j )
+{
+        double h = 1e-4;
+        double DactDm;
+        double m_old1 = m[j];
+        double m_old2 = m[j+1];
+/*	// Central Finite Difference
+cout<<"m["<<j<<"] = "<<m[j]<<endl;
+
+        m[j] = m_j - h;
+cout<<"m["<<j<<"] = "<<m[j]<<endl;
+        CalcAct();
+        act_low = lnGamma[j];
+        m[j] = m_j + h;
+
+cout<<"m["<<j<<"] = "<<m[j]<<endl;
+        CalcAct();
+        DactDm = (lnGamma[j]-act_low)/(2*h);
+*/
+        // Forward Finite Difference
+        double gam_1,gam_2,gam_3;
+//cout<<"FD base 	m["<<j<<"] = "<<m[j]<<endl;
+        m[j] 	= m_j;
+        m[j+1] 	= m_j;
+        molfrac_update();
+//cout<<"FD 1 	m["<<j<<"] = "<<m[j]<<endl;
+        lnGamma[j] = 0.0;
+        CalcAct();
+        gam_1 = 0.5*(lnGamma[j]+lnGamma[j+1]);
+
+        m[j] 	= m_j + h;
+        m[j+1]	= m_j + h;
+        molfrac_update();
+        lnGamma[j] = 0.0;
+        lnGamma[j] = 0.0;
+//cout<<"FD 2		m["<<j<<"] = "<<m[j]<<endl;
+        CalcAct();
+        gam_2 = 0.5*(lnGamma[j]+lnGamma[j+1]);
+
+        m[j] 	= m_j + h + h;
+        m[j+1]	= m_j + h + h;
+        molfrac_update();
+        lnGamma[j] 		= 0.0;
+        lnGamma[j+1] 	= 0.0;
+//cout<<"FD 3 	m["<<j<<"] = "<<m[j]<<endl;
+        CalcAct();
+        gam_3 = 0.5*(lnGamma[j]+lnGamma[j+1]);
+
+        DactDm = (-3*gam_1 + 4*gam_2 - gam_3)/(2*h);
+
+        m[j] 	= m_old1;
+        m[j+1] 	= m_old2;
+return DactDm * m_j; // for the Bjerrum relation, multiply the derivative with m_j (integrand)
+}
+
+// partial molar excess volume of solute
+double TELVIS::FinDiffVol( double m_j, int j )
+{
+    //int j = *(int *) params;	
+
+    double lnGam_high, lnGam_low, FinDiff_cation, FinDiff_anion, FinDiffVolume = 0.0;
+    double P_diff = Pbar*0.1;	// pressure in bar
+    double P_old  = Pbar;
+    int stoic_cation = 1;               // stoichiometric coefficient of cation in electrolyte
+    int stoic_anion  = 2;               // stoichiometric coefficient of anion in electrolyte
+
+    m[j] 	= stoic_cation*m_j;
+    m[j+1] 	= stoic_anion*m_j;
+    molfrac_update();
+
+
+    // Cation contribution
+    Pbar 			= P_old + P_diff;
+    PTparam();
+    CalcAct();
+    lnGam_high = lnGamma[j];
+
+    Pbar			= P_old - P_diff;
+    PTparam();
+    CalcAct();
+    lnGam_low	= lnGamma[j];
+
+    FinDiff_cation 		= (lnGam_high - lnGam_low)/(2*P_diff);
+		//cout<<"lnGam_high = "<<lnGam_high<<" | lnGam_low = "<<lnGam_low<<endl;
+
+    
+	// Anion contribution
+    Pbar 			= P_old + P_diff;
+    PTparam();
+    CalcAct();
+    lnGam_high = lnGamma[j+1];
+
+    Pbar			= P_old - P_diff;
+    PTparam();
+    CalcAct();
+    lnGam_low	= lnGamma[j+1];
+
+    FinDiff_anion 		= (lnGam_high - lnGam_low)/(2*P_diff);
+		//cout<<"FinDiff_anion = "<<FinDiff_anion<<endl;
+
+    // Sum
+		//FinDiff = (stoic_cation+stoic_anion)*(stoic_cation*FinDiff_cation + stoic_anion*FinDiff_anion);
+    FinDiffVolume = (stoic_cation*FinDiff_cation + stoic_anion*FinDiff_anion);
+
+    Pbar  = P_old;
+    PTparam();
+
+    return FinDiffVolume;
+}
+
+
+void TELVIS::molfrac_update()
+{
+    double sum=0.0; int i;
+    for( i=0; i<NComp; i++ )
+    {    sum += m[i];   }
+
+    for( i=0; i<NComp; i++ )
+    {    x[i] = m[i]/sum;  }
+}
+
+// Numerical Integration code from Numerical recipes in C (4th edition).
+double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int& species, int select)
+{
+        double x,tnm,sum,del = 0.0;
+        static double s;
+        int it,j = 0;
+
+        // select = 0: Finite diefferences over molality of electrolyte -> compute osmotic coefficient
+        if (select == 0)
         {
-            RR = 0.0;
-            QQ = 0.0;
-            for( i=0; i<NComp; i++ )
-            {
-                RR += x[i]*R[i];
-                QQ += x[i]*Q[i];
-            }
-            Phi[j] = x[j]*R[j]/RR;
-            Theta[j] = x[j]*Q[j]/QQ;
-        }
-
-        // loop over species
-        for( j=0; j<NComp; j++ )
-        {
-                // species other than water solvent
-                if (j < w)
+                if( n == 1 )
                 {
-                        K = 0.0;
-                        L = 0.0;
-                        for (k=0; k<NComp; k++)
-                        {
-                                M = 0.0;
-                                for (l=0; l<NComp; l++)
-                                {
-                                        M += Theta[l]*Psi[l][k];
-                                }
-                                if( fabs(M) < 1e-20 )
-                                {
-                                        M = 1e-20;
-                                }
-                                K += Theta[k]*Psi[k][j];
-                                L += Theta[k]*Psi[j][k]/M;
-                        }
-//			gamDH = - pow(z[j],2.)*A*sqrt(IS)/(1.+b*sqrt(IS));
-
-                        const int DivideByZero_or_NegativeLogarithm = 10;
-                        try
-                        {
-                                if( Phi[j]<0.0 || x[j]<=0.0 || R[j]<0.0 || (Phi[j]/Theta[j])<0.0 || (R[j]*Q[w]/(R[w]*Q[j]))<0.0 || K<0.0 || Psi[w][j]<0.0 ){
-                                        cout<<"Phi["<<j<<"] = "<<Phi[j]<<", x["<<j<<"] = "<<x[j]<<", Theta["<<j<<"] = "<<Theta[j]<<endl;
-                                        cout<<"R["<<j<<"] = "<<R[j]<<", Q["<<j<<"] = "<<Q[j]<<", Q["<<w<<"] = "<<Q[w]<<", R["<<w<<"] = "<<R[w]<<endl;
-                                        cout<<"K = "<<K<<", Psi["<<w<<"]["<<j<<"] = "<<Psi[w][j]<<endl;
-                                        throw DivideByZero_or_NegativeLogarithm;
-                                }
-                                if( Phi[j]<1e-20 ){
-                                        Phi[j] = 1e-20;
-                                }
-                                if( Theta[j]<1e-20 ){
-                                        Theta[j] = 1e-20;
-                                }
-                                if( Psi[w][j]<1e-20 ){
-                                        Psi[w][j] = 1e-20;
-                                }
-
-                                gamC = log(Phi[j]/x[j]) - Phi[j]/x[j] - log(R[j]/R[w]) + R[j]/R[w]
-                                                - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
-                                                - log(R[j]*Q[w]/(R[w]*Q[j])) + R[j]*Q[w]/(R[w]*Q[j]) );
-                                gamR = Q[j] * ( - log(K) - L + log(Psi[w][j]) + Psi[j][w] );
-
-                                if( R[j]<1e-5 ){
-                                        gamC = 1e10;
-                                }
-
-                        }
-                        catch( int err )
-                        {
-                                if( err==DivideByZero_or_NegativeLogarithm )
-                                {
-                                        cerr<<" Careful: a zero-divide or negative-logarithm occured in the UNIQUAC part of ELVIS !!!! Check your interaction and component specific parameters !!!!"<<endl;
-                                }
-                        }
-
-                        ELVIS_logGam_UNIQUAC[j] = gamC + gamR;
-
-                        gammaC[j] = gamC;
-                        gammaR[j] = gamR;
-
-#ifdef ELVIS_DEBUG
-                        cout<<"-------------------------------------------------------"<<endl;
-                        cout<<"gamC   = "<<gamC<<endl;
-                        cout<<"gamR   = "<<gamR<<endl;
-                        cout<<"gamDH   = "<<gamDH<<endl;
-                        cout<<"gamBorn = "<<gamBorn<<endl;
-                        cout<<"gamQUAC = "<<gamC + gamR<<endl;
-                        cout<<"lnGam = "<<lnGam<<endl;
-#endif
+                        return (s=0.5*(m_j-m_infdil)*(FinDiff(m_infdil,species)+FinDiff(m_j,species)));
                 }
-
-                // water solvent
                 else
                 {
-                        K = 0.0;
-                        L = 0.0;
-                        for (k=0; k<NComp; k++)
-                        {
-                                M = 0.0;
-                                for (l=0; l<NComp; l++)
-                                {
-                                        M += Theta[l]*Psi[l][k];
-                                }
-
-                                K += Theta[k]*Psi[k][j];
-                                L += Theta[k]*Psi[j][k]/M;
-                        }
-
-//			gamDH = Mw*2.*A/pow(b,3.) * ( 1. + b*sqrt(IS) - 1./(1.+b*sqrt(IS)) - 2*log(1.+b*sqrt(IS)) );
-                        gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
-                        gamR = Q[j] * (1. - log(K) - L );
-                        lnGam = gamC + gamR;
-                        lnGamma[j] = lnGam;
-
-                        // write debug results
-                        Gam 	  = exp(lnGam);
+                        for( it=1,j=1;j<n-1;j++ ) it <<= 1;
+                        tnm=it;
+                        del=(m_j-m_infdil)/tnm;
+        //		This is the spacing of the points to be added.
+                        x=m_infdil+0.5*del;
+                        for (sum=0.0,j=1;j<=it;j++,x+=del) sum += FinDiff(x,species);
+                        s=0.5*(s+(m_j-m_infdil)*sum/tnm);
+        //		This replaces s by its refined value.
+                                return s;
                 }
         }
-
-
-
-}
-
-
-long int TELVIS::ExcessProp( double *Zex )
-{
-        long int j, i, w;
-        double Mw, Xw, b, phiti, phthi, RR, QQ, N, TPI, tpx, TPX,
-                                dtpx, DTPX, con;
-        double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX, dg, d2g, dgRI, d2gRI,
-                                dgRX, d2gRX, dgDH, d2gDH, dgDHdP;
-        b = 1.5; Mw = 0.01801528;
-
-        // get index of water (assumes water is last species in phase)	w = NComp - 1;
-        w = NComp -1;
-        Xw = x[w];
-
-        // calculation of ionic strength
-        IonicStrength();
-
-        // calculation of Phi and Theta terms
-        for (j=0; j<NComp; j++)
+        // select = 1: Finite differences over pressure -> compute apparent molar volume
+        else if (select == 1)
         {
-                RR = 0.0;
-                QQ = 0.0;
-                for (i=0; i<NComp; i++)
+
+                if (n == 1)
                 {
-                        RR += x[i]*R[i];
-                        QQ += x[i]*Q[i];
+                        double lower_bound = FinDiffVol(m_infdil,species);
+                        double upper_bound = FinDiffVol(m_j,species);
+                        return (s=0.5*(m_j-m_infdil)*(lower_bound+upper_bound));
                 }
-                Phi[j] = x[j]*R[j]/RR;
-                Theta[j] = x[j]*Q[j]/QQ;
-        }
-
-        // calculation of bulk phase excess properties
-        Gex = 0.0; Hex = 0.0; Sex = 0.0; CPex = 0.0; Vex = 0.0;
-        gC = 0.0; gR = 0.0; hR = 0.0; cpR = 0.0;
-
-        // infinite dilution part
-        gCI = 0.; gRI = 0.; dgRI = 0.; d2gRI = 0.;
-
-        for (j=0; j<NComp; j++) // loop over species
-        {
-                if (j == w)
-                {
-                        gCI += 0.;
-                        gRI += 0.;
-                        dgRI += 0.;
-                        d2gRI += 0.;
-                }
-
                 else
                 {
-                        phiti = R[j]/R[w];
-                        phthi = R[j]*Q[w]/(Q[j]*R[w]);
-                        gCI += x[j]*( 1.0 + log(phiti) - phiti - 5.*Q[j]*(1.+log(phthi)-phthi) );
-                        gRI += x[j]*Q[j]*(1.-log(Psi[w][j])-Psi[j][w]);
-                        dgRI += - x[j]*Q[j]*( pow(Psi[w][j],(-1.))*dPsi[w][j] + dPsi[j][w] ) ;
-                        d2gRI += x[j]*Q[j]*( pow(Psi[w][j],(-2.))*dPsi[w][j]*dPsi[w][j]
-                                   - pow(Psi[w][j],(-1.))*d2Psi[w][j] - d2Psi[j][w] );
+                        for (it=1,j=1;j<n-1;j++) it <<= 1;
+                        tnm=it;
+                        del=(m_j-m_infdil)/tnm;
+        //		This is the spacing of the points to be added.
+                        x=m_infdil+0.5*del;
+                        for (sum=0.0,j=1;j<=it;j++,x+=del) sum += FinDiffVol(x,species);
+                        s=0.5*(s+(m_j-m_infdil)*sum/tnm);
+        //		This replaces s by its refined value.
+                                return s;
                 }
         }
-
-        // combinatorial and residual part
-        gCX = 0.; gRX = 0.; dgRX = 0.; d2gRX = 0.;
-
-        for (j=0; j<NComp; j++)  // loop over species
-        {
-                N = 0.0;
-                TPI = 0.0;
-                tpx = 0.0;
-                TPX = 0.0;
-                dtpx = 0.0;
-                DTPX = 0.0;
-
-                for (i=0; i<NComp; i++)
-                {
-                        N += Theta[i]*Psi[i][j];
-                        tpx += Theta[i]*dPsi[i][j];
-                        dtpx += Theta[i]*d2Psi[i][j];
-                }
-
-                TPI = 1./N;
-                TPX = tpx*TPI;
-                DTPX = - TPX*TPX + dtpx*TPI;
-                gCX += x[j]*log(Phi[j]/x[j]) - 5.0*(Q[j]*x[j]*log(Phi[j]/Theta[j]));
-                gRX += ( - x[j]*Q[j]*log(N) );
-                dgRX += x[j]*Q[j]*TPX;
-                d2gRX += x[j]*Q[j]*DTPX;
-        }
-
-        // DH part
-        con = - x[w]*Mw*4./pow(b,3.) * ( log(1.+b*sqrt(IS)) - b*sqrt(IS) + 0.5*pow(b,2.)*IS );
-        gDH = con*A;
-        dgDH = - con*dAdT;
-        d2gDH = - con*d2AdT2;
-        dgDHdP = con*dAdP;
-
-        // increment thermodynamic properties
-        dg = ( dgDH + dgRX + dgRI );
-        d2g = ( d2gDH + d2gRX + d2gRI );
-        Gex = ( gDH + gRX + gCX - gRI - gCI ) * R_CONST * Tk;
-        Hex = dg * pow(Tk,2.) * R_CONST;
-        CPex = ( 2.*Tk*dg + pow(Tk,2.)*d2g ) * R_CONST;
-        Sex = (Hex-Gex)/Tk;
-        Vex = dgDHdP;
-        Aex = Gex - Vex*Pbar;
-        Uex = Hex - Vex*Pbar;
-
-        // assigments (excess properties)
-        Zex[0] = Gex;
-        Zex[1] = Hex;
-        Zex[2] = Sex;
-        Zex[3] = CPex;
-        Zex[4] = Vex;
-        Zex[5] = Aex;
-        Zex[6] = Uex;
-
-        return 0;
 }
 
 
-/// calculates ideal mixing properties
-long int TELVIS::IdealProp( double *Zid )
+//	Returns the integral of the function func from a to b. The parameters EPS can be set to the
+//	desired fractional accuracy and JMAX so that 2 to the power JMAX-1 is the maximum allowed
+//	number of steps. Integration is performed by Simpson’s rule.
+// Numerical Integration code from Numerical recipes in C (4th edition).
+double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species, int select)
 {
-        long int j;
-        double si;
-        si = 0.0;
-        for (j=0; j<NComp; j++)
+        int k;
+        double s,st,ost,os,EPS,JMAX;
+        EPS = 1.0e-6;
+        JMAX = 15;
+        ost = os = -1.0e30;
+
+        for( k=1;k<=JMAX;k++ )
         {
-                if ( x[j] > 1.0e-32 )
-                        si += x[j]*log(x[j]);
+                st=trapzd(m_infdil,m_j,k,species,select);
+                if( isnan(st) ) break;
+		
+		s=(4.0*st-ost)/3.0;
+                        if( k > 6 )
+                //		Avoid spurious early convergence.
+                                if( fabs(s-os) < EPS*fabs(os) || (s == 0.0 && os == 0.0) ) return s;
+                os=s;
+                ost=st;
         }
-        Hid = 0.0;
-        CPid = 0.0;
-        Vid = 0.0;
-        Sid = (-1.)*R_CONST*si;
-        Gid = Hid - Sid*Tk;
-        Aid = Gid - Vid*Pbar;
-        Uid = Hid - Vid*Pbar;
+        cout<<"Too many steps in routine qsimp"<<endl;
 
-        // assignments (ideal mixing properties)
-        Zid[0] = Gid;
-        Zid[1] = Hid;
-        Zid[2] = Sid;
-        Zid[3] = CPid;
-        Zid[4] = Vid;
-        Zid[5] = Aid;
-        Zid[6] = Uid;
-
-        return 0;
+        return 77777777777777777777777.0;
 }
 
 
-/// Calculate ionic strength
-long int TELVIS::IonicStrength()
-{
-        long int j;
-        double Mw, Xw;
-        IS = 0.0; Mw = 0.01801528;
-        Xw = x[NComp-1];
 
-        for (j=0; j<(NComp-1); j++)
-        {
-                IS += 0.5*x[j]*pow(z[j],2.)/(Xw*Mw);
-        }
-
-        return 0;
-}
-
-
-/// Output of test results into text file (standalone variant only)
+// Output of test results into text file (standalone variant only)
 void TELVIS::TELVIS_test_out( const char *path, const double M ) const
 {
         long int ii;//, c, a, n;
@@ -3738,6 +4186,8 @@ void TELVIS::TELVIS_test_out( const char *path, const double M ) const
 
         ff.close();
 }
+
+
 
 
 
