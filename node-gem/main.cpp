@@ -4,18 +4,18 @@
 // Demo test of usage of the TNode class for implementing a simple
 // direct coupling scheme between FMT and GEM in a single-GEM-call
 // fashion, assuming that the chemical speciation and all dynamic
-// parameter data are kept in the FMT part, which calls GEMIPM
+// parameter data are kept in the FMT part, which calls GEM IPM
 // calculation once per node.
 
-// TNode class implements a  simple C/C++ interface between GEMIPM
+// TNode class implements a  simple C/C++ interface between GEMS3K
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (C) 2006,2010 S.Dmytriyeva, D.Kulik, G.Kosakowski
+// Copyright (C) 2006,2012 S.Dmytriyeva, D.Kulik, G.Kosakowski
 //
-// This file is part of the GEMIPM2K code for thermodynamic modelling
+// This file is part of the GEMS3K code for thermodynamic modelling
 // by Gibbs energy minimization
 //
-// See also http://gems.web.psi.ch/
+// See also http://gems.web.psi.ch/GEMS3K/
 // mailto://gems2.support@psi.ch
 //-------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ int main( int argc, char* argv[] )
     // Creates TNode structure instance accessible trough the "node" pointer
     TNode* node  = new TNode();
 
-    // (1) Initialization of GEMIPM2K internal data by reading  files
+    // (1) Initialization of GEMS3K internal data by reading  files
     //     whose names are given in the ipm_input_system_file_list_name
     if( node->GEM_init( ipm_input_file_list_name ) )
     {
@@ -45,21 +45,21 @@ int main( int argc, char* argv[] )
     }
 
     // Getting direct access to work node DATABR structure which exchanges the
-    // data with GEM IPM2 (already filled out by reading the DBR input file)
+    // data with GEMS3K (already filled out by reading the DBR input file)
     DATABR* dBR = node->pCNode();
 
-    // Getting direct access to DataCH structure in GEMIPM2K instance memory
+    // Getting direct access to DataCH structure in GEMS3K instance memory
     DATACH* dCH = node->pCSD();
 
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
     TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb );
 
-    // Initialization of GEMIPM2K and chemical information for nodes kept in the FMT part
+    // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
     for(  in=1; in< mt.nNodes; in++ )
     {
-        // Asking GEM to run with automatic initial approximation
+        // Asking GEM IPM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_AIA;
         // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
         mt.aNodeStatusCH[in] = node->GEM_run( false);
@@ -69,11 +69,11 @@ int main( int argc, char* argv[] )
               return 5;
         }
 
-        // Extracting GEMIPM input data to mass-transport program arrays
+        // Extracting GEM IPM input data to mass-transport program arrays
         node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
             mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
           
-        // Extracting GEMIPM output data to mass-transport program arrays
+        // Extracting GEM IPM output data to mass-transport program arrays
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
             mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
             mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
@@ -90,7 +90,7 @@ int main( int argc, char* argv[] )
 
     for(  in=0; in<1; in++ )
     {
-        // Asking GEM to run with automatic initial approximation
+        // Asking GEM IPM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_AIA;
         // (2) Re-calculating chemical equilibrium by calling GEM
         mt.aNodeStatusCH[in] = node->GEM_run( false );
@@ -144,7 +144,7 @@ int main( int argc, char* argv[] )
        {
           mt.aNodeHandle[in] = in;
           mt.aNodeStatusCH[in] = NEED_GEM_SIA;
-          // (8) Setting input data for GEMIPM to use available node speciation as
+          // (8) Setting input data for GEM IPM to use available node speciation as
           // initial approximation
           node->GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
                   mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],
@@ -186,9 +186,8 @@ int main( int argc, char* argv[] )
   // Final output e.g. of total simulation time or of the final distribution of
   //  components and phases in all nodes can be implemented here
 
-  // deleting GEMIPM and data exchange memory structures
+  // deleting GEM IPM and data exchange memory structures
   delete node;
-//  mt.~TMyTransport();
   // end of example
   return 0;
 }
@@ -254,12 +253,10 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
          abPS[in] = new double [nIC*nPS];
          abSP[in] = new double [nIC];
     }
-
 }
 
 TMyTransport::~TMyTransport()
 {
-
     // Deleting chemical data arrays for nodes
     for (long int in=0; in<nNodes; in++)
     {
@@ -313,7 +310,7 @@ TMyTransport::~TMyTransport()
     delete[]aEh;
 }
 
-// Very simple example of transport
+// A very simple example of transport algorithm
 void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nICndx )
 {
     double parcel[nICndx];
