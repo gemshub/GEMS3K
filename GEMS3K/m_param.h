@@ -368,7 +368,7 @@ public:
     void ChangeSettings(int nSettings);
 
     // work with Project
-    bool initCalcMode();
+    bool initCalcMode( const char * profileKey );
     void loadSystat( const char *key=0 );
     void newSystat( int mode );
     void deriveSystat();
