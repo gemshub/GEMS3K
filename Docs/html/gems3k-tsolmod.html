@@ -11,128 +11,388 @@
 
 </head>
 <body>
-<h1><img src="gems1.png" align="left" height="48" width="48">
-GEMS3K Solver of GeoChemical Equilibria</h1>
+<h1><img src="gems1.png" height="48" align="left" width="48">
+GEMS3K Code for Solving for GeoChemical Equilibria</h1>
 
 <p> </p>
 
-<h2>Built-in Models of Non-Ideal Phases and Their Parameters in GEMS3K Input Files
+<h2>Parameters of built-in models of phases-solutions in IPM input file
 </h2>
 
 
 <hr size="2" width="100%">
 <h3>Contents</h3>
 
-<div style="margin-left: 40px;"><font face="Helvetica, Arial, sans-serif"><a href="#TAG_INTRO">1.
-Introduction</a><br>
+<div style="margin-left: 40px;"><a href="#TAG_INTRO">1.
+Introduction</a>
 <br>
 <a href="#TAG_TSOLMOD">2.
-The TSolMod class structure</a> <br>
+The TSolMod class structure</a> 
+
 <br>
 <a href="#TAG_SETUP">3.
 Setup and transfer of of non-ideality parameters</a>
+
+
 <br>
-<br>
-<a href="#TAG_SETUP_DCPARAM">3.1.
+<blockquote><a href="#TAG_SETUP_DCPARAM">3.1.
 Parameters for Dependent Components
 in Phase definitions</a><br>
-<a href="#TAG_DC_INTPARAM">3.2.
+  <a href="#TAG_DC_INTPARAM">3.2.
 Interaction parameters and coefficients
 in Phase definitions</a><br>
-<br>
+</blockquote>
+
+
+
 <a href="#TAG_PARAM_ARRAYS">4.
 Collected parameter arrays in MULTI data
-structure and IPM files</a><br>
+structure and IPM files</a>
+
 <br>
 <a href="#TAG_SELECTION">5.
 Selection (codes) of built-in non-ideality
-models and setup of their parameters</a><br>
-&nbsp;<br>
-<a href="#TAG_ION_ASSOC">5.1.
+models and setup of their parameters</a>
+<br>
+<blockquote><a href="#TAG_ION_ASSOC">5.1.
 Ion-association aqueous electrolyte model
 (autophase)</a><br>
-<a href="#TAG_DAVIES">5.1.1.
+</blockquote>
+
+<blockquote>
+  <blockquote><a href="#TAG_DAVIES">5.1.1.
 Davies model</a><br>
-<a href="#TAG_DHK">5.1.2. </a></font><font face="Helvetica, Arial, sans-serif"><a href="#TAG_DHK">Debye-Hueckel
+    <a href="#TAG_DHK">5.1.2. </a><a href="#TAG_DHK">Debye-Hueckel
 equations (Kielland setup)</a><br>
-</font><font face="Helvetica, Arial, sans-serif"><a href="#TAG_DHH">5.1.3.
-Debye-Hueckel equations (Helgeson setup)</a>
-<br>
-<br>
-<a href="#TAG_SIT_MODELS">5.2.
-</a></font><a href="#TAG_SIT_MODELS"><font face="Helvetica, Arial, sans-serif">Specific ion
+    <a href="#TAG_DHH">5.1.3.
+Debye-Hueckel equations (Helgeson setup)</a><br>
+  </blockquote>
+</blockquote>
+
+
+
+
+<blockquote><a href="#TAG_SIT_MODELS">5.2.
+  </a><a href="#TAG_SIT_MODELS">Specific ion
 interaction aqueous
-electrolyte models</font></a><br>
-<font face="Helvetica, Arial, sans-serif"><a href="#TAG_SIT">5.2.1. SIT
+electrolyte models</a><br>
+</blockquote>
+
+
+<blockquote>
+  <blockquote><a href="#TAG_SIT">5.2.1. SIT
 (Broensted-Scatchard-Guggenheim) model</a><br>
-<a href="#TAG_PITZER">5.2.2.
+    <a href="#TAG_PITZER">5.2.2.
 Pitzer (HMW) model</a><br>
-<a href="#TAG_EQUNIQUAC">5.2.3.
+    <a href="#TAG_EQUNIQUAC">5.2.3.
 Extended UNIQUAC model</a><br>
-<br>
-<a href="#TAG_GASFLUID">5.3.
-Gas/fluid models</a> <br>
-5.3.1. Simple (autophase) gas/fluid models<br>
-<br>
-5.4. Gas/fluid models using specific interactions<br>
+  </blockquote>
+</blockquote>
+
+
+
+<blockquote><a href="#TAG_GASFLUID">5.3.
+Gas/fluid models</a><br>
+</blockquote>
+ 
+<blockquote>
+  <blockquote>
+5.3.1. Simple (autophase) gas/fluid models
+    <br>
+  </blockquote>
+</blockquote>
+<blockquote>5.4. Gas/fluid models using specific interactions<br>
+</blockquote>
+<blockquote>
+  <blockquote>
 5.4.1. PRSV model <br>
+
 5.4.2. SRK model<br>
-5.4.3. Churakov-Gottschalk model<br>
-<br>
-5.5. Solid solution models <br>
+
+5.4.3. Churakov-Gottschalk model
+    <br>
+  </blockquote>
+</blockquote>
+<blockquote>5.5. Solid solution models <br>
+</blockquote>
+<blockquote>
+  <blockquote>
 5.5.1. Margules <br>
+
 5.5.2. Redlich-Kister (Guggenheim) <br>
+
 5.5.3. Regular multicomponent<br>
+
 5.5.4. Van Laar <br>
+  </blockquote>
+</blockquote>
+
 ......<br>
-<br>
-<br>
+
+&lt;under construction&gt;<br>
+
+<font face="Helvetica, Arial, sans-serif"><br>
 </font></div>
 
-<hr style="width: 100%; height: 2px;"><br>
-
-<h3 style="font-family: Helvetica,Arial,sans-serif;"><a name="TAG_INTRO"></a>1.
+<hr style="width: 100%; height: 2px;"><h3><a name="TAG_INTRO"></a>1.
 Introduction</h3>
 
-<p><font face="Helvetica, Arial, sans-serif">A particular
+<p>A particular
 strength of
-GEM algorithms is their ability to compute equilibria in heterogeneous
-chemical systems containing several(highly)&nbsp; non-ideal
+GEM algorithms is in their ability to compute equilibria in 
+heterogeneous
+chemical systems containing several (highly)&nbsp; non-ideal
 solution
-phases.&nbsp; The GEM-Selektor code, in principle, allows the usage
+phases.&nbsp; The GEM-Selektor v.3 code, in principle, allows the usage
 of
 any model of non-ideal mixing because it provides the possibility of
-writing scripts in the Phase definition record (see <a href="gm_phase.html">gm_phase.html</a>
-and related documentation).
-However, interpretation of scripts is slower, and many non-ideality
-models are so well established and popular that they are hard-coded in
-GEM IPM kernel, and thus available in both GEM-Selektor and GEMS3K
-packages. Description of these models on scientific side is provided in
-the&nbsp; </font><big style="font-weight: bold;"><span style="font-family: monospace;">Activity-Coeffs.pdf</span></big><font face="Helvetica, Arial, sans-serif">&nbsp; file
-in GEMS documentation
-(also on the web site). The present document describes the technical
-side, providing an overview of implementation (TSolMod class), relevant
+writing scripts in the Phase definition record (see GEM-Selektor 
+documentation).
+However, interpretation of Phase scripts slows the calculations down, 
+and many non-ideality
+models are so well established and popular that they are now hard-coded 
+in
+the GEM IPM kernel in form of TSolMod class library, which makes them 
+available in both GEM-Selektor package and in standalone GEMS3K code. 
+Formal description of these models is provided in
+the Activity-Coeffs.pdf&nbsp; file
+in GEM-Selektor documentation
+(also on the GEMS web site). The present document provides an overview 
+of implementation (TSolMod class), relevant
 data structures for transferring parameters and coefficients used in
 the models, and examples of parameter setup for frequently used
-built-in non-ideality models. <br>
-<br>
-<br>
+built-in non-ideality models.&nbsp; <font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
+<p>More about TSolMod C++ class library can be learned from a publication:</p>
+<ul>
+  <li>Wagner T., Kulik D.A., Hingerl F.F., Dmytrieva S.V. (2012): 
+GEM-Selektor geochemical modeling package: TSolMod C++ class library and
+ data interface for multicomponent phase models. <i>Canadian Mineralogist</i> (in press).</li>
+</ul>
+<font face="Helvetica, Arial, sans-serif"><br>
+</font>
+<hr size="2" width="100%">
 
-<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_TSOLMOD"></a>2.
-The TSolMod class structure and functionality<br>
+<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_TSOLMOD"></a></font>2.
+The TSolMod class structure and functionality<font face="Helvetica, Arial, sans-serif"><br>
 </font></h3>
 
-<p><font face="Helvetica, Arial, sans-serif">&lt;overview
-to be written
-by TW &gt;<br>
-</font></p>
+<p><!--StartFragment--></p><p>Key innovative features
+of the TSolMod class library are:<br>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
+</p>
+<ul><li>generic and flexible model parameter setup;<br>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
+ </li><li>computationally efficient data exchange with the GEM IPM equilibrium solver;<br>
+
+ </li><li>open conceptual design that allows straightforward extension to incorporate any
+models for solution phases. </li></ul>
+<!--EndFragment-->
+
+<p></p>
+<p>In a broad sense, TSolMod library is a collection of classes (each 
+implementing one particular equation of state or activity model) derived
+ from the TSolMod base class. For brevity, this collection will further 
+be called the TSolMod library. The base class contains a set of virtual 
+member functions (virtual C++ methods) and data objects that are common 
+to all models. These are designed to call model-specific calculations at
+ different stages of the GEM IPM algorithm (Fig. 1), most importantly 
+functions that calculate increments to the thermodynamic properties of 
+chemical species, pressure-temperature corrections to model parameters, 
+activity coefficients, and bulk phase ideal and excess mixing properties
+ (Table 1). This separation of different functionality significantly 
+increases the GEMS3K code efficiency (Fig. 1), because in most cases 
+only the activity coefficients or activities need to be recalculated at 
+each iteration of GEM IPM. The correction of model parameters is only 
+done when pressure and/or temperature have been changed, and the bulk 
+phase properties are calculated after the GEM IPM algorithm has 
+converged.</p>
+<p>The data objects in the TSolMod base class, commonly available to all
+ derived classes, provide access to data arrays of composition (mole 
+fractions, molalities) and model parameters (species-related and 
+interaction parameters). In addition, they comprise thermodynamic output
+ data including fugacity and activity coefficients, and different bulk 
+phase properties such as Gibbs energy, enthalpy, entropy, Helmholtz 
+energy, heat capacity, and volume (Table 2). The bulk phase properties 
+are separated into thermodynamically distinct contributions, most 
+importantly ideal mixing, excess, and residual properties (Anderson 
+&amp; Crerar 1993, Prausnitz et al. 1997), and Darken terms for solid 
+solutions (Holland &amp; Powell 1992). The data exchange between the GEM
+ IPM algorithm and the derived classes in the TSolMod library occurs via
+ two well-defined interfaces. These are the derived class constructor, 
+which transfers all input (temperature, pressure, model parameters, 
+composition) and output (activity coefficients, phase properties) data 
+encapsulated into a single data container structure for a given phase, 
+and a specific derived class member function call that updates pressure 
+and temperature whenever these have been externally modified.</p>
+<p>Of particular importance for the versatility and extensibility of the
+ TSolMod library is the design of data arrays that contain the 
+model-specific parameters. These are separated into two data structures,
+ one containing parameters of individual end-member components (species)
+ and a second containing the interaction parameters between end-member 
+species. In addition, the site occupancy table (SOT) that contains the 
+fractions of different moieties (ions, atoms, or groups of atoms) on 
+individual crystal lattice sites is supported in the case of multi-site 
+(sublattice) solid solution phases. Interaction parameters (of different
+ types, composed of one or several coefficients to express temperature 
+and pressure dependence) can be of binary, ternary or higher order (or 
+combinations thereof). Any such interactions between different species 
+are uniquely identified by a generalized indexation scheme, which also 
+makes it possible to encode different types of interaction parameters 
+(as for example in the Pitzer aqueous electrolyte model). Zero 
+interaction parameters are default and can be skipped from input data 
+lists. The indexation scheme and the two data structures can be 
+collected and stored in phase definitions in the GEM-Selektor database, 
+or read in from the GEMS3K input file. This gives maximum flexibility to
+ the user, because the model parameters can be set up without any 
+modification of the source code, and different alternative calibrations 
+of equation of state or activity models using the same formalism can be 
+tested in a straightforward, interactive way. An example of the data 
+setup is provided in Figure 2 for the derived class TVanLaar containing 
+implementation of a nonideal ternary feldspar solid solution model.</p>
+<p><br>
+</p>
+<p>Summary of virtual methods of the TSolMod library that are available 
+in all implemented activity and equation of state models. The functions 
+are called through corresponding wrappers in the GEM IPM main algorithm 
+in a loop over all multicomponent phases (index k).<br>
+  <br>
+Method name&nbsp;&nbsp;&nbsp; GEM IPM wrapper&nbsp;&nbsp;&nbsp; Description<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+TSolMod()&nbsp;&nbsp;&nbsp; SolModCreate (k)&nbsp;&nbsp;&nbsp; Constructor<br>
+~TSolMod()&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Destructor<br>
+PureSpecies()&nbsp;&nbsp;&nbsp; SolModParPT (k) &nbsp;&nbsp;&nbsp; 
+Calculates increments to thermodynamic properties of species 
+(end-members) in solution phases such as pure fluid fugacities, Darken 
+correction terms<br>
+PTparam()&nbsp;&nbsp;&nbsp; SolModParPT (k) &nbsp;&nbsp;&nbsp; 
+Calculates pressure-temperature corrections to interaction or equation 
+of state mixing parameters, executed once before main GEM IPM<br>
+MixMod()&nbsp;&nbsp;&nbsp; SolModActCoeff (k)&nbsp;&nbsp;&nbsp; 
+Calculates activity and fugacity coefficients of species (end-members) 
+in solution phases, executed every main GEM IPM iteration<br>
+ExcessProp()&nbsp;&nbsp;&nbsp; SolModExcessProp (k)&nbsp;&nbsp;&nbsp; 
+Calculates integral excess mixing properties of solution phases 
+(enthalpy, entropy, heat capacity, volume), executed after GEM IPM has 
+converged<br>
+IdealProp()&nbsp;&nbsp;&nbsp; SolModIdealProp (k)&nbsp;&nbsp;&nbsp; 
+Calculates integral ideal mixing properties of solution phases 
+(enthalpy, entropy, heat capacity, volume), executed after GEM IPM has 
+converged<br>
+UpdatePT()&nbsp;&nbsp;&nbsp; SolModCreate (k)&nbsp;&nbsp;&nbsp; Updates 
+pressure and temperature inside TSolMod and subclasses whenever they are
+ externally modified<br>
+GetPhaseName()&nbsp;&nbsp;&nbsp; SolModCreate (k)&nbsp;&nbsp;&nbsp; 
+Transfers phase name into TSolMod and subclasses, used for supporting 
+implementation of user-defined specific mixing models for solution 
+phases<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+  <br>
+Thermodynamic data objects of the TSolMod library that are available in all implemented activity and equation of state models.<br>
+  <br>
+Data object name&nbsp;&nbsp;&nbsp; Description<br>
+&nbsp;&nbsp;&nbsp; <br>
+ModCode&nbsp;&nbsp;&nbsp; External code for identifying the activity or EoS model<br>
+MixCode&nbsp;&nbsp;&nbsp; External code for selection of EoS mixing rules<br>
+DC_Codes&nbsp;&nbsp;&nbsp; External code for selection of species (end-member) type<br>
+NComp&nbsp;&nbsp;&nbsp; Number of components in the solution phase<br>
+NPar&nbsp;&nbsp;&nbsp; Number of non-zero interaction parameters<br>
+NPcoef&nbsp;&nbsp;&nbsp; Number of coefficients per interaction parameter<br>
+MaxOrd&nbsp;&nbsp;&nbsp; Maximum order of interaction (binary, ternary etc.)<br>
+NP_DC&nbsp;&nbsp;&nbsp; Number of coefficients per species<br>
+NSub&nbsp;&nbsp;&nbsp; Number of sublattices for multisite solid-solution models<br>
+Nmoi&nbsp;&nbsp;&nbsp; Number of cations or cation groups that exchange on sublattices<br>
+aIPx&nbsp;&nbsp;&nbsp; List of indexes of non-zero interaction parameters<br>
+aIPc&nbsp;&nbsp;&nbsp; Table of interaction parameter coefficients<br>
+aIP&nbsp;&nbsp;&nbsp; Vector of interaction parameters corrected to T and P<br>
+aDCc&nbsp;&nbsp;&nbsp; Species (end-member) properties coefficients<br>
+aDC&nbsp;&nbsp;&nbsp; Table of corrected species (end-member) properties at T and P<br>
+aGEX&nbsp;&nbsp;&nbsp; Reciprocal energies, Darken terms, pure fugacities of species<br>
+aPparc&nbsp;&nbsp;&nbsp; Output partial pressures (activities, fugacities)<br>
+x&nbsp;&nbsp;&nbsp; Mole fractions of end members<br>
+lnGamma&nbsp;&nbsp;&nbsp; Activity coefficients of species (end-members)<br>
+aVol&nbsp;&nbsp;&nbsp; Molar volumes of species (end-members)<br>
+phVOL&nbsp;&nbsp;&nbsp; Phase volume (cm3/mol)<br>
+R_CONST&nbsp;&nbsp;&nbsp; Gas constant (8.31451)<br>
+Tk&nbsp;&nbsp;&nbsp; Temperature (in K)<br>
+Pbar&nbsp;&nbsp;&nbsp; Pressure (in bar)<br>
+Gex, Hex, Sex, CPex, Vex, Aex, Uex&nbsp;&nbsp;&nbsp; Molar bulk phase excess properties<br>
+Gid, Hid, Sid, CPid, Vid, Aid, Uid&nbsp;&nbsp;&nbsp; Molar bulk phase ideal mixing properties<br>
+Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq&nbsp;&nbsp;&nbsp; Molar bulk phase Darken quadratic terms<br>
+Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs&nbsp;&nbsp;&nbsp; Molar bulk phase residual functions (for gases and fluids)<br>
+&nbsp;&nbsp;&nbsp; <br>
+</p>
+<p>Overview of activity and equation of state models implemented in TSolMod library.<br>
+  <br>
+Derived class name&nbsp;&nbsp;&nbsp; Description<br>
+&nbsp;&nbsp;&nbsp; <br>
+Fluids and gases&nbsp;&nbsp;&nbsp; <br>
+TSRKcalc&nbsp;&nbsp;&nbsp; Multicomponent Soave-Redlich-Kwong cubic 
+equation of state, with Van der Waals mixing rule using constant or 
+T-dependent parameter<br>
+TPR78calc&nbsp;&nbsp;&nbsp; Multicomponent Peng-Robinson cubic equation 
+of state, with Van der Waals mixing rule using constant or T-dependent 
+parameter<br>
+TPRSVcalc&nbsp;&nbsp;&nbsp; Multicomponent Peng-Robinson-Stryjek-Vera 
+cubic equation of state, with Van der Waals mixing rule using constant 
+or T-dependent parameter<br>
+TCORKcalc&nbsp;&nbsp;&nbsp; Multicomponent compensated Redlich-Kwong 
+(CORK) hybrid cubic and virial equation of state, with Van Laar mixing 
+rule<br>
+TSTPcalc&nbsp;&nbsp;&nbsp; Multicomponent Sterner-Pitzer Helmholtz 
+energy based equation of state for high-pressure systems, with Van Laar 
+mixing rule<br>
+TCGFcalc&nbsp;&nbsp;&nbsp; Multicomponent perturbation theory based 
+Churakov-Gottschalk equation of state, with basic Van der Waals mixing 
+rule<br>
+&nbsp;&nbsp;&nbsp; <br>
+Liquid nonelectrolyte solutions&nbsp;&nbsp;&nbsp; <br>
+TWilson&nbsp;&nbsp;&nbsp; Multicomponent Wilson local composition activity model, with T-dependent non-randomness parameter<br>
+TNRTL&nbsp;&nbsp;&nbsp; Multicomponent non-random two-liquid (NRTL) 
+local composition activity model, with T-dependent non-randomness 
+parameter<br>
+&nbsp;&nbsp;&nbsp; <br>
+Solid solutions&nbsp;&nbsp;&nbsp; <br>
+TIdeal&nbsp;&nbsp;&nbsp; Multicomponent ideal mixing model for 
+fluid/gases and solid-solutions, supporting multisite ideal formalism 
+for solid-solutions<br>
+TBerman&nbsp;&nbsp;&nbsp; Multicomponent microscopic multisite model for solid-solutions<br>
+TRegular&nbsp;&nbsp;&nbsp; Multicomponent regular activity model (symmetric formalism)<br>
+TVanLaar&nbsp;&nbsp;&nbsp; Multicomponent Van Laar activity model (asymmetric formalism)<br>
+TRedlichKister&nbsp;&nbsp;&nbsp; Multicomponent 4-term Redlich-Kister activity model<br>
+TMargules&nbsp;&nbsp;&nbsp; Ternary regular Margules activity model<br>
+TSubregular&nbsp;&nbsp;&nbsp; Binary subregular Margules activity model<br>
+TGuggenheim&nbsp;&nbsp;&nbsp; Binary 3-term Redlich-Kister activity model<br>
+&nbsp;&nbsp;&nbsp; <br>
+Aqueous electrolyte solutions&nbsp;&nbsp;&nbsp; <br>
+TDebeyeHueckel&nbsp;&nbsp;&nbsp; Multicomponent two-term Debye-H&uuml;ckel model<br>
+TLimitingLaw&nbsp;&nbsp;&nbsp; Multicomponent one-term limiting law Debye-H&uuml;ckel model<br>
+THelgeson&nbsp;&nbsp;&nbsp; Multicomponent extended Debye-H&uuml;ckel 
+model with common constant or T-P-dependent extended term parameter, and
+ common ion size<br>
+TKarpov&nbsp;&nbsp;&nbsp; Multicomponent extended Debye-H&uuml;ckel 
+model with common constant or T-P-dependent extended term parameter, and
+ individual ion sizes<br>
+TShvarov&nbsp;&nbsp;&nbsp; Multicomponent extended Debye-H&uuml;ckel 
+model with common constant or T-P-dependent extended term parameter, and
+ common ion size<br>
+TDavies&nbsp;&nbsp;&nbsp; Multicomponent Davies extended Debye-H&uuml;ckel model<br>
+TSIT&nbsp;&nbsp;&nbsp; Multicomponent 2-term Specific ion interaction (SIT) model<br>
+TPitzer&nbsp;&nbsp;&nbsp; Multicomponent Pitzer (Harvie-Moller-Weare) 
+model with T-dependent binary and ternary interaction parameters<br>
+TEUNIQUAC&nbsp;&nbsp;&nbsp; Multicomponent extended UNIQUAC model with T-dependent binary interaction parameters<br>
+&nbsp;&nbsp;&nbsp; <br>
+  <br>
+  <br>
+  <br>
+</p>
+<p><br>
+</p>
+<p><br>
+</p>
+<p><br>
+</p>
+<hr size="2" width="100%">
 
 <h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_SETUP"></a>3.
 Setup and transfer of of non-ideality parameters </font></h3>

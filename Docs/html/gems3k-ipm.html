@@ -38,7 +38,7 @@
 
 </head>
 <body>
-<h1><img src="gems1.png" align="left" height="48" width="48"> <font color="#000066"> GEM-Selektor version 3<br>
+<h1><img src="gems1.png" height="48" align="left" width="48"> <font color="#000066"> GEMS3K Code for Solving for GeoChemical Equilibria<br>
 </font></h1>
 
 
@@ -55,7 +55,7 @@
 
 
 
-<h2> GEM Task Data Structure and IPM-3 Kernel Program<br>
+<h2> GEM Task Data Structure and IPM-3 Kernel Module<br>
 </h2>
 
 
@@ -78,8 +78,7 @@
 
 
 
-<p><a href="#MULTI_INTRO">1.
-The Gem Task (Multi) Data Structure</a>&nbsp; </p>
+<p><a href="#MULTI_INTRO">1. The Gem Task (Multi) Data Structure</a>&nbsp; </p>
 
 
 
@@ -87,8 +86,7 @@ The Gem Task (Multi) Data Structure</a>&nbsp; </p>
 
 
 
-<p><a href="#MULTI_GEMIPM3">2.
-The GEM Algorithm and IPM-3 Kernel Program</a></p>
+<p><a href="#MULTI_GEMIPM3">2. The GEM Algorithm and IPM-3 Kernel Module</a></p>
 
 
 
@@ -124,7 +122,8 @@ IPM Descent Procedure</a></p>
 
 
 <p style="margin-left: 40px;"><a href="#PROCEDURE_PSSC">2.4. Stage 4:
-PSSC Procedure</a></p>
+PSSC Procedure</a></p><p><a href="#GEMIPM3_CONTROLS">3.
+Numerical Settings&nbsp; to Control GEM IPM-3 Module Operation</a> </p>
 
 
 
@@ -132,95 +131,8 @@ PSSC Procedure</a></p>
 
 
 
-<p><a href="#MULTI_MWINDOW">3.
-Multi: (Details for Experts) Submodule Window</a></p>
-
-
-
-
-
-
-
-
-  
-<p style="margin-left: 40px;"><a href="#MWPAGE_1">3.1.
-Multi: Window "Gamma" Page</a></p>
-
-
-
-  
-<p style="margin-left: 40px;"><a href="#MWPAGE_2">3.2. Multi: Window "Phases"
-Page</a> </p>
-
-
-
-  
-<p style="margin-left: 40px;"><a href="#MWPAGE_3">3.3. Multi: Window "Species"
-Page</a> </p>
-
-
-
-  
-<p style="margin-left: 40px;"><a href="#MWPAGE_4">3.4. Multi: Window "Basis"
-Page</a> </p>
-
-
-
-
-
-
-
-
-<p><a href="#GEMIPM3_CONTROLS">4.
-Numerical Settings&nbsp; to Control IPM-3 Kernel Operation</a> </p>
-
-
-
-
-
-
-
-<p><a href="#GEMIPM3_ERRORS">5.
-Warnings and Error Messages</a></p>
-
-
-
-
-
-
-
-
-
-
-
-<p><a href="#TO_STANDALONE">6. Connection with Standalone GEMS3K
-Program (and Coupled Codes)</a></p>
-
-
-
-
-
-
-
-<p style="margin-left: 40px;"><a href="#TO_STANDALONE_FROM_SYSEQ">6.1.
-How to Write and
-Read GEMS3K I/O Files from Single System Dialog</a></p>
-
-
-
-
-
-
-
-<p style="margin-left: 40px;"><a href="#TO_STANDALONE_FROM_GEM2MT">6.2.
-How to Export Many Initial Systems to GEMS3K I/O Files from GEM2MT
-Module</a></p>
-
-
-
-
-
- <br>
+<p><a href="#GEMIPM3_ERRORS">4.
+Warnings and Error Messages</a></p><br>
 <hr style="width: 100%; height: 2px;"> 
 
 
@@ -239,15 +151,22 @@ Module</a></p>
 
 <p>The GEM Task ("Multi") data structure is dynamically allocated in
 computer memory and keeps all scalars and arrays containing input, work
-and output data of the GEM IPM-3 algorithm (<a href="theory_gem.html">more...</a>)
+and output data of the GEM IPM-3 algorithm
 
 used
-in calculation of an equilibrium state. Contents of the Multi
-structure can also be exported into GEMS3K input files and used in
-standalone coupled code calculations (<a href="gems_sys.html#MULTI_INTRO">more...</a>). In
-a standalone GEMS3K program, the Multi data structure is created and
+in calculation of an equilibrium state. Within the GEM-Selektor code, contents of the Multi
+structure can be exported into GEMS3K input files and then used in
+standalone coupled code calculations. In the standalone GEMS3K program, the Multi data structure is created and
 filled out by reading DCH and IPM input data files; it remains
 intact during the whole runtime of GEMS3K instance. </p>
+
+
+
+
+
+
+
+
 
 
 
@@ -259,32 +178,11 @@ intact during the whole runtime of GEMS3K instance. </p>
 kernel program, the main work data in the Multi structure accessible in
 Multi: window pages, and describes the <a href="#GEMIPM3_CONTROLS">numerical
 settings</a> that control
-the operation of the GEM IPM-3 algorithm. The output
-(equilibrium speciation etc.) data is described in detail <a href="gems_sys.html">elsewhere</a>.&nbsp;&nbsp; </p>
-
-
-
-
-
-
-
-<p>After the whole GEM IPM-3 algorithm sequence has converged, and the
-GEM-Selektor
-user has clicked
-the "Accept" button, the Multi data structure remains intact in the
-memory, whereas
-the CSD and GEM Task results will be automatically collected,
-compressed, and saved into a SysEq
-database record. In standalone GEMS3K program, the Multi data structure
-remains in memory, and the GEM Task results will be
-returned to the calling program. <br>
+the operation of the GEM IPM-3 algorithm. <br>
 <br>
 There are two main modes of operation of GEM IPM-3 kernel: the
 "automatic initial approximation" mode (AIA) and the "smart initial
-approximation mode" (SIA). The operation mode can be set in
-GEM-Selektor Single System dialog (menu "Calculate"), as well as in
-Process and GEM2MT
-wizards. In GEMS3K, it can be set before every call of GEM
+approximation mode" (SIA).  In GEMS3K, the operation mode can be set before every call of GEM
 calculation.&nbsp;</p>
 
 
@@ -341,7 +239,11 @@ Program<br>
 
 
 <p>The operation of GEM IPM-3 module proceeds in four (AIA mode) or
-three (SIA mode) main stages, as shown on the flow chart (<span style="color: rgb(204, 0, 0);">Kulik et al., 2012</span>) below.&nbsp;</p>
+three (SIA mode) main stages, as shown on the flow chart (<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">from Kulik D.A., Wagner T., Dmytrieva S.V., Kosakowski G., Hingerl
+F.F., Chudnenko K.V., Berner U. (2012): GEM-Selektor geochemical
+modeling package: Numerical kernel GEMS3K for coupled simulation codes.
+    <span style="font-style: italic;">Computational Geosciences</span>
+(in press), <a href="http://dx.doi.org/10.1007/s10596-012-9310-6" target="_blank">http://dx.doi.org/10.1007/s10596-012-9310-6</a>).</p>
 
 
 
@@ -349,16 +251,17 @@ three (SIA mode) main stages, as shown on the flow chart (<span style="color: rg
 
 
 
-<p>To start calculations, the Multi data structure must be correctly
+
+<p>To start calculations, the GEM Task data structure must be correctly
 filled out with input data (<a href="gems_bcc.html">BCC etc.</a>),
 including a feasible initial approximation (FIA) of the GEM primal
-solution.&nbsp; FIA is the speciation (amounts of Dependent Components)
+solution.&nbsp; FIA is the speciation (i.e. amounts of Dependent Components)
 that is compatible with the equilibrium phase assemblage, mass balance
-and metastability constraints and is close enough to the Gibbs energy
+and metastability constraints, and is close enough to the Gibbs energy
 minimum so that the IPM algorithm can reach it and not another (local)
 minimum in a strongly non-ideal system. If FIA is available e.g. from a
 previously computed equilibrium state in a similar system, the AIA
-procedure can be skipped and calculation proceeds in "Smart Initial
+procedure can be skipped, and calculation proceeds in "Smart Initial
 Approximation" (SIA) mode. Otherwise, the IPM-3 algorithm begins from
 the AIA procedure in the "cold-start" Automatic Initial Approximation
 (AIA) mode. &nbsp; &nbsp; </p>
@@ -431,9 +334,9 @@ ensures that no thermodynamically stable phases and species will not be
 eliminated from the final GEM result, even though their amounts were
 set to zeros after simplex LP calculation. The program goes through the
 whole primal solution approximation vector and checks each element
-against the respective <a href="#Pa_DFY_0">Pa_DFY</a> value. If the
-data element contains a value equal or greater than Pa_DFY then it
-remains unchanged; otherwise the Pa_DFY value is inserted. <br>
+against the respective <tt><a href="#Pa_DFY_0">Pa_DFY</a></tt> value. If the
+data element contains a value equal or greater than <tt>Pa_DFY</tt> then it
+remains unchanged; otherwise the <tt>Pa_DFY</tt> value is inserted. <br>
 </p>
 
 
@@ -444,7 +347,7 @@ remains unchanged; otherwise the Pa_DFY value is inserted. <br>
 
 <p>Note that this Fill-out procedure makes the mass balance precision
 worse and its improvement within the MBR procedure mandatory. Too large
-insertion constants in Pa_DFY can result in MBR algorithm failure,
+insertion constants in <tt>Pa_DFY</tt> can result in MBR algorithm failure,
 whereas some DCs can be lost upon GEM IPM descent iterations after too
 small fill-out insertions. &nbsp; <br>
 </p>
@@ -473,7 +376,7 @@ mass balance residual for <span style="font-style: italic;">i</span>-th
 IC
 does not exceed a small value <span style="font-style: italic;">b<sub>i</sub></span>*
 
-Pa_DHB.
+<tt>Pa_DHB</tt>.
 The MBR algorithm tries first to adjust larger amounts of DCs,
 if possible. MBR iterations are sensitive to several tolerances - <tt><a href="#Pa_DHB">Pa_DHB</a>,<a href="#Pa_DFY_0"> Pa_DFY</a>, <a href="#Pa_DPV_0">Pa_DPV</a></tt> - which
 also define the final precision of
@@ -497,7 +400,7 @@ results.&nbsp;</p>
 <p>After successful convergence of MBR, The Main IPM Descent procedure
 iteratively adjusts both the primal and the dual solution vectors,
 while trying to decrease the total Gibbs energy function of the system
-GX. At each iteration, first the descent-direction vector is obtained,
+<i>G</i>(<i>X</i>). At each iteration, first the descent-direction vector is obtained,
 then the optimal step length is estimated, and finally the primal
 solution approximation is corrected by adding products of descent
 direction (gradient) and step length for each DC. <br>
@@ -563,8 +466,8 @@ precision of GEM IPM calculation results. <br>
 the PSSC (Phase Selection and Speciation Cleanup) procedure that
 calculates stability
 criteria for all species and phases, and
-checks whether some phases have been lost from the x and
-Xa vectors and must be restored. If this was the case, the control will
+checks whether some phases have been lost from the <tt>x</tt> and
+<tt>Xa</tt> vectors and must be restored. If this was the case, the control will
 go back to <a href="#PROCEDURE_MBR">MBR Procedure</a>; the whole loop
 can be repeated up to up
 to five times. Behavior of the PSSC() algorithm mainly depends on the <a href="#Pa_PC"><tt>Pa_PC</tt></a> and <a href="#Pa_DF_0"><tt>Pa_DF</tt></a>
@@ -586,277 +489,6 @@ for consistency with dual solution (see <a style="font-family: monospace;" href=
 tolerances). If an inconsistency is found, it will be corrected and, if
 the correction is too strong, the control goes to <a href="#PROCEDURE_MBR">MBR Procedure</a> again.</p>
 <br>
-<hr style="width: 100%; height: 2px;">
-<h2><font face="Helvetica, Arial, sans-serif"><a name="MULTI_MWINDOW"></a>3.
-MULTI
-(Details
-for Experts) Submodule Window</font></h2>
-<p>This window can be opened in Equilibria Calculation mode from the
-Single System (SysEq) dialog, using "View" "Details for experts..."
-menu commands. The purpose of this window is to provide a detailed
-access to some Multi data in addition to the <a href="gems_sys.html#EQDEMO_MWINDOW">EqDemo window</a> and <a href="gems_sys.html#TAB_RESULTS">"Results:" tab</a>. For example, such
-access can be necessary in case of problems with calculation of
-activity coefficients, or when GEM IPM does not converge, or by
-persistent messages about inconsistent phases in the system, or to
-follow how the Multi data changes in step-by-step MBR and IPM
-calculations.</p>
-
-
-
-
-
-
-
-<p>The MULTI window contains four pages - Gamma, Phases, Species, and
-Basis - shortly summarized below.</p>
-
-
-
-
-
-
-
-<br>
-
-
-
-
-
-
-
-<hr style="width: 100%; height: 2px;">
-<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_1"></a>3.1.
-MULTI
-Window
-"Gamma" Page</font></h3>
-
-
-
-
-
-
-
-<p>This page shows a table with the list of Dependent Component names (<a href="gems_sys.html#DCnam">DCnam</a>), their charges (<a href="gems_sys.html#ez">ez</a>),&nbsp; DQF constant/pure fugacity
-values (<a href="gems_sys.html#fDQF">fDQF</a>), as well as currently
-available molar excess Gibbs energies (<a href="gems_sys.html#vEx">vEx</a>),
-internal
-(<a href="gems_sys.html#lnGam">lnGam</a>) and external (<a href="gems_sys.html#gamma">gamma</a>) activity coefficients. Note that
-vEx and lnGam values may differ significantly in the case if (strong)
-smoothing in a strongly non-ideal system because vEx shows the values
-affected by smoothing, especially at the beginning of the IPM iteration
-process. <br>
-</p>
-
-
-
-
-
-
-
-<p>Below this table, two tables <a href="gems_sys.html#qd">qd</a> and <a href="gems_sys.html#qp">qp</a> with work data cells for built-in or
-scripted models of mixing in multi-component phases appear (one row per
-phase). <br>
-</p>
-
-
-
-
-
-
-
-<p>The next table below shows phase names (PHnam2) with model codes (<a href="gems_sys.html#smod">smod</a>) and their parameter
-dimensionalities (<a href="gems_sys.html#Lsmod">Lsmod</a> and <a href="gems_sys.html#Lsmdc">Lsmdc</a>). Below, the arrays <a href="gems_sys.html#MoiSN">MoiSN</a>, <a href="gems_sys.html#SitFr">SitFr</a>,
-<a href="gems_sys.html#dmc">dmc</a>, <a href="gems_sys.html#IPxPM">IPxPM,</a>
-and <a href="gems_sys.html#pmc">pmc</a> appear that contain all data
-necessary for models of mixing in multi-component phases, arranged
-according to dimensionalities in Lsmod and Lsmdc. <br>
-</p>
-
-
-
-
-
-
-
- <br>
-
-
-
-
-
-
-
-
-<hr style="width: 100%; height: 2px;">
-<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_2"></a>3.2.
-</font><font face="Helvetica, Arial, sans-serif">MULTI Window "Phases"
-Page</font></h3>
-
-
-
-
-
-
-
-<p>This page shows details and some intermediate and output properties
-of multi-component phases. The first two tables (<a href="gems_sys.html#denW">denW</a> and <a href="gems_sys.html#epsW">epsW</a>)
-contain
-density and dielectric constants (and their derivatives) of H<sub>2</sub>O
-at
-T,P of interest, if the aqueous phase is included in the GEM task. <br>
-</p>
-
-
-
-
-
-
-
-<p>Next, the table shows the list of phase names <a href="gems_sys.html#PHnam">PHnam</a>, the numbers of DCs in each phase
-<a href="gems_sys.html#L1">L1</a>, the amounts of phases <a href="gems_sys.html#Xa">Xa</a>, amounts of solvent/sorbent in
-asymmetric phases <a href="gems_sys.html#Xwa">Xwa</a>, specific
-surface areas of phases <a href="gems_sys.html#Aalp">Aalp</a>, and
-specific (surface) energy increments <a href="gems_sys.html#Yof">Yof</a>.&nbsp;
-To
-the right of this table, an optional table with sorption model
-parameters for phases is shown (<span style="color: rgb(204, 0, 0);">under
-construction</span>).</p>
-
-
-
-
-
-
-
-<p>The remaining five tables below, VPh, GPh, HPh, SPh, CPh, show
-integral properties of multi-component phases (<span style="color: rgb(204, 0, 0);">under construction</span>). These
-properties are important in highly non-ideal systems for calculation of
-the respective integral properties of the whole system, Vx, GX, Hx, Sx,
-Cpx.<br>
-</p>
-
-
-
-
-
-
-
-<br>
-
-
-
-
-
-
-
-<hr style="width: 100%; height: 2px;">
-<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_3"></a>3.3.
-</font><font face="Helvetica, Arial, sans-serif">MULTI Window "Species"
-Page</font></h3>
-
-
-
-
-
-
-
-<p>This page shows the list <a href="gems_sys.html#DCnam">DCnam</a> of
-Dependent Component (DCs) names included in this GEM task. To the left (<a href="gems_sys.html#muj">muj</a>) , the indexes of DCs in the project
-basis system can be seen. To the right, the primal solution (<a href="gems_sys.html#x">x</a>), its initial approximation (<a href="gems_sys.html#y">y</a>), and DC amounts restored using the dual
-solution (<a href="gems_sys.html#XU">XU</a>) can be seen, followed by
-lower- and upper metastability constraints (<a href="gems_sys.html#dll">dll</a>,
-<a href="gems_sys.html#dul">dul</a>). &nbsp; <br>
-</p>
-
-
-
-
-
-
-
-<p>Next table (below) provides (in normalized scale, at T,P of
-interest): the standard Gibbs energy functions of DCs (<a href="gems_sys.html#g0">g0</a>);&nbsp; the sum of g0, smoothed excess <a href="gems_sys.html#vEx">vEx</a>, and <a href="gems_sys.html#gDQF">gDQF</a>
-terms of primal chemical potentials (<a href="gems_sys.html#c">c</a>);&nbsp;
-the
-primal (<a href="gems_sys.html#v">v</a>) and dual (<a href="gems_sys.html#fx">fx</a>) chemical potentials of DCs, as well as
-the IPM direction of descent vector (<a href="gems_sys.html#mu">mu</a>)
-and DC weight multipliers (<a href="gems_sys.html#W">W</a>). This
-information is important to observe especially in the stepwise mode of
-GEM IPM calculations. <br>
-</p>
-
-
-
-
-
-
-
-<br>
-
-
-
-
-
-
-
-<hr style="width: 100%; height: 2px;">
-<h3><font face="Helvetica, Arial, sans-serif"><a name="MWPAGE_4"></a>3.4.
-</font><font face="Helvetica, Arial, sans-serif">MULTI Window "Basis"
-Page</font></h3>
-
-
-
-
-
-
-
-<p>This page consists of two tables. The upper table presents some data
-for Independent Components: their names and types (<a href="gems_sys.html#ICnam">ICnam</a>), atomic/molar masses (<a href="gems_sys.html#icM">icM</a>), the input bulk composition of the
-system (<a href="gems_sys.html#b">b</a>), the mass balance deviations.
-Three columns that follow (<a href="gems_sys.html#u">u</a>, <a href="gems_sys.html#uc">uc</a>[0], uc[1]) represent the dual solution
-values (Lagrange multipliers) from this and two earlier IPM iterations.
-The <a href="gems_sys.html#uefd">uefd</a> column contains Lagrange
-multipliers for the Mass Balance Refinement (MBR) task.</p>
-
-
-
-
-
-
-
-<p>The lower table begins with coefficients of the stoichiometry matrix
-<a href="gems_sys.html#A">A</a> (rows for DCs/species, columns for
-ICs), followed by the DC names list (<a href="gems_sys.html#DCnam">DCnam</a>),
-the
-primal GEM solution vector (<a href="gems_sys.html#x">x</a>), the
-standard Gibbs energy functions of DCs (<a href="gems_sys.html#g0">g0</a>),
-as
-well as molar masses of DCs (<a href="gems_sys.html#mmDC">mmDC</a>)
-and molar volumes of DCs (<a href="gems_sys.html#vol">vol</a>). <br>
-</p>
-
-
-
-
-
-
-
-<p>Taken together, these two tables represent most of the GEM Task
-setup input and relevant output data. The A table can be used for
-checking DC stoichiometries, as well as mass balance (together with the
-x vector). The three consecutive approximations of the dual solution u
-(upper table) can be useful to see where the dual solution diverges in
-the case of warnings, and how chemical potential approximations for ICs
-change between IPM iterations.&nbsp; <br>
-</p>
-
-
-
-
-
-
-
-<br>
 
 
 
@@ -865,8 +497,8 @@ change between IPM iterations.&nbsp; <br>
 
 
 <hr size="2" width="100%">
-<h2><a name="GEMIPM3_CONTROLS"></a>4. Numerical Settings to Control GEM
-IPM-3 Kernel
+<h2><a name="GEMIPM3_CONTROLS"></a>3. Numerical Settings to Control GEM
+IPM-3 Module
 Operation</h2>
 
 
@@ -876,16 +508,10 @@ Operation</h2>
 
 
 <p> The data objects listed below control the operation of GEM
-IPM-3 kernel program. They are saved in the modelling
-project database record and can be changed any time in the "Equilibria
-Calculation" mode upon opening the Project window and editing its <a href="gm_project.html#MWPAGE_2">"Controls" page</a>.&nbsp; If you
-will&nbsp;
-change any field there, but not save the Project record, then your
-changes will apply only until the project session is closed; after
-that, the changes
-will be lost. To make the changes persistent, save the Project
-record to database by clicking on the "Save" toolbar button (or
-"Record" "Save" menu command). <br>
+IPM-3 kernel program. For the GEMS3K standalone code, these settings can
+ be changed in the IPM input file. Such a file is usually exported from a
+ chemical system definition created within the modeling project in the 
+GEM-Selektor package.&nbsp; <br>
 </p>
 
 
@@ -894,12 +520,12 @@ record to database by clicking on the "Save" toolbar button (or
 
 
 
-<p>For the standalone GEMS3K program, the numerical settings are
-exported as part of the IPM
-input file and can be edited there, if necessary. They remain valid
-for the whole duration of GEMS3K instance in computer memory. Only
-numerical settings that differ from defaults may be exported to IPM
-file (<span style="color: rgb(204, 0, 0);">more ...</span>). <br>
+<p>For the standalone GEMS3K program, the numerical settings read from 
+the IPM
+input file remain valid
+for the whole duration of the GEMS3K instance in computer memory. If 
+some entries are not present in the IPM file, they will be set to 
+default values. <br>
 </p>
 
 
@@ -909,7 +535,7 @@ file (<span style="color: rgb(204, 0, 0);">more ...</span>). <br>
 
 
 <p>Note that usually, there is no need to change default numerical
-settings. The default values below
+settings. The default values given below
 correspond to aqueous systems of 1000 total moles
 of independent components in the internal Multi <span style="font-style: italic;">b</span> vector; re-scaling from-to actual
 BCC occurs automatically within the IPM-3 kernel program. Ad-hoc
@@ -2652,32 +2278,7 @@ code is used from the mass transport modeling algorithm. </p>
 
 <tt>
 </tt>
-<hr size="2" width="100%"><tt><br>
-</tt>
-<h2><a name="TO_STANDALONE"></a>6. Connection with Standalone GEMS3K
-Program (and Coupled Codes)<br>
-</h2>
-
-
-
-
-
-
-
-<p>&lt;under construction&gt;</p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span></p>
-
-
-
-
-
-
-
-<h3><a name="TO_STANDALONE_FROM_SYSEQ"></a><a name="WRITEIPMFILES"></a>6.1.
-How
-to Write and Read GEMS3K I/O Files
-From Single System Dialog</h3>
+<hr size="2" width="100%"><tt>end of file</tt> <br>
 
 
 
@@ -2693,40 +2294,7 @@ From Single System Dialog</h3>
 
 
 
-&lt;under construction&gt;<br>
-
-<h3><tt><a name="TO_STANDALONE_FROM_GEM2MT"></a></tt>6.2. How to Export
-Many Initial Systems to GEMS3K I/O Files from GEM2MT Module</h3>
-
-
-
-
-
-
-
-&lt;under construction&gt;<br>
-<tt>
-&nbsp;
-</tt> <tt><br>
-</tt>
-<hr style="width: 100%; height: 2px;"><tt><br>
-end of file</tt> <br>
-
-
-
-
-
-
-
-<br>
-
-
-
-
-
-
-
-Last change: DK, March 28, 2012<br>
+Last change: 26.09.2012&nbsp; DK<br>
 
 
 
