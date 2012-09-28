@@ -2540,7 +2540,7 @@ void TEUNIQUAC::Euniquac_test_out( const char *path )
 
 
 
-
+/*
 //=============================================================================================
 // ELVIS activity model for aqueous electrolyte solutions
 // (c) FFH Aug 2010
@@ -2989,7 +2989,7 @@ cout<<" in TELVIS::PTparam()"<<endl;
 			alp = aIPc[NPcoef*ip+4];	// for Pitzer term
 			alpha[i1][i2]   = alp; 
 			alpha[i2][i1]   = alp; 
-*/
+* /
 
 			ra_ = aIPc[NPcoef*ip+4];	// for UNIQUAC term
 			RA[i1][i2]   = ra_; 
@@ -3020,7 +3020,7 @@ cout<<" in TELVIS::PTparam()"<<endl;
 			d2udt2 = aIPc[NPcoef*ip+4] + aIPc[NPcoef*ip+6]*Tk + aIPc[NPcoef*ip+7]*Pbar;
 			d2UdT2[i1][i2] 	    = d2udt2;
 			d2UdT2[i2][i1] 	    = d2udt2;
-*/
+* /
 			// !!!!!!!  For single T-P point fitting !!!!!!! :
 			dudp   = aIPc[NPcoef*ip+1];
 			dUdP[i1][i2] 	    = dudp;
@@ -3106,7 +3106,7 @@ cout<<" in TELVIS::PTparam()"<<endl;
 
 	}	
 	
-*/
+* /
 // ------------------------------------------------------------------------------------- //
 
 	// Debye-Huckel Term functions
@@ -3167,7 +3167,7 @@ long int TELVIS::MixMod()
 
 /*	// compute osmotic coefficient of solvent
         osmcoeff = Int_OsmCoeff();
-*/
+* /
         // compute activity coefficients of solute species
         CalcAct();
 
@@ -3183,12 +3183,12 @@ long int TELVIS::MixMod()
         }
 
         lnGamma[NComp-1] = osmcoeff * msum / 55.508435061791985;
-*/
+* /
 /*        for (j=0; j<(NComp-1); j++)
         {
                  cout<<"lnGamma[j] = "<<lnGamma[j]<<endl;
         }
-*/
+* /
 		// Penalty function
 		/*if( R[0]<1e-10 || R[0]>100 || Q[0]<1e-10 || Q[0]>100 )
 		{
@@ -3198,7 +3198,7 @@ long int TELVIS::MixMod()
         lnGamma[2] = 0.0;
         lnGamma[3] = 0.0;
         lnGamma[4] = 0.0;
-		*/
+        * /
 return 0;
 }
 
@@ -3259,14 +3259,14 @@ long int TELVIS::CalcAct()
         my_gemactcoef.width(fieldwidth);
         my_gemactcoef.precision(12);
         my_gemactcoef 	<< right << setw(fieldwidth) << "lnGamma"   << right << setw(fieldwidth) << "gammaDH" \
-                       /* << right << setw(fieldwidth) << "gammaBorn"*/ << right << setw(fieldwidth) << "gammaQUAC" \
+                       /* << right << setw(fieldwidth) << "gammaBorn"* / << right << setw(fieldwidth) << "gammaQUAC" \
                         << right << setw(fieldwidth) << "gammaC"    << right << setw(fieldwidth) << "gammaR" \
                         << right << setw(fieldwidth) << "m[0]" << right << setw(fieldwidth) << "m[1]" \
                         << endl;
         for(int i=0; i<(NComp-1); i++ )
         {
            my_gemactcoef << right << setw(fieldwidth) << lnGamma[i] 	 << right << setw(fieldwidth) << gammaDH[i] \
-                         /*<< right << setw(fieldwidth) << gammaBorn[i]*/ << right << setw(fieldwidth) << gammaQUAC[i] \
+                         /*<< right << setw(fieldwidth) << gammaBorn[i]* / << right << setw(fieldwidth) << gammaQUAC[i] \
                          << right << setw(fieldwidth) << gammaC[i] 	 << right << setw(fieldwidth) << gammaR[i] \
                          << right << setw(fieldwidth) << m[0]         << right << setw(fieldwidth) << m[1] \
                          << endl;
@@ -3413,7 +3413,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
 		vector<double> spec_frac((NComp-1),0);
 
 		CN = 5.;		
-/*
+/ *
 		for( i=0;i<(NComp-1);i++ )
 		{
 			if( z[i] != 0 )
@@ -3432,7 +3432,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
 				CN += (spec_frac[i]*spec_frac[j]) * coord[i][j];
 			}
 		}
-*/
+* /
 // -------------------------------- COORDINATION NUMBER --------------------------------------------- //
 
 
@@ -3465,7 +3465,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
                         {
 /*								if( R[j]<1e-10 || Q[j]<1e-10 )
 								{
-  */                               //if( Phi[j]<0.0 || x[j]<=0.0 || R[j]<0.0 || (Phi[j]/Theta[j])<0.0 || (R[j]*Q[w]/(R[w]*Q[j]))<0.0 || K<0.0 || Psi[w][j]<0.0 ){
+  * /                               //if( Phi[j]<0.0 || x[j]<=0.0 || R[j]<0.0 || (Phi[j]/Theta[j])<0.0 || (R[j]*Q[w]/(R[w]*Q[j]))<0.0 || K<0.0 || Psi[w][j]<0.0 ){
                                  //       cout<<"Phi["<<j<<"] = "<<Phi[j]<<", x["<<j<<"] = "<<x[j]<<", Theta["<<j<<"] = "<<Theta[j]<<endl;
                                  //       cout<<"R["<<j<<"] = "<<R[j]<<", Q["<<j<<"] = "<<Q[j]<<", Q["<<w<<"] = "<<Q[w]<<", R["<<w<<"] = "<<R[w]<<endl;
                                  //       cout<<"K = "<<K<<", Psi["<<w<<"]["<<j<<"] = "<<Psi[w][j]<<endl;
@@ -3474,7 +3474,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
                                     throw DivideByZero_or_NegativeLogarithm;
 								}
 								if( Psi[w][j]<1e-20 ){ Psi[w][j] = 1e-20; }
-*/
+* /
 
                                 gamC = log(Phi[j]/x[j]) - Phi[j]/x[j] - log(R[j]/R[w]) + R[j]/R[w]
                                        //         - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) - Phi[j]/Theta[j]
@@ -3631,7 +3631,7 @@ cout << "ExcessProp() Rhow[0] = " << RhoW[0] << endl;
 cout << "ExcessProp() Rhow[1] = " << RhoW[1] << endl;
 cout << "ExcessProp() Rhow[2] = " << RhoW[2] << endl;
 cout << "ExcessProp() Rhow[3] = " << RhoW[3] << endl;
-*/
+* /
 
 	// Debye Huckel term
 	DHTg = - Xw * Mw * 4 * A / ( aDH*aDH*aDH*B*B*B ) * ( log(1 + aDH*B*SRI ) - aDH*B*SRI + aDH*aDH*B*B*IS/2 ) ;			
@@ -3658,14 +3658,14 @@ cout << "ExcessProp() Rhow[3] = " << RhoW[3] << endl;
 	}
 	Gex = ( DHTg + CTg - RTg ) * R_CONST * Tk; 
 
-	Vex = DHTv /*+ CTv + RTv*/;
+    Vex = DHTv /*+ CTv + RTv* /;
 
 cout << "Vex = " << Vex << endl;
 
 /*	
 cout << "Gex = " << Gex << endl;
 cout << "Vex = " << Vex << endl;
-*/
+* /
 
     // increment thermodynamic properties
     //Gex = ( gDH + gRX + gCX - gRI - gCI ) * R_CONST * Tk;
@@ -3772,9 +3772,8 @@ void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
 				part2 += 2 * m[j] * ( beta0[i][j] * beta1[i][j] * 2*(1-(1+x)*exp(-x))/(x*x) );
 			}
 		}
-		ELVIS_lnGam_Born[ i ] = z[i] * z[i] * part1 + part2;
-	}
-*/
+		ELVIS_lnGam_Born[ i ] = z[i] * z[i] * part1 + part2;	}
+* /
 
 		// species fractions:
 		double spec_sum=0.;
@@ -3888,7 +3887,7 @@ void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
         delete[] spec_frac;
         delete[] omega;
         delete[] omega1;
-}*/
+}* /
 
 
 
@@ -3946,7 +3945,7 @@ cout<<"m["<<j<<"] = "<<m[j]<<endl;
 cout<<"m["<<j<<"] = "<<m[j]<<endl;
         CalcAct();
         DactDm = (lnGamma[j]-act_low)/(2*h);
-*/
+* /
         // Forward Finite Difference
         double gam_1,gam_2,gam_3;
 //cout<<"FD base 	m["<<j<<"] = "<<m[j]<<endl;
@@ -4187,7 +4186,7 @@ void TELVIS::TELVIS_test_out( const char *path, const double M ) const
         ff.close();
 }
 
-
+*/
 
 
 

@@ -24,7 +24,7 @@
 #include <cstring>
 #include <vector>
 #include <iostream>
-#include "boost/multi_array.hpp"
+//#include "boost/multi_array.hpp"
 
 
 
@@ -1426,6 +1426,7 @@ class TEUNIQUAC: public TSolMod
 };
 
 
+/*
 // -------------------------------------------------------------------------------------
 // ELVIS activity model for aqueous electrolyte solutions
 // (c) FFH Aug 2011
@@ -1442,7 +1443,8 @@ class TELVIS: public TSolMod
                 double A, dAdT, d2AdT2, dAdP;  			// A term of DH equation (and derivatives)
                 double B, dBdT, d2BdT2, dBdP;  			// B term of DH equation (and derivatives)
 
-				typedef boost::multi_array<double, 2> array_2D_double;
+//				typedef boost::multi_array<double, 2> array_2D_double;
+                typedef multi_array<double, 2> array_2D_double;
 				array_2D_double::extent_gen extents;
   				typedef array_2D_double::index index2D;
 				array_2D_double beta0;			// second virial coefficient contributions
@@ -1597,7 +1599,7 @@ class TELVIS: public TSolMod
                 double FinDiffVol( double m_j, int j ); 					// Finite differences of mean lnGam with respect to pressure
 
 };
-
+*/
 
 
 // -------------------------------------------------------------------------------------

@@ -881,14 +881,14 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
                 mySM = (TSolMod*)myPT;
                 break;
         }
-
+/*
         case SM_AQELVIS:  // ELVIS aqueous electrolyte model (multicomponent)
         {
                 TELVIS* myPT = new TELVIS( &sd, aM, aZ, pm.denW, pm.epsW );
 		mySM = (TSolMod*)myPT;
                 break;
         }
-
+*/
         case SM_AQDH3:  // extended Debye-Hueckel aqueous electrolyte model (Karpov version)
         {
                 TKarpov* myPT = new TKarpov( &sd, aM, aZ, pm.denW, pm.epsW );
