@@ -1,22 +1,29 @@
 //-------------------------------------------------------------------
 // $Id: ms_multi.h 675 2012-05-18 12:02:51Z dmitrieva $
 //
-// Declaration of TMulti class, configuration, and related functions
+// Stub declaration of enhanced TMulti class, configuration, and 
+// for new phases, TSorpMod and TKinMet implementation functions
 // based on the IPM work data structure MULTI that represents chemical
-// thermodynamic multisystem work data for GEM IPM-2 algorithm
+// thermodynamic multisystem work data for GEM IPM-3 algorithm
 //
-// Rewritten from C to C++ by S.Dmytriyeva
-// Copyright (C) 1995,2008 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2012 S.Dmytriyeva, D.Kulik, T.Wagner
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization and of the
-// standalone GEMS3K code (define IPMGEMPLUGIN).
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
 #ifndef _ms_multi_h_

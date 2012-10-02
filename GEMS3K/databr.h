@@ -1,16 +1,15 @@
 //-------------------------------------------------------------------
 // $Id$
+/// \file databr.h
+/// Contains definition of the DATABR structure - data bridge between
+/// GEMS3K and another code.
 //
 /// \struct DATABR databr.h
 /// DataBRidge defines the structure of node-dependent data for
 /// exchange between the coupled GEM IPM and FMT code parts.
-/// Requires DATACH.H header and data structure.
-/// DATABR is used in TNode and TNodeArray classes.
+/// DATABR structure is used in TNode and TNodeArray classes.
 //
-//      CH: chemical structure in GEM IPM
-//      FMT: fluid mass transport
-//
-// Copyright (c) 2003,2009 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
+// Copyright (c) 2003-2011 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling

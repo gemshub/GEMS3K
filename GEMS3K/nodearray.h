@@ -1,11 +1,13 @@
 //-------------------------------------------------------------------
 // $Id$
+/// \file nodearray.h
+/// Contains declaration of TNodeArray class implementing an advanced
+/// interface for development of coupled codes involving GEMS3K.
 //
 /// \class TNodeArray nodearray.h
-/// Implements an advanced (level 2) C/C++ interface with
-/// GEM IPM for development of coupled and GEM-FMT codes
-/// Works with DATACH and work DATABR structures
-/// Uses the TNode class
+/// Implements an advanced (level 2) C/C++ interface with GEMS3K for the
+/// development of coupled reactive transport codes.
+/// Works with DATACH and an array of DATABR structures; uses TNode class
 //
 // Copyright (C) 2006-2012 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>

@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id$
-/// \class TError verror.h
-/// Error handling: classes TError and TFatalError
+/// \file verror.h
+/// Declarations of classes TError and TFatalError for error handling.
 //
 // Copyright (C) 1996-2012 A.Rysin, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>

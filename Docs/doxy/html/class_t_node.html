@@ -112,7 +112,7 @@ Inheritance diagram for TNode:</div>
  <div class="center">
   <img src="class_t_node.png" usemap="#TNode_map" alt=""/>
   <map id="TNode_map" name="TNode_map">
-<area href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT ..." alt="TNodeArray" shape="rect" coords="0,56,82,80"/>
+<area href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ..." alt="TNodeArray" shape="rect" coords="0,56,82,80"/>
 </map>
  </div></div>
 
@@ -324,7 +324,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a36d5436804f2ecfbe4f7d509c6711be1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current (dual-thermodynamic) activity of DC directly from GEM IPM work structure.  <a href="#a36d5436804f2ecfbe4f7d509c6711be1"></a><br/></td></tr>
 <tr class="memitem:ae5208dd72252a8ab48f7611aaba912a5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5208dd72252a8ab48f7611aaba912a5"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ae5208dd72252a8ab48f7611aaba912a5">Get_IPc_IPx_DCc_indices</a> (long &amp;index_phase_aIPx, long &amp;index_phase_aIPc, long &amp;index_phase_aDCc, const long &amp;index_phase)</td></tr>
-<tr class="memdesc:ae5208dd72252a8ab48f7611aaba912a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functions for retrieveing and setting values needed for activity coefficient calculation by <a class="el" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a> class Sets values of LsMod and LsMdc array. <br/></td></tr>
+<tr class="memdesc:ae5208dd72252a8ab48f7611aaba912a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functions for retrieveing and setting values needed for activity coefficient calculation by <a class="el" href="class_t_sol_mod.html">TSolMod</a> class Sets values of LsMod and LsMdc array. <br/></td></tr>
 <tr class="memitem:af3cb56042ce412805120f55cb863d47e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3cb56042ce412805120f55cb863d47e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_NPar_NPcoef_MaxOrd_NComp_NP_DC</b> (long &amp;NPar, long &amp;NPcoef, long &amp;MaxOrd, long &amp;NComp, long &amp;NP_DC, const long &amp;index_phase)</td></tr>
 <tr class="memitem:abb3b1e78cd50a9fc6fa890df07993e93"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb3b1e78cd50a9fc6fa890df07993e93"></a>
@@ -414,7 +414,7 @@ virtual long int&#160;</td><td class="memItemRight" valign="bottom"><b>nNodes</b
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a77c784ef975db01b79dabea4c16b915b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77c784ef975db01b79dabea4c16b915b"></a>
 <a class="el" href="struct_m_u_l_t_i.html">MULTI</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b">pmm</a></td></tr>
-<tr class="memdesc:a77c784ef975db01b79dabea4c16b915b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to GEM IPM work data structure (<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a>) <br/></td></tr>
+<tr class="memdesc:a77c784ef975db01b79dabea4c16b915b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to GEM IPM work data structure (<a class="el" href="ms__multi_8h.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">ms_multi.h</a>) <br/></td></tr>
 <tr class="memitem:a58ec1b37f5453673e11bc5a6023c97e6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58ec1b37f5453673e11bc5a6023c97e6"></a>
 <a class="el" href="class_t_multi.html">TMulti</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>multi</b></td></tr>
 <tr class="memitem:ae6e7fab96367176ec59da221ac92c5a9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6e7fab96367176ec59da221ac92c5a9"></a>
@@ -1776,7 +1776,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">ipmfiles_lst_name</td><td>pointer to a null-terminated C string with a path to a text file containing the list of names of GEMS3K input files. Example: file "test.lst" with a content: -t "dch.dat" "ipm.dat" "dbr-0.dat" (-t tells that input files are in text format) </td></tr>
-    <tr><td class="paramname">nodeTypes</td><td>optional parameter used only on the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT ...">TNodeArray</a>, the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution list nodeTypes </td></tr>
+    <tr><td class="paramname">nodeTypes</td><td>optional parameter used only on the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a>, the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution list nodeTypes </td></tr>
     <tr><td class="paramname">getNodT1</td><td>optional parameter used only when reading multiple DBR files after modeling task interruption in GEM-Selektor </td></tr>
   </table>
   </dd>
@@ -2915,7 +2915,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 2 2012 16:15:11 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Oct 2 2012 17:22:44 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

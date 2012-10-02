@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-/// \class TMulti ms_multi.h
+/// \file ms_multi.h
 /// Declaration of TMulti class, configuration, and related functions
 /// based on the IPM work data structure MULTI
 //

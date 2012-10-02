@@ -34,7 +34,7 @@ var searchData=
   ['getnodelocation',['GetNodeLocation',['../class_t_node_array.html#ac00435dc0fa73af7fb6fe8b8e3322835',1,'TNodeArray']]],
   ['getnodemass',['GetNodeMass',['../class_t_node_array.html#a1a5d540ab240ab2b1bcacac9b93518f5',1,'TNodeArray']]],
   ['getnodesizes',['GetNodeSizes',['../class_t_node_array.html#a8a0ab738ad596c13f40d6d5ab3c2550a',1,'TNodeArray']]],
-  ['getnpoints',['getNpoints',['../num__methods_8cpp.html#a328dfa0c299ffa4b68d8264a2269d528',1,'num_methods.cpp']]],
+  ['getnpoints',['getNpoints',['../num__methods_8cpp.html#a328dfa0c299ffa4b68d8264a2269d528',1,'getNpoints(double Tai[4]):&#160;num_methods.cpp'],['../num__methods_8h.html#a328dfa0c299ffa4b68d8264a2269d528',1,'getNpoints(double Tai[4]):&#160;num_methods.cpp']]],
   ['getphasename',['GetPhaseName',['../class_t_sol_mod.html#a7b93cd821e119dfcb3c7f140445416f9',1,'TSolMod']]],
   ['getsize',['GetSize',['../class_t_node_array.html#a3f7bdddb853d11f9521403a7b574595d',1,'TNodeArray']]],
   ['getxvolume',['getXvolume',['../class_t_multi.html#ac07143c37681b84f8ecbb3a0a3461877',1,'TMulti']]],

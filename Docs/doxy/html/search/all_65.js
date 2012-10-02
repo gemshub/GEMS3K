@@ -12,6 +12,8 @@ var searchData=
   ['epsh2ow',['EpsH2Ow',['../class_t_node.html#ac52e8e98b3dee1af3f63b348eacedb08',1,'TNode']]],
   ['epsw',['epsW',['../struct_d_a_t_a_c_h.html#a654fd046fc132f6d243981d9f2ceeddc',1,'DATACH::epsW()'],['../struct_m_u_l_t_i.html#aa79fa3910aac3d05893683f1fce00c34',1,'MULTI::epsW()']]],
   ['epswg',['epsWg',['../struct_d_a_t_a_c_h.html#a4fa533adbdf259ef7df5cdb80ee38fde',1,'DATACH::epsWg()'],['../struct_m_u_l_t_i.html#a7f5d7f947830d823c14eab3d9711c6de',1,'MULTI::epsWg()']]],
+  ['err_5fgem_5faia',['ERR_GEM_AIA',['../databr_8h.html#a4308de97b3b11a66f3963f4e7b528eb2a3d522a003f3ea44c09cf4765ebbf31fb',1,'databr.h']]],
+  ['err_5fgem_5fsia',['ERR_GEM_SIA',['../databr_8h.html#a4308de97b3b11a66f3963f4e7b528eb2a584bd1246f58befa5bc025514d1a24f6',1,'databr.h']]],
   ['errorbuf',['errorBuf',['../struct_m_u_l_t_i.html#a3054564b562df4c9b4073f457c9a2153',1,'MULTI']]],
   ['errorcode',['errorCode',['../struct_m_u_l_t_i.html#a81f098af8e52fab56063dbc791975c20',1,'MULTI']]],
   ['euniquac_5ftest_5fout',['Euniquac_test_out',['../class_t_e_u_n_i_q_u_a_c.html#ae8af7bd1a5f723c310ab3e01674bc053',1,'TEUNIQUAC']]],

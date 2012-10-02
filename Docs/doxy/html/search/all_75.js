@@ -15,6 +15,7 @@ var searchData=
   ['uex',['Uex',['../class_t_sol_mod.html#a84ff3d68cf1046681115e74b53e9046a',1,'TSolMod']]],
   ['uic',['uIC',['../struct_d_a_t_a_b_r.html#aecdcb29342052587ff39cc3a9ad8cc72',1,'DATABR']]],
   ['uid',['Uid',['../class_t_sol_mod.html#a81f7e865b911b1e5ad7ed97ddb767a88',1,'TSolMod']]],
+  ['undefi',['undefi',['../databr_8h.html#ae05d72f7c3e53b9934c86c90728ea051a0ce90fef9549e05b68f984a53644a174',1,'databr.h']]],
   ['unpackdatabr',['unpackDataBr',['../class_t_node.html#a090a174a1dec22e2cffd1446a756ea08',1,'TNode']]],
   ['updatept',['UpdatePT',['../class_t_sol_mod.html#a29afe82cad5ac9e2f2fb71bad192520c',1,'TSolMod']]],
   ['uph',['UPh',['../struct_m_u_l_t_i.html#a79e40226f7f008015f5304dd995d1ef2',1,'MULTI']]],

@@ -1,7 +1,8 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-/// \file Declarations of C/C++ Numerical Methods used in GEMS3K code
+/// \file num_methods.h
+/// Declarations of C/C++ Numerical Methods used in GEMS3K code.
 //
 // Copyright (C) 2006-2012 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>

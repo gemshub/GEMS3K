@@ -1,20 +1,27 @@
 //-------------------------------------------------------------------
 // $Id: s_fgl.h 675 2012-05-18 12:02:51Z dmitrieva $
 //
-// Copyright (C) 2003-2011  T.Wagner, D.Kulik, S.Dmitrieva, S.Churakov
-//
-// Declaration of new versions of fluid, liquid, aquous
+// Stub declaration of new versions of fluid, liquid, aquous
 // and solid-solution models
 //
-// This file is part of a GEM-Selektor (GEMS) v.3.1.x program
-// environment for thermodynamic modeling in geochemistry
-// and part of the standalone GEMS3K code
+// Copyright (c) 2012  D.Kulik, T.Wagner, F.Hingerl, S.Dmitrieva, S.Churakov
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //------------------------------------------------------------------
 //
 

@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id$
-//
-/// Service functions for writing/reading arrays in files
+/// \file io_arrays.h
+/// Various service functions for writing/reading arrays in files
 //
 // Copyright (C) 2006-2012 S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>

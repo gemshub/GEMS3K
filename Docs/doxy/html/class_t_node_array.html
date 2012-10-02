@@ -103,7 +103,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT codes Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures Uses the <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class.  
+<p>Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive transport codes.  
  <a href="class_t_node_array.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="nodearray_8h_source.html">nodearray.h</a>&gt;</code></p>
@@ -279,13 +279,14 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a80553fe992968b02485e959f902b360b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array of grid point locations, size is anNodes. <br/></td></tr>
 <tr class="memitem:a5b9b0f68cc27731e880afc7028079198"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5b9b0f68cc27731e880afc7028079198"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#a5b9b0f68cc27731e880afc7028079198">tcNode</a></td></tr>
-<tr class="memdesc:a5b9b0f68cc27731e880afc7028079198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Node type codes (see <a class="el" href="databr_8h_source.html">databr.h</a>), size anNodes. <br/></td></tr>
+<tr class="memdesc:a5b9b0f68cc27731e880afc7028079198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Node type codes (see <a class="el" href="databr_8h.html" title="Contains definition of the DATABR structure - data bridge between GEMS3K and another code...">databr.h</a>), size anNodes. <br/></td></tr>
 <tr class="memitem:aed745861d8cfedc874e4c0c3844edc15"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed745861d8cfedc874e4c0c3844edc15"></a>
 bool *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#aed745861d8cfedc874e4c0c3844edc15">iaNode</a></td></tr>
 <tr class="memdesc:aed745861d8cfedc874e4c0c3844edc15"><td class="mdescLeft">&#160;</td><td class="mdescRight">GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_SIA) <br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT codes Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures Uses the <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class. </p>
+<div class="textblock"><p>Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive transport codes. </p>
+<p>Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and an array of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures; uses <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class </p>
 </div><hr/><h2>Member Function Documentation</h2>
 <a class="anchor" id="aaf2854c6b4b9ca1fe9197527331db892"></a>
 <div class="memitem">
@@ -423,7 +424,7 @@ bool *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 2 2012 16:15:11 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Oct 2 2012 17:22:44 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

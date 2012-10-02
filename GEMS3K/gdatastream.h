@@ -1,9 +1,12 @@
 //-------------------------------------------------------------------
 // $Id$
+/// \file gdatastream.h
+/// Contains definition of the GemDataStream class for processing
+/// binary data streams on platforms with different endianness.
 //
 /// \class  GemDataStream  gdatastream.h
 /// Stream binary file operations extended for endianness
-/// (e.g. for compatibility between Intel- and old Mac processors )
+/// (e.g. for compatibility between Intel- and old Mac processors)
 //
 // Copyright (c) 1996-2012 A.Rysin, S.Dmytriyeva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>

@@ -95,8 +95,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="title">C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: s_fgl.h 722 2012-10-02 07:46:16Z kulik $</span>
+<a href="s__fgl_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: s_fgl.h 724 2012-10-02 14:25:25Z kulik $</span>
 <a name="l00003"></a>00003 <span class="comment">//</span>
 <a name="l00007"></a>00007 <span class="comment"></span>
 <a name="l00008"></a>00008 <span class="comment">// Copyright (C) 2003-2012  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov</span>
@@ -128,8 +128,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00034"></a>00034 
 <a name="l00035"></a>00035 <span class="comment">// re-declaration of enums below required for GEMS3K</span>
 <a name="l00036"></a>00036 <span class="comment">// dc_class_codes for fluids will be replaced by tp_codes</span>
-<a name="l00037"></a>00037 <span class="keyword">enum</span> fluid_mix_rules {  
-<a name="l00038"></a>00038     MR_UNDEF_ = <span class="charliteral">&#39;N&#39;</span>,
+<a name="l00037"></a><a class="code" href="s__fgl_8h.html#ac46b82555cd527b42a1faa43552a88a8">00037</a> <span class="keyword">enum</span> <a class="code" href="s__fgl_8h.html#ac46b82555cd527b42a1faa43552a88a8">fluid_mix_rules</a> {  
+<a name="l00038"></a><a class="code" href="s__fgl_8h.html#ac46b82555cd527b42a1faa43552a88a8a2c5988cd10379ed62aa8c54d74f62c00">00038</a>     <a class="code" href="s__fgl_8h.html#ac46b82555cd527b42a1faa43552a88a8a2c5988cd10379ed62aa8c54d74f62c00" title="codes for mixing rules in EoS models (see m_phase.h)">MR_UNDEF_</a> = <span class="charliteral">&#39;N&#39;</span>,
 <a name="l00039"></a>00039     MR_WAAL_ = <span class="charliteral">&#39;W&#39;</span>,
 <a name="l00040"></a>00040     MR_CONST_ = <span class="charliteral">&#39;C&#39;</span>,
 <a name="l00041"></a>00041     MR_TEMP_ = <span class="charliteral">&#39;T&#39;</span>,
@@ -140,16 +140,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00046"></a>00046     MR_PITZ8_ = <span class="charliteral">&#39;8&#39;</span>
 <a name="l00047"></a>00047 };
 <a name="l00048"></a>00048 
-<a name="l00049"></a>00049 <span class="keyword">enum</span> dc_class_codes {  
-<a name="l00050"></a>00050     DC_GAS_H2O_ = <span class="charliteral">&#39;V&#39;</span>,
+<a name="l00049"></a><a class="code" href="s__fgl_8h.html#a2a3c6b6890e69c32841bd0cec2a92680">00049</a> <span class="keyword">enum</span> <a class="code" href="s__fgl_8h.html#a2a3c6b6890e69c32841bd0cec2a92680">dc_class_codes</a> {  
+<a name="l00050"></a><a class="code" href="s__fgl_8h.html#a2a3c6b6890e69c32841bd0cec2a92680aefb56ff104ec6b805b8a07e38de05ea6">00050</a>     <a class="code" href="s__fgl_8h.html#a2a3c6b6890e69c32841bd0cec2a92680aefb56ff104ec6b805b8a07e38de05ea6" title="codes for fluid types in EoS models (see v_mod.h)">DC_GAS_H2O_</a> = <span class="charliteral">&#39;V&#39;</span>,
 <a name="l00051"></a>00051     DC_GAS_CO2_ = <span class="charliteral">&#39;C&#39;</span>,
 <a name="l00052"></a>00052     DC_GAS_H2_ = <span class="charliteral">&#39;H&#39;</span>,
 <a name="l00053"></a>00053     DC_GAS_N2_ = <span class="charliteral">&#39;N&#39;</span>,
 <a name="l00054"></a>00054     DC_GAS_COMP_ = <span class="charliteral">&#39;G&#39;</span>
 <a name="l00055"></a>00055 };
 <a name="l00056"></a>00056 
-<a name="l00057"></a>00057 <span class="keyword">enum</span> tp_codes {  
-<a name="l00058"></a>00058     CEM_OFF_ = <span class="charliteral">&#39;N&#39;</span>,
+<a name="l00057"></a><a class="code" href="s__fgl_8h.html#ac2a9ada868624c05132e7a884ea56902">00057</a> <span class="keyword">enum</span> <a class="code" href="s__fgl_8h.html#ac2a9ada868624c05132e7a884ea56902">tp_codes</a> {  
+<a name="l00058"></a><a class="code" href="s__fgl_8h.html#ac2a9ada868624c05132e7a884ea56902adfe8be27c5d73442eac6cb0af527a4e8">00058</a>     <a class="code" href="s__fgl_8h.html#ac2a9ada868624c05132e7a884ea56902adfe8be27c5d73442eac6cb0af527a4e8" title="codes for fluid subroutines in EoS models (see v_mod.h)">CEM_OFF_</a> = <span class="charliteral">&#39;N&#39;</span>,
 <a name="l00059"></a>00059     CEM_GAS_ = <span class="charliteral">&#39;G&#39;</span>,
 <a name="l00060"></a>00060     CEM_H2O_ = <span class="charliteral">&#39;V&#39;</span>,
 <a name="l00061"></a>00061     CEM_CO2_ = <span class="charliteral">&#39;C&#39;</span>,
@@ -195,7 +195,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00103"></a>00103 };
 <a name="l00104"></a>00104 
 <a name="l00105"></a>00105 
-<a name="l00106"></a><a class="code" href="class_t_sol_mod.html">00106</a> <span class="keyword">class </span><a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00106"></a><a class="code" href="class_t_sol_mod.html">00106</a> <span class="keyword">class </span><a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00107"></a>00107 {
 <a name="l00108"></a>00108         <span class="keyword">protected</span>:
 <a name="l00109"></a><a class="code" href="class_t_sol_mod.html#ae3c6f8f1ee9769201132b7dff73dd0cb">00109</a>         <span class="keywordtype">char</span> <a class="code" href="class_t_sol_mod.html#ae3c6f8f1ee9769201132b7dff73dd0cb" title="Code of the mixing model.">ModCode</a>;   
@@ -317,7 +317,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00231"></a>00231 
 <a name="l00232"></a>00232 
 <a name="l00233"></a>00233 
-<a name="l00235"></a><a class="code" href="class_t_ideal.html">00235</a> <span class="keyword">class </span><a class="code" href="class_t_ideal.html" title="Subclass for the ideal model (both simple and multi-site)">TIdeal</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00235"></a><a class="code" href="class_t_ideal.html">00235</a> <span class="keyword">class </span><a class="code" href="class_t_ideal.html" title="Subclass for the ideal model (both simple and multi-site)">TIdeal</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00236"></a>00236 {
 <a name="l00237"></a>00237             <span class="keyword">private</span>:
 <a name="l00238"></a>00238 
@@ -412,7 +412,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00335"></a>00335 
 <a name="l00336"></a>00336 
 <a name="l00337"></a>00337 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00343"></a><a class="code" href="class_t_c_g_fcalc.html">00343</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_c_g_fcalc.html" title="Churakov and Gottschalk (2003) EOS calculations.">TCGFcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00343"></a><a class="code" href="class_t_c_g_fcalc.html">00343</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_c_g_fcalc.html" title="Churakov and Gottschalk (2003) EOS calculations.">TCGFcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00344"></a>00344 {
 <a name="l00345"></a>00345         <span class="keyword">private</span>:
 <a name="l00346"></a>00346 
@@ -553,7 +553,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00490"></a>00490 
 <a name="l00491"></a>00491 
 <a name="l00492"></a>00492 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00496"></a><a class="code" href="class_t_p_r_s_vcalc.html">00496</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_p_r_s_vcalc.html" title="Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures.">TPRSVcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00496"></a><a class="code" href="class_t_p_r_s_vcalc.html">00496</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_p_r_s_vcalc.html" title="Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures.">TPRSVcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00497"></a>00497 
 <a name="l00498"></a>00498 {
 <a name="l00499"></a>00499         <span class="keyword">private</span>:
@@ -618,7 +618,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00566"></a>00566 
 <a name="l00567"></a>00567 
 <a name="l00568"></a>00568 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00572"></a><a class="code" href="class_t_s_r_kcalc.html">00572</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_s_r_kcalc.html" title="Soave-Redlich-Kwong (SRK) model for fluid mixtures.">TSRKcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00572"></a><a class="code" href="class_t_s_r_kcalc.html">00572</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_s_r_kcalc.html" title="Soave-Redlich-Kwong (SRK) model for fluid mixtures.">TSRKcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00573"></a>00573 
 <a name="l00574"></a>00574 {
 <a name="l00575"></a>00575         <span class="keyword">private</span>:
@@ -681,7 +681,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00640"></a>00640 
 <a name="l00641"></a>00641 
 <a name="l00642"></a>00642 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00646"></a><a class="code" href="class_t_p_r78calc.html">00646</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_p_r78calc.html" title="Peng-Robinson (PR78) model for fluid mixtures.">TPR78calc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00646"></a><a class="code" href="class_t_p_r78calc.html">00646</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_p_r78calc.html" title="Peng-Robinson (PR78) model for fluid mixtures.">TPR78calc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00647"></a>00647 
 <a name="l00648"></a>00648 {
 <a name="l00649"></a>00649         <span class="keyword">private</span>:
@@ -744,7 +744,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00714"></a>00714 
 <a name="l00715"></a>00715 
 <a name="l00716"></a>00716 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00720"></a><a class="code" href="class_t_c_o_r_kcalc.html">00720</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_c_o_r_kcalc.html" title="Compensated Redlich-Kwong (CORK) model for fluid mixtures.">TCORKcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00720"></a><a class="code" href="class_t_c_o_r_kcalc.html">00720</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_c_o_r_kcalc.html" title="Compensated Redlich-Kwong (CORK) model for fluid mixtures.">TCORKcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00721"></a>00721 
 <a name="l00722"></a>00722 {
 <a name="l00723"></a>00723         <span class="keyword">private</span>:
@@ -811,7 +811,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00792"></a>00792 
 <a name="l00793"></a>00793 
 <a name="l00794"></a>00794 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00798"></a><a class="code" href="class_t_s_t_pcalc.html">00798</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_s_t_pcalc.html" title="Sterner-Pitzer (STP) model for fluid mixtures.">TSTPcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00798"></a><a class="code" href="class_t_s_t_pcalc.html">00798</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_s_t_pcalc.html" title="Sterner-Pitzer (STP) model for fluid mixtures.">TSTPcalc</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00799"></a>00799 
 <a name="l00800"></a>00800 {
 <a name="l00801"></a>00801         <span class="keyword">private</span>:
@@ -896,7 +896,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00888"></a>00888 
 <a name="l00889"></a>00889 <span class="comment">// -------------------------------------------------------------------------------------</span>
 <a name="l00893"></a>00893 <span class="comment"></span>
-<a name="l00894"></a><a class="code" href="class_t_van_laar.html">00894</a> <span class="keyword">class </span><a class="code" href="class_t_van_laar.html" title="Van Laar model for solid solutions.">TVanLaar</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00894"></a><a class="code" href="class_t_van_laar.html">00894</a> <span class="keyword">class </span><a class="code" href="class_t_van_laar.html" title="Van Laar model for solid solutions.">TVanLaar</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00895"></a>00895 {
 <a name="l00896"></a>00896         <span class="keyword">private</span>:
 <a name="l00897"></a>00897                 <span class="keywordtype">double</span> *Wu;
@@ -928,7 +928,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00929"></a>00929 
 <a name="l00930"></a>00930 
 <a name="l00931"></a>00931 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00935"></a><a class="code" href="class_t_regular.html">00935</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_regular.html" title="Regular model for multicomponent solid solutions.">TRegular</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00935"></a><a class="code" href="class_t_regular.html">00935</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_regular.html" title="Regular model for multicomponent solid solutions.">TRegular</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00936"></a>00936 {
 <a name="l00937"></a>00937         <span class="keyword">private</span>:
 <a name="l00938"></a>00938                 <span class="keywordtype">double</span> *Wu;
@@ -958,7 +958,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00968"></a>00968 
 <a name="l00969"></a>00969 
 <a name="l00970"></a>00970 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l00974"></a><a class="code" href="class_t_redlich_kister.html">00974</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_redlich_kister.html" title="Redlich-Kister model for multicomponent solid solutions.">TRedlichKister</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l00974"></a><a class="code" href="class_t_redlich_kister.html">00974</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_redlich_kister.html" title="Redlich-Kister model for multicomponent solid solutions.">TRedlichKister</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l00975"></a>00975 {
 <a name="l00976"></a>00976         <span class="keyword">private</span>:
 <a name="l00977"></a>00977                 double (*Lu)[4];
@@ -989,7 +989,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01008"></a>01008 
 <a name="l01009"></a>01009 
 <a name="l01010"></a>01010 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01014"></a><a class="code" href="class_t_n_r_t_l.html">01014</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_n_r_t_l.html" title="Non-random two liquid (NRTL) model for liquid solutions.">TNRTL</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01014"></a><a class="code" href="class_t_n_r_t_l.html">01014</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_n_r_t_l.html" title="Non-random two liquid (NRTL) model for liquid solutions.">TNRTL</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01015"></a>01015 {
 <a name="l01016"></a>01016         <span class="keyword">private</span>:
 <a name="l01017"></a>01017                 <span class="keywordtype">double</span> **Tau;
@@ -1024,7 +1024,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01052"></a>01052 
 <a name="l01053"></a>01053 
 <a name="l01054"></a>01054 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01058"></a><a class="code" href="class_t_wilson.html">01058</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_wilson.html" title="Wilson model for liquid solutions.">TWilson</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01058"></a><a class="code" href="class_t_wilson.html">01058</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_wilson.html" title="Wilson model for liquid solutions.">TWilson</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01059"></a>01059 {
 <a name="l01060"></a>01060         <span class="keyword">private</span>:
 <a name="l01061"></a>01061                 <span class="keywordtype">double</span> **Lam;
@@ -1053,7 +1053,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01090"></a>01090 
 <a name="l01091"></a>01091 
 <a name="l01092"></a>01092 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01097"></a><a class="code" href="class_t_berman.html">01097</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_berman.html" title="Berman model for multi-component sublattice solid solutions.">TBerman</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01097"></a><a class="code" href="class_t_berman.html">01097</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_berman.html" title="Berman model for multi-component sublattice solid solutions.">TBerman</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01098"></a>01098 {
 <a name="l01099"></a>01099         <span class="keyword">private</span>:
 <a name="l01100"></a>01100 
@@ -1091,7 +1091,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01138"></a>01138 
 <a name="l01139"></a>01139 
 <a name="l01140"></a>01140 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01143"></a><a class="code" href="class_t_s_i_t.html">01143</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_s_i_t.html" title="SIT model reimplementation for aqueous electrolyte solutions.">TSIT</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01143"></a><a class="code" href="class_t_s_i_t.html">01143</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_s_i_t.html" title="SIT model reimplementation for aqueous electrolyte solutions.">TSIT</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01144"></a>01144 {
 <a name="l01145"></a>01145         <span class="keyword">private</span>:
 <a name="l01146"></a>01146 
@@ -1139,7 +1139,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01194"></a>01194 
 <a name="l01195"></a>01195 
 <a name="l01196"></a>01196 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01200"></a><a class="code" href="class_t_pitzer.html">01200</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_pitzer.html" title="Pitzer model, Harvie-Moller-Weare (HMW) version, with explicit temperature dependence.">TPitzer</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01200"></a><a class="code" href="class_t_pitzer.html">01200</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_pitzer.html" title="Pitzer model, Harvie-Moller-Weare (HMW) version, with explicit temperature dependence.">TPitzer</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01201"></a>01201 {
 <a name="l01202"></a>01202 
 <a name="l01203"></a>01203 <span class="keyword">private</span>:
@@ -1298,7 +1298,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01367"></a>01367 
 <a name="l01368"></a>01368 
 <a name="l01369"></a>01369 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01373"></a><a class="code" href="class_t_e_u_n_i_q_u_a_c.html">01373</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_e_u_n_i_q_u_a_c.html" title="Extended universal quasi-chemical (EUNIQUAC) model for aqueous electrolyte solutions.">TEUNIQUAC</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01373"></a><a class="code" href="class_t_e_u_n_i_q_u_a_c.html">01373</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_e_u_n_i_q_u_a_c.html" title="Extended universal quasi-chemical (EUNIQUAC) model for aqueous electrolyte solutions.">TEUNIQUAC</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01374"></a>01374 {
 <a name="l01375"></a>01375         <span class="keyword">private</span>:
 <a name="l01376"></a>01376 
@@ -1351,7 +1351,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01430"></a>01430 
 <a name="l01431"></a>01431 
 <a name="l01432"></a>01432 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01436"></a><a class="code" href="class_t_helgeson.html">01436</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_helgeson.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Helgesons variant.">THelgeson</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01436"></a><a class="code" href="class_t_helgeson.html">01436</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_helgeson.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Helgesons variant.">THelgeson</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01437"></a>01437 {
 <a name="l01438"></a>01438         <span class="keyword">private</span>:
 <a name="l01439"></a>01439 
@@ -1414,7 +1414,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01502"></a>01502 
 <a name="l01503"></a>01503 
 <a name="l01504"></a>01504 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01508"></a><a class="code" href="class_t_davies.html">01508</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_davies.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Davies variant.">TDavies</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01508"></a><a class="code" href="class_t_davies.html">01508</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_davies.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Davies variant.">TDavies</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01509"></a>01509 {
 <a name="l01510"></a>01510         <span class="keyword">private</span>:
 <a name="l01511"></a>01511 
@@ -1462,7 +1462,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01559"></a>01559 
 <a name="l01560"></a>01560 
 <a name="l01561"></a>01561 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01565"></a><a class="code" href="class_t_limiting_law.html">01565</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_limiting_law.html" title="Debye-Hueckel (DH) limiting law for aqueous electrolyte solutions.">TLimitingLaw</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01565"></a><a class="code" href="class_t_limiting_law.html">01565</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_limiting_law.html" title="Debye-Hueckel (DH) limiting law for aqueous electrolyte solutions.">TLimitingLaw</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01566"></a>01566 {
 <a name="l01567"></a>01567         <span class="keyword">private</span>:
 <a name="l01568"></a>01568 
@@ -1509,7 +1509,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01615"></a>01615 
 <a name="l01616"></a>01616 
 <a name="l01617"></a>01617 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01622"></a><a class="code" href="class_t_debye_hueckel.html">01622</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_debye_hueckel.html" title="Two-term Debye-Hueckel (DH) model for aqueous electrolyte solutions.">TDebyeHueckel</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01622"></a><a class="code" href="class_t_debye_hueckel.html">01622</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_debye_hueckel.html" title="Two-term Debye-Hueckel (DH) model for aqueous electrolyte solutions.">TDebyeHueckel</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01623"></a>01623 {
 <a name="l01624"></a>01624         <span class="keyword">private</span>:
 <a name="l01625"></a>01625 
@@ -1562,7 +1562,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01678"></a>01678 
 <a name="l01679"></a>01679 
 <a name="l01680"></a>01680 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01685"></a><a class="code" href="class_t_karpov.html">01685</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_karpov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Karpovs variant.">TKarpov</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01685"></a><a class="code" href="class_t_karpov.html">01685</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_karpov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Karpovs variant.">TKarpov</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01686"></a>01686 {
 <a name="l01687"></a>01687         <span class="keyword">private</span>:
 <a name="l01688"></a>01688 
@@ -1625,7 +1625,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01751"></a>01751 
 <a name="l01752"></a>01752 
 <a name="l01753"></a>01753 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01758"></a><a class="code" href="class_t_shvarov.html">01758</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_shvarov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Shvarov variant.">TShvarov</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01758"></a><a class="code" href="class_t_shvarov.html">01758</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_shvarov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Shvarov variant.">TShvarov</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01759"></a>01759 {
 <a name="l01760"></a>01760         <span class="keyword">private</span>:
 <a name="l01761"></a>01761 
@@ -1686,7 +1686,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01822"></a>01822 
 <a name="l01823"></a>01823 
 <a name="l01824"></a>01824 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01827"></a><a class="code" href="class_t_mod_other.html">01827</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_mod_other.html" title="Class for hardcoded models for solid solutions.">TModOther</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01827"></a><a class="code" href="class_t_mod_other.html">01827</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_mod_other.html" title="Class for hardcoded models for solid solutions.">TModOther</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01828"></a>01828 {
 <a name="l01829"></a>01829         <span class="keyword">private</span>:
 <a name="l01830"></a>01830         <span class="keywordtype">double</span> PhVol;   
@@ -1736,7 +1736,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01881"></a>01881 
 <a name="l01882"></a>01882 
 <a name="l01883"></a>01883 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01887"></a><a class="code" href="class_t_margules.html">01887</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_margules.html" title="Ternary Margules (regular) model for solid solutions.">TMargules</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01887"></a><a class="code" href="class_t_margules.html">01887</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_margules.html" title="Ternary Margules (regular) model for solid solutions.">TMargules</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01888"></a>01888 {
 <a name="l01889"></a>01889         <span class="keyword">private</span>:
 <a name="l01890"></a>01890 
@@ -1764,7 +1764,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01918"></a>01918 
 <a name="l01919"></a>01919 
 <a name="l01920"></a>01920 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01924"></a><a class="code" href="class_t_subregular.html">01924</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_subregular.html" title="Binary Margules (subregular) model for solid solutions.">TSubregular</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01924"></a><a class="code" href="class_t_subregular.html">01924</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_subregular.html" title="Binary Margules (subregular) model for solid solutions.">TSubregular</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01925"></a>01925 {
 <a name="l01926"></a>01926         <span class="keyword">private</span>:
 <a name="l01927"></a>01927 
@@ -1790,7 +1790,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l01953"></a>01953 
 <a name="l01954"></a>01954 
 <a name="l01955"></a>01955 <span class="comment">// -------------------------------------------------------------------------------------</span>
-<a name="l01960"></a><a class="code" href="class_t_guggenheim.html">01960</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_guggenheim.html" title="Binary Guggenheim (Redlich-Kister) model for solid solutions.">TGuggenheim</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html" title="Declarations of TSolMod and derived classes implementing built-in models of mixing in fluid...">TSolMod</a>
+<a name="l01960"></a><a class="code" href="class_t_guggenheim.html">01960</a> <span class="comment"></span><span class="keyword">class </span><a class="code" href="class_t_guggenheim.html" title="Binary Guggenheim (Redlich-Kister) model for solid solutions.">TGuggenheim</a>: <span class="keyword">public</span> <a class="code" href="class_t_sol_mod.html">TSolMod</a>
 <a name="l01961"></a>01961 {
 <a name="l01962"></a>01962         <span class="keyword">private</span>:
 <a name="l01963"></a>01963 
@@ -1820,7 +1820,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 2 2012 16:15:10 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Oct 2 2012 17:22:42 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

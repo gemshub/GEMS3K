@@ -28,9 +28,6 @@ Docs/doxy/html/class_t_davies.png -text
 Docs/doxy/html/class_t_debye_hueckel-members.html -text
 Docs/doxy/html/class_t_debye_hueckel.html -text
 Docs/doxy/html/class_t_debye_hueckel.png -text
-Docs/doxy/html/class_t_e_l_v_i_s-members.html -text
-Docs/doxy/html/class_t_e_l_v_i_s.html -text
-Docs/doxy/html/class_t_e_l_v_i_s.png -text
 Docs/doxy/html/class_t_e_u_n_i_q_u_a_c-members.html -text
 Docs/doxy/html/class_t_e_u_n_i_q_u_a_c.html -text
 Docs/doxy/html/class_t_e_u_n_i_q_u_a_c.png -text
@@ -123,19 +120,6 @@ Docs/doxy/html/datach_8h_source.html -text
 Docs/doxy/html/doxygen.css -text
 Docs/doxy/html/doxygen.png -text
 Docs/doxy/html/files.html -text
-Docs/doxy/html/ftv2blank.png -text
-Docs/doxy/html/ftv2doc.png -text
-Docs/doxy/html/ftv2folderclosed.png -text
-Docs/doxy/html/ftv2folderopen.png -text
-Docs/doxy/html/ftv2lastnode.png -text
-Docs/doxy/html/ftv2link.png -text
-Docs/doxy/html/ftv2mlastnode.png -text
-Docs/doxy/html/ftv2mnode.png -text
-Docs/doxy/html/ftv2node.png -text
-Docs/doxy/html/ftv2plastnode.png -text
-Docs/doxy/html/ftv2pnode.png -text
-Docs/doxy/html/ftv2splitbar.png -text
-Docs/doxy/html/ftv2vertline.png -text
 Docs/doxy/html/functions.html -text
 Docs/doxy/html/functions_0x62.html -text
 Docs/doxy/html/functions_0x63.html -text
@@ -465,7 +449,6 @@ GEMS3K/ipm_main.cpp -text svn_keywords=Id
 GEMS3K/ipm_simplex.cpp -text svn_keywords=Id
 GEMS3K/jama_cholesky.h -text
 GEMS3K/jama_lu.h -text
-GEMS3K/m_const.h -text svn_keywords=Id
 GEMS3K/m_param.h -text svn_keywords=Id
 GEMS3K/ms_multi.h -text svn_keywords=Id
 GEMS3K/ms_multi_file.cpp -text svn_keywords=Id

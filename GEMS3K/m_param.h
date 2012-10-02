@@ -1,10 +1,10 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-/// \class TProfil m_param.h
+/// \file m_param.h
 /// Declaration of TProfil class, config and calculation functions
 //
-// Copyright (C) 1995-2012 S.Dmytriyeva, D.Kulik
+// Copyright (c) 1995-2012 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -39,7 +39,6 @@ extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
 #include "gdatastream.h"
 #include "ms_multi.h"
 #include "verror.h"
-
 
 struct BASE_PARAM /// Flags and thresholds for numeric modules
 {
