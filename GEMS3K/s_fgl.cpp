@@ -1,28 +1,38 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright (C) 2004-2011  T.Wagner, S.Churakov, D.Kulik
+/// \file s_fgl.cpp
+/// Implementation of TSolMod derived classes for fluid phase models
+/// (TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc and TCORKcalc classes)
 //
-// Implementation of subclasses of TSolMod for fluid models
-// subclasses: TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc and TCORKcalc classes
+// Copyright (c) 2004-2012  T.Wagner, S.Churakov, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor (GEMS) v.3.1.x program
-// environment for thermodynamic modeling in geochemistry
-// and part of the GEMS3K standalone code
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include <cmath>
 #include <cstdio>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+using namespace std;
 #include "s_fgl.h"
 #include "verror.h"
-
-
 
 
 //=======================================================================================================

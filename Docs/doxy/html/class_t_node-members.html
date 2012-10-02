@@ -32,7 +32,7 @@
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -138,6 +138,7 @@ This is the complete list of members for <a class="el" href="class_t_node.html">
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a5069e421787a454946eda375c8b3fddb">DC_g</a>(const long int xCH) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a7afac572263e12640835279830ca60e4">DC_G0</a>(const long int xCH, const double P, const double TK, bool norm=true)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#abd4439e8fdd785e70d25a9de13dadbf9">DC_H0</a>(const long int xCH, const double P, const double TK)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77">DC_lng</a>(const long int xCH) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a25b3fed9d9faca846d95ddb86799c7a7">DC_mu</a>(const long int xCH, bool norm=true)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a0c376c84ac9b00b0ac83be8c78913f70">DC_mu0</a>(const long int xCH, bool norm=true)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a8c6c25c9d71fd92b711e815c94e4ebda">DC_n</a>(const long int xCH) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
@@ -154,6 +155,8 @@ This is the complete list of members for <a class="el" href="class_t_node.html">
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a33ea7b8aac27af7a1a6e844bfe2ac710">DCtoPh_DCH</a>(const long int xCH)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#aa5f5fa762cb44dcc8902816854dcaf94">DenH2Og</a>(const double P, const double TK)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c">DenH2Ow</a>(const double P, const double TK)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#a590116944bc0ee663608303005db06df">DensArrayH2Ow</a>(const double P, const double TK, vector&lt; double &gt; &amp;DensAW)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#aab53daf27bc5d38b107b0c74b416938e">EpsArrayH2Ow</a>(const double P, const double TK, vector&lt; double &gt; &amp;EpsAW)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a0069ac15df83325d5fb5267d96a83a2f">EpsH2Og</a>(const double P, const double TK)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#ac52e8e98b3dee1af3f63b348eacedb08">EpsH2Ow</a>(const double P, const double TK)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>freeMemory</b>() (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [protected]</code></td></tr>
@@ -171,17 +174,19 @@ This is the complete list of members for <a class="el" href="class_t_node.html">
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a125493ee614a08e887f4ba3ce09b9f7e">GEM_to_MT</a>(long int &amp;p_NodeHandle, long int &amp;p_NodeStatusCH, long int &amp;p_IterDone, double &amp;p_Vs, double &amp;p_Ms, double &amp;p_Gs, double &amp;p_Hs, double &amp;p_IC, double &amp;p_pH, double &amp;p_pe, double &amp;p_Eh, double *p_rMB, double *p_uIC, double *p_xDC, double *p_gam, double *p_xPH, double *p_vPS, double *p_mPS, double *p_bPS, double *p_xPA, double *p_aPH, double *p_bSP)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a22efa265fa48c4bc4029398567db4bfc">GEM_write_dbr</a>(const char *fname, bool binary_f=false, bool with_comments=true, bool brief_mode=false)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a92d0b5a65a279e5845136c1f20c11f2e">Get_aDC</a>(const long int xdc, bool scale=true)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Get_aDCc</b>(double *aDCc, long *index_phase_aDCc, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Get_aIPc</b>(double *aIPc, long *index_phase_aIPc, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Get_aIPx</b>(long *aIPx, long *index_phase_aIPx, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Get_aDCc</b>(vector&lt; double &gt; &amp;aDCc, const long &amp;index_phase_aDCc, const long &amp;index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Get_aIPc</b>(vector&lt; double &gt; &amp;aIPc, const long &amp;index_phase_aIPc, const long &amp;index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Get_aIPx</b>(vector&lt; long &gt; &amp;aIPx, const long &amp;index_phase_aIPx, const long &amp;index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a41ba1dce2f8052b3e0a9f4c5b81f9556">Get_bIC</a>(const long int xic) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#afcd7c761bdfd4d7c7efe2804cf4555f7">Get_cDC</a>(const long int xdc)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a3df0cb5959e0f98709a94caa54051949">Get_gDC</a>(const long int xdc) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Get_IPc_IPx_DCc_indices</b>(long *index_phase_aIPx, long *index_phase_aIPc, long *index_phase_aDCc, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#a98971c2b677af3ec5b10ce034db45063">get_grid_index_Ppa_sat</a>(double Tk)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#ae5208dd72252a8ab48f7611aaba912a5">Get_IPc_IPx_DCc_indices</a>(long &amp;index_phase_aIPx, long &amp;index_phase_aIPc, long &amp;index_phase_aDCc, const long &amp;index_phase)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a15924334eae4af3c8cf0b694773065b8">Get_mIC</a>(const long xic)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#af344571eeba18ef0addfff68be4da9f7">Get_muDC</a>(const long int xDC, bool norm=true)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a043b5da39790ea1dc8db59441b3c66bb">Get_nDC</a>(const long int xdc) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Get_NPar_NPcoef_MaxOrd_NComp_NP_DC</b>(long *NPar, long *NPcoef, long *MaxOrd, long *NComp, long *NP_DC, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Get_NPar_NPcoef_MaxOrd_NComp_NP_DC</b>(long &amp;NPar, long &amp;NPcoef, long &amp;MaxOrd, long &amp;NComp, long &amp;NP_DC, const long &amp;index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#ac04b6d96043f2b6b3c5c2b10c71af4a8">get_Ppa_sat</a>(double Tk)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683">gridTP</a>() const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#abe260b0ba07f67f415b0a9b08492c678">IC_b</a>(const long int xCH) const </td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a242db0953e1e2125e432c0952cc2972e">IC_name_to_xCH</a>(const char *Name)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
@@ -210,15 +215,15 @@ This is the complete list of members for <a class="el" href="class_t_node.html">
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b">pmm</a></td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [protected]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#abf3b49ea5e4679b3fcd9254c50f02520">PrecLoops</a></td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [protected]</code></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>profil</b> (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [protected]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Set_aDCc</b>(const double *aDCc, long *index_phase_aDCc, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Set_aIPc</b>(double *aIPc, long *index_phase_aIPc, long *index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Set_aDCc</b>(const vector&lt; double &gt; aDCc, const long &amp;index_phase_aDCc, const long &amp;index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Set_aIPc</b>(const vector&lt; double &gt; aIPc, const long &amp;index_phase_aIPc, const long &amp;index_phase) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#aa6a422cc58993b5ff3391c7c93ec8510">Set_bIC</a>(const long int xic, const double bIC)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a784e8870ffa0096c1a981b24d5acb7a0">Set_dll</a>(const long int xdc, const double dll)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a23b62f0bb8dfd15f5e8f4b5655c679e0">Set_dul</a>(const long int xdc, const double dul)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a18c0ae79ce5b04148afe237dc424856d">Set_IC_b</a>(const double b_val, const long int xCH)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a784b210c88d626da6b6797580d997bd7">Set_nDC</a>(const long int xdc, const double nDC)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Set_Pb</b>(double *P_b) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
-  <tr bgcolor="#f0f0f0"><td><b>Set_Tk</b>(double *T_k) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr bgcolor="#f0f0f0"><td><b>Set_Pb</b>(double &amp;P_b) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
+  <tr class="memlist"><td><a class="el" href="class_t_node.html#a41022870d6a1b5d4067ba28d737cb740">Set_Tk</a>(double &amp;T_k)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
   <tr bgcolor="#f0f0f0"><td><b>setNodeArray</b>(long int, long int *) (defined in <a class="el" href="class_t_node.html">TNode</a>)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline, protected, virtual]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a70b297f3e4e8bff1654188544a87ca1e">setNodeHandle</a>(long int jj)</td><td><a class="el" href="class_t_node.html">TNode</a></td><td><code> [inline]</code></td></tr>
   <tr class="memlist"><td><a class="el" href="class_t_node.html#a5d7ab5171cd0dfb220b01778e2804225">TNode</a>()</td><td><a class="el" href="class_t_node.html">TNode</a></td><td></td></tr>
@@ -229,7 +234,7 @@ This is the complete list of members for <a class="el" href="class_t_node.html">
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 24 2012 13:51:36 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Oct 2 2012 16:15:11 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

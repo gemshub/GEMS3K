@@ -1,32 +1,36 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright (C) 2003-2011  T.Wagner, D.Kulik, S.Dmitrieva, S.Churakov
+/// \class TSolMod s_fgl.h
+/// Declarations of TSolMod and derived classes implementing built-in models
+/// of mixing in fluid, liquid, aqueous and solid-solution models
+
+// Copyright (C) 2003-2012  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// Declaration of new versions of fluid, liquid, aquous
-// and solid-solution models
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file is part of a GEM-Selektor (GEMS) v.3.1.x program
-// environment for thermodynamic modeling in geochemistry
-// and part of the standalone GEMS3K code
-//
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //------------------------------------------------------------------
 //
-
 
 #ifndef _s_fgl_h_
 #define _s_fgl_h_
 #include <cstring>
 #include <vector>
 #include <iostream>
-//#include "boost/multi_array.hpp"
-
-
 
 // re-declaration of enums below required for GEMS3K
 // dc_class_codes for fluids will be replaced by tp_codes
@@ -63,7 +67,6 @@ enum tp_codes {  /// codes for fluid subroutines in EoS models (see v_mod.h)
     CEM_PO_ = 'P',
     CEM_NP_ = 'Q'
 };
-
 
 // ------------------------------------------------------------------
 

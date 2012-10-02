@@ -12,8 +12,6 @@ var searchData=
   ['tcorkcalc',['TCORKcalc',['../class_t_c_o_r_kcalc.html',1,'TCORKcalc'],['../class_t_c_o_r_kcalc.html#a0eec15a55ddb05113790f55e539e516b',1,'TCORKcalc::TCORKcalc()']]],
   ['tdavies',['TDavies',['../class_t_davies.html',1,'TDavies'],['../class_t_davies.html#ad5b4912a79d693db7be2911d71b17e25',1,'TDavies::TDavies()']]],
   ['tdebyehueckel',['TDebyeHueckel',['../class_t_debye_hueckel.html',1,'TDebyeHueckel'],['../class_t_debye_hueckel.html#a89961998ba34fb64ad37a7e606b17dcd',1,'TDebyeHueckel::TDebyeHueckel()']]],
-  ['telvis',['TELVIS',['../class_t_e_l_v_i_s.html',1,'TELVIS'],['../class_t_e_l_v_i_s.html#aa31caf6da00738d795614f86c248db36',1,'TELVIS::TELVIS()']]],
-  ['telvis_5ftest_5fout',['TELVIS_test_out',['../class_t_e_l_v_i_s.html#a4436f29374277c9d8500080999931640',1,'TELVIS']]],
   ['terror',['TError',['../struct_t_error.html',1,'']]],
   ['testmulti',['testMulti',['../class_t_multi.html#ad456a03d33685cd1d4f5d2356a448b82',1,'TMulti']]],
   ['testread',['testRead',['../class_t_read_arrays.html#a94a500388569946c396d16a855f8a21e',1,'TReadArrays']]],

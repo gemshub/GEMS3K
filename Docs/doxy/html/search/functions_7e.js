@@ -5,7 +5,6 @@ var searchData=
   ['_7etcorkcalc',['~TCORKcalc',['../class_t_c_o_r_kcalc.html#a2a9106f2e91fc82041fe8fbac30eefde',1,'TCORKcalc']]],
   ['_7etdavies',['~TDavies',['../class_t_davies.html#a6c1d01190e0d2a568115549221fb19cb',1,'TDavies']]],
   ['_7etdebyehueckel',['~TDebyeHueckel',['../class_t_debye_hueckel.html#a0962f4eb8a5a230b81691f447806a0bd',1,'TDebyeHueckel']]],
-  ['_7etelvis',['~TELVIS',['../class_t_e_l_v_i_s.html#a2b4ae03d5d3c7c3ae3101eac41b70293',1,'TELVIS']]],
   ['_7eteuniquac',['~TEUNIQUAC',['../class_t_e_u_n_i_q_u_a_c.html#a25b81cf762bb6d3a75caa78c1e3194f0',1,'TEUNIQUAC']]],
   ['_7etguggenheim',['~TGuggenheim',['../class_t_guggenheim.html#aa47fa400495390e70a2a57ddc9afdd42',1,'TGuggenheim']]],
   ['_7ethelgeson',['~THelgeson',['../class_t_helgeson.html#a3179597a7f3e985a81cb0715bab92ddc',1,'THelgeson']]],

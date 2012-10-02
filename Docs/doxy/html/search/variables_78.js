@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['x',['x',['../class_t_sol_mod.html#a342ab6fc595ed41197251658fc866909',1,'TSolMod::x()'],['../struct_m_u_l_t_i.html#aecd97d558c7bc2cc28406af90ed1b7f4',1,'MULTI::X()']]],
+  ['x',['X',['../struct_m_u_l_t_i.html#aecd97d558c7bc2cc28406af90ed1b7f4',1,'MULTI::X()'],['../class_t_sol_mod.html#a342ab6fc595ed41197251658fc866909',1,'TSolMod::x()']]],
   ['xcapa',['XcapA',['../struct_m_u_l_t_i.html#a90f7d5fb30a5f257474b94d00a786d42',1,'MULTI']]],
   ['xcapb',['XcapB',['../struct_m_u_l_t_i.html#adc7dd299968efafbfe03beb984beb13d',1,'MULTI']]],
   ['xcapd',['XcapD',['../struct_m_u_l_t_i.html#a55c3f4a1ea5c93bcbc75ed7e936bdffb',1,'MULTI']]],
@@ -22,7 +22,7 @@ var searchData=
   ['xic',['xic',['../struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698',1,'DATACH']]],
   ['xlama',['XlamA',['../struct_m_u_l_t_i.html#a6445b85274be46649e4c4f07757a19d6',1,'MULTI']]],
   ['xpa',['xPA',['../struct_d_a_t_a_b_r.html#ab9b989c65c6fd2fb5915c03597d46474',1,'DATABR']]],
-  ['xph',['xph',['../struct_d_a_t_a_c_h.html#a3b851a69e8520e28c6b328843318ea62',1,'DATACH::xph()'],['../struct_d_a_t_a_b_r.html#af436220b713086a37a9a657348c4bedb',1,'DATABR::xPH()']]],
+  ['xph',['xPH',['../struct_d_a_t_a_b_r.html#af436220b713086a37a9a657348c4bedb',1,'DATABR::xPH()'],['../struct_d_a_t_a_c_h.html#a3b851a69e8520e28c6b328843318ea62',1,'DATACH::xph()']]],
   ['xpsia',['XpsiA',['../struct_m_u_l_t_i.html#ae8841c2079569c317aa5a8106def0608',1,'MULTI']]],
   ['xpsib',['XpsiB',['../struct_m_u_l_t_i.html#a8dd70827a3a81f7ec4a2372c26678db1',1,'MULTI']]],
   ['xpsid',['XpsiD',['../struct_m_u_l_t_i.html#aed1a297a4aa647b85214c0adefa628f2',1,'MULTI']]],

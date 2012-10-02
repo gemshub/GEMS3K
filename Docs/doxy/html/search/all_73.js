@@ -1,6 +1,10 @@
 var searchData=
 [
   ['s0',['S0',['../struct_d_a_t_a_c_h.html#a2574b21656995cb5d5bc119472a5a78e',1,'DATACH::S0()'],['../struct_m_u_l_t_i.html#a53d2a7ec276066c5c6128671669aa515',1,'MULTI::S0()']]],
+  ['s_5ffgl_2ecpp',['s_fgl.cpp',['../s__fgl_8cpp.html',1,'']]],
+  ['s_5ffgl1_2ecpp',['s_fgl1.cpp',['../s__fgl1_8cpp.html',1,'']]],
+  ['s_5ffgl2_2ecpp',['s_fgl2.cpp',['../s__fgl2_8cpp.html',1,'']]],
+  ['s_5ffgl4_2ecpp',['s_fgl4.cpp',['../s__fgl4_8cpp.html',1,'']]],
   ['satt',['SATT',['../struct_m_u_l_t_i.html#a0e7fc1ffada22db3f187d11e9c9e7cfe',1,'MULTI']]],
   ['satx',['SATX',['../struct_m_u_l_t_i.html#afae633930ff14977f327d047fa774270',1,'MULTI']]],
   ['sb',['SB',['../struct_m_u_l_t_i.html#aab9bc1ad3fc1451866e23934f65a47a1',1,'MULTI']]],
@@ -16,6 +20,7 @@ var searchData=
   ['set_5fdul',['Set_dul',['../class_t_node.html#a23b62f0bb8dfd15f5e8f4b5655c679e0',1,'TNode']]],
   ['set_5fic_5fb',['Set_IC_b',['../class_t_node.html#a18c0ae79ce5b04148afe237dc424856d',1,'TNode']]],
   ['set_5fndc',['Set_nDC',['../class_t_node.html#a784b210c88d626da6b6797580d997bd7',1,'TNode']]],
+  ['set_5ftk',['Set_Tk',['../class_t_node.html#a41022870d6a1b5d4067ba28d737cb740',1,'TNode']]],
   ['setalws',['setAlws',['../class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5',1,'TRWArrays::setAlws(long int ii)'],['../class_t_r_w_arrays.html#a5aec02af2cb7f671df740698609244d4',1,'TRWArrays::setAlws(const char *Name)']]],
   ['setgrid',['SetGrid',['../class_t_node_array.html#ac0b328eff648791b088597c0cd406cf6',1,'TNodeArray']]],
   ['setnoalws',['setNoAlws',['../class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f',1,'TRWArrays::setNoAlws(long int ii)'],['../class_t_r_w_arrays.html#a57dd2bd81f1c75f44e51d97a548b45ef',1,'TRWArrays::setNoAlws(const char *Name)']]],
@@ -33,7 +38,7 @@ var searchData=
   ['size',['size',['../class_t_node_array.html#a45393a9383d02c266c68305405524cdf',1,'TNodeArray']]],
   ['sizefactor',['SizeFactor',['../struct_m_u_l_t_i.html#a3939c70d10e5f377ce40c0d6b6445425',1,'MULTI']]],
   ['sizefis',['sizeFIs',['../class_t_multi.html#aacf37532bfac24f09b3157288370b454',1,'TMulti']]],
-  ['sizek',['sizeK',['../class_t_node_array.html#a359201a73501a2bf81d176f0f403fd81',1,'TNodeArray::sizeK()'],['../class_t_node_array.html#a70040ed9a98df452919b6972fa3c8fc1',1,'TNodeArray::SizeK() const ']]],
+  ['sizek',['SizeK',['../class_t_node_array.html#a70040ed9a98df452919b6972fa3c8fc1',1,'TNodeArray::SizeK() const '],['../class_t_node_array.html#a359201a73501a2bf81d176f0f403fd81',1,'TNodeArray::sizeK()']]],
   ['sizem',['SizeM',['../class_t_node_array.html#a86b977693359a8957a854ec0728d7b27',1,'TNodeArray::SizeM() const '],['../class_t_node_array.html#a86e6c235668b55a42596401eacc5d860',1,'TNodeArray::sizeM()']]],
   ['sizen',['sizeN',['../class_t_node_array.html#a7e4d120b9966a77ce98826b6794969e5',1,'TNodeArray::sizeN()'],['../class_t_node_array.html#a3b2a4350c5bc7b0fe38fadb4c1530cf2',1,'TNodeArray::SizeN() const ']]],
   ['sm',['SM',['../struct_m_u_l_t_i.html#a2a894400854f4d5cc74c3a6ee751cdbe',1,'MULTI']]],

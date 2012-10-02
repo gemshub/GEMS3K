@@ -5,7 +5,6 @@ var searchData=
   ['tcorkcalc',['TCORKcalc',['../class_t_c_o_r_kcalc.html',1,'']]],
   ['tdavies',['TDavies',['../class_t_davies.html',1,'']]],
   ['tdebyehueckel',['TDebyeHueckel',['../class_t_debye_hueckel.html',1,'']]],
-  ['telvis',['TELVIS',['../class_t_e_l_v_i_s.html',1,'']]],
   ['terror',['TError',['../struct_t_error.html',1,'']]],
   ['teuniquac',['TEUNIQUAC',['../class_t_e_u_n_i_q_u_a_c.html',1,'']]],
   ['tfatalerror',['TFatalError',['../struct_t_fatal_error.html',1,'']]],

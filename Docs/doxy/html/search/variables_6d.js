@@ -2,7 +2,6 @@ var searchData=
 [
   ['masdj',['MASDJ',['../struct_m_u_l_t_i.html#a10ccc1f26d60731d84dcfe257cde4dba',1,'MULTI']]],
   ['masdt',['MASDT',['../struct_m_u_l_t_i.html#af7a7393a40db6d7da252fa49b817f674',1,'MULTI']]],
-  ['maxicn',['MaxICN',['../datach_8h.html#a88451b49096f525871ce7213eb2099fa',1,'datach.h']]],
   ['maxord',['MaxOrd',['../class_t_sol_mod.html#aa3d9af979ee9b840062964790cbd8c48',1,'TSolMod']]],
   ['maxorder',['MaxOrder',['../struct_solution_data.html#aa0e288690dfc16c42e3330e98cba7f9f',1,'SolutionData']]],
   ['mbx',['MBX',['../struct_m_u_l_t_i.html#ac9eb028667ae1b78ddb9463224e16056',1,'MULTI']]],
