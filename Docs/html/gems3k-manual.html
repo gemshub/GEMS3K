@@ -1,21 +1,18 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html><head>
-  
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
   
-<meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; I) [Netscape]">
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
   
-<title>GEMS3K User Manual</title>
+  <meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; I) [Netscape]"><title>GEMS3K User Manual</title>
+  
 
   
-<meta name="description" content="Version 3.0.0-PSI">
-
-</head>
-<body>
-<h1><img alt="GEMS-icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font color="#000066">
-GEMS3K Solver of GeoChemical Equilibria</font> </h1>
+  
+  <meta name="description" content="Version 3.0.0-PSI"></head><body style="background-image: url(bgimg-gray.jpg);">
+<h1><img alt="GEMS-icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font style="color: black;" color="#000066">
+GEMS3K Code for Solving for GeoChemical Equilibria</font> </h1>
 
 <h2>The Standalone GEMS3K Code User Manual
 </h2>
@@ -26,23 +23,32 @@ GEMS3K Solver of GeoChemical Equilibria</font> </h1>
 <h3>Summary<br>
 </h3>
 
-<p>The GEMS3K code is a numerical kernel module of the <a href="http://gems.web.psi.ch/GEMS3/index.html">GEM-Selektor v.3 code package</a> for Gibbs energy
+<p>The GEMS3K code is a numerical kernel module of the <a href="http://gems.web.psi.ch/GEMS3/index.html">GEM-Selektor v.3 code
+package</a> for Gibbs energy
 minimization (GEM), enhanced with RAM-
-and file-system- data exchange interfaces without GUI in its standalone variant. GEM
+and file-system- data exchange interfaces without GUI in its standalone
+variant. GEM
 is a method of chemical thermodynamic modeling with emphasis on complex
 heterogeneous
-equilibria involving phases-solutions and sorption, implemented in a GEM-IPM-3 algorithm. <br>
+equilibria involving phases-solutions and sorption, implemented in a
+GEM-IPM-3 algorithm. <br>
 </p>
+
 <p>The standalone GEMS3K code is
 designed for
 coupling GEM chemical solver with
 existing and new fluid-mass-transport (FMT)
-codes, parameters fitting codes, and other upper-level simulation tools. The GEMS3K source code is compatible with ANSI
-C++ and can be compiled on many computer platforms (Windows, Linux, Mac OSX, HPC
+codes, parameters fitting codes, and other upper-level simulation
+tools. The GEMS3K source code is compatible with ANSI
+C++ and can be compiled on many computer platforms (Windows, Linux, Mac
+OSX, HPC
 Merlin, Cray XT, etc.) using various optimizing
 compilers (GNU C++, MinGW GNU C++, PGI C++, Intel
-C++, Microsoft C++, &#8230; ). <a href="gems3k-about.html">Check here for technical information</a> about code installation and building libraries and examples.<br>
+C++, Microsoft C++, &#8230; ). <a href="gems3k-about.html">Check here for
+technical information</a> about code installation and building
+libraries and examples.<br>
 </p>
+
 <p>The input data can be provided in ASCII files
 (edited or exported from GEM-Selektor per mouse-click), the
 output can also be written in ASCII files. Alternatively, the whole
@@ -50,15 +56,20 @@ data
 exchange with a transport code part can be performed in RAM
 using the DATACH
 and DATABR data structures.
-This data exchange interface is implemented in two C++ classes named TNode
+This data exchange interface is implemented in two C++ classes named
+TNode
 and TNodeArray. <br>
 </p>
+
 <p>The TNode class provides functionality for attaching GEMS3K
-kernel to an existing transport simulation code, which keeps the chemical
+kernel to an existing transport simulation code, which keeps the
+chemical
 information
 for all nodes in its own memory, and calls a GEM
-calculation for each node separately. <a href="gems3k-nodelev.html">Check here</a> how to use the TNode interface in a coupled code.<br>
+calculation for each node separately. <a href="gems3k-nodelev.html">Check
+here</a> how to use the TNode interface in a coupled code.<br>
 </p>
+
 <p>The TNodeArray class is built on
 top of the TNode class and can store both chemical and dynamic data
 for all nodes of the mass transport problem; the re-calculation of
@@ -69,6 +80,7 @@ internal parallelization possible); this may be suitable for developing
 of a
 new transport code (<a href="gems3k-nodearray.html">more...</a>). <br>
 </p>
+
 <p>Both GEMS3K and GEM-Selektor codes are developed
 jointly at the Paul Scherrer Institute (NES LES) and at ETH Zurich
 (ERDW IGP). The standalone GEMS3K code is distributed
@@ -78,38 +90,36 @@ the LGPL v.3 license (<a href="gems3k-about.html">more...</a>).<br>
 
 <br>
 
-
-
 <hr style="width: 100%; height: 2px;">
 <h3>Contents</h3>
+
 <p><a href="#TAG_INTRO">1.
 Introduction</a></p>
+
 <p><a href="#TAG_GEMIPM2">2.
-GEM IPM &#8211; the numerical kernel of GEM-Selektor</a>
-  </p>
+GEM IPM &#8211; the numerical kernel of GEM-Selektor</a> </p>
+
 <blockquote><a href="#TAG_GEM_METHOD">2.1.
 The Gibbs
 Energy Minimization (GEM) method (brief overview) </a><br>
   <a href="#TAG-IPM2-ALGORITHM">2.2. The GEM IPM-3 algorithm (brief
-overview)</a>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;
-
-
-  <br>
-  <a href="#TAG_TMULTI">2.3. TMulti class - an implementation of the GEM
+overview)</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp; <br>
+  <a href="#TAG_TMULTI">2.3. TMulti class - an implementation of the
+GEM
 IPM-3
 algorithm</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <br>
-  <a href="#TAG_MAKE_FILES">2.4. How to export GEMS3K input files from the
+  <a href="#TAG_MAKE_FILES">2.4. How to export GEMS3K input files from
+the
 GEM-Selektor
 package</a><br>
 </blockquote>
 
-  
 <p><a href="#TAG_GEMIPM2K">3. GEMS3K - a standalone GEM
 solver with data exchange interface</a></p>
+
 <blockquote><a href="#TAG_DATACH">3.1.
 DATACH data exchange structure for sharing
 chemical
@@ -123,7 +133,9 @@ class for
 simple coupling of GEM IPM module to transport
 codes</a><br>
 </blockquote>
+
 <p><a href="#TAG_PROGRAMMING">4. Programming and technical issues</a></p>
+
 <blockquote><a href="#TAG_SVN">4.1.
 Subversion repository of GEMS3K source code</a><br>
   <a href="#TAG_FMT_CPP">4.2.
@@ -131,8 +143,8 @@ Mass transport part in C++</a><br>
   <a href="#TAG_FMT_FORTRAN">4.3. Mass transport part in Fortran</a><br>
   <a href="#TAG_BUILD">4.4.
 Building GEMS3K executables</a></blockquote>
-<p><a href="#TAG_REFERENCES">5. References</a></p>
 
+<p><a href="#TAG_REFERENCES">5. References</a></p>
 
 <hr size="2" width="100%">
 <h2><a name="TAG_INTRO"></a>1. Introduction</h2>
@@ -153,7 +165,6 @@ via the porosity and permeability changes e.g. due to mineral
 dissolution or
 precipitation. </p>
 
-
 <p>Direct
 inclusion of all possible chemical reactions in the mass transport
 model is possible (e.g.[<a href="gemipm2k-man.html#Ref_Steefel_2009">Steefel
@@ -164,8 +175,6 @@ to a
 few reactions, which makes its chemical plausibility doubtful. The
 modeller must make (often arbitrary) decisions about which chemical
 interactions are relevant, and which ones can be neglected. </p>
-
-
 
 <p>An
 alternative "operator-splitting" approach would be to keep a complex
@@ -181,8 +190,6 @@ could have been changed by the mass transport part on its previous
 iteration time step <span style="font-style: italic;">t-</span>1.&nbsp;
 </p>
 
-
-
 <p>The
 "chemical black box" equilibration is then applied
 to each node independently at time point <span style="font-style: italic;">t</span>,
@@ -196,8 +203,6 @@ procedure can also detect a disappearance of some phases or
 appearance of some new phases in some nodes (e.g., due to dissolution
 or
 precipitation of solids). </p>
-
-
 
 <p>After the
 "chemistry" run over all nodes is
@@ -216,7 +221,6 @@ earlier (at <span style="font-style: italic;">t</span>-1), and
 then&nbsp; by applying the "chemical black box" to each node at time <span style="font-style: italic;">t</span>, producing the updated speciation
 which will be used by the FMT part at the next time point&nbsp; <span style="font-style: italic;">t</span>+1.</p>
 
-
 <p>This
 idea of "operator-splitting" coupling is not really new and it has
 already been implemented in a number of
@@ -229,7 +233,6 @@ for minimizing the mass balance deviations. However, another type of
 chemical solvers based on Gibbs energy minimization (GEM) can also
 be&nbsp;
 coupled with the FMT codes. </p>
-
 
 <p>Both LMA and
 GEM can solve the so-called forward
@@ -253,7 +256,6 @@ mixture) phase. Even more complex systems can be considered, e.g. those
 involving (ad)sorption on several co-existing
 sorbents. </p>
 
-
 <p>Chemical
 speciation problems were traditionally solved with help of the LMA
 codes,
@@ -270,8 +272,6 @@ and Appelo, 1999</a>] or CHESS
 [<a href="gemipm2k-man.html#Ref_van-der-Lee-1998">van der Lee, 1998</a>].
 </p>
 
-
-
 <p>The
 advantages of LMA - excellent mass balance accuracy and fast
 convergence - are best revealed in the case of simple aqueous
@@ -281,7 +281,6 @@ data only for the product species (usually aqueous/surface complexes,
 minerals, and gases), but not for the master species (usually aqueous
 ions) - this "input data economy" can also be viewed as an advantage in
 some cases.</p>
-
 
 <p><a name="CRITIQUE-LMA"></a>However,
 solving with LMA codes the complex equilibria that involve aqueous
@@ -303,6 +302,7 @@ highest oversaturation is included into the mass balance, the
 speciation is computed again, and this loop is repeated until no
 supersaturated phases are left in the list. <br>
 </p>
+
 <p>The real
 problem
 in LMA approach is how to determine the saturation index of the solid
@@ -312,7 +312,8 @@ be
 done over iterations using ionic activities
 available from aqueous speciation. For non-ideal SS, this is a problem
 which has
-no general solution, as explained on Page 94 in [<a href="gemipm2k-man.html#Ref_Bruno_ea_2007">Bruno et al, 2007</a>]. Because of that,
+no general solution, as explained on Page 94 in [<a href="gemipm2k-man.html#Ref_Bruno_ea_2007">Bruno et al, 2007</a>].
+Because of that,
 the
 LMA chemical solvers can at best treat only ideal solution phases and
 simple binary non-ideal solid solutions that can be described using
@@ -327,12 +328,15 @@ to evaluate, but, with a large list of possible condensed phases, more
 than ten LMA loops may be required to include all stable solids
 into
 mass balance.</p>
+
 <p>A
 complementary GEM (Gibbs Energy Minimization) method of
 thermodynamic modeling has been implemented in several computer codes
 such as
 ChemSage/ FactSage (http://www.factsage.com); Gibbs/HCh [<a href="#Ref-Borisov-1992">Borisov &amp; Shvarov, 1992</a>];
-Selektor-C [<a href="#Ref_Karpov-ea-2001">Karpov et al., 2001</a>]; and GEM-Selektor ([<a href="gemipm2k-man.html#Ref_Kulik-ea-2004">Kulik et al., 2004</a>];
+Selektor-C [<a href="#Ref_Karpov-ea-2001">Karpov et al., 2001</a>]; and
+GEM-Selektor ([<a href="gemipm2k-man.html#Ref_Kulik-ea-2004">Kulik et
+al., 2004</a>];
 http://gems.web.psi.ch). GEM
 algorithms can solve complex chemical equilibria in a straightforward
 way. The
@@ -346,8 +350,10 @@ programming approach to GEM will
 be considered [<a href="gemipm2k-man.html#Ref_Karpov-ea-1997">Karpov et
 al., 1997</a>; <a href="gemipm2k-man.html#Ref_Karpov-ea-2001">2001</a>],
 as implemented in GEMS3K
-and GEM-Selektor v.3 code [<a href="gemipm2k-man.html#Ref_Kulik-ea-2004">Kulik et al., 2004</a>] and
+and GEM-Selektor v.3 code [<a href="gemipm2k-man.html#Ref_Kulik-ea-2004">Kulik
+et al., 2004</a>] and
 distributed with a built-in Nagra/PSI chemical thermodynamic data base [<a href="#Ref-Hummel-2002">Hummel et al, 2002</a>]. </p>
+
 <p>The
 GEM method computes simultaneously the primal (amounts of dependent
 components
@@ -360,7 +366,6 @@ equilibrium are obtained. If non-ideal phases are included then the
 activity
 coefficients of their components are adjusted on each GEM
 iteration and come out as part of the primal solution.</p>
-
 
 <p>In
 comparison
@@ -390,7 +395,6 @@ additional
 iterations and internally consistent thermodynamic data [<a href="gemipm2k-man.html#Ref_TM-44-02-06">Chudnenko ea,
 2002</a>]. </p>
 
-
 <p>The
 present GEMS3K code is a GEM-Selektor
 kernel chemical
@@ -398,12 +402,11 @@ solver equipped with a data exchange interface that makes it possible
 to
 couple any existing FMT code with the GEM&nbsp; "chemical black box" to
 produce a coupled modeling code with high chemical plausibility. As
-in standalone GEMS3K code there is no GUI and data exchange occurs via files or directly in
+in standalone GEMS3K code there is no GUI and data exchange occurs via
+files or directly in
 computer RAM, such code
 can be parallelized and compiled on various platforms up to HPC
 clusters.&nbsp; </p>
-
-
 
 <p>The traditional
 "operator-splitting" coupling, where the chemical information for all
@@ -416,7 +419,6 @@ be
 organized (using a TNodeArray C++ class) into node arrays, with each
 node accessible
 from the GEM IPM-3 routines or from the FMT program. </p>
-
 
 <p>This
 document describes the structure of GEMS3K program and the data
@@ -431,10 +433,7 @@ these data objects are the same as in GEM-Selektor package or similar;
 links are
 provided wherever necessary.</p>
 
-
 <br>
-
-
 
 <hr size="2" width="100%">
 <h2><a name="TAG_GEMIPM2"></a>2. GEM IPM-3 &#8211; the numerical kernel of
@@ -444,27 +443,26 @@ GEM-Selektor </h2>
 extracted from the GEM-Selektor code package for thermodynamic
 modelling by Gibbs energy minimization (GEM),
 available at <a href="http://gems.web.psi.ch/GEMS3K/">http://gems.web.psi.ch/GEMS3K/</a>.
-The satndalone GEMS3K code implements the same GEM IPM-3 chemical solver as in GEM-Selektor,
+The satndalone GEMS3K code implements the same GEM IPM-3 chemical
+solver as in GEM-Selektor,
 linked to TMulti C++ class
 and data structure, enhanced with RAM-
 and file- data exchange interfaces implemented in TNode and TNodeArray
-classes, but cut from the GEM-Selektor graphical user interface, database
+classes, but cut from the GEM-Selektor graphical user interface,
+database
 engine, and script interpreter.</p>
-
-
 
 <p> The GEMS3K code has been designed for
 coupling the GEM IPM-3 chemical
 solver with
 existing and new fluid-mass-transport (FMT)
 codes. The program source code is compatible with ANSI
-C++ and can be compiled on many computer platforms (Windows, Linux, HPC Merlin, Cray XT, etc.) using many
+C++ and can be compiled on many computer platforms (Windows, Linux, HPC
+Merlin, Cray XT, etc.) using many
 optimizing
 compilers (GNU C++, PGI
 C++, Intel
 C++, Microsoft C++, &#8230; ). </p>
-
-
 
 <p>The
 input data can be provided in human-readable ASCII files, the
@@ -476,11 +474,10 @@ and&nbsp; DATABR data structures.
 This data exchange interface is implemented in two C++ classes &#8211; TNode
 and TNodeArray. </p>
 
-
-
 <p>The
 TNode class provides functionality for attaching the GEM IPM-3
-kernel module to an existing transport model code which keeps the chemical
+kernel module to an existing transport model code which keeps the
+chemical
 information
 for all nodes and calls GEM
 calculation for each node separately. The TNodeArray class is built on
@@ -491,16 +488,20 @@ states in all nodes after the mass transport step can be done with a
 single call (with
 internal parallelization possible). This may be suitable for developing
 of a
-new coupled code. The GEMS3K source code is distributed open-source under
+new coupled code. The GEMS3K source code is distributed open-source
+under
 LGPL v.3 license.</p>
+
 <br>
-<hr size="2" width="100%"><h3><a name="TAG_GEM_METHOD"></a>2.1. The Gibbs Energy
+
+<hr size="2" width="100%">
+<h3><a name="TAG_GEM_METHOD"></a>2.1. The Gibbs Energy
 Minimization (GEM) method (brief overview)<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;" lang="DE-CH"></span></h3>
+
 <p>In GEM approach
 [for details, see <a href="#Ref_Karpov-ea-1997">Karpov
 et
-al., 1997</a>; <a href="#Ref_Karpov-ea-2001">Karpov et al., 2001</a>;
-  <a href="#Ref_Kulik-ea-2004">Kulik
+al., 1997</a>; <a href="#Ref_Karpov-ea-2001">Karpov et al., 2001</a>; <a href="#Ref_Kulik-ea-2004">Kulik
 et al., 2004</a>; <a href="#Ref_Kulik_ea-2012">Kulik
 et al., 2012</a>], the total mole
 amounts of
@@ -527,8 +528,6 @@ into account appropriate standard and
 reference states, concentration scales, and models of (non)ideal
 mixing.</p>
 
-
-
 <p>The <st2:stockticker w:st="on">GEM</st2:stockticker>
 problem consists in calculation of (yet unknown) equilibrium phase
 assemblage
@@ -540,9 +539,8 @@ dependent components, and, optionally, parameters of models of
 non-ideal mixing
 in multi-component phases. Solving this problem means finding mole
 amounts of
-dependent components<span style=""> </span><big><i style="">n</i><sup>(<i style="">x</i>)</sup> = <st1:citation w:st="on">{<i style=""> n</i><sup>(<i style="">x</i>)</sup><i style=""><sub>j</sub></i>, <i style="">j</i><span style="font-family: Symbol;"><span style=""><span style="font-style: italic;"> </span>belongs to</span></span><i style=""> L</i>}</st1:citation></big>&nbsp; such
+dependent components<span style=""> </span><big><i style="">n</i><sup>(<i style="">x</i>)</sup> = <st1:citation w:st="on">{<i style=""> n</i><sup>(<i style="">x</i>)</sup><i style=""><sub>j</sub></i>, <i style="">j</i><span style="font-family: Symbol;"><span style=""><span style="font-style: italic;"> </span></span></span></st1:citation></big>belongs to<big><st1:citation w:st="on"><i style=""> L</i>}</st1:citation></big>&nbsp; such
 that:<span style=""><o:p></o:p></span></p>
-
 
 <p class="NormalEq" style="text-align: left; text-indent: 0cm; line-height: normal;" align="left"><big><i><span style="font-size: 12pt;" lang="EN-GB">G</span></i><span style="font-size: 12pt;" lang="EN-GB">(<i>n</i><sup>(<i style="">x</i>)</sup>)<i>
 </i></span><span style="font-size: 12pt; font-family: Symbol;" lang="EN-GB"><span style="">-&gt;</span></span></big><span style="font-size: 12pt;" lang="EN-GB"><big> min<span style="">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -565,61 +563,14 @@ matrix made of the formula stoichiometry
 coefficients of dependent components (DC, product species with indexes
 comprising the set<span style=""> <big><span style="font-style: italic;">L</span></big></span>); and <big><i style="">G</i>(<i>n</i><sup>(<i style="">x</i>)</sup>)</big><span style=""><big> </big></span>is a total Gibbs
 energy function of the system:<br>
-<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;; position: relative; top: 11pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:120pt;
- height:25.5pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;; position: relative; top: 11pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:120pt;
- height:25.5pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span></p>
+<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;; position: relative; top: 11pt;"></span><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;; position: relative; top: 11pt;"></span></p>
 
 <p class="MsoNormal" style="margin-bottom: 6pt; text-align: justify;"><big><i><span style="font-size: 12pt;" lang="EN-GB">G</span></i><span style="font-size: 12pt;" lang="EN-GB">(<i>n</i><sup>(<i style="">x</i>)</sup>)
 = SUM(<span style="font-style: italic;"> v</span></span></big><big><i style=""><sub>j</sub></i></big><big><span style="font-size: 12pt;" lang="EN-GB"><span style="font-style: italic;"></span> </span></big><big><i style="">* n</i><sup>(<i style="">x</i>)</sup></big><big><i style=""><sub>j</sub></i></big><big><span style="font-size: 12pt;" lang="EN-GB"> ), &nbsp;&nbsp; </span></big><big><i style="">j</i><span style="font-family: Symbol;"><span style=""><span style="font-style: italic;"> </span>belongs to</span></span><i style=""> L</i></big><br>
 <span style=""><span style="font-family: Helvetica,Arial,sans-serif;"></span><o:p></o:p></span></p>
 
-<p>Here<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><span style="font-family: Helvetica,Arial,sans-serif;">,</span> </span><big><i style=""><span style="font-size: 12pt; font-family: Symbol;"><span style="">v</span></span><sub><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;">j</span></sub></i></big><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"> </span>is the normalized
+<p>Here<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><span style="font-family: Helvetica,Arial,sans-serif;">,</span> </span><big><i style=""><span style="font-size: 12pt; font-family: Symbol;"><span style="">v</span></span><sub><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;">j</span></sub></i></big><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"> </span>is
+the normalized
 primal chemical potential of j&#8211;th dependent
 component, calculated for each DC from its standard molar
 Gibbs energy function, concentration and activity coefficient taken in
@@ -633,145 +584,25 @@ GEM iterations according
 to the
 model of non-ideal mixing chosen for each phase. For aqueous
 electrolyte,
-various modifications of the Debye-H&uuml;ckel equation are commonly
+various modifications of the Debye-Hückel equation are commonly
 used for low-to-moderate ionic strength, as well as SIT and Pitzer
 models for high dissolved salt concentrations. <span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"></span></p>
-<p><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;">
-  </span></p>
-<i><span style="font-size: 11pt; font-family: Arial; color: black; position: relative; top: 10pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:168pt;
- height:33.75pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span></i><i><span style="font-size: 11pt; font-family: Arial; color: black; position: relative; top: 10pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:168pt;
- height:33.75pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span></i><i><span style="font-size: 11pt; font-family: Arial; color: black; position: relative; top: 10pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:168pt;
- height:33.75pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span></i>
 
-<p style="font-family: Helvetica,Arial,sans-serif;"><i><span style="font-size: 11pt; font-family: Arial; color: black; position: relative; top: 10pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:168pt;
- height:33.75pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span></i></p>
+<p><span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"> </span></p>
+
+<i><span style="font-size: 11pt; font-family: Arial; color: black; position: relative; top: 10pt;"></span></i>
+
 
 <p><span style="">The <i>Interior
 Points Method</i>
 (IPM) non-linear <st2:stockticker w:st="on">GEM</st2:stockticker>
-algorithm finds simultaneously two vectors &#8211; the <i>primal</i> <span style="position: relative; top: 5pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75" coordsize="21600,21600"
- o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe" filled="f"
- stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:20.25pt;
- height:19.5pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span></span><big><i style="">n</i><sup>(<i style="">x</i>) </sup></big><span style="">and the <i style="">dual
+algorithm finds simultaneously two vectors &#8211; the <i>primal</i> <span style="position: relative; top: 5pt;"></span></span><big><i style="">n</i><sup>(<i style="">x</i>) </sup></big><span style="">and
+the <i style="">dual
 </i></span><big><i style="">u</i></big> solution vectors of
 the GEM problem &#8211; using the Karush-Kuhn-Tucker
 necessary and sufficient conditions of
 equilibrium state [<a href="#Ref_Karpov-ea-1997">Karpov et al, 1997</a>]
 which in vector-matrix form look like<span style="font-family: Helvetica,Arial,sans-serif;"><o:p></o:p></span></p>
-
 
 <p style="font-family: Helvetica,Arial,sans-serif;"><big><i style=""><span style="font-size: 12pt; font-family: Symbol;"><span style="">v - </span></span></i><i style="font-family: Times New Roman,Times,serif;">A<sup>T</sup>u &gt;=
 </i><span style="font-family: Times New Roman,Times,serif;">0</span><i style="font-family: Times New Roman,Times,serif;">;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -783,35 +614,11 @@ operator.&nbsp; <span style="font-size: 12pt; letter-spacing: -0.2pt;">The
 last condition of <i style="">orthogonality</i> zeroes off
 the molar amounts of unstable species and phases. The
 Karush-Kuhn-Tucker conditions were also extended
-for the case when the sought-for amounts <span style="position: relative; top: 6pt;"><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
- coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
- filled="f" stroked="f">
- <v:stroke joinstyle="miter"/>
- <v:formulas>
-  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
-  <v:f eqn="sum @0 1 0"/>
-  <v:f eqn="sum 0 0 @1"/>
-  <v:f eqn="prod @2 1 2"/>
-  <v:f eqn="prod @3 21600 pixelWidth"/>
-  <v:f eqn="prod @3 21600 pixelHeight"/>
-  <v:f eqn="sum @0 0 1"/>
-  <v:f eqn="prod @6 1 2"/>
-  <v:f eqn="prod @7 21600 pixelWidth"/>
-  <v:f eqn="sum @8 21600 0"/>
-  <v:f eqn="prod @7 21600 pixelHeight"/>
-  <v:f eqn="sum @10 21600 0"/>
- </v:formulas>
- <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
- <o:lock v:ext="edit" aspectratio="t"/>
-</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:18pt;
- height:18pt'>
- <v:imagedata src="file:///C:\DOCUME~1\kulik\LOCALS~1\Temp\msohtml1\01\clip_image001.wmz"
-  o:title=""/>
-</v:shape><![endif]--><!--[if !vml]--><!--[endif]--></span>of
+for the case when the sought-for amounts <span style="position: relative; top: 6pt;"></span>of
 some metastable species are constrained
 from below and/or above to model &#8220;partial equilibrium&#8221; states </span><st1:citation w:st="on"><span style="font-size: 12pt;">and simulate kinetics [<a href="#Ref_Karpov-ea-2001">Karpov et al., 2001</a>]</span></st1:citation><span style="font-size: 12pt; letter-spacing: -0.2pt;">.</span></p>
-<span style="font-size: 12pt; font-family: Times; letter-spacing: -0.2pt;"> </span>
 
+<span style="font-size: 12pt; font-family: Times; letter-spacing: -0.2pt;"> </span>
 <p>It is an advantage
 of
 GEM method (in "convex programming" variant) that it yields two
@@ -827,11 +634,9 @@ diffusion of any component may be considered as being driven by the
 gradient of its chemical
 potential.</p>
 
-
 <br>
+
 <hr size="2" width="100%">
-
-
 <h3><a name="TAG-IPM2-ALGORITHM"></a>2.2. The GEM IPM-3 algorithm
 (brief overview) </h3>
 
@@ -841,12 +646,11 @@ potential.</p>
 algorithm is described in more detail in a paper [<a href="#Ref_Kulik_ea-2012">Kulik et
 al., 2012</a>] , as well as in earlier report [<a href="#Ref_TM-44-02-06">Chudnenko et al., 2002</a>]. A short overview
 is given in [<a href="#Ref_Bruno_ea_2007">Bruno et al., 2007</a>],
-pages 94-104. The mass balance precision and speed of GEM IPM-3 calculations have been
+pages 94-104. The mass balance precision and speed of GEM IPM-3
+calculations have been
 dramatically increased [<a href="#Ref_Dmytrieva-2008">Dmytrieva et al.,
 2009</a>] and now are comparable with that of LMA codes, at least in
 "smart initial approximation" SIA mode. </p>
-
-
 
 <p>The basic idea of
 the GEM IPM algorithm consists in finding such a distribution vector <span style="font-style: italic;">n </span>of bulk chemical composition of
@@ -860,19 +664,17 @@ the process consists of four major steps. </p>
 
 <br>
 
-
-
-<p style="font-family: Helvetica,Arial,sans-serif;"><img style=" width: 640px; height: 780px;" alt="IPM flowchart" title="GEM IPM general flowchart" src="FlowChartOfIPM-3-Algorithm.png"><br>
+<p style="font-family: Helvetica,Arial,sans-serif;"><img style="width: 640px; height: 780px;" alt="IPM flowchart" title="GEM IPM general flowchart" src="FlowChartOfIPM-3-Algorithm.png"><br>
 </p>
 
 <p>Fig. 2-1.
 Simplified flowchart of the GEM IPM-3 algorithm</p>
 
-
-
 <p style="font-family: Helvetica,Arial,sans-serif;"><br>
 </p>
-<p><a name="INITIAL_APPROXIMATION"></a>The <u>first stage</u> is to obtain an
+
+<p><a name="INITIAL_APPROXIMATION"></a>The <u>first stage</u> is to
+obtain an
 initial approximation of the <span style="font-style: italic;">n</span>
 vector which is close enough to
 the <span style="font-style: italic;">G</span>(<span style="font-style: italic;">n</span>) minimum, so that the GEM process
@@ -884,19 +686,20 @@ previous solution is available at all, or the available one is bad,
 then the so-called "automatic initial approximation" (AIA) must
 obtained by solving a linear programming (LP) sub-problem using a
 modified simplex method. </p>
+
 <p style="font-family: Helvetica,Arial,sans-serif;">
 </p>
-
 
 <p>The LP
 sub-problem is constructed by truncating all the mixing terms from
 chemical potential expressions for all components of phases-solutions,
 which is equivalent to considering any component as a pure phase. Given
-  <span style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>) Independent Components (usually
+<span style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>) Independent Components (usually
 chemical elements and charge) in the bulk composition vector <span style="font-style: italic;">b</span>, the simplex solution contains at
 most <span style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>) non-zero elements in the AIA
 speciation vector <span style="font-style: italic;">n</span>(AIA).
-This is also consistent with the Gibbs phase rule. The <i>n</i>(AIA) vector contains many
+This is also consistent with the Gibbs phase rule. The <i>n</i>(AIA)
+vector contains many
 zero amounts of chemical species (dependent components) which may be
 relevant aqueous species or form stable condensed or fluid phases,
 although this is not a priori known. For that reason, the zero mole
@@ -905,21 +708,23 @@ amount (1e-6 - 1e-5 mol) which then would increase or decrease upon GEM
 iterations depending on the stability of the chemical species in this
 chemical system.</p>
 
-
-
 <p>Usually, the
 number of aqueous species is greater than <span style="font-style: italic;">n</span>(<span style="font-style: italic;">N</span>).
 If the number of stoichiometrically possible phases exceeds n(N), such
-system is called a "multisystem" [<a href="#Ref_Karpov-ea-1997">Karpov et al., 1997</a>]. Equilibria in
+system is called a "multisystem" [<a href="#Ref_Karpov-ea-1997">Karpov
+et al., 1997</a>]. Equilibria in
 multisystems cannot be solved directly by LMA algorithm (see a <a href="#CRITIQUE-LMA">comment here</a>), but such equilibria can be
 solved in one GEM run, if the initial approximation belongs to the
 so-called "feasible domain". <br>
 </p>
-<p><a name="MBR_PROCEDURE"></a>So, the <u>second stage</u> - a special MBR() algorithm - consists in checking
+
+<p><a name="MBR_PROCEDURE"></a>So, the <u>second stage</u> - a special
+MBR() algorithm - consists in checking
 whether the AIA or SIA vector <span style="font-style: italic;">n</span>
 is feasible, i.e. whether the mass balance residuals for all
 independent components are small enough. This is usually so in the case
-of previously available SIA vector, but not so for the <i>n</i>(AIA) vector.&nbsp; If the current amount of <span style="font-style: italic;">j</span>-th species <span style="font-style: italic;">n<sub>j</sub></span> falls below a certain
+of previously available SIA vector, but not so for the <i>n</i>(AIA)
+vector.&nbsp; If the current amount of <span style="font-style: italic;">j</span>-th species <span style="font-style: italic;">n<sub>j</sub></span> falls below a certain
 numerical threshold (ca. 1e-30 mol), it will be zeroed off. This
 eliminates the <span style="font-style: italic;">j</span>-th species
 from subsequent GEM iterations in order to avoid numerical troubles.
@@ -928,18 +733,16 @@ However, if the total amount of a phase falls below another threshold
 will be zeroed off and the whole phase is eliminated from next GEM
 iterations.</p>
 
-
-
-<p>On each iteration, the MBR() algorithm checks the mass balance residuals and
+<p>On each iteration, the MBR() algorithm checks the mass balance
+residuals and
 tries to change the largest elements of the AIA vector in such a way
 that the mass balance accuracy would be at least satisfactory (i.e.
 deviations less than 1e-12 mol). This is usually done in a few
 iterations, and then the initial approximation vector is ready for the
 main GEM algorithm. </p>
 
-
-
-<p><a name="GEM_PROCEDURE"></a>The <u>third stage</u> - the Main IPM Descent algorithm - adjusts the elements of <span style="font-style: italic;"></span>speciation
+<p><a name="GEM_PROCEDURE"></a>The <u>third stage</u> - the Main IPM
+Descent algorithm - adjusts the elements of <span style="font-style: italic;"></span>speciation
 vector <span style="font-style: italic;">n</span> to minimize the
 total Gibbs energy of the system <span style="font-style: italic;">G</span>(<span style="font-style: italic;">n</span>) while keeping mass balance
 deviations the same or lower as inherited from the MBR() step. This is
@@ -959,12 +762,13 @@ function of <span style="font-style: italic;">G</span>(<span style="font-style: 
 which is ideally zero, but numerically must be below a small threshold
 (for the quadratic Dikin's criterion, DK &lt; Pa_DK = 1e-6).&nbsp; </p>
 
-
-
 <p>Each iteration of
-the IPM Descent consists of three steps. First, a new dual solution approximation <span style="font-style: italic;">u</span> is found by solving with the
+the IPM Descent consists of three steps. First, a new dual solution
+approximation <span style="font-style: italic;">u</span> is found by
+solving with the
 Cholesky decomposition method a SLE constructed from the previous
-primal solution, stoichiometry matrix, and weight multipliers. Next, the
+primal solution, stoichiometry matrix, and weight multipliers. Next,
+the
 vector of descent direction is found by comparing primal and dual
 chemical potentials for each dependent component. Finally, a step
 length multiplier is determined from a condition that no new nj value
@@ -972,46 +776,48 @@ should break the "feasible domain" of mass balance and metastability
 constraints. The new approximation of the <span style="font-style: italic;">n</span> speciation vector is found by
 incrementing non-zero elements of the old one with a product of the
 respective element of the descent direction vector and the scalar step
-length. Convergence is usually achieved in 1 to 10 iterations in the SIA
+length. Convergence is usually achieved in 1 to 10 iterations in the
+SIA
 and 20 to 200 iterations in the simplex AIA case. </p>
 
-
-
 <a name="PSSC_PROCEDURE"></a>The <u>fourth stage</u>
-is called "phase selection" (implemented in the PhaseSelection() 
+is called "phase selection" (implemented in the PhaseSelection()
 function). It
 consists in calculation of a phase stability index for each
 multi-component phase present in non-zero amount, as well as for each
-pure phase, either in the mass balance or not. The stability index is 
-computed mainly from the dual solution vector u and stoichiometry of 
-phase components. For any stable phase, the stability index (in 
+pure phase, either in the mass balance or not. The stability index is
+computed mainly from the dual solution vector u and stoichiometry of
+phase components. For any stable phase, the stability index (in
 logarithmic scale) must be close to zero.&nbsp; However, if the initial
 approximation was bad, or there were errors in stoichiometry or <span style="font-style: italic;">g</span><sup>o</sup> value for a dependent
-component, <span style="font-style: italic;"></span> the value of stability index may indicate that a phase present in the mass
+component, <span style="font-style: italic;"></span> the value of
+stability index may indicate that a phase present in the mass
 balance is unstable and must be excluded, or vice versa - a phase
 absent from the mass balance (zeroed off) is stable and must be
 included. If any such phase has been detected, it is zeroed off
 respectively its component amounts are filled out with small amounts,
 and the whole sequence is repeated from Step two (but without the
-overall fill-out step). If, after three to five such refinement loops, the
-PhaseSelection() still finds inconsistent phases, the behavior of GEM IPM
+overall fill-out step). If, after three to five such refinement loops,
+the
+PhaseSelection() still finds inconsistent phases, the behavior of GEM
+IPM
 algorithm depends on the original initial approximation. If it was SIA,
 the mode is automatically switched to AIA and calculation begin "from
 scratch", i.e. from solving the LP sub-problem for a generic IA. If it
 was AIA, an error message is generated and the GEM solution is not
 accepted.&nbsp; <br>
+
 <p>All these
-numerical paths of the iterative GEM IPM-3 algorithm are controlled 
+numerical paths of the iterative GEM IPM-3 algorithm are controlled
 using ca. 20 thresholds and flags, values of which were empirically
 found in many test and modelling calculations in various systems. These
-  <a href="gems3k-ipm.html">numerical controls</a> can be adjusted
+<a href="gems3k-ipm.html">numerical controls</a> can be adjusted
 in the GEM-Selektor Project module window, or in the <span style="font-family: monospace;">*ipm.dat</span>&nbsp;
 input file of the GEMS3K standalone program, as described in the <a href="gems3k-iofiles.html">companion manual</a>. </p>
 
 <br>
+
 <hr size="2" width="100%">
-
-
 <h3>&nbsp;<a name="TAG_TMULTI"></a>2.3. TMulti class - an
 implementation of the GEM
 IPM-3 algorithm<span style="font-size: 12pt; font-family: &quot;Times New Roman&quot;;"><br>
@@ -1022,44 +828,52 @@ described in the previous section &#8211; the GEM IPM-3 kernel - are
 implemented in the
 TMulti class (see <tt>ms_multi.h</tt> file). This C++ class includes a
 work
-structure called <tt>MULTI</tt>, as well as a number of supplementary data
+structure called <tt>MULTI</tt>, as well as a number of supplementary
+data
 structures
 and functions. Before starting the GEM IPM calculation, all input data
 arrays
-in the <tt>MULTI</tt> work instance must be filled out. 
+in the <tt>MULTI</tt> work instance must be filled out. </p>
 
-</p>
 <p>In
-the GEM-Selektor code, most of this data is taken from the work instance of <tt>TSyst</tt>
+the GEM-Selektor code, most of this data is taken from the work
+instance of <tt>TSyst</tt>
 class
-(<tt>SYSTEM</tt> data structure) and from the work instance of <tt>TMTparm</tt> class
+(<tt>SYSTEM</tt> data structure) and from the work instance of <tt>TMTparm</tt>
+class
 (<tt>MTPARM</tt>
-data structure), both connected to the <tt>RMULTS</tt> data structure containing
+data structure), both connected to the <tt>RMULTS</tt> data structure
+containing
 lists
-of components and phases included into a GEM-Selektor modeling project. These
+of components and phases included into a GEM-Selektor modeling project.
+These
 data are
 98% accessible through GEM-Selektor module windows. Upon collecting the
 information
-into the <tt>MULTI</tt> structure, the data for all components and phases that
+into the <tt>MULTI</tt> structure, the data for all components and
+phases that
 have been
-switched off will be skipped automatically, i.e. the chemical system definition will be compressed.&nbsp; 
+switched off will be skipped automatically, i.e. the chemical system
+definition will be compressed.&nbsp; </p>
 
-</p>
 <p>In
 the GEMS3K
 code, the only way to exchange input and output
-data with the GEM IPM kernel (and the work instance of the <tt>MULTI</tt> data
+data with the GEM IPM kernel (and the work instance of the <tt>MULTI</tt>
+data
 structure) is using <tt>TNode</tt> class functions
 that access the <tt>DATACH</tt> and <tt>DATABR</tt>
-structures. One way is to read the DCH, IPM and DBR input files of GEMS3K;
+structures. One way is to read the DCH, IPM and DBR input files of
+GEMS3K;
 another way (used in coupled reactive transport codes) is to exchange
 data directly
-in computer memory (see <a href="gems3k-useref.html">User Reference file</a> and doxygen-style documentation). 
+in computer memory (see <a href="gems3k-useref.html">User Reference
+file</a> and doxygen-style documentation). </p>
 
-</p>
 <p>The
 format
-and content of GEMS3K I/O files are described in the <a href="gems3k-iofiles.html">I/O File Formats</a> documentation file. In the text
+and content of GEMS3K I/O files are described in the <a href="gems3k-iofiles.html">I/O File Formats</a> documentation file. In
+the text
 variant, these I/O files can be typed by the user with help of a simple
 ASCII text
 editor. However, it is highly recommended to export them from the
@@ -1069,248 +883,276 @@ modeling must be performed at temperatures and pressures varying from
 node to
 node or with time. This is more than just technical issue. It is
 essential to
-investigate the behavior and the stiffness of the chemical system in detail
+investigate the behavior and the stiffness of the chemical system in
+detail
 (by
 performing GEM-Selektor runs that simulate irreversible mixing,
 oxidation/reduction, or titration) before inserting it into the coupled
-reactive transport model, calculation of which is far more expensive. Exporting
+reactive transport model, calculation of which is far more expensive.
+Exporting
 the DCH, IPM and DBR files in GEM-Selektor is quite easy, as outlined
 in the
 next section.</p>
 
 <br>
+
 <hr size="2" width="100%">
-
-
 <h3><a name="TAG_MAKE_FILES"></a>2.4. How to make GEMS3K input
 files using the
 GEM-Selektor package</h3>
+
 <p>It
 is
-possible to produce a set of DCH, IPM and DBR files readable by GEMS3K 
+possible to produce a set of DCH, IPM and DBR files readable by GEMS3K
 for
 any single chemical system that has been set up and calculated in
 GEM-Selektor at
-least once. The description below is also available in the GEM-Selektor 
-runtime help database. First, refer to the help tutorial there&nbsp; for
- learning how to make a GEM-Selektor modeling
+least once. The description below is also available in the GEM-Selektor
+runtime help database. First, refer to the help tutorial there&nbsp;
+for learning how to make a GEM-Selektor modeling
 project and
 set up the chemical system of your interest in a new SysEq record.</p>
+
 <h4>How
-to
-      Write and Read GEMS3K I/O Files
-      From the Single System Dialog</h4>
-<p>This method produces one DCH, one IPM and one DBR file for a
-      given single chemical system definition and GEM task. How to read
-      these files in is <a href="#HOWTO_READ_IN">described here</a>.</p>
+to Write and Read GEMS3K I/O Files From the Single System Dialog</h4>
+
+<p>This method produces one DCH, one IPM and one DBR file for a given
+single chemical system definition and GEM task. How to read these files
+in is <a href="#HOWTO_READ_IN">described here</a>.</p>
+
 <p>In the Single System dialog, calculate and save the desired SysEq
-      record. Then click on "Data" "Export GEMS3K files..." menu
-      command. This opens the "Setup for writing GEMS3K input files"
-      dialog, which by default looks like this:</p>
-<p><img style=" width: 576px; height: 569px;" alt="SetupWritingGEMS3KfilesDialog.png" src="file:///Users/kulik/DevGEMS/trunk/gems-gui/Resources/doc/html/SetupWritingGEMS3KfilesDialog.png"><br>
+record. Then click on "Data" "Export GEMS3K files..." menu command.
+This opens the "Setup for writing GEMS3K input files" dialog, which by
+default looks like this:</p>
+
+<p><img style="width: 576px; height: 569px;" alt="SetupWritingGEMS3KfilesDialog.png" src="SetupWritingGEMS3KfilesDialog.png"><br>
 </p>
+
 <br>
-<p>In the upper group, you have a choice to write GEMS3K files in
-      text mode (default) or in binary mode. Activating the "Do not
-      write data items that contain only default values" will result in
-      much smaller IPM and DBR files because only data and numerical
-      settings that differ from default values will be written; by
-      reading these files, GEMS3K will assume default values for all
-      data objects that are not present in the input files. Note that
-      this makes sense to do if you are sure that you work with the same
-      GEMS3K version in both GEM-Selektor and the coupled code. The next
-      option ("Write files with comments..."), if deactivated, results
-      in much more compact though less human-readable text input files.
-      The last option ("Include node transport properties into DBR
-      file") should be unchecked (default) when exporting files for
-      coupled codes such as OGS-GEMS where all such information is kept
-      in the transport part of the code. The topmost option "Select ICs,
-      DCs, and phases to be exchanged via DATABR file...",&nbsp; if
-      activated, can be used for setting up very compact DBR files that
-      only contain items that will change in standalone or coupled
-      calculations (yet untested;
-        more about this here ...); normally, just leave it
-      unchecked (default). &nbsp; <br>
+
+<p>In the upper group, you have a choice to write GEMS3K files in text
+mode (default) or in binary mode. Activating the "Do not write data
+items that contain only default values" will result in much smaller IPM
+and DBR files because only data and numerical settings that differ from
+default values will be written; by reading these files, GEMS3K will
+assume default values for all data objects that are not present in the
+input files. Note that this makes sense to do if you are sure that you
+work with the same GEMS3K version in both GEM-Selektor and the coupled
+code. The next option ("Write files with comments..."), if deactivated,
+results in much more compact though less human-readable text input
+files. The last option ("Include node transport properties into DBR
+file") should be unchecked (default) when exporting files for coupled
+codes such as OGS-GEMS where all such information is kept in the
+transport part of the code. The topmost option "Select ICs, DCs, and
+phases to be exchanged via DATABR file...",&nbsp; if activated, can be
+used for setting up very compact DBR files that only contain items that
+will change in standalone or coupled calculations (yet untested; more
+about this here ...); normally, just leave it unchecked (default).
+&nbsp; <br>
 </p>
+
 <p>The middle group can be used to set up the lookup arrays with
-      thermodynamic data (to be written at the end of the DCH file).
-      This group consists of two iterators - one for pressure and one
-      for temperature. In the simplest case such as shown above, the
-      data will be calculated for one pressure and one temperature,
-      which are taken over from the current GEM task. <br>
+thermodynamic data (to be written at the end of the DCH file). This
+group consists of two iterators - one for pressure and one for
+temperature. In the simplest case such as shown above, the data will be
+calculated for one pressure and one temperature, which are taken over
+from the current GEM task. <br>
 </p>
+
 <p>However, if coupled-code calculations will be performed with
-      variable temperature and pressure, a look-up array must be
-      exported. In this case, the user must specify wide enough pressure
-      and temperature intervals (in Min. and Max. fields on both sides)
-      and the step values such that at least 10 grid points will be
-      created for pressure and 10 to 40 grid points for temperature (or
-      less to keep the temperature step greater than 3 - 5 degrees). The
-      "Tolerance" fields define the area around grid points where
-      interpolation will not be done and values corresponding to the
-      grid point will be extracted directly, if T and P fall within
-      tolerances at this point.</p>
+variable temperature and pressure, a look-up array must be exported. In
+this case, the user must specify wide enough pressure and temperature
+intervals (in Min. and Max. fields on both sides) and the step values
+such that at least 10 grid points will be created for pressure and 10
+to 40 grid points for temperature (or less to keep the temperature step
+greater than 3 - 5 degrees). The "Tolerance" fields define the area
+around grid points where interpolation will not be done and values
+corresponding to the grid point will be extracted directly, if T and P
+fall within tolerances at this point.</p>
+
 <p>The lower group settings let the user to fine-tune the setup of
-      look-up arrays and their T,P grid values after the pressure and
-      temperature iterators have been set up. <br>
+look-up arrays and their T,P grid values after the pressure and
+temperature iterators have been set up. <br>
 </p>
+
 <p>If the checkbox "Enter pressure and temperature values" is
-      activated, a next page of the dialog will appear showing values of
-      pressure and temperature, automatically generated from P and T
-      iterators using the interval and step size set there. If
-      necessary, these values of P and T can be modified by the user,
-      then the program will use them to construct and export the look-up
-      array data. This occurs differently, depending on the "Disable
-      Interpolation" checkbox state. <br>
+activated, a next page of the dialog will appear showing values of
+pressure and temperature, automatically generated from P and T
+iterators using the interval and step size set there. If necessary,
+these values of P and T can be modified by the user, then the program
+will use them to construct and export the look-up array data. This
+occurs differently, depending on the "Disable Interpolation" checkbox
+state. <br>
 </p>
+
 <p>If this checkbox is not checked (default), the usual P,T grid
-      consisting of nP*nT (P,T) points will be generated, and
-      interpolation will be enabled in the whole P and T intervals
-      space. The number nP of pressure grid points can be different from
-      the number nT of temperature grid points. <br>
+consisting of nP*nT (P,T) points will be generated, and interpolation
+will be enabled in the whole P and T intervals space. The number nP of
+pressure grid points can be different from the number nT of temperature
+grid points. <br>
 </p>
-<p>However, if the "Disable Interpolation" checkbox is checked, nT
-      will be set equal to nP, and only nP (P,T) pairs will be used as a
-      grid to generate and export the look-up arrays of thermodynamic
-      data; the interpolation will be disabled, so GEMS3K calculations
-      shall be done only at (T,P) pair values given in the grid table
-      (to be seen in the next wizard page) within tolerances given under
-      P and T iterators. <br>
+
+<p>However, if the "Disable Interpolation" checkbox is checked, nT will
+be set equal to nP, and only nP (P,T) pairs will be used as a grid to
+generate and export the look-up arrays of thermodynamic data; the
+interpolation will be disabled, so GEMS3K calculations shall be done
+only at (T,P) pair values given in the grid table (to be seen in the
+next wizard page) within tolerances given under P and T iterators. <br>
 </p>
-<p>If different number of P and/or T points (greater than 1) was set
-      by the user, the P and T values will be automatically generated
-      using&nbsp; these given nP (nT), Min. and Step values from the
-      iterators, again with the possibility for the user to modify
-      values in the second page of this dialog, shown below:</p>
-<p><img alt="SetupWritingGEMS3KfilesPage2grid.png" src="SetupWritingGEMS3KfilesPage2grid.png" height="542" width="558"> &nbsp; &nbsp; &nbsp; <br>
+
+<p>If different number of P and/or T points (greater than 1) was set by
+the user, the P and T values will be automatically generated
+using&nbsp; these given nP (nT), Min. and Step values from the
+iterators, again with the possibility for the user to modify values in
+the second page of this dialog, shown below:</p>
+
+<p><img style="width: 558px; height: 542px;" alt="SetupWritingGEMS3KfilesPage2grid.png" src="SetupWritingGEMS3KfilesPage2grid.png">
+&nbsp; &nbsp; &nbsp; <br>
 </p>
+
 <p>The "Next" button proceeds either to the next page (if "Enter
-      pressure ..." checkbox is activated), or directly to the standard
-      dialog where the path to the folder where the generated input
-      GEMS3K files will be saved. <br>
+pressure ..." checkbox is activated), or directly to the standard
+dialog where the path to the folder where the generated input GEMS3K
+files will be saved. <br>
 </p>
-<p>If the "Enter pressure ..." checkbox is activated and the
-      "Disable Interpolation" checkbox is not activated, the second page
-      will look like that shown below.&nbsp; In this example, the
-      Pressure iterator on the first page has been set to 1 bar start,
-      91 bar end value, and 10 bar step; the Temperature iterator has
-      been set to 5 C start, 95 C end value, and 5 degrees step. The
-      user can now enter other numbers, if necessary, for instance,
-      change pressure to 1; 10; 20; 30; ... bar; or some P and T values
-      adjusted to allow more precise interpolation around some important
-      phase transitions. The lookup grid will have 190 (T,P) points,
-      among which the interpolation in P,T space takes place.<br>
+
+<p>If the "Enter pressure ..." checkbox is activated and the "Disable
+Interpolation" checkbox is not activated, the second page will look
+like that shown below.&nbsp; In this example, the Pressure iterator on
+the first page has been set to 1 bar start, 91 bar end value, and 10
+bar step; the Temperature iterator has been set to 5 C start, 95 C end
+value, and 5 degrees step. The user can now enter other numbers, if
+necessary, for instance, change pressure to 1; 10; 20; 30; ... bar; or
+some P and T values adjusted to allow more precise interpolation around
+some important phase transitions. The lookup grid will have 190 (T,P)
+points, among which the interpolation in P,T space takes place.<br>
 </p>
+
 <p>If both the "Enter pressure ..." checkbox and the "Disable
-      Interpolation" checkbox are activated, the second page for the
-      previous example will take the following shape:</p>
- <img style=" width: 558px; height: 542px;" alt="SetupWritingGEMS3KfilesPage2pairs.png" src="file:///Users/kulik/DevGEMS/trunk/gems-gui/Resources/doc/html/SetupWritingGEMS3KfilesPage2pairs.png">&nbsp;<br>
+Interpolation" checkbox are activated, the second page for the previous
+example will take the following shape:</p>
+
+<img style="width: 558px; height: 542px;" alt="SetupWritingGEMS3KfilesPage2pairs.png" src="SetupWritingGEMS3KfilesPage2pairs.png">&nbsp;<br>
+
 <br>
+
 <p>In this case, the number of (T,P) pairs was determined from the
-      Pressure iterator and applied to the whole interval given in the
-      Temperature iterator, which yields 10 (T,P) pairs. The values can
-      be edited now, if necessary, e.g. in accordance with experimental
-      (T,P) data; the GEMS3K program will not perform interpolation,
-      which means that only calculations at 10 given (T,P) pair values
-      will be possible, as well as at slightly different T,P values
-      within tolerances for each grid point. The look-up arrays will
-      contain data for 10 (T,P) pair values, not for 100 (T,P) points as
-      it would be in the case when the interpolation is allowed.<br>
+Pressure iterator and applied to the whole interval given in the
+Temperature iterator, which yields 10 (T,P) pairs. The values can be
+edited now, if necessary, e.g. in accordance with experimental (T,P)
+data; the GEMS3K program will not perform interpolation, which means
+that only calculations at 10 given (T,P) pair values will be possible,
+as well as at slightly different T,P values within tolerances for each
+grid point. The look-up arrays will contain data for 10 (T,P) pair
+values, not for 100 (T,P) points as it would be in the case when the
+interpolation is allowed.<br>
 </p>
-<h4>How to read GEMS3K I/O files with
-      standalone calculation results into a SysEq record <br>
+
+<h4>How to read GEMS3K I/O files with standalone calculation results
+into a SysEq record <br>
 </h4>
-<p>When GEMS3K input files have been exported from GEM-Selektor for
-      use standalone coupled-code calculations that produce DBR files
-      with different composition and speciation, such files can be
-      imported into GEM-Selektor to investigate these results in "Single
-      System" dialog and related EqDemo: and Multi: submodule windows.
-      The files can be imported (read in) only in that modeling project
-      where they have been originally exported from. <br>
+
+<p>When GEMS3K input files have been exported from GEM-Selektor for use
+standalone coupled-code calculations that produce DBR files with
+different composition and speciation, such files can be imported into
+GEM-Selektor to investigate these results in "Single System" dialog and
+related EqDemo: and Multi: submodule windows. The files can be imported
+(read in) only in that modeling project where they have been originally
+exported from. <br>
 </p>
-<p>To import GEMS3K files, arrange them in any folder in the same
-      way as if they would be exported: one IPM, one DCH and one DBR
-      file, with file names listed in the respective .lst file. For
-      example, the initial GEMS3K files were exported from the SysEq
-      record "Carbonates:G:IsoCaCdDol:0:0:10:75:0:" into a file set
-      consisting of files&nbsp; "IsoCaCdDol-ipm.dat",
-      "IsoCaCdDol-dch.dat", "IsoCaCdDol-dbr-0-0000.dat", and
-      "IsoCaCdDol-dat.lst". The latter file lists the previous three
-      files as</p>
-<p><tt>-t "IsoCaCdDol-dch.dat"
-      "IsoCaCdDol-ipm.dat"&nbsp; "IsoCaCdDol-dbr-0-0000.dat"</tt></p>
-<p>(this means that all four files must be in the same folder; -t
-      tells that the files are in text format). The key of the exported
-      SysEq record can be found at the beginning of the
-      "IsoCaCdDol-ipm.dat" file. In standalone calculations, the DCH and
-      IPM files will not be changed, only
-      the new DBR files will be generated. To import one of those (e.g.
-      "IsoCaCdDol-dbr-result-00001.dat"), it has to be placed in the
-      same folder where DCH and IPM files reside, and its name must be
-      entered into the .lst file, for instance, called
-      "IsoCaCdDol-dat-to-import.lst" with contents</p>
-<p><tt>-t "IsoCaCdDol-dch.dat"
-      "IsoCaCdDol-ipm.dat"&nbsp; "IsoCaCdDol-dbr-0-0000-result.dat"</tt><br>
+
+<p>To import GEMS3K files, arrange them in any folder in the same way
+as if they would be exported: one IPM, one DCH and one DBR file, with
+file names listed in the respective .lst file. For example, the initial
+GEMS3K files were exported from the SysEq record
+"Carbonates:G:IsoCaCdDol:0:0:10:75:0:" into a file set consisting of
+files&nbsp; "IsoCaCdDol-ipm.dat", "IsoCaCdDol-dch.dat",
+"IsoCaCdDol-dbr-0-0000.dat", and "IsoCaCdDol-dat.lst". The latter file
+lists the previous three files as</p>
+
+<p><tt>-t "IsoCaCdDol-dch.dat" "IsoCaCdDol-ipm.dat"&nbsp;
+"IsoCaCdDol-dbr-0-0000.dat"</tt></p>
+
+<p>(this means that all four files must be in the same folder; -t tells
+that the files are in text format). The key of the exported SysEq
+record can be found at the beginning of the "IsoCaCdDol-ipm.dat" file.
+In standalone calculations, the DCH and IPM files will not be changed,
+only the new DBR files will be generated. To import one of those (e.g.
+"IsoCaCdDol-dbr-result-00001.dat"), it has to be placed in the same
+folder where DCH and IPM files reside, and its name must be entered
+into the .lst file, for instance, called "IsoCaCdDol-dat-to-import.lst"
+with contents</p>
+
+<p><tt>-t "IsoCaCdDol-dch.dat" "IsoCaCdDol-ipm.dat"&nbsp;
+"IsoCaCdDol-dbr-0-0000-result.dat"</tt><br>
 </p>
+
 <p>When a folder with the set of GEMS3K files is ready, proceed as
-      follows. Start GEM-Selektor and go in "Equilibria Calculation"
-      mode, select and open the appropriate project ("Carbonates" in
-      this example).&nbsp; In "Single System" dialog, execute the "Data"
-      "Import GEMS3K DBR file..." menu command. <br>
+follows. Start GEM-Selektor and go in "Equilibria Calculation" mode,
+select and open the appropriate project ("Carbonates" in this
+example).&nbsp; In "Single System" dialog, execute the "Data" "Import
+GEMS3K DBR file..." menu command. <br>
 </p>
+
 <p>In the appearing "Browse for GEMS3K *.lst file to import" dialog,
-      find in the folder and select the necessary .lst file
-      ("IsoCaCdDol-dat-to-import.lst" in this example), and click
-      "Open".&nbsp; <br>
+find in the folder and select the necessary .lst file
+("IsoCaCdDol-dat-to-import.lst" in this example), and click
+"Open".&nbsp; <br>
 </p>
+
 <p>You should see now the "Enter record key" dialog with fields
-      corresponding to SysEq record key from the imported IPM file. Edit
-      fields as you like, to make sure that no such SysEq record already
-      exists in the project, and click Ok. The program reads GEMS3K
-      files, and replaces the previous recipe by the bulk composition
-      from DBR file taken over into the bi_ data object (input mole
-      amounts of Independent Components),&nbsp; as well as metastability
-      constraints and selection of components from the imported IPM and
-      DCH files. &nbsp; &nbsp;&nbsp; <br>
+corresponding to SysEq record key from the imported IPM file. Edit
+fields as you like, to make sure that no such SysEq record already
+exists in the project, and click Ok. The program reads GEMS3K files,
+and replaces the previous recipe by the bulk composition from DBR file
+taken over into the bi_ data object (input mole amounts of Independent
+Components),&nbsp; as well as metastability constraints and selection
+of components from the imported IPM and DCH files. &nbsp; &nbsp;&nbsp; <br>
 </p>
-<p>In the appearing "Input Recipe" dialog, you should see now the
-      bulk system composition from the imported DBR file, given as bi_
-      values. Click "Ok" to proceed.&nbsp; Now, click "Open EqDemo
-      window..." toolbar button to explore the imported contents of the
-      GEM task data structure just as they were computed by the
-      standalone program, without being re-calculated in GEM-Selektor.
-      You can save the SysEq record with these imported contents.</p>
-<p>You can also re-calculate the imported equilibrium state to see
-      if there is any difference, e.g. by differences in interpolated
-      and directly calculated thermodynamic data. These differences (if
-      any) can be seen in the gEx column in MTparm (Thermodynamic data)
-      window. To re-calculate, it is the best to clone the imported
-      SysEq record and re-run GEM, then the data from originally
-      imported and re-computed equilibria can be copy-pasted to a
-      spreadsheet and compared there.</p>
- 
-<h3>How to
-      Export
-      Many Initial Systems to GEMS3K I/O Files from GEM2MT Module</h3>
 
-    &lt;under construction&gt;<br>
+<p>In the appearing "Input Recipe" dialog, you should see now the bulk
+system composition from the imported DBR file, given as bi_ values.
+Click "Ok" to proceed.&nbsp; Now, click "Open EqDemo window..." toolbar
+button to explore the imported contents of the GEM task data structure
+just as they were computed by the standalone program, without being
+re-calculated in GEM-Selektor. You can save the SysEq record with these
+imported contents.</p>
+
+<p>You can also re-calculate the imported equilibrium state to see if
+there is any difference, e.g. by differences in interpolated and
+directly calculated thermodynamic data. These differences (if any) can
+be seen in the gEx column in MTparm (Thermodynamic data) window. To
+re-calculate, it is the best to clone the imported SysEq record and
+re-run GEM, then the data from originally imported and re-computed
+equilibria can be copy-pasted to a spreadsheet and compared there.</p>
+
+<h3>How to Export Many Initial Systems to GEMS3K I/O Files from GEM2MT
+Module</h3>
+
+&lt;under construction&gt;<br>
+
 <br>
+
 <br>
+
 <hr size="2" width="100%">
-
-<h2><a name="TAG_GEMIPM2K"></a>3. GEMS3K &#8211; a standalone GEM solver with data exchange interface<br>
-
+<h2><a name="TAG_GEMIPM2K"></a>3. GEMS3K &#8211; a standalone GEM solver with
+data exchange interface<br>
 </h2>
 
 <p>The
-GEM IPM-3 algorithm described in <a href="#TAG_GEMIPM2">Section 2</a> is
+GEM IPM-3 algorithm described in <a href="#TAG_GEMIPM2">Section 2</a>
+is
 implemented in a TMulti C++ class. This class and related
 source code files are shared between the GEM-Selektor
-package (i.w. with GUI, database management system, script interpreter and
+package (i.w. with GUI, database management system, script interpreter
+and
 runtime
-help system) and a standalone solver GEMS3K code. The difference between
+help system) and a standalone solver GEMS3K code. The difference
+between
 two programs is
-controlled by a compiler define key&nbsp; <tt>-DGEMIPMPLUGIN</tt>&nbsp; which
+controlled by a compiler define key&nbsp; <tt>-DGEMIPMPLUGIN</tt>&nbsp;
+which
 has to be provided in the make- or
 project file for building any program that uses standalone GEMS3K. The
 global&nbsp; <tt>#define
@@ -1318,55 +1160,58 @@ GEMIPMPLUGIN</tt>&nbsp; in the source code cuts any connection to
 the GEM-Selektor GUI, its data object descriptors, and data base
 functions. This
 is done because the main idea behind GEMS3K is
-to provide the same GEM chemical solver as that used in GEM-Selektor for
- easy coupling with existing fluid-mass-transport codes in the
+to provide the same GEM chemical solver as that used in GEM-Selektor
+for easy coupling with existing fluid-mass-transport codes in the
 &#8220;operator-splitting&#8221;
 fashion, also capable for high-performance
 computing.&nbsp; </p>
 
-
-<p>Because GEMS3K implemented as a &#8220;node-gem&#8221; example has no overhead on calling
+<p>Because GEMS3K implemented as a &#8220;node-gem&#8221; example has no overhead
+on calling
 GUI or
 database functions, it provides a good opportunity to test performance
 of GEM IPM-3 module in terms of calculation times, as
-well as to locate parts of the code where most of the time is spent. The GEMS3K
+well as to locate parts of the code where most of the time is spent.
+The GEMS3K
 is a program arranged
-in three C++ classes: <tt>TMulti, TNode</tt> and <tt>TNodeArray</tt>. </p>
-
+in three C++ classes: <tt>TMulti, TNode</tt> and <tt>TNodeArray</tt>.
+</p>
 
 <p>The
 T<tt>Multi</tt> class is based on the <tt>MULTI</tt>
-data structure combined with all functions in which the GEM IPM-3 algorithm
+data structure combined with all functions in which the GEM IPM-3
+algorithm
 is implemented. <tt>TMulti</tt> class also
-contains functions that connect it with the TSolMod class library of 
+contains functions that connect it with the TSolMod class library of
 built-in models of mixing in multi-component phases. A practically
 important
 part is a collection of numerical controls that define the convergence
 and
 accuracy of GEM IPM-3 algorithm. Description of these controls is
-provided in the <a href="gems3k-ipm.html">gems3k_ipm.html</a> file; they all can be changed also in the
+provided in the <a href="gems3k-ipm.html">gems3k_ipm.html</a> file;
+they all can be changed also in the
 IPM input file of GEMS3K, as described in <a href="gems3k-iofiles.html">gems3k-iofiles.html</a>
-file. The work data structure <tt>MULTI</tt> of the <tt>TMulti</tt> class contains
+file. The work data structure <tt>MULTI</tt> of the <tt>TMulti</tt>
+class contains
 parameters and coefficients used by the
 built-in non-ideal mixing models in phases-solutions implemented
 in the <tt>TSolMod</tt> class (documentation about input parameters
-in the IPM file is given in <a href="gems3k-tsolmod.html">gems3k_tsolmod.html</a> file). </p>
+in the IPM file is given in <a href="gems3k-tsolmod.html">gems3k_tsolmod.html</a>
+file). </p>
 
-
-<p>The
-  <tt>TNode</tt> class provides a simple non-GUI interface for
+<p>The <tt>TNode</tt> class provides a simple non-GUI interface for
 loading the input chemical system definition and related thermodynamic
 and
 composition data into the IPM (<tt>MULTI</tt>) work structure,
 then running the IPM-3 algorithm for one calculation of equilibrium
 state, and
-extracting the calculated speciation into the <tt>DATABR</tt> structure
+extracting the calculated speciation into the <tt>DATABR</tt>
+structure
 (or DBR file). Description of <tt>TNode</tt> functions is provided in <a href="gems3k-useref.html">gems3k-useref.html</a>
 file.</p>
 
-
-<p>The
-  <tt>TNodeArray</tt> class, built on top of the <tt>TNode</tt> class, can store both
+<p>The <tt>TNodeArray</tt> class, built on top of the <tt>TNode</tt>
+class, can store both
 chemical and transport
 parameters for all nodes of the mass transport problem. Re-calculation
 of
@@ -1377,33 +1222,36 @@ developing a
 new transport code. Description of <tt>TNodeArray</tt> functions
 will be provided later in a separate document. </p>
 
-
 <p>TNode class uses
-two data interface structures &#8211; <tt>DATACH</tt> and <tt>DATABR</tt> (defined in <tt>datach.h</tt>
+two data interface structures &#8211; <tt>DATACH</tt> and <tt>DATABR</tt>
+(defined in <tt>datach.h</tt>
 and <tt>databr.h</tt> headers, respectively). The structures can be
 allocated in computer RAM (one instance of <tt>DATACH</tt>
-and one or more instances of <tt>DATABR</tt> per a GEMS3K instance) and written to or read from text
+and one or more instances of <tt>DATABR</tt> per a GEMS3K instance)
+and written to or read from text
 or binary files (DCH and DBR format, respectively). In addition, the
 IPM-3
 specific data and arrays used by TSolMod I/O functions
-can be read from the IPM format file directly into the <tt>MULTI</tt> structure.
+can be read from the IPM format file directly into the <tt>MULTI</tt>
+structure.
 As the <tt>TNode</tt>
-class (with certain extensions) is also part of the GEM-Selektor package, all three files can be
+class (with certain extensions) is also part of the GEM-Selektor
+package, all three files can be
 produced
 per mouse click from there and then used in standalone coupled code
 calculations
 (see <a href="#TAG_MAKE_FILES">Section 2.4</a>).</p>
 
-
 <p>The GEMS3K program
 source code comprises a sub-set of C++
-source code files used in the GEM-Selektor v.3 code. In GEMS3K, some numerical subroutines from the<small> <big><a href="http://math.nist.gov/tnt/download.html">NIST JAMA-C++ TNT package</a></big></small> for
+source code files used in the GEM-Selektor v.3 code. In GEMS3K, some
+numerical subroutines from the<small> <big><a href="http://math.nist.gov/tnt/download.html">NIST JAMA-C++ TNT package</a></big></small>
+for
 solving SLE are employed. The list of source code files common to both
 GEM-Selektor
 and GEMS3K programs is provided below.</p>
+
 <span style="font-family: Helvetica,Arial,sans-serif;"></span>
-
-
 <h3><a name="TAG_SOURCE_FILELIST"></a>Lists of GEMS3K source code
 files<br>
 </h3>
@@ -1417,12 +1265,10 @@ files<br>
   <tbody>
     <tr>
       <td style="vertical-align: top;">
-<p>File name</p>
-
+      <p>File name</p>
       </td>
       <td style="vertical-align: top;">
-<p>Comment</p>
-
+      <p>Comment</p>
       </td>
     </tr>
     <tr>
@@ -1454,8 +1300,6 @@ streams (with account for endianness in binary data files)<br>
 file access <br>
       </td>
     </tr>
-    
-    
     <tr>
       <td style="font-family: monospace;">io_arrays.cpp</td>
       <td style="vertical-align: top;">Implementation of file I/O of
@@ -1628,17 +1472,16 @@ exceptions handling: classes TError and TFatalError<br>
   </tbody>
 </table>
 
-<p>The files are located in "<tt>standalone/GEMS3K/</tt>" folder. Header files
-necessary for compiling or linking GEMS3K with the mass-transport part of the
+<p>The files are located in "<tt>standalone/GEMS3K/</tt>" folder.
+Header files
+necessary for compiling or linking GEMS3K with the mass-transport part
+of the
 coupled code are shown in
 boldface. </p>
 
-
-
 <p>The following two header files
-from the GEMS3K folder have the same names as those used in the GEM-Selektor source code, but different contents. </p>
-
-
+from the GEMS3K folder have the same names as those used in the
+GEM-Selektor source code, but different contents. </p>
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
 
@@ -1661,16 +1504,15 @@ settings used in GEM IPM-3 operation (standalone version)<br>
 
 <p>
 The following files: </p>
+
 <p style="font-family: Helvetica,Arial,sans-serif;">
 </p>
-
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
 
   <tbody>
     <tr>
-      <td style="font-family: monospace;">ms_param.cpp<small><a href="../../ms_param.cpp"><big>
-      <br>
+      <td style="font-family: monospace;">ms_param.cpp<small><a href="../../ms_param.cpp"><big> <br>
       </big></a></small></td>
       <td style="vertical-align: top;">Default values of constants
 and numerical settings of GEM IPM-3 algorithm; implementations of
@@ -1681,46 +1523,54 @@ single GEM IPM-3 calculation<br>
     <tr>
       <td style="font-family: monospace;">main.cpp</td>
       <td style="vertical-align: top;">Examples of using GEMS3K for
-batch calculations of chemical equilibria (located in "<tt>gemcalc\</tt>" and "<tt>node-gem\</tt>" folders) <br>
+batch calculations of chemical equilibria (located in "<tt>gemcalc\</tt>"
+and "<tt>node-gem\</tt>" folders) <br>
       </td>
     </tr>
   </tbody>
 </table>
 
 <p>are
-also provided in the GEMS3K code. The files named "main.cpp" and "main.h" are needed
+also provided in the GEMS3K code. The files named "main.cpp" and
+"main.h" are needed
 for compiling an example of usage of GEMS3K. This file can be changed
-according to your tasks. <br></p>
+according to your tasks. <br>
+</p>
+
 <p>The GEM
 IPM-3 algorithm is implemented as a set of C++ functions belonging to
-the <tt>TMulti</tt> class that all use data and lists provided in a single
-instance of the <tt>MULTI</tt> data structure also inserted into the
-  <tt>TMulti</tt> class. Before any GEM calculation, all data arrays must be
+the <tt>TMulti</tt> class that all use data and lists provided in a
+single
+instance of the <tt>MULTI</tt> data structure also inserted into the <tt>TMulti</tt>
+class. Before any GEM calculation, all data arrays must be
 allocated according to current number of components and phases, and all
 input data must be correctly filled into these arrays. <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+
 <span style="font-family: Helvetica,Arial,sans-serif;">
 </span>
-
 <p>In the
 GEM-Selektor GUI environment, this is done automatically before any GEM
 calculation is started. The data of the "internal" GEM problem are
-compressed into the <tt>MULTI</tt> data structure by collecting the items from the
+compressed into the <tt>MULTI</tt> data structure by collecting the
+items from the
 project system lists and arrays, as well as from the thermodynamic data
 base. In the project system lists, many independent components,
 dependent components, and phases may be switched off by the user. Only
 the names and data for components and phases that are switched on are
-copied into the <tt>MULTI</tt> structure. If necessary, the scripts for
+copied into the <tt>MULTI</tt> structure. If necessary, the scripts
+for
 calculating activity coefficients of components of non-ideal solution
 phases are also compressed, together with any needed coefficients for
 non-ideal interaction parameters or surface complexation models picked
-up from the Phase database records. This makes the GEM-Selektor GUI setup of
+up from the Phase database records. This makes the GEM-Selektor GUI
+setup of
 thermodynamic models very flexible, though rendering its software
 implementation more complicated<span style="font-family: Helvetica,Arial,sans-serif;">. </span></p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
-<span style="font-family: Helvetica,Arial,sans-serif;">
-</span>
 
-This route
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+
+<span style="font-family: Helvetica,Arial,sans-serif;">
+</span>This route
 cannot be followed in the standalone GEMS3K program and any programs
 using it. The purpose of GEMS3K development was to keep the code
 implementation
@@ -1734,107 +1584,92 @@ has no script interpreter included. It uses only pre-loaded data for a
 allowed). Because of that, some restrictions apply in GEMS3K compared
 to the GEM-Selektor code<span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span>
-
 <h4><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span>DIfferences
-in functionality between GEMS3K program and the complete GEM-Selektor code<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+in functionality between GEMS3K program and the complete GEM-Selektor
+code<span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span></h4>
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
     <tr>
-      <td style="vertical-align: top;"><big>Functionality
-      </big></td>
-      <td style="vertical-align: top;"><big>GEMS3K
-      </big></td>
-      <td style="vertical-align: top;"><big>GEM-Selektor
-      </big></td>
+      <td style="vertical-align: top;"><big>Functionality </big></td>
+      <td style="vertical-align: top;"><big>GEMS3K </big></td>
+      <td style="vertical-align: top;"><big>GEM-Selektor </big></td>
     </tr>
     <tr>
       <td style="vertical-align: top;">Phase-
-and Process math scripts
-      </td>
+and Process math scripts </td>
       <td style="vertical-align: top;">Not
-possible
-      </td>
-      <td style="vertical-align: top;">Used
-      </td>
+possible </td>
+      <td style="vertical-align: top;">Used </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">Built-in
 functions for
-activity coefficients
-      </td>
-      <td style="vertical-align: top;">Used
-      </td>
-      <td style="vertical-align: top;">Used
-      </td>
+activity coefficients </td>
+      <td style="vertical-align: top;">Used </td>
+      <td style="vertical-align: top;">Used </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">T-P
 corrections for input
-thermodynamic data
-      </td>
+thermodynamic data </td>
       <td style="vertical-align: top;">Interpolation
-using a lookup array (produced in GEM-Selektor)
-      </td>
+using a lookup array (produced in GEM-Selektor) </td>
       <td style="vertical-align: top;">Direct
 access to thermodynamic
 data base, built-in HKF EoS, Cp double integration,
-etc.
-      </td>
+etc. </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">Access
 to input, output and
-work data
-      </td>
+work data </td>
       <td style="vertical-align: top;">Batch
 mode only (data exchange I/O files or
-in RAM)
-      </td>
+in RAM) </td>
       <td style="vertical-align: top;">Direct
 GUI access, including
-multithread stepwise mode
-      </td>
+multithread stepwise mode </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">Runtime
-help and tooltips 
-      </td>
+help and tooltips </td>
       <td style="vertical-align: top;">Not
-available
-      </td>
+available </td>
       <td style="vertical-align: top;">Available
 as runtime HTML
-help window and database
-      </td>
+help window and database </td>
     </tr>
   </tbody>
 </table>
 
 <br>
-<p><span style="font-family: Helvetica,Arial,sans-serif;"></span>All the input data required for GEM IPM-3
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span>All
+the input data required for GEM IPM-3
 calculation can be provided in a human-readable ASCII file. However,
 producing such a file without a software front-end that can access the
 thermodynamic data base would be a rather difficult and error-prone
 process. </p>
 
-
-
-<p>Moreover, reactive transport problems are usually represented by many nodes; reactive subsystems
+<p>Moreover, reactive transport problems are usually represented by
+many nodes; reactive subsystems
 in all these nodes can share the same chemical system definition (CSD)
 and would usually differ only in bulk chemical composition (,
 temperature and pressure). Hence, it would make no sense to use the
-<tt>MULTI</tt> data structure directly for data exchange with the mass-transport
+<tt>MULTI</tt> data structure directly for data exchange with the
+mass-transport
 part. Often, not all independent and dependent components must take
-place in exchange with the mass transport part - only those components that are
+place in exchange with the mass transport part - only those components
+that are
 somehow transported from node to node. <br>
-
 </p>
 
 <p>For these
-reasons, the whole content of the <tt>MULTI</tt> and <tt>BASE_PARAM</tt> data structures
+reasons, the whole content of the <tt>MULTI</tt> and <tt>BASE_PARAM</tt>
+data structures
 required for a GEMS3K calculation has been subdivided into three
 main parts, or data sub-sets (covered with the respective I/O files): <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span></p>
@@ -1853,7 +1688,8 @@ structure<br>
       </td>
       <td style="vertical-align: top;">&nbsp;Visibility <br>
       </td>
-      <td style="vertical-align: top;"><a href="#INPUT_FILES">&nbsp;I/O file</a><br>
+      <td style="vertical-align: top;"><a href="#INPUT_FILES">&nbsp;I/O
+file</a><br>
       </td>
       <td style="vertical-align: top;">&nbsp;Comment<br>
       </td>
@@ -1869,7 +1705,8 @@ structure<br>
       </td>
       <td style="vertical-align: top;">Input definition of the
 chemical system (compressed) with selection of components and phases to
-be exchanged with the mass-transport part common to all nodes of the reactive transport problem<br>
+be exchanged with the mass-transport part common to all nodes of the
+reactive transport problem<br>
       </td>
     </tr>
     <tr>
@@ -1889,14 +1726,16 @@ temperature, pressure, optional kinetic constraints)<br>
     <tr>
       <td style="vertical-align: top;">IPM<br>
       </td>
-      <td style="vertical-align: top;"><a href="../../ms_multi.h">MULTI</a>, <a href="../../m_param.h">BASE_PARAM</a><br>
+      <td style="vertical-align: top;"><a href="../../ms_multi.h">MULTI</a>,
+      <a href="../../m_param.h">BASE_PARAM</a><br>
       </td>
       <td style="vertical-align: top;">GEM part only<br>
       </td>
       <td style="vertical-align: top;">*IPM .dat <br>
       </td>
       <td style="vertical-align: top;">Input information not relevant
-for the tarnsport part of the code, but needed for GEM IPM-3 calculations (numerical
+for the tarnsport part of the code, but needed for GEM IPM-3
+calculations (numerical
 settings, parameters of non-ideal mixing models, adsorption models
 etc.) <br>
       </td>
@@ -1905,21 +1744,21 @@ etc.) <br>
 </table>
 
 <p>Upon reading/writing, DCH and DBR
-files are automatically (un)packed to/from the <tt>MULTI</tt> memory structure
+files are automatically (un)packed to/from the <tt>MULTI</tt> memory
+structure
 inside of the <tt>TNode</tt> class instance. <br>
-
 </p>
-
 
 <p>The
 advantage of having three kinds of input files instead of one is that
-in a typical reactive transport problem with tens to hundreds of thousands of nodes,
+in a typical reactive transport problem with tens to hundreds of
+thousands of nodes,
 only one
 relatively large DCH and one IPM file is needed, while node-specific
 data are provided in many small and compact input-output DBR files
-which do not contain redundant information. As a consequence,&nbsp; higher
+which do not contain redundant information. As a consequence,&nbsp;
+higher
 performance and flexibility of the coupled code can be achieved. <br>
-
 </p>
 
 <p>In the
@@ -1934,31 +1773,33 @@ data
 objects can be
 skipped if the program can substitute default values.&nbsp; Only&nbsp;
 dimenions necessary for internal data allocation must be present at the
-beginning of DCH and IPM files. More about the file formats and structure of GEMS3K is provided in the <a href="gems3k-iofiles.html">companion
-manual</a>.</p><br style="font-family: Helvetica,Arial,sans-serif;">
+beginning of DCH and IPM files. More about the file formats and
+structure of GEMS3K is provided in the <a href="gems3k-iofiles.html">companion
+manual</a>.</p>
+
+<br style="font-family: Helvetica,Arial,sans-serif;">
 
 <hr size="2" width="100%">
-
 <h3><a name="TAG_DATACH"></a>3.1. DATACH data exchange structure for
 sharing chemical
 system definition (CSD)<font style="font-family: times new roman,times,serif;" face="Helvetica, Arial, sans-serif">&nbsp;</font> </h3>
 
 <p>The DATACH&nbsp;
-structure in datach.h file (mirrored in a DCH input file) contains an input definition
+structure in datach.h file (mirrored in a DCH input file) contains an
+input definition
 of the chemical system visible to both GEMS3K and mass-transport
 parts of a coupled code. The respective dimensions, lists of components
-and phases etc. will be automatically copied into the <tt>MULTI </tt>work data
-structure of <tt>TMulti</tt> class upon an initialization of a&nbsp; <tt>TNode</tt> class
+and phases etc. will be automatically copied into the <tt>MULTI </tt>work
+data
+structure of <tt>TMulti</tt> class upon an initialization of a&nbsp; <tt>TNode</tt>
+class
 instance, which includes reading of one DCH, one IPM and at least one
 DBR
 file. </p>
 
-
-
-<p>The<span style="font-weight: bold;"> </span>Chemical System Definition part of
+<p>The<span style="font-weight: bold;"> </span>Chemical System
+Definition part of
 the DATACH structure includes the following data: </p>
-
-
 
 <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -1982,13 +1823,10 @@ in GEMS</td>
       </span></td>
       <td style="font-family: monospace;"> nIC</td>
       <td style="font-family: monospace;"> N<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">nIC<br>
-
       </td>
       <td> Total
 number of IC (independent components) <br>
@@ -1999,13 +1837,10 @@ number of IC (independent components) <br>
       </td>
       <td style="font-family: monospace;"> nDC</td>
       <td style="font-family: monospace;"> L<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">nDC<br>
-
       </td>
       <td> Total
 number of DC (chemical species or dependent components) <br>
@@ -2016,13 +1851,10 @@ number of DC (chemical species or dependent components) <br>
       </td>
       <td style="font-family: monospace;"> nPH</td>
       <td style="font-family: monospace;"> FI<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">nPH<br>
-
       </td>
       <td> Total
 number of phases included into this CSD</td>
@@ -2032,13 +1864,10 @@ number of phases included into this CSD</td>
       </td>
       <td style="font-family: monospace;"> nPS</td>
       <td style="font-family: monospace;"> FIs<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">nPS<br>
-
       </td>
       <td> Number of
 multicomponent phases (nPS &lt;=&nbsp; nPH)</td>
@@ -2048,13 +1877,10 @@ multicomponent phases (nPS &lt;=&nbsp; nPH)</td>
       </td>
       <td style="font-family: monospace;"> nDCs</td>
       <td style="font-family: monospace;"> Ls<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">nDCs<br>
-
       </td>
       <td> Total
 Number of DC in phases-solutions</td>
@@ -2063,13 +1889,10 @@ Number of DC in phases-solutions</td>
       <td><span style="font-family: monospace;">short</span><span style="font-family: monospace;">[]</span></td>
       <td style="font-family: monospace;"> nDCinPH</td>
       <td style="font-family: monospace;"> L1<br>
-
       </td>
       <td style="font-family: monospace;"> L1<br>
-
       </td>
       <td style="font-family: monospace;">nDCinPH<br>
-
       </td>
       <td> Number of
 DC included into each phase [nPH] </td>
@@ -2078,10 +1901,8 @@ DC included into each phase [nPH] </td>
       <td><span style="font-family: monospace;">double[]</span></td>
       <td style="font-family: monospace;"> A</td>
       <td style="font-family: monospace;"> A<br>
-
       </td>
       <td style="font-family: monospace;"> A<br>
-
       </td>
       <td style="font-family: monospace;">A</td>
       <td>Stoichiometry
@@ -2093,13 +1914,10 @@ matrix A containing amounts of IC in one mole of each DC
       <td><span style="font-family: monospace;">double</span><span style="font-family: monospace;">[]</span></td>
       <td style="font-family: monospace;"> ICmm</td>
       <td style="font-family: monospace;"> Awt<br>
-
       </td>
       <td style="font-family: monospace;"> icM<br>
-
       </td>
       <td style="font-family: monospace;">ICmm<br>
-
       </td>
       <td> IC atomic
 (molar) mass in g/mol [nIC]<br>
@@ -2109,13 +1927,10 @@ matrix A containing amounts of IC in one mole of each DC
       <td><span style="font-family: monospace;">double</span><span style="font-family: monospace;">[]</span></td>
       <td style="font-family: monospace;"> DCmm</td>
       <td style="font-family: monospace;"> MM<br>
-
       </td>
       <td style="font-family: monospace;"> mmDC<br>
-
       </td>
       <td style="font-family: monospace;">DCmm *<br>
-
       </td>
       <td> DC molar
 mass in g/mol [nDC]<br>
@@ -2125,13 +1940,10 @@ mass in g/mol [nDC]<br>
       <td><span style="font-family: monospace;">char*[]</span></td>
       <td style="font-family: monospace;"> ICNL</td>
       <td style="font-family: monospace;"> SB<br>
-
       </td>
       <td style="font-family: monospace;"> ICnam<br>
-
       </td>
       <td style="font-family: monospace;">ICNL<br>
-
       </td>
       <td> List of
 IC names, [nIC] strings of MaxICN
@@ -2141,13 +1953,10 @@ length</td>
       <td><span style="font-family: monospace;">char*[]</span></td>
       <td style="font-family: monospace;"> DCNL</td>
       <td style="font-family: monospace;"> SM<br>
-
       </td>
       <td style="font-family: monospace;"> DCnam<br>
-
       </td>
       <td style="font-family: monospace;">DCNL<br>
-
       </td>
       <td> List of
 DC names, [nDC] strings of MaxDCN
@@ -2157,13 +1966,10 @@ length</td>
       <td><span style="font-family: monospace;">char*[]</span></td>
       <td style="font-family: monospace;"> PHNL</td>
       <td style="font-family: monospace;"> SF<br>
-
       </td>
       <td style="font-family: monospace;"> PHnam<br>
-
       </td>
       <td style="font-family: monospace;">PHNL<br>
-
       </td>
       <td> List of
 names of phases, [nPH] strings of
@@ -2173,13 +1979,10 @@ MaxPHN length</td>
       <td><span style="font-family: monospace;">char[]</span></td>
       <td style="font-family: monospace;"> ccIC</td>
       <td style="font-family: monospace;"> ICC<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">ccIC<br>
-
       </td>
       <td> Class
 codes of IC [nIC], see codes in enum ICL_CLASSES<br>
@@ -2189,13 +1992,10 @@ codes of IC [nIC], see codes in enum ICL_CLASSES<br>
       <td><span style="font-family: monospace;">char[]</span></td>
       <td style="font-family: monospace;"> ccDC</td>
       <td style="font-family: monospace;"> DCC<br>
-
       </td>
       <td style="font-family: monospace;"> DCC<br>
-
       </td>
       <td style="font-family: monospace;">ccDC<br>
-
       </td>
       <td> Class
 codes of DC [nDC], see codes in enum DCL_CLASSES<br>
@@ -2205,13 +2005,10 @@ codes of DC [nDC], see codes in enum DCL_CLASSES<br>
       <td><span style="font-family: monospace;">char[]</span></td>
       <td style="font-family: monospace;"> ccPH</td>
       <td style="font-family: monospace;"> PHC<br>
-
       </td>
       <td style="font-family: monospace;"> <br>
-
       </td>
       <td style="font-family: monospace;">ccPH<br>
-
       </td>
       <td> Class
 codes of phases [nPH], see codes in enum PHL_CLASSES <br>
@@ -2221,21 +2018,27 @@ codes of phases [nPH], see codes in enum PHL_CLASSES <br>
 </table>
 
 <p>* <tt>DCmm</tt>
-vector is automatically calculated from <tt>A</tt> and <tt>ICmm</tt> data and can be
+vector is automatically calculated from <tt>A</tt> and <tt>ICmm</tt>
+data and can be
 skipped
 from the DCH file</p>
+
 Because direct access
 to GEMS thermodynamic data
-base is not possible and functions for <i>T,P</i> corrections of thermodynamic
+base is not possible and functions for <i>T,P</i> corrections of
+thermodynamic
 data&nbsp; are not available in GEMS3K, the retrieval of
 thermodynamic data
 for dependent components is implemented through the Lagrange
 interpolation from
-look-up arrays provided in the <tt>DATACH</tt> structure and DCH file. These
+look-up arrays provided in the <tt>DATACH</tt> structure and DCH file.
+These
 lookup
-arrays are automatically generated in in GEM-Selektor package and written into the
+arrays are automatically generated in in GEM-Selektor package and
+written into the
 DCH
-file. To use the lookup arrays, the <tt>TNode</tt> class employs a 2-D Lagrange
+file. To use the lookup arrays, the <tt>TNode</tt> class employs a 2-D
+Lagrange
 interpolation routine
 that extracts thermodynamic data for temperature and pressure of
 interest and
@@ -2243,15 +2046,14 @@ loads them into the <tt>MULTI</tt> structure before starting the IPM-3
 calculation. In
 this way, the coupled models where temperature and/or pressure change
 over time
-or between the nodes can be easily implemented without blowing up the GEMS3K size
+or between the nodes can be easily implemented without blowing up the
+GEMS3K size
 and complexity. &nbsp;
-
-
 <br>
-<p>The<span style="font-weight: bold;"></span> DATACH structure includes the
+
+<p>The<span style="font-weight: bold;"></span> DATACH structure
+includes the
 following objects related to thermodynamic data: </p>
-
-
 
 <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -2261,50 +2063,40 @@ following objects related to thermodynamic data: </p>
       <td> ID</td>
       <td> Dimensions</td>
       <td> Comment</td>
-      <td style="vertical-align: top;">Tag in DCH file
-      </td>
+      <td style="vertical-align: top;">Tag in DCH file </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nTp</td>
       <td style="font-family: monospace;"> 1<br>
-
       </td>
       <td> Number of temperature points in lookup grid arrays<br>
       </td>
       <td style="font-family: monospace;">nTp<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nPp</td>
       <td style="font-family: monospace;"> 1<br>
-
       </td>
       <td> Number of pressure points in lookup grid arrays <br>
       </td>
       <td style="font-family: monospace;">nPp<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> iGrd</td>
       <td style="font-family: monospace;"> 1<br>
-
       </td>
       <td> Flag for lookup grid array setup: 0 - only V0 and G0; 1
 - plus H0; 2 - plus S0; 3 - plus Cp0; 4 - plus A0 (Helmholtz); -1 - V0,
 G0 and DD (modes 1,2,3,4,-1 reserved)</td>
       <td style="font-family: monospace;">iGrd<br>
-
       </td>
     </tr>
     <tr>
@@ -2314,7 +2106,6 @@ G0 and DD (modes 1,2,3,4,-1 reserved)</td>
       <td>[nTp] discrete values of temperature <span style="font-style: italic;">T</span>, in K,&nbsp; in ascending order<br>
       </td>
       <td style="font-family: monospace;">TKval<br>
-
       </td>
     </tr>
     <tr>
@@ -2325,45 +2116,41 @@ G0 and DD (modes 1,2,3,4,-1 reserved)</td>
 ascending order<br>
       </td>
       <td style="font-family: monospace;">Pval<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double</td>
       <td style="font-family: monospace;"> Ttol</td>
       <td style="font-family: monospace;"> 1<br>
-
       </td>
       <td> Temperature tolerance, in K, for the interpolation of
 thermodynamic data (default: 0.1)<br>
       </td>
       <td style="font-family: monospace;">Ttol<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double</td>
       <td style="font-family: monospace;"> Ptol</td>
       <td style="font-family: monospace;"> 1<br>
-
       </td>
       <td> Pressure tolerance, in Pa, for the interpolation of
 thermodynamic data (default: 1000)<br>
       </td>
       <td style="font-family: monospace;">Ptol<br>
-
       </td>
     </tr>
   </tbody>
 </table>
 
 <br>
+
 <p>
-The following lookup arrays of thermodynamic data can be allocated in
-  <tt>DATACH</tt> (G0 and V0 are mandatory):&nbsp; </p>
+The following lookup arrays of thermodynamic data can be allocated in <tt>DATACH</tt>
+(G0 and V0 are mandatory):&nbsp; </p>
+
 <p style="font-family: Helvetica,Arial,sans-serif;">
 </p>
-
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
 
@@ -2378,19 +2165,17 @@ The following lookup arrays of thermodynamic data can be allocated in
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace;"> roW</td>
       <td style="font-family: monospace;"> [nPp][nTp][5] </td>
-      <td> Density of water-solvent, kg/m<sup>3</sup> and its T and P derivatives<br>
+      <td> Density of water-solvent, kg/m<sup>3</sup> and its T and P
+derivatives<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">roW<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace;"> epsW</td>
       <td style="font-family: monospace;"> [nPp][nTp][5]</td>
@@ -2398,116 +2183,109 @@ The following lookup arrays of thermodynamic data can be allocated in
 derivatives<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">epsW<br>
-
       </td>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace;">double[]</td>
       <td style="vertical-align: top;"><span style="font-family: monospace;">visW</span><small><br>
-
       </small></td>
       <td style="vertical-align: top; font-family: monospace;">[nPp][nTp][5]</td>
       <td style="vertical-align: top;">Viscosity of water-solvent, with
 its T and P derivatives (units?)<br>
       </td>
       <td style="vertical-align: top;"><span style="font-family: monospace;">visW</span><small><br>
-
       </small></td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace; font-weight: bold;"> G0</td>
       <td style="font-family: monospace;"> [nDC][nPp][nTp] </td>
-      <td><span style="font-weight: bold;"> G<sup>o</sup> standard molar Gibbs
+      <td><span style="font-weight: bold;"> G<sup>o</sup> standard
+molar Gibbs
 energy function of DC, J/mol, corrected to </span><span style="font-style: italic; font-weight: bold;">T,P</span><br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">G0<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace; font-weight: bold;"> V0</td>
       <td style="font-family: monospace;"> [nDC][nPp][nTp]</td>
-      <td style="font-weight: bold;"> V<sup>o</sup> standard molar volume of DC,
+      <td style="font-weight: bold;"> V<sup>o</sup> standard molar
+volume of DC,
 m3/mol, corrected to <span style="font-style: italic;">T,P</span></td>
       <td style="vertical-align: top; font-family: monospace;">V0<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace;"> S0</td>
       <td style="font-family: monospace;"> [nDC][nPp][nTp]</td>
-      <td>S<sup>o</sup> standard molar entropy of DC, J/K/mol, corrected to <span style="font-style: italic;">T,P</span> <br>
+      <td>S<sup>o</sup> standard molar entropy of DC, J/K/mol,
+corrected to <span style="font-style: italic;">T,P</span> <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">S0<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace;"> H0</td>
       <td style="font-family: monospace;"> [nDC][nPp][nTp]</td>
-      <td> H<sup>o</sup> standard molar enthalpy function of DC, J/mol, corrected
+      <td> H<sup>o</sup> standard molar enthalpy function of DC, J/mol,
+corrected
 to <span style="font-style: italic;">T,P</span><br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">H0<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">double[]<br>
-
       </td>
       <td style="font-family: monospace;"> Cp0</td>
       <td style="font-family: monospace;"> [nDC][nPp][nTp] </td>
-      <td> Cp<sup>o</sup> molar heat capacity of DC J/K/mol, corrected to <span style="font-style: italic;">T,P</span> <br>
+      <td> Cp<sup>o</sup> molar heat capacity of DC J/K/mol, corrected
+to <span style="font-style: italic;">T,P</span> <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">Cp0<br>
-
       </td>
     </tr>
-    
-    
-    
   </tbody>
 </table>
 
-<p><b>Attention</b>: the <tt>S0, H0</tt> and <tt>Cp0</tt> arrays will be
- exported into DCH file only if the respective arrays in the modeling 
-project chemical system are activated in GEM-Selektor. The <tt>roW, epsW</tt> and <tt>visW</tt> arrays will not be exported if the system is non-aqueous (i.e. there is no water-solvent and no aqueous phase).<br>
+<p><b>Attention</b>: the <tt>S0, H0</tt> and <tt>Cp0</tt> arrays will
+be exported into DCH file only if the respective arrays in the modeling
+project chemical system are activated in GEM-Selektor. The <tt>roW,
+epsW</tt> and <tt>visW</tt> arrays will not be exported if the system
+is non-aqueous (i.e. there is no water-solvent and no aqueous phase).<br>
 </p>
-<p>The <big><span style="font-family: monospace;"><small>roW,epsW</small></span></big>&nbsp; and <span style="font-family: monospace;">visW</span> lookup arrays are provided because they are used internally in <tt>TSolMod</tt> functions for
+
+<p>The <big><span style="font-family: monospace;"><small>roW,epsW</small></span></big>&nbsp;
+and <span style="font-family: monospace;">visW</span> lookup arrays
+are provided because they are used internally in <tt>TSolMod</tt>
+functions for
 calculation of activity coefficients of aqueous species and water. The <span style="font-family: monospace;">TNode</span> class provides
 direct methods for accessing interpolated thermodynamic data from the
 mass-transport part at any time (see <a href="gems3k-useref.html">User's
 Reference</a>). </p>
 
-
-
 <p>The trivial case
 of lookup is when <span style="font-family: monospace;">nTp</span><small>
-= 1</small> and <span style="font-family: monospace;">nPp</span><small> =
+= 1</small> and <span style="font-family: monospace;">nPp</span><small>
+=
 1</small>. In this case, each thermodynamic data lookup array (see
 the table above) must contain one
 value per DC for a single temperature <span style="font-family: monospace;">TKval[0]</span> and pressure<small> </small><span style="font-family: monospace;">Pval[0]</span>. Conversely, no
 variations in <span style="font-style: italic;">T,P</span> between the
 nodes or with
 time will then be allowed in the coupled model. Actually, the program
-checks that current <span style="font-style: italic;">T</span> and <span style="font-style: italic;">P</span> coincide with a value from <big><span style="font-family: monospace;"><small>TCval</small> </span></big>resp. <big><small><span style="font-family: monospace;">Pval</span></small><span style="font-family: monospace;"></span></big> within the tolerance
+checks that current <span style="font-style: italic;">T</span> and <span style="font-style: italic;">P</span> coincide with a value from <big><span style="font-family: monospace;"><small>TCval</small> </span></big>resp.
+<big><small><span style="font-family: monospace;">Pval</span></small><span style="font-family: monospace;"></span></big> within the tolerance
 limits given in <span style="font-family: monospace;"></span><span style="font-family: monospace;">Ttol</span> and <span style="font-family: monospace;">Ptol</span>, respectively, and
 picks up the values from grid arrays.&nbsp; </p>
-
-
 
 <p>The more common
 case is when the pressure is fixed (<span style="font-family: monospace;">nPp</span><small> =
@@ -2525,7 +2303,8 @@ necessarily be equal. According to this setup, the <span style="font-family: mon
 must contain 8 values each that correspond to 1 MPa pressure and the
 temperatures given in <span style="font-family: monospace;">TKval</span>
 array. Provided that there are 40 dependent
-components in the DCH list, the <span style="font-family: monospace;">G0</span> array will consist of
+components in the DCH list, the <span style="font-family: monospace;">G0</span>
+array will consist of
 8 values per
 DC, i.e. total 320 numbers, the first 8 contain <span style="font-style: italic;">G</span><sup>o</sup> values for the first
 species (for temperatures in <span style="font-family: monospace;">TKval</span>),
@@ -2537,8 +2316,6 @@ component to return <span style="font-style: italic;">G</span><sup>o</sup>
 and <span style="font-style: italic;">V</span><sup>o</sup> values for <span style="font-style: italic;">P</span>=10 bar and <span style="font-style: italic;">T</span> of interest,
 interpolated in 1-D mode, if necessary. </p>
 
-
-
 <p>In the most
 general
 case, the lookup grid arrays contain numbers for several discrete
@@ -2547,31 +2324,38 @@ arrays are actually&nbsp; tables made of rows each containing values
 for different
 temperatures from <span style="font-family: monospace;">TKval</span>
 but one pressure value from <span style="font-family: monospace;">Pval</span>.
-The <big><span style="font-family: monospace;"><small>G0</small> </span></big>and <span style="font-family: monospace;">V0</span>
+The <big><span style="font-family: monospace;"><small>G0</small> </span></big>and
+<span style="font-family: monospace;">V0</span>
 arrays are then composed of such tables for each dependent component,
 arranged in the order in which the dependent components are listed in
 the <tt>DATACH</tt> <span style="font-family: monospace;">DCNL</span>
 list. The interpolation subroutine performs 2-D interpolation
-separately for each dependent component to return its G<sup>o</sup> and V<sup>o</sup> values
+separately for each dependent component to return its G<sup>o</sup> and
+V<sup>o</sup> values
 for <span style="font-style: italic;">P,T</span> of interest.&nbsp;
 To achieve accurate interpolation over a wide temperature interval (300
-  <sup>o</sup>C or more), at least 30 temperature points and 10 pressure points are
+<sup>o</sup>C or more), at least 30 temperature points and 10 pressure
+points are
 recommended. <br>
 </p>
-<p>There is a special 'pairwise' mode with equal number of pressure and temperature grid points <span style="font-family: monospace;">nTp</span><small>
+
+<p>There is a special 'pairwise' mode with equal number of pressure and
+temperature grid points <span style="font-family: monospace;">nTp</span><small>
 =</small> <span style="font-family: monospace;">nPp</span><small> </small>.
- In this mode, no interpolation is allowed, and only a T,P pair can be 
-used in calculations that corresponds to one of the lookup grid points 
-(within tolerances <small><tt><big>Ptol</big></tt><tt>, </tt><tt><big>Ttol</big></tt></small>). Accordingly, there will be <tt>nPp</tt> values in <tt>roW, epsW</tt> and <tt>visW</tt> arrays, and <tt>nDC*nPp</tt> values in <tt>G0, V0</tt> and other thermodynamic data arrays. &nbsp; <br>
+In this mode, no interpolation is allowed, and only a T,P pair can be
+used in calculations that corresponds to one of the lookup grid points
+(within tolerances <small><tt><big>Ptol</big></tt><tt>, </tt><tt><big>Ttol</big></tt></small>).
+Accordingly, there will be <tt>nPp</tt> values in <tt>roW, epsW</tt>
+and <tt>visW</tt> arrays, and <tt>nDC*nPp</tt> values in <tt>G0, V0</tt>
+and other thermodynamic data arrays. &nbsp; <br>
 </p>
-
-
 
 <p>Thus, the
 lookup arrays of thermodynamic data permit GEMS3K to extract
 thermodynamic
 data for any current <span style="font-style: italic;">T</span> and <span style="font-style: italic;">P</span> in any node, provided that <span style="font-style: italic;">T</span> and <span style="font-style: italic;">P</span> are
-within the respective ranges set in <small><tt><big>TKval</big></tt></small> and <small><tt><big>Pval</big></tt></small> lists. Before calling the
+within the respective ranges set in <small><tt><big>TKval</big></tt></small>
+and <small><tt><big>Pval</big></tt></small> lists. Before calling the
 GEM IPM-3
 calculation, the
 interpolation is performed, and <span style="font-style: italic;">G</span><sup>o</sup>
@@ -2581,17 +2365,18 @@ structure, where they remain as long as the input <span style="font-style: itali
 change. New
 interpolation is done when the requested <span style="font-style: italic;">P</span> or <span style="font-style: italic;">T</span> differ from previous values by
 more
-than <small><tt><big>Ptol</big></tt><tt>, </tt><tt><big>Ttol</big></tt></small>. </p>
-
+than <small><tt><big>Ptol</big></tt><tt>, </tt><tt><big>Ttol</big></tt></small>.
+</p>
 
 <p><a name="INDEX_MAPPING"></a> A special
-part of the <tt>DATACH</tt> structure (and file) defines the selection of
-components and phases to be exchanged with the mass-transport program via
-the <tt>DATABR</tt> structure instances for nodes, or via the DBR files. This part
+part of the <tt>DATACH</tt> structure (and file) defines the selection
+of
+components and phases to be exchanged with the mass-transport program
+via
+the <tt>DATABR</tt> structure instances for nodes, or via the DBR
+files. This part
 includes the
 following data items: </p>
-
-
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
 
@@ -2607,7 +2392,6 @@ in DCH file<br>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nICb</td>
       <td style="font-family: monospace;"> 1<br>
@@ -2616,12 +2400,10 @@ in DCH file<br>
 DATABR<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">nICb<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nDCb</td>
       <td style="font-family: monospace;"> 1<br>
@@ -2629,12 +2411,10 @@ DATABR<br>
       <td> Number of DC (chemical species) &lt;= nDC) used in DATABR<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">nDCb<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nPHb</td>
       <td style="font-family: monospace;"> 1<br>
@@ -2642,12 +2422,10 @@ DATABR<br>
       <td> Number of Phases (&lt;= nPH) used in DATABR<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">nPHb<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nPSb</td>
       <td style="font-family: monospace;"> 1<br>
@@ -2655,12 +2433,10 @@ DATABR<br>
       <td> Number of Phases-solutions (&lt;= nPS) used in DATABR<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">nPSb<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;">long int<br>
-
       </td>
       <td style="font-family: monospace;"> nAalp</td>
       <td style="font-family: monospace;"> 1<br>
@@ -2668,7 +2444,6 @@ DATABR<br>
       <td> Flag for considering surface areas of phases in DATABR<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">nAalp<br>
-
       </td>
     </tr>
     <tr>
@@ -2678,7 +2453,6 @@ DATABR<br>
       <td>index mapping list for ICs used in DATABR data vectors <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">xIC<br>
-
       </td>
     </tr>
     <tr>
@@ -2688,7 +2462,6 @@ DATABR<br>
       <td>index mapping list for DCs used in DATABR data vectors <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">xDC<br>
-
       </td>
     </tr>
     <tr>
@@ -2698,31 +2471,37 @@ DATABR<br>
       <td>index mapping list for phases used in DATABR data vectors <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">xPH<br>
-
       </td>
     </tr>
   </tbody>
 </table>
 
 <br>
+
 <p>
 The trivial
 (default) case is when <big> <small><span style="font-family: monospace;">nICb
 = nIC,</span></small></big><span style="font-family: monospace;">nDCb =
 nDC, </span><span style="font-family: monospace;">nPHb =
 nPH, </span><big><span style="font-family: monospace;"><small>nPSb =
-nPS.</small><span style="font-family: Helvetica,Arial,sans-serif;"></span></span></big>In this
+nPS.</small><span style="font-family: Helvetica,Arial,sans-serif;"></span></span></big>In
+this
 case, the data vectors in <tt>DATABR</tt> structure exactly map the
-corresponding data vectors in <tt>DATACH</tt> and <tt>MULTI</tt> structures. For
-instance, the bulk chemical composition of the system - vecto<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">r </span><small><span style="font-family: monospace;">b</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>in <tt>MULTI</tt> structure -
+corresponding data vectors in <tt>DATACH</tt> and <tt>MULTI</tt>
+structures. For
+instance, the bulk chemical composition of the system - vecto<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">r </span><small><span style="font-family: monospace;">b</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>in
+<tt>MULTI</tt> structure -
 is the
-same as the vector<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">bIC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>provided in the
-  <tt>DATABR</tt> structure or DBR file. The index one-to-one mapping lists<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xIC, xDC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>and<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xPH</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>will also be
-trivial. For instance, given 7 independent components in the system<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> <small>(</small></span><small><span style="font-family: monospace;">nIC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"><small> = 7)</small>, </span></span></big>the<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xIC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>array will simply
+same as the vector<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">bIC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>provided
+in the <tt>DATABR</tt> structure or DBR file. The index one-to-one
+mapping lists<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xIC, xDC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>and<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xPH</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>will
+also be
+trivial. For instance, given 7 independent components in the system<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> <small>(</small></span><small><span style="font-family: monospace;">nIC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"><small> = 7)</small>,
+</span></span></big>the<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xIC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>array
+will simply
 contain ascending indexes<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> <small>(</small></span><small><span style="font-family: monospace;">0,1,2,3,4,5,6</span></small><span style="font-family: Helvetica,Arial,sans-serif;"><small>)</small>. </span></span></big></p>
-<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">
-    </span></span></big>
 
+<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>
 <p>However, the usage of
 index mapping lists<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span></span></big><big><span style="font-family: monospace;"><small><span style="font-family: monospace;">xIC,xDC</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>and<big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span><small><span style="font-family: monospace;">xPH</span></small><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big>may
 significantly accelerate data exchange and reduce memory size of the
@@ -2735,9 +2514,8 @@ can be neglected, so the transport of dissolved silica can also be
 neglected.&nbsp; For a system involving calcium and magnesium,
 carbonate, and chloride, the&nbsp; <tt>DATACH</tt> name lists may look
 like:</p>
-<p><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">
-      </span></span></big></p>
 
+<p><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big></p>
 
 <p style="font-family: Helvetica,Arial,sans-serif;"><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"></span></span></big></p>
 
@@ -2746,10 +2524,9 @@ like:</p>
   <tbody>
     <tr>
       <td style="vertical-align: top;"><big><span style="font-family: monospace;"><span style="font-family: monospace;"><br>
-<small>&lt;nIC&gt;
+      <small>&lt;nIC&gt;
 8&nbsp;&nbsp; &lt;nDC&gt; 27&nbsp;&nbsp; &lt;nPH&gt; 8&nbsp;&nbsp;
 &lt;nPS&gt; 2<br>
-
 &lt;ICNL&gt;</small></span><small><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span style="font-family: monospace;">'C' 'Ca' 'Cl' 'H' 'Mg' 'O' <span style="color: rgb(204, 0, 0);">'Si'</span> <span style="color: rgb(204, 0, 0);">'Zz'</span></span><span style="font-family: Helvetica,Arial,sans-serif;"> &nbsp;&nbsp; ( NB: </span><span style="font-family: monospace;">'Zz'</span><span style="font-family: Helvetica,Arial,sans-serif;"> stays for electrical
 charge). <br>
       </span><span style="font-family: monospace;">&lt;DCNL&gt;</span><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><span style="font-family: monospace;">'Ca+2' 'CaOH+' <span style="color: rgb(204, 0, 0);">'Ca(HSiO3)+'</span> <span style="color: rgb(204, 0, 0);">'CaSiO3@'</span> 'Mg+2' 'MgOH+' <span style="color: rgb(204, 0, 0);">'HSiO3-' 'SiO2@' 'SiO3-2'</span> 'CO2@'
@@ -2771,14 +2548,17 @@ charge). <br>
 mass transport model does not consider the transport of gas phase,
 electric charge, and of dissolved silicium species (non-transported
 components and species are marked red in the lists above). Some
-aqueous species and solids are very unlikely to appear (marked in pink) and thus
-can also be considered irrelevant for the mass transport model. Then&nbsp;
-the&nbsp; respective arrays of the <tt>DATABR</tt> structure can be made
-smaller, and values in them re-mapped to <tt>DATACH</tt> or <tt>MULTI</tt> structure as
+aqueous species and solids are very unlikely to appear (marked in pink)
+and thus
+can also be considered irrelevant for the mass transport model.
+Then&nbsp;
+the&nbsp; respective arrays of the <tt>DATABR</tt> structure can be
+made
+smaller, and values in them re-mapped to <tt>DATACH</tt> or <tt>MULTI</tt>
+structure as
 follows: </p>
-<p><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">
-      </span></span></big></p>
 
+<p><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big></p>
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -2786,12 +2566,9 @@ follows: </p>
     <tr>
       <td style="vertical-align: top;"><big><span style="font-family: monospace;"><span style="font-family: monospace;"><small>&lt;nICb&gt;
 6 &nbsp; &lt;nDCb&gt; 15 &nbsp; &lt;nPHb&gt; 3 &nbsp; &lt;nPSb&gt; 1<br>
-
 &lt;xIC&gt;&nbsp; 0 1 2 3 4 5 <br>
-
 &lt;xDC&gt;&nbsp; 0 1&nbsp; 4 5&nbsp; 9 10 11&nbsp; 13 14 15 16 17
 18&nbsp; 22 23 <br>
-
 &lt;xPH&gt;&nbsp; 0&nbsp; 3 4</small> </span></span></big></td>
     </tr>
   </tbody>
@@ -2800,53 +2577,58 @@ follows: </p>
 <br>
 
 <p>It is important
-to realize that the re-mapping does not affect any dimensions in the
-  <tt>MULTI</tt> structure and any <tt>DATACH</tt> lists and arrays (the latter remain
+to realize that the re-mapping does not affect any dimensions in the <tt>MULTI</tt>
+structure and any <tt>DATACH</tt> lists and arrays (the latter remain
 accessible in full also to the transport part of the coupled code).
 Values for components and phases marked red (non-transported) are
-skipped only from data arrays in all instances of the <tt>DATABR</tt> structure,
+skipped only from data arrays in all instances of the <tt>DATABR</tt>
+structure,
 but
 these components and phases are still present in <tt>DATACH</tt> and <tt>MULTI</tt>
 structures and take part in the equilibration. In the above example,
-the size of a <tt>DATABR</tt> instance (and DBR file) becomes more than 30% less
+the size of a <tt>DATABR</tt> instance (and DBR file) becomes more
+than 30% less
 compared with the trivial (complete) index mapping case.&nbsp; This
 decrease can be even more dramatic for some transport algorithms where
 only a certain tracer moves, or where the advection strongly prevails
 over the diffusion. In the latter case, only the bulk aqueous solution
 is migrated as the whole between the nodes, so all dependent components
-of the aqueous phase can be skipped from the <tt>DATABR</tt> mapping. In the
-above example, this would make the <tt>DATABR</tt> instance ca. 3-4 times
+of the aqueous phase can be skipped from the <tt>DATABR</tt> mapping.
+In the
+above example, this would make the <tt>DATABR</tt> instance ca. 3-4
+times
 smaller
 than in the trivial mapping case. <big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"></span></span></big></p>
-<p><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;">
-      </span></span></big></p>
 
+<p><big><span style="font-family: monospace;"><span style="font-family: Helvetica,Arial,sans-serif;"> </span></span></big></p>
 
 <p>The presence of DATABR index mapping to DATACH structure provides a
 great flexibility in defining various coupling schemes between the RMT
 and the GEM parts. A natural question is - how the bulk composition of
-the node system can be set up when the mapping list xIC is incomplete?&nbsp;
+the node system can be set up when the mapping list xIC is
+incomplete?&nbsp;
 A straightforward answer: the full b vector can
 always be
-provided in the IPM file (from where it is directly loaded into the
-  <tt>MULTI</tt> structure). The <tt>TNode</tt> class also has
+provided in the IPM file (from where it is directly loaded into the <tt>MULTI</tt>
+structure). The <tt>TNode</tt> class also has
 methods for the direct access to the b&nbsp; vector using
-the
-  <tt>DATACH/MULTI</tt> indexation, which can be used e.g. for setting in all
-nodes the initial amounts of ICs skipped from the <tt>DATABR</tt> index mapping.
+the <tt>DATACH/MULTI</tt> indexation, which can be used e.g. for
+setting in all
+nodes the initial amounts of ICs skipped from the <tt>DATABR</tt>
+index mapping.
 Use of this functionality makes sense in 2-D or 3-D RMT problems with
 relatively large chemical system definition, where it may result in
 considerably less memory demand and higher performance of data
 exchange. However, the use of SIA initial approximation mode of GEM
 IPM-3 may be restricted in this case. Hence, for 1-D columns, we
 recommend
-using the trivial (complete) one-to-one mapping in <tt>DATABR</tt> structure and in DBR
+using the trivial (complete) one-to-one mapping in <tt>DATABR</tt>
+structure and in DBR
 files. </p>
 
-
 <br>
-<hr size="2" width="100%">
 
+<hr size="2" width="100%">
 <p> </p>
 
 <h3><a name="TAG_DATABR"></a>3.2. DATABR data exchange structure for
@@ -2854,44 +2636,46 @@ defining i/o data
 for a single node system </h3>
 
 <p>This data
-structure relies on dimensions provided in the <tt>DATACH</tt> structure. Hence,
+structure relies on dimensions provided in the <tt>DATACH</tt>
+structure. Hence,
 the DCH file must always be read before DBR file(s) in order to
-initialize the <tt>MULTI</tt> and <tt>DATABR</tt> structures and perform dynamic memory
+initialize the <tt>MULTI</tt> and <tt>DATABR</tt> structures and
+perform dynamic memory
 allocation. </p>
-
-
 
 <p>The <tt>DATABR</tt>
 structure contains several flags and three blocks of data. In the
 following tables, four columns are provided to indicate which data
-fields are set in <tt>DATABR</tt> by the mass transport part (MT-DB); which are
-given from <tt>DATABR</tt> instance to GEM as input data (DB-GEM); which data is
-taken from GEM to <tt>DATABR</tt> as GEM output (GEM-DB); and which are taken
-from <tt>DATABR</tt> instance to MT part data structures (DB-MT). The most
+fields are set in <tt>DATABR</tt> by the mass transport part (MT-DB);
+which are
+given from <tt>DATABR</tt> instance to GEM as input data (DB-GEM);
+which data is
+taken from GEM to <tt>DATABR</tt> as GEM output (GEM-DB); and which
+are taken
+from <tt>DATABR</tt> instance to MT part data structures (DB-MT). The
+most
 important GEM input and output data are shown in boldface. <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span></p>
 
+<p><span style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
 
 <p>1. Chemical
-scalar variables (all double floating point numbers). Data for the inert
+scalar variables (all double floating point numbers). Data for the
+inert
 sub-system are not included in GEM IPM-3 calculations and serve for
 completeness of node-related information used by the MT part (mainly on
-  <tt>TNodeArray</tt> level). </p>
+<tt>TNodeArray</tt> level). </p>
 
 <span style="font-family: monospace;"></span><span style="font-family: monospace;"></span><span style="font-family: monospace;"></span>
-
 <table style="width: 891px; height: 395px;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
     <tr>
-      <td>ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <br>
+      <td>ID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
       </td>
       <td> Comment</td>
       <td valign="top">Units<br>
-</td>
-<td style="vertical-align: top;">Default<br>
+      </td>
+      <td style="vertical-align: top;">Default<br>
       </td>
       <td style="text-align: center;">MT-DB</td>
       <td style="text-align: center;">DB-GEM</td>
@@ -2905,111 +2689,104 @@ DBR file</td>
       <td> Temperature T<br>
       </td>
       <td valign="top">K<br>
-</td>
-<td style="vertical-align: top;">25<br>
+      </td>
+      <td style="vertical-align: top;">25<br>
       </td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace;">TK<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-weight: bold;"><span style="font-family: monospace;"> P</span></td>
       <td> Pressure P<br>
-</td>
+      </td>
       <td valign="top">Pa<br>
-</td>
-<td style="vertical-align: top;">1<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace;">P<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> <b>Vs</b></span></td>
       <td> Volume V of reactive subsystem<br>
-</td>
+      </td>
       <td valign="top">m<sup>3</sup><br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;">+</td>
       <td style="font-family: monospace; text-align: center;">(+)</td>
       <td style="font-family: monospace; text-align: center;">(+)</td>
       <td style="font-family: monospace; text-align: center;">+</td>
       <td style="font-family: monospace;">Vs<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> Vi</span></td>
       <td> Volume of the inert subsystem<br>
-</td>
+      </td>
       <td valign="top">m<sup>3</sup><br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">Vi<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-weight: bold;"><span style="font-family: monospace;"> Ms</span></td>
       <td> Mass M of reactive subsystem<br>
-</td>
+      </td>
       <td valign="top">kg<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;">(+)</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace;">Ms<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> Mi</span></td>
       <td> Mass of the inert subsystem<br>
-</td>
+      </td>
       <td valign="top">kg<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">Mi<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> Gs</span></td>
       <td> Gibbs energy of reactive subsystem<br>
-</td>
+      </td>
       <td valign="top">J<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;">(+)</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">Gs<br>
-
       </td>
     </tr>
     <tr>
@@ -3017,46 +2794,43 @@ DBR file</td>
       <td> Enthalpy of reactive subsystem (reserved)<br>
       </td>
       <td valign="top">J<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;">(+)</td>
       <td style="font-family: monospace; text-align: center;">+</td>
       <td style="font-family: monospace;">Hs<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> Hi</span></td>
       <td> Enthalpy of the inert subsystem<br>
-</td>
+      </td>
       <td valign="top">J<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">Hi<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> IC</span></td>
       <td> Effective molal aqueous ionic strength</td>
       <td valign="top"><i>m</i><br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">IC<br>
-
       </td>
     </tr>
     <tr>
@@ -3064,15 +2838,14 @@ DBR file</td>
       <td> pH of aqueous solution (-log10
 molal)</td>
       <td valign="top"><br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">pH<br>
-
       </td>
     </tr>
     <tr>
@@ -3080,39 +2853,39 @@ molal)</td>
       <td> pe (redox) of aqueous solution (-log10
 molal)</td>
       <td valign="top"><br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">pe<br>
-
       </td>
     </tr>
     <tr>
       <td><span style="font-family: monospace;"> <b>Eh</b></span></td>
       <td> Eh (redox) of aqueous solution, <br>
-</td>
+      </td>
       <td valign="top">V<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> -</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace; text-align: center;"> +</td>
       <td style="font-family: monospace;">Eh<br>
-
       </td>
     </tr>
   </tbody>
 </table>
 
 <p>Symbols in
-parentheses (+) indicate data items that are automatically re-scaled when
-loaded from <tt>DATABR</tt> instance into <tt>MULTI </tt>structure, or scaled back&nbsp; when extracted from
+parentheses (+) indicate data items that are automatically re-scaled
+when
+loaded from <tt>DATABR</tt> instance into <tt>MULTI </tt>structure,
+or scaled back&nbsp; when extracted from
 <tt>MULTI</tt> to <tt>DATABR</tt> instance. Only extensive
 properties are re-scaled. <br>
 </p>
@@ -3121,13 +2894,15 @@ properties are re-scaled. <br>
 
 <p>2. Chemical
 data arrays for the reactive sub-system (all double* C++ type). Values
-of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">nICb,nDCb,nPHb</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>and<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">nPSb</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>can be found in the
-  <tt>DATACH</tt> instance (or DCH file). Access to all arrays in <tt>DATABR</tt> instance
-requires the usage of <tt>DATACH</tt> <a href="#INDEX_MAPPING">index mapping</a>
-lists&nbsp;<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xIC,xDC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>and<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xPH</span><span style="font-family: Helvetica,Arial,sans-serif;">. </span><br></p>
+of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">nICb,nDCb,nPHb</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>and<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">nPSb</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>can be found
+in the <tt>DATACH</tt> instance (or DCH file). Access to all arrays in
+<tt>DATABR</tt> instance
+requires the usage of <tt>DATACH</tt> <a href="#INDEX_MAPPING">index
+mapping</a>
+lists&nbsp;<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xIC,xDC</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>and<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">xPH</span><span style="font-family: Helvetica,Arial,sans-serif;">. </span><br>
+</p>
 
 <span style="font-family: monospace;"></span>
-
 <table style="width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
@@ -3136,8 +2911,8 @@ lists&nbsp;<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span 
       <td align="center"> Dimensions</td>
       <td> Comment</td>
       <td align="center" valign="top">Units<br>
-</td>
-<td style="vertical-align: middle;">Default<br>
+      </td>
+      <td style="vertical-align: middle;">Default<br>
       </td>
       <td> MT-DB</td>
       <td> DB-GEM</td>
@@ -3153,15 +2928,14 @@ DBR file</td>
 independent components<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="text-align: center;"><small>(+)</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="font-family: monospace;" align="center">bIC<br>
-
       </td>
     </tr>
     <tr>
@@ -3170,15 +2944,14 @@ independent components<br>
       <td> Mass balance residuals from GEMIPM<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small>(+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">rMB<br>
-
       </td>
     </tr>
     <tr>
@@ -3187,49 +2960,47 @@ independent components<br>
       <td> IC chemical potentials
 (dimensionless)</td>
       <td align="center" valign="top"><br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="text-align: center;"><small> +<span style="font-family: monospace;"></span></small></td>
       <td style="font-family: monospace;" align="center">uIC<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace; font-weight: bold;" align="center"> xDC</td>
       <td style="font-family: monospace;" align="center"> [nDCb]</td>
-      <td> DC amounts <i>n</i><sup>(</sup><sup><i>x</i></sup><sup>)</sup> in equilibrium state<br>
-</td>
+      <td> DC amounts <i>n</i><sup>(</sup><sup><i>x</i></sup><sup>)</sup>
+in equilibrium state<br>
+      </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="text-align: center;"><small> {+}</small></td>
       <td style="text-align: center;"><small> {(+)}</small></td>
       <td style="text-align: center;"><small> (+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">xDC<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;" align="center"> gam</td>
       <td style="font-family: monospace;" align="center"> [nDCb]</td>
       <td>DC activity coefficients (dimensionless)<br>
-</td>
+      </td>
       <td align="center" valign="top"><br>
-</td>
-<td style="vertical-align: top;">1<br>
+      </td>
+      <td style="vertical-align: top;">1<br>
       </td>
       <td style="text-align: center;"><small>{+}</small></td>
       <td style="text-align: center;"><small> {+}</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">gam<br>
-
       </td>
     </tr>
     <tr>
@@ -3238,15 +3009,14 @@ independent components<br>
       <td>Upper metastability restrictions on xDC<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;">1e6<br>
+      </td>
+      <td style="vertical-align: top;">1e6<br>
       </td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="text-align: center;"><small>(+)</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="font-family: monospace;" align="center">dul<br>
-
       </td>
     </tr>
     <tr>
@@ -3255,32 +3025,30 @@ independent components<br>
       <td>Lower metastability restrictions on xDC<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="text-align: center;"><small>+</small></td>
       <td style="text-align: center;"><small> (+)</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="font-family: monospace;" align="center">dll<br>
-
       </td>
     </tr>
     <tr>
       <td style="font-family: monospace;" align="center"> aPH</td>
       <td style="font-family: monospace;" align="center"> [nPHb]</td>
       <td> Specific surface areas of phases<br>
-</td>
+      </td>
       <td align="center" valign="top">m<sup>2</sup>/kg<br>
-</td>
-<td style="vertical-align: top;">0<br>
+      </td>
+      <td style="vertical-align: top;">0<br>
       </td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="font-family: monospace;" align="center">aPH<br>
-
       </td>
     </tr>
     <tr>
@@ -3289,15 +3057,14 @@ independent components<br>
       <td> Total amounts of phases<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> (+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">xPH<br>
-
       </td>
     </tr>
     <tr>
@@ -3306,15 +3073,14 @@ independent components<br>
       <td>Volumes of phases-solutions<br>
       </td>
       <td align="center" valign="top">m<sup>3</sup><br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small>(+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">vPS<br>
-
       </td>
     </tr>
     <tr>
@@ -3323,15 +3089,14 @@ independent components<br>
       <td> Masses of phases-solutions<br>
       </td>
       <td align="center" valign="top">kg<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> (+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">mPS<br>
-
       </td>
     </tr>
     <tr>
@@ -3340,15 +3105,14 @@ independent components<br>
       <td>Bulk compositions of phases-solutions<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> (+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">bPS<br>
-
       </td>
     </tr>
     <tr>
@@ -3357,47 +3121,49 @@ independent components<br>
       <td>Amounts of solvent/sorbent in phases-solutions<br>
       </td>
       <td align="center" valign="top">mol<br>
-</td>
-<td style="vertical-align: top;"><br>
+      </td>
+      <td style="vertical-align: top;"><br>
       </td>
       <td style="text-align: center;"><small>-</small></td>
       <td style="text-align: center;"><small> -</small></td>
       <td style="text-align: center;"><small> (+)</small></td>
       <td style="text-align: center;"><small> +</small></td>
       <td style="font-family: monospace;" align="center">xPA<br>
-
       </td>
-    </tr><tr>
-  <td align="center" valign="top"><tt>bSP</tt><tt><br>
-    </tt></td>
-  <td align="center" valign="top"><tt>[nICb]</tt><tt><br>
-    </tt></td>
-  <td valign="top">Bulk composition of the equilibrium solid part of the system<br>
-  </td>
-  <td align="center" valign="top">mol<br>
-  </td>
-  <td valign="top"><br>
-  </td>
-  <td align="center" valign="top"><tt>-</tt><tt><br>
-    </tt></td>
-  <td align="center" valign="top"><tt>-</tt><tt><br>
-    </tt></td>
-  <td align="center" valign="top"><tt>(+)</tt><tt><br>
-    </tt></td>
-  <td align="center" valign="top"><tt>+</tt><tt><br>
-    </tt></td>
-  <td align="center" valign="top"><tt>bSP</tt><tt><br>
-    </tt></td>
-</tr>
-
+    </tr>
+    <tr>
+      <td align="center" valign="top"><tt>bSP</tt><tt><br>
+      </tt></td>
+      <td align="center" valign="top"><tt>[nICb]</tt><tt><br>
+      </tt></td>
+      <td valign="top">Bulk composition of the equilibrium solid part
+of the system<br>
+      </td>
+      <td align="center" valign="top">mol<br>
+      </td>
+      <td valign="top"><br>
+      </td>
+      <td align="center" valign="top"><tt>-</tt><tt><br>
+      </tt></td>
+      <td align="center" valign="top"><tt>-</tt><tt><br>
+      </tt></td>
+      <td align="center" valign="top"><tt>(+)</tt><tt><br>
+      </tt></td>
+      <td align="center" valign="top"><tt>+</tt><tt><br>
+      </tt></td>
+      <td align="center" valign="top"><tt>bSP</tt><tt><br>
+      </tt></td>
+    </tr>
   </tbody>
 </table>
 
 <p><span style="font-family: monospace;"></span></p>
 
 <p>Symbols in
-parentheses (+) indicate data items that are automatically re-scaled when
-loaded from <tt>DATABR</tt> instance into <tt>MULTI </tt>structure, or scaled back&nbsp; when extracted from
+parentheses (+) indicate data items that are automatically re-scaled
+when
+loaded from <tt>DATABR</tt> instance into <tt>MULTI </tt>structure,
+or scaled back&nbsp; when extracted from
 <tt>MULTI</tt> to <tt>DATABR</tt> instance. Only extensive
 properties are re-scaled.&nbsp; Symbols in
 braces {} indicate optional use for calculation of equilibrium in SIA
@@ -3407,8 +3173,10 @@ braces {} indicate optional use for calculation of equilibrium in SIA
 <p><br>
 3. FMT node
 properties, all scalar double values, can be used for storing mass
-transport parameters for nodes mainly at <tt>TNodeArray</tt> implementation
-level. This information is normally not exchanged in the single-call RMT-GEM coupling at the <tt>TNode</tt> level.&nbsp; <br style="font-family: Helvetica,Arial,sans-serif;">
+transport parameters for nodes mainly at <tt>TNodeArray</tt>
+implementation
+level. This information is normally not exchanged in the single-call
+RMT-GEM coupling at the <tt>TNode</tt> level.&nbsp; <br style="font-family: Helvetica,Arial,sans-serif;">
 </p>
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
@@ -3418,45 +3186,45 @@ level. This information is normally not exchanged in the single-call RMT-GEM cou
       <td>ID</td>
       <td> Comment</td>
       <td valign="top">Units<br>
-</td>
-<td> Default</td>
+      </td>
+      <td> Default</td>
       <td> Label in
 DBR file</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> <b>Tm</b></td>
       <td> Actual total simulation time<br>
-</td>
+      </td>
       <td valign="top">s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> Tm</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> <b>dt</b></td>
       <td> Actual time step<br>
-</td>
+      </td>
       <td valign="top">s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> dt</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> Dif</td>
       <td> General diffusivity of disolved matter in the node</td>
       <td valign="top"><br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> Dif</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> Vt</td>
       <td> Total volume of the node
 (voxel)<br>
-</td>
+      </td>
       <td valign="top">m<sup>3</sup><br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> Vt</td>
     </tr>
     <tr>
@@ -3465,34 +3233,34 @@ DBR file</td>
 pores) in this node<br>
       </td>
       <td valign="top">m/s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> vp</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> eps</td>
       <td> Effective (actual) porosity normalized to 1</td>
       <td valign="top"><br>
-</td>
-<td> 1</td>
+      </td>
+      <td> 1</td>
       <td style="font-family: monospace;"> eps</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> Km</td>
       <td> Actual permeability<br>
-</td>
+      </td>
       <td valign="top">m<sup>2</sup><br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> Km </td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> Kf</td>
       <td> Actual Darcy's constant<br>
-</td>
+      </td>
       <td valign="top">m<sup>2</sup>/s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> Kf</td>
     </tr>
     <tr>
@@ -3502,67 +3270,67 @@ coefficient, dimensionless (re-scaling factor for the system
 mass)<br>
       </td>
       <td valign="top"><br>
-</td>
-<td> 1</td>
+      </td>
+      <td> 1</td>
       <td style="font-family: monospace;"> S</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> Tr</td>
       <td> Transmissivity in the node<br>
-</td>
+      </td>
       <td valign="top">m<sup>2</sup>/s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> Tr</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> h</td>
       <td> Actual hydraulic head
 (hydraulic potential)<br>
-</td>
+      </td>
       <td valign="top">m<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> h</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> rho</td>
       <td> Actual carrier density for density-driven
 flow<br>
-</td>
+      </td>
       <td valign="top">kg/cm<sup>3</sup><br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> rho</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> al</td>
       <td> Specific longitudinal
 dispersivity of porous media<br>
-</td>
+      </td>
       <td valign="top">m<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> al</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> at</td>
       <td> Specific transversal
 dispersivity of porous media<br>
-</td>
+      </td>
       <td valign="top">m<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> at</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> av</td>
       <td> Specific vertical
 dispersivity of porous media<br>
-</td>
+      </td>
       <td valign="top">m<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> av</td>
     </tr>
     <tr>
@@ -3570,26 +3338,26 @@ dispersivity of porous media<br>
       <td>Hydraulic longitudinal dispersivity<br>
       </td>
       <td valign="top">m<sup>2</sup>/s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> hDl</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> hDt</td>
       <td> Hydraulic transversal dispersivity<br>
-</td>
+      </td>
       <td valign="top">m<sup>2</sup>/s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> hDt</td>
     </tr>
     <tr>
       <td style="font-family: monospace;"> hDv</td>
       <td> Hydraulic vertical dispersivity<br>
-</td>
+      </td>
       <td valign="top">m<sup>2</sup>/s<br>
-</td>
-<td> 0</td>
+      </td>
+      <td> 0</td>
       <td style="font-family: monospace;"> hDv</td>
     </tr>
     <tr>
@@ -3597,8 +3365,8 @@ dispersivity of porous media<br>
       <td> Tortuosity factor, dimensionless<br>
       </td>
       <td valign="top"><br>
-</td>
-<td> 1</td>
+      </td>
+      <td> 1</td>
       <td style="font-family: monospace;"> nto</td>
     </tr>
   </tbody>
@@ -3611,13 +3379,17 @@ scaling factor S may be used for scaling the input/output extensive
 variables of GEM IPM for keeping the size of reactive sub-system in GEM
 runs reasonable, regardless of the node size. Especially
 in&nbsp; finite-element methods, this can be necessary.&nbsp;<span style="font-family: monospace;"></span></p>
-<p><b>Attention:</b> The above data fields in Table 3 except <tt>Tm</tt> and <tt>dT</tt> can only be used in the <tt>DATABR</tt> structure definition (and read from the DBR file) by compiling GEMS3K with a global compiler key directive <tt>-DNODEARRAYLEVEL</tt>. This key is required for any TNodeArray - level coupled code.<span style="font-family: monospace;"><br style="font-family: monospace;">
-  </span><span style="font-family: monospace;"></span> <span style="font-family: monospace;"></span><br>
+
+<p><b>Attention:</b> The above data fields in Table 3 except <tt>Tm</tt>
+and <tt>dT</tt> can only be used in the <tt>DATABR</tt> structure
+definition (and read from the DBR file) by compiling GEMS3K with a
+global compiler key directive <tt>-DNODEARRAYLEVEL</tt>. This key is
+required for any TNodeArray - level coupled code.<span style="font-family: monospace;"><br style="font-family: monospace;">
+</span><span style="font-family: monospace;"></span> <span style="font-family: monospace;"></span><br>
 4. GEM IPM-3
 and RMT operation control flags and return codes (all scalar short
 integer values)<br>
 </p>
-
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
 
@@ -3673,25 +3445,25 @@ performed in the last GEM IPM-3 run for this node</td>
 
 <p><span style="font-family: monospace;"></span></p>
 
-<p><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span>The <tt>IterDone</tt> field can be used
+<p><span style="font-family: Helvetica,Arial,sans-serif;"> </span>The <tt>IterDone</tt>
+field can be used
 after a GEM calculation for diagnostic purposes (e.g. to keep track of
-GEM IPM-3 performance). The <tt>TNode</tt> class also provides several function
+GEM IPM-3 performance). The <tt>TNode</tt> class also provides several
+function
 calls that return the elapsed and pure GEM calculation time. <br>
-
 </p>
-<p> </p>
 
+<p> </p>
 
 <p>The first
 four flags are only important for the RMT part implemented at
 TNodeArray level. <br>
-
 </p>
 
 For
 calling the GEM IPM-3
-calculations, the correct handling of the <tt>NodeStatusCH</tt>&nbsp;flag is of
+calculations, the correct handling of the <tt>NodeStatusCH</tt>&nbsp;flag
+is of
 utmost
 importance. This flag sets at input the GEM initial approximation mode,
 and will
@@ -3700,68 +3472,72 @@ mass-transport
 part must reset this flag every time when the GEM calculation is to be
 done,
 and check the return value immediately after getting the control back
-from GEMS3K. Most important situations (at simple TNode level of coupling):<br>
+from GEMS3K. Most important situations (at simple TNode level of
+coupling):<br>
 
 <br>
-
-
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
     <tr>
       <td style="vertical-align: top;">
-<p><span style="font-weight: bold;">AIA
+      <p><span style="font-weight: bold;">AIA
 (simplex) </span>initial approximation mode of GEM calculations <br>
-</p>
-<p>(slow
+      </p>
+      <p>(slow
 but more
 accurate and reproducible results)</p>
-</td>
+      </td>
       <td style="vertical-align: top;">
-<p>Before calling GEM:
+      <p>Before calling GEM:
 set NodeStatusCH to 1 (NEED_GEM_AIA). </p>
-<p>After GEM
-calculation: check that NodeStatusCH contains 2 (OK_GEM_AIA). If yes then copy
+      <p>After GEM
+calculation: check that NodeStatusCH contains 2 (OK_GEM_AIA). If yes
+then copy
 GEM results to MT data structures and proceed with the next node. If
 no, but NodeStatusCH contains 3 (BAD_GEM_AIA) then decide on
 further actions (e.g. check whether the current bulk composition in the
 reactive sub-system is well balanced). </p>
-<p>If NodeStatusCH contains 4 (ERR_GEM_AIA) or 9 (T_ERROR_GEM), generate a
+      <p>If NodeStatusCH contains 4 (ERR_GEM_AIA) or 9 (T_ERROR_GEM),
+generate a
 diagnostic message and break the coupled modeling calculations. </p>
-<p>Code 9
+      <p>Code 9
 (terminal error) usually reflects the dynamic memory corruption in GEM
 IPM-2 kernel.</p>
-</td>
+      </td>
     </tr>
     <tr>
       <td style="vertical-align: top;">
-<p><span style="font-weight: bold;">SIA (smart)</span>
+      <p><span style="font-weight: bold;">SIA (smart)</span>
 initial approximation mode of GEM calculations <br>
-</p>
-<p>(fast but results may be
+      </p>
+      <p>(fast but results may be
 less accurate and, in general, not exactly reproducible)</p>
-</td>
+      </td>
       <td style="vertical-align: top;">
-<p>Before calling GEM:
+      <p>Before calling GEM:
 set NodeStatusCH to 5 (NEED_GEM_SIA). </p>
-<p>After GEM
-calculation: check that NodeStatusCH contains 6 (OK_GEM_SIA) or 2 (OK_GEM_AIA).
+      <p>After GEM
+calculation: check that NodeStatusCH contains 6 (OK_GEM_SIA) or 2
+(OK_GEM_AIA).
 If yes then copy GEM results to MT data structures and proceed with the
 next node. </p>
-<p>Code 2 in this situation means that the GEM IPM algorithm
+      <p>Code 2 in this situation means that the GEM IPM algorithm
 had found the node chemical speciation inappropriate as initial
 approximation and has switched to the automatic (simplex) initial
 approximation. Accordingly, error codes 3 or 4 mean the same as above
 for the AIA start. </p>
-<p>Seldomly, NodeStatusCH may contain 7 (BAD_GEM_SIA) or 8 (ERR_GEM_SIA); if so, the MT part
+      <p>Seldomly, NodeStatusCH may contain 7 (BAD_GEM_SIA) or 8
+(ERR_GEM_SIA); if so, the MT part
 may try re-starting GEM calculation for this node in the AIA mode. </p>
-</td>
+      </td>
     </tr>
   </tbody>
 </table>
 
 <span style="font-family: Helvetica,Arial,sans-serif;"></span><span style="font-family: Helvetica,Arial,sans-serif;"></span><br>
+
 <p>In the
 AIA (automatic initial approximation) mode, GEM
 calculations are 100% reproducible but may rather slow (20 to 1000 IPM
@@ -3769,14 +3545,17 @@ iterations depending on the chemical system definition and
 composition) because the simplex initial approximation is in general
 not close to Gibbs energy minimum when phases solutions (especially
 non-ideal) are present in the system. </p>
+
 <p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
 
 <p>The alternative SIA (smart initial
 approximation) mode uses the
-currently available contents of the speciation (<tt>xDC</tt>) and activity
+currently available contents of the speciation (<tt>xDC</tt>) and
+activity
 coefficients (<tt>gam</tt>) vectors (perhaps
 modified
-through the <tt>DATABR</tt> interface after the mass transport step) as the
+through the <tt>DATABR</tt> interface after the mass transport step)
+as the
 initial approximation. If the xDC
 vector for the current node does not violate the mass balance relative
 to the current bulk
@@ -3796,8 +3575,8 @@ to the Gibbs energy minimum. Nevertheless, the behavior of SIA mode GEM
 calculation
 relative to AIA in coupled models still needs more testing and
 verification.<span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span></p>
+
+<p><span style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
 
 <p>The SIA
 GEM calculation mode may be preferable over the AIA mode when the
@@ -3808,9 +3587,8 @@ calculated from the corrections to xDC
 vector. The latter then is a good initial approximation at least in the
 sense of mass balance, so the GEM MBR()
 procedure is not expected to do any extra iterations. <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span></p>
 
+<p><span style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
 
 <p>In meaningful
 RMT problems, the phase association changes or redox
@@ -3829,34 +3607,40 @@ composition upon the transport time iteration would not result in any
 phase or redox transitions. In this case, the SIA approximation appears
 safe
 enough and GEM IPM is expected to converge in 1 to 10 iterations.</p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
-  </span></p>
-<hr size="2" width="100%">
 
+<p><span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span></p>
+
+<hr size="2" width="100%">
 <h3><a name="TAG_TNODE"></a> 3.3. TNode class for
 simple coupling of GEMS3K to transport
 codes</h3>
 
-
-<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;">The TNode C++
+<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;">The
+TNode C++
 class (defined in node.h
 file,
 implemented in node.cpp
 and node_format.cpp
 files) provides
-a selection of methods (function calls) for an easy coupling of GEMS3K with an already existing mass transport code that keeps
+a selection of methods (function calls) for an easy coupling of GEMS3K
+with an already existing mass transport code that keeps
 chemical information
 in its own data arrays. The use of TNode class functionality is
 described in detail
-in the <a href="gems3k-useref.html">User's Reference</a> file. Overview of two
-programming examples is provided in the <a href="gems3k-nodelev.html">HowTo file</a>. The format of GEMS3K input IPM, DCH and DBR
+in the <a href="gems3k-useref.html">User's Reference</a> file.
+Overview of two
+programming examples is provided in the <a href="gems3k-nodelev.html">HowTo
+file</a>. The format of GEMS3K input IPM, DCH and DBR
 files is
 described in detail in a <a href="gems3k-iofiles.html">companion
 document</a>.</p>
-<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"> </p>
-<br>
-<hr size="2" width="100%">
 
+<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"> </p>
+
+<br>
+
+<hr size="2" width="100%">
 <h3><a name="TAG_TNODEARRAY"></a>3.4. TNodeArray class for the advanced
 coupled code development<br>
 </h3>
@@ -3882,27 +3666,32 @@ instance of </span><tt><span style=""><span style="font-size: 10pt;">DATACH</spa
 accessing nodes
 and is visible from both <st1:stockticker w:st="on">GEM</st1:stockticker>
 and <st1:stockticker w:st="on">RMT</st1:stockticker> parts.</span> </p>
+
 <p>The basic
-idea of TNodeArray is to maintain two arrays of pointers to
-  <tt>DATABR</tt> structures: one array <tt>C0</tt> for the previous (<tt>t0</tt>) and one <tt>C1</tt> for the
+idea of TNodeArray is to maintain two arrays of pointers to <tt>DATABR</tt>
+structures: one array <tt>C0</tt> for the previous (<tt>t0</tt>) and
+one <tt>C1</tt> for the
 current time (<tt>t1</tt>) moment. The <tt>DATABR</tt>
 structures keeping information for each node are dynamically allocated.
-Using <tt>TNode</tt> class access methods, the mass transport part can read any
+Using <tt>TNode</tt> class access methods, the mass transport part can
+read any
 data for nodes from the <tt>C0</tt> layer of the
 node array and put modified speciation, composition, or temperature
-for each node in the respective structure linked to the <tt>C1</tt> layer of the
+for each node in the respective structure linked to the <tt>C1</tt>
+layer of the
 node array. The GEM calculations (chemical equilibration) are always
-performed over the nodes in the <tt>C1</tt> node array layer. Then, in the
+performed over the nodes in the <tt>C1</tt> node array layer. Then, in
+the
 (optional) back-coupling algorithm, the decision about the acceptance
 of the time step dt is made. The time
 step can always be made smaller and the transport loop can be repeated,
 if necessary, followed by the chemical&nbsp; equilibration loop. Only
-when the time step is accepted, the data for each node are copied from
-  <tt>C1</tt> layer into
-the respective <tt>DATABR</tt> structures in the <tt>C0</tt> node array layer. </p>
-<p><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span></p>
+when the time step is accepted, the data for each node are copied from <tt>C1</tt>
+layer into
+the respective <tt>DATABR</tt> structures in the <tt>C0</tt> node
+array layer. </p>
 
+<p><span style="font-family: Helvetica,Arial,sans-serif;"> </span></p>
 
 <p>The <tt>TNodeArray</tt> class contains
 integrated calls that allow
@@ -3919,17 +3708,20 @@ of <tt>TNodeArray</tt> operation is in
 the scope of another document.</p>
 
 <p>The methods of
-data access specific to <tt>TNodeArray</tt> class are defined in <tt>nodearray.h</tt>, implemented in <tt>nodearray.cpp</tt> files, and&nbsp;
-will be described in a separate <a href="gems3k-nodearray.html">document (in
+data access specific to <tt>TNodeArray</tt> class are defined in <tt>nodearray.h</tt>,
+implemented in <tt>nodearray.cpp</tt> files, and&nbsp;
+will be described in a separate <a href="gems3k-nodearray.html">document
+(in
 preparation)</a>. The example of using the <tt>TNodeArray</tt> class
-functionality is provided in the <tt>main.cpp</tt> file in "<tt>nodearray-gem\</tt>" folder. This example is a prototype of a finite-difference or random-walk
+functionality is provided in the <tt>main.cpp</tt> file in "<tt>nodearray-gem\</tt>"
+folder. This example is a prototype of a finite-difference or
+random-walk
 advection-diffusion mass transport model (supplied by&nbsp; F. Enzmann).<br>
 </p>
+
 <span style="font-family: Helvetica,Arial,sans-serif;"></span><span style="font-family: Helvetica,Arial,sans-serif;"></span><br>
 
 <hr style="width: 100%; height: 2px;">
-
-
 <h2><a name="TAG_PROGRAMMING"></a>4. Programming and technical issues</h2>
 
 <p>The program
@@ -3938,9 +3730,8 @@ C++ and can be compiled on many computer platforms (Windows, Linux, HPC
 Merlin, Cray XT, etc.) using several optimizing
 compilers (GNU C++, PGI C++, Intel
 C++, Microsoft C++, &#8230; ). The make scripts for some of this platforms
-are located in "<tt>/GEMS3K/platform</tt>" subfolders. <br></p>
-
-
+are located in "<tt>/GEMS3K/platform</tt>" subfolders. <br>
+</p>
 
 <h3><a name="TAG_SVN"></a>4.1.
 Subversion repository of GEMS3K source code<br>
@@ -3949,43 +3740,53 @@ Subversion repository of GEMS3K source code<br>
 The GEMS3K
 program
 source code comprises a sub-set of C++
-source code files used in the <a style="font-family: Helvetica,Arial,sans-serif;" href="http://gems.web.psi.ch/">GEM-Selektor package</a>.&nbsp;&nbsp; The list of source
+source code files used in the <a style="font-family: Helvetica,Arial,sans-serif;" href="http://gems.web.psi.ch/">GEM-Selektor package</a>.&nbsp;&nbsp;
+The list of source
 code files common to both
 GEM-Selektor
 and GEMS3K programs is provided <a href="#TAG_SOURCE_FILELIST">above
 in this file</a>. <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span>
-
 <br>
+
 The GEMS3K
 source code tree resides in the Subversion repository at PSI on the
-server savannah01.psi.ch. This server can only be accessed through the SSH
-protocol (in Subversion client checkout, the URL should begin with<span style="font-family: Helvetica,Arial,sans-serif;"> </span>svn+ssh://). For the user
+server savannah01.psi.ch. This server can only be accessed through the
+SSH
+protocol (in Subversion client checkout, the URL should begin with<span style="font-family: Helvetica,Arial,sans-serif;"> </span>svn+ssh://).
+For the user
 account and details about accessing the repository, please ask the <a href="http://gems.web.psi.ch">GEMS Development Team</a>.
-A GEMS3K Subversion trunk repository mirror on assembla.com is under 
+A GEMS3K Subversion trunk repository mirror on assembla.com is under
 construction. Alternatively, you can download a zipped working copy
-of the source code from <a href="http://gems.web.psi.ch/GEMS3K/">GEMS3K web page</a>, then simply unpack it into your home or
+of the source code from <a href="http://gems.web.psi.ch/GEMS3K/">GEMS3K
+web page</a>, then simply unpack it into your home or
 development directory. <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span>
-
 <br>
-On your computer, the source
-code should be located in the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><big><span style="font-family: monospace;">"<small>\standalone</small></span><span style="font-family: monospace;"><small>\GEMS3K\</small>" </span></big>subfolder, the
-node-gem example - in the "<big><span style="font-family: monospace;"><small>\standalone</small></span><small><span style="font-family: monospace;">\node-gem</span></small></big><span style="font-family: Helvetica,Arial,sans-serif;"><small>\</small></span>" subfolder.<span style="font-family: Helvetica,Arial,sans-serif;"><br>
-</span>
 
+On your computer, the source
+code should be located in the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><big><span style="font-family: monospace;">"<small>\standalone</small></span><span style="font-family: monospace;"><small>\GEMS3K\</small>" </span></big>subfolder,
+the
+node-gem example - in the "<big><span style="font-family: monospace;"><small>\standalone</small></span><small><span style="font-family: monospace;">\node-gem</span></small></big><span style="font-family: Helvetica,Arial,sans-serif;"><small>\</small></span>"
+subfolder.<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>
 <p>This
-documentation file (with others) resides in the <big><span style="font-family: monospace;">"<small>\standalone</small></span><span style="font-family: monospace;"><small>\GEMS3K\doc\html\</small>"</span></big> folder. Details on downloading and installation are also given in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a> on GEMS3K web page.
+documentation file (with others) resides in the <big><span style="font-family: monospace;">"<small>\standalone</small></span><span style="font-family: monospace;"><small>\GEMS3K\doc\html\</small>"</span></big>
+folder. Details on downloading and installation are also given in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a>
+on GEMS3K web page.
 </p>
 
 <h3><a name="TAG_FMT_CPP"></a>4.2. Mass transport part in C++<br>
 </h3>
 
-<p>If you mass transport part is written in C++, you can add&nbsp; the C++&nbsp; source code to you project- or Makefile and
-compile all files at the same time. Important: you must use compiler directives "<tt>-DIPMGEMPLUGIN</tt>", If coupled at TNode level, do not use&nbsp; "<tt>-DNODEARRAYLEVEL"</tt>.
-  You can also compile a dynamic or static GEMS3K library and link it to
- your compiled RMT code. Details on compiling and linking are given in 
-the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a> on GEMS3K web page.<br>
+<p>If you mass transport part is written in C++, you can add&nbsp; the
+C++&nbsp; source code to you project- or Makefile and
+compile all files at the same time. Important: you must use compiler
+directives "<tt>-DIPMGEMPLUGIN</tt>", If coupled at TNode level, do not
+use&nbsp; "<tt>-DNODEARRAYLEVEL"</tt>. You can also compile a dynamic
+or static GEMS3K library and link it to your compiled RMT code. Details
+on compiling and linking are given in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a>
+on GEMS3K web page.<br>
 <br>
 </p>
 
@@ -3993,8 +3794,13 @@ the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a> on G
 </h3>
 
 <p>If you mass transport part is written in Fortran, you can
-add&nbsp; this sub-set of C++&nbsp; source code to you project you must use compiler directives "<tt>-DIPMGEMPLUGIN</tt>", If coupled at TNode level, do not use&nbsp; "<tt>-DNODEARRAYLEVEL".</tt> Alternatively, make a GEMS3K static or dynamic library and link it
-to your compiled fortran program. Details on compiling and linking GEMS3K library are given in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a> on GEMS3K web page.<br>
+add&nbsp; this sub-set of C++&nbsp; source code to you project you must
+use compiler directives "<tt>-DIPMGEMPLUGIN</tt>", If coupled at TNode
+level, do not use&nbsp; "<tt>-DNODEARRAYLEVEL".</tt> Alternatively,
+make a GEMS3K static or dynamic library and link it
+to your compiled fortran program. Details on compiling and linking
+GEMS3K library are given in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo page</a>
+on GEMS3K web page.<br>
 <br>
 </p>
 
@@ -4002,21 +3808,19 @@ to your compiled fortran program. Details on compiling and linking GEMS3K librar
 </h3>
 
 <p>The easiest way
-to build GEMS3K is to use the standard <tt>make</tt> command (available in
+to build GEMS3K is to use the standard <tt>make</tt> command
+(available in
 most platforms) together with GNU C++ compiler suite v. 4.2 or higher.
 In Windows XP/7 we recommend to download and use the MinGW port
 of GNU tools (<a href="http://www.mingw.org">http://www.mingw.org</a>).
 In Linux or&nbsp; Mac OS X, the GNU tools are provided by default (in
 Linux, take care that the main Development packages are
-installed). 
+installed). </p>
 
-</p>
 <p>There are two
 alternative make files in GEMS3K source code tree, provided each pair
 for different arcitectures in the
 ./platforms subdirectories. </p>
-
-
 
 <table border="1" cellpadding="2" cellspacing="2" width="100%">
 
@@ -4043,18 +3847,22 @@ FMT-GEM code<br>
 for building
 a static executable file gemcalc(.exe) for the test
 example.</p>
+
 <p><tt>Makefile.lib</tt> script file can be
 used for
-building a static library&nbsp; libgems3k.a (or libgems3k.so) which can be linked
+building a static library&nbsp; libgems3k.a (or libgems3k.so) which can
+be linked
 to the mass-transport&nbsp; part to produce a coupled code later on. <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
-<span style="font-family: Helvetica,Arial,sans-serif;">
-
-</span>
-<p>A recommended way of building GEMS3K examples is to use QtSDK and qmake, as described in in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo web page</a>.</p>
 
 <span style="font-family: Helvetica,Arial,sans-serif;">
 </span>
-<h4><a name="TAG_GNU"></a>GNU C++ (gcc - gfortran) on Linux, Mac OS X, and MinGW (Windows)</h4>
+<p>A recommended way of building GEMS3K examples is to use QtSDK and
+qmake, as described in in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo web page</a>.</p>
+
+<span style="font-family: Helvetica,Arial,sans-serif;">
+</span>
+<h4><a name="TAG_GNU"></a>GNU C++ (gcc - gfortran) on Linux, Mac OS X,
+and MinGW (Windows)</h4>
 
 <p>GEMS3K is
 developed using GNU C++ (version 3.5 or higher) and related tools under
@@ -4064,64 +3872,50 @@ for the first time, make sure that you have the GNU C++ compiler,
 binutils, libraries, debugger and other related tools installed and
 accessible through system environment variables. </p>
 
-
-
 <p>The make scripts
-are located in
-  <tt>"~/standalone/GEMS3K/platform/win32MinGW"</tt>
-for Windows,
-  <tt>"~/standalone/GEMS3K/platform/Linux-GNU"</tt>
-for Linux, and
-  <tt>"~/standalone/GEMS3K/platform/MacOSX"</tt>
+are located in <tt>"~/standalone/GEMS3K/platform/win32MinGW"</tt>
+for Windows, <tt>"~/standalone/GEMS3K/platform/Linux-GNU"</tt>
+for Linux, and <tt>"~/standalone/GEMS3K/platform/MacOSX"</tt>
 for Mac OS X.
 Copy the corresponding Makefile to the working
 directory, e.g. <tt>"~/standalone/GEMS3K/gemcalc/"</tt>.</p>
-
 
 <p>From this
 directory, different build modes can be invoked by typing a console
 command </p>
 
-
-<p><tt>"make &lt;target&gt;"
-  </tt>&nbsp;&nbsp; (or mingw32-make
+<p><tt>"make &lt;target&gt;" </tt>&nbsp;&nbsp; (or mingw32-make
 &lt;target&gt; for
 MinGW)</p>
-
 
 <p>The parameter
 &lt;target&gt; may be one of the following: </p>
 
 &nbsp; <tt>all&nbsp;</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- create object files and the executable file<br>
-
+create object files and the executable file<br>
 
 &nbsp; <tt>clean&nbsp;</tt>&nbsp;&nbsp;&nbsp;
 &nbsp; &nbsp; &nbsp; &nbsp; remove all object files<br>
 
-
 &nbsp; <tt>distclean</tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clean
-and remove executable file 
-
+and remove executable file
 <p>For instance, to
 create the executable file, type</p>
-<p>
 
-  <tt>&nbsp;make&nbsp;&nbsp;</tt>&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ( or &nbsp; &nbsp;&nbsp; make all )</p>
-
+<p> <tt>&nbsp;make&nbsp;&nbsp;</tt>&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; ( or &nbsp; &nbsp;&nbsp; make all
+)</p>
 
 <p>To rebuild the
 executable file after performing optimized compile, edit Makefile
-(change there compiler key <tt>-g</tt> to <tt>-O2</tt> ) and then type </p>
-
+(change there compiler key <tt>-g</tt> to <tt>-O2</tt> ) and then
+type </p>
 
 <tt>make clean
 </tt><tt><br>
 </tt><tt>make</tt>
-
-<p>A recommended way of building GEMS3K examples is to use QtSDK and qmake, as described in in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo web page</a>.</p>
-
+<p>A recommended way of building GEMS3K examples is to use QtSDK and
+qmake, as described in in the <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">Techinfo web page</a>.</p>
 
 <span style="font-family: Helvetica,Arial,sans-serif;">
 <br>
@@ -4130,10 +3924,14 @@ executable file after performing optimized compile, edit Makefile
 </span>
 <h2><a name="TAG_REFERENCES"></a>5. References</h2>
 
-<a name="Ref_Bethke-1996"></a> Bethke, C. M. (2008): Geochemical and Biogeochemical Reaction Modeling. Cambridge University Press, New York&nbsp; (<a href="http://hercules.geology.uiuc.edu/%7Ebethke/hydro_gwb.htm">http://hercules.geology.uiuc.edu/~bethke/hydro_gwb.htm</a>)<br>
+<a name="Ref_Bethke-1996"></a> Bethke, C. M. (2008): Geochemical and
+Biogeochemical Reaction Modeling. Cambridge University Press, New
+York&nbsp; (<a href="http://hercules.geology.uiuc.edu/%7Ebethke/hydro_gwb.htm">http://hercules.geology.uiuc.edu/~bethke/hydro_gwb.htm</a>)<br>
+
 <br>
-<a name="Ref-Borisov-1992"></a>Borisov, M.V., Shvarov, Y.V. (1992): 
-Thermodynamics of geochemical processes. Moscow State University 
+
+<a name="Ref-Borisov-1992"></a>Borisov, M.V., Shvarov, Y.V. (1992):
+Thermodynamics of geochemical processes. Moscow State University
 Publishers, Moscow, in Russian<br>
 
 <br>
@@ -4148,19 +3946,23 @@ Vol. <span style="font-weight: bold;">10</span>, Paris, OECD, 292 p.
 
 <br>
 
-<a name="Ref_TM-44-02-06"></a> Chudnenko, K.V., Karpov, I.K., Kulik, 
-D.A. (2002): A high-precision IPM-2 non-linear minimization mod-ule of 
-GEM-Selektor v.2-PSI program code for geochemical thermodynamic 
-modeling. Technical Report TM-44-02-06, Paul Scherrer Institut, 
+<a name="Ref_TM-44-02-06"></a> Chudnenko, K.V., Karpov, I.K., Kulik,
+D.A. (2002): A high-precision IPM-2 non-linear minimization mod-ule of
+GEM-Selektor v.2-PSI program code for geochemical thermodynamic
+modeling. Technical Report TM-44-02-06, Paul Scherrer Institut,
 Villigen.<br>
+
 <br>
-<a name="Ref-Chudnenko-2010"></a>Chudnenko, K.V. (2010): Thermodynamic 
-modeling in geochemistry: the theory, the algortithms, the soft-ware, 
-the applications. Academic Publishing House GEO, Novosibirsk (2010), in 
+
+<a name="Ref-Chudnenko-2010"></a>Chudnenko, K.V. (2010): Thermodynamic
+modeling in geochemistry: the theory, the algortithms, the soft-ware,
+the applications. Academic Publishing House GEO, Novosibirsk (2010), in
 Russian.<br>
+
 <br>
- <a name="Ref-Hummel-2002"></a>Hummel, W., Berner., U., Curti, E., 
-Pearson, F.J., Thoenen, T.&nbsp; (2002): Nagra/PSI chemical 
+
+<a name="Ref-Hummel-2002"></a>Hummel, W., Berner., U., Curti, E.,
+Pearson, F.J., Thoenen, T.&nbsp; (2002): Nagra/PSI chemical
 thermodynamic data base 01/01. Pp. 589. Universal-Publishers<br>
 
 <br>
@@ -4194,33 +3996,39 @@ Villigen, Switzerland, March 2004, p.109-122 (ISSN 1423-7334) (<a href="http://g
 
 <br>
 
-<a name="Ref_Kulik_ea-2012"></a> Kulik D.A., Wagner T., Dmytrieva S.V., Kosakowski G., Hingerl
+<a name="Ref_Kulik_ea-2012"></a> Kulik D.A., Wagner T., Dmytrieva S.V.,
+Kosakowski G., Hingerl
 F.F., Chudnenko K.V., Berner U. (2012): GEM-Selektor geochemical
 modeling package: Numerical kernel GEMS3K for coupled simulation codes.
-    <span style="font-style: italic;">Computational Geosciences</span>
+<span style="font-style: italic;">Computational Geosciences</span>
 (in press), <a href="http://dx.doi.org/10.1007/s10596-012-9310-6" target="_blank">http://dx.doi.org/10.1007/s10596-012-9310-6</a>).<br>
-<br>
-
-<a name="Ref_Morel-Hering-1993"></a> Morel, F. M. M., Hering, J. G. (1993): Principles and applications of aquatic chemistry. New York et al., Wiley Interscience. <br>
 
 <br>
 
-<a name="Ref_Parkhurst-Appelo-1999"></a> Parkhurst, D.L., Appelo, C.A.J.
- (1999): User's guide to PHREEQC (version 2) - A computer program for 
-speciation, batch-reaction, one-dimensional transport, and inverse 
-geochemical calculations. U.S.G.S. Water-Resources Investigations Report
- 99-4259, Denver, Colorado (1999) (<a href="http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/%29">http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/)</a><br>
+<a name="Ref_Morel-Hering-1993"></a> Morel, F. M. M., Hering, J. G.
+(1993): Principles and applications of aquatic chemistry. New York et
+al., Wiley Interscience. <br>
 
 <br>
 
-<a name="Ref_Reed-1982"></a> . Reed, M.H. (1982): Calculation of 
-multicomponent chemical equilibria and reaction processes in systems 
-involving minerals, gases and an aqueous phase. Geochimica et 
+<a name="Ref_Parkhurst-Appelo-1999"></a> Parkhurst, D.L., Appelo,
+C.A.J. (1999): User's guide to PHREEQC (version 2) - A computer program
+for speciation, batch-reaction, one-dimensional transport, and inverse
+geochemical calculations. U.S.G.S. Water-Resources Investigations
+Report 99-4259, Denver, Colorado (1999) (<a href="http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/%29">http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc/)</a><br>
+
+<br>
+
+<a name="Ref_Reed-1982"></a> . Reed, M.H. (1982): Calculation of
+multicomponent chemical equilibria and reaction processes in systems
+involving minerals, gases and an aqueous phase. Geochimica et
 Cosmochimica Acta 46, 513-528.<br>
+
 <br>
-<a name="Ref-Wagner-2012"></a>Wagner, T., Kulik, D.A., Hingerl, F.F., 
-Dmytrieva, S.V. (2012): GEM-Selektor geochemical modeling package: 
-TSolMod C++ class library and data interface for multicomponent phase 
+
+<a name="Ref-Wagner-2012"></a>Wagner, T., Kulik, D.A., Hingerl, F.F.,
+Dmytrieva, S.V. (2012): GEM-Selektor geochemical modeling package:
+TSolMod C++ class library and data interface for multicomponent phase
 models. Canadian Mineralogist (2012), in press.<br>
 
 <br>
@@ -4230,12 +4038,16 @@ Thermodynamic and mathematical concepts of CHESS, Technical Report Nr.
 LHM/RD/98/39, Ecole des Mines de Paris, Fontaineleau, France&nbsp; (<a href="http://chess.ensmp.fr/doc.html">http://chess.ensmp.fr/doc.html</a>).<br>
 
 <br>
-<a name="Ref-VanDerLee-2003"></a>Van der Lee, J., De Windt, L., Lagneau,
- V., Goblet, P. (2003): Module-oriented modeling of reactive transport 
-with HYTEC. Computers and Geosciences 29, 265-275.<br>
+
+<a name="Ref-VanDerLee-2003"></a>Van der Lee, J., De Windt, L.,
+Lagneau, V., Goblet, P. (2003): Module-oriented modeling of reactive
+transport with HYTEC. Computers and Geosciences 29, 265-275.<br>
+
 <br>
 
-<a name="Ref_Van-Zeggeren-1970"></a> Van Zeggren, F., Storey, S. H. (1970): The computation of chemical equilibria. Cambridge, Cambridge University Press.<br>
+<a name="Ref_Van-Zeggeren-1970"></a> Van Zeggren, F., Storey, S. H.
+(1970): The computation of chemical equilibria. Cambridge, Cambridge
+University Press.<br>
 
 <br>
 
@@ -4257,7 +4069,5 @@ Last edited: 28.09.2012 DK<br>
   <br>
   <br>
 </blockquote>
-
-
 
 </body></html>

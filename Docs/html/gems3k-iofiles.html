@@ -1,19 +1,17 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html><head>
   
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
   
-<meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; I) [Netscape]">
+  <meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; I) [Netscape]">
+  <title>GEMS3K I/O File Formats</title>
 
   
-<title>GEMS3K I/O File Formats</title>
-
   
-<meta name="description" content="Version 3.0.0-PSI">
+  <meta name="description" content="Version 3.0.0-PSI">
 
-</head>
-<body>
+</head><body style="background-image: url(bgimg-gray.jpg);">
 <h1><img alt="GEMS icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font color="#000066">
 </font>GEMS3K Code for Solving for GeoChemical Equilibria </h1>
 
@@ -25,47 +23,39 @@
 
 <h3>Contents</h3>
 
-<blockquote>
-  
-</blockquote>
+<blockquote> </blockquote>
+
 <p><a href="#1-INTRO">1.
 Introduction</a>
 </p>
+
 <p><a href="#2-INPUTFILES">2.
 Input Files Needed to Run a Standalone GEMS3K Calculation </a></p>
 
 <blockquote>
-  
   <p><a href="#DATACH">2.1.
-The DCH File with Chemical System Definition</a>
-  </p>
+The DCH File with Chemical System Definition</a> </p>
   <p><a href="#GEMIPM">2.2. The IPM File with
 GEM IPM Numerical Settings, Optional Sorption and Solution Model
-Parameters</a>
-  </p>
+Parameters</a> </p>
   <p><a href="#DATABR">2.3. The DBR File with Node
 Data Bridge Composition and Speciation Data</a></p>
-
 </blockquote>
 
-
-  
-  
-  
-  
 <p><a href="#FREEDATA">3.
 Free Data Input File Format of GEMS3K</a>
 </p>
+
 <p><a href="#ALPHABETICAL">4.
 Alphabetical List of Data Objects Used in GEMS3K Input Files</a></p>
+
 <blockquote>
-
 </blockquote>
-
 
 <br>
 
-<hr size="2" width="100%"><h2><a name="1-INTRO"></a>1. Introduction</h2>
+<hr size="2" width="100%">
+<h2><a name="1-INTRO"></a>1. Introduction</h2>
 
 <p>Text input file formats of GEMS3K program, in general,
 correspond to three data structures that keep the definition of
@@ -82,7 +72,8 @@ a SysEq record (calculated equilibrium state) in the GEM-Selektor
 package. To do the latter, simply open a SysEq record in "Single
 Thermodynamic System" dialog and re-calculate it. Then select a menu
 command "Data" "Write GEMS3K files ..." and follow the appearing
-dialogs (<a href="gems3k-manual.html#TAG_MAKE_FILES">more about this here</a>).<br>
+dialogs (<a href="gems3k-manual.html#TAG_MAKE_FILES">more about this
+here</a>).<br>
 </p>
 
 <p>The contents of <span style="font-weight: bold;">DCH file</span>,
@@ -105,7 +96,7 @@ sorption phases and surface complexes belonging to them. <br>
 contain the data for bulk
 composition,
 temperature, pressure, and metastability constraints (GEM input). At
-the same time, such files when written by GEM-Selektor or (coupled) 
+the same time, such files when written by GEM-Selektor or (coupled)
 GEMS3K code, contain the GEM equilibrium speciation results (output)
 such as the dual solution (vector u), primal solution
 (speciation), activity coefficients, amounts and bulk compositions of
@@ -1558,7 +1549,8 @@ output</span><br>
 keyword indicating the end
 of head section with compulsory array dimensions or setup flags.</span>
 Used
-in&nbsp; DCH and IPM files. Upon reading these files, when GEMS3K program encounters this keyword, it allocates the memory for
+in&nbsp; DCH and IPM files. Upon reading these files, when GEMS3K
+program encounters this keyword, it allocates the memory for
 dynamic data in DATACH, DATABR and IPM (Multi) structures. Any missing
 or wrong dimension will be detected at this stage. Input of any
 subsequent data will assume the number of elements as defined before
@@ -2708,7 +2700,8 @@ calculation with no-simplex (smart) IA</td>
       <td style="vertical-align: top;"><span style="font-family: monospace;">T_ERROR_GEM</span></td>
       <td style="vertical-align: top;">Terminal
 error has
-occurred in GEMS3K (e.g. memory corruption). Restart is required.&nbsp; </td>
+occurred in GEMS3K (e.g. memory corruption). Restart is required.&nbsp;
+      </td>
     </tr>
   </tbody>
 </table>
@@ -3668,7 +3661,8 @@ interfaces; default value is '+'. <br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Tolerance
 for the pressure
-interpolation (Pa).</span> Thermodynamic data will be interpolated in GEMS3K only if the current pressure is more than Ptol different than
+interpolation (Pa).</span> Thermodynamic data will be interpolated in
+GEMS3K only if the current pressure is more than Ptol different than
 the previous one used in GEM IPM run. Default value: <span style="color: rgb(255, 0, 0);">1000 Pa</span>.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
@@ -4409,7 +4403,5 @@ end of file</tt> <br>
 <br>
 
 <br>
-
-
 
 </body></html>
