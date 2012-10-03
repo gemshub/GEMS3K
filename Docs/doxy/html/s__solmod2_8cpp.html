@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<title>Gems3k: C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl1.cpp File Reference</title>
+<title>Gems3k: C:/DevelGEMS/trunk/standalone/GEMS3K/s_solmod2.cpp File Reference</title>
 
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
@@ -91,27 +91,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 </div>
 <div class="header">
+  <div class="summary">
+<a href="#define-members">Defines</a>  </div>
   <div class="headertitle">
-<div class="title">C:/DevelGEMS/trunk/standalone/GEMS3K/s_fgl1.cpp File Reference</div>  </div>
+<div class="title">C:/DevelGEMS/trunk/standalone/GEMS3K/s_solmod2.cpp File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Implementation of <a class="el" href="class_t_sol_mod.html">TSolMod</a> derived classes for ion-association aqueous activity models (<a class="el" href="class_t_helgeson.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Helgesons variant.">THelgeson</a>, <a class="el" href="class_t_davies.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Davies variant.">TDavies</a>, <a class="el" href="class_t_limiting_law.html" title="Debye-Hueckel (DH) limiting law for aqueous electrolyte solutions.">TLimitingLaw</a>, <a class="el" href="class_t_debye_hueckel.html" title="Two-term Debye-Hueckel (DH) model for aqueous electrolyte solutions.">TDebyeHueckel</a>, (<a class="el" href="class_t_karpov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Karpovs variant.">TKarpov</a>, <a class="el" href="class_t_shvarov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Shvarov variant.">TShvarov</a>)  
+<p>Implementation of <a class="el" href="class_t_sol_mod.html">TSolMod</a> derived classes for fluid phase models (<a class="el" href="class_t_p_r_s_vcalc.html" title="Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures.">TPRSVcalc</a>, <a class="el" href="class_t_c_g_fcalc.html" title="Churakov and Gottschalk (2003) EOS calculations.">TCGFcalc</a>, <a class="el" href="class_t_s_r_kcalc.html" title="Soave-Redlich-Kwong (SRK) model for fluid mixtures.">TSRKcalc</a>, <a class="el" href="class_t_p_r78calc.html" title="Peng-Robinson (PR78) model for fluid mixtures.">TPR78calc</a>, <a class="el" href="class_t_c_o_r_kcalc.html" title="Compensated Redlich-Kwong (CORK) model for fluid mixtures.">TCORKcalc</a> and <a class="el" href="class_t_s_t_pcalc.html" title="Sterner-Pitzer (STP) model for fluid mixtures.">TSTPcalc</a> classes)  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;cmath&gt;</code><br/>
 <code>#include &lt;cstdio&gt;</code><br/>
 <code>#include &lt;iostream&gt;</code><br/>
 <code>#include &lt;iomanip&gt;</code><br/>
 <code>#include &lt;fstream&gt;</code><br/>
+<code>#include &quot;<a class="el" href="s__solmod_8h_source.html">s_solmod.h</a>&quot;</code><br/>
 <code>#include &quot;<a class="el" href="verror_8h_source.html">verror.h</a>&quot;</code><br/>
-<code>#include &quot;<a class="el" href="s__fgl_8h_source.html">s_fgl.h</a>&quot;</code><br/>
-</div><hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>Implementation of <a class="el" href="class_t_sol_mod.html">TSolMod</a> derived classes for ion-association aqueous activity models (<a class="el" href="class_t_helgeson.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Helgesons variant.">THelgeson</a>, <a class="el" href="class_t_davies.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Davies variant.">TDavies</a>, <a class="el" href="class_t_limiting_law.html" title="Debye-Hueckel (DH) limiting law for aqueous electrolyte solutions.">TLimitingLaw</a>, <a class="el" href="class_t_debye_hueckel.html" title="Two-term Debye-Hueckel (DH) model for aqueous electrolyte solutions.">TDebyeHueckel</a>, (<a class="el" href="class_t_karpov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Karpovs variant.">TKarpov</a>, <a class="el" href="class_t_shvarov.html" title="Extended Debye-Hueckel (EDH) model for aqueous electrolyte solutions, Shvarov variant.">TShvarov</a>) </p>
+</div><table class="memberdecls">
+<tr><td colspan="2"><h2><a name="define-members"></a>
+Defines</h2></td></tr>
+<tr class="memitem:a1cdf1a6ffdcd84109cfad2295797b7a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1cdf1a6ffdcd84109cfad2295797b7a0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>FIRSTSEED</b>&#160;&#160;&#160;(15)</td></tr>
+<tr class="memitem:a4763558c1bcd489756f0ffaeb20b74c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4763558c1bcd489756f0ffaeb20b74c6"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>ROMIN</b>&#160;&#160;&#160;(1.E-2)</td></tr>
+<tr class="memitem:a2ed4a235102aeae0d6c2c39e793e7c96"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ed4a235102aeae0d6c2c39e793e7c96"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NPOINT</b>&#160;&#160;&#160;(5)</td></tr>
+</table>
+<hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
+<div class="textblock"><p>Implementation of <a class="el" href="class_t_sol_mod.html">TSolMod</a> derived classes for fluid phase models (<a class="el" href="class_t_p_r_s_vcalc.html" title="Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures.">TPRSVcalc</a>, <a class="el" href="class_t_c_g_fcalc.html" title="Churakov and Gottschalk (2003) EOS calculations.">TCGFcalc</a>, <a class="el" href="class_t_s_r_kcalc.html" title="Soave-Redlich-Kwong (SRK) model for fluid mixtures.">TSRKcalc</a>, <a class="el" href="class_t_p_r78calc.html" title="Peng-Robinson (PR78) model for fluid mixtures.">TPR78calc</a>, <a class="el" href="class_t_c_o_r_kcalc.html" title="Compensated Redlich-Kwong (CORK) model for fluid mixtures.">TCORKcalc</a> and <a class="el" href="class_t_s_t_pcalc.html" title="Sterner-Pitzer (STP) model for fluid mixtures.">TSTPcalc</a> classes) </p>
 </div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 2 2012 17:22:43 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Oct 3 2012 18:12:01 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

@@ -26,7 +26,7 @@ var searchData=
   ['fitvar',['FitVar',['../struct_m_u_l_t_i.html#a5209cb7d3712fcab97d9a02a8ab0bdb3',1,'MULTI']]],
   ['fjs',['fjs',['../class_t_sol_mod.html#af1a2d8ffd58a17a4e02f479426e7bc1a',1,'TSolMod']]],
   ['flds',['flds',['../class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add',1,'TRWArrays']]],
-  ['fluid_5fmix_5frules',['fluid_mix_rules',['../s__fgl_8h.html#ac46b82555cd527b42a1faa43552a88a8',1,'s_fgl.h']]],
+  ['fluid_5fmix_5frules',['fluid_mix_rules',['../s__solmod_8h.html#ac46b82555cd527b42a1faa43552a88a8',1,'s_solmod.h']]],
   ['free_5fmultisite',['free_multisite',['../class_t_sol_mod.html#aa9736d6143e2b5dcd9ec9703670a7874',1,'TSolMod']]],
   ['from_5ffile',['from_file',['../class_t_multi.html#a4775ee22d0c6ed22e9e408b605aa00ab',1,'TMulti']]],
   ['from_5ftext_5ffile_5fgemipm',['from_text_file_gemipm',['../class_t_multi.html#ad1367f8aaa802db0331ab02eb7c1b844',1,'TMulti']]],

@@ -54,6 +54,7 @@ Docs/doxy/html/class_t_mod_other.html -text
 Docs/doxy/html/class_t_mod_other.png -text
 Docs/doxy/html/class_t_multi-members.html -text
 Docs/doxy/html/class_t_multi.html -text
+Docs/doxy/html/class_t_n_e_mcalc.png -text
 Docs/doxy/html/class_t_n_r_t_l-members.html -text
 Docs/doxy/html/class_t_n_r_t_l.html -text
 Docs/doxy/html/class_t_n_r_t_l.png -text
@@ -104,6 +105,7 @@ Docs/doxy/html/class_t_shvarov.png -text
 Docs/doxy/html/class_t_sol_mod-members.html -text
 Docs/doxy/html/class_t_sol_mod.html -text
 Docs/doxy/html/class_t_sol_mod.png -text
+Docs/doxy/html/class_t_sorp_mod.png -text
 Docs/doxy/html/class_t_subregular-members.html -text
 Docs/doxy/html/class_t_subregular.html -text
 Docs/doxy/html/class_t_subregular.png -text
@@ -199,7 +201,6 @@ Docs/doxy/html/hierarchy.html -text
 Docs/doxy/html/index.html -text
 Docs/doxy/html/io__arrays_8h_source.html -text
 Docs/doxy/html/jquery.js -text
-Docs/doxy/html/m__const_8h_source.html -text
 Docs/doxy/html/m__param_8h_source.html -text
 Docs/doxy/html/ms__multi_8h_source.html -text
 Docs/doxy/html/nav_f.png -text
@@ -208,7 +209,6 @@ Docs/doxy/html/node_8h_source.html -text
 Docs/doxy/html/nodearray_8h_source.html -text
 Docs/doxy/html/num__methods_8h_source.html -text
 Docs/doxy/html/open.png -text
-Docs/doxy/html/s__fgl_8h_source.html -text
 Docs/doxy/html/search/all_61.html -text
 Docs/doxy/html/search/all_61.js -text
 Docs/doxy/html/search/all_62.html -text
@@ -472,16 +472,8 @@ GEMS3K/platform/MacOSX/Makefile.lib -text
 GEMS3K/platform/other/Makefile -text
 GEMS3K/platform/win32MinGW/Makefile -text
 GEMS3K/platform/win32bcc/Makefile -text
-GEMS3K/s_fgl.cpp -text svn_keywords=Id
-GEMS3K/s_fgl.h -text svn_keywords=Id
-GEMS3K/s_fgl1.cpp -text svn_keywords=Id
-GEMS3K/s_fgl2.cpp -text svn_keywords=Id
-GEMS3K/s_fgl3.cpp -text svn_keywords=Id
-GEMS3K/s_fgl4.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.h -text svn_keywords=Id
-GEMS3K/s_sorption.cpp -text svn_keywords=Id
-GEMS3K/s_sorption.h -text svn_keywords=Id
 GEMS3K/tnt.h -text
 GEMS3K/tnt_array1d.h -text
 GEMS3K/tnt_array2d.h -text

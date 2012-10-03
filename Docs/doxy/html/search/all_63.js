@@ -9,7 +9,7 @@ var searchData=
   ['ccdc',['ccDC',['../struct_d_a_t_a_c_h.html#ac9de9a9b9625330fa729b1b6d3544535',1,'DATACH']]],
   ['ccic',['ccIC',['../struct_d_a_t_a_c_h.html#ae70bd312b513c5f659c7ecf21323ffe9',1,'DATACH']]],
   ['ccph',['ccPH',['../struct_d_a_t_a_c_h.html#a35b6a4b908452341a06d91771b8f6997',1,'DATACH']]],
-  ['cem_5foff_5f',['CEM_OFF_',['../s__fgl_8h.html#ac2a9ada868624c05132e7a884ea56902adfe8be27c5d73442eac6cb0af527a4e8',1,'s_fgl.h']]],
+  ['cem_5foff_5f',['CEM_OFF_',['../s__solmod_8h.html#ac2a9ada868624c05132e7a884ea56902adfe8be27c5d73442eac6cb0af527a4e8',1,'s_solmod.h']]],
   ['cgcalcfugpure',['CGcalcFugPure',['../class_t_c_g_fcalc.html#aa24abf47a044e7a97386b1c89135af34',1,'TCGFcalc']]],
   ['cgfugacitypt',['CGFugacityPT',['../class_t_c_g_fcalc.html#afbe6b450b19e62045afd0a2d074d07a4',1,'TCGFcalc']]],
   ['cgresidualfunct',['CGResidualFunct',['../class_t_c_g_fcalc.html#aec2a4d155c389ba58afc98b1fd30018d',1,'TCGFcalc']]],

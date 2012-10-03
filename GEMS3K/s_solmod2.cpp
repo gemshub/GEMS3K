@@ -1,11 +1,11 @@
 //-------------------------------------------------------------------
-// $Id$
+// $Id: s_fgl.cpp 724 2012-10-02 14:25:25Z kulik $
 //
-/// \file s_fgl.cpp
+/// \file s_solmod2.cpp
 /// Implementation of TSolMod derived classes for fluid phase models
-/// (TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc and TCORKcalc classes)
+/// (TPRSVcalc, TCGFcalc, TSRKcalc, TPR78calc, TCORKcalc and TSTPcalc classes)
 //
-// Copyright (c) 2004-2012  T.Wagner, S.Churakov, D.Kulik
+// Copyright (c) 2004-2012  T.Wagner, D.Kulik, S. Dmitrieva, S.Churakov
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -31,7 +31,7 @@
 #include <iomanip>
 #include <fstream>
 using namespace std;
-#include "s_fgl.h"
+#include "s_solmod.h"
 #include "verror.h"
 
 
@@ -6283,6 +6283,6 @@ long int TSTPcalc::STPCalcFugPure( double Tmin, float *Cpg, double *FugProps )
 
 
 
-//--------------------- End of s_fgl.cpp ---------------------------
+//--------------------- End of s_solmod2.cpp ---------------------------
 
 

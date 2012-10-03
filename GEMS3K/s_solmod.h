@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
-// $Id$
+// $Id: s_fgl.h 725 2012-10-02 15:43:37Z kulik $
 //
-/// \file s_fgl.h
+/// \file s_solmod.h
 /// Declarations of TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous and solid-solution phases
 
@@ -26,8 +26,8 @@
 //------------------------------------------------------------------
 //
 
-#ifndef _s_fgl_h_
-#define _s_fgl_h_
+#ifndef _s_solmod_h_
+#define _s_solmod_h_
 #include <cstring>
 #include <vector>
 #include <iostream>
@@ -1989,4 +1989,4 @@ class TGuggenheim: public TSolMod
 
 #endif
 
-/// _s_fgl_h
+/// _s_solmod_h

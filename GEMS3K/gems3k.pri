@@ -8,8 +8,8 @@
                     $$GEMS3K_H/jama_cholesky.h \
                     $$GEMS3K_H/jama_lu.h \
                     $$GEMS3K_H/num_methods.h \
-                    $$GEMS3K_H/s_fgl.h \
-#                    $$GEMS3K_H/s_sorption.h \
+                    $$GEMS3K_H/s_solmod.h \
+#                    $$GEMS3K_H/s_sorpmod.h \
 #                    $$GEMS3K_H/s_kinmet.h \
                     $$GEMS3K_H/m_param.h  \
                     $$GEMS3K_H/ms_multi.h \
@@ -22,12 +22,13 @@
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
                       $$GEMS3K_CPP/num_methods.cpp \
-                      $$GEMS3K_CPP/s_fgl.cpp \
-                      $$GEMS3K_CPP/s_fgl1.cpp \
-                      $$GEMS3K_CPP/s_fgl2.cpp \
-                      $$GEMS3K_CPP/s_fgl3.cpp \
-                      $$GEMS3K_CPP/s_fgl4.cpp \
-#                      $$GEMS3K_CPP/s_sorption.cpp \
+                      $$GEMS3K_CPP/s_solmod.cpp \
+                      $$GEMS3K_CPP/s_solmod2.cpp \
+                      $$GEMS3K_CPP/s_solmod3.cpp \
+                      $$GEMS3K_CPP/s_solmod4.cpp \
+                      $$GEMS3K_CPP/s_solmod5.cpp \
+                      $$GEMS3K_CPP/s_solmod6.cpp \
+#                      $$GEMS3K_CPP/s_sorpmod.cpp \
 #                      $$GEMS3K_CPP/s_kinmet.cpp \
                       $$GEMS3K_CPP/ipm_chemical.cpp \
                       $$GEMS3K_CPP/ipm_chemical2.cpp \
