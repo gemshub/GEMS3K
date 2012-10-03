@@ -47,8 +47,8 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #endif
 
-#include "s_fgl.h"
-// #include "s_sorption.h"
+#include "s_solmod.h"
+// #include "s_sorpmod.h"
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
