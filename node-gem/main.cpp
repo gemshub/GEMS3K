@@ -57,7 +57,7 @@ int main( int argc, char* argv[] )
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
-    for(  in=1; in< mt.nNodes; in++ )
+    for(  in=1; in< mt.nNodes; in++ ) // DM mt.nodes numer of experiments
     {
         // Asking GEM IPM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_AIA;
@@ -73,7 +73,7 @@ int main( int argc, char* argv[] )
         node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
             mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
           
-        // Extracting GEM IPM output data to mass-transport program arrays
+        // Extracting GEM IPM output data to mass-transport program arrays // DM here we could extract the solubilities
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
             mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
             mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
@@ -137,7 +137,7 @@ int main( int argc, char* argv[] )
     {
        cout << "Time step  " << it << endl;
        // Mass transport loop over nodes (not a real transport model)
-       mt.OneTimeStepRun( stoich, ICndx, 5 );
+       mt.OneTimeStepRun( stoich, ICndx, 5 );  // DM creates all nodes - somehow I have to create all experiments - read the class experiment,
 
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
@@ -185,6 +185,15 @@ int main( int argc, char* argv[] )
 
   // Final output e.g. of total simulation time or of the final distribution of
   //  components and phases in all nodes can be implemented here
+
+  // *********************** DM test of different functions ********************* //
+
+    int alabala = node->DC_name_to_xDB( "Ca(CO3)@"); // gets the index of calcite
+    cout << " G0= " << node->DC_G0(alabala, 100000, 298.15, false); // prints the G0 of calcite in the output file
+
+
+
+  // *********************** DM test of different functions ********************* //
 
   // deleting GEM IPM and data exchange memory structures
   delete node;
