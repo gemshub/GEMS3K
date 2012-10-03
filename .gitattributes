@@ -491,6 +491,14 @@ GEMS3K/tnt_array2d.h -text
 GEMS3K/tnt_i_refvec.h -text
 GEMS3K/v_user.h -text svn_keywords=Id
 GEMS3K/verror.h -text svn_keywords=Id
+dm-node-gem-build/Makefile -text
+dm-node-gem-build/Walther2001_tp.out -text
+dm-node-gem-build/ipmlog.txt -text
+dm-node-gem/dm-node-gem.pri -text
+dm-node-gem/dm-node-gem.pro -text
+dm-node-gem/dm-node-gem.pro.user -text
+dm-node-gem/main.cpp -text
+dm-node-gem/main.h -text
 gemcalc-build/debug/libgcc_s_dw2-1.dll -text
 gemcalc-build/debug/mingwm10.dll -text
 gemcalc-build/release/libgcc_s_dw2-1.dll -text

@@ -1,0 +1,14 @@
+xSi= 5 xAl=0 xNa=3 xCl=1
+ xCorundum=1 xAq_gen=0
+
+  Node 0: Aq= 196.118 pH= 7.88982  Corundum= 0.489642
+moles of Al= 0.000423237 P 1e+08 T 873.15
+  Node 1: Aq= 196.413 pH= 7.54923  Corundum= 0.488678
+moles of Al= 0.000973862 P 1e+08 T 673.15
+  Node 2: Aq= 196.118 pH= 7.88982  Corundum= 0.489642
+moles of Al= 0.000423237 P 1e+08 T 873.15
+  Node 3: Aq= 196.163 pH= 7.80333  Corundum= 0.489447
+moles of Al= 0.000534692 P 2e+08 T 773.15
+Insufficient quality of GEM solution, but GEM results are retrieved  Node 4: Aq= 6.93305e-310 pH= 0  Corundum= 6.93305e-310
+moles of Al= 0.423782 P 7.5e+07 T 313.15
+ AlHSiO3+2 G0= -1.40631e+06
