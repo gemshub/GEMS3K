@@ -1,22 +1,7 @@
 //--------------------------------------------------------------------
-// $Id: main.cpp 716 2012-09-28 15:18:35Z kulik $
-//
-// Demo test of usage of the TNode class for implementing a simple
-// direct coupling scheme between FMT and GEM in a single-GEM-call
-// fashion, assuming that the chemical speciation and all dynamic
-// parameter data are kept in the FMT part, which calls GEM IPM
-// calculation once per node.
-
-// TNode class implements a  simple C/C++ interface between GEMS3K
-// and FMT codes. Works with DATACH and work DATABR structures
-//
-// Copyright (C) 2006,2012 S.Dmytriyeva, D.Kulik, G.Kosakowski
-//
-// This file is part of the GEMS3K code for thermodynamic modelling
-// by Gibbs energy minimization
-//
-// See also http://gems.web.psi.ch/GEMS3K/
-// mailto://gems2.support@psi.ch
+// Dan Miron
+// Test program using the TNode class for calculating solubilities for
+// different input recepies (dbr) files
 //-------------------------------------------------------------------
 
 #include "main.h"
@@ -30,8 +15,8 @@ int main( int argc, char* argv[] )
 
    if (argc >= 2 )  // list of files needed as input for initializing GEMIPM2K
        strncpy( ipm_input_file_list_name, argv[1], 256);
-   if (argc >= 3 ) // input file for boundary conditions
-       strncpy( dbr_input_file_name, argv[2], 256);
+//   if (argc >= 3 ) // input file for boundary conditions
+//       strncpy( dbr_input_file_name, argv[2], 256);
 
     // Creates TNode structure instance accessible trough the "node" pointer
     TNode* node  = new TNode();
@@ -44,6 +29,8 @@ int main( int argc, char* argv[] )
           return 1;
     }
 
+
+
     // Getting direct access to work node DATABR structure which exchanges the
     // data with GEMS3K (already filled out by reading the DBR input file)
     DATABR* dBR = node->pCNode(); // DM pointer to work with dBR data
@@ -52,61 +39,159 @@ int main( int argc, char* argv[] )
     DATACH* dCH = node->pCSD(); // DM pointer to work with dCH data
 
     // Creating memory for mass transport nodes
-    // 11 nodes, 99 time steps
-    TMyExperiments mt( 5, 4, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb );
-
-    // Initialization of GEMS3K and chemical information for nodes kept in the MT part
+    // 5 experiments
+    TMyExperiments mt( 5, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb );
     long int in=0;
-    for(  in=0; in< mt.nNodes; in++ ) // DM mt.nodes numer of experiments
-    {
-        // Asking GEM IPM to run with automatic initial approximation
-        dBR->NodeStatusCH = NEED_GEM_AIA;
-        // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
-        mt.aNodeStatusCH[in] = node->GEM_run( false);
-        if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
-        {
-              cout << "Error occured during re-calculating equilibrium" ;
-              return 5;
-        }
+    if (argc >= 3 )
+     {
+            char NextRecipeFileName[256];
+            char NextRecipeOutFileName[300];
+            char input_recipes_file_list_path[256-fileNameLength] = "/tp_test";
+            char input_recipes_file_list_name[256];
+            char (*recipes)[64];
 
-        // Extracting GEM IPM input data to mass-transport program arrays
-        node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in], ///// DM (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
-            mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
 
-        switch (in)
+            strncpy( input_recipes_file_list_name, argv[2], 256);
+        // list of additional recipes (dbr.dat files) e.g. for simulation
+        // of a titration or another irreversible process
+            // Reading list of recipes names from file
+            cout<< input_recipes_file_list_name << "aalaa" << endl;
+            recipes = f_getfiles( input_recipes_file_list_name, input_recipes_file_list_path, in, ',' );
+            cout << recipes[in]<<endl;
+
+           for(int in=0; in < mt.nNodes; in++ )
         {
-            case 1:
-                mt.aT[in]=673.15;
-                mt.aP[in]=1e+08;
-                break;
-        case 2:
-            mt.aT[in]=873.15;
-            mt.aP[in]=1e+08;
-            break;
-        case 3:
-            mt.aT[in]=773.15;
-            mt.aP[in]=2e+08;
-            break;
-        case 4:
-            mt.aT[in]=313.15;
-            mt.aP[in]=75e+06;
-            break;
+           // Trying to read the next file name
+              sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[in] );
+
+              cout<<recipes[in]<< " " <<endl;
+
+          // (5) Reading the next DBR file with different input composition or temperature
+          node->GEM_read_dbr( NextRecipeFileName );
+
+          // Asking GEM IPM2 to run (faster) with smart initial approximation
+          dBR->NodeStatusCH = NEED_GEM_SIA;
+          mt.aNodeStatusCH[in] = node->GEM_run( false );
+          if( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA  )
+          {
+              sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
+              cout<<NextRecipeOutFileName<< " " <<endl;
+              node->GEM_write_dbr( NextRecipeOutFileName, false, true );
+              sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+              node->GEM_print_ipm( NextRecipeOutFileName );
+          }
+          else {
+                 // error message, debugging printout
+                sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
+                node->GEM_print_ipm( NextRecipeOutFileName );
+  //??              return 5; // GEM IPM did not converge properly
+                }
+
+
+          // Extracting GEM IPM input data to mass-transport program arrays
+          node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in], ///// DM (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
+              mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
+
+          // Diferences between node temperatures and pressures
+          switch (in)
+          {
+          case 0:
+              mt.aT[in]=873.15;
+              mt.aP[in]=1e+08;
+              break;
+          case 1:
+              mt.aT[in]=773.15;
+              mt.aP[in]=1e+08;
+              break;
+          case 2:
+              mt.aT[in]=873.15;
+              mt.aP[in]=1e+08;
+              break;
+          case 3:
+              mt.aT[in]=973.15;
+              mt.aP[in]=2e+08;
+              break;
+          case 4:
+              mt.aT[in]=773.15;
+              mt.aP[in]=1e+08;
+              break;
+           }
+
         }
-          
+     }
+           // end of possible loop on input recipes
+
+
+  // *********************** DM part of old node-gem modified ********************* //
+
+
+//node->GEM_read_dbr( "test-dbr2.dat" );
+
+//    // Initialization of GEMS3K and chemical information for nodes kept in the MT part
+//    long int in=0;
+//    for(  in=0; in<mt.nNodes; in++ ) // DM mt.nodes number of experiments
+//    {
+
+////        if (in==2) {
+//////            node->GEM_init( ipm_input_file_list_name );
+////        node->GEM_read_dbr( "test-dbr2.dat" );
+////        }
+
+//        // Asking GEM IPM to run with automatic initial approximation
+//        dBR->NodeStatusCH = NEED_GEM_AIA;
+//        // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
+//        mt.aNodeStatusCH[in] = node->GEM_run( false );
+//        if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
+//        {
+//              cout << "Error occured during re-calculating equilibrium" ;
+//              return 5;
+//        }
+//        // Extracting GEM IPM input data to mass-transport program arrays
+//        node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in], ///// DM (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
+//            mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
+
+//        // Diferences between node temperatures and pressures
+//        switch (in)
+//        {
+//        case 1:
+//            mt.aT[in]=873.15;
+//            mt.aP[in]=1e+08;
+//            break;
+//        case 2:
+//            mt.aT[in]=773.15;
+//            mt.aP[in]=1e+08;
+//            break;
+//        case 3:
+//            mt.aT[in]=973.15;
+//            mt.aP[in]=2e+08;
+//            break;
+//        case 4:
+//            mt.aT[in]=773.15;
+//            mt.aP[in]=75e+06;
+//            break;
+//         }
+
+//                  std::strstream filename;
+//                  filename << "test-dbr" << (int)in << ".dat";
+//                  cout << filename.str();
+////                  node->GEM_write_dbr(filename.str(), false, false, false);
+////        node->GEM_write_dbr("test-dbr", false, false, false);
+
 //        // Extracting GEM IPM output data to mass-transport program arrays // DM here we could extract the solubilities
 //        node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in], //  DM Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
 //            mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
 //            mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
 //            mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
 
+
         // Here the setup of initial differences between node compositions,
         //    temperatures, etc. can be implemented
         //
         // Here the file output for the initial conditions can be implemented
-    }
+//    }
 
-    // Read DATABR structure from text file (read boundary condition on the left)
-    node->GEM_read_dbr( dbr_input_file_name );
+//    Read DATABR structure from text file (read boundary condition on the left)
+//    node->GEM_read_dbr( dbr_input_file_name );
 
 //    for(  in=0; in<mt.nNodes; in++ )
 //    {
@@ -137,6 +222,12 @@ int main( int argc, char* argv[] )
 //        //
 //        // Here the file output for the initial conditions can be implemented
 //    }
+
+
+      // *********************** DM part of old node-gem modified ********************* //
+
+
+
       
     // Main loop - iterations over nTimes time steps
     int xCorundum = node->Ph_name_to_xDB("Corundum");
@@ -158,11 +249,20 @@ int main( int argc, char* argv[] )
 //       {
 //       cout << "Time step  " << it << endl;
 //       // Mass transport loop over nodes (not a real transport model)
-//       mt.OneTimeStepRun( stoich, ICndx, 5 );  // DM creates all nodes - somehow I have to create all experiments - read the class experiment,
+//       mt.OneTimeStepRun( mt );  // DM creates all nodes - somehow I have to create all experiments - read the class experiment,
 
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
        {
+
+//           if (in==2) {
+////               node->GEM_init( ipm_input_file_list_name );
+//           node->GEM_read_dbr( "test-dbr2.dat" );
+//           }
+
+//           std::strstream filename;
+//           filename << "test-dbr" << (int)in << ".dat";
+//          node->GEM_read_dbr( filename.str() );
           mt.aNodeHandle[in] = in;
           mt.aNodeStatusCH[in] = NEED_GEM_SIA;
           // (8) Setting input data for GEM IPM to use available node speciation as
@@ -170,8 +270,16 @@ int main( int argc, char* argv[] )
           node->GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
                   mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],
                   mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in], mt.axDC[in], mt.agam[in] );
+
+          cout << " P " << mt.aP[in] << " T " << mt.aT[in] << endl;
+         // cout << "T= " << node->CNode->TK << " P= " << node->CNode->P << endl;
           // (9)   Passing current FMT iteration information into the work DATABR structure
-          node->GEM_set_MT( (double)in, 1. );
+//          node->GEM_set_MT( (double)in, 1. );
+
+//          std::strstream filename;
+//          filename << "test-dbr" << (int)in << ".dat";
+//          cout << filename.str();
+//          node->GEM_write_dbr(filename.str(), false, false, false);
  
           // Calling GEMIPM calculation
           mt.aNodeStatusCH[in] = node->GEM_run( true );
@@ -188,7 +296,7 @@ int main( int argc, char* argv[] )
             {
                cout << "Insufficient quality of GEM solution, but GEM results are retrieved";
 //               << it << " node " << in << endl;
-            }              
+            }
             else // (7) Extracting GEMIPM output data to FMT part
               node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
                 mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
@@ -203,9 +311,9 @@ int main( int argc, char* argv[] )
       }
 //  }
   // Calculations finished - end time reached
-
   // Final output e.g. of total simulation time or of the final distribution of
   //  components and phases in all nodes can be implemented here
+
 
   // *********************** DM test of different functions ********************* //
 
@@ -216,6 +324,7 @@ int main( int argc, char* argv[] )
 
   // *********************** DM test of different functions ********************* //
 
+
   // deleting GEM IPM and data exchange memory structures
   delete node;
   // end of example
@@ -223,12 +332,11 @@ int main( int argc, char* argv[] )
 }
 
 
-TMyExperiments::TMyExperiments( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,
+TMyExperiments::TMyExperiments( long int p_nNod, long int p_nIC, long int p_nDC,
               long int p_nPH, long int p_nPS )
 {
 
     nNodes = p_nNod;
-    nTimes = p_nTim;
     nIC = p_nIC;
     nDC = p_nDC;
     nPH = p_nPH;
@@ -343,28 +451,32 @@ TMyExperiments::~TMyExperiments()
 // A very simple example of transport algorithm
 
 
-void TMyExperiments::OneTimeStepRun( double *stoicf, long int *ICndx, long int nICndx )
-{
-//    double parcel[nICndx];
-//    long int in;
-//    for(  in=1; in< nNodes; in++ )
-//    {
-//    // some operators that change in some nodes some amounts of some migrating
-//    // chemical species (axDC array or  some amounts of migrating chemical
-//    // elements in abIC array), possibly using data from other arrays in such
-//    // a way that the mass conservation within the whole array of nodes is retained
-//        for (int i=0; i<nICndx; i++)
+//void TMyExperiments::OneTimeStepRun(TMyExperiments &mt )
+//{
+
+//        long int in;
+//        for(  in=1; in< nNodes; in++ )
 //        {
-//            parcel[i] = 0.01* stoicf[i]*abIC[in-1][ICndx[i]];
-//            abIC[in][ICndx[i]] += parcel[i];
-////            if( in > 1 )
-////                abIC[in-1][ICndx[i]] -= parcel[i];
+//        // some operators that change in some nodes some amounts of some migrating
+//        // chemical species (axDC array or  some amounts of migrating chemical
+//        // elements in abIC array), possibly using data from other arrays in such
+//        // a way that the mass conservation within the whole array of nodes is retained
+
+
+
+
+////            for (int i=0; i<nICndx; i++)
+////            {
+////                parcel[i] = 0.01* stoicf[i]*abIC[in-1][ICndx[i]];
+////                abIC[in][ICndx[i]] += parcel[i];
+////    //            if( in > 1 )
+////    //                abIC[in-1][ICndx[i]] -= parcel[i];
+////            }
+//        // The above example loop implements a zero-order flux of MgCl2 in one direction.
+//        // Real advective/diffusive transport models are much more complex, but essentially
+//        //   do similar things
 //        }
-//    // The above example loop implements a zero-order flux of MgCl2 in one direction.
-//    // Real advective/diffusive transport models are much more complex, but essentially
-//    //   do similar things
-//    }
-}
+//}
 
 
 

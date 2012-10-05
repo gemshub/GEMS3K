@@ -24,6 +24,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <strstream>
 
 #include "node.h"
 
@@ -31,7 +32,6 @@ class TMyExperiments
 {
  public:
     long int nNodes,  // Number of experiment nodes
-            nTimes,   // Number of time steps
             nIC,      // Number of chemical independent components
             nDC,      // Number of chemical dependent components
             nPH,      // Number of chemical phases
@@ -71,7 +71,6 @@ class TMyExperiments
 
         TMyExperiments(   // Constructor (dynamic memory allocation)
            long int p_nNod,    // Number of nodes
-           long int p_nTim,    // Number of time steps
            long int p_nIC,     // Number of chemical independent components
            long int p_nDC,     // Number of chemical dependent components
            long int p_nPH,     // Number of chemical phases
@@ -81,9 +80,8 @@ class TMyExperiments
         ~TMyExperiments();  // Destructor of dynamic memory
 
          void OneTimeStepRun(   // Placeholder function for one transport time step
-            double *stoich,     // Stoichiometry coefficients
-            long int *ICndx,    // Indexes of mobile independent components
-            long int nICndx     // Number of mobile independent components
+                  TMyExperiments &mt // Array of node pressures P, Pa
+
                  );
 
 };

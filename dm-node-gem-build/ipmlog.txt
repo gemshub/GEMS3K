@@ -75,3 +75,608 @@ Error Node:2:time:0:dt:0: unpackDataBr:
 Error Node:3:time:0:dt:0: unpackDataBr:
 Error Node:4:time:0:dt:0: unpackDataBr:
 In node 4,  Given TK= 213.15  is beyond the interpolation range for thermodynamic data near boundary T_= 297.15
+system-dat.lst  : Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:1:time:1:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:1:time:1:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:1:time:1:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: unpackDataBr:
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:1:time:1:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: unpackDataBr:
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:1:time:1:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+system-dat.lst  : Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+system-dat.lst  : Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:0:time:0:dt:0: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr0.dat
+Error Node:0:time:0:dt:0: test-dbr0.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr1.dat
+Error Node:0:time:0:dt:1: test-dbr1.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr2.dat
+Error Node:1:time:1:dt:1: test-dbr2.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:2:time:2:dt:1: test-dbr3.dat:DataBR Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr4.dat
+Error Node:3:time:3:dt:1: test-dbr4.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+system-dat.lst  : Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test_dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr1.dat
+Error Node:0:time:0:dt:1: test-dbr1.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:2:time:2:dt:1: test-dbr3.dat:DataBR Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr0.dat
+Error Node:1:time:1:dt:1: test-dbr0.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr1.dat
+Error Node:0:time:0:dt:1: test-dbr1.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr2.dat
+Error Node:1:time:1:dt:1: test-dbr2.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr4.dat
+Error Node:3:time:3:dt:1: test-dbr4.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr2.dat
+Error Node:1:time:1:dt:1: test-dbr2.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:2:time:2:dt:1: test-dbr3.dat:DataBR Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:1:time:1:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:2:time:2:dt:1: unpackDataBr:
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr0.dat
+Error Node:0:time:0:dt:0: test-dbr0.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr1.dat
+Error Node:0:time:0:dt:1: test-dbr1.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr2.dat
+Error Node:1:time:1:dt:1: test-dbr2.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:2:time:2:dt:1: test-dbr3.dat:DataBR Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr4.dat
+Error Node:3:time:3:dt:1: test-dbr4.dat:DataBR Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file tp_test/(null)
+Error Node:0:time:0:dt:0: tp_test/(null):DataBR Fileopen error
+GEMS3K input : file (null)
+Error Node:0:time:0:dt:0: (null):DataBR Fileopen error
+GEMS3K input : file (null)
+Error Node:0:time:0:dt:0: (null):DataBR Fileopen error
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:1: check_TP: :
+Error Node:2:time:2:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:4:time:4:dt:1: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:0:time:0:dt:0: check_TP: :
+Error Node:2:time:0:dt:0: check_TP: :
+Error Node:3:time:0:dt:0: check_TP: :
+Error Node:4:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+Error Node:2:time:0:dt:0: check_TP: :
+Error Node:3:time:0:dt:0: check_TP: :
+Error Node:4:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: Óqˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: Óqˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:Jˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:Jˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:1:time:0:dt:0: check_TP: :
+Error Node:3:time:0:dt:0: check_TP: :
+Error Node:4:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:p>Qˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:p>Qˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:'À‚ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:'À‚ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:Äi∑öˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:Äi∑öˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:`œ´ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:`œ´ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:pŸßÀˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:pŸßÀˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:P‘˛Íˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:P‘˛Íˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/test-dbr0.dat test-dbr1.dat test-dbr2.dat test-dbr3.dat test-db
+Error Node:0:time:0:dt:0: tp_test/test-dbr0.dat test-dbr1.dat test-dbr2.dat test-dbr3.dat test-db:DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: J,Uˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: J,Uˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/test-dbr0.dat test-dbr1.dat test-dbr2.dat test-dbr3.dat test-db
+Error Node:0:time:0:dt:0: tp_test/test-dbr0.dat test-dbr1.dat test-dbr2.dat test-dbr3.dat test-db:DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:–(“‚ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:–(“‚ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:@eulˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:@eulˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:`,pêˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:`,pêˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:êuÜ1ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:êuÜ1ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: ‡¸!ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: ‡¸!ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:–0ÿˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:–0ÿˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:0Ûπ!ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:0Ûπ!ˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:p2>ûˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:p2>ûˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:`<pˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:`<pˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file test-dbr0.dat
+Error Node:0:time:0:dt:0: test-dbr0.dat:DataBR Fileopen error
+GEMS3K input : file test-dbr3.dat
+Error Node:3:time:3:dt:1: Formatted read error 01: - Invalid label of data.
+After successfully read <xDC> 48 data items
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file test-dbr4.dat
+Error Node:3:time:3:dt:1: test-dbr4.dat:DataBR Fileopen error
+Error Node:3:time:3:dt:1: check_TP: :
+Error Node:3:time:3:dt:1: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:êé<Èˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:êé<Èˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: …9Yˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: …9Yˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/-t 
+Error Node:0:time:0:dt:0: tp_test/-t :DataBR Fileopen error
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: QÃWˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01: QÃWˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:∞'Åfˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/
+Error Node:0:time:0:dt:0: Formatted read error 01:∞'Åfˇ - Invalid label of data.
+
+GEMS3K input : file tp_test/0
+Error Node:0:time:0:dt:0: tp_test/0:DataBR Fileopen error
+GEMS3K input : file tp_test/.dat
+Error Node:0:time:0:dt:0: tp_test/.dat:DataBR Fileopen error
+Error Node:3:time:0:dt:0: check_TP: :
