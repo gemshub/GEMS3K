@@ -1,0 +1,31 @@
+tp_test/test-dbr-dat.lstaalaa
+
+test-dbr4.dat 
+tp_test/test-dbr4.dat.out 
+ 
+tp_test/.out 
+ 
+tp_test/.out 
+0 
+tp_test/0.out 
+.dat 
+tp_test/.dat.out 
+xSi= 5 xAl=0 xNa=3 xCl=1
+ xCorundum=1 xAq_gen=0
+
+ P 1e+08 T 873.15
+  Node 0: Aq= 196.451 pH= 6.33064  Corundum= 0.490209
+moles of Al= 9.87205e-05 P 1e+08 T 873.15
+ P 1e+08 T 773.15
+  Node 1: Aq= 196.557 pH= 6.26876  Corundum= 0.490184
+moles of Al= 0.000113011 P 1e+08 T 773.15
+ P 1e+08 T 873.15
+  Node 2: Aq= 196.451 pH= 6.33064  Corundum= 0.490209
+moles of Al= 9.87205e-05 P 1e+08 T 873.15
+ P 2e+08 T 973.15
+Error: GEM calculation results are not retrieved. Time step  Node 3: Aq= 6.90519e-310 pH= 0  Corundum= 6.90519e-310
+moles of Al= 9.87205e-05 P 2e+08 T 973.15
+ P 1e+08 T 773.15
+  Node 4: Aq= 196.557 pH= 6.26876  Corundum= 0.490184
+moles of Al= 0.000113011 P 1e+08 T 773.15
+ AlHSiO3+2 G0= -1.40631e+06
