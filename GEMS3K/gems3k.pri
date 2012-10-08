@@ -12,6 +12,7 @@
 #                    $$GEMS3K_H/s_sorpmod.h \
 #                    $$GEMS3K_H/s_kinmet.h \
                     $$GEMS3K_H/m_param.h  \
+                    $$GEMS3K_H/m_const.h  \
                     $$GEMS3K_H/ms_multi.h \
                     $$GEMS3K_H/databr.h \
                     $$GEMS3K_H/datach.h \

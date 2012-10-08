@@ -449,6 +449,7 @@ GEMS3K/ipm_main.cpp -text svn_keywords=Id
 GEMS3K/ipm_simplex.cpp -text svn_keywords=Id
 GEMS3K/jama_cholesky.h -text
 GEMS3K/jama_lu.h -text
+GEMS3K/m_const.h -text svn_keywords=Id
 GEMS3K/m_param.h -text svn_keywords=Id
 GEMS3K/ms_multi.h -text svn_keywords=Id
 GEMS3K/ms_multi_file.cpp -text svn_keywords=Id
