@@ -321,7 +321,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 		 filesList =  filesListNew;
 	}
     strncpy( filesList[nElem], name.c_str(), fileNameLength);
-	filesList[nElem][fileNameLength-1] = '\0';
+    filesList[nElem][fileNameLength-1] = '\0';
     nElem++;
   }
 

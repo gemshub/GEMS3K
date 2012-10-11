@@ -138,18 +138,17 @@ int main( int argc, char* argv[] )
  	  char NextRecipeOutFileName[300];
  	  char input_recipes_file_list_path[256-fileNameLength] = "";
      
- 	  strncpy( input_recipes_file_list_name, argv[2], 256);
+      strncpy( input_recipes_file_list_name, argv[2], 256);
       // list of additional recipes (dbr.dat files) e.g. for simulation
       // of a titration or another irreversible process
   	  // Reading list of recipes names from file 
-  	  recipes = f_getfiles(  input_recipes_file_list_name, 
+      recipes = f_getfiles(  input_recipes_file_list_name,
   	       		 input_recipes_file_list_path, nRecipes, ',');			 
-  	  
-  	 for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
+      for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
       { 
          // Trying to read the next file name 
   	    sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[cRecipe] );
-  
+
         // (5) Reading the next DBR file with different input composition or temperature
         node->GEM_read_dbr( NextRecipeFileName );
 
@@ -172,7 +171,8 @@ node->GEM_print_ipm( NextRecipeOutFileName );
               }
       }
    }	 
-  	 // end of possible loop on input recipes
+
+     // end of possible loop on input recipes
    delete node;
    if( recipes ) delete recipes;
 
