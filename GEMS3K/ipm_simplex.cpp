@@ -822,13 +822,11 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
 //cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
 
-
-#else
-
+//#else
+//
    //TProfil::pm->CheckMtparam(); //test load thermodynamic data before
-   CheckMtparam(); //test load thermodynamic data before
-
-
+//   CheckMtparam(); // this call was in the wrong place!  DK DM 11.10.2012
+//
 #endif
 
 

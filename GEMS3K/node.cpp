@@ -1968,6 +1968,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
 #endif
+  multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
   pmm->TCc = CNode->TK-C_to_K;
   pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;

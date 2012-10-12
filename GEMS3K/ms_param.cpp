@@ -204,12 +204,13 @@ void TMulti::CheckMtparam()
 
   P = PPa/bar_to_Pa;
 
- //pmp->pTPD = 2;
+  //pmp->pTPD = 2;
 
- if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
-           || fabs( pm.P - P )  > dCH->Ptol  )
+  if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
+           || fabs( pm.Pc - P )  > dCH->Ptol/bar_to_Pa  )
+  {
      pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
-
+  }
   load = true;
 }
 
