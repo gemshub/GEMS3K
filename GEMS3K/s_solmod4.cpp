@@ -4,7 +4,7 @@
 /// \file s_solmod4.cpp
 /// Implementation of TSolMod derived classes for ion-association aqueous
 /// activity models (THelgeson, TDavies, TLimitingLaw, TDebyeHueckel,
-/// (TKarpov, TShvarov)
+/// TKarpov, TShvarov)
 //
 // Copyright (c) 2008-2012  T.Wagner, S.Dmitrieva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>

@@ -5,7 +5,7 @@
 /// Implementation of TSolMod derived classes
 /// for activity models of mixing in condensed (solid and liquid) phases
 ///  (TVanLaar, TRegular, TRedlichKister, TNRTL, TWilson, TMargulesTernary,
-///  (TMargulesBinary, TGuggenheim, TIdeal multi-site, TBerman)
+///  TMargulesBinary, TGuggenheim, TIdeal multi-site, TBerman)
 //
 // Copyright (c) 2007-2012  T.Wagner, D.Kulik, S.Dmitrieva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
