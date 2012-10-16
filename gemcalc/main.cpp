@@ -66,7 +66,7 @@ int main( int argc, char* argv[] )
   }
 
    // Getting direct access to work node DATABR structure which exchanges the
-   // data with GEM IPM2 (already filled out by reading the DBR input file)
+   // data with GEM IPM3 (already filled out by reading the DBR input file)
    DATABR* dBR = node->pCNode(); 
 
   // test internal functions
@@ -93,7 +93,7 @@ int main( int argc, char* argv[] )
    dBR->NodeStatusCH = NEED_GEM_AIA;
 
    // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
-   int NodeStatusCH = node->GEM_run(  false );
+   int NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
@@ -103,7 +103,7 @@ int main( int argc, char* argv[] )
    else {
       // (4) possible return status analysis, error message
        node->GEM_print_ipm( NULL );   // possible debugging printout
-       return 5; // GEM IPM did not converge properly      //?????
+       return 5; // GEM IPM did not converge properly - error message needed
         }
 
    // test internal functions
@@ -131,7 +131,7 @@ int main( int argc, char* argv[] )
   cout << "A0   Ca+2: " << node->DC_A0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_A0( xCal, node->cP(), node->cTK() ) << endl;   
   cout << "U0   Ca+2: " << node->DC_U0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_U0( xCal, node->cP(), node->cTK() ) << endl;   
    
-   // Here a possible loop on input recipes begins
+   // Here a possible loop on more input recipes begins
    if (argc >= 3 )
    {  
  	  char NextRecipeFileName[256];
@@ -167,7 +167,7 @@ node->GEM_print_ipm( NextRecipeOutFileName );
                // error message, debugging printout
      	      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
               node->GEM_print_ipm( NextRecipeOutFileName );
-//??              return 5; // GEM IPM did not converge properly
+//              return 5; // GEM IPM did not converge properly - error message needed
               }
       }
    }	 

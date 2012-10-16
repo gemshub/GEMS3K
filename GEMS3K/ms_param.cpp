@@ -112,7 +112,9 @@ TProfil::TProfil( TMulti* amulti )
 /// GEM IPM calculation of equilibrium state in MULTI
 double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
- return multi->CalculateEquilibriumState( 0, NumIterFIA_, NumIterIPM_ );
+   long int RefineLoops = RefinLoops_;
+   RefineLoops = 0L; // Provisional
+   return multi->CalculateEquilibriumState( RefineLoops, NumIterFIA_, NumIterIPM_ );
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file
@@ -282,7 +284,7 @@ void u_splitpath(const gstring& Path, gstring& dir,
     }
 }
 
-const long int bGRAN = 20;
+const long int bGRAN = 200;
 
 /// Get Path of file and Reading list of file names from it, return number of files
 char  (* f_getfiles(const char *f_name, char *Path,
