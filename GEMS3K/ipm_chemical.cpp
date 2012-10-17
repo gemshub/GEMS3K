@@ -1107,7 +1107,7 @@ void TMulti::KarpovsPhaseStabilityCriteria()
 {
     bool KinConstr, fRestore;
     long int k, j, ii;
-    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, fDQF, NonLogTerm = 0.;
+    double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, NonLogTerm = 0.;
     SPP_SETTING *pa = paTProfil;
 
     EMU = pm.EMU;
