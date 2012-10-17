@@ -25,7 +25,9 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <algorithm>
 #include <iostream>
+using namespace std;
 
 #ifdef __linux__
 #include <endian.h>
@@ -51,8 +53,8 @@ inline short SWAP(short x) {
     return (((x>>8) & 0x00ff) | ((x<<8) & 0xff00)); 
 }
 
-inline int SWAP(int x) {
-    int x_new;
+inline int32_t SWAP(int32_t x) {
+    int32_t x_new;
     char* xc_new = (char*)&x_new;
     char* xc = (char*)&x;
     xc_new[0] = xc[3];
@@ -62,7 +64,17 @@ inline int SWAP(int x) {
     return x_new;
 }
 
-inline int SWAP(long x) {
+/*inline int SWAP(int x) {
+    int x_new;
+    char* xc_new = (char*)&x_new;
+    char* xc = (char*)&x;
+    xc_new[0] = xc[3];
+    xc_new[1] = xc[2];
+    xc_new[2] = xc[1];
+    xc_new[3] = xc[0];
+    return x_new;
+}*/
+/*inline int SWAP(long x) {
     long x_new;
     char* xc_new = (char*)&x_new;
     char* xc = (char*)&x;
@@ -71,7 +83,7 @@ inline int SWAP(long x) {
     xc_new[2] = xc[1];
     xc_new[3] = xc[0];
     return x_new;
-}
+}*/
 
 
 /*
@@ -160,17 +172,23 @@ GemDataStream &GemDataStream::operator>>( short &i )
     return *this;
 }
 
-GemDataStream &GemDataStream::operator>>( int &i )
+GemDataStream &GemDataStream::operator>>( int &i_ )
 {
-    ff.read((char*)&i, sizeof(int));
+    //ff.read((char*)&i, sizeof(int));
+    int32_t i=(int32_t)i_;
+    ff.read((char*)&i, sizeof(int32_t));
     if( swap ) i = SWAP(i);
+    i_ = (int)i;
     return *this;
 }
 
-GemDataStream &GemDataStream::operator>>( long &i )
+GemDataStream &GemDataStream::operator>>( long &i_ )
 {
-    ff.read((char*)&i, sizeof(long));
+    //ff.read((char*)&i, sizeof(long));
+    int32_t i=(int32_t)i_;
+    ff.read((char*)&i, sizeof(int32_t));
     if( swap ) i = SWAP(i);
+    i_ = (long)i;
     return *this;
 }
 
@@ -207,17 +225,19 @@ GemDataStream &GemDataStream::operator<<( short i )
     return *this;
 }
 
-GemDataStream &GemDataStream::operator<<( int i )
+GemDataStream &GemDataStream::operator<<( int i_ )
 {
+    int32_t i=(int32_t)i_;
     if( swap ) i = SWAP(i);
-    ff.write((char*)&i, sizeof(int));
+    ff.write((char*)&i, sizeof(int32_t));
     return *this;
 }
 
-GemDataStream &GemDataStream::operator<<( long i )
+GemDataStream &GemDataStream::operator<<( long i_ )
 {
+    int32_t i=(int32_t)i_;
     if( swap ) i = SWAP(i);
-    ff.write((char*)&i, sizeof(long));
+    ff.write((char*)&i, sizeof(int32_t));
     return *this;
 }
 
