@@ -45,7 +45,8 @@ class TMyTransport
             nIC,      // Number of chemical independent components
             nDC,      // Number of chemical dependent components
             nPH,      // Number of chemical phases
-            nPS;      // Number of chemical phases-solutions
+            nPS,      // Number of chemical phases-solutions
+            nRecipes; // Number of different input node recipes to set boundary conditions
 
     long int *aNodeHandle,     // Node identification handles
              *aNodeStatusCH,   // Node status codes (changed after GEM calculation)
@@ -85,7 +86,8 @@ class TMyTransport
            long int p_nIC,     // Number of chemical independent components
            long int p_nDC,     // Number of chemical dependent components
            long int p_nPH,     // Number of chemical phases
-           long int p_nPS      // Number of chemical phases - solutions
+           long int p_nPS,     // Number of chemical phases - solutions
+           long int p_nRcps    // Number of different input node recipes to set boundary conditions
                 );
 
         ~TMyTransport();  // Destructor of dynamic memory

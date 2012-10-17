@@ -9,7 +9,7 @@
 // TNode class implements a  simple C/C++ interface between GEMS3K
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -34,11 +34,9 @@
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
 {
-   long nRecipes = 0;
    char (*recipes)[fileNameLength] = 0;
 
    // Analyzing command line arguments ( Default arguments)
-   // Default arguments
    char input_system_file_list_name[256] = "system-dat.lst";
    char input_recipes_file_list_name[256] = "more_recipes.lst";
 
@@ -68,7 +66,7 @@ int main( int argc, char* argv[] )
 
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
-    TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb );
+    TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -108,10 +106,10 @@ int main( int argc, char* argv[] )
 
        // Reading list of recipes names from file
        recipes = f_getfiles(  input_recipes_file_list_name,
-                  input_recipes_file_list_path, nRecipes, ',');
-       // in this example, nRecipes = 1
+                  input_recipes_file_list_path, mt.nRecipes, ',');
+       // in this example, nRecipes = 1 (one additional input recipe)
 
-       for(  in=0; in<min(nRecipes, mt.nNodes); in++ )
+       for(  in=0; in<min(mt.nRecipes, mt.nNodes); in++ )
        {
           // Trying to read the next DBR file name
           sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[in] );
@@ -223,7 +221,7 @@ int main( int argc, char* argv[] )
 
 
 TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,
-              long int p_nPH, long int p_nPS )
+              long int p_nPH, long int p_nPS, long int p_nRcps )
 {
 
     nNodes = p_nNod;
@@ -232,6 +230,7 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
     nDC = p_nDC;
     nPH = p_nPH;
     nPS = p_nPS;
+    nRecipes = p_nRcps;
 
     aNodeHandle = new long int [nNodes];
     aNodeStatusCH = new long int [nNodes];

@@ -3,6 +3,8 @@
 
 
 
+
+
   
   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
@@ -114,13 +116,54 @@ phases. <br>
 Standalone GEMS3K Calculation<br>
 </h2>
 
-<p>The <a href="gems3k-tests.html">test examples</a> of usage of GEMS3K on the TNode and TNodeArray
-levels can be executed with the
-following command line: <br>
+<p>The minimum to run GEMS3K coupled at TNode level requires to create
+an instance of TNode structure and a pointer to it, and then issue the
+GEM_init() call, as exemplified in this code fragment:</p><span style="font-family: monospace;">&nbsp;&nbsp; // Create TNode structure instance accessible trough the "node" pointer</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; TNode* node&nbsp; = new TNode();</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; long int retCode;</span><span style="font-family: monospace;"> </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; // Initialize GEMS3K internal data by reading files whose names are given </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; // in the null-terminated string as argument of the GEM_init() call<br>
+</span><span style="font-family: monospace;">&nbsp;&nbsp; retCode = node-&gt;GEM_init( input_system_file_list_name );</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; if( retCode )</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; {</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error occured during reading the files</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return retCode;</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; } </span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; // ......</span>  <br>
+<p>In the <span style="font-family: monospace;">"input_system_file_list_name"</span> string,
+typically a path to text file with the extension ".lst" is given. In
+this .lst file, three&nbsp; GEMS3K input file names must be given
+(space-separated) in the following order: DCH file; IPM file; DBR file.
+The files must be located in the same folder (directory) as the .lst
+file. The easiest way to produce such a set of files is to export them
+from the GEM-Selektor package, <a href="gems3k-manual.html#TAG_MAKE_FILES">as described here</a>.<br>
+</p>
+<p>After successful initialization, any number of additional DBR files
+with different chemical system recipes compatible with DCH and IPM
+files used during the GEMS3K initialization can be read into the TNode
+instance using the following call: <br>
+</p>
+<span style="font-family: monospace;">&nbsp;&nbsp; // Read the next DBR file e.g. with different input composition or temperature<br>
+&nbsp;&nbsp; long int retCode;<br>
+</span><span style="font-family: monospace;">&nbsp;&nbsp; retCode = node-&gt;GEM_read_dbr( </span><span style="font-family: monospace;">NextRecipeFileName </span><span style="font-family: monospace;">);</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; if( retCode</span><span style="font-family: monospace;"> )</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error occured during reading the DBR file</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return retCode;</span><br style="font-family: monospace;">
+
+<span style="font-family: monospace;">&nbsp;&nbsp; } <br>
+</span><span style="font-family: monospace;">&nbsp;&nbsp; // .....</span><br>
+<span style="font-family: monospace;"></span>
+<p>In the "<span style="font-family: monospace;">NextRecipeFileName"</span> null-terminated string, a path to text file with the extension "dbr.dat" should be given. <br>
+These DBR file names can be, in principle, passed via a list (.lst)
+file similar to that needed for GEM_init(), containing
+(comma-separated) DBR file names located in the same folder as the list
+file. This is done in "gemcalc" and "node-gem" t<a href="gems3k-tests.html">est examples</a> provided with the GEMS3K code. Both test example programs can be executed from command line of the following format:<br>
+
 <br>
 <span style="font-family: monospace;">gemnode.exe
-&lt;TestDir&gt;/&lt;TaskName&gt;-dat.lst&gt;
-[</span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt;] </span><span style="font-family: monospace;">&gt; &lt;TaskName&gt;.out</span><br>
+&lt;TestDir&gt;/&lt;TaskName&gt;-dat.lst&gt; </span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt; </span><span style="font-family: monospace;">&gt; &lt;TaskName&gt;.out</span><br>
 <br>
 where <span style="font-family: monospace;">&lt;TestDir&gt;</span> is
 an optional subdirectory path; <span style="font-family: monospace;">&lt;TaskName&gt;</span>
@@ -130,45 +173,37 @@ problem name, e.g. <span style="font-family: monospace;">"MyTask"</span>.
 contain console output of the program, redirected there during
 execution of the
 TNode example. Without this redirection, the output can be found in a
-terminal (Linux) or lost (Windows). <br>
+terminal (Linux, Mac OS X) or lost (in Windows). The GEMS3K input files will be read in the following order: <br>
 </p>
+<span style="font-family: monospace;">&lt;TaskName&gt;-dat.lst</span><br style="font-family: monospace;">
 
-<p>The simplest example of the command-line GEM calculation on TNode level looks like</p>
 
-<p><span style="font-family: monospace;">gemnode.exe
-MyTestData/mytask-dat.lst </span><span style="font-family: monospace;">MyTestData/mytask-dbr.lst </span><span style="font-family: monospace;">&gt; mytask.out<br>
-</span></p>
+<div style="margin-left: 40px;"><span style="font-family: monospace;">&lt;TaskName&gt;-dch.dat</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&lt;TaskName&gt;-ipm.dat</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span><br style="font-family: monospace;">
+</div>
 
-<p>The file <span style="font-family: monospace;">&lt;TaskName&gt;-dat.lst</span>
-must have the following contents (also automatically created by default
-upon file export from the GEM-Selektor code):<br>
-<br>
-<span style="font-family: monospace;">-t "&lt;TaskName&gt;-dch.dat"
-"&lt;TaskName&gt;-ipm.dat"
-"&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat"</span><span style="font-family: monospace;">[,
-"&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat", ... ]</span><br style="font-family: monospace;">
-<br>
-This is simply the list of three files prepared for the GEMS3K initialization input;
-all these files must be located in the same directory where the <span style="font-family: monospace;">*-dat.lst</span> file itself is
-located.&nbsp; <br>
-</p>
 
-<p> The <span style="font-family: monospace;">-t</span>
-command-line key tells that the following <span style="font-family: monospace;">&lt;TaskName&gt;-dch.dat,</span><span style="font-family: monospace;"> &lt;TaskName&gt;-ipm.dat,</span><span style="font-family: monospace;">
-&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span> files, and so on, are
-prepared in
-a free-text input format. Alternative command-line key is <span style="font-family: monospace;">-b</span> telling that the files are prepared in a binary format. In this
-case, when the file set is exported from the GEM-Selektor code, the file <span style="font-family: monospace;">&lt;TaskName&gt;-bin.lst </span>will have the following content:<span style="font-family: monospace;"><br>
-</span></p>
 
-<p><span style="font-family: monospace;">-b
-"&lt;TaskName&gt;-dch.bin"
-"&lt;TaskName&gt;.ipm"
-"&lt;TaskName&gt;-dbr-&lt;node0&gt;.bin"[,
-"&lt;TaskName&gt;-dbr-&lt;node1&gt;.bin", ... ]</span><br style="font-family: monospace;">
-</p>
 
-<p>The first file in the list, <span style="font-family: monospace;">&lt;TaskName&gt;<a href="#DATACH">-dch.dat</a></span>, (or <span style="font-family: monospace;">&lt;TaskName&gt;-dch.bin</span>)
+
+
+
+<span style="font-family: monospace;"><br>
+</span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt;</span><span style="font-family: monospace;"></span><br>
+
+<div style="margin-left: 40px;"><span style="font-family: monospace;"></span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat</span><br>
+<span style="font-family: monospace;">
+</span><span style="font-family: monospace;">............</span><br style="font-family: monospace;">
+<span style="font-family: monospace;"></span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;nodeN&gt;.dat</span><br style="font-family: monospace;">
+</div>
+
+
+
+
+
+
+<p>The first file in the list, <span style="font-family: monospace;">&lt;TaskName&gt;<a href="#DATACH">-dch.dat</a></span>,
 contains the input
 data for the
 chemical system definition (CSD) that can be used by both GEM and the
@@ -188,50 +223,16 @@ optionally,&nbsp; parameters of surface complexation models. <br>
 contains the input data for the &lt;node0&gt; chemical system. If this
 is the only equilibrium to be calculated then no other files are necessary.
 Otherwise, a list of additional DBR file names from the
-same location must be provided in the optional file <span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt; </span>containing e.g. <br>
+same or different location is provided in the optional file <span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt; </span>file. <br>
 </p>
-<p><span style="font-family: monospace;">"&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat", </span><span style="font-family: monospace;">"&lt;TaskName&gt;-dbr-&lt;node2&gt;.dat", </span><span style="font-family: monospace;">... <br>
-</span></p>
+
 <p>There can be one or many comma-separated file
 names of <a href="#DATABR"><span style="font-family: monospace;">*-dbr.dat</span></a>&nbsp;
-(node recipe) type, which will be read sequentially until the end of file condition occurs. On the
+(node recipe) type, which will be read sequentially. On the
 TNodeArray level, these files may contain composition and speciation of all
 chemical systems needed to set up the initial conditions for the reactive mass
-transport modelling. On the TNode level, in principle, one <span style="font-family: monospace;">*-dbr.dat</span> file is sufficient;
-if there are many such file names then they will be read one by one,
-but only the last-read one will remain in the work DATABR structure in the
-program memory. <br>
-<br>
-To summarize, the GEMS3K examples will read the specified input text files
-in
-the following order: <br>
+transport modelling. On the TNode level, in principle, one <span style="font-family: monospace;">*-dbr.dat</span> file is sufficient. <br>
 </p>
-
-<span style="font-family: monospace;">&lt;TaskName&gt;-dat.lst</span><br style="font-family: monospace;">
-
-<div style="margin-left: 40px;"><span style="font-family: monospace;">&lt;TaskName&gt;-dch.dat</span><br style="font-family: monospace;">
-<span style="font-family: monospace;">&lt;TaskName&gt;-ipm.dat</span><br style="font-family: monospace;">
-<span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span><br style="font-family: monospace;">
-</div>
-
-
-
-
-
-
-<span style="font-family: monospace;"><br>
-</span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt;</span><span style="font-family: monospace;"></span><br>
-<div style="margin-left: 40px;"><span style="font-family: monospace;"></span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node1&gt;.dat</span><br>
-<span style="font-family: monospace;">
-</span><span style="font-family: monospace;">............</span><br style="font-family: monospace;">
-<span style="font-family: monospace;"></span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;nodeN&gt;.dat</span><br style="font-family: monospace;">
-</div>
-
-
-
-
-
-<br>
 The <a href="#FREEDATA">free-text format</a> of DCH, IPM and DBR text file types is essentially the same, only the data tags and
 selection of fields
 differ. Each file consists of
@@ -249,8 +250,9 @@ the default values will be set automatically by GEMS3K. The data
 objects without default values must always be provided at input (they
 are marked accordingly in the file format documentation).<br>
 
+<br>In the following, only text format files shall be considered.<br>
 <br>
-&nbsp;<br>
+
 
 
 
@@ -259,53 +261,54 @@ are marked accordingly in the file format documentation).<br>
 Chemical System Definition</h3>
 
 
-<p>The DCH input file will be read before the IPM
-file and the DBR files. In the following, only text format will be considered.<br>
+<p>The DCH input file will be read in before the IPM
+file and DBR files. <br>
 </p>
 
-<p>The file &lt;TaskName&gt;-dch.dat contains parts of chemical
+<p>The file <span style="font-family: monospace;">&lt;TaskName&gt;-dch.dat</span> contains the items of chemical
 system
-definitions (CSD) that can be requested both by GEM and by the FMT
+definitions (CSD) that can be accessed both by the GEM IPM3 and by the mass-transport
 parts of the coupled code. Contents of this file will be placed in two
-memory data structures: (1) DCH structure visible from both GEMIPM
-and the FMT part and (2) MULTI structure - the internal work structure
-of GEM IPM, not visible from the FMT part. The &lt;TaskName&gt;-dch.dat
+memory data structures: (1) DATACH structure visible from both GEM IPM3
+and the mass transport part, and (2) MULTI - the internal work structure
+of GEM IPM3, not visible from the mass transport part.</p>
+<p> The <span style="font-family: monospace;">&lt;TaskName&gt;-dch.dat</span>
 (and the DATACH structure) also contain dimensions and index lists that
 are needed for reading and accessing the DBR (node description)
-files like &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat. Finally, the DCH
-file and structure contains grid arrays of thermodynamic data used
-later on for automatic interpolation of gibbs energies G0, molar
-volumes V0, absolute entropy
-function S0 and other look-up grid arrays of thermodynamic data&nbsp;
-of components to given values of temperature T and pressure
-P in GEM IPM calculations for any node and time. </p>
+files like <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node0&gt;.dat</span>. Finally, the DCH
+file and DATACH structure contain the look-up arrays used for the automatic interpolation of Gibbs energies G0, molar
+volumes V0, and other kinds of thermodynamic data to given values of temperature T and pressure
+P in GEM IPM3 calculations for any node and time. </p>
+
 
 <p> The DCH text input file consists of nine sections, of which
 sections (1), (2),&nbsp; and (3)
 contain dimensions needed for
-memory allocation must appear before the <span style="text-decoration: underline;">&lt;END_DIM&gt;</span> tag. Any
+memory allocation that must appear before the <span style="font-family: monospace;">&lt;END_DIM&gt;</span> tag. Any
 other data object fields can appear after this tag in any order, and
 some data objects can be skipped. If the data object tag is not found
 in the input file, its elements will be assigned default values, if
 possible. <br>
 </p>
 
-<p>It is recommended to place the input data&nbsp; in logical
-sections as in DCH files printed from the GEMS code. The section (4)
-contains a DATABR structure configuration; section (5) contains
+<p>It is recommended to place the input data in logical
+sections as in DCH files printed from the GEM-Selektor code. The section (4)
+contains a DATABR structure index configuration; section (5) contains
 names and some data for independent components (IC); section (6)
 contains names and data for the dependent components (DC); section (7)
 contains names and data for phases; section (8) is the stoichiometry
 matrix A for all Dependent Components in the system, and section (9)
 contains the lookup arrays
-for interpolation of thermodynamic data for DCs. <br>
+for interpolation of thermodynamic data. <br>
 <br>
 </p>
 
+<hr style="width: 100%; height: 2px;">
 <h3><a name="GEMIPM"></a>2.2. The IPM File with
 GEM IPM Numerical Settings, Optional Sorption and Solution Model
 Parameters<br>
 </h3>
+
 
 &nbsp;The IPM text input file for GEM-IPM specific data is usually
 generated from GEM-Selektor package. The GEMS3K program reads
@@ -358,9 +361,11 @@ logical sections as printed from GEMS code.<br>
 
 <br>
 
+<hr style="width: 100%; height: 2px;">
 <h3><a name="DATABR"></a>2.3. The DBR File with Node
 Data Bridge Composition and Speciation Data<br>
 </h3>
+
 
 The DBR text input file for DATABR (node recipe) data can also
 be generated by GEM-Selektor. The GEMS3K program reads such files

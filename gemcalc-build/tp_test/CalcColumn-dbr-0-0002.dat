@@ -1,0 +1,10 @@
+#  GEMS3K v.3.1 r.740 (rc) 
+# File: tp_test/CalcColumn-dbr-0-0002.dat
+
+<NodeStatusFMT>  -1
+<NodeStatusCH>  1
+<TK>  298.15
+<P>  100000
+
+<bIC>
+0.0001001 1e-07 0.016 110.683696417673 0.008 55.3420685088366 0 

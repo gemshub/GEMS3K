@@ -2072,7 +2072,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 }
 
 
-// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
+// (3) Writes the contents of the work instance of DATABR structure into a disk file with path name fname.
 //   Parameters:
 //   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
 //                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
@@ -2082,7 +2082,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   with_comments (text format only): defines the mode of output of comments written before each data tag and  content
 //                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
 //                 If   false (0), comments will not be written.
-//  brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+//  brief_mode     if true (1), tells not to write data items that contain only default values.
+//
 void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments, bool brief_mode )
    {
        gstring str_file;
@@ -2110,6 +2111,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 // Parameters: fname   null-terminated (C) string containing a full path to the disk file to be written.
 //                     NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
 //                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+//
    void  TNode::GEM_print_ipm( const char* fname )
    {
      gstring str_file;

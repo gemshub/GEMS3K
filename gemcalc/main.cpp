@@ -97,14 +97,14 @@ int main( int argc, char* argv[] )
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
-       node->GEM_write_dbr( NULL, false, true );
-       node->GEM_print_ipm( NULL );   // possible debugging printout
+       node->GEM_write_dbr( NULL, false, true, false );
+//       node->GEM_print_ipm( NULL );   // possible debugging printout
    }
    else {
       // (4) possible return status analysis, error message
        node->GEM_print_ipm( NULL );   // possible debugging printout
        return 5; // GEM IPM did not converge properly - error message needed
-        }
+   }
 
    // test internal functions
   cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;   
@@ -158,10 +158,10 @@ int main( int argc, char* argv[] )
         NodeStatusCH = node->GEM_run( false );
 
         if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
-        {    sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
-        	 node->GEM_write_dbr( NextRecipeOutFileName, false, true );
-sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
-node->GEM_print_ipm( NextRecipeOutFileName );
+        {    sprintf(NextRecipeOutFileName , "%s.nc.out", NextRecipeFileName );
+             node->GEM_write_dbr( NextRecipeOutFileName, false, false, false );
+             sprintf(NextRecipeOutFileName , "%s.nc.Dump.out", NextRecipeFileName );
+             node->GEM_print_ipm( NextRecipeOutFileName );
         }
         else {
                // error message, debugging printout
@@ -171,14 +171,13 @@ node->GEM_print_ipm( NextRecipeOutFileName );
               }
       }
    }	 
-
-     // end of possible loop on input recipes
+   // end of possible loop on input recipes
    delete node;
    if( recipes ) delete recipes;
 
  // End of example  
    return 0; 
- }  
+}
    
 
 //---------------------------------------------------------------------------

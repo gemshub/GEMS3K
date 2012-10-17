@@ -485,7 +485,6 @@ gemcalc-build/debug/libgcc_s_dw2-1.dll -text
 gemcalc-build/debug/mingwm10.dll -text
 gemcalc-build/release/libgcc_s_dw2-1.dll -text
 gemcalc-build/release/mingwm10.dll -text
-node-gem-build/CalcColumn.BAT -text
 node-gem-build/debug/libgcc_s_dw2-1.dll -text
 node-gem-build/debug/mingwm10.dll -text
 node-gem-build/linux-run.bat -text

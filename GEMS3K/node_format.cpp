@@ -129,7 +129,7 @@ outField DataCH_static_fields[14] =  {
   { "nPp",   1, 0, 0, "# nPp: Number of pressure grid points in lookup arrays for data interpolation, >=1" },
   { "iGrd",  1, 0, 0, "# iGrd: Flag for allocation of array of diffusition coefficients in DATACH structure (DCH file)" },
   { "fAalp", 1, 0, 0, "# fAalp: Flag for keeping specific surface areas of phases in DATABR structure (1) or ignoring them (0)" },
-  { "mLook", 0, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
+  { "mLook", 1, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
 };
 
 outField DataCH_dynamic_fields[30] =  { //+4
@@ -1367,7 +1367,7 @@ void TNode::datach_reset()
 	CSD->nDCb = 0;
 	CSD->nPHb = 0;
 	CSD->nPSb = 0;
-        CSD->mLook = 0;
+    CSD->mLook = 0;
 // Lists = 0; vectors and matrices
 	CSD->nDCinPH = 0;
 	CSD->xic = 0;
@@ -1375,8 +1375,8 @@ void TNode::datach_reset()
 	CSD->xph = 0;  //18
 
 	CSD->TKval = 0;
-        CSD->Psat = 0;
-        CSD->Pval = 0;
+    CSD->Psat = 0;
+    CSD->Pval = 0;
 	CSD->A = 0;
 	CSD->Ttol = 0.;
 	CSD->Ptol = 0.;
