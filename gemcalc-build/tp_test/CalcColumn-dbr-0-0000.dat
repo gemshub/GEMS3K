@@ -1,11 +1,10 @@
-#  GEMS3K v.3.1 r.740 (rc) 
-# File: tp_test/CalcColumn-dbr-0-0000.dat
-# Comments can be marked with # $ ;
-
-# Template for the dbr-dat text input file for DATABR (node) data
+#  GEMS3K v.3.1 r.750 (rc) 
+# File: /Users/kulik/DevGEMS/trunk/standalone/Tests/Cases/Full-Commented/CalcColumn-dbr-0-0000.dat
+# Comments can be marked with # $ ; as the first character in the line
+# DBR text input file for node system recipe and speciation data
 # (should be read only after the DCH and the IPM files)
 
-#Section (scalar-1): Controls of the GEM IPM operation and data exchange
+# (1): Flags controlling GEM IPM-3 operation and data exchange
 # NodeHandle: Node identification handle
 <NodeHandle>  0
 # NodeTypeHY:  Node type code (hydraulic), not used on TNode level; see typedef NODETYPE
@@ -19,7 +18,7 @@
 # IterDone:  Number of iterations performed by GEM IPM in the last run (GEM output)
 <IterDone>  72
 
-## (2) Chemical scalar variables
+## (2) Chemical scalar properies of the node system
 # TK: Node temperature T, Kelvin. This value must always be provided (GEM input)
 <TK>  298.15
 # P:  Node Pressure P, Pa. This value must always be provided (GEM input)
@@ -51,9 +50,9 @@
 # dt: Actual time step, s (kinetics, metastability, transport)
 <dt>  0
 
-### Arrays: for dimensions and index lists, see Section (2) of DATACH file
+### Arrays: for dimensions and index lists, see Section (2) of DCH file
 
-## (4) IC data section
+## (4) Data for Independent Components
 #  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
 # bIC: Bulk composition of reactive subsystem (main GEM input), moles of ICs [nICb]
 <bIC>
@@ -71,7 +70,7 @@
 <bSP>
 0 0 0 0 0 0 0 
 
-## (5) DC data section
+## (5) Data for Dependent Components
 #  'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 'CH4' 'H2' 'O2' 'Gr' 'Cal' 'Dis-Dol' 'Portlandite' 'Brc' 
 # xDC: Speciation - amounts of DCs in equilibrium (primal solution), moles (GEM output/input) [nDCb]
 <xDC>
@@ -89,7 +88,7 @@
 <dul>
 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
 
-## (6) Phase data section
+## (6) Data for Phases
 #  'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' 
 # aPH: Specific surface areas of phases, m2/kg (GEM input) [nPHb]
 <aPH>
@@ -116,7 +115,5 @@
 <bPS>
 0.0001001 1e-07 0.016 110.683696417673 0.008 55.3420685088366 9.5641800521515e-20 
 0 0 0 0 0 0 0 
-
-# reserved
 
 # End of file

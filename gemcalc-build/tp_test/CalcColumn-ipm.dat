@@ -1,14 +1,13 @@
-#  GEMS3K v.3.1 r.740 (rc) 
-# File: /Users/kulik/DevGEMS/trunk/standalone/Tests/Cases/CalcColumn-ipm.dat
+#  GEMS3K v.3.1 r.750 (rc) 
+# File: /Users/kulik/DevGEMS/trunk/standalone/Tests/Cases/Full-Commented/CalcColumn-ipm.dat
 # Comments can be marked with # $ ; as the first character in the line
-
-# Template for the ipm-dat text input file for the internal MULTI data
-# (should be read after the DATACH file and before DATABR files)
+# IPM text input file for the internal GEM IPM3 kernel data
+# (should be read after the DCH file and before DBR files)
 
 # ID key of the initial chemical system definition
-"CalDolCol2G  CalcColumn  0000 0       1       25      255 "
+"CalcDolo  G  CalcColumn  0000 0       1       25      0   "
 
-## (1) Important flags that affect memory allocation
+## (1) Flags that affect memory allocation
 # PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)
 <pa_PE>  1
 
@@ -24,7 +23,7 @@
 # PSigm: Flag for using (+) or ignoring (-) specific surface free energies  
 <PSigm>          '+'
 
-## (2) Important dimensionalities that affect memory allocation
+## (2) Dimensionalities that affect memory allocation
 # Lads: Total number of Dependent Components in sorption phases included into this system
 <Lads>  0
 # FIa: Number of sorption phases included in this system (0 if no sorption phases )
@@ -34,8 +33,8 @@
 
 <END_DIM>
 
-## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel
-#      - Need to be changed only in rare special cases (see gems_ipm.html)
+## (3) Numerical controls and tolerances of GEM IPM-3 kernel
+#      - Need to be changed only in special cases (see gems3k_ipm.html)
 # DB: Minimum amount of IC in the bulk composition, moles (except charge Zz) { 1e-17 }
 <pa_DB>  1e-17
 
@@ -113,7 +112,7 @@
 # DFYs: Insertion mole amount for single-component phase in PSSC() algorithm { 1e-6 }
 <pa_DFYs>  1e-06
 
-# Parameters for high-accuracy IPM algorithm 
+# Tolerances and controls of high-precision IPM-3 algorithm 
 # DW: Activate (1) or disable (0) error condition on maximum number of MBR() iterations DP { 1 }
 <pa_DW>  1
 # DT: use DHB as relative maximum mass balance cutoff for all ICs (0), default, or for major ICs:
@@ -129,16 +128,16 @@
 # IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }
 <pa_IEPS>  0.001
 
-# pKin: Flag for using metastability restrictions on DC amounts in primal GEM solution { 1 } 
+# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } 
 <pKin>  1
-# DKIN: Tolerance for non-trivial metastability restrictions on DC amounts, moles { 1e-10 } 
+# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } 
 <pa_DKIN>  1e-10
 # pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables
 <pa_PLLG>  10000
 # tMin: Type of thermodynamic potential to minimize (reserved)
 <tMin>  0
 
-## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)
+## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)
 # sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]
 <sMod>
 'DNNSNN' 'INNINN' 
@@ -150,7 +149,7 @@
 2 0 4 
 0 0 0 
 
-# PMc: TSolMod collected interaction parameter coefficients for non-ideal  models of mixing
+# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions
 <PMc>
 0 0 1 1 0 0 0 0 
 
@@ -161,7 +160,7 @@
 0 0 0 
 0 0 0 
 
-## (5) Some data arrays which are not provided in DATACH and DATABR files
+## (5) Data arrays which are provided neither in DCH nor in DBR files
 # B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)
 <B>
 0.0001001 1e-07 0.016 110.683696417673 0.008 55.3420685088366 0 
@@ -179,24 +178,24 @@
 <lnGmf>
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 
-# (6) Section for metastability/ kinetic constraints
-# RLC: Code of metastability restrictions for DCs {L U B (default)} [nDC]
+# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)
+# RLC: Code of metastability constraints for DCs {L U B (default)} [nDC]
 <RLC>
 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
 
-# RSC: Units of metastability/kinetic restrictions for DCs {M} moles [nDC]
+# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]
 <RSC>
 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
 
-# DLL: Lower metastability restrictions on DC amounts <xDC>, moles [nDC] (default: 0)
+# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)
 <DLL>
 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 
-# DUL: Upper metastability restrictions on DC amounts <xDC>, moles [nDC] (default: 1e6)
+# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)
 <DUL>
 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
 
-# (7) Initial data for phases
+# (7) Initial data for Phases
 
 # Aalp: Specific surface areas of phases, m2/g [nPH]
 <Aalp>

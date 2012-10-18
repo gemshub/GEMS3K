@@ -1,9 +1,7 @@
-#  GEMS3K v.3.1 r.740 (rc) 
+#  GEMS3K v.3.1 r.750 (rc) 
 # File: /Users/kulik/DevGEMS/trunk/standalone/Tests/Cases/Brief-commented/CalcColumn-dch.dat
-# Comments are marked with # $ ;
-
-# Template for the dch-dat text input file for DATACH data 
-# (should be read first, before the IPM-DAT file and DATABR files)
+# Comments can be marked with # $ ; as the first character in the line
+# DCH text input file (should be read before IPM and DBR files)
 
 ## (1) Dimensions for memory allocation
 # nIC: Number of Independent Components (usually chemical elements and charge)
@@ -17,7 +15,7 @@
 # nDCs: Number of Dependent Components in phases-solutions <= nDC
 <nDCs>  23
 
-## (2) Databridge configuration section (for memory allocation)
+## (2) Dimensions for DBR node recipe (memory allocation)
 # nICb: Number of ICs kept in the DBR file and DATABR memory structure (<= nIC)
 <nICb>  7
 # nDCb: Number of DCs kept in the DBR file and DATABR memory structure (<=nDC)
@@ -41,10 +39,10 @@
 
 <END_DIM>
 
-## (4) Databridge configuration section (for memory allocation)
+## (4) DBR node recipe connection index lists
 
-## (5) Independent components section
-# ICNL: Name list of Independent Components (up to 4 characters per name) [nIC]
+## (5) Independent Components and their properties
+# ICNL: List of Independent Component names (<=4 characters per name) [nIC]
 <ICNL>
 'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
 # ccIC: Class codes of ICs (Independent Components) [nIC]
@@ -54,16 +52,16 @@
 <ICmm>
 0.0120108003616333 0.0400779991149902 0.0354529991149902 0.00100794994831085 0.0243050003051758 0.015999400138855 0 
 
-## (6) Dependent Components section (codes and names)
-# DCNL: Name list of Dependent Components (up to 16 characters per name) [nDC]
+## (6) Dependent Components and their codes
+# DCNL: Name list of Dependent Components (<=16 characters per name) [nDC]
 <DCNL>
 'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 'CH4' 'H2' 'O2' 'Gr' 'Cal' 'Dis-Dol' 'Portlandite' 'Brc' 
 # ccDC: Class codes of DCs (Dependent Components) [nDC]
 <ccDC>
 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'T' 'W' 'G' 'G' 'G' 'G' 'O' 'O' 'O' 'O' 'O' 
 
-## (7) Phases section
-# PHNL: List of Phase names (up to 16 characters per name) [nPH]
+## (7) Phases and their codes
+# PHNL: List of Phase names (<=16 characters per name) [nPH]
 <PHNL>
 'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' 
 # ccPH: Codes of phase aggregate state [nPH]
@@ -73,7 +71,7 @@
 <nDCinPH>
 19 4 1 1 1 1 1 
 
-# (8) Data section for DCs
+# (8) Data for Dependent Components
 # A: Stoichiometry matrix A (expanded formulae) for DCs [nDC*nIC]
 <A>
 1 1 0 0 0 3 0 
@@ -105,14 +103,14 @@
 0 1 0 2 0 2 0 
 0 0 0 2 1 2 0 
 
-## (9) Thermodynamic data section# TKval: Temperature values, K for lookup arrays of thermodynamic data [nTp]
+## (9) Thermodynamic data for Dependent Components# TKval: Temperature values, K for lookup arrays of thermodynamic data [nTp]
 <TKval>
 298.15 308.15 328.15 
 # Pval: Pressure values, Pa for lookup arrays of thermodynamic data [nPp]
 <Pval>
 100000 10000000 30000000 
 
-# denW: Lookup array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]
+# denW: Look-up array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]
 <denW>
 997.061364306278 998.356005405459 998.315521146566 
 -0.25866418191325 -0.351245995240374 -0.481526974116549 
@@ -120,7 +118,7 @@
 0.0450858902637571 0.04320907388247 0.0408264412681549 
 0 0 0 
 
-# denWg: Lookup array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]
+# denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]
 <denWg>
 0 0 0 
 -0 -0 -0 
@@ -128,7 +126,7 @@
 0 0 0 
 0 0 0 
 
-# epsW: Lookup array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]
+# epsW: Look-up array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]
 <epsW>
 78.2451456494471 75.1438080290594 69.2777788768649 
 -0.355010888388417 -0.342609612168612 -0.315334450161999 
@@ -136,7 +134,7 @@
 0.00406162824448407 0.00378968195478582 0.00339565126908197 
 0 0 0 
 
-# epsWg: Lookup array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]
+# epsWg: Look-up array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]
 <epsWg>
 0 0 0 
 0 0 0 
@@ -144,7 +142,7 @@
 0 0 0 
 0 0 0 
 
-# V0: Lookup array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]
+# V0: Look-up array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]
 <V0>
 -1.56484448542463e-05 -1.49452326837588e-05 -1.37711281379437e-05 
 1.33298113314253e-05 1.38725790615347e-05 1.45379532536251e-05 
@@ -175,7 +173,7 @@
 3.30599999427795e-05 3.30599999427795e-05 3.30599999427795e-05 
 2.46299982070923e-05 2.46299982070923e-05 2.46299982070923e-05 
 
-# G0: Lookup array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]
+# G0: Look-up array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]
 <G0>
 -1099175.99998 -1099412.4773716 -1099771.1866594 
 -1146041.000162 -1146611.6476182 -1147938.5601222 

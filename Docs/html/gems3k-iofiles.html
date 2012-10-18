@@ -5,6 +5,7 @@
 
 
 
+
   
   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
@@ -37,12 +38,11 @@ Introduction</a>
 Input Files Needed to Run a Standalone GEMS3K Calculation </a></p>
 
 <blockquote>
-  <p><a href="#DATACH">2.1.
-The DCH File with Chemical System Definition</a> </p>
-  <p><a href="#GEMIPM">2.2. The IPM File with
+  <p><a href="#DATACH">2.1. DCH File with Chemical System Definition</a> </p>
+  <p><a href="#GEMIPM">2.2. IPM File with
 GEM IPM Numerical Settings, Optional Sorption and Solution Model
 Parameters</a> </p>
-  <p><a href="#DATABR">2.3. The DBR File with Node
+  <p><a href="#DATABR">2.3. DBR File with Node
 Data Bridge Composition and Speciation Data</a></p>
 </blockquote>
 
@@ -148,7 +148,7 @@ instance using the following call: <br>
 </span><span style="font-family: monospace;">&nbsp;&nbsp; retCode = node-&gt;GEM_read_dbr( </span><span style="font-family: monospace;">NextRecipeFileName </span><span style="font-family: monospace;">);</span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp; if( retCode</span><span style="font-family: monospace;"> )</span><br style="font-family: monospace;">
 
-<span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error occured during reading the DBR file</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp;&nbsp; {&nbsp; // error occured during reading the DBR file</span><br style="font-family: monospace;">
 
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return retCode;</span><br style="font-family: monospace;">
 
@@ -159,7 +159,7 @@ instance using the following call: <br>
 These DBR file names can be, in principle, passed via a list (.lst)
 file similar to that needed for GEM_init(), containing
 (comma-separated) DBR file names located in the same folder as the list
-file. This is done in "gemcalc" and "node-gem" t<a href="gems3k-tests.html">est examples</a> provided with the GEMS3K code. Both test example programs can be executed from command line of the following format:<br>
+file. This is done in "gemcalc" and "node-gem" t<a href="gems3k-tests.html">est examples</a> provided with the GEMS3K code. Both example programs can be executed from command line as follows:<br>
 
 <br>
 <span style="font-family: monospace;">gemnode.exe
@@ -257,7 +257,7 @@ are marked accordingly in the file format documentation).<br>
 
 
 <hr style="width: 100%; height: 2px;">
-<h3><a name="DATACH"></a>2.1. The DCH File with
+<h3><a name="DATACH"></a>2.1. DCH File with
 Chemical System Definition</h3>
 
 
@@ -300,108 +300,251 @@ contains names and data for phases; section (8) is the stoichiometry
 matrix A for all Dependent Components in the system, and section (9)
 contains the lookup arrays
 for interpolation of thermodynamic data. <br>
-<br>
+</p>An example DCH text file content (from the 'node-gem' example input data) is shown below<br>
+<table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"># File test_tp/CalcColumn-dch.dat<br>
+&lt;nIC&gt;&nbsp; 7&nbsp;&nbsp; &lt;nDC&gt;&nbsp; 28&nbsp;&nbsp;&nbsp;
+&lt;nPH&gt;&nbsp; 7&nbsp;&nbsp;&nbsp; &lt;nPS&gt;&nbsp;
+2&nbsp;&nbsp;&nbsp; &lt;nDCs&gt;&nbsp; 23<br>
+&lt;nICb&gt;&nbsp; 7&nbsp; &lt;nDCb&gt;&nbsp; 28&nbsp; &lt;nPHb&gt;&nbsp; 7&nbsp; &lt;nPSb&gt;&nbsp; 2<br>
+&lt;nTp&gt;&nbsp; 3&nbsp; &lt;nPp&gt;&nbsp; 3&nbsp;&nbsp;
+&lt;iGrd&gt;&nbsp; 0&nbsp;&nbsp; &lt;fAalp&gt;&nbsp; 1&nbsp;&nbsp;
+&lt;mLook&gt;&nbsp; 1<br>
+&lt;END_DIM&gt;<br>
+&lt;ICNL&gt;&nbsp; 'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' <br>
+&lt;ccIC&gt;&nbsp; 'e' 'e' 'e' 'h' 'e' 'o' 'z' <br>
+&lt;ICmm&gt;&nbsp;&nbsp; 0.0120108 0.040078 0.035453 0.00100795 0.024305 0.0159994 0 <br>
+&lt;DCNL&gt;&nbsp;&nbsp; 'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+'
+'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@'
+'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 'CH4' 'H2' 'O2' 'Gr'
+'Cal' 'Dis-Dol' 'Portlandite' 'Brc' <br>
+&lt;ccDC&gt;&nbsp; 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S'
+'S' 'S' 'S' 'S' 'T' 'W' 'G' 'G' 'G' 'G' 'O' 'O' 'O' 'O' 'O' <br>
+&lt;PHNL&gt;&nbsp; 'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' <br>
+&lt;ccPH&gt;&nbsp;&nbsp; 'a' 'g' 's' 's' 's' 's' 's' <br>
+&lt;nDCinPH&gt;&nbsp;&nbsp; 19 4 1 1 1 1 1 <br>
+&lt;A&gt;<br>
+1 1 0 0 0 3 0 <br>
+1 1 0 1 0 3 1 <br>
+0 1 0 0 0 0 2 <br>
+0 1 0 1 0 1 1 <br>
+1 0 0 0 1 3 0 <br>
+1 0 0 1 1 3 1 <br>
+0 0 0 0 1 0 2 <br>
+0 0 0 1 1 1 1 <br>
+1 0 0 0 0 2 0 <br>
+1 0 0 0 0 3 -2 <br>
+1 0 0 1 0 3 -1 <br>
+1 0 0 4 0 0 0 <br>
+0 0 1 0 0 4 -1 <br>
+0 0 1 0 0 0 -1 <br>
+0 0 0 2 0 0 0 <br>
+0 0 0 0 0 2 0 <br>
+0 0 0 1 0 1 -1 <br>
+0 0 0 1 0 0 1 <br>
+0 0 0 2 0 1 0 <br>
+1 0 0 0 0 2 0 <br>
+1 0 0 4 0 0 0 <br>
+0 0 0 2 0 0 0 <br>
+0 0 0 0 0 2 0 <br>
+1 0 0 0 0 0 0 <br>
+1 1 0 0 0 3 0 <br>
+2 1 0 0 1 6 0 <br>
+0 1 0 2 0 2 0 <br>
+0 0 0 2 1 2 0 <br>
+      <br>
+&lt;TKval&gt;&nbsp;&nbsp;&nbsp;&nbsp; 298.15&nbsp; 308.15&nbsp;&nbsp; 328.15 <br>
+&lt;Pval&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 100000 10000000 30000000 <br>
+&lt;denW&gt;<br>
+997.061364306278&nbsp;&nbsp;&nbsp;&nbsp; 998.356005405459&nbsp;&nbsp;&nbsp;&nbsp; 998.315521146566 <br>
+-0.25866418191325&nbsp;&nbsp; -0.351245995240374&nbsp;&nbsp; -0.481526974116549 <br>
+-0.00946964566451448 -0.00744141355821083 -0.00528332996880317 <br>
+0.0450858902637571&nbsp;&nbsp; 0.04320907388247&nbsp;&nbsp;&nbsp;&nbsp; 0.0408264412681549 <br>
+0 0 0 <br>
+&lt;denWg&gt;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0 <br>
+&lt;epsW&gt;<br>
+78.2451456494471&nbsp;&nbsp;&nbsp;&nbsp; 75.1438080290594&nbsp;&nbsp;&nbsp;&nbsp; 69.2777788768649 <br>
+-0.355010888388417&nbsp; -0.342609612168612&nbsp;&nbsp; -0.315334450161999 <br>
+0.00135076186526265 0.00145381261941342&nbsp; 0.00146902056825049 <br>
+0.00406162824448407 0.00378968195478582&nbsp; 0.00339565126908197 <br>
+0 0 0 <br>
+&lt;epsWg&gt;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0&nbsp;&nbsp;&nbsp; 0 0 0 <br>
+&lt;V0&gt;<br>
+-1.56484448542463e-05 -1.49452326837588e-05&nbsp; -1.37711281379437e-05 <br>
+1.33298113314253e-05&nbsp;&nbsp; 1.38725790615347e-05&nbsp; 1.45379532536251e-05 <br>
+-1.84387418380244e-05 -1.75533933999758e-05&nbsp; -1.62969099111207e-05 <br>
+5.76247702545953e-06&nbsp;&nbsp; 6.33629338552895e-06&nbsp; 7.08924325144033e-06 <br>
+-1.67761919999581e-05 -1.60679169484991e-05&nbsp; -1.48773193819304e-05 <br>
+9.3426087471381e-06&nbsp;&nbsp;&nbsp; 9.89204762992462e-06&nbsp; 1.05618685503456e-05 <br>
+-2.20137394655029e-05&nbsp; -2.1320943411343e-05&nbsp; -2.03326858879116e-05 <br>
+1.64145699446217e-06&nbsp;&nbsp; 2.21808242240575e-06&nbsp; 2.95757899812691e-06 <br>
+3.28066811910075e-05&nbsp;&nbsp; 3.32679822859718e-05&nbsp; 3.37010311440001e-05 <br>
+-6.05772456161104e-06 -5.46936955254417e-06&nbsp; -4.93991997546153e-06 <br>
+2.42108973468909e-05&nbsp;&nbsp; 2.50266893539127e-05&nbsp; 2.59742627657025e-05 <br>
+3.73979881034516e-05&nbsp;&nbsp; 3.78500686806748e-05&nbsp; 3.82709925715825e-05 <br>
+4.39042028119618e-05&nbsp;&nbsp; 4.47667683271473e-05&nbsp; 4.54562337609889e-05 <br>
+1.7340894051096e-05&nbsp;&nbsp;&nbsp; 1.76207011450668e-05&nbsp; 1.77091668778402e-05 <br>
+2.52643576113497e-05&nbsp;&nbsp; 2.57718133264169e-05&nbsp; 2.63562931139282e-05 <br>
+3.05008890803284e-05&nbsp;&nbsp; 3.09909078649789e-05&nbsp; 3.15317883449385e-05 <br>
+-4.70784300725686e-06 -3.90436877320447e-06&nbsp; -2.99568282046958e-06 <br>
+0 0 0 <br>
+1.80683971876364e-05&nbsp; 1.80449665782457e-05&nbsp; 1.80456983479951e-05 <br>
+0.024789711565&nbsp;&nbsp; 0.00025621162565&nbsp;&nbsp; 9.09468818833333e-05 <br>
+0.024789711565&nbsp;&nbsp; 0.00025621162565&nbsp;&nbsp; 9.09468818833333e-05 <br>
+0.024789711565&nbsp;&nbsp; 0.00025621162565&nbsp;&nbsp; 9.09468818833333e-05 <br>
+0.024789711565&nbsp;&nbsp; 0.00025621162565&nbsp;&nbsp; 9.09468818833333e-05 <br>
+5.29799997806549e-06 5.29799997806549e-06 5.29799997806549e-06 <br>
+3.69339990615845e-05 3.69339990615845e-05 3.69339990615845e-05 <br>
+6.43900012969971e-05 6.43900012969971e-05 6.43900012969971e-05 <br>
+3.30599999427795e-05 3.30599999427795e-05 3.30599999427795e-05 <br>
+2.46299982070923e-05 2.46299982070923e-05 2.46299982070923e-05 <br>
+&lt;G0&gt;<br>
+-1099175.99998&nbsp;&nbsp; -1099412.4773716 -1099771.1866594 <br>
+-1146041.000162&nbsp; -1146611.6476182 -1147938.5601222 <br>
+-552790.00065054 -552397.64596393 -551571.07035226 <br>
+-717024.00023652 -717244.44195785 -717679.66789818 <br>
+-998974.99998001 -998115.07384519 -996287.53862559 <br>
+-1047022.0003151 -1046840.8294166 -1046684.4334278 <br>
+-453985.00080868 -452816.49654134 -450465.45064891 <br>
+-625868.00044448 -625069.89938223 -623576.29640564 <br>
+-386014.99998948 -386899.55522501 -388855.6969679 <br>
+-527982.00178413 -527493.83708255 -526278.15287992 <br>
+-586940.00066985 -587672.78039755 -589086.24152252 <br>
+-34353.999832761 -34900.700576841 -36207.37497453 <br>
+-8535.3605102398 -9906.1943288058 -12592.475843486 <br>
+-131290.00076596 -131663.56530272 -132298.2564942 <br>
+17729.00010995&nbsp;&nbsp; 17380.090133707&nbsp;&nbsp; 16559.535871506 <br>
+16446.000207431&nbsp; 15626.385155535&nbsp;&nbsp; 13809.465864252 <br>
+-157270.00090727 -157181.92300796 -156877.9321197 <br>
+0 0 0 <br>
+-237181.38483664 -237714.09160835 -238846.23234236 <br>
+-394393&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -396536.60110492 -400860.47406385 <br>
+-50659&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -52527.592734262 -56299.999726769 <br>
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1311.6093540837 -3962.5913312329 <br>
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -2056.2422857245 -6197.1811918837 <br>
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -6.4313916269379 -27.418626262101 <br>
+-1129176&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1129750.8053174 -1130974.4968908 <br>
+-2157149&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -2158204.8298561 -2160460.5933456 <br>
+-897013&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -897534.29155164 -898656.19809258 <br>
+-832227&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -832627.45843186 -833500.39273009<br>
+# End of file <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p><br>
+</p>
+<p><br>
 </p>
 
+
 <hr style="width: 100%; height: 2px;">
-<h3><a name="GEMIPM"></a>2.2. The IPM File with
-GEM IPM Numerical Settings, Optional Sorption and Solution Model
+<h3><a name="GEMIPM"></a>2.2. IPM File with Numerical Settings, Optional Sorption and Solution Model
 Parameters<br>
 </h3>
+<p>
 
 
-&nbsp;The IPM text input file for GEM-IPM specific data is usually
-generated from GEM-Selektor package. The GEMS3K program reads
-this file after the DCH file and before any DBR file.<br>
+The IPM text input file for GEM-IPM specific data is usually
+generated from GEM-Selektor package. 
 
-<br>
+The IPM file is complementary to the DCH file. The GEMS3K program reads
+this file after the DCH file and before any DBR file.</p>
+<p>
 
-The file &lt;TaskName&gt;-ipm.dat contains additional data and
+The file <span style="font-family: monospace;">&lt;TaskName&gt;-ipm.dat</span> contains additional data and
 numerical controls from the IPM (MULTI) data strucutre that are
 necessary for
-the GEM IPM algorithm but are not relevant for the FMT part. As an
+the GEM IPM3 algorithm but are not relevant for the mass transport part or enother upper-level code. As an
 option, the whole binary MULTI structure can be read from the
-&lt;TaskName&gt;.ipm binary file if the -b key is set at the beginning
-in the &lt;TaskName&gt;-dat.lst file.<br>
+<span style="font-family: monospace;">&lt;TaskName&gt;.ipm</span> binary file if the <span style="font-family: monospace;">-b</span> key is set at the beginning
+in the <span style="font-family: monospace;">&lt;TaskName&gt;-dat.lst</span> file.</p>
+<p>
 
-<br>
-
-The IPM file is complementary to the DCH file. The IPM file
-contains parts of chemical system definitions (CSD) that are&nbsp; used
-by GEM IPM part but should not visible to the FMT part of the coupled
-code. <br>
-
-<br>
-
-The IPM text input file consists of eight<span style="color: rgb(0, 153, 0);"> </span>sections, of which&nbsp;
-section (1) contains numerical controls of GEM IPM algorithm
-operation&nbsp; and convergence; section (2) contains dimensionalities
+The IPM text input file consists of eight<span style="color: rgb(0, 153, 0);"> </span>sections, of which
+section (1) contains flags that affect memory allocation in the MULTI structure; section (2) contains dimensionalities
 for additional memory allocation for surface complexes (main
-dimensionalities of the&nbsp; chemical system are given in DATACH
+dimensionalities of the&nbsp; chemical system are given in the DCH
 file); section (3) contains
-tolerances and controls of the numerical behavior of GEM IPM-2 kernel;
+numerical controls and tolerances of the GEM IPM-3 kernel;
 section (4) defines the presence and the data for mixing models of
 multi-component phases and,&nbsp; in particular, the arrays of
-non-ideality parameters; sections (5) and (6) provide some
+non-ideality parameters in TSolMod convention; sections (5) and (6) provide some
 complete
-data arrays that may be incomplete in DATABR file(s); section (7)
+data arrays that may be incomplete in DBR file(s); section (7)
 contains some initial data for phases; and, finally, section (8)
 contains initial data for sorption (surface&nbsp; complexation) phases,
-present if set so in section (2). <br>
-
-<br>
+present if set so in section (2). </p>
+<p>
 
 Sections (1) and (2) contain flags and dimensions needed for
-optional memory allocation which must appear before the &lt;END_DIM&gt;
-tag. Any other data object fields can appear after this tag in any
-order, and some data objects can be skipped. If the data object tag is
+optional memory allocation, which must appear before the &lt;END_DIM&gt;
+tag. Any other data object field can appear after this tag in any
+order, and many data objects can be skipped. If the data object tag is
 not found in the input file, its elements will be assigned default
 values, if possible. It is recommended to place the input data&nbsp; in
-logical sections as printed from GEMS code.<br>
+logical sections, as exported from the GEM-Selektor code.</p>
 
+
+For GEMS3K calculations in typical aquatic systems containing only
+ideal gas mixture and ideal solid solutions, the contents of IPM text
+input file can be really minimal, as exemplified below for the
+'gemcalc' or 'node-gem' example input&nbsp; file. <br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;"><br>
+"CalcDolo &nbsp; &nbsp; CalcColumn&nbsp; 0000
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 &nbsp; "</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;PAalp&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '+'</span><span style="font-family: monospace;">&nbsp;&nbsp; &lt;PSigm&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '+'</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;END_DIM&gt;</span><span style="font-family: monospace;"></span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;sMod&gt;</span><span style="font-family: monospace;"> 'DNNSNN' 'INNINN' </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;LsMod&gt;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">2 0 4 </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">0 0 0 </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;PMc&gt;</span><span style="font-family: monospace;">&nbsp; 0 0 1 1 0 0 0 0 </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;LsMdc&gt;</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">0 0 0 </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">0 0 0 </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;B&gt;</span><span style="font-family: monospace;">&nbsp; 0.0001001 1e-07&nbsp; 0.016&nbsp; 110.683696417673&nbsp; 0.008&nbsp; 55.3420685088366&nbsp; 0 </span><br style="font-family: monospace;">
+      <br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
 <br>
 
 <hr style="width: 100%; height: 2px;">
 <h3><a name="DATABR"></a>2.3. The DBR File with Node
 Data Bridge Composition and Speciation Data<br>
 </h3>
+<p>
 
 
-The DBR text input file for DATABR (node recipe) data can also
-be generated by GEM-Selektor. The GEMS3K program reads such files
+The DBR text input file, read into the DATABR (node recipe) data structure, can also
+be exported GEM-Selektor or prepared with a simple text editor.&nbsp; The GEMS3K program reads such files
 after the DCH
 and IPM files. The DATABR data structure comprises the interface ("data
 bridge
 recipe") for
-coupling mass transport and chemistry (see DATABR.H
-file).<br>
+coupling mass transport and chemistry (see <span style="font-family: monospace;">databr.h</span>
+file).</p>
+<p>
 
-<br>
-
-The file &lt;TaskName&gt;-dbr-&lt;node0&gt;.dat (read into the DATABR
-memory structure) contains parts of the chemical system definition that
-may be changed by the FMT part (input data of GEM such as T, P, bulk
+The file <span style="font-family: monospace;">&lt;TaskName&gt;-dbr-&lt;node#&gt;.dat</span> contains parts of the chemical system definition that
+may be changed by the mass transport part (input data of GEM such as T, P, bulk
 composition, metastability constraints) or are returned after the GEM
-IPM calculation and be utilized by the FMT part on the next time
-iteration. The &lt;TaskName&gt;-dat.lst file may contain any number of
-(comma-separated) DBR file names. These files will be read
-one-by-one: (a) into the same work DATABR structure on the level of
-TNode class for coupling of GEMIPM with already existing FMT codes;
-(b) distributed into different DATABR structures for many nodes on the
-level of TNodeArray class&nbsp; (and coupled FMT-GEM codes written on
-the
-basis of TNodeArray); see documentation to the TNodeArray example for
-more information in this respect.&nbsp; <br>
+IPM calculation to be utilized by the mass transport part at the next time
+iteration.</p>
 
-<br>
 
-As an option, the DCH and DBR files can be read in in the binary
-format (after changing the second -t key to -b in the file
-&lt;TaskName&gt;-dat.lst).<br>
-
-<br>
-
-The DBR text input file consists of several logical sections.
+<p>The DBR text input file consists of several logical sections.
 Dimesions of
 all arrays in DATABR correspond to those given in Section 2 of DCH
 file, and the order of
@@ -411,38 +554,53 @@ file.
 Here, we will refer to tags from these
 two sections even though these tags are not present in the DBR file;
 it is assumed&nbsp; that the DATACH structure exists and is correctly
-filled out before any operation with DBR files or DATABR structures. <br>
+filled out before any program operation with DBR files or DATABR structures. </p>
 
-<br>
 
-The DBR text input file consists
+<p>The DBR text input file consists
 of six&nbsp; sections, of which&nbsp;
-section (1) contains the controls of GEM IPM operation and data
-exchange; section (2) contains the chemical system scalar variables;
+section (1) contains the control flags for GEM IPM3 operation and data
+exchange; section (2) contains the chemical system scalar properties;
 section (3)
 contains the FMT scalar variables; section (4) contains the data for
 Independent Components; section (5) contains the data for Dependent
 Components; and, finally,
 section (6)
-contains some data for phases.<br>
+contains the data for phases.</p>
 
-<br>
 
-There is no <span style="text-decoration: underline;">&lt;END_DIM&gt;</span>
+<p>There is no <span style="font-family: monospace;">&lt;END_DIM&gt;</span>
 tag in the DBR file. After section (1), any data objects can appear in
 any
 order, and some data objects can be skipped. If the data object tag is
 not found in the input file, its elements will be assigned default
-values, if possible. It is recommended to place the input data&nbsp; in
-logical sections as in DBR files printed from GEMS code.<br>
+values, if possible. When creating DBR files using a text editor, it is recommended to place the input data&nbsp; in
+logical sections as in DBR files exported from the GEM-Selektor code package.</p>
 
+
+<p>For GEMS3K calculations in AIA mode, the DBR text files can be
+really minimal, as shown below for the 'gemcalc' example test input
+data.</p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;"><br>
+# File: tp_test/CalcColumn-dbr-0-0002.dat</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;NodeStatusFMT&gt;&nbsp; -1&nbsp;&nbsp;&nbsp;&nbsp; &lt;NodeStatusCH&gt;&nbsp; 1</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;TK&gt; 298.15&nbsp;&nbsp;&nbsp;&nbsp; &lt;P&gt; 100000</span><br style="font-family: monospace;">
+      <span style="font-family: monospace;">&lt;bIC&gt;&nbsp; 0.0001001&nbsp; 1e-07&nbsp; 0.016&nbsp; 110.683696417673&nbsp; 0.008&nbsp; 55.3420685088366&nbsp; 0 </span><br style="font-family: monospace;">
+      <span style="font-family: monospace;"># End of file<br>
+      <br>
+      </span></td>
+    </tr>
+  </tbody>
+</table>
 <br>
 
 <p> </p>
 
 <hr size="2" width="100%">
-<h2><br>
-</h2>
+
 
 <h2><a name="FREEDATA"></a>3. Free Data Input File
 Format of GEMS3K <br>
