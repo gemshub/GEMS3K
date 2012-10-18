@@ -150,19 +150,19 @@ outField DataCH_dynamic_fields[30] =  { //+4
    { "TKval", 1, 0, 0, "# TKval: Temperature values, K for lookup arrays of thermodynamic data [nTp]" },
    { "Ptol",  0, 0, 0, "\n# Ptol: Tolerance for the pressure interpolation, Pa" },
    { "Pval",  1, 0, 0, "# Pval: Pressure values, Pa for lookup arrays of thermodynamic data [nPp]" },
-   { "denW",  1, 0, 0, "\n\n# denW: Lookup array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]" },
-   { "denWg", 1, 0, 0, "\n\n# denWg: Lookup array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]" },
-   { "epsW",  1, 0, 0, "\n\n# epsW: Lookup array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]" },
-   { "epsWg", 1, 0, 0, "\n\n# epsWg: Lookup array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]" },
+   { "denW",  1, 0, 0, "\n\n# denW: Look-up array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]" },
+   { "denWg", 1, 0, 0, "\n\n# denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]" },
+   { "epsW",  1, 0, 0, "\n\n# epsW: Look-up array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]" },
+   { "epsWg", 1, 0, 0, "\n\n# epsWg: Look-up array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]" },
 //   { "visW",  1, 0, 0 },
-   { "V0",    1, 0, 0, "\n\n# V0: Lookup array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]" },
-   { "G0",    1, 0, 0, "\n\n# G0: Lookup array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]" },
-   { "H0",    0, 0, 0, "\n\n# H0: Lookup array for DC molar enthalpy h(T,P), J/mol [nDC*nPp*nTp]" },
-   { "S0",    0, 0, 0, "\n\n# S0: Lookup array for DC absolute entropy S(T,P), J/K/mol [nDC*nPp*nTp] " },
-   { "Cp0",   0, 0, 0, "\n\n# Cp0: Lookup array for DC heat capacity Cp(T,P), J/K/mol [nDC*nPp*nTp]" },
-   { "A0",    0, 0, 0, "\n\n# A0: reserved: Lookup array for DC Helmholtz energy function, J/mol [nDC*nPp*nTp]" },
-   { "U0",    0, 0, 0, "\n\n# U0: reserved: Lookup array for DC internal energy function, J/mol [nDC*nPp*nTp]" },
-   { "DD",    0, 0, 0, "\n\n# DD: reserved: Lookup array for DC diffusion coefficients [nDC*nPp*nTp]" },
+   { "V0",    1, 0, 0, "\n\n# V0: Look-up array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]" },
+   { "G0",    1, 0, 0, "\n\n# G0: Look-up array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]" },
+   { "H0",    0, 0, 0, "\n\n# H0: Look-up array for DC molar enthalpy h(T,P), J/mol [nDC*nPp*nTp]" },
+   { "S0",    0, 0, 0, "\n\n# S0: Look-up array for DC absolute entropy S(T,P), J/K/mol [nDC*nPp*nTp] " },
+   { "Cp0",   0, 0, 0, "\n\n# Cp0: Look-up array for DC heat capacity Cp(T,P), J/K/mol [nDC*nPp*nTp]" },
+   { "A0",    0, 0, 0, "\n\n# A0: reserved: Look-up array for DC Helmholtz energy function, J/mol [nDC*nPp*nTp]" },
+   { "U0",    0, 0, 0, "\n\n# U0: reserved: Look-up array for DC internal energy function, J/mol [nDC*nPp*nTp]" },
+   { "DD",    0, 0, 0, "\n\n# DD: reserved: Look-up array for DC diffusion coefficients [nDC*nPp*nTp]" },
    { "Psat",  0, 0, 0, "\n# Psat: Pressure Pa at saturated H2O vapour at given temperature [nTp]" }
 };
 
@@ -179,10 +179,10 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
    if( _comment )
    {
       ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-      ff << "# Comments can be marked with # $ ;" << endl << endl;
-      ff << "# Template for the dbr-dat text input file for DATABR (node) data" << endl;
+      ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
+      ff << "# DBR text input file for node system recipe and speciation data" << endl;
       ff << "# (should be read only after the DCH and the IPM files)" << endl << endl;
-      ff << "#Section (scalar-1): Controls of the GEM IPM operation and data exchange" << endl;
+      ff << "# (1): Flags controlling GEM IPM-3 operation and data exchange" << endl;
    }
 
 #ifndef NODEARRAYLEVEL
@@ -196,7 +196,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
    prar.writeField(f_IterDone, CNode->IterDone, _comment, brief_mode  );
 
   if( _comment )
-      ff << "\n## (2) Chemical scalar variables" << endl;
+      ff << "\n## (2) Chemical scalar properies of the node system" << endl;
 
   prar.writeField(f_TK, CNode->TK, _comment, brief_mode  );
   prar.writeField(f_P, CNode->P, _comment, brief_mode  );
@@ -228,7 +228,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( CNode->NodeStatusFMT != No_nodearray /*TNodeArray::na->nNodes() > 1*/ )
   {
    if( _comment )
-      ff << "\n## (3) FMT scalars (can be used only in NodeArray, not used in GEM)" << endl;
+      ff << "\n## (3) Scalar mass-trasport properties (used only at NodeArray level)" << endl;
    prar.writeField(f_Dif, CNode->Dif, _comment, brief_mode  );
    prar.writeField(f_Vt, CNode->Vt, _comment, brief_mode  );
    prar.writeField(f_vp, CNode->vp, _comment, brief_mode  );
@@ -250,8 +250,8 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 #endif
 
   if( _comment )
-   {   ff << "\n### Arrays: for dimensions and index lists, see Section (2) of DATACH file" << endl << endl;
-       ff << "## (4) IC data section";
+   {   ff << "\n### Arrays: for dimensions and index lists, see Section (2) of DCH file" << endl << endl;
+       ff << "## (4) Data for Independent Components";
        prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
        ff << endl;
    }
@@ -262,7 +262,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   prar.writeArray(  f_bSP,  CNode->bSP, CSD->nICb, -1L,_comment, brief_mode );
 
   if( _comment )
-  {    ff << "\n\n## (5) DC data section";
+  {    ff << "\n\n## (5) Data for Dependent Components";
        prar.writeArray(  NULL, CSD->DCNL[0], CSD->nDC, MaxDCN );
        ff << endl;
   }
@@ -273,7 +273,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   prar.writeArray(  f_dul,  CNode->dul, CSD->nDCb, -1L,_comment, brief_mode  );
 
   if( _comment )
-  {    ff << "\n\n## (6) Phase data section";
+  {    ff << "\n\n## (6) Data for Phases";
         prar.writeArray(  NULL, CSD->PHNL[0], CSD->nPH, MaxPHN );
         ff << endl;
   }
@@ -295,7 +295,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 
   ff << endl;
   if( _comment )
-   {     ff << "\n# reserved" << endl;
+   {   //  ff << "\n# reserved" << endl;
          ff << "\n# End of file"<< endl;
    }
 }
@@ -487,12 +487,10 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( _comment )
   {
      ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-     ff << "# Comments are marked with # $ ;" << endl;
-     ff << "\n# Template for the dch-dat text input file for DATACH data " << endl;
-     ff << "# (should be read first, before the IPM-DAT file and DATABR files)" << endl;
-     ff << "\n## (1) Dimensions for memory allocation" << endl;
+     ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
+     ff << "# DCH text input file (should be read before IPM and DBR files)" << endl << endl;
+     ff << "## (1) Dimensions for memory allocation" << endl;
   }
-
   prar1.writeField(f_nIC, CSD->nIC, _comment, brief_mode  );
   prar1.writeField(f_nDC, CSD->nDC, _comment, brief_mode  );
   prar1.writeField(f_nPH, CSD->nPH, _comment, brief_mode  );
@@ -500,68 +498,67 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   prar1.writeField(f_nDCs, CSD->nDCs, _comment, brief_mode  );
 
   if( _comment )
-    ff << "\n## (2) Databridge configuration section (for memory allocation)" << endl;
+    ff << endl << "## (2) Dimensions for DBR node recipe (memory allocation)" << endl;
   prar1.writeField(f_nICb, CSD->nICb, _comment, brief_mode  );
   prar1.writeField(f_nDCb, CSD->nDCb, _comment, brief_mode  );
   prar1.writeField(f_nPHb, CSD->nPHb, _comment, brief_mode  );
   prar1.writeField(f_nPSb, CSD->nPSb, _comment, brief_mode  );
 
   if( _comment )
-     ff << "\n## (3) Dimensions for thermodynamic data arrays" << endl;
+    ff << endl << "## (3) Dimensions for thermodynamic data arrays" << endl;
   prar1.writeField(f_nTp, CSD->nTp, _comment, brief_mode  );
   prar1.writeField(f_nPp, CSD->nPp, _comment, brief_mode  );
   prar1.writeField(f_iGrd, CSD->iGrd, _comment, brief_mode  );
   prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
   prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
-  ff<< "\n<END_DIM>\n";
+  ff << endl << "<END_DIM>" << endl;
 
 // dynamic arrays - must follow static data
   if( _comment )
-     ff << "\n## (4) Databridge configuration section (for memory allocation)";
+     ff << "\n## (4) DBR node recipe connection index lists";
   prar.writeArray(  f_xic, CSD->xic, CSD->nICb, -1L,_comment, brief_mode);
   prar.writeArray(  f_xdc, CSD->xdc, CSD->nDCb, -1L,_comment, brief_mode);
   prar.writeArray(  f_xph, CSD->xph, CSD->nPHb, -1L,_comment, brief_mode);
 
-
   if( _comment )
-     ff << "\n\n## (5) Independent components section";
+     ff << "\n\n## (5) Independent Components and their properties";
   if(!brief_mode || prar.getAlws( f_ICNL ))
   {
      if( _comment )
-         ff << "\n# ICNL: Name list of Independent Components (up to 4 characters per name) [nIC]";
+         ff << "\n# ICNL: List of Independent Component names (<=4 characters per name) [nIC]";
       prar.writeArray(  "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
   }
   prar.writeArrayF(  f_ccIC, CSD->ccIC, CSD->nIC, 1L,_comment, brief_mode );
   prar.writeArray(  f_ICmm, CSD->ICmm, CSD->nIC, -1L,_comment, brief_mode);
 
   if( _comment )
-    ff << "\n\n## (6) Dependent Components section (codes and names)";
+    ff << "\n\n## (6) Dependent Components and their codes";
   if(!brief_mode || prar.getAlws( f_DCNL ))
   {	  if( _comment )
-       ff << "\n# DCNL: Name list of Dependent Components (up to 16 characters per name) [nDC]";
+       ff << "\n# DCNL: Name list of Dependent Components (<=16 characters per name) [nDC]";
      prar.writeArray(  "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
   }
   prar.writeArrayF(  f_ccDC, CSD->ccDC, CSD->nDC, 1L,_comment, brief_mode );
   prar.writeArray(  f_DCmm, CSD->DCmm, CSD->nDC, -1L,_comment, brief_mode);
 
   if( _comment )
-    ff << "\n\n## (7) Phases section" << endl;
+    ff << "\n\n## (7) Phases and their codes" << endl;
   if(!brief_mode || prar.getAlws( f_PHNL ))
   { if( _comment )
-      ff << "# PHNL: List of Phase names (up to 16 characters per name) [nPH]";
+      ff << "# PHNL: List of Phase names (<=16 characters per name) [nPH]";
     prar.writeArray(  "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
   }
   prar.writeArrayF(  f_ccPH, CSD->ccPH, CSD->nPH, 1L,_comment, brief_mode );
   prar.writeArray(  f_nDCinPH, CSD->nDCinPH, CSD->nPH, -1L,_comment, brief_mode);
 
   if( _comment )
-    ff << "\n\n# (8) Data section for DCs";
+    ff << "\n\n# (8) Data for Dependent Components";
   prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
   ff << endl;
 
   if( _comment )
-    ff << "\n## (9) Thermodynamic data section";
+    ff << "\n## (9) Thermodynamic data for Dependent Components";
   prar.writeField(  f_Ttol, CSD->Ttol, _comment, brief_mode  );
   prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
   prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );

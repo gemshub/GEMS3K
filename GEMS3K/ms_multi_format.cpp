@@ -33,7 +33,7 @@
 #endif
 
 //bool _comment = true;
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.740 (rc) ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.750 (rc) ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -71,10 +71,10 @@ outField MULTI_dynamic_fields[70] =  {
    {  "Pparc", 0 , 0, 0, "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)" },
    {  "fDQF",  0 , 0, 0, "\n\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
    {  "lnGmf", 0 , 0, 0, "\n\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
-   {  "RLC",   0 , 0, 0, "# RLC: Code of metastability restrictions for DCs {L U B (default)} [nDC]" },
-   {  "RSC",   0 , 0, 0, "\n\n# RSC: Units of metastability/kinetic restrictions for DCs {M} moles [nDC]" },
-   {  "DLL",   0 , 0, 0, "\n\n# DLL: Lower metastability restrictions on DC amounts <xDC>, moles [nDC] (default: 0)" },
-   {  "DUL",   0 , 0, 0, "\n\n# DUL: Upper metastability restrictions on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
+   {  "RLC",   0 , 0, 0, "# RLC: Code of metastability constraints for DCs {L U B (default)} [nDC]" },
+   {  "RSC",   0 , 0, 0, "\n\n# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]" },
+   {  "DLL",   0 , 0, 0, "\n\n# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)" },
+   {  "DUL",   0 , 0, 0, "\n\n# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
    {  "Aalp",  0 , 0, 0, "\n# Aalp: Specific surface areas of phases, m2/g [nPH]" },
    {  "Sigw",  0 , 0, 0, "\n\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
    {  "Sigg",  0 , 0, 0, "\n\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
@@ -131,8 +131,8 @@ outField MULTI_dynamic_fields[70] =  {
    { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1e3 }" },
    { "pa_DNS" ,  0 , 0, 0,  "# DNS: Standard surface number density, nm-2 for calculating activity of surface species { 12.05 }" },
    { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }" },
-   { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability restrictions on DC amounts in primal GEM solution { 1 } " },
-   { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability restrictions on DC amounts, moles { 1e-10 } " },
+   { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } " },
+   { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } " },
    { "mui" ,     0 , 0, 0,  "\n\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
    { "muk" ,     0 , 0, 0,  "\n\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
    { "muj" ,     0 , 0, 0,  "\n\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
@@ -195,15 +195,15 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 
 if( _comment )
 {  ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-   ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
-   ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
-   ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
+   ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
+   ff << "# IPM text input file for the internal GEM IPM3 kernel data" << endl;
+   ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
   ff << "\"" << pm.stkey << "\"" << endl;
 
  if( _comment )
-     ff << "\n## (1) Important flags that affect memory allocation" << endl;
+     ff << "\n## (1) Flags that affect memory allocation" << endl;
 
  if(!brief_mode || pa->p.PE != pa_.p.PE )
    prar1.writeField(f_pa_PE, pa->p.PE, _comment, false  );
@@ -225,7 +225,7 @@ if( _comment )
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
   { if( _comment )
-      ff << "\n## (2) Important dimensionalities that affect memory allocation" << endl;
+      ff << "\n## (2) Dimensionalities that affect memory allocation" << endl;
     prar1.writeField(f_Lads, pm.Lads, _comment, false  );
     prar1.writeField(f_FIa, pm.FIa, _comment, false  );
     prar1.writeField(f_FIat,  pm.FIat, _comment, false  );
@@ -238,8 +238,8 @@ ff << "\n<END_DIM>\n";
 
 // static data not affected by dimensionalities
    if( _comment )
-   {  ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
-      ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
+   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
+      ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)" << endl;
    }
    if( !brief_mode ||pa->p.DB != pa_.p.DB )
       prar.writeField(f_pa_DB, pa->p.DB, _comment, false  );
@@ -313,7 +313,7 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_DFYs,  pa->p.DFYs, _comment, false  );
 
    if( _comment )
-     ff << "\n# Parameters for high-accuracy IPM algorithm " << endl;
+     ff << "\n# Tolerances and controls of high-precision IPM-3 algorithm " << endl;
 
    if(!brief_mode || pa->p.DW != pa_.p.DW )
        prar.writeField(f_pa_DW,  pa->p.DW, _comment, false  );
@@ -339,7 +339,7 @@ ff << "\n<END_DIM>\n";
 if( pm.FIs > 0 && pm.Ls > 0 )
 {
   if( _comment )
-     ff << "\n## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)" << endl;
+     ff << "\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)" << endl;
   prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 6L, _comment, brief_mode );
 
 long int LsModSum;
@@ -355,29 +355,29 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   if(LsIPxSum )
   {
    if( _comment )
-      ff << "\n\n# IPxPH:  TSolMod collected indexation table for interaction parameters of non-ideal solutions.";
+      ff << "\n\n# IPxPH: Index lists (in TSolMod convention) for interaction parameters of non-ideal solutions";
    prar.writeArray(  "IPxPH", pm.IPx,  LsIPxSum);
   }
   if(LsModSum )
    {
      if( _comment )
-        ff << "\n\n# PMc: TSolMod collected interaction parameter coefficients for non-ideal  models of mixing";
+        ff << "\n\n# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions";
     prar.writeArray(  "PMc", pm.PMc,  LsModSum);
    }
    prar.writeArray(  f_LsMdc, pm.LsMdc, pm.FIs*3, 3L, _comment, brief_mode);
    if(LsMdcSum )
    {   if( _comment )
-          ff << "\n\n# DMc: TSolMod collected parameters per phase component for the non-ideal models of mixing";
+          ff << "\n\n# DMc: Tables (in TSolMod convention) of  parameter coefficients for dependent components";
     prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
    }
    if(LsMsnSum )
    {   if( _comment )
-          ff << "\n\n# MoiSN: TSolMod collected end member moiety / site multiplicity number tables ";
+          ff << "\n\n# MoiSN:  end member moiety / site multiplicity number tables (in TSolMod convention) ";
     prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
    }
 } // sMod
   if( _comment )
-    ff << "\n\n## (5) Some data arrays which are not provided in DATACH and DATABR files" << endl;
+    ff << "\n\n## (5) Data arrays which are provided neither in DCH nor in DBR files" << endl;
   prar.writeArray(  f_B, pm.B,  pm.N, -1L, _comment, brief_mode);
 
   if( _comment )
@@ -389,14 +389,14 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   prar.writeArray(  f_lnGmf, pm.lnGmf,  pm.L, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
+     ff << "\n\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)" << endl;
    prar.writeArrayF(  f_RLC, pm.RLC, pm.L, 1L, _comment, brief_mode );
    prar.writeArrayF(  f_RSC, pm.RSC, pm.L, 1L, _comment, brief_mode );
    prar.writeArray(  f_DLL, pm.DLL, pm.L, -1L, _comment, brief_mode);
    prar.writeArray(  f_DUL, pm.DUL,  pm.L, -1L, _comment, brief_mode);
 
    if( _comment )
-     ff << "\n\n# (7) Initial data for phases" << endl;
+     ff << "\n\n# (7) Initial data for Phases" << endl;
    prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
    if( PSigm != S_OFF )
    {
@@ -405,10 +405,10 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    }
    prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
 
-   if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
-    { /* ADSORPTION AND ION EXCHANGE */
+   if( pm.FIat > 0 &&  pm.FIs > 0 )
+    { // ADSORPTION AND ION EXCHANGE
       if( _comment )
-        ff << "\n\n# (8) Initial data for sorption" << endl;
+        ff << "\n\n# (8) Initial data for sorption phases" << endl;
 
       prar.writeArray(  f_Nfsp, &pm.Nfsp[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
       prar.writeArray(  f_MASDT, &pm.MASDT[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
@@ -452,7 +452,6 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
 {
   SPP_SETTING *pa = paTProfil;
-  //DATACH  *dCH = /*TNode::*/node->pCSD();  // 19/05/2010 error line
   long int ii, nfild, len;
 
    //static values
@@ -534,7 +533,7 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
  // testing read
  gstring ret = rdar.testRead();
  if( !ret.empty() )
-  { ret += " - fields must be read from the MULTY structure";
+  { ret += " - fields must be read from the MULTI structure";
     Error( "Error", ret);
   }
 
