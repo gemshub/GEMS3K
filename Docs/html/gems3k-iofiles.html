@@ -7,6 +7,7 @@
 
 
 
+
   
   <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
@@ -2311,7 +2312,11 @@ cannot be performed. <br>
 LsMdc[k][2])<br>
 
 over <a href="gems3k-iofiles.html#TAG_nPS">nPS</a></td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">Collected end member moiety - site multiplicity number arrays for multi-site mixing models</span>. This input array has total length of sum(of nDCinPH[k]*LsMdc[k][1]*LsMdc[k][2] elements) over &lt;nPS&gt;. The arays are stored in the same order as phase names in DCH file,&nbsp; for each phase, nDCinPH[k] tables each having LsMdc[k][1]*LsMdc[k][2] <span style="font-family: monospace;"></span> occupancy numbers
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Collected end member moiety - site multiplicity number arrays for multi-site mixing models</span>.
+This input array has total length of sum(of
+nDCinPH[k]*LsMdc[k][1]*LsMdc[k][2] elements) over &lt;nPS&gt;. The
+arays are stored in the same order as phase names in DCH file,&nbsp;
+for each phase, nDCinPH[k] tables each having LsMdc[k][1]*LsMdc[k][2] <span style="font-family: monospace;"></span> occupancy numbers
 per end member. Upon GEM IPM run, the table for&nbsp; each phase is
 transferred to a TSolMod library function that calculates activity
 coefficients of phase species.<br>
@@ -2863,7 +2868,7 @@ ERR_GEM_SIA</span><span style="font-family: monospace; color: rgb(0, 153, 0);">.
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_AG&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_AG">Pa_AG</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_AG<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -2874,8 +2879,8 @@ potentials between
 IPM
 descent iterations.</span> Possible values: from 1.0 to 0.1 (or -1.0 to -0.1). For ideal
 systems, 1.0
-is
-recommended. Default value is 1.0. Too high or to low values may cause
+(default) is
+recommended. Too high or to low values may cause
 non-convergence of GEM IPM in highly non-ideal systems. For alternative
 smoothing functions, Pa_AG should usually be set to 1.0 (or
 -1.0). If set less than 1.0 then the smoothing will effectively begin
@@ -2889,14 +2894,14 @@ several IPM iterations. More in <a href="gems_ipm.html#Pa_AG">gems_ipm.html</a>.
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DB&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DB">Pa_DB</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DB<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Minimum
 amount of Independent
 Component in the bulk system composition (except charge "Zz") (moles). </span>May
-be set in the interval 1e-17 &lt; DB &lt; 1e-7.
+be set in the interval 1e-20 &lt; DB &lt; 1e-7.
 Default value:
 1e-17. More in <a href="gems_ipm.html#Pa_DB">gems_ipm.html</a>. <br>
       </td>
@@ -2907,7 +2912,7 @@ Default value:
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DcMin&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_XMI_2">Pa_XMI[2]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_XMI[2]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -2922,7 +2927,7 @@ elimination of solution- or surface species </span>(default value
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DF&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DF_0">Pa_DF[0]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DF[0]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -2931,9 +2936,11 @@ for the application
 of the phase stability criterion for a lost phase to be inserted to mass balance </span>(diagnostic
 criterion&nbsp;
 for determining which phases are stable (|f_a| &lt;= DF) and which are
-not (|f_a| &gt; DF). Used in the PhaseSelektion() procedures for checking
-the stable phase assemblage and inserting stable phases absent from the mass balance.&nbsp; Inserted amounts will be taken from &lt;pa_DFYs&gt;. Default is 0.01; changing it is not
-recommended. More in <a href="gems_ipm.html#Pa_DF_0">gems_ipm.html</a>.<br>
+not (|f_a| &gt; DF). Used in the PhaseSelektion() procedures for
+checking
+the stable phase assemblage and inserting stable phases absent from the
+mass balance.&nbsp; Inserted amounts will be taken from
+&lt;pa_DFYs&gt;. Default is 0.01. More in <a href="gems_ipm.html#Pa_DF_0">gems_ipm.html</a>.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -2942,17 +2949,18 @@ recommended. More in <a href="gems_ipm.html#Pa_DF_0">gems_ipm.html</a>.<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DFM&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DF_1">Pa_DF[1]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DF[1]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Threshold
 for the phase stability
-criterion for a phase to be eliminated from the mass balance</span> in&nbsp; PhaseSelection()
+criterion for a phase to be eliminated from the mass balance</span>
+in&nbsp; PhaseSelection()
 procedures.&nbsp; If any (pure) phase with f_a &lt; -DFM&nbsp; is
-detected then all its components will be removed (zeroed off) from the X
-and&nbsp;
-XF vectors, and IPM run will be repeated using the fixed speciation as initial
+detected then all its components will be removed (zeroed off) from the
+speciation and phase amounts vectors, and IPM run will be repeated
+using the corrected speciation as initial
 approximation. Default value is 0.01.
 More in <a href="gems_ipm.html#Pa_DF_1">gems_ipm.html</a>.<br>
       </td>
@@ -3101,7 +3109,7 @@ File<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DHB&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DHB">Pa_DHB</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DHB<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3109,7 +3117,7 @@ File<br>
 allowed relative mass balance
 residual for Independent Components</span> (may be set in
 the
-interval 1e-15 &lt; DHB &lt; 1e-12). Default value: 1e-13.&nbsp; More in <a href="gems_ipm.html#Pa_DHB">gems_ipm.html</a>.<br>
+interval 1e-16 &lt; DHB &lt; 1e-10). Default value: 1e-13.&nbsp; More in <a href="gems_ipm.html#Pa_DHB">gems_ipm.html</a>.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3118,7 +3126,7 @@ interval 1e-15 &lt; DHB &lt; 1e-12). Default value: 1e-13.&nbsp; More in <a href
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DG&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DG">Pa_DG</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DG<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3126,7 +3134,7 @@ interval 1e-15 &lt; DHB &lt; 1e-12). Default value: 1e-13.&nbsp; More in <a href
 Default value: 1000 moles of total IC amount in bulk composition vector
 &lt;bIC&gt;. Possible values: 0.001 to 10000 moles. Note that default
 values of other numerical controls were tuned to the default value of
-&lt;pa_DG&gt; = 1000. If this value is changed, many settings may need
+      <span style="font-family: monospace;">&lt;pa_DG&gt;</span> = 1000. If this value is changed, many settings may need
 to be re-adjusted to achieve optimal convergence and precision of GEM
 IPM-3 algorithm.More in  <a href="gems_ipm.html#Pa_DHB">gems_ipm.html</a>.
       </td>
@@ -3137,7 +3145,7 @@ IPM-3 algorithm.More in  <a href="gems_ipm.html#Pa_DHB">gems_ipm.html</a>.
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DGC&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DGC">Pa_DGC</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DGC<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3147,7 +3155,7 @@ smoothing function, or
 minimal smoothing factor in new functions.</span> Possible values: 0
 (smoothing is disabled if also <tt>Pa_AG</tt> is set to 1); from 0.01
 to
-0.1 to enable smoothing. Default value: 0.07. To invoke new
+0.1 to enable smoothing. Default value: 0. To invoke new
 smoothing functions, just invert the sign of Pa_AG
 to negative. For surface complexation models, only the old
 smoothing function with Pa_AG = 0.7 and Pa_DGC = 0.07 must be used.
@@ -3159,7 +3167,7 @@ More in <a href="gems_ipm.html#Pa_DGC">gems_ipm.html</a>.</td>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DK&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DK">Pa_DK</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DK<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3168,9 +3176,8 @@ convergence threshold
 for the Dikin criterion (may be set in the interval 1e-8 &lt; DK &lt;
 1e-3, the default value of 1e-6 is recommended)</span>. Setting too low
 DK
-&lt; 1e-7 may dramatically increase the number of IPM iterations, slow
-the convergence down, and deteriorate the quality and mass balance
-precision of the GEM IPM result. Too large DK value may result in an inconsistent
+&lt; 1e-7 may dramatically increase the number of IPM iterations, slowing
+the convergence down. Too large DK value may result in an inconsistent
 GEM IPM solution. More in <a href="gems_ipm.html#Pa_DK">gems_ipm.html</a>.
 &nbsp; </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
@@ -3180,7 +3187,7 @@ GEM IPM solution. More in <a href="gems_ipm.html#Pa_DK">gems_ipm.html</a>.
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DKIN&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DKI">Pa_DKI</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DKI<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3197,7 +3204,7 @@ in <a href="gems_ipm.html#Pa_DKI">gems_ipm.html</a> file.<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DNS&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DNS">Pa_DNS</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DNS<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3215,16 +3222,16 @@ database</span>). Default is 12.05 nm<sup>-2</sup>.<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DP&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DPV_0">Pa_DPV[0]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DPV[0]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;">&nbsp;<span style="font-weight: bold;">Maximum allowed number
-of iterations in the EnterFeasibleDomain() procedure</span> (can be
+of iterations in the MassBalanceRefinement </span>MBR()<span style="font-weight: bold;"> procedure</span> (can be
 set&nbsp;
-between 10 and 200). Default value: 150. If the procedure has not
+between 10 and 200). Default value: 130. If the MBR() procedure has not
 converged in DP iterations,&nbsp; this usually means that chemical
-system definition (CSD) is wrong or there are errors in DC
+system definition (CSD) is incorrect, or there are errors in DC
 stoichiometry.&nbsp; More in <a href="gems_ipm.html#Pa_DPV_0">gems_ipm.html</a>.</td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3233,19 +3240,19 @@ stoichiometry.&nbsp; More in <a href="gems_ipm.html#Pa_DPV_0">gems_ipm.html</a>.
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DS&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DS">Pa_DS</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DS<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Cutoff
 minimum mole amount of
 stable Phase present in the IPM primal
-solution. </span>Default value is 1e-16.<span style="font-weight: bold;"> </span>Elimination of a phase&nbsp;
+solution. </span>Default value is 1e-20.<span style="font-weight: bold;"> </span>Elimination of a phase&nbsp;
 means
-that amounts of all its components in the X vector (primal solution)
-will be set to zero and calculation of activity coefficients skipped on
+that amounts of all its components in the speciation vector (primal solution)
+will be set to zero, and calculation of activity coefficients skipped on
 remaining GEM iterations. Setting DS &gt; 1e-10 may significantly
-affect the mass balance residuals and cause MBR errors. <br>
+affect the mass balance residuals and cause MBR() errors. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3254,17 +3261,20 @@ affect the mass balance residuals and cause MBR errors. <br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DT&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DPV_2">Pa_DPV[2]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DPV[2]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">IPM-3
-cutoff exponent to
-recover small elements of the primal x
-vector using the
-dual solution vector u.</span> The cutoff amount is
-calculated as DHBM*10^DT (for example, if DHBM = 1e-7 and DT = -2 then
-the cutoff amount will be 1e-9). Default value is -3. More in <a href="gems_ipm.html#Pa_DPV_2">gems_ipm.html</a> file.&nbsp; <br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Mode for applying tolerances to mass balance residuals in MBR() procedure.</span>&nbsp;
+If this setting is 0 (default) then the MBR() procedure will try to
+satisfy relative tolerances for all ICs mass balance residuals as set
+in &lt;Pa_DHB&gt; regardless of IC amounts in the b vector. If this
+setting is +1 or -1 then &lt;Pa_DHB&gt; value will be interpreted as
+relative or absolute tolerance for the residuals; MBR() iterations will
+continue if at least for one ICs (except charge 'Zz'), the residual
+exceeds Pa_DHB or exceeds bi*Pa_DHB. Using this mode leads to better MB
+precision for major elements such as H, O, Si, Ca, Mg etc. in aquatic
+and rock systems. More in <a href="gems_ipm.html#Pa_DPV_2">gems_ipm.html</a> file.&nbsp; <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3273,18 +3283,11 @@ the cutoff amount will be 1e-9). Default value is -3. More in <a href="gems_ipm.
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_DW&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_DPV_1">Pa_DPV[1]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_DPV[1]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">Maximum
-number of allowed
-IPM-2 mass balance accuracy improvement
-loops. </span>Possible values: 0 - disables the IPM-2
-mass balance accuracy improvement; 1 to 15 - &nbsp;enables IPM-2 mass
-balance accuracy
-improvement.<span style="text-decoration: underline;"> Default value</span>:
-15. More in <a href="gems_ipm.html#Pa_DPV_1">gems_ipm.html</a> file.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Activate (1) or disable (0) error condition on maximum number of MBR() iterations </span>&lt;Pa_DP&gt;<span style="font-weight: bold;">. </span>Default: 0. If activated, when MBR() iterations have exceed &lt;Pa_DP&gt;, the GEM IPM3 will stop with an error message E04IPM. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3293,7 +3296,7 @@ improvement.<span style="text-decoration: underline;"> Default value</span>:
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_EPS&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_EPS_0">Pa_EPS[0]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_EPS[0]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3301,7 +3304,7 @@ improvement.<span style="text-decoration: underline;"> Default value</span>:
 criterion of the
 simplex() procedure to obtain the automatic initial approximation</span>
 (may
-be set in the interval 1e-14 &lt; EPS &lt; 1e-6). Default value: 1e-9.
+be set in the interval 1e-14 &lt; EPS &lt; 1e-6). Default value: 1e-10.
 More in <a href="gems_ipm.html#Pa_EPS_0">gems_ipm.html</a> file. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
@@ -3312,12 +3315,12 @@ More in <a href="gems_ipm.html#Pa_EPS_0">gems_ipm.html</a> file. <br>
 </table>
 
 <br>
+<h4>
 
-<br>
+Table 11 (P)</h4>
 
-Table 11 (P)<br>
 
-<br>
+
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -3343,13 +3346,13 @@ File<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_GAR&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_GAN_0">Pa_GAN[0]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_GAN[0]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Initial
 activity coefficient value for major (M) species in a solution phase
-before Simplex() approximation. </span>Default value 1. More in <a href="gems_ipm.html#Pa_GAN_0">gems_ipm.html</a> file</td>
+before Simplex() approximation. </span>Default value 1. Used only at LP simplex step in AIA mode. More in <a href="gems_ipm.html#Pa_GAN_0">gems_ipm.html</a> file.</td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
       </td>
@@ -3357,14 +3360,14 @@ before Simplex() approximation. </span>Default value 1. More in <a href="gems_ip
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_GAH&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_GAN_1">Pa_GAN[1]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_GAN[1]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Initial
 activity coefficient value for minor (J) species in a solution phase
 before
-Simplex() approximation. </span>Default value 1000. More in <a href="gems_ipm.html#Pa_GAN_1">gems_ipm.html</a> file </td>
+Simplex() approximation. </span>Default value 1000. Used only at LP simplex step in AIA mode. More in <a href="gems_ipm.html#Pa_GAN_1">gems_ipm.html</a> file. </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
       </td>
@@ -3372,17 +3375,17 @@ Simplex() approximation. </span>Default value 1000. More in <a href="gems_ipm.ht
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_GAS&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_GAN_2">Pa_GAN[2]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_GAN[2]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">IPM-2
-balance accuracy control
-ratio DHBM[i]/b[i], determines the maximum allowed mass balance
-residuals for minor Independent Components.</span> Minor ICs are those
-with
-total amount &lt; 1e-5 mol. Default value 0.001 means at most 0.1%
-residual relative to the total IC amount in the system.&nbsp; More in <a href="gems_ipm.html#Pa_GAN_2">gems_ipm.html</a>.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Threshold for primal-dual normalized chemical potential difference used in Speciation Cleanup </span>(default value: 0.001).<span style="font-weight: bold;">&nbsp; </span>In
+all multi-component phases present in the primal solution in positive
+amounts, the Speciation Cleanup procedure compares the amounts of DCs
+in the primal solution vector xDC with their amounts restored using the
+dual solution vector uIC and DC chemical formula from A matrix. The DC
+amount is corrected to the restored one, if |&lt;Pa_GAS&gt;| is
+exceeded for this DC. More in <a href="gems_ipm.html#Pa_GAN_2">gems_ipm.html</a>.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3391,14 +3394,14 @@ residual relative to the total IC amount in the system.&nbsp; More in <a href="g
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_ICmin&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_XMI_4">Pa_XMI[4]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_XMI[4]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Minimal
 effective ionic
-strength (molal), below which the activity coefficients for aqueous
-species are set to 1. Default value: 3e-5. </span><br>
+strength </span>(molal), below which the activity coefficients for aqueous
+species are set to 1. Default value: 1e-5. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3407,7 +3410,7 @@ species are set to 1. Default value: 3e-5. </span><br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_IEPS&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_EPS_1">Pa_EPS[1]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_EPS[1]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3425,15 +3428,14 @@ between
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_IIM&gt;
       <br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_IIM">Pa_IIM</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_IIM<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Maximum
 allowed number of
-iterations in the Main_IPM_Descent()<span style="color: rgb(204, 102, 0);"> </span>procedure.&nbsp; Default
-value:
-500.&nbsp;</span> This parameter is also used in new smoothing
+iterations in the Main_IPM_Descent()<span style="color: rgb(204, 102, 0);"> </span>procedure.&nbsp; </span>Default
+value: 7000.&nbsp; This parameter is also used in new smoothing
 functions (see
 Pa_AG). More details in <a href="gems_ipm.html#Pa_IIM">gems_ipm.html</a>.</td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
@@ -3443,14 +3445,13 @@ Pa_AG). More details in <a href="gems_ipm.html#Pa_IIM">gems_ipm.html</a>.</td>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PC&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_PC">Pa_PC</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_PC<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Mode
 of PhaseSelect()
-operation. </span>Default value 1.<span style="font-weight: bold;"> </span>Reserved
-for future versions<br>
+operation, old (1) and new (2) variants. </span>Default value 2.<span style="font-weight: bold;"> </span>This flag defines the behavior of Phase Selection procedure, (disabled when this flag is set to 0). More details in <a href="gems_ipm.html#Pa_PC">gems_ipm.html</a>.
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3459,13 +3460,14 @@ for future versions<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PD&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_PRD_0">Pa_PRD[0]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_PRD[0]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">Mode
-of execution of the
-built-in DebyeHueckel()/Davies() functions. </span>Default value: 3.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Mode of calculation of activity coefficients and metastability factors.</span>
+Possible values: 2 (default) - at each MBR() and MainIPMDescent()
+iteration;&nbsp;&nbsp; 3 - reserved. This mode should be fixed to 2 in
+the present version of GEM-Selektor. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3474,7 +3476,7 @@ built-in DebyeHueckel()/Davies() functions. </span>Default value: 3.<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PE&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_PE">Pa_PE</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_PE<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3492,7 +3494,7 @@ during GEM calculation if e.g. the aqueous phase has been eliminated<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PhMin&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_XMI_3">Pa_XMI[3]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_XMI[3]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
@@ -3507,15 +3509,16 @@ components</span> (default&nbsp; value 1e-10).&nbsp; <br>
     </tr>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PLLG&gt;</td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_LLG">Pa_LLG</a></td>
+      <td style="vertical-align: top; font-family: monospace;">Pa_LLG</td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">IPM-2
-tolerance for checking
-change in dual solution among GEM
-refinement
-loops.</span> Defaul value is 200. More in <a href="gems_ipm.html#Pa_LLG">gems-ipm.html</a>
-.</td>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Tolerance for checking divergence in the GEM dual solution between IPM iterations. </span>Default:
+30000.&nbsp; Possible values: 0 - disables the divergence detection (in
+stiff systems, failure of GEM IPM algorithm may occur);&nbsp; 32001 or
+-32001 - enables divergence detection in the respective mode, but
+blocks the warning message; other values between 1 and 32000 or -1 and
+-32000 enable the divergence detection and possible warning W14IPM.
+More in <a href="gems_ipm.html#Pa_LLG">gems-ipm.html</a>.</td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
       </td>
@@ -3523,24 +3526,17 @@ loops.</span> Defaul value is 200. More in <a href="gems_ipm.html#Pa_LLG">gems-i
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PRD&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_PRD_1">Pa_PRD[1]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_PRD[1]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
-      <td style="vertical-align: top;"><span style="font-weight: bold;">Negative
-number (from -1 to
--50): the number |PRD| of additional full IPM-2 loops </span>to
-improve
-the
-GEM final solution<span style="font-weight: bold;"> </span>in highly
-non-ideal systems (especially
-around the
-critial point in some phases). Otherwise no additional loops will be
-used.<span style="font-weight: bold;"> </span>IPM_gamma()
-is called on each GEM
-iteration in any case. Default
-value: 3.&nbsp;
-More in <a href="gems_ipm.html#Pa_PRD_1">gems_ipm.html</a>.<br>
+      <td style="vertical-align: top;"><span style="font-weight: bold;">Decimal exponent for maximal DC amount correction in SpeciationCleanup().&nbsp; </span>Default
+value: -5. The correction will be applied if log10 of the absolute
+difference between the corrected and uncorrected amount exceeds
+&lt;Pa_PRD&gt;, otherwise the DC amount will be set to 10<sup>&lt;Pa_PRD&gt;</sup>.
+This tolerance is especially useful if the detection of divergence in
+the dual GEM solution is disabled (see &lt;Pa_LLG&gt;). Possible
+values: from -7 to -3 More in <a href="gems_ipm.html#Pa_PRD_1">gems_ipm.html</a>.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3549,16 +3545,16 @@ More in <a href="gems_ipm.html#Pa_PRD_1">gems_ipm.html</a>.<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_PSM&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_PRD_2">Pa_PRD[2]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_PRD[2]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Level
-of diagnostic messages:
-0- disabled (no ipmlog file); 1- normal; 2-including warnings.</span>
+of IPM diagnostic messages:
+</span>0- disabled (no ipmlog file); 1- normal; 2-including warnings.
 Default
 value: 1. See <a href="gems_ipm.html#Pa_PRD_2">gems_ipm.html</a> for
-details<br>
+detail.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (3)<br>
@@ -3567,12 +3563,12 @@ details<br>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_ScMin&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_XMI_1">Pa_XMI[1]</a></td>
-      <td style="vertical-align: top; font-family: monospace;"><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_XMI[1]</td>
+      <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Cutoff
 mole amount for
-elimination of solid sorbent (default 1e-7). </span>Elimination of the
+elimination of solid sorbent </span>(default 1e-13). Elimination of the
 sorbent
 results in the elimination (zeroing off) of the whole sorption phase
 and all its components from the mass balance.</td>
@@ -3583,13 +3579,13 @@ and all its components from the mass balance.</td>
     <tr>
       <td style="vertical-align: top; font-family: monospace; font-weight: bold;">&lt;pa_XwMin&gt;<br>
       </td>
-      <td style="vertical-align: top; font-family: monospace;"><a href="gems_ipm.html#Pa_XMI_0">Pa_XMI[0]</a><br>
+      <td style="vertical-align: top; font-family: monospace;">Pa_XMI[0]<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Cutoff
 mole amount for
-elimination of water-solvent (default 1e-9)</span>. Elimination of the
+elimination of water-solvent </span>(default 1e-13). Elimination of the
 solvent
 results in the elimination (zeroing off) of the whole aqueous phase and
 all its components from the mass balance.</td>
@@ -3601,12 +3597,12 @@ all its components from the mass balance.</td>
 </table>
 
 <br>
+<h4>
 
-<br>
+Table 12 (P)</h4>
 
-Table 12 (P)<br>
 
-<br>
+
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -3638,7 +3634,7 @@ File<br>
       </td>
       <td style="vertical-align: top;">Flag for using (+) or ignoring
 (-) specific surface areas of phases; default value is '+'.&nbsp; This
-flag must be set on (+) if sorption phases are present in the system
+flag must be set on (+) if dispersed or sorption phases, or phases under kinetic rate control are present in the system
 definition. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
@@ -3676,7 +3672,7 @@ in this list must be arranged in the following order: aqueous
 electrolyte phase first (if present in the system), then fluid and/or
 gas phase(s) (if present), then condensed solution phases (if present),
 then sorption phases (if present), and then pure condenced phases. Data
-in all other DATACH/IPM arrays for phases must go in the same order as
+in all other DCH/IPM arrays for phases must go in the same order as
 the Phase names in this list<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
@@ -3709,11 +3705,11 @@ Default value is 1 (on).&nbsp; <br>
 LsMod[k][2]<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Collected
-interaction parameter
+array of interaction parameter
 coefficients for the (built-in) non-ideal mixing models.</span> Number
 of parameters used by k-th
 phase model is given in &lt;LsMod&gt;[k][0] and the number of T,P
-coefficients per parameter - in &lt;LsMod&gt;[k][2]. Provide necessary
+coefficients per parameter - in &lt;LsMod&gt;[k][2]. Provides necessary
 coefficients or zeros for each combination of phase component indexes
 given in the <a href="#TAG_IPxPH">&lt;IPxPH&gt;</a> table. See <a href="gems3k_tsolmod.html">gems3k_tsolmod.html</a>
 file for detail. </td>
@@ -3767,7 +3763,7 @@ interfaces; default value is '+'. <br>
 for the pressure
 interpolation (Pa).</span> Thermodynamic data will be interpolated in
 GEMS3K only if the current pressure is more than Ptol different than
-the previous one used in GEM IPM run. Default value: <span style="color: rgb(255, 0, 0);">1000 Pa</span>.<br>
+the previous one used in GEM IPM run. Default value: <span style="color: black;">1000 Pa</span>.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (9)<br>
@@ -3799,9 +3795,8 @@ used in this version). If PV = 1 then the Independent Component
       <td style="vertical-align: top; font-family: monospace;"><a href="gemipm2k-inp.html#TAG_nPp">nPp</a><br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Pressure
-values for the
-interpolation grid (Pa) for the lookup arrays of thermodynamic data</span>,
-must be given in the ascending order<br>
+values </span><span style="font-weight: bold;">(Pa)</span><span style="font-weight: bold;"> for the look-up arrays grid of thermodynamic data</span>,
+must be given in the ascending order. Interpretation depends on &lt;mLook&gt; flag.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (9)<br>
@@ -3842,11 +3837,10 @@ activity scale (GEM output)</span><br>
 
 <br>
 
-<br>
+<h4><a name="TAB_13_Q"></a>Table 13 (Q-S)</h4>
 
-<a name="TAB_13_Q"></a>Table 13 (Q-S)<br>
 
-<br>
+
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -3877,7 +3871,11 @@ File<br>
       </td>
       <td style="vertical-align: top; font-weight: bold;">Actual
 carrier density for
-density-driven flow (kg/m<sup>3</sup>)</td>
+density-driven flow (kg/m<sup>3</sup>). <span style="font-weight: normal;">Not used on the level of
+TNode,
+stored
+in DATABR structures and files on the level of TNodeArray. Default
+value is 0.0.</span></td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (3)</td>
     </tr>
@@ -3890,11 +3888,10 @@ density-driven flow (kg/m<sup>3</sup>)</td>
 balance residuals - GEM
 output (moles).</span> This vector has &lt;nICb&gt; elements in the
 order of
-IC defined in the &lt;xic&gt; index list. Good mass balance residuals
-must be less than 1e-7 mol or &lt; 0.1% of the respective element of
-the total bulk composition &lt;bIC&gt; which is less than 1e-7. This
+IC defined in the &lt;xic&gt; index list. Good relative mass balance residuals
+must be less than 1e-12 (1e-15 for O, H). This
 vector can
-be checked for evaluating the quality of the GEM IPM2 solution.</td>
+be checked for evaluating quality of the GEM IPM3 solution.</td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (4)</td>
     </tr>
@@ -3908,8 +3905,9 @@ of metastability
 constraints for DCs:</span> 'B' - both side (&lt;DLL&gt;
 and &lt;DUL&gt;) constraints&nbsp; are used (default); 'L' - from below
 only
-(&lt;DUL&gt; take trivial values of 1e6 mol);'U' - from above only
-(&lt;DLL&gt; take trivial values of 0 mol).</td>
+(&lt;DUL&gt; take trivial values of 1e6 mol); 'U' - from above only
+(&lt;DLL&gt; take trivial values of 0 mol). Default value: 'B'.<br>
+</td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (6)</td>
     </tr>
@@ -3975,7 +3973,7 @@ competitive Langmuir (default); 'Q' or '1' - non-competitive
 monodentate (Langmuir); '2' - non-competitive bidentate QCA; '3' -
 non-competitive tridentate QCA; '4' - non-competitive tetradentate
 QCA;&nbsp;&nbsp; 'F' - non-competitive Frumkin; 'R' - competitive
-Frumkin; 'I' - no SACT correction (e.g. for sorbent components). <br>
+Frumkin; 'I' - no SACT correction (e.g. for sorbent components). Will probably change in TSorpMod class in future.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (8)</td>
@@ -4071,8 +4069,7 @@ built-in subroutine will be used for the non-ideal model). Note that
 only built-in mixing models are allowed in GEMS3K (i.e. no phase
 scripts). The sixth character is either 'N' or code of the mixing rule
 used in some fluid EoS models (e.g. 'W'). The first code selects the
-built-in model; for codes and details, see <a href="g_tsolmod.html">g_tsolmod.html</a>
-. <br>
+built-in model; for codes and details, see <a href="gems_solmod.html">gems_solmod.html</a>. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">IPM<br>
 (4)<br>
@@ -4083,11 +4080,10 @@ built-in model; for codes and details, see <a href="g_tsolmod.html">g_tsolmod.ht
 
 <br>
 
-<br>
+<h4><a name="TAB_14_T"></a>Table 14 (T-W)</h4>
 
-<a name="TAB_14_T"></a>Table 14 (T-W)<br>
 
-<br>
+
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -4118,7 +4114,7 @@ TC[1]</td>
       <td style="vertical-align: top; font-family: monospace;">1<br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Node
-temperature T (K) . This value must
+temperature T (K). This value must
 always be provided</span> (<span style="font-weight: bold;">GEM
 input). </span>If this value
 differs by
@@ -4127,7 +4123,7 @@ previous GEM calculation, the GEMS3K program will attempt to
 interpolate thermodynamic data if lookup arrays were provided in DCH
 file or DATACH memory structure. If
 a given TK value is outside of the
-interpolation interval then calculations will stop and NodeStatusCH
+interpolation interval then calculations will stop, and NodeStatusCH
 will be set to <span style="font-family: monospace;">ERR_GEM_AIA or
 ERR_GEM_SIA.</span><span style="color: rgb(204, 102, 0);"></span> <br>
       </td>
@@ -4140,10 +4136,10 @@ ERR_GEM_SIA.</span><span style="color: rgb(204, 102, 0);"></span> <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;"><a href="gemipm2k-inp.html#TAG_nTp">nTp</a></td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Temperature
-values (K) for the
-interpolation grid in lookup arrays;</span> the values must be given in
+values (K) f</span><span style="font-weight: bold;">for the look-up arrays grid of thermodynamic data</span><span style="font-weight: bold;">;</span> the values must be given in
 the
-ascending order</td>
+ascending order. Interpretation depends on the &lt;mLook&gt; flag.<br>
+</td>
       <td style="vertical-align: top; font-family: monospace;">DCH <br>
 (9)</td>
     </tr>
@@ -4156,7 +4152,7 @@ ascending order</td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Tolerance
 for the
 interpolation <span style="color: rgb(0, 0, 0);">over temperature</span>
-(C, K).</span> Thermodynamic data will
+(K).</span> Thermodynamic data will
 be
 interpolated only if current temperature is more than Ttol different
 than the previous one used in GEM IPM run. Default value: 0.1 degree</td>
@@ -4172,7 +4168,7 @@ than the previous one used in GEM IPM run. Default value: 0.1 degree</td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Actual
 total simulation time (s). </span>Passed into the TNode class. Stored in DATABR structures
 and
-files. Default value is 0.0.</td>
+DBR files. Default value is 0.0.</td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)</td>
     </tr>
@@ -4206,7 +4202,8 @@ the names in the &lt;DCNL&gt; list. Each table has &lt;nPp&gt; rows and
 &lt;nTp&gt; columns, in total, &lt;nPp&gt;*&lt;nTp&gt; values. Each row
 in the DC table corresponds to a certain value of pressure from the
 &lt;Pval&gt; vector. Data in the row refer to this pressure and to
-temperatures in a sequence defined in the &lt;TKval&gt; vector. </td>
+temperatures in a sequence defined in the &lt;TKval&gt; vector. Under construction.<br>
+ </td>
       <td style="vertical-align: top; font-family: monospace;">DCH<br>
 (9)<br>
       </td>
@@ -4260,7 +4257,7 @@ the &lt;TKval&gt; vector. <br>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Volume
 of inert subsystem (m<sup>3</sup>)</span>
-(used only in FMT part and stored here on the TNodeArray level).<br>
+(used only in mass transport part and stored here on the TNodeArray level).<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (2)<br>
@@ -4294,7 +4291,7 @@ of multicomponent
 phases (m<sup>3</sup>) (GEM output). </span>Order of phases: defined
 in the
 &lt;xph&gt;
-index list in the DATACH file/structure.<br>
+index list in the DCH file.<br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (6)<br>
@@ -4337,11 +4334,10 @@ on the level of TNodeArray. Default value is 0.0. </td>
 
 <br>
 
-<br>
+<h4><a name="TAB_15_X"></a>Table 15 (X-Z)</h4>
 
-<a name="TAB_15_X"></a>Table 15 (X-Z)<br>
 
-<br>
+
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -4379,10 +4375,10 @@ vector is also required as input at &lt;NodeStatusCH&gt; = 5 when the
 old GEM solution is used as an initial approximation. Number of
 elements: &lt;nDCb&gt;; order of DC elements is defined in the
 &lt;xdc&gt; index list in the DATACH structure.The &lt;xDC&gt; vector
-is the standard result of equilibrium speciation calculations, from
+is the typical result of equilibrium speciation calculations, from
 which concentrations of all chemical species (or their activities using
 the &lt;gam&gt; output vector) can be computed. Zeros in this vector
-correspond to unstable species eliminated by GEM from the mass balance
+correspond to unstable species eliminated by GEM IPM from the mass balance
 in equilibrium state. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
@@ -4445,11 +4441,11 @@ DATACH/IPM lists) </td>
       </td>
       <td style="vertical-align: top;"><span style="font-weight: bold;">Amounts
 of phases in
-equilibrium state </span><span style="font-weight: bold;">(moles)</span><span style="font-weight: bold;"> - GEM output .</span> Number of elements:
+equilibrium state </span><span style="font-weight: bold;">(moles)</span><span style="font-weight: bold;"> - GEM output.</span> Number of elements:
 &lt;nPHb&gt;; order: defined&nbsp; in the &lt;xph&gt; index list in the
-DATACH file/structure. Zero element value means that the respective
+DCH file. Zero element value means that the respective
 phase&nbsp; is unstable and is not present in the equilibrium state
-mass balance. This data object is not used as GEM IPM input. <br>
+mass balance. This data object is not used as GEM IPM3 input. <br>
       </td>
       <td style="vertical-align: top; font-family: monospace;">DBR<br>
 (6)<br>
@@ -4494,7 +4490,7 @@ free energy parameter for phases
 
 <br>
 
-<hr size="2" width="100%"><tt><br></tt>Last change: 15.10.2012 DK<br>
+<hr size="2" width="100%"><tt><br></tt>Last change: 22.10.2012 DK<br>
 <br>
 Copyright (c) 2012 GEMS Development Team<tt><br>
 <br>
