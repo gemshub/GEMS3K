@@ -98,14 +98,14 @@ outField MULTI_dynamic_fields[70] =  {
    { "pa_DB" , 0 , 0, 0,  "# DB: Minimum amount of IC in the bulk composition, moles (except charge Zz) { 1e-17 }"},
    { "pa_DHB", 0 , 0, 0,  "\n# DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } " },
    { "pa_EPS", 0 , 0, 0,  "\n# EPS: Tolerance of the SolveSimplex() balance residual for ICs { 1e-10 } " },
-   { "pa_DK",  0 , 0, 0,  "\n# DK: Tolerance for the Dikin's criterion of IPM convergence { 3e-6 } " },
+   { "pa_DK",  0 , 0, 0,  "\n# DK: Tolerance for the Dikin's criterion of IPM convergence { 1e-6 } " },
    { "pa_DF" , 0 , 0, 0,  "\n# DF: Tolerance DF of the stability criterion for a lost phase to be inserted to mass balance { 0.01 } " },
    { "pa_DP",  0 , 0, 0,  "\n# DP: Maximal number of iterations in MassBalanceRefinement MBR() procedure { 130 }"  },
    { "pa_IIM", 0 , 0, 0,  "\n# IIM: Maximum allowed number of iterations in one main GEM IPM descent run { 7000 }" },
-   { "pa_PD" , 0 , 0, 0,  "\n# PD: Mode of calculation of DC activity coefficients ( 1 -IPM, 2 +MBR, 3 IPM ) { 2 } " },
-   { "pa_PRD" , 0 , 0, 0, "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -4 }" },
+   { "pa_PD" , 0 , 0, 0,  "\n# PD: Mode of calculation of DC activity coefficients { 2 } " },
+   { "pa_PRD" , 0 , 0, 0, "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -5 }" },
    { "pa_AG" ,  0 , 0, 0, "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments (-1 to +1) { 1.0 }" },
-   { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 1 or 0.001 for adsorption }" },
+   { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 0 or 0.001 for adsorption }" },
    { "pa_PSM" , 0 , 0, 0, "\n# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- default; 2-including warnings }" },
    { "pa_GAR" , 0 , 0, 0, "# GAR: Activity coefficient for major (M) species in solution phases at Simplex LP AIA { 1 }"  },
    { "pa_GAH" , 0 , 0, 0, "# GAH: Activity coefficient for minor (J) species in solution phases at Simplex LP AIA { 1000 }" },
@@ -125,18 +125,18 @@ outField MULTI_dynamic_fields[70] =  {
    { "pa_DFYc" , 0 , 0, 0,  "# DFYc: Insertion mole amount for single-component phase at Simplex()->MBR() bridge { 1e-5 }" },
    { "pa_DFYs",  0 , 0, 0,  "# DFYs: Insertion mole amount for single-component phase in PSSC() algorithm { 1e-6 }" },
    { "pa_DW",    0 , 0, 0,  "# DW: Activate (1) or disable (0) error condition on maximum number of MBR() iterations DP { 1 }" },
-   { "pa_DT",    0 , 0, 0,  "# DT: use DHB as relative maximum mass balance cutoff for all ICs (0), default, or for major ICs:"
+   { "pa_DT",    0 , 0, 0,  "# DT: use DHB as relative maximum mass balance cutoff for all ICs (0, default); or for major ICs:"
                             "\n# decimal exponent (<-6) applied to DHB cutoff; (1) use DHB also as an absolute cutoff { 1 }" },
-   { "pa_GAS",   0 , 0, 0,  "\n# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.0001 }" },
-   { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1e3 }" },
+   { "pa_GAS",   0 , 0, 0,  "\n# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.001 }" },
+   { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1000 }" },
    { "pa_DNS" ,  0 , 0, 0,  "# DNS: Standard surface number density, nm-2 for calculating activity of surface species { 12.05 }" },
-   { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }" },
+   { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 0.001 }" },
    { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } " },
    { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } " },
    { "mui" ,     0 , 0, 0,  "\n\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
    { "muk" ,     0 , 0, 0,  "\n\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
    { "muj" ,     0 , 0, 0,  "\n\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
-   { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables" },
+   { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
    { "dcMod",    0 , 0, 0,  "\n# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
 };
@@ -196,7 +196,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 if( _comment )
 {  ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
-   ff << "# IPM text input file for the internal GEM IPM3 kernel data" << endl;
+   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << endl;
    ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
@@ -276,8 +276,7 @@ ff << "\n<END_DIM>\n";
 
    if(!brief_mode)
     if( _comment )
-     {  ff << "\n# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-11 }; Sc - solid sorbent {1e-11}; " << endl;
-        ff <<   "#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-20 }" << endl;
+     {  ff << "\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance" << endl;
      }
 
    if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
@@ -288,7 +287,6 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_DcMin,  pa->p.DcMin, _comment, false  );
    if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
        prar.writeField(f_pa_PhMin,  pa->p.PhMin, _comment, false  );
-
    if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
        prar.writeField(f_pa_ICmin,  pa->p.ICmin, _comment, false  );
    if(!brief_mode || pa->p.PC != pa_.p.PC )
@@ -313,7 +311,7 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_DFYs,  pa->p.DFYs, _comment, false  );
 
    if( _comment )
-     ff << "\n# Tolerances and controls of high-precision IPM-3 algorithm " << endl;
+     ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm " << endl;
 
    if(!brief_mode || pa->p.DW != pa_.p.DW )
        prar.writeField(f_pa_DW,  pa->p.DW, _comment, false  );
