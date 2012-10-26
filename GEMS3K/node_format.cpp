@@ -1,19 +1,28 @@
 //--------------------------------------------------------------------
 // $Id$
 //
-// C/C++ interface for writing/reading DBR and DCH files
-// Works  with DATACH and DATABR structures
+/// \file node_format.cpp
+/// Interface for writing/reading DBR and DCH I/O files of GEMS3K
+/// Works  with DATACH and DATABR structures
 //
-// Copyright (C) 2006,2011 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization and of the GEMS3K code
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include <iomanip>
@@ -120,7 +129,7 @@ outField DataCH_static_fields[14] =  {
   { "nPp",   1, 0, 0, "# nPp: Number of pressure grid points in lookup arrays for data interpolation, >=1" },
   { "iGrd",  1, 0, 0, "# iGrd: Flag for allocation of array of diffusition coefficients in DATACH structure (DCH file)" },
   { "fAalp", 1, 0, 0, "# fAalp: Flag for keeping specific surface areas of phases in DATABR structure (1) or ignoring them (0)" },
-  { "mLook", 0, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
+  { "mLook", 1, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
 };
 
 outField DataCH_dynamic_fields[30] =  { //+4
@@ -1358,7 +1367,7 @@ void TNode::datach_reset()
 	CSD->nDCb = 0;
 	CSD->nPHb = 0;
 	CSD->nPSb = 0;
-        CSD->mLook = 0;
+    CSD->mLook = 0;
 // Lists = 0; vectors and matrices
 	CSD->nDCinPH = 0;
 	CSD->xic = 0;
@@ -1366,8 +1375,8 @@ void TNode::datach_reset()
 	CSD->xph = 0;  //18
 
 	CSD->TKval = 0;
-        CSD->Psat = 0;
-        CSD->Pval = 0;
+    CSD->Psat = 0;
+    CSD->Pval = 0;
 	CSD->A = 0;
 	CSD->Ttol = 0.;
 	CSD->Ptol = 0.;

@@ -1,44 +1,57 @@
 //-------------------------------------------------------------------
 // $Id$
-//
 /// \file node.h
-// Implements a simple C/C++ interface between GEM IPM and FMT codes.
-// Works with DATACH and work DATABR structures without using
-// the TNodearray class.
+/// Declaration of TNode class that implements a simple C/C++ interface
+/// between GEMS3K and another code.
 //
-// (c) 2006,2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+/// \class TNode node.h
+/// Implements a simple C/C++ interface between GEM IPM and FMT codes.
+/// Works with DATACH and work DATABR structures without using
+/// the TNodearray class.
 //
-// This file is part of GEMS3K and GEMS-PSI codes for
-// thermodynamic modelling by Gibbs energy minimization
-// developed in the Laboratory for Waste Management,
-//   Paul Scherrer Institute
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
+//
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// This file may be distributed under the licence terms
-// defined in GEMS3K.QAL
-//
-// See also http://gems.web.psi.ch/
-// E-mail: gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
-//
 
 /// \mainpage GEMS3K Solver of GeoChemical Equilibria and its TNode class interface.
+///
 /// GEMS3K (formerly GEMIPM2K) is a C/C++ code implementing the efficient numerical kernel
 /// IPM-3 of the GEM-Selektor v.3 package for geochemical  thermodynamic modeling of complex
 /// heterogeneous multicomponent-multiphase  systems. GEMS3K results from substantial
 /// improvements of convex programming Gibbs energy minimization algorithms achieved since
-/// 2000, when development and support of GEMS was taken over by LES PSI (since 2008 jointly
-/// with IGP ETHZ) through GEMS Development Team, currently consisting of D.Kulik (lead),
-/// T.Wagner, S.Dmytrieva, G. Kosakowski, F.Hingerl, K.Chudnenko, and U.Berner.
-/// The standalone variant of GEMS3K code can be coupled to reactive mass transport simulation
+/// 2000, when development and support of GEMS was taken over by LES in Paul Scherrer Institut
+/// (since 2008 jointly with IGP ETHZ) by the GEMS Development Team, currently consisting of
+/// D.Kulik (lead), T.Wagner, S.Dmytrieva, G. Kosakowski, F.Hingerl, K.Chudnenko, and U.Berner.
+///
+/// Standalone variant of the GEMS3K code can be coupled to reactive mass transport simulation
 /// codes, also those running on high-performance computers. Input files (in text format) for
 /// GEMS3K can be exported with a few mouse-clicks from the GEM-Selektor v.3  code, or prepared
-/// manually using a simple ASCII text editor.
-/// Data exchange with the mass transport part of the coupled code can be implemented in computer
-/// memory using TNode class functions.
-/// The standalone GEMS3K code is foreseen to be licensed as the open-source software in order
-/// to promote its broad application in hydrothermal-/ waste geochemistry and related research
-/// communities. Other potential areas of GEMS3K application include coupled parameter fitting
-/// codes and phase diagram tools.
+/// manually using a simple ASCII text editor. Data exchange with the mass transport part of
+/// the coupled code can be implemented in computer memory using TNode class functions.
+///
+/// The standalone GEMS3K code is licensed as the open-source software in order to promote its
+/// broad application in hydrothermal-/ waste geochemistry and related research communities.
+/// Other potential areas of GEMS3K application include coupled parameter-fitting codes
+/// and phase diagram tools.
+///
+/// Copyright (C) 2012 GEMS Development Team
+/// Available on web at http://gems.web.psi.ch/GEMS3K
 
 #ifndef _node_h_
 #define _node_h_

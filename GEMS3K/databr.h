@@ -1,26 +1,32 @@
 //-------------------------------------------------------------------
 // $Id$
+/// \file databr.h
+/// Contains definition of the DATABR structure - data bridge between
+/// GEMS3K and another code.
 //
 /// \struct DATABR databr.h
 /// DataBRidge defines the structure of node-dependent data for
 /// exchange between the coupled GEM IPM and FMT code parts.
-/// Requires DATACH.H header and data structure.
-/// DATABR is used in TNode and TNodeArray classes.
+/// DATABR structure is used in TNode and TNodeArray classes.
 //
-//      CH: chemical structure in GEM IPM
-//      FMT: fluid mass transport
+// Copyright (c) 2003-2011 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-/// \author (c) 2003,2009 by D.Kulik, S.Dmytriyeva, F.Enzmann, W.Pfingsten
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file is part of GEMS3K and GEMS-PSI codes for
-// thermodynamic modelling by Gibbs energy minimization
-// developed by the Laboratory of Waste Management, Paul Scherrer Institute
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// This file may be distributed together with GEMS3K source code
-// under the licence terms defined in GEMS3K.QAL
-//
-// See also http://gems.web.psi.ch/
-// E-mail: gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
 #ifndef _DataBr_H_
@@ -48,16 +54,16 @@ typedef struct  /// DATABR - template node data bridge structure
 //      Usage of this variable (DB - data bridge)      	               MT-DB DB-GEM GEM-DB DB-MT
    double
 // \section Chemical scalar variables
-    TK,     ///< Node temperature T (Kelvin)                     	          +      +      -     -
-    P, 	    ///< Node Pressure P (Pa)                         	          +      +      -     -
-    Vs,     ///< Volume V of reactive subsystem  (m3)                      (+)    (+)     +     +
-    Vi,     ///< Volume of inert subsystem (m3)          	                  +      -      -     +
-    Ms,     ///< Mass of reactive subsystem (kg)         	                  +     (+)     -     -
-    Mi,     ///< Mass of inert subsystem (kg)             	              +      -      -     +
+    TK,     ///< Node temperature T (Kelvin)                     	         +      +      -     -
+    P, 	    ///< Node Pressure P (Pa)                         	             +      +      -     -
+    Vs,     ///< Volume V of reactive subsystem  (m3)                       (+)    (+)     +     +
+    Vi,     ///< Volume of inert subsystem (m3)          	                 +      -      -     +
+    Ms,     ///< Mass of reactive subsystem (kg)         	                 +     (+)     -     -
+    Mi,     ///< Mass of inert subsystem (kg)             	                 +      -      -     +
 
-    Gs,     ///< Total Gibbs energy of the reactive subsystem (J/RT) (norm) -      -      +     +
-    Hs, 	///< Total enthalpy of reactive subsystem (J) (reserved)        -      -      +     +
-    Hi,     ///< Total enthalpy of inert subsystem (J) (reserved)           +      -      -     +
+    Gs,     ///< Total Gibbs energy of the reactive subsystem (J/RT) (norm)  -      -      +     +
+    Hs, 	///< Total enthalpy of reactive subsystem (J) (reserved)         -      -      +     +
+    Hi,     ///< Total enthalpy of inert subsystem (J) (reserved)            +      -      -     +
 
     IC,     ///< Effective aqueous ionic strength (molal)                    -      -      +     +
     pH,     ///< pH of aqueous solution in the activity scale (-log10 molal) -      -      +     +

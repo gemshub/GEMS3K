@@ -1,21 +1,29 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Implementation of TNode class including initialization and
-// execution of GEMIPM2 kernel
+/// \file node.cpp
+/// Implementation of TNode class functionality including initialization
+/// and execution of the GEM IPM 3 kernel
+/// Works with DATACH and DATABR structures
+//
+// Copyright (c) 2005-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
+//
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// Works with DATACH and DATABR structures
-//
-// Copyright (C) 2005,2009 S.Dmytriyeva, D.Kulik, G.Kosakowski
-//
-// This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization and of GEMS3K code
-//
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include "node.h"
@@ -1959,7 +1967,9 @@ void TNode::unpackDataBr( bool uPrimalSol )
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
+ multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
 #endif
+
   pmm->TCc = CNode->TK-C_to_K;
   pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;
@@ -2062,7 +2072,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 }
 
 
-// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
+// (3) Writes the contents of the work instance of DATABR structure into a disk file with path name fname.
 //   Parameters:
 //   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
 //                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
@@ -2072,7 +2082,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   with_comments (text format only): defines the mode of output of comments written before each data tag and  content
 //                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
 //                 If   false (0), comments will not be written.
-//  brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+//  brief_mode     if true (1), tells not to write data items that contain only default values.
+//
 void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments, bool brief_mode )
    {
        gstring str_file;
@@ -2100,6 +2111,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 // Parameters: fname   null-terminated (C) string containing a full path to the disk file to be written.
 //                     NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
 //                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+//
    void  TNode::GEM_print_ipm( const char* fname )
    {
      gstring str_file;

@@ -475,16 +475,8 @@ GEMS3K/platform/MacOSX/Makefile.lib -text
 GEMS3K/platform/other/Makefile -text
 GEMS3K/platform/win32MinGW/Makefile -text
 GEMS3K/platform/win32bcc/Makefile -text
-GEMS3K/s_fgl.cpp -text svn_keywords=Id
-GEMS3K/s_fgl.h -text svn_keywords=Id
-GEMS3K/s_fgl1.cpp -text svn_keywords=Id
-GEMS3K/s_fgl2.cpp -text svn_keywords=Id
-GEMS3K/s_fgl3.cpp -text svn_keywords=Id
-GEMS3K/s_fgl4.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.h -text svn_keywords=Id
-GEMS3K/s_sorption.cpp -text svn_keywords=Id
-GEMS3K/s_sorption.h -text svn_keywords=Id
 GEMS3K/tnt.h -text
 GEMS3K/tnt_array1d.h -text
 GEMS3K/tnt_array2d.h -text
