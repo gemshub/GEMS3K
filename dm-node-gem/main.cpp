@@ -37,7 +37,7 @@ int main( int argc, char* argv[] )
 
     // Getting direct access to DataCH structure in GEMS3K instance memory
     DATACH* dCH = node->pCSD(); // DM pointer to work with dCH data
-
+    int alabala = node->DC_name_to_xDB( "AlO2-"); // gets the index of calcite
     // Creating memory for mass transport nodes
     // 5 experiments
     TMyExperiments mt( 5, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb );
@@ -58,6 +58,9 @@ int main( int argc, char* argv[] )
             cout<< input_recipes_file_list_name << "aalaa" << endl;
             recipes = f_getfiles( input_recipes_file_list_name, input_recipes_file_list_path, in, ',' );
             cout << recipes[in]<<endl;
+
+
+//        node->Set_DC_G0(alabala, 1e+08, 773.15, 0.821695);
 
            for(int in=0; in < mt.nNodes; in++ )
         {
@@ -227,7 +230,6 @@ int main( int argc, char* argv[] )
       // *********************** DM part of old node-gem modified ********************* //
 
 
-
       
     // Main loop - iterations over nTimes time steps
     int xCorundum = node->Ph_name_to_xDB("Corundum");
@@ -307,7 +309,7 @@ int main( int argc, char* argv[] )
           //  to monitor the coupled simulation or collect results
           cout << "  Node " << in ;
           cout << ": Aq= " << mt.axPH[in][xAq_gen] << " pH= " << mt.apH[in] <<
-                  "  Corundum= " << mt.axPH[in][xCorundum] << endl << "moles of Al= " << node->Get_mIC(ICndx[1]) << " P " << mt.aP[in] << " T " << mt.aT[in] << endl;
+                  "  Corundum= " << mt.axPH[in][xCorundum] << endl << "molality of Al= " << node->Get_mIC(ICndx[1]) << " moles of AlO2-= " << node->Get_nDC(alabala)<< " P " << mt.aP[in] << " T " << mt.aT[in] << endl;
       }
 //  }
   // Calculations finished - end time reached
@@ -316,9 +318,12 @@ int main( int argc, char* argv[] )
 
 
   // *********************** DM test of different functions ********************* //
+    cout.setf(ios::fixed); // print without scientific notation
+    cout << " AlO2- G0= " << node->DC_G0(alabala, 1e+08, 773.15, false) << endl; // prints the G0 of specie in the output file
 
-    int alabala = node->DC_name_to_xDB( "AlHSiO3+2"); // gets the index of calcite
-    cout << " AlHSiO3+2 G0= " << node->DC_G0(alabala, 150000000, 673.15, false); // prints the G0 of specie in the output file
+    node->Set_DC_G0(alabala, 1e+08, 773.15, -1370489.895202);
+
+    cout << " new AlO2- G0= " << node->DC_G0(alabala, 1e+08, 773.15, false);
 
 
 

@@ -520,14 +520,23 @@ void GEM_set_MT(
 	 /// Returns index of Tk point - Psat point pair 
 	 long int get_grid_index_Ppa_sat( double Tk );
 
-    /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
-    /// from the DATACH structure.
+    /// Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
+    /// in the DATACH structure.
      /// \param xCH is the DC DCH index
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \param norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
-     /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true);
+     /// \return 0
+     double Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 );
+
+     /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
+     /// from the DATACH structure.
+      /// \param xCH is the DC DCH index
+      /// \param P pressure, Pa
+      /// \param TK temperature, Kelvin
+      /// \param new_G0 in J/mol;
+      /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
+      double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true);
 
      /// Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
      /// from the DATACH structure.

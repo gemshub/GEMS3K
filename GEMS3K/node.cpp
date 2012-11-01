@@ -732,6 +732,27 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     return ndx;
   }
 
+  //Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
+  //in the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
+  // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
+   {
+    long int xTP, jj;
+    double G0;
+
+    if( check_TP( TK, P ) == false )
+        return 7777777.;
+
+    xTP = check_grid_TP( TK, P );
+    jj =  xCH * gridTP();
+
+    if( xTP >= 0 )
+       CSD->G0[ jj + xTP ]=new_G0;
+    else
+        cout << "ERROR P and TK pair not present in the DATACH";
+      return 0;
+   }
+
   //Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
   //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.

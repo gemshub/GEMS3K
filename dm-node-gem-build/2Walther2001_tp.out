@@ -15,17 +15,18 @@ xSi= 5 xAl=0 xNa=3 xCl=1
 
  P 1e+08 T 873.15
   Node 0: Aq= 196.118 pH= 7.88982  Corundum= 0.489642
-moles of Al= 0.000423237 P 1e+08 T 873.15
+moles of Al= 0.000423237 moles of AlO2-= 0.00148129 P 1e+08 T 873.15
  P 1e+08 T 773.15
   Node 1: Aq= 196.557 pH= 6.26876  Corundum= 0.490184
-moles of Al= 0.000113011 P 1e+08 T 773.15
+moles of Al= 0.000113011 moles of AlO2-= 0.000395429 P 1e+08 T 773.15
  P 1e+08 T 873.15
   Node 2: Aq= 196.118 pH= 7.88982  Corundum= 0.489642
-moles of Al= 0.000423237 P 1e+08 T 873.15
+moles of Al= 0.000423237 moles of AlO2-= 0.00148129 P 1e+08 T 873.15
  P 2e+08 T 973.15
-Error: GEM calculation results are not retrieved. Time step  Node 3: Aq= 6.92454e-310 pH= 0  Corundum= 6.92454e-310
-moles of Al= 0.000423237 P 2e+08 T 973.15
+Error: GEM calculation results are not retrieved. Time step  Node 3: Aq= 6.93003e-310 pH= 0  Corundum= 6.93003e-310
+moles of Al= 0.000423237 moles of AlO2-= 0 P 2e+08 T 973.15
  P 1e+08 T 773.15
   Node 4: Aq= 196.557 pH= 6.26876  Corundum= 0.490184
-moles of Al= 0.000113011 P 1e+08 T 773.15
- AlHSiO3+2 G0= -1.40631e+06
+moles of Al= 0.000113011 moles of AlO2-= 0.000395429 P 1e+08 T 773.15
+ AlO2- G0= -792502.011803
+ new AlO2- G0= -1370489.895202
