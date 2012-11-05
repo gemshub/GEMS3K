@@ -727,8 +727,9 @@ typedef enum {  // Symbols of thermodynamic potential to minimize
 
 } NUM_POTENTIALS;
 
-double A_P( double x, double x2=0.);
-double U_TP( double TC, double P);
+// kg44: this is not correctly implemented!! 
+//double A_P( double x, double x2=0.);
+//double U_TP( double TC, double P);
 
 
 typedef enum {  // Field index into outField structure
