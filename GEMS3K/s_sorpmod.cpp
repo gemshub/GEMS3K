@@ -27,7 +27,7 @@
 #include <cmath>
 #include <cstdio>
 #include "verror.h"
-#include "s_fgl.h"
+//#include "s_fgl.h"
 //#include "s_sorption.h"
 
 
