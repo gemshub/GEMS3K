@@ -1218,12 +1218,13 @@ double TMulti::HelmholtzEnergy( double x )
     return( pm.VXc - pm.VX_ ); // VXc current value, VX_ value from key
 }
 
+// kg44: if the function is only used in "BIG GEMS", one should remove it from the kernel sources
+#ifndef IPMGEMPLUGIN
 double A_P( double x, double )
 {
-#ifndef IPMGEMPLUGIN
   return TProfil::pm->HelmholtzEnergy(x);
-#endif
 }
+#endif
 
 
 /// Calls to minimization of other system potentials - InternalEnergy.
@@ -1237,12 +1238,12 @@ double TMulti::InternalEnergy( double TC, double P )
     return( (pm.VXc - pm.VX_)+(pm.SXc - pm.SX_) ); // VXc current value, VX_ value from key
 }
 
-
+// kg44: if the function is only used in "BIG GEMS", one should remove it from the kernel sources
+#ifndef IPMGEMPLUGIN
 double U_TP( double TC, double P)
 {
-#ifndef IPMGEMPLUGIN
   return TProfil::pm->InternalEnergy(  TC,  P );
-#endif
 }
+#endif
 
 //--------------------- End of ipm_simplex.cpp ---------------------------
