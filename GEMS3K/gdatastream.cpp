@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <stdint.h>
 using namespace std;
 
 #ifdef __linux__
