@@ -153,6 +153,7 @@ gstring TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
 	    bool putNodT1, bool addMui )
 {
   fstream fout;
+  fstream fout2;
   gstring Path_;
   gstring dir;
   gstring name;
@@ -206,6 +207,11 @@ AGAIN:
        fout << "-t \"" << name.c_str() << "-dch.dat\"";
        fout << " \"" << name.c_str() << "-ipm.dat\" ";
    }
+
+   gstring path2 = name;
+   path2 += "-dbr";
+   path2 = u_makepath( dir, path2, "lst" );
+   fout2.open(path2.c_str(), ios::out);
 
   if( bin_mode )
   {
@@ -264,6 +270,9 @@ AGAIN:
        if( !first )
           fout << ",";
        fout << " \"" << newname.c_str() << ".bin\"";
+       if( !first )
+          fout2 << ",";
+       fout2 << " \"" << newname.c_str() << ".bin\"";
      }
      else
      {
@@ -275,6 +284,9 @@ AGAIN:
         if( !first )
            fout << ",";
         fout << " \"" << newname.c_str() << ".dat\"";
+        if( !first )
+           fout2 << ",";
+        fout2 << " \"" << newname.c_str() << ".dat\"";
      }
      first = false;
 
