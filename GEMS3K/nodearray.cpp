@@ -99,6 +99,107 @@ void  TNodeArray::checkNodeArray(
 }
 
 //-------------------------------------------------------------------
+// Initialization of TNodeArray data structures. Reads in the DBR text input files and
+// copying data from work DATABR structure into the node array
+// (as specified in nodeTypes array, ndx index of dataBR files in
+//    the dbrfiles_lst_name list).
+//
+//-------------------------------------------------------------------
+void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
+                  long int *nodeTypes, bool getNodT1, bool binary_f  )
+{
+  int i;
+  gstring datachbr_fn;
+
+  gstring curPath = ""; //current reading file path
+
+#ifndef IPMGEMPLUGIN
+      size_t npos = gstring::npos;
+#endif
+
+     gstring lst_in = dbrfiles_lst_name;
+     gstring Path = "";
+
+// Get path
+#ifdef IPMGEMPLUGIN
+#ifdef _WIN32
+      size_t pos = lst_in.rfind("\\");// HS keep this on windows
+#else
+      size_t pos = lst_in.rfind("/"); // HS keep this on linux
+#endif
+#else
+      size_t pos = lst_in.rfind("\\");
+      if( pos == npos )
+         pos = lst_in.rfind("/");
+      else
+         pos = max(pos, lst_in.rfind("/") );
+#endif
+      if( pos < npos )
+      Path = lst_in.substr(0, pos+1);
+
+//  open file stream for the file names list file
+      fstream f_lst( lst_in.c_str(), ios::in );
+      ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
+
+
+// Prepare for reading DBR_DAT files
+     i = 0;
+     while( !f_lst.eof() )  // For all DBR_DAT files listed
+     {
+
+#ifndef IPMGEMPLUGIN
+   pVisor->Message( 0, "GEM2MT node array",
+      "Reading from disk a set of node array files to resume an interrupted RMT task. "
+           "Please, wait...", i, nNodes() );
+#endif
+
+// Reading DBR_DAT file into work DATABR structure
+         if( i )  // Comma only after the first DBR_DAT file!
+            f_getline( f_lst, datachbr_fn, ',');
+         else
+            f_getline( f_lst, datachbr_fn, ' ');
+
+         gstring dbr_file = Path + datachbr_fn;
+         curPath = dbr_file;
+         if( binary_f )
+         {
+             GemDataStream in_br(dbr_file, ios::in|ios::binary);
+             databr_from_file(in_br);
+          }
+         else
+          {   fstream in_br(dbr_file.c_str(), ios::in );
+                 ErrorIf( !in_br.good() , datachbr_fn.c_str(),
+                    "DBR_DAT fileopen error");
+               databr_from_text_file(in_br);
+          }
+         curPath = "";
+// Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
+//    unpackDataBr();
+
+#ifndef IPMGEMPLUGIN
+        if( getNodT1 )  // optional parameter used only when reading multiple
+            // DBR files after coupled modeling task interruption in GEM-Selektor
+        {
+           setNodeArray( dbr_file, i, binary_f );
+        }
+        else
+#endif
+        {
+// Copying data from work DATABR structure into the node array
+// (as specified in nodeTypes array)
+           setNodeArray( i, nodeTypes  );
+         }
+          i++;
+     }  // end while()
+#ifndef IPMGEMPLUGIN
+   pVisor->CloseMessage();
+#endif
+
+    ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
+    checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
+}
+
+//-------------------------------------------------------------------
 // setNodeArray()
 // Copying data from work DATABR structure into the node array
 // (as specified in nodeTypes array, ndx index of dataBR files in
@@ -267,9 +368,8 @@ AGAIN:
        GemDataStream  f_br1(Path_, ios::out|ios::binary);
        databr_to_file(f_br1);
        f_br1.close();
-       if( !first )
-          fout << ",";
-       fout << " \"" << newname.c_str() << ".bin\"";
+       if( first )
+          fout << " \"" << newname.c_str() << ".bin\"";
        if( !first )
           fout2 << ",";
        fout2 << " \"" << newname.c_str() << ".bin\"";
@@ -281,9 +381,8 @@ AGAIN:
         fstream  f_br2(Path_.c_str(), ios::out);
         databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
         f_br2.close();
-        if( !first )
-           fout << ",";
-        fout << " \"" << newname.c_str() << ".dat\"";
+        if( first )
+           fout << " \"" << newname.c_str() << ".dat\"";
         if( !first )
            fout2 << ",";
         fout2 << " \"" << newname.c_str() << ".dat\"";
@@ -299,7 +398,7 @@ AGAIN:
       // dataBR files - binary
       if( bin_mode )
       {
-         newname =  name + + "-dbr-1-"  + buf;
+         newname =  name +  "-dbr-1-"  + buf;
          Path_ = u_makepath( dir, newname, "bin" );
          GemDataStream  f_br1(Path_, ios::out|ios::binary);
          databr_to_file(f_br1);

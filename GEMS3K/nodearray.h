@@ -197,6 +197,17 @@ public:
     { return RunGEM( iNode( indN, indM, indK ), Mode); }
         // (both calls clean the work node DATABR structure)
 
+    /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
+    /// copying data from work DATABR structure into the node array
+    ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
+    ///                      containing the list of names of  DBR input files.
+    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
+    ///  \param nodeTypes    the initial node contents from DATABR files will be distributed among nodes in array
+    ///                      according to the distribution list nodeTypes
+    ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
+    ///                      task interruption  in GEM-Selektor
+    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f  );
+
     /// Copies data from the work DATABR structure into the node ndx in
     /// the node arrays NodT0 and NodT1  (as specified in nodeTypes array)
     void  setNodeArray( long int ndx, long int* nodeTypes  );

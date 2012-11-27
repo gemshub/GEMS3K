@@ -322,8 +322,9 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
 //  Parameters:
 //  ipmfiles_lst_name - name of a text file that contains:
-//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name1>,
-//      ... , <dataBR file nameN> "
+//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+//  dbfiles_lst_name - name of a text file that contains:
+//    <dataBR  file name1>, ... , <dataBR file nameN> "
 //    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
 //    exist in the same directory where the ipmfiles_lst_name file is located.
 //    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
@@ -345,13 +346,13 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #ifdef IPMGEMPLUGIN
-                          long int* nodeTypes, bool /*getNodT1*/)
+                          const char* dbrfiles_lst_name, long int* nodeTypes, bool /*getNodT1*/)
 #else
-                          long int* nodeTypes, bool getNodT1)
+                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 #endif
 {
-  long int i;
-  gstring curPath = ""; //current reading file path
+
+   gstring curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
   fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
@@ -453,65 +454,34 @@ if( binary_f )
   pmm->Fdev2[0] = 0.;
   pmm->Fdev2[1] = 1e-6;
 
+  // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+       f_getline( f_lst, datachbr_fn, ' ');
 
-// Prepare for reading DBR_DAT files
-     i = 0;
-     while( !f_lst.eof() )  // For all DBR_DAT files listed
-     {
-
-#ifndef IPMGEMPLUGIN
-   pVisor->Message( 0, "GEM2MT node array",
-      "Reading from disk a set of node array files to resume an interrupted RMT task. "
-           "Please, wait...", i, nNodes() );
-#endif
-
-// Reading DBR_DAT file into work DATABR structure
-         if( i )  // Comma only after the first DBR_DAT file!
-            f_getline( f_lst, datachbr_fn, ',');
-         else
-            f_getline( f_lst, datachbr_fn, ' ');
-
-         gstring dbr_file = Path + datachbr_fn;
-         curPath = dbr_file;
-         if( binary_f )
-         {
-             GemDataStream in_br(dbr_file, ios::in|ios::binary);
-             databr_from_file(in_br);
-          }
-         else
-          {   fstream in_br(dbr_file.c_str(), ios::in );
-                 ErrorIf( !in_br.good() , datachbr_fn.c_str(),
-                    "DBR_DAT fileopen error");
-               databr_from_text_file(in_br);
-          }
-         curPath = "";
-          if(!i)
-        	  dbr_file_name = dbr_file;
-// Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
-//    unpackDataBr();
-
-#ifndef IPMGEMPLUGIN
-        if( getNodT1 )  // optional parameter used only when reading multiple
-        	// DBR files after coupled modeling task interruption in GEM-Selektor
+        gstring dbr_file = Path + datachbr_fn;
+        curPath = dbr_file;
+        if( binary_f )
         {
-           setNodeArray( dbr_file, i, binary_f );
-        }
-        else
-#endif
-        {
-// Copying data from work DATABR structure into the node array
-// (as specified in nodeTypes array)
-           setNodeArray( i, nodeTypes  );
+               GemDataStream in_br(dbr_file, ios::in|ios::binary);
+               databr_from_file(in_br);
          }
-          i++;
-     }  // end while()
-#ifndef IPMGEMPLUGIN
-   pVisor->CloseMessage();
-#endif
+         else
+         {   fstream in_br(dbr_file.c_str(), ios::in );
+                   ErrorIf( !in_br.good() , datachbr_fn.c_str(),
+                      "DBR_DAT fileopen error");
+                 databr_from_text_file(in_br);
+            }
+          curPath = "";
+          dbr_file_name = dbr_file;
 
-    ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
-    checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
-
+   // Reading DBR_DAT files from dbrfiles_lst_name
+   // only for TNodeArray class
+          if(  dbrfiles_lst_name )
+              InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
+          else
+              if( nNodes() ==1 )
+                setNodeArray( 0 , 0  );
+             else // undefined TNodeArray
+                  Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
    return 0;
 
 #ifdef IPMGEMPLUGIN

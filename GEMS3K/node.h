@@ -144,8 +144,9 @@ protected:
                             long nx = 1, long ny = 1, long nz = 1 );
 
     // virtual functions for interaction with TNodeArray class (not used at TNode level)
+    virtual void  InitNodeArray( const char *, long int *, bool , bool  ) {}
     virtual void  setNodeArray( long int , long int*  ) { }
-    virtual void  checkNodeArray( long int, long int*, const char* ) { }
+    //virtual void  checkNodeArray( long int, long int*, const char* ) { }
     virtual long int nNodes()  const // virtual call for interaction with TNodeArray class
     { return 1; }
 
@@ -194,12 +195,16 @@ public:
 ///                      containing the list of names of  GEMS3K input files.
 ///                      Example: file "test.lst" with a content:    -t "dch.dat" "ipm.dat" "dbr-0.dat"
 ///                      (-t  tells that input files are in text format)
+///  \param dbrfiles_lst_name  optional parameter used only on the TNodeArray,
+///                      pointer to a null-terminated C string with a path to a text file
+///                      containing the list of names of  DBR input files.
+///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
 ///  \param nodeTypes   optional parameter used only on the TNodeArray, the initial node contents
 ///                      from DATABR files will be distributed among nodes in array according to the distribution list nodeTypes
 ///  \param getNodT1    optional parameter used only when reading multiple DBR files after modeling
 ///                      task interruption  in GEM-Selektor
 ///  \return 0  if successful; 1 if input file(s) were not found or corrupt; -1 if internal memory allocation error occurred.
-    long int  GEM_init( const char *ipmfiles_lst_name,
+  long int  GEM_init( const char *ipmfiles_lst_name, const char *dbrfiles_lst_name = 0,
                    long int *nodeTypes = 0, bool getNodT1 = false);
 
 #ifdef IPMGEMPLUGIN
