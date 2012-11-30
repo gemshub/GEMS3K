@@ -116,6 +116,16 @@ long int TRWArrays::findFld( const char *Name )
       }
     }
 
+ void TPrintArrays::writeField(long f_num, char value, bool with_comments, bool brief_mode  )
+    {
+      if(!brief_mode || getAlws( f_num ))
+      {  if( with_comments && flds[f_num].comment.length()>1)
+          ff << flds[f_num].comment.c_str() << endl;
+        ff << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << "\'" << value << "\'" << endl;
+      }
+    }
+
  void TPrintArrays::writeField(long f_num, double value, bool with_comments, bool brief_mode  )
   {
      if(!brief_mode || getAlws(f_num ))

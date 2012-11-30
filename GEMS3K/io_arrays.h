@@ -124,6 +124,12 @@ public:
     /// \param brief_mode - Do not write data items that contain only default values
     void writeField(long f_num, short value, bool with_comments, bool brief_mode  );
 
+    /// Writes char field to a text file.
+    /// <flds[f_num].name> 'value'
+    /// \param with_comments - Write files with comments for all data entries
+    /// \param brief_mode - Do not write data items that contain only default values
+    void writeField(long f_num, char value, bool with_comments, bool brief_mode  );
+
     /// Writes double field to a text file.
     /// <flds[f_num].name> value
     /// \param with_comments - Write files with comments for all data entries

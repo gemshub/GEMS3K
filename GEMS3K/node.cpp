@@ -346,7 +346,7 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #ifdef IPMGEMPLUGIN
-                          const char* dbrfiles_lst_name, long int* nodeTypes, bool /*getNodT1*/)
+                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 #else
                           const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 #endif
