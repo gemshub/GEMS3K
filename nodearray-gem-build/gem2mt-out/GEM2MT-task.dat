@@ -1,143 +1,72 @@
-#  GEMS3K v.3.1 r.760 (rc) 
-# File: C:/DevGEMS/gem2mt-out/GEM2MT-task.dat
-# Comments can be marked with # $ ; as the first character in the line
 
-# Name: Comment line for the full name of this GEM2MT task 
 <Name>
 'Test S mode (initial 2.5 mmol/L calcite)  1 to 96 C' 
-# Note: Comment line for optional enhancement of the dtName line 
 <Note>
 '`' 
-
-## (1) Allocation and setup flags
-# PvPGD: Use mobile phase groups definitions (+ -)
 <PvPGD>  '+'
-# PvFDL: Use MGP flux definition list (+ -)
 <PvFDL>  '+'
-# PvSFL: Use source fluxes and elemental stoichiometries for them (+ -)
 <PvSFL>  '-'
-# PvGrid: Use array of grid point locations (+ -)
 <PvGrid>  '-'
-# PvDDc:  Use diffusion coefficients for DC - DDc vector (+ -)
 <PvDDc>  '-'
-# PvDIc:  Use diffusion coefficients for IC - DIc vector (+ -)
 <PvDIc>  '-'
-# PvnVTK: Use selected fields to VTK format (+ -)
-<PvnVTK>  '-'
-
-## (2) Controls on operation
-# PsMode: Code of GEM2MT mode of operation { S F A D T W V }
+<PvnVTK>  '+'
 <PsMode>  'S'
-# PsSIA: Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)
 <PsSIA>  '-'
-# PsSdat:Save DataCH and inital DataBR files as text files (+) or binary (-)
 <PsSdat>  '+'
-# PsSdef:Do not write data items that contain only default values (+ -)
 <PsSdef>  '-'
-# PsScom:Write files with comments for all data entries ( in text mode )(+ -)
-<PsScom>  '+'
-# PsMO: Use non stop debug output for nodes (+ -)
-<PsMO>  '-'
-# PsVTK: Use non stop debug output nodes to VTK format(+ -)
-<PsVTK>  '-'
-# PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids )
+<PsScom>  '-'
+<PsMO>  '+'
+<PsVTK>  '+'
 <PsMPh>  '1'
-
-## (3) Dimensions for gem2mt (memory allocation)
-# nC:  Input number of local equilibrium cells (nodes)
 <nC>  21
-# nIV:  Number of initial variants of the chemical system, nIV <= nC
 <nIV>  2
-# nMGP:  Number of mobile groups of phases, nMGP >= 0
 <nMGP>  1
-# nFD: Number of MGP fluxes defined in the megasystem, nFD >= 0
 <nFD>  21
-# nSFD:  Number of IC source flux compositions defined in megasystem, nSFD >= 0
 <nSFD>  0
-# nEl: Number of electrolytes for diffusion coefficients in mDEl
 <nEl>  0
-# nPTypes:  Number of allocated particle types < 20
 <nPTypes>  0
-# nProps:  Number of particle statistic properties (for monitoring) >= nPTypes
 <nProps>  0
-# Nsd:   Number of references to data sources
 <Nsd>  0
-# bTau:   Time point for the simulation break (Tau[0] at start)
 <bTau>  0
-# ntM:  Maximum allowed number of time iteration steps
 <ntM>  100
-# nVTKfld:   Number of selected fields to VTK format
-<nVTKfld>  0
-# nPai: Number of P points in MTP interpolation array in DataCH ( 1 to 10 )
+<nVTKfld>  5
 <nPai>  21
-# nTai: Number of T points in MTP interpolation array in DataCH ( 1 to 20 )
 <nTai>  21
-# Lsf:  Number of DCs in phases-solutions in Multi (DATACH)
 <Lsf>  23
-# Nf:   nICb number of ICs in  (DATABR) for setting box-fluxes
 <Nf>  7
-# FIf:  nPHb number of phases in (DATABR) for setting box-fluxes
 <FIf>  6
-# Tau:   Physical time iterator (start,end,step)
 <Tau>
 0 10 0.1 
-# sizeLc:  Spatial dimensions of the medium defines topology of nodes ( x y z )
 <sizeLc>
 0 0 0 
-
-## (4) Input for compositions of initial systems
-# InpSys: Masses (kg) and volumes (L) for initial systems: Ms (total mass, normalize)
 <InpSys>  0
-# Vsysb:  Vs (total volume of the object, for volume concentrations)
 <Vsysb>  0
-# Mwatb:  M(H2O) (mass of water-solvent for molalities)
 <Mwatb>  1
-# Maqb:   Maq (mass of aqueous solution for ppm etc.)
 <Maqb>  1
-# Vaqb:   Vaq (volume of aqueous solution for molarities)
 <Vaqb>  1
-# Pgb:   Pg (pressure in gas, for partial pressures)
 <Pgb>  0
-# Tmolb:  MOL total mole amount for basis sub-system composition calculations
 <Tmolb>  0
-# WmCb:  mole fraction of the carrier DC (e.g. sorbent or solvent)
 <WmCb>  0
-# TauAsur:  Specific surface area of the sorbent (for adsorbed species)
 <Asur>  0
-# tf:  Advection/diffusion mass transport: time step reduction factor (usually 1)
 <tf>  0
-# Vt:  Initial total node volume (m^3)
 <Vt>  0
-# vp:  Fluid advection velocity (m/sec)
 <vp>  0
-# eps:  Initial node effective porosity (0 < eps < 1), usually 1
 <eps>  1e-009
-# Km:  Initial effective permeability, m2, usually 1
 <Km>  1e-012
-# al:  Initial value of specific longitudinal dispersivity (m), usually 1e-3
 <al>  0
-# Dif:  Initial general aqueous medium diffusivity (m2/sec), usually 1e-9
 <Dif>  0
-# nto:  Initial tortuosity factor, usually 1
 <nto>  0
-# cdv:   Cutoff for IC amount differences in the node between time steps (mol), usually 1e-9
 <cdv>  0
-# cez:   Cutoff for minimal amounts of IC in node bulk compositions (mol), usually 1e-12
 <cez>  0
-
-## (5) Internal stop point
-# mtWrkS: internal
 <mtWrkS>
 1002 0 20 2 0 0 
 20 0 0 0 100 0 
-# mtWrkF: internal
 <mtWrkF>
 25 1 0 9.99999999999998 0.1 9.89999999999998 
-0 90.1520000000051 0 0 
+0 99.3410000000071 0 0 
 
 <END_DIM>
 
-# DiCp:  Array of indexes of initial system variants for distributing to nodes [nC]
 <DiCp>
 0 3 
 1 0 
@@ -160,9 +89,6 @@
 1 0 
 1 0 
 1 -3 
-
-## Use flux definition list
-# FDLi: Source/Receive box index in the flux definition
 <FDLi>
 0 1 
 1 2 
@@ -185,7 +111,6 @@
 18 19 
 19 20 
 20 -1 
-# FDLf:  [nFD][4] Part of the flux defnition list: flux order ,flux rate, MGP quantity
 <FDLf>
 0 1 0 0 
 0 1 0 0 
@@ -208,18 +133,12 @@
 0 1 0 0 
 0 1 0 0 
 0 1 0 0 
-# FDLid: [nFD] IDs of fluxes
 <FDLid>
 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 'qj' 
-# FDLop: [nFD] Operation codes (letters)
 <FDLop>
-' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' 
-# FDLmp: [nFD] ID of MGP to move in this flux 
+'' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' '' 
 <FDLmp>
 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 'aq' 
-
-## Use phase groups definitions
-# PGT: Quantities of phases in MGP [Fi][nPG]
 <PGT>
 1 
 0 
@@ -227,14 +146,10 @@
 0 
 0 
 0 
-# MGPid: [nPG] ID list of mobile phase groups
 <MGPid>
 'aq' 
-# UMGP: [nFi] units for setting phase quantities in MGP (see PGT )
 <UMGP>
 'M' 'M' 'M' 'M' 'M' 'M' 
-
-# MB: [nC]  column of current masses of boxes or reservoirs (in kg) 
 <MB>
 1.20497251999189e-006 4.01677169666276e-009 0.000568517816464101 0.11181337030866 0.000194875272157376 0.887422027613427 0 
 1.33921499150558e-005 2.03392418856424e-005 0.000568502716045441 0.111813701992173 0.0002071998609941 0.887473363098193 0 
@@ -257,7 +172,6 @@
 3.15134501870238e-005 0.000104172779787782 2.44938934330555e-005 0.123762957279759 6.29536640854473e-006 0.982382156289581 0 
 3.15614395715462e-005 0.000102895830894987 1.44609596535559e-005 0.123983332542129 3.72300576852408e-006 0.984131376832289 0 
 3.15965621323084e-005 0.00010212547317507 8.22997972734041e-006 0.124120197178759 2.12243411302572e-006 0.985217756108132 0 
-# dMB: nC][Nb]  Table of current derivatives dM for elements in reservoirs 
 <dMB>
 0 0 0 0 0 0 0 
 -1.92643301142703e-006 -3.21626248561983e-006 1.67782429548154e-008 -3.6853723696384e-007 -1.94208360537363e-006 -1.06234443080222e-005 0 
@@ -280,9 +194,11 @@
 -7.64400464874518e-008 2.21578473129618e-006 1.71503141529907e-005 -0.000376709850204784 4.38852377582627e-006 -0.00299009823442453 0 
 -6.00418022639118e-008 1.39640772481586e-006 1.1147704199444e-005 -0.000244861402633106 2.85817848891184e-006 -0.00194360523666404 0 
 -4.20687522792415e-008 8.45796763457365e-007 6.92331102912836e-006 -0.000152071818477539 1.77841295055373e-006 -0.00120710024760495 0 
-
-# nam_i: [nIV][12] id names of initial systems
+<xFlds>
+6 0 
+7 0 
+16 0 
+18 0 
+17 0 
 <nam_i>
 'MgCl2-f(0)' 'CalcCol(1)' 
-
-# End of file

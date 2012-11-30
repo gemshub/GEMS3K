@@ -825,6 +825,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
        name += ".vtk";
 
        name = pathVTK + prefixVTK + name;
+
        fstream out_br(name.c_str(), ios::out );
        ErrorIf( !out_br.good() , name, "VTK text make error");
        na->databr_to_vtk(out_br, nameVTK.c_str(), mtp->cTau, mtp->ct, mtp->nVTKfld, mtp->xVTKfld );

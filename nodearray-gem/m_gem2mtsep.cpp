@@ -86,8 +86,8 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
    ErrorIf( !ff.good() , gem2mt_in1, "Fileopen error");
    from_text_file( ff );
    pathVTK = vtk_dir;
-   nameVTK = "Undef";
-   prefixVTK = "VTK";
+   if( !pathVTK.empty() )
+      pathVTK += "/";
    return 0;
   }
   catch(TError& err)
@@ -123,6 +123,28 @@ int TGEM2MT::WriteTask( const char *gem2mt_out )
 int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
 {
   int ii;
+
+  // define name of vtk file
+  gstring lst_in = lst_f_name;
+  size_t pos = lst_in.rfind("\\");
+  size_t pos2 = lst_in.rfind("/");
+  if( pos == npos )
+      pos = pos2;
+  else
+      if( pos2 < npos)
+         pos = max(pos, pos2 );
+  if( pos < npos )
+  {   if( pathVTK.empty() )
+        pathVTK = lst_in.substr(0, pos+1);
+      lst_in = lst_in.substr(pos+1);
+  }
+  pos = lst_in.find(".");
+  lst_in = lst_in.substr(0, pos);
+  pos = lst_in.find("-");
+  lst_in = lst_in.substr(0, pos);
+  nameVTK = lst_in;
+  prefixVTK = lst_in;
+
   // The NodeArray must be allocated here
   TNodeArray::na = na = new TNodeArray( /* mtp->xC,mtp->yC,mtp->zC */ mtp->nC );
 

@@ -128,8 +128,10 @@ void TGEM2MT::mt_reset()
   mtp->qc = 0;
   mtp->kv = 0;
   mtp->jt = 0;
+#ifndef IPMGEMPLUGIN
   mtp->cT = mtp->PTVm[START_][1];
   mtp->cP = mtp->PTVm[START_][0];
+#endif
   mtp->ct = 0;
 }
 

@@ -32,7 +32,7 @@ int main( int argc, char* argv[] )
      gstring gem2mt_in1 = "";
      gstring ipm_lst = "";
      gstring dbr_lst = "";
-     gstring vtk_fname = "vtk_dir_name";
+     gstring vtk_fname = "";
 
 // from argv
       if (argc >= 2 )
@@ -41,11 +41,10 @@ int main( int argc, char* argv[] )
        ipm_lst = argv[2];
       if (argc >= 4 )
         dbr_lst = argv[3];
-      if (argc >= 4 )
-        vtk_fname = argv[3];
+      if (argc >= 5 )
+        vtk_fname = argv[4];
 
    try{
-
 
    if(gem2mt_in1.empty() || ipm_lst.empty() || dbr_lst.empty() )
        Error( "Start task", "No inital files");
@@ -61,8 +60,8 @@ int main( int argc, char* argv[] )
     if( TGEM2MT::pm->MassTransInit( ipm_lst.c_str(), dbr_lst.c_str() ) )
       return 1;  // error reading files
 
-   TGEM2MT::pm-> WriteTask( "gem2mt_out.dat" );
-   return 0;
+//   TGEM2MT::pm-> WriteTask( "gem2mt_out.dat" );
+
 // here we call the mass-transport finite-difference coupled routine
    TGEM2MT::pm->RecCalc();
    }
