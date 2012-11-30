@@ -92,19 +92,19 @@ outField DataBR_fields[f_lga+1/*58*/] =  {
 //#endif
  // dynamic arrays (52-38=14)
   { "bIC",  1, 0, nICbi, "# bIC: Bulk composition of reactive subsystem (main GEM input), moles of ICs [nICb]" },
-  { "rMB",  0, 0, nICbi, "\n\n# rMB: Mass balance residuals, moles (GEM output) [nICb]" },
-  { "uIC",  0, 0, nICbi, "\n\n# uIC: Chemical potentials of ICs in equilibrium (dual solution), J/(RT) (GEM output) [nICb]" },
+  { "rMB",  0, 0, nICbi, "\n# rMB: Mass balance residuals, moles (GEM output) [nICb]" },
+  { "uIC",  0, 0, nICbi, "\n# uIC: Chemical potentials of ICs in equilibrium (dual solution), J/(RT) (GEM output) [nICb]" },
   { "xDC",  0, 0, nDCbi, "# xDC: Speciation - amounts of DCs in equilibrium (primal solution), moles (GEM output/input) [nDCb]" },
-  { "gam",  0, 0, nDCbi, "\n\n# gam: Activity coefficients of DCs in their respective phases (GEM output/input) [nDCb]" },
-  { "dll",  0, 0, nDCbi, "\n\n# dll: Lower metastability restrictions on amounts of DCs, moles (GEM input) [nDCb]" },
-  { "dul",  0, 0, nDCbi, "\n\n# dul: Upper metastability constraints on amounts of DCs, moles (GEM input) [nDCb]" },
+  { "gam",  0, 0, nDCbi, "\n# gam: Activity coefficients of DCs in their respective phases (GEM output/input) [nDCb]" },
+  { "dll",  0, 0, nDCbi, "\n# dll: Lower metastability restrictions on amounts of DCs, moles (GEM input) [nDCb]" },
+  { "dul",  0, 0, nDCbi, "\n# dul: Upper metastability constraints on amounts of DCs, moles (GEM input) [nDCb]" },
   { "aPH",  0, 0, nPHbi, "# aPH: Specific surface areas of phases, m2/kg (GEM input) [nPHb]" },
-  { "xPH",  0, 0, nPHbi, "\n\n# xPH: Amounts of phases in equilibrium state, moles (GEM output) [nPHb]" },
-  { "vPS",  0, 0, nPSbi, "\n\n# vPS: Volumes of multicomponent phases, m3 (GEM output) [nPSb]" },
-  { "mPS",  0, 0, nPSbi, "\n\n# mPS: Masses of multicomponent phases, kg (GEM output) [nPSb]" },
+  { "xPH",  0, 0, nPHbi, "\n# xPH: Amounts of phases in equilibrium state, moles (GEM output) [nPHb]" },
+  { "vPS",  0, 0, nPSbi, "\n# vPS: Volumes of multicomponent phases, m3 (GEM output) [nPSb]" },
+  { "mPS",  0, 0, nPSbi, "\n# mPS: Masses of multicomponent phases, kg (GEM output) [nPSb]" },
   { "bPS",  0, 0, nPSbnICbi, "\n\n# bPS: Bulk elemental compositions of multicomponent phases, moles (GEM output) [nPSb*nICb]"},
-  { "xPA",  0, 0, nPSbi, "\n\n# xPA: Amount of carrier (sorbent or solvent) in multicomponent phases, moles (GEM output) [nPSb]" },
-  { "bSP",  0, 0, nICbi, "\n\n# bSP: Output bulk composition of the equilibrium solid part of the system, moles " },
+  { "xPA",  0, 0, nPSbi, "\n# xPA: Amount of carrier (sorbent or solvent) in multicomponent phases, moles (GEM output) [nPSb]" },
+  { "bSP",  0, 0, nICbi, "\n# bSP: Output bulk composition of the equilibrium solid part of the system, moles " },
 
 // only for VTK format output
     { "mPH",  0, 0, nPHbi, "# mPH: Masses of phases in equilibrium, kg [nPHb]" },
@@ -133,37 +133,37 @@ outField DataCH_static_fields[14] =  {
 };
 
 outField DataCH_dynamic_fields[30] =  { //+4
-   { "xic",   1, 0, 0, "\n# xIC: DATACH access index list for ICs kept in the DATABR structure and in DBR files [nICb]" },
-   { "xdc",   1, 0, 0, "\n# xDC: DATACH access index list of DCs kept in the DATABR  structure and in DBR files [nDCb]" },
-   { "xph",   1, 0, 0, "\n# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]" },
+   { "xic",   1, 0, 0, "# xIC: DATACH access index list for ICs kept in the DATABR structure and in DBR files [nICb]" },
+   { "xdc",   1, 0, 0, "# xDC: DATACH access index list of DCs kept in the DATABR  structure and in DBR files [nDCb]" },
+   { "xph",   1, 0, 0, "# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]" },
    { "ICNL",  1, 0, 0, "\n# ICNL: Name list of ICs (Independent Components, up to 5 characters per name) [nIC]" },
-   { "ccIC",  1, 0, 0, "\n# ccIC: Class codes of ICs (Independent Components) [nIC]" },
-   { "ICmm",  1, 0, 0, "\n# ICmm: Atomic (molar) masses of ICs,  kg/mol [nIC]" },
+   { "ccIC",  1, 0, 0, "# ccIC: Class codes of ICs (Independent Components) [nIC]" },
+   { "ICmm",  1, 0, 0, "# ICmm: Atomic (molar) masses of ICs,  kg/mol [nIC]" },
    { "DCNL",  1, 0, 0, "\n# DCNL: Name list of DCs (Dependent Components, up to 16 characters per name) [nDC]" },
-   { "ccDC",  1, 0, 0, "\n# ccDC: Class codes of DCs (Dependent Components) [nDC]" },
-   { "DCmm",  0, 0, 0, "\n\n# DCmm: Molar masses of DCs, kg/mol [nDC]" },
+   { "ccDC",  1, 0, 0, "# ccDC: Class codes of DCs (Dependent Components) [nDC]" },
+   { "DCmm",  0, 0, 0, "\n# DCmm: Molar masses of DCs, kg/mol [nDC]" },
    { "PHNL",  1, 0, 0, "# PHNL: List of Phase names (up to 16 characters per name) [nPH]" },
-   { "ccPH",  1, 0, 0, "\n# ccPH: Codes of phase aggregate state [nPH]" },
-   { "nDCinPH",  1, 0, 0, "\n# nDCinPH: Number of DCs included in each phase [nPH]" },
-   { "A",     1, 0, 0, "\n# A: Stoichiometry matrix A (expanded formulae) for DCs [nDC*nIC]"},
-   { "Ttol",  0, 0, 0, "\n# Ttol: Tolerance for the temperature interpolation, K" },
+   { "ccPH",  1, 0, 0, "# ccPH: Codes of phase aggregate state [nPH]" },
+   { "nDCinPH",  1, 0, 0, "# nDCinPH: Number of DCs included in each phase [nPH]" },
+   { "A",     1, 0, 0, "# A: Stoichiometry matrix A (expanded formulae) for DCs [nDC*nIC]"},
+   { "Ttol",  0, 0, 0, "# Ttol: Tolerance for the temperature interpolation, K" },
    { "TKval", 1, 0, 0, "# TKval: Temperature values, K for lookup arrays of thermodynamic data [nTp]" },
-   { "Ptol",  0, 0, 0, "\n# Ptol: Tolerance for the pressure interpolation, Pa" },
+   { "Ptol",  0, 0, 0, "# Ptol: Tolerance for the pressure interpolation, Pa" },
    { "Pval",  1, 0, 0, "# Pval: Pressure values, Pa for lookup arrays of thermodynamic data [nPp]" },
-   { "denW",  1, 0, 0, "\n\n# denW: Look-up array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]" },
-   { "denWg", 1, 0, 0, "\n\n# denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]" },
-   { "epsW",  1, 0, 0, "\n\n# epsW: Look-up array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]" },
-   { "epsWg", 1, 0, 0, "\n\n# epsWg: Look-up array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]" },
+   { "denW",  1, 0, 0, "\n# denW: Look-up array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]" },
+   { "denWg", 1, 0, 0, "\n# denWg: Look-up array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]" },
+   { "epsW",  1, 0, 0, "\n# epsW: Look-up array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]" },
+   { "epsWg", 1, 0, 0, "\n# epsWg: Look-up array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]" },
 //   { "visW",  1, 0, 0 },
-   { "V0",    1, 0, 0, "\n\n# V0: Look-up array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]" },
-   { "G0",    1, 0, 0, "\n\n# G0: Look-up array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]" },
-   { "H0",    0, 0, 0, "\n\n# H0: Look-up array for DC molar enthalpy h(T,P), J/mol [nDC*nPp*nTp]" },
-   { "S0",    0, 0, 0, "\n\n# S0: Look-up array for DC absolute entropy S(T,P), J/K/mol [nDC*nPp*nTp] " },
-   { "Cp0",   0, 0, 0, "\n\n# Cp0: Look-up array for DC heat capacity Cp(T,P), J/K/mol [nDC*nPp*nTp]" },
-   { "A0",    0, 0, 0, "\n\n# A0: reserved: Look-up array for DC Helmholtz energy function, J/mol [nDC*nPp*nTp]" },
-   { "U0",    0, 0, 0, "\n\n# U0: reserved: Look-up array for DC internal energy function, J/mol [nDC*nPp*nTp]" },
-   { "DD",    0, 0, 0, "\n\n# DD: reserved: Look-up array for DC diffusion coefficients [nDC*nPp*nTp]" },
-   { "Psat",  0, 0, 0, "\n# Psat: Pressure Pa at saturated H2O vapour at given temperature [nTp]" }
+   { "V0",    1, 0, 0, "\n# V0: Look-up array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]" },
+   { "G0",    1, 0, 0, "\n# G0: Look-up array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]" },
+   { "H0",    0, 0, 0, "\n# H0: Look-up array for DC molar enthalpy h(T,P), J/mol [nDC*nPp*nTp]" },
+   { "S0",    0, 0, 0, "\n# S0: Look-up array for DC absolute entropy S(T,P), J/K/mol [nDC*nPp*nTp] " },
+   { "Cp0",   0, 0, 0, "\n# Cp0: Look-up array for DC heat capacity Cp(T,P), J/K/mol [nDC*nPp*nTp]" },
+   { "A0",    0, 0, 0, "\n# A0: reserved: Look-up array for DC Helmholtz energy function, J/mol [nDC*nPp*nTp]" },
+   { "U0",    0, 0, 0, "\n# U0: reserved: Look-up array for DC internal energy function, J/mol [nDC*nPp*nTp]" },
+   { "DD",    0, 0, 0, "\n# DD: reserved: Look-up array for DC diffusion coefficients [nDC*nPp*nTp]" },
+   { "Psat",  0, 0, 0, "# Psat: Pressure Pa at saturated H2O vapour at given temperature [nTp]" }
 };
 
 //===============================================================
@@ -182,7 +182,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
       ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
       ff << "# DBR text input file for node system recipe and speciation data" << endl;
       ff << "# (should be read only after the DCH and the IPM files)" << endl << endl;
-      ff << "# (1): Flags controlling GEM IPM-3 operation and data exchange" << endl;
+      ff << "# (1): Flags controlling GEM IPM-3 operation and data exchange";
    }
 
 #ifndef NODEARRAYLEVEL
@@ -196,7 +196,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
    prar.writeField(f_IterDone, CNode->IterDone, _comment, brief_mode  );
 
   if( _comment )
-      ff << "\n## (2) Chemical scalar properies of the node system" << endl;
+      ff << "\n\n## (2) Chemical scalar properies of the node system";
 
   prar.writeField(f_TK, CNode->TK, _comment, brief_mode  );
   prar.writeField(f_P, CNode->P, _comment, brief_mode  );
@@ -228,7 +228,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( CNode->NodeStatusFMT != No_nodearray /*TNodeArray::na->nNodes() > 1*/ )
   {
    if( _comment )
-      ff << "\n## (3) Scalar mass-trasport properties (used only at NodeArray level)" << endl;
+      ff << "\n\n## (3) Scalar mass-trasport properties (used only at NodeArray level)";
    prar.writeField(f_Dif, CNode->Dif, _comment, brief_mode  );
    prar.writeField(f_Vt, CNode->Vt, _comment, brief_mode  );
    prar.writeField(f_vp, CNode->vp, _comment, brief_mode  );
@@ -250,10 +250,10 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 #endif
 
   if( _comment )
-   {   ff << "\n### Arrays: for dimensions and index lists, see Section (2) of DCH file" << endl << endl;
+   {   ff << "\n\n### Arrays: for dimensions and index lists, see Section (2) of DCH file" << endl << endl;
        ff << "## (4) Data for Independent Components";
        prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
-       ff << endl;
+       //ff << endl;
    }
 
   prar.writeArray(  f_bIC,  CNode->bIC, CSD->nICb, -1L,_comment, brief_mode );
@@ -264,7 +264,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( _comment )
   {    ff << "\n\n## (5) Data for Dependent Components";
        prar.writeArray(  NULL, CSD->DCNL[0], CSD->nDC, MaxDCN );
-       ff << endl;
+       //ff << endl;
   }
 
   prar.writeArray(  f_xDC,  CNode->xDC, CSD->nDCb, -1L,_comment, brief_mode  );
@@ -275,7 +275,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( _comment )
   {    ff << "\n\n## (6) Data for Phases";
         prar.writeArray(  NULL, CSD->PHNL[0], CSD->nPH, MaxPHN );
-        ff << endl;
+       // ff << endl;
   }
 
   prar.writeArray(  f_aPH,  CNode->aPH, CSD->nPHb, -1L,_comment, brief_mode );
@@ -489,7 +489,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
      ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
      ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
      ff << "# DCH text input file (should be read before IPM and DBR files)" << endl << endl;
-     ff << "## (1) Dimensions for memory allocation" << endl;
+     ff << "## (1) Dimensions for memory allocation";
   }
   prar1.writeField(f_nIC, CSD->nIC, _comment, brief_mode  );
   prar1.writeField(f_nDC, CSD->nDC, _comment, brief_mode  );
@@ -498,21 +498,21 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   prar1.writeField(f_nDCs, CSD->nDCs, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "## (2) Dimensions for DBR node recipe (memory allocation)" << endl;
+    ff << endl << "\n## (2) Dimensions for DBR node recipe (memory allocation)";
   prar1.writeField(f_nICb, CSD->nICb, _comment, brief_mode  );
   prar1.writeField(f_nDCb, CSD->nDCb, _comment, brief_mode  );
   prar1.writeField(f_nPHb, CSD->nPHb, _comment, brief_mode  );
   prar1.writeField(f_nPSb, CSD->nPSb, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "## (3) Dimensions for thermodynamic data arrays" << endl;
+    ff << endl << "\n## (3) Dimensions for thermodynamic data arrays";
   prar1.writeField(f_nTp, CSD->nTp, _comment, brief_mode  );
   prar1.writeField(f_nPp, CSD->nPp, _comment, brief_mode  );
   prar1.writeField(f_iGrd, CSD->iGrd, _comment, brief_mode  );
   prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
   prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
-  ff << endl << "<END_DIM>" << endl;
+  ff << endl << "\n<END_DIM>" << endl;
 
 // dynamic arrays - must follow static data
   if( _comment )

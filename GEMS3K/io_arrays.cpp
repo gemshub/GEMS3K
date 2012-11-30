@@ -100,9 +100,9 @@ long int TRWArrays::findFld( const char *Name )
     {
       if(!brief_mode || getAlws( f_num ))
       {  if( with_comments && flds[f_num].comment.length()>1)
-          ff << flds[f_num].comment.c_str() << endl;
-        ff << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << /*left << setw(17)  <<*/  value << endl;
+          ff << endl << flds[f_num].comment.c_str();
+        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << /*left << setw(17)  <<*/  value;
       }
     }
 
@@ -110,9 +110,9 @@ long int TRWArrays::findFld( const char *Name )
     {
       if(!brief_mode || getAlws( f_num ))
       {  if( with_comments && flds[f_num].comment.length()>1)
-          ff << flds[f_num].comment.c_str() << endl;
-        ff << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << /*left << setw(17)  <<*/  value << endl;
+          ff <<  endl << flds[f_num].comment.c_str();
+        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << /*left << setw(17)  <<*/  value;
       }
     }
 
@@ -120,9 +120,9 @@ long int TRWArrays::findFld( const char *Name )
     {
       if(!brief_mode || getAlws( f_num ))
       {  if( with_comments && flds[f_num].comment.length()>1)
-          ff << flds[f_num].comment.c_str() << endl;
-        ff << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << "\'" << value << "\'" << endl;
+          ff <<  endl <<  flds[f_num].comment.c_str();
+        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << "\'" << value << "\'";
       }
     }
 
@@ -130,9 +130,9 @@ long int TRWArrays::findFld( const char *Name )
   {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments && flds[f_num].comment.length()>1 )
-            ff << flds[f_num].comment.c_str() << endl;
-         ff << "<" << flds[f_num].name.c_str() << ">  ";
-         ff << /*left << setw(7) <<*/  value << endl;
+            ff <<  endl <<  flds[f_num].comment.c_str();
+         ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+         ff << /*left << setw(7) <<*/  value;
      }
   }
 
@@ -142,7 +142,7 @@ long int TRWArrays::findFld( const char *Name )
 
    if(!brief_mode || getAlws(f_num ))
    { if( with_comments )
-          ff << flds[f_num].comment.c_str();
+          ff <<  endl << flds[f_num].comment.c_str();
      writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
    }
  }
@@ -152,7 +152,7 @@ long int TRWArrays::findFld( const char *Name )
  {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
-            ff << flds[f_num].comment.c_str();
+            ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
      }
  }
@@ -162,7 +162,7 @@ long int TRWArrays::findFld( const char *Name )
  {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
-            ff << flds[f_num].comment.c_str();
+            ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
      }
  }
@@ -172,7 +172,7 @@ long int TRWArrays::findFld( const char *Name )
  {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
-            ff << flds[f_num].comment.c_str();
+            ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
      }
  }

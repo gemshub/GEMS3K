@@ -1,94 +1,49 @@
-#qmake -spec win32-borland nodearray-gem.pro > a
-#qmake -spec win32-msvc.net nodearray-gem.pro > a
+#  qmake project file for the nodearray-gem example (part of GEMS3K standalone code)
+# (c) 2012 GEMS Developer Team
 
-TEMPLATE	= app
-LANGUAGE        = C++
-TARGET		= nodearrs
-VERSION         = 2.2.3
+TEMPLATE = app
+LANGUAGE = C++
+TARGET = nodearrs
+VERSION = 3.0.0
 
-CONFIG		-= qt
-CONFIG		+=  warn_on debug windows
-CONFIG		+= console
+CONFIG -= qt
+CONFIG += warn_on
+CONFIG += debug
+#CONFIG += windows
+CONFIG += console
 
-DEFINES         += IPMGEMPLUGIN
-DEFINES         += NOPARTICLEARRAY
+DEFINES += IPMGEMPLUGIN
+DEFINES += NODEARRAYLEVEL
+#DEFINES += NOPARTICLEARRAY
+#DEFINES += SEPGEM2MTMODE
 
 !win32 {
   DEFINES += __unix
 }
 
+GEMS3K_CPP = ../GEMS3K
+GEMS3K_H   = $$GEMS3K_CPP
 
-win32-borland {
-    	DEFINES += __win32_borland
-        #  Debug, RTTI, exceptions, Visual C - compatible
-        QMAKE_CFLAGS += -x -xd -xp -VM -RT
-        QMAKE_CXXFLAGS += -x -xd -xp -VM -RT
-}
+DEPENDPATH +=
+DEPENDPATH += .
+DEPENDPATH += $$GEMS3K_H
 
-LIBS_CPP       =  ../GEMIPM2K
-KERNEL_CPP     =  ../GEMIPM2K
-MODS_CPP       =  ../GEMIPM2K
-SUBMOD_CPP     =  ../GEMIPM2K
-NUMERICS_CPP   =  ../GEMIPM2K
-GEMIPM_CPP     =  ../GEMIPM2K
+INCLUDEPATH +=
+INCLUDEPATH += .
+INCLUDEPATH += $$GEMS3K_H
 
-#LIBS_CPP       =  .
-#KERNEL_CPP     =  .
-#MODS_CPP       =  .
-#SUBMOD_CPP     =  .
-#NUMERICS_CPP   =  .
-#GEMIPM_CPP     =  .
-
-KERNEL_H     =  $$KERNEL_CPP
-LIBS_H       =  $$LIBS_CPP
-MODS_H       =  $$MODS_CPP
-SUBMOD_H     =  $$SUBMOD_CPP
-NUMERICS_H   =  $$NUMERICS_CPP
-GEMIPM_H     =  $$GEMIPM_CPP
+QMAKE_LFLAGS +=
+OBJECTS_DIR = obj
 
 
-DEPENDPATH   += ;.;$$GEMIPM_H;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
-INCLUDEPATH   +=;.;$$GEMIPM_H;$$KERNEL_H;$$LIBS_H;$$MODS_H;$$SUBMOD_H;$$NUMERICS_H
+HEADERS	 +=  m_gem2mt.h \
+             particlearray.h
 
-OBJECTS_DIR       = obj
+SOURCES  +=   main.cpp \
+              particlearray.cpp \
+              m_gem2mtt.cpp \
+              m_gem2mtbox.cpp \
+              m_gem2mtfor.cpp \
+              m_gem2mtsep.cpp
 
-       HEADERS	 += $$LIBS_H/verror.h  \
-                    $$LIBS_H/gdatastream.h  \
-                    $$KERNEL_H/v_user.h \
-                    $$MODS_H/s_fgl.h \
-                    $$SUBMOD_H/databr.h \
-                    $$SUBMOD_H/datach.h \
-                    $$SUBMOD_H/nodearray.h \
-                    $$SUBMOD_H/node.h \
-                    $$SUBMOD_H/ms_multi.h \
-	                $$SUBMOD_H/io_arrays.h \
-		            $$GEMIPM_H/m_const.h \
-		            $$GEMIPM_H/m_param.h  \
-                    $$NUMERICS_H/num_methods.h \
-                    $$NUMERICS_H/tnt_i_refvec.h \
-                    $$NUMERICS_H/tnt_array1d.h \
-                    $$NUMERICS_H/tnt_array2d.h \
-                    $$NUMERICS_H/tnt.h \
-                    $$NUMERICS_H/jama_cholesky.h \
-                    $$NUMERICS_H/jama_lu.h
-
-        SOURCES	  +=  $$LIBS_CPP/gdatastream.cpp  \
-                     $$MODS_CPP/s_fgl.cpp \
-                     $$MODS_CPP/s_fgl1.cpp \
-                     $$MODS_CPP/s_fgl2.cpp \
-                     $$MODS_CPP/s_fgl3.cpp \
-                     $$MODS_CPP/s_fgl4.cpp \
-                    $$SUBMOD_CPP/node.cpp \
-                    $$SUBMOD_CPP/nodearray.cpp \
-                    $$SUBMOD_CPP/node_format.cpp \
-                    $$SUBMOD_CPP/ms_multi_file.cpp \
-                    $$SUBMOD_CPP/ms_multi_format.cpp \
-                    $$SUBMOD_CPP/ipm_chemical.cpp \
-                    $$SUBMOD_CPP/ipm_chemical2.cpp \
-                    $$SUBMOD_CPP/ipm_chemical3.cpp \
-                    $$SUBMOD_CPP/ipm_main.cpp \
-                    $$SUBMOD_CPP/ipm_simplex.cpp \
-		            $$SUBMOD_CPP/io_arrays.cpp \
-                    main.cpp \
-		            $$GEMIPM_CPP/ms_param.cpp \
-                    $$NUMERICS_CPP/num_methods.cpp
+include($$GEMS3K_CPP/gems3k.pri)

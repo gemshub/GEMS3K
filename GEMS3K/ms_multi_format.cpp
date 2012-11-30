@@ -49,7 +49,7 @@ outField MULTI_static_fields[8] =  {
   { "pa_PE" , 0 , 0, 0, "# PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)" },
   { "PV" ,    0 , 0, 0, "\n# PV: Flag for the volume balance constraint (on Vol IC) for indifferent equilibria at P_Sat (0 or 1)" },
   { "PSOL" ,  0 , 0, 0, "\n# PSOL: Total number of DCs in liquid hydrocarbon phases (0; reserved)" },
-  { "PAalp" , 0 , 0, 0, "\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " },
+  { "PAalp" , 0 , 0, 0, "# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " },
   { "PSigm" , 0 , 0, 0, "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " },
   { "Lads" ,  0 , 0, 0, "# Lads: Total number of Dependent Components in sorption phases included into this system" },
   { "FIa" ,   0 , 0, 0, "# FIa: Number of sorption phases included in this system (0 if no sorption phases )" },
@@ -59,26 +59,26 @@ outField MULTI_static_fields[8] =  {
 outField MULTI_dynamic_fields[70] =  {
 // write/read dynamic (array) data to/from the text-format IPM file
    {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]" },
-   {  "LsMod", 1 , 0, 0, "\n\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
+   {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
                          "\n# [0] number of interaction parameters (rows in <IPx>); [1] max. parameter order (columns in <IPx>);"
                          "\n# [2] number of coefficients per interaction parameter in <PMc> array" },
-   {  "LsMdc", 1 , 0, 0, "\n\n# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):"
+   {  "LsMdc", 1 , 0, 0, "\n# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):"
                          "\n# [0] number of parameters per component; [1] 0; [2] 0. For multi-site (sublattice) models: "
                          "\n#   [1] number of sublattices nS; [2] total number of moieties nM acting in sublattice sites" },
    {  "B",     1 , 0, 0, "# B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)" },
    {  "DCCW",  0 , 0, 0, "# DCCW: internal DC class codes [nDC], will be reset automatically from DCH file content" },
                // DCCW is placeholder - something else can be used here, if needed
    {  "Pparc", 0 , 0, 0, "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)" },
-   {  "fDQF",  0 , 0, 0, "\n\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
-   {  "lnGmf", 0 , 0, 0, "\n\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
+   {  "fDQF",  0 , 0, 0, "\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
+   {  "lnGmf", 0 , 0, 0, "\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
    {  "RLC",   0 , 0, 0, "# RLC: Code of metastability constraints for DCs {L U B (default)} [nDC]" },
-   {  "RSC",   0 , 0, 0, "\n\n# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]" },
-   {  "DLL",   0 , 0, 0, "\n\n# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)" },
-   {  "DUL",   0 , 0, 0, "\n\n# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
-   {  "Aalp",  0 , 0, 0, "\n# Aalp: Specific surface areas of phases, m2/g [nPH]" },
-   {  "Sigw",  0 , 0, 0, "\n\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
-   {  "Sigg",  0 , 0, 0, "\n\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
-   {  "YOF",   0 , 0, 0, "\n\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
+   {  "RSC",   0 , 0, 0, "\n# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]" },
+   {  "DLL",   0 , 0, 0, "\n# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)" },
+   {  "DUL",   0 , 0, 0, "\n# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
+   {  "Aalp",  0 , 0, 0, "# Aalp: Specific surface areas of phases, m2/g [nPH]" },
+   {  "Sigw",  0 , 0, 0, "\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
+   {  "Sigg",  0 , 0, 0, "\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
+   {  "YOF",   0 , 0, 0, "\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
    {  "Nfsp",  1 , 0, 0, "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]" },
    {  "MASDT", 1 , 0, 0, "\n# MASDT: Total maximum site  density per surface type, mkmol/g [nPS*6]" },
    {  "C1",    1 , 0, 0, "\n# C1: Inner capacitance density parameter C1, F/m2 [nPS*6]" },
@@ -133,12 +133,12 @@ outField MULTI_dynamic_fields[70] =  {
    { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 0.001 }" },
    { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } " },
    { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } " },
-   { "mui" ,     0 , 0, 0,  "\n\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
-   { "muk" ,     0 , 0, 0,  "\n\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
-   { "muj" ,     0 , 0, 0,  "\n\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
+   { "mui" ,     0 , 0, 0,  "\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
+   { "muk" ,     0 , 0, 0,  "\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
+   { "muj" ,     0 , 0, 0,  "\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
    { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
-   { "dcMod",    0 , 0, 0,  "\n# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
+   { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
 };
 
 
@@ -203,7 +203,7 @@ if( _comment )
   ff << "\"" << pm.stkey << "\"" << endl;
 
  if( _comment )
-     ff << "\n## (1) Flags that affect memory allocation" << endl;
+     ff << "\n## (1) Flags that affect memory allocation";
 
  if(!brief_mode || pa->p.PE != pa_.p.PE )
    prar1.writeField(f_pa_PE, pa->p.PE, _comment, false  );
@@ -215,8 +215,8 @@ if( _comment )
  prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
  prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
  if( _comment )
-   ff << "\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " << endl;
- ff << left << setw(12) << "<PAalp> " <<  right << setw(6) <<
+   ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
+ ff << endl << left << setw(12) << "<PAalp> " <<  right << setw(6) <<
     "\'" << PAalp << "\'" << endl;
  if( _comment )
   ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
@@ -225,7 +225,7 @@ if( _comment )
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
   { if( _comment )
-      ff << "\n## (2) Dimensionalities that affect memory allocation" << endl;
+      ff << "\n## (2) Dimensionalities that affect memory allocation";
     prar1.writeField(f_Lads, pm.Lads, _comment, false  );
     prar1.writeField(f_FIa, pm.FIa, _comment, false  );
     prar1.writeField(f_FIat,  pm.FIat, _comment, false  );
@@ -234,12 +234,12 @@ if( _comment )
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
 
-ff << "\n<END_DIM>\n";
+ff << "\n\n<END_DIM>\n";
 
 // static data not affected by dimensionalities
    if( _comment )
    {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
-      ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)" << endl;
+      ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
    }
    if( !brief_mode ||pa->p.DB != pa_.p.DB )
       prar.writeField(f_pa_DB, pa->p.DB, _comment, false  );
@@ -276,7 +276,7 @@ ff << "\n<END_DIM>\n";
 
    if(!brief_mode)
     if( _comment )
-     {  ff << "\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance" << endl;
+     {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
      }
 
    if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
@@ -293,7 +293,7 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_PC,  pa->p.PC, _comment, false  );
 
    if( _comment )
-      ff << "# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
+      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
 
    if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
        prar.writeField(f_pa_DFYw,  pa->p.DFYw, _comment, false  );
@@ -311,7 +311,7 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_DFYs,  pa->p.DFYs, _comment, false  );
 
    if( _comment )
-     ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm " << endl;
+     ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm ";
 
    if(!brief_mode || pa->p.DW != pa_.p.DW )
        prar.writeField(f_pa_DW,  pa->p.DW, _comment, false  );
@@ -337,7 +337,7 @@ ff << "\n<END_DIM>\n";
 if( pm.FIs > 0 && pm.Ls > 0 )
 {
   if( _comment )
-     ff << "\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)" << endl;
+     ff << "\n\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)";
   prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 6L, _comment, brief_mode );
 
 long int LsModSum;
@@ -375,11 +375,11 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    }
 } // sMod
   if( _comment )
-    ff << "\n\n## (5) Data arrays which are provided neither in DCH nor in DBR files" << endl;
+    ff << "\n\n## (5) Data arrays which are provided neither in DCH nor in DBR files";
   prar.writeArray(  f_B, pm.B,  pm.N, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs" << endl;
+     ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs";
   prar.writeArray(  f_Pparc, pm.Pparc,  pm.L, -1L, _comment, brief_mode);
   //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
   // prar.writeArray(  "G0", pm.G0,  pm.L);
@@ -387,7 +387,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   prar.writeArray(  f_lnGmf, pm.lnGmf,  pm.L, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)" << endl;
+     ff << "\n\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)";
    prar.writeArrayF(  f_RLC, pm.RLC, pm.L, 1L, _comment, brief_mode );
    prar.writeArrayF(  f_RSC, pm.RSC, pm.L, 1L, _comment, brief_mode );
    prar.writeArray(  f_DLL, pm.DLL, pm.L, -1L, _comment, brief_mode);
@@ -406,7 +406,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    if( pm.FIat > 0 &&  pm.FIs > 0 )
     { // ADSORPTION AND ION EXCHANGE
       if( _comment )
-        ff << "\n\n# (8) Initial data for sorption phases" << endl;
+        ff << "\n\n# (8) Initial data for sorption phases";
 
       prar.writeArray(  f_Nfsp, &pm.Nfsp[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
       prar.writeArray(  f_MASDT, &pm.MASDT[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
