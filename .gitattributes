@@ -477,6 +477,14 @@ GEMS3K/platform/win32MinGW/Makefile -text
 GEMS3K/platform/win32bcc/Makefile -text
 GEMS3K/s_kinmet.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.h -text svn_keywords=Id
+GEMS3K/s_solmod.cpp -text
+GEMS3K/s_solmod.h -text
+GEMS3K/s_solmod2.cpp -text
+GEMS3K/s_solmod3.cpp -text
+GEMS3K/s_solmod4.cpp -text
+GEMS3K/s_solmod5.cpp -text
+GEMS3K/s_solmod6.cpp -text
+GEMS3K/s_sorpmod.cpp -text
 GEMS3K/s_sorpmod.h -text
 GEMS3K/tnt.h -text
 GEMS3K/tnt_array1d.h -text
