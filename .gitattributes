@@ -523,12 +523,4 @@ nodearray-gem/main.cpp -text svn_keywords=Id
 nodearray-gem/main.cpp.template -text
 nodearray-gem/nodearray-gem.pro -text
 nodearray-gem/nodearray-gem3.pro -text
-nodearray-gem/obj/Readme.txt -text
-nodearray-gem/platform/Linux-GNU/Makefile -text
-nodearray-gem/platform/Linux-PGI/Makefile -text
-nodearray-gem/platform/other/Makefile -text
-nodearray-gem/platform/win32bcc/Makefile -text
-nodearray-gem/platform/win32minGW/Makefile -text
-nodearray-gem/platform/win32minGW/object_ld_script -text
-nodearray-gem/platform/win32msvc/Makefile -text
 nodearray-gem/win32-run.bat -text

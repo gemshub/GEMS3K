@@ -784,6 +784,13 @@ long int TPitzer::Pitzer_calc_Gamma( )
  out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
 #endif
 
+#ifndef __unix
+  std::ostream out(0);
+  out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
+ // out << "Aphi " << Aphi << " dAphidT2 " << dAphidT << " d2AphidT2" << d2AphidT2 << endl;
+ // out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
+#endif
+
     lnGamma[Ns] = lnGammaH2O( Aphi );
 
     for( M=0; M<Nc; M++ )
