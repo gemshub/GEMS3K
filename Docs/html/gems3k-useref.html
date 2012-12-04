@@ -2,6 +2,7 @@
 <html><head>
 
 
+
   
   <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>GEMS3K Functions at TNode Level)</title></head><body style="background-image: url(bgimg-gray.jpg);">
 <h1><img alt="GEMS icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font color="#000066">
@@ -93,7 +94,8 @@ documentation</a>). <br>
 </h3>
 
 <p><span style="font-family: monospace;">long int GEM_init( const char
-*ipmfiles_lst_name,&nbsp; long int *nodeTypes = 0, bool getNodT1 =
+*ipmfiles_lst_name,&nbsp; </span><span style="font-family: monospace;">const char
+*dbrfiles_lst_name=0, </span><span style="font-family: monospace;">long int *nodeTypes = 0, bool getNodT1 =
 false );</span><br>
 </p>
 
@@ -128,6 +130,13 @@ input files
 are in text format)</td>
     </tr>
     <tr>
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;dbrfiles_lst_name</span><br>
+      </td>
+      <td style="vertical-align: top;">Optional parameter used only on the TNodeArray level. Pointer to a null-terminated C string with a path to a text file<br>
+containing the list of names of&nbsp; DBR input files.&nbsp;&nbsp;&nbsp; Example: file <span style="font-family: monospace;">"test-dbr.lst"</span> with a content:&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">"dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"</span><br>
+      </td>
+    </tr>
+<tr>
       <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;nodeTypes <br>
       </span></td>
       <td style="vertical-align: top;">Optional parameter used only on

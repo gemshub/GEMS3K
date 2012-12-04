@@ -426,12 +426,12 @@ void TGEM2MT::checkAlws(TRWArrays&  prar1, TRWArrays&  prar)
       prar.setAlws( f__BSF);
     }
 
-    if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF )
+    /*if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF )
       {
         prar.setAlws( f__MB);
         prar.setAlws( f__dMB);
       }
-
+    */
     if( mtp->PvnVTK == S_ON )
     {
       prar1.setAlws( f_nVTKfld );
