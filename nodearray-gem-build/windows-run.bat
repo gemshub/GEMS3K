@@ -1,5 +1,5 @@
 echo off
-rem release\nodearrs.exe gem2mt-out/CaWBoundC.dat gem2mt-out/CaWBoundC-dat.lst gem2mt-out/CaWBoundC-dbr.lst gem2mt-out/VTK 
-debug\nodearrs.exe gem2mt-out/CaWBoundC.dat gem2mt-out/CaWBoundC-dat.lst gem2mt-out/CaWBoundC-dbr.lst gem2mt-out/VTK   
+rem release\nodearrs.exe test-data/CalColumnF.dat test-data/CalColumn-dat.lst test-data/CalColumn-dbr.lst test-data/VTK
+debug\nodearrs.exe test-data/CalColumnF.dat test-data/CalColumn-dat.lst test-data/CalColumn-dbr.lst test-data/VTK  
 
 

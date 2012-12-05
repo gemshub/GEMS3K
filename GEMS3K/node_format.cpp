@@ -1567,10 +1567,10 @@ void TNode::databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long 
 #endif
 
   if( !str.empty() )
-  { ff << "(" << str.c_str();
+  { ff << "_" << str.c_str();
     if( !str2.empty() )
       ff << "_" << str2.c_str();
-    ff << ")";
+    ff << "_";
   }
 
   if( nfild < 6)

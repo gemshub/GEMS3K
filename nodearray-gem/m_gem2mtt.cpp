@@ -743,7 +743,7 @@ if( mtp->PsMO != S_OFF )
 if( mtp->PsVTK != S_OFF )
    outp_time += PrintPoint( 0 );
 
- } while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
+} while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
 
 
 t_end = clock();

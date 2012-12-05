@@ -37,7 +37,7 @@ outField GEM2MT_static_fields[57] =  {
      { "PsSdef" , 0, 0, 0, "# PsSdef:Do not write data items that contain only default values (+ -)" },
      { "PsScom" , 0, 0, 0, "# PsScom:Write files with comments for all data entries ( in text mode )(+ -)" },
      { "PsMO" , 0, 0, 0, "# PsMO: Use non stop debug output for nodes (+ -)" },
-     { "PsVTK" , 0, 0, 0, "# PsVTK: Use non stop debug output nodes to VTK format(+ -)" },
+     { "PsVTK" , 1, 0, 0, "# PsVTK: Use non stop debug output nodes to VTK format(+ -)" },
      { "PsMPh" , 1, 0, 0, "# PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids )" },
       // sizes
      { "nC", 1, 0, 0, "# nC:  Input number of local equilibrium cells (nodes)" },
@@ -163,7 +163,7 @@ void TGEM2MT::set_def(int q)
 
 //    TProfil *aPa= TProfil::pm;
     memcpy( &mtp->PunE, "jjbC", 4 );
-    memcpy( &mtp->PvICi, "++------------S00--+-++-----", 28 );
+    memcpy( &mtp->PvICi, "++------------S00--+--+-----", 28 );
     strcpy( mtp->name,  "`" );
     strcpy( mtp->notes, "`" );
     strcpy( mtp->xNames, "X" );

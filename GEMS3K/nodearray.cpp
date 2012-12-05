@@ -1261,7 +1261,10 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
    long int i, j,k;
 
    // write header of file
-   databr_head_to_vtk( ff, name, time, cycle, sizeN, sizeM, sizeK );
+   kk = sizeM;
+   if(sizeM==1 && sizeK==1) // 05.12.2012 workaround for 2D paraview
+         kk=2;
+   databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
 
    if( nFilds < 1 || !Flds )
    {  all = true;
@@ -1296,6 +1299,16 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
                CopyWorkNodeFromArray( ndx, anNodes,  pNodT0() );
                databr_element_to_vtk( ff, CNode/*pNodT0()[(ndx)]*/, nf, ii );
             }
+        if( sizeM==1 && sizeK==1)  // 05.12.2012 workaround for 2D paraview
+        { for( i = 0; i < sizeN; i++ )
+           for( j = 0; j < sizeM; j++ )
+            for( k = 0; k < sizeK; k++ )
+            {
+               int ndx = iNode( i, j, k );
+               CopyWorkNodeFromArray( ndx, anNodes,  pNodT0() );
+               databr_element_to_vtk( ff, CNode/*pNodT0()[(ndx)]*/, nf, ii );
+            }
+         }
        }
    }
 }
