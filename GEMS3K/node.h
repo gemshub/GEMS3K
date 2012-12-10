@@ -189,21 +189,23 @@ public:
 
 // Typical sequence for using TNode class ----------------------------------
 /// (1)
-/// Initialization of GEM IPM2 data structures in coupled FMT-GEM programs
-/// that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
+/// Initialization of GEM IPM3 data structures in coupled programs
+/// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
 ///  \param ipmfiles_lst_name  pointer to a null-terminated C string with a path to a text file
 ///                      containing the list of names of  GEMS3K input files.
 ///                      Example: file "test.lst" with a content:    -t "dch.dat" "ipm.dat" "dbr-0.dat"
 ///                      (-t  tells that input files are in text format)
-///  \param dbrfiles_lst_name  optional parameter used only on the TNodeArray,
+///  \param dbrfiles_lst_name  optional parameter (used only at the TNodeArray level) - a
 ///                      pointer to a null-terminated C string with a path to a text file
-///                      containing the list of names of  DBR input files.
+///                      containing the list of comma-separated names of  DBR input files.
 ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
-///  \param nodeTypes   optional parameter used only on the TNodeArray, the initial node contents
-///                      from DATABR files will be distributed among nodes in array according to the distribution list nodeTypes
-///  \param getNodT1    optional parameter used only when reading multiple DBR files after modeling
+///  \param nodeTypes   optional parameter used only at the TNodeArray level, the initial node contents
+///                      from DATABR files will be distributed among nodes in array according to the
+///                      distribution index list nodeTypes
+///  \param getNodT1    optional parameter used only when reading multiple DBR files after the modeling
 ///                      task interruption  in GEM-Selektor
-///  \return 0  if successful; 1 if input file(s) were not found or corrupt; -1 if internal memory allocation error occurred.
+///  \return 0  if successful; 1 if input file(s) were not found or corrupt;
+///                      -1 if internal memory allocation error occurred.
   long int  GEM_init( const char *ipmfiles_lst_name, const char *dbrfiles_lst_name = 0,
                    long int *nodeTypes = 0, bool getNodT1 = false);
 

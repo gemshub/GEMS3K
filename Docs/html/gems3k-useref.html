@@ -3,6 +3,7 @@
 
 
 
+
   
   <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>GEMS3K Functions at TNode Level)</title></head><body style="background-image: url(bgimg-gray.jpg);">
 <h1><img alt="GEMS icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font color="#000066">
@@ -93,11 +94,13 @@ documentation</a>). <br>
 <h3>(1)&nbsp; GEM_init()<br>
 </h3>
 
-<p><span style="font-family: monospace;">long int GEM_init( const char
-*ipmfiles_lst_name,&nbsp; </span><span style="font-family: monospace;">const char
-*dbrfiles_lst_name=0, </span><span style="font-family: monospace;">long int *nodeTypes = 0, bool getNodT1 =
+<span style="font-family: monospace;">long int GEM_init( const char
+*ipmfiles_lst_name,&nbsp; </span><br>
+<span style="font-family: monospace;"></span><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp; const char
+*dbrfiles_lst_name = 0, </span><span style="font-family: monospace;">long int *nodeTypes = 0, bool getNodT1 =
 false );</span><br>
-</p>
+
+
 
 <p style="font-family: Helvetica,Arial,sans-serif;">Purpose: <br>
 </p>
@@ -132,14 +135,17 @@ are in text format)</td>
     <tr>
       <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;dbrfiles_lst_name</span><br>
       </td>
-      <td style="vertical-align: top;">Optional parameter used only on the TNodeArray level. Pointer to a null-terminated C string with a path to a text file<br>
-containing the list of names of&nbsp; DBR input files.&nbsp;&nbsp;&nbsp; Example: file <span style="font-family: monospace;">"test-dbr.lst"</span> with a content:&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">"dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"</span><br>
+      <td style="vertical-align: top;">Optional
+parameter that should be used only at the TNodeClass level. Pointer to
+a null-terminated C string with a path to a text file containing a
+comma-separated list of names of&nbsp; DBR input
+files.&nbsp;&nbsp;&nbsp; Example: file <span style="font-family: monospace;">"test-dbr.lst"</span> with a content:&nbsp;&nbsp;&nbsp; <span style="font-family: monospace;">"dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"</span><br>
       </td>
     </tr>
 <tr>
       <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;nodeTypes <br>
       </span></td>
-      <td style="vertical-align: top;">Optional parameter used only on
+      <td style="vertical-align: top;">Optional parameter used only at
 the TNodeClass
 level to create nodeArray (not used in
 this document)</td>
@@ -149,7 +155,7 @@ this document)</td>
       </span></td>
       <td style="vertical-align: top;">Optional parameter used only
 when reading multiple DBR files after
-modeling task interruption <br>
+the modeling task interruption <br>
 in
 GEM-Selektor (not used in this document)</td>
     </tr>
@@ -167,9 +173,13 @@ file(s) were not found or corrupt; -1
 if internal memory allocation error occurred. <br>
 </div>
 
-<p>
-&nbsp;&nbsp;&nbsp; <br>
+<p><span style="font-family: Helvetica,Arial,sans-serif;">Examples: </span><br>
 </p>
+<p>Call at TNode level: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <span style="font-family: monospace;">iRet = GEM_init( "MyTest.lst" );</span></p>
+<p>Call at TNodeArray level:<span style="font-family: monospace;">&nbsp; </span><span style="font-family: monospace;">iRet = GEM_init( "MyTest.lst", "MyTest-nodes.lst", 1L );</span></p>
+<span style="font-family: monospace;"><br>
+</span><span style="font-family: monospace;"> </span>
+
 
 <h3>(2) GEM_run()<br>
 </h3>
@@ -276,11 +286,10 @@ calculation with no-simplex (smart) IA<span style="font-family: monospace;"><br>
 occurred in GEMS3K (e.g. memory corruption). Restart is required.&nbsp;
 </p>
 
-<p><span style="font-family: Helvetica,Arial,sans-serif;">We recommend
-checking the </span><span style="font-family: monospace;">NodeStatusCH</span><span style="font-family: Helvetica,Arial,sans-serif;"> immediately after
-the
-</span><span style="font-family: monospace;">GEM_run()</span><small style="font-family: monospace;"> </small><span style="font-family: Helvetica,Arial,sans-serif;">call, as shown in
-the above code snippet.</span><br style="font-family: Helvetica,Arial,sans-serif;">
+<p><span style="font-family: Helvetica,Arial,sans-serif;"><span style="font-family: Times New Roman,Times,serif;">We recommend
+checking the</span> </span><span style="font-family: monospace;">NodeStatusCH</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>immediately after
+the<span style="font-family: Helvetica,Arial,sans-serif;">
+</span><span style="font-family: monospace;">GEM_run() </span>call, as shown in<span style="font-family: monospace;"> 'gemcalc' </span>or<span style="font-family: monospace;"> 'node-gem' </span>examples.<span style="font-family: Helvetica,Arial,sans-serif;"></span><br style="font-family: Helvetica,Arial,sans-serif;">
 <span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;</span><br>
 </p>
 
@@ -2485,7 +2494,7 @@ Only access via DCH indexation (will be added in next versions)<br>
 <br>
 
 <hr style="width: 100%; height: 2px;"><span style="font-family: monospace;"><br>
-</span>Last change: 15.10.2012 DK<span style="font-family: monospace;"><br>
+</span>Last change: 10.12.2012 DK<span style="font-family: monospace;"><br>
 <br></span>Copyright (c) 2012 <a href="http://gems.web.psi.ch/teamhist.html">GEMS Development Team</a><br>
 
 <br>

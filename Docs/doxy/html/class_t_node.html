@@ -124,8 +124,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a374606795ee14fe9a6df10dec491d799"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a374606795ee14fe9a6df10dec491d799"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a374606795ee14fe9a6df10dec491d799">~TNode</a> ()</td></tr>
 <tr class="memdesc:a374606795ee14fe9a6df10dec491d799"><td class="mdescLeft">&#160;</td><td class="mdescRight">destructor <br/></td></tr>
-<tr class="memitem:a3d184ad9dd7bb247ffcd63b8411c3071"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071">GEM_init</a> (const char *ipmfiles_lst_name, long int *nodeTypes=0, bool getNodT1=false)</td></tr>
-<tr class="memdesc:a3d184ad9dd7bb247ffcd63b8411c3071"><td class="mdescLeft">&#160;</td><td class="mdescRight">(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module.  <a href="#a3d184ad9dd7bb247ffcd63b8411c3071"></a><br/></td></tr>
+<tr class="memitem:a494e9ad8f9f34b60208427b0a0d79e94"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94">GEM_init</a> (const char *ipmfiles_lst_name, const char *dbrfiles_lst_name=0, long int *nodeTypes=0, bool getNodT1=false)</td></tr>
+<tr class="memdesc:a494e9ad8f9f34b60208427b0a0d79e94"><td class="mdescLeft">&#160;</td><td class="mdescRight">(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.  <a href="#a494e9ad8f9f34b60208427b0a0d79e94"></a><br/></td></tr>
 <tr class="memitem:aca4567cec25b6583af9410b02c79ed41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aca4567cec25b6583af9410b02c79ed41">GEM_restore_MT</a> (long int &amp;p_NodeHandle, long int &amp;p_NodeStatusCH, double &amp;p_TK, double &amp;p_P, double &amp;p_Vs, double &amp;p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH)</td></tr>
 <tr class="memdesc:aca4567cec25b6583af9410b02c79ed41"><td class="mdescLeft">&#160;</td><td class="mdescRight">(6) Passes (copies) the GEMS3K input data from the work instance of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure.  <a href="#aca4567cec25b6583af9410b02c79ed41"></a><br/></td></tr>
 <tr class="memitem:abfc9b81781189f20f95aed5f97589858"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858">GEM_from_MT</a> (long int p_NodeHandle, long int p_NodeStatusCH, double p_TK, double p_P, double p_Vs, double p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH)</td></tr>
@@ -402,10 +402,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_name_to_vtk</b
 void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_size_to_vtk</b> (long int nfild, long int &amp;nel, long int &amp;nel2)</td></tr>
 <tr class="memitem:a96183ef36b24d0cc0d5973acf716d5ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96183ef36b24d0cc0d5973acf716d5ba"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_head_to_vtk</b> (fstream &amp;ff, const char *name, double time, long cycle, long nx=1, long ny=1, long nz=1)</td></tr>
+<tr class="memitem:a0042cee23e1b049699cb8550fb6bce07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0042cee23e1b049699cb8550fb6bce07"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>InitNodeArray</b> (const char *, long int *, bool, bool)</td></tr>
 <tr class="memitem:ac090df5cb2d3c61e4eb8e7bb4b205dfc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac090df5cb2d3c61e4eb8e7bb4b205dfc"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setNodeArray</b> (long int, long int *)</td></tr>
-<tr class="memitem:a393b0da0eff947170dbf28c5b0beab2e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a393b0da0eff947170dbf28c5b0beab2e"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>checkNodeArray</b> (long int, long int *, const char *)</td></tr>
 <tr class="memitem:ad3ab643d4bc0c7f98b76abe60bf13d58"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3ab643d4bc0c7f98b76abe60bf13d58"></a>
 virtual long int&#160;</td><td class="memItemRight" valign="bottom"><b>nNodes</b> () const </td></tr>
 <tr><td colspan="2"><h2><a name="pro-attribs"></a>
@@ -1738,15 +1738,21 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 
 </div>
 </div>
-<a class="anchor" id="a3d184ad9dd7bb247ffcd63b8411c3071"></a>
+<a class="anchor" id="a494e9ad8f9f34b60208427b0a0d79e94"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long int <a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071">TNode::GEM_init</a> </td>
+          <td class="memname">long int <a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94">TNode::GEM_init</a> </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>ipmfiles_lst_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>dbrfiles_lst_name</em> = <code>0</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1769,13 +1775,14 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module. </p>
-<p>Also reads in the IPM, DCH and DBR text input files. </p>
+<p>(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module. </p>
+<p>Also reads in the IPM, DCH and one or many DBR text input files. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">ipmfiles_lst_name</td><td>pointer to a null-terminated C string with a path to a text file containing the list of names of GEMS3K input files. Example: file "test.lst" with a content: -t "dch.dat" "ipm.dat" "dbr-0.dat" (-t tells that input files are in text format) </td></tr>
-    <tr><td class="paramname">nodeTypes</td><td>optional parameter used only on the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a>, the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution list nodeTypes </td></tr>
-    <tr><td class="paramname">getNodT1</td><td>optional parameter used only when reading multiple DBR files after modeling task interruption in GEM-Selektor </td></tr>
+    <tr><td class="paramname">dbrfiles_lst_name</td><td>optional parameter (used only at the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a> level) - a pointer to a null-terminated C string with a path to a text file containing the list of comma-separated names of DBR input files. Example: file "test-dbr.lst" with a content: "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat" </td></tr>
+    <tr><td class="paramname">nodeTypes</td><td>optional parameter used only at the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a> level, the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution index list nodeTypes </td></tr>
+    <tr><td class="paramname">getNodT1</td><td>optional parameter used only when reading multiple DBR files after the modeling task interruption in GEM-Selektor </td></tr>
   </table>
   </dd>
 </dl>
@@ -1880,7 +1887,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <div class="memdoc">
 
 <p>(5) Reads another DBR file (with input system composition, T,P etc.) \ . </p>
-<p>The DBR file must be compatible with the currently loaded IPM and DCH files (see description of <a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071" title="(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module...">GEM_init()</a> function call). </p>
+<p>The DBR file must be compatible with the currently loaded IPM and DCH files (see description of <a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94" title="(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module...">GEM_init()</a> function call). </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">fname</td><td>Null-terminated (C) string containing a full path to the input DBR disk file. </td></tr>
@@ -1966,7 +1973,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <div class="memdoc">
 
 <p>(6) Passes (copies) the GEMS3K input data from the work instance of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure. </p>
-<p>This call is useful after the <a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071" title="(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module...">GEM_init()</a> (1) and <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> (2) calls to initialize the arrays which keep the chemical data for all nodes used in the mass-transport model. </p>
+<p>This call is useful after the <a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94" title="(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module...">GEM_init()</a> (1) and <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> (2) calls to initialize the arrays which keep the chemical data for all nodes used in the mass-transport model. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">p_NodeHandle</td><td>Node identification handle </td></tr>
@@ -2913,7 +2920,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Oct 22 2012 21:04:42 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:29 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

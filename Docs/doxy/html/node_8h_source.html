@@ -94,7 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <a href="node_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: node.h 725 2012-10-02 15:43:37Z kulik $</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: node.h 760 2012-11-27 16:33:44Z dmitrieva $</span>
 <a name="l00006"></a>00006 <span class="comment"></span><span class="comment">//</span>
 <a name="l00011"></a>00011 <span class="comment"></span><span class="comment">//</span>
 <a name="l00012"></a>00012 <span class="comment">// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl</span>
@@ -191,425 +191,426 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00144"></a>00144                             <span class="keywordtype">long</span> nx = 1, <span class="keywordtype">long</span> ny = 1, <span class="keywordtype">long</span> nz = 1 );
 <a name="l00145"></a>00145 
 <a name="l00146"></a>00146     <span class="comment">// virtual functions for interaction with TNodeArray class (not used at TNode level)</span>
-<a name="l00147"></a>00147     <span class="keyword">virtual</span> <span class="keywordtype">void</span>  setNodeArray( <span class="keywordtype">long</span> <span class="keywordtype">int</span> , <span class="keywordtype">long</span> <span class="keywordtype">int</span>*  ) { }
-<a name="l00148"></a>00148     <span class="keyword">virtual</span> <span class="keywordtype">void</span>  checkNodeArray( <span class="keywordtype">long</span> <span class="keywordtype">int</span>, <span class="keywordtype">long</span> <span class="keywordtype">int</span>*, <span class="keyword">const</span> <span class="keywordtype">char</span>* ) { }
-<a name="l00149"></a>00149     <span class="keyword">virtual</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> nNodes()  const <span class="comment">// virtual call for interaction with TNodeArray class</span>
-<a name="l00150"></a>00150     { <span class="keywordflow">return</span> 1; }
-<a name="l00151"></a>00151 
-<a name="l00152"></a>00152 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
-<a name="l00153"></a>00153 <span class="preprocessor"></span>    <span class="comment">// Integration in GEMS-PSI GUI environment</span>
-<a name="l00154"></a>00154     <span class="comment">// Prepares and writes DCH and DBR files for reading into the coupled code</span>
-<a name="l00155"></a>00155     <span class="keywordtype">void</span> makeStartDataChBR( QWidget* par, <span class="keywordtype">bool</span> no_interpolat,
-<a name="l00156"></a>00156          TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH,
-<a name="l00157"></a>00157          <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_, <span class="keywordtype">double</span> Ttol_, <span class="keywordtype">double</span> Ptol_,
-<a name="l00158"></a>00158          <span class="keywordtype">double</span> *Tai, <span class="keywordtype">double</span> *Pai );
-<a name="l00159"></a>00159     <span class="keywordtype">void</span> makeStartDataChBR( QWidget* par,
-<a name="l00160"></a>00160       TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH,
-<a name="l00161"></a>00161       <span class="keywordtype">double</span> Tai[4], <span class="keywordtype">double</span> Pai[4] );
-<a name="l00162"></a>00162 
-<a name="l00163"></a>00163     <span class="comment">// Building internal dataCH and DataBR structures from Multi</span>
-<a name="l00164"></a>00164     <span class="keywordtype">void</span> setupDataChBR( TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH,
-<a name="l00165"></a>00165                                <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_, <span class="keywordtype">bool</span> use_grid );
-<a name="l00166"></a>00166     <span class="comment">// Build lists names of components for selection into DataBridge</span>
-<a name="l00167"></a>00167     <span class="keywordtype">void</span> getDataBridgeNames( QWidget* par, <span class="keywordtype">bool</span> select_all,
-<a name="l00168"></a>00168         TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH  );
-<a name="l00169"></a>00169 
+<a name="l00147"></a>00147     <span class="keyword">virtual</span> <span class="keywordtype">void</span>  InitNodeArray( <span class="keyword">const</span> <span class="keywordtype">char</span> *, <span class="keywordtype">long</span> <span class="keywordtype">int</span> *, <span class="keywordtype">bool</span> , <span class="keywordtype">bool</span>  ) {}
+<a name="l00148"></a>00148     <span class="keyword">virtual</span> <span class="keywordtype">void</span>  setNodeArray( <span class="keywordtype">long</span> <span class="keywordtype">int</span> , <span class="keywordtype">long</span> <span class="keywordtype">int</span>*  ) { }
+<a name="l00149"></a>00149     <span class="comment">//virtual void  checkNodeArray( long int, long int*, const char* ) { }</span>
+<a name="l00150"></a>00150     <span class="keyword">virtual</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> nNodes()  const <span class="comment">// virtual call for interaction with TNodeArray class</span>
+<a name="l00151"></a>00151     { <span class="keywordflow">return</span> 1; }
+<a name="l00152"></a>00152 
+<a name="l00153"></a>00153 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
+<a name="l00154"></a>00154 <span class="preprocessor"></span>    <span class="comment">// Integration in GEMS-PSI GUI environment</span>
+<a name="l00155"></a>00155     <span class="comment">// Prepares and writes DCH and DBR files for reading into the coupled code</span>
+<a name="l00156"></a>00156     <span class="keywordtype">void</span> makeStartDataChBR( QWidget* par, <span class="keywordtype">bool</span> no_interpolat,
+<a name="l00157"></a>00157          TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH,
+<a name="l00158"></a>00158          <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_, <span class="keywordtype">double</span> Ttol_, <span class="keywordtype">double</span> Ptol_,
+<a name="l00159"></a>00159          <span class="keywordtype">double</span> *Tai, <span class="keywordtype">double</span> *Pai );
+<a name="l00160"></a>00160     <span class="keywordtype">void</span> makeStartDataChBR( QWidget* par,
+<a name="l00161"></a>00161       TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH,
+<a name="l00162"></a>00162       <span class="keywordtype">double</span> Tai[4], <span class="keywordtype">double</span> Pai[4] );
+<a name="l00163"></a>00163 
+<a name="l00164"></a>00164     <span class="comment">// Building internal dataCH and DataBR structures from Multi</span>
+<a name="l00165"></a>00165     <span class="keywordtype">void</span> setupDataChBR( TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH,
+<a name="l00166"></a>00166                                <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_, <span class="keywordtype">bool</span> use_grid );
+<a name="l00167"></a>00167     <span class="comment">// Build lists names of components for selection into DataBridge</span>
+<a name="l00168"></a>00168     <span class="keywordtype">void</span> getDataBridgeNames( QWidget* par, <span class="keywordtype">bool</span> select_all,
+<a name="l00169"></a>00169         TCIntArray&amp; selIC, TCIntArray&amp; selDC, TCIntArray&amp; selPH  );
 <a name="l00170"></a>00170 
-<a name="l00171"></a>00171     <span class="comment">// Virtual function for interaction with TNodeArray class</span>
-<a name="l00172"></a>00172     <span class="keyword">virtual</span> <span class="keywordtype">void</span>  setNodeArray( gstring&amp; , <span class="keywordtype">long</span> <span class="keywordtype">int</span> , <span class="keywordtype">bool</span> ) { }
-<a name="l00173"></a>00173 <span class="preprocessor">#endif</span>
-<a name="l00174"></a>00174 <span class="preprocessor"></span>
-<a name="l00175"></a>00175 <span class="keyword">public</span>:
-<a name="l00176"></a>00176 
-<a name="l00177"></a>00177 <span class="comment">//static TNode* na;   // static pointer to this TNode class instance</span>
-<a name="l00178"></a>00178 
-<a name="l00179"></a>00179 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
-<a name="l00180"></a>00180 <span class="preprocessor"></span>
-<a name="l00181"></a>00181   <a class="code" href="class_t_node.html#a5d7ab5171cd0dfb220b01778e2804225" title="Constructor of the class instance in memory for standalone GEMS3K or coupled program.">TNode</a>( <a class="code" href="struct_m_u_l_t_i.html" title="Contains chemical thermodynamic work data for GEM IPM-3 algorithm.">MULTI</a> *apm );
-<a name="l00182"></a>00182 <span class="preprocessor">#else</span>
-<a name="l00183"></a>00183 <span class="preprocessor"></span>
-<a name="l00184"></a>00184   <a class="code" href="class_t_node.html#a5d7ab5171cd0dfb220b01778e2804225" title="Constructor of the class instance in memory for standalone GEMS3K or coupled program.">TNode</a>();
-<a name="l00185"></a>00185 <span class="preprocessor">#endif</span>
-<a name="l00186"></a>00186 <span class="preprocessor"></span>
-<a name="l00187"></a>00187   <span class="keyword">virtual</span> <a class="code" href="class_t_node.html#a374606795ee14fe9a6df10dec491d799" title="destructor">~TNode</a>();      
-<a name="l00188"></a>00188 
-<a name="l00189"></a>00189 <span class="comment">// Typical sequence for using TNode class ----------------------------------</span>
-<a name="l00202"></a>00202 <span class="comment"></span>    <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071" title="(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module...">GEM_init</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *ipmfiles_lst_name,
-<a name="l00203"></a>00203                    <span class="keywordtype">long</span> <span class="keywordtype">int</span> *nodeTypes = 0, <span class="keywordtype">bool</span> getNodT1 = <span class="keyword">false</span>);
-<a name="l00204"></a>00204 
-<a name="l00205"></a>00205 <span class="preprocessor">#ifdef IPMGEMPLUGIN</span>
-<a name="l00206"></a>00206 <span class="preprocessor"></span><span class="comment">//  Calls for direct coupling of a FMT code with GEMS3K</span>
-<a name="l00207"></a>00207 
-<a name="l00211"></a>00211    <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#aca4567cec25b6583af9410b02c79ed41" title="(6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.">GEM_restore_MT</a>(
-<a name="l00212"></a>00212     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  &amp;p_NodeHandle,   
-<a name="l00213"></a>00213     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  &amp;p_NodeStatusCH, 
-<a name="l00214"></a>00214                       <span class="comment">//                                    GEM input output  FMT control</span>
-<a name="l00215"></a>00215     <span class="keywordtype">double</span> &amp;p_TK,      
-<a name="l00216"></a>00216     <span class="keywordtype">double</span> &amp;p_P,      
-<a name="l00217"></a>00217     <span class="keywordtype">double</span> &amp;p_Vs,     
-<a name="l00218"></a>00218     <span class="keywordtype">double</span> &amp;p_Ms,     
-<a name="l00219"></a>00219     <span class="keywordtype">double</span> *p_bIC,    
-<a name="l00220"></a>00220     <span class="keywordtype">double</span> *p_dul,    
-<a name="l00221"></a>00221     <span class="keywordtype">double</span> *p_dll,    
-<a name="l00222"></a>00222     <span class="keywordtype">double</span> *p_aPH     
-<a name="l00223"></a>00223    );
-<a name="l00224"></a>00224 
-<a name="l00227"></a>00227 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858" title="(8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR stru...">GEM_from_MT</a>(
-<a name="l00228"></a>00228  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeHandle,   
-<a name="l00229"></a>00229  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeStatusCH, 
-<a name="l00230"></a>00230                   <span class="comment">//                                              GEM input output  FMT control</span>
-<a name="l00231"></a>00231  <span class="keywordtype">double</span> p_TK,     
-<a name="l00232"></a>00232  <span class="keywordtype">double</span> p_P,      
-<a name="l00233"></a>00233  <span class="keywordtype">double</span> p_Vs,     
-<a name="l00234"></a>00234  <span class="keywordtype">double</span> p_Ms,     
-<a name="l00235"></a>00235  <span class="keywordtype">double</span> *p_bIC,   
-<a name="l00236"></a>00236  <span class="keywordtype">double</span> *p_dul,   
-<a name="l00237"></a>00237  <span class="keywordtype">double</span> *p_dll,   
-<a name="l00238"></a>00238  <span class="keywordtype">double</span> *p_aPH    
-<a name="l00239"></a>00239  );
-<a name="l00240"></a>00240 
-<a name="l00244"></a>00244 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858" title="(8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR stru...">GEM_from_MT</a>(
-<a name="l00245"></a>00245  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeHandle,   
-<a name="l00246"></a>00246  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeStatusCH, 
-<a name="l00247"></a>00247                   <span class="comment">//                                              GEM input output  FMT control</span>
-<a name="l00248"></a>00248  <span class="keywordtype">double</span> p_TK,     
-<a name="l00249"></a>00249  <span class="keywordtype">double</span> p_P,      
-<a name="l00250"></a>00250  <span class="keywordtype">double</span> p_Vs,     
-<a name="l00251"></a>00251  <span class="keywordtype">double</span> p_Ms,     
-<a name="l00252"></a>00252  <span class="keywordtype">double</span> *p_bIC,   
-<a name="l00253"></a>00253  <span class="keywordtype">double</span> *p_dul,   
-<a name="l00254"></a>00254  <span class="keywordtype">double</span> *p_dll,   
-<a name="l00255"></a>00255  <span class="keywordtype">double</span> *p_aPH,   
-<a name="l00256"></a>00256  <span class="keywordtype">double</span> *p_xDC    
-<a name="l00257"></a>00257 
-<a name="l00258"></a>00258 
-<a name="l00259"></a>00259 
-<a name="l00260"></a>00260 );
-<a name="l00261"></a>00261 
-<a name="l00267"></a>00267 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858" title="(8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR stru...">GEM_from_MT</a>(
-<a name="l00268"></a>00268  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeHandle,   
-<a name="l00269"></a>00269  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeStatusCH, 
-<a name="l00270"></a>00270                   <span class="comment">//                                              GEM input output  FMT control</span>
-<a name="l00271"></a>00271  <span class="keywordtype">double</span> p_TK,     
-<a name="l00272"></a>00272  <span class="keywordtype">double</span> p_P,      
-<a name="l00273"></a>00273  <span class="keywordtype">double</span> p_Vs,     
-<a name="l00274"></a>00274  <span class="keywordtype">double</span> p_Ms,     
-<a name="l00275"></a>00275  <span class="keywordtype">double</span> *p_bIC,   
-<a name="l00276"></a>00276  <span class="keywordtype">double</span> *p_dul,   
-<a name="l00277"></a>00277  <span class="keywordtype">double</span> *p_dll,   
-<a name="l00278"></a>00278  <span class="keywordtype">double</span> *p_aPH,   
-<a name="l00279"></a>00279  <span class="keywordtype">double</span> *p_xDC,   
-<a name="l00280"></a>00280  <span class="keywordtype">double</span> *p_gam    
-<a name="l00281"></a>00281 );
-<a name="l00282"></a>00282 
-<a name="l00285"></a>00285 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a501d3b3ea6e029ffda376c5afdc1d21b" title="(9) Optional, for passing the current mass transport iteration information into the work DATABR struc...">GEM_set_MT</a>(
-<a name="l00286"></a>00286 <span class="comment">//   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE</span>
-<a name="l00287"></a>00287 <span class="comment">//   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE</span>
-<a name="l00288"></a>00288    <span class="keywordtype">double</span> p_Tm,      
-<a name="l00289"></a>00289    <span class="keywordtype">double</span> p_dt       
-<a name="l00290"></a>00290 );
-<a name="l00291"></a>00291 <span class="preprocessor">#endif</span>
-<a name="l00292"></a>00292 <span class="preprocessor"></span>
-<a name="l00298"></a>00298    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#ac5712e9651942d115a645ad3b3c5a4a7" title="(5) Reads another DBR file (with input system composition, T,P etc.) \ .">GEM_read_dbr</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* fname, <span class="keywordtype">bool</span> binary_f=<span class="keyword">false</span> );
-<a name="l00299"></a>00299 
-<a name="l00311"></a>00311    <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run</a>( <span class="keywordtype">bool</span> uPrimalSol );   <span class="comment">// calls GEM for a work node</span>
-<a name="l00312"></a>00312 
-<a name="l00316"></a>00316    <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ae804bf27317fe1861aa0b3a25ce6d348" title="Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() - can be used f...">GEM_CalcTime</a>();
-<a name="l00317"></a>00317 
-<a name="l00325"></a>00325    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#acdf09273cdcf420d60963935da1b0395" title="To obtain the number of GEM IPM2 iterations performed during the last call of GEM_run() e...">GEM_Iterations</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; <a class="code" href="class_t_node.html#abf3b49ea5e4679b3fcd9254c50f02520" title="Number of performed IPM-2 precision refinement loops.">PrecLoops</a>, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; <a class="code" href="class_t_node.html#a36b8ccc85f5912f7e02a1e844566a2f5" title="Total Number of performed FIA entry iterations.">NumIterFIA</a>, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; <a class="code" href="class_t_node.html#a78bcefa08d965128e3929298d765c57d" title="Total Number of performed IPM main iterations.">NumIterIPM</a> );
-<a name="l00326"></a>00326 
-<a name="l00337"></a>00337    <span class="keywordtype">void</span>  <a class="code" href="class_t_node.html#a22efa265fa48c4bc4029398567db4bfc" title="(3) Writes the contents of the work instance of the DATABR structure into a disk file with path name ...">GEM_write_dbr</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* fname,  <span class="keywordtype">bool</span> binary_f=<span class="keyword">false</span>,
-<a name="l00338"></a>00338                                   <span class="keywordtype">bool</span> with_comments = <span class="keyword">true</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span>);
-<a name="l00339"></a>00339 
-<a name="l00346"></a>00346    <span class="keywordtype">void</span>  <a class="code" href="class_t_node.html#ae7ad180ef576c5b67cfcf82be4c90380" title="(4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work st...">GEM_print_ipm</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* fname );
-<a name="l00347"></a>00347 
-<a name="l00348"></a>00348 <span class="preprocessor">#ifdef IPMGEMPLUGIN</span>
-<a name="l00349"></a>00349 <span class="preprocessor"></span>
-<a name="l00350"></a>00350 
-<a name="l00351"></a>00351 
-<a name="l00352"></a>00352    <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a125493ee614a08e887f4ba3ce09b9f7e" title="(7) Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure inst...">GEM_to_MT</a>(
-<a name="l00353"></a>00353    <span class="keywordtype">long</span> <span class="keywordtype">int</span> &amp;p_NodeHandle,    
-<a name="l00354"></a>00354    <span class="keywordtype">long</span> <span class="keywordtype">int</span> &amp;p_NodeStatusCH,  
-<a name="l00355"></a>00355    <span class="keywordtype">long</span> <span class="keywordtype">int</span> &amp;p_IterDone,      
-<a name="l00356"></a>00356                          <span class="comment">//                                                  GEM input output  FMT control</span>
-<a name="l00357"></a>00357     <span class="comment">// Chemical scalar variables</span>
-<a name="l00358"></a>00358     <span class="keywordtype">double</span> &amp;p_Vs,    
-<a name="l00359"></a>00359     <span class="keywordtype">double</span> &amp;p_Ms,    
-<a name="l00360"></a>00360     <span class="keywordtype">double</span> &amp;p_Gs,    
-<a name="l00361"></a>00361     <span class="keywordtype">double</span> &amp;p_Hs,    
-<a name="l00362"></a>00362     <span class="keywordtype">double</span> &amp;p_IC,    
-<a name="l00363"></a>00363     <span class="keywordtype">double</span> &amp;p_pH,    
-<a name="l00364"></a>00364     <span class="keywordtype">double</span> &amp;p_pe,    
-<a name="l00365"></a>00365     <span class="keywordtype">double</span> &amp;p_Eh,    
-<a name="l00366"></a>00366     <span class="comment">// Dynamic data - dimensions see in DATACH.H structure</span>
-<a name="l00367"></a>00367     <span class="keywordtype">double</span>  *p_rMB,  
-<a name="l00368"></a>00368     <span class="keywordtype">double</span>  *p_uIC,  
-<a name="l00369"></a>00369     <span class="keywordtype">double</span>  *p_xDC,  
-<a name="l00370"></a>00370     <span class="keywordtype">double</span>  *p_gam,  
-<a name="l00371"></a>00371     <span class="keywordtype">double</span>  *p_xPH,  
-<a name="l00372"></a>00372     <span class="keywordtype">double</span>  *p_vPS,  
-<a name="l00373"></a>00373     <span class="keywordtype">double</span>  *p_mPS,  
-<a name="l00374"></a>00374     <span class="keywordtype">double</span>  *p_bPS,  
-<a name="l00375"></a>00375     <span class="keywordtype">double</span>  *p_xPA,  
-<a name="l00376"></a>00376     <span class="keywordtype">double</span>  *p_aPH,  
-<a name="l00377"></a>00377     <span class="keywordtype">double</span>  *p_bSP   
-<a name="l00378"></a>00378  );
-<a name="l00379"></a>00379 
-<a name="l00380"></a>00380 <span class="preprocessor">#endif</span>
-<a name="l00381"></a>00381 <span class="preprocessor"></span>
-<a name="l00382"></a>00382 <span class="comment">// Access methods for direct or protected manipulation of CSD and DBR data</span>
-<a name="l00383"></a>00383 <span class="comment">//</span>
-<a name="l00384"></a><a class="code" href="class_t_node.html#aed7d853915ed527c6062699626c0801c">00384</a>     <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>* <a class="code" href="class_t_node.html#aed7d853915ed527c6062699626c0801c" title="Get the pointer to chemical system definition data structure.">pCSD</a>() const  
-<a name="l00385"></a>00385     {     <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>;   }
+<a name="l00171"></a>00171 
+<a name="l00172"></a>00172     <span class="comment">// Virtual function for interaction with TNodeArray class</span>
+<a name="l00173"></a>00173     <span class="keyword">virtual</span> <span class="keywordtype">void</span>  setNodeArray( gstring&amp; , <span class="keywordtype">long</span> <span class="keywordtype">int</span> , <span class="keywordtype">bool</span> ) { }
+<a name="l00174"></a>00174 <span class="preprocessor">#endif</span>
+<a name="l00175"></a>00175 <span class="preprocessor"></span>
+<a name="l00176"></a>00176 <span class="keyword">public</span>:
+<a name="l00177"></a>00177 
+<a name="l00178"></a>00178 <span class="comment">//static TNode* na;   // static pointer to this TNode class instance</span>
+<a name="l00179"></a>00179 
+<a name="l00180"></a>00180 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
+<a name="l00181"></a>00181 <span class="preprocessor"></span>
+<a name="l00182"></a>00182   <a class="code" href="class_t_node.html#a5d7ab5171cd0dfb220b01778e2804225" title="Constructor of the class instance in memory for standalone GEMS3K or coupled program.">TNode</a>( <a class="code" href="struct_m_u_l_t_i.html" title="Contains chemical thermodynamic work data for GEM IPM-3 algorithm.">MULTI</a> *apm );
+<a name="l00183"></a>00183 <span class="preprocessor">#else</span>
+<a name="l00184"></a>00184 <span class="preprocessor"></span>
+<a name="l00185"></a>00185   <a class="code" href="class_t_node.html#a5d7ab5171cd0dfb220b01778e2804225" title="Constructor of the class instance in memory for standalone GEMS3K or coupled program.">TNode</a>();
+<a name="l00186"></a>00186 <span class="preprocessor">#endif</span>
+<a name="l00187"></a>00187 <span class="preprocessor"></span>
+<a name="l00188"></a>00188   <span class="keyword">virtual</span> <a class="code" href="class_t_node.html#a374606795ee14fe9a6df10dec491d799" title="destructor">~TNode</a>();      
+<a name="l00189"></a>00189 
+<a name="l00190"></a>00190 <span class="comment">// Typical sequence for using TNode class ----------------------------------</span>
+<a name="l00209"></a>00209 <span class="comment"></span>  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94" title="(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module...">GEM_init</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *ipmfiles_lst_name, <span class="keyword">const</span> <span class="keywordtype">char</span> *dbrfiles_lst_name = 0,
+<a name="l00210"></a>00210                    <span class="keywordtype">long</span> <span class="keywordtype">int</span> *nodeTypes = 0, <span class="keywordtype">bool</span> getNodT1 = <span class="keyword">false</span>);
+<a name="l00211"></a>00211 
+<a name="l00212"></a>00212 <span class="preprocessor">#ifdef IPMGEMPLUGIN</span>
+<a name="l00213"></a>00213 <span class="preprocessor"></span><span class="comment">//  Calls for direct coupling of a FMT code with GEMS3K</span>
+<a name="l00214"></a>00214 
+<a name="l00218"></a>00218    <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#aca4567cec25b6583af9410b02c79ed41" title="(6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.">GEM_restore_MT</a>(
+<a name="l00219"></a>00219     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  &amp;p_NodeHandle,   
+<a name="l00220"></a>00220     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  &amp;p_NodeStatusCH, 
+<a name="l00221"></a>00221                       <span class="comment">//                                    GEM input output  FMT control</span>
+<a name="l00222"></a>00222     <span class="keywordtype">double</span> &amp;p_TK,      
+<a name="l00223"></a>00223     <span class="keywordtype">double</span> &amp;p_P,      
+<a name="l00224"></a>00224     <span class="keywordtype">double</span> &amp;p_Vs,     
+<a name="l00225"></a>00225     <span class="keywordtype">double</span> &amp;p_Ms,     
+<a name="l00226"></a>00226     <span class="keywordtype">double</span> *p_bIC,    
+<a name="l00227"></a>00227     <span class="keywordtype">double</span> *p_dul,    
+<a name="l00228"></a>00228     <span class="keywordtype">double</span> *p_dll,    
+<a name="l00229"></a>00229     <span class="keywordtype">double</span> *p_aPH     
+<a name="l00230"></a>00230    );
+<a name="l00231"></a>00231 
+<a name="l00234"></a>00234 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858" title="(8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR stru...">GEM_from_MT</a>(
+<a name="l00235"></a>00235  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeHandle,   
+<a name="l00236"></a>00236  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeStatusCH, 
+<a name="l00237"></a>00237                   <span class="comment">//                                              GEM input output  FMT control</span>
+<a name="l00238"></a>00238  <span class="keywordtype">double</span> p_TK,     
+<a name="l00239"></a>00239  <span class="keywordtype">double</span> p_P,      
+<a name="l00240"></a>00240  <span class="keywordtype">double</span> p_Vs,     
+<a name="l00241"></a>00241  <span class="keywordtype">double</span> p_Ms,     
+<a name="l00242"></a>00242  <span class="keywordtype">double</span> *p_bIC,   
+<a name="l00243"></a>00243  <span class="keywordtype">double</span> *p_dul,   
+<a name="l00244"></a>00244  <span class="keywordtype">double</span> *p_dll,   
+<a name="l00245"></a>00245  <span class="keywordtype">double</span> *p_aPH    
+<a name="l00246"></a>00246  );
+<a name="l00247"></a>00247 
+<a name="l00251"></a>00251 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858" title="(8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR stru...">GEM_from_MT</a>(
+<a name="l00252"></a>00252  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeHandle,   
+<a name="l00253"></a>00253  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeStatusCH, 
+<a name="l00254"></a>00254                   <span class="comment">//                                              GEM input output  FMT control</span>
+<a name="l00255"></a>00255  <span class="keywordtype">double</span> p_TK,     
+<a name="l00256"></a>00256  <span class="keywordtype">double</span> p_P,      
+<a name="l00257"></a>00257  <span class="keywordtype">double</span> p_Vs,     
+<a name="l00258"></a>00258  <span class="keywordtype">double</span> p_Ms,     
+<a name="l00259"></a>00259  <span class="keywordtype">double</span> *p_bIC,   
+<a name="l00260"></a>00260  <span class="keywordtype">double</span> *p_dul,   
+<a name="l00261"></a>00261  <span class="keywordtype">double</span> *p_dll,   
+<a name="l00262"></a>00262  <span class="keywordtype">double</span> *p_aPH,   
+<a name="l00263"></a>00263  <span class="keywordtype">double</span> *p_xDC    
+<a name="l00264"></a>00264 
+<a name="l00265"></a>00265 
+<a name="l00266"></a>00266 
+<a name="l00267"></a>00267 );
+<a name="l00268"></a>00268 
+<a name="l00274"></a>00274 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858" title="(8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR stru...">GEM_from_MT</a>(
+<a name="l00275"></a>00275  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeHandle,   
+<a name="l00276"></a>00276  <span class="keywordtype">long</span> <span class="keywordtype">int</span>  p_NodeStatusCH, 
+<a name="l00277"></a>00277                   <span class="comment">//                                              GEM input output  FMT control</span>
+<a name="l00278"></a>00278  <span class="keywordtype">double</span> p_TK,     
+<a name="l00279"></a>00279  <span class="keywordtype">double</span> p_P,      
+<a name="l00280"></a>00280  <span class="keywordtype">double</span> p_Vs,     
+<a name="l00281"></a>00281  <span class="keywordtype">double</span> p_Ms,     
+<a name="l00282"></a>00282  <span class="keywordtype">double</span> *p_bIC,   
+<a name="l00283"></a>00283  <span class="keywordtype">double</span> *p_dul,   
+<a name="l00284"></a>00284  <span class="keywordtype">double</span> *p_dll,   
+<a name="l00285"></a>00285  <span class="keywordtype">double</span> *p_aPH,   
+<a name="l00286"></a>00286  <span class="keywordtype">double</span> *p_xDC,   
+<a name="l00287"></a>00287  <span class="keywordtype">double</span> *p_gam    
+<a name="l00288"></a>00288 );
+<a name="l00289"></a>00289 
+<a name="l00292"></a>00292 <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a501d3b3ea6e029ffda376c5afdc1d21b" title="(9) Optional, for passing the current mass transport iteration information into the work DATABR struc...">GEM_set_MT</a>(
+<a name="l00293"></a>00293 <span class="comment">//   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE</span>
+<a name="l00294"></a>00294 <span class="comment">//   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE</span>
+<a name="l00295"></a>00295    <span class="keywordtype">double</span> p_Tm,      
+<a name="l00296"></a>00296    <span class="keywordtype">double</span> p_dt       
+<a name="l00297"></a>00297 );
+<a name="l00298"></a>00298 <span class="preprocessor">#endif</span>
+<a name="l00299"></a>00299 <span class="preprocessor"></span>
+<a name="l00305"></a>00305    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#ac5712e9651942d115a645ad3b3c5a4a7" title="(5) Reads another DBR file (with input system composition, T,P etc.) \ .">GEM_read_dbr</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* fname, <span class="keywordtype">bool</span> binary_f=<span class="keyword">false</span> );
+<a name="l00306"></a>00306 
+<a name="l00318"></a>00318    <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run</a>( <span class="keywordtype">bool</span> uPrimalSol );   <span class="comment">// calls GEM for a work node</span>
+<a name="l00319"></a>00319 
+<a name="l00323"></a>00323    <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ae804bf27317fe1861aa0b3a25ce6d348" title="Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() - can be used f...">GEM_CalcTime</a>();
+<a name="l00324"></a>00324 
+<a name="l00332"></a>00332    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#acdf09273cdcf420d60963935da1b0395" title="To obtain the number of GEM IPM2 iterations performed during the last call of GEM_run() e...">GEM_Iterations</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; <a class="code" href="class_t_node.html#abf3b49ea5e4679b3fcd9254c50f02520" title="Number of performed IPM-2 precision refinement loops.">PrecLoops</a>, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; <a class="code" href="class_t_node.html#a36b8ccc85f5912f7e02a1e844566a2f5" title="Total Number of performed FIA entry iterations.">NumIterFIA</a>, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; <a class="code" href="class_t_node.html#a78bcefa08d965128e3929298d765c57d" title="Total Number of performed IPM main iterations.">NumIterIPM</a> );
+<a name="l00333"></a>00333 
+<a name="l00344"></a>00344    <span class="keywordtype">void</span>  <a class="code" href="class_t_node.html#a22efa265fa48c4bc4029398567db4bfc" title="(3) Writes the contents of the work instance of the DATABR structure into a disk file with path name ...">GEM_write_dbr</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* fname,  <span class="keywordtype">bool</span> binary_f=<span class="keyword">false</span>,
+<a name="l00345"></a>00345                                   <span class="keywordtype">bool</span> with_comments = <span class="keyword">true</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span>);
+<a name="l00346"></a>00346 
+<a name="l00353"></a>00353    <span class="keywordtype">void</span>  <a class="code" href="class_t_node.html#ae7ad180ef576c5b67cfcf82be4c90380" title="(4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work st...">GEM_print_ipm</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* fname );
+<a name="l00354"></a>00354 
+<a name="l00355"></a>00355 <span class="preprocessor">#ifdef IPMGEMPLUGIN</span>
+<a name="l00356"></a>00356 <span class="preprocessor"></span>
+<a name="l00357"></a>00357 
+<a name="l00358"></a>00358 
+<a name="l00359"></a>00359    <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a125493ee614a08e887f4ba3ce09b9f7e" title="(7) Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure inst...">GEM_to_MT</a>(
+<a name="l00360"></a>00360    <span class="keywordtype">long</span> <span class="keywordtype">int</span> &amp;p_NodeHandle,    
+<a name="l00361"></a>00361    <span class="keywordtype">long</span> <span class="keywordtype">int</span> &amp;p_NodeStatusCH,  
+<a name="l00362"></a>00362    <span class="keywordtype">long</span> <span class="keywordtype">int</span> &amp;p_IterDone,      
+<a name="l00363"></a>00363                          <span class="comment">//                                                  GEM input output  FMT control</span>
+<a name="l00364"></a>00364     <span class="comment">// Chemical scalar variables</span>
+<a name="l00365"></a>00365     <span class="keywordtype">double</span> &amp;p_Vs,    
+<a name="l00366"></a>00366     <span class="keywordtype">double</span> &amp;p_Ms,    
+<a name="l00367"></a>00367     <span class="keywordtype">double</span> &amp;p_Gs,    
+<a name="l00368"></a>00368     <span class="keywordtype">double</span> &amp;p_Hs,    
+<a name="l00369"></a>00369     <span class="keywordtype">double</span> &amp;p_IC,    
+<a name="l00370"></a>00370     <span class="keywordtype">double</span> &amp;p_pH,    
+<a name="l00371"></a>00371     <span class="keywordtype">double</span> &amp;p_pe,    
+<a name="l00372"></a>00372     <span class="keywordtype">double</span> &amp;p_Eh,    
+<a name="l00373"></a>00373     <span class="comment">// Dynamic data - dimensions see in DATACH.H structure</span>
+<a name="l00374"></a>00374     <span class="keywordtype">double</span>  *p_rMB,  
+<a name="l00375"></a>00375     <span class="keywordtype">double</span>  *p_uIC,  
+<a name="l00376"></a>00376     <span class="keywordtype">double</span>  *p_xDC,  
+<a name="l00377"></a>00377     <span class="keywordtype">double</span>  *p_gam,  
+<a name="l00378"></a>00378     <span class="keywordtype">double</span>  *p_xPH,  
+<a name="l00379"></a>00379     <span class="keywordtype">double</span>  *p_vPS,  
+<a name="l00380"></a>00380     <span class="keywordtype">double</span>  *p_mPS,  
+<a name="l00381"></a>00381     <span class="keywordtype">double</span>  *p_bPS,  
+<a name="l00382"></a>00382     <span class="keywordtype">double</span>  *p_xPA,  
+<a name="l00383"></a>00383     <span class="keywordtype">double</span>  *p_aPH,  
+<a name="l00384"></a>00384     <span class="keywordtype">double</span>  *p_bSP   
+<a name="l00385"></a>00385  );
 <a name="l00386"></a>00386 
-<a name="l00387"></a><a class="code" href="class_t_node.html#ac176ba7c702d4355acb3095953f1beab">00387</a>     <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a>* <a class="code" href="class_t_node.html#ac176ba7c702d4355acb3095953f1beab" title="Get pointer to work node data structure usage on the level of TNodearray is not recommended !...">pCNode</a>() const  
-<a name="l00388"></a>00388 
-<a name="l00389"></a>00389     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>;     }
-<a name="l00390"></a>00390 
-<a name="l00391"></a>00391     <span class="comment">// These methods get contents of fields in the work node structure</span>
-<a name="l00392"></a><a class="code" href="class_t_node.html#a791931e1eed046a2ea5af0e56f0a91d1">00392</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a791931e1eed046a2ea5af0e56f0a91d1" title="Get current node Temperature T, Celsius.">cTC</a>() const     
-<a name="l00393"></a>00393     {  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a78fd022c47ee2d759e912bd405af29dd" title="Node temperature T (Kelvin) + + - -.">TK</a>-C_to_K;   }
-<a name="l00394"></a>00394 
-<a name="l00395"></a>00395     <span class="comment">// These methods get contents of fields in the work node structure</span>
-<a name="l00396"></a><a class="code" href="class_t_node.html#a0dd828fde13d51011878af8890626dd5">00396</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a0dd828fde13d51011878af8890626dd5" title="Get current node Temperature T, Kelvin.">cTK</a>() const     
-<a name="l00397"></a>00397     {  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a78fd022c47ee2d759e912bd405af29dd" title="Node temperature T (Kelvin) + + - -.">TK</a>;   }
-<a name="l00398"></a>00398 
-<a name="l00399"></a><a class="code" href="class_t_node.html#abeef3f6710d8dd9c344bbf562e068f0f">00399</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abeef3f6710d8dd9c344bbf562e068f0f" title="Get current node Pressure P, Pa.">cP</a>() const     
-<a name="l00400"></a>00400     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a2278baab69b3d27a33f759a2e655f35e" title="Node Pressure P (Pa) + + - -.">P</a>;   }
+<a name="l00387"></a>00387 <span class="preprocessor">#endif</span>
+<a name="l00388"></a>00388 <span class="preprocessor"></span>
+<a name="l00389"></a>00389 <span class="comment">// Access methods for direct or protected manipulation of CSD and DBR data</span>
+<a name="l00390"></a>00390 <span class="comment">//</span>
+<a name="l00391"></a><a class="code" href="class_t_node.html#aed7d853915ed527c6062699626c0801c">00391</a>     <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>* <a class="code" href="class_t_node.html#aed7d853915ed527c6062699626c0801c" title="Get the pointer to chemical system definition data structure.">pCSD</a>() const  
+<a name="l00392"></a>00392     {     <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>;   }
+<a name="l00393"></a>00393 
+<a name="l00394"></a><a class="code" href="class_t_node.html#ac176ba7c702d4355acb3095953f1beab">00394</a>     <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a>* <a class="code" href="class_t_node.html#ac176ba7c702d4355acb3095953f1beab" title="Get pointer to work node data structure usage on the level of TNodearray is not recommended !...">pCNode</a>() const  
+<a name="l00395"></a>00395 
+<a name="l00396"></a>00396     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>;     }
+<a name="l00397"></a>00397 
+<a name="l00398"></a>00398     <span class="comment">// These methods get contents of fields in the work node structure</span>
+<a name="l00399"></a><a class="code" href="class_t_node.html#a791931e1eed046a2ea5af0e56f0a91d1">00399</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a791931e1eed046a2ea5af0e56f0a91d1" title="Get current node Temperature T, Celsius.">cTC</a>() const     
+<a name="l00400"></a>00400     {  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a78fd022c47ee2d759e912bd405af29dd" title="Node temperature T (Kelvin) + + - -.">TK</a>-C_to_K;   }
 <a name="l00401"></a>00401 
-<a name="l00402"></a><a class="code" href="class_t_node.html#a1ee5d7097eff1026e99ec811b20990c0">00402</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a1ee5d7097eff1026e99ec811b20990c0" title="Get current node mass in kg (reactive part)">cMs</a>() const     
-<a name="l00403"></a>00403     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a65cecb0df5bca9167b21e53263bd38ec" title="Mass of reactive subsystem (kg) + (+) - -.">Ms</a>;   }
-<a name="l00404"></a>00404 
-<a name="l00405"></a><a class="code" href="class_t_node.html#ac08ffa708fbfe767a0d5e5f0cc1c77cc">00405</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ac08ffa708fbfe767a0d5e5f0cc1c77cc" title="Get current node volume in m3 (reactive part)">cVs</a>() const     
-<a name="l00406"></a>00406     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a59b710a778b2e713fa83f16b64c4e908" title="Volume V of reactive subsystem (m3) (+) (+) + +.">Vs</a>;   }
-<a name="l00407"></a>00407 
-<a name="l00409"></a><a class="code" href="class_t_node.html#a70b297f3e4e8bff1654188544a87ca1e">00409</a>     <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a70b297f3e4e8bff1654188544a87ca1e" title="Set current node identification handle to value of.">setNodeHandle</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> jj )
-<a name="l00410"></a>00410     {      <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#aad8811ca8a0712b43a66f8cf77af89ce" title="Node identification handle, not used in calculaions on TNode level.">NodeHandle</a> = jj;  }
+<a name="l00402"></a>00402     <span class="comment">// These methods get contents of fields in the work node structure</span>
+<a name="l00403"></a><a class="code" href="class_t_node.html#a0dd828fde13d51011878af8890626dd5">00403</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a0dd828fde13d51011878af8890626dd5" title="Get current node Temperature T, Kelvin.">cTK</a>() const     
+<a name="l00404"></a>00404     {  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a78fd022c47ee2d759e912bd405af29dd" title="Node temperature T (Kelvin) + + - -.">TK</a>;   }
+<a name="l00405"></a>00405 
+<a name="l00406"></a><a class="code" href="class_t_node.html#abeef3f6710d8dd9c344bbf562e068f0f">00406</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abeef3f6710d8dd9c344bbf562e068f0f" title="Get current node Pressure P, Pa.">cP</a>() const     
+<a name="l00407"></a>00407     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a2278baab69b3d27a33f759a2e655f35e" title="Node Pressure P (Pa) + + - -.">P</a>;   }
+<a name="l00408"></a>00408 
+<a name="l00409"></a><a class="code" href="class_t_node.html#a1ee5d7097eff1026e99ec811b20990c0">00409</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a1ee5d7097eff1026e99ec811b20990c0" title="Get current node mass in kg (reactive part)">cMs</a>() const     
+<a name="l00410"></a>00410     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a65cecb0df5bca9167b21e53263bd38ec" title="Mass of reactive subsystem (kg) + (+) - -.">Ms</a>;   }
 <a name="l00411"></a>00411 
-<a name="l00412"></a>00412 <span class="comment">// Useful methods facilitating the communication between DataCH (or FMT)</span>
-<a name="l00413"></a>00413 <span class="comment">// and DataBR (or node) data structures for components and phases</span>
-<a name="l00414"></a>00414 <span class="comment">// (i.e. between the chemical system definition and the node)</span>
-<a name="l00415"></a>00415 
-<a name="l00418"></a>00418   <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a242db0953e1e2125e432c0952cc2972e" title="Returns DCH index of IC given the IC Name string (null-terminated) or -1 if no such name was found in...">IC_name_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
-<a name="l00419"></a>00419 
-<a name="l00422"></a>00422    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a40d14d1cc3dff8196d16c1c0f907281a" title="Returns DCH index of DC given the DC Name string or -1 if no such name was found in the DATACH DC nam...">DC_name_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
-<a name="l00423"></a>00423 
-<a name="l00426"></a>00426    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#aa732ba0048e34dcfad9b10d8ef128503" title="Returns DCH index of Phase given the Phase Name string or -1 if no such name was found in the DATACH ...">Ph_name_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
-<a name="l00427"></a>00427 
-<a name="l00430"></a><a class="code" href="class_t_node.html#afc747ebf3dac420af73670c5ab029781">00430</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#afc747ebf3dac420af73670c5ab029781" title="Returns DBR index of IC given the IC Name string or -1 if no such name was found in the DATACH IC nam...">IC_name_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
-<a name="l00431"></a>00431    { <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#aa983bc0d23c7de73d36929f292d6ce21" title="Converts the IC DCH index into the IC DBR index or returns -1 if this IC is not used in the data brid...">IC_xCH_to_xDB</a>( <a class="code" href="class_t_node.html#a242db0953e1e2125e432c0952cc2972e" title="Returns DCH index of IC given the IC Name string (null-terminated) or -1 if no such name was found in...">IC_name_to_xCH</a>( Name ) ); }
-<a name="l00432"></a>00432 
-<a name="l00435"></a><a class="code" href="class_t_node.html#a8e33d3a97b4bfecc452dab2c1e6e1e8c">00435</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a8e33d3a97b4bfecc452dab2c1e6e1e8c" title="Returns DBR index of DC given the DC Name string or -1 if no such name was found in the DATACH DC nam...">DC_name_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
-<a name="l00436"></a>00436    { <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a5afe7b9910fe36c35ef4180cca1d27b8" title="Converts the DC DCH index into the DC DBR index or returns -1 if this DC is not used in the data brid...">DC_xCH_to_xDB</a>( <a class="code" href="class_t_node.html#a40d14d1cc3dff8196d16c1c0f907281a" title="Returns DCH index of DC given the DC Name string or -1 if no such name was found in the DATACH DC nam...">DC_name_to_xCH</a>( Name ) ); }
-<a name="l00437"></a>00437 
-<a name="l00440"></a><a class="code" href="class_t_node.html#a287f81d6eff449b02c546c439d25cf4b">00440</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a287f81d6eff449b02c546c439d25cf4b" title="Returns DBR index of Phase given the Phase Name string or -1 if no such name was found in the DATACH ...">Ph_name_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
-<a name="l00441"></a>00441    { <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a10adca033b08f592fc6ad36b0533ee38" title="Converts the Phase DCH index into the Phase DBR index or returns -1 if this Phase is not used in the ...">Ph_xCH_to_xDB</a>( <a class="code" href="class_t_node.html#aa732ba0048e34dcfad9b10d8ef128503" title="Returns DCH index of Phase given the Phase Name string or -1 if no such name was found in the DATACH ...">Ph_name_to_xCH</a>( Name ) ); }
-<a name="l00442"></a>00442 
-<a name="l00445"></a>00445    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#aa983bc0d23c7de73d36929f292d6ce21" title="Converts the IC DCH index into the IC DBR index or returns -1 if this IC is not used in the data brid...">IC_xCH_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
-<a name="l00446"></a>00446 
-<a name="l00449"></a>00449    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a5afe7b9910fe36c35ef4180cca1d27b8" title="Converts the DC DCH index into the DC DBR index or returns -1 if this DC is not used in the data brid...">DC_xCH_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
-<a name="l00450"></a>00450 
-<a name="l00453"></a>00453    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a10adca033b08f592fc6ad36b0533ee38" title="Converts the Phase DCH index into the Phase DBR index or returns -1 if this Phase is not used in the ...">Ph_xCH_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
-<a name="l00454"></a>00454 
-<a name="l00456"></a><a class="code" href="class_t_node.html#a1823795641f266517c1298e7d697600d">00456</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a1823795641f266517c1298e7d697600d" title="Converts the IC DBR index into the IC DCH index.">IC_xDB_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR )<span class="keyword"> const</span>
-<a name="l00457"></a>00457 <span class="keyword">   </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698" title="DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb].">xic</a>[xBR]; }
-<a name="l00458"></a>00458 
-<a name="l00460"></a><a class="code" href="class_t_node.html#afbf9865c9b8b3bc7fd97b2ec28585f39">00460</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#afbf9865c9b8b3bc7fd97b2ec28585f39" title="Converts the DC DBR index into the DC DCH index.">DC_xDB_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR )<span class="keyword"> const</span>
-<a name="l00461"></a>00461 <span class="keyword">   </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a" title="DATACH access index list of DC kept in the DATABR structure and in DBR files [nDCb].">xdc</a>[xBR]; }
-<a name="l00462"></a>00462 
-<a name="l00464"></a><a class="code" href="class_t_node.html#a6a6be1199812513ec03b785da6df60ef">00464</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a6a6be1199812513ec03b785da6df60ef" title="Converts the Phase DBR index into the Phase DCH index.">Ph_xDB_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR )<span class="keyword"> const</span>
-<a name="l00465"></a>00465 <span class="keyword">   </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a3b851a69e8520e28c6b328843318ea62" title="DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]...">xph</a>[xBR]; }
-<a name="l00466"></a>00466 
-<a name="l00468"></a>00468     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a040539ce973c4fb3951665c9e4548513" title="Returns the DCH index of the first DC belonging to the phase with DCH index Phx.">Phx_to_DCx</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> Phx );
+<a name="l00412"></a><a class="code" href="class_t_node.html#ac08ffa708fbfe767a0d5e5f0cc1c77cc">00412</a>     <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ac08ffa708fbfe767a0d5e5f0cc1c77cc" title="Get current node volume in m3 (reactive part)">cVs</a>() const     
+<a name="l00413"></a>00413     {        <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a59b710a778b2e713fa83f16b64c4e908" title="Volume V of reactive subsystem (m3) (+) (+) + +.">Vs</a>;   }
+<a name="l00414"></a>00414 
+<a name="l00416"></a><a class="code" href="class_t_node.html#a70b297f3e4e8bff1654188544a87ca1e">00416</a>     <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a70b297f3e4e8bff1654188544a87ca1e" title="Set current node identification handle to value of.">setNodeHandle</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> jj )
+<a name="l00417"></a>00417     {      <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#aad8811ca8a0712b43a66f8cf77af89ce" title="Node identification handle, not used in calculaions on TNode level.">NodeHandle</a> = jj;  }
+<a name="l00418"></a>00418 
+<a name="l00419"></a>00419 <span class="comment">// Useful methods facilitating the communication between DataCH (or FMT)</span>
+<a name="l00420"></a>00420 <span class="comment">// and DataBR (or node) data structures for components and phases</span>
+<a name="l00421"></a>00421 <span class="comment">// (i.e. between the chemical system definition and the node)</span>
+<a name="l00422"></a>00422 
+<a name="l00425"></a>00425   <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a242db0953e1e2125e432c0952cc2972e" title="Returns DCH index of IC given the IC Name string (null-terminated) or -1 if no such name was found in...">IC_name_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
+<a name="l00426"></a>00426 
+<a name="l00429"></a>00429    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a40d14d1cc3dff8196d16c1c0f907281a" title="Returns DCH index of DC given the DC Name string or -1 if no such name was found in the DATACH DC nam...">DC_name_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
+<a name="l00430"></a>00430 
+<a name="l00433"></a>00433    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#aa732ba0048e34dcfad9b10d8ef128503" title="Returns DCH index of Phase given the Phase Name string or -1 if no such name was found in the DATACH ...">Ph_name_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
+<a name="l00434"></a>00434 
+<a name="l00437"></a><a class="code" href="class_t_node.html#afc747ebf3dac420af73670c5ab029781">00437</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#afc747ebf3dac420af73670c5ab029781" title="Returns DBR index of IC given the IC Name string or -1 if no such name was found in the DATACH IC nam...">IC_name_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
+<a name="l00438"></a>00438    { <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#aa983bc0d23c7de73d36929f292d6ce21" title="Converts the IC DCH index into the IC DBR index or returns -1 if this IC is not used in the data brid...">IC_xCH_to_xDB</a>( <a class="code" href="class_t_node.html#a242db0953e1e2125e432c0952cc2972e" title="Returns DCH index of IC given the IC Name string (null-terminated) or -1 if no such name was found in...">IC_name_to_xCH</a>( Name ) ); }
+<a name="l00439"></a>00439 
+<a name="l00442"></a><a class="code" href="class_t_node.html#a8e33d3a97b4bfecc452dab2c1e6e1e8c">00442</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a8e33d3a97b4bfecc452dab2c1e6e1e8c" title="Returns DBR index of DC given the DC Name string or -1 if no such name was found in the DATACH DC nam...">DC_name_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
+<a name="l00443"></a>00443    { <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a5afe7b9910fe36c35ef4180cca1d27b8" title="Converts the DC DCH index into the DC DBR index or returns -1 if this DC is not used in the data brid...">DC_xCH_to_xDB</a>( <a class="code" href="class_t_node.html#a40d14d1cc3dff8196d16c1c0f907281a" title="Returns DCH index of DC given the DC Name string or -1 if no such name was found in the DATACH DC nam...">DC_name_to_xCH</a>( Name ) ); }
+<a name="l00444"></a>00444 
+<a name="l00447"></a><a class="code" href="class_t_node.html#a287f81d6eff449b02c546c439d25cf4b">00447</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a287f81d6eff449b02c546c439d25cf4b" title="Returns DBR index of Phase given the Phase Name string or -1 if no such name was found in the DATACH ...">Ph_name_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
+<a name="l00448"></a>00448    { <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a10adca033b08f592fc6ad36b0533ee38" title="Converts the Phase DCH index into the Phase DBR index or returns -1 if this Phase is not used in the ...">Ph_xCH_to_xDB</a>( <a class="code" href="class_t_node.html#aa732ba0048e34dcfad9b10d8ef128503" title="Returns DCH index of Phase given the Phase Name string or -1 if no such name was found in the DATACH ...">Ph_name_to_xCH</a>( Name ) ); }
+<a name="l00449"></a>00449 
+<a name="l00452"></a>00452    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#aa983bc0d23c7de73d36929f292d6ce21" title="Converts the IC DCH index into the IC DBR index or returns -1 if this IC is not used in the data brid...">IC_xCH_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
+<a name="l00453"></a>00453 
+<a name="l00456"></a>00456    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a5afe7b9910fe36c35ef4180cca1d27b8" title="Converts the DC DCH index into the DC DBR index or returns -1 if this DC is not used in the data brid...">DC_xCH_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
+<a name="l00457"></a>00457 
+<a name="l00460"></a>00460    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a10adca033b08f592fc6ad36b0533ee38" title="Converts the Phase DCH index into the Phase DBR index or returns -1 if this Phase is not used in the ...">Ph_xCH_to_xDB</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
+<a name="l00461"></a>00461 
+<a name="l00463"></a><a class="code" href="class_t_node.html#a1823795641f266517c1298e7d697600d">00463</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a1823795641f266517c1298e7d697600d" title="Converts the IC DBR index into the IC DCH index.">IC_xDB_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR )<span class="keyword"> const</span>
+<a name="l00464"></a>00464 <span class="keyword">   </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698" title="DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb].">xic</a>[xBR]; }
+<a name="l00465"></a>00465 
+<a name="l00467"></a><a class="code" href="class_t_node.html#afbf9865c9b8b3bc7fd97b2ec28585f39">00467</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#afbf9865c9b8b3bc7fd97b2ec28585f39" title="Converts the DC DBR index into the DC DCH index.">DC_xDB_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR )<span class="keyword"> const</span>
+<a name="l00468"></a>00468 <span class="keyword">   </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a" title="DATACH access index list of DC kept in the DATABR structure and in DBR files [nDCb].">xdc</a>[xBR]; }
 <a name="l00469"></a>00469 
-<a name="l00472"></a>00472     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a6aa666a5950edd1ae72ca9f092ca883e" title="Returns the DCH index of the first DC belonging to the phase with DCH index Phx, plus returns through...">PhtoDC_DCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> Phx, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; nDCinPh );
+<a name="l00471"></a><a class="code" href="class_t_node.html#a6a6be1199812513ec03b785da6df60ef">00471</a>    <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a6a6be1199812513ec03b785da6df60ef" title="Converts the Phase DBR index into the Phase DCH index.">Ph_xDB_to_xCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR )<span class="keyword"> const</span>
+<a name="l00472"></a>00472 <span class="keyword">   </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a3b851a69e8520e28c6b328843318ea62" title="DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]...">xph</a>[xBR]; }
 <a name="l00473"></a>00473 
-<a name="l00475"></a>00475     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a33ea7b8aac27af7a1a6e844bfe2ac710" title="Returns the DCH index of the Phase to which the Dependent Component with index xCH belongs...">DCtoPh_DCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
+<a name="l00475"></a>00475     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a040539ce973c4fb3951665c9e4548513" title="Returns the DCH index of the first DC belonging to the phase with DCH index Phx.">Phx_to_DCx</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> Phx );
 <a name="l00476"></a>00476 
-<a name="l00479"></a>00479     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a81596e83f36fc5e6ed580bfc49c33254" title="Returns the DBR index of the first DC belonging to the phase with DBR index Phx, plus returns through...">PhtoDC_DBR</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> Phx, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; nDCinPh );
+<a name="l00479"></a>00479     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a6aa666a5950edd1ae72ca9f092ca883e" title="Returns the DCH index of the first DC belonging to the phase with DCH index Phx, plus returns through...">PhtoDC_DCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> Phx, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; nDCinPh );
 <a name="l00480"></a>00480 
-<a name="l00482"></a>00482      <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a50a246d6a4a31e84bbedb479d0076a50" title="Returns the DBR index of the Phase to which the Dependent Component with index xBR belongs...">DCtoPh_DBR</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR );
+<a name="l00482"></a>00482     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a33ea7b8aac27af7a1a6e844bfe2ac710" title="Returns the DCH index of the Phase to which the Dependent Component with index xCH belongs...">DCtoPh_DCH</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH );
 <a name="l00483"></a>00483 
-<a name="l00484"></a>00484     <span class="comment">// Data exchange methods between GEMIPM and work node DATABR structure</span>
-<a name="l00485"></a>00485     <span class="comment">// Are called inside of GEM_run()</span>
-<a name="l00486"></a>00486     <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a75809d87b78faa90396f90b95eada62e" title="Packs GEMIPM calculation results into work node structure.">packDataBr</a>();   
-<a name="l00487"></a>00487     <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a090a174a1dec22e2cffd1446a756ea08" title="unpacks work DATABR content into GEMIPM data structure">unpackDataBr</a>( <span class="keywordtype">bool</span> uPrimalSol ); 
-<a name="l00488"></a>00488 
-<a name="l00489"></a>00489     <span class="comment">// Access to interpolated thermodynamic data from DCH structure</span>
-<a name="l00492"></a>00492 <span class="comment"></span>    <span class="keywordtype">bool</span>  <a class="code" href="class_t_node.html#a507d05a8ab3d3965aa0a27fc19f34c80" title="Checks if given temperature T (K) and pressure P (Pa) fit within the interpolation intervals of the D...">check_TP</a>( <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> P );
-<a name="l00493"></a>00493 
-<a name="l00496"></a>00496     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#aac069202444c7a0dccbfac40a779de4f" title="Tests TK as a grid point for the interpolation of thermodynamic data.">check_grid_T</a>( <span class="keywordtype">double</span> TK );
-<a name="l00497"></a>00497 
-<a name="l00500"></a>00500     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a773180f7d931f2f2a3b5a70bbc26dff0" title="Tests P as a grid point for the interpolation of thermodynamic data.">check_grid_P</a>( <span class="keywordtype">double</span> P );
-<a name="l00501"></a>00501 
-<a name="l00505"></a>00505      <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#ac32d5bbf0bb791d1d40b69f9fc7b3f78" title="Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH looku...">check_grid_TP</a>(  <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> P );
-<a name="l00506"></a>00506 
-<a name="l00508"></a><a class="code" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683">00508</a>      <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683" title="Returns number of temperature and pressure grid points for one dependent component.">gridTP</a>()<span class="keyword"> const</span>
-<a name="l00509"></a>00509 <span class="keyword">     </span>{
-<a name="l00510"></a>00510          <span class="keywordflow">if</span>( <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#aef9210539e6eda1fee2b32021ce4d50c" title="Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid); 1 no interpolation, work on data for T,P pairs (for GEMSFIT)">mLook</a> == 1L )
-<a name="l00511"></a>00511            <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a6b2527b00c3a874293a24a6f4e11d845" title="Number of temperature grid points in interpolation lookup arrays, 1 or more.">nTp</a>;
-<a name="l00512"></a>00512          <span class="keywordflow">else</span>
-<a name="l00513"></a>00513            <span class="keywordflow">return</span> (<a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ae20f2ed53c4e64c28e744b3c72f97d68" title="Number of pressure grid points in interpolation lookup arrays, 1 or more.">nPp</a> * <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a6b2527b00c3a874293a24a6f4e11d845" title="Number of temperature grid points in interpolation lookup arrays, 1 or more.">nTp</a>);
-<a name="l00514"></a>00514      }
-<a name="l00515"></a>00515 
-<a name="l00516"></a>00516         
-<a name="l00518"></a>00518          <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ac04b6d96043f2b6b3c5c2b10c71af4a8" title="Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input ...">get_Ppa_sat</a>( <span class="keywordtype">double</span> Tk );
-<a name="l00519"></a>00519 
-<a name="l00521"></a>00521          <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a98971c2b677af3ec5b10ce034db45063" title="Returns index of Tk point - Psat point pair.">get_grid_index_Ppa_sat</a>( <span class="keywordtype">double</span> Tk );
+<a name="l00486"></a>00486     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a81596e83f36fc5e6ed580bfc49c33254" title="Returns the DBR index of the first DC belonging to the phase with DBR index Phx, plus returns through...">PhtoDC_DBR</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> Phx, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; nDCinPh );
+<a name="l00487"></a>00487 
+<a name="l00489"></a>00489      <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a50a246d6a4a31e84bbedb479d0076a50" title="Returns the DBR index of the Phase to which the Dependent Component with index xBR belongs...">DCtoPh_DBR</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR );
+<a name="l00490"></a>00490 
+<a name="l00491"></a>00491     <span class="comment">// Data exchange methods between GEMIPM and work node DATABR structure</span>
+<a name="l00492"></a>00492     <span class="comment">// Are called inside of GEM_run()</span>
+<a name="l00493"></a>00493     <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a75809d87b78faa90396f90b95eada62e" title="Packs GEMIPM calculation results into work node structure.">packDataBr</a>();   
+<a name="l00494"></a>00494     <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a090a174a1dec22e2cffd1446a756ea08" title="unpacks work DATABR content into GEMIPM data structure">unpackDataBr</a>( <span class="keywordtype">bool</span> uPrimalSol ); 
+<a name="l00495"></a>00495 
+<a name="l00496"></a>00496     <span class="comment">// Access to interpolated thermodynamic data from DCH structure</span>
+<a name="l00499"></a>00499 <span class="comment"></span>    <span class="keywordtype">bool</span>  <a class="code" href="class_t_node.html#a507d05a8ab3d3965aa0a27fc19f34c80" title="Checks if given temperature T (K) and pressure P (Pa) fit within the interpolation intervals of the D...">check_TP</a>( <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> P );
+<a name="l00500"></a>00500 
+<a name="l00503"></a>00503     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#aac069202444c7a0dccbfac40a779de4f" title="Tests TK as a grid point for the interpolation of thermodynamic data.">check_grid_T</a>( <span class="keywordtype">double</span> TK );
+<a name="l00504"></a>00504 
+<a name="l00507"></a>00507     <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#a773180f7d931f2f2a3b5a70bbc26dff0" title="Tests P as a grid point for the interpolation of thermodynamic data.">check_grid_P</a>( <span class="keywordtype">double</span> P );
+<a name="l00508"></a>00508 
+<a name="l00512"></a>00512      <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="class_t_node.html#ac32d5bbf0bb791d1d40b69f9fc7b3f78" title="Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH looku...">check_grid_TP</a>(  <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> P );
+<a name="l00513"></a>00513 
+<a name="l00515"></a><a class="code" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683">00515</a>      <span class="keyword">inline</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683" title="Returns number of temperature and pressure grid points for one dependent component.">gridTP</a>()<span class="keyword"> const</span>
+<a name="l00516"></a>00516 <span class="keyword">     </span>{
+<a name="l00517"></a>00517          <span class="keywordflow">if</span>( <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#aef9210539e6eda1fee2b32021ce4d50c" title="Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid); 1 no interpolation, work on data for T,P pairs (for GEMSFIT)">mLook</a> == 1L )
+<a name="l00518"></a>00518            <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a6b2527b00c3a874293a24a6f4e11d845" title="Number of temperature grid points in interpolation lookup arrays, 1 or more.">nTp</a>;
+<a name="l00519"></a>00519          <span class="keywordflow">else</span>
+<a name="l00520"></a>00520            <span class="keywordflow">return</span> (<a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ae20f2ed53c4e64c28e744b3c72f97d68" title="Number of pressure grid points in interpolation lookup arrays, 1 or more.">nPp</a> * <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a6b2527b00c3a874293a24a6f4e11d845" title="Number of temperature grid points in interpolation lookup arrays, 1 or more.">nTp</a>);
+<a name="l00521"></a>00521      }
 <a name="l00522"></a>00522 
-<a name="l00530"></a>00530      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a7afac572263e12640835279830ca60e4" title="Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the DATACH st...">DC_G0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK,  <span class="keywordtype">bool</span> norm=<span class="keyword">true</span>);
-<a name="l00531"></a>00531 
-<a name="l00538"></a>00538      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a63c87c39f33bfd636d523c03a2cd6b9f" title="Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa) ...">DC_V0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00539"></a>00539 
-<a name="l00546"></a>00546      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abd4439e8fdd785e70d25a9de13dadbf9" title="Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the DA...">DC_H0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00547"></a>00547 
-<a name="l00554"></a>00554      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#aa1b34ac12bacd643440441ababa5e949" title="Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol) fr...">DC_S0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00555"></a>00555 
-<a name="l00562"></a>00562      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a69d602fcf4335702caaf3e68c700df48" title="Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in ...">DC_Cp0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00563"></a>00563 
-<a name="l00570"></a>00570      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a1e6c17e719376669403af8d7149bf529" title="Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the DATACH structure...">DC_A0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00571"></a>00571 
-<a name="l00578"></a>00578      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a5b87fb908873d158d2f9e965be39b274" title="Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the DATACH structure...">DC_U0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00579"></a>00579 
-<a name="l00585"></a>00585      <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a590116944bc0ee663608303005db06df" title="Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH struct...">DensArrayH2Ow</a>( <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK, vector&lt;double&gt;&amp; DensAW );
+<a name="l00523"></a>00523         
+<a name="l00525"></a>00525          <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ac04b6d96043f2b6b3c5c2b10c71af4a8" title="Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input ...">get_Ppa_sat</a>( <span class="keywordtype">double</span> Tk );
+<a name="l00526"></a>00526 
+<a name="l00528"></a>00528          <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node.html#a98971c2b677af3ec5b10ce034db45063" title="Returns index of Tk point - Psat point pair.">get_grid_index_Ppa_sat</a>( <span class="keywordtype">double</span> Tk );
+<a name="l00529"></a>00529 
+<a name="l00537"></a>00537      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a7afac572263e12640835279830ca60e4" title="Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the DATACH st...">DC_G0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK,  <span class="keywordtype">bool</span> norm=<span class="keyword">true</span>);
+<a name="l00538"></a>00538 
+<a name="l00545"></a>00545      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a63c87c39f33bfd636d523c03a2cd6b9f" title="Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa) ...">DC_V0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00546"></a>00546 
+<a name="l00553"></a>00553      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abd4439e8fdd785e70d25a9de13dadbf9" title="Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol) from the DA...">DC_H0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00554"></a>00554 
+<a name="l00561"></a>00561      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#aa1b34ac12bacd643440441ababa5e949" title="Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol) fr...">DC_S0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00562"></a>00562 
+<a name="l00569"></a>00569      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a69d602fcf4335702caaf3e68c700df48" title="Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in ...">DC_Cp0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00570"></a>00570 
+<a name="l00577"></a>00577      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a1e6c17e719376669403af8d7149bf529" title="Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the DATACH structure...">DC_A0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00578"></a>00578 
+<a name="l00585"></a>00585      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a5b87fb908873d158d2f9e965be39b274" title="Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the DATACH structure...">DC_U0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
 <a name="l00586"></a>00586 
-<a name="l00592"></a>00592          <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#aab53daf27bc5d38b107b0c74b416938e" title="Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P...">EpsArrayH2Ow</a>( <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK, vector&lt;double&gt;&amp; EpsAW );
+<a name="l00592"></a>00592      <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a590116944bc0ee663608303005db06df" title="Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH struct...">DensArrayH2Ow</a>( <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK, vector&lt;double&gt;&amp; DensAW );
 <a name="l00593"></a>00593 
-<a name="l00594"></a>00594 
-<a name="l00599"></a>00599      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ac52e8e98b3dee1af3f63b348eacedb08" title="Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure...">EpsH2Ow</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00599"></a>00599          <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#aab53daf27bc5d38b107b0c74b416938e" title="Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P...">EpsArrayH2Ow</a>( <span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK, vector&lt;double&gt;&amp; EpsAW );
 <a name="l00600"></a>00600 
-<a name="l00605"></a>00605      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c" title="Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the DATACH structure...">DenH2Ow</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00606"></a>00606 
-<a name="l00611"></a>00611      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a9e9d8f6870dcdb13c8da55cc854fded3" title="Retrieves (interpolated) viscosity of liquid water (in kg/m3) at (P,TK) from the DATACH structure...">VisH2Ow</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00612"></a>00612 
-<a name="l00617"></a>00617      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a0069ac15df83325d5fb5267d96a83a2f" title="Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the DATACH structure...">EpsH2Og</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00618"></a>00618 
-<a name="l00623"></a>00623      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#aa5f5fa762cb44dcc8902816854dcaf94" title="Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the DATACH structure...">DenH2Og</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
-<a name="l00624"></a>00624 
-<a name="l00629"></a>00629       <span class="keywordtype">double</span>  <a class="code" href="class_t_node.html#a3a069c368580b0022cd129c773024123" title="Retrieves the current phase volume in m3 in the reactive sub-system.">Ph_Volume</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR );
-<a name="l00630"></a>00630 
-<a name="l00635"></a>00635       <span class="keywordtype">double</span>  <a class="code" href="class_t_node.html#a0d062bd5340b9cd939a3b9aa9aa25ae3" title="Retrieves the phase mass in kg.">Ph_Mass</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR );
-<a name="l00636"></a>00636 
-<a name="l00641"></a>00641       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a77fdce981684ec7bca0ec8a1c153f726" title="Retrieves the phase saturation index.">Ph_SatInd</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xph );
-<a name="l00642"></a>00642 
-<a name="l00650"></a>00650       <span class="keywordtype">double</span> *<a class="code" href="class_t_node.html#ab77b1a4990e19edcc64271094b41a96a" title="Retrieval of the phase bulk composition into memory indicated by ARout.">Ph_BC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xph, <span class="keywordtype">double</span>* ARout=0 );
-<a name="l00651"></a>00651 
-<a name="l00656"></a>00656       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a15924334eae4af3c8cf0b694773065b8" title="Retrieves total dissolved aqueous molality of Independent Component with DBR index xic...">Get_mIC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> xic );
-<a name="l00657"></a>00657 
-<a name="l00661"></a><a class="code" href="class_t_node.html#aa6a422cc58993b5ff3391c7c93ec8510">00661</a>       <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#aa6a422cc58993b5ff3391c7c93ec8510" title="Sets the amount of IC in the bIC input vector of the work DATABR structure.">Set_bIC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic, <span class="keyword">const</span> <span class="keywordtype">double</span> bIC)
-<a name="l00662"></a>00662       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a9d8abddb67d664df9e6f13a5ef199217" title="Bulk composition of (reactive part of) the system (moles)[nICb] + + - -.">bIC</a>[xic] = bIC;  }
-<a name="l00663"></a>00663 
-<a name="l00666"></a><a class="code" href="class_t_node.html#a41ba1dce2f8052b3e0a9f4c5b81f9556">00666</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a41ba1dce2f8052b3e0a9f4c5b81f9556" title="Retrieves the current amount of Independent Component.">Get_bIC</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic)<span class="keyword"> const</span>
-<a name="l00667"></a>00667 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a9d8abddb67d664df9e6f13a5ef199217" title="Bulk composition of (reactive part of) the system (moles)[nICb] + + - -.">bIC</a>[xic];  }
-<a name="l00668"></a>00668 
-<a name="l00672"></a><a class="code" href="class_t_node.html#a784e8870ffa0096c1a981b24d5acb7a0">00672</a>       <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a784e8870ffa0096c1a981b24d5acb7a0" title="Sets the metastability constraint from below to the amount of DC in the dll vector of the work DATABR...">Set_dll</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">double</span> dll)
-<a name="l00673"></a>00673       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#ac078f7d19c96085bbd6ad43ba670cfb4" title="Lower metastability constraints on amounts of DCs (moles) [nDCb] + + - -.">dll</a>[xdc] = dll;  }
-<a name="l00674"></a>00674 
-<a name="l00678"></a><a class="code" href="class_t_node.html#a23b62f0bb8dfd15f5e8f4b5655c679e0">00678</a>       <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a23b62f0bb8dfd15f5e8f4b5655c679e0" title="Sets the metastability constraint from above to the amount of DC in the dul vector of the work DATABR...">Set_dul</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">double</span> dul)
-<a name="l00679"></a>00679       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#ace641d7a1fbc5dbbf4443e78441d6e2d" title="Upper metastability constraints on amounts of DCs (moles) [nDCb] + + - -.">dul</a>[xdc] = dul;  }
-<a name="l00680"></a>00680 
-<a name="l00683"></a><a class="code" href="class_t_node.html#a784b210c88d626da6b6797580d997bd7">00683</a>       <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a784b210c88d626da6b6797580d997bd7" title="Sets the amount of DC in the xDC vector of the work DATABR structure.">Set_nDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">double</span> nDC)
-<a name="l00684"></a>00684       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#aa66e1c1ccde54dc258187c5c1196e9d2" title="Speciation - amounts of DCs in equilibrium state - primal GEM solution(moles)[nDCb] (+) (+) + +...">xDC</a>[xdc] = nDC;  }
-<a name="l00685"></a>00685 
-<a name="l00688"></a><a class="code" href="class_t_node.html#a043b5da39790ea1dc8db59441b3c66bb">00688</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a043b5da39790ea1dc8db59441b3c66bb" title="Retrieves the current mole amount of Dependent Component.">Get_nDC</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc)<span class="keyword"> const</span>
-<a name="l00689"></a>00689 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#aa66e1c1ccde54dc258187c5c1196e9d2" title="Speciation - amounts of DCs in equilibrium state - primal GEM solution(moles)[nDCb] (+) (+) + +...">xDC</a>[xdc];  }
-<a name="l00690"></a>00690 
-<a name="l00694"></a>00694       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#af344571eeba18ef0addfff68be4da9f7" title="Retrieval of (dual-thermodynamic) chemical potential of the DC.">Get_muDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xDC, <span class="keywordtype">bool</span> norm=<span class="keyword">true</span> );
-<a name="l00695"></a>00695 
-<a name="l00699"></a>00699       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a92d0b5a65a279e5845136c1f20c11f2e" title="Retrieval of (dual-thermodynamic) activity of the DC.">Get_aDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keywordtype">bool</span> scale=<span class="keyword">true</span> );
-<a name="l00700"></a>00700 
-<a name="l00707"></a>00707       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#afcd7c761bdfd4d7c7efe2804cf4555f7" title="Retrieves concentration of Dependent Component in its phase in the respective concentration scale...">Get_cDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc );
-<a name="l00708"></a>00708 
-<a name="l00713"></a><a class="code" href="class_t_node.html#a3df0cb5959e0f98709a94caa54051949">00713</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a3df0cb5959e0f98709a94caa54051949" title="Retrieves the activity coefficient of Dependent Component in its phase in the respective scale...">Get_gDC</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc)<span class="keyword"> const</span>
-<a name="l00714"></a>00714 <span class="keyword">      </span>{  <span class="keywordflow">return</span> ( <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#abee3441a0fe543de21b3b181ad8474c1" title="Activity coefficients of DCs in their respective phases [nDCb] (+) (+) + +.">gam</a>[xdc] ? <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#abee3441a0fe543de21b3b181ad8474c1" title="Activity coefficients of DCs in their respective phases [nDCb] (+) (+) + +.">gam</a>[xdc]: 1.);  }
+<a name="l00601"></a>00601 
+<a name="l00606"></a>00606      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ac52e8e98b3dee1af3f63b348eacedb08" title="Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure...">EpsH2Ow</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00607"></a>00607 
+<a name="l00612"></a>00612      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c" title="Retrieves (interpolated) density of liquid water (in kg/m3) at (P,TK) from the DATACH structure...">DenH2Ow</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00613"></a>00613 
+<a name="l00618"></a>00618      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a9e9d8f6870dcdb13c8da55cc854fded3" title="Retrieves (interpolated) viscosity of liquid water (in kg/m3) at (P,TK) from the DATACH structure...">VisH2Ow</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00619"></a>00619 
+<a name="l00624"></a>00624      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a0069ac15df83325d5fb5267d96a83a2f" title="Retrieves (interpolated) dielectric constant of H2O vapor at (P,TK) from the DATACH structure...">EpsH2Og</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00625"></a>00625 
+<a name="l00630"></a>00630      <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#aa5f5fa762cb44dcc8902816854dcaf94" title="Retrieves (interpolated) density of H2O vapor (in kg/m3) at (P,TK) from the DATACH structure...">DenH2Og</a>(<span class="keyword">const</span> <span class="keywordtype">double</span> P, <span class="keyword">const</span> <span class="keywordtype">double</span> TK);
+<a name="l00631"></a>00631 
+<a name="l00636"></a>00636       <span class="keywordtype">double</span>  <a class="code" href="class_t_node.html#a3a069c368580b0022cd129c773024123" title="Retrieves the current phase volume in m3 in the reactive sub-system.">Ph_Volume</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR );
+<a name="l00637"></a>00637 
+<a name="l00642"></a>00642       <span class="keywordtype">double</span>  <a class="code" href="class_t_node.html#a0d062bd5340b9cd939a3b9aa9aa25ae3" title="Retrieves the phase mass in kg.">Ph_Mass</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xBR );
+<a name="l00643"></a>00643 
+<a name="l00648"></a>00648       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a77fdce981684ec7bca0ec8a1c153f726" title="Retrieves the phase saturation index.">Ph_SatInd</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xph );
+<a name="l00649"></a>00649 
+<a name="l00657"></a>00657       <span class="keywordtype">double</span> *<a class="code" href="class_t_node.html#ab77b1a4990e19edcc64271094b41a96a" title="Retrieval of the phase bulk composition into memory indicated by ARout.">Ph_BC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xph, <span class="keywordtype">double</span>* ARout=0 );
+<a name="l00658"></a>00658 
+<a name="l00663"></a>00663       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a15924334eae4af3c8cf0b694773065b8" title="Retrieves total dissolved aqueous molality of Independent Component with DBR index xic...">Get_mIC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> xic );
+<a name="l00664"></a>00664 
+<a name="l00668"></a><a class="code" href="class_t_node.html#aa6a422cc58993b5ff3391c7c93ec8510">00668</a>       <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#aa6a422cc58993b5ff3391c7c93ec8510" title="Sets the amount of IC in the bIC input vector of the work DATABR structure.">Set_bIC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic, <span class="keyword">const</span> <span class="keywordtype">double</span> bIC)
+<a name="l00669"></a>00669       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a9d8abddb67d664df9e6f13a5ef199217" title="Bulk composition of (reactive part of) the system (moles)[nICb] + + - -.">bIC</a>[xic] = bIC;  }
+<a name="l00670"></a>00670 
+<a name="l00673"></a><a class="code" href="class_t_node.html#a41ba1dce2f8052b3e0a9f4c5b81f9556">00673</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a41ba1dce2f8052b3e0a9f4c5b81f9556" title="Retrieves the current amount of Independent Component.">Get_bIC</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic)<span class="keyword"> const</span>
+<a name="l00674"></a>00674 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#a9d8abddb67d664df9e6f13a5ef199217" title="Bulk composition of (reactive part of) the system (moles)[nICb] + + - -.">bIC</a>[xic];  }
+<a name="l00675"></a>00675 
+<a name="l00679"></a><a class="code" href="class_t_node.html#a784e8870ffa0096c1a981b24d5acb7a0">00679</a>       <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a784e8870ffa0096c1a981b24d5acb7a0" title="Sets the metastability constraint from below to the amount of DC in the dll vector of the work DATABR...">Set_dll</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">double</span> dll)
+<a name="l00680"></a>00680       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#ac078f7d19c96085bbd6ad43ba670cfb4" title="Lower metastability constraints on amounts of DCs (moles) [nDCb] + + - -.">dll</a>[xdc] = dll;  }
+<a name="l00681"></a>00681 
+<a name="l00685"></a><a class="code" href="class_t_node.html#a23b62f0bb8dfd15f5e8f4b5655c679e0">00685</a>       <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a23b62f0bb8dfd15f5e8f4b5655c679e0" title="Sets the metastability constraint from above to the amount of DC in the dul vector of the work DATABR...">Set_dul</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">double</span> dul)
+<a name="l00686"></a>00686       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#ace641d7a1fbc5dbbf4443e78441d6e2d" title="Upper metastability constraints on amounts of DCs (moles) [nDCb] + + - -.">dul</a>[xdc] = dul;  }
+<a name="l00687"></a>00687 
+<a name="l00690"></a><a class="code" href="class_t_node.html#a784b210c88d626da6b6797580d997bd7">00690</a>       <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a784b210c88d626da6b6797580d997bd7" title="Sets the amount of DC in the xDC vector of the work DATABR structure.">Set_nDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">double</span> nDC)
+<a name="l00691"></a>00691       {  <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#aa66e1c1ccde54dc258187c5c1196e9d2" title="Speciation - amounts of DCs in equilibrium state - primal GEM solution(moles)[nDCb] (+) (+) + +...">xDC</a>[xdc] = nDC;  }
+<a name="l00692"></a>00692 
+<a name="l00695"></a><a class="code" href="class_t_node.html#a043b5da39790ea1dc8db59441b3c66bb">00695</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a043b5da39790ea1dc8db59441b3c66bb" title="Retrieves the current mole amount of Dependent Component.">Get_nDC</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc)<span class="keyword"> const</span>
+<a name="l00696"></a>00696 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#aa66e1c1ccde54dc258187c5c1196e9d2" title="Speciation - amounts of DCs in equilibrium state - primal GEM solution(moles)[nDCb] (+) (+) + +...">xDC</a>[xdc];  }
+<a name="l00697"></a>00697 
+<a name="l00701"></a>00701       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#af344571eeba18ef0addfff68be4da9f7" title="Retrieval of (dual-thermodynamic) chemical potential of the DC.">Get_muDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xDC, <span class="keywordtype">bool</span> norm=<span class="keyword">true</span> );
+<a name="l00702"></a>00702 
+<a name="l00706"></a>00706       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a92d0b5a65a279e5845136c1f20c11f2e" title="Retrieval of (dual-thermodynamic) activity of the DC.">Get_aDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keywordtype">bool</span> scale=<span class="keyword">true</span> );
+<a name="l00707"></a>00707 
+<a name="l00714"></a>00714       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#afcd7c761bdfd4d7c7efe2804cf4555f7" title="Retrieves concentration of Dependent Component in its phase in the respective concentration scale...">Get_cDC</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc );
 <a name="l00715"></a>00715 
-<a name="l00718"></a><a class="code" href="class_t_node.html#a35e608a097689dac2b7f7d823800702d">00718</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a35e608a097689dac2b7f7d823800702d" title="Retrieves the molar mass of Dependent Component in kg/mol.">DCmm</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc )<span class="keyword"> const</span>
-<a name="l00719"></a>00719 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a95e37866cd006338e16036c2a2ff0643" title="Molar masses of Dependent Components (kg/mol) [nDC].">DCmm</a>[ <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a" title="DATACH access index list of DC kept in the DATABR structure and in DBR files [nDCb].">xdc</a>[xdc]]; }
-<a name="l00720"></a>00720 
-<a name="l00723"></a><a class="code" href="class_t_node.html#a7ce591148d185918a4764c8bbaf244e8">00723</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a7ce591148d185918a4764c8bbaf244e8" title="Retrieves the molar mass of Independent Component in kg/mol.">ICmm</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic )<span class="keyword"> const</span>
-<a name="l00724"></a>00724 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ab4db4b284eec183ef69b8171c19d394e" title="Atomic (molar) masses of Independent Components (kg/mol) [nIC].">ICmm</a>[ <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698" title="DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb].">xic</a>[xic]]; }
-<a name="l00725"></a>00725 
-<a name="l00729"></a><a class="code" href="class_t_node.html#a3eafcc980700f88016a69f6f38e9d78a">00729</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a3eafcc980700f88016a69f6f38e9d78a" title="Retrieves the stoichiometry coefficient a[xdc][xic] of IC in the formula of DC.">DCaJI</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic)<span class="keyword"> const</span>
-<a name="l00730"></a>00730 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a679a83e9116e304ad969a1b2ec374409" title="Stoichiometry matrix A for Dependent Components. [nIC][nDC] elements.">A</a>[ <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698" title="DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb].">xic</a>[xic] + <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a" title="DATACH access index list of DC kept in the DATABR structure and in DBR files [nDCb].">xdc</a>[xdc] * <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a8cc4ea921c73db84afac861d9eefb0d4" title="Number of Independent Components (stoichiometry units, usually chemical elements and charge)...">nIC</a> ]; }
-<a name="l00731"></a>00731 
-<a name="l00732"></a>00732 <span class="comment">// These methods can only be used for the current work node (direct access to GEM IPM data)</span>
-<a name="l00733"></a>00733 
-<a name="l00739"></a><a class="code" href="class_t_node.html#a18c0ae79ce5b04148afe237dc424856d">00739</a>       <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a18c0ae79ce5b04148afe237dc424856d" title="Sets the total amount of Independent Component.">Set_IC_b</a>( <span class="keyword">const</span> <span class="keywordtype">double</span> b_val, <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)
-<a name="l00740"></a>00740       { <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#ad600cb492c609f5058ae5d0c72fbf843" title="Input bulk chem. compos. of the system - b vector, moles of IC[N].">B</a>[xCH] = b_val; }
-<a name="l00741"></a>00741 
-<a name="l00747"></a><a class="code" href="class_t_node.html#abe260b0ba07f67f415b0a9b08492c678">00747</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abe260b0ba07f67f415b0a9b08492c678" title="Retrieves the current total amount of Independent Component.">IC_b</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)<span class="keyword"> const</span>
-<a name="l00748"></a>00748 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#ad600cb492c609f5058ae5d0c72fbf843" title="Input bulk chem. compos. of the system - b vector, moles of IC[N].">B</a>[xCH]; }
-<a name="l00749"></a>00749 
-<a name="l00755"></a><a class="code" href="class_t_node.html#a8c6c25c9d71fd92b711e815c94e4ebda">00755</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a8c6c25c9d71fd92b711e815c94e4ebda" title="Retrieves the current mole amount of DC directly from GEM IPM work structure.">DC_n</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)<span class="keyword"> const</span>
-<a name="l00756"></a>00756 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#aecd97d558c7bc2cc28406af90ed1b7f4" title="DC quantities at eqstate x_j, moles - primal IPM solution [L].">X</a>[xCH]; }
-<a name="l00757"></a>00757 
-<a name="l00765"></a>00765       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a36d5436804f2ecfbe4f7d509c6711be1" title="Retrieves the current (dual-thermodynamic) activity of DC directly from GEM IPM work structure...">DC_a</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH);
-<a name="l00766"></a>00766 
-<a name="l00767"></a>00767       
-<a name="l00770"></a>00770       <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#ae5208dd72252a8ab48f7611aaba912a5" title="Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod c...">Get_IPc_IPx_DCc_indices</a>( <span class="keywordtype">long</span> &amp;index_phase_aIPx, <span class="keywordtype">long</span> &amp;index_phase_aIPc, <span class="keywordtype">long</span> &amp;index_phase_aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase);
-<a name="l00771"></a>00771       <span class="keywordtype">void</span> Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( <span class="keywordtype">long</span> &amp;NPar, <span class="keywordtype">long</span> &amp;NPcoef, <span class="keywordtype">long</span> &amp;MaxOrd, <span class="keywordtype">long</span> &amp;NComp, <span class="keywordtype">long</span> &amp;NP_DC, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
-<a name="l00772"></a>00772       <span class="keywordtype">void</span> Get_aIPc ( vector&lt;double&gt; &amp;aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
-<a name="l00773"></a>00773       <span class="keywordtype">void</span> Get_aIPx ( vector&lt;long&gt; &amp;aIPx,   <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aIPx, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
-<a name="l00774"></a>00774       <span class="keywordtype">void</span> Get_aDCc ( vector&lt;double&gt; &amp;aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
-<a name="l00775"></a>00775       <span class="keywordtype">void</span> Set_aIPc ( <span class="keyword">const</span> vector&lt;double&gt; aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );               <span class="comment">// Set values of aIPc array</span>
-<a name="l00776"></a>00776       <span class="keywordtype">void</span> Set_aDCc ( <span class="keyword">const</span> vector&lt;double&gt; aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );               <span class="comment">// Set values of  aDCc array</span>
-<a name="l00778"></a>00778 <span class="comment"></span>      <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a41022870d6a1b5d4067ba28d737cb740" title="These methods set contents of fields in the work node structure.">Set_Tk</a>   ( <span class="keywordtype">double</span> &amp;T_k);
-<a name="l00779"></a>00779       <span class="keywordtype">void</span> Set_Pb   ( <span class="keywordtype">double</span> &amp;P_b);
-<a name="l00780"></a>00780 
-<a name="l00781"></a>00781 
-<a name="l00789"></a>00789       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ab4b1ad570e677e07b9fcd1e3c25e05be" title="Retrieves the current concentration of Dependent Component in its phase directly from GEM IPM work st...">DC_c</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH);
-<a name="l00790"></a>00790 
-<a name="l00796"></a><a class="code" href="class_t_node.html#a5069e421787a454946eda375c8b3fddb">00796</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a5069e421787a454946eda375c8b3fddb" title="Retrieves the current activity coefficient of DC in its plase directly from GEM IPM work structure...">DC_g</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)<span class="keyword"> const</span>
-<a name="l00797"></a>00797 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#a88111c98447b2f9f595b0de1bf5e25c8" title="DC activity coefficients in molal or other phase-specific scale [0:L-1].">Gamma</a>[xCH];  }
-<a name="l00798"></a>00798 
-<a name="l00799"></a>00799 
-<a name="l00802"></a><a class="code" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77">00802</a>           <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77" title="Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH...">DC_lng</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH )<span class="keyword"> const</span>
-<a name="l00803"></a>00803 <span class="keyword">          </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#ac1a61957fdd4bc28b3d29dc3f72e413f" title="ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]">lnGam</a>[ xCH ]; }        
-<a name="l00804"></a>00804 
+<a name="l00720"></a><a class="code" href="class_t_node.html#a3df0cb5959e0f98709a94caa54051949">00720</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a3df0cb5959e0f98709a94caa54051949" title="Retrieves the activity coefficient of Dependent Component in its phase in the respective scale...">Get_gDC</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc)<span class="keyword"> const</span>
+<a name="l00721"></a>00721 <span class="keyword">      </span>{  <span class="keywordflow">return</span> ( <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#abee3441a0fe543de21b3b181ad8474c1" title="Activity coefficients of DCs in their respective phases [nDCb] (+) (+) + +.">gam</a>[xdc] ? <a class="code" href="class_t_node.html#af9972ec005d9d422c78445eb330471cd" title="Pointer to a work node data bridge structure (node)">CNode</a>-&gt;<a class="code" href="struct_d_a_t_a_b_r.html#abee3441a0fe543de21b3b181ad8474c1" title="Activity coefficients of DCs in their respective phases [nDCb] (+) (+) + +.">gam</a>[xdc]: 1.);  }
+<a name="l00722"></a>00722 
+<a name="l00725"></a><a class="code" href="class_t_node.html#a35e608a097689dac2b7f7d823800702d">00725</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a35e608a097689dac2b7f7d823800702d" title="Retrieves the molar mass of Dependent Component in kg/mol.">DCmm</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc )<span class="keyword"> const</span>
+<a name="l00726"></a>00726 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a95e37866cd006338e16036c2a2ff0643" title="Molar masses of Dependent Components (kg/mol) [nDC].">DCmm</a>[ <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a" title="DATACH access index list of DC kept in the DATABR structure and in DBR files [nDCb].">xdc</a>[xdc]]; }
+<a name="l00727"></a>00727 
+<a name="l00730"></a><a class="code" href="class_t_node.html#a7ce591148d185918a4764c8bbaf244e8">00730</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a7ce591148d185918a4764c8bbaf244e8" title="Retrieves the molar mass of Independent Component in kg/mol.">ICmm</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic )<span class="keyword"> const</span>
+<a name="l00731"></a>00731 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ab4db4b284eec183ef69b8171c19d394e" title="Atomic (molar) masses of Independent Components (kg/mol) [nIC].">ICmm</a>[ <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698" title="DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb].">xic</a>[xic]]; }
+<a name="l00732"></a>00732 
+<a name="l00736"></a><a class="code" href="class_t_node.html#a3eafcc980700f88016a69f6f38e9d78a">00736</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a3eafcc980700f88016a69f6f38e9d78a" title="Retrieves the stoichiometry coefficient a[xdc][xic] of IC in the formula of DC.">DCaJI</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xdc, <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xic)<span class="keyword"> const</span>
+<a name="l00737"></a>00737 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a679a83e9116e304ad969a1b2ec374409" title="Stoichiometry matrix A for Dependent Components. [nIC][nDC] elements.">A</a>[ <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a2f0c33b7c0a0075caa567d5d248f7698" title="DATACH access index list for IC kept in the DATABR structure and in DBR files [nICb].">xic</a>[xic] + <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a" title="DATACH access index list of DC kept in the DATABR structure and in DBR files [nDCb].">xdc</a>[xdc] * <a class="code" href="class_t_node.html#a1fe698e7e08f635eea7c7c8d60aaf791" title="Pointer to chemical system data structure CSD (DATACH)">CSD</a>-&gt;<a class="code" href="struct_d_a_t_a_c_h.html#a8cc4ea921c73db84afac861d9eefb0d4" title="Number of Independent Components (stoichiometry units, usually chemical elements and charge)...">nIC</a> ]; }
+<a name="l00738"></a>00738 
+<a name="l00739"></a>00739 <span class="comment">// These methods can only be used for the current work node (direct access to GEM IPM data)</span>
+<a name="l00740"></a>00740 
+<a name="l00746"></a><a class="code" href="class_t_node.html#a18c0ae79ce5b04148afe237dc424856d">00746</a>       <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a18c0ae79ce5b04148afe237dc424856d" title="Sets the total amount of Independent Component.">Set_IC_b</a>( <span class="keyword">const</span> <span class="keywordtype">double</span> b_val, <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)
+<a name="l00747"></a>00747       { <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#ad600cb492c609f5058ae5d0c72fbf843" title="Input bulk chem. compos. of the system - b vector, moles of IC[N].">B</a>[xCH] = b_val; }
+<a name="l00748"></a>00748 
+<a name="l00754"></a><a class="code" href="class_t_node.html#abe260b0ba07f67f415b0a9b08492c678">00754</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#abe260b0ba07f67f415b0a9b08492c678" title="Retrieves the current total amount of Independent Component.">IC_b</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)<span class="keyword"> const</span>
+<a name="l00755"></a>00755 <span class="keyword">      </span>{ <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#ad600cb492c609f5058ae5d0c72fbf843" title="Input bulk chem. compos. of the system - b vector, moles of IC[N].">B</a>[xCH]; }
+<a name="l00756"></a>00756 
+<a name="l00762"></a><a class="code" href="class_t_node.html#a8c6c25c9d71fd92b711e815c94e4ebda">00762</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a8c6c25c9d71fd92b711e815c94e4ebda" title="Retrieves the current mole amount of DC directly from GEM IPM work structure.">DC_n</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)<span class="keyword"> const</span>
+<a name="l00763"></a>00763 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#aecd97d558c7bc2cc28406af90ed1b7f4" title="DC quantities at eqstate x_j, moles - primal IPM solution [L].">X</a>[xCH]; }
+<a name="l00764"></a>00764 
+<a name="l00772"></a>00772       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a36d5436804f2ecfbe4f7d509c6711be1" title="Retrieves the current (dual-thermodynamic) activity of DC directly from GEM IPM work structure...">DC_a</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH);
+<a name="l00773"></a>00773 
+<a name="l00774"></a>00774       
+<a name="l00777"></a>00777       <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#ae5208dd72252a8ab48f7611aaba912a5" title="Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod c...">Get_IPc_IPx_DCc_indices</a>( <span class="keywordtype">long</span> &amp;index_phase_aIPx, <span class="keywordtype">long</span> &amp;index_phase_aIPc, <span class="keywordtype">long</span> &amp;index_phase_aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase);
+<a name="l00778"></a>00778       <span class="keywordtype">void</span> Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( <span class="keywordtype">long</span> &amp;NPar, <span class="keywordtype">long</span> &amp;NPcoef, <span class="keywordtype">long</span> &amp;MaxOrd, <span class="keywordtype">long</span> &amp;NComp, <span class="keywordtype">long</span> &amp;NP_DC, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
+<a name="l00779"></a>00779       <span class="keywordtype">void</span> Get_aIPc ( vector&lt;double&gt; &amp;aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
+<a name="l00780"></a>00780       <span class="keywordtype">void</span> Get_aIPx ( vector&lt;long&gt; &amp;aIPx,   <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aIPx, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
+<a name="l00781"></a>00781       <span class="keywordtype">void</span> Get_aDCc ( vector&lt;double&gt; &amp;aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );
+<a name="l00782"></a>00782       <span class="keywordtype">void</span> Set_aIPc ( <span class="keyword">const</span> vector&lt;double&gt; aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aIPc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );               <span class="comment">// Set values of aIPc array</span>
+<a name="l00783"></a>00783       <span class="keywordtype">void</span> Set_aDCc ( <span class="keyword">const</span> vector&lt;double&gt; aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase_aDCc, <span class="keyword">const</span> <span class="keywordtype">long</span> &amp;index_phase );               <span class="comment">// Set values of  aDCc array</span>
+<a name="l00785"></a>00785 <span class="comment"></span>      <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a41022870d6a1b5d4067ba28d737cb740" title="These methods set contents of fields in the work node structure.">Set_Tk</a>   ( <span class="keywordtype">double</span> &amp;T_k);
+<a name="l00786"></a>00786       <span class="keywordtype">void</span> Set_Pb   ( <span class="keywordtype">double</span> &amp;P_b);
+<a name="l00787"></a>00787 
+<a name="l00788"></a>00788 
+<a name="l00796"></a>00796       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#ab4b1ad570e677e07b9fcd1e3c25e05be" title="Retrieves the current concentration of Dependent Component in its phase directly from GEM IPM work st...">DC_c</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH);
+<a name="l00797"></a>00797 
+<a name="l00803"></a><a class="code" href="class_t_node.html#a5069e421787a454946eda375c8b3fddb">00803</a>       <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a5069e421787a454946eda375c8b3fddb" title="Retrieves the current activity coefficient of DC in its plase directly from GEM IPM work structure...">DC_g</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH)<span class="keyword"> const</span>
+<a name="l00804"></a>00804 <span class="keyword">      </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#a88111c98447b2f9f595b0de1bf5e25c8" title="DC activity coefficients in molal or other phase-specific scale [0:L-1].">Gamma</a>[xCH];  }
 <a name="l00805"></a>00805 
-<a name="l00812"></a>00812       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a25b3fed9d9faca846d95ddb86799c7a7" title="Retrieves the current (dual-thermodynamic) chemical potential of DC directly from GEM IPM work struct...">DC_mu</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keywordtype">bool</span> norm=<span class="keyword">true</span>);
-<a name="l00813"></a>00813 
-<a name="l00821"></a>00821       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a0c376c84ac9b00b0ac83be8c78913f70" title="Retrieves the standard chemical potential of DC directly from GEM IPM work structure at current press...">DC_mu0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keywordtype">bool</span> norm=<span class="keyword">true</span>);
-<a name="l00822"></a>00822 
-<a name="l00823"></a>00823 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
-<a name="l00824"></a>00824 <span class="preprocessor"></span><span class="comment">// These calls are used only inside the GEMS-PSI GEM2MT module</span>
-<a name="l00825"></a>00825 
-<a name="l00829"></a>00829     <span class="keywordtype">void</span> MakeNodeStructures( QWidget* par, <span class="keywordtype">bool</span> select_all,<span class="keywordtype">bool</span> no_interpolat,
-<a name="l00830"></a>00830              <span class="keywordtype">double</span> *Tai, <span class="keywordtype">double</span> *Pai, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_ = 1 ,
-<a name="l00831"></a>00831              <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_ = 1 , <span class="keywordtype">double</span> Ttol_ = 1., <span class="keywordtype">double</span> Ptol_ =1. );
-<a name="l00836"></a>00836     <span class="keywordtype">void</span> MakeNodeStructures( QWidget* par, <span class="keywordtype">bool</span> select_all,
-<a name="l00837"></a>00837         <span class="keywordtype">double</span> Tai[4], <span class="keywordtype">double</span> Pai[4]  );
-<a name="l00838"></a>00838 
-<a name="l00839"></a>00839 
-<a name="l00843"></a>00843     <span class="keywordtype">void</span> MakeNodeStructures(  <span class="keywordtype">long</span> <span class="keywordtype">int</span> anICb, <span class="keywordtype">long</span> <span class="keywordtype">int</span> anDCb,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> anPHb,
-<a name="l00844"></a>00844                 <span class="keywordtype">long</span> <span class="keywordtype">int</span>* axIC, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* axDC,  <span class="keywordtype">long</span> <span class="keywordtype">int</span>* axPH, <span class="keywordtype">bool</span> no_interpolat,
-<a name="l00845"></a>00845              <span class="keywordtype">double</span>* Tai, <span class="keywordtype">double</span>* Pai,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_,
-<a name="l00846"></a>00846              <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_, <span class="keywordtype">double</span> Ttol_, <span class="keywordtype">double</span> Ptol_  );
-<a name="l00847"></a>00847 
-<a name="l00849"></a>00849     <span class="keywordtype">bool</span> TestTPGrid(  <span class="keywordtype">double</span> Tai[4], <span class="keywordtype">double</span> Pai[4] );
-<a name="l00850"></a>00850 
-<a name="l00851"></a>00851 <span class="preprocessor">#endif</span>
-<a name="l00852"></a>00852 <span class="preprocessor"></span>
-<a name="l00854"></a>00854     <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a87fdbd69f4002c39c7bdc013a8551742" title="Writes work node (DATABR structure) to a text VTK file.">databr_to_vtk</a>( fstream&amp; ff, <span class="keyword">const</span> <span class="keywordtype">char</span>*name, <span class="keywordtype">double</span> time, <span class="keywordtype">long</span> <span class="keywordtype">int</span>  cycle,
-<a name="l00855"></a>00855                               <span class="keywordtype">long</span> <span class="keywordtype">int</span> nFilds, <span class="keywordtype">long</span> <span class="keywordtype">int</span> (*Flds)[2]);
-<a name="l00856"></a>00856 
-<a name="l00857"></a>00857 };
-<a name="l00858"></a>00858 
-<a name="l00859"></a>00859 <span class="comment">// Redo into a function with interpolation</span>
-<a name="l00860"></a>00860 <span class="comment">// Diffusion coefficient of dependent component with node DBr index ICx</span>
-<a name="l00861"></a>00861 <span class="comment">// #define nodeCH_DD( DCx )    ( TNode::na-&gt;pCSD()-&gt;DD[</span>
-<a name="l00862"></a>00862 <span class="comment">//                              TNode::na-&gt;pCSD()-&gt;xDC[(DCx)]] )</span>
+<a name="l00806"></a>00806 
+<a name="l00809"></a><a class="code" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77">00809</a>           <span class="keyword">inline</span> <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77" title="Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH...">DC_lng</a>( <span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH )<span class="keyword"> const</span>
+<a name="l00810"></a>00810 <span class="keyword">          </span>{  <span class="keywordflow">return</span> <a class="code" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b" title="Pointer to GEM IPM work data structure (ms_multi.h)">pmm</a>-&gt;<a class="code" href="struct_m_u_l_t_i.html#ac1a61957fdd4bc28b3d29dc3f72e413f" title="ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]">lnGam</a>[ xCH ]; }        
+<a name="l00811"></a>00811 
+<a name="l00812"></a>00812 
+<a name="l00819"></a>00819       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a25b3fed9d9faca846d95ddb86799c7a7" title="Retrieves the current (dual-thermodynamic) chemical potential of DC directly from GEM IPM work struct...">DC_mu</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keywordtype">bool</span> norm=<span class="keyword">true</span>);
+<a name="l00820"></a>00820 
+<a name="l00828"></a>00828       <span class="keywordtype">double</span> <a class="code" href="class_t_node.html#a0c376c84ac9b00b0ac83be8c78913f70" title="Retrieves the standard chemical potential of DC directly from GEM IPM work structure at current press...">DC_mu0</a>(<span class="keyword">const</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> xCH, <span class="keywordtype">bool</span> norm=<span class="keyword">true</span>);
+<a name="l00829"></a>00829 
+<a name="l00830"></a>00830 <span class="preprocessor">#ifndef IPMGEMPLUGIN</span>
+<a name="l00831"></a>00831 <span class="preprocessor"></span><span class="comment">// These calls are used only inside the GEMS-PSI GEM2MT module</span>
+<a name="l00832"></a>00832 
+<a name="l00836"></a>00836     <span class="keywordtype">void</span> MakeNodeStructures( QWidget* par, <span class="keywordtype">bool</span> select_all,<span class="keywordtype">bool</span> no_interpolat,
+<a name="l00837"></a>00837              <span class="keywordtype">double</span> *Tai, <span class="keywordtype">double</span> *Pai, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_ = 1 ,
+<a name="l00838"></a>00838              <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_ = 1 , <span class="keywordtype">double</span> Ttol_ = 1., <span class="keywordtype">double</span> Ptol_ =1. );
+<a name="l00843"></a>00843     <span class="keywordtype">void</span> MakeNodeStructures( QWidget* par, <span class="keywordtype">bool</span> select_all,
+<a name="l00844"></a>00844         <span class="keywordtype">double</span> Tai[4], <span class="keywordtype">double</span> Pai[4]  );
+<a name="l00845"></a>00845 
+<a name="l00846"></a>00846 
+<a name="l00850"></a>00850     <span class="keywordtype">void</span> MakeNodeStructures(  <span class="keywordtype">long</span> <span class="keywordtype">int</span> anICb, <span class="keywordtype">long</span> <span class="keywordtype">int</span> anDCb,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> anPHb,
+<a name="l00851"></a>00851                 <span class="keywordtype">long</span> <span class="keywordtype">int</span>* axIC, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* axDC,  <span class="keywordtype">long</span> <span class="keywordtype">int</span>* axPH, <span class="keywordtype">bool</span> no_interpolat,
+<a name="l00852"></a>00852              <span class="keywordtype">double</span>* Tai, <span class="keywordtype">double</span>* Pai,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> nTp_,
+<a name="l00853"></a>00853              <span class="keywordtype">long</span> <span class="keywordtype">int</span> nPp_, <span class="keywordtype">double</span> Ttol_, <span class="keywordtype">double</span> Ptol_  );
+<a name="l00854"></a>00854 
+<a name="l00856"></a>00856     <span class="keywordtype">bool</span> TestTPGrid(  <span class="keywordtype">double</span> Tai[4], <span class="keywordtype">double</span> Pai[4] );
+<a name="l00857"></a>00857 
+<a name="l00858"></a>00858 <span class="preprocessor">#endif</span>
+<a name="l00859"></a>00859 <span class="preprocessor"></span>
+<a name="l00861"></a>00861     <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_t_node.html#a87fdbd69f4002c39c7bdc013a8551742" title="Writes work node (DATABR structure) to a text VTK file.">databr_to_vtk</a>( fstream&amp; ff, <span class="keyword">const</span> <span class="keywordtype">char</span>*name, <span class="keywordtype">double</span> time, <span class="keywordtype">long</span> <span class="keywordtype">int</span>  cycle,
+<a name="l00862"></a>00862                               <span class="keywordtype">long</span> <span class="keywordtype">int</span> nFilds, <span class="keywordtype">long</span> <span class="keywordtype">int</span> (*Flds)[2]);
 <a name="l00863"></a>00863 
-<a name="l00864"></a>00864 
-<a name="l00865"></a>00865 <span class="preprocessor">#endif</span>
-<a name="l00866"></a>00866 <span class="preprocessor"></span><span class="comment">// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
-<a name="l00867"></a>00867 <span class="comment">// _node_h_</span>
-<a name="l00868"></a>00868 
+<a name="l00864"></a>00864 };
+<a name="l00865"></a>00865 
+<a name="l00866"></a>00866 <span class="comment">// Redo into a function with interpolation</span>
+<a name="l00867"></a>00867 <span class="comment">// Diffusion coefficient of dependent component with node DBr index ICx</span>
+<a name="l00868"></a>00868 <span class="comment">// #define nodeCH_DD( DCx )    ( TNode::na-&gt;pCSD()-&gt;DD[</span>
+<a name="l00869"></a>00869 <span class="comment">//                              TNode::na-&gt;pCSD()-&gt;xDC[(DCx)]] )</span>
+<a name="l00870"></a>00870 
+<a name="l00871"></a>00871 
+<a name="l00872"></a>00872 <span class="preprocessor">#endif</span>
+<a name="l00873"></a>00873 <span class="preprocessor"></span><span class="comment">// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<a name="l00874"></a>00874 <span class="comment">// _node_h_</span>
+<a name="l00875"></a>00875 
 </pre></div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Oct 22 2012 21:04:42 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

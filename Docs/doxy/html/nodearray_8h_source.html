@@ -94,7 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <a href="nodearray_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: nodearray.h 725 2012-10-02 15:43:37Z kulik $</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: nodearray.h 760 2012-11-27 16:33:44Z dmitrieva $</span>
 <a name="l00006"></a>00006 <span class="comment"></span><span class="comment">//</span>
 <a name="l00011"></a>00011 <span class="comment"></span><span class="comment">//</span>
 <a name="l00012"></a>00012 <span class="comment">// Copyright (C) 2006-2012 S.Dmytriyeva, D.Kulik</span>
@@ -261,157 +261,159 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00197"></a>00197     { <span class="keywordflow">return</span> <a class="code" href="class_t_node_array.html#a12994fa6d30576d51a68c6b705f41d36" title="Calls GEM IPM for one node with three indexes (along x,y,z)">RunGEM</a>( <a class="code" href="class_t_node_array.html#acfce3177a410321a63154bdc9a0d563d" title="Makes one absolute node index from three spatial coordinate indexes.">iNode</a>( indN, indM, indK ), Mode); }
 <a name="l00198"></a>00198         <span class="comment">// (both calls clean the work node DATABR structure)</span>
 <a name="l00199"></a>00199 
-<a name="l00202"></a>00202     <span class="keywordtype">void</span>  <a class="code" href="class_t_node_array.html#aa9537361dc6a8fa3db023f41c55f407a" title="Copies data from the work DATABR structure into the node ndx in the node arrays NodT0 and NodT1 (as s...">setNodeArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* nodeTypes  );
-<a name="l00203"></a>00203 
-<a name="l00205"></a>00205     <span class="keywordtype">void</span>  <a class="code" href="class_t_node_array.html#a6b72453a75bc4e4d81eccd751dae7dea" title="Test setup of the boundary condition for all nodes in the task.">checkNodeArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> i, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* nodeTypes, <span class="keyword">const</span> <span class="keywordtype">char</span>*  datachbr_file );
-<a name="l00206"></a>00206 
-<a name="l00207"></a>00207    <span class="comment">//---------------------------------------------------------</span>
-<a name="l00208"></a>00208    <span class="comment">// Methods for working with node arrays (access to data from DBR)</span>
-<a name="l00210"></a>00210 <span class="comment"></span>   <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#a7b0c009a13089988bc4dae83fe3b69f3" title="Calculate phase (carrier) mass, kg of single component phase.">get_mPH</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ia, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nodex, <span class="keywordtype">long</span> <span class="keywordtype">int</span> PHx );
-<a name="l00212"></a>00212    <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#ad79e1f7eda3a7e8b3809286359f1004d" title="Calculate phase volume, cm3 of single component phase.">get_vPH</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ia, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nodex, <span class="keywordtype">long</span> <span class="keywordtype">int</span> PHx );
-<a name="l00214"></a>00214    <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#afebaf290399ac5ecc5f83ed19f6daa57" title="Calculate bulk compositions of single component phase.">get_bPH</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ia, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nodex, <span class="keywordtype">long</span> <span class="keywordtype">int</span> PHx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> IC );
-<a name="l00215"></a>00215 
-<a name="l00216"></a>00216 
-<a name="l00217"></a>00217    <span class="comment">//---------------------------------------------------------</span>
-<a name="l00218"></a>00218    <span class="comment">// Methods for working with node arrays</span>
-<a name="l00219"></a>00219 
-<a name="l00222"></a>00222     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a6ce6862ff6f62fb299ea7f9d46644764" title="Copies data for a node ndx from the array of nodes anyNodeArray that contains nNodes into the work no...">CopyWorkNodeFromArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#ae61d1eec1172e0892c3d2a1d215ac0ac" title="Destructor.">nNodes</a>, <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* anyNodeArray );
-<a name="l00223"></a>00223 
-<a name="l00227"></a>00227     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a4311f0f53f94e73966f392e13dee55a5" title="Moves work node data to the ndx element of the node array anyNodeArray that has nNodes.">MoveWorkNodeToArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#ae61d1eec1172e0892c3d2a1d215ac0ac" title="Destructor.">nNodes</a>, <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* anyNodeArray );
-<a name="l00228"></a>00228 
-<a name="l00233"></a>00233     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#aaf2854c6b4b9ca1fe9197527331db892" title="Copies a node from the node array arr_From to the same place in the node array arr_To.">CopyNodeFromTo</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#ae61d1eec1172e0892c3d2a1d215ac0ac" title="Destructor.">nNodes</a>, <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* arr_From,
-<a name="l00234"></a>00234          <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* arr_To );
-<a name="l00235"></a>00235 
-<a name="l00236"></a>00236     <span class="comment">//---------------------------------------------------------</span>
-<a name="l00237"></a>00237     <span class="comment">// Data collection for monitoring differences</span>
-<a name="l00238"></a>00238     <span class="comment">// formatted writing into text file that must be already open </span>
-<a name="l00239"></a>00239     <span class="comment">//</span>
-<a name="l00241"></a>00241 <span class="comment"></span>    <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a0c8b2be5ae5dd578cb22c3e2318764fe" title="Prints difference increments in all nodes (cells) for step t (time point at)">logDiffsIC</a>( FILE* diffile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
-<a name="l00242"></a>00242 
-<a name="l00244"></a>00244     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#adb442602739954e1909e253709b946bd" title="Prints dissolved elemental molarities in all cells for time point t / at.">logProfileAqIC</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
-<a name="l00245"></a>00245 
-<a name="l00247"></a>00247     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a54520f6613382afe586cd78ba772b69e" title="Prints total elemental amounts in all cells for time point t / at.">logProfileTotIC</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
-<a name="l00248"></a>00248 
-<a name="l00250"></a>00250     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a3d3bf70fd14a302cd0affc56175e0207" title="Prints amounts of phases in all cells for time point t / at.">logProfilePhMol</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
-<a name="l00251"></a>00251     
-<a name="l00253"></a>00253     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#af84f4689a6aae9983a0bd1a9228a8aee" title="Prints volumes of phases in all cells for time point t / at.">logProfilePhVol</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
-<a name="l00254"></a>00254     
-<a name="l00256"></a>00256     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a23eadd2cee5d9d2fa795c8bf2ca38a60" title="Prints dissolved species molarities in all cells for time point t / at.">logProfileAqDC</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
-<a name="l00257"></a>00257 
-<a name="l00258"></a>00258     <span class="comment">//---------------------------------------------------------</span>
-<a name="l00259"></a>00259     <span class="comment">// Working with the node grid (mainly used in Random Walk algorithms)</span>
-<a name="l00260"></a>00260 
-<a name="l00263"></a>00263      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#ac0b328eff648791b088597c0cd406cf6" title="Set grid coordinate array use predefined array aGrid or set up regular scale.">SetGrid</a>( <span class="keywordtype">double</span> aSize[3], <span class="keywordtype">double</span> (*aGrid)[3] = 0 );
-<a name="l00264"></a>00264 
-<a name="l00268"></a>00268      <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#aa0ee3a3b6b76b2ea8e71d37ac2401387" title="Finds a node absolute index for the current point location.">FindNodeFromLocation</a>( <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a> cxyz, <span class="keywordtype">long</span> <span class="keywordtype">int</span> old_node = -1 ) <span class="keyword">const</span>;
-<a name="l00269"></a>00269 
-<a name="l00271"></a>00271      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a8a0ab738ad596c13f40d6d5ab3c2550a" title="Get 3D sizes for node ( from cxyz[0] - to cxyz[1] )">GetNodeSizes</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a> cxyz[2] );
-<a name="l00272"></a>00272 
-<a name="l00274"></a><a class="code" href="class_t_node_array.html#ac00435dc0fa73af7fb6fe8b8e3322835">00274</a>      <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a>&amp; <a class="code" href="class_t_node_array.html#ac00435dc0fa73af7fb6fe8b8e3322835" title="Get 3D location for node ( from cxyz[0] - to cxyz[1] )">GetNodeLocation</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx )
-<a name="l00275"></a>00275      { <span class="keywordflow">return</span> <a class="code" href="class_t_node_array.html#a80553fe992968b02485e959f902b360b" title="Array of grid point locations, size is anNodes.">grid</a>[ndx]; }
-<a name="l00276"></a>00276 
-<a name="l00278"></a><a class="code" href="class_t_node_array.html#a3f7bdddb853d11f9521403a7b574595d">00278</a>      <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a>&amp; <a class="code" href="class_t_node_array.html#a3f7bdddb853d11f9521403a7b574595d" title="Get 3D size of the whole region.">GetSize</a>()
-<a name="l00279"></a>00279      { <span class="keywordflow">return</span> <a class="code" href="class_t_node_array.html#a45393a9383d02c266c68305405524cdf" title="spatial dimensions of the medium ( x, 0, 0 - 1D; x,y,0 - 2D; x,0,z - 2D; x,y,z - 3D ) defines topolog...">size</a>; }
+<a name="l00209"></a>00209     <span class="keywordtype">void</span>  <a class="code" href="class_t_node_array.html#ad9ad56a4ccdbbff2fb352139e52bbabd" title="Initialization of TNodeArray data structures.">InitNodeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *dbrfiles_lst_name, <span class="keywordtype">long</span> <span class="keywordtype">int</span> *nodeTypes, <span class="keywordtype">bool</span> getNodT1, <span class="keywordtype">bool</span> binary_f  );
+<a name="l00210"></a>00210 
+<a name="l00213"></a>00213     <span class="keywordtype">void</span>  <a class="code" href="class_t_node_array.html#aa9537361dc6a8fa3db023f41c55f407a" title="Copies data from the work DATABR structure into the node ndx in the node arrays NodT0 and NodT1 (as s...">setNodeArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* nodeTypes  );
+<a name="l00214"></a>00214 
+<a name="l00216"></a>00216     <span class="keywordtype">void</span>  <a class="code" href="class_t_node_array.html#a6b72453a75bc4e4d81eccd751dae7dea" title="Test setup of the boundary condition for all nodes in the task.">checkNodeArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> i, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* nodeTypes, <span class="keyword">const</span> <span class="keywordtype">char</span>*  datachbr_file );
+<a name="l00217"></a>00217 
+<a name="l00218"></a>00218    <span class="comment">//---------------------------------------------------------</span>
+<a name="l00219"></a>00219    <span class="comment">// Methods for working with node arrays (access to data from DBR)</span>
+<a name="l00221"></a>00221 <span class="comment"></span>   <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#a7b0c009a13089988bc4dae83fe3b69f3" title="Calculate phase (carrier) mass, kg of single component phase.">get_mPH</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ia, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nodex, <span class="keywordtype">long</span> <span class="keywordtype">int</span> PHx );
+<a name="l00223"></a>00223    <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#ad79e1f7eda3a7e8b3809286359f1004d" title="Calculate phase volume, cm3 of single component phase.">get_vPH</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ia, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nodex, <span class="keywordtype">long</span> <span class="keywordtype">int</span> PHx );
+<a name="l00225"></a>00225    <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#afebaf290399ac5ecc5f83ed19f6daa57" title="Calculate bulk compositions of single component phase.">get_bPH</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ia, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nodex, <span class="keywordtype">long</span> <span class="keywordtype">int</span> PHx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> IC );
+<a name="l00226"></a>00226 
+<a name="l00227"></a>00227 
+<a name="l00228"></a>00228    <span class="comment">//---------------------------------------------------------</span>
+<a name="l00229"></a>00229    <span class="comment">// Methods for working with node arrays</span>
+<a name="l00230"></a>00230 
+<a name="l00233"></a>00233     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a6ce6862ff6f62fb299ea7f9d46644764" title="Copies data for a node ndx from the array of nodes anyNodeArray that contains nNodes into the work no...">CopyWorkNodeFromArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#ae61d1eec1172e0892c3d2a1d215ac0ac" title="Destructor.">nNodes</a>, <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* anyNodeArray );
+<a name="l00234"></a>00234 
+<a name="l00238"></a>00238     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a4311f0f53f94e73966f392e13dee55a5" title="Moves work node data to the ndx element of the node array anyNodeArray that has nNodes.">MoveWorkNodeToArray</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#ae61d1eec1172e0892c3d2a1d215ac0ac" title="Destructor.">nNodes</a>, <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* anyNodeArray );
+<a name="l00239"></a>00239 
+<a name="l00244"></a>00244     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#aaf2854c6b4b9ca1fe9197527331db892" title="Copies a node from the node array arr_From to the same place in the node array arr_To.">CopyNodeFromTo</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#ae61d1eec1172e0892c3d2a1d215ac0ac" title="Destructor.">nNodes</a>, <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* arr_From,
+<a name="l00245"></a>00245          <a class="code" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABRPTR</a>* arr_To );
+<a name="l00246"></a>00246 
+<a name="l00247"></a>00247     <span class="comment">//---------------------------------------------------------</span>
+<a name="l00248"></a>00248     <span class="comment">// Data collection for monitoring differences</span>
+<a name="l00249"></a>00249     <span class="comment">// formatted writing into text file that must be already open </span>
+<a name="l00250"></a>00250     <span class="comment">//</span>
+<a name="l00252"></a>00252 <span class="comment"></span>    <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a0c8b2be5ae5dd578cb22c3e2318764fe" title="Prints difference increments in all nodes (cells) for step t (time point at)">logDiffsIC</a>( FILE* diffile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
+<a name="l00253"></a>00253 
+<a name="l00255"></a>00255     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#adb442602739954e1909e253709b946bd" title="Prints dissolved elemental molarities in all cells for time point t / at.">logProfileAqIC</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
+<a name="l00256"></a>00256 
+<a name="l00258"></a>00258     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a54520f6613382afe586cd78ba772b69e" title="Prints total elemental amounts in all cells for time point t / at.">logProfileTotIC</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
+<a name="l00259"></a>00259 
+<a name="l00261"></a>00261     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a3d3bf70fd14a302cd0affc56175e0207" title="Prints amounts of phases in all cells for time point t / at.">logProfilePhMol</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
+<a name="l00262"></a>00262     
+<a name="l00264"></a>00264     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#af84f4689a6aae9983a0bd1a9228a8aee" title="Prints volumes of phases in all cells for time point t / at.">logProfilePhVol</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
+<a name="l00265"></a>00265     
+<a name="l00267"></a>00267     <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a23eadd2cee5d9d2fa795c8bf2ca38a60" title="Prints dissolved species molarities in all cells for time point t / at.">logProfileAqDC</a>( FILE* logfile, <span class="keywordtype">long</span> <span class="keywordtype">int</span> t, <span class="keywordtype">double</span> at, <span class="keywordtype">long</span> <span class="keywordtype">int</span> nx, <span class="keywordtype">long</span> <span class="keywordtype">int</span> every_t );
+<a name="l00268"></a>00268 
+<a name="l00269"></a>00269     <span class="comment">//---------------------------------------------------------</span>
+<a name="l00270"></a>00270     <span class="comment">// Working with the node grid (mainly used in Random Walk algorithms)</span>
+<a name="l00271"></a>00271 
+<a name="l00274"></a>00274      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#ac0b328eff648791b088597c0cd406cf6" title="Set grid coordinate array use predefined array aGrid or set up regular scale.">SetGrid</a>( <span class="keywordtype">double</span> aSize[3], <span class="keywordtype">double</span> (*aGrid)[3] = 0 );
+<a name="l00275"></a>00275 
+<a name="l00279"></a>00279      <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_node_array.html#aa0ee3a3b6b76b2ea8e71d37ac2401387" title="Finds a node absolute index for the current point location.">FindNodeFromLocation</a>( <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a> cxyz, <span class="keywordtype">long</span> <span class="keywordtype">int</span> old_node = -1 ) <span class="keyword">const</span>;
 <a name="l00280"></a>00280 
-<a name="l00282"></a>00282      <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#a1a5d540ab240ab2b1bcacac9b93518f5" title="Get full mass particle type in the node ndx.">GetNodeMass</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">char</span> type, <span class="keywordtype">char</span> tcode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> ips );
+<a name="l00282"></a>00282      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a8a0ab738ad596c13f40d6d5ab3c2550a" title="Get 3D sizes for node ( from cxyz[0] - to cxyz[1] )">GetNodeSizes</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a> cxyz[2] );
 <a name="l00283"></a>00283 
-<a name="l00285"></a>00285      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#ae1358d1a2b583f3629b987c896a19ba9" title="Move a mass m_v from node ndx_from to node ind_to, for particle type.">MoveParticleMass</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx_from, <span class="keywordtype">long</span> <span class="keywordtype">int</span> ind_to, <span class="keywordtype">char</span> type, <span class="keywordtype">char</span> ComponentMode, 
-<a name="l00286"></a>00286                  <span class="keywordtype">char</span> tcode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> ips, <span class="keywordtype">double</span> m_v );
+<a name="l00285"></a><a class="code" href="class_t_node_array.html#ac00435dc0fa73af7fb6fe8b8e3322835">00285</a>      <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a>&amp; <a class="code" href="class_t_node_array.html#ac00435dc0fa73af7fb6fe8b8e3322835" title="Get 3D location for node ( from cxyz[0] - to cxyz[1] )">GetNodeLocation</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx )
+<a name="l00286"></a>00286      { <span class="keywordflow">return</span> <a class="code" href="class_t_node_array.html#a80553fe992968b02485e959f902b360b" title="Array of grid point locations, size is anNodes.">grid</a>[ndx]; }
 <a name="l00287"></a>00287 
-<a name="l00289"></a>00289      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a491ed02c17f7feb6d0a3fa74387b4db8" title="Writes work node (DATABR structure) to a text VTK file.">databr_to_vtk</a>( fstream&amp; ff, <span class="keyword">const</span> <span class="keywordtype">char</span>*name, <span class="keywordtype">double</span> time, <span class="keywordtype">long</span> cycle,
-<a name="l00290"></a>00290                                <span class="keywordtype">long</span> <span class="keywordtype">int</span> nFields=0, <span class="keywordtype">long</span> <span class="keywordtype">int</span> (*Flds)[2]=0);
+<a name="l00289"></a><a class="code" href="class_t_node_array.html#a3f7bdddb853d11f9521403a7b574595d">00289</a>      <a class="code" href="struct_l_o_c_a_t_i_o_n.html" title="Location (coordinates) of a point in space for implementation of particle transport algorithms...">LOCATION</a>&amp; <a class="code" href="class_t_node_array.html#a3f7bdddb853d11f9521403a7b574595d" title="Get 3D size of the whole region.">GetSize</a>()
+<a name="l00290"></a>00290      { <span class="keywordflow">return</span> <a class="code" href="class_t_node_array.html#a45393a9383d02c266c68305405524cdf" title="spatial dimensions of the medium ( x, 0, 0 - 1D; x,y,0 - 2D; x,0,z - 2D; x,y,z - 3D ) defines topolog...">size</a>; }
 <a name="l00291"></a>00291 
-<a name="l00292"></a>00292 };
-<a name="l00293"></a>00293 
-<a name="l00294"></a>00294 <span class="comment">//IC node data access macroses</span>
-<a name="l00295"></a>00295 <span class="preprocessor">#define node0_bIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;bIC[(ICx)])</span>
-<a name="l00296"></a>00296 <span class="preprocessor"></span><span class="preprocessor">#define node1_bIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;bIC[(ICx)])</span>
-<a name="l00297"></a>00297 <span class="preprocessor"></span><span class="preprocessor">#define node0_rMB( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;rMB[(ICx)])</span>
-<a name="l00298"></a>00298 <span class="preprocessor"></span><span class="preprocessor">#define node1_rMB( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;rMB[(ICx)])</span>
-<a name="l00299"></a>00299 <span class="preprocessor"></span><span class="preprocessor">#define node0_uIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;uIC[(ICx)])</span>
-<a name="l00300"></a>00300 <span class="preprocessor"></span><span class="preprocessor">#define node1_uIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;uIC[(ICx)])</span>
-<a name="l00301"></a>00301 <span class="preprocessor"></span>
-<a name="l00302"></a>00302 <span class="comment">//DC node data access macroses</span>
-<a name="l00303"></a>00303 
-<a name="l00304"></a>00304   <span class="comment">// amount of DC with index DCx from T0 node with index nodex</span>
-<a name="l00305"></a>00305 <span class="preprocessor">#define node0_xDC( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;xDC[(DCx)])</span>
-<a name="l00306"></a>00306 <span class="preprocessor"></span>  <span class="comment">// amount of DC with index DCx from T1 node with index nodex</span>
-<a name="l00307"></a>00307 <span class="preprocessor">#define node1_xDC( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;xDC[(DCx)])</span>
-<a name="l00308"></a>00308 <span class="preprocessor"></span>
-<a name="l00309"></a>00309   <span class="comment">// activity coefficient of DC with index DCx from T0 node with index nodex</span>
-<a name="l00310"></a>00310 <span class="preprocessor">#define node0_gam( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;gam[(DCx)])</span>
-<a name="l00311"></a>00311 <span class="preprocessor"></span>  <span class="comment">// activity coefficient of DC with index DCx from T1 node with index nodex</span>
-<a name="l00312"></a>00312 <span class="preprocessor">#define node1_gam( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;gam[(DCx)])</span>
-<a name="l00313"></a>00313 <span class="preprocessor"></span>
-<a name="l00314"></a>00314   <span class="comment">// upper constraint on amount of DC with index DCx from T0 node with index nodex</span>
-<a name="l00315"></a>00315 <span class="preprocessor">#define node0_dul( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;dul[(DCx)])</span>
-<a name="l00316"></a>00316 <span class="preprocessor"></span>  <span class="comment">// upper constraint on amount of DC with index DCx from T1 node with index nodex</span>
-<a name="l00317"></a>00317 <span class="preprocessor">#define node1_dul( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;dul[(DCx)])</span>
-<a name="l00318"></a>00318 <span class="preprocessor"></span>
-<a name="l00319"></a>00319   <span class="comment">// lower constraint on amount of DC with index DCx from T0 node with index nodex</span>
-<a name="l00320"></a>00320 <span class="preprocessor">#define node0_dll( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;dll[(DCx)])</span>
-<a name="l00321"></a>00321 <span class="preprocessor"></span>  <span class="comment">// lower constraint on amount of DC with index DCx from T1 node with index nodex</span>
-<a name="l00322"></a>00322 <span class="preprocessor">#define node1_dll( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;dll[(DCx)])</span>
-<a name="l00323"></a>00323 <span class="preprocessor"></span>
-<a name="l00324"></a>00324 <span class="comment">//Phase node data access macroses</span>
-<a name="l00325"></a>00325   <span class="comment">// amount of phase with index PHx from T0 node with index nodex</span>
-<a name="l00326"></a>00326 <span class="preprocessor">#define node0_xPH( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;xPH[(PHx)])</span>
-<a name="l00327"></a>00327 <span class="preprocessor"></span>  <span class="comment">// amount of phase with index PHx from T1 node with index nodex</span>
-<a name="l00328"></a>00328 <span class="preprocessor">#define node1_xPH( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;xPH[(PHx)])</span>
+<a name="l00293"></a>00293      <span class="keywordtype">double</span> <a class="code" href="class_t_node_array.html#a1a5d540ab240ab2b1bcacac9b93518f5" title="Get full mass particle type in the node ndx.">GetNodeMass</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx, <span class="keywordtype">char</span> type, <span class="keywordtype">char</span> tcode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> ips );
+<a name="l00294"></a>00294 
+<a name="l00296"></a>00296      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#ae1358d1a2b583f3629b987c896a19ba9" title="Move a mass m_v from node ndx_from to node ind_to, for particle type.">MoveParticleMass</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ndx_from, <span class="keywordtype">long</span> <span class="keywordtype">int</span> ind_to, <span class="keywordtype">char</span> type, <span class="keywordtype">char</span> ComponentMode, 
+<a name="l00297"></a>00297                  <span class="keywordtype">char</span> tcode, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> ips, <span class="keywordtype">double</span> m_v );
+<a name="l00298"></a>00298 
+<a name="l00300"></a>00300      <span class="keywordtype">void</span> <a class="code" href="class_t_node_array.html#a491ed02c17f7feb6d0a3fa74387b4db8" title="Writes work node (DATABR structure) to a text VTK file.">databr_to_vtk</a>( fstream&amp; ff, <span class="keyword">const</span> <span class="keywordtype">char</span>*name, <span class="keywordtype">double</span> time, <span class="keywordtype">long</span> cycle,
+<a name="l00301"></a>00301                                <span class="keywordtype">long</span> <span class="keywordtype">int</span> nFields=0, <span class="keywordtype">long</span> <span class="keywordtype">int</span> (*Flds)[2]=0);
+<a name="l00302"></a>00302 
+<a name="l00303"></a>00303 };
+<a name="l00304"></a>00304 
+<a name="l00305"></a>00305 <span class="comment">//IC node data access macroses</span>
+<a name="l00306"></a>00306 <span class="preprocessor">#define node0_bIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;bIC[(ICx)])</span>
+<a name="l00307"></a>00307 <span class="preprocessor"></span><span class="preprocessor">#define node1_bIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;bIC[(ICx)])</span>
+<a name="l00308"></a>00308 <span class="preprocessor"></span><span class="preprocessor">#define node0_rMB( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;rMB[(ICx)])</span>
+<a name="l00309"></a>00309 <span class="preprocessor"></span><span class="preprocessor">#define node1_rMB( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;rMB[(ICx)])</span>
+<a name="l00310"></a>00310 <span class="preprocessor"></span><span class="preprocessor">#define node0_uIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;uIC[(ICx)])</span>
+<a name="l00311"></a>00311 <span class="preprocessor"></span><span class="preprocessor">#define node1_uIC( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;uIC[(ICx)])</span>
+<a name="l00312"></a>00312 <span class="preprocessor"></span>
+<a name="l00313"></a>00313 <span class="comment">//DC node data access macroses</span>
+<a name="l00314"></a>00314 
+<a name="l00315"></a>00315   <span class="comment">// amount of DC with index DCx from T0 node with index nodex</span>
+<a name="l00316"></a>00316 <span class="preprocessor">#define node0_xDC( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;xDC[(DCx)])</span>
+<a name="l00317"></a>00317 <span class="preprocessor"></span>  <span class="comment">// amount of DC with index DCx from T1 node with index nodex</span>
+<a name="l00318"></a>00318 <span class="preprocessor">#define node1_xDC( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;xDC[(DCx)])</span>
+<a name="l00319"></a>00319 <span class="preprocessor"></span>
+<a name="l00320"></a>00320   <span class="comment">// activity coefficient of DC with index DCx from T0 node with index nodex</span>
+<a name="l00321"></a>00321 <span class="preprocessor">#define node0_gam( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;gam[(DCx)])</span>
+<a name="l00322"></a>00322 <span class="preprocessor"></span>  <span class="comment">// activity coefficient of DC with index DCx from T1 node with index nodex</span>
+<a name="l00323"></a>00323 <span class="preprocessor">#define node1_gam( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;gam[(DCx)])</span>
+<a name="l00324"></a>00324 <span class="preprocessor"></span>
+<a name="l00325"></a>00325   <span class="comment">// upper constraint on amount of DC with index DCx from T0 node with index nodex</span>
+<a name="l00326"></a>00326 <span class="preprocessor">#define node0_dul( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;dul[(DCx)])</span>
+<a name="l00327"></a>00327 <span class="preprocessor"></span>  <span class="comment">// upper constraint on amount of DC with index DCx from T1 node with index nodex</span>
+<a name="l00328"></a>00328 <span class="preprocessor">#define node1_dul( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;dul[(DCx)])</span>
 <a name="l00329"></a>00329 <span class="preprocessor"></span>
-<a name="l00330"></a>00330   <span class="comment">// volume of multicomponent phase with index PHx from T0 node with index nodex</span>
-<a name="l00331"></a>00331 <span class="preprocessor">#define node0_vPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;vPS[(PHx)])</span>
-<a name="l00332"></a>00332 <span class="preprocessor"></span>  <span class="comment">// volume of multicomponent phase with index PHx from T1 node with index nodex</span>
-<a name="l00333"></a>00333 <span class="preprocessor">#define node1_vPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;vPS[(PHx)])</span>
+<a name="l00330"></a>00330   <span class="comment">// lower constraint on amount of DC with index DCx from T0 node with index nodex</span>
+<a name="l00331"></a>00331 <span class="preprocessor">#define node0_dll( nodex, DCx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;dll[(DCx)])</span>
+<a name="l00332"></a>00332 <span class="preprocessor"></span>  <span class="comment">// lower constraint on amount of DC with index DCx from T1 node with index nodex</span>
+<a name="l00333"></a>00333 <span class="preprocessor">#define node1_dll( nodex, DCx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;dll[(DCx)])</span>
 <a name="l00334"></a>00334 <span class="preprocessor"></span>
-<a name="l00335"></a>00335   <span class="comment">// volume of single-component phase with index PHx from T0 node with index nodex</span>
-<a name="l00336"></a>00336 <span class="preprocessor">#define node0_vPH( nodex, PHx ) (TNodeArray::na-&gt;get_vPH( 0, (nodex), (PHx)))</span>
-<a name="l00337"></a>00337 <span class="preprocessor"></span>  <span class="comment">// volume of single-component phase with index PHx from T1 node with index nodex</span>
-<a name="l00338"></a>00338 <span class="preprocessor">#define node1_vPH( nodex, PHx ) (TNodeArray::na-&gt;get_vPH( 1, (nodex), (PHx)))</span>
-<a name="l00339"></a>00339 <span class="preprocessor"></span>
-<a name="l00340"></a>00340   <span class="comment">// mass of multicomponent phase with index PHx from T0 node with index nodex</span>
-<a name="l00341"></a>00341 <span class="preprocessor">#define node0_mPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;mPS[(PHx)])</span>
-<a name="l00342"></a>00342 <span class="preprocessor"></span>  <span class="comment">// mass of multicomponent phase with index PHx from T1 node with index nodex</span>
-<a name="l00343"></a>00343 <span class="preprocessor">#define node1_mPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;mPS[(PHx)])</span>
-<a name="l00344"></a>00344 <span class="preprocessor"></span>
-<a name="l00345"></a>00345   <span class="comment">// mass of single-component phase with index PHx from T0 node with index nodex</span>
-<a name="l00346"></a>00346 <span class="preprocessor">#define node0_mPH( nodex, PHx )  (TNodeArray::na-&gt;get_mPH( 0, (nodex), (PHx)))</span>
-<a name="l00347"></a>00347 <span class="preprocessor"></span>  <span class="comment">// mass of single-component phase with index PHx from T1 node with index nodex</span>
-<a name="l00348"></a>00348 <span class="preprocessor">#define node1_mPH( nodex, PHx )  (TNodeArray::na-&gt;get_mPH( 1, (nodex), (PHx)))</span>
-<a name="l00349"></a>00349 <span class="preprocessor"></span>
-<a name="l00350"></a>00350 
-<a name="l00351"></a>00351   <span class="comment">// amount of solvent/sorbent in phase with index PHx from T0 node with index nodex</span>
-<a name="l00352"></a>00352 <span class="preprocessor">#define node0_xPA( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;xPA[(PHx)])</span>
-<a name="l00353"></a>00353 <span class="preprocessor"></span>  <span class="comment">// amount of solvent/sorbent in phase with index PHx from T1 node with index nodex</span>
-<a name="l00354"></a>00354 <span class="preprocessor">#define node1_xPA( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;xPA[(PHx)])</span>
+<a name="l00335"></a>00335 <span class="comment">//Phase node data access macroses</span>
+<a name="l00336"></a>00336   <span class="comment">// amount of phase with index PHx from T0 node with index nodex</span>
+<a name="l00337"></a>00337 <span class="preprocessor">#define node0_xPH( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;xPH[(PHx)])</span>
+<a name="l00338"></a>00338 <span class="preprocessor"></span>  <span class="comment">// amount of phase with index PHx from T1 node with index nodex</span>
+<a name="l00339"></a>00339 <span class="preprocessor">#define node1_xPH( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;xPH[(PHx)])</span>
+<a name="l00340"></a>00340 <span class="preprocessor"></span>
+<a name="l00341"></a>00341   <span class="comment">// volume of multicomponent phase with index PHx from T0 node with index nodex</span>
+<a name="l00342"></a>00342 <span class="preprocessor">#define node0_vPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;vPS[(PHx)])</span>
+<a name="l00343"></a>00343 <span class="preprocessor"></span>  <span class="comment">// volume of multicomponent phase with index PHx from T1 node with index nodex</span>
+<a name="l00344"></a>00344 <span class="preprocessor">#define node1_vPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;vPS[(PHx)])</span>
+<a name="l00345"></a>00345 <span class="preprocessor"></span>
+<a name="l00346"></a>00346   <span class="comment">// volume of single-component phase with index PHx from T0 node with index nodex</span>
+<a name="l00347"></a>00347 <span class="preprocessor">#define node0_vPH( nodex, PHx ) (TNodeArray::na-&gt;get_vPH( 0, (nodex), (PHx)))</span>
+<a name="l00348"></a>00348 <span class="preprocessor"></span>  <span class="comment">// volume of single-component phase with index PHx from T1 node with index nodex</span>
+<a name="l00349"></a>00349 <span class="preprocessor">#define node1_vPH( nodex, PHx ) (TNodeArray::na-&gt;get_vPH( 1, (nodex), (PHx)))</span>
+<a name="l00350"></a>00350 <span class="preprocessor"></span>
+<a name="l00351"></a>00351   <span class="comment">// mass of multicomponent phase with index PHx from T0 node with index nodex</span>
+<a name="l00352"></a>00352 <span class="preprocessor">#define node0_mPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;mPS[(PHx)])</span>
+<a name="l00353"></a>00353 <span class="preprocessor"></span>  <span class="comment">// mass of multicomponent phase with index PHx from T1 node with index nodex</span>
+<a name="l00354"></a>00354 <span class="preprocessor">#define node1_mPS( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;mPS[(PHx)])</span>
 <a name="l00355"></a>00355 <span class="preprocessor"></span>
-<a name="l00356"></a>00356 <span class="comment">// equilibrium bulk composition of solid part of the system, moles from T0 node</span>
-<a name="l00357"></a>00357 <span class="preprocessor">#define node0_bSP( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;bSP[(ICx)])</span>
-<a name="l00358"></a>00358 <span class="preprocessor"></span><span class="comment">// equilibrium bulk composition of solid part of the system, moles from T1 node</span>
-<a name="l00359"></a>00359 <span class="preprocessor">#define node1_bSP( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;bSP[(ICx)])</span>
+<a name="l00356"></a>00356   <span class="comment">// mass of single-component phase with index PHx from T0 node with index nodex</span>
+<a name="l00357"></a>00357 <span class="preprocessor">#define node0_mPH( nodex, PHx )  (TNodeArray::na-&gt;get_mPH( 0, (nodex), (PHx)))</span>
+<a name="l00358"></a>00358 <span class="preprocessor"></span>  <span class="comment">// mass of single-component phase with index PHx from T1 node with index nodex</span>
+<a name="l00359"></a>00359 <span class="preprocessor">#define node1_mPH( nodex, PHx )  (TNodeArray::na-&gt;get_mPH( 1, (nodex), (PHx)))</span>
 <a name="l00360"></a>00360 <span class="preprocessor"></span>
 <a name="l00361"></a>00361 
-<a name="l00362"></a>00362 <span class="comment">// Phase compositions node data access macroses</span>
-<a name="l00363"></a>00363 <span class="comment">// amount of independent component ICx in multi-component phase PHx in T0 node nodex</span>
-<a name="l00364"></a>00364 <span class="preprocessor">#define node0_bPS( nodex, PHx, ICx ) ( TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;bPS[ \</span>
-<a name="l00365"></a>00365 <span class="preprocessor">                                       (PHx)*TNodeArray::na-&gt;pCSD()-&gt;nICb+(ICx)])</span>
-<a name="l00366"></a>00366 <span class="preprocessor"></span><span class="comment">// amount of independent component ICx in multi-component phase PHx in T1 node nodex</span>
-<a name="l00367"></a>00367 <span class="preprocessor">#define node1_bPS( nodex, PHx, ICx ) ( TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;bPS[ \</span>
-<a name="l00368"></a>00368 <span class="preprocessor">                                       (PHx)*TNodeArray::na-&gt;pCSD()-&gt;nICb+(ICx)])</span>
-<a name="l00369"></a>00369 <span class="preprocessor"></span>
-<a name="l00370"></a>00370 <span class="comment">// amount of independent component ICx in single-component phase PHx in T0 node nodex</span>
-<a name="l00371"></a>00371 <span class="preprocessor">#define node0_bPH( nodex, PHx, ICx )  (TNodeArray::na-&gt;get_bPH( 0, (nodex), (PHx), (ICx)))</span>
-<a name="l00372"></a>00372 <span class="preprocessor"></span><span class="comment">// amount of independent component ICx in single-component phase PHx in T1 node nodex</span>
-<a name="l00373"></a>00373 <span class="preprocessor">#define node1_bPH( nodex, PHx, ICx )  (TNodeArray::na-&gt;get_bPH( 1, (nodex), (PHx), (ICx)))</span>
-<a name="l00374"></a>00374 <span class="preprocessor"></span>
-<a name="l00375"></a>00375 <span class="preprocessor">#endif   // _nodearray_h_</span>
-<a name="l00376"></a>00376 <span class="preprocessor"></span>
-<a name="l00377"></a>00377 <span class="comment">// end nodearray.h</span>
+<a name="l00362"></a>00362   <span class="comment">// amount of solvent/sorbent in phase with index PHx from T0 node with index nodex</span>
+<a name="l00363"></a>00363 <span class="preprocessor">#define node0_xPA( nodex, PHx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;xPA[(PHx)])</span>
+<a name="l00364"></a>00364 <span class="preprocessor"></span>  <span class="comment">// amount of solvent/sorbent in phase with index PHx from T1 node with index nodex</span>
+<a name="l00365"></a>00365 <span class="preprocessor">#define node1_xPA( nodex, PHx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;xPA[(PHx)])</span>
+<a name="l00366"></a>00366 <span class="preprocessor"></span>
+<a name="l00367"></a>00367 <span class="comment">// equilibrium bulk composition of solid part of the system, moles from T0 node</span>
+<a name="l00368"></a>00368 <span class="preprocessor">#define node0_bSP( nodex, ICx ) (TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;bSP[(ICx)])</span>
+<a name="l00369"></a>00369 <span class="preprocessor"></span><span class="comment">// equilibrium bulk composition of solid part of the system, moles from T1 node</span>
+<a name="l00370"></a>00370 <span class="preprocessor">#define node1_bSP( nodex, ICx ) (TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;bSP[(ICx)])</span>
+<a name="l00371"></a>00371 <span class="preprocessor"></span>
+<a name="l00372"></a>00372 
+<a name="l00373"></a>00373 <span class="comment">// Phase compositions node data access macroses</span>
+<a name="l00374"></a>00374 <span class="comment">// amount of independent component ICx in multi-component phase PHx in T0 node nodex</span>
+<a name="l00375"></a>00375 <span class="preprocessor">#define node0_bPS( nodex, PHx, ICx ) ( TNodeArray::na-&gt;pNodT0()[(nodex)]-&gt;bPS[ \</span>
+<a name="l00376"></a>00376 <span class="preprocessor">                                       (PHx)*TNodeArray::na-&gt;pCSD()-&gt;nICb+(ICx)])</span>
+<a name="l00377"></a>00377 <span class="preprocessor"></span><span class="comment">// amount of independent component ICx in multi-component phase PHx in T1 node nodex</span>
+<a name="l00378"></a>00378 <span class="preprocessor">#define node1_bPS( nodex, PHx, ICx ) ( TNodeArray::na-&gt;pNodT1()[(nodex)]-&gt;bPS[ \</span>
+<a name="l00379"></a>00379 <span class="preprocessor">                                       (PHx)*TNodeArray::na-&gt;pCSD()-&gt;nICb+(ICx)])</span>
+<a name="l00380"></a>00380 <span class="preprocessor"></span>
+<a name="l00381"></a>00381 <span class="comment">// amount of independent component ICx in single-component phase PHx in T0 node nodex</span>
+<a name="l00382"></a>00382 <span class="preprocessor">#define node0_bPH( nodex, PHx, ICx )  (TNodeArray::na-&gt;get_bPH( 0, (nodex), (PHx), (ICx)))</span>
+<a name="l00383"></a>00383 <span class="preprocessor"></span><span class="comment">// amount of independent component ICx in single-component phase PHx in T1 node nodex</span>
+<a name="l00384"></a>00384 <span class="preprocessor">#define node1_bPH( nodex, PHx, ICx )  (TNodeArray::na-&gt;get_bPH( 1, (nodex), (PHx), (ICx)))</span>
+<a name="l00385"></a>00385 <span class="preprocessor"></span>
+<a name="l00386"></a>00386 <span class="preprocessor">#endif   // _nodearray_h_</span>
+<a name="l00387"></a>00387 <span class="preprocessor"></span>
+<a name="l00388"></a>00388 <span class="comment">// end nodearray.h</span>
 </pre></div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Oct 22 2012 21:04:42 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

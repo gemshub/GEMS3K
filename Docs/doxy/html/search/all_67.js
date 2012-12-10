@@ -13,7 +13,7 @@ var searchData=
   ['gdatastream_2eh',['gdatastream.h',['../gdatastream_8h.html',1,'']]],
   ['gem_5fcalctime',['GEM_CalcTime',['../class_t_node.html#ae804bf27317fe1861aa0b3a25ce6d348',1,'TNode']]],
   ['gem_5ffrom_5fmt',['GEM_from_MT',['../class_t_node.html#abfc9b81781189f20f95aed5f97589858',1,'TNode::GEM_from_MT(long int p_NodeHandle, long int p_NodeStatusCH, double p_TK, double p_P, double p_Vs, double p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH)'],['../class_t_node.html#ac5b74648a0e63987192e11f2e23f75ae',1,'TNode::GEM_from_MT(long int p_NodeHandle, long int p_NodeStatusCH, double p_TK, double p_P, double p_Vs, double p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH, double *p_xDC)'],['../class_t_node.html#ae742c95f26391b60770efc792e6aa97d',1,'TNode::GEM_from_MT(long int p_NodeHandle, long int p_NodeStatusCH, double p_TK, double p_P, double p_Vs, double p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH, double *p_xDC, double *p_gam)']]],
-  ['gem_5finit',['GEM_init',['../class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071',1,'TNode']]],
+  ['gem_5finit',['GEM_init',['../class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94',1,'TNode']]],
   ['gem_5fipm',['GEM_IPM',['../class_t_multi.html#a6b8d1a27f84d3f707fa6d1cba1c3c2d5',1,'TMulti']]],
   ['gem_5fipm_5finit',['GEM_IPM_Init',['../class_t_multi.html#a7d1123d2f2f13c244eccbe649afa93f9',1,'TMulti']]],
   ['gem_5fipm_5finitialapproximation',['GEM_IPM_InitialApproximation',['../class_t_multi.html#a3a94652d7d7d01f34b4806fa6626a556',1,'TMulti']]],

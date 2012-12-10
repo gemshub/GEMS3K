@@ -94,7 +94,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <a href="ms__multi_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: ms_multi.h 729 2012-10-03 18:34:10Z ext_wagner_t $</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: ms_multi.h 756 2012-11-05 13:59:16Z kosakowski $</span>
 <a name="l00003"></a>00003 <span class="comment">//</span>
 <a name="l00007"></a>00007 <span class="comment"></span><span class="comment">//</span>
 <a name="l00010"></a>00010 <span class="comment"></span><span class="comment">//</span>
@@ -809,43 +809,44 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a name="l00727"></a>00727 
 <a name="l00728"></a>00728 } NUM_POTENTIALS;
 <a name="l00729"></a>00729 
-<a name="l00730"></a>00730 <span class="keywordtype">double</span> A_P( <span class="keywordtype">double</span> x, <span class="keywordtype">double</span> x2=0.);
-<a name="l00731"></a>00731 <span class="keywordtype">double</span> U_TP( <span class="keywordtype">double</span> TC, <span class="keywordtype">double</span> P);
-<a name="l00732"></a>00732 
+<a name="l00730"></a>00730 <span class="comment">// kg44: this is not correctly implemented!! </span>
+<a name="l00731"></a>00731 <span class="comment">//double A_P( double x, double x2=0.);</span>
+<a name="l00732"></a>00732 <span class="comment">//double U_TP( double TC, double P);</span>
 <a name="l00733"></a>00733 
-<a name="l00734"></a>00734 <span class="keyword">typedef</span> <span class="keyword">enum</span> {  <span class="comment">// Field index into outField structure</span>
-<a name="l00735"></a>00735   f_pa_PE = 0,  f_PV,  f_PSOL,  f_PAalp,  f_PSigm,
-<a name="l00736"></a>00736   f_Lads,  f_FIa,  f_FIat
-<a name="l00737"></a>00737 } MULTI_STATIC_FIELDS;
-<a name="l00738"></a>00738 
-<a name="l00739"></a>00739 <span class="keyword">typedef</span> <span class="keyword">enum</span> {  <span class="comment">// Field index into outField structure</span>
-<a name="l00740"></a>00740   f_sMod = 0,  f_LsMod,  f_LsMdc,  f_B,  f_DCCW,
-<a name="l00741"></a>00741   f_Pparc,  f_fDQF,  f_lnGmf,  f_RLC,  f_RSC,
-<a name="l00742"></a>00742   f_DLL,  f_DUL,  f_Aalp,  f_Sigw,  f_Sigg,
-<a name="l00743"></a>00743   f_YOF,  f_Nfsp,  f_MASDT,  f_C1,  f_C2,
-<a name="l00744"></a>00744   f_C3,  f_pCh,  f_SATX,  f_MASDJ,  f_SCM,
-<a name="l00745"></a>00745   f_SACT,  f_DCads,
-<a name="l00746"></a>00746 <span class="comment">// static</span>
-<a name="l00747"></a>00747   f_pa_DB,  f_pa_DHB,  f_pa_EPS,  f_pa_DK,  f_pa_DF,
-<a name="l00748"></a>00748   f_pa_DP,  f_pa_IIM,  f_pa_PD,  f_pa_PRD,  f_pa_AG,
-<a name="l00749"></a>00749   f_pa_DGC,  f_pa_PSM,  f_pa_GAR,  f_pa_GAH,  f_pa_DS,
-<a name="l00750"></a>00750   f_pa_XwMin,  f_pa_ScMin,  f_pa_DcMin,  f_pa_PhMin,  f_pa_ICmin,
-<a name="l00751"></a>00751   f_pa_PC,  f_pa_DFM,  f_pa_DFYw,  f_pa_DFYaq,  f_pa_DFYid,
-<a name="l00752"></a>00752   f_pa_DFYr,  f_pa_DFYh,  f_pa_DFYc,  f_pa_DFYs,  f_pa_DW,
-<a name="l00753"></a>00753   f_pa_DT,  f_pa_GAS,  f_pa_DG,  f_pa_DNS,  f_pa_IEPS,
-<a name="l00754"></a>00754   f_pKin,  f_pa_DKIN,  f_mui,  f_muk,  f_muj,
-<a name="l00755"></a>00755   f_pa_PLLG,  f_tMin,  f_dcMod
-<a name="l00756"></a>00756 } MULTI_DYNAMIC_FIELDS;
-<a name="l00757"></a>00757 
+<a name="l00734"></a>00734 
+<a name="l00735"></a>00735 <span class="keyword">typedef</span> <span class="keyword">enum</span> {  <span class="comment">// Field index into outField structure</span>
+<a name="l00736"></a>00736   f_pa_PE = 0,  f_PV,  f_PSOL,  f_PAalp,  f_PSigm,
+<a name="l00737"></a>00737   f_Lads,  f_FIa,  f_FIat
+<a name="l00738"></a>00738 } MULTI_STATIC_FIELDS;
+<a name="l00739"></a>00739 
+<a name="l00740"></a>00740 <span class="keyword">typedef</span> <span class="keyword">enum</span> {  <span class="comment">// Field index into outField structure</span>
+<a name="l00741"></a>00741   f_sMod = 0,  f_LsMod,  f_LsMdc,  f_B,  f_DCCW,
+<a name="l00742"></a>00742   f_Pparc,  f_fDQF,  f_lnGmf,  f_RLC,  f_RSC,
+<a name="l00743"></a>00743   f_DLL,  f_DUL,  f_Aalp,  f_Sigw,  f_Sigg,
+<a name="l00744"></a>00744   f_YOF,  f_Nfsp,  f_MASDT,  f_C1,  f_C2,
+<a name="l00745"></a>00745   f_C3,  f_pCh,  f_SATX,  f_MASDJ,  f_SCM,
+<a name="l00746"></a>00746   f_SACT,  f_DCads,
+<a name="l00747"></a>00747 <span class="comment">// static</span>
+<a name="l00748"></a>00748   f_pa_DB,  f_pa_DHB,  f_pa_EPS,  f_pa_DK,  f_pa_DF,
+<a name="l00749"></a>00749   f_pa_DP,  f_pa_IIM,  f_pa_PD,  f_pa_PRD,  f_pa_AG,
+<a name="l00750"></a>00750   f_pa_DGC,  f_pa_PSM,  f_pa_GAR,  f_pa_GAH,  f_pa_DS,
+<a name="l00751"></a>00751   f_pa_XwMin,  f_pa_ScMin,  f_pa_DcMin,  f_pa_PhMin,  f_pa_ICmin,
+<a name="l00752"></a>00752   f_pa_PC,  f_pa_DFM,  f_pa_DFYw,  f_pa_DFYaq,  f_pa_DFYid,
+<a name="l00753"></a>00753   f_pa_DFYr,  f_pa_DFYh,  f_pa_DFYc,  f_pa_DFYs,  f_pa_DW,
+<a name="l00754"></a>00754   f_pa_DT,  f_pa_GAS,  f_pa_DG,  f_pa_DNS,  f_pa_IEPS,
+<a name="l00755"></a>00755   f_pKin,  f_pa_DKIN,  f_mui,  f_muk,  f_muj,
+<a name="l00756"></a>00756   f_pa_PLLG,  f_tMin,  f_dcMod
+<a name="l00757"></a>00757 } MULTI_DYNAMIC_FIELDS;
 <a name="l00758"></a>00758 
 <a name="l00759"></a>00759 
-<a name="l00760"></a>00760 <span class="preprocessor">#endif   //_ms_multi_h</span>
-<a name="l00761"></a>00761 <span class="preprocessor"></span>
+<a name="l00760"></a>00760 
+<a name="l00761"></a>00761 <span class="preprocessor">#endif   //_ms_multi_h</span>
+<a name="l00762"></a>00762 <span class="preprocessor"></span>
 </pre></div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Oct 22 2012 21:04:42 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

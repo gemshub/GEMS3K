@@ -30,6 +30,7 @@ var searchData=
   ['init_5ffunk',['INIT_FUNK',['../databr_8h.html#a5047cbfad0b49c9f1c7a57ddbee2009aaa79c9e47792ed329f1c68f8da85f0f4e',1,'databr.h']]],
   ['init_5fmultisite',['init_multisite',['../class_t_sol_mod.html#ae599fdac05c4ed1080f781733095376a',1,'TSolMod']]],
   ['initalizegem_5fipm_5fdata',['InitalizeGEM_IPM_Data',['../class_t_multi.html#a11854dd39bbc3530debddde81bc94c42',1,'TMulti']]],
+  ['initnodearray',['InitNodeArray',['../class_t_node_array.html#ad9ad56a4ccdbbff2fb352139e52bbabd',1,'TNodeArray']]],
   ['inode',['iNode',['../class_t_node_array.html#acfce3177a410321a63154bdc9a0d563d',1,'TNodeArray']]],
   ['interiorpointsmethod',['InteriorPointsMethod',['../class_t_multi.html#ae0ce862b92fb59c63df3badc9a0c0eb1',1,'TMulti']]],
   ['internalenergy',['InternalEnergy',['../class_t_multi.html#a12af02446fdc8df715cc57f4a348415a',1,'TMulti']]],

@@ -129,6 +129,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:acb6d2814c2d60bafc96ee4ca4fae3df0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes long field to a text file.  <a href="#acb6d2814c2d60bafc96ee4ca4fae3df0"></a><br/></td></tr>
 <tr class="memitem:a8d7569482675766215a12350a2c9db05"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_print_arrays.html#a8d7569482675766215a12350a2c9db05">writeField</a> (long f_num, short value, bool with_comments, bool brief_mode)</td></tr>
 <tr class="memdesc:a8d7569482675766215a12350a2c9db05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes short field to a text file.  <a href="#a8d7569482675766215a12350a2c9db05"></a><br/></td></tr>
+<tr class="memitem:add042269e44b4be252759e73b9c1e383"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_print_arrays.html#add042269e44b4be252759e73b9c1e383">writeField</a> (long f_num, char value, bool with_comments, bool brief_mode)</td></tr>
+<tr class="memdesc:add042269e44b4be252759e73b9c1e383"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes char field to a text file.  <a href="#add042269e44b4be252759e73b9c1e383"></a><br/></td></tr>
 <tr class="memitem:a5f91ae16920c14667db0639e392d71cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_print_arrays.html#a5f91ae16920c14667db0639e392d71cc">writeField</a> (long f_num, double value, bool with_comments, bool brief_mode)</td></tr>
 <tr class="memdesc:a5f91ae16920c14667db0639e392d71cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes double field to a text file.  <a href="#a5f91ae16920c14667db0639e392d71cc"></a><br/></td></tr>
 <tr class="memitem:aaa28ecdf8301c07edb0c47be0c246fc8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8">writeArray</a> (long f_num, double *arr, long int size, long int l_size, bool with_comments=false, bool brief_mode=false)</td></tr>
@@ -575,6 +577,55 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 </div>
 </div>
+<a class="anchor" id="add042269e44b4be252759e73b9c1e383"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0">TPrintArrays::writeField</a> </td>
+          <td>(</td>
+          <td class="paramtype">long&#160;</td>
+          <td class="paramname"><em>f_num</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>with_comments</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>brief_mode</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Writes char field to a text file. </p>
+<p>&lt;flds[f_num].name&gt; 'value' </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">with_comments</td><td>- Write files with comments for all data entries </td></tr>
+    <tr><td class="paramname">brief_mode</td><td>- Do not write data items that contain only default values </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a5f91ae16920c14667db0639e392d71cc"></a>
 <div class="memitem">
 <div class="memproto">
@@ -632,7 +683,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Oct 22 2012 21:04:43 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:29 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>
