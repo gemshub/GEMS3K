@@ -280,8 +280,9 @@ class TProfil : public TCModule
     TMulti* multi;
 
     bool newRecord;
-//    int pll;
-//    double FXold;
+    // new 12.12.12 data to Project record
+    char *internalBufer;  // text bufer for internal Project settings
+                          // (now only for built-in TDB)
 
     // to compare with old Project
     bool comp_change_all;
