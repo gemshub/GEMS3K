@@ -72,7 +72,11 @@ void TGEM2MT::RecCalc()
       if( mtp->PsVTK != S_OFF )
       {
          if( !DirExists( pathVTK.c_str() ) )
-                 mkdir( pathVTK.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH/*0755*/ );
+#ifndef _UWIN
+            mkdir( pathVTK.c_str() );
+#else
+             mkdir( pathVTK.c_str(), 0755 );
+#endif
        // vfMakeDirectory(window(), pathVTK.c_str() );
       }
 
