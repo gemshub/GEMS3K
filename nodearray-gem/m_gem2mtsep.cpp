@@ -72,7 +72,7 @@ void TGEM2MT::RecCalc()
       if( mtp->PsVTK != S_OFF )
       {
          if( !DirExists( pathVTK.c_str() ) )
-#ifndef _UWIN
+#ifndef  __unix
             mkdir( pathVTK.c_str() );
 #else
              mkdir( pathVTK.c_str(), 0755 );
