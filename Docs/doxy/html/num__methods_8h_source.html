@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<title>Gems3k: C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h Source File</title>
+<title>Gems3k: /Users/kulik/DevGEMS/trunk/standalone/GEMS3K/num_methods.h Source File</title>
 
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
@@ -25,14 +25,12 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -92,170 +90,178 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div class="header">
   <div class="headertitle">
-<div class="title">C:/DevelGEMS/trunk/standalone/GEMS3K/num_methods.h</div>  </div>
+<div class="title">/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/num_methods.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: num_methods.h 678 2012-05-24 14:40:29Z dmitrieva $</span>
+<a href="num__methods_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: num_methods.h 725 2012-10-02 15:43:37Z kulik $</span>
 <a name="l00003"></a>00003 <span class="comment">//</span>
-<a name="l00004"></a>00004 <span class="comment">// C/C++ Numerical Methods used in GEMS-PSI and GEMS3K</span>
-<a name="l00005"></a>00005 <span class="comment">// (c) 2006,2011 S.Dmytriyeva, D.Kulik</span>
-<a name="l00006"></a>00006 <span class="comment">//</span>
-<a name="l00007"></a>00007 <span class="comment">// This file is part of a GEM-Selektor library for thermodynamic</span>
-<a name="l00008"></a>00008 <span class="comment">// modelling by Gibbs energy minimization and of the GEMS3K code</span>
+<a name="l00006"></a>00006 <span class="comment"></span><span class="comment">//</span>
+<a name="l00007"></a>00007 <span class="comment">// Copyright (C) 2006-2012 S.Dmytriyeva, D.Kulik</span>
+<a name="l00008"></a>00008 <span class="comment">// &lt;GEMS Development Team, mailto:gems2.support@psi.ch&gt;</span>
 <a name="l00009"></a>00009 <span class="comment">//</span>
-<a name="l00010"></a>00010 <span class="comment">// This file may be distributed under the terms of the GEMS-PSI</span>
-<a name="l00011"></a>00011 <span class="comment">// QA Licence (GEMSPSI.QAL)</span>
+<a name="l00010"></a>00010 <span class="comment">// This file is part of the GEMS3K code for thermodynamic modelling</span>
+<a name="l00011"></a>00011 <span class="comment">// by Gibbs energy minimization &lt;http://gems.web.psi.ch/GEMS3K/&gt;</span>
 <a name="l00012"></a>00012 <span class="comment">//</span>
-<a name="l00013"></a>00013 <span class="comment">// See http://gems.web.psi.ch/ for more information</span>
-<a name="l00014"></a>00014 <span class="comment">// E-mail: gems2.support@psi.ch</span>
-<a name="l00015"></a>00015 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00016"></a>00016 
-<a name="l00017"></a>00017 <span class="preprocessor">#ifndef _num_methods_h_</span>
-<a name="l00018"></a>00018 <span class="preprocessor"></span><span class="preprocessor">#define _num_methods_h_</span>
-<a name="l00019"></a>00019 <span class="preprocessor"></span>
-<a name="l00020"></a>00020 <span class="preprocessor">#include &lt;cmath&gt;</span>
-<a name="l00021"></a>00021 
-<a name="l00022"></a>00022 <span class="comment">// Calculate number of points from iterators</span>
-<a name="l00023"></a>00023 <span class="keywordtype">long</span> <span class="keywordtype">int</span>  getNpoints( <span class="keywordtype">double</span> Tai[4] );
-<a name="l00024"></a>00024 <span class="keywordtype">double</span>    getStep( <span class="keywordtype">double</span> *Tai, <span class="keywordtype">int</span> nPoints );
-<a name="l00025"></a>00025 
+<a name="l00013"></a>00013 <span class="comment">// GEMS3K is free software: you can redistribute it and/or modify</span>
+<a name="l00014"></a>00014 <span class="comment">// it under the terms of the GNU Lesser General Public License as</span>
+<a name="l00015"></a>00015 <span class="comment">// published by the Free Software Foundation, either version 3 of</span>
+<a name="l00016"></a>00016 <span class="comment">// the License, or (at your option) any later version.</span>
+<a name="l00017"></a>00017 
+<a name="l00018"></a>00018 <span class="comment">// GEMS3K is distributed in the hope that it will be useful,</span>
+<a name="l00019"></a>00019 <span class="comment">// but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<a name="l00020"></a>00020 <span class="comment">// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<a name="l00021"></a>00021 <span class="comment">// GNU Lesser General Public License for more details.</span>
+<a name="l00022"></a>00022 
+<a name="l00023"></a>00023 <span class="comment">// You should have received a copy of the GNU General Public License</span>
+<a name="l00024"></a>00024 <span class="comment">// along with GEMS3K code. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<a name="l00025"></a>00025 <span class="comment">//-------------------------------------------------------------------</span>
 <a name="l00026"></a>00026 
-<a name="l00027"></a>00027 <span class="comment">// Lagrangian interpolation functions</span>
-<a name="l00028"></a>00028 <span class="keywordtype">double</span> LagranInterp(<span class="keywordtype">float</span> *y, <span class="keywordtype">float</span> *x, <span class="keywordtype">double</span> *d, <span class="keywordtype">float</span> yoi,
-<a name="l00029"></a>00029                 <span class="keywordtype">float</span> xoi, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> pp );
-<a name="l00030"></a>00030 <span class="keywordtype">double</span> LagranInterp(<span class="keywordtype">float</span> *y, <span class="keywordtype">float</span> *x, <span class="keywordtype">float</span> *d, <span class="keywordtype">float</span> yoi,
-<a name="l00031"></a>00031                 <span class="keywordtype">float</span> xoi, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> pp );
-<a name="l00032"></a>00032 <span class="keywordtype">double</span> LagranInterp(<span class="keywordtype">double</span> *y, <span class="keywordtype">double</span> *x, <span class="keywordtype">double</span> *d, <span class="keywordtype">double</span> yoi,
-<a name="l00033"></a>00033                 <span class="keywordtype">double</span> xoi, <span class="keywordtype">long</span> <span class="keywordtype">int</span> M, <span class="keywordtype">long</span> <span class="keywordtype">int</span> N, <span class="keywordtype">long</span> <span class="keywordtype">int</span> pp );
-<a name="l00034"></a>00034 
+<a name="l00027"></a>00027 <span class="preprocessor">#ifndef _num_methods_h_</span>
+<a name="l00028"></a>00028 <span class="preprocessor"></span><span class="preprocessor">#define _num_methods_h_</span>
+<a name="l00029"></a>00029 <span class="preprocessor"></span>
+<a name="l00030"></a>00030 <span class="preprocessor">#include &lt;cmath&gt;</span>
+<a name="l00031"></a>00031 
+<a name="l00032"></a>00032 <span class="comment">// Calculate number of points from iterators</span>
+<a name="l00033"></a>00033 <span class="keywordtype">long</span> <span class="keywordtype">int</span>  <a class="code" href="num__methods_8cpp.html#a328dfa0c299ffa4b68d8264a2269d528" title="Calculate number of points from iterators.">getNpoints</a>( <span class="keywordtype">double</span> Tai[4] );
+<a name="l00034"></a>00034 <span class="keywordtype">double</span>    getStep( <span class="keywordtype">double</span> *Tai, <span class="keywordtype">int</span> nPoints );
 <a name="l00035"></a>00035 
-<a name="l00036"></a>00036 <span class="comment">// generic functions for calculating partial derivatives</span>
-<a name="l00037"></a>00037 <span class="keywordtype">double</span> quot( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv );
-<a name="l00038"></a>00038 
-<a name="l00039"></a>00039 <span class="keywordtype">double</span> quot( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> d2u, <span class="keywordtype">double</span> d2v );
-<a name="l00040"></a>00040 
-<a name="l00041"></a>00041 
-<a name="l00042"></a>00042 <span class="keywordtype">double</span> prod2( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv );
-<a name="l00043"></a>00043 
-<a name="l00044"></a>00044 <span class="keywordtype">double</span> prod2 ( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> d2u, <span class="keywordtype">double</span> d2v );
+<a name="l00036"></a>00036 
+<a name="l00037"></a>00037 <span class="comment">// Lagrangian interpolation functions</span>
+<a name="l00038"></a>00038 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#ab6b4fab86289bc03cd3bb17b937f2043" title="Interpolation over tabulated values (2D array d) using Lagrange method.">LagranInterp</a>(<span class="keywordtype">float</span> *y, <span class="keywordtype">float</span> *x, <span class="keywordtype">double</span> *d, <span class="keywordtype">float</span> yoi,
+<a name="l00039"></a>00039                 <span class="keywordtype">float</span> xoi, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> pp );
+<a name="l00040"></a>00040 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#ab6b4fab86289bc03cd3bb17b937f2043" title="Interpolation over tabulated values (2D array d) using Lagrange method.">LagranInterp</a>(<span class="keywordtype">float</span> *y, <span class="keywordtype">float</span> *x, <span class="keywordtype">float</span> *d, <span class="keywordtype">float</span> yoi,
+<a name="l00041"></a>00041                 <span class="keywordtype">float</span> xoi, <span class="keywordtype">int</span> M, <span class="keywordtype">int</span> N, <span class="keywordtype">int</span> pp );
+<a name="l00042"></a>00042 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#ab6b4fab86289bc03cd3bb17b937f2043" title="Interpolation over tabulated values (2D array d) using Lagrange method.">LagranInterp</a>(<span class="keywordtype">double</span> *y, <span class="keywordtype">double</span> *x, <span class="keywordtype">double</span> *d, <span class="keywordtype">double</span> yoi,
+<a name="l00043"></a>00043                 <span class="keywordtype">double</span> xoi, <span class="keywordtype">long</span> <span class="keywordtype">int</span> M, <span class="keywordtype">long</span> <span class="keywordtype">int</span> N, <span class="keywordtype">long</span> <span class="keywordtype">int</span> pp );
+<a name="l00044"></a>00044 
 <a name="l00045"></a>00045 
-<a name="l00046"></a>00046 
-<a name="l00047"></a>00047 <span class="keywordtype">double</span> prod3 ( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> w, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> dw );
+<a name="l00046"></a>00046 <span class="comment">// generic functions for calculating partial derivatives</span>
+<a name="l00047"></a>00047 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#a6396aba7b2efadd6f525e7d3663f37e1" title="1st partial derivative of quotient of two functions">quot</a>( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv );
 <a name="l00048"></a>00048 
-<a name="l00049"></a>00049 <span class="keywordtype">double</span> prod3 ( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> w, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> dw,
-<a name="l00050"></a>00050                 <span class="keywordtype">double</span> d2u, <span class="keywordtype">double</span> d2v, <span class="keywordtype">double</span> d2w );
+<a name="l00049"></a>00049 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#a6396aba7b2efadd6f525e7d3663f37e1" title="1st partial derivative of quotient of two functions">quot</a>( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> d2u, <span class="keywordtype">double</span> d2v );
+<a name="l00050"></a>00050 
 <a name="l00051"></a>00051 
-<a name="l00052"></a>00052 
-<a name="l00053"></a>00053 <span class="keyword">typedef</span> double (*minFunction)(<span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y );
-<a name="l00054"></a>00054 
-<a name="l00056"></a><a class="code" href="struct_golden_section_data.html">00056</a> <span class="keyword">struct </span><a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a>
-<a name="l00057"></a>00057 {
-<a name="l00058"></a>00058     <span class="keywordtype">double</span> Fa;
-<a name="l00059"></a>00059     <span class="keywordtype">double</span> Fb;
-<a name="l00060"></a>00060     <span class="keywordtype">double</span> Fx1;
-<a name="l00061"></a>00061     <span class="keywordtype">double</span> Fx2;
-<a name="l00062"></a>00062     <span class="keywordtype">double</span> a;
-<a name="l00063"></a>00063     <span class="keywordtype">double</span> b;
-<a name="l00064"></a>00064     <span class="keywordtype">double</span> x1;
-<a name="l00065"></a>00065     <span class="keywordtype">double</span> x2;
-<a name="l00066"></a>00066     <span class="keywordtype">double</span> Xtol;
-<a name="l00067"></a>00067 
-<a name="l00068"></a>00068 
-<a name="l00069"></a>00069     <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a>( <span class="keywordtype">double</span> xstart, <span class="keywordtype">double</span> xend, <span class="keywordtype">double</span> Xtol_)
-<a name="l00070"></a>00070     {
-<a name="l00071"></a>00071       Xtol = Xtol_;
-<a name="l00072"></a>00072       x1 = xstart;
-<a name="l00073"></a>00073       x2 = xend;
-<a name="l00074"></a>00074       a = min( x1, x2 );
-<a name="l00075"></a>00075       b = max( x1, x2 );
-<a name="l00076"></a>00076    }
+<a name="l00052"></a>00052 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#a688fba765c4a5abc1e4d1b81b82db114" title="1st partial derivative of product of two functions">prod2</a>( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv );
+<a name="l00053"></a>00053 
+<a name="l00054"></a>00054 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#a688fba765c4a5abc1e4d1b81b82db114" title="1st partial derivative of product of two functions">prod2</a> ( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> d2u, <span class="keywordtype">double</span> d2v );
+<a name="l00055"></a>00055 
+<a name="l00056"></a>00056 
+<a name="l00057"></a>00057 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#a06ccd3a87d9dcadc79a756881374e250" title="1st partial derivative of product of three functions">prod3</a> ( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> w, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> dw );
+<a name="l00058"></a>00058 
+<a name="l00059"></a>00059 <span class="keywordtype">double</span> <a class="code" href="num__methods_8cpp.html#a06ccd3a87d9dcadc79a756881374e250" title="1st partial derivative of product of three functions">prod3</a> ( <span class="keywordtype">double</span> u, <span class="keywordtype">double</span> v, <span class="keywordtype">double</span> w, <span class="keywordtype">double</span> du, <span class="keywordtype">double</span> dv, <span class="keywordtype">double</span> dw,
+<a name="l00060"></a>00060                 <span class="keywordtype">double</span> d2u, <span class="keywordtype">double</span> d2v, <span class="keywordtype">double</span> d2w );
+<a name="l00061"></a>00061 
+<a name="l00062"></a>00062 
+<a name="l00063"></a>00063 <span class="keyword">typedef</span> double (*minFunction)(<span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y );
+<a name="l00064"></a>00064 
+<a name="l00066"></a><a class="code" href="struct_golden_section_data.html">00066</a> <span class="keyword">struct </span><a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a>
+<a name="l00067"></a>00067 {
+<a name="l00068"></a>00068     <span class="keywordtype">double</span> Fa;
+<a name="l00069"></a>00069     <span class="keywordtype">double</span> Fb;
+<a name="l00070"></a>00070     <span class="keywordtype">double</span> Fx1;
+<a name="l00071"></a>00071     <span class="keywordtype">double</span> Fx2;
+<a name="l00072"></a>00072     <span class="keywordtype">double</span> a;
+<a name="l00073"></a>00073     <span class="keywordtype">double</span> b;
+<a name="l00074"></a>00074     <span class="keywordtype">double</span> x1;
+<a name="l00075"></a>00075     <span class="keywordtype">double</span> x2;
+<a name="l00076"></a>00076     <span class="keywordtype">double</span> Xtol;
 <a name="l00077"></a>00077 
-<a name="l00078"></a>00078  };
-<a name="l00079"></a>00079 
-<a name="l00080"></a>00080 
-<a name="l00083"></a><a class="code" href="class_golden_section.html">00083</a> <span class="keyword">class </span><a class="code" href="class_golden_section.html" title="Class for minimization of convex one parameter function ( f(x)=&gt;0 ) Method of Gold Selection...">GoldenSection</a>
-<a name="l00084"></a>00084 {
-<a name="l00085"></a>00085 <span class="keyword">protected</span>:
-<a name="l00086"></a>00086 
-<a name="l00087"></a>00087   <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a> dat1;
-<a name="l00088"></a>00088   <span class="keywordtype">double</span> Ftol;
-<a name="l00089"></a>00089   minFunction minF;
+<a name="l00078"></a>00078 
+<a name="l00079"></a>00079     <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a>( <span class="keywordtype">double</span> xstart, <span class="keywordtype">double</span> xend, <span class="keywordtype">double</span> Xtol_)
+<a name="l00080"></a>00080     {
+<a name="l00081"></a>00081       Xtol = Xtol_;
+<a name="l00082"></a>00082       x1 = xstart;
+<a name="l00083"></a>00083       x2 = xend;
+<a name="l00084"></a>00084       a = min( x1, x2 );
+<a name="l00085"></a>00085       b = max( x1, x2 );
+<a name="l00086"></a>00086    }
+<a name="l00087"></a>00087 
+<a name="l00088"></a>00088  };
+<a name="l00089"></a>00089 
 <a name="l00090"></a>00090 
-<a name="l00091"></a>00091 <span class="keyword">public</span>:
-<a name="l00092"></a>00092 
-<a name="l00095"></a><a class="code" href="class_golden_section.html#afb99f039279f7b46467826249fe306e3">00095</a>   <a class="code" href="class_golden_section.html#afb99f039279f7b46467826249fe306e3" title="Golden Selection in interval x1 to x2, to minimize function f_proc xtol, ftol tolerance for the param...">GoldenSection</a>( <span class="keywordtype">double</span> x1, <span class="keywordtype">double</span> x2, <span class="keywordtype">double</span> xtol, <span class="keywordtype">double</span> ftol,
-<a name="l00096"></a>00096                    <span class="keywordtype">double</span> (f_proc)(<span class="keywordtype">double</span> val, <span class="keywordtype">double</span> val2 )):
-<a name="l00097"></a>00097    dat1(x1,x2,xtol),Ftol(ftol)
-<a name="l00098"></a>00098   {
-<a name="l00099"></a>00099     minF = f_proc;
-<a name="l00100"></a>00100   }
-<a name="l00101"></a>00101 
-<a name="l00102"></a>00102   <span class="keyword">virtual</span> <span class="keywordtype">double</span> calcFunction( <span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y )
-<a name="l00103"></a>00103   {
-<a name="l00104"></a>00104       <span class="keywordflow">return</span> minF( x, y );
-<a name="l00105"></a>00105   }
-<a name="l00106"></a>00106 
-<a name="l00107"></a>00107   <span class="keyword">virtual</span> <span class="keywordtype">double</span> getMinimum( <span class="keywordtype">double</span> val2=0 )
+<a name="l00093"></a><a class="code" href="class_golden_section.html">00093</a> <span class="keyword">class </span><a class="code" href="class_golden_section.html" title="Class for minimization of convex one parameter function ( f(x)=&gt;0 ) Method of Gold Selection...">GoldenSection</a>
+<a name="l00094"></a>00094 {
+<a name="l00095"></a>00095 <span class="keyword">protected</span>:
+<a name="l00096"></a>00096 
+<a name="l00097"></a>00097   <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a> dat1;
+<a name="l00098"></a>00098   <span class="keywordtype">double</span> Ftol;
+<a name="l00099"></a>00099   minFunction minF;
+<a name="l00100"></a>00100 
+<a name="l00101"></a>00101 <span class="keyword">public</span>:
+<a name="l00102"></a>00102 
+<a name="l00105"></a><a class="code" href="class_golden_section.html#afb99f039279f7b46467826249fe306e3">00105</a>   <a class="code" href="class_golden_section.html#afb99f039279f7b46467826249fe306e3" title="Golden Selection in interval x1 to x2, to minimize function f_proc xtol, ftol tolerance for the param...">GoldenSection</a>( <span class="keywordtype">double</span> x1, <span class="keywordtype">double</span> x2, <span class="keywordtype">double</span> xtol, <span class="keywordtype">double</span> ftol,
+<a name="l00106"></a>00106                    <span class="keywordtype">double</span> (f_proc)(<span class="keywordtype">double</span> val, <span class="keywordtype">double</span> val2 )):
+<a name="l00107"></a>00107    dat1(x1,x2,xtol),Ftol(ftol)
 <a name="l00108"></a>00108   {
-<a name="l00109"></a>00109      <span class="keywordflow">return</span> <a class="code" href="class_golden_section.html#af4f5b7584ccac853ef0cc0426f68c042" title="Method of Golden Section 1D and 2D (reimplemented) xstart, xend, xtol, parameter x - start...">getMinimumDat</a>( dat1, val2 );
+<a name="l00109"></a>00109     minF = f_proc;
 <a name="l00110"></a>00110   }
 <a name="l00111"></a>00111 
-<a name="l00112"></a>00112   <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="class_golden_section.html#af4f5b7584ccac853ef0cc0426f68c042" title="Method of Golden Section 1D and 2D (reimplemented) xstart, xend, xtol, parameter x - start...">getMinimumDat</a>( <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a> dat, <span class="keywordtype">double</span> val2 );
-<a name="l00113"></a>00113 
-<a name="l00114"></a>00114 };
-<a name="l00115"></a>00115 
-<a name="l00118"></a><a class="code" href="class_golden_section_two.html">00118</a> <span class="keyword">class </span><a class="code" href="class_golden_section_two.html" title="Class for minimization of convex two parameter function ( f(x,y)=&gt;0 ) Method of Gold Selection...">GoldenSectionTwo</a> : <span class="keyword">public</span> <a class="code" href="class_golden_section.html" title="Class for minimization of convex one parameter function ( f(x)=&gt;0 ) Method of Gold Selection...">GoldenSection</a>
-<a name="l00119"></a>00119 {
-<a name="l00120"></a>00120   <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a> dat2;
-<a name="l00121"></a>00121   <span class="keywordtype">int</span> nOperand;   <span class="comment">// minimization for first or second parameter</span>
-<a name="l00122"></a>00122   <span class="keywordtype">double</span> minX;
-<a name="l00123"></a>00123   <span class="keywordtype">double</span> minY;
-<a name="l00124"></a>00124 
-<a name="l00125"></a>00125 <span class="keyword">public</span>:
-<a name="l00126"></a>00126 
-<a name="l00129"></a><a class="code" href="class_golden_section_two.html#a8f9c651d48f2043f42374a15d86723fe">00129</a>   <a class="code" href="class_golden_section_two.html#a8f9c651d48f2043f42374a15d86723fe" title="Golden Selection in intervals x1 to x2, y1 to y2 to minimize function f_proc xtol, ytol, ftol tolerance for the parameters and function.">GoldenSectionTwo</a>( <span class="keywordtype">double</span> x1, <span class="keywordtype">double</span> x2, <span class="keywordtype">double</span> xtol,
-<a name="l00130"></a>00130                       <span class="keywordtype">double</span> y1, <span class="keywordtype">double</span> y2, <span class="keywordtype">double</span> ytol,
-<a name="l00131"></a>00131                       <span class="keywordtype">double</span> ftol, <span class="keywordtype">double</span> (f_proc)(<span class="keywordtype">double</span> val, <span class="keywordtype">double</span> val2 )):
-<a name="l00132"></a>00132   <a class="code" href="class_golden_section.html" title="Class for minimization of convex one parameter function ( f(x)=&gt;0 ) Method of Gold Selection...">GoldenSection</a>( x1, x2, xtol, ftol, f_proc),  dat2(y1,y2,ytol)
-<a name="l00133"></a>00133   {}
+<a name="l00112"></a>00112   <span class="keyword">virtual</span> <span class="keywordtype">double</span> calcFunction( <span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y )
+<a name="l00113"></a>00113   {
+<a name="l00114"></a>00114       <span class="keywordflow">return</span> minF( x, y );
+<a name="l00115"></a>00115   }
+<a name="l00116"></a>00116 
+<a name="l00117"></a>00117   <span class="keyword">virtual</span> <span class="keywordtype">double</span> getMinimum( <span class="keywordtype">double</span> val2=0 )
+<a name="l00118"></a>00118   {
+<a name="l00119"></a>00119      <span class="keywordflow">return</span> <a class="code" href="class_golden_section.html#af4f5b7584ccac853ef0cc0426f68c042" title="Method of Golden Section 1D and 2D (reimplemented) xstart, xend, xtol, parameter x - start...">getMinimumDat</a>( dat1, val2 );
+<a name="l00120"></a>00120   }
+<a name="l00121"></a>00121 
+<a name="l00122"></a>00122   <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="class_golden_section.html#af4f5b7584ccac853ef0cc0426f68c042" title="Method of Golden Section 1D and 2D (reimplemented) xstart, xend, xtol, parameter x - start...">getMinimumDat</a>( <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a> dat, <span class="keywordtype">double</span> val2 );
+<a name="l00123"></a>00123 
+<a name="l00124"></a>00124 };
+<a name="l00125"></a>00125 
+<a name="l00128"></a><a class="code" href="class_golden_section_two.html">00128</a> <span class="keyword">class </span><a class="code" href="class_golden_section_two.html" title="Class for minimization of convex two parameter function ( f(x,y)=&gt;0 ) Method of Gold Selection...">GoldenSectionTwo</a> : <span class="keyword">public</span> <a class="code" href="class_golden_section.html" title="Class for minimization of convex one parameter function ( f(x)=&gt;0 ) Method of Gold Selection...">GoldenSection</a>
+<a name="l00129"></a>00129 {
+<a name="l00130"></a>00130   <a class="code" href="struct_golden_section_data.html" title="Data for minimization of convex one parameter function ( f(x)=&gt;0 )">GoldenSectionData</a> dat2;
+<a name="l00131"></a>00131   <span class="keywordtype">int</span> nOperand;   <span class="comment">// minimization for first or second parameter</span>
+<a name="l00132"></a>00132   <span class="keywordtype">double</span> minX;
+<a name="l00133"></a>00133   <span class="keywordtype">double</span> minY;
 <a name="l00134"></a>00134 
-<a name="l00135"></a>00135   <span class="keywordtype">double</span> calcFunction( <span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y );
-<a name="l00136"></a>00136   <span class="keywordtype">double</span> getMinimum( <span class="keywordtype">double</span> val2=0 );
-<a name="l00137"></a>00137 
-<a name="l00138"></a>00138   <span class="keywordtype">double</span> getMinX()
-<a name="l00139"></a>00139   { <span class="keywordflow">return</span> minX; }
-<a name="l00140"></a>00140   <span class="keywordtype">double</span> getMinY()
-<a name="l00141"></a>00141   { <span class="keywordflow">return</span> minY; }
-<a name="l00142"></a>00142 
-<a name="l00143"></a>00143 };
+<a name="l00135"></a>00135 <span class="keyword">public</span>:
+<a name="l00136"></a>00136 
+<a name="l00139"></a><a class="code" href="class_golden_section_two.html#a8f9c651d48f2043f42374a15d86723fe">00139</a>   <a class="code" href="class_golden_section_two.html#a8f9c651d48f2043f42374a15d86723fe" title="Golden Selection in intervals x1 to x2, y1 to y2 to minimize function f_proc xtol, ytol, ftol tolerance for the parameters and function.">GoldenSectionTwo</a>( <span class="keywordtype">double</span> x1, <span class="keywordtype">double</span> x2, <span class="keywordtype">double</span> xtol,
+<a name="l00140"></a>00140                       <span class="keywordtype">double</span> y1, <span class="keywordtype">double</span> y2, <span class="keywordtype">double</span> ytol,
+<a name="l00141"></a>00141                       <span class="keywordtype">double</span> ftol, <span class="keywordtype">double</span> (f_proc)(<span class="keywordtype">double</span> val, <span class="keywordtype">double</span> val2 )):
+<a name="l00142"></a>00142   <a class="code" href="class_golden_section.html" title="Class for minimization of convex one parameter function ( f(x)=&gt;0 ) Method of Gold Selection...">GoldenSection</a>( x1, x2, xtol, ftol, f_proc),  dat2(y1,y2,ytol)
+<a name="l00143"></a>00143   {}
 <a name="l00144"></a>00144 
-<a name="l00145"></a>00145 
-<a name="l00146"></a>00146 <span class="comment">// Golden Selection in interval x1 to x2, to minimize function f_proc</span>
-<a name="l00147"></a>00147 <span class="comment">//double GoldenSection( double x1, double x2, double xtol, double ftol,</span>
-<a name="l00148"></a>00148 <span class="comment">//                        double val2, double (f_proc)(double val, double val2 ));</span>
-<a name="l00149"></a>00149 <span class="comment">// Method of Gold Selection for two parameters</span>
-<a name="l00150"></a>00150 <span class="comment">//   ystart, yend, ytol,  parameter y    - start, end, tolerance</span>
-<a name="l00151"></a>00151 <span class="comment">//   xstart, xend, xtol,  parameter x    - start, end, tolerance</span>
-<a name="l00152"></a>00152 <span class="comment">//   ftol  function tolerance</span>
-<a name="l00153"></a>00153 <span class="comment">//   ymin and xmin return values</span>
-<a name="l00154"></a>00154 <span class="comment">//   f_proc function to minimize ( f( y, x)=&gt;0 )</span>
-<a name="l00155"></a>00155 <span class="comment">//void GoldenSection2( double ystart, double yend, double Ytol,</span>
-<a name="l00156"></a>00156 <span class="comment">//                       double xstart, double xend, double Xtol,</span>
-<a name="l00157"></a>00157 <span class="comment">//                       double Ftol, double&amp; ymin, double&amp; xmin,</span>
-<a name="l00158"></a>00158 <span class="comment">//                       double (f_proc)(double valy, double valx ));</span>
-<a name="l00159"></a>00159 
-<a name="l00160"></a>00160 
-<a name="l00161"></a>00161 
-<a name="l00162"></a>00162 <span class="preprocessor">#endif   // _num_methods_h_</span>
-<a name="l00163"></a>00163 <span class="preprocessor"></span>
-<a name="l00164"></a>00164 <span class="comment">//-----------------------End of num_methods.h--------------------------</span>
-<a name="l00165"></a>00165 
+<a name="l00145"></a>00145   <span class="keywordtype">double</span> calcFunction( <span class="keywordtype">double</span> x, <span class="keywordtype">double</span> y );
+<a name="l00146"></a>00146   <span class="keywordtype">double</span> getMinimum( <span class="keywordtype">double</span> val2=0 );
+<a name="l00147"></a>00147 
+<a name="l00148"></a>00148   <span class="keywordtype">double</span> getMinX()
+<a name="l00149"></a>00149   { <span class="keywordflow">return</span> minX; }
+<a name="l00150"></a>00150   <span class="keywordtype">double</span> getMinY()
+<a name="l00151"></a>00151   { <span class="keywordflow">return</span> minY; }
+<a name="l00152"></a>00152 
+<a name="l00153"></a>00153 };
+<a name="l00154"></a>00154 
+<a name="l00155"></a>00155 
+<a name="l00156"></a>00156 <span class="comment">// Golden Selection in interval x1 to x2, to minimize function f_proc</span>
+<a name="l00157"></a>00157 <span class="comment">//double GoldenSection( double x1, double x2, double xtol, double ftol,</span>
+<a name="l00158"></a>00158 <span class="comment">//                        double val2, double (f_proc)(double val, double val2 ));</span>
+<a name="l00159"></a>00159 <span class="comment">// Method of Gold Selection for two parameters</span>
+<a name="l00160"></a>00160 <span class="comment">//   ystart, yend, ytol,  parameter y    - start, end, tolerance</span>
+<a name="l00161"></a>00161 <span class="comment">//   xstart, xend, xtol,  parameter x    - start, end, tolerance</span>
+<a name="l00162"></a>00162 <span class="comment">//   ftol  function tolerance</span>
+<a name="l00163"></a>00163 <span class="comment">//   ymin and xmin return values</span>
+<a name="l00164"></a>00164 <span class="comment">//   f_proc function to minimize ( f( y, x)=&gt;0 )</span>
+<a name="l00165"></a>00165 <span class="comment">//void GoldenSection2( double ystart, double yend, double Ytol,</span>
+<a name="l00166"></a>00166 <span class="comment">//                       double xstart, double xend, double Xtol,</span>
+<a name="l00167"></a>00167 <span class="comment">//                       double Ftol, double&amp; ymin, double&amp; xmin,</span>
+<a name="l00168"></a>00168 <span class="comment">//                       double (f_proc)(double valy, double valx ));</span>
+<a name="l00169"></a>00169 
+<a name="l00170"></a>00170 
+<a name="l00171"></a>00171 
+<a name="l00172"></a>00172 <span class="preprocessor">#endif   // _num_methods_h_</span>
+<a name="l00173"></a>00173 <span class="preprocessor"></span>
+<a name="l00174"></a>00174 <span class="comment">//-----------------------End of num_methods.h--------------------------</span>
+<a name="l00175"></a>00175 
 </pre></div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 16:58:54 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

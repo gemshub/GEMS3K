@@ -1,21 +1,29 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Implementation of TNode class including initialization and
-// execution of GEMIPM2 kernel
+/// \file node.cpp
+/// Implementation of TNode class functionality including initialization
+/// and execution of the GEM IPM 3 kernel
+/// Works with DATACH and DATABR structures
+//
+// Copyright (c) 2005-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
+//
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// Works with DATACH and DATABR structures
-//
-// Copyright (C) 2005,2009 S.Dmytriyeva, D.Kulik, G.Kosakowski
-//
-// This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization and of GEMS3K code
-//
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include "node.h"
@@ -40,6 +48,49 @@
 const double bar_to_Pa = 1e5,
                m3_to_cm3 = 1e6,
                kg_to_g = 1e3;
+
+
+double TNode::get_Ppa_sat( double Tk )
+{
+	long int i=0;
+	for( i=0; i<CSD->nTp; i++ )
+	{
+		if( (CSD->TKval[i] + CSD->Ttol) > Tk && (CSD->TKval[i] - CSD->Ttol) < Tk )
+		{
+			if( CSD->Psat[i] > 1.1e-5 )
+			{
+				return CSD->Psat[i];
+			}
+			else
+			{
+				return 0;
+			}
+		}
+	}
+
+}
+
+long int TNode::get_grid_index_Ppa_sat( double Tk )
+{
+	long int i=0;
+	long int r=-1;
+	for( i=0; i<CSD->nTp; i++ )
+	{
+		if( (CSD->TKval[i] + CSD->Ttol) > Tk && (CSD->TKval[i] - CSD->Ttol) < Tk )
+		{
+			if( CSD->Psat[i] > 1.1e-5 )
+			{
+				return i;
+			}
+			else
+			{
+				return r;
+			}
+		}
+	}
+
+}
+
 
 
 // Checks if given temperature TK and pressure P fit within the interpolation
@@ -271,8 +322,9 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
 //  Parameters:
 //  ipmfiles_lst_name - name of a text file that contains:
-//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name1>,
-//      ... , <dataBR file nameN> "
+//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+//  dbfiles_lst_name - name of a text file that contains:
+//    <dataBR  file name1>, ... , <dataBR file nameN> "
 //    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
 //    exist in the same directory where the ipmfiles_lst_name file is located.
 //    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
@@ -294,13 +346,14 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name,
 #ifdef IPMGEMPLUGIN
-                          long int* nodeTypes, bool /*getNodT1*/)
+                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 #else
-                          long int* nodeTypes, bool getNodT1)
+                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 #endif
 {
-  long int i;
-  gstring curPath = ""; //current reading file path
+
+   // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
+   gstring curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
   fstream f_log("ipmlog.txt", ios::out|ios::app );
   try
@@ -402,65 +455,34 @@ if( binary_f )
   pmm->Fdev2[0] = 0.;
   pmm->Fdev2[1] = 1e-6;
 
+  // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+       f_getline( f_lst, datachbr_fn, ' ');
 
-// Prepare for reading DBR_DAT files
-     i = 0;
-     while( !f_lst.eof() )  // For all DBR_DAT files listed
-     {
-
-#ifndef IPMGEMPLUGIN
-   pVisor->Message( 0, "GEM2MT node array",
-      "Reading from disk a set of node array files to resume an interrupted RMT task. "
-           "Please, wait...", i, nNodes() );
-#endif
-
-// Reading DBR_DAT file into work DATABR structure
-         if( i )  // Comma only after the first DBR_DAT file!
-            f_getline( f_lst, datachbr_fn, ',');
-         else
-            f_getline( f_lst, datachbr_fn, ' ');
-
-         gstring dbr_file = Path + datachbr_fn;
-         curPath = dbr_file;
-         if( binary_f )
-         {
-             GemDataStream in_br(dbr_file, ios::in|ios::binary);
-             databr_from_file(in_br);
-          }
-         else
-          {   fstream in_br(dbr_file.c_str(), ios::in );
-                 ErrorIf( !in_br.good() , datachbr_fn.c_str(),
-                    "DBR_DAT fileopen error");
-               databr_from_text_file(in_br);
-          }
-         curPath = "";
-          if(!i)
-        	  dbr_file_name = dbr_file;
-// Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
-//    unpackDataBr();
-
-#ifndef IPMGEMPLUGIN
-        if( getNodT1 )  // optional parameter used only when reading multiple
-        	// DBR files after coupled modeling task interruption in GEM-Selektor
+        gstring dbr_file = Path + datachbr_fn;
+        curPath = dbr_file;
+        if( binary_f )
         {
-           setNodeArray( dbr_file, i, binary_f );
-        }
-        else
-#endif
-        {
-// Copying data from work DATABR structure into the node array
-// (as specified in nodeTypes array)
-           setNodeArray( i, nodeTypes  );
+               GemDataStream in_br(dbr_file, ios::in|ios::binary);
+               databr_from_file(in_br);
          }
-          i++;
-     }  // end while()
-#ifndef IPMGEMPLUGIN
-   pVisor->CloseMessage();
-#endif
+         else
+         {   fstream in_br(dbr_file.c_str(), ios::in );
+                   ErrorIf( !in_br.good() , datachbr_fn.c_str(),
+                      "DBR_DAT fileopen error");
+                 databr_from_text_file(in_br);
+            }
+          curPath = "";
+          dbr_file_name = dbr_file;
 
-    ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
-    checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
-
+   // Reading DBR_DAT files from dbrfiles_lst_name
+   // only for TNodeArray class
+          if(  dbrfiles_lst_name )
+              InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
+          else
+              if( nNodes() ==1 )
+                setNodeArray( 0 , 0  );
+             else // undefined TNodeArray
+                  Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
    return 0;
 
 #ifdef IPMGEMPLUGIN
@@ -841,6 +863,86 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
        return u0;
   }
 
+   // Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   void TNode::EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW )
+   {
+		long int xTP;
+		EpsAW.resize(5);
+		long int nTP = CSD->nTp;
+
+		if( check_TP( TK, P ) == false )
+			return;
+
+		xTP = check_grid_TP( TK, P );
+
+		if( xTP >= 0 )
+		{
+			EpsAW[0] = CSD->epsW[ 0*nTP + xTP ];
+			EpsAW[1] = CSD->epsW[ 1*nTP + xTP ];
+			EpsAW[2] = CSD->epsW[ 2*nTP + xTP ];
+			EpsAW[3] = CSD->epsW[ 3*nTP + xTP ];
+			EpsAW[4] = CSD->epsW[ 4*nTP + xTP ];
+		}    
+		else
+		{
+			EpsAW[0] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+0*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[1] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+1*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[2] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+2*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[3] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+3*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			EpsAW[4] = LagranInterp( CSD->Pval, CSD->TKval, CSD->epsW+4*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+		}
+
+   }
+
+
+   // Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+   // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   void TNode::DensArrayH2Ow( const double P, const double TK, vector<double>& DensAW )
+   {
+		long int xTP;
+		DensAW.resize(5);
+		long int nTP = CSD->nTp;
+
+		if( check_TP( TK, P ) == false )
+				if( P > 1e-5 )
+					return;
+
+		
+		xTP = check_grid_TP( TK, P );
+		
+		if( xTP < 0 )
+			xTP = get_grid_index_Ppa_sat( TK );
+		
+
+		if( xTP >= 0 )
+		{
+			DensAW[0] = CSD->denW[ 0*nTP + xTP ];
+			DensAW[1] = CSD->denW[ 1*nTP + xTP ];
+			DensAW[2] = CSD->denW[ 2*nTP + xTP ];
+			DensAW[3] = CSD->denW[ 3*nTP + xTP ];
+			DensAW[4] = CSD->denW[ 4*nTP + xTP ];
+		}    
+		else
+		{
+			DensAW[0] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+0*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[1] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+1*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[2] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+2*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[3] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+3*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+			DensAW[4] = LagranInterp( CSD->Pval, CSD->TKval, CSD->denW+4*nTP,
+				    P, TK, CSD->nTp, CSD->nPp, 5 );
+		}
+   }
+
 
    // Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure or 0.0,
    // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
@@ -1151,9 +1253,10 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   }
 
     
-  // Functions needed by GEM_FIT. Setting parameters for activity coefficient models.
+
+    
+  // Functions needed by GEMSFIT. Setting parameters for activity coefficient models.
     //     aIPx     = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
-    //                               // -> NPar x MaxOrd   added 07.12.2006   KD
     //     aIPc     = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
     //     aDCc     = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
     //     NComp    = pmp->L1[k];          // Number of components in the phase
@@ -1161,100 +1264,127 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     //     NPcoef   = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
     //     MaxOrd   = pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
     //     NP_DC    = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
-  void TNode::Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase)
+  
+  // IN: index_phase -> index of phase of interest | OUT: start index of phase in aIPx, aIPc and aDCc arrays.   	
+  void TNode::Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase )
   {
     long ip_IPx=0; long ip_IPc=0; long ip_DCc=0;
-    for(long int k=0;k<((*index_phase)+1);k++)
+    for( int k=0;k<index_phase; k++ ) 
     {
-        *index_phase_aIPx = ip_IPx;
         ip_IPx          += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
-        *index_phase_aIPc = ip_IPc;
         ip_IPc          += pmm->LsMod[k*3] * pmm->LsMod[k*3+2];
-        *index_phase_aDCc = ip_DCc;
         ip_DCc          += pmm->LsMdc[k] * pmm->L1[k];
     }
+    index_phase_aIPx = ip_IPx;
+    index_phase_aIPc = ip_IPc;
+    index_phase_aDCc = ip_DCc;
   }
 
-  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase )
+  // IN: index_phase -> index of phase of interest | OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC. 
+  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase )
   {
-    *NPar   = pmm->LsMod[(*index_phase)*3];
-    *NPcoef = pmm->LsMod[(*index_phase)*3+2];
-    *MaxOrd = pmm->LsMod[(*index_phase)*3+1];
-    *NComp  = pmm->L1[(*index_phase)];
-    *NP_DC  = pmm->LsMdc[(*index_phase)];
-    cout<<"*NPcoef in node.cpp = "<<*NPcoef<<endl;
+    NPar   = pmm->LsMod[(index_phase)*3];
+    NPcoef = pmm->LsMod[(index_phase)*3+2];
+    MaxOrd = pmm->LsMod[(index_phase)*3+1];
+    NComp  = pmm->L1[(index_phase)];
+    NP_DC  = pmm->LsMdc[(index_phase)];
   }
 
-  void TNode::Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase )
+  void TNode::Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase )
   { 
-    long int rc, NPar, NPcoef;
-    NPar = pmm->LsMod[(*index_phase)*3];
-    NPcoef =  pmm->LsMod[(*index_phase)*3+2];
+    int rc, NPar, NPcoef;
+    NPar = pmm->LsMod[ index_phase * 3 ];
+    NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
+    if( aIPc.size() != (NPar*NPcoef) )
+    {
+		cout<<endl;
+		cout<<" in node.cpp (TNode::Set_aIPc()): vector aIPc does not have the dimensions specified by the GEMS3K input file (NPar*NPcoef) !!!! "<<endl;
+		cout<<" aIPc.size() = "<<aIPc.size()<<", NPar*NPcoef = "<<NPar*NPcoef<<endl;
+		cout<<" bailing out now ... "<<endl;
+		cout<<endl;
+		exit(1);
+    }
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
     {
-        (pmm->PMc[(*index_phase_aIPc)+rc]) = aIPc[rc];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+        (pmm->PMc[ index_phase_aIPc + rc ]) = aIPc[ rc ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
     }
   }
 
-  void TNode::Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase )
+  void TNode::Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase )
   { 
-    long int i; long NPar, NPcoef;
-    NPar   = pmm->LsMod[(*index_phase)*3];
-    NPcoef = pmm->LsMod[(*index_phase)*3+2];
+    int i; long NPar, NPcoef;
+    NPar   = pmm->LsMod[ index_phase * 3 ];
+    NPcoef = pmm->LsMod[ index_phase * 3 + 2 ];
+    aIPc.clear();
+    aIPc.resize( (NPar*NPcoef) );	
     i = 0;
     while (i<(NPar*NPcoef))
     {
-      *(aIPc + i)   = pmm->PMc[(*index_phase_aIPc) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aIPc[ i ]   = pmm->PMc[ index_phase_aIPc + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase )
+  void TNode::Get_aIPx ( vector<long> &aIPx, const long &index_phase_aIPx, const long &index_phase )
   {
-    long int i; long NPar, MaxOrd;
-    NPar   = pmm->LsMod[(*index_phase)*3];
-    MaxOrd = pmm->LsMod[(*index_phase)*3+1];
+    int i; long NPar, MaxOrd;
+    NPar   = pmm->LsMod[ index_phase * 3 ];
+    MaxOrd = pmm->LsMod[ index_phase * 3 + 1 ];
+    aIPx.clear();
+    aIPx.resize( (NPar*MaxOrd) );	
     i = 0;
     while (i<(NPar*MaxOrd))
     {
-      *(aIPx + i)   = pmm->IPx[(*index_phase_aIPx) + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aIPx[ i ]   = pmm->IPx[ index_phase_aIPx + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase )
+  void TNode::Set_aDCc( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase )
   { 
-    long int rc, NComp, NP_DC;
-    NComp = pmm->L1[(*index_phase)];
-    NP_DC = pmm->LsMdc[(*index_phase)];
-    for ( rc=0;rc<NComp*NP_DC;rc++ )
+    int rc, NComp, NP_DC;
+    NComp = pmm->L1[ index_phase ];
+    NP_DC = pmm->LsMdc[ index_phase ];
+    if( aDCc.size() != (NComp*NP_DC) )
     {
-        (pmm->DMc[(*index_phase_aDCc)+rc]) = aDCc[rc];		// end-member param coeffs, NComp * NP_DC
+		cout<<endl;
+		cout<<" node class: vector aDCc does not have the dimensions specified by the GEMS3K input file (NComp*NP_DC) !!!! "<<endl;
+		cout<<" aDCc.size() = "<<aDCc.size()<<", NComp*NP_DC = "<<NComp*NP_DC<<endl;
+		cout<<" bailing out now ... "<<endl;
+		cout<<endl;
+		exit(1);
+    }
+    for ( rc=0;rc<(NComp*NP_DC);rc++ )
+    {
+        (pmm->DMc[ index_phase_aDCc + rc ]) = aDCc[ rc ];		// end-member param coeffs, NComp * NP_DC
     }
   }
 
-  void TNode::Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase )
+  void TNode::Get_aDCc( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase )
   {
-    long int i; long NComp, NP_DC;
-    NComp = pmm->L1[(*index_phase)];
-    NP_DC = pmm->LsMdc[(*index_phase)];
+    int i; long NComp, NP_DC;
+    NComp = pmm->L1[ index_phase ];
+    NP_DC = pmm->LsMdc[ index_phase ];
+    aDCc.clear();
+    aDCc.resize( (NComp*NP_DC) );
     i = 0;
     while (i<(NComp*NP_DC))
     {
-      *(aDCc + i)   = pmm->DMc[(*index_phase_aDCc)+i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aDCc[ i ]   = pmm->DMc[ index_phase_aDCc + i ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Set_Tk   ( double* T_k)
+  void TNode::Set_Tk( double &T_k )
   {
-      CNode->TK = *T_k;
+      CNode->TK = T_k;
   }
 
-  void TNode::Set_Pb   ( double* P_b)
+  void TNode::Set_Pb( double &P_b )
   {
-      CNode->P = *P_b;
+      CNode->P = P_b;
   }
+
 
 
   // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its
@@ -1808,7 +1938,9 @@ void TNode::unpackDataBr( bool uPrimalSol )
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
+ multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
 #endif
+
   pmm->TCc = CNode->TK-C_to_K;
   pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;
@@ -1911,7 +2043,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 }
 
 
-// (3) Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
+// (3) Writes the contents of the work instance of DATABR structure into a disk file with path name fname.
 //   Parameters:
 //   fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
 //                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
@@ -1921,7 +2053,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   with_comments (text format only): defines the mode of output of comments written before each data tag and  content
 //                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
 //                 If   false (0), comments will not be written.
-//  brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+//  brief_mode     if true (1), tells not to write data items that contain only default values.
+//
 void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments, bool brief_mode )
    {
        gstring str_file;
@@ -1949,6 +2082,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 // Parameters: fname   null-terminated (C) string containing a full path to the disk file to be written.
 //                     NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance will be used,
 //                     extended with ".dump.out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+//
    void  TNode::GEM_print_ipm( const char* fname )
    {
      gstring str_file;

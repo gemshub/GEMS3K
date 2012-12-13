@@ -1,44 +1,57 @@
 //-------------------------------------------------------------------
 // $Id$
-//
 /// \file node.h
-// Implements a simple C/C++ interface between GEM IPM and FMT codes.
-// Works with DATACH and work DATABR structures without using
-// the TNodearray class.
+/// Declaration of TNode class that implements a simple C/C++ interface
+/// between GEMS3K and another code.
 //
-// (c) 2006,2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+/// \class TNode node.h
+/// Implements a simple C/C++ interface between GEM IPM and FMT codes.
+/// Works with DATACH and work DATABR structures without using
+/// the TNodearray class.
 //
-// This file is part of GEMS3K and GEMS-PSI codes for
-// thermodynamic modelling by Gibbs energy minimization
-// developed in the Laboratory for Waste Management,
-//   Paul Scherrer Institute
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
+//
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// This file may be distributed under the licence terms
-// defined in GEMS3K.QAL
-//
-// See also http://gems.web.psi.ch/
-// E-mail: gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
-//
 
 /// \mainpage GEMS3K Solver of GeoChemical Equilibria and its TNode class interface.
+///
 /// GEMS3K (formerly GEMIPM2K) is a C/C++ code implementing the efficient numerical kernel
 /// IPM-3 of the GEM-Selektor v.3 package for geochemical  thermodynamic modeling of complex
 /// heterogeneous multicomponent-multiphase  systems. GEMS3K results from substantial
 /// improvements of convex programming Gibbs energy minimization algorithms achieved since
-/// 2000, when development and support of GEMS was taken over by LES PSI (since 2008 jointly
-/// with IGP ETHZ) through GEMS Development Team, currently consisting of D.Kulik (lead),
-/// T.Wagner, S.Dmytrieva, G. Kosakowski, F.Hingerl, K.Chudnenko, and U.Berner.
-/// The standalone variant of GEMS3K code can be coupled to reactive mass transport simulation
+/// 2000, when development and support of GEMS was taken over by LES in Paul Scherrer Institut
+/// (since 2008 jointly with IGP ETHZ) by the GEMS Development Team, currently consisting of
+/// D.Kulik (lead), T.Wagner, S.Dmytrieva, G. Kosakowski, F.Hingerl, K.Chudnenko, and U.Berner.
+///
+/// Standalone variant of the GEMS3K code can be coupled to reactive mass transport simulation
 /// codes, also those running on high-performance computers. Input files (in text format) for
 /// GEMS3K can be exported with a few mouse-clicks from the GEM-Selektor v.3  code, or prepared
-/// manually using a simple ASCII text editor.
-/// Data exchange with the mass transport part of the coupled code can be implemented in computer
-/// memory using TNode class functions.
-/// The standalone GEMS3K code is foreseen to be licensed as the open-source software in order
-/// to promote its broad application in hydrothermal-/ waste geochemistry and related research
-/// communities. Other potential areas of GEMS3K application include coupled parameter fitting
-/// codes and phase diagram tools.
+/// manually using a simple ASCII text editor. Data exchange with the mass transport part of
+/// the coupled code can be implemented in computer memory using TNode class functions.
+///
+/// The standalone GEMS3K code is licensed as the open-source software in order to promote its
+/// broad application in hydrothermal-/ waste geochemistry and related research communities.
+/// Other potential areas of GEMS3K application include coupled parameter-fitting codes
+/// and phase diagram tools.
+///
+/// Copyright (C) 2012 GEMS Development Team
+/// Available on web at http://gems.web.psi.ch/GEMS3K
 
 #ifndef _node_h_
 #define _node_h_
@@ -131,8 +144,9 @@ protected:
                             long nx = 1, long ny = 1, long nz = 1 );
 
     // virtual functions for interaction with TNodeArray class (not used at TNode level)
+    virtual void  InitNodeArray( const char *, long int *, bool , bool  ) {}
     virtual void  setNodeArray( long int , long int*  ) { }
-    virtual void  checkNodeArray( long int, long int*, const char* ) { }
+    //virtual void  checkNodeArray( long int, long int*, const char* ) { }
     virtual long int nNodes()  const // virtual call for interaction with TNodeArray class
     { return 1; }
 
@@ -175,18 +189,24 @@ public:
 
 // Typical sequence for using TNode class ----------------------------------
 /// (1)
-/// Initialization of GEM IPM2 data structures in coupled FMT-GEM programs
-/// that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
+/// Initialization of GEM IPM3 data structures in coupled programs
+/// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
 ///  \param ipmfiles_lst_name  pointer to a null-terminated C string with a path to a text file
 ///                      containing the list of names of  GEMS3K input files.
 ///                      Example: file "test.lst" with a content:    -t "dch.dat" "ipm.dat" "dbr-0.dat"
 ///                      (-t  tells that input files are in text format)
-///  \param nodeTypes   optional parameter used only on the TNodeArray, the initial node contents
-///                      from DATABR files will be distributed among nodes in array according to the distribution list nodeTypes
-///  \param getNodT1    optional parameter used only when reading multiple DBR files after modeling
+///  \param dbrfiles_lst_name  optional parameter (used only at the TNodeArray level) - a
+///                      pointer to a null-terminated C string with a path to a text file
+///                      containing the list of comma-separated names of  DBR input files.
+///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
+///  \param nodeTypes   optional parameter used only at the TNodeArray level, the initial node contents
+///                      from DATABR files will be distributed among nodes in array according to the
+///                      distribution index list nodeTypes
+///  \param getNodT1    optional parameter used only when reading multiple DBR files after the modeling
 ///                      task interruption  in GEM-Selektor
-///  \return 0  if successful; 1 if input file(s) were not found or corrupt; -1 if internal memory allocation error occurred.
-    long int  GEM_init( const char *ipmfiles_lst_name,
+///  \return 0  if successful; 1 if input file(s) were not found or corrupt;
+///                      -1 if internal memory allocation error occurred.
+  long int  GEM_init( const char *ipmfiles_lst_name, const char *dbrfiles_lst_name = 0,
                    long int *nodeTypes = 0, bool getNodT1 = false);
 
 #ifdef IPMGEMPLUGIN
@@ -377,7 +397,7 @@ void GEM_set_MT(
 
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
-    {  return CNode->TK+C_to_K;   }
+    {  return CNode->TK-C_to_K;   }
 
     // These methods get contents of fields in the work node structure
     double cTK() const     /// Get current node Temperature T, Kelvin
@@ -500,6 +520,12 @@ void GEM_set_MT(
            return (CSD->nPp * CSD->nTp);
      }
 
+	
+	 /// Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input file
+	 double get_Ppa_sat( double Tk );
+
+	 /// Returns index of Tk point - Psat point pair 
+	 long int get_grid_index_Ppa_sat( double Tk );
 
     /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
     /// from the DATACH structure.
@@ -557,6 +583,21 @@ void GEM_set_MT(
      /// \param TK temperature, Kelvin
      /// \return Internal energy (in J/mol) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
      double DC_U0(const long int xCH, const double P, const double TK);
+
+     /// Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+     /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+	 /// \param P refers to the pressure in Pascal
+	 /// \param TK refers to the temperature in Kelvin
+	 /// \param DensAW contains the density of water (at P and Tk) and its temperature and pressure derivatives 
+     void DensArrayH2Ow( const double P, const double TK, vector<double>& DensAW );
+
+     /// Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
+     /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+     /// \param P refers to the pressure in Pascal
+	 /// \param TK refers to the temperature in Kelvin
+	 /// \param DensAW contains the permittivity of water (at P and Tk) and its temperature and pressure derivatives 
+	 void EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW );
+
 
      /// Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure.
      /// \param P pressure, Pa
@@ -731,18 +772,18 @@ void GEM_set_MT(
       double DC_a(const long int xCH);
 
       
-      // Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
-      // Sets values of LsMod and LsMdc array
-      void Get_IPc_IPx_DCc_indices( long* index_phase_aIPx, long* index_phase_aIPc, long* index_phase_aDCc, long* index_phase);
-      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long* NPar, long* NPcoef, long* MaxOrd, long* NComp, long* NP_DC, long* index_phase );
-      void Get_aIPc ( double *aIPc, long* index_phase_aIPc, long* index_phase );
-      void Get_aIPx ( long* aIPx, long* index_phase_aIPx, long* index_phase );
-      void Get_aDCc ( double* aDCc, long* index_phase_aDCc, long* index_phase );
-      void Set_aIPc ( double* aIPc, long* index_phase_aIPc, long *index_phase ); 		// Set values of aIPc array
-      void Set_aDCc ( const double* aDCc, long* index_phase_aDCc, long* index_phase );		// Set values of  aDCc array
-      // These methods get contents of fields in the work node structure
-      void Set_Tk   ( double* T_k);
-      void Set_Pb   ( double* P_b);
+      /// Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
+      /// Sets values of LsMod and LsMdc array
+      void Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase);
+      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase );
+      void Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase );
+      void Get_aIPx ( vector<long> &aIPx,   const long &index_phase_aIPx, const long &index_phase );
+      void Get_aDCc ( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase );
+      void Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase ); 		// Set values of aIPc array
+      void Set_aDCc ( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase );		// Set values of  aDCc array
+      /// These methods set contents of fields in the work node structure
+      void Set_Tk   ( double &T_k);
+      void Set_Pb   ( double &P_b);
 
 
       /// Retrieves the current concentration of Dependent Component in its
@@ -761,6 +802,13 @@ void GEM_set_MT(
       /// \param xCH is DC DCH index
       inline double DC_g(const long int xCH) const
       {  return pmm->Gamma[xCH];  }
+
+
+	  /// Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH
+	  /// \param xCH index of species DCH
+	  inline double DC_lng( const long int xCH ) const
+	  {  return pmm->lnGam[ xCH ]; } 	
+
 
       /// Retrieves the current (dual-thermodynamic) chemical potential of DC
       /// directly from GEM IPM work structure. Also for any DC not included into DATABR or having zero amount.

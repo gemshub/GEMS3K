@@ -6,17 +6,27 @@
 // fashion, assuming that the chemical speciation and all dynamic
 // parameter data are kept in the FMT part, which calls GEMIPM
 // calculation once per node.
-
 // TNode class implements a  simple C/C++ interface between GEMIPM
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (C) 2006,2010 S.Dmytriyeva, D.Kulik, G.Kosakowski
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of the GEMIPM2K code for thermodynamic modelling
-// by Gibbs energy minimization
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// See also http://gems.web.psi.ch/
-// mailto://gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 #ifndef MAIN_H
 #define MAIN_H
@@ -35,44 +45,58 @@ class TMyTransport
             nIC,      // Number of chemical independent components
             nDC,      // Number of chemical dependent components
             nPH,      // Number of chemical phases
-            nPS;      // Number of chemical phases-solutions
+            nPS,      // Number of chemical phases-solutions
+            nRecipes; // Number of different input node recipes to set boundary conditions
 
-    long int *aNodeHandle,
-             *aNodeStatusCH,
-             *aIterDone;
+    long int *aNodeHandle,     // Node identification handles
+             *aNodeStatusCH,   // Node status codes (changed after GEM calculation)
+             *aIterDone;       // Number of GEM IPM iterations performed for each node
+                               //   at the last time step
 
-    double *aT,
-           *aP,
-           *aVs,
-           *aMs,
-           *aGs,
-           *aHs,
-           *aIC,
-           *apH,
-           *ape,
-           *aEh;
+    double *aT,     // Array of node temperatures T, Kelvin
+           *aP,     // Array of node pressures P, Pa
+           *aVs,    // Array of node volume V of reactive subsystem, m3
+           *aMs,    // Array of node mass of reactive subsystem, kg
+           *aGs,    // Array of node total Gibbs energy of reactive subsystems, J
+           *aHs,    // Array of node total enthalpy of reactive subsystems, J (reserved)
+           *aIC,    // Array of node effective aqueous ionic strengths, molal
+           *apH,    // Array of node pH of aqueous solutions
+           *ape,    // Array of node pe of aqueous solutions
+           *aEh;    // Array of node Eh of aqueous solution, V
 
-    double **axDC,
-           **agam,
-           **axPH,
-           **aaPH,
-           **avPS,
-           **amPS,
-           **abPS,
-           **axPA,
-           **aaPh,
-           **adul,
-           **adll,
-           **abIC,
-           **arMB,
-           **auIC;
+    double **axDC,  // Array of node mole amounts of dependent components (speciation)
+           **agam,  // Array of node activity coefficients of dependent components
+           **axPH,  // Array of node total mole amounts of all reactive phases
+           **aaPH,  // Array of node specific surface areas of phases, m2/kg
+           **avPS,  // Array of node total volumes of multicomponent phases, m3
+           **amPS,  // Array of node total masses of multicomponent phases,kg
+           **abPS,  // Array of node bulk compositions of multicomponent phases, moles
+           **axPA,  // Array of node amount of carrier in asymmetric phases, moles
+           **aaPh,  // Array of node surface areas of phases, m2
+           **adul,  // Array of node upper restrictions to amounts of dependent components
+           **adll,  // Array of node lower restrictions to amounts of dependent components
+           **abIC,  // Array of node bulk mole amounts of independent components
+           **arMB,  // Array of node mole balance residuals for independent components
+           **auIC,  // Array of node chemical potentials of independent components (norm.)
+           **abSP;  // Array for bulk composition of solid part of equilibrated sub-system
 
-        TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,
-                      long int p_nPH, long int p_nPS );
+        TMyTransport(   // Constructor (dynamic memory allocation)
+           long int p_nNod,    // Number of nodes
+           long int p_nTim,    // Number of time steps
+           long int p_nIC,     // Number of chemical independent components
+           long int p_nDC,     // Number of chemical dependent components
+           long int p_nPH,     // Number of chemical phases
+           long int p_nPS,     // Number of chemical phases - solutions
+           long int p_nRcps    // Number of different input node recipes to set boundary conditions
+                );
 
-        ~TMyTransport();
+        ~TMyTransport();  // Destructor of dynamic memory
 
-        void OneTimeStepRun( double *stoich, long int *ICndx, long int nICndx );
+         void OneTimeStepRun(   // Placeholder function for one transport time step
+            double *stoich,     // Stoichiometry coefficients
+            long int *ICndx,    // Indexes of mobile independent components
+            long int nICndx     // Number of mobile independent components
+                 );
 };
 
 #endif // MAIN_H

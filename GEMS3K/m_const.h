@@ -1,22 +1,36 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright (C) 2006,2009  S.Dmitrieva, D.Kulik
+/// \file m_const.h
+/// Declarations of enums and constants from GEM-Selektor code that
+/// are used in GEMS3K standalone code (this file is not used otherwise).
 //
-// Codes and parameters used in GEM IPM work structure (standalone version)
+// Copyright (c) 1995-2012 S.Dmytriyeva, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of the standalone GEMS3K code
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch; chud@igc.irk.ru
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
+
 #ifndef _m_const_h
 #define _m_const_h
 
+#ifdef IPMGEMPLUGIN
+// This header is only used in standalone GEMS3K code!
 #include <ctype.h>
 #include <fstream>
 
@@ -99,7 +113,7 @@ SM_BERMAN = 'B',    // built-in multicomponent microscopic (a)symmetric solid-so
     SM_IONEX = 'X',     // ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
-    SM_OTHER = 'O',	// other built-in phase-specific models of non-ideal solutions (selected by phase name)
+    SM_OTHER = 'O'  	// other built-in phase-specific models of non-ideal solutions (selected by phase name)
     	                //    (selected through phase name)
 };
 
@@ -391,6 +405,6 @@ typedef enum {  // Classes of Phases used in ccPH code list
 } PHL_CLASSES;
 
 #endif*/
-
+#endif
 #endif
 // m_const.h in GEMS3K

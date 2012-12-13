@@ -28,9 +28,6 @@ Docs/doxy/html/class_t_davies.png -text
 Docs/doxy/html/class_t_debye_hueckel-members.html -text
 Docs/doxy/html/class_t_debye_hueckel.html -text
 Docs/doxy/html/class_t_debye_hueckel.png -text
-Docs/doxy/html/class_t_e_l_v_i_s-members.html -text
-Docs/doxy/html/class_t_e_l_v_i_s.html -text
-Docs/doxy/html/class_t_e_l_v_i_s.png -text
 Docs/doxy/html/class_t_e_u_n_i_q_u_a_c-members.html -text
 Docs/doxy/html/class_t_e_u_n_i_q_u_a_c.html -text
 Docs/doxy/html/class_t_e_u_n_i_q_u_a_c.png -text
@@ -57,6 +54,7 @@ Docs/doxy/html/class_t_mod_other.html -text
 Docs/doxy/html/class_t_mod_other.png -text
 Docs/doxy/html/class_t_multi-members.html -text
 Docs/doxy/html/class_t_multi.html -text
+Docs/doxy/html/class_t_n_e_mcalc.png -text
 Docs/doxy/html/class_t_n_r_t_l-members.html -text
 Docs/doxy/html/class_t_n_r_t_l.html -text
 Docs/doxy/html/class_t_n_r_t_l.png -text
@@ -107,6 +105,7 @@ Docs/doxy/html/class_t_shvarov.png -text
 Docs/doxy/html/class_t_sol_mod-members.html -text
 Docs/doxy/html/class_t_sol_mod.html -text
 Docs/doxy/html/class_t_sol_mod.png -text
+Docs/doxy/html/class_t_sorp_mod.png -text
 Docs/doxy/html/class_t_subregular-members.html -text
 Docs/doxy/html/class_t_subregular.html -text
 Docs/doxy/html/class_t_subregular.png -text
@@ -202,7 +201,6 @@ Docs/doxy/html/hierarchy.html -text
 Docs/doxy/html/index.html -text
 Docs/doxy/html/io__arrays_8h_source.html -text
 Docs/doxy/html/jquery.js -text
-Docs/doxy/html/m__const_8h_source.html -text
 Docs/doxy/html/m__param_8h_source.html -text
 Docs/doxy/html/ms__multi_8h_source.html -text
 Docs/doxy/html/nav_f.png -text
@@ -211,7 +209,6 @@ Docs/doxy/html/node_8h_source.html -text
 Docs/doxy/html/nodearray_8h_source.html -text
 Docs/doxy/html/num__methods_8h_source.html -text
 Docs/doxy/html/open.png -text
-Docs/doxy/html/s__fgl_8h_source.html -text
 Docs/doxy/html/search/all_61.html -text
 Docs/doxy/html/search/all_61.js -text
 Docs/doxy/html/search/all_62.html -text
@@ -415,7 +412,17 @@ Docs/doxy/html/tab_s.png -text
 Docs/doxy/html/tabs.css -text
 Docs/doxy/html/v__user_8h_source.html -text
 Docs/doxy/html/verror_8h_source.html -text
+Docs/html/Default-GEMIPM3-Num-Controls.png -text
 Docs/html/FlowChartOfIPM-3-Algorithm.png -text
+Docs/html/Pitzer_Phase_page3.png -text
+Docs/html/Pitzer_phase_code.png -text
+Docs/html/SIT-Phase-page3.png -text
+Docs/html/Screen-Calcite-Col-BC-0000.png -text
+Docs/html/Screen-Calcite-Column-0001.png -text
+Docs/html/SetupWritingGEMS3KfilesDialog.png -text
+Docs/html/SetupWritingGEMS3KfilesPage2grid.png -text
+Docs/html/SetupWritingGEMS3KfilesPage2pairs.png -text
+Docs/html/bgimg-gray.jpg -text
 Docs/html/gems1.png -text
 Docs/html/gems3k-manual.html -text
 Docs/txt/NewGEMS_RepoStructure.txt -text
@@ -429,7 +436,6 @@ Docs/txt/f_gem_node.h -text
 Docs/txt/f_gem_node.inc -text
 Docs/txt/filelist-doc.txt -text
 Docs/txt/ipm-dat-doc.txt -text
-GEMS3K/GEMS3K.pro -text
 GEMS3K/Makefile.MinGW -text
 GEMS3K/Makefile.lib -text
 GEMS3K/databr.h -text svn_keywords=Id
@@ -448,7 +454,6 @@ GEMS3K/jama_cholesky.h -text
 GEMS3K/jama_lu.h -text
 GEMS3K/m_const.h -text svn_keywords=Id
 GEMS3K/m_param.h -text svn_keywords=Id
-GEMS3K/main.cpp -text svn_keywords=Id
 GEMS3K/ms_multi.h -text svn_keywords=Id
 GEMS3K/ms_multi_file.cpp -text svn_keywords=Id
 GEMS3K/ms_multi_format.cpp -text svn_keywords=Id
@@ -471,22 +476,28 @@ GEMS3K/platform/MacOSX/Makefile.lib -text
 GEMS3K/platform/other/Makefile -text
 GEMS3K/platform/win32MinGW/Makefile -text
 GEMS3K/platform/win32bcc/Makefile -text
-GEMS3K/s_fgl.cpp -text svn_keywords=Id
-GEMS3K/s_fgl.h -text svn_keywords=Id
-GEMS3K/s_fgl1.cpp -text svn_keywords=Id
-GEMS3K/s_fgl2.cpp -text svn_keywords=Id
-GEMS3K/s_fgl3.cpp -text svn_keywords=Id
-GEMS3K/s_fgl4.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.cpp -text svn_keywords=Id
 GEMS3K/s_kinmet.h -text svn_keywords=Id
-GEMS3K/s_sorption.cpp -text svn_keywords=Id
-GEMS3K/s_sorption.h -text svn_keywords=Id
 GEMS3K/tnt.h -text
 GEMS3K/tnt_array1d.h -text
 GEMS3K/tnt_array2d.h -text
 GEMS3K/tnt_i_refvec.h -text
 GEMS3K/v_user.h -text svn_keywords=Id
 GEMS3K/verror.h -text svn_keywords=Id
+gemcalc-build/debug/libgcc_s_dw2-1.dll -text
+gemcalc-build/debug/mingwm10.dll -text
+gemcalc-build/release/libgcc_s_dw2-1.dll -text
+gemcalc-build/release/mingwm10.dll -text
+node-gem-build/debug/libgcc_s_dw2-1.dll -text
+node-gem-build/debug/mingwm10.dll -text
+node-gem-build/linux-run.bat -text
+node-gem-build/release/libgcc_s_dw2-1.dll -text
+node-gem-build/release/mingwm10.dll -text
+node-gem-build/tp_test/CalcColumn-dat.lst -text
+node-gem-build/tp_test/CalcColumn-dbr-0-0000.dat -text
+node-gem-build/tp_test/CalcColumn-dbr-0-0001.dat -text
+node-gem-build/tp_test/CalcColumn-dch.dat -text
+node-gem-build/tp_test/CalcColumn-ipm.dat -text
 node-gem/Makefile.MinGW -text
 node-gem/doc/Readme.1st -text
 node-gem/doc/scm-dbr-dat-doc.txt -text
@@ -495,9 +506,6 @@ node-gem/doc/scm-ipm-dat-doc.txt -text
 node-gem/linux-run.bat -text
 node-gem/main.cpp -text svn_keywords=Id
 node-gem/main.h -text
-node-gem/node-gem-sep.pro -text
-node-gem/node-gem3-sep.pro -text
-node-gem/obj/Readme.txt -text
 node-gem/platform/CRAYXT3-catamount/Makefile -text
 node-gem/platform/Linux-GNU/Makefile -text
 node-gem/platform/Linux-Intel/Makefile -text
@@ -508,112 +516,6 @@ node-gem/platform/win32bcc/Makefile -text
 node-gem/platform/win32minGW/Makefile -text
 node-gem/platform/win32minGW/object_ld_script -text
 node-gem/platform/win32msvc/Makefile -text
-node-gem/test_ads/TestAds.BAT -text
-node-gem/test_ads/UL_on_Qtz-dat.lst -text
-node-gem/test_ads/UL_on_Qtz-dbr-0-0000.dat -text
-node-gem/test_ads/UL_on_Qtz-dch.dat -text
-node-gem/test_ads/UL_on_Qtz-ipm.dat -text
-node-gem/test_ads/main.cpp -text
-node-gem/test_ads/test_ads.out -text
-node-gem/test_data/CalcColumn-dat.lst -text
-node-gem/test_data/CalcColumn-dbr-0-0000.dat -text
-node-gem/test_data/CalcColumn-dbr-0-0001.dat -text
-node-gem/test_data/CalcColumn-dch.dat -text
-node-gem/test_data/CalcColumn-ipm.dat -text
-node-gem/test_data/CalcColumn.BAT -text
-node-gem/test_data/CalcColumn.out -text
-node-gem/test_data/Readme.1st -text
-node-gem/test_data/linux-run.bat -text
-node-gem/test_data/main.cpp -text
-node-gem/time/10/Speed10ic-dat.lst -text
-node-gem/time/10/Speed10ic-dbr-0-0000.dat -text
-node-gem/time/10/Speed10ic-dch.dat -text
-node-gem/time/10/Speed10ic-ipm.dat -text
-node-gem/time/10/Speed10ic.out2A -text
-node-gem/time/10/Speed10ic.out2B -text
-node-gem/time/10/Speed10ic.out2P -text
-node-gem/time/10/linux-run.bat -text
-node-gem/time/10/win32-run.bat -text
-node-gem/time/15/Speed15ic-dat.lst -text
-node-gem/time/15/Speed15ic-dbr-0-0000.dat -text
-node-gem/time/15/Speed15ic-dch.dat -text
-node-gem/time/15/Speed15ic-ipm.dat -text
-node-gem/time/15/Speed15ic.out2A -text
-node-gem/time/15/Speed15ic.out2B -text
-node-gem/time/15/Speed15ic.out2P -text
-node-gem/time/15/linux-run.bat -text
-node-gem/time/15/win32-run.bat -text
-node-gem/time/20/Speed20ic-dat.lst -text
-node-gem/time/20/Speed20ic-dbr-0-0000.dat -text
-node-gem/time/20/Speed20ic-dch.dat -text
-node-gem/time/20/Speed20ic-ipm.dat -text
-node-gem/time/20/Speed20ic.out2A -text
-node-gem/time/20/Speed20ic.out2B -text
-node-gem/time/20/Speed20ic.out2P -text
-node-gem/time/20/linux-run.bat -text
-node-gem/time/20/win32-run.bat -text
-node-gem/time/25/Speed25ic-dat.lst -text
-node-gem/time/25/Speed25ic-dbr-0-0000.dat -text
-node-gem/time/25/Speed25ic-dch.dat -text
-node-gem/time/25/Speed25ic-ipm.dat -text
-node-gem/time/25/Speed25ic.out2A -text
-node-gem/time/25/Speed25ic.out2B -text
-node-gem/time/25/Speed25ic.out2P -text
-node-gem/time/25/linux-run.bat -text
-node-gem/time/25/win32-run.bat -text
-node-gem/time/30/Speed30ic-dat.lst -text
-node-gem/time/30/Speed30ic-dbr-0-0000.dat -text
-node-gem/time/30/Speed30ic-dch.dat -text
-node-gem/time/30/Speed30ic-ipm.dat -text
-node-gem/time/30/Speed30ic.out2A -text
-node-gem/time/30/Speed30ic.out2B -text
-node-gem/time/30/Speed30ic.out2P -text
-node-gem/time/30/linux-run.bat -text
-node-gem/time/30/win32-run.bat -text
-node-gem/time/35/Speed35ic-dat.lst -text
-node-gem/time/35/Speed35ic-dbr-0-0000.dat -text
-node-gem/time/35/Speed35ic-dch.dat -text
-node-gem/time/35/Speed35ic-ipm.dat -text
-node-gem/time/35/Speed35ic.out2A -text
-node-gem/time/35/Speed35ic.out2B -text
-node-gem/time/35/Speed35ic.out2P -text
-node-gem/time/35/linux-run.bat -text
-node-gem/time/35/win32-run.bat -text
-node-gem/time/40/Speed40ic-dat.lst -text
-node-gem/time/40/Speed40ic-dbr-0-0000.dat -text
-node-gem/time/40/Speed40ic-dch.dat -text
-node-gem/time/40/Speed40ic-ipm.dat -text
-node-gem/time/40/Speed40ic.out2A -text
-node-gem/time/40/Speed40ic.out2B -text
-node-gem/time/40/Speed40ic.out2P -text
-node-gem/time/40/linux-run.bat -text
-node-gem/time/40/main.cpp -text
-node-gem/time/40/win32-run.bat -text
-node-gem/time/5/Speed05ic-dat.lst -text
-node-gem/time/5/Speed05ic-dbr-0-0000.dat -text
-node-gem/time/5/Speed05ic-dch.dat -text
-node-gem/time/5/Speed05ic-ipm.dat -text
-node-gem/time/5/Speed05ic.out2A -text
-node-gem/time/5/Speed05ic.out2B -text
-node-gem/time/5/Speed05ic.out2P -text
-node-gem/time/5/linux-run.bat -text
-node-gem/time/5/win32-run.bat -text
-node-gem/time/All_test/AnoxSystem-dat.lst -text
-node-gem/time/All_test/AnoxSystem-dbr-0-0000.dat -text
-node-gem/time/All_test/AnoxSystem-dch.dat -text
-node-gem/time/All_test/AnoxSystem-ipm.dat -text
-node-gem/time/All_test/AnoxSystem.out2P -text
-node-gem/time/All_test/linux-run.bat -text
-node-gem/time/main.cpp -text
-node-gem/tp_test/CalcColumn-dat.lst -text
-node-gem/tp_test/CalcColumn-dbr-0-0000.dat -text
-node-gem/tp_test/CalcColumn-dbr-0-0001.dat -text
-node-gem/tp_test/CalcColumn-dch.dat -text
-node-gem/tp_test/CalcColumn-ipm.dat -text
-node-gem/tp_test/CalcColumn.BAT -text
-node-gem/tp_test/CalcColumn_tp.out -text
-node-gem/tp_test/linux-run.bat -text
-node-gem/tp_test/main.cpp -text
 nodearray-gem/LINUX-RUN.BAT -text
 nodearray-gem/doc/Readme.1st -text
 nodearray-gem/doc/filelist-doc.txt -text
@@ -621,20 +523,4 @@ nodearray-gem/main.cpp -text svn_keywords=Id
 nodearray-gem/main.cpp.template -text
 nodearray-gem/nodearray-gem.pro -text
 nodearray-gem/nodearray-gem3.pro -text
-nodearray-gem/obj/Readme.txt -text
-nodearray-gem/platform/Linux-GNU/Makefile -text
-nodearray-gem/platform/Linux-PGI/Makefile -text
-nodearray-gem/platform/other/Makefile -text
-nodearray-gem/platform/win32bcc/Makefile -text
-nodearray-gem/platform/win32minGW/Makefile -text
-nodearray-gem/platform/win32minGW/object_ld_script -text
-nodearray-gem/platform/win32msvc/Makefile -text
-nodearray-gem/test/Readme.1st -text
-nodearray-gem/test/Speed15ic-dat.lst -text
-nodearray-gem/test/Speed15ic-dbr-0-0000.dat -text
-nodearray-gem/test/Speed15ic-dbr-0-0001.dat -text
-nodearray-gem/test/Speed15ic-dch.dat -text
-nodearray-gem/test/Speed15ic-ipm.dat -text
-nodearray-gem/test/linux-run.bat -text
-nodearray-gem/test/win32-run.bat -text
 nodearray-gem/win32-run.bat -text

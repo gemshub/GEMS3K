@@ -1,25 +1,31 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-/// \class TMulti ms_multi.h
+/// \file ms_multi.h
 /// Declaration of TMulti class, configuration, and related functions
 /// based on the IPM work data structure MULTI
 //
 /// \struct MULTI ms_multi.h
-/// Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm
+/// Contains chemical thermodynamic work data for GEM IPM-3 algorithm
 //
-// Rewritten from C to C++ by S.Dmytriyeva
-/// \author Copyright (C) 1995,2008 S.Dmytriyeva, D.Kulik
+// Copyright (c) 1995-2012 S.Dmytriyeva, D.Kulik, T.Wagner
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization and of the
-// standalone GEMS3K code (define IPMGEMPLUGIN).
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
 #ifndef _ms_multi_h_
@@ -41,8 +47,8 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
 #endif
 
-#include "s_fgl.h"
-// #include "s_sorption.h"
+#include "s_solmod.h"
+// #include "s_sorpmod.h"
 
 typedef struct
 {  // MULTI is base structure to Project (local values)
@@ -389,7 +395,7 @@ double
   char errorCode[100]; ///<  code of error in IPM      (Ec number of error)
   char errorBuf[1024]; ///< description of error in IPM
   double logCDvalues[5]; ///< Collection of lg Dikin crit. values for the new smoothing equation
-//  qd_real qdFX;    	///< Current Gibbs potential of the system in IPM, moles
+double *GamFs;   ///< Copy of activity coefficients Gamma before the first enter in PhaseSelection() [L] new
 
   double // Iterators for MTP interpolation (do not load/unload for IPM)
   Pai[4],    ///< Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol
@@ -789,8 +795,9 @@ typedef enum {  // Symbols of thermodynamic potential to minimize
 
 } NUM_POTENTIALS;
 
-double A_P( double x, double x2=0.);
-double U_TP( double TC, double P);
+// kg44: this is not correctly implemented!! 
+//double A_P( double x, double x2=0.);
+//double U_TP( double TC, double P);
 
 
 typedef enum {  // Field index into outField structure

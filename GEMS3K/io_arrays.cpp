@@ -1,19 +1,27 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Implementation of service functions for writing/reading arrays in files
+/// \file io_arrays.cpp
+/// Implementation of service functions for writing/reading arrays in files
 //
-// Copyright (C) 2006-2007 S.Dmytriyeva
-// Uses  gstring class
+// Copyright (c) 2006-2012 S.Dmytriyeva
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of the GEM-Selektor GUI library and GEMS3K
-// code package
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include <iomanip>
@@ -92,9 +100,9 @@ long int TRWArrays::findFld( const char *Name )
     {
       if(!brief_mode || getAlws( f_num ))
       {  if( with_comments && flds[f_num].comment.length()>1)
-          ff << flds[f_num].comment.c_str() << endl;
-        ff << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << /*left << setw(17)  <<*/  value << endl;
+          ff << endl << flds[f_num].comment.c_str();
+        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << /*left << setw(17)  <<*/  value;
       }
     }
 
@@ -102,9 +110,19 @@ long int TRWArrays::findFld( const char *Name )
     {
       if(!brief_mode || getAlws( f_num ))
       {  if( with_comments && flds[f_num].comment.length()>1)
-          ff << flds[f_num].comment.c_str() << endl;
-        ff << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << /*left << setw(17)  <<*/  value << endl;
+          ff <<  endl << flds[f_num].comment.c_str();
+        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << /*left << setw(17)  <<*/  value;
+      }
+    }
+
+ void TPrintArrays::writeField(long f_num, char value, bool with_comments, bool brief_mode  )
+    {
+      if(!brief_mode || getAlws( f_num ))
+      {  if( with_comments && flds[f_num].comment.length()>1)
+          ff <<  endl <<  flds[f_num].comment.c_str();
+        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+        ff << "\'" << value << "\'";
       }
     }
 
@@ -112,9 +130,9 @@ long int TRWArrays::findFld( const char *Name )
   {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments && flds[f_num].comment.length()>1 )
-            ff << flds[f_num].comment.c_str() << endl;
-         ff << "<" << flds[f_num].name.c_str() << ">  ";
-         ff << /*left << setw(7) <<*/  value << endl;
+            ff <<  endl <<  flds[f_num].comment.c_str();
+         ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+         ff << /*left << setw(7) <<*/  value;
      }
   }
 
@@ -124,7 +142,7 @@ long int TRWArrays::findFld( const char *Name )
 
    if(!brief_mode || getAlws(f_num ))
    { if( with_comments )
-          ff << flds[f_num].comment.c_str();
+          ff <<  endl << flds[f_num].comment.c_str();
      writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
    }
  }
@@ -134,7 +152,7 @@ long int TRWArrays::findFld( const char *Name )
  {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
-            ff << flds[f_num].comment.c_str();
+            ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
      }
  }
@@ -144,7 +162,7 @@ long int TRWArrays::findFld( const char *Name )
  {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
-            ff << flds[f_num].comment.c_str();
+            ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
      }
  }
@@ -154,7 +172,7 @@ long int TRWArrays::findFld( const char *Name )
  {
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
-            ff << flds[f_num].comment.c_str();
+            ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
      }
  }

@@ -1,23 +1,32 @@
 //-------------------------------------------------------------------
 // $Id$
+/// \file nodearray.h
+/// Contains declaration of TNodeArray class implementing an advanced
+/// interface for development of coupled codes involving GEMS3K.
 //
 /// \class TNodeArray nodearray.h
-/// Implements an advanced (level 2) C/C++ interface with
-/// GEM IPM for development of coupled and GEM-FMT codes
-/// Works with DATACH and work DATABR structures
-/// Uses the TNode class
+/// Implements an advanced (level 2) C/C++ interface with GEMS3K for the
+/// development of coupled reactive transport codes.
+/// Works with DATACH and an array of DATABR structures; uses TNode class
 //
-// Written by S.Dmytriyeva,  D.Kulik
-/// \author Copyright (C) 2006,2008 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2006-2012 S.Dmytriyeva, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of GEMS3K and GEMS-PSI codes for
-// thermodynamic modelling by Gibbs energy minimization
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// This file may be distributed under the licence terms
-// defined in GEMS3K.QAL
-//
-// See also http://gems.web.psi.ch/
-// E-mail: gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
 
@@ -187,6 +196,17 @@ public:
     long int  RunGEM( long int indN, long int indM, long int indK, long int Mode )
     { return RunGEM( iNode( indN, indM, indK ), Mode); }
         // (both calls clean the work node DATABR structure)
+
+    /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
+    /// copying data from work DATABR structure into the node array
+    ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
+    ///                      containing the list of names of  DBR input files.
+    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
+    ///  \param nodeTypes    the initial node contents from DATABR files will be distributed among nodes in array
+    ///                      according to the distribution list nodeTypes
+    ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
+    ///                      task interruption  in GEM-Selektor
+    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f  );
 
     /// Copies data from the work DATABR structure into the node ndx in
     /// the node arrays NodT0 and NodT1  (as specified in nodeTypes array)

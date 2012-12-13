@@ -1,23 +1,29 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright (C) 1992-2011  D.Kulik, T.Wagner, S.Dmitrieva, K.Chudnenko
+/// \file ipm_chemical3.cpp
+/// Implementation of chemistry-specific functions (concentrations,
+/// activity coefficients, chemical potentials, etc.)
+/// for the IPM convex programming Gibbs energy minimization algorithm
 //
-// Implementation of chemistry-specific functions (concentrations,
-// activity coefficients, adsorption models etc.)
-// for convex programming Gibbs energy minimization, described in:
-// (Karpov, Chudnenko, Kulik (1997): American Journal of Science
-//  v.297 p. 767-806); Kulik (2000), Geoch.Cosmoch.Acta 64,3161-3179
+// Copyright (c) 1992-2012  D.Kulik, T.Wagner, S.Dmitrieva, K.Chudnenko
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor (GEMS) v.3.1.x program
-// environment for thermodynamic modeling in geochemistry and of the
-// standalone GEMS3K code (define IPMGEMPLUGIN).
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEM-Selektor
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
 
@@ -247,8 +253,8 @@ NonLogTermS = 0.0;
         {	 // Converting lnGam[j] into Gamma[j]
             if( !pm.X[j] && !pm.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012
                         return 1.;
-                double Gamma = 1.;
-                double lnGamS = pm.lnGam[j];
+            double Gamma = 1.;
+            double lnGamS = pm.lnGam[j];
 
             switch( pm.DCC[j] )
             { // Aqueous electrolyte
@@ -912,14 +918,14 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
                 mySM = (TSolMod*)myPT;
                 break;
         }
-
+/*
         case SM_AQELVIS:  // ELVIS aqueous electrolyte model (multicomponent)
         {
                 TELVIS* myPT = new TELVIS( &sd, aM, aZ, pm.denW, pm.epsW );
 		mySM = (TSolMod*)myPT;
                 break;
         }
-
+*/
         case SM_AQDH3:  // extended Debye-Hueckel aqueous electrolyte model (Karpov version)
         {
                 TKarpov* myPT = new TKarpov( &sd, aM, aZ, pm.denW, pm.epsW );

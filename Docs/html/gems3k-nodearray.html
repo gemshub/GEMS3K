@@ -1,18 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html><head>
-  
-<meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
 
   
-<title>How to Couple with GEMS3K at TNodeArray level</title>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>Coupling GEMS3K at TNodeArray level</title></head><body style="background-image: url(bgimg-gray.jpg);">
+<h1><img alt="GEMS icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font style="color: black;" color="#000066">
+GEMS3K Code for Solving for GeoChemical Equilibria</font> </h1>
 
-</head>
-<body>
-<h1><img alt="GEMS icon" src="gems1.png" style=" width: 48px; height: 48px;" align="left"> <font color="#000066">
-GEMS3K Solver of GeoChemical Equilibria</font> </h1>
-
-<h2>How to Couple with GEMS3K on the TNodeArray Level</h2>
-
+<h2>How to Couple with GEMS3K at the TNodeArray Level</h2>
 
 <p><big style="color: rgb(255, 0, 0);"><big>&lt;Under Construction&gt;</big></big><br>
 <span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
@@ -53,7 +47,8 @@ example fragment (see full example in
 fragments below illustrate how the TNodeArray functionality can be used
 in implementing a new coupled RMT code (see also </span><big><span style="font-family: monospace;">main.cpp</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; file in&nbsp; </span><big><span style="font-family: monospace;">nodearray-gem/</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> subdirectory).&nbsp;
 At the first step, two node arrays are allocated using the TNodeArray
-constructor. Then the initial distribution index list </span><big><span style="font-family: monospace;">nodeIn[] </span></big><span style="font-family: Helvetica,Arial,sans-serif;">is defined, and the GEMS3K input files are read in.&nbsp; The contents of</span><big><span style="font-family: monospace;"> nodeIn</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> tell the program
+constructor. Then the initial distribution index list </span><big><span style="font-family: monospace;">nodeIn[] </span></big><span style="font-family: Helvetica,Arial,sans-serif;">is defined, and the
+GEMS3K input files are read in.&nbsp; The contents of</span><big><span style="font-family: monospace;"> nodeIn</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> tell the program
 where to copy the contents of just read DBR file. In this way, the </span><big><span style="font-family: monospace;">GEM_init()</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> function initializes
 the </span><big><span style="font-family: monospace;">C0&nbsp;</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> layer of the node
 array. <br>
@@ -171,9 +166,7 @@ in&lt;nNodes; in++)&nbsp; // Copying node layer 0 to node layer 1&nbsp;
 </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;
 {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//
-
- (for MT models that can reset time step dt) </span><br style="font-family: monospace;">
+// (for MT models that can reset time step dt) </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Mode = NEED_GEM_AIA; </span><br style="font-family: monospace;">
 <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;
@@ -399,7 +392,5 @@ stored for nodes at C0 and C1 levels. &nbsp; <br>
 <hr style="width: 100%; height: 2px;"><span style="font-family: monospace;">End of File</span><br>
 
 <br>
-
-
 
 </body></html>

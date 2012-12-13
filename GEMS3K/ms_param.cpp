@@ -1,24 +1,31 @@
 //-------------------------------------------------------------------
 // $Id$
+/// \file ms_param.cpp
+/// Implementation  of default settings for the Interior Points Method
+/// (IPM) module for convex programming Gibbs energy minimization
+/// as well as I/O functions for IPM files
 //
-// Copyright  (C) 1992,2012 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
+// Copyright (c) 1992,2012 S.Dmytriyeva, D.Kulik, K.Chudnenko
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// Implementation  of parts of the Interior Points Method (IPM) module
-// for convex programming Gibbs energy minimization, described in:
-// (Karpov, Chudnenko, Kulik (1997): American Journal of Science
-//  v.297 p. 767-806)
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file is part of a GEM-Selektor (GEMS) v.3.x.x program
-// environment for thermodynamic modeling in geochemistry and
-// of the GEMS3K standalone code
-//
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
+#ifdef IPMGEMPLUGIN
 #ifdef __unix__
 #include <unistd.h>
 #endif
@@ -53,7 +60,7 @@ SPP_SETTING pa_ = {
     {    // Typical default set (03.04.2012) new PSSC( logSI ) & uDD()
          2,  /* PC */  2,     /* PD */   -5,   /* PRD */
          1,  /* PSM  */ 130,  /* DP */   1,   /* DW */
-         0, /* DT */     13000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
+         0, /* DT */     30000,   /* PLLG */   1,  /* PE */  7000, /* IIM */
          1000., /* DG */   1e-13,  /* DHB */  1e-20,  /* DS */
          1e-6,  /* DK */  0.01,  /* DF */  0.01,  /* DFM */
          1e-5,  /* DFYw */  1e-5,  /* DFYaq */    1e-5,  /* DFYid */
@@ -105,7 +112,9 @@ TProfil::TProfil( TMulti* amulti )
 /// GEM IPM calculation of equilibrium state in MULTI
 double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
 {
- return multi->CalculateEquilibriumState( 0, NumIterFIA_, NumIterIPM_ );
+   long int RefineLoops = RefinLoops_;
+   RefineLoops = 0L; // Provisional
+   return multi->CalculateEquilibriumState( RefineLoops, NumIterFIA_, NumIterIPM_ );
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file
@@ -197,12 +206,13 @@ void TMulti::CheckMtparam()
 
   P = PPa/bar_to_Pa;
 
- //pmp->pTPD = 2;
+  //pmp->pTPD = 2;
 
- if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
-           || fabs( pm.P - P )  > dCH->Ptol  )
+  if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
+           || fabs( pm.Pc - P )  > dCH->Ptol/bar_to_Pa  )
+  {
      pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
-
+  }
   load = true;
 }
 
@@ -274,7 +284,7 @@ void u_splitpath(const gstring& Path, gstring& dir,
     }
 }
 
-const long int bGRAN = 20;
+const long int bGRAN = 200;
 
 /// Get Path of file and Reading list of file names from it, return number of files
 char  (* f_getfiles(const char *f_name, char *Path,
@@ -314,7 +324,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 		 filesList =  filesListNew;
 	}
     strncpy( filesList[nElem], name.c_str(), fileNameLength);
-	filesList[nElem][fileNameLength-1] = '\0';
+    filesList[nElem][fileNameLength-1] = '\0';
     nElem++;
   }
 
@@ -330,7 +340,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 
   return filesList;
 }
-
+#endif
 // ------------------ End of ms_param.cpp -----------------------
 
 

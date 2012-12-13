@@ -1,18 +1,27 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Implementation of writing/reading IPM work data structure files
+/// \file ms_multi_file.cpp
+/// Implementation of writing/reading IPM I/O files of GEMS3K
 //
-// Copyright (C) 2006-2007 S.Dmytriyeva
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of the GEM-Selektor GUI library and GEMS3K
-// code package
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include <cmath>
@@ -345,6 +354,7 @@ void TMulti::set_def( long int /*q*/)
     pm.A     = 0;
     pm.XFs   = 0;
         pm.Falps = 0;
+pm.GamFs = 0;
         pm.Fug   = 0;
         pm.Fug_l = 0;
         pm.Ppg_l = 0;
@@ -1101,6 +1111,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = new double[pm.L];
    pm.Gamma = new double[pm.L];
    pm.lnGmf = new double[pm.L]; //7
+pm.GamFs = new double[pm.L];
    for( ii=0; ii<pm.L; ii++ )
    {
 	   pm.Y_la[ii] = 0.0;
@@ -1110,6 +1121,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
 	   pm.VL[ii] = 0.0;
 	   pm.Gamma[ii] = 0.0;
 	   pm.lnGmf[ii] = 0.0;
+       pm.GamFs[ii] = 0.0;
    }
    //   pm.D = new double[pm.L];
  }
@@ -1122,6 +1134,7 @@ void TMulti::multi_realloc( char PAalp, char PSigm )
    pm.VL = 0;
    pm.Gamma = 0;
    pm.lnGmf = 0;
+pm.GamFs = 0;
 //   pm.D = 0;
  }
 
@@ -1546,6 +1559,7 @@ void TMulti::multi_free()
    if( pm.VL ) delete[] pm.VL;
    if( pm.Gamma ) delete[] pm.Gamma;
    if( pm.lnGmf ) delete[] pm.lnGmf;
+if( pm.GamFs ) delete[] pm.GamFs;
 //   if( pm.D ) delete[] pm.D;
 
    // Part 2  not requited arrays

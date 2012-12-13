@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<title>Gems3k: C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h Source File</title>
+<title>Gems3k: /Users/kulik/DevGEMS/trunk/standalone/GEMS3K/io_arrays.h Source File</title>
 
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
@@ -25,14 +25,12 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -92,188 +90,195 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div class="header">
   <div class="headertitle">
-<div class="title">C:/DevelGEMS/trunk/standalone/GEMS3K/io_arrays.h</div>  </div>
+<div class="title">/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/io_arrays.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: io_arrays.h 679 2012-05-25 12:24:24Z dmitrieva $</span>
-<a name="l00003"></a>00003 <span class="comment">//</span>
-<a name="l00004"></a>00004 <span class="comment">// Service functions for writing/reading arrays in files</span>
-<a name="l00005"></a>00005 <span class="comment">//</span>
-<a name="l00006"></a>00006 <span class="comment">// Copyright (C) 2006-2007 S.Dmytriyeva</span>
-<a name="l00007"></a>00007 <span class="comment">// Uses  gstring class</span>
+<a href="io__arrays_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: io_arrays.h 761 2012-11-30 09:12:20Z dmitrieva $</span>
+<a name="l00005"></a>00005 <span class="comment"></span><span class="comment">//</span>
+<a name="l00006"></a>00006 <span class="comment">// Copyright (C) 2006-2012 S.Dmytriyeva</span>
+<a name="l00007"></a>00007 <span class="comment">// &lt;GEMS Development Team, mailto:gems2.support@psi.ch&gt;</span>
 <a name="l00008"></a>00008 <span class="comment">//</span>
-<a name="l00009"></a>00009 <span class="comment">// This file is part of the GEM-Selektor GUI library and GEMS3K</span>
-<a name="l00010"></a>00010 <span class="comment">// code package</span>
+<a name="l00009"></a>00009 <span class="comment">// This file is part of the GEMS3K code for thermodynamic modelling</span>
+<a name="l00010"></a>00010 <span class="comment">// by Gibbs energy minimization &lt;http://gems.web.psi.ch/GEMS3K/&gt;</span>
 <a name="l00011"></a>00011 <span class="comment">//</span>
-<a name="l00012"></a>00012 <span class="comment">// This file may be distributed under the terms of the GEMS-PSI</span>
-<a name="l00013"></a>00013 <span class="comment">// QA Licence (GEMSPSI.QAL)</span>
-<a name="l00014"></a>00014 <span class="comment">//</span>
-<a name="l00015"></a>00015 <span class="comment">// See http://gems.web.psi.ch/ for more information</span>
-<a name="l00016"></a>00016 <span class="comment">// E-mail gems2.support@psi.ch</span>
-<a name="l00017"></a>00017 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00018"></a>00018 
-<a name="l00019"></a>00019 <span class="preprocessor">#include  &lt;fstream&gt;</span>
-<a name="l00020"></a>00020 
-<a name="l00021"></a>00021 <span class="preprocessor">#include &quot;verror.h&quot;</span>
-<a name="l00022"></a>00022 
-<a name="l00023"></a><a class="code" href="structout_field.html">00023</a> <span class="keyword">struct </span><a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a> 
-<a name="l00024"></a>00024  {
-<a name="l00025"></a><a class="code" href="structout_field.html#a81c177b19165055d12f34aa3118f11a1">00025</a>    gstring <a class="code" href="structout_field.html#a81c177b19165055d12f34aa3118f11a1" title="name of field in structure">name</a>; 
-<a name="l00026"></a><a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10">00026</a>    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10" title="1 - must be read, 0 - default values can be used">alws</a>;    
-<a name="l00027"></a><a class="code" href="structout_field.html#a1774d8a55ee1e3581e4dd5fdf0863afe">00027</a>    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="structout_field.html#a1774d8a55ee1e3581e4dd5fdf0863afe" title="0; set to 1 after reading the field from input file">readed</a>;  
-<a name="l00028"></a><a class="code" href="structout_field.html#ace8dde149e6dbdb35216cce0f1b8debe">00028</a>    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="structout_field.html#ace8dde149e6dbdb35216cce0f1b8debe" title="1 - static object; 0 - undefined; &lt;0 type of indexation, &gt;1 number of elements in array...">indexation</a>;  
-<a name="l00029"></a>00029    gstring comment;
-<a name="l00030"></a>00030 
-<a name="l00031"></a>00031 };
-<a name="l00032"></a>00032 
-<a name="l00033"></a><a class="code" href="class_t_r_w_arrays.html">00033</a> <span class="keyword">class </span><a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>  
-<a name="l00034"></a>00034  {
-<a name="l00035"></a>00035  <span class="keyword">protected</span>:
-<a name="l00036"></a>00036     fstream&amp; ff;
-<a name="l00037"></a><a class="code" href="class_t_r_w_arrays.html#a930e37bb33041e6a9c2da8f0a3ee67fd">00037</a>     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_r_w_arrays.html#a930e37bb33041e6a9c2da8f0a3ee67fd" title="Size of array flds.">numFlds</a>; 
-<a name="l00038"></a><a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add">00038</a>     <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>;   
+<a name="l00012"></a>00012 <span class="comment">// GEMS3K is free software: you can redistribute it and/or modify</span>
+<a name="l00013"></a>00013 <span class="comment">// it under the terms of the GNU Lesser General Public License as</span>
+<a name="l00014"></a>00014 <span class="comment">// published by the Free Software Foundation, either version 3 of</span>
+<a name="l00015"></a>00015 <span class="comment">// the License, or (at your option) any later version.</span>
+<a name="l00016"></a>00016 
+<a name="l00017"></a>00017 <span class="comment">// GEMS3K is distributed in the hope that it will be useful,</span>
+<a name="l00018"></a>00018 <span class="comment">// but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<a name="l00019"></a>00019 <span class="comment">// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<a name="l00020"></a>00020 <span class="comment">// GNU Lesser General Public License for more details.</span>
+<a name="l00021"></a>00021 
+<a name="l00022"></a>00022 <span class="comment">// You should have received a copy of the GNU General Public License</span>
+<a name="l00023"></a>00023 <span class="comment">// along with GEMS3K code. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<a name="l00024"></a>00024 <span class="comment">//-------------------------------------------------------------------</span>
+<a name="l00025"></a>00025 
+<a name="l00026"></a>00026 <span class="preprocessor">#include  &lt;fstream&gt;</span>
+<a name="l00027"></a>00027 
+<a name="l00028"></a>00028 <span class="preprocessor">#include &quot;<a class="code" href="verror_8h.html" title="Declarations of classes TError and TFatalError for error handling.">verror.h</a>&quot;</span>
+<a name="l00029"></a>00029 
+<a name="l00030"></a><a class="code" href="structout_field.html">00030</a> <span class="keyword">struct </span><a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a> 
+<a name="l00031"></a>00031  {
+<a name="l00032"></a><a class="code" href="structout_field.html#a81c177b19165055d12f34aa3118f11a1">00032</a>    gstring <a class="code" href="structout_field.html#a81c177b19165055d12f34aa3118f11a1" title="name of field in structure">name</a>; 
+<a name="l00033"></a><a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10">00033</a>    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10" title="1 - must be read, 0 - default values can be used">alws</a>;    
+<a name="l00034"></a><a class="code" href="structout_field.html#a1774d8a55ee1e3581e4dd5fdf0863afe">00034</a>    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="structout_field.html#a1774d8a55ee1e3581e4dd5fdf0863afe" title="0; set to 1 after reading the field from input file">readed</a>;  
+<a name="l00035"></a><a class="code" href="structout_field.html#ace8dde149e6dbdb35216cce0f1b8debe">00035</a>    <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="structout_field.html#ace8dde149e6dbdb35216cce0f1b8debe" title="1 - static object; 0 - undefined; &lt;0 type of indexation, &gt;1 number of elements in array...">indexation</a>;  
+<a name="l00036"></a>00036    gstring comment;
+<a name="l00037"></a>00037 
+<a name="l00038"></a>00038 };
 <a name="l00039"></a>00039 
-<a name="l00040"></a>00040  <span class="keyword">public</span>:
-<a name="l00041"></a>00041 
-<a name="l00043"></a><a class="code" href="class_t_r_w_arrays.html#a1e5f60ca30041cd5637ac4c87bfc205b">00043</a>          <a class="code" href="class_t_r_w_arrays.html#a1e5f60ca30041cd5637ac4c87bfc205b" title="Constructor.">TRWArrays</a>( <span class="keywordtype">short</span> aNumFlds, <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* aFlds, fstream&amp; fin ):
-<a name="l00044"></a>00044         ff( fin ), <a class="code" href="class_t_r_w_arrays.html#a930e37bb33041e6a9c2da8f0a3ee67fd" title="Size of array flds.">numFlds</a>(aNumFlds), <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>(aFlds)
-<a name="l00045"></a>00045     {}
+<a name="l00040"></a><a class="code" href="class_t_r_w_arrays.html">00040</a> <span class="keyword">class </span><a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>  
+<a name="l00041"></a>00041  {
+<a name="l00042"></a>00042  <span class="keyword">protected</span>:
+<a name="l00043"></a>00043     fstream&amp; ff;
+<a name="l00044"></a><a class="code" href="class_t_r_w_arrays.html#a930e37bb33041e6a9c2da8f0a3ee67fd">00044</a>     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_r_w_arrays.html#a930e37bb33041e6a9c2da8f0a3ee67fd" title="Size of array flds.">numFlds</a>; 
+<a name="l00045"></a><a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add">00045</a>     <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>;   
 <a name="l00046"></a>00046 
-<a name="l00048"></a>00048     <span class="keyword">virtual</span>  <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
-<a name="l00049"></a>00049 
-<a name="l00053"></a><a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f">00053</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f" title="Set the data object can be skipped from the file and default value(s) can be used.">setNoAlws</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii )
-<a name="l00054"></a>00054     {  <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>[ii].<a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10" title="1 - must be read, 0 - default values can be used">alws</a> = 0; }
-<a name="l00055"></a>00055 
-<a name="l00059"></a><a class="code" href="class_t_r_w_arrays.html#a57dd2bd81f1c75f44e51d97a548b45ef">00059</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f" title="Set the data object can be skipped from the file and default value(s) can be used.">setNoAlws</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
-<a name="l00060"></a>00060     {
-<a name="l00061"></a>00061         <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii = <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( Name );
-<a name="l00062"></a>00062          <span class="keywordflow">if</span>( ii &gt;=0 )
-<a name="l00063"></a>00063             <a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f" title="Set the data object can be skipped from the file and default value(s) can be used.">setNoAlws</a>(ii);
-<a name="l00064"></a>00064     }
-<a name="l00065"></a>00065 
-<a name="l00068"></a><a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5">00068</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5" title="Set the data object must be always present in the file.">setAlws</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii )
-<a name="l00069"></a>00069     {  <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>[ii].<a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10" title="1 - must be read, 0 - default values can be used">alws</a> = 1; }
-<a name="l00070"></a>00070 
-<a name="l00073"></a><a class="code" href="class_t_r_w_arrays.html#a5aec02af2cb7f671df740698609244d4">00073</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5" title="Set the data object must be always present in the file.">setAlws</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
-<a name="l00074"></a>00074     {
-<a name="l00075"></a>00075         <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii = <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( Name );
-<a name="l00076"></a>00076          <span class="keywordflow">if</span>( ii &gt;=0 )
-<a name="l00077"></a>00077             <a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5" title="Set the data object must be always present in the file.">setAlws</a>(ii);
-<a name="l00078"></a>00078     }
-<a name="l00079"></a>00079 
-<a name="l00082"></a><a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950">00082</a>     <span class="keywordtype">bool</span>  <a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950" title="Test the data object must be always present in the file.">getAlws</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii )
-<a name="l00083"></a>00083     {  <span class="keywordflow">return</span> (<a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>[ii].alws == 1); }
-<a name="l00084"></a>00084 
-<a name="l00087"></a><a class="code" href="class_t_r_w_arrays.html#a05cfa0ef0efb6a3dccd09e82bc48e27e">00087</a>     <span class="keywordtype">bool</span>  <a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950" title="Test the data object must be always present in the file.">getAlws</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
-<a name="l00088"></a>00088     {
-<a name="l00089"></a>00089         <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii = <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( Name );
-<a name="l00090"></a>00090          <span class="keywordflow">if</span>( ii &gt;=0 )
-<a name="l00091"></a>00091            <span class="keywordflow">return</span> <a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950" title="Test the data object must be always present in the file.">getAlws</a>(ii);
-<a name="l00092"></a>00092          <span class="keywordflow">else</span>
-<a name="l00093"></a>00093         <span class="keywordflow">return</span> <span class="keyword">false</span>;    
-<a name="l00094"></a>00094     }
-<a name="l00095"></a>00095 
-<a name="l00096"></a>00096 };
-<a name="l00097"></a>00097 
-<a name="l00099"></a><a class="code" href="class_t_print_arrays.html">00099</a> <span class="keyword">class </span><a class="code" href="class_t_print_arrays.html" title="Print fields of structure outField.">TPrintArrays</a>: <span class="keyword">public</span>  <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>
-<a name="l00100"></a>00100 {
-<a name="l00101"></a>00101 
-<a name="l00102"></a>00102 <span class="keyword">public</span>:
-<a name="l00103"></a>00103 
-<a name="l00104"></a>00104     <span class="comment">/*inline*/</span> <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a541d1d8ad8ad088be00ebfbea86a09ec" title="Write float value to file.">writeValue</a>(<span class="keywordtype">float</span> val);
-<a name="l00105"></a>00105     <span class="comment">/*inline*/</span> <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a541d1d8ad8ad088be00ebfbea86a09ec" title="Write float value to file.">writeValue</a>(<span class="keywordtype">double</span> val);
-<a name="l00106"></a>00106     <span class="comment">/*inline*/</span> <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a541d1d8ad8ad088be00ebfbea86a09ec" title="Write float value to file.">writeValue</a>(<span class="keywordtype">long</span> val);
-<a name="l00107"></a>00107 
-<a name="l00112"></a>00112     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">long</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
-<a name="l00113"></a>00113 
-<a name="l00118"></a>00118     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">short</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
-<a name="l00119"></a>00119 
-<a name="l00124"></a>00124     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">double</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
-<a name="l00125"></a>00125 
-<a name="l00131"></a>00131     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keywordtype">long</span> f_num,  <span class="keywordtype">double</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
-<a name="l00132"></a>00132                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
-<a name="l00133"></a>00133 
-<a name="l00139"></a>00139     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keywordtype">long</span> f_num, <span class="keywordtype">long</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
-<a name="l00140"></a>00140                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
-<a name="l00141"></a>00141 
-<a name="l00147"></a>00147     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keywordtype">long</span> f_num, <span class="keywordtype">short</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
-<a name="l00148"></a>00148                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
-<a name="l00149"></a>00149 
-<a name="l00155"></a>00155     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a0c1b4e1e39125d0c1174c40720bdf8f1" title="Writes char array to a text file.">writeArrayF</a>( <span class="keywordtype">long</span> f_num, <span class="keywordtype">char</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
-<a name="l00156"></a>00156                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
-<a name="l00157"></a>00157 
-<a name="l00158"></a>00158 
-<a name="l00160"></a><a class="code" href="class_t_print_arrays.html#ab66c569cf323ae722c83a974a71fda38">00160</a>     <a class="code" href="class_t_print_arrays.html#ab66c569cf323ae722c83a974a71fda38" title="Constructor.">TPrintArrays</a>( <span class="keywordtype">short</span> aNumFlds, <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* aFlds, fstream&amp; fout ):
-<a name="l00161"></a>00161         <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>( aNumFlds, aFlds, fout)
-<a name="l00162"></a>00162     {}
-<a name="l00163"></a>00163 
-<a name="l00165"></a>00165     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span>*   arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> arr_size );
-<a name="l00167"></a>00167     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
-<a name="l00169"></a>00169     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
-<a name="l00171"></a>00171     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">long</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L  );
-<a name="l00172"></a>00172 
-<a name="l00174"></a>00174     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span>*   arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> arr_size );
-<a name="l00176"></a>00176     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> l_size=-1 );
-<a name="l00178"></a>00178     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> l_size=-1 );
-<a name="l00180"></a>00180     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">short</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> l_size=-1  );
-<a name="l00181"></a>00181 
-<a name="l00183"></a>00183     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
-<a name="l00184"></a>00184                 <span class="keywordtype">long</span> <span class="keywordtype">int</span> nColumns=1L, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
-<a name="l00186"></a>00186     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
-<a name="l00187"></a>00187                 <span class="keywordtype">long</span> <span class="keywordtype">int</span> nColumns=1L, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
-<a name="l00189"></a>00189     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">long</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
-<a name="l00190"></a>00190                 <span class="keywordtype">long</span> <span class="keywordtype">int</span> nColumns=1L, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
-<a name="l00191"></a>00191 
-<a name="l00193"></a>00193     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
-<a name="l00194"></a>00194                 <span class="keywordtype">int</span> nColumns=1, <span class="keywordtype">int</span> l_size=-1 );
-<a name="l00196"></a>00196     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
-<a name="l00197"></a>00197                 <span class="keywordtype">int</span> nColumns=1, <span class="keywordtype">int</span> l_size=-1 );
-<a name="l00199"></a>00199     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">short</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
-<a name="l00200"></a>00200                 <span class="keywordtype">int</span> nColumns=1, <span class="keywordtype">int</span> l_size=-1 );
-<a name="l00201"></a>00201 
-<a name="l00202"></a>00202 };
-<a name="l00203"></a>00203 
+<a name="l00047"></a>00047  <span class="keyword">public</span>:
+<a name="l00048"></a>00048 
+<a name="l00050"></a><a class="code" href="class_t_r_w_arrays.html#a1e5f60ca30041cd5637ac4c87bfc205b">00050</a>          <a class="code" href="class_t_r_w_arrays.html#a1e5f60ca30041cd5637ac4c87bfc205b" title="Constructor.">TRWArrays</a>( <span class="keywordtype">short</span> aNumFlds, <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* aFlds, fstream&amp; fin ):
+<a name="l00051"></a>00051         ff( fin ), <a class="code" href="class_t_r_w_arrays.html#a930e37bb33041e6a9c2da8f0a3ee67fd" title="Size of array flds.">numFlds</a>(aNumFlds), <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>(aFlds)
+<a name="l00052"></a>00052     {}
+<a name="l00053"></a>00053 
+<a name="l00055"></a>00055     <span class="keyword">virtual</span>  <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name );
+<a name="l00056"></a>00056 
+<a name="l00060"></a><a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f">00060</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f" title="Set the data object can be skipped from the file and default value(s) can be used.">setNoAlws</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii )
+<a name="l00061"></a>00061     {  <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>[ii].<a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10" title="1 - must be read, 0 - default values can be used">alws</a> = 0; }
+<a name="l00062"></a>00062 
+<a name="l00066"></a><a class="code" href="class_t_r_w_arrays.html#a57dd2bd81f1c75f44e51d97a548b45ef">00066</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f" title="Set the data object can be skipped from the file and default value(s) can be used.">setNoAlws</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
+<a name="l00067"></a>00067     {
+<a name="l00068"></a>00068         <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii = <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( Name );
+<a name="l00069"></a>00069          <span class="keywordflow">if</span>( ii &gt;=0 )
+<a name="l00070"></a>00070             <a class="code" href="class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f" title="Set the data object can be skipped from the file and default value(s) can be used.">setNoAlws</a>(ii);
+<a name="l00071"></a>00071     }
+<a name="l00072"></a>00072 
+<a name="l00075"></a><a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5">00075</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5" title="Set the data object must be always present in the file.">setAlws</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii )
+<a name="l00076"></a>00076     {  <a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>[ii].<a class="code" href="structout_field.html#a157c2ef6902805674e0a7da92cd44d10" title="1 - must be read, 0 - default values can be used">alws</a> = 1; }
+<a name="l00077"></a>00077 
+<a name="l00080"></a><a class="code" href="class_t_r_w_arrays.html#a5aec02af2cb7f671df740698609244d4">00080</a>     <span class="keywordtype">void</span>  <a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5" title="Set the data object must be always present in the file.">setAlws</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
+<a name="l00081"></a>00081     {
+<a name="l00082"></a>00082         <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii = <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( Name );
+<a name="l00083"></a>00083          <span class="keywordflow">if</span>( ii &gt;=0 )
+<a name="l00084"></a>00084             <a class="code" href="class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5" title="Set the data object must be always present in the file.">setAlws</a>(ii);
+<a name="l00085"></a>00085     }
+<a name="l00086"></a>00086 
+<a name="l00089"></a><a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950">00089</a>     <span class="keywordtype">bool</span>  <a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950" title="Test the data object must be always present in the file.">getAlws</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii )
+<a name="l00090"></a>00090     {  <span class="keywordflow">return</span> (<a class="code" href="class_t_r_w_arrays.html#a0063eb3b8bce70ca24efb0ca14e41add" title="Array of permissible fields.">flds</a>[ii].alws == 1); }
+<a name="l00091"></a>00091 
+<a name="l00094"></a><a class="code" href="class_t_r_w_arrays.html#a05cfa0ef0efb6a3dccd09e82bc48e27e">00094</a>     <span class="keywordtype">bool</span>  <a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950" title="Test the data object must be always present in the file.">getAlws</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name )
+<a name="l00095"></a>00095     {
+<a name="l00096"></a>00096         <span class="keywordtype">long</span> <span class="keywordtype">int</span> ii = <a class="code" href="class_t_r_w_arrays.html#a33e233540db304c7b31e5200ca5756cf" title="Find field by name.">findFld</a>( Name );
+<a name="l00097"></a>00097          <span class="keywordflow">if</span>( ii &gt;=0 )
+<a name="l00098"></a>00098            <span class="keywordflow">return</span> <a class="code" href="class_t_r_w_arrays.html#a1ac7d2736c96c1a9bd08a1e695275950" title="Test the data object must be always present in the file.">getAlws</a>(ii);
+<a name="l00099"></a>00099          <span class="keywordflow">else</span>
+<a name="l00100"></a>00100         <span class="keywordflow">return</span> <span class="keyword">false</span>;    
+<a name="l00101"></a>00101     }
+<a name="l00102"></a>00102 
+<a name="l00103"></a>00103 };
+<a name="l00104"></a>00104 
+<a name="l00106"></a><a class="code" href="class_t_print_arrays.html">00106</a> <span class="keyword">class </span><a class="code" href="class_t_print_arrays.html" title="Print fields of structure outField.">TPrintArrays</a>: <span class="keyword">public</span>  <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>
+<a name="l00107"></a>00107 {
+<a name="l00108"></a>00108 
+<a name="l00109"></a>00109 <span class="keyword">public</span>:
+<a name="l00110"></a>00110 
+<a name="l00111"></a>00111     <span class="comment">/*inline*/</span> <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a541d1d8ad8ad088be00ebfbea86a09ec" title="Write float value to file.">writeValue</a>(<span class="keywordtype">float</span> val);
+<a name="l00112"></a>00112     <span class="comment">/*inline*/</span> <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a541d1d8ad8ad088be00ebfbea86a09ec" title="Write float value to file.">writeValue</a>(<span class="keywordtype">double</span> val);
+<a name="l00113"></a>00113     <span class="comment">/*inline*/</span> <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a541d1d8ad8ad088be00ebfbea86a09ec" title="Write float value to file.">writeValue</a>(<span class="keywordtype">long</span> val);
+<a name="l00114"></a>00114 
+<a name="l00119"></a>00119     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">long</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
+<a name="l00120"></a>00120 
+<a name="l00125"></a>00125     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">short</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
+<a name="l00126"></a>00126 
+<a name="l00131"></a>00131     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">char</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
+<a name="l00132"></a>00132 
+<a name="l00137"></a>00137     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#acb6d2814c2d60bafc96ee4ca4fae3df0" title="Writes long field to a text file.">writeField</a>(<span class="keywordtype">long</span> f_num, <span class="keywordtype">double</span> value, <span class="keywordtype">bool</span> with_comments, <span class="keywordtype">bool</span> brief_mode  );
+<a name="l00138"></a>00138 
+<a name="l00144"></a>00144     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keywordtype">long</span> f_num,  <span class="keywordtype">double</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
+<a name="l00145"></a>00145                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
+<a name="l00146"></a>00146 
+<a name="l00152"></a>00152     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keywordtype">long</span> f_num, <span class="keywordtype">long</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
+<a name="l00153"></a>00153                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
+<a name="l00154"></a>00154 
+<a name="l00160"></a>00160     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keywordtype">long</span> f_num, <span class="keywordtype">short</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
+<a name="l00161"></a>00161                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
+<a name="l00162"></a>00162 
+<a name="l00168"></a>00168     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#a0c1b4e1e39125d0c1174c40720bdf8f1" title="Writes char array to a text file.">writeArrayF</a>( <span class="keywordtype">long</span> f_num, <span class="keywordtype">char</span>* arr,  <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size,
+<a name="l00169"></a>00169                     <span class="keywordtype">bool</span> with_comments = <span class="keyword">false</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
+<a name="l00170"></a>00170 
+<a name="l00171"></a>00171 
+<a name="l00173"></a><a class="code" href="class_t_print_arrays.html#ab66c569cf323ae722c83a974a71fda38">00173</a>     <a class="code" href="class_t_print_arrays.html#ab66c569cf323ae722c83a974a71fda38" title="Constructor.">TPrintArrays</a>( <span class="keywordtype">short</span> aNumFlds, <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* aFlds, fstream&amp; fout ):
+<a name="l00174"></a>00174         <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>( aNumFlds, aFlds, fout)
+<a name="l00175"></a>00175     {}
+<a name="l00176"></a>00176 
+<a name="l00178"></a>00178     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span>*   arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> arr_size );
+<a name="l00180"></a>00180     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
+<a name="l00182"></a>00182     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
+<a name="l00184"></a>00184     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">long</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L  );
+<a name="l00185"></a>00185 
+<a name="l00187"></a>00187     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span>*   arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> arr_size );
+<a name="l00189"></a>00189     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> l_size=-1 );
+<a name="l00191"></a>00191     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> l_size=-1 );
+<a name="l00193"></a>00193     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">short</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">int</span> l_size=-1  );
+<a name="l00194"></a>00194 
+<a name="l00196"></a>00196     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
+<a name="l00197"></a>00197                 <span class="keywordtype">long</span> <span class="keywordtype">int</span> nColumns=1L, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
+<a name="l00199"></a>00199     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
+<a name="l00200"></a>00200                 <span class="keywordtype">long</span> <span class="keywordtype">int</span> nColumns=1L, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
+<a name="l00202"></a>00202     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">long</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
+<a name="l00203"></a>00203                 <span class="keywordtype">long</span> <span class="keywordtype">int</span> nColumns=1L, <span class="keywordtype">long</span> <span class="keywordtype">int</span> l_size=-1L );
 <a name="l00204"></a>00204 
-<a name="l00205"></a><a class="code" href="class_t_read_arrays.html">00205</a>  <span class="keyword">class </span><a class="code" href="class_t_read_arrays.html" title="Read fields of structure.">TReadArrays</a> : <span class="keyword">public</span>  <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a> 
-<a name="l00206"></a>00206  {
-<a name="l00207"></a>00207     gstring curArray;
-<a name="l00208"></a>00208 
-<a name="l00209"></a>00209  <span class="keyword">protected</span>:
-<a name="l00211"></a>00211     <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a72bbe3b62c7472a08d6977e7f770293d" title="Reads value from a text file.">readValue</a>(<span class="keywordtype">float</span>&amp; val);
-<a name="l00213"></a>00213     <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a72bbe3b62c7472a08d6977e7f770293d" title="Reads value from a text file.">readValue</a>(<span class="keywordtype">double</span>&amp; val);
-<a name="l00214"></a>00214     <span class="keyword">inline</span> <span class="keywordtype">void</span> setCurrentArray( <span class="keyword">const</span> <span class="keywordtype">char</span>* name, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
-<a name="l00215"></a>00215  
-<a name="l00216"></a>00216  <span class="keyword">public</span>:
+<a name="l00206"></a>00206     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>*  arr, <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
+<a name="l00207"></a>00207                 <span class="keywordtype">int</span> nColumns=1, <span class="keywordtype">int</span> l_size=-1 );
+<a name="l00209"></a>00209     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
+<a name="l00210"></a>00210                 <span class="keywordtype">int</span> nColumns=1, <span class="keywordtype">int</span> l_size=-1 );
+<a name="l00212"></a>00212     <span class="keywordtype">void</span> <a class="code" href="class_t_print_arrays.html#aaa28ecdf8301c07edb0c47be0c246fc8" title="Writes array to a text file.">writeArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">short</span>* arr, <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* selAr,
+<a name="l00213"></a>00213                 <span class="keywordtype">int</span> nColumns=1, <span class="keywordtype">int</span> l_size=-1 );
+<a name="l00214"></a>00214 
+<a name="l00215"></a>00215 };
+<a name="l00216"></a>00216 
 <a name="l00217"></a>00217 
-<a name="l00219"></a><a class="code" href="class_t_read_arrays.html#a3626aa2620d260ff1e71e269f06fde78">00219</a>     <a class="code" href="class_t_read_arrays.html#a3626aa2620d260ff1e71e269f06fde78" title="Constructor.">TReadArrays</a>( <span class="keywordtype">short</span> aNumFlds, <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* aFlds, fstream&amp; fin ):
-<a name="l00220"></a>00220         <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>( aNumFlds, aFlds, fin ), curArray(<span class="stringliteral">&quot;&quot;</span>)
-<a name="l00221"></a>00221     {}
-<a name="l00222"></a>00222 
-<a name="l00223"></a>00223     <span class="keywordtype">void</span>  skipSpace();
-<a name="l00224"></a>00224     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a2794ce6829a9b045cf6b5bfaad8b6452" title="Reset to 0 all flags (readed)">reset</a>();  
-<a name="l00225"></a>00225 
-<a name="l00226"></a>00226     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_read_arrays.html#ad385d986e79d394b4facfeae004dc133" title="Find field by name.">findFld</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name ); 
-<a name="l00227"></a>00227     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_read_arrays.html#a168f014a891549d4603fb5e26621bd0c" title="Read next name from file and find in fields list.">findNext</a>();  
-<a name="l00228"></a>00228     <span class="keywordtype">void</span>  <a class="code" href="class_t_read_arrays.html#ac3f19bc4ca9b56b2247f37cfaf33b851" title="Read next name from file.">readNext</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* label); 
-<a name="l00229"></a>00229 
-<a name="l00230"></a>00230     gstring <a class="code" href="class_t_read_arrays.html#a94a500388569946c396d16a855f8a21e" title="Test for reading all fields must be always present in the file.">testRead</a>();   
-<a name="l00231"></a>00231 
-<a name="l00233"></a>00233     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">short</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
-<a name="l00235"></a>00235     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
-<a name="l00237"></a>00237     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
-<a name="l00239"></a>00239     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
-<a name="l00241"></a>00241     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
-<a name="l00243"></a>00243     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> el_size );
+<a name="l00218"></a><a class="code" href="class_t_read_arrays.html">00218</a>  <span class="keyword">class </span><a class="code" href="class_t_read_arrays.html" title="Read fields of structure.">TReadArrays</a> : <span class="keyword">public</span>  <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a> 
+<a name="l00219"></a>00219  {
+<a name="l00220"></a>00220     gstring curArray;
+<a name="l00221"></a>00221 
+<a name="l00222"></a>00222  <span class="keyword">protected</span>:
+<a name="l00224"></a>00224     <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a72bbe3b62c7472a08d6977e7f770293d" title="Reads value from a text file.">readValue</a>(<span class="keywordtype">float</span>&amp; val);
+<a name="l00226"></a>00226     <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a72bbe3b62c7472a08d6977e7f770293d" title="Reads value from a text file.">readValue</a>(<span class="keywordtype">double</span>&amp; val);
+<a name="l00227"></a>00227     <span class="keyword">inline</span> <span class="keywordtype">void</span> setCurrentArray( <span class="keyword">const</span> <span class="keywordtype">char</span>* name, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
+<a name="l00228"></a>00228  
+<a name="l00229"></a>00229  <span class="keyword">public</span>:
+<a name="l00230"></a>00230 
+<a name="l00232"></a><a class="code" href="class_t_read_arrays.html#a3626aa2620d260ff1e71e269f06fde78">00232</a>     <a class="code" href="class_t_read_arrays.html#a3626aa2620d260ff1e71e269f06fde78" title="Constructor.">TReadArrays</a>( <span class="keywordtype">short</span> aNumFlds, <a class="code" href="structout_field.html" title="Internal descriptions of fields.">outField</a>* aFlds, fstream&amp; fin ):
+<a name="l00233"></a>00233         <a class="code" href="class_t_r_w_arrays.html" title="Basic class for red/write fields of structure.">TRWArrays</a>( aNumFlds, aFlds, fin ), curArray(<span class="stringliteral">&quot;&quot;</span>)
+<a name="l00234"></a>00234     {}
+<a name="l00235"></a>00235 
+<a name="l00236"></a>00236     <span class="keywordtype">void</span>  skipSpace();
+<a name="l00237"></a>00237     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a2794ce6829a9b045cf6b5bfaad8b6452" title="Reset to 0 all flags (readed)">reset</a>();  
+<a name="l00238"></a>00238 
+<a name="l00239"></a>00239     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_read_arrays.html#ad385d986e79d394b4facfeae004dc133" title="Find field by name.">findFld</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *Name ); 
+<a name="l00240"></a>00240     <span class="keywordtype">long</span> <span class="keywordtype">int</span> <a class="code" href="class_t_read_arrays.html#a168f014a891549d4603fb5e26621bd0c" title="Read next name from file and find in fields list.">findNext</a>();  
+<a name="l00241"></a>00241     <span class="keywordtype">void</span>  <a class="code" href="class_t_read_arrays.html#ac3f19bc4ca9b56b2247f37cfaf33b851" title="Read next name from file.">readNext</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* label); 
+<a name="l00242"></a>00242 
+<a name="l00243"></a>00243     gstring <a class="code" href="class_t_read_arrays.html#a94a500388569946c396d16a855f8a21e" title="Test for reading all fields must be always present in the file.">testRead</a>();   
 <a name="l00244"></a>00244 
-<a name="l00245"></a>00245 };
-<a name="l00246"></a>00246 
-<a name="l00247"></a>00247 <span class="comment">//=============================================================================</span>
+<a name="l00246"></a>00246     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">short</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
+<a name="l00248"></a>00248     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">int</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
+<a name="l00250"></a>00250     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">long</span> <span class="keywordtype">int</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
+<a name="l00252"></a>00252     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">float</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
+<a name="l00254"></a>00254     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">double</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size );
+<a name="l00256"></a>00256     <span class="keywordtype">void</span> <a class="code" href="class_t_read_arrays.html#a364e1656cce61a26962c85732778b620" title="Reads array from a text file.">readArray</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *name, <span class="keywordtype">char</span>* arr, <span class="keywordtype">long</span> <span class="keywordtype">int</span> size, <span class="keywordtype">long</span> <span class="keywordtype">int</span> el_size );
+<a name="l00257"></a>00257 
+<a name="l00258"></a>00258 };
+<a name="l00259"></a>00259 
+<a name="l00260"></a>00260 <span class="comment">//=============================================================================</span>
 </pre></div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 16:58:53 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

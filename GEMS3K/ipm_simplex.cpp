@@ -1,22 +1,29 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-// Copyright (C) 1992-2007 K.Chudnenko, I.Karpov, D.Kulik, S.Dmitrieva
+/// \file ipm_simplex.cpp
+/// Implementation of parts of the Interior Points Method (IPM) algorithm
+/// for convex programming Gibbs energy minimization,including modified
+/// simplex LP method with two-side constraints
 //
-// Implementation of parts of the Interior Points Method (IPM) module
-// for convex programming Gibbs energy minimization, described in:
-// (Karpov, Chudnenko, Kulik (1997): American Journal of Science
-//  v.297 p. 767-806)
+// Copyright (c) 1992-2012 K.Chudnenko, D.Kulik, S.Dmitrieva
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor (GEMS) v.3.1.x program
-// environment for thermodynamic modeling in geochemistry and of the
-// standalone GEMS3K code (define IPMGEMPLUGIN).
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
 
@@ -529,19 +536,27 @@ try{
        switch( pm.tMin )
        {
        case  A_TV_:
-           {   GoldenSection gsData( pm.Pai[0], pm.Pai[1], pm.Pai[3], pm.Fdev1[1], A_P);
+           {   
+	     // kg44 this is not yet properly implemented ....removed it
+	     /*
+               GoldenSection gsData( pm.Pai[0], pm.Pai[1], pm.Pai[3], pm.Fdev1[1], A_P);
                pm.P = gsData.getMinimum();
                A_P(pm.P);
+	     */
            }
            break;
        case  U_SV_:
-           {      GoldenSectionTwo gsData( pm.Tai[0], pm.Tai[1], pm.Tai[3],
+           {      
+	     // kg44 this is not yet properly implemented...removed it 
+	     /*
+                  GoldenSectionTwo gsData( pm.Tai[0], pm.Tai[1], pm.Tai[3],
                                              pm.Pai[0], pm.Pai[1], pm.Pai[3],
                                              pm.Fdev1[1], U_TP);
                   gsData.getMinimum();
                   pm.TC = gsData.getMinX();
                   pm.P = gsData.getMinY();
                   U_TP(pm.TC, pm.P);
+	     */
               }
             break;
        case  H_PS_:
@@ -815,13 +830,11 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
 //cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
 
-
-#else
-
+//#else
+//
    //TProfil::pm->CheckMtparam(); //test load thermodynamic data before
-   CheckMtparam(); //test load thermodynamic data before
-
-
+//   CheckMtparam(); // this call was in the wrong place!  DK DM 11.10.2012
+//
 #endif
 
 
@@ -1212,14 +1225,16 @@ double TMulti::HelmholtzEnergy( double x )
     GibbsEnergyMinimization();
     return( pm.VXc - pm.VX_ ); // VXc current value, VX_ value from key
 }
-
+//
+// kg44: not properly implemented...removed it
+/*
 double A_P( double x, double )
 {
 #ifndef IPMGEMPLUGIN
   return TProfil::pm->HelmholtzEnergy(x);
 #endif
 }
-
+*/
 
 /// Calls to minimization of other system potentials - InternalEnergy.
 /// Calc function for Method of golden section (only in GEMS ).
@@ -1232,12 +1247,13 @@ double TMulti::InternalEnergy( double TC, double P )
     return( (pm.VXc - pm.VX_)+(pm.SXc - pm.SX_) ); // VXc current value, VX_ value from key
 }
 
-
+// kg44: not properly implemented...removed it
+/*
 double U_TP( double TC, double P)
 {
 #ifndef IPMGEMPLUGIN
   return TProfil::pm->InternalEnergy(  TC,  P );
 #endif
 }
-
+*/
 //--------------------- End of ipm_simplex.cpp ---------------------------

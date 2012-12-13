@@ -25,14 +25,12 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -100,7 +98,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm.  
+<p>Contains chemical thermodynamic work data for GEM IPM-3 algorithm.  
  <a href="struct_m_u_l_t_i.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a>&gt;</code></p>
@@ -843,6 +841,9 @@ char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 <tr class="memitem:a0ed7ac7e0acc90040ad63e5b7b680ef6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0ed7ac7e0acc90040ad63e5b7b680ef6"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_m_u_l_t_i.html#a0ed7ac7e0acc90040ad63e5b7b680ef6">logCDvalues</a> [5]</td></tr>
 <tr class="memdesc:a0ed7ac7e0acc90040ad63e5b7b680ef6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Collection of lg Dikin crit. values for the new smoothing equation. <br/></td></tr>
+<tr class="memitem:a277829cdcd26a457e1d4dd3ae43ccf52"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a277829cdcd26a457e1d4dd3ae43ccf52"></a>
+double *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_m_u_l_t_i.html#a277829cdcd26a457e1d4dd3ae43ccf52">GamFs</a></td></tr>
+<tr class="memdesc:a277829cdcd26a457e1d4dd3ae43ccf52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy of activity coefficients Gamma before the first enter in PhaseSelection() [L] new. <br/></td></tr>
 <tr class="memitem:af2c0fc61014407f8dc40f80162981341"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af2c0fc61014407f8dc40f80162981341"></a>
 double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_m_u_l_t_i.html#af2c0fc61014407f8dc40f80162981341">Pai</a> [4]</td></tr>
 <tr class="memdesc:af2c0fc61014407f8dc40f80162981341"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol. <br/></td></tr>
@@ -893,8 +894,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 <tr class="memdesc:a3939c70d10e5f377ce40c0d6b6445425"><td class="mdescLeft">&#160;</td><td class="mdescRight">factor for re-scaling the cutoffs/insertions to the system size <br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm. </p>
-<dl class="section author"><dt>Author:</dt><dd>Copyright (C) 1995,2008 S.Dmytriyeva, D.Kulik </dd></dl>
+<div class="textblock"><p>Contains chemical thermodynamic work data for GEM IPM-3 algorithm. </p>
 </div><hr/><h2>Member Data Documentation</h2>
 <a class="anchor" id="a5209cb7d3712fcab97d9a02a8ab0bdb3"></a>
 <div class="memitem">
@@ -929,13 +929,13 @@ double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="st
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>C:/DevelGEMS/trunk/standalone/GEMS3K/<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a></li>
+<li>/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a></li>
 </ul>
 </div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jun 1 2012 16:58:54 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

@@ -1,191 +1,768 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html><head>
-  
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
+
+
 
   
-<meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20 (Win98; I) [Netscape]">
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
   
-<title>GEMS3K TSolMod Library Manual</title>
-
-</head>
-<body>
+  <meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20 (Win98; I) [Netscape]"><title>GEMS3K TSolMod Data in IPM File</title></head><body style="background-image: url(bgimg-gray.jpg);">
 <h1><img src="gems1.png" align="left" height="48" width="48">
-GEMS3K Solver of GeoChemical Equilibria</h1>
+GEMS3K Code for Solving for GeoChemical Equilibria</h1>
 
 <p> </p>
 
-<h2>Built-in Models of Non-Ideal Phases and Their Parameters in GEMS3K Input Files
+<h2>Parameters of built-in models of phases-solutions in the IPM input file
 </h2>
-
 
 <hr size="2" width="100%">
 <h3>Contents</h3>
 
-<div style="margin-left: 40px;"><font face="Helvetica, Arial, sans-serif"><a href="#TAG_INTRO">1.
-Introduction</a><br>
-<br>
-<a href="#TAG_TSOLMOD">2.
-The TSolMod class structure</a> <br>
-<br>
-<a href="#TAG_SETUP">3.
+<p><a href="#TAG_INTRO">1.
+Introduction</a>
+</p>
+
+<p><a href="#TAG_TSOLMOD">2.
+The TSolMod class structure</a> </p>
+
+<p><a href="#TAG_SETUP">3.
 Setup and transfer of of non-ideality parameters</a>
-<br>
-<br>
-<a href="#TAG_SETUP_DCPARAM">3.1.
+</p>
+
+<p style="margin-left: 40px;"><a href="#TAG_SETUP_DCPARAM">3.1.
 Parameters for Dependent Components
-in Phase definitions</a><br>
-<a href="#TAG_DC_INTPARAM">3.2.
+in Phase definitions</a></p>
+
+  
+<p style="margin-left: 40px;"><a href="#TAG_DC_INTPARAM">3.2.
 Interaction parameters and coefficients
-in Phase definitions</a><br>
-<br>
-<a href="#TAG_PARAM_ARRAYS">4.
+in Phase definitions</a></p>
+
+
+<p><a href="#TAG_PARAM_ARRAYS">4.
 Collected parameter arrays in MULTI data
-structure and IPM files</a><br>
-<br>
-<a href="#TAG_SELECTION">5.
-Selection (codes) of built-in non-ideality
-models and setup of their parameters</a><br>
-&nbsp;<br>
-<a href="#TAG_ION_ASSOC">5.1.
-Ion-association aqueous electrolyte model
-(autophase)</a><br>
-<a href="#TAG_DAVIES">5.1.1.
-Davies model</a><br>
-<a href="#TAG_DHK">5.1.2. </a></font><font face="Helvetica, Arial, sans-serif"><a href="#TAG_DHK">Debye-Hueckel
-equations (Kielland setup)</a><br>
-</font><font face="Helvetica, Arial, sans-serif"><a href="#TAG_DHH">5.1.3.
-Debye-Hueckel equations (Helgeson setup)</a>
-<br>
-<br>
-<a href="#TAG_SIT_MODELS">5.2.
-</a></font><a href="#TAG_SIT_MODELS"><font face="Helvetica, Arial, sans-serif">Specific ion
-interaction aqueous
-electrolyte models</font></a><br>
-<font face="Helvetica, Arial, sans-serif"><a href="#TAG_SIT">5.2.1. SIT
-(Broensted-Scatchard-Guggenheim) model</a><br>
-<a href="#TAG_PITZER">5.2.2.
-Pitzer (HMW) model</a><br>
-<a href="#TAG_EQUNIQUAC">5.2.3.
-Extended UNIQUAC model</a><br>
-<br>
-<a href="#TAG_GASFLUID">5.3.
-Gas/fluid models</a> <br>
-5.3.1. Simple (autophase) gas/fluid models<br>
-<br>
-5.4. Gas/fluid models using specific interactions<br>
-5.4.1. PRSV model <br>
-5.4.2. SRK model<br>
-5.4.3. Churakov-Gottschalk model<br>
-<br>
-5.5. Solid solution models <br>
-5.5.1. Margules <br>
-5.5.2. Redlich-Kister (Guggenheim) <br>
-5.5.3. Regular multicomponent<br>
-5.5.4. Van Laar <br>
+structure and IPM files</a>
+</p>
+
+<p><a href="#TAG_SELECTION">5. Codes of built-in non-ideality models and setup of their parameters</a></p>
+<p><a href="#TAG_EXAMPLES">6. </a><a href="#TAG_EXAMPLES">Examples of parameter structure of some specific-interaction phase models</a></p>
+
+
+
+  
+<p style="margin-left: 40px;"><a href="#TAG_SIT">5.1. SIT
+(Broensted-Scatchard-Guggenheim) model</a></p>
+
+    
+<p style="margin-left: 40px;"><a href="#TAG_PITZER">5.2.
+Pitzer (HMW) model</a></p>
+
+    
+<p style="margin-left: 40px;"><a href="#TAG_EQUNIQUAC">5.3.
+Extended UNIQUAC model</a></p>
+
+  
 ......<br>
+
+&lt;under construction&gt;<br>
 <br>
 <br>
-</font></div>
-
-<hr style="width: 100%; height: 2px;"><br>
-
-<h3 style="font-family: Helvetica,Arial,sans-serif;"><a name="TAG_INTRO"></a>1.
+<hr style="width: 100%; height: 2px;">
+<h3><a name="TAG_INTRO"></a>1.
 Introduction</h3>
 
-<p><font face="Helvetica, Arial, sans-serif">A particular
+
+<p>A particular
 strength of
-GEM algorithms is their ability to compute equilibria in heterogeneous
-chemical systems containing several(highly)&nbsp; non-ideal
+GEM algorithms is in their ability to compute equilibria in
+heterogeneous
+chemical systems containing several (highly)&nbsp; non-ideal
 solution
-phases.&nbsp; The GEM-Selektor code, in principle, allows the usage
+phases.&nbsp; The GEM-Selektor v.3 code, in principle, allows the usage
 of
 any model of non-ideal mixing because it provides the possibility of
-writing scripts in the Phase definition record (see <a href="gm_phase.html">gm_phase.html</a>
-and related documentation).
-However, interpretation of scripts is slower, and many non-ideality
-models are so well established and popular that they are hard-coded in
-GEM IPM kernel, and thus available in both GEM-Selektor and GEMS3K
-packages. Description of these models on scientific side is provided in
-the&nbsp; </font><big style="font-weight: bold;"><span style="font-family: monospace;">Activity-Coeffs.pdf</span></big><font face="Helvetica, Arial, sans-serif">&nbsp; file
-in GEMS documentation
-(also on the web site). The present document describes the technical
-side, providing an overview of implementation (TSolMod class), relevant
+writing scripts in the Phase definition record (see GEM-Selektor
+documentation).
+However, interpretation of Phase scripts slows the calculations down,
+and many non-ideality
+models are so well established and popular that they are now hard-coded
+in
+the GEM IPM kernel in form of TSolMod class library, which makes them
+available in both GEM-Selektor package and in standalone GEMS3K code.
+Formal description of these models is provided in
+the Activity-Coeffs.pdf&nbsp; file
+in GEM-Selektor documentation
+(also on the GEMS web site). The present document provides an overview
+of implementation (TSolMod class), relevant
 data structures for transferring parameters and coefficients used in
 the models, and examples of parameter setup for frequently used
-built-in non-ideality models. <br>
-<br>
-<br>
+built-in non-ideality models.&nbsp; <font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 
-<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_TSOLMOD"></a>2.
-The TSolMod class structure and functionality<br>
+<p>More about TSolMod C++ class library can be learned from a
+publication:</p>
+
+<ul>
+
+  <li>Wagner T., Kulik D.A., Hingerl F.F., Dmytrieva S.V. (2012):
+GEM-Selektor geochemical modeling package: TSolMod C++ class library
+and data interface for multicomponent phase models. <i>Canadian
+Mineralogist</i> (in press).</li>
+</ul>
+
+<font face="Helvetica, Arial, sans-serif"><br>
+</font>
+<hr size="2" width="100%">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_TSOLMOD"></a></font>2.
+The TSolMod class structure and functionality<font face="Helvetica, Arial, sans-serif"><br>
 </font></h3>
 
-<p><font face="Helvetica, Arial, sans-serif">&lt;overview
-to be written
-by TW &gt;<br>
-</font></p>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
+<p>Key innovative features
+of the TSolMod class library are:<br>
+</p>
 
-<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_SETUP"></a>3.
-Setup and transfer of of non-ideality parameters </font></h3>
+<ul>
 
-<p style="font-family: Helvetica,Arial,sans-serif;">There
+  <li>generic and flexible model parameter setup;<br>
+  </li>
+  <li>computationally efficient data exchange with the GEM IPM
+equilibrium solver;<br>
+  </li>
+  <li>open conceptual design that allows straightforward extension to
+incorporate any
+models for solution phases. </li>
+</ul>
+
+
+
+<p>In a broad sense, TSolMod library is a collection of classes (each
+implementing one particular equation of state or activity model)
+derived from the TSolMod base class. For brevity, this collection will
+further be called the TSolMod library. The base class contains a set of
+virtual member functions (virtual C++ methods) and data objects that
+are common to all models. These are designed to call model-specific
+calculations at different stages of the GEM IPM algorithm (Fig. 1),
+most importantly functions that calculate increments to the
+thermodynamic properties of chemical species, pressure-temperature
+corrections to model parameters, activity coefficients, and bulk phase
+ideal and excess mixing properties (Table 1). This separation of
+different functionality significantly increases the GEMS3K code
+efficiency (Fig. 1), because in most cases only the activity
+coefficients or activities need to be recalculated at each iteration of
+GEM IPM. The correction of model parameters is only done when pressure
+and/or temperature have been changed, and the bulk phase properties are
+calculated after the GEM IPM algorithm has converged.</p>
+
+<p>The data objects in the TSolMod base class, commonly available to
+all derived classes, provide access to data arrays of composition (mole
+fractions, molalities) and model parameters (species-related and
+interaction parameters). In addition, they comprise thermodynamic
+output data including fugacity and activity coefficients, and different
+bulk phase properties such as Gibbs energy, enthalpy, entropy,
+Helmholtz energy, heat capacity, and volume (Table 2). The bulk phase
+properties are separated into thermodynamically distinct contributions,
+most importantly ideal mixing, excess, and residual properties
+(Anderson &amp; Crerar 1993, Prausnitz et al. 1997), and Darken terms
+for solid solutions (Holland &amp; Powell 1992). The data exchange
+between the GEM IPM algorithm and the derived classes in the TSolMod
+library occurs via two well-defined interfaces. These are the derived
+class constructor, which transfers all input (temperature, pressure,
+model parameters, composition) and output (activity coefficients, phase
+properties) data encapsulated into a single data container structure
+for a given phase, and a specific derived class member function call
+that updates pressure and temperature whenever these have been
+externally modified.</p>
+
+<p>Of particular importance for the versatility and extensibility of
+the TSolMod library is the design of data arrays that contain the
+model-specific parameters. These are separated into two data
+structures, one containing parameters of individual end-member
+components (species) and a second containing the interaction parameters
+between end-member species. In addition, the end member site occupancy table (SOT)
+that contains the fractions of different moieties (ions, atoms, or
+groups of atoms) on individual crystal lattice sites is supported in
+the case of multi-site (sublattice) solid solution phases. Interaction
+parameters (of different types, composed of one or several coefficients
+to express temperature and pressure dependence) can be of binary,
+ternary or higher order (or combinations thereof). Any such
+interactions between different species are uniquely identified by a
+generalized indexation scheme, which also makes it possible to encode
+different types of interaction parameters (as for example in the Pitzer
+aqueous electrolyte model). Zero interaction parameters are default and
+can be skipped from input data lists. The indexation scheme and the two
+data structures can be collected and stored in phase definitions in the
+GEM-Selektor database, or read in from the GEMS3K input file. This
+gives maximum flexibility to the user, because the model parameters can
+be set up without any modification of the source code, and different
+alternative calibrations of equation of state or activity models using
+the same formalism can be tested in a straightforward, interactive way.
+An example of the data setup is provided in Figure 2 for the derived
+class TVanLaar containing implementation of a nonideal ternary feldspar
+solid solution model.</p>
+
+
+
+<h4>Summary of virtual methods of the TSolMod library for all implemented activity and equation of state models. <br>
+</h4>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+      <p>
+Method name</p>
+      </td>
+      <td style="vertical-align: top;">
+      <p>GEM IPM wrapper</p>
+      </td>
+      <td style="vertical-align: top;">
+      <p>Description</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TSolMod()</td>
+      <td style="vertical-align: top; font-family: monospace;">SolModCreate(k)</td>
+      <td style="vertical-align: top;">Constructor</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+~TSolMod()</td>
+      <td style="vertical-align: top; font-family: monospace;"><br>
+      </td>
+      <td style="vertical-align: top;">Destructor</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+PureSpecies() <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">SolModParPT(k)</td>
+      <td style="vertical-align: top;">Calculates increments to thermodynamic properties of species
+(end-members) in solution phases such as pure fluid fugacities, Darken
+correction terms</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+PTparam()</td>
+      <td style="vertical-align: top; font-family: monospace;">SolModParPT(k) </td>
+      <td style="vertical-align: top;">Calculates pressure-temperature corrections to interaction or equation
+of state mixing parameters, executed once before main GEM IPM</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+MixMod()</td>
+      <td style="vertical-align: top; font-family: monospace;">SolModActCoeff(k) <br>
+      </td>
+      <td style="vertical-align: top;">Calculates activity and fugacity coefficients of species (end-members)
+in solution phases, executed every main GEM IPM iteration</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+ExcessProp() <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">SolModExcessProp(k)</td>
+      <td style="vertical-align: top;">Calculates integral excess mixing properties of solution phases
+(enthalpy, entropy, heat capacity, volume), executed after GEM IPM has
+converged</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+IdealProp() <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">SolModIdealProp(k) <br>
+      </td>
+      <td style="vertical-align: top;">Calculates integral ideal mixing properties of solution phases
+(enthalpy, entropy, heat capacity, volume), executed after GEM IPM has
+converged</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+UpdatePT() <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">SolModCreate(k)<br>
+      </td>
+      <td style="vertical-align: top;">Updates
+pressure and temperature inside TSolMod and subclasses whenever they
+are externally modified</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+GetPhaseName() <br>
+      </td>
+      <td style="vertical-align: top; font-family: monospace;">SolModCreate(k)</td>
+      <td style="vertical-align: top;">Transfers phase name into TSolMod and subclasses, used for supporting
+implementation of user-defined specific mixing models for solution
+phase</td>
+    </tr>
+  </tbody>
+</table>
+<p>The functions
+are called through corresponding wrappers in the GEM IPM-3 main algorithm
+in a loop over all multicomponent phases (indexed with k).<br>
+<br></p>
+<h4>
+Thermodynamic data objects of the TSolMod library that are available in
+all implemented activity and equation of state models.&nbsp;&nbsp;  </h4>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+Data object name <br>
+      </td>
+      <td style="vertical-align: top;">Description</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+ModCode</td>
+      <td style="vertical-align: top;">External code for identifying the activity or
+EoS model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+MixCode</td>
+      <td style="vertical-align: top;">External code for selection of EoS mixing
+rules</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+DC_Codes</td>
+      <td style="vertical-align: top;">External code for selection of species
+(end-member) type</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+NComp</td>
+      <td style="vertical-align: top;">Number of components in the solution phase</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+NPar</td>
+      <td style="vertical-align: top;">Number of non-zero interaction parameters</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+NPcoef <br>
+      </td>
+      <td style="vertical-align: top;">Number of coefficients per interaction
+parameter</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+MaxOrd</td>
+      <td style="vertical-align: top;">Maximum order of interaction (binary, ternary
+etc.)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+NP_DC</td>
+      <td style="vertical-align: top;">Number of coefficients per species</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+NSub</td>
+      <td style="vertical-align: top;">Number of sublattices for multisite
+solid-solution models</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Nmoi <br>
+      </td>
+      <td style="vertical-align: top;">Number of ions or ion groups (moieties) that exchange
+on sublattices</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aIPx</td>
+      <td style="vertical-align: top;">List of indexes of non-zero interaction
+parameters</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aIPc</td>
+      <td style="vertical-align: top;">Table of interaction parameter coefficients</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aIP</td>
+      <td style="vertical-align: top;">Vector of interaction parameters corrected to T
+and P</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aDCc</td>
+      <td style="vertical-align: top;">Species (end-member) properties coefficients</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aDC</td>
+      <td style="vertical-align: top;">Table of corrected species (end-member)
+properties at T and P</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aGEX</td>
+      <td style="vertical-align: top;">Reciprocal energies, Darken terms, pure
+fugacities of species</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aPparc</td>
+      <td style="vertical-align: top;">Output partial pressures (activities,
+fugacities)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">x<br>
+      </td>
+      <td style="vertical-align: top;">Mole fractions of end members</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+lnGamma</td>
+      <td style="vertical-align: top;">Activity coefficients of species (end-members)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+aVol</td>
+      <td style="vertical-align: top;">Molar volumes of species (end-members)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+phVOL <br>
+      </td>
+      <td style="vertical-align: top;">Phases volume (cm<sup>3</sup>/mol)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+R_CONST</td>
+      <td style="vertical-align: top;">Universal gas constant (8.31451)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Tk</td>
+      <td style="vertical-align: top;">Temperature (in K)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Pbar</td>
+      <td style="vertical-align: top;">Pressure (in bar)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Gex, Hex, Sex, CPex, Vex, Aex, Uex</td>
+      <td style="vertical-align: top;">Molar bulk phase
+excess properties &lt;under construction&gt;<br>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Gid, Hid, Sid, CPid, Vid, Aid, Uid</td>
+      <td style="vertical-align: top;">Molar bulk phase
+ideal mixing properties &lt;under construction&gt;</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq <br>
+      </td>
+      <td style="vertical-align: top;">Molar bulk phase
+DQF or reciprocal terms &lt;under construction&gt;</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs</td>
+      <td style="vertical-align: top;">Molar bulk phase
+residual functions (for gases and fluids) &lt;under construction&gt;</td>
+    </tr>
+  </tbody>
+</table>
+&nbsp;&nbsp;&nbsp; <br>
+
+<br>
+
+
+<h4>Overview of activity and equation of state models currently implemented in
+TSolMod library</h4>
+<p>
+Multicomponent fluids and gases<br></p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+Derived class name</td>
+      <td style="vertical-align: top;">Short description</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TSRKcalc</td>
+      <td style="vertical-align: top;">Soave-Redlich-Kwong cubic
+equation of state, with Van der Waals mixing rule using constant or
+T-dependent parameter</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TPR78calc</td>
+      <td style="vertical-align: top;">Peng-Robinson cubic equation
+of state, with Van der Waals mixing rule using constant or T-dependent
+parameter</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TPRSVcalc</td>
+      <td style="vertical-align: top;">Peng-Robinson-Stryjek-Vera
+cubic equation of state, with Van der Waals mixing rule using constant
+or T-dependent parameter</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TCORKcalc</td>
+      <td style="vertical-align: top;">Compensated Redlich-Kwong
+(CORK) hybrid cubic and virial equation of state, with Van Laar mixing
+rule</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TSTPcalc</td>
+      <td style="vertical-align: top;">Sterner-Pitzer Helmholtz
+energy based equation of state for high-pressure systems, with Van Laar
+mixing rule</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TCGFcalc</td>
+      <td style="vertical-align: top;">Perturbation theory based
+Churakov-Gottschalk equation of state, with basic Van der Waals mixing
+rule</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+&nbsp;&nbsp;  <br></p>
+Multicomponent liquid nonelectrolyte solutions&nbsp;&nbsp;&nbsp; <br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+Derived class name</td>
+      <td style="vertical-align: top;">Short description</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">TWilson</td>
+      <td style="vertical-align: top;">Multicomponent Wilson local composition
+activity model, with T-dependent non-randomness parameter</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TNRTL</td>
+      <td style="vertical-align: top;">Multicomponent non-random two-liquid (NRTL)
+local composition activity model, with T-dependent non-randomness
+parameter</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+
+&nbsp;&nbsp;&nbsp; <br>
+<p>
+Solid solutions&nbsp;&nbsp;&nbsp; </p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+Derived class name</td>
+      <td style="vertical-align: top;">Short description</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">TIdeal</td>
+      <td style="vertical-align: top;">Multicomponent ideal mixing model for
+fluid/gases and solid-solutions; suppors a multisite ideal formalism
+for solid-solutions</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TBerman</td>
+      <td style="vertical-align: top;">Multicomponent microscopic-interaction multisite model
+for solid-solutions</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TRegular <br>
+      </td>
+      <td style="vertical-align: top;">Multicomponent regular activity model
+(symmetric formalism)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TVanLaar</td>
+      <td style="vertical-align: top;">Multicomponent Van Laar activity model
+(asymmetric formalism)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TRedlichKister</td>
+      <td style="vertical-align: top;">Multicomponent 4-term Redlich-Kister
+activity model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TMargules</td>
+      <td style="vertical-align: top;">Ternary regular Margules activity model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TSubregular</td>
+      <td style="vertical-align: top;">Binary subregular Margules activity model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TGuggenheim</td>
+      <td style="vertical-align: top;">Binary 3-term Redlich-Kister activity
+model</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+
+&nbsp;&nbsp;&nbsp; <br>
+Multicomponent aqueous electrolyte solutions <br>
+<br>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">
+Derived class name</td>
+      <td style="vertical-align: top;">Short description</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TDebyeHueckel</td>
+      <td style="vertical-align: top;">Two-term Debye-Hückel
+model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TLimitingLaw</td>
+      <td style="vertical-align: top;">One-term limiting law
+Debye-Hückel model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+THelgeson</td>
+      <td style="vertical-align: top;">Extended Debye-Hückel model
+with common constant or T-P-dependent extended term parameter, and
+common ion size</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TKarpov</td>
+      <td style="vertical-align: top;">Extended Debye-Hückel model
+with common constant or T-P-dependent extended term parameter, and
+individual ion sizes</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TShvarov</td>
+      <td style="vertical-align: top;">Extended Debye-Hückel model
+with common constant or T-P-dependent extended term parameter, and
+common ion size</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TDavies</td>
+      <td style="vertical-align: top;">Davies extended Debye-Hückel
+model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TSIT <br>
+      </td>
+      <td style="vertical-align: top;">2-term Specific ion interaction
+(SIT) model</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TPitzer <br>
+      </td>
+      <td style="vertical-align: top;">Pitzer (Harvie-Moller-Weare)
+model with T-dependent binary and ternary interaction parameters</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; font-family: monospace;">
+TEUNIQUAC</td>
+      <td style="vertical-align: top;">Extended UNIQUAC model with
+T-dependent binary interaction parameters<br>
+      </td>
+    </tr>
+  </tbody>
+</table>
+&nbsp;&nbsp; <br>
+<p>
+More derived classes can be added in future versions of TSolMod library.  </p>
+
+
+<br>
+
+
+
+
+
+<p></p><hr size="2" width="100%">
+<h3><a name="TAG_SETUP"></a>3.
+Setup and transfer of of non-ideality parameters<font face="Helvetica, Arial, sans-serif"> </font></h3>
+
+<p>In GEM-Selektor code, there
 are two major
 variants of setting up the Phase definitions for ideal or non-ideal
 solution models: (1) Autophase setup; (2) User-defined Phase record
-setup. <br>
-</p>
+setup. </p>
 
-<p style="font-family: Helvetica,Arial,sans-serif;">In
-Autophase mode,
+
+
+<p>In
+the Autophase mode,
 the GEM-Selektor can automatically construct a Phase definition record
-for aqueous and/or gas/fluid phase for mixing models where no specific
-interactions between phase components are employed. Such a phase exists
+for an aqueous or a gas/fluid phase without specific
+interactions between phase components (species). Such a phase exists
 only during the modeling project session and will be automatically
 deleted when the project is closed, and created when it is opened
 again. If the model requires component individual parameters (such as
 Kielland ion-size parameters in the Debye-Hueckel equation), these will
-be automatically collected into <big style="font-family: monospace; font-weight: bold;">dc_cf</big>
-array
-from DComp and ReacDC records. Some parameter settings that refer to
-the whole phase will be&nbsp; stored in the <big style="font-family: monospace;"><span style="font-weight: bold;">ph_cf</span></big>
-array. <br>
-</p>
+be automatically collected into <big style="font-family: monospace; font-weight: bold;">dc_cf</big>array
+from DComp and ReacDC records. Note that, upon export to GEMS3K I/O
+files, automatically created aqueous, gas or fluid phases will be
+exported just as any ohter phase definitions. &nbsp; </p>
 
-<p><span style="font-family: Helvetica,Arial,sans-serif;">However,
-the
-mixing models with specific interactions between phase components (end
-members) cannot be implemented in Autophase mode; any Phase record for
-such a model must be taken from the Default data base or created by the
-user before attempting to open the modeling project and calculate
-equilibria. Some components of such phases cannot be switched
-off in the chemical system definition because this will shift component
-indexes and render the mixing model non-operational. However, the whole
-phase with all its components can be switched off. When setting the
+
+
+<p>Mixing models with specific interactions between phase components (end
+members, aqueous ions) cannot be implemented in the Autophase mode. Any Phase record for
+such a model of mixing must be taken from the "DB.Default" data base, or created by the
+user in the modeling project before attempting to open the project and calculate
+the equilibria. In some cases, certain components of such phases cannot be switched
+off in the chemical system definition because this will render the mixing model non-operational. When setting this kind of
 Phase definition, one typically needs to
 know how many non-zero interaction parameters will be used - this
-defines the number of rows in&nbsp; </span><big><span style="font-family: monospace; font-weight: bold;">ipxT</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
-and&nbsp; </span><big><span style="font-family: monospace; font-weight: bold;">ph_cf</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
-arrays (zero
-interaction is default and needs not be defined explicitly).</span><br>
-</p>
+determines the number of rows in<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big><span style="font-family: monospace; font-weight: bold;">ipxT</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
+</span>and<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big><span style="font-family: monospace; font-weight: bold;">ph_cf</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
+</span>arrays (zero
+interaction is default and needs not be defined explicitly).</p>
+<br>
 
-<h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_SETUP_DCPARAM"></a>3.1.
+
+
+<hr style="width: 100%; height: 2px;">
+<h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_SETUP_DCPARAM"></a></font>3.1.
 Parameters for Dependent Components
-in Phase definitions</font></h4>
+in Phase definitions</h4>
 
-<p><font face="Helvetica, Arial, sans-serif">Many non-ideality
+
+<p>Many non-ideality
 models
 require some individual parameters of phase components (species or end
-members). If so then a </font><big style="font-weight: bold;"><span style="font-family: monospace;">dc_cf</span></big><font face="Helvetica, Arial, sans-serif"> array must be
+members). If so then a<font face="Helvetica, Arial, sans-serif"> </font><big style="font-weight: bold;"><span style="font-family: monospace;">dc_cf</span></big><font face="Helvetica, Arial, sans-serif"> </font>array
+must be
 allocated in the
 Phase record and structure, having the number of rows equal to the
 number of Dependent Components included in the phase, and the number of
@@ -193,382 +770,382 @@ columns equal to the (maximum) number of parameters (coefficients) per
 component. Typically, in GEM-Selektor code, this information is
 collected from DComp or ReacDC records in Autophase setup or (as an
 option) during remake of Phase record. In user-defined Phase records,
-these parameters can be corrected or re-entered, if necessary. <br>
+these parameters can be corrected or re-entered, if necessary. Upon
+export to GEMS3K I/O file, all this information is recorded in the IPM
+file for all multi-component phases. </p>
+<font face="Helvetica, Arial, sans-serif">
 <br>
-</font></p>
+</font>
 
+<hr style="width: 100%; height: 2px;">
 <h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_DC_INTPARAM"></a>
-3.2. Interaction parameters and coefficients in Phase definitions<br>
+</font>3.2. Interaction parameters and coefficients in Phase definitions<font face="Helvetica, Arial, sans-serif"><br>
 </font></h4>
 
-<p><span style="font-family: Helvetica,Arial,sans-serif;">In
+
+<p>In
 all
-built-in non-ideality models with specific inetractions, the
-interaction parameters are given in the&nbsp; </span><big style="font-weight: bold;"><span style="font-family: monospace;">ph_cf</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
-array, and the
-indexes of involved phase components&nbsp; are given in the </span><big style="font-weight: bold;"><span style="font-family: monospace;">ipxT</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
-array. These
-two arrays are connected in a sense that a row in the ipxT index
+built-in non-ideality models with specific inetractions belonging to the TSolMod class library, the
+interaction parameter coefficients are given in the<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big style="font-weight: bold;"><span style="font-family: monospace;">ph_cf</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
+</span>array, and the
+indexes of involved phase components (and optionally parameter types) are given in the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><big style="font-weight: bold;"><span style="font-family: monospace;">ipxT</span></big><span style="font-family: Helvetica,Arial,sans-serif;">&nbsp;
+</span>array. These
+two arrays are connected in a sense that a row in the <span style="font-family: monospace;">ipxT</span> index
 list tells the indexes of interacting components in the phase, while
 the
-respective row of the ph_cf table contains all the coefficients that
-together make up the interaction parameter. The number of
-columns in the ipxT index list depends on the maximum order of
+respective row of the <span style="font-family: monospace;">ph_cf</span> table contains all the coefficients that
+together make up the respective interaction parameter. The number of
+columns in the <span style="font-family: monospace;">ipxT</span> index list depends on the maximum order of
 interaction
 parameters (2 for binary, 3 for ternary, ...); unused indexes should be
-set to -1. The number of columns in the ph_cf table depends on the
+set to -1. The number of columns in the <span style="font-family: monospace;">ph_cf</span> table depends on the
 maximum
 number of coefficients per parameter - minimum 1, or depending on how
 the temperature, pressure or ionic strength dependence of interaction
 parameters is defined in the particular model. Examples of this setup
-are given for particular models.</span><br>
+are given for some particular models of mixing.</p>
 <br>
-</p>
 
-<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_PARAM_ARRAYS"></a>4.
-Collected parameter arrays in MULTI data structure and IPM files<br>
+
+
+<hr style="width: 100%; height: 2px;">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_PARAM_ARRAYS"></a></font>4.
+Collected parameter arrays in MULTI data structure and IPM files<font face="Helvetica, Arial, sans-serif"><br>
 </font></h3>
 
-<p style="font-family: Helvetica,Arial,sans-serif;">The
+
+<p>The
 model selection
 codes (listed in tables in Section 5 below) can be selected in the
 Phase remake
 wizard&nbsp; (in&nbsp; GEM-Selektor) and will appear as a first
 character in the
-<big style="font-weight: bold;"><span style="font-family: monospace;">p_solt</span></big>
+<big><span style="font-family: monospace;">p_solt</span></big>
 list (the fourth character there must be set to 'S' for built-in
-models). <br>
-</p>
+models). </p>
 
-<p style="font-family: Helvetica,Arial,sans-serif;">When
+
+
+<p>When
 the chemical
 system definition is assembled inside of the
-GEMS modeling project, the <big style="font-weight: bold;"><span style="font-family: monospace;">p_solt</span></big>
+GEMS modeling project, the <big><span style="font-family: monospace;">p_solt</span></big>
 data object for
 each multi-component phase
-will be copied into a respective row of the&nbsp; <big style="font-weight: bold;"><span style="font-family: monospace;">smod</span></big>&nbsp;
+will be copied into a respective row of the&nbsp; <big><span style="font-family: monospace;">smod</span></big>&nbsp;
 array in the IPM (MULTI) work
-data structure. In parallel, the dimensions of <big style="font-weight: bold;"><span style="font-family: monospace;">ipxT</span></big>
-and <big style="font-weight: bold;"><span style="font-family: monospace;">ph_cf</span></big>
+data structure. In parallel, the dimensions of <big><span style="font-family: monospace;">ipxT&nbsp; </span></big>and<big> </big><big><span style="font-family: monospace;">ph_cf</span></big>
 arrays&nbsp;
 for each phase will be collected&nbsp; in the respective row of the
-<big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod</span></big>
+<big><span style="font-family: monospace;">Lsmod</span></big>
 array; the number of individual DC parameters per component will be
-put into the respective cell (row) of the <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmdc</span></big>
-array. <br>
-</p>
-
-<p style="font-family: Helvetica,Arial,sans-serif;">After
+put into the respective cell (row) of the <big><span style="font-family: monospace;">Lsmdc</span></big>
+array. </p>
+<p>
+After
 completion of
-assembling the <big style="font-weight: bold;"><span style="font-family: monospace;">smod</span></big>,
-<big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod</span></big>
-and <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmdc</span></big>
+assembling the <big><span style="font-family: monospace;">smod</span></big>,
+<big><span style="font-family: monospace;">Lsmod</span></big>
+and <big><span style="font-family: monospace;">Lsmdc</span></big>
 arrays, the <big style="font-weight: bold;"><span style="font-family: monospace;">dmc</span></big>
 array
-(in MULTI structure) will be allocated, with number of elements equal
-to the sum of products <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmdc[k]*L1[k]</span></big>,
+(in MULTI structure, called <big><span style="font-family: monospace;">DMc</span></big> in the IPM file) will be allocated, with number of elements equal
+to the sum of products <big><span style="font-family: monospace;">Lsmdc[k][0]*L1[k]</span></big>,
 i.e. the
-sum of each non-zero element in the <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmdc</span><span style="font-family: monospace; font-weight: bold;">&nbsp;</span><span style="font-family: monospace;"></span></big>
-array times the number
+sum of each non-zero element in the <big><span style="font-family: monospace;">Lsmdc</span><span style="font-family: monospace;">[0]</span></big>
+array column times the number
 of phase components over all multicomponent phases. The&nbsp; <big style="font-weight: bold;"><span style="font-family: monospace;">pmc</span></big>&nbsp;
-array will be allocated next, with total number of elements equal to
-the sum of products&nbsp; <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod[k][0]*Lsmod[k][2]</span></big>&nbsp;
+array (<big><span style="font-family: monospace;">PMc</span></big> in the IPM file) will be allocated next, with total number of elements equal to
+the sum of products&nbsp; <big><span style="font-family: monospace;">Lsmod[k][0]*Lsmod[k][2]</span></big>&nbsp;
 for all multicomponent phases. The <big style="font-weight: bold;"><span style="font-family: monospace;">ipx </span></big>index
-array will be
+array (<big><span style="font-family: monospace;">IPxPH</span></big> in IPM file) will be
 allocated with total number of elements equal to the sum of
-products&nbsp; <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod[k][0]*Lsmod[k][1]</span></big>&nbsp;
-for all multicomponent phases.<br>
-</p>
+products&nbsp; <big><span style="font-family: monospace;">Lsmod[k][0]*Lsmod[k][1]</span></big>&nbsp;
+for all multicomponent phases.</p>
 
-<p style="font-family: Helvetica,Arial,sans-serif;">Finally,
+
+
+<p>Finally,
 the Phase
-records will be read again one-by-one, and the contents of <big style="font-weight: bold;"><span style="font-family: monospace;">dc_cf</span></big>
-array in k-th phase (if any) will be copied into the <big style="font-weight: bold;"><span style="font-family: monospace;">dmc</span></big>
-array block-after-block (a table block is copied row-by-row). For
+records will be read again one-by-one, and the contents of <big><span style="font-family: monospace;">dc_cf</span></big>
+array in k-th phase (if any) will be copied into the <big><span style="font-family: monospace;">dmc</span></big><big style="font-weight: bold;"><span style="font-family: monospace;"> </span></big>array block-after-block (a table block is copied row-by-row). For
 instance, if the aqueous phase (k=0) had one parameter per species and
 10 species, the gas phase (k=1) had no parameters per species and 3
-species, and the solid solution phase had two parameter per species and
-two species, the <big style="font-weight: bold;"><span style="font-family: monospace;">L1</span></big>
+species, and the solid solution phase (k=2) had two parameter per species and
+two species, the<big><span style="font-family: monospace;"> L1</span></big>
 array will
-contain&nbsp; { 10, 3, 2&nbsp; }; the&nbsp; <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmdc</span></big>
-array&nbsp; { 1, 0, 2&nbsp; } and the <big style="font-weight: bold;"><span style="font-family: monospace;">dmc</span></big>
+contain&nbsp; { 10, 3, 2&nbsp; }; the&nbsp; <big><span style="font-family: monospace;">Lsmdc</span></big>
+array will contain { 1, 0, 0,&nbsp;&nbsp; 0, 0, 0,&nbsp;&nbsp; 2, 0, 0&nbsp; }; the <big><span style="font-family: monospace;">dmc</span></big>
 array will contain
 first 10 numbers for aqueous phase, then no numbers for gas phase, and
-then 4 numbers for solid solution phase. <br>
-</p>
-
-<p style="font-family: Helvetica,Arial,sans-serif;">Likewise,
+then 4 numbers for solid solution phase. </p>
+<p> Likewise,
 the
-contents of&nbsp; <big style="font-weight: bold;"><span style="font-family: monospace;">ipxT</span></big>
+contents of&nbsp; <big><span style="font-family: monospace;">ipxT</span></big>
 array for each phase
-(if available) will be copied into the <big style="font-weight: bold;"><span style="font-family: monospace;">ipx</span></big>
+(if available) will be copied into the <big><span style="font-family: monospace;">ipx</span></big>
 array
-block-after-block (row-by-row). Continuing with the above example, let
-the number of interaction parameters <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod[k][0]</span></big>
+block-after-block (row-by-row); the respective rows with interaction parameter coefficients will be copied from <big><span style="font-family: monospace;">ph_cf</span></big> into <big><span style="font-family: monospace;">pmc</span></big>
+array. If some components of the phase were turned off then only those
+rows will be copied where no indexes of turned-off components are
+present; the index values will be adjusted to the remaining set of
+'turned-on' components in the phase. <br>
+</p>
+<p> Continuing with the above example, let
+the number of interaction parameters <big><span style="font-family: monospace;">Lsmod[k][0]</span></big>
 be 5 for the
 aqueous phase, 0 for gas phase, and 2 for the solid solution phase; the
-maximum order of parameters <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod[k][1]</span></big>
+maximum order of parameters <big><span style="font-family: monospace;">Lsmod[k][1]</span></big>
 be 3 for
 aqueous, 0 for gas and 2 for&nbsp; solid solution, and the number
 of
-coefficients per interaction parameter <big style="font-weight: bold;"><span style="font-family: monospace;">Lsmod[k][2]</span></big>
+coefficients per interaction parameter <big><span style="font-family: monospace;">Lsmod[k][2]</span></big>
 be 2 for
-aqueous, 0 for gas, and 4 for solid solution. Then the <big style="font-weight: bold;"><span style="font-family: monospace;">ipx</span></big>
+aqueous, 0 for gas, and 4 for solid solution. Then the <big><span style="font-family: monospace;">ipx</span></big>
 array will contain 15 indexes for the aqueous phase, 0 for gas phase,
-and 4 for solid solution phase; the <big style="font-weight: bold;"><span style="font-family: monospace;">pmc</span></big>
+and 4 for solid solution phase; the <big><span style="font-family: monospace;">pmc</span></big>
 array will contain 10
 coefficients for aqueous phase, 0 for gas, and 8 for solid solution
-phase (all in the indicated sequence of phases). <br>
-</p>
-
-<p><span style="font-family: Helvetica,Arial,sans-serif;">The </span><big style="font-weight: bold;"><span style="font-family: monospace;">smod,
-Lsmod, Lsmdc, dmc</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> and
-</span><big style="font-weight: bold;"><span style="font-family: monospace;">pmc</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
-arrays are
-printed/read by </span><big style="font-weight: bold;"><span style="font-family: monospace;">TNode</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
-class functions
-into/from the GEMS3K IPM file in the same format as described above,
-i.e. as they exist in the IPM work structure</span><span style="font-family: Helvetica,Arial,sans-serif;">
-(MULTI)</span><span style="font-family: Helvetica,Arial,sans-serif;">. <br>
-</span></p>
-
-<p><span style="font-family: Helvetica,Arial,sans-serif;">On
+phase (all in the indicated sequence of phases). In a similar way, the contents of <big><span style="font-family: monospace;">pmc</span><span style="font-family: monospace;">Lsmod</span></big> collected array can be analyzed using dimensions from columns [0] and [2] of the  table.<br>
+ </p>
+<p>The <big><span style="font-family: monospace;">sMod,
+LsMod, LsMdc, DMc</span></big><span style="font-family: Helvetica,Arial,sans-serif;">, </span><big><span style="font-family: monospace;">IPxPH,</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> </span>and<span style="font-family: Helvetica,Arial,sans-serif;"> </span><big><span style="font-family: monospace;">PMc</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
+</span>arrays are written/read by<span style="font-family: Helvetica,Arial,sans-serif;"> </span><big><span style="font-family: monospace;">TNode</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
+</span>class functions
+into/from the GEMS3K IPM file in the same format as just described above,
+i.e. as their counterparts exist in the IPM work structure
+(MULTI). </p>
+On
 each
-iteration of GEM algorithm, the </span><big style="font-weight: bold;"><span style="font-family: monospace;">GammaCalc()</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
+iteration of the GEM IPM algorithm, the <span style="font-family: monospace;">CalculateActivityCoefficients()</span>
 function goes in a
-loop k over multi-component phases and delivers to </span><big style="font-weight: bold;"><span style="font-family: monospace;">TSolMod</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
-class instance for
-each phase the contents of k-th row of&nbsp; </span><big style="font-weight: bold;"><span style="font-family: monospace;">smod,
-Lsmod, Lsmdc</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> a
-rrays, the
-respective blocks (if any) of data from the </span><big style="font-weight: bold;"><span style="font-family: monospace;">dmc,
-ipx </span></big><span style="font-family: Helvetica,Arial,sans-serif;">and
-</span><big style="font-weight: bold;"><span style="font-family: monospace;">pmc</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
-arrays, as well as
+loop k over multi-component phases and delivers to<span style="font-family: Helvetica,Arial,sans-serif;"> </span>the <big><span style="font-family: monospace;">TSolMod</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
+</span>class instance for
+each phase the contents of k-th row of<span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span><big><span style="font-family: monospace;">smod,
+Lsmod, Lsmdc</span></big><span style="font-family: Helvetica,Arial,sans-serif;"> </span>arrays, the
+respective blocks (if available) of data from the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><big><span style="font-family: monospace;">dmc,
+ipx</span></big><big style="font-weight: bold;"><span style="font-family: monospace;"> </span></big>and
+<big><span style="font-family: monospace;">pmc</span></big><span style="font-family: Helvetica,Arial,sans-serif;">
+</span>collected arrays, as well as
 respective blocks of speciation data (concentrations, activity
 coefficients, etc.). In this way, a built-in function form TSolMod
-obtains only counters, indexes and parameters for this phase model
+obtains only counters, indexes and parameters for the k-th phase model
 only, as this had been defined in the respective Phase record. In other
 word, any built-in calculation of non-ideality and activity
 coefficients instantaneously "knows" only about this particular phase
-and not about other phases and models. This data structure is quite
+and not about other phases and models. This data exchange structure used in TSolMod library is quite
 general, flexible, and allows processing systems with very different
-multi-component phases and solution models.</span>
-&nbsp;&nbsp; <br>
+multi-component phases and solution models.
 <br>
-</p>
+&nbsp;&nbsp; <br>
 
-<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_SELECTION"></a>5.
-Selection (codes) of built-in non-ideality models and setup of their
-parameters</font><br>
+
+
+<hr style="width: 100%; height: 2px;">
+<h3><font face="Helvetica, Arial, sans-serif"><a name="TAG_SELECTION"></a></font>5. Codes of built-in non-ideality models and setup of their
+parameters<br>
+
 </h3>
 
 
-<p style="font-family: Helvetica,Arial,sans-serif;"><b style="">Table
+<p><b style="">Table
 5-1</b>.
 Built-in models for calculation of activity coefficients for aqueous
-species and water<br>
-</p>
-
-<p style="font-family: Helvetica,Arial,sans-serif;"><o:p></o:p></p>
-
+species and water</p>
+<br>
 <table style="border: medium none ; border-collapse: collapse; width: 100%; font-family: Helvetica,Arial,sans-serif;" class="MsoTableGrid" border="3" cellpadding="3" cellspacing="6">
 
   <tbody>
     <tr style="">
       <td style="border: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 41.4pt;">
-      <p><span style="font-size: 11pt;">Code<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Code</span>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;">Model<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Model</span>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">DC individual parameters <o:p></o:p></span></p>
+      <span style="font-size: 11pt;">DC individual parameters&nbsp;</span>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><span style="font-size: 11pt;">Phase and Interaction
-parameters<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Phase and Interaction
+parameters</span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">D<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">D</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_DAVIES">Davies</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Davies</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">none</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><span style="font-size: 11pt;">none (depends on ionic
+      <span style="font-size: 11pt;">none (depends on ionic
 strength, T and P);</span><span style="font-size: 11pt;"> molality
-correction optional. Autophase&nbsp; setup.<o:p></o:p></span></p>
+correction optional. Autophase&nbsp; setup.</span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">3<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">3</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_DHK">Extended
-Debye-H&uuml;ckel (Kielland)</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Extended
+Debye-Hückel (Kielland)</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">individual ion-size </span><span style="font-size: 11pt;">(Kielland) </span><span style="font-size: 11pt;">parameter <i style="">&aring;</i>
+      <span style="font-size: 11pt;">individual ion-size </span><span style="font-size: 11pt;">(Kielland) </span><span style="font-size: 11pt;">parameter <i style="">å</i>
 ,in
 Angstroms<br>
-      </span></p>
+      </span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Common <i style="">b</i></span><i style=""><sub><span style="font-size: 11pt;"><span style="">g</span></span></sub></i><span style="font-size: 11pt;"><span style="">&nbsp; </span>(third)
+      <i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Common <i style="">b</i></span><i style=""><sub><span style="font-size: 11pt;"><span style="">g</span></span></sub></i><span style="font-size: 11pt;"><span style="">&nbsp; </span>(third)
 DH
 parameter (default value 0.064); </span><span style="font-size: 11pt;">molality
 correction by default. </span><span style="font-size: 11pt;">Autophase&nbsp;
-setup.</span><span style="font-size: 11pt;"> <o:p></o:p></span></p>
+setup.</span><span style="font-size: 11pt;">&nbsp;</span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">H<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">H</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_DHH">Extended
-Debye-H&uuml;ckel (Helgeson)</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Extended
+Debye-Hückel (Helgeson)</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">none</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Common ion-size parameter <i style="">&aring;</i>&nbsp;
+      <i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Common ion-size parameter <i style="">å</i>&nbsp;
 (default value 3.72 Angstrom); common <i style="">b</i></span><i style=""><sub><span style="font-size: 11pt;"><span style="">g</span></span></sub></i><span style="font-size: 11pt;"><span style="">&nbsp; </span>parameter
 (default value 0.064); </span><span style="font-size: 11pt;">molality
 correction by default. </span><span style="font-size: 11pt;">Autophase&nbsp;
-setup.</span></p>
+setup.</span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">2<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">2</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_DHK">Debye-H&uuml;ckel</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Debye-Hückel</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">individual ion-size </span><span style="font-size: 11pt;">(Kielland) </span><span style="font-size: 11pt;">parameter <i style="">&aring;</i>
+      <span style="font-size: 11pt;">individual ion-size </span><span style="font-size: 11pt;">(Kielland) </span><span style="font-size: 11pt;">parameter <i style="">å</i>
 ,in
-Angstroms (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">dc_cf</span></b><span style="font-size: 11pt;">
-array)</span></p>
+Angstroms (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">dmc</span></b><span style="font-size: 11pt;">
+array)</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><span style="font-size: 11pt;">None (depends on ionic
+      <span style="font-size: 11pt;">None (depends on ionic
 strength, T and P); </span><span style="font-size: 11pt;">molality
 correction by default.</span><span style="font-size: 11pt;">
-Autophase&nbsp; setup.</span><span style="font-size: 11pt;"><o:p></o:p></span></p>
+Autophase&nbsp; setup.</span><span style="font-size: 11pt;"></span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">1<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">1</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_DHK">Debye-H&uuml;ckel
-limiting law</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Debye-Hückel
+limiting law</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">none</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><span style="font-size: 11pt;">None. </span><span style="font-size: 11pt;">Autophase&nbsp; setup.</span><span style="font-size: 11pt;"><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">None. </span><span style="font-size: 11pt;">Autophase&nbsp; setup.</span><span style="font-size: 11pt;"></span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">S<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">S</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_SIT">SIT (BGS)
-model</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">SIT (BGS)
+model</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">none</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Two binary interaction
+      <i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Two binary interaction
 coefficients (provided
-in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;">
+in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">pmc</span></b><span style="font-size: 11pt;">
 array);&nbsp; indexes of interacting&nbsp; species&nbsp; to
-be given in <span style="font-weight: bold; font-family: monospace;">ipxT</span>
-array. <i style=""><o:p></o:p></i></span></p>
+be given in <span style="font-weight: bold; font-family: monospace;">ipx</span>
+array.&nbsp;</span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">Z<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">Z</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_PITZER">Pitzer
-(HMW) model</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">Pitzer
+(HMW) model</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <span style="font-size: 11pt;">none</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Several sorts of binary and
+      <i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Several sorts of binary and
 ternary
-interaction coefficients (provided in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;">)</span><span style="font-size: 11pt;">
-between aqueous species whose indexes are given in <span style="font-weight: bold; font-family: monospace;">ipxT</span>
+interaction coefficients (provided in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">pmc</span></b><span style="font-size: 11pt;">)</span><span style="font-size: 11pt;">
+between aqueous species whose indexes are given in <span style="font-weight: bold; font-family: monospace;">ipx</span>
 array
 together with parameter types.<br>
-      </span></p>
+      </span>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p><b style=""><span style="font-size: 11pt;">Q<o:p></o:p></span></b></p>
+      <b style=""><span style="font-size: 11pt;">Q</span></b>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 102pt;" valign="top" width="136">
-      <p><span style="font-size: 11pt;"><a href="#TAG_EQUNIQUAC">EUNIQUAC
-model</a><o:p></o:p></span></p>
+      <span style="font-size: 11pt;">EUNIQUAC
+model</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 66pt;" valign="top" width="88">
-      <p><span style="font-size: 11pt;">Volume and surface area
-parameter (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">dc_cf</span></b><span style="font-size: 11pt;">
-array)</span></p>
+      <span style="font-size: 11pt;">Volume and surface area
+parameter (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">dmc</span></b><span style="font-size: 11pt;">
+array)</span>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 254.95pt;" valign="top" width="340">
-      <p><i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Binary interaction
-coefficients (provided in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;"><span style="font-family: monospace;"> </span>array) </span><span style="font-size: 11pt;">between aqueous species
-whose indexes are given in the <span style="font-weight: bold; font-family: monospace;">ipxT</span>
-array.</span></p>
+      <i style=""><span style="font-size: 11pt;"></span></i><span style="font-size: 11pt;">Binary interaction
+coefficients (provided in </span><b style="font-family: monospace;"><span style="font-size: 11pt;">pmc</span></b><span style="font-size: 11pt;"><span style="font-family: monospace;"> </span>array) </span><span style="font-size: 11pt;">between aqueous species
+whose indexes are given in the <span style="font-weight: bold; font-family: monospace;">ipx</span>
+array.</span>
       </td>
     </tr>
   </tbody>
 </table>
 
-<p style="font-family: Helvetica,Arial,sans-serif;"><o:p></o:p></p>
+<p style="font-family: Helvetica,Arial,sans-serif;"><br>
+</p>
 
-<p style="font-family: Helvetica,Arial,sans-serif;"><o:p></o:p></p>
+<p><b style="">Table 5-2</b>.
+Built-in options for mixed non-ideal gas/fluid phases</p>
 
 
-<p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal"><b style=""><br>
-</b></p>
-
-<p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal"><b style="">Table 5-2</b>.
-Built-in options for mixed non-ideal gas/fluid phases<span style=""></span>.<o:p>&nbsp;</o:p></p>
-
-<table style="border: medium none ; border-collapse: collapse; width: 100%; font-family: Helvetica,Arial,sans-serif;" class="MsoTableGrid" border="1" cellpadding="0" cellspacing="0">
+<table style="border: medium none ; border-collapse: collapse; width: 983px; font-family: Helvetica,Arial,sans-serif; height: 119px;" class="MsoTableGrid" border="1" cellpadding="0" cellspacing="0">
 
   <tbody>
     <tr style="">
       <td style="border: 1pt solid windowtext; padding: 0cm 5.4pt; width: 41.4pt;" valign="top" width="55">
-      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Code<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Code</span></p>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 108pt;" valign="top" width="144">
-      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Model <o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Model&nbsp;</span></p>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 72pt;" valign="top" width="96">
-      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">DC individual parameters</span><span style="font-size: 11pt;"> <o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">DC individual parameters</span><span style="font-size: 11pt;">&nbsp;</span></p>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 242.95pt;" valign="top" width="324">
       <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Phase and Interaction
@@ -577,84 +1154,82 @@ parameters</span></p>
     </tr>
     <tr style="page-break-inside: avoid; height: 1cm;">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt; height: 1cm;" valign="top" width="55">
-      <p class="MsoNormal"><b style=""><span style="font-size: 11pt;">F<o:p></o:p></span></b></p>
+      <p class="MsoNormal"><b style=""><span style="font-size: 11pt;">F</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 108pt; height: 1cm;" valign="top" width="144">
       <p class="MsoNormal"><span style="font-size: 11pt;">CG
-(Churakov-Gottschalk) EoS <o:p></o:p></span></p>
+(Churakov-Gottschalk) EoS&nbsp;</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 72pt; height: 1cm;" valign="top" width="96">
       <p class="MsoNormal"><span style="font-size: 11pt;">4 to 12
-parameters per species (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dc_cf</span></b><span style="font-size: 11pt;">
+parameters per species (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dmc</span></b><span style="font-size: 11pt;">
 array)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 242.95pt; height: 1cm;" valign="top" width="324">
       <p class="MsoNormal"><span style="font-size: 11pt;">none
-(autophase setup)<o:p></o:p></span></p>
+(autophase setup)</span></p>
       </td>
     </tr>
     <tr style="height: 2cm;">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt; height: 2cm;" valign="top" width="55">
-      <p class="MsoNormal"><b style=""><span style="font-size: 11pt;">P<o:p></o:p></span></b></p>
+      <p class="MsoNormal"><b style=""><span style="font-size: 11pt;">P</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 108pt; height: 2cm;" valign="top" width="144">
       <p class="MsoNormal"><span style="font-size: 11pt;">PRSV
-(Peng-Robinson-Stryjek-Vera) EoS<o:p></o:p></span></p>
+(Peng-Robinson-Stryjek-Vera) EoS</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 72pt; height: 2cm;" valign="top" width="96"><span style="font-size: 11pt;">six parameters
-per species (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dc_cf</span></b><span style="font-size: 11pt;">
+per species (</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dmc</span></b><span style="font-size: 11pt;">
 array)</span>
-      <p class="MsoNormal"><span style="font-size: 11pt;"><o:p></o:p></span></p>
+      
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 242.95pt; height: 2cm;" valign="top" width="324">
       <p class="MsoNormal"><span style="font-size: 11pt;"><o:p></o:p>one
-constant binary interaction parameter (provided in </span><b style=""><span style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span style="font-size: 11pt;">
-between species whose indexes are given in the <span style="font-weight: bold;">ipxT</span>
+constant binary interaction parameter (provided in </span><b style=""><span style="font-size: 11pt;">pmc</span></b><span style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span style="font-size: 11pt;">
+between species whose indexes are given in the <span style="font-weight: bold;">ipx</span>
 array.</span></p>
       </td>
     </tr>
     <tr style="height: 2cm;">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 41.4pt; height: 2cm;" valign="top" width="55">
-      <p class="MsoNormal"><b style=""><span style="font-size: 11pt;">E<o:p></o:p></span></b></p>
+      <p class="MsoNormal"><b style=""><span style="font-size: 11pt;">E</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 108pt; height: 2cm;" valign="top" width="144">
       <p class="MsoNormal"><span style="font-size: 11pt;" lang="DE">SRK
-(Soave-Redlich-Kwong) EoS<o:p></o:p></span></p>
+(Soave-Redlich-Kwong) EoS</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 72pt; height: 2cm;" valign="top" width="96">
       <p class="MsoNormal"><span style="font-size: 11pt;" lang="DE"></span><span style="font-size: 11pt;">three parameters per species
-(</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dc_cf</span></b><span style="font-size: 11pt;">
+(</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dmc</span></b><span style="font-size: 11pt;">
 array)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 242.95pt; height: 2cm;" valign="top" width="324">
       <p class="MsoNormal"><span style="font-size: 11pt;"><o:p></o:p>one
-constant binary interaction parameter </span><span style="font-size: 11pt;">(provided in </span><b style=""><span style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span style="font-size: 11pt;">
-between species whose indexes are given in the <span style="font-weight: bold;">ipxT</span>
-array.</span><b style=""><span style="font-size: 11pt;"></span></b><span style="font-size: 11pt;"><span style=""> </span><o:p></o:p></span></p>
+constant binary interaction parameter </span><span style="font-size: 11pt;">(provided in </span><b style=""><span style="font-size: 11pt;">pmc</span></b><span style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span style="font-size: 11pt;">
+between species whose indexes are given in the <span style="font-weight: bold;">ipx</span>
+array.</span><b style=""><span style="font-size: 11pt;"></span></b><span style="font-size: 11pt;"><span style="">&nbsp;</span></span></p>
       </td>
     </tr>
   </tbody>
 </table>
 
-<p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal"><o:p>&nbsp;</o:p></p>
-
-<p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal">
+<p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal"><br>
 </p>
-
-<p class="MsoNormal" style="margin: 6pt 0cm; text-align: justify; font-family: Helvetica,Arial,sans-serif;"><b style="">Table 5-3</b>.
+<p><b style="">Table 5-3</b>.
 Built-in options for activity coefficients for
 end members of
-condensed (solid and liquid) non-electrolyte solution phases.<o:p></o:p></p>
+condensed (solid and liquid) non-electrolyte solution phases.</p>
+
 
 <table class="MsoTableGrid" style="border: medium none ; border-collapse: collapse; width: 100%; font-family: Helvetica,Arial,sans-serif;" border="1" cellpadding="0" cellspacing="0">
 
   <tbody>
     <tr style="">
       <td style="border: 1pt solid windowtext; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Code<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Code</span></p>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Model<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Model</span></p>
       </td>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
       <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">DC individual parameters</span></p>
@@ -662,287 +1237,263 @@ condensed (solid and liquid) non-electrolyte solution phases.<o:p></o:p></p>
       <td style="border-style: solid solid solid none; border-color: windowtext windowtext windowtext -moz-use-text-color; border-width: 1pt 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 6pt 0cm;"><span style="font-size: 11pt;">Phase and Interaction
 parameters&nbsp; </span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;">(provided
-in </span><b style=""><span style="font-size: 11pt;">ph_cf</span></b><span style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;"><o:p></o:p></span></p>
+in </span><b style=""><span style="font-size: 11pt;">pmc</span></b><span style="font-size: 11pt;"><span style="">&nbsp; </span>array)</span><span style="font-size: 11pt;"></span><span style="font-size: 11pt;"></span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">G<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">G</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Redlich-Kister model (binary)<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Redlich-Kister model (binary)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">three constant binary
-interaction parameters<o:p></o:p></span></p>
+interaction parameters</span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">M<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">M</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Subregular model (binary)<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Subregular model (binary)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">two binary interaction
 parameters, each
 represented with 3 coefficients as <i style="">a</i>
-&#8211; <i style="">b</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> +
-      <i style="">c</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i><span style="font-size: 11pt;"><o:p></o:p></span></p>
+&#8211; <i style="">b</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> + <i style="">c</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i><span style="font-size: 11pt;"></span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">T<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">T</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Regular model (ternary)<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Regular model (ternary)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">one binary interaction
 parameter per pair and
 1 ternary interaction parameter, each represented with 3 coefficients
 as <i style="">a</i>
-&#8211; <i style="">b</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> +
-      <i style="">c</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">P<o:p></o:p></span></i></p>
+&#8211; <i style="">b</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> + <i style="">c</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">R<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">R</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Regular model
-(multicomponent)<o:p></o:p></span></p>
+(multicomponent)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">one binary interaction
 parameter per pair of
 components, represented as<span style="">&nbsp; </span><i style="">a</i>
-+ <i style="">b</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> +
-      <i style="">c</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i><span style="font-size: 11pt;"><o:p></o:p></span></p>
++ <i style="">b</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> + <i style="">c</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i><span style="font-size: 11pt;"></span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">V<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">V</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Van Laar model
-(multicomponent)<o:p></o:p></span></p>
+(multicomponent)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">one size parameter </span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dc_cf</span></b><span style="font-size: 11pt;">
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">one size parameter </span><span style="font-size: 11pt;">in </span><b style=""><span style="font-size: 11pt;">dmc</span></b><span style="font-size: 11pt;">
 array</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">one binary interaction
 parameter per pair of
-components, represented using three coefficients as<i style=""> a + b</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T + c</span></i><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">P<o:p></o:p></span></i></p>
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">&nbsp;</span><span style="font-size: 11pt;"><o:p></o:p></span></p>
+components, represented using three coefficients as<i style=""> a + b</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T + c</span></i><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">&nbsp;</span><span style="font-size: 11pt;"><br>
+</span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">K<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">K</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Redlich-Kister model
-(multicomponent)<o:p></o:p></span></p>
+(multicomponent)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">four binary interaction
 parameters per pair
-of components, represented using four coefficients as <i style="">a + b</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T + c</span></i><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"><span style="">&times;</span></span><span style="font-size: 11pt;">ln(<i style="">T</i>) <i style="">+ d</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i><span style="font-size: 11pt;"><o:p></o:p></span></p>
+of components, represented using four coefficients as <i style="">a + b</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T + c</span></i><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"><span style="">×</span></span><span style="font-size: 11pt;">ln(<i style="">T</i>)
+      <i style="">+ d</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">P</span></i><span style="font-size: 11pt;"></span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">L<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">L</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">NRTL model (multicomponent)<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">NRTL model (multicomponent)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">two normalized binary
 interaction energies
-per pair of components, represented using four coefficients as <span style="">&nbsp;</span><i style="">A + B/T + C</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> <i style="">+ D</i></span><span style="font-size: 11pt;"><span style="">&times;</span></span><span style="font-size: 11pt;">ln(<i style="">T</i>)<o:p></o:p></span></p>
+per pair of components, represented using four coefficients as <span style="">&nbsp;</span><i style="">A + B/T + C</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> <i style="">+ D</i></span><span style="font-size: 11pt;"><span style="">×</span></span><span style="font-size: 11pt;">ln(<i style="">T</i>)</span></p>
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">1 parameter &#945; per
 pair of components: <i style="">E
-+ F</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;"> </span></i><span style="font-size: 11pt;">(<i style="">T</i>-273.15)
-represented using two coefficients<o:p></o:p></span></p>
++ F</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;"> </span></i><span style="font-size: 11pt;">(<i style="">T</i>-273.15)
+represented using two coefficients</span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">W<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">W</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><st1:place w:st="on"><st1:city w:st="on"><span style="font-size: 11pt;">Wilson</span></st1:city></st1:place><span style="font-size: 11pt;"> model (multicomponent)<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><st1:place w:st="on"><st1:city w:st="on"><span style="font-size: 11pt;">Wilson</span></st1:city></st1:place><span style="font-size: 11pt;"> model (multicomponent)</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">none</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
       <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">two binary interaction
 energies per pair of
 components, represented using four coeeficients as exp[ <i style="">A
-+ B/T + C</i></span><i style=""><span style="font-size: 11pt;"><span style="">&times;</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> <i style="">+ D</i></span><span style="font-size: 11pt;"><span style="">&times;</span></span><span style="font-size: 11pt;">ln(<i style="">T</i>) ]<o:p></o:p></span></p>
++ B/T + C</i></span><i style=""><span style="font-size: 11pt;"><span style="">×</span></span></i><i style=""><span style="font-size: 11pt;">T</span></i><span style="font-size: 11pt;"> <i style="">+ D</i></span><span style="font-size: 11pt;"><span style="">×</span></span><span style="font-size: 11pt;">ln(<i style="">T</i>) ]</span></p>
       </td>
     </tr>
     <tr style="">
       <td style="border-style: none solid solid; border-color: -moz-use-text-color windowtext windowtext; border-width: medium 1pt 1pt; padding: 0cm 5.4pt; width: 36.15pt;" valign="top" width="48">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">U<o:p></o:p></span></b></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><b style=""><span style="font-size: 11pt;">U</span></b></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 101.25pt;" valign="top" width="135">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">User-defined*<o:p></o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">User-defined*</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 60pt;" valign="top" width="80">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;"><o:p>&nbsp;</o:p></span></p>
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;"><br>
+</span></p>
       </td>
       <td style="border-style: none solid solid none; border-color: -moz-use-text-color windowtext windowtext -moz-use-text-color; border-width: medium 1pt 1pt medium; padding: 0cm 5.4pt; width: 266.95pt;" valign="top" width="356">
-      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Must be provided as Phase
+      <p class="MsoNormal" style="margin: 3pt 0cm;"><span style="font-size: 11pt;">Must be hardcoded or provided as Phase
 scripts and
-parameters*<o:p></o:p></span></p>
+parameters*</span></p>
       </td>
     </tr>
   </tbody>
 </table>
 
-<p style="font-family: Helvetica,Arial,sans-serif;" class="MsoNormal"><o:p>&nbsp;*Not
-available in GEMS3K code<br>
+<p><o:p>&nbsp;*Not
+yet available in GEMS3K code</o:p></p>
+<p><o:p>&lt;Under construction, more TSolMod models to be added&gt;
 </o:p></p>
 
-<p><br>
-<font face="Helvetica, Arial, sans-serif">&nbsp;<br>
-</font></p>
 
-<h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_ION_ASSOC"></a>5.1.
-Ion-association aqueous electrolyte model (autophase)</font></h4>
+<br>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_DAVIES"></a>5.1.1.
-Davies model</font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_DHK"></a>5.1.2.
-</font><font face="Helvetica, Arial, sans-serif">Debye-Hueckel
-equations (Kielland setup)</font></h5>
-
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_DHH"></a>5.1.3.
-Debye-Hueckel equations (Helgeson setup) </font></h5>
-
-<p><br>
-</p>
-
-<h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_SIT_MODELS"></a>5.2.
-</font><font face="Helvetica, Arial, sans-serif">Specific ion
-interaction aqueous electrolyte models</font></h4>
-
-
-<p><span style="font-family: Helvetica,Arial,sans-serif;">Such
+<hr style="width: 100%; height: 2px;">
+<h3><a name="TAG_EXAMPLES"></a>6. Examples of parameter structure of some specific-interaction phase models</h3>
+<p>Such
 non-ideality models can only be implemented (in GEM-Selektor) in
-ordinary Phase definition records but not in Autophase setup mode. </span><span style="font-family: Helvetica,Arial,sans-serif;">The
+ordinary Phase definition records but not in Autophase setup mode. The
 currently
 available implementation covers three most popular models valid up to 3
 (SIT) to 10 molal ionic strength, i.e. for highly concentrated aqueous
 solutions. However, temperature and pressure range of applicability is
 rather limited in comparison with the DHH model: SIT only at 1 bar 25
-C, and Pitzer up to 200 C along P</span><sub style="font-family: Helvetica,Arial,sans-serif;">SAT</sub><span style="font-family: Helvetica,Arial,sans-serif;">.
+C, and Pitzer up to 200 C along P<sub>SAT</sub>.
 T,P applicability
-range of the EUNIQUAC model is still a matter of investigation. </span><br>
-&nbsp;<br>
-</p>
+range of the EUNIQUAC model is still a matter of investigation.</p>
+<p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+<span style="font-family: Helvetica,Arial,sans-serif;"></span><br>
+<hr style="width: 100%; height: 2px;">
+<h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_SIT"></a></font>6.1.
+SIT (Broensted-Guggenheim-Scatchard)
+model (NEA TDB variant)<font face="Helvetica, Arial, sans-serif"><br>
+</font></h4>
 
-<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_SIT"></a>5.2.1.
-SIT (Broensted-Guggenheim<font face="Helvetica, Arial, sans-serif">-Scatchard</font>)
-model (NEA TDB variant)<br>
-</font></h5>
 
-<p><font face="Helvetica, Arial, sans-serif">The built-in SIT
+<p>The built-in SIT
 model for
 aqueous electrolyte (code 'S') has no individual parameters for aqueous
 species. The model consists of a generic Debye-Hueckel term (a function
 of effective molal ionic strength), enhanced with a SIT sum of binary
 interaction parameters multiplied by the molality of respective
 counter-ions. The model is officially applicable to ambient conditions
-(1 bar <br>
-and temperature around 25 C) and to systems with one background
+(1 bar and temperature around 25 C) and to systems with one background
 electrolyte; it is not good for mixed-electrolyte systems (Plyasunov
 and Grenthe, 1997). The interaction parameters, in general, consist of
 two coefficients, the second one describes an optional linear
 dependence on the ionic strength. This second coefficient is seldomly
 used. <br>
-</font></p>
 
-<p><font face="Helvetica, Arial, sans-serif">The Phase window
+</p>
+
+<font face="Helvetica, Arial, sans-serif"><span style="font-family: Times New Roman,Times,serif;">The Phase window
 screenshot below shows an example of SIT model setup for an aqueous
 phase containing 17 species. There are four interaction parameters
-given non-zero values (K<sup>+</sup>
-- OH<sup>-</sup>,
-Na<sup>+</sup>
+given non-zero values (K</span><sup style="font-family: Times New Roman,Times,serif;">+</sup><span style="font-family: Times New Roman,Times,serif;">
+- OH</span><sup style="font-family: Times New Roman,Times,serif;">-</sup><span style="font-family: Times New Roman,Times,serif;">,
+Na</span><sup style="font-family: Times New Roman,Times,serif;">+</sup><span style="font-family: Times New Roman,Times,serif;">
 -
-OH<sup>-</sup>,
-Ca<sup>+2</sup>
-- NaOH<sup>0</sup>,
-and CaOH<sup>+</sup>
-- NaOH<sup>0</sup>;
-the parameters are example only). Hence, the </font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif"> array has
-dimensions 4*2 and the </font><big><span style="font-family: monospace;">ph_cf</span></big><font face="Helvetica, Arial, sans-serif"> array 4*2. The
+OH</span><sup style="font-family: Times New Roman,Times,serif;">-</sup><span style="font-family: Times New Roman,Times,serif;">,
+Ca</span><sup style="font-family: Times New Roman,Times,serif;">+2</sup><span style="font-family: Times New Roman,Times,serif;">
+- NaOH</span><sup style="font-family: Times New Roman,Times,serif;">0</sup><span style="font-family: Times New Roman,Times,serif;">,
+and CaOH</span><sup style="font-family: Times New Roman,Times,serif;">+</sup><span style="font-family: Times New Roman,Times,serif;">
+- NaOH</span><sup style="font-family: Times New Roman,Times,serif;">0</sup><span style="font-family: Times New Roman,Times,serif;">;
+the parameters are example only). Hence, the</span> </font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">array has
+dimensions 4*2 and the</span> </font><big><span style="font-family: monospace;">ph_cf</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">array has 4*2. The
 indexes of cations
 and anions are shown on the right side; those of interacting ions are
-seen in the </font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif"> columns. The
+seen in the </span></font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">columns. The
 order of interaction
-parameters in rows of </font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif">, as well as the
+parameters in rows of </span></font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif">, <span style="font-family: Times New Roman,Times,serif;">as well as the
 order of ions
-indexes inside of one row of </font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif">, play no role. <br>
+indexes inside of one row of </span></font><big><span style="font-family: monospace;">ipxT</span></big><font face="Helvetica, Arial, sans-serif">, <span style="font-family: Times New Roman,Times,serif;">play no role</span>. </font><br>
+<font face="Helvetica, Arial, sans-serif">
 <br>
-</font></p>
+</font>
 
 <p><font face="Helvetica, Arial, sans-serif"><img style="width: 585px; height: 514px;" alt="Example Phase setup for SIT model" title="Example Phase setup for SIT model" src="SIT-Phase-page3.png">&nbsp;<br>
 </font></p>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
+<p><font face="Helvetica, Arial, sans-serif"><br></font></p>
 An example chemical system that included the above SIT aqueous model,
 the ideal gas mixture (3 gases), and a pure Portlandite phase, was
-constructed in GEM-Selektor and printed into GEMS3K files fragments
+constructed in GEM-Selektor and printed into GEMS3K files, fragments
 of which are given below. The numbers of components and phases with the
 respective name lists are seen in the fragments of DCH file. <br>
+<font face="Helvetica, Arial, sans-serif">
 <br>
-</font></p>
+</font>
 
-<h6><font face="Helvetica, Arial, sans-serif">Fragments of
+<h5>Fragments of
 (commented) GEMS3K DCH file <br>
-</font></h6>
 
-<table style="text-align: left; width: 896px; height: 544px;" border="1" cellpadding="2" cellspacing="2">
+</h5>
+
+
+<table style="text-align: left; width: 896px; height: 514px;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
     <tr style="font-family: monospace;">
@@ -1006,31 +1557,36 @@ in IPM work structure) tells how many Dependent Components is included
 in each phase [nPH]</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">&lt;nDCinPH&gt;</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">17
-3 1 </span><br>
+3 1 <br>
+# . . . . . . . . .<br>
+</span>
       </td>
     </tr>
   </tbody>
 </table>
 
-<p><font face="Helvetica, Arial, sans-serif"><br>
-In the corresponding IPM file fragment (slightly re-formatted for
-better readability), the </font><big><span style="font-family: monospace;">LsMdc</span></big><font face="Helvetica, Arial, sans-serif"> object contains
+<font face="Helvetica, Arial, sans-serif"><br></font><br>
+<p><font face="Helvetica, Arial, sans-serif"><span style="font-family: Times New Roman,Times,serif;">
+In the corresponding IPM file fragment shown below, slightly re-formatted for
+better readability, the</span> </font><big><span style="font-family: monospace;">LsMdc</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">object contains
 zeros (no
-individual parameters of Dependent components in any muticomponent
-phase). Because of this, there is no need to provide the </font><big><span style="font-family: monospace;">DMc</span></big><font face="Helvetica, Arial, sans-serif"> array. The </font><big><span style="font-family: monospace;">LsMod</span></big><font face="Helvetica, Arial, sans-serif"> object defines
+individual parameters of Dependent Components and no sublattices in any muticomponent
+phase). Because of this, there is no need to provide the</span> </font><big><span style="font-family: monospace;">DMc</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">array. The</span> </font><big><span style="font-family: monospace;">LsMod</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">object defines
 that there are 4
 non-zero binary interaction parameters, each represented by two
 coefficients. The indexes&nbsp; of interacting ions are given in
-the </font><big><span style="font-family: monospace;">IPxPH</span></big><font face="Helvetica, Arial, sans-serif"> data object, and
+the</span> </font><big><span style="font-family: monospace;">IPxPH</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">data object, and
 the parameter
-values - in the </font><big><span style="font-family: monospace;">PMc</span></big><font face="Helvetica, Arial, sans-serif"> data object. The
+values - in the</span> </font><big><span style="font-family: monospace;">PMc</span></big><font face="Helvetica, Arial, sans-serif"> <span style="font-family: Times New Roman,Times,serif;">data object. The
 same data
 structure exists in the computer memory during equilibria calculations
-within GEM-Selektor or GEMS3K. <br>
-</font></p>
+within GEM-Selektor or GEMS3K. </span></font></p>
+<font face="Helvetica, Arial, sans-serif">
+</font>
 
-<h6><font face="Helvetica, Arial, sans-serif">Fragments of
-(commented) GEMS3K IPM file</font></h6>
+<h5>Fragments of
+(commented) GEMS3K IPM file</h5>
+
 
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
@@ -1078,8 +1634,12 @@ LsMdc: Number of
 parameters per component of the phase for the non-ideal mixing models
 (Lsmdc)</span><br style="font-family: monospace;">
       <span style="font-family: monospace;">&lt;LsMdc&gt;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">0
-0 </span><br>
+      <span style="font-family: monospace;">0 0 0
+      <br>
+0 0 0<br>
+# . . . . . . . .<br>
+      <br>
+</span>
       </td>
     </tr>
   </tbody>
@@ -1088,122 +1648,112 @@ parameters per component of the phase for the non-ideal mixing models
 <p><font face="Helvetica, Arial, sans-serif"><br>
 </font></p>
 
-<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_PITZER"></a>5.2.2.
-Pitzer (Harvie-Moller-Weare) model &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-&nbsp; &nbsp; &nbsp;&nbsp;</font></h5>
+<hr style="width: 100%; height: 2px;">
+<h4><a name="TAG_PITZER"></a>6.2.
+Pitzer (Harvie-Moller-Weare) model <font face="Helvetica, Arial, sans-serif">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp;</font></h4>
 
-<font face="Helvetica, Arial, sans-serif">We
-have implemented the Pitzer model version of Harvie-Moller-Weare
-(1984),
-which allows for activity coefficient calculations up to ionic
+
+<p>The Pitzer model version of Harvie-Moller-Weare
+(1984), as implemented in TSolMod class and GEMS3K code, allows for activity coefficient calculations up to ionic
 strengths greater than 6
 molal. The Pitzer model consists of a Debye-Huckel term accounting for
 long-range interactions, and a semi-empirical virial expansion approach
-considering short range interactions. <br>
+considering short range interactions. </p>
+<p>
 The
 model specific alpha parameters are fixed to &#945; = 2.0 and
 &#945;<sub>1</sub>
 = 0.0 for electrolytes containing a monovalent ion, 1.4 and 12.0
 for&nbsp; 2-2 electrolytes and 2.0, 50.0 for all other cases
 (equivalent to the PHREEQC Pitzer implementation).
-<br>
+</p>
+<p>
 The Phase
 window
 screenshot below shows an example of a Pitzer model setup for an
 aqueous
-phase containing 21 species (-&gt;&nbsp;</font><big><span style="font-family: monospace;">Ph_Nc</span></big><font face="Helvetica, Arial, sans-serif"> = 21). </font><br>
+phase containing 21 species (-&gt;&nbsp;<big><span style="font-family: monospace;">Ph_Nc</span></big> = 21).</p>
+<br>
+ 
 
 <p><font face="Helvetica, Arial, sans-serif"><img style="width: 854px; height: 702px;" alt="Pitzer Model: Phase Record, page 3" src="Pitzer_Phase_page3.png"></font>
 <br>
-<small>Pitzer Model: page 3
-of phase record input mask</small>
-<br>
 </p>
 
-<p>The arrays shown on the screenshot contain following values:<br>
+<p><br>
 </p>
-
--&nbsp;<big><span style="font-family: monospace;">ipxT</span></big>:
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;The first three columns
+<p>The arrays shown on the screenshot contain the following values:</p>
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">ipxT</span></big>
+      </td>
+      <td style="vertical-align: top;">The first three columns
 contain the indices of the species of
 interest.&nbsp; In case of a binary interaction parameter, the
-value in the third column is set to -1.<br>
-
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;The
-intern parameter code is collected in the fourth column.<br>
-
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; In the
+value in the third column is set to -1. The
+internal parameter code is collected in the fourth column. In the
 above example, "0" stands for Ca<sup>+2</sup>
 and&nbsp;
 "9" for Cl<sup>-</sup>
 &nbsp;(see&nbsp;<big><span style="font-family: monospace;">plsCat </span>and<span style="font-family: monospace;"> </span></big><big><span style="font-family: monospace;">plsAn</span></big><big><span style="font-family: monospace;"> </span></big>vector).
 As mentioned, "-1"&nbsp;indicates that
-only binary interaction is &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;described. "-10" is the
+only binary interaction is&nbsp; described. "-10" is the
 code for the &#946;<sup>0</sup><sub>ca</sub>
-interaction coefficient (see following table).<br>
-
--&nbsp;<big><span style="font-family: monospace;">ph_cf</span></big>:
-&nbsp;&nbsp;&nbsp; &nbsp; This array contains the parameters given by
-the temperature
-correction function of
-the interaction parameters. We have implemented a 5 and a 8 parameter
-version &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;of&nbsp;the T
+interaction coefficient (see the table below).</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">ph_cf</span></big></td>
+      <td style="vertical-align: top;">This array contains the parameter coefficients as given for the 5-parameter temperature
 correction function.&nbsp;Fields
-left empty are automatically assigned the value 0.<br>
-
--&nbsp;<big><span style="font-family: monospace;">plsCat</span></big>:
-&nbsp;&nbsp;&nbsp; Cation indices for Pitzer activity model coefficients<br>
-
-- <big><span style="font-family: monospace;">pnxCat</span></big>:
-&nbsp;&nbsp;&nbsp;&nbsp;List of cation names for Pitzer activity model
-coefficient<br>
-
--&nbsp;<big><span style="font-family: monospace;">plsAn</span></big>:
-&nbsp; &nbsp;&nbsp;&nbsp; Anion indices for Pitzer activity model
-coefficients<br>
-
-- <big><span style="font-family: monospace;">pnxAn</span></big>:
-&nbsp; &nbsp;&nbsp;&nbsp; List of anion names for Pitzer activity model
-coefficient<br>
-
--&nbsp;<big><span style="font-family: monospace;">plsNs</span></big>:
-&nbsp; &nbsp;&nbsp;&nbsp; Indices of neutral species&nbsp;for Pitzer
-activity model coefficients<br>
-
-- <big><span style="font-family: monospace;">pnxNs</span></big>:
-&nbsp; &nbsp;&nbsp;&nbsp; List of names of neutral species for Pitzer
-activity model coefficient<br>
-
-<br>
-
-Furthermore, the two vectors&nbsp;<big><span style="font-family: monospace;">Ph_ncp </span></big>and&nbsp;<big><span style="font-family: monospace;">Ph_npx </span></big>have
-following content: <big><span style="font-family: monospace;"></span></big><big><span style="font-family: monospace;"></span></big><br>
-
-- <big><span style="font-family: monospace;">Ph_ncp[a][b]</span></big>:&nbsp;&nbsp;&nbsp;
-Dimensions of the <big><span style="font-family: monospace;">ph_cf </span></big>interaction
+left empty are automatically assigned the value 0.</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">plsCat</span></big></td>
+      <td style="vertical-align: top;">Cation indices (within this aqueous phase)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">pnxCat</span></big></td>
+      <td style="vertical-align: top;">List of cation names </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">plsAn</span></big></td>
+      <td style="vertical-align: top;">Anion indices </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">pnxAn</span></big></td>
+      <td style="vertical-align: top;">List of anion names</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">plsNs</span></big></td>
+      <td style="vertical-align: top;">Indices of neutral species</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">pnxNs</span></big></td>
+      <td style="vertical-align: top;">List of names of neutral species</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">Ph_ncp[0], Ph_hcp[1]</span></big></td>
+      <td style="vertical-align: top;">Dimensions of the <big><span style="font-family: monospace;">ph_cf </span></big>interaction
 parameter data array, with a = number of rows and b = number of columns
-(coefficients per parameter)<br>
-
-- <big><span style="font-family: monospace;">Ph_npx</span></big><big><span style="font-family: monospace;">[c]</span></big>&nbsp; &nbsp;
-&nbsp;&nbsp; :&nbsp;
-&nbsp;&nbsp;Number of columns (max. order) in the <big><span style="font-family: monospace;">ipxT</span></big>
-parameter indexation array. <br>
-
-<br>
-
-Following table displays the interaction parameters and the their
+(coefficients per parameter)</td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top;"><big><span style="font-family: monospace;">Ph_npx[0]</span></big><big><span style="font-family: monospace;"></span></big></td>
+      <td style="vertical-align: top;">Number of columns (max. order) in the <big><span style="font-family: monospace;">ipxT</span></big>
+parameter indexation array.</td>
+    </tr>
+  </tbody>
+</table>
+<br><br>
+<p>The following table displays the interaction parameters and the their
 corresponding code, which enters the <big><span style="font-family: monospace;">ipxT</span></big>
 array at the fourth column.
 Also
-given is the index nomenclature as well as the parameter dimensions
-(-&gt; dimensions are&nbsp;
-only shown for illustration here, as they are fixed internally).<br>
+given is the index nomenclature, as well as the parameter dimensions
+(only shown for illustration here, as they are fixed internally).</p>
+
 
 <br>
 
@@ -1310,120 +1860,33 @@ only shown for illustration here, as they are fixed internally).<br>
 </table>
 
 <p><small>&nbsp;
-&nbsp; with: a1
+&nbsp; </small>with: a1
 = a + 1, c1 = c + 1,&nbsp;c
-= cation,&nbsp;a = anion, n = neutral species</small></p>
+= cation,&nbsp;a = anion, n = neutral species</p>
 
-
-<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_EQUNIQUAC"></a>5.2.3.
-Extended UNIQUAC model<br>
-</font></h5>
-
-<p><br>
-</p>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h4><font face="Helvetica, Arial, sans-serif"><a name="TAG_GASFLUID"></a>5.3.
-Gas/fluid models&nbsp;<br>
-</font></h4>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.3.1. Simple
-(autophase)
-CST models<br>
-</font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
+<h5>&lt;to be continued&gt;<br>
+</h5><br>
 <br>
-</font></p>
-
-<h4><font face="Helvetica, Arial, sans-serif">5.4. Gas/fluid
-models
-(advanced)<br>
-</font></h4>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.4.1. PRSV model
-</font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.4.2. SRK model<br>
-</font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.4.3.
-Churakov-Gottschalk model<br>
-</font></h5>
-
-<p><br>
-</p>
-
-<h4><font face="Helvetica, Arial, sans-serif">5.5. Solid
-solution
-models <br>
-</font></h4>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.5.1. Margules </font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.5.2.
-Redlich-Kister
-(Guggenheim) <br>
-</font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.5.3. Regular
-multicomponent<br>
-</font></h5>
-
-<p><font face="Helvetica, Arial, sans-serif"><br>
-</font></p>
-
-<h5><font face="Helvetica, Arial, sans-serif">5.5.4. Van Laar </font><br>
-</h5>
-
-<p><br>
-</p>
-
-<p><br>
-</p>
-
 <hr style="width: 100%; height: 2px;">
+<h5><font face="Helvetica, Arial, sans-serif"><a name="TAG_EQUNIQUAC"></a>6.3.
+Extended UNIQUAC model &lt;under construction&gt;<br>
+</font></h5>
+
+
 <p><br>
-Under Construction<br>
-&nbsp; <br>
-To be provided in Version 3&nbsp; <br>
-&nbsp; <br>
-&nbsp;</p>
+</p>
 
-<hr size="2" width="100%">
-<p> </p>
-
-<p><tt>end
-of file</tt> <br>
+<p><font face="Helvetica, Arial, sans-serif"><br>
+</font></p><br>
+<hr style="width: 100%; height: 2px;"> <p>Last changed: 22.10.2012 DK</p>
+<p>Copyright (c) 2012 <a href="http://gems.web.psi.ch/teamhist.html">GEMS Development Team</a></p>
+<p>
+&nbsp;<br>
 &nbsp; </p>
+<p></p>
 
 <br>
 
 <br>
-
-
 
 </body></html>

@@ -1,22 +1,32 @@
 //--------------------------------------------------------------------
 // $Id$
 //
-// C/C++ interface between GEM IPM and FMT node array
-// Working whith DATACH and DATABR structures
+/// \file nodearray.cpp
+/// Implementation of TNodeArray class functionality - advanced
+/// interface between GEM IPM and FMT node array
+/// working with one DATACH structure and arrays of DATABR structures
 //
-// Copyright (C) 2004,2007 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2004-2012 S.Dmytriyeva, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of a GEM-Selektor library for thermodynamic
-// modelling by Gibbs energy minimization
-// Uses: GEM-Selektor GUI GUI DBMS library, gems/lib/gemvizor.lib
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// This file may be distributed under the terms of the GEMS-PSI
-// QA Licence (GEMSPSI.QAL)
-//
-// See http://gems.web.psi.ch/ for more information
-// E-mail: gems2.support@psi.ch
-//-------------------------------------------------------------------
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
+//-------------------------------------------------------------------
+//
+#ifdef NODEARRAYLEVEL
 #ifndef NOPARTICLEARRAY
 #include "particlearray.h"
 #endif
@@ -89,6 +99,107 @@ void  TNodeArray::checkNodeArray(
 }
 
 //-------------------------------------------------------------------
+// Initialization of TNodeArray data structures. Reads in the DBR text input files and
+// copying data from work DATABR structure into the node array
+// (as specified in nodeTypes array, ndx index of dataBR files in
+//    the dbrfiles_lst_name list).
+//
+//-------------------------------------------------------------------
+void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
+                  long int *nodeTypes, bool getNodT1, bool binary_f  )
+{
+  int i;
+  gstring datachbr_fn;
+
+  gstring curPath = ""; //current reading file path
+
+#ifndef IPMGEMPLUGIN
+      size_t npos = gstring::npos;
+#endif
+
+     gstring lst_in = dbrfiles_lst_name;
+     gstring Path = "";
+
+// Get path
+#ifdef IPMGEMPLUGIN
+#ifdef _WIN32
+      size_t pos = lst_in.rfind("\\");// HS keep this on windows
+#else
+      size_t pos = lst_in.rfind("/"); // HS keep this on linux
+#endif
+#else
+      size_t pos = lst_in.rfind("\\");
+      if( pos == npos )
+         pos = lst_in.rfind("/");
+      else
+         pos = max(pos, lst_in.rfind("/") );
+#endif
+      if( pos < npos )
+      Path = lst_in.substr(0, pos+1);
+
+//  open file stream for the file names list file
+      fstream f_lst( lst_in.c_str(), ios::in );
+      ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
+
+
+// Prepare for reading DBR_DAT files
+     i = 0;
+     while( !f_lst.eof() )  // For all DBR_DAT files listed
+     {
+
+#ifndef IPMGEMPLUGIN
+   pVisor->Message( 0, "GEM2MT node array",
+      "Reading from disk a set of node array files to resume an interrupted RMT task. "
+           "Please, wait...", i, nNodes() );
+#endif
+
+// Reading DBR_DAT file into work DATABR structure
+         if( i )  // Comma only after the first DBR_DAT file!
+            f_getline( f_lst, datachbr_fn, ',');
+         else
+            f_getline( f_lst, datachbr_fn, ' ');
+
+         gstring dbr_file = Path + datachbr_fn;
+         curPath = dbr_file;
+         if( binary_f )
+         {
+             GemDataStream in_br(dbr_file, ios::in|ios::binary);
+             databr_from_file(in_br);
+          }
+         else
+          {   fstream in_br(dbr_file.c_str(), ios::in );
+                 ErrorIf( !in_br.good() , datachbr_fn.c_str(),
+                    "DBR_DAT fileopen error");
+               databr_from_text_file(in_br);
+          }
+         curPath = "";
+// Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
+//    unpackDataBr();
+
+#ifndef IPMGEMPLUGIN
+        if( getNodT1 )  // optional parameter used only when reading multiple
+            // DBR files after coupled modeling task interruption in GEM-Selektor
+        {
+           setNodeArray( dbr_file, i, binary_f );
+        }
+        else
+#endif
+        {
+// Copying data from work DATABR structure into the node array
+// (as specified in nodeTypes array)
+           setNodeArray( i, nodeTypes  );
+         }
+          i++;
+     }  // end while()
+#ifndef IPMGEMPLUGIN
+   pVisor->CloseMessage();
+#endif
+
+    ErrorIf( i==0, datachbr_fn.c_str(), "GEM_init() error: No DBR_DAT files read!" );
+    checkNodeArray( i, nodeTypes, datachbr_fn.c_str()  );
+}
+
+//-------------------------------------------------------------------
 // setNodeArray()
 // Copying data from work DATABR structure into the node array
 // (as specified in nodeTypes array, ndx index of dataBR files in
@@ -143,6 +254,7 @@ gstring TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
 	    bool putNodT1, bool addMui )
 {
   fstream fout;
+  fstream fout2;
   gstring Path_;
   gstring dir;
   gstring name;
@@ -196,6 +308,11 @@ AGAIN:
        fout << "-t \"" << name.c_str() << "-dch.dat\"";
        fout << " \"" << name.c_str() << "-ipm.dat\" ";
    }
+
+   gstring path2 = name;
+   path2 += "-dbr";
+   path2 = u_makepath( dir, path2, "lst" );
+   fout2.open(path2.c_str(), ios::out);
 
   if( bin_mode )
   {
@@ -251,9 +368,11 @@ AGAIN:
        GemDataStream  f_br1(Path_, ios::out|ios::binary);
        databr_to_file(f_br1);
        f_br1.close();
+       if( first )
+          fout << " \"" << newname.c_str() << ".bin\"";
        if( !first )
-          fout << ",";
-       fout << " \"" << newname.c_str() << ".bin\"";
+          fout2 << ",";
+       fout2 << " \"" << newname.c_str() << ".bin\"";
      }
      else
      {
@@ -262,9 +381,11 @@ AGAIN:
         fstream  f_br2(Path_.c_str(), ios::out);
         databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
         f_br2.close();
+        if( first )
+           fout << " \"" << newname.c_str() << ".dat\"";
         if( !first )
-           fout << ",";
-        fout << " \"" << newname.c_str() << ".dat\"";
+           fout2 << ",";
+        fout2 << " \"" << newname.c_str() << ".dat\"";
      }
      first = false;
 
@@ -277,7 +398,7 @@ AGAIN:
       // dataBR files - binary
       if( bin_mode )
       {
-         newname =  name + + "-dbr-1-"  + buf;
+         newname =  name +  "-dbr-1-"  + buf;
          Path_ = u_makepath( dir, newname, "bin" );
          GemDataStream  f_br1(Path_, ios::out|ios::binary);
          databr_to_file(f_br1);
@@ -1140,7 +1261,10 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
    long int i, j,k;
 
    // write header of file
-   databr_head_to_vtk( ff, name, time, cycle, sizeN, sizeM, sizeK );
+   kk = sizeM;
+   if(sizeM==1 && sizeK==1) // 05.12.2012 workaround for 2D paraview
+         kk=2;
+   databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
 
    if( nFilds < 1 || !Flds )
    {  all = true;
@@ -1175,9 +1299,19 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
                CopyWorkNodeFromArray( ndx, anNodes,  pNodT0() );
                databr_element_to_vtk( ff, CNode/*pNodT0()[(ndx)]*/, nf, ii );
             }
+        if( sizeM==1 && sizeK==1)  // 05.12.2012 workaround for 2D paraview
+        { for( i = 0; i < sizeN; i++ )
+           for( j = 0; j < sizeM; j++ )
+            for( k = 0; k < sizeK; k++ )
+            {
+               int ndx = iNode( i, j, k );
+               CopyWorkNodeFromArray( ndx, anNodes,  pNodT0() );
+               databr_element_to_vtk( ff, CNode/*pNodT0()[(ndx)]*/, nf, ii );
+            }
+         }
        }
    }
 }
-
+#endif
 //-----------------------End of nodearray.cpp--------------------------
 
