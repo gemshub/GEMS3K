@@ -627,9 +627,8 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
 // Reading dataCH structure from text file
 void TGEM2MT::from_text_file(fstream& ff)
 {
-  long int ii;
 
-// static arrays
+  // static arrays
  TReadArrays  rdar( 57, GEM2MT_static_fields, ff);
  long int nfild = rdar.findNext();
  while( nfild >=0 )

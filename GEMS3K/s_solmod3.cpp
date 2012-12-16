@@ -1863,7 +1863,7 @@ long int TBerman::IdealProp( double *Zid )
 /// for now, only one term (quaternary model)?
 long int TBerman::ReciprocalPart()
 {
-    long int j,s,m;
+    long int j/*,s,m*/;
 
     if( !NSub || !NMoi )
     {

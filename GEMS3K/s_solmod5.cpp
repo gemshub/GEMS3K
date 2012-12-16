@@ -715,13 +715,15 @@ long int TPitzer::MixMod()
     for( ic=0; ic<Nc; ic++){
         mc[ic] = aM[xcx[ic]];
         zc[ic] = aZ[xcx[ic]];
+         cout << mc[ic] << " " << zc[ic] << endl;
     }
-
+ cout << "aM"  << endl;
     for(ia=0; ia<Na; ia++){
         ma[ia] = aM[xax[ia]];
         za[ia] = aZ[xax[ia]];
+        cout << ma[ia] << " " << za[ia] << endl;
     }
-
+    cout << "aZ"  << endl;
     for(in=0; in>Nn; in++){
         mn[in] = aM[xnx[in]];
     }
