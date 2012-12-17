@@ -470,6 +470,7 @@ pm.GamFs = 0;
         pm.ocPRkC   = 0;
         pm.feSArC   = 0;
         pm.rpConC   = 0;
+        pm.apConC   = 0;
         pm.UMpcC   = 0;
         pm.kMod   = 0;
 

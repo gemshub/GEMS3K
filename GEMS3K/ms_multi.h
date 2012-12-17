@@ -240,7 +240,7 @@ double
   // TKinMet stuff
   *feSArC, ///< new: Collected array of fractions of surface area related to parallel reactions k-> += LsKin[k][0]
   *rpConC,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][2];
-*apConC,  ///< new:!! Collected array of parameters per species involved in activity product terms
+  *apConC,  ///< new:!! Collected array of parameters per species involved in activity product terms
           ///  k-> += LsKin[k][0]*LsKin[k][1]*LsKin[k][3];
   *UMpcC,  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
       ;
@@ -348,7 +348,7 @@ double
     *W,   ///< Weight multipliers for DC (incl restrictions) in IPM [L]
     *Fx,  ///< Dual DC chemical potentials defined via u_i and a_ji [L]
     *Wx,  ///< Mole fractions Wx of DC in multi-component phases [L]
-    *F,   ///<Primal DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
+    *F,   /// <Primal DC chemical potentials defined via g0_j, Wx_j and lnGam_j[L]
     *F0;  ///< Excess Gibbs energies for (metastable) DC, mole/mole [L]
 // Old sorption models
    double (*D)[MST];  ///< Reserved; new work array for calc. surface act.coeff.
