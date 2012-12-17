@@ -162,12 +162,14 @@ double
   epsWg[5];  ///< Diel. constant of steam for Tc,Pc
 
   long int
-    *L1,    ///< l_a vector - number of DCs included into each phase [Fi]
+  *L1,    ///< l_a vector - number of DCs included into each phase [Fi]
   // TSolMod stuff
   *LsMod, ///< Number of interaction parameters. Max parameter order (cols in IPx),
             ///< and number of coefficients per parameter in PMc table [3*FIs]
-    *LsMdc, ///<  for multi-site models: [3*FIs] - number of nonid. params per component; number of sublattices nS; number of moieties nM.
- *LsMdc2, ///<  new: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member; reserved.
+   *LsMdc, ///<  for multi-site models: [3*FIs] - number of nonid. params per component;
+           /// number of sublattices nS; number of moieties nM
+ *LsMdc2, ///<  new: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member;
+          /// reserved
     *IPx,   ///< Collected indexation table for interaction parameters of non-ideal solutions
             ///< ->LsMod[k,0] x LsMod[k,1]   over FIs
     *mui,   ///< IC indices in RMULTS IC list [N]
@@ -176,17 +178,20 @@ double
   long int  (*SATX)[4]; ///< Setup of surface sites and species (will be applied separately within each sorption phase) [Lads]
              // link indexes to surface type [XL_ST]; sorbent em [XL_EM]; surf.site [XL-SI] and EDL plane [XL_SP]
   long int
-  *LsPhl,  ///< new: Number of phase links; link parameters; [Fi][2]
+  *LsPhl,  ///< new: Number of phase links; number of link parameters; [Fi][2]
   *PhLin,  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
   // TSorpMod stuff
   *LsESmo, ///< new: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]
   *LsISmo, ///< new: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]
   *xSMd,   ///< new: denticity of surface species per surface site (site allocation) (-> L1[k]*LsISmo[k][3]] )
   // TKinMet stuff
-  *LsKin,  ///< new: number of faces; number of kin.regions; rate constants/coeffs; reserved [Fi][4]
-  *LsUpt,  ///< new: number of uptake model coeffs; reserved [Fis][2]
-  *jCrDC,  ///< new: Collected array of aq/gas/sorption species indexes used in rate regions (-> += LsKin[k][1]*LsKin[k][2])
-  *xfaces; ///< new: Collected array of indexes of faces for parameter sets in rate regions (-> += LsKin[k][0]*LsKin[k][1])
+  *LsKin,  ///< new: number of kin.regions nPRk[k]; number of species in activity products nSkr[k];
+           /// number of parameter coeffs in parallel reaction term nrpC[k]; number of parameters
+           /// per species in activity products naptC[k] [Fi][4]
+  *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k]; reserved [Fis][2]
+
+  *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])
+  *ocPRkC; ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
 
   double
    // TSolMod stuff
@@ -205,7 +210,6 @@ double
      *HYM,    ///< reserved
      *ENT,    ///< reserved no object
 
- // Convert H0, A0, U0, S0, Cp0 to double
      *H0,     ///< DC pmolar enthalpies, reserved [L]
      *A0,     ///< DC molar Helmholtz energies, reserved [L]
      *U0,     ///< DC molar internal energies, reserved [L]
@@ -234,9 +238,11 @@ double
   *IsoPc, ///< new: Collected isotherm coefficients per DC k -> += L1[k]*LsISmo[k][2];
   *IsoSc, ///< new: Collected isotherm coeffs per site k -> += LsISmo[k][0]*LsISmo[k][1];
   // TKinMet stuff
-  *fSak,  ///< new: Collected array of fractions of surface area by different faces k-> += LsKin[k][0]
-  *Krpc,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][1]*LsKin[k][2];
-  *UMpc,  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
+  *feSArC, ///< new: Collected array of fractions of surface area related to parallel reactions k-> += LsKin[k][0]
+  *rpConC,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][2];
+*apConC,  ///< new:!! Collected array of parameters per species involved in activity product terms
+          ///  k-> += LsKin[k][0]*LsKin[k][1]*LsKin[k][3];
+  *UMpcC,  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
       ;
   //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   ///< mean r & h of particles (- pores), nm  [0:FI-1][2], reserved

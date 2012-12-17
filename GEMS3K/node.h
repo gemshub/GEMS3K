@@ -780,7 +780,7 @@ void GEM_set_MT(
       void Get_aIPx ( vector<long> &aIPx,   const long &index_phase_aIPx, const long &index_phase );
       void Get_aDCc ( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase );
       void Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase ); 		// Set values of aIPc array
-      void Set_aDCc ( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase );		// Set values of  aDCc array
+      void Set_aDCc ( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase );		// Set values of aDCc array
       /// These methods set contents of fields in the work node structure
       void Set_Tk   ( double &T_k);
       void Set_Pb   ( double &P_b);

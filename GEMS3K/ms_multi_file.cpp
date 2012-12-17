@@ -466,11 +466,11 @@ pm.GamFs = 0;
 // TKinMet stuff
         pm.LsKin   = 0;
         pm.LsUpt   = 0;
-        pm.jCrDC   = 0;
-        pm.xfaces   = 0;
-        pm.fSak   = 0;
-        pm.Krpc   = 0;
-        pm.UMpc   = 0;
+        pm.xSKrC   = 0;
+        pm.ocPRkC   = 0;
+        pm.feSArC   = 0;
+        pm.rpConC   = 0;
+        pm.UMpcC   = 0;
         pm.kMod   = 0;
 
 }

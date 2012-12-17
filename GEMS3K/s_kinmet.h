@@ -34,14 +34,18 @@ const int   MAXDCNAME =      16, MAXPHNAME = 16;
 struct KinMetData {
 
     char  KinModCod_;   // Type code of the kinetic/metastability model, see KINMETTYPECODES
+    char  KinDirCod_;   // Code of direction of the kinetic process, see KINMETDIRCODES
     char  UptModCod_;   // Type code of Tr uptake model (solution/sorption phases only), see UPTMTYPECODES
+    char  MetLinkCod_;  // Type code of metastability links of this phase to other phases,see PHMETLINKCODES
     char  PhasNam_[MAXPHNAME];      // Phase name (for specific built-in models)
 
     long int NSpec_; // Number of components in the phase
     long int nlPh_;  // number of linked phases (cf. lPh), default 0.
-    long int nFace_; // number of kinetically different faces (on solid phase surface), default 1, up to 6.
-    long int nReg_;  // number of kinetic regions (and catalyzing aqueous species)
+    long int nSkr_; // total number of (aqueous or gaseous or surface) species from other reacting phases
+       // involved (assuming that in each “parallel reaction” the same list of external species is used);
+    long int nPRk_;  // number of «parallel reactions» that affect amount constraints for this phase
     long int nrpC_;  // number of kinetic rate constants and coefficients
+    long int naptC_; // number of parameter (coefficients) per species involved in “activity product” terms
     long int numpC_; // number of uptake model parameter coefficients (per end member)
     long int kins_;  // kinetic state: -1 dissolution +1 precipitation ...
 //    long int Nres_;  // reserved
@@ -62,46 +66,49 @@ struct KinMetData {
     double hX0_;  // Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
     //
     double sVp_;  // Specific pore volume of phase, m3/g (default: 0)
-    double frSA_; // reactive fraction of surface area (def. 1)
+    //
     double nPh_;  // current amount of this phase, mol (read-only)
     double mPh_;  // current mass of this phase, g (read-only)
     double vPh_;  // current volume of this phase, cm3 (read-only)
     double sAPh_;  // current surface of this phase, m2
-    double OmPh_;  // phase stability index (lg scale), input
+    double LaPh_;  // phase stability index (log scale), input
+    double OmPh_;  // phase stability index (activity scale) 10^LaPh_
 
     double *nPul_; // upper restriction to this phase amount, mol (calculated here)
     double *nPll_; // lower restriction to this phase amount, mol (calculated here)
     double *sGP_;  // surface free energy of the phase, J (YOF*PhM)
 
-    double *fSAk;     // Pointer to input fractions of surface area of solid occupied by different faces [nFaces]
-    double *arKrpc_;  // pointer to input array of kinetic rate constants [nReg*nFaces][nrpC]
-    double *arUmpc_;  // pointer to input array of uptake model coefficients [nComp][numpC]
+    double *arfeSAr_;  // Pointer to input fractions of surface area to reactions [nPRk] read-only
+    double *arrpCon_;  // pointer to input array of kinetic rate constants [nPRk*nrpC] read-only
+    double *arapCon_;  // pointer to Array of parameters per species involved in
+                   // “activity product” terms [nPRk * nSkr*naptC] read-only
+    double *arUmpc_;  // pointer to input array of uptake model coefficients [nComp*numpC] read-only
 
     char  (*SM_)[MAXDCNAME];  // pointer to the list of DC names in the phase [NComp] read-only
     char  arDCC_;     // pointer to the classifier of DCs involved in sorption phase [NComp] read-only
-
-    long int *xFaces;    // indexes of faces per set of kinetic region parameters [nReg*nFaces], default 0.
-    long int *arjCrDC_;  // input array of DC indexes used in rate regions [nReg*nFaces], default 0.
+i
+    long int *arocPRk_; // pointer to operation codes for kinetic parallel reaction terms [nPRk] read-only
+    long int *arxSKr_;  // pointer to input array of DC indexes used in activity products [nSKr_]
 
     double *arym_;    // Pointer to molalities of all species in MULTI (provided), read-only
     double *arla_;    // Pointer to lg activities of all species in MULTI (provided), read-only
 
     double *arnx_;    // Pointer to mole amounts of phase components (provided) [NComp] read-only
 
-    double *arnxul_;     // Vector of upper kinetic restrictions to nx, moles [L]  (DUL) direct access output
-    double *arnxll_;     // Vector of lower kinetic restrictions to nx, moles [L]  (DLL) direct access output
+    double *arnxul_;  // Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output
+    double *arnxll_;  // Vector of lower kinetic restrictions to nx, moles [NComp]  (DLL) direct access output
 
-    double *arWx_;       // Species (end member) mole fractions ->NSpecies
-    double *arVol_;      // molar volumes of end-members (species) cm3/mol ->NSpecies
+    double *arWx_;    // Species (end member) mole fractions ->NSpecies
+    double *arVol_;   // molar volumes of end-members (species) cm3/mol ->NSpecies
 
 };
 
-// Class describing a mineral face precipitation/dissolution data (Lasaga's general form)
-class TFaceKinetics
+// Class describing a reaction region kinetic rate law data (Schott's general form)
+class TReactionKinetics
 {
 protected:
 
-     long int nReg; // number of kinetic regions applying to this face
+//     long int nReg; // number of kinetic regions applying to this face
      long int nrC;  // number of kinetic rate constants and coefficients (max. 32)
      long int jrDC; // index of catalytic (rate-controlling) species
      long int iRes; // reserved
@@ -211,7 +218,7 @@ class TKinMet  // Base class for kinetics and metastability models
         double *arWx;     // Species (end member) mole fractions (provided) ->NSpecies
         double *arVol;    // molar volumes of end-members (species) (provided) cm3/mol ->NSpecies
 
-        TFaceKinetics arFk[]; // work dyn array of kinetic faces data (model-specific) [nFaces]
+        TReactionKinetics arFk[]; // work dyn array of kinetic faces data (model-specific) [nFaces]
 
         double spcfu[];    // work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
         double spcfl[];    // work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
