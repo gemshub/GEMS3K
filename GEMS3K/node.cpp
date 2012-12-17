@@ -67,7 +67,7 @@ double TNode::get_Ppa_sat( double Tk )
 			}
 		}
 	}
-
+    return 0;
 }
 
 long int TNode::get_grid_index_Ppa_sat( double Tk )
@@ -81,20 +81,19 @@ long int TNode::get_grid_index_Ppa_sat( double Tk )
 			if( CSD->Psat[i] > 1.1e-5 )
 			{
 				return i;
-			}
-			else
-			{
-				return r;
-			}
-		}
+            }
+            else
+            {
+                return r;
+            }
+        }
 	}
-
+    return r;
 }
 
 
-
 // Checks if given temperature TK and pressure P fit within the interpolation
-//intervals of the DATACH lookup arrays (returns true) or not (returns false)
+// intervals of the DATACH lookup arrays (returns true) or not (returns false)
 bool  TNode::check_TP( double TK, double P )
 {
    bool okT = true, okP = true;

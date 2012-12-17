@@ -715,15 +715,15 @@ long int TPitzer::MixMod()
     for( ic=0; ic<Nc; ic++){
         mc[ic] = aM[xcx[ic]];
         zc[ic] = aZ[xcx[ic]];
-         cout << mc[ic] << " " << zc[ic] << endl;
+//         cout << mc[ic] << " " << zc[ic] << endl;
     }
- cout << "aM"  << endl;
+// cout << "aM"  << endl;
     for(ia=0; ia<Na; ia++){
         ma[ia] = aM[xax[ia]];
         za[ia] = aZ[xax[ia]];
-        cout << ma[ia] << " " << za[ia] << endl;
+//        cout << ma[ia] << " " << za[ia] << endl;
     }
-    cout << "aZ"  << endl;
+//    cout << "aZ"  << endl;
     for(in=0; in>Nn; in++){
         mn[in] = aM[xnx[in]];
     }
@@ -785,12 +785,12 @@ long int TPitzer::Pitzer_calc_Gamma( )
  out << "Aphi " << Aphi << " dAphidT2 " << dAphidT << " d2AphidT2" << d2AphidT2 << endl;
  out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
 #endif
-
+// Workaround to prevent occasional generation of rubbish activity coefficients under MacOS and MinGW
 #ifndef __unix
-  std::ostream out(0);
-  out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
- // out << "Aphi " << Aphi << " dAphidT2 " << dAphidT << " d2AphidT2" << d2AphidT2 << endl;
- // out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
+//  std::ostream out(0);
+// out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
+// out << "Aphi " << Aphi << " dAphidT2 " << dAphidT << " d2AphidT2" << d2AphidT2 << endl;
+// out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
 #endif
 
     lnGamma[Ns] = lnGammaH2O( Aphi );
