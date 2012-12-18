@@ -17,6 +17,27 @@
 #include "io_arrays.h"
 #include "m_gem2mt.h"
 
+#include <dirent.h>
+#include <sys/stat.h>
+
+bool DirExists( const char* aPath )
+{
+    if ( aPath == NULL) return false;
+
+    DIR *pDir;
+    bool bExists = false;
+
+    pDir = opendir (aPath);
+
+    if (pDir != NULL)
+    {
+        bExists = true;
+        (void) closedir(pDir);
+    }
+
+    return bExists;
+}
+
 
 TGEM2MT* TGEM2MT::pm;
 
@@ -50,6 +71,12 @@ void TGEM2MT::RecCalc()
 
       if( mtp->PsVTK != S_OFF )
       {
+         if( !DirExists( pathVTK.c_str() ) )
+#ifndef  __unix
+            mkdir( pathVTK.c_str() );
+#else
+             mkdir( pathVTK.c_str(), 0755 );
+#endif
        // vfMakeDirectory(window(), pathVTK.c_str() );
       }
 
@@ -87,7 +114,11 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
    from_text_file( ff );
    pathVTK = vtk_dir;
    if( !pathVTK.empty() )
-      pathVTK += "/";
+   {
+       if(  DirExists( pathVTK.c_str() ) )
+          pathVTK += "/";
+       else pathVTK =""; // this directory do not exist
+   }
    return 0;
   }
   catch(TError& err)
@@ -135,7 +166,9 @@ int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
          pos = max(pos, pos2 );
   if( pos < npos )
   {   if( pathVTK.empty() )
-        pathVTK = lst_in.substr(0, pos+1);
+      {  pathVTK = lst_in.substr(0, pos+1);
+          pathVTK += "VTK/";
+      }
       lst_in = lst_in.substr(pos+1);
   }
   pos = lst_in.find(".");

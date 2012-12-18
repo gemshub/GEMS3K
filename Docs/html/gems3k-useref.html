@@ -4,6 +4,7 @@
 
 
 
+
   
   <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type"><title>GEMS3K Functions at TNode Level)</title></head><body style="background-image: url(bgimg-gray.jpg);">
 <h1><img alt="GEMS icon" src="gems1.png" style="width: 48px; height: 48px;" align="left"> <font color="#000066">
@@ -48,7 +49,7 @@ files to start calculations with GEMS3K can be exported
 from the GEM-Selektor package as described in the <a href="gems3k-manual.html">gems3k-manual</a> file, and
 can also be modified using any ASCII text editor. The file formats are
 described in detail in the <a href="gems3k-iofiles.html">gems3k-iofiles
-file</a>.&nbsp;The names of IPM, DCH and at least one&nbsp;DBR files
+file</a>.&nbsp;The names of IPM, DCH and&nbsp; DBR files
 should
 be collected
 in
@@ -63,14 +64,12 @@ usually look like this: <br>
 "Test-ipm.dat" "Test-dbr-0.dat"<br>
 </span></p>
 
-<p>If more than one
-DBR file names are given, they should be comma-separated. All these
+<p>All these
 files
 should be
 located in the same directory where&nbsp; the list file is located.
 When coupling is performed on the TNode level, only one instance of <tt>DATABR</tt>
-structure exists in RAM, therefore, only the contents of the
-last DBR file in the list will be available after the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">GEM_init() </span>call<span style="font-family: Helvetica,Arial,sans-serif;">.</span></p>
+structure exists in RAM, therefore, only the contents of one DBR file will be available after the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">GEM_init() </span>call<span style="font-family: Helvetica,Arial,sans-serif;">.</span></p>
 
 <span style="font-family: Helvetica,Arial,sans-serif;">&nbsp; </span>
 
@@ -2494,7 +2493,7 @@ Only access via DCH indexation (will be added in next versions)<br>
 <br>
 
 <hr style="width: 100%; height: 2px;"><span style="font-family: monospace;"><br>
-</span>Last change: 10.12.2012 DK<span style="font-family: monospace;"><br>
+</span>Last change: 17.12.2012 DK SD<span style="font-family: monospace;"><br>
 <br></span>Copyright (c) 2012 <a href="http://gems.web.psi.ch/teamhist.html">GEMS Development Team</a><br>
 
 <br>

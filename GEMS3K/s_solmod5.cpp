@@ -712,17 +712,18 @@ long int TPitzer::MixMod()
     // Refreshing molalities of cations, anions, and neutral species
     // Added by DK on 01.Dec.2009
     long int ic, ia, in, iRet;
+
     for( ic=0; ic<Nc; ic++){
         mc[ic] = aM[xcx[ic]];
         zc[ic] = aZ[xcx[ic]];
-    }
+      }
 
     for(ia=0; ia<Na; ia++){
         ma[ia] = aM[xax[ia]];
         za[ia] = aZ[xax[ia]];
-    }
+     }
 
-    for(in=0; in>Nn; in++){
+    for(in=0; in<Nn; in++){   //Important bugfix (was in>Nn) 17/12/2012 SD
         mn[in] = aM[xnx[in]];
     }
 
@@ -777,20 +778,6 @@ long int TPitzer::Pitzer_calc_Gamma( )
     // Z- Term, Pitzer-Toughreact Report 2006 equation (A8)
     Zfac = Z_Term();
 
-#ifdef __APPLE__
- std::ostream out(0);
- out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
- out << "Aphi " << Aphi << " dAphidT2 " << dAphidT << " d2AphidT2" << d2AphidT2 << endl;
- out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
-#endif
-
-#ifndef __unix
-  std::ostream out(0);
-  out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
- // out << "Aphi " << Aphi << " dAphidT2 " << dAphidT << " d2AphidT2" << d2AphidT2 << endl;
- // out << "Ffac " << Ffac << " Zfac " << Zfac << endl;
-#endif
-
     lnGamma[Ns] = lnGammaH2O( Aphi );
 
     for( M=0; M<Nc; M++ )
@@ -810,7 +797,8 @@ long int TPitzer::Pitzer_calc_Gamma( )
                     lnGamma[xnx[N]] = lnGammaN( N );
             }
     }
-    // Pitzer_test_out( "test111.dat ");
+    //Pitzer_test_out( "test111.dat ");
+
     return 0;
 }
 
@@ -1462,7 +1450,6 @@ double TPitzer::lnGammaH2O( double DH_term )
         }
     }
 
-
     // Term OC4
     OC4 = OC4a =0.;
     for( a=0; a<(Na-1); a++)
@@ -1482,7 +1469,6 @@ double TPitzer::lnGammaH2O( double DH_term )
         }
     }
 
-
     // Term OC5
     OC5 = OC5a = OC5b = 0.;
     for(  n=0; n<Nn; n++)
@@ -1501,7 +1487,6 @@ double TPitzer::lnGammaH2O( double DH_term )
         }
     }
     OC5=OC5a+OC5b;
-
 
     // Term OC6
     OC6 = 0.;

@@ -480,7 +480,7 @@ void TPrintArrays::writeArray( const char *name, short* arr,
  inline void TReadArrays::setCurrentArray( const char* name, long int size )
  {
    char buf[200];
-   sprintf( buf, "After successfully read <%s> %d data items", name, size);
+   sprintf( buf, "After successfully read <%s> %ld data items", name, size);
    curArray = buf;
  }
 

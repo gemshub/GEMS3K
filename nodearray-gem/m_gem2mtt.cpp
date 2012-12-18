@@ -356,7 +356,7 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
           gstring err_msg;
           iRet = false;
 
-          sprintf( buf, " Node= %-8d  Step= %-8d\n", ii, mtp->ct );
+          sprintf( buf, " Node= %-8ld  Step= %-8ld\n", ii, mtp->ct );
           err_msg = buf;
           switch( RetCode )
           {
@@ -584,9 +584,7 @@ bool TGEM2MT::Trans1D( char mode )
   bool CompMode = false;   // Component transport mode: true: DC; false: IC
   long int nStart = 0, nEnd = mtp->nC;
   // long int NodesSetToAIA;
- bool UseGraphMonitoring = false;
- char buf[300];
-// gstring Vmessage;
+  // gstring Vmessage;
 
 FILE* logfile = NULL;
 FILE* ph_file = NULL;
@@ -655,6 +653,10 @@ if( mtp->PsVTK != S_OFF )
 
 
 #ifndef IPMGEMPLUGIN
+
+bool UseGraphMonitoring = false;
+char buf[300];
+
    if( mtp->PsSmode == S_OFF )
     if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
              GetName(), "Use graphic monitoring?") )
@@ -672,7 +674,7 @@ if( mtp->PsVTK != S_OFF )
        if( mtp->ct > 0)
             CalcStartScript();
 
-       sprintf(buf, "   time %lg; step %d ", mtp->cTau, mtp->ct );
+       sprintf(buf, "   time %lg; step %ld ", mtp->cTau, mtp->ct );
        Vmessage = "Calculating Reactive Mass Transport (RMT): ";
        Vmessage += buf;
        Vmessage += ". Please, wait (may take long)...";
@@ -814,7 +816,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
    {
        char buf[200];
 
-       sprintf( buf, "%05d", mtp->ct);
+       sprintf( buf, "%05ld", mtp->ct);
        gstring name = buf;
 
 #ifdef IPMGEMPLUGIN

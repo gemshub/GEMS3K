@@ -116,7 +116,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double t )
 
   if( f<0 ) // Elemental production flux?
   {
-        sscanf( MGPid, "%d", &fe );  // Reading BSF row index
+        sscanf( MGPid, "%ld", &fe );  // Reading BSF row index
         if( fe < 0 || fe >= mtp->nSFD )
            Error( "BOXFLUX:", "Wrong MGP identifier or BSF row index!" );
   }
@@ -535,7 +535,7 @@ TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int pr, double tcur, double step 
   {
       char buf[300];
       //gstring Vmessage;
-      sprintf(buf, "   step %d; time %lg; dtime %lg  ", mtp->ct, mtp->cTau, mtp->dTau );
+      sprintf(buf, "   step %ld; time %lg; dtime %lg  ", mtp->ct, mtp->cTau, mtp->dTau );
       Vmessage = "Calculating Reactive Transport Box-Flux Simulation: ";
       Vmessage += buf;
       Vmessage += ". Please, wait (may take long)...";
@@ -671,16 +671,18 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 {
 
   try {
-    char buf[300];
     //gstring Vmessage;
     long int p, i, kk, x_aq=-1, x_gf=-1, naqgf=1, lastp=0;
     bool iRet = false;
     clock_t outp_time = (clock_t)0;
-    bool UseGraphMonitoring = false;
 
     BoxFluxTransportStart();
 
 #ifndef IPMGEMPLUGIN
+    bool UseGraphMonitoring = false;
+    char buf[300];
+
+
     if( mtp->PsSmode == S_OFF )
       if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
              GetName(), "Use graphic monitoring?") )
@@ -754,7 +756,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
         if( mtp->ct > 0)
           CalcStartScript();
 
-      sprintf(buf, "   step %d; time %lg; dtime %lg  ", mtp->ct, mtp->cTau, mtp->dTau );
+      sprintf(buf, "   step %ld; time %lg; dtime %lg  ", mtp->ct, mtp->cTau, mtp->dTau );
       Vmessage = "Calculating Transport through Sequential Reactors: ";
       Vmessage += buf;
       Vmessage += ". Please, wait (may take long)...";
@@ -876,13 +878,13 @@ bool TGEM2MT::CalcBoxFluxModel( char mode )
 {
   try{
 	 
-    bool iRet = false;
-    bool UseGraphMonitoring = false;
-
     BoxFluxTransportStart();
 
 
 #ifndef IPMGEMPLUGIN
+    bool iRet = false;
+    bool UseGraphMonitoring = false;
+
      if( mtp->PsSmode == S_OFF )
           if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
              GetName(), "Use graphic monitoring?") )

@@ -303,9 +303,11 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 // Reading work dataBR structure from text file
 void TNode::databr_from_text_file( fstream& ff )
 {
+#ifndef NODEARRAYLEVEL
    double tmpVal;
-// fstream ff("DataBR.out", ios::out );
-// ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
+#endif
+   // fstream ff("DataBR.out", ios::out );
+   // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
  // mem_set( &CNode->Tm, 0, 19*sizeof(double));
  databr_reset( CNode );

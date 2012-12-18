@@ -5520,7 +5520,7 @@ long int TSTPcalc::FugacityH2O( long int j )
     double pmpa, tol, rhoguess, rho, pnew, pgrad, rhoold, rhonew, errnew, errold, step,
                     rhomin, rhomax, vol, lnfug, fug, fugc;
     double ar, dard, dardd, darddd, dart, dartt, dardt, darddt, dardtt, pig,
-                    g, h, s, cp, cv, u, a, dpr, dprr, dpt, dptt, dprt, drt, drtt, drp, drpp, drtp;
+                    g, h, s, cp, cv, /*u,*/ a, dpr, dprr, dpt, dptt, dprt, drt, drtt, drp, drpp, drtp;
 
     pmpa = Pbar/10.;  // MPa
     tol = 1.e-10;
@@ -5631,7 +5631,7 @@ long int TSTPcalc::FugacityCO2( long int j )
     double pmpa, tol, rhoguess, rho, pnew, pgrad, rhoold, rhonew, errnew, errold, step,
                     rhomin, rhomax, vol, lnfug, fug, fugc;
     double ar, dard, dardd, darddd, dart, dartt, dardt, darddt, dardtt, pig,
-                    g, h, s, cp, cv, u, a, dpr, dprr, dpt, dptt, dprt, drt, drtt, drp, drpp, drtp;
+                    g, h, s, cp, cv, /*u,*/ a, dpr, dprr, dpt, dptt, dprt, drt, drtt, drp, drpp, drtp;
 
     pmpa = Pbar/10.;  // MPa
     tol = 1.e-10;
