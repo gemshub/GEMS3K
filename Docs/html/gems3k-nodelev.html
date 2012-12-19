@@ -1,43 +1,40 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html><head>
-  
-  
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+
 
 
   
-  
-<meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20  (Win98; I) [Netscape]">
+  <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 
   
-<title>How to couple codes with GEMS3K at simple level</title>
-
-
-  
-</head><body>
-<h1><img src="gems1.png" height="48" align="left" width="48">
+  <meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20  (Win98; I) [Netscape]"><title>How to couple codes with GEMS3K at simple level</title></head><body style="background-image: url(bgimg-gray.jpg);">
+<h1><img src="gems1.png" align="left" height="48" width="48">
 GEMS3K Solver of GeoChemical Equilibria<br>
 </h1>
 
-
 <p> </p>
 
+<h2>Coupling with GEMS3K at Simple TNode Level</h2>
 
-<h2>How to Couple Codes with GEMS3K at the Simple TNode Level</h2>
 <hr size="2" width="100%">
 <h3>Contents</h3>
+
 <p><a href="#TAG_INTRO">1. Introduction</a></p>
+
 <p><a href="#TAG_DISKONLY">2. Data exchange using disk files only</a></p>
+
 <p><a href="#TAG_MEMEXCHANGE">3. Data exchange in computer memory</a> </p>
 
 <p><a href="#TAG_FAQ">4. Frequently asked questions</a></p>
+
 <br>
 
 <hr size="2" width="100%">
 <h3><a name="TAG_INTRO"></a>1. Introduction<br>
-
 </h3>
-<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;">The&nbsp; <tt>main.cpp</tt>&nbsp;
+
+<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;">The&nbsp;
+<tt>main.cpp</tt>&nbsp;
 file
 in "<tt>standalone/gemcalc/</tt>" folder
 shows how to perform a batch calculation of chemical equilibria using
@@ -46,8 +43,8 @@ data given in DCH, IPM and one or more DBR files; the results are
 written into
 DBR files or (optionally) into a dump text output file.&nbsp; </p>
 
-
-<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><tt>M</tt><tt>ain.cpp</tt> and <tt>main.h</tt>&nbsp; files
+<p class="MsoNormal" style="margin-bottom: 6pt; text-align: left;"><tt>M</tt><tt>ain.cpp</tt>
+and <tt>main.h</tt>&nbsp; files
 in&nbsp; "<tt>standalone/node-gem</tt>/" folder&nbsp;
 shows how the coupling with a "transport part" having
 several nodes can be arranged, where the chemical data and parameters
@@ -57,21 +54,21 @@ The modification to a &#8220;real&#8221; mass transport method is
 straightforward, although this would make the example program too
 complicated.&nbsp; </p>
 
-
 In
 these examples,
 some options are shown that may significantly improve performance and
 accuracy
 of GEMS3K.&nbsp; <br>
+
 <p>As the mass
 transport part has no direct access to internal IPM work data, the
 calculations
 of equilibria occur as if they were done in &#8220;real&#8221; amounts consistent
 with the
-current size of the node. The use of internal re-scaling mechanism leads, in general,
+current size of the node. The use of internal re-scaling mechanism
+leads, in general,
 to a much
 better convergence of GEMS3K and to higher precision of its results.</p>
-
 
 <p>The current
 chemical speciation (<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>
@@ -79,35 +76,43 @@ vector, amounts
 of Dependent Components) is usually the output from GEM IPM
 runs (can also be used as input initial approximation in SIA mode). The
 ultimate
-input of GEMS3K is the bulk chemical composition vector (<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span>), temperature and
-pressure. So, at time steps, the mass transport part should change the
-  <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> vector and,
+input of GEMS3K is the bulk chemical composition vector (<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span>),
+temperature and
+pressure. So, at time steps, the mass transport part should change the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> vector
+and,
 maybe, <i>T</i>
 and/or <i>P</i> in every node, and
 this must be sufficient.&nbsp; &nbsp;&nbsp;
-
 </p>
+
 <p>However, in many
-existing advection/diffusion transport codes (e.g. OpenGeoSys),&nbsp;not
+existing advection/diffusion transport codes (e.g.
+OpenGeoSys),&nbsp;not
 the total amounts of independent components, but rather the amounts of
 aqueous
 species are moved between nodes. Conversely, after the mass transport
 step,
 only the speciation vector <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>
 is changed in
-each node, and an additional step would be needed to compute a corrected
-  <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> vector
+each node, and an additional step would be needed to compute a
+corrected <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span>
+vector
 (i.e. elemental bulk composition) in the mass transport part, which
 will be the
-GEM input for computing the new speciation <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>. &nbsp;In
-turn, this would require access to several data objects (such as the A stoichiometry
+GEM input for computing the new speciation <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>.
+&nbsp;In
+turn, this would require access to several data objects (such as the A
+stoichiometry
 matrix) in the <tt>DATACH</tt> structure.<span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+
 <p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
+
 <p>In order to make this
 unnecessary, the TNode class provides
 a variant of <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">GEM_from_MT()</span>
 function call
-where the re-calculation of input (changed) <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span> speciation into
+where the re-calculation of input (changed) <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>
+speciation into
 new <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span>
 bulk composition
 vector is performed inside of GEMS3K before the internal mass scaling
@@ -120,12 +125,13 @@ amounts (in the <span style="font-size: 11pt; font-family: &quot;Courier New&quo
 vector passed
 through the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_xDC</span>
 parameter), and
-then added to the amounts given in the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> vector (passed through
-  <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_bIC</span>
+then added to the amounts given in the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> vector
+(passed through <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_bIC</span>
 parameter).
 Here,
 two cases are possible. One case is when the mass transport step puts
-in the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_xDC</span> parameter the differences
+in the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_xDC</span>
+parameter the differences
 between the new and the old speciation in the node chemical system. In
 this
 case, the old <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_bIC</span>
@@ -133,22 +139,26 @@ content (e.g.
 unchanged since the last GEM calculation for this node) must be
 provided and it will be automatically corrected.&nbsp; Another (more
 usual) case
-is when the mass-transport part delivers in <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_xDC</span> the complete new
+is when the mass-transport part delivers in <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_xDC</span> the
+complete new
 speciation (absolute
-amounts) after the transport time step. In this case, the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_bIC</span> vector must be
+amounts) after the transport time step. In this case, the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">p_bIC</span>
+vector must be
 filled with zeros because its new content will be completely retrieved
 from the
 p_<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>
 vector.
-
 </p>
+
 <p>Concerning the &#8220;Smart
 Initial Approximation&#8221; (SIA) mode,
-the TNode class contains a parameter in <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">GEM_run()</span> call and yet another
+the TNode class contains a parameter in <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">GEM_run()</span>
+call and yet another
 variant of <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">GEM_from_MT()</span>
 function that
 control what initial approximation of GEM speciation vector will
-be used. Basically, regardless of what the mass transport part does, the GEMS3K can use previous contents of
+be used. Basically, regardless of what the mass transport part does,
+the GEMS3K can use previous contents of
 speciation
 and activity coefficients vectors in MULTI structure as an initial
 approximation for the next GEM calculation &#8211; even if the bulk
@@ -156,28 +166,30 @@ composition b or
 temperature T have had changed. This mode is set by the default <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">uPrimalSol</span>
 parameter value
 (<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">false</span>).
-
-
 </p>
+
 <p>Another, more
 efficient variant (<span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">uPrimalSol = true</span>)
 can be used when
 the mass transport part directly changes the chemical speciation in the
 node while
-taking care of material balance, and the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> input vector must be
+taking care of material balance, and the <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">bIC</span> input
+vector must be
 restored anyway from
-the new <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span> vector contents
+the new <span style="font-size: 11pt; font-family: &quot;Courier New&quot;;">xDC</span>
+vector contents
 (provided together with activity coefficients stored for this
 node at previous time step). In this case, the SIA mode is very
 efficient because
 the mass balance is already ensured, and this may lead to a very
 serious reduction
-of the number of GEM iterations and total computing time. &nbsp;Note that this
+of the number of GEM iterations and total computing time. &nbsp;Note
+that this
 SIA mode works only when the
 DATACH structure contains a full list of Dependent Components used in
 GEM calculations.
-
 </p>
+
 <p>The
 TNode
 class provides dozens of access methods to single items of chemical
@@ -185,9 +197,8 @@ data. Usage
 of these public methods is strongly preferred over direct access to
 fields of
 the DATABR and DATACH memory structures. The
-provided methods use either DATABR or DATACH indexation. 
+provided methods use either DATABR or DATACH indexation. </p>
 
-</p>
 In DBR files
 and DATABR structure, the results for volumes, masses and bulk
 compositions are
@@ -202,157 +213,195 @@ multi- and single-component phases. This is done in order to make
 access to such data from the side of mass-transport part of the program
 as simple
 as possible.<br>
+
 <br>
+
 <hr size="2" width="100%">
 <h3><a name="TAG_DISKONLY"></a>2. Data exchange using disk files only</h3>
 
 <p><span style="font-family: Helvetica,Arial,sans-serif;">Programming
-example fragment (see full example in
-  </span><big><span style="font-family: monospace;">"<small>standalone/gemcalc/main.cpp</small></span></big><span style="font-family: Helvetica,Arial,sans-serif;">"): </span></p>
-
+example fragment (see full example in </span><big><span style="font-family: monospace;">"<small>standalone/gemcalc/main.cpp</small></span></big><span style="font-family: Helvetica,Arial,sans-serif;">"): </span></p>
 
 <span style="font-family: monospace;"></span><span style="font-family: monospace;"></span>
-
 <table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
-
 
   <tbody>
     <tr>
       <td style="vertical-align: top;"><tt>#include "node.h"</tt><tt><br>
-  </tt><tt>
-      </tt><tt>&nbsp;&nbsp; </tt><tt><br>
-  </tt><tt>
-&nbsp;&nbsp; // Creates TNode structure instance accessible trough the "node" pointer</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; TNode* node&nbsp; = new TNode();</tt><tt><br>
-  </tt><tt>&nbsp; </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; // (1) Initialization of GEMS3K internal data by reading&nbsp; files</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp; whose names are given in the input_system_file_list_name</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; if( node-&gt;GEM_init( input_system_file_list_name ) )</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; {</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error occured during reading the files</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; }</tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; // Getting direct access to work node DATABR structure which exchanges the</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; // data with GEM IPM2 (already filled out by reading the DBR input file)</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; DATABR* dBR = node-&gt;pCNode(); </tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; // Asking GEM to run with automatic initial approximation </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;</tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; // (2) re-calculating equilibrium by calling GEMS3K, getting the status back</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run(&nbsp; false );</tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // (3) Writing results in default DBR file</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_write_dbr( NULL, false, true );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NULL );&nbsp;&nbsp; // possible debugging printout</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; }</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; else {</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (4) possible return status analysis, error message</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NULL );&nbsp;&nbsp; // possible debugging printout</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5; // GEM IPM did not converge properly&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</tt><tt><br>
-  </tt><tt><br>
-&nbsp;&nbsp; // Here a
-possible loop
-on input recipes begins</tt><tt><br>
-  </tt><tt>
-&nbsp;&nbsp; // (5) Reading the next DBR file with different input composition or temperature</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_read_dbr( NextRecipeFileName );</tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM IPM2 to run (faster) with smart initial approximation </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_SIA;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;</tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NodeStatusCH = node-&gt;GEM_run( false );</tt><tt><br>
-  </tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; node-&gt;GEM_write_dbr( NextRecipeOutFileName, false, true );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
- sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NextRecipeOutFileName );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else {</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error message, debugging printout</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sprintf(NextRecipeOutFileName , 
-"%s.Dump.out", NextRecipeFileName );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NextRecipeOutFileName );</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5; // GEM IPM did not converge properly</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</tt><tt><br>
-  </tt><tt>&nbsp;&nbsp; // end of
-possible loop
-on input recipes<br>
-&nbsp;</tt><tt><br>
-  </tt><tt>
-      
-      </tt><tt>&nbsp;&nbsp; delete node;</tt><br style="font-family: monospace;">
-      <span style="font-family: monospace;"><br>
-</span></td>
+      </tt><tt> </tt><tt>&nbsp;&nbsp; </tt><tt><br>
+      </tt><tt>int main( int argc, char* argv[] )<br>
+&nbsp;{<br>
+&nbsp;&nbsp; long nRecipes = 0;<br>
+&nbsp;&nbsp; char (*recipes)[fileNameLength] = 0;<br>
+&nbsp;&nbsp; <br>
+&nbsp;&nbsp; // Analyzing command line arguments<br>
+&nbsp;&nbsp; // Default arguments<br>
+&nbsp;&nbsp; char input_system_file_list_name[256] = "system-dat.lst";<br>
+&nbsp;&nbsp; char input_recipes_file_list_name[256] = "more_recipes.lst";<br>
+&nbsp;&nbsp; <br>
+&nbsp;&nbsp; if (argc &gt;= 2 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( input_system_file_list_name, argv[1], 256);<br>
+&nbsp;&nbsp; // list of DCH, IPM and DBR input files for initializing GEMS3K<br>
+&nbsp;&nbsp; <br>
+&nbsp;&nbsp; // Creates TNode structure instance accessible trough the "node" pointer<br>
+&nbsp;&nbsp; TNode* node&nbsp; = new TNode();<br>
+&nbsp; <br>
+&nbsp;&nbsp; // (1) Initialization of GEMS3K internal data by reading&nbsp; files<br>
+&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp; whose names are given in the input_system_file_list_name<br>
+&nbsp;&nbsp; if( node-&gt;GEM_init( input_system_file_list_name ) )<br>
+&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error occured during reading the files<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;<br>
+&nbsp;&nbsp; }<br>
+      <br>
+&nbsp;&nbsp; // Getting direct access to work node DATABR structure which exchanges the<br>
+&nbsp;&nbsp; // data with GEM IPM3 (already filled out by reading the DBR input file)<br>
+&nbsp;&nbsp; DATABR* dBR = node-&gt;pCNode(); </tt><tt></tt><tt><br>
+      </tt><tt><br>
+</tt><tt>// . . . . . . . . . . . . . . .<br>
+      </tt><br>
+<tt>&nbsp;&nbsp; // Asking GEM to run with automatic initial approximation <br>
+&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;<br>
+      <br>
+&nbsp;&nbsp; // (2) re-calculating equilibrium by calling GEMS3K, getting the status back<br>
+&nbsp;&nbsp; int NodeStatusCH = node-&gt;GEM_run( false );<br>
+      <br>
+&nbsp;&nbsp; if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )<br>
+&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; // (3) Writing results in default DBR file<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_write_dbr( NULL, false, true, false );<br>// &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NULL );&nbsp;&nbsp; // possible debugging printout<br>
+&nbsp;&nbsp; }<br>
+&nbsp;&nbsp; else {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (4) possible return status analysis, error message<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NULL );&nbsp;&nbsp; // possible debugging printout<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5; // GEM IPM did not converge properly - error message needed<br>
+&nbsp;&nbsp; }<br>
+</tt><tt></tt><tt><br></tt><tt>// . . . . . . . . . . . . . . .<br>
+      </tt><br>
+      <tt>&nbsp;&nbsp; // Here a possible loop on more input recipes begins<br>
+&nbsp;&nbsp; if (argc &gt;= 3 )<br>
+&nbsp;&nbsp; {&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; char NextRecipeFileName[256];<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; char NextRecipeOutFileName[300];<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; char input_recipes_file_list_path[256-fileNameLength] = "";<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( input_recipes_file_list_name, argv[2], 256);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // list of additional recipes (dbr.dat files) e.g. for simulation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // of a titration or another irreversible process<br>
+&nbsp; &nbsp;&nbsp;&nbsp; &nbsp; // Reading list of recipes names from file <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; recipes = f_getfiles(&nbsp; input_recipes_file_list_name,<br>
+&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;input_recipes_file_list_path, nRecipes, ',');&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(int cRecipe=0; cRecipe &lt; nRecipes; cRecipe++ )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; { <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Trying to read the next file name <br>
+&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; sprintf(NextRecipeFileName
+, "%s%s", input_recipes_file_list_path, recipes[cRecipe] );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (5) Reading the next DBR file with different input composition or temperature<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_read_dbr( NextRecipeFileName );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM IPM2 to run (faster) with smart initial approximation <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_SIA;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NodeStatusCH = node-&gt;GEM_run( false );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA&nbsp; )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {&nbsp;&nbsp;&nbsp; sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;node-&gt;GEM_write_dbr( NextRecipeOutFileName, false, false, false );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NextRecipeOutFileName );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // error message, debugging printout<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sprintf(NextRecipeOutFileName ,
+"%s.Dump.out", NextRecipeFileName );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_print_ipm( NextRecipeOutFileName );<br>
+//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+return 5; // GEM IPM did not converge properly - error message needed<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp; }&nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp; // end of possible loop on input recipes<br>
+&nbsp;&nbsp; delete node;<br>
+&nbsp;&nbsp; if( recipes ) delete recipes;<br>
+      <br>
+&nbsp;// End of example&nbsp; <br>
+&nbsp;&nbsp; return 0; <br>
+}&nbsp; </tt><span style="font-family: monospace;"><br>
+      </span></td>
     </tr>
   </tbody>
 </table>
 
-
 <span style="font-family: monospace;"></span><br>
+In this example, the GEMS3K input file names are provided in two .lst
+text files, whose paths are given as command line arguments. The second
+list (passed when argc &gt;= 3) may contain one or many DBR input files
+(for systems at different T, P, or bulk composition). These files are
+processed in a loop; the function f_getfiles also counts how many file
+names are in the .lst files. The input DBR files must be provided (e.g.
+exported from GEM-Selektor or cloned/modified using a text editor) in
+the same folder as the .lst files. <br>
+
 <br>
+
 <hr size="2" width="100%">
 <h3><a name="TAG_MEMEXCHANGE"></a>3. Data exchange in computer memory </h3>
-
 
 <p>This case is
 typical for coupling GEMS3K with an existing reactive
 mass transport code that has its own data structure for keeping
 chemical information (e.g. speciation, bulk composition of the system)
 for each node. As in the previous example, it uses one work instance of
-the <span style="font-family: monospace;">DATABR</span><span style="font-family: Helvetica,Arial,sans-serif;">
-  </span>memory structure as data bridge for the exchange with internal GEM IPM data structures.
-  <br>
-
+the <span style="font-family: monospace;">DATABR</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>memory
+structure as data bridge for the exchange with internal GEM IPM data
+structures. <br>
 </p>
+
 <p>
-This example code consists of two C++ files: "<tt>main.h</tt>" and "<tt>main.cpp</tt>", located in the "<tt>standalone/node-gem/</tt>" folder. The former file contains a definition of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;">
+This example code consists of two C++ files: "<tt>main.h</tt>" and "<tt>main.cpp</tt>",
+located in the "<tt>standalone/node-gem/</tt>" folder. The former file
+contains a definition of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;">
 </span>class representing a typical dynamic memory structure used for
 keeping current chemical composition and speciation for all nodes
-involved in the reactive mass transport system. The latter file contains
-an implementation of some public methods of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class, as well as the main function which shows the sequence of calls to<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;">
+involved in the reactive mass transport system. The latter file
+contains
+an implementation of some public methods of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class, as
+well as the main function which shows the sequence of calls to<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;">
 </span>class functions, necessary to perform coupled reactive transport
 calculations based on the "operator splitting" approach. <span style="font-family: Helvetica,Arial,sans-serif;"><br>
-  </span></p>
-
+</span></p>
 
 <p>This example
 is designed to help learning how to couple the existing transport code
 with GEMS3K in a simple way, and it does not contain a 'real' transport
-code which would make the example more difficult to observe. The transport model itself is located in the <tt>TMyTransport::OneTimeStepRun()</tt> function and can be improved there to any desired extent. <br>
+code which would make the example more difficult to observe. The
+transport model itself is located in the <tt>TMyTransport::OneTimeStepRun()</tt>
+function and can be improved there to any desired extent. <br>
 </p>
-
 
 <p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
 
-
 <span style="font-family: Helvetica,Arial,sans-serif;">
 </span>
-<p>Here is a code snippet with the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class definition (see complete code in
-<span style="font-family: monospace;">standalone/node-gem/main.h</span>): <span style="font-family: monospace;"></span></p>
-
-
-
+<p>Here is a code snippet with the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class
+definition (see complete code in
+<span style="font-family: monospace;">standalone/node-gem/main.h</span>):
+<span style="font-family: monospace;"></span></p>
 
 <span style="font-family: monospace;">
-</span><span style="font-family: Helvetica,Arial,sans-serif;">
-
-
-</span>
+</span><span style="font-family: Helvetica,Arial,sans-serif;"></span>
 <table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
-
 
   <tbody>
     <tr>
       <td style="vertical-align: top;">#include "node.h"<br>
-<br>
-class TMyTransport<br>
+      <br>class TMyTransport<br>
 {<br>
 &nbsp;public:<br>
 &nbsp;&nbsp;&nbsp; long int nNodes,&nbsp; // Number of mass transport nodes<br>
@@ -366,8 +415,11 @@ components<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 nPH,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-nPS;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical
+nPS,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical
 phases-solutions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+nRecipes; // Number of different input node recipes to set boundary
+conditions<br>
       <br>
 &nbsp;&nbsp;&nbsp; long int *aNodeHandle,&nbsp;&nbsp;&nbsp;&nbsp; // Node identification handles<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -375,13 +427,9 @@ phases-solutions<br>
 calculation)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 *aIterDone;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of GEM IPM
-iterations performed for each node<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-//&nbsp;&nbsp;
-
-
-
-
- at the last time step<br>
+iterations performed for each node<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp;&nbsp; at the last time step<br>
       <br>
 &nbsp;&nbsp;&nbsp; double *aT,&nbsp;&nbsp;&nbsp;&nbsp; // Array of node temperatures T, Kelvin<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *aP,&nbsp;&nbsp;&nbsp;&nbsp; // Array of node pressures P, Pa<br>
@@ -438,8 +486,8 @@ components<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 **auIC,&nbsp; // Array of node chemical potentials of independent
 components (norm.)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-**abSP;&nbsp; // Array for bulk composition of solid part of 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+**abSP;&nbsp; // Array for bulk composition of solid part of
 equilibrated sub-system<br>
       <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TMyTransport(&nbsp;&nbsp; // Constructor (dynamic memory allocation)<br>
@@ -454,21 +502,26 @@ components<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
 p_nPH,&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
-p_nPS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases -
-solutions<br>
+p_nPS,&nbsp;&nbsp;&nbsp;&nbsp; // Number of chemical phases - solutions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
+p_nRcps&nbsp;&nbsp;&nbsp; // Number of different input node recipes to
+set boundary conditions<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );<br>
       <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ~TMyTransport();&nbsp; // Destructor of dynamic memory<br>
       <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; void OneTimeStepRun(&nbsp;&nbsp; // Placeholder function for one transport time step<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double
-*stoich,&nbsp;&nbsp;&nbsp;&nbsp; // Stoichiometry coefficients<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
-*ICndx,&nbsp;&nbsp;&nbsp; // Indexes of mobile independent components<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int
-nICndx&nbsp;&nbsp;&nbsp;&nbsp; // Number of mobile independent
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; void
+OneTimeStepRun(&nbsp;&nbsp; // Placeholder function for one transport
+time step<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+double *stoich,&nbsp;&nbsp;&nbsp;&nbsp; // Stoichiometry coefficients<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long
+int *ICndx,&nbsp;&nbsp;&nbsp; // Indexes of mobile independent
 components<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long
+int nICndx&nbsp;&nbsp;&nbsp;&nbsp; // Number of mobile independent
+components<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; );<br>
 };<br>
       <br>
       </td>
@@ -476,24 +529,27 @@ components<br>
   </tbody>
 </table>
 
-
 <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span>
 <p>All data and
 methods in this class are declared as 'public' to make the example
-program more straightforward. The three functions belonging to<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class are implemented in the<span style="font-family: Helvetica,Arial,sans-serif;"></span> "<span style="font-family: monospace;">standalone/node-gem/main.cpp</span>" file as follows:</p>
-
+program more straightforward. The three functions belonging to<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class are
+implemented in the<span style="font-family: Helvetica,Arial,sans-serif;"></span>
+"<span style="font-family: monospace;">standalone/node-gem/main.cpp</span>"
+file as follows:</p>
 
 <p><span style="font-family: Helvetica,Arial,sans-serif;"></span></p>
 
-
 <span style="font-family: Helvetica,Arial,sans-serif;"></span>
 <table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
-<tbody><tr><td style="vertical-align: top;">#include "node.h"<br>
+
+  <tbody>
+    <tr>
+      <td style="vertical-align: top;">#include "node.h"<br>
 #include "main.h"<br>
-      <br>
-TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; long int p_nPH, long int p_nPS )<br>
+      <br>TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+long int p_nPH, long int p_nPS, long int p_nRcps )<br>
 {<br>
       <br>
 &nbsp;&nbsp;&nbsp; nNodes = p_nNod;<br>
@@ -502,6 +558,7 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
 &nbsp;&nbsp;&nbsp; nDC = p_nDC;<br>
 &nbsp;&nbsp;&nbsp; nPH = p_nPH;<br>
 &nbsp;&nbsp;&nbsp; nPS = p_nPS;<br>
+&nbsp;&nbsp;&nbsp; nRecipes = p_nRcps;<br>
       <br>
 &nbsp;&nbsp;&nbsp; aNodeHandle = new long int [nNodes];<br>
 &nbsp;&nbsp;&nbsp; aNodeStatusCH = new long int [nNodes];<br>
@@ -552,8 +609,8 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abPS[in] = new double [nIC*nPS];<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abSP[in] = new double [nIC];<br>
 &nbsp;&nbsp;&nbsp; }<br>
-      <br>
 }<br>
+<br>
       <br>
 TMyTransport::~TMyTransport()<br>
 {<br>
@@ -608,25 +665,37 @@ TMyTransport::~TMyTransport()<br>
 }<br>
       <br>
 // A very simple example of transport algorithm<br>
-void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nICndx )<br>
+void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx,
+long int nICndx )<br>
 {<br>
 &nbsp;&nbsp;&nbsp; double parcel[nICndx];<br>
 &nbsp;&nbsp;&nbsp; long int in;<br>
 &nbsp;&nbsp;&nbsp; for(&nbsp; in=1; in&lt; nNodes; in++ )<br>
 &nbsp;&nbsp;&nbsp; {<br>
-&nbsp;&nbsp;&nbsp; // some operators that change in some nodes some amounts of some migrating<br>
-&nbsp;&nbsp;&nbsp; // chemical species (axDC array or&nbsp; some amounts of migrating chemical<br>
-&nbsp;&nbsp;&nbsp; // elements in abIC array), possibly using data from other arrays in such<br>
-&nbsp;&nbsp;&nbsp; // a way that the mass conservation within the whole array of nodes is retained<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i=0; i&lt;nICndx; i++)<br>
+&nbsp;&nbsp;&nbsp; // some operators that change in some nodes some
+amounts of some migrating<br>
+&nbsp;&nbsp;&nbsp; // chemical species (axDC array or&nbsp; some
+amounts of migrating chemical<br>
+&nbsp;&nbsp;&nbsp; // elements in abIC array), possibly using data from
+other arrays in such<br>
+&nbsp;&nbsp;&nbsp; // a way that the mass conservation within the whole
+array of nodes is retained<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for (int i=0; i&lt;nICndx;
+i++)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; parcel[i] = 0.01* stoicf[i]*abIC[in-1][ICndx[i]];<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abIC[in][ICndx[i]] += parcel[i];<br>
-//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( in &gt; 1 )<br>
-//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; abIC[in-1][ICndx[i]] -= parcel[i];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+parcel[i] = 0.01* stoicf[i]*abIC[in-1][ICndx[i]];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+abIC[in][ICndx[i]] += parcel[i];<br>
+//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if( in &gt; 1 )<br>
+//&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+abIC[in-1][ICndx[i]] -= parcel[i];<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-&nbsp;&nbsp;&nbsp; // The above example loop implements a zero-order flux of MgCl2 in one direction.<br>
-&nbsp;&nbsp;&nbsp; // Real advective/diffusive transport models are much more complex, but essentially<br>
+&nbsp;&nbsp;&nbsp; // The above example loop implements a zero-order
+flux of MgCl2 in one direction.<br>
+&nbsp;&nbsp;&nbsp; // Real advective/diffusive transport models are
+much more complex, but essentially<br>
 &nbsp;&nbsp;&nbsp; //&nbsp;&nbsp; do similar things<br>
 &nbsp;&nbsp;&nbsp; }<br>
 }<br>
@@ -635,7 +704,6 @@ void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nIC
     </tr>
   </tbody>
 </table>
-
 
 <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span>The last function<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">OneTimeStepRun()</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>is
@@ -646,21 +714,23 @@ to another, using the zeroth node as an infinite source of constant
 composition - MgCl<sub>2</sub> solution. And it is called from the same
 place of the example coupled code where the code performing the
 transport time step should be called from (see below). <span style="font-family: Helvetica,Arial,sans-serif;"><br>
-&nbsp;&nbsp;</span><span style="font-family: Helvetica,Arial,sans-serif;"> &nbsp;  </span><br>
-
+&nbsp;&nbsp;</span><span style="font-family: Helvetica,Arial,sans-serif;"> &nbsp; </span><br>
 
 The first part of <tt>main.cpp</tt> (see full example in
-<span style="font-family: monospace;">"standalone/node-gem/main.cpp</span>") creates the <tt>TNode</tt> class instance and initializes it by reading three GEMS3K input files (provided in<span style="font-family: Helvetica,Arial,sans-serif;"> <tt>"standalone</tt></span><span style="font-family: monospace;">/node-gem-build/tp_test/</span>"), which it extracts from the file list passed through the first command line argument. Then an instance of the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class
- is created, and its constructor is called to allocate dynamic memory 
-arrays for storing information for all nodes. If necessary, another 
+<span style="font-family: monospace;">"standalone/node-gem/main.cpp</span>")
+creates the <tt>TNode</tt> class instance and initializes it by
+reading three GEMS3K input files (provided in<span style="font-family: Helvetica,Arial,sans-serif;"> <tt>"standalone</tt></span><span style="font-family: monospace;">/node-gem-build/tp_test/</span>"),
+which it extracts from the file list passed through the first command
+line argument. Then an instance of the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class is
+created, and its constructor is called to allocate dynamic memory
+arrays for storing information for all nodes. If necessary, another
 instance of<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TMyTransport</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>class
 could be created and initialized here, for example, if the state of the
 system at previous time step is needed to calculate mass transport at
 the current time step.<span style="font-family: Helvetica,Arial,sans-serif;"><br>
- <br>
+<br>
 </span>
 <table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
-
 
   <tbody>
     <tr>
@@ -668,26 +738,28 @@ the current time step.<span style="font-family: Helvetica,Arial,sans-serif;"><br
 #include "node.h"<br>
 #include "main.h"<br>
       <br>
-//The case of data exchange in computer memory<br>
-int main( int argc, char* argv[] )<br>
+//The case of data exchange in computer memory<br>int main( int argc, char* argv[] )<br>
 {<br>
-&nbsp;&nbsp; // Analyzing command line arguments (default arguments)<br>
-&nbsp;&nbsp; char ipm_input_file_list_name[256] = "system-dat.lst";<br>
-&nbsp;&nbsp; char dbr_input_file_name[256] = "system-dbr.dat";<br>
+&nbsp;&nbsp; char (*recipes)[fileNameLength] = 0;<br>
       <br>
-&nbsp;&nbsp; if (argc &gt;= 2 )&nbsp; // list of files needed as input for initializing GEMS3K<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( ipm_input_file_list_name, argv[1], 256);<br>
-&nbsp;&nbsp; if (argc &gt;= 3 ) // input file for boundary conditions<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( dbr_input_file_name, argv[2], 256);<br>
+&nbsp;&nbsp; // Analyzing command line arguments ( Default arguments)<br>
+&nbsp;&nbsp; char input_system_file_list_name[256] = "system-dat.lst";<br>
+&nbsp;&nbsp; char input_recipes_file_list_name[256] = "more_recipes.lst";<br>
       <br>
-&nbsp;&nbsp;&nbsp; // Creates a TNode structure instance accessible through the "node" pointer<br>
+&nbsp;&nbsp; if (argc &gt;= 2 )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( input_system_file_list_name, argv[1], 256);<br>
+&nbsp;&nbsp; // list of DCH, IPM and DBR input files for initializing GEMS3K<br>
+&nbsp;&nbsp; if (argc &gt;= 3 ) // list of DBR files for setting boundary conditions<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; strncpy( input_recipes_file_list_name, argv[2], 256);<br>
+      <br>
+&nbsp;&nbsp;&nbsp; // Creates TNode structure instance accessible trough the "node" pointer<br>
 &nbsp;&nbsp;&nbsp; TNode* node&nbsp; = new TNode();<br>
       <br>
 &nbsp;&nbsp;&nbsp; // (1) Initialization of GEMS3K internal data by reading&nbsp; files<br>
 &nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp;&nbsp; whose names are given in the ipm_input_system_file_list_name<br>
-&nbsp;&nbsp;&nbsp; if( node-&gt;GEM_init( ipm_input_file_list_name ) )<br>
+&nbsp;&nbsp;&nbsp; if( node-&gt;GEM_init( input_system_file_list_name ) )<br>
 &nbsp;&nbsp;&nbsp; {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Error occured during reading the files";<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Error occured during reading the files" ;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 1;<br>
 &nbsp;&nbsp;&nbsp; }<br>
       <br>
@@ -695,24 +767,25 @@ int main( int argc, char* argv[] )<br>
 &nbsp;&nbsp;&nbsp; // data with GEMS3K (already filled out by reading the DBR input file)<br>
 &nbsp;&nbsp;&nbsp; DATABR* dBR = node-&gt;pCNode();<br>
       <br>
-&nbsp;&nbsp;&nbsp; // Getting direct access to the DataCH structure in GEMS3K instance memory<br>
+&nbsp;&nbsp;&nbsp; // Getting direct access to DataCH structure in GEMS3K instance memory<br>
 &nbsp;&nbsp;&nbsp; DATACH* dCH = node-&gt;pCSD();<br>
       <br>
 &nbsp;&nbsp;&nbsp; // Creating memory for mass transport nodes<br>
 &nbsp;&nbsp;&nbsp; // 11 nodes, 99 time steps<br>
-&nbsp;&nbsp;&nbsp; TMyTransport mt( 11, 100, dCH-&gt;nICb, dCH-&gt;nDCb, dCH-&gt;nPHb, dCH-&gt;nPSb );<br>
+&nbsp;&nbsp;&nbsp; TMyTransport mt( 11, 100, dCH-&gt;nICb, dCH-&gt;nDCb, dCH-&gt;nPHb, dCH-&gt;nPSb, 1 );<br>
       <br>
       </td>
     </tr>
   </tbody>
 </table>
 
-
 <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 <br>
 </span>The next part of the example sets the initial state of the mass
-transport system by taking the data for the chemical system from GEMS3K. These data were read in upon initialization of the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;">
-</span>class instance (see above) and are copied into all nodes but the zeroth
+transport system by taking the data for the chemical system from
+GEMS3K. These data were read in upon initialization of the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">TNode</span><span style="font-family: Helvetica,Arial,sans-serif;">
+</span>class instance (see above) and are copied into all nodes but the
+zeroth
 one. After the GEM calculation for each node, the node status code
 is checked in order to assess quality of GEM solution. Initialization
 of nodes is done in the same loop with GEM calculations, even
@@ -724,30 +797,31 @@ codes,
 this part - setting initial conditions and composition in all nodes -
 is much more complex. <br>
 
-<br>
-
-One initial chemical system is read separately in a<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">GEM_read_dbr()</span> call,
-then (after calculation of equilibrium at desired T,P) the data is
-copied into mass transport arrays for the node with index 0. This node has
+<br>To set boundary conditions, different chemical system recipes are read separately in a<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">GEM_read_dbr()</span>
+call taking DBR file names from the file list given as the second
+command line argument). Then, after calculation of equilibrium at
+desired T,P, the data is
+copied into mass transport arrays for the node with the respective
+index. In the particular case of this example, there is only one
+boundary condition for the node with index 0 that
+has
 a different composition and will be used by the transport part as a
-constant infinite source of MgCl<sub>2</sub>, moved into other nodes (containing calcium carbonate) over time steps.  <br>
-
+constant infinite source of MgCl<sub>2</sub>, moved into other nodes
+(containing calcium carbonate) by mass transport over time steps. <br>
 
 <span style="font-family: Helvetica,Arial,sans-serif;"><br>
 </span>
 <table style="text-align: left; width: 100%; font-family: monospace;" border="1" cellpadding="2" cellspacing="2">
 
-
   <tbody>
     <tr>
-      <td style="vertical-align: top;">&nbsp;&nbsp;&nbsp; <br>
-&nbsp;&nbsp;&nbsp; // Initialization of GEMS3K and chemical information for nodes kept in the MT part<br>
+      <td style="vertical-align: top;">&nbsp;&nbsp;&nbsp; <br>&nbsp;&nbsp;&nbsp; // Initialization of GEMS3K and chemical information for nodes kept in the MT part<br>
 &nbsp;&nbsp;&nbsp; long int in;<br>
-&nbsp;&nbsp;&nbsp; for(&nbsp; in=1; in&lt; mt.nNodes; in++ )<br>
+&nbsp;&nbsp;&nbsp; for(&nbsp; in=0; in&lt; mt.nNodes; in++ )<br>
 &nbsp;&nbsp;&nbsp; {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM IPM to run with automatic initial approximation<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (2) re-calculating equilibrium by calling GEMS3K, getting the status back<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( false);<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
@@ -762,7 +836,7 @@ mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in],
 mt.aaPH[in] );<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Extracting GEM IPM output data to mass-transport program arrays<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -772,7 +846,8 @@ mt.ape[in],<br>
 mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in],
 mt.axPH[in],<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );<br>
+mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in],
+mt.abSP[in] );<br>
       <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here the setup of initial differences between node compositions,<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; temperatures, etc. can be implemented<br>
@@ -780,60 +855,82 @@ mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );<
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here the file output for the initial conditions can be implemented<br>
 &nbsp;&nbsp;&nbsp; }<br>
       <br>
-&nbsp;&nbsp;&nbsp; // Read DATABR structure from text file (read boundary condition on the left)<br>
-&nbsp;&nbsp;&nbsp; node-&gt;GEM_read_dbr( dbr_input_file_name );<br>
-      <br>
-&nbsp;&nbsp;&nbsp; for(&nbsp; in=0; in&lt;1; in++ )<br>
+&nbsp;&nbsp;&nbsp; if (argc &gt;= 3 )&nbsp; // Read DATABR structure from text file<br>
 &nbsp;&nbsp;&nbsp; {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM IPM to run with automatic initial approximation<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (2) Re-calculating chemical equilibrium by calling GEM<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( false );<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; char NextRecipeFileName[256];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; char NextRecipeOutFileName[300];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; char input_recipes_file_list_path[256-fileNameLength] = "";<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Reading list of recipes names from file<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; recipes = f_getfiles(&nbsp; input_recipes_file_list_name,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+input_recipes_file_list_path, mt.nRecipes, ',');<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // in this example, nRecipes = 1 (one additional input recipe)<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for(&nbsp; in=0; in&lt;min(mt.nRecipes, mt.nNodes); in++ )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Trying to read the next DBR file name<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path,
+recipes[in] );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (5) Reading the next DBR file (boundary condition on the left)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_read_dbr( NextRecipeFileName );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Asking GEM IPM to run with automatic initial approximation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dBR-&gt;NodeStatusCH = NEED_GEM_AIA;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (2) Re-calculating chemical equilibrium by calling GEM<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( false );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( !(
+mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] ==
+OK_GEM_SIA ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 cout &lt;&lt; "Error occured during re-calculating chemical
 equilibrium" ;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 5;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
       <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (6) Extracting GEM IPM input data to mass-transport program arrays<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_restore_MT(
-mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (6) Extracting GEMIPM input data to mass-transport program arrays<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
+mt.aT[in], mt.aP[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in],
 mt.aaPH[in] );<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (7) Extracting GEM IPM output data to mass-transport program arrays<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (7) Extracting GEMIPM output data to mass-transport program arrays<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
+mt.aIterDone[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in],
 mt.ape[in],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in],
 mt.axPH[in],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in],
+mt.abSP[in] );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here the setup of initial differences between node compositions,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp;&nbsp;&nbsp; temperatures, etc. can be implemented<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here the file output for the initial conditions can be implemented<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }&nbsp; // end loop on in<br>
 &nbsp;&nbsp;&nbsp; }<br>
       <br>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-
-<span style="font-family: Helvetica,Arial,sans-serif;"><br>
-</span>
-<p>The last code snippet below shows how the main loop of coupled calculations is organized.&nbsp; <br>
-
-  <br>
-
+</td></tr></tbody></table><p>The last code snippet below shows how the main loop of coupled
+calculations is organized.&nbsp; <br>
+<br>
 Firstly, the use of access methods for extracting indexes of
 independent chemical components and phases is shown.&nbsp; Then, the
-stoichiometry of matter to be transported is defined using the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">stoich[5]</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>work array. Next, the 'time loop' begins with the 'mass transport' as such represented as a single<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">mt.OneTimeStepRun()</span> function call; in principle, in this function, also temperature of each node may change. <br>
-
-  <span style="font-family: Helvetica,Arial,sans-serif;"><br>
-  </span>After that, the nested 'chemical equilibriation loop'&nbsp; performs
+stoichiometry of matter to be transported is defined using the<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">stoich[5]</span><span style="font-family: Helvetica,Arial,sans-serif;"> </span>work array.
+Next, the 'time loop' begins with the 'mass transport' as such
+represented as a single<span style="font-family: Helvetica,Arial,sans-serif;"> </span><span style="font-family: monospace;">mt.OneTimeStepRun()</span> function
+call; in principle, in this function, also temperature of each node may
+change. <br>
+<span style="font-family: Helvetica,Arial,sans-serif;"><br>
+</span>After that, the nested 'chemical equilibriation loop' performs
 re-calculation of equilibria in all nodes whose bulk composition had
 just been modified at the 'mass transport' stage at this time step.
 This loop also demonstrates how to use the 'smart initial
@@ -844,163 +941,153 @@ the mass transport time loop. Note that at this stage, various
 back-coupling calculations, i.e. how precipitation/dissolution of some
 phases has affected the porosity and transport properties, can be
 implemented&nbsp; (in a real coupling, of course). <br>
-
-
 </p>
-<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
+<table style="text-align: left; width: 100%;" border="1" cellpadding="2" cellspacing="2">
 
   <tbody>
     <tr>
-      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Main loop - iterations over mt.nTimes time steps</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; <br>
-&nbsp;&nbsp;&nbsp; int xCalcite = node-&gt;Ph_name_to_xDB("Calcite");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; int xDolomite = node-&gt;Ph_name_to_xDB("Dolomite-dis");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; int xAq_gen = node-&gt;Ph_name_to_xDB("aq_gen");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; long int ICndx[5];</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[0] = node-&gt;IC_name_to_xDB("Ca");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[1] = node-&gt;IC_name_to_xDB("C");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[2] = node-&gt;IC_name_to_xDB("O");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[3] = node-&gt;IC_name_to_xDB("Mg");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; ICndx[4] = node-&gt;IC_name_to_xDB("Cl");</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Checking indexes</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; cout
-&lt;&lt; "xCa= " &lt;&lt; ICndx[0] &lt;&lt; " xC=" &lt;&lt; ICndx[1]
-&lt;&lt; " xO=" &lt;&lt; ICndx[2] &lt;&lt; " xMg="</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&lt;&lt; ICndx[3] &lt;&lt; " xCl=" &lt;&lt; ICndx[4] &lt;&lt; endl
-&lt;&lt; " xCalcite=" &lt;&lt; xCalcite</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&lt;&lt; " xDolomite=" &lt;&lt; xDolomite &lt;&lt; " xAq_gen=" &lt;&lt;
-xAq_gen &lt;&lt; endl &lt;&lt; endl;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; double stoich[5] = { 0., 0., 0., 1., 2. }; // defines what is 'transported'</span><br style="font-family: monospace;">
-      <br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; long int it;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; for( it=0; it&lt; mt.nTimes; it++ )</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Time step&nbsp; " &lt;&lt; it &lt;&lt; endl;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Mass transport loop over nodes (not a real transport model)</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.OneTimeStepRun( stoich, ICndx, 5 );</span><br style="font-family: monospace;">
-      <br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Chemical equilibration loop over nodes</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for( in=0; in&lt; mt.nNodes; in++ )</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeHandle[in] = in;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = NEED_GEM_SIA;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (8) Setting input data for GEMIPM to use available node speciation as</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // initial approximation</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <td style="vertical-align: top;"><span style="font-family: monospace;">&nbsp;&nbsp;&nbsp; // Main loop - iterations over nTimes time steps<br>
+&nbsp;&nbsp;&nbsp; int xCalcite = node-&gt;Ph_name_to_xDB("Calcite");<br>
+&nbsp;&nbsp;&nbsp; int xDolomite = node-&gt;Ph_name_to_xDB("Dolomite-dis");<br>
+&nbsp;&nbsp;&nbsp; int xAq_gen = node-&gt;Ph_name_to_xDB("aq_gen");<br>
+&nbsp;&nbsp;&nbsp; long int ICndx[5];<br>
+&nbsp;&nbsp;&nbsp; ICndx[0] = node-&gt;IC_name_to_xDB("Ca");<br>
+&nbsp;&nbsp;&nbsp; ICndx[1] = node-&gt;IC_name_to_xDB("C");<br>
+&nbsp;&nbsp;&nbsp; ICndx[2] = node-&gt;IC_name_to_xDB("O");<br>
+&nbsp;&nbsp;&nbsp; ICndx[3] = node-&gt;IC_name_to_xDB("Mg");<br>
+&nbsp;&nbsp;&nbsp; ICndx[4] = node-&gt;IC_name_to_xDB("Cl");<br>
+&nbsp;&nbsp;&nbsp; // Checking indexes<br>
+&nbsp;&nbsp;&nbsp; cout &lt;&lt; "xCa= " &lt;&lt; ICndx[0] &lt;&lt; "
+xC=" &lt;&lt; ICndx[1] &lt;&lt; " xO=" &lt;&lt; ICndx[2] &lt;&lt; "
+xMg="<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;&lt; ICndx[3]
+&lt;&lt; " xCl=" &lt;&lt; ICndx[4] &lt;&lt; endl &lt;&lt; " xCalcite="
+&lt;&lt; xCalcite<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;&lt; " xDolomite="
+&lt;&lt; xDolomite &lt;&lt; " xAq_gen=" &lt;&lt; xAq_gen &lt;&lt; endl
+&lt;&lt; endl;<br>
+&nbsp;&nbsp;&nbsp; double stoich[5] = { 0., 0., 0., 1., 2. }; // defines what is 'transported'<br>
+      <br>
+&nbsp;&nbsp;&nbsp; long int it;<br>
+&nbsp;&nbsp;&nbsp; for( it=0; it&lt; mt.nTimes; it++ )<br>
+&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "Time step&nbsp; " &lt;&lt; it &lt;&lt; endl;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Mass transport loop over nodes (not a real transport model)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.OneTimeStepRun( stoich, ICndx, 5 );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Chemical equilibration loop over nodes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; for( in=0; in&lt; mt.nNodes; in++ )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeHandle[in] = in;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = NEED_GEM_SIA;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (8) Setting input data for GEM IPM to use available node speciation as<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // initial approximation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in], mt.axDC[in],
-mt.agam[in] );</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// (9)&nbsp;&nbsp; Passing current FMT iteration information into the
-work DATABR structure</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_set_MT( (double)it, 1. );</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Calling GEMIPM calculation</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( true );</span><br style="font-family: monospace;">
-      <br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-if( ( mt.aNodeStatusCH[in] == ERR_GEM_AIA || mt.aNodeStatusCH[in] ==
-ERR_GEM_SIA ||</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-mt.aNodeStatusCH[in]
-
-
-
-
- ==&nbsp; T_ERROR_GEM ) )</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.agam[in] );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+(9)&nbsp;&nbsp; Passing current FMT iteration information into the work
+DATABR structure<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; node-&gt;GEM_set_MT( (double)it, 1. );<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Calling GEMIPM calculation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mt.aNodeStatusCH[in] = node-&gt;GEM_run( true );<br>
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if( (
+mt.aNodeStatusCH[in] == ERR_GEM_AIA || mt.aNodeStatusCH[in] ==
+ERR_GEM_SIA ||<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aNodeStatusCH[in] ==&nbsp; T_ERROR_GEM ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 cout &lt;&lt; "Error: GEM calculation results are not retrieved. Time
-step"</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&lt;&lt; it &lt;&lt; " node " &lt;&lt; in &lt;&lt; endl;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-if( ( mt.aNodeStatusCH[in] == BAD_GEM_AIA || mt.aNodeStatusCH[in] ==
-BAD_GEM_SIA&nbsp; ) )</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+step"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&lt; it &lt;&lt; " node " &lt;&lt; in &lt;&lt; endl;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if(
+( mt.aNodeStatusCH[in] == BAD_GEM_AIA || mt.aNodeStatusCH[in] ==
+BAD_GEM_SIA&nbsp; ) )<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 cout &lt;&lt; "Insufficient quality of GEM solution, but GEM results
-are retrieved"</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-&lt;&lt; it &lt;&lt; " node " &lt;&lt; in &lt;&lt; endl;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+are retrieved"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt;&lt; it &lt;&lt; " node " &lt;&lt; in &lt;&lt; endl;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 }&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      </span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // (7) Extracting GEMIPM output data to FMT part</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else // (7) Extracting GEMIPM output data to FMT part<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 node-&gt;GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
-mt.aIterDone[in],</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.aIterDone[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in],
-mt.ape[in],</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.ape[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 mt.aEh[in],mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in],
-mt.axPH[in],</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], </span><span style="font-family: monospace;">mt.abSP[in] );</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-// Here, the output upon completion of the time step is usually
-implemented</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp; to monitor the coupled simulation or collect results</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "&nbsp; Node " &lt;&lt; in ;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-cout &lt;&lt; ": Aq= " &lt;&lt; mt.axPH[in][xAq_gen] &lt;&lt; " pH= "
-&lt;&lt; mt.apH[in] &lt;&lt;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-"&nbsp; Calcite= " &lt;&lt; mt.axPH[in][xCalcite] &lt;&lt; endl;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; }</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; // Calculations finished - end time step reached</span><br style="font-family: monospace;">
-      <br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; // Final output, e.g. of total simulation time or of the final distribution of</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; //&nbsp; components and phases in all nodes, can be implemented here</span><br style="font-family: monospace;">
-      <br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; // deleting GEMS3K and data exchange memory structures</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; delete node;</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; // end of example</span><br style="font-family: monospace;">
-      <span style="font-family: monospace;">&nbsp; return 0;<br>
-&nbsp; // no need to call the TMyTransport destructor in this case<br>
+mt.axPH[in],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in],
+mt.abSP[in] );<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Here, the
+output upon completion of the time step is usually implemented<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //&nbsp; to monitor the coupled simulation or collect results<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; "&nbsp; Node " &lt;&lt; in ;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cout &lt;&lt; ":
+Aq= " &lt;&lt; mt.axPH[in][xAq_gen] &lt;&lt; " pH= " &lt;&lt;
+mt.apH[in] &lt;&lt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+"&nbsp; Calcite= " &lt;&lt; mt.axPH[in][xCalcite] &lt;&lt; endl;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp; }<br>
+&nbsp;&nbsp; // Calculations finished - end time reached<br>
+      <br>
+&nbsp;&nbsp; // Final output e.g. of total simulation time or of the final distribution of<br>
+&nbsp;&nbsp; //&nbsp; components and phases in all nodes can be implemented here<br>
+      <br>
+&nbsp;&nbsp; // deleting GEM IPM and data exchange memory structures<br>
+&nbsp;&nbsp; delete node;<br>
+&nbsp;&nbsp; // end of example<br>
+&nbsp;&nbsp; return 0;<br>
 }<br>
+</span><span style="font-family: monospace;"><br>
       </span></td>
     </tr>
   </tbody>
 </table>
 
-
-<br>
 <br>
 
+<br>
 
 <hr size="2" width="100%">
 <h3><a name="TAG_FAQ"></a>4. Frequently asked questions</h3>
+
 <p>&nbsp;
 &lt;under construction&gt;<br>
 </p>
 
-
-
 <hr size="2" width="100%">
 <p> </p>
 
+<p>Last change: 16.10.2012 DK<br>
 
-<p><tt>Last change: 29.09.2012 DK<br>
-</tt></p>
-<p><tt>end of file</tt> <br>
+</p>
+
+<p>Copyright (c) 2012 <a href="http://gems.web.psi.ch/teamhist.html">GEMS Development Team</a></p>
+<p><br>
 &nbsp; </p>
 
 
-
 <br>
-
 
 <br>
 

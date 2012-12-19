@@ -1,5 +1,9 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
 <html><head>
+
+
+
+
   
   
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
@@ -7,15 +11,15 @@
 
   
   
-<meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20  (Win98; I) [Netscape]">
+<meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20  (Win98; I) [Netscape]"><title>GEMS3K Solver of Chemical Equilibria</title>
 
   
-<title>GEMS3K Solver of Chemical Equilibria</title>
+
 
 
   
-</head><body>
-<h1><img src="gems1.png" height="48" align="left" width="48">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"></head><body>
+<h1><img src="gems1.png" align="left" height="48" width="48">
 GEMS3K Code for Solving for GeoChemical Equilibria <br>
 </h1>
 
@@ -27,15 +31,21 @@ GEMS3K Code for Solving for GeoChemical Equilibria <br>
 </h2>
 <hr style="width: 100%; height: 2px;">
 <h3>Contents</h3>
-<p style="margin-left: 40px;"><a href="#WHAT_IS">1. What does GEMS3K</a><br>
-</p>
-<p style="margin-left: 40px;"><a href="#OVERVIEW">2. Overview</a></p>
-<p style="margin-left: 40px;"><a href="#DOCUMENTATION">3. Documentation files<br>
-  </a></p>
-<p style="margin-left: 40px;"><a href="#LICENSING">4. Licensing</a></p>
-<p style="margin-left: 40px;"><a href="#DEVELOPERS">5. Developers</a></p>
-<p style="margin-left: 40px;"><a href="#CREDITS">6. Credits</a></p>
-<p style="margin-left: 40px;"><a href="#REFERENCES">7. Publications</a></p>
+<div style="margin-left: 40px;"><a href="#WHAT_IS">1. What does GEMS3K</a><br>
+<a href="#OVERVIEW">2. Overview</a>
+<br>
+<a href="#DOCUMENTATION">3. Documentation files</a><br>
+<a href="#LICENSING">4. Licensing</a>
+<br>
+<a href="#DEVELOPERS">5. Developers</a>
+<br>
+<a href="#CREDITS">6. Credits</a>
+<br>
+<a href="#REFERENCES">7. Publications</a><br>
+</div>
+
+
+
 <br>
 
 
@@ -64,7 +74,9 @@ GEMS3K Code for Solving for GeoChemical Equilibria <br>
 <p>GEMS3K (formerly GEMIPM2K) is a standalone C/C++ code implementing the efficient numerical kernel <a href="gems3k-ipm.html">IPM-3</a>
  of the GEM-Selektor v.3 package for geochemical&nbsp; thermodynamic 
 modeling of complex heterogeneous multicomponent-multiphase&nbsp; 
-systems. The code includes a <a href="gems3k-tsolmod.html">TSolMod</a> library of built-in phase models of non-ideal mixing, relevant to a wide range of applications in geochemistry.<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"> GEMS3K uses fast and
+systems. The code includes a <a href="gems3k-tsolmod.html">TSolMod</a>
+library of built-in phase models of non-ideal mixing, relevant to a
+wide range of applications in geochemistry. GEMS3K uses fast and
 efficient linear algebra solvers from the <a href="http://math.nist.gov/tnt/download.html">JAMA C++ TNT package</a>
 (NIST).<!--EndFragment-->
 
@@ -95,94 +107,13 @@ More about the GEMS3K code can be found in <a href="#REFERENCES">publications</a
 <br>
 <hr style="width: 100%; height: 2px;">
 <h3><a name="DOCUMENTATION"></a>3. Documentation files</h3>
-<p>The documentation of standalone GEMS3K code consists of HTML files located in "<tt>/standalone/GEMS3K/doc/html</tt>" folder in the trunk GEMS3K subversion repository. <br>
-</p>
-<p></p>
-<table style="text-align: left; width: 974px; height: 222px;" border="1" cellpadding="2" cellspacing="2">
-  <tbody>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-manual.html">gems3k-manual.html</a> </p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>The standalone GEMS3K code and how to use it (TNode level)<br>
-</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-iofiles.html">gems3k-iofiles.html</a></p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>Formats of GEMS3K text input/output files (TNode level) </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-tsolmod.html">gems3k-tsolmod.html</a></p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>Built-in models of non-ideal phases and their parameters in GEMS3K input files</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-nodelev.html">gems3k-nodelev.html</a></p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>How to couple codes with GEMS3K on the simple TNode level &lt;TBD&gt;<br>
-</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-useref.html">gems3k-useref.html</a></p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>GEMS3K function calls and access methods at the TNode level</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-tests.html">gems3k-tests.html</a> </p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>Test examples and benchmarks for the "gemnode" - GEMS3K test program (+ input and output files)<br>
-        </p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k-nodearray.html">gems3k-nodearray.html</a></p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>How to couple with GEMS3K on the TNodeArray level &lt;TBD&gt;</p>
-      </td>
-    </tr>
-    <tr>
-      <td style="vertical-align: top;">
-        <p><a href="gems3k_ipm.html">gems3k-ipm.html</a></p>
-      </td>
-      <td style="vertical-align: top;">
-        <p>Operation of GEM-Selektor IPM kernel, numerical controls and errors, export of GEM task to GEMS3K input files.&nbsp; </p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-<p>The recommended way to prepare GEMS3K input files consists in 
-creating a modeling project in GEM-Selektor package, creating and calculating 
-chemical systems (equilibria), and then exporting the GEM tasks to 
-GEMS3K I/O files. Details about this process can be found <br>
-</p>
-<p><br>
-</p>
-<!--EndFragment-->
-
+<p>The documentation of standalone GEMS3K code consists of HTML files located in the "<tt>Docs/html/</tt>" folder in the trunk GEMS3K subversion repository (see contents <a href="index.html" target="_blank">here</a>). <br>
+</p><br>
 <hr style="width: 100%; height: 2px;">
 <h3><a name="LICENSING"></a>4. Licensing</h3>
-<p><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<p>
 </p>
-<p><!--StartFragment--></p>
+
 <h4>Terms and Conditions
 of Use</h4>
 
@@ -281,15 +212,16 @@ sole responsibility of the user.
 trade marks, product, or company names in GEMS3K help files and web pages is solely for
 descriptive purposes.
 </p>
-<!--EndFragment-->
+<br>
+
 
 
 
 <hr style="width: 100%; height: 2px;">
 <h3><a name="DEVELOPERS"></a>5. Developers (GEMS Development Team)<br>
 </h3>
-<p><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-</p><!--StartFragment-->
+<p>
+</p>
 <h4>Authors
 
 </h4>
@@ -339,9 +271,9 @@ codes for IBM/360 compatible mainframes and maintains the alternative
 Selektor-W code based on GEM IPM algorithms. He contributed a lot in incorporating the proprietary
 IPM modules into Selektor-A codes in 1990-1996, and upgrading it into an IPM-2 module of GEM-Selektor in 2000-2001.</p>
 <h4>Contributors</h4>
-<p><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<p>
 </p>
-<p><!--StartFragment--><a href="http://www.staff.uni-mainz.de/enzmann/">Frieder
+<p><a href="http://www.staff.uni-mainz.de/enzmann/">Frieder
 Enzmann</a> (Geowissenschaften, JOGU Mainz, Germany): Improved TNodeArray example also used in the GEM2MT
 module of GEM-Selektor for 1-D coupled reactive transport simulations using the random-walk algorithms.</p>
 <p><a href="http://people.web.psi.ch/churakov">Sergey Churakov</a> (Paul
@@ -349,48 +281,47 @@ module of GEM-Selektor for 1-D coupled reactive transport simulations using the 
 Churakov-Gottschalk EoS for gas/fluid mixtures, adapted as part of the <a href="gems3k-tsolmod.html">TSolMod library</a>.<br>
 </p>
 
-<!--EndFragment-->
+<br>
+
 
 
 
 <hr style="width: 100%; height: 2px;">
 <h3><a name="CREDITS"></a>6. Credits</h3>
-<p><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-</p><!--StartFragment-->
-<p><a href="#DEVELOPERS">GEMS Development Team</a> acknowledges partial support that comes from various sources, among others:&nbsp;</p>
-<p style="font-family: Helvetica,Arial,sans-serif;"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<p>
 </p>
-<!--StartFragment-->
+<p><a href="#DEVELOPERS">GEMS Development Team</a> acknowledges partial support that comes from various sources, among others:&nbsp;</p>
+<p style="font-family: Helvetica,Arial,sans-serif;">
+</p>
+
 <p><a href="http://www.nagra.ch">Nagra</a> (Swiss National Cooperative for the Disposal of Radioactive Waste), Wettingen;<br>
 </p>
-<!--EndFragment-->
+
 
 
 <p>
   <a href="http://www.cces.ethz.ch/projects/nature/geotherm">GEOTHERM project</a> of the Competence Center Environment and Sustainability of the ETH Domain (CCES) (2008-2012); <br>
-  </p><p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;"><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  </p><p style="font-family: Helvetica,Arial,sans-serif; margin-left: 40px;">
   </p>
 <p></p>
-<!--StartFragment-->
+
 <p> Fluid chemistry and fluid-rock interaction of Alpine veins, Central Alps (T.Wagner, SNF funded);
 </p>
 <p>Internally-consistent thermodynamic data for fluid-rock equilibria: Development and applications (T.Wagner, ETHIIRA funded);
 </p>
 
 <p>Sinergia project "COTHERM - COmbined hydrological, geochemical and geophysical modelling of geotTHERMal systems"</p>
-<p><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<p>
 </p>
-<p><!--StartFragment-->Thanks to <a href="http://www.focusterra.ethz.ch/people/grueng">Dr. Gillian Gruen</a> (<span style="font-style: italic;">focus</span>Terra,
+<p>Thanks to <a href="http://www.focusterra.ethz.ch/people/grueng">Dr. Gillian Gruen</a> (<span style="font-style: italic;">focus</span>Terra,
 ETH Zurich) for designing icons used in
-GEM-Selektor Graphical User Interface and on GEMS3K help and web pages. <!--EndFragment-->
+GEM-Selektor Graphical User Interface and on GEMS3K help and web pages.&nbsp;
 
 </p>
-<!--EndFragment-->
-
-<p><!--EndFragment-->
 
 
-</p>
+<br>
+
 
 <hr style="width: 100%; height: 2px;">
 <h3><a name="REFERENCES"></a>7. Publications</h3>
@@ -399,7 +330,8 @@ GEM-Selektor Graphical User Interface and on GEMS3K help and web pages. <!--EndF
 kernel GEMS3K for coupled simulation codes. Computational Geosciences (in press), <a href="http://dx.doi.org/10.1007/s10596-012-9310-6">http://dx.doi.org/10.1007/s10596-012-9310-6</a>.</p>
 <p>Wagner T., Kulik D.A., Hingerl F.F., Dmytrieva S.V. (2012). 
 GEM-Selektor geochemical modeling package: TSolMod C++ class library and
- data interface for multicomponent phase models. Canadian Mineralogist (in press).</p>
+ data interface for multicomponent phase models. Canadian Mineralogist 50, 1173-1195, <span style="color: rgb(51, 51, 255); text-decoration: underline;">http://dx.doi.org/10.3749/canmin.50.5.1173</span><br>
+</p>
 <p>Shao H., Dmytrieva S.V., Kolditz O., Kulik D.A., Pfingsten W., 
 Kosakowski G. (2009): Modeling reactive transport in non-ideal 
 aqueous&#8211;solid solution system. Applied Geochemistry 24, 1287-1300.</p>
@@ -421,12 +353,11 @@ Science 297, 767-806.</p>
 
 
 <hr size="2" width="100%">
-<p> </p>
+<p> </p> 
+<p>Last modified: 6.12.2012 DK</p>
+<p>Copyright (c) 2012 <a href="http://gems.web.psi.ch/teamhist.html">GEMS Development Team</a><br>
+ </p>
 
-
-<p><tt>end of file</tt> <br>
-</p>
-<p>Last modified: 26.09.2012 (DK)&nbsp; </p>
 
 
 <br>

@@ -25,14 +25,12 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -103,7 +101,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT codes Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures Uses the <a class="el" href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class.  
+<p>Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive transport codes.  
  <a href="class_t_node_array.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="nodearray_8h_source.html">nodearray.h</a>&gt;</code></p>
@@ -113,7 +111,7 @@ Inheritance diagram for TNodeArray:</div>
  <div class="center">
   <img src="class_t_node_array.png" usemap="#TNodeArray_map" alt=""/>
   <map id="TNodeArray_map" name="TNodeArray_map">
-<area href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes." alt="TNode" shape="rect" coords="0,0,82,24"/>
+<area href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes." alt="TNode" shape="rect" coords="0,0,82,24"/>
 </map>
  </div></div>
 
@@ -168,6 +166,8 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memitem:a12994fa6d30576d51a68c6b705f41d36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12994fa6d30576d51a68c6b705f41d36"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#a12994fa6d30576d51a68c6b705f41d36">RunGEM</a> (long int <a class="el" href="class_t_node_array.html#ad9562e135ea5c3090e0190b8beca3275">indN</a>, long int <a class="el" href="class_t_node_array.html#a3b928fb6672184d49b280868155c2193">indM</a>, long int <a class="el" href="class_t_node_array.html#ad36aa8cfe824bd931148fc6a81b97442">indK</a>, long int Mode)</td></tr>
 <tr class="memdesc:a12994fa6d30576d51a68c6b705f41d36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls GEM IPM for one node with three indexes (along x,y,z) <br/></td></tr>
+<tr class="memitem:ad9ad56a4ccdbbff2fb352139e52bbabd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#ad9ad56a4ccdbbff2fb352139e52bbabd">InitNodeArray</a> (const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f)</td></tr>
+<tr class="memdesc:ad9ad56a4ccdbbff2fb352139e52bbabd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialization of <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a> data structures.  <a href="#ad9ad56a4ccdbbff2fb352139e52bbabd"></a><br/></td></tr>
 <tr class="memitem:aa9537361dc6a8fa3db023f41c55f407a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9537361dc6a8fa3db023f41c55f407a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#aa9537361dc6a8fa3db023f41c55f407a">setNodeArray</a> (long int ndx, long int *nodeTypes)</td></tr>
 <tr class="memdesc:aa9537361dc6a8fa3db023f41c55f407a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies data from the work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure into the node ndx in the node arrays NodT0 and NodT1 (as specified in nodeTypes array) <br/></td></tr>
@@ -279,13 +279,14 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a80553fe992968b02485e959f902b360b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Array of grid point locations, size is anNodes. <br/></td></tr>
 <tr class="memitem:a5b9b0f68cc27731e880afc7028079198"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5b9b0f68cc27731e880afc7028079198"></a>
 char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#a5b9b0f68cc27731e880afc7028079198">tcNode</a></td></tr>
-<tr class="memdesc:a5b9b0f68cc27731e880afc7028079198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Node type codes (see <a class="el" href="databr_8h_source.html">databr.h</a>), size anNodes. <br/></td></tr>
+<tr class="memdesc:a5b9b0f68cc27731e880afc7028079198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Node type codes (see <a class="el" href="databr_8h.html" title="Contains definition of the DATABR structure - data bridge between GEMS3K and another code...">databr.h</a>), size anNodes. <br/></td></tr>
 <tr class="memitem:aed745861d8cfedc874e4c0c3844edc15"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed745861d8cfedc874e4c0c3844edc15"></a>
 bool *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node_array.html#aed745861d8cfedc874e4c0c3844edc15">iaNode</a></td></tr>
 <tr class="memdesc:aed745861d8cfedc874e4c0c3844edc15"><td class="mdescLeft">&#160;</td><td class="mdescRight">GEM IA status for all nodes (true: NEED_GEM_AIA, false: NEED_GEM_SIA) <br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT codes Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures Uses the <a class="el" href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class. </p>
+<div class="textblock"><p>Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive transport codes. </p>
+<p>Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and an array of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures; uses <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class </p>
 </div><hr/><h2>Member Function Documentation</h2>
 <a class="anchor" id="aaf2854c6b4b9ca1fe9197527331db892"></a>
 <div class="memitem">
@@ -359,6 +360,58 @@ bool *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 
 </div>
 </div>
+<a class="anchor" id="ad9ad56a4ccdbbff2fb352139e52bbabd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_t_node_array.html#ad9ad56a4ccdbbff2fb352139e52bbabd">TNodeArray::InitNodeArray</a> </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>dbrfiles_lst_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">long int *&#160;</td>
+          <td class="paramname"><em>nodeTypes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>getNodT1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>binary_f</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td><code> [virtual]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Initialization of <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a> data structures. </p>
+<p>Reads in the DBR text input files and copying data from work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure into the node array </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">dbrfiles_lst_name</td><td>pointer to a null-terminated C string with a path to a text file containing the list of names of DBR input files. Example: file "test-dbr.lst" with a content: "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat" </td></tr>
+    <tr><td class="paramname">nodeTypes</td><td>the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution list nodeTypes </td></tr>
+    <tr><td class="paramname">getNodT1</td><td>optional parameter used only when reading multiple DBR files after modeling task interruption in GEM-Selektor </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Reimplemented from <a class="el" href="class_t_node.html">TNode</a>.</p>
+
+</div>
+</div>
 <a class="anchor" id="a4311f0f53f94e73966f392e13dee55a5"></a>
 <div class="memitem">
 <div class="memproto">
@@ -417,13 +470,13 @@ bool *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>C:/DevelGEMS/trunk/standalone/GEMS3K/<a class="el" href="nodearray_8h_source.html">nodearray.h</a></li>
+<li>/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="nodearray_8h_source.html">nodearray.h</a></li>
 </ul>
 </div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 24 2012 13:51:36 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:29 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

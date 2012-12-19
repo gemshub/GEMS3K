@@ -6,17 +6,27 @@
 // fashion, assuming that the chemical speciation and all dynamic
 // parameter data are kept in the FMT part, which calls GEM IPM
 // calculation once per node.
-
 // TNode class implements a  simple C/C++ interface between GEMS3K
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (C) 2006,2012 S.Dmytriyeva, D.Kulik, G.Kosakowski
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
-// by Gibbs energy minimization
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
 //
-// See also http://gems.web.psi.ch/GEMS3K/
-// mailto://gems2.support@psi.ch
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
 #include "main.h"
@@ -24,21 +34,24 @@
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
 {
-   // Analyzing command line arguments ( Default arguments)
-   char ipm_input_file_list_name[256] = "system-dat.lst";
-   char dbr_input_file_name[256] = "system-dbr.dat";
+   char (*recipes)[fileNameLength] = 0;
 
-   if (argc >= 2 )  // list of files needed as input for initializing GEMIPM2K
-       strncpy( ipm_input_file_list_name, argv[1], 256);
-   if (argc >= 3 ) // input file for boundary conditions
-       strncpy( dbr_input_file_name, argv[2], 256);
+   // Analyzing command line arguments ( Default arguments)
+   char input_system_file_list_name[256] = "system-dat.lst";
+   char input_recipes_file_list_name[256] = "more_recipes.lst";
+
+   if (argc >= 2 )
+       strncpy( input_system_file_list_name, argv[1], 256);
+   // list of DCH, IPM and DBR input files for initializing GEMS3K
+   if (argc >= 3 ) // list of DBR files for setting boundary conditions
+       strncpy( input_recipes_file_list_name, argv[2], 256);
 
     // Creates TNode structure instance accessible trough the "node" pointer
     TNode* node  = new TNode();
 
     // (1) Initialization of GEMS3K internal data by reading  files
     //     whose names are given in the ipm_input_system_file_list_name
-    if( node->GEM_init( ipm_input_file_list_name ) )
+    if( node->GEM_init( input_system_file_list_name ) )
     {
           cout << "Error occured during reading the files" ;
           return 1;
@@ -53,11 +66,11 @@ int main( int argc, char* argv[] )
 
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
-    TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb );
+    TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
-    for(  in=1; in< mt.nNodes; in++ ) // DM mt.nodes numer of experiments
+    for(  in=0; in< mt.nNodes; in++ )
     {
         // Asking GEM IPM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_AIA;
@@ -73,7 +86,7 @@ int main( int argc, char* argv[] )
         node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
             mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
           
-        // Extracting GEM IPM output data to mass-transport program arrays // DM here we could extract the solubilities
+        // Extracting GEM IPM output data to mass-transport program arrays
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
             mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
             mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
@@ -85,37 +98,51 @@ int main( int argc, char* argv[] )
         // Here the file output for the initial conditions can be implemented
     }
 
-    // Read DATABR structure from text file (read boundary condition on the left)
-    node->GEM_read_dbr( dbr_input_file_name );
-
-    for(  in=0; in<1; in++ )
+    if (argc >= 3 )  // Read DATABR structure from text file
     {
-        // Asking GEM IPM to run with automatic initial approximation
-        dBR->NodeStatusCH = NEED_GEM_AIA;
-        // (2) Re-calculating chemical equilibrium by calling GEM
-        mt.aNodeStatusCH[in] = node->GEM_run( false );
-        if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
-        {
+       char NextRecipeFileName[256];
+       char NextRecipeOutFileName[300];
+       char input_recipes_file_list_path[256-fileNameLength] = "";
+
+       // Reading list of recipes names from file
+       recipes = f_getfiles(  input_recipes_file_list_name,
+                  input_recipes_file_list_path, mt.nRecipes, ',');
+       // in this example, nRecipes = 1 (one additional input recipe)
+
+       for(  in=0; in<min(mt.nRecipes, mt.nNodes); in++ )
+       {
+          // Trying to read the next DBR file name
+          sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[in] );
+
+          // (5) Reading the next DBR file (boundary condition on the left)
+          node->GEM_read_dbr( NextRecipeFileName );
+          // Asking GEM IPM to run with automatic initial approximation
+          dBR->NodeStatusCH = NEED_GEM_AIA;
+          // (2) Re-calculating chemical equilibrium by calling GEM
+          mt.aNodeStatusCH[in] = node->GEM_run( false );
+          if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
+          {
               cout << "Error occured during re-calculating chemical equilibrium" ;
               return 5;
-        }
+          }
 
-        // (6) Extracting GEMIPM input data to mass-transport program arrays
-        node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
-            mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
+          // (6) Extracting GEMIPM input data to mass-transport program arrays
+          node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
+              mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
           
-        // (7) Extracting GEMIPM output data to mass-transport program arrays
-        node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
-            mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
-            mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
-            mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
+          // (7) Extracting GEMIPM output data to mass-transport program arrays
+          node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
+              mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
+              mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
+              mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
 
-        // Here the setup of initial differences between node compositions,
-        //    temperatures, etc. can be implemented
-        //
-        // Here the file output for the initial conditions can be implemented
+          // Here the setup of initial differences between node compositions,
+          //    temperatures, etc. can be implemented
+          //
+          // Here the file output for the initial conditions can be implemented
+       }  // end loop on in
     }
-      
+
     // Main loop - iterations over nTimes time steps
     int xCalcite = node->Ph_name_to_xDB("Calcite");
     int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
@@ -137,7 +164,7 @@ int main( int argc, char* argv[] )
     {
        cout << "Time step  " << it << endl;
        // Mass transport loop over nodes (not a real transport model)
-       mt.OneTimeStepRun( stoich, ICndx, 5 );  // DM creates all nodes - somehow I have to create all experiments - read the class experiment,
+       mt.OneTimeStepRun( stoich, ICndx, 5 );
 
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
@@ -180,30 +207,21 @@ int main( int argc, char* argv[] )
           cout << ": Aq= " << mt.axPH[in][xAq_gen] << " pH= " << mt.apH[in] <<
                   "  Calcite= " << mt.axPH[in][xCalcite] << endl;
       }
-  }
-  // Calculations finished - end time reached
+   }
+   // Calculations finished - end time reached
 
-  // Final output e.g. of total simulation time or of the final distribution of
-  //  components and phases in all nodes can be implemented here
+   // Final output e.g. of total simulation time or of the final distribution of
+   //  components and phases in all nodes can be implemented here
 
-  // *********************** DM test of different functions ********************* //
-
-    int alabala = node->DC_name_to_xDB( "Ca(CO3)@"); // gets the index of calcite
-    cout << " G0= " << node->DC_G0(alabala, 100000, 298.15, false); // prints the G0 of calcite in the output file
-
-
-
-  // *********************** DM test of different functions ********************* //
-
-  // deleting GEM IPM and data exchange memory structures
-  delete node;
-  // end of example
-  return 0;
+   // deleting GEM IPM and data exchange memory structures
+   delete node;
+   // end of example
+   return 0;
 }
 
 
 TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,
-              long int p_nPH, long int p_nPS )
+              long int p_nPH, long int p_nPS, long int p_nRcps )
 {
 
     nNodes = p_nNod;
@@ -212,6 +230,7 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
     nDC = p_nDC;
     nPH = p_nPH;
     nPS = p_nPS;
+    nRecipes = p_nRcps;
 
     aNodeHandle = new long int [nNodes];
     aNodeStatusCH = new long int [nNodes];

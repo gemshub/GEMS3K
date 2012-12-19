@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-<title>Gems3k: C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h Source File</title>
+<title>Gems3k: /Users/kulik/DevGEMS/trunk/standalone/GEMS3K/m_param.h Source File</title>
 
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
@@ -25,14 +25,12 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -92,470 +90,474 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div class="header">
   <div class="headertitle">
-<div class="title">C:/DevelGEMS/trunk/standalone/GEMS3K/m_param.h</div>  </div>
+<div class="title">/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/m_param.h</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00002"></a>00002 <span class="comment">// $Id: m_param.h 684 2012-05-31 08:29:03Z dmitrieva $</span>
+<a href="m__param_8h.html">Go to the documentation of this file.</a><div class="fragment"><pre class="fragment"><a name="l00001"></a>00001 <span class="comment">//-------------------------------------------------------------------</span>
+<a name="l00002"></a>00002 <span class="comment">// $Id: m_param.h 725 2012-10-02 15:43:37Z kulik $</span>
 <a name="l00003"></a>00003 <span class="comment">//</span>
-<a name="l00004"></a>00004 <span class="comment">// Declaration of TProfil class, config and calculation functions</span>
-<a name="l00005"></a>00005 <span class="comment">//</span>
-<a name="l00006"></a>00006 <span class="comment">// Rewritten from C to C++ by S.Dmytriyeva</span>
-<a name="l00007"></a>00007 <span class="comment">// Copyright (C) 1995,2012 S.Dmytriyeva, D.Kulik</span>
-<a name="l00008"></a>00008 <span class="comment">//</span>
-<a name="l00009"></a>00009 <span class="comment">// This file is part of a GEM-Selektor library for thermodynamic</span>
-<a name="l00010"></a>00010 <span class="comment">// modelling by Gibbs energy minimization</span>
-<a name="l00011"></a>00011 <span class="comment">// Uses: GEM-Selektor GUI GUI DBMS</span>
+<a name="l00006"></a>00006 <span class="comment"></span><span class="comment">//</span>
+<a name="l00007"></a>00007 <span class="comment">// Copyright (c) 1995-2012 S.Dmytriyeva, D.Kulik</span>
+<a name="l00008"></a>00008 <span class="comment">// &lt;GEMS Development Team, mailto:gems2.support@psi.ch&gt;</span>
+<a name="l00009"></a>00009 <span class="comment">//</span>
+<a name="l00010"></a>00010 <span class="comment">// This file is part of the GEMS3K code for thermodynamic modelling</span>
+<a name="l00011"></a>00011 <span class="comment">// by Gibbs energy minimization &lt;http://gems.web.psi.ch/GEMS3K/&gt;</span>
 <a name="l00012"></a>00012 <span class="comment">//</span>
-<a name="l00013"></a>00013 <span class="comment">// This file may be distributed under the terms of the GEMS-PSI</span>
-<a name="l00014"></a>00014 <span class="comment">// QA Licence (GEMSPSI.QAL)</span>
-<a name="l00015"></a>00015 <span class="comment">//</span>
-<a name="l00016"></a>00016 <span class="comment">// See http://gems.web.psi.ch/ for more information</span>
-<a name="l00017"></a>00017 <span class="comment">// E-mail: gems2.support@psi.ch</span>
-<a name="l00018"></a>00018 <span class="comment">//-------------------------------------------------------------------</span>
-<a name="l00019"></a>00019 <span class="comment">//</span>
-<a name="l00020"></a>00020 
-<a name="l00021"></a>00021 <span class="preprocessor">#ifndef _m_param_h_</span>
-<a name="l00022"></a>00022 <span class="preprocessor"></span><span class="preprocessor">#define _m_param_h_</span>
-<a name="l00023"></a>00023 <span class="preprocessor"></span>
-<a name="l00024"></a>00024 <span class="preprocessor">#include &lt;cmath&gt;</span>
-<a name="l00025"></a>00025 
-<a name="l00026"></a>00026 <span class="comment">// Physical constants - see m_param.cpp or ms_param.cpp</span>
-<a name="l00027"></a>00027 <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">double</span> R_CONSTANT, NA_CONSTANT, F_CONSTANT,
-<a name="l00028"></a>00028     e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
-<a name="l00029"></a>00029 
-<a name="l00030"></a>00030 <span class="preprocessor">#ifdef IPMGEMPLUGIN</span>
-<a name="l00031"></a>00031 <span class="preprocessor"></span>
-<a name="l00032"></a>00032 <span class="preprocessor">#include &quot;gdatastream.h&quot;</span>
-<a name="l00033"></a>00033 <span class="preprocessor">#include &quot;ms_multi.h&quot;</span>
-<a name="l00034"></a>00034 <span class="preprocessor">#include &quot;verror.h&quot;</span>
-<a name="l00035"></a>00035 
+<a name="l00013"></a>00013 <span class="comment">// GEMS3K is free software: you can redistribute it and/or modify</span>
+<a name="l00014"></a>00014 <span class="comment">// it under the terms of the GNU Lesser General Public License as</span>
+<a name="l00015"></a>00015 <span class="comment">// published by the Free Software Foundation, either version 3 of</span>
+<a name="l00016"></a>00016 <span class="comment">// the License, or (at your option) any later version.</span>
+<a name="l00017"></a>00017 
+<a name="l00018"></a>00018 <span class="comment">// GEMS3K is distributed in the hope that it will be useful,</span>
+<a name="l00019"></a>00019 <span class="comment">// but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<a name="l00020"></a>00020 <span class="comment">// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<a name="l00021"></a>00021 <span class="comment">// GNU Lesser General Public License for more details.</span>
+<a name="l00022"></a>00022 
+<a name="l00023"></a>00023 <span class="comment">// You should have received a copy of the GNU General Public License</span>
+<a name="l00024"></a>00024 <span class="comment">// along with GEMS3K code. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<a name="l00025"></a>00025 <span class="comment">//-------------------------------------------------------------------</span>
+<a name="l00026"></a>00026 <span class="comment">//</span>
+<a name="l00027"></a>00027 
+<a name="l00028"></a>00028 <span class="preprocessor">#ifndef _m_param_h_</span>
+<a name="l00029"></a>00029 <span class="preprocessor"></span><span class="preprocessor">#define _m_param_h_</span>
+<a name="l00030"></a>00030 <span class="preprocessor"></span>
+<a name="l00031"></a>00031 <span class="preprocessor">#include &lt;cmath&gt;</span>
+<a name="l00032"></a>00032 
+<a name="l00033"></a>00033 <span class="comment">// Physical constants - see m_param.cpp or ms_param.cpp</span>
+<a name="l00034"></a>00034 <span class="keyword">extern</span> <span class="keyword">const</span> <span class="keywordtype">double</span> R_CONSTANT, NA_CONSTANT, F_CONSTANT,
+<a name="l00035"></a>00035     e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
 <a name="l00036"></a>00036 
-<a name="l00037"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html">00037</a> <span class="keyword">struct </span><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a> 
-<a name="l00038"></a>00038 {
-<a name="l00039"></a>00039    <span class="keywordtype">long</span> <span class="keywordtype">int</span>
-<a name="l00040"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af3d776149515bca94c79dfc8b13e18c1">00040</a>            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9e77d8c41231403169ec579962e506be" title="Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }.">PC</a>,   
-<a name="l00041"></a>00041            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab0c5a883d3ecfe33d62d84093bcd4280" title="abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.">PD</a>,   
+<a name="l00037"></a>00037 <span class="preprocessor">#ifdef IPMGEMPLUGIN</span>
+<a name="l00038"></a>00038 <span class="preprocessor"></span>
+<a name="l00039"></a>00039 <span class="preprocessor">#include &quot;<a class="code" href="gdatastream_8h.html" title="Contains definition of the GemDataStream class for processing binary data streams on platforms with d...">gdatastream.h</a>&quot;</span>
+<a name="l00040"></a>00040 <span class="preprocessor">#include &quot;<a class="code" href="ms__multi_8h.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">ms_multi.h</a>&quot;</span>
+<a name="l00041"></a>00041 <span class="preprocessor">#include &quot;<a class="code" href="verror_8h.html" title="Declarations of classes TError and TFatalError for error handling.">verror.h</a>&quot;</span>
 <a name="l00042"></a>00042 
-<a name="l00043"></a>00043 
-<a name="l00044"></a>00044            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad8871e4d1c67b604d3dd4fe35b346187" title="Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }...">PRD</a>,  
-<a name="l00045"></a>00045            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af3d776149515bca94c79dfc8b13e18c1" title="Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace ...">PSM</a>,  
-<a name="l00046"></a>00046            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af43b7f67082b410a86accad1529c6311" title="Maximum allowed number of iterations in the MassBalanceRefinement() procedure { 30 }...">DP</a>,   
-<a name="l00047"></a>00047            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a345e89b31b2072d266d3e0b8ccc70650" title="Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }...">DW</a>,   
-<a name="l00048"></a>00048            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a169ab9e5ecf567b84b9771cf6a1638ec" title="Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }...">DT</a>,   
-<a name="l00049"></a>00049            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a59e5a41d14b5d233c047e26763545b90" title="IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detecti...">PLLG</a>, 
-<a name="l00050"></a>00050            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9a7ce591ca03b6ff003bbf54c8a12a0c" title="Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }.">PE</a>,   
-<a name="l00051"></a>00051            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af1aaaa4bd76b1771ec225edd1c345c3c" title="&lt; Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }...">IIM</a>   
-<a name="l00052"></a>00052            ;
-<a name="l00053"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab46993decc1dfa2b2daf4420601814cc">00053</a>          <span class="keywordtype">double</span> <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4b727717dc3434455e78d3db3b9a539e" title="Standart total moles { 1e5 }.">DG</a>,   
-<a name="l00054"></a>00054            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a999f2109eb6eba61a50bccca7735e55f" title="Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }...">DHB</a>,  
-<a name="l00055"></a>00055            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad6b008d6e727093c2999f69f0fc50b94" title="Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }...">DS</a>,   
-<a name="l00056"></a>00056            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a5046d07f22308e16bbcdf46b97eb6125" title="IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 &lt; DK &lt; 1e-4) { 1...">DK</a>,   
-<a name="l00057"></a>00057            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9795dac9acac7cf187c34b998ef76258" title="Threshold for the application of the Karpov phase stability criterion: (Fa &gt; DF) for a lost stable ph...">DF</a>,   
-<a name="l00058"></a>00058            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a8a3825f92beeb2fb4db378e25a48cafd" title="Threshold for Karpov stability criterion f_a for insertion of a phase (Fa &lt; -DFM) for a present unsta...">DFM</a>,  
-<a name="l00059"></a>00059            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a82e4fb9dca368e996eb4df7f8b5b7f8d" title="Insertion mole amount for water-solvent { 1e-6 }.">DFYw</a>, 
-<a name="l00060"></a>00060            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a347e8b12476050350bff6a04726bf834" title="Insertion mole amount for aqueous species { 1e-6 }.">DFYaq</a>,
-<a name="l00061"></a>00061            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0107ce0b0bb22a3f9c2ac860b33de3f0" title="Insertion mole amount for ideal solution components { 1e-6 }.">DFYid</a>,
-<a name="l00062"></a>00062            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9720c6b164bac701c283288717c56229" title="Insertion mole amount for major solution components { 1e-6 }.">DFYr</a>, 
-<a name="l00063"></a>00063            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab43b91a6152673682e96db096f85be6f" title="Insertion mole amount for minor solution components { 1e-6 }.">DFYh</a>, 
-<a name="l00064"></a>00064            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#aa1ff3633ed2b081b92ef355ed399c183" title="Insertion mole amount for single-component phase { 1e-6 }.">DFYc</a>, 
-<a name="l00065"></a>00065            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7928ec88325c49123462ec0419c8afa9" title="Insertion mole amount used in PhaseSelect() for a condensed phase component { 1e-7 }...">DFYs</a>, 
-<a name="l00066"></a>00066            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a97cf091d282d30b1999204b6c571adb7" title="Minimum amount of Independent Component in the bulk system composition (except charge &quot;Zz&quot;) (moles) (...">DB</a>,   
-<a name="l00067"></a>00067            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac3a624fd0ffdf6aadab2ed51ba97a515" title="Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterat...">AG</a>,   
-<a name="l00068"></a>00068            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac430836fd606ea7cd975ae90a3761e03" title="Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0...">DGC</a>,  
-<a name="l00069"></a>00069            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a74634723e3ef710a0b3b83fc0f6a84c3" title="Initial activity coefficient value for major (M) species in a solution phase before LPP approximation...">GAR</a>,  
-<a name="l00070"></a>00070            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1e99fae5e0d9ce6a3f00936125767ef3" title="Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation...">GAH</a>,  
-<a name="l00071"></a>00071            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a6808426c6626272a3ce9113a865620de" title="Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup()...">GAS</a>,  
-<a name="l00072"></a>00072 
-<a name="l00073"></a>00073            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab42f810d4a3b0e7c06c136d46ff82492" title="Standard surface density (nm-2) for calculating activity of surface species (12.05)">DNS</a>,  
-<a name="l00074"></a>00074            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab46993decc1dfa2b2daf4420601814cc" title="Cutoff mole amount for elimination of water-solvent { 1e-9 }.">XwMin</a>,
-<a name="l00075"></a>00075            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1f4396f4e60576c24a7a7d0cbae53bb6" title="Cutoff mole amount for elimination of solid sorbent {1e-7}.">ScMin</a>,
-<a name="l00076"></a>00076            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a47e2044eacb67ecc6ee4cf4168968cf3" title="Cutoff mole amount for elimination of solution- or surface species { 1e-30 }.">DcMin</a>,
-<a name="l00077"></a>00077            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a2223d0b1f3d403b052abca6630cb6ca1" title="Cutoff mole amount for elimination of non-electrolyte solution phase with all its components { 1e-10 ...">PhMin</a>,
-<a name="l00078"></a>00078            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0c43b2dfc9a38b71c4f35165b854d992" title="Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species a...">ICmin</a>,
-<a name="l00079"></a>00079            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7b657f4f4f01943efe317c07bc52ef26" title="Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }...">EPS</a>,  
-<a name="l00080"></a>00080            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a424a9a97608ad3ecb4889881cd49eeeb" title="Convergence parameter of SACT calculation in sorption/surface complexation models { 0...">IEPS</a>, 
-<a name="l00081"></a>00081            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4658b67ad793f166576dd5dab851c3fc" title="Tolerance on the amount of DC with two-side metastability constraints { 1e-7 }.">DKIN</a>; 
-<a name="l00082"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#afd37d2e669dbfb34b78959412673fa71">00082</a>     <span class="keywordtype">char</span> *<a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#afd37d2e669dbfb34b78959412673fa71" title="internal">tprn</a>;       
-<a name="l00083"></a>00083 
-<a name="l00084"></a>00084     <span class="keywordtype">void</span> write(fstream&amp; oss);
-<a name="l00085"></a>00085 };
-<a name="l00086"></a>00086 
-<a name="l00087"></a><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html">00087</a> <span class="keyword">struct </span><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> 
-<a name="l00088"></a>00088 {
-<a name="l00089"></a><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html#a8be51bb796054af5b36699a36bee5a1e">00089</a>     <span class="keywordtype">char</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html#a8be51bb796054af5b36699a36bee5a1e" title="Version &amp; Copyright 64.">ver</a>[TDBVERSION]; 
-<a name="l00090"></a>00090     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a> p; <span class="comment">//</span>
-<a name="l00091"></a>00091     <span class="keywordtype">void</span> write(fstream&amp; oss);
-<a name="l00092"></a>00092 };
-<a name="l00093"></a>00093 
-<a name="l00094"></a>00094 <span class="keyword">extern</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa_;
-<a name="l00095"></a>00095 
-<a name="l00097"></a><a class="code" href="class_t_profil.html">00097</a> <span class="keyword">class </span><a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>
-<a name="l00098"></a>00098 {
+<a name="l00043"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html">00043</a> <span class="keyword">struct </span><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a> 
+<a name="l00044"></a>00044 {
+<a name="l00045"></a>00045    <span class="keywordtype">long</span> <span class="keywordtype">int</span>
+<a name="l00046"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af3d776149515bca94c79dfc8b13e18c1">00046</a>            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9e77d8c41231403169ec579962e506be" title="Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }.">PC</a>,   
+<a name="l00047"></a>00047            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab0c5a883d3ecfe33d62d84093bcd4280" title="abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.">PD</a>,   
+<a name="l00048"></a>00048 
+<a name="l00049"></a>00049 
+<a name="l00050"></a>00050            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad8871e4d1c67b604d3dd4fe35b346187" title="Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }...">PRD</a>,  
+<a name="l00051"></a>00051            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af3d776149515bca94c79dfc8b13e18c1" title="Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace ...">PSM</a>,  
+<a name="l00052"></a>00052            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af43b7f67082b410a86accad1529c6311" title="Maximum allowed number of iterations in the MassBalanceRefinement() procedure { 30 }...">DP</a>,   
+<a name="l00053"></a>00053            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a345e89b31b2072d266d3e0b8ccc70650" title="Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }...">DW</a>,   
+<a name="l00054"></a>00054            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a169ab9e5ecf567b84b9771cf6a1638ec" title="Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }...">DT</a>,   
+<a name="l00055"></a>00055            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a59e5a41d14b5d233c047e26763545b90" title="IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detecti...">PLLG</a>, 
+<a name="l00056"></a>00056            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9a7ce591ca03b6ff003bbf54c8a12a0c" title="Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }.">PE</a>,   
+<a name="l00057"></a>00057            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af1aaaa4bd76b1771ec225edd1c345c3c" title="&lt; Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }...">IIM</a>   
+<a name="l00058"></a>00058            ;
+<a name="l00059"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab46993decc1dfa2b2daf4420601814cc">00059</a>          <span class="keywordtype">double</span> <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4b727717dc3434455e78d3db3b9a539e" title="Standart total moles { 1e5 }.">DG</a>,   
+<a name="l00060"></a>00060            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a999f2109eb6eba61a50bccca7735e55f" title="Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }...">DHB</a>,  
+<a name="l00061"></a>00061            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad6b008d6e727093c2999f69f0fc50b94" title="Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }...">DS</a>,   
+<a name="l00062"></a>00062            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a5046d07f22308e16bbcdf46b97eb6125" title="IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 &lt; DK &lt; 1e-4) { 1...">DK</a>,   
+<a name="l00063"></a>00063            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9795dac9acac7cf187c34b998ef76258" title="Threshold for the application of the Karpov phase stability criterion: (Fa &gt; DF) for a lost stable ph...">DF</a>,   
+<a name="l00064"></a>00064            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a8a3825f92beeb2fb4db378e25a48cafd" title="Threshold for Karpov stability criterion f_a for insertion of a phase (Fa &lt; -DFM) for a present unsta...">DFM</a>,  
+<a name="l00065"></a>00065            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a82e4fb9dca368e996eb4df7f8b5b7f8d" title="Insertion mole amount for water-solvent { 1e-6 }.">DFYw</a>, 
+<a name="l00066"></a>00066            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a347e8b12476050350bff6a04726bf834" title="Insertion mole amount for aqueous species { 1e-6 }.">DFYaq</a>,
+<a name="l00067"></a>00067            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0107ce0b0bb22a3f9c2ac860b33de3f0" title="Insertion mole amount for ideal solution components { 1e-6 }.">DFYid</a>,
+<a name="l00068"></a>00068            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9720c6b164bac701c283288717c56229" title="Insertion mole amount for major solution components { 1e-6 }.">DFYr</a>, 
+<a name="l00069"></a>00069            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab43b91a6152673682e96db096f85be6f" title="Insertion mole amount for minor solution components { 1e-6 }.">DFYh</a>, 
+<a name="l00070"></a>00070            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#aa1ff3633ed2b081b92ef355ed399c183" title="Insertion mole amount for single-component phase { 1e-6 }.">DFYc</a>, 
+<a name="l00071"></a>00071            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7928ec88325c49123462ec0419c8afa9" title="Insertion mole amount used in PhaseSelect() for a condensed phase component { 1e-7 }...">DFYs</a>, 
+<a name="l00072"></a>00072            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a97cf091d282d30b1999204b6c571adb7" title="Minimum amount of Independent Component in the bulk system composition (except charge &quot;Zz&quot;) (moles) (...">DB</a>,   
+<a name="l00073"></a>00073            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac3a624fd0ffdf6aadab2ed51ba97a515" title="Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterat...">AG</a>,   
+<a name="l00074"></a>00074            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac430836fd606ea7cd975ae90a3761e03" title="Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0...">DGC</a>,  
+<a name="l00075"></a>00075            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a74634723e3ef710a0b3b83fc0f6a84c3" title="Initial activity coefficient value for major (M) species in a solution phase before LPP approximation...">GAR</a>,  
+<a name="l00076"></a>00076            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1e99fae5e0d9ce6a3f00936125767ef3" title="Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation...">GAH</a>,  
+<a name="l00077"></a>00077            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a6808426c6626272a3ce9113a865620de" title="Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup()...">GAS</a>,  
+<a name="l00078"></a>00078 
+<a name="l00079"></a>00079            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab42f810d4a3b0e7c06c136d46ff82492" title="Standard surface density (nm-2) for calculating activity of surface species (12.05)">DNS</a>,  
+<a name="l00080"></a>00080            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab46993decc1dfa2b2daf4420601814cc" title="Cutoff mole amount for elimination of water-solvent { 1e-9 }.">XwMin</a>,
+<a name="l00081"></a>00081            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1f4396f4e60576c24a7a7d0cbae53bb6" title="Cutoff mole amount for elimination of solid sorbent {1e-7}.">ScMin</a>,
+<a name="l00082"></a>00082            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a47e2044eacb67ecc6ee4cf4168968cf3" title="Cutoff mole amount for elimination of solution- or surface species { 1e-30 }.">DcMin</a>,
+<a name="l00083"></a>00083            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a2223d0b1f3d403b052abca6630cb6ca1" title="Cutoff mole amount for elimination of non-electrolyte solution phase with all its components { 1e-10 ...">PhMin</a>,
+<a name="l00084"></a>00084            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0c43b2dfc9a38b71c4f35165b854d992" title="Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species a...">ICmin</a>,
+<a name="l00085"></a>00085            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7b657f4f4f01943efe317c07bc52ef26" title="Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }...">EPS</a>,  
+<a name="l00086"></a>00086            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a424a9a97608ad3ecb4889881cd49eeeb" title="Convergence parameter of SACT calculation in sorption/surface complexation models { 0...">IEPS</a>, 
+<a name="l00087"></a>00087            <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4658b67ad793f166576dd5dab851c3fc" title="Tolerance on the amount of DC with two-side metastability constraints { 1e-7 }.">DKIN</a>; 
+<a name="l00088"></a><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#afd37d2e669dbfb34b78959412673fa71">00088</a>     <span class="keywordtype">char</span> *<a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#afd37d2e669dbfb34b78959412673fa71" title="internal">tprn</a>;       
+<a name="l00089"></a>00089 
+<a name="l00090"></a>00090     <span class="keywordtype">void</span> write(fstream&amp; oss);
+<a name="l00091"></a>00091 };
+<a name="l00092"></a>00092 
+<a name="l00093"></a><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html">00093</a> <span class="keyword">struct </span><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> 
+<a name="l00094"></a>00094 {
+<a name="l00095"></a><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html#a8be51bb796054af5b36699a36bee5a1e">00095</a>     <span class="keywordtype">char</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html#a8be51bb796054af5b36699a36bee5a1e" title="Version &amp; Copyright 64.">ver</a>[TDBVERSION]; 
+<a name="l00096"></a>00096     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a> p; <span class="comment">//</span>
+<a name="l00097"></a>00097     <span class="keywordtype">void</span> write(fstream&amp; oss);
+<a name="l00098"></a>00098 };
 <a name="l00099"></a>00099 
-<a name="l00100"></a>00100 <span class="keyword">public</span>:
+<a name="l00100"></a>00100 <span class="keyword">extern</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa_;
 <a name="l00101"></a>00101 
-<a name="l00102"></a>00102     <span class="comment">//static TProfil* pm;</span>
-<a name="l00103"></a>00103 
-<a name="l00104"></a>00104     <a class="code" href="class_t_multi.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">TMulti</a>* multi;
-<a name="l00105"></a>00105     <a class="code" href="struct_m_u_l_t_i.html" title="Represents chemical thermodynamic multisystem work data for GEM IPM-2 algorithm.">MULTI</a> *pmp;
-<a name="l00106"></a>00106     <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa;
+<a name="l00103"></a><a class="code" href="class_t_profil.html">00103</a> <span class="keyword">class </span><a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>
+<a name="l00104"></a>00104 {
+<a name="l00105"></a>00105 
+<a name="l00106"></a>00106 <span class="keyword">public</span>:
 <a name="l00107"></a>00107 
-<a name="l00108"></a>00108     <a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>( <a class="code" href="class_t_multi.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">TMulti</a>* amulti );
+<a name="l00108"></a>00108     <span class="comment">//static TProfil* pm;</span>
 <a name="l00109"></a>00109 
-<a name="l00110"></a>00110     <span class="keyword">const</span> <span class="keywordtype">char</span>* GetName()<span class="keyword"> const</span>
-<a name="l00111"></a>00111 <span class="keyword">    </span>{
-<a name="l00112"></a>00112         <span class="keywordflow">return</span> <span class="stringliteral">&quot;Project&quot;</span>;
-<a name="l00113"></a>00113     }
-<a name="l00114"></a>00114 
-<a name="l00115"></a>00115    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a4be2bc3caf9557385a0c952f77d79b2f" title="Writing structure MULTI (GEM IPM work structure) to binary file.">outMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff, gstring&amp; path  );
-<a name="l00116"></a>00116    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a9abdf8500418ce458bf7cdfb20c0af2c" title="Writing structure MULTI ( free format text file )">outMultiTxt</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">bool</span> append=<span class="keyword">false</span>  );
-<a name="l00117"></a>00117    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff );
-<a name="l00118"></a>00118    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* path,  <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>  *dCH );
-<a name="l00119"></a>00119 
-<a name="l00120"></a>00120    <span class="keywordtype">double</span> <a class="code" href="class_t_profil.html#abe48fd0f9ddc5804e4e54b7ec9d4294b" title="GEM IPM calculation of equilibrium state in MULTI.">ComputeEquilibriumState</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; PrecLoops_, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterFIA_, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterIPM_ );
-<a name="l00121"></a>00121 
-<a name="l00122"></a>00122    <span class="keyword">inline</span> <span class="keywordtype">double</span> HelmholtzEnergy( <span class="keywordtype">double</span> x )
-<a name="l00123"></a>00123    {
-<a name="l00124"></a>00124        <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#af8cd7213884c0420eb1e86b850c06254" title="Calls to minimization of other system potentials - HelmholtzEnergy.">HelmholtzEnergy</a>(x);
-<a name="l00125"></a>00125    }
-<a name="l00126"></a>00126 
-<a name="l00127"></a>00127    <span class="keyword">inline</span> <span class="keywordtype">double</span> InternalEnergy( <span class="keywordtype">double</span> TC, <span class="keywordtype">double</span> P )
-<a name="l00128"></a>00128    {
-<a name="l00129"></a>00129        <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#a12af02446fdc8df715cc57f4a348415a" title="Calls to minimization of other system potentials - InternalEnergy.">InternalEnergy</a>( TC, P );
-<a name="l00130"></a>00130    }
-<a name="l00131"></a>00131 
-<a name="l00132"></a>00132    <span class="comment">//void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );</span>
-<a name="l00133"></a>00133 };
-<a name="l00134"></a>00134 
-<a name="l00135"></a>00135 <span class="keyword">enum</span> QpQdSizes {   <span class="comment">// see m_phase.h</span>
-<a name="l00136"></a>00136    QPSIZE = 180,    <span class="comment">// This enum is for GEMS3K only!</span>
-<a name="l00137"></a>00137    QDSIZE = 60
-<a name="l00138"></a>00138 };
-<a name="l00139"></a>00139 
-<a name="l00140"></a>00140 <span class="preprocessor">#else</span>
-<a name="l00141"></a>00141 <span class="preprocessor"></span>
-<a name="l00142"></a>00142 <span class="preprocessor">#include &quot;v_mod.h&quot;</span>
-<a name="l00143"></a>00143 <span class="preprocessor">#include &quot;ms_rmults.h&quot;</span>
-<a name="l00144"></a>00144 <span class="preprocessor">#include &quot;ms_mtparm.h&quot;</span>
-<a name="l00145"></a>00145 <span class="preprocessor">#include &quot;ms_system.h&quot;</span>
-<a name="l00146"></a>00146 <span class="preprocessor">#include &quot;ms_multi.h&quot;</span>
-<a name="l00147"></a>00147 <span class="preprocessor">#include &quot;ms_calc.h&quot;</span>
-<a name="l00148"></a>00148 
-<a name="l00149"></a>00149 <span class="keyword">class </span><a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>;
-<a name="l00150"></a>00150 <span class="keyword">class </span>QWidget;
-<a name="l00151"></a>00151 
-<a name="l00152"></a>00152 <span class="keyword">extern</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> showMss;
-<a name="l00153"></a>00153 
-<a name="l00154"></a>00154 <span class="keyword">struct </span><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a>
-<a name="l00155"></a>00155 { <span class="comment">// Flags and thresholds for numeric modules</span>
-<a name="l00156"></a>00156   <span class="keywordtype">short</span>
-<a name="l00157"></a>00157     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9e77d8c41231403169ec579962e506be" title="Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }.">PC</a>,   <span class="comment">// Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }</span>
-<a name="l00158"></a>00158     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab0c5a883d3ecfe33d62d84093bcd4280" title="abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.">PD</a>,   <span class="comment">// abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }</span>
-<a name="l00159"></a>00159           <span class="comment">// Mode of CalculateActivityCoefficients(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.</span>
-<a name="l00160"></a>00160           <span class="comment">// if PD &lt; 0 then use test qd_real accuracy mode</span>
-<a name="l00161"></a>00161     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad8871e4d1c67b604d3dd4fe35b346187" title="Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }...">PRD</a>,  <span class="comment">// Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }</span>
-<a name="l00162"></a>00162     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af3d776149515bca94c79dfc8b13e18c1" title="Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace ...">PSM</a>,  <span class="comment">// Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }</span>
-<a name="l00163"></a>00163     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af43b7f67082b410a86accad1529c6311" title="Maximum allowed number of iterations in the MassBalanceRefinement() procedure { 30 }...">DP</a>,   <span class="comment">// Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }</span>
-<a name="l00164"></a>00164     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a345e89b31b2072d266d3e0b8ccc70650" title="Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }...">DW</a>,   <span class="comment">// Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }</span>
-<a name="l00165"></a>00165     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a169ab9e5ecf567b84b9771cf6a1638ec" title="Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }...">DT</a>,   <span class="comment">// Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }</span>
-<a name="l00166"></a>00166     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a59e5a41d14b5d233c047e26763545b90" title="IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detecti...">PLLG</a>, <span class="comment">// IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }</span>
-<a name="l00167"></a>00167     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9a7ce591ca03b6ff003bbf54c8a12a0c" title="Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }.">PE</a>,   <span class="comment">// Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }</span>
-<a name="l00168"></a>00168     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af1aaaa4bd76b1771ec225edd1c345c3c" title="&lt; Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }...">IIM</a>   <span class="comment">// Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }</span>
-<a name="l00169"></a>00169     ;
-<a name="l00170"></a>00170   <span class="keywordtype">double</span> <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4b727717dc3434455e78d3db3b9a539e" title="Standart total moles { 1e5 }.">DG</a>,   <span class="comment">// Standart total moles { 1e5 }</span>
-<a name="l00171"></a>00171     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a999f2109eb6eba61a50bccca7735e55f" title="Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }...">DHB</a>,  <span class="comment">// Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }</span>
-<a name="l00172"></a>00172     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad6b008d6e727093c2999f69f0fc50b94" title="Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }...">DS</a>,   <span class="comment">// Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }</span>
-<a name="l00173"></a>00173     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a5046d07f22308e16bbcdf46b97eb6125" title="IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 &lt; DK &lt; 1e-4) { 1...">DK</a>,   <span class="comment">// IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 &lt; DK &lt; 1e-4) { 1e-5 }</span>
-<a name="l00174"></a>00174     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9795dac9acac7cf187c34b998ef76258" title="Threshold for the application of the Karpov phase stability criterion: (Fa &gt; DF) for a lost stable ph...">DF</a>,   <span class="comment">// Threshold for the application of the Karpov phase stability criterion: (Fa &gt; DF) for a lost stable phase { 0.01 }</span>
-<a name="l00175"></a>00175     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a8a3825f92beeb2fb4db378e25a48cafd" title="Threshold for Karpov stability criterion f_a for insertion of a phase (Fa &lt; -DFM) for a present unsta...">DFM</a>,  <span class="comment">// Threshold for Karpov stability criterion f_a for insertion of a phase (Fa &lt; -DFM) for a present unstable phase { 0.1 }</span>
-<a name="l00176"></a>00176     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a82e4fb9dca368e996eb4df7f8b5b7f8d" title="Insertion mole amount for water-solvent { 1e-6 }.">DFYw</a>, <span class="comment">// Insertion mole amount for water-solvent { 1e-6 }</span>
-<a name="l00177"></a>00177     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a347e8b12476050350bff6a04726bf834" title="Insertion mole amount for aqueous species { 1e-6 }.">DFYaq</a>,<span class="comment">// Insertion mole amount for aqueous species { 1e-6 }</span>
-<a name="l00178"></a>00178     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0107ce0b0bb22a3f9c2ac860b33de3f0" title="Insertion mole amount for ideal solution components { 1e-6 }.">DFYid</a>,<span class="comment">// Insertion mole amount for ideal solution components { 1e-6 }</span>
-<a name="l00179"></a>00179     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9720c6b164bac701c283288717c56229" title="Insertion mole amount for major solution components { 1e-6 }.">DFYr</a>, <span class="comment">// Insertion mole amount for major solution components { 1e-6 }</span>
-<a name="l00180"></a>00180     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab43b91a6152673682e96db096f85be6f" title="Insertion mole amount for minor solution components { 1e-6 }.">DFYh</a>, <span class="comment">// Insertion mole amount for minor solution components { 1e-6 }</span>
-<a name="l00181"></a>00181     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#aa1ff3633ed2b081b92ef355ed399c183" title="Insertion mole amount for single-component phase { 1e-6 }.">DFYc</a>, <span class="comment">// Insertion mole amount for single-component phase { 1e-6 }</span>
-<a name="l00182"></a>00182     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7928ec88325c49123462ec0419c8afa9" title="Insertion mole amount used in PhaseSelect() for a condensed phase component { 1e-7 }...">DFYs</a>, <span class="comment">// Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }</span>
-<a name="l00183"></a>00183     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a97cf091d282d30b1999204b6c571adb7" title="Minimum amount of Independent Component in the bulk system composition (except charge &quot;Zz&quot;) (moles) (...">DB</a>,   <span class="comment">// Minimum amount of Independent Component in the bulk system composition (except charge &quot;Zz&quot;) (moles) (1e-17)</span>
-<a name="l00184"></a>00184     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac3a624fd0ffdf6aadab2ed51ba97a515" title="Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterat...">AG</a>,   <span class="comment">// Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }</span>
-<a name="l00185"></a>00185     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac430836fd606ea7cd975ae90a3761e03" title="Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0...">DGC</a>,  <span class="comment">// Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }</span>
-<a name="l00186"></a>00186     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a74634723e3ef710a0b3b83fc0f6a84c3" title="Initial activity coefficient value for major (M) species in a solution phase before LPP approximation...">GAR</a>,  <span class="comment">// Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }</span>
-<a name="l00187"></a>00187     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1e99fae5e0d9ce6a3f00936125767ef3" title="Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation...">GAH</a>,  <span class="comment">// Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }</span>
-<a name="l00188"></a>00188     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a6808426c6626272a3ce9113a865620de" title="Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup()...">GAS</a>,  <span class="comment">// Since r1583: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }</span>
-<a name="l00189"></a>00189           <span class="comment">// before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }</span>
-<a name="l00190"></a>00190     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab42f810d4a3b0e7c06c136d46ff82492" title="Standard surface density (nm-2) for calculating activity of surface species (12.05)">DNS</a>,  <span class="comment">// Standard surface density (nm-2) for calculating activity of surface species (12.05)</span>
-<a name="l00191"></a>00191     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab46993decc1dfa2b2daf4420601814cc" title="Cutoff mole amount for elimination of water-solvent { 1e-9 }.">XwMin</a>,<span class="comment">// Cutoff mole amount for elimination of water-solvent { 1e-9 }</span>
-<a name="l00192"></a>00192     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1f4396f4e60576c24a7a7d0cbae53bb6" title="Cutoff mole amount for elimination of solid sorbent {1e-7}.">ScMin</a>,<span class="comment">// Cutoff mole amount for elimination of solid sorbent {1e-7}</span>
-<a name="l00193"></a>00193     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a47e2044eacb67ecc6ee4cf4168968cf3" title="Cutoff mole amount for elimination of solution- or surface species { 1e-30 }.">DcMin</a>,<span class="comment">// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }</span>
-<a name="l00194"></a>00194     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a2223d0b1f3d403b052abca6630cb6ca1" title="Cutoff mole amount for elimination of non-electrolyte solution phase with all its components { 1e-10 ...">PhMin</a>,<span class="comment">// Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }</span>
-<a name="l00195"></a>00195     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0c43b2dfc9a38b71c4f35165b854d992" title="Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species a...">ICmin</a>,<span class="comment">// Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }</span>
-<a name="l00196"></a>00196     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7b657f4f4f01943efe317c07bc52ef26" title="Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }...">EPS</a>,  <span class="comment">// Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }</span>
-<a name="l00197"></a>00197     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a424a9a97608ad3ecb4889881cd49eeeb" title="Convergence parameter of SACT calculation in sorption/surface complexation models { 0...">IEPS</a>, <span class="comment">// Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }</span>
-<a name="l00198"></a>00198     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4658b67ad793f166576dd5dab851c3fc" title="Tolerance on the amount of DC with two-side metastability constraints { 1e-7 }.">DKIN</a>; <span class="comment">// Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }</span>
-<a name="l00199"></a>00199     <span class="keywordtype">char</span> *<a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#afd37d2e669dbfb34b78959412673fa71" title="internal">tprn</a>;       <span class="comment">// internal</span>
-<a name="l00200"></a>00200     <span class="keywordtype">void</span> write(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
-<a name="l00201"></a>00201     <span class="keywordtype">void</span> read(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
-<a name="l00202"></a>00202 };
-<a name="l00203"></a>00203 
-<a name="l00204"></a>00204 <span class="keyword">struct </span><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a>
-<a name="l00205"></a>00205 {   <span class="comment">// Base Parametres of SP</span>
-<a name="l00206"></a>00206     <span class="keywordtype">char</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html#a8be51bb796054af5b36699a36bee5a1e" title="Version &amp; Copyright 64.">ver</a>[TDBVERSION]; <span class="comment">// Version &amp; Copyright 64</span>
-<a name="l00207"></a>00207     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a> p; <span class="comment">// Flags and thresholds for numeric modules</span>
-<a name="l00208"></a>00208     <span class="keywordtype">char</span>           <span class="comment">// default codes of values</span>
-<a name="l00209"></a>00209     DCpct[7],      <span class="comment">// Default DCOMP flags and codes</span>
-<a name="l00210"></a>00210     DCpdc[10],     <span class="comment">// Default DCOMP class and units</span>
-<a name="l00211"></a>00211     BCpc[7],       <span class="comment">// Default COMPOS configuration</span>
-<a name="l00212"></a>00212     REpct[7],      <span class="comment">// Default REACDC flags and codes</span>
-<a name="l00213"></a>00213 
-<a name="l00214"></a>00214     REpdc[7],      <span class="comment">// Default REACDC class and units</span>
-<a name="l00215"></a>00215     REpvc[9],      <span class="comment">// Default REACDC configuration</span>
-<a name="l00216"></a>00216     RPpdc[11],      <span class="comment">// Default RTPARM flags and codes</span>
-<a name="l00217"></a>00217     RPpvc[33],     <span class="comment">// Default RTPARM configuration  reserved</span>
-<a name="l00218"></a>00218     PHsol_t[7],    <span class="comment">// Default PHASE model codes</span>
-<a name="l00219"></a>00219     PHpvc[7],      <span class="comment">// Default PHASE configuration</span>
-<a name="l00220"></a>00220     MUpmv[11],     <span class="comment">// Default RMULTS configuration</span>
-<a name="l00221"></a>00221     TPpdc[9],      <span class="comment">// Default class and units for MTPARM</span>
-<a name="l00222"></a>00222     TPpvc[21],     <span class="comment">// Default MTPARM configuration</span>
-<a name="l00223"></a>00223     SYppc[11],     <span class="comment">// Default class and flags for SYSTEM</span>
-<a name="l00224"></a>00224     SYpvc[29],     <span class="comment">// Default SYSTEM confifuration</span>
-<a name="l00225"></a>00225     UTppc[11],     <span class="comment">// Default DUTERM class and flags</span>
-<a name="l00226"></a>00226     PEpsc[13],     <span class="comment">// Default PROCES class and flags</span>
-<a name="l00227"></a>00227     PEpvc[13],     <span class="comment">// Default PROCES configuration</span>
-<a name="l00228"></a>00228     GDcode[2][20], <span class="comment">// Default names of screen and graphs in GTDEMO ????</span>
-<a name="l00229"></a>00229     GDpsc[7],      <span class="comment">// Default names of lines on GTDEMO graphs</span>
-<a name="l00230"></a>00230     GDpcc[2][9],   <span class="comment">// Default axis names for GTDEMO</span>
-<a name="l00231"></a>00231     GDptc[7],      <span class="comment">// Default GTDEMO configuration</span>
-<a name="l00232"></a>00232     GDpgw[7],      <span class="comment">// Default setup of graphs in GTDEMO</span>
-<a name="l00233"></a>00233     SDrefKey[32],  <span class="comment">// sdref key</span>
-<a name="l00234"></a>00234     Reserv[50-32]    <span class="comment">// (reserved) objects later</span>
-<a name="l00235"></a>00235     ;
-<a name="l00236"></a>00236     <span class="comment">// for RTPARM</span>
-<a name="l00237"></a>00237     <span class="keywordtype">short</span> NP,NT,  <span class="comment">// Default N of points (RTPARM): P, T</span>
-<a name="l00238"></a>00238     NV,       <span class="comment">// reserved</span>
-<a name="l00239"></a>00239     Mode,     <span class="comment">// Default indexation mode RTPARM</span>
-<a name="l00240"></a>00240     ResShort[5];
-<a name="l00241"></a>00241     <span class="keywordtype">float</span>        <span class="comment">// RTPARM</span>
-<a name="l00242"></a>00242     Pi[3],    <span class="comment">// Default interval for pressure</span>
-<a name="l00243"></a>00243     Ti[3],    <span class="comment">// Default interval for temperature, C</span>
-<a name="l00244"></a>00244     Vi[3],    <span class="comment">// Default interval for volume, cm3</span>
-<a name="l00245"></a>00245     DRpst, DRtcst,   <span class="comment">// Default Pr, Tr for DCOMP &amp; REACDC</span>
-<a name="l00246"></a>00246     lowPosNum, <span class="comment">// MULTI Cutoff moles of DC (Ls set) { 1e-19 };</span>
-<a name="l00247"></a>00247     logXw,     <span class="comment">// log(1e-16)</span>
-<a name="l00248"></a>00248     logYFk,    <span class="comment">// log(1e-9)</span>
-<a name="l00249"></a>00249     aqPar[5];  <span class="comment">// b_gamma, a0, NeutPolicy, GamH2O, b_gam_T_dep for auto aq phase model</span>
-<a name="l00250"></a>00250 <span class="comment">//    ResFloat;   // one parameter for auto gas/fluid phase</span>
-<a name="l00251"></a>00251 
-<a name="l00252"></a>00252     <span class="keywordtype">void</span> write(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
-<a name="l00253"></a>00253     <span class="keywordtype">void</span> read(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
-<a name="l00254"></a>00254 };
-<a name="l00255"></a>00255 
-<a name="l00256"></a>00256 <span class="keyword">extern</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa_;
+<a name="l00110"></a>00110     <a class="code" href="class_t_multi.html">TMulti</a>* multi;
+<a name="l00111"></a>00111     <a class="code" href="struct_m_u_l_t_i.html" title="Contains chemical thermodynamic work data for GEM IPM-3 algorithm.">MULTI</a> *pmp;
+<a name="l00112"></a>00112     <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa;
+<a name="l00113"></a>00113 
+<a name="l00114"></a>00114     <a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>( <a class="code" href="class_t_multi.html">TMulti</a>* amulti );
+<a name="l00115"></a>00115 
+<a name="l00116"></a>00116     <span class="keyword">const</span> <span class="keywordtype">char</span>* GetName()<span class="keyword"> const</span>
+<a name="l00117"></a>00117 <span class="keyword">    </span>{
+<a name="l00118"></a>00118         <span class="keywordflow">return</span> <span class="stringliteral">&quot;Project&quot;</span>;
+<a name="l00119"></a>00119     }
+<a name="l00120"></a>00120 
+<a name="l00121"></a>00121    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a4be2bc3caf9557385a0c952f77d79b2f" title="Writing structure MULTI (GEM IPM work structure) to binary file.">outMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff, gstring&amp; path  );
+<a name="l00122"></a>00122    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a9abdf8500418ce458bf7cdfb20c0af2c" title="Writing structure MULTI ( free format text file )">outMultiTxt</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">bool</span> append=<span class="keyword">false</span>  );
+<a name="l00123"></a>00123    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff );
+<a name="l00124"></a>00124    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* path,  <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>  *dCH );
+<a name="l00125"></a>00125 
+<a name="l00126"></a>00126    <span class="keywordtype">double</span> <a class="code" href="class_t_profil.html#abe48fd0f9ddc5804e4e54b7ec9d4294b" title="GEM IPM calculation of equilibrium state in MULTI.">ComputeEquilibriumState</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; PrecLoops_, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterFIA_, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterIPM_ );
+<a name="l00127"></a>00127 
+<a name="l00128"></a>00128    <span class="keyword">inline</span> <span class="keywordtype">double</span> HelmholtzEnergy( <span class="keywordtype">double</span> x )
+<a name="l00129"></a>00129    {
+<a name="l00130"></a>00130        <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#af8cd7213884c0420eb1e86b850c06254" title="Calls to minimization of other system potentials - HelmholtzEnergy.">HelmholtzEnergy</a>(x);
+<a name="l00131"></a>00131    }
+<a name="l00132"></a>00132 
+<a name="l00133"></a>00133    <span class="keyword">inline</span> <span class="keywordtype">double</span> InternalEnergy( <span class="keywordtype">double</span> TC, <span class="keywordtype">double</span> P )
+<a name="l00134"></a>00134    {
+<a name="l00135"></a>00135        <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#a12af02446fdc8df715cc57f4a348415a" title="Calls to minimization of other system potentials - InternalEnergy.">InternalEnergy</a>( TC, P );
+<a name="l00136"></a>00136    }
+<a name="l00137"></a>00137 
+<a name="l00138"></a>00138    <span class="comment">//void test_G0_V0_H0_Cp0_DD_arrays( long int nT, long int nP );</span>
+<a name="l00139"></a>00139 };
+<a name="l00140"></a>00140 
+<a name="l00141"></a>00141 <span class="keyword">enum</span> QpQdSizes {   <span class="comment">// see m_phase.h</span>
+<a name="l00142"></a>00142    QPSIZE = 180,    <span class="comment">// This enum is for GEMS3K only!</span>
+<a name="l00143"></a>00143    QDSIZE = 60
+<a name="l00144"></a>00144 };
+<a name="l00145"></a>00145 
+<a name="l00146"></a>00146 <span class="preprocessor">#else</span>
+<a name="l00147"></a>00147 <span class="preprocessor"></span>
+<a name="l00148"></a>00148 <span class="preprocessor">#include &quot;v_mod.h&quot;</span>
+<a name="l00149"></a>00149 <span class="preprocessor">#include &quot;ms_rmults.h&quot;</span>
+<a name="l00150"></a>00150 <span class="preprocessor">#include &quot;ms_mtparm.h&quot;</span>
+<a name="l00151"></a>00151 <span class="preprocessor">#include &quot;ms_system.h&quot;</span>
+<a name="l00152"></a>00152 <span class="preprocessor">#include &quot;<a class="code" href="ms__multi_8h.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">ms_multi.h</a>&quot;</span>
+<a name="l00153"></a>00153 <span class="preprocessor">#include &quot;ms_calc.h&quot;</span>
+<a name="l00154"></a>00154 
+<a name="l00155"></a>00155 <span class="keyword">class </span><a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>;
+<a name="l00156"></a>00156 <span class="keyword">class </span>QWidget;
+<a name="l00157"></a>00157 
+<a name="l00158"></a>00158 <span class="keyword">extern</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span> showMss;
+<a name="l00159"></a>00159 
+<a name="l00160"></a>00160 <span class="keyword">struct </span><a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a>
+<a name="l00161"></a>00161 { <span class="comment">// Flags and thresholds for numeric modules</span>
+<a name="l00162"></a>00162   <span class="keywordtype">short</span>
+<a name="l00163"></a>00163     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9e77d8c41231403169ec579962e506be" title="Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }.">PC</a>,   <span class="comment">// Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }</span>
+<a name="l00164"></a>00164     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab0c5a883d3ecfe33d62d84093bcd4280" title="abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }.">PD</a>,   <span class="comment">// abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }</span>
+<a name="l00165"></a>00165           <span class="comment">// Mode of CalculateActivityCoefficients(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.</span>
+<a name="l00166"></a>00166           <span class="comment">// if PD &lt; 0 then use test qd_real accuracy mode</span>
+<a name="l00167"></a>00167     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad8871e4d1c67b604d3dd4fe35b346187" title="Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }...">PRD</a>,  <span class="comment">// Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }</span>
+<a name="l00168"></a>00168     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af3d776149515bca94c79dfc8b13e18c1" title="Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace ...">PSM</a>,  <span class="comment">// Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }</span>
+<a name="l00169"></a>00169     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af43b7f67082b410a86accad1529c6311" title="Maximum allowed number of iterations in the MassBalanceRefinement() procedure { 30 }...">DP</a>,   <span class="comment">// Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }</span>
+<a name="l00170"></a>00170     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a345e89b31b2072d266d3e0b8ccc70650" title="Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }...">DW</a>,   <span class="comment">// Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }</span>
+<a name="l00171"></a>00171     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a169ab9e5ecf567b84b9771cf6a1638ec" title="Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }...">DT</a>,   <span class="comment">// Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }</span>
+<a name="l00172"></a>00172     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a59e5a41d14b5d233c047e26763545b90" title="IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detecti...">PLLG</a>, <span class="comment">// IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }</span>
+<a name="l00173"></a>00173     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9a7ce591ca03b6ff003bbf54c8a12a0c" title="Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }.">PE</a>,   <span class="comment">// Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }</span>
+<a name="l00174"></a>00174     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#af1aaaa4bd76b1771ec225edd1c345c3c" title="&lt; Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }...">IIM</a>   <span class="comment">// Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }</span>
+<a name="l00175"></a>00175     ;
+<a name="l00176"></a>00176   <span class="keywordtype">double</span> <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4b727717dc3434455e78d3db3b9a539e" title="Standart total moles { 1e5 }.">DG</a>,   <span class="comment">// Standart total moles { 1e5 }</span>
+<a name="l00177"></a>00177     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a999f2109eb6eba61a50bccca7735e55f" title="Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }...">DHB</a>,  <span class="comment">// Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }</span>
+<a name="l00178"></a>00178     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ad6b008d6e727093c2999f69f0fc50b94" title="Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }...">DS</a>,   <span class="comment">// Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }</span>
+<a name="l00179"></a>00179     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a5046d07f22308e16bbcdf46b97eb6125" title="IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 &lt; DK &lt; 1e-4) { 1...">DK</a>,   <span class="comment">// IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 &lt; DK &lt; 1e-4) { 1e-5 }</span>
+<a name="l00180"></a>00180     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9795dac9acac7cf187c34b998ef76258" title="Threshold for the application of the Karpov phase stability criterion: (Fa &gt; DF) for a lost stable ph...">DF</a>,   <span class="comment">// Threshold for the application of the Karpov phase stability criterion: (Fa &gt; DF) for a lost stable phase { 0.01 }</span>
+<a name="l00181"></a>00181     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a8a3825f92beeb2fb4db378e25a48cafd" title="Threshold for Karpov stability criterion f_a for insertion of a phase (Fa &lt; -DFM) for a present unsta...">DFM</a>,  <span class="comment">// Threshold for Karpov stability criterion f_a for insertion of a phase (Fa &lt; -DFM) for a present unstable phase { 0.1 }</span>
+<a name="l00182"></a>00182     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a82e4fb9dca368e996eb4df7f8b5b7f8d" title="Insertion mole amount for water-solvent { 1e-6 }.">DFYw</a>, <span class="comment">// Insertion mole amount for water-solvent { 1e-6 }</span>
+<a name="l00183"></a>00183     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a347e8b12476050350bff6a04726bf834" title="Insertion mole amount for aqueous species { 1e-6 }.">DFYaq</a>,<span class="comment">// Insertion mole amount for aqueous species { 1e-6 }</span>
+<a name="l00184"></a>00184     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0107ce0b0bb22a3f9c2ac860b33de3f0" title="Insertion mole amount for ideal solution components { 1e-6 }.">DFYid</a>,<span class="comment">// Insertion mole amount for ideal solution components { 1e-6 }</span>
+<a name="l00185"></a>00185     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a9720c6b164bac701c283288717c56229" title="Insertion mole amount for major solution components { 1e-6 }.">DFYr</a>, <span class="comment">// Insertion mole amount for major solution components { 1e-6 }</span>
+<a name="l00186"></a>00186     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab43b91a6152673682e96db096f85be6f" title="Insertion mole amount for minor solution components { 1e-6 }.">DFYh</a>, <span class="comment">// Insertion mole amount for minor solution components { 1e-6 }</span>
+<a name="l00187"></a>00187     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#aa1ff3633ed2b081b92ef355ed399c183" title="Insertion mole amount for single-component phase { 1e-6 }.">DFYc</a>, <span class="comment">// Insertion mole amount for single-component phase { 1e-6 }</span>
+<a name="l00188"></a>00188     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7928ec88325c49123462ec0419c8afa9" title="Insertion mole amount used in PhaseSelect() for a condensed phase component { 1e-7 }...">DFYs</a>, <span class="comment">// Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }</span>
+<a name="l00189"></a>00189     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a97cf091d282d30b1999204b6c571adb7" title="Minimum amount of Independent Component in the bulk system composition (except charge &quot;Zz&quot;) (moles) (...">DB</a>,   <span class="comment">// Minimum amount of Independent Component in the bulk system composition (except charge &quot;Zz&quot;) (moles) (1e-17)</span>
+<a name="l00190"></a>00190     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac3a624fd0ffdf6aadab2ed51ba97a515" title="Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterat...">AG</a>,   <span class="comment">// Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }</span>
+<a name="l00191"></a>00191     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ac430836fd606ea7cd975ae90a3761e03" title="Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0...">DGC</a>,  <span class="comment">// Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }</span>
+<a name="l00192"></a>00192     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a74634723e3ef710a0b3b83fc0f6a84c3" title="Initial activity coefficient value for major (M) species in a solution phase before LPP approximation...">GAR</a>,  <span class="comment">// Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }</span>
+<a name="l00193"></a>00193     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1e99fae5e0d9ce6a3f00936125767ef3" title="Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation...">GAH</a>,  <span class="comment">// Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }</span>
+<a name="l00194"></a>00194     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a6808426c6626272a3ce9113a865620de" title="Since r1583/r409: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup()...">GAS</a>,  <span class="comment">// Since r1583: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }</span>
+<a name="l00195"></a>00195           <span class="comment">// before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }</span>
+<a name="l00196"></a>00196     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab42f810d4a3b0e7c06c136d46ff82492" title="Standard surface density (nm-2) for calculating activity of surface species (12.05)">DNS</a>,  <span class="comment">// Standard surface density (nm-2) for calculating activity of surface species (12.05)</span>
+<a name="l00197"></a>00197     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#ab46993decc1dfa2b2daf4420601814cc" title="Cutoff mole amount for elimination of water-solvent { 1e-9 }.">XwMin</a>,<span class="comment">// Cutoff mole amount for elimination of water-solvent { 1e-9 }</span>
+<a name="l00198"></a>00198     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a1f4396f4e60576c24a7a7d0cbae53bb6" title="Cutoff mole amount for elimination of solid sorbent {1e-7}.">ScMin</a>,<span class="comment">// Cutoff mole amount for elimination of solid sorbent {1e-7}</span>
+<a name="l00199"></a>00199     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a47e2044eacb67ecc6ee4cf4168968cf3" title="Cutoff mole amount for elimination of solution- or surface species { 1e-30 }.">DcMin</a>,<span class="comment">// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }</span>
+<a name="l00200"></a>00200     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a2223d0b1f3d403b052abca6630cb6ca1" title="Cutoff mole amount for elimination of non-electrolyte solution phase with all its components { 1e-10 ...">PhMin</a>,<span class="comment">// Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }</span>
+<a name="l00201"></a>00201     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a0c43b2dfc9a38b71c4f35165b854d992" title="Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species a...">ICmin</a>,<span class="comment">// Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }</span>
+<a name="l00202"></a>00202     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a7b657f4f4f01943efe317c07bc52ef26" title="Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }...">EPS</a>,  <span class="comment">// Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }</span>
+<a name="l00203"></a>00203     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a424a9a97608ad3ecb4889881cd49eeeb" title="Convergence parameter of SACT calculation in sorption/surface complexation models { 0...">IEPS</a>, <span class="comment">// Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }</span>
+<a name="l00204"></a>00204     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#a4658b67ad793f166576dd5dab851c3fc" title="Tolerance on the amount of DC with two-side metastability constraints { 1e-7 }.">DKIN</a>; <span class="comment">// Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }</span>
+<a name="l00205"></a>00205     <span class="keywordtype">char</span> *<a class="code" href="struct_b_a_s_e___p_a_r_a_m.html#afd37d2e669dbfb34b78959412673fa71" title="internal">tprn</a>;       <span class="comment">// internal</span>
+<a name="l00206"></a>00206     <span class="keywordtype">void</span> write(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
+<a name="l00207"></a>00207     <span class="keywordtype">void</span> read(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
+<a name="l00208"></a>00208 };
+<a name="l00209"></a>00209 
+<a name="l00210"></a>00210 <span class="keyword">struct </span><a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a>
+<a name="l00211"></a>00211 {   <span class="comment">// Base Parametres of SP</span>
+<a name="l00212"></a>00212     <span class="keywordtype">char</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html#a8be51bb796054af5b36699a36bee5a1e" title="Version &amp; Copyright 64.">ver</a>[TDBVERSION]; <span class="comment">// Version &amp; Copyright 64</span>
+<a name="l00213"></a>00213     <a class="code" href="struct_b_a_s_e___p_a_r_a_m.html" title="Flags and thresholds for numeric modules.">BASE_PARAM</a> p; <span class="comment">// Flags and thresholds for numeric modules</span>
+<a name="l00214"></a>00214     <span class="keywordtype">char</span>           <span class="comment">// default codes of values</span>
+<a name="l00215"></a>00215     DCpct[7],      <span class="comment">// Default DCOMP flags and codes</span>
+<a name="l00216"></a>00216     DCpdc[10],     <span class="comment">// Default DCOMP class and units</span>
+<a name="l00217"></a>00217     BCpc[7],       <span class="comment">// Default COMPOS configuration</span>
+<a name="l00218"></a>00218     REpct[7],      <span class="comment">// Default REACDC flags and codes</span>
+<a name="l00219"></a>00219 
+<a name="l00220"></a>00220     REpdc[7],      <span class="comment">// Default REACDC class and units</span>
+<a name="l00221"></a>00221     REpvc[9],      <span class="comment">// Default REACDC configuration</span>
+<a name="l00222"></a>00222     RPpdc[11],      <span class="comment">// Default RTPARM flags and codes</span>
+<a name="l00223"></a>00223     RPpvc[33],     <span class="comment">// Default RTPARM configuration  reserved</span>
+<a name="l00224"></a>00224     PHsol_t[7],    <span class="comment">// Default PHASE model codes</span>
+<a name="l00225"></a>00225     PHpvc[7],      <span class="comment">// Default PHASE configuration</span>
+<a name="l00226"></a>00226     MUpmv[11],     <span class="comment">// Default RMULTS configuration</span>
+<a name="l00227"></a>00227     TPpdc[9],      <span class="comment">// Default class and units for MTPARM</span>
+<a name="l00228"></a>00228     TPpvc[21],     <span class="comment">// Default MTPARM configuration</span>
+<a name="l00229"></a>00229     SYppc[11],     <span class="comment">// Default class and flags for SYSTEM</span>
+<a name="l00230"></a>00230     SYpvc[29],     <span class="comment">// Default SYSTEM confifuration</span>
+<a name="l00231"></a>00231     UTppc[11],     <span class="comment">// Default DUTERM class and flags</span>
+<a name="l00232"></a>00232     PEpsc[13],     <span class="comment">// Default PROCES class and flags</span>
+<a name="l00233"></a>00233     PEpvc[13],     <span class="comment">// Default PROCES configuration</span>
+<a name="l00234"></a>00234     GDcode[2][20], <span class="comment">// Default names of screen and graphs in GTDEMO ????</span>
+<a name="l00235"></a>00235     GDpsc[7],      <span class="comment">// Default names of lines on GTDEMO graphs</span>
+<a name="l00236"></a>00236     GDpcc[2][9],   <span class="comment">// Default axis names for GTDEMO</span>
+<a name="l00237"></a>00237     GDptc[7],      <span class="comment">// Default GTDEMO configuration</span>
+<a name="l00238"></a>00238     GDpgw[7],      <span class="comment">// Default setup of graphs in GTDEMO</span>
+<a name="l00239"></a>00239     SDrefKey[32],  <span class="comment">// sdref key</span>
+<a name="l00240"></a>00240     Reserv[50-32]    <span class="comment">// (reserved) objects later</span>
+<a name="l00241"></a>00241     ;
+<a name="l00242"></a>00242     <span class="comment">// for RTPARM</span>
+<a name="l00243"></a>00243     <span class="keywordtype">short</span> NP,NT,  <span class="comment">// Default N of points (RTPARM): P, T</span>
+<a name="l00244"></a>00244     NV,       <span class="comment">// reserved</span>
+<a name="l00245"></a>00245     Mode,     <span class="comment">// Default indexation mode RTPARM</span>
+<a name="l00246"></a>00246     ResShort[5];
+<a name="l00247"></a>00247     <span class="keywordtype">float</span>        <span class="comment">// RTPARM</span>
+<a name="l00248"></a>00248     Pi[3],    <span class="comment">// Default interval for pressure</span>
+<a name="l00249"></a>00249     Ti[3],    <span class="comment">// Default interval for temperature, C</span>
+<a name="l00250"></a>00250     Vi[3],    <span class="comment">// Default interval for volume, cm3</span>
+<a name="l00251"></a>00251     DRpst, DRtcst,   <span class="comment">// Default Pr, Tr for DCOMP &amp; REACDC</span>
+<a name="l00252"></a>00252     lowPosNum, <span class="comment">// MULTI Cutoff moles of DC (Ls set) { 1e-19 };</span>
+<a name="l00253"></a>00253     logXw,     <span class="comment">// log(1e-16)</span>
+<a name="l00254"></a>00254     logYFk,    <span class="comment">// log(1e-9)</span>
+<a name="l00255"></a>00255     aqPar[5];  <span class="comment">// b_gamma, a0, NeutPolicy, GamH2O, b_gam_T_dep for auto aq phase model</span>
+<a name="l00256"></a>00256 <span class="comment">//    ResFloat;   // one parameter for auto gas/fluid phase</span>
 <a name="l00257"></a>00257 
-<a name="l00258"></a>00258 <span class="keyword">struct </span>CompItem
-<a name="l00259"></a>00259 {
-<a name="l00260"></a>00260     <span class="keywordtype">int</span> line;
-<a name="l00261"></a>00261     <span class="keywordtype">short</span> delta; <span class="comment">// RpnItemType</span>
-<a name="l00262"></a>00262     CompItem(<span class="keywordtype">int</span> nLine, <span class="keywordtype">short</span> nDelta):
-<a name="l00263"></a>00263             line(nLine), delta(nDelta)
-<a name="l00264"></a>00264     {}
-<a name="l00265"></a>00265 
-<a name="l00266"></a>00266 };
-<a name="l00267"></a>00267 
-<a name="l00268"></a>00268 <span class="comment">// Module TParam (RMULTS+MTPARM+SYSTEM+MULTY see SubModules)</span>
-<a name="l00269"></a>00269 <span class="keyword">class </span><a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a> : <span class="keyword">public</span> TCModule
-<a name="l00270"></a>00270 {
-<a name="l00271"></a>00271     TRMults* rmults;
-<a name="l00272"></a>00272     TMTparm* mtparm;
-<a name="l00273"></a>00273     TSyst* syst;
-<a name="l00274"></a>00274     <a class="code" href="class_t_multi.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">TMulti</a>* multi;
-<a name="l00275"></a>00275 
-<a name="l00276"></a>00276     <span class="keywordtype">bool</span> newRecord;
-<a name="l00277"></a>00277 <span class="comment">//    int pll;</span>
-<a name="l00278"></a>00278 <span class="comment">//    double FXold;</span>
-<a name="l00279"></a>00279 
-<a name="l00280"></a>00280     <span class="comment">// to compare with old Project</span>
-<a name="l00281"></a>00281     <span class="keywordtype">bool</span> comp_change_all;
-<a name="l00282"></a>00282     char (*SFold)[PH_RKLEN];<span class="comment">// List of PHASE definition keys [0:Fi-1]             DB</span>
-<a name="l00283"></a>00283     char (*SMold)[DC_RKLEN];<span class="comment">// List of DC definition keys (DCOMP, REACDC) [0:L-1] DB</span>
-<a name="l00284"></a>00284     char (*SAold)[BC_RKLEN];<span class="comment">// List of COMPOS definition keys [0:La-1]            DB</span>
-<a name="l00285"></a>00285     char (*SBold)[IC_RKLEN];<span class="comment">// List of ICOMP record keys (stoichiometry basis)[0:N-1] DB</span>
-<a name="l00286"></a>00286     <span class="keywordtype">short</span> *Llold;<span class="comment">// L1 vector, shows a number of DC included to each phase [0:Fi-1] DB</span>
-<a name="l00287"></a>00287     <span class="keywordtype">short</span> Nold,     <span class="comment">// N of IC, incl. Zz (charge) and Vol (volume)</span>
-<a name="l00288"></a>00288     Lold,       <span class="comment">// L   - of DC - total for all phases</span>
-<a name="l00289"></a>00289     Fiold,      <span class="comment">// FI  - total number of phases</span>
-<a name="l00290"></a>00290     Fisold,     <span class="comment">// FIs - total number of multi-component phases</span>
-<a name="l00291"></a>00291     Laold,      <span class="comment">// La  - of references to COMPOS records</span>
-<a name="l00292"></a>00292     Lsold;      <span class="comment">// Ls  - total number of DC in multi-component phases</span>
-<a name="l00293"></a>00293 
-<a name="l00294"></a>00294     <span class="comment">// data to load SysEq &lt;project&gt;:G:z_cp_config:0:0:1:25:0</span>
-<a name="l00295"></a>00295     <span class="keywordtype">bool</span>  isSysEq;
-<a name="l00296"></a>00296     TCIntArray DCon;
-<a name="l00297"></a>00297     TCIntArray PHon;
-<a name="l00298"></a>00298     TCIntArray DCoff;
-<a name="l00299"></a>00299     TCIntArray PHoff;
-<a name="l00300"></a>00300 
-<a name="l00301"></a>00301 <span class="keyword">protected</span>:
-<a name="l00302"></a>00302 
-<a name="l00303"></a>00303     <span class="keywordtype">void</span> InitFN( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName, <span class="keyword">const</span> <span class="keywordtype">char</span>* prfTemplate );
-<a name="l00304"></a>00304     <span class="keywordtype">void</span> RenameFN( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName, <span class="keyword">const</span> <span class="keywordtype">char</span>* prfTemplate );
-<a name="l00305"></a>00305     <span class="keywordtype">bool</span> GetFN( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName, <span class="keywordtype">bool</span> show_dlg=<span class="keyword">true</span> );
-<a name="l00306"></a>00306     <span class="keywordtype">void</span> SetFN();
-<a name="l00307"></a>00307     <span class="keywordtype">bool</span> rCopyFilterProfile( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName );
+<a name="l00258"></a>00258     <span class="keywordtype">void</span> write(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
+<a name="l00259"></a>00259     <span class="keywordtype">void</span> read(<a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; oss);
+<a name="l00260"></a>00260 };
+<a name="l00261"></a>00261 
+<a name="l00262"></a>00262 <span class="keyword">extern</span> <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa_;
+<a name="l00263"></a>00263 
+<a name="l00264"></a>00264 <span class="keyword">struct </span>CompItem
+<a name="l00265"></a>00265 {
+<a name="l00266"></a>00266     <span class="keywordtype">int</span> line;
+<a name="l00267"></a>00267     <span class="keywordtype">short</span> delta; <span class="comment">// RpnItemType</span>
+<a name="l00268"></a>00268     CompItem(<span class="keywordtype">int</span> nLine, <span class="keywordtype">short</span> nDelta):
+<a name="l00269"></a>00269             line(nLine), delta(nDelta)
+<a name="l00270"></a>00270     {}
+<a name="l00271"></a>00271 
+<a name="l00272"></a>00272 };
+<a name="l00273"></a>00273 
+<a name="l00274"></a>00274 <span class="comment">// Module TParam (RMULTS+MTPARM+SYSTEM+MULTY see SubModules)</span>
+<a name="l00275"></a>00275 <span class="keyword">class </span><a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a> : <span class="keyword">public</span> TCModule
+<a name="l00276"></a>00276 {
+<a name="l00277"></a>00277     TRMults* rmults;
+<a name="l00278"></a>00278     TMTparm* mtparm;
+<a name="l00279"></a>00279     TSyst* syst;
+<a name="l00280"></a>00280     <a class="code" href="class_t_multi.html">TMulti</a>* multi;
+<a name="l00281"></a>00281 
+<a name="l00282"></a>00282     <span class="keywordtype">bool</span> newRecord;
+<a name="l00283"></a>00283 <span class="comment">//    int pll;</span>
+<a name="l00284"></a>00284 <span class="comment">//    double FXold;</span>
+<a name="l00285"></a>00285 
+<a name="l00286"></a>00286     <span class="comment">// to compare with old Project</span>
+<a name="l00287"></a>00287     <span class="keywordtype">bool</span> comp_change_all;
+<a name="l00288"></a>00288     char (*SFold)[PH_RKLEN];<span class="comment">// List of PHASE definition keys [0:Fi-1]             DB</span>
+<a name="l00289"></a>00289     char (*SMold)[DC_RKLEN];<span class="comment">// List of DC definition keys (DCOMP, REACDC) [0:L-1] DB</span>
+<a name="l00290"></a>00290     char (*SAold)[BC_RKLEN];<span class="comment">// List of COMPOS definition keys [0:La-1]            DB</span>
+<a name="l00291"></a>00291     char (*SBold)[IC_RKLEN];<span class="comment">// List of ICOMP record keys (stoichiometry basis)[0:N-1] DB</span>
+<a name="l00292"></a>00292     <span class="keywordtype">short</span> *Llold;<span class="comment">// L1 vector, shows a number of DC included to each phase [0:Fi-1] DB</span>
+<a name="l00293"></a>00293     <span class="keywordtype">short</span> Nold,     <span class="comment">// N of IC, incl. Zz (charge) and Vol (volume)</span>
+<a name="l00294"></a>00294     Lold,       <span class="comment">// L   - of DC - total for all phases</span>
+<a name="l00295"></a>00295     Fiold,      <span class="comment">// FI  - total number of phases</span>
+<a name="l00296"></a>00296     Fisold,     <span class="comment">// FIs - total number of multi-component phases</span>
+<a name="l00297"></a>00297     Laold,      <span class="comment">// La  - of references to COMPOS records</span>
+<a name="l00298"></a>00298     Lsold;      <span class="comment">// Ls  - total number of DC in multi-component phases</span>
+<a name="l00299"></a>00299 
+<a name="l00300"></a>00300     <span class="comment">// data to load SysEq &lt;project&gt;:G:z_cp_config:0:0:1:25:0</span>
+<a name="l00301"></a>00301     <span class="keywordtype">bool</span>  isSysEq;
+<a name="l00302"></a>00302     TCIntArray DCon;
+<a name="l00303"></a>00303     TCIntArray PHon;
+<a name="l00304"></a>00304     TCIntArray DCoff;
+<a name="l00305"></a>00305     TCIntArray PHoff;
+<a name="l00306"></a>00306 
+<a name="l00307"></a>00307 <span class="keyword">protected</span>:
 <a name="l00308"></a>00308 
-<a name="l00309"></a>00309     <span class="keywordtype">void</span> OpenProfileMode(
-<a name="l00310"></a>00310         <span class="keyword">const</span> <span class="keywordtype">char</span>* key, <span class="keywordtype">bool</span> changeAqGas, <span class="keywordtype">bool</span> addFile,  <span class="keywordtype">bool</span> remakeRec );
-<a name="l00311"></a>00311     <span class="keywordtype">bool</span> NewProfileMode( <span class="keywordtype">bool</span> remakeRec, gstring&amp; key_templ );
-<a name="l00312"></a>00312     <span class="keywordtype">bool</span> NewProfileModeElements( <span class="keywordtype">bool</span> remakeRec, gstring&amp; key_templ );
-<a name="l00313"></a>00313     <span class="keywordtype">void</span> CalcAllSystems(<span class="keywordtype">int</span> makeDump);
-<a name="l00314"></a>00314     <span class="keywordtype">void</span> SaveOldList();
-<a name="l00315"></a>00315     <span class="keywordtype">void</span> DeleteOldList();
-<a name="l00316"></a>00316     <span class="keywordtype">void</span> TestChangeProfile();
-<a name="l00317"></a>00317     <span class="keywordtype">void</span> Push( TIArray&lt;CompItem&gt;&amp; aList, <span class="keywordtype">int</span> aLine,
-<a name="l00318"></a>00318                <span class="keywordtype">short</span> aDelta, <span class="keyword">const</span> <span class="keywordtype">char</span>* dbKeywd, gstring aKey );
-<a name="l00319"></a>00319     <span class="keywordtype">void</span> ICcompare( TIArray&lt;CompItem&gt;&amp; aIComp);
-<a name="l00320"></a>00320     <span class="keywordtype">void</span> COMPcompare( TIArray&lt;CompItem&gt;&amp; aCompos);
-<a name="l00321"></a>00321     <span class="keywordtype">void</span> DCcompare( TIArray&lt;CompItem&gt;&amp; aList, <span class="keywordtype">int</span>&amp; i,<span class="keywordtype">int</span>&amp; j, <span class="keywordtype">int</span> nI, <span class="keywordtype">int</span> nJ);
-<a name="l00322"></a>00322     <span class="keywordtype">void</span> PHcompare( TIArray&lt;CompItem&gt;&amp; aPhase, TIArray&lt;CompItem&gt;&amp; aDComp);
-<a name="l00323"></a>00323 
-<a name="l00324"></a>00324     <span class="comment">// multi load</span>
-<a name="l00325"></a>00325     <span class="keywordtype">short</span> BAL_compare();
-<a name="l00326"></a>00326 
-<a name="l00327"></a>00327 <span class="keyword">public</span>:
-<a name="l00328"></a>00328 
-<a name="l00329"></a>00329     <span class="keyword">static</span> <a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>* pm;
-<a name="l00330"></a>00330 
-<a name="l00331"></a>00331    <span class="keywordtype">bool</span> userCancel;
-<a name="l00332"></a>00332    <span class="keywordtype">bool</span> stepWise;
-<a name="l00333"></a>00333    <span class="keywordtype">bool</span> calcFinished;
-<a name="l00334"></a>00334    <span class="keyword">const</span> <span class="keywordtype">char</span> * status;
-<a name="l00335"></a>00335 
-<a name="l00336"></a>00336     <span class="keywordtype">bool</span> useAqPhase;
-<a name="l00337"></a>00337     <span class="keywordtype">bool</span> useGasPhase;
-<a name="l00338"></a>00338 
-<a name="l00339"></a>00339 <span class="comment">// temporary !Use_mt_mode</span>
-<a name="l00340"></a>00340     <span class="keywordtype">bool</span> fStopCalc;
+<a name="l00309"></a>00309     <span class="keywordtype">void</span> InitFN( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName, <span class="keyword">const</span> <span class="keywordtype">char</span>* prfTemplate );
+<a name="l00310"></a>00310     <span class="keywordtype">void</span> RenameFN( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName, <span class="keyword">const</span> <span class="keywordtype">char</span>* prfTemplate );
+<a name="l00311"></a>00311     <span class="keywordtype">bool</span> GetFN( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName, <span class="keywordtype">bool</span> show_dlg=<span class="keyword">true</span> );
+<a name="l00312"></a>00312     <span class="keywordtype">void</span> SetFN();
+<a name="l00313"></a>00313     <span class="keywordtype">bool</span> rCopyFilterProfile( <span class="keyword">const</span> <span class="keywordtype">char</span> * prfName );
+<a name="l00314"></a>00314 
+<a name="l00315"></a>00315     <span class="keywordtype">void</span> OpenProfileMode(
+<a name="l00316"></a>00316         <span class="keyword">const</span> <span class="keywordtype">char</span>* key, <span class="keywordtype">bool</span> changeAqGas, <span class="keywordtype">bool</span> addFile,  <span class="keywordtype">bool</span> remakeRec );
+<a name="l00317"></a>00317     <span class="keywordtype">bool</span> NewProfileMode( <span class="keywordtype">bool</span> remakeRec, gstring&amp; key_templ );
+<a name="l00318"></a>00318     <span class="keywordtype">bool</span> NewProfileModeElements( <span class="keywordtype">bool</span> remakeRec, gstring&amp; key_templ );
+<a name="l00319"></a>00319     <span class="keywordtype">void</span> CalcAllSystems(<span class="keywordtype">int</span> makeDump);
+<a name="l00320"></a>00320     <span class="keywordtype">void</span> SaveOldList();
+<a name="l00321"></a>00321     <span class="keywordtype">void</span> DeleteOldList();
+<a name="l00322"></a>00322     <span class="keywordtype">void</span> TestChangeProfile();
+<a name="l00323"></a>00323     <span class="keywordtype">void</span> Push( TIArray&lt;CompItem&gt;&amp; aList, <span class="keywordtype">int</span> aLine,
+<a name="l00324"></a>00324                <span class="keywordtype">short</span> aDelta, <span class="keyword">const</span> <span class="keywordtype">char</span>* dbKeywd, gstring aKey );
+<a name="l00325"></a>00325     <span class="keywordtype">void</span> ICcompare( TIArray&lt;CompItem&gt;&amp; aIComp);
+<a name="l00326"></a>00326     <span class="keywordtype">void</span> COMPcompare( TIArray&lt;CompItem&gt;&amp; aCompos);
+<a name="l00327"></a>00327     <span class="keywordtype">void</span> DCcompare( TIArray&lt;CompItem&gt;&amp; aList, <span class="keywordtype">int</span>&amp; i,<span class="keywordtype">int</span>&amp; j, <span class="keywordtype">int</span> nI, <span class="keywordtype">int</span> nJ);
+<a name="l00328"></a>00328     <span class="keywordtype">void</span> PHcompare( TIArray&lt;CompItem&gt;&amp; aPhase, TIArray&lt;CompItem&gt;&amp; aDComp);
+<a name="l00329"></a>00329 
+<a name="l00330"></a>00330     <span class="comment">// multi load</span>
+<a name="l00331"></a>00331     <span class="keywordtype">short</span> BAL_compare();
+<a name="l00332"></a>00332 
+<a name="l00333"></a>00333 <span class="keyword">public</span>:
+<a name="l00334"></a>00334 
+<a name="l00335"></a>00335     <span class="keyword">static</span> <a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>* pm;
+<a name="l00336"></a>00336 
+<a name="l00337"></a>00337    <span class="keywordtype">bool</span> userCancel;
+<a name="l00338"></a>00338    <span class="keywordtype">bool</span> stepWise;
+<a name="l00339"></a>00339    <span class="keywordtype">bool</span> calcFinished;
+<a name="l00340"></a>00340    <span class="keyword">const</span> <span class="keywordtype">char</span> * status;
 <a name="l00341"></a>00341 
-<a name="l00342"></a>00342     <span class="comment">//RMULTS* mup;</span>
-<a name="l00343"></a>00343     <span class="comment">//MTPARM *tpp;</span>
-<a name="l00344"></a>00344     <span class="comment">//SYSTEM *syp;</span>
-<a name="l00345"></a>00345     <span class="comment">//MULTI *pmp;</span>
-<a name="l00346"></a>00346 <span class="comment">//TMulti *pmulti;</span>
+<a name="l00342"></a>00342     <span class="keywordtype">bool</span> useAqPhase;
+<a name="l00343"></a>00343     <span class="keywordtype">bool</span> useGasPhase;
+<a name="l00344"></a>00344 
+<a name="l00345"></a>00345 <span class="comment">// temporary !Use_mt_mode</span>
+<a name="l00346"></a>00346     <span class="keywordtype">bool</span> fStopCalc;
 <a name="l00347"></a>00347 
-<a name="l00348"></a>00348     <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa;
-<a name="l00349"></a>00349 
-<a name="l00350"></a>00350     <a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>( <span class="keywordtype">int</span> nrt );
-<a name="l00351"></a>00351     <span class="keywordtype">void</span> InitSubModules();
-<a name="l00352"></a>00352 
-<a name="l00353"></a>00353     <span class="keyword">const</span> <span class="keywordtype">char</span>* GetName()<span class="keyword"> const</span>
-<a name="l00354"></a>00354 <span class="keyword">    </span>{
-<a name="l00355"></a>00355         <span class="keywordflow">return</span> <span class="stringliteral">&quot;Project&quot;</span>;
-<a name="l00356"></a>00356     }
-<a name="l00357"></a>00357 
-<a name="l00358"></a>00358     <span class="keywordtype">void</span> ods_link(<span class="keywordtype">int</span> i=0);
-<a name="l00359"></a>00359     <span class="keywordtype">void</span> dyn_set(<span class="keywordtype">int</span> i=0);
-<a name="l00360"></a>00360     <span class="keywordtype">void</span> dyn_kill(<span class="keywordtype">int</span> i=0);
-<a name="l00361"></a>00361     <span class="keywordtype">void</span> dyn_new(<span class="keywordtype">int</span> i=0);
-<a name="l00362"></a>00362     <span class="keywordtype">void</span> set_def(<span class="keywordtype">int</span> i=0);
-<a name="l00363"></a>00363     <span class="keywordtype">void</span> DeleteRecord( <span class="keyword">const</span> <span class="keywordtype">char</span> *key, <span class="keywordtype">bool</span> errinNo=<span class="keyword">true</span> );
-<a name="l00364"></a>00364     <span class="keywordtype">void</span> MakeQuery();
-<a name="l00365"></a>00365     <span class="keyword">const</span> <span class="keywordtype">char</span>* GetHtml();
-<a name="l00366"></a>00366 
-<a name="l00367"></a>00367     <span class="comment">// Setup one of 5 default IPM numerical settings</span>
-<a name="l00368"></a>00368     <span class="keywordtype">void</span> ChangeSettings(<span class="keywordtype">int</span> nSettings);
-<a name="l00369"></a>00369 
-<a name="l00370"></a>00370     <span class="comment">// work with Project</span>
-<a name="l00371"></a>00371     <span class="keywordtype">bool</span> initCalcMode();
-<a name="l00372"></a>00372     <span class="keywordtype">void</span> loadSystat( <span class="keyword">const</span> <span class="keywordtype">char</span> *key=0 );
-<a name="l00373"></a>00373     <span class="keywordtype">void</span> newSystat( <span class="keywordtype">int</span> mode );
-<a name="l00374"></a>00374     <span class="keywordtype">void</span> deriveSystat();
-<a name="l00375"></a>00375     <span class="keywordtype">void</span> PackSystat();
-<a name="l00376"></a>00376     <span class="keywordtype">double</span> CalcEqstat( <span class="keywordtype">bool</span> show_progress=<span class="keyword">true</span> );
-<a name="l00377"></a>00377     <span class="keywordtype">int</span>  indDC( <span class="keywordtype">int</span> );
-<a name="l00378"></a>00378     <span class="keywordtype">int</span>  indPH( <span class="keywordtype">int</span> );
-<a name="l00379"></a>00379     <span class="keywordtype">void</span>  deleteAutoGenerated();
-<a name="l00380"></a>00380     <span class="keywordtype">void</span>  systbcInput( QWidget* par, <span class="keyword">const</span> <span class="keywordtype">char</span> * p_key );
-<a name="l00381"></a>00381     gstring PhNameforDC( <span class="keywordtype">int</span> xdc, <span class="keywordtype">bool</span> system );
-<a name="l00382"></a>00382     TCStringArray DCNamesforPh( <span class="keyword">const</span> <span class="keywordtype">char</span> *PhName, <span class="keywordtype">bool</span> system );
-<a name="l00383"></a>00383 
-<a name="l00384"></a>00384     <span class="comment">// Multi make functions</span>
-<a name="l00385"></a>00385     <span class="keywordtype">void</span> PMtest( <span class="keyword">const</span> <span class="keywordtype">char</span> *key );
-<a name="l00386"></a>00386     <span class="keywordtype">void</span> CheckMtparam();
-<a name="l00387"></a>00387 
-<a name="l00388"></a>00388    <span class="keywordtype">void</span> LoadFromMtparm( QWidget* par, <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> *CSD, <span class="keywordtype">bool</span> no_interpolat );
-<a name="l00389"></a>00389     <span class="keywordtype">void</span> CalcBcc(); <span class="comment">// Calc bulk composition</span>
-<a name="l00390"></a>00390     <span class="keywordtype">void</span> ShowPhaseWindow();
-<a name="l00391"></a>00391     <span class="keywordtype">void</span> ShowEqPhaseWindow();
-<a name="l00392"></a>00392     <span class="keywordtype">void</span> ShowDBWindow( <span class="keyword">const</span> <span class="keywordtype">char</span> *objName, <span class="keywordtype">int</span> nLine=0 );
-<a name="l00393"></a>00393     <span class="keywordtype">void</span> Clear_XeA_XeD_Phm_BIun();
-<a name="l00394"></a>00394 
-<a name="l00395"></a>00395     <span class="comment">// Proces make functions</span>
-<a name="l00396"></a>00396     <span class="keywordtype">void</span> ET_translate( <span class="keywordtype">int</span> nOet, <span class="keywordtype">int</span> nOpex, <span class="keywordtype">int</span> JB, <span class="keywordtype">int</span> JE, <span class="keywordtype">int</span> jb, <span class="keywordtype">int</span> je,
-<a name="l00397"></a>00397      tget_ndx *get_ndx = 0 )
-<a name="l00398"></a>00398      { multi-&gt;ET_translate( nOet, nOpex, JB, JE, jb, je, get_ndx); }
-<a name="l00399"></a>00399     <span class="keywordtype">void</span> getNamesList( <span class="keywordtype">int</span> nO, TCStringArray&amp; lst )
-<a name="l00400"></a>00400      { multi-&gt;getNamesList(nO, lst); }
-<a name="l00401"></a>00401     <span class="keywordtype">double</span> MolWeight( <span class="keywordtype">int</span> N, <span class="keywordtype">double</span> *ICaw, <span class="keywordtype">double</span> *Smline )
-<a name="l00402"></a>00402      {  <span class="keywordflow">return</span> syst-&gt;MolWeight( N, ICaw, Smline ); }
-<a name="l00403"></a>00403     <span class="keywordtype">void</span> SyTestSizes()
-<a name="l00404"></a>00404      {  syst-&gt;SyTestSizes(); }
-<a name="l00405"></a>00405 
-<a name="l00406"></a>00406     <span class="keyword">inline</span> <span class="keywordtype">double</span> HelmholtzEnergy( <span class="keywordtype">double</span> x )
-<a name="l00407"></a>00407     {
-<a name="l00408"></a>00408         <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#af8cd7213884c0420eb1e86b850c06254" title="Calls to minimization of other system potentials - HelmholtzEnergy.">HelmholtzEnergy</a>(x);
-<a name="l00409"></a>00409     }
-<a name="l00410"></a>00410     <span class="keyword">inline</span> <span class="keywordtype">double</span> InternalEnergy( <span class="keywordtype">double</span> TC, <span class="keywordtype">double</span> P )
-<a name="l00411"></a>00411     {
-<a name="l00412"></a>00412         <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#a12af02446fdc8df715cc57f4a348415a" title="Calls to minimization of other system potentials - InternalEnergy.">InternalEnergy</a>( TC, P );
-<a name="l00413"></a>00413     }
-<a name="l00414"></a>00414 
-<a name="l00415"></a>00415 
-<a name="l00416"></a>00416    <span class="comment">//test</span>
-<a name="l00417"></a>00417    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a4be2bc3caf9557385a0c952f77d79b2f" title="Writing structure MULTI (GEM IPM work structure) to binary file.">outMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff, gstring&amp; path  );
-<a name="l00418"></a>00418    <span class="comment">// brief_mode - Do not write data items that contain only default values</span>
-<a name="l00419"></a>00419    <span class="comment">// with_comments -Write files with comments for all data entries ( in text mode)</span>
-<a name="l00420"></a>00420    <span class="comment">// addMui - Print internal indices in RMULTS to IPM file for reading into Gems back</span>
-<a name="l00421"></a>00421    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a4be2bc3caf9557385a0c952f77d79b2f" title="Writing structure MULTI (GEM IPM work structure) to binary file.">outMulti</a>( gstring&amp; path, <span class="keywordtype">bool</span> addMui, <span class="keywordtype">bool</span> with_comments = <span class="keyword">true</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
-<a name="l00422"></a>00422    <span class="keywordtype">void</span> makeGEM2MTFiles(QWidget* par);
-<a name="l00423"></a>00423    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a9abdf8500418ce458bf7cdfb20c0af2c" title="Writing structure MULTI ( free format text file )">outMultiTxt</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">bool</span> append=<span class="keyword">false</span>  );
-<a name="l00424"></a>00424    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff );
-<a name="l00425"></a>00425    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* path,  <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>  *dCH );
-<a name="l00426"></a>00426    <span class="keywordtype">void</span> CmReadMulti( QWidget* par, <span class="keyword">const</span> <span class="keywordtype">char</span>* path );
-<a name="l00427"></a>00427    <span class="keywordtype">double</span> <a class="code" href="class_t_profil.html#abe48fd0f9ddc5804e4e54b7ec9d4294b" title="GEM IPM calculation of equilibrium state in MULTI.">ComputeEquilibriumState</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumPrecLoops, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterFIA, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterIPM );
-<a name="l00428"></a>00428    <span class="comment">//long int testMulti( );</span>
-<a name="l00429"></a>00429    <span class="keywordtype">bool</span> CompareProjectName( <span class="keyword">const</span> <span class="keywordtype">char</span>* SysKey );
-<a name="l00430"></a>00430    <span class="keywordtype">void</span> ChangeTPinKey( <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> P );
-<a name="l00431"></a>00431    <span class="keywordtype">void</span> SetSysSwitchesFromMulti( );
-<a name="l00432"></a>00432 };
-<a name="l00433"></a>00433 
-<a name="l00434"></a>00434 <span class="comment">/* Work codes of surface site types in pm-&gt;AtNdx vector (compatibility with old-style SCMs *</span>
-<a name="l00435"></a>00435 <span class="comment">enum SurTypeNdx {</span>
-<a name="l00436"></a>00436 <span class="comment">    AT_SA0=0, AT_SB0=0, AT_SA1=1, AT_SB1=1, AT_SA2=2, AT_SB2=2, AT_SA3=3,</span>
-<a name="l00437"></a>00437 <span class="comment">    AT_SB3=3, AT_SA4=4, AT_SB4=4, AT_SA5=5, AT_SB5=5,</span>
-<a name="l00438"></a>00438 <span class="comment">    MSPN = 2   * Max number of EDL planes considered in old-style SCMs *</span>
-<a name="l00439"></a>00439 <span class="comment">}; */</span>
-<a name="l00440"></a>00440 
-<a name="l00441"></a>00441 
-<a name="l00442"></a>00442 <span class="preprocessor">#endif // #ifndef IPMGEMPLUGIN</span>
-<a name="l00443"></a>00443 <span class="preprocessor"></span>
-<a name="l00444"></a>00444 
-<a name="l00445"></a>00445 <span class="comment">// Work DC classifier codes  pm-&gt;DCCW</span>
-<a name="l00446"></a>00446 <span class="keyword">enum</span> SolDCodes {
+<a name="l00348"></a>00348     <span class="comment">//RMULTS* mup;</span>
+<a name="l00349"></a>00349     <span class="comment">//MTPARM *tpp;</span>
+<a name="l00350"></a>00350     <span class="comment">//SYSTEM *syp;</span>
+<a name="l00351"></a>00351     <span class="comment">//MULTI *pmp;</span>
+<a name="l00352"></a>00352 <span class="comment">//TMulti *pmulti;</span>
+<a name="l00353"></a>00353 
+<a name="l00354"></a>00354     <a class="code" href="struct_s_p_p___s_e_t_t_i_n_g.html" title="Base Parametres of SP.">SPP_SETTING</a> pa;
+<a name="l00355"></a>00355 
+<a name="l00356"></a>00356     <a class="code" href="class_t_profil.html" title="Module contains a Flags and thresholds for numeric modules.">TProfil</a>( <span class="keywordtype">int</span> nrt );
+<a name="l00357"></a>00357     <span class="keywordtype">void</span> InitSubModules();
+<a name="l00358"></a>00358 
+<a name="l00359"></a>00359     <span class="keyword">const</span> <span class="keywordtype">char</span>* GetName()<span class="keyword"> const</span>
+<a name="l00360"></a>00360 <span class="keyword">    </span>{
+<a name="l00361"></a>00361         <span class="keywordflow">return</span> <span class="stringliteral">&quot;Project&quot;</span>;
+<a name="l00362"></a>00362     }
+<a name="l00363"></a>00363 
+<a name="l00364"></a>00364     <span class="keywordtype">void</span> ods_link(<span class="keywordtype">int</span> i=0);
+<a name="l00365"></a>00365     <span class="keywordtype">void</span> dyn_set(<span class="keywordtype">int</span> i=0);
+<a name="l00366"></a>00366     <span class="keywordtype">void</span> dyn_kill(<span class="keywordtype">int</span> i=0);
+<a name="l00367"></a>00367     <span class="keywordtype">void</span> dyn_new(<span class="keywordtype">int</span> i=0);
+<a name="l00368"></a>00368     <span class="keywordtype">void</span> set_def(<span class="keywordtype">int</span> i=0);
+<a name="l00369"></a>00369     <span class="keywordtype">void</span> DeleteRecord( <span class="keyword">const</span> <span class="keywordtype">char</span> *key, <span class="keywordtype">bool</span> errinNo=<span class="keyword">true</span> );
+<a name="l00370"></a>00370     <span class="keywordtype">void</span> MakeQuery();
+<a name="l00371"></a>00371     <span class="keyword">const</span> <span class="keywordtype">char</span>* GetHtml();
+<a name="l00372"></a>00372 
+<a name="l00373"></a>00373     <span class="comment">// Setup one of 5 default IPM numerical settings</span>
+<a name="l00374"></a>00374     <span class="keywordtype">void</span> ChangeSettings(<span class="keywordtype">int</span> nSettings);
+<a name="l00375"></a>00375 
+<a name="l00376"></a>00376     <span class="comment">// work with Project</span>
+<a name="l00377"></a>00377     <span class="keywordtype">bool</span> initCalcMode( <span class="keyword">const</span> <span class="keywordtype">char</span> * profileKey );
+<a name="l00378"></a>00378     <span class="keywordtype">void</span> loadSystat( <span class="keyword">const</span> <span class="keywordtype">char</span> *key=0 );
+<a name="l00379"></a>00379     <span class="keywordtype">void</span> newSystat( <span class="keywordtype">int</span> mode );
+<a name="l00380"></a>00380     <span class="keywordtype">void</span> deriveSystat();
+<a name="l00381"></a>00381     <span class="keywordtype">void</span> PackSystat();
+<a name="l00382"></a>00382     <span class="keywordtype">double</span> CalcEqstat( <span class="keywordtype">bool</span> show_progress=<span class="keyword">true</span> );
+<a name="l00383"></a>00383     <span class="keywordtype">int</span>  indDC( <span class="keywordtype">int</span> );
+<a name="l00384"></a>00384     <span class="keywordtype">int</span>  indPH( <span class="keywordtype">int</span> );
+<a name="l00385"></a>00385     <span class="keywordtype">void</span>  deleteAutoGenerated();
+<a name="l00386"></a>00386     <span class="keywordtype">void</span>  systbcInput( QWidget* par, <span class="keyword">const</span> <span class="keywordtype">char</span> * p_key );
+<a name="l00387"></a>00387     gstring PhNameforDC( <span class="keywordtype">int</span> xdc, <span class="keywordtype">bool</span> system );
+<a name="l00388"></a>00388     TCStringArray DCNamesforPh( <span class="keyword">const</span> <span class="keywordtype">char</span> *PhName, <span class="keywordtype">bool</span> system );
+<a name="l00389"></a>00389 
+<a name="l00390"></a>00390     <span class="comment">// Multi make functions</span>
+<a name="l00391"></a>00391     <span class="keywordtype">void</span> PMtest( <span class="keyword">const</span> <span class="keywordtype">char</span> *key );
+<a name="l00392"></a>00392     <span class="keywordtype">void</span> CheckMtparam();
+<a name="l00393"></a>00393 
+<a name="l00394"></a>00394    <span class="keywordtype">void</span> LoadFromMtparm( QWidget* par, <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> *CSD, <span class="keywordtype">bool</span> no_interpolat );
+<a name="l00395"></a>00395     <span class="keywordtype">void</span> CalcBcc(); <span class="comment">// Calc bulk composition</span>
+<a name="l00396"></a>00396     <span class="keywordtype">void</span> ShowPhaseWindow();
+<a name="l00397"></a>00397     <span class="keywordtype">void</span> ShowEqPhaseWindow();
+<a name="l00398"></a>00398     <span class="keywordtype">void</span> ShowDBWindow( <span class="keyword">const</span> <span class="keywordtype">char</span> *objName, <span class="keywordtype">int</span> nLine=0 );
+<a name="l00399"></a>00399     <span class="keywordtype">void</span> Clear_XeA_XeD_Phm_BIun();
+<a name="l00400"></a>00400 
+<a name="l00401"></a>00401     <span class="comment">// Proces make functions</span>
+<a name="l00402"></a>00402     <span class="keywordtype">void</span> ET_translate( <span class="keywordtype">int</span> nOet, <span class="keywordtype">int</span> nOpex, <span class="keywordtype">int</span> JB, <span class="keywordtype">int</span> JE, <span class="keywordtype">int</span> jb, <span class="keywordtype">int</span> je,
+<a name="l00403"></a>00403      tget_ndx *get_ndx = 0 )
+<a name="l00404"></a>00404      { multi-&gt;ET_translate( nOet, nOpex, JB, JE, jb, je, get_ndx); }
+<a name="l00405"></a>00405     <span class="keywordtype">void</span> getNamesList( <span class="keywordtype">int</span> nO, TCStringArray&amp; lst )
+<a name="l00406"></a>00406      { multi-&gt;getNamesList(nO, lst); }
+<a name="l00407"></a>00407     <span class="keywordtype">double</span> MolWeight( <span class="keywordtype">int</span> N, <span class="keywordtype">double</span> *ICaw, <span class="keywordtype">double</span> *Smline )
+<a name="l00408"></a>00408      {  <span class="keywordflow">return</span> syst-&gt;MolWeight( N, ICaw, Smline ); }
+<a name="l00409"></a>00409     <span class="keywordtype">void</span> SyTestSizes()
+<a name="l00410"></a>00410      {  syst-&gt;SyTestSizes(); }
+<a name="l00411"></a>00411 
+<a name="l00412"></a>00412     <span class="keyword">inline</span> <span class="keywordtype">double</span> HelmholtzEnergy( <span class="keywordtype">double</span> x )
+<a name="l00413"></a>00413     {
+<a name="l00414"></a>00414         <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#af8cd7213884c0420eb1e86b850c06254" title="Calls to minimization of other system potentials - HelmholtzEnergy.">HelmholtzEnergy</a>(x);
+<a name="l00415"></a>00415     }
+<a name="l00416"></a>00416     <span class="keyword">inline</span> <span class="keywordtype">double</span> InternalEnergy( <span class="keywordtype">double</span> TC, <span class="keywordtype">double</span> P )
+<a name="l00417"></a>00417     {
+<a name="l00418"></a>00418         <span class="keywordflow">return</span> multi-&gt;<a class="code" href="class_t_multi.html#a12af02446fdc8df715cc57f4a348415a" title="Calls to minimization of other system potentials - InternalEnergy.">InternalEnergy</a>( TC, P );
+<a name="l00419"></a>00419     }
+<a name="l00420"></a>00420 
+<a name="l00421"></a>00421 
+<a name="l00422"></a>00422    <span class="comment">//test</span>
+<a name="l00423"></a>00423    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a4be2bc3caf9557385a0c952f77d79b2f" title="Writing structure MULTI (GEM IPM work structure) to binary file.">outMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff, gstring&amp; path  );
+<a name="l00424"></a>00424    <span class="comment">// brief_mode - Do not write data items that contain only default values</span>
+<a name="l00425"></a>00425    <span class="comment">// with_comments -Write files with comments for all data entries ( in text mode)</span>
+<a name="l00426"></a>00426    <span class="comment">// addMui - Print internal indices in RMULTS to IPM file for reading into Gems back</span>
+<a name="l00427"></a>00427    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a4be2bc3caf9557385a0c952f77d79b2f" title="Writing structure MULTI (GEM IPM work structure) to binary file.">outMulti</a>( gstring&amp; path, <span class="keywordtype">bool</span> addMui, <span class="keywordtype">bool</span> with_comments = <span class="keyword">true</span>, <span class="keywordtype">bool</span> brief_mode = <span class="keyword">false</span> );
+<a name="l00428"></a>00428    <span class="keywordtype">void</span> makeGEM2MTFiles(QWidget* par);
+<a name="l00429"></a>00429    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#a9abdf8500418ce458bf7cdfb20c0af2c" title="Writing structure MULTI ( free format text file )">outMultiTxt</a>( <span class="keyword">const</span> <span class="keywordtype">char</span> *path, <span class="keywordtype">bool</span> append=<span class="keyword">false</span>  );
+<a name="l00430"></a>00430    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <a class="code" href="class_gem_data_stream.html" title="Stream binary file operations extended for endianness (e.g.">GemDataStream</a>&amp; ff );
+<a name="l00431"></a>00431    <span class="keywordtype">void</span> <a class="code" href="class_t_profil.html#ad0b037bc45385fc3bcab920f6cfde385" title="Reading structure MULTI (GEM IPM work structure) from binary file.">readMulti</a>( <span class="keyword">const</span> <span class="keywordtype">char</span>* path,  <a class="code" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a>  *dCH );
+<a name="l00432"></a>00432    <span class="keywordtype">void</span> CmReadMulti( QWidget* par, <span class="keyword">const</span> <span class="keywordtype">char</span>* path );
+<a name="l00433"></a>00433    <span class="keywordtype">double</span> <a class="code" href="class_t_profil.html#abe48fd0f9ddc5804e4e54b7ec9d4294b" title="GEM IPM calculation of equilibrium state in MULTI.">ComputeEquilibriumState</a>( <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumPrecLoops, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterFIA, <span class="keywordtype">long</span> <span class="keywordtype">int</span>&amp; NumIterIPM );
+<a name="l00434"></a>00434    <span class="comment">//long int testMulti( );</span>
+<a name="l00435"></a>00435    <span class="keywordtype">bool</span> CompareProjectName( <span class="keyword">const</span> <span class="keywordtype">char</span>* SysKey );
+<a name="l00436"></a>00436    <span class="keywordtype">void</span> ChangeTPinKey( <span class="keywordtype">double</span> T, <span class="keywordtype">double</span> P );
+<a name="l00437"></a>00437    <span class="keywordtype">void</span> SetSysSwitchesFromMulti( );
+<a name="l00438"></a>00438 };
+<a name="l00439"></a>00439 
+<a name="l00440"></a>00440 <span class="comment">/* Work codes of surface site types in pm-&gt;AtNdx vector (compatibility with old-style SCMs *</span>
+<a name="l00441"></a>00441 <span class="comment">enum SurTypeNdx {</span>
+<a name="l00442"></a>00442 <span class="comment">    AT_SA0=0, AT_SB0=0, AT_SA1=1, AT_SB1=1, AT_SA2=2, AT_SB2=2, AT_SA3=3,</span>
+<a name="l00443"></a>00443 <span class="comment">    AT_SB3=3, AT_SA4=4, AT_SB4=4, AT_SA5=5, AT_SB5=5,</span>
+<a name="l00444"></a>00444 <span class="comment">    MSPN = 2   * Max number of EDL planes considered in old-style SCMs *</span>
+<a name="l00445"></a>00445 <span class="comment">}; */</span>
+<a name="l00446"></a>00446 
 <a name="l00447"></a>00447 
-<a name="l00448"></a>00448     DC_SINGLE = <span class="charliteral">&#39;U&#39;</span>,        <span class="comment">// This DC is a single-component phase</span>
-<a name="l00449"></a>00449     DC_SYMMETRIC = <span class="charliteral">&#39;I&#39;</span>,     <span class="comment">// This DC is in symmetric solution phase</span>
-<a name="l00450"></a>00450     DC_ASYM_SPECIES = <span class="charliteral">&#39;S&#39;</span>,  <span class="comment">// This is DC-solute(sorbate) in asymmetric phase</span>
-<a name="l00451"></a>00451     DC_ASYM_CARRIER = <span class="charliteral">&#39;W&#39;</span>   <span class="comment">// This is carrier(solvent) DC in asymmetric phase</span>
-<a name="l00452"></a>00452 };
+<a name="l00448"></a>00448 <span class="preprocessor">#endif // #ifndef IPMGEMPLUGIN</span>
+<a name="l00449"></a>00449 <span class="preprocessor"></span>
+<a name="l00450"></a>00450 
+<a name="l00451"></a>00451 <span class="comment">// Work DC classifier codes  pm-&gt;DCCW</span>
+<a name="l00452"></a>00452 <span class="keyword">enum</span> SolDCodes {
 <a name="l00453"></a>00453 
-<a name="l00454"></a>00454 
-<a name="l00455"></a>00455 <span class="preprocessor">#endif  // _m_param_h</span>
-<a name="l00456"></a>00456 <span class="preprocessor"></span>
-<a name="l00457"></a>00457 
+<a name="l00454"></a>00454     DC_SINGLE = <span class="charliteral">&#39;U&#39;</span>,        <span class="comment">// This DC is a single-component phase</span>
+<a name="l00455"></a>00455     DC_SYMMETRIC = <span class="charliteral">&#39;I&#39;</span>,     <span class="comment">// This DC is in symmetric solution phase</span>
+<a name="l00456"></a>00456     DC_ASYM_SPECIES = <span class="charliteral">&#39;S&#39;</span>,  <span class="comment">// This is DC-solute(sorbate) in asymmetric phase</span>
+<a name="l00457"></a>00457     DC_ASYM_CARRIER = <span class="charliteral">&#39;W&#39;</span>   <span class="comment">// This is carrier(solvent) DC in asymmetric phase</span>
+<a name="l00458"></a>00458 };
+<a name="l00459"></a>00459 
+<a name="l00460"></a>00460 
+<a name="l00461"></a>00461 <span class="preprocessor">#endif  // _m_param_h</span>
+<a name="l00462"></a>00462 <span class="preprocessor"></span>
+<a name="l00463"></a>00463 
 </pre></div></div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 24 2012 13:51:35 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:28 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

@@ -19,6 +19,7 @@ var searchData=
   ['dc_5fg0',['DC_G0',['../class_t_node.html#a7afac572263e12640835279830ca60e4',1,'TNode']]],
   ['dc_5fgibbsenergycontribution',['DC_GibbsEnergyContribution',['../class_t_multi.html#ae51cf1a690d7c2b1ea5498a0b2373bc4',1,'TMulti']]],
   ['dc_5fh0',['DC_H0',['../class_t_node.html#abd4439e8fdd785e70d25a9de13dadbf9',1,'TNode']]],
+  ['dc_5flng',['DC_lng',['../class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77',1,'TNode']]],
   ['dc_5floadthermodynamicdata',['DC_LoadThermodynamicData',['../class_t_multi.html#acd7417b0053280565ddfa235c9c8bfe2',1,'TMulti']]],
   ['dc_5fmu',['DC_mu',['../class_t_node.html#a25b3fed9d9faca846d95ddb86799c7a7',1,'TNode']]],
   ['dc_5fmu0',['DC_mu0',['../class_t_node.html#a0c376c84ac9b00b0ac83be8c78913f70',1,'TNode']]],
@@ -40,5 +41,6 @@ var searchData=
   ['dctoph_5fdch',['DCtoPh_DCH',['../class_t_node.html#a33ea7b8aac27af7a1a6e844bfe2ac710',1,'TNode']]],
   ['denh2og',['DenH2Og',['../class_t_node.html#aa5f5fa762cb44dcc8902816854dcaf94',1,'TNode']]],
   ['denh2ow',['DenH2Ow',['../class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c',1,'TNode']]],
+  ['densarrayh2ow',['DensArrayH2Ow',['../class_t_node.html#a590116944bc0ee663608303005db06df',1,'TNode']]],
   ['dikinscriterion',['DikinsCriterion',['../class_t_multi.html#a0245f972e785fcb412ab228d6194b1fa',1,'TMulti']]]
 ];

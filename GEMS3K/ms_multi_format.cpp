@@ -33,7 +33,7 @@
 #endif
 
 //bool _comment = true;
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.740 (rc) ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.1 r.780 (rc) ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
@@ -49,7 +49,7 @@ outField MULTI_static_fields[8] =  {
   { "pa_PE" , 0 , 0, 0, "# PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)" },
   { "PV" ,    0 , 0, 0, "\n# PV: Flag for the volume balance constraint (on Vol IC) for indifferent equilibria at P_Sat (0 or 1)" },
   { "PSOL" ,  0 , 0, 0, "\n# PSOL: Total number of DCs in liquid hydrocarbon phases (0; reserved)" },
-  { "PAalp" , 0 , 0, 0, "\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " },
+  { "PAalp" , 0 , 0, 0, "# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " },
   { "PSigm" , 0 , 0, 0, "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " },
   { "Lads" ,  0 , 0, 0, "# Lads: Total number of Dependent Components in sorption phases included into this system" },
   { "FIa" ,   0 , 0, 0, "# FIa: Number of sorption phases included in this system (0 if no sorption phases )" },
@@ -59,26 +59,26 @@ outField MULTI_static_fields[8] =  {
 outField MULTI_dynamic_fields[70] =  {
 // write/read dynamic (array) data to/from the text-format IPM file
    {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]" },
-   {  "LsMod", 1 , 0, 0, "\n\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
+   {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
                          "\n# [0] number of interaction parameters (rows in <IPx>); [1] max. parameter order (columns in <IPx>);"
                          "\n# [2] number of coefficients per interaction parameter in <PMc> array" },
-   {  "LsMdc", 1 , 0, 0, "\n\n# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):"
+   {  "LsMdc", 1 , 0, 0, "\n# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):"
                          "\n# [0] number of parameters per component; [1] 0; [2] 0. For multi-site (sublattice) models: "
                          "\n#   [1] number of sublattices nS; [2] total number of moieties nM acting in sublattice sites" },
    {  "B",     1 , 0, 0, "# B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)" },
    {  "DCCW",  0 , 0, 0, "# DCCW: internal DC class codes [nDC], will be reset automatically from DCH file content" },
                // DCCW is placeholder - something else can be used here, if needed
    {  "Pparc", 0 , 0, 0, "# Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)" },
-   {  "fDQF",  0 , 0, 0, "\n\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
-   {  "lnGmf", 0 , 0, 0, "\n\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
-   {  "RLC",   0 , 0, 0, "# RLC: Code of metastability restrictions for DCs {L U B (default)} [nDC]" },
-   {  "RSC",   0 , 0, 0, "\n\n# RSC: Units of metastability/kinetic restrictions for DCs {M} moles [nDC]" },
-   {  "DLL",   0 , 0, 0, "\n\n# DLL: Lower metastability restrictions on DC amounts <xDC>, moles [nDC] (default: 0)" },
-   {  "DUL",   0 , 0, 0, "\n\n# DUL: Upper metastability restrictions on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
-   {  "Aalp",  0 , 0, 0, "\n# Aalp: Specific surface areas of phases, m2/g [nPH]" },
-   {  "Sigw",  0 , 0, 0, "\n\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
-   {  "Sigg",  0 , 0, 0, "\n\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
-   {  "YOF",   0 , 0, 0, "\n\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
+   {  "fDQF",  0 , 0, 0, "\n# fDQF: DQF parameters of end members or pure gas fugacities, (J/mol/(RT) [nDC]" },
+   {  "lnGmf", 0 , 0, 0, "\n# lnGmf: Natural logarithms of DC activity coefficients used at Simplex LP approximation only [nDC]" },
+   {  "RLC",   0 , 0, 0, "# RLC: Code of metastability constraints for DCs {L U B (default)} [nDC]" },
+   {  "RSC",   0 , 0, 0, "\n# RSC: Units of metastability/kinetic constraints for DCs {M} moles [nDC]" },
+   {  "DLL",   0 , 0, 0, "\n# DLL: Lower metastability constraints on DC amounts <xDC>, moles [nDC] (default: 0)" },
+   {  "DUL",   0 , 0, 0, "\n# DUL: Upper metastability constraints on DC amounts <xDC>, moles [nDC] (default: 1e6)" },
+   {  "Aalp",  0 , 0, 0, "# Aalp: Specific surface areas of phases, m2/g [nPH]" },
+   {  "Sigw",  0 , 0, 0, "\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
+   {  "Sigg",  0 , 0, 0, "\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
+   {  "YOF",   0 , 0, 0, "\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
    {  "Nfsp",  1 , 0, 0, "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]" },
    {  "MASDT", 1 , 0, 0, "\n# MASDT: Total maximum site  density per surface type, mkmol/g [nPS*6]" },
    {  "C1",    1 , 0, 0, "\n# C1: Inner capacitance density parameter C1, F/m2 [nPS*6]" },
@@ -98,14 +98,14 @@ outField MULTI_dynamic_fields[70] =  {
    { "pa_DB" , 0 , 0, 0,  "# DB: Minimum amount of IC in the bulk composition, moles (except charge Zz) { 1e-17 }"},
    { "pa_DHB", 0 , 0, 0,  "\n# DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } " },
    { "pa_EPS", 0 , 0, 0,  "\n# EPS: Tolerance of the SolveSimplex() balance residual for ICs { 1e-10 } " },
-   { "pa_DK",  0 , 0, 0,  "\n# DK: Tolerance for the Dikin's criterion of IPM convergence { 3e-6 } " },
+   { "pa_DK",  0 , 0, 0,  "\n# DK: Tolerance for the Dikin's criterion of IPM convergence { 1e-6 } " },
    { "pa_DF" , 0 , 0, 0,  "\n# DF: Tolerance DF of the stability criterion for a lost phase to be inserted to mass balance { 0.01 } " },
    { "pa_DP",  0 , 0, 0,  "\n# DP: Maximal number of iterations in MassBalanceRefinement MBR() procedure { 130 }"  },
    { "pa_IIM", 0 , 0, 0,  "\n# IIM: Maximum allowed number of iterations in one main GEM IPM descent run { 7000 }" },
-   { "pa_PD" , 0 , 0, 0,  "\n# PD: Mode of calculation of DC activity coefficients ( 1 -IPM, 2 +MBR, 3 IPM ) { 2 } " },
-   { "pa_PRD" , 0 , 0, 0, "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -4 }" },
+   { "pa_PD" , 0 , 0, 0,  "\n# PD: Mode of calculation of DC activity coefficients { 2 } " },
+   { "pa_PRD" , 0 , 0, 0, "\n# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -5 }" },
    { "pa_AG" ,  0 , 0, 0, "\n# AG: Smoothing parameter 1 for non-ideal primal chemical potential increments (-1 to +1) { 1.0 }" },
-   { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 1 or 0.001 for adsorption }" },
+   { "pa_DGC" , 0 , 0, 0, "\n# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 0 or 0.001 for adsorption }" },
    { "pa_PSM" , 0 , 0, 0, "\n# PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- default; 2-including warnings }" },
    { "pa_GAR" , 0 , 0, 0, "# GAR: Activity coefficient for major (M) species in solution phases at Simplex LP AIA { 1 }"  },
    { "pa_GAH" , 0 , 0, 0, "# GAH: Activity coefficient for minor (J) species in solution phases at Simplex LP AIA { 1000 }" },
@@ -125,20 +125,20 @@ outField MULTI_dynamic_fields[70] =  {
    { "pa_DFYc" , 0 , 0, 0,  "# DFYc: Insertion mole amount for single-component phase at Simplex()->MBR() bridge { 1e-5 }" },
    { "pa_DFYs",  0 , 0, 0,  "# DFYs: Insertion mole amount for single-component phase in PSSC() algorithm { 1e-6 }" },
    { "pa_DW",    0 , 0, 0,  "# DW: Activate (1) or disable (0) error condition on maximum number of MBR() iterations DP { 1 }" },
-   { "pa_DT",    0 , 0, 0,  "# DT: use DHB as relative maximum mass balance cutoff for all ICs (0), default, or for major ICs:"
+   { "pa_DT",    0 , 0, 0,  "# DT: use DHB as relative maximum mass balance cutoff for all ICs (0, default); or for major ICs:"
                             "\n# decimal exponent (<-6) applied to DHB cutoff; (1) use DHB also as an absolute cutoff { 1 }" },
-   { "pa_GAS",   0 , 0, 0,  "\n# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.0001 }" },
-   { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1e3 }" },
+   { "pa_GAS",   0 , 0, 0,  "\n# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.001 }" },
+   { "pa_DG",    0 , 0, 0,  "# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1000 }" },
    { "pa_DNS" ,  0 , 0, 0,  "# DNS: Standard surface number density, nm-2 for calculating activity of surface species { 12.05 }" },
-   { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }" },
-   { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability restrictions on DC amounts in primal GEM solution { 1 } " },
-   { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability restrictions on DC amounts, moles { 1e-10 } " },
-   { "mui" ,     0 , 0, 0,  "\n\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
-   { "muk" ,     0 , 0, 0,  "\n\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
-   { "muj" ,     0 , 0, 0,  "\n\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
-   { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables" },
+   { "pa_IEPS" , 0 , 0, 0,  "# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 0.001 }" },
+   { "pKin" ,    0 , 0, 0,  "\n# pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } " },
+   { "pa_DKIN" , 0 , 0, 0,  "# DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } " },
+   { "mui" ,     0 , 0, 0,  "\n# mui: IC indices in parent RMULTS IC list (not used in standalone GEMS3K)" },
+   { "muk" ,     0 , 0, 0,  "\n# muk: Phase indices in parent RMULTS Phase list (not used in standalone GEMS3K)" },
+   { "muj" ,     0 , 0, 0,  "\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
+   { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
-   { "dcMod",    0 , 0, 0,  "\n# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
+   { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
 };
 
 
@@ -195,15 +195,15 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 
 if( _comment )
 {  ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-   ff << "# Comments can be marked with # $ ; as the first character in the line" << endl << endl;
-   ff << "# Template for the ipm-dat text input file for the internal MULTI data" << endl;
-   ff << "# (should be read after the DATACH file and before DATABR files)" << endl << endl;
+   ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
+   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << endl;
+   ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
   ff << "\"" << pm.stkey << "\"" << endl;
 
  if( _comment )
-     ff << "\n## (1) Important flags that affect memory allocation" << endl;
+     ff << "\n## (1) Flags that affect memory allocation";
 
  if(!brief_mode || pa->p.PE != pa_.p.PE )
    prar1.writeField(f_pa_PE, pa->p.PE, _comment, false  );
@@ -215,8 +215,8 @@ if( _comment )
  prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
  prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
  if( _comment )
-   ff << "\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases " << endl;
- ff << left << setw(12) << "<PAalp> " <<  right << setw(6) <<
+   ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
+ ff << endl << left << setw(12) << "<PAalp> " <<  right << setw(6) <<
     "\'" << PAalp << "\'" << endl;
  if( _comment )
   ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
@@ -225,7 +225,7 @@ if( _comment )
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
   { if( _comment )
-      ff << "\n## (2) Important dimensionalities that affect memory allocation" << endl;
+      ff << "\n## (2) Dimensionalities that affect memory allocation";
     prar1.writeField(f_Lads, pm.Lads, _comment, false  );
     prar1.writeField(f_FIa, pm.FIa, _comment, false  );
     prar1.writeField(f_FIat,  pm.FIat, _comment, false  );
@@ -234,12 +234,12 @@ if( _comment )
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
 
-ff << "\n<END_DIM>\n";
+ff << "\n\n<END_DIM>\n";
 
 // static data not affected by dimensionalities
    if( _comment )
-   {  ff << "\n## (3) Tolerances and controls of the numerical behavior of GEM IPM-2 kernel" << endl;
-      ff << "#      - Need to be changed only in rare special cases (see gems_ipm.html)" << endl;
+   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
+      ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
    }
    if( !brief_mode ||pa->p.DB != pa_.p.DB )
       prar.writeField(f_pa_DB, pa->p.DB, _comment, false  );
@@ -276,8 +276,7 @@ ff << "\n<END_DIM>\n";
 
    if(!brief_mode)
     if( _comment )
-     {  ff << "\n# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-11 }; Sc - solid sorbent {1e-11}; " << endl;
-        ff <<   "#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-20 }" << endl;
+     {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
      }
 
    if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
@@ -288,14 +287,13 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_DcMin,  pa->p.DcMin, _comment, false  );
    if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
        prar.writeField(f_pa_PhMin,  pa->p.PhMin, _comment, false  );
-
    if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
        prar.writeField(f_pa_ICmin,  pa->p.ICmin, _comment, false  );
    if(!brief_mode || pa->p.PC != pa_.p.PC )
        prar.writeField(f_pa_PC,  pa->p.PC, _comment, false  );
 
    if( _comment )
-      ff << "# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
+      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
 
    if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
        prar.writeField(f_pa_DFYw,  pa->p.DFYw, _comment, false  );
@@ -313,7 +311,7 @@ ff << "\n<END_DIM>\n";
        prar.writeField(f_pa_DFYs,  pa->p.DFYs, _comment, false  );
 
    if( _comment )
-     ff << "\n# Parameters for high-accuracy IPM algorithm " << endl;
+     ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm ";
 
    if(!brief_mode || pa->p.DW != pa_.p.DW )
        prar.writeField(f_pa_DW,  pa->p.DW, _comment, false  );
@@ -339,7 +337,7 @@ ff << "\n<END_DIM>\n";
 if( pm.FIs > 0 && pm.Ls > 0 )
 {
   if( _comment )
-     ff << "\n## (4) Initial data for multicomponent phases (see DATACH file for dimension nPHs)" << endl;
+     ff << "\n\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)";
   prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 6L, _comment, brief_mode );
 
 long int LsModSum;
@@ -355,33 +353,33 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   if(LsIPxSum )
   {
    if( _comment )
-      ff << "\n\n# IPxPH:  TSolMod collected indexation table for interaction parameters of non-ideal solutions.";
+      ff << "\n\n# IPxPH: Index lists (in TSolMod convention) for interaction parameters of non-ideal solutions";
    prar.writeArray(  "IPxPH", pm.IPx,  LsIPxSum);
   }
   if(LsModSum )
    {
      if( _comment )
-        ff << "\n\n# PMc: TSolMod collected interaction parameter coefficients for non-ideal  models of mixing";
+        ff << "\n\n# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions";
     prar.writeArray(  "PMc", pm.PMc,  LsModSum);
    }
    prar.writeArray(  f_LsMdc, pm.LsMdc, pm.FIs*3, 3L, _comment, brief_mode);
    if(LsMdcSum )
    {   if( _comment )
-          ff << "\n\n# DMc: TSolMod collected parameters per phase component for the non-ideal models of mixing";
+          ff << "\n\n# DMc: Tables (in TSolMod convention) of  parameter coefficients for dependent components";
     prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
    }
    if(LsMsnSum )
    {   if( _comment )
-          ff << "\n\n# MoiSN: TSolMod collected end member moiety / site multiplicity number tables ";
+          ff << "\n\n# MoiSN:  end member moiety / site multiplicity number tables (in TSolMod convention) ";
     prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
    }
 } // sMod
   if( _comment )
-    ff << "\n\n## (5) Some data arrays which are not provided in DATACH and DATABR files" << endl;
+    ff << "\n\n## (5) Data arrays which are provided neither in DCH nor in DBR files";
   prar.writeArray(  f_B, pm.B,  pm.N, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs" << endl;
+     ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs";
   prar.writeArray(  f_Pparc, pm.Pparc,  pm.L, -1L, _comment, brief_mode);
   //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
   // prar.writeArray(  "G0", pm.G0,  pm.L);
@@ -389,14 +387,14 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   prar.writeArray(  f_lnGmf, pm.lnGmf,  pm.L, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# (6) Section for metastability/ kinetic constraints" << endl;
+     ff << "\n\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)";
    prar.writeArrayF(  f_RLC, pm.RLC, pm.L, 1L, _comment, brief_mode );
    prar.writeArrayF(  f_RSC, pm.RSC, pm.L, 1L, _comment, brief_mode );
    prar.writeArray(  f_DLL, pm.DLL, pm.L, -1L, _comment, brief_mode);
    prar.writeArray(  f_DUL, pm.DUL,  pm.L, -1L, _comment, brief_mode);
 
    if( _comment )
-     ff << "\n\n# (7) Initial data for phases" << endl;
+     ff << "\n\n# (7) Initial data for Phases" << endl;
    prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
    if( PSigm != S_OFF )
    {
@@ -405,10 +403,10 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    }
    prar.writeArray(  f_YOF, pm.YOF,  pm.FI, -1L, _comment, brief_mode);
 
-   if( pm.FIat > 0 && /*pm.Lads > 0 &&Sveta 12/09/99*/ pm.FIs > 0 )
-    { /* ADSORPTION AND ION EXCHANGE */
+   if( pm.FIat > 0 &&  pm.FIs > 0 )
+    { // ADSORPTION AND ION EXCHANGE
       if( _comment )
-        ff << "\n\n# (8) Initial data for sorption" << endl;
+        ff << "\n\n# (8) Initial data for sorption phases";
 
       prar.writeArray(  f_Nfsp, &pm.Nfsp[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
       prar.writeArray(  f_MASDT, &pm.MASDT[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
@@ -452,7 +450,6 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
 {
   SPP_SETTING *pa = paTProfil;
-  //DATACH  *dCH = /*TNode::*/node->pCSD();  // 19/05/2010 error line
   long int ii, nfild, len;
 
    //static values
@@ -534,7 +531,7 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
  // testing read
  gstring ret = rdar.testRead();
  if( !ret.empty() )
-  { ret += " - fields must be read from the MULTY structure";
+  { ret += " - fields must be read from the MULTI structure";
     Error( "Error", ret);
   }
 

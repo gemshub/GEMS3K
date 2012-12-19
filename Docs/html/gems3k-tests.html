@@ -1,48 +1,412 @@
 <!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
-<html><head>
-  
-  
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-
-
-  
-  
-<meta name="GENERATOR" content="Mozilla/4.72 [en]C-BLUEWIN-CH20  (Win98; I) [Netscape]">
-
-  
-<title>GEMS3K Tests &amp; Benchmarks</title>
-
-
-  
-</head><body>
-<h1><img src="gems1.png" height="48" align="left" width="48">
+<html><head><title>GEMS3K Tests &amp; Benchmarks</title></head><body style="background-image: url(bgimg-gray.jpg);">
+<h1><img src="gems1.png" align="left" height="48" width="48">
 GEMS3K Code for Solving for GeoChemical Equilibria<br>
 </h1>
 
-
 <p> </p>
-
 
 <h2>Test cases for "gemcalc" and "node-gem" examples </h2>
 
-
 <hr size="2" width="100%">
-<p> Under Construction<br>
-&nbsp; <br>
+<h3>Contents&nbsp; <br>
+</h3>
+
+<p><a href="#INTRO">
+1. Introduction</a></p>
+<p><a href="#CALCDOLO">2. The 'CalcDolo' modeling project</a><a href="#INTRO"><br>
+</a></p>
+
+
+<p><a href="#GEMCALC">3. The 'gemcalc' example: data exchange via I/O files only</a></p>
+
+<p><a href="#NODE-GEM">4. The 'node-gem' example: data exchange in memory at TNode level</a>
+</p>
+
 <br>
-&nbsp;</p>
+
+<hr style="width: 100%; height: 2px;">
+<h2><a name="INTRO"></a>1. Introduction</h2>
+
+<p>The test
+examples of usage of GEMS3K on the TNode and TNodeArray
+levels can be executed with the
+following command line: <br>
+<br>
+<span style="font-family: monospace;">gemnode.exe
+&lt;TestDir&gt;/&lt;TaskName&gt;-dat.lst&gt;
+[</span><span style="font-family: monospace;">&lt;TaskName&gt;-dbr.lst&gt;]
+[ </span><span style="font-family: monospace;">&gt; &lt;TaskName&gt;.out</span> ]<br>
+<br>
+where <span style="font-family: monospace;">&lt;TestDir&gt;</span> is
+an optional subdirectory path; <span style="font-family: monospace;">&lt;TaskName&gt;</span>
+should be substituted by a string denoting the
+problem name, e.g. <span style="font-family: monospace;">"MyTask"</span>. The file <span style="font-family: monospace;">&lt;TaskName&gt;.out</span> will
+contain console output of the program, redirected there during
+execution of the
+TNode example. Without this redirection, the output can be found in a
+terminal (Linux) or lost (Windows). <br>
+</p>
 
 
-<hr size="2" width="100%">
+<p>The simplest example of the command-line GEM calculation on TNode
+level (that uses GEMS3K I/O files from the example described below) looks like</p>
+
+<p><span style="font-family: monospace;">gemcalc.exe tp_test/CalcColumn-dat.lst </span><span style="font-family: monospace;">tp_test/CalcColumn-dbr.lst
+</span><span style="font-family: monospace;">&gt; CalcColumn.out<br>
+</span></p>
+
+<p>The file&nbsp;<span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-dat.lst</span>
+has the following contents (also automatically created by default
+upon file export from the GEM-Selektor project '<span style="font-family: monospace;">CalcDolo'</span>):<br>
+<br>
+<span style="font-family: monospace;">-t "</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-dch.dat"
+"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-ipm.dat"
+"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-dbr-0-0000.dat"</span><span style="font-family: monospace;"></span><br style="font-family: monospace;">
+<br>
+This is simply the list of names of three files prepared for the GEMS3K
+initialization input;
+all these files must be located in the same directory where the&nbsp;<span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dat.lst</span> file itself is
+located.&nbsp; <br>
+</p>
+
+<p> The <span style="font-family: monospace;">-t</span>
+command-line key tells that the listed I/O files are
+prepared in
+a free-text input format. Alternative command-line key is <span style="font-family: monospace;">-b</span> telling that the I/O files are
+prepared in a binary format (uneditable by the user). In this
+case, when the file set is exported from the GEM-Selektor code, the
+file <span style="font-family: monospace;">&lt;TaskName&gt;-bin.lst </span>will
+be written, with the following content:<span style="font-family: monospace;"><br>
+</span></p>
+
+<p><span style="font-family: monospace;">-b
+"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dch.bin"
+"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">.ipm"
+"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dbr-0-0000.bin"</span><br style="font-family: monospace;">
+</p>
+
+<p>The first file in the list, <a href="gems3k-iofiles.html#DATACH"><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span></a><span style="font-family: monospace;"><a href="gems3k-iofiles.html#DATACH">-dch.dat</a></span>, (or&nbsp; <span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dch.bin</span>)
+contains the input
+data for the
+chemical system definition (CSD) that can be used by both GEM and the
+mass transport parts of the coupled code.
+This data are is also needed for reading/writing the <span style="font-family: monospace;">*-dbr.dat</span> files (see below). <br>
+</p>
+
+<p>The second file in the list, <a href="gems3k-iofiles.html#GEMIPM"><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span></a><span style="font-family: monospace;"><a href="gems3k-iofiles.html#GEMIPM">-ipm.dat</a></span>,
+contains input data that are used
+internally by the GEM IPM3 kernel and must not be exchanged with the
+mass transport part. This file also contains the GEM IPM3 numerical
+controls; parameters of mixing in multicomponent phases; and,
+optionally,&nbsp; parameters of surface complexation models. <br>
+</p>
+
+<p>The third file in the list,&nbsp;<span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dbr-0-0000.dat</span>,
+contains the input data for the particular 'node' chemical system recipe. If this
+is the only equilibrium to be calculated then no other files are
+necessary.
+Otherwise, a list of additional DBR file names from the
+same location must be provided in the optional <span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dbr.lst </span>containing
+e.g. <br>
+</p>
+
+<p><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dbr-0-0001.dat",
+</span><span style="font-family: monospace;">"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;"></span><span style="font-family: monospace;">-dbr-0-0002.dat",
+</span><span style="font-family: monospace;">... </span><br>
+</p>
+<p>There can be one or many comma-separated file
+names of the <a href="gems3k-iofiles.html#DATABR"><span style="font-family: monospace;">*-dbr.dat</span></a>&nbsp;
+(node recipe) DBR type, which will be read sequentially until the end of
+file condition occurs. On the
+TNodeArray level, these files may contain composition and speciation of
+all
+chemical systems needed to set up the initial conditions for the
+reactive mass
+transport modelling. On the TNode level, in principle, one DBR file is sufficient (the input bulk composition, T or P can be modified in computer memory later on).<br>
+
+</p>
+
+
+<br>
+<hr style="width: 100%; height: 2px;">
+<h2><a name="CALCDOLO"></a>2. The 'CalcDolo' modeling project</h2>
+<p>The GEMS3K I/O files used in 'gemcalc' and 'node-gem' test examples
+were exported using the GEM-Selektor v.3 code from the 'CalcDolo'
+modeling project (available in the GEM-Selektor installer). This
+project is small and rather simple in order to easier demonstrate
+features of GEMS2K I/O files. </p>
+The idea of this example project, a version of which is also used for
+testing reactive-transport calculations implemented in the GEM2MT
+module of GEM-Selektor (under construction), consists in considering a
+hypothetical column of given porosity (filled with intert material)
+that contains small amount of unifomly distributed calcite, initially
+stable but reactive. Transport in the column occurs by advection (with
+or without diffusion) in one direction. The boundary conditions are:
+Ca-poor solution of MgCl<sub>2</sub> enters as an infinite source of
+fluid; the opposite end of the column is an infinite sinc. Upon
+transport through the column (assuming instantaneous mineral-water
+reactions), a reactive front develops, at which calcite dissolves and
+dolomite precipitates. This is followed at some distance by another
+front where dolomite dissolves, and no reactive minerals remain in the
+column. <br>
+<br>
+To set up such a column, in principle, only two initial chemical
+systems are necessary: the one representing the initial column filling
+material with stable calcite and trace amounts of Mg and Cl; and
+another representing the source composition of the system (mainly MgCl<sub>2</sub> solution). These two systems are provided in the 'CalcDolo' project. &nbsp;  <br>
+<br>
+The <span style="font-family: monospace;">CalcDolo:G:CalcColumn:0001:0:1:25:0:</span> SysEq record represents the initial calcite column composition (ignoring the inert material). It has the following recipe:<br>
+&nbsp;<br>
+<div style="margin-left: 40px;"><span style="font-family: monospace;">Property&nbsp;&nbsp; Name&nbsp;&nbsp;&nbsp; Quantity&nbsp;&nbsp;&nbsp; Units</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; C&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; 0.00035&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Ca&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; 0.00025&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Cl&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; 2e-07&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; H&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; 110.684&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Mg&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; 1e-07&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; O&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; 55.3428&nbsp;&nbsp;&nbsp; M</span><br>
+</div>
+<br>
+<p>Calculation of equilibrium in this system at 1 bar pressure and 25 <sup>o</sup>C temperature results in the following speciation: </p>
+<img style="width: 767px; height: 677px;" alt="Screen-Calcite-Column-0001.png" src="Screen-Calcite-Column-0001.png"><br>
+<br>
+<p>As seen on this screen capture, the partial dissolution of calcite
+(isolated from atmospheric air) results in rather alkaline reaction of
+water that has a negligibly low ionic strength. This system was
+exported into <span style="font-family: monospace;">"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-dch.dat",
+"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-ipm.dat"</span>, and <span style="font-family: monospace;">"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-dbr-0-0001.dat" </span>GEMS3K I/O files.&nbsp; </p>
+<p>The <span style="font-family: monospace;">CalcDolo:G:CalcColumn:0000:0:1:25:0:</span> SysEq record represents the MgCl<sub>2</sub> solution that comes from an infinite source (of constant composition). It has the following recipe:</p>
+<br>
+<div style="margin-left: 40px;"><span style="font-family: monospace;">Property&nbsp;&nbsp; Name&nbsp;&nbsp;&nbsp; Quantity&nbsp;&nbsp;&nbsp; Units</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; C&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; 0.0001001&nbsp;&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Ca&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1e-07&nbsp;&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Cl&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.016&nbsp;&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; H&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 110.684&nbsp;&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; Mg&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.008&nbsp;&nbsp;&nbsp;&nbsp; M</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">bi_&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; O&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; 55.3421&nbsp;&nbsp;&nbsp;&nbsp; M</span><br>
+</div>
+<br>
+<p>Calculation of equilibrium in this system at 1 bar pressure and 25 <sup>o</sup>C temperature yields the following speciation:</p>
+<img style="width: 768px; height: 667px;" alt="Screen-Calcite-Col-BC-0000.png" src="Screen-Calcite-Col-BC-0000.png"><br>
+<br>
+<p>showing that calcite and dolomite are both strongly undersaturated,
+solution is weakly acidic, having a significant ionic strength of 0.024
+<span style="font-style: italic;">m</span>.</p>
+<p>This system was exported into the <span style="font-family: monospace;">"</span><span style="font-family: monospace;">CalcColumn</span><span style="font-family: monospace;">-dbr-0-0000.dat" </span>DBR
+file (DCH and IPM files can be used from the previous export because
+this system definition differs from the previous one only in bulk
+composition). <br>
+</p>
+<p>All the exported files can be found in <span style="font-family: monospace;">"tp_test/"</span> subfolder in <span style="font-family: monospace;">"standalone/gemcalc-build/"</span> or <span style="font-family: monospace;">"standalone/node-gem-build/"</span>
+example folders. The only difference is that in the former case, the
+files were exported with comments and all data fields, whereas in the
+latter, <br>
+ </p>
+<br>
+
+<hr style="width: 100%; height: 2px;">
+<h2><a name="GEMCALC"></a>3. The 'gemcalc' example: data exchange via I/O files only<br>
+</h2>
+<h4>How to build and run the "gemcalc" example (see also&nbsp; <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">TechInfo on GEMS3K web page</a>) </h4>
+<p>Start the QtCreator and open one a Qmake project file&nbsp; <span style="font-family: monospace;">'standalone/gemcalc/gemcalc.pro'</span>.&nbsp;
+Use shadow building; do not use the Qt Simulator, and disable QML
+debugging. Switch to 'Projects' on the left pane, and under 'General'
+'Build directory', browse to set the build directory to <span style="font-family: monospace;">'standalone/gemcalc-build'</span>.
+Then change to the 'Edit' mode of QtCreator. In the "Build" menu,
+select first "Run qmake"; this will generate Makefile for this
+particular desktop platform and the chosen debug or release mode. Now,
+run "Build" "Build project..." menu command. This will build the '<span style="font-family: monospace;">gemcalc'</span> executable file in the <span style="font-family: monospace;">'standalone/gemcalc-build'</span> folder (under Windows, either in <span style="font-family: monospace;">'standalone\gemcalc-build\debug'</span> or in <span style="font-family: monospace;">'standalone\gemcalc-build\release'</span> folder).</p>
+<p>To launch the 'gemcalc' example in the terminal, cd into <span style="font-family: monospace;">'standalone/gemcalc-build'</span>, and start the appropriate batch file, e.g. <span style="font-family: monospace;">'linux-run.bat'</span> on linux. The GEMS3K input data files are located in the <span style="font-family: monospace;">'tp_test' </span>subfolder. The example program will produce several output files in that folder, plus two log files in the <span style="font-family: monospace;">'standalone/gemcalc-build'</span> folder.</p>
+<p>You can run the example program also directly from the QtCreator.
+Before doing so, open the 'Projects' window and switch there to 'Run
+settings'. In the 'Arguments' line, enter the command line arguments</p>
+<p><span style="font-family: monospace;">tp_test/CalcColumn-dat.lst tp_test/CalcColumn-dbr.lst&nbsp; &gt;&nbsp; CalcColumn_tp.out</span></p>
+<p>the same as those in the batch file variant for the respective OS.
+In the 'Working directory' line, edit the path such that the working
+directory is <span style="font-family: monospace;">'standalone/gemcalc-build'</span>.</p>
+<p>To simply execute the program, click on the 'Run' button in the
+leftmost toolbar pane. To observe how the program works, click instead
+the 'Start debugging' button below the 'Run' button. Before doing that,
+it is advisable to open the <span style="font-family: monospace;">'main.cpp'</span> file and set there a breakpoint. Details about the example program in that file are explained in the <a href="gems3k-nodelev.html"><span style="font-family: monospace;">gems3k-nodelev.html</span></a> documentation file. <br>
+</p>
+
+
+<h4>What this example does<br>
+</h4>
+<p>The 'gemcalc' example performs a simple batch calculation of one or more chemical system recipes provided in DBR files in the <span style="font-family: monospace;">'tp_test'</span> folder. If just one calculation is necessary then the input DBR file must be given in the <span style="font-family: monospace;">'CalcColumn-dat.lst'</span> file (as usually exported from a GEM-Selektor system), and the <span style="font-family: monospace;">'CalcColumn-dbr.lst' </span>file name must be removed from the command line. Otherwise, the second, third, ... DBR file names must be given in the <span style="font-family: monospace;">'CalcColumn-dbr.lst'</span> file, and respective DBR files provided in the same folder.  <br>
+</p>
+
+
+<p>Upon each calculation of equilibrium state, the example produces two output files: one in DBR format (with&nbsp; <span style="font-family: monospace;">.out</span> extension appended to file name), and one in the 'dump' format (with&nbsp; <span style="font-family: monospace;">.Dump</span>
+extension), useful for looking at results in detail, comparing with
+previous calculations, or for debugging purposes. The 'dump' files
+cannot be used as GEMS3K input files. </p>
+<p>To use an output DBR file for the next gemcalc calculation, first
+rename it removing the .out extension, then edit at least some fields
+in it (usually <span style="font-family: monospace;">&lt;bIC&gt;, &lt;Tk&gt;, &lt;P&gt;</span>, optionally <span style="font-family: monospace;">&lt;dll&gt;</span> and <span style="font-family: monospace;">&lt;dul&gt;</span>).
+Do not forget to reset the &lt;NodeStatusCH&gt; flag from 2 to 1 (run
+GEM IPM3 in AIA mode) or from 6 to 5 (run GEM IPM3 in SIA mode),
+otherwise the calculation of equilibrium for this file will be skipped
+by GEMS3K. Then add the DBR file name to the <span style="font-family: monospace;">'CalcColumn-dbr.lst'</span> file. <br>
+</p>
+<p>For a SIA mode GEM calculation, the DBR file must contain <span style="font-family: monospace;">&lt;xDC&gt;</span> and <span style="font-family: monospace;">&lt;gam&gt;</span>
+data vectors that will be taken as initial approximation. If these data
+vectors are not present in the file than the speciation and activity
+coefficientscurrently available in the GEM IPM3 work data structure will be used.  <br>
+</p>
+<p><span style="font-family: monospace;"></span>You are welcome to
+modify the example input files (in a text editor) and observe the
+effects of modification on results of calculations of equilibria. Try
+also to export other (more complex) systems from GEM-Selektor and run
+them in AIA or SIA modes if GEM IPM3 to compare performance.<br>
+</p>
+<p>If any errors in GEMS3K calculations occur, they will be logged into the '<span style="font-family: monospace;">ipmlog.txt file',&nbsp;</span>
+located in the working directory of the executable file. This file is
+always appended, so to reset it you will need to delete it. <br>
+</p>
+
+<p>
+</p>
+
+
+
 <p> </p>
-
-
-<p><tt>end of file</tt> <br>
-&nbsp; </p>
-
-
 <br>
 
+<hr style="width: 100%; height: 2px;">
+<h2><a name="NODE-GEM"></a>3. The 'node-gem' example: data exchange in memory at TNode level</h2>
+
+<h4>How to build and run the "node-gem" example (see also&nbsp; <a href="http://gems.web.psi.ch/GEMS3K/techinfo.html">TechInfo on GEMS3K web page</a>). </h4>
+<p>
+Start the QtCreator and open one a Qmake project file&nbsp;<span style="font-family: monospace;"> 'standalone/node-gem/node-gem.pro'</span>.&nbsp;
+Use shadow building; do not use the Qt Simulator, and disable QML
+debugging. Switch to 'Projects' on the left pane, and under 'General'
+'Build directory', browse to set the build directory to <span style="font-family: monospace;">'standalone/node-gem-build'</span>.
+Then change to 'Edit' mode of QtCreator. In the "Build" menu, select
+first "Run qmake"; this will generate Makefile for this particular
+desktop platform and the chosen debug or release mode. Now, run "Build"
+"Build project..." menu command. This will build the 'node-gem'
+executable file in the 'standalone\node-gem-build\' folder (under
+Windows, either in 'standalone\node-gem-build\debug\' or in
+'standalone\node-gem-build\release\' folder).<br>
+<br>
+To launch the gemcalc example in the terminal, cd into
+'standalone\node-gem-build\'&nbsp; and use the respective batch file
+'standalone\node-gem-build\', e.g. 'linux-run.bat' on linux. The GEMS3K
+input data files are located in the 'tp_test\' subfolder. The example
+program will produce one output file and one log file in the
+'standalone\node-gem-build\' folder.<br>
+</p>
+<p>You can run the example program also directly from the QtCreator.
+Before doing so, open the 'Projects' window and switch there to 'Run
+settings'. In the 'Arguments' line, enter the command line arguments</p>
+
+<p><span style="font-family: monospace;">tp_test/CalcColumn-dat.lst tp_test/CalcColumn-dbr.lst&nbsp; &gt;&nbsp; CalcColumn_tp.out</span></p>
+
+<p>the same as those in the batch file variant for the respective OS.
+In the 'Working directory' line, edit the path such that the working
+directory is <span style="font-family: monospace;">'standalone/node-gem-build'</span>.</p>
+
+<p>To simply execute the program, click on the 'Run' button in the
+leftmost toolbar pane. To observe how the program works or to debug the code, click instead
+the 'Start debugging' button below the 'Run' button. Before doing that,
+it is advisable to open the <span style="font-family: monospace;">'main.cpp'</span> file and set there a breakpoint. Details about the example program in that file are explained in the <a href="gems3k-nodelev.html"><span style="font-family: monospace;">gems3k-nodelev.html</span></a> documentation file. </p>
+<h4>What this example does</h4>
+<p>The 'node-gem' example implements a simple operator-splitting
+algorithmic framework of a coupled reactive mass trasport code.&nbsp;
+No actual transport algorithm is implemented. Instead, just a
+placeholder for one time step is given as a <span style="font-family: monospace;">TMyTransport::OneTimeStepRun()</span>
+function, which&nbsp; modifies bulk chemical compositions of node
+chemical systems in a regular way. Upon running the example, this leads
+to disappearance of calcite as stable phase from more and more nodes
+with time steps. This can be seen in the <span style="font-family: monospace;">'standalone/node-gem-build/CalcColumn_tp.out'</span> file where the console output is captured, as shown below for three selected times:</p>
+<div style="margin-left: 40px;"><span style="font-family: monospace;">...................</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Time step&nbsp; 1</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 0: Aq= 55.366 pH= 5.18718&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 1: Aq= 55.3432 pH= 6.35951&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 2: Aq= 55.3422 pH= 9.32542&nbsp; Calcite= 8.33082e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 3: Aq= 55.3422 pH= 9.37284&nbsp; Calcite= 9.33273e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 4: Aq= 55.3422 pH= 9.37434&nbsp; Calcite= 9.36328e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 5: Aq= 55.3422 pH= 9.37438&nbsp; Calcite= 9.36424e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 6: Aq= 55.3422 pH= 9.37438&nbsp; Calcite= 9.36426e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 7: Aq= 55.3422 pH= 9.37438&nbsp; Calcite= 9.36426e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 8: Aq= 55.3422 pH= 9.37438&nbsp; Calcite= 9.36426e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 9: Aq= 55.3422 pH= 9.37438&nbsp; Calcite= 9.36426e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 10: Aq= 55.3422 pH= 9.37438&nbsp; Calcite= 9.36426e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">....................</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Time step&nbsp; 31</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 0: Aq= 55.366 pH= 5.18718&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 1: Aq= 55.3588 pH= 2.38453&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 2: Aq= 55.3479 pH= 2.72024&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 3: Aq= 55.3435 pH= 3.78101&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 4: Aq= 55.3425 pH= 8.88375&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 5: Aq= 55.3422 pH= 9.31056&nbsp; Calcite= 8.01711e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 6: Aq= 55.3422 pH= 9.36598&nbsp; Calcite= 9.19323e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 7: Aq= 55.3422 pH= 9.37315&nbsp; Calcite= 9.33892e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 8: Aq= 55.3422 pH= 9.37395&nbsp; Calcite= 9.35507e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 9: Aq= 55.3422 pH= 9.37403&nbsp; Calcite= 9.35639e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 10: Aq= 55.3422 pH= 9.37404&nbsp; Calcite= 9.35665e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">....................</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Time step&nbsp; 61</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 0: Aq= 55.366 pH= 5.18718&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 1: Aq= 55.3732 pH= 2.09072&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 2: Aq= 55.3622 pH= 2.10303&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 3: Aq= 55.3514 pH= 2.41456&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 4: Aq= 55.3452 pH= 2.96921&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 5: Aq= 55.343 pH= 5.64156&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 6: Aq= 55.3424 pH= 9.05896&nbsp; Calcite= 1.40241e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 7: Aq= 55.3422 pH= 9.30647&nbsp; Calcite= 7.92787e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 8: Aq= 55.3422 pH= 9.36157&nbsp; Calcite= 9.10225e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 9: Aq= 55.3422 pH= 9.37144&nbsp; Calcite= 9.30467e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 10: Aq= 55.3422 pH= 9.37303&nbsp; Calcite= 9.33527e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">.....................</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">Time step&nbsp; 91</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 0: Aq= 55.366 pH= 5.18718&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 1: Aq= 55.3876 pH= 1.92269&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 2: Aq= 55.3845 pH= 1.76877&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 3: Aq= 55.3692 pH= 1.89531&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 4: Aq= 55.3557 pH= 2.18716&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 5: Aq= 55.3477 pH= 2.62293&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 6: Aq= 55.344 pH= 3.31962&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 7: Aq= 55.3427 pH= 6.55641&nbsp; Calcite= 0</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 8: Aq= 55.3423 pH= 9.1462&nbsp; Calcite= 3.9567e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 9: Aq= 55.3422 pH= 9.31884&nbsp; Calcite= 8.19927e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">&nbsp; Node 10: Aq= 55.3422 pH= 9.36093&nbsp; Calcite= 9.08932e-05</span><br style="font-family: monospace;">
+<span style="font-family: monospace;">.....................</span><br>
+</div>
+<p>The evolution of pH does not seem to be realistic because the scheme in <span style="font-family: monospace;">OneTimeStepRun()</span>
+function is not a realistic mass-balanced transport algorithm. You are
+welcome to contribute a true simple advection transport algorithm for
+this numerical example!<br>
+</p>
+<p>You are welcome to modify the example code and input files and
+observe the effects of modification. For large chemical systems, it
+would make sence to write output in a dedicated file and leave console
+output not redirected in order to watch the claculation progress in the
+console or in a terminal. <br>
+</p>
+<p>If any errors in GEMS3K calculations occur, they will be logged into the '<span style="font-family: monospace;">ipmlog.txt file'</span>
+located in the working directory of the executable file. This file is
+always appended, so to reset it you will need to delete it. <br>
+</p>
+<p>
+</p>
+
+
+<p><br>
+</p>
+
+
+
+<hr size="2" width="100%"><p>Last change: 17.10.2012&nbsp; DK</p>
+
+<p>Copyright (c) 2012 <a href="http://gems.web.psi.ch/teamhist.html">GEMS
+Development Team</a></p>
+
+<p><br>
+</p>
+
+<br>
 
 <br>
 

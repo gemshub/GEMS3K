@@ -25,14 +25,12 @@
  <tbody>
  <tr style="height: 56px;">
   
-  <td id="projectlogo"><img alt="Logo" src="gems1.png"/></td>
-  
   
   <td style="padding-left: 0.5em;">
    <div id="projectname">Gems3k
    &#160;<span id="projectnumber">3.1</span>
    </div>
-   
+   <div id="projectbrief">GEMS3K standalone solver for geochemical equilibria</div>
   </td>
   
   
@@ -102,15 +100,17 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 
-<p>) Implements a simple C/C++ interface between GEM IPM and FMT codes.  
+<p>Implements a simple C/C++ interface between GEM IPM and FMT codes.  
  <a href="class_t_node.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="node_8h_source.html">node.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for TNode:</div>
 <div class="dyncontent">
  <div class="center">
   <img src="class_t_node.png" usemap="#TNode_map" alt=""/>
   <map id="TNode_map" name="TNode_map">
-<area href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT ..." alt="TNodeArray" shape="rect" coords="0,56,82,80"/>
+<area href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ..." alt="TNodeArray" shape="rect" coords="0,56,82,80"/>
 </map>
  </div></div>
 
@@ -124,8 +124,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a374606795ee14fe9a6df10dec491d799"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a374606795ee14fe9a6df10dec491d799"></a>
 virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a374606795ee14fe9a6df10dec491d799">~TNode</a> ()</td></tr>
 <tr class="memdesc:a374606795ee14fe9a6df10dec491d799"><td class="mdescLeft">&#160;</td><td class="mdescRight">destructor <br/></td></tr>
-<tr class="memitem:a3d184ad9dd7bb247ffcd63b8411c3071"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071">GEM_init</a> (const char *ipmfiles_lst_name, long int *nodeTypes=0, bool getNodT1=false)</td></tr>
-<tr class="memdesc:a3d184ad9dd7bb247ffcd63b8411c3071"><td class="mdescLeft">&#160;</td><td class="mdescRight">(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module.  <a href="#a3d184ad9dd7bb247ffcd63b8411c3071"></a><br/></td></tr>
+<tr class="memitem:a494e9ad8f9f34b60208427b0a0d79e94"><td class="memItemLeft" align="right" valign="top">long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94">GEM_init</a> (const char *ipmfiles_lst_name, const char *dbrfiles_lst_name=0, long int *nodeTypes=0, bool getNodT1=false)</td></tr>
+<tr class="memdesc:a494e9ad8f9f34b60208427b0a0d79e94"><td class="mdescLeft">&#160;</td><td class="mdescRight">(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module.  <a href="#a494e9ad8f9f34b60208427b0a0d79e94"></a><br/></td></tr>
 <tr class="memitem:aca4567cec25b6583af9410b02c79ed41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aca4567cec25b6583af9410b02c79ed41">GEM_restore_MT</a> (long int &amp;p_NodeHandle, long int &amp;p_NodeStatusCH, double &amp;p_TK, double &amp;p_P, double &amp;p_Vs, double &amp;p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH)</td></tr>
 <tr class="memdesc:aca4567cec25b6583af9410b02c79ed41"><td class="mdescLeft">&#160;</td><td class="mdescRight">(6) Passes (copies) the GEMS3K input data from the work instance of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure.  <a href="#aca4567cec25b6583af9410b02c79ed41"></a><br/></td></tr>
 <tr class="memitem:abfc9b81781189f20f95aed5f97589858"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#abfc9b81781189f20f95aed5f97589858">GEM_from_MT</a> (long int p_NodeHandle, long int p_NodeStatusCH, double p_TK, double p_P, double p_Vs, double p_Ms, double *p_bIC, double *p_dul, double *p_dll, double *p_aPH)</td></tr>
@@ -242,6 +242,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ae3a6ef1b3df13da8198695204ba72683"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3a6ef1b3df13da8198695204ba72683"></a>
 long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ae3a6ef1b3df13da8198695204ba72683">gridTP</a> () const </td></tr>
 <tr class="memdesc:ae3a6ef1b3df13da8198695204ba72683"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns number of temperature and pressure grid points for one dependent component. <br/></td></tr>
+<tr class="memitem:ac04b6d96043f2b6b3c5c2b10c71af4a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac04b6d96043f2b6b3c5c2b10c71af4a8"></a>
+double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ac04b6d96043f2b6b3c5c2b10c71af4a8">get_Ppa_sat</a> (double Tk)</td></tr>
+<tr class="memdesc:ac04b6d96043f2b6b3c5c2b10c71af4a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input file. <br/></td></tr>
+<tr class="memitem:a98971c2b677af3ec5b10ce034db45063"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98971c2b677af3ec5b10ce034db45063"></a>
+long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a98971c2b677af3ec5b10ce034db45063">get_grid_index_Ppa_sat</a> (double Tk)</td></tr>
+<tr class="memdesc:a98971c2b677af3ec5b10ce034db45063"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns index of Tk point - Psat point pair. <br/></td></tr>
 <tr class="memitem:a7afac572263e12640835279830ca60e4"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a7afac572263e12640835279830ca60e4">DC_G0</a> (const long int xCH, const double P, const double TK, bool norm=true)</td></tr>
 <tr class="memdesc:a7afac572263e12640835279830ca60e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a7afac572263e12640835279830ca60e4"></a><br/></td></tr>
 <tr class="memitem:a63c87c39f33bfd636d523c03a2cd6b9f"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a63c87c39f33bfd636d523c03a2cd6b9f">DC_V0</a> (const long int xCH, const double P, const double TK)</td></tr>
@@ -256,6 +262,10 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a1e6c17e719376669403af8d7149bf529"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) Helmholtz energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a1e6c17e719376669403af8d7149bf529"></a><br/></td></tr>
 <tr class="memitem:a5b87fb908873d158d2f9e965be39b274"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a5b87fb908873d158d2f9e965be39b274">DC_U0</a> (const long int xCH, const double P, const double TK)</td></tr>
 <tr class="memdesc:a5b87fb908873d158d2f9e965be39b274"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) Internal energy of Dependent Component (in J/mol) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#a5b87fb908873d158d2f9e965be39b274"></a><br/></td></tr>
+<tr class="memitem:a590116944bc0ee663608303005db06df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a590116944bc0ee663608303005db06df">DensArrayH2Ow</a> (const double P, const double TK, vector&lt; double &gt; &amp;DensAW)</td></tr>
+<tr class="memdesc:a590116944bc0ee663608303005db06df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure or 0.0, if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.  <a href="#a590116944bc0ee663608303005db06df"></a><br/></td></tr>
+<tr class="memitem:aab53daf27bc5d38b107b0c74b416938e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aab53daf27bc5d38b107b0c74b416938e">EpsArrayH2Ow</a> (const double P, const double TK, vector&lt; double &gt; &amp;EpsAW)</td></tr>
+<tr class="memdesc:aab53daf27bc5d38b107b0c74b416938e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure or 0.0, if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.  <a href="#aab53daf27bc5d38b107b0c74b416938e"></a><br/></td></tr>
 <tr class="memitem:ac52e8e98b3dee1af3f63b348eacedb08"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ac52e8e98b3dee1af3f63b348eacedb08">EpsH2Ow</a> (const double P, const double TK)</td></tr>
 <tr class="memdesc:ac52e8e98b3dee1af3f63b348eacedb08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure.  <a href="#ac52e8e98b3dee1af3f63b348eacedb08"></a><br/></td></tr>
 <tr class="memitem:abdc7cfbd1f11c337568536ad0c7f4e6c"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#abdc7cfbd1f11c337568536ad0c7f4e6c">DenH2Ow</a> (const double P, const double TK)</td></tr>
@@ -310,28 +320,32 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a8c6c25c9d71fd92b711e815c94e4ebda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current mole amount of DC directly from GEM IPM work structure.  <a href="#a8c6c25c9d71fd92b711e815c94e4ebda"></a><br/></td></tr>
 <tr class="memitem:a36d5436804f2ecfbe4f7d509c6711be1"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a36d5436804f2ecfbe4f7d509c6711be1">DC_a</a> (const long int xCH)</td></tr>
 <tr class="memdesc:a36d5436804f2ecfbe4f7d509c6711be1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current (dual-thermodynamic) activity of DC directly from GEM IPM work structure.  <a href="#a36d5436804f2ecfbe4f7d509c6711be1"></a><br/></td></tr>
-<tr class="memitem:a67d1f15b2372bb147d4f6e2cfa2bb0b3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a67d1f15b2372bb147d4f6e2cfa2bb0b3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_IPc_IPx_DCc_indices</b> (long *index_phase_aIPx, long *index_phase_aIPc, long *index_phase_aDCc, long *index_phase)</td></tr>
-<tr class="memitem:a00ae5c41bdcc64a1abd9d1d609405f82"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a00ae5c41bdcc64a1abd9d1d609405f82"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_NPar_NPcoef_MaxOrd_NComp_NP_DC</b> (long *NPar, long *NPcoef, long *MaxOrd, long *NComp, long *NP_DC, long *index_phase)</td></tr>
-<tr class="memitem:a2accb175572388a00ea387f0a301240d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2accb175572388a00ea387f0a301240d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_aIPc</b> (double *aIPc, long *index_phase_aIPc, long *index_phase)</td></tr>
-<tr class="memitem:adbd6331a8df16ef5961c269842cd7a1b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbd6331a8df16ef5961c269842cd7a1b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_aIPx</b> (long *aIPx, long *index_phase_aIPx, long *index_phase)</td></tr>
-<tr class="memitem:aff5d5c3283368336e462771de496eea3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff5d5c3283368336e462771de496eea3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_aDCc</b> (double *aDCc, long *index_phase_aDCc, long *index_phase)</td></tr>
-<tr class="memitem:ab21be9a7d3c9d457bcccaa12ef3dd4a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab21be9a7d3c9d457bcccaa12ef3dd4a2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_aIPc</b> (double *aIPc, long *index_phase_aIPc, long *index_phase)</td></tr>
-<tr class="memitem:a9ff3385bd050f96e4cc1d32841d881ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ff3385bd050f96e4cc1d32841d881ce"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_aDCc</b> (const double *aDCc, long *index_phase_aDCc, long *index_phase)</td></tr>
-<tr class="memitem:a25cb2bffaaf49dfee567a841e6e6d5a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a25cb2bffaaf49dfee567a841e6e6d5a1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_Tk</b> (double *T_k)</td></tr>
-<tr class="memitem:a6b90a76d41a95aa70c1e6e9543014b35"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b90a76d41a95aa70c1e6e9543014b35"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_Pb</b> (double *P_b)</td></tr>
+<tr class="memitem:ae5208dd72252a8ab48f7611aaba912a5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5208dd72252a8ab48f7611aaba912a5"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ae5208dd72252a8ab48f7611aaba912a5">Get_IPc_IPx_DCc_indices</a> (long &amp;index_phase_aIPx, long &amp;index_phase_aIPc, long &amp;index_phase_aDCc, const long &amp;index_phase)</td></tr>
+<tr class="memdesc:ae5208dd72252a8ab48f7611aaba912a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functions for retrieveing and setting values needed for activity coefficient calculation by <a class="el" href="class_t_sol_mod.html">TSolMod</a> class Sets values of LsMod and LsMdc array. <br/></td></tr>
+<tr class="memitem:af3cb56042ce412805120f55cb863d47e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3cb56042ce412805120f55cb863d47e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_NPar_NPcoef_MaxOrd_NComp_NP_DC</b> (long &amp;NPar, long &amp;NPcoef, long &amp;MaxOrd, long &amp;NComp, long &amp;NP_DC, const long &amp;index_phase)</td></tr>
+<tr class="memitem:abb3b1e78cd50a9fc6fa890df07993e93"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb3b1e78cd50a9fc6fa890df07993e93"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_aIPc</b> (vector&lt; double &gt; &amp;aIPc, const long &amp;index_phase_aIPc, const long &amp;index_phase)</td></tr>
+<tr class="memitem:aac2ea095e960202aad993525555c4196"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aac2ea095e960202aad993525555c4196"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_aIPx</b> (vector&lt; long &gt; &amp;aIPx, const long &amp;index_phase_aIPx, const long &amp;index_phase)</td></tr>
+<tr class="memitem:a5676fb8cd217a7d93ef090655ef36d0e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5676fb8cd217a7d93ef090655ef36d0e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Get_aDCc</b> (vector&lt; double &gt; &amp;aDCc, const long &amp;index_phase_aDCc, const long &amp;index_phase)</td></tr>
+<tr class="memitem:a15fc7bf28f0fee06441f831e45f57d7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15fc7bf28f0fee06441f831e45f57d7f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_aIPc</b> (const vector&lt; double &gt; aIPc, const long &amp;index_phase_aIPc, const long &amp;index_phase)</td></tr>
+<tr class="memitem:abf4983eb047191c6b7aa306daf1b6d3f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abf4983eb047191c6b7aa306daf1b6d3f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_aDCc</b> (const vector&lt; double &gt; aDCc, const long &amp;index_phase_aDCc, const long &amp;index_phase)</td></tr>
+<tr class="memitem:a41022870d6a1b5d4067ba28d737cb740"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41022870d6a1b5d4067ba28d737cb740"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a41022870d6a1b5d4067ba28d737cb740">Set_Tk</a> (double &amp;T_k)</td></tr>
+<tr class="memdesc:a41022870d6a1b5d4067ba28d737cb740"><td class="mdescLeft">&#160;</td><td class="mdescRight">These methods set contents of fields in the work node structure. <br/></td></tr>
+<tr class="memitem:a9a6eb7647fb254742deb0774e674486f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a6eb7647fb254742deb0774e674486f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Set_Pb</b> (double &amp;P_b)</td></tr>
 <tr class="memitem:ab4b1ad570e677e07b9fcd1e3c25e05be"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#ab4b1ad570e677e07b9fcd1e3c25e05be">DC_c</a> (const long int xCH)</td></tr>
 <tr class="memdesc:ab4b1ad570e677e07b9fcd1e3c25e05be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current concentration of Dependent Component in its phase directly from GEM IPM work structure.  <a href="#ab4b1ad570e677e07b9fcd1e3c25e05be"></a><br/></td></tr>
 <tr class="memitem:a5069e421787a454946eda375c8b3fddb"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a5069e421787a454946eda375c8b3fddb">DC_g</a> (const long int xCH) const </td></tr>
 <tr class="memdesc:a5069e421787a454946eda375c8b3fddb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current activity coefficient of DC in its plase directly from GEM IPM work structure.  <a href="#a5069e421787a454946eda375c8b3fddb"></a><br/></td></tr>
+<tr class="memitem:aa677e4004c01bb46d8f986d5b7921a77"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77">DC_lng</a> (const long int xCH) const </td></tr>
+<tr class="memdesc:aa677e4004c01bb46d8f986d5b7921a77"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH.  <a href="#aa677e4004c01bb46d8f986d5b7921a77"></a><br/></td></tr>
 <tr class="memitem:a25b3fed9d9faca846d95ddb86799c7a7"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a25b3fed9d9faca846d95ddb86799c7a7">DC_mu</a> (const long int xCH, bool norm=true)</td></tr>
 <tr class="memdesc:a25b3fed9d9faca846d95ddb86799c7a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the current (dual-thermodynamic) chemical potential of DC directly from GEM IPM work structure.  <a href="#a25b3fed9d9faca846d95ddb86799c7a7"></a><br/></td></tr>
 <tr class="memitem:a0c376c84ac9b00b0ac83be8c78913f70"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a0c376c84ac9b00b0ac83be8c78913f70">DC_mu0</a> (const long int xCH, bool norm=true)</td></tr>
@@ -388,17 +402,17 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_name_to_vtk</b
 void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_size_to_vtk</b> (long int nfild, long int &amp;nel, long int &amp;nel2)</td></tr>
 <tr class="memitem:a96183ef36b24d0cc0d5973acf716d5ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96183ef36b24d0cc0d5973acf716d5ba"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>databr_head_to_vtk</b> (fstream &amp;ff, const char *name, double time, long cycle, long nx=1, long ny=1, long nz=1)</td></tr>
+<tr class="memitem:a0042cee23e1b049699cb8550fb6bce07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0042cee23e1b049699cb8550fb6bce07"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>InitNodeArray</b> (const char *, long int *, bool, bool)</td></tr>
 <tr class="memitem:ac090df5cb2d3c61e4eb8e7bb4b205dfc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac090df5cb2d3c61e4eb8e7bb4b205dfc"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setNodeArray</b> (long int, long int *)</td></tr>
-<tr class="memitem:a393b0da0eff947170dbf28c5b0beab2e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a393b0da0eff947170dbf28c5b0beab2e"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>checkNodeArray</b> (long int, long int *, const char *)</td></tr>
 <tr class="memitem:ad3ab643d4bc0c7f98b76abe60bf13d58"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3ab643d4bc0c7f98b76abe60bf13d58"></a>
 virtual long int&#160;</td><td class="memItemRight" valign="bottom"><b>nNodes</b> () const </td></tr>
 <tr><td colspan="2"><h2><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a77c784ef975db01b79dabea4c16b915b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77c784ef975db01b79dabea4c16b915b"></a>
 <a class="el" href="struct_m_u_l_t_i.html">MULTI</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_t_node.html#a77c784ef975db01b79dabea4c16b915b">pmm</a></td></tr>
-<tr class="memdesc:a77c784ef975db01b79dabea4c16b915b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to GEM IPM work data structure (<a class="el" href="ms__multi_8h_source.html">ms_multi.h</a>) <br/></td></tr>
+<tr class="memdesc:a77c784ef975db01b79dabea4c16b915b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to GEM IPM work data structure (<a class="el" href="ms__multi_8h.html" title="Declaration of TMulti class, configuration, and related functions based on the IPM work data structur...">ms_multi.h</a>) <br/></td></tr>
 <tr class="memitem:a58ec1b37f5453673e11bc5a6023c97e6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58ec1b37f5453673e11bc5a6023c97e6"></a>
 <a class="el" href="class_t_multi.html">TMulti</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>multi</b></td></tr>
 <tr class="memitem:ae6e7fab96367176ec59da221ac92c5a9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae6e7fab96367176ec59da221ac92c5a9"></a>
@@ -422,7 +436,8 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <tr class="memdesc:a78bcefa08d965128e3929298d765c57d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total Number of performed IPM main iterations. <br/></td></tr>
 </table>
 <hr/><a name="details" id="details"></a><h2>Detailed Description</h2>
-<div class="textblock"><p>) Implements a simple C/C++ interface between GEM IPM and FMT codes. </p>
+<div class="textblock"><p>Implements a simple C/C++ interface between GEM IPM and FMT codes. </p>
+<p>) Implements a simple C/C++ interface between GEM IPM and FMT codes.</p>
 <p>Works with <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> and work <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structures without using the TNodearray class. </p>
 </div><hr/><h2>Member Function Documentation</h2>
 <a class="anchor" id="a773180f7d931f2f2a3b5a70bbc26dff0"></a>
@@ -852,6 +867,31 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 
 </div>
 </div>
+<a class="anchor" id="aa677e4004c01bb46d8f986d5b7921a77"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double <a class="el" href="class_t_node.html#aa677e4004c01bb46d8f986d5b7921a77">TNode::DC_lng</a> </td>
+          <td>(</td>
+          <td class="paramtype">const long int&#160;</td>
+          <td class="paramname"><em>xCH</em></td><td>)</td>
+          <td> const<code> [inline]</code></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">xCH</td><td>index of species DCH </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="a25b3fed9d9faca846d95ddb86799c7a7"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1216,6 +1256,92 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
   </dd>
 </dl>
 <dl class="section return"><dt>Returns:</dt><dd>density or 0.0, if TK or P go beyond the valid lookup array intervals or tolerances. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a590116944bc0ee663608303005db06df"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_t_node.html#a590116944bc0ee663608303005db06df">TNode::DensArrayH2Ow</a> </td>
+          <td>(</td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>P</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>TK</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">vector&lt; double &gt; &amp;&#160;</td>
+          <td class="paramname"><em>DensAW</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure or 0.0, if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">P</td><td>refers to the pressure in Pascal </td></tr>
+    <tr><td class="paramname">TK</td><td>refers to the temperature in Kelvin </td></tr>
+    <tr><td class="paramname">DensAW</td><td>contains the density of water (at P and Tk) and its temperature and pressure derivatives </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="aab53daf27bc5d38b107b0c74b416938e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="class_t_node.html#aab53daf27bc5d38b107b0c74b416938e">TNode::EpsArrayH2Ow</a> </td>
+          <td>(</td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>P</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const double&#160;</td>
+          <td class="paramname"><em>TK</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">vector&lt; double &gt; &amp;&#160;</td>
+          <td class="paramname"><em>EpsAW</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the <a class="el" href="struct_d_a_t_a_c_h.html" title="Data for CHemistry data structure.">DATACH</a> structure or 0.0, if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances. </p>
+<dl class="params"><dt><b>Parameters:</b></dt><dd>
+  <table class="params">
+    <tr><td class="paramname">P</td><td>refers to the pressure in Pascal </td></tr>
+    <tr><td class="paramname">TK</td><td>refers to the temperature in Kelvin </td></tr>
+    <tr><td class="paramname">DensAW</td><td>contains the permittivity of water (at P and Tk) and its temperature and pressure derivatives </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1612,15 +1738,21 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 
 </div>
 </div>
-<a class="anchor" id="a3d184ad9dd7bb247ffcd63b8411c3071"></a>
+<a class="anchor" id="a494e9ad8f9f34b60208427b0a0d79e94"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long int <a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071">TNode::GEM_init</a> </td>
+          <td class="memname">long int <a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94">TNode::GEM_init</a> </td>
           <td>(</td>
           <td class="paramtype">const char *&#160;</td>
           <td class="paramname"><em>ipmfiles_lst_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>dbrfiles_lst_name</em> = <code>0</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -1643,13 +1775,14 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 <div class="memdoc">
 
-<p>(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module. </p>
-<p>Also reads in the IPM, DCH and DBR text input files. </p>
+<p>(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module. </p>
+<p>Also reads in the IPM, DCH and one or many DBR text input files. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">ipmfiles_lst_name</td><td>pointer to a null-terminated C string with a path to a text file containing the list of names of GEMS3K input files. Example: file "test.lst" with a content: -t "dch.dat" "ipm.dat" "dbr-0.dat" (-t tells that input files are in text format) </td></tr>
-    <tr><td class="paramname">nodeTypes</td><td>optional parameter used only on the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEM IPM for development of coupled and GEM-FMT ...">TNodeArray</a>, the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution list nodeTypes </td></tr>
-    <tr><td class="paramname">getNodT1</td><td>optional parameter used only when reading multiple DBR files after modeling task interruption in GEM-Selektor </td></tr>
+    <tr><td class="paramname">dbrfiles_lst_name</td><td>optional parameter (used only at the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a> level) - a pointer to a null-terminated C string with a path to a text file containing the list of comma-separated names of DBR input files. Example: file "test-dbr.lst" with a content: "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat" </td></tr>
+    <tr><td class="paramname">nodeTypes</td><td>optional parameter used only at the <a class="el" href="class_t_node_array.html" title="Implements an advanced (level 2) C/C++ interface with GEMS3K for the development of coupled reactive ...">TNodeArray</a> level, the initial node contents from <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> files will be distributed among nodes in array according to the distribution index list nodeTypes </td></tr>
+    <tr><td class="paramname">getNodT1</td><td>optional parameter used only when reading multiple DBR files after the modeling task interruption in GEM-Selektor </td></tr>
   </table>
   </dd>
 </dl>
@@ -1721,7 +1854,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <p>This call is useful when <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> returns with a NodeStatusCH value indicating a GEM calculation error (see above). Another use is for a detailed comparison of a test system calculation after the version upgrade of GEMS3K. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".dump.out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
+    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".dump.out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1754,7 +1887,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <div class="memdoc">
 
 <p>(5) Reads another DBR file (with input system composition, T,P etc.) \ . </p>
-<p>The DBR file must be compatible with the currently loaded IPM and DCH files (see description of <a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071" title="(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module...">GEM_init()</a> function call). </p>
+<p>The DBR file must be compatible with the currently loaded IPM and DCH files (see description of <a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94" title="(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module...">GEM_init()</a> function call). </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">fname</td><td>Null-terminated (C) string containing a full path to the input DBR disk file. </td></tr>
@@ -1840,7 +1973,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <div class="memdoc">
 
 <p>(6) Passes (copies) the GEMS3K input data from the work instance of <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure. </p>
-<p>This call is useful after the <a class="el" href="class_t_node.html#a3d184ad9dd7bb247ffcd63b8411c3071" title="(1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs that use GEMS3K module...">GEM_init()</a> (1) and <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> (2) calls to initialize the arrays which keep the chemical data for all nodes used in the mass-transport model. </p>
+<p>This call is useful after the <a class="el" href="class_t_node.html#a494e9ad8f9f34b60208427b0a0d79e94" title="(1) Initialization of GEM IPM3 data structures in coupled programs that use GEMS3K module...">GEM_init()</a> (1) and <a class="el" href="class_t_node.html#a0feda4c96c9e8320af1c8cce57dfdbe1" title="(2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure and metastability constraints provided in the work instance of DATABR structure.">GEM_run()</a> (2) calls to initialize the arrays which keep the chemical data for all nodes used in the mass-transport model. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
     <tr><td class="paramname">p_NodeHandle</td><td>Node identification handle </td></tr>
@@ -2141,7 +2274,7 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 <p>(3) Writes the contents of the work instance of the <a class="el" href="struct_d_a_t_a_b_r.html" title="DataBRidge defines the structure of node-dependent data for exchange between the coupled GEM IPM and ...">DATABR</a> structure into a disk file with path name fname. </p>
 <dl class="params"><dt><b>Parameters:</b></dt><dd>
   <table class="params">
-    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the DBR disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title=") Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
+    <tr><td class="paramname">fname</td><td>null-terminated (C) string containing a full path to the DBR disk file to be written. NULL - the disk file name path stored in the dbr_file_name field of the <a class="el" href="class_t_node.html" title="Implements a simple C/C++ interface between GEM IPM and FMT codes.">TNode</a> class instance will be used, extended with ".out". Usually the dbr_file_name field contains the path to the last input DBR file. </td></tr>
     <tr><td class="paramname">binary_f</td><td>defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task if called in the loop for each node), or in text format (false or 0, default). </td></tr>
     <tr><td class="paramname">with_comments</td><td>(text format only): defines the mode of output of comments written before each data tag and content in the DBR file. If set to true (1), the comments will be written for all data entries (default). If false (0), comments will not be written. </td></tr>
     <tr><td class="paramname">brief_mode</td><td>if true, tells that do not write data items, that contain only default values in text format </td></tr>
@@ -2779,15 +2912,15 @@ long int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>C:/DevelGEMS/trunk/standalone/GEMS3K/<a class="el" href="node_8h_source.html">node.h</a></li>
-<li>C:/DevelGEMS/trunk/standalone/GEMS3K/node.cpp</li>
-<li>C:/DevelGEMS/trunk/standalone/GEMS3K/node_format.cpp</li>
+<li>/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="node_8h_source.html">node.h</a></li>
+<li>/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="node_8cpp.html">node.cpp</a></li>
+<li>/Users/kulik/DevGEMS/trunk/standalone/GEMS3K/<a class="el" href="node__format_8cpp.html">node_format.cpp</a></li>
 </ul>
 </div><!-- contents -->
 
 
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Sep 24 2012 13:51:36 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 10 2012 13:50:29 for Gems3k by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.0
 </small></address>

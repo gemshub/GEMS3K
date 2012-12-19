@@ -31,6 +31,7 @@
 
 #include<iomanip>
 
+#include "node.h"
 #include "m_param.h"
 #include "jama_lu.h"
 #include "jama_cholesky.h"
@@ -870,8 +871,8 @@ STEP_POINT("FIA Iteration");
    {  // Strict mode of mass balance control
        iRet = 2;
        char buf[320];
-       sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR iterations (%d) exceeded! ",
-                WhereCalledFrom, pa->p.DP );
+       sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR iterations (%ld) exceeded! ",
+                WhereCalledFrom, (long int)pa->p.DP );
        setErrorMessage( 4, "E04IPM: Mass Balance Refinement: ", buf );
        return iRet; // no MBR() solution
    }

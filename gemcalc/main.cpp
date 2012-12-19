@@ -3,25 +3,33 @@
 //
 // Demo test of usage of the TNode class for implementing a simple
 // batch-like calculation of equilibria using text file input and
-// GEMIPM2 numerical kernel
+// GEM-IPM-3 numerical kernel.
 
-// TNode class implements a  simple C/C++ interface of GEMS3K.
+// TNode class implements a simple C/C++ interface of GEMS3K code.
 // It works with DATACH and work DATABR structures and respective
 // DCH (chemical system definition) and DBR (recipe or data bridge)
-// data files. In addition, the program reads an IPM inlut file which 
-// can be used for tuning up numerical controls of GEM IPM2 algorithm 
+// data files. In addition, the program reads an IPM input file which
+// can be used for tuning up numerical controls of GEM IPM-3 algorithm
 // and for setting up the parameters of non-ideal mixing models.
 //
-// Copyright (C) 2007,2008 D.Kulik, S.Dmitrieva
+// Copyright (C) 2007-2012 D.Kulik, S.Dmytriyeva
+// <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
-// This file is part of GEMS3K code for thermodynamic modelling
-// by Gibbs energy minimization
+// This file is part of the GEMS3K code for thermodynamic modelling
+// by Gibbs energy minimization <http://gems.web.psi.ch/GEMS3K/>
+//
+// GEMS3K is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
 
-// This file may be distributed under the licence terms defined
-// in GEMS3K.QAL
-//
-// See also http://gems.web.psi.ch
-// mailto://gems2.support@psi.ch
+// GEMS3K is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>
 //-------------------------------------------------------------------
 
 #include <time.h>
@@ -58,7 +66,7 @@ int main( int argc, char* argv[] )
   }
 
    // Getting direct access to work node DATABR structure which exchanges the
-   // data with GEM IPM2 (already filled out by reading the DBR input file)
+   // data with GEM IPM3 (already filled out by reading the DBR input file)
    DATABR* dBR = node->pCNode(); 
 
   // test internal functions
@@ -85,18 +93,18 @@ int main( int argc, char* argv[] )
    dBR->NodeStatusCH = NEED_GEM_AIA;
 
    // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
-   int NodeStatusCH = node->GEM_run(  false );
+   int NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
-       node->GEM_write_dbr( NULL, false, true );
-       node->GEM_print_ipm( NULL );   // possible debugging printout
+       node->GEM_write_dbr( NULL, false, true, false );
+//       node->GEM_print_ipm( NULL );   // possible debugging printout
    }
    else {
       // (4) possible return status analysis, error message
        node->GEM_print_ipm( NULL );   // possible debugging printout
-       return 5; // GEM IPM did not converge properly      //?????
-        }
+       return 5; // GEM IPM did not converge properly - error message needed
+   }
 
    // test internal functions
   cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;   
@@ -123,25 +131,24 @@ int main( int argc, char* argv[] )
   cout << "A0   Ca+2: " << node->DC_A0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_A0( xCal, node->cP(), node->cTK() ) << endl;   
   cout << "U0   Ca+2: " << node->DC_U0( xCa_ion, node->cP(), node->cTK() ) <<  " Cal: " << node->DC_U0( xCal, node->cP(), node->cTK() ) << endl;   
    
-   // Here a possible loop on input recipes begins
+   // Here a possible loop on more input recipes begins
    if (argc >= 3 )
    {  
  	  char NextRecipeFileName[256];
  	  char NextRecipeOutFileName[300];
  	  char input_recipes_file_list_path[256-fileNameLength] = "";
      
- 	  strncpy( input_recipes_file_list_name, argv[2], 256);
+      strncpy( input_recipes_file_list_name, argv[2], 256);
       // list of additional recipes (dbr.dat files) e.g. for simulation
       // of a titration or another irreversible process
   	  // Reading list of recipes names from file 
-  	  recipes = f_getfiles(  input_recipes_file_list_name, 
+      recipes = f_getfiles(  input_recipes_file_list_name,
   	       		 input_recipes_file_list_path, nRecipes, ',');			 
-  	  
-  	 for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
+      for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
       { 
          // Trying to read the next file name 
   	    sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[cRecipe] );
-  
+
         // (5) Reading the next DBR file with different input composition or temperature
         node->GEM_read_dbr( NextRecipeFileName );
 
@@ -151,28 +158,27 @@ int main( int argc, char* argv[] )
         NodeStatusCH = node->GEM_run( false );
 
         if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
-        {    sprintf(NextRecipeOutFileName , "%s.out", NextRecipeFileName );
-        	 node->GEM_write_dbr( NextRecipeOutFileName, false, true );
-sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
-node->GEM_print_ipm( NextRecipeOutFileName );
+        {    sprintf(NextRecipeOutFileName , "%s.nc.out", NextRecipeFileName );
+             node->GEM_write_dbr( NextRecipeOutFileName, false, false, false );
+             sprintf(NextRecipeOutFileName , "%s.nc.Dump.out", NextRecipeFileName );
+             node->GEM_print_ipm( NextRecipeOutFileName );
         }
         else {
                // error message, debugging printout
      	      sprintf(NextRecipeOutFileName , "%s.Dump.out", NextRecipeFileName );
               node->GEM_print_ipm( NextRecipeOutFileName );
-//??              return 5; // GEM IPM did not converge properly
+//              return 5; // GEM IPM did not converge properly - error message needed
               }
-
       }
    }	 
-  	 // end of possible loop on input recipes
+   // end of possible loop on input recipes
    delete node;
    if( recipes ) delete recipes;
 
  // End of example  
    return 0; 
- }  
+}
    
 
 //---------------------------------------------------------------------------
-// end of main.cpp for TNode class usage - GEM single calculation example
+// end of main.cpp for TNode class usage - GEMS3K single calculation example

@@ -1,87 +1,73 @@
-"CalDolCol2G  CalcColumn  0009 0       3       55      000 "
-<pa_PE>  1
-<PV>  1
-<PSOL>  0
+#  GEMS3K v.3.1 r.750 (rc) 
+# File: /Users/kulik/DevGEMS/trunk/standalone/Tests/Cases/Brief-commented/CalcColumn-ipm.dat
+# Comments can be marked with # $ ; as the first character in the line
+# IPM text input file for the internal GEM IPM3 kernel data
+# (should be read after the DCH file and before DBR files)
+
+# ID key of the initial chemical system definition
+"CalcDolo  G  CalcColumn  0000 0       1       25      0   "
+
+## (1) Flags that affect memory allocation
+
+# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases 
 <PAalp>          '+'
+
+# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  
 <PSigm>          '+'
-<Lads>  0
-<FIa>  0
-<FIat>  0
 
 <END_DIM>
-<pa_DB>  1e-017
-<pa_DHB>  1e-014
-<pa_EPS>  1e-010
-<pa_DK>  1e-006
-<pa_DS>  1e-020
-<pa_DF>  0.01
-<pa_DFM>  0.01
-<pa_DP>  130
-<pa_IIM>  7000
-<pa_PD>  2
-<pa_PRD>  -5
-<pa_AG>  1
-<pa_DGC>  0
-<pa_PSM>  1
-<pa_GAR>  1
-<pa_GAH>  1000
-<pa_XwMin>  1e-013
-<pa_ScMin>  1e-013
-<pa_DcMin>  1e-033
-<pa_PhMin>  1e-020
-<pa_ICmin>  1e-005
-<pa_PC>  2
-<pa_DFYw>  1e-005
-<pa_DFYaq>  1e-005
-<pa_DFYid>  1e-005
-<pa_DFYr>  1e-005
-<pa_DFYh>  1e-005
-<pa_DFYc>  1e-005
-<pa_DFYs>  1e-006
-<pa_DW>  1
-<pa_DT>  0
-<pa_GAS>  0.001
-<pa_DG>  1000
-<pa_DNS>  12.05
-<pa_IEPS>  0.001
-<pKin>  1
-<pa_DKIN>  1e-010
-<pa_PLLG>  10000
-<tMin>  0
 
+## (3) Numerical controls and tolerances of GEM IPM-3 kernel
+#      - Need to be changed only in special cases (see gems3k_ipm.html)
+
+# DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } 
+<pa_DHB>  1e-15
+
+# DK: Tolerance for the Dikin's criterion of IPM convergence { 3e-6 } 
+<pa_DK>  1e-07
+# DFM: Tolerance for stability criterion for a phase to be eliminated from mass balance { 0.01 } 
+<pa_DFM>  0.001
+# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm
+
+# Tolerances and controls of high-precision IPM-3 algorithm 
+# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables
+<pa_PLLG>  10000
+
+## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)
+# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]
 <sMod>
 'DNNSNN' 'INNINN' 
+
+# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):
+# [0] number of interaction parameters (rows in <IPx>); [1] max. parameter order (columns in <IPx>);
+# [2] number of coefficients per interaction parameter in <PMc> array
 <LsMod>
 2 0 4 
 0 0 0 
+
+# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions
 <PMc>
 0 0 1 1 0 0 0 0 
+
+# LsMdc: Dimensions of TSolMod <DMc> and <MoiSN> arrays [nPS*3]: In each row (for phase):
+# [0] number of parameters per component; [1] 0; [2] 0. For multi-site (sublattice) models: 
+#   [1] number of sublattices nS; [2] total number of moieties nM acting in sublattice sites
 <LsMdc>
 0 0 0 
 0 0 0 
+
+## (5) Data arrays which are provided neither in DCH nor in DBR files
+# B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)
 <B>
-0.000331 0.000331 2e-007 110.683696417673 1e-007 55.3428612088366 0 
-<Pparc>
-3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 3 
-<fDQF>
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-<lnGmf>
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-<RLC>
-'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 'B' 
-<RSC>
-'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 
-<DLL>
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-<DUL>
-1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 1000000 
-<Aalp>
-0 0 0 0 0 0 0 
-<Sigw>
-0 0 0 0 0 0 0 
-<Sigg>
-0 0 0 0 0 0 0 
-<YOF>
-0 0 0 0 0 0 0 
-<dcMod>
-'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HKF' 'HWF' 'CSN' 'CSN' 'CSN' 'CSN' 'CSC' 'CSC' 'CSC' 'CSC' 'CSC' 
+0.0001001 1e-07 0.016 110.683696417673 0.008 55.3420685088366 0 
+
+# Initial data for DCs - see DATACH file for dimensions nDC, nDCs
+
+
+# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)
+
+
+# (7) Initial data for Phases
+
+
+# End of file

@@ -3,6 +3,7 @@ var searchData=
   ['l',['L',['../struct_m_u_l_t_i.html#a7818a2852c10bd19ff729b6a16793e88',1,'MULTI']]],
   ['l1',['L1',['../struct_m_u_l_t_i.html#ad2ff6b9453ba2138396bea6566ba269e',1,'MULTI']]],
   ['lads',['Lads',['../struct_m_u_l_t_i.html#a2d4615da0ecc43b55d2e3842621975cc',1,'MULTI']]],
+  ['lagraninterp',['LagranInterp',['../num__methods_8cpp.html#ab6b4fab86289bc03cd3bb17b937f2043',1,'LagranInterp(double *y, double *x, double *d, double yoi, double xoi, long int M, long int N, long int pp):&#160;num_methods.cpp'],['../num__methods_8h.html#ab6b4fab86289bc03cd3bb17b937f2043',1,'LagranInterp(double *y, double *x, double *d, double yoi, double xoi, long int M, long int N, long int pp):&#160;num_methods.cpp']]],
   ['ln5551',['ln5551',['../struct_m_u_l_t_i.html#a4ccffdb6281ef0b5d90ccb64843704ed',1,'MULTI']]],
   ['lngam',['lnGam',['../struct_m_u_l_t_i.html#ac1a61957fdd4bc28b3d29dc3f72e413f',1,'MULTI']]],
   ['lngamex',['lnGamEx',['../class_t_sol_mod.html#aab927fabdf186e13a10787da27a078b3',1,'TSolMod']]],
