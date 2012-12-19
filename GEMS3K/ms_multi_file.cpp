@@ -109,18 +109,21 @@ void TMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
  }
 
 // dimensions from LsKin array
-void TMulti::getLsKinsum( long int& fSakSum,long int& KrpcSum, long int& jCrDCSum,long int& xfacesSum )
-{  fSakSum = 0;
-   KrpcSum = 0;
-   jCrDCSum = 0;
-   xfacesSum = 0;
+void TMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
+              long int& rpConCSum,long int& apConCSum, long int& AscpCSum )
+{  xSKrCSum = 0;
+   ocPRkC_feSArC_Sum = 0;
+   rpConCSum = 0;
+   apConCSum = 0;
+   AscpCSum = 0;
 
    for(long int i=0; i<pm.FI; i++)
    {
-       fSakSum += (pm.LsKin[i*4]);
-       KrpcSum += (pm.LsKin[i*4+1]*pm.LsKin[i*4+2]);
-       jCrDCSum += (pm.LsKin[i*4+1]*pm.LsKin[i*4+2]); //== KrpcSum
-       xfacesSum += (pm.LsKin[i*4]*pm.LsKin[i*4+1]);
+       xSKrCSum += (pm.LsKin[i*6+1]);
+       ocPRkC_feSArC_Sum += (pm.LsKin[i*6]);
+       rpConCSum += (pm.LsKin[i*6]*pm.LsKin[i*6+2]);
+       apConCSum += (pm.LsKin[i*6]*pm.LsKin[i*6+1]*pm.LsKin[i*6+3]);
+       AscpCSum += (pm.LsKin[i*6+4]);
    }
  }
 
@@ -130,7 +133,6 @@ void TMulti::getLsUptsum( long int& UMpcSum )
    for(long int i=0; i<pm.FIs; i++)
    {
        UMpcSum += (pm.LsUpt[i*2]*pm.L1[i]);
-
    }
  }
 
@@ -471,6 +473,7 @@ pm.GamFs = 0;
         pm.feSArC   = 0;
         pm.rpConC   = 0;
         pm.apConC   = 0;
+        pm.AscpC   = 0;
         pm.UMpcC   = 0;
         pm.kMod   = 0;
 

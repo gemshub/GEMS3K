@@ -50,6 +50,26 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 #include "s_solmod.h"
 // #include "s_sorpmod.h"
 
+/* !! Must be added arrays
+
+ncsolv, /// TW new: number of solvent parameter coefficients (columns in solvc array)
+nsolv,  /// TW new: number of solvent interaction parameters (rows in solvc array)
+*ixsolv, /// new: array of indexes of solvent interaction parameters [nsolv*2]
+*solvc, /// TW new: array of solvent interaction parameters [ncsolv*nsolv]
+
+
+ncdiel, /// TW new: number of dielectric constant coefficients (colums in dielc array)
+ndiel,  /// TW new: number of dielectric constant parameters (rows in dielc array)
+*ixdiel /// new: array of indexes of dielectric interaction parameters [ndiel*2]
+*dielc, /// TW new: array of dielectric constant parameters [ncdiel*ndiel]
+
+ndh,    /// TW new: number of generic DH coefficients (rows in dhc array)
+*dhc,   /// TW new: array of generic DH parameters [ndh]
+
+*/
+
+
+
 typedef struct
 {  // MULTI is base structure to Project (local values)
   char
@@ -187,7 +207,7 @@ double
   // TKinMet stuff
   *LsKin,  ///< new: number of kin.regions nPRk[k]; number of species in activity products nSkr[k];
            /// number of parameter coeffs in parallel reaction term nrpC[k]; number of parameters
-           /// per species in activity products naptC[k] [Fi][4]
+           /// per species in activity products naptC[k]; nAscC number of parameter coefficients in As correction [Fi][6]; Reserved
   *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k]; reserved [Fis][2]
 
   *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])
@@ -242,6 +262,7 @@ double
   *rpConC,  ///< new: Collected array of kinetic rate constants k-> += LsKin[k][0]*LsKin[k][2];
   *apConC,  ///< new:!! Collected array of parameters per species involved in activity product terms
           ///  k-> += LsKin[k][0]*LsKin[k][1]*LsKin[k][3];
+  *AscpC,   /// new: parameter coefficients of equation for correction of specific surface area k-> += LsKin[k][4]
   *UMpcC,  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
       ;
   //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
@@ -354,7 +375,7 @@ double
    double (*D)[MST];  ///< Reserved; new work array for calc. surface act.coeff.
 // Name lists
   char (*sMod)[8];   ///< new: Codes for built-in mixing models of multicomponent phases [FIs]
-  char (*kMod)[4];  ///< new: Codes for built-in kinetic models [Fi]
+  char (*kMod)[6];  ///< new: Codes for built-in kinetic models [Fi]
   char  (*dcMod)[6];   ///< Codes for PT corrections for dependent component data [L]
   char  (*SB)[MAXICNAME+MAXSYMB]; ///< List of IC names in the system [N]
   char  (*SB1)[MAXICNAME]; ///< List of IC names in the system [N]
@@ -541,7 +562,8 @@ protected:
    /// Get dimensions from LsESmo array
    void getLsESmosum( long int& EImcSum,long int& mCDcSum );
    /// Get dimensions from LsKin array
-   void getLsKinsum( long int& fSakSum,long int& KrpcSum, long int& jCrDCSum,long int& xfacesSum );
+   void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
+                     long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
    /// Get dimensions from LsUpot array
    void getLsUptsum( long int& UMpcSum );
 
