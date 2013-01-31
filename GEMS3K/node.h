@@ -671,6 +671,9 @@ void GEM_set_MT(
       /// if there is no water in the node or no aqueous phase in DATACH.
       double Get_mIC( const long xic );
 
+      /// Retrieves pH of the aqueous solution
+      double Get_pH( );
+
      /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
      /// \param xic is IC DBR index
      /// \param bIC is amount of IC

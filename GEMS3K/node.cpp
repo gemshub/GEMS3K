@@ -1255,6 +1255,15 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
      return m_tot;
   }
 
+  // Added 31.01.2013 DM
+  // Retrives pH of the aqueous solution
+  double TNode::Get_pH( )
+  {
+      double p_pH;
+      p_pH = CNode->pH;
+      return p_pH;
+  }
+
   // Access to equilibrium properties of phases and components using DATACH indexation
 
   // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index)
