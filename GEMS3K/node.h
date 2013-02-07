@@ -783,23 +783,63 @@ void GEM_set_MT(
       /// \param xCH is DC DCH index
       double DC_a(const long int xCH);
 
-      
-      /// Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
-      /// Sets values of LsMod and LsMdc array
-      void Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase);
-      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase );
-      void Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase );
-      void Get_aIPx ( vector<long> &aIPx,   const long &index_phase_aIPx, const long &index_phase );
-      void Get_aDCc ( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase );
-      void Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase ); 		// Set values of aIPc array
-      void Set_aDCc ( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase );		// Set values of  aDCc array
-      /// These methods set contents of fields in the work node structure
-      void Set_Tk   ( double &T_k);
-      void Set_Pb   ( double &P_b);
+// GEMSFIT access functions
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Retrieves indices of origin in TSolMod composite arrays for a solution phase of interest index_phase.
+      /// \param IN: index_phase is the DCH index of phase of interest.
+      /// \param OUT: ipaIPx, ipaIPc, ipaDCc are origin indices of this phase in aIPx, aIPc and aDCc arrays, respectively.
+      void Get_IPc_IPx_DCc_indices( long int &ipaIPx, long int &ipaIPc, long int &ipaDCc, const long int &index_phase );
 
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Retrieves dimensions of TSolMod array for a solution phase of interest index_phase.
+      /// \param IN: index_phase is the DCH index of phase of interest.
+      /// \param OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC, are number of interaction parameters, number of coefficients per parameter,
+      /// \param   maximum parameter order (i.e. row length in aIPx), number of components in the phase, and number of coefficients
+      /// \param   per component, respectively.
+      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC( long int &NPar, long int &NPcoef, long int &MaxOrd,
+                                                long int &NComp, long int &NP_DC, const long int &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Gets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
+      /// \param IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
+      /// \param OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
+      void Get_aIPc ( vector<double> &vaIPc, const long int &ipaIPc, const long int &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Gets values of the aIPx list array (of indexes of interacting moieties or components) for the solution phase of interest index_phase.
+      /// \param IN: ipaIPx is the origin index (of the first element) of the aIPx array; index_phase is the DCH index of phase of interest.
+      /// \param OUT: returns vaIPx - vector with the contents of the aIPx sub-array.
+      void Get_aIPx ( vector<long int> &vaIPx,   const long int &ipaIPx, const long &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Gets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
+      /// \param IN: ipaDCc is the origin index (of the first element) of the aDCc array; index_phase is the DCH index of phase of interest.
+      /// \param OUT: returns vaDCc - vector with the contents of the aDCc sub-array.
+      void Get_aDCc ( vector<double> &vaDCc, const long &ipaDCc, const long &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Sets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
+      /// \param IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
+      /// \param     of the aIPc array; index_phase is the DCH index of phase of interest.
+      void Set_aIPc ( const vector<double> vaIPc, const long int &ipaIPc, const long &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Sets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
+      /// \param IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
+      /// \param of the aDCc array; index_phase is the DCH index of phase of interest.
+      void Set_aDCc ( const vector<double> vaDCc, const long &ipaDCc, const long &index_phase );
+
+      /// These methods set contents of fields in the work node structure
+      /// Direct access to set temperature T_K in the current (work) node
+      void Set_Tk   ( const double &T_K );
+
+      /// Direct access to set pressure (P_b given in bar) in the current (work) node
+      void Set_Pb   ( const double &P_b );
+
+// End GEMSFIT access functions
 
       /// Retrieves the current concentration of Dependent Component in its
-      /// phase directly from GEM IPM work structure. Also activity of a DC not included into
+      /// phase directly from the GEM IPM work structure. Also the activity of a DC not included into
       /// DATABR list can be retrieved. For aqueous species, molality is returned; for gas species,
       /// partial pressure; for surface complexes - density in mol/m2; for species in other phases -
       /// mole fraction. If DC has zero amount, the function returns 0.0.
