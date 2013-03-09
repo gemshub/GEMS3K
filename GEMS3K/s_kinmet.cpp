@@ -28,7 +28,61 @@
 #include <cstdio>
 #include "verror.h"
 //#include "s_fgl.h"
-//#include "s_kinmet.h"
+#include "s_kinmet.h"
+
+
+// Generic constructor
+TKinMet::TKinMet( const KinMetData *kmd )
+{
+  ;
+}
+
+// Destructor
+TKinMet::~TKinMet()
+{
+  ;
+}
+
+// sets the specific surface area of the phase and 'parallel reactions' area fractions
+long int TKinMet::UpdateFSA( const double *fSAf_p, const double As )
+{
+
+}
+
+// returns modified specific surface area of the phase and 'parallel reactions' area fractions
+double TKinMet::ModifiedFSA ( double *fSAf_p )
+{
+
+}
+
+// sets new system TP state
+long int TKinMet::UpdatePT ( const double T_k, const double P_bar )
+{
+
+}
+
+// sets new time and time step
+bool TKinMet::UpdateTime( const double Tau, const double dTau )
+{
+
+}
+
+// Checks dimensions in order to re-allocate class instance, if necessary
+bool TKinMet::testSizes( const KinMetData *kmd )
+{
+
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 //--------------------- End of s_kinmet.cpp ---------------------------

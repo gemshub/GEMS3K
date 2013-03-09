@@ -37,7 +37,7 @@ struct outField /// Internal descriptions of fields
 
 };
 
-class TRWArrays  /// Basic class for red/write fields of structure
+class TRWArrays  /// Basic class for read/write fields of structured data
  {
  protected:
     fstream& ff;

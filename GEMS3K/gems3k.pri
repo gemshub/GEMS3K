@@ -9,8 +9,8 @@
                     $$GEMS3K_H/jama_lu.h \
                     $$GEMS3K_H/num_methods.h \
                     $$GEMS3K_H/s_solmod.h \
-#                    $$GEMS3K_H/s_sorpmod.h \
-#                    $$GEMS3K_H/s_kinmet.h \
+                    $$GEMS3K_H/s_sorpmod.h \
+                    $$GEMS3K_H/s_kinmet.h \
                     $$GEMS3K_H/m_param.h  \
                     $$GEMS3K_H/m_const.h  \
                     $$GEMS3K_H/ms_multi.h \
@@ -29,8 +29,8 @@
                       $$GEMS3K_CPP/s_solmod4.cpp \
                       $$GEMS3K_CPP/s_solmod5.cpp \
                       $$GEMS3K_CPP/s_solmod6.cpp \
-#                      $$GEMS3K_CPP/s_sorpmod.cpp \
-#                      $$GEMS3K_CPP/s_kinmet.cpp \
+                      $$GEMS3K_CPP/s_sorpmod.cpp \
+                      $$GEMS3K_CPP/s_kinmet.cpp \
                       $$GEMS3K_CPP/ipm_chemical.cpp \
                       $$GEMS3K_CPP/ipm_chemical2.cpp \
                       $$GEMS3K_CPP/ipm_chemical3.cpp \

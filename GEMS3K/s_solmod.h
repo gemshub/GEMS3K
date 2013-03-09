@@ -196,14 +196,10 @@ class TSolMod
         public:
 
         /// Generic constructor
-                TSolMod( SolutionData *sd );
-                    // TSolMod( long int NSpecies, long int NParams, long int NPcoefs, long int MaxOrder,
-                        // long int NPperDC, long int NPTPperDC, char Mod_Code, char Mix_Code,
-                        // long int* arIPx, double* arIPc, double* arDCc, double *arWx,
-                        // double *arlnGam, double *aphVOL, double T_k, double P_bar );
+        TSolMod( SolutionData *sd );
 
          /// Generic constructor for DComp/DCthermo
-                TSolMod( long int NSpecies,  char Mod_Code,  double T_k, double P_bar );
+        TSolMod( long int NSpecies,  char Mod_Code,  double T_k, double P_bar );
 
         /// Destructor
 		virtual ~TSolMod();
@@ -236,16 +232,13 @@ class TSolMod
         /// Set new system state
 		long int UpdatePT ( double T_k, double P_bar );
 
-                // bool testSizes( long int NSpecies, long int NParams, long int NPcoefs,
-                    // long int MaxOrder, long int NPperDC, char Mod_Code, char Mix_Code );
-
-                bool testSizes( SolutionData *sd );
+        bool testSizes( SolutionData *sd );
 
         /// Getting phase name
 		void GetPhaseName( const char *PhName );
 
 		
-		// return pointer to activity coefficients
+        // copy activity coefficients into provided array lngamma
 		inline void Get_lnGamma( double* lngamma )		
 		{ 
 			for( int i=0; i<NComp; i++ )

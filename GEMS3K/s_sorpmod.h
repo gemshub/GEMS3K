@@ -29,7 +29,9 @@
 
 //#include "s_fgl.h"
 
-const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6, MAXEILAYERS = 4;
+// const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6,
+
+const int MAXEILAYERS = 4;
 
 struct SorptionSiteData {
     char  SiteT_;        // Site type code, see SITETYPECODES
@@ -121,7 +123,8 @@ long int nEIpl_; // number of EIL params per layer (default 0);
 long int nCDcf_; // number of CD coefs per DC (default 0);
 long int nEIres_; // reserved
 
-long int NsiteTs_; // number of surface sites; (default 1)
+long int NsiteTs_;  // Number of surface site types per this surface patch (min 1 max 6), for Donnan 1
+                    //   (if 0 then this sorption phase model is ignored)
 long int nISTcf_;  // number of isotherm coeffs per site (default 1)
 long int nISDcf_;  // number of isotherm coeffs per DC (default 1)
 long int DelMax_;  // max.denticity of DC (default 1)
@@ -129,8 +132,6 @@ long int DelMax_;  // max.denticity of DC (default 1)
 long int kSorPh_;  // Index of the sorbent phase in GEM IPM work structure (MULTI)
                    // if -1 then this is a site-balance based approach; SSa_ or sVp_ must be provided here
 
-long int NsiteTs_;  // Number of surface site types per this surface patch (min 1 max 6), for Donnan 1
-                    //   (if 0 then this sorption phase model is ignored)
 long int *xsMd_;    // denticity of surface species per surface site (site allocation) [NSpec][NsiteTs]
 
 // long int *arPsDiS_;  // array of DC denticity and indexes of binding sites [NSpec*(DelMax+1)]
@@ -227,7 +228,8 @@ protected:
     long int nCDcf;  // number of CD coefs per DC (default 0);
     long int nEIres; // reserved
 
-    long int NsiteTs; // number of surface sites; (default 1)
+    long int NsiteTs; // Number of surface site types per surface patch type (min 1 max 6), for Donnan 1
+                      //   (if 0 then this sorption phase model is ignored)
     long int nISTcf;  // number of isotherm coeffs per site (default 1)
     long int nISDcf;  // number of isotherm coeffs per DC (default 1)
     long int DelMax;  // max.denticity of DC (default 1)
@@ -235,8 +237,6 @@ protected:
     long int kSorPh;  // Index of the sorbent phase in GEM IPM work structure (MULTI)
                       // if -1 then this is a site-balance based approach; SSa_ or sVp_ must be provided
 
-    long int NsiteTs; // Number of surface site types per surface patch type (min 1 max 6), for Donnan 1
-                      //   (if 0 then this sorption phase model is ignored)
     long int **xsMd;      // denticity of surface species per surface site (site allocation) [NSpec][NsiteTs]
 //    long int **PsDS;    // array of DC denticity and indexes of binding sites [NSpec][DelMax+1]
     long int (*PhLin)[2]; // indexes of linked (sorbent) phase(s) and link type code(s) [nlPh][2] read-only
@@ -301,7 +301,7 @@ double q_Cst;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent
          Xpsi[MAXEILAYERS],    // Relative potential at EIL planes, V
            VetaD,    // Total charge in the Donnan volume, moles
            VPsiD,    // Relative Donnan potential, V
-           IS;       // Ionic strength (for Donnan electrolyte, or in bulk electrolyte for surface tile)
+           ISD;      // Ionic strength (for Donnan electrolyte)
 
     double nx[];     // pointer to moles of surface species on this surface tile (read-only) [Nspec]
 
