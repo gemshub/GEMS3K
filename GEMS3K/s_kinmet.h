@@ -92,28 +92,28 @@ struct KinMetData {
     double P_bar_;   /// Pressure, bar (initial)
     double kTau_;    /// current time, s (initial)
     double kdT_;     /// current time step (initial)
+  //
     double IS_;      /// Effective molal ionic strength of aqueous electrolyte
     double pH_;      /// pH of aqueous solution
     double pe_;      /// pe of aqueous solution
     double Eh_;      /// Eh of aqueous solution, V
-
-    // These values may be corrected inside of TKinMet class instance over time steps
-    double *sSA_;    /// Specific surface area of the phase, m2/g, default: 0.
-    double *sgw_;    /// Standard mean surface energy of solid-aqueous interface, J/m2
-    double *sgg_;    /// Standard mean surface energy of gas-aqueous interface, J/m2
-    double *rX0_;    /// Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
-    double *hX0_;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
-    double *sVp_;    /// Specific pore volume of phase, m3/g (default: 0)
-    double *sGP_;    /// surface free energy of the phase, J (YOF*PhM)
-    double *nPul_;   /// upper restriction to this phase amount, mol (calculated here)
-    double *nPll_;   /// lower restriction to this phase amount, mol (calculated here)
-    //
+  //
     double nPh_;     /// current amount of this phase, mol (read-only)
     double mPh_;     /// current mass of this phase, g (read-only)
     double vPh_;     /// current volume of this phase, cm3 (read-only)
     double sAPh_;    /// current surface of this phase, m2
     double LaPh_;    /// phase stability index (log scale)
     double OmPh_;    /// phase stability index (activity scale) 10^LaPh_
+  //
+    double sSA_;    /// Specific surface area of the phase, m2/g, default: 0.
+    double sgw_;    /// Standard mean surface energy of solid-aqueous interface, J/m2
+    double sgg_;    /// Standard mean surface energy of gas-aqueous interface, J/m2
+    double rX0_;    /// Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
+    double hX0_;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
+    double sVp_;    /// Specific pore volume of phase, m3/g (default: 0)
+    double sGP_;    /// surface free energy of the phase, J (YOF*PhM)
+    double nPul_;   /// upper restriction to this phase amount, mol (calculated here)
+    double nPll_;   /// lower restriction to this phase amount, mol (calculated here)
 
     double *arlPhc_;   /// TsolMod, TKinMet, TSorpMod: pointer to input array of phase link parameters [nlPh*nlPc]
     double *arfeSAr_;  /// Pointer to input fractions of surface area of the solid related to different parallel reactions [nPRk] read-only
@@ -123,9 +123,9 @@ struct KinMetData {
     double *arUmpCon_; /// Pointer to input array of uptake model coefficients [nComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
-    char  (*SM_)[MAXDCNAME_];  // pointer to the list of DC names in the phase [NComp] read-only
-    char  *arDCC_;     // pointer to the classifier of DCs involved in sorption phase [NComp] read-only
-    char  *arlPhC;      /// TSolMod, TKinMet: Phase linkage type codes [nlPh] { TBA  }
+    char  (*SM_)[MAXDCNAME_];  /// pointer to the classifier of DCs involved in sorption phase [NComp] read-only
+    char  *arDCC_;       /// pointer to the classifier of DCs involved in the phase [NComp] read-only
+    char  *arlPhC_;      /// TSolMod, TKinMet: Phase linkage type codes [nlPh] { TBA  }
 
     long int *arocPRk_; /// pointer to operation codes for kinetic parallel reaction affinity terms [nPRk] read-only
     long int *arxSKr_;  /// pointer to input array of DC indexes used in activity products [nSKr_] read-only
@@ -224,15 +224,23 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int numpC;   /// number of uptake model parameter coefficients (per end member)
     long int iRes4;   // reserved
 
+    double R_CONST;     /// Gas constant, 8.31451 J/K/mol
     double T_k;         /// Temperature, K
     double P_bar;       /// Pressure, bar
     double kTau;        /// current time, s
     double kdT;         /// current time step
+
+    // These values will be corrected after GEM converged at each time step
     double IS;          /// Effective molal ionic strength of aqueous electrolyte
     double pH;          /// pH of aqueous solution
     double pe;          /// pe of aqueous solution
     double Eh;          /// Eh of aqueous solution, V
-    double R_CONST;     /// Gas constant, 8.31451 J/K/mol
+    double nPh;     /// current amount of this phase, mol
+    double mPh;     /// current mass of this phase, g
+    double vPh;     /// current volume of this phase, cm3
+    double sAPh;    /// current surface of this phase, m2
+    double LaPh;    /// phase stability index (log scale)
+    double OmPh;    /// phase stability index (activity scale) 10^LaPh
 
     // These values may be corrected inside of TKinMet class instance over time steps
     double sSA;    /// Specific surface area of the phase, m2/g, default: 0.
@@ -244,20 +252,13 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double sGP;    /// surface free energy of the phase, J (YOF*PhM)
     double nPul;   /// upper restriction to this phase amount, mol (calculated here)
     double nPll;   /// lower restriction to this phase amount, mol (calculated here)
-    //
-    double nPh;     /// current amount of this phase, mol
-    double mPh;     /// current mass of this phase, g
-    double vPh;     /// current volume of this phase, cm3
-    double sAPh;    /// current surface of this phase, m2
-    double LaPh;    /// phase stability index (log scale)
-    double OmPh;    /// phase stability index (activity scale) 10^LaPh
 
     double **arlPhc; /// TsolMod, TKinMet, TSorpMod: pointer to input array of phase link parameters [nlPh*nlPc]
   double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk]
   double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
   double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
     double *arAscp;  /// input array of parameter coefficients of equation for correction of specific surface area [nAscC]
-    double **arUmpCon; /// input array of uptake model coefficients [nComp*numpC] read-only
+    double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM)[MAXDCNAME_];  /// pointer to the list of DC names in the phase [NComp] read-only
@@ -276,8 +277,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double *arnxul;  /// Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output
     double *arnxll;  /// Vector of lower kinetic restrictions to nx, moles [NComp]  (DLL) direct access output
 
-    double arWx;    /// Species (end member) mole fractions ->NComp
-    double arVol;   /// molar volumes of end-members (species) cm3/mol ->NComp
+    double *arWx;    /// Species (end member) mole fractions ->NComp
+    double *arVol;   /// molar volumes of end-members (species) cm3/mol ->NComp
 
 // Work data and kinetic law calculation results
 
@@ -298,6 +299,11 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     // SS dissolution
 
     // SS precipitation
+
+    // functions for allocation and initialization of kinetic rate tables
+    void alloc_kinrtabs();
+    long int init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,  double *p_arUmpCon );
+    void free_kinrtabs();
 
   public:
     // Generic constructor
