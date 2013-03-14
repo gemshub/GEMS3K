@@ -25,7 +25,7 @@
 //-------------------------------------------------------------------
 
 #include <iomanip>
-#include  <iostream>
+#include  <iostream> 
 
 #include "io_arrays.h"
 #include "v_user.h"
@@ -135,6 +135,23 @@ long int TRWArrays::findFld( const char *Name )
          ff << /*left << setw(7) <<*/  value;
      }
   }
+
+ void TPrintArrays::writeField(long f_num, gstring value, bool with_comments, bool brief_mode  )
+ {
+     if(!brief_mode || getAlws( f_num ))
+     { if( with_comments && flds[f_num].comment.length()>1 )
+            ff <<  endl <<  flds[f_num].comment.c_str();
+         ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+
+ #ifdef IPMGEMPLUGIN // 24/08/2010
+     strip(value);
+ #else
+     value.strip();
+ #endif
+     ff  << "\'" << value.c_str() << "\'" << " ";
+   }
+ }
+
 
  void TPrintArrays::writeArray( long f_num,  double* arr,
                  long int size, long int l_size, bool with_comments, bool brief_mode )
@@ -297,6 +314,28 @@ void TPrintArrays::writeArray( const char *name,  double* arr,
     { jj=0;  ff << endl;}
     writeValue(arr[ii]);
  }
+}
+
+void TPrintArrays::writeArray( long f_num,  vector<double> arr, long int l_size,
+                               bool with_comments, bool brief_mode )
+{
+
+    if(!brief_mode || getAlws(f_num ))
+    { if( with_comments )
+           ff <<  endl << flds[f_num].comment.c_str();
+
+      int sz = 40;
+      if( l_size > 0 )
+       sz = l_size;
+
+      ff << endl << "<" << flds[f_num].name << ">" << endl;
+      for( int ii=0, jj=0; ii<arr.size(); ii++, jj++  )
+      {
+         if(jj == sz)
+         { jj=0;  ff << endl;}
+         writeValue(arr[ii]);
+      }
+    }
 }
 
 void TPrintArrays::writeArray( const char *name, long* arr, long int size, long int l_size  )
@@ -653,6 +692,66 @@ void TReadArrays::readArray( const char* name, char* arr, long int size, long in
    copyValues( arr +(ii*el_size), buf, el_size );
  }
 
+}
+
+
+int TReadArrays::readFormatValue(double& val, gstring format)
+{
+  char input;
+  format = "";
+
+  skipSpace();
+
+  if( ff.eof() )
+    return 5;
+
+  ff.get( input );
+  switch( input )
+  {
+  case CHAR_EMPTY: val = DOUBLE_EMPTY;
+                   break;
+  case '<': ff.putback(input);
+            return 4;
+
+  case 'F': return 1;
+  case 'L': return 2;
+  case 'R': return 3;
+  defaults:
+      {
+          ff.putback(input);
+          ff >> val;
+       }
+  }
+  return 0;
+}
+
+void TReadArrays::readArray( const char* name, vector<double> arr )
+{
+  int retSimb= 0; // next field is only value
+  double value;
+  gstring str;
+
+  setCurrentArray( name, 0);
+ //ff << setprecision(15);
+
+  do{
+       retSimb = readFormatValue(value, str);
+       if( retSimb == 0 )
+        arr.push_back( value );
+  } while(retSimb == 0 );
+}
+
+
+void TReadArrays::readArray( const char* name, gstring arr, long int el_size )
+{
+ char ch;
+ char buf[400];
+
+ setCurrentArray( name, 1);
+ skipSpace();
+ ff.get(ch);
+ ff.getline( buf, el_size+1, '\'');
+ arr = buf;
 }
 
 gstring TReadArrays::testRead()

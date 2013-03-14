@@ -24,6 +24,7 @@
 //-------------------------------------------------------------------
 
 #include  <fstream>
+#include <vector>
 
 #include "verror.h"
 
@@ -136,6 +137,12 @@ public:
     /// \param brief_mode - Do not write data items that contain only default values
     void writeField(long f_num, double value, bool with_comments, bool brief_mode  );
 
+    /// Writes string field to a text file.
+    /// <flds[f_num].name> value
+    /// \param with_comments - Write files with comments for all data entries
+    /// \param brief_mode - Do not write data items that contain only default values
+    void writeField(long f_num, gstring value, bool with_comments, bool brief_mode  );
+
     /// Writes array to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
@@ -168,6 +175,13 @@ public:
     void writeArrayF( long f_num, char* arr,  long int size, long int l_size,
                     bool with_comments = false, bool brief_mode = false );
 
+    /// Writes double vector to a text file.
+    /// <flds[f_num].name> arr[0] ... arr[size-1]
+    /// \param l_size - Setup number of elements in line
+    /// \param with_comments - Write files with comments for all data entries
+    /// \param brief_mode - Do not write data items that contain only default values
+    void writeArray( long f_num,  vector<double> arr, long int l_size=0,
+                     bool with_comments = false, bool brief_mode = false );
 
     /// Constructor
     TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):
@@ -224,8 +238,12 @@ public:
     inline void readValue(float& val);
     /// Reads value from a text file.
     inline void readValue(double& val);
+    /// Reads format value from a text file.
+    int readFormatValue(double& val, gstring format);
+
     inline void setCurrentArray( const char* name, long int size );
  
+
  public:
 
     /// Constructor
@@ -254,6 +272,11 @@ public:
     void readArray( const char *name, double* arr, long int size );
     /// Reads array from a text file.
     void readArray( const char *name, char* arr, long int size, long int el_size );
+
+    /// Reads string from a text file.
+    void readArray( const char* name, gstring arr, long int el_size=198 );
+    /// Reads double vector from a text file.
+    void readArray( const char* name, vector<double> arr );
 
 };
 
