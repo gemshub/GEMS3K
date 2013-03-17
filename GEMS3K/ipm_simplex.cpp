@@ -975,11 +975,18 @@ void TMulti::GEM_IPM_Init()
     {
 #ifndef IPMGEMPLUGIN
 //????? problematic point
+// New: TKinMet stuff
+  if( pmp->pKMM <= 0 )
+  {
+     KinMetModLoad();  // Call point to loading parameters for kinetic models
+  }
+  pmp->pKMM = 1;
+
        if( pm.pIPN <=0 )  // mixing models finalized in any case (AIA or SIA)
        {
              // not done if these models are already present in MULTI !
            pm.PD = TProfil::pm->pa.p.PD;
-           SolModLoad();   // Call point to loading scripts for mixing models
+           SolModLoad();   // Call point to loading scripts and parameters for mixing models
        }
        pm.pIPN = 1;
 #endif

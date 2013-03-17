@@ -92,6 +92,7 @@ typedef struct
     tMin,   ///< Type of thermodynamic potential to minimize
     pTPD,   ///< State of reloading thermod data: 0-all  -1-full from database   1-new system 2-no
     pULR,   ///< Start recalc kinetic constraints (0-do not, 1-do )internal
+pKMM, ///< new: State of KinMet arrays: 0-create; 1-available; -1 remake
     ITaia,  ///< Number of IPM iterations completed in AIA mode (renamed from pRR1)
     FIat,   ///< max. number of surface site types
     MK,     ///< IPM return code: 0 - continue;  1 - converged
@@ -506,6 +507,8 @@ class TMulti
                             int car_l[], int car_c, int Cjs );
     void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
     void SolModLoad();
+// new TKinMet stuff
+void KinMetModLoad();
     bool CompressPhaseIpxt( int kPH );
     gstring PressSolMod( int nP );
     char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
@@ -514,6 +517,7 @@ class TMulti
     int find_phnum( char *name, int LNmode );
     int find_acnum( char *name, int LNmode );
     int find_phnum_multi( const char *name);
+    int find_dcnum_multi( const char *name);
     const char* GetHtml();
 
 #else
@@ -737,7 +741,7 @@ public:
     void unpackData();
 
     void MultiKeyInit( const char*key );
-    void EqstatExpand( const char *key,  bool calcActivityModels = true );
+    void EqstatExpand( const char *key,  bool calcActivityModels, bool calcKineticModels );
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
      tget_ndx *get_ndx = 0 );
     void getNamesList( int nO, TCStringArray& lst );

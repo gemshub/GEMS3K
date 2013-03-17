@@ -1385,7 +1385,6 @@ void TMulti::Alloc_TSolMod( long int newFIs )
     	  phSolMod[ii] = 0;
 }
 
-
 void TMulti::Free_TSolMod()
 {
   long int kk;
@@ -1401,9 +1400,65 @@ void TMulti::Free_TSolMod()
   sizeFIs = 0;
 }
 
+/// Internal memory allocation for TSorpMod performance optimization
+/// (since version 3.4.0)
+void TMulti::Alloc_TSorpMod( long int newFIs )
+{
+  if(  phSorpMod && ( newFIs == sizeFIs) )
+    return;
 
+  Free_TSorpMod();
+  // alloc memory for all multicomponents phases
+  phSorpMod = new  TSorpMod *[newFIs];
+  sizeFIs = newFIs;
+ for( long int ii=0; ii<newFIs; ii++ )
+          phSorpMod[ii] = 0;
+}
 
+void TMulti::Free_TSorpMod()
+{
+  long int kk;
 
+  if( phSorpMod )
+  {  for(  kk=0; kk<sizeFIs; kk++ )
+      if( phSorpMod[kk] )
+           delete phSorpMod[kk];
+
+      delete[]  phSorpMod;
+  }
+  phSorpMod = 0;
+  sizeFIs = 0;
+}
+
+/// Internal memory allocation for TKinMet performance optimization
+/// (since version 3.3.0)
+void TMulti::Alloc_TKinMet( long int newFI )
+{
+  if(  phKinMet && ( newFI == sizeFI) )
+    return;
+
+  Free_TKinMet();
+  // alloc memory for all multicomponents phases
+  phKinMet = new  TKinMet *[newFI];
+  sizeFI = newFI;
+ for( long int ii=0; ii<newFI; ii++ )
+          phKinMet[ii] = 0;
+}
+
+void TMulti::Free_TKinMet()
+{
+  long int kk;
+
+  if( phKinMet )
+  {  for(  kk=0; kk<sizeFI; kk++ )
+      if( phKinMet[kk] )
+           delete phKinMet[kk];
+
+      delete[]  phKinMet;
+  }
+  phKinMet = 0;
+  sizeFI = 0;
+}
 
 
 //--------------------- End of ipm_chemical3.cpp ---------------------------
