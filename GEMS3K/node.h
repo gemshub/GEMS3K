@@ -395,6 +395,12 @@ void GEM_set_MT(
                             /// usage on the level of TNodearray is not recommended !
     {        return CNode;     }
 
+#ifdef IPMGEMPLUGIN
+
+    TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
+   {        return multi;     }
+
+#endif
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
     {  return CNode->TK-C_to_K;   }

@@ -181,7 +181,7 @@ public:
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
     void writeArray( long f_num,  vector<double> arr, long int l_size=0,
-                     bool with_comments = false, bool brief_mode = false );
+                     bool with_comments = false, bool brief_mode = false);
 
     /// Constructor
     TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):

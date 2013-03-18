@@ -468,10 +468,6 @@ protected:
 
 #endif
 
-// Internal functions for SCMs
-   void getLsModsum( long int& LsModSum, long int& LsIPxSum );
-   void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
-
    void setErrorMessage( long int num, const char *code, const char * msg);
    void addErrorMessage( const char * msg);
 
@@ -682,7 +678,12 @@ public:
     const char* GetName() const
     {  return "Multi";  }
 
-   //connection to mass transport
+
+    // Internal functions for SCMs
+       void getLsModsum( long int& LsModSum, long int& LsIPxSum );
+       void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+
+    //connection to mass transport
     void to_file( GemDataStream& ff );
     void to_text_file( const char *path, bool append=false  );
     void from_file( GemDataStream& ff );

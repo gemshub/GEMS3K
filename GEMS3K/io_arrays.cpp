@@ -321,7 +321,8 @@ void TPrintArrays::writeArray( long f_num,  vector<double> arr, long int l_size,
 {
 
     if(!brief_mode || getAlws(f_num ))
-    { if( with_comments )
+    {
+       if( with_comments )
            ff <<  endl << flds[f_num].comment.c_str();
 
       int sz = 40;
@@ -598,8 +599,6 @@ long int TReadArrays::findNext()
      Error( "Formatted read error 01", msg );
  }
 
-
-
  flds[ii].readed = 1;
  return ii;
 }
@@ -663,6 +662,7 @@ again:
       }while( input != '<' && input != '\0' && !ff.eof());
       if( input == '\0' || ff.eof() )
         return -3;
+      ff.putback(input);
       goto again;
   }
 
