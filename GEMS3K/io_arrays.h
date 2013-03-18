@@ -256,6 +256,7 @@ public:
 
     long int findFld( const char *Name ); ///< Find field by name
     long int findNext();  ///< Read next name from file and find in fields list
+    long int findNextNotAll();  ///< Read next name from file and find in fields list (if doesnot find read next name)
     void  readNext( const char* label); ///< Read next name from file
 
     gstring testRead();   ///< Test for reading all fields must be always present in the file

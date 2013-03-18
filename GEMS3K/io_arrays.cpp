@@ -598,6 +598,8 @@ long int TReadArrays::findNext()
      Error( "Formatted read error 01", msg );
  }
 
+
+
  flds[ii].readed = 1;
  return ii;
 }
@@ -630,6 +632,42 @@ void TReadArrays::readNext( const char* label)
  msg += curArray;
  Error( "Formatted read error 03", msg );
 
+}
+
+long int TReadArrays::findNextNotAll()
+{
+ char buf[200];
+ char input;
+
+ skipSpace();
+
+ if( ff.eof() )
+   return -3;
+
+again:
+
+ ff >> buf;
+
+ if( !( memcmp( "END_DIM", buf+1, 7 )) )
+  return -2;
+
+ long int ii = findFld( buf+1 );
+ if(  ii < 0 )
+ {
+    do{
+        ff.get( input );
+        if( input == '#' )
+        { ff.putback(input);
+          skipSpace();
+        }
+      }while( input != '<' && input != '\0' && !ff.eof());
+      if( input == '\0' || ff.eof() )
+        return -3;
+      goto again;
+  }
+
+ flds[ii].readed = 1;
+ return ii;
 }
 
 void TReadArrays::readArray( const char* name, short* arr, long int size )
