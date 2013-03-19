@@ -38,6 +38,32 @@ struct outField /// Internal descriptions of fields
 
 };
 
+
+enum FormatType {
+        ft_Value=0,   // value
+        ft_F,   // command F
+        ft_L,   // command L
+        ft_R,   // command R
+        ft_Internal
+};
+
+
+struct outFormat /// Internal descriptions of output formats with JSON notation
+ {
+   long int index;    ///< index formatted value into reading array
+   long int type;  ///< type of formatted value { F, L, R, ...}
+   gstring format; ///< string with formatted data for different type
+
+   outFormat( char aType, int aIndex, gstring aFormat ):
+               type(aType), index(aIndex), format(aFormat)
+       {}
+
+   outFormat( const outFormat& data ):
+       type(data.type), index(data.index), format(data.format)
+       { }
+};
+
+
 class TRWArrays  /// Basic class for red/write fields of structure
  {
  protected:
@@ -239,7 +265,8 @@ public:
     /// Reads value from a text file.
     inline void readValue(double& val);
     /// Reads format value from a text file.
-    int readFormatValue(double& val, gstring format);
+    long int readFormatValue(double& val, gstring& format);
+    bool  readFormat( gstring& format );
 
     inline void setCurrentArray( const char* name, long int size );
  
@@ -279,6 +306,9 @@ public:
     /// Reads double vector from a text file.
     void readArray( const char* name, vector<double> arr );
 
+
+    void readFormatArray( const char* name, double* arr,
+        long int size, vector<outFormat>& vFormats );
 };
 
 //=============================================================================

@@ -539,6 +539,45 @@ void TPrintArrays::writeArray( const char *name, short* arr,
       }
  }
 
+ long int TReadArrays::readFormatValue(double& val, gstring& format)
+ {
+   char input;
+   format = "";
+   long int type = ft_Value;
+
+   skipSpace();
+
+   if( ff.eof() )
+     return ft_Internal;
+
+   ff.get( input );
+   switch( input )
+   {
+     case CHAR_EMPTY: val = DOUBLE_EMPTY;
+                    return type;
+     case '<': ff.putback(input);
+                 return ft_Internal;
+     case 'F': type = ft_F;
+             if(!readFormat( format ))
+              ff >> val;
+             break;
+   case 'L': type = ft_L;
+             if(!readFormat( format ))
+               ff >> val;
+             break;
+   case 'R': type = ft_R;
+             if(!readFormat( format ))
+               ff >> val;
+             break;
+   default:
+       {   ff.putback(input);
+           ff >> val;
+           break;
+       }
+   }
+  return type;
+ }
+
 // skip  ' ',  '\n', '\t' and comments (from '#' to end of line)
 void  TReadArrays::skipSpace()
 {
@@ -556,6 +595,40 @@ void  TReadArrays::skipSpace()
    ff.get( input );
   }
  ff.putback(input);
+}
+
+// Read format string
+bool  TReadArrays::readFormat( gstring& format )
+{
+  char input;
+  format = "";
+  long int count1=0;  // counters of {}
+  long int count2=0;  // counters of []
+
+  skipSpace();
+  ff.get( input );
+  if( input != '{' && input != '[')
+  {
+      ff.putback(input);
+      return false;  // no format string (only value)
+  }
+  do
+  {
+      format += input;
+      if( input == '{')
+       count1++;
+      if( input == '}')
+       count1--;
+      if( input == '[')
+       count2++;
+      if( input == ']')
+       count2--;
+      ff.get( input );
+      if( input == '\0' || ff.eof() )
+        break;
+  } while( count1 != 0 || count2 !=0 );
+
+  return true;
 }
 
 void TReadArrays::reset()
@@ -667,6 +740,7 @@ again:
   }
 
  flds[ii].readed = 1;
+ //cout << flds[ii].name << endl;
  return ii;
 }
 
@@ -714,12 +788,32 @@ void TReadArrays::readArray( const char* name, double* arr, long int size )
     readValue(arr[ii]);
 }
 
+void TReadArrays::readFormatArray( const char* name, double* arr,
+    long int size, vector<outFormat>& vFormats )
+{
+ gstring format;
+ long int type;
+
+ setCurrentArray( name, size);
+ // vFormats.clear();
+
+ //ff << setprecision(15);
+ for( long int ii=0; ii<size; ii++  )
+ {
+     type = readFormatValue(arr[ii], format);
+     if(type > ft_Value && type< ft_Internal )
+     {    vFormats.push_back( outFormat(type, ii, format));
+     }
+ }
+}
+
 void TReadArrays::readArray( const char* name, char* arr, long int size, long int el_size )
 {
  char ch;
  char buf[200];
 
  setCurrentArray( name, size);
+
  for( long int ii=0; ii<size; ii++  )
  {
    skipSpace();
@@ -730,37 +824,6 @@ void TReadArrays::readArray( const char* name, char* arr, long int size, long in
    copyValues( arr +(ii*el_size), buf, el_size );
  }
 
-}
-
-
-int TReadArrays::readFormatValue(double& val, gstring format)
-{
-  char input;
-  format = "";
-
-  skipSpace();
-
-  if( ff.eof() )
-    return 5;
-
-  ff.get( input );
-  switch( input )
-  {
-  case CHAR_EMPTY: val = DOUBLE_EMPTY;
-                   break;
-  case '<': ff.putback(input);
-            return 4;
-
-  case 'F': return 1;
-  case 'L': return 2;
-  case 'R': return 3;
-  defaults:
-      {
-          ff.putback(input);
-          ff >> val;
-       }
-  }
-  return 0;
 }
 
 void TReadArrays::readArray( const char* name, vector<double> arr )
@@ -774,9 +837,9 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
 
   do{
        retSimb = readFormatValue(value, str);
-       if( retSimb == 0 )
+       if( retSimb == ft_Value )
         arr.push_back( value );
-  } while(retSimb == 0 );
+  } while(retSimb == ft_Value );
 }
 
 
