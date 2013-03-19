@@ -34,6 +34,7 @@
                       $$GEMS3K_CPP/ipm_chemical.cpp \
                       $$GEMS3K_CPP/ipm_chemical2.cpp \
                       $$GEMS3K_CPP/ipm_chemical3.cpp \
+         $$GEMS3K_CPP/ipm_chemical4.cpp \
                       $$GEMS3K_CPP/ipm_main.cpp \
                       $$GEMS3K_CPP/ipm_simplex.cpp \
                       $$GEMS3K_CPP/node.cpp \

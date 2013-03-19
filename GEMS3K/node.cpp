@@ -250,8 +250,6 @@ long int TNode::GEM_run( bool uPrimalSol )
    return CNode->NodeStatusCH;
 }
 
-
-
 // Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() -
 // can be used for monitoring the performance of calculations.
 // Return value:  double number, may contain 0.0 if the calculation time is less than the

@@ -68,8 +68,10 @@ enum solmod_switches { // indexes of keys of model solution
     // link state
     LINK_UX_MODE,
     LINK_TP_MODE,
-//    LINK_FIA_MODE,
-    LINK_PP_MODE, // LINK_PHP_MODE,
+    LINK_PP_MODE,
+LINK_IN_MODE, // Initialization mode for kinetics and other time-dependent processes
+SORP_MOD,  // new, see also enum sorption_control
+KINR_MOD,  /// see also enum kinmet_controls
     // Posible values of keys of model solution - DCOMP_DEP, SPHAS_DEP
     SM_UNDEF = 'N',
     SM_TPDEP = 'T',

@@ -306,7 +306,8 @@ NonLogTermS = 0.0;
                         break;
                case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
                                 break;
-                   case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
+                   case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP:
+                   case DC_SOL_MAJDEP:
                         break;
                case DC_SCP_CONDEN: case DC_SUR_MINAL:
                             break;
@@ -356,7 +357,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     {
       case LINK_TP_MODE:  // Built-in functions depending on T,P only
       {
-        long int jphl=0, jlphc=0, jdqfc=0,  jrcpc=0;
+        long int  jdqfc=0,  jrcpc=0; // jphl=0, jlphc=0,
         long int  jmb, jme=0, jsb, jse=0;
 
         pm.FitVar[3] = 1.0;  // resetting the IPM smoothing factor
@@ -397,17 +398,11 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             // scheme should probably be the same as in LINK_UX_MODE, 03.06.2008 (TW)
             switch( pm.PHC[k] )
             {
-               case PH_AQUEL:
-               case PH_LIQUID:
-               case PH_SINCOND:
-               case PH_SINDIS:
-               case PH_HCARBL:
-               case PH_SIMELT:
-               case PH_GASMIX:
-               case PH_PLASMA:
-               case PH_FLUID:
+                case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
+                case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
-                      sMod[SPHAS_TYP], sMod[MIX_TYP], jphl, jlphc, jdqfc,  jrcpc  ); // new solution models (TW, DK 2007)
+                      sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
+                    // new solution models (TW, DK 2007)
             	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
               default:
@@ -415,8 +410,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             }
 
             // move pointers
-            jphl  += (pm.LsPhl[k*2]*2);
-            jlphc += (pm.LsPhl[k*2]*pm.LsPhl[k*2+1]);
+ //           jphl  += (pm.LsPhl[k*2]*2);
+ //           jlphc += (pm.LsPhl[k*2]*pm.LsPhl[k*2+1]);
             jdqfc += (pm.LsMdc2[k*3]*pm.L1[k]);
             jrcpc += (pm.LsMdc2[k*3+1]*pm.L1[k]);
 
@@ -432,15 +427,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             sMod = pm.sMod[k];
                 switch( pm.PHC[k] )
             {
-              case PH_AQUEL:
-              case PH_LIQUID:
-              case PH_SINCOND:
-              case PH_SINDIS:
-              case PH_HCARBL:
-              case PH_SIMELT:
-              case PH_GASMIX:
-              case PH_PLASMA:
-              case PH_FLUID:
+              case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
+              case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
            	       SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
            	       SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
            	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
@@ -523,16 +511,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
-					case SM_AQDH3:
-					case SM_AQDH2:
-					case SM_AQDH1:
-					case SM_AQDHS:
-					case SM_AQDHH:
-					case SM_AQDAV:
-					case SM_AQSIT:
-					case SM_AQPITZ:
-					case SM_AQEXUQ:
-					case SM_AQELVIS:  
+                    case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHS: case SM_AQDHH:
+                    case SM_AQDAV: case SM_AQSIT: case SM_AQPITZ: case SM_AQEXUQ: case SM_AQELVIS:
 						SolModActCoeff( k, sMod[SPHAS_TYP] );
 						break;
 					default:
@@ -542,9 +522,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
              }
              goto END_LOOP;
              break;
-          case PH_GASMIX:
-          case PH_PLASMA:
-          case PH_FLUID:
+          case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
              if( pmpXFk > pm.DSM && pm.XF[k] > pa->p.PhMin )
              {
                  if( sMod[SPHAS_TYP] == SM_CGFLUID )  // CG EoS fluid model
@@ -562,13 +540,9 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
              }
              goto END_LOOP;
              break;
-         case PH_LIQUID:
-         case PH_SIMELT:
-         case PH_SINCOND:
-         case PH_SINDIS:
-         case PH_HCARBL:  // solid and liquid mixtures
+         case PH_LIQUID: case PH_SIMELT: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
              if( pmpXFk > pm.DSM )
-             {
+             {     // solid and liquid mixtures
                 switch( sMod[SPHAS_TYP] )
                 {
                     case SM_IDEAL:   // Ideal (multi-site) model (DK 29.11.2010)
@@ -607,7 +581,6 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             goto END_LOOP;
        } // end switch
    }  // end if LinkMode == LINK_UX_MODE
-
 
 #ifndef IPMGEMPLUGIN
 // This part running Phase math scripts is not used in standalone GEMS3K
@@ -767,7 +740,7 @@ END_LOOP:
 //
 void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                            long int k, long int ipb, char ModCode, char MixCode,
-                           long int jphl, long int jlphc, long int jdqfc, long int  jrcpc)
+                           /* long int jphl, long int jlphc, */ long int jdqfc, long int  jrcpc)
 {
     double *aZ, *aM;//, *aVol;
     //long int *aIPx;
@@ -785,15 +758,13 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     sd.Mix_Code = MixCode;
 
     //new objects to Phase 06/06/12
-    sd.NlPhs = pm.LsPhl[k*2];
-    sd.NlPhC = pm.LsPhl[k*2+1];
+//    sd.NlPhs = pm.LsPhl[k*2];
+//    sd.NlPhC = pm.LsPhl[k*2+1];
     sd.NDQFpDC = pm.LsMdc2[k*3];
     sd.NrcPpDC = pm.LsMdc2[k*3+1];
 
-
     if( phSolMod[k])
-        if(  // phSolMod[k]->testSizes( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode )
-              phSolMod[k]->testSizes( &sd ) )
+        if(  phSolMod[k]->testSizes( &sd ) )
     	{
                 phSolMod[k]->UpdatePT( pm.Tc, pm.Pc );
                 return; // using old allocation and setup of the solution model
@@ -816,8 +787,8 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     sd.P_bar = pm.Pc;
 
     //new objects to Phase 06/06/12
-    sd.arPhLin = pm.PhLin+jphl;
-    sd.lPhc = pm.lPhc+ jlphc;
+//    sd.arPhLin = pm.PhLin+jphl;
+//    sd.lPhc = pm.lPhc+ jlphc;
     sd.DQFc = pm.DQFc+ jdqfc;
     sd.rcpc = pm.rcpc+ jrcpc;
     //sd.arSitFj =
@@ -1017,25 +988,20 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
                 break;
         }
         case SM_IDEAL:
-        // case SM_USERDEF:
         {
                 TIdeal* myPT = new TIdeal( &sd );
                 myPT->GetPhaseName( pm.SF[k] );
                 mySM = (TSolMod*)myPT;
                 break;
         }
+        // case SM_USERDEF:
         default:
-                // mySM = new TSolMod( NComp, NPar, NPcoef, MaxOrd, NP_DC, ModCode, MixCode,
-                // aIPx, aIPc, aDCc,  aWx, alnGam, pm.Tc, pm.Pc );
         	break;
     }
-
   	if(phSolMod[k])
             delete phSolMod[k];
         phSolMod[k] = mySM; // set up new pointer for the solution model
 }
-
-
 
 /// Wrapper call for calculation of temperature and pressure correction
 /// uses TSolMod class
@@ -1043,44 +1009,18 @@ void TMulti::SolModParPT( long int k, char ModCode )
 {
     // Extended constructor to connect to params, coeffs, and mole fractions
     switch( ModCode )
-    {
-        // solid and liquid solutions
-        case SM_IDEAL:
+    {  // solid and liquid solutions
         // case SM_USERDEF:
-        case SM_VANLAAR:
-        case SM_REGULAR:
-        case SM_GUGGENM:
-        case SM_NRTLLIQ:
-        case SM_WILSLIQ:
+        case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
+        case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
         case SM_BERMAN:
-
-        // old solid solutions
-        case SM_MARGT:
-        case SM_MARGB:
-        case SM_REDKIS:
-
         // aqueous DH models
-        case SM_AQDH3:
-        case SM_AQDH2:
-        case SM_AQDH1:
-        case SM_AQDHH:
-        case SM_AQDHS:
-        case SM_AQDAV:
-
-        // aqueous models
-        case SM_AQPITZ:
-        case SM_AQSIT:
-        case SM_AQEXUQ:
-        case SM_AQELVIS:
-	  
+        case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
+        // aqueous SIT models
+        case SM_AQPITZ: case SM_AQSIT: case SM_AQEXUQ: case SM_AQELVIS:
         // fluid (gas) models
-        case SM_PRFLUID:
-        case SM_CGFLUID:
-        case SM_SRFLUID:
-        case SM_PR78FL:
-        case SM_CORKFL:
+        case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* mySM = phSolMod[k];
               mySM->PTparam();
@@ -1091,51 +1031,23 @@ void TMulti::SolModParPT( long int k, char ModCode )
     }
 }
 
-
-
 /// Wrapper call for calculation of activity coefficients
 /// uses TSolMod class
 void TMulti::SolModActCoeff( long int k, char ModCode )
 {
     switch( ModCode )
-    {
-        // solid and liquid solutions
-        case SM_IDEAL:
+    {   // solid and liquid solutions
         // case SM_USERDEF:
-        case SM_VANLAAR:
-        case SM_REGULAR:
-        case SM_GUGGENM:
-        case SM_NRTLLIQ:
-        case SM_WILSLIQ:
+        case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
+        case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
         case SM_BERMAN:
-
-        // old solid solutions
-        case SM_MARGT:
-        case SM_MARGB:
-        case SM_REDKIS:
-
         // aqueous DH models
-        case SM_AQDH3:
-        case SM_AQDH2:
-        case SM_AQDH1:
-        case SM_AQDHH:
-        case SM_AQDHS:
-        case SM_AQDAV:
-
-        // aqueous models
-        case SM_AQPITZ:
-        case SM_AQSIT:
-        case SM_AQEXUQ:
-        case SM_AQELVIS:
-
+        case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
+        // aqueous SIT models
+        case SM_AQPITZ: case SM_AQSIT: case SM_AQEXUQ: case SM_AQELVIS:
         // fluid (gas) models
-        case SM_PRFLUID:
-        case SM_CGFLUID:
-        case SM_SRFLUID:
-        case SM_PR78FL:
-        case SM_CORKFL:
+        case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->MixMod();
@@ -1145,8 +1057,6 @@ void TMulti::SolModActCoeff( long int k, char ModCode )
               break;
     }
 }
-
-
 
 /// Wrapper call for calculation of bulk phase excess properties
 /// uses TSolMod class
@@ -1162,45 +1072,20 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
     {
         zex[j] = 0.0;
     }
-
     // insert cases for old solution and activity models
     switch( ModCode )
     {
-        // solid and liquid solutions
-        case SM_VANLAAR:
-        case SM_REGULAR:
-        case SM_GUGGENM:
-        case SM_NRTLLIQ:
-        case SM_WILSLIQ:
+        // case SM_USERDEF:  case SM_IDEAL:
+        case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
+        case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
         case SM_BERMAN:
-
-        // old solid solutions
-        case SM_MARGT:
-        case SM_MARGB:
-        case SM_REDKIS:
-
         // aqueous DH models
-        case SM_AQDH3:
-        case SM_AQDH2:
-        case SM_AQDH1:
-        case SM_AQDHH:
-        case SM_AQDHS:
-        case SM_AQDAV:
-
-        // aqueous models
-        case SM_AQPITZ:
-        case SM_AQSIT:
-        case SM_AQEXUQ:
-        case SM_AQELVIS:
-
+        case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
+        // aqueous SIT models
+        case SM_AQPITZ: case SM_AQSIT: case SM_AQEXUQ: case SM_AQELVIS:
         // fluid (gas) models
-        case SM_PRFLUID:
-        case SM_CGFLUID:
-        case SM_SRFLUID:
-        case SM_PR78FL:
-        case SM_CORKFL:
+        case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
               TSolMod* mySM = phSolMod[k];
               mySM->ExcessProp( zex );
@@ -1209,7 +1094,6 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
         default:
               break;
     }
-
     // assignments
     Gex = zex[0];
     Hex = zex[1];
@@ -1225,7 +1109,6 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
     pm.VPh[k][2] = Vex;
     pm.APh[k][2] = Aex;
     pm.UPh[k][2] = Uex;
-
 }
 
 
@@ -1241,60 +1124,28 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
     {
         zid[j] = 0.0;
     }
-
     // needs to check for DC class state to catch ideal gas phase case
     switch( ModCode )
-    {
-
-        // check what solution phase (ideal gas?)
-
-        // solid and liquid solutions
-        case SM_IDEAL:
+    {   // check what solution phase (ideal gas?)
         // case SM_USERDEF:
-        case SM_VANLAAR:
-        case SM_GUGGENM:
-        case SM_REGULAR:
-        case SM_NRTLLIQ:
-        case SM_WILSLIQ:
+        case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
+        case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
         case SM_BERMAN:
-
-        // old solid solutions
-        case SM_MARGT:
-        case SM_MARGB:
-        case SM_REDKIS:
-
         // aqueous DH models
-        case SM_AQDH3:
-        case SM_AQDH2:
-        case SM_AQDH1:
-        case SM_AQDHH:
-        case SM_AQDHS:
-        case SM_AQDAV:
-
-        // aqueous models
-        case SM_AQPITZ:
-        case SM_AQSIT:
-        case SM_AQEXUQ:
-        case SM_AQELVIS:
-	  
+        case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
+        // aqueous SIT models
+        case SM_AQPITZ: case SM_AQSIT: case SM_AQEXUQ: case SM_AQELVIS:
         // fluid (gas) models
-        case SM_PRFLUID:
-        case SM_CGFLUID:
-        case SM_SRFLUID:
-        case SM_PR78FL:
-        case SM_CORKFL:
+        case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-
         {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->IdealProp( zid );
              break;
         }
-
         default:
             break;
     }
-
     // assignments
     Gid = zid[0];
     Hid = zid[1];
@@ -1310,9 +1161,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
     pm.VPh[k][1] = Vid;
     pm.APh[k][1] = Aid;
     pm.UPh[k][1] = Uid;
-
 }
-
 
 /// Wrapper call for retrieving bulk phase Darken quadratic terms
 void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
@@ -1347,7 +1196,6 @@ void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 
 }
 
-
 /// Wrapper call for retrieving bulk phase standard state terms
 void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
 {
@@ -1367,6 +1215,8 @@ void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
 
 }
 
+//-------------------------------------------------------------------------
+/// Wrappers for TKinMet class
 
 
 //-------------------------------------------------------------------------
@@ -1430,6 +1280,7 @@ void TMulti::Free_TSorpMod()
   sizeFIs = 0;
 }
 
+/*
 /// Internal memory allocation for TKinMet performance optimization
 /// (since version 3.3.0)
 void TMulti::Alloc_TKinMet( long int newFI )
@@ -1459,7 +1310,7 @@ void TMulti::Free_TKinMet()
   phKinMet = 0;
   sizeFI = 0;
 }
-
+*/
 
 //--------------------- End of ipm_chemical3.cpp ---------------------------
 

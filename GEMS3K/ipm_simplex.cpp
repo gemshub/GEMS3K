@@ -511,6 +511,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
  // const char *key;
   double ScFact=1.;
 
+  long int KMretCode = 0;
 //#ifndef IPMGEMPLUGIN
 //  key = rt[RT_SYSEQ].UnpackKey();
 //#else
@@ -524,13 +525,25 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
   pm.t_elap_sec = 0.0;
   pm.ITF = pm.ITG = 0;
 
+// New: Run of TKinMet class library
+  if( pm.ITau < 0 || pm.pKMM != 1 )
+      KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
+  if( pm.ITau == 0 )
+      KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
+  if(pm.ITau > 0 )
+      KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
+//  switch(KMretCode)
+//  {
+//        case 0L:
+//
+//  }
 //  to_text_file( "MultiDump1.txt" );   // Debugging
 
-if( paTProfil->p.DG > 1e-5 )
-{
-   ScFact = SystemTotalMolesIC();
-   ScaleSystemToInternal( ScFact );
-}
+    if( paTProfil->p.DG > 1e-5 )
+    {
+        ScFact = SystemTotalMolesIC();
+        ScaleSystemToInternal( ScFact );
+    }
 
 try{
        switch( pm.tMin )

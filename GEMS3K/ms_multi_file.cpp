@@ -612,7 +612,7 @@ void TMulti::to_file( GemDataStream& ff  )
       ff.writeArray(pm.rcpc, rcpcSum);
       long int PhLinSum, lPhcSum;
       getLsPhlsum( PhLinSum,lPhcSum );
-      ff.writeArray(pm.PhLin, PhLinSum);
+      ff.writeArray((long int *)pm.PhLin, PhLinSum);
       ff.writeArray(pm.lPhc, lPhcSum);
 
       ff.writeArray(pm.PUL, pm.FIs);
@@ -854,7 +854,7 @@ void TMulti::from_file( GemDataStream& ff )
       pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
       pm.DQFc = (double *)aObj[ o_wi_dqfc].Alloc( DQFcSum, 1, D_ );
       pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
-      pm.PhLin = (long int *)aObj[ o_wi_phlin].Alloc( PhLinSum, 1, L_ );
+      pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum/2, 2, L_ );
       pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
 #endif
 
@@ -865,7 +865,7 @@ void TMulti::from_file( GemDataStream& ff )
       ff.readArray(pm.SitFr, LsSitSum);
       ff.readArray(pm.DQFc, DQFcSum);
       ff.readArray(pm.rcpc, rcpcSum);
-      ff.readArray(pm.PhLin, PhLinSum);
+      ff.readArray((long int *)pm.PhLin, PhLinSum);
       ff.readArray(pm.lPhc, lPhcSum);
 
       ff.readArray(pm.PUL, pm.FIs);
@@ -1809,7 +1809,7 @@ void TMulti::to_text_file( const char *path, bool append )
      prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
      prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
      prar.writeArray(  "LsPhl", pm.LsPhl, pm.FI*2);
-     prar.writeArray(  "PhLin", pm.PhLin,  PhLinSum);
+     prar.writeArray(  "PhLin", &pm.PhLin[0][0], PhLinSum);
      prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
 
      prar.writeArray(  "PUL", pm.PUL,  pm.FIs);

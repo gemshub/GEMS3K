@@ -29,17 +29,16 @@
 #include "verror.h"
 #include "s_kinmet.h"
 
-
 //=============================================================================================
 // TKinMet base class constructor (simulation of phase metastability and MWR kinetics)
 // (c) DK March 2013
 //
 //=============================================================================================
-
-/// generic constructor (new)
+/// generic constructor
+//
 TKinMet::TKinMet( const KinMetData *kmd ):
-    KinRateCode(kmd->KinRateCod_),    KinDirCode(kmd->KinDirCod_),   KinUptCode(kmd->KinUptCod_),
-    KinLnkCode(kmd->KinLnkCod_),  KinSizedCode(kmd->KinSizedCod_),  KinRezdCode(kmd->KinRezdCod_),
+    KinProCode(kmd->KinProCod_),    KinModCode(kmd->KinModCod_),   KinSorpCode(kmd->KinSorpCod_),
+    KinLinkCode(kmd->KinLinkCod_),  KinSizedCode(kmd->KinSizedCod_),  KinResCode(kmd->KinResCod_),
     NComp(kmd->NComp_), nlPh(kmd->nlPh_), nlPc(kmd->nlPc_), nPRk(kmd->nPRk_), nSkr(kmd->nSkr_),
     nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), numpC(kmd->numpC_), iRes4(kmd->iRes4_),
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
@@ -48,17 +47,14 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     sSA(kmd->sSA_),  sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
     sVp(kmd->sVp_), sGP(kmd->sGP_), nPul(kmd->nPul_), nPll(kmd->nPll_)
 {
-
-
     // pointer assignments
-    arfeSAr = kmd->arfeSAr_;   //  [nPRk]
-    arAscp = kmd->arAscp_;     //  [nAscC]
-    SM = kmd->SM_;             //  [NComp]
-    arDCC = kmd->arDCC_;       //  [NComp]
-    arlPhC = kmd->arlPhC_;     //  [nlPh]
+    arfeSAr = kmd->arfeSAr_;   // [nPRk]
+    arAscp = kmd->arAscp_;     // [nAscC]
+    SM = kmd->SM_;             // [NComp]
+    arDCC = kmd->arDCC_;       // [NComp]
+    arPhXC = kmd->arPhXC_;     // [nlPh]
     arocPRk = kmd->arocPRk_;   // [nPRk]
     arxSKr = kmd->arxSKr_;     // [nSKr]
-    arxlPh = kmd->arxlPh_;     // [nlPh]
     arym = kmd->arym_;         // L
     arla = kmd->arla_;         // L
     arnx = kmd->arnx_;         // [NComp]
@@ -75,10 +71,15 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     alloc_kinrtabs( );
     init_kinrtabs( kmd->arlPhc_, kmd->arrpCon_,  kmd->arapCon_,  kmd->arUmpCon_);
 
+    /// allocation of work array of parameters and results for 'parallel reactions'
+    arPRt = NULL;
+    if(nPRk > 0 )
+       arPRt = new TKinReact[nPRk];
+//        alloc_arPRt();
+    init_arPRt();   // load data for parallel reactions
+
 /*
     // Work data and kinetic law calculation results
-
-    TKinReact arPRt[]; /// work array of parameters and results for 'parallel reaction' terms [nPRk]
 
     double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
     double spcfl[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
@@ -89,9 +90,6 @@ TKinMet::TKinMet( const KinMetData *kmd ):
 
     double sSAcor; /// Corrected specific surface area (m2/g)
     double sAph_c; /// Corrected surface area of the phase (m2/g)
-
-
-
 
 
     lnGamConf = new double[NComp];
@@ -109,14 +107,17 @@ TKinMet::TKinMet( const KinMetData *kmd ):
 */
 }
 
-// Destructor
+/// Destructor
 TKinMet::~TKinMet()
 {
   free_kinrtabs();
+  if( arPRt )
+      delete[] arPRt;
 }
 
-/// allocates memory for multisite data
-void TKinMet::alloc_kinrtabs()
+/// allocates memory for TKinMet data
+void
+TKinMet::alloc_kinrtabs()
 {
    long int j, s, lp, pr;
 
@@ -164,7 +165,8 @@ void TKinMet::alloc_kinrtabs()
 /// returns 0 if o.k. or some arrays were not allocated.
 /// returns -1 if error was encountered.
 //
-long int TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,  double *p_arUmpCon  )
+long int
+TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,  double *p_arUmpCon  )
 {
     long int j, i, s, lp, pr;
 
@@ -198,7 +200,8 @@ long int TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p
 
 /// frees memory for TKinMet tables
 //
-void TKinMet::free_kinrtabs()
+void
+TKinMet::free_kinrtabs()
 {
     long int j, s, lp, pr;
 
@@ -243,46 +246,179 @@ void TKinMet::free_kinrtabs()
     }
 }
 
+// creates the TKinReact array
+//void alloc_arPRt()
+//{
+//    if( nPRk > 0 )
+//    {
+//        arPRt = new TKinReact[nPRk];
+//    }
+//}
+
+/// Initializes TKinReact array and loads parameters into it
+void
+TKinMet::init_arPRt()
+{
+    long int xj;
+
+    if( nPRk > 0 )
+    {
+        for(xj=0; xj<nPRk; xj++)
+        {
+            arPRt[xj].xPR = xj;   /// index of this parallel reaction
+            // long int iRes; // reserved
+            arPRt[xj].ocPRk = arocPRk[xj]; /// operation code for this kinetic parallel reaction affinity term
+            arPRt[xj].xSKr = arxSKr;
+            arPRt[xj].feSAr = arfeSAr[xj];
+            arPRt[xj].rpCon = arrpCon[xj];
+            arPRt[xj].apCon = arapCon[xj];
+    // work data: unpacked rpCon[nrpC]
+            if( nrpC >=3 )
+            {
+                arPRt[xj].ko = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
+                arPRt[xj].Ap = arPRt[xj].rpCon[1];  /// Arrhenius parameter
+                arPRt[xj].Ea = arPRt[xj].rpCon[2];  /// activation energy at st.temperature J/mol
+            }
+            else {
+               arPRt[xj].ko = arPRt[xj].Ap = arPRt[xj].Ea = 0.0;
+            }
+            if( nrpC >=7 )
+            {
+                arPRt[xj].bI = arPRt[xj].rpCon[3];
+                arPRt[xj].bpH = arPRt[xj].rpCon[4];
+                arPRt[xj].bpe = arPRt[xj].rpCon[5];
+                arPRt[xj].bEh = arPRt[xj].rpCon[6];
+            }
+            else {
+               arPRt[xj].bI = arPRt[xj].bpH = arPRt[xj].bpe = arPRt[xj].bEh = 0.0;
+            }
+            if( nrpC >=10 )
+            {
+                arPRt[xj].pPR = arPRt[xj].rpCon[7];
+                arPRt[xj].qPR = arPRt[xj].rpCon[8];
+                arPRt[xj].mPR = arPRt[xj].rpCon[9];
+            }
+            else {
+                arPRt[xj].pPR = arPRt[xj].qPR = arPRt[xj].mPR = 0.0;
+            }
+            if( nrpC > 10 )
+            {
+                arPRt[xj].OmEff = arPRt[xj].rpCon[10];
+            }
+            else {
+                arPRt[xj].OmEff = 1.;
+            }
+            arPRt[xj].Omg = OmPh; /// Input stability index non-log (d-less)
+
+    // Results of rate term calculation
+            arPRt[xj].arf = 1.;  // Arrhenius factor (temperature correction on kappa)
+            arPRt[xj].cat = 1.;  // catalytic product term (f(prod(a))
+            arPRt[xj].aft = 0.;  // affinity term (f(Omega))
+
+            arPRt[xj].kPR = arPRt[xj].ko;   // rate constant (involving all corrections) in mol/m2/s
+            arPRt[xj].rPR = 0.;   // rate for this region (output) in mol/s
+            arPRt[xj].rmol = 0.;   // rate for the whole face (output) in mol/s
+//        arPRt[xj].velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
+
+        } // xj
+    }
+}
+
+// frees memory for TKinReact array
+//void free_arPRt()
+//{
+//    if( arPRt )
+//        delete[]arPRt;
+//}
+
+
+//=============================================================================================
+// TKinReact base class constructor (to keep data for parallel reaction regions)
+// (c) DK March 2013
+//
+//=============================================================================================
+// Generic constructor
+//TKinReact::TKinReact( )
+//{
+//
+//}
+
 // sets the specific surface area of the phase and 'parallel reactions' area fractions
-long int TKinMet::UpdateFSA( const double *fSAf_p, const double As )
+long int
+TKinMet::UpdateFSA( const double *fSAf_p, const double As )
 {
 
 }
 
 // returns modified specific surface area of the phase and 'parallel reactions' area fractions
-double TKinMet::ModifiedFSA ( double *fSAf_p )
+double
+TKinMet::GetModFSA ( double *fSAf_p )
 {
 
 }
 
 // sets new system TP state
-long int TKinMet::UpdatePT ( const double T_k, const double P_bar )
+long int
+TKinMet::UpdatePT ( const double T_k, const double P_bar )
 {
 
 }
 
 // sets new time and time step
-bool TKinMet::UpdateTime( const double Tau, const double dTau )
+bool
+TKinMet::UpdateTime( const double Tau, const double dTau )
 {
 
 }
 
 // Checks dimensions in order to re-allocate class instance, if necessary
-bool TKinMet::testSizes( const KinMetData *kmd )
+bool
+TKinMet::testSizes( const KinMetData *kmd )
 {
 
 }
 
+/*
+// -----------------------------------------------------------------------------
+// Implementation of derived class main functionality
+//
+long int PTparam()
+{
+    return 0;
+};
+
+long int RateMod()
+{
+    return 0;
+};
+
+long int SplitMod()
+{
+    return 0;
+};
+
+long int SplitInit()
+{
+    return 0;
+};
+
+long int SorptMod()
+{
+    return 0;
+};
+
+long int SorptInit()
+{
+    return 0;
+};
+
+long int SetMetCon()
+{
+    return 0;
+};
 
 
-
-
-
-
-
-
-
-
+*/
 
 
 //--------------------- End of s_kinmet.cpp ---------------------------

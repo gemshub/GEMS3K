@@ -46,7 +46,7 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 #include "datach.h"
 
 #endif
-
+// TSolMod header
 #include "s_solmod.h"
 // new: TsorpMod and TKinMet
 #include "s_sorpmod.h"
@@ -180,7 +180,7 @@ double
     *muj,   ///< DC indices in RMULTS DC list [L]
 
   *LsPhl,  ///< new: Number of phase links; number of link parameters; [Fi][2]
-  *PhLin;  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
+  (*PhLin)[2];  ///< new: indexes of linked phases and link type codes (sum 2*LsPhl[k][0] over Fi)
 
   /* TSolMod !! arrays and counters to be added (for mixed-solvent electrolyte phase) TW
 
@@ -296,7 +296,7 @@ double
     *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
-  // TKinMet stuff (old DODs, new contents
+  // TKinMet stuff (old DODs, new contents )
     *PUL,  ///< Vector of upper restrictions to phases amounts X_a (reserved)[FIs]
     *PLL,  ///< Vector of lower restrictions to phases amounts X_a (reserved)[FIs]
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
@@ -304,7 +304,7 @@ double
     *MM,      ///< DC molar masses, g/mol [L]
     *Pparc,   ///< Partial pressures or fugacities of pure DC, bar (Pc by default) [0:L-1]
     *Y_m,     ///< Molalities of aqueous species and sorbates [0:Ls-1]
-    *Y_la,    ///< log activity of DC in multi-component phases (mju-mji0) [0:Ls-1]
+    *Y_la,    ///< log activity of DC in multi-component phases (mju-mji0) [0:L-1]
     *Y_w,     ///< Mass concentrations of DC in multi-component phases,%(ppm)[Ls]
     *Gamma,   ///< DC activity coefficients in molal or other phase-specific scale [0:L-1]
     *lnGmf,   ///< ln of initial DC activity coefficients for correcting G0 [0:L-1]
@@ -408,7 +408,9 @@ double
 //  SolutionData *asd; ///< Array of data structures to pass info to TSolMod [FIs]
 
   long int ITF,       ///< Number of completed IA EFD iterations
-         ITG;         ///< Number of completed GEM IPM iterations
+         ITG,         ///< Number of completed GEM IPM iterations
+         ITau,    /// new: Time iteration for TKinMet class calculations
+         IRes1;
   clock_t t_start, t_end;
   double t_elap_sec;  ///< work variables for determining IPM calculation time
 #ifdef IPMGEMPLUGIN
@@ -639,7 +641,7 @@ protected:
 // Generic solution model calls
     void SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                        long int k, long int ipb, char ModCode, char MixCode,
-                       long int jphl, long int jlphc, long int jdqfc, long int  jrcpc );
+                       /* long int jphl, long int jlphc, */ long int jdqfc, long int jrcpc );
     void SolModParPT( long int k, char ModCode );
     void SolModActCoeff( long int k, char ModCode );
     void SolModExcessProp( long int k, char ModCode );
@@ -651,6 +653,23 @@ protected:
     // void IdealGas( long int jb, long int k, double *Zid );
     // void IdealOneSite( long int jb, long int k, double *Zid );
     // void IdealMultiSite( long int jb, long int k, double *Zid );
+
+// New stuff for TKinMet class implementation
+long int CalculateKinMet( long int LinkMode  );
+void KinMetCreate( long int jb, long int k, long int kc, long int kp, long int kf,
+            long int ka, long int ks, long int kd, long int ku, const char *kmod,
+            long jphl, long int jlphc );
+void KinMetParPT( long int k, const char *kMod );
+void KinMetSetTime( long int k, const char *kMod );
+void KinMetUpdateFSA( long int k, const char *kMod );
+void KinMetGetModFSA( long int k, const char *kMod );
+void KinMetCalcRates( long int k, const char *kMod );
+void KinMetInitRates( long int k, const char *kMod );
+void KinMetCalcSplit( long int jb, long int k, const char *kMod );
+void KinMetInitSplit( long int jb, long int k, const char *kMod );
+void KinMetCalcSorpt( long int jb, long int k, const char *kMod );
+void KinMetInitSorpt( long int jb, long int k, const char *kMod );
+void KinMetSetConstr( long int jb, long int k, const char *kMod );
 
 // ipm_main.cpp - numerical part of GEM IPM-2
     void GEM_IPM( long int rLoop );

@@ -27,30 +27,43 @@
 #define S_KINMET_H
 
 //#include "s_fgl.h"
+#include <vector>
 
 const int   MAXDCNAME_ =      16, MAXPHNAME_ = 16;   // see also v_mod.h
 
-enum kinmet_controls {  /// Re-declared codes to control kinetic rate models (see also m_phase.h)
+enum kinmet_controls {   /// Re-declared codes to control kinetic rate models (see also m_phase.h)
 
-    KM_UNDEF_ = 'N',     /// not defined, no account
-    KM_RATE_SURF_ = 'A', /// surface-scaled rate model (k in mol/m2/s)
-    KM_RATE_PV_ = 'V',   /// pore-volume-scaled model (k in mol/m3/s)
-
-    KM_DIR_DISSOL_ = 'D', ///	dissolution
-    KM_DIR_GROWTH_ = 'G', /// growth on seed particles
-    KM_DIR_NUCPREC_ ='P', ///	nucleation and precipitation
-    KM_DIR_BOTH_ = 'B',   /// bidirectional (D or G depending on stability index)
-
-    KM_UPT_ENTRAP_ = 'E',  ///	unified entrapment model
-    KM_UPT_ENTRDIF_ = 'M', ///	unified entrapment model with in/out diffusion term
-
-    KM_LNK_SURF_ = 'S',  /// link to (fraction of) solid substrate surface
-    KM_LNK_PVOL_ = 'P',  ///	link to (fraction of) solid substrate (pore) volume
-    KM_LNK_MASS_ = 'M',  ///	link to (fraction of) solid substrate mass
-
-    KM_SIZED_UNI_ = 'U', /// 	uniform
-    KM_SIZED_BIN_ = 'B', /// 	binodal
-    KM_SIZED_FUN_ = 'F'  ///    distribution function
+    KM_UNDEF_ = 'N',      /// not defined, no account for
+//KinProCode
+    KM_PRO_MWR_ = 'M',     /// Kinetics of generic dissolution/precipitation (no uptake, ionex, adsorption)
+    KM_PRO_UPT_ = 'U',     /// Kinetics of uptake/entrapment (of minor/trace element) into solid solution
+    KM_PRO_IEX_ = 'X',     /// Kinetics of ion exchange (clays, C-S-H, zeolites, ...)
+    KM_PRO_ADS_ = 'A',     /// Kinetics of adsorption (on MWI), redox
+    KM_PRO_NUPR_ = 'P',    /// Kinetics of nucleation and precipitation
+//KinModCode
+    KM_MOD_TST_ = 'T',     /// Generic TST dissolution/precipitation model following Shott ea 2012
+    KM_MOD_PAL_ = 'P',     /// Dissolution/precipitation model of the form (Palandri 2004)
+    KM_MOD_WOL_ = 'W',     /// Carbonate growth model following (Wolthers 2012)
+    KM_MOD_NUGR_ = 'U',    /// Mineral nucleation and growth model with nuclei/particle size distr. (TBD)
+//KinSorpCode
+    KM_UPT_ENTRAP_ = 'E',  ///	Unified entrapment model (Thien,Kulik,Curti 2012)
+    KM_UPT_UPDP_ = 'M',    ///	DePaolo (2011) uptake kinetics model
+    KM_UPT_SEMO_ = 'G',    ///  Growth (surface) entrapment model (Watson 2004)
+    KM_IEX_FAST_ = 'F',    ///  Fast ion exchange kinetics (e.g. montmorillonite, CSH)
+    KM_IEX_SLOW_ = 'L',    ///  Slow ion exchange kinetics (e.g. illite, zeolites)
+    KM_ADS_INHIB_ = 'I',   ///  Adsorption inhibition
+    KM_NUCL_SSMP_  = 'P',  ///  Solid solution nucleation model (Prieto 2013)
+//KinLinkCode
+    KM_LNK_SURF_ = 'S',   ///  Link to (fraction of) solid substrate surface
+    KM_LNK_PVOL_ = 'P',   ///  Link to (fraction of) solid substrate (pore) volume
+    KM_LNK_MASS_ = 'M',   ///  Link to (fraction of) solid substrate mass
+//KinSizedCode
+    KM_SIZED_UNI_ = 'U',  ///  Uniform particle/pore size distribution
+    KM_SIZED_BIN_ = 'B',  ///  Binodal particle/pore size distribution
+    KM_SIZED_FUN_ = 'F',  ///  Empirical distribution function
+//KinResCode
+    KM_RES_SURF_ = 'A',   /// surface-scaled rate model (k in mol/m2/s)
+    KM_RES_PVS_ = 'V'     /// pore-volume-scaled model (k in mol/m3/s)
 
 };
 
@@ -68,12 +81,12 @@ enum affin_term_op_codes {
 // This data structure should be passed in order to create an instance of TKinMet derived class for a phase
 struct KinMetData {
 
-    char  KinRateCod_;  /// Type code of the kinetic/metastability model, see enum kinmet_controls
-    char  KinDirCod_;   /// Code of direction of the kinetic process, see enum kinmet_controls
-    char  KinUptCod_;   /// Type code of Tr uptake model (solution/sorption phases only), see enum kinmet_controlsS
-    char  KinLnkCod_;   /// Type code of metastability links of this phase to other phases,see enum kinmet_controls
-    char  KinSizedCod_; /// Type of particle/pore size distribution and specific surface area correction, see enum kinmet_controls
-    char  KinRezdCod_;  /// Reserved { N }
+    char  KinProCod_;   /// Code of the kinetic process (derived TKinMet class), see enum kinmet_controls
+    char  KinModCod_;   /// Type code of the kinetic/metastability model, see enum kinmet_controls
+    char  KinSorpCod_;  /// Type code of sorption kinetics model (solution/sorption phases only), see enum kinmet_controls
+    char  KinLinkCod_;  /// Type code of metastability links of this phase to other phases, see enum kinmet_controls
+    char  KinSizedCod_; /// Type of particle/pore size distribution and A_s correction, see enum kinmet_controls
+    char  KinResCod_;   /// Reserved model control code
     char  PhasNam_[MAXPHNAME_];      /// Phase name (for specific built-in models)
 
     long int NComp_;   /// Number of components in the phase (nDC in m_phase.h, L1[k] in MULTI)
@@ -125,11 +138,11 @@ struct KinMetData {
 
     char  (*SM_)[MAXDCNAME_];  /// pointer to the classifier of DCs involved in sorption phase [NComp] read-only
     char  *arDCC_;       /// pointer to the classifier of DCs involved in the phase [NComp] read-only
-    char  *arlPhC_;      /// TSolMod, TKinMet: Phase linkage type codes [nlPh] { TBA  }
+
+    long int (*arPhXC_)[2];  /// TKinMet: linked phase indexes and linkage type codes [nlPh][2]
 
     long int *arocPRk_; /// pointer to operation codes for kinetic parallel reaction affinity terms [nPRk] read-only
     long int *arxSKr_;  /// pointer to input array of DC indexes used in activity products [nSKr_] read-only
-    long int *arxlPh_;  /// pointer to input array of linked phase indexes  [nlPh_] read-only
 
     double *arym_;    /// Pointer to molalities of all species in MULTI (provided), read-only
     double *arla_;    /// Pointer to lg activities of all species in MULTI (provided), read-only
@@ -147,9 +160,9 @@ struct KinMetData {
 // Class describing a 'parallel reaction' region kinetic rate law data (Schott ea 2012 general form)
 class TKinReact
 {
-protected:
-
-     // Input data
+//   protected:
+    public:
+    // Input data
      long int xPR;   /// index of this parallel reaction
      long int iRes; // reserved
 
@@ -157,8 +170,8 @@ protected:
      long int *xSKr;  /// pointer to input array of DC indexes used in activity products [nSKr] (copy)
 
      double feSAr;   /// input fraction of surface area of the solid related to this parallel reaction
-     double *rpCon;  /// input array of kinetic rate constants for this 'parallel reaction' [nrpC]
-     double **apCon; /// input array of parameters per species involved in 'activity product' terms [nSkr*naptC]
+     double *rpCon;  /// pointer to input array of kinetic rate constants for this 'parallel reaction' [nrpC]
+     double **apCon; /// pointer input array of parameters per species involved in 'activity product' terms [nSkr][naptC]
 
      // work data: unpacked rpCon[nrpC]
      double ko,  /// rate constant at standard temperature (mol/m2/s)
@@ -188,13 +201,15 @@ protected:
 //        velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
         ;
 
-public:
+// public:
     // Generic constructor
-    TKinReact( long int xPR_p, long int ocPRk_p, long int *xSKr_p, double feSAr_p, double Omg_p,
-               double *rpCon_p, double **apCon_p );
+    TKinReact()
+    {
+
+    };
 
     // Destructor
-    virtual ~TKinReact();
+    ~TKinReact();
 
     double PRrateCon( long int xPR_p );  // calculates the rate constant for xPR parallel reaction
 
@@ -204,22 +219,22 @@ public:
 class TKinMet  // Base class for MWR kinetics and metastability models
 {
     protected:
-    char  KinRateCode;  /// Type code of the kinetic/metastability model, see enum kinmet_controls
-    char  KinDirCode;   /// Code of direction of the kinetic process, see enum kinmet_controls
-    char  KinUptCode;   /// Type code of Tr uptake model (solution/sorption phases only), see enum kinmet_controlsS
-    char  KinLnkCode;   /// Type code of metastability links of this phase to other phases,see enum kinmet_controls
-    char  KinSizedCode; /// Type of particle/pore size distribution and specific surface area correction, see enum kinmet_controls
-    char  KinRezdCode;  /// Reserved { N }
+    char  KinProCode;   /// Code of the kinetic process (derived TKinMet class), see enum kinmet_controls
+    char  KinModCode;   /// Type code of the kinetic/metastability model, see enum kinmet_controls
+    char  KinSorpCode;   /// Type code of sorption kinetics model (solution/sorption phases only), see enum kinmet_controls
+    char  KinLinkCode;   /// Type code of metastability links of this phase to other phases, see enum kinmet_controls
+    char  KinSizedCode; /// Type of particle/pore size distribution and A_s correction, see enum kinmet_controls
+    char  KinResCode;   /// Reserved model control code
     char  PhasName[MAXPHNAME_];      /// Phase name (for specific built-in models)
 
     long int NComp;   /// Number of components in the phase (nDC in m_phase.h, L1[k] in MULTI)
     long int nlPh;    /// Number of linked phases (cf. lPh), default 0
     long int nlPc;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
 
-  long int nPRk;      /// number of «parallel reactions» that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
-  long int nSkr;      /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
-  long int nrpC;      /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
-  long int naptC;     /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
+    long int nPRk;      /// number of «parallel reactions» that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
+    long int nSkr;      /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
+    long int nrpC;      /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
+    long int naptC;     /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     long int nAscC;   /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
     long int numpC;   /// number of uptake model parameter coefficients (per end member)
     long int iRes4;   // reserved
@@ -254,20 +269,20 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double nPll;   /// lower restriction to this phase amount, mol (calculated here)
 
     double **arlPhc; /// TsolMod, TKinMet, TSorpMod: pointer to input array of phase link parameters [nlPh*nlPc]
-  double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk]
-  double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
-  double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
+    double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk]
+    double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
+    double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
     double *arAscp;  /// input array of parameter coefficients of equation for correction of specific surface area [nAscC]
     double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM)[MAXDCNAME_];  /// pointer to the list of DC names in the phase [NComp] read-only
     char  *arDCC;       /// pointer to the classifier of DCs involved in the phase [NComp] read-only
-    char  *arlPhC;      /// TSolMod, TKinMet: Phase linkage type codes [nlPh] { TBA  }
 
-  long int *arocPRk; /// input operation codes for kinetic parallel reaction affinity terms [nPRk]
-  long int *arxSKr;  /// pointer to input array of DC indexes used in activity products [nSKr]
-    long int *arxlPh;  /// pointer to input array of linked phase indexes  [nlPh]
+    long int (*arPhXC)[2];  /// TKinMet: linked phase indexes and linkage type codes [nlPh][2]
+
+    long int *arocPRk; /// input operation codes for kinetic parallel reaction affinity terms [nPRk]
+    long int *arxSKr;  /// pointer to input array of DC indexes used in activity products [nSKr]
 
     double *arym;    /// Pointer to molalities of all species in MULTI (provided), read-only
     double *arla;    /// Pointer to lg activities of all species in MULTI (provided), read-only
@@ -282,7 +297,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
 // Work data and kinetic law calculation results
 
-    TKinReact arPRt[]; /// work array of parameters and results for 'parallel reaction' terms [nPRk]
+    TKinReact *arPRt; /// work array of parameters and results for 'parallel reaction' terms [nPRk]
 
     double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
     double spcfl[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
@@ -300,10 +315,16 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
     // SS precipitation
 
+    // (SS) nucleation
+
     // functions for allocation and initialization of kinetic rate tables
     void alloc_kinrtabs();
     long int init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,  double *p_arUmpCon );
     void free_kinrtabs();
+    // functions for allocation and initialization of the  TKinReact array for parallel reactions data
+    void alloc_arPRt();
+    void init_arPRt();
+    void free_arPRt();
 
   public:
     // Generic constructor
@@ -312,27 +333,50 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     // Destructor
     virtual ~TKinMet();
 
-    virtual long int SetTime()
+    virtual   // Calculates temperature/pressure corrections to kinetic rate constants
+    long int PTparam()
     {
         return 0;
     };
 
-    virtual long int PTparam()
+    virtual  // Calculates phase dissolution/precipitation/nucleation rates
+    long int RateMod()
     {
         return 0;
     };
 
-    virtual long int RateMod()
+    virtual  // Calculates phase dissolution/precipitation/nucleation rates
+    long int RateInit()
     {
         return 0;
     };
 
-    virtual long int SplitMod()
+    virtual  // Calculates (splits) rates to lower/upper metastability constraints
+    long int SplitMod()
     {
         return 0;
     };
 
-    virtual long int UptakeMod()
+    virtual  // Calculates (splits) rates to lower/upper metastability constraints
+    long int SplitInit()
+    {
+        return 0;
+    };
+
+    virtual  // Calculates (splits) rates to lower/upper constraints for minor/trace end member(s)
+    long int SorptMod()
+    {
+        return 0;
+    };
+
+    virtual  // Calculates (splits) rates to lower/upper constraints for minor/trace end member(s)
+    long int SorptInit()
+    {
+        return 0;
+    };
+
+    virtual
+    long int SetMetCon()
     {
         return 0;
     };
@@ -341,7 +385,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int UpdateFSA( const double *fSAf_p, const double As );
 
     // returns modified specific surface area of the phase and 'parallel reactions' area fractions
-    double ModifiedFSA ( double *fSAf_p );
+    double GetModFSA ( double *fSAf_p );
 
     // sets new system TP state
     long int UpdatePT ( const double T_k, const double P_bar );
@@ -357,135 +401,142 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - derived classes - - - - - - - - - - - - - -
 
-class TKinTST: public TKinMet // Generic dissolution/precipitation models following Lasaga 1998, Shott ea 2012
+class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/uptake/sorption TBD
 {
-
     private:
+
+        // specific stuff for uptake kinetics
+
+            // internal functions
+        //        void alloc_internal();
+        //        void free_internal();
+
+     public:
+
+            // Constructor
+            TMWReaKin( const KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
+            {
+
+            };
+
+            // Destructor
+            ~TMWReaKin();
+
+
+
+};
+
+class TUptakeKin: public TKinMet  // SS uptake kinetics models Bruno Kulik Curti 2013
+{
+    private:
+
+    // specific stuff for uptake kinetics
+
+    // internal functions
+    //        void alloc_internal();
+    //        void free_internal();
 
     public:
 
     // Constructor
-    TKinTST( KinMetData *kmd /*, specific params */ );
+    TUptakeKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
+    {
+
+    };
 
     // Destructor
-     ~TKinTST();
-
-    // Sets initial time
-    long int SetTime();
-
-    // Calculates T,P corrected kinetic parameters
-    long int PTparam();
-
-    // Calculates kinetic rates
-    long int RateMod();
-
-    long int SplitMod();
+    ~TUptakeKin();
 
     // Calculates uptake rates
     long int UptakeMod();
 
 };
 
-class TPalandri: public TKinMet  // Dissolution/precipitation models following Palandri 2004
+
+class TIonExKin: public TKinMet  // Ion exchange (layered) kinetics model TBD
 {
     private:
 
- // specific stuff for Palandri form
+    // specific stuff for uptake kinetics
 
-        // internal functions
-//        void alloc_internal();
-//        void free_internal();
+    // internal functions
+    //        void alloc_internal();
+    //        void free_internal();
 
-public:
-        // Constructor
-        TPalandri( KinMetData *kmd /*, specific params */ );
+    public:
 
-        // Destructor
-        ~TPalandri();
+    // Constructor
+    TIonExKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
+    {
 
-        // Sets initial time
-        long int SetTime();
+    }
 
-        // Calculates T,P corrected kinetic parameters
-        long int PTparam();
+    // Destructor
+    ~TIonExKin();
 
-        // Calculates kinetic rates
-        long int RateMod();
+    // Calculates ion exchange rates
+    long int IonExRatesMod();
 
-        long int SplitMod();
-
-        // Calculates uptake rates
-        long int UptakeMod();
 
 };
 
 
-class TWolthers: public TKinMet  // Calcite growth and uptake model
+class TAdsorpKin: public TKinMet  // Adsorption (layered) kinetics model TBD
 {
     private:
 
- // specific stuff for Wolthers form
+    // specific stuff for adsorption kinetics
 
-        // internal functions
-//        void alloc_internal();
-//        void free_internal();
+    // internal functions
+    //        void alloc_internal();
+    //        void free_internal();
 
-public:
-        // Constructor
-        TWolthers( KinMetData *kmd /*, specific params */ );
+    public:
 
-        // Destructor
-        ~TWolthers();
+    // Constructor
+    TAdsorpKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
+    {
 
-        // Sets initial time
-        long int SetTime();
+    };
 
-        // Calculates T,P corrected kinetic parameters
-        long int PTparam();
+    // Destructor
+    ~TAdsorpKin();
 
-        // Calculates kinetic rates
-        long int RateMod();
+    // Calculates uptake rates
+    long int AdsorpRatesMod();
 
-        long int SplitMod();
-
-        // Calculates uptake rates
-        long int UptakeMod();
 
 };
 
-class TLaidler: public TKinMet  // Laidler d/p and uptake model
+
+class TNucleKin: public TKinMet  // Mineral nucleation/growth kinetics models TBD
 {
     private:
 
- // specific stuff for Laidler form
+    // specific stuff for uptake kinetics
 
-        // internal functions
-//        void alloc_internal();
-//        void free_internal();
+    // internal functions
+    //        void alloc_internal();
+    //        void free_internal();
 
-public:
+    public:
 
-        // Constructor
-        TLaidler( KinMetData *kmd /*, specific params */ );
+    // Constructor
+    TNucleKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
+    {
 
-        // Destructor
-        ~TLaidler();
+    };
 
-        // Sets initial time
-        long int SetTime();
+    // Destructor
+    ~TNucleKin();
 
-        // Calculates T,P corrected kinetic parameters
-        long int PTparam();
-
-        // Calculates kinetic rates
-        long int RateMod();
-
-        long int SplitMod();
-
-        // Calculates uptake rates
-        long int UptakeMod();
-
+    // Calculates uptake rates
+    long int NucleGrowthMod();
 
 };
+
+// More derived classes can be added here, if necessary
+
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #endif // S_KINMET_H

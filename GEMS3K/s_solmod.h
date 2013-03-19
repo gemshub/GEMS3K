@@ -83,8 +83,8 @@ struct SolutionData {
     long int NSublat;   ///< number of sublattices nS
     long int NMoiet;    ///< number of moieties nM
 
-    long int NlPhs;     ///< new: Number of linked phases
-    long int NlPhC;     ///< new: Number of linked phase parameter coefficient per link (default 0)
+//    long int NlPhs;     ///< new: Number of linked phases
+//    long int NlPhC;     ///< new: Number of linked phase parameter coefficient per link (default 0)
     long int NDQFpDC;   ///< new: Number of DQF parameters per species (end member)
     long int NrcPpDC;   ///< new: Number of reciprocal parameters per species (end member)
 
@@ -94,16 +94,16 @@ struct SolutionData {
     char (*TP_Code)[6]; ///< Codes for TP correction methods for species ->NSpecies
     long int *arIPx;    ///< Pointer to list of indexes of non-zero interaction parameters
 
-    long int *arPhLin;  ///< new: indexes of linked phase and link type codes [NlPhs*2] read-only
+//    long int *arPhLin;  ///< new: indexes of linked phase and link type codes [NlPhs*2] read-only
 
     double *arIPc;      ///< Table of interaction parameter coefficients
     double *arDCc;      ///< End-member properties coefficients
     double *arMoiSN;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
     double *arSitFr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
     double *arSitFj; ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
-        double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
+    double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
 
-    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
+//    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
     double *DQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
     double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
 
@@ -134,14 +134,14 @@ class TSolMod
         long int NSub;     ///< number of sublattices nS
         long int NMoi;     ///< number of moieties nM
 
-   long int NlPh;     ///< new: Number of linked phases
-   long int NlPc;     ///< new: Number of linked phase parameter coefficient per link (default 0)
+//   long int NlPh;     ///< new: Number of linked phases
+//   long int NlPc;     ///< new: Number of linked phase parameter coefficient per link (default 0)
    long int NDQFpc;   ///< new: Number of DQF parameters per species (end member)
    long int NrcPpc;   ///< new: Number of reciprocal parameters per species (end member)
 
         //        long int NPTP_DC;  // Number of properties per one DC at T,P of interest (columns in aDC)  !!!! Move to CG EOS subclass
                 long int *aIPx;    // Pointer to list of indexes of non-zero interaction parameters
-   long int (*PhLin)[2];  ///< new: indexes of linked phase and link type codes [NlPhs][2] read-only
+//   long int (*PhLin)[2];  ///< new: indexes of linked phase and link type codes [NlPhs][2] read-only
 
         double R_CONST; ///< R constant
         double Tk;    	///< Temperature, K
@@ -156,7 +156,7 @@ class TSolMod
         double *aMoiSN; ///< End member moiety- site multiplicity number tables -> NComp x NSub x NMoi
         double *aSitFR; ///< Table of sublattice site fractions for moieties -> NSub x NMoi
 
-    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
+//    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
     double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
     double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpc; (read-only)
 
