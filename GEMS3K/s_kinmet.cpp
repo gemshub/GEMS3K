@@ -40,7 +40,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     KinProCode(kmd->KinProCod_),    KinModCode(kmd->KinModCod_),   KinSorpCode(kmd->KinSorpCod_),
     KinLinkCode(kmd->KinLinkCod_),  KinSizedCode(kmd->KinSizedCod_),  KinResCode(kmd->KinResCod_),
     NComp(kmd->NComp_), nlPh(kmd->nlPh_), nlPc(kmd->nlPc_), nPRk(kmd->nPRk_), nSkr(kmd->nSkr_),
-    nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), numpC(kmd->numpC_), iRes4(kmd->iRes4_),
+    nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), // numpC(kmd->numpC_), iRes4(kmd->iRes4_),
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
     IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),  nPh(kmd->nPh_), mPh(kmd->mPh_),
     vPh(kmd->vPh_), sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
@@ -67,9 +67,9 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     arlPhc = NULL;
     arrpCon = NULL;
     arapCon = NULL;
-    arUmpCon = NULL;
+//    arUmpCon = NULL;
     alloc_kinrtabs( );
-    init_kinrtabs( kmd->arlPhc_, kmd->arrpCon_,  kmd->arapCon_,  kmd->arUmpCon_);
+    init_kinrtabs( kmd->arlPhc_, kmd->arrpCon_,  kmd->arapCon_ );
 
     /// allocation of work array of parameters and results for 'parallel reactions'
     arPRt = NULL;
@@ -90,19 +90,6 @@ TKinMet::TKinMet( const KinMetData *kmd ):
 
     double sSAcor; /// Corrected specific surface area (m2/g)
     double sAph_c; /// Corrected surface area of the phase (m2/g)
-
-
-    lnGamConf = new double[NComp];
-    lnGamRecip = new double[NComp];
-    lnGamEx = new double[NComp];  // Work arrays for lnGamma components - should we zero off?
-    for (long int i=0; i<NComp; i++)
-    {
-       lnGamConf[i] = 0.0;
-       lnGamRecip[i] = 0.0;
-       lnGamEx[i] = 0.0;
-    }
-    // initialize phase properties
-    Gex = 0.0;
 
 */
 }
@@ -139,15 +126,6 @@ TKinMet::alloc_kinrtabs()
      }
    }
 
-   if( NComp && numpC )
-   {
-     arUmpCon = new double *[NComp];
-     for( j=0; j<NComp; j++)
-     {
-          arUmpCon[j] = new double[numpC];
-     }
-   }
-
    if( nPRk && nSkr && naptC )
    {
         arapCon = new double **[nPRk];
@@ -166,7 +144,7 @@ TKinMet::alloc_kinrtabs()
 /// returns -1 if error was encountered.
 //
 long int
-TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,  double *p_arUmpCon  )
+TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon  )
 {
     long int j, i, s, lp, pr;
 
@@ -182,18 +160,12 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,
             for( i=0; i<nrpC; i++)
                 arrpCon[pr][i] = p_arrpCon[nrpC*pr+i];
     }
-    if( arUmpCon ) {
-
-        for( j=0; j<NComp; j++)
-            for( i=0; i<numpC; i++)
-                arUmpCon[j][i] = p_arUmpCon[numpC*j+i];
-    }
     if( arapCon ) {
 
         for( j=0; j<nPRk; j++)
             for( s=0; s<nSkr; s++)
-                for( i=0; i<numpC; i++)
-                    arapCon[j][s][i] = p_arapCon[numpC*nSkr*j+numpC*s+i];
+                for( i=0; i<naptC; i++)
+                    arapCon[j][s][i] = p_arapCon[naptC*nSkr*j+naptC*s+i];
     }
     return 0;
 }
@@ -220,14 +192,6 @@ TKinMet::free_kinrtabs()
            delete[]arrpCon[pr];
       }
       delete[]arrpCon;
-    }
-    if( arUmpCon )
-    {
-      for( j=0; j<NComp; j++)
-      {
-           delete[]arUmpCon[j];
-      }
-      delete[]arUmpCon;
     }
     if( arapCon )
     {
@@ -419,6 +383,82 @@ long int SetMetCon()
 
 
 */
+
+//  Implementation of TUptakeKin class (uptake kinetics)
+//
+TUptakeKin::TUptakeKin( KinMetData *kmd, long int p_numpC, double *p_arUmpCon ):TKinMet( kmd )
+{
+    numpC = p_numpC;
+    arUmpCon = NULL;
+    alloc_upttabs();
+    init_upttabs( p_arUmpCon );
+};
+
+/// Destructor
+TUptakeKin::~TUptakeKin()
+{
+  free_upttabs();
+}
+
+/// allocates memory for TUptakeKin data
+void
+TUptakeKin::alloc_upttabs()
+{
+   long int j;
+
+   if( NComp && numpC )
+   {
+     arUmpCon = new double *[NComp];
+     for( j=0; j<NComp; j++)
+     {
+          arUmpCon[j] = new double[numpC];
+     }
+   }
+
+}
+
+/// returns 0 if o.k. or some arrays were not allocated.
+/// returns -1 if error was encountered.
+//
+long int
+TUptakeKin::init_upttabs( double *p_arUmpCon  )
+{
+    long int j, i;
+
+    if( arUmpCon ) {
+
+        for( j=0; j<NComp; j++)
+            for( i=0; i<numpC; i++)
+                arUmpCon[j][i] = p_arUmpCon[numpC*j+i];
+    }
+    return 0;
+}
+
+/// frees memory for TKinMet tables
+//
+void
+TUptakeKin::free_upttabs()
+{
+    long int j;
+
+    if( arUmpCon )
+    {
+      for( j=0; j<NComp; j++)
+      {
+           delete[]arUmpCon[j];
+      }
+      delete[]arUmpCon;
+    }
+}
+
+// Calculates uptake rates
+long int
+TUptakeKin::UptakeMod()
+{
+
+}
+
+
 
 
 //--------------------- End of s_kinmet.cpp ---------------------------

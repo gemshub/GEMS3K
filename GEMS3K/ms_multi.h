@@ -657,8 +657,8 @@ protected:
 // New stuff for TKinMet class implementation
 long int CalculateKinMet( long int LinkMode  );
 void KinMetCreate( long int jb, long int k, long int kc, long int kp, long int kf,
-            long int ka, long int ks, long int kd, long int ku, const char *kmod,
-            long jphl, long int jlphc );
+            long int ka, long int ks, long int kd, long ku, const char *kmod,
+            long jphl, long jlphc );
 void KinMetParPT( long int k, const char *kMod );
 void KinMetSetTime( long int k, const char *kMod );
 void KinMetUpdateFSA( long int k, const char *kMod );

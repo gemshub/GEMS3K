@@ -98,8 +98,8 @@ struct KinMetData {
     long int nrpC_;  /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC_; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     long int nAscC_; /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
-    long int numpC_; /// number of uptake model parameter coefficients (per end member)
-    long int iRes4_;  // reserved
+//    long int numpC_; /// number of uptake model parameter coefficients (per end member)
+//    long int iRes4_;  // reserved
 
     double T_k_;     /// Temperature, K (initial)
     double P_bar_;   /// Pressure, bar (initial)
@@ -133,7 +133,7 @@ struct KinMetData {
     double *arrpCon_;  /// Pointer to input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC] read-only
     double *arapCon_;  /// Pointer to array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC] read-only
     double *arAscp_;   /// Pointer to array of parameter coefficients of equation for correction of specific surface area [nAscC] read-only
-    double *arUmpCon_; /// Pointer to input array of uptake model coefficients [nComp*numpC] read-only
+//    double *arUmpCon_; /// Pointer to input array of uptake model coefficients [nComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM_)[MAXDCNAME_];  /// pointer to the classifier of DCs involved in sorption phase [NComp] read-only
@@ -236,8 +236,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int nrpC;      /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC;     /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     long int nAscC;   /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
-    long int numpC;   /// number of uptake model parameter coefficients (per end member)
-    long int iRes4;   // reserved
+//    long int numpC;   /// number of sorption/uptake model parameter coefficients (per end member)
+//    long int iRes4;   // reserved
 
     double R_CONST;     /// Gas constant, 8.31451 J/K/mol
     double T_k;         /// Temperature, K
@@ -273,7 +273,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
     double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
     double *arAscp;  /// input array of parameter coefficients of equation for correction of specific surface area [nAscC]
-    double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
+//    double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM)[MAXDCNAME_];  /// pointer to the list of DC names in the phase [NComp] read-only
@@ -309,8 +309,6 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double sSAcor; /// Corrected specific surface area (m2/g)
     double sAph_c; /// Corrected surface area of the phase (m2/g)
 
-    // Uptake model output
-
     // SS dissolution
 
     // SS precipitation
@@ -319,7 +317,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
     // functions for allocation and initialization of kinetic rate tables
     void alloc_kinrtabs();
-    long int init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon,  double *p_arUmpCon );
+    long int init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon );
     void free_kinrtabs();
     // functions for allocation and initialization of the  TKinReact array for parallel reactions data
     void alloc_arPRt();
@@ -431,18 +429,22 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Bruno Kulik Curti
     private:
 
     // specific stuff for uptake kinetics
+    long int numpC;   /// number of sorption/uptake model parameter coefficients (per end member)
+    long int iRes4;   // reserved
+
+    double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
+
+    // Uptake model output
 
     // internal functions
-    //        void alloc_internal();
-    //        void free_internal();
+    void alloc_upttabs();
+    long int init_upttabs( double *p_arUmpCon );
+    void free_upttabs();
 
     public:
 
     // Constructor
-    TUptakeKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
-    {
-
-    };
+    TUptakeKin( KinMetData *kmd, long int numpC_, double *arUmpCon_ );
 
     // Destructor
     ~TUptakeKin();
@@ -514,6 +516,7 @@ class TNucleKin: public TKinMet  // Mineral nucleation/growth kinetics models TB
     private:
 
     // specific stuff for uptake kinetics
+  // new:new: array of nucleation model parameters (A.Testino?)
 
     // internal functions
     //        void alloc_internal();

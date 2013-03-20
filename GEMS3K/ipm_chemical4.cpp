@@ -196,9 +196,6 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.nrpC_ = pm.LsKin[k*6+2];  /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12)
     kmd.naptC_ = pm.LsKin[k*6+3]; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     kmd.nAscC_ = pm.LsKin[k*6+4]; /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
-    if( k < pm.FIs)
-        kmd.numpC_ = pm.LsUpt[k*2]; /// number of uptake model parameter coefficients (per end member)
-    else kmd.numpC_ = 0;
 //    kmd.iRes4_;  // reserved
 
     if( phKinMet[k])
@@ -248,14 +245,6 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.arrpCon_ = pm.rpConC+kc;  /// Pointer to input array of kinetic rate constants for 'parallel reactions' [nPRk*nrpC]
     kmd.arapCon_ = pm.apConC+ka;  /// Pointer to array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC] read-only
     kmd.arAscp_ = pm.AscpC+ks;    /// Pointer to array of parameter coefficients of equation for correction of A_s [nAscC]
-    if( k < pm.FIs)
-    {
-        kmd.arUmpCon_= pm.UMpcC+ku; /// Pointer to input array of uptake model coefficients [nComp*numpC]
-    }
-    else {
-        kmd.arUmpCon_= NULL;
-    }
-    // new:new: array of nucleation model parameters here (A.Testino?)
 
     kmd.SM_ = pm.SM+jb;           /// pointer to list of DC names involved in the phase [NComp]
     kmd.arDCC_ = pm.DCC+jb;       /// pointer to the classifier of DCs involved in the phase [NComp]
@@ -293,9 +282,12 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
         }
         case KM_PRO_UPT_:  // Kinetics of uptake/entrapment (of minor/trace element) into solid solution
         {
-                TUptakeKin* myPT = new TUptakeKin( &kmd );
+             if( k < pm.FIs)
+             {
+                TUptakeKin* myPT = new TUptakeKin( &kmd, pm.LsUpt[k*2], pm.UMpcC+ku );
                 myKM = (TKinMet*)myPT;
-                break;
+             }
+             break;
         }
         case KM_PRO_IEX_:  // Kinetics of ion exchange (clays, C-S-H, zeolites, ...)
         {
@@ -311,6 +303,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
         }
         case KM_PRO_NUPR_:  // Kinetics of nucleation followed by precipitation
         {
+           // new:new: array of nucleation model parameters here (A.Testino?)
                 TNucleKin* myPT = new TNucleKin( &kmd );
                 myKM = (TKinMet*)myPT;
                 break;
