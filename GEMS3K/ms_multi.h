@@ -790,6 +790,10 @@ public:
 
      sizeFIs = 0;
      phSolMod = 0;
+     sizeFIa = 0;
+     phSorpMod = 0;
+     sizeFI = 0;
+     phKinMet = 0;
 
      pmp->Guns = 0;
      pmp->Vuns = 0;

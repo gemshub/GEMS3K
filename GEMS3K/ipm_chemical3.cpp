@@ -1254,13 +1254,13 @@ void TMulti::Free_TSolMod()
 /// (since version 3.4.0)
 void TMulti::Alloc_TSorpMod( long int newFIs )
 {
-  if(  phSorpMod && ( newFIs == sizeFIs) )
+  if(  phSorpMod && ( newFIs == sizeFIa) )
     return;
 
   Free_TSorpMod();
   // alloc memory for all multicomponents phases
   phSorpMod = new  TSorpMod *[newFIs];
-  sizeFIs = newFIs;
+  sizeFIa = newFIs;
  for( long int ii=0; ii<newFIs; ii++ )
           phSorpMod[ii] = 0;
 }
@@ -1270,14 +1270,14 @@ void TMulti::Free_TSorpMod()
   long int kk;
 
   if( phSorpMod )
-  {  for(  kk=0; kk<sizeFIs; kk++ )
+  {  for(  kk=0; kk<sizeFIa; kk++ )
       if( phSorpMod[kk] )
            delete phSorpMod[kk];
 
       delete[]  phSorpMod;
   }
   phSorpMod = 0;
-  sizeFIs = 0;
+  sizeFIa = 0;
 }
 
 /*

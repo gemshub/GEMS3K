@@ -93,7 +93,7 @@ struct KinMetData {
     long int nlPh_;    /// Number of linked phases (cf. lPh), default 0
     long int nlPc_;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
 
-    long int nPRk_;  /// number of «parallel reactions» that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
+    long int nPRk_;  /// number of ï¿½parallel reactionsï¿½ that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
     long int nSkr_;  /// number of (aqueous or gaseous or surface) species from other reacting phases involved, 0 by default
     long int nrpC_;  /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC_; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
@@ -209,7 +209,7 @@ class TKinReact
     };
 
     // Destructor
-    ~TKinReact();
+    ~TKinReact(){}
 
     double PRrateCon( long int xPR_p );  // calculates the rate constant for xPR parallel reaction
 
@@ -231,7 +231,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int nlPh;    /// Number of linked phases (cf. lPh), default 0
     long int nlPc;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
 
-    long int nPRk;      /// number of «parallel reactions» that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
+    long int nPRk;      /// number of ï¿½parallel reactionsï¿½ that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
     long int nSkr;      /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
     long int nrpC;      /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC;     /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
@@ -335,49 +335,49 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int PTparam()
     {
         return 0;
-    };
+    }
 
     virtual  // Calculates phase dissolution/precipitation/nucleation rates
     long int RateMod()
     {
         return 0;
-    };
+    }
 
     virtual  // Calculates phase dissolution/precipitation/nucleation rates
     long int RateInit()
     {
         return 0;
-    };
+    }
 
     virtual  // Calculates (splits) rates to lower/upper metastability constraints
     long int SplitMod()
     {
         return 0;
-    };
+    }
 
     virtual  // Calculates (splits) rates to lower/upper metastability constraints
     long int SplitInit()
     {
         return 0;
-    };
+    }
 
     virtual  // Calculates (splits) rates to lower/upper constraints for minor/trace end member(s)
     long int SorptMod()
     {
         return 0;
-    };
+    }
 
     virtual  // Calculates (splits) rates to lower/upper constraints for minor/trace end member(s)
     long int SorptInit()
     {
         return 0;
-    };
+    }
 
     virtual
     long int SetMetCon()
     {
         return 0;
-    };
+    }
 
     // sets the specific surface area of the phase and 'parallel reactions' area fractions
     long int UpdateFSA( const double *fSAf_p, const double As );
@@ -415,10 +415,10 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
             TMWReaKin( const KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
             {
 
-            };
+            }
 
             // Destructor
-            ~TMWReaKin();
+            ~TMWReaKin(){}
 
 
 
@@ -444,8 +444,7 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Bruno Kulik Curti
     public:
 
     // Constructor
-    TUptakeKin( KinMetData *kmd, long int numpC_, double *arUmpCon_ );
-
+    TUptakeKin( KinMetData *kmd,  long int p_numpC, double *p_arUmpCon /*, specific params */ );
     // Destructor
     ~TUptakeKin();
 
@@ -474,7 +473,7 @@ class TIonExKin: public TKinMet  // Ion exchange (layered) kinetics model TBD
     }
 
     // Destructor
-    ~TIonExKin();
+    ~TIonExKin(){}
 
     // Calculates ion exchange rates
     long int IonExRatesMod();
@@ -499,10 +498,10 @@ class TAdsorpKin: public TKinMet  // Adsorption (layered) kinetics model TBD
     TAdsorpKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
     {
 
-    };
+    }
 
     // Destructor
-    ~TAdsorpKin();
+    ~TAdsorpKin(){}
 
     // Calculates uptake rates
     long int AdsorpRatesMod();
@@ -528,10 +527,10 @@ class TNucleKin: public TKinMet  // Mineral nucleation/growth kinetics models TB
     TNucleKin( KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
     {
 
-    };
+    }
 
     // Destructor
-    ~TNucleKin();
+    ~TNucleKin(){}
 
     // Calculates uptake rates
     long int NucleGrowthMod();
