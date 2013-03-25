@@ -48,17 +48,17 @@ enum FormatType {
 };
 
 
-struct outFormat /// Internal descriptions of output formats with JSON notation
+struct IOJFormat /// Internal descriptions of output/input formats with JSON notation
  {
    long int index;    ///< index formatted value into reading array
    long int type;  ///< type of formatted value { F, L, R, ...}
    gstring format; ///< string with formatted data for different type
 
-   outFormat( char aType, int aIndex, gstring aFormat ):
+   IOJFormat( char aType, int aIndex, gstring aFormat ):
                type(aType), index(aIndex), format(aFormat)
        {}
 
-   outFormat( const outFormat& data ):
+   IOJFormat( const IOJFormat& data ):
        type(data.type), index(data.index), format(data.format)
        { }
 };
@@ -308,7 +308,7 @@ public:
 
 
     void readFormatArray( const char* name, double* arr,
-        long int size, vector<outFormat>& vFormats );
+        long int size, vector<IOJFormat>& vFormats );
 };
 
 //=============================================================================

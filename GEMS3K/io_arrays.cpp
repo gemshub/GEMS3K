@@ -789,7 +789,7 @@ void TReadArrays::readArray( const char* name, double* arr, long int size )
 }
 
 void TReadArrays::readFormatArray( const char* name, double* arr,
-    long int size, vector<outFormat>& vFormats )
+    long int size, vector<IOJFormat>& vFormats )
 {
  gstring format;
  long int type;
@@ -802,7 +802,7 @@ void TReadArrays::readFormatArray( const char* name, double* arr,
  {
      type = readFormatValue(arr[ii], format);
      if(type > ft_Value && type< ft_Internal )
-     {    vFormats.push_back( outFormat(type, ii, format));
+     {    vFormats.push_back( IOJFormat(type, ii, format));
      }
  }
 }
