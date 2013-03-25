@@ -235,6 +235,7 @@ void TMulti::set_def( long int /*q*/)
     pm.tMin = G_TP;  // Type of thermodynamic potential to minimize
     pm.pTPD = 0;  // State of reloading thermod data: 0- all  1 - G0 only  2 - no
     pm.pULR = 0;  // Start recalc kinetic constraints (0-do not = 0; 1-do )internal
+pm.pKMM = 0;
     pm.ITaia = 0;  // Number of IPM iterations completed in AIA mode (renamed from pRR1)
     pm.FIat = 0;   // max. number of surface site types
     pm.MK = 0;     // PM return code: 0 - continue;  1 - converged
@@ -243,7 +244,10 @@ void TMulti::set_def( long int /*q*/)
     pm.js = 0;     // js - index of DC for IPN equations ( CalculateActivityCoefficients() )
     pm.next = 0;
     pm.sitNcat = 0;    // SIT: number of cations
-    pm.sitNan = 0;     // SIT: number of anions
+    pm.sitNan = 0;     // SIT: number of anions    
+pm.ITau = -1;  // current time, s (kinetics)
+pm.kTau = 0.;  // current time, s (kinetics)
+pm.kdT = 0.;   // current time step, s (kinetics)
 
     // mem_set( &pm.TC, 0, 54*sizeof(double));
     pm.TC = pm.TCc = 0.; 	// Temperature T = 0.; min.-max. (0 = 0.;2000 C)

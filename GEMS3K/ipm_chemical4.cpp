@@ -126,6 +126,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 break;
          }
        } // k
+       break;
     }
    case LINK_PP_MODE:  // Calculation of kinetics and metast. constraints at time step
    {
@@ -158,6 +159,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                break;
             }
           } // k
+          break;
         }
    default: ;
    }
