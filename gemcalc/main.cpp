@@ -143,11 +143,12 @@ int main( int argc, char* argv[] )
       // of a titration or another irreversible process
   	  // Reading list of recipes names from file 
       recipes = f_getfiles(  input_recipes_file_list_name,
-  	       		 input_recipes_file_list_path, nRecipes, ',');			 
+                 input_recipes_file_list_path, nRecipes, ',');
+
       for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
       { 
          // Trying to read the next file name 
-  	    sprintf(NextRecipeFileName , "%s%s", input_recipes_file_list_path, recipes[cRecipe] );
+        sprintf(NextRecipeFileName , "%s\%s", input_recipes_file_list_path, recipes[cRecipe] );
 
         // (5) Reading the next DBR file with different input composition or temperature
         node->GEM_read_dbr( NextRecipeFileName );

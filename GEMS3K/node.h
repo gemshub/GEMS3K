@@ -292,8 +292,8 @@ void GEM_from_MT(
 void GEM_set_MT(
 //   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
 //   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
-   double p_Tm,      ///< Actual total simulation time, s                        +       -      -
-   double p_dt       ///< Actual time step, s                          +       -      -
+   double p_Tm,      ///< Actual total simulation time, s               +       -      -
+   double p_dt       ///< Actual time step, s                           +       -      -
 );
 #endif
 

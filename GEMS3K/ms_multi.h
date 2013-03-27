@@ -834,7 +834,7 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
-    double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
+double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
     void DC_LoadThermodynamicData( TNode* aNa = 0 );
 

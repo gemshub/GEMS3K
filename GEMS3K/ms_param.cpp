@@ -227,6 +227,13 @@ void strip(string& str)
     pos2 == string::npos ? str.length() - 1 : pos2 - pos1 + 1);
 }
 
+void replaceall(string& str, char ch1, char ch2)
+{
+  for(size_t ii=0; ii<str.length(); ii++ )
+   if( str[ii] == ch1 )
+            str[ii] = ch2;
+}
+
 /// read string as: "<characters>"
 istream& f_getline(istream& is, gstring& str, char delim)
 {
@@ -262,9 +269,11 @@ gstring u_makepath(const gstring& dir,
     return Path;
 }
 
-void u_splitpath(const gstring& Path, gstring& dir,
+void u_splitpath(const gstring& aPath, gstring& dir,
             gstring& name, gstring& ext)
 {
+    gstring Path = aPath;
+    replaceall( Path, '\\', '/');
     size_t pos = Path.rfind("/");
     if( pos != npos )
         dir = Path.substr(0, pos), pos++;
@@ -299,6 +308,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
 // Get path
    gstring path_;
    gstring flst_name = f_name;
+    replaceall( flst_name, '\\', '/');
    unsigned long int pos = flst_name.rfind("/");
    path_ = "";
    if( pos < npos )
