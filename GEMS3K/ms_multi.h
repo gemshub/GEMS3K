@@ -210,12 +210,12 @@ double
   *LsKin,  ///< new: number of parallel reactions nPRk[k]; number of species in activity products nSkr[k];
            /// number of parameter coeffs in parallel reaction term nrpC[k]; number of parameters
            /// per species in activity products naptC[k]; nAscC number of parameter coefficients in As correction [Fi][6];
-           /// Reserved
+           /// nFaces[k] number of (separately considered) crystal faces or surface patches ( 1 to 4 )
   *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k]; reserved [Fis][2]
 
   *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])
-  *ocPRkC; ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
-
+  (*ocPRkC)[2]; ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
+                /// and indexes of faces (surface patches)
   double
    // TSolMod stuff
     *PMc,    ///< Collected interaction parameter coefficients for the (built-in) non-ideal mixing models -> LsMod[k,0] x LsMod[k,2]

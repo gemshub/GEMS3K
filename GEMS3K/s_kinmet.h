@@ -141,7 +141,7 @@ struct KinMetData {
 
     long int (*arPhXC_)[2];  /// TKinMet: linked phase indexes and linkage type codes [nlPh][2]
 
-    long int *arocPRk_; /// pointer to operation codes for kinetic parallel reaction affinity terms [nPRk] read-only
+    long int (*arocPRk_)[2]; /// pointer to operation codes for kinetic parallel reaction affinity terms [nPRk] read-only
     long int *arxSKr_;  /// pointer to input array of DC indexes used in activity products [nSKr_] read-only
 
     double *arym_;    /// Pointer to molalities of all species in MULTI (provided), read-only
@@ -166,7 +166,7 @@ class TKinReact
      long int xPR;   /// index of this parallel reaction
      long int iRes; // reserved
 
-     long int ocPRk; /// operation code for this kinetic parallel reaction affinity term
+     long int ocPRk[2]; /// operation code for this kinetic parallel reaction affinity term
      long int *xSKr;  /// pointer to input array of DC indexes used in activity products [nSKr] (copy)
 
      double feSAr;   /// input fraction of surface area of the solid related to this parallel reaction
@@ -281,7 +281,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
     long int (*arPhXC)[2];  /// TKinMet: linked phase indexes and linkage type codes [nlPh][2]
 
-    long int *arocPRk; /// input operation codes for kinetic parallel reaction affinity terms [nPRk]
+    long int (*arocPRk)[2]; /// input operation codes for kinetic parallel reaction affinity terms [nPRk][2]
     long int *arxSKr;  /// pointer to input array of DC indexes used in activity products [nSKr]
 
     double *arym;    /// Pointer to molalities of all species in MULTI (provided), read-only

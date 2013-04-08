@@ -231,7 +231,8 @@ TKinMet::init_arPRt()
         {
             arPRt[xj].xPR = xj;   /// index of this parallel reaction
             // long int iRes; // reserved
-            arPRt[xj].ocPRk = arocPRk[xj]; /// operation code for this kinetic parallel reaction affinity term
+            arPRt[xj].ocPRk[0] = arocPRk[xj][0]; /// operation code for this kinetic parallel reaction affinity term
+            arPRt[xj].ocPRk[1] = arocPRk[xj][1];
             arPRt[xj].xSKr = arxSKr;
             arPRt[xj].feSAr = arfeSAr[xj];
             arPRt[xj].rpCon = arrpCon[xj];
