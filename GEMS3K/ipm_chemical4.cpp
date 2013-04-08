@@ -85,13 +85,13 @@ TMulti::CalculateKinMet( long int LinkMode  )
            jphl  += pm.LsPhl[k*2];
            jlphc += pm.LsPhl[k*2]*pm.LsPhl[k*2+1];
 
-           kfe += pmp->LsKin[k*6];
-           kpe += pmp->LsKin[k*6];
-           kce += pmp->LsKin[k*6]*pmp->LsKin[k*6+2];
-           kae += pmp->LsKin[k*6]*pmp->LsKin[k*6+1]*pmp->LsKin[k*6+3];
-           kse += pmp->LsMod[k*6+4];
-           kde += pmp->LsKin[k*6+1];
-           kue += pmp->LsUpt[k*2];
+           kfe += pm.LsKin[k*6];
+           kpe += pm.LsKin[k*6];
+           kce += pm.LsKin[k*6]*pm.LsKin[k*6+2];
+           kae += pm.LsKin[k*6]*pm.LsKin[k*6+1]*pm.LsKin[k*6+3];
+           kse += pm.LsMod[k*6+4];
+           kde += pm.LsKin[k*6+1];
+           kue += pm.LsUpt[k*2];
          } // k
          break;
    }
@@ -198,7 +198,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.nrpC_ = pm.LsKin[k*6+2];  /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12)
     kmd.naptC_ = pm.LsKin[k*6+3]; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     kmd.nAscC_ = pm.LsKin[k*6+4]; /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
-//    kmd.iRes4_;  // reserved
+    kmd.nFaceC_ = pm.LsKin[k*6+5]; /// number of (separately considered) crystal faces or surface patches ( 1 to 4 )
 
     if( phKinMet[k])
         if(  phKinMet[k]->testSizes( &kmd ) )

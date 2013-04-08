@@ -209,8 +209,8 @@ double
   long int
   *LsKin,  ///< new: number of parallel reactions nPRk[k]; number of species in activity products nSkr[k];
            /// number of parameter coeffs in parallel reaction term nrpC[k]; number of parameters
-           /// per species in activity products naptC[k]; nAscC number of parameter coefficients in As correction [Fi][6];
-           /// nFaces[k] number of (separately considered) crystal faces or surface patches ( 1 to 4 )
+           /// per species in activity products naptC[k]; nAscC number of parameter coefficients in As correction;
+           /// nFaces[k] number of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
   *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k]; reserved [Fis][2]
 
   *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])

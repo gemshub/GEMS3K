@@ -98,6 +98,7 @@ struct KinMetData {
     long int nrpC_;  /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC_; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     long int nAscC_; /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
+    long int nFaceC_; /// number of (separately considered) crystal faces or surface patches ( 1 to 4 )
 //    long int numpC_; /// number of uptake model parameter coefficients (per end member)
 //    long int iRes4_;  // reserved
 
@@ -231,11 +232,12 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int nlPh;    /// Number of linked phases (cf. lPh), default 0
     long int nlPc;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
 
-    long int nPRk;      /// number of �parallel reactions� that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
-    long int nSkr;      /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
-    long int nrpC;      /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
-    long int naptC;     /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
-    long int nAscC;   /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
+    long int nPRk;     /// number of �parallel reactions� that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
+    long int nSkr;     /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
+    long int nrpC;     /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
+    long int naptC;    /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
+    long int nAscC;    /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
+    long int nFaceC;   /// number of (separately considered) crystal faces or surface patches ( 1 to 4 )
 //    long int numpC;   /// number of sorption/uptake model parameter coefficients (per end member)
 //    long int iRes4;   // reserved
 
@@ -419,8 +421,6 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 
             // Destructor
             ~TMWReaKin(){}
-
-
 
 };
 
