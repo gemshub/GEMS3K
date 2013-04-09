@@ -34,18 +34,18 @@ const int   MAXDCNAME_ =      16, MAXPHNAME_ = 16;   // see also v_mod.h
 enum kinmet_controls {   /// Re-declared codes to control kinetic rate models (see also m_phase.h)
 
     KM_UNDEF_ = 'N',      /// not defined, no account for
-//KinProCode
+KinProCode_ = 2,
     KM_PRO_MWR_ = 'M',     /// Kinetics of generic dissolution/precipitation (no uptake, ionex, adsorption)
     KM_PRO_UPT_ = 'U',     /// Kinetics of uptake/entrapment (of minor/trace element) into solid solution
     KM_PRO_IEX_ = 'X',     /// Kinetics of ion exchange (clays, C-S-H, zeolites, ...)
     KM_PRO_ADS_ = 'A',     /// Kinetics of adsorption (on MWI), redox
     KM_PRO_NUPR_ = 'P',    /// Kinetics of nucleation and precipitation
-//KinModCode
+KinModCode_ = 3,
     KM_MOD_TST_ = 'T',     /// Generic TST dissolution/precipitation model following Shott ea 2012
     KM_MOD_PAL_ = 'P',     /// Dissolution/precipitation model of the form (Palandri 2004)
     KM_MOD_WOL_ = 'W',     /// Carbonate growth model following (Wolthers 2012)
     KM_MOD_NUGR_ = 'U',    /// Mineral nucleation and growth model with nuclei/particle size distr. (TBD)
-//KinSorpCode
+KinSorpCode_ = 4,
     KM_UPT_ENTRAP_ = 'E',  ///	Unified entrapment model (Thien,Kulik,Curti 2012)
     KM_UPT_UPDP_ = 'M',    ///	DePaolo (2011) uptake kinetics model
     KM_UPT_SEMO_ = 'G',    ///  Growth (surface) entrapment model (Watson 2004)
@@ -53,15 +53,15 @@ enum kinmet_controls {   /// Re-declared codes to control kinetic rate models (s
     KM_IEX_SLOW_ = 'L',    ///  Slow ion exchange kinetics (e.g. illite, zeolites)
     KM_ADS_INHIB_ = 'I',   ///  Adsorption inhibition
     KM_NUCL_SSMP_  = 'P',  ///  Solid solution nucleation model (Prieto 2013)
-//KinLinkCode
+KinLinkCode_ = 5,
     KM_LNK_SURF_ = 'S',   ///  Link to (fraction of) solid substrate surface
     KM_LNK_PVOL_ = 'P',   ///  Link to (fraction of) solid substrate (pore) volume
     KM_LNK_MASS_ = 'M',   ///  Link to (fraction of) solid substrate mass
-//KinSizedCode
+KinSizedCode_ = 6,
     KM_SIZED_UNI_ = 'U',  ///  Uniform particle/pore size distribution
     KM_SIZED_BIN_ = 'B',  ///  Binodal particle/pore size distribution
     KM_SIZED_FUN_ = 'F',  ///  Empirical distribution function
-//KinResCode
+KinResCode_ = 7,
     KM_RES_SURF_ = 'A',   /// surface-scaled rate model (k in mol/m2/s)
     KM_RES_PVS_ = 'V'     /// pore-volume-scaled model (k in mol/m3/s)
 
@@ -175,7 +175,8 @@ class TKinReact
      double **apCon; /// pointer input array of parameters per species involved in 'activity product' terms [nSkr][naptC]
 
      // work data: unpacked rpCon[nrpC]
-     double ko,  /// rate constant at standard temperature (mol/m2/s)
+     double kod,  /// dissolution rate constant at standard temperature (mol/m2/s)
+            kop,  /// precipitation rate constant at standard temperature (mol/m2/s)
             Ap,  /// Arrhenius parameter
             Ea,  /// activation energy at st.temperature J/mol
             bI,
@@ -185,7 +186,9 @@ class TKinReact
             pPR,
             qPR,
             mPR,
+            uPR,
             OmEff,
+            nucRes,
 
             Omg; /// Input stability index non-log (d-less)
 

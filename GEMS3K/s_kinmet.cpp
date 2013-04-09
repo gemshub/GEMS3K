@@ -232,43 +232,46 @@ TKinMet::init_arPRt()
             arPRt[xj].xPR = xj;   /// index of this parallel reaction
             // long int iRes; // reserved
             arPRt[xj].ocPRk[0] = arocPRk[xj][0]; /// operation code for this kinetic parallel reaction affinity term
-            arPRt[xj].ocPRk[1] = arocPRk[xj][1];
+            arPRt[xj].ocPRk[1] = arocPRk[xj][1]; /// index of particle face (surface patch)
             arPRt[xj].xSKr = arxSKr;
             arPRt[xj].feSAr = arfeSAr[xj];
             arPRt[xj].rpCon = arrpCon[xj];
             arPRt[xj].apCon = arapCon[xj];
     // work data: unpacked rpCon[nrpC]
-            if( nrpC >=3 )
+            if( nrpC >=4 )
             {
-                arPRt[xj].ko = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
-                arPRt[xj].Ap = arPRt[xj].rpCon[1];  /// Arrhenius parameter
-                arPRt[xj].Ea = arPRt[xj].rpCon[2];  /// activation energy at st.temperature J/mol
+                arPRt[xj].kod = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
+                arPRt[xj].kop = arPRt[xj].rpCon[1];  /// rate constant at standard temperature (mol/m2/s)
+                arPRt[xj].Ap = arPRt[xj].rpCon[2];  /// Arrhenius parameter
+                arPRt[xj].Ea = arPRt[xj].rpCon[3];  /// activation energy at st.temperature J/mol
             }
             else {
-               arPRt[xj].ko = arPRt[xj].Ap = arPRt[xj].Ea = 0.0;
+                arPRt[xj].kod = arPRt[xj].kop = arPRt[xj].Ap = arPRt[xj].Ea = 0.0;
             }
-            if( nrpC >=7 )
+            if( nrpC >=8 )
             {
-                arPRt[xj].bI = arPRt[xj].rpCon[3];
-                arPRt[xj].bpH = arPRt[xj].rpCon[4];
-                arPRt[xj].bpe = arPRt[xj].rpCon[5];
-                arPRt[xj].bEh = arPRt[xj].rpCon[6];
+                arPRt[xj].bI = arPRt[xj].rpCon[4];
+                arPRt[xj].bpH = arPRt[xj].rpCon[5];
+                arPRt[xj].bpe = arPRt[xj].rpCon[6];
+                arPRt[xj].bEh = arPRt[xj].rpCon[7];
             }
             else {
                arPRt[xj].bI = arPRt[xj].bpH = arPRt[xj].bpe = arPRt[xj].bEh = 0.0;
             }
-            if( nrpC >=10 )
+            if( nrpC >=12 )
             {
-                arPRt[xj].pPR = arPRt[xj].rpCon[7];
-                arPRt[xj].qPR = arPRt[xj].rpCon[8];
-                arPRt[xj].mPR = arPRt[xj].rpCon[9];
+                arPRt[xj].pPR = arPRt[xj].rpCon[8];
+                arPRt[xj].qPR = arPRt[xj].rpCon[9];
+                arPRt[xj].mPR = arPRt[xj].rpCon[10];
+                arPRt[xj].uPR = arPRt[xj].rpCon[11];
             }
             else {
-                arPRt[xj].pPR = arPRt[xj].qPR = arPRt[xj].mPR = 0.0;
+                arPRt[xj].pPR = arPRt[xj].qPR = arPRt[xj].mPR = arPRt[xj].uPR = 0.0;
             }
-            if( nrpC > 10 )
+            if( nrpC > 12 )
             {
-                arPRt[xj].OmEff = arPRt[xj].rpCon[10];
+                arPRt[xj].OmEff = arPRt[xj].rpCon[12];
+                arPRt[xj].nucRes = arPRt[xj].rpCon[13];
             }
             else {
                 arPRt[xj].OmEff = 1.;
@@ -280,7 +283,8 @@ TKinMet::init_arPRt()
             arPRt[xj].cat = 1.;  // catalytic product term (f(prod(a))
             arPRt[xj].aft = 0.;  // affinity term (f(Omega))
 
-            arPRt[xj].kPR = arPRt[xj].ko;   // rate constant (involving all corrections) in mol/m2/s
+            arPRt[xj].kPR = arPRt[xj].kod;   // rate constant (involving all corrections) in mol/m2/s
+            // check direction - for precipitation, arPRt[xj].kPR = arPRt[xj].kop;
             arPRt[xj].rPR = 0.;   // rate for this region (output) in mol/s
             arPRt[xj].rmol = 0.;   // rate for the whole face (output) in mol/s
 //        arPRt[xj].velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
