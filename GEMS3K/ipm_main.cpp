@@ -53,6 +53,7 @@ using namespace JAMA;
 void TMulti::GibbsEnergyMinimization()
 {
   bool IAstatus;
+  int KMretCode;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
 // fstream f_log("ipmlog.txt", ios::out|ios::app );
@@ -66,6 +67,23 @@ FORCED_AIA:
            pm.IT = 30;
        else
            pm.IT = pm.ITaia;  // Setting number of iterations for the smoothing parameter
+   }
+
+   // New: Run of TKinMet class library
+   if( pm.pKMM < 2 )
+   {
+     if( pm.ITau < 0 || pm.pKMM != 1 )
+         KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
+     if( pm.ITau == 0 )
+         KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
+     if(pm.ITau > 0 )
+         KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
+   //  switch(KMretCode)
+   //  {
+   //        case 0L:
+   //
+   //  }
+   //  to_text_file( "MultiDump1.txt" );   // Debugging
    }
 
    IAstatus = GEM_IPM_InitialApproximation( );

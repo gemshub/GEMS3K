@@ -525,20 +525,6 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
   pm.t_elap_sec = 0.0;
   pm.ITF = pm.ITG = 0;
 
-// New: Run of TKinMet class library
-  if( pm.ITau < 0 || pm.pKMM != 1 )
-      KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
-  if( pm.ITau == 0 )
-      KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
-  if(pm.ITau > 0 )
-      KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
-//  switch(KMretCode)
-//  {
-//        case 0L:
-//
-//  }
-//  to_text_file( "MultiDump1.txt" );   // Debugging
-
     if( paTProfil->p.DG > 1e-5 )
     {
         ScFact = SystemTotalMolesIC();
@@ -984,17 +970,18 @@ void TMulti::GEM_IPM_Init()
 //     if( pm.pULR && pm.PLIM )
 //          Set_DC_limits(  DC_LIM_INIT );
 
-    if( pm.FIs && AllPhasesPure == false )   /// line must be tested !pm.FIs
-    {
 #ifndef IPMGEMPLUGIN
-//????? problematic point
 // New: TKinMet stuff
   if( pmp->pKMM <= 0 )
   {
      KinMetModLoad();  // Call point to loading parameters for kinetic models
+     pmp->pKMM = 1;
   }
-  pmp->pKMM = 1;
+#endif
 
+    if( pm.FIs && AllPhasesPure == false )   /// line must be tested !pm.FIs
+    {
+#ifndef IPMGEMPLUGIN
        if( pm.pIPN <=0 )  // mixing models finalized in any case (AIA or SIA)
        {
              // not done if these models are already present in MULTI !
