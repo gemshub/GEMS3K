@@ -102,6 +102,15 @@ TKinMet::~TKinMet()
       delete[] arPRt;
 }
 
+// Checks dimensions in order to re-allocate class instance, if necessary
+bool
+TKinMet::testSizes( const KinMetData *kmd )
+{
+//    return( ( ModCode == sd->Mod_Code) && (NComp == sd->NSpecies) && ( NPar == sd->NParams) &&
+//            ( NPcoef == sd->NPcoefs) && (MaxOrd == sd->MaxOrder) &&  ( NP_DC == sd->NPperDC) &&
+//            ( NSub == sd->NSublat ) && ( NMoi == sd->NMoiet ) && (MixCode == sd->Mix_Code) );
+}
+
 /// allocates memory for TKinMet data
 void
 TKinMet::alloc_kinrtabs()
@@ -340,12 +349,6 @@ TKinMet::UpdateTime( const double Tau, const double dTau )
 
 }
 
-// Checks dimensions in order to re-allocate class instance, if necessary
-bool
-TKinMet::testSizes( const KinMetData *kmd )
-{
-
-}
 
 /*
 // -----------------------------------------------------------------------------
@@ -395,6 +398,7 @@ TUptakeKin::TUptakeKin( KinMetData *kmd, long int p_numpC, double *p_arUmpCon ):
 {
     numpC = p_numpC;
     arUmpCon = NULL;
+
     alloc_upttabs();
     init_upttabs( p_arUmpCon );
 };

@@ -44,7 +44,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
    // Creating TKinMet instances for phases and passing data, if needed
    switch( LinkMode )
    {
-     case LINK_TP_MODE:  // Re-create TKinMet class instances
+     case LINK_TP_MODE:  // Re-create TKinMet class instances and initialize them
      {
 
         for( k=0; k<pm.FI; k++ )
@@ -76,6 +76,8 @@ TMulti::CalculateKinMet( long int LinkMode  )
                    KinMetCreate( jb, k, kc, kp, kf, ka, ks, kd, ku, kMod, jphl, jlphc );
                    // Correction of parameters for initial T,P
                    KinMetParPT( k, kMod );
+                   // Reset and initialize time
+                   KinMetInitTime( k, kMod );
                    break;
              default:
                    break;
@@ -112,7 +114,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
          // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
              // Correction for T,P
                 KinMetParPT( k, kMod );
-                KinMetSetTime( k, kMod );
+                KinMetInitTime( k, kMod );
                 KinMetUpdateFSA( k, kMod );
                 KinMetInitRates( k, kMod );
                 if( k < pm.FIs )
@@ -120,7 +122,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                     KinMetInitSplit( jb, k, kMod );
                     KinMetInitSorpt( jb, k, kMod );
                 }
-                // KinMetSetConstr( jb, k, kMod );  TBD
+                KinMetSetConstr( jb, k, kMod );  // TBD
                 break;
             default:
                 break;
@@ -144,7 +146,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
             // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
                 // Correction for T,P
                     KinMetParPT( k, kMod );
-                    KinMetSetTime( k, kMod );
+                    KinMetUpdateTime( k, kMod );
                     KinMetUpdateFSA( k, kMod );
                     KinMetCalcRates( k, kMod );
                     if( k < pm.FIs )
@@ -341,10 +343,17 @@ TMulti::KinMetParPT( long int k, const char* kMod )
 }
 
 
+void
+TMulti::KinMetInitTime( long int k, const char *kMod )
+{
 
+
+
+
+}
 
 void
-TMulti::KinMetSetTime( long int k, const char *kMod )
+TMulti::KinMetUpdateTime( long int k, const char *kMod )
 {
 
 
@@ -407,6 +416,14 @@ TMulti::KinMetCalcSplit( long int jb, long int k, const char *kMod )
 
 }
 
+void
+TMulti::KinMetSetConstr( long int jb, long int k,const char *kMod )
+{
+
+
+
+
+}
 
 void
 TMulti::KinMetCalcSorpt( long int jb, long int k, const char *kMod )
@@ -427,14 +444,6 @@ TMulti::KinMetInitSorpt( long int jb, long int k, const char *kMod )
 
 }
 
-void
-TMulti::KinMetSetConstr( long int jb, long int k,const char *kMod )
-{
-
-
-
-
-}
 
 // ------------------------------------------------------------------------------------
 /// Internal memory allocation for TKinMet performance optimization

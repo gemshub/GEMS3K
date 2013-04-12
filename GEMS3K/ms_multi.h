@@ -660,7 +660,8 @@ void KinMetCreate( long int jb, long int k, long int kc, long int kp, long int k
             long int ka, long int ks, long int kd, long ku, const char *kmod,
             long jphl, long jlphc );
 void KinMetParPT( long int k, const char *kMod );
-void KinMetSetTime( long int k, const char *kMod );
+void KinMetInitTime( long int k, const char *kMod );
+void KinMetUpdateTime( long int k, const char *kMod );
 void KinMetUpdateFSA( long int k, const char *kMod );
 void KinMetGetModFSA( long int k, const char *kMod );
 void KinMetCalcRates( long int k, const char *kMod );

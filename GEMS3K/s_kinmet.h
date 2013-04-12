@@ -366,38 +366,31 @@ class TKinMet  // Base class for MWR kinetics and metastability models
         return 0;
     }
 
-    virtual  // Calculates (splits) rates to lower/upper constraints for minor/trace end member(s)
-    long int SorptMod()
-    {
-        return 0;
-    }
-
-    virtual  // Calculates (splits) rates to lower/upper constraints for minor/trace end member(s)
-    long int SorptInit()
-    {
-        return 0;
-    }
-
-    virtual
+    // sets the new metastability constraints if the time step is accepted
     long int SetMetCon()
     {
         return 0;
     }
 
     // sets the specific surface area of the phase and 'parallel reactions' area fractions
-    long int UpdateFSA( const double *fSAf_p, const double As );
+    long int
+    UpdateFSA( const double *fSAf_p, const double As );
 
     // returns modified specific surface area of the phase and 'parallel reactions' area fractions
-    double GetModFSA ( double *fSAf_p );
+    double
+    GetModFSA ( double *fSAf_p );
 
     // sets new system TP state
-    long int UpdatePT ( const double T_k, const double P_bar );
+    long int
+    UpdatePT ( const double T_k, const double P_bar );
 
     // sets new time and time step
-    bool UpdateTime( const double Tau, const double dTau );
+    bool
+    UpdateTime( const double Tau, const double dTau );
 
     // Checks dimensions in order to re-allocate class instance, if necessary
     bool testSizes( const KinMetData *kmd );
+
 
 };
 
@@ -419,11 +412,47 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
             // Constructor
             TMWReaKin( const KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
             {
-
             }
 
             // Destructor
             ~TMWReaKin(){}
+
+
+            // Calculates temperature/pressure corrections to kinetic rate constants
+            long int PTparam(   )
+            {
+                return 0;
+            }
+
+            virtual  // Calculates phase dissolution/precipitation/nucleation rates
+            long int RateMod()
+            {
+                return 0;
+            }
+
+            virtual  // Calculates phase dissolution/precipitation/nucleation rates
+            long int RateInit()
+            {
+                return 0;
+            }
+
+            virtual  // Calculates (splits) rates to lower/upper metastability constraints
+            long int SplitMod()
+            {
+                return 0;
+            }
+
+            virtual  // Calculates (splits) rates to lower/upper metastability constraints
+            long int SplitInit()
+            {
+                return 0;
+            }
+
+            virtual
+            long int SetMetCon()
+            {
+                return 0;
+            }
 
 };
 
