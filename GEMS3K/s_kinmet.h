@@ -193,13 +193,13 @@ class TKinReact
             Omg; /// Input stability index non-log (d-less)
 
      // Results of rate term calculation
-
      double
         arf,  // Arrhenius factor (temperature correction on kappa)
         cat,  // catalytic product term (f(prod(a))
         aft,  // affinity term (f(Omega))
 
-        kPR,   // rate constant (involving all corrections) in mol/m2/s
+        kd,   // dissolution rate constant (corrected for T) in mol/m2/s
+        kp,   // precipitation rate constant (corrected for T) in mol/m2/s
         rPR,   // rate for this region (output) in mol/s
         rmol,   // rate for the whole face (output) in mol/s
 //        velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
@@ -382,7 +382,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
     // sets new system TP state
     long int
-    UpdatePT ( const double T_k, const double P_bar );
+    UpdatePT (const double T_K, const double P_BAR );
 
     // sets new time and time step
     bool
@@ -419,10 +419,7 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 
 
             // Calculates temperature/pressure corrections to kinetic rate constants
-            long int PTparam(   )
-            {
-                return 0;
-            }
+            long int PTparam( const double TK, const double P  );
 
             virtual  // Calculates phase dissolution/precipitation/nucleation rates
             long int RateMod()
@@ -480,8 +477,13 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Bruno Kulik Curti
     // Destructor
     ~TUptakeKin();
 
+    // Calculates temperature/pressure corrections to kinetic rate constants
+    long int PTparam( const double TK, const double P  );
+
     // Calculates uptake rates
     long int UptakeMod();
+
+
 
 };
 

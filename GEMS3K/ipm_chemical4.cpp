@@ -328,15 +328,16 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
 void
 TMulti::KinMetParPT( long int k, const char* kMod )
 {
-    // Extended constructor to connect to params, coeffs, and mole fractions
+    //
     switch( kMod[0] )
     {
-        case KM_PRO_MWR_:  case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_MWR_:
         {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
-              TKinMet* myKM = phKinMet[k];
-              myKM->PTparam();
+              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+              myKM->PTparam( pm.Tc, pm.Pc );
              break;
         }
+        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }

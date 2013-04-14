@@ -68,7 +68,7 @@ FORCED_AIA:
        else
            pm.IT = pm.ITaia;  // Setting number of iterations for the smoothing parameter
    }
-
+   cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
    // New: Run of TKinMet class library
    if( pm.pKMM < 2 )
    {

@@ -92,6 +92,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     double sAph_c; /// Corrected surface area of the phase (m2/g)
 
 */
+    T_k = 0.; // To trigger P-T recalculation after constructing the class instance
 }
 
 /// Destructor
@@ -102,13 +103,14 @@ TKinMet::~TKinMet()
       delete[] arPRt;
 }
 
-// Checks dimensions in order to re-allocate class instance, if necessary
+// Checks dimensions in order to re-allocate the class instance, if necessary
 bool
 TKinMet::testSizes( const KinMetData *kmd )
 {
 //    return( ( ModCode == sd->Mod_Code) && (NComp == sd->NSpecies) && ( NPar == sd->NParams) &&
 //            ( NPcoef == sd->NPcoefs) && (MaxOrd == sd->MaxOrder) &&  ( NP_DC == sd->NPperDC) &&
 //            ( NSub == sd->NSublat ) && ( NMoi == sd->NMoiet ) && (MixCode == sd->Mix_Code) );
+    return false;
 }
 
 /// allocates memory for TKinMet data
@@ -292,7 +294,8 @@ TKinMet::init_arPRt()
             arPRt[xj].cat = 1.;  // catalytic product term (f(prod(a))
             arPRt[xj].aft = 0.;  // affinity term (f(Omega))
 
-            arPRt[xj].kPR = arPRt[xj].kod;   // rate constant (involving all corrections) in mol/m2/s
+            arPRt[xj].kd = arPRt[xj].kod;   // rate constant (involving all corrections) in mol/m2/s
+            arPRt[xj].kp = arPRt[xj].kop;
             // check direction - for precipitation, arPRt[xj].kPR = arPRt[xj].kop;
             arPRt[xj].rPR = 0.;   // rate for this region (output) in mol/s
             arPRt[xj].rmol = 0.;   // rate for the whole face (output) in mol/s
@@ -335,11 +338,30 @@ TKinMet::GetModFSA ( double *fSAf_p )
 
 }
 
-// sets new system TP state
+// Update temperature to T_K and pressure to P_BAR;
+// calculate temperature-corrected rate constants in all PR regions.
 long int
-TKinMet::UpdatePT ( const double T_k, const double P_bar )
+TKinMet::UpdatePT ( const double T_K, const double P_BAR )
 {
+    double Arf=1., kd=0., kp=0.;
+    double RT = R_CONST*T_K;
+    long int i;
 
+    T_k = T_K; P_bar = P_BAR;
+
+    for( i=0; i<nPRk; i++ )
+    {
+        Arf = arPRt[i].Ap * exp(-(arPRt[i].Ea)/RT);
+        if( arPRt[i].Ap != 0.0 )
+            arPRt[i].arf = Arf;
+        else
+            Arf = 1.0;
+        kd = arPRt[i].kod * Arf;
+        kp = arPRt[i].kop * Arf;
+        arPRt[i].kd = kd;
+        arPRt[i].kp = kp;
+    }
+    return 0;
 }
 
 // sets new time and time step
@@ -348,6 +370,14 @@ TKinMet::UpdateTime( const double Tau, const double dTau )
 {
 
 }
+
+//long int
+//TKinMet::PTparam()
+//{
+//    int iRet = 0;
+//    iRet = UpdatePT(  );
+//    return iRet;
+//};
 
 
 /*
@@ -391,6 +421,22 @@ long int SetMetCon()
 
 
 */
+
+//  Implementation of TMWReaKin class (uptake kinetics)
+//
+long int
+TMWReaKin::PTparam( const double TK, const double P )
+{
+    int iRet = 0;
+    if( TK < 273. || TK > 5273. || P < 0. || P > 1e6 )
+        iRet = 1;  // error
+    if( fabs( TK - T_k ) > 0.1 || fabs( P - P_bar ) > 1e-5 )
+    {
+       iRet = UpdatePT( TK, P );
+    }
+    return iRet;
+}
+
 
 //  Implementation of TUptakeKin class (uptake kinetics)
 //
@@ -459,6 +505,16 @@ TUptakeKin::free_upttabs()
       delete[]arUmpCon;
     }
 }
+
+
+long int
+TUptakeKin::PTparam( const double TK, const double P )
+{
+    int iRet = 0;
+    iRet = UpdatePT( TK, P );
+    return iRet;
+};
+
 
 // Calculates uptake rates
 long int
