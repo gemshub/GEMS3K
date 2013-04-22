@@ -302,7 +302,7 @@ public:
     void readArray( const char *name, char* arr, long int size, long int el_size );
 
     /// Reads string from a text file.
-    void readArray( const char* name, gstring arr, long int el_size=198 );
+    void readArray( const char* name, gstring &arr, long int el_size=198 );
     /// Reads double vector from a text file.
     void readArray( const char* name, vector<double> arr );
 

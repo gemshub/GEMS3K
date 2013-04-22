@@ -25,7 +25,7 @@
 //-------------------------------------------------------------------
 
 #include <iomanip>
-#include  <iostream> 
+#include  <iostream>
 
 #include "io_arrays.h"
 #include "v_user.h"
@@ -843,16 +843,16 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
 }
 
 
-void TReadArrays::readArray( const char* name, gstring arr, long int el_size )
+void TReadArrays::readArray( const char* name, gstring &arr, long int el_size )
 {
- char ch;
+// char ch;
  char buf[400];
 
  setCurrentArray( name, 1);
  skipSpace();
- ff.get(ch);
- ff.getline( buf, el_size+1, '\'');
- arr = buf;
+// ff.get(ch);
+ ff.getline( buf, el_size+1/*, '\''*/);
+ arr += buf;
 }
 
 gstring TReadArrays::testRead()
