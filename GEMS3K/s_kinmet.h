@@ -235,7 +235,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int nlPh;    /// Number of linked phases (cf. lPh), default 0
     long int nlPc;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
 
-    long int nPRk;     /// number of �parallel reactions� that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
+    long int nPRk;     /// number of 'parallel reactions' that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
     long int nSkr;     /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
     long int nrpC;     /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC;    /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
@@ -249,6 +249,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double P_bar;       /// Pressure, bar
     double kTau;        /// current time, s
     double kdT;         /// current time step
+    double sSAi;        /// initial specific surface area of the phase (m2/g)
 
     // These values will be corrected after GEM converged at each time step
     double IS;          /// Effective molal ionic strength of aqueous electrolyte
@@ -313,6 +314,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
     double sSAcor; /// Corrected specific surface area (m2/g)
     double sAph_c; /// Corrected surface area of the phase (m2/g)
+    double kdT_c;  /// Corrected time step (s)
 
     // SS dissolution
 
@@ -337,54 +339,59 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     virtual ~TKinMet();
 
     virtual   // Calculates temperature/pressure corrections to kinetic rate constants
-    long int PTparam()
+    bool PTparam()
     {
-        return 0;
+        return false;
     }
 
     virtual  // Calculates phase dissolution/precipitation/nucleation rates
-    long int RateMod()
+    bool RateMod()
     {
-        return 0;
+        return false;
     }
 
-    virtual  // Calculates phase dissolution/precipitation/nucleation rates
-    long int RateInit()
+    virtual  // Calculates initial phase dissolution/precipitation/nucleation rates
+    bool RateInit()
     {
-        return 0;
-    }
-
-    virtual  // Calculates (splits) rates to lower/upper metastability constraints
-    long int SplitMod()
-    {
-        return 0;
+        return false;
     }
 
     virtual  // Calculates (splits) rates to lower/upper metastability constraints
-    long int SplitInit()
+    bool SplitMod()
     {
-        return 0;
+        return false;
     }
 
-    // sets the new metastability constraints if the time step is accepted
-    long int SetMetCon()
+    virtual  // Calculates (splits) rates to lower/upper metastability constraints
+    bool SplitInit()
     {
-        return 0;
+        return false;
     }
 
-    // sets the specific surface area of the phase and 'parallel reactions' area fractions
-    long int
-    UpdateFSA( const double *fSAf_p, const double As );
+    virtual // sets the new metastability constraints if the time step is accepted
+    bool SetMetCon()
+    {
+        return false;
+    }
 
-    // returns modified specific surface area of the phase and 'parallel reactions' area fractions
+    // Sets new specific surface area of the phase As;
+    // also sets 'parallel reactions' area fractions
+    // returns false if these parameters in TKinMet instance did not change; true if they did.
+    //
+    bool UpdateFSA(const double As );
+
+    // Returns (modified) specific surface area of the phase;
+    // and gets (modified) 'parallel reactions' area fractions
     double
-    GetModFSA ( double *fSAf_p );
+    GetModFSA ();
 
-    // sets new system TP state
+    // Updates temperature to T_K and pressure to P_BAR;
+    // calculates Arrhenius factors and temperature-corrected rate constants in all PR regions.
     long int
     UpdatePT (const double T_K, const double P_BAR );
 
-    // sets new time and time step
+    // sets new time Tau and time step dTau
+    // returns false if neither kTau nor kdT changed; true otherwise
     bool
     UpdateTime( const double Tau, const double dTau );
 
@@ -419,37 +426,22 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 
 
             // Calculates temperature/pressure corrections to kinetic rate constants
-            long int PTparam( const double TK, const double P  );
+            bool PTparam( const double TK, const double P  );
 
-            virtual  // Calculates phase dissolution/precipitation/nucleation rates
-            long int RateMod()
-            {
-                return 0;
-            }
+            // Calculates phase dissolution/precipitation/nucleation rates
+            bool RateMod( );
 
-            virtual  // Calculates phase dissolution/precipitation/nucleation rates
-            long int RateInit()
-            {
-                return 0;
-            }
+            // Calculates initial phase dissolution/precipitation/nucleation rates
+            bool RateInit( );
 
-            virtual  // Calculates (splits) rates to lower/upper metastability constraints
-            long int SplitMod()
-            {
-                return 0;
-            }
+            // Calculates (splits) rates to lower/upper metastability constraints
+            bool SplitMod();
 
-            virtual  // Calculates (splits) rates to lower/upper metastability constraints
-            long int SplitInit()
-            {
-                return 0;
-            }
+            // Calculates (splits) initial rates to lower/upper metastability constraints
+            bool SplitInit();
 
-            virtual
-            long int SetMetCon()
-            {
-                return 0;
-            }
+            // sets new metastability constraints
+            bool SetMetCon();
 
 };
 
@@ -478,10 +470,10 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Bruno Kulik Curti
     ~TUptakeKin();
 
     // Calculates temperature/pressure corrections to kinetic rate constants
-    long int PTparam( const double TK, const double P  );
+    bool PTparam( const double TK, const double P  );
 
     // Calculates uptake rates
-    long int UptakeMod();
+    bool UptakeMod();
 
 
 

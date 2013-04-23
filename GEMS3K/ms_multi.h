@@ -285,7 +285,6 @@ double
   double  (*MASDJ)[DFCN];  ///< Parameters of surface species in surface complexation models [Lads][DFCN]
                            // Contents defined in the enum below this structure
 // Other data
-
   double
     *XFs,    ///< Current quantities of phases X_a at IPM iterations [0:FI-1]
     *Falps,  ///< Current Karpov criteria of phase stability  F_a [0:FI-1]
@@ -662,8 +661,8 @@ void KinMetCreate( long int jb, long int k, long int kc, long int kp, long int k
 void KinMetParPT( long int k, const char *kMod );
 void KinMetInitTime( long int k, const char *kMod );
 void KinMetUpdateTime( long int k, const char *kMod );
-void KinMetUpdateFSA( long int k, const char *kMod );
-void KinMetGetModFSA( long int k, const char *kMod );
+void KinMetUpdateFSA(long int k, const char *kMod );
+void KinMetGetModFSA(long int k, const char *kMod );
 void KinMetCalcRates( long int k, const char *kMod );
 void KinMetInitRates( long int k, const char *kMod );
 void KinMetCalcSplit( long int jb, long int k, const char *kMod );

@@ -41,130 +41,110 @@ TMulti::CalculateKinMet( long int LinkMode  )
    SPP_SETTING *pa = paTProfil;
    char *kMod;
 
+   for( k=0; k<pm.FI; k++ )
+   { // loop on solution phases
+      jb = je;
+      je += pm.L1[k];
+      kMod = pmp->kMod[k];
+      if( kMod[0] == KM_UNDEF )
+          continue;  // skip TKinMet for this phase
+      kc = kce;
+      kp = kpe;
+      kf = kfe;
+      ka = kae;
+      ks = kse;
+      kd = kde;
+      ku = kue;
    // Creating TKinMet instances for phases and passing data, if needed
    switch( LinkMode )
    {
      case LINK_TP_MODE:  // Re-create TKinMet class instances and initialize them
      {
-
-        for( k=0; k<pm.FI; k++ )
-        { // loop on solution phases
-           jb = je;
-           je += pm.L1[k];
-
-           kMod = pmp->kMod[k];
-           if( kMod[0] == KM_UNDEF )
-               continue;  // skip TKinMet for this phase
-           kc = kce;
-           kp = kpe;
-           kf = kfe;
-           ka = kae;
-           ks = kse;
-           kd = kde;
-           ku = kue;
-/*
-           for( j= jb; j<je; j++ )
-           {
-                Here cleaning, if necessary
-           }
-*/
-           switch( pm.PHC[k] )
-           {
-             //   case PH_AQUEL:
-                case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
-             // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
-                   KinMetCreate( jb, k, kc, kp, kf, ka, ks, kd, ku, kMod, jphl, jlphc );
-                   // Correction of parameters for initial T,P
-                   KinMetParPT( k, kMod );
-                   // Reset and initialize time
-                   KinMetInitTime( k, kMod );
-                   break;
-             default:
-                   break;
-           }
-
-           // move handles
-           jphl  += pm.LsPhl[k*2];
-           jlphc += pm.LsPhl[k*2]*pm.LsPhl[k*2+1];
-
-           kfe += pm.LsKin[k*6];
-           kpe += pm.LsKin[k*6];
-           kce += pm.LsKin[k*6]*pm.LsKin[k*6+2];
-           kae += pm.LsKin[k*6]*pm.LsKin[k*6+1]*pm.LsKin[k*6+3];
-           kse += pm.LsMod[k*6+4];
-           kde += pm.LsKin[k*6+1];
-           kue += pm.LsUpt[k*2];
-         } // k
+//           for( j= jb; j<je; j++ )
+//           {
+//                Here cleaning, if necessary
+//           }
+         switch( pm.PHC[k] )
+         {
+           //   case PH_AQUEL:
+              case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
+           // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
+              KinMetCreate( jb, k, kc, kp, kf, ka, ks, kd, ku, kMod, jphl, jlphc );
+           // Correction of parameters for initial T,P
+              KinMetParPT( k, kMod );
+           // Reset and initialize time
+              KinMetInitTime( k, kMod );
+              break;
+           default:
+              break;
+         }
          break;
    }
 
    case LINK_IN_MODE:  // Initial state calculation of rates etc.
    {
-       for( k=0; k<pm.FI; k++ )
-       { // loop on phases
-         jb = je;
-         je += pm.L1[k];
-         kMod = pmp->kMod[k];
-         if( kMod[0] == KM_UNDEF )
-             continue;
+    //
          switch( pm.PHC[k] )
          {
          //   case PH_AQUEL:
              case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
          // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
              // Correction for T,P
-                KinMetParPT( k, kMod );
-                KinMetInitTime( k, kMod );
-                KinMetUpdateFSA( k, kMod );
-                KinMetInitRates( k, kMod );
-                if( k < pm.FIs )
-                {
-                    KinMetInitSplit( jb, k, kMod );
-                    KinMetInitSorpt( jb, k, kMod );
-                }
-                KinMetSetConstr( jb, k, kMod );  // TBD
-                break;
-            default:
-                break;
-         }
-       } // k
-       break;
+             KinMetParPT( k, kMod );
+             KinMetInitTime( k, kMod );
+             KinMetUpdateFSA( k, kMod );
+             KinMetInitRates( k, kMod );
+             if( k < pm.FIs )
+             {
+                 KinMetInitSplit( jb, k, kMod );
+                 KinMetInitSorpt( jb, k, kMod );
+             }
+             KinMetSetConstr( jb, k, kMod );  // TBD
+             break;
+          default:
+             break;
+        }
+        break;
     }
    case LINK_PP_MODE:  // Calculation of kinetics and metast. constraints at time step
    {
-          for( k=0; k<pm.FI; k++ )
-          { // loop on phases
-            jb = je;
-            je += pm.L1[k];
-            kMod = pmp->kMod[k];
-            if( kMod[0] == KM_UNDEF )
-                continue;
-            switch( pm.PHC[k] )
-            {
-            //   case PH_AQUEL:
-                case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
-            // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
-                // Correction for T,P
-                    KinMetParPT( k, kMod );
-                    KinMetUpdateTime( k, kMod );
-                    KinMetUpdateFSA( k, kMod );
-                    KinMetCalcRates( k, kMod );
-                    if( k < pm.FIs )
-                    {
-                        KinMetCalcSplit( jb, k, kMod );
-                        KinMetCalcSorpt( jb, k, kMod );
-                    }
-                    KinMetSetConstr( jb, k, kMod );
-                    KinMetGetModFSA( k, kMod );
+        switch( pm.PHC[k] )
+        {
+        //   case PH_AQUEL:
+            case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
+        // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
+        // Correction for T,P
+                KinMetParPT( k, kMod );
+                KinMetUpdateTime( k, kMod );
+                KinMetUpdateFSA( k, kMod );
+                KinMetCalcRates( k, kMod );
+                if( k < pm.FIs )
+                {
+                    KinMetCalcSplit( jb, k, kMod );
+                    KinMetCalcSorpt( jb, k, kMod );
+                }
+                KinMetSetConstr( jb, k, kMod );
+                KinMetGetModFSA( k, kMod );
                 break;
             default:
-               break;
-            }
-          } // k
-          break;
+                break;
         }
-   default: ;
+        break;
+     }
+     default: ;
    }
+
+   jphl  += pm.LsPhl[k*2];
+   jlphc += pm.LsPhl[k*2]*pm.LsPhl[k*2+1];
+
+   kfe += pm.LsKin[k*6];
+   kpe += pm.LsKin[k*6];
+   kce += pm.LsKin[k*6]*pm.LsKin[k*6+2];
+   kae += pm.LsKin[k*6]*pm.LsKin[k*6+1]*pm.LsKin[k*6+3];
+   kse += pm.LsMod[k*6+4];
+   kde += pm.LsKin[k*6+1];
+   kue += pm.LsUpt[k*2];
+ } // k
    return 0;
 }
 
@@ -207,7 +187,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
         {
                 phKinMet[k]->UpdatePT( pm.Tc, pm.Pc );
                 phKinMet[k]->UpdateTime( pm.kTau, pm.kdT );
-                phKinMet[k]->UpdateFSA( pm.feSArC+kf, pm.Aalp[k] );
+                phKinMet[k]->UpdateFSA( pm.Aalp[k] );
                 return; // using old allocation and setup of the kinetics model
         }
 
@@ -324,7 +304,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
 }
 
 /// Wrapper call for calculation of temperature and pressure correction
-/// uses TSolMod class
+/// uses TKinMet class
 void
 TMulti::KinMetParPT( long int k, const char* kMod )
 {
@@ -343,41 +323,88 @@ TMulti::KinMetParPT( long int k, const char* kMod )
     }
 }
 
-
+/// Wrapper call for initialization of time (step) variables
+/// uses TKinMet class
 void
 TMulti::KinMetInitTime( long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
+              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+              myKM->UpdateTime( 0., pm.kdT );
+//              myKM->RateInit();
+             break;
+        }
+        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
+/// Wrapper call for updating the time (step) variables
+/// uses TKinMet class
 void
 TMulti::KinMetUpdateTime( long int k, const char *kMod )
 {
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
+              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+              myKM->UpdateTime( pm.kTau, pm.kdT );
+             break;
+        }
+        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 
 
 }
 
+/// Wrapper call for updating surface area fractions for parallel reactions surface area fractions
+/// uses TKinMet class
 void
 TMulti::KinMetUpdateFSA( long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
+              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+              myKM->UpdateFSA( pm.Aalp[k] );
+             break;
+        }
+        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
+/// Wrapper call for updating surface area fractions for parallel reactions surface area fractions
+/// and specific surface area
+/// uses TKinMet class
 void
 TMulti::KinMetGetModFSA( long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
+              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+              pm.Aalp[k] = myKM->GetModFSA( );
+             break;
+        }
+        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 

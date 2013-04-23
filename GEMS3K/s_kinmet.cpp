@@ -44,7 +44,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
     IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),  nPh(kmd->nPh_), mPh(kmd->mPh_),
     vPh(kmd->vPh_), sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
-    sSA(kmd->sSA_),  sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
+    sSAi(kmd->sSA_),  sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
     sVp(kmd->sVp_), sGP(kmd->sGP_), nPul(kmd->nPul_), nPll(kmd->nPll_)
 {
     // pointer assignments
@@ -78,20 +78,19 @@ TKinMet::TKinMet( const KinMetData *kmd ):
 //        alloc_arPRt();
     init_arPRt();   // load data for parallel reactions
 
-/*
     // Work data and kinetic law calculation results
+//    double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+//    double spcfl[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
 
-    double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
-    double spcfl[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+    double kTot = 0.;   /// Total rate constant (per m2 phase surface area)
+    double rTot = 0.;   /// Current total MWR rate (mol/s)
+    double vTot = 0.;   /// Total surface propagation velocity (nm/s)
 
-    double kTot;   /// Total rate constant (per m2 phase surface area)
-    double rTot;   /// Current total MWR rate (mol/s)
-    double vTot;   /// Total surface propagation velocity (nm/s)
+    sSA = sSAi;
+    sSAcor = sSAi; /// Initialized corrected specific surface area (m2/g)
+    sAph_c = sAPh; /// Initialized corrected surface area of the phase (m2/g)
+    kdT_c = kdT;   /// Initialized corrected time step (s)
 
-    double sSAcor; /// Corrected specific surface area (m2/g)
-    double sAph_c; /// Corrected surface area of the phase (m2/g)
-
-*/
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
 }
 
@@ -107,10 +106,12 @@ TKinMet::~TKinMet()
 bool
 TKinMet::testSizes( const KinMetData *kmd )
 {
-//    return( ( ModCode == sd->Mod_Code) && (NComp == sd->NSpecies) && ( NPar == sd->NParams) &&
-//            ( NPcoef == sd->NPcoefs) && (MaxOrd == sd->MaxOrder) &&  ( NP_DC == sd->NPperDC) &&
-//            ( NSub == sd->NSublat ) && ( NMoi == sd->NMoiet ) && (MixCode == sd->Mix_Code) );
-    return false;
+    bool status;
+    status = (KinProCode == kmd->KinProCod_) && (KinModCode == kmd->KinModCod_) && (KinSorpCode == kmd->KinSorpCod_)
+     && (KinLinkCode == kmd->KinLinkCod_) &&  (KinSizedCode == kmd->KinSizedCod_) && (KinResCode == kmd->KinResCod_)
+     && (NComp == kmd->NComp_) && (nlPh == kmd->nlPh_) && (nlPc == kmd->nlPc_) && (nPRk == kmd->nPRk_)
+               && (nSkr == kmd->nSkr_);
+    return status;
 }
 
 /// allocates memory for TKinMet data
@@ -324,22 +325,44 @@ TKinMet::init_arPRt()
 //
 //}
 
-// sets the specific surface area of the phase and 'parallel reactions' area fractions
-long int
-TKinMet::UpdateFSA( const double *fSAf_p, const double As )
+// Sets new specific surface area of the phase As;
+// also sets 'parallel reactions' area fractions
+// returns false if these parameters in TKinMet instance did not change; true if they did.
+//
+bool
+TKinMet::UpdateFSA( const double As )
 {
-
+    long int i;
+    bool status = false;
+    if( sSA != As )
+        status = true;
+    sSA = As;
+    for( i = 0; i < nPRk; i++ )
+    {
+       if( arPRt[i].feSAr != arfeSAr[i] )
+           status = true;
+       arPRt[i].feSAr = arfeSAr[i];
+    }
+    return status;
 }
 
-// returns modified specific surface area of the phase and 'parallel reactions' area fractions
+// Returns (modified) specific surface area of the phase;
+// and gets (modified) 'parallel reactions' area fractions
+//
 double
-TKinMet::GetModFSA ( double *fSAf_p )
+TKinMet::GetModFSA (  )
 {
-
+    long int i;
+    for( i = 0; i < nPRk; i++ )
+    {
+       arPRt[i].feSAr = arfeSAr[i];
+    }
+    return sSAcor;
 }
 
-// Update temperature to T_K and pressure to P_BAR;
-// calculate temperature-corrected rate constants in all PR regions.
+// Updates temperature to T_K and pressure to P_BAR;
+// calculates Arrhenius factors and temperature-corrected rate constants in all PR regions.
+//
 long int
 TKinMet::UpdatePT ( const double T_K, const double P_BAR )
 {
@@ -364,11 +387,18 @@ TKinMet::UpdatePT ( const double T_K, const double P_BAR )
     return 0;
 }
 
-// sets new time and time step
+// sets new time Tau and time step dTau
+// returns false if neither kTau nor kdT changed; true otherwise
+//
 bool
 TKinMet::UpdateTime( const double Tau, const double dTau )
 {
-
+    bool status = false;
+    if( Tau == kTau || dTau == kdT )
+        status = true;
+    kTau = Tau;
+    kdT = dTau;
+    return status;
 }
 
 //long int
@@ -424,18 +454,50 @@ long int SetMetCon()
 
 //  Implementation of TMWReaKin class (uptake kinetics)
 //
-long int
+bool
 TMWReaKin::PTparam( const double TK, const double P )
 {
-    int iRet = 0;
+    bool iRet = false;
     if( TK < 273. || TK > 5273. || P < 0. || P > 1e6 )
-        iRet = 1;  // error
+        iRet = true;  // error
     if( fabs( TK - T_k ) > 0.1 || fabs( P - P_bar ) > 1e-5 )
     {
        iRet = UpdatePT( TK, P );
     }
     return iRet;
 }
+
+
+bool
+TMWReaKin::RateInit( )
+{
+    return 0;
+}
+
+bool
+TMWReaKin::RateMod( )
+{
+    return 0;
+}
+
+bool
+TMWReaKin::SplitInit( )
+{
+    return 0;
+}
+
+bool
+TMWReaKin::SplitMod( )
+{
+    return 0;
+}
+
+bool
+TMWReaKin::SetMetCon( )
+{
+    return 0;
+}
+
 
 
 //  Implementation of TUptakeKin class (uptake kinetics)
@@ -507,8 +569,7 @@ TUptakeKin::free_upttabs()
 }
 
 
-long int
-TUptakeKin::PTparam( const double TK, const double P )
+bool TUptakeKin::PTparam( const double TK, const double P )
 {
     int iRet = 0;
     iRet = UpdatePT( TK, P );
@@ -517,7 +578,7 @@ TUptakeKin::PTparam( const double TK, const double P )
 
 
 // Calculates uptake rates
-long int
+bool
 TUptakeKin::UptakeMod()
 {
 
