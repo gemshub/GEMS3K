@@ -26,6 +26,10 @@
 
 #include <cmath>
 #include <cstdio>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+using namespace std;
 #include "verror.h"
 #include "s_kinmet.h"
 
@@ -42,7 +46,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     NComp(kmd->NComp_), nlPh(kmd->nlPh_), nlPc(kmd->nlPc_), nPRk(kmd->nPRk_), nSkr(kmd->nSkr_),
     nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), // numpC(kmd->numpC_), iRes4(kmd->iRes4_),
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
-    IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),  nPh(kmd->nPh_), mPh(kmd->mPh_),
+    IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),  nPhi(kmd->nPh_), mPh(kmd->mPh_),
     vPh(kmd->vPh_), sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
     sSAi(kmd->sSA_),  sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
     sVp(kmd->sVp_), sGP(kmd->sGP_), nPul(kmd->nPul_), nPll(kmd->nPll_)
@@ -76,7 +80,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     if(nPRk > 0 )
        arPRt = new TKinReact[nPRk];
 //        alloc_arPRt();
-    init_arPRt();   // load data for parallel reactions
+    init_arPRt( );   // load data for parallel reactions
 
     // Work data and kinetic law calculation results
 //    double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
@@ -86,6 +90,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     double rTot = 0.;   /// Current total MWR rate (mol/s)
     double vTot = 0.;   /// Total surface propagation velocity (nm/s)
 
+    nPh = nPhi;
     sSA = sSAi;
     sSAcor = sSAi; /// Initialized corrected specific surface area (m2/g)
     sAph_c = sAPh; /// Initialized corrected surface area of the phase (m2/g)
@@ -242,14 +247,15 @@ TKinMet::init_arPRt()
         for(xj=0; xj<nPRk; xj++)
         {
             arPRt[xj].xPR = xj;   /// index of this parallel reaction
-            // long int iRes; // reserved
+            arPRt[xj].nSa = nSkr; // number of species involved in parallel reactions
             arPRt[xj].ocPRk[0] = arocPRk[xj][0]; /// operation code for this kinetic parallel reaction affinity term
             arPRt[xj].ocPRk[1] = arocPRk[xj][1]; /// index of particle face (surface patch)
             arPRt[xj].xSKr = arxSKr;
             arPRt[xj].feSAr = arfeSAr[xj];
             arPRt[xj].rpCon = arrpCon[xj];
             arPRt[xj].apCon = arapCon[xj];
-    // work data: unpacked rpCon[nrpC]
+
+            // work data: unpacked rpCon[nrpC]
             if( nrpC >=4 )
             {
                 arPRt[xj].kod = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
@@ -288,7 +294,7 @@ TKinMet::init_arPRt()
             else {
                 arPRt[xj].OmEff = 1.;
             }
-            arPRt[xj].Omg = OmPh; /// Input stability index non-log (d-less)
+//            arPRt[xj].Omg = OmPh; /// Input stability index non-log (d-less)
 
     // Results of rate term calculation
             arPRt[xj].arf = 1.;  // Arrhenius factor (temperature correction on kappa)
@@ -325,18 +331,36 @@ TKinMet::init_arPRt()
 //
 //}
 
-// Sets new specific surface area of the phase As;
-// also sets 'parallel reactions' area fractions
+// Sets new specific surface area and other properties of the phase;
+// also updates 'parallel reactions' area fractions
 // returns false if these parameters in TKinMet instance did not change; true if they did.
 //
 bool
-TKinMet::UpdateFSA( const double As )
+TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
+                    const double pLaPh, const double pPULk, const double pPLLk, const double pYOFk,
+                    const double pICa, const double ppHa, const double ppea, const double pEha )
 {
     long int i;
     bool status = false;
-    if( sSA != As )
+    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk || nPul != pPULk || nPll != pPLLk
+        || LaPh != pLaPh || IS != pICa || pH != ppHa || pe != ppea || Eh != pEha || sGP != pYOFk*mPh )
         status = true;
-    sSA = As;
+    sSA = pAsk;
+    nPh = pXFk;
+    mPh = pFWGTk;
+cout << " !!! mPh: " << mPh << endl;
+    vPh = pFVOLk;
+    nPul = pPULk;
+    nPll = pPLLk;
+    LaPh = pLaPh;
+    sGP = pYOFk*mPh;
+    IS = pICa;
+    pH = ppHa;
+    pe = ppea;
+    Eh = pEha;
+    sAPh = sSA*mPh;             // current surface area of this phase, m2
+    OmPh = pow( 10., LaPh );    // phase stability index (activity scale) 10^LaPh_
+
     for( i = 0; i < nPRk; i++ )
     {
        if( arPRt[i].feSAr != arfeSAr[i] )
@@ -350,13 +374,15 @@ TKinMet::UpdateFSA( const double As )
 // and gets (modified) 'parallel reactions' area fractions
 //
 double
-TKinMet::GetModFSA (  )
+TKinMet::GetModFSA ( double& pPULk, double& pPLLk  )
 {
     long int i;
     for( i = 0; i < nPRk; i++ )
     {
        arPRt[i].feSAr = arfeSAr[i];
     }
+    pPULk = nPul;
+    pPLLk = nPll;
     return sSAcor;
 }
 
@@ -394,7 +420,7 @@ bool
 TKinMet::UpdateTime( const double Tau, const double dTau )
 {
     bool status = false;
-    if( Tau == kTau || dTau == kdT )
+    if( Tau != kTau || dTau != kdT )
         status = true;
     kTau = Tau;
     kdT = dTau;
@@ -410,49 +436,118 @@ TKinMet::UpdateTime( const double Tau, const double dTau )
 //};
 
 
-/*
-// -----------------------------------------------------------------------------
-// Implementation of derived class main functionality
-//
-long int PTparam()
+// calculates the rate per m2 for r-th (xPR-th) parallel reaction
+double
+TKinMet::PRrateCon( TKinReact &k, const long int r )
 {
-    return 0;
-};
+   long int xj, j, atopc, facex;
+   double atp, ajp, aj;
 
-long int RateMod()
-{
-    return 0;
-};
+cout << "kTau: " << kTau << " kd: " << k.kd << " kp: " << k.kp << " Omg: " << OmPh <<
+        " nPh: " << nPh << " mPh: " << mPh << endl;
 
-long int SplitMod()
-{
-    return 0;
-};
+if( k.xPR != r )     // index of this parallel reaction
+        cout << k.xPR << " <-> " << r << " mismatch" << endl;
+   atopc = k.ocPRk[0]; // operation code for this kinetic parallel reaction affinity term
+   facex = k.ocPRk[1]; // particle face index
 
-long int SplitInit()
-{
-    return 0;
-};
+   // activity (catalysis) product term (f(prod(a))
+   k.cat = 1.;
+   for( xj=0; xj < k.nSa; xj++ )
+   {
+       j = k.xSKr[xj];
+       aj = arla[j];
+       if( k.apCon[xj][0] )
+       {    ajp = pow( aj, k.apCon[xj][0] );
+            // may need extension in future
+       }
+       else
+           ajp = 1.;
+       k.cat *= ajp;
+   }
+   if( k.pPR )
+       k.cat = pow( k.cat, k.pPR );
+   if( k.bI )
+       k.cat *= pow( IS, k.bI );
+   if( k.bpH )
+       k.cat *= pow( pH, k.bpH );
+   if( k.bpe )
+       k.cat *= pow( pe, k.bpe );
+   if( k.bEh )
+       k.cat *= pow( Eh, k.bEh );
 
-long int SorptMod()
-{
-    return 0;
-};
+   // affinity term (f(Omega))
+   k.aft = 0.; atp = 0.;
+   switch( atopc )    // selecting a proper affinity term
+   {
+    default:
+    case ATOP_CLASSIC_: // = 0,     classic TST affinity term (see .../Doc/Descriptions/KinetParams.pdf)
+       k.aft = 1. - pow( OmPh, k.qPR );
+       if( k.mPR )
+           k.aft = pow( k.aft, k.mPR );
+       break;
+    case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed
+       k.aft = pow( OmPh, k.qPR ) - 1. - k.uPR;
+       if( k.mPR )
+           k.aft = pow( k.aft, k.mPR );
+       break;
+    case ATOP_SCHOTT_: // = 2,      Schott et al. 2012 fig. 1e
+       if( OmPh )
+           k.aft = exp( -k.uPR/OmPh );
+       else
+           k.aft = 0.;
+       break;
+    case ATOP_HELLMANN_: // = 3,    Hellmann Tisserand 2006 eq 9
+       if( OmPh )
+       {
+          atp = pow( k.qPR*log( OmPh ), k.uPR );
+          k.aft = 1 - exp( -atp );
+       }
+       else {
+          atp = 0.; k.aft = 0.;
+       }
+       break;
+    case ATOP_TENG1_: // = 4,       Teng et al. 2000, eq 13
+       if( OmPh )
+           atp = log( OmPh );
+       else
+           atp = 0.;
+       k.aft = k.uPR * ( OmPh - 1. ) * atp;
+       break;
+    case ATOP_TENG2_: // = 5,       Teng et al. 2000, Fig 6
+       k.aft = pow( OmPh, k.mPR );
+       break;
+    case ATOP_FRITZ_: // = 6        Fritz et al. 2009, eq 6 nucleation and growth
+       atp = OmPh - k.OmEff;
+       k.aft = pow( atp, k.mPR );
+//   nucRes
+       break;
+   }
 
-long int SorptInit()
-{
-    return 0;
-};
+   // Calculating rate for this region (output) in mol/m2/s
+   if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
+   {   // kd     dissolution rate constant (corrected for T) in mol/m2/s
+       k.rPR = k.kd * k.cat * k.aft;
+   }
+   else if( LaPh > 0.001 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+       k.rPR = k.kp * k.cat * k.aft;
+   }
+   else {  // equilibrium
+       k.rPR = 0.;
+   }
+   k.rPR *= k.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
 
-long int SetMetCon()
-{
-    return 0;
-};
+   return k.rPR;
+}
+//   rmol,   // rate for the whole face (output) in mol//m2/s    TBD
+//   velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
+//       kod,  /// dissolution rate constant at standard temperature (mol/m2/s)
+//       kop,  /// precipitation rate constant at standard temperature (mol/m2/s)
+//       Ap,   /// Arrhenius parameter
+//       Ea,   /// activation energy at st.temperature J/mol
 
-
-*/
-
-//  Implementation of TMWReaKin class (uptake kinetics)
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//  Implementation of TMWReaKin class (TST kinetics)
 //
 bool
 TMWReaKin::PTparam( const double TK, const double P )
@@ -470,36 +565,93 @@ TMWReaKin::PTparam( const double TK, const double P )
 
 bool
 TMWReaKin::RateInit( )
-{
-    return 0;
+{   
+    double RT = R_CONST*T_k;
+    long int r;
+
+    kTot = 0.;
+    for( r=0; r<nPRk; r++ )
+    {
+       kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+    }
+    rTot = kTot * sSAcor; // overall rate (mol/s)
+    nPhi = nPh;
+    sAPh = sSA * mPh;   // surface of the phase
+    rTot = kTot * sAPh; // overall rate (mol/s)
+
+cout << " init kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
+ // Check initial rates and limit them to realistic values
+    return false;
 }
 
 bool
 TMWReaKin::RateMod( )
 {
-    return 0;
+    double RT = R_CONST*T_k;
+    long int r;
+
+    kTot = 0.;
+    for( r=0; r<nPRk; r++ )
+    {
+       kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+    }
+    sSAcor = sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
+    sAPh = sSA * mPh;   // surface of the phase
+    rTot = kTot * sAPh; // overall rate (mol/s)
+
+cout << " cur kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
+    return false;
 }
+
+// Sets new metastability constraints based on updated kinetic rates
+//
+bool
+TMWReaKin::SetMetCon( )
+{
+   double dnPh = 0., dn_dt = 0.;
+
+   dnPh = - kdT * rTot; // change in phase amount over dt
+   dn_dt = - kdT;  // minus total rate mol/s
+
+   // First calculate phase constraints
+   if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
+   {
+       nPll = nPh + dnPh;
+       if( nPul < nPll )
+           nPul = nPll;
+   }
+   else if( LaPh > 0.001 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+       nPul = nPh + dnPh;
+       if( nPll > nPul )
+           nPll = nPul;
+    }
+    else {  // equilibrium  - needs to be checked!
+       nPul = nPh + fabs( dnPh );
+       nPll = nPh - fabs( dnPh );
+    }
+
+    if( NComp > 1 )
+       return false;  // DC constraints will be set in SplitMod() or SplitInit()
+    // setting DC metastability constraints
+    arnxul[0] = nPul;
+    arnxll[0] = nPll;
+    return false;
+}
+
 
 bool
 TMWReaKin::SplitInit( )
 {
-    return 0;
+    return false;
 }
 
 bool
 TMWReaKin::SplitMod( )
 {
-    return 0;
+    return false;
 }
 
-bool
-TMWReaKin::SetMetCon( )
-{
-    return 0;
-}
-
-
-
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TUptakeKin class (uptake kinetics)
 //
 TUptakeKin::TUptakeKin( KinMetData *kmd, long int p_numpC, double *p_arUmpCon ):TKinMet( kmd )
@@ -577,14 +729,68 @@ bool TUptakeKin::PTparam( const double TK, const double P )
 };
 
 
+// Initializes uptake rates
+bool
+TUptakeKin::UptakeInit()
+{
+    return false;
+}
+
+
 // Calculates uptake rates
 bool
 TUptakeKin::UptakeMod()
 {
 
+    return false;
 }
 
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+/*
+// -----------------------------------------------------------------------------
+// Implementation of derived class main functionality
+//
+bool PTparam()
+{
+    return 0;
+};
+
+bool RateMod()
+{
+    return 0;
+};
+
+bool SplitMod()
+{
+    return 0;
+};
+
+bool SplitInit()
+{
+    return 0;
+};
+
+bool UptakeMod()
+{
+    return 0;
+};
+
+bool UptakeInit()
+{
+    return 0;
+};
+
+bool SetMetCon()
+{
+    return 0;
+};
+
+
+*/
 
 
 //--------------------- End of s_kinmet.cpp ---------------------------

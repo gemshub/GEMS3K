@@ -661,14 +661,14 @@ void KinMetCreate( long int jb, long int k, long int kc, long int kp, long int k
 void KinMetParPT( long int k, const char *kMod );
 void KinMetInitTime( long int k, const char *kMod );
 void KinMetUpdateTime( long int k, const char *kMod );
-void KinMetUpdateFSA(long int k, const char *kMod );
+void KinMetUpdateFSA(long jb, long int k, const char *kMod );
 void KinMetGetModFSA(long int k, const char *kMod );
 void KinMetCalcRates( long int k, const char *kMod );
 void KinMetInitRates( long int k, const char *kMod );
 void KinMetCalcSplit( long int jb, long int k, const char *kMod );
 void KinMetInitSplit( long int jb, long int k, const char *kMod );
-void KinMetCalcSorpt( long int jb, long int k, const char *kMod );
-void KinMetInitSorpt( long int jb, long int k, const char *kMod );
+void KinMetCalcUptake( long int jb, long int k, const char *kMod );
+void KinMetInitUptake( long int jb, long int k, const char *kMod );
 void KinMetSetConstr( long int jb, long int k, const char *kMod );
 
 // ipm_main.cpp - numerical part of GEM IPM-2

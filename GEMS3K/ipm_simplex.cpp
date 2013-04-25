@@ -519,11 +519,29 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 //#endif
 
   InitalizeGEM_IPM_Data();
-
+cout << " ++D mPh: " << pm.FWGT[2] << endl;
   pm.t_start = clock();
   pm.t_end = pm.t_start;
   pm.t_elap_sec = 0.0;
   pm.ITF = pm.ITG = 0;
+
+ // New: Run of TKinMet class library
+ // cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
+  if( pm.pKMM < 2 )
+  {
+    if( pm.ITau < 0 || pm.pKMM != 1 )
+        KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
+    if( pm.ITau == 0 )
+        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
+    if(pm.ITau > 0 )
+        KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
+//  switch(KMretCode)
+//  {
+//        case 0L:
+//
+//  }
+//  to_text_file( "MultiDump1.txt" );   // Debugging
+  }
 
     if( paTProfil->p.DG > 1e-5 )
     {
@@ -584,7 +602,7 @@ try{
 
   if( paTProfil->p.DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
-
+cout << " **C mPh: " << pm.FWGT[2] << endl;
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
   NumIterFIA = pm.ITF;
@@ -829,6 +847,13 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
 //cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
 
+ // New: TKinMet stuff
+ if( pm.pKMM <= 0 )
+ {
+    KinMetModLoad();  // Call point to loading parameters for kinetic models
+    pm.pKMM = 1;
+ }
+
 //#else
 //
    //TProfil::pm->CheckMtparam(); //test load thermodynamic data before
@@ -970,14 +995,14 @@ void TMulti::GEM_IPM_Init()
 //     if( pm.pULR && pm.PLIM )
 //          Set_DC_limits(  DC_LIM_INIT );
 
-#ifndef IPMGEMPLUGIN
+//#ifndef IPMGEMPLUGIN
 // New: TKinMet stuff
-  if( pmp->pKMM <= 0 )
-  {
-     KinMetModLoad();  // Call point to loading parameters for kinetic models
-     pmp->pKMM = 1;
-  }
-#endif
+//  if( pmp->pKMM <= 0 )
+//  {
+//     KinMetModLoad();  // Call point to loading parameters for kinetic models
+//     pmp->pKMM = 1;
+//  }
+//#endif
 
     if( pm.FIs && AllPhasesPure == false )   /// line must be tested !pm.FIs
     {

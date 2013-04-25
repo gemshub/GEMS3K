@@ -93,7 +93,7 @@ struct KinMetData {
     long int nlPh_;    /// Number of linked phases (cf. lPh), default 0
     long int nlPc_;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
 
-    long int nPRk_;  /// number of �parallel reactions� that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
+    long int nPRk_;  /// number of "parallel reactions" that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
     long int nSkr_;  /// number of (aqueous or gaseous or surface) species from other reacting phases involved, 0 by default
     long int nrpC_;  /// number of parameter (coefficients) involved in 'parallel reaction' terms (0 or 12 + 3res.)
     long int naptC_; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
@@ -159,13 +159,11 @@ struct KinMetData {
 };
 
 // Class describing a 'parallel reaction' region kinetic rate law data (Schott ea 2012 general form)
-class TKinReact
+struct TKinReact
 {
-//   protected:
-    public:
     // Input data
      long int xPR;   /// index of this parallel reaction
-     long int iRes; // reserved
+     long int nSa;   // the same as nSKr - tot. number of species used in activity products
 
      long int ocPRk[2]; /// operation code for this kinetic parallel reaction affinity term
      long int *xSKr;  /// pointer to input array of DC indexes used in activity products [nSKr] (copy)
@@ -188,9 +186,8 @@ class TKinReact
             mPR,
             uPR,
             OmEff,
-            nucRes,
-
-            Omg; /// Input stability index non-log (d-less)
+            nucRes;
+//            Omg; /// Input stability index non-log (d-less)
 
      // Results of rate term calculation
      double
@@ -204,21 +201,7 @@ class TKinReact
         rmol,   // rate for the whole face (output) in mol/s
 //        velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
         ;
-
-// public:
-    // Generic constructor
-    TKinReact()
-    {
-
-    };
-
-    // Destructor
-    ~TKinReact(){}
-
-    double PRrateCon( long int xPR_p );  // calculates the rate constant for xPR parallel reaction
-
 };
-
 
 class TKinMet  // Base class for MWR kinetics and metastability models
 {
@@ -250,7 +233,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double kTau;        /// current time, s
     double kdT;         /// current time step
     double sSAi;        /// initial specific surface area of the phase (m2/g)
-
+    double nPhi;        /// initial amount of the phase, mol
+                         // both for built-in correction of specific surface area
     // These values will be corrected after GEM converged at each time step
     double IS;          /// Effective molal ionic strength of aqueous electrolyte
     double pH;          /// pH of aqueous solution
@@ -374,16 +358,18 @@ class TKinMet  // Base class for MWR kinetics and metastability models
         return false;
     }
 
-    // Sets new specific surface area of the phase As;
+    // Sets new specific surface area of the phase As and other properties;
     // also sets 'parallel reactions' area fractions
     // returns false if these parameters in TKinMet instance did not change; true if they did.
     //
-    bool UpdateFSA(const double As );
+    bool UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
+                    const double pLgOm, const double pPULk, const double pPLLk, const double pYOFk,
+                    const double pICa, const double ppHa, const double ppea, const double pEha );
 
-    // Returns (modified) specific surface area of the phase;
+    // Returns (modified) specific surface area of the phase, metastability constraints (via parameters),
     // and gets (modified) 'parallel reactions' area fractions
     double
-    GetModFSA ();
+    GetModFSA ( double& pPULk, double& pPLLk );
 
     // Updates temperature to T_K and pressure to P_BAR;
     // calculates Arrhenius factors and temperature-corrected rate constants in all PR regions.
@@ -398,6 +384,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     // Checks dimensions in order to re-allocate class instance, if necessary
     bool testSizes( const KinMetData *kmd );
 
+    // calculates the rate constant for r-th parallel reaction
+    double PRrateCon( TKinReact &k, const long int r );
 
 };
 
@@ -472,10 +460,11 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Bruno Kulik Curti
     // Calculates temperature/pressure corrections to kinetic rate constants
     bool PTparam( const double TK, const double P  );
 
+    // Initializes uptake rates
+    bool UptakeInit();
+
     // Calculates uptake rates
     bool UptakeMod();
-
-
 
 };
 

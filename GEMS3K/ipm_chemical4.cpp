@@ -55,6 +55,10 @@ TMulti::CalculateKinMet( long int LinkMode  )
       ks = kse;
       kd = kde;
       ku = kue;
+
+//      for( j=jb; j<je; j++ )
+//cout << "LM: " << LinkMode << " k: " << k << " dul: " << pm.DUL[j] << " dll: " << pm.DLL[j] << endl;
+
    // Creating TKinMet instances for phases and passing data, if needed
    switch( LinkMode )
    {
@@ -74,7 +78,8 @@ TMulti::CalculateKinMet( long int LinkMode  )
               KinMetParPT( k, kMod );
            // Reset and initialize time
               KinMetInitTime( k, kMod );
-              break;
+cout << " **B mPh: " << pm.FWGT[k] << endl;
+             break;
            default:
               break;
          }
@@ -92,12 +97,12 @@ TMulti::CalculateKinMet( long int LinkMode  )
              // Correction for T,P
              KinMetParPT( k, kMod );
              KinMetInitTime( k, kMod );
-             KinMetUpdateFSA( k, kMod );
+             KinMetUpdateFSA( jb, k, kMod );
              KinMetInitRates( k, kMod );
              if( k < pm.FIs )
              {
                  KinMetInitSplit( jb, k, kMod );
-                 KinMetInitSorpt( jb, k, kMod );
+                 KinMetInitUptake( jb, k, kMod );
              }
              KinMetSetConstr( jb, k, kMod );  // TBD
              break;
@@ -116,12 +121,12 @@ TMulti::CalculateKinMet( long int LinkMode  )
         // Correction for T,P
                 KinMetParPT( k, kMod );
                 KinMetUpdateTime( k, kMod );
-                KinMetUpdateFSA( k, kMod );
+                KinMetUpdateFSA( jb, k, kMod );
                 KinMetCalcRates( k, kMod );
                 if( k < pm.FIs )
                 {
                     KinMetCalcSplit( jb, k, kMod );
-                    KinMetCalcSorpt( jb, k, kMod );
+                    KinMetCalcUptake( jb, k, kMod );
                 }
                 KinMetSetConstr( jb, k, kMod );
                 KinMetGetModFSA( k, kMod );
@@ -187,7 +192,8 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
         {
                 phKinMet[k]->UpdatePT( pm.Tc, pm.Pc );
                 phKinMet[k]->UpdateTime( pm.kTau, pm.kdT );
-                phKinMet[k]->UpdateFSA( pm.Aalp[k] );
+                phKinMet[k]->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
+                                        pm.PUL[k], pm.PLL[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh );
                 return; // using old allocation and setup of the kinetics model
         }
 
@@ -203,6 +209,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
   //
     kmd.nPh_ = pm.XF[k];   /// current amount of this phase, mol (read-only)
     kmd.mPh_ = pm.FWGT[k]; /// current mass of this phase, g (read-only)
+ cout << " **A mPh: " << pm.FWGT[k] << endl;
     kmd.vPh_ = pm.FVOL[k]; /// current volume of this phase, cm3 (read-only)
     kmd.sAPh_ = pm.Aalp[k]*pm.FWGT[k];  /// current surface area of this phase, m2
     kmd.LaPh_ = pm.Falp[k];    /// phase stability index (log scale)
@@ -300,7 +307,8 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     }
     if(phKinMet[k])
             delete phKinMet[k];
-        phKinMet[k] = myKM; // set up new pointer for the kinetics model
+    phKinMet[k] = myKM; // set up new pointer for the kinetics model
+    return;
 }
 
 /// Wrapper call for calculation of temperature and pressure correction
@@ -312,12 +320,20 @@ TMulti::KinMetParPT( long int k, const char* kMod )
     switch( kMod[0] )
     {
         case KM_PRO_MWR_:
-        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
-              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
-              myKM->PTparam( pm.Tc, pm.Pc );
+        {
+            ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+             myKM->PTparam( pm.Tc, pm.Pc );
              break;
         }
-        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->PTparam( pm.Tc, pm.Pc );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }
@@ -332,13 +348,21 @@ TMulti::KinMetInitTime( long int k, const char *kMod )
     switch( kMod[0] )
     {
         case KM_PRO_MWR_:
-        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
-              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
-              myKM->UpdateTime( 0., pm.kdT );
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitTime: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            myKM->UpdateTime( 0., pm.kdT );
 //              myKM->RateInit();
              break;
         }
-        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitTime: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->UpdateTime( 0., pm.kdT );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }
@@ -353,57 +377,97 @@ TMulti::KinMetUpdateTime( long int k, const char *kMod )
     switch( kMod[0] )
     {
         case KM_PRO_MWR_:
-        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
-              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
-              myKM->UpdateTime( pm.kTau, pm.kdT );
+        {
+             ErrorIf( !phKinMet[k], "KinMetUpdateTime: ","Invalid index of phase");
+             TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+             myKM->UpdateTime( pm.kTau, pm.kdT );
              break;
         }
-        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetUpdateTime: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->UpdateTime( pm.kTau, pm.kdT );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }
-
-
 }
 
 /// Wrapper call for updating surface area fractions for parallel reactions surface area fractions
 /// uses TKinMet class
 void
-TMulti::KinMetUpdateFSA( long int k, const char *kMod )
+TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
 {
+    double PUL=1e6, PLL=0.;
+    if( k < pm.FIs )
+    {
+        PUL = pm.PUL[k];
+        PLL = pm.PLL[k];
+    }
+    else {
+        PUL = pm.DUL[jb];
+        PUL = pm.DLL[jb];
+    }
     //
     switch( kMod[0] )
     {
         case KM_PRO_MWR_:
-        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
-              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
-              myKM->UpdateFSA( pm.Aalp[k] );
-             break;
+        {
+            ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            myKM->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
+                             PUL, PLL, pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
+            break;
         }
-        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
+                             PUL, PLL, pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }
 }
 
-/// Wrapper call for updating surface area fractions for parallel reactions surface area fractions
-/// and specific surface area
+/// Wrapper call for updating surface area fractions for parallel reactions
+/// and specific surface area, as well as the phase metastability constraints
 /// uses TKinMet class
 void
 TMulti::KinMetGetModFSA( long int k, const char *kMod )
 {
+    double PUL=1e6, PLL=0.;
     //
     switch( kMod[0] )
     {
         case KM_PRO_MWR_:
-        {    ErrorIf( !phKinMet[k], "","Invalid index of phase");
-              TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
-              pm.Aalp[k] = myKM->GetModFSA( );
-             break;
+        {
+            ErrorIf( !phKinMet[k], "KinMetGetModFSA: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            pm.Aalp[k] = myKM->GetModFSA( PUL, PLL );
+            break;
         }
-        case KM_PRO_UPT_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetGetModFSA: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            pm.Aalp[k] = myKM->GetModFSA( PUL, PLL );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
+    }
+    if( k < pm.FIs )
+    {
+        pm.PUL[k] = PUL;
+        pm.PLL[k] = PLL;
     }
 }
 
@@ -411,65 +475,174 @@ TMulti::KinMetGetModFSA( long int k, const char *kMod )
 void
 TMulti::KinMetInitRates( long int k, const char *kMod )
 {
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitRates: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+             myKM->RateInit( );
+             break;
+        }
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitRates: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->RateInit( );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 
 void
 TMulti::KinMetCalcRates( long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcRates: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            myKM->RateMod( );
+            break;
+        }
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcRates: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->RateMod( );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 void
 TMulti::KinMetInitSplit( long int jb, long int k, const char *kMod )
 {
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitSplit: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+             myKM->SplitInit( );
+             break;
+        }
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitSplit: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->SplitInit( );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 
 void
 TMulti::KinMetCalcSplit( long int jb, long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcSplit: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+             myKM->SplitMod( );
+             break;
+        }
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcSplit: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->SplitMod( );
+            break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
+// Sets new metastability constraints based on updated kinetic rates
+//
 void
 TMulti::KinMetSetConstr( long int jb, long int k,const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcSplit: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+             myKM->SetMetCon( );
+             break;
+        }
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcSplit: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+             myKM->SetMetCon( );
+             break;
+        }
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 void
-TMulti::KinMetCalcSorpt( long int jb, long int k, const char *kMod )
+TMulti::KinMetCalcUptake( long int jb, long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcUptake: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->UptakeMod( );
+            break;
+        }
+        case KM_PRO_MWR_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 
 void
-TMulti::KinMetInitSorpt( long int jb, long int k, const char *kMod )
+TMulti::KinMetInitUptake( long int jb, long int k, const char *kMod )
 {
-
-
-
-
+    //
+    switch( kMod[0] )
+    {
+        case KM_PRO_UPT_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetInitUptake: ","Invalid index of phase");
+            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            myKM->UptakeInit( );
+            break;
+        }
+        case KM_PRO_MWR_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        default:
+              break;
+    }
 }
 
 

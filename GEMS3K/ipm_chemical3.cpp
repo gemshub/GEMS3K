@@ -1021,7 +1021,7 @@ void TMulti::SolModParPT( long int k, char ModCode )
         // fluid (gas) models
         case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "SolModParPT: ","Invalid index of phase");
               TSolMod* mySM = phSolMod[k];
               mySM->PTparam();
              break;
@@ -1048,7 +1048,7 @@ void TMulti::SolModActCoeff( long int k, char ModCode )
         // fluid (gas) models
         case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "SolModActCoeff: ","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->MixMod();
              break;
@@ -1086,7 +1086,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
         // fluid (gas) models
         case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "SolModExcessProp: ","Invalid index of phase");
               TSolMod* mySM = phSolMod[k];
               mySM->ExcessProp( zex );
               break;
@@ -1138,7 +1138,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
         // fluid (gas) models
         case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
         case SM_STFLUID:
-        {    ErrorIf( !phSolMod[k], "","Invalid index of phase");
+        {    ErrorIf( !phSolMod[k], "SolModIdealProp: ","Invalid index of phase");
              TSolMod* mySM = phSolMod[k];
              mySM->IdealProp( zid );
              break;
@@ -1214,10 +1214,6 @@ void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
     pm.UPh[k][0] = Ust;
 
 }
-
-//-------------------------------------------------------------------------
-/// Wrappers for TKinMet class
-
 
 //-------------------------------------------------------------------------
 /// Internal memory allocation for TSolMod performance optimization

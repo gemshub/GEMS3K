@@ -68,23 +68,6 @@ FORCED_AIA:
        else
            pm.IT = pm.ITaia;  // Setting number of iterations for the smoothing parameter
    }
-   cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
-   // New: Run of TKinMet class library
-   if( pm.pKMM < 2 )
-   {
-     if( pm.ITau < 0 || pm.pKMM != 1 )
-         KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
-     if( pm.ITau == 0 )
-         KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
-     if(pm.ITau > 0 )
-         KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
-   //  switch(KMretCode)
-   //  {
-   //        case 0L:
-   //
-   //  }
-   //  to_text_file( "MultiDump1.txt" );   // Debugging
-   }
 
    IAstatus = GEM_IPM_InitialApproximation( );
    if( IAstatus == false )
