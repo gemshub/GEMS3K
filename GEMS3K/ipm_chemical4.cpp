@@ -78,8 +78,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
               KinMetParPT( k, kMod );
            // Reset and initialize time
               KinMetInitTime( k, kMod );
-cout << " **B mPh: " << pm.FWGT[k] << endl;
-             break;
+              break;
            default:
               break;
          }
@@ -209,7 +208,6 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
   //
     kmd.nPh_ = pm.XF[k];   /// current amount of this phase, mol (read-only)
     kmd.mPh_ = pm.FWGT[k]; /// current mass of this phase, g (read-only)
- cout << " **A mPh: " << pm.FWGT[k] << endl;
     kmd.vPh_ = pm.FVOL[k]; /// current volume of this phase, cm3 (read-only)
     kmd.sAPh_ = pm.Aalp[k]*pm.FWGT[k];  /// current surface area of this phase, m2
     kmd.LaPh_ = pm.Falp[k];    /// phase stability index (log scale)

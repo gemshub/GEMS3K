@@ -519,7 +519,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
 //#endif
 
   InitalizeGEM_IPM_Data();
-cout << " ++D mPh: " << pm.FWGT[2] << endl;
+
   pm.t_start = clock();
   pm.t_end = pm.t_start;
   pm.t_elap_sec = 0.0;
@@ -602,7 +602,6 @@ try{
 
   if( paTProfil->p.DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
-cout << " **C mPh: " << pm.FWGT[2] << endl;
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
   NumIterFIA = pm.ITF;

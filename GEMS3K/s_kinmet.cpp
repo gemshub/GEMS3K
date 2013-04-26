@@ -348,7 +348,7 @@ TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, c
     sSA = pAsk;
     nPh = pXFk;
     mPh = pFWGTk;
-cout << " !!! mPh: " << mPh << endl;
+// cout << " !!! mPh: " << mPh << endl;
     vPh = pFVOLk;
     nPul = pPULk;
     nPll = pPLLk;
@@ -443,8 +443,8 @@ TKinMet::PRrateCon( TKinReact &k, const long int r )
    long int xj, j, atopc, facex;
    double atp, ajp, aj;
 
-cout << "kTau: " << kTau << " kd: " << k.kd << " kp: " << k.kp << " Omg: " << OmPh <<
-        " nPh: " << nPh << " mPh: " << mPh << endl;
+// cout << "kTau: " << kTau << " kd: " << k.kd << " kp: " << k.kp << " Omg: " << OmPh <<
+//        " nPh: " << nPh << " mPh: " << mPh << endl;
 
 if( k.xPR != r )     // index of this parallel reaction
         cout << k.xPR << " <-> " << r << " mismatch" << endl;
@@ -562,7 +562,6 @@ TMWReaKin::PTparam( const double TK, const double P )
     return iRet;
 }
 
-
 bool
 TMWReaKin::RateInit( )
 {   
@@ -574,9 +573,12 @@ TMWReaKin::RateInit( )
     {
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
+    sSA = sSAi;
+    sSAcor = sSAi;
     rTot = kTot * sSAcor; // overall rate (mol/s)
     nPhi = nPh;
     sAPh = sSA * mPh;   // surface of the phase
+    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate (mol/s)
 
 cout << " init kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
@@ -587,19 +589,25 @@ cout << " init kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << 
 bool
 TMWReaKin::RateMod( )
 {
-    double RT = R_CONST*T_k;
+    double RT = R_CONST*T_k, FormFactor = 1.;
     long int r;
 
+    if( nAscC )
+        FormFactor = arAscp[0];
     kTot = 0.;
     for( r=0; r<nPRk; r++ )
     {
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
-    sSAcor = sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
+
+    sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
+        // more sophisticated functions to be called here
+
     sAPh = sSA * mPh;   // surface of the phase
+    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate (mol/s)
 
-cout << " cur kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
+// cout << " cur kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
     return false;
 }
 
