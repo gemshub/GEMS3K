@@ -715,7 +715,10 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     jj =  xCH * gridTP();
 
     if( xTP >= 0 )
+    {
        CSD->G0[ jj + xTP ]=new_G0;
+       multi->set_load(false);
+    }
     else
         cout << "ERROR P and TK pair not present in the DATACH";
       return 0;
