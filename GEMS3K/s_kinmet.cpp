@@ -600,8 +600,19 @@ TMWReaKin::RateMod( )
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
 
-    sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
+//  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
         // more sophisticated functions to be called here
+
+    if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
+    {
+        sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. );
+    }
+    else if( LaPh > 0.001 ) {  // precipitation
+        sSAcor = FormFactor * sSAi * pow( nPhi/nPh, 1./3. );
+    }
+    else {  // equilibrium
+        ;   // no change in sSAcor
+    }
 
     sAPh = sSA * mPh;   // surface of the phase
     sAph_c = sAPh;
