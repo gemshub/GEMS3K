@@ -595,6 +595,7 @@ void  TReadArrays::skipSpace()
    ff.get( input );
   }
  ff.putback(input);
+// cout << ff << endl; // comented out DM 03.05.2013
 }
 
 // Read format string
@@ -708,7 +709,7 @@ void TReadArrays::readNext( const char* label)
 
 long int TReadArrays::findNextNotAll()
 {
- char buf[200];
+ char bufx[200];
  char input;
 
  skipSpace();
@@ -718,12 +719,12 @@ long int TReadArrays::findNextNotAll()
 
 again:
 
- ff >> buf;
+ ff >> bufx;
 
- if( !( memcmp( "END_DIM", buf+1, 7 )) )
+ if( !( memcmp( "END_DIM", bufx+1, 7 )) )
   return -2;
 
- long int ii = findFld( buf+1 );
+ long int ii = findFld( bufx+1 );
  if(  ii < 0 )
  {
     do{
@@ -842,17 +843,17 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
   } while(retSimb == ft_Value );
 }
 
-
-void TReadArrays::readArray( const char* name, gstring &arr, long int el_size )
+// DM corrected added gstring& arr instead of gstring arr 18.04.2013
+void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
 {
-// char ch;
+// char ch; commented out DM 18.04.2013
  char buf[400];
 
  setCurrentArray( name, 1);
  skipSpace();
-// ff.get(ch);
- ff.getline( buf, el_size+1/*, '\''*/);
- arr += buf;
+// ff.get(ch); commented out DM 18.04.2013
+ ff.getline( buf, el_size+1/*, '\''*/); // DM commented out DM 18.04.2013
+ arr = buf;
 }
 
 gstring TReadArrays::testRead()

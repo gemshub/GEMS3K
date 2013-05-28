@@ -764,6 +764,13 @@ void GEM_set_MT(
       inline void Set_IC_b( const double b_val, const long int xCH)
       { pmm->B[xCH] = b_val; }
 
+      /// Sets the value of the interation parameter.
+      /// Internal re-scaling to mass of the system is applied.
+      /// These methods can only be used for the current work node (direct access to GEM IPM data)
+      /// \param xPMC is the index of the interaction parameter
+      inline void Set_PMc( const double PMc_val, const long int xPMc)
+      { pmm->PMc[xPMc] = PMc_val; multi->set_load(false); }
+
       /// Retrieves the current total amount of Independent Component.
       /// Also amount of ICs not included into DATABR list can be retrieved.
       /// Internal re-scaling to mass of the system is applied
