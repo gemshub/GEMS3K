@@ -173,20 +173,22 @@ struct TKinReact
      double **apCon; /// pointer input array of parameters per species involved in 'activity product' terms [nSkr][naptC]
 
      // work data: unpacked rpCon[nrpC]
-     double kod,  /// dissolution rate constant at standard temperature (mol/m2/s)
-            kop,  /// precipitation rate constant at standard temperature (mol/m2/s)
+     double ko,  /// kod net rate constant at standard temperature (mol/m2/s)
+                ///    if k > 0 it is used for dissolution only; if k < 0 it is used for precipitation only
+            Ko,  /// kop gross rate constant at standard temperature (mol/m2/s) (if K != 0 it is used in any case)
+                /// k or K convention: negative sign: precipitation; positive sign: dissolution
             Ap,  /// Arrhenius parameter
             Ea,  /// activation energy at st.temperature J/mol
-            bI,
-            bpH,
-            bpe,
-            bEh,
-            pPR,
-            qPR,
-            mPR,
-            uPR,
-            OmEff,
-            nucRes;
+            bI,  /// Ionic strength power coefficient (default 0)
+            bpH, /// pH power coefficient (default 0)
+            bpe, /// pe power coefficient (default 0)
+            bEh, /// Eh power coefficient (default 0)
+            pPR, /// Reaction order power coefficient for far-from-equilibrium cases
+            qPR, /// reaction order power coefficient in the affinity term (default 1)
+            mPR, /// second reaction order parameter in the affinity term (default 0)
+            uPR, /// parameter constant in the affinity term
+            OmEff, /// Effective saturation index for a simple nucleation model (default 1)
+            nucRes; // reserved
 //            Omg; /// Input stability index non-log (d-less)
 
      // Results of rate term calculation
@@ -195,8 +197,8 @@ struct TKinReact
         cat,  // catalytic product term (f(prod(a))
         aft,  // affinity term (f(Omega))
 
-        kd,   // dissolution rate constant (corrected for T) in mol/m2/s
-        kp,   // precipitation rate constant (corrected for T) in mol/m2/s
+        k,   // dissolution rate constant (corrected for T) in mol/m2/s
+        K,   // precipitation rate constant (corrected for T) in mol/m2/s
         rPR,   // rate for this region (output) in mol/s
         rmol,   // rate for the whole face (output) in mol/s
 //        velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
@@ -385,7 +387,10 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     bool testSizes( const KinMetData *kmd );
 
     // calculates the rate constant for r-th parallel reaction
-    double PRrateCon( TKinReact &k, const long int r );
+    double PRrateCon(TKinReact &rk, const long int r );
+
+    // calculates corrected specific surface area
+    double CorrSpecSurfArea( const double formFactor );
 
 };
 
@@ -415,6 +420,9 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 
             // Calculates temperature/pressure corrections to kinetic rate constants
             bool PTparam( const double TK, const double P  );
+
+            // Calculates corrected specific surface area
+            double CorrSpecSurfArea( const double formFactor  );
 
             // Calculates phase dissolution/precipitation/nucleation rates
             bool RateMod( );

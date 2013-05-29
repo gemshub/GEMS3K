@@ -258,13 +258,13 @@ TKinMet::init_arPRt()
             // work data: unpacked rpCon[nrpC]
             if( nrpC >=4 )
             {
-                arPRt[xj].kod = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
-                arPRt[xj].kop = arPRt[xj].rpCon[1];  /// rate constant at standard temperature (mol/m2/s)
+                arPRt[xj].ko = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
+                arPRt[xj].Ko = arPRt[xj].rpCon[1];  /// rate constant at standard temperature (mol/m2/s)
                 arPRt[xj].Ap = arPRt[xj].rpCon[2];  /// Arrhenius parameter
                 arPRt[xj].Ea = arPRt[xj].rpCon[3];  /// activation energy at st.temperature J/mol
             }
             else {
-                arPRt[xj].kod = arPRt[xj].kop = arPRt[xj].Ap = arPRt[xj].Ea = 0.0;
+                arPRt[xj].ko = arPRt[xj].Ko = arPRt[xj].Ap = arPRt[xj].Ea = 0.0;
             }
             if( nrpC >=8 )
             {
@@ -301,8 +301,8 @@ TKinMet::init_arPRt()
             arPRt[xj].cat = 1.;  // catalytic product term (f(prod(a))
             arPRt[xj].aft = 0.;  // affinity term (f(Omega))
 
-            arPRt[xj].kd = arPRt[xj].kod;   // rate constant (involving all corrections) in mol/m2/s
-            arPRt[xj].kp = arPRt[xj].kop;
+            arPRt[xj].k = arPRt[xj].ko;   // rate constant (involving all corrections) in mol/m2/s
+            arPRt[xj].K = arPRt[xj].Ko;
             // check direction - for precipitation, arPRt[xj].kPR = arPRt[xj].kop;
             arPRt[xj].rPR = 0.;   // rate for this region (output) in mol/s
             arPRt[xj].rmol = 0.;   // rate for the whole face (output) in mol/s
@@ -371,7 +371,8 @@ TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, c
 }
 
 // Returns (modified) specific surface area of the phase;
-// and gets (modified) 'parallel reactions' area fractions
+//  and (modified) 'parallel reactions' area fractions
+//  (provisionally also modified phase amount constraints)
 //
 double
 TKinMet::GetModFSA ( double& pPULk, double& pPLLk  )
@@ -392,7 +393,7 @@ TKinMet::GetModFSA ( double& pPULk, double& pPLLk  )
 long int
 TKinMet::UpdatePT ( const double T_K, const double P_BAR )
 {
-    double Arf=1., kd=0., kp=0.;
+    double Arf=1., kk=0., KK=0.;
     double RT = R_CONST*T_K;
     long int i;
 
@@ -405,10 +406,10 @@ TKinMet::UpdatePT ( const double T_K, const double P_BAR )
             arPRt[i].arf = Arf;
         else
             Arf = 1.0;
-        kd = arPRt[i].kod * Arf;
-        kp = arPRt[i].kop * Arf;
-        arPRt[i].kd = kd;
-        arPRt[i].kp = kp;
+        kk = arPRt[i].ko * Arf;
+        KK = arPRt[i].Ko * Arf;
+        arPRt[i].k = kk;
+        arPRt[i].K = KK;
     }
     return 0;
 }
@@ -438,73 +439,73 @@ TKinMet::UpdateTime( const double Tau, const double dTau )
 
 // calculates the rate per m2 for r-th (xPR-th) parallel reaction
 double
-TKinMet::PRrateCon( TKinReact &k, const long int r )
+TKinMet::PRrateCon( TKinReact &rk, const long int r )
 {
    long int xj, j, atopc, facex;
-   double atp, ajp, aj;
+   double atp, ajp, aj, kr;
 
-// cout << "kTau: " << kTau << " kd: " << k.kd << " kp: " << k.kp << " Omg: " << OmPh <<
+//cout << "kTau: " << kTau << " k: " << rk.k << " K: " << rk.K << " Omg: " << OmPh <<
 //        " nPh: " << nPh << " mPh: " << mPh << endl;
 
-if( k.xPR != r )     // index of this parallel reaction
-        cout << k.xPR << " <-> " << r << " mismatch" << endl;
-   atopc = k.ocPRk[0]; // operation code for this kinetic parallel reaction affinity term
-   facex = k.ocPRk[1]; // particle face index
+if( rk.xPR != r )     // index of this parallel reaction
+        cout << rk.xPR << " <-> " << r << " mismatch" << endl;
+   atopc = rk.ocPRk[0]; // operation code for this kinetic parallel reaction affinity term
+   facex = rk.ocPRk[1]; // particle face index
 
    // activity (catalysis) product term (f(prod(a))
-   k.cat = 1.;
-   for( xj=0; xj < k.nSa; xj++ )
+   rk.cat = 1.;
+   for( xj=0; xj < rk.nSa; xj++ )
    {
-       j = k.xSKr[xj];
+       j = rk.xSKr[xj];
        aj = arla[j];
-       if( k.apCon[xj][0] )
-       {    ajp = pow( aj, k.apCon[xj][0] );
+       if( rk.apCon[xj][0] )
+       {    ajp = pow( aj, rk.apCon[xj][0] );
             // may need extension in future
        }
        else
            ajp = 1.;
-       k.cat *= ajp;
+       rk.cat *= ajp;
    }
-   if( k.pPR )
-       k.cat = pow( k.cat, k.pPR );
-   if( k.bI )
-       k.cat *= pow( IS, k.bI );
-   if( k.bpH )
-       k.cat *= pow( pH, k.bpH );
-   if( k.bpe )
-       k.cat *= pow( pe, k.bpe );
-   if( k.bEh )
-       k.cat *= pow( Eh, k.bEh );
+   if( rk.pPR )
+       rk.cat = pow( rk.cat, rk.pPR );
+   if( rk.bI )
+       rk.cat *= pow( IS, rk.bI );
+   if( rk.bpH )
+       rk.cat *= pow( pH, rk.bpH );
+   if( rk.bpe )
+       rk.cat *= pow( pe, rk.bpe );
+   if( rk.bEh )
+       rk.cat *= pow( Eh, rk.bEh );
 
    // affinity term (f(Omega))
-   k.aft = 0.; atp = 0.;
+   rk.aft = 0.; atp = 0.;
    switch( atopc )    // selecting a proper affinity term
    {
     default:
     case ATOP_CLASSIC_: // = 0,     classic TST affinity term (see .../Doc/Descriptions/KinetParams.pdf)
-       k.aft = 1. - pow( OmPh, k.qPR );
-       if( k.mPR )
-           k.aft = pow( k.aft, k.mPR );
+       rk.aft = 1. - pow( OmPh, rk.qPR );
+       if( rk.mPR )
+           rk.aft = pow( rk.aft, rk.mPR );
        break;
     case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed
-       k.aft = pow( OmPh, k.qPR ) - 1. - k.uPR;
-       if( k.mPR )
-           k.aft = pow( k.aft, k.mPR );
+       rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
+       if( rk.mPR )
+           rk.aft = pow( rk.aft, rk.mPR );
        break;
     case ATOP_SCHOTT_: // = 2,      Schott et al. 2012 fig. 1e
        if( OmPh )
-           k.aft = exp( -k.uPR/OmPh );
+           rk.aft = exp( -rk.uPR/OmPh );
        else
-           k.aft = 0.;
+           rk.aft = 0.;
        break;
     case ATOP_HELLMANN_: // = 3,    Hellmann Tisserand 2006 eq 9
        if( OmPh )
        {
-          atp = pow( k.qPR*log( OmPh ), k.uPR );
-          k.aft = 1 - exp( -atp );
+          atp = pow( rk.qPR*log( OmPh ), rk.uPR );
+          rk.aft = 1 - exp( -atp );
        }
        else {
-          atp = 0.; k.aft = 0.;
+          atp = 0.; rk.aft = 0.;
        }
        break;
     case ATOP_TENG1_: // = 4,       Teng et al. 2000, eq 13
@@ -512,39 +513,43 @@ if( k.xPR != r )     // index of this parallel reaction
            atp = log( OmPh );
        else
            atp = 0.;
-       k.aft = k.uPR * ( OmPh - 1. ) * atp;
+       rk.aft = rk.uPR * ( OmPh - 1. ) * atp;
        break;
     case ATOP_TENG2_: // = 5,       Teng et al. 2000, Fig 6
-       k.aft = pow( OmPh, k.mPR );
+       rk.aft = pow( OmPh, rk.mPR );
        break;
     case ATOP_FRITZ_: // = 6        Fritz et al. 2009, eq 6 nucleation and growth
-       atp = OmPh - k.OmEff;
-       k.aft = pow( atp, k.mPR );
+       atp = OmPh - rk.OmEff;
+       rk.aft = pow( atp, rk.mPR );
 //   nucRes
        break;
    }
-
    // Calculating rate for this region (output) in mol/m2/s
+   rk.rPR = 0.;
    if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
-   {   // kd     dissolution rate constant (corrected for T) in mol/m2/s
-       k.rPR = k.kd * k.cat * k.aft;
+   {
+       if( rk.k > 0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
+           rk.rPR = rk.k * rk.cat * rk.aft;
+       else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
+           rk.rPR = rk.K * rk.cat * rk.aft;
    }
-   else if( LaPh > 0.001 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
-       k.rPR = k.kp * k.cat * k.aft;
+   if( LaPh > 0.001 ) {
+       if( rk.k < 0 ) //   net precipitation rate constant (corrected for T) in mol/m2/st * rk.aft;
+           rk.rPR = fabs(rk.k) * rk.cat * rk.aft;
+       else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
+           rk.rPR = rk.K * rk.cat * rk.aft;
    }
-   else {  // equilibrium
-       k.rPR = 0.;
-   }
-   k.rPR *= k.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
+//   else {  // equilibrium - no rate
+//       ;
+//   }
+   rk.rPR *= rk.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
 
-   return k.rPR;
-}
+   return rk.rPR;
 //   rmol,   // rate for the whole face (output) in mol//m2/s    TBD
 //   velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
-//       kod,  /// dissolution rate constant at standard temperature (mol/m2/s)
-//       kop,  /// precipitation rate constant at standard temperature (mol/m2/s)
 //       Ap,   /// Arrhenius parameter
 //       Ea,   /// activation energy at st.temperature J/mol
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TMWReaKin class (TST kinetics)
@@ -562,25 +567,49 @@ TMWReaKin::PTparam( const double TK, const double P )
     return iRet;
 }
 
+// Returns sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. );
+//     a primitive correction for specific surface area
+//     more sophisticated functions to be added here
+double
+TMWReaKin::CorrSpecSurfArea( const double formFactor )
+{
+   double sSAc = sSA;
+    //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
+    // more sophisticated functions to be called here
+if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
+{
+    sSAc = formFactor * sSAi * pow( nPh/nPhi, 1./3. );
+}
+else if( LaPh > 0.001 ) {  // precipitation
+    sSAc = formFactor * sSAi * pow( nPhi/nPh, 1./3. );
+}
+else {  // equilibrium
+    sSAc = sSAcor;   // no change in sSAcor
+}
+return sSAc;
+}
+
 bool
 TMWReaKin::RateInit( )
 {   
-    double RT = R_CONST*T_k;
+    double RT = R_CONST*T_k, kPR, dnPh, FormFactor = 1.;
     long int r;
 
     kTot = 0.;
     for( r=0; r<nPRk; r++ )
     {
-       kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+        kPR = PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+        kTot += kPR;
     }
-    sSA = sSAi;
-    sSAcor = sSAi;
-    rTot = kTot * sSAcor; // overall rate (mol/s)
-    nPhi = nPh;
-    sAPh = sSA * mPh;   // surface of the phase
+    nPhi = nPh;         // initial amount of this phase
+    sSA = sSAi;         // initial specific surface area
+    sAPh = sSA * mPh;   // initial surface of the phase
     sAph_c = sAPh;
-    rTot = kTot * sAPh; // overall rate (mol/s)
+    rTot = kTot * sAPh; // overall initial rate (mol/s)
+    dnPh = -kdT * rTot; // overall initial change (moles)
+    nPh = nPhi + dnPh;  // New amount of the phase
 
+    sSAcor = CorrSpecSurfArea( FormFactor );  // correction of specific surface area
 cout << " init kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
  // Check initial rates and limit them to realistic values
     return false;
@@ -600,25 +629,12 @@ TMWReaKin::RateMod( )
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
 
-//  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
-        // more sophisticated functions to be called here
-
-    if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
-    {
-        sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. );
-    }
-    else if( LaPh > 0.001 ) {  // precipitation
-        sSAcor = FormFactor * sSAi * pow( nPhi/nPh, 1./3. );
-    }
-    else {  // equilibrium
-        ;   // no change in sSAcor
-    }
-
     sAPh = sSA * mPh;   // surface of the phase
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate (mol/s)
 
-// cout << " cur kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
+    sSAcor = CorrSpecSurfArea( FormFactor );
+ cout << " cur kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
     return false;
 }
 
@@ -629,8 +645,8 @@ TMWReaKin::SetMetCon( )
 {
    double dnPh = 0., dn_dt = 0.;
 
-   dnPh = - kdT * rTot; // change in phase amount over dt
-   dn_dt = - kdT;  // minus total rate mol/s
+   dnPh = -kdT * rTot; // change in phase amount over dt
+   dn_dt = -rTot;  // minus total rate mol/s
 
    // First calculate phase constraints
    if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!

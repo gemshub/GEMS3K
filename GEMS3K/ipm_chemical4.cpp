@@ -104,6 +104,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                  KinMetInitUptake( jb, k, kMod );
              }
              KinMetSetConstr( jb, k, kMod );  // TBD
+//             KinMetGetModFSA( k, kMod );
              break;
           default:
              break;
@@ -394,7 +395,9 @@ TMulti::KinMetUpdateTime( long int k, const char *kMod )
     }
 }
 
-/// Wrapper call for updating surface area fractions for parallel reactions surface area fractions
+/// Wrapper call for updating surface area fractions for parallel reactions
+/// current properties of the phase (surf.area, amount, mass, volume, log stability index)
+///    and current properties of aqueous solution
 /// uses TKinMet class
 void
 TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
@@ -434,8 +437,7 @@ TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
     }
 }
 
-/// Wrapper call for updating surface area fractions for parallel reactions
-/// and specific surface area, as well as the phase metastability constraints
+/// Wrapper call for updating surface area of the phase and phase amount metastability constraints
 /// uses TKinMet class
 void
 TMulti::KinMetGetModFSA( long int k, const char *kMod )
