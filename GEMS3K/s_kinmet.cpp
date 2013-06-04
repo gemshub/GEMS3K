@@ -83,8 +83,8 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     init_arPRt( );   // load data for parallel reactions
 
     // Work data and kinetic law calculation results
-//    double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
-//    double spcfl[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+    spcfu = NULL;
+    spcfl = NULL;
 
     double kTot = 0.;   /// Total rate constant (per m2 phase surface area)
     double rTot = 0.;   /// Current total MWR rate (mol/s)
@@ -97,6 +97,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     kdT_c = kdT;   /// Initialized corrected time step (s)
 
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
+    OmgTol = 1e-6;  // default tolerance for checking dissolution or precipitation cases
 }
 
 /// Destructor
@@ -155,6 +156,9 @@ TKinMet::alloc_kinrtabs()
             }
         }
     }
+    spcfu = new double[NComp];
+    spcfl = new double[NComp];
+
 }
 
 /// returns 0 if o.k. or some arrays were not allocated.
@@ -183,6 +187,11 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon 
             for( s=0; s<nSkr; s++)
                 for( i=0; i<naptC; i++)
                     arapCon[j][s][i] = p_arapCon[naptC*nSkr*j+naptC*s+i];
+    }
+    for( j=0; j<NComp; j++ )
+    {
+        spcfu[j] = 1.;
+        spcfl[j] = 1.;
     }
     return 0;
 }
@@ -225,6 +234,8 @@ TKinMet::free_kinrtabs()
          }
          delete[]arapCon;
     }
+    delete[]spcfu;
+    delete[]spcfl;
 }
 
 // creates the TKinReact array
@@ -337,21 +348,21 @@ TKinMet::init_arPRt()
 //
 bool
 TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
-                    const double pLaPh, const double pPULk, const double pPLLk, const double pYOFk,
+                    const double pLaPh, /* const double pPULk, const double pPLLk, */ const double pYOFk,
                     const double pICa, const double ppHa, const double ppea, const double pEha )
 {
     long int i;
     bool status = false;
-    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk || nPul != pPULk || nPll != pPLLk
+    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk /* || nPul != pPULk || nPll != pPLLk */
         || LaPh != pLaPh || IS != pICa || pH != ppHa || pe != ppea || Eh != pEha || sGP != pYOFk*mPh )
         status = true;
     sSA = pAsk;
     nPh = pXFk;
-    mPh = pFWGTk;
+    mPh = pFWGTk;  // in grams?
 // cout << " !!! mPh: " << mPh << endl;
     vPh = pFVOLk;
-    nPul = pPULk;
-    nPll = pPLLk;
+//    nPul = pPULk;
+//    nPll = pPLLk;
     LaPh = pLaPh;
     sGP = pYOFk*mPh;
     IS = pICa;
@@ -375,15 +386,15 @@ TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, c
 //  (provisionally also modified phase amount constraints)
 //
 double
-TKinMet::GetModFSA ( double& pPULk, double& pPLLk  )
+TKinMet::GetModFSA( /* double& pPULk, double& pPLLk  */ )
 {
     long int i;
     for( i = 0; i < nPRk; i++ )
-    {
+    {  // gets back modified surface area fractions
        arPRt[i].feSAr = arfeSAr[i];
     }
-    pPULk = nPul;
-    pPLLk = nPll;
+//    pPULk = nPul;
+//    pPLLk = nPll;
     return sSAcor;
 }
 
@@ -526,14 +537,14 @@ if( rk.xPR != r )     // index of this parallel reaction
    }
    // Calculating rate for this region (output) in mol/m2/s
    rk.rPR = 0.;
-   if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
+   if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
        if( rk.k > 0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.k * rk.cat * rk.aft;
        else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
    }
-   if( LaPh > 0.001 ) {
+   if( LaPh > OmgTol ) {
        if( rk.k < 0 ) //   net precipitation rate constant (corrected for T) in mol/m2/st * rk.aft;
            rk.rPR = fabs(rk.k) * rk.cat * rk.aft;
        else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
@@ -573,26 +584,26 @@ TMWReaKin::PTparam( const double TK, const double P )
 double
 TMWReaKin::CorrSpecSurfArea( const double formFactor )
 {
-   double sSAc = sSA;
+    double sSAc = sSA;
     //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
     // more sophisticated functions to be called here
-if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
-{
-    sSAc = formFactor * sSAi * pow( nPh/nPhi, 1./3. );
-}
-else if( LaPh > 0.001 ) {  // precipitation
-    sSAc = formFactor * sSAi * pow( nPhi/nPh, 1./3. );
-}
-else {  // equilibrium
-    sSAc = sSAcor;   // no change in sSAcor
-}
-return sSAc;
+    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
+    {
+        sSAc = formFactor * sSAi * pow( nPh/nPhi, 1./3. );
+    }
+    else if( LaPh > OmgTol ) {  // precipitation
+        sSAc = formFactor * sSAi * pow( nPhi/nPh, 1./3. );
+    }
+    else {  // equilibrium
+        sSAc = sSAcor;   // no change in sSAcor
+    }
+    return sSAc;
 }
 
 bool
 TMWReaKin::RateInit( )
 {   
-    double RT = R_CONST*T_k, kPR, dnPh, FormFactor = 1.;
+    double RT = R_CONST*T_k, kPR, dnPh; // , FormFactor = 1.;
     long int r;
 
     kTot = 0.;
@@ -606,11 +617,12 @@ TMWReaKin::RateInit( )
     sAPh = sSA * mPh;   // initial surface of the phase
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall initial rate (mol/s)
-    dnPh = -kdT * rTot; // overall initial change (moles)
-    nPh = nPhi + dnPh;  // New amount of the phase
-
-    sSAcor = CorrSpecSurfArea( FormFactor );  // correction of specific surface area
-cout << " init kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
+//    dnPh = -kdT * rTot; // overall initial change (moles)
+    dnPh = 0.; // overall initial change (moles)
+    nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
+    sSAcor = sSA;
+//    sSAcor = CorrSpecSurfArea( FormFactor );  // initial correction of specific surface area
+// cout << " init 0  kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
     return false;
 }
@@ -628,13 +640,13 @@ TMWReaKin::RateMod( )
     {
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
-
-    sAPh = sSA * mPh;   // surface of the phase
+    sSAcor = CorrSpecSurfArea( FormFactor );
+    sAPh = sSAcor * mPh;   // corrected surface of the phase. Discussion needed: Should new overall rate include corrected SSA,
+                           // or should correction of SSA be applied after the new overall rate is applied?
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate (mol/s)
-
-    sSAcor = CorrSpecSurfArea( FormFactor );
- cout << " cur kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << endl;
+//    sSAcor = CorrSpecSurfArea( FormFactor );
+// cout << " t: " << kTau << " kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;
 }
 
@@ -649,15 +661,15 @@ TMWReaKin::SetMetCon( )
    dn_dt = -rTot;  // minus total rate mol/s
 
    // First calculate phase constraints
-   if( LaPh < -0.001 ) // dissolution  (needs more flexible check based on Fa stability criterion!
+   if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
        nPll = nPh + dnPh;
-       if( nPul < nPll )
+//       if( nPul < nPll )
            nPul = nPll;
    }
-   else if( LaPh > 0.001 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+   else if( LaPh > OmgTol ) {  // precipitation rate constant (corrected for T) in mol/m2/s
        nPul = nPh + dnPh;
-       if( nPll > nPul )
+//       if( nPll > nPul )
            nPll = nPul;
     }
     else {  // equilibrium  - needs to be checked!
@@ -667,7 +679,7 @@ TMWReaKin::SetMetCon( )
 
     if( NComp > 1 )
        return false;  // DC constraints will be set in SplitMod() or SplitInit()
-    // setting DC metastability constraints
+    // setting DC metastability constraints for a single-component phase
     arnxul[0] = nPul;
     arnxll[0] = nPll;
     return false;
@@ -680,9 +692,37 @@ TMWReaKin::SplitInit( )
     return false;
 }
 
+// Sets metastability constraints on end members of the (solid) solution phase
+//
 bool
 TMWReaKin::SplitMod( )
 {
+    long int j;
+
+    if( LaPh < -OmgTol ) // dissolution
+    {
+        for(j=0; j<NComp; j++)
+        {
+            arnxll[j] = nPll*spcfl[j];
+//            if( arnxul[j] < arnxll[j] )
+                arnxul[j] = nPul*spcfu[j];
+        }
+    }
+    else if( LaPh > OmgTol )
+    {  // precipitation
+        for(j=0; j<NComp; j++)
+        {
+            arnxul[j] = nPul*spcfu[j];
+            arnxll[j] = nPll*spcfl[j];
+        }
+    }
+    else {  // equilibrium
+        for(j=0; j<NComp; j++)
+        {
+            arnxul[j] = nPul*spcfu[j];
+            arnxll[j] = nPll*spcfl[j];
+        }
+    }
     return false;
 }
 
@@ -779,7 +819,6 @@ TUptakeKin::UptakeMod()
 
     return false;
 }
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

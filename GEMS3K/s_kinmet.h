@@ -26,7 +26,6 @@
 #ifndef S_KINMET_H
 #define S_KINMET_H
 
-//#include "s_fgl.h"
 #include <vector>
 
 const int   MAXDCNAME_ =      16, MAXPHNAME_ = 16;   // see also v_mod.h
@@ -228,7 +227,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     long int nFaceC;   /// number of (separately considered) crystal faces or surface patches ( 1 to 4 )
 //    long int numpC;   /// number of sorption/uptake model parameter coefficients (per end member)
 //    long int iRes4;   // reserved
-
+    double OmgTol;      /// Tolerance for checking dissolution or precipitation cases (default 1e-6)
     double R_CONST;     /// Gas constant, 8.31451 J/K/mol
     double T_k;         /// Temperature, K
     double P_bar;       /// Pressure, bar
@@ -288,11 +287,11 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double *arVol;   /// molar volumes of end-members (species) cm3/mol ->NComp
 
 // Work data and kinetic law calculation results
-
     TKinReact *arPRt; /// work array of parameters and results for 'parallel reaction' terms [nPRk]
 
-    double spcfu[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
-    double spcfl[];    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+    double *spcfu;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+    double *spcfl;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+
 
     double kTot;   /// Total rate constant (per m2 phase surface area)
     double rTot;   /// Current total MWR rate (mol/s)
@@ -364,14 +363,14 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     // also sets 'parallel reactions' area fractions
     // returns false if these parameters in TKinMet instance did not change; true if they did.
     //
-    bool UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
-                    const double pLgOm, const double pPULk, const double pPLLk, const double pYOFk,
+    bool UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
+                    const double pLgOm,  /* const double pPULk, const double pPLLk, */ const double pYOFk,
                     const double pICa, const double ppHa, const double ppea, const double pEha );
 
     // Returns (modified) specific surface area of the phase, metastability constraints (via parameters),
     // and gets (modified) 'parallel reactions' area fractions
     double
-    GetModFSA ( double& pPULk, double& pPLLk );
+    GetModFSA ( /* double& pPULk, double& pPLLk  */ );
 
     // Updates temperature to T_K and pressure to P_BAR;
     // calculates Arrhenius factors and temperature-corrected rate constants in all PR regions.
