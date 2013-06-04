@@ -330,6 +330,7 @@ TMulti::KinMetParPT( long int k, const char* kMod )
             ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
             myKM->PTparam( pm.Tc, pm.Pc );
+            myKM->UptKinPTparam( pm.Tc, pm.Pc );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
@@ -490,6 +491,7 @@ TMulti::KinMetInitRates( long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetInitRates: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
             myKM->RateInit( );
+//            myKM->UptakeInit( );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
@@ -517,6 +519,7 @@ TMulti::KinMetCalcRates( long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetCalcRates: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
             myKM->RateMod( );
+//            myKM->UptakeMod( );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:

@@ -563,10 +563,10 @@ if( rk.xPR != r )     // index of this parallel reaction
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//  Implementation of TMWReaKin class (TST kinetics)
+//  Implementation of TKinMet class (TST kinetics)
 //
 bool
-TMWReaKin::PTparam( const double TK, const double P )
+TKinMet::PTparam( const double TK, const double P )
 {
     bool iRet = false;
     if( TK < 273. || TK > 5273. || P < 0. || P > 1e6 )
@@ -580,30 +580,34 @@ TMWReaKin::PTparam( const double TK, const double P )
 
 // Returns sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. );
 //     a primitive correction for specific surface area
-//     more sophisticated functions to be added here
+//  Returns mid-interval sSAc value for rate calculation and sets fully-corrected sSAcor value.
+//     mMre sophisticated functions to be added here
 double
-TMWReaKin::CorrSpecSurfArea( const double formFactor )
+TKinMet::CorrSpecSurfArea( const double formFactor, const double formFactor1 = 1.0 )
 {
-    double sSAc = sSA;
+    double sSAc = sSA, r_sSAc;
     //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
     // more sophisticated functions to be called here
     if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
     {
-        sSAc = formFactor * sSAi * pow( nPh/nPhi, 1./3. );
+        sSAc = formFactor * sSAi * pow( formFactor1*nPh/nPhi, 1./3. );
     }
     else if( LaPh > OmgTol ) {  // precipitation
-        sSAc = formFactor * sSAi * pow( nPhi/nPh, 1./3. );
+        sSAc = formFactor * sSAi * pow( formFactor1*nPhi/nPh, 1./3. );
     }
     else {  // equilibrium
         sSAc = sSAcor;   // no change in sSAcor
     }
+    r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
+    sSAcor = sSAc;
+//    return r_sSAc;
     return sSAc;
 }
 
 bool
-TMWReaKin::RateInit( )
+TKinMet::RateInit( )
 {   
-    double RT = R_CONST*T_k, kPR, dnPh; // , FormFactor = 1.;
+    double RT = R_CONST*T_k, kPR, dnPh, sSAcr, FormFactor = 1.;
     long int r;
 
     kTot = 0.;
@@ -614,23 +618,24 @@ TMWReaKin::RateInit( )
     }
     nPhi = nPh;         // initial amount of this phase
     sSA = sSAi;         // initial specific surface area
-    sAPh = sSA * mPh;   // initial surface of the phase
+    sSAcr = CorrSpecSurfArea( FormFactor );
+    sAPh = sSAcr * mPh;   // initial surface of the phase
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall initial rate (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
     nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    sSAcor = sSA;
-//    sSAcor = CorrSpecSurfArea( FormFactor );  // initial correction of specific surface area
-// cout << " init 0  kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
+    vTot = 3000. * kTot * vPh/nPh;  // linear velocity in nm/s
+
+// cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
     return false;
 }
 
 bool
-TMWReaKin::RateMod( )
+TKinMet::RateMod( )
 {
-    double RT = R_CONST*T_k, FormFactor = 1.;
+    double RT = R_CONST*T_k, FormFactor = 1., sSAcr;
     long int r;
 
     if( nAscC )
@@ -640,20 +645,21 @@ TMWReaKin::RateMod( )
     {
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
-    sSAcor = CorrSpecSurfArea( FormFactor );
-    sAPh = sSAcor * mPh;   // corrected surface of the phase. Discussion needed: Should new overall rate include corrected SSA,
+    sSAcr = CorrSpecSurfArea( FormFactor );
+    sAPh = sSAcr * mPh;   // corrected surface of the phase. Discussion needed: Should new overall rate include corrected SSA,
                            // or should correction of SSA be applied after the new overall rate is applied?
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate (mol/s)
-//    sSAcor = CorrSpecSurfArea( FormFactor );
-// cout << " t: " << kTau << " kTot: " << kTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
+    vTot = 3000. * kTot * vPh/nPh;  // linear velocity in nm/s
+
+// cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;
 }
 
 // Sets new metastability constraints based on updated kinetic rates
 //
 bool
-TMWReaKin::SetMetCon( )
+TKinMet::SetMetCon( )
 {
    double dnPh = 0., dn_dt = 0.;
 
@@ -687,7 +693,7 @@ TMWReaKin::SetMetCon( )
 
 
 bool
-TMWReaKin::SplitInit( )
+TKinMet::SplitInit( )
 {
     return false;
 }
@@ -695,7 +701,7 @@ TMWReaKin::SplitInit( )
 // Sets metastability constraints on end members of the (solid) solution phase
 //
 bool
-TMWReaKin::SplitMod( )
+TKinMet::SplitMod( )
 {
     long int j;
 
@@ -796,12 +802,11 @@ TUptakeKin::free_upttabs()
 }
 
 
-bool TUptakeKin::PTparam( const double TK, const double P )
+bool
+TUptakeKin::UptKinPTparam( const double TK, const double P )
 {
-    int iRet = 0;
-    iRet = UpdatePT( TK, P );
-    return iRet;
-};
+    return false;
+}
 
 
 // Initializes uptake rates
