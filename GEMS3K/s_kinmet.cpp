@@ -776,7 +776,6 @@ TUptakeKin::init_upttabs( double *p_arUmpCon  )
     long int j, i;
 
     if( arUmpCon ) {
-
         for( j=0; j<NComp; j++)
             for( i=0; i<numpC; i++)
                 arUmpCon[j][i] = p_arUmpCon[numpC*j+i];

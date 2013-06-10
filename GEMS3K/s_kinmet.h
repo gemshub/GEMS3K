@@ -386,14 +386,12 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 {
     private:
 
-        // specific stuff for uptake kinetics
-
+        // specific stuff for uptake kinetics (TBD)
             // internal functions
         //        void alloc_internal();
         //        void free_internal();
 
      public:
-
             // Constructor
             TMWReaKin( const KinMetData *kmd /*, specific params */ ):TKinMet( kmd )
             {
@@ -424,7 +422,8 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti
     public:
 
     // Constructor
-    TUptakeKin( KinMetData *kmd,  long int p_numpC, double *p_arUmpCon /*, specific params */ );
+    TUptakeKin( KinMetData *kmd, long int p_numpC, double *p_arUmpCon /*, specific params */ );
+
     // Destructor
     ~TUptakeKin();
 
