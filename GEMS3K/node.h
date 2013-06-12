@@ -434,6 +434,11 @@ void GEM_set_MT(
    /// or -1 if no such name was found in the DATACH DC name list
    long int DC_name_to_xCH( const char *Name );
 
+   /// Returns DCH index of DC given the DC Name string
+   /// or -1 if no such name was found in the DATACH DC name list
+   char* xCH_to_DC_name( int xCH )
+   {return CSD->DCNL[xCH];}
+
    /// Returns DCH index of Phase given the Phase Name string
    /// or -1 if no such name was found in the DATACH Phase name list
    long int Ph_name_to_xCH( const char *Name );
@@ -679,6 +684,9 @@ void GEM_set_MT(
 
       /// Retrieves pH of the aqueous solution
       double Get_pH( );
+
+      /// Retrieves Eh of the aqueous solution
+      double Get_Eh( );
 
      /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
      /// \param xic is IC DBR index
