@@ -45,7 +45,7 @@ KinModCode_ = 3,
     KM_MOD_WOL_ = 'W',     /// Carbonate growth model following (Wolthers 2012)
     KM_MOD_NUGR_ = 'U',    /// Mineral nucleation and growth model with nuclei/particle size distr. (TBD)
 KinSorpCode_ = 4,
-    KM_UPT_ENTRAP_ = 'E',  ///	Unified entrapment model (Thien,Kulik,Curti 2012)
+    KM_UPT_ENTRAP_ = 'E',  ///	Unified entrapment model (Thien,Kulik,Curti 2013)
     KM_UPT_UPDP_ = 'M',    ///	DePaolo (2011) uptake kinetics model
     KM_UPT_SEMO_ = 'G',    ///  Growth (surface) entrapment model (Watson 2004)
     KM_IEX_FAST_ = 'F',    ///  Fast ion exchange kinetics (e.g. montmorillonite, CSH)
@@ -62,8 +62,10 @@ KinSizedCode_ = 6,
     KM_SIZED_FUN_ = 'F',  ///  Empirical distribution function
 KinResCode_ = 7,
     KM_RES_SURF_ = 'A',   /// surface-scaled rate model (k in mol/m2/s)
-    KM_RES_PVS_ = 'V'     /// pore-volume-scaled model (k in mol/m3/s)
-
+    KM_RES_PVS_ = 'V',     /// pore-volume-scaled model (k in mol/m3/s)
+// Minor end member codes for uptake kinetics models
+    DC_SOL_MINOR_ = 'J',
+    DC_SOL_MINDEP_ = 'F'
 };
 
 enum affin_term_op_codes {
@@ -264,7 +266,6 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
     double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
     double *arAscp;  /// input array of parameter coefficients of equation for correction of specific surface area [nAscC]
-//    double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM)[MAXDCNAME_];  /// pointer to the list of DC names in the phase [NComp] read-only
@@ -291,7 +292,6 @@ class TKinMet  // Base class for MWR kinetics and metastability models
 
     double *spcfu;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
     double *spcfl;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
-
 
     double kTot;   /// Total rate constant (mol/m2/s)
     double rTot;   /// Current total MWR rate (mol/s)
@@ -408,9 +408,14 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti
 
     // specific stuff for uptake kinetics
     long int numpC;   /// number of sorption/uptake model parameter coefficients (per end member)
+    long int nElm;   /// number of independent components in IPM work data structure
     long int iRes4;   // reserved
 
+long int *arxTrDC;  /// pointer to input array of aq DC indexes for end-members [NComp]
+long int *arxICu;  /// pointer to input array of aq IC indexes for end members [NComp]
+
     double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
+    double *arElm;   /// pointer to total molalities of elements (IC) dissolved in aqueous phase [nElem]
 
     // Uptake model output
 
@@ -422,7 +427,8 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti
     public:
 
     // Constructor
-    TUptakeKin( KinMetData *kmd, long int p_numpC, double *p_arUmpCon /*, specific params */ );
+    TUptakeKin(KinMetData *kmd, long int p_numpC, long int p_nElm, double *p_arUmpCon, long int *p_arxICu,
+               double *p_arElm /*, specific params */ );
 
     // Destructor
     ~TUptakeKin();

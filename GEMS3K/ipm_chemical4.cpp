@@ -36,7 +36,7 @@ long int
 TMulti::CalculateKinMet( long int LinkMode  )
 {
    long int k, j, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
-            kc, kd, kce=0, kde=0, ku, kue=0, jphl=0, jlphc=0;
+            kc, kd, kce=0, kde=0, ku, kue=0, ki, kie=0, jphl=0, jlphc=0;
 
    SPP_SETTING *pa = paTProfil;
    char *kMod;
@@ -55,6 +55,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
       ks = kse;
       kd = kde;
       ku = kue;
+      ki = kie;
 
 //      for( j=jb; j<je; j++ )
 //cout << "LM: " << LinkMode << " k: " << k << " dul: " << pm.DUL[j] << " dll: " << pm.DLL[j] << endl;
@@ -73,14 +74,14 @@ TMulti::CalculateKinMet( long int LinkMode  )
            //   case PH_AQUEL:
               case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
            // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
-              KinMetCreate( jb, k, kc, kp, kf, ka, ks, kd, ku, kMod, jphl, jlphc );
-           // Correction of parameters for initial T,P
-              KinMetParPT( k, kMod );
-           // Reset and initialize time
-              KinMetInitTime( k, kMod );
-              break;
-           default:
-              break;
+                KinMetCreate( jb, k, kc, kp, kf, ka, ks, kd, ku, ki, kMod, jphl, jlphc );
+                // Correction of parameters for initial T,P
+                KinMetParPT( k, kMod );
+                // Reset and initialize time
+                KinMetInitTime( k, kMod );
+                break;
+            default:
+                break;
          }
          break;
    }
@@ -94,20 +95,20 @@ TMulti::CalculateKinMet( long int LinkMode  )
              case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
          // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
              // Correction for T,P
-             KinMetParPT( k, kMod );
-             KinMetInitTime( k, kMod );
-             KinMetUpdateFSA( jb, k, kMod );
-             KinMetInitRates( k, kMod );
-             if( k < pm.FIs )
-             {
-                 KinMetInitSplit( jb, k, kMod );
-                 KinMetInitUptake( jb, k, kMod );
-             }
-             KinMetSetConstr( jb, k, kMod );  // TBD
-//             KinMetGetModFSA( k, kMod );
-             break;
-          default:
-             break;
+                KinMetParPT( k, kMod );
+                KinMetInitTime( k, kMod );
+                KinMetUpdateFSA( jb, k, kMod );
+                KinMetInitRates( k, kMod );
+                if( k < pm.FIs )
+                {
+                    KinMetInitUptake( jb, k, kMod );
+                    KinMetInitSplit( jb, k, kMod );
+                }
+                KinMetSetConstr( jb, k, kMod );  // TBD
+//                  KinMetGetModFSA( k, kMod );
+                break;
+            default:
+                break;
         }
         break;
     }
@@ -125,8 +126,8 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 KinMetCalcRates( k, kMod );
                 if( k < pm.FIs )
                 {
-                    KinMetCalcSplit( jb, k, kMod );
                     KinMetCalcUptake( jb, k, kMod );
+                    KinMetCalcSplit( jb, k, kMod );
                 }
                 KinMetSetConstr( jb, k, kMod );
                 KinMetGetModFSA( k, kMod );
@@ -141,15 +142,16 @@ TMulti::CalculateKinMet( long int LinkMode  )
 
    jphl  += pm.LsPhl[k*2];
    jlphc += pm.LsPhl[k*2]*pm.LsPhl[k*2+1];
-
    kfe += pm.LsKin[k*6];
    kpe += pm.LsKin[k*6];
    kce += pm.LsKin[k*6]*pm.LsKin[k*6+2];
    kae += pm.LsKin[k*6]*pm.LsKin[k*6+1]*pm.LsKin[k*6+3];
    kse += pm.LsMod[k*6+4];
    kde += pm.LsKin[k*6+1];
-   if( k < pm.FIs)
+   if( k < pm.FIs)  
        kue += pm.LsUpt[k*2]*pmp->L1[k];  // bugfix 10.06.13
+   if( kMod[0] == KM_PRO_UPT )
+       kie += pm.N;
  } // k
    return 0;
 }
@@ -160,7 +162,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
 /// using the TKinMet class.
 //
 void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
-                           long int kf, long int ka, long int ks, long int kd, long int ku,
+                           long int kf, long int ka, long int ks, long int kd, long int ku, long int ki,
                            const char *kmod, long int jphl, long int jlphc )
 {
     double *aZ, *aM;
@@ -275,7 +277,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
         {
              if( k < pm.FIs)
              {
-                TUptakeKin* myPT = new TUptakeKin( &kmd, pm.LsUpt[k*2], pm.UMpcC+ku );
+                TUptakeKin* myPT = new TUptakeKin( &kmd, pm.LsUpt[k*2], pm.N, pm.UMpcC+ku, pm.xICuC+ki, pm.IC_m );
                 myKM = (TKinMet*)myPT;
              }
              break;
@@ -632,8 +634,7 @@ TMulti::KinMetCalcUptake( long int jb, long int k, const char *kMod )
 
 void
 TMulti::KinMetInitUptake( long int jb, long int k, const char *kMod )
-{
-    //
+{   
     switch( kMod[0] )
     {
         case KM_PRO_UPT_:

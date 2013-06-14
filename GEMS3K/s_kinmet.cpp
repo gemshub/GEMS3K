@@ -625,7 +625,7 @@ TKinMet::RateInit( )
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
     nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot = 3000. * kTot * vPh/nPh;  // linear velocity in nm/s
+    vTot = 3e9 * kTot * vPh/nPh;  // linear velocity in nm/s
 
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
@@ -646,11 +646,10 @@ TKinMet::RateMod( )
        kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
     }
     sSAcr = CorrSpecSurfArea( FormFactor );
-    sAPh = sSAcr * mPh;   // corrected surface of the phase. Discussion needed: Should new overall rate include corrected SSA,
-                           // or should correction of SSA be applied after the new overall rate is applied?
+    sAPh = sSAcr * mPh;   // corrected surface of the phase.
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate (mol/s)
-    vTot = 3000. * kTot * vPh/nPh;  // linear velocity in nm/s
+    vTot = 3e9 * kTot * vPh/nPh;  // linear velocity in nm/s
 
 // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;
@@ -735,10 +734,15 @@ TKinMet::SplitMod( )
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TUptakeKin class (uptake kinetics)
 //
-TUptakeKin::TUptakeKin( KinMetData *kmd, long int p_numpC, double *p_arUmpCon ):TKinMet( kmd )
+TUptakeKin::TUptakeKin(KinMetData *kmd, long int p_numpC, long int p_nElm, double *p_arUmpCon ,
+                       long int *p_arxICu, double *p_arElm ):TKinMet( kmd )
 {
     numpC = p_numpC;
+nElm = p_nElm;
     arUmpCon = NULL;
+
+arxICu = p_arxICu; // Added 14.06.13 DK
+arElm = p_arElm;
 
     alloc_upttabs();
     init_upttabs( p_arUmpCon );
@@ -800,26 +804,77 @@ TUptakeKin::free_upttabs()
     }
 }
 
-
 bool
 TUptakeKin::UptKinPTparam( const double TK, const double P )
 {
+    // No T,P corrections so far ...
     return false;
 }
 
-
-// Initializes uptake rates
+// Initializes uptake rates by setting spcfu and spcfl vectors
+//  proportional to SS mole fractions
 bool
 TUptakeKin::UptakeInit()
 {
+    long int j;
+
+    for( j=0; j<NComp; j++ )
+    {
+        spcfu[j] = arWx[j];
+        spcfl[j] = arWx[j];
+    }
     return false;
 }
-
 
 // Calculates uptake rates
 bool
 TUptakeKin::UptakeMod()
 {
+
+
+    switch( KinSorpCode )
+    {
+        case  KM_UPT_ENTRAP_: //  = 'E',  //	Unified entrapment model (Thien,Kulik,Curti 2013)
+        {
+            double FTr, DelTr0, Ds, Dl, l, m;
+            double DelTr, Vml;
+            long int j;
+
+            for( j=0; j<NComp; j++ )
+            {
+                if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+                {    // not a minor/trace element
+                     // take precip. rate for this component
+                    continue; // not a minor/trace element
+                }
+                // Minor/trace component
+                FTr =   arUmpCon[j][0];
+                DelTr0= arUmpCon[j][1];
+                Ds =    arUmpCon[j][2];
+                Dl =    arUmpCon[j][3];
+                l =     arUmpCon[j][4];
+                m =     arUmpCon[j][5];
+                // Calculate eq 1.11
+                Vml = vTot * m * l;
+                DelTr = DelTr0 * ( Ds + Vml ) / ( Ds + Vml/FTr ); // Effective fractionation coeff.
+                spcfu[j] = DelTr * 1.;  // TBD
+                spcfl[j] = spcfu[j];
+
+
+            }
+            break;
+        }
+        case KM_UPT_UPDP_:    // = 'M',   //	DePaolo (2011) uptake kinetics model
+            break;
+        case KM_UPT_SEMO_:    // = 'G',   //  Growth (surface) entrapment model (Watson 2004)
+            break;
+        case KM_IEX_FAST_:    // = 'F',   //  Fast ion exchange kinetics (e.g. montmorillonite, CSH)
+            break;
+        case KM_IEX_SLOW_:    // = 'L',   //  Slow ion exchange kinetics (e.g. illite, zeolites)
+            break;
+        default:
+            break;
+    }
 
     return false;
 }

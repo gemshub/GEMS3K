@@ -214,8 +214,9 @@ double
   *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k]; reserved [Fis][2]
 
   *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])
-  (*ocPRkC)[2]; ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
+  (*ocPRkC)[2], ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
                 /// and indexes of faces (surface patches)
+*xICuC;  ///< new: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k]   TBD
   double
    // TSolMod stuff
     *PMc,    ///< Collected interaction parameter coefficients for the (built-in) non-ideal mixing models -> LsMod[k,0] x LsMod[k,2]
@@ -519,6 +520,7 @@ void KinMetModLoad();
     int find_acnum( char *name, int LNmode );
     int find_phnum_multi( const char *name);
     int find_dcnum_multi( const char *name);
+    int find_icnum_multi( const char *name);
     const char* GetHtml();
 
 #else
@@ -655,8 +657,8 @@ protected:
 
 // New stuff for TKinMet class implementation
 long int CalculateKinMet( long int LinkMode  );
-void KinMetCreate( long int jb, long int k, long int kc, long int kp, long int kf,
-            long int ka, long int ks, long int kd, long ku, const char *kmod,
+void KinMetCreate(long int jb, long int k, long int kc, long int kp, long int kf,
+            long int ka, long int ks, long int kd, long ku, long ki, const char *kmod,
             long jphl, long jlphc );
 void KinMetParPT( long int k, const char *kMod );
 void KinMetInitTime( long int k, const char *kMod );
