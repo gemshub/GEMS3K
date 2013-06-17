@@ -71,6 +71,8 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     arlPhc = NULL;
     arrpCon = NULL;
     arapCon = NULL;
+    spcfu = NULL;
+    spcfl = NULL;
 //    arUmpCon = NULL;
     alloc_kinrtabs( );
     init_kinrtabs( kmd->arlPhc_, kmd->arrpCon_,  kmd->arapCon_ );
@@ -83,9 +85,6 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     init_arPRt( );   // load data for parallel reactions
 
     // Work data and kinetic law calculation results
-    spcfu = NULL;
-    spcfl = NULL;
-
     double kTot = 0.;   /// Total rate constant (per m2 phase surface area)
     double rTot = 0.;   /// Current total MWR rate (mol/s)
     double vTot = 0.;   /// Total surface propagation velocity (nm/s)
@@ -158,7 +157,6 @@ TKinMet::alloc_kinrtabs()
     }
     spcfu = new double[NComp];
     spcfl = new double[NComp];
-
 }
 
 /// returns 0 if o.k. or some arrays were not allocated.
@@ -190,8 +188,8 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon 
     }
     for( j=0; j<NComp; j++ )
     {
-        spcfu[j] = 1.;
-        spcfl[j] = 1.;
+        spcfu[j] = arWx[j];
+        spcfl[j] = arWx[j];
     }
     return 0;
 }
@@ -690,10 +688,36 @@ TKinMet::SetMetCon( )
     return false;
 }
 
-
+// Sets initial metastability constraints on end members of the (solid) solution phase
+//
 bool
 TKinMet::SplitInit( )
 {
+    long int j;
+
+    if( LaPh < -OmgTol ) // dissolution
+    {
+        for(j=0; j<NComp; j++)
+        {
+            arnxll[j] = nPll*spcfl[j];
+            arnxul[j] = nPul*spcfu[j];
+        }
+    }
+    else if( LaPh > OmgTol )
+    {  // precipitation
+        for(j=0; j<NComp; j++)
+        {
+            arnxul[j] = nPul*spcfu[j];
+            arnxll[j] = nPll*spcfl[j];
+        }
+    }
+    else {  // equilibrium
+        for(j=0; j<NComp; j++)
+        {
+            arnxul[j] = nPul*spcfu[j];
+            arnxll[j] = nPll*spcfl[j];
+        }
+    }
     return false;
 }
 
@@ -709,7 +733,7 @@ TKinMet::SplitMod( )
         for(j=0; j<NComp; j++)
         {
             arnxll[j] = nPll*spcfl[j];
-//            if( arnxul[j] < arnxll[j] )
+//          if( arnxul[j] < arnxll[j] )
                 arnxul[j] = nPul*spcfu[j];
         }
     }
@@ -830,21 +854,37 @@ TUptakeKin::UptakeInit()
 bool
 TUptakeKin::UptakeMod()
 {
-
+    long int j, i;
 
     switch( KinSorpCode )
     {
         case  KM_UPT_ENTRAP_: //  = 'E',  //	Unified entrapment model (Thien,Kulik,Curti 2013)
         {
-            double FTr, DelTr0, Ds, Dl, l, m;
-            double DelTr, Vml;
-            long int j;
+            double FTr, DelTr0, Ds, Dl, l, m, xtTr, xtHc, CF;
+            double DelTr, Vml, molSum=0., molMinSum=0., molMajSum=0., spMinSum=0, spMajSum=0;
 
+// Calcula<>ting the sums of tot.diss.molal. for all elements relevant to major and minor endmembers
             for( j=0; j<NComp; j++ )
             {
+                i = arxICu[j];
                 if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
                 {    // not a minor/trace element
-                     // take precip. rate for this component
+                    molMajSum += arElm[i];
+                }
+                else {
+                    molMinSum += arElm[i];
+                }
+            }
+            molSum = molMajSum + molMinSum;
+//            if(spMajSum < 1e-9)
+//               Error - no host components left!
+// Calculating the fractionation and splitting coefficients for Tr end members
+            for( j=0; j<NComp; j++ )
+            {
+                 i = arxICu[j];
+                if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+                {
+                    spMajSum += arWx[j];
                     continue; // not a minor/trace element
                 }
                 // Minor/trace component
@@ -854,13 +894,24 @@ TUptakeKin::UptakeMod()
                 Dl =    arUmpCon[j][3];
                 l =     arUmpCon[j][4];
                 m =     arUmpCon[j][5];
-                // Calculate eq 1.11
+                // Calculate eq (2.7)
                 Vml = vTot * m * l;
                 DelTr = DelTr0 * ( Ds + Vml ) / ( Ds + Vml/FTr ); // Effective fractionation coeff.
-                spcfu[j] = DelTr * 1.;  // TBD
+                xtTr = DelTr * arElm[i]/molMajSum;  // Frac.coeff. defined rel to sum of major EMs!
+                spcfu[j] = xtTr;
                 spcfl[j] = spcfu[j];
-
-
+                spMinSum += xtTr;
+            }
+// Correcting splitting coeffs of major EMs for changed sum of split.coeffs. for Tr EMs
+            CF = (1.-spMinSum)/spMajSum;
+            for( j=0; j<NComp; j++ )
+            {
+                if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+                {    // not a minor/trace element
+                    xtHc = arWx[j]*CF;
+                    spcfu[j] = xtHc;
+                    spcfl[j] = spcfu[j];
+                }
             }
             break;
         }
