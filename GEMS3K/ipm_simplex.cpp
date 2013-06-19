@@ -944,7 +944,8 @@ void TMulti::MultiConstInit() // from MultiRemake
 
   //  ???????
   pm.FX = 7777777.;
-  pm.pH = pm.Eh = pm.pe = 0.0;
+  if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
+      pm.pH = pm.Eh = pm.pe = 0.0;
   pm.YMET = 0;                      // always 0.0 ????
   pm.PCI = 1.0;
   pm.FitVar[4] = 1.0;
@@ -952,7 +953,7 @@ void TMulti::MultiConstInit() // from MultiRemake
 #ifndef IPMGEMPLUGIN
   pm.PZ = 0; // IPM default
 //  pm.FitVar[0] = pa->aqPar[0]; // setting T,P dependent b_gamma parameters
-  pm.pH = pm.Eh = pm.pe = 0.0;
+//  pm.pH = pm.Eh = pm.pe = 0.0;
 #else
   pm.PZ = pa->p.DW;  // in IPM
 //  pm.FitVar[0] = 0.0640000030398369;

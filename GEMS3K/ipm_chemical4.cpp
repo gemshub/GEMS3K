@@ -104,7 +104,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                     KinMetInitUptake( jb, k, kMod );
                     KinMetInitSplit( jb, k, kMod );
                 }
-                KinMetSetConstr( jb, k, kMod );  // TBD
+                KinMetSetConstr( jb, k, kMod );
 //                  KinMetGetModFSA( k, kMod );
                 break;
             default:
@@ -618,6 +618,13 @@ TMulti::KinMetCalcUptake( long int jb, long int k, const char *kMod )
     //
     switch( kMod[0] )
     {
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcUptake: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            myKM->SSReaKinMod( );
+            break;
+        }
         case KM_PRO_UPT_:
         {
             ErrorIf( !phKinMet[k], "KinMetCalcUptake: ","Invalid index of phase");
@@ -625,7 +632,7 @@ TMulti::KinMetCalcUptake( long int jb, long int k, const char *kMod )
             myKM->UptakeMod( );
             break;
         }
-        case KM_PRO_MWR_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }
@@ -636,7 +643,14 @@ void
 TMulti::KinMetInitUptake( long int jb, long int k, const char *kMod )
 {   
     switch( kMod[0] )
-    {
+    {      
+        case KM_PRO_MWR_:
+        {
+            ErrorIf( !phKinMet[k], "KinMetCalcUptake: ","Invalid index of phase");
+            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            myKM->SSReaKinInit( );
+            break;
+        }
         case KM_PRO_UPT_:
         {
             ErrorIf( !phKinMet[k], "KinMetInitUptake: ","Invalid index of phase");
@@ -644,7 +658,7 @@ TMulti::KinMetInitUptake( long int jb, long int k, const char *kMod )
             myKM->UptakeInit( );
             break;
         }
-        case KM_PRO_MWR_: case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
+        case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
         default:
               break;
     }

@@ -468,8 +468,8 @@ if( rk.xPR != r )     // index of this parallel reaction
        j = rk.xSKr[xj];
        aj = arla[j];
        if( rk.apCon[xj][0] )
-       {    ajp = pow( aj, rk.apCon[xj][0] );
-            // may need extension in future
+       {
+           ajp = pow( aj, rk.apCon[xj][0] );           // may need extension in future
        }
        else
            ajp = 1.;
@@ -754,6 +754,26 @@ TKinMet::SplitMod( )
     }
     return false;
 }
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//  Implementation of TMWReaKin class (uptake kinetics)
+//
+// Initializes uptake rates
+bool
+TMWReaKin::SSReaKinInit()
+{
+    return false;
+}
+
+// Calculates uptake rates
+bool
+TMWReaKin::SSReaKinMod()
+{
+    return false;
+}
+
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TUptakeKin class (uptake kinetics)

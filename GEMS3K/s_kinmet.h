@@ -400,6 +400,12 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
             // Destructor
             ~TMWReaKin(){}
 
+            // Initializes uptake rates
+            bool SSReaKinInit();
+
+            // Calculates uptake rates
+            bool SSReaKinMod();
+
 };
 
 class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti 2013
