@@ -99,12 +99,12 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 KinMetInitTime( k, kMod );
                 KinMetUpdateFSA( jb, k, kMod );
                 KinMetInitRates( k, kMod );
+                KinMetSetConstr( jb, k, kMod );
                 if( k < pm.FIs )
                 {
                     KinMetInitUptake( jb, k, kMod );
                     KinMetInitSplit( jb, k, kMod );
                 }
-                KinMetSetConstr( jb, k, kMod );
 //                  KinMetGetModFSA( k, kMod );
                 break;
             default:
@@ -124,12 +124,12 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 KinMetUpdateTime( k, kMod );
                 KinMetUpdateFSA( jb, k, kMod );
                 KinMetCalcRates( k, kMod );
+                KinMetSetConstr( jb, k, kMod );
                 if( k < pm.FIs )
                 {
                     KinMetCalcUptake( jb, k, kMod );
                     KinMetCalcSplit( jb, k, kMod );
                 }
-                KinMetSetConstr( jb, k, kMod );
                 KinMetGetModFSA( k, kMod );
                 break;
             default:

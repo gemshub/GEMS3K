@@ -346,13 +346,15 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
             goto NEXT_PHASE;
         }
         if( pm.LO && !k )
+        {    // aqueous phase present
+            pm.IC=0.;                   // fix 20.06.13 DK
             for( ii=0; ii<pm.N; ii++ )
             {
                 pm.IC_m[ii] = 0.0;
                 pm.IC_lm[ii] = 0.0;
                 pm.IC_wm[ii] = 0.0;
             }
-
+        }
         if( XF[k] <= pm.DSM ||
             (pm.PHC[k] == PH_AQUEL && ( XFA[k] <= pm.XwMinM || XF[k] <= pm.DSM ) )
                 || ( pm.PHC[k] == PH_SORPTION && XFA[k] <= pm.ScMinM ))
@@ -398,7 +400,7 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
             if( (XFA[k] > pm.XwMinM) && (MMC > pm.lowPosNum) )
                 Factor = 1000./MMC/XFA[k]; // molality
             else Factor = 0.0;
-            pm.IC=0.;
+//            pm.IC=0.;
             pm.pe = ln_to_lg* pm.U[pm.N-1];
             pm.Eh = 0.000086 * pm.U[pm.N-1] * pm.T;
         case PH_GASMIX:

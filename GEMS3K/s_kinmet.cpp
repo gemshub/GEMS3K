@@ -623,7 +623,7 @@ TKinMet::RateInit( )
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
     nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot = 3e9 * kTot * vPh/nPh;  // linear velocity in nm/s
+    vTot = 3. * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s
 
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
@@ -638,22 +638,22 @@ TKinMet::RateMod( )
 
     if( nAscC )
         FormFactor = arAscp[0];
-    kTot = 0.;
+    kTot = 0.;   // overall specific rate (mol/m2/s)
     for( r=0; r<nPRk; r++ )
     {
-       kTot += PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+       kTot += PRrateCon( arPRt[r], r ); // adds the specific rate (mol/m2/s) for r-th parallel reaction
     }
     sSAcr = CorrSpecSurfArea( FormFactor );
     sAPh = sSAcr * mPh;   // corrected surface of the phase.
     sAph_c = sAPh;
-    rTot = kTot * sAPh; // overall rate (mol/s)
-    vTot = 3e9 * kTot * vPh/nPh;  // linear velocity in nm/s
+    rTot = kTot * sAPh; // overall rate for the phase (mol/s)
+    vTot = 3. * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
 
 // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;
 }
 
-// Sets new metastability constraints based on updated kinetic rates
+// Sets new metastability constraints for the whole phase  based on updated kinetic rates
 //
 bool
 TKinMet::SetMetCon( )
@@ -667,74 +667,87 @@ TKinMet::SetMetCon( )
    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
        nPll = nPh + dnPh;
-//       if( nPul < nPll )
-           nPul = nPll;
+       if( nPul < nPll + fabs(dnPh) )
+           nPul = nPll + fabs(dnPh);    // ensuring slackness
    }
    else if( LaPh > OmgTol ) {  // precipitation rate constant (corrected for T) in mol/m2/s
        nPul = nPh + dnPh;
-//       if( nPll > nPul )
-           nPll = nPul;
+       if( nPll > nPul - fabs(dnPh) )
+           nPll = nPul - fabs(dnPh);    // ensuring slackness
     }
-    else {  // equilibrium  - needs to be checked!
-       nPul = nPh + fabs( dnPh );
-       nPll = nPh - fabs( dnPh );
-    }
+//    else {  // equilibrium  - needs to be checked!
+//       nPul = nPh + fabs( dnPh );
+//       nPll = nPh - fabs( dnPh );
+//    }
 
     if( NComp > 1 )
        return false;  // DC constraints will be set in SplitMod() or SplitInit()
+
     // setting DC metastability constraints for a single-component phase
     arnxul[0] = nPul;
     arnxll[0] = nPll;
     return false;
 }
 
-// Sets initial metastability constraints on end members of the (solid) solution phase
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Sets initial metastability constraints on end members of the (solid solution) phase
 //
 bool
 TKinMet::SplitInit( )
 {
+    double dnPh;
     long int j;
 
+    dnPh = -kdT * rTot;
     if( LaPh < -OmgTol ) // dissolution
     {
+//        nPll = nPh + dnPh;
         for(j=0; j<NComp; j++)
         {
             arnxll[j] = nPll*spcfl[j];
-            arnxul[j] = nPul*spcfu[j];
+            if( arnxul[j] < arnxll[j] )
+                arnxul[j] = nPul*spcfu[j];
+            //  arnxul[j] = arnxll[j];
         }
     }
     else if( LaPh > OmgTol )
     {  // precipitation
+//        nPul = nPh + dnPh;
         for(j=0; j<NComp; j++)
         {
             arnxul[j] = nPul*spcfu[j];
-            arnxll[j] = nPll*spcfl[j];
+            if( arnxll[j] > arnxul[j] )
+                arnxll[j] = nPll*spcfl[j];
+            //  arnxll[j] = arnxul[j];
         }
     }
-    else {  // equilibrium
-        for(j=0; j<NComp; j++)
-        {
-            arnxul[j] = nPul*spcfu[j];
-            arnxll[j] = nPll*spcfl[j];
-        }
-    }
+//    else {  // equilibrium
+//        for(j=0; j<NComp; j++)
+//        {
+//            arnxul[j] = nPul*spcfu[j];
+//            arnxll[j] = nPll*spcfl[j];
+//        }
+//    }
     return false;
 }
 
-// Sets metastability constraints on end members of the (solid) solution phase
+// Sets current metastability constraints on end members of the (solid solution) phase
 //
 bool
 TKinMet::SplitMod( )
 {
+    double dnPh = 0.;
     long int j;
 
+    dnPh = -kdT * rTot;
     if( LaPh < -OmgTol ) // dissolution
     {
         for(j=0; j<NComp; j++)
         {
             arnxll[j] = nPll*spcfl[j];
-//          if( arnxul[j] < arnxll[j] )
+            if( arnxul[j] < arnxll[j] )
                 arnxul[j] = nPul*spcfu[j];
+            //  arnxul[j] = arnxll[j];
         }
     }
     else if( LaPh > OmgTol )
@@ -742,19 +755,20 @@ TKinMet::SplitMod( )
         for(j=0; j<NComp; j++)
         {
             arnxul[j] = nPul*spcfu[j];
-            arnxll[j] = nPll*spcfl[j];
+            if( arnxll[j] > arnxul[j] )
+                arnxll[j] = nPll*spcfl[j];
+            //  arnxll[j] = arnxul[j];
         }
     }
-    else {  // equilibrium
-        for(j=0; j<NComp; j++)
-        {
-            arnxul[j] = nPul*spcfu[j];
-            arnxll[j] = nPll*spcfl[j];
-        }
-    }
+//    else {  // equilibrium
+//        for(j=0; j<NComp; j++)
+//        {
+//            arnxul[j] = nPul*spcfu[j];
+//            arnxll[j] = nPll*spcfl[j];
+//        }
+//    }
     return false;
 }
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TMWReaKin class (uptake kinetics)
