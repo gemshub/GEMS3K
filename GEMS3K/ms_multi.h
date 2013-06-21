@@ -296,9 +296,14 @@ double
     *DUL,     ///< VG Vector of upper kinetic restrictions to x_j, moles [L]
     *DLL,     ///< NG Vector of lower kinetic restrictions to x_j, moles [L]
     *fDQF,    ///< Increments to molar G0 values of DCs from pure gas fugacities or DQF terms, normalized [L]
-  // TKinMet stuff (old DODs, new contents )
-    *PUL,  ///< Vector of upper restrictions to phases amounts X_a (reserved)[FIs]
-    *PLL,  ///< Vector of lower restrictions to phases amounts X_a (reserved)[FIs]
+// TKinMet stuff (old DODs, new contents )
+    *PUL,  ///< Vector of upper restrictions to multicomponent phases amounts [FIs]
+    *PLL,  ///< Vector of lower restrictions to multicomponent phases amounts [FIs]
+*PfFact, /// new: form factors for phases (taken from TKinMet or set from TNode) [FI]
+*PrT,    /// new: Total MWR rate (mol/s) for phases - TKinMet output [FI]
+*PkT,    /// new: Total specific MWR rate (mol/m2/s) for phases - TKinMet output [FI]
+*PvT,    /// new: Total one-dimensional MWR surface propagation velocity (m/s) - TKinMet output [FI]
+//
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
     *Vol,     ///< DC molar volumes, cm3/mol [L]
     *MM,      ///< DC molar masses, g/mol [L]

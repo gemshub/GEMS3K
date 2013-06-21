@@ -135,7 +135,6 @@ struct KinMetData {
     double *arrpCon_;  /// Pointer to input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC] read-only
     double *arapCon_;  /// Pointer to array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC] read-only
     double *arAscp_;   /// Pointer to array of parameter coefficients of equation for correction of specific surface area [nAscC] read-only
-//    double *arUmpCon_; /// Pointer to input array of uptake model coefficients [nComp*numpC] read-only
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM_)[MAXDCNAME_];  /// pointer to the classifier of DCs involved in sorption phase [NComp] read-only
@@ -234,10 +233,11 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double T_k;         /// Temperature, K
     double P_bar;       /// Pressure, bar
     double kTau;        /// current time, s
-    double kdT;         /// current time step
+    double kdT;         /// current time increment, s
     double sSAi;        /// initial specific surface area of the phase (m2/g)
     double nPhi;        /// initial amount of the phase, mol
-                         // both for built-in correction of specific surface area
+double fFact;       /// new: shape factor (for particles or pores)
+                    // all three for the built-in correction of specific surface area and kTot-vTot transformation
     // These values will be corrected after GEM converged at each time step
     double IS;          /// Effective molal ionic strength of aqueous electrolyte
     double pH;          /// pH of aqueous solution
@@ -258,11 +258,11 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double hX0;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
     double sVp;    /// Specific pore volume of phase, m3/g (default: 0)
     double sGP;    /// surface free energy of the phase, J (YOF*PhM)
-    double nPul;   /// upper restriction to this phase amount, mol (calculated here)
-    double nPll;   /// lower restriction to this phase amount, mol (calculated here)
+    double nPul;   /// upper restriction to this phase amount, mol (output)
+    double nPll;   /// lower restriction to this phase amount, mol (output)
 
     double **arlPhc; /// TsolMod, TKinMet, TSorpMod: pointer to input array of phase link parameters [nlPh*nlPc]
-    double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk]
+    double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk] - input
     double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
     double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
     double *arAscp;  /// input array of parameter coefficients of equation for correction of specific surface area [nAscC]
@@ -293,14 +293,13 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double *spcfu;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
     double *spcfl;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
 
-    double kTot;   /// Total rate constant (mol/m2/s)
+    double kTot;   /// Total specific MWR (precipitation/dissolution) rate (mol/m2/s) - output
     double rTot;   /// Current total MWR rate (mol/s)
-    double vTot;   /// Total surface propagation velocity (nm/s)
+    double vTot;   /// Total one-dimensional MWR surface propagation velocity (m/s) - output
 
-    double sSAcor; /// Corrected specific surface area (m2/g)
+    double sSAcor; /// Corrected specific surface area (m2/g) - output
     double sAph_c; /// Corrected surface area of the phase (m2/g)
-    double kdT_c;  /// Corrected time step (s)
-
+    double kdT_c;  /// new: modified (suggested) time increment, s
     // SS dissolution
 
     // SS precipitation
@@ -347,13 +346,14 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     //
     virtual
     bool UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
-                    const double pLgOm,  /* const double pPULk, const double pPLLk, */ const double pYOFk,
+                    const double pLgOm, const double p_fFact, const double pYOFk,
                     const double pICa, const double ppHa, const double ppea, const double pEha );
 
     // Returns (modified) specific surface area of the phase, metastability constraints (via parameters),
-    // and gets (modified) 'parallel reactions' area fractions
+    // and sends internally back (modified) 'parallel reactions' area fractions.
     virtual
-    double GetModFSA( /* double& pPULk, double& pPLLk  */ );
+    double GetModFSA(double& p_fFact, double& prTot, double& pkTot, double& pvTot,
+                     double& pPULk, double& pPLLk);
 
     // Updates temperature to T_K and pressure to P_BAR;
     // calculates Arrhenius factors and temperature-corrected rate constants in all PR regions.
@@ -364,6 +364,14 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     // returns false if neither kTau nor kdT changed; true otherwise
     virtual
     bool UpdateTime( const double Tau, const double dTau );
+
+    // Returns (modified) time step value that satisfies back-coupling criterion
+    //    TBD
+    virtual
+    double GetMdTime( )
+    {
+      return kdT_c;
+    }
 
     // Checks dimensions in order to re-allocate class instance, if necessary
     virtual
@@ -386,7 +394,15 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 {
     private:
 
-        // specific stuff for uptake kinetics (TBD)
+
+    // SS dissolution
+
+    // SS precipitation
+
+    // (SS) nucleation
+
+
+    // specific stuff for uptake kinetics (TBD)
             // internal functions
         //        void alloc_internal();
         //        void free_internal();
@@ -413,15 +429,18 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti
     private:
 
     // specific stuff for uptake kinetics
-    long int numpC;   /// number of sorption/uptake model parameter coefficients (per end member)
+    long int numpC;  /// number of sorption/uptake model parameter coefficients (per end member)
     long int nElm;   /// number of independent components in IPM work data structure
     long int iRes4;   // reserved
 
-long int *arxTrDC;  /// pointer to input array of aq DC indexes for end-members [NComp]
-long int *arxICu;  /// pointer to input array of aq IC indexes for end members [NComp]
+    long int *arxTrDC;   /// pointer to input array of aq DC indexes for end-members [NComp]
+    long int *arxICu;    /// pointer to input array of aq IC indexes for end members [NComp]
 
     double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
     double *arElm;   /// pointer to total molalities of elements (IC) dissolved in aqueous phase [nElem]
+
+double *Rdj;  /// new: pointer to vector of output Rd values (for t-th time step) [NComp]
+double *Dfj;  /// new: pointer to vector of output Delta(j,rest) values (for t-th time step) [NComp]
 
     // Uptake model output
 

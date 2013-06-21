@@ -85,15 +85,15 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     init_arPRt( );   // load data for parallel reactions
 
     // Work data and kinetic law calculation results
-    double kTot = 0.;   /// Total rate constant (per m2 phase surface area)
-    double rTot = 0.;   /// Current total MWR rate (mol/s)
-    double vTot = 0.;   /// Total surface propagation velocity (nm/s)
-
+    kTot = 0.;   // Total rate constant (per m2 phase surface area)
+    rTot = 0.;   // Current total MWR rate (mol/s)
+    vTot = 0.;   // Total surface propagation velocity (nm/s)
+    fFact = 1.;  // Form factor (particles or pores)
     nPh = nPhi;
     sSA = sSAi;
-    sSAcor = sSAi; /// Initialized corrected specific surface area (m2/g)
-    sAph_c = sAPh; /// Initialized corrected surface area of the phase (m2/g)
-    kdT_c = kdT;   /// Initialized corrected time step (s)
+    sSAcor = sSAi;  // Initialized corrected specific surface area (m2/g)
+    sAph_c = sAPh;  // Initialized corrected surface area of the phase (m2/g)
+    kdT_c = kdT;    // Initialized corrected time step (s)
 
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
     OmgTol = 1e-6;  // default tolerance for checking dissolution or precipitation cases
@@ -346,12 +346,12 @@ TKinMet::init_arPRt()
 //
 bool
 TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
-                    const double pLaPh, /* const double pPULk, const double pPLLk, */ const double pYOFk,
+                    const double pLaPh, const double p_fFact, const double pYOFk,
                     const double pICa, const double ppHa, const double ppea, const double pEha )
 {
     long int i;
     bool status = false;
-    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk /* || nPul != pPULk || nPll != pPLLk */
+    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk || p_fFact != fFact
         || LaPh != pLaPh || IS != pICa || pH != ppHa || pe != ppea || Eh != pEha || sGP != pYOFk*mPh )
         status = true;
     sSA = pAsk;
@@ -359,8 +359,7 @@ TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, c
     mPh = pFWGTk;  // in grams?
 // cout << " !!! mPh: " << mPh << endl;
     vPh = pFVOLk;
-//    nPul = pPULk;
-//    nPll = pPLLk;
+fFact = p_fFact;
     LaPh = pLaPh;
     sGP = pYOFk*mPh;
     IS = pICa;
@@ -373,26 +372,34 @@ TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, c
     for( i = 0; i < nPRk; i++ )
     {
        if( arPRt[i].feSAr != arfeSAr[i] )
+       {    // copying (externally modified) surface area fractions for parallel reactions
            status = true;
-       arPRt[i].feSAr = arfeSAr[i];
+           arfeSAr[i] = arPRt[i].feSAr;
+       }
     }
     return status;
 }
 
 // Returns (modified) specific surface area of the phase;
-//  and (modified) 'parallel reactions' area fractions
+//  and modifies 'parallel reactions' area fractions
 //  (provisionally also modified phase amount constraints)
 //
 double
-TKinMet::GetModFSA( /* double& pPULk, double& pPLLk  */ )
+TKinMet::GetModFSA( double& p_fFact,  double& prTot,
+                    double& pkTot, double& pvTot, double& pPULk, double& pPLLk )
 {
     long int i;
     for( i = 0; i < nPRk; i++ )
-    {  // gets back modified surface area fractions
+    {  // gets back (to Multi) modified surface area fractions
        arPRt[i].feSAr = arfeSAr[i];
     }
-//    pPULk = nPul;
-//    pPLLk = nPll;
+    p_fFact = fFact;
+    pPULk = nPul;
+    pPLLk = nPll;
+    pkTot = kTot;
+    prTot = rTot;
+    pvTot = vTot;
+
     return sSAcor;
 }
 
@@ -436,15 +443,6 @@ TKinMet::UpdateTime( const double Tau, const double dTau )
     kdT = dTau;
     return status;
 }
-
-//long int
-//TKinMet::PTparam()
-//{
-//    int iRet = 0;
-//    iRet = UpdatePT(  );
-//    return iRet;
-//};
-
 
 // calculates the rate per m2 for r-th (xPR-th) parallel reaction
 double
@@ -579,7 +577,7 @@ TKinMet::PTparam( const double TK, const double P )
 
 // Returns sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. );
 //     a primitive correction for specific surface area
-//  Returns mid-interval sSAc value for rate calculation and sets fully-corrected sSAcor value.
+//  Returns the sSAc value for rate calculation and sets fully-corrected sSAcor value.
 //     mMre sophisticated functions to be added here
 double
 TKinMet::CorrSpecSurfArea( const double formFactor, const double formFactor1 = 1.0 )
@@ -790,7 +788,7 @@ TKinMet::SplitMod( )
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//  Implementation of TMWReaKin class (uptake kinetics)
+//  Implementation of TMWReaKin class
 //
 // Initializes uptake rates
 bool
@@ -805,8 +803,6 @@ TMWReaKin::SSReaKinMod()
 {
     return false;
 }
-
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TUptakeKin class (uptake kinetics)
@@ -916,7 +912,7 @@ TUptakeKin::UptakeMod()
             double FTr, DelTr0, Ds, Dl, l, m, xtTr, xtHc, CF;
             double DelTr, Vml, molSum=0., molMinSum=0., molMajSum=0., spMinSum=0, spMajSum=0;
 
-// Calcula<>ting the sums of tot.diss.molal. for all elements relevant to major and minor endmembers
+// Calculating the sums of tot.diss.molal. for all elements relevant to major and minor endmembers
             for( j=0; j<NComp; j++ )
             {
                 i = arxICu[j];
@@ -984,7 +980,6 @@ TUptakeKin::UptakeMod()
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 
 
 /*

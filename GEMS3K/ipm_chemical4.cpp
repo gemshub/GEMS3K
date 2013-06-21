@@ -196,7 +196,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
             phKinMet[k]->UpdatePT( pm.Tc, pm.Pc );
             phKinMet[k]->UpdateTime( pm.kTau, pm.kdT );
             phKinMet[k]->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
-                                    /* pm.PUL[k], pm.PLL[k], */ pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh );
+                                    pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh );
                 return; // using old allocation and setup of the kinetics model
         }
 
@@ -424,7 +424,7 @@ TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
             TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
             myKM->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
-                             /* PUL, PLL, */ pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
+                             pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
             break;
         }
         case KM_PRO_UPT_:
@@ -432,7 +432,7 @@ TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
             myKM->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
-                             /* PUL, PLL, */ pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
+                             pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
@@ -454,14 +454,14 @@ TMulti::KinMetGetModFSA( long int k, const char *kMod )
         {
             ErrorIf( !phKinMet[k], "KinMetGetModFSA: ","Invalid index of phase");
             TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
-            pm.Aalp[k] = myKM->GetModFSA( /* PUL, PLL */ );
+            pm.Aalp[k] = myKM->GetModFSA( pm.PfFact[k], pm.PrT[k], pm.PkT[k], pm.PvT[k], PUL, PLL );
             break;
         }
         case KM_PRO_UPT_:
         {
             ErrorIf( !phKinMet[k], "KinMetGetModFSA: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
-            pm.Aalp[k] = myKM->GetModFSA( /* PUL, PLL */ );
+            pm.Aalp[k] = myKM->GetModFSA( pm.PfFact[k],  pm.PrT[k], pm.PkT[k], pm.PvT[k], PUL, PLL );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:
