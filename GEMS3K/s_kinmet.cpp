@@ -500,6 +500,7 @@ if( rk.xPR != r )     // index of this parallel reaction
        rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
        if( rk.mPR )
            rk.aft = pow( rk.aft, rk.mPR );
+       rk.aft *= -1.;
        break;
     case ATOP_SCHOTT_: // = 2,      Schott et al. 2012 fig. 1e
        if( OmPh )
@@ -623,7 +624,7 @@ TKinMet::RateInit( )
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
     nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot = 3. * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s
+    vTot = 3e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s
 
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
@@ -647,7 +648,7 @@ TKinMet::RateMod( )
     sAPh = sSAcr * mPh;   // corrected surface of the phase.
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate for the phase (mol/s)
-    vTot = 3. * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
+    vTot = 3e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
 
 // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;
@@ -701,24 +702,32 @@ TKinMet::SplitInit( )
     dnPh = -kdT * rTot;
     if( LaPh < -OmgTol ) // dissolution
     {
-//        nPll = nPh + dnPh;
         for(j=0; j<NComp; j++)
         {
             arnxll[j] = nPll*spcfl[j];
-            if( arnxul[j] < arnxll[j] )
-                arnxul[j] = nPul*spcfu[j];
-            //  arnxul[j] = arnxll[j];
+            if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+            {    // not a minor/trace element
+                if( arnxul[j] < arnxll[j] )
+                    arnxul[j] = nPul*spcfu[j];
+            }
+            else {  // minor/trace element
+                arnxul[j] = arnxll[j];
+            }
         }
     }
     else if( LaPh > OmgTol )
     {  // precipitation
-//        nPul = nPh + dnPh;
         for(j=0; j<NComp; j++)
         {
             arnxul[j] = nPul*spcfu[j];
-            if( arnxll[j] > arnxul[j] )
-                arnxll[j] = nPll*spcfl[j];
-            //  arnxll[j] = arnxul[j];
+            if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+            {    // not a minor/trace element
+                if( arnxll[j] > arnxul[j] )
+                    arnxll[j] = nPll*spcfl[j];
+            }
+            else {  // minor/trace element
+                arnxll[j] = arnxul[j];
+            }
         }
     }
 //    else {  // equilibrium
@@ -745,9 +754,14 @@ TKinMet::SplitMod( )
         for(j=0; j<NComp; j++)
         {
             arnxll[j] = nPll*spcfl[j];
-            if( arnxul[j] < arnxll[j] )
-                arnxul[j] = nPul*spcfu[j];
-            //  arnxul[j] = arnxll[j];
+            if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+            {    // not a minor/trace element
+                if( arnxul[j] < arnxll[j] )
+                    arnxul[j] = nPul*spcfu[j];
+            }
+            else {  // minor/trace element
+                arnxul[j] = arnxll[j];
+            }
         }
     }
     else if( LaPh > OmgTol )
@@ -755,9 +769,14 @@ TKinMet::SplitMod( )
         for(j=0; j<NComp; j++)
         {
             arnxul[j] = nPul*spcfu[j];
-            if( arnxll[j] > arnxul[j] )
-                arnxll[j] = nPll*spcfl[j];
-            //  arnxll[j] = arnxul[j];
+            if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
+            {    // not a minor/trace element
+                if( arnxll[j] > arnxul[j] )
+                    arnxll[j] = nPll*spcfl[j];
+            }
+            else {  // minor/trace element
+                arnxll[j] = arnxul[j];
+            }
         }
     }
 //    else {  // equilibrium
@@ -922,14 +941,14 @@ TUptakeKin::UptakeMod()
                     continue; // not a minor/trace element
                 }
                 // Minor/trace component
-                FTr =   arUmpCon[j][0];
-                DelTr0= arUmpCon[j][1];
-                Ds =    arUmpCon[j][2];
-                Dl =    arUmpCon[j][3];
-                l =     arUmpCon[j][4];
-                m =     arUmpCon[j][5];
+                FTr =   arUmpCon[j][0]; // d-less
+                DelTr0= arUmpCon[j][1]; // eq tr fract.coeff.
+                Ds =    arUmpCon[j][2]; // in nm2/s
+                Dl =    arUmpCon[j][3]; // in nm2/s
+                l =     arUmpCon[j][4]; // in nm
+                m =     arUmpCon[j][5]; // d-less
                 // Calculate eq (2.7)
-                Vml = vTot * m * l;
+                Vml = -vTot * m * l * 1e9;  // here vTot is in m/s and Vml is in nm2/s
                 DelTr = DelTr0 * ( Ds + Vml ) / ( Ds + Vml/FTr ); // Effective fractionation coeff.
                 xtTr = DelTr * arElm[i]/molMajSum;  // Frac.coeff. defined rel to sum of major EMs!
                 spcfu[j] = xtTr;
