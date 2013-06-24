@@ -303,6 +303,9 @@ double
 *PrT,    /// new: Total MWR rate (mol/s) for phases - TKinMet output [FI]
 *PkT,    /// new: Total specific MWR rate (mol/m2/s) for phases - TKinMet output [FI]
 *PvT,    /// new: Total one-dimensional MWR surface propagation velocity (m/s) - TKinMet output [FI]
+//  potentially can be extended to all solution phases?
+*emRd,   /// new: output Rd values (partition coefficients) for end members (in uptake kinetics model) [Ls]
+*emDf,   /// new: output Df values (fractionation coeffs.) for end members (in uptake kinetics model) [Ls]
 //
     *YOF,     ///< Surface free energy parameter for phases (J/g) (to accomodate for variable phase composition) [FI]
     *Vol,     ///< DC molar volumes, cm3/mol [L]

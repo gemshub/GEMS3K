@@ -480,6 +480,13 @@ pm.GamFs = 0;
         pm.AscpC   = 0;
         pm.UMpcC   = 0;
         pm.kMod   = 0;
+        // new
+        pm.PfFact  = 0;
+        pm.PrT   = 0;
+        pm.PkT   = 0;
+        pm.PvT   = 0;
+        pm.emRd   = 0;
+        pm.emDf   = 0;
 
 }
 

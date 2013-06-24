@@ -277,7 +277,8 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
         {
              if( k < pm.FIs)
              {
-                TUptakeKin* myPT = new TUptakeKin( &kmd, pm.LsUpt[k*2], pm.N, pm.UMpcC+ku, pm.xICuC+ki, pm.IC_m );
+                TUptakeKin* myPT = new TUptakeKin( &kmd, pm.LsUpt[k*2], pm.N, pm.UMpcC+ku, pm.xICuC+ki,
+                        pm.IC_m, pm.emRd+jb, pm.emDf+jb );
                 myKM = (TKinMet*)myPT;
              }
              break;

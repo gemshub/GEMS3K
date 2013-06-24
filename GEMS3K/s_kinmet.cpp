@@ -808,7 +808,7 @@ TMWReaKin::SSReaKinMod()
 //  Implementation of TUptakeKin class (uptake kinetics)
 //
 TUptakeKin::TUptakeKin(KinMetData *kmd, long int p_numpC, long int p_nElm, double *p_arUmpCon ,
-                       long int *p_arxICu, double *p_arElm ):TKinMet( kmd )
+            long int *p_arxICu, double *p_arElm, double *p_Rdj, double *p_Dfj ):TKinMet( kmd )
 {
     numpC = p_numpC;
 nElm = p_nElm;
@@ -816,6 +816,8 @@ nElm = p_nElm;
 
 arxICu = p_arxICu; // Added 14.06.13 DK
 arElm = p_arElm;
+Rdj = p_Rdj;  // direct access
+Dfj = p_Dfj;  // direct access
 
     alloc_upttabs();
     init_upttabs( p_arUmpCon );
@@ -889,12 +891,23 @@ TUptakeKin::UptKinPTparam( const double TK, const double P )
 bool
 TUptakeKin::UptakeInit()
 {
-    long int j;
+    long int i, j;
+    double molSum = 0., Rd_rest;
 
     for( j=0; j<NComp; j++ )
     {
-        spcfu[j] = arWx[j];
-        spcfl[j] = arWx[j];
+        i = arxICu[j];
+        molSum += arElm[i];
+    }
+
+    for( j=0; j<NComp; j++ )
+    {
+       i = arxICu[j];
+       spcfu[j] = arWx[j];
+       spcfl[j] = arWx[j];
+     Rdj[j] = arWx[j]/arElm[i];
+     Rd_rest = (1.-arWx[j])/(molSum-arElm[i]);
+     Dfj[j] = Rdj[j]/Rd_rest;
     }
     return false;
 }
@@ -909,7 +922,7 @@ TUptakeKin::UptakeMod()
     {
         case  KM_UPT_ENTRAP_: //  = 'E',  //	Unified entrapment model (Thien,Kulik,Curti 2013)
         {
-            double FTr, DelTr0, Ds, Dl, l, m, xtTr, xtHc, CF;
+            double FTr, DelTr0, Ds, Dl, l, m, xtTr, xtHc, CF, Rd_rest;
             double DelTr, Vml, molSum=0., molMinSum=0., molMajSum=0., spMinSum=0, spMajSum=0;
 
 // Calculating the sums of tot.diss.molal. for all elements relevant to major and minor endmembers
@@ -955,12 +968,18 @@ TUptakeKin::UptakeMod()
             CF = (1.-spMinSum)/spMajSum;
             for( j=0; j<NComp; j++ )
             {
+                i = arxICu[j];
                 if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
                 {    // not a minor/trace element
                     xtHc = arWx[j]*CF;
                     spcfu[j] = xtHc;
-                    spcfl[j] = spcfu[j];
+                    spcfl[j] = spcfu[j];   
                 }
+                // Rd and Df calculation (on the bulk basis)
+                Rdj[j] = spcfu[j]/arElm[i];
+                Rd_rest = (1-spcfu[j])/(molSum-arElm[i]);
+                Dfj[j] = Rdj[j]/Rd_rest;
+                // Other ways of Dfj calculation are possible!
             }
             break;
         }

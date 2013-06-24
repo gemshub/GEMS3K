@@ -439,8 +439,8 @@ class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti
     double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
     double *arElm;   /// pointer to total molalities of elements (IC) dissolved in aqueous phase [nElem]
 
-double *Rdj;  /// new: pointer to vector of output Rd values (for t-th time step) [NComp]
-double *Dfj;  /// new: pointer to vector of output Delta(j,rest) values (for t-th time step) [NComp]
+double *Rdj;  /// new: pointer to vector of output Rd values (for t-th time step) [NComp], direct access
+double *Dfj;  /// new: pointer to vector of output Delta(j,rest) values (for t-th time step) [NComp], direct access
 
     // Uptake model output
 
@@ -453,7 +453,7 @@ double *Dfj;  /// new: pointer to vector of output Delta(j,rest) values (for t-t
 
     // Constructor
     TUptakeKin(KinMetData *kmd, long int p_numpC, long int p_nElm, double *p_arUmpCon, long int *p_arxICu,
-               double *p_arElm /*, specific params */ );
+               double *p_arElm, double *p_Rdj, double *p_Dfj /*, specific params */ );
 
     // Destructor
     ~TUptakeKin();
