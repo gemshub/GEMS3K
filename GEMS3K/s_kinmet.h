@@ -148,6 +148,11 @@ struct KinMetData {
     double *arym_;    /// Pointer to molalities of all species in MULTI (provided), read-only
     double *arla_;    /// Pointer to lg activities of all species in MULTI (provided), read-only
 
+double *arxp_;   /// Pointer to amounts of all phases in MULTI (provided), read-only
+double *armp_;   /// Pointer to masses of all phases in MULTI (provided), read-only
+double *arvp_;   /// Pointer to volumes of all phases in MULTI (provided), read-only
+double *arasp_;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided), read-only
+
     double *arnx_;    /// Pointer to mole amounts of phase components (provided) [NComp] read-only
 
     double *arnxul_;  /// Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output
@@ -217,8 +222,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     char  PhasName[MAXPHNAME_];      /// Phase name (for specific built-in models)
 
     long int NComp;   /// Number of components in the phase (nDC in m_phase.h, L1[k] in MULTI)
-    long int nlPh;    /// Number of linked phases (cf. lPh), default 0
-    long int nlPc;    /// TKinMet, TSorpMod: number of parameters per linked phase, default 0.
+    long int nlPh;    /// Number of linked phases (cf. arPhXC), default 0
+    long int nlPc;    /// TKinMet, TSorpMod: number of parameters per linked phase (<=7), default 0.
 
     long int nPRk;     /// number of 'parallel reactions' that affect amount constraints for k-th phase (1, 2, 3, ...), 1 by default
     long int nSkr;     /// number of (aqueous or gaseous) species from other reacting phases involved, 0 by default
@@ -236,6 +241,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double kdT;         /// current time increment, s
     double sSAi;        /// initial specific surface area of the phase (m2/g)
     double nPhi;        /// initial amount of the phase, mol
+    double mPhi;        /// initial mass of the phase, g
+    double vPhi;        /// initial volume of the phase, cm3
 double fFact;       /// new: shape factor (for particles or pores)
                     // all three for the built-in correction of specific surface area and kTot-vTot transformation
     // These values will be corrected after GEM converged at each time step
@@ -278,6 +285,11 @@ double fFact;       /// new: shape factor (for particles or pores)
 
     double *arym;    /// Pointer to molalities of all species in MULTI (provided), read-only
     double *arla;    /// Pointer to lg activities of all species in MULTI (provided), read-only
+
+double *arxp;   /// Pointer to amounts of all phases in MULTI (provided), read-only
+double *armp;   /// Pointer to masses of all phases in MULTI (provided), read-only
+double *arvp;   /// Pointer to volumes of all phases in MULTI (provided), read-only
+double *arasp;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided), read-only
 
     double *arnx;    /// Pointer to mole amounts of phase components (provided) [NComp] read-only
 
@@ -383,7 +395,7 @@ double fFact;       /// new: shape factor (for particles or pores)
 
     // calculates corrected specific surface area
     virtual
-    double CorrSpecSurfArea( const double formFactor, const double formFactor1 );
+    double CorrSpecSurfArea( const double formFactor, const bool toinit );
 
 };
 

@@ -249,6 +249,11 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.arym_ = pm.Y_m;    /// Pointer to molalities of all species in MULTI (provided),
     kmd.arla_ = pm.Y_la;   /// Pointer to lg activities of all species in MULTI (provided)
 
+kmd.arxp_ = pm.XF;    /// Pointer to amounts of all phases in MULTI (provided)
+kmd.armp_ = pm.FWGT;  /// Pointer to masses of all phases in MULTI (provided)
+kmd.arvp_ = pm.FVOL;  /// Pointer to volumes of all phases in MULTI (provided)
+kmd.arasp_ = pm.Aalp;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided)
+
     kmd.arnx_ = pm.X + jb; /// Pointer to mole amounts of phase components (provided) [NComp]
 
     kmd.arnxul_ = pm.DUL+jb;    /// Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output

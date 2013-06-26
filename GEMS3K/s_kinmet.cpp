@@ -46,8 +46,8 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     NComp(kmd->NComp_), nlPh(kmd->nlPh_), nlPc(kmd->nlPc_), nPRk(kmd->nPRk_), nSkr(kmd->nSkr_),
     nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), // numpC(kmd->numpC_), iRes4(kmd->iRes4_),
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
-    IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),  nPhi(kmd->nPh_), mPh(kmd->mPh_),
-    vPh(kmd->vPh_), sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
+    IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),  nPhi(kmd->nPh_), mPhi(kmd->mPh_),
+    vPhi(kmd->vPh_), sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
     sSAi(kmd->sSA_),  sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
     sVp(kmd->sVp_), sGP(kmd->sGP_), nPul(kmd->nPul_), nPll(kmd->nPll_)
 {
@@ -61,6 +61,12 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     arxSKr = kmd->arxSKr_;     // [nSKr]
     arym = kmd->arym_;         // L
     arla = kmd->arla_;         // L
+
+arxp = kmd->arxp_;     // FI
+armp = kmd->armp_;     // FI
+arvp = kmd->arvp_;     // FI
+arasp = kmd->arasp_;   // FI
+
     arnx = kmd->arnx_;         // [NComp]
     arnxul = kmd->arnxul_;     // [NComp]  (DUL)
     arnxll = kmd->arnxll_;     // [NComp]  (DLL)
@@ -90,6 +96,8 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     vTot = 0.;   // Total surface propagation velocity (nm/s)
     fFact = 1.;  // Form factor (particles or pores)
     nPh = nPhi;
+    mPh = mPhi;
+    vPh = vPhi;
     sSA = sSAi;
     sSAcor = sSAi;  // Initialized corrected specific surface area (m2/g)
     sAph_c = sAPh;  // Initialized corrected surface area of the phase (m2/g)
@@ -341,8 +349,9 @@ TKinMet::init_arPRt()
 //}
 
 // Sets new specific surface area and other properties of the phase;
-// also updates 'parallel reactions' area fractions
-// returns false if these parameters in TKinMet instance did not change; true if they did.
+// also updates 'parallel reactions' area fractions; if there is a link to other phase(s),
+// makes respective corrections using the properties of other phase(s).
+// Returns false if these parameters in TKinMet instance did not change; true if they did.
 //
 bool
 TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
@@ -366,6 +375,7 @@ fFact = p_fFact;
     pH = ppHa;
     pe = ppea;
     Eh = pEha;
+
     sAPh = sSA*mPh;             // current surface area of this phase, m2
     OmPh = pow( 10., LaPh );    // phase stability index (activity scale) 10^LaPh_
 
@@ -575,28 +585,88 @@ TKinMet::PTparam( const double TK, const double P )
     return iRet;
 }
 
-// Returns sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. );
-//     a primitive correction for specific surface area
+// Returns a primitive correction for specific surface area, also for the linked phase.
 //  Returns the sSAc value for rate calculation and sets fully-corrected sSAcor value.
 //     mMre sophisticated functions to be added here
 double
-TKinMet::CorrSpecSurfArea( const double formFactor, const double formFactor1 = 1.0 )
+TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
 {
     double sSAc = sSA, r_sSAc;
-    //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
-    // more sophisticated functions to be called here
-    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
-    {
-        sSAc = formFactor * sSAi * pow( formFactor1*nPh/nPhi, 1./3. );
+
+
+    if( nlPh )
+    {   // this is a phase linked to one or more other phases!
+        long int klp, k, xlc, lpcode, i;
+        double lc[8], xpk, mpk, vpk, aspk, sSAlp = 0., mPhlp = 0;
+
+        // Checking if there is a phase linkage
+        for( klp=0; klp<nlPh; klp++ )
+        {
+            k = arPhXC[klp][0];      // index of the phase in MULTI
+            lpcode = arPhXC[klp][1]; // phase linkage code
+            if(nlPc)
+            {
+                for( i=0; i<8; i++ )
+                    lc[i] =0.;
+                for( xlc=0; xlc<nlPc; xlc++ )
+                    lc[xlc] = arlPhc[klp][xlc];
+            }
+            // getting properties of the k-th phase
+            xpk = arxp[k];  // amount, mol
+            mpk = armp[k];  // mass, g
+            vpk = arvp[k];  // volume, cm3
+            aspk = arasp[k]; // sp.surf.area, m2/g
+           // Adding up corrections
+            switch( lpcode )   // selecting linkage type
+            {
+                default:
+                case 0:     // link to phase amount
+                    break;
+                case 1:     // link to (particle/pore) surface area
+                sSAlp += aspk * lc[0]; // coeff. lc[0] is fraction of substrate area
+                                             // lc[1] for correction of formFactor - TBD
+                mPhlp += mpk;
+                    break;
+                case 2:     // link to (particle/pore) volume
+                    break;
+                case 3:     // link to phase mass
+                    break;
+            }
+        }
+        if( toinit )
+            sSAi = 0.;
+        // Correction of SSA of this phase
+        if( LaPh < -OmgTol ) // dissolution  (needs a more flexible check based on Fa stability criterion!
+        {
+            sSAc = formFactor * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), 1./3. );
+        }
+        else if( LaPh > OmgTol ) {  // precipitation
+            sSAc = formFactor * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), -1./3. );
+        }
+        else {  // equilibrium
+            sSAc = sSAcor;   // no change in sSAcor
+        }
+        if( toinit )
+            sSAi = sSAc - sSAlp;  // in this case, sSAi is the initial increment to sp.surf.area
+                                   // due to the initial amount of linked (overgrowth) phase
+        sSAcor = sSAc;
     }
-    else if( LaPh > OmgTol ) {  // precipitation
-        sSAc = formFactor * sSAi * pow( formFactor1*nPhi/nPh, 1./3. );
+    else { // This phase is not linked to other phases
+        //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
+        // more sophisticated functions to be called here
+        if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
+        {
+            sSAc = formFactor * sSAi * pow( mPh/mPhi, 1./3. );
+        }
+        else if( LaPh > OmgTol ) {  // precipitation
+            sSAc = formFactor * sSAi * pow( mPhi/mPh, 1./3. );
+        }
+        else {  // equilibrium
+            sSAc = sSAcor;   // no change in sSAcor
+        }
+//        r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
+        sSAcor = sSAc;
     }
-    else {  // equilibrium
-        sSAc = sSAcor;   // no change in sSAcor
-    }
-    r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
-    sSAcor = sSAc;
 //    return r_sSAc;
     return sSAc;
 }
@@ -614,8 +684,10 @@ TKinMet::RateInit( )
         kTot += kPR;
     }
     nPhi = nPh;         // initial amount of this phase
-    sSA = sSAi;         // initial specific surface area
-    sSAcr = CorrSpecSurfArea( FormFactor );
+    mPhi = mPh;         // initial mass
+    vPhi = vPh;         // initial volume
+    sSAi = sSA;         // initial specific surface area
+    sSAcr = CorrSpecSurfArea( FormFactor, true );
     sAPh = sSAcr * mPh;   // initial surface of the phase
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall initial rate (mol/s)
@@ -642,7 +714,7 @@ TKinMet::RateMod( )
     {
        kTot += PRrateCon( arPRt[r], r ); // adds the specific rate (mol/m2/s) for r-th parallel reaction
     }
-    sSAcr = CorrSpecSurfArea( FormFactor );
+    sSAcr = CorrSpecSurfArea( FormFactor, false );
     sAPh = sSAcr * mPh;   // corrected surface of the phase.
     sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate for the phase (mol/s)
