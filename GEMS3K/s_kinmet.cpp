@@ -634,7 +634,10 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
             }
         }
         if( toinit )
+        {
             sSAi = 0.;
+            mPhi = 0.;
+        }
         // Correction of SSA of this phase
         if( LaPh < -OmgTol ) // dissolution  (needs a more flexible check based on Fa stability criterion!
         {
@@ -647,9 +650,13 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
             sSAc = sSAcor;   // no change in sSAcor
         }
         if( toinit )
+        {
+            mPhi = mPh;
             sSAi = sSAc - sSAlp;  // in this case, sSAi is the initial increment to sp.surf.area
-                                   // due to the initial amount of linked (overgrowth) phase
+        }                           // due to the initial amount of linked (overgrowth) phase
         sSAcor = sSAc;
+        sAPh = sSAcor * (mPh+mPhlp);   // corrected surface of the phase.
+        sAph_c = sAPh;
     }
     else { // This phase is not linked to other phases
         //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
@@ -666,6 +673,8 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
         }
 //        r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
         sSAcor = sSAc;
+        sAPh = sSAcor * mPh;   // corrected surface of the phase.
+        sAph_c = sAPh;
     }
 //    return r_sSAc;
     return sSAc;
@@ -688,8 +697,8 @@ TKinMet::RateInit( )
     vPhi = vPh;         // initial volume
     sSAi = sSA;         // initial specific surface area
     sSAcr = CorrSpecSurfArea( FormFactor, true );
-    sAPh = sSAcr * mPh;   // initial surface of the phase
-    sAph_c = sAPh;
+//    sAPh = sSAcr * mPh;   // initial surface of the phase
+//    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall initial rate (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
@@ -715,8 +724,8 @@ TKinMet::RateMod( )
        kTot += PRrateCon( arPRt[r], r ); // adds the specific rate (mol/m2/s) for r-th parallel reaction
     }
     sSAcr = CorrSpecSurfArea( FormFactor, false );
-    sAPh = sSAcr * mPh;   // corrected surface of the phase.
-    sAph_c = sAPh;
+//    sAPh = sSAcr * mPh;   // corrected surface of the phase.
+//    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate for the phase (mol/s)
     vTot = 3e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
 
