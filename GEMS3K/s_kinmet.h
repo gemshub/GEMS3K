@@ -205,7 +205,7 @@ struct TKinReact
         k,   // dissolution rate constant (corrected for T) in mol/m2/s
         K,   // precipitation rate constant (corrected for T) in mol/m2/s
         rPR,   // rate for this region (output) in mol/s
-        rmol,   // rate for the whole face (output) in mol/s
+        rmol   // rate for the whole face (output) in mol/s
 //        velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
         ;
 };

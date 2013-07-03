@@ -268,7 +268,7 @@ double
   *apConC,  ///< new:!! Collected array of parameters per species involved in activity product terms
           ///  k-> += LsKin[k][0]*LsKin[k][1]*LsKin[k][3];
   *AscpC,   /// new: parameter coefficients of equation for correction of specific surface area k-> += LsKin[k][4]
-  *UMpcC,  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
+  *UMpcC  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
       ;
   //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   ///< mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
