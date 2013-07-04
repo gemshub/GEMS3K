@@ -667,7 +667,7 @@ public:
 
     void CheckMtparam(); // Test load thermodynamic data before
 
-    void set_load (bool *what); // DM 20.05.2013
+    void set_load (bool what); // DM 20.05.2013 - Ensures the re-reading of the system paroperties into GEM IMP data structure
 
 #endif
 

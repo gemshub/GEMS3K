@@ -688,11 +688,26 @@ void GEM_set_MT(
       /// Retrieves Eh of the aqueous solution
       double Get_Eh( );
 
-     /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
-     /// \param xic is IC DBR index
-     /// \param bIC is amount of IC
-      void Set_bIC( const long int xic, const double bIC)
-      {  CNode->bIC[xic] = bIC;  }
+     /// Sets the TK in the work DATABR structure.
+     /// \param TK is the temperature value
+      void Set_TK(const double TK)
+      {  CNode->TK = TK;  }
+
+      /// Sets the P in the work DATABR structure.
+      /// \param P is the presure value
+       void Set_P(const double P)
+       {  CNode->P = P;  }
+
+       /// Sets the mLook Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid).
+       /// \param mLook is 0 or 1
+        void Set_mLook(const double mLook)
+        {  CSD->mLook = mLook;  multi->set_load(false);}
+
+       /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
+       /// \param xic is IC DBR index
+       /// \param bIC is amount of IC
+        void Set_bIC( const long int xic, const double bIC)
+        {  CNode->bIC[xic] = bIC;  }
 
       /// Retrieves the current amount of Independent Component.
       /// \param xic is IC DBR index
@@ -778,6 +793,13 @@ void GEM_set_MT(
       /// \param xPMC is the index of the interaction parameter
       inline void Set_PMc( const double PMc_val, const long int xPMc)
       { pmm->PMc[xPMc] = PMc_val; multi->set_load(false); }
+
+      /// Sets the value of the interation parameter.
+      /// Internal re-scaling to mass of the system is applied.
+      /// These methods can only be used for the current work node (direct access to GEM IPM data)
+      /// \param xDMC is the index of the interaction parameter
+      inline void Set_DMc( const double DMc_val, const long int xDMc)
+      { pmm->PMc[xDMc] = DMc_val; multi->set_load(false); }
 
       /// Retrieves the current total amount of Independent Component.
       /// Also amount of ICs not included into DATABR list can be retrieved.
