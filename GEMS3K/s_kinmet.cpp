@@ -499,8 +499,8 @@ if( rk.xPR != r )     // index of this parallel reaction
    switch( atopc )    // selecting a proper affinity term
    {
     default:
-    case ATOP_CLASSIC_: // = 0,     classic TST affinity term (see .../Doc/Descriptions/KinetParams.pdf)
-       rk.aft = 1. - pow( OmPh, rk.qPR );
+    case ATOP_CLASSIC_: // = 0,     classic TST affinity term (see .../Doc/Descriptions/Kinetics-Uptake.doc)
+       rk.aft = - rk.uPR + 1. - pow( OmPh, rk.qPR );
        if( rk.mPR )
            rk.aft = pow( rk.aft, rk.mPR );
        break;
