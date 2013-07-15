@@ -175,7 +175,7 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon 
 {
     long int j, i, s, lp, pr;
 
-    if( arlPhc ) {
+    if( nlPh && nlPc && arlPhc ) {
 
         for( lp=0; lp<nlPh; lp++)
             for( i=0; i<nlPc; i++)
@@ -187,7 +187,7 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon 
             for( i=0; i<nrpC; i++)
                 arrpCon[pr][i] = p_arrpCon[nrpC*pr+i];
     }
-    if( arapCon ) {
+    if( nSkr && naptC && arapCon ) {
 
         for( j=0; j<nPRk; j++)
             for( s=0; s<nSkr; s++)
@@ -209,7 +209,7 @@ TKinMet::free_kinrtabs()
 {
     long int j, s, lp, pr;
 
-    if( arlPhc )
+    if( arlPhc && nlPh )
     {
       for( lp=0; lp<nlPh; lp++)
       {
@@ -217,7 +217,7 @@ TKinMet::free_kinrtabs()
       }
       delete[]arlPhc;
     }
-    if( arrpCon )
+    if( arrpCon && nPRk )
     {
       for( pr=0; pr<nPRk; pr++)
       {
@@ -225,7 +225,7 @@ TKinMet::free_kinrtabs()
       }
       delete[]arrpCon;
     }
-    if( arapCon )
+    if( nPRk && nSkr && arapCon )
     {
          for(j=0; j<nPRk; j++)
          {
@@ -270,7 +270,8 @@ TKinMet::init_arPRt()
             arPRt[xj].xSKr = arxSKr;
             arPRt[xj].feSAr = arfeSAr[xj];
             arPRt[xj].rpCon = arrpCon[xj];
-            arPRt[xj].apCon = arapCon[xj];
+            if( nSkr && naptC && arapCon )
+                arPRt[xj].apCon = arapCon[xj];
 
             // work data: unpacked rpCon[nrpC]
             if( nrpC >=4 )
@@ -471,17 +472,20 @@ if( rk.xPR != r )     // index of this parallel reaction
 
    // activity (catalysis) product term (f(prod(a))
    rk.cat = 1.;
-   for( xj=0; xj < rk.nSa; xj++ )
+   if( nSkr && naptC && rk.apCon )
    {
-       j = rk.xSKr[xj];
-       aj = arla[j];
-       if( rk.apCon[xj][0] )
-       {
-           ajp = pow( aj, rk.apCon[xj][0] );           // may need extension in future
-       }
-       else
-           ajp = 1.;
-       rk.cat *= ajp;
+        for( xj=0; xj < rk.nSa; xj++ )
+        {
+            j = rk.xSKr[xj];
+            aj = arla[j];
+            if( rk.apCon[xj][0] )
+            {
+                ajp = pow( aj, rk.apCon[xj][0] );           // may need extension in future
+            }
+            else
+                ajp = 1.;
+            rk.cat *= ajp;
+        }
    }
    if( rk.pPR )
        rk.cat = pow( rk.cat, rk.pPR );
