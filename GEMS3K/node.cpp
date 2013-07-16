@@ -2454,6 +2454,37 @@ void TNode::GEM_from_MT(
 
 }
 
+
+// (8c) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
+//     This call is usually preceeding the GEM_run() call
+void TNode::GEM_from_MT(
+  long int  p_NodeHandle,   // Node identification handle
+  long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                    //                                              GEM input output  FMT control
+  double p_TK,     // Temperature T, Kelvin                            +       -      -
+  double p_P,      // Pressure P, Pa                                   +       -      -
+  double *p_bIC   // Bulk mole amounts of IC [nICb]                   +       -      -
+ )
+ {
+     long int ii;
+     bool useSimplex = false;
+
+     CNode->NodeHandle = p_NodeHandle;
+     CNode->NodeStatusCH = p_NodeStatusCH;
+     CNode->TK = p_TK;
+     CNode->P = p_P;
+   // Checking if no-LPP IA is Ok
+      for( ii=0; ii<CSD->nICb; ii++ )
+      {  //  SD 11/02/05 for test
+         //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
+          //     useSimplex = true;
+        CNode->bIC[ii] = p_bIC[ii];
+      }
+      if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
+        CNode->NodeStatusCH = NEED_GEM_AIA;
+      // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
+}
+
 #endif
 //-----------------------End of node.cpp--------------------------
 

@@ -148,7 +148,7 @@ long int TRWArrays::findFld( const char *Name )
  #else
      value.strip();
  #endif
-     ff  << "\'" << value.c_str() << "\'" << " ";
+     ff  << "\'" << value.c_str() << "\'" /*<< " "*/; // commented out (space after text conflicts with gemsfit2 read-in) DM 16.07.2013
    }
  }
 
