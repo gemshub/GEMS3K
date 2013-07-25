@@ -807,6 +807,9 @@ void GEM_set_MT(
       inline void Set_PMc( const double PMc_val, const long int xPMc)
       { pmm->PMc[xPMc] = PMc_val; multi->set_load(false); }
 
+      inline void Get_PMc( double &PMc_val, const long int xPMc)
+      {  PMc_val = pmm->PMc[xPMc]; multi->set_load(false); }
+
       /// Sets the value of the interation parameter.
       /// Internal re-scaling to mass of the system is applied.
       /// These methods can only be used for the current work node (direct access to GEM IPM data)
