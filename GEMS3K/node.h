@@ -295,7 +295,9 @@ void GEM_from_MT(
                   //                                              GEM input output  FMT control
  double p_TK,     ///< Temperature T, Kelvin                            +       -      -
  double p_P,      ///< Pressure P, Pa                                   +       -      -
- double *p_bIC   ///< Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_bIC,   ///< Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll    ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
  );
 
 

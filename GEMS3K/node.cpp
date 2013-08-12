@@ -706,7 +706,6 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
    {
     long int xTP, jj;
-    double G0;
 
     if( check_TP( TK, P ) == false )
         return 7777777.;
@@ -2457,14 +2456,15 @@ void TNode::GEM_from_MT(
 
 // (8c) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
 //     This call is usually preceeding the GEM_run() call
-void TNode::GEM_from_MT(
-  long int  p_NodeHandle,   // Node identification handle
+void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
   long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
                     //                                              GEM input output  FMT control
   double p_TK,     // Temperature T, Kelvin                            +       -      -
   double p_P,      // Pressure P, Pa                                   +       -      -
-  double *p_bIC   // Bulk mole amounts of IC [nICb]                   +       -      -
- )
+  double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_dll   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+)
  {
      long int ii;
      bool useSimplex = false;
@@ -2479,6 +2479,11 @@ void TNode::GEM_from_MT(
          //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
           //     useSimplex = true;
         CNode->bIC[ii] = p_bIC[ii];
+      }
+      for( ii=0; ii<CSD->nDCb; ii++ )
+      {
+        CNode->dul[ii] = p_dul[ii];
+        CNode->dll[ii] = p_dll[ii];
       }
       if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
         CNode->NodeStatusCH = NEED_GEM_AIA;
