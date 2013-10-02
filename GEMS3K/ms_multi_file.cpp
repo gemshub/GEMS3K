@@ -854,7 +854,7 @@ void TMulti::from_file( GemDataStream& ff )
       pm.SitFr = new double[LsSitSum];
       pm.DQFc = new double[DQFcSum];
       pm.rcpc = new double[rcpcSum];
-      pm.PhLin = new long int[PhLinSum];
+      pm.PhLin = new long int[PhLinSum/2][2];
       pm.lPhc = new double[lPhcSum];
 
 #else

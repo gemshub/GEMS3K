@@ -265,6 +265,42 @@ SC_3LM = '3', SC_NOT_USED = 'N',
    PI_DEN=0, PI_CD0, PI_CDB, PI_P1, PI_P2, PI_P3
 };
 
+enum ph_kinmet_controls { /// TKinMet: codes to control kinetic rate models
+
+    KM_UNDEF = 'N',       /// not defined, no account for
+KinProCode = 2,
+    KM_PRO_MWR = 'M',     /// Kinetics of generic dissolution/precipitation (no uptake, ionex, adsorption)
+    KM_PRO_UPT = 'U',     /// Kinetics of uptake/entrapment (of minor/trace element) into solid solution
+    KM_PRO_IEX = 'X',     /// Kinetics of ion exchange (clays, C-S-H, zeolites, ...)
+    KM_PRO_ADS = 'A',     /// Kinetics of adsorption (on MWI), redox
+    KM_PRO_NUPR = 'P',    /// Kinetics of nucleation and precipitation
+KinModCode = 3,
+    KM_MOD_TST = 'T',     /// Generic TST dissolution/precipitation model following Shott ea 2012
+    KM_MOD_PAL = 'P',     /// Dissolution/precipitation model of the form (Palandri 2004)
+    KM_MOD_WOL = 'W',     /// Carbonate growth model following (Wolthers 2012)
+    KM_MOD_NUGR = 'U',    /// Mineral nucleation and growth model with nuclei/particle size distr. (TBD)
+KinSorpCode = 4,
+    KM_UPT_ENTRAP = 'E',  ///	Unified entrapment model (Thien,Kulik,Curti 2012)
+    KM_UPT_UPDP = 'M',    ///	DePaolo (2011) uptake kinetics model
+    KM_UPT_SEMO = 'G',    ///  Growth (surface) entrapment model (Watson 2004)
+    KM_IEX_FAST = 'F',    ///  Fast ion exchange kinetics (e.g. montmorillonite, CSH)
+    KM_IEX_SLOW = 'L',    ///  Slow ion exchange kinetics (e.g. illite, zeolites)
+    KM_ADS_INHIB = 'I',   ///  Adsorption inhibition
+    KM_NUCL_SSMP  = 'P',  ///  Solid solution nucleation model (Prieto 2013)
+KinLinkCode = 5,
+    KM_LNK_SURF = 'S',    ///   Link to (fraction of) solid substrate surface
+    KM_LNK_PVOL = 'P',    ///    Link to (fraction of) solid substrate (pore) volume
+    KM_LNK_MASS = 'M',    ///	Link to (fraction of) solid substrate mass
+KinSizedCode = 6,
+    KM_SIZED_UNI = 'U',   /// 	Uniform particle/pore size distribution
+    KM_SIZED_BIN = 'B',   /// 	Binodal particle/pore size distribution
+    KM_SIZED_FUN = 'F',   ///    Empirical distribution function
+KinResCode = 7,
+    KM_RES_SURF = 'A',    /// surface-scaled rate model (k in mol/m2/s)
+    KM_RES_PVS = 'V'      /// pore-volume-scaled model (k in mol/m3/s)
+
+};
+
 typedef enum { // Units of measurement of quantities and concentrations
     // amounts of components and phases
     QUAN_MKMOL = 'Y',  QUAN_MMOL = 'h',  QUAN_MOL = 'M', // MOLES
