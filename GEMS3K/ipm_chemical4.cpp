@@ -176,8 +176,8 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.KinSizedCod_ = kmod[4];  /// Type of particle/pore size distribution and A_s correction, see enum kinmet_controls
     kmd.KinResCod_   = kmod[5];  /// Reserved model control code
 
-    memcpy(kmd.PhasNam_, pm.SF[k], MAXPHNAME_);      /// Phase name (for specific built-in models)
-    kmd.PhasNam_[MAXPHNAME-1]='\0';
+    memcpy(kmd.PhasNam_, pm.SF[k]+MAXSYMB_, MAXPHNAME_); /// Phase name (for specific built-in models)
+    kmd.PhasNam_[MAXPHNAME]='\0';
 
     kmd.NComp_ = pm.L1[k];      /// Number of components in the phase (nDC in m_phase.h, L1[k] in MULTI)
     kmd.nlPh_ = pm.LsPhl[k*2];  /// Number of linked phases (cf. lPh), default 0

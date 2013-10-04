@@ -28,7 +28,7 @@
 
 #include <vector>
 
-const int   MAXDCNAME_ =      16, MAXPHNAME_ = 16;   // see also v_mod.h
+const int MAXDCNAME_ = 16, MAXPHNAME_ = 16, MAXSYMB_ = 4;   // see also v_mod.h
 
 enum kinmet_controls {   /// Re-declared codes to control kinetic rate models (see also m_phase.h)
 
@@ -88,7 +88,7 @@ struct KinMetData {
     char  KinLinkCod_;  /// Type code of metastability links of this phase to other phases, see enum kinmet_controls
     char  KinSizedCod_; /// Type of particle/pore size distribution and A_s correction, see enum kinmet_controls
     char  KinResCod_;   /// Reserved model control code
-    char  PhasNam_[MAXPHNAME_];      /// Phase name (for specific built-in models)
+    char  PhasNam_[MAXPHNAME_+1];      /// Phase name (for specific built-in models)
 
     long int NComp_;   /// Number of components in the phase (nDC in m_phase.h, L1[k] in MULTI)
     long int nlPh_;    /// Number of linked phases (cf. lPh), default 0
@@ -219,7 +219,7 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     char  KinLinkCode;   /// Type code of metastability links of this phase to other phases, see enum kinmet_controls
     char  KinSizedCode; /// Type of particle/pore size distribution and A_s correction, see enum kinmet_controls
     char  KinResCode;   /// Reserved model control code
-    char  PhasName[MAXPHNAME_];      /// Phase name (for specific built-in models)
+    char  PhasName[MAXPHNAME_+1];      /// Phase name (for specific built-in models)
 
     long int NComp;   /// Number of components in the phase (nDC in m_phase.h, L1[k] in MULTI)
     long int nlPh;    /// Number of linked phases (cf. arPhXC), default 0

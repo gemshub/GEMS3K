@@ -51,6 +51,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     sSAi(kmd->sSA_),  sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
     sVp(kmd->sVp_), sGP(kmd->sGP_), nPul(kmd->nPul_), nPll(kmd->nPll_)
 {
+    memcpy( PhasName, kmd->PhasNam_, MAXPHNAME_+1);
     // pointer assignments
     arfeSAr = kmd->arfeSAr_;   // [nPRk]
     arAscp = kmd->arAscp_;     // [nAscC]
@@ -175,20 +176,20 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon 
 {
     long int j, i, s, lp, pr;
 
-    if( nlPh && nlPc && arlPhc ) {
-
+    if( nlPh && nlPc && arlPhc )
+    {
         for( lp=0; lp<nlPh; lp++)
             for( i=0; i<nlPc; i++)
                 arlPhc[lp][i] = p_arlPhc[nlPc*lp+i];
     }
-    if( arrpCon ) {
-
+    if( arrpCon )
+    {
         for( pr=0; pr<nPRk; pr++)
             for( i=0; i<nrpC; i++)
                 arrpCon[pr][i] = p_arrpCon[nrpC*pr+i];
     }
-    if( nSkr && naptC && arapCon ) {
-
+    if( nPRk && nSkr && naptC )
+    {
         for( j=0; j<nPRk; j++)
             for( s=0; s<nSkr; s++)
                 for( i=0; i<naptC; i++)
@@ -225,7 +226,7 @@ TKinMet::free_kinrtabs()
       }
       delete[]arrpCon;
     }
-    if( nPRk && nSkr && arapCon )
+    if( nPRk && nSkr && naptC )
     {
          for(j=0; j<nPRk; j++)
          {
@@ -270,9 +271,9 @@ TKinMet::init_arPRt()
             arPRt[xj].xSKr = arxSKr;
             arPRt[xj].feSAr = arfeSAr[xj];
             arPRt[xj].rpCon = arrpCon[xj];
-            if( nSkr && naptC && arapCon )
+            if( nSkr && naptC )
                 arPRt[xj].apCon = arapCon[xj];
-
+            else arPRt[xj].apCon = NULL;
             // work data: unpacked rpCon[nrpC]
             if( nrpC >=4 )
             {
@@ -460,7 +461,7 @@ double
 TKinMet::PRrateCon( TKinReact &rk, const long int r )
 {
    long int xj, j, atopc, facex;
-   double atp, ajp, aj, kr;
+   double atp, ajp, aj, kr, bc;
 
 //cout << "kTau: " << kTau << " k: " << rk.k << " K: " << rk.K << " Omg: " << OmPh <<
 //        " nPh: " << nPh << " mPh: " << mPh << endl;
@@ -477,14 +478,13 @@ if( rk.xPR != r )     // index of this parallel reaction
         for( xj=0; xj < rk.nSa; xj++ )
         {
             j = rk.xSKr[xj];
-            aj = arla[j];
-            if( rk.apCon[xj][0] )
+            bc = rk.apCon[xj][0];
+            if( bc )
             {
-                ajp = pow( aj, rk.apCon[xj][0] );           // may need extension in future
+                aj = pow( 10., arla[j] );  // bugfix 4.10.2013 DK
+                ajp = pow( aj, bc );
+                rk.cat *= ajp;             // may need extension in future
             }
-            else
-                ajp = 1.;
-            rk.cat *= ajp;
         }
    }
    if( rk.pPR )
