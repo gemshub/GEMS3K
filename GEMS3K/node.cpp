@@ -49,7 +49,6 @@ const double bar_to_Pa = 1e5,
                m3_to_cm3 = 1e6,
                kg_to_g = 1e3;
 
-
 double TNode::get_Ppa_sat( double Tk )
 {
 	long int i=0;
@@ -461,15 +460,15 @@ if( binary_f )
         {
                GemDataStream in_br(dbr_file, ios::in|ios::binary);
                databr_from_file(in_br);
-         }
-         else
-         {   fstream in_br(dbr_file.c_str(), ios::in );
+        }
+        else
+        {   fstream in_br(dbr_file.c_str(), ios::in );
                    ErrorIf( !in_br.good() , datachbr_fn.c_str(),
                       "DBR_DAT fileopen error");
                  databr_from_text_file(in_br);
-            }
-          curPath = "";
-          dbr_file_name = dbr_file;
+        }
+        curPath = "";
+        dbr_file_name = dbr_file;
 
    // Reading DBR_DAT files from dbrfiles_lst_name
    // only for TNodeArray class
@@ -699,6 +698,32 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     }
     return ndx;
   }
+
+#ifdef IPMGEMPLUGIN
+// used in GEMSFIT only
+  //Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
+  //in the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
+  // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
+   double TNode::Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 )
+   {
+    long int xTP, jj;
+
+    if( check_TP( TK, P ) == false )
+        return 7777777.;
+
+    xTP = check_grid_TP( TK, P );
+    jj =  xCH * gridTP();
+
+    if( xTP >= 0 )
+    {
+       CSD->G0[ jj + xTP ]=new_G0;
+       multi->set_load(false);
+    }
+    else
+        cout << "ERROR P and TK pair not present in the DATACH";
+      return 0;
+   }
+#endif
 
   //Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
   //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
@@ -1234,6 +1259,24 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
      return m_tot;
   }
 
+  // Added 31.01.2013 DM
+  // Retrives pH of the aqueous solution
+  double TNode::Get_pH( )
+  {
+      double p_pH;
+      p_pH = CNode->pH;
+      return p_pH;
+  }
+
+  // Added 12.06.2013 DM
+  // Retrives Eh of the aqueous solution
+  double TNode::Get_Eh( )
+  {
+      double p_Eh;
+      p_Eh = CNode->Eh;
+      return p_Eh;
+  }
+
   // Access to equilibrium properties of phases and components using DATACH indexation
 
   // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index)
@@ -1247,55 +1290,68 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 	 //double Mj0 = DC_G0( xCH, CNode->P, CNode->TK,  true );
 	 //return (Mj-Mj0)/2.302585093;
 	 return 	pow(10.0,pmm->Y_la[xCH]);
-  }
+  } 
 
-    
-
-    
-  // Functions needed by GEMSFIT. Setting parameters for activity coefficient models.
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Functions needed by GEMSFIT. Setting parameters for activity coefficient models.
     //     aIPx     = pmp->IPx+ipb;   // Pointer to list of indexes of non-zero interaction parameters for non-ideal solutions
     //     aIPc     = pmp->PMc+jpb;   // Interaction parameter coefficients f(TP) -> NPar x NPcoef
     //     aDCc     = pmp->DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
-    //     NComp    = pmp->L1[k];          // Number of components in the phase
-    //     NPar     = pmp->LsMod[k*3];      // Number of interaction parameters
+    //     NComp    = pmp->L1[k];         // Number of components in the phase
+    //     NPar     = pmp->LsMod[k*3];    // Number of interaction parameters
     //     NPcoef   = pmp->LsMod[k*3+2];  // and number of coefs per parameter in PMc table
     //     MaxOrd   = pmp->LsMod[k*3+1];  // max. parameter order (cols in IPx)
-    //     NP_DC    = pmp->LsMdc[k]; // Number of non-ideality coeffs per one DC in multicomponent phase
+    //     NP_DC    = pmp->LsMdc[k*3];    // Number of non-ideality coeffs per one DC in multicomponent phase
+    //     NsSit    = pmp->LsMdc[k*3+1];  // Number of sublattices considered in a multisite mixing model (0 if no sublattices considered)
+    //     NsMoi    = pmp->LsMdc[k*3+2];  // Total number of moieties considered in sublattice phase model (0 if no sublattices considered)
   
-  // IN: index_phase -> index of phase of interest | OUT: start index of phase in aIPx, aIPc and aDCc arrays.   	
-  void TNode::Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Retrieves indices of origin in TSolMod composite arrays for a phase of interest index_phase.
+  // Parameters IN: index_phase is the DCH index of phase of interest.
+  // Parameters OUT: ipaIPx, ipaIPc, ipaDCc are origin indices of this phase in aIPx, aIPc and aDCc arrays, respectively.
+  void TNode::Get_IPc_IPx_DCc_indices( long int &ipaIPx, long int &ipaIPc, long int &ipaDCc, const long int &index_phase )
   {
-    long ip_IPx=0; long ip_IPc=0; long ip_DCc=0;
-    for( int k=0;k<index_phase; k++ ) 
+    long int ip_IPx=0; long int ip_IPc=0; long int ip_DCc=0;
+
+    for( int k=0; k < index_phase; k++ )
     {
-        ip_IPx          += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
-        ip_IPc          += pmm->LsMod[k*3] * pmm->LsMod[k*3+2];
-        ip_DCc          += pmm->LsMdc[k] * pmm->L1[k];
+        ip_IPx  += pmm->LsMod[k*3] * pmm->LsMod[k*3+1];
+        ip_IPc  += pmm->LsMod[k*3] * pmm->LsMod[k*3+2];
+        ip_DCc  += pmm->LsMdc[k] * pmm->L1[k];
     }
-    index_phase_aIPx = ip_IPx;
-    index_phase_aIPc = ip_IPc;
-    index_phase_aDCc = ip_DCc;
+    ipaIPx = ip_IPx;
+    ipaIPc = ip_IPc;
+    ipaDCc = ip_DCc;
   }
 
-  // IN: index_phase -> index of phase of interest | OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC. 
-  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Retrieves dimensions of TSolMod arrays for a phase of interest index_phase.
+  // Parameters IN: index_phase is the DCH index of phase of interest.
+  // Parameters OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC, are number of interaction parameters, number of coefficients per parameter,
+  // maximum parameter order (i.e. row length in aIPx), number of components in the phase, and number of coefficients per component, respectively.
+  void TNode::Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long int &NPar, long int &NPcoef, long int &MaxOrd,
+                                                   long int &NComp, long int &NP_DC, const long int &index_phase )
   {
     NPar   = pmm->LsMod[(index_phase)*3];
     NPcoef = pmm->LsMod[(index_phase)*3+2];
     MaxOrd = pmm->LsMod[(index_phase)*3+1];
     NComp  = pmm->L1[(index_phase)];
-    NP_DC  = pmm->LsMdc[(index_phase)];
+    NP_DC  = pmm->LsMdc[(index_phase)*3];
   }
 
-  void TNode::Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Sets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
+  // Parameters IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
+  //    of the aIPc array; index_phase is the DCH index of phase of interest.
+  void TNode::Set_aIPc ( const vector<double> aIPc, const long int &ipaIPc, const long int &index_phase )
   { 
-    int rc, NPar, NPcoef;
+    long int rc, NPar, NPcoef;
     NPar = pmm->LsMod[ index_phase * 3 ];
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
     if( aIPc.size() != (NPar*NPcoef) )
     {
 		cout<<endl;
-		cout<<" in node.cpp (TNode::Set_aIPc()): vector aIPc does not have the dimensions specified by the GEMS3K input file (NPar*NPcoef) !!!! "<<endl;
+        cout<<" TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! "<<endl;
 		cout<<" aIPc.size() = "<<aIPc.size()<<", NPar*NPcoef = "<<NPar*NPcoef<<endl;
 		cout<<" bailing out now ... "<<endl;
 		cout<<endl;
@@ -1303,13 +1359,17 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     }
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
     {
-        (pmm->PMc[ index_phase_aIPc + rc ]) = aIPc[ rc ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+        (pmm->PMc[ ipaIPc + rc ]) = aIPc[ rc ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
     }
   }
 
-  void TNode::Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Gets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
+  // Parameters IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
+  // Parameters OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
+  void TNode::Get_aIPc ( vector<double> &aIPc, const long int &ipaIPc, const long int &index_phase )
   { 
-    int i; long NPar, NPcoef;
+    long int i, NPar, NPcoef;
     NPar   = pmm->LsMod[ index_phase * 3 ];
     NPcoef = pmm->LsMod[ index_phase * 3 + 2 ];
     aIPc.clear();
@@ -1317,14 +1377,18 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     i = 0;
     while (i<(NPar*NPcoef))
     {
-      aIPc[ i ]   = pmm->PMc[ index_phase_aIPc + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aIPc[ i ]   = pmm->PMc[ ipaIPc + i ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Get_aIPx ( vector<long> &aIPx, const long &index_phase_aIPx, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Gets values of the aIPx list array (of indexes of interacting moieties or components) for the solution phase of interest index_phase.
+  // Parameters IN: ipaIPx is the origin index (of the first element) of the aIPx array; index_phase is the DCH index of phase of interest.
+  // Parameters OUT: returns vaIPx - vector with the contents of the aIPx sub-array.
+  void TNode::Get_aIPx ( vector<long int> &aIPx, const long int &ipaIPx, const long int &index_phase )
   {
-    int i; long NPar, MaxOrd;
+    long int i, NPar, MaxOrd;
     NPar   = pmm->LsMod[ index_phase * 3 ];
     MaxOrd = pmm->LsMod[ index_phase * 3 + 1 ];
     aIPx.clear();
@@ -1332,20 +1396,24 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     i = 0;
     while (i<(NPar*MaxOrd))
     {
-      aIPx[ i ]   = pmm->IPx[ index_phase_aIPx + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aIPx[ i ]   = pmm->IPx[ ipaIPx + i];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Set_aDCc( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Sets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
+  // Parameters IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
+  //    of the aDCc array; index_phase is the DCH index of phase of interest.
+  void TNode::Set_aDCc( const vector<double> aDCc, const long int &ipaDCc, const long int &index_phase )
   { 
-    int rc, NComp, NP_DC;
+    long int rc, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
     NP_DC = pmm->LsMdc[ index_phase ];
     if( aDCc.size() != (NComp*NP_DC) )
     {
 		cout<<endl;
-		cout<<" node class: vector aDCc does not have the dimensions specified by the GEMS3K input file (NComp*NP_DC) !!!! "<<endl;
+        cout<<"TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "<<endl;
 		cout<<" aDCc.size() = "<<aDCc.size()<<", NComp*NP_DC = "<<NComp*NP_DC<<endl;
 		cout<<" bailing out now ... "<<endl;
 		cout<<endl;
@@ -1353,13 +1421,17 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     }
     for ( rc=0;rc<(NComp*NP_DC);rc++ )
     {
-        (pmm->DMc[ index_phase_aDCc + rc ]) = aDCc[ rc ];		// end-member param coeffs, NComp * NP_DC
+        (pmm->DMc[ ipaDCc + rc ]) = aDCc[ rc ];		// end-member param coeffs, NComp * NP_DC
     }
   }
 
-  void TNode::Get_aDCc( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase )
+  // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+  // Gets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
+  // Parameters IN: ipaDCc is the origin index (of the first element) of the aDCc array; index_phase is the DCH index of phase of interest.
+  // Parameters OUT: returns vaDCc - vector with the contents of the aDCc sub-array.
+  void TNode::Get_aDCc( vector<double> &aDCc, const long int &index_phase_aDCc, const long int &index_phase )
   {
-    int i; long NComp, NP_DC;
+    long int i, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
     NP_DC = pmm->LsMdc[ index_phase ];
     aDCc.clear();
@@ -1367,25 +1439,27 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
     i = 0;
     while (i<(NComp*NP_DC))
     {
-      aDCc[ i ]   = pmm->DMc[ index_phase_aDCc + i ];		// pointer to list of indices of interaction param coeffs, NPar * MaxOrd
+      aDCc[ i ]   = pmm->DMc[ index_phase_aDCc + i ];  // pointer to list of indices of interaction param coeffs, NPar * MaxOrd
       i++;
     }
   }
 
-  void TNode::Set_Tk( double &T_k )
+  // direct access to set temperature in the current (work) node
+  void TNode::Set_Tk( const double &T_k )
   {
       CNode->TK = T_k;
   }
 
-  void TNode::Set_Pb( double &P_b )
+  // direct access to set pressure (given in bar) in the current (work) node
+  void TNode::Set_Pb( const double &P_b )
   {
-      CNode->P = P_b;
+      CNode->P = P_b * 1e5;  // in the node, pressure is given in Pa (see databr.h)!
   }
 
 
 
   // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its
-  // phase directly from GEM IPM work structure.Also activity of a DC not included into 
+  // phase directly from the GEM IPM work structure. Also activity of a DC not included into
   // DATABR list can be retrieved. For aqueous species, molality is returned; for gas species, 
   // partial pressure; for surface complexes - density in mol/m2; for species in other phases - 
   // mole fraction. If DC has zero amount, the function returns 0.0. 
@@ -2379,6 +2453,43 @@ void TNode::GEM_from_MT(
 //            CNode->bIC[ii] += p_xDC[jj] * nodeCH_A( jj, ii );
 //   }
 
+}
+
+
+// (8c) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
+//     This call is usually preceeding the GEM_run() call
+void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
+  long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                    //                                              GEM input output  FMT control
+  double p_TK,     // Temperature T, Kelvin                            +       -      -
+  double p_P,      // Pressure P, Pa                                   +       -      -
+  double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_dll   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+)
+ {
+     long int ii;
+     bool useSimplex = false;
+
+     CNode->NodeHandle = p_NodeHandle;
+     CNode->NodeStatusCH = p_NodeStatusCH;
+     CNode->TK = p_TK;
+     CNode->P = p_P;
+   // Checking if no-LPP IA is Ok
+      for( ii=0; ii<CSD->nICb; ii++ )
+      {  //  SD 11/02/05 for test
+         //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
+          //     useSimplex = true;
+        CNode->bIC[ii] = p_bIC[ii];
+      }
+      for( ii=0; ii<CSD->nDCb; ii++ )
+      {
+        CNode->dul[ii] = p_dul[ii];
+        CNode->dll[ii] = p_dll[ii];
+      }
+      if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
+        CNode->NodeStatusCH = NEED_GEM_AIA;
+      // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
 }
 
 #endif

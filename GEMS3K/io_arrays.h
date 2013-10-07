@@ -24,6 +24,7 @@
 //-------------------------------------------------------------------
 
 #include  <fstream>
+#include <vector>
 
 #include "verror.h"
 
@@ -37,7 +38,30 @@ struct outField /// Internal descriptions of fields
 
 };
 
-class TRWArrays  /// Basic class for read/write fields of structured data
+enum FormatType {
+        ft_Value=0,   // value
+        ft_F,   // command F
+        ft_L,   // command L
+        ft_R,   // command R
+        ft_Internal
+};
+
+struct IOJFormat /// Internal descriptions of output/input formats with JSON notation
+ {
+   long int index;    ///< index formatted value into reading array
+   long int type;  ///< type of formatted value { F, L, R, ...}
+   gstring format; ///< string with formatted data for different type
+
+   IOJFormat( char aType, int aIndex, gstring aFormat ):
+               type(aType), index(aIndex), format(aFormat)
+       {}
+
+   IOJFormat( const IOJFormat& data ):
+       type(data.type), index(data.index), format(data.format)
+       { }
+};
+
+class TRWArrays  /// Basic class for red/write fields of structure
  {
  protected:
     fstream& ff;
@@ -136,6 +160,12 @@ public:
     /// \param brief_mode - Do not write data items that contain only default values
     void writeField(long f_num, double value, bool with_comments, bool brief_mode  );
 
+    /// Writes string field to a text file.
+    /// <flds[f_num].name> value
+    /// \param with_comments - Write files with comments for all data entries
+    /// \param brief_mode - Do not write data items that contain only default values
+    void writeField(long f_num, gstring value, bool with_comments, bool brief_mode  );
+
     /// Writes array to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
@@ -168,6 +198,13 @@ public:
     void writeArrayF( long f_num, char* arr,  long int size, long int l_size,
                     bool with_comments = false, bool brief_mode = false );
 
+    /// Writes double vector to a text file.
+    /// <flds[f_num].name> arr[0] ... arr[size-1]
+    /// \param l_size - Setup number of elements in line
+    /// \param with_comments - Write files with comments for all data entries
+    /// \param brief_mode - Do not write data items that contain only default values
+    void writeArray( long f_num,  vector<double> arr, long int l_size=0,
+                     bool with_comments = false, bool brief_mode = false);
 
     /// Constructor
     TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):
@@ -224,8 +261,13 @@ public:
     inline void readValue(float& val);
     /// Reads value from a text file.
     inline void readValue(double& val);
+    /// Reads format value from a text file.
+    long int readFormatValue(double& val, gstring& format);
+    bool  readFormat( gstring& format );
+
     inline void setCurrentArray( const char* name, long int size );
  
+
  public:
 
     /// Constructor
@@ -238,6 +280,7 @@ public:
 
     long int findFld( const char *Name ); ///< Find field by name
     long int findNext();  ///< Read next name from file and find in fields list
+    long int findNextNotAll();  ///< Read next name from file and find in fields list (if doesnot find read next name)
     void  readNext( const char* label); ///< Read next name from file
 
     gstring testRead();   ///< Test for reading all fields must be always present in the file
@@ -255,6 +298,14 @@ public:
     /// Reads array from a text file.
     void readArray( const char *name, char* arr, long int size, long int el_size );
 
+    /// Reads string from a text file.
+    void readArray( const char* name, gstring &arr, long int el_size=198 );
+    /// Reads double vector from a text file.
+    void readArray( const char* name, vector<double> arr );
+
+
+    void readFormatArray( const char* name, double* arr,
+        long int size, vector<IOJFormat>& vFormats );
 };
 
 //=============================================================================

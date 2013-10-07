@@ -287,6 +287,21 @@ void GEM_from_MT(
  double *p_gam    ///< DC activity coefficients [nDCb] - old primal s.   +      -      -
 );
 
+/// (8c) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
+///     This call is usually preceeding the GEM_run() call
+void GEM_from_MT(
+ long int  p_NodeHandle,   ///< Node identification handle
+ long int  p_NodeStatusCH, ///< Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                  //                                              GEM input output  FMT control
+ double p_TK,     ///< Temperature T, Kelvin                            +       -      -
+ double p_P,      ///< Pressure P, Pa                                   +       -      -
+ double *p_bIC,   ///< Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll    ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
+ );
+
+
+
 /// (9) Optional, for passing the current mass transport iteration information into the work
 /// DATABR structure (e.g. \ for using it in tracing/debugging or in writing DBR files for nodes)
 void GEM_set_MT(
@@ -395,6 +410,12 @@ void GEM_set_MT(
                             /// usage on the level of TNodearray is not recommended !
     {        return CNode;     }
 
+#ifdef IPMGEMPLUGIN
+
+    TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
+   {        return multi;     }
+
+#endif
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
     {  return CNode->TK-C_to_K;   }
@@ -427,6 +448,11 @@ void GEM_set_MT(
    /// Returns DCH index of DC given the DC Name string
    /// or -1 if no such name was found in the DATACH DC name list
    long int DC_name_to_xCH( const char *Name );
+
+   /// Returns DCH index of DC given the DC Name string
+   /// or -1 if no such name was found in the DATACH DC name list
+   char* xCH_to_DC_name( int xCH )
+   {return CSD->DCNL[xCH];}
 
    /// Returns DCH index of Phase given the Phase Name string
    /// or -1 if no such name was found in the DATACH Phase name list
@@ -527,14 +553,23 @@ void GEM_set_MT(
 	 /// Returns index of Tk point - Psat point pair 
 	 long int get_grid_index_Ppa_sat( double Tk );
 
-    /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
-    /// from the DATACH structure.
+    /// Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
+    /// in the DATACH structure.
      /// \param xCH is the DC DCH index
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \param norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
-     /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true);
+     /// \return 0
+     double Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 );
+
+     /// Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
+     /// from the DATACH structure.
+      /// \param xCH is the DC DCH index
+      /// \param P pressure, Pa
+      /// \param TK temperature, Kelvin
+      /// \param new_G0 in J/mol;
+      /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
+      double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true);
 
      /// Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
      /// from the DATACH structure.
@@ -662,11 +697,27 @@ void GEM_set_MT(
       /// if there is no water in the node or no aqueous phase in DATACH.
       double Get_mIC( const long xic );
 
-     /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
-     /// \param xic is IC DBR index
-     /// \param bIC is amount of IC
-      void Set_bIC( const long int xic, const double bIC)
-      {  CNode->bIC[xic] = bIC;  }
+      /// Retrieves pH of the aqueous solution
+      double Get_pH( );
+
+      /// Retrieves Eh of the aqueous solution
+      double Get_Eh( );
+
+     /// Sets the TK in the work DATABR structure.
+     /// \param TK is the temperature value
+      void Set_TK(const double TK)
+      {  CNode->TK = TK;  }
+
+      /// Sets the P in the work DATABR structure.
+      /// \param P is the presure value
+       void Set_P(const double P)
+       {  CNode->P = P;  }
+
+       /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
+       /// \param xic is IC DBR index
+       /// \param bIC is amount of IC
+        void Set_bIC( const long int xic, const double bIC)
+        {  CNode->bIC[xic] = bIC;  }
 
       /// Retrieves the current amount of Independent Component.
       /// \param xic is IC DBR index
@@ -746,6 +797,31 @@ void GEM_set_MT(
       inline void Set_IC_b( const double b_val, const long int xCH)
       { pmm->B[xCH] = b_val; }
 
+#ifdef IPMGEMPLUGIN
+// used in GEMSFIT
+      /// Sets the mLook Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid).
+       /// \param mLook is 0 or 1
+        void Set_mLook(const double mLook)
+        {  CSD->mLook = mLook;  multi->set_load(false);}
+
+      /// Sets the value of the interation parameter.
+      /// Internal re-scaling to mass of the system is applied.
+      /// These methods can only be used for the current work node (direct access to GEM IPM data)
+      /// \param xPMC is the index of the interaction parameter
+      inline void Set_PMc( const double PMc_val, const long int xPMc)
+      { pmm->PMc[xPMc] = PMc_val; multi->set_load(false); }
+
+      inline void Get_PMc( double &PMc_val, const long int xPMc)
+      {  PMc_val = pmm->PMc[xPMc]; multi->set_load(false); }
+
+      /// Sets the value of the interation parameter.
+      /// Internal re-scaling to mass of the system is applied.
+      /// These methods can only be used for the current work node (direct access to GEM IPM data)
+      /// \param xDMC is the index of the interaction parameter
+      inline void Set_DMc( const double DMc_val, const long int xDMc)
+      { pmm->PMc[xDMc] = DMc_val; multi->set_load(false); }
+#endif
+
       /// Retrieves the current total amount of Independent Component.
       /// Also amount of ICs not included into DATABR list can be retrieved.
       /// Internal re-scaling to mass of the system is applied
@@ -771,23 +847,63 @@ void GEM_set_MT(
       /// \param xCH is DC DCH index
       double DC_a(const long int xCH);
 
-      
-      /// Functions for retrieveing and setting values needed for activity coefficient calculation by TSolMod class
-      /// Sets values of LsMod and LsMdc array
-      void Get_IPc_IPx_DCc_indices( long &index_phase_aIPx, long &index_phase_aIPc, long &index_phase_aDCc, const long &index_phase);
-      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC ( long &NPar, long &NPcoef, long &MaxOrd, long &NComp, long &NP_DC, const long &index_phase );
-      void Get_aIPc ( vector<double> &aIPc, const long &index_phase_aIPc, const long &index_phase );
-      void Get_aIPx ( vector<long> &aIPx,   const long &index_phase_aIPx, const long &index_phase );
-      void Get_aDCc ( vector<double> &aDCc, const long &index_phase_aDCc, const long &index_phase );
-      void Set_aIPc ( const vector<double> aIPc, const long &index_phase_aIPc, const long &index_phase ); 		// Set values of aIPc array
-      void Set_aDCc ( const vector<double> aDCc, const long &index_phase_aDCc, const long &index_phase );		// Set values of aDCc array
-      /// These methods set contents of fields in the work node structure
-      void Set_Tk   ( double &T_k);
-      void Set_Pb   ( double &P_b);
+// GEMSFIT access functions
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Retrieves indices of origin in TSolMod composite arrays for a solution phase of interest index_phase.
+      /// \param IN: index_phase is the DCH index of phase of interest.
+      /// \param OUT: ipaIPx, ipaIPc, ipaDCc are origin indices of this phase in aIPx, aIPc and aDCc arrays, respectively.
+      void Get_IPc_IPx_DCc_indices( long int &ipaIPx, long int &ipaIPc, long int &ipaDCc, const long int &index_phase );
 
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Retrieves dimensions of TSolMod array for a solution phase of interest index_phase.
+      /// \param IN: index_phase is the DCH index of phase of interest.
+      /// \param OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC, are number of interaction parameters, number of coefficients per parameter,
+      /// \param   maximum parameter order (i.e. row length in aIPx), number of components in the phase, and number of coefficients
+      /// \param   per component, respectively.
+      void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC( long int &NPar, long int &NPcoef, long int &MaxOrd,
+                                                long int &NComp, long int &NP_DC, const long int &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Gets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
+      /// \param IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
+      /// \param OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
+      void Get_aIPc ( vector<double> &vaIPc, const long int &ipaIPc, const long int &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Gets values of the aIPx list array (of indexes of interacting moieties or components) for the solution phase of interest index_phase.
+      /// \param IN: ipaIPx is the origin index (of the first element) of the aIPx array; index_phase is the DCH index of phase of interest.
+      /// \param OUT: returns vaIPx - vector with the contents of the aIPx sub-array.
+      void Get_aIPx ( vector<long int> &vaIPx,   const long int &ipaIPx, const long &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Gets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
+      /// \param IN: ipaDCc is the origin index (of the first element) of the aDCc array; index_phase is the DCH index of phase of interest.
+      /// \param OUT: returns vaDCc - vector with the contents of the aDCc sub-array.
+      void Get_aDCc ( vector<double> &vaDCc, const long &ipaDCc, const long &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Sets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
+      /// \param IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
+      /// \param     of the aIPc array; index_phase is the DCH index of phase of interest.
+      void Set_aIPc ( const vector<double> vaIPc, const long int &ipaIPc, const long &index_phase );
+
+      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+      /// Sets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
+      /// \param IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
+      /// \param of the aDCc array; index_phase is the DCH index of phase of interest.
+      void Set_aDCc ( const vector<double> vaDCc, const long &ipaDCc, const long &index_phase );
+
+      /// These methods set contents of fields in the work node structure
+      /// Direct access to set temperature T_K in the current (work) node
+      void Set_Tk   ( const double &T_k );
+
+      /// Direct access to set pressure (P_b given in bar) in the current (work) node
+      void Set_Pb   ( const double &P_b );
+
+// End GEMSFIT access functions
 
       /// Retrieves the current concentration of Dependent Component in its
-      /// phase directly from GEM IPM work structure. Also activity of a DC not included into
+      /// phase directly from the GEM IPM work structure. Also the activity of a DC not included into
       /// DATABR list can be retrieved. For aqueous species, molality is returned; for gas species,
       /// partial pressure; for surface complexes - density in mol/m2; for species in other phases -
       /// mole fraction. If DC has zero amount, the function returns 0.0.

@@ -558,9 +558,6 @@ protected:
    void Alloc_TKinMet( long int newFI );
    void Free_TKinMet();
 
-
-
-
 // Added for implementation of divergence detection in dual solution 06.05.2011 DK
    long int nNu;  ///< number of ICs in the system
    long int cnr;  ///< current IPM iteration
@@ -822,6 +819,8 @@ public:
 
     void CheckMtparam(); // Test load thermodynamic data before
 
+    void set_load (bool what); // DM 20.05.2013 - Ensures the re-reading of the system properties into GEM IMP data structure
+
 #endif
 
     MULTI* GetPM()
@@ -833,7 +832,11 @@ public:
     const char* GetName() const
     {  return "Multi";  }
 
-   //connection to mass transport
+    // Internal functions for SCMs
+//       void getLsModsum( long int& LsModSum, long int& LsIPxSum );
+//       void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+
+    //connection to mass transport
     void to_file( GemDataStream& ff );
     void to_text_file( const char *path, bool append=false  );
     void from_file( GemDataStream& ff );

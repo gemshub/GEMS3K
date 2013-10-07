@@ -216,6 +216,10 @@ void TMulti::CheckMtparam()
   load = true;
 }
 
+void TMulti::set_load (bool what)  // DM 20.05.2013
+{
+load = what;
+}
 //-------------------------------------------------------------------------
 // internal functions
 
