@@ -251,8 +251,8 @@ double
     *Sigg,  	///< Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
   // TSolMod stuff
   *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
-  *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc[k][3]
-  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc[k][4]
+  *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
+  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc2[k][1]
 
   // TSorpMod & TKinMet stuff
   *SorMc, ///< new: Phase-related kinetics and sorption model parameters: [Fis][16]
@@ -909,7 +909,9 @@ typedef enum {  // Field index into outField structure
   f_pKin,  f_pa_DKIN,  f_mui,  f_muk,  f_muj,
   f_pa_PLLG,  f_tMin,  f_dcMod,
 //new
-   f_LsPhl,  f_LsMdc2
+    f_kMod, f_LsKin, f_LsUpt, f_xICuC, f_PfFact,
+    f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl
+
 } MULTI_DYNAMIC_FIELDS;
 
 

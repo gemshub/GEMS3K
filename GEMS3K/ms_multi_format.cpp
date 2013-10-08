@@ -56,7 +56,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" ,  0 , 0, 0, "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, set FIat = 6)" }
 };
 
-outField MULTI_dynamic_fields[70] =  {
+outField MULTI_dynamic_fields[80] =  {
 // write/read dynamic (array) data to/from the text-format IPM file
    {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]" },
    {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
@@ -138,9 +138,23 @@ outField MULTI_dynamic_fields[70] =  {
    { "muj" ,     0 , 0, 0,  "\n# muj: DC indices in parent RMULTS DC list (not used in standalone GEMS3K)" },
    { "pa_PLLG" , 0 , 0, 0,  "# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables" },
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
-   { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" }
+   { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
+//TKinMet
+    { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi]" },
+    { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
+      "# of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]" },
+    { "LsUpt",    0 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
+    { "xICuC",    0 , 0, 0,  "# xICuC: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k] (reserved)" },
+    { "PfFact",    0 , 0, 0,  "# PfFact: form factors for phases (taken from TKinMet or set from TNode) [FI] (reserved)" },
+// TSorpMod stuff
+    { "LsESmo",    0 , 0, 0,  "# LsESmo: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]" },
+    { "LsISmo",    0 , 0, 0,  "# LsISmo: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]" },
+// TSorpMod & TKinMet stuff
+    { "SorMc",    0 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
+// TSolMod stuff
+    { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
+    { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
 };
-
 
 
 //===================================================================
@@ -164,7 +178,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
   fstream ff( path, ios::out );
   ErrorIf( !ff.good() , path, "Fileopen error");
   TPrintArrays  prar1( 8, MULTI_static_fields, ff);
-  TPrintArrays  prar( 70, MULTI_dynamic_fields, ff);
+  TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
    if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -373,7 +387,126 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
           ff << "\n\n# MoiSN:  end member moiety / site multiplicity number tables (in TSolMod convention) ";
     prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
    }
+   long int DQFcSum, rcpcSum;
+   getLsMdc2sum( DQFcSum, rcpcSum );
+   prar.writeArray(  f_LsMdc2, pm.LsMdc2, pm.FIs*3, 3L, _comment, brief_mode);
+   if(DQFcSum )
+   {   if( _comment )
+          ff << "\n\n# DQFc:  Collected array of DQF parameters for DCs in phases ";
+   prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
+   }
+   if(rcpcSum )
+   {   if( _comment )
+          ff << "\n\n# rcpc:  Collected array of reciprocal parameters for DCs in phases ";
+     prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
+   }
+   long int PhLinSum, lPhcSum;
+   getLsPhlsum( PhLinSum,lPhcSum );
+   prar.writeArray(  f_LsPhl, pm.LsPhl, pm.FI*2, 2L, _comment, brief_mode);
+   if(PhLinSum )
+   {   if( _comment )
+          ff << "\n\n# PhLin:  indexes of linked phases and link type codes ";
+   prar.writeArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
+   }
+   if(lPhcSum )
+   {   if( _comment )
+          ff << "\n\n# lPhc:  Collected array of phase link parameters ";
+       prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
+   }
+   prar.writeArray(  f_SorMc, pm.SorMc, pm.FIs*16, 16L, _comment, brief_mode);
+
+    // TSorpMod stuff
+   long int IsoCtSum, IsoScSum;
+   long int IsoPcSum, xSMdSum;
+   getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
+   prar.writeArray(  f_LsISmo, pm.LsISmo, pm.FIs*4, 4L, _comment, brief_mode);
+   if(xSMdSum )
+   {   if( _comment )
+          ff << "\n\n# xSMd:  denticity of surface species per surface site (site allocation) ";
+   prar.writeArray(  "xSMd", pm.xSMd, xSMdSum);
+   }
+   if(IsoPcSum )
+   {   if( _comment )
+          ff << "\n\n# IsoPc:  Collected isotherm coefficients per DC ";
+   prar.writeArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
+   }
+   if(IsoScSum )
+   {   if( _comment )
+          ff << "\n\n# IsoSc:  Collected isotherm coeffs per site";
+   prar.writeArray(  "IsoSc", pm.IsoSc, IsoScSum);
+   }
+   if(IsoCtSum )
+   {   if( _comment )
+          ff << "\n\n# IsoCt:  Collected isotherm and SATC codes for surface site types";
+   prar.writeArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
+   }
+   long int EImcSum, mCDcSum;
+   getLsESmosum( EImcSum, mCDcSum );
+   prar.writeArray(  f_LsESmo, pm.LsESmo, pm.FIs*4, 4L, _comment, brief_mode);
+   if(EImcSum )
+   {   if( _comment )
+          ff << "\n\n# EImc:  Collected EIL model coefficients";
+   prar.writeArray(  "EImc", pm.EImc, EImcSum);
+   }
+   if(mCDcSum )
+   {   if( _comment )
+          ff << "\n\n# mCDc:  Collected CD EIL model coefficients per DC ";
+   prar.writeArray(  "mCDc", pm.mCDc,  mCDcSum);
+   }
+   // TKinMet stuff
+   prar.writeArrayF(  f_kMod, pm.kMod[0], pm.FI, 6L, _comment, brief_mode);
+   long int xSKrCSum, ocPRkC_feSArC_Sum;
+   long int rpConCSum, apConCSum, AscpCSum;
+   getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
+   prar.writeArray(  f_LsKin, pm.LsKin, pm.FI*6, 6L, _comment, brief_mode);
+   if(xSKrCSum )
+   {   if( _comment )
+          ff << "\n\n# xSKrC:  Collected array of aq/gas/sorption species indexes used in activity products";
+   prar.writeArray(  "xSKrC", pm.xSKrC, xSKrCSum);
+   }
+   if(ocPRkC_feSArC_Sum )
+   {   if( _comment )
+          ff << "\n\n# ocPRkC:  Collected array of operation codes for kinetic parallel reaction terms";
+   prar.writeArray(  "ocPRkC", &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
+   }
+   if(ocPRkC_feSArC_Sum )
+   {   if( _comment )
+          ff << "\n\n# feSArC:  Collected array of fractions of surface area related to parallel reactions";
+   prar.writeArray(  "feSArC", pm.feSArC, ocPRkC_feSArC_Sum);
+   }
+   if(rpConCSum )
+   {   if( _comment )
+          ff << "\n\n# rpConC:  Collected array of kinetic rate constants";
+   prar.writeArray(  "rpConC", pm.rpConC,  rpConCSum);
+   }
+   if(apConCSum )
+   {   if( _comment )
+          ff << "\n\n# apConC:  Collected array of parameters per species involved in activity product terms";
+   prar.writeArray(  "apConC", pm.apConC, apConCSum);
+   }
+   if(AscpCSum )
+   {   if( _comment )
+          ff << "\n\n# AscpC:  parameter coefficients of equation for correction of specific surface area";
+   prar.writeArray(  "AscpC", pm.AscpC,  AscpCSum);
+   }
+   long int UMpcSum;
+   getLsUptsum( UMpcSum );
+   prar.writeArray(  f_LsUpt, pm.LsUpt, pm.FIs*2, 2L, _comment, brief_mode);
+   if(UMpcSum )
+   {   if( _comment )
+          ff << "\n\n# UMpcC:  Collected array of uptake model coefficients";
+   prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
+   }
+   prar.writeArray(  f_PfFact, pm.PfFact, pm.FI, 1L, _comment, brief_mode);
+   if( pm.xICuC )
+   { long int xICuCSum = 0;
+     for(long int i=0; i<pm.FIs; i++)
+       xICuCSum += pm.L1[i];
+     prar.writeArray(  f_xICuC, pm.xICuC, xICuCSum, _comment, brief_mode);
+   }
+
 } // sMod
+
   if( _comment )
     ff << "\n\n## (5) Data arrays which are provided neither in DCH nor in DBR files";
   prar.writeArray(  f_B, pm.B,  pm.N, -1L, _comment, brief_mode);
@@ -611,7 +744,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
   ConvertDCC();
 
 //reads dynamic values from txt file
-   TReadArrays  rddar( 70, MULTI_dynamic_fields, ff);
+   TReadArrays  rddar( 80, MULTI_dynamic_fields, ff);
 
 // set up array flags for permanent fields
 
@@ -710,6 +843,254 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
               }
               break;
             }
+      case f_LsMdc2:
+        {
+          if( !pm.LsMdc2 )
+            Error( "Error", "Array LsMdc2 not used in this problem");
+          rddar.readArray(  "LsMdc2", pm.LsMdc2, pm.FIs*3);
+          long int DQFcSum, rcpcSum;
+          getLsMdc2sum( DQFcSum, rcpcSum );
+         if(DQFcSum )
+         {  rddar.readNext( "DQFc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.DQFc )
+                     pm.DQFc = new double[DQFcSum];
+#else
+                pm.DQFc = (double *)aObj[o_wi_dqfc ].Alloc( DQFcSum, 1, D_ );
+#endif
+                rddar.readArray(  "DQFc", pm.DQFc,  DQFcSum);
+          }
+        if(rcpcSum )
+        { rddar.readNext( "rcpc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.rcpc )
+                     pm.rcpc = new double[rcpcSum];
+#else
+                pm.rcpc = (double *)aObj[ o_wi_rcpc].Alloc( rcpcSum, 1, D_ );
+#endif
+                rddar.readArray(  "rcpc", pm.rcpc,  rcpcSum);
+        }
+        break;
+        }
+      case f_LsPhl:
+        { if( !pm.LsPhl )
+            Error( "Error", "Array LsPhl not used in this problem");
+          rddar.readArray(  "LsPhl",  pm.LsPhl, pm.FI*2);
+          long int PhLinSum, lPhcSum;
+          getLsPhlsum( PhLinSum,lPhcSum );
+
+          if(PhLinSum )
+          {   rddar.readNext( "PhLin");
+#ifdef IPMGEMPLUGIN
+                if(!pm.PhLin )
+                    pm.PhLin = new long int[PhLinSum][2];
+#else
+                pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
+#endif
+                rddar.readArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
+        }
+        if(lPhcSum )
+        {   rddar.readNext( "lPhc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.lPhc )
+                    pm.lPhc = new double[lPhcSum];
+#else
+                pm.lPhc = (double*)aObj[ o_wi_lphc].Alloc( lPhcSum, 1, D_ );
+#endif
+                rddar.readArray(  "lPhc", pm.lPhc,  lPhcSum);
+        }
+        break;
+       }
+      case f_SorMc:
+        rddar.readArray(  "SorMc", pm.SorMc, pm.FIs*16);
+        break;
+        // TSorpMod stuff
+      case f_LsISmo:
+       { if( !pm.LsISmo )
+           Error( "Error", "Array LsISmo not used in this problem");
+         rddar.readArray(  "LsISmo",  pm.LsISmo, pm.FIs*4);
+
+        long int IsoCtSum, IsoScSum;
+        long int IsoPcSum, xSMdSum;
+        getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
+
+        if(xSMdSum )
+        {   rddar.readNext( "xSMd");
+#ifdef IPMGEMPLUGIN
+                if(!pm.xSMd )
+                    pm.xSMd = new long int[xSMdSum];
+#else
+                pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
+#endif
+                rddar.readArray(  "xSMd", pm.xSMd, xSMdSum);
+        }
+        if(IsoPcSum )
+        {   rddar.readNext( "IsoPc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.IsoPc )
+                    pm.IsoPc = new double[IsoPcSum];
+#else
+                pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
+#endif
+                rddar.readArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
+        }
+        if(IsoScSum )
+        {   rddar.readNext( "IsoSc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.IsoSc )
+                    pm.IsoSc = new double[IsoScSum];
+#else
+                pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
+#endif
+                rddar.readArray(  "IsoSc", pm.IsoSc, IsoScSum);
+        }
+        if(IsoCtSum )
+        {    rddar.readNext( "IsoCt");
+#ifdef IPMGEMPLUGIN
+                if(!pm.IsoCt )
+                    pm.IsoCt = new char[IsoCtSum];
+#else
+                pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
+#endif
+                rddar.readArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
+        }
+        break;
+       }
+      case f_LsESmo:
+       {
+        if( !pm.LsESmo )
+                   Error( "Error", "Array LsESmo not used in this problem");
+                 rddar.readArray(  "LsESmo",  pm.LsESmo, pm.FIs*4);
+        long int EImcSum, mCDcSum;
+        getLsESmosum( EImcSum, mCDcSum );
+
+        if(EImcSum )
+        {   rddar.readNext( "EImc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.EImc )
+                    pm.EImc = new double[EImcSum];
+#else
+                pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
+#endif
+                rddar.readArray(  "EImc", pm.EImc, EImcSum);
+        }
+        if(mCDcSum )
+        {   rddar.readNext( "mCDc");
+#ifdef IPMGEMPLUGIN
+                if(!pm.mCDc )
+                    pm.mCDc = new double[mCDcSum];
+#else
+                pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
+#endif
+                rddar.readArray(  "mCDc", pm.mCDc,  mCDcSum);
+        }
+        break;
+        }
+        // TKinMet stuff
+     case f_kMod:
+        rddar.readArray(  "kMod", pm.kMod[0], pm.FI, 6L);
+        break;
+     case f_LsKin:
+       {
+        if( !pm.LsKin )
+            Error( "Error", "Array LsKin not used in this problem");
+          rddar.readArray(  "LsKin",  pm.LsKin, pm.FI*6);
+
+        long int xSKrCSum, ocPRkC_feSArC_Sum;
+        long int rpConCSum, apConCSum, AscpCSum;
+        getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
+        if(xSKrCSum )
+        {   rddar.readNext( "xSKrC");
+#ifdef IPMGEMPLUGIN
+                if(!pm.xSKrC )
+                    pm.xSKrC = new long int[xSKrCSum];
+#else
+                pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
+#endif
+                rddar.readArray(  "xSKrC", pm.xSKrC, xSKrCSum);
+        }
+        if(ocPRkC_feSArC_Sum )
+        {   rddar.readNext( "ocPRkC");
+#ifdef IPMGEMPLUGIN
+                if(!pm.ocPRkC )
+                    pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
+                if(!pm.feSArC )
+                    pm.feSArC = new double[ocPRkC_feSArC_Sum];
+#else
+            pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
+            pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
+#endif
+           rddar.readArray(  "ocPRkC", &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
+           rddar.readNext( "feSArC");
+           rddar.readArray(  "feSArC", pm.feSArC, ocPRkC_feSArC_Sum);
+        }
+        if(rpConCSum )
+        {   rddar.readNext( "rpConC");
+#ifdef IPMGEMPLUGIN
+                if(!pm.rpConC )
+                    pm.rpConC = new double[rpConCSum];
+#else
+                pm.rpConC = (double*)aObj[ o_wi_krpc].Alloc( rpConCSum, 1, D_ );
+#endif
+                rddar.readArray(  "rpConC", pm.rpConC,  rpConCSum);
+        }
+        if(apConCSum )
+        {   rddar.readNext( "apConC");
+#ifdef IPMGEMPLUGIN
+                if(!pm.apConC )
+                    pm.apConC = new double[apConCSum];
+#else
+                pm.apConC = (double*)aObj[ o_wi_apconc].Alloc( apConCSum, 1, D_ );
+#endif
+                rddar.readArray(  "apConC", pm.apConC, apConCSum);
+        }
+        if(AscpCSum )
+        {   rddar.readNext( "AscpC");
+#ifdef IPMGEMPLUGIN
+                if(!pm.AscpC )
+                    pm.AscpC = new double[AscpCSum];
+#else
+                pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
+#endif
+                rddar.readArray(  "AscpC", pm.AscpC,  AscpCSum);
+        }
+        break;
+        }
+      case f_LsUpt:
+       {
+        if( !pm.LsUpt )
+            Error( "Error", "Array LsUpt not used in this problem");
+          rddar.readArray(  "LsUpt",  pm.LsUpt, pm.FIs*2);
+
+        long int UMpcSum;
+        getLsUptsum( UMpcSum );
+        if(UMpcSum )
+        {   rddar.readNext( "UMpcC");
+#ifdef IPMGEMPLUGIN
+                if(!pm.UMpcC )
+                    pm.UMpcC = new double[UMpcSum];
+#else
+                pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
+#endif
+                rddar.readArray(  "UMpcC", pm.UMpcC, UMpcSum);
+        }
+        break;
+        }
+      case f_PfFact:  rddar.readArray(  "PfFact", pm.PfFact, pm.FI );
+                      break;
+      case f_xICuC:
+         { long int xICuCSum = 0;
+          for(long int i=0; i<pm.FIs; i++)
+            xICuCSum += pm.L1[i];
+#ifdef IPMGEMPLUGIN
+                if(!pm.xICuC )
+                     pm.xICuC = new long int[xICuCSum];
+#else
+                pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
+#endif
+                rddar.readArray(  "xICuC", pm.xICuC, xICuCSum );
+                break;
+         }
       case f_B: rddar.readArray( "B", pm.B,  pm.N);
               break;
       case f_DCCW: rddar.readArray( "DCCW", pm.DCCW,  pm.L, 1);

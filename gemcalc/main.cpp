@@ -92,13 +92,15 @@ int main( int argc, char* argv[] )
    // Asking GEM to run with automatic initial approximation 
    dBR->NodeStatusCH = NEED_GEM_AIA;
 
-   // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
+node->GEM_print_ipm( "BeforeCalcPhase.txt" );   // possible debugging printout
+
+// (2) re-calculating equilibrium by calling GEMS3K, getting the status back
    int NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
        node->GEM_write_dbr( NULL, false, true, false );
-//       node->GEM_print_ipm( NULL );   // possible debugging printout
+node->GEM_print_ipm( "AfterCalcPhase.txt" );   // possible debugging printout
    }
    else {
       // (4) possible return status analysis, error message
@@ -106,6 +108,7 @@ int main( int argc, char* argv[] )
        return 5; // GEM IPM did not converge properly - error message needed
    }
 
+return 0;
    // test internal functions
   cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;   
   cout << "Ph_Mass     Aq: " << node->Ph_Mass(xbaq) <<  " Calcite: " << node->Ph_Mass(xbCalcite) << endl;   
