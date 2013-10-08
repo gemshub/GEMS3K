@@ -1637,6 +1637,8 @@ else
 
 
  Alloc_TSolMod( pm.FIs );
+ Alloc_TSorpMod( pm.FIs );
+ Alloc_TKinMet( pm.FI );
 
 }
 

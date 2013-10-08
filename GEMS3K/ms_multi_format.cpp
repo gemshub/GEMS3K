@@ -352,7 +352,7 @@ if( pm.FIs > 0 && pm.Ls > 0 )
 {
   if( _comment )
      ff << "\n\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)";
-  prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 6L, _comment, brief_mode );
+  prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 8L, _comment, brief_mode );
 
 long int LsModSum;
 long int LsIPxSum;
@@ -781,7 +781,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
     switch( nfild )
     { case f_sMod: if( !pm.sMod )
                 Error( "Error", "Array sMod is not used in this problem");
-              rddar.readArray( "sMod" , pm.sMod[0], pm.FIs, 6 );
+              rddar.readArray( "sMod" , pm.sMod[0], pm.FIs, 8 );
               break;
       case f_LsMod:{ if( !pm.LsMod )
                 Error( "Error", "Array LsMod is not used in this problem");
