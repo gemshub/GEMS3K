@@ -592,7 +592,7 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
 #ifdef IPMGEMPLUGIN
    set_def();
 #endif
-  //mem_set( &pm.N, 0, 38*sizeof(long int));
+  //mem_set( &pm.N, 0, 39*sizeof(long int));
   //mem_set( &pm.TC, 0, 55*sizeof(double));
   // get sizes from DATACH
   pm.TC = pm.TCc = 25.;

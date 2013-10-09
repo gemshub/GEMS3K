@@ -513,7 +513,7 @@ void TMulti::to_file( GemDataStream& ff  )
 
 
    ff.writeArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
-   ff.writeArray( &pm.N, 38);
+   ff.writeArray( &pm.N, 39);
    ff.writeArray(&pm.TC, 55);
    ff << PAalp;
    ff << PSigm;
@@ -703,8 +703,63 @@ ff.writeArray((double*)pm.D, MST*MST);
        getLsPhlsum( PhLinSum,lPhcSum );
        ff.writeArray((long int *)pm.PhLin, PhLinSum*2);
        ff.writeArray(pm.lPhc, lPhcSum);
-     }
+       ff.writeArray(  pm.lnDQFt, pm.Ls);
+       ff.writeArray(  pm.lnRcpt, pm.Ls);
+       ff.writeArray(  pm.lnEXt, pm.Ls);
+       ff.writeArray(  pm.lnCnft, pm.Ls);
+       ff.writeArray( pm.SorMc, pm.FIs*16 );
 
+       //TSorpMod
+       ff.writeArray(  pm.LsISmo, pm.FIs*4);
+       ff.writeArray(  pm.LsESmo, pm.FIs*4);
+       long int EImcSum, mCDcSum;
+       getLsESmosum( EImcSum, mCDcSum );
+       long int IsoCtSum, IsoScSum;
+       long int IsoPcSum, xSMdSum;
+       getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
+        ff.writeArray(  pm.xSMd, xSMdSum);
+        ff.writeArray(  pm.IsoPc,  IsoPcSum);
+        ff.writeArray(  pm.IsoSc, IsoScSum);
+        ff.writeArray(  pm.IsoCt,  IsoCtSum);
+        ff.writeArray(  pm.EImc, EImcSum);
+        ff.writeArray(  pm.mCDc,  mCDcSum);
+
+        ff.writeArray(  pm.lnScalT, pm.Ls);
+        ff.writeArray(  pm.lnSACT, pm.Ls);
+        ff.writeArray(  pm.lnGammF, pm.Ls);
+        ff.writeArray(  pm.CTerms, pm.Ls);
+
+        // TKinMet stuff
+        ff.writeArray(  pm.kMod[0], pm.FI*6 );
+        ff.writeArray(  pm.LsKin, pm.FI*6);
+        ff.writeArray(  pm.LsUpt, pm.FIs*2);
+
+        long int UMpcSum;
+        getLsUptsum( UMpcSum );
+        long int xSKrCSum, ocPRkC_feSArC_Sum;
+        long int rpConCSum, apConCSum, AscpCSum;
+        getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
+        long int xICuCSum = 0;
+        for(long int i=0; i<pm.FIs; i++)
+        xICuCSum += pm.L1[i];
+
+        ff.writeArray( pm.xSKrC, xSKrCSum);
+        ff.writeArray( &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
+        ff.writeArray( pm.feSArC, ocPRkC_feSArC_Sum);
+        ff.writeArray( pm.rpConC,  rpConCSum);
+        ff.writeArray( pm.apConC, apConCSum);
+        ff.writeArray( pm.AscpC,  AscpCSum);
+        ff.writeArray( pm.UMpcC, UMpcSum);
+
+        ff.writeArray(  pm.PfFact, pm.FI );
+        ff.writeArray(  pm.xICuC, xICuCSum );
+        ff.writeArray( pm.PfFact, pm.FI);
+        ff.writeArray( pm.PrT, pm.FI);
+        ff.writeArray( pm.PkT, pm.FI);
+        ff.writeArray( pm.PvT, pm.FI);
+        ff.writeArray( pm.emRd, pm.Ls);
+        ff.writeArray( pm.emDf, pm.Ls);
+     }
 
     // Part 4
 
@@ -732,7 +787,7 @@ void TMulti::from_file( GemDataStream& ff )
    char PSigm;
 
    ff.readArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
-   ff.readArray( &pm.N, 38);
+   ff.readArray( &pm.N, 39);
    ff.readArray(&pm.TC, 55);
    ff >> PAalp;
    ff >> PSigm;
@@ -961,7 +1016,99 @@ ff.readArray((double*)pm.D, MST*MST);
        ff.readArray(pm.rcpc, rcpcSum);
        ff.readArray((long int *)pm.PhLin, PhLinSum*2);
        ff.readArray(pm.lPhc, lPhcSum);
-    }
+
+       ff.readArray(  pm.lnDQFt, pm.Ls);
+       ff.readArray(  pm.lnRcpt, pm.Ls);
+       ff.readArray(  pm.lnEXt, pm.Ls);
+       ff.readArray(  pm.lnCnft, pm.Ls);
+       ff.readArray( pm.SorMc, pm.FIs*16 );
+
+       //TSorpMod
+       ff.readArray(  pm.LsISmo, pm.FIs*4);
+       ff.readArray(  pm.LsESmo, pm.FIs*4);
+       long int EImcSum, mCDcSum;
+       getLsESmosum( EImcSum, mCDcSum );
+
+       long int IsoCtSum, IsoScSum;
+       long int IsoPcSum, xSMdSum;
+       getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
+
+#ifdef IPMGEMPLUGIN
+       pm.xSMd = new long int[xSMdSum];
+       pm.IsoPc = new double[IsoPcSum];
+       pm.IsoSc = new double[IsoScSum];
+       pm.IsoCt = new char[IsoCtSum];
+       pm.EImc = new double[EImcSum];
+       pm.mCDc = new double[mCDcSum];
+#else
+        pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
+        pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
+        pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
+        pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
+        pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
+        pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
+#endif
+        ff.readArray(  pm.xSMd, xSMdSum);
+        ff.readArray(  pm.IsoPc,  IsoPcSum);
+        ff.readArray(  pm.IsoSc, IsoScSum);
+        ff.readArray(  pm.IsoCt,  IsoCtSum);
+        ff.readArray(  pm.EImc, EImcSum);
+        ff.readArray(  pm.mCDc,  mCDcSum);
+
+        ff.readArray(  pm.lnScalT, pm.Ls);
+        ff.readArray(  pm.lnSACT, pm.Ls);
+        ff.readArray(  pm.lnGammF, pm.Ls);
+        ff.readArray(  pm.CTerms, pm.Ls);
+
+        // TKinMet stuff
+        ff.readArray(  pm.kMod[0], pm.FI*6 );
+        ff.readArray(  pm.LsKin, pm.FI*6);
+        ff.readArray(  pm.LsUpt, pm.FIs*2);
+
+        long int UMpcSum;
+        getLsUptsum( UMpcSum );
+        long int xSKrCSum, ocPRkC_feSArC_Sum;
+        long int rpConCSum, apConCSum, AscpCSum;
+        getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
+        long int xICuCSum = 0;
+        for(long int i=0; i<pm.FIs; i++)
+        xICuCSum += pm.L1[i];
+#ifdef IPMGEMPLUGIN
+        pm.xSKrC = new long int[xSKrCSum];
+        pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
+        pm.feSArC = new double[ocPRkC_feSArC_Sum];
+        pm.rpConC = new double[rpConCSum];
+        pm.apConC = new double[apConCSum];
+        pm.AscpC = new double[AscpCSum];
+        pm.UMpcC = new double[UMpcSum];
+        pm.xICuC = new long int[xICuCSum];
+#else
+        pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
+        pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
+        pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
+        pm.rpConC = (double*)aObj[ o_wi_krpc].Alloc( rpConCSum, 1, D_ );
+        pm.apConC = (double*)aObj[ o_wi_apconc].Alloc( apConCSum, 1, D_ );
+        pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
+        pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
+        pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
+#endif
+        ff.readArray( pm.xSKrC, xSKrCSum);
+        ff.readArray( &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
+        ff.readArray( pm.feSArC, ocPRkC_feSArC_Sum);
+        ff.readArray( pm.rpConC,  rpConCSum);
+        ff.readArray( pm.apConC, apConCSum);
+        ff.readArray( pm.AscpC,  AscpCSum);
+        ff.readArray( pm.UMpcC, UMpcSum);
+
+        ff.readArray(  pm.PfFact, pm.FI );
+        ff.readArray(  pm.xICuC, xICuCSum );
+        ff.readArray( pm.PfFact, pm.FI);
+        ff.readArray( pm.PrT, pm.FI);
+        ff.readArray( pm.PkT, pm.FI);
+        ff.readArray( pm.PvT, pm.FI);
+        ff.readArray( pm.emRd, pm.Ls);
+        ff.readArray( pm.emDf, pm.Ls);
+     }
 
      // Part 4
 
@@ -1896,7 +2043,7 @@ void TMulti::to_text_file( const char *path, bool append )
 
   prar.writeArray( "Short_PARAM",  &paTProfil->p.PC, 10L );
   prar.writeArray( "Double_PARAM",  &paTProfil->p.DG, 28L );
-  prar.writeArray( "Short_Const",  &pm.N, 38L );
+  prar.writeArray( "Short_Const",  &pm.N, 39L );
   prar.writeArray(  "Double_Const",  &pm.TC, 55, 20 );
   prar.writeArray(  "EpsW", pm.epsW, 5);
   prar.writeArray(  "EpsWg", pm.epsWg, 5);
