@@ -624,6 +624,8 @@ void TNodeArray::CopyWorkNodeFromArray( long int ii, long int nNodes, DATABRPTR*
   copyValues( pCNode()->rMB, arr_BR[ii]->rMB, pCSD()->nICb );
   copyValues( pCNode()->uIC, arr_BR[ii]->uIC, pCSD()->nICb );
   copyValues( pCNode()->bSP, arr_BR[ii]->bSP, pCSD()->nICb );
+  copyValues( pCNode()->amru, arr_BR[ii]->amru, pCSD()->nPSb );
+  copyValues( pCNode()->amrl, arr_BR[ii]->amrl, pCSD()->nPSb );
 }
 
 // Copying data for node iNode back from work DATABR structure into the node array

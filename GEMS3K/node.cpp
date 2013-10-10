@@ -1971,6 +1971,8 @@ void TNode::packDataBr()
    {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3;
        CNode->mPS[ii] = pmm->FWGT[ CSD->xph[ii] ]/kg_to_g;
        CNode->xPA[ii] = pmm->XFA[ CSD->xph[ii] ];
+       CNode->amru[ii] = pmm->PUL[ CSD->xph[ii] ];
+       CNode->amrl[ii] = pmm->PLL[ CSD->xph[ii] ];
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
    for(long int jj=0; jj<CSD->nICb; jj++ )
@@ -2062,9 +2064,12 @@ void TNode::unpackDataBr( bool uPrimalSol )
         pmm->Y[ CSD->xdc[ii] ] = CNode->xDC[ii];
 
   for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
-  for( ii=0; ii<CSD->nPSb; ii++ )
-   pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
+  {
+      pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
+      pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
+      pmm->PUL[ CSD->xph[ii] ] = CNode->amru[ii];
+      pmm->PLL[ CSD->xph[ii] ] = CNode->amrl[ii];
+  }
 
   for( ii=0; ii<CSD->nPHb; ii++ )
   {

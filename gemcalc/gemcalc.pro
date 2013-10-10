@@ -7,10 +7,11 @@ TARGET = gemcalc
 VERSION = 3.1.0
 
 CONFIG -= qt
-CONFIG += warn_on
+CONFIG -= warn_on
 CONFIG += debug
 #CONFIG += windows
 CONFIG += console
+
 
 DEFINES += IPMGEMPLUGIN
 #DEFINES += NODEARRAYLEVEL
@@ -31,7 +32,8 @@ INCLUDEPATH +=
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
-QMAKE_LFLAGS += 
+QMAKE_LFLAGS +=
+QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
 SOURCES      +=   main.cpp

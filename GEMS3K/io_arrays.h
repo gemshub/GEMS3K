@@ -53,11 +53,11 @@ struct IOJFormat /// Internal descriptions of output/input formats with JSON not
    gstring format; ///< string with formatted data for different type
 
    IOJFormat( char aType, int aIndex, gstring aFormat ):
-               type(aType), index(aIndex), format(aFormat)
+               index(aIndex), type(aType), format(aFormat)
        {}
 
    IOJFormat( const IOJFormat& data ):
-       type(data.type), index(data.index), format(data.format)
+       index(data.index), type(data.type),  format(data.format)
        { }
 };
 

@@ -320,6 +320,7 @@ void TPrintArrays::writeArray( long f_num,  vector<double> arr, long int l_size,
                                bool with_comments, bool brief_mode )
 {
 
+    long int jj;
     if(!brief_mode || getAlws(f_num ))
     {
        if( with_comments )
@@ -330,7 +331,8 @@ void TPrintArrays::writeArray( long f_num,  vector<double> arr, long int l_size,
        sz = l_size;
 
       ff << endl << "<" << flds[f_num].name.c_str() << ">" << endl;
-      for( int ii=0, jj=0; ii<arr.size(); ii++, jj++  )
+      jj=0;
+      for( size_t ii=0; ii<arr.size(); ii++, jj++  )
       {
          if(jj == sz)
          { jj=0;  ff << endl;}

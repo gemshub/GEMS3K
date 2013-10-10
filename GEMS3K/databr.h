@@ -194,10 +194,11 @@ f_Km, f_Kf, f_S,  f_Tr, f_h,
 f_rho,f_al, f_at, f_av, f_hDl,
 f_hDt, f_hDv, f_nto,
 //#endif
-    // dynamic arrays (52-38=14)
+    // dynamic arrays (52-38=14+2new)
 f_bIC, f_rMB, f_uIC, f_xDC, f_gam,
 f_dll, f_dul, f_aPH, f_xPH, f_vPS,
 f_mPS, f_bPS, f_xPA, f_bSP,
+f_amru, f_amrl,
 // only for VTK format output
 f_mPH, f_vPH, f_m_t, f_con, f_mju, f_lga
 
