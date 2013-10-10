@@ -420,7 +420,7 @@ TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
     }
     else {
         PUL = pm.DUL[jb];
-        PUL = pm.DLL[jb];
+        PLL = pm.DLL[jb];    // bugfix 9.10.2013 DK
     }
     //
     switch( kMod[0] )

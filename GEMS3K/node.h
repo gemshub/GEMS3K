@@ -9,7 +9,7 @@
 /// Works with DATACH and work DATABR structures without using
 /// the TNodearray class.
 //
-// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik, G.Kosakowski, F.Hingerl
+// Copyright (c) 2006-2013 S.Dmytriyeva, D.Kulik, G.Kosakowski, G.D.Miron, F.Hingerl
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -37,7 +37,7 @@
 /// improvements of convex programming Gibbs energy minimization algorithms achieved since
 /// 2000, when development and support of GEMS was taken over by LES in Paul Scherrer Institut
 /// (since 2008 jointly with IGP ETHZ) by the GEMS Development Team, currently consisting of
-/// D.Kulik (lead), T.Wagner, S.Dmytrieva, G. Kosakowski, F.Hingerl, K.Chudnenko, and U.Berner.
+/// D.Kulik (lead), T.Wagner, S.Dmytrieva, G. Kosakowski, G.D.Miron, K.Chudnenko, and U.Berner.
 ///
 /// Standalone variant of the GEMS3K code can be coupled to reactive mass transport simulation
 /// codes, also those running on high-performance computers. Input files (in text format) for
@@ -218,7 +218,7 @@ public:
    void GEM_restore_MT(
     long int  &p_NodeHandle,   ///< Node identification handle
     long int  &p_NodeStatusCH, ///< Node status code;  see typedef NODECODECH
-                      //                                    GEM input output  FMT control
+                      //                                           GEM input output  FMT control
     double &p_TK,      ///< Temperature T, Kelvin                       +       -      -
     double &p_P,      ///< Pressure P,  Pa                              +       -      -
     double &p_Vs,     ///< Volume V of reactive subsystem,  m3         (+)      -      +
@@ -227,6 +227,25 @@ public:
     double *p_dul,    ///< Upper restrictions to amounts of DC [nDCb]   +       -      -
     double *p_dll,    ///< Lower restrictions to amounts of DC [nDCb]   +       -      -
     double *p_aPH     ///< Specific surface areas of phases,m2/kg[nPHb] +       -      -
+   );
+
+/// (6s) Passes (copies) the GEMS3K input data from the work instance of DATABR structure with TKinMet phases.
+///  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
+///   chemical data for all nodes used in the mass-transport model.
+    void GEM_restore_MT(
+    long int  &p_NodeHandle,   ///< Node identification handle
+    long int  &p_NodeStatusCH, ///< Node status code;  see typedef NODECODECH
+                         //                                           GEM input output  FMT control
+    double &p_TK,      ///< Temperature T, Kelvin                       +       -      -
+    double &p_P,      ///< Pressure P,  Pa                              +       -      -
+    double &p_Vs,     ///< Volume V of reactive subsystem,  m3         (+)      -      +
+    double &p_Ms,     ///< Mass of reactive subsystem, kg               -       -      +
+    double *p_bIC,    ///< Bulk mole amounts of IC  [nICb]              +       -      -
+    double *p_dul,    ///< Upper restrictions to amounts of DC [nDCb]   +       -      -
+    double *p_dll,    ///< Lower restrictions to amounts of DC [nDCb]   +       -      -
+    double *p_aPH,    ///< Specific surface areas of phases,m2/kg[nPHb] +       -      -
+ double *p_amru,      ///< Upper AMR to masses of sol. phases [nPSb]   +       -      -
+ double *p_amrl       ///< Lower AMR to masses of sol. phases [nPSb]   +       -      -
    );
 
 /// (8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
@@ -259,7 +278,7 @@ void GEM_from_MT(
  double *p_bIC,   ///< Bulk mole amounts of IC [nICb]                   +       -      -
  double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
- double *p_aPH,   ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_asPH,  ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
  double *p_xDC    ///< Mole amounts of DCs [nDCb] - will be convoluted
                   ///< and added to the bIC GEM input vector (if full speciation
                   ///< and not just increments then p_bIC vector must be zeroed off -
@@ -282,13 +301,13 @@ void GEM_from_MT(
  double *p_bIC,   ///< Bulk mole amounts of IC [nICb]                   +       -      -
  double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
- double *p_aPH,   ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_asPH,  ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
  double *p_xDC,   ///< Mole amounts of DCs [nDCb] - old primal soln.     +      -      -
  double *p_gam    ///< DC activity coefficients [nDCb] - old primal s.   +      -      -
 );
 
-/// (8c) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
-///     This call is usually preceeding the GEM_run() call
+/// (8c) Loads the minimum of GEMS3K input data for a given mass-transport node into the work instance
+///   of DATABR structure. This call is usually preceeding the GEM_run() call.
 void GEM_from_MT(
  long int  p_NodeHandle,   ///< Node identification handle
  long int  p_NodeStatusCH, ///< Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
@@ -300,11 +319,27 @@ void GEM_from_MT(
  double *p_dll    ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
  );
 
+/// (8d) Loads the minimum of GEMS3K input data for a given mass-transport node into the work instance of
+///   the DATABR structure. In addition, loads specific surface areas of phases, and AMCs for phases-solutions.
+///   This call is usually preceeding the GEM_run() call.
+void GEM_from_MT(
+ long int  p_NodeHandle,   ///< Node identification handle
+ long int  p_NodeStatusCH, ///< Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                  //                                              GEM input output  FMT control
+ double p_TK,     ///< Temperature T, Kelvin                            +       -      -
+ double p_P,      ///< Pressure P, Pa                                   +       -      -
+ double *p_bIC,   ///< Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll,   ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_asPH,  ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+double *p_amru,   ///< Upper AMR to masses of sol. phases [nPSb]        +       -      -
+double *p_amrl    ///< Lower AMR to masses of sol. phases [nPSb]        +       -      -
+);
 
-
-/// (9) Optional, for passing the current mass transport iteration information into the work
-/// DATABR structure (e.g. \ for using it in tracing/debugging or in writing DBR files for nodes)
-void GEM_set_MT(
+/// (9) Optional, for passing the current mass transport time and time step into the work
+/// DATABR structure (for using it in TKinMet, or tracing/debugging, or in writing DBR files for nodes)
+//
+void GEM_from_MT_time(
 //   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
 //   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
    double p_Tm,      ///< Actual total simulation time, s               +       -      -
@@ -394,9 +429,26 @@ void GEM_set_MT(
     double  *p_vPS,  ///< Total volumes of multicomponent phases, m3   [nPSb]      -      -       +     +
     double  *p_mPS,  ///< Total mass of multicomponent phase (carrier),kg [nPSb]   -      -       +     +
     double  *p_bPS,  ///< Bulk compositions of multicomponent phases  [nPSb][nICb] -      -       +     +
-    double  *p_xPA,  ///< Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -       +     +
+    double  *p_xPA,  ///< Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -      +     +
     double  *p_aPH,  ///< Calculated surface areas of phases (m2) [nPHb]           -      -       +     +
-    double  *p_bSP   ///< Bulk composition of all solids, moles [nICb]               -    -       +     +
+    double  *p_bSP   ///< Bulk composition of all solids, moles [nICb]             -      -       +     +
+ );
+
+ /// (7a) Optional, to check if the time step in the work DATABR structure was o.k. for TKinMet calculations,
+ ///  compared with the time step p_dt given before the GEM calculation. Checks the criteria for the validity
+ ///  of time step. If time step was acceptable by a TKinMet model used, returns the actual time step after
+ ///  copying (changed) AMRs into p_dul and p_dll vectors, as well as (changed) specific surface areas of
+ ///  some (kinetically controlled) phases. Otherwise, returns a (smaller) suggested time step, while the
+ ///  p_dul, p_pll, and p_asPH vectors remain unchanged.
+ ///  Returns 0 or a negative number (unchanged p_dul and p_dll), if TKinMet calculations failed.
+ //
+ double GEM_to_MT_time(
+    double p_dt,       ///< Actual time step, s                                     -       -     (+)   (+)
+    double *p_dul,    ///< Upper AMR restrictions to amounts of DC [nDCb]          -       -      +     -
+    double *p_dll,    ///< Lower AMR restrictions to amounts of DC [nDCb]          -       -      +     -
+   double *p_amru,    ///< Upper AMR to masses of solution phases [nPSb]           -       -      +     -
+   double *p_amrl,    ///< Lower AMR to masses of solution phases [nPSb]           -       -      +     -
+    double *p_asPH    ///< Specific surface areas of phases m2/kg  [nPHb]          -       -      +     -
  );
 
 #endif
@@ -545,7 +597,6 @@ void GEM_set_MT(
          else
            return (CSD->nPp * CSD->nTp);
      }
-
 	
 	 /// Returns 1 if a Psat value corresponding to the temperature of interest was found in the GEMS3K input file
 	 double get_Ppa_sat( double Tk );
@@ -848,13 +899,13 @@ void GEM_set_MT(
       double DC_a(const long int xCH);
 
 // GEMSFIT access functions
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+/// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
+
       /// Retrieves indices of origin in TSolMod composite arrays for a solution phase of interest index_phase.
       /// \param IN: index_phase is the DCH index of phase of interest.
       /// \param OUT: ipaIPx, ipaIPc, ipaDCc are origin indices of this phase in aIPx, aIPc and aDCc arrays, respectively.
       void Get_IPc_IPx_DCc_indices( long int &ipaIPx, long int &ipaIPc, long int &ipaDCc, const long int &index_phase );
 
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
       /// Retrieves dimensions of TSolMod array for a solution phase of interest index_phase.
       /// \param IN: index_phase is the DCH index of phase of interest.
       /// \param OUT: NPar, NPcoef, MaxOrd, NComp, NP_DC, are number of interaction parameters, number of coefficients per parameter,
@@ -863,31 +914,26 @@ void GEM_set_MT(
       void Get_NPar_NPcoef_MaxOrd_NComp_NP_DC( long int &NPar, long int &NPcoef, long int &MaxOrd,
                                                 long int &NComp, long int &NP_DC, const long int &index_phase );
 
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
       /// Gets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
       /// \param IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
       /// \param OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
       void Get_aIPc ( vector<double> &vaIPc, const long int &ipaIPc, const long int &index_phase );
 
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
       /// Gets values of the aIPx list array (of indexes of interacting moieties or components) for the solution phase of interest index_phase.
       /// \param IN: ipaIPx is the origin index (of the first element) of the aIPx array; index_phase is the DCH index of phase of interest.
       /// \param OUT: returns vaIPx - vector with the contents of the aIPx sub-array.
       void Get_aIPx ( vector<long int> &vaIPx,   const long int &ipaIPx, const long &index_phase );
 
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
       /// Gets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
       /// \param IN: ipaDCc is the origin index (of the first element) of the aDCc array; index_phase is the DCH index of phase of interest.
       /// \param OUT: returns vaDCc - vector with the contents of the aDCc sub-array.
       void Get_aDCc ( vector<double> &vaDCc, const long &ipaDCc, const long &index_phase );
 
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
       /// Sets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
       /// \param IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
       /// \param     of the aIPc array; index_phase is the DCH index of phase of interest.
       void Set_aIPc ( const vector<double> vaIPc, const long int &ipaIPc, const long &index_phase );
 
-      /// Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
       /// Sets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
       /// \param IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
       /// \param of the aDCc array; index_phase is the DCH index of phase of interest.
@@ -899,7 +945,6 @@ void GEM_set_MT(
 
       /// Direct access to set pressure (P_b given in bar) in the current (work) node
       void Set_Pb   ( const double &P_b );
-
 // End GEMSFIT access functions
 
       /// Retrieves the current concentration of Dependent Component in its
@@ -919,12 +964,10 @@ void GEM_set_MT(
       inline double DC_g(const long int xCH) const
       {  return pmm->Gamma[xCH];  }
 
-
 	  /// Retrieves the natural logarithm of the internal activity coefficient of species at DCH index xCH
 	  /// \param xCH index of species DCH
 	  inline double DC_lng( const long int xCH ) const
 	  {  return pmm->lnGam[ xCH ]; } 	
-
 
       /// Retrieves the current (dual-thermodynamic) chemical potential of DC
       /// directly from GEM IPM work structure. Also for any DC not included into DATABR or having zero amount.

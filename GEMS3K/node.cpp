@@ -2167,9 +2167,10 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 
 #ifdef IPMGEMPLUGIN
 
-// (9) Optional, for passing the current mass transport iteration information into the work
-// DATABR structure (e.g. for using it in tracing/debugging or in writing DBR files for nodes)
-void TNode::GEM_set_MT(
+// (9) Optional, for passing the current mass transport time and time step into the work
+// DATABR structure (for using it in TKinMet, or tracing/debugging, or in writing DBR files for nodes)
+//
+void TNode::GEM_from_MT_time(
    double p_Tm,      // actual total simulation time, s          +       -      -
    double p_dt       // actual time step, s                      +       -      -
 )
@@ -2177,6 +2178,20 @@ void TNode::GEM_set_MT(
   CNode->Tm = p_Tm;
   CNode->dt = p_dt;
 }
+
+// (7a) Optional, to check if the time step in the work DATABR structure was o.k. for TKinMet calculations,
+//  compared with the time step p_dt given before the GEM calculation. Checks the criteria for the validity
+//  of time step. If time step was acceptable by a TKinMet model used, returns the actual time step after
+//  copying (changed) AMRs into p_dul and p_dll vectors, as well as (changed) specific surface areas of
+//  some (kinetically controlled) phases. Otherwise, returns a (smaller) suggested time step, while the
+//  p_dul, p_pll, and p_asPH vectors remain unchanged.
+//  Returns 0 or a negative number (unchanged p_dul and p_dll), if TKinMet calculations failed.
+//
+double GEM_to_MT_time(
+   double p_dt,       ///< Actual time step, s                                     -       -     (+)   (+)
+   double *p_dul,    ///< Upper AMR restrictions to amounts of DC [nDCb]          -       -      +     -
+   double *p_dll     ///< Lower AMR restrictions to amounts of DC [nDCb]          -       -      +     -
+);
 
 // (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
 //  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
@@ -2192,7 +2207,7 @@ void TNode::GEM_restore_MT(
     double *p_bIC,    // Bulk mole amounts of IC  [nICb]              +       -      -
     double *p_dul,    // Upper restrictions to amounts of DC [nDCb]   +       -      -
     double *p_dll,    // Lower restrictions to amounts of DC [nDCb]   +       -      -
-    double *p_aPH     // Specific surface areas of phases,m2/kg[nPHb] +       -      -
+    double *p_asPH    // Specific surface areas of phases,m2/kg[nPHb] +       -      -
    )
 {
   long int ii;
@@ -2211,7 +2226,7 @@ void TNode::GEM_restore_MT(
    }
    if( CSD->nAalp >0 )
      for( ii=0; ii<CSD->nPHb; ii++ )
-        p_aPH[ii] = CNode->aPH[ii];
+        p_asPH[ii] = CNode->aPH[ii];
 }
 
 // (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
@@ -2241,8 +2256,8 @@ void TNode::GEM_to_MT(
     double  *p_mPS,  // Total mass of multicomponent phase (carrier),kg [nPSb]   -      -       +     +
     double  *p_bPS,  // Bulk compositions of phases  [nPSb][nICb]                -      -       +     +
     double  *p_xPA,  //Amount of carrier in a multicomponent asymmetric phase[nPSb]-    -       +     +
-    double  *p_aPH,  //surface area for                                 phase[nPSb]-    -       +     +
-    double  *p_bSP   //Bulk composition of all solids, moles [nICb]               -    -       +     +
+    double  *p_aPH,  //surface area for phases, m2                           [nPHb]-    -       +     +
+    double  *p_bSP   //Bulk composition of all solids, moles [nICb]                -    -       +     +
  )
 {
    long int ii;
@@ -2273,7 +2288,7 @@ void TNode::GEM_to_MT(
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     p_xPH[ii] = CNode->xPH[ii];
-    p_aPH[ii] = CNode->aPH[ii];
+    p_aPH[ii] = CNode->aPH[ii]*Ph_Mass( ii );  // correction 9.10.2013 DK
   }
   for( ii=0; ii<CSD->nPSb; ii++ )
   {
@@ -2298,7 +2313,7 @@ void TNode::GEM_from_MT(
   double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
   double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
   double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
-  double *p_aPH    // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+  double *p_asPH   // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
  )
  {
      long int ii;
@@ -2324,7 +2339,7 @@ void TNode::GEM_from_MT(
       }
        if( CSD->nAalp >0 )
         for( ii=0; ii<CSD->nPHb; ii++ )
-            CNode->aPH[ii] = p_aPH[ii];
+            CNode->aPH[ii] = p_asPH[ii];
       if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
         CNode->NodeStatusCH = NEED_GEM_AIA;
       // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
@@ -2344,7 +2359,7 @@ void TNode::GEM_from_MT(
  double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
- double *p_aPH,    // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_asPH,  // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
  double *p_xDC    // Mole amounts of DCs [nDCb] - will be convoluted
                   // and added to the bIC GEM input vector (if full speciation
                   // and not just increments then p_bIC vector must be zeroed off -
@@ -2372,7 +2387,7 @@ void TNode::GEM_from_MT(
    }
     if( CSD->nAalp >0 )
      for( ii=0; ii<CSD->nPHb; ii++ )
-         CNode->aPH[ii] = p_aPH[ii];
+         CNode->aPH[ii] = p_asPH[ii];
    if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
      CNode->NodeStatusCH = NEED_GEM_AIA;
    // Switch only if SIA is ordered, leave if simplex is ordered (KD)
@@ -2404,9 +2419,9 @@ void TNode::GEM_from_MT(
  double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
- double *p_aPH,   // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
- double *p_xDC,  // Mole amounts of DCs [nDCb] - old primal soln.     +      -      -
- double *p_gam   // DC activity coefficients [nDCb] - old primal s.   +      -      -
+ double *p_asPH,   // Specific surface areas of phases, m2/kg [nPHb]  +       -      -
+ double *p_xDC,  // Mole amounts of DCs [nDCb] - old primal soln.     +       -      -
+ double *p_gam   // DC activity coefficients [nDCb] - old primal s.   +       -      -
 )
 {
   long int ii;
@@ -2429,7 +2444,7 @@ void TNode::GEM_from_MT(
    }
     if( CSD->nAalp >0 )
      for( ii=0; ii<CSD->nPHb; ii++ )
-         CNode->aPH[ii] = p_aPH[ii];
+         CNode->aPH[ii] = p_asPH[ii];
 
    // Optional part - copying old primal solution from p_xDC and p_gam vectors
    if( p_xDC && p_gam )
@@ -2465,7 +2480,7 @@ void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
   double p_P,      // Pressure P, Pa                                   +       -      -
   double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
   double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
-  double *p_dll   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_dll    // Lower restrictions to amounts of DC [nDCb]       +       -      -
 )
  {
      long int ii;
@@ -2490,6 +2505,51 @@ void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
       if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
         CNode->NodeStatusCH = NEED_GEM_AIA;
       // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
+}
+
+// (8d) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
+//     This call is usually preceeding the GEM_run() call
+void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
+  long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                    //                                              GEM input output  FMT control
+  double p_TK,     // Temperature T, Kelvin                            +       -      -
+  double p_P,      // Pressure P, Pa                                   +       -      -
+  double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+  double *p_asPH,  // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_amru,   // Upper AMR to masses of sol. phases [nPSb]        +       -      -
+ double *p_amrl    // Lower AMR to masses of sol. phases [nPSb]        +       -      -
+)
+ {
+     long int ii;
+     bool useSimplex = false;
+
+     CNode->NodeHandle = p_NodeHandle;
+     CNode->NodeStatusCH = p_NodeStatusCH;
+     CNode->TK = p_TK;
+     CNode->P = p_P;
+   // Checking if no-LPP IA is Ok
+      for( ii=0; ii<CSD->nICb; ii++ )
+      {  //  SD 11/02/05 for test
+         //if( fabs(CNode->bIC[ii] - p_bIC[ii] ) > CNode->bIC[ii]*1e-4 ) // bugfix KD 21.11.04
+          //     useSimplex = true;
+        CNode->bIC[ii] = p_bIC[ii];
+      }
+      for( ii=0; ii<CSD->nDCb; ii++ )
+      {
+        CNode->dul[ii] = p_dul[ii];
+        CNode->dll[ii] = p_dll[ii];
+      }
+      if( useSimplex && CNode->NodeStatusCH == NEED_GEM_SIA )
+        CNode->NodeStatusCH = NEED_GEM_AIA;
+      // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
+      if( CSD->nAalp >0 )
+       for( ii=0; ii<CSD->nPHb; ii++ )
+           CNode->aPH[ii] = p_asPH[ii];
+
+
+
 }
 
 #endif

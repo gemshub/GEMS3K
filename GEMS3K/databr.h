@@ -51,7 +51,7 @@ typedef struct  /// DATABR - template node data bridge structure
     nPHb,     	///< Number of Phases to be kept in the DATABR structure (<= nPH)
     nPSb,       ///< Number of Phases-solutions (multicomponent phases) to be kept in the DATABR memory structure (<= nPS)
 */
-//      Usage of this variable (DB - data bridge)      	               MT-DB DB-GEM GEM-DB DB-MT
+//      Usage of this variable (DB - data bridge)                           MT-DB DB-GEM GEM-DB DB-MT
    double
 // \section Chemical scalar variables
     TK,     ///< Node temperature T (Kelvin)                     	         +      +      -     -
@@ -69,8 +69,8 @@ typedef struct  /// DATABR - template node data bridge structure
     pH,     ///< pH of aqueous solution in the activity scale (-log10 molal) -      -      +     +
     pe,     ///< pe of aqueous solution in the activity scale (-log10 molal) -      -      +     +
     Eh,     ///< Eh of aqueous solution (V)                                  -      -      +     +
-    Tm,     ///< Actual total simulation time (s)
-    dt      /// Actual time step (s) - needed for diagnostics in GEMS3K output
+    Tm,     ///< Actual total simulation time (s)                            +      +      -     -
+    dt      ///< Actual time step (s) - needed for TKinMet, can change!      +      +     (+)   (+)
 #ifdef NODEARRAYLEVEL
       ,
 // \section  FMT variables (units or dimensionsless) - to be used for storing them
@@ -109,17 +109,20 @@ typedef struct  /// DATABR - template node data bridge structure
     *xDC,  ///< Speciation - amounts of DCs in equilibrium state - primal GEM solution(moles)[nDCb] (+)    (+)     +     +
     *gam,  ///< Activity coefficients of DCs in their respective phases  [nDCb]                     (+)    (+)     +     +
 // Metastability/kinetic controls
-    *dul,  ///< Upper metastability constraints on amounts of DCs (moles) [nDCb]                     +      +      -     -
-    *dll,  ///< Lower metastability constraints on amounts of DCs (moles)  [nDCb]                    +      +      -     -
+    *dul,  ///< Upper additional metastability restrictions AMR on amounts of DCs (moles) [nDCb]     +      +      -     -
+    *dll,  ///< Lower AMR on amounts of DCs (moles) [nDCb]                                           +      +      -     -
 // Phases in reactive subsystem
-    *aPH,  ///< Specific surface areas of phases (m2/kg) [nPHb]                                      +      +      -     -
+    *aPH,  ///< Specific surface areas of phases (m2/kg) [nPHb], can change in TKinMet               +      +     (+)   (+)
     *xPH,  ///< Amounts of phases in equilibrium state (moles) [nPHb]                                -      -      +     +
     *vPS,  ///< Volumes of multicomponent phases (m3)  [nPSb]                                        -      -      +     +
     *mPS,  ///< Masses of multicomponent phases (kg)    [nPSb]                                       -      -      +     +
     *bPS,  ///< Bulk elemental compositions of multicomponent phases (moles) [nPSb][nICb]            -      -      +     +
     *xPA,  ///< Amount of carrier (sorbent or solvent) in multicomponent phases [nPSb]               -      -      +     +
            ///< (+) can be used as input in "smart initial approximation" mode of GEM IPM-2 algorithm
-    *bSP;  ///< Output bulk composition of the equilibrium solid part of the system, moles   [nICb]  -      -      +     +
+    *bSP,  ///< Output bulk composition of the equilibrium solid part of the system, moles   [nICb]  -      -      +     +
+   // Metastability/kinetic controls on phases-solutions (added in devPhase branch)
+    *amru, ///< Upper AMRs on masses of DCs (kg) [nPSb]                                              +      +      -     -
+    *amrl; ///< Lower AMRs on masses of DCs (kg) [nPSb]                                              +      +      -     -
 }
 DATABR;
 
@@ -154,7 +157,8 @@ typedef enum {
  OK_MassBal    = 7,
  OK_RecalcPar  = 8,
  Bad_Recalc    = 9,
- OK_Time       = 10
+ Bad_Time_Step = 10  ///< converged but TKinMet finds that time step must be less (returns in dt)
+
 } NODECODEFMT; /// Node status codes set by the FMT (FluidMassTransport) part
 
 typedef enum {  /// Node type codes controlling hydraulic/mass-transport behavior
@@ -169,9 +173,8 @@ typedef enum {  /// Node type codes controlling hydraulic/mass-transport behavio
   INIT_FUNK    = 4  ///< functional conditions (e.g. input time-depended functions)
 } NODETYPE;
 
-
 typedef enum {  /// Node type codes controlling Indexation Code
-   undefi  = 0, ///<
+   undefi  = 0,    ///<
    nICbi   = -1,   ///< index of Independent Components kept in the DBR file and DATABR memory structure
    nDCbi   = -2,   ///< index of Dependent Components kept in the DBR file and DATABR memory structure
    nPHbi   = -3,   ///< index of Phases to be kept in the DBR file and DATABR structure
