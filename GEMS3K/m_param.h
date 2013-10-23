@@ -397,7 +397,7 @@ public:
 
    void LoadFromMtparm( QWidget* par, DATACH *CSD, bool no_interpolat );
     void CalcBcc(); // Calc bulk composition
-    void ShowPhaseWindow(const char *objName, int nLine);
+    void ShowPhaseWindow(QWidget* par, const char *objName, int nLine);
     //void ShowEqPhaseWindow();
     void ShowDBWindow( const char *objName, int nLine=0 );
     void Clear_XeA_XeD_Phm_BIun();
