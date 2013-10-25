@@ -2174,8 +2174,18 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 
 // (9) Optional, for passing the current mass transport time and time step into the work
 // DATABR structure (for using it in TKinMet, or tracing/debugging, or in writing DBR files for nodes)
+// This call should be used instead of obsolete GEM_set_MT() (provided below for compatibility with older codes)
 //
 void TNode::GEM_from_MT_time(
+   double p_Tm,      // actual total simulation time, s          +       -      -
+   double p_dt       // actual time step, s                      +       -      -
+)
+{
+  CNode->Tm = p_Tm;
+  CNode->dt = p_dt;
+}
+
+void TNode::GEM_set_MT( // misleading name of the method - use GEM_from_MT_time() instead, see above
    double p_Tm,      // actual total simulation time, s          +       -      -
    double p_dt       // actual time step, s                      +       -      -
 )

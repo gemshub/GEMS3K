@@ -9,7 +9,7 @@
 // TNode class implements a  simple C/C++ interface between GEMS3K
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2006-2013 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling

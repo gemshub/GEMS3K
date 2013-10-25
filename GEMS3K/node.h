@@ -338,8 +338,16 @@ double *p_amrl    ///< Lower AMR to masses of sol. phases [nPSb]        +       
 
 /// (9) Optional, for passing the current mass transport time and time step into the work
 /// DATABR structure (for using it in TKinMet, or tracing/debugging, or in writing DBR files for nodes)
+/// This call should be used instead of obsolete GEM_set_MT() (provided below for compatibility with older codes)
 //
 void GEM_from_MT_time(
+//   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
+//   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
+   double p_Tm,      ///< Actual total simulation time, s               +       -      -
+   double p_dt       ///< Actual time step, s                           +       -      -
+);
+
+void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_time(), see above
 //   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
 //   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
    double p_Tm,      ///< Actual total simulation time, s               +       -      -
