@@ -580,23 +580,6 @@ protected:
 
 #endif
 
-// Internal functions for SCMs
-   void getLsModsum( long int& LsModSum, long int& LsIPxSum );
-   void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
-   /// Get dimensions from LsPhl array
-   void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
-   /// Get dimensions from LsMdc2 array
-   void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
-   /// Get dimensions from LsISmo array
-   void getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum );
-   /// Get dimensions from LsESmo array
-   void getLsESmosum( long int& EImcSum,long int& mCDcSum );
-   /// Get dimensions from LsKin array
-   void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
-                     long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
-   /// Get dimensions from LsUpot array
-   void getLsUptsum( long int& UMpcSum );
-
    void setErrorMessage( long int num, const char *code, const char * msg);
    void addErrorMessage( const char * msg);
 
@@ -843,6 +826,23 @@ public:
     void to_text_file_gemipm( const char *path, bool addMui,
     		bool with_comments = true, bool brief_mode = false );
     void from_text_file_gemipm( const char *path,  DATACH  *dCH );
+
+    // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
+       void getLsModsum( long int& LsModSum, long int& LsIPxSum );
+       void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+       /// Get dimensions from LsPhl array
+       void getLsPhlsum( long int& PhLinSum,long int& lPhcSum );
+       /// Get dimensions from LsMdc2 array
+       void getLsMdc2sum( long int& DQFcSum,long int& rcpcSum );
+       /// Get dimensions from LsISmo array
+       void getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum );
+       /// Get dimensions from LsESmo array
+       void getLsESmosum( long int& EImcSum,long int& mCDcSum );
+       /// Get dimensions from LsKin array
+       void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
+                         long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
+       /// Get dimensions from LsUpot array
+       void getLsUptsum( long int& UMpcSum );
 
     // EXTERNAL FUNCTIONS
     // MultiCalc
