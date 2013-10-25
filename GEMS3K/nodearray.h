@@ -302,15 +302,179 @@ public:
 
 };
 
-//IC node data access macroses
+//Node scalar data access macros (added in devPhase), work both as get() and put()
+
+// Temperature T (Kelvin) in T0 node
+#define node0_TK( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->TK)
+// Temperature T (Kelvin) in T1 node
+#define node1_TK( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->TK)
+
+// Pressure P (Pa) in T0 node
+#define node0_P( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->P)
+// Pressure P (Pa) in T1 node
+#define node1_P( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->P)
+
+// Volume V of reactive subsystem (m3) in T0 node
+#define node0_Vs( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Vs)
+// Volume V of reactive subsystem (m3) in T1 node
+#define node1_Vs( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Vs)
+
+// Volume of inert subsystem (m3) in T0 node
+#define node0_Vi( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Vi)
+// Volume of inert subsystem (m3) in T1 node
+#define node1_Vi( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Vi)
+
+// Mass of reactive subsystem (kg) in T0 node
+#define node0_Ms( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Ms)
+// Mass of reactive subsystem (kg) in T1 node
+#define node1_Ms( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Ms)
+
+// Mass of inert subsystem (kg) in T0 node
+#define node0_Mi( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Mi)
+// Mass of inert subsystem (kg) in T1 node
+#define node1_Mi( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Mi)
+
+/*
+Gs,     ///< Total Gibbs energy of the reactive subsystem (J/RT) (norm)  -      -      +     +
+Hs, 	///< Total enthalpy of reactive subsystem (J) (reserved)         -      -      +     +
+Hi,     ///< Total enthalpy of inert subsystem (J) (reserved)            +      -      -     +
+*/
+
+// Effective aqueous ionic strength (molal) in T0 node
+#define node0_IC( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->IC)
+// Effective aqueous ionic strength (molal) in T1 node
+#define node1_IC( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->IC)
+
+// pH of aqueous solution in the activity scale (-log10 molal) in T0 node
+#define node0_pH( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->pH)
+// pH of aqueous solution in the activity scale (-log10 molal) in T1 node
+#define node1_pH( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->pH)
+
+// pe of aqueous solution in the activity scale (-log10 molal) in T0 node
+#define node0_pe( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->pe)
+// pe of aqueous solution in the activity scale (-log10 molal) in T1 node
+#define node1_pe( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->pe)
+
+// Eh of aqueous solution (V) in T0 node
+#define node0_Eh( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Eh)
+// Eh of aqueous solution (V) in T1 node
+#define node1_Eh( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Eh)
+
+// Actual total simulation time (s) in T0 node
+#define node0_Tm( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Tm)
+// Actual total simulation time (s) in T1 node
+#define node1_Tm( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Tm)
+
+// Actual time step (s) in T0 node (needed for TKinMet, can change in GEM calculation)
+#define node0_dt( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->dt)
+// Actual time step (s) in T1 node (needed for TKinMet, can change in GEM calculation)
+#define node1_dt( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->dt)
+
+#ifdef NODEARRAYLEVEL
+// \section  FMT variables (units or dimensionsless) - to be used for storing them
+//  at the nodearray level, normally not used in the single-node FMT-GEM coupling
+
+// General diffusivity of disolved matter (m2/s) in T0 node
+#define node0_Dif( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Dif)
+// General diffusivity of disolved matter (m2/s) in T1 node
+#define node1_Dif( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Dif)
+
+// Total volume of the node (m3) (Vs + Vi) in T0 node
+#define node0_Vt( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Vt)
+// Total volume of the node (m3) (Vs + Vi) in T1 node
+#define node1_Vt( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Vt)
+
+// Advection velocity (in pores)  (m/s) in T0 node
+#define node0_vp( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->vp)
+// Advection velocity (in pores)  (m/s) in T1 node
+#define node1_vp( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->vp)
+
+// Effective (actual) porosity normalized to 1 in T0 node
+#define node0_eps( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->eps)
+// Effective (actual) porosity normalized to 1 in T1 node
+#define node1_eps( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->eps)
+
+// Actual permeability (m2) in T0 node
+#define node0_Km( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Km)
+// Actual permeability (m2) in T1 node
+#define node1_Km( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Km)
+
+// Actual Darcy`s constant (m2/s) in T0 node
+#define node0_Kf( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Kf)
+// Actual Darcy`s constant (m2/s) in T1 node
+#define node1_Kf( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Kf)
+
+// Specific storage coefficient, dimensionless in T0 node
+#define node0_S( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->S)
+// Specific storage coefficient, dimensionless in T1 node
+#define node1_S( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->S)
+
+// Transmissivity, m2/s in T0 node
+#define node0_Tr( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->Tr)
+// Transmissivity, m2/s in T1 node
+#define node1_Tr( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->Tr)
+
+// Actual hydraulic head (hydraulic potential) (m) in T0 node
+#define node0_h( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->h)
+// Actual hydraulic head (hydraulic potential) (m) in T1 node
+#define node1_h( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->h)
+
+// Actual carrier density for density-driven flow (kg/m3) in T0 node
+#define node0_rho( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->rho)
+// Actual carrier density for density-driven flow (kg/m3) in T1 node
+#define node1_rho( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->rho)
+
+// Specific longitudinal dispersivity of porous media (m) in T0 node
+#define node0_al( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->al)
+// Specific longitudinal dispersivity of porous media (m) in T1 node
+#define node1_al( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->al)
+
+// Specific transversal dispersivity of porous media (m) in T0 node
+#define node0_at( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->at)
+// Specific transversal dispersivity of porous media (m) in T1 node
+#define node1_at( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->at)
+
+// Specific vertical dispersivity of porous media (m) in T0 node
+#define node0_av( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->av)
+// Specific vertical dispersivity of porous media (m) in T1 node
+#define node1_av( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->av)
+
+// Hydraulic longitudinal dispersivity (m2/s) in T0 node
+#define node0_hDl( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->hDl)
+// Hydraulic longitudinal dispersivity (m2/s) in T1 node
+#define node1_hDl( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->hDl)
+
+// Hydraulic transversal dispersivity (m2/s) in T0 node
+#define node0_hDt( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->hDt)
+// Hydraulic transversal dispersivity (m2/s) in T1 node
+#define node1_hDt( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->hDt)
+
+// Hydraulic vertical dispersivity (m2/s) in T0 node
+#define node0_hDv( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->hDv)
+// Hydraulic vertical dispersivity (m2/s) in T1 node
+#define node1_hDv( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->hDv)
+
+// Tortuosity factor (dimensionless) in T0 node
+#define node0_nto( nodex ) (TNodeArray::na->pNodT0()[(nodex)]->nto)
+// Tortuosity factor (dimensionless) in T1 node
+#define node1_nto( nodex ) (TNodeArray::na->pNodT1()[(nodex)]->nto)
+
+#endif
+
+//IC node data access macros
+
 #define node0_bIC( nodex, ICx ) (TNodeArray::na->pNodT0()[(nodex)]->bIC[(ICx)])
 #define node1_bIC( nodex, ICx ) (TNodeArray::na->pNodT1()[(nodex)]->bIC[(ICx)])
 #define node0_rMB( nodex, ICx ) (TNodeArray::na->pNodT0()[(nodex)]->rMB[(ICx)])
 #define node1_rMB( nodex, ICx ) (TNodeArray::na->pNodT1()[(nodex)]->rMB[(ICx)])
 #define node0_uIC( nodex, ICx ) (TNodeArray::na->pNodT0()[(nodex)]->uIC[(ICx)])
 #define node1_uIC( nodex, ICx ) (TNodeArray::na->pNodT1()[(nodex)]->uIC[(ICx)])
+// equilibrium bulk composition of solid part of the system, moles from T0 node
+#define node0_bSP( nodex, ICx ) (TNodeArray::na->pNodT0()[(nodex)]->bSP[(ICx)])
+// equilibrium bulk composition of solid part of the system, moles from T1 node
+#define node1_bSP( nodex, ICx ) (TNodeArray::na->pNodT1()[(nodex)]->bSP[(ICx)])
 
-//DC node data access macroses
+//DC node data access macros
 
   // amount of DC with index DCx from T0 node with index nodex
 #define node0_xDC( nodex, DCx ) (TNodeArray::na->pNodT0()[(nodex)]->xDC[(DCx)])
@@ -332,7 +496,7 @@ public:
   // lower constraint on amount of DC with index DCx from T1 node with index nodex
 #define node1_dll( nodex, DCx ) (TNodeArray::na->pNodT1()[(nodex)]->dll[(DCx)])
 
-//Phase node data access macroses
+//Phase node data access macros
   // amount of phase with index PHx from T0 node with index nodex
 #define node0_xPH( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->xPH[(PHx)])
   // amount of phase with index PHx from T1 node with index nodex
@@ -371,15 +535,9 @@ public:
   // amount of solvent/sorbent in phase with index PHx from T0 node with index nodex
 #define node0_xPA( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->xPA[(PHx)])
   // amount of solvent/sorbent in phase with index PHx from T1 node with index nodex
-#define node1_xPA( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->xPA[(PHx)])
+#define node1_xPA( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->xPA[(PHx)])   
 
-// equilibrium bulk composition of solid part of the system, moles from T0 node
-#define node0_bSP( nodex, ICx ) (TNodeArray::na->pNodT0()[(nodex)]->bSP[(ICx)])
-// equilibrium bulk composition of solid part of the system, moles from T1 node
-#define node1_bSP( nodex, ICx ) (TNodeArray::na->pNodT1()[(nodex)]->bSP[(ICx)])
-
-
-// Phase compositions node data access macroses
+// Phase compositions node data access macros
 // amount of independent component ICx in multi-component phase PHx in T0 node nodex
 #define node0_bPS( nodex, PHx, ICx ) ( TNodeArray::na->pNodT0()[(nodex)]->bPS[ \
                                        (PHx)*TNodeArray::na->pCSD()->nICb+(ICx)])
