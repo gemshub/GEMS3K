@@ -593,7 +593,7 @@ TKinMet::PTparam( const double TK, const double P )
 
 // Returns a primitive correction for specific surface area, also for the linked phase.
 //  Returns the sSAc value for rate calculation and sets fully-corrected sSAcor value.
-//     mMre sophisticated functions to be added here
+//     more sophisticated functions to be added here
 double
 TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
 {
@@ -667,14 +667,14 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
     else { // This phase is not linked to other phases
         //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
         // more sophisticated functions to be called here
-        if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
+        if( LaPh < -OmgTol && formFactor ) // dissolution  (needs more flexible check based on Fa stability criterion!
         {
             sSAc = formFactor * sSAi * pow( mPh/mPhi, 1./3. );
         }
-        else if( LaPh > OmgTol ) {  // precipitation
+        else if( LaPh > OmgTol && formFactor ) {  // precipitation
             sSAc = formFactor * sSAi * pow( mPhi/mPh, 1./3. );
         }
-        else {  // equilibrium
+        else {  // equilibrium or formFactor == 0
             sSAc = sSAcor;   // no change in sSAcor
         }
 //        r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
