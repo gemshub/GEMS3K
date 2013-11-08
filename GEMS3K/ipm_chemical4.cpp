@@ -211,17 +211,17 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.Eh_ = pm.Eh;      /// Eh of aqueous solution, V
   //
     kmd.nPh_ = pm.XF[k];   /// current amount of this phase, mol (read-only)
-    kmd.mPh_ = pm.FWGT[k]; /// current mass of this phase, g (read-only)
-    kmd.vPh_ = pm.FVOL[k]; /// current volume of this phase, cm3 (read-only)
+    kmd.mPh_ = pm.FWGT[k]/1e3; /// current mass of this phase, kg (read-only)
+    kmd.vPh_ = pm.FVOL[k]/1e6; /// current volume of this phase, m3 (read-only)
     kmd.sAPh_ = pm.Aalp[k]*pm.FWGT[k];  /// current surface area of this phase, m2
     kmd.LaPh_ = pm.Falp[k];    /// phase stability index (log scale)
     kmd.OmPh_ = pow( 10., pm.Falp[k] );  /// phase stability index (activity scale) 10^LaPh_
   //
-    kmd.sSA_ = pm.Aalp[k];  /// Specific surface area of the phase, m2/g, default: 0.
+    kmd.sSA_ = pm.Aalp[k]*1e3; /// Specific surface area of the phase, m2/kg, default: 0.
     kmd.sgw_ = pm.Sigw[k];    /// Standard mean surface energy of solid-aqueous interface, J/m2
     kmd.sgg_ = pm.Sigg[k];    /// Standard mean surface energy of gas-aqueous interface, J/m2
-    kmd.rX0_ = pm.Xr0h0[k][0];  /// Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
-    kmd.hX0_ = pm.Xr0h0[k][1];  /// Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
+    kmd.rX0_ = pm.Xr0h0[k][0]/1e9;  /// Mean radius r0 for (spherical or cylindrical) particles, n (reserved)
+    kmd.hX0_ = pm.Xr0h0[k][1]/1e9;  /// Mean thickness h0 for cylindrical or 0 for spherical particles, n (reserved)
     kmd.sVp_ = 0.;    /// Specific pore volume of phase, m3/g (default: 0)
     kmd.sGP_ = pm.YOF[k]*pm.FWGT[k];    /// surface free energy of the phase, J (YOF*PhM)
     if( k < pm.FIs)
@@ -249,10 +249,10 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.arym_ = pm.Y_m;    /// Pointer to molalities of all species in MULTI (provided),
     kmd.arla_ = pm.Y_la;   /// Pointer to lg activities of all species in MULTI (provided)
 
-kmd.arxp_ = pm.XF;    /// Pointer to amounts of all phases in MULTI (provided)
-kmd.armp_ = pm.FWGT;  /// Pointer to masses of all phases in MULTI (provided)
-kmd.arvp_ = pm.FVOL;  /// Pointer to volumes of all phases in MULTI (provided)
-kmd.arasp_ = pm.Aalp;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided)
+    kmd.arxp_ = pm.XF;    /// Pointer to amounts of all phases in MULTI (provided)
+    kmd.armp_ = pm.FWGT;  /// Pointer to masses of all phases in MULTI (provided)
+    kmd.arvp_ = pm.FVOL;  /// Pointer to volumes of all phases in MULTI (provided)
+    kmd.arasp_ = pm.Aalp;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided)
 
     kmd.arnx_ = pm.X + jb; /// Pointer to mole amounts of phase components (provided) [NComp]
 

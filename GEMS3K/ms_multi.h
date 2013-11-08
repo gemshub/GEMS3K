@@ -299,7 +299,7 @@ double
 // TKinMet stuff (old DODs, new contents )
     *PUL,  ///< Vector of upper restrictions to multicomponent phases amounts [FIs]
     *PLL,  ///< Vector of lower restrictions to multicomponent phases amounts [FIs]
-*PfFact, /// new: form factors for phases (taken from TKinMet or set from TNode) [FI]
+*PfFact, /// new: phase surface area - volume shape factor (taken from TKinMet or set from TNode) [FI]
 *PrT,    /// new: Total MWR rate (mol/s) for phases - TKinMet output [FI]
 *PkT,    /// new: Total specific MWR rate (mol/m2/s) for phases - TKinMet output [FI]
 *PvT,    /// new: Total one-dimensional MWR surface propagation velocity (m/s) - TKinMet output [FI]

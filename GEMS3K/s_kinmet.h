@@ -67,13 +67,13 @@ KinSizedCode_ = 6,  // Codes for dependencies of the shape factor on system vari
     KM_SIZED_BIN_ = 'B',   ///  Binodal particle/pore size distribution (reserved)
     KM_SIZED_FUN_ = 'F',   ///  Empirical particle/pore size distribution function (reserved)
 KinResCode_ = 7,     // Units and type of rate constants
-    KM_RES_SURF_N = 'A',   /// surface-scaled rate constant (k in mol/m2/s), default
-    KM_RES_SURF_M = 'M',   /// surface-scaled rate constant (k in kg/m2/s)
-    KM_RES_PVS_N  = 'V',   /// pore-volume-scaled rate constant (k in mol/m3/s)
-    KM_RES_PVS_M  = 'W',   /// pore-volume-scaled rate constant (k in kg/m3/s)
-    KM_RES_ABS_N  = 'F',   /// absolute (unscaled) rate constant (k in mol/s)
-    KM_RES_ABS_M  = 'G',   /// absolute (unscaled) rate constant (k in kg/s)
-    KM_LIN_RATE   = 'L',   /// linear growth/dissolution rate constant (v in m/s)
+    KM_RES_SURF_N_ = 'A',   /// surface-scaled rate constant (k in mol/m2/s), default
+    KM_RES_SURF_M_ = 'M',   /// surface-scaled rate constant (k in kg/m2/s)
+    KM_RES_PVS_N_  = 'V',   /// pore-volume-scaled rate constant (k in mol/m3/s)
+    KM_RES_PVS_M_  = 'W',   /// pore-volume-scaled rate constant (k in kg/m3/s)
+    KM_RES_ABS_N_  = 'F',   /// absolute (unscaled) rate constant (k in mol/s)
+    KM_RES_ABS_M_  = 'G',   /// absolute (unscaled) rate constant (k in kg/s)
+    KM_LIN_RATE_   = 'L',   /// linear growth/dissolution rate constant (v in m/s)
 
 // Minor end member codes for uptake kinetics models
     DC_SOL_MINOR_ = 'J',
@@ -126,17 +126,17 @@ struct KinMetData {
     double Eh_;      /// Eh of aqueous solution, V
   //
     double nPh_;     /// current amount of this phase, mol (read-only)
-    double mPh_;     /// current mass of this phase, g (read-only)
-    double vPh_;     /// current volume of this phase, cm3 (read-only)
+    double mPh_;     /// current mass of this phase, kg (read-only)
+    double vPh_;     /// current volume of this phase, m3 (read-only)
     double sAPh_;    /// current surface of this phase, m2
     double LaPh_;    /// phase stability index (log scale)
     double OmPh_;    /// phase stability index (activity scale) 10^LaPh_
-  //
-    double sSA_;    /// Specific surface area of the phase, m2/g, default: 0.
+double sFact_;   /// phase surface area - volume shape factor ( >= 4.836 for spheres )
+    double sSA_;    /// Specific surface area of the phase, m2/kg, default: 0.
     double sgw_;    /// Standard mean surface energy of solid-aqueous interface, J/m2
     double sgg_;    /// Standard mean surface energy of gas-aqueous interface, J/m2
-    double rX0_;    /// Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
-    double hX0_;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
+    double rX0_;    /// Mean radius r0 for (spherical or cylindrical) particles, m (reserved)
+    double hX0_;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, m (reserved)
     double sVp_;    /// Specific pore volume of phase, m3/g (default: 0)
     double sGP_;    /// surface free energy of the phase, J (YOF*PhM)
     double nPul_;   /// upper restriction to this phase amount, mol (calculated here)
@@ -160,9 +160,9 @@ struct KinMetData {
     double *arym_;    /// Pointer to molalities of all species in MULTI (provided), read-only
     double *arla_;    /// Pointer to lg activities of all species in MULTI (provided), read-only
 
-double *arxp_;   /// Pointer to amounts of all phases in MULTI (provided), read-only
-double *armp_;   /// Pointer to masses of all phases in MULTI (provided), read-only
-double *arvp_;   /// Pointer to volumes of all phases in MULTI (provided), read-only
+double *arxp_;   /// Pointer to amounts of all phases in MULTI (provided), read-only   mol
+double *armp_;   /// Pointer to masses of all phases in MULTI (provided), read-only    g
+double *arvp_;   /// Pointer to volumes of all phases in MULTI (provided), read-only   cm3
 double *arasp_;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided), read-only
 
     double *arnx_;    /// Pointer to mole amounts of phase components (provided) [NComp] read-only
@@ -218,7 +218,7 @@ struct TKinReact
         K,   // precipitation rate constant (corrected for T) in mol/m2/s
         rPR,   // rate for this region (output) in mol/s
         rmol   // rate for the whole face (output) in mol/s
-//        velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
+//        velo,   // velocity of face growth (positive) or dissolution (negative) m/s
         ;
 };
 
@@ -251,11 +251,12 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double P_bar;       /// Pressure, bar
     double kTau;        /// current time, s
     double kdT;         /// current time increment, s
-    double sSAi;        /// initial specific surface area of the phase (m2/g)
+    double sSAi;        /// initial specific surface area of the phase (m2/kg)
     double nPhi;        /// initial amount of the phase, mol
-    double mPhi;        /// initial mass of the phase, g
-    double vPhi;        /// initial volume of the phase, cm3
-double fFact;       /// new: shape factor (for particles or pores)
+    double mPhi;        /// initial mass of the phase, kg
+    double vPhi;        /// initial volume of the phase, m3
+double sFacti;      /// inital surface area - volume shape factor ( >= 4.836 for spheres ), negative for pores
+double sFact;       /// surface area-volume factor
                     // all three for the built-in correction of specific surface area and kTot-vTot transformation
     // These values will be corrected after GEM converged at each time step
     double IS;          /// Effective molal ionic strength of aqueous electrolyte
@@ -263,19 +264,19 @@ double fFact;       /// new: shape factor (for particles or pores)
     double pe;          /// pe of aqueous solution
     double Eh;          /// Eh of aqueous solution, V
     double nPh;     /// current amount of this phase, mol
-    double mPh;     /// current mass of this phase, g
-    double vPh;     /// current volume of this phase, cm3
-    double sAPh;    /// current surface of this phase, m2
+    double mPh;     /// current mass of this phase, kg
+    double vPh;     /// current volume of this phase, m3
+    double sAPh;    /// current surface area of this phase, m2
     double LaPh;    /// phase stability index (log scale)
     double OmPh;    /// phase stability index (activity scale) 10^LaPh
 
     // These values may be corrected inside of TKinMet class instance over time steps
-    double sSA;    /// Specific surface area of the phase, m2/g, default: 0.
+    double sSA;    /// Specific surface area of the phase, m2/kg, default: 0.
     double sgw;    /// Standard mean surface energy of solid-aqueous interface, J/m2
     double sgg;    /// Standard mean surface energy of gas-aqueous interface, J/m2
-    double rX0;    /// Mean radius r0 for (spherical or cylindrical) particles, nm (reserved)
-    double hX0;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, nm (reserved)
-    double sVp;    /// Specific pore volume of phase, m3/g (default: 0)
+    double rX0;    /// Mean radius r0 for (spherical or cylindrical) particles, m (reserved)
+    double hX0;    /// Mean thickness h0 for cylindrical or 0 for spherical particles, m (reserved)
+    double sVp;    /// Specific pore volume of phase, m3/kg (default: 0)
     double sGP;    /// surface free energy of the phase, J (YOF*PhM)
     double nPul;   /// upper restriction to this phase amount, mol (output)
     double nPll;   /// lower restriction to this phase amount, mol (output)
@@ -298,12 +299,12 @@ double fFact;       /// new: shape factor (for particles or pores)
     double *arym;    /// Pointer to molalities of all species in MULTI (provided), read-only
     double *arla;    /// Pointer to lg activities of all species in MULTI (provided), read-only
 
-double *arxp;   /// Pointer to amounts of all phases in MULTI (provided), read-only
-double *armp;   /// Pointer to masses of all phases in MULTI (provided), read-only
-double *arvp;   /// Pointer to volumes of all phases in MULTI (provided), read-only
+double *arxp;   /// Pointer to amounts of all phases in MULTI (provided), read-only   mol
+double *armp;   /// Pointer to masses of all phases in MULTI (provided), read-only    g
+double *arvp;   /// Pointer to volumes of all phases in MULTI (provided), read-only   cm3
 double *arasp;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided), read-only
 
-    double *arnx;    /// Pointer to mole amounts of phase components (provided) [NComp] read-only
+    double *arnx;    /// Pointer to mole amounts of phase components (provided) [NComp] read-only mol
 
     double *arnxul;  /// Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output
     double *arnxll;  /// Vector of lower kinetic restrictions to nx, moles [NComp]  (DLL) direct access output
@@ -321,8 +322,9 @@ double *arasp;  /// Pointer to (current) specific surface areas of all phases in
     double rTot;   /// Current total MWR rate (mol/s)
     double vTot;   /// Total one-dimensional MWR surface propagation velocity (m/s) - output
 
-    double sSAcor; /// Corrected specific surface area (m2/g) - output
-    double sAph_c; /// Corrected surface area of the phase (m2/g)
+    double Rho;    /// current density of this phase, kg/m3
+    double sSAcor; /// Corrected specific surface area (m2/kg) - output
+    double sAph_c; /// Corrected surface area of the phase (m2/kg)
     double kdT_c;  /// new: modified (suggested) time increment, s
     // SS dissolution
 
@@ -407,7 +409,7 @@ double *arasp;  /// Pointer to (current) specific surface areas of all phases in
 
     // calculates corrected specific surface area
     virtual
-    double CorrSpecSurfArea( const double formFactor, const bool toinit );
+    double CorrSpecSurfArea(const double sFratio, const bool toinit );
 
 };
 

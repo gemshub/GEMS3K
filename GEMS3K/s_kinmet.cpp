@@ -47,7 +47,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     NComp(kmd->NComp_), nlPh(kmd->nlPh_), nlPc(kmd->nlPc_), nPRk(kmd->nPRk_), nSkr(kmd->nSkr_),
     nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), // numpC(kmd->numpC_), iRes4(kmd->iRes4_),
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
-    sSAi(kmd->sSA_), nPhi(kmd->nPh_), mPhi(kmd->mPh_), vPhi(kmd->vPh_),
+    sFact(kmd->sFact_), sSAi(kmd->sSA_), nPhi(kmd->nPh_), mPhi(kmd->mPh_), vPhi(kmd->vPh_),
     IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),
     sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
     sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
@@ -96,16 +96,33 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     // Work data and kinetic law calculation results
     kTot = 0.;   // Total rate constant (per m2 phase surface area)
     rTot = 0.;   // Current total MWR rate (mol/s)
-    vTot = 0.;   // Total surface propagation velocity (nm/s)
-    fFact = 1.;  // Form factor (particles or pores)
+    vTot = 0.;   // Total surface propagation velocity (m/s)
+
     nPh = nPhi;
     mPh = mPhi;
     vPh = vPhi;
     sSA = sSAi;
-    sSAcor = sSAi;  // Initialized corrected specific surface area (m2/g)
-    sAph_c = sAPh;  // Initialized corrected surface area of the phase (m2/g)
-    kdT_c = kdT;    // Initialized corrected time step (s)
+    sSAcor = sSAi;  // Initialized corrected specific surface area (m2/kg)
+    sAph_c = sAPh = mPh*sSA;  // Initialized corrected surface area of the phase (m2/kg)
 
+    if( fabs(sFact) < 4.836 )
+    {   // Calculation of area-volume shape factor (positive for particles or negative for pores)
+        if( sFact < 0 )
+            sFact = -1.;
+        else sFact = 1.;
+        if( vPh > 0. )   // volume in cm3
+        {
+            sFact *= sAPh / pow( mPh, 2./3. );   // obtain from mass
+            sFact *= sAPh / pow( vPh, 2./3. );   // Shape factor (positive for particles or negative for pores)
+        }
+    else // no phase volume - error?
+        {
+           sFact *= sAPh / pow( mPh, 2./3. );   // obtain from mass
+        }
+    }
+    sFacti = sFact;
+
+    kdT_c = kdT;    // Initialized corrected time step (s)
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
     OmgTol = 1e-6;  // default tolerance for checking dissolution or precipitation cases
 }
@@ -327,7 +344,7 @@ TKinMet::init_arPRt()
             // check direction - for precipitation, arPRt[xj].kPR = arPRt[xj].kop;
             arPRt[xj].rPR = 0.;   // rate for this region (output) in mol/s
             arPRt[xj].rmol = 0.;   // rate for the whole face (output) in mol/s
-//        arPRt[xj].velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
+//        arPRt[xj].velo,   // velocity of face growth (positive) or dissolution (negative) m/s
 
         } // xj
     }
@@ -359,28 +376,29 @@ TKinMet::init_arPRt()
 //
 bool
 TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
-                    const double pLaPh, const double p_fFact, const double pYOFk,
+                    const double pLaPh, const double p_sFact, const double pYOFk,
                     const double pICa, const double ppHa, const double ppea, const double pEha )
 {
     long int i;
     bool status = false;
-    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk || p_fFact != fFact
+    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk || p_sFact != sFact
         || LaPh != pLaPh || IS != pICa || pH != ppHa || pe != ppea || Eh != pEha || sGP != pYOFk*mPh )
         status = true;
-    sSA = pAsk;
+    sSA = pAsk*1000.; // from m2/g to m2/kg
     nPh = pXFk;
-    mPh = pFWGTk;  // in grams?
+    mPh = pFWGTk/1e3;  // from g to kg
 // cout << " !!! mPh: " << mPh << endl;
-    vPh = pFVOLk;
-fFact = p_fFact;
+    vPh = pFVOLk/1e6;  // from cm3 to m3
+sFacti = p_sFact;
     LaPh = pLaPh;
-    sGP = pYOFk*mPh;
+    sGP = pYOFk*pFWGTk;
     IS = pICa;
     pH = ppHa;
     pe = ppea;
     Eh = pEha;
 
     sAPh = sSA*mPh;             // current surface area of this phase, m2
+
     OmPh = pow( 10., LaPh );    // phase stability index (activity scale) 10^LaPh_
 
     for( i = 0; i < nPRk; i++ )
@@ -391,6 +409,54 @@ fFact = p_fFact;
            arfeSAr[i] = arPRt[i].feSAr;
        }
     }
+
+    // Modification of shape factor as given in shape factor equation
+    {
+        double x=0., a=0., b=0., c=0., d=0.;
+        switch( KinSizedCode )
+        {
+           default:
+           case KM_UNDEF_: // 'N' - no modification
+                sFact = sFacti;
+                return status;
+           case KM_SIZED_ETM_:  // 'T', Empirical f(time) polynomial f = a + bt +ct^2 + dt^3 (default)
+                x = kTau;
+                break;
+           case KM_SIZED_ESI_:  // 'S', Empirical f(lgSI) polynomial f = a + bt +ct^2 + dt^3
+                x = LaPh;
+                break;
+           case KM_SIZED_ESA_:  // 'A', Empirical f(sarea-change) polynomial f = a + bt +ct^2 + dt^3
+                x =  ( sSA*mPh - sSAi*mPhi )/( sSAi*mPhi );
+                break;
+           case KM_SIZED_EVOL_: // 'V', Empirical f(volume-change) polynomial f = a + bt +ct^2 + dt^3
+                x =  ( vPh - vPhi )/( vPhi );
+                break;
+           case KM_SIZED_MASS_: // 'M', Empirical f(mass-change) polynomial f = a + bt +ct^2 + dt^3
+                x =  ( mPh - mPhi )/( mPhi );
+                break;
+           case KM_SIZED_MOL_:  // 'X', Empirical f(amount-change) polynomial f = a + bt +ct^2 + dt^3
+                x =  ( nPh - nPhi )/( nPhi );
+                break;
+           case KM_SIZED_UNI_:  // 'U', Uniform particle/pore size distribution (reserved)
+                return status;
+           case KM_SIZED_BIN_:  // 'B', Binodal particle/pore size distribution (reserved)
+                return status;
+           case KM_SIZED_FUN_:  // 'F', Empirical particle/pore size distribution function (reserved)
+                return status;
+        }
+        if( nAscC >= 1 )
+            a = arAscp[0];
+        if( nAscC >= 2 )
+            b = arAscp[1];
+        if( nAscC >= 3 )
+            c = arAscp[2];
+        if( nAscC >= 4 )
+            d = arAscp[3];
+
+        sFact = a + b*x +c*x*x + d*x*x*x;
+        if( sFact < 4.836 )
+            sFact = 4.836;
+    }
     return status;
 }
 
@@ -399,7 +465,7 @@ fFact = p_fFact;
 //  (provisionally also modified phase amount constraints)
 //
 double
-TKinMet::GetModFSA( double& p_fFact,  double& prTot,
+TKinMet::GetModFSA( double& p_sFact,  double& prTot,
                     double& pkTot, double& pvTot, double& pPULk, double& pPLLk )
 {
     long int i;
@@ -407,14 +473,14 @@ TKinMet::GetModFSA( double& p_fFact,  double& prTot,
     {  // gets back (to Multi) modified surface area fractions
        arPRt[i].feSAr = arfeSAr[i];
     }
-    p_fFact = fFact;
+    p_sFact = sFact;
     pPULk = nPul;
     pPLLk = nPll;
     pkTot = kTot;
     prTot = rTot;
     pvTot = vTot;
 
-    return sSAcor;
+    return sSAcor/1e3;
 }
 
 // Updates temperature to T_K and pressure to P_BAR;
@@ -558,7 +624,7 @@ if( rk.xPR != r )     // index of this parallel reaction
            rk.rPR = rk.K * rk.cat * rk.aft;
    }
    if( LaPh > OmgTol ) {
-       if( rk.k < 0 ) //   net precipitation rate constant (corrected for T) in mol/m2/st * rk.aft;
+       if( rk.k < 0 ) //   net precipitation rate constant (corrected for T) in mol/m2/s
            rk.rPR = fabs(rk.k) * rk.cat * rk.aft;
        else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
@@ -595,10 +661,9 @@ TKinMet::PTparam( const double TK, const double P )
 //  Returns the sSAc value for rate calculation and sets fully-corrected sSAcor value.
 //     more sophisticated functions to be added here
 double
-TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
+TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
 {
     double sSAc = sSA, r_sSAc;
-
 
     if( nlPh )
     {   // this is a phase linked to one or more other phases!
@@ -619,9 +684,9 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
             }
             // getting properties of the k-th phase
             xpk = arxp[k];  // amount, mol
-            mpk = armp[k];  // mass, g
-            vpk = arvp[k];  // volume, cm3
-            aspk = arasp[k]; // sp.surf.area, m2/g
+            mpk = armp[k]/1e3;  // mass, g to kg
+            vpk = arvp[k]/1e6;  // volume, cm3 to m3
+            aspk = arasp[k]*1e3; // sp.surf.area, m2/g to m2/kg
            // Adding up corrections
             switch( lpcode )   // selecting linkage type
             {
@@ -640,17 +705,17 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
             }
         }
         if( toinit )
-        {
+        {               // this may not be correct
             sSAi = 0.;
             mPhi = 0.;
         }
         // Correction of SSA of this phase
         if( LaPh < -OmgTol ) // dissolution  (needs a more flexible check based on Fa stability criterion!
         {
-            sSAc = formFactor * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), 1./3. );
+            sSAc = sFratio * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), 1./3. );
         }
         else if( LaPh > OmgTol ) {  // precipitation
-            sSAc = formFactor * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), -1./3. );
+            sSAc = sFratio * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), -1./3. );
         }
         else {  // equilibrium
             sSAc = sSAcor;   // no change in sSAcor
@@ -665,16 +730,15 @@ TKinMet::CorrSpecSurfArea( const double formFactor, const bool toinit = false )
         sAph_c = sAPh;
     }
     else { // This phase is not linked to other phases
-        //  sSAcor = FormFactor * sSAi * pow( nPh/nPhi, 1./3. ); // primitive correction for specific surface area
         // more sophisticated functions to be called here
-        if( LaPh < -OmgTol && formFactor ) // dissolution  (needs more flexible check based on Fa stability criterion!
+        if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
         {
-            sSAc = formFactor * sSAi * pow( mPh/mPhi, 1./3. );
+            sSAc = sFratio * sSAi * pow( mPh/mPhi, 1./3. );
         }
-        else if( LaPh > OmgTol && formFactor ) {  // precipitation
-            sSAc = formFactor * sSAi * pow( mPhi/mPh, 1./3. );
+        else if( LaPh > OmgTol ) {  // precipitation
+            sSAc = sFratio * sSAi * pow( mPh/mPhi, -1./3. );
         }
-        else {  // equilibrium or formFactor == 0
+        else {  // equilibrium
             sSAc = sSAcor;   // no change in sSAcor
         }
 //        r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
@@ -702,14 +766,15 @@ TKinMet::RateInit( )
     mPhi = mPh;         // initial mass
     vPhi = vPh;         // initial volume
     sSAi = sSA;         // initial specific surface area
-    sSAcr = CorrSpecSurfArea( FormFactor, true );
+    sFacti = sFact;     // initial shape factor
+    sSAcr = CorrSpecSurfArea( 1.0, true );
 //    sAPh = sSAcr * mPh;   // initial surface of the phase
 //    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall initial rate (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
     nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot = 1e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s
+    vTot =  kTot * vPh / nPh;  // linear growth/dissolution velocity in m/s
 
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
@@ -719,22 +784,23 @@ TKinMet::RateInit( )
 bool
 TKinMet::RateMod( )
 {
-    double RT = R_CONST*T_k, FormFactor = 1., sSAcr;
+    double RT = R_CONST*T_k, sFratio = 1., sSAcr;
     long int r;
 
-    if( nAscC )
-        FormFactor = arAscp[0];
     kTot = 0.;   // overall specific rate (mol/m2/s)
     for( r=0; r<nPRk; r++ )
     {
        kTot += PRrateCon( arPRt[r], r ); // adds the specific rate (mol/m2/s) for r-th parallel reaction
     }
-    sSAcr = CorrSpecSurfArea( FormFactor, false );
+    // Calculation of shape factor ratio
+    // Convert into area-mass shape factor
+    // TBD
+    sFratio = sFact/sFacti;
+    sSAcr = CorrSpecSurfArea( sFratio, false );
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate for the phase (mol/s)
-    vTot = 1e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
-
+    vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
 // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;
 }
