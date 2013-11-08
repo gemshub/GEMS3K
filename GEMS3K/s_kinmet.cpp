@@ -65,10 +65,10 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     arym = kmd->arym_;         // L
     arla = kmd->arla_;         // L
 
-arxp = kmd->arxp_;     // FI
-armp = kmd->armp_;     // FI
-arvp = kmd->arvp_;     // FI
-arasp = kmd->arasp_;   // FI
+    arxp = kmd->arxp_;     // FI
+    armp = kmd->armp_;     // FI
+    arvp = kmd->arvp_;     // FI
+    arasp = kmd->arasp_;   // FI
 
     arnx = kmd->arnx_;         // [NComp]
     arnxul = kmd->arnxul_;     // [NComp]  (DUL)
@@ -709,7 +709,7 @@ TKinMet::RateInit( )
 //    dnPh = -kdT * rTot; // overall initial change (moles)
     dnPh = 0.; // overall initial change (moles)
     nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot = 3e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s
+    vTot = 1e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s
 
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
@@ -733,7 +733,7 @@ TKinMet::RateMod( )
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
     rTot = kTot * sAPh; // overall rate for the phase (mol/s)
-    vTot = 3e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
+    vTot = 1e-6 * kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
 
 // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     return false;

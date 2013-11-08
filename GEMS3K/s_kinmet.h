@@ -42,27 +42,39 @@ KinProCode_ = 2,
 KinModCode_ = 3,
     KM_MOD_TST_ = 'T',     /// Generic TST dissolution/precipitation model following Shott ea 2012
     KM_MOD_PAL_ = 'P',     /// Dissolution/precipitation model of the form (Palandri 2004)
-    KM_MOD_WOL_ = 'W',     /// Carbonate growth model following (Wolthers 2012)
+    KM_MOD_WOL_ = 'W',     /// Linear-rate growth/dissolution model (e.g. calcite, Wolthers 2012)
     KM_MOD_NUGR_ = 'U',    /// Mineral nucleation and growth model with nuclei/particle size distr. (TBD)
 KinSorpCode_ = 4,
-    KM_UPT_ENTRAP_ = 'E',  ///	Unified entrapment model (Thien,Kulik,Curti 2013)
-    KM_UPT_UPDP_ = 'M',    ///	DePaolo (2011) uptake kinetics model
-    KM_UPT_SEMO_ = 'G',    ///  Growth (surface) entrapment model (Watson 2004)
-    KM_IEX_FAST_ = 'F',    ///  Fast ion exchange kinetics (e.g. montmorillonite, CSH)
-    KM_IEX_SLOW_ = 'L',    ///  Slow ion exchange kinetics (e.g. illite, zeolites)
-    KM_ADS_INHIB_ = 'I',   ///  Adsorption inhibition
-    KM_NUCL_SSMP_  = 'P',  ///  Solid solution nucleation model (Prieto 2013)
+    KM_UPT_ENTRAP_ = 'E',  /// Unified entrapment model (Thien,Kulik,Curti 2013)
+    KM_UPT_UPDP_ = 'M',    /// DePaolo (2011) uptake kinetics model TBD
+    KM_UPT_SEMO_ = 'G',    /// Growth (surface) entrapment model (Watson 2004) TBD
+    KM_IEX_FAST_ = 'F',    /// Fast ion exchange kinetics (e.g. montmorillonite, CSH) TBD
+    KM_IEX_SLOW_ = 'L',    /// Slow ion exchange kinetics (e.g. illite, zeolites)  TBD
+    KM_ADS_INHIB_ = 'I',   /// Adsorption inhibition TBD
+    KM_NUCL_SSMP_  = 'P',  /// Solid solution nucleation model (Prieto 2013) TBD
 KinLinkCode_ = 5,
-    KM_LNK_SURF_ = 'S',   ///  Link to (fraction of) solid substrate surface
-    KM_LNK_PVOL_ = 'P',   ///  Link to (fraction of) solid substrate (pore) volume
-    KM_LNK_MASS_ = 'M',   ///  Link to (fraction of) solid substrate mass
-KinSizedCode_ = 6,
-    KM_SIZED_UNI_ = 'U',  ///  Uniform particle/pore size distribution
-    KM_SIZED_BIN_ = 'B',  ///  Binodal particle/pore size distribution
-    KM_SIZED_FUN_ = 'F',  ///  Empirical distribution function
-KinResCode_ = 7,
-    KM_RES_SURF_ = 'A',   /// surface-scaled rate model (k in mol/m2/s)
-    KM_RES_PVS_ = 'V',     /// pore-volume-scaled model (k in mol/m3/s)
+    KM_LNK_SURF_ = 'S',    ///  Link to (fraction of) solid substrate surface area (default)
+    KM_LNK_PVOL_ = 'P',    ///  Link to (fraction of) solid substrate (pore) volume
+    KM_LNK_MASS_ = 'M',    ///  Link to (fraction of) solid substrate mass
+KinSizedCode_ = 6,  // Codes for dependencies of the shape factor on system variables
+    KM_SIZED_ETM_ = 'T',   ///  Empirical f(time) cubic polynomial f = a + bt +ct^2 + dt^3 (default)
+    KM_SIZED_ESI_ = 'S',   ///  Empirical f(lgSI) cubic polynomial f = a + bt +ct^2 + dt^3
+    KM_SIZED_ESA_ = 'A',   ///  Empirical f(sarea-change) cubic polynomial f = a + bt +ct^2 + dt^3
+    KM_SIZED_EVOL_ = 'V',  ///  Empirical f(volume-change) cubic polynomial f = a + bt +ct^2 + dt^3
+    KM_SIZED_MASS_ = 'M',  ///  Empirical f(mass-change) cubic polynomial f = a + bt +ct^2 + dt^3
+    KM_SIZED_MOL_ = 'X',  ///  Empirical f(amount-change) cubic polynomial f = a + bt +ct^2 + dt^3
+    KM_SIZED_UNI_ = 'U',   ///  Uniform particle/pore size distribution (reserved)
+    KM_SIZED_BIN_ = 'B',   ///  Binodal particle/pore size distribution (reserved)
+    KM_SIZED_FUN_ = 'F',   ///  Empirical particle/pore size distribution function (reserved)
+KinResCode_ = 7,     // Units and type of rate constants
+    KM_RES_SURF_N = 'A',   /// surface-scaled rate constant (k in mol/m2/s), default
+    KM_RES_SURF_M = 'M',   /// surface-scaled rate constant (k in kg/m2/s)
+    KM_RES_PVS_N  = 'V',   /// pore-volume-scaled rate constant (k in mol/m3/s)
+    KM_RES_PVS_M  = 'W',   /// pore-volume-scaled rate constant (k in kg/m3/s)
+    KM_RES_ABS_N  = 'F',   /// absolute (unscaled) rate constant (k in mol/s)
+    KM_RES_ABS_M  = 'G',   /// absolute (unscaled) rate constant (k in kg/s)
+    KM_LIN_RATE   = 'L',   /// linear growth/dissolution rate constant (v in m/s)
+
 // Minor end member codes for uptake kinetics models
     DC_SOL_MINOR_ = 'J',
     DC_SOL_MINDEP_ = 'F'
