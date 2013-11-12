@@ -79,6 +79,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 KinMetParPT( k, kMod );
                 // Reset and initialize time
                 KinMetInitTime( k, kMod );
+                KinMetGetModFSA( k, kMod );
                 break;
             default:
                 break;
@@ -105,7 +106,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                     KinMetInitUptake( jb, k, kMod );
                     KinMetInitSplit( jb, k, kMod );
                 }
-//                  KinMetGetModFSA( k, kMod );
+                KinMetGetModFSA( k, kMod );
                 break;
             default:
                 break;
@@ -211,12 +212,13 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
     kmd.Eh_ = pm.Eh;      /// Eh of aqueous solution, V
   //
     kmd.nPh_ = pm.XF[k];   /// current amount of this phase, mol (read-only)
-    kmd.mPh_ = pm.FWGT[k]/1e3; /// current mass of this phase, kg (read-only)
-    kmd.vPh_ = pm.FVOL[k]/1e6; /// current volume of this phase, m3 (read-only)
+    kmd.mPh_ = pm.FWGT[k]/1e3; /// current mass of this phase, g to kg (read-only)
+    kmd.vPh_ = pm.FVOL[k]/1e6; /// current volume of this phase, cm3 to m3 (read-only)
     kmd.sAPh_ = pm.Aalp[k]*pm.FWGT[k];  /// current surface area of this phase, m2
     kmd.LaPh_ = pm.Falp[k];    /// phase stability index (log scale)
     kmd.OmPh_ = pow( 10., pm.Falp[k] );  /// phase stability index (activity scale) 10^LaPh_
   //
+    kmd.sFact_= pm.PfFact[k];  /// Shape (sphericity) factor
     kmd.sSA_ = pm.Aalp[k]*1e3; /// Specific surface area of the phase, m2/kg, default: 0.
     kmd.sgw_ = pm.Sigw[k];    /// Standard mean surface energy of solid-aqueous interface, J/m2
     kmd.sgg_ = pm.Sigg[k];    /// Standard mean surface energy of gas-aqueous interface, J/m2

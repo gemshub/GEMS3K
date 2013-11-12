@@ -94,8 +94,10 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     init_arPRt( );   // load data for parallel reactions
 
     // Work data and kinetic law calculation results
-    kTot = 0.;   // Total rate constant (per m2 phase surface area)
+    pi = 3.14159265358979;
+    kTot = 0.;   // Total rate constant (mol per m2 per s)
     rTot = 0.;   // Current total MWR rate (mol/s)
+    gTot = 0;    // Total rate constant (kg per m2 per s)
     vTot = 0.;   // Total surface propagation velocity (m/s)
 
     nPh = nPhi;
@@ -105,22 +107,14 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     sSAcor = sSAi;  // Initialized corrected specific surface area (m2/kg)
     sAph_c = sAPh = mPh*sSA;  // Initialized corrected surface area of the phase (m2/kg)
 
-    if( fabs(sFact) < 4.836 )
-    {   // Calculation of area-volume shape factor (positive for particles or negative for pores)
-        if( sFact < 0 )
-            sFact = -1.;
-        else sFact = 1.;
-        if( vPh > 0. )   // volume in cm3
-        {
-            sFact *= sAPh / pow( mPh, 2./3. );   // obtain from mass
-            sFact *= sAPh / pow( vPh, 2./3. );   // Shape factor (positive for particles or negative for pores)
-        }
-    else // no phase volume - error?
-        {
-           sFact *= sAPh / pow( mPh, 2./3. );   // obtain from mass
-        }
-    }
-    sFacti = sFact;
+    sSAlp = 0.;    ssAVlp = 0.;  sAPhlp = 0.;   // reset totals for linked phases
+    mPhlp = 0.;    vPhlp = 0.;   Rholp =0.;  nPhlp = 0.;
+
+    // Calculation of total properties of linked phases
+    if( nlPh )
+       linked_phases_properties( true );
+    // Calculates mean equivalent properties of particles or pores
+    particles_pores_properties( true );
 
     kdT_c = kdT;    // Initialized corrected time step (s)
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
@@ -358,6 +352,99 @@ TKinMet::init_arPRt()
 //}
 
 
+// Calculation of total properties of linked phases
+// and initial settings of surface area for this phase (linked to other phases)
+bool
+TKinMet::linked_phases_properties( bool if_init = false )
+{
+    // this is a phase linked to one or more other phases!
+          long int klp, k, xlc, lpcode, i;
+          double lc[8], xpk, mpk, vpk, aspk;
+
+          // Checking if there is a phase linkage
+          for( klp=0; klp<nlPh; klp++ )
+          {
+              k = arPhXC[klp][0];      // index of the phase in MULTI
+              lpcode = arPhXC[klp][1]; // phase linkage code
+              if(nlPc)
+              {
+                  for( i=0; i<8; i++ )
+                      lc[i] =0.;
+                  for( xlc=0; xlc<nlPc; xlc++ )
+                      lc[xlc] = arlPhc[klp][xlc];
+              }
+              // getting properties of the k-th phase
+              xpk = arxp[k];  // amount, mol
+              mpk = armp[k]/1e3;  // mass, g to kg
+              vpk = arvp[k]/1e6;  // volume, cm3 to m3
+              aspk = arasp[k]*1e3; // sp.surf.area, m2/g to m2/kg
+             // Adding up corrections
+              switch( lpcode )   // selecting linkage type
+              {
+                  default:
+                  case 0:     // link to phase amount
+                      break;
+                  case 1:     // link to (particle/pore) surface area
+                  nPhlp += xpk;
+                  mPhlp += mpk;
+                  vPhlp += vpk;
+                  sAPhlp += mpk * aspk * lc[0]; // coeff. lc[0] is fraction of substrate area
+                                                // lc[1] for correction of shape factor - TBD
+                  if( if_init )
+                  {               // this may not be correct
+                       sAPh = sAph_c = sAPhlp;  //   give the composite solid the total surface of linked phases
+                       sSAcor = sSA = sAPhlp/mPhlp;
+                       sSAVcor = sSAV = sAPhlp/vPhlp;
+                       ; //   mPhi = mPh;
+                  }
+                      break;
+                  case 2:     // link to (particle/pore) volume
+                      break;
+                  case 3:     // link to phase mass
+                      break;
+              }
+          }
+          //  Work data for totals for linked phases
+          sSAlp = sAPhlp/mPhlp;   // specific surface per unit mass in m2/kg
+          Rholp = mPhlp/vPhlp;    // total density, kg/m3
+          ssAVlp = sAPhlp/vPhlp;  // specific surface area per unit volume in m2
+          return false;
+}
+
+// Calculates mean equivalent properties of particles or pores
+bool
+TKinMet::particles_pores_properties( bool if_init = false )
+{
+    if( if_init )  // initialization only
+    {
+       if( sFact < 1e-6 || fabs(sFact) >= 1 )
+       {
+           // Setting the sphericity factor (positive for particles or negative for pores)
+           sFact = 1.;
+           if( nAscC > 0 )
+               sFact = arAscp[0];
+           sFacti = sFact;
+       }
+    }
+    Rho = (mPh+mPhlp)/(vPh+vPhlp);      // current average density of particles, kg/m3
+    sSAV = (sAPh+sSAlp)/(vPh+vPhlp);    // current specific surface per unit volume in m2/m3
+    d32 = 6./sSAV;                      // current Sauter equivalent diameter of particles, m
+    dsv = d32/sFact;                    // current surface-volume equivalent diameter, m
+    Vp = pi/6.*dsv*dsv*dsv;             // current equivalent volume of one particle, m3
+    Mp = Vp*Rho;                        // current average mass of one partcle, kg
+    if( if_init )  // initialization only
+    {
+        Np = vPh/Vp;       // so far, estimated number of particles remains constant
+        sSAVcor = sSAV;
+        d43 = 0.;
+        dsvi = dsv;
+    }
+    Ap = (sAPh+sSAlp)/Np;     // current surface area of one partcle, m2
+//    Mp = Vp*Rho;              // current average mass of one partcle, kg
+
+   return false;
+}
+
 //=============================================================================================
 // TKinReact base class constructor (to keep data for parallel reaction regions)
 // (c) DK March 2013
@@ -398,8 +485,12 @@ sFacti = p_sFact;
     Eh = pEha;
 
     sAPh = sSA*mPh;             // current surface area of this phase, m2
-
     OmPh = pow( 10., LaPh );    // phase stability index (activity scale) 10^LaPh_
+
+    if( nlPh )    // get current properties of linked phases
+        linked_phases_properties( false );
+    // get current properties of particles/pores in this phase
+    particles_pores_properties( false );
 
     for( i = 0; i < nPRk; i++ )
     {
@@ -409,8 +500,7 @@ sFacti = p_sFact;
            arfeSAr[i] = arPRt[i].feSAr;
        }
     }
-
-    // Modification of shape factor as given in shape factor equation
+    // Modification of the shape factor as given in the shape factor correction function
     {
         double x=0., a=0., b=0., c=0., d=0.;
         switch( KinSizedCode )
@@ -419,26 +509,27 @@ sFacti = p_sFact;
            case KM_UNDEF_: // 'N' - no modification
                 sFact = sFacti;
                 return status;
-           case KM_SIZED_ETM_:  // 'T', Empirical f(time) polynomial f = a + bt +ct^2 + dt^3 (default)
+           case KM_SIZED_ETM_:  // 'T', Empirical f(time) polynomial  (default)
                 x = kTau;
                 break;
-           case KM_SIZED_ESI_:  // 'S', Empirical f(lgSI) polynomial f = a + bt +ct^2 + dt^3
+           case KM_SIZED_ESI_:  // 'S', Empirical f(lgSI) polynomial
                 x = LaPh;
                 break;
-           case KM_SIZED_ESA_:  // 'A', Empirical f(sarea-change) polynomial f = a + bt +ct^2 + dt^3
-                x =  ( sSA*mPh - sSAi*mPhi )/( sSAi*mPhi );
+           case KM_SIZED_ESA_:  // 'A', Empirical f(sarea-change) polynomial
+                x =  ( sSA*mPh - sSAi*mPhi ) / ( sSAi*mPhi );
                 break;
-           case KM_SIZED_EVOL_: // 'V', Empirical f(volume-change) polynomial f = a + bt +ct^2 + dt^3
-                x =  ( vPh - vPhi )/( vPhi );
+           case KM_SIZED_EVOL_: // 'V', Empirical f(volume-change) polynomial
+                x =  ( vPh - vPhi ) / vPhi;
                 break;
-           case KM_SIZED_MASS_: // 'M', Empirical f(mass-change) polynomial f = a + bt +ct^2 + dt^3
-                x =  ( mPh - mPhi )/( mPhi );
+           case KM_SIZED_MASS_: // 'M', Empirical f(mass-change) polynomial
+                x =  ( mPh - mPhi ) /mPhi;
                 break;
-           case KM_SIZED_MOL_:  // 'X', Empirical f(amount-change) polynomial f = a + bt +ct^2 + dt^3
-                x =  ( nPh - nPhi )/( nPhi );
+           case KM_SIZED_MOL_:  // 'X', Empirical f(amount-change) polynomial
+                x =  ( nPh - nPhi ) / nPhi;
                 break;
-           case KM_SIZED_UNI_:  // 'U', Uniform particle/pore size distribution (reserved)
-                return status;
+           case KM_SIZED_UNI_:  // 'U', Uniform particle/pore size distribution
+                x = ( dsv - dsvi ) / dsvi;
+                break;
            case KM_SIZED_BIN_:  // 'B', Binodal particle/pore size distribution (reserved)
                 return status;
            case KM_SIZED_FUN_:  // 'F', Empirical particle/pore size distribution function (reserved)
@@ -454,9 +545,13 @@ sFacti = p_sFact;
             d = arAscp[3];
 
         sFact = a + b*x +c*x*x + d*x*x*x;
-        if( sFact < 4.836 )
-            sFact = 4.836;
+
+        if( sFact <= 0. )
+            sFact = 0.001;
+        if( sFact > 1. )
+            sFact = 1.;
     }
+
     return status;
 }
 
@@ -663,74 +758,32 @@ TKinMet::PTparam( const double TK, const double P )
 double
 TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
 {
-    double sSAc = sSA, r_sSAc;
+    double sSAc = sSA, sSAVc = sSAV, r_sSAc;
 
-    if( nlPh )
-    {   // this is a phase linked to one or more other phases!
-        long int klp, k, xlc, lpcode, i;
-        double lc[8], xpk, mpk, vpk, aspk, sSAlp = 0., mPhlp = 0;
+    // more sophisticated functions to be called here
 
-        // Checking if there is a phase linkage
-        for( klp=0; klp<nlPh; klp++ )
-        {
-            k = arPhXC[klp][0];      // index of the phase in MULTI
-            lpcode = arPhXC[klp][1]; // phase linkage code
-            if(nlPc)
-            {
-                for( i=0; i<8; i++ )
-                    lc[i] =0.;
-                for( xlc=0; xlc<nlPc; xlc++ )
-                    lc[xlc] = arlPhc[klp][xlc];
-            }
-            // getting properties of the k-th phase
-            xpk = arxp[k];  // amount, mol
-            mpk = armp[k]/1e3;  // mass, g to kg
-            vpk = arvp[k]/1e6;  // volume, cm3 to m3
-            aspk = arasp[k]*1e3; // sp.surf.area, m2/g to m2/kg
-           // Adding up corrections
-            switch( lpcode )   // selecting linkage type
-            {
-                default:
-                case 0:     // link to phase amount
-                    break;
-                case 1:     // link to (particle/pore) surface area
-                sSAlp += aspk * lc[0]; // coeff. lc[0] is fraction of substrate area
-                                             // lc[1] for correction of formFactor - TBD
-                mPhlp += mpk;
-                    break;
-                case 2:     // link to (particle/pore) volume
-                    break;
-                case 3:     // link to phase mass
-                    break;
-            }
-        }
-        if( toinit )
-        {               // this may not be correct
-            sSAi = 0.;
-            mPhi = 0.;
-        }
-        // Correction of SSA of this phase
-        if( LaPh < -OmgTol ) // dissolution  (needs a more flexible check based on Fa stability criterion!
-        {
-            sSAc = sFratio * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), 1./3. );
-        }
-        else if( LaPh > OmgTol ) {  // precipitation
-            sSAc = sFratio * (sSAi+sSAlp) * pow( (mPh+mPhlp)/(mPhi+mPhlp), -1./3. );
-        }
-        else {  // equilibrium
-            sSAc = sSAcor;   // no change in sSAcor
-        }
-        if( toinit )
-        {
-            mPhi = mPh;
-            sSAi = sSAc - sSAlp;  // in this case, sSAi is the initial increment to sp.surf.area
-        }                           // due to the initial amount of linked (overgrowth) phase
-        sSAcor = sSAc;
-        sAPh = sSAcor * (mPh+mPhlp);   // corrected surface of the phase.
-        sAph_c = sAPh;
+    if( LaPh < -OmgTol ) // dissolution  (needs a more flexible check based on Fa stability criterion!
+    {
+        sSAVc = sFratio * sSAV * dsv  / ( dsv - 2.* fabs(vTot) * kdT );
+        sSAc = sSAVc / Rho;
     }
-    else { // This phase is not linked to other phases
-        // more sophisticated functions to be called here
+    else if( LaPh > OmgTol ) {  // precipitation
+        sSAVc = sFratio * sSAV * dsv  / ( dsv + 2.* fabs(vTot) * kdT );
+        sSAc = sSAVc / Rho;
+    }
+    else {  // equilibrium
+        sSAVc = sSAV;
+        sSAc = sSAcor;   // no change in sSAcor
+    }
+//        r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
+    sSAcor = sSAc;
+    sAph_c = sSAcor * mPh;   // corrected surface area of the phase.
+//    sAph_c = sAPh;  // leave main surface area yet not corrected
+    return sSAc;
+}
+/*
+    { // This phase is not linked to other phases
+        // Old SSA correction
         if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
         {
             sSAc = sFratio * sSAi * pow( mPh/mPhi, 1./3. );
@@ -746,14 +799,12 @@ TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
         sAPh = sSAcor * mPh;   // corrected surface of the phase.
         sAph_c = sAPh;
     }
-//    return r_sSAc;
-    return sSAc;
-}
+*/
 
 bool
 TKinMet::RateInit( )
 {   
-    double RT = R_CONST*T_k, kPR, dnPh, sSAcr, FormFactor = 1.;
+    double RT = R_CONST*T_k, kPR, sSAcr;
     long int r;
 
     kTot = 0.;
@@ -767,17 +818,21 @@ TKinMet::RateInit( )
     vPhi = vPh;         // initial volume
     sSAi = sSA;         // initial specific surface area
     sFacti = sFact;     // initial shape factor
-    sSAcr = CorrSpecSurfArea( 1.0, true );
+//    sSAcr = CorrSpecSurfArea( 1.0, true );
 //    sAPh = sSAcr * mPh;   // initial surface of the phase
 //    sAph_c = sAPh;
+    gTot = kTot * mPh/nPh;  // initial rate in kg/m2/s
     rTot = kTot * sAPh; // overall initial rate (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
-    dnPh = 0.; // overall initial change (moles)
-    nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot =  kTot * vPh / nPh;  // linear growth/dissolution velocity in m/s
+//    dnPh = 0.; // overall initial change (moles)
+//    nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
+    vTot =  kTot * vPh / nPh;  // orthogonal mean growth/dissolution velocity in m/s
+//    sSAcr = CorrSpecSurfArea( 1.0, true );
+//   Here possibly additional corrections of dissolution/precipitation rates
 
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
+
     return false;
 }
 
@@ -795,13 +850,18 @@ TKinMet::RateMod( )
     // Calculation of shape factor ratio
     // Convert into area-mass shape factor
     // TBD
-    sFratio = sFact/sFacti;
-    sSAcr = CorrSpecSurfArea( sFratio, false );
+    if( fabs(sFact) > 0 )
+        sFratio = sFacti/sFact;
+//    sSAcr = CorrSpecSurfArea( sFratio, false );
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
+    gTot = kTot * mPh/nPh;  // rate in kg/m2/s
     rTot = kTot * sAPh; // overall rate for the phase (mol/s)
     vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
 // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
+    sSAcr = CorrSpecSurfArea( sFratio, false );
+//   Here possibly additional corrections of dissolution/precipitation rates
+
     return false;
 }
 

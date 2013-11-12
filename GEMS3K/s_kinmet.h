@@ -56,7 +56,7 @@ KinLinkCode_ = 5,
     KM_LNK_SURF_ = 'S',    ///  Link to (fraction of) solid substrate surface area (default)
     KM_LNK_PVOL_ = 'P',    ///  Link to (fraction of) solid substrate (pore) volume
     KM_LNK_MASS_ = 'M',    ///  Link to (fraction of) solid substrate mass
-KinSizedCode_ = 6,  // Codes for dependencies of the shape factor on system variables
+KinSizedCode_ = 6,  // Codes for dependencies of the sphericity shape factor on system variables
     KM_SIZED_ETM_ = 'T',   ///  Empirical f(time) cubic polynomial f = a + bt +ct^2 + dt^3 (default)
     KM_SIZED_ESI_ = 'S',   ///  Empirical f(lgSI) cubic polynomial f = a + bt +ct^2 + dt^3
     KM_SIZED_ESA_ = 'A',   ///  Empirical f(sarea-change) cubic polynomial f = a + bt +ct^2 + dt^3
@@ -255,8 +255,8 @@ class TKinMet  // Base class for MWR kinetics and metastability models
     double nPhi;        /// initial amount of the phase, mol
     double mPhi;        /// initial mass of the phase, kg
     double vPhi;        /// initial volume of the phase, m3
-double sFacti;      /// inital surface area - volume shape factor ( >= 4.836 for spheres ), negative for pores
-double sFact;       /// surface area-volume factor
+double sFacti;      /// inital sphericity factor (0 < sFacti < 1), negative for pores
+double sFact;       /// current sphericity factor (0 < sFact < 1)
                     // all three for the built-in correction of specific surface area and kTot-vTot transformation
     // These values will be corrected after GEM converged at each time step
     double IS;          /// Effective molal ionic strength of aqueous electrolyte
@@ -285,7 +285,7 @@ double sFact;       /// surface area-volume factor
     double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk] - input
     double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
     double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
-    double *arAscp;  /// input array of parameter coefficients of equation for correction of specific surface area [nAscC]
+    double *arAscp;  /// input array of coefficients of the sFact function for correction of specific surface area [nAscC]
     // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM)[MAXDCNAME_];  /// pointer to the list of DC names in the phase [NComp] read-only
@@ -304,28 +304,51 @@ double *armp;   /// Pointer to masses of all phases in MULTI (provided), read-on
 double *arvp;   /// Pointer to volumes of all phases in MULTI (provided), read-only   cm3
 double *arasp;  /// Pointer to (current) specific surface areas of all phases in MULTI (provided), read-only
 
-    double *arnx;    /// Pointer to mole amounts of phase components (provided) [NComp] read-only mol
+    double *arnx;   /// Pointer to mole amounts of phase components (provided) [NComp] read-only mol
 
-    double *arnxul;  /// Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output
-    double *arnxll;  /// Vector of lower kinetic restrictions to nx, moles [NComp]  (DLL) direct access output
+    double *arnxul; /// Vector of upper kinetic restrictions to nx, moles [NComp]  (DUL) direct access output
+    double *arnxll; /// Vector of lower kinetic restrictions to nx, moles [NComp]  (DLL) direct access output
 
-    double *arWx;    /// Species (end member) mole fractions ->NComp
-    double *arVol;   /// molar volumes of end-members (species) cm3/mol ->NComp
+    double *arWx;   /// Species (end member) mole fractions ->NComp
+    double *arVol;  /// molar volumes of end-members (species) cm3/mol ->NComp
 
 // Work data and kinetic law calculation results
     TKinReact *arPRt; /// work array of parameters and results for 'parallel reaction' terms [nPRk]
 
-    double *spcfu;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
-    double *spcfl;    /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+    double *spcfu;  /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
+    double *spcfl;  /// work array of coefficients for splitting nPul and nPll into nxul and nxll [NComp]
 
-    double kTot;   /// Total specific MWR (precipitation/dissolution) rate (mol/m2/s) - output
-    double rTot;   /// Current total MWR rate (mol/s)
-    double vTot;   /// Total one-dimensional MWR surface propagation velocity (m/s) - output
+    double kTot;    /// Total specific MWR (precipitation/dissolution) rate Rn (mol/m2/s) - output
+    double gTot;    /// Total specific MWR rate RG (kg/m2/s)
+    double rTot;    /// Current total MWR rate (mol/s) Rn*sAPh
+    double vTot;    /// Total orthogonal surface propagation velocity RL (m/s) - output
 
-    double Rho;    /// current density of this phase, kg/m3
-    double sSAcor; /// Corrected specific surface area (m2/kg) - output
-    double sAph_c; /// Corrected surface area of the phase (m2/kg)
-    double kdT_c;  /// new: modified (suggested) time increment, s
+//  Work data for SSA correction over time step
+    double pi;      /// Pi = 3.14159265358979;
+    double Np;      /// estimated number of particles
+    double Rho;     /// current density of this phase, kg/m3
+    double d32;     /// Sauter equivalent diameter of particles, m
+    double d43;     /// De Brouckere equivalent diameter, m
+    double dsv;     /// Surface-volume equivalent diameter, m
+    double dsvi;    /// Initial surface-volume equivalent diameter, m
+    double Vp;      /// equivalent volume of one particle, m3
+    double Ap;      /// surface area of one partcle, m2
+    double Mp;      /// estimated mass of one partcle, kg
+    double sSAV;    /// specific surface per unit volume in m2/m3
+    double sSAVcor; /// corrected specific surface per unit volume in m2/m3
+    double sSAcor;  /// Corrected specific surface area (m2/kg) - output
+    double sAph_c;  /// Corrected surface area of the phase (m2/kg)
+    double kdT_c;   /// new: modified (suggested) time increment, s
+
+//  Work data for totals for linked phases
+    double sSAlp;   /// specific surface per unit mass in m2/kg
+    double ssAVlp;  /// specific surface per unit volume in m2/m3
+    double sAPhlp;  /// total surface area, m2
+    double mPhlp;   /// total mass, kg
+    double vPhlp;   /// total volume, m3
+    double Rholp;   /// total density, kg/m3
+    double nPhlp;   /// total moles
+
     // SS dissolution
 
     // SS precipitation
@@ -340,6 +363,11 @@ double *arasp;  /// Pointer to (current) specific surface areas of all phases in
     void alloc_arPRt();
     void init_arPRt();
     void free_arPRt();
+
+    // Calculation of total properties of linked phases
+    bool linked_phases_properties( bool if_init );
+    // Calculates mean equivalent properties of particles or pores
+    bool particles_pores_properties( bool if_init );
 
   public:
     // Generic constructor
