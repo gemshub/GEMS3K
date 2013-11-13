@@ -342,12 +342,15 @@ double *arasp;  /// Pointer to (current) specific surface areas of all phases in
 
 //  Work data for totals for linked phases
     double sSAlp;   /// specific surface per unit mass in m2/kg
-    double ssAVlp;  /// specific surface per unit volume in m2/m3
+    double sSAVlp;  /// specific surface per unit volume in m2/m3
     double sAPhlp;  /// total surface area, m2
     double mPhlp;   /// total mass, kg
     double vPhlp;   /// total volume, m3
     double Rholp;   /// total density, kg/m3
     double nPhlp;   /// total moles
+    double nPhlpi;  /// initial total moles
+    double mPhlpi;  /// initial total mass, kg
+    double vPhlpi;  /// initial total volume, m3
 
     // SS dissolution
 
