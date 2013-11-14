@@ -920,19 +920,21 @@ TKinMet::SetMetCon( )
 bool
 TKinMet::SplitInit( )
 {
-    double dnPh;
+    double dnPh, dnDC, nDC;
     long int j;
 
-    dnPh = -kdT * rTot;
     if( LaPh < -OmgTol ) // dissolution
     {
+        dnPh = nPll - nPh;
         for(j=0; j<NComp; j++)
         {
-            arnxll[j] = nPll*spcfl[j];
+            nDC = arnx[j];
+            dnDC = dnPh*spcfl[j];
+            arnxll[j] = nDC + dnDC;
             if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
             {    // not a minor/trace element
                 if( arnxul[j] < arnxll[j] )
-                    arnxul[j] = nPul*spcfu[j];
+                    arnxul[j] = nDC + (nPul-nPh)*spcfu[j];
             }
             else {  // minor/trace element
                 arnxul[j] = arnxll[j];
@@ -941,26 +943,31 @@ TKinMet::SplitInit( )
     }
     else if( LaPh > OmgTol )
     {  // precipitation
+        dnPh = nPul - nPh;
         for(j=0; j<NComp; j++)
         {
-            arnxul[j] = nPul*spcfu[j];
+            nDC = arnx[j];
+            dnDC = dnPh*spcfu[j];
+            arnxul[j] = nDC + dnDC;
             if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
             {    // not a minor/trace element
                 if( arnxll[j] > arnxul[j] )
-                    arnxll[j] = nPll*spcfl[j];
+                    arnxll[j] = nDC + (nPll-nPh)*spcfl[j];
             }
             else {  // minor/trace element
                 arnxll[j] = arnxul[j];
             }
         }
     }
-//    else {  // equilibrium
-//        for(j=0; j<NComp; j++)
-//        {
-//            arnxul[j] = nPul*spcfu[j];
-//            arnxll[j] = nPll*spcfl[j];
-//        }
-//    }
+    else {  // equilibrium
+        double delOmg = pow( 10., OmgTol );
+        for(j=0; j<NComp; j++)
+        {
+            nDC = arnx[j];
+            arnxul[j] = nDC + delOmg;
+            arnxll[j] = nDC - delOmg;
+        }
+    }
     return false;
 }
 
@@ -969,19 +976,22 @@ TKinMet::SplitInit( )
 bool
 TKinMet::SplitMod( )
 {
-    double dnPh = 0.;
+    double dnPh, dnDC, nDC;
     long int j;
 
-    dnPh = -kdT * rTot;
     if( LaPh < -OmgTol ) // dissolution
     {
+        dnPh = nPll - nPh;
         for(j=0; j<NComp; j++)
         {
-            arnxll[j] = nPll*spcfl[j];
+            nDC = arnx[j];
+            dnDC = dnPh*spcfl[j];
+            arnxll[j] = nDC + dnDC;
             if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
             {    // not a minor/trace element
                 if( arnxul[j] < arnxll[j] )
-                    arnxul[j] = nPul*spcfu[j];
+//                    arnxul[j] = nPul*spcfu[j];
+                    arnxul[j] = nDC + (nPul-nPh)*spcfu[j];
             }
             else {  // minor/trace element
                 arnxul[j] = arnxll[j];
@@ -990,26 +1000,32 @@ TKinMet::SplitMod( )
     }
     else if( LaPh > OmgTol )
     {  // precipitation
+        dnPh = nPul - nPh;
         for(j=0; j<NComp; j++)
         {
-            arnxul[j] = nPul*spcfu[j];
+            nDC = arnx[j];
+            dnDC = dnPh*spcfu[j];
+            arnxul[j] = nDC + dnDC;
             if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
             {    // not a minor/trace element
                 if( arnxll[j] > arnxul[j] )
-                    arnxll[j] = nPll*spcfl[j];
+//                    arnxll[j] = nPll*spcfl[j];
+                    arnxll[j] = nDC + (nPll-nPh)*spcfl[j];
             }
             else {  // minor/trace element
                 arnxll[j] = arnxul[j];
             }
         }
     }
-//    else {  // equilibrium
-//        for(j=0; j<NComp; j++)
-//        {
-//            arnxul[j] = nPul*spcfu[j];
-//            arnxll[j] = nPll*spcfl[j];
-//        }
-//    }
+    else {  // equilibrium
+        double delOmg = pow( 10., OmgTol );
+        for(j=0; j<NComp; j++)
+        {
+            nDC = arnx[j];
+            arnxul[j] = nDC + delOmg;
+            arnxll[j] = nDC - delOmg;
+        }
+    }
     return false;
 }
 
@@ -1176,28 +1192,30 @@ TUptakeKin::UptakeMod()
                     continue; // not a minor/trace element
                 }
                 // Minor/trace component
-                FTr =   arUmpCon[j][0]; // d-less
-                DelTr0= arUmpCon[j][1]; // eq tr fract.coeff.
-                Ds =    arUmpCon[j][2]; // in nm2/s
-                Dl =    arUmpCon[j][3]; // in nm2/s
-                l =     arUmpCon[j][4]; // in nm
-                m =     arUmpCon[j][5]; // d-less
-                // Calculate eq (2.7)
-                Vml = -vTot * m * l * 1e9;  // here vTot is in m/s and Vml is in nm2/s
-                DelTr = DelTr0 * ( Ds + Vml ) / ( Ds + Vml/FTr ); // Effective fractionation coeff.
-                xtTr = DelTr * arElm[i]/molMajSum;  // Frac.coeff. defined rel to sum of major EMs!
+                FTr =    arUmpCon[j][0];  // d-less
+                DelTr0 = arUmpCon[j][1];  // eq tr fract.coeff.
+                Ds =     arUmpCon[j][2];  // in nm2/s
+                Dl =     arUmpCon[j][3];  // in nm2/s
+                l =      arUmpCon[j][4];  // in nm
+                m =      arUmpCon[j][5];  // d-less
+
+                // Calculate orthogonal linear rate
+                Vml = -vTot * m * l * 1e9;     // here vTot is in m/s and Vml is in nm2/s
+                DelTr = DelTr0 * ( Ds + Vml ) / ( Ds + Vml/FTr );    // Effective fractionation coeff.
+                xtTr = DelTr * arElm[i]/molMajSum;     // Frac.coeff. defined rel to sum of major EMs!
                 spcfu[j] = xtTr;
                 spcfl[j] = spcfu[j];
                 spMinSum += xtTr;
             }
 // Correcting splitting coeffs of major EMs for changed sum of split.coeffs. for Tr EMs
+            spMajSum = 1.- spMinSum;    // bugfix  14.11.2013 DK
             CF = (1.-spMinSum)/spMajSum;
             for( j=0; j<NComp; j++ )
             {
                 i = arxICu[j];
                 if( arDCC[j] != DC_SOL_MINOR_ && arDCC[j] != DC_SOL_MINDEP_ )
                 {    // not a minor/trace element
-                    xtHc = arWx[j]*CF;
+                    xtHc = spcfu[j]*CF; //  xtHc = arWx[j]*CF;
                     spcfu[j] = xtHc;
                     spcfl[j] = spcfu[j];   
                 }

@@ -484,20 +484,19 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
 class TUptakeKin: public TKinMet  // SS uptake kinetics models Thien,Kulik,Curti 2013
 {
     private:
-
     // specific stuff for uptake kinetics
-    long int numpC;  /// number of sorption/uptake model parameter coefficients (per end member)
-    long int nElm;   /// number of independent components in IPM work data structure
-    long int iRes4;   // reserved
+    long int numpC;    /// number of sorption/uptake model parameter coefficients (per end member)
+    long int nElm;     /// number of independent components in IPM work data structure
+    long int iRes4;    // reserved
 
-    long int *arxTrDC;   /// pointer to input array of aq DC indexes for end-members [NComp]
-    long int *arxICu;    /// pointer to input array of aq IC indexes for end members [NComp]
+    long int *arxTrDC; /// pointer to input array of aq DC indexes for end-members [NComp]
+    long int *arxICu;  /// pointer to input array of aq IC indexes for end members [NComp]
 
     double **arUmpCon; /// input array of uptake model coefficients [NComp*numpC] read-only
-    double *arElm;   /// pointer to total molalities of elements (IC) dissolved in aqueous phase [nElem]
+    double *arElm;     /// pointer to total molalities of elements (IC) dissolved in aqueous phase [nElem]
 
-double *Rdj;  /// new: pointer to vector of output Rd values (for t-th time step) [NComp], direct access
-double *Dfj;  /// new: pointer to vector of output Delta(j,rest) values (for t-th time step) [NComp], direct access
+    double *Rdj;       /// pointer to vector of output Rd values (for t-th time step) [NComp], direct access
+    double *Dfj;       /// pointer to vector of output Delta(j,rest) values (for t-th time step) [NComp], direct access
 
     // Uptake model output
 
