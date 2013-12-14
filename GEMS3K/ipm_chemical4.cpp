@@ -147,7 +147,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
    kpe += pm.LsKin[k*6];
    kce += pm.LsKin[k*6]*pm.LsKin[k*6+2];
    kae += pm.LsKin[k*6]*pm.LsKin[k*6+1]*pm.LsKin[k*6+3];
-   kse += pm.LsMod[k*6+4];
+   kse += pm.LsKin[k*6+4];  // bugfix 14.12.13 was .LsMod
    kde += pm.LsKin[k*6+1];
    if( k < pm.FIs)  
        kue += pm.LsUpt[k*2]*pmp->L1[k];  // bugfix 10.06.13
