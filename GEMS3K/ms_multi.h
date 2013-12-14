@@ -645,21 +645,21 @@ protected:
 
 // New stuff for TKinMet class implementation
 long int CalculateKinMet( long int LinkMode  );
-void KinMetCreate(long int jb, long int k, long int kc, long int kp, long int kf,
+void KM_Create(long int jb, long int k, long int kc, long int kp, long int kf,
             long int ka, long int ks, long int kd, long ku, long ki, const char *kmod,
             long jphl, long jlphc );
-void KinMetParPT( long int k, const char *kMod );
-void KinMetInitTime( long int k, const char *kMod );
-void KinMetUpdateTime( long int k, const char *kMod );
-void KinMetUpdateFSA(long jb, long int k, const char *kMod );
-void KinMetGetModFSA(long int k, const char *kMod );
-void KinMetCalcRates( long int k, const char *kMod );
-void KinMetInitRates( long int k, const char *kMod );
-void KinMetCalcSplit( long int jb, long int k, const char *kMod );
-void KinMetInitSplit( long int jb, long int k, const char *kMod );
-void KinMetCalcUptake( long int jb, long int k, const char *kMod );
-void KinMetInitUptake( long int jb, long int k, const char *kMod );
-void KinMetSetConstr( long int jb, long int k, const char *kMod );
+void KM_ParPT( long int k, const char *kMod );
+void KM_InitTime( long int k, const char *kMod );
+void KM_UpdateTime( long int k, const char *kMod );
+void KM_UpdateFSA(long jb, long int k, const char *kMod );
+void KM_ReturnFSA(long int k, const char *kMod );
+void KM_CalcRates( long int k, const char *kMod );
+void KM_InitRates( long int k, const char *kMod );
+void KM_CalcSplit( long int jb, long int k, const char *kMod );
+void KM_InitSplit( long int jb, long int k, const char *kMod );
+void KM_CalcUptake( long int jb, long int k, const char *kMod );
+void KM_InitUptake( long int jb, long int k, const char *kMod );
+void KM_SetAMRs( long int jb, long int k, const char *kMod );
 
 // ipm_main.cpp - numerical part of GEM IPM-2
     void GEM_IPM( long int rLoop );

@@ -74,12 +74,12 @@ TMulti::CalculateKinMet( long int LinkMode  )
            //   case PH_AQUEL:
               case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
            // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
-                KinMetCreate( jb, k, kc, kp, kf, ka, ks, kd, ku, ki, kMod, jphl, jlphc );
+                KM_Create( jb, k, kc, kp, kf, ka, ks, kd, ku, ki, kMod, jphl, jlphc );
                 // Correction of parameters for initial T,P
-                KinMetParPT( k, kMod );
+                KM_ParPT( k, kMod );
                 // Reset and initialize time
-                KinMetInitTime( k, kMod );
-                KinMetGetModFSA( k, kMod );
+                KM_InitTime( k, kMod );
+                KM_ReturnFSA( k, kMod );
                 break;
             default:
                 break;
@@ -96,17 +96,17 @@ TMulti::CalculateKinMet( long int LinkMode  )
              case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
          // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
              // Correction for T,P
-                KinMetParPT( k, kMod );
-                KinMetInitTime( k, kMod );
-                KinMetUpdateFSA( jb, k, kMod );
-                KinMetInitRates( k, kMod );
-                KinMetSetConstr( jb, k, kMod );
+                KM_ParPT( k, kMod );
+                KM_InitTime( k, kMod );
+                KM_UpdateFSA( jb, k, kMod );
+                KM_InitRates( k, kMod );
+                KM_SetAMRs( jb, k, kMod );
                 if( k < pm.FIs )
                 {
-                    KinMetInitUptake( jb, k, kMod );
-                    KinMetInitSplit( jb, k, kMod );
+                    KM_InitUptake( jb, k, kMod );
+                    KM_InitSplit( jb, k, kMod );
                 }
-                KinMetGetModFSA( k, kMod );
+                KM_ReturnFSA( k, kMod );
                 break;
             default:
                 break;
@@ -121,17 +121,17 @@ TMulti::CalculateKinMet( long int LinkMode  )
             case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
         // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
         // Correction for T,P
-                KinMetParPT( k, kMod );
-                KinMetUpdateTime( k, kMod );
-                KinMetUpdateFSA( jb, k, kMod );
-                KinMetCalcRates( k, kMod );
-                KinMetSetConstr( jb, k, kMod );
+                KM_ParPT( k, kMod );
+                KM_UpdateTime( k, kMod );
+                KM_UpdateFSA( jb, k, kMod );
+                KM_CalcRates( k, kMod );
+                KM_SetAMRs( jb, k, kMod );
                 if( k < pm.FIs )
                 {
-                    KinMetCalcUptake( jb, k, kMod );
-                    KinMetCalcSplit( jb, k, kMod );
+                    KM_CalcUptake( jb, k, kMod );
+                    KM_CalcSplit( jb, k, kMod );
                 }
-                KinMetGetModFSA( k, kMod );
+                KM_ReturnFSA( k, kMod );
                 break;
             default:
                 break;
@@ -162,7 +162,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
 /// Wrapper functions for creating kinetics and metastability models for phases
 /// using the TKinMet class.
 //
-void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
+void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
                            long int kf, long int ka, long int ks, long int kd, long int ku, long int ki,
                            const char *kmod, long int jphl, long int jlphc )
 {
@@ -324,7 +324,7 @@ void TMulti::KinMetCreate( long int jb, long int k, long int kc, long int kp,
 /// Wrapper call for calculation of temperature and pressure correction
 /// uses TKinMet class
 void
-TMulti::KinMetParPT( long int k, const char* kMod )
+TMulti::KM_ParPT( long int k, const char* kMod )
 {
     //
     switch( kMod[0] )
@@ -353,7 +353,7 @@ TMulti::KinMetParPT( long int k, const char* kMod )
 /// Wrapper call for initialization of time (step) variables
 /// uses TKinMet class
 void
-TMulti::KinMetInitTime( long int k, const char *kMod )
+TMulti::KM_InitTime( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -382,7 +382,7 @@ TMulti::KinMetInitTime( long int k, const char *kMod )
 /// Wrapper call for updating the time (step) variables
 /// uses TKinMet class
 void
-TMulti::KinMetUpdateTime( long int k, const char *kMod )
+TMulti::KM_UpdateTime( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -412,7 +412,7 @@ TMulti::KinMetUpdateTime( long int k, const char *kMod )
 ///    and current properties of aqueous solution
 /// uses TKinMet class
 void
-TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
+TMulti::KM_UpdateFSA( long int jb, long int k, const char *kMod )
 {
     double PUL=1e6, PLL=0.;
     if( k < pm.FIs )
@@ -452,7 +452,7 @@ TMulti::KinMetUpdateFSA( long int jb, long int k, const char *kMod )
 /// Wrapper call for updating surface area of the phase and phase amount metastability constraints
 /// uses TKinMet class
 void
-TMulti::KinMetGetModFSA( long int k, const char *kMod )
+TMulti::KM_ReturnFSA( long int k, const char *kMod )
 {
     double PUL=1e6, PLL=0.;
     //
@@ -483,9 +483,10 @@ TMulti::KinMetGetModFSA( long int k, const char *kMod )
     }
 }
 
-
+// Calculation of initial kinetic rates
+//
 void
-TMulti::KinMetInitRates( long int k, const char *kMod )
+TMulti::KM_InitRates( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -512,8 +513,10 @@ TMulti::KinMetInitRates( long int k, const char *kMod )
 }
 
 
+// Calculation of current kinetic rates
+//
 void
-TMulti::KinMetCalcRates( long int k, const char *kMod )
+TMulti::KM_CalcRates( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -539,8 +542,10 @@ TMulti::KinMetCalcRates( long int k, const char *kMod )
     }
 }
 
+// Calculation of initial AMR splitting for end members of SS phase
+//
 void
-TMulti::KinMetInitSplit( long int jb, long int k, const char *kMod )
+TMulti::KM_InitSplit( long int jb, long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -565,9 +570,10 @@ TMulti::KinMetInitSplit( long int jb, long int k, const char *kMod )
     }
 }
 
-
+// Calculation of current AMR splitting for end members of SS phase
+//
 void
-TMulti::KinMetCalcSplit( long int jb, long int k, const char *kMod )
+TMulti::KM_CalcSplit( long int jb, long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -595,7 +601,7 @@ TMulti::KinMetCalcSplit( long int jb, long int k, const char *kMod )
 // Sets new metastability constraints based on updated kinetic rates
 //
 void
-TMulti::KinMetSetConstr( long int jb, long int k,const char *kMod )
+TMulti::KM_SetAMRs( long int jb, long int k,const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -621,7 +627,7 @@ TMulti::KinMetSetConstr( long int jb, long int k,const char *kMod )
 }
 
 void
-TMulti::KinMetCalcUptake( long int jb, long int k, const char *kMod )
+TMulti::KM_CalcUptake( long int jb, long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -648,7 +654,7 @@ TMulti::KinMetCalcUptake( long int jb, long int k, const char *kMod )
 
 
 void
-TMulti::KinMetInitUptake( long int jb, long int k, const char *kMod )
+TMulti::KM_InitUptake( long int jb, long int k, const char *kMod )
 {   
     switch( kMod[0] )
     {      
