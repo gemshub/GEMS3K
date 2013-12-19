@@ -1066,6 +1066,15 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    return vol;
  }
 
+ //Retrieves the current phase amount in moles ( xph is DBR phase index) in the reactive sub-system.
+ double  TNode::Ph_Mole( const long int xBR )
+ {
+   double mol;
+   mol = CNode->xPH[xBR];
+
+   return mol;
+ }
+
   // Retrieves the phase mass in kg ( xph is DBR phase index).
   // Works for multicomponent and for single-component phases. Returns 0.0 if phase amount is zero.
   double  TNode::Ph_Mass( const long int xBR )

@@ -729,6 +729,12 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
      /// \return the current phase volume in m3 or 0.0, if the phase mole amount is zero.
       double  Ph_Volume( const long int xBR );
 
+      /// Retrieves the current phase amount (in equilibrium) in moles in the reactive sub-system.
+      /// Works both for multicomponent and for single-component phases.
+      /// \param xph is DBR phase index
+      /// \return the current phase volume in moles or 0.0, if the phase mole amount is zero.
+       double  Ph_Mole( const long int xBR );
+
      /// Retrieves the phase mass in kg.
      /// Works for multicomponent and for single-component phases.
       /// \param xph is DBR phase index
