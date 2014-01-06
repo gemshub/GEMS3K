@@ -509,7 +509,7 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
    /// or -1 if no such name was found in the DATACH DC name list
    long int DC_name_to_xCH( const char *Name );
 
-   /// Returns DCH index of DC given the DC Name string
+   /// Returns DC Name string given the DCH index of DC
    /// or -1 if no such name was found in the DATACH DC name list
    char* xCH_to_DC_name( int xCH )
    {return CSD->DCNL[xCH];}
