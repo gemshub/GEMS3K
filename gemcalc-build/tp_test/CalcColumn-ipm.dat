@@ -1,7 +1,7 @@
 #  GEMS3K v.3.1 r.750 (rc) 
-# File: /Users/kulik/DevGEMS/trunk/standalone/Tests/Cases/Full-Commented/CalcColumn-ipm.dat
+# File: tp_test/CalcColumn-ipm.dat
 # Comments can be marked with # $ ; as the first character in the line
-# IPM text input file for the internal GEM IPM3 kernel data
+# IPM text input file for the internal GEM IPM-3 kernel data
 # (should be read after the DCH file and before DBR files)
 
 # ID key of the initial chemical system definition
@@ -44,7 +44,7 @@
 # EPS: Tolerance of the SolveSimplex() balance residual for ICs { 1e-10 } 
 <pa_EPS>  1e-10
 
-# DK: Tolerance for the Dikin's criterion of IPM convergence { 3e-6 } 
+# DK: Tolerance for the Dikin's criterion of IPM convergence { 1e-6 } 
 <pa_DK>  1e-07
 
 # DS: Cutoff minimum amount of stable phase in GEM IPM primal solution, moles { 1e-20 }
@@ -61,16 +61,16 @@
 # IIM: Maximum allowed number of iterations in one main GEM IPM descent run { 7000 }
 <pa_IIM>  7000
 
-# PD: Mode of calculation of DC activity coefficients ( 1 -IPM, 2 +MBR, 3 IPM ) { 2 } 
+# PD: Mode of calculation of DC activity coefficients { 2 } 
 <pa_PD>  2
 
-# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -4 }
+# PRD: Disable (0) or activate (-4 or less- max.dec.exp.for DC amount correction) SpeciationCleanup() { -5 }
 <pa_PRD>  -5
 
 # AG: Smoothing parameter 1 for non-ideal primal chemical potential increments (-1 to +1) { 1.0 }
 <pa_AG>  1
 
-# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 1 or 0.001 for adsorption }
+# DGC: Smoothing parameter 2- exponent in smoothing function (-1 to +1) { 0 or 0.001 for adsorption }
 <pa_DGC>  0
 
 # PSM: Level of diagnostic messages { 0- disabled (no ipmlog file); 1- default; 2-including warnings }
@@ -80,8 +80,7 @@
 # GAH: Activity coefficient for minor (J) species in solution phases at Simplex LP AIA { 1000 }
 <pa_GAH>  1000
 
-# _Min: Cutoff amounts for elimination of: Xw - water-solvent { 1e-11 }; Sc - solid sorbent {1e-11}; 
-#       Dc - solution- or surface species { 1e-30 }; Ph - non-electrolyte solution phase with all its components { 1e-20 }
+# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance
 # XwMin: Cutoff mole amount of water-solvent for aqueous phase elimination { 1e-13 }
 <pa_XwMin>  1e-13
 # ScMin: Cutoff mole amount of solid sorbent for sorption phase elimination { 1e-13 }
@@ -112,27 +111,27 @@
 # DFYs: Insertion mole amount for single-component phase in PSSC() algorithm { 1e-6 }
 <pa_DFYs>  1e-06
 
-# Tolerances and controls of high-precision IPM-3 algorithm 
+# Tolerances and controls of the high-precision IPM-3 algorithm 
 # DW: Activate (1) or disable (0) error condition on maximum number of MBR() iterations DP { 1 }
 <pa_DW>  1
-# DT: use DHB as relative maximum mass balance cutoff for all ICs (0), default, or for major ICs:
+# DT: use DHB as relative maximum mass balance cutoff for all ICs (0, default); or for major ICs:
 # decimal exponent (<-6) applied to DHB cutoff; (1) use DHB also as an absolute cutoff { 1 }
 <pa_DT>  0
 
-# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.0001 }
+# GAS: Threshold for primal-dual chemical potential difference used in SpeciationCleanup() { 0.001 }
 <pa_GAS>  0.001
-# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1e3 }
+# Total number of moles used in internal re-scaling of the system (disabled if < 1e-4) { 1000 }
 <pa_DG>  1000
 # DNS: Standard surface number density, nm-2 for calculating activity of surface species { 12.05 }
 <pa_DNS>  12.05
-# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 1e-3 }
+# IEPS: Tolerance for calculation of surface activity coefficient terms for surface species { 0.001 }
 <pa_IEPS>  0.001
 
 # pKin: Flag for using metastability constraints on DC amounts in primal GEM solution { 1 } 
 <pKin>  1
 # DKIN: Tolerance for non-trivial metastability constraints on DC amounts, moles { 1e-10 } 
 <pa_DKIN>  1e-10
-# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables
+# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 32001 { 30000 }, 0 disables
 <pa_PLLG>  10000
 # tMin: Type of thermodynamic potential to minimize (reserved)
 <tMin>  0

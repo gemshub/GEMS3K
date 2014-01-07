@@ -15,8 +15,8 @@ CONFIG		-= qt
 CONFIG		+= warn_on
 CONFIG		+= console
 
-QMAKE_CC	= gcc
-QMAKE_CXX	= g++
+#QMAKE_CC	= gcc
+#QMAKE_CXX	= g++
 
 #CONFIG( release,  debug|release ) {
 #	message( "Configuring for release build ..." )

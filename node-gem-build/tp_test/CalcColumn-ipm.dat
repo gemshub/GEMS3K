@@ -23,14 +23,14 @@
 # DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } 
 <pa_DHB>  1e-15
 
-# DK: Tolerance for the Dikin's criterion of IPM convergence { 3e-6 } 
+# DK: Tolerance for the Dikin's criterion of IPM convergence { 1e-6 } 
 <pa_DK>  1e-07
 # DFM: Tolerance for stability criterion for a phase to be eliminated from mass balance { 0.01 } 
 <pa_DFM>  0.001
 # DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm
 
 # Tolerances and controls of high-precision IPM-3 algorithm 
-# pa_PLLG: Tolerance for checking divergence in IPM dual solution, 1 to 30000 { 3000 }, 0 disables
+# pa_PLLG: Tolerance for checking divergence in IPM dual solution,  { 30000 }, 0 disables
 <pa_PLLG>  10000
 
 ## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)
