@@ -58,7 +58,7 @@ outField MULTI_static_fields[8] =  {
 
 outField MULTI_dynamic_fields[80] =  {
 // write/read dynamic (array) data to/from the text-format IPM file
-   {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*6]" },
+   {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*8]" },
    {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
                          "\n# [0] number of interaction parameters (rows in <IPx>); [1] max. parameter order (columns in <IPx>);"
                          "\n# [2] number of coefficients per interaction parameter in <PMc> array" },
@@ -140,7 +140,7 @@ outField MULTI_dynamic_fields[80] =  {
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
    { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
 //TKinMet
-    { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi]" },
+    { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi*6]" },
     { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
       "# of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]" },
     { "LsUpt",    0 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
