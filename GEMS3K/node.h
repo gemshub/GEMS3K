@@ -768,6 +768,9 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
       /// Retrieves Eh of the aqueous solution
       double Get_Eh( );
 
+      /// Retrieves pe of the aqueous solution
+      double Get_pe( );
+
      /// Sets the TK in the work DATABR structure.
      /// \param TK is the temperature value
       void Set_TK(const double TK)

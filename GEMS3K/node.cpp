@@ -1286,6 +1286,15 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       return p_Eh;
   }
 
+  // Added 01.02.2014 DM
+  // Retrives pe of the aqueous solution
+  double TNode::Get_pe( )
+  {
+      double p_pe;
+      p_pe = CNode->pe;
+      return p_pe;
+  }
+
   // Access to equilibrium properties of phases and components using DATACH indexation
 
   // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index)
