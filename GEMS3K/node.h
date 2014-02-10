@@ -765,11 +765,11 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
       /// Retrieves pH of the aqueous solution
       double Get_pH( );
 
-      /// Retrieves Eh of the aqueous solution
-      double Get_Eh( );
-
       /// Retrieves pe of the aqueous solution
       double Get_pe( );
+
+      /// Retrieves Eh of the aqueous solution
+      double Get_Eh( );
 
      /// Sets the TK in the work DATABR structure.
      /// \param TK is the temperature value
@@ -780,6 +780,14 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
       /// \param P is the presure value
        void Set_P(const double P)
        {  CNode->P = P;  }
+
+       /// Retrieves the pressure P (Pa) in the current (work) node
+       inline double Get_P( )
+       {  return CNode->P;  }
+
+       /// Retrieves the temperature T_K (Kelvin) in the current (work) node
+       inline double Get_TK( )
+       {  return CNode->TK;  }
 
        /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
        /// \param xic is IC DBR index

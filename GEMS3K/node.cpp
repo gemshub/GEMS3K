@@ -1277,6 +1277,15 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       return p_pH;
   }
 
+  // Added 28.01.2014 DM
+  // Retrives pH of the aqueous solution
+  double TNode::Get_pe( )
+  {
+      double p_pe;
+      p_pe = CNode->pe;
+      return p_pe;
+  }
+
   // Added 12.06.2013 DM
   // Retrives Eh of the aqueous solution
   double TNode::Get_Eh( )
@@ -1284,15 +1293,6 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       double p_Eh;
       p_Eh = CNode->Eh;
       return p_Eh;
-  }
-
-  // Added 01.02.2014 DM
-  // Retrives pe of the aqueous solution
-  double TNode::Get_pe( )
-  {
-      double p_pe;
-      p_pe = CNode->pe;
-      return p_pe;
   }
 
   // Access to equilibrium properties of phases and components using DATACH indexation
