@@ -1295,6 +1295,15 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       return p_Eh;
   }
 
+  // Added 17.02.2014 DM
+  // Retrives effective molal ionic strength of aqueous solution
+  double TNode::Get_IC( )
+  {
+      double p_IC;
+      p_IC = CNode->IC;
+      return p_IC;
+  }
+
   // Access to equilibrium properties of phases and components using DATACH indexation
 
   // Retrieves the current (dual-thermodynamic) activity of DC (xCH is DC DCH index)

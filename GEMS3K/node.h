@@ -514,6 +514,11 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
    char* xCH_to_DC_name( int xCH )
    {return CSD->DCNL[xCH];}
 
+   /// Returns IC Name string given the ICH index of IC
+   /// or -1 if no such name was found in the DATACH IC name list
+   char* xCH_to_IC_name( int xCH )
+   {return CSD->ICNL[xCH];}
+
    /// Returns DCH index of Phase given the Phase Name string
    /// or -1 if no such name was found in the DATACH Phase name list
    long int Ph_name_to_xCH( const char *Name );
@@ -770,6 +775,9 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
 
       /// Retrieves Eh of the aqueous solution
       double Get_Eh( );
+
+      /// Retrieves IC (effective molal ionic strength of aqueous electrolyte) of the aqueous solution
+      double Get_IC( );
 
      /// Sets the TK in the work DATABR structure.
      /// \param TK is the temperature value
