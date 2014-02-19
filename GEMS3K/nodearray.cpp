@@ -35,7 +35,7 @@
 #include "io_arrays.h"
 #include "gdatastream.h"
 #include <cmath>
-
+#include <unistd.h>
 #ifndef __unix
 #include <io.h>
 #endif
