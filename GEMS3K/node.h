@@ -501,6 +501,10 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
 // and DataBR (or node) data structures for components and phases
 // (i.e. between the chemical system definition and the node)
 
+//  void AtcivityCoeficient ();
+    /// Return a pointer to a phase (TSolMod) with index xPH
+  void *get_ptrTSolMod( int xPH );
+
   /// Returns DCH index of IC given the IC Name string (null-terminated)
   /// or -1 if no such name was found in the DATACH IC name list
   long int IC_name_to_xCH( const char *Name );

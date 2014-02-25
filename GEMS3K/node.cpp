@@ -500,6 +500,16 @@ if( binary_f )
 //-----------------------------------------------------------------
 // work with lists
 
+//void TNode::AtcivityCoeficient()
+//{
+//    multi->Access_GEM_IMP_init();
+//}
+
+void *TNode::get_ptrTSolMod(int xPH)
+{
+    return multi->Get_ptrTSolMod(xPH);
+}
+
 //Returns DCH index of IC given the IC Name string (null-terminated)
 // or -1 if no such name was found in the DATACH IC name list
 long int TNode::IC_name_to_xCH( const char *Name )

@@ -1060,6 +1060,17 @@ void TMulti::GEM_IPM_Init()
 #endif
 }
 
+//void TMulti::Access_GEM_IMP_init()
+//{
+//    GEM_IPM_Init();
+//}
+
+TSolMod * TMulti::Get_ptrTSolMod (int xPH){
+    return this->phSolMod[xPH];
+}
+
+
+
 /// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 //
 void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
