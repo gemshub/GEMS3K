@@ -505,10 +505,12 @@ if( binary_f )
 //    multi->Access_GEM_IMP_init();
 //}
 
+#ifdef IPMGEMPLUGIN
 void *TNode::get_ptrTSolMod(int xPH)
 {
     return multi->Get_ptrTSolMod(xPH);
 }
+#endif
 
 //Returns DCH index of IC given the IC Name string (null-terminated)
 // or -1 if no such name was found in the DATACH IC name list
