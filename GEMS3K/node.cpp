@@ -354,7 +354,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
    gstring curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
-  fstream f_log(ipmLogFile.c_str(), ios::out|ios::app );
+  fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
   try
     {
 #else
