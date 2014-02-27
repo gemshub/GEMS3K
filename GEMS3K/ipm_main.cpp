@@ -56,7 +56,7 @@ void TMulti::GibbsEnergyMinimization()
   int KMretCode;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
-// fstream f_log("ipmlog.txt", ios::out|ios::app );
+// fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
 // f_log << " GEMIPM TC= " << pm.TCc  << endl;
 
 FORCED_AIA:
@@ -1787,7 +1787,7 @@ void TMulti::Reset_uDD( long int nr, bool trace )
     }
     if( paTProfil->p.PSM >= 3 )
     {
-      fstream f_log("ipmlog.txt", ios::out|ios::app );
+      fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
       f_log << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
       f_log << " Itr   C_D:   " << pm.SB1[0] ;
     }
@@ -1803,7 +1803,7 @@ void TMulti::Increment_uDD( long int r, bool trace )
         return;
     if( paTProfil->p.PSM >= 3 )
     {
-       fstream f_log("ipmlog.txt", ios::out|ios::app );
+       fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
        f_log << r << " " << pm.PCI << " ";
     }
     if( trace )
@@ -1843,7 +1843,7 @@ void TMulti::Increment_uDD( long int r, bool trace )
       }
       if( paTProfil->p.PSM >= 3 )
       {
-          fstream f_log("ipmlog.txt", ios::out|ios::app );
+          fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
           f_log << U_mean[i] << " ";
   //      f_log << pm.U[i] << " ";
   //      f_log << U_CV[i] << " ";
@@ -1885,7 +1885,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
     tol_gen *= pm.PCI;
     if( paTProfil->p.PSM >= 3 )
     {
-        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
         f_log << " Tol= " << tol_gen << " |" << endl;
     }
     if( trace )
@@ -1938,7 +1938,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
             cout << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
          if( paTProfil->p.PSM >= 3 )
          {
-            fstream f_log("ipmlog.txt", ios::out|ios::app );
+            fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
             f_log << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
          }
          FirstTime = false;
@@ -1951,7 +1951,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
       }
       if( paTProfil->p.PSM >= 3 )
       {
-          fstream f_log("ipmlog.txt", ios::out|ios::app );
+          fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
           memcpy(buf, pm.SB[i], MAXICNAME );
           buf[MAXICNAME] = '\0';
           f_log << buf << " ln_bi= " << log_bi << " Tol= " << tolerance << " ";
@@ -1962,7 +1962,7 @@ long int TMulti::Check_uDD( long int mode, double DivTol,  bool trace )
            cout << " |" << endl;
          if( paTProfil->p.PSM >= 3 )
          {
-             fstream f_log("ipmlog.txt", ios::out|ios::app );
+             fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
              f_log << " |" << endl;
          }
     }

@@ -150,7 +150,7 @@ long int TMulti::testMulti( )
   {
     if( paTProfil->p.PSM == 2 )
     {
-      fstream f_log("ipmlog.txt", ios::out|ios::app );
+      fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
       f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
       f_log << pm.errorBuf << endl;
     }
@@ -168,7 +168,7 @@ long int TMulti::testMulti()
   {
    if( paTProfil->p.PSM >= 2 )
    {
-     fstream f_log("ipmlog.txt", ios::out|ios::app );
+     fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
      f_log << pm.errorBuf << endl;
    }

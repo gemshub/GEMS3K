@@ -124,7 +124,7 @@ bool  TNode::check_TP( double TK, double P )
       }
       if( okT == false )
       {
-        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
          f_log << "In node "<< CNode->NodeHandle << ",  Given TK= "<<  TK <<
              "  is beyond the interpolation range for thermodynamic data near boundary T_= "
      		<< T_ << endl;
@@ -142,7 +142,7 @@ bool  TNode::check_TP( double TK, double P )
       }
       if( !okP )
       {
-        fstream f_log("ipmlog.txt", ios::out|ios::app );
+        fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
           f_log << "In node "<< CNode->NodeHandle << ", Given P= "<<  P <<
            "  is beyond the interpolation range for thermodynamic data near boundary P_= "
            << P_ << endl;
@@ -227,7 +227,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    {
     if( profil->pa.p.PSM  )
 	{
-		fstream f_log("ipmlog.txt", ios::out|ios::app );
+        fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
         f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
           err.title.c_str() << ":" << endl;
        if( profil->pa.p.PSM >= 2  )
@@ -241,7 +241,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
    catch(...)
    {
-    fstream f_log("ipmlog.txt", ios::out|ios::app );
+    fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
     f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
                 << "gems3: Unknown exception: GEM calculation aborted" << endl;
     CNode->NodeStatusCH = T_ERROR_GEM;
@@ -300,7 +300,7 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 
   } catch(TError& err)
     {
-	  fstream f_log("ipmlog.txt", ios::out|ios::app );
+      fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
       f_log << "GEMS3K input : file " << fname << endl;
       f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
         err.title.c_str() << ":" <<  err.mess.c_str() << endl;
@@ -351,7 +351,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name,
    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
    gstring curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
-  fstream f_log("ipmlog.txt", ios::out|ios::app );
+  fstream f_log(ipmLogFile.c_str(), ios::out|ios::app );
   try
     {
 #else
@@ -1945,6 +1945,8 @@ TNode::TNode( MULTI *apm  )
     allocMemory();
     //na = this;
     dbr_file_name = "dbr_file_name";
+    ipmlog_file_name = pVisor->userGEMDir();
+    ipmlog_file_name += "ipmlog.txt";
 }
 
 #else
@@ -1956,6 +1958,7 @@ TNode::TNode()
   allocMemory();
   //na = this;
   dbr_file_name = "dbr_file_name";
+  ipmlog_file_name = "ipmlog.txt";
 }
 
 #endif
