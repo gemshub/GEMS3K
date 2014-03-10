@@ -6,7 +6,7 @@ var searchData=
   ['xcapd',['XcapD',['../struct_m_u_l_t_i.html#a55c3f4a1ea5c93bcbc75ed7e936bdffb',1,'MULTI']]],
   ['xcapf',['XcapF',['../struct_m_u_l_t_i.html#a80580301d715d151748e7b168b3f254a',1,'MULTI']]],
   ['xcond',['Xcond',['../struct_m_u_l_t_i.html#ac4f955e4c1a6982f84854a6f7942f354',1,'MULTI']]],
-  ['xdc',['xdc',['../struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a',1,'DATACH::xdc()'],['../struct_d_a_t_a_b_r.html#aa66e1c1ccde54dc258187c5c1196e9d2',1,'DATABR::xDC()']]],
+  ['xdc',['xDC',['../struct_d_a_t_a_b_r.html#aa66e1c1ccde54dc258187c5c1196e9d2',1,'DATABR::xDC()'],['../struct_d_a_t_a_c_h.html#ac7ce14b69af5ac78eec4832a7c457e6a',1,'DATACH::xdc()']]],
   ['xdla',['XdlA',['../struct_m_u_l_t_i.html#ac376f2a97ad11ed44fdce5450147e955',1,'MULTI']]],
   ['xdlb',['XdlB',['../struct_m_u_l_t_i.html#a29e009eb9397c7b6c54e92d6e47bea5b',1,'MULTI']]],
   ['xdld',['XdlD',['../struct_m_u_l_t_i.html#ac11c2a7b7de8aee423bccbfcb2f1e9d1',1,'MULTI']]],

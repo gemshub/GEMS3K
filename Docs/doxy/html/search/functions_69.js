@@ -19,6 +19,7 @@ var searchData=
   ['inode',['iNode',['../class_t_node_array.html#acfce3177a410321a63154bdc9a0d563d',1,'TNodeArray']]],
   ['interiorpointsmethod',['InteriorPointsMethod',['../class_t_multi.html#ae0ce862b92fb59c63df3badc9a0c0eb1',1,'TMulti']]],
   ['internalenergy',['InternalEnergy',['../class_t_multi.html#a12af02446fdc8df715cc57f4a348415a',1,'TMulti']]],
+  ['ipmlogfile',['ipmLogFile',['../class_t_node.html#a3412c39380508a438e8889d6abbd182d',1,'TNode']]],
   ['is_5fetacalc',['IS_EtaCalc',['../class_t_multi.html#a6e7660cf3c63beff3eb765efc7de399c',1,'TMulti']]],
   ['islocationinnode',['isLocationInNode',['../class_t_node_array.html#acdf2bb8db77fd402603e7229fdf975c1',1,'TNodeArray::isLocationInNode(long int ii, long int jj, long int kk, LOCATION cxyz) const '],['../class_t_node_array.html#a34307fdc8bba8794a3dbf6690d086e24',1,'TNodeArray::isLocationInNode(long int iNode, LOCATION cxyz) const ']]]
 ];

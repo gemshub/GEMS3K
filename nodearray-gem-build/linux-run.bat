@@ -1,3 +1,3 @@
-exec ./nodearrs test-data/CalColumnF.dat test-data/CalColumn-dat.lst test-data/CalColumn-dbr.lst test-data/VTK
+./nodearrs test-advec/GEM2MT-task.dat test-advec/CalcColumn-dat.lst test-advec/CalcColumn-dbr.lst test-advec/VTK
 
 

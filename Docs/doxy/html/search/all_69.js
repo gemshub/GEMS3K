@@ -41,6 +41,7 @@ var searchData=
   ['ipm_5fchemical3_2ecpp',['ipm_chemical3.cpp',['../ipm__chemical3_8cpp.html',1,'']]],
   ['ipm_5fmain_2ecpp',['ipm_main.cpp',['../ipm__main_8cpp.html',1,'']]],
   ['ipm_5fsimplex_2ecpp',['ipm_simplex.cpp',['../ipm__simplex_8cpp.html',1,'']]],
+  ['ipmlogfile',['ipmLogFile',['../class_t_node.html#a3412c39380508a438e8889d6abbd182d',1,'TNode']]],
   ['ipx',['IPx',['../struct_m_u_l_t_i.html#a979aa4a848d27af2e65d7ca0757e8ea2',1,'MULTI']]],
   ['is',['is',['../struct_m_u_l_t_i.html#acb393319826f44682fdc58edae07d534',1,'MULTI']]],
   ['is_5fetacalc',['IS_EtaCalc',['../class_t_multi.html#a6e7660cf3c63beff3eb765efc7de399c',1,'TMulti']]],

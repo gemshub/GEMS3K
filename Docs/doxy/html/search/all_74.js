@@ -21,7 +21,7 @@ var searchData=
   ['tguggenheim',['TGuggenheim',['../class_t_guggenheim.html',1,'TGuggenheim'],['../class_t_guggenheim.html#a671d44cf378708085ed9c82b172ccd43',1,'TGuggenheim::TGuggenheim()']]],
   ['thelgeson',['THelgeson',['../class_t_helgeson.html',1,'THelgeson'],['../class_t_helgeson.html#aa24e2032f5eaf32f30e4041fac89f414',1,'THelgeson::THelgeson()']]],
   ['tideal',['TIdeal',['../class_t_ideal.html',1,'TIdeal'],['../class_t_ideal.html#abbfaf8e26af76dc51f60ae5c4559d20f',1,'TIdeal::TIdeal()']]],
-  ['tk',['TK',['../struct_d_a_t_a_b_r.html#a78fd022c47ee2d759e912bd405af29dd',1,'DATABR::TK()'],['../class_t_sol_mod.html#a846a11f3884d6b2ed1f1a82369242984',1,'TSolMod::Tk()']]],
+  ['tk',['Tk',['../class_t_sol_mod.html#a846a11f3884d6b2ed1f1a82369242984',1,'TSolMod::Tk()'],['../struct_d_a_t_a_b_r.html#a78fd022c47ee2d759e912bd405af29dd',1,'DATABR::TK()']]],
   ['tkarpov',['TKarpov',['../class_t_karpov.html',1,'TKarpov'],['../class_t_karpov.html#aa2de96319fa7182b2f770acf2faec029',1,'TKarpov::TKarpov()']]],
   ['tkval',['TKval',['../struct_d_a_t_a_c_h.html#a9b7d09db0adb8868855a455bcb56124a',1,'DATACH']]],
   ['tlimitinglaw',['TLimitingLaw',['../class_t_limiting_law.html',1,'TLimitingLaw'],['../class_t_limiting_law.html#a0e613437f1afa7b8351afdc51fa33728',1,'TLimitingLaw::TLimitingLaw()']]],

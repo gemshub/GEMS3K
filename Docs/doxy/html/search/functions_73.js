@@ -11,6 +11,7 @@ var searchData=
   ['set_5ftk',['Set_Tk',['../class_t_node.html#a41022870d6a1b5d4067ba28d737cb740',1,'TNode']]],
   ['setalws',['setAlws',['../class_t_r_w_arrays.html#a80e2ade8231ca5b8fd9775ab1d081aa5',1,'TRWArrays::setAlws(long int ii)'],['../class_t_r_w_arrays.html#a5aec02af2cb7f671df740698609244d4',1,'TRWArrays::setAlws(const char *Name)']]],
   ['setgrid',['SetGrid',['../class_t_node_array.html#ac0b328eff648791b088597c0cd406cf6',1,'TNodeArray']]],
+  ['setipmlogfile',['setipmLogFile',['../class_t_node.html#a282f4625140c113d60ead8ca92f9b3c3',1,'TNode']]],
   ['setnoalws',['setNoAlws',['../class_t_r_w_arrays.html#a3300db86e748bcc613136accb9a89b0f',1,'TRWArrays::setNoAlws(long int ii)'],['../class_t_r_w_arrays.html#a57dd2bd81f1c75f44e51d97a548b45ef',1,'TRWArrays::setNoAlws(const char *Name)']]],
   ['setnodearray',['setNodeArray',['../class_t_node_array.html#aa9537361dc6a8fa3db023f41c55f407a',1,'TNodeArray']]],
   ['setnodehandle',['setNodeHandle',['../class_t_node.html#a70b297f3e4e8bff1654188544a87ca1e',1,'TNode']]],
