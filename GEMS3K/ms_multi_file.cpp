@@ -1662,8 +1662,8 @@ else
         pm.lnCnft[ii] =0.;
      }
 //TSorpMod & TKinMet stuff
-    pm.SorMc   = new double[pm.FIs*14];
-    for( ii=0; ii<pm.FIs*14; ii++ )
+    pm.SorMc   = new double[pm.FIs*16];
+    for( ii=0; ii<pm.FIs*16; ii++ )
         pm.SorMc[ii] =0.;
 // TSorpMod stuff
     pm.LsESmo   = new long int[pm.FIs*4];
