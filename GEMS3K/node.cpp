@@ -508,7 +508,7 @@ if( binary_f )
 #ifdef IPMGEMPLUGIN
 void *TNode::get_ptrTSolMod(int xPH)
 {
-    return multi->Get_ptrTSolMod(xPH);
+    return multi->pTSolMod(xPH);
 }
 #endif
 

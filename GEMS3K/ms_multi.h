@@ -851,9 +851,10 @@ double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long i
     void InitalizeGEM_IPM_Data();
     void DC_LoadThermodynamicData( TNode* aNa = 0 );
     //DM 25.02.2014
-    // void Access_GEM_IMP_init();
+    void Access_GEM_IMP_init();
+    int get_sizeFIs () {return sizeFIs;}
     // acces for node class
-    TSolMod * Get_ptrTSolMod (int xPH);
+    TSolMod * pTSolMod (int xPH);
 
 
     long int CheckMassBalanceResiduals(double *Y );

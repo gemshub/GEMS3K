@@ -1060,12 +1060,12 @@ void TMulti::GEM_IPM_Init()
 #endif
 }
 
-//void TMulti::Access_GEM_IMP_init()
-//{
-//    GEM_IPM_Init();
-//}
+void TMulti::Access_GEM_IMP_init()
+{
+    GEM_IPM_Init();
+}
 
-TSolMod * TMulti::Get_ptrTSolMod (int xPH){
+TSolMod * TMulti::pTSolMod (int xPH){
     return this->phSolMod[xPH];
 }
 
