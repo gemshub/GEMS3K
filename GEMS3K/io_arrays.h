@@ -222,6 +222,7 @@ public:
 
     /// Writes char array to a text file.
     void writeArray( const char *name, char*   arr, int size, int arr_size );
+    void writeArrayS( const char *name, char* arr, long int size, long int arr_siz );
     /// Writes float array to a text file.
     void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
     /// Writes double array to a text file.

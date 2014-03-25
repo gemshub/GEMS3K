@@ -190,8 +190,15 @@ long int TRWArrays::findFld( const char *Name )
      if(!brief_mode || getAlws(f_num ))
      { if( with_comments )
             ff <<  endl << flds[f_num].comment.c_str();
-        writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
+        writeArrayS( flds[f_num].name.c_str(),  arr,size, l_size);
      }
+ }
+
+
+ void TPrintArrays::writeArrayS( const char *name, char* arr,
+         long int size, long int arr_siz )
+ {
+    writeArray( name,  arr,size, arr_siz);
  }
 
 /// If the first parameter is given as NULL then the char array
