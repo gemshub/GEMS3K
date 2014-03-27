@@ -503,6 +503,8 @@ void TPrintArrays::writeArray( const char *name, short* arr,
 void  TReadArrays::skipSpace()
 {
   char input;
+  if( ff.eof() )
+       return;
   ff.get( input );
   while( input == '#' || input == ' ' ||
         input == '\n' || input == '\t')
