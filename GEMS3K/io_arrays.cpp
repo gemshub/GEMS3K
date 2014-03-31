@@ -857,13 +857,13 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
 // DM corrected added gstring& arr instead of gstring arr 18.04.2013
 void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
 {
-// char ch; commented out DM 18.04.2013
- char buf[400];
+ char ch;
+ char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
 
  setCurrentArray( name, 1);
  skipSpace();
-// ff.get(ch); commented out DM 18.04.2013
- ff.getline( buf, el_size+1/*, '\''*/); // DM commented out DM 18.04.2013
+ ff.get(ch);
+ ff.getline( buf, el_size+1, '\'');
  arr = buf;
 }
 
