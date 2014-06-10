@@ -1,0 +1,1662 @@
+<ParaView>
+  <ServerManagerState version="3.6.2">
+    <Proxy group="animation" type="AnimationScene" id="20" servers="16">
+      <Property name="AnimationTime" id="20.AnimationTime" number_of_elements="1">
+        <Element index="0" value="14"/>
+      </Property>
+      <Property name="CacheLimit" id="20.CacheLimit" number_of_elements="1">
+        <Element index="0" value="102400"/>
+        <Domain name="range" id="20.CacheLimit.range"/>
+      </Property>
+      <Property name="Caching" id="20.Caching" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="20.Caching.bool"/>
+      </Property>
+      <Property name="Cues" id="20.Cues" number_of_elements="1">
+        <Proxy value="30"/>
+        <Domain name="groups" id="20.Cues.groups">
+          <Group value="animation"/>
+        </Domain>
+      </Property>
+      <Property name="EndTime" id="20.EndTime" number_of_elements="1">
+        <Element index="0" value="14"/>
+      </Property>
+      <Property name="EndTimeInfo" id="20.EndTimeInfo" number_of_elements="1">
+        <Element index="0" value="14"/>
+      </Property>
+      <Property name="LockEndTime" id="20.LockEndTime" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="20.LockEndTime.bool"/>
+      </Property>
+      <Property name="LockStartTime" id="20.LockStartTime" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="20.LockStartTime.bool"/>
+      </Property>
+      <Property name="StartTime" id="20.StartTime" number_of_elements="1">
+        <Element index="0" value="0"/>
+      </Property>
+      <Property name="StartTimeInfo" id="20.StartTimeInfo" number_of_elements="1">
+        <Element index="0" value="0"/>
+      </Property>
+      <Property name="TimeKeeper" id="20.TimeKeeper" number_of_elements="1">
+        <Proxy value="4"/>
+      </Property>
+      <Property name="ViewModules" id="20.ViewModules" number_of_elements="1">
+        <Proxy value="532"/>
+        <Domain name="groups" id="20.ViewModules.groups">
+          <Group value="views"/>
+        </Domain>
+      </Property>
+      <Property name="Duration" id="20.Duration" number_of_elements="1">
+        <Element index="0" value="10"/>
+      </Property>
+      <Property name="FramesPerTimestep" id="20.FramesPerTimestep" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="range" id="20.FramesPerTimestep.range">
+          <Min index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="GoToFirst" id="20.GoToFirst"/>
+      <Property name="GoToLast" id="20.GoToLast"/>
+      <Property name="GoToNext" id="20.GoToNext"/>
+      <Property name="GoToPrevious" id="20.GoToPrevious"/>
+      <Property name="Loop" id="20.Loop" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="20.Loop.bool"/>
+      </Property>
+      <Property name="NumberOfFrames" id="20.NumberOfFrames" number_of_elements="1">
+        <Element index="0" value="10"/>
+        <Domain name="range" id="20.NumberOfFrames.range">
+          <Min index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="Play" id="20.Play"/>
+      <Property name="PlayMode" id="20.PlayMode" number_of_elements="1">
+        <Element index="0" value="2"/>
+        <Domain name="enum" id="20.PlayMode.enum">
+          <Entry value="0" text="Sequence"/>
+          <Entry value="1" text="Real Time"/>
+          <Entry value="2" text="Snap To TimeSteps"/>
+        </Domain>
+      </Property>
+      <Property name="Stop" id="20.Stop"/>
+      <SubProxy name="AnimationPlayer" servers="16">
+        <SubProxy name="RealtimeAnimationPlayer" servers="16"/>
+        <SubProxy name="SequenceAnimationPlayer" servers="16"/>
+        <SubProxy name="TimestepsAnimationPlayer" servers="16"/>
+      </SubProxy>
+    </Proxy>
+    <Proxy group="animation" type="TimeAnimationCue" id="30" servers="16">
+      <Property name="AnimatedDomainName" id="30.AnimatedDomainName" number_of_elements="1">
+        <Element index="0" value=""/>
+      </Property>
+      <Property name="AnimatedElement" id="30.AnimatedElement" number_of_elements="1">
+        <Element index="0" value="0"/>
+      </Property>
+      <Property name="AnimatedPropertyName" id="30.AnimatedPropertyName" number_of_elements="1">
+        <Element index="0" value="Time"/>
+      </Property>
+      <Property name="AnimatedProxy" id="30.AnimatedProxy" number_of_elements="1">
+        <Proxy value="4"/>
+        <Domain name="groups" id="30.AnimatedProxy.groups">
+          <Group value="sources"/>
+          <Group value="filters"/>
+        </Domain>
+      </Property>
+      <Property name="Enabled" id="30.Enabled" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="30.Enabled.bool"/>
+      </Property>
+      <Property name="EndTime" id="30.EndTime" number_of_elements="1">
+        <Element index="0" value="1"/>
+      </Property>
+      <Property name="StartTime" id="30.StartTime" number_of_elements="1">
+        <Element index="0" value="0"/>
+      </Property>
+      <Property name="TimeMode" id="30.TimeMode" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="enum" id="30.TimeMode.enum">
+          <Entry value="0" text="Normalized"/>
+          <Entry value="1" text="Relative"/>
+        </Domain>
+      </Property>
+      <Property name="UseAnimationTime" id="30.UseAnimationTime" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="30.UseAnimationTime.bool"/>
+      </Property>
+      <Property name="KeyFrames" id="30.KeyFrames" number_of_elements="0">
+        <Domain name="groups" id="30.KeyFrames.groups">
+          <Group value="animation_keyframes"/>
+        </Domain>
+      </Property>
+      <Property name="LastAddedKeyFrameIndex" id="30.LastAddedKeyFrameIndex" number_of_elements="1">
+        <Element index="0" value="0"/>
+      </Property>
+      <SubProxy name="Manipulator" servers="16">
+        <SubProxy name="CueStarter" servers="16"/>
+      </SubProxy>
+    </Proxy>
+    <Proxy group="lookup_tables" type="PVLookupTable" id="490" servers="20">
+      <Property name="ColorSpace" id="490.ColorSpace" number_of_elements="1">
+        <Element index="0" value="3"/>
+        <Domain name="enum" id="490.ColorSpace.enum">
+          <Entry value="0" text="RGB"/>
+          <Entry value="1" text="HSV"/>
+          <Entry value="2" text="Lab"/>
+          <Entry value="3" text="Diverging"/>
+        </Domain>
+      </Property>
+      <Property name="Discretize" id="490.Discretize" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="490.Discretize.bool"/>
+      </Property>
+      <Property name="HSVWrap" id="490.HSVWrap" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="490.HSVWrap.bool"/>
+      </Property>
+      <Property name="LockScalarRange" id="490.LockScalarRange" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="490.LockScalarRange.bool"/>
+      </Property>
+      <Property name="NumberOfTableValues" id="490.NumberOfTableValues" number_of_elements="1">
+        <Element index="0" value="256"/>
+        <Domain name="range" id="490.NumberOfTableValues.range">
+          <Min index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="RGBPoints" id="490.RGBPoints" number_of_elements="8">
+        <Element index="0" value="9.97034e-06"/>
+        <Element index="1" value="0.23"/>
+        <Element index="2" value="0.299"/>
+        <Element index="3" value="0.754"/>
+        <Element index="4" value="0.122398"/>
+        <Element index="5" value="0.706"/>
+        <Element index="6" value="0.016"/>
+        <Element index="7" value="0.15"/>
+      </Property>
+      <Property name="ScalarRangeInitialized" id="490.ScalarRangeInitialized" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="490.ScalarRangeInitialized.bool"/>
+      </Property>
+      <Property name="UseLogScale" id="490.UseLogScale" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="490.UseLogScale.bool"/>
+      </Property>
+      <Property name="VectorComponent" id="490.VectorComponent" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="range" id="490.VectorComponent.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="0"/>
+        </Domain>
+      </Property>
+      <Property name="VectorMode" id="490.VectorMode" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="enum" id="490.VectorMode.enum">
+          <Entry value="0" text="Magnitude"/>
+          <Entry value="1" text="Component"/>
+        </Domain>
+      </Property>
+    </Proxy>
+    <Proxy group="piecewise_functions" type="PiecewiseFunction" id="492" servers="20">
+      <Property name="Points" id="492.Points" number_of_elements="4">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="1"/>
+        <Element index="3" value="1"/>
+      </Property>
+    </Proxy>
+    <Proxy group="misc" type="RepresentationAnimationHelper" id="142" servers="1">
+      <Property name="Source" id="142.Source" number_of_elements="1">
+        <Proxy value="128"/>
+      </Property>
+    </Proxy>
+    <Proxy group="misc" type="RepresentationAnimationHelper" id="524" servers="1">
+      <Property name="Source" id="524.Source" number_of_elements="1">
+        <Proxy value="499"/>
+      </Property>
+    </Proxy>
+    <Proxy group="extended_sources" type="HighResLineSource" id="511" servers="1">
+      <Property name="Point1" id="511.Point1" number_of_elements="3">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Domain name="range" id="511.Point1.range">
+          <Min index="0" value="0"/>
+          <Min index="1" value="0"/>
+          <Min index="2" value="0"/>
+          <Max index="0" value="0.5"/>
+          <Max index="1" value="0"/>
+          <Max index="2" value="0"/>
+        </Domain>
+      </Property>
+      <Property name="Point2" id="511.Point2" number_of_elements="3">
+        <Element index="0" value="0.5"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Domain name="range" id="511.Point2.range">
+          <Min index="0" value="0"/>
+          <Min index="1" value="0"/>
+          <Min index="2" value="0"/>
+          <Max index="0" value="0.5"/>
+          <Max index="1" value="0"/>
+          <Max index="2" value="0"/>
+        </Domain>
+      </Property>
+      <Property name="Resolution" id="511.Resolution" number_of_elements="1">
+        <Element index="0" value="200"/>
+        <Domain name="range" id="511.Resolution.range">
+          <Min index="0" value="1"/>
+        </Domain>
+      </Property>
+    </Proxy>
+    <Proxy group="representations" type="XYPlotRepresentation" id="534" servers="1">
+      <Property name="Input" id="534.Input" number_of_elements="1">
+        <Proxy value="499" output_port="0"/>
+        <Domain name="input_type" id="534.Input.input_type">
+          <DataType value="vtkDataObject"/>
+        </Domain>
+      </Property>
+      <Property name="SeriesNamesInfo" id="534.SeriesNamesInfo" number_of_elements="51">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="2-Ca"/>
+        <Element index="2" value="3-Cl"/>
+        <Element index="3" value="4-H"/>
+        <Element index="4" value="5-Mg"/>
+        <Element index="5" value="6-O"/>
+        <Element index="6" value="7-Sn"/>
+        <Element index="7" value="8-Zz"/>
+        <Element index="8" value="Ca(CO3)@"/>
+        <Element index="9" value="Ca(HCO3)+"/>
+        <Element index="10" value="Ca+2"/>
+        <Element index="11" value="CaOH+"/>
+        <Element index="12" value="Mg(CO3)@"/>
+        <Element index="13" value="Mg(HCO3)+"/>
+        <Element index="14" value="Mg+2"/>
+        <Element index="15" value="MgOH+"/>
+        <Element index="16" value="CO2@"/>
+        <Element index="17" value="CO3-2"/>
+        <Element index="18" value="HCO3-"/>
+        <Element index="19" value="CH4@"/>
+        <Element index="20" value="ClO4-"/>
+        <Element index="21" value="Cl-"/>
+        <Element index="22" value="H2@"/>
+        <Element index="23" value="O2@"/>
+        <Element index="24" value="OH-"/>
+        <Element index="25" value="H+"/>
+        <Element index="26" value="H2O@"/>
+        <Element index="27" value="CO2"/>
+        <Element index="28" value="CH4"/>
+        <Element index="29" value="H2"/>
+        <Element index="30" value="O2"/>
+        <Element index="31" value="Cal"/>
+        <Element index="32" value="Dis-Dol"/>
+        <Element index="33" value="Sn"/>
+        <Element index="34" value="pH"/>
+        <Element index="35" value="pe"/>
+        <Element index="36" value="Eh"/>
+        <Element index="37" value="NodePorosity"/>
+        <Element index="38" value="Fluidvolume"/>
+        <Element index="39" value="ExcessVolume"/>
+        <Element index="40" value="POROSITY"/>
+        <Element index="41" value="velocity (0)"/>
+        <Element index="42" value="velocity (1)"/>
+        <Element index="43" value="velocity (2)"/>
+        <Element index="44" value="velocity (Magnitude)"/>
+        <Element index="45" value="vtkValidPointMask"/>
+        <Element index="46" value="arc_length"/>
+        <Element index="47" value="Points (0)"/>
+        <Element index="48" value="Points (1)"/>
+        <Element index="49" value="Points (2)"/>
+        <Element index="50" value="Points (Magnitude)"/>
+      </Property>
+      <Property name="UseIndexForXAxis" id="534.UseIndexForXAxis" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="bool" id="534.UseIndexForXAxis.bool"/>
+      </Property>
+      <Property name="UseViewUpdateTime" id="534.UseViewUpdateTime" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="534.UseViewUpdateTime.bool"/>
+      </Property>
+      <Property name="Visibility" id="534.Visibility" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="534.Visibility.bool"/>
+      </Property>
+      <Property name="XArrayName" id="534.XArrayName" number_of_elements="1">
+        <Element index="0" value="arc_length"/>
+        <Domain name="array_list" id="534.XArrayName.array_list">
+          <String text="1-C"/>
+          <String text="2-Ca"/>
+          <String text="3-Cl"/>
+          <String text="4-H"/>
+          <String text="5-Mg"/>
+          <String text="6-O"/>
+          <String text="7-Sn"/>
+          <String text="8-Zz"/>
+          <String text="Ca(CO3)@"/>
+          <String text="Ca(HCO3)+"/>
+          <String text="Ca+2"/>
+          <String text="CaOH+"/>
+          <String text="Mg(CO3)@"/>
+          <String text="Mg(HCO3)+"/>
+          <String text="Mg+2"/>
+          <String text="MgOH+"/>
+          <String text="CO2@"/>
+          <String text="CO3-2"/>
+          <String text="HCO3-"/>
+          <String text="CH4@"/>
+          <String text="ClO4-"/>
+          <String text="Cl-"/>
+          <String text="H2@"/>
+          <String text="O2@"/>
+          <String text="OH-"/>
+          <String text="H+"/>
+          <String text="H2O@"/>
+          <String text="CO2"/>
+          <String text="CH4"/>
+          <String text="H2"/>
+          <String text="O2"/>
+          <String text="Cal"/>
+          <String text="Dis-Dol"/>
+          <String text="Sn"/>
+          <String text="pH"/>
+          <String text="pe"/>
+          <String text="Eh"/>
+          <String text="NodePorosity"/>
+          <String text="Fluidvolume"/>
+          <String text="ExcessVolume"/>
+          <String text="POROSITY"/>
+          <String text="velocity (0)"/>
+          <String text="velocity (1)"/>
+          <String text="velocity (2)"/>
+          <String text="velocity (Magnitude)"/>
+          <String text="vtkValidPointMask"/>
+          <String text="arc_length"/>
+          <String text="Points (0)"/>
+          <String text="Points (1)"/>
+          <String text="Points (2)"/>
+          <String text="Points (Magnitude)"/>
+        </Domain>
+      </Property>
+      <Property name="AttributeType" id="534.AttributeType" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="enum" id="534.AttributeType.enum">
+          <Entry value="0" text="Point Data"/>
+          <Entry value="1" text="Cell Data"/>
+          <Entry value="4" text="Vertex Data"/>
+          <Entry value="5" text="Edge Data"/>
+          <Entry value="6" text="Row Data"/>
+          <Entry value="2" text="Field Data"/>
+        </Domain>
+      </Property>
+      <Property name="CompositeDataSetIndex" id="534.CompositeDataSetIndex" number_of_elements="1">
+        <Element index="0" value="0"/>
+        <Domain name="tree" id="534.CompositeDataSetIndex.tree"/>
+      </Property>
+      <Property name="SeriesAxisCorner" id="534.SeriesAxisCorner"/>
+      <Property name="SeriesColor" id="534.SeriesColor"/>
+      <Property name="SeriesColorInfo" id="534.SeriesColorInfo" number_of_elements="204">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="2-Ca"/>
+        <Element index="5" value="0.894118"/>
+        <Element index="6" value="0.101961"/>
+        <Element index="7" value="0.109804"/>
+        <Element index="8" value="3-Cl"/>
+        <Element index="9" value="0.215686"/>
+        <Element index="10" value="0.494118"/>
+        <Element index="11" value="0.721569"/>
+        <Element index="12" value="4-H"/>
+        <Element index="13" value="0.301961"/>
+        <Element index="14" value="0.686275"/>
+        <Element index="15" value="0.290196"/>
+        <Element index="16" value="5-Mg"/>
+        <Element index="17" value="0.596078"/>
+        <Element index="18" value="0.305882"/>
+        <Element index="19" value="0.639216"/>
+        <Element index="20" value="6-O"/>
+        <Element index="21" value="1"/>
+        <Element index="22" value="0.498039"/>
+        <Element index="23" value="0"/>
+        <Element index="24" value="7-Sn"/>
+        <Element index="25" value="0.65098"/>
+        <Element index="26" value="0.337255"/>
+        <Element index="27" value="0.156863"/>
+        <Element index="28" value="8-Zz"/>
+        <Element index="29" value="0"/>
+        <Element index="30" value="0"/>
+        <Element index="31" value="0"/>
+        <Element index="32" value="Ca(CO3)@"/>
+        <Element index="33" value="0.894118"/>
+        <Element index="34" value="0.101961"/>
+        <Element index="35" value="0.109804"/>
+        <Element index="36" value="Ca(HCO3)+"/>
+        <Element index="37" value="0.215686"/>
+        <Element index="38" value="0.494118"/>
+        <Element index="39" value="0.721569"/>
+        <Element index="40" value="Ca+2"/>
+        <Element index="41" value="0.301961"/>
+        <Element index="42" value="0.686275"/>
+        <Element index="43" value="0.290196"/>
+        <Element index="44" value="CaOH+"/>
+        <Element index="45" value="0.596078"/>
+        <Element index="46" value="0.305882"/>
+        <Element index="47" value="0.639216"/>
+        <Element index="48" value="Mg(CO3)@"/>
+        <Element index="49" value="1"/>
+        <Element index="50" value="0.498039"/>
+        <Element index="51" value="0"/>
+        <Element index="52" value="Mg(HCO3)+"/>
+        <Element index="53" value="0.65098"/>
+        <Element index="54" value="0.337255"/>
+        <Element index="55" value="0.156863"/>
+        <Element index="56" value="Mg+2"/>
+        <Element index="57" value="0"/>
+        <Element index="58" value="0"/>
+        <Element index="59" value="0"/>
+        <Element index="60" value="MgOH+"/>
+        <Element index="61" value="0.894118"/>
+        <Element index="62" value="0.101961"/>
+        <Element index="63" value="0.109804"/>
+        <Element index="64" value="CO2@"/>
+        <Element index="65" value="0.215686"/>
+        <Element index="66" value="0.494118"/>
+        <Element index="67" value="0.721569"/>
+        <Element index="68" value="CO3-2"/>
+        <Element index="69" value="0.301961"/>
+        <Element index="70" value="0.686275"/>
+        <Element index="71" value="0.290196"/>
+        <Element index="72" value="HCO3-"/>
+        <Element index="73" value="0.596078"/>
+        <Element index="74" value="0.305882"/>
+        <Element index="75" value="0.639216"/>
+        <Element index="76" value="CH4@"/>
+        <Element index="77" value="1"/>
+        <Element index="78" value="0.498039"/>
+        <Element index="79" value="0"/>
+        <Element index="80" value="ClO4-"/>
+        <Element index="81" value="0.65098"/>
+        <Element index="82" value="0.337255"/>
+        <Element index="83" value="0.156863"/>
+        <Element index="84" value="Cl-"/>
+        <Element index="85" value="0"/>
+        <Element index="86" value="0"/>
+        <Element index="87" value="0"/>
+        <Element index="88" value="H2@"/>
+        <Element index="89" value="0.894118"/>
+        <Element index="90" value="0.101961"/>
+        <Element index="91" value="0.109804"/>
+        <Element index="92" value="O2@"/>
+        <Element index="93" value="0.215686"/>
+        <Element index="94" value="0.494118"/>
+        <Element index="95" value="0.721569"/>
+        <Element index="96" value="OH-"/>
+        <Element index="97" value="0.301961"/>
+        <Element index="98" value="0.686275"/>
+        <Element index="99" value="0.290196"/>
+        <Element index="100" value="H+"/>
+        <Element index="101" value="0.596078"/>
+        <Element index="102" value="0.305882"/>
+        <Element index="103" value="0.639216"/>
+        <Element index="104" value="H2O@"/>
+        <Element index="105" value="1"/>
+        <Element index="106" value="0.498039"/>
+        <Element index="107" value="0"/>
+        <Element index="108" value="CO2"/>
+        <Element index="109" value="0.65098"/>
+        <Element index="110" value="0.337255"/>
+        <Element index="111" value="0.156863"/>
+        <Element index="112" value="CH4"/>
+        <Element index="113" value="0"/>
+        <Element index="114" value="0"/>
+        <Element index="115" value="0"/>
+        <Element index="116" value="H2"/>
+        <Element index="117" value="0.894118"/>
+        <Element index="118" value="0.101961"/>
+        <Element index="119" value="0.109804"/>
+        <Element index="120" value="O2"/>
+        <Element index="121" value="0.215686"/>
+        <Element index="122" value="0.494118"/>
+        <Element index="123" value="0.721569"/>
+        <Element index="124" value="Cal"/>
+        <Element index="125" value="0.301961"/>
+        <Element index="126" value="0.686275"/>
+        <Element index="127" value="0.290196"/>
+        <Element index="128" value="Dis-Dol"/>
+        <Element index="129" value="0.596078"/>
+        <Element index="130" value="0.305882"/>
+        <Element index="131" value="0.639216"/>
+        <Element index="132" value="Sn"/>
+        <Element index="133" value="1"/>
+        <Element index="134" value="0.498039"/>
+        <Element index="135" value="0"/>
+        <Element index="136" value="pH"/>
+        <Element index="137" value="0.65098"/>
+        <Element index="138" value="0.337255"/>
+        <Element index="139" value="0.156863"/>
+        <Element index="140" value="pe"/>
+        <Element index="141" value="0"/>
+        <Element index="142" value="0"/>
+        <Element index="143" value="0"/>
+        <Element index="144" value="Eh"/>
+        <Element index="145" value="0.894118"/>
+        <Element index="146" value="0.101961"/>
+        <Element index="147" value="0.109804"/>
+        <Element index="148" value="NodePorosity"/>
+        <Element index="149" value="0.215686"/>
+        <Element index="150" value="0.494118"/>
+        <Element index="151" value="0.721569"/>
+        <Element index="152" value="Fluidvolume"/>
+        <Element index="153" value="0.301961"/>
+        <Element index="154" value="0.686275"/>
+        <Element index="155" value="0.290196"/>
+        <Element index="156" value="ExcessVolume"/>
+        <Element index="157" value="0.596078"/>
+        <Element index="158" value="0.305882"/>
+        <Element index="159" value="0.639216"/>
+        <Element index="160" value="POROSITY"/>
+        <Element index="161" value="1"/>
+        <Element index="162" value="0.498039"/>
+        <Element index="163" value="0"/>
+        <Element index="164" value="velocity (0)"/>
+        <Element index="165" value="0.65098"/>
+        <Element index="166" value="0.337255"/>
+        <Element index="167" value="0.156863"/>
+        <Element index="168" value="velocity (1)"/>
+        <Element index="169" value="0"/>
+        <Element index="170" value="0"/>
+        <Element index="171" value="0"/>
+        <Element index="172" value="velocity (2)"/>
+        <Element index="173" value="0.894118"/>
+        <Element index="174" value="0.101961"/>
+        <Element index="175" value="0.109804"/>
+        <Element index="176" value="velocity (Magnitude)"/>
+        <Element index="177" value="0.215686"/>
+        <Element index="178" value="0.494118"/>
+        <Element index="179" value="0.721569"/>
+        <Element index="180" value="vtkValidPointMask"/>
+        <Element index="181" value="0.301961"/>
+        <Element index="182" value="0.686275"/>
+        <Element index="183" value="0.290196"/>
+        <Element index="184" value="arc_length"/>
+        <Element index="185" value="0.596078"/>
+        <Element index="186" value="0.305882"/>
+        <Element index="187" value="0.639216"/>
+        <Element index="188" value="Points (0)"/>
+        <Element index="189" value="1"/>
+        <Element index="190" value="0.498039"/>
+        <Element index="191" value="0"/>
+        <Element index="192" value="Points (1)"/>
+        <Element index="193" value="0.65098"/>
+        <Element index="194" value="0.337255"/>
+        <Element index="195" value="0.156863"/>
+        <Element index="196" value="Points (2)"/>
+        <Element index="197" value="0"/>
+        <Element index="198" value="0"/>
+        <Element index="199" value="0"/>
+        <Element index="200" value="Points (Magnitude)"/>
+        <Element index="201" value="0.894118"/>
+        <Element index="202" value="0.101961"/>
+        <Element index="203" value="0.109804"/>
+      </Property>
+      <Property name="SeriesLabel" id="534.SeriesLabel"/>
+      <Property name="SeriesLabelInfo" id="534.SeriesLabelInfo" number_of_elements="102">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="1-C"/>
+        <Element index="2" value="2-Ca"/>
+        <Element index="3" value="2-Ca"/>
+        <Element index="4" value="3-Cl"/>
+        <Element index="5" value="3-Cl"/>
+        <Element index="6" value="4-H"/>
+        <Element index="7" value="4-H"/>
+        <Element index="8" value="5-Mg"/>
+        <Element index="9" value="5-Mg"/>
+        <Element index="10" value="6-O"/>
+        <Element index="11" value="6-O"/>
+        <Element index="12" value="7-Sn"/>
+        <Element index="13" value="7-Sn"/>
+        <Element index="14" value="8-Zz"/>
+        <Element index="15" value="8-Zz"/>
+        <Element index="16" value="Ca(CO3)@"/>
+        <Element index="17" value="Ca(CO3)@"/>
+        <Element index="18" value="Ca(HCO3)+"/>
+        <Element index="19" value="Ca(HCO3)+"/>
+        <Element index="20" value="Ca+2"/>
+        <Element index="21" value="Ca+2"/>
+        <Element index="22" value="CaOH+"/>
+        <Element index="23" value="CaOH+"/>
+        <Element index="24" value="Mg(CO3)@"/>
+        <Element index="25" value="Mg(CO3)@"/>
+        <Element index="26" value="Mg(HCO3)+"/>
+        <Element index="27" value="Mg(HCO3)+"/>
+        <Element index="28" value="Mg+2"/>
+        <Element index="29" value="Mg+2"/>
+        <Element index="30" value="MgOH+"/>
+        <Element index="31" value="MgOH+"/>
+        <Element index="32" value="CO2@"/>
+        <Element index="33" value="CO2@"/>
+        <Element index="34" value="CO3-2"/>
+        <Element index="35" value="CO3-2"/>
+        <Element index="36" value="HCO3-"/>
+        <Element index="37" value="HCO3-"/>
+        <Element index="38" value="CH4@"/>
+        <Element index="39" value="CH4@"/>
+        <Element index="40" value="ClO4-"/>
+        <Element index="41" value="ClO4-"/>
+        <Element index="42" value="Cl-"/>
+        <Element index="43" value="Cl-"/>
+        <Element index="44" value="H2@"/>
+        <Element index="45" value="H2@"/>
+        <Element index="46" value="O2@"/>
+        <Element index="47" value="O2@"/>
+        <Element index="48" value="OH-"/>
+        <Element index="49" value="OH-"/>
+        <Element index="50" value="H+"/>
+        <Element index="51" value="H+"/>
+        <Element index="52" value="H2O@"/>
+        <Element index="53" value="H2O@"/>
+        <Element index="54" value="CO2"/>
+        <Element index="55" value="CO2"/>
+        <Element index="56" value="CH4"/>
+        <Element index="57" value="CH4"/>
+        <Element index="58" value="H2"/>
+        <Element index="59" value="H2"/>
+        <Element index="60" value="O2"/>
+        <Element index="61" value="O2"/>
+        <Element index="62" value="Cal"/>
+        <Element index="63" value="Cal"/>
+        <Element index="64" value="Dis-Dol"/>
+        <Element index="65" value="Dis-Dol"/>
+        <Element index="66" value="Sn"/>
+        <Element index="67" value="Sn"/>
+        <Element index="68" value="pH"/>
+        <Element index="69" value="pH"/>
+        <Element index="70" value="pe"/>
+        <Element index="71" value="pe"/>
+        <Element index="72" value="Eh"/>
+        <Element index="73" value="Eh"/>
+        <Element index="74" value="NodePorosity"/>
+        <Element index="75" value="NodePorosity"/>
+        <Element index="76" value="Fluidvolume"/>
+        <Element index="77" value="Fluidvolume"/>
+        <Element index="78" value="ExcessVolume"/>
+        <Element index="79" value="ExcessVolume"/>
+        <Element index="80" value="POROSITY"/>
+        <Element index="81" value="POROSITY"/>
+        <Element index="82" value="velocity (0)"/>
+        <Element index="83" value="velocity (0)"/>
+        <Element index="84" value="velocity (1)"/>
+        <Element index="85" value="velocity (1)"/>
+        <Element index="86" value="velocity (2)"/>
+        <Element index="87" value="velocity (2)"/>
+        <Element index="88" value="velocity (Magnitude)"/>
+        <Element index="89" value="velocity (Magnitude)"/>
+        <Element index="90" value="vtkValidPointMask"/>
+        <Element index="91" value="vtkValidPointMask"/>
+        <Element index="92" value="arc_length"/>
+        <Element index="93" value="arc_length"/>
+        <Element index="94" value="Points (0)"/>
+        <Element index="95" value="Points (0)"/>
+        <Element index="96" value="Points (1)"/>
+        <Element index="97" value="Points (1)"/>
+        <Element index="98" value="Points (2)"/>
+        <Element index="99" value="Points (2)"/>
+        <Element index="100" value="Points (Magnitude)"/>
+        <Element index="101" value="Points (Magnitude)"/>
+      </Property>
+      <Property name="SeriesLineStyle" id="534.SeriesLineStyle"/>
+      <Property name="SeriesLineStyleInfo" id="534.SeriesLineStyleInfo" number_of_elements="102">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="2-Ca"/>
+        <Element index="3" value="1"/>
+        <Element index="4" value="3-Cl"/>
+        <Element index="5" value="1"/>
+        <Element index="6" value="4-H"/>
+        <Element index="7" value="1"/>
+        <Element index="8" value="5-Mg"/>
+        <Element index="9" value="1"/>
+        <Element index="10" value="6-O"/>
+        <Element index="11" value="1"/>
+        <Element index="12" value="7-Sn"/>
+        <Element index="13" value="1"/>
+        <Element index="14" value="8-Zz"/>
+        <Element index="15" value="2"/>
+        <Element index="16" value="Ca(CO3)@"/>
+        <Element index="17" value="2"/>
+        <Element index="18" value="Ca(HCO3)+"/>
+        <Element index="19" value="2"/>
+        <Element index="20" value="Ca+2"/>
+        <Element index="21" value="2"/>
+        <Element index="22" value="CaOH+"/>
+        <Element index="23" value="2"/>
+        <Element index="24" value="Mg(CO3)@"/>
+        <Element index="25" value="2"/>
+        <Element index="26" value="Mg(HCO3)+"/>
+        <Element index="27" value="2"/>
+        <Element index="28" value="Mg+2"/>
+        <Element index="29" value="3"/>
+        <Element index="30" value="MgOH+"/>
+        <Element index="31" value="3"/>
+        <Element index="32" value="CO2@"/>
+        <Element index="33" value="3"/>
+        <Element index="34" value="CO3-2"/>
+        <Element index="35" value="3"/>
+        <Element index="36" value="HCO3-"/>
+        <Element index="37" value="3"/>
+        <Element index="38" value="CH4@"/>
+        <Element index="39" value="3"/>
+        <Element index="40" value="ClO4-"/>
+        <Element index="41" value="3"/>
+        <Element index="42" value="Cl-"/>
+        <Element index="43" value="4"/>
+        <Element index="44" value="H2@"/>
+        <Element index="45" value="4"/>
+        <Element index="46" value="O2@"/>
+        <Element index="47" value="4"/>
+        <Element index="48" value="OH-"/>
+        <Element index="49" value="4"/>
+        <Element index="50" value="H+"/>
+        <Element index="51" value="4"/>
+        <Element index="52" value="H2O@"/>
+        <Element index="53" value="4"/>
+        <Element index="54" value="CO2"/>
+        <Element index="55" value="4"/>
+        <Element index="56" value="CH4"/>
+        <Element index="57" value="5"/>
+        <Element index="58" value="H2"/>
+        <Element index="59" value="5"/>
+        <Element index="60" value="O2"/>
+        <Element index="61" value="5"/>
+        <Element index="62" value="Cal"/>
+        <Element index="63" value="5"/>
+        <Element index="64" value="Dis-Dol"/>
+        <Element index="65" value="5"/>
+        <Element index="66" value="Sn"/>
+        <Element index="67" value="5"/>
+        <Element index="68" value="pH"/>
+        <Element index="69" value="5"/>
+        <Element index="70" value="pe"/>
+        <Element index="71" value="1"/>
+        <Element index="72" value="Eh"/>
+        <Element index="73" value="1"/>
+        <Element index="74" value="NodePorosity"/>
+        <Element index="75" value="1"/>
+        <Element index="76" value="Fluidvolume"/>
+        <Element index="77" value="1"/>
+        <Element index="78" value="ExcessVolume"/>
+        <Element index="79" value="1"/>
+        <Element index="80" value="POROSITY"/>
+        <Element index="81" value="1"/>
+        <Element index="82" value="velocity (0)"/>
+        <Element index="83" value="1"/>
+        <Element index="84" value="velocity (1)"/>
+        <Element index="85" value="2"/>
+        <Element index="86" value="velocity (2)"/>
+        <Element index="87" value="2"/>
+        <Element index="88" value="velocity (Magnitude)"/>
+        <Element index="89" value="2"/>
+        <Element index="90" value="vtkValidPointMask"/>
+        <Element index="91" value="2"/>
+        <Element index="92" value="arc_length"/>
+        <Element index="93" value="2"/>
+        <Element index="94" value="Points (0)"/>
+        <Element index="95" value="2"/>
+        <Element index="96" value="Points (1)"/>
+        <Element index="97" value="2"/>
+        <Element index="98" value="Points (2)"/>
+        <Element index="99" value="3"/>
+        <Element index="100" value="Points (Magnitude)"/>
+        <Element index="101" value="3"/>
+      </Property>
+      <Property name="SeriesLineThickness" id="534.SeriesLineThickness"/>
+      <Property name="SeriesLineThicknessInfo" id="534.SeriesLineThicknessInfo" number_of_elements="102">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="2-Ca"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="3-Cl"/>
+        <Element index="5" value="0"/>
+        <Element index="6" value="4-H"/>
+        <Element index="7" value="0"/>
+        <Element index="8" value="5-Mg"/>
+        <Element index="9" value="0"/>
+        <Element index="10" value="6-O"/>
+        <Element index="11" value="0"/>
+        <Element index="12" value="7-Sn"/>
+        <Element index="13" value="0"/>
+        <Element index="14" value="8-Zz"/>
+        <Element index="15" value="0"/>
+        <Element index="16" value="Ca(CO3)@"/>
+        <Element index="17" value="0"/>
+        <Element index="18" value="Ca(HCO3)+"/>
+        <Element index="19" value="0"/>
+        <Element index="20" value="Ca+2"/>
+        <Element index="21" value="0"/>
+        <Element index="22" value="CaOH+"/>
+        <Element index="23" value="0"/>
+        <Element index="24" value="Mg(CO3)@"/>
+        <Element index="25" value="0"/>
+        <Element index="26" value="Mg(HCO3)+"/>
+        <Element index="27" value="0"/>
+        <Element index="28" value="Mg+2"/>
+        <Element index="29" value="0"/>
+        <Element index="30" value="MgOH+"/>
+        <Element index="31" value="0"/>
+        <Element index="32" value="CO2@"/>
+        <Element index="33" value="0"/>
+        <Element index="34" value="CO3-2"/>
+        <Element index="35" value="0"/>
+        <Element index="36" value="HCO3-"/>
+        <Element index="37" value="0"/>
+        <Element index="38" value="CH4@"/>
+        <Element index="39" value="0"/>
+        <Element index="40" value="ClO4-"/>
+        <Element index="41" value="0"/>
+        <Element index="42" value="Cl-"/>
+        <Element index="43" value="0"/>
+        <Element index="44" value="H2@"/>
+        <Element index="45" value="0"/>
+        <Element index="46" value="O2@"/>
+        <Element index="47" value="0"/>
+        <Element index="48" value="OH-"/>
+        <Element index="49" value="0"/>
+        <Element index="50" value="H+"/>
+        <Element index="51" value="0"/>
+        <Element index="52" value="H2O@"/>
+        <Element index="53" value="0"/>
+        <Element index="54" value="CO2"/>
+        <Element index="55" value="0"/>
+        <Element index="56" value="CH4"/>
+        <Element index="57" value="0"/>
+        <Element index="58" value="H2"/>
+        <Element index="59" value="0"/>
+        <Element index="60" value="O2"/>
+        <Element index="61" value="0"/>
+        <Element index="62" value="Cal"/>
+        <Element index="63" value="0"/>
+        <Element index="64" value="Dis-Dol"/>
+        <Element index="65" value="0"/>
+        <Element index="66" value="Sn"/>
+        <Element index="67" value="0"/>
+        <Element index="68" value="pH"/>
+        <Element index="69" value="0"/>
+        <Element index="70" value="pe"/>
+        <Element index="71" value="0"/>
+        <Element index="72" value="Eh"/>
+        <Element index="73" value="0"/>
+        <Element index="74" value="NodePorosity"/>
+        <Element index="75" value="0"/>
+        <Element index="76" value="Fluidvolume"/>
+        <Element index="77" value="0"/>
+        <Element index="78" value="ExcessVolume"/>
+        <Element index="79" value="0"/>
+        <Element index="80" value="POROSITY"/>
+        <Element index="81" value="0"/>
+        <Element index="82" value="velocity (0)"/>
+        <Element index="83" value="0"/>
+        <Element index="84" value="velocity (1)"/>
+        <Element index="85" value="0"/>
+        <Element index="86" value="velocity (2)"/>
+        <Element index="87" value="0"/>
+        <Element index="88" value="velocity (Magnitude)"/>
+        <Element index="89" value="0"/>
+        <Element index="90" value="vtkValidPointMask"/>
+        <Element index="91" value="0"/>
+        <Element index="92" value="arc_length"/>
+        <Element index="93" value="0"/>
+        <Element index="94" value="Points (0)"/>
+        <Element index="95" value="0"/>
+        <Element index="96" value="Points (1)"/>
+        <Element index="97" value="0"/>
+        <Element index="98" value="Points (2)"/>
+        <Element index="99" value="0"/>
+        <Element index="100" value="Points (Magnitude)"/>
+        <Element index="101" value="0"/>
+      </Property>
+      <Property name="SeriesMarkerStyle" id="534.SeriesMarkerStyle"/>
+      <Property name="SeriesMarkerStyleInfo" id="534.SeriesMarkerStyleInfo" number_of_elements="102">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="2-Ca"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="3-Cl"/>
+        <Element index="5" value="0"/>
+        <Element index="6" value="4-H"/>
+        <Element index="7" value="0"/>
+        <Element index="8" value="5-Mg"/>
+        <Element index="9" value="0"/>
+        <Element index="10" value="6-O"/>
+        <Element index="11" value="0"/>
+        <Element index="12" value="7-Sn"/>
+        <Element index="13" value="0"/>
+        <Element index="14" value="8-Zz"/>
+        <Element index="15" value="0"/>
+        <Element index="16" value="Ca(CO3)@"/>
+        <Element index="17" value="0"/>
+        <Element index="18" value="Ca(HCO3)+"/>
+        <Element index="19" value="0"/>
+        <Element index="20" value="Ca+2"/>
+        <Element index="21" value="0"/>
+        <Element index="22" value="CaOH+"/>
+        <Element index="23" value="0"/>
+        <Element index="24" value="Mg(CO3)@"/>
+        <Element index="25" value="0"/>
+        <Element index="26" value="Mg(HCO3)+"/>
+        <Element index="27" value="0"/>
+        <Element index="28" value="Mg+2"/>
+        <Element index="29" value="0"/>
+        <Element index="30" value="MgOH+"/>
+        <Element index="31" value="0"/>
+        <Element index="32" value="CO2@"/>
+        <Element index="33" value="0"/>
+        <Element index="34" value="CO3-2"/>
+        <Element index="35" value="0"/>
+        <Element index="36" value="HCO3-"/>
+        <Element index="37" value="0"/>
+        <Element index="38" value="CH4@"/>
+        <Element index="39" value="0"/>
+        <Element index="40" value="ClO4-"/>
+        <Element index="41" value="0"/>
+        <Element index="42" value="Cl-"/>
+        <Element index="43" value="0"/>
+        <Element index="44" value="H2@"/>
+        <Element index="45" value="0"/>
+        <Element index="46" value="O2@"/>
+        <Element index="47" value="0"/>
+        <Element index="48" value="OH-"/>
+        <Element index="49" value="0"/>
+        <Element index="50" value="H+"/>
+        <Element index="51" value="0"/>
+        <Element index="52" value="H2O@"/>
+        <Element index="53" value="0"/>
+        <Element index="54" value="CO2"/>
+        <Element index="55" value="0"/>
+        <Element index="56" value="CH4"/>
+        <Element index="57" value="0"/>
+        <Element index="58" value="H2"/>
+        <Element index="59" value="0"/>
+        <Element index="60" value="O2"/>
+        <Element index="61" value="0"/>
+        <Element index="62" value="Cal"/>
+        <Element index="63" value="0"/>
+        <Element index="64" value="Dis-Dol"/>
+        <Element index="65" value="0"/>
+        <Element index="66" value="Sn"/>
+        <Element index="67" value="0"/>
+        <Element index="68" value="pH"/>
+        <Element index="69" value="0"/>
+        <Element index="70" value="pe"/>
+        <Element index="71" value="0"/>
+        <Element index="72" value="Eh"/>
+        <Element index="73" value="0"/>
+        <Element index="74" value="NodePorosity"/>
+        <Element index="75" value="0"/>
+        <Element index="76" value="Fluidvolume"/>
+        <Element index="77" value="0"/>
+        <Element index="78" value="ExcessVolume"/>
+        <Element index="79" value="0"/>
+        <Element index="80" value="POROSITY"/>
+        <Element index="81" value="0"/>
+        <Element index="82" value="velocity (0)"/>
+        <Element index="83" value="0"/>
+        <Element index="84" value="velocity (1)"/>
+        <Element index="85" value="0"/>
+        <Element index="86" value="velocity (2)"/>
+        <Element index="87" value="0"/>
+        <Element index="88" value="velocity (Magnitude)"/>
+        <Element index="89" value="0"/>
+        <Element index="90" value="vtkValidPointMask"/>
+        <Element index="91" value="0"/>
+        <Element index="92" value="arc_length"/>
+        <Element index="93" value="0"/>
+        <Element index="94" value="Points (0)"/>
+        <Element index="95" value="0"/>
+        <Element index="96" value="Points (1)"/>
+        <Element index="97" value="0"/>
+        <Element index="98" value="Points (2)"/>
+        <Element index="99" value="0"/>
+        <Element index="100" value="Points (Magnitude)"/>
+        <Element index="101" value="0"/>
+      </Property>
+      <Property name="SeriesVisibility" id="534.SeriesVisibility" number_of_elements="104">
+        <Element index="0" value="velocity (0)"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="velocity (1)"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="velocity (2)"/>
+        <Element index="5" value="0"/>
+        <Element index="6" value="vtkValidPointMask"/>
+        <Element index="7" value="0"/>
+        <Element index="8" value="arc_length"/>
+        <Element index="9" value="0"/>
+        <Element index="10" value="Points (0)"/>
+        <Element index="11" value="0"/>
+        <Element index="12" value="Points (1)"/>
+        <Element index="13" value="0"/>
+        <Element index="14" value="Points (2)"/>
+        <Element index="15" value="0"/>
+        <Element index="16" value="Points (Magnitude)"/>
+        <Element index="17" value="0"/>
+        <Element index="18" value=""/>
+        <Element index="19" value="1"/>
+        <Element index="20" value="1-C"/>
+        <Element index="21" value="0"/>
+        <Element index="22" value="2-Ca"/>
+        <Element index="23" value="0"/>
+        <Element index="24" value="3-Cl"/>
+        <Element index="25" value="0"/>
+        <Element index="26" value="4-H"/>
+        <Element index="27" value="0"/>
+        <Element index="28" value="5-Mg"/>
+        <Element index="29" value="0"/>
+        <Element index="30" value="6-O"/>
+        <Element index="31" value="0"/>
+        <Element index="32" value="7-Sn"/>
+        <Element index="33" value="0"/>
+        <Element index="34" value="8-Zz"/>
+        <Element index="35" value="0"/>
+        <Element index="36" value="Ca(CO3)@"/>
+        <Element index="37" value="0"/>
+        <Element index="38" value="Ca(HCO3)+"/>
+        <Element index="39" value="0"/>
+        <Element index="40" value="Ca+2"/>
+        <Element index="41" value="0"/>
+        <Element index="42" value="CaOH+"/>
+        <Element index="43" value="0"/>
+        <Element index="44" value="Mg(CO3)@"/>
+        <Element index="45" value="0"/>
+        <Element index="46" value="Mg(HCO3)+"/>
+        <Element index="47" value="0"/>
+        <Element index="48" value="Mg+2"/>
+        <Element index="49" value="0"/>
+        <Element index="50" value="MgOH+"/>
+        <Element index="51" value="0"/>
+        <Element index="52" value="CO2@"/>
+        <Element index="53" value="0"/>
+        <Element index="54" value="CO3-2"/>
+        <Element index="55" value="0"/>
+        <Element index="56" value="HCO3-"/>
+        <Element index="57" value="0"/>
+        <Element index="58" value="CH4@"/>
+        <Element index="59" value="0"/>
+        <Element index="60" value="ClO4-"/>
+        <Element index="61" value="0"/>
+        <Element index="62" value="Cl-"/>
+        <Element index="63" value="0"/>
+        <Element index="64" value="H2@"/>
+        <Element index="65" value="0"/>
+        <Element index="66" value="O2@"/>
+        <Element index="67" value="0"/>
+        <Element index="68" value="OH-"/>
+        <Element index="69" value="0"/>
+        <Element index="70" value="H+"/>
+        <Element index="71" value="0"/>
+        <Element index="72" value="H2O@"/>
+        <Element index="73" value="0"/>
+        <Element index="74" value="CO2"/>
+        <Element index="75" value="0"/>
+        <Element index="76" value="CH4"/>
+        <Element index="77" value="0"/>
+        <Element index="78" value="H2"/>
+        <Element index="79" value="0"/>
+        <Element index="80" value="O2"/>
+        <Element index="81" value="0"/>
+        <Element index="82" value="Cal"/>
+        <Element index="83" value="1"/>
+        <Element index="84" value="Dis-Dol"/>
+        <Element index="85" value="1"/>
+        <Element index="86" value="Sn"/>
+        <Element index="87" value="0"/>
+        <Element index="88" value="pH"/>
+        <Element index="89" value="0"/>
+        <Element index="90" value="pe"/>
+        <Element index="91" value="0"/>
+        <Element index="92" value="Eh"/>
+        <Element index="93" value="0"/>
+        <Element index="94" value="NodePorosity"/>
+        <Element index="95" value="0"/>
+        <Element index="96" value="Fluidvolume"/>
+        <Element index="97" value="0"/>
+        <Element index="98" value="ExcessVolume"/>
+        <Element index="99" value="0"/>
+        <Element index="100" value="POROSITY"/>
+        <Element index="101" value="0"/>
+        <Element index="102" value="velocity (Magnitude)"/>
+        <Element index="103" value="0"/>
+      </Property>
+      <Property name="SeriesVisibilityInfo" id="534.SeriesVisibilityInfo" number_of_elements="102">
+        <Element index="0" value="1-C"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="2-Ca"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="3-Cl"/>
+        <Element index="5" value="0"/>
+        <Element index="6" value="4-H"/>
+        <Element index="7" value="0"/>
+        <Element index="8" value="5-Mg"/>
+        <Element index="9" value="0"/>
+        <Element index="10" value="6-O"/>
+        <Element index="11" value="0"/>
+        <Element index="12" value="7-Sn"/>
+        <Element index="13" value="0"/>
+        <Element index="14" value="8-Zz"/>
+        <Element index="15" value="0"/>
+        <Element index="16" value="Ca(CO3)@"/>
+        <Element index="17" value="0"/>
+        <Element index="18" value="Ca(HCO3)+"/>
+        <Element index="19" value="0"/>
+        <Element index="20" value="Ca+2"/>
+        <Element index="21" value="0"/>
+        <Element index="22" value="CaOH+"/>
+        <Element index="23" value="0"/>
+        <Element index="24" value="Mg(CO3)@"/>
+        <Element index="25" value="0"/>
+        <Element index="26" value="Mg(HCO3)+"/>
+        <Element index="27" value="0"/>
+        <Element index="28" value="Mg+2"/>
+        <Element index="29" value="0"/>
+        <Element index="30" value="MgOH+"/>
+        <Element index="31" value="0"/>
+        <Element index="32" value="CO2@"/>
+        <Element index="33" value="0"/>
+        <Element index="34" value="CO3-2"/>
+        <Element index="35" value="0"/>
+        <Element index="36" value="HCO3-"/>
+        <Element index="37" value="0"/>
+        <Element index="38" value="CH4@"/>
+        <Element index="39" value="0"/>
+        <Element index="40" value="ClO4-"/>
+        <Element index="41" value="0"/>
+        <Element index="42" value="Cl-"/>
+        <Element index="43" value="0"/>
+        <Element index="44" value="H2@"/>
+        <Element index="45" value="0"/>
+        <Element index="46" value="O2@"/>
+        <Element index="47" value="0"/>
+        <Element index="48" value="OH-"/>
+        <Element index="49" value="0"/>
+        <Element index="50" value="H+"/>
+        <Element index="51" value="0"/>
+        <Element index="52" value="H2O@"/>
+        <Element index="53" value="0"/>
+        <Element index="54" value="CO2"/>
+        <Element index="55" value="0"/>
+        <Element index="56" value="CH4"/>
+        <Element index="57" value="0"/>
+        <Element index="58" value="H2"/>
+        <Element index="59" value="0"/>
+        <Element index="60" value="O2"/>
+        <Element index="61" value="0"/>
+        <Element index="62" value="Cal"/>
+        <Element index="63" value="1"/>
+        <Element index="64" value="Dis-Dol"/>
+        <Element index="65" value="1"/>
+        <Element index="66" value="Sn"/>
+        <Element index="67" value="0"/>
+        <Element index="68" value="pH"/>
+        <Element index="69" value="0"/>
+        <Element index="70" value="pe"/>
+        <Element index="71" value="0"/>
+        <Element index="72" value="Eh"/>
+        <Element index="73" value="0"/>
+        <Element index="74" value="NodePorosity"/>
+        <Element index="75" value="0"/>
+        <Element index="76" value="Fluidvolume"/>
+        <Element index="77" value="0"/>
+        <Element index="78" value="ExcessVolume"/>
+        <Element index="79" value="0"/>
+        <Element index="80" value="POROSITY"/>
+        <Element index="81" value="0"/>
+        <Element index="82" value="velocity (0)"/>
+        <Element index="83" value="0"/>
+        <Element index="84" value="velocity (1)"/>
+        <Element index="85" value="0"/>
+        <Element index="86" value="velocity (2)"/>
+        <Element index="87" value="0"/>
+        <Element index="88" value="velocity (Magnitude)"/>
+        <Element index="89" value="0"/>
+        <Element index="90" value="vtkValidPointMask"/>
+        <Element index="91" value="0"/>
+        <Element index="92" value="arc_length"/>
+        <Element index="93" value="0"/>
+        <Element index="94" value="Points (0)"/>
+        <Element index="95" value="0"/>
+        <Element index="96" value="Points (1)"/>
+        <Element index="97" value="0"/>
+        <Element index="98" value="Points (2)"/>
+        <Element index="99" value="0"/>
+        <Element index="100" value="Points (Magnitude)"/>
+        <Element index="101" value="0"/>
+      </Property>
+      <SubProxy name="PreProcessor" servers="1"/>
+      <SubProxy name="SeriesOptions" servers="1"/>
+    </Proxy>
+    <Proxy group="filters" type="ProbeLine" id="499" servers="1">
+      <Property name="Input" id="499.Input" number_of_elements="1">
+        <Proxy value="128" output_port="0"/>
+        <Domain name="groups" id="499.Input.groups">
+          <Group value="sources"/>
+          <Group value="filters"/>
+        </Domain>
+        <Domain name="input_array" id="499.Input.input_array">
+          <InputArray attribute_type="any" number_of_components="0"/>
+        </Domain>
+        <Domain name="input_type" id="499.Input.input_type">
+          <DataType value="vtkDataSet"/>
+          <DataType value="vtkCompositeDataSet"/>
+        </Domain>
+      </Property>
+      <Property name="PassPartialArrays" id="499.PassPartialArrays" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="499.PassPartialArrays.bool"/>
+      </Property>
+      <Property name="Source" id="499.Source" number_of_elements="1">
+        <Proxy value="511" output_port="0"/>
+        <Domain name="groups" id="499.Source.groups">
+          <Group value="sources"/>
+        </Domain>
+        <Domain name="proxy_list" id="499.Source.proxy_list">
+          <Proxy value="511"/>
+        </Domain>
+      </Property>
+      <SubProxy name="AppendArcLength1" servers="1"/>
+      <SubProxy name="PlotOverLine1" servers="1"/>
+    </Proxy>
+    <Proxy group="sources" type="LegacyVTKFileReader" id="128" servers="1">
+      <Property name="FileNameInfo" id="128.FileNameInfo" number_of_elements="1">
+        <Element index="0" value="/home/kosakowski/work/calcite_gem230/calcite0.vtk"/>
+      </Property>
+      <Property name="FileNames" id="128.FileNames" number_of_elements="15">
+        <Element index="0" value="/home/kosakowski/work/calcite_gem230/calcite0.vtk"/>
+        <Element index="1" value="/home/kosakowski/work/calcite_gem230/calcite1.vtk"/>
+        <Element index="2" value="/home/kosakowski/work/calcite_gem230/calcite10.vtk"/>
+        <Element index="3" value="/home/kosakowski/work/calcite_gem230/calcite20.vtk"/>
+        <Element index="4" value="/home/kosakowski/work/calcite_gem230/calcite30.vtk"/>
+        <Element index="5" value="/home/kosakowski/work/calcite_gem230/calcite40.vtk"/>
+        <Element index="6" value="/home/kosakowski/work/calcite_gem230/calcite50.vtk"/>
+        <Element index="7" value="/home/kosakowski/work/calcite_gem230/calcite60.vtk"/>
+        <Element index="8" value="/home/kosakowski/work/calcite_gem230/calcite70.vtk"/>
+        <Element index="9" value="/home/kosakowski/work/calcite_gem230/calcite80.vtk"/>
+        <Element index="10" value="/home/kosakowski/work/calcite_gem230/calcite90.vtk"/>
+        <Element index="11" value="/home/kosakowski/work/calcite_gem230/calcite100.vtk"/>
+        <Element index="12" value="/home/kosakowski/work/calcite_gem230/calcite110.vtk"/>
+        <Element index="13" value="/home/kosakowski/work/calcite_gem230/calcite120.vtk"/>
+        <Element index="14" value="/home/kosakowski/work/calcite_gem230/calcite130.vtk"/>
+        <Domain name="files" id="128.FileNames.files"/>
+      </Property>
+      <Property name="TimestepValues" id="128.TimestepValues" number_of_elements="15">
+        <Element index="0" value="0"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="2"/>
+        <Element index="3" value="3"/>
+        <Element index="4" value="4"/>
+        <Element index="5" value="5"/>
+        <Element index="6" value="6"/>
+        <Element index="7" value="7"/>
+        <Element index="8" value="8"/>
+        <Element index="9" value="9"/>
+        <Element index="10" value="10"/>
+        <Element index="11" value="11"/>
+        <Element index="12" value="12"/>
+        <Element index="13" value="13"/>
+        <Element index="14" value="14"/>
+      </Property>
+      <SubProxy name="Reader" servers="1"/>
+    </Proxy>
+    <Proxy group="misc" type="TimeKeeper" id="4" servers="16">
+      <Property name="Time" id="4.Time" number_of_elements="1">
+        <Element index="0" value="14"/>
+        <Domain name="range" id="4.Time.range"/>
+      </Property>
+      <Property name="TimeRange" id="4.TimeRange" number_of_elements="2">
+        <Element index="0" value="0"/>
+        <Element index="1" value="14"/>
+      </Property>
+      <Property name="TimeSources" id="4.TimeSources" number_of_elements="2">
+        <Proxy value="128"/>
+        <Proxy value="499"/>
+      </Property>
+      <Property name="TimestepValues" id="4.TimestepValues" number_of_elements="15">
+        <Element index="0" value="0"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="2"/>
+        <Element index="3" value="3"/>
+        <Element index="4" value="4"/>
+        <Element index="5" value="5"/>
+        <Element index="6" value="6"/>
+        <Element index="7" value="7"/>
+        <Element index="8" value="8"/>
+        <Element index="9" value="9"/>
+        <Element index="10" value="10"/>
+        <Element index="11" value="11"/>
+        <Element index="12" value="12"/>
+        <Element index="13" value="13"/>
+        <Element index="14" value="14"/>
+      </Property>
+      <Property name="Views" id="4.Views" number_of_elements="1">
+        <Proxy value="532"/>
+      </Property>
+    </Proxy>
+    <Proxy group="views" type="XYPlotView" id="532" servers="1">
+      <Property name="GUISize" id="532.GUISize" number_of_elements="2">
+        <Element index="0" value="1661"/>
+        <Element index="1" value="787"/>
+        <Domain name="range" id="532.GUISize.range">
+          <Min index="0" value="1"/>
+          <Min index="1" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="LineHelpFormat" id="532.LineHelpFormat" number_of_elements="1">
+        <Element index="0" value="%s: %1, %2"/>
+      </Property>
+      <Property name="Representations" id="532.Representations" number_of_elements="1">
+        <Proxy value="534"/>
+      </Property>
+      <Property name="ViewPosition" id="532.ViewPosition" number_of_elements="2">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Domain name="range" id="532.ViewPosition.range">
+          <Min index="0" value="0"/>
+          <Min index="1" value="0"/>
+        </Domain>
+      </Property>
+      <Property name="ViewTime" id="532.ViewTime" number_of_elements="1">
+        <Element index="0" value="14"/>
+        <Domain name="range" id="532.ViewTime.range"/>
+      </Property>
+      <Property name="AxisBehavior" id="532.AxisBehavior" number_of_elements="4">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Domain name="range" id="532.AxisBehavior.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="2"/>
+        </Domain>
+      </Property>
+      <Property name="AxisColor" id="532.AxisColor" number_of_elements="12">
+        <Element index="0" value="0.75"/>
+        <Element index="1" value="0.75"/>
+        <Element index="2" value="0.75"/>
+        <Element index="3" value="0.75"/>
+        <Element index="4" value="0.75"/>
+        <Element index="5" value="0.75"/>
+        <Element index="6" value="0.75"/>
+        <Element index="7" value="0.75"/>
+        <Element index="8" value="0.75"/>
+        <Element index="9" value="0.75"/>
+        <Element index="10" value="0.75"/>
+        <Element index="11" value="0.75"/>
+        <Domain name="range" id="532.AxisColor.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="AxisGridColor" id="532.AxisGridColor" number_of_elements="12">
+        <Element index="0" value="0.75"/>
+        <Element index="1" value="0.75"/>
+        <Element index="2" value="0.75"/>
+        <Element index="3" value="0.75"/>
+        <Element index="4" value="0.75"/>
+        <Element index="5" value="0.75"/>
+        <Element index="6" value="0.75"/>
+        <Element index="7" value="0.75"/>
+        <Element index="8" value="0.75"/>
+        <Element index="9" value="0.75"/>
+        <Element index="10" value="0.75"/>
+        <Element index="11" value="0.75"/>
+        <Domain name="range" id="532.AxisGridColor.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="AxisGridType" id="532.AxisGridType" number_of_elements="4">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Domain name="range" id="532.AxisGridType.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="AxisLabelColor" id="532.AxisLabelColor" number_of_elements="12">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="0"/>
+        <Element index="5" value="0"/>
+        <Element index="6" value="0"/>
+        <Element index="7" value="0"/>
+        <Element index="8" value="0.5"/>
+        <Element index="9" value="0"/>
+        <Element index="10" value="0"/>
+        <Element index="11" value="0.5"/>
+        <Domain name="range" id="532.AxisLabelColor.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="AxisLabelFont" id="532.AxisLabelFont" number_of_elements="16">
+        <Element index="0" value="Helvetica"/>
+        <Element index="1" value="9;0;0;Helve"/>
+        <Element index="2" value="0;0;Helvetica"/>
+        <Element index="3" value="0;Helvetica;9;0"/>
+        <Element index="4" value="Helvetica;9;0;0;Helvetica"/>
+        <Element index="5" value="9;0;0;Helvetica;9;0;0;Helve"/>
+        <Element index="6" value="0;0;Helvetica;9;0;0;Helvetica"/>
+        <Element index="7" value="0;Helvetica;9;0;0;Helvetica;9;0"/>
+        <Element index="8" value="Helvetica;9;0;0;Helvetica;9;0;0"/>
+        <Element index="9" value="9;0;0;Helvetica;9;0;0"/>
+        <Element index="10" value="0;0;Helvetica;9;0;0"/>
+        <Element index="11" value="0;Helvetica;9;0;0"/>
+        <Element index="12" value="Helvetica;9;0;0"/>
+        <Element index="13" value="9;0;0"/>
+        <Element index="14" value="0;0"/>
+        <Element index="15" value="0"/>
+      </Property>
+      <Property name="AxisLabelNotation" id="532.AxisLabelNotation" number_of_elements="4">
+        <Element index="0" value="3"/>
+        <Element index="1" value="3"/>
+        <Element index="2" value="3"/>
+        <Element index="3" value="3"/>
+        <Domain name="range" id="532.AxisLabelNotation.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="3"/>
+        </Domain>
+      </Property>
+      <Property name="AxisLabelPrecision" id="532.AxisLabelPrecision" number_of_elements="4">
+        <Element index="0" value="2"/>
+        <Element index="1" value="2"/>
+        <Element index="2" value="2"/>
+        <Element index="3" value="2"/>
+        <Domain name="range" id="532.AxisLabelPrecision.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="6"/>
+        </Domain>
+      </Property>
+      <Property name="AxisRange" id="532.AxisRange" number_of_elements="8">
+        <Element index="0" value="0"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="1"/>
+        <Element index="4" value="0"/>
+        <Element index="5" value="1"/>
+        <Element index="6" value="0"/>
+        <Element index="7" value="1"/>
+      </Property>
+      <Property name="AxisScale" id="532.AxisScale" number_of_elements="4">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Domain name="bool" id="532.AxisScale.bool"/>
+      </Property>
+      <Property name="AxisTitle" id="532.AxisTitle" number_of_elements="4">
+        <Element index="0" value=""/>
+        <Element index="1" value=""/>
+        <Element index="2" value=""/>
+        <Element index="3" value=""/>
+      </Property>
+      <Property name="AxisTitleAlignment" id="532.AxisTitleAlignment" number_of_elements="4">
+        <Element index="0" value="1"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="1"/>
+        <Element index="3" value="1"/>
+        <Domain name="range" id="532.AxisTitleAlignment.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="2"/>
+        </Domain>
+      </Property>
+      <Property name="AxisTitleColor" id="532.AxisTitleColor" number_of_elements="12">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Element index="4" value="0"/>
+        <Element index="5" value="0"/>
+        <Element index="6" value="0"/>
+        <Element index="7" value="0"/>
+        <Element index="8" value="0.5"/>
+        <Element index="9" value="0"/>
+        <Element index="10" value="0"/>
+        <Element index="11" value="0.5"/>
+        <Domain name="range" id="532.AxisTitleColor.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="AxisTitleFont" id="532.AxisTitleFont" number_of_elements="16">
+        <Element index="0" value="Helvetica"/>
+        <Element index="1" value="9;0;0;Helve"/>
+        <Element index="2" value="0;0;Helvetica"/>
+        <Element index="3" value="0;Helvetica;9;0"/>
+        <Element index="4" value="Helvetica;9;0;0;Helvetica"/>
+        <Element index="5" value="9;0;0;Helvetica;9;0;0;Helve"/>
+        <Element index="6" value="0;0;Helvetica;9;0;0;Helvetica"/>
+        <Element index="7" value="0;Helvetica;9;0;0;Helvetica;9;0"/>
+        <Element index="8" value="Helvetica;9;0;0;Helvetica;9;0;0"/>
+        <Element index="9" value="9;0;0;Helvetica;9;0;0"/>
+        <Element index="10" value="0;0;Helvetica;9;0;0"/>
+        <Element index="11" value="0;Helvetica;9;0;0"/>
+        <Element index="12" value="Helvetica;9;0;0"/>
+        <Element index="13" value="9;0;0"/>
+        <Element index="14" value="0;0"/>
+        <Element index="15" value="0"/>
+      </Property>
+      <Property name="BottomAxisLabels" id="532.BottomAxisLabels"/>
+      <Property name="ChartTitle" id="532.ChartTitle" number_of_elements="1">
+        <Element index="0" value=""/>
+      </Property>
+      <Property name="ChartTitleAlignment" id="532.ChartTitleAlignment" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="range" id="532.ChartTitleAlignment.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="2"/>
+        </Domain>
+      </Property>
+      <Property name="ChartTitleColor" id="532.ChartTitleColor" number_of_elements="3">
+        <Element index="0" value="0"/>
+        <Element index="1" value="0"/>
+        <Element index="2" value="0"/>
+        <Domain name="range" id="532.ChartTitleColor.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="ChartTitleFont" id="532.ChartTitleFont" number_of_elements="4">
+        <Element index="0" value="Helvetica"/>
+        <Element index="1" value="9;0;0"/>
+        <Element index="2" value="0;0"/>
+        <Element index="3" value="0"/>
+      </Property>
+      <Property name="LeftAxisLabels" id="532.LeftAxisLabels"/>
+      <Property name="LegendFlow" id="532.LegendFlow" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="range" id="532.LegendFlow.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="1"/>
+        </Domain>
+      </Property>
+      <Property name="LegendLocation" id="532.LegendLocation" number_of_elements="1">
+        <Element index="0" value="2"/>
+        <Domain name="range" id="532.LegendLocation.range">
+          <Min index="0" value="0"/>
+          <Max index="0" value="3"/>
+        </Domain>
+      </Property>
+      <Property name="RightAxisLabels" id="532.RightAxisLabels"/>
+      <Property name="ShowAxis" id="532.ShowAxis" number_of_elements="4">
+        <Element index="0" value="1"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="1"/>
+        <Element index="3" value="1"/>
+        <Domain name="bool" id="532.ShowAxis.bool"/>
+      </Property>
+      <Property name="ShowAxisGrid" id="532.ShowAxisGrid" number_of_elements="4">
+        <Element index="0" value="1"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="0"/>
+        <Element index="3" value="0"/>
+        <Domain name="bool" id="532.ShowAxisGrid.bool"/>
+      </Property>
+      <Property name="ShowAxisLabels" id="532.ShowAxisLabels" number_of_elements="4">
+        <Element index="0" value="1"/>
+        <Element index="1" value="1"/>
+        <Element index="2" value="1"/>
+        <Element index="3" value="1"/>
+        <Domain name="bool" id="532.ShowAxisLabels.bool"/>
+      </Property>
+      <Property name="ShowLegend" id="532.ShowLegend" number_of_elements="1">
+        <Element index="0" value="1"/>
+        <Domain name="bool" id="532.ShowLegend.bool"/>
+      </Property>
+      <Property name="TopAxisLabels" id="532.TopAxisLabels"/>
+      <SubProxy name="ChartOptions" servers="1"/>
+    </Proxy>
+    <ProxyCollection name="animation">
+      <Item id="20" name="AnimationScene1"/>
+      <Item id="30" name="TimeAnimationCue1"/>
+    </ProxyCollection>
+    <ProxyCollection name="lookup_tables">
+      <Item id="490" name="1.1-C.PVLookupTable"/>
+    </ProxyCollection>
+    <ProxyCollection name="piecewise_functions">
+      <Item id="492" name="1.1-C.PiecewiseFunction"/>
+    </ProxyCollection>
+    <ProxyCollection name="pq_helper_proxies.128">
+      <Item id="142" name="RepresentationAnimationHelper"/>
+    </ProxyCollection>
+    <ProxyCollection name="pq_helper_proxies.499">
+      <Item id="524" name="RepresentationAnimationHelper"/>
+      <Item id="511" name="Source"/>
+    </ProxyCollection>
+    <ProxyCollection name="representations">
+      <Item id="534" name="DataRepresentation2"/>
+    </ProxyCollection>
+    <ProxyCollection name="sources">
+      <Item id="499" name="PlotOverLine1"/>
+      <Item id="128" name="calcite*"/>
+    </ProxyCollection>
+    <ProxyCollection name="timekeeper">
+      <Item id="4" name="TimeKeeper"/>
+    </ProxyCollection>
+    <ProxyCollection name="views">
+      <Item id="532" name="XYPlotView1"/>
+    </ProxyCollection>
+    <CustomProxyDefinitions/>
+    <Links/>
+    <GlobalPropertiesManagers>
+      <GlobalPropertiesManager group="misc" type="GlobalProperties" name="ParaViewProperties"/>
+    </GlobalPropertiesManagers>
+  </ServerManagerState>
+  <ViewManager version="3.6.2">
+    <MultiView>
+      <Splitter index="0" orientation="Horizontal" count="1" sizes="1665"/>
+    </MultiView>
+    <Frame index="0" view_module="532"/>
+  </ViewManager>
+</ParaView>

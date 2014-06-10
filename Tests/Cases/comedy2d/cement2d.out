@@ -1,0 +1,62 @@
+GeoSys-OUT: Output ------------------------------------------------
+#OUTPUT
+ $NOD_VALUES
+  HEAD
+  1-C 
+  2-Ca 
+  3-Cl 
+  4-H 
+  5-Na 
+  6-O 
+  7-Oxa 
+  8-Si 
+  9-Zz 
+ $ELE_VALUES
+  POROSITY
+  VELOCITY1_X
+  VELOCITY1_Y
+ $GEO_TYPE
+  DOMAIN
+ $DAT_TYPE
+  VTK
+ $TIM_TYPE
+   STEPS 30
+#STOP
+
+#OUTPUT // profile
+ $PCS_TYPE
+  GROUNDWATER_FLOW
+ $ELE_VALUES
+  VELOCITY1_X
+  VELOCITY1_Y
+  VELOCITY1_Z
+  VELOCITY
+ $GEO_TYPE
+  POLYLINE LINE_1  
+ $DAT_TYPE
+  TECPLOT
+ $TIM_TYPE
+  STEPS 1
+
+#STOP
+
+   100.0
+   1000.0
+   10000.0
+   21000.0
+   140700.0
+   
+   
+#OUTPUT // profile
+ $NOD_VALUES
+  HEAD
+  Cl-
+ $GEO_TYPE
+  POLYLINE LINE_1
+ $DAT_TYPE
+  TECPLOT
+ $TIM_TYPE
+  STEPS 40
+  
+
+#STOP

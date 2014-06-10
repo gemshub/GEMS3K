@@ -1,0 +1,27 @@
+GeoSys-MSP: Material Solid Properties ------------------------------------
+#SOLID_PROPERTIES
+  $DENSITY
+    1 1.80000e+003
+#STOP
+
+
+;-------------------------------------------------------
+
+#SOIL_PROPERTIES
+ 1  1.000000e+000             ; dimension, (area), 
+ 0                            ; porosity model
+ 0.32  1.000000e+000          ; porosity, tortuosity
+ 0                            ; mobile immobile model
+ 0                            ; lithological component
+ 0                            ; maximum sorption model
+ 0 ; nonlinear flow parameter
+ 0.000000e+000 ; storativity
+ 0 0  3.000000e-07 ; permeability model, permeability tensor, permeabilities
+ 0  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000 ; k-S function
+ 0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000  0.000000e+000 ; p-S function
+; 0.100000e+000  0.000000e+000 ; mass dispersion parameters
+ 0.00670000e+000  0.000000e+000 ; mass dispersion parameters
+ 0.000000e+000  0.000000e+000 ; heat dispersion parameters
+ 1.800000e+003  0.000000e+000 ; rock density, heat capacity
+ 0  0.000000e+000 ; heat conductivity parameters
+

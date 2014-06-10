@@ -1,0 +1,67 @@
+GeoSys-TIM: Timestepping ------------------------------------------------
+#TIME_STEPPING
+ $PCS_TYPE
+  RICHARDS_FLOW
+ $TIME_START
+  0.0
+ $TIME_END
+  10.0
+ $TIME_CONTROL
+  SELF_ADAPTIVE
+   10001  1.1
+   10001  0.8
+  MAX_TIME_STEP
+    1.0e6
+   MIN_TIME_STEP
+    1.0e1
+#TIME_STEPPING
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $TIME_START
+   0.0
+ $TIME_END
+  10.0
+ $TIME_CONTROL
+   SELF_ADAPTIVE
+   80 1.1
+   85 0.8
+   MAX_TIME_STEP
+    1.0e6
+   MIN_TIME_STEP
+    1.0e1
+#STOP
+
+
+   10 0.1
+   9   1.0
+   9  10.0
+   9  10.0
+   9  100.0
+   9  1000.0
+   9  10000.0
+   9  1.0e5
+
+ $TIME_CONTROL
+   SELF_ADAPTIVE
+   10001  1.7
+   10002  0.7
+   MAX_TIME_STEP
+    2.0e+8
+   MIN_TIME_STEP
+    1.0
+
+
+   SELF_ADAPTIVE
+    4 1.7
+   10 0.7
+   MAX_TIME_STEP
+    1.0e+3
+   MIN_TIME_STEP
+    1.0e-6
+   SELF_ADAPTIVE
+    4 1.7
+   10 0.7
+   MAX_TIME_STEP
+    1.0e+3
+   MIN_TIME_STEP
+    1.0e-6

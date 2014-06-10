@@ -1,0 +1,89 @@
+GeoSys-PCS: Processes ------------------------------------------------
+#PROCESS   ;flow
+ $PCS_TYPE
+  RICHARDS_FLOW
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS   ;1
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ;2
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ;3
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ;5
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ; 7
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ;9
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ;11
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS; 13
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ;15
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#PROCESS ; 16
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $RELOAD
+  3   250 ; write restart file every 100th timestep
+#STOP
+
+; 16 species for transport! 

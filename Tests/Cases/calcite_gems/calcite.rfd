@@ -1,0 +1,13 @@
+
+#ITERATION_PROPERTIES_CONCENTRATION
+ 0 ; iteration method
+ 0  100  1.000000e-006  0 ; norm, max iterations, abs error tolerance, time control
+
+; 7 Materials ----------------------------------------------------------
+#REFERENCE_CONDITIONS
+ 9.810000  0.000000  101325.000000 
+
+#APRIORI_REFINE_ELEMENT
+ 0  0
+
+#STOP

@@ -1,0 +1,82 @@
+#COMPONENT_PROPERTIES ; comp1 
+ $NAME  
+  1-C 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp2 
+ $NAME  
+  2-Ca 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp3 
+ $NAME  
+  3-Cl 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp4 
+ $NAME  
+  4-H 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp5 
+ $NAME  
+  5-Na 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp6 
+ $NAME  
+  6-O 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp7 
+ $NAME  
+  7-Oxa 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp8 
+ $NAME  
+  8-Si 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333e-9
+ 
+#COMPONENT_PROPERTIES ; comp9 
+ $NAME  
+  9-Zz 
+ $MOBILE
+  0;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ 
+#STOP
+
+
+
+#COMPONENT_PROPERTIES  ; comp1
+ $NAME
+  Cl- ;
+ $MOBILE
+  1; MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+  1  3.333333333e-9             	; diffusion model type, diffusion constant
+#STOP

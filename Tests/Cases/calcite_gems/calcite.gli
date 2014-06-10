@@ -1,0 +1,17 @@
+GeoSys-BC: Boundary Conditions ------------------------------------------------
+
+#POINTS
+0  0.0   0.0 0.0 0.0 0.0 0.0 0.0 $NAME POINT0
+1  0.5  0.0 0.0 0.0 0.0 0.0 0.0 $NAME POINT1
+2  .25	0	0
+
+
+#POLYLINE
+ $NAME 
+  OUT_LINE
+ $EPSILON
+  1.0e-4
+ $POINTS
+  0
+  1
+#STOP

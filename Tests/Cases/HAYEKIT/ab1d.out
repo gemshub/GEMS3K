@@ -1,0 +1,21 @@
+#OUTPUT
+ $NOD_VALUES
+  HEAD
+  1-Ael 
+  2-Bel 
+  3-H 
+  4-Inrt 
+  5-O 
+  6-Zz 
+ $ELE_VALUES
+  POROSITY
+  VELOCITY_X
+ $GEO_TYPE
+  DOMAIN
+ $DAT_TYPE
+  VTK
+ $TIM_TYPE
+   STEPS 10
+#STOP
+
+

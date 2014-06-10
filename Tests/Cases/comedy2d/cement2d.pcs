@@ -1,0 +1,72 @@
+GeoSys-PCS: Processes ------------------------------------------------
+#PROCESS
+ $PCS_TYPE
+ GROUNDWATER_FLOW
+ $NUM_TYPE
+   NEW   
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#PROCESS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW    
+ $RELOAD
+  3 250  ; write restart file every 100th timestep
+#STOP
