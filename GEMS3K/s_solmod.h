@@ -1447,18 +1447,34 @@ class TEUNIQUAC: public TSolMod
 
 };
 
-
 // -------------------------------------------------------------------------------------
-/// ELVIS activity model for aqueous electrolyte solutions.
-/// (c) FFH Aug 2011
+// ELVIS activity model for aqueous electrolyte solutions
+// (c) FFH Aug 2011
+
 class TELVIS: public TSolMod
 {
         private:
                 // data objects copied from MULTI
-                double *z;   							///< species charges
-                double *m;   							///< species molalities
-                double *RhoW;  							///< water density properties
-                double *EpsW;  							///< water dielectrical properties
+                double *z;   							// species charges
+                double *m;   							// species molalities
+                double *RhoW;  							// water density properties
+                double *EpsW;  							// water dielectrical properties
+                double aDH;								// averaged ion size term in DH term
+                double A, dAdT, d2AdT2, dAdP;  			// A term of DH equation (and derivatives)
+                double B, dBdT, d2BdT2, dBdP;  			// B term of DH equation (and derivatives)
+
+                double **beta0;
+                double **beta1;
+                double **alpha;
+
+                double **coord;         // coordinaiton number parameter
+
+                double **RA;
+                double **RC;
+                double **QA;
+                double **QC;
+
+                double CN;
 
 #ifdef ELVIS_SPEED
 #define ELVIS_NCOMP 10
@@ -1470,10 +1486,12 @@ class TELVIS: public TSolMod
 
                 double EffRad[ELVIS_NCOMP];
 
-                double ELVIS_logGam_DH[ELVIS_NCOMP];
-                double ELVIS_logGam_Born[ELVIS_NCOMP];
-                double ELVIS_OsmCoeff_DH[ELVIS_NCOMP];
-                double ELVIS_logGam_UNIQUAC[ELVIS_NCOMP];
+                double dRdP[ELVIS_NCOMP];
+                double dRdT[ELVIS_NCOMP];
+                double d2RdT2[ELVIS_NCOMP];
+                double dQdP[ELVIS_NCOMP];
+                double dQdT[ELVIS_NCOMP];
+                double d2QdT2[ELVIS_NCOMP];
 
                 double WEps[ELVIS_NCOMP][ELVIS_NCOMP];
                 double U[ELVIS_NCOMP][ELVIS_NCOMP];
@@ -1483,38 +1501,58 @@ class TELVIS: public TSolMod
                 double dPsi[ELVIS_NCOMP][ELVIS_NCOMP];
                 double d2Psi[ELVIS_NCOMP][ELVIS_NCOMP];
                 double TR[ELVIS_NCOMP][4];
+
+                double U[ELVIS_NCOMP][ELVIS_NCOMP];
+                double dUdP[ELVIS_NCOMP][ELVIS_NCOMP];
+                double dUdT[ELVIS_NCOMP][ELVIS_NCOMP];
+                double d2UdT2[ELVIS_NCOMP][ELVIS_NCOMP];
+
+                double ELVIS_lnGam_DH[ELVIS_NCOMP];
+                double ELVIS_lnGam_Born[ELVIS_NCOMP];
+                double ELVIS_OsmCoeff_DH[ELVIS_NCOMP];
+                double ELVIS_lnGam_UNIQUAC[ELVIS_NCOMP];
+
 #endif
 
 #ifndef ELVIS_SPEED
                 // internal work objects
-                double *R;   							///< volume parameter
-                double *Q;   							///< surface parameter
+                double *R;   							// volume parameter
+                double *Q;   							// surface parameter
                 double *Phi;
                 double *Theta;
-                double *EffRad; 						///< effective ionic radii
-                double **U;   							///< interaction energies
-                double **dU;   							///< first derivative
-                double **d2U;   						///< second derivative
+                double *EffRad; 						// effective ionic radii
+                double **U;   							// interaction energies
+                double **dU;   							// first derivative
+                double **d2U;   						// second derivative
                 double **Psi;
                 double **dPsi;
                 double **d2Psi;
-                double **TR; 							///< TR interpolation parameter array
-                double **WEps;							///< indices for electrolyte specific permittivity calculation
+                double **TR; 							// TR interpolation parameter array
+                double **WEps;							// indices for electrolyte specific permittivity calculation
 
-                double* ELVIS_logGam_DH;
-                double* ELVIS_logGam_Born;
+                double* dRdP;
+                double* dRdT;
+                double* d2RdT2;
+                double* dQdP;
+                double* dQdT;
+                double* d2QdT2;
+
+                double** dUdP;
+                double** dUdT;
+                double** d2UdT2;
+
+                double* ELVIS_lnGam_DH;
+                double* ELVIS_lnGam_Born;
                 double* ELVIS_OsmCoeff_DH;
-                double* ELVIS_logGam_UNIQUAC;
+                double* ELVIS_lnGam_UNIQUAC;
 #endif
 
-                double IS;  							///< ionic strength
-                double molT;  							///< total molality of aqueous species (except water solvent)
-                double molZ;  							///< total molality of charged species
-                double A, dAdT, d2AdT2, dAdP;  			///< A term of DH equation (and derivatives)
-                double B, dBdT, d2BdT2, dBdP;  			///< B term of DH equation (and derivatives)
+                double IS;  							// ionic strength
+                double molT;  							// total molality of aqueous species (except water solvent)
+                double molZ;  							// total molality of charged species
 
 
-                /// objects needed for debugging output
+                // objects needed for debugging output
                 double gammaDH[200];
                 double gammaBorn[200];
                 double gammaQUAC[200];
@@ -1527,56 +1565,57 @@ class TELVIS: public TSolMod
 
                 long int IonicStrength();
 
-                /// activity coefficient contributions
-                void ELVIS_DH(double* ELVIS_logGam_DH, double* ELVIS_OsmCoeff_DH);
-                void ELVIS_Born(double* ELVIS_logGam_Born);
-                void ELVIS_UNIQUAC(double* ELVIS_logGam_UNIQUAC);
+                // activity coefficient contributions
+                void ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH);
+                void ELVIS_Born(double* ELVIS_lnGam_Born);
+                void ELVIS_UNIQUAC(double* ELVIS_lnGam_UNIQUAC);
 
-                /// Osmotic coefficient
+                // Osmotic coefficient
                 double Int_OsmCoeff();
                 void molfrac_update();
-                double FinDiff( double m_j, int j  ); 	///< Finite Difference of lnGam of electrolyte 'j' with respect to its molality 'm[j]';
+                double FinDiff( double m_j, int j  ); 	// Finite Difference of lnGam of electrolyte 'j' with respect to its molality 'm[j]';
                 double CalcWaterAct();
 
-                /// Apparent molar volume
-                double FinDiffVol( double m_j, int j); 					///< Finite differences of mean lnGam with respect to pressure
+                // Apparent molar volume
+//                double FinDiffVol( double m_j, void* params ); 					// Finite differences of mean lnGam with respect to pressure
 
-                double trapzd( const double lower_bound, const double upper_bound, int& n, long int& species, int select ); 	/// from Numerical Recipes in C, 2nd Ed.
-                double qsimp( const double lower_bound, const double upper_bound, long int& species, int select ); 			/// from Numerical Recipes in C, 2nd Ed.
+                double trapzd( const double lower_bound, const double upper_bound, int& n, long int& species, int select ); 	// from Numerical Recipes in C, 2nd Ed.
+                double qsimp( const double lower_bound, const double upper_bound, long int& species, int select ); 			// from Numerical Recipes in C, 2nd Ed.
 
 
         public:
-                /// Constructor
+                // Constructor
                 TELVIS( SolutionData *sd, double *arM, double *arZ, double *dW, double *eW );
 
-                /// Destructor
+                // Destructor
                 ~TELVIS();
 
-                /// Calculates T,P corrected interaction parameters
+                // calculates T,P corrected interaction parameters
                 long int PTparam();
 
-                /// Calculates activity coefficients
-                /// Numerical Integration of Bjerrum Relation
+                // calculates activity coefficients and osmotic coefficient by
+                // numerical Integration of Bjerrum Relation
                 long int MixMod();
                 long int CalcAct();
 
-                /// Compute apparent molar volume of electrolyte
+                // Compute apparent molar volume of electrolyte
                 double App_molar_volume();
 
-                /// Calculates excess properties
+                // calculates excess properties
                 long int ExcessProp( double *Zex );
 
-                /// Calculates ideal mixing properties
+                // calculates ideal mixing properties
                 long int IdealProp( double *Zid );
 
-                /// Plot debug results
+                // plot debug results
                 void TELVIS_test_out( const char *path, const double M ) const;
 
-                /// ELVIS_FIT: get lnGamma array
+                // ELVIS_FIT: get lnGamma array
                 void get_lnGamma( std::vector<double>& ln_gamma );
 
-                };
+                double FinDiffVol( double m_j, int j ); 					// Finite differences of mean lnGam with respect to pressure
 
+};
 
 
 // -------------------------------------------------------------------------------------
