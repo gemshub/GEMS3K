@@ -1,0 +1,234 @@
+#  GEMS3K v.3.1 r.692 (rc) 
+# File: /home/kosakowski/SOFT/OGS-GEM/benchmarks/C/HAYEKIT/TestSolub-dch.dat
+# Comments are marked with # $ ;
+
+# Template for the dch-dat text input file for DATACH data 
+# (should be read first, before the IPM-DAT file and DATABR files)
+
+## (1) Dimensions for memory allocation
+# nIC: Number of Independent Components (usually chemical elements and charge)
+<nIC>  6
+# nDC: Number of Dependent Components (chemical species made of Independent Components)
+<nDC>  9
+# nPH: Number of phases (into which Dependent Components are grouped)
+<nPH>  3
+# nPS: Number of phases-solutions (multicomponent phases) <= nPH
+<nPS>  1
+# nDCs: Number of Dependent Components in phases-solutions <= nDC
+<nDCs>  7
+
+## (2) Databridge configuration section (for memory allocation)
+# nICb: Number of ICs kept in the DBR file and DATABR memory structure (<= nIC)
+<nICb>  6
+# nDCb: Number of DCs kept in the DBR file and DATABR memory structure (<=nDC)
+<nDCb>  9
+# nPHb: Number of phases kept in the DBR file and DATABR structure (<=nPH)
+<nPHb>  3
+# nPSb: Number of phases-solutions kept in the DBR file and DATABR structure (<=nPS)
+<nPSb>  1
+
+## (3) Dimensions for thermodynamic data arrays
+# nTp: Number of temperature grid points in lookup arrays for data interpolation, >=1
+<nTp>  1
+# nPp: Number of pressure grid points in lookup arrays for data interpolation, >=1
+<nPp>  1
+# iGrd: Flag for allocation of array of diffusition coefficients in DATACH structure (DCH file)
+<iGrd>  0
+# fAalp: Flag for keeping specific surface areas of phases in DATABR structure (1) or ignoring them (0)
+<fAalp>  1
+# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation
+<mLook>  0
+
+<END_DIM>
+
+## (4) Databridge configuration section (for memory allocation)
+# xIC: DATACH access index list for ICs kept in the DATABR structure and in DBR files [nICb]
+<xic>
+0 1 2 3 4 5 
+# xDC: DATACH access index list of DCs kept in the DATABR  structure and in DBR files [nDCb]
+<xdc>
+0 1 2 3 4 5 6 7 8 
+# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]
+<xph>
+0 1 2 
+
+## (5) Independent components section
+# ICNL: Name list of Independent Components (up to 4 characters per name) [nIC]
+<ICNL>
+'Ael' 'Bel' 'H' 'Inrt' 'O' 'Zz' 
+# ccIC: Class codes of ICs (Independent Components) [nIC]
+<ccIC>
+'a' 'a' 'h' 'a' 'o' 'z' 
+# ICmm: Atomic (molar) masses of ICs,  kg/mol [nIC]
+<ICmm>
+0.05 0.05 0.00100794994831085 0.05 0.015999400138855 0 
+
+## (6) Dependent Components section (codes and names)
+# DCNL: Name list of Dependent Components (up to 16 characters per name) [nDC]
+<DCNL>
+'A@' 'B@' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'AB(s)' 'I(s)' 
+# ccDC: Class codes of DCs (Dependent Components) [nDC]
+<ccDC>
+'S' 'S' 'S' 'S' 'S' 'T' 'W' 'I' 'O' 
+
+# DCmm: Molar masses of DCs, kg/mol [nDC]
+<DCmm>
+0.05 0.05 0.0020158998966217 0.03199880027771 0.0170073500871658 0.00100794994831085 0.0180153000354767 0.1 0.05 
+
+## (7) Phases section
+# PHNL: List of Phase names (up to 16 characters per name) [nPH]
+<PHNL>
+'aq_gen' 'AB-solid' 'Inert-solid' 
+# ccPH: Codes of phase aggregate state [nPH]
+<ccPH>
+'a' 's' 's' 
+# nDCinPH: Number of DCs included in each phase [nPH]
+<nDCinPH>
+7 1 1 
+
+# (8) Data section for DCs
+# A: Stoichiometry matrix A (expanded formulae) for DCs [nDC*nIC]
+<A>
+1 0 0 0 0 0 
+0 1 0 0 0 0 
+0 0 2 0 0 0 
+0 0 0 0 2 0 
+0 0 1 0 1 -1 
+0 0 1 0 0 1 
+0 0 2 0 1 0 
+1 1 0 0 0 0 
+0 0 0 1 0 0 
+
+## (9) Thermodynamic data section
+# Ttol: Tolerance for the temperature interpolation, K
+<Ttol>  1
+# TKval: Temperature values, K for lookup arrays of thermodynamic data [nTp]
+<TKval>
+298.15 
+# Psat: Pressure Pa at saturated H2O vapour at given temperature [nTp]
+<Psat>
+1e-05 
+
+# Ptol: Tolerance for the pressure interpolation, Pa
+<Ptol>  50000
+# Pval: Pressure values, Pa for lookup arrays of thermodynamic data [nPp]
+<Pval>
+100000 
+
+# denW: Lookup array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]
+<denW>
+997.061364306278 
+-0.25866418191325 
+-0.00946964566451448 
+0.0450858902637571 
+0 
+
+# denWg: Lookup array for the density of water vapour, kg/m3, and its derivatives [5*nPp*nTp]
+<denWg>
+0 
+-0 
+0 
+0 
+0 
+
+# epsW: Lookup array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]
+<epsW>
+78.2451456494471 
+-0.355010888388417 
+0.00135076186526265 
+0.00406162824448407 
+0 
+
+# epsWg: Lookup array for the dielectric constant of water vapour and its derivatives [5*nPp*nTp]
+<epsWg>
+0 
+0 
+0 
+0 
+0 
+
+# V0: Lookup array for DC (standard) molar volumes, J/Pa [nDC*nPp*nTp]
+<V0>
+0 
+0 
+2.52643576113497e-05 
+3.05008890803284e-05 
+-4.70784300725686e-06 
+0 
+1.80683971876364e-05 
+1 
+1 
+
+# G0: Lookup array for DC molar Gibbs energy function g(T,P), J/mol [nDC*nPp*nTp]
+<G0>
+0 
+0 
+17729.00010995 
+16446.000207431 
+-157270.00090727 
+0 
+-237181.38483664 
+-36588.549418286 
+0 
+
+# H0: Lookup array for DC molar enthalpy h(T,P), J/mol [nDC*nPp*nTp]
+<H0>
+0 
+0 
+-4018.00010780252 
+-12237.0002033806 
+-230008.999110235 
+0 
+-285837.30429999 
+0 
+0 
+
+# S0: Lookup array for DC absolute entropy S(T,P), J/K/mol [nDC*nPp*nTp] 
+<S0>
+0 
+0 
+57.738997682742 
+108.951399378967 
+-10.7110335158716 
+0 
+69.9241798936394 
+122.718597412109 
+0 
+
+# Cp0: Lookup array for DC heat capacity Cp(T,P), J/K/mol [nDC*nPp*nTp]
+<Cp0>
+0 
+0 
+166.852112064487 
+234.132884195387 
+-136.338084390688 
+0 
+75.3605258482016 
+0 
+0 
+
+# A0: reserved: Lookup array for DC Helmholtz energy function, J/mol [nDC*nPp*nTp]
+<A0>
+0 
+0 
+0 
+0 
+0 
+0 
+0 
+0 
+0 
+
+# U0: reserved: Lookup array for DC internal energy function, J/mol [nDC*nPp*nTp]
+<U0>
+0 
+0 
+0 
+0 
+0 
+0 
+0 
+0 
+0 
+
+# End of file

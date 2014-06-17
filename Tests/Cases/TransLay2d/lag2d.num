@@ -1,0 +1,145 @@
+GeoSys-NUM: Numerical Parameter ----------------------------------------
+#NUMERICS
+ $PCS_TYPE
+  RICHARDS_FLOW
+ $ELE_UPWINDING
+  0.5
+ $ELE_MASS_LUMPING
+  1
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+ petsc bcgs bjacobi 1.e-10 10000 1.0
+;  3      6    1.e-010     10000       1.0    1     4
+; 2      1 1.e-012       1000           0.5   1       4
+;  3      6 1.e-021       10000           1.0   101       4
+ $NON_LINEAR_SOLVER 
+; method error_tolerance max_iterations relaxation
+  PICARD   1.0e-3            10             0.0
+ $ELE_GAUSS_POINTS
+  3
+#NUMERICS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+;  2      6 1.e-021       2000           1.0   1       2
+ petsc bcgs bjacobi 1.e-14 2000 1.0
+; petsc preonly tfs 1.e-14 2000 1.0
+ $ELE_GAUSS_POINTS
+  3
+ $FEM_FCT
+  1 0
+#STOP
+
+
+GeoSys-NUM: Numerical Parameter ----------------------------------------
+#NUMERICS
+ $PCS_TYPE
+  GROUNDWATER_FLOW
+ $ELE_GAUSS_POINTS
+  3
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+;  2      2 1.e-020       2000           1.0   100       4
+ petsc preonly tfs 1.e-12 10000 1.0
+#NUMERICS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+;  2      2 1.e-020       2000           1.0   100       4
+ petsc preonly tfs 1.e-14 2000 1.0
+ $ELE_GAUSS_POINTS
+  3
+$FEM_FCT
+ 1 0
+; fct_method prelimiting_method(0:cancel,1:minmod,2:superbee) constant_limiter(-1:off, 0-1)
+#STOP
+
+
+
+GeoSys-NUM: Numerical Parameter ----------------------------------------
+#NUMERICS
+ $PCS_TYPE
+  RICHARDS_FLOW
+ $ELE_UPWINDING
+  0.5
+ $ELE_MASS_LUMPING
+  1
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+  2      2      1.e-010       2000       1.0    100     4
+ $NON_LINEAR_SOLVER 
+; method error_tolerance max_iterations relaxation
+  PICARD   1.0e-3            10             0.0
+ $ELE_GAUSS_POINTS
+  3
+#NUMERICS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+  2      6 1.e-014       1000           1.0   1       2
+ $ELE_GAUSS_POINTS
+  3
+#STOP
+
+
+
+GeoSys-NUM: Numerical Parameter ----------------------------------------
+#NUMERICS
+ $PCS_TYPE
+  LIQUID_FLOW
+ $ELE_GAUSS_POINTS
+  3
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+  2      6 1.e-012       1000           1.0   1       2
+#NUMERICS
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $LINEAR_SOLVER 
+; method error_tolerance max_iterations theta precond storage
+  2      6 1.e-014       1000           1.0   1       2
+ $ELE_GAUSS_POINTS
+  3
+#STOP
+
+; 2 Numerical Method ---------------------------------------------------
+#NUMERICS
+ 0 ; numerical method
+ PRESSURE ; name of unknown variable
+ 2 ; gauss points
+ 1.000000 ; time collocation
+ 0.000000 ; upwind parameter
+ 0  0.000000 ; lagrange methode, quality parameter
+#NUMERICS
+ 1 ; numerical method
+ TRANSPORT ; name of unknown variable
+ 2 ; gauss points
+ 1.000000 ; time collocation
+ 0.000000 ; upwind parameter
+ 0  0.000000 ; lagrange methode, quality parameter
+
+#NUMERICS
+ 1     ; method
+TRANSPORT_SORP ; name
+ 2     ; gaussian points
+ 1.0   ; time collocation
+ 0.0   ; upwind parameter
+ 0 0.0 ; lagrange
+
+
+; 4.1 Linear Solver Properties -----------------------------------------
+#LINEAR_SOLVER_PROPERTIES_PRESSURE
+ 2  0  1 ; method, norm, preconditioning
+ 1000  0 ; maximum iterations, repeating
+ 6  1.000000e-014 ; criterium, absolute error
+ 0 ; kind
+ 2 ; matrix storage technique
+#LINEAR_SOLVER_PROPERTIES_CONCENTRATION
+ 2  0  1 ; method, norm, preconditioning
+ 1000  0 ; maximum iterations, repeating
+ 6  1.000000e-014 ; criterium, absolute error
+ 0 ; kind
+ 2 ; matrix storage technique

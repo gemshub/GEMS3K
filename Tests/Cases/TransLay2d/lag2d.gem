@@ -1,0 +1,167 @@
+GeoSys-MMP  Material Medium Properties ------------------------------------
+#GEM_PROPERTIES
+  $GEM_INIT_FILE
+    bensan-dat.lst    ; only file name, no path
+  $GEM_THREADS
+    4
+  $FLAG_POROSITY_CHANGE
+    1    ; 0-not coupled;1=coupled;
+  $MIN_POROSITY
+    1.e-6  
+  $MAX_POROSITY
+    1.0
+  $FLAG_COUPLING_HYDROLOGY
+    1    ; 0-not coupled;1=coupled;
+  $CALCULATE_BOUNDARY_NODES
+    0  ; do not do it
+  $TEMPERATURE_GEM
+    298.15       ; temperature for GEMS in degree Celsius
+  $GEM_SMART
+     0 ; do not set to one if kinetics is used
+  $MAX_FAILED_NODES
+    100
+  $MY_SMART_GEMS
+   -1.0e-30
+ $TRANSPORT_B
+    1 ; 1: do transport of b vector
+ $KINETIC_GEM     ; like kaolinite palandri
+  Kaolinite 1   1     0.0 0.0 0.0   -11.31 -13.18 -17.05  1.0 1.0  1.0 1.0  1.0 1.0   H+  0.777  0.0 -0.472
+  1 3.0e+6    ; same as illite
+ $KINETIC_GEM     ; Palandri kinetic data 
+  Quartz 1   1     0.0 0.0 0.0   0.0 -13.99 -16.29  0.0 1.0  1.0 1.0  1.0 1.0   H+  0.0  0.0 -0.5
+  1 0.0     ; monokorn 0.0028m durchmesser.....fuer Kugel A/V=6/d
+ $KINETIC_GEM     ; Palandri kinetic data 
+  Sand 1   1     0.0 0.0 0.0   0.0 -13.99 -16.29  0.0 1.0  1.0 1.0  1.0 1.0   H+  0.0  0.0 -0.5
+  1 2143.0     ; monokorn 0.0028m durchmesser.....fuer Kugel A/V=6/d
+ $KINETIC_GEM       ;       palandri quartz data
+  Gravel 1  1   0.0  0.0  0.0  0.0   -13.99 -16.29   0.0 1.0 0.0 1.0 1.0 1.0   H+  0.0  0.0 -0.5 
+   1 120.0  ; kies durchmesser 0.05 m
+ $KINETIC_GEM     ; like Palandri
+  Gibbsite 1   1     0.0 0.0 0.0   -7.65 -11.50 -16.65  1.0 1.0  1.0 1.0  1.0 1.0   H+  0.992  0.0 -0.784
+  1 1.0e+2       ; like Traber mäder
+ $KINETIC_GEM     ; msmectite (K,Ca) from Palandri
+  SS_Montmor 5   1     0.0 0.0 0.0   -10.98 -12.78 -16.52  1.0 1.0  1.0 1.0  1.0 1.0   H+  0.340  0.0 -0.400
+  1 3.0e+6         ; same as illite in Traber Mäder for OPA 
+  7 2.0 2.0 2.0 1.0 2.0 1.0 2.0
+ $KINETIC_GEM     ; msmectite (K,Ca) from Palandri
+  IlliteEx 5   1     0.0 0.0 0.0   -10.98 -12.78 -16.52  1.0 1.0  1.0 1.0  1.0 1.0   H+  0.340  0.0 -0.400
+  1 3.0e+6         ; same as illite in Traber Mäder for OPA 
+  5 3.0 2.0 2.0 1.0 1.0 
+ $KINETIC_GEM     ; like zeolithes from Traber mäder
+  Phillipsite 5   1     0.0 0.0 0.0   0.0 -10.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+  1 1.0e+2      ; like Traber mäder
+  3 2.0 1.0 1.0
+ $KINETIC_GEM     ; like zeolithes from Traber mäder
+  Analcime 1   1     0.0 0.0 0.0   0.0 -10.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+  1 1.0e+2      ; like Traber mäder
+ $KINETIC_GEM     ; like zeolithes from Traber mäder
+  Mordenite 1   1     0.0 0.0 0.0   0.0 -10.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+  1 1.0e+2      ; like Traber mäder
+ $KINETIC_GEM     ; like zeolithes from Traber mäder
+  Laumontite 1   1     0.0 0.0 0.0   0.0 -10.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+  1 1.0e+2      ; like Traber mäder
+#STOP
+
+ $KINETIC_GEM     ; Palandri 
+  Dolomite-ord  1   1     0.0 0.0 0.0   0.0 -8.60 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+3       ; like Traber mäder for OPA
+ $KINETIC_GEM     ; palandri data for neutral reaction....we need a fix for  carbonate mechanism
+  Calcite  1   1     0.0 0.0 0.0   0.0 -5.81 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 6.0e+3     ; like Traber mäder for OPA
+ $KINETIC_GEM     ; palandri ...Fe3+ dependency not complete!!!!
+  Pyrite  1   1     0.0 0.0 0.0   0.0 -4.55 0.0  0.0 1.0  1.0 1.0  0.0 1.0   O2@  0.0  0.5 0.0
+   1 1.0e+2       ; like mäder default value
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ $KINETIC_GEM     ; palandri
+  Anhydrite  1   1     0.0 0.0 0.0   0.0 -3.19 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2   ;default
+ $KINETIC_GEM     ; palandri
+  Gypsum  1   1     0.0 0.0 0.0   0.0 -2.79 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2   ;default
+ $KINETIC_GEM     ; default
+  Tob_jen_ss  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+   ettringite-Al 1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+   ettringite-Fe 1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+   monosulphate 1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+   straetlingite 1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  hemicarbonate  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  monocarbonate  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  SO4_OH_AFm  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  OH_SO4_AFm  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+$KINETIC_GEM     ; default
+   OH-hydrotalcite 1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Portlandite  1   1     0.0 0.0 0.0   0.0 -8.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+3    ; like traber mäder
+ $KINETIC_GEM     ; default
+  hemihydrate  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Siderite  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+   Ferrihydrite-mc 1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  syngenite  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Magnesite  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Brucite  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Strontianite  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Celestite  1   1     0.0 0.0 0.0   -5.66 0.00 0.0  1.0 1.0  0.0 1.0  0.0 1.0   H+  0.109  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Witherite  1   1     0.0 0.0 0.0   0.0 -7.00 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   1 1.0e+2
+ $KINETIC_GEM     ; default
+  Barite  1   1     0.0 0.0 0.0   -6.9 -7.90 0.0  1.0 1.0  1.0 1.0  0.0 1.0   H+  0.220  0.0 0.0
+   1 1.0e+2
+
+ $KINETIC_GEM     ; wolery colon
+   Albite_low 1   1     0.0 0.0 0.0   -10.16 -12.56 -15.6  1.0 1.0  1.0 1.0  1.0 1.0   H+  0.456  0.0 -0.572
+   1 5.0e+3
+
+#STOP
+
+
+

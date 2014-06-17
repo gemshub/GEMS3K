@@ -1,0 +1,72 @@
+GeoSys-PCS: Processes ------------------------------------------------
+#PROCESS
+ $PCS_TYPE
+ GROUNDWATER_FLOW
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1   ; read restart
+
+#PROCESS  ;1
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1  ; read restart
+
+#PROCESS ;2
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1  ; read restart
+
+#PROCESS      ;3
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1  ; read restart
+
+#PROCESS    ;4
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1  ; read restart
+
+#PROCESS    ;5
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1  ; read restart
+
+#PROCESS     ;6
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $NUM_TYPE
+   NEW   
+ $ELEMENT_MATRIX_OUTPUT 
+  0
+ $RELOAD
+  2 1  ; read restart
+
+#STOP

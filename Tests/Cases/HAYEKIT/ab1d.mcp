@@ -1,0 +1,49 @@
+#COMPONENT_PROPERTIES ; comp1 
+ $NAME  
+  1-Ael 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+ 9 1.0e-10 1.0
+ 
+#COMPONENT_PROPERTIES ; comp2 
+ $NAME  
+  2-Bel 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+ 9 1.0e-10 1.0
+ 
+#COMPONENT_PROPERTIES ; comp3 
+ $NAME  
+  3-H 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+ 9 1.0e-10 1.0
+ 
+#COMPONENT_PROPERTIES ; comp4 
+ $NAME  
+  4-Inrt 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+ 9 1.0e-10 1.0
+ 
+#COMPONENT_PROPERTIES ; comp5 
+ $NAME  
+  5-O 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+ 9 1.0e-10 1.0
+ 
+#COMPONENT_PROPERTIES ; comp6 
+ $NAME  
+  6-Zz 
+ $MOBILE
+  1;  MOBILE-Flag: 0=imMOBILEe, 1=MOBILEe/transported
+ $DIFFUSION
+ 9 1.0e-10 1.0
+ 
+#STOP

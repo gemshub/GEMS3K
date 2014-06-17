@@ -1,0 +1,33 @@
+GeoSys-TIM: Timestepping ------------------------------------------------
+#TIME_STEPPING
+ $PCS_TYPE
+  GROUNDWATER_FLOW
+ $TIME_END
+  65.0
+ $TIME_START
+  0.0    ; this is not the real start time..see cement2d_time_gem.asc
+ $TIME_CONTROL
+   SELF_ADAPTIVE
+   250  1.05
+   280  0.8
+   MAX_TIME_STEP
+    1.0e+7
+   MIN_TIME_STEP
+    1.0
+#TIME_STEPPING
+ $PCS_TYPE
+  MASS_TRANSPORT
+ $TIME_END
+  65.0
+ $TIME_START
+  0.0
+ $TIME_CONTROL
+   SELF_ADAPTIVE
+   33  1.05
+   35  0.8
+   MAX_TIME_STEP
+    1.0e+7
+   MIN_TIME_STEP
+    1.0
+#STOP
+

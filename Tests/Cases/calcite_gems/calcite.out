@@ -1,0 +1,41 @@
+#OUTPUT
+ $NOD_VALUES
+  1-C 
+  2-Ca 
+  3-Cl 
+  4-H 
+  5-Mg 
+  6-O 
+  7-Sn 
+  8-Zz 
+ $ELE_VALUES
+  POROSITY
+ $GEO_TYPE
+  DOMAIN
+ $DAT_TYPE
+  VTK
+ $TIM_TYPE
+   STEPS 10
+#STOP
+#OUTPUT
+ $NOD_VALUES
+  1-C 
+  2-Ca 
+  3-Cl 
+  4-H 
+  5-Mg 
+  6-O 
+  7-Sn 
+  8-Zz 
+ $ELE_VALUES
+  POROSITY
+ $GEO_TYPE
+  DOMAIN
+ $DAT_TYPE
+  TECPLOT
+ $TIM_TYPE
+  STEPS 10
+#STOP
+
+
+

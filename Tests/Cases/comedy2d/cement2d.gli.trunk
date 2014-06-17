@@ -1,0 +1,124 @@
+GeoSys-GLI: Geometry Setup------------------------------------------------
+#POINTS
+0  0.00 0.00 0.00 0.0 0.0 0.0 0.0
+1  0.14 0.00 0.00 0.0 0.0 0.0 0.0
+2  0.14 0.14 0.00 
+3  0.00 0.14 0.00 
+4  0.08 0.00 0.00 
+5  0.08 0.14 0.00 
+6  0.10 0.00 0.00 
+7  0.00 0.14 0.00 
+8  0.00 0.07 0.00 
+9  0.14 0.07 0.00 
+10 0.095 0.00 0.00 
+11 0.095 0.14 0.00 
+12 0.00 0.10 0.00 
+13 0.00 0.12 0.00 
+14 0.05 0.14 0.00 
+15 0.07 0.14 0.00 
+16 0.14 0.08 0.00 
+17 0.14 0.12 0.00 
+18 0.095 0.108 0.00 
+19 0.10 0.14 0.00
+#POLYLINE
+ $NAME 
+  INLET_1
+ $EPSILON
+  1.0e-4
+ $POINTS
+  12
+  13
+#POLYLINE
+ $NAME 
+  INLET_2
+ $EPSILON
+  1.0e-4
+ $POINTS
+  14
+  15
+#POLYLINE
+ $NAME 
+  OUTLET 
+ $EPSILON
+  1.0e-4
+ $POINTS
+  16
+  17
+#POLYLINE
+ $NAME 
+  LINE_1
+ $EPSILON
+  1.0e-4
+ $POINTS
+  8
+  9
+#POLYLINE
+ $NAME 
+  LINE_2
+ $EPSILON
+  1.0e-4
+ $POINTS
+  10
+  11
+#POLYLINE 
+ $NAME
+  Q1_LINE
+ $EPSILON
+  1.0e-4
+ $POINTS
+   0
+   4
+   5
+   3
+   0
+#POLYLINE 
+ $NAME
+  Q3_LINE
+ $EPSILON
+  1.0e-4
+ $POINTS
+   6
+   1
+   2
+   19
+   6
+#POLYLINE 
+ $NAME
+  Q2_LINE
+ $TYPE
+  -1
+ $EPSILON
+  1.0e-4
+ $POINTS
+   4
+   5
+   19
+   6
+   4
+#SURFACE
+ $NAME
+  Q1
+ $EPSILON
+  1.0e-4
+ $POLYLINES
+  Q1_LINE
+#SURFACE
+ $NAME
+  Q2
+ $TYPE
+  3
+ $EPSILON
+  1.0e-4
+ $POLYLINES
+  Q2_LINE
+#SURFACE
+ $NAME
+  Q3
+ $TYPE
+  3
+ $EPSILON
+  1.0e-4
+ $POLYLINES
+  Q3_LINE
+
+#STOP

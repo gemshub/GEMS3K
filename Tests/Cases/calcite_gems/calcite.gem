@@ -1,0 +1,26 @@
+GeoSys-MMP  Material Medium Properties ------------------------------------
+#GEM_PROPERTIES
+  $GEM_THREADS
+    8
+  $GEM_INIT_FILE
+    BC-dat.lst    ; only file name, no path
+  $FLAG_POROSITY_CHANGE
+    1    ; 0-not coupled;1=coupled;
+  $MIN_POROSITY
+    1.e-4
+  $MAX_POROSITY
+    1.0
+  $FLAG_COUPLING_HYDROLOGY
+    1    ; 0-not coupled;1=coupled;
+  $TEMPERATURE_GEM
+    298.15       ; temperature for GEMS in degree Celsius
+  $MY_SMART_GEMS
+     1.0e-16 ; do not set to one if kinetics is used
+  $CALCULATE_BOUNDARY_NODES
+    0
+  $MAX_FAILED_NODES
+    2
+  $TRANSPORT_B
+     1 ; 1: do transport of b vector
+#STOP
+

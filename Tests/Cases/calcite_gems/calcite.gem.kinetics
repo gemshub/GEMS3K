@@ -1,0 +1,29 @@
+GeoSys-MMP  Material Medium Properties ------------------------------------
+#GEM_PROPERTIES
+  $GEM_INIT_FILE
+    BC-dat.lst    ; only file name, no path
+  $FLAG_NODE_ELEMENT
+    0    ; 0-node based; 1-elem based;
+  $FLAG_POROSITY_CHANGE
+    1    ; 0-not coupled;1=coupled;
+  $MIN_POROSITY
+    1.e-4
+  $MAX_POROSITY
+    0.9999
+  $FLAG_COUPLING_HYDROLOGY
+    1    ; 0-not coupled;1=coupled;
+  $PERMEABILITY_POROSITY_MODEL
+    0    ; 0-no coupling; 1-Kozeny-Carman; 2-Kozeny-Carman normalized;
+  $ITERATIVE_SCHEME
+    0    ; 0-not iteration;1=iteration. Not implemented yet.
+  $TEMPERATURE_GEM
+    298.15       ; temperature for GEMS in degree Celsius
+  $GEM_SMART
+     0 ; do not set to one if kinetics is used
+  $TRANSPORT_B
+     1 ; 1: do transport of b vector
+ $KINETIC_GEM     ; wie Traber and Maeder
+   Dolomite-dis 1   1     0.0 0.0 0.0   0.0 -7.53 0.0  0.0 1.0  1.0 1.0  0.0 1.0   H+  0.0  0.0 0.0
+   2 32.0
+#STOP
+
