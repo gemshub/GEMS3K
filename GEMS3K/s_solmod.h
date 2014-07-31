@@ -1116,22 +1116,35 @@ class TWilson: public TSolMod
 class TBerman: public TSolMod
 {
         private:
+                long int NrcR;   ///< max. possible number of reciprocal reactions (allocated)
+                long int Nrc;    ///< number of reciprocal reactions (actual)
+                long int *NmoS;   ///< number of different moieties per sublattice
+            long int ***XrcM;  ///< Table of indexes of end members, sublattices and moieties involved in
+                               ///< reciprocal reactions [NrecR][4][2], two left and two right side.
+                               ///< for each of 4 reaction components: j, mark, // s1, m1, s2, m2.
 
-                double *Wu;
-                double *Ws;
-                double *Wv;
-                double *Wpt;   ///< Interaction coeffs at P-T
+                double *Wu;    ///< Interaction parameter coefficients a
+                double *Ws;    ///< Interaction parameter coefficients b (f(T))
+                double *Wv;    ///< Interaction parameter coefficients c (f(P))
+                double *Wpt;   ///< Interaction parameters corrected at P-T of interest
             double **fjs;      ///< array of site activity coefficients for end members [NComp][NSub]
 
-                double *Grec;  ///< standard molar reciprocal energies (constant)
+                double *Grc;  ///< standard molar reciprocal energies (constant)
                 double *oGf;   ///< molar Gibbs energies of end-member compounds
                 double *G0f;   ///< standard molar Gibbs energies of end members (constant)
+            double *DGrc; ///< molar effects of reciprocal reactions [NrecR]
 
                 void alloc_internal();
                 void free_internal();
-            long int ExcessPart();     ///< Arrays for ideal conf part must exist in base TSolMod instance
+                bool CheckThisReciprocalReaction( const long r, const long j, long int *xm );
+                long int CollectReciprocalReactions( void );
+                long int FindIdenticalSublatticeRow(const long int si, const long int ji,
+                                                    const long int jb, const long int je );
+                                              //      long int &nsx, long int *sx, long int *mx );
+            long int ExcessPart();
+                               ///< Arrays for ideal conf part must exist in base TSolMod instance
 
-                long int ReciprocalPart();   ///< TBD
+                long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
 
         public:
 

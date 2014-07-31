@@ -293,7 +293,6 @@ void TSolMod::GetPhaseName( const char *PhName )
 	 PhaseName[MAXPHASENAME] = 0;
 }
 
-
 /// Calculation of configurational terms for the ideal mixing (c) DK, TW Nov. 2010
 /// Based upon the formalism of Price (1985)
 /// Returns 0 if calculated o.k., or 1 if this is not a multi-site model
@@ -310,7 +309,6 @@ long int TSolMod::IdealMixing()
 
     double mnsxj, lnaconj;
     // calculation of site fractions
-
     for( s=0; s<NSub; s++)
     {
         for( m=0; m<NMoi; m++)

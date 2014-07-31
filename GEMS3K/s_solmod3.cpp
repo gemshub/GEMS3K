@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------
-// $Id: s_fgl2.cpp 724 2012-10-02 14:25:25Z kulik $
+// $Id: s_solmod3.cpp 724 2012-10-02 14:25:25Z kulik $
 //
 /// \file s_solmod3.cpp
 /// Implementation of TSolMod derived classes
@@ -34,8 +34,6 @@
 #include <fstream>
 using namespace std;
 #include "s_solmod.h"
-
-
 
 
 //=============================================================================================
@@ -1658,12 +1656,10 @@ long int TGuggenheim::IdealProp( double *Zid )
 }
 
 
-
-
 //=============================================================================================
 // Berman model for multi-component sublattice solid solutions extended with reciprocal terms
-// References: Wood & Nicholls (1978); Berman (1990); Price (1985);
-// (c) DK/TW December 2010, June 2011
+// References: Wood & Nicholls (1978); Berman (1990); Price (1985); Aranovich (1991).
+// (c) DK/TW December 2010, June 2011; DK July 2014 (added reciprocal terms)
 //=============================================================================================
 
 // Generic constructor for the TBerman class
@@ -1679,12 +1675,14 @@ TBerman::~TBerman()
     free_internal();
 }
 
-
 void TBerman::alloc_internal()
 {
-    long int j;
-    if( !NSub || !NMoi )
-        return;   // This is not a multi-site model
+    long int j, jk, jx, s, sk, sx, m, mk, mx, r;
+    long int emx[4], si[4];  // pairwise recip. reactions; max 4 sublattices
+    double mnn;
+
+    if( !NSub || !NMoi || NSub < 2 || NSub > 4 )
+        return;   // This is not a multi-site model or there are >4 sublattices
 
     Wu = new double [NPar];
     Ws = new double [NPar];
@@ -1697,14 +1695,188 @@ void TBerman::alloc_internal()
        fjs[j] = new double[NSub];
     }
 
-    Grec = new double [NComp];
+    Grc = new double [NComp];
     oGf =  new double [NComp];
+
+    // Count the number of different moieties on each sublattice
+    NmoS = new long int [NSub];
+    for( s=0; s< NSub; s++ ) // Cleaning
+       NmoS = 0L;
+    for( m=0; m<NMoi; m++ ) // Looking through moieties
+    {
+        bool mf=false;
+        for( j=0; j<NComp; j++) // looking through end members
+        {
+            for( s=0; s< NSub; s++ ) // looking through sublattices
+            {
+               if( mn[j][s][m] != 0. )
+               {
+                 mf=true;
+                 NmoS[s]++;
+                 break;
+               }
+            }
+            if( mf == true )
+               break;
+        } // end j
+    }
+    // Count the maximum number of minals L and the number of independent minals M
+    // see (Aranovich, 1991 p.27)
+    long int L=0, M=-1, C=1, n;
+    for( s=0; s< NSub; s++ )
+    {
+        L *= NmoS[s];
+        M += NmoS[s];
+    }
+    // Computing the number of choices by M from L (Knuth algorithm)
+    n = L;
+    for(long int d=1; d<M; ++d) {
+       C *= n--;
+       C /= d;
+    }
+    NrcR = C;
+    //    if( NComp > L )
+cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
+
+    // Allocate memory for reciprocal reactions DeltaG and indexation
+    DGrc = new double [NrcR];
+    XrcM = new long int **[NrcR];
+    for(r=0; r<NrcR; r++)
+    {
+         XrcM[r]   = new long int *[4];
+         for(s=0; s<4; s++)
+         {
+             XrcM[r][s] = new long int [2];
+         }
+    }
+    // initializing arrays
+    for(r=0; r<NrcR; r++)
+        DGrc[r] = 0.;
+    for( r=0; r<NrcR; j++)
+        for( s=0; s<4; s++)
+           for( m=0; m<2; m++)
+             XrcM[r][s][m] = -1;
+
+    // collect all possible reciprocal reactions
+    Nrc = CollectReciprocalReactions(); // building the array of indexes for
+                                          // reciprocal reactions
+cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
 }
 
+// Collects indexes of end members involved in reciprocal reactions,
+// as well as indexes of sublattices and substituted moieties on them.
+// Returns the total number of reciprocal reactions actually found in this system.
+long int TBerman::CollectReciprocalReactions( void )
+{
+    long int j, jf, jrs, jls, jrx, jl[4], jr[4];  // max 4 sublattices
+    long int i, s, r = 0;
+//    long int mx[8];
+    bool exists, rvalid;
+
+    for( j=0; j<NComp; j++ ) // looking through all end members
+    {
+        jl[0] = jl[1] = jl[2] = jl[3] = -1;
+        jr[0] = jr[1] = jr[2] = jr[3] = -1;
+        exists = true;
+        jls = j; // Assuming this end member is on the left side of reaction
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+        {
+            // Is there any other end member with the same moieties on s-th sublattice?
+            jf = FindIdenticalSublatticeRow( s, jls, 0, NComp ); // mx, j, Ncomp );
+            if( jf < 0 )
+            {
+                exists = false;
+                break;  // there is no reciprocal reaction for j-th end member
+            }
+            jl[s] = jls;
+            jr[s] = jf;
+        }
+        if( !exists )
+            continue;
+        // Need to find the fourth reaction component (to put at the left side)
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+        {
+            jrs = jr[s];
+            jf = FindIdenticalSublatticeRow( s, jrs, 0, NComp );
+            if( jf < 0 )
+            {
+                exists = false;
+                break;  // there is no 4-th end member for the reciprocal reaction
+            }
+            jl[s] = jf;
+        }
+        if( !exists )
+            continue;
+        // Analyzing the results and putting indexes
+        // Indexes kept for each of 4 reaction components: j, mark, // s1, m1, s2, m2.
+        XrcM[r][0][0] = jls; jrx=2;
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+        {
+           if( jl[s] >= 0 )
+               XrcM[r][1][0] = jl[s];
+           if( jr[s] >= 0 )
+               XrcM[r][jrx++][0] = jr[s];
+        }
+        // check the indexes in reaction
+        rvalid = true;
+cout << "r=" << r;
+        for( i=0; i<4; i++ )
+        {
+cout << ": i=" << i << " EMj=" << XrcM[r][i][0];
+if(i==1)
+    cout << " | ";
+            if(XrcM[r][i][0] < 0 )
+               rvalid=false;
+        }
+        if( rvalid )
+        {    r++;
+cout << " o.k." << endl;
+        }
+        else
+        {
+cout << " failed!" << endl;
+        }
+    }  // j
+    return r;  // actual number of reciprocal reactions (with all permutations)
+}
+
+// Looks for an identical row for the sublattice si in end member ji among other end members in the
+// interval of end-member indexes from jb until je.
+// sx and mx index lists contain occupied sublattice and moiety indexes, respectively.
+// nsx returns the number of moieties on occupied sublattices.
+// Returns the index of end member in which the identical moieties on this sublattice exists,
+// or -1L otherwise (in which case the ji-th end member is not involved in any reciprocal reaction).
+long int TBerman::FindIdenticalSublatticeRow(const long si, const long ji, const long jb, const long je )
+                                     //        long int &nsx, long int *sx, long int *mx )
+{
+    long int m, j;
+    bool match=true;
+
+//    emx[0] = emx[1] = emx[2] = emx[3] = -1L; // cleaning recip. reac. EM indexes
+//    si[0] = si[1] = si[2] = si[3] = -1L; // cleaning indexes of sublattices and moieties
+
+    for( j = jb; j < je; j++ )
+    {
+       if( j == ji )
+         continue;
+       match = true;
+       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          if( mn[ji][si][m] == mn[j][si][m] )
+              continue;
+          match = false;
+          break;
+       }
+       if(!match)
+           continue;  // this site in this end member does not fit
+       return j;      // match found
+    }
+    return -1L; // no matching end-member/sublattice row was found
+}
 
 void TBerman::free_internal()
 {
-    long int j;
+    long int j,r,s;
 
     delete[]Wu;
     delete[]Ws;
@@ -1717,15 +1889,30 @@ void TBerman::free_internal()
     }
     delete[]fjs;
 
-    delete[]Grec;
+    delete[]Grc;
     delete[]oGf;
+    delete[]NmoS;
+
+    delete[]DGrc;
+    for(r=0; r<NrcR; r++)
+    {
+       for(s=0; s<4; s++)
+       {
+          delete[]XrcM[r][s];
+       }
+    }
+    for(r=0; r<NrcR; r++)
+    {
+           delete[]XrcM[r];
+    }
+    delete[]XrcM;
 }
 
 
 /// Calculates T-corrected interaction parameters
 long int TBerman::PTparam( )
 {
-    long int ip, j;
+    long int ip, j, r, j0, j1, j2, j3;
 
     if ( NPcoef < 3 || NPar < 1 )
                return 1;
@@ -1739,25 +1926,43 @@ long int TBerman::PTparam( )
         aIP[ip] = Wpt[ip];
     }
     // Stub to be used later
-    if( NP_DC == 1L )
+    if( NP_DC >= 1L )
     {
         for (j=0; j<NComp; j++)  // Darken, reciprocal and standard energy terms
         {
            aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
-           Grec[j] = aDCc[NP_DC*j];  // in J/mol
-           oGf[j] = G0f[j] += Grec[j]/(R_CONST*Tk); // normalized
+           Grc[j] = aDCc[NP_DC*j];  // in J/mol + aDCc[NP_DC*j+1]/Tk + aDCc[NP_DC*j+2]*Tk*Tk ;
+           oGf[j] = G0f[j] += Grc[j]/(R_CONST*Tk); // normalized
         }
     }
     else { // no separate recipro free energy terms provided
         for (j=0; j<NComp; j++)  // reciprocal and standard energies
         {
-           Grec[j] = 0.;  // in J/mol
+           Grc[j] = 0.;  // in J/mol
            oGf[j] = G0f[j]; // normalized
         }
     }
+    // Calculation of DeltaG of reciprocal reactions
+    if( !Nrc )
+      return 0;
+    double dGrc; long int i;
+    for( r=0; r< Nrc; r++ ) // looking through reactions
+    {
+//       dGrc = 0.;
+       j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
+       dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
+cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
+       DGrc[r] = dGrc;  // normalized!
+       if( NP_DC >= 1L )
+       for( i=0; i++; i<4)
+       {
+           if( Grc[XrcM[r][i][0]] != 0. )
+               XrcM[r][0][1] = 1;  // setting type - "secondary" EM
+           else XrcM[r][0][1] = 0;
+       }
+    }
     return 0;
 }
-
 
 /// Calculates ideal config. term and activity coefficients
 long int TBerman::MixMod()
@@ -1863,7 +2068,10 @@ long int TBerman::IdealProp( double *Zid )
 /// for now, only one term (quaternary model)?
 long int TBerman::ReciprocalPart()
 {
-    long int j/*,s,m*/;
+    long int j, r, s, m;
+    long int xm[4];  // max 4 sublattices
+    bool skip;
+    double rcSum;
 
     if( !NSub || !NMoi )
     {
@@ -1871,17 +2079,49 @@ long int TBerman::ReciprocalPart()
              lnGamRecip[j] = 0.;
         return 1;   // this is not a multi-site model - bailing out
     }
+    if ( !Nrc || NSub > 4 )
+        return 2;  // no reciprocal reactions found or too many sublattices - bailing out
 
-    // tables of site fractions and end-member multiplicities have been
-    // already calculated in the IdealMixing() - here we just use them
+    // Tables of site fractions y and end-member multiplicities mn, mns have been
+    // already calculated in the IdealMixing() - here we just use them.
+    // We also use the DGrc - normamized G effects of reciprocal reactions
+    // and XrcM - the array of indexes of end members involved in recip. reactions
 
-    // To be implemented later
     for( j=0; j<NComp; j++)
-    lnGamRecip[j] = 0.;
-//        lnGamRecip[j] = Grec[j];  // provisorial for DQF-like implementation of inversion term in spinels  DK
+    {
+      lnGamRecip[j] = 0.;
+
+      for( r=0; r< Nrc; r++)
+      {
+         // summation of DeltaGrc contributions,
+         // skipping those that involve the moieties in this EM
+         // also identify moieties on sublattices of this minal (EM)
+         skip = CheckThisReciprocalReaction( r, j, xm );
+         if( skip )
+             continue;
+         rcSum = DGrc[r];
+         for(s = 0; s < NSub; s++)
+         {
+
+             if( xm[s] < 0 )
+                 continue;
+             rcSum *= y[s][xm[s]];
+         }
+         lnGamRecip[j] -= rcSum;
+      }  // r
+cout << " GexRc=" << lnGamRecip[j] << endl;
+    }  // j
     return 0;
 }
 
+// Checks if this reaction (index r) should be skipped from summation of reciprocal
+// reaction excess energy terms for the end member with index j
+// Returns in xm the moiety indexes for each sublattice for picking up their site fractions
+// (max. 4 sublattices can be considered)
+bool TBerman::CheckThisReciprocalReaction( const long int r, const long int j, long int *xm )
+{
+    return true; // this reaction to be skipped
+}
 
 /// calculates part of activity coefficients related to interaction energies
 /// between moieties on the same sublattice.
