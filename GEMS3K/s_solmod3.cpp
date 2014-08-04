@@ -1675,10 +1675,17 @@ TBerman::~TBerman()
     free_internal();
 }
 
+// n choose k  from http://stackoverflow.com/questions/15301885/calculate-value-of-n-choose-k
+long int TBerman::choose( const long n, const long k )
+{
+    if( k == 0 ) return 1;
+    return (n * choose(n - 1, k - 1)) / k;
+}
+
 void TBerman::alloc_internal()
 {
     long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
-    long int emx[4], si[4];  // pairwise recip. reactions; max 4 sublattices
+    long int emx[4], si[4], NmoS[4];  // pairwise recip. reactions; max 4 sublattices
     double mnn;
 
     if( !NSub || !NMoi || NSub < 2 || NSub > 4 )
@@ -1699,9 +1706,8 @@ void TBerman::alloc_internal()
     oGf =  new double [NComp];
 
     // Count the number of different moieties on each sublattice
-    NmoS = new long int [NSub];
-    for( s=0; s< NSub; s++ ) // Cleaning
-       NmoS = 0L;
+    for( s=0; s< 4; s++ ) // Cleaning
+       NmoS[s] = 0L;
     for( m=0; m<NMoi; m++ ) // Looking through moieties
     {
         bool mf=false;
@@ -1712,7 +1718,7 @@ void TBerman::alloc_internal()
                if( mn[j][s][m] != 0. )
                {
                  mf=true;
-                 NmoS[s]++;
+                 NmoS[s] += 1;
                  break;
                }
             }
@@ -1722,19 +1728,15 @@ void TBerman::alloc_internal()
     }
     // Count the maximum number of minals L and the number of independent minals M
     // see (Aranovich, 1991 p.27)
-    long int L=0, M=-1, C=1, n;
+    long int L=1, M=-1, C=1, n;
     for( s=0; s< NSub; s++ )
     {
         L *= NmoS[s];
         M += NmoS[s];
     }
-    // Computing the number of choices by M from L (Knuth algorithm)
-    n = L;
-    for(long int d=1; d<M; ++d) {
-       C *= n--;
-       C /= d;
-    }
-    NrcR = C; // mac possible number of reciprocal reactions
+    // Computing the number of choices by M from L
+    C = choose( L, M );
+    NrcR = C; // maximum possible number of reciprocal reactions
     //    if( NComp > L )
 cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
@@ -1752,8 +1754,8 @@ cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << en
     // initializing arrays
     for(r=0; r<NrcR; r++)
         DGrc[r] = 0.;
-    for( r=0; r<NrcR; j++)
-        for( em=0; em<4; s++)
+    for( r=0; r<NrcR; r++)
+        for( em=0; em<4; em++)
            for( s=0; s<2; s++)
              XrcM[r][em][s] = -1;
 
