@@ -158,7 +158,7 @@ class TSolMod
 
 //    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
     double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
-    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpc; (read-only)
+    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NComp x NrcPpc; (read-only)
 
         double *x;      ///< Pointer to mole fractions of end members (provided)
         double *aVol;   ///< molar volumes of species (end members)
@@ -1138,7 +1138,7 @@ class TBerman: public TSolMod
                 void free_internal();
                 bool CheckThisReciprocalReaction( const long r, const long j, long int *xm );
                 long int CollectReciprocalReactions( void );
-                long int FindIdenticalSublatticeRow(const long int si, const long int ji,
+                long int FindIdenticalSublatticeRow(const long int si, const long int ji, const long jp,
                                                     const long int jb, const long int je );
                                               //      long int &nsx, long int *sx, long int *mx );
             long int ExcessPart();

@@ -1677,7 +1677,7 @@ TBerman::~TBerman()
 
 void TBerman::alloc_internal()
 {
-    long int j, jk, jx, s, sk, sx, m, mk, mx, r;
+    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
     long int emx[4], si[4];  // pairwise recip. reactions; max 4 sublattices
     double mnn;
 
@@ -1734,7 +1734,7 @@ void TBerman::alloc_internal()
        C *= n--;
        C /= d;
     }
-    NrcR = C;
+    NrcR = C; // mac possible number of reciprocal reactions
     //    if( NComp > L )
 cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
@@ -1753,9 +1753,9 @@ cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << en
     for(r=0; r<NrcR; r++)
         DGrc[r] = 0.;
     for( r=0; r<NrcR; j++)
-        for( s=0; s<4; s++)
-           for( m=0; m<2; m++)
-             XrcM[r][s][m] = -1;
+        for( em=0; em<4; s++)
+           for( s=0; s<2; s++)
+             XrcM[r][em][s] = -1;
 
     // collect all possible reciprocal reactions
     Nrc = CollectReciprocalReactions(); // building the array of indexes for
@@ -1768,96 +1768,86 @@ cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
 // Returns the total number of reciprocal reactions actually found in this system.
 long int TBerman::CollectReciprocalReactions( void )
 {
-    long int j, jf, jrs, jls, jrx, jl[4], jr[4];  // max 4 sublattices
-    long int i, s, r = 0;
-//    long int mx[8];
-    bool exists, rvalid;
+    long int r, rn = 0, j, jf, jb1, jb2, jb3;    // max 3 sublattices
+    long int j0, jf1, jf2, jf3, s0=0, s1, s2, s3;
 
-    for( j=0; j<NComp; j++ ) // looking through all end members
+    for( j0=0; j0<NComp; j0++ ) // looking through all end members
     {
-        jl[0] = jl[1] = jl[2] = jl[3] = -1;
-        jr[0] = jr[1] = jr[2] = jr[3] = -1;
-        exists = true;
-        jls = j; // Assuming this end member is on the left side of reaction
-        for( s=0; s< NSub; s++ ) // looking through sublattices
+        // Assuming this end member is on the leftmost side of reaction
+        for( s2=1; s2<NSub; s2++ ) // looking through sublattices
         {
             // Is there any other end member with the same moieties on s-th sublattice?
-            jf = FindIdenticalSublatticeRow( s, jls, 0, NComp ); // mx, j, Ncomp );
-            if( jf < 0 )
+            jb2 = 0;
+            while( jb2 < NComp )
             {
-                exists = false;
-                break;  // there is no reciprocal reaction for j-th end member
-            }
-            jl[s] = jls;
-            jr[s] = jf;
-        }
-        if( !exists )
-            continue;
-        // Need to find the fourth reaction component (to put at the left side)
-        for( s=0; s< NSub; s++ ) // looking through sublattices
-        {
-            jrs = jr[s];
-            jf = FindIdenticalSublatticeRow( s, jrs, 0, NComp );
-            if( jf < 0 )
-            {
-                exists = false;
-                break;  // there is no 4-th end member for the reciprocal reaction
-            }
-            jl[s] = jf;
-        }
-        if( !exists )
-            continue;
-        // Analyzing the results and putting indexes
-        // Indexes kept for each of 4 reaction components: j, mark, // s1, m1, s2, m2.
-        XrcM[r][0][0] = jls; jrx=2;
-        for( s=0; s< NSub; s++ ) // looking through sublattices
-        {
-           if( jl[s] >= 0 )
-               XrcM[r][1][0] = jl[s];
-           if( jr[s] >= 0 )
-               XrcM[r][jrx++][0] = jr[s];
-        }
-        // check the indexes in reaction
-        rvalid = true;
-cout << "r=" << r;
-        for( i=0; i<4; i++ )
-        {
-cout << ": i=" << i << " EMj=" << XrcM[r][i][0];
-if(i==1)
-    cout << " | ";
-            if(XrcM[r][i][0] < 0 )
-               rvalid=false;
-        }
-        if( rvalid )
-        {    r++;
-cout << " o.k." << endl;
-        }
-        else
-        {
-cout << " failed!" << endl;
-        }
-    }  // j
-    return r;  // actual number of reciprocal reactions (with all permutations)
+                jf2 = FindIdenticalSublatticeRow( s2, j0, j0, jb2, NComp );
+                if( jf2 < 0 )
+                   break; // no suitable end members found
+/*                if( jf2 != FindIdenticalSublatticeRow( s0, jf2, jf2, j0, j0+1 ) )
+                {   // do not take it if it does not contain the moiety of 0-th em on 0-th sublattice
+                    jb2 = jf2+1;
+                    continue;
+                }
+*/                // found another end member involved on the right side
+                if( s2 < NSub-1 )
+                    s1 = s2+1;
+                else s1 = 0+1;  // ?
+                jb1 = 0;
+                while( jb1 < NComp )
+                {
+                   jf1 = FindIdenticalSublatticeRow( s1, jf2, j0, jb1, NComp );
+                   if( jf1 < 0 )
+                          break; // no suitable end members found
+                   if( jf1 != FindIdenticalSublatticeRow( s0, jf1, jf1, jf2, jf2+1 ) )  // s2 ?
+                   { // do not take it if it does not contain the moiety of jf2-th em on s0-th sublattice
+                       jb1 = jf1+1;
+                       continue;
+                   }
+                   s3 = s2;
+                   jb3 = 0;
+                   while( jb3 < NComp )
+                   {
+                      jf3 = FindIdenticalSublatticeRow( s3, jf1, j0, jb1, NComp);
+                      if( jf3 == FindIdenticalSublatticeRow( s1, jf3, jf3, jf1, jf1+1 ) )
+                      { // take it only if it contains the moiety of jf1-th em on s1-th sublattice
+                           XrcM[rn][0][0] = j0;  XrcM[rn][0][1] = s0;
+                           XrcM[rn][2][0] = jf2; XrcM[rn][2][1] = s2;
+                           XrcM[rn][1][0] = jf1; XrcM[rn][1][1] = s1;
+                           XrcM[rn][1][0] = jf3; XrcM[rn][1][1] = s3;
+cout << "r=" << r << " j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
+                  << " j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
+                  << " j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
+                  << " j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
+                           rn++;  // next reaction
+                      }
+                      jb3 = jf3+1;
+                   }   // while jb3
+                   jb1 = jf1+1;
+                } // while jb1
+                jb2 = jf2+1;
+            }   // while jb2
+        } // for s0
+    } // for j0
+    Nrc = rn;
+    if (!Nrc)
+        return Nrc; // no reciprocal reactions found
+    return rn;  // actual number of processed reciprocal reactions
 }
 
-// Looks for an identical row for the sublattice si in end member ji among other end members in the
-// interval of end-member indexes from jb until je.
-// sx and mx index lists contain occupied sublattice and moiety indexes, respectively.
-// nsx returns the number of moieties on occupied sublattices.
+// Looks for an identical row for the sublattice si in end member ji skipping end member ji
+// and (another) end member jp among other end members in the interval of end-member indexes
+// from jb until je.
 // Returns the index of end member in which the identical moieties on this sublattice exists,
 // or -1L otherwise (in which case the ji-th end member is not involved in any reciprocal reaction).
-long int TBerman::FindIdenticalSublatticeRow(const long si, const long ji, const long jb, const long je )
-                                     //        long int &nsx, long int *sx, long int *mx )
+long int TBerman::FindIdenticalSublatticeRow(const long si, const long ji,
+                                             const long jp, const long jb, const long je )
 {
     long int m, j;
     bool match=true;
 
-//    emx[0] = emx[1] = emx[2] = emx[3] = -1L; // cleaning recip. reac. EM indexes
-//    si[0] = si[1] = si[2] = si[3] = -1L; // cleaning indexes of sublattices and moieties
-
     for( j = jb; j < je; j++ )
     {
-       if( j == ji )
+       if( j == ji || j == jp )
          continue;
        match = true;
        for( m=0; m < NMoi; m++ ) // Looking through moieties
@@ -1868,7 +1858,7 @@ long int TBerman::FindIdenticalSublatticeRow(const long si, const long ji, const
           break;
        }
        if(!match)
-           continue;  // this site in this end member does not fit
+           continue;  // this site  row in j-th end member does not fit
        return j;      // match found
     }
     return -1L; // no matching end-member/sublattice row was found
@@ -1925,21 +1915,43 @@ long int TBerman::PTparam( )
         Wpt[ip] = Wu[ip] - Ws[ip]*Tk + Wv[ip]*Pbar;  // This minus is a future problem...
         aIP[ip] = Wpt[ip];
     }
-    // Stub to be used later
-    if( NP_DC >= 1L )
+    // Collecting reciprocal parameters and correcting them for temperature
+    if( NrcPpc > 0 )
     {
-        for (j=0; j<NComp; j++)  // Darken, reciprocal and standard energy terms
+cout << "NrcPpc=" << NrcPpc << endl;
+        for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
         {
-           aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
-           Grc[j] = aDCc[NP_DC*j];  // in J/mol + aDCc[NP_DC*j+1]/Tk + aDCc[NP_DC*j+2]*Tk*Tk ;
+cout << " j=";
+            Grc[j] = rcpcf[NrcPpc*j];
+cout << " rcpcf[j][0]=" << rcpcf[NrcPpc*j];
+            if(NrcPpc > 1)
+            {
+                Grc[j] += rcpcf[NrcPpc*j+1]/Tk;
+cout << " rcpcf[j][1]=" << rcpcf[NrcPpc*j+1];
+            }
+            if(NrcPpc > 2)
+            {
+                Grc[j] += rcpcf[NrcPpc*j+2]*Tk*Tk;
+cout << " rcpcf[j][2]=" << rcpcf[NrcPpc*j+2];
+            } // in J/mol iGrc[j] = a + b/T + c*T^2  ;
+cout << " Grc[j]=" << Grc[j] << " G0f[j]=" << G0f[j];
            oGf[j] = G0f[j] += Grc[j]/(R_CONST*Tk); // normalized
+cout << " | oGf[j]=" << oGf[j] << endl;
         }
     }
-    else { // no separate recipro free energy terms provided
-        for (j=0; j<NComp; j++)  // reciprocal and standard energies
+    else { // no separate reciprocal free energy terms provided
+cout << "NP_DC" << NP_DC << endl;
+        for (j=0; j<NComp; j++)
         {
+cout << " j=";
+            if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
+           {
+                aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
+cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
+           }
            Grc[j] = 0.;  // in J/mol
-           oGf[j] = G0f[j]; // normalized
+           oGf[j] = G0f[j]+aGEX[j]; // normalized
+cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
         }
     }
     // Calculation of DeltaG of reciprocal reactions
@@ -1963,6 +1975,7 @@ cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1]
     }
     return 0;
 }
+
 
 /// Calculates ideal config. term and activity coefficients
 long int TBerman::MixMod()

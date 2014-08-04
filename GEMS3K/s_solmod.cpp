@@ -50,8 +50,8 @@ TSolMod::TSolMod( SolutionData *sd ):
     NDQFpc = sd->NDQFpDC;
     NrcPpc = sd->NrcPpDC;
 //   lPhcf = sd->lPhc;
-    DQFcf = sd->DQFc;
-    rcpcf = sd->rcpc;
+    DQFcf = sd->DQFc;  // read-only
+    rcpcf = sd->rcpc;  // read-only
     //PhLin = sd->arPhLin;
 //    PhLin = new long int[NlPh][2];
 //    for (long int i=0; i<NlPh; i++)
