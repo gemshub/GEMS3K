@@ -1688,8 +1688,11 @@ void TBerman::alloc_internal()
     long int emx[4], si[4], NmoS[4];  // pairwise recip. reactions; max 4 sublattices
     double mnn;
 
-    if( !NSub || !NMoi || NSub < 2 || NSub > 4 )
-        return;   // This is not a multi-site model or there are >4 sublattices
+    if( !NSub || !NMoi || NComp < 4 || NSub < 2 || NSub > 4 )
+    {
+        NrcR = Nrc = 0;
+        return;   // This is not a multi-site model or < 4 EMs or >4 sublattices
+    }
 
     Wu = new double [NPar];
     Ws = new double [NPar];
@@ -1757,20 +1760,84 @@ cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << en
     for( r=0; r<NrcR; r++)
         for( em=0; em<4; em++)
            for( s=0; s<2; s++)
-             XrcM[r][em][s] = -1;
+              XrcM[r][em][s] = -1;
 
-    // collect all possible reciprocal reactions
-    Nrc = CollectReciprocalReactions(); // building the array of indexes for
-                                          // reciprocal reactions
+    // collect all possible reciprocal reactions into the array of indexes
+    switch( NSub )
+    {
+       case 2:  // 2 sublattices
+            Nrc = CollectReciprocalReactions2();
+            break;
+       case 3:  // 3 sublattices
+            Nrc = CollectReciprocalReactions3();
+            break;
+//       case 4:  // 4 sublattices
+//            Nrc = CollectReciprocalReactions4();
+//            break;
+       default:
+            Nrc = 0;
+    }
 cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
 }
 
-// Collects indexes of end members involved in reciprocal reactions,
+// Collects indexes of end members involved in reciprocal reactions (2 sublattices case)
 // as well as indexes of sublattices and substituted moieties on them.
 // Returns the total number of reciprocal reactions actually found in this system.
-long int TBerman::CollectReciprocalReactions( void )
+long int TBerman::CollectReciprocalReactions2( void )
 {
-    long int r, rn = 0, j, jf, jb1, jb2, jb3;    // max 3 sublattices
+    long int rn = 0, jb1, jb2, jb3;    // max 3 sublattices
+    long int jf0, jf1, jf2, jf3, s0=0, s1=0, s2=1, s3=1;
+
+    for( jf0=0; jf0<NComp; jf0++ ) // looking through all end members
+    {
+        // Is there any other end member with the same moieties on s2-th sublattice?
+        jb2 = 0;
+        while( jb2 < NComp )
+        {
+            jf2 = FindIdenticalSublatticeRow( s2, jf0, jf0, jb2, NComp );
+            if( jf2 < 0 )
+                break; // no suitable end members found
+            // found another end member involved on the right side
+            jb1 = 0;
+            while( jb1 < NComp )
+            {
+               jf1 = FindIdenticalSublatticeRow( s1, jf2, jf0, jb1, NComp );
+               if( jf1 < 0 )
+                      break; // no suitable end members found
+               jb3 = 0;
+               while( jb3 < NComp )
+               {
+                  jf3 = FindIdenticalSublatticeRow( s3, jf1, jf0, jb3, NComp);
+                  if( jf3 < 0 )
+                      break; // no suitable end members found
+                  XrcM[rn][0][0] = jf0; XrcM[rn][0][1] = s0;
+                  XrcM[rn][2][0] = jf2; XrcM[rn][2][1] = s2;
+                  XrcM[rn][1][0] = jf1; XrcM[rn][1][1] = s1;
+                  XrcM[rn][3][0] = jf3; XrcM[rn][3][1] = s3;
+cout << "rn=" << rn << " | j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
+                  << "  j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
+                  << "  j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
+                  << "  j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
+                  rn++;  // next reaction
+                  if( rn > NrcR )
+                  { return rn-1; } // indexation error
+                  jb3 = jf3+1;
+               }   // while jb3
+               jb1 = jf1+1;
+            } // while jb1
+            jb2 = jf2+1;
+        }   // while jb2
+    } // for j0
+//    Nrc = rn;
+    return rn;  // actual number of processed reciprocal reactions
+}
+
+// Collects indexes of end members involved in reciprocal reactions (3 sublattices case)
+// as well as indexes of sublattices and substituted moieties on them.
+// Returns the total number of reciprocal reactions actually found in this system.
+long int TBerman::CollectReciprocalReactions3( void )
+{
+    long int r, rn = 0, j, jb1, jb2, jb3;    // max 3 sublattices
     long int j0, jf1, jf2, jf3, s0=0, s1, s2, s3;
 
     for( j0=0; j0<NComp; j0++ ) // looking through all end members
@@ -1793,17 +1860,20 @@ long int TBerman::CollectReciprocalReactions( void )
 */                // found another end member involved on the right side
                 if( s2 < NSub-1 )
                     s1 = s2+1;
-                else s1 = 0+1;  // ?
+                else s1 = 0; // +1;  // ?
                 jb1 = 0;
                 while( jb1 < NComp )
                 {
                    jf1 = FindIdenticalSublatticeRow( s1, jf2, j0, jb1, NComp );
                    if( jf1 < 0 )
                           break; // no suitable end members found
-                   if( jf1 != FindIdenticalSublatticeRow( s0, jf1, jf1, jf2, jf2+1 ) )  // s2 ?
-                   { // do not take it if it does not contain the moiety of jf2-th em on s0-th sublattice
-                       jb1 = jf1+1;
-                       continue;
+                   if( NSub > 2 )
+                   {
+                      if( jf1 != FindIdenticalSublatticeRow( s0, jf1, jf1, jf2, jf2+1 ) )  // s2 ?
+                      { // do not take it if it does not contain the moiety of jf2-th em on s0-th sublattice
+                        jb1 = jf1+1;
+                        continue;
+                      }
                    }
                    s3 = s2;
                    jb3 = 0;
@@ -1918,6 +1988,8 @@ long int TBerman::PTparam( )
         aIP[ip] = Wpt[ip];
     }
     // Collecting reciprocal parameters and correcting them for temperature
+    if( NComp < 4L || Nrc == 0L )
+        return 0; // no reciprocal reactions possible
     if( NrcPpc > 0 )
     {
 cout << "NrcPpc=" << NrcPpc << endl;
@@ -1967,13 +2039,13 @@ cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
        dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
 cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
        DGrc[r] = dGrc;  // normalized!
-       if( NP_DC >= 1L )
-       for( i=0; i++; i<4)
-       {
-           if( Grc[XrcM[r][i][0]] != 0. )
-               XrcM[r][0][1] = 1;  // setting type - "secondary" EM
-           else XrcM[r][0][1] = 0;
-       }
+//       if( NrcPpc )
+//      for( i=0; i++; i<4)
+//       {
+//           if( Grc[XrcM[r][i][0]] != 0. )
+//               XrcM[r][0][1] = 1;  // setting type - "secondary" EM
+//           else XrcM[r][0][1] = 0;
+//       }
     }
     return 0;
 }
@@ -2088,13 +2160,11 @@ long int TBerman::ReciprocalPart()
     bool skip;
     double rcSum;
 
-    if( !NSub || !NMoi )
-    {
-        for( j=0; j<NComp; j++)
-             lnGamRecip[j] = 0.;
+    for( j=0; j<NComp; j++)
+         lnGamRecip[j] = 0.;
+    if( NSub == 0L || NMoi == 0L )
         return 1;   // this is not a multi-site model - bailing out
-    }
-    if ( !Nrc || NSub > 4 )
+    if ( Nrc == 0L || NSub > 4L )
         return 2;  // no reciprocal reactions found or too many sublattices - bailing out
 
     // Tables of site fractions y and end-member multiplicities mn, mns have been
@@ -2104,7 +2174,6 @@ long int TBerman::ReciprocalPart()
 
     for( j=0; j<NComp; j++)
     {
-      lnGamRecip[j] = 0.;
 
       for( r=0; r< Nrc; r++)
       {

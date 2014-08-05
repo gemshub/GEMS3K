@@ -1138,7 +1138,8 @@ class TBerman: public TSolMod
                 void free_internal();
                 long int choose( const long int n, const long int k );
                 bool CheckThisReciprocalReaction( const long int r, const long int j, long int *xm );
-                long int CollectReciprocalReactions( void );
+                long int CollectReciprocalReactions2( void );
+                long int CollectReciprocalReactions3( void );
                 long int FindIdenticalSublatticeRow(const long int si, const long int ji, const long jp,
                                                     const long int jb, const long int je );
                                               //      long int &nsx, long int *sx, long int *mx );

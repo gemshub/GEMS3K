@@ -194,7 +194,8 @@ long int TSolMod::init_multisite()
         for( s=0; s<NSub; s++)
            for( m=0; m<NMoi; m++)
            {  // extracting multiplicity numbers
-              mn[j][s][m] = aMoiSN[k]; k++;
+              mn[j][s][m] = aMoiSN[k];
+              k++;
            }
     // calculation of total site multiplicity numbers
     double mnsj;
