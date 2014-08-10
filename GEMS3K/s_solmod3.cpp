@@ -1685,13 +1685,13 @@ long int TBerman::choose( const long n, const long k )
 void TBerman::alloc_internal()
 {
     long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
-    long int emx[4], si[4], NmoS[4];  // pairwise recip. reactions; max 4 sublattices
+    long int emx[4], si[4], NmoS[4];  // pairwise recip. reactions; max 5 sublattices
     double mnn;
 
-    if( !NSub || !NMoi || NComp < 4 || NSub < 2 || NSub > 4 )
+    if( !NSub || !NMoi || NComp < 2 || NSub > 5 )
     {
         NrcR = Nrc = 0;
-        return;   // This is not a multi-site model or < 4 EMs or >4 sublattices
+        return;   // This is not a multi-site model or < 2 EMs or >5 sublattices
     }
 
     Wu = new double [NPar];
@@ -1705,6 +1705,8 @@ void TBerman::alloc_internal()
        fjs[j] = new double[NSub];
     }
 
+    pyp = new double [NComp];
+//    pyn = new double [NComp];
     Grc = new double [NComp];
     oGf =  new double [NComp];
 
@@ -1768,8 +1770,8 @@ cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << en
        case 2:  // 2 sublattices
             Nrc = CollectReciprocalReactions2();
             break;
-       case 3:  // 3 sublattices
-            Nrc = CollectReciprocalReactions3();
+//       case 3:  // 3 sublattices
+//            Nrc = CollectReciprocalReactions3();
             break;
 //       case 4:  // 4 sublattices
 //            Nrc = CollectReciprocalReactions4();
@@ -1832,80 +1834,6 @@ cout << "rn=" << rn << " | j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
     return rn;  // actual number of processed reciprocal reactions
 }
 
-// Collects indexes of end members involved in reciprocal reactions (3 sublattices case)
-// as well as indexes of sublattices and substituted moieties on them.
-// Returns the total number of reciprocal reactions actually found in this system.
-long int TBerman::CollectReciprocalReactions3( void )
-{
-    long int r, rn = 0, j, jb1, jb2, jb3;    // max 3 sublattices
-    long int j0, jf1, jf2, jf3, s0=0, s1, s2, s3;
-
-    for( j0=0; j0<NComp; j0++ ) // looking through all end members
-    {
-        // Assuming this end member is on the leftmost side of reaction
-        for( s2=1; s2<NSub; s2++ ) // looking through sublattices
-        {
-            // Is there any other end member with the same moieties on s-th sublattice?
-            jb2 = 0;
-            while( jb2 < NComp )
-            {
-                jf2 = FindIdenticalSublatticeRow( s2, j0, j0, jb2, NComp );
-                if( jf2 < 0 )
-                   break; // no suitable end members found
-/*                if( jf2 != FindIdenticalSublatticeRow( s0, jf2, jf2, j0, j0+1 ) )
-                {   // do not take it if it does not contain the moiety of 0-th em on 0-th sublattice
-                    jb2 = jf2+1;
-                    continue;
-                }
-*/                // found another end member involved on the right side
-                if( s2 < NSub-1 )
-                    s1 = s2+1;
-                else s1 = 0; // +1;  // ?
-                jb1 = 0;
-                while( jb1 < NComp )
-                {
-                   jf1 = FindIdenticalSublatticeRow( s1, jf2, j0, jb1, NComp );
-                   if( jf1 < 0 )
-                          break; // no suitable end members found
-                   if( NSub > 2 )
-                   {
-                      if( jf1 != FindIdenticalSublatticeRow( s0, jf1, jf1, jf2, jf2+1 ) )  // s2 ?
-                      { // do not take it if it does not contain the moiety of jf2-th em on s0-th sublattice
-                        jb1 = jf1+1;
-                        continue;
-                      }
-                   }
-                   s3 = s2;
-                   jb3 = 0;
-                   while( jb3 < NComp )
-                   {
-                      jf3 = FindIdenticalSublatticeRow( s3, jf1, j0, jb1, NComp);
-                      if( jf3 == FindIdenticalSublatticeRow( s1, jf3, jf3, jf1, jf1+1 ) )
-                      { // take it only if it contains the moiety of jf1-th em on s1-th sublattice
-                           XrcM[rn][0][0] = j0;  XrcM[rn][0][1] = s0;
-                           XrcM[rn][2][0] = jf2; XrcM[rn][2][1] = s2;
-                           XrcM[rn][1][0] = jf1; XrcM[rn][1][1] = s1;
-                           XrcM[rn][1][0] = jf3; XrcM[rn][1][1] = s3;
-cout << "r=" << r << " j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
-                  << " j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
-                  << " j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
-                  << " j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
-                           rn++;  // next reaction
-                      }
-                      jb3 = jf3+1;
-                   }   // while jb3
-                   jb1 = jf1+1;
-                } // while jb1
-                jb2 = jf2+1;
-            }   // while jb2
-        } // for s0
-    } // for j0
-    Nrc = rn;
-    if (!Nrc)
-        return Nrc; // no reciprocal reactions found
-    return rn;  // actual number of processed reciprocal reactions
-}
-
 // Looks for an identical row for the sublattice si in end member ji skipping end member ji
 // and (another) end member jp among other end members in the interval of end-member indexes
 // from jb until je.
@@ -1954,6 +1882,8 @@ void TBerman::free_internal()
     delete[]Grc;
     delete[]oGf;
     delete[]NmoS;
+    delete[]pyp;
+//    delete[]pyn;
 
     delete[]DGrc;
     for(r=0; r<NrcR; r++)
@@ -1992,25 +1922,25 @@ long int TBerman::PTparam( )
         return 0; // no reciprocal reactions possible
     if( NrcPpc > 0 )
     {
-cout << "NrcPpc=" << NrcPpc << endl;
+// cout << "NrcPpc=" << NrcPpc << endl;
         for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
         {
-cout << " j=";
+// cout << " j=";
             Grc[j] = rcpcf[NrcPpc*j];
-cout << " rcpcf[j][0]=" << rcpcf[NrcPpc*j];
+// cout << " rcpcf[j][0]=" << rcpcf[NrcPpc*j];
             if(NrcPpc > 1)
             {
                 Grc[j] += rcpcf[NrcPpc*j+1]/Tk;
-cout << " rcpcf[j][1]=" << rcpcf[NrcPpc*j+1];
+// cout << " rcpcf[j][1]=" << rcpcf[NrcPpc*j+1];
             }
             if(NrcPpc > 2)
             {
                 Grc[j] += rcpcf[NrcPpc*j+2]*Tk*Tk;
-cout << " rcpcf[j][2]=" << rcpcf[NrcPpc*j+2];
+// cout << " rcpcf[j][2]=" << rcpcf[NrcPpc*j+2];
             } // in J/mol iGrc[j] = a + b/T + c*T^2  ;
-cout << " Grc[j]=" << Grc[j] << " G0f[j]=" << G0f[j];
+// cout << " Grc[j]=" << Grc[j] << " G0f[j]=" << G0f[j];
            oGf[j] = G0f[j] += Grc[j]/(R_CONST*Tk); // normalized
-cout << " | oGf[j]=" << oGf[j] << endl;
+// cout << " | oGf[j]=" << oGf[j] << endl;
         }
     }
     else { // no separate reciprocal free energy terms provided
@@ -2051,7 +1981,7 @@ cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1]
 }
 
 
-/// Calculates ideal config. term and activity coefficients
+// Calculates ideal config. term and activity coefficients
 long int TBerman::MixMod()
 {
     long int retCode, j;
@@ -2080,7 +2010,7 @@ long int TBerman::MixMod()
 }
 
 
-/// calculates bulk phase excess properties - to be done yet!
+// calculates bulk phase excess properties - to be done yet!
 long int TBerman::ExcessProp( double *Zex )
 {
 
@@ -2126,7 +2056,7 @@ long int TBerman::ExcessProp( double *Zex )
 }
 
 
-/// calculates ideal mixing properties
+// calculates ideal mixing properties
 long int TBerman::IdealProp( double *Zid )
 {
         Hid = 0.0;
@@ -2149,32 +2079,238 @@ long int TBerman::IdealProp( double *Zid )
         return 0;
 }
 
+double TBerman::KronDelta( const long int j, const long s, const long m )
+{
+    double krond = 0.;
+    if( mn[j][s][m] != 0 )
+       krond = 1.;
+    return krond;
+}
 
-/// calculates part of activity coefficients related to reciprocal energies.
-/// (interactions between moieties on different sublattices)
-/// for now, only one term (quaternary model)?
+// CEF calculations - computing pyp[j] (product of site fractions for j-th end member) eq 42
+double TBerman::PYproduct( const long int j )
+{
+    double pyp_j = 1., ys;
+    long int s, m;
+
+    for(s = 0; s < NSub; s++)
+    {
+       ys = ysigma( j, s );
+       pyp_j *= ys;
+    } // s
+// cout << "j=" << j << " pyp_j=" << pyp_j << endl;
+    return pyp_j;
+}
+
+// calculates y_sigma(j,s) see eq 42
+//
+double TBerman::ysigma( const long int j, const long s )
+{
+    long int m;
+    double ys = 0.;
+    for( m=0; m < NMoi; m++ ) // Looking through moieties
+    {
+       if( mn[j][s][m] != 0. ) // This site is occupied in j-th end member
+           ys += mn[j][s][m] * y[s][m];
+    }
+    if( ys > 0. )
+       ys /= mns[s];
+    return ys;
+}
+
+// calculates dGref/d_ysigma, eq 45
+//
+double TBerman::dGref_dysigma( const long int j, const long int s, const long int ex_j )
+{
+    long int l, m;
+    double krond=0., ys, dst, dsum=0.;
+    bool kron;
+    for( l=0; l<NComp; l++ )
+    {
+       if( l == ex_j )   // this end member is marked to be skipped
+           continue;
+       ys = 0.; kron = false;
+       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          krond = KronDelta( j, s, m );
+          if( krond != 0. )
+          {
+              ys += mn[l][s][m] * y[s][m];
+              kron = true;
+          }
+       } // m
+       if( kron == false )
+           continue;  // no moieties belonging to l-th end member found in this sublattice
+       if( ys > 0. )
+       {
+           ys /= mns[s];
+           dst = oGf[l] * ( pyp[l] / ys );
+           dsum += dst;
+       }
+    } // l
+    return dsum;
+}
+
+// Temporary: calculates dGref/d_ysm, eq 46
+double TBerman::dGref_dysm( const long int s, const long m, const long int ex_j )
+{
+    long int l;
+    double krond=0., ys, dst, dsum=0.;
+    bool kron;
+    for( l=0; l<NComp; l++ )
+    {
+       if( l == ex_j )   // this end member is marked to be skipped
+           continue;
+       ys = 0.; kron = false;
+       krond = KronDelta( l, s, m );
+       if( krond != 0. )
+       {
+           ys = y[s][m];
+           kron = true;
+       }
+/*       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          krond = KronDelta( l, s, m );  // j ?
+          if( krond != 0. )
+          {
+              ys += mn[l][s][m] * y[s][m];
+              kron = true;
+          }
+       } // m
+*/     if( kron == false )
+           continue;  // no moieties belonging to l-th end member found in this sublattice
+       if( ys != 0. )
+       {
+//           ys /= mns[s];
+           dst = oGf[l] * ( pyp[l] / ys );
+           dsum += dst;
+       }
+    } // l
+    return dsum;
+}
+
+// find index of end-member which has moiety m on site s
+// returns end-member index or -1 if no end member has this moiety
+// on this site
+long int TBerman::which_em( long int s, long int m )
+{
+    long int l, j=-1, jc=0;
+    for( l=0; l<NComp; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+       {
+           j = l; jc++;
+       }
+    }
+cout << "which em: s=" << s << " m=" << m << " j=" << j << " jc=" << jc << endl;
+    return j;
+}
+
+// calculates ref.frame term (modified CEF, see eq 43)
+//
+double TBerman::RefFrameTerm( const long int j, const double G_ref )
+{
+    long int l, m, s;
+    double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
+
+    sum_s = 0.;
+    for(s = 0; s < NSub; s++)  // sublattices
+    {
+        dgr_dys = dGref_dysigma( j, s, -1L );
+        sum_s += dgr_dys;
+        sum_m = 0.;
+        for( m=0; m < NMoi; m++ ) // Looking through moieties
+        {
+//           l = which_em( s, m );
+//           if( l < 0 )  // moiety m does not exist on site s
+//               continue;
+//           if( l == j )    // not sure
+//               continue;
+//           ys = ysigma( l, s );
+           ys = y[s][m];
+           dgr_dys = dGref_dysm( s, m, -1L );
+           ydp = ys * dgr_dys;
+           sum_m += ydp;
+        } // m
+        sum_s -= sum_m;
+    } // s
+    reftj = G_ref + sum_s;
+    return reftj;
+}
+/* // This is to experiment with end members with >1 moiety per site
+double TBerman::RefFrameTerm( const long int j, const double G_ref )
+{
+    long int l, s;
+    double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
+
+    sum_s = 0.;
+    for(s = 0; s < NSub; s++)  // sublattices
+    {
+        dgr_dys = dGref_dysigma( j, s, -1L );
+        sum_s += dgr_dys;
+        sum_m = 0.;
+        for( l=0; l<NComp; l++ )
+        {
+           if( l == j )    // not sure
+              continue;
+           ys = ysigma( l, s );
+           dgr_dys = dGref_dysigma( l, s, -1L ); // j
+           ydp = ys * dgr_dys;
+           sum_m += ydp;
+        }  // l
+        sum_s -= sum_m;
+    } // s
+    reftj = G_ref + sum_s;
+    return reftj;
+}
+*/
+// calculates part of activity coefficients related to reciprocal energies.
+// (interactions between moieties on different sublattices)
+// For 2 sublattices also using reciprocal reactions
 long int TBerman::ReciprocalPart()
 {
     long int j, r, s, m;
     long int xm[4];  // max 4 sublattices
     bool skip;
-    double rcSum;
+    double rcSum, rft, yss, ysn;
 
     for( j=0; j<NComp; j++)
          lnGamRecip[j] = 0.;
     if( NSub == 0L || NMoi == 0L )
         return 1;   // this is not a multi-site model - bailing out
-    if ( Nrc == 0L || NSub > 4L )
+    if ( NSub > 5L )
         return 2;  // no reciprocal reactions found or too many sublattices - bailing out
-
     // Tables of site fractions y and end-member multiplicities mn, mns have been
     // already calculated in the IdealMixing() - here we just use them.
-    // We also use the DGrc - normamized G effects of reciprocal reactions
-    // and XrcM - the array of indexes of end members involved in recip. reactions
+
+    // CEF calculations - computing pyp[j] (site fraction products for end members) eq 42
+    // and G_ref - total reference Gibbs energy
+    double G_ref=0.;
+    for( j=0; j<NComp; j++)
+    {
+        pyp[j] = PYproduct( j );
+        G_ref += pyp[j] * oGf[j];
+    }
+// cout << "G_ref= " << G_ref << endl;
+    // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
+    for( j=0; j<NComp; j++)
+    {
+       rft = RefFrameTerm( j, G_ref );
+       lnGamRecip[j] = rft - oGf[j];
+cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
+     << " pyp=" << pyp[j] << endl;
+    }
+    if( NSub > 2 )
+        return 0;
+
+    if( NSub == 2L && Nrc > 0 )
+    {  // using reciprocal reactions for 2-site case
+        // We use DGrc - normamized G effects of reciprocal reactions
+        // and XrcM - the array of indexes of end members involved in recip. reactions
 
     for( j=0; j<NComp; j++)
     {
-
+      lnGamRecip[j] = 0.;
       for( r=0; r< Nrc; r++)
       {
          // summation of DeltaGrc contributions,
@@ -2195,6 +2331,7 @@ long int TBerman::ReciprocalPart()
       }  // r
 cout << " GexRc=" << lnGamRecip[j] << endl;
     }  // j
+    }
     return 0;
 }
 
