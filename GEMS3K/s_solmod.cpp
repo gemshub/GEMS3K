@@ -52,6 +52,7 @@ TSolMod::TSolMod( SolutionData *sd ):
 //   lPhcf = sd->lPhc;
     DQFcf = sd->DQFc;  // read-only
     rcpcf = sd->rcpc;  // read-only
+    if(rcpcf == NULL) NrcPpc = 0;
     //PhLin = sd->arPhLin;
 //    PhLin = new long int[NlPh][2];
 //    for (long int i=0; i<NlPh; i++)
@@ -60,7 +61,6 @@ TSolMod::TSolMod( SolutionData *sd ):
 //        PhLin[i][1] = sd->arPhLin[2*i+1];
 //    }
     //aSitFj = sd->arSitFj;
-
     // pointer assignments
     aIPx = sd->arIPx;   // Direct access to index list and parameter coeff arrays!
     aIPc = sd->arIPc;

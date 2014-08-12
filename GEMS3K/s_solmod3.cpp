@@ -1685,19 +1685,20 @@ long int TBerman::choose( const long n, const long k )
 void TBerman::alloc_internal()
 {
     long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
-    long int emx[4], si[4], NmoS[4];  // pairwise recip. reactions; max 5 sublattices
+    long int emx[4], si[4];  // pairwise recip. reactions; max 6 sublattices
     double mnn;
 
-    if( !NSub || !NMoi || NComp < 2 || NSub > 5 )
+    if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
     {
         NrcR = Nrc = 0;
-        return;   // This is not a multi-site model or < 2 EMs or >5 sublattices
+        return;   // This is not a multi-site model or < 2 EMs or >6 sublattices
     }
 
     Wu = new double [NPar];
     Ws = new double [NPar];
     Wv = new double [NPar];
     Wpt = new double [NPar];
+    NmoS = new long int [NSub];
 
     fjs = new double *[NComp];
     for( j=0; j<NComp; j++)
@@ -1711,7 +1712,7 @@ void TBerman::alloc_internal()
     oGf =  new double [NComp];
 
     // Count the number of different moieties on each sublattice
-    for( s=0; s< 4; s++ ) // Cleaning
+    for( s=0; s< NSub; s++ ) // Cleaning
        NmoS[s] = 0L;
     for( m=0; m<NMoi; m++ ) // Looking through moieties
     {
@@ -1742,42 +1743,31 @@ void TBerman::alloc_internal()
     // Computing the number of choices by M from L
     C = choose( L, M );
     NrcR = C; // maximum possible number of reciprocal reactions
-    //    if( NComp > L )
+    Nrc = 0;
 cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
-    // Allocate memory for reciprocal reactions DeltaG and indexation
-    DGrc = new double [NrcR];
-    XrcM = new long int **[NrcR];
-    for(r=0; r<NrcR; r++)
+    if( NSub == 2 )
     {
-         XrcM[r]   = new long int *[4];
-         for(s=0; s<4; s++)
-         {
+       // Allocate memory for reciprocal reactions DeltaG and indexation
+       DGrc = new double [NrcR];
+       XrcM = new long int **[NrcR];
+       for(r=0; r<NrcR; r++)
+       {
+          XrcM[r]   = new long int *[4];
+          for(s=0; s<4; s++)
+          {
              XrcM[r][s] = new long int [2];
-         }
-    }
-    // initializing arrays
-    for(r=0; r<NrcR; r++)
-        DGrc[r] = 0.;
-    for( r=0; r<NrcR; r++)
-        for( em=0; em<4; em++)
-           for( s=0; s<2; s++)
-              XrcM[r][em][s] = -1;
+          }
+       }
+       // initializing arrays
+       for(r=0; r<NrcR; r++)
+           DGrc[r] = 0.;
+       for( r=0; r<NrcR; r++)
+           for( em=0; em<4; em++)
+              for( s=0; s<2; s++)
+                 XrcM[r][em][s] = -1;
 
-    // collect all possible reciprocal reactions into the array of indexes
-    switch( NSub )
-    {
-       case 2:  // 2 sublattices
-            Nrc = CollectReciprocalReactions2();
-            break;
-//       case 3:  // 3 sublattices
-//            Nrc = CollectReciprocalReactions3();
-            break;
-//       case 4:  // 4 sublattices
-//            Nrc = CollectReciprocalReactions4();
-//            break;
-       default:
-            Nrc = 0;
+       Nrc = CollectReciprocalReactions2();
     }
 cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
 }
@@ -1885,19 +1875,22 @@ void TBerman::free_internal()
     delete[]pyp;
 //    delete[]pyn;
 
-    delete[]DGrc;
-    for(r=0; r<NrcR; r++)
+    if( NSub == 2 )
     {
-       for(s=0; s<4; s++)
-       {
-          delete[]XrcM[r][s];
-       }
-    }
-    for(r=0; r<NrcR; r++)
-    {
+        delete[]DGrc;
+        for(r=0; r<NrcR; r++)
+        {
+            for(s=0; s<4; s++)
+            {
+                delete[]XrcM[r][s];
+            }
+        }
+        for(r=0; r<NrcR; r++)
+        {
            delete[]XrcM[r];
+        }
+        delete[]XrcM;
     }
-    delete[]XrcM;
 }
 
 
@@ -1917,10 +1910,8 @@ long int TBerman::PTparam( )
         Wpt[ip] = Wu[ip] - Ws[ip]*Tk + Wv[ip]*Pbar;  // This minus is a future problem...
         aIP[ip] = Wpt[ip];
     }
-    // Collecting reciprocal parameters and correcting them for temperature
-    if( NComp < 4L || Nrc == 0L )
-        return 0; // no reciprocal reactions possible
-    if( NrcPpc > 0 )
+
+    if( NrcPpc > 0 && rcpcf != NULL )
     {
 // cout << "NrcPpc=" << NrcPpc << endl;
         for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
@@ -1944,10 +1935,10 @@ long int TBerman::PTparam( )
         }
     }
     else { // no separate reciprocal free energy terms provided
-cout << "NP_DC" << NP_DC << endl;
+cout << "NP_DC=" << NP_DC << endl;
         for (j=0; j<NComp; j++)
         {
-cout << " j=";
+cout << " j=" << j;
             if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
            {
                 aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
@@ -1958,24 +1949,16 @@ cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
 cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
         }
     }
-    // Calculation of DeltaG of reciprocal reactions
     if( !Nrc )
       return 0;
+    // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
     double dGrc; long int i;
     for( r=0; r< Nrc; r++ ) // looking through reactions
     {
-//       dGrc = 0.;
        j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
        dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
 cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
        DGrc[r] = dGrc;  // normalized!
-//       if( NrcPpc )
-//      for( i=0; i++; i<4)
-//       {
-//           if( Grc[XrcM[r][i][0]] != 0. )
-//               XrcM[r][0][1] = 1;  // setting type - "secondary" EM
-//           else XrcM[r][0][1] = 0;
-//       }
     }
     return 0;
 }
@@ -2278,8 +2261,8 @@ long int TBerman::ReciprocalPart()
          lnGamRecip[j] = 0.;
     if( NSub == 0L || NMoi == 0L )
         return 1;   // this is not a multi-site model - bailing out
-    if ( NSub > 5L )
-        return 2;  // no reciprocal reactions found or too many sublattices - bailing out
+    if ( NSub > 6L )
+        return 2;  //  too many sublattices - bailing out
     // Tables of site fractions y and end-member multiplicities mn, mns have been
     // already calculated in the IdealMixing() - here we just use them.
 
@@ -2291,7 +2274,7 @@ long int TBerman::ReciprocalPart()
         pyp[j] = PYproduct( j );
         G_ref += pyp[j] * oGf[j];
     }
-// cout << "G_ref= " << G_ref << endl;
+cout << "G_ref= " << G_ref << endl;
     // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
     for( j=0; j<NComp; j++)
     {
@@ -2300,7 +2283,7 @@ long int TBerman::ReciprocalPart()
 cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
      << " pyp=" << pyp[j] << endl;
     }
-    if( NSub > 2 )
+    if( NSub != 2 )
         return 0;
 
     if( NSub == 2L && Nrc > 0 )
