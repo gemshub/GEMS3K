@@ -1118,7 +1118,7 @@ class TBerman: public TSolMod
         private:
                 long int NrcR;   ///< max. possible number of reciprocal reactions (allocated)
                 long int Nrc;    ///< number of reciprocal reactions (actual)
-                long int *NmoS;   ///< number of different moieties per sublattice
+                long int *NmoS;  ///< number of different moieties (in end members) on each sublattice
             long int ***XrcM;  ///< Table of indexes of end members, sublattices and moieties involved in
                                ///< reciprocal reactions [NrecR][4][2], two left and two right side.
                                ///< for each of 4 reaction components: j, mark, // s1, m1, s2, m2.
@@ -1147,7 +1147,8 @@ class TBerman: public TSolMod
                 long int ExcessPart();
                                ///< Arrays for ideal conf part must exist in base TSolMod instance
                 double PYproduct( const long int j );
-                long int which_em( long int s, long int m );
+                long int em_which(const long int s, const long int m , const long int jb, const long int je);
+                long int em_howmany( long int s, long int m );
                 double ysigma( const long int j, const long int s );
                 double KronDelta( const long int j, const long int s, const long int m );
                 double dGref_dysigma(const long int l, const long int s, const long int ex_j );

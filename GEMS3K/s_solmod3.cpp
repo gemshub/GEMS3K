@@ -1716,7 +1716,9 @@ void TBerman::alloc_internal()
        NmoS[s] = 0L;
     for( m=0; m<NMoi; m++ ) // Looking through moieties
     {
-        bool mf=false;
+        bool mf=false; long int mem[8];
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+           mem[s] = 0;
         for( j=0; j<NComp; j++) // looking through end members
         {
             for( s=0; s< NSub; s++ ) // looking through sublattices
@@ -1724,21 +1726,28 @@ void TBerman::alloc_internal()
                if( mn[j][s][m] != 0. )
                {
                  mf=true;
-                 NmoS[s] += 1;
+                 NmoS[s]++;
+                 mem[s]++;
                  break;
                }
             }
             if( mf == true )
                break;
         } // end j
-    }
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+            if( mem[s] == NComp )
+               NmoS[s]--;  // don't count a moiety which is the same in all end members
+    } // m
     // Count the maximum number of minals L and the number of independent minals M
     // see (Aranovich, 1991 p.27)
-    long int L=1, M=-1, C=1, n;
+    long int L=1, M=-1, C=1, ns=0;
     for( s=0; s< NSub; s++ )
     {
+        if( NmoS[s] < 2L )
+           continue; // no reciprocal contribution from sublattices with one moiety
         L *= NmoS[s];
         M += NmoS[s];
+        ns++;   // counting how many sites have two or more different moieties
     }
     // Computing the number of choices by M from L
     C = choose( L, M );
@@ -1746,7 +1755,7 @@ void TBerman::alloc_internal()
     Nrc = 0;
 cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
-    if( NSub == 2 )
+    if( ns == 2 ) // NSub == 2 )
     {
        // Allocate memory for reciprocal reactions DeltaG and indexation
        DGrc = new double [NrcR];
@@ -2078,8 +2087,10 @@ double TBerman::PYproduct( const long int j )
 
     for(s = 0; s < NSub; s++)
     {
-       ys = ysigma( j, s );
-       pyp_j *= ys;
+        if( NmoS[s] < 2L )
+           continue; // no reciprocal contribution from sublattices with one moiety
+        ys = ysigma( j, s );
+        pyp_j *= ys;
     } // s
 // cout << "j=" << j << " pyp_j=" << pyp_j << endl;
     return pyp_j;
@@ -2105,7 +2116,7 @@ double TBerman::ysigma( const long int j, const long s )
 //
 double TBerman::dGref_dysigma( const long int j, const long int s, const long int ex_j )
 {
-    long int l, m;
+    long int l, m, nmem;
     double krond=0., ys, dst, dsum=0.;
     bool kron;
     for( l=0; l<NComp; l++ )
@@ -2115,6 +2126,9 @@ double TBerman::dGref_dysigma( const long int j, const long int s, const long in
        ys = 0.; kron = false;
        for( m=0; m < NMoi; m++ ) // Looking through moieties
        {
+          nmem = em_howmany( s, m );
+          if( nmem == NComp )
+              continue;  // ignoring the moiety which is present in all end members
           krond = KronDelta( j, s, m );
           if( krond != 0. )
           {
@@ -2175,35 +2189,51 @@ double TBerman::dGref_dysm( const long int s, const long m, const long int ex_j 
 // find index of end-member which has moiety m on site s
 // returns end-member index or -1 if no end member has this moiety
 // on this site
-long int TBerman::which_em( long int s, long int m )
+long int TBerman::em_which(const long int s, const long int m, const long int jb, const long int je )
 {
-    long int l, j=-1, jc=0;
+    long int l;
+    for( l=jb; l<=je; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+           return l;
+    }
+    return -1L;
+}
+
+// find and return the number of end-members that have the moiety m on site s
+//
+long int TBerman::em_howmany( long int s, long int m )
+{
+    long int l, jc=0;
     for( l=0; l<NComp; l++ )
     {
        if( mn[l][s][m] != 0 )
-       {
-           j = l; jc++;
-       }
+           jc++;
     }
-cout << "which em: s=" << s << " m=" << m << " j=" << j << " jc=" << jc << endl;
-    return j;
+    return jc;
 }
+
 
 // calculates ref.frame term (modified CEF, see eq 43)
 //
 double TBerman::RefFrameTerm( const long int j, const double G_ref )
 {
-    long int l, m, s;
+    long int l, m, s, nmem;
     double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
 
     sum_s = 0.;
-    for(s = 0; s < NSub; s++)  // sublattices
+    for( s = 0; s < NSub; s++ )  // sublattices
     {
+        if( NmoS[s] < 2L )
+            continue; // no reciprocal contribution from sublattices with one moiety
         dgr_dys = dGref_dysigma( j, s, -1L );
         sum_s += dgr_dys;
         sum_m = 0.;
         for( m=0; m < NMoi; m++ ) // Looking through moieties
         {
+            nmem = em_howmany( s, m );
+            if( nmem == NComp )
+                continue;  // ignoring the moiety which is present in all end members
 //           l = which_em( s, m );
 //           if( l < 0 )  // moiety m does not exist on site s
 //               continue;
@@ -2283,7 +2313,7 @@ cout << "G_ref= " << G_ref << endl;
 cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
      << " pyp=" << pyp[j] << endl;
     }
-    if( NSub != 2 )
+//    if( NSub != 2 )
         return 0;
 
     if( NSub == 2L && Nrc > 0 )
@@ -2305,7 +2335,8 @@ cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
          rcSum = DGrc[r];
          for(s = 0; s < NSub; s++)
          {
-
+             if( NmoS[s] < 2L )
+                continue; // no reciprocal contribution from sublattices with one moiety
              if( xm[s] < 0 )
                  continue;
              rcSum *= y[s][xm[s]];
