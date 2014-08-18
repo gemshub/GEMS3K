@@ -988,12 +988,12 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
                 mySM = (TSolMod*)myPT;
                 break;
         }
-    case SM_CEF:  // Non-ideal (multi-site) model (CALPHAD)
-    {
-            TCEFmod* myPT = new TCEFmod( &sd, pm.G0+jb );
-            mySM = (TSolMod*)myPT;
-            break;
-    }
+        case SM_CEF:  // Non-ideal (multi-site) model (CALPHAD)
+        {
+                TCEFmod* myPT = new TCEFmod( &sd, pm.G0+jb );
+                mySM = (TSolMod*)myPT;
+                break;
+        }
         case SM_IDEAL:
         {
                 TIdeal* myPT = new TIdeal( &sd );
@@ -1020,7 +1020,7 @@ void TMulti::SolModParPT( long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-    case SM_BERMAN:  case SM_CEF:
+        case SM_BERMAN:  case SM_CEF:  // new ss models
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models

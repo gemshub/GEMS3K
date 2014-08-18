@@ -1180,50 +1180,36 @@ class TBerman: public TSolMod
 
 
 // -------------------------------------------------------------------------------------
-/// CEF (Calphad) model for multi-component sublattice solid solutions.
-/// To be extended with reciprocal terms.
-/// References: Wood and Nicholls (1978); Berman and Brown (1993)
-/// (c) DK/TW December 2010, June 2011
+/// CEF (Calphad) model for multi-component sublattice solid solutions with reciprocal terms
+/// References: Sundman & Agren (1981); Lucas et al. (2006); Hillert (1998).
+/// (c) DK/SN since August 2014 (still to change the excess Gibbs energy terms).
 class TCEFmod: public TSolMod
 {
         private:
-                long int NrcR;   ///< max. possible number of reciprocal reactions (allocated)
-                long int Nrc;    ///< number of reciprocal reactions (actual)
-                long int *NmoS;  ///< number of different moieties (in end members) on each sublattice
-            long int ***XrcM;  ///< Table of indexes of end members, sublattices and moieties involved in
-                               ///< reciprocal reactions [NrecR][4][2], two left and two right side.
-                               ///< for each of 4 reaction components: j, mark, // s1, m1, s2, m2.
+                long int *NmoS;  ///< number of different moieties (in end members) on each sublattic
 
                 double *Wu;    ///< Interaction parameter coefficients a
                 double *Ws;    ///< Interaction parameter coefficients b (f(T))
                 double *Wv;    ///< Interaction parameter coefficients c (f(P))
                 double *Wpt;   ///< Interaction parameters corrected at P-T of interest
-            double **fjs;      ///< array of site activity coefficients for end members [NComp][NSub]
+                double **fjs;      ///< array of site activity coefficients for end members [NComp][NSub]
 
                 double *Grc;  ///< standard molar reciprocal energies (constant)
                 double *oGf;   ///< molar Gibbs energies of end-member compounds
                 double *G0f;   ///< standard molar Gibbs energies of end members (constant)
-            double *DGrc; ///< molar effects of reciprocal reactions [NrecR]
-            double *pyp;  ///< Products of site fractions for end members (CEF mod.) [NComp]
+                double *pyp;  ///< Products of site fractions for end members (CEF mod.) [NComp]
 //            double *pyn;  // Products of site fractions for sites not in the end member [NComp]
                 void alloc_internal();
                 void free_internal();
-                long int choose( const long int n, const long int k );
-                bool CheckThisReciprocalReaction( const long int r, const long int j, long int *xm );
-                long int CollectReciprocalReactions2( void );
-//                long int CollectReciprocalReactions3( void );
-                long int FindIdenticalSublatticeRow(const long int si, const long int ji, const long jp,
-                                                    const long int jb, const long int je );
-                                              //      long int &nsx, long int *sx, long int *mx );
                 long int ExcessPart();
                                ///< Arrays for ideal conf part must exist in base TSolMod instance
                 double PYproduct( const long int j );
                 long int em_which(const long int s, const long int m , const long int jb, const long int je);
                 long int em_howmany( long int s, long int m );
-                double ysigma( const long int j, const long int s );
+                double ysm( const long int j, const long int s );
                 double KronDelta( const long int j, const long int s, const long int m );
-                double dGref_dysigma(const long int l, const long int s, const long int ex_j );
-                double dGref_dysm( const long int s, const long m, const long int ex_j );
+                double dGref_dysigma(const long int l, const long int s );
+                double dGref_dysm( const long int s, const long m );
                 double RefFrameTerm( const long int j, double G_ref );
                 long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
 
