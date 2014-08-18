@@ -5,7 +5,7 @@
 /// Implementation of TSolMod derived classes
 /// for activity models of mixing in condensed (solid and liquid) phases
 ///  (TVanLaar, TRegular, TRedlichKister, TNRTL, TWilson, TMargulesTernary,
-///  TMargulesBinary, TGuggenheim, TIdeal multi-site, TBerman)
+///  TMargulesBinary, TGuggenheim, TIdeal multi-site, TBerman, TCEFmod)
 //
 // Copyright (c) 2007-2012  T.Wagner, D.Kulik, S.Dmitrieva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
@@ -2362,6 +2362,790 @@ bool TBerman::CheckThisReciprocalReaction( const long int r, const long int j, l
 /// between moieties on the same sublattice.
 /// (DK/TW June 2011)
 long int TBerman::ExcessPart()
+{
+    long int ip, sp, j, s, m, d, e, f;
+    double y0jsm, yWo, Qsm, Qy, ipo, lnGamRT, lnGam;
+
+    if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
+        || NPcoef < 3 || !x || !lnGamma )
+    {
+        for( j=0; j<NComp; j++)
+             lnGamEx[j] = 0.;
+        return 1;   // this is not a multi-site mixing model - bailing out
+    }
+    // Cleaning up the fjs array
+    for (j=0; j<NComp; j++)
+      for( s=0; s<NSub; s++)
+          fjs[j][s] =0.;
+
+    // calculating activity coefficients
+    for (j=0; j<NComp; j++)
+    {
+       lnGamRT = 0.;
+    // tables of site fractions and end-member multiplicities have been
+    // already prepared in the IdealMixing() - here we just use them
+       for( s=0; s<NSub; s++)
+       {
+          for( m=0; m<NMoi; m++)
+          {
+            // Retrieving the moiety occupancy number in end member y0_j,s,m
+            y0jsm = mn[j][s][m] / mns[s];
+            if( y0jsm <= 0. )
+               continue; // skip - this moiety is not present on s site in this end member
+
+            // looking through the parameters list
+            for (ip=0; ip<NPar; ip++)  // interaction parameters indexed with ip
+            {
+               sp = aIPx[MaxOrd*ip];
+               if( sp != s )
+                 continue;   // skip - this parameter refers to another sublattice
+
+               d = aIPx[MaxOrd*ip+1];
+               e = aIPx[MaxOrd*ip+2];
+               f = aIPx[MaxOrd*ip+3];
+
+               // Determining Q_sm
+               Qsm = 0.;
+               if( d == m )
+                   Qsm += 1.;
+               if( e == m )
+                   Qsm += 1.;
+
+               if( f < 0L )
+               {  ipo = 1.; // this is symmetric interaction parameter W_de,s - eq (5.2-5)
+                  yWo = y[s][d] * y[s][e] * Wpt[ip];
+               }
+               else { ipo = 2.; // this is asymmetric interaction parameter W_def,s - eq (5.2-6)
+                  if( f == m )
+                       Qsm += 1.;
+                  yWo = y[s][d] * y[s][e] * y[s][f] * Wpt[ip];
+               }
+               Qy = Qsm * y0jsm / y[s][m] - ipo;  // eq (5.2-3)
+               fjs[j][s] += y0jsm * yWo * Qy;   // fixed 29.06.2011 - was  fjs[j][s] += yWo * Qy;
+
+               // Attention - may still be a problem with the site multiplicity factor!
+               // also a problem with accounting of W_de or W_ed ( W_dee or W_eed )
+               // More research is needed!  DK 08.07.2011
+
+            }  // ip
+         } // m
+         lnGamRT += fjs[j][s];
+      } // s
+
+       lnGam = lnGamRT/(R_CONST*Tk);
+      lnGamEx[j] = lnGam;
+   } // j
+
+   return 0;
+
+}
+
+//=============================================================================================
+// CEF (Calphad) model for multi-component sublattice solid solutions extended with reciprocal terms
+// References: Sundman & Agren (1981); Lucas et al. (2006); Hillert (1998).
+// (c) DK/SN since August 2014 (still to change the excess Gibbs energy terms).
+//=============================================================================================
+
+// Generic constructor for the TCEFmod class
+TCEFmod::TCEFmod( SolutionData *sd, double *G0 ):
+                TSolMod( sd )
+{
+    alloc_internal();
+    G0f = G0;
+}
+
+TCEFmod::~TCEFmod()
+{
+    free_internal();
+}
+
+// n choose k  from http://stackoverflow.com/questions/15301885/calculate-value-of-n-choose-k
+long int TCEFmod::choose( const long n, const long k )
+{
+    if( k == 0 ) return 1;
+    return (n * choose(n - 1, k - 1)) / k;
+}
+
+void TCEFmod::alloc_internal()
+{
+    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
+    long int emx[4], si[4];  // pairwise recip. reactions; max 6 sublattices
+    double mnn;
+
+    if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
+    {
+        NrcR = Nrc = 0;
+        return;   // This is not a multi-site model or < 2 EMs or >6 sublattices
+    }
+
+    Wu = new double [NPar];
+    Ws = new double [NPar];
+    Wv = new double [NPar];
+    Wpt = new double [NPar];
+    NmoS = new long int [NSub];
+
+    fjs = new double *[NComp];
+    for( j=0; j<NComp; j++)
+    {
+       fjs[j] = new double[NSub];
+    }
+
+    pyp = new double [NComp];
+//    pyn = new double [NComp];
+    Grc = new double [NComp];
+    oGf =  new double [NComp];
+
+    // Count the number of different moieties on each sublattice
+    for( s=0; s< NSub; s++ ) // Cleaning
+       NmoS[s] = 0L;
+    for( m=0; m<NMoi; m++ ) // Looking through moieties
+    {
+        bool mf=false; long int mem[8];
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+           mem[s] = 0;
+        for( j=0; j<NComp; j++) // looking through end members
+        {
+            for( s=0; s< NSub; s++ ) // looking through sublattices
+            {
+               if( mn[j][s][m] != 0. )
+               {
+                 mf=true;
+                 NmoS[s]++;
+                 mem[s]++;
+                 break;
+               }
+            }
+            if( mf == true )
+               break;
+        } // end j
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+            if( mem[s] == NComp )
+               NmoS[s]--;  // don't count a moiety which is the same in all end members
+    } // m
+    // Count the maximum number of minals L and the number of independent minals M
+    // see (Aranovich, 1991 p.27)
+    long int L=1, M=-1, C=1, ns=0;
+    for( s=0; s< NSub; s++ )
+    {
+        if( NmoS[s] < 2L )
+           continue; // no reciprocal contribution from sublattices with one moiety
+        L *= NmoS[s];
+        M += NmoS[s];
+        ns++;   // counting how many sites have two or more different moieties
+    }
+    // Computing the number of choices by M from L
+    C = choose( L, M );
+    NrcR = C; // maximum possible number of reciprocal reactions
+    Nrc = 0;
+cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
+
+    if( ns == 2 ) // NSub == 2 )
+    {
+       // Allocate memory for reciprocal reactions DeltaG and indexation
+       DGrc = new double [NrcR];
+       XrcM = new long int **[NrcR];
+       for(r=0; r<NrcR; r++)
+       {
+          XrcM[r]   = new long int *[4];
+          for(s=0; s<4; s++)
+          {
+             XrcM[r][s] = new long int [2];
+          }
+       }
+       // initializing arrays
+       for(r=0; r<NrcR; r++)
+           DGrc[r] = 0.;
+       for( r=0; r<NrcR; r++)
+           for( em=0; em<4; em++)
+              for( s=0; s<2; s++)
+                 XrcM[r][em][s] = -1;
+
+       Nrc = CollectReciprocalReactions2();
+    }
+cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
+}
+
+// Collects indexes of end members involved in reciprocal reactions (2 sublattices case)
+// as well as indexes of sublattices and substituted moieties on them.
+// Returns the total number of reciprocal reactions actually found in this system.
+long int TCEFmod::CollectReciprocalReactions2( void )
+{
+    long int rn = 0, jb1, jb2, jb3;    // max 3 sublattices
+    long int jf0, jf1, jf2, jf3, s0=0, s1=0, s2=1, s3=1;
+
+    for( jf0=0; jf0<NComp; jf0++ ) // looking through all end members
+    {
+        // Is there any other end member with the same moieties on s2-th sublattice?
+        jb2 = 0;
+        while( jb2 < NComp )
+        {
+            jf2 = FindIdenticalSublatticeRow( s2, jf0, jf0, jb2, NComp );
+            if( jf2 < 0 )
+                break; // no suitable end members found
+            // found another end member involved on the right side
+            jb1 = 0;
+            while( jb1 < NComp )
+            {
+               jf1 = FindIdenticalSublatticeRow( s1, jf2, jf0, jb1, NComp );
+               if( jf1 < 0 )
+                      break; // no suitable end members found
+               jb3 = 0;
+               while( jb3 < NComp )
+               {
+                  jf3 = FindIdenticalSublatticeRow( s3, jf1, jf0, jb3, NComp);
+                  if( jf3 < 0 )
+                      break; // no suitable end members found
+                  XrcM[rn][0][0] = jf0; XrcM[rn][0][1] = s0;
+                  XrcM[rn][2][0] = jf2; XrcM[rn][2][1] = s2;
+                  XrcM[rn][1][0] = jf1; XrcM[rn][1][1] = s1;
+                  XrcM[rn][3][0] = jf3; XrcM[rn][3][1] = s3;
+cout << "rn=" << rn << " | j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
+                  << "  j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
+                  << "  j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
+                  << "  j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
+                  rn++;  // next reaction
+                  if( rn > NrcR )
+                  { return rn-1; } // indexation error
+                  jb3 = jf3+1;
+               }   // while jb3
+               jb1 = jf1+1;
+            } // while jb1
+            jb2 = jf2+1;
+        }   // while jb2
+    } // for j0
+//    Nrc = rn;
+    return rn;  // actual number of processed reciprocal reactions
+}
+
+// Looks for an identical row for the sublattice si in end member ji skipping end member ji
+// and (another) end member jp among other end members in the interval of end-member indexes
+// from jb until je.
+// Returns the index of end member in which the identical moieties on this sublattice exists,
+// or -1L otherwise (in which case the ji-th end member is not involved in any reciprocal reaction).
+long int TCEFmod::FindIdenticalSublatticeRow(const long si, const long ji,
+                                             const long jp, const long jb, const long je )
+{
+    long int m, j;
+    bool match=true;
+
+    for( j = jb; j < je; j++ )
+    {
+       if( j == ji || j == jp )
+         continue;
+       match = true;
+       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          if( mn[ji][si][m] == mn[j][si][m] )
+              continue;
+          match = false;
+          break;
+       }
+       if(!match)
+           continue;  // this site  row in j-th end member does not fit
+       return j;      // match found
+    }
+    return -1L; // no matching end-member/sublattice row was found
+}
+
+void TCEFmod::free_internal()
+{
+    long int j,r,s;
+
+    delete[]Wu;
+    delete[]Ws;
+    delete[]Wv;
+    delete[]Wpt;
+
+    for( j=0; j<NComp; j++)
+    {
+       delete[]fjs[j];
+    }
+    delete[]fjs;
+
+    delete[]Grc;
+    delete[]oGf;
+    delete[]NmoS;
+    delete[]pyp;
+//    delete[]pyn;
+
+    if( NSub == 2 )
+    {
+        delete[]DGrc;
+        for(r=0; r<NrcR; r++)
+        {
+            for(s=0; s<4; s++)
+            {
+                delete[]XrcM[r][s];
+            }
+        }
+        for(r=0; r<NrcR; r++)
+        {
+           delete[]XrcM[r];
+        }
+        delete[]XrcM;
+    }
+}
+
+
+/// Calculates T-corrected interaction parameters
+long int TCEFmod::PTparam( )
+{
+    long int ip, j, r, j0, j1, j2, j3;
+
+    if ( NPcoef < 3 || NPar < 1 )
+               return 1;
+
+    for (ip=0; ip<NPar; ip++)  // interaction parameters
+    {
+        Wu[ip] = aIPc[NPcoef*ip];
+        Ws[ip] = aIPc[NPcoef*ip+1];
+        Wv[ip] = aIPc[NPcoef*ip+2];
+        Wpt[ip] = Wu[ip] - Ws[ip]*Tk + Wv[ip]*Pbar;  // This minus is a future problem...
+        aIP[ip] = Wpt[ip];
+    }
+
+    if( NrcPpc > 0 && rcpcf != NULL )
+    {
+// cout << "NrcPpc=" << NrcPpc << endl;
+        for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
+        {
+// cout << " j=";
+            Grc[j] = rcpcf[NrcPpc*j];
+// cout << " rcpcf[j][0]=" << rcpcf[NrcPpc*j];
+            if(NrcPpc > 1)
+            {
+                Grc[j] += rcpcf[NrcPpc*j+1]/Tk;
+// cout << " rcpcf[j][1]=" << rcpcf[NrcPpc*j+1];
+            }
+            if(NrcPpc > 2)
+            {
+                Grc[j] += rcpcf[NrcPpc*j+2]*Tk*Tk;
+// cout << " rcpcf[j][2]=" << rcpcf[NrcPpc*j+2];
+            } // in J/mol iGrc[j] = a + b/T + c*T^2  ;
+// cout << " Grc[j]=" << Grc[j] << " G0f[j]=" << G0f[j];
+           oGf[j] = G0f[j] += Grc[j]/(R_CONST*Tk); // normalized
+// cout << " | oGf[j]=" << oGf[j] << endl;
+        }
+    }
+    else { // no separate reciprocal free energy terms provided
+cout << "NP_DC=" << NP_DC << endl;
+        for (j=0; j<NComp; j++)
+        {
+cout << " j=" << j;
+            if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
+           {
+                aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
+cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
+           }
+           Grc[j] = 0.;  // in J/mol
+           oGf[j] = G0f[j]+aGEX[j]; // normalized
+cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
+        }
+    }
+    if( !Nrc )
+      return 0;
+    // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
+    double dGrc; long int i;
+    for( r=0; r< Nrc; r++ ) // looking through reactions
+    {
+       j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
+       dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
+cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
+       DGrc[r] = dGrc;  // normalized!
+    }
+    return 0;
+}
+
+
+// Calculates ideal config. term and activity coefficients
+long int TCEFmod::MixMod()
+{
+    long int retCode, j;
+    retCode = IdealMixing();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++)
+           lnGamma[j] += lnGamConf[j];
+    }
+
+    retCode = ReciprocalPart();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++)
+           lnGamma[j] += lnGamRecip[j];
+    }
+
+    retCode = ExcessPart();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++)
+           lnGamma[j] += lnGamEx[j];
+    }
+
+    return 0;
+}
+
+
+// calculates bulk phase excess properties - to be done yet!
+long int TCEFmod::ExcessProp( double *Zex )
+{
+
+    // check and add calculation of excess properties here
+    long int ip, i1, i2;
+    double g, v, s, u;
+
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
+
+    // calculate bulk phase excess properties
+    g = 0.0; s = 0.0; v = 0.0; u = 0.0;
+
+    for (ip=0; ip<NPar; ip++)
+    {
+            i1 = aIPx[MaxOrd*ip];
+            i2 = aIPx[MaxOrd*ip+1];
+            g += x[i1]*x[i2]*Wpt[ip];
+            v += x[i1]*x[i2]*Wv[ip];
+            u += x[i1]*x[i2]*Wu[ip];
+            s -= x[i1]*x[i2]*Ws[ip];
+    }
+
+    Gex = g;
+    Sex = s;
+    CPex = 0.0;
+    Vex = v;
+    Uex = u;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
+
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
+
+    return 0;
+}
+
+
+// calculates ideal mixing properties
+long int TCEFmod::IdealProp( double *Zid )
+{
+        Hid = 0.0;
+        CPid = 0.0;
+        Vid = 0.0;
+        Sid = ideal_conf_entropy();
+        Gid = Hid - Sid*Tk;
+        Aid = Gid - Vid*Pbar;
+        Uid = Hid - Vid*Pbar;
+
+        // assignments (ideal mixing properties)
+        Zid[0] = Gid;
+        Zid[1] = Hid;
+        Zid[2] = Sid;
+        Zid[3] = CPid;
+        Zid[4] = Vid;
+        Zid[5] = Aid;
+        Zid[6] = Uid;
+
+        return 0;
+}
+
+double TCEFmod::KronDelta( const long int j, const long s, const long m )
+{
+    double krond = 0.;
+    if( mn[j][s][m] != 0 )
+       krond = 1.;
+    return krond;
+}
+
+// CEF calculations - computing pyp[j] (product of site fractions for j-th end member) eq 42
+double TCEFmod::PYproduct( const long int j )
+{
+    double pyp_j = 1., ys;
+    long int s, m;
+
+    for(s = 0; s < NSub; s++)
+    {
+        if( NmoS[s] < 2L )
+           continue; // no reciprocal contribution from sublattices with one moiety
+        ys = ysigma( j, s );
+        pyp_j *= ys;
+    } // s
+// cout << "j=" << j << " pyp_j=" << pyp_j << endl;
+    return pyp_j;
+}
+
+// calculates y_sigma(j,s) see eq 42
+//
+double TCEFmod::ysigma( const long int j, const long s )
+{
+    long int m;
+    double ys = 0.;
+    for( m=0; m < NMoi; m++ ) // Looking through moieties
+    {
+       if( mn[j][s][m] != 0. ) // This site is occupied in j-th end member
+           ys += mn[j][s][m] * y[s][m];
+    }
+    if( ys > 0. )
+       ys /= mns[s];
+    return ys;
+}
+
+// calculates dGref/d_ysigma, eq 45
+//
+double TCEFmod::dGref_dysigma( const long int j, const long int s, const long int ex_j )
+{
+    long int l, m, nmem;
+    double krond=0., ys, dst, dsum=0.;
+    bool kron;
+    for( l=0; l<NComp; l++ )
+    {
+       if( l == ex_j )   // this end member is marked to be skipped
+           continue;
+       ys = 0.; kron = false;
+       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          nmem = em_howmany( s, m );
+          if( nmem == NComp )
+              continue;  // ignoring the moiety which is present in all end members
+          krond = KronDelta( j, s, m );
+          if( krond != 0. )
+          {
+              ys += mn[l][s][m] * y[s][m];
+              kron = true;
+          }
+       } // m
+       if( kron == false )
+           continue;  // no moieties belonging to l-th end member found in this sublattice
+       if( ys > 0. )
+       {
+           ys /= mns[s];
+           dst = oGf[l] * ( pyp[l] / ys );
+           dsum += dst;
+       }
+    } // l
+    return dsum;
+}
+
+// Temporary: calculates dGref/d_ysm, eq 46
+double TCEFmod::dGref_dysm( const long int s, const long m, const long int ex_j )
+{
+    long int l;
+    double krond=0., ys, dst, dsum=0.;
+    bool kron;
+    for( l=0; l<NComp; l++ )
+    {
+       if( l == ex_j )   // this end member is marked to be skipped
+           continue;
+       ys = 0.; kron = false;
+       krond = KronDelta( l, s, m );
+       if( krond != 0. )
+       {
+           ys = y[s][m];
+           kron = true;
+       }
+/*       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          krond = KronDelta( l, s, m );  // j ?
+          if( krond != 0. )
+          {
+              ys += mn[l][s][m] * y[s][m];
+              kron = true;
+          }
+       } // m
+*/     if( kron == false )
+           continue;  // no moieties belonging to l-th end member found in this sublattice
+       if( ys != 0. )
+       {
+//           ys /= mns[s];
+           dst = oGf[l] * ( pyp[l] / ys );
+           dsum += dst;
+       }
+    } // l
+    return dsum;
+}
+
+// find index of end-member which has moiety m on site s
+// returns end-member index or -1 if no end member has this moiety
+// on this site
+long int TCEFmod::em_which(const long int s, const long int m, const long int jb, const long int je )
+{
+    long int l;
+    for( l=jb; l<=je; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+           return l;
+    }
+    return -1L;
+}
+
+// find and return the number of end-members that have the moiety m on site s
+//
+long int TCEFmod::em_howmany( long int s, long int m )
+{
+    long int l, jc=0;
+    for( l=0; l<NComp; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+           jc++;
+    }
+    return jc;
+}
+
+
+// calculates ref.frame term (modified CEF, see eq 43)
+//
+double TCEFmod::RefFrameTerm( const long int j, const double G_ref )
+{
+    long int l, m, s, nmem;
+    double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
+
+    sum_s = 0.;
+    for( s = 0; s < NSub; s++ )  // sublattices
+    {
+        if( NmoS[s] < 2L )
+            continue; // no reciprocal contribution from sublattices with one moiety
+        dgr_dys = dGref_dysigma( j, s, -1L );
+        sum_s += dgr_dys;
+        sum_m = 0.;
+        for( m=0; m < NMoi; m++ ) // Looking through moieties
+        {
+            nmem = em_howmany( s, m );
+            if( nmem == NComp )
+                continue;  // ignoring the moiety which is present in all end members
+//           l = which_em( s, m );
+//           if( l < 0 )  // moiety m does not exist on site s
+//               continue;
+//           if( l == j )    // not sure
+//               continue;
+//           ys = ysigma( l, s );
+           ys = y[s][m];
+           dgr_dys = dGref_dysm( s, m, -1L );
+           ydp = ys * dgr_dys;
+           sum_m += ydp;
+        } // m
+        sum_s -= sum_m;
+    } // s
+    reftj = G_ref + sum_s;
+    return reftj;
+}
+/* // This is to experiment with end members with >1 moiety per site
+double TCEFmod::RefFrameTerm( const long int j, const double G_ref )
+{
+    long int l, s;
+    double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
+
+    sum_s = 0.;
+    for(s = 0; s < NSub; s++)  // sublattices
+    {
+        dgr_dys = dGref_dysigma( j, s, -1L );
+        sum_s += dgr_dys;
+        sum_m = 0.;
+        for( l=0; l<NComp; l++ )
+        {
+           if( l == j )    // not sure
+              continue;
+           ys = ysigma( l, s );
+           dgr_dys = dGref_dysigma( l, s, -1L ); // j
+           ydp = ys * dgr_dys;
+           sum_m += ydp;
+        }  // l
+        sum_s -= sum_m;
+    } // s
+    reftj = G_ref + sum_s;
+    return reftj;
+}
+*/
+// calculates part of activity coefficients related to reciprocal energies.
+// (interactions between moieties on different sublattices)
+// For 2 sublattices also using reciprocal reactions
+long int TCEFmod::ReciprocalPart()
+{
+    long int j, r, s, m;
+    long int xm[4];  // max 4 sublattices
+    bool skip;
+    double rcSum, rft, yss, ysn;
+
+    for( j=0; j<NComp; j++)
+         lnGamRecip[j] = 0.;
+    if( NSub == 0L || NMoi == 0L )
+        return 1;   // this is not a multi-site model - bailing out
+    if ( NSub > 6L )
+        return 2;  //  too many sublattices - bailing out
+    // Tables of site fractions y and end-member multiplicities mn, mns have been
+    // already calculated in the IdealMixing() - here we just use them.
+
+    // CEF calculations - computing pyp[j] (site fraction products for end members) eq 42
+    // and G_ref - total reference Gibbs energy
+    double G_ref=0.;
+    for( j=0; j<NComp; j++)
+    {
+        pyp[j] = PYproduct( j );
+        G_ref += pyp[j] * oGf[j];
+    }
+cout << "G_ref= " << G_ref << endl;
+    // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
+    for( j=0; j<NComp; j++)
+    {
+       rft = RefFrameTerm( j, G_ref );
+       lnGamRecip[j] = rft - oGf[j];
+cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
+     << " pyp=" << pyp[j] << endl;
+    }
+//    if( NSub != 2 )
+        return 0;
+
+    if( NSub == 2L && Nrc > 0 )
+    {  // using reciprocal reactions for 2-site case
+        // We use DGrc - normamized G effects of reciprocal reactions
+        // and XrcM - the array of indexes of end members involved in recip. reactions
+
+    for( j=0; j<NComp; j++)
+    {
+      lnGamRecip[j] = 0.;
+      for( r=0; r< Nrc; r++)
+      {
+         // summation of DeltaGrc contributions,
+         // skipping those that involve the moieties in this EM
+         // also identify moieties on sublattices of this minal (EM)
+         skip = CheckThisReciprocalReaction( r, j, xm );
+         if( skip )
+             continue;
+         rcSum = DGrc[r];
+         for(s = 0; s < NSub; s++)
+         {
+             if( NmoS[s] < 2L )
+                continue; // no reciprocal contribution from sublattices with one moiety
+             if( xm[s] < 0 )
+                 continue;
+             rcSum *= y[s][xm[s]];
+         }
+         lnGamRecip[j] -= rcSum;
+      }  // r
+cout << " GexRc=" << lnGamRecip[j] << endl;
+    }  // j
+    }
+    return 0;
+}
+
+// Checks if this reaction (index r) should be skipped from summation of reciprocal
+// reaction excess energy terms for the end member with index j
+// Returns in xm the moiety indexes for each sublattice for picking up their site fractions
+// (max. 4 sublattices can be considered)
+bool TCEFmod::CheckThisReciprocalReaction( const long int r, const long int j, long int *xm )
+{
+    return true; // this reaction to be skipped
+}
+
+/// calculates part of activity coefficients related to interaction energies
+/// between moieties on the same sublattice.
+/// (DK/TW June 2011)
+long int TCEFmod::ExcessPart()
 {
     long int ip, sp, j, s, m, d, e, f;
     double y0jsm, yWo, Qsm, Qy, ipo, lnGamRT, lnGam;
