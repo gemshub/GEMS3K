@@ -7,7 +7,7 @@
 ///  (TVanLaar, TRegular, TRedlichKister, TNRTL, TWilson, TMargulesTernary,
 ///  TMargulesBinary, TGuggenheim, TIdeal multi-site, TBerman, TCEFmod)
 //
-// Copyright (c) 2007-2012  T.Wagner, D.Kulik, S.Dmitrieva
+// Copyright (c) 2007-2014  T.Wagner, D.Kulik, S.Dmitrieva
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -1753,7 +1753,7 @@ void TBerman::alloc_internal()
     C = choose( L, M );
     NrcR = C; // maximum possible number of reciprocal reactions
     Nrc = 0;
-cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
+// cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
     if( ns == 2 ) // NSub == 2 )
     {
@@ -1778,7 +1778,7 @@ cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << en
 
        Nrc = CollectReciprocalReactions2();
     }
-cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
+// cout << "Nrc=" << Nrc << " NrcR= " << NrcR << endl;
 }
 
 // Collects indexes of end members involved in reciprocal reactions (2 sublattices case)
@@ -1815,10 +1815,10 @@ long int TBerman::CollectReciprocalReactions2( void )
                   XrcM[rn][2][0] = jf2; XrcM[rn][2][1] = s2;
                   XrcM[rn][1][0] = jf1; XrcM[rn][1][1] = s1;
                   XrcM[rn][3][0] = jf3; XrcM[rn][3][1] = s3;
-cout << "rn=" << rn << " | j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
-                  << "  j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
-                  << "  j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
-                  << "  j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
+// cout << "rn=" << rn << " | j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
+//                  << "  j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
+//                  << "  j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
+//                  << "  j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
                   rn++;  // next reaction
                   if( rn > NrcR )
                   { return rn-1; } // indexation error
@@ -1944,18 +1944,18 @@ long int TBerman::PTparam( )
         }
     }
     else { // no separate reciprocal free energy terms provided
-cout << "NP_DC=" << NP_DC << endl;
+// cout << "NP_DC=" << NP_DC << endl;
         for (j=0; j<NComp; j++)
         {
-cout << " j=" << j;
+// cout << " j=" << j;
             if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
            {
                 aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
-cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
+// cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
            }
            Grc[j] = 0.;  // in J/mol
            oGf[j] = G0f[j]+aGEX[j]; // normalized
-cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
+// cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
         }
     }
     if( !Nrc )
@@ -1966,7 +1966,7 @@ cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
     {
        j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
        dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
-cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
+// cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
        DGrc[r] = dGrc;  // normalized!
     }
     return 0;
@@ -1977,6 +1977,7 @@ cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1]
 long int TBerman::MixMod()
 {
     long int retCode, j;
+
     retCode = IdealMixing();
     if(!retCode)
     {
@@ -1998,7 +1999,7 @@ long int TBerman::MixMod()
            lnGamma[j] += lnGamEx[j];
     }
 
-    return 0;
+    return retCode;
 }
 
 
@@ -2137,7 +2138,8 @@ double TBerman::dGref_dysigma( const long int j, const long int s, const long in
           }
        } // m
        if( kron == false )
-           continue;  // no moieties belonging to l-th end member found in this sublattice
+           continue;  // no moieties belonging to l-th end member that are also
+                      // present in j-th end member found in this sublattice
        if( ys > 0. )
        {
            ys /= mns[s];
@@ -2148,7 +2150,8 @@ double TBerman::dGref_dysigma( const long int j, const long int s, const long in
     return dsum;
 }
 
-// Temporary: calculates dGref/d_ysm, eq 46
+// Temporary: calculates dGref/d_ysm, eq 46 (needs consideration for general case)
+//
 double TBerman::dGref_dysm( const long int s, const long m, const long int ex_j )
 {
     long int l;
@@ -2212,7 +2215,6 @@ long int TBerman::em_howmany( long int s, long int m )
     }
     return jc;
 }
-
 
 // calculates ref.frame term (modified CEF, see eq 43)
 //
@@ -2304,14 +2306,14 @@ long int TBerman::ReciprocalPart()
         pyp[j] = PYproduct( j );
         G_ref += pyp[j] * oGf[j];
     }
-cout << "G_ref= " << G_ref << endl;
+// cout << "G_ref= " << G_ref << endl;
     // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
     for( j=0; j<NComp; j++)
     {
        rft = RefFrameTerm( j, G_ref );
        lnGamRecip[j] = rft - oGf[j];
-cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
-     << " pyp=" << pyp[j] << endl;
+// cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
+//     << " pyp=" << pyp[j] << endl;
     }
 //    if( NSub != 2 )
         return 0;
@@ -2577,18 +2579,18 @@ long int TCEFmod::PTparam( )
         }
     }
     else { // no separate reciprocal free energy terms provided
-cout << "NP_DC=" << NP_DC << endl;
+// cout << "NP_DC=" << NP_DC << endl;
         for (j=0; j<NComp; j++)
         {
-cout << " j=" << j;
+// cout << " j=" << j;
             if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
            {
                 aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
-cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
+// cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
            }
            Grc[j] = 0.;  // in J/mol
            oGf[j] = G0f[j]+aGEX[j]; // normalized
-cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
+// cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
         }
     }
     return 0;
@@ -2599,6 +2601,7 @@ cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
 long int TCEFmod::MixMod()
 {
     long int retCode, j;
+
     retCode = IdealMixing();
     if(!retCode)
     {
@@ -2620,7 +2623,7 @@ long int TCEFmod::MixMod()
            lnGamma[j] += lnGamEx[j];
     }
 
-    return 0;
+    return retCode;
 }
 
 
@@ -2711,7 +2714,7 @@ double TCEFmod::PYproduct( const long int j )
     for(s = 0; s < NSub; s++)
     {
         if( NmoS[s] < 2L )
-           continue; // no reciprocal contribution from sublattices with one moiety e.g. no substitution
+           continue; // no reciprocal contribution from sublattices with one moiety - no substitution
         ys = ysm( j, s );
         pyp_j *= ys;
     } // s
@@ -2877,14 +2880,14 @@ long int TCEFmod::ReciprocalPart()
         pyp[j] = PYproduct( j );
         G_ref += pyp[j] * oGf[j];
     }
-cout << "G_ref= " << G_ref << endl;
+// cout << "G_ref= " << G_ref << endl;
     // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
     for( j=0; j<NComp; j++)
     {
        rft = RefFrameTerm( j, G_ref );
        lnGamRecip[j] = rft - oGf[j];
-cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
-     << " pyp=" << pyp[j] << endl;
+// cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
+//     << " pyp=" << pyp[j] << endl;
     }
 //    if( NSub != 2 )
         return 0;
