@@ -9,7 +9,7 @@
 // TNode class implements a  simple C/C++ interface between GEMS3K
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik + (c) 2014 A.Yapparova
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -30,6 +30,8 @@
 //-------------------------------------------------------------------
 
 #include "main.h"
+#include <time.h>
+time_t start,end;
 
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
@@ -159,14 +161,15 @@ int main( int argc, char* argv[] )
     cout << "xCa= " << ICndx[0] << " xC=" << ICndx[1] << " xO=" << ICndx[2] << " xMg="
          << ICndx[3] << " xCl=" << ICndx[4] << endl << " xCalcite=" << xCalcite
          << " xDolomite=" << xDolomite << " xAq_gen=" << xAq_gen << endl << endl;
-    double stoich[5] = { 0., 0., 0., 1., 2. }; // defines what is 'transported'
+
+    time (&start);
 
     long int it;
     for( it=0; it< mt.nTimes; it++ )
     {
        cout << "Time step  " << it;
        // Mass transport loop over nodes (not a real transport model)
-       mt.OneTimeStepRun( stoich, ICndx, 5 );
+       mt.OneTimeStepRun( ICndx, 5 );
 
        cout << "Node\tAq\tpH\tCalcite\tDolomite\tCa\tMg\tCl" << endl;
 
@@ -175,6 +178,7 @@ int main( int argc, char* argv[] )
        {
           mt.aNodeHandle[in] = in;
           mt.aNodeStatusCH[in] = NEED_GEM_SIA;
+          // mt.aNodeStatusCH[in] = NEED_GEM_AIA;
           // (8) Setting input data for GEM IPM to use available node speciation as
           // initial approximation
           node->GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
@@ -217,6 +221,9 @@ int main( int argc, char* argv[] )
       }
    }
    // Calculations finished - end time reached
+    time (&end);
+    double dif = difftime (end,start);
+    printf ("Elasped time is %.2lf seconds.", dif );
 
    // Final output e.g. of total simulation time or of the final distribution of
    //  components and phases in all nodes can be implemented here
@@ -346,8 +353,11 @@ TMyTransport::~TMyTransport()
     delete[]aEh;
 }
 
-// A very simple example of transport algorithm
-void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nICndx )
+// A very simple example of finite difference transport algorithm
+// Contributed on 22.08.2014 by Alina Yapparova, Chair of Reservoir Engineering,
+// Montanuniveritaet Leoben, Austria
+//
+void TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
 {
     double column_length  = 0.5; // [m]
     double dx = column_length/(nNodes-1);
@@ -381,4 +391,4 @@ void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nIC
 }
 
 //---------------------------------------------------------------------------
-// end of main.cpp for node class usage example
+// end of main.cpp for the node-gem (TNode-level usage) coupled-code example
