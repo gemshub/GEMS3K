@@ -330,7 +330,7 @@ double
   // TSolMod stuff (detailed output on partial energies of mixing)
   double *lnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
   double *lnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
-  double *lnEXt;  ///< new: excess energy terms adding to overall activity coefficients [Ls_]
+  double *lnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
   double *lnCnft; ///< new: configurational terms adding to overall activity [Ls_]
   // TSorpMod stuff
   double *lnScalT;  ///< new: Surface/volume scaling activity correction terms [Ls_]

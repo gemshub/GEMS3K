@@ -777,6 +777,12 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     sd.arDCc = pm.DMc+jdb;   // End-member parameter coefficients f(TPX) -> NComp x NP_DC
     sd.arWx = pm.Wx+jb;       // End member mole fractions
     sd.arlnGam = pm.lnGam+jb; // End member ln activity coeffs
+
+    sd.arlnDQFt = pm.lnDQFt+jb; // End member ln activity coeffs
+    sd.arlnRcpt = pm.lnRcpt+jb; // End member ln activity coeffs
+    sd.arlnExet = pm.lnExet+jb; // End member ln activity coeffs
+    sd.arlnCnft = pm.lnCnft+jb; // End member ln activity coeffs
+
     sd.aphVOL = pm.FVOL+k;
     sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
     sd.arMoiSN = pm.MoiSN+jmb;  // Pointer to sublattice-moiety multiplicity array

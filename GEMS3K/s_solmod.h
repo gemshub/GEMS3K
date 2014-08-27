@@ -43,7 +43,8 @@ enum fluid_mix_rules {  /// codes for mixing rules in EoS models (see m_phase.h)
     MR_KW1_ = 'K',
     MR_PITZ5_ = '5',
     MR_PITZ6_ = '6',
-    MR_PITZ8_ = '8'
+    MR_PITZ8_ = '8',
+    MR_B_RCPT_ = 'R'
 };
 
 enum dc_class_codes {  /// codes for fluid types in EoS models (see v_mod.h)
@@ -100,7 +101,7 @@ struct SolutionData {
     double *arDCc;      ///< End-member properties coefficients
     double *arMoiSN;    ///< End member moiety- site multiplicity number tables -> NSpecies x NSublat x NMoiet
     double *arSitFr;    ///< Tables of sublattice site fractions for moieties -> NSublat x NMoiet
-    double *arSitFj; ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
+    double *arSitFj;    ///< new: Table of end member sublattice activity coefficients -> NSpecies x NSublat
     double *arGEX;      ///< Pure-species fugacities, G0 increment terms  -> NSpecies
 
 //    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
@@ -109,7 +110,14 @@ struct SolutionData {
 
     double *arPparc;    ///< Partial pressures -> NSpecies
     double *arWx;       ///< Species (end member) mole fractions ->NSpecies
-    double *arlnGam;    ///< Output: activity coefficients of species (end members)
+    double *arlnGam;    ///< Output: activity coefficients of species (end members)   
+
+    // Detailed output on terms of partial end-member properties, allocated in MULTI
+    double *arlnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
+    double *arlnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
+    double *arlnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
+    double *arlnCnft; ///< new: configurational terms adding to overall activity [Ls_]
+
     double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
     double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
     double T_k;         ///< Temperature, K (initial)

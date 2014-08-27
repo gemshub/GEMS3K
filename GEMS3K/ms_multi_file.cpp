@@ -452,7 +452,7 @@ pm.GamFs = 0;
         pm.rcpc   = 0;
         pm.lnDQFt   = 0;
         pm.lnRcpt   = 0;
-        pm.lnEXt   = 0;
+        pm.lnExet   = 0;
         pm.lnCnft   = 0;
 //TSorpMod & TKinMet stuff
         pm.SorMc   = 0;
@@ -705,7 +705,7 @@ ff.writeArray((double*)pm.D, MST*MST);
        ff.writeArray(pm.lPhc, lPhcSum);
        ff.writeArray(  pm.lnDQFt, pm.Ls);
        ff.writeArray(  pm.lnRcpt, pm.Ls);
-       ff.writeArray(  pm.lnEXt, pm.Ls);
+       ff.writeArray(  pm.lnExet, pm.Ls);
        ff.writeArray(  pm.lnCnft, pm.Ls);
        ff.writeArray( pm.SorMc, pm.FIs*16 );
 
@@ -1019,7 +1019,7 @@ ff.readArray((double*)pm.D, MST*MST);
 
        ff.readArray(  pm.lnDQFt, pm.Ls);
        ff.readArray(  pm.lnRcpt, pm.Ls);
-       ff.readArray(  pm.lnEXt, pm.Ls);
+       ff.readArray(  pm.lnExet, pm.Ls);
        ff.readArray(  pm.lnCnft, pm.Ls);
        ff.readArray( pm.SorMc, pm.FIs*16 );
 
@@ -1653,12 +1653,12 @@ else
     pm.rcpc   = 0;
     pm.lnDQFt   = new double[pm.Ls];
     pm.lnRcpt   = new double[pm.Ls];
-    pm.lnEXt   = new double[pm.Ls];
+    pm.lnExet   = new double[pm.Ls];
     pm.lnCnft   = new double[pm.Ls];
     for( ii=0; ii<pm.Ls; ii++ )
     {    pm.lnDQFt[ii] =0.;
         pm.lnRcpt[ii] =0.;
-        pm.lnEXt[ii] =0.;
+        pm.lnExet[ii] =0.;
         pm.lnCnft[ii] =0.;
      }
 //TSorpMod & TKinMet stuff
@@ -1744,7 +1744,7 @@ else
     pm.rcpc   = 0;
     pm.lnDQFt   = 0;
     pm.lnRcpt   = 0;
-    pm.lnEXt   = 0;
+    pm.lnExet   = 0;
     pm.lnCnft   = 0;
 //TSorpMod & TKinMet stuff
     pm.SorMc   = 0;
@@ -1969,7 +1969,7 @@ if( pm.D ) delete[] pm.D;
     // TSolMod stuff
     if(pm.lnDQFt) delete[] pm.lnDQFt;
     if(pm.lnRcpt) delete[] pm.lnRcpt;
-    if(pm.lnEXt) delete[] pm.lnEXt;
+    if(pm.lnExet) delete[] pm.lnExet;
     if(pm.lnCnft) delete[] pm.lnCnft;
     //TSorpMod & TKinMet stuff
     if(pm.SorMc) delete[] pm.SorMc;
@@ -2218,7 +2218,7 @@ void TMulti::to_text_file( const char *path, bool append )
 
       prar.writeArray(  "lnDQFt", pm.lnDQFt, pm.Ls);
       prar.writeArray(  "lnRcpt", pm.lnRcpt, pm.Ls);
-      prar.writeArray(  "lnEXt", pm.lnEXt, pm.Ls);
+      prar.writeArray(  "lnExet", pm.lnExet, pm.Ls);
       prar.writeArray(  "lnCnft", pm.lnCnft, pm.Ls);
 
       prar.writeArray(  "SorMc", pm.SorMc, pm.FIs*16, 16L);

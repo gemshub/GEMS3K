@@ -75,9 +75,10 @@ TSolMod::TSolMod( SolutionData *sd ):
     phVOL = sd->aphVOL;
     aVol = sd->arVol;
     lnGamma = sd->arlnGam;
-    lnGamConf = new double[NComp];
-    lnGamRecip = new double[NComp];
-    lnGamEx = new double[NComp];  // Work arrays for lnGamma components - should we zero off?
+    lnGamConf = sd->arlnCnft;  // new double[NComp];
+    lnGamRecip = sd->arlnRcpt; // new double[NComp];
+    lnGamEx = sd->arlnExet;    // new double[NComp];
+   // Arrays for lnGamma components - should we zero off?
     for (long int i=0; i<NComp; i++)
     {
        lnGamConf[i] = 0.0;
@@ -100,7 +101,7 @@ TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
         NPcoef(0), MaxOrd(0),  NP_DC(0), /*NPTP_DC(NPTPperDC),*/
         NSub(0), NMoi(0), R_CONST(8.31451), Tk(T_k), Pbar(P_bar)
 {
-    // pointer assignments
+    // pointer assignments (blocked direct access)
     aIPx = 0;   // Direct access to index list and parameter coeff arrays!
     aIPc = 0;
     aIP = 0;
@@ -114,15 +115,10 @@ TSolMod::TSolMod( long int NSpecies, char Mod_Code,  double T_k, double P_bar ):
     phVOL = 0;
     aVol = 0;
     lnGamma = 0;
-    lnGamConf = new double[NComp];
-    lnGamRecip = new double[NComp];
-    lnGamEx = new double[NComp];  // Work arrays for lnGamma components - should we zero off?
-    for (long int i=0; i<NComp; i++)
-    {
-       lnGamConf[i] = 0.0;
-       lnGamRecip[i] = 0.0;
-       lnGamEx[i] = 0.0;
-    }
+    lnGamConf = 0;
+    lnGamRecip = 0;
+    lnGamEx = 0;
+
     // initialize phase properties
     Gex = 0.0; Hex = 0.0; Sex = 0.0; CPex = 0.0; Vex = 0.0; Aex = 0.0; Uex = 0.0;
     Gid = 0.0; Hid = 0.0; Sid = 0.0; CPid = 0.0; Vid = 0.0; Aid = 0.0; Uid = 0.0;
@@ -144,9 +140,9 @@ TSolMod::~TSolMod()
    if( aIP )        // Bugfix 07.12.2010 DK
       delete[] aIP;
 
-   delete[] lnGamConf;
-   delete[] lnGamRecip;
-   delete[] lnGamEx;
+//   delete[] lnGamConf;
+//   delete[] lnGamRecip;
+//   delete[] lnGamEx;
    free_multisite();
 }
 

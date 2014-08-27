@@ -1755,7 +1755,8 @@ void TBerman::alloc_internal()
     Nrc = 0;
 // cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
-    if( ns == 2 ) // NSub == 2 )
+    if( ns == 2 && MixCode == MR_B_RCPT_ )  // using CEF reciprocal part in Berman model
+    // NSub == 2 )
     {
        // Allocate memory for reciprocal reactions DeltaG and indexation
        DGrc = new double [NrcR];
@@ -1884,7 +1885,7 @@ void TBerman::free_internal()
     delete[]pyp;
 //    delete[]pyn;
 
-    if( NSub == 2 )
+    if( NSub == 2 && MixCode == MR_B_RCPT_ )  // if using CEF reciprocal part in Berman model
     {
         delete[]DGrc;
         for(r=0; r<NrcR; r++)
@@ -1901,7 +1902,6 @@ void TBerman::free_internal()
         delete[]XrcM;
     }
 }
-
 
 /// Calculates T-corrected interaction parameters
 long int TBerman::PTparam( )
@@ -1920,54 +1920,33 @@ long int TBerman::PTparam( )
         aIP[ip] = Wpt[ip];
     }
 
-    if( NrcPpc > 0 && rcpcf != NULL )
+    if( NrcPpc >= 3 && rcpcf != NULL ) // reciprocal parameters provided
     {
-// cout << "NrcPpc=" << NrcPpc << endl;
+        long int TklnTk = Tk * log(Tk);
+//cout << endl << " j" << "\trc(j,0)" << "\trc(j,1)" << "\trc(j,2)" << "\tGrc[j]" << "\tG0f[j]" << "\t|oGf[j]" << endl;
         for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
         {
-// cout << " j=";
-            Grc[j] = rcpcf[NrcPpc*j];
-// cout << " rcpcf[j][0]=" << rcpcf[NrcPpc*j];
-            if(NrcPpc > 1)
-            {
-                Grc[j] += rcpcf[NrcPpc*j+1]/Tk;
-// cout << " rcpcf[j][1]=" << rcpcf[NrcPpc*j+1];
-            }
-            if(NrcPpc > 2)
-            {
-                Grc[j] += rcpcf[NrcPpc*j+2]*Tk*Tk;
-// cout << " rcpcf[j][2]=" << rcpcf[NrcPpc*j+2];
-            } // in J/mol iGrc[j] = a + b/T + c*T^2  ;
-// cout << " Grc[j]=" << Grc[j] << " G0f[j]=" << G0f[j];
-           oGf[j] = G0f[j] += Grc[j]/(R_CONST*Tk); // normalized
-// cout << " | oGf[j]=" << oGf[j] << endl;
-        }
-    }
-    else { // no separate reciprocal free energy terms provided
-// cout << "NP_DC=" << NP_DC << endl;
-        for (j=0; j<NComp; j++)
-        {
-// cout << " j=" << j;
-            if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
-           {
-                aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
-// cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
-           }
-           Grc[j] = 0.;  // in J/mol
-           oGf[j] = G0f[j]+aGEX[j]; // normalized
-// cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
+//cout << " " << j << "\t" << rcpcf[NrcPpc*j] << "\t" << rcpcf[NrcPpc*j+1] << "\t" << rcpcf[NrcPpc*j+2];
+             Grc[j] = rcpcf[NrcPpc*j] + rcpcf[NrcPpc*j+1]/Tk + rcpcf[NrcPpc*j+2]*TklnTk;
+                     // in J/mol iGrc[j] = a + b/T + c*T*lnT  ;
+             oGf[j] = G0f[j] + Grc[j]/(R_CONST*Tk); // normalized
+             aGEX[j] = Grc[j]/(R_CONST*Tk);  //this sets the respective correction in pm.fDQF[]
+//cout << "\t" << Grc[j] << "\t" << G0f[j] << "\t" << oGf[j] << endl;
         }
     }
     if( !Nrc )
       return 0;
-    // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
-    double dGrc; long int i;
-    for( r=0; r< Nrc; r++ ) // looking through reactions
-    {
-       j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
-       dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
+    if( MixCode == MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
+     {
+        // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
+        double dGrc; long int i;
+        for( r=0; r< Nrc; r++ ) // looking through reactions
+        {
+           j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
+           dGrc = oGf[j0] + oGf[j1] - oGf[j2] - oGf[j3];  // Aranovich 1991, eq 1.92
 // cout << "r=" << r << " : dGrc=" << dGrc << " oGF: " << oGf[j0] << " " << oGf[j1] << " " << oGf[j2] << " " << oGf[j3] << endl;
-       DGrc[r] = dGrc;  // normalized!
+          DGrc[r] = dGrc;  // normalized!
+        }
     }
     return 0;
 }
@@ -1984,21 +1963,22 @@ long int TBerman::MixMod()
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamConf[j];
     }
-
     retCode = ReciprocalPart();
     if(!retCode)
     {
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamRecip[j];
     }
-
     retCode = ExcessPart();
     if(!retCode)
     {
-       for(j=0; j<NComp; j++)
+// cout << endl << " j" << "\tlnGamC" << "\tlnGamR" << "\tlnGamE" << "\t|lnGam" << endl;
+        for(j=0; j<NComp; j++)
+       {
            lnGamma[j] += lnGamEx[j];
+// cout << " " << j << "\t" << lnGamConf[j] << "\t" << lnGamRecip[j] << "\t" << lnGamEx[j] << "\t| " << lnGamma[j] << endl;
+       }
     }
-
     return retCode;
 }
 
@@ -2291,6 +2271,10 @@ long int TBerman::ReciprocalPart()
 
     for( j=0; j<NComp; j++)
          lnGamRecip[j] = 0.;
+
+    if( MixCode != MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
+        return 0;
+
     if( NSub == 0L || NMoi == 0L )
         return 1;   // this is not a multi-site model - bailing out
     if ( NSub > 6L )
@@ -2554,28 +2538,18 @@ long int TCEFmod::PTparam( )
                                                     // perhaps also c*T*lnT term?
         aIP[ip] = Wpt[ip];
     }
-
-    if( NrcPpc > 0 && rcpcf != NULL )
+    if( NrcPpc >= 3 && rcpcf != NULL ) // reciprocal parameters provided
     {
-// cout << "NrcPpc=" << NrcPpc << endl;
+        long int TklnTk = Tk * log(Tk);
+//cout << endl << " j" << "\trc(j,0)" << "\trc(j,1)" << "\trc(j,2)" << "\tGrc[j]" << "\tG0f[j]" << "\t|oGf[j]" << endl;
         for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
         {
-// cout << " j=";
-            Grc[j] = rcpcf[NrcPpc*j];
-// cout << " rcpcf[j][0]=" << rcpcf[NrcPpc*j];
-            if(NrcPpc > 1)
-            {
-                Grc[j] += rcpcf[NrcPpc*j+1]/Tk;
-// cout << " rcpcf[j][1]=" << rcpcf[NrcPpc*j+1];
-            }
-            if(NrcPpc > 2)
-            {
-                Grc[j] += rcpcf[NrcPpc*j+2]*Tk*Tk;
-// cout << " rcpcf[j][2]=" << rcpcf[NrcPpc*j+2];
-            } // in J/mol iGrc[j] = a + b/T + c*T^2  ;
-// cout << " Grc[j]=" << Grc[j] << " G0f[j]=" << G0f[j];
-           oGf[j] = G0f[j] += Grc[j]/(R_CONST*Tk); // normalized
-// cout << " | oGf[j]=" << oGf[j] << endl;
+//cout << " " << j << "\t" << rcpcf[NrcPpc*j] << "\t" << rcpcf[NrcPpc*j+1] << "\t" << rcpcf[NrcPpc*j+2];
+             Grc[j] = rcpcf[NrcPpc*j] + rcpcf[NrcPpc*j+1]/Tk + rcpcf[NrcPpc*j+2]*TklnTk;
+                     // in J/mol iGrc[j] = a + b/T + c*T*lnT  ;
+             oGf[j] = G0f[j] + Grc[j]/(R_CONST*Tk); // normalized
+             aGEX[j] = Grc[j]/(R_CONST*Tk);  //this sets the respective correction in pm.fDQF[]
+//cout << "\t" << Grc[j] << "\t" << G0f[j] << "\t" << oGf[j] << endl;
         }
     }
     else { // no separate reciprocal free energy terms provided
@@ -2608,21 +2582,18 @@ long int TCEFmod::MixMod()
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamConf[j];
     }
-
     retCode = ReciprocalPart();
     if(!retCode)
     {
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamRecip[j];
     }
-
     retCode = ExcessPart();
     if(!retCode)
     {
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamEx[j];
     }
-
     return retCode;
 }
 
