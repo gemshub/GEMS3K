@@ -395,11 +395,11 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
           ff << "\n\n# DQFc:  Collected array of DQF parameters for DCs in phases ";
    prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
    }
-   if(rcpcSum )
-   {   if( _comment )
-          ff << "\n\n# rcpc:  Collected array of reciprocal parameters for DCs in phases ";
-     prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
-   }
+//   if(rcpcSum )
+//   {   if( _comment )
+//          ff << "\n\n# rcpc:  Collected array of reciprocal parameters for DCs in phases ";
+//     prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
+//   }
    long int PhLinSum, lPhcSum;
    getLsPhlsum( PhLinSum,lPhcSum );
    prar.writeArray(  f_LsPhl, pm.LsPhl, pm.FI*2, 2L, _comment, brief_mode);
@@ -860,16 +860,16 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
 #endif
                 rddar.readArray(  "DQFc", pm.DQFc,  DQFcSum);
           }
-        if(rcpcSum )
-        { rddar.readNext( "rcpc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.rcpc )
-                     pm.rcpc = new double[rcpcSum];
-#else
-                pm.rcpc = (double *)aObj[ o_wi_rcpc].Alloc( rcpcSum, 1, D_ );
-#endif
-                rddar.readArray(  "rcpc", pm.rcpc,  rcpcSum);
-        }
+//        if(rcpcSum )
+//        { rddar.readNext( "rcpc");
+//#ifdef IPMGEMPLUGIN
+//                if(!pm.rcpc )
+//                     pm.rcpc = new double[rcpcSum];
+//#else
+//                pm.rcpc = (double *)aObj[ o_wi_rcpc].Alloc( rcpcSum, 1, D_ );
+//#endif
+//                rddar.readArray(  "rcpc", pm.rcpc,  rcpcSum);
+//        }
         break;
         }
       case f_LsPhl:

@@ -1919,7 +1919,7 @@ long int TBerman::PTparam( )
         Wpt[ip] = Wu[ip] - Ws[ip]*Tk + Wv[ip]*Pbar;  // This minus is a future problem...
         aIP[ip] = Wpt[ip];
     }
-
+/*
     if( NrcPpc >= 3 && rcpcf != NULL ) // reciprocal parameters provided
     {
         long int TklnTk = Tk * log(Tk);
@@ -1934,8 +1934,12 @@ long int TBerman::PTparam( )
 //cout << "\t" << Grc[j] << "\t" << G0f[j] << "\t" << oGf[j] << endl;
         }
     }
+*/
+    for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
+         oGf[j] = G0f[j];
     if( !Nrc )
       return 0;
+
     if( MixCode == MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
      {
         // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
@@ -2538,6 +2542,7 @@ long int TCEFmod::PTparam( )
                                                     // perhaps also c*T*lnT term?
         aIP[ip] = Wpt[ip];
     }
+/*
     if( NrcPpc >= 3 && rcpcf != NULL ) // reciprocal parameters provided
     {
         long int TklnTk = Tk * log(Tk);
@@ -2552,7 +2557,11 @@ long int TCEFmod::PTparam( )
 //cout << "\t" << Grc[j] << "\t" << G0f[j] << "\t" << oGf[j] << endl;
         }
     }
-    else { // no separate reciprocal free energy terms provided
+*/
+    for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
+       oGf[j] = G0f[j];
+//    else
+    { // no separate reciprocal free energy terms provided
 // cout << "NP_DC=" << NP_DC << endl;
         for (j=0; j<NComp; j++)
         {

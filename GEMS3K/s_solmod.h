@@ -87,7 +87,7 @@ struct SolutionData {
 //    long int NlPhs;     ///< new: Number of linked phases
 //    long int NlPhC;     ///< new: Number of linked phase parameter coefficient per link (default 0)
     long int NDQFpDC;   ///< new: Number of DQF parameters per species (end member)
-    long int NrcPpDC;   ///< new: Number of reciprocal parameters per species (end member)
+//    long int NrcPpDC;   ///< new: Number of reciprocal parameters per species (end member)
 
     char Mod_Code;      ///< Code of the mixing model
     char Mix_Code;      ///< Code for specific EoS mixing rule
@@ -106,7 +106,7 @@ struct SolutionData {
 
 //    double *lPhc;  ///< new: array of phase link parameters -> NlPhs x NlPhC (read-only)
     double *DQFc;  ///< new: array of DQF parameters for DCs in phases ->  NSpecies x NDQFpDC; (read-only)
-    double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
+//    double *rcpc;  ///< new: array of reciprocal parameters for DCs in phases -> NSpecies x NrcPpDC; (read-only)
 
     double *arPparc;    ///< Partial pressures -> NSpecies
     double *arWx;       ///< Species (end member) mole fractions ->NSpecies
@@ -145,7 +145,7 @@ class TSolMod
 //   long int NlPh;     ///< new: Number of linked phases
 //   long int NlPc;     ///< new: Number of linked phase parameter coefficient per link (default 0)
    long int NDQFpc;   ///< new: Number of DQF parameters per species (end member)
-   long int NrcPpc;   ///< new: Number of reciprocal parameters per species (end member)
+//   long int NrcPpc;   ///< new: Number of reciprocal parameters per species (end member)
 
         //        long int NPTP_DC;  // Number of properties per one DC at T,P of interest (columns in aDC)  !!!! Move to CG EOS subclass
                 long int *aIPx;    // Pointer to list of indexes of non-zero interaction parameters
@@ -166,7 +166,7 @@ class TSolMod
 
 //    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
     double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
-    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NComp x NrcPpc; (read-only)
+//    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NComp x NrcPpc; (read-only)
 
         double *x;      ///< Pointer to mole fractions of end members (provided)
         double *aVol;   ///< molar volumes of species (end members)

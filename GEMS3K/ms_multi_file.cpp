@@ -76,7 +76,7 @@ void TMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
    for(long int i=0; i<pm.FIs; i++)
    {
        DQFcSum += (pm.LsMdc2[i*3]*pm.L1[i]);
-       rcpcSum += (pm.LsMdc2[i*3+1]*pm.L1[i]);
+//       rcpcSum += (pm.LsMdc2[i*3+1]*pm.L1[i]);
    }
  }
 
@@ -449,7 +449,7 @@ pm.GamFs = 0;
 // TSolMod stuff
         pm.lPhc   = 0;
         pm.DQFc   = 0;
-        pm.rcpc   = 0;
+//        pm.rcpc   = 0;
         pm.lnDQFt   = 0;
         pm.lnRcpt   = 0;
         pm.lnExet   = 0;
@@ -698,7 +698,7 @@ ff.writeArray((double*)pm.D, MST*MST);
        long int DQFcSum, rcpcSum;
        getLsMdc2sum( DQFcSum, rcpcSum );
        ff.writeArray(pm.DQFc, DQFcSum);
-       ff.writeArray(pm.rcpc, rcpcSum);
+//       ff.writeArray(pm.rcpc, rcpcSum);
        long int PhLinSum, lPhcSum;
        getLsPhlsum( PhLinSum,lPhcSum );
        ff.writeArray((long int *)pm.PhLin, PhLinSum*2);
@@ -991,7 +991,7 @@ ff.readArray((double*)pm.D, MST*MST);
        pm.MoiSN = new double[LsMsnSum];
        pm.SitFr = new double[LsSitSum];
        pm.DQFc = new double[DQFcSum];
-       pm.rcpc = new double[rcpcSum];
+//       pm.rcpc = new double[rcpcSum];
        pm.PhLin = new long int[PhLinSum][2];
        pm.lPhc = new double[lPhcSum];
 
@@ -1002,7 +1002,7 @@ ff.readArray((double*)pm.D, MST*MST);
        pm.MoiSN = (double *)aObj[ o_wi_moisn].Alloc( LsMsnSum, 1, D_ );
        pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
        pm.DQFc = (double *)aObj[ o_wi_dqfc].Alloc( DQFcSum, 1, D_ );
-       pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
+//       pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
        pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
        pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
  #endif
@@ -1013,7 +1013,7 @@ ff.readArray((double*)pm.D, MST*MST);
        ff.readArray(pm.MoiSN, LsMsnSum);
        ff.readArray(pm.SitFr, LsSitSum);
        ff.readArray(pm.DQFc, DQFcSum);
-       ff.readArray(pm.rcpc, rcpcSum);
+//       ff.readArray(pm.rcpc, rcpcSum);
        ff.readArray((long int *)pm.PhLin, PhLinSum*2);
        ff.readArray(pm.lPhc, lPhcSum);
 
@@ -1650,7 +1650,7 @@ else
  // TSolMod stuff
     pm.lPhc   = 0;
     pm.DQFc   = 0;
-    pm.rcpc   = 0;
+//    pm.rcpc   = 0;
     pm.lnDQFt   = new double[pm.Ls];
     pm.lnRcpt   = new double[pm.Ls];
     pm.lnExet   = new double[pm.Ls];
@@ -1741,7 +1741,7 @@ else
 // TSolMod stuff
     pm.lPhc   = 0;
     pm.DQFc   = 0;
-    pm.rcpc   = 0;
+//    pm.rcpc   = 0;
     pm.lnDQFt   = 0;
     pm.lnRcpt   = 0;
     pm.lnExet   = 0;
@@ -1960,7 +1960,7 @@ if( pm.D ) delete[] pm.D;
     if( pm.sMod ) delete[] pm.sMod;
 
     if(pm.DQFc) delete[] pm.DQFc;
-    if(pm.rcpc) delete[] pm.rcpc;
+//    if(pm.rcpc) delete[] pm.rcpc;
     if(pm.LsMdc2) delete[] pm.LsMdc2;
     if(pm.PhLin) delete[] pm.PhLin;
     if(pm.lPhc) delete[] pm.lPhc;
@@ -2209,7 +2209,7 @@ void TMulti::to_text_file( const char *path, bool append )
       getLsMdc2sum( DQFcSum, rcpcSum );
       prar.writeArray(  "LsMdc2", pm.LsMdc2, pm.FIs*3);
       prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
-      prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
+//      prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
       long int PhLinSum, lPhcSum;
       getLsPhlsum( PhLinSum,lPhcSum );
       prar.writeArray(  "LsPhl", pm.LsPhl, pm.FI*2);

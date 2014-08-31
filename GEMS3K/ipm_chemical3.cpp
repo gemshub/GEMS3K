@@ -762,7 +762,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
 //    sd.NlPhs = pm.LsPhl[k*2];
 //    sd.NlPhC = pm.LsPhl[k*2+1];
     sd.NDQFpDC = pm.LsMdc2[k*3];
-    sd.NrcPpDC = pm.LsMdc2[k*3+1];
+//    sd.NrcPpDC = pm.LsMdc2[k*3+1];
 
     if( phSolMod[k])
         if(  phSolMod[k]->testSizes( &sd ) )
@@ -797,7 +797,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
 //    sd.arPhLin = pm.PhLin+jphl;
 //    sd.lPhc = pm.lPhc+ jlphc;
     sd.DQFc = pm.DQFc+ jdqfc;
-    sd.rcpc = pm.rcpc+ jrcpc;
+//    sd.rcpc = pm.rcpc+ jrcpc;
     //sd.arSitFj =
 
     // specific properties

@@ -252,7 +252,7 @@ double
   // TSolMod stuff
   *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
   *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
-  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc2[k][1]
+//  *rcpc,  ///< new: Collected array of reciprocal parameters for DCs in phases -> L1[k] x LsMdc2[k][1]
 
   // TSorpMod & TKinMet stuff
   *SorMc, ///< new: Phase-related kinetics and sorption model parameters: [Fis][16]
