@@ -1198,6 +1198,7 @@ class TCEFmod: public TSolMod
 
                 double *Wu;    ///< Interaction parameter coefficients a
                 double *Ws;    ///< Interaction parameter coefficients b (f(T))
+                double *Wc;    ///< Interaction parameter coefficients b (f(TlnT))
                 double *Wv;    ///< Interaction parameter coefficients c (f(P))
                 double *Wpt;   ///< Interaction parameters corrected at P-T of interest
                 double **fjs;      ///< array of site activity coefficients for end members [NComp][NSub]

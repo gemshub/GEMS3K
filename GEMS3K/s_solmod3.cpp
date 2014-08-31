@@ -2458,6 +2458,7 @@ void TCEFmod::alloc_internal()
 
     Wu = new double [NPar];
     Ws = new double [NPar];
+    Wc = new double [NPar];
     Wv = new double [NPar];
     Wpt = new double [NPar];
     NmoS = new long int [NSub];
@@ -2507,6 +2508,7 @@ void TCEFmod::free_internal()
 
     delete[]Wu;
     delete[]Ws;
+    delete[]Wc;
     delete[]Wv;
     delete[]Wpt;
 
@@ -2529,17 +2531,17 @@ long int TCEFmod::PTparam( )
 {
     long int ip, j, r, j0, j1, j2, j3;
 
-    if ( NPcoef < 3 || NPar < 1 )
+    if ( NPcoef < 4 || NPar < 1 )
                return 1;
 
     for (ip=0; ip<NPar; ip++)  // interaction parameters
     {
         Wu[ip] = aIPc[NPcoef*ip];
         Ws[ip] = aIPc[NPcoef*ip+1];
-        Wv[ip] = aIPc[NPcoef*ip+2];
-        Wpt[ip] = Wu[ip] + Ws[ip]*Tk + Wv[ip]*Pbar;
-        // Lucas 2007 eq 5.66, pressure term added for consistency with petrology
-                                                    // perhaps also c*T*lnT term?
+        Wc[ip] = aIPc[NPcoef*ip+2];
+        Wv[ip] = aIPc[NPcoef*ip+3];
+        Wpt[ip] = Wu[ip] + Ws[ip]*Tk + Wc[ip]*Tk*log(Tk) + Wv[ip]*Pbar;
+        // Lucas 2007 eq 5.66, Wv and Wc terms added for consistency with petrology
         aIP[ip] = Wpt[ip];
     }
 /*
