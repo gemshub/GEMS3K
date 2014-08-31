@@ -93,7 +93,6 @@ class TMyTransport
         ~TMyTransport();  // Destructor of dynamic memory
 
          void OneTimeStepRun(   // Placeholder function for one transport time step
-            double *stoich,     // Stoichiometry coefficients
             long int *ICndx,    // Indexes of mobile independent components
             long int nICndx     // Number of mobile independent components
                  );

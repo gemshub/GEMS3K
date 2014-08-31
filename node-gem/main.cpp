@@ -9,7 +9,7 @@
 // TNode class implements a  simple C/C++ interface between GEMS3K
 // and FMT codes. Works with DATACH and work DATABR structures
 //
-// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik
+// Copyright (c) 2006-2012 S.Dmytriyeva, D.Kulik + (c) 2014 A.Yapparova
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -30,6 +30,8 @@
 //-------------------------------------------------------------------
 
 #include "main.h"
+#include <time.h>
+time_t start,end;
 
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
@@ -66,7 +68,9 @@ int main( int argc, char* argv[] )
 
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
-    TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    //TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    // 101 nodes 500 time steps
+    TMyTransport mt( 101, 500, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -157,20 +161,24 @@ int main( int argc, char* argv[] )
     cout << "xCa= " << ICndx[0] << " xC=" << ICndx[1] << " xO=" << ICndx[2] << " xMg="
          << ICndx[3] << " xCl=" << ICndx[4] << endl << " xCalcite=" << xCalcite
          << " xDolomite=" << xDolomite << " xAq_gen=" << xAq_gen << endl << endl;
-    double stoich[5] = { 0., 0., 0., 1., 2. }; // defines what is 'transported'
+
+    time (&start);
 
     long int it;
     for( it=0; it< mt.nTimes; it++ )
     {
-       cout << "Time step  " << it << endl;
+       cout << "Time step  " << it;
        // Mass transport loop over nodes (not a real transport model)
-       mt.OneTimeStepRun( stoich, ICndx, 5 );
+       mt.OneTimeStepRun( ICndx, 5 );
+
+       cout << "Node\tAq\tpH\tCalcite\tDolomite\tCa\tMg\tCl" << endl;
 
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
        {
           mt.aNodeHandle[in] = in;
           mt.aNodeStatusCH[in] = NEED_GEM_SIA;
+          // mt.aNodeStatusCH[in] = NEED_GEM_AIA;
           // (8) Setting input data for GEM IPM to use available node speciation as
           // initial approximation
           node->GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
@@ -178,7 +186,7 @@ int main( int argc, char* argv[] )
                   mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in], mt.axDC[in], mt.agam[in] );
           // (9)   Passing current FMT iteration information into the work DATABR structure
           node->GEM_set_MT( (double)it, 1. );
- 
+
           // Calling GEMIPM calculation
           mt.aNodeStatusCH[in] = node->GEM_run( true );
 
@@ -203,12 +211,19 @@ int main( int argc, char* argv[] )
           }
           // Here, the output upon completion of the time step is usually implemented
           //  to monitor the coupled simulation or collect results
-          cout << "  Node " << in ;
-          cout << ": Aq= " << mt.axPH[in][xAq_gen] << " pH= " << mt.apH[in] <<
-                  "  Calcite= " << mt.axPH[in][xCalcite] << endl;
+          cout << in <<"\t"<< mt.axPH[in][xAq_gen] << "\t" << mt.apH[in] <<
+                  "\t" << mt.axPH[in][xCalcite] <<
+                  "\t" << mt.axPH[in][xDolomite] <<
+                  "\t" << mt.abPS[in][ICndx[0]] <<
+                  "\t" << mt.abPS[in][ICndx[3]] <<
+                  "\t" << mt.abPS[in][ICndx[4]] <<
+                  endl;
       }
    }
    // Calculations finished - end time reached
+    time (&end);
+    double dif = difftime (end,start);
+    printf ("Elasped time is %.2lf seconds.", dif );
 
    // Final output e.g. of total simulation time or of the final distribution of
    //  components and phases in all nodes can be implemented here
@@ -338,29 +353,42 @@ TMyTransport::~TMyTransport()
     delete[]aEh;
 }
 
-// A very simple example of transport algorithm
-void TMyTransport::OneTimeStepRun( double *stoicf, long int *ICndx, long int nICndx )
+// A very simple example of finite difference transport algorithm
+// Contributed on 22.08.2014 by Alina Yapparova, Chair of Reservoir Engineering,
+// Montanuniveritaet Leoben, Austria
+//
+void TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
 {
-    double parcel[nICndx];
+    double column_length  = 0.5; // [m]
+    double dx = column_length/(nNodes-1);
+
+    //constant velocity field
+    double v = 1.e-5; // velocity [m/s]
+    // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
+    double k = 0.1; // k = dt/dx*v
+    // calculate dt
+    double dt = k*dx/v;
+    // and print dt into the output file
+    cout<<"\tdt = " << dt << "[s]" << endl;
+
+    //Finite difference approximation for the equation dc/dt + v*dc/dx = 0
+    // explicit time, left spatial derivative
+    // (c^{n+1}_{i} - c^{n}_{i})/dt + v*(c^{n}_{i} - c^{n}_{i-1})/dx = 0
+    // c^{n+1}_{i} = (1 - k)*c^{n}_{i} + k*c^{n}_{i-1}
     long int in;
     for(  in=1; in< nNodes; in++ )
     {
-    // some operators that change in some nodes some amounts of some migrating
-    // chemical species (axDC array or  some amounts of migrating chemical
-    // elements in abIC array), possibly using data from other arrays in such
-    // a way that the mass conservation within the whole array of nodes is retained
         for (int i=0; i<nICndx; i++)
         {
-            parcel[i] = 0.01* stoicf[i]*abIC[in-1][ICndx[i]];
-            abIC[in][ICndx[i]] += parcel[i];
-//            if( in > 1 )
-//                abIC[in-1][ICndx[i]] -= parcel[i];
+            abIC[in][ICndx[i]] = (1 - k)*abPS[in][ICndx[i]] + k*abPS[in-1][ICndx[i]] + abSP[in][ICndx[i]];
+            // where abPS is the total amount of an independent component ICndx[i] in the aqueous phase (after GEMS computation)
+            // abSP is the total amount of an independent component ICndx[i] in ALL solid phases
+            // abIC is the total amount of ICndx[i] that will serve as an input constraint for GEMS computation at the next time level
+            // NB: more precisely, one should write abPS[in][n*nIC + ICndx[i]], where 0=<n<=nPS, and transport each phase-solution separately
+            //but as far as an aqueous phase is the first in the list (n=0), this simplified indexing will work for transport of aq phase
         }
-    // The above example loop implements a zero-order flux of MgCl2 in one direction.
-    // Real advective/diffusive transport models are much more complex, but essentially
-    //   do similar things
     }
 }
 
 //---------------------------------------------------------------------------
-// end of main.cpp for node class usage example
+// end of main.cpp for the node-gem (TNode-level usage) coupled-code example
