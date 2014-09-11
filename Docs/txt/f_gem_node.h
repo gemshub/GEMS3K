@@ -7,7 +7,7 @@
 //
 // This is a documentation file and, in principle, may not be linked to the 
 //  compiled program; only the file f_gem_node.cpp should be linked. 
-
+ 
 #ifndef _fgemnode_
 #define _fgemnode_
 
