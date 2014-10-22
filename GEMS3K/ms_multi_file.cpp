@@ -1709,7 +1709,7 @@ else
     pm.PvT   = new double[pm.FI];
     for( ii=0; ii<pm.FI; ii++)
     {
-       fillValue( pm.kMod[ii], '\0', 6);
+       fillValue( pm.kMod[ii], 'N', 6);
        pm.PfFact[ii] =0.;
        pm.PrT[ii] =0.;
        pm.PkT[ii] =0.;
