@@ -529,7 +529,7 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
    char xCH_to_ccPH( int xCH )
    {return CSD->ccPH[xCH];}
 
-   /// Returns the umber of interaction parameters. Max parameter order (cols in IPx),
+   /// Returns the number of interaction parameters. Max parameter order (cols in IPx),
    /// and number of coefficients per parameter in PMc table [3*FIs]
    long int* Get_LsMod ( )
    {return pmm->LsMod;}

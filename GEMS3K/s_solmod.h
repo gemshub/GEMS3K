@@ -5,7 +5,7 @@
 /// Declarations of TSolMod and derived classes implementing built-in models
 /// of mixing in fluid, liquid, aqueous and solid-solution phases
 
-// Copyright (C) 2003-2012  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
+// Copyright (C) 2003-2014  T.Wagner, D.Kulik, S.Dmitrieva, F.Hingerl, S.Churakov
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
