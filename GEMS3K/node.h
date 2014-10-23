@@ -524,6 +524,16 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
    char* xCH_to_IC_name( int xCH )
    {return CSD->ICNL[xCH];}
 
+ /// Returns the class codes of phase given the ICH index of PH
+   /// or -1 if no such name was found in the DATACH ccPH list
+   char xCH_to_ccPH( int xCH )
+   {return CSD->ccPH[xCH];}
+
+   /// Returns the umber of interaction parameters. Max parameter order (cols in IPx),
+   /// and number of coefficients per parameter in PMc table [3*FIs]
+   long int* Get_LsMod ( )
+   {return pmm->LsMod;}
+
    /// Returns DCH index of Phase given the Phase Name string
    /// or -1 if no such name was found in the DATACH Phase name list
    long int Ph_name_to_xCH( const char *Name );
@@ -699,7 +709,7 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
      /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
      /// \param P refers to the pressure in Pascal
 	 /// \param TK refers to the temperature in Kelvin
-	 /// \param DensAW contains the permittivity of water (at P and Tk) and its temperature and pressure derivatives 
+     /// \param EpsAW contains the permittivity of water (at P and Tk) and its temperature and pressure derivatives
 	 void EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW );
 
 
@@ -893,22 +903,27 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
         void Set_mLook(const double mLook)
         {  CSD->mLook = mLook;  multi->set_load(false);}
 
-      /// Sets the value of the interation parameter.
+      /// Sets the value of the interaction parameter.
       /// Internal re-scaling to mass of the system is applied.
       /// These methods can only be used for the current work node (direct access to GEM IPM data)
       /// \param xPMC is the index of the interaction parameter
       inline void Set_PMc( const double PMc_val, const long int xPMc)
       { pmm->PMc[xPMc] = PMc_val; multi->set_load(false); }
 
+      /// Gets the value of the interaction parameter.
       inline void Get_PMc( double &PMc_val, const long int xPMc)
       {  PMc_val = pmm->PMc[xPMc]; multi->set_load(false); }
 
-      /// Sets the value of the interation parameter.
+      /// Gets code of the aquesous solution model
+      inline void Get_sMod( int ndx, string &sMod)
+      {  sMod = pmm->sMod[ndx];}
+
+      /// Sets the value of the phase component parameter.
       /// Internal re-scaling to mass of the system is applied.
       /// These methods can only be used for the current work node (direct access to GEM IPM data)
       /// \param xDMC is the index of the interaction parameter
       inline void Set_DMc( const double DMc_val, const long int xDMc)
-      { pmm->PMc[xDMc] = DMc_val; multi->set_load(false); }
+      { pmm->DMc[xDMc] = DMc_val; multi->set_load(false); }
 #endif
 
       /// Retrieves the current total amount of Independent Component.
