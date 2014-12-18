@@ -68,9 +68,9 @@ int main( int argc, char* argv[] )
 
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
-    //TMyTransport mt( 11, 100, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    //TMyTransport mt( 11, 100, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
     // 101 nodes 500 time steps
-    TMyTransport mt( 101, 500, dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    TMyTransport mt( 101, 500, 0., 1., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -78,6 +78,7 @@ int main( int argc, char* argv[] )
     {
         // Asking GEM IPM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_AIA;
+        node->GEM_from_MT_time( 0., -1. );
         // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
         mt.aNodeStatusCH[in] = node->GEM_run( false);
         if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
@@ -122,6 +123,7 @@ int main( int argc, char* argv[] )
           node->GEM_read_dbr( NextRecipeFileName );
           // Asking GEM IPM to run with automatic initial approximation
           dBR->NodeStatusCH = NEED_GEM_AIA;
+          node->GEM_from_MT_time( 0., -1. );
           // (2) Re-calculating chemical equilibrium by calling GEM
           mt.aNodeStatusCH[in] = node->GEM_run( false );
           if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
@@ -164,11 +166,10 @@ int main( int argc, char* argv[] )
 
     time (&start);
 
-    long int it;
-    for( it=0; it< mt.nTimes; it++ )
+    for( long int it=0; it< mt.nTimes; it++ )
     {
-       cout << "Time step  " << it;
-       // Mass transport loop over nodes (not a real transport model)
+       cout << "Time step: " << it << "  Time, s: " << mt.tm << "  dTime, s: " << mt.dt;
+       // Mass transport loop over nodes (a simple FD advection transport model)
        mt.OneTimeStepRun( ICndx, 5 );
 
        cout << "Node\tAq\tpH\tCalcite\tDolomite\tCa\tMg\tCl" << endl;
@@ -185,7 +186,7 @@ int main( int argc, char* argv[] )
                   mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],
                   mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in], mt.axDC[in], mt.agam[in] );
           // (9)   Passing current FMT iteration information into the work DATABR structure
-          node->GEM_set_MT( (double)it, 1. );
+          node->GEM_from_MT_time( mt.tm, mt.dt );
 
           // Calling GEMIPM calculation
           mt.aNodeStatusCH[in] = node->GEM_run( true );
@@ -211,7 +212,7 @@ int main( int argc, char* argv[] )
           }
           // Here, the output upon completion of the time step is usually implemented
           //  to monitor the coupled simulation or collect results
-          cout << in <<"\t"<< mt.axPH[in][xAq_gen] << "\t" << mt.apH[in] <<
+          cout << in <<"\t\t\t"<< mt.axPH[in][xAq_gen] << "\t" << mt.apH[in] <<
                   "\t" << mt.axPH[in][xCalcite] <<
                   "\t" << mt.axPH[in][xDolomite] <<
                   "\t" << mt.abPS[in][ICndx[0]] <<
@@ -219,6 +220,7 @@ int main( int argc, char* argv[] )
                   "\t" << mt.abPS[in][ICndx[4]] <<
                   endl;
       }
+      mt.tm += mt.dt;
    }
    // Calculations finished - end time reached
     time (&end);
@@ -234,9 +236,9 @@ int main( int argc, char* argv[] )
    return 0;
 }
 
-
-TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, long int p_nDC,
-              long int p_nPH, long int p_nPS, long int p_nRcps )
+// constructor
+TMyTransport::TMyTransport(long int p_nNod, long int p_nTim, double p_Tim, double p_dTim,
+              long int p_nIC, long int p_nDC, long int p_nPH, long int p_nPS, long int p_nRcps )
 {
 
     nNodes = p_nNod;
@@ -246,6 +248,9 @@ TMyTransport::TMyTransport( long int p_nNod, long int p_nTim, long int p_nIC, lo
     nPH = p_nPH;
     nPS = p_nPS;
     nRecipes = p_nRcps;
+
+    tm = p_Tim;
+    dt = p_dTim;
 
     aNodeHandle = new long int [nNodes];
     aNodeStatusCH = new long int [nNodes];

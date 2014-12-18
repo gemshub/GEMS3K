@@ -52,6 +52,8 @@ class TMyTransport
              *aNodeStatusCH,   // Node status codes (changed after GEM calculation)
              *aIterDone;       // Number of GEM IPM iterations performed for each node
                                //   at the last time step
+    double tm,      // time, s
+           dt;      // time increment, s
 
     double *aT,     // Array of node temperatures T, Kelvin
            *aP,     // Array of node pressures P, Pa
@@ -83,6 +85,8 @@ class TMyTransport
         TMyTransport(   // Constructor (dynamic memory allocation)
            long int p_nNod,    // Number of nodes
            long int p_nTim,    // Number of time steps
+           double p_Tim,       // Total maximum time
+           double p_dTim,      // Time step duration
            long int p_nIC,     // Number of chemical independent components
            long int p_nDC,     // Number of chemical dependent components
            long int p_nPH,     // Number of chemical phases

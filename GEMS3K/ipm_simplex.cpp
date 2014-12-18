@@ -526,7 +526,7 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
   pm.ITF = pm.ITG = 0;
 
  // New: Run of TKinMet class library
- // cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
+cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
   if( pm.pKMM < 2 )
   {
     if( pm.ITau < 0 || pm.pKMM != 1 )

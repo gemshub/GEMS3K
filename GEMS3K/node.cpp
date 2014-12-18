@@ -189,6 +189,28 @@ long int TNode::GEM_run( bool uPrimalSol )
          }
         else
 	       return CNode->NodeStatusCH;
+
+   // added 18.12.14 DK : setting chemical kinetics time counter and variables
+// cout << "dTime: " << CNode->dt << " TimeStep: " << CNode->NodeStatusFMT << " Time: " << CNode->Tm << endl;
+       if( CNode->dt <= 0. )
+       {  // no kinetics to consider
+           pmm->kTau = 0.;
+           pmm->kdT = 0.;
+           pmm->ITau = 0;
+           pmm->pKMM = 2;  // no need to allocate TKinMet instances
+       }
+       else {   // considering kinetics
+           pmm->kTau = CNode->Tm;
+           pmm->kdT = CNode->dt;
+           if( pmm->ITau < 0 || CNode->Tm/CNode->dt < 1e-9 )
+           {   // we need to initialize TKinMet
+               pmm->pKMM = -1;
+               pmm->ITau = -1;
+           }
+           else  // TKinMet exists, simulation continues
+               pmm->ITau = CNode->Tm/CNode->dt;
+       }
+
    // GEM IPM calculation of equilibrium state
    CalcTime = profil->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
@@ -2055,6 +2077,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
  strncpy( pmm->stkey, buf, EQ_RKLEN );
  multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
 #endif
+  pmm->kTau = CNode->Tm;  // added 18.12.14 DK
+  pmm->kdT = CNode->dt;   // added 18.12.14 DK
 
   pmm->TCc = CNode->TK-C_to_K;
   pmm->Tc = CNode->TK;

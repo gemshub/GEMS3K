@@ -345,14 +345,14 @@ void GEM_from_MT_time(
 //   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
 //   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
    double p_Tm,      ///< Actual total simulation time, s               +       -      -
-   double p_dt       ///< Actual time step, s                           +       -      -
+   double p_dt       ///< Actual time step duration, s                  +       -      -
 );
 
 void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_time(), see above
 //   long int  NodeTypeHY,    // Node type (hydraulic); see typedef NODETYPE
 //   long int  NodeTypeMT,    // Node type (mass transport); see typedef NODETYPE
    double p_Tm,      ///< Actual total simulation time, s               +       -      -
-   double p_dt       ///< Actual time step, s                           +       -      -
+   double p_dt       ///< Actual time step duration, s                  +       -      -
 );
 #endif
 
