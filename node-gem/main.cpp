@@ -172,7 +172,7 @@ int main( int argc, char* argv[] )
        // Mass transport loop over nodes (a simple FD advection transport model)
        mt.OneTimeStepRun( ICndx, 5 );
 
-       cout << "Node\tAq\tpH\tCalcite\tDolomite\tCa\tMg\tCl" << endl;
+       cout << "Node\tAq\tpH\tCalc\tDolo\tCa\tMg\tCl" << endl;
 
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
@@ -212,7 +212,7 @@ int main( int argc, char* argv[] )
           }
           // Here, the output upon completion of the time step is usually implemented
           //  to monitor the coupled simulation or collect results
-          cout << in <<"\t\t\t"<< mt.axPH[in][xAq_gen] << "\t" << mt.apH[in] <<
+          cout << in <<"\t"<< mt.axPH[in][xAq_gen] << "\t" << mt.apH[in] <<
                   "\t" << mt.axPH[in][xCalcite] <<
                   "\t" << mt.axPH[in][xDolomite] <<
                   "\t" << mt.abPS[in][ICndx[0]] <<
@@ -221,6 +221,7 @@ int main( int argc, char* argv[] )
                   endl;
       }
       mt.tm += mt.dt;
+      node->GEM_step_MT( it+1 );  // increments time iteration in GEM solver (for kinetics)
    }
    // Calculations finished - end time reached
     time (&end);

@@ -196,19 +196,19 @@ long int TNode::GEM_run( bool uPrimalSol )
        {  // no kinetics to consider
            pmm->kTau = 0.;
            pmm->kdT = 0.;
-           pmm->ITau = 0;
+           pmm->ITau = -1;
            pmm->pKMM = 2;  // no need to allocate TKinMet instances
        }
        else {   // considering kinetics
            pmm->kTau = CNode->Tm;
            pmm->kdT = CNode->dt;
-           if( pmm->ITau < 0 || CNode->Tm/CNode->dt < 1e-9 )
+           if( pmm->ITau < 0 && CNode->Tm/CNode->dt < 1e-9 )
            {   // we need to initialize TKinMet
                pmm->pKMM = -1;
                pmm->ITau = -1;
            }
            else  // TKinMet exists, simulation continues
-               pmm->ITau = CNode->Tm/CNode->dt;
+               pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
        }
 
    // GEM IPM calculation of equilibrium state

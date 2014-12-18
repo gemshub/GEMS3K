@@ -526,13 +526,18 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
   pm.ITF = pm.ITG = 0;
 
  // New: Run of TKinMet class library
-cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
+// cout << "kMM: " << pm.pKMM << "  ITau: " << pm.ITau << "  kTau: " << pm.kTau << "  kdT: " << pm.kdT << endl;
   if( pm.pKMM < 2 )
   {
     if( pm.ITau < 0 || pm.pKMM != 1 )
+    {
         KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
+        pm.ITau = 0; pm.pKMM = 1;
+    }
     if( pm.ITau == 0 )
-        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
+    {
+        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates       
+    }
     if( pm.ITau > 0 )
         KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
 //  switch(KMretCode)

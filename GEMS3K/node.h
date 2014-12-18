@@ -354,6 +354,16 @@ void GEM_set_MT(  // misleading name of the method - use instead GEM_from_MT_tim
    double p_Tm,      ///< Actual total simulation time, s               +       -      -
    double p_dt       ///< Actual time step duration, s                  +       -      -
 );
+
+// Sets time step (for kinetics) if step >= 0 or gets it if step < 0
+// direct access to MULTI - needs reimplementation for TKinetics in TNode
+long int GEM_step_MT( const long int step )
+{
+    if( step >= 0 )
+        pmm->ITau = step;
+    return pmm->ITau;
+}
+
 #endif
 
 /// (5) Reads another DBR file (with input system composition, T,P etc.) \ . The DBR file must be compatible with
