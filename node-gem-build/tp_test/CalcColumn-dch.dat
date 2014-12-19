@@ -1,5 +1,5 @@
 #  GEMS3K v.3.3 r.999 (dev) 
-# File: /Users/kulik/DevGEMS/devPhase/standalone/node-gem-build/tp_test/CalcColumn-dch.dat
+# File: /home/kulik/DevGEMS/CalcColumn-dch.dat
 # Comments can be marked with # $ ; as the first character in the line
 # DCH text input file (should be read before IPM and DBR files)
 
@@ -114,7 +114,7 @@
 
 # denW: Look-up array for the density of water-solvent, kg/m3, and its derivatives [5*nPp*nTp]
 <denW>
-997.061364306278 
+997.075121266911 
 -0.25866418191325 
 -0.00946964566451448 
 0.0450858902637571 
@@ -130,7 +130,7 @@
 
 # epsW: Look-up array for the dielectric constant of water-solvent and its derivatives [5*nPp*nTp]
 <epsW>
-78.2451456494471 
+78.2940373976894 
 -0.355010888388417 
 0.00135076186526265 
 0.00406162824448407 

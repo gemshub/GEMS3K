@@ -1,5 +1,5 @@
 #  GEMS3K v.3.3 r.999 (dev) 
-# File: /Users/kulik/DevGEMS/devPhase/standalone/node-gem-build/tp_test/CalcColumn-ipm.dat
+# File: /home/kulik/DevGEMS/CalcColumn-ipm.dat
 # Comments can be marked with # $ ; as the first character in the line
 # IPM text input file for the internal GEM IPM-3 kernel data
 # (should be read after the DCH file and before DBR files)
@@ -237,7 +237,7 @@
 ## (5) Data arrays which are provided neither in DCH nor in DBR files
 # B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)
 <B>
-0.000331 0.000331 2e-07 110.683696417673 1e-07 55.3428612088366 0 
+0.000431 0.000381 2e-07 110.683696417673 5.01e-05 55.3431612088366 0 
 
 # Initial data for DCs - see DATACH file for dimensions nDC, nDCs
 # Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)

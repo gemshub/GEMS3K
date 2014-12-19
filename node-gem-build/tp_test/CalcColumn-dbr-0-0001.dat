@@ -1,5 +1,5 @@
 #  GEMS3K v.3.3 r.999 (dev) 
-# File: /Users/kulik/DevGEMS/devPhase/standalone/node-gem-build/tp_test/CalcColumn-dbr-0-0001.dat
+# File: /home/kulik/DevGEMS/CalcColumn-dbr-0-0001.dat
 # Comments can be marked with # $ ; as the first character in the line
 # DBR text input file for node system recipe and speciation data
 # (should be read only after the DCH and the IPM files)
@@ -24,7 +24,7 @@
 #  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
 # bIC: Bulk composition of reactive subsystem (main GEM input), moles of ICs [nICb]
 <bIC>
-0.000331 0.000331 2e-07 110.683696417673 1e-07 55.3428612088366 0 
+0.000731 0.000531 2e-07 110.683696417673 0.0002001 55.3440612088366 0 
 
 ## (5) Data for Dependent Components
 #  'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 'CH4' 'H2' 'O2' 'Gr' 'Cal' 'Dis-Dol' 'Portlandite' 'Brc' 
