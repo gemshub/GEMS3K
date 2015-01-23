@@ -119,7 +119,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
 
     kdT_c = kdT;    // Initialized corrected time step (s)
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
-    OmgTol = 1e-6;  // default tolerance for checking dissolution or precipitation cases
+    OmgTol = 1e-3; // 1e-6;  // default tolerance for checking dissolution or precipitation cases
 }
 
 /// Destructor
@@ -339,7 +339,7 @@ TKinMet::init_arPRt()
             // check direction - for precipitation, arPRt[xj].kPR = arPRt[xj].kop;
             arPRt[xj].rPR = 0.;   // rate for this region (output) in mol/s
             arPRt[xj].rmol = 0.;   // rate for the whole face (output) in mol/s
-//        arPRt[xj].velo,   // velocity of face growth (positive) or dissolution (negative) m/s
+//            arPRt[xj].velo = 0.;   // velocity of face growth (positive) or dissolution (negative) m/s
 
         } // xj
     }
@@ -635,15 +635,19 @@ double
 TKinMet::PRrateCon( TKinReact &rk, const long int r )
 {
    long int xj, j, atopc, facex;
-   double atp, ajp, aj, kr, bc;
+   double atp, ajp, aj, bc;  // ,kr
 
 //cout << "kTau: " << kTau << " k: " << rk.k << " K: " << rk.K << " Omg: " << OmPh <<
-//        " nPh: " << nPh << " mPh: " << mPh << endl;
+//        " nPh: " << nPh << " mPh: " << mPh << " LaPh: " << LaPh << endl;
+
+//   rk.rPR = 0.;
+   if(fabs(LaPh) < OmgTol )
+       return 0.;  // equilibrium - zero rate
 
 if( rk.xPR != r )     // index of this parallel reaction
         cout << rk.xPR << " <-> " << r << " mismatch" << endl;
    atopc = rk.ocPRk[0]; // operation code for this kinetic parallel reaction affinity term
-   facex = rk.ocPRk[1]; // particle face index
+   facex = rk.ocPRk[1]; // particle face index (reserved)
 
    // activity (catalysis) product term (f(prod(a))
    rk.cat = 1.;
@@ -679,12 +683,12 @@ if( rk.xPR != r )     // index of this parallel reaction
     default:
     case ATOP_CLASSIC_: // = 0,     classic TST affinity term (see .../Doc/Descriptions/Kinetics-Uptake.doc)
        rk.aft = - rk.uPR + 1. - pow( OmPh, rk.qPR );
-       if( rk.mPR )
+       if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
            rk.aft = pow( rk.aft, rk.mPR );
        break;
     case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed
        rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
-       if( rk.mPR )
+       if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
            rk.aft = pow( rk.aft, rk.mPR );
        rk.aft *= -1.;
        break;
@@ -720,8 +724,8 @@ if( rk.xPR != r )     // index of this parallel reaction
 //   nucRes
        break;
    }
+
    // Calculating rate for this region (output) in mol/m2/s
-//   rk.rPR = 0.;
    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
        if( rk.k > 0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
