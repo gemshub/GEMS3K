@@ -533,13 +533,15 @@ double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA
     {
         KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
         pm.ITau = 0; pm.pKMM = 1;
+        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
     }
-    if( pm.ITau == 0 )
-    {
-        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates       
-    }
-    if( pm.ITau > 0 )
+//    if( pm.ITau == 0 )
+//    {
+//        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
+//    }
+    else if( pm.ITau >= 0 ) {
         KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
+    }
 //  switch(KMretCode)
 //  {
 //        case 0L:
