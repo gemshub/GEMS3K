@@ -205,7 +205,7 @@ struct TKinReact
             mPR, /// second reaction order parameter in the affinity term (default 0)
             uPR, /// parameter constant in the affinity term
             OmEff, /// Effective saturation index for a simple nucleation model (default 1)
-            nucRes; // reserved
+            GamN; /// Gamma parameter (K^3) of the Hellevang nucleation kinetics model (default 0)
 //            Omg; /// Input stability index non-log (d-less)
 
      // Results of rate term calculation

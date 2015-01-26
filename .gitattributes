@@ -812,6 +812,7 @@ gemcalc-build/release/mingwm10.dll -text
 node-gem-build/debug/libgcc_s_dw2-1.dll -text
 node-gem-build/debug/mingwm10.dll -text
 node-gem-build/linux-run.bat -text
+node-gem-build/node-gem -text
 node-gem-build/release/libgcc_s_dw2-1.dll -text
 node-gem-build/release/mingwm10.dll -text
 node-gem-build/results/results.ods -text

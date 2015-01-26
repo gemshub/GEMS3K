@@ -322,10 +322,11 @@ TKinMet::init_arPRt()
             if( nrpC > 12 )
             {
                 arPRt[xj].OmEff = arPRt[xj].rpCon[12];
-                arPRt[xj].nucRes = arPRt[xj].rpCon[13];
+                arPRt[xj].GamN = arPRt[xj].rpCon[13];
             }
             else {
                 arPRt[xj].OmEff = 1.;
+                arPRt[xj].GamN = 0.;
             }
 //            arPRt[xj].Omg = OmPh; /// Input stability index non-log (d-less)
 
