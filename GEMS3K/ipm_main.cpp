@@ -765,7 +765,7 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
     {  // Experimental
         char buf[320];
         sprintf( buf, "(EFD(%ld)) Invalid initial Lagrange multiplier for metastability-constrained DC %16s ",
-                 WhereCalledFrom, pm.SM[jK] );
+                 WhereCalledFrom, gstring( pm.SM[jK], 0,  MAXDCNAME ).c_str() );
                 setErrorMessage( 17, "E17IPM: Mass Balance Refinement: ", buf);
       	return 5;
     }
