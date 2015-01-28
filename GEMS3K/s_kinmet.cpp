@@ -99,7 +99,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     rTot = 0.;   // Current total MWR rate (mol/s)
     gTot = 0;    // Total rate constant (kg per m2 per s)
     vTot = 0.;   // Total surface propagation velocity (m/s)
-
+    rNuc = 0.;   // Total nucleation rate
     nPh = nPhi;
     mPh = mPhi;
     vPh = vPhi;
@@ -722,11 +722,15 @@ if( rk.xPR != r )     // index of this parallel reaction
     case ATOP_FRITZ_: // = 6        Fritz et al. 2009, eq 6 nucleation and growth
        atp = OmPh - rk.OmEff;
        rk.aft = pow( atp, rk.mPR );
-//   nucRes
        break;
+    case ATOP_HELLEV_: // = 7        Hellevang et al. 2013 eq 3 nucleation
+       atp = rk.GamN * pow( 1./pow( T_k, 1.5 ) / log( OmPh ), 2.0  );
+       rk.aft = rk.OmEff * exp( -atp );
+       break;
+//       break;
    }
 
-   // Calculating rate for this region (output) in mol/m2/s
+   // Calculating rate for this partial reaction (output) in mol/m2/s (in mol/s/kgw for nucleation)
    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
        if( rk.k > 0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
@@ -742,7 +746,7 @@ if( rk.xPR != r )     // index of this parallel reaction
            rk.rPR = rk.K * rk.cat * rk.aft;
         rk.rPR *= rk.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
    }
-//   else {  // equilibrium - no rate change
+//   else {  // equilibrium - no rate of change
 //       ;
 //   }
    return rk.rPR;
@@ -822,14 +826,14 @@ TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
 bool
 TKinMet::RateInit( )
 {   
-    double RT = R_CONST*T_k, kPR, sSAcr;
+    double RT = R_CONST*T_k, rPR, sSAcr;
     long int r;
 
     kTot = 0.;
     for( r=0; r<nPRk; r++ )
     {
-        kPR = PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
-        kTot += kPR;
+        rPR = PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+        kTot += rPR;
     }
     nPhi = nPh;         // initial amount of this phase
     mPhi = mPh;         // initial mass
@@ -847,7 +851,7 @@ TKinMet::RateInit( )
     vTot =  kTot * vPh/nPh;  // orthogonal mean growth/dissolution velocity in m/s
     sSAcr = CorrSpecSurfArea( 1.0, true );
 //   Here possibly additional corrections of dissolution/precipitation rates
-
+    rNuc = 0.;  // initially zero nucleation rate
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
 
@@ -857,13 +861,20 @@ TKinMet::RateInit( )
 bool
 TKinMet::RateMod( )
 {
-    double RT = R_CONST*T_k, sFratio = 1., sSAcr;
-    long int r;
+    double RT = R_CONST*T_k, sFratio = 1., rPR, sSAcr, NucRate = 0.;
+    long int r, atopc;
 
     kTot = 0.;   // overall specific rate (mol/m2/s)
+    rNuc = 0.;
     for( r=0; r<nPRk; r++ )
-    {
-       kTot += PRrateCon( arPRt[r], r ); // adds the specific rate (mol/m2/s) for r-th parallel reaction
+    {  
+        atopc = arPRt[r].ocPRk[0];
+        rPR = PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
+        if(atopc != ATOP_HELLEV_ )
+          kTot += rPR;
+        else {
+          rNuc += rPR; // must account for the nucleation rate in mol/s/kgw (mol/s/dm3)
+        }
     }
     // Calculation of shape factor ratio
     // Convert into area-mass shape factor
@@ -873,10 +884,11 @@ TKinMet::RateMod( )
 //    sSAcr = CorrSpecSurfArea( sFratio, false );
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
+  rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
     gTot = kTot * mPh/nPh;  // rate in kg/m2/s
-    rTot = kTot * sAPh; // overall rate for the phase (mol/s)
+    rTot = kTot * sAPh + rNuc; // overall rate for the phase (mol/s)
     vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
-// cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
+    // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
     sSAcr = CorrSpecSurfArea( sFratio, false );
 //   Here possibly additional corrections of dissolution/precipitation rates
 

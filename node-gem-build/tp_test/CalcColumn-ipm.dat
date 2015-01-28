@@ -5,7 +5,7 @@
 # (should be read after the DCH file and before DBR files)
 
 # ID key of the initial chemical system definition
-"CalDolCol2G  CalcColumn  0009 0       1       25      000 "
+"CalDolCol2G  CalcColumn  0009 0       1       37      000 "
 
 ## (1) Flags that affect memory allocation
 # PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)
@@ -189,40 +189,37 @@
 # LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;
 # of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
 <LsKin>
-3 3 14 1 4 0 
-3 3 14 1 4 0 
 0 0 0 0 0 0 
 0 0 0 0 0 0 
-3 3 14 1 4 0 
+0 0 0 0 0 0 
+0 0 0 0 0 0 
+5 2 14 1 4 0 
 0 0 0 0 0 0 
 0 0 0 0 0 0 
 
 # xSKrC:  Collected array of aq/gas/sorption species indexes used in activity products
 <xSKrC>
-2 6 9 2 6 9 2 6 9 
+17 19 
 
 # ocPRkC:  Collected array of operation codes for kinetic parallel reaction terms
 <ocPRkC>
-1 0 0 0 7 0 1 0 0 0 7 0 1 0 0 0 7 0 
+1 0 7 0 0 0 0 0 0 0 
 
 # feSArC:  Collected array of fractions of surface area related to parallel reactions
 <feSArC>
-1 1 0 1 1 0 1 1 0 
+1 1 1 1 1 
 
 # rpConC:  Collected array of kinetic rate constants
 <rpConC>
--4.49999984141763e-25 0 1 133469.59375 0 0 0 0 0 1 2 0 0 0 9.40000006721675e-08 0 1 21000 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
-40000000000 1 -4.49999984141763e-25 0 1 133469.59375 0 0 0 0 0 1 2 0 0 0 9.40000006721675e-08 0 1 21000 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 
-0 0 40000000000 1 -4.49999984141763e-25 0 1 133469.59375 0 0 0 0 0 1 2 0 0 0 9.40000006721675e-08 0 1 21000 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 
-0 0 0 0 40000000000 1 
+-10000 0 11.22 133469.59375 0 0 0 0 0 1 2.26 -77 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 1 40000000000 0.000646 0 21100000 36100 0 0 0 0 1 1 1 0 0 0 2.95e-08 0 14000000000 52200 0 0 0 0 1 1 1 0 0 0 7.76e-06 0 1250000 34800 0 0 0 0 1 1 1 0 0 0 
 
 # apConC:  Collected array of parameters per species involved in activity product terms
 <apConC>
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+0 0 0.5 0 0 0 0 0 0 0.5 
 
 # AscpC:  parameter coefficients of equation for correction of specific surface area
 <AscpC>
-1 0 0 0 1 0 0 0 1 0 0 0 
+1 0 0 0 
 # LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)
 <LsUpt>
 0 0 

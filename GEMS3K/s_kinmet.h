@@ -87,8 +87,8 @@ enum affin_term_op_codes {
     ATOP_HELLMANN_ = 3,      /// Hellmann Tisserand 2006 eq 9
     ATOP_TENG1_ = 4,         /// Teng et al. 2000, eq 13
     ATOP_TENG2_ = 5,         /// Teng et al. 2000, Fig 6
-    ATOP_FRITZ_ = 6          /// Fritz et al. 2009, eq 6 nucleation and growth
-
+    ATOP_FRITZ_ = 6,          /// Fritz et al. 2009, eq 6 nucleation and growth
+    ATOP_HELLEV_ = 7          /// Hellevang et al. 2013, nucleation rate term from eq (3)
 };
 
 // This data structure should be passed in order to create an instance of TKinMet derived class for a phase
@@ -357,6 +357,7 @@ double *arasp;  /// Pointer to (current) specific surface areas of all phases in
     // SS precipitation
 
     // (SS) nucleation
+    double rNuc;   /// nucleation rate for this phase in mol/s/kgw (mol/s/dm3)
 
     // functions for allocation and initialization of kinetic rate tables
     void alloc_kinrtabs();
