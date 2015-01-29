@@ -70,7 +70,7 @@ int main( int argc, char* argv[] )
     // 11 nodes, 99 time steps
     //TMyTransport mt( 11, 100, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
     // 101 nodes 500 time steps
-    TMyTransport mt( 101, 500, 0., 1., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    TMyTransport mt( 101, 500, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -369,7 +369,7 @@ void TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     double dx = column_length/(nNodes-1);
 
     //constant velocity field
-    double v = 1.e-5; // velocity [m/s]
+    double v = 1.e-7; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
     double k = 0.1; // k = dt/dx*v
     // calculate dt

@@ -204,10 +204,12 @@ TKinMet::init_kinrtabs( double *p_arlPhc, double *p_arrpCon,  double *p_arapCon 
     }
     if( nPRk && nSkr && naptC )
     {
-        for( j=0; j<nPRk; j++)
+        for( pr=0; pr<nPRk; pr++)
             for( s=0; s<nSkr; s++)
                 for( i=0; i<naptC; i++)
-                    arapCon[j][s][i] = p_arapCon[naptC*nSkr*j+naptC*s+i];
+                {       //  arapCon[pr][s][i] = p_arapCon[naptC*nSkr*pr+naptC*s+i];
+                    arapCon[pr][s][i] = p_arapCon[naptC*nPRk*s+naptC*pr+i];  // bugfix 29.01.2015 DK
+                }
     }
     for( j=0; j<NComp; j++ )
     {
@@ -279,7 +281,7 @@ TKinMet::init_arPRt()
         for(xj=0; xj<nPRk; xj++)
         {
             arPRt[xj].xPR = xj;   /// index of this parallel reaction
-            arPRt[xj].nSa = nSkr; // number of species involved in parallel reactions
+            arPRt[xj].nSa = nSkr; /// number of species involved in parallel reactions
             arPRt[xj].ocPRk[0] = arocPRk[xj][0]; /// operation code for this kinetic parallel reaction affinity term
             arPRt[xj].ocPRk[1] = arocPRk[xj][1]; /// index of particle face (surface patch)
             arPRt[xj].xSKr = arxSKr;
@@ -636,11 +638,11 @@ double
 TKinMet::PRrateCon( TKinReact &rk, const long int r )
 {
    long int xj, j, atopc, facex;
-   double atp, ajp, aj, bc;  // ,kr
+   double atp, ajp, aj, bc, tt;  // ,kr
 
 //cout << "kTau: " << kTau << " k: " << rk.k << " K: " << rk.K << " Omg: " << OmPh <<
 //        " nPh: " << nPh << " mPh: " << mPh << " LaPh: " << LaPh << endl;
-
+   rk.rPR = 0.;
 //   rk.rPR = 0.;
    if(fabs(LaPh) < OmgTol )
        return 0.;  // equilibrium - zero rate
@@ -724,8 +726,13 @@ if( rk.xPR != r )     // index of this parallel reaction
        rk.aft = pow( atp, rk.mPR );
        break;
     case ATOP_HELLEV_: // = 7        Hellevang et al. 2013 eq 3 nucleation
-       atp = rk.GamN * pow( 1./pow( T_k, 1.5 ) / log( OmPh ), 2.0  );
-       rk.aft = rk.OmEff * exp( -atp );
+       if(LaPh > OmgTol )
+       {
+           tt = 1./( pow( T_k, 1.5 ) * log( OmPh ) );
+           atp = rk.GamN * tt*tt;
+//           atp = rk.GamN * pow( 1./pow( T_k, 1.5 ) / log( OmPh ), 2.0  );
+           rk.aft = rk.OmEff * exp( -atp );
+       }
        break;
 //       break;
    }
@@ -733,22 +740,22 @@ if( rk.xPR != r )     // index of this parallel reaction
    // Calculating rate for this partial reaction (output) in mol/m2/s (in mol/s/kgw for nucleation)
    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
-       if( rk.k > 0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
+       if( rk.k > 0 && rk.K == 0.0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.k * rk.cat * rk.aft;
        else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
-       rk.rPR *= rk.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
    }
    if( LaPh > OmgTol ) {
-       if( rk.k < 0 ) //   net precipitation rate constant (corrected for T) in mol/m2/s
+       if( rk.k < 0 && rk.K == 0.0 ) //   net precipitation rate constant (corrected for T) in mol/m2/s
            rk.rPR = fabs(rk.k) * rk.cat * rk.aft;
        else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
-        rk.rPR *= rk.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
    }
 //   else {  // equilibrium - no rate of change
 //       ;
 //   }
+   if( atopc != ATOP_HELLEV_ && rk.rPR != 0.0 )
+       rk.rPR *= rk.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
    return rk.rPR;
 //   rmol,   // rate for the whole face (output) in mol//m2/s    TBD
 //   velo,   // velocity of face growth (positive) or dissolution (negative) nm/s
@@ -826,14 +833,20 @@ TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
 bool
 TKinMet::RateInit( )
 {   
-    double RT = R_CONST*T_k, rPR, sSAcr;
-    long int r;
+    double rPR, sSAcr;
+    long int r, atopc;
 
     kTot = 0.;
+    rNuc = 0.;
     for( r=0; r<nPRk; r++ )
     {
+        atopc = arPRt[r].ocPRk[0];
         rPR = PRrateCon( arPRt[r], r ); // adds the rate constant (mol/m2/s) for r-th parallel reaction
-        kTot += rPR;
+        if(atopc != ATOP_HELLEV_ )
+          kTot += rPR;
+        else {
+          rNuc += rPR; // must account for the nucleation rate in mol/s/kgw (mol/s/dm3)
+        }
     }
     nPhi = nPh;         // initial amount of this phase
     mPhi = mPh;         // initial mass
@@ -843,15 +856,15 @@ TKinMet::RateInit( )
 //    sSAcr = CorrSpecSurfArea( 1.0, true );
 //    sAPh = sSAcr * mPh;   // initial surface of the phase
 //    sAph_c = sAPh;
+  rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
     gTot = kTot * mPh/nPh;  // initial rate in kg/m2/s
-    rTot = kTot * sAPh; // overall initial rate (mol/s)
+    rTot = kTot * sAPh + rNuc; // overall rate for the phase (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
 //    dnPh = 0.; // overall initial change (moles)
 //    nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
     vTot =  kTot * vPh/nPh;  // orthogonal mean growth/dissolution velocity in m/s
     sSAcr = CorrSpecSurfArea( 1.0, true );
 //   Here possibly additional corrections of dissolution/precipitation rates
-    rNuc = 0.;  // initially zero nucleation rate
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
 
@@ -861,7 +874,7 @@ TKinMet::RateInit( )
 bool
 TKinMet::RateMod( )
 {
-    double RT = R_CONST*T_k, sFratio = 1., rPR, sSAcr, NucRate = 0.;
+    double sFratio = 1., rPR, sSAcr;
     long int r, atopc;
 
     kTot = 0.;   // overall specific rate (mol/m2/s)
@@ -903,7 +916,7 @@ TKinMet::SetMetCon( )
    double dnPh = 0., dn_dt = 0.;
 
    dnPh = -kdT * rTot; // change in phase amount over dt
-   dn_dt = -rTot;  // minus total rate mol/s
+//   dn_dt = -rTot;  // minus total rate mol/s
 
    // First calculate phase constraints
    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
@@ -913,9 +926,16 @@ TKinMet::SetMetCon( )
            nPul = nPll + fabs(dnPh);    // ensuring slackness
    }
    else if( LaPh > OmgTol ) {  // precipitation rate constant (corrected for T) in mol/m2/s
-       nPul = nPh + dnPh;
-       if( nPll > nPul - fabs(dnPh) )
-           nPll = nPul - fabs(dnPh);    // ensuring slackness
+//       if( fabs( rNuc ) * kdT < 1e-10 )
+//       {  // precipitation without nucleation
+          nPul = nPh + dnPh;
+          if( nPll > nPul - fabs(dnPh) )
+              nPll = nPul - fabs(dnPh);    // ensuring slackness
+//       }
+//       else {  // nucleation occurs - min amount of nucleated material
+//          nPul = nPh + dnPh;
+//          nPll = max( (fabs( rNuc ) * kdT), (nPul - fabs(dnPh))  );
+//       }
     }
 //    else {  // equilibrium  - needs to be checked!
 //       nPul = nPh + fabs( dnPh );

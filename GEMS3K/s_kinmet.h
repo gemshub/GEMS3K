@@ -180,7 +180,7 @@ struct TKinReact
 {
     // Input data
      long int xPR;   /// index of this parallel reaction
-     long int nSa;   // the same as nSKr - tot. number of species used in activity products
+     long int nSa;   /// the same as nSKr - tot. number of species used in activity products
 
      long int ocPRk[2]; /// operation code for this kinetic parallel reaction affinity term
      long int *xSKr;  /// pointer to input array of DC indexes used in activity products [nSKr] (copy)
@@ -284,7 +284,7 @@ double sFact;       /// current sphericity factor (0 < sFact < 1)
     double **arlPhc; /// TsolMod, TKinMet, TSorpMod: pointer to input array of phase link parameters [nlPh*nlPc]
     double *arfeSAr;   /// input fractions of surface area of the solid related to different parallel reactions [nPRk] - input
     double **arrpCon;  /// input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC]
-    double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC]
+    double ***arapCon; /// input array of parameters per species involved in 'activity product' terms [nPRk * nSkr* naptC]
     double *arAscp;  /// input array of coefficients of the sFact function for correction of specific surface area [nAscC]
     // new:new: array of nucleation model parameters (A.Testino?)
 
