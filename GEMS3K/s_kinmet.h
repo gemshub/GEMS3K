@@ -267,7 +267,7 @@ double sFact;       /// current sphericity factor (0 < sFact < 1)
     double mPh;     /// current mass of this phase, kg
     double vPh;     /// current volume of this phase, m3
     double sAPh;    /// current surface area of this phase, m2
-    double LaPh;    /// phase stability index (log scale)
+    double LaPh;    /// phase stability index (log10 scale)
     double OmPh;    /// phase stability index (activity scale) 10^LaPh
 
     // These values may be corrected inside of TKinMet class instance over time steps
@@ -405,7 +405,8 @@ double *arasp;  /// Pointer to (current) specific surface areas of all phases in
     virtual
     bool UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
                     const double pLgOm, const double p_fFact, const double pYOFk,
-                    const double pICa, const double ppHa, const double ppea, const double pEha );
+                    const double pICa, const double ppHa, const double ppea, const double pEha,
+                    const double pPULk, const double pPLLk );
 
     // Returns (modified) specific surface area of the phase, metastability constraints (via parameters),
     // and sends internally back (modified) 'parallel reactions' area fractions.

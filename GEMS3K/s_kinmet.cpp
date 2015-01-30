@@ -467,15 +467,16 @@ TKinMet::particles_pores_properties( bool if_init = false )
 //
 //}
 
-// Sets new specific surface area and other properties of the phase;
+// Sets new specific surface area and other properties of the phase, as well as phase AMRs;
 // also updates 'parallel reactions' area fractions; if there is a link to other phase(s),
 // makes respective corrections using the properties of other phase(s).
 // Returns false if these parameters in TKinMet instance did not change; true if they did.
 //
 bool
-TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
+TKinMet::UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, const double pFVOLk,
                     const double pLaPh, const double p_sFact, const double pYOFk,
-                    const double pICa, const double ppHa, const double ppea, const double pEha )
+                    const double pICa, const double ppHa, const double ppea, const double pEha,
+                    const double pPULk, const double pPLLk )  // added 30.01.2015 by DK
 {
     long int i;
     bool status = false;
@@ -485,6 +486,8 @@ TKinMet::UpdateFSA( const double pAsk, const double pXFk, const double pFWGTk, c
     sSA = pAsk*1000.; // from m2/g to m2/kg
     nPh = pXFk;
     mPh = pFWGTk/1e3;  // from g to kg
+    nPul = pPULk;
+    nPll = pPLLk;
 // cout << " !!! mPh: " << mPh << endl;
     vPh = pFVOLk/1e6;  // from cm3 to m3
 sFacti = p_sFact;
@@ -689,7 +692,7 @@ if( rk.xPR != r )     // index of this parallel reaction
        if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
            rk.aft = pow( rk.aft, rk.mPR );
        break;
-    case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed
+    case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed (for growth)
        rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
        if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
            rk.aft = pow( rk.aft, rk.mPR );
@@ -728,7 +731,7 @@ if( rk.xPR != r )     // index of this parallel reaction
     case ATOP_HELLEV_: // = 7        Hellevang et al. 2013 eq 3 nucleation
        if(LaPh > OmgTol )
        {
-           tt = 1./( pow( T_k, 1.5 ) * log( OmPh ) );
+           tt = 1./( pow( T_k, 1.5 ) * ( LaPh/0.4343 ) );
            atp = rk.GamN * tt*tt;
 //           atp = rk.GamN * pow( 1./pow( T_k, 1.5 ) / log( OmPh ), 2.0  );
            rk.aft = rk.OmEff * exp( -atp );
@@ -747,7 +750,7 @@ if( rk.xPR != r )     // index of this parallel reaction
    }
    if( LaPh > OmgTol ) {
        if( rk.k < 0 && rk.K == 0.0 ) //   net precipitation rate constant (corrected for T) in mol/m2/s
-           rk.rPR = fabs(rk.k) * rk.cat * rk.aft;
+           rk.rPR = rk.k * rk.cat * rk.aft;
        else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
    }
@@ -838,6 +841,7 @@ TKinMet::RateInit( )
 
     kTot = 0.;
     rNuc = 0.;
+
     for( r=0; r<nPRk; r++ )
     {
         atopc = arPRt[r].ocPRk[0];
@@ -856,14 +860,22 @@ TKinMet::RateInit( )
 //    sSAcr = CorrSpecSurfArea( 1.0, true );
 //    sAPh = sSAcr * mPh;   // initial surface of the phase
 //    sAph_c = sAPh;
-  rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
-    gTot = kTot * mPh/nPh;  // initial rate in kg/m2/s
+    rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
     rTot = kTot * sAPh + rNuc; // overall rate for the phase (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
 //    dnPh = 0.; // overall initial change (moles)
 //    nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
-    vTot =  kTot * vPh/nPh;  // orthogonal mean growth/dissolution velocity in m/s
-    sSAcr = CorrSpecSurfArea( 1.0, true );
+    if( nPh > 0. )
+    {
+       gTot = kTot * mPh/nPh;  // initial rate in kg/m2/s
+       vTot =  kTot * vPh/nPh;  // orthogonal mean growth/dissolution velocity in m/s
+       sSAcr = CorrSpecSurfArea( 1.0, true );
+    }
+    else {
+        sSAcr = 0.;
+        gTot = 0.;
+        vTot = 0.;
+    }
 //   Here possibly additional corrections of dissolution/precipitation rates
 // cout << " init 0  kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPhi: " << nPhi << endl;
  // Check initial rates and limit them to realistic values
@@ -879,6 +891,7 @@ TKinMet::RateMod( )
 
     kTot = 0.;   // overall specific rate (mol/m2/s)
     rNuc = 0.;
+
     for( r=0; r<nPRk; r++ )
     {  
         atopc = arPRt[r].ocPRk[0];
@@ -897,12 +910,20 @@ TKinMet::RateMod( )
 //    sSAcr = CorrSpecSurfArea( sFratio, false );
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
-  rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
-    gTot = kTot * mPh/nPh;  // rate in kg/m2/s
+    rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
     rTot = kTot * sAPh + rNuc; // overall rate for the phase (mol/s)
-    vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
+    if( nPh > 0. )
+    {
+       gTot = kTot * mPh/nPh;  // rate in kg/m2/s
+       vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
+       sSAcr = CorrSpecSurfArea( sFratio, false );
+    }
+    else {
+        gTot = 0.;
+        vTot = 0.;
+        sSAcr = 0.;
+    }
     // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
-    sSAcr = CorrSpecSurfArea( sFratio, false );
 //   Here possibly additional corrections of dissolution/precipitation rates
 
     return false;
@@ -913,38 +934,70 @@ TKinMet::RateMod( )
 bool
 TKinMet::SetMetCon( )
 {
-   double dnPh = 0., dn_dt = 0.;
+    double dnPh = 0.; // dn_dt = 0.;
+    long int r, atopc;
+    bool isNucl = false;
 
-   dnPh = -kdT * rTot; // change in phase amount over dt
+    for( r=0; r<nPRk; r++ )
+    {   // check if nucleation rate is accounted for
+        atopc = arPRt[r].ocPRk[0];
+        if(atopc == ATOP_HELLEV_ )
+            isNucl = true;
+    }
+
+    dnPh = -kdT * rTot; // change in phase amount over dt
 //   dn_dt = -rTot;  // minus total rate mol/s
 
-   // First calculate phase constraints
-   if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
-   {
-       nPll = nPh + dnPh;
-       if( nPul < nPll + fabs(dnPh) )
-           nPul = nPll + fabs(dnPh);    // ensuring slackness
-   }
-   else if( LaPh > OmgTol ) {  // precipitation rate constant (corrected for T) in mol/m2/s
-//       if( fabs( rNuc ) * kdT < 1e-10 )
-//       {  // precipitation without nucleation
-          nPul = nPh + dnPh;
-          if( nPll > nPul - fabs(dnPh) )
-              nPll = nPul - fabs(dnPh);    // ensuring slackness
-//       }
-//       else {  // nucleation occurs - min amount of nucleated material
-//          nPul = nPh + dnPh;
-//          nPll = max( (fabs( rNuc ) * kdT), (nPul - fabs(dnPh))  );
-//       }
+    // First calculate phase constraints
+    if( LaPh < -OmgTol && dnPh < 0. ) // dissolution
+    {                     // (needs more flexible check based on Fa stability criterion!)
+       if( nPh > 0. )
+       {   // dissolution
+         nPll = max( 0.0, nPh + dnPh );
+         if( nPul < nPll )
+           nPul = nPll;
+//         if( nPul < nPll - dnPh )
+//           nPul = max( 0.0, nPll - dnPh );    // ensuring slackness
+       }
     }
-//    else {  // equilibrium  - needs to be checked!
-//       nPul = nPh + fabs( dnPh );
-//       nPll = nPh - fabs( dnPh );
-//    }
-
+    else if( LaPh > OmgTol && dnPh > 0. ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+       if( isNucl == false )
+       {  // growth without nucleation
+          nPul = max( 0.0, nPh + dnPh );
+          if( nPll > nPul - dnPh )
+              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
+       }
+       else {  // nucleation (rTot already includes nucleation rate)
+          if( nPh == 0. )
+          {
+              if( -rNuc*kdT >= 1e-10 )
+              {  // no phase but significant nucleation rate - onset of the phase
+                 // No growth yet, even if parallel reactions are given
+                  nPul = -rNuc*kdT; nPll = nPul;
+                  nPhi = nPh;         // initial amount of this phase
+                  mPhi = mPh;         // initial mass
+                  vPhi = vPh;         // initial volume
+                  sSAi = sSA;         // initial specific surface area
+                  sFacti = sFact;     // initial shape factor
+              }
+              else { // No phase and no nucleation rate
+                  nPul = 0.; nPll = 0.;
+              }
+          }
+          else { // nucleation occurs together with growth - nPll set at least to nucleated amount
+             nPul = nPh + dnPh;
+             nPll = max( -rNuc*kdT, nPul - dnPh );
+          }
+       }
+    }
+    else {  // equilibrium  - needs to be checked!
+        if( dnPh > 0 )
+            nPul = nPh + dnPh;
+        else
+            nPul = max(0.0, nPh - dnPh );
+    }
     if( NComp > 1 )
-       return false;  // DC constraints will be set in SplitMod() or SplitInit()
-
+       return false;  // DC constraints for ss will be set in SplitMod() or SplitInit()
     // setting DC metastability constraints for a single-component phase
     arnxul[0] = nPul;
     arnxll[0] = nPll;

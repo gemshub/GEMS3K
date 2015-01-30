@@ -80,7 +80,10 @@ class TMyTransport
            **abIC,  // Array of node bulk mole amounts of independent components
            **arMB,  // Array of node mole balance residuals for independent components
            **auIC,  // Array of node chemical potentials of independent components (norm.)
-           **abSP;  // Array for bulk composition of solid part of equilibrated sub-system
+           **abSP,  // Array for bulk composition of solid part of equilibrated sub-system
+         **amru,  // Array of upper metastability restrictions for amounts of phases  // needed for MARKS
+         **amrl;  // Array of upper metastability restrictions for amounts of phases  // needed for MARKS
+                  // MARK: Mineral-Aqueous Reaction Kinetic Simulations
 
         TMyTransport(   // Constructor (dynamic memory allocation)
            long int p_nNod,    // Number of nodes
@@ -96,7 +99,7 @@ class TMyTransport
 
         ~TMyTransport();  // Destructor of dynamic memory
 
-         void OneTimeStepRun(   // Placeholder function for one transport time step
+         double OneTimeStepRun(   // Placeholder function for one transport time step, returns dt
             long int *ICndx,    // Indexes of mobile independent components
             long int nICndx     // Number of mobile independent components
                  );

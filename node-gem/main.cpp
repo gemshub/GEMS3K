@@ -69,8 +69,8 @@ int main( int argc, char* argv[] )
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
     //TMyTransport mt( 11, 100, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
-    // 101 nodes 500 time steps
-    TMyTransport mt( 101, 500, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    // 101 nodes 400 time steps
+    TMyTransport mt( 101, 400, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -89,7 +89,8 @@ int main( int argc, char* argv[] )
 
         // Extracting GEM IPM input data to mass-transport program arrays
         node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
-            mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
+            mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in],
+            mt.amru[in], mt.amrl[in] );
           
         // Extracting GEM IPM output data to mass-transport program arrays
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
@@ -134,7 +135,8 @@ int main( int argc, char* argv[] )
 
           // (6) Extracting GEMIPM input data to mass-transport program arrays
           node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
-              mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in] );
+              mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in],
+              mt.amru[in], mt.amrl[in] );
           
           // (7) Extracting GEMIPM output data to mass-transport program arrays
           node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
@@ -168,9 +170,9 @@ int main( int argc, char* argv[] )
 
     for( long int it=0; it< mt.nTimes; it++ )
     {
-       cout << "Time step: " << it << "  Time, s: " << mt.tm << "  dTime, s: " << mt.dt;
+       cout << "Time step: " << it << "  Time, s: " << mt.tm;
        // Mass transport loop over nodes (a simple FD advection transport model)
-       mt.OneTimeStepRun( ICndx, 5 );
+       mt.dt = mt.OneTimeStepRun( ICndx, 5 );
 
        cout << "Node\tAq\tpH\tCalc\tDolo\tCa\tMg\tCl" << endl;
 
@@ -184,7 +186,8 @@ int main( int argc, char* argv[] )
           // initial approximation
           node->GEM_from_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in],
                   mt.aT[in], mt.aP[in], mt.aVs[in], mt.aMs[in],
-                  mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in], mt.axDC[in], mt.agam[in] );
+                  mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in],
+                  mt.amru[in], mt.amrl[in], mt.axDC[in], mt.agam[in] );
           // (9)   Passing current FMT iteration information into the work DATABR structure
           node->GEM_from_MT_time( mt.tm, mt.dt );
 
@@ -204,11 +207,16 @@ int main( int argc, char* argv[] )
                cout << "Insufficient quality of GEM solution, but GEM results are retrieved"
                << it << " node " << in << endl;
             }              
-            else // (7) Extracting GEMIPM output data to FMT part
-              node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
-                mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
-                mt.aEh[in],mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
-                mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
+            else { // (7) Extracting GEMIPM output data to FMT part
+               node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
+                    mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in],
+                    mt.amru[in], mt.amrl[in] );
+
+               node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
+                   mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
+                   mt.aEh[in],mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
+                   mt.avPS[in], mt.amPS[in], mt.abPS[in], mt.axPA[in], mt.aaPh[in], mt.abSP[in] );
+            }
           }
           // Here, the output upon completion of the time step is usually implemented
           //  to monitor the coupled simulation or collect results
@@ -283,6 +291,8 @@ TMyTransport::TMyTransport(long int p_nNod, long int p_nTim, double p_Tim, doubl
     arMB = new double *[nNodes];
     auIC = new double *[nNodes];
     abSP = new double *[nNodes];
+  amru = new double *[nNodes];
+  amrl = new double *[nNodes];
 
     for (long int in=0; in<nNodes; in++)
     {
@@ -301,6 +311,8 @@ TMyTransport::TMyTransport(long int p_nNod, long int p_nTim, double p_Tim, doubl
          aaPh[in] = new double [nPH];
          abPS[in] = new double [nIC*nPS];
          abSP[in] = new double [nIC];
+        amru[in] = new double [nPS];
+        amrl[in] = new double [nPS];
     }
 }
 
@@ -326,6 +338,8 @@ TMyTransport::~TMyTransport()
         delete[]aaPh[in];
         delete[]abPS[in];
         delete[]abSP[in];
+      delete[]amru[in];
+      delete[]amrl[in];
     }
 // return;
     delete[]axDC;
@@ -343,6 +357,8 @@ TMyTransport::~TMyTransport()
     delete[]arMB;
     delete[]auIC;
     delete[]abSP;
+  delete[]amru;
+  delete[]amrl;
 
     delete[]aNodeHandle;
     delete[]aNodeStatusCH;
@@ -363,13 +379,13 @@ TMyTransport::~TMyTransport()
 // Contributed on 22.08.2014 by Alina Yapparova, Chair of Reservoir Engineering,
 // Montanuniveritaet Leoben, Austria
 //
-void TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
+double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
 {
     double column_length  = 0.5; // [m]
     double dx = column_length/(nNodes-1);
 
     //constant velocity field
-    double v = 1.e-7; // velocity [m/s]
+    double v = 1.e-6; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
     double k = 0.1; // k = dt/dx*v
     // calculate dt
@@ -394,6 +410,7 @@ void TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
             //but as far as an aqueous phase is the first in the list (n=0), this simplified indexing will work for transport of aq phase
         }
     }
+    return dt;
 }
 
 //---------------------------------------------------------------------------

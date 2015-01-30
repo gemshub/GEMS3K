@@ -166,7 +166,7 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
                            long int kf, long int ka, long int ks, long int kd, long int ku, long int ki,
                            const char *kmod, long int jphl, long int jlphc )
 {
-    double *aZ, *aM;
+    double *aZ, *aM, PUL, PLL;
     KinMetData kmd;
     char KinProCode;
 
@@ -190,14 +190,22 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
     kmd.naptC_ = pm.LsKin[k*6+3]; /// number of parameter (coefficients) per species involved in 'activity product' terms (0 or 1)
     kmd.nAscC_ = pm.LsKin[k*6+4]; /// number of parameter coefficients in specific surface area correction equation ( 0 to 5 )
     kmd.nFaceC_ = pm.LsKin[k*6+5]; /// number of (separately considered) crystal faces or surface patches ( 1 to 4 )
-
+    if( k < pm.FIs )
+    {
+        PUL = pm.PUL[k];
+        PLL = pm.PLL[k];
+    }
+    else {
+        PUL = pm.DUL[jb];
+        PLL = pm.DLL[jb];    // bugfix 9.10.2013 DK
+    }
     if( phKinMet[k])
         if(  phKinMet[k]->testSizes( &kmd ) )
         {
             phKinMet[k]->UpdatePT( pm.Tc, pm.Pc );
             phKinMet[k]->UpdateTime( pm.kTau, pm.kdT );
             phKinMet[k]->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
-                                    pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh );
+                                    pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh, PUL, PLL );
                 return; // using old allocation and setup of the kinetics model
         }
 
@@ -226,15 +234,9 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
     kmd.hX0_ = pm.Xr0h0[k][1]/1e9;  /// Mean thickness h0 for cylindrical or 0 for spherical particles, n (reserved)
     kmd.sVp_ = 0.;    /// Specific pore volume of phase, m3/g (default: 0)
     kmd.sGP_ = pm.YOF[k]*pm.FWGT[k];    /// surface free energy of the phase, J (YOF*PhM)
-    if( k < pm.FIs)
-    {
-        kmd.nPul_ = pm.PUL[k];   /// upper restriction to this phase amount, mol (calculated here)
-        kmd.nPll_ = pm.PLL[k];   /// lower restriction to this phase amount, mol (calculated here)
-    }
-    else {
-       kmd.nPul_ = 1e6;
-       kmd.nPll_ = 0.;
-    }
+    kmd.nPul_ = PUL;   /// upper restriction to this phase amount, mol
+    kmd.nPll_ = PLL;   /// lower restriction to this phase amount, mol
+
     kmd.arlPhc_ = pm.lPhc+jlphc;   /// Pointer to input array of phase link parameters [nlPh*nlPc]
     kmd.arfeSAr_ = pm.feSArC+kf;  /// Pointer to fractions of surface area related to different parallel reactions [nPRk]
     kmd.arrpCon_ = pm.rpConC+kc;  /// Pointer to input array of kinetic rate constants for 'parallel reactions' [nPRk*nrpC]
@@ -265,7 +267,6 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
     kmd.arVol_ = pm.Vol + jb;   /// molar volumes of end-members (species) cm3/mol ->NSpecies
 
 // More stuff here, if needed
-
 
     KinProCode = kmd.KinProCod_;
     TKinMet* myKM = NULL;
@@ -432,7 +433,8 @@ TMulti::KM_UpdateFSA( long int jb, long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
             TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
             myKM->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
-                             pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
+                             pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh,
+                             PUL, PLL );
             break;
         }
         case KM_PRO_UPT_:
@@ -440,7 +442,8 @@ TMulti::KM_UpdateFSA( long int jb, long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
             myKM->UpdateFSA( pm.Aalp[k], pm.XF[k], pm.FWGT[k], pm.FVOL[k], pm.Falp[k],
-                             pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh  );
+                             pm.PfFact[k], pm.YOF[k], pm.IC, pm.pH, pm.pe, pm.Eh,
+                             PUL, PLL );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:

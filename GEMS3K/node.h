@@ -337,6 +337,30 @@ double *p_amru,   ///< Upper AMR to masses of sol. phases [nPSb]        +       
 double *p_amrl    ///< Lower AMR to masses of sol. phases [nPSb]        +       -      -
 );
 
+/// (8e) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure,
+/// with AMRs for phases-solutions.
+/// In addition, provides access to speciation vector p_xDC and DC activity coefficients p_gam that will be used in
+/// GEM "smart initial approximation" SIA mode if dBR->NodeStatusCH == NEED_GEM_SIA (5) and
+/// uPrimalSol = true are set for the GEM_run() call (see Section 2) . This works only when the DATACH
+/// structure contains a full list of Dependent Components used in GEM IPM2 calculations.
+void GEM_from_MT(
+ long int  p_NodeHandle,   ///< Node identification handle
+ long int  p_NodeStatusCH, ///< Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                  //                                              GEM input output  FMT control
+ double p_TK,     ///< Temperature T, Kelvin                            +       -      -
+ double p_P,      ///< Pressure P, Pa                                   +       -      -
+ double p_Vs,     ///< Volume V of reactive subsystem, m3               -       -      +
+ double p_Ms,     ///< Mass of reactive subsystem, kg                   -       -      +
+ double *p_bIC,   ///< Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll,   ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_asPH,  ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_amru,   ///< Upper AMR to masses of sol. phases [nPSb]       +       -      -
+ double *p_amrl,    ///< Lower AMR to masses of sol. phases [nPSb]      +       -      -
+ double *p_xDC,   ///< Mole amounts of DCs [nDCb] - old primal soln.    +      -      -
+ double *p_gam    ///< DC activity coefficients [nDCb] - old primal s.  +      -      -
+);
+
 /// (9) Optional, for passing the current mass transport time and time step into the work
 /// DATABR structure (for using it in TKinMet, or tracing/debugging, or in writing DBR files for nodes)
 /// This call should be used instead of obsolete GEM_set_MT() (provided below for compatibility with older codes)

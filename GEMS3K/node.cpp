@@ -2310,6 +2310,49 @@ void TNode::GEM_restore_MT(
         p_asPH[ii] = CNode->aPH[ii];
 }
 
+// (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
+//  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
+//   chemical data for all nodes used in the mass-transport model.
+void TNode::GEM_restore_MT(
+    long int  &p_NodeHandle,   // Node identification handle
+    long int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
+                      //                                    GEM input output  FMT control
+    double &p_TK,      // Temperature T, Kelvin                       +       -      -
+    double &p_P,      // Pressure P,  Pa                              +       -      -
+    double &p_Vs,     // Volume V of reactive subsystem,  m3         (+)      -      +
+    double &p_Ms,     // Mass of reactive subsystem, kg               -       -      +
+    double *p_bIC,    // Bulk mole amounts of IC  [nICb]              +       -      -
+    double *p_dul,    // Upper restrictions to amounts of DC [nDCb]   +       -      -
+    double *p_dll,    // Lower restrictions to amounts of DC [nDCb]   +       -      -
+    double *p_asPH,   // Specific surface areas of phases,m2/kg[nPHb] +       -      -
+    double *p_amru,   // Upper AMRs to masses of sol. phases [nPSb]   +       -      -
+    double *p_amrl    // Lower AMRs to masses of sol. phases [nPSb]   +       -      -
+   )
+{
+  long int ii;
+  p_NodeHandle = CNode->NodeHandle;
+  p_NodeStatusCH = CNode->NodeStatusCH;
+  p_TK = CNode->TK;
+  p_P = CNode->P;
+  p_Vs = CNode->Vs;
+  p_Ms = CNode->Ms;
+// Checking if no-LPP IA is Ok
+   for( ii=0; ii<CSD->nICb; ii++ )
+     p_bIC[ii] = CNode->bIC[ii];
+   for( ii=0; ii<CSD->nDCb; ii++ )
+   {  p_dul[ii] = CNode->dul[ii];
+      p_dll[ii] = CNode->dll[ii];
+   }
+   if( CSD->nAalp >0 )
+     for( ii=0; ii<CSD->nPHb; ii++ )
+        p_asPH[ii] = CNode->aPH[ii];
+   for( ii=0; ii<CSD->nPSb; ii++ )
+   {
+       p_amru[ii] = CNode->amru[ii];
+       p_amrl[ii] = CNode->amrl[ii];
+   }
+}
+
 // (7)  Retrieves the GEMIPM2 chemical speciation calculation results from the work DATABR structure instance
 //   into memory provided by the mass transport part. Dimensions and order of elements in the arrays must correspond
 //   to those in currently existing DATACH memory structure.
@@ -2627,11 +2670,89 @@ void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
       // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
       if( CSD->nAalp >0 )
        for( ii=0; ii<CSD->nPHb; ii++ )
-           CNode->aPH[ii] = p_asPH[ii];
+          CNode->aPH[ii] = p_asPH[ii];
 
+      for( ii=0; ii<CSD->nPSb; ii++ )
+      {
+          CNode->amru[ii] = p_amru[ii];
+          CNode->amrl[ii] = p_amrl[ii];
+      }
+}
 
+//(8e) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
+//In addition, provides access to speciation vector p_xDC and DC activity coefficients p_gam that will be used in
+// GEM "smart initial approximation" SIA mode if dBR->NodeStatusCH == NEED_GEM_SIA (5) and
+// uPrimalSol = true are set for the GEM_run() call (see Section 2) . This works only when the DATACH
+//  structure contains a full list of Dependent Components used in GEM IPM2 calculations.
+void TNode::GEM_from_MT(
+ long int  p_NodeHandle,   // Node identification handle
+ long int  p_NodeStatusCH, // Node status code (NEED_GEM_SIA or NEED_GEM_AIA)
+                  //                                              GEM input output  FMT control
+ double p_TK,     // Temperature T, Kelvin                            +       -      -
+ double p_P,      // Pressure P, Pa                                   +       -      -
+ double p_Vs,     // Volume V of reactive subsystem, m3               -       -      +
+ double p_Ms,     // Mass of reactive subsystem, kg                   -       -      +
+ double *p_bIC,   // Bulk mole amounts of IC [nICb]                   +       -      -
+ double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
+ double *p_asPH,   // Specific surface areas of phases, m2/kg [nPHb]  +       -      -
+ double *p_amru,   //< Upper AMR to masses of sol. phases [nPSb]       +       -      -
+ double *p_amrl,   //< Lower AMR to masses of sol. phases [nPSb]      +       -      -
+ double *p_xDC,  // Mole amounts of DCs [nDCb] - old primal soln.     +       -      -
+ double *p_gam   // DC activity coefficients [nDCb] - old primal s.   +       -      -
+)
+{
+  long int ii;
+
+  CNode->NodeHandle = p_NodeHandle;
+  CNode->NodeStatusCH = p_NodeStatusCH;
+  CNode->TK = p_TK;
+  CNode->P = p_P;
+  CNode->Vs = p_Vs;
+  CNode->Ms = p_Ms;
+// Checking if no-LPP IA is Ok
+   for( ii=0; ii<CSD->nICb; ii++ )
+   {
+     CNode->bIC[ii] = p_bIC[ii];
+   }
+   for( ii=0; ii<CSD->nDCb; ii++ )
+   {
+     CNode->dul[ii] = p_dul[ii];
+     CNode->dll[ii] = p_dll[ii];
+   }
+    if( CSD->nAalp >0 )
+     for( ii=0; ii<CSD->nPHb; ii++ )
+         CNode->aPH[ii] = p_asPH[ii];
+
+   // Optional part - copying old primal solution from p_xDC and p_gam vectors
+   if( p_xDC && p_gam )
+   {
+      for( ii=0; ii<CSD->nDCb; ii++ )
+      {
+        CNode->xDC[ii] = p_xDC[ii];
+        CNode->gam[ii] = p_gam[ii];
+      }
+   }
+   else if( CNode->NodeStatusCH == NEED_GEM_SIA )
+            CNode->NodeStatusCH = NEED_GEM_AIA;   // no complete old primal solution provided!
+
+   for( ii=0; ii<CSD->nPSb; ii++ )
+   {
+       CNode->amru[ii] = p_amru[ii];
+       CNode->amrl[ii] = p_amrl[ii];
+   }
+//  Discuss the policy!
+//   if( p_xDC )
+//   {  long int jj;
+//      // Correction of bIC vector by convoluting the amounts of DCs
+//      for( jj=0; jj<CSD->nDCb; jj++ )
+//        if( p_xDC[jj] )
+//          for( ii=0; ii<CSD->nICb; ii++ )
+//            CNode->bIC[ii] += p_xDC[jj] * nodeCH_A( jj, ii );
+//   }
 
 }
+
 
 #endif
 //-----------------------End of node.cpp--------------------------
