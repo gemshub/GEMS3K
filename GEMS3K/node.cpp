@@ -2092,7 +2092,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
     if( pmm->DUL[ CSD->xdc[ii] ] < pmm->DLL[ CSD->xdc[ii] ] )
     {
        char buf[300];
-       sprintf(buf, "Upper kinetic restrictions smolest than lower for DC&RC %-6.6s",
+       sprintf(buf, "Upper kinetic restriction less than the lower one for DC&RC %-6.6s",
                          pmm->SM[CSD->xdc[ii]] );
        Error("unpackDataBr", buf );
     }
@@ -2103,7 +2103,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
       if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil->pa.p.DB )
       {
          char buf[300];
-         sprintf(buf, "Bulk mole amounts of IC  %-6.6s is %lg",
+         sprintf(buf, "Bulk mole amount of IC %-6.6s is %lg - out of range",
                            pmm->SB[CSD->xic[ii]], pmm->B[ CSD->xic[ii] ] );
           Error("unpackDataBr", buf );
       }

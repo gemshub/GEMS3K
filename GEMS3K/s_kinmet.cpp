@@ -951,27 +951,31 @@ TKinMet::SetMetCon( )
     // First calculate phase constraints
     if( LaPh < -OmgTol && dnPh < 0. ) // dissolution
     {                     // (needs more flexible check based on Fa stability criterion!)
-       if( nPh > 0. )
+       if( nPh >= 1e-10 )
        {   // dissolution
          nPll = max( 0.0, nPh + dnPh );
-         if( nPul < nPll )
+//         if( nPul < nPll )
            nPul = nPll;
 //         if( nPul < nPll - dnPh )
 //           nPul = max( 0.0, nPll - dnPh );    // ensuring slackness
+       }
+       else { // removing the solid phase at cutoff amount 1e-10
+           nPll = 0.0; nPul = 0.0;
        }
     }
     else if( LaPh > OmgTol && dnPh > 0. ) {  // precipitation rate constant (corrected for T) in mol/m2/s
        if( isNucl == false )
        {  // growth without nucleation
           nPul = max( 0.0, nPh + dnPh );
-          if( nPll > nPul - dnPh )
-              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
+          nPll = nPul;
+//          if( nPll > nPul - dnPh )
+//              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
        }
        else {  // nucleation (rTot already includes nucleation rate)
           if( nPh == 0. )
           {
               if( -rNuc*kdT >= 1e-10 )
-              {  // no phase but significant nucleation rate - onset of the phase
+              {  // no phase but significant nucleation rate - onset of the phase at cutoff 1e-10 mol
                  // No growth yet, even if parallel reactions are given
                   nPul = -rNuc*kdT; nPll = nPul;
                   nPhi = nPh;         // initial amount of this phase
@@ -985,16 +989,18 @@ TKinMet::SetMetCon( )
               }
           }
           else { // nucleation occurs together with growth - nPll set at least to nucleated amount
-             nPul = nPh + dnPh;
-             nPll = max( -rNuc*kdT, nPul - dnPh );
+              nPul = nPh + dnPh;
+              nPll = nPul;
+//             nPll = max( -rNuc*kdT, nPul - dnPh );
           }
        }
     }
-    else {  // equilibrium  - needs to be checked!
-        if( dnPh > 0 )
-            nPul = nPh + dnPh;
-        else
-            nPul = max(0.0, nPh - dnPh );
+    else { ; // equilibrium  - needs to be checked!
+//         nPll = 0.; nPul = 1e6;
+//        if( dnPh > 0 )
+//            nPul = nPh + dnPh;
+//        else
+//            nPul = max(0.0, nPh - dnPh );
     }
     if( NComp > 1 )
        return false;  // DC constraints for ss will be set in SplitMod() or SplitInit()
