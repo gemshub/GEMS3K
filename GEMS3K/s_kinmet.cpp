@@ -861,7 +861,7 @@ TKinMet::RateInit( )
 //    sAPh = sSAcr * mPh;   // initial surface of the phase
 //    sAph_c = sAPh;
     rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
-    rTot = kTot * sAPh + rNuc; // overall rate for the phase (mol/s)
+    rTot = kTot * sAPh; // + rNuc; // overall rate for the phase (mol/s)
 //    dnPh = -kdT * rTot; // overall initial change (moles)
 //    dnPh = 0.; // overall initial change (moles)
 //    nPh += dnPh;  // New amount of the phase (this operator is doubtful...)
@@ -911,7 +911,7 @@ TKinMet::RateMod( )
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
     rNuc *= ( arvp[0]/1000. ); // Normalize nucleation rate to mol/s for the current volume of aqueous phase
-    rTot = kTot * sAPh + rNuc; // overall rate for the phase (mol/s)
+    rTot = kTot * sAPh; // + rNuc; // overall rate for the phase (mol/s)
     if( nPh > 0. )
     {
        gTot = kTot * mPh/nPh;  // rate in kg/m2/s
@@ -934,7 +934,7 @@ TKinMet::RateMod( )
 bool
 TKinMet::SetMetCon( )
 {
-    double dnPh = 0.; // dn_dt = 0.;
+    double dnPh = 0., dnNuc = 0.;// dn_dt = 0.;
     long int r, atopc;
     bool isNucl = false;
 
@@ -946,6 +946,7 @@ TKinMet::SetMetCon( )
     }
 
     dnPh = -kdT * rTot; // change in phase amount over dt
+    dnNuc = -kdT * rNuc;
 //   dn_dt = -rTot;  // minus total rate mol/s
 
     // First calculate phase constraints
@@ -963,21 +964,22 @@ TKinMet::SetMetCon( )
            nPll = 0.0; nPul = 0.0;
        }
     }
-    else if( LaPh > OmgTol && dnPh > 0. ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+    else if( LaPh > OmgTol && dnPh+dnNuc > 0. ) {  // precipitation rate constant (corrected for T) in mol/m2/s
        if( isNucl == false )
        {  // growth without nucleation
-          nPul = max( 0.0, nPh + dnPh );
-          nPll = nPul;
+          nPul = nPh + dnPh;
+          nPll = min(nPh, nPul); // nPul;
 //          if( nPll > nPul - dnPh )
 //              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
        }
        else {  // nucleation (rTot already includes nucleation rate)
           if( nPh == 0. )
           {
-              if( -rNuc*kdT >= 1e-10 )
+              if( dnNuc >= 1e-10 )
               {  // no phase but significant nucleation rate - onset of the phase at cutoff 1e-10 mol
                  // No growth yet, even if parallel reactions are given
-                  nPul = -rNuc*kdT; nPll = nPul;
+                  nPul = dnNuc;       // nPll = nPul;
+                  nPll = min( nPul, 1e-6 ); // PROVISIONAL - max content of phase in aqueous to be checked!
                   nPhi = nPh;         // initial amount of this phase
                   mPhi = mPh;         // initial mass
                   vPhi = vPh;         // initial volume
@@ -988,9 +990,10 @@ TKinMet::SetMetCon( )
                   nPul = 0.; nPll = 0.;
               }
           }
-          else { // nucleation occurs together with growth - nPll set at least to nucleated amount
+          else { // nucleation occurs together with growth - nPll set at least to grown amount
               nPul = nPh + dnPh;
-              nPll = nPul;
+              nPll = min(nPh, nPul); // nPul;
+              nPul += dnNuc;
 //             nPll = max( -rNuc*kdT, nPul - dnPh );
           }
        }
