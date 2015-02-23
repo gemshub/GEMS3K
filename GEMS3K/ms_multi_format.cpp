@@ -214,7 +214,7 @@ if( _comment )
    ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
-  ff << "\"" << pm.stkey << "\"" << endl;
+  ff << "<ID_key> \"" << pm.stkey << "\"" << endl;
 
  if( _comment )
      ff << "\n## (1) Flags that affect memory allocation";
@@ -632,8 +632,18 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
    TReadArrays  rdar( 8, MULTI_static_fields, ff);
    gstring str;
    rdar.skipSpace();
-   f_getline( ff, str, '\n');
-   copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
+   char buf[300];
+   ff.getline(buf, 300,  '\n' );
+   str = buf;
+   size_t pos1 = str.find('\"');
+   if( pos1 < gstring::npos )
+      str = str.substr( pos1+1);
+   pos1 = str.find('\"');
+   if( pos1 < gstring::npos )
+   {   str = str.substr( 0, pos1 );
+      //f_getline( ff, str, '\n');
+      copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
+   }
 
    nfild = rdar.findNext();
    while( nfild >=0 )
