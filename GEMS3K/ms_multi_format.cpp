@@ -501,7 +501,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    if( pm.xICuC )
    { long int xICuCSum = 0;
      for(long int i=0; i<pm.FIs; i++)
-       xICuCSum += pm.L1[i];
+       xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
      prar.writeArray(  f_xICuC, pm.xICuC, xICuCSum, _comment, brief_mode);
    }
 
@@ -1091,7 +1091,7 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       case f_xICuC:
          { long int xICuCSum = 0;
           for(long int i=0; i<pm.FIs; i++)
-            xICuCSum += pm.L1[i];
+            xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
 #ifdef IPMGEMPLUGIN
                 if(!pm.xICuC )
                      pm.xICuC = new long int[xICuCSum];

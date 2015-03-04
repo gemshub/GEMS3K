@@ -211,8 +211,8 @@ double
            /// number of parameter coeffs in parallel reaction term nrpC[k]; number of parameters
            /// per species in activity products naptC[k]; nAscC number of parameter coefficients in As correction;
            /// nFaces[k] number of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
-  *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k]; reserved [Fis][2]
-
+  *LsUpt,  ///< new: number of uptake kinetics model parameters (coefficients) numpC[k];
+          /// number of IC element indexes for end members = L1[k]    [Fis][2]
   *xSKrC,  ///< new: Collected array of aq/gas/sorption species indexes used in activity products (-> += LsKin[k][1])
   (*ocPRkC)[2], ///< new: Collected array of operation codes for kinetic parallel reaction terms (-> += LsKin[k][0])
                 /// and indexes of faces (surface patches)

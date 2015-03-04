@@ -741,7 +741,7 @@ ff.writeArray((double*)pm.D, MST*MST);
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
         long int xICuCSum = 0;
         for(long int i=0; i<pm.FIs; i++)
-        xICuCSum += pm.L1[i];
+            xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
 
         ff.writeArray( pm.xSKrC, xSKrCSum);
         ff.writeArray( &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
@@ -1072,7 +1072,7 @@ ff.readArray((double*)pm.D, MST*MST);
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
         long int xICuCSum = 0;
         for(long int i=0; i<pm.FIs; i++)
-        xICuCSum += pm.L1[i];
+        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
 #ifdef IPMGEMPLUGIN
         pm.xSKrC = new long int[xSKrCSum];
         pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
@@ -2269,7 +2269,7 @@ void TMulti::to_text_file( const char *path, bool append )
       if( pm.xICuC )
       { long int xICuCSum = 0;
         for(long int i=0; i<pm.FIs; i++)
-          xICuCSum += pm.L1[i];
+          xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
         prar.writeArray(  "xICuC", pm.xICuC, xICuCSum);
       }
    }
