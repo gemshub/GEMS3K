@@ -144,7 +144,7 @@ outField MULTI_dynamic_fields[80] =  {
     { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
       "# of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]" },
     { "LsUpt",    0 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
-    { "xICuC",    0 , 0, 0,  "# xICuC: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k] (reserved)" },
+    { "xICuC",    0 , 0, 0,  "# xICuC: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k]" },
     { "PfFact",    0 , 0, 0,  "# PfFact: form factors for phases (taken from TKinMet or set from TNode) [FI] (reserved)" },
 // TSorpMod stuff
     { "LsESmo",    0 , 0, 0,  "# LsESmo: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]" },
@@ -489,20 +489,19 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
           ff << "\n\n# AscpC:  parameter coefficients of equation for correction of specific surface area";
    prar.writeArray(  "AscpC", pm.AscpC,  AscpCSum);
    }
-   long int UMpcSum;
-   getLsUptsum( UMpcSum );
+   prar.writeArray(  f_PfFact, pm.PfFact, pm.FI, 1L, _comment, brief_mode);
+
+   long int UMpcSum, xICuCSum;
+   getLsUptsum( UMpcSum, xICuCSum );
    prar.writeArray(  f_LsUpt, pm.LsUpt, pm.FIs*2, 2L, _comment, brief_mode);
-   if(UMpcSum )
+   if( pm.xICuC )
+   {
+     prar.writeArray(  f_xICuC, pm.xICuC, xICuCSum, _comment, brief_mode);
+   }
+   if( UMpcSum )
    {   if( _comment )
           ff << "\n\n# UMpcC:  Collected array of uptake model coefficients";
    prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
-   }
-   prar.writeArray(  f_PfFact, pm.PfFact, pm.FI, 1L, _comment, brief_mode);
-   if( pm.xICuC )
-   { long int xICuCSum = 0;
-     for(long int i=0; i<pm.FIs; i++)
-       xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
-     prar.writeArray(  f_xICuC, pm.xICuC, xICuCSum, _comment, brief_mode);
    }
 
 } // sMod
@@ -1072,8 +1071,8 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
             Error( "Error", "Array LsUpt not used in this problem");
           rddar.readArray(  "LsUpt",  pm.LsUpt, pm.FIs*2);
 
-        long int UMpcSum;
-        getLsUptsum( UMpcSum );
+        long int UMpcSum, xICuCSum;
+        getLsUptsum( UMpcSum, xICuCSum );
         if(UMpcSum )
         {   rddar.readNext( "UMpcC");
 #ifdef IPMGEMPLUGIN
@@ -1089,9 +1088,9 @@ if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       case f_PfFact:  rddar.readArray(  "PfFact", pm.PfFact, pm.FI );
                       break;
       case f_xICuC:
-         { long int xICuCSum = 0;
-          for(long int i=0; i<pm.FIs; i++)
-            xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
+         {
+            long int UMpcSum, xICuCSum;
+            getLsUptsum( UMpcSum, xICuCSum );
 #ifdef IPMGEMPLUGIN
                 if(!pm.xICuC )
                      pm.xICuC = new long int[xICuCSum];

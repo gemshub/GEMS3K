@@ -128,12 +128,16 @@ void TMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
  }
 
 // dimensions from LsUpt array
-void TMulti::getLsUptsum( long int& UMpcSum )
-{  UMpcSum = 0;
+void TMulti::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
+{
+   UMpcSum = 0;
    for(long int i=0; i<pm.FIs; i++)
    {
        UMpcSum += (pm.LsUpt[i*2]*pm.L1[i]);
    }
+   xICuCSum = 0;
+   for(long int i=0; i<pm.FIs; i++)
+       xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
  }
 
 void TMulti::setPa( TProfil *prof)
@@ -734,14 +738,11 @@ ff.writeArray((double*)pm.D, MST*MST);
         ff.writeArray(  pm.LsKin, pm.FI*6);
         ff.writeArray(  pm.LsUpt, pm.FIs*2);
 
-        long int UMpcSum;
-        getLsUptsum( UMpcSum );
+        long int UMpcSum, xICuCSum;
+        getLsUptsum( UMpcSum, xICuCSum );
         long int xSKrCSum, ocPRkC_feSArC_Sum;
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
-        long int xICuCSum = 0;
-        for(long int i=0; i<pm.FIs; i++)
-            xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
 
         ff.writeArray( pm.xSKrC, xSKrCSum);
         ff.writeArray( &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
@@ -1065,14 +1066,12 @@ ff.readArray((double*)pm.D, MST*MST);
         ff.readArray(  pm.LsKin, pm.FI*6);
         ff.readArray(  pm.LsUpt, pm.FIs*2);
 
-        long int UMpcSum;
-        getLsUptsum( UMpcSum );
+        long int UMpcSum, xICuCSum;
+        getLsUptsum( UMpcSum, xICuCSum );
         long int xSKrCSum, ocPRkC_feSArC_Sum;
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
-        long int xICuCSum = 0;
-        for(long int i=0; i<pm.FIs; i++)
-        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
+
 #ifdef IPMGEMPLUGIN
         pm.xSKrC = new long int[xSKrCSum];
         pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
@@ -2255,8 +2254,8 @@ void TMulti::to_text_file( const char *path, bool append )
       prar.writeArray(  "rpConC", pm.rpConC,  rpConCSum);
       prar.writeArray(  "apConC", pm.apConC, apConCSum);
       prar.writeArray(  "AscpC", pm.AscpC,  AscpCSum);
-      long int UMpcSum;
-      getLsUptsum( UMpcSum );
+      long int UMpcSum, xICuCSum;
+      getLsUptsum( UMpcSum, xICuCSum );
       prar.writeArray(  "LsUpt", pm.LsUpt, pm.FIs*2);
       prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
 
@@ -2267,9 +2266,7 @@ void TMulti::to_text_file( const char *path, bool append )
       prar.writeArray(  "emRd", pm.emRd, pm.Ls);
       prar.writeArray(  "emDf", pm.emDf, pm.Ls);
       if( pm.xICuC )
-      { long int xICuCSum = 0;
-        for(long int i=0; i<pm.FIs; i++)
-          xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
+      {
         prar.writeArray(  "xICuC", pm.xICuC, xICuCSum);
       }
    }

@@ -842,7 +842,7 @@ public:
        void getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
                          long int& rpConCSum,long int& apConCSum, long int& AscpCSum );
        /// Get dimensions from LsUpot array
-       void getLsUptsum( long int& UMpcSum );
+       void getLsUptsum(long int& UMpcSum, long int& xICuCSum);
 
     // EXTERNAL FUNCTIONS
     // MultiCalc
