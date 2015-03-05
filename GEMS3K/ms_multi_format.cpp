@@ -494,14 +494,14 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    long int UMpcSum, xICuCSum;
    getLsUptsum( UMpcSum, xICuCSum );
    prar.writeArray(  f_LsUpt, pm.LsUpt, pm.FIs*2, 2L, _comment, brief_mode);
-   if( pm.xICuC )
-   {
-     prar.writeArray(  f_xICuC, pm.xICuC, xICuCSum, _comment, brief_mode);
-   }
    if( UMpcSum )
    {   if( _comment )
           ff << "\n\n# UMpcC:  Collected array of uptake model coefficients";
-   prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
+       prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
+   }
+   if( pm.xICuC )
+   {
+     prar.writeArray(  f_xICuC, pm.xICuC, xICuCSum, _comment, brief_mode);
    }
 
 } // sMod
