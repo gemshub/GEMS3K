@@ -696,7 +696,7 @@ if( rk.xPR != r )     // index of this parallel reaction
        rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
        if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
            rk.aft = pow( rk.aft, rk.mPR );
-       rk.aft *= -1.;
+//       rk.aft *= -1.;
        break;
     case ATOP_SCHOTT_: // = 2,      Schott et al. 2012 fig. 1e
        if( OmPh )
