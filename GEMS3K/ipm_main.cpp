@@ -627,12 +627,11 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         // Calculation of mass-balance residuals and DC concentrations in phases
         MassBalanceResiduals( pm.N, pm.L, pm.A, pm.X, pm.B, pm.C);
         CalculateConcentrations( pm.X, pm.XF, pm.XFA );  // also ln activities (DualTh)
-
 #ifndef IPMGEMPLUGIN
-        if( pa->p.PC == 1 )
-            KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria
-        else if( pa->p.PC >= 2 )
-            StabilityIndexes(); // calculation of new phase stability indexes
+//20/03/2015        if( pa->p.PC == 1 )
+//20/03/2015            KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria
+//20/03/2015         else if( pa->p.PC >= 2 )
+//20/03/2015             StabilityIndexes(); // calculation of new phase stability indexes
 #ifndef Use_mt_mode
    pVisor->Update(false);
 #endif
@@ -839,7 +838,7 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
 
       LM = StepSizeEstimate( true ); // Estimation of the MBR() iteration step size LM
 
-      if( LM < 1e-6 )
+      if( LM < 1e-6 ) //SD 1e-6 was
       {  // Experimental
           iRet = 3;
           char buf[320];
