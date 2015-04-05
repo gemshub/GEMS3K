@@ -1301,7 +1301,7 @@ long int TMargules::PTparam()
 	WG23 = WU23 - Tk*WS23 + Pbar*WV23;
 	WG123 = WU123 - Tk*WS123 + Pbar*WV123;
 
-	return 0;
+    return 0;
 }
 
 
@@ -1443,7 +1443,20 @@ long int TSubregular::PTparam()
 	WG12 = WU12 - Tk*WS12 + Pbar*WV12;
 	WG21 = WU21 - Tk*WS21 + Pbar*WV21;
 
-	return 0;
+    if( NDQFpc < 4 )
+        return 0;
+    // Calculate DQF terms for end members
+    DQFX1 = DQFcf[0];
+    DQFG1 = DQFcf[1];
+    DQFS1 = DQFcf[2];
+    DQFV1 = DQFcf[3];
+    DQFX2 = DQFcf[NDQFpc];
+    DQFG2 = DQFcf[NDQFpc+1];
+    DQFS2 = DQFcf[NDQFpc+2];
+    DQFV2 = DQFcf[NDQFpc+3];
+    DQF1 = DQFG1 - Tk*DQFS1 + Pbar*DQFV1;
+    DQF2 = DQFG2 - Tk*DQFS2 + Pbar*DQFV2;
+    return 0;
 }
 
 
@@ -1454,24 +1467,59 @@ long int TSubregular::MixMod()
 
 	if ( NPcoef < 3 || NPar < 2 || NComp < 2 || !x || !lnGamma )
 		return 1;
+    if( NDQFpc == 0 )
+    {    // Classic Margules subregular model
+        a1 = WG12 / (R_CONST*Tk);
+        a2 = WG21 / (R_CONST*Tk);
 
-	a1 = WG12 / (R_CONST*Tk);
-	a2 = WG21 / (R_CONST*Tk);
+        X1 = x[0];
+        X2 = x[1];
 
-	X1 = x[0];
-	X2 = x[1];
+        // activity coefficients (normalized by RT)
+        lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
+        lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
 
-	// activity coefficients (normalized by RT)
-	lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
-	lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
+        // assignments
+        lnGamma[0] = lnGam1;
+        lnGamma[1] = lnGam2;
+    }
+    else if( NDQFpc == 4 )
+    {   // DQF (regular) model, a1 and a2 taken as regular parameters
+        // description: Kulik et al., Phys.Chem.Earth 35 (2010) 217-232, eqs 18-20
+        a1 = WG12 / (R_CONST*Tk);
+        a2 = WG21 / (R_CONST*Tk);
 
-	// assignments
-	lnGamma[0] = lnGam1;
-	lnGamma[1] = lnGam2;
+        X1 = x[0];
+        X2 = x[1];
 
-	return 0;
+        if( X2 < DQFX2 )
+        {
+            lnGamDQF[0] = 0.;
+            lnGamDQF[1] = DQF2/(R_CONST*Tk);
+            lnGam1 = a2 * X2*X2;
+            lnGam2 = a2 * X1*X1;
+
+        }
+        else if( X1 < DQFX1 )
+        {
+            lnGamDQF[0] = DQF1/(R_CONST*Tk);
+            lnGamDQF[1] = 0.;
+            lnGam1 = a1 * X2*X2;
+            lnGam2 = a1 * X1*X1;
+        }
+        else {
+        // hypothetical region of undefined structure where subregular model works
+            lnGamDQF[0] = DQF1/(R_CONST*Tk);
+            lnGamDQF[1] = DQF2/(R_CONST*Tk);
+            lnGam1 = (2.*a2-a1)*X2*X2 + 2.*(a1-a2)*X2*X2*X2;
+            lnGam2 = (2.*a1-a2)*X1*X1 + 2.*(a2-a1)*X1*X1*X1;
+        }
+        // assignments
+        lnGamma[0] = lnGam1+lnGamDQF[0];
+        lnGamma[1] = lnGam2+lnGamDQF[1];
+        return 0;
+    }
 }
-
 
 /// calculates bulk phase excess properties
 long int TSubregular::ExcessProp( double *Zex )
@@ -1499,6 +1547,7 @@ long int TSubregular::ExcessProp( double *Zex )
 	Zex[5] = Aex;
 	Zex[6] = Uex;
 
+    // TBD: DQF contributions
 	return 0;
 }
 

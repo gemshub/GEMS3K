@@ -144,7 +144,7 @@ class TSolMod
 
 //   long int NlPh;     ///< new: Number of linked phases
 //   long int NlPc;     ///< new: Number of linked phase parameter coefficient per link (default 0)
-   long int NDQFpc;   ///< new: Number of DQF parameters per species (end member)
+   long int NDQFpc;   ///< new: Number of DQF parameters per species (end member), 0 or 4
 //   long int NrcPpc;   ///< new: Number of reciprocal parameters per species (end member)
 
         //        long int NPTP_DC;  // Number of properties per one DC at T,P of interest (columns in aDC)  !!!! Move to CG EOS subclass
@@ -158,7 +158,7 @@ class TSolMod
         double *aIPc;   ///< Table of interaction parameter coefficients
         double *aIP;    ///< Vector of interaction parameters corrected to T,P of interest
         double *aDCc;   ///< End-member properties coefficients
-        double *aGEX;   ///< Reciprocal energies, Darken terms, pure fugacities of DC (corrected to TP)
+        double *aGEX;   ///< Reciprocal energies, DQF terms, pure fugacities of DC (corrected to TP)
         double *aPparc;  ///< Output partial pressures (activities, fugacities) -> NComp
         double **aDC;   ///< Table of corrected end member properties at T,P of interest  !!!!!! Move to GC EOS subclass!
         double *aMoiSN; ///< End member moiety- site multiplicity number tables -> NComp x NSub x NMoi
@@ -166,6 +166,8 @@ class TSolMod
 
 //    double *lPhcf;  ///< new: array of phase link parameters -> NlPh x NlPc (read-only)
     double *DQFcf;  ///< new: array of DQF parameters for DCs in phases ->  NComp x NDQFpc; (read-only)
+                    ///< x_DQF[j]: mole fraction at transition; a, b, c - coefficients of T,P correction
+                    ///< according to the equation aGEX[j] = A + B*T + C*P (so far only binary Margules)
 //    double *rcpcf;  ///< new: array of reciprocal parameters for DCs in phases -> NComp x NrcPpc; (read-only)
 
         double *x;      ///< Pointer to mole fractions of end members (provided)
@@ -180,7 +182,7 @@ class TSolMod
         double Gid, Hid, Sid, CPid, Vid, Aid, Uid;   ///< molar ideal mixing properties
         double Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq;   ///< molar Darken quadratic terms
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
-        double *lnGamConf, *lnGamRecip, *lnGamEx;    ///< Work arrays for lnGamma components
+        double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF;    ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
@@ -2198,13 +2200,15 @@ class TMargules: public TSolMod
 // -------------------------------------------------------------------------------------
 /// Binary Margules (subregular) model for solid solutions.
 /// References: Anderson and Crerar (1993); Anderson (2006)
-/// (c) TW/DK June 2009
+/// (c) TW/DK June 2009, DQF part added by DK on April 5, 2015
 class TSubregular: public TSolMod
 {
 	private:
 
 		double WU12, WS12, WV12, WG12;
 		double WU21, WS21, WV21, WG21;
+        double DQFX1, DQFG1, DQFS1, DQFV1, DQF1;
+        double DQFX2, DQFG2, DQFS2, DQFV2, DQF2;
 
 	public:
 
