@@ -1,11 +1,11 @@
-#  GEMS3K v.3.3 r.999 (dev) 
+#  GEMS3K v.3.3 r.1036 (rc) 
 # File: /home/kulik/DevGEMS/CalcCol-sw-ipm.dat
 # Comments can be marked with # $ ; as the first character in the line
 # IPM text input file for the internal GEM IPM-3 kernel data
 # (should be read after the DCH file and before DBR files)
 
 # ID key of the initial chemical system definition
-"CalDolCol2G  CalcCol-sw  0009 0       1       37      000 "
+<ID_key> "CalDolCol2G  CalcCol-sw  0009 0       1       37      000 "
 
 ## (1) Flags that affect memory allocation
 # PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)
@@ -185,60 +185,62 @@
 0 0 0 0 
 # kMod: Codes for built-in kinetic models [Fi*6]
 <kMod>
-'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'MTNNSN' 'NNNNNN' 'NNNNNN' 
+'NNNNNN' 'NNNNNN' 'NNNNNN' 'MTNNSA' 'MTNNSN' 'NNNNNN' 'NNNNNN' 
 # LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;
 # of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
 <LsKin>
 0 0 0 0 0 0 
 0 0 0 0 0 0 
 0 0 0 0 0 0 
-0 0 0 0 0 0 
+4 4 14 1 4 1 
 5 2 14 1 4 0 
 0 0 0 0 0 0 
 0 0 0 0 0 0 
 
 # xSKrC:  Collected array of aq/gas/sorption species indexes used in activity products
 <xSKrC>
-17 19 
+2 9 17 19 17 19 
 
 # ocPRkC:  Collected array of operation codes for kinetic parallel reaction terms
 <ocPRkC>
-1 0 7 0 0 0 0 0 0 0 
+0 0 0 0 0 0 1 0 1 0 7 0 0 0 0 0 0 0 
 
 # feSArC:  Collected array of fractions of surface area related to parallel reactions
 <feSArC>
-1 0 1 1 1 
+1 1 1 1 1 0 1 1 1 
 
 # rpConC:  Collected array of kinetic rate constants
 <rpConC>
--10000 0 11.2200002670288 133469.59375 0 0 0 0 0 1 2.25999999046326 -77 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 1 4000000000 0.000645999971311539 0 21100000 36100 0 0 0 0 1 1 1 0 
-0 0 2.95000006644841e-08 0 14000000000 52200 0 0 0 0 1 1 1 0 0 0 7.759999789414e-06 0 1250000 34800 0 0 0 0 1 1 1 0 0 0 
+0.500999987125397 0 333.200012207031 14400 0 0 0 0 1 1 1 0 0 0 1.5499999790336e-06 0 13090 23500 0 0 0 0 1 1 1 0 0 0 0.000330999988364056 0 1591000 35400 0 0 0 0 1 1 1 0 
+0 0 -37800 0 267060000 48100 0.360000014305115 -10.9899997711182 0 0 -0.709999978542328 0.5 2 1 0 0 -10000 0 11.2200002670288 133469.59375 0 0 0 0 0 1 2.25999999046326 -77 0 0 -1 0 0 0 0 0 0 0 0 0 
+0 0 1 40000000000 0.000645999971311539 0 21100000 36100 0 0 0 0 1 1 1 0 0 0 2.95000006644841e-08 0 14000000000 52200 0 0 0 0 1 1 1 0 0 0 7.759999789414e-06 0 1250000 34800 0 0 0 0 
+1 1 1 0 0 0 
 
 # apConC:  Collected array of parameters per species involved in activity product terms
 <apConC>
-0 0 0.5 0 0 0 0 0 0 0.5 
+0 0 0 1 0 0 0 -1 1 0 0 0 0 0 1 0 0 0 0.5 0 0 0 0 0 0 0.5 
 
 # AscpC:  parameter coefficients of equation for correction of specific surface area
 <AscpC>
-1 0 0 0 
-# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)
-<LsUpt>
-0 0 
-0 0 
+0.800000011920929 0 0 0 0.800000011920929 0 0 0 
 # PfFact: form factors for phases (taken from TKinMet or set from TNode) [FI] (reserved)
 <PfFact>
 1 
 1 
 1 
+0.800000011920929 
+0.800000011920929 
 1 
 1 
-1 
-1 
+# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)
+<LsUpt>
+0 0 
+0 0 
 
 ## (5) Data arrays which are provided neither in DCH nor in DBR files
 # B: Full total bulk composition (vector b), moles [nIC] (will be partially re-written from DBR files)
 <B>
-0.0307 0.03 2e-07 110.506069623021 1e-07 55.3444548115105 0 
+0.0306 0.0303 2e-07 110.506069623021 0.0003001 55.3448548115105 0 
 
 # Initial data for DCs - see DATACH file for dimensions nDC, nDCs
 # Pparc: Partial pressures or fugacities of pure Dependent Components [nDC] (reserved)
@@ -274,7 +276,7 @@
 
 # Aalp: Specific surface areas of phases, m2/g [nPH]
 <Aalp>
-0 0 0 0.01 0.01 0 0 
+0 0 0 0 0.01 0 0 
 
 # Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)
 <Sigw>

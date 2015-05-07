@@ -121,8 +121,8 @@ typedef struct  /// DATABR - template node data bridge structure
            ///< (+) can be used as input in "smart initial approximation" mode of GEM IPM-2 algorithm
     *bSP,  ///< Output bulk composition of the equilibrium solid part of the system, moles   [nICb]  -      -      +     +
    // Metastability/kinetic controls on phases-solutions (added in devPhase branch)
-    *amru, ///< Upper AMRs on masses of DCs (kg) [nPSb]                                              +      +      -     -
-    *amrl; ///< Lower AMRs on masses of DCs (kg) [nPSb]                                              +      +      -     -
+    *amru, ///< Upper AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
+    *amrl; ///< Lower AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
 }
 DATABR;
 

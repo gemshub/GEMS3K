@@ -105,8 +105,8 @@ outField DataBR_fields[f_lga+1/*60*/] =  {
   { "bPS",  0, 0, nPSbnICbi, "\n\n# bPS: Bulk elemental compositions of multicomponent phases, moles (GEM output) [nPSb*nICb]"},
   { "xPA",  0, 0, nPSbi, "\n# xPA: Amount of carrier (sorbent or solvent) in multicomponent phases, moles (GEM output) [nPSb]" },
   { "bSP",  0, 0, nICbi, "\n# bSP: Output bulk composition of the equilibrium solid part of the system, moles " },
-    { "amru",  0, 0, nPSbi, "\n# amru: Upper AMRs on masses of DCs (kg) [nPSb]  " },
-    { "amrl",  0, 0, nPSbi, "\n# amrl: Lower AMRs on masses of DCs (kg) [nPSb]" },
+    { "amru",  0, 0, nPSbi, "\n# amru: Upper AMRs on amounts of multi-component phases (mol) [nPSb]  " },
+    { "amrl",  0, 0, nPSbi, "\n# amrl: Lower AMRs on amounts of multi-component phases (mol) [nPSb]" },
 
 // only for VTK format output
     { "mPH",  0, 0, nPHbi, "# mPH: Masses of phases in equilibrium, kg [nPHb]" },

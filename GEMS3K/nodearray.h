@@ -522,14 +522,14 @@ Hi,     ///< Total enthalpy of inert subsystem (J) (reserved)            +      
   // mass of single-component phase with index PHx from T1 node with index nodex
 #define node1_mPH( nodex, PHx )  (TNodeArray::na->get_mPH( 1, (nodex), (PHx)))
 
-// Upper AMRs on masses of DCs (kg) with index PHx from T0 node with index nodex
+// Upper AMRs on amounts of multi-component phases (mol) with index PHx from T0 node with index nodex
 #define node0_amru( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->amru[(PHx)])
-// Upper AMRs on masses of DCs (kg) with index PHx from T1 node with index nodex
+// Upper AMRs on amounts of multi-component phases (mol) with index PHx from T1 node with index nodex
 #define node1_amru( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->amru[(PHx)])
 
-// Lower AMRs on masses of DCs (kg) with index PHx from T0 node with index nodex
+// Lower AMRs on amounts of multi-component phases (mol) with index PHx from T0 node with index nodex
 #define node0_amrl( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->amrl[(PHx)])
-// Lower AMRs on masses of DCs (kg) with index PHx from T1 node with index nodex
+// Lower AMRs on amounts of multi-component phases (mol) with index PHx from T1 node with index nodex
 #define node1_amrl( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->amrl[(PHx)])
 
   // amount of solvent/sorbent in phase with index PHx from T0 node with index nodex
