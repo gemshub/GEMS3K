@@ -20,7 +20,7 @@
 
 ## (2) Chemical scalar properies of the node system
 # TK: Node temperature T, Kelvin. This value must always be provided (GEM input)
-<TK>  298.15
+<TK>  310.15
 # P:  Node Pressure P, Pa. This value must always be provided (GEM input)
 <P>  100000
 # Vs: Volume V of reactive subsystem, m3 (GEM output)
@@ -50,49 +50,13 @@
 # dt: Actual time step, s (kinetics, metastability, transport)
 <dt>  0
 
-## (3) Scalar mass-trasport properties (used only at NodeArray level)
-# Dif: General diffusivity of disolved matter, m2/s (mass transport)
-<Dif>  0
-# Vt: Total volume of the node, m3 (mass transport)
-<Vt>  0
-# vp: Advection velocity in pores, m/s (mass transport)
-<vp>  0
-# eps: Effective (actual) porosity normalized to 1 (mass transport)
-<eps>  0
-# Km: Actual permeability, m2 (mass transport)
-<Km>  0
-# Kf: Actual Darcy`s constant, (m2/s (mass transport)
-<Kf>  0
-# S: Specific storage coefficient, dimensionless (mass transport)
-<S>  0
-# Tr: Transmissivity, m2/s (mass transport)
-<Tr>  0
-# h: Actual hydraulic head (hydraulic potential), m (mass transport)
-<h>  0
-# rho: Actual carrier density for density-driven flow, kg/m3 (mass transport)
-<rho>  0
-# al: Specific longitudinal dispersivity of porous media, m (mass transport)
-<al>  0
-# at: Specific transversal dispersivity of porous media, m (mass transport)
-<at>  0
-# av: Specific vertical dispersivity of porous media, m (mass transport)
-<av>  0
-# hDl: Hydraulic longitudinal dispersivity, m2/s (mass transport)
-<hDl>  0
-# hDt: Hydraulic transversal dispersivity, m2/s (mass transport)
-<hDt>  0
-# hDv: Hydraulic vertical dispersivity, m2/s (mass transport)
-<hDv>  0
-# nto: Tortuosity factor, dimensionless (mass transport)
-<nto>  0
-
 ### Arrays: for dimensions and index lists, see Section (2) of DCH file
 
 ## (4) Data for Independent Components
 #  'C' 'Ca' 'Cl' 'H' 'Mg' 'O' 'Zz' 
 # bIC: Bulk composition of reactive subsystem (main GEM input), moles of ICs [nICb]
 <bIC>
-0.003 0.003 0.112 110.425027397961 0.056 55.2215336989805 0 
+0.005 0.003 0.112 110.425027397961 0.056 55.2255336989805 0 
 
 # rMB: Mass balance residuals, moles (GEM output) [nICb]
 <rMB>
@@ -128,7 +92,7 @@
 #  'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' 
 # aPH: Specific surface areas of phases, m2/kg (GEM input) [nPHb]
 <aPH>
-0 0 0 0 10 0 0 
+0 0 0 10 10 0 0 
 
 # xPH: Amounts of phases in equilibrium state, moles (GEM output) [nPHb]
 <xPH>
@@ -146,11 +110,11 @@
 <xPA>
 55.2122156584796 0 
 
-# amru: Upper AMRs on masses of DCs (kg) [nPSb]  
+# amru: Upper AMRs on amounts of multi-component phases (mol) [nPSb]  
 <amru>
 1000000 1000000 
 
-# amrl: Lower AMRs on masses of DCs (kg) [nPSb]
+# amrl: Lower AMRs on amounts of multi-component phases (mol) [nPSb]
 <amrl>
 0 0 
 

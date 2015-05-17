@@ -788,18 +788,44 @@ TKinMet::PTparam( const double TK, const double P )
 double
 TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
 {
-    double sSAc = sSA, sSAVc = sSAV, r_sSAc;
+    double sSAc = sSA, sSAVc = sSAV, delta_dsv=0., rcf=1.;
 
     // more sophisticated functions to be called here
-    if( !toinit )
+    if( !toinit ) // && !(KinSizedCode == KM_UNDEF_) )   // changed 17.05.2015 DK
     {
-      if( LaPh < -OmgTol ) // dissolution  (needs a more flexible check based on Fa stability criterion!
+      if( LaPh < -OmgTol ) // dissolution
       {
-          sSAVc = sFratio * sSAV * dsv  / ( dsv - 2.* fabs(vTot) * kdT );
+          delta_dsv = dsv - 2.* fabs(vTot) * kdT;
+          if( delta_dsv < 0.5*dsv )   // temporary fix - to avoid too high spec. surface area
+          {    // truncation
+              delta_dsv = 0.5*dsv;
+              rcf = 0.5/2.*dsv/kdT/fabs(vTot);
+              if(rcf < 1.0)
+              {
+                vTot *= rcf;
+                gTot *= rcf;
+                kTot *= rcf;
+                rTot = kTot * sAPh;
+              }
+          }
+          sSAVc = sFratio * sSAV * dsv  / delta_dsv;
           sSAc = sSAVc / Rho;
       }
       else if( LaPh > OmgTol ) {  // precipitation
-          sSAVc = sFratio * sSAV * dsv  / ( dsv + 2.* fabs(vTot) * kdT );
+          delta_dsv = dsv + 2.* fabs(vTot) * kdT;
+          if( delta_dsv > 2.*dsv )   // temporary fix - to avoid too low spec. surface area
+          {    // truncation
+              delta_dsv = 2.*dsv;
+              rcf = 2./2.*dsv/kdT/fabs(vTot);
+              if(rcf < 1.0)
+              {
+                vTot *= rcf;
+                gTot *= rcf;
+                kTot *= rcf;
+                rTot = kTot * sAPh;
+              }
+          }
+          sSAVc = sFratio * sSAV * dsv  / delta_dsv;
           sSAc = sSAVc / Rho;
       }
       else {  // equilibrium
@@ -807,7 +833,7 @@ TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
           sSAc = sSAcor;   // no change in sSAcor
       }
     }
-    //        r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
+    //   double  r_sSAc = (sSAc + sSAcor)/2.;  // Suggested by A.Denisov (PSI ENE) 04.06.2013
     sSAcor = sSAc;
     sAph_c = sSAcor * ( mPh+mPhlp );   // corrected surface area of the phase
 //    sAph_c = sAPh;  // leave main surface area yet not corrected
@@ -941,7 +967,7 @@ TKinMet::SetMetCon( )
     for( r=0; r<nPRk; r++ )
     {   // check if nucleation rate is accounted for
         atopc = arPRt[r].ocPRk[0];
-        if(atopc == ATOP_HELLEV_ )
+        if( atopc == ATOP_HELLEV_ && rNuc < -1e-20 )  // fix 17.05.2015 DK
             isNucl = true;
     }
 
@@ -950,11 +976,11 @@ TKinMet::SetMetCon( )
 //   dn_dt = -rTot;  // minus total rate mol/s
 
     // First calculate phase constraints
-    if( LaPh < -OmgTol && dnPh < 0. ) // dissolution
+    if( LaPh < -OmgTol && dnPh < 1e-20 ) // dissolution
     {                     // (needs more flexible check based on Fa stability criterion!)
        if( nPh >= 1e-10 )
        {   // dissolution
-         nPll = max( 0.0, nPh + dnPh );
+         nPll = max( 0.1*nPh, nPh + dnPh );
 //         if( nPul < nPll )
            nPul = nPll;
 //         if( nPul < nPll - dnPh )
@@ -964,10 +990,10 @@ TKinMet::SetMetCon( )
            nPll = 0.0; nPul = 0.0;
        }
     }
-    else if( LaPh > OmgTol && dnPh+dnNuc > 0. ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+    else if( LaPh > OmgTol && dnPh+dnNuc > 1e-20 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
        if( isNucl == false )
        {  // growth without nucleation
-          nPul = nPh + dnPh;
+          nPul = nPh + dnPh;  // dangerous - needs a check for max. possible nPul!
           nPll = min(nPh, nPul); // nPul;
 //          if( nPll > nPul - dnPh )
 //              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
@@ -975,10 +1001,10 @@ TKinMet::SetMetCon( )
        else {  // nucleation (rTot already includes nucleation rate)
           if( nPh == 0. )
           {
-              if( dnNuc >= 1e-10 )
+              if( dnNuc >= 1e-12 )
               {  // no phase but significant nucleation rate - onset of the phase at cutoff 1e-10 mol
                  // No growth yet, even if parallel reactions are given
-                  nPul = dnNuc;       // nPll = nPul;
+                  nPul = dnNuc;       // nPll = nPul; // dangerous - needs a check for max. possible nPul!
                   nPll = min( nPul, 1e-6 ); // PROVISIONAL - max content of phase in aqueous to be checked!
                   nPhi = nPh;         // initial amount of this phase
                   mPhi = mPh;         // initial mass
@@ -991,7 +1017,7 @@ TKinMet::SetMetCon( )
               }
           }
           else { // nucleation occurs together with growth - nPll set at least to grown amount
-              nPul = nPh + dnPh;
+              nPul = nPh + dnPh; // dangerous - needs a check for max. possible nPul!
               nPll = min(nPh, nPul); // nPul;
               nPul += dnNuc;
 //             nPll = max( -rNuc*kdT, nPul - dnPh );

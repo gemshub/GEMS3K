@@ -69,8 +69,8 @@ int main( int argc, char* argv[] )
     // Creating memory for mass transport nodes
     // 11 nodes, 99 time steps
     //TMyTransport mt( 11, 100, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
-    // 101 nodes 400 time steps
-    TMyTransport mt( 101, 1000, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    // 101 nodes 1000 time steps
+    TMyTransport mt( 101, 2000, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -174,7 +174,7 @@ int main( int argc, char* argv[] )
        // Mass transport loop over nodes (a simple FD advection transport model)
        mt.dt = mt.OneTimeStepRun( ICndx, 5 );
 
-       cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol" << endl;
+       cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol\tSIDol" << endl;
 
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
@@ -227,7 +227,8 @@ int main( int argc, char* argv[] )
                   "\t" << mt.abPS[in][ICndx[4]] <<
                   "\t" << mt.axPH[in][xCalcite] <<
                   "\t" << mt.axPH[in][xDolomite] <<
-                  "\t" << mt.aaPH[in][xDolomite] << endl; // aaPH
+                  "\t" << mt.aaPH[in][xDolomite] <<  // aaPH
+          "\t" << node->Ph_SatInd( xDolomite ) << endl;
       }
       mt.tm += mt.dt;
       node->GEM_step_MT( it+1 );  // increments time iteration in GEM solver (for kinetics)
@@ -386,9 +387,9 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     double dx = column_length/(nNodes-1);
 
     //constant velocity field
-    double v = 1.e-6; // velocity [m/s]
+    double v = 1.e-7; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
-    double k = 0.1; // k = dt/dx*v
+    double k = 0.2; // k = dt/dx*v
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file
