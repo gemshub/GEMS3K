@@ -1220,10 +1220,20 @@ class TCEFmod: public TSolMod
                 double ysm( const long int j, const long int s );
                 double KronDelta( const long int j, const long int s, const long int m );
                 double dGref_dysigma(const long int l, const long int s );
-                double dGref_dysm( const long int s, const long m );
+                double dGref_dysm(const long int s, const long m );
+                double dGm_dysm(const long int s, const long m ); // added by Nichenko
                 double RefFrameTerm( const long int j, double G_ref );
                 long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
 
+                long int IdealMixing(); // NSergii: added by Nichenko to rewrite the ideal part contribution
+                long int CalcSiteFractions(); // NSergii:
+                double dGrefdnNum(const long int i); // NSergii:
+                double dGidmixdnNum(const long int i); // NSergii:
+                double dGexcdnNum(const long int i); // NSergii:
+                double Gmix(); // NSergii:
+                double Gexc();
+                double Gref();
+                double Gidmix();
         public:
 
                 /// Constructor
