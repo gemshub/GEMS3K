@@ -77,7 +77,7 @@ int main( int argc, char* argv[] )
     for(  in=0; in< mt.nNodes; in++ )
     {
         // Asking GEM IPM to run with automatic initial approximation
-        dBR->NodeStatusCH = NEED_GEM_AIA;
+        dBR->NodeStatusCH = NEED_GEM_SIA;
         node->GEM_from_MT_time( 0., -1. );
         // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
         mt.aNodeStatusCH[in] = node->GEM_run( false);
@@ -123,7 +123,7 @@ int main( int argc, char* argv[] )
           // (5) Reading the next DBR file (boundary condition on the left)
           node->GEM_read_dbr( NextRecipeFileName );
           // Asking GEM IPM to run with automatic initial approximation
-          dBR->NodeStatusCH = NEED_GEM_AIA;
+          dBR->NodeStatusCH = NEED_GEM_SIA;
           node->GEM_from_MT_time( 0., -1. );
           // (2) Re-calculating chemical equilibrium by calling GEM
           mt.aNodeStatusCH[in] = node->GEM_run( false );
@@ -153,7 +153,7 @@ int main( int argc, char* argv[] )
 
     // Main loop - iterations over nTimes time steps
     int xCalcite = node->Ph_name_to_xDB("Calcite");
-    int xDolomite = node->Ph_name_to_xDB("Dolomite-dis");
+    int xDolomite = node->Ph_name_to_xDB("Dolomite-ord");
     int xAq_gen = node->Ph_name_to_xDB("aq_gen");
     long int ICndx[5];
     ICndx[0] = node->IC_name_to_xDB("Ca");
@@ -389,7 +389,7 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     //constant velocity field
     double v = 1.e-7; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
-    double k = 0.2; // k = dt/dx*v
+    double k = 0.1; // k = dt/dx*v
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file

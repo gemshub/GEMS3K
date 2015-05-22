@@ -688,13 +688,17 @@ if( rk.xPR != r )     // index of this parallel reaction
    {
     default:
     case ATOP_CLASSIC_: // = 0,     classic TST affinity term (see .../Doc/Descriptions/Kinetics-Uptake.doc)
+       if( LaPh > -OmgTol )
+           break;
        rk.aft = - rk.uPR + 1. - pow( OmPh, rk.qPR );
-       if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
+       if( rk.aft != 0. && rk.mPR != 0. )
            rk.aft = pow( rk.aft, rk.mPR );
        break;
     case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed (for growth)
+       if( LaPh < OmgTol )
+           break;
        rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
-       if( rk.mPR && rk.aft > 0 )  // check for aft > 0 added by DK 19.01.2015
+       if( rk.aft != 0. && rk.mPR != 0. )
            rk.aft = pow( rk.aft, rk.mPR );
 //       rk.aft *= -1.;
        break;
@@ -964,6 +968,8 @@ TKinMet::SetMetCon( )
     long int r, atopc;
     bool isNucl = false;
 
+  if( LaPh < -OmgTol || LaPh > OmgTol )
+  {
     for( r=0; r<nPRk; r++ )
     {   // check if nucleation rate is accounted for
         atopc = arPRt[r].ocPRk[0];
@@ -976,7 +982,7 @@ TKinMet::SetMetCon( )
 //   dn_dt = -rTot;  // minus total rate mol/s
 
     // First calculate phase constraints
-    if( LaPh < -OmgTol && dnPh < 1e-20 ) // dissolution
+    if( dnPh < -1e-20 ) // dissolution
     {                     // (needs more flexible check based on Fa stability criterion!)
        if( nPh >= 1e-10 )
        {   // dissolution
@@ -986,15 +992,15 @@ TKinMet::SetMetCon( )
 //         if( nPul < nPll - dnPh )
 //           nPul = max( 0.0, nPll - dnPh );    // ensuring slackness
        }
-       else { // removing the solid phase at cutoff amount 1e-10
+       else { // removing the solid phase at cutoff amount 1e-20
            nPll = 0.0; nPul = 0.0;
        }
     }
-    else if( LaPh > OmgTol && dnPh+dnNuc > 1e-20 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
+    else if( dnPh+dnNuc > 1e-20 ) {  // precipitation rate constant (corrected for T) in mol/m2/s
        if( isNucl == false )
        {  // growth without nucleation
           nPul = nPh + dnPh;  // dangerous - needs a check for max. possible nPul!
-          nPll = min(nPh, nPul); // nPul;
+          nPll = min(nPh, nPul);   // nPul;
 //          if( nPll > nPul - dnPh )
 //              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
        }
@@ -1024,13 +1030,11 @@ TKinMet::SetMetCon( )
           }
        }
     }
-    else { ; // equilibrium  - needs to be checked!
-//         nPll = 0.; nPul = 1e6;
-//        if( dnPh > 0 )
-//            nPul = nPh + dnPh;
-//        else
-//            nPul = max(0.0, nPh - dnPh );
-    }
+  }
+  else {  // equilibrium  - needs to be checked!
+        nPll = nPh;
+        nPul = nPll;
+  }
     if( NComp > 1 )
        return false;  // DC constraints for ss will be set in SplitMod() or SplitInit()
     // setting DC metastability constraints for a single-component phase

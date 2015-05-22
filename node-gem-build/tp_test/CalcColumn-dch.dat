@@ -64,7 +64,7 @@
 ## (6) Dependent Components and their codes
 # DCNL: Name list of Dependent Components (<=16 characters per name) [nDC]
 <DCNL>
-'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 'CH4' 'H2' 'O2' 'Gr' 'Cal' 'Dis-Dol' 'Portlandite' 'Brc' 
+'Ca(CO3)@' 'Ca(HCO3)+' 'Ca+2' 'CaOH+' 'Mg(CO3)@' 'Mg(HCO3)+' 'Mg+2' 'MgOH+' 'CO2@' 'CO3-2' 'HCO3-' 'CH4@' 'ClO4-' 'Cl-' 'H2@' 'O2@' 'OH-' 'H+' 'H2O@' 'CO2' 'CH4' 'H2' 'O2' 'Gr' 'Cal' 'Ord-Dol' 'Portlandite' 'Brc' 
 # ccDC: Class codes of DCs (Dependent Components) [nDC]
 <ccDC>
 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'S' 'T' 'W' 'G' 'G' 'G' 'G' 'O' 'O' 'O' 'O' 'O' 
@@ -76,7 +76,7 @@
 ## (7) Phases and their codes
 # PHNL: List of Phase names (<=16 characters per name) [nPH]
 <PHNL>
-'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-dis' 'Portlandite' 'Brucite' 
+'aq_gen' 'gas_gen' 'Graphite' 'Calcite' 'Dolomite-ord' 'Portlandite' 'Brucite' 
 # ccPH: Codes of phase aggregate state [nPH]
 <ccPH>
 'a' 'g' 's' 's' 's' 's' 's' 
@@ -191,7 +191,7 @@
 0.025787452765 
 5.29799997806549e-06 
 3.69339990615845e-05 
-6.43900012969971e-05 
+6.43399953842163e-05 
 3.30599999427795e-05 
 2.46299982070923e-05 
 
@@ -222,7 +222,7 @@
 -2468.6473453438 
 -71.018103838403 
 -1130307.8188598 
--2159187.261724 
+-2162189.1895805 
 -898034.7777341 
 -833003.24837086 
 
