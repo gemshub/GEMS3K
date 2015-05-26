@@ -70,7 +70,7 @@ int main( int argc, char* argv[] )
     // 11 nodes, 99 time steps
     //TMyTransport mt( 11, 100, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
     // 101 nodes 1000 time steps
-    TMyTransport mt( 101, 2000, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
+    TMyTransport mt( 101, 1000, 0., 10., dCH->nICb, dCH->nDCb, dCH->nPHb, dCH->nPSb, 1 );
 
     // Initialization of GEMS3K and chemical information for nodes kept in the MT part
     long int in;
@@ -79,7 +79,7 @@ int main( int argc, char* argv[] )
         // Asking GEM IPM to run with automatic initial approximation
         dBR->NodeStatusCH = NEED_GEM_SIA;
         node->GEM_from_MT_time( 0., -1. );
-        // (2) re-calculating equilibrium by calling GEMIPM2K, getting the status back
+        // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
         mt.aNodeStatusCH[in] = node->GEM_run( false);
         if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
         {
@@ -87,12 +87,12 @@ int main( int argc, char* argv[] )
               return 5;
         }
 
-        // Extracting GEM IPM input data to mass-transport program arrays
+        // Extracting GEM input data to mass-transport program arrays
         node->GEM_restore_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aT[in], mt.aP[in],
             mt.aVs[in], mt.aMs[in], mt.abIC[in], mt.adul[in], mt.adll[in], mt.aaPH[in],
             mt.amru[in], mt.amrl[in] );
           
-        // Extracting GEM IPM output data to mass-transport program arrays
+        // Extracting GEM output data to mass-transport program arrays
         node->GEM_to_MT( mt.aNodeHandle[in], mt.aNodeStatusCH[in], mt.aIterDone[in],
             mt.aVs[in], mt.aMs[in], mt.aGs[in], mt.aHs[in], mt.aIC[in], mt.apH[in], mt.ape[in],
             mt.aEh[in], mt.arMB[in], mt.auIC[in], mt.axDC[in], mt.agam[in], mt.axPH[in],
@@ -130,7 +130,7 @@ int main( int argc, char* argv[] )
           if( !( mt.aNodeStatusCH[in] == OK_GEM_AIA || mt.aNodeStatusCH[in] == OK_GEM_SIA ) )
           {
               cout << "Error occured during re-calculating chemical equilibrium" ;
-              return 5;
+              return 6;
           }
 
           // (6) Extracting GEMIPM input data to mass-transport program arrays
@@ -387,9 +387,9 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     double dx = column_length/(nNodes-1);
 
     //constant velocity field
-    double v = 1.e-7; // velocity [m/s]
+    double v = 1.e-8; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
-    double k = 0.1; // k = dt/dx*v
+    double k = 0.02; // k = dt/dx*v
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file
