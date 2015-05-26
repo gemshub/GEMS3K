@@ -185,7 +185,7 @@
 0 0 0 0 
 # kMod: Codes for built-in kinetic models [Fi*6]
 <kMod>
-'NNNNNN' 'NNNNNN' 'NNNNNN' 'MTNNSA' 'MTNNSN' 'NNNNNN' 'NNNNNN' 
+'NNNNNN' 'NNNNNN' 'NNNNNN' 'MTNNNA' 'MTNNNA' 'NNNNNN' 'NNNNNN' 
 # LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;
 # of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
 <LsKin>
@@ -276,7 +276,7 @@
 
 # Aalp: Specific surface areas of phases, m2/g [nPH]
 <Aalp>
-0 0 0 0 0.01 0 0 
+0 0 0 0.01 1 0 0 
 
 # Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)
 <Sigw>

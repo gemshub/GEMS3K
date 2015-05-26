@@ -77,7 +77,7 @@ int main( int argc, char* argv[] )
     for(  in=0; in< mt.nNodes; in++ )
     {
         // Asking GEM IPM to run with automatic initial approximation
-        dBR->NodeStatusCH = NEED_GEM_SIA;
+        dBR->NodeStatusCH = NEED_GEM_AIA;
         node->GEM_from_MT_time( 0., -1. );
         // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
         mt.aNodeStatusCH[in] = node->GEM_run( false);
@@ -123,7 +123,7 @@ int main( int argc, char* argv[] )
           // (5) Reading the next DBR file (boundary condition on the left)
           node->GEM_read_dbr( NextRecipeFileName );
           // Asking GEM IPM to run with automatic initial approximation
-          dBR->NodeStatusCH = NEED_GEM_SIA;
+          dBR->NodeStatusCH = NEED_GEM_AIA;
           node->GEM_from_MT_time( 0., -1. );
           // (2) Re-calculating chemical equilibrium by calling GEM
           mt.aNodeStatusCH[in] = node->GEM_run( false );
@@ -170,12 +170,14 @@ int main( int argc, char* argv[] )
 
     for( long int it=0; it< mt.nTimes; it++ )
     {
-       cout << "Time step: " << it << "  Time, s: " << mt.tm;
        // Mass transport loop over nodes (a simple FD advection transport model)
-       mt.dt = mt.OneTimeStepRun( ICndx, 5 );
+       mt.dt = mt.OneTimeStepRun( dCH->xic, dCH->nICb );   // dCH->nICb-1 no transport of charge
 
-       cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol\tSIDol" << endl;
-
+       if( it == 1 || it%10 == 0 ){
+          cout << "Time step: " << it << "  Time, s: " << mt.tm;
+          cout<<"\tdt = " << mt.dt << "[s]" << endl;
+          cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol\tSIDol" << endl;
+       }
        // Chemical equilibration loop over nodes
        for( in=0; in< mt.nNodes; in++ )
        {
@@ -197,14 +199,14 @@ int main( int argc, char* argv[] )
           if( ( mt.aNodeStatusCH[in] == ERR_GEM_AIA || mt.aNodeStatusCH[in] == ERR_GEM_SIA ||
                         mt.aNodeStatusCH[in] ==  T_ERROR_GEM ) )
           {
-              cout << "Error: GEM calculation results are not retrieved. Time step"
+              cout << "Error: GEM calculation results are not retrieved: time step "
                  << it << " node " << in << endl;
           }
           else
           {
             if( ( mt.aNodeStatusCH[in] == BAD_GEM_AIA || mt.aNodeStatusCH[in] == BAD_GEM_SIA  ) )
             {
-               cout << "Insufficient quality of GEM solution, but GEM results are retrieved"
+               cout << "Bad quality of GEM solution, but GEM results retrieved: time step "
                << it << " node " << in << endl;
             }              
             else { // (7) Extracting GEMIPM output data to FMT part
@@ -219,8 +221,10 @@ int main( int argc, char* argv[] )
             }
           }
           // Here, the output upon completion of the time step is usually implemented
-          //  to monitor the coupled simulation or collect results
-          cout << in <<
+          //  to monitor the coupled simulation or collect results. Here, output every 10-th time step.
+          if( it == 1 || it%10 == 0 )
+          {
+            cout << in <<
                   "\t" << mt.apH[in] <<
                   "\t" << mt.abPS[in][ICndx[0]] <<
                   "\t" << mt.abPS[in][ICndx[3]] <<
@@ -228,7 +232,8 @@ int main( int argc, char* argv[] )
                   "\t" << mt.axPH[in][xCalcite] <<
                   "\t" << mt.axPH[in][xDolomite] <<
                   "\t" << mt.aaPH[in][xDolomite] <<  // aaPH
-          "\t" << node->Ph_SatInd( xDolomite ) << endl;
+            "\t" << node->Ph_SatInd( xDolomite ) << endl;
+          }
       }
       mt.tm += mt.dt;
       node->GEM_step_MT( it+1 );  // increments time iteration in GEM solver (for kinetics)
@@ -387,13 +392,13 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     double dx = column_length/(nNodes-1);
 
     //constant velocity field
-    double v = 1.e-8; // velocity [m/s]
+    double v = 1.e-7; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
-    double k = 0.02; // k = dt/dx*v
+    double k = 0.1; // k = dt/dx*v
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file
-    cout<<"\tdt = " << dt << "[s]" << endl;
+    // cout<<"\tdt = " << dt << "[s]" << endl;
 
     //Finite difference approximation for the equation dc/dt + v*dc/dx = 0
     // explicit time, left spatial derivative

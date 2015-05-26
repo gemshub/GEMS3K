@@ -114,9 +114,10 @@ TKinMet::TKinMet( const KinMetData *kmd ):
         sSAlp = 0.;    sSAVlp = 0.;  sAPhlp = 0.;   // zero totals for linked phases
         mPhlp = 0.;    vPhlp = 0.;   Rholp =0.;  nPhlp = 0.;
     }
-    // Calculates mean equivalent properties of particles or pores
-    particles_pores_properties( true );
-
+    if( KinSizedCode != KM_UNDEF_ )
+    {    // Calculates mean equivalent properties of particles or pores
+        particles_pores_properties( true );
+    }
     kdT_c = kdT;    // Initialized corrected time step (s)
     T_k = 0.; // To trigger P-T recalculation after constructing the class instance
     OmgTol = 1e-3; // 1e-6;  // default tolerance for checking dissolution or precipitation cases
@@ -490,7 +491,7 @@ TKinMet::UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, co
     nPll = pPLLk;
 // cout << " !!! mPh: " << mPh << endl;
     vPh = pFVOLk/1e6;  // from cm3 to m3
-sFacti = p_sFact;
+    sFacti = p_sFact;
     LaPh = pLaPh;
     sGP = pYOFk*pFWGTk;
     IS = pICa;
@@ -506,9 +507,11 @@ sFacti = p_sFact;
     {
         linked_phases_properties( false );
     }
-    // get current properties of particles/pores in this phase
-    particles_pores_properties( false );
 
+    if( KinSizedCode != KM_UNDEF_ ) // get current properties of particles/pores in this phase
+    {
+        particles_pores_properties( false );
+    }
     for( i = 0; i < nPRk; i++ )
     {
        if( arPRt[i].feSAr != arfeSAr[i] )
@@ -572,9 +575,9 @@ sFacti = p_sFact;
     return status;
 }
 
-// Returns (modified) specific surface area of the phase;
+// Returns (modified) specific surface area of the phase in m2/g;
 //  and modifies 'parallel reactions' area fractions
-//  (provisionally also modified phase amount constraints)
+//  (provisionally also modifies the phase amount constraints)
 //
 double
 TKinMet::GetModFSA( double& p_sFact,  double& prTot,
@@ -592,7 +595,10 @@ TKinMet::GetModFSA( double& p_sFact,  double& prTot,
     prTot = rTot;
     pvTot = vTot;
 
-    return sSAcor/1e3;
+    if( KinSizedCode != KM_UNDEF_ )
+        return sSAcor/1e3;
+    else
+        return sSA/1e3;
 }
 
 // Updates temperature to T_K and pressure to P_BAR;
@@ -795,7 +801,7 @@ TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
     double sSAc = sSA, sSAVc = sSAV, delta_dsv=0., rcf=1.;
 
     // more sophisticated functions to be called here
-    if( !toinit ) // && !(KinSizedCode == KM_UNDEF_) )   // changed 17.05.2015 DK
+    if( !toinit && !(KinSizedCode == KM_UNDEF_) )   // changed 17.05.2015 DK
     {
       if( LaPh < -OmgTol ) // dissolution
       {
@@ -899,10 +905,11 @@ TKinMet::RateInit( )
     {
        gTot = kTot * mPh/nPh;  // initial rate in kg/m2/s
        vTot =  kTot * vPh/nPh;  // orthogonal mean growth/dissolution velocity in m/s
-       sSAcr = CorrSpecSurfArea( 1.0, true );
+       if( KinSizedCode != KM_UNDEF_ )
+           sSAcr = CorrSpecSurfArea( 1.0, true );
     }
     else {
-        sSAcr = 0.;
+//        sSAcr = 0.;
         gTot = 0.;
         vTot = 0.;
     }
@@ -935,8 +942,11 @@ TKinMet::RateMod( )
     // Calculation of shape factor ratio
     // Convert into area-mass shape factor
     // TBD
-    if( fabs(sFact) > 0 )
-        sFratio = sFacti/sFact;
+    if( KinSizedCode != KM_UNDEF_ )
+    {
+       if( fabs(sFact) > 0 )
+          sFratio = sFacti/sFact;
+    }
 //    sSAcr = CorrSpecSurfArea( sFratio, false );
 //    sAPh = sSAcr * mPh;   // corrected surface of the phase.
 //    sAph_c = sAPh;
@@ -946,16 +956,16 @@ TKinMet::RateMod( )
     {
        gTot = kTot * mPh/nPh;  // rate in kg/m2/s
        vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
-       sSAcr = CorrSpecSurfArea( sFratio, false );
+       if( KinSizedCode != KM_UNDEF_ )
+           sSAcr = CorrSpecSurfArea( sFratio, false );
     }
     else {
         gTot = 0.;
         vTot = 0.;
-        sSAcr = 0.;
+//        sSAcr = 0.; problematic
     }
     // cout << " t: " << kTau << " kTot: " << kTot << " vTot: " << vTot << " rTot: " << rTot << " sSAcor: " << sSAcor << " sAPh: " << sAPh << " nPh: " << nPh << endl;
 //   Here possibly additional corrections of dissolution/precipitation rates
-
     return false;
 }
 
