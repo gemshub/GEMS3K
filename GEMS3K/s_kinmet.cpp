@@ -997,7 +997,8 @@ TKinMet::SetMetCon( )
        if( nPh >= 1e-10 )
        {   // dissolution
          nPll = max( 0.1*nPh, nPh + dnPh );
-//         if( nPul < nPll )
+//         nPul = max( nPh, nPll );
+         //         if( nPul < nPll )
            nPul = nPll;
 //         if( nPul < nPll - dnPh )
 //           nPul = max( 0.0, nPll - dnPh );    // ensuring slackness

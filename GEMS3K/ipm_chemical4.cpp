@@ -46,8 +46,8 @@ TMulti::CalculateKinMet( long int LinkMode  )
       jb = je;
       je += pm.L1[k];
       kMod = pmp->kMod[k];
-      if( kMod[0] == KM_UNDEF )
-          continue;  // skip TKinMet for this phase
+//      if( kMod[0] == KM_UNDEF )
+//         continue;  // skip TKinMet for this phase
       kc = kce;
       kp = kpe;
       kf = kfe;
@@ -65,10 +65,8 @@ TMulti::CalculateKinMet( long int LinkMode  )
    {
      case LINK_TP_MODE:  // Re-create TKinMet class instances and initialize them
      {
-//           for( j= jb; j<je; j++ )
-//           {
-//                Here cleaning, if necessary
-//           }
+         if( kMod[0] == KM_UNDEF )
+             break;  // skip for this phase
          switch( pm.PHC[k] )
          {
            //   case PH_AQUEL:
@@ -89,9 +87,10 @@ TMulti::CalculateKinMet( long int LinkMode  )
 
    case LINK_IN_MODE:  // Initial state calculation of rates etc.
    {
-    //
-         switch( pm.PHC[k] )
-         {
+       if( kMod[0] == KM_UNDEF )
+           break;  // skip for this phase
+        switch( pm.PHC[k] )
+        {
          //   case PH_AQUEL:
              case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
          // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
@@ -115,7 +114,9 @@ TMulti::CalculateKinMet( long int LinkMode  )
     }
    case LINK_PP_MODE:  // Calculation of kinetics and metast. constraints at time step
    {
-        switch( pm.PHC[k] )
+       if( kMod[0] == KM_UNDEF )
+           break;  // skip for this phase
+       switch( pm.PHC[k] )
         {
         //   case PH_AQUEL:
             case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:

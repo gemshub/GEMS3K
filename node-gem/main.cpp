@@ -394,7 +394,7 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     //constant velocity field
     double v = 1.e-7; // velocity [m/s]
     // stability requirement: dt<=dx/velocity, so we can choose any coefficient k<1
-    double k = 0.1; // k = dt/dx*v
+    double k = 0.2; // k = dt/dx*v
     // calculate dt
     double dt = k*dx/v;
     // and print dt into the output file
