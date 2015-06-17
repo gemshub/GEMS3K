@@ -2029,7 +2029,8 @@ void TNode::packDataBr()
    for( ii=0; ii<CSD->nPHb; ii++ )
    {  CNode->xPH[ii] = pmm->XF[ CSD->xph[ii] ];
       if( CSD->nAalp >0 )
-       CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
+         CNode->aPH[ii] = pmm->Aalp[ CSD->xph[ii] ]*kg_to_g;
+      CNode->omPH[ii] = pmm->Falp[ CSD->xph[ii] ];
    }
    for( ii=0; ii<CSD->nPSb; ii++ )
    {   CNode->vPS[ii] = pmm->FVOL[ CSD->xph[ii] ]/m3_to_cm3;
@@ -2113,6 +2114,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   {
     if( CSD->nAalp >0 )
         pmm->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
+    pmm->Falp[ CSD->xph[ii] ] = CNode->omPH[ii];
   }
 
  if( !uPrimalSol )
@@ -2313,8 +2315,7 @@ void TNode::GEM_restore_MT(
 // (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
 //  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
 //   chemical data for all nodes used in the mass-transport model.
-void TNode::GEM_restore_MT(
-    long int  &p_NodeHandle,   // Node identification handle
+void TNode::GEM_restore_MT(long int  &p_NodeHandle,   // Node identification handle
     long int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                       //                                    GEM input output  FMT control
     double &p_TK,      // Temperature T, Kelvin                       +       -      -
@@ -2325,6 +2326,7 @@ void TNode::GEM_restore_MT(
     double *p_dul,    // Upper restrictions to amounts of DC [nDCb]   +       -      -
     double *p_dll,    // Lower restrictions to amounts of DC [nDCb]   +       -      -
     double *p_asPH,   // Specific surface areas of phases,m2/kg[nPHb] +       -      -
+   double *p_omPH,  // Stability indices of phases,log10 scale [nPHb] (+)     +      -
     double *p_amru,   // Upper AMRs to masses of sol. phases [nPSb]   +       -      -
     double *p_amrl    // Lower AMRs to masses of sol. phases [nPSb]   +       -      -
    )
@@ -2344,8 +2346,10 @@ void TNode::GEM_restore_MT(
       p_dll[ii] = CNode->dll[ii];
    }
    if( CSD->nAalp >0 )
-     for( ii=0; ii<CSD->nPHb; ii++ )
-        p_asPH[ii] = CNode->aPH[ii];
+   {  for( ii=0; ii<CSD->nPHb; ii++ )
+        p_asPH[ii] = CNode->aPH[ii]; }
+   for( ii=0; ii<CSD->nPHb; ii++ )
+      p_omPH[ii] = CNode->omPH[ii];
    for( ii=0; ii<CSD->nPSb; ii++ )
    {
        p_amru[ii] = CNode->amru[ii];
@@ -2642,6 +2646,7 @@ void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
   double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
   double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
   double *p_asPH,  // Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+ double *p_omPH,   // Stability indices of phases,log10 scale [nPHb]  (+)      +      -
  double *p_amru,   // Upper AMR to masses of sol. phases [nPSb]        +       -      -
  double *p_amrl    // Lower AMR to masses of sol. phases [nPSb]        +       -      -
 )
@@ -2669,9 +2674,10 @@ void TNode::GEM_from_MT(long int  p_NodeHandle,   // Node identification handle
         CNode->NodeStatusCH = NEED_GEM_AIA;
       // Switch only if SIA is selected, leave if LPP AIA is prescribed (KD)
       if( CSD->nAalp >0 )
-       for( ii=0; ii<CSD->nPHb; ii++ )
-          CNode->aPH[ii] = p_asPH[ii];
-
+      { for( ii=0; ii<CSD->nPHb; ii++ )
+          CNode->aPH[ii] = p_asPH[ii]; }
+      for( ii=0; ii<CSD->nPHb; ii++ )
+         CNode->omPH[ii] = p_omPH[ii];
       for( ii=0; ii<CSD->nPSb; ii++ )
       {
           CNode->amru[ii] = p_amru[ii];
@@ -2696,7 +2702,8 @@ void TNode::GEM_from_MT(
  double *p_dul,   // Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   // Lower restrictions to amounts of DC [nDCb]       +       -      -
  double *p_asPH,   // Specific surface areas of phases, m2/kg [nPHb]  +       -      -
- double *p_amru,   //< Upper AMR to masses of sol. phases [nPSb]       +       -      -
+double *p_omPH,   // Stability indices of phases,log10 scale [nPHb]  (+)      +      -
+ double *p_amru,   //< Upper AMR to masses of sol. phases [nPSb]      +       -      -
  double *p_amrl,   //< Lower AMR to masses of sol. phases [nPSb]      +       -      -
  double *p_xDC,  // Mole amounts of DCs [nDCb] - old primal soln.     +       -      -
  double *p_gam   // DC activity coefficients [nDCb] - old primal s.   +       -      -
@@ -2721,9 +2728,10 @@ void TNode::GEM_from_MT(
      CNode->dll[ii] = p_dll[ii];
    }
     if( CSD->nAalp >0 )
-     for( ii=0; ii<CSD->nPHb; ii++ )
-         CNode->aPH[ii] = p_asPH[ii];
-
+    { for( ii=0; ii<CSD->nPHb; ii++ )
+         CNode->aPH[ii] = p_asPH[ii]; }
+    for( ii=0; ii<CSD->nPHb; ii++ )
+       CNode->omPH[ii] = p_omPH[ii];
    // Optional part - copying old primal solution from p_xDC and p_gam vectors
    if( p_xDC && p_gam )
    {

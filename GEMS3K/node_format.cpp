@@ -90,7 +90,7 @@ outField DataBR_fields[f_lga+1/*60*/] =  {
   { "hDv",  0, 0, 1, "# hDv: Hydraulic vertical dispersivity, m2/s (mass transport)" },
   { "nto",  0, 0, 1, "# nto: Tortuosity factor, dimensionless (mass transport)" },
 //#endif
- // dynamic arrays (52-38=14)
+ // dynamic arrays (53-38=15)
   { "bIC",  1, 0, nICbi, "# bIC: Bulk composition of reactive subsystem (main GEM input), moles of ICs [nICb]" },
   { "rMB",  0, 0, nICbi, "\n# rMB: Mass balance residuals, moles (GEM output) [nICb]" },
   { "uIC",  0, 0, nICbi, "\n# uIC: Chemical potentials of ICs in equilibrium (dual solution), J/(RT) (GEM output) [nICb]" },
@@ -107,6 +107,7 @@ outField DataBR_fields[f_lga+1/*60*/] =  {
   { "bSP",  0, 0, nICbi, "\n# bSP: Output bulk composition of the equilibrium solid part of the system, moles " },
     { "amru",  0, 0, nPSbi, "\n# amru: Upper AMRs on amounts of multi-component phases (mol) [nPSb]  " },
     { "amrl",  0, 0, nPSbi, "\n# amrl: Lower AMRs on amounts of multi-component phases (mol) [nPSb]" },
+  { "omPH",  0, 0, nPHbi, "\n# omPH: stability (saturation) indices of phases in log10 scale, can change in GEM [nPHb] " },
 
 // only for VTK format output
     { "mPH",  0, 0, nPHbi, "# mPH: Masses of phases in equilibrium, kg [nPHb]" },
@@ -176,7 +177,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   bool _comment = with_comments;
 
-  TPrintArrays  prar(f_amrl+1/*54*/, DataBR_fields, ff);
+  TPrintArrays  prar(f_omph+1/*55*/, DataBR_fields, ff);
 
    if( _comment )
    {
@@ -287,6 +288,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   prar.writeArray(  f_xPA,  CNode->xPA, CSD->nPSb, -1L,_comment, brief_mode );
   prar.writeArray(  f_amru,  CNode->amru, CSD->nPSb, -1L,_comment, brief_mode );
   prar.writeArray(  f_amrl,  CNode->amrl, CSD->nPSb, -1L,_comment, brief_mode );
+  prar.writeArray(  f_omph,  CNode->omPH, CSD->nPHb, -1L,_comment, brief_mode );
 
   if(!brief_mode || prar.getAlws( f_bPS ))
   {  if( _comment )
@@ -315,7 +317,7 @@ void TNode::databr_from_text_file( fstream& ff )
 
  // mem_set( &CNode->Tm, 0, 19*sizeof(double));
  databr_reset( CNode );
- TReadArrays  rdar(f_amrl+1/*54*/, DataBR_fields, ff);
+ TReadArrays  rdar(f_omph+1/*55*/, DataBR_fields, ff);
  long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
@@ -465,6 +467,8 @@ void TNode::databr_from_text_file( fstream& ff )
    case f_amru: rdar.readArray( "amru",  CNode->amru, CSD->nPSb );
            break;
    case f_amrl: rdar.readArray( "arml",  CNode->amrl, CSD->nPSb );
+           break;
+   case f_omph: rdar.readArray( "omPH",  CNode->omPH, CSD->nPSb );
            break;
    }
    nfild = rdar.findNext();
@@ -1547,6 +1551,8 @@ void TNode::databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, 
   case f_amru: prar.writeValue(   CNode_->amru[ndx] );
          break;
   case f_amrl: prar.writeValue(   CNode_->amrl[ndx] );
+         break;
+  case f_omph: prar.writeValue(   CNode_->omPH[ndx] );
          break;
    // CNode_ must be pointer to a work node data bridge structure CNode
   case f_mPH: prar.writeValue(   Ph_Mass(ndx) );

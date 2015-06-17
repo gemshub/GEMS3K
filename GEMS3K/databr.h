@@ -122,7 +122,8 @@ typedef struct  /// DATABR - template node data bridge structure
     *bSP,  ///< Output bulk composition of the equilibrium solid part of the system, moles   [nICb]  -      -      +     +
    // Metastability/kinetic controls on phases-solutions (added in devPhase branch)
     *amru, ///< Upper AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
-    *amrl; ///< Lower AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
+    *amrl, ///< Lower AMRs on amounts of multi-component phases (mol) [nPSb]                         +      +      -     -
+  *omPH; ///< stability (saturation) indices of phases in log10 scale, can change in GEM [nPHb]     (+)    (+)     +     +
 }
 DATABR;
 
@@ -198,7 +199,7 @@ f_hDt, f_hDv, f_nto,
 f_bIC, f_rMB, f_uIC, f_xDC, f_gam,
 f_dll, f_dul, f_aPH, f_xPH, f_vPS,
 f_mPS, f_bPS, f_xPA, f_bSP,
-f_amru, f_amrl,
+f_amru, f_amrl,       f_omph,
 // only for VTK format output
 f_mPH, f_vPH, f_m_t, f_con, f_mju, f_lga
 

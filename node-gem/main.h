@@ -70,6 +70,7 @@ class TMyTransport
            **agam,  // Array of node activity coefficients of dependent components
            **axPH,  // Array of node total mole amounts of all reactive phases
            **aaPH,  // Array of node specific surface areas of phases, m2/kg
+           **aomPH,  // Array of node-time specific stability indices of phases, log10 scale
            **avPS,  // Array of node total volumes of multicomponent phases, m3
            **amPS,  // Array of node total masses of multicomponent phases,kg
            **abPS,  // Array of node bulk compositions of multicomponent phases, moles

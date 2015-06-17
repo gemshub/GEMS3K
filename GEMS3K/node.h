@@ -231,6 +231,7 @@ public:
    );
 
 /// (6s) Passes (copies) the GEMS3K input data from the work instance of DATABR structure with TKinMet phases.
+///  In addition, copies the AMRs for solution phases, and phase stability indices (to keep for kinetics).
 ///  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
 ///   chemical data for all nodes used in the mass-transport model.
     void GEM_restore_MT(
@@ -245,8 +246,10 @@ public:
     double *p_dul,    ///< Upper restrictions to amounts of DC [nDCb]   +       -      -
     double *p_dll,    ///< Lower restrictions to amounts of DC [nDCb]   +       -      -
     double *p_aPH,    ///< Specific surface areas of phases,m2/kg[nPHb] +       -      -
- double *p_amru,      ///< Upper AMR to masses of sol. phases [nPSb]   +       -      -
- double *p_amrl       ///< Lower AMR to masses of sol. phases [nPSb]   +       -      -
+ double *p_omPH,    ///< Stability indices of phases,log10 scale [nPHb] (+)     +      -
+   double *p_amru,      ///< Upper AMR to masses of sol. phases [nPSb]   +       -      -
+   double *p_amrl       ///< Lower AMR to masses of sol. phases [nPSb]   +       -      -
+
    );
 
 /// (8) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure.
@@ -321,7 +324,8 @@ void GEM_from_MT(
  );
 
 /// (8d) Loads the minimum of GEMS3K input data for a given mass-transport node into the work instance of
-///   the DATABR structure. In addition, loads specific surface areas of phases, and AMCs for phases-solutions.
+///   the DATABR structure. In addition, loads specific surface areas of phases,
+///   stability indexes of phases (kept from previous time point), and AMRs for phases-solutions.
 ///   This call is usually preceeding the GEM_run() call.
 void GEM_from_MT(
  long int  p_NodeHandle,   ///< Node identification handle
@@ -333,12 +337,13 @@ void GEM_from_MT(
  double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
  double *p_asPH,  ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+double *p_omPH,   ///< Stability indices of phases,log10 scale [nPHb]  (+)      +      -
 double *p_amru,   ///< Upper AMR to masses of sol. phases [nPSb]        +       -      -
 double *p_amrl    ///< Lower AMR to masses of sol. phases [nPSb]        +       -      -
 );
 
 /// (8e) Loads the GEMS3K input data for a given mass-transport node into the work instance of DATABR structure,
-/// with AMRs for phases-solutions.
+/// with stability indexes of phases (kept from previous time point), and AMRs for phases-solutions.
 /// In addition, provides access to speciation vector p_xDC and DC activity coefficients p_gam that will be used in
 /// GEM "smart initial approximation" SIA mode if dBR->NodeStatusCH == NEED_GEM_SIA (5) and
 /// uPrimalSol = true are set for the GEM_run() call (see Section 2) . This works only when the DATACH
@@ -355,10 +360,11 @@ void GEM_from_MT(
  double *p_dul,   ///< Upper restrictions to amounts of DC [nDCb]       +       -      -
  double *p_dll,   ///< Lower restrictions to amounts of DC [nDCb]       +       -      -
  double *p_asPH,  ///< Specific surface areas of phases, m2/kg [nPHb]   +       -      -
+double *p_omPH,   ///< Stability indices of phases,log10 scale [nPHb]  (+)      +      -
  double *p_amru,   ///< Upper AMR to masses of sol. phases [nPSb]       +       -      -
  double *p_amrl,    ///< Lower AMR to masses of sol. phases [nPSb]      +       -      -
- double *p_xDC,   ///< Mole amounts of DCs [nDCb] - old primal soln.    +      -      -
- double *p_gam    ///< DC activity coefficients [nDCb] - old primal s.  +      -      -
+ double *p_xDC,   ///< Mole amounts of DCs [nDCb] - old primal soln.    +       -      -
+ double *p_gam    ///< DC activity coefficients [nDCb] - old primal s.  +       -      -
 );
 
 /// (9) Optional, for passing the current mass transport time and time step into the work
