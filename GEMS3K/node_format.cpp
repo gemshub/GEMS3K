@@ -1207,6 +1207,7 @@ void TNode::databr_realloc()
     CNode->aPH = 0;
 
  CNode->xPH = new double[CSD->nPHb];
+ CNode->omPH = new double[CSD->nPHb];
 
  for(  k=0; k<CSD->nPHb; k++ )
    CNode->xPH[k] = 0.0;       // default assignment

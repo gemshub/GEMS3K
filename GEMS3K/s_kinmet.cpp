@@ -1051,6 +1051,7 @@ TKinMet::SetMetCon( )
     // setting DC metastability constraints for a single-component phase
     arnxul[0] = nPul;
     arnxll[0] = nPll;
+
     return false;
 }
 

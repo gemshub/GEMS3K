@@ -612,6 +612,7 @@ void TNodeArray::CopyWorkNodeFromArray( long int ii, long int nNodes, DATABRPTR*
 	  copyValues( pCNode()->aPH, arr_BR[ii]->aPH, pCSD()->nPHb );
   else  pCNode()->aPH = 0;
   copyValues( pCNode()->xPH, arr_BR[ii]->xPH, pCSD()->nPHb );
+  copyValues( pCNode()->omPH, arr_BR[ii]->omPH, pCSD()->nPHb );
   copyValues( pCNode()->vPS, arr_BR[ii]->vPS, pCSD()->nPSb );
   copyValues( pCNode()->mPS, arr_BR[ii]->mPS, pCSD()->nPSb );
 

@@ -2315,7 +2315,8 @@ void TNode::GEM_restore_MT(
 // (6) Passes (copies) the GEMS3K input data from the work instance of DATABR structure.
 //  This call is useful after the GEM_init() (1) and GEM_run() (2) calls to initialize the arrays which keep the
 //   chemical data for all nodes used in the mass-transport model.
-void TNode::GEM_restore_MT(long int  &p_NodeHandle,   // Node identification handle
+void TNode::GEM_restore_MT(
+    long int  &p_NodeHandle,   // Node identification handle
     long int  &p_NodeStatusCH, // Node status code;  see typedef NODECODECH
                       //                                    GEM input output  FMT control
     double &p_TK,      // Temperature T, Kelvin                       +       -      -
