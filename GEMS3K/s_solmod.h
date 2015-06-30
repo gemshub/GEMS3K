@@ -1230,6 +1230,7 @@ class TCEFmod: public TSolMod
                 double dGrefdnNum(const long int i); // NSergii:
                 double dGidmixdnNum(const long int i); // NSergii:
                 double dGexcdnNum(const long int i); // NSergii:
+                long int SLatt(const long int m);
                 double Gmix(); // NSergii:
                 double Gexc();
                 double Gref();

@@ -2929,8 +2929,10 @@ long int TCEFmod::ReciprocalPart() {
 /// between moieties on the same sublattice.
 /// After Berman (DK/TW June 2011), needs to be changed to CEF (Lukas ea 2007)
 //
+
+
 long int TCEFmod::ExcessPart() {
-    long int ip, j, s, m, d, e, f, s1, s2;
+    long int ip, j, s, m, d, e, f, g, s1, s2;
     double lnGamRT, lnGam, PY, sum;
 
     if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
@@ -2951,23 +2953,37 @@ long int TCEFmod::ExcessPart() {
                 // looking through the parameters list
                     for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
 
-                        s1 = aIPx[MaxOrd*ip];   //
-                        s2 = 1 - s1;
+                        //s1 = aIPx[MaxOrd*ip];   //
+                        //s2 = 1 - s1;
 
-                        if( s1 != s )
-                            continue;   // skip - this parameter refers to another sublattice
+                        d = aIPx[MaxOrd*ip+0];
+                        e = aIPx[MaxOrd*ip+1];
+                        f = aIPx[MaxOrd*ip+2];
+                        g = aIPx[MaxOrd*ip+3];
 
-                        d = aIPx[MaxOrd*ip+1];
-                        e = aIPx[MaxOrd*ip+2];
-                        f = aIPx[MaxOrd*ip+3];
+                        PY = 1.0;
+                        if (d > -1.0){
+                            s1 = SLatt(d);
+                            PY *= y[s1][d];
+                        }
 
-                        if( f < 0L )
-                          PY = y[s1][d] * y[s1][e];
-                        else
-                          PY = y[s1][d] * y[s1][e] * y[s2][f];
+                        if (e > -1.0){
+                            s1 = SLatt(e);
+                            PY *= y[s1][e];
+                        }
 
-                        sum += PY / y[s1][m] * Wpt[ip];
+                        if (f > -1.0){
+                            s1 = SLatt(f);
+                            PY *= y[s1][f];
+                        }
 
+                        if (g > -1.0){
+                            s1 = SLatt(g);
+                            PY *= y[s1][g];
+                        }
+
+                        s2 = SLatt(m);
+                        sum += PY / y[s2][m] * Wpt[ip];
                     }  // ip
                 }
             } // m
@@ -2980,6 +2996,41 @@ long int TCEFmod::ExcessPart() {
    return 0;
 }
 
+double TCEFmod::Gref(){
+    int j;
+    double G_ref;
+
+    // Reference frame term
+    G_ref   = 0.0;
+    for( j=0; j<NComp; j++) {
+        pyp[j] = PYproduct( j );
+        G_ref += pyp[j] * oGf[j];
+    }
+    return G_ref;
+}
+
+long int TCEFmod::SLatt(const long m){
+    long int s, j, sub = 0;
+
+    for (j = 0; j < NMoi; j++){
+        for (s = 0; s < NSub; s++){
+            if (mn[j][s][m] != 0){
+                sub = s;
+                continue;
+            }
+        }
+    }
+    return sub;
+}
+
+double TCEFmod::KronDelta( const long int j, const long int s, const long int m ){
+    double krond = 0.;
+    if( mn[j][s][m] != 0 )
+       krond = 1.;
+    return krond;
+}
+
+/*
 double TCEFmod::Gexc(){
     int j, s, m, s1, s2, d, e, f, ip;
     double G_ex, PY;
@@ -3002,19 +3053,6 @@ double TCEFmod::Gexc(){
         G_ex += PY * Wpt[ip];
     }  // ip
     return G_ex;
-}
-
-double TCEFmod::Gref(){
-    int j;
-    double G_ref;
-
-    // Reference frame term
-    G_ref   = 0.0;
-    for( j=0; j<NComp; j++) {
-        pyp[j] = PYproduct( j );
-        G_ref += pyp[j] * oGf[j];
-    }
-    return G_ref;
 }
 
 double TCEFmod::Gidmix(){
@@ -3086,7 +3124,7 @@ double TCEFmod::dGexcdnNum(const long int i){
 }
 
 //--------------------- End of s_solmod3.cpp ----------------------------------------
-
+*/
 
 
 
