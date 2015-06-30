@@ -79,21 +79,21 @@ outField MULTI_dynamic_fields[80] =  {
    {  "Sigw",  0 , 0, 0, "\n# Sigw: Specific surface free energy for phase-water interface, J/m2 [nPH] (reserved)" },
    {  "Sigg",  0 , 0, 0, "\n# Sigg: Specific surface free energy for phase-gas interface, J/m2 (not yet used) [nPH]" },
    {  "YOF",   0 , 0, 0, "\n# YOF: Surface free energy parameter for phases in J/g (to accomodate for variable phase composition)  [nPH]" },
-   {  "Nfsp",  1 , 0, 0, "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]" },
-   {  "MASDT", 1 , 0, 0, "\n# MASDT: Total maximum site  density per surface type, mkmol/g [nPS*6]" },
-   {  "C1",    1 , 0, 0, "\n# C1: Inner capacitance density parameter C1, F/m2 [nPS*6]" },
-   {  "C2",    1 , 0, 0, "\n# C2: Outer capacitance density parameter C2, F/m2 [nPS*6]" },
-   {  "C3",    1 , 0, 0, "\n# C3: Third capacitance density parameter C3, F/m2 [nPS*6]" },
-   {  "pCh",   1 , 0, 0, "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]" },
-   {  "SATX",  1 , 0, 0, "\n# SATX: Setup of surface sites and species (will be applied separately within each sorption phase) [Lads*4]"
+   {  "Nfsp",  0 , 0, 0, "\n# Nfsp: Fractions of the sorbent specific surface area allocated to surface types [nPS*6]" },
+   {  "MASDT", 0 , 0, 0, "\n# MASDT: Total maximum site  density per surface type, mkmol/g [nPS*6]" },
+   {  "C1",    0 , 0, 0, "\n# C1: Inner capacitance density parameter C1, F/m2 [nPS*6]" },
+   {  "C2",    0 , 0, 0, "\n# C2: Outer capacitance density parameter C2, F/m2 [nPS*6]" },
+   {  "C3",    0 , 0, 0, "\n# C3: Third capacitance density parameter C3, F/m2 [nPS*6]" },
+   {  "pCh",   0 , 0, 0, "\n# pCh: Density of permanent surface type charge (mkeq/m2) for each surface type on sorption phases [nPS*6]" },
+   {  "SATX",  0 , 0, 0, "\n# SATX: Setup of surface sites and species (will be applied separately within each sorption phase) [Lads*4]"
                         "\n# [0] surface type; [1] sorbent emd member; [2] surface site in surf. type; [3] surface EDL plane" },
-   {  "MASDJ", 1 , 0, 0, "\n# MASDJ: Parameters of surface species in surface complexation models [Lads*6]"
+   {  "MASDJ", 0, 0, 0, "\n# MASDJ: Parameters of surface species in surface complexation models [Lads*6]"
                          "\n# [0] max site density mmol/g; [1] species charge allocated to 0 plane;"
                          "\n# [2] species charge allocated to beta -or third plane; [3] Frumkin isotherm interaction parameter;"
                          "\n# [4] denticity or coordination number CN; [5] reserved isoterm parameter" },
-   {  "SCM",   1 , 0, 0, "\n# SCM: Classifier of built-in electrostatic models applied to surface types in sorption phases [nPS*6]" },
-   {  "SACT",  1 , 0, 0, "\n# SACT: Classifier of applied SACT equations (isotherm corrections) [Lads]" },
-   {  "DCads", 1 , 0, 0, "\n# DCads: Classifier of DCs involved in sorption phases [Lads]" },
+   {  "SCM",   0, 0, 0, "\n# SCM: Classifier of built-in electrostatic models applied to surface types in sorption phases [nPS*6]" },
+   {  "SACT",  0, 0, 0, "\n# SACT: Classifier of applied SACT equations (isotherm corrections) [Lads]" },
+   {  "DCads", 0, 0, 0, "\n# DCads: Classifier of DCs involved in sorption phases [Lads]" },
                // static: GEM IPM v3 numerical tolerances
    { "pa_DB" , 0 , 0, 0,  "# DB: Minimum amount of IC in the bulk composition, moles (except charge Zz) { 1e-17 }"},
    { "pa_DHB", 0 , 0, 0,  "\n# DHB: Maximum allowed relative mass balance residual for ICs { 1e-13 } " },
@@ -140,20 +140,20 @@ outField MULTI_dynamic_fields[80] =  {
    { "tMin" ,    0 , 0, 0,  "# tMin: Type of thermodynamic potential to minimize (reserved)" },
    { "dcMod",    0 , 0, 0,  "# dcMod: Codes for PT corrections of DC thermodynamic data [nDC] (reserved)" },
 //TKinMet
-    { "kMod",    0 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi*6]" },
-    { "LsKin",    1 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
+    { "kMod",    1 , 0, 0,  "# kMod: Codes for built-in kinetic models [Fi*6]" },
+    { "LsKin",    0 , 0, 0,  "# LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;\n"
       "# of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]" },
-    { "LsUpt",    1 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
+    { "LsUpt",    0 , 0, 0,  "# LsUpt: number of uptake kinetics model parameters (coefficients) numpC[k]; (reserved)" },
     { "xICuC",    0 , 0, 0,  "# xICuC: Collected array of IC species indexes used in partition (fractionation) coefficients  ->L1[k]" },
     { "PfFact",    0 , 0, 0,  "# PfFact: form factors for phases (taken from TKinMet or set from TNode) [FI] (reserved)" },
 // TSorpMod stuff
-    { "LsESmo",    1 , 0, 0,  "# LsESmo: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]" },
-    { "LsISmo",    1 , 0, 0,  "# LsISmo: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]" },
+    { "LsESmo",    0 , 0, 0,  "# LsESmo: number of EIL model layers; EIL params per layer; CD coefs per DC; reserved  [Fis][4]" },
+    { "LsISmo",    0 , 0, 0,  "# LsISmo: number of surface sites; isotherm coeffs per site; isotherm coeffs per DC; max.denticity of DC [Fis][4]" },
 // TSorpMod & TKinMet stuff
-    { "SorMc",    1 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
+    { "SorMc",    0 , 0, 0,  "# SorMc: Phase-related kinetics and sorption model parameters: [Fis][16]" },
 // TSolMod stuff
-    { "LsMdc2",    1 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
-    { "LsPhl",    1 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
+    { "LsMdc2",    0 , 0, 0,  "# LsMdc2: [3*FIs] - number of DQF coeffs; reciprocal coeffs per end member" },
+    { "LsPhl",    0 , 0, 0,  "# LsPhl: Number of phase links; number of link parameters; [Fi][2]" }
 };
 
 
