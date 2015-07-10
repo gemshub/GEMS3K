@@ -468,7 +468,7 @@ void TNode::databr_from_text_file( fstream& ff )
            break;
    case f_amrl: rdar.readArray( "arml",  CNode->amrl, CSD->nPSb );
            break;
-   case f_omph: rdar.readArray( "omPH",  CNode->omPH, CSD->nPSb );
+   case f_omph: rdar.readArray( "omPH",  CNode->omPH, CSD->nPHb );
            break;
    }
    nfild = rdar.findNext();
