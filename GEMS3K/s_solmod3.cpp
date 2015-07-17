@@ -2011,26 +2011,21 @@ long int TBerman::MixMod()
     long int retCode, j;
 
     retCode = IdealMixing();
-    if(!retCode)
-    {
+    if(!retCode) {
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamConf[j];
     }
+
     retCode = ReciprocalPart();
-    if(!retCode)
-    {
+    if(!retCode) {
        for(j=0; j<NComp; j++)
            lnGamma[j] += lnGamRecip[j];
     }
+
     retCode = ExcessPart();
-    if(!retCode)
-    {
-// cout << endl << " j" << "\tlnGamC" << "\tlnGamR" << "\tlnGamE" << "\t|lnGam" << endl;
+    if(!retCode) {
         for(j=0; j<NComp; j++)
-       {
            lnGamma[j] += lnGamEx[j];
-// cout << " " << j << "\t" << lnGamConf[j] << "\t" << lnGamRecip[j] << "\t" << lnGamEx[j] << "\t| " << lnGamma[j] << endl;
-       }
     }
     return retCode;
 }
@@ -2511,6 +2506,7 @@ void TCEFmod::alloc_internal()
     Wv = new double [NPar];
     Wpt = new double [NPar];
     NmoS = new long int [NSub];
+    Sub = new long int [NMoi];
 
     fjs = new double *[NComp];
     for( j=0; j<NComp; j++)
@@ -2539,6 +2535,7 @@ void TCEFmod::alloc_internal()
                  mf=true;
                  NmoS[s]++;
                  mem[s]++;
+                 Sub[m] = s;
                  break;
                }
             }
@@ -2560,6 +2557,7 @@ void TCEFmod::free_internal()
     delete[]Wc;
     delete[]Wv;
     delete[]Wpt;
+    delete[]Sub;
 
     for( j=0; j<NComp; j++)
     {
@@ -2628,7 +2626,7 @@ long int TCEFmod::MixMod()
        }
     }
 
-    retCode = ReciprocalPart();
+    retCode = RefFrameTerm();
     if(!retCode)
     {
        for(j=0; j<NComp; j++){
@@ -2647,15 +2645,15 @@ long int TCEFmod::MixMod()
     return retCode;
 }
 
+
+
 // NSergii: calculates ideal mixing part from the CEF model
 long int TCEFmod::CalcSiteFractions(){
     long int j,s,m, i;
     double mnsxj;
     // calculation of site fractions
-    for( s=0; s<NSub; s++)
-    {
-        for( m=0; m<NMoi; m++)
-        {
+    for( s=0; s<NSub; s++) {
+        for( m=0; m<NMoi; m++) {
             mnsxj = 0.;
             for( j=0; j<NComp; j++)
                mnsxj += mn[j][s][m] * x[j];
@@ -2669,8 +2667,8 @@ long int TCEFmod::CalcSiteFractions(){
 
 //NSergii: Rewrote thte IdealMixing function according to Sundman (1981)
 long int TCEFmod::IdealMixing() {
-    long int j,s,m, i;
-    double dgm_dyjs, dgm_dysis, sum_s;  // NSergii
+    long int j,s,m;
+    double dgm_dyjs, dgm_dysis, sum_s, Gid;  // NSergii
 
     if( !NSub || !NMoi ) {
         for( j=0; j<NComp; j++)
@@ -2681,45 +2679,37 @@ long int TCEFmod::IdealMixing() {
     CalcSiteFractions();
     //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
 
+    Gid = Gidmix();
     // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
     // for each end member
     for( j=0; j<NComp; j++) {
         sum_s = 0.0;
-        for( s=0; s<NSub; s++) {
-            dgm_dysis = 0.0;
-            dgm_dyjs = 0.0;
 
-            if( NmoS[s] < 2L )
-                continue; // no reciprocal contribution from sublattices with one moiety
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if (KronDelta(j, m)) {
+                dgm_dysis += R_CONST*Tk * mns[s] * (1 + log(y[s][m]));
+            }
+        } // m
 
-            for( m=0; m < NMoi; m++ ) { // Looking through moieties
-                if ( mn[j][s][m] ){
-                    dgm_dysis += mns[s] * (1 + log(y[s][m]));
-                }
-            } // m
 
-            for( i=0; i<NComp; i++ ) {
-                for( m=0; m < NMoi; m++ ) { // Looking through moieties
-                    if ( mn[i][s][m] ){
-                        dgm_dyjs += y[s][m] * mns[s] * (1 + log(y[s][m]));
-                    }
-                }
-            } // i
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            dgm_dyjs += R_CONST*Tk * y[s][m] * mns[s] * (1 + log(y[s][m]));
+        } // m
 
-            sum_s += (dgm_dysis - dgm_dyjs);
+        sum_s = Gid + (dgm_dysis - dgm_dyjs);
 
-        }
-        // Calculation of the fictive activity coefficient  eq 5.1-14
         lnGamConf[j] = 0.;
         if(x[j] > 1e-32 )  // Check threshold
-            lnGamConf[j] = sum_s;
+            lnGamConf[j] = sum_s/(R_CONST*Tk);
     }
     return 0;
 }
 
-long int TCEFmod::ExcessProp( double *Zex )
-{
-
+long int TCEFmod::ExcessProp( double *Zex ) {
     // check and add calculation of excess properties here
     long int ip, i1, i2, s1, s2, d, e, f;
     double g, v, s, u;
@@ -2767,8 +2757,7 @@ long int TCEFmod::ExcessProp( double *Zex )
 }
 
 // calculates ideal mixing properties
-long int TCEFmod::IdealProp( double *Zid )
-{
+long int TCEFmod::IdealProp( double *Zid ) {
         Hid = 0.0;
         CPid = 0.0;
         Vid = 0.0;
@@ -2806,101 +2795,12 @@ double TCEFmod::PYproduct( const long int j ) {
     return pyp_j;
 }
 
-double TCEFmod::dGm_dysm(const long int s, const long int m )
-{
-    long int i, ip, s1, s2, d, e, f;
-    double ys, dst, dsum, PY;
-
-    /*  NSergii: calculation of the Reference part derivative.
-        In this case the mn array is being used instead of delta function
-        to simplify the code */
-    dsum = 0.0;
-    ys = y[s][m];
-    for( i=0; i<NComp; i++) {
-        if(mn[i][s][m]) {
-           if (ys){ // check whether moieties belonging to l-th end member found in this sublattice
-               dst = pyp[i] * oGf[i] / ys ;
-               dsum += dst;
-           }
-        }
-    }
-
-    /*
-    // NSergii: Ideal Part calculation - has been moved to separate TCEFmod::IdealMixing
-    if (ys) {
-        dsum += R_CONST*Tk * mns[s] * (1.0 + log(y[s][m]));
-    }
-    */
-
-    for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
-
-        s1 = aIPx[MaxOrd*ip];   //
-        s2 = 1 - s1;
-
-        if( s1 != s )
-            continue;   // skip - this parameter refers to another sublattice
-
-        d = aIPx[MaxOrd*ip+1];
-        e = aIPx[MaxOrd*ip+2];
-        f = aIPx[MaxOrd*ip+3];
-
-        if ((m == d || m == e || m == f) && (s == s1 || s == s2)){
-            if( f < 0L )
-              PY = y[s1][d] * y[s1][e];
-            else
-              PY = y[s1][d] * y[s1][e] * y[s2][f];
-
-            dsum += PY / y[s1][m] * Wpt[ip];
-        }
-
-    }  // ip
-    return dsum;
-}
-
-// NSergii:
-double TCEFmod::RefFrameTerm( const long int j, const double G_ref )
-{
-    long int l, m, s, nmem, i;
-    double reftj, sum_s, sum_m, ys, ydp, dgr_dys, dgm_dysis, dgm_dyjs;
-
-    sum_s = 0.;
-
-    for( s = 0; s < NSub; s++ ) {  // sublattices
-        dgm_dyjs = 0.0;
-        dgm_dysis = 0.0;
-
-        if( NmoS[s] < 2L )
-            continue; // no reciprocal contribution from sublattices with one moiety
-
-        for( m=0; m < NMoi; m++ ) { // Looking through moieties
-            if ( mn[j][s][m] ) {
-                dgm_dysis += dGm_dysm(s, m);
-            }
-        } // m
-
-        for( i=0; i<NComp; i++ ) {
-            for( m=0; m < NMoi; m++ ) { // Looking through moieties
-                if ( mn[i][s][m] ) {
-                    dgm_dyjs += mns[s] * y[s][m] * dGm_dysm(s, m);
-                }
-            }
-        } // i
-
-        sum_s += (dgm_dysis - dgm_dyjs);
-    } // s
-    reftj = G_ref + sum_s;
-    return reftj;
-}
-
 /// CEF: calculates part of activity coefficients related to reciprocal energies
 /// (interactions between moieties on different sublattices)
 ///
-long int TCEFmod::ReciprocalPart() {
-    long int j, r, s, m;
-    long int xm[4];  // max 4 sublattices
-    bool skip;
-    double rcSum, rft, yss, ysn;
-    double val; //NSergii
+long int TCEFmod::RefFrameTerm() {
+    long int j, i, s, m;
+    double sum_s, dgm_dysis, dgm_dyjs; //NSergii
 
     for( j=0; j<NComp; j++)
          lnGamRecip[j] = 0.;
@@ -2911,16 +2811,42 @@ long int TCEFmod::ReciprocalPart() {
     // Tables of site fractions y and end-member multiplicities mn, mns have been
     // already calculated in the IdealMixing() - here we just use them.
 
+
     // CEF calculations - computing pyp[j] (site fraction products for end members) eq 42
     // and G_ref - total reference Gibbs energy
-    double G_ref=0.;
+    double G_ref = 0.;
     G_ref = Gref();
 
-    // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
-    double G2, x1, x2, dx = 1.0e-7;
     for( j=0; j<NComp; j++) {
-        rft = RefFrameTerm( j, G_ref );
-        lnGamRecip[j] = rft/(R_CONST*Tk);
+        sum_s = 0.0;
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if ( KronDelta(j, m) ) { // If the moiety is a part of compound j
+                for ( i=0; i<NComp; i++) { // Looking through all the compounds that contain moiety m
+                    if ( KronDelta(i, m) ) { // If the moiety is a part of compound j
+                        dgm_dysis += pyp[i] * oGf[i] / y[s][m];
+                    }
+                }
+            }
+        } // m
+
+
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            for ( i=0; i<NComp; i++) { // Looking through all the compounds that contain moiety m
+                if ( KronDelta(i, m) ) { // If the moiety is a part of compound j
+                    dgm_dyjs  += mns[s] * y[s][m] * pyp[i] * oGf[i] / y[s][m];
+                }
+            }
+        } // m
+
+        sum_s = G_ref + (dgm_dysis - dgm_dyjs);
+
+        lnGamConf[j] = 0.;
+        if(x[j] > 1e-32 )  // Check threshold
+            lnGamConf[j] = sum_s/(R_CONST*Tk);
     }
     return 0;
 }
@@ -2929,11 +2855,9 @@ long int TCEFmod::ReciprocalPart() {
 /// between moieties on the same sublattice.
 /// After Berman (DK/TW June 2011), needs to be changed to CEF (Lukas ea 2007)
 //
-
-
 long int TCEFmod::ExcessPart() {
     long int ip, j, s, m, d, e, f, g, s1, s2;
-    double lnGamRT, lnGam, PY, sum;
+    double sum_s, dgm_dysis, dgm_dyjs, PY, G_exc;
 
     if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
         || NPcoef < 3 || !x || !lnGamma ) {
@@ -2943,18 +2867,104 @@ long int TCEFmod::ExcessPart() {
     }
 
     // calculating activity coefficients
+    G_exc = Gexc();
+
+    for( j=0; j<NComp; j++) {
+        sum_s = 0.0;
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if ( KronDelta(j, m) ) { // If the moiety is a part of compound j
+                for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
+
+                    d = aIPx[MaxOrd*ip+0];
+                    e = aIPx[MaxOrd*ip+1];
+                    f = aIPx[MaxOrd*ip+2];
+                    g = aIPx[MaxOrd*ip+3];
+
+                    if ( ( d==m ) || ( e==m ) || ( f==m ) || ( g==m ) ) { // If the m moiety is one of the moieties in index vector
+                        PY = 1.0;
+                        if (d > -1.0){
+                            s1 = Sub[d];
+                            PY *= y[s1][d];
+                        }
+
+                        if (e > -1.0){
+                            s1 = Sub[e];
+                            PY *= y[s1][e];
+                        }
+
+                        if (f > -1.0){
+                            s1 = Sub[f];
+                            PY *= y[s1][f];
+                        }
+
+                        if (g > -1.0){
+                            s1 = Sub[g];
+                            PY *= y[s1][g];
+                        }
+
+                        s2 = Sub[m];
+                        dgm_dysis += PY / y[s2][m] * Wpt[ip];
+                    }
+                }  // ip
+            }
+        } // m
+
+
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
+
+                d = aIPx[MaxOrd*ip+0];
+                e = aIPx[MaxOrd*ip+1];
+                f = aIPx[MaxOrd*ip+2];
+                g = aIPx[MaxOrd*ip+3];
+
+                if ( ( d==m ) || ( e==m ) || ( f==m ) || ( g==m ) ) { // If the m moiety is one of the moieties in index vector
+                    PY = 1.0;
+                    if (d > -1.0){
+                        s1 = Sub[d];
+                        PY *= y[s1][d];
+                    }
+
+                    if (e > -1.0){
+                        s1 = Sub[e];
+                        PY *= y[s1][e];
+                    }
+
+                    if (f > -1.0){
+                        s1 = Sub[f];
+                        PY *= y[s1][f];
+                    }
+
+                    if (g > -1.0){
+                        s1 = Sub[g];
+                        PY *= y[s1][g];
+                    }
+
+                    s2 = Sub[m];
+                    dgm_dyjs += mns[s] * y[s][m] * PY / y[s2][m] * Wpt[ip];
+                }
+            }  // ip
+        } // m
+        sum_s = G_exc + (dgm_dysis - dgm_dyjs);
+        lnGamEx[j] = 0.;
+        if(x[j] > 1e-32 )  // Check threshold
+            lnGamEx[j] = sum_s/(R_CONST*Tk);
+    } // s
+
+    /*
     for (j=0; j<NComp; j++) {
         lnGamRT = 0.;
         for( s=0; s<NSub; s++) {
             sum = 0.0;
             for( m=0; m<NMoi; m++) {
                 // Retrieving the moiety occupancy number in end member y0_j,s,m
-                if( mn[j][s][m] ) {
+                if( KronDelta(j, m) ) {
                 // looking through the parameters list
                     for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
-
-                        //s1 = aIPx[MaxOrd*ip];   //
-                        //s2 = 1 - s1;
 
                         d = aIPx[MaxOrd*ip+0];
                         e = aIPx[MaxOrd*ip+1];
@@ -2963,26 +2973,26 @@ long int TCEFmod::ExcessPart() {
 
                         PY = 1.0;
                         if (d > -1.0){
-                            s1 = SLatt(d);
+                            s1 = Sub[d];
                             PY *= y[s1][d];
                         }
 
                         if (e > -1.0){
-                            s1 = SLatt(e);
+                            s1 = Sub[e];
                             PY *= y[s1][e];
                         }
 
                         if (f > -1.0){
-                            s1 = SLatt(f);
+                            s1 = Sub[f];
                             PY *= y[s1][f];
                         }
 
                         if (g > -1.0){
-                            s1 = SLatt(g);
+                            s1 = Sub[g];
                             PY *= y[s1][g];
                         }
 
-                        s2 = SLatt(m);
+                        s2 = Sub[m];
                         sum += PY / y[s2][m] * Wpt[ip];
                     }  // ip
                 }
@@ -2993,6 +3003,7 @@ long int TCEFmod::ExcessPart() {
         lnGam = lnGamRT/(R_CONST*Tk);
         lnGamEx[j] = lnGam;
    } // j
+    */
    return 0;
 }
 
@@ -3009,122 +3020,69 @@ double TCEFmod::Gref(){
     return G_ref;
 }
 
-long int TCEFmod::SLatt(const long m){
-    long int s, j, sub = 0;
+double TCEFmod::Gidmix(){
+    int j, m, s;
+    double G_idmix;
 
-    for (j = 0; j < NMoi; j++){
-        for (s = 0; s < NSub; s++){
-            if (mn[j][s][m] != 0){
-                sub = s;
-                continue;
-            }
-        }
-    }
-    return sub;
+    // Reference frame term
+    G_idmix = 0.0;
+    for( m=0; m < NMoi; m++ ) { // Looking through moieties
+        s = Sub[m];
+        G_idmix  += mns[s] * y[s][m] * log(y[s][m]);
+    } // m
+    return G_idmix*R_CONST*Tk;
 }
 
-double TCEFmod::KronDelta( const long int j, const long int s, const long int m ){
+double TCEFmod::KronDelta( const long int j, const long int m ){
     double krond = 0.;
+    int s = Sub[m];
+
     if( mn[j][s][m] != 0 )
        krond = 1.;
     return krond;
 }
 
-/*
 double TCEFmod::Gexc(){
-    int j, s, m, s1, s2, d, e, f, ip;
-    double G_ex, PY;
+    int m, s1, d, e, f, g, ip;
+    double G_exc, PY;
 
     // Excess Gibbs energy term
-    G_ex    = 0.0;
+    G_exc    = 0.0;
     for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
 
-        s1 = aIPx[MaxOrd*ip];   //
-        s2 = 1 - s1;
+        d = aIPx[MaxOrd*ip+0];
+        e = aIPx[MaxOrd*ip+1];
+        f = aIPx[MaxOrd*ip+2];
+        g = aIPx[MaxOrd*ip+3];
 
-        d = aIPx[MaxOrd*ip+1];
-        e = aIPx[MaxOrd*ip+2];
-        f = aIPx[MaxOrd*ip+3];
+        PY = 1.0;
+        if (d > -1.0){
+            s1 = Sub[d];
+            PY *= y[s1][d];
+        }
 
-        if( f < 0L )
-          PY = y[s1][d] * y[s1][e];
-        else
-          PY = y[s1][d] * y[s1][e] * y[s2][f];
-        G_ex += PY * Wpt[ip];
+        if (e > -1.0){
+            s1 = Sub[e];
+            PY *= y[s1][e];
+        }
+
+        if (f > -1.0){
+            s1 = Sub[f];
+            PY *= y[s1][f];
+        }
+
+        if (g > -1.0){
+            s1 = Sub[g];
+            PY *= y[s1][g];
+        }
+
+        G_exc += PY * Wpt[ip];
     }  // ip
-    return G_ex;
-}
-
-double TCEFmod::Gidmix(){
-    int s, m;
-    double G_idmx;
-
-    // Ideal mixing term
-    G_idmx  = 0.0;
-    for( s=0; s<NSub; s++) {
-        if( NmoS[s] < 2L )
-            continue; // no reciprocal contribution from sublattices with one moiety
-        for( m=0; m < NMoi; m++ ) { // Looking through moieties
-            if ( y[s][m] > 1.0e-20 )
-                G_idmx += mns[s] * y[s][m] * log(y[s][m]);
-        } // m
-    } // s
-    G_idmx *= R_CONST*Tk;
-    return G_idmx;
-}
-
-double TCEFmod::Gmix(){
-    return Gref() + Gidmix() + Gexc();
-}
-
-//NSergii: Numerical calculation of
-double TCEFmod::dGidmixdnNum(const long int i){
-    double G2, G1, x1, x2, dx = 1.0e-7;
-
-    CalcSiteFractions();
-    G1 = Gidmix();
-
-    x1 = x[i];
-    x2 = x1 + dx;
-    x[i] = x2;
-    CalcSiteFractions();
-    G2 = Gidmix();
-
-    x[i] = x1;
-    CalcSiteFractions();
-    return (G2 - G1)/(x2 - x1)/(R_CONST*Tk);
-}
-
-double TCEFmod::dGrefdnNum(const long int i){
-    double G2, G1, x1, x2, dx = 1.0e-7;
-    G1 = Gref();
-    x1 = x[i];
-    x2 = x1 + dx;
-    x[i] = x2;
-    CalcSiteFractions();
-    G2 = Gref();
-    x[i] = x1;
-    CalcSiteFractions();
-    return (G2 - G1)/(x2 - x1)/(R_CONST*Tk);
-
-}
-
-double TCEFmod::dGexcdnNum(const long int i){
-    double G2, G1, x1, x2, dx = 1.0e-7;
-    G1 = Gexc();
-    x1 = x[i];
-    x2 = x1 + dx;
-    x[i] = x2;
-    CalcSiteFractions();
-    G2 = Gexc();
-    x[i] = x1;
-    CalcSiteFractions();
-    return (G2 - G1)/(x2 - x1)/(R_CONST*Tk);
-
+    return G_exc;
 }
 
 //--------------------- End of s_solmod3.cpp ----------------------------------------
-*/
+
 
 
 
