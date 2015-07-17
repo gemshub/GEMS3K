@@ -1198,6 +1198,7 @@ class TCEFmod: public TSolMod
         private:
                 long int *NmoS;  ///< number of different moieties (in end members) on each sublattic
                 long int *Sub;  ///< lookup table for sublattice index for each moiety.
+                long int *InCf;   ///< Vector of moieties in interaction parameter table (moiesties in columns in aIPx)
 
                 double *Wu;    ///< Interaction parameter coefficients a
                 double *Ws;    ///< Interaction parameter coefficients b (f(T))
@@ -1223,9 +1224,9 @@ class TCEFmod: public TSolMod
                 double dGref_dysigma(const long int l, const long int s );
                 double dGref_dysm(const long int s, const long m );
                 double dGm_dysm(const long int s, const long m ); // added by Nichenko
-                //long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
+                long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
 
-                long int RefFrameTerm();
+                double RefFrameTerm( const long int j, double G_ref );
                 long int IdealMixing(); // NSergii: added by Nichenko to rewrite the ideal part contribution
                 long int CalcSiteFractions(); // NSergii:
                 long int SLatt(const long int m);
