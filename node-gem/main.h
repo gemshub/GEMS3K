@@ -34,6 +34,8 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#include <iomanip> // setprecision
+using namespace std;
 
 #include "node.h"
 
@@ -70,7 +72,6 @@ class TMyTransport
            **agam,  // Array of node activity coefficients of dependent components
            **axPH,  // Array of node total mole amounts of all reactive phases
            **aaPH,  // Array of node specific surface areas of phases, m2/kg
-           **aomPH,  // Array of node-time specific stability indices of phases, log10 scale
            **avPS,  // Array of node total volumes of multicomponent phases, m3
            **amPS,  // Array of node total masses of multicomponent phases,kg
            **abPS,  // Array of node bulk compositions of multicomponent phases, moles
@@ -82,6 +83,7 @@ class TMyTransport
            **arMB,  // Array of node mole balance residuals for independent components
            **auIC,  // Array of node chemical potentials of independent components (norm.)
            **abSP,  // Array for bulk composition of solid part of equilibrated sub-system
+           **aomPH, // Array of stability indices of phases,log10 scale
          **amru,  // Array of upper metastability restrictions for amounts of phases  // needed for MARKS
          **amrl;  // Array of upper metastability restrictions for amounts of phases  // needed for MARKS
                   // MARK: Mineral-Aqueous Reaction Kinetic Simulations
