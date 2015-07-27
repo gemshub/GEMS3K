@@ -106,6 +106,10 @@ class TMyTransport
             long int *ICndx,    // Indexes of mobile independent components
             long int nICndx     // Number of mobile independent components
                  );
+         double OneTimeStepRun_CN(   // Placeholder function for one transport time step, returns dt
+            long int *ICndx,    // Indexes of mobile independent components
+            long int nICndx     // Number of mobile independent components
+                 );
 };
 
 #endif // MAIN_H

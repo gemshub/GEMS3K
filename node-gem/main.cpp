@@ -171,10 +171,11 @@ int main( int argc, char* argv[] )
     for( long int it=0; it< mt.nTimes; it++ )
     {
        // Mass transport loop over nodes (a simple FD advection transport model)
-       mt.dt = mt.OneTimeStepRun( dCH->xic, dCH->nICb );   // dCH->nICb-1 no transport of charge
+       //mt.dt = mt.OneTimeStepRun( dCH->xic, dCH->nICb );   // dCH->nICb-1 no transport of charge
+       mt.dt = mt.OneTimeStepRun_CN( dCH->xic, dCH->nICb );   // dCH->nICb-1 no transport of charge
 
-       if( it == 1 || it%100 == 0 ){
-          cout << "Time step: " << it << "  Time, s: " << mt.tm;
+       if( it == 0 || (it+1)%100 == 0 ){
+          cout << "Time step: " << it+1 << "  Time, s: " << mt.tm+mt.dt;
           cout<<"\tdt = " << mt.dt << "[s]" << endl;
           cout << "Node\tpH\tmCa\tmMg\tmCl\tnCal\tnDol\tAsDol\tSIDol" << endl;
        }
@@ -222,7 +223,7 @@ int main( int argc, char* argv[] )
           }
           // Here, the output upon completion of the time step is usually implemented
           //  to monitor the coupled simulation or collect results. Here, output every 10-th time step.
-          if( it == 1 || it%100 == 0 )
+          if( it == 0 || (it+1)%100 == 0 )
           {
             cout << in << fixed << setprecision(7) <<
                   "\t" << mt.apH[in] <<
@@ -423,6 +424,42 @@ double TMyTransport::OneTimeStepRun( long int *ICndx, long int nICndx )
     }
     return dt;
 }
+
+// Finite difference transport algorithm (Crank-Nicolson scheme)
+// Contributed on 27.07.2015 by Alina Yapparova, Chair of Reservoir Engineering,
+// Montanuniveritaet Leoben, Austria
+//
+double TMyTransport::OneTimeStepRun_CN( long int *ICndx, long int nICndx )
+{
+    double column_length  = 0.5; // [m]
+    double dx = column_length/(nNodes-1);
+
+    //constant velocity field
+    double v = 1.e-8; // velocity [m/s]
+    // stability requirement: unconditionally stable
+    double dt = 1000000.; //[s]
+    double k = dt*v/(2*dx);
+
+    //Finite difference approximation for the equation dc/dt + v*dc/dx = 0
+    // semi-implicit time, left spatial derivative
+    // (1 + k)*c^{n+1}_{i} - k*c^{n+1}_{i-1} =  (1 - k)*c^{n}_{i} + k*c^{n}_{i-1}
+    // c^{n+1}_{i} = 1/(1+k)*(k*c^{n+1}_{i-1} + (1 - k)*c^{n}_{i} + k*c^{n}_{i-1})
+    long int in;
+    for(  in=1; in< nNodes; in++ )
+    {
+        for (int i=0; i<nICndx; i++)
+        {
+            abIC[in][ICndx[i]] = 1/(1+k)*( k*(abIC[in-1][ICndx[i]] - abSP[in-1][ICndx[i]]) + (1 - k)*abPS[in][ICndx[i]] + k*abPS[in-1][ICndx[i]] ) + abSP[in][ICndx[i]];
+            // where abPS is the total amount of an independent component ICndx[i] in the aqueous phase (after GEMS computation)
+            // abSP is the total amount of an independent component ICndx[i] in ALL solid phases
+            // abIC is the total amount of ICndx[i] that will serve as an input constraint for GEMS computation at the next time level
+            // NB: more precisely, one should write abPS[in][n*nIC + ICndx[i]], where 0=<n<=nPS, and transport each phase-solution separately
+            //but as far as an aqueous phase is the first in the list (n=0), this simplified indexing will work for transport of aq phase
+        }
+    }
+    return dt;
+}
+
 
 //---------------------------------------------------------------------------
 // end of main.cpp for the node-gem (TNode-level usage) coupled-code example
