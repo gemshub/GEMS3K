@@ -231,9 +231,171 @@ double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, lo
 //    for( long int i=0; i<N; i++ )  // obsolete straightforward loop
 //         Nu += U[i]*AL[i];
 //
+
+///  This overloaded method sets kinetic constraints according to given
+///  concentration units. InitState: true - reset constraints (only SIA mode)
+/// false - use kinetic constraints as they are.
+//
+void TMulti::Set_DC_limits( bool InitState )
+{
+    double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
+    long int jb, je, j,k, MpL;
+    char tbuf[150];
+
+    if( !pm.PLIM )
+        return;  // no metastability limits to be set
+
+    if( InitState == true )
+    {
+        CalculateConcentrations( pm.X, pm.XF, pm.XFA );
+        for(k=0; k<pm.FI; k++)
+            XFS+=pm.XF[k];  // calculate sum of moles in all phases
+    }
+    if( XFS < pm.DSM )
+      return; // this is automatic initial guess
+    jb=0;
+    for( k=0; k<pm.FI; k++ )
+    { // cycle over phases
+        je=jb+pm.L1[k];
+//        XFM=0.;
+        MWXW =0.;
+        MXV = 0.;
+        XFL = 0.;
+        XFU = 1e6;
+//        if( pm.XF[k] < pm.DSM )
+//            goto NEXT_PHASE;
+        XFM = pm.FWGT[k]; // Mass of a phase
+        if((InitState == true) && (pm.XF[k] >= pm.DSM))
+        {
+            MWXW = XFM/pm.XF[k];         // current molar mass of phase
+            MXV = pm.FVOL[k]/pm.XF[k]; // current molar volume of phase
+        }
+        // Check codes for phase DC
+        MpL=0;
+        for( j=jb; j<je; j++ )
+            if( pm.RLC[j] != NO_LIM )
+                MpL = 1;
+
+        if( k < pm.FIs )
+        {					// Temporary workaround - DK  13.12.2007
+            if( pm.RFLC[k] == NO_LIM && !MpL )
+            { // check type restrictions on phase
+                goto NEXT_PHASE;
+            }
+            if( InitState == true )
+            {
+                switch( pm.RFSC[k] )
+                { // check scale restrictions on phase in all system
+                case QUAN_MOL:
+                    XFL = pm.PLL[k];
+                    XFU = pm.PUL[k];
+                    break;
+                case CON_MOLAL:
+                    XFL = pm.PLL[k]*pm.GWAT/H2O_mol_to_kg;
+                    XFU = pm.PUL[k]*pm.GWAT/H2O_mol_to_kg;
+                    break;
+                case CON_MOLFR:
+                    XFL = pm.PLL[k]*XFS;
+                    XFU = pm.PUL[k]*XFS;
+                    break;
+                case CON_WTFR:   if(MWXW < 1e-15) break;  // Temp.fix
+                    XFL = pm.PLL[k]*pm.MBX/MWXW;
+                    XFU = pm.PUL[k]*pm.MBX/MWXW;
+                    break;
+                case CON_VOLFR:   if(MXV < 1e-15) break; // Temp.fix
+                    XFL = pm.PLL[k]*pm.VXc/MXV;
+                    XFU = pm.PUL[k]*pm.VXc/MXV;
+                    break;
+                default:
+                    XFL = 0.0;
+                    XFU = 1e6;
+                    break; // do more?
+               }
+               if( XFU < 0.0 ) XFU = 0.0;
+               if( XFU > 1e6 ) XFU = 1e6;
+               if( XFL < 0.0 ) XFL = 0.0;
+               if( XFL > 1e6 ) XFL = 1e6;
+               pm.PLL[k] = XFL;
+               pm.PUL[k] = XFU;
+            }
+        }
+        for( j=jb; j<je; j++ )
+        { // loop over DCs
+            if( pm.RLC[j] == NO_LIM )
+                continue;
+            if( InitState == false )
+            {
+                XU = pm.DUL[j];
+                XL = pm.DLL[j];
+            }
+            else {  // Initial guess == true
+                switch( pm.RSC[j] ) // get initial limits
+                {
+                case QUAN_MOL:
+                    XU = pm.DUL[j];
+                    XL = pm.DLL[j];
+                    break;
+                case CON_MOLAL:
+                    XU = pm.DUL[j]*pm.GWAT/H2O_mol_to_kg;
+                    XL = pm.DLL[j]*pm.GWAT/H2O_mol_to_kg;
+                    break;
+                case CON_MOLFR:
+                    XU = pm.DUL[j]*XFU;
+                    XL = pm.DLL[j]*XFL;
+                    break;
+                case CON_WTFR:
+                    if( pm.MM[j] > 1e-15 )
+                    {
+                       XU = pm.DUL[j]*XFU*MWXW / pm.MM[j];
+                       XL = pm.DLL[j]*XFL*MWXW / pm.MM[j];
+                    }
+                    break;
+                case CON_VOLFR:
+                    if( pm.Vol[j] > 1e-15 )
+                    {
+                       XU = pm.DUL[j]*XFU*MXV / pm.Vol[j];
+                       XL = pm.DLL[j]*XFL*MXV / pm.Vol[j];
+                    }
+                    break;
+                default:
+                    ; // do more
+                }
+                // check combine
+                if( XU < 0.0 ) XU = 0.0;
+                if( XU > 1e6 ) XU = 1e6;
+                if( XL < 0.0 ) XL = 0.0;
+                if( XL > 1e6 ) XL = 1e6;
+                if( XU > XFU )
+                {
+     //               JJ = j;
+    //                KK = k;
+                    sprintf( tbuf, "Inconsistent upper DC metastability limits j=%ld k=%ld XU=%g XFU=%g",
+                             j, k, XU, XFU );
+                    Error( "E11IPM: Set_DC_limits(): ",tbuf );
+    //                XU = XFU; // - pm.lowPosNum;
+                }
+                if( XL < XFL )
+                {
+    //                JJ = j;
+    //                KK = k;
+                    sprintf( tbuf, "Inconsistent lower DC metastability limits j=%ld k=%ld XL=%g XFL=%g",
+                             j, k, XL, XFL );
+                    Error( "E12IPM: Set_DC_limits(): ",tbuf );
+    //                XL = XFL; // - pm.lowPosNum;
+                }
+                pm.DUL[j]=XU;
+                pm.DLL[j]=XL;
+            }
+        }   // j
+NEXT_PHASE:
+        jb = je;
+    }  // k
+}
+
+/*
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ///  This procedure sets kinetic constraints according to a given
-///  concentration units.
+///  concentration units. Mode: 0 - initialization of AMRs; 1 - current iteration
 //  Needs much more work, elaboration, and performance optimization
 //
 void TMulti::Set_DC_limits( long int Mode )
@@ -382,7 +544,7 @@ NEXT_PHASE:
         jb = je;
     }  // k
 }
-
+*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating total amounts of phases
 //

@@ -67,6 +67,7 @@ FORCED_AIA:
            pm.IT = 30;
        else
            pm.IT = pm.ITaia;  // Setting number of iterations for the smoothing parameter
+      Set_DC_limits( true );  // Experimental location for setting AMRs 29.07.15
    }
 
    IAstatus = GEM_IPM_InitialApproximation( );
@@ -131,8 +132,9 @@ void TMulti::GEM_IPM( long int rLoop )
  //   if( TProfil::pm->pa.p.PLLG == 0 )  // Disabled by DK 11.05.2011
  //       TProfil::pm->pa.p.PLLG = 20;  // Changed 28.04.2010 KD
 
-    if( pm.pULR && pm.PLIM )
-        Set_DC_limits( DC_LIM_INIT );
+//    if( pm.pULR && pm.PLIM )
+//        Set_DC_limits( DC_LIM_INIT );
+//          Set_DC_limits( false );
 
 mEFD:  // Mass balance refinement (formerly EnterFeasibleDomain())
      eRet = MassBalanceRefinement( pm.K2 ); // Here the MBR() algorithm is called
@@ -754,8 +756,8 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
     // calculation of total mole amounts of phases
     TotalPhasesAmounts( pm.Y, pm.YF, pm.YFA );
 
-    if( pm.PLIM )
-        Set_DC_limits(  DC_LIM_INIT );
+//    if( pm.PLIM )
+//        Set_DC_limits(  DC_LIM_INIT );
 
     // Adjustment of primal approximation according to kinetic constraints
     // Now returns <0 (OK) or index of DC that caused a problem

@@ -70,8 +70,9 @@ void TMulti::AutoInitialApproximation( )
             for(i=0;i<pm.L;i++)
                 if(fabs(*(pm.A+i*pm.N+j))>1E-19)
                     T++;
-        if( pm.PLIM ) // Setting constraints on x elements
-            Set_DC_limits(  DC_LIM_INIT );
+//        if( pm.PLIM ) // Setting constraints on x elements
+//            Set_DC_limits(  DC_LIM_INIT );
+//            Set_DC_limits( false );    // test 29.07.15
 
         for(i=0;i<Q;i++)
         {
@@ -1053,8 +1054,9 @@ void TMulti::GEM_IPM_Init()
     }
 
     // recalculating kinetic restrictions for DC amounts
-     if( pm.pULR && pm.PLIM )
-          Set_DC_limits(  DC_LIM_INIT );
+//     if( pm.pULR && pm.PLIM )
+//          Set_DC_limits(  DC_LIM_INIT );
+//        Set_DC_limits( true );  // test 29.07.15
 
 #ifndef IPMGEMPLUGIN
     // dynamic work arrays - loading initial data

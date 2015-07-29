@@ -587,7 +587,8 @@ protected:
     void XmaxSAT_IPM2();
 //    void XmaxSAT_IPM2_reset();
     double DC_DualChemicalPotential( double U[], double AL[], long int N, long int j );
-    void Set_DC_limits( long int Mode );
+//    void Set_DC_limits( long int Mode );
+    void Set_DC_limits( bool InitState );
     void TotalPhasesAmounts( double X[], double XF[], double XFA[] );
     double DC_PrimalChemicalPotentialUpdate( long int j, long int k );
     double  DC_PrimalChemicalPotential( double G,  double logY,  double logYF,
