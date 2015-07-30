@@ -1011,8 +1011,9 @@ TKinMet::SetMetCon( )
        if( isNucl == false )
        {  // growth without nucleation
           nPul = nPh + dnPh;  // dangerous - needs a check for max. possible nPul!
-          nPll = min(nPh, nPul);   // nPul;
-//          if( nPll > nPul - dnPh )
+//          nPll = min(nPh, nPul);   // nPul;  with this, dolomite kinetics produces massive warnings
+nPll = nPul;     // dolomite kinetics works, no warnings!
+          //          if( nPll > nPul - dnPh )
 //              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
        }
        else {  // nucleation (rTot already includes nucleation rate)
@@ -1035,9 +1036,10 @@ TKinMet::SetMetCon( )
           }
           else { // nucleation occurs together with growth - nPll set at least to grown amount
               nPul = nPh + dnPh; // dangerous - needs a check for max. possible nPul!
-              nPll = min(nPh, nPul); // nPul;
+//              nPll = min(nPh, nPul); // nPul;
               nPul += dnNuc;
 //             nPll = max( -rNuc*kdT, nPul - dnPh );
+nPll = nPul;     // needs testing!!!!!
           }
        }
     }

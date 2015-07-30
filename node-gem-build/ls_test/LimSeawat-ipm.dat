@@ -191,7 +191,7 @@
 0 0 0 0 
 # kMod: Codes for built-in kinetic models [Fi*6]
 <kMod>
-'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'MTNNNA' 'MTNNNA' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 
+'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NTNNNA' 'MTNNNA' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 'NNNNNN' 
 # LsKin: number of parallel reactions; of species in activity products; of parameter coeffs in parallel reaction;
 # of parameters per species; parameter coefficients in As correction; of (separately considered) crystal faces or surface patches ( 1 to 4 ) [Fi][6]
 <LsKin>
