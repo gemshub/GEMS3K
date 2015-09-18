@@ -2117,6 +2117,12 @@ void TNode::unpackDataBr( bool uPrimalSol )
     pmm->Falp[ CSD->xph[ii] ] = CNode->omPH[ii];
   }
 
+  for( ii=0; ii<CSD->nPHb; ii++ )
+  {
+    pmm->XF[ CSD->xph[ii] ] = CNode->xPH[ii];
+    //pmm->YF[ CSD->xph[ii] ] = CNode->xPH[ii];
+  }
+
  if( !uPrimalSol )
  {    //  Using primal solution retained in the MULTI structure instead -
     ; // the primal solution data from the DATABR structure are not unpacked
