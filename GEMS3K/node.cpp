@@ -2124,8 +2124,10 @@ void TNode::unpackDataBr( bool uPrimalSol )
   }
 
  if( !uPrimalSol )
- {    //  Using primal solution retained in the MULTI structure instead -
+ {
+     //  Using primal solution retained in the MULTI structure instead -
     ; // the primal solution data from the DATABR structure are not unpacked
+
 //   pmm->IT = 0;
  }
  else {   // Unpacking primal solution provided in the node DATABR structure
