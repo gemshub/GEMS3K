@@ -185,7 +185,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
    else if( CNode->NodeStatusCH == NEED_GEM_AIA )
 	     {  pmm->pNP = 0; // As default setting AIA mode
-	        unpackDataBr( false );
+            unpackDataBr( uPrimalSol );
          }
         else
 	       return CNode->NodeStatusCH;
@@ -2112,7 +2112,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   }
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
-    if( CSD->nAalp >0 )
+    if( CSD->nAalp > 0 )
         pmm->Aalp[ CSD->xph[ii] ] = CNode->aPH[ii]/kg_to_g;
     pmm->Falp[ CSD->xph[ii] ] = CNode->omPH[ii];
   }
@@ -2139,8 +2139,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
 
   for( ii=0; ii<CSD->nPSb; ii++ )
   {
-      pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
-      pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
+//      pmm->FVOL[ CSD->xph[ii] ] = CNode->vPS[ii]*m3_to_cm3;
+//      pmm->FWGT[ CSD->xph[ii] ] = CNode->mPS[ii]*kg_to_g;
       pmm->PUL[ CSD->xph[ii] ] = CNode->amru[ii];
       pmm->PLL[ CSD->xph[ii] ] = CNode->amrl[ii];
   }
@@ -2148,7 +2148,9 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nPHb; ii++ )
   {
     pmm->XF[ CSD->xph[ii] ] =
-    pmm->YF[ CSD->xph[ii] ] = CNode->xPH[ii];
+    pmm->YF[ CSD->xph[ii] ] = this->Ph_Mole(ii);
+    pmm->FVOL[ CSD->xph[ii] ] = this->Ph_Volume(ii)*m3_to_cm3;
+    pmm->FWGT[ CSD->xph[ii] ] = this->Ph_Mass(ii)*kg_to_g;
   }
 
   for( long int k=0; k<CSD->nPSb; k++ )
