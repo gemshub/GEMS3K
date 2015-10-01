@@ -184,7 +184,10 @@ long int TNode::GEM_run( bool uPrimalSol )
 	   unpackDataBr( uPrimalSol );
    }
    else if( CNode->NodeStatusCH == NEED_GEM_AIA )
-	     {  pmm->pNP = 0; // As default setting AIA mode
+         {
+            pmm->pNP = 0; // As default setting AIA mode
+            if (CNode->dt > 0.)
+               uPrimalSol = true;
             unpackDataBr( uPrimalSol );
          }
         else
