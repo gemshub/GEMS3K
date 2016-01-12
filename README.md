@@ -1,6 +1,6 @@
-# README #
+# GEMS3K #
 
-GEMS3K is the numerical kernel of the GEM-Selektor v.3 package for geochemical modelling.
+Numerical kernel solver of the GEM-Selektor v.3 package for geochemical modelling.
 
 ### Briefly about GEMS3K ###
 
