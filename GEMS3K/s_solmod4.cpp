@@ -4816,7 +4816,7 @@ double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species,
         for( k=1;k<=JMAX;k++ )
         {
                 st=trapzd(m_infdil,m_j,k,species,select);
-                if( isnan(st) ) break;
+                if( ::isnan(st) ) break;
 
         s=(4.0*st-ost)/3.0;
                         if( k > 6 )
