@@ -50,8 +50,19 @@ int main( int argc, char* argv[] )
 
      double pmin, pmax, pstep, Tmin, Tmax, Tstep;
 
-     cin>>pmin>>pmax>>pstep;
-     cin>>Tmin>>Tmax>>Tstep;
+     cout<<"\n Enter pmin ";
+     cin>>pmin;
+     cout<<"\n Enter pmax ";
+     cin>>pmax;
+     cout<<"\n Enter pstep ";
+     cin>>pstep;
+     cout<<"\n Enter Tmin ";
+     cin>>Tmin;
+     cout<<"\n Enter Tmax ";
+     cin>>Tmax;
+     cout<<"\n Enter Tstep ";
+     cin>>Tstep;
+
 
      if (pstep <= 0)
          pstep = 1.;
