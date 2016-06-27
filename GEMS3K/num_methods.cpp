@@ -174,6 +174,40 @@ double LagranInterp(float *y, float *x, double *d, float yoi,
  return res;
 }
 
+double LagranInterp1D(double *x, double *d, double xoi, long int M, long int pp )
+{
+    double s,z;
+    long int  ppx, px, i, k, jx;
+
+    px = M-1;
+
+   if(xoi < x[0] || xoi > x[px] )
+   Error( "LagranInterp",
+    "E34RErun: xoi < x[0] or xoi > x[px] ( column argument outside the range )");
+
+   if( M==1 ) // zero dimension interpolation
+      return d[0];
+
+// find the point in the column
+   ppx = min( M-1, pp );
+   for(jx=0;jx<M;jx++)
+        if(xoi >= x[jx] && xoi <= x[jx+1])
+            break;
+   if(jx >= M-ppx)
+     jx = M-ppx-1;
+
+   s=0.;
+   for(i=0;i<=ppx;i++)
+   {
+       z=1;
+       for(k=0;k<=ppx;k++)
+           if(k!=i)
+               z*=(xoi-x[k+jx])/(x[i+jx]-x[k+jx]);
+       s+=d[i+jx]*z;
+   }
+
+   return(s);
+}
 
 /// 1st partial derivative of quotient of two functions
 double quot( double u, double v, double du, double dv )
