@@ -90,6 +90,23 @@ long int TNode::get_grid_index_Ppa_sat( double Tk )
     return r;
 }
 
+//return exact or interpolated saturated pressure value for the temperature Tk using the exported data from the *.dch file
+double TNode::Get_Psat(double Tk)
+{
+    double psat = 0.;
+
+    long int xT;
+
+    xT = check_grid_T(Tk);
+
+    if (xT >=0)
+        psat = CSD->Psat[xT];
+    else
+        psat = LagranInterp1D(CSD->TKval, CSD->Psat,Tk, CSD->nTp, 3);
+
+    return psat;
+}
+
 
 // Checks if given temperature TK and pressure P fit within the interpolation
 // intervals of the DATACH lookup arrays (returns true) or not (returns false)

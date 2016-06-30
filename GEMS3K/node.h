@@ -672,6 +672,8 @@ long int GEM_step_MT( const long int step )
 	 /// Returns index of Tk point - Psat point pair 
 	 long int get_grid_index_Ppa_sat( double Tk );
 
+     double Get_Psat (double Tk);
+
     /// Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
     /// in the DATACH structure.
      /// \param xCH is the DC DCH index
