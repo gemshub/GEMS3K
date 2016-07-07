@@ -4273,7 +4273,7 @@ long int TELVIS::ExcessProp( double *Zex )
 {
     long int j, i, k, w;
     double Mw, Xw;
-    double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX, dg, d2g;
+    double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX, dg=0.0, d2g=0.0;
     double DHTv, CTv, RTv, rtv1;
     double DHTg, CTg, RTg, rtg;
     double SRI = 0.0, xr = 0.0, xq = 0.0, xDrDp = 0.0, xDqDp = 0.0;
@@ -4798,6 +4798,7 @@ double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int
                                 return s;
                 }
         }
+    return s;
 }
 
 
@@ -4816,7 +4817,7 @@ double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species,
         for( k=1;k<=JMAX;k++ )
         {
                 st=trapzd(m_infdil,m_j,k,species,select);
-                if( ::isnan(st) ) break;
+                if( std::isnan(st) ) break;
 
         s=(4.0*st-ost)/3.0;
                         if( k > 6 )

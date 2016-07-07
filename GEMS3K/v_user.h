@@ -180,9 +180,9 @@ inline char* gcvt(double num, int digit, char* buf)
 
 #endif  // __FreeBSD
 
-#ifdef __APPLE__
-#include <algobase.h>
-#endif
+//#ifdef __APPLE__
+//#include <algobase.h>
+//#endif
 
 
 // dynamically allocates temporary 'char*'

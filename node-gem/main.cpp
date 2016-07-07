@@ -31,7 +31,7 @@
 
 #include "main.h"
 #include <time.h>
-time_t start,end;
+time_t start,stop;
 
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
@@ -240,8 +240,8 @@ int main( int argc, char* argv[] )
       node->GEM_step_MT( it+1 );  // increments time iteration in GEM solver (for kinetics)
    }
    // Calculations finished - end time reached
-    time (&end);
-    double dif = difftime (end,start);
+    time (&stop);
+    double dif = difftime (stop,start);
     printf ("Elasped time is %.2lf seconds.", dif );
 
    // Final output e.g. of total simulation time or of the final distribution of

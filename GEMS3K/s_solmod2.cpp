@@ -549,7 +549,7 @@ long int TPRSVcalc::FugacityPure( long int i )
 	}
 	else
 	{
-		z = z; vol = vol; lnf = lnf;
+        ; // z = z; vol = vol; lnf = lnf;
 	}
 
 	// calculate thermodynamic properties
@@ -697,7 +697,7 @@ long int TPRSVcalc::FugacityMix( double amix, double bmix, double &fugmix, doubl
 	}
 	else
 	{
-		zmix = zmix; vmix = vmix; lnf = lnf;
+        ; // zmix = zmix; vmix = vmix; lnf = lnf;
 	}
 	fugmix = exp(lnf);
         PhVol = vmix;
@@ -2944,7 +2944,7 @@ long int TSRKcalc::FugacityPure( long int i )
 	}
 	else
 	{
-		z = z; vol = vol; lnf = lnf;
+      ; //	z = z; vol = vol; lnf = lnf;
 	}
 
 	// calculate thermodynamic properties
@@ -3088,7 +3088,7 @@ long int TSRKcalc::FugacityMix( double amix, double bmix,
 	}
 	else
 	{
-		zmix = zmix; vmix = vmix; lnf = lnf;
+      ; //	zmix = zmix; vmix = vmix; lnf = lnf;
 	}
 
 	fugmix = exp(lnf);
@@ -3754,7 +3754,7 @@ long int TPR78calc::FugacityPure( long int i )
 	}
 	else
 	{
-		z = z; vol = vol; lnf = lnf;
+        ; // z = z; vol = vol; lnf = lnf;
 	}
 
 	// calculate thermodynamic properties
@@ -3904,7 +3904,7 @@ long int TPR78calc::FugacityMix( double amix, double bmix,
 	}
 	else
 	{
-		zmix = zmix; vmix = vmix; lnf = lnf;
+        ; // zmix = zmix; vmix = vmix; lnf = lnf;
 	}
 	fugmix = exp(lnf);
     PhVol = vmix;
