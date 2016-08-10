@@ -1275,6 +1275,10 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
   { delete[] CNode_->xPH;
     CNode_->xPH = 0;
   }
+ if( CNode_->omPH )
+  { delete[] CNode_->omPH;
+    CNode_->omPH = 0;
+  }
  if( CNode_->vPS )
   { delete[] CNode_->vPS;
     CNode_->vPS = 0;
