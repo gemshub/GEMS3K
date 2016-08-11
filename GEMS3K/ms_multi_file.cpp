@@ -2006,6 +2006,8 @@ if( pm.D ) delete[] pm.D;
 
     // optimization 08/02/2007
     Free_TSolMod();
+    Free_TSorpMod();
+    Free_TKinMet();
     Free_internal();
     Free_uDD();
 }
