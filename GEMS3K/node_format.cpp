@@ -1226,7 +1226,7 @@ void TNode::databr_realloc()
      CNode->xPA[k] = 0.0;
      for(  j=0; j<CSD->nICb; j++ )
         CNode->bPS[k*CSD->nICb+j] = 0.0;
-     CNode->amru[k] = 0.0;
+     CNode->amru[k] = 1.0e6;
      CNode->amrl[k] = 0.0;
  }
 }
