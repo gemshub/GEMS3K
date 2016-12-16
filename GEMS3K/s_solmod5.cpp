@@ -950,7 +950,7 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
         else if( NPcoef == 8 ){
             value = G_ex_par8(ii);
         }
-        else Error( "", "PitzerHMW: Invalid number of coefficients to describe T dependence");
+        else Error( "PTcalc", "PitzerHMW: Invalid number of coefficients to describe T dependence");
     }
     else if(Gex_or_Sex==1)
     {
@@ -962,7 +962,7 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
         {
             value = S_ex_par8(ii);
         }
-        else Error( "", "PitzerHMW: Invalid number of coefficients to describe T dependence");
+        else Error( "PTcalc", "PitzerHMW: Invalid number of coefficients to describe T dependence");
     }
     else if(Gex_or_Sex==2)
     {
@@ -974,9 +974,9 @@ double TPitzer::setvalue(long int ii, int Gex_or_Sex)
         {
         value = CP_ex_par8(ii);
         }
-        else Error( "", "PitzerHMW: Invalid number of coefficients to describe T dependence");
+        else Error( "PTcalc", "PitzerHMW: Invalid number of coefficients to describe T dependence");
     }
-    else Error ( "", "PitzerHMW: Only first and second temperature derivatives of activity function are implemented" );
+    else Error ( "PTcalc", "PitzerHMW: Only first and second temperature derivatives of activity function are implemented" );
 
     return value;
 }
@@ -1018,7 +1018,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 }
                 else
                     ia = getIa( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( ia<0||ic<0, "", "Cation and anion index needed here"  );
+                ErrorIf( ia<0||ic<0, "PTcalc", "Cation and anion index needed here"  );
                 Bet0[ic][ia] = setvalue(ii, Gex_or_Sex);
                 break;
 
@@ -1031,7 +1031,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 }
                 else
                     ia = getIa( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( ia<0||ic<0, "", "Cation and anion index needed here"  );
+                ErrorIf( ia<0||ic<0, "PTcalc", "Cation and anion index needed here"  );
                 Bet1[ic][ia] = setvalue(ii, Gex_or_Sex);
                 break;
 
@@ -1044,7 +1044,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 }
                 else
                     ia = getIa( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( ia<0||ic<0, "", "Cation and anion indexes needed here"  );
+                ErrorIf( ia<0||ic<0, "PTcalc", "Cation and anion indexes needed here"  );
 
                 Bet2[ic][ia] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1058,7 +1058,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 }
                 else
                     ia = getIa( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( ia<0||ic<0, "", "Cation and anion indexes needed here"  );
+                ErrorIf( ia<0||ic<0, "PTcalc", "Cation and anion indexes needed here"  );
 
                 Cphi[ic][ia] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1072,7 +1072,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 }
                 else
                     ic = getIc( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( in<0||ic<0, "", "Cation and neutral species indexes needed here"  );
+                ErrorIf( in<0||ic<0, "PTcalc", "Cation and neutral species indexes needed here"  );
 
                 Lam[in][ic] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1086,7 +1086,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                 }
                 else
                     ia = getIa( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( in<0||ia<0, "", "Parameters must be anion and neutral species index"  );
+                ErrorIf( in<0||ia<0, "PTcalc", "Parameters must be anion and neutral species index"  );
 
                 Lam1[in][ia] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1094,7 +1094,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
             case Theta_:
                 ic = getIc( aIPx[ii * MaxOrd + 0] );
                 i = getIc( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( i<0||ic<0, "", "Only indexes of cations needed here"  );
+                ErrorIf( i<0||ic<0, "PTcalc", "Only indexes of cations needed here"  );
 
                 Theta[ic][i] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1102,7 +1102,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
             case Theta1_:
                 ia = getIa( aIPx[ii * MaxOrd + 0] );
                 i = getIa( aIPx[ii * MaxOrd + 1] );
-                ErrorIf( i<0||ia<0, "", "Only indexes of anions needed here"  );
+                ErrorIf( i<0||ia<0, "PTcalc", "Only indexes of anions needed here"  );
 
                 Theta1[ia][i] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1126,7 +1126,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                     else
                         ia = getIa( aIPx[ii * MaxOrd + 2] );
                 }
-                ErrorIf( ic<0||ia<0||i<0, "", "Index of anion and 2 indexes of cations needed here"  );
+                ErrorIf( ic<0||ia<0||i<0, "PTcalc", "Index of anion and 2 indexes of cations needed here"  );
 
                 Psi[ic][i][ia] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1150,7 +1150,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                     else
                         ic = getIc( aIPx[ii * MaxOrd + 2] );
                 }
-                ErrorIf( ic<0||ia<0||i<0, "", "Indexes of 2 anions and one cation needed here"  );
+                ErrorIf( ic<0||ia<0||i<0, "PTcalc", "Indexes of 2 anions and one cation needed here"  );
 
                 Psi1[ia][i][ic] = setvalue(ii, Gex_or_Sex);
                 break;
@@ -1177,7 +1177,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                     if( ia < 0 )
                         ia = getIa( aIPx[ii * MaxOrd + 1] );
                 }
-                ErrorIf( ic<0||ia<0||in<0, "",
+                ErrorIf( ic<0||ia<0||in<0, "PTcalc",
                         "Index of neutral species, index of cation and index of anion needed here"  );
                 Zeta[in][ic][ia] = setvalue(ii, Gex_or_Sex);
                 break;
