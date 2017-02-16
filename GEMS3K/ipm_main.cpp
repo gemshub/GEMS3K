@@ -1262,40 +1262,15 @@ long int TMulti::MetastabilityLagrangeMultiplier()
     for(long int J=0;J<pm.L;J++)
     {
         if( pm.Y[J] < 0. )   // negative number of moles!
-        	return J;
+            return J;
         if( pm.Y[J] < min( pm.lowPosNum, pm.DcMinM ))
             continue;
-
-        switch( pm.RLC[J] )
-        {
-        case NO_LIM:
-        case LOWER_LIM:
-            if( pm.Y[J]<=pm.DLL[J])
-                pm.Y[J]=pm.DLL[J]+E;
-            break;
-        case BOTH_LIM:
-            if( pm.Y[J]<=pm.DLL[J])
-                pm.Y[J]=pm.DLL[J]+E;
-            if( pm.Y[J]>=pm.DUL[J])     // SD 22/01/2009
-            {
-                if( pm.DUL[J] == 1e6 )
-                   return J;   // Broken initial approximation!
-                pm.Y[J]=pm.DUL[J]-E;
-                if( pm.Y[J]<=pm.DLL[J])
-                        pm.Y[J]=(pm.DUL[J]+pm.DLL[J])/2.;
-             }
-             break;
-        case UPPER_LIM:
-            if( pm.Y[J]>=pm.DUL[J])
-            {
-                if( pm.DUL[J] == 1e6 )
-               	    return J;   // Broken initial approximation!
-                pm.Y[J]=pm.DUL[J]-E;
-                if( pm.Y[J]<=0)         // SD 22/01/2009
-                        pm.Y[J]=(pm.DUL[J])/2.;
-            }
-            break;
-        }
+// kg44 why use a switch? Much to complicated! Simply correct all the values that are to big or to small. 
+// values that are in the intervall given by DLL and DUL need no change.	
+        if( pm.Y[J]<pm.DLL[J])
+            pm.Y[J]=pm.DLL[J]; // set it to the constraint
+        if( pm.Y[J]>pm.DUL[J])
+            pm.Y[J]=pm.DUL[J]; // set it to the constraint
     }   // J
     return -1L;
 }
