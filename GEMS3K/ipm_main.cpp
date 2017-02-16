@@ -1267,10 +1267,10 @@ long int TMulti::MetastabilityLagrangeMultiplier()
             continue;
 // kg44 why use a switch? Much to complicated! Simply correct all the values that are to big or to small. 
 // values that are in the intervall given by DLL and DUL need no change.	
-        if( pm.Y[J]<pm.DLL[J])
-            pm.Y[J]=pm.DLL[J]; // set it to the constraint
-        if( pm.Y[J]>pm.DUL[J])
-            pm.Y[J]=pm.DUL[J]; // set it to the constraint
+        if(pm.Y[J]<pm.DLL[J]) 
+	  pm.Y[J]=pm.DLL[J]+(pm.DUL[J]-pm.DLL[J])/2.0; // this seems to work better than setting it directly to constraints
+        if (pm.Y[J]>pm.DUL[J])
+	  pm.Y[J]=pm.DLL[J]+(pm.DUL[J]-pm.DLL[J])/2.0; 
     }   // J
     return -1L;
 }
