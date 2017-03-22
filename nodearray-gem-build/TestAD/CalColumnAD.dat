@@ -80,7 +80,7 @@
 <FIf>  7
 # Tau:   Physical time iterator (start,end,step)
 <Tau>
-0 500000000 500000 
+0 500000 5000 
 # sizeLc:  Spatial dimensions of the medium defines topology of nodes ( x y z )
 <sizeLc>
 0.2 0 0 
@@ -140,7 +140,7 @@
 # DiCp:  Array of indexes of initial system variants for distributing to nodes [nC]
 <DiCp>
 0 3 
-1 0 
+0 3 
 1 0 
 1 0 
 1 0 

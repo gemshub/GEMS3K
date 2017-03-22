@@ -1122,8 +1122,7 @@ void TNodeArray::logProfileAqDC( FILE* logfile, long int t, double at, long int 
 	long int i, is;
 	if( t % every_t )
 		return;
-	fprintf( logfile, "\nStep= %-8ld  Time= %-12.4g     Dissolved species concentrations, M\n",
-			t, at/(365*86400) );
+    fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g, s\tDissolved species concentrations, M\n", t, at );
 	fprintf(logfile, "%s","Node#   ");	
 	for( is=0; is < (pCSD()->nDCb); is++ )
 		fprintf( logfile, "%-12.4s ", pCSD()->DCNL[is] );
@@ -1132,7 +1131,7 @@ void TNodeArray::logProfileAqDC( FILE* logfile, long int t, double at, long int 
 		fprintf( logfile, "\n%5ld   ", i );
 		for( is=0; is < (pCSD()->nDCinPH[0]); is++ )
 		{
-			pm = NodT1[i]->xDC[is]/NodT1[i]->vPS[0]*1000.;  // Assumes there is aq phase!
+            pm = NodT1[i]->xDC[is]/NodT1[i]->vPS[0]/1000.;  // Assumes there is aq phase!
                // dissolved species molarity
 			fprintf( logfile, "%-12.4g ", pm );
 		}
@@ -1148,7 +1147,7 @@ void TNodeArray::logProfileAqIC( FILE* logfile, long int t, double at, long int 
   long int i, ie;
   if( t % every_t )
     return;
-  fprintf( logfile, "\nStep= %-8ld Time= %-12.4g     Dissolved IC total concentrations, M\n", t, at/(365*86400) );
+  fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tDissolved IC total concentrations, M\n", t, at );
   fprintf(logfile, "%s","Node#   ");
   for( ie=0; ie < (pCSD()->nICb); ie++ )
     fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie] );
@@ -1157,7 +1156,7 @@ void TNodeArray::logProfileAqIC( FILE* logfile, long int t, double at, long int 
      fprintf( logfile, "\n%5ld   ", i );
      for( ie=0; ie < (pCSD()->nICb); ie++ )
      {
-       pm = NodT1[i]->bPS[ie]/NodT1[i]->vPS[0]*1000.;  // Assumes there is aq phase!
+       pm = NodT1[i]->bPS[ie]/NodT1[i]->vPS[0]/1000.;  // Assumes there is aq phase!
                  // total dissolved element molarity
        fprintf( logfile, "%-12.4g ", pm );
      }
@@ -1174,7 +1173,7 @@ void TNodeArray::logProfileTotIC( FILE* logfile, long int t, double at, long int
   long int i, ie;
   if( t % every_t )
     return;
-  fprintf( logfile, "\nStep= %-8ld  Time= %-12.4g     Bulk IC amounts, moles\n", t, at/(365*86400) );
+  fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tBulk IC amounts, moles\n", t, at );
   fprintf(logfile, "%s","Node#   ");
   for( ie=0; ie < (pCSD()->nICb); ie++ )
     fprintf( logfile, "%-12.4s ", pCSD()->ICNL[ie] );
@@ -1197,7 +1196,7 @@ void TNodeArray::logProfilePhMol( FILE* logfile, long int t, double at, long int
   long int i, ip;
   if( t % every_t )
     return;
-  fprintf( logfile, "\nStep= %-8ld  Time= %-12.4g     Amounts of reactive phases, moles\n", t, at/(365*86400) );
+  fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tAmounts of reactive phases, moles\n", t, at );
   fprintf(logfile, "%s","Node#   ");
   for( ip=0; ip < (pCSD()->nPHb); ip++ )
     fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip] );
@@ -1235,7 +1234,7 @@ void TNodeArray::logProfilePhVol( FILE* logfile, long int t, double at, long int
   long int i, ip;
   if( t % every_t )
     return;
-  fprintf( logfile, "\nStep= %-8ld  Time= %-12.4g     Volumes of reactive phases, moles\n", t, at/(365*86400) );
+  fprintf( logfile, "\nStep= %-8ld\tTime= %-12.4g,s\tVolumes of reactive phases, moles\n", t, at );
   fprintf(logfile, "%s","Node#   ");
   for( ip=0; ip < (pCSD()->nPHb); ip++ )
     fprintf( logfile, "%-12.12s ", pCSD()->PHNL[ip] );

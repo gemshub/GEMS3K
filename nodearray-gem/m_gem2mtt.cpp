@@ -786,7 +786,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
     {
        if( diffile )
        {
-           na->logDiffsIC( diffile, mtp->ct, mtp->cTau/(365*86400), mtp->nC, 10 );
+           na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 10 );
            // logging differences after the MT iteration loop
        }
    }
@@ -795,20 +795,20 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
    // from  Trans1D
    if( nPoint == 2 )
    {
-     na->logDiffsIC( diffile, mtp->ct, mtp->cTau/(365*86400), mtp->nC, 1 );
-     na->logProfileAqIC( logfile, mtp->ct, mtp->cTau/(365*86400), mtp->nC, 1 );
-     na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau/(365*86400), mtp->nC, 1 );
+     na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 1 );
+     na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, 1 );
+     na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau, mtp->nC, 1 );
    }
 
    if( nPoint == 3 )
    {
-       na->logDiffsIC( diffile, mtp->ct, mtp->cTau/(365*86400), mtp->nC, evrt );
+       na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, evrt );
    }
 
    if( nPoint == 4 )
    {
-       na->logProfileAqIC( logfile, mtp->ct, mtp->cTau/(365*86400), mtp->nC, evrt );
-       na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau/(365*86400), mtp->nC, evrt );
+       na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, evrt );
+       na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau, mtp->nC, evrt );
    }
 
    // write to VTK
