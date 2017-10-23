@@ -628,7 +628,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
 void TGEM2MT::from_text_file(fstream& ff)
 {
 
-  // static arrays
+// static arrays
  TReadArrays  rdar( 57, GEM2MT_static_fields, ff);
  long int nfild = rdar.findNext();
  while( nfild >=0 )

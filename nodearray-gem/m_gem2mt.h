@@ -34,7 +34,7 @@ class TRWArrays;
 enum grr_constants { // gstring len for graph
     MAXAXISNAME = 9,
     MAXGSNAME = 70,
-    MAXGRNAME = 7
+    MAXGRNAME = 16
 };
 
 const unsigned int  MAXFORMULA =     81,

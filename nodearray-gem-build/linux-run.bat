@@ -1,3 +1,3 @@
-exec ./nodearrs test-data/CalColumnF.dat test-data/CalColumn-dat.lst test-data/CalColumn-dbr.lst test-data/VTK
+exec ./nodearrs TestBF/CalColumnBF.dat TestBF/CalColumn-dat.lst TestBF/CalColumn-dbr.lst TestBF/VTK
 
 

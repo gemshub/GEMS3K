@@ -37,7 +37,7 @@
 # PsScom:Write files with comments for all data entries ( in text mode )(+ -)
 <PsScom>  '+'
 # PsMO: Use non stop debug output for nodes (+ -)
-<PsMO>  '-'
+<PsMO>  '+'
 # PsVTK: Use non stop debug output nodes to VTK format(+ -)
 <PsVTK>  '+'
 # PsMPh: Type flux Phase ( 0 undef, 1 - aq; 2 - gas; 3 - aq+gas, 4 - solids )

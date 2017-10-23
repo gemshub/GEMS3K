@@ -301,6 +301,11 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
    DATABRPTR* C1 = na->pNodT1();  // nodes at current time point
    bool* iaN = na->piaNode();     // indicators for IA in the nodes
 
+//   node0_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
+//   node0_dt( ii ) = mtp->dTau;
+   node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
+   node1_dt( ii ) = mtp->dTau;
+
    if(mtp->PsSIA == S_OFF )
        iaN[ii] = true;
    else
@@ -412,9 +417,14 @@ bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* 
 
    for( long int ii = start_node; ii<= end_node; ii++) // node iteration
    {
-     if( !CalcIPM_Node(  mode, ii,  diffile ) )
+
+       if( !CalcIPM_Node(  mode, ii,  diffile ) )
        iRet = false;
    }  // ii   end of node iteration loop
+
+   // Here dt can be analyzed over nodes - if changed anywhere by TKinMet
+   //   then the overall time step should be reduced and the MT loop started all over
+
    return iRet;
 }
 
@@ -535,19 +545,19 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
     		 // Chemical compositions may become inconsistent with time
     		 // It has to be checked on minimal allowed c0 value
     		 c0  = (node1_bPS( ii, 0, ic ) - niw )*fmolal;    //C1[ii]->bPS[0*CH->nICb + ic];
-    		 c1  = (node1_bPS( ii+1, 0, ic) - niw )*fmolal;   //C1[ii+1]->bPS[0*CH->nICb + ic];
+             c1  = (node1_bPS( ii+1, 0, ic) - niw )*fmolal;   //C1[ii+1]->bPS[0*CH->nICb + ic];
     		 cm1 = (node1_bPS( ii-1, 0, ic ) - niw )*fmolal;  //C1[ii-1]->bPS[0*CH->nICb + ic];
-    		 cm2 = (node1_bPS( ii-2, 0, ic ) - niw )*fmolal;  //C1[ii-2]->bPS[0*CH->nICb + ic];
+             cm2 = (node1_bPS( ii-2, 0, ic ) - niw )*fmolal;  //C1[ii-2]->bPS[0*CH->nICb + ic];
 
     		 // Finite-difference calculation (suggested by FE )
-    		 c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
-    		 cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
-    		 dc = cr*(c12-cm12);
+             c12=((c1+c0)/2)-(cr*(c1-c0)/2)-((1-cr*cr)*(c1-2*c0+cm1)/6);
+             cm12=((c0+cm1)/2)-(cr*(c0-cm1)/2)-((1-cr*cr)*(c0-2*cm1+cm2)/6);
+             dc = cr*(c12-cm12);
              if( fabs( dc ) < mtp->cdv )  // *c0
             	 continue;
     		 dc /= fmolal; 
-    		 // Checking the new IC amount 
-    		 if( (c0/fmolal - dc) > mtp->cez ) // min( mtp->cez, node1_bIC(ii, ic) * 1e-4 ))
+             // Checking the new IC amount
+             if( (node1_bPS(ii, 0, ic) - dc) > mtp->cez )
     		 {  // New IC amount is positive
     			 node1_bPS( ii, 0, ic ) -= dc;
     			 node1_bIC(ii, ic) -= dc;
@@ -568,7 +578,7 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
      }
 	 // checking charge balance
 	 charge = node1_bIC(ii, CH->nICb-1 );
-node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
+     node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
    } // end of loop over nodes
 }
 
@@ -584,7 +594,7 @@ bool TGEM2MT::Trans1D( char mode )
   bool CompMode = false;   // Component transport mode: true: DC; false: IC
   long int nStart = 0, nEnd = mtp->nC;
   // long int NodesSetToAIA;
-  // gstring Vmessage;
+// gstring Vmessage;
 
 FILE* logfile = NULL;
 FILE* ph_file = NULL;
@@ -601,14 +611,18 @@ if( mtp->PvDDc == S_OFF && mtp->PvDIc == S_ON )  // Set of IC transport using re
 
 if( mtp->PsMO != S_OFF )
 {
-// Preparations: opening output files for monitoring 1D profiles
-logfile = fopen( "ICaq-log.dat", "w+" );    // Total dissolved element molarities
+    gstring fname;
+#ifndef IPMGEMPLUGIN
+    fname = pVisor->userGEMDir();
+#endif
+    // Preparations: opening output files for monitoring 1D profiles
+logfile = fopen( ( fname + "ICaq-log.dat").c_str(), "w+" );    // Total dissolved element molarities
 if( !logfile)
   return iRet;
-ph_file = fopen( "Ph-log.dat", "w+" );   // Mole amounts of phases
+ph_file = fopen( ( fname + "Ph-log.dat" ).c_str(), "w+" );   // Mole amounts of phases
 if( !ph_file)
   return iRet;
-diffile = fopen( "ICdif-log.dat", "w+" );   //  Element amount diffs for t and t-1
+diffile = fopen( ( fname + "ICdif-log.dat").c_str(), "w+" );   //  Element amount diffs for t and t-1
 if( !diffile)
   return iRet;
 }
@@ -745,7 +759,7 @@ if( mtp->PsMO != S_OFF )
 if( mtp->PsVTK != S_OFF )
    outp_time += PrintPoint( 0 );
 
-} while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
+ } while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
 
 
 t_end = clock();

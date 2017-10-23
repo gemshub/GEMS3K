@@ -30,3 +30,13 @@ node-gem-build/object_script.node-gem.Release
 node-gem-build/node-gem.app
 node-gem-build/.qmake.*
 node-gem/node-gem.pro.user
+nodearray-gem-build/nodearrs
+nodearray-gem-build/Makefile.*
+nodearray-gem-build/Makefile
+nodearray-gem-build/obj/*.o
+nodearray-gem-build/object_script.nodearray-gem.Debug
+nodearray-gem-build/object_script.nodearray-gem.Release
+nodearray-gem-build/nodearray-gem.app
+nodearray-gem-build/.qmake.*
+nodearray-gem/nodearray-gem.pro.user
+nodearray-gem/nodearray-gem3.pro.user
