@@ -282,7 +282,7 @@ DIFFERENT:
        return nSetAIA;
 }
 
-//   Here we do a GEM calculation in box ii
+/*   Here we do a GEM calculation in box ii
 //   mode can be NEED_GEM_PIA (smart algorithm) or NEED_GEM_AIA
 //   (forced AIA, usually used at the beginning of coupled run)
 //   return code   true   Ok
@@ -301,17 +301,15 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
    DATABRPTR* C1 = na->pNodT1();  // nodes at current time point
    bool* iaN = na->piaNode();     // indicators for IA in the nodes
 
-//   node0_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
-//   node0_dt( ii ) = mtp->dTau;
-   node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
-   node1_dt( ii ) = mtp->dTau;
+   /// node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
+   /// node1_dt( ii ) = mtp->dTau;
 
    if(mtp->PsSIA == S_OFF )
        iaN[ii] = true;
    else
       iaN[ii] = false;
 
-   mtp->qc = ii;
+   /// mtp->qc = ii;
 
    if(mtp->PsSIA == S_OFF )
         NeedGEM = true;
@@ -379,7 +377,7 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
                       break;
                case  T_ERROR_GEM:  err_msg +=  "Terminal error in GEMS3K module";
           }
-          if( mtp->PsMO != S_OFF && diffile )
+          if( S_OFF && diffile )
           {  fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
                     err_msg.c_str() );
           }
@@ -400,6 +398,7 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
      }
     return iRet;
 }
+*/
 
 //   Here we call a loop on GEM calculations over nodes
 //   parallelization should affect this loop only
@@ -408,23 +407,36 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* diffile )
+bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* updiffile )
 {
     bool iRet = true;
+
+    FILE* diffile = NULL;
+    if( mtp->PsMO != S_OFF )
+      diffile = updiffile;
 
     start_node = max( start_node, 0L );
     end_node = min( end_node, mtp->nC-1 );
 
-   for( long int ii = start_node; ii<= end_node; ii++) // node iteration
+    for( long int ii = start_node; ii<= end_node; ii++) // node iteration
+    {
+      node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
+      node1_dt( ii ) = mtp->dTau;
+   }
+
+   na->CalcIPM( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
+
+   /*for( long int ii = start_node; ii<= end_node; ii++) // node iteration
    {
 
        if( !CalcIPM_Node(  mode, ii,  diffile ) )
        iRet = false;
    }  // ii   end of node iteration loop
-
+*/
    // Here dt can be analyzed over nodes - if changed anywhere by TKinMet
    //   then the overall time step should be reduced and the MT loop started all over
 
+   mtp->qc = end_node;
    return iRet;
 }
 

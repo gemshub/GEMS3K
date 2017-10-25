@@ -50,6 +50,168 @@ extern outField DataBR_fields[58];
 
 TNodeArray* TNodeArray::na;
 
+// To parallelization calculations ========================================================
+
+//   Here we call a loop on GEM calculations over nodes
+//   parallelization should affect this loop only
+//   return code   true   Ok
+//                 false  Error in GEMipm calculation part
+//
+bool TNodeArray::CalcIPM( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile )
+{
+    bool iRet = true;
+
+    start_node = max( start_node, 0L );
+    end_node = min( end_node, anNodes );
+
+    for( long int ii = start_node; ii<= end_node; ii++) // node iteration
+    {
+       if( !CalcIPM_Node(  modeParam, ii,  diffile ) )
+           iRet = false;
+    }  // ii   end of node iteration loop
+
+   return iRet;
+}
+
+// ================================================================
+
+
+bool TNodeArray::NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  )
+{
+  bool NeedGEM = false;
+  DATACH* CH = pCSD();  // DataCH structure
+  double dc;
+
+  if( modeParam.useSIA == S_OFF )
+       NeedGEM = true;
+  else
+    {   C1->IterDone = 0;
+        NeedGEM = false;
+    }
+
+  // Here we compare this node for current time and for previous time - works for AIA and PIA
+  for( long int ic=0; ic < CH->nICb; ic++)    // do we check charge here?
+  {
+      // It has to be checked on minimal allowed c0 value
+      if( C1->bIC[ic] < modeParam.cez )
+           C1->bIC[ic] = modeParam.cez; // to prevent loss of Independent Component
+
+       dc = C0->bIC[ic] - C1->bIC[ic];
+       if( fabs( dc ) > min( modeParam.cdv, (C1->bIC[ic] * 1e-3 ) ))
+       {
+           NeedGEM = true;  // we still need to recalculate equilibrium
+           //break;                 // in this node because its vector b has changed
+       }
+   }
+  C1->bIC[CH->nICb-1] = 0.;   // zeroing charge off in bulk composition
+
+  return NeedGEM;
+}
+
+long int TNodeArray::SmartMode( const TestModeGEMParam& modeParam, long int ii  )
+{
+  long int Mode = NEED_GEM_AIA;
+  bool* iaN = piaNode();     // indicators for IA in the nodes
+
+  if( modeParam.useSIA == S_OFF )
+     iaN[ii] = true;
+  else
+     iaN[ii] = false;
+
+  if( modeParam.mode == NEED_GEM_SIA )
+  {
+      // smart algorithm
+      if( iaN[ii] == true )
+      {
+        Mode = NEED_GEM_AIA;
+      }
+       else {
+               Mode = NEED_GEM_SIA;
+               if( modeParam.useSIA == S_ON )   // force loading of primal solution into GEMIPM
+                       Mode *= -1;            // othervise use internal (old) primal solution
+       }
+   }
+
+  return Mode;
+}
+
+gstring TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int step  )
+{
+    gstring err_msg;
+    char buf[200];
+
+    sprintf( buf, " Node= %-8ld  Step= %-8ld\n", ii, step );
+    err_msg = buf;
+
+    switch( RetCode )
+    {
+          case BAD_GEM_AIA:
+                err_msg += "Bad GEM result using LPP AIA";
+                break;
+          case  ERR_GEM_AIA:
+                err_msg += "GEM calculation error using LPP AIA";
+                break;
+          case  BAD_GEM_SIA:
+                err_msg += "Bad GEM result using SIA";
+                break;
+          case  ERR_GEM_SIA:
+                err_msg += "GEM calculation error using SIA";
+                break;
+         case  T_ERROR_GEM:  err_msg +=  "Terminal error in GEMS3K module";
+    }
+
+   return  err_msg;
+}
+
+
+//   Here we do a GEM calculation in box ii
+//   return code   true   Ok
+//                 false  Error in GEMipm calculation part
+//
+bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, long int ii, FILE* diffile )
+{
+   bool iRet = true;
+
+   //  Getting direct access to TNodeArray class data
+   DATABRPTR* C0 = pNodT0();  // nodes at previous time point
+   DATABRPTR* C1 = pNodT1();  // nodes at current time point
+
+   long int Mode = SmartMode( modeParam, ii  );
+   bool needGEM = NeedGEM( modeParam, C0[ii], C1[ii]  );
+
+   if( needGEM )
+   {
+       long RetCode = RunGEM( ii, Mode );
+        // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
+        timeGEM +=	GEM_CalcTime();
+
+        // checking RetCode from GEM IPM calculation
+        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
+        {
+          gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
+          iRet = false;
+          if( diffile )
+          {
+              fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
+                    err_msg.c_str() );
+          }
+#ifndef IPMGEMPLUGIN
+          else
+          {  err_msg += "\n Continue?";
+             if( !vfQuestion( window(),
+                 "Error reported from GEMIPM2 module",err_msg.c_str() ))
+                     Error("Error reported from GEMIPM2 module",
+                     "Process stopped by the user");
+          }
+#endif
+        }
+     }
+     else { // GEM calculation for this node not needed
+         C1[ii]->IterDone = 0; // number of GEMIPM iterations is set to 0
+     }
+    return iRet;
+}
+
 //-------------------------------------------------------------------------
 // RunGEM()
 // GEM IPM calculation of equilibrium state for the iNode node

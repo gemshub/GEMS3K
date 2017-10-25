@@ -399,7 +399,7 @@ protected:
     long int CheckPIAinNodes1D( char mode,
               long int start_node = 0, long int end_node = 1000 );
 
-     bool CalcIPM_Node( char mode, long int ii, FILE* diffile = NULL);
+     //bool CalcIPM_Node( char mode, long int ii, FILE* diffile = NULL);
      bool  CalcIPM( char mode, long int start_node = 0,
          long int end_node = 1000, FILE* diffile = NULL );
 

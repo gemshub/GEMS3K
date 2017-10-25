@@ -68,6 +68,21 @@ struct  LOCATION /// Location (coordinates) of a point in space
 //    }
 };
 
+/// Struct to setup GEMRun properties
+struct TestModeGEMParam
+{
+    char mode;        ///   mode can be NEED_GEM_PIA (smart algorithm) or NEED_GEM_AIA
+    char useSIA;      /// Use smart initial approximation in GEM IPM (+); SIA internal (*); AIA (-)
+    long int step;    /// extern actual time iterator
+    double cdv;       /// cutoff for IC amount differences in the node between time steps (mol, 1e-9)
+    double cez;       /// cutoff for minimal amounts of IC in node bulk compositions (mol, 1e-12)
+
+    TestModeGEMParam( char amode, char  auseSIA,
+                      long int astep,   double acdv,  double acez ):
+       mode(amode), useSIA(auseSIA), step(astep), cdv(acdv), cez(acez) {}
+};
+
+
 class TParticleArray;
 
 // Definition of TNodeArray class
@@ -191,6 +206,19 @@ public:
     char* ptcNode() const /// Get pointer to boundary condition codes for nodes
     { return tcNode; }
     
+    /// New Stuff--------------------------------------------------------------
+
+    double timeGEM;
+    bool NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
+    long int SmartMode( const TestModeGEMParam& modeParam, long int ii  );
+    gstring ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
+
+    bool CalcIPM_Node(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile );
+    bool CalcIPM( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile );
+
+
+    // end of new stuff -------------------------------------------------------
+
     /// Calls GEM IPM calculation for a node with absolute index ndx
     long int RunGEM( long int ndx, long int Mode );
 
