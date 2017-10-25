@@ -48,7 +48,7 @@ TGEM2MT::TGEM2MT( int /*nrt*/ )
   ////mtp->PvMO =   S_ON;
   ////mtp->iStat =  AS_READY;
   na = 0;
-  pa = 0;
+  pa_mt = 0;
 }
 
 TGEM2MT::~TGEM2MT()
@@ -56,8 +56,8 @@ TGEM2MT::~TGEM2MT()
   mem_kill(0);
   if( na )
    delete na;
-  if( pa )
-    delete pa;
+  if( pa_mt )
+    delete pa_mt;
 }
 
 //=======================================================================================
@@ -201,9 +201,9 @@ int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
   if( mtp->PsMode == RMT_MODE_W  )
   {
    na->SetGrid( mtp->sizeLc, mtp->grid );   // set up grid structure
-   pa = new TParticleArray( mtp->nPTypes, mtp->nProps,
+   pa_mt = new TParticleArray( mtp->nPTypes, mtp->nProps,
          mtp->NPmean, mtp->ParTD, mtp->nPmin, mtp->nPmax, na );
-   pa->setUpCounters();
+   pa_mt->setUpCounters();
   }
      // put HydP
   if( mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B )

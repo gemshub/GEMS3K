@@ -113,8 +113,6 @@ class TParticleArray
 // More data fields for interpolation, smoothing, etc. to add
 
 
-
-
 // Methods
 
 // internal methods
@@ -177,11 +175,7 @@ public:
    // stub call for coupled mass transport calculation
   long int GEMPARTRACK( long int Mode, bool ComponentMode, double t0, double t1 );
 
-//#ifdef IPMGEMPLUGIN
-
-  static TParticleArray* pa;
-
-//#endif
+  void logProfilePhMol( FILE* logfile, int inode );
 
   long int nPTypes() const
    { return anPTypes; }    // Number of allocated particle types (< 20 ? )

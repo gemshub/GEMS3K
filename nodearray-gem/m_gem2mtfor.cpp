@@ -266,7 +266,7 @@ void TGEM2MT::set_def(int q)
     mtp->etext = 0;
     mtp->tprn = 0;
     na = 0;
-    pa = 0;
+    pa_mt = 0;
 }
 
 

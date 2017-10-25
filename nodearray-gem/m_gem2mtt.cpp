@@ -456,7 +456,7 @@ void TGEM2MT::MassTransParticleStart()
     mtp->cTau = mtp->Tau[START_];
     // mtp->cTau = 0;
     mtp->ct = 0;
-    pa->setUpCounters();
+    pa_mt->setUpCounters();
 
 }
 
@@ -468,7 +468,7 @@ void TGEM2MT::MassTransParticleStep( bool CompMode )
    mtp->oTau = mtp->cTau;
    mtp->cTau += mtp->dTau;
 
-   pa->GEMPARTRACK( mtp->PsMode, CompMode, mtp->oTau, mtp->cTau );
+   pa_mt->GEMPARTRACK( mtp->PsMode, CompMode, mtp->oTau, mtp->cTau );
 }
 
 
@@ -748,7 +748,7 @@ if( mtp->PsMO != S_OFF )
           copyNodeArrays();
           // copy particle array ?
           if( mtp->PsMode == RMT_MODE_W )
-            pa->CopyfromT1toT0();
+            pa_mt->CopyfromT1toT0();
 
           if( mtp->PsMode == RMT_MODE_F )
              CalcMGPdata();
@@ -811,7 +811,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
    {
      na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 1 );
      na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, 1 );
-     na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau, mtp->nC, 1 );
+     na->logProfilePhMol( ph_file, pa_mt, mtp->ct, mtp->cTau, mtp->nC, 1 );
    }
 
    if( nPoint == 3 )
@@ -822,7 +822,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
    if( nPoint == 4 )
    {
        na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, evrt );
-       na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau, mtp->nC, evrt );
+       na->logProfilePhMol( ph_file, pa_mt, mtp->ct, mtp->cTau, mtp->nC, evrt );
    }
 
    // write to VTK

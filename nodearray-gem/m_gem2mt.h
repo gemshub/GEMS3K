@@ -360,7 +360,7 @@ class TGEM2MT
 #endif
 
   TNodeArray* na;       // pointer to nodearray class instance
-  TParticleArray* pa;       // pointer to TParticleArray class instance
+  TParticleArray* pa_mt;       // pointer to TParticleArray class instance
 
     gstring pathVTK;
     gstring nameVTK;

@@ -428,10 +428,6 @@ void TNodeArray::allocMemory()
 {
 	long int ii;
 
-#ifndef NOPARTICLEARRAY
-TParticleArray::pa = 0;
-#endif
-
 // alloc memory for data bidge structures
 // did in constructor TNode::allocMemory();
 
@@ -1190,7 +1186,7 @@ void TNodeArray::logProfileTotIC( FILE* logfile, long int t, double at, long int
 }
 
 // Prints amounts of reactive phases in all cells for time point t / at
-void TNodeArray::logProfilePhMol( FILE* logfile, long int t, double at, long int nx, long int every_t )
+void TNodeArray::logProfilePhMol( FILE* logfile, TParticleArray* pa, long int t, double at, long int nx, long int every_t )
 {
   double pm;
   long int i, ip;
@@ -1210,16 +1206,8 @@ void TNodeArray::logProfilePhMol( FILE* logfile, long int t, double at, long int
        fprintf( logfile, "%-12.4g ", pm );
      }
 #ifndef NOPARTICLEARRAY
-    if( TParticleArray::pa )
-     {       // printing number of particles in nodes
-       TParticleArray * ppa = TParticleArray::pa;
-       long int npa;
-       for( long int jp=0; jp < ppa->nPTypes(); jp++ )
-       {
-            npa = ppa->getNPnum( i, jp);   // number of particles in the node
-            fprintf( logfile, "%-8ld ", npa );
-       }
-     }
+    if( pa )
+       pa->logProfilePhMol( logfile, i );
 #endif
   }
   fprintf( logfile, "\n" );

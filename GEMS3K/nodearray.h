@@ -68,6 +68,8 @@ struct  LOCATION /// Location (coordinates) of a point in space
 //    }
 };
 
+class TParticleArray;
+
 // Definition of TNodeArray class
 class TNodeArray : public TNode
 {
@@ -258,7 +260,7 @@ public:
     void logProfileTotIC( FILE* logfile, long int t, double at, long int nx, long int every_t );
 
     /// Prints amounts of phases in all cells for time point t / at
-    void logProfilePhMol( FILE* logfile, long int t, double at, long int nx, long int every_t );
+    void logProfilePhMol( FILE* logfile, TParticleArray* pa, long int t, double at, long int nx, long int every_t );
     
     /// Prints volumes of phases in all cells for time point t / at
     void logProfilePhVol( FILE* logfile, long int t, double at, long int nx, long int every_t );
