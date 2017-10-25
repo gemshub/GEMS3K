@@ -74,6 +74,8 @@ extern const double bar_to_Pa,
 /// the TNodearray class.
 class TNode
 {
+    friend class TNodeArray;
+
     gstring dbr_file_name;  ///< place for the *dbr. I/O file name
     gstring ipmlog_file_name;  ///< full name of the ipmlog file
 
@@ -144,12 +146,20 @@ protected:
     void databr_head_to_vtk( fstream& ff, const char*name, double time, long cycle,
                             long nx = 1, long ny = 1, long nz = 1 );
 
-    // virtual functions for interaction with TNodeArray class (not used at TNode level)
+    /** virtual functions for interaction with TNodeArray class (not used at TNode level)
     virtual void  InitNodeArray( const char *, long int *, bool , bool  ) {}
     virtual void  setNodeArray( long int , long int*  ) { }
     //virtual void  checkNodeArray( long int, long int*, const char* ) { }
     virtual long int nNodes()  const // virtual call for interaction with TNodeArray class
-    { return 1; }
+    { return 1; } */
+
+    // alloc new memory
+    void allocNewDBR()
+    {
+        CNode = new DATABR;
+        databr_reset( CNode, 1 );
+        databr_realloc();
+    }
 
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS-PSI GUI environment
@@ -207,8 +217,7 @@ public:
 ///                      task interruption  in GEM-Selektor
 ///  \return 0  if successful; 1 if input file(s) were not found or corrupt;
 ///                      -1 if internal memory allocation error occurred.
-  long int  GEM_init( const char *ipmfiles_lst_name, const char *dbrfiles_lst_name = 0,
-                   long int *nodeTypes = 0, bool getNodT1 = false);
+  long int  GEM_init( const char *ipmfiles_lst_name );
 
 #ifdef IPMGEMPLUGIN
 //  Calls for direct coupling of a FMT code with GEMS3K

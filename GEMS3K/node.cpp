@@ -382,12 +382,7 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
 //
 //-------------------------------------------------------------------
-long int  TNode::GEM_init( const char* ipmfiles_lst_name,
-#ifdef IPMGEMPLUGIN
-                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
-#else
-                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
-#endif
+long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
 
    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
@@ -512,7 +507,7 @@ if( binary_f )
         curPath = "";
         dbr_file_name = dbr_file;
 
-   // Reading DBR_DAT files from dbrfiles_lst_name
+   /** Reading DBR_DAT files from dbrfiles_lst_name
    // only for TNodeArray class
           if(  dbrfiles_lst_name )
               InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
@@ -521,6 +516,7 @@ if( binary_f )
                 setNodeArray( 0 , 0  );
              else // undefined TNodeArray
                   Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
+   */
    return 0;
 
 #ifdef IPMGEMPLUGIN

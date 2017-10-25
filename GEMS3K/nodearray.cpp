@@ -73,8 +73,94 @@ bool TNodeArray::CalcIPM( const TestModeGEMParam& modeParam, long int start_node
    return iRet;
 }
 
-// ================================================================
+// New init ================================================================
 
+//-------------------------------------------------------------------
+// (1) Initialization of GEM IPM2 data structures in coupled FMT-GEM programs
+//  that use GEMS3K module. Also reads in the IPM, DCH and DBR text input files.
+//  Parameters:
+//  ipmfiles_lst_name - name of a text file that contains:
+//    " -t/-b <DCH_DAT file name> <IPM_DAT file name> <dataBR file name>
+//  dbfiles_lst_name - name of a text file that contains:
+//    <dataBR  file name1>, ... , <dataBR file nameN> "
+//    These files (one DCH_DAT, one IPM_DAT, and at least one dataBR file) must
+//    exist in the same directory where the ipmfiles_lst_name file is located.
+//    the DBR_DAT files in the above list are indexed as 1, 2, ... N (node handles)
+//    and must contain valid initial chemical systems (of the same structure
+//    as described in the DCH_DAT file) to set up the initial state of the FMT
+//    node array. If -t flag or nothing is specified then all data files must
+//    be in text (ASCII) format; if -b flag is specified then all data files
+//    are  assumed to be binary (little-endian) files.
+//  nodeTypes[nNodes] - optional parameter used only on the TNodeArray level,
+//    array of node type (fortran) indexes of DBR_DAT files
+//    in the ipmfiles_lst_name list. This array (handle for each FMT node),
+//    specifies from which DBR_DAT file the initial chemical system should
+//    be taken.
+//  getNodT1 - optional flag, used only (if true) when reading multiple DBR files
+//    after the coupled modeling task interruption in GEM-Selektor
+//  This function returns:
+//   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
+//
+//-------------------------------------------------------------------
+long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
+         const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
+{
+
+   calcNode->GEM_init( ipmfiles_lst_name );
+    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
+   gstring curPath = ""; //current reading file path
+#ifdef IPMGEMPLUGIN
+   fstream f_log(calcNode->ipmLogFile().c_str(), ios::out|ios::app );
+  try
+    {
+#else
+      size_t npos = gstring::npos;
+#endif
+     bool binary_f = false;
+
+     //  open file stream for the file names list file
+     fstream f_lst( ipmfiles_lst_name, ios::in );
+     ErrorIf( !f_lst.good() , ipmfiles_lst_name, "Fileopen error");
+
+     gstring datachbr_fn;
+     f_getline( f_lst, datachbr_fn, ' ');
+
+     //Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
+      size_t pos = datachbr_fn.find( '-');
+      if( pos != /*gstring::*/npos )
+      {
+         if( datachbr_fn[pos+1] == 'b' )
+            binary_f = true;
+         f_getline( f_lst, datachbr_fn, ' ');
+      }
+   // Reading DBR_DAT files from dbrfiles_lst_name
+    if(  dbrfiles_lst_name )
+          InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
+    else
+       if( nNodes() ==1 )
+              setNodeArray( 0 , 0  );
+          else // undefined TNodeArray
+                  Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
+   return 0;
+
+#ifdef IPMGEMPLUGIN
+    }
+    catch(TError& err)
+    {
+      if( !curPath.empty() )
+          f_log << "GEMS3K input : file " << curPath.c_str() << endl;
+      f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+    }
+    catch(...)
+    {
+        return -1;
+    }
+    return 1;
+#endif
+}
+
+
+// ------------------------------------------------------------------
 
 bool TNodeArray::NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  )
 {
@@ -183,7 +269,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, long int ii, F
    {
        long RetCode = RunGEM( ii, Mode );
         // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
-        timeGEM +=	GEM_CalcTime();
+        timeGEM +=	calcNode->GEM_CalcTime();
 
         // checking RetCode from GEM IPM calculation
         if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
@@ -237,7 +323,7 @@ long int retCode;
 
 // GEM IPM calculation of equilibrium state in MULTI
   pCNode()->NodeStatusCH = abs(Mode);
-  retCode = GEM_run( uPrimalSol );
+  retCode = calcNode->GEM_run( uPrimalSol );
 
 // Copying data for node iNode back from work DATABR structure into the node array
 //   if( retCode == OK_GEM_AIA ||
@@ -326,13 +412,13 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
          if( binary_f )
          {
              GemDataStream in_br(dbr_file, ios::in|ios::binary);
-             databr_from_file(in_br);
+             calcNode->databr_from_file(in_br);
           }
          else
           {   fstream in_br(dbr_file.c_str(), ios::in );
                  ErrorIf( !in_br.good() , datachbr_fn.c_str(),
                     "DBR_DAT fileopen error");
-               databr_from_text_file(in_br);
+               calcNode->databr_from_text_file(in_br);
           }
          curPath = "";
 // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
@@ -590,6 +676,9 @@ void TNodeArray::allocMemory()
 {
 	long int ii;
 
+    // The NodeArray must be allocated here
+    calcNode = new TNode();
+
 // alloc memory for data bidge structures
 // did in constructor TNode::allocMemory();
 
@@ -623,13 +712,13 @@ void TNodeArray::freeMemory()
    { if( NodT0 )
        for(  ii=0; ii<anNodes; ii++ )
         if( NodT0[ii] )
-           NodT0[ii] = databr_free(NodT0[ii]);
+           NodT0[ii] = calcNode->databr_free(NodT0[ii]);
      delete[]  NodT0;
      NodT0 = 0;
      if( NodT1 )
        for(  ii=0; ii<anNodes; ii++ )
         if( NodT1[ii] )
-          NodT1[ii] = databr_free(NodT1[ii]);
+          NodT1[ii] = calcNode->databr_free(NodT1[ii]);
      delete[]  NodT1;
      NodT1 = 0;
    }
@@ -639,7 +728,10 @@ void TNodeArray::freeMemory()
   if( tcNode)
      delete[] tcNode;
   if( iaNode )
-	 delete[] iaNode; 
+     delete[] iaNode;
+
+  if(calcNode)
+     delete calcNode;
 }
 
 #ifndef IPMGEMPLUGIN
@@ -654,6 +746,7 @@ TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):TNode( apm )
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
     iaNode = 0;
+    calcNode = 0;
     allocMemory();
     na = this;
 }
@@ -667,6 +760,7 @@ TNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
+  calcNode = 0;
   allocMemory();
   na = this;
 }
@@ -684,6 +778,7 @@ TNodeArray::TNodeArray( long int nNod  ):
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
+  calcNode = 0;
   allocMemory();
   na = this;
 }
@@ -697,6 +792,7 @@ sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
+  calcNode = 0;
   allocMemory();
   na = this;
 }
@@ -766,7 +862,7 @@ void TNodeArray::CopyWorkNodeFromArray( long int ii, long int nNodes, DATABRPTR*
 // exchange of values occurs through lists of indices, e.g. xDC, xPH
   copyValues( pCNode()->xDC, arr_BR[ii]->xDC, pCSD()->nDCb );
   copyValues( pCNode()->gam, arr_BR[ii]->gam, pCSD()->nDCb );
-  if( CSD->nAalp >0 )
+  if( pCSD()->nAalp >0 )
 	  copyValues( pCNode()->aPH, arr_BR[ii]->aPH, pCSD()->nPHb );
   else  pCNode()->aPH = 0;
   copyValues( pCNode()->xPH, arr_BR[ii]->xPH, pCSD()->nPHb );
@@ -794,14 +890,15 @@ void TNodeArray::MoveWorkNodeToArray( long int ii, long int nNodes, DATABRPTR* a
     return;
   if( arr_BR[ii] )
   {
-       arr_BR[ii] = databr_free( arr_BR[ii]);
+       arr_BR[ii] = calcNode->databr_free( arr_BR[ii]);
        // delete[] arr_BR[ii];
   }
   arr_BR[ii] = pCNode();
 // alloc new memory
-  TNode::CNode = new DATABR;
-  databr_reset( CNode, 1 );
-  databr_realloc();
+  calcNode->allocNewDBR();
+  ///TNode::CNode = new DATABR;
+  ///calcNode->databr_reset( pCNode(), 1 );
+  ///calcNode->databr_realloc();
   // mem_set( &pCNode()->TC, 0, 32*sizeof(double));
 }
 
@@ -820,16 +917,16 @@ void TNodeArray::CopyNodeFromTo( long int ndx, long int nNod,
 // Calculate phase (carrier) mass, kg  of single component phase
 double TNodeArray::get_mPH( long int ia, long int nodex, long int PHx )
 {
-  long int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
+  long int DCx = calcNode->Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
   double val=0.;
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
   {
     val = pCSD()->DCmm[DCx];
     if( ia == 0)
-     val *= pNodT0()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
+     val *= pNodT0()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
     else
-     val *= pNodT1()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
+     val *= pNodT1()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
   }
 
   return val;
@@ -838,7 +935,7 @@ double TNodeArray::get_mPH( long int ia, long int nodex, long int PHx )
 // Calculate phase volume (in cm3) of single - component phase
 double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
 {
-  long int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
+  long int DCx = calcNode->Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
   double val=0.;
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
@@ -848,15 +945,15 @@ double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
      {
       T = pNodT0()[(nodex)]->TK;
       P = pNodT0()[(nodex)]->P;
-      val = pNodT0()[nodex]->xDC[DC_xCH_to_xDB(DCx)]; // number of moles
+      val = pNodT0()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)]; // number of moles
      }
      else
      {
       T = pNodT1()[(nodex)]->TK;
       P = pNodT1()[(nodex)]->P;
-      val = pNodT1()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
+      val = pNodT1()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
      }
-     val *= DC_V0( DCx, P, T );
+     val *= calcNode->DC_V0( DCx, P, T );
   }
   return val;
 }
@@ -865,16 +962,16 @@ double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
 // Calculate bulk compositions  of single component phase
 double TNodeArray::get_bPH( long int ia, long int nodex, long int PHx, long int ICx )
 {
-  long int DCx = Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
+  long int DCx = calcNode->Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
   double val=0.;
 
   if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
   {
     val = pCSD()->A[ pCSD()->xic[ICx] + DCx * pCSD()->nIC];
     if( ia == 0)
-     val *= pNodT0()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
+     val *= pNodT0()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
     else
-     val *= pNodT1()[nodex]->xDC[DC_xCH_to_xDB(DCx)];
+     val *= pNodT1()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
   }
 
   return val;
@@ -1055,7 +1152,7 @@ double TNodeArray::GetNodeMass( long int ndx,
 {
    double mass = 0.;
 //   DATABR* dbr = NodT1[ndx];
-   DATACH* dch = CSD;
+   DATACH* dch = pCSD();
    long int xWatCH, ips = (long int)iips;
 
      switch( tcode )
@@ -1095,13 +1192,13 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
 {
    double mass = 0., coeff, mol, mWat=0., fmolal=1., aji;
    DATABR* dbr = NodT1[ndx_from];
-   DATACH* dch = CSD;
+   DATACH* dch = pCSD();
    long int xWatCH=0, ic, ips = (long int)iips;
    if( tcode == DISSOLVED || tcode == ADVECTIVE || tcode == DIFFUSIVE )
    {
-	   xWatCH = CSD->nDCinPH[CSD->xph[0]]-1; // CH index of water
+       xWatCH = pCSD()->nDCinPH[pCSD()->xph[0]]-1; // CH index of water
 //	   mWat = node1_xDC( ndx_from, xWatCH )* CSD->DCmm[xWatCH]; 
-	   mWat = node1_xPA(ndx_from, ips) * CSD->DCmm[xWatCH];  // Mass of water-solvent
+       mWat = node1_xPA(ndx_from, ips) * pCSD()->DCmm[xWatCH];  // Mass of water-solvent
 	   fmolal = 1.0; // 1000./mWat;              // molality conversion factor
    }
 
@@ -1131,7 +1228,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
 
   if( CompMode == true )
   { // Moving dependent components 
-	for(long int jc=0; jc < CSD->nDC; jc++ )
+    for(long int jc=0; jc < pCSD()->nDC; jc++ )
 	{
 	  mol = 0.; // moles of DC transported in the particle
 	  switch( tcode )
@@ -1167,7 +1264,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
     	  if( NodT1[ndx_from]->NodeTypeHY != NBC3source )
     	  {
     		  node1_xDC( ndx_from, jc ) -= mol;   // Correcting species amount in source node at T1 
-    		  for( ic=0; ic<CSD->nICb; ic++)  // incrementing independent components
+              for( ic=0; ic<pCSD()->nICb; ic++)  // incrementing independent components
     		  {
     			  aji = DCaJI( jc, ic );
     			  if( aji )
@@ -1179,7 +1276,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
  	  		  if( NodT1[ndx_to]->NodeTypeHY != NBC3source )
  	  		  {
  	  			  node1_xDC( ndx_to, jc ) += mol;
- 	  			  for( ic=0; ic<CSD->nICb; ic++)  // incrementing independent components
+                  for( ic=0; ic<pCSD()->nICb; ic++)  // incrementing independent components
  	  			  {
  	  				  aji = DCaJI( jc, ic );
  	  				  if( aji )
@@ -1197,7 +1294,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
   }
   else {  
 	      // Transport of independent components 
-   for(long int ie=0; ie < CSD->nICb; ie++ )
+   for(long int ie=0; ie < pCSD()->nICb; ie++ )
    {
      mol = 0.; // moles of IC in the particle
      switch( tcode )
@@ -1416,7 +1513,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
    kk = sizeM;
    if(sizeM==1 && sizeK==1) // 05.12.2012 workaround for 2D paraview
          kk=2;
-   databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
+   calcNode->databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
 
    if( nFilds < 1 || !Flds )
    {  all = true;
@@ -1429,7 +1526,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
          nf = kk;
        else nf= Flds[kk][0];
 
-       databr_size_to_vtk(  nf, nel, nel2 );
+       calcNode->databr_size_to_vtk(  nf, nel, nel2 );
 
       if( all )
         { ii=0;}
@@ -1440,7 +1537,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
 
        for( ; ii<nel; ii++ )
         {
-        databr_name_to_vtk( ff, nf, ii, nel2 );
+           calcNode->databr_name_to_vtk( ff, nf, ii, nel2 );
 
         // cycle for TNode array
         for( i = 0; i < sizeN; i++ )
@@ -1449,7 +1546,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
             {
                int ndx = iNode( i, j, k );
                CopyWorkNodeFromArray( ndx, anNodes,  pNodT0() );
-               databr_element_to_vtk( ff, CNode/*pNodT0()[(ndx)]*/, nf, ii );
+               calcNode->databr_element_to_vtk( ff, pCNode()/*pNodT0()[(ndx)]*/, nf, ii );
             }
         if( sizeM==1 && sizeK==1)  // 05.12.2012 workaround for 2D paraview
         { for( i = 0; i < sizeN; i++ )
@@ -1458,7 +1555,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
             {
                int ndx = iNode( i, j, k );
                CopyWorkNodeFromArray( ndx, anNodes,  pNodT0() );
-               databr_element_to_vtk( ff, CNode/*pNodT0()[(ndx)]*/, nf, ii );
+               calcNode->databr_element_to_vtk( ff, pCNode()/*pNodT0()[(ndx)]*/, nf, ii );
             }
          }
        }

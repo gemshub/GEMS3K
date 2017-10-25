@@ -86,9 +86,11 @@ struct TestModeGEMParam
 class TParticleArray;
 
 // Definition of TNodeArray class
-class TNodeArray : public TNode
+class TNodeArray //: public TNode
 {
 protected:
+
+    TNode *calcNode;
 
     DATABR* (*NodT0);  ///< array of nodes for previous time point
     DATABR* (*NodT1);  ///< array of nodes for current time point
@@ -121,6 +123,34 @@ protected:
 public:
 
   static TNodeArray* na;   ///< static pointer to this class
+
+  DATACH* pCSD() const  /// Get the pointer to chemical system definition data structure
+  {  return calcNode->pCSD();   }
+
+  DATABR* pCNode() const  /// Get pointer to work node data structure
+                          /// usage on the level of TNodearray is not recommended !
+  {  return calcNode->pCNode();     }
+
+  /// Retrieves the stoichiometry coefficient a[xdc][xic] of IC in the formula of DC.
+  /// \param xdc is DC DBR index
+  /// \param xic is IC DBR index
+  inline double DCaJI( const long int xdc, const long int xic) const
+  { return calcNode->DCaJI( xdc, xic); }
+
+  /// Retrieves the molar mass of Independent Component in kg/mol.
+  /// \param xic is IC DBR index
+  inline double ICmm( const long int xic ) const
+  { return calcNode->ICmm(  xic); }
+
+  /// Retrieves the molar mass of Dependent Component in kg/mol.
+  /// \param xdc is DC DBR index
+  inline double DCmm( const long int xdc ) const
+  { return calcNode->DCmm( xdc); }
+
+  /// Converts the Phase DBR index into the Phase DCH index
+  inline long int Ph_xDB_to_xCH( const long int xBR ) const
+  { return calcNode->Ph_xDB_to_xCH( xBR ); }
+
 
 #ifndef IPMGEMPLUGIN
 // These calls are used only inside of GEMS-PSI GEM2MT module
@@ -216,6 +246,8 @@ public:
     bool CalcIPM_Node(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile );
     bool CalcIPM( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile );
 
+    long int  GEM_init( const char* ipmfiles_lst_name,
+             const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1);
 
     // end of new stuff -------------------------------------------------------
 
