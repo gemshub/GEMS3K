@@ -331,7 +331,7 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
    dTau, // current time step value
    oTau, // old time step value
    dx,   // node distance [L/nC]
-   TimeGEM, // pure GEM runtime, in seconds
+   TimeGEM__, // pure GEM runtime, in seconds
    ref3,
    ref4
   ;

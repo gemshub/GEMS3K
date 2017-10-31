@@ -507,17 +507,7 @@ if( binary_f )
         curPath = "";
         dbr_file_name = dbr_file;
 
-   /** Reading DBR_DAT files from dbrfiles_lst_name
-   // only for TNodeArray class
-          if(  dbrfiles_lst_name )
-              InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
-          else
-              if( nNodes() ==1 )
-                setNodeArray( 0 , 0  );
-             else // undefined TNodeArray
-                  Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
-   */
-   return 0;
+    return 0;
 
 #ifdef IPMGEMPLUGIN
     }

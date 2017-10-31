@@ -813,7 +813,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
          // calculate equilibrium state in q-th box
          node1_Tm( p ) = mtp->cTau;
          node1_dt( p ) = mtp->dTau;
-         if( !na->CalcIPM_Node( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), p, 0 ) )
+         if( !na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), p, 0 ) )
            iRet = false;  // Analysis of errors after GEM calculation?
          mtp->qc = p;
             //  iRet = false;

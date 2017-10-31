@@ -86,11 +86,11 @@ struct TestModeGEMParam
 class TParticleArray;
 
 // Definition of TNodeArray class
-class TNodeArray //: public TNode
+class TNodeArray
 {
 protected:
 
-    TNode *calcNode;
+    TNode calcNode;
 
     DATABR* (*NodT0);  ///< array of nodes for previous time point
     DATABR* (*NodT1);  ///< array of nodes for current time point
@@ -120,37 +120,69 @@ protected:
    /// Test if the location cxyz resides in the node with absolute index iNode
    bool isLocationInNode( long int iNode, LOCATION cxyz ) const;
 
+   /// Copies data from the work DATABR structure into the node ndx in
+   /// the node arrays NodT0 and NodT1  (as specified in nodeTypes array)
+   void  setNodeArray( long int ndx, long int* nodeTypes  );
+
+   /// Test setup of the boundary condition for all nodes in the task
+   void  checkNodeArray( long int i, long int* nodeTypes, const char*  datachbr_file );
+
+   ///  Copies data for a node ndx from the array of nodes anyNodeArray that
+   /// contains nNodes into the work node data bridge structure
+   ///  (implementation thread-safe)
+   void CopyWorkNodeFromArray( TNode& wrkNode, long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
+
+   ///  Moves work node data to the ndx element of the node array anyNodeArray
+   /// that has nNodes. Previous contents of the ndx element will be lost,
+   /// work node will be allocated new and will contain no data
+   ///  (implementation thread-safe)
+   void MoveWorkNodeToArray( TNode& wrkNode, long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
+
+   /// New Stuff--------------------------------------------------------------
+
+   /// Here we compare this node for current time and for previous time to test need to recalculate equilibrium
+   /// in this node because its vector b has changed
+   /// Zeroing charge off in bulk composition
+   bool NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
+
+   ///  Testing indicators for IA in the ii node for smart algorithm
+   long int SmartMode( const TestModeGEMParam& modeParam, long int ii  );
+
+   /// Build bad GEM result message
+   gstring ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
+
+   ///  Here we do a GEM calculation in box ii (implementation thread-safe)
+   bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode& wrkNode, long int ii, FILE* diffile  );
+
+   // end of new stuff -------------------------------------------------------
+
 public:
 
   static TNodeArray* na;   ///< static pointer to this class
 
   DATACH* pCSD() const  /// Get the pointer to chemical system definition data structure
-  {  return calcNode->pCSD();   }
+  {  return calcNode.pCSD();   }
 
-  DATABR* pCNode() const  /// Get pointer to work node data structure
-                          /// usage on the level of TNodearray is not recommended !
-  {  return calcNode->pCNode();     }
 
   /// Retrieves the stoichiometry coefficient a[xdc][xic] of IC in the formula of DC.
   /// \param xdc is DC DBR index
   /// \param xic is IC DBR index
   inline double DCaJI( const long int xdc, const long int xic) const
-  { return calcNode->DCaJI( xdc, xic); }
+  { return calcNode.DCaJI( xdc, xic); }
 
   /// Retrieves the molar mass of Independent Component in kg/mol.
   /// \param xic is IC DBR index
   inline double ICmm( const long int xic ) const
-  { return calcNode->ICmm(  xic); }
+  { return calcNode.ICmm(  xic); }
 
   /// Retrieves the molar mass of Dependent Component in kg/mol.
   /// \param xdc is DC DBR index
   inline double DCmm( const long int xdc ) const
-  { return calcNode->DCmm( xdc); }
+  { return calcNode.DCmm( xdc); }
 
   /// Converts the Phase DBR index into the Phase DCH index
   inline long int Ph_xDB_to_xCH( const long int xBR ) const
-  { return calcNode->Ph_xDB_to_xCH( xBR ); }
-
+  { return calcNode.Ph_xDB_to_xCH( xBR ); }
 
 #ifndef IPMGEMPLUGIN
 // These calls are used only inside of GEMS-PSI GEM2MT module
@@ -239,24 +271,44 @@ public:
     /// New Stuff--------------------------------------------------------------
 
     double timeGEM;
-    bool NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
-    long int SmartMode( const TestModeGEMParam& modeParam, long int ii  );
-    gstring ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
 
-    bool CalcIPM_Node(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile );
-    bool CalcIPM( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile );
+    ///  Here we do a GEM calculation in box ii
+    bool CalcIPM_One(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile )
+    {
+        return CalcIPM_Node(  modeParam, calcNode , ii, diffile );
+    }
 
+    ///  Here we do a GEM calculation in boxes from  start_node to end_node
+    bool CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile );
+
+    ///
+    /// Initialization of GEM IPM3 data structures in coupled programs
+    /// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
+    ///  \param ipmfiles_lst_name  pointer to a null-terminated C string with a path to a text file
+    ///                      containing the list of names of  GEMS3K input files.
+    ///                      Example: file "test.lst" with a content:    -t "dch.dat" "ipm.dat" "dbr-0.dat"
+    ///                      (-t  tells that input files are in text format)
+    ///  \param dbrfiles_lst_name  a pointer to a null-terminated C string with a path to a text file
+    ///                      containing the list of comma-separated names of  DBR input files.
+    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
+    ///  \param nodeTypes    the initial node contents
+    ///                      from DATABR files will be distributed among nodes in array according to the
+    ///                      distribution index list nodeTypes
+    ///  \param getNodT1     used only when reading multiple DBR files after the modeling
+    ///                      task interruption  in GEM-Selektor
+    ///  \return 0  if successful; 1 if input file(s) were not found or corrupt;
+    ///                      -1 if internal memory allocation error occurred.
     long int  GEM_init( const char* ipmfiles_lst_name,
              const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1);
 
     // end of new stuff -------------------------------------------------------
 
     /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( long int ndx, long int Mode );
+    long int RunGEM( TNode& wrkNode, long int ndx, long int Mode );
 
     /// Calls GEM IPM for one node with three indexes (along x,y,z)
-    long int  RunGEM( long int indN, long int indM, long int indK, long int Mode )
-    { return RunGEM( iNode( indN, indM, indK ), Mode); }
+    long int  RunGEM( TNode& wrkNode, long int indN, long int indM, long int indK, long int Mode )
+    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode); }
         // (both calls clean the work node DATABR structure)
 
     /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
@@ -270,13 +322,6 @@ public:
     ///                      task interruption  in GEM-Selektor
     void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f  );
 
-    /// Copies data from the work DATABR structure into the node ndx in
-    /// the node arrays NodT0 and NodT1  (as specified in nodeTypes array)
-    void  setNodeArray( long int ndx, long int* nodeTypes  );
-
-   /// Test setup of the boundary condition for all nodes in the task
-    void  checkNodeArray( long int i, long int* nodeTypes, const char*  datachbr_file );
-
    //---------------------------------------------------------
    // Methods for working with node arrays (access to data from DBR)
    /// Calculate phase (carrier) mass, kg  of single component phase
@@ -289,15 +334,6 @@ public:
 
    //---------------------------------------------------------
    // Methods for working with node arrays
-
-    ///  Copies data for a node ndx from the array of nodes anyNodeArray that
-    /// contains nNodes into the work node data bridge structure
-    void CopyWorkNodeFromArray( long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
-
-    ///  Moves work node data to the ndx element of the node array anyNodeArray
-    /// that has nNodes. Previous contents of the ndx element will be lost,
-    /// work node will be allocated new and will contain no data
-    void MoveWorkNodeToArray( long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
 
     /// Copies a node from the node array arr_From to the same place in the
     /// node array arr_To. Previous contents of the ndx element in arr_To

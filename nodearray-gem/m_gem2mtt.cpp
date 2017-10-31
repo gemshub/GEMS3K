@@ -306,7 +306,7 @@ bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* 
       node1_dt( ii ) = mtp->dTau;
    }
 
-   na->CalcIPM( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
+   na->CalcIPM_List( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
 
    /*for( long int ii = start_node; ii<= end_node; ii++) // node iteration
    {
@@ -525,7 +525,8 @@ if( !diffile)
 clock_t t_start, t_end;
 clock_t outp_time = (clock_t)0;
 t_start = clock();
-mtp->TimeGEM = 0.0; 
+//mtp->TimeGEM = 0.0;
+na->timeGEM = 0.0;
 
    if( mtp->iStat != AS_RUN  )
    {  switch( mtp->PsMode )
@@ -664,7 +665,7 @@ if( mtp->PsMO != S_OFF )
 {
 fprintf( diffile,
   "\nTotal time of calculation %lg s;  Time of output %lg s;  Whole run time %lg s;  Pure GEM run time %lg s\n",
-    (dtime-outp_time)/clc_sec,  outp_time/clc_sec, dtime/clc_sec, mtp->TimeGEM );
+    (dtime-outp_time)/clc_sec,  outp_time/clc_sec, dtime/clc_sec, na->timeGEM );
 fclose( logfile );
 fclose( ph_file );
 fclose( diffile );
