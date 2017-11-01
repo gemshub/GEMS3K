@@ -70,9 +70,10 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     end_node = min( end_node, anNodes );
 
 //  #pragma omp parallel for shared(modeParam, diffile, iRet) private( wrkNode, ii)
+    #pragma omp parallel
     for( ii = start_node; ii<= end_node; ii++) // node iteration
     {
-       if( !CalcIPM_Node(  modeParam, wrkNode, ii,  diffile ) )
+       if( !CalcIPM_Node(  modeParam, calcNode, ii, pNodT0()[ii], pNodT1()[ii], diffile ) )
           iRet = false; /// !!! must be atomic operation
     }  // ii
 
@@ -169,10 +170,10 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
 
 // ------------------------------------------------------------------
 
-bool TNodeArray::NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  )
+bool TNodeArray::NeedGEM( TNode& wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  )
 {
   bool NeedGEM = false;
-  DATACH* CH = pCSD();  // DataCH structure
+  DATACH* CH = wrkNode.pCSD();  // DataCH structure
   double dc;
 
   if( modeParam.useSIA == S_OFF )
@@ -261,20 +262,17 @@ gstring TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int s
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode, long int ii, FILE* diffile )
+bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode wrkNode,
+                               long int ii, DATABR* C0, DATABR* C1, FILE* diffile )
 {
    bool iRet = true;
 
-   //  Getting direct access to TNodeArray class data
-   DATABRPTR* C0 = pNodT0();  // nodes at previous time point
-   DATABRPTR* C1 = pNodT1();  // nodes at current time point
-
    long int Mode = SmartMode( modeParam, ii  );
-   bool needGEM = NeedGEM( modeParam, C0[ii], C1[ii]  );
+   bool needGEM = NeedGEM( wrkNode, modeParam, C0, C1  );
 
    if( needGEM )
    {
-       long RetCode = RunGEM( wrkNode, ii, Mode );
+       long RetCode =  RunGEM( wrkNode, ii, Mode );
         // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
         timeGEM +=	wrkNode.GEM_CalcTime();
 
@@ -301,7 +299,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
         }
      }
      else { // GEM calculation for this node not needed
-         C1[ii]->IterDone = 0; // number of GEMIPM iterations is set to 0
+         C1->IterDone = 0; // number of GEMIPM iterations is set to 0
      }
     return iRet;
 }
@@ -464,14 +462,18 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
 //-------------------------------------------------------------------
 void  TNodeArray::setNodeArray( long int ndx, long int* nodeTypes  )
 {
-   for( long int ii=0; ii<anNodes; ii++)
+
+    for( long int ii=0; ii<anNodes; ii++)
             if(  (!nodeTypes && ndx==0) ||
               ( nodeTypes && (nodeTypes[ii] == ndx/*i+1*/ )) )
                   {    calcNode.pCNode()->NodeHandle = ndx/*(i+1)*/;
+                NodT0[ii] = allocNewDBR( calcNode);
+                NodT1[ii] = allocNewDBR( calcNode);
+
                        MoveWorkNodeToArray( calcNode, ii, anNodes, NodT0);
-                       CopyWorkNodeFromArray( calcNode, ii, anNodes,NodT0);
+                     //  CopyWorkNodeFromArray( calcNode, ii, anNodes,NodT0);
                        MoveWorkNodeToArray( calcNode, ii, anNodes, NodT1);
-                       CopyWorkNodeFromArray( calcNode, ii, anNodes,NodT1);
+                     //  CopyWorkNodeFromArray( calcNode, ii, anNodes,NodT1);
                    }
 }
 
@@ -891,7 +893,85 @@ void TNodeArray::CopyWorkNodeFromArray( TNode& wrkNode, long int ii, long int nN
   copyValues( wrkNode.pCNode()->amrl, arr_BR[ii]->amrl, pCSD()->nPSb );
 }
 
-// Copying data for node iNode back from work DATABR structure into the node array
+// new Copying data for node iNode back from work DATABR structure into the node array
+void TNodeArray::MoveWorkNodeToArray( TNode& wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
+{
+    // from arr_BR[ii] to pCNode() structure
+    if( ii < 0 || ii>= nNodes )
+      return;
+    // memory must be allocated before
+
+    // mem_cpy( &wrkNode.pCNode()->NodeHandle, &arr_BR[ii]->NodeHandle, 6*sizeof(short));
+    arr_BR[ii]->NodeHandle = wrkNode.pCNode()->NodeHandle;
+    arr_BR[ii]->NodeTypeHY = wrkNode.pCNode()->NodeTypeHY;
+    arr_BR[ii]->NodeTypeMT = wrkNode.pCNode()->NodeTypeMT;
+    arr_BR[ii]->NodeStatusFMT = wrkNode.pCNode()->NodeStatusFMT;
+    arr_BR[ii]->NodeStatusCH = wrkNode.pCNode()->NodeStatusCH;
+    arr_BR[ii]->IterDone = wrkNode.pCNode()->IterDone;      //6
+    // mem_cpy( &wrkNode.pCNode()->TK, &arr_BR[ii]->TK, 32*sizeof(double));
+    arr_BR[ii]->TK = wrkNode.pCNode()->TK;
+    arr_BR[ii]->P = wrkNode.pCNode()->P;
+    arr_BR[ii]->Vs = wrkNode.pCNode()->Vs;
+    arr_BR[ii]->Vi = wrkNode.pCNode()->Vi;
+    arr_BR[ii]->Ms = wrkNode.pCNode()->Ms;
+    arr_BR[ii]->Mi = wrkNode.pCNode()->Mi;
+    arr_BR[ii]->Gs = wrkNode.pCNode()->Gs;
+    arr_BR[ii]->Hs = wrkNode.pCNode()->Hs;
+    arr_BR[ii]->Hi = wrkNode.pCNode()->Hi;
+    arr_BR[ii]->IC = wrkNode.pCNode()->IC;
+    arr_BR[ii]->pH = wrkNode.pCNode()->pH;
+    arr_BR[ii]->pe = wrkNode.pCNode()->pe;
+    arr_BR[ii]->Eh = wrkNode.pCNode()->Eh; //13
+
+    arr_BR[ii]->Tm = wrkNode.pCNode()->Tm;
+    arr_BR[ii]->dt = wrkNode.pCNode()->dt;
+  #ifdef NODEARRAYLEVEL
+    arr_BR[ii]->Dif = wrkNode.pCNode()->Dif;
+    arr_BR[ii]->Vt = wrkNode.pCNode()->Vt;
+    arr_BR[ii]->vp = wrkNode.pCNode()->vp;
+    arr_BR[ii]->eps = wrkNode.pCNode()->eps;
+    arr_BR[ii]->Km = wrkNode.pCNode()->Km;
+    arr_BR[ii]->Kf = wrkNode.pCNode()->Kf;
+    arr_BR[ii]->S = wrkNode.pCNode()->S;
+    arr_BR[ii]->Tr = wrkNode.pCNode()->Tr;
+    arr_BR[ii]->h = wrkNode.pCNode()->h;
+    arr_BR[ii]->rho = wrkNode.pCNode()->rho;
+    arr_BR[ii]->al = wrkNode.pCNode()->al;
+    arr_BR[ii]->at = wrkNode.pCNode()->at;
+    arr_BR[ii]->av = wrkNode.pCNode()->av;
+    arr_BR[ii]->hDl = wrkNode.pCNode()->hDl;
+    arr_BR[ii]->hDt = wrkNode.pCNode()->hDt;
+    arr_BR[ii]->hDv = wrkNode.pCNode()->hDv;
+    arr_BR[ii]->nto = wrkNode.pCNode()->nto; //19
+  #endif
+  // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
+  // exchange of values occurs through lists of indices, e.g. xDC, xPH
+    copyValues( arr_BR[ii]->xDC, wrkNode.pCNode()->xDC, wrkNode.pCSD()->nDCb );
+    copyValues( arr_BR[ii]->gam, wrkNode.pCNode()->gam, wrkNode.pCSD()->nDCb );
+    if( wrkNode.pCSD()->nAalp >0 )
+        copyValues( arr_BR[ii]->aPH, wrkNode.pCNode()->aPH, wrkNode.pCSD()->nPHb );
+    else  arr_BR[ii]->aPH = 0;
+    copyValues( arr_BR[ii]->xPH, wrkNode.pCNode()->xPH, wrkNode.pCSD()->nPHb );
+    copyValues( arr_BR[ii]->omPH, wrkNode.pCNode()->omPH, wrkNode.pCSD()->nPHb );
+    copyValues( arr_BR[ii]->vPS, wrkNode.pCNode()->vPS, wrkNode.pCSD()->nPSb );
+    copyValues( arr_BR[ii]->mPS, wrkNode.pCNode()->mPS, wrkNode.pCSD()->nPSb );
+
+    copyValues( arr_BR[ii]->bPS, wrkNode.pCNode()->bPS,
+                            wrkNode.pCSD()->nPSb*wrkNode.pCSD()->nICb );
+    copyValues( arr_BR[ii]->xPA, wrkNode.pCNode()->xPA, wrkNode.pCSD()->nPSb );
+    copyValues( arr_BR[ii]->dul, wrkNode.pCNode()->dul, wrkNode.pCSD()->nDCb );
+    copyValues( arr_BR[ii]->dll, wrkNode.pCNode()->dll, wrkNode.pCSD()->nDCb );
+    copyValues( arr_BR[ii]->bIC, wrkNode.pCNode()->bIC, wrkNode.pCSD()->nICb );
+    copyValues( arr_BR[ii]->rMB, wrkNode.pCNode()->rMB, wrkNode.pCSD()->nICb );
+    copyValues( arr_BR[ii]->uIC, wrkNode.pCNode()->uIC, wrkNode.pCSD()->nICb );
+    copyValues( arr_BR[ii]->bSP, wrkNode.pCNode()->bSP, wrkNode.pCSD()->nICb );
+    copyValues( arr_BR[ii]->amru, wrkNode.pCNode()->amru, wrkNode.pCSD()->nPSb );
+    copyValues( arr_BR[ii]->amrl, wrkNode.pCNode()->amrl, wrkNode.pCSD()->nPSb );
+}
+
+
+
+/** old Copying data for node iNode back from work DATABR structure into the node array
 void TNodeArray::MoveWorkNodeToArray( TNode& wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
 {
   if( ii < 0 || ii>= nNodes )
@@ -904,11 +984,7 @@ void TNodeArray::MoveWorkNodeToArray( TNode& wrkNode, long int ii, long int nNod
   arr_BR[ii] = wrkNode.pCNode();
 // alloc new memory
   wrkNode.allocNewDBR();
-  ///TNode::CNode = new DATABR;
-  ///calcNode->databr_reset( pCNode(), 1 );
-  ///calcNode->databr_realloc();
-  // mem_set( &pCNode()->TC, 0, 32*sizeof(double));
-}
+}*/
 
 void TNodeArray::CopyNodeFromTo( long int ndx, long int nNod,
                        DATABRPTR* arr_From, DATABRPTR* arr_To )

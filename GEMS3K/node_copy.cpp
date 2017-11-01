@@ -330,72 +330,72 @@ void TNode::datach_free()
 }
 
 // Allocates DataBR structure
-void TNode::databr_realloc()
+void TNode::databr_realloc( DATABR * CNode_)
 {
   long int j,k;
-  CNode->bIC = new double[CSD->nICb];
-  CNode->rMB = new double[CSD->nICb];
-  CNode->uIC = new double[CSD->nICb];
-  CNode->bSP = new double[CSD->nICb];
+  CNode_->bIC = new double[CSD->nICb];
+  CNode_->rMB = new double[CSD->nICb];
+  CNode_->uIC = new double[CSD->nICb];
+  CNode_->bSP = new double[CSD->nICb];
 
   for(  j=0; j<CSD->nICb; j++ )
   {
-      CNode->rMB[j] = 0.;
-      CNode->uIC[j] = 0.;
-      CNode->bSP[j] = 0.;
+      CNode_->rMB[j] = 0.;
+      CNode_->uIC[j] = 0.;
+      CNode_->bSP[j] = 0.;
    }
 
-  CNode->xDC = new double[CSD->nDCb];
-  CNode->gam = new double[CSD->nDCb];
+  CNode_->xDC = new double[CSD->nDCb];
+  CNode_->gam = new double[CSD->nDCb];
 
   for(  j=0; j<CSD->nDCb; j++ )
   {
-    CNode->xDC[j] = 0.;
-    CNode->gam[j] = 1.;
+    CNode_->xDC[j] = 0.;
+    CNode_->gam[j] = 1.;
   }
 
   //  default assignment
- CNode->dul = new double[CSD->nDCb];
+ CNode_->dul = new double[CSD->nDCb];
  for(  j=0; j<CSD->nDCb; j++ )
-   CNode->dul[j] = 1.0e6;            // default assignment
- CNode->dll = new double[CSD->nDCb];
+   CNode_->dul[j] = 1.0e6;            // default assignment
+ CNode_->dll = new double[CSD->nDCb];
  for(  j=0; j<CSD->nDCb; j++ )
-   CNode->dll[j] = 0.0;              // default assignment
+   CNode_->dll[j] = 0.0;              // default assignment
 
  if( CSD->nAalp >0 )
  {
-    CNode->aPH = new double[CSD->nPHb];
+    CNode_->aPH = new double[CSD->nPHb];
     for(  k=0; k<CSD->nPHb; k++ )
-      CNode->aPH[k] = 0.0;       // default assignment
+      CNode_->aPH[k] = 0.0;       // default assignment
  }
  else
-    CNode->aPH = 0;
+    CNode_->aPH = 0;
 
- CNode->xPH = new double[CSD->nPHb];
- CNode->omPH = new double[CSD->nPHb];
+ CNode_->xPH = new double[CSD->nPHb];
+ CNode_->omPH = new double[CSD->nPHb];
 
  for(  k=0; k<CSD->nPHb; k++ )
  {
-     CNode->xPH[k] = 0.0;       // default assignment
-     CNode->omPH[k] = 0.0;
+     CNode_->xPH[k] = 0.0;       // default assignment
+     CNode_->omPH[k] = 0.0;
  }
 
- CNode->vPS = new double[CSD->nPSb];
- CNode->mPS = new double[CSD->nPSb];
- CNode->bPS = new double[CSD->nPSb*CSD->nICb];
- CNode->xPA = new double[CSD->nPSb];
- CNode->amru = new double[CSD->nPSb];
- CNode->amrl = new double[CSD->nPSb];
+ CNode_->vPS = new double[CSD->nPSb];
+ CNode_->mPS = new double[CSD->nPSb];
+ CNode_->bPS = new double[CSD->nPSb*CSD->nICb];
+ CNode_->xPA = new double[CSD->nPSb];
+ CNode_->amru = new double[CSD->nPSb];
+ CNode_->amrl = new double[CSD->nPSb];
 
  for(  k=0; k<CSD->nPSb; k++ )
  {
-     CNode->vPS[k] = 0.0;
-     CNode->mPS[k] = 0.0;
-     CNode->xPA[k] = 0.0;
+     CNode_->vPS[k] = 0.0;
+     CNode_->mPS[k] = 0.0;
+     CNode_->xPA[k] = 0.0;
      for(  j=0; j<CSD->nICb; j++ )
-        CNode->bPS[k*CSD->nICb+j] = 0.0;
-     CNode->amru[k] = 1.0e6;
-     CNode->amrl[k] = 0.0;
+        CNode_->bPS[k*CSD->nICb+j] = 0.0;
+     CNode_->amru[k] = 1.0e6;
+     CNode_->amrl[k] = 0.0;
  }
 }
 

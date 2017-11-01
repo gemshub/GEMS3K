@@ -108,7 +108,13 @@ protected:
     void datach_realloc();
     void datach_free();
     void datach_reset();
-    void databr_realloc();
+    void databr_realloc()
+    {
+      databr_realloc( CNode);
+    }
+
+    void databr_realloc( DATABR * CNode_);
+
     void databr_reset( DATABR *CNode, long int level=0 );
 
     /// Deletes fields of DATABR structure indicated by data_BR_

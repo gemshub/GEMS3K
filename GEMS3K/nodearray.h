@@ -143,7 +143,7 @@ protected:
    /// Here we compare this node for current time and for previous time to test need to recalculate equilibrium
    /// in this node because its vector b has changed
    /// Zeroing charge off in bulk composition
-   bool NeedGEM( const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
+   bool NeedGEM( TNode& wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
 
    ///  Testing indicators for IA in the ii node for smart algorithm
    long int SmartMode( const TestModeGEMParam& modeParam, long int ii  );
@@ -152,9 +152,19 @@ protected:
    gstring ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
 
    ///  Here we do a GEM calculation in box ii (implementation thread-safe)
-   bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode& wrkNode, long int ii, FILE* diffile  );
+   bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode wrkNode,
+                       long int ii, DATABR* C0, DATABR* C1, FILE* diffile  );
 
-   // end of new stuff -------------------------------------------------------
+   // alloc new memory
+    DATABR * allocNewDBR( TNode& wrkNode)
+    {
+        DATABR *node = new DATABR;
+        wrkNode.databr_reset( node, 1 );
+        wrkNode.databr_realloc(node);
+        return node;
+    }
+
+    // end of new stuff -------------------------------------------------------
 
 public:
 
@@ -275,7 +285,7 @@ public:
     ///  Here we do a GEM calculation in box ii
     bool CalcIPM_One(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile )
     {
-        return CalcIPM_Node(  modeParam, calcNode , ii, diffile );
+        return CalcIPM_Node(  modeParam, calcNode, ii, pNodT0()[ii], pNodT1()[ii], diffile );
     }
 
     ///  Here we do a GEM calculation in boxes from  start_node to end_node
