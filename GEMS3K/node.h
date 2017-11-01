@@ -146,6 +146,11 @@ protected:
     void databr_head_to_vtk( fstream& ff, const char*name, double time, long cycle,
                             long nx = 1, long ny = 1, long nz = 1 );
 
+    /// Copy CSD (DATACH structure) data from other structure.
+    void datach_copy( DATACH* otherCSD );
+    /// Reads node (work DATABR structure) data from other DBR.
+    void databr_copy( DATABR* otherCNode );
+
    // alloc new memory
     void allocNewDBR()
     {
@@ -189,6 +194,7 @@ public:
   TNode();
 #endif
 
+  TNode( const TNode& otherNode );
   virtual ~TNode();      ///< destructor
 
 // Typical sequence for using TNode class ----------------------------------

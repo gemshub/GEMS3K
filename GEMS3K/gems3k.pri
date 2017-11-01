@@ -44,5 +44,7 @@
                       $$GEMS3K_CPP/ms_multi_file.cpp \
                       $$GEMS3K_CPP/ms_multi_format.cpp \
                       $$GEMS3K_CPP/ms_param.cpp \
-                      $$GEMS3K_CPP/io_arrays.cpp
+                      $$GEMS3K_CPP/io_arrays.cpp \
+    $$PWD/node_copy.cpp \
+    $$PWD/ms_multi_copy.cpp
 

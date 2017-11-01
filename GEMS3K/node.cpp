@@ -1626,7 +1626,8 @@ void TNode::allocMemory()
 
 #ifdef IPMGEMPLUGIN
 // internal structures
-    multi = new TMulti( this ); multi->set_def();
+    multi = new TMulti( this );
+    multi->set_def();
     pmm = multi->GetPM();
     profil = new TProfil( multi );
     multi->setPa(profil);

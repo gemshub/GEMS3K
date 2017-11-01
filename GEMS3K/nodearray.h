@@ -600,6 +600,11 @@ Hi,     ///< Total enthalpy of inert subsystem (J) (reserved)            +      
   // amount of phase with index PHx from T1 node with index nodex
 #define node1_xPH( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->xPH[(PHx)])
 
+// amount of phase with index PHx from T0 node with index nodex
+#define node0_omPH( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->omPH[(PHx)])
+// amount of phase with index PHx from T1 node with index nodex
+#define node1_omPH( nodex, PHx ) (TNodeArray::na->pNodT1()[(nodex)]->omPH[(PHx)])
+
   // volume of multicomponent phase with index PHx from T0 node with index nodex
 #define node0_vPS( nodex, PHx ) (TNodeArray::na->pNodT0()[(nodex)]->vPS[(PHx)])
   // volume of multicomponent phase with index PHx from T1 node with index nodex

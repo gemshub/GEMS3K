@@ -26,19 +26,21 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifdef NODEARRAYLEVEL
-#ifndef NOPARTICLEARRAY
-#include "particlearray.h"
-#endif
 
-#include "nodearray.h"
-#include "io_arrays.h"
-#include "gdatastream.h"
 #include <cmath>
 #include <unistd.h>
 #ifndef __unix
 #include <io.h>
 #endif
+#include <omp.h>
+
+#ifdef NODEARRAYLEVEL
+#ifndef NOPARTICLEARRAY
+#include "particlearray.h"
+#endif
+#include "nodearray.h"
+#include "io_arrays.h"
+#include "gdatastream.h"
 
 #ifndef IPMGEMPLUGIN
    #include "visor.h"
@@ -50,6 +52,7 @@ extern outField DataBR_fields[58];
 
 TNodeArray* TNodeArray::na;
 
+
 // To parallelization calculations ========================================================
 
 //   Here we call a loop on GEM calculations over nodes
@@ -59,19 +62,23 @@ TNodeArray* TNodeArray::na;
 //
 bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile )
 {
+    long int ii;
     bool iRet = true;
+    TNode wrkNode( calcNode ); // must be copy TNode internal
 
     start_node = max( start_node, 0L );
     end_node = min( end_node, anNodes );
 
-    for( long int ii = start_node; ii<= end_node; ii++) // node iteration
+//  #pragma omp parallel for shared(modeParam, diffile, iRet) private( wrkNode, ii)
+    for( ii = start_node; ii<= end_node; ii++) // node iteration
     {
-       if( !CalcIPM_Node(  modeParam, calcNode, ii,  diffile ) )
-           iRet = false;
-    }  // ii   end of node iteration loop
+       if( !CalcIPM_Node(  modeParam, wrkNode, ii,  diffile ) )
+          iRet = false; /// !!! must be atomic operation
+    }  // ii
 
    return iRet;
 }
+
 
 // New init ================================================================
 
@@ -278,6 +285,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
           iRet = false;
           if( diffile )
           {
+            /// !!!!  Here must be lock before end save to file
               fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
                     err_msg.c_str() );
           }
