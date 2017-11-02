@@ -59,7 +59,7 @@ TNode::TNode( const TNode& otherNode )
   pmm->Fdev2[0] = 0.;
   pmm->Fdev2[1] = 1e-6;
 
-
+  cout << "copy constructor..." << endl;
 }
 
 // Copy CSD (DATACH structure) data from other structure.

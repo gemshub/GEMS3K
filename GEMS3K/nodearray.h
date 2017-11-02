@@ -143,17 +143,17 @@ protected:
    /// Here we compare this node for current time and for previous time to test need to recalculate equilibrium
    /// in this node because its vector b has changed
    /// Zeroing charge off in bulk composition
-   bool NeedGEM( TNode& wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
+   bool NeedGEMS( TNode& wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
 
    ///  Testing indicators for IA in the ii node for smart algorithm
-   long int SmartMode( const TestModeGEMParam& modeParam, long int ii  );
+   long int SmartMode( const TestModeGEMParam& modeParam, long int ii,  bool* piaN  );
 
    /// Build bad GEM result message
    gstring ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
 
    ///  Here we do a GEM calculation in box ii (implementation thread-safe)
-   bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode wrkNode,
-                       long int ii, DATABR* C0, DATABR* C1, FILE* diffile  );
+   bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode& wrkNode,
+                       long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* iaN, FILE* diffile  );
 
    // alloc new memory
     DATABR * allocNewDBR( TNode& wrkNode)
@@ -285,7 +285,7 @@ public:
     ///  Here we do a GEM calculation in box ii
     bool CalcIPM_One(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile )
     {
-        return CalcIPM_Node(  modeParam, calcNode, ii, pNodT0()[ii], pNodT1()[ii], diffile );
+        return CalcIPM_Node(  modeParam, calcNode, ii, pNodT0(), pNodT1(), piaNode(), diffile );
     }
 
     ///  Here we do a GEM calculation in boxes from  start_node to end_node
@@ -314,11 +314,12 @@ public:
     // end of new stuff -------------------------------------------------------
 
     /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( TNode& wrkNode, long int ndx, long int Mode );
+    long int RunGEM( TNode& wrkNode,  long int  iNode, long int Mode, DATABRPTR* nodeArray );
 
     /// Calls GEM IPM for one node with three indexes (along x,y,z)
-    long int  RunGEM( TNode& wrkNode, long int indN, long int indM, long int indK, long int Mode )
-    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode); }
+    long int  RunGEM( TNode& wrkNode, long int indN, long int indM, long int indK,
+                      long int Mode, DATABRPTR* nodeArray  )
+    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
         // (both calls clean the work node DATABR structure)
 
     /// Initialization of TNodeArray data structures. Reads in the DBR text input files and

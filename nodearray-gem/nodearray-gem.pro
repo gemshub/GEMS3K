@@ -9,6 +9,7 @@ VERSION = 3.0.0
 CONFIG -= qt
 CONFIG += warn_on
 CONFIG += debug
+CONFIG += thread
 #CONFIG += windows
 CONFIG += console
 
