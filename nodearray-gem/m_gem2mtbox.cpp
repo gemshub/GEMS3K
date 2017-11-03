@@ -296,21 +296,21 @@ void TGEM2MT::Solut( double *m, double *dm, double tau )
 void TGEM2MT::BoxComposUpdate( long int q )
 {
    long int i;
- double n1bICo, n1bICn=0., dMbqi, ICmm, dTau;  // for debugging
+// double n1bICo, n1bICn=0., dMbqi, ICmm, dTau;  // for debugging
 
    for(i =0; i< mtp->Nf; i++ )
    {
- n1bICo = node1_bIC(q, i); dMbqi = dMb( q, i); ICmm = na->ICmm( i ); dTau =  mtp->dTau;
+// n1bICo = node1_bIC(q, i); dMbqi = dMb( q, i); ICmm = na->ICmm( i ); dTau =  mtp->dTau;
 
        if( na->pCSD()->ccPH[na->Ph_xDB_to_xCH( 0 )] == PH_AQUEL && i == mtp->Nf-1 )
        {
          node1_bIC(q, i) += dMb( q, i) * mtp->dTau;   // molar mass of charge is 0
- n1bICn = node1_bIC(q, i);
+// n1bICn = node1_bIC(q, i);
          node1_bIC(q, i) = 0.0;  // Provisorial - zeroing-off charge for the node
        }
        else {                                         // dTau is the time step (in s)
          node1_bIC(q, i) += dMb( q, i) / na->ICmm( i ) * mtp->dTau;
- n1bICn = node1_bIC(q, i);
+// n1bICn = node1_bIC(q, i);
          if( node1_bIC(q, i) < 1e-12 )
             node1_bIC(q, i) = 1e-12;    // preventing too small or negative amounts of ICs
        }
@@ -333,11 +333,11 @@ void TGEM2MT::BoxesBCupdate()
 double TGEM2MT::BoxMasses( long int q )
 {
    long int i;
-   double BoxMass = 0., Mbqi = 0.;
+   double BoxMass = 0.; //, Mbqi = 0.;
    for(i=0; i<mtp->Nf; i++ )
    {
        Mb( q, i) = node1_bIC( q, i ) * na->ICmm( i );
-Mbqi = Mb(q,i);    // debugging
+// Mbqi = Mb(q,i);    // debugging
        BoxMass += Mb(q,i);
    }
    return BoxMass;
@@ -474,24 +474,24 @@ void TGEM2MT::ComposMGPinBox( long int q  )
 
           if( fabs(PhFract) > 0.0 )   // calculate IC compositions of MGP and MGP IC partition coeffs
           {
- double yqfio, yqfin, n1bPHqki, gqfio, gqfin; // debugging
+ //double yqfio, yqfin, n1bPHqki, gqfio, gqfin; // debugging
             if( k < na->pCSD()->nPSb )
                  for(i=0; i<mtp->Nf; i++ )
                  {
- yqfio = y(q,f,i); n1bPHqki = node1_bPS( q, k, i );
+// yqfio = y(q,f,i); n1bPHqki = node1_bPS( q, k, i );
                     y(q,f,i) += node1_bPS( q, k, i );
- yqfin = y(q,f,i); gqfio = g(q,f,i);
+// yqfin = y(q,f,i); gqfio = g(q,f,i);
                     g(q,f,i) = ( node1_bIC( q, i ) > 0. ? y(q,f,i)*PhFract/node1_bIC( q, i ): 0.);
- gqfin = g(q,f,i);
+// gqfin = g(q,f,i);
                  }
             else
                  for(i=0; i<mtp->Nf; i++ )
                  {
- yqfio = y(q,f,i); n1bPHqki = node1_bPH( q, k, i );
+ // yqfio = y(q,f,i); n1bPHqki = node1_bPH( q, k, i );
                     y(q,f,i) += node1_bPH( q, k, i );
- yqfin = y(q,f,i); gqfio = g(q,f,i);
+ // yqfin = y(q,f,i); gqfio = g(q,f,i);
                    g(q,f,i) = ( node1_bIC( q, i ) > 0. ? y(q,f,i)*PhFract/node1_bIC( q, i ): 0.);
- gqfin = g(q,f,i);
+ // gqfin = g(q,f,i);
                  }
             if( x_aq == 0 )
             {
