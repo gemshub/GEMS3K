@@ -43,7 +43,8 @@
 #include "gdatastream.h"
 
 #ifndef IPMGEMPLUGIN
-   #include "visor.h"
+#include "visor.h"
+#include "m_gem2mt.h"
 #else
   istream& f_getline(istream& is, gstring& str, char delim);
 #endif
@@ -88,7 +89,11 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
               #pragma omp atomic write
               iRet = false;
           }
-          cout << n << "-thread did index: " << ii << endl;
+
+          #pragma omp critical
+          {
+             cout << n << "-thread did index: " << ii << endl;
+          }
        }
 
    }
@@ -198,7 +203,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
 #ifndef IPMGEMPLUGIN
           else
           {  err_msg += "\n Continue?";
-             if( !vfQuestion( window(),
+             if( !vfQuestion( TGEM2MT::pm->window(),
                  "Error reported from GEMIPM2 module",err_msg.c_str() ))
                      Error("Error reported from GEMIPM2 module",
                      "Process stopped by the user");
@@ -578,20 +583,23 @@ void  TNodeArray::setNodeArray( long int ndx, long int* nodeTypes  )
 
 void  TNodeArray::setNodeArray( gstring& dbr_file, long int ndx, bool binary_f )
 {
-   MoveWorkNodeToArray(ndx, anNodes, NodT0);
    dbr_file = dbr_file.replace("dbr-0-","dbr-1-");
    if( binary_f )
    {
       GemDataStream in_br(dbr_file, ios::in|ios::binary);
-      databr_from_file(in_br);
+      calcNode.databr_from_file(in_br);
    }
    else
    {   fstream in_br(dbr_file.c_str(), ios::in );
          ErrorIf( !in_br.good() , dbr_file.c_str(),
                     "DataBR Fileopen error");
-       databr_from_text_file(in_br);
+       calcNode.databr_from_text_file(in_br);
     }
-   MoveWorkNodeToArray(ndx, anNodes, NodT1);
+
+   NodT0[ndx] = allocNewDBR( calcNode);
+   NodT1[ndx] = allocNewDBR( calcNode);
+   MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT0);
+   MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT1);
 }
 
 // Writing dataCH, dataBR structure to binary/text files
@@ -681,7 +689,7 @@ AGAIN:
    if( bin_mode )
    {  Path_ = u_makepath( dir, newname, "bin" );
       GemDataStream  f_ch1(Path_, ios::out|ios::binary);
-      datach_to_file(f_ch1);
+      calcNode.datach_to_file(f_ch1);
       f_ch1.close();
    }
 // out dataCH to text file
@@ -689,7 +697,7 @@ AGAIN:
    {  //newname = name+"-dch";
       Path_ = u_makepath( dir, newname, "dat" );
       fstream  f_ch2(Path_.c_str(), ios::out);
-      datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
+      calcNode.datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
       f_ch2.close();
    }
 
@@ -704,7 +712,7 @@ AGAIN:
       "Writing to disk a set of node array files from interrupted RMT task. "
            "Please, wait...", ii, nIV );
    // Save databr
-   CopyWorkNodeFromArray( ii, anNodes, NodT0 );
+   CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT0 );
 
    sprintf( buf, "%4.4ld", ii );
    // dataBR files - binary
@@ -713,7 +721,7 @@ AGAIN:
        newname =  name + + "-dbr-0-"  + buf;
        Path_ = u_makepath( dir, newname, "bin" );
        GemDataStream  f_br1(Path_, ios::out|ios::binary);
-       databr_to_file(f_br1);
+       calcNode.databr_to_file(f_br1);
        f_br1.close();
        if( first )
           fout << " \"" << newname.c_str() << ".bin\"";
@@ -726,7 +734,7 @@ AGAIN:
         newname = name + "-dbr-0-" + buf;
         Path_ = u_makepath( dir, newname, "dat" );
         fstream  f_br2(Path_.c_str(), ios::out);
-        databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
+        calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
         f_br2.close();
         if( first )
            fout << " \"" << newname.c_str() << ".dat\"";
@@ -740,7 +748,7 @@ AGAIN:
    {
 
        // Save databr
-      CopyWorkNodeFromArray( ii, anNodes, NodT1 );
+      CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT1 );
 
       // dataBR files - binary
       if( bin_mode )
@@ -748,7 +756,7 @@ AGAIN:
          newname =  name +  "-dbr-1-"  + buf;
          Path_ = u_makepath( dir, newname, "bin" );
          GemDataStream  f_br1(Path_, ios::out|ios::binary);
-         databr_to_file(f_br1);
+         calcNode.databr_to_file(f_br1);
          f_br1.close();
 //         fout << ", \"" << newname.c_str() << ".bin\"";
       }
@@ -757,7 +765,7 @@ AGAIN:
          newname = name + "-dbr-1-" + buf;
          Path_ = u_makepath( dir, newname, "dat" );
          fstream  f_br2(Path_.c_str(), ios::out);
-         databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
+         calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
          f_br2.close();
 //         fout << ", \"" << newname.c_str() << ".dat\"";
       }
@@ -835,7 +843,8 @@ void TNodeArray::freeMemory()
 
 #ifndef IPMGEMPLUGIN
 
-TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):TNode( apm )
+TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):
+    calcNode( apm )
 {
     anNodes = nNod;
     sizeN = anNodes;
@@ -845,13 +854,12 @@ TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):TNode( apm )
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
     iaNode = 0;
-    calcNode = 0;
     allocMemory();
     na = this;
 }
 
 TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK, MULTI *apm  ):
-TNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
+calcNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
 {
   anNodes = asizeN*asizeM*asizeK;
   NodT0 = 0;  // nodes at current time point
@@ -859,7 +867,6 @@ TNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
-  calcNode = 0;
   allocMemory();
   na = this;
 }
@@ -877,7 +884,6 @@ TNodeArray::TNodeArray( long int nNod  ):
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
-  ///calcNode = 0;
   allocMemory();
   na = this;
 }
@@ -891,7 +897,6 @@ sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
   grid  = 0;   // Array of grid point locations, size is anNodes+1
   tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
   iaNode = 0;
-  ///calcNode = 0;
   allocMemory();
   na = this;
 }

@@ -34,7 +34,7 @@
                       $$GEMS3K_CPP/ipm_chemical.cpp \
                       $$GEMS3K_CPP/ipm_chemical2.cpp \
                       $$GEMS3K_CPP/ipm_chemical3.cpp \
-         $$GEMS3K_CPP/ipm_chemical4.cpp \
+                      $$GEMS3K_CPP/ipm_chemical4.cpp \
                       $$GEMS3K_CPP/ipm_main.cpp \
                       $$GEMS3K_CPP/ipm_simplex.cpp \
                       $$GEMS3K_CPP/node.cpp \
@@ -45,6 +45,6 @@
                       $$GEMS3K_CPP/ms_multi_format.cpp \
                       $$GEMS3K_CPP/ms_param.cpp \
                       $$GEMS3K_CPP/io_arrays.cpp \
-    $$PWD/node_copy.cpp \
-    $$PWD/ms_multi_copy.cpp
+                      $$GEMS3K_CPP/node_copy.cpp \
+                      $$GEMS3K_CPP/ms_multi_copy.cpp
 

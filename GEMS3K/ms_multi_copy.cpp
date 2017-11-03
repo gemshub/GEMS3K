@@ -44,8 +44,8 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
     char PSigm; ///< Flag for using (+) or ignoring (-) specific surface free energies
 
  #ifndef IPMGEMPLUGIN
-   PAalp =  syp->PAalp;
-   PSigm =  syp->PSigm;
+   PAalp =  TSyst::sm->GetSY()->PAalp;
+   PSigm =  TSyst::sm->GetSY()->PSigm;
  #else
     PAalp = PAalp_ = otherMulti.PAalp_;
     PSigm = PSigm_ = otherMulti.PSigm_;

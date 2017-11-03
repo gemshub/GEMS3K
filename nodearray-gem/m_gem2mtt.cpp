@@ -97,7 +97,7 @@ void  TGEM2MT::NewNodeArray()
  if( mtp->PsTPai != S_OFF )
     gen_TPval();
 
- na->MakeNodeStructures( mtp->nICb, mtp->nDCb,  mtp->nPHb,
+ na->InitCalcNodeStructures( mtp->nICb, mtp->nDCb,  mtp->nPHb,
       mtp->xIC, mtp->xDC, mtp->xPH, mtp->PsTPpath != S_OFF,
       mtp->Tval, mtp->Pval,
       mtp->nTai,  mtp->nPai, mtp->Tai[3], mtp->Pai[3]  );
@@ -136,20 +136,17 @@ void  TGEM2MT::NewNodeArray()
          if( mtp->PsMode == RMT_MODE_S )
          {
              // empty current node
-             na->MoveWorkNodeToArray( q, mtp->nC,  na->pNodT0());
-             // set up inital data
-             DATABR* data_BR = na->pCNode();
+             DATABR* data_BR = na->reallocDBR( q, mtp->nC,  na->pNodT0());
              data_BR->TK = TMulti::sm->GetPM()->TCc+C_to_K; //25
              data_BR->P = TMulti::sm->GetPM()->Pc*bar_to_Pa; //1
              for(long int i1=0; i1<mtp->nICb; i1++ )
                data_BR->bIC[i1] = TMulti::sm->GetPM()->B[ mtp->xIC[i1] ];
          }
          else // Save databr
-             na->packDataBr();
-         //
-         na->setNodeHandle( q );
-         na->MoveWorkNodeToArray( q, mtp->nC,  na->pNodT0());
-         na->CopyWorkNodeFromArray( q, mtp->nC,  na->pNodT0() );
+         {
+             na->SaveToNode( q, mtp->nC,  na->pNodT0());
+         }
+         na->pNodT0()[q]->NodeHandle = q;
      }
    } // q
    mt_next();      // Generate work values for the next EqStat rkey

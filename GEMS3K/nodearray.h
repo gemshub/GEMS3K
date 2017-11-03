@@ -173,6 +173,10 @@ public:
   DATACH* pCSD() const  /// Get the pointer to chemical system definition data structure
   {  return calcNode.pCSD();   }
 
+  /// Returns number of temperature and  pressure grid points for one dependent component
+  inline long int gridTP() const
+  {  return calcNode.gridTP();   }
+
 
   /// Retrieves the stoichiometry coefficient a[xdc][xic] of IC in the formula of DC.
   /// \param xdc is DC DBR index
@@ -219,6 +223,82 @@ public:
    /// Copying data from work DATABR structure into the node array NodT0
    /// and read DATABR structure into the node array NodT1 from file dbr_file
    void  setNodeArray( gstring& dbr_file, long int ndx, bool binary_f );
+
+   /// Overloaded variant - takes lists of ICs, DCs and phases according to
+   /// already existing index vectors axIC, axDC, axPH (with anICb, anDCb,
+   /// anPHb, respectively)
+   void InitCalcNodeStructures(  long int anICb, long int anDCb,  long int anPHb,
+               long int* axIC, long int* axDC,  long int* axPH, bool no_interpolat,
+            double* Tai, double* Pai,  long int nTp_,
+            long int nPp_, double Ttol_, double Ptol_  )
+   {
+       calcNode.MakeNodeStructures(  anICb, anDCb,  anPHb,
+                axIC, axDC,  axPH, no_interpolat,
+                Tai,  Pai,  nTp_,  nPp_, Ttol_,  Ptol_  ) ;
+   }
+
+   /// Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
+   /// interaction variant. The user must select ICs, DCs and phases to be included
+   /// in DATABR lists
+   /// Lookup arays from iterators
+   void MakeNodeStructuresOne( QWidget* par, bool select_all,
+       double Tai[4], double Pai[4]  )
+   {
+     calcNode.MakeNodeStructures( par, select_all,  Tai, Pai  );
+     // setup dataBR and NodeT0 data
+     NodT0[0] = allocNewDBR( calcNode);
+     NodT1[0] = allocNewDBR( calcNode);
+     MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT0() );
+     MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT1() );
+   }
+
+   /// Makes start DATACH and DATABR data using GEMS internal data (MULTI and other)
+   /// interaction variant. The user must select ICs, DCs and phases to be included
+   /// in DATABR lists
+   void MakeNodeStructuresOne( QWidget* par, bool select_all,bool no_interpolat,
+            double *Tai, double *Pai, long int nTp_ = 1 ,
+            long int nPp_ = 1 , double Ttol_ = 1., double Ptol_ =1. )
+   {
+     calcNode.MakeNodeStructures( par, select_all, no_interpolat,
+                Tai, Pai, nTp_, nPp_, Ttol_, Ptol_ );
+     NodT0[0] = allocNewDBR( calcNode);
+     NodT1[0] = allocNewDBR( calcNode);
+     MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT0() );
+     MoveWorkNodeToArray( calcNode, 0, 1, na->pNodT1() );
+   }
+
+   const TNode& LinkToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
+   {
+     CopyWorkNodeFromArray( calcNode, ndx, nNodes, anyNodeArray );
+     return calcNode;
+   }
+
+   void SaveToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
+   {
+       // Save databr
+       calcNode.packDataBr();
+       if( !NodT0[ndx] )
+         NodT0[ndx] = allocNewDBR( calcNode);
+       if( !NodT1[ndx] )
+         NodT1[ndx] = allocNewDBR( calcNode);
+       MoveWorkNodeToArray( calcNode, ndx, nNodes, anyNodeArray );
+  }
+
+   DATABR *reallocDBR( long int ndx, long int nNodes, DATABRPTR* anyNodeArray)
+   {
+       if( ndx < 0 || ndx>= nNodes )
+         return 0;
+       // free old memory
+       if( anyNodeArray[ndx] )
+       {
+            anyNodeArray[ndx] = calcNode.databr_free( anyNodeArray[ndx] );
+            delete[] anyNodeArray[ndx];
+       }
+      anyNodeArray[ndx] = allocNewDBR( calcNode );
+      if( !NodT1[ndx] )
+        NodT1[ndx] = allocNewDBR( calcNode);
+      return anyNodeArray[ndx];
+   }
 
 #else
 // Used in GEMIPM2 standalone module only
