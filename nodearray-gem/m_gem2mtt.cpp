@@ -19,6 +19,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <omp.h>
 #ifndef IPMGEMPLUGIN
 
 #include "m_gem2mt.h"
@@ -306,15 +307,25 @@ bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* 
       node1_dt( ii ) = mtp->dTau;
    }
 
+#ifdef useOMP
+   double  t0 = omp_get_wtime();
+#else
+   clock_t t_start, t_end;
+   t_start = clock();
+#endif
+
+
    na->CalcIPM_List( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
 
-   /*for( long int ii = start_node; ii<= end_node; ii++) // node iteration
-   {
+#ifdef useOMP
+   double  t1 = omp_get_wtime();
+   mtp->TimeGEM += t1-t0;
+#else
+   double clc_sec = CLOCKS_PER_SEC;
+   t_end = clock();
+   mtp->TimeGEM = ( t_end- t_start )/clc_sec;
+#endif
 
-       if( !CalcIPM_Node(  mode, ii,  diffile ) )
-       iRet = false;
-   }  // ii   end of node iteration loop
-*/
    // Here dt can be analyzed over nodes - if changed anywhere by TKinMet
    //   then the overall time step should be reduced and the MT loop started all over
 
@@ -522,13 +533,16 @@ if( !diffile)
 }
 
 // time scales testing
+#ifdef useOMP
+double  t0 = omp_get_wtime();
+#else
 clock_t t_start, t_end;
-clock_t outp_time = (clock_t)0;
 t_start = clock();
-//mtp->TimeGEM = 0.0;
-na->timeGEM = 0.0;
+#endif
+double otime = 0.;
+mtp->TimeGEM = 0.0;
 
-   if( mtp->iStat != AS_RUN  )
+   if( mtp->iStat!= AS_RUN  )
    {  switch( mtp->PsMode )
      {
        case RMT_MODE_A:   // A: 1D advection (numerical) coupled FMT scoping model
@@ -555,10 +569,10 @@ na->timeGEM = 0.0;
       CalcMGPdata();
 
 if( mtp->PsMO != S_OFF )
-  outp_time += PrintPoint( 2, diffile, logfile, ph_file );
+  otime += PrintPoint( 2, diffile, logfile, ph_file );
 
 if( mtp->PsVTK != S_OFF )
-   outp_time += PrintPoint( 0 );
+   otime += PrintPoint( 0 );
 
 
 #ifndef IPMGEMPLUGIN
@@ -627,7 +641,7 @@ char buf[300];
         CalcIPM( mode, nStart, nEnd, diffile );
 
 if( mtp->PsMO != S_OFF )
-  outp_time += PrintPoint( 3, diffile, logfile, ph_file );
+  otime += PrintPoint( 3, diffile, logfile, ph_file );
 
           // Here one has to compare old and new equilibrium phase assemblage
           // and pH/pe in all nodes and decide if the time step was Ok or it
@@ -649,23 +663,29 @@ if( mtp->PsMO != S_OFF )
              CalcMGPdata();
 
 if( mtp->PsMO != S_OFF )
-   outp_time += PrintPoint( 4, diffile, logfile, ph_file );
+   otime += PrintPoint( 4, diffile, logfile, ph_file );
 
 if( mtp->PsVTK != S_OFF )
-   outp_time += PrintPoint( 0 );
+   otime += PrintPoint( 0 );
 
  } while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
 
 
-t_end = clock();
-double dtime = ( t_end- t_start );
+#ifdef useOMP
+double  t1 = omp_get_wtime();
+double dtime = ( t1- t0 );
+#else
 double clc_sec = CLOCKS_PER_SEC;
+t_end = clock();
+double dtime = ( t_end- t_start )/clc_sec;
+#endif
+
 
 if( mtp->PsMO != S_OFF )
 {
 fprintf( diffile,
   "\nTotal time of calculation %lg s;  Time of output %lg s;  Whole run time %lg s;  Pure GEM run time %lg s\n",
-    (dtime-outp_time)/clc_sec,  outp_time/clc_sec, dtime/clc_sec, na->timeGEM );
+    (dtime-otime),  otime, dtime, mtp->TimeGEM );
 fclose( logfile );
 fclose( ph_file );
 fclose( diffile );
@@ -684,11 +704,17 @@ fclose( diffile );
 
 // plotting the record -------------------------------------------------
 //Added one point to graph
-clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE* ph_file )
+double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE* ph_file )
 {
     long int evrt =10;
+
+#ifdef useOMP
+    double  t0 = omp_get_wtime();
+#else
     clock_t t_out, t_out2;
     t_out = clock();
+#endif
+
 
     // from BoxEqStatesUpdate (BoxFlux ) not tested and used
     if( nPoint == 1 )
@@ -742,8 +768,14 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
        na->databr_to_vtk(out_br, nameVTK.c_str(), mtp->cTau, mtp->ct, mtp->nVTKfld, mtp->xVTKfld );
    }
 
+#ifdef useOMP
+   double  t1 = omp_get_wtime();
+   return ( t1- t0 );
+#else
+   double clc_sec = CLOCKS_PER_SEC;
    t_out2 = clock();
-   return ( t_out2 -  t_out);
+   return ( t_out2 -  t_out)/clc_sec;
+#endif
 
 }
 

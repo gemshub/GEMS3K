@@ -1141,7 +1141,7 @@ l60:
         mtp->ct++;
         BoxEqStatesUpdate( naccept, kc, t, h );
         if( mtp->PsVTK != S_OFF )
-           /* outp_time += */PrintPoint( 0 );
+           PrintPoint( 0 );
         //
         if( kc == 1 )
         {

@@ -55,6 +55,8 @@ TNodeArray* TNodeArray::na;
 
 // To parallelization calculations ========================================================
 
+#ifdef useOMP
+
 //   Here we call a loop on GEM calculations over nodes
 //   parallelization should affect this loop only
 //   return code   true   Ok
@@ -65,7 +67,7 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     int n;
     long int ii;
     bool iRet = true;
-    TNode wrkNode( calcNode ); // must be copy TNode internal
+    TNode wrkNode;//( calcNode ); // must be copy TNode internal
     DATABRPTR* C0 = pNodT0();
     DATABRPTR* C1 = pNodT1();
     bool* iaN = piaNode();     // indicators for IA in the nodes
@@ -73,7 +75,8 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     start_node = max( start_node, 0L );
     end_node = min( end_node, anNodes );
 
-#pragma omp parallel shared( C0, C1, iaN, diffile, iRet ) private( wrkNode, ii )
+
+#pragma omp parallel shared( C0, C1, iaN, diffile, iRet ) private( wrkNode, n )
     {
        TNode wrkNode( calcNode ); // must be copy TNode internal
        n = omp_get_thread_num();
@@ -81,13 +84,136 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
        for( ii = start_node; ii<= end_node; ii++) // node iteration
        {
           if( !CalcIPM_Node(  modeParam, wrkNode, ii, C0, C1, iaN, diffile ) )
-                  iRet = false; /// !!! must be atomic operation
+          {
+              #pragma omp atomic write
+              iRet = false;
+          }
           cout << n << "-thread did index: " << ii << endl;
-       }  // ii
+       }
 
    }
-  return iRet;
+
+   return iRet;
 }
+
+//   Here we do a GEM calculation in box ii
+//   return code   true   Ok
+//                 false  Error in GEMipm calculation part
+//
+bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode,
+                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
+{
+   bool iRet = true;
+
+   long int Mode = SmartMode( modeParam, ii, piaN   );
+   bool needGEM = NeedGEMS( wrkNode, modeParam, C0[ii], C1[ii]  );
+
+   if( needGEM )
+   {
+       long RetCode =  RunGEM( wrkNode, ii, Mode, C1 );
+        // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
+       /*#pragma omp atomic update
+       timeGEM +=	wrkNode.GEM_CalcTime();*/
+
+        // checking RetCode from GEM IPM calculation
+        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
+        {
+          gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
+          iRet = false;
+
+          if( diffile )
+          {
+           #pragma omp critical
+           {
+               // write to file here
+              fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
+                    err_msg.c_str() );
+           }
+          }
+        }
+     }
+     else { // GEM calculation for this node not needed
+         C1[ii]->IterDone = 0; // number of GEMIPM iterations is set to 0
+     }
+    return iRet;
+}
+
+#else
+
+
+//   Here we call a loop on GEM calculations over nodes
+//   parallelization should affect this loop only
+//   return code   true   Ok
+//                 false  Error in GEMipm calculation part
+//
+bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start_node, long int end_node, FILE* diffile )
+{
+    long int ii;
+    bool iRet = true;
+    DATABRPTR* C0 = pNodT0();
+    DATABRPTR* C1 = pNodT1();
+    bool* iaN = piaNode();     // indicators for IA in the nodes
+
+    start_node = max( start_node, 0L );
+    end_node = min( end_node, anNodes );
+
+
+    for( ii = start_node; ii<= end_node; ii++) // node iteration
+    {
+          if( !CalcIPM_Node(  modeParam, calcNode, ii, C0, C1, iaN, diffile ) )
+              iRet = false;
+    }
+
+   return iRet;
+}
+
+//   Here we do a GEM calculation in box ii
+//   return code   true   Ok
+//                 false  Error in GEMipm calculation part
+//
+bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode,
+                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
+{
+   bool iRet = true;
+
+   long int Mode = SmartMode( modeParam, ii, piaN   );
+   bool needGEM = NeedGEMS( wrkNode, modeParam, C0[ii], C1[ii]  );
+
+   if( needGEM )
+   {
+       long RetCode =  RunGEM( wrkNode, ii, Mode, C1 );
+
+       // checking RetCode from GEM IPM calculation
+        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
+        {
+          gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
+          iRet = false;
+
+          if( diffile )
+          {
+            // write to file here
+            fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
+                    err_msg.c_str() );
+          }
+#ifndef IPMGEMPLUGIN
+          else
+          {  err_msg += "\n Continue?";
+             if( !vfQuestion( window(),
+                 "Error reported from GEMIPM2 module",err_msg.c_str() ))
+                     Error("Error reported from GEMIPM2 module",
+                     "Process stopped by the user");
+          }
+#endif
+        }
+     }
+     else { // GEM calculation for this node not needed
+         C1[ii]->IterDone = 0; // number of GEMIPM iterations is set to 0
+     }
+    return iRet;
+}
+
+
+#endif
 
 
 // New init ================================================================
@@ -266,53 +392,6 @@ gstring TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int s
    return  err_msg;
 }
 
-
-//   Here we do a GEM calculation in box ii
-//   return code   true   Ok
-//                 false  Error in GEMipm calculation part
-//
-bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode,
-                               long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
-{
-   bool iRet = true;
-
-   long int Mode = SmartMode( modeParam, ii, piaN   );
-   bool needGEM = NeedGEMS( wrkNode, modeParam, C0[ii], C1[ii]  );
-
-   if( needGEM )
-   {
-       long RetCode =  RunGEM( wrkNode, ii, Mode, C1 );
-        // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
-        timeGEM +=	wrkNode.GEM_CalcTime();
-
-        // checking RetCode from GEM IPM calculation
-        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
-        {
-          gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
-          iRet = false;
-          if( diffile )
-          {
-            /* !!!!  Here must be lock before end save to file
-              fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
-                    err_msg.c_str() );
-            */
-          }
-#ifndef IPMGEMPLUGIN
-          else
-          {  err_msg += "\n Continue?";
-             if( !vfQuestion( window(),
-                 "Error reported from GEMIPM2 module",err_msg.c_str() ))
-                     Error("Error reported from GEMIPM2 module",
-                     "Process stopped by the user");
-          }
-#endif
-        }
-     }
-     else { // GEM calculation for this node not needed
-         C1[ii]->IterDone = 0; // number of GEMIPM iterations is set to 0
-     }
-    return iRet;
-}
 
 //-------------------------------------------------------------------------
 // RunGEM()

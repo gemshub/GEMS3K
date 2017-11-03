@@ -280,8 +280,6 @@ public:
     
     /// New Stuff--------------------------------------------------------------
 
-    double timeGEM;
-
     ///  Here we do a GEM calculation in box ii
     bool CalcIPM_One(  const TestModeGEMParam& modeParam, long int ii, FILE* diffile )
     {

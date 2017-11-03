@@ -331,7 +331,7 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
    dTau, // current time step value
    oTau, // old time step value
    dx,   // node distance [L/nC]
-   TimeGEM__, // pure GEM runtime, in seconds
+   TimeGEM, // pure GEM runtime, in seconds
    ref3,
    ref4
   ;
@@ -446,7 +446,7 @@ protected:
     void MIDEX( long int j, double t, double h );
     void INTEG( double eps, double& step, double t_begin, double t_end );
 
-    clock_t PrintPoint( long int nPoint, FILE* diffile = NULL, FILE* logfile = NULL, FILE* ph_file = NULL);
+    double PrintPoint( long int nPoint, FILE* diffile = NULL, FILE* logfile = NULL, FILE* ph_file = NULL);
     
 public:
 
