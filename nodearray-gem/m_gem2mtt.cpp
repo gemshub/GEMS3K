@@ -19,7 +19,6 @@
 
 #include <cmath>
 #include <cstdio>
-#include <omp.h>
 #ifndef IPMGEMPLUGIN
 
 #include "m_gem2mt.h"
@@ -28,6 +27,9 @@
 
 #else
 
+#ifdef useOMP
+#include <omp.h>
+#endif
 #include <ctime>
 #include "m_gem2mt.h"
 #include "nodearray.h"
