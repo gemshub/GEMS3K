@@ -34,11 +34,12 @@ INCLUDEPATH +=
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
+#QMAKE_CXXFLAGS += -fopenmp -pg
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS +=  -fopenmp
 LIBS += -lgomp -lpthread
 
-QMAKE_LFLAGS +=
+#QMAKE_LFLAGS += -pg
 OBJECTS_DIR = obj
 
 

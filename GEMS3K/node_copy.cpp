@@ -28,6 +28,7 @@
 #include "node.h"
 #include "num_methods.h"
 
+#ifdef IPMGEMPLUGIN
 
 TNode::TNode( const TNode& otherNode )
 {
@@ -42,9 +43,7 @@ TNode::TNode( const TNode& otherNode )
   datach_copy( otherNode.CSD );
   databr_copy( otherNode.CNode );
 
-#ifdef IPMGEMPLUGIN
   multi->copyMULTI( *otherNode.multi );
-#endif
 
   // copy intervals for minimizatiom
    pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -155,6 +154,7 @@ void TNode::databr_copy( DATABR* otherCNode )
     copyValues( CNode->omPH, otherCNode->omPH, CSD->nPHb );
 }
 
+#endif
 
 // allocating DataCH structure
 void TNode::datach_realloc()

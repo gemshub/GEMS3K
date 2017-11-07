@@ -157,13 +157,13 @@ protected:
     /// Reads node (work DATABR structure) data from other DBR.
     void databr_copy( DATABR* otherCNode );
 
-   // alloc new memory
+   /* alloc new memory
     void allocNewDBR()
     {
         CNode = new DATABR;
         databr_reset( CNode, 1 );
         databr_realloc();
-    }
+    }*/
 
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS-PSI GUI environment
@@ -198,9 +198,9 @@ public:
 #else
   /// Constructor of the class instance in memory for standalone GEMS3K or coupled program
   TNode();
+  TNode( const TNode& otherNode );
 #endif
 
-  TNode( const TNode& otherNode );
   virtual ~TNode();      ///< destructor
 
 // Typical sequence for using TNode class ----------------------------------
