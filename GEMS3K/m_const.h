@@ -84,8 +84,8 @@ KINR_MOD,  /// see also enum kinmet_controls
     //  Possible values: (SPHAS_TYP)
     // Codes to identify the mixing models used (during IPM iterations)
     SM_IDEAL =  'I',	// ideal solution or single-component phase
-SM_BERMAN = 'B',    // built-in multicomponent multisite (a)symmetric solid-solution model
-SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (CALPHAD)
+    SM_BERMAN = 'B',    // built-in multicomponent multisite (a)symmetric solid-solution model
+    SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (CALPHAD)
     SM_REDKIS = 'G', 	// built-in binary Guggenheim (Redlich-Kister) solid-solution model
     SM_MARGB = 'M',	// built-in binary Margules solid-solutions (subregular)
     SM_MARGT = 'T',	// built-in ternary Margules solid-solution (regular)
@@ -113,7 +113,7 @@ SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (
     SM_AQPITZ = 'Z',    // built-in Pitzer HMW model for aqueous electrolytes
     SM_AQMIX = 'C',     // built-in mixed-solvent aqueous Debye-Hueckel model (reserved)
     SM_AQELVIS = 'J',   // built-in modified extended UNIQUAC model (ELVIS) for aqueous electrolytes (reserved)
-    SM_IONEX = 'X',     // ion exchange (Donnan, Nikolskii) (reserved)
+    SM_DONNAN = 'X',     // ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
     SM_OTHER = 'O'  	// other built-in phase-specific models of non-ideal solutions (selected by phase name)
