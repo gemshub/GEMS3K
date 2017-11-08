@@ -212,7 +212,9 @@ enum PH_CLASSES{  // Possible values
     PH_LIQUID   = 'l',  // non-electrolyte liquid (melt)
     PH_SIMELT   = 'm',  // silicate (magmatic) melt or non-aqueous electrolyte
     PH_SORPTION = 'x',  // dilspersed solid with adsorption (ion exchange) in aqueous
-    PH_POLYEL = 'y',    // colloidal poly- (oligo)electrolyte
+    PH_POLYEL = 'y',    // colloidal poly- (oligo)electrolyte e.g. Donnan volume phase
+  PH_IONEX = 'i',     // ion exchange on permanent charge ligand, e.g. B&B Clay
+  PH_ADSORPT = 'z',   // surface complexation (adsorption) on hydrated amphoteric surface
     PH_SINCOND  = 's',  // condenced solid phase, also multicomponent
     PH_SINDIS   = 'd',  // dispersed solid phase, also multicomponent
     PH_HCARBL   = 'h'   // mixture of condensed hydrocarbons

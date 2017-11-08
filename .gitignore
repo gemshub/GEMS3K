@@ -1,3 +1,4 @@
+.directory
 GEMS3K/ms_multi_new.h
 GEMS3K/s_fgl_new.h
 gemcalc-build/Makefile.*
@@ -8,6 +9,11 @@ gemcalc-build/object_script.gemcalc.Release
 gemcalc-build/tp_test/CalcColumn-dbr-0-0001.dat.out
 gemcalc-build/gemcalc.app
 gemcalc-build/.qmake.*
+gemcalc-build/AfterCalcPhase.txt
+gemcalc-build/BeforeCalcPhase.txt
+gemcalc-build/CalcColumn_tp.out
+gemcalc-build/gemcalc
+gemcalc-build/ipmlog.txt
 gemcalc/gemcalc.pro.user
 gemcalc/gemcalc.pro.user.2.5pre1
 lib-gems3k/Makefile
