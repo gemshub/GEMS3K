@@ -408,6 +408,8 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
         case PH_PLASMA:
         case PH_SIMELT:
         case PH_HCARBL:
+        case PH_IONEX:
+        case PH_ADSORPT:
         case PH_SINCOND:
         case PH_SINDIS:
         case PH_LIQUID:
