@@ -1157,6 +1157,7 @@ void TMulti::ConvertDCC()
             case DC_SOL_MAJOR:
             case DC_SOL_MINDEP:
             case DC_SOL_MAJDEP:
+case DC_SCM_SPECIES:
                 DCCW = DC_SYMMETRIC;
                 break;
             case DC_AQ_PROTON:

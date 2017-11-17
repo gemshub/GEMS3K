@@ -190,6 +190,10 @@ DC_AQ_SURCOMP = 'K',     // Surface complex represented as aqueous species
     // Single-component phases:
     DC_SCP_CONDEN  = 'O',   // DC forming a single-component phase
 
+
+    // New surface complexation models (added 16.11.2017 by DK)
+    DC_SCM_SPECIES = 'U',
+
     // Special class codes for diffusing species etc. (reserved)
     DCaquoCATION   = 'c',
     DCaquoANION    = 'n',
@@ -423,6 +427,9 @@ typedef enum {  // Classes of dependent components DC used in ccDC code list
     DC_WSC_A4 = '9',        // Weak surface complex on site type 0,1,2,3,4 - B plane
     DC_IESC_A  = 'A',       // Strong exchange ion const-charge plane
     DC_IEWC_B  = 'B',       // Weak exchange ion const-charge plane
+
+    // New surface complexation models (added 16.11.2017 by DK)
+    DC_SCM_SPECIES = 'U',
 
     // Special class codes for diffusing species etc. (reserved)
     DCaquoCATION   = 'c',
