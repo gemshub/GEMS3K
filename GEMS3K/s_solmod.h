@@ -117,6 +117,7 @@ struct SolutionData {
     double *arlnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
     double *arlnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
     double *arlnCnft; ///< new: configurational terms adding to overall activity [Ls_]
+ double *arCTermt; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
 
     double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
     double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
@@ -182,7 +183,7 @@ class TSolMod
         double Gid, Hid, Sid, CPid, Vid, Aid, Uid;   ///< molar ideal mixing properties
         double Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq;   ///< molar Darken quadratic terms
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
-        double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF;    ///< Work pointers for lnGamma components
+        double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF, *CTerm; ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
@@ -2277,8 +2278,40 @@ class TGuggenheim: public TSolMod
 
 };
 
+// -------------------------- Site-balance-based SCMs ----------------------
+/// Subclass for the non-electrostatic SCM (single- and multisite)
+class TSCM_NEM: public TSolMod
+{
+            private:
 
+            public:
+
+                    /// Constructor
+                    TSCM_NEM( SolutionData *sd );
+
+                    /// Destructor
+                    ~TSCM_NEM();
+
+                    /// Calculates T,P corrected interaction parameters
+                    long int PTparam();
+
+                    /// Calculates (fictive) activity coefficients
+                    long int MixMod();
+
+                    /// Calculates EDL (Coulombic) terms
+                    long int EDLmod();
+
+                    /// Calculates excess properties
+                    long int ExcessProp( double *Zex );
+
+                    /// Calculates ideal mixing properties
+                    long int IdealProp( double *Zid );
+
+                    /// Calculates SCM configurational entropy
+                    double SCM_conf_entropy();
+
+};
 
 #endif
 
-/// _s_solmod_h
+/// end of _s_solmod_h

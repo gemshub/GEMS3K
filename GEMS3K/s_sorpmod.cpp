@@ -1,9 +1,12 @@
 //-------------------------------------------------------------------
 // $Id: s_sorption.cpp 725 2012-10-02 15:43:37Z kulik $
 //
-// Stub implementation of TSorpMod class for further development
+/// \file s_sorpmod.cpp
+/// Implementation of TSolMod derived classes
+/// for activity models of mixing in site-balance-based surface complexation phases
+///  (TSCM_NEM, TSCM_CCM, TSCM_DLM, TSCM_BSM, TSCM_TLM, TSCM_CDM, TSCM_ETLM, TSCM_BET)
 //
-// Copyright (C) 2010  D.Kulik, S.Dmitrieva, T.Wagner
+// Copyright (C) 2017  D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -26,10 +29,107 @@
 
 #include <cmath>
 #include <cstdio>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+using namespace std;
 #include "verror.h"
-//#include "s_fgl.h"
-//#include "s_sorption.h"
+#include "s_solmod.h"
 
+//=============================================================================================
+// Implementation of ideal mixing model for multicomponent solid solutions
+// References: Price 1989
+// also used with scripted models to provide ideal mixing term in the multi-site case
+// (c) DK/TW November 2010
+//=============================================================================================
+
+
+// Generic constructor for the TIdeal class
+TSCM_NEM::TSCM_NEM( SolutionData *sd ):
+                TSolMod( sd )
+{
+}
+
+TSCM_NEM::~TSCM_NEM()
+{
+}
+
+long int TSCM_NEM::PTparam()
+{
+   return 0;
+}
+
+
+/// Calculates ideal configurational terms in case of multi-site mixing
+/// to preserve values computed in Phase scripts.
+/// Only increments lnGamma[j] - may need to be cleaned before running MixMod
+long int TSCM_NEM::MixMod()
+{
+   long int retCode, j;
+   retCode = EDLmod();
+
+   if(!retCode)
+   {
+      for(j=0; j<NComp; j++)
+          lnGamma[j] += lnGamEDL[j];
+   }
+   return 0;
+}
+
+
+/// calculates adsorption monolayer phase excess properties
+long int TSCM_NEM::ExcessProp( double *Zex )
+{
+
+        // assignments (excess properties)
+        Zex[0] = 0.;
+        Zex[1] = 0.;
+        Zex[2] = 0.;
+        Zex[3] = 0.;
+        Zex[4] = 0.;
+        Zex[5] = 0.;
+        Zex[6] = 0.;
+
+        return 0;
+}
+
+
+/// calculates ideal mixing properties
+long int TSCM_NEM::IdealProp( double *Zid )
+{
+        Hid = 0.0;
+        CPid = 0.0;
+        Vid = 0.0;
+        Sid = SCM_conf_entropy();
+        Gid = Hid - Sid*Tk;
+        Aid = Gid - Vid*Pbar;
+        Uid = Hid - Vid*Pbar;
+
+        // assignments (ideal mixing properties)
+        Zid[0] = Gid;
+        Zid[1] = Hid;
+        Zid[2] = Sid;
+        Zid[3] = CPid;
+        Zid[4] = Vid;
+        Zid[5] = Aid;
+        Zid[6] = Uid;
+
+        return 0;
+}
+
+long int TSCM_NEM::EDLmod()
+{
+    long int retCode=0;
+
+    return retCode;
+}
+
+double TSCM_NEM::SCM_conf_entropy()
+{
+    double entropy = 0;
+
+    return entropy;
+}
 
 //--------------------- End of s_sorption.cpp ---------------------------
 

@@ -242,6 +242,8 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
               NonLogTermS = 2. - pm.XFA[k]/pm.XF[k] - pm.XF[k]/pm.XFA[k];
            }
            break;
+       case PH_ADSORPT: // 'z' phase - adsorption on site balances
+           break;
        default:
           break; // Phase class code error should be generated here!
     }
@@ -268,7 +270,8 @@ NonLogTermS = 0.0;
             case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:
             case DC_GAS_H2: case DC_GAS_N2:
                 break;
-            case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
+            case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR:
+            case DC_SOL_MINDEP: case DC_SOL_MAJDEP:               case DC_SCM_SPECIES:
             break;
                 // non-electrolyte condensed mixtures
             case DC_SCP_CONDEN: case DC_SUR_MINAL:
@@ -307,7 +310,7 @@ NonLogTermS = 0.0;
                case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
                                 break;
                    case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP:
-                   case DC_SOL_MAJDEP:
+                   case DC_SOL_MAJDEP:                   case DC_SCM_SPECIES:
                         break;
                case DC_SCP_CONDEN: case DC_SUR_MINAL:
                             break;
@@ -399,7 +402,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             switch( pm.PHC[k] )
             {
                 case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
-                case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
+                case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID: case PH_ADSORPT:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
                       sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
                     // new solution models (TW, DK 2007)
@@ -428,7 +431,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                 switch( pm.PHC[k] )
             {
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
-              case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
+              case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:  case PH_ADSORPT:
            	       SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
            	       SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
            	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
@@ -540,7 +543,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
              }
              goto END_LOOP;
              break;
-         case PH_LIQUID: case PH_SIMELT: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
+         case PH_LIQUID: case PH_SIMELT: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL: case PH_ADSORPT:
              if( pmpXFk > pm.DSM )
              {     // solid and liquid mixtures
                 switch( sMod[SPHAS_TYP] )
@@ -558,6 +561,9 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                     case SM_WILSLIQ: // Wilson model (multicomponent), 09.06.2007 (TW)
                         SolModActCoeff( k, sMod[SPHAS_TYP] );
                         break;
+                    case SM_SURCOM:   // new SCMs with site balances
+                        SolModActCoeff( k, sMod[SPHAS_TYP] );
+                    break;
                     default:
                         break;
                 }
@@ -711,8 +717,9 @@ END_LOOP:
            for( j=jb; j<je; j++ )
            {
              if( pm.DCC[j] == DC_AQ_SURCOMP )  // Workaround for aqueous surface complexes DK 22.07.09
-                pm.lnGam[j] = 0.0;
-             lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
+             {   pm.lnGam[j] = 0.0; lnGamG = 0.0; }
+             else
+                 lnGamG = PhaseSpecificGamma( j, jb, je, k, 1 );
              LnGam = pm.lnGam[j];
              if( fabs( lnGamG ) > 1e-9 )
             	LnGam += lnGamG;
@@ -720,7 +727,8 @@ END_LOOP:
              if( fabs( LnGam ) < 84. )   // before 26.02.08: < 42.
                     pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
              else pm.Gamma[j] = 1.0;
-
+             if( pm.DCC[j] == DC_AQ_SURCOMP )  // bugfix 18.11.2017 by DK for K aq species
+                  pm.Gamma[j] = 1.0;
              pm.F0[j] = DC_PrimalChemicalPotentialUpdate( j, k );
              pm.G[j] = pm.G0[j] + pm.fDQF[j] + pm.F0[j];
            }
@@ -782,6 +790,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     sd.arlnRcpt = pm.lnRcpt+jb; // End member ln activity coeffs
     sd.arlnExet = pm.lnExet+jb; // End member ln activity coeffs
     sd.arlnCnft = pm.lnCnft+jb; // End member ln activity coeffs
+    sd.arCTermt = pm.CTerms+jb; // End member coulombic terms
 
     sd.aphVOL = pm.FVOL+k;
     sd.DC_Codes = pm.DCC+jb;  // pointer to Dcomp class codes (added 02.05.2010 TW)
@@ -1008,6 +1017,13 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
                 break;
         }
         // case SM_USERDEF:
+        case SM_SURCOM:
+        {
+            TSCM_NEM* myPT = new TSCM_NEM( &sd );
+            myPT->GetPhaseName( pm.SF[k] );
+            mySM = (TSCM_NEM*)myPT;
+            break;
+        }
         default:
         	break;
     }
@@ -1026,7 +1042,7 @@ void TMulti::SolModParPT( long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:  // new ss models
+    case SM_BERMAN:  case SM_CEF:  /* new ss models */           case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models
@@ -1053,7 +1069,7 @@ void TMulti::SolModActCoeff( long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:
+        case SM_BERMAN:  case SM_CEF:   case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models
@@ -1091,7 +1107,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
         // case SM_USERDEF:  case SM_IDEAL:
         case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:
+        case SM_BERMAN:  case SM_CEF:   case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models
@@ -1143,7 +1159,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:
+        case SM_BERMAN:  case SM_CEF:   case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models

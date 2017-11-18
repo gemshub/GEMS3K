@@ -1241,6 +1241,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
              case DC_SOL_MAJOR:
              case DC_SOL_MINDEP:
              case DC_SOL_MAJDEP:
+case DC_SCM_SPECIES:
 
 	     case DC_PEL_CARRIER:
 	     case DC_SUR_MINAL:
@@ -1565,6 +1566,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
       case DC_GAS_N2:    DCcon =  pmm->Wx[xCH]*(pmm->P*bar_to_Pa);
                           break;
       case DC_SOL_IDEAL:
+case DC_SCM_SPECIES:
       case DC_SOL_MINOR:
       case DC_SOL_MAJOR: DCcon =  pmm->Wx[xCH];
                           break;
