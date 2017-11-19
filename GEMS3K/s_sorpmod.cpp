@@ -66,12 +66,13 @@ long int TSCM_NEM::PTparam()
 long int TSCM_NEM::MixMod()
 {
    long int retCode, j;
+
    retCode = EDLmod();
 
    if(!retCode)
    {
       for(j=0; j<NComp; j++)
-          lnGamma[j] += lnGamEDL[j];
+          lnGamma[j] += CTerm[j];
    }
    return 0;
 }
@@ -97,38 +98,54 @@ long int TSCM_NEM::ExcessProp( double *Zex )
 /// calculates ideal mixing properties
 long int TSCM_NEM::IdealProp( double *Zid )
 {
-        Hid = 0.0;
-        CPid = 0.0;
-        Vid = 0.0;
-        Sid = SCM_conf_entropy();
-        Gid = Hid - Sid*Tk;
-        Aid = Gid - Vid*Pbar;
-        Uid = Hid - Vid*Pbar;
 
-        // assignments (ideal mixing properties)
-        Zid[0] = Gid;
-        Zid[1] = Hid;
-        Zid[2] = Sid;
-        Zid[3] = CPid;
-        Zid[4] = Vid;
-        Zid[5] = Aid;
-        Zid[6] = Uid;
+    long int j;
 
-        return 0;
+     Hid = 0.0;
+     CPid = 0.0;
+     Vid = 0.0;
+     Sid = SCM_conf_entropy();
+     Gid = Hid - Sid*Tk;
+     Aid = Gid - Vid*Pbar;
+     Uid = Hid - Vid*Pbar;
+
+     // assignments (ideal mixing properties)
+     Zid[0] = Gid;
+     Zid[1] = Hid;
+     Zid[2] = Sid;
+     Zid[3] = CPid;
+     Zid[4] = Vid;
+     Zid[5] = Aid;
+     Zid[6] = Uid;
+
+     return 0;
 }
 
 long int TSCM_NEM::EDLmod()
 {
-    long int retCode=0;
+    long int j, retCode=0;
+
+    if(MixCode != MR_UNDEF_ )
+       return 1; // This should be 'N' code for NEM
+
+    for(j=0; j<NComp; j++)
+        CTerm[j] = 0.0;     // For NEM, Coulombic terms equal 0
 
     return retCode;
 }
 
 double TSCM_NEM::SCM_conf_entropy()
 {
-    double entropy = 0;
+    long int j;
+    double si = 0.0, Sid = 0.0;
 
-    return entropy;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Sid = (-1.)*R_CONST*si;
+    return Sid;
 }
 
 //--------------------- End of s_sorption.cpp ---------------------------
