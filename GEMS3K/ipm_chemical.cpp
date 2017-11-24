@@ -610,6 +610,7 @@ double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     case DC_AQ_ELECTRON:
     case DC_AQ_SPECIES:
 case DC_AQ_SURCOMP:
+case DC_SCM_SPECIES:
     case DC_GAS_COMP:
     case DC_GAS_H2O:
     case DC_GAS_CO2:
@@ -1081,6 +1082,7 @@ case DC_AQ_SURCOMP:
     case DC_SOL_MAJOR: // changed by DK on 4.12.2006
     case DC_SOL_MINDEP:
     case DC_SOL_MAJDEP:
+case DC_SCM_SPECIES:
         if( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_FLUID
             || pm.PHC[k] == PH_PLASMA )
         {
@@ -1157,6 +1159,7 @@ void TMulti::ConvertDCC()
             case DC_SOL_MAJOR:
             case DC_SOL_MINDEP:
             case DC_SOL_MAJDEP:
+case DC_SCM_SPECIES:                
                 DCCW = DC_SYMMETRIC;
                 break;
             case DC_AQ_PROTON:
@@ -1905,7 +1908,7 @@ else fRestore = true;
                   ln_ax_dual -= lnFugPur;
                   break;
              case DC_SCP_CONDEN: case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR:
-             case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
+             case DC_SOL_MINDEP: case DC_SOL_MAJDEP: case DC_SCM_SPECIES:
                   ln_ax_dual -= lnFugPur;
                   break;
              case DC_SUR_GROUP:
@@ -2108,6 +2111,7 @@ double TMulti::RaiseDC_Value( const long int j )
     case DC_AQ_SPECIES:
     case DC_AQ_SURCOMP:	RaiseZeroVal = pm.DFYaqM;
                                                 break;
+case DC_SCM_SPECIES:
     case DC_SOL_IDEAL:
     case DC_GAS_COMP:
     case DC_GAS_H2O:

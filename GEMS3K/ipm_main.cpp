@@ -1222,6 +1222,7 @@ void TMulti::DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k )
        case DC_GAS_N2:
        case DC_GAS_COMP:
        case DC_SOL_IDEAL:
+case DC_SCM_SPECIES:
             if( k >= 0 || pm.Y[j] < pm.DFYidM )
                   pm.Y[j] = pm.DFYidM;
              break;

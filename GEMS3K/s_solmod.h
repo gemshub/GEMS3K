@@ -34,17 +34,21 @@
 
 // re-declaration of enums below required for GEMS3K
 // dc_class_codes for fluids will be replaced by tp_codes
-enum fluid_mix_rules {  /// codes for mixing rules in EoS models (see m_phase.h)
-    MR_UNDEF_ = 'N',
-    MR_WAAL_ = 'W',
-    MR_CONST_ = 'C',
-    MR_TEMP_ = 'T',
-    MR_LJ_ = 'J',
-    MR_KW1_ = 'K',
-    MR_PITZ5_ = '5',
-    MR_PITZ6_ = '6',
-    MR_PITZ8_ = '8',
-    MR_B_RCPT_ = 'R'
+enum fluid_mix_rules {  /// Codes to identify specific mixing rules and temperature functions in EoS and activity models (see m_phase.h)
+    MR_UNDEF_ = 'N', // Default mixing rule or form of interaction parameter coefficients; NEM for adsorption 'A'
+    MR_WAAL_ = 'W',	// Basic Van der Waals mixing rules in cubic EoS models
+    MR_CONST_ = 'C',	// Constant one-term interaction parameter kij; CCM for sorption 'A'
+    MR_TEMP_ = 'T',	// Temperature-dependent one-term interaction parameter kij (Jaubert et al. 2005); TLM for adsorption 'A'
+    MR_LJ_ = 'J',    // Lemmon-Jacobsen mixing rule (Lemmon and Jacobsen, 1999)
+    MR_KW1_ = 'K',       // Kunz-Wagner mixing rule (Kunz and Wagner, 2007)
+    MR_PITZ5_ = '5',     // 5-term Pitzer model temperature dependence (TOUGHREACT variant)
+    MR_PITZ6_ = '6',     // 6-term Pitzer model temperature dependence (FREZCHEM variant)
+    MR_PITZ8_ = '8',     // 8-term Pitzer model temperature dependence
+    MR_B_RCPT_ = 'R',    // Use CEF reciprocal non-ideality terms in Berman multi-site ss model
+    MR_A_DLM_  = 'D',    // Diffuse-layer electrostatic model (DLM) for adsorption 'A'
+    MR_A_BSM_  = 'B',    // Basic Stern electrostatic model (BSM) for adsorption 'A'
+    MR_A_CDLM_  = 'M',    // CD-MUSIC (3-layer) electrostatic model (DLM) for adsorption 'A'
+    MR_A_ETLM_  = 'E'     // Extended TLM electrostatic model (ETLM) for adsorption 'A'
 };
 
 enum dc_class_codes {  /// codes for fluid types in EoS models (see v_mod.h)
@@ -117,6 +121,7 @@ struct SolutionData {
     double *arlnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
     double *arlnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
     double *arlnCnft; ///< new: configurational terms adding to overall activity [Ls_]
+ double *arCTermt; ///< new: Coulombic terms adding to overall activity coefficients [Ls_]
 
     double *arVol;      ///< molar volumes of end-members (species) cm3/mol ->NSpecies
     double *aphVOL;     ///< phase volumes, cm3/mol (now obsolete) !!!!!!! check usage!
@@ -129,7 +134,7 @@ class TSolMod
 {
 	protected:
         char ModCode;   ///< Code of the mixing model
-        char MixCode;	///< Code for specific EoS mixing rules
+        char MixCode;	///< Code for specific EoS mixing rules or site-balance based electrostatic SCMs
                 char *DC_Codes; ///< Class codes of end members (species) ->NComp
 
         char PhaseName[MAXPHASENAME+1];    ///< Phase name (for specific built-in models)
@@ -182,7 +187,7 @@ class TSolMod
         double Gid, Hid, Sid, CPid, Vid, Aid, Uid;   ///< molar ideal mixing properties
         double Gdq, Hdq, Sdq, CPdq, Vdq, Adq, Udq;   ///< molar Darken quadratic terms
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
-        double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF;    ///< Work pointers for lnGamma components
+        double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF, *CTerm; ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
@@ -2277,8 +2282,40 @@ class TGuggenheim: public TSolMod
 
 };
 
+// -------------------------- Site-balance-based SCMs ----------------------
+/// Subclass for the non-electrostatic SCM (single- and multisite)
+class TSCM_NEM: public TSolMod
+{
+            private:
 
+            public:
+
+                    /// Constructor
+                    TSCM_NEM( SolutionData *sd );
+
+                    /// Destructor
+                    ~TSCM_NEM();
+
+                    /// Calculates T,P corrected interaction parameters
+                    long int PTparam();
+
+                    /// Calculates (fictive) activity coefficients
+                    long int MixMod();
+
+                    /// Calculates EDL (Coulombic) terms
+                    long int EDLmod();
+
+                    /// Calculates excess properties
+                    long int ExcessProp( double *Zex );
+
+                    /// Calculates ideal mixing properties
+                    long int IdealProp( double *Zid );
+
+                    /// Calculates SCM configurational entropy
+                    double SCM_conf_entropy();
+
+};
 
 #endif
 
-/// _s_solmod_h
+/// end of _s_solmod_h

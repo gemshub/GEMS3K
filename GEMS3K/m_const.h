@@ -84,8 +84,8 @@ KINR_MOD,  /// see also enum kinmet_controls
     //  Possible values: (SPHAS_TYP)
     // Codes to identify the mixing models used (during IPM iterations)
     SM_IDEAL =  'I',	// ideal solution or single-component phase
-SM_BERMAN = 'B',    // built-in multicomponent multisite (a)symmetric solid-solution model
-SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (CALPHAD)
+    SM_BERMAN = 'B',    // built-in multicomponent multisite (a)symmetric solid-solution model
+    SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (CALPHAD)
     SM_REDKIS = 'G', 	// built-in binary Guggenheim (Redlich-Kister) solid-solution model
     SM_MARGB = 'M',	// built-in binary Margules solid-solutions (subregular)
     SM_MARGT = 'T',	// built-in ternary Margules solid-solution (regular)
@@ -113,7 +113,7 @@ SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (
     SM_AQPITZ = 'Z',    // built-in Pitzer HMW model for aqueous electrolytes
     SM_AQMIX = 'C',     // built-in mixed-solvent aqueous Debye-Hueckel model (reserved)
     SM_AQELVIS = 'J',   // built-in modified extended UNIQUAC model (ELVIS) for aqueous electrolytes (reserved)
-    SM_IONEX = 'X',     // ion exchange (Donnan, Nikolskii) (reserved)
+    SM_DONNAN = 'X',     // ion exchange (Donnan, Nikolskii) (reserved)
     SM_SURCOM = 'A',	// models of surface complexation at solid-aqueous interface
     SM_USERDEF = 'U',	// user-defined mixing model (scripts in Phase record)
     SM_OTHER = 'O'  	// other built-in phase-specific models of non-ideal solutions (selected by phase name)
@@ -190,6 +190,10 @@ DC_AQ_SURCOMP = 'K',     // Surface complex represented as aqueous species
     // Single-component phases:
     DC_SCP_CONDEN  = 'O',   // DC forming a single-component phase
 
+
+    // New surface complexation models (added 16.11.2017 by DK)
+    DC_SCM_SPECIES = 'U',
+
     // Special class codes for diffusing species etc. (reserved)
     DCaquoCATION   = 'c',
     DCaquoANION    = 'n',
@@ -212,7 +216,9 @@ enum PH_CLASSES{  // Possible values
     PH_LIQUID   = 'l',  // non-electrolyte liquid (melt)
     PH_SIMELT   = 'm',  // silicate (magmatic) melt or non-aqueous electrolyte
     PH_SORPTION = 'x',  // dilspersed solid with adsorption (ion exchange) in aqueous
-    PH_POLYEL = 'y',    // colloidal poly- (oligo)electrolyte
+    PH_POLYEL = 'y',    // colloidal poly- (oligo)electrolyte e.g. Donnan volume phase
+  PH_IONEX = 'i',     // ion exchange on permanent charge ligand, e.g. B&B Clay
+  PH_ADSORPT = 'z',   // surface complexation (adsorption) on hydrated amphoteric surface
     PH_SINCOND  = 's',  // condenced solid phase, also multicomponent
     PH_SINDIS   = 'd',  // dispersed solid phase, also multicomponent
     PH_HCARBL   = 'h'   // mixture of condensed hydrocarbons
@@ -421,6 +427,9 @@ typedef enum {  // Classes of dependent components DC used in ccDC code list
     DC_WSC_A4 = '9',        // Weak surface complex on site type 0,1,2,3,4 - B plane
     DC_IESC_A  = 'A',       // Strong exchange ion const-charge plane
     DC_IEWC_B  = 'B',       // Weak exchange ion const-charge plane
+
+    // New surface complexation models (added 16.11.2017 by DK)
+    DC_SCM_SPECIES = 'U',
 
     // Special class codes for diffusing species etc. (reserved)
     DCaquoCATION   = 'c',

@@ -141,6 +141,7 @@ void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA
                         pm.Y_la[j] += log10( pm.Pc );
                     break;
                case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
+                       case DC_SCM_SPECIES:
                     pm.Y_la[j] = ln_to_lg * ( Muj - pm.G0[j] );
                     break;
                case DC_SUR_GROUP:
@@ -231,6 +232,7 @@ void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA
         case DC_SOL_MAJOR:
         case DC_SOL_MINDEP:
         case DC_SOL_MAJDEP:
+case DC_SCM_SPECIES:
             pm.FVOL[k] += pm.Vol[j]*X[j];
             pm.Y_la[j] = ln_to_lg * ( Muj - pm.G0[j] );
             if( pm.LO )
@@ -408,6 +410,8 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
         case PH_PLASMA:
         case PH_SIMELT:
         case PH_HCARBL:
+        case PH_IONEX:
+        case PH_ADSORPT:
         case PH_SINCOND:
         case PH_SINDIS:
         case PH_LIQUID:
