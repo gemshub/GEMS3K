@@ -226,7 +226,8 @@ TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, lo
            break;
       case PH_GASMIX:  case PH_FLUID:   case PH_PLASMA:   case PH_SIMELT:
       case PH_HCARBL:  case PH_SINCOND:  case PH_SINDIS:  case PH_LIQUID:
-           break;
+      case PH_IONEX:
+           break;  
       case PH_POLYEL:
       case PH_SORPTION: // only sorbent end-members!
            if( pm.XF[k] && pm.XFA[k] )
@@ -403,6 +404,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             {
                 case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
                 case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID: case PH_ADSORPT:
+                case PH_IONEX:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
                       sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
                     // new solution models (TW, DK 2007)
@@ -432,6 +434,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             {
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
               case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:  case PH_ADSORPT:
+              case PH_IONEX:
            	       SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
            	       SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
            	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
@@ -543,7 +546,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
              }
              goto END_LOOP;
              break;
-         case PH_LIQUID: case PH_SIMELT: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL: case PH_ADSORPT:
+         case PH_LIQUID: case PH_SIMELT: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
+         case PH_ADSORPT: case PH_IONEX:
              if( pmpXFk > pm.DSM )
              {     // solid and liquid mixtures
                 switch( sMod[SPHAS_TYP] )
@@ -628,6 +632,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                   case PH_SINDIS:
                   case PH_HCARBL:
                   case PH_SIMELT:
+                  case PH_IONEX:
+                  case PH_ADSORPT:
                   case PH_GASMIX:
                   case PH_PLASMA:
                   case PH_FLUID:  // How to pull this stuff out of the script (pointers to integral phase properties added)
@@ -658,6 +664,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
              case PH_SIMELT:
              case PH_SINCOND:
              case PH_SINDIS:
+             case PH_IONEX:
+             case PH_ADSORPT:
              case PH_HCARBL:  // solid and liquid mixtures
                  if( !(pmpXFk > pm.DSM) )
                      goto END_LOOP;

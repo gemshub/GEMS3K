@@ -69,7 +69,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
              break;  // skip for this phase
          switch( pm.PHC[k] )
          {
-           //   case PH_AQUEL:
+           //   case PH_AQUEL: case PH_ADSORPT: case PH_IONEX:
               case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
            // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
                 KM_Create( jb, k, kc, kp, kf, ka, ks, kd, ku, ki, kMod, jphl, jlphc );
@@ -91,7 +91,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
            break;  // skip for this phase
         switch( pm.PHC[k] )
         {
-         //   case PH_AQUEL:
+         //   case PH_AQUEL: case PH_ADSORPT: case PH_IONEX:
              case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
          // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
              // Correction for T,P
@@ -118,7 +118,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
            break;  // skip for this phase
        switch( pm.PHC[k] )
         {
-        //   case PH_AQUEL:
+        //   case PH_AQUEL: case PH_ADSORPT: case PH_IONEX:
             case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: // case PH_HCARBL:
         // case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
         // Correction for T,P
