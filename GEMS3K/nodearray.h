@@ -170,6 +170,9 @@ public:
 
   static TNodeArray* na;   ///< static pointer to this class
 
+  TNode getCalcNode()
+  { return calcNode;}
+
   DATACH* pCSD() const  /// Get the pointer to chemical system definition data structure
   {  return calcNode.pCSD();   }
 
@@ -393,6 +396,10 @@ public:
 
     /// Calls GEM IPM calculation for a node with absolute index ndx
     long int RunGEM( TNode& wrkNode,  long int  iNode, long int Mode, DATABRPTR* nodeArray );
+    
+    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1) 
+    /// in a loop with an optional openmp parallelization
+    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
 
     /// Calls GEM IPM for one node with three indexes (along x,y,z)
     long int  RunGEM( TNode& wrkNode, long int indN, long int indM, long int indK,

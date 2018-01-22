@@ -93,10 +93,10 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
               iRet = false;
           }
 
-          #pragma omp critical
-          {
-             cout << n << "-thread did index: " << ii << endl;
-          }
+          //#pragma omp critical
+          //{
+          //   cout << n << "-thread did index: " << ii << endl;
+          //}
        }
 
    }
@@ -501,6 +501,24 @@ long int retCode;
    MoveWorkNodeToArray( wrkNode, iNode, anNodes, nodeArray );
 
    return retCode;
+}
+
+void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes )
+{
+#ifdef useOMP  
+    #pragma omp parallel
+#endif
+    {
+        TNode workNode(na->getCalcNode());
+#ifdef useOMP  
+    #pragma omp for
+#endif
+        for (long int node=0;node<nNodes;node++)
+        {
+            if (nodeFlags[node])
+                retCodes[node] = na->RunGEM(workNode, node, Mode, nodeArray);
+        }
+    }
 }
 
 void  TNodeArray::checkNodeArray(
