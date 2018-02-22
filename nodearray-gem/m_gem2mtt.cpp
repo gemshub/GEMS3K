@@ -27,6 +27,9 @@
 
 #else
 
+#ifdef useOMP
+#include <omp.h>
+#endif
 #include <ctime>
 #include "m_gem2mt.h"
 #include "nodearray.h"
@@ -96,7 +99,7 @@ void  TGEM2MT::NewNodeArray()
  if( mtp->PsTPai != S_OFF )
     gen_TPval();
 
- na->MakeNodeStructures( mtp->nICb, mtp->nDCb,  mtp->nPHb,
+ na->InitCalcNodeStructures( mtp->nICb, mtp->nDCb,  mtp->nPHb,
       mtp->xIC, mtp->xDC, mtp->xPH, mtp->PsTPpath != S_OFF,
       mtp->Tval, mtp->Pval,
       mtp->nTai,  mtp->nPai, mtp->Tai[3], mtp->Pai[3]  );
@@ -135,20 +138,17 @@ void  TGEM2MT::NewNodeArray()
          if( mtp->PsMode == RMT_MODE_S )
          {
              // empty current node
-             na->MoveWorkNodeToArray( q, mtp->nC,  na->pNodT0());
-             // set up inital data
-             DATABR* data_BR = na->pCNode();
+             DATABR* data_BR = na->reallocDBR( q, mtp->nC,  na->pNodT0());
              data_BR->TK = TMulti::sm->GetPM()->TCc+C_to_K; //25
              data_BR->P = TMulti::sm->GetPM()->Pc*bar_to_Pa; //1
              for(long int i1=0; i1<mtp->nICb; i1++ )
                data_BR->bIC[i1] = TMulti::sm->GetPM()->B[ mtp->xIC[i1] ];
          }
          else // Save databr
-             na->packDataBr();
-         //
-         na->setNodeHandle( q );
-         na->MoveWorkNodeToArray( q, mtp->nC,  na->pNodT0());
-         na->CopyWorkNodeFromArray( q, mtp->nC,  na->pNodT0() );
+         {
+             na->SaveToNode( q, mtp->nC,  na->pNodT0());
+         }
+         na->pNodT0()[q]->NodeHandle = q;
      }
    } // q
    mt_next();      // Generate work values for the next EqStat rkey
@@ -282,125 +282,6 @@ DIFFERENT:
        return nSetAIA;
 }
 
-//   Here we do a GEM calculation in box ii
-//   mode can be NEED_GEM_PIA (smart algorithm) or NEED_GEM_AIA
-//   (forced AIA, usually used at the beginning of coupled run)
-//   return code   true   Ok
-//                 false  Error in GEMipm calculation part
-//
-bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
-{
-   long int Mode, ic, RetCode=OK_GEM_AIA;
-   bool NeedGEM = false;
-   bool iRet = true;
-   double dc; // difference (decrement) to concentration/amount
-   //  Getting direct access to TNodeArray class data
-
-   DATACH* CH = na->pCSD();       // DataCH structure
-   DATABRPTR* C0 = na->pNodT0();  // nodes at previous time point
-   DATABRPTR* C1 = na->pNodT1();  // nodes at current time point
-   bool* iaN = na->piaNode();     // indicators for IA in the nodes
-
-//   node0_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
-//   node0_dt( ii ) = mtp->dTau;
-   node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
-   node1_dt( ii ) = mtp->dTau;
-
-   if(mtp->PsSIA == S_OFF )
-       iaN[ii] = true;
-   else
-      iaN[ii] = false;
-
-   mtp->qc = ii;
-
-   if(mtp->PsSIA == S_OFF )
-        NeedGEM = true;
-   else
-     {
-         C1[ii]->IterDone = 0;
-         NeedGEM = false;
-     }
-
-   // Here we compare this node for current time and for previous time - works for AIA and PIA
-   for( ic=0; ic < CH->nICb; ic++)    // do we check charge here?
-   {     // It has to be checked on minimal allowed c0 value
-                 if( C1[ii]->bIC[ic] < mtp->cez )
-             { // to prevent loss of Independent Component
-                         C1[ii]->bIC[ic] = mtp->cez;
-                 }
-                 dc = C0[ii]->bIC[ic] - C1[ii]->bIC[ic];
-                 if( fabs( dc ) > min( mtp->cdv, (C1[ii]->bIC[ic] * 1e-3 )))
-                         NeedGEM = true;  // we still need to recalculate equilibrium
-                          // in this node because its vector b has changed
-    }
-    C1[ii]->bIC[CH->nICb-1] = 0.;   // zeroing charge off in bulk composition
-//     NeedGEM = true;
-    if( mode == NEED_GEM_SIA )
-    {   // smart algorithm
-         if( iaN[ii] == true )
-         {
-                 Mode = NEED_GEM_AIA;
-         }
-         else {
-                 Mode = NEED_GEM_SIA;
-                 if( mtp->PsSIA == S_ON )   // force loading of primal solution into GEMIPM
-                         Mode *= -1;            // othervise use internal (old) primal solution
-         }
-     }
-     else Mode = NEED_GEM_AIA;
-
-    if( NeedGEM )
-     {
-        RetCode = na->RunGEM( ii, Mode );
-        // Returns GEMIPM2 calculation time in sec after the last call to GEM_run()
-        mtp->TimeGEM +=	na->GEM_CalcTime();
-        // checking RetCode from GEM IPM calculation
-        if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
-        {
-          char buf[200];
-          gstring err_msg;
-          iRet = false;
-
-          sprintf( buf, " Node= %-8ld  Step= %-8ld\n", ii, mtp->ct );
-          err_msg = buf;
-          switch( RetCode )
-          {
-                case BAD_GEM_AIA:
-                      err_msg += "Bad GEM result using LPP AIA";
-                      break;
-                case  ERR_GEM_AIA:
-                      err_msg += "GEM calculation error using LPP AIA";
-                      break;
-                case  BAD_GEM_SIA:
-                      err_msg += "Bad GEM result using SIA";
-                      break;
-                case  ERR_GEM_SIA:
-                      err_msg += "GEM calculation error using SIA";
-                      break;
-               case  T_ERROR_GEM:  err_msg +=  "Terminal error in GEMS3K module";
-          }
-          if( mtp->PsMO != S_OFF && diffile )
-          {  fprintf( diffile, "\nError reported from GEMS3K module\n%s\n",
-                    err_msg.c_str() );
-          }
-#ifndef IPMGEMPLUGIN
-          else
-          {  err_msg += "\n Continue?";
-             if( !vfQuestion( window(),
-                 "Error reported from GEMIPM2 module",err_msg.c_str() ))
-                     Error("Error reported from GEMIPM2 module",
-                     "Process stopped by the user");
-          }
-#endif
-        }
-     }
-     else { // GEM calculation for this node not needed
-//       C0[ii]->IterDone = 0;
-         C1[ii]->IterDone = 0; // number of GEMIPM iterations is set to 0
-     }
-    return iRet;
-}
-
 //   Here we call a loop on GEM calculations over nodes
 //   parallelization should affect this loop only
 //   mode can be NEED_GEM_PIA (smart algorithm) or NEED_GEM_AIA
@@ -408,23 +289,46 @@ bool TGEM2MT::CalcIPM_Node( char mode, long int ii, FILE* diffile )
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* diffile )
+bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* updiffile )
 {
     bool iRet = true;
+
+    FILE* diffile = NULL;
+    if( mtp->PsMO != S_OFF )
+      diffile = updiffile;
 
     start_node = max( start_node, 0L );
     end_node = min( end_node, mtp->nC-1 );
 
-   for( long int ii = start_node; ii<= end_node; ii++) // node iteration
-   {
+    for( long int ii = start_node; ii<= end_node; ii++) // node iteration
+    {
+      node1_Tm( ii ) = mtp->cTau;     // set time and time step (for TKinMet)
+      node1_dt( ii ) = mtp->dTau;
+   }
 
-       if( !CalcIPM_Node(  mode, ii,  diffile ) )
-       iRet = false;
-   }  // ii   end of node iteration loop
+#ifdef useOMP
+   double  t0 = omp_get_wtime();
+#else
+   clock_t t_start, t_end;
+   t_start = clock();
+#endif
+
+
+   na->CalcIPM_List( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), start_node, end_node, diffile );
+
+#ifdef useOMP
+   double  t1 = omp_get_wtime();
+   mtp->TimeGEM += t1-t0;
+#else
+   double clc_sec = CLOCKS_PER_SEC;
+   t_end = clock();
+   mtp->TimeGEM = ( t_end- t_start )/clc_sec;
+#endif
 
    // Here dt can be analyzed over nodes - if changed anywhere by TKinMet
    //   then the overall time step should be reduced and the MT loop started all over
 
+   mtp->qc = end_node;
    return iRet;
 }
 
@@ -456,7 +360,7 @@ void TGEM2MT::MassTransParticleStart()
     mtp->cTau = mtp->Tau[START_];
     // mtp->cTau = 0;
     mtp->ct = 0;
-    pa->setUpCounters();
+    pa_mt->setUpCounters();
 
 }
 
@@ -468,7 +372,7 @@ void TGEM2MT::MassTransParticleStep( bool CompMode )
    mtp->oTau = mtp->cTau;
    mtp->cTau += mtp->dTau;
 
-   pa->GEMPARTRACK( mtp->PsMode, CompMode, mtp->oTau, mtp->cTau );
+   pa_mt->GEMPARTRACK( mtp->PsMode, CompMode, mtp->oTau, mtp->cTau );
 }
 
 
@@ -628,12 +532,16 @@ if( !diffile)
 }
 
 // time scales testing
+#ifdef useOMP
+double  t0 = omp_get_wtime();
+#else
 clock_t t_start, t_end;
-clock_t outp_time = (clock_t)0;
 t_start = clock();
-mtp->TimeGEM = 0.0; 
+#endif
+double otime = 0.;
+mtp->TimeGEM = 0.0;
 
-   if( mtp->iStat != AS_RUN  )
+   if( mtp->iStat!= AS_RUN  )
    {  switch( mtp->PsMode )
      {
        case RMT_MODE_A:   // A: 1D advection (numerical) coupled FMT scoping model
@@ -660,10 +568,10 @@ mtp->TimeGEM = 0.0;
       CalcMGPdata();
 
 if( mtp->PsMO != S_OFF )
-  outp_time += PrintPoint( 2, diffile, logfile, ph_file );
+  otime += PrintPoint( 2, diffile, logfile, ph_file );
 
 if( mtp->PsVTK != S_OFF )
-   outp_time += PrintPoint( 0 );
+   otime += PrintPoint( 0 );
 
 
 #ifndef IPMGEMPLUGIN
@@ -732,7 +640,7 @@ char buf[300];
         CalcIPM( mode, nStart, nEnd, diffile );
 
 if( mtp->PsMO != S_OFF )
-  outp_time += PrintPoint( 3, diffile, logfile, ph_file );
+  otime += PrintPoint( 3, diffile, logfile, ph_file );
 
           // Here one has to compare old and new equilibrium phase assemblage
           // and pH/pe in all nodes and decide if the time step was Ok or it
@@ -748,29 +656,35 @@ if( mtp->PsMO != S_OFF )
           copyNodeArrays();
           // copy particle array ?
           if( mtp->PsMode == RMT_MODE_W )
-            pa->CopyfromT1toT0();
+            pa_mt->CopyfromT1toT0();
 
           if( mtp->PsMode == RMT_MODE_F )
              CalcMGPdata();
 
 if( mtp->PsMO != S_OFF )
-   outp_time += PrintPoint( 4, diffile, logfile, ph_file );
+   otime += PrintPoint( 4, diffile, logfile, ph_file );
 
 if( mtp->PsVTK != S_OFF )
-   outp_time += PrintPoint( 0 );
+   otime += PrintPoint( 0 );
 
  } while ( mtp->cTau < mtp->Tau[STOP_] && mtp->ct < mtp->ntM );
 
 
-t_end = clock();
-double dtime = ( t_end- t_start );
+#ifdef useOMP
+double  t1 = omp_get_wtime();
+double dtime = ( t1- t0 );
+#else
 double clc_sec = CLOCKS_PER_SEC;
+t_end = clock();
+double dtime = ( t_end- t_start )/clc_sec;
+#endif
+
 
 if( mtp->PsMO != S_OFF )
 {
 fprintf( diffile,
   "\nTotal time of calculation %lg s;  Time of output %lg s;  Whole run time %lg s;  Pure GEM run time %lg s\n",
-    (dtime-outp_time)/clc_sec,  outp_time/clc_sec, dtime/clc_sec, mtp->TimeGEM );
+    (dtime-otime),  otime, dtime, mtp->TimeGEM );
 fclose( logfile );
 fclose( ph_file );
 fclose( diffile );
@@ -789,11 +703,17 @@ fclose( diffile );
 
 // plotting the record -------------------------------------------------
 //Added one point to graph
-clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE* ph_file )
+double TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE* ph_file )
 {
     long int evrt =10;
+
+#ifdef useOMP
+    double  t0 = omp_get_wtime();
+#else
     clock_t t_out, t_out2;
     t_out = clock();
+#endif
+
 
     // from BoxEqStatesUpdate (BoxFlux ) not tested and used
     if( nPoint == 1 )
@@ -811,7 +731,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
    {
      na->logDiffsIC( diffile, mtp->ct, mtp->cTau, mtp->nC, 1 );
      na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, 1 );
-     na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau, mtp->nC, 1 );
+     na->logProfilePhMol( ph_file, pa_mt, mtp->ct, mtp->cTau, mtp->nC, 1 );
    }
 
    if( nPoint == 3 )
@@ -822,7 +742,7 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
    if( nPoint == 4 )
    {
        na->logProfileAqIC( logfile, mtp->ct, mtp->cTau, mtp->nC, evrt );
-       na->logProfilePhMol( ph_file, mtp->ct, mtp->cTau, mtp->nC, evrt );
+       na->logProfilePhMol( ph_file, pa_mt, mtp->ct, mtp->cTau, mtp->nC, evrt );
    }
 
    // write to VTK
@@ -847,8 +767,14 @@ clock_t TGEM2MT::PrintPoint( long int nPoint, FILE* diffile, FILE* logfile, FILE
        na->databr_to_vtk(out_br, nameVTK.c_str(), mtp->cTau, mtp->ct, mtp->nVTKfld, mtp->xVTKfld );
    }
 
+#ifdef useOMP
+   double  t1 = omp_get_wtime();
+   return ( t1- t0 );
+#else
+   double clc_sec = CLOCKS_PER_SEC;
    t_out2 = clock();
-   return ( t_out2 -  t_out);
+   return ( t_out2 -  t_out)/clc_sec;
+#endif
 
 }
 

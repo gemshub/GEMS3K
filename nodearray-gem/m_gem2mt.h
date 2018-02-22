@@ -360,7 +360,7 @@ class TGEM2MT
 #endif
 
   TNodeArray* na;       // pointer to nodearray class instance
-  TParticleArray* pa;       // pointer to TParticleArray class instance
+  TParticleArray* pa_mt;       // pointer to TParticleArray class instance
 
     gstring pathVTK;
     gstring nameVTK;
@@ -399,8 +399,7 @@ protected:
     long int CheckPIAinNodes1D( char mode,
               long int start_node = 0, long int end_node = 1000 );
 
-     bool CalcIPM_Node( char mode, long int ii, FILE* diffile = NULL);
-     bool  CalcIPM( char mode, long int start_node = 0,
+    bool  CalcIPM( char mode, long int start_node = 0,
          long int end_node = 1000, FILE* diffile = NULL );
 
     void  MassTransAdvecStart();
@@ -447,7 +446,7 @@ protected:
     void MIDEX( long int j, double t, double h );
     void INTEG( double eps, double& step, double t_begin, double t_end );
 
-    clock_t PrintPoint( long int nPoint, FILE* diffile = NULL, FILE* logfile = NULL, FILE* ph_file = NULL);
+    double PrintPoint( long int nPoint, FILE* diffile = NULL, FILE* logfile = NULL, FILE* ph_file = NULL);
     
 public:
 

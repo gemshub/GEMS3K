@@ -234,12 +234,12 @@ class TSolMod
 			return 0;
 		};
 
-		virtual long int ExcessProp( double *Zex )
+        virtual long int ExcessProp( double */*Zex*/ )
 		{
 			return 0;
 		};
 
-		virtual long int IdealProp( double *Zid )
+        virtual long int IdealProp( double */*Zid*/ )
 		{
 			return 0;
 		};

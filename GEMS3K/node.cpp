@@ -110,7 +110,7 @@ double TNode::Get_Psat(double Tk)
 
 // Checks if given temperature TK and pressure P fit within the interpolation
 // intervals of the DATACH lookup arrays (returns true) or not (returns false)
-bool  TNode::check_TP( double TK, double P )
+bool  TNode::check_TP( double TK, double P ) const
 {
    bool okT = true, okP = true;
    double T_=TK, P_=P;
@@ -382,12 +382,7 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //   0: OK; 1: GEM IPM read file error; -1: System error (e.g. memory allocation)
 //
 //-------------------------------------------------------------------
-long int  TNode::GEM_init( const char* ipmfiles_lst_name,
-#ifdef IPMGEMPLUGIN
-                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
-#else
-                          const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
-#endif
+long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
 
    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
@@ -512,16 +507,7 @@ if( binary_f )
         curPath = "";
         dbr_file_name = dbr_file;
 
-   // Reading DBR_DAT files from dbrfiles_lst_name
-   // only for TNodeArray class
-          if(  dbrfiles_lst_name )
-              InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
-          else
-              if( nNodes() ==1 )
-                setNodeArray( 0 , 0  );
-             else // undefined TNodeArray
-                  Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
-   return 0;
+    return 0;
 
 #ifdef IPMGEMPLUGIN
     }
@@ -548,7 +534,7 @@ if( binary_f )
 //}
 
 #ifdef IPMGEMPLUGIN
-void *TNode::get_ptrTSolMod(int xPH)
+void *TNode::get_ptrTSolMod(int xPH) const
 {
     return multi->pTSolMod(xPH);
 }
@@ -556,7 +542,7 @@ void *TNode::get_ptrTSolMod(int xPH)
 
 //Returns DCH index of IC given the IC Name string (null-terminated)
 // or -1 if no such name was found in the DATACH IC name list
-long int TNode::IC_name_to_xCH( const char *Name )
+long int TNode::IC_name_to_xCH( const char *Name ) const
 {
   long int ii, len = strlen( Name );
   len =  min(len,MaxICN);
@@ -570,7 +556,7 @@ long int TNode::IC_name_to_xCH( const char *Name )
 
 // Returns DCH index of DC given the DC Name string
 // or -1 if no such name was found in the DATACH DC name list
- long int TNode::DC_name_to_xCH( const char *Name )
+ long int TNode::DC_name_to_xCH( const char *Name ) const
  {
   long int ii, len = strlen( Name );
   len =  min(len,MaxDCN);
@@ -584,7 +570,7 @@ long int TNode::IC_name_to_xCH( const char *Name )
 
 // Returns DCH index of Phase given the Phase Name string
 // or -1 if no such name was found in the DATACH Phase name list
-long int TNode::Ph_name_to_xCH( const char *Name )
+long int TNode::Ph_name_to_xCH( const char *Name ) const
 {
   long int ii, len = strlen( Name );
   len =  min(len,MaxPHN);
@@ -598,7 +584,7 @@ long int TNode::Ph_name_to_xCH( const char *Name )
 
 // Converts the IC DCH index into the IC DBR index
 // or returns -1 if this IC is not used in the data bridge
-long int TNode::IC_xCH_to_xDB( const long int xCH )
+long int TNode::IC_xCH_to_xDB( const long int xCH ) const
 {
   for(long int ii = 0; ii<CSD->nICb; ii++ )
        if( CSD->xic[ii] == xCH )
@@ -608,7 +594,7 @@ long int TNode::IC_xCH_to_xDB( const long int xCH )
 
 // Converts the DC DCH index into the DC DBR index
 // or returns -1 if this DC is not used in the data bridge
-long int TNode::DC_xCH_to_xDB( const long int xCH )
+long int TNode::DC_xCH_to_xDB( const long int xCH ) const
 {
   for(long int ii = 0; ii<CSD->nDCb; ii++ )
        if( CSD->xdc[ii] == xCH )
@@ -618,7 +604,7 @@ long int TNode::DC_xCH_to_xDB( const long int xCH )
 
 // Converts the Phase DCH index into the Phase DBR index
 // or returns -1 if this Phase is not used in the data bridge
-long int TNode::Ph_xCH_to_xDB( const long int xCH )
+long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 {
   for(long int ii = 0; ii<CSD->nPHb; ii++ )
        if( CSD->xph[ii] == xCH )
@@ -627,7 +613,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 }
 
 // Returns the DCH index of the first DC belonging to the phase with DCH index Phx
- long int  TNode::Phx_to_DCx( const long int Phx )
+ long int  TNode::Phx_to_DCx( const long int Phx ) const
  {
    long int k, DCx = 0;
    for( k=0; k<CSD->nPHb; k++ )
@@ -640,7 +626,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
  }
 
  // Returns the DCH index of the Phase to which the Dependent Component with index xCH belongs
-  long int  TNode::DCtoPh_DCH( const long int xdc )
+  long int  TNode::DCtoPh_DCH( const long int xdc ) const
   {
     long int k, DCx = 0;
     for( k=0; k<CSD->nPHb; k++ )
@@ -655,7 +641,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
  // Returns the DCH index of the first DC belonging to the phase with DCH index Phx,
  // plus returns through the nDCinPh (reference) parameter the number of DCs included into this phase
- long int  TNode::PhtoDC_DCH( const long int Phx, long int& nDCinPh )
+ long int  TNode::PhtoDC_DCH( const long int Phx, long int& nDCinPh ) const
  {
    long int k, DCx = 0;
    for( k=0; k<CSD->nPHb; k++ )
@@ -669,7 +655,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
  }
 
  // Returns the DBR index of the Phase to which the  Dependent Component with index xBR belongs
-  long int  TNode::DCtoPh_DBR( const long int xBR )
+  long int  TNode::DCtoPh_DBR( const long int xBR ) const
   {
     long int DCxCH = DC_xDB_to_xCH( xBR );
     long int PhxCH = DCtoPh_DCH( DCxCH );
@@ -678,7 +664,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
 // Returns the DBR index of the first DC belonging to the phase with DBR index Phx,
 //plus returns through the nDCinPh (reference) parameter the number of DCs included into DBR for this phase
- long int  TNode::PhtoDC_DBR( const long int Phx, long int& nDCinPh )
+ long int  TNode::PhtoDC_DBR( const long int Phx, long int& nDCinPh ) const
  {
    long int ii, DCx, DCxCH, PhxCH, nDCinPhCH;
 
@@ -703,7 +689,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
  // Test TK as lying in the vicinity of a grid point for the interpolation of thermodynamic data
  // Return index of the node in lookup array or -1
- long int  TNode::check_grid_T( double TK )
+ long int  TNode::check_grid_T( double TK ) const
  {
    long int jj;
    for( jj=0; jj<CSD->nTp; jj++)
@@ -714,7 +700,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
  // Test P as lying in the vicinity of a grid point for the interpolation of thermodynamic data
  // Return index of the node in lookup array or -1
- long int  TNode::check_grid_P( double P )
+ long int  TNode::check_grid_P( double P ) const
  {
    long int jj;
    for( jj=0; jj<CSD->nPp; jj++)
@@ -728,7 +714,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
  // if TK and P fit within the respective tolerances.
  // For producing lookup arrays (in GEMS), we recommend using step for temperature less or equal to 10 degrees
  // in order to assure good accuracy of interpolation especially for S0 and Cp0 of aqueous species.
-  long int  TNode::check_grid_TP(  double TK, double P )
+  long int  TNode::check_grid_TP(  double TK, double P ) const
   {
     long int xT, xP, ndx=-1;
 
@@ -783,7 +769,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   //from the DATACH structure ( xCH is the DC DCH index) or 7777777., if TK (temperature, Kelvin)
   // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
   // Parameter norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
-   double TNode::DC_G0(const long int xCH, const double P, const double TK,  bool norm )
+   double TNode::DC_G0(const long int xCH, const double P, const double TK,  bool norm ) const
    {
     long int xTP, jj;
     double G0;
@@ -809,7 +795,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
    // Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
    // from the DATACH structure ( xCH is the DC DCH index) or 0.0, if TK (temperature, Kelvin)
    // or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   double TNode::DC_V0(const long int xCH, const double P, const double TK)
+   double TNode::DC_V0(const long int xCH, const double P, const double TK) const
    {
     long int xTP, jj;
     double V0;
@@ -1106,7 +1092,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
  //Retrieves the current phase volume in m3 ( xph is DBR phase index) in the reactive sub-system.
  // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
- double  TNode::Ph_Volume( const long int xBR )
+ double  TNode::Ph_Volume( const long int xBR ) const
  {
    double vol;
    if( xBR < CSD->nPSb )
@@ -1131,7 +1117,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   // Retrieves the phase mass in kg ( xph is DBR phase index).
   // Works for multicomponent and for single-component phases. Returns 0.0 if phase amount is zero.
-  double  TNode::Ph_Mass( const long int xBR )
+  double  TNode::Ph_Mass( const long int xBR ) const
   {
      double mass;
      if( xBR < CSD->nPSb )
@@ -1192,7 +1178,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   // Retrieval of (dual-thermodynamic) chemical potential of the DC (xdc is the DC DBR index).
   // Parameter norm defines the scale: if true (1) then in mol/mol, otherwise in J/mol
-  double TNode::Get_muDC( const long int xdc, bool norm )
+  double TNode::Get_muDC( const long int xdc, bool norm ) const
   {	long int xCH, ii;
 	double muDC = 0;
 
@@ -1208,7 +1194,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
 
   //Retrieval of (dual-thermodynamic) activity of the DC (xdc is the DC DBR index)
   //If parameter scale is true then activity is returned, if false then log10(activity)
-  double TNode::Get_aDC( const long int xdc, bool scale )
+  double TNode::Get_aDC( const long int xdc, bool scale ) const
    {
 	 double Mj  = Get_muDC( xdc, true );
 	 double Mj0 = DC_G0( DC_xDB_to_xCH(xdc), CNode->P, CNode->TK,  true );
@@ -1223,7 +1209,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH )
   // in the respective concentration scale. For aqueous species, molality is returned;
   // for gas species, mole fraction not partial pressure; for surface complexes - molality;
   // for species in other phases - mole fraction. If DC has zero amount, the function returns 0.0.
-  double TNode::Get_cDC( const long int xdc )
+  double TNode::Get_cDC( const long int xdc ) const
   {
     long int xph = DCtoPh_DBR( xdc);
     long int DCxCH = DC_xDB_to_xCH(xdc);
@@ -1309,7 +1295,7 @@ case DC_SCM_SPECIES:
   // Added 6.12.2011 DK
   // Retrieves total dissolved aqueous molality of Independent Component with DBR index xIC
   // or returns 0.0 if there is no water in the node or no aqueous phase in DATACH
-  double TNode::Get_mIC( const long xic )
+  double TNode::Get_mIC( const long xic ) const
   {
      long int xaq = DC_name_to_xDB( "H2O@" );  // index of H2O aq in DATABR
      double nAQ, nIC, scICinH2O, m_tot;
@@ -1642,7 +1628,8 @@ void TNode::allocMemory()
 
 #ifdef IPMGEMPLUGIN
 // internal structures
-    multi = new TMulti( this ); multi->set_def();
+    multi = new TMulti( this );
+    multi->set_def();
     pmm = multi->GetPM();
     profil = new TProfil( multi );
     multi->setPa(profil);

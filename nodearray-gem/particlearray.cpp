@@ -22,9 +22,6 @@
 static long int idum = -10000l;
 static double Rand = -1;
 
-TParticleArray* TParticleArray::pa;
-
-
 TParticleArray::TParticleArray( long int nPTypes, long int nProps,
            long int *aNPmean,
            long int (*aParTD)[6],
@@ -66,7 +63,6 @@ TParticleArray::TParticleArray( long int nPTypes, long int nProps,
   cParts = 0;
   NPlist = 0;
   NPstat = 0;
-  pa = this;
 }
 
 void TParticleArray::freeMemory()
@@ -358,7 +354,7 @@ long int TParticleArray::MoveParticleBetweenNodes( long int px, bool CompMode, d
 long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, double t0, double t1 )
 {
 
-  long int iNode, iType, iRet=0, cpx;
+  long int iNode, iType, iRet = 0, cpx;
   double *mass, m_;
 
 // set up new masses to particles after GEM calculations
@@ -427,6 +423,17 @@ long int TParticleArray::GEMPARTRACK( long int Mode, bool ComponentMode, double 
               break;
   }
   return iRet;
+}
+
+void TParticleArray::logProfilePhMol( FILE* logfile, int inode )
+{
+  long int npa;
+  for( long int jp=0; jp < nPTypes(); jp++ )
+       {
+            npa = getNPnum( inode, jp);   // number of particles in the node
+            fprintf( logfile, "%-8ld ", npa );
+       }
+  fprintf( logfile, "\n" );
 }
 
 //=========================================================================

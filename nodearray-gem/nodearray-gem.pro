@@ -9,11 +9,13 @@ VERSION = 3.0.0
 CONFIG -= qt
 CONFIG += warn_on
 CONFIG += debug
+CONFIG += thread
 #CONFIG += windows
 CONFIG += console
 
 DEFINES += IPMGEMPLUGIN
 DEFINES += NODEARRAYLEVEL
+DEFINES += useOMP
 #DEFINES += NOPARTICLEARRAY
 #DEFINES += SEPGEM2MTMODE
 
@@ -32,7 +34,12 @@ INCLUDEPATH +=
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
 
-QMAKE_LFLAGS +=
+#QMAKE_CXXFLAGS += -fopenmp -pg
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS +=  -fopenmp
+LIBS += -lgomp -lpthread
+
+#QMAKE_LFLAGS += -pg
 OBJECTS_DIR = obj
 
 

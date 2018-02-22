@@ -232,15 +232,15 @@ double
      *Wb,     ///< Relative Born factors (HKF, reserved) [0:Ls-1]
      *Wabs,   ///< Absolute Born factors (HKF, reserved) [0:Ls-1]
      *Rion,   ///< Ionic or solvation radii, A (reserved) [0:Ls-1]
-     *HYM,    ///< reserved
-     *ENT,    ///< reserved no object
+     *HYM__,    ///< reserved
+     *ENT__,    ///< reserved no object
 
      *H0,     ///< DC pmolar enthalpies, reserved [L]
      *A0,     ///< DC molar Helmholtz energies, reserved [L]
      *U0,     ///< DC molar internal energies, reserved [L]
      *S0,     ///< DC molar entropies, reserved [L]
      *Cp0,    ///< DC molar heat capacity, reserved [L]
-     *Cv0,    ///< DC molar Cv, reserved [L]
+     *Cv0__,    ///< DC molar Cv, reserved [L]
 
     *VL,      ///< ln mole fraction of end members in phases-solutions
   // Old sorption stuff
@@ -827,6 +827,8 @@ public:
     void to_text_file_gemipm( const char *path, bool addMui,
     		bool with_comments = true, bool brief_mode = false );
     void from_text_file_gemipm( const char *path,  DATACH  *dCH );
+    void copyMULTI( const TMulti& otherMulti );
+
 
     // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
        void getLsModsum( long int& LsModSum, long int& LsIPxSum );

@@ -74,6 +74,8 @@ extern const double bar_to_Pa,
 /// the TNodearray class.
 class TNode
 {
+    friend class TNodeArray;
+
     gstring dbr_file_name;  ///< place for the *dbr. I/O file name
     gstring ipmlog_file_name;  ///< full name of the ipmlog file
 
@@ -106,7 +108,13 @@ protected:
     void datach_realloc();
     void datach_free();
     void datach_reset();
-    void databr_realloc();
+    void databr_realloc()
+    {
+      databr_realloc( CNode);
+    }
+
+    void databr_realloc( DATABR * CNode_);
+
     void databr_reset( DATABR *CNode, long int level=0 );
 
     /// Deletes fields of DATABR structure indicated by data_BR_
@@ -144,12 +152,18 @@ protected:
     void databr_head_to_vtk( fstream& ff, const char*name, double time, long cycle,
                             long nx = 1, long ny = 1, long nz = 1 );
 
-    // virtual functions for interaction with TNodeArray class (not used at TNode level)
-    virtual void  InitNodeArray( const char *, long int *, bool , bool  ) {}
-    virtual void  setNodeArray( long int , long int*  ) { }
-    //virtual void  checkNodeArray( long int, long int*, const char* ) { }
-    virtual long int nNodes()  const // virtual call for interaction with TNodeArray class
-    { return 1; }
+    /// Copy CSD (DATACH structure) data from other structure.
+    void datach_copy( DATACH* otherCSD );
+    /// Reads node (work DATABR structure) data from other DBR.
+    void databr_copy( DATABR* otherCNode );
+
+   /* alloc new memory
+    void allocNewDBR()
+    {
+        CNode = new DATABR;
+        databr_reset( CNode, 1 );
+        databr_realloc();
+    }*/
 
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS-PSI GUI environment
@@ -184,6 +198,7 @@ public:
 #else
   /// Constructor of the class instance in memory for standalone GEMS3K or coupled program
   TNode();
+  TNode( const TNode& otherNode );
 #endif
 
   virtual ~TNode();      ///< destructor
@@ -196,19 +211,9 @@ public:
 ///                      containing the list of names of  GEMS3K input files.
 ///                      Example: file "test.lst" with a content:    -t "dch.dat" "ipm.dat" "dbr-0.dat"
 ///                      (-t  tells that input files are in text format)
-///  \param dbrfiles_lst_name  optional parameter (used only at the TNodeArray level) - a
-///                      pointer to a null-terminated C string with a path to a text file
-///                      containing the list of comma-separated names of  DBR input files.
-///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
-///  \param nodeTypes   optional parameter used only at the TNodeArray level, the initial node contents
-///                      from DATABR files will be distributed among nodes in array according to the
-///                      distribution index list nodeTypes
-///  \param getNodT1    optional parameter used only when reading multiple DBR files after the modeling
-///                      task interruption  in GEM-Selektor
 ///  \return 0  if successful; 1 if input file(s) were not found or corrupt;
 ///                      -1 if internal memory allocation error occurred.
-  long int  GEM_init( const char *ipmfiles_lst_name, const char *dbrfiles_lst_name = 0,
-                   long int *nodeTypes = 0, bool getNodT1 = false);
+  long int  GEM_init( const char *ipmfiles_lst_name );
 
 #ifdef IPMGEMPLUGIN
 //  Calls for direct coupling of a FMT code with GEMS3K
@@ -544,66 +549,66 @@ long int GEM_step_MT( const long int step )
 
 //  void AtcivityCoeficient ();
     /// Return a pointer to a phase (TSolMod) with index xPH
-  void *get_ptrTSolMod( int xPH );
+  void *get_ptrTSolMod( int xPH ) const;
 
   /// Returns DCH index of IC given the IC Name string (null-terminated)
   /// or -1 if no such name was found in the DATACH IC name list
-  long int IC_name_to_xCH( const char *Name );
+  long int IC_name_to_xCH( const char *Name ) const;
 
    /// Returns DCH index of DC given the DC Name string
    /// or -1 if no such name was found in the DATACH DC name list
-   long int DC_name_to_xCH( const char *Name );
+   long int DC_name_to_xCH( const char *Name ) const;
 
    /// Returns DC Name string given the DCH index of DC
    /// or -1 if no such name was found in the DATACH DC name list
-   char* xCH_to_DC_name( int xCH )
+   char* xCH_to_DC_name( int xCH ) const
    {return CSD->DCNL[xCH];}
 
    /// Returns IC Name string given the ICH index of IC
    /// or -1 if no such name was found in the DATACH IC name list
-   char* xCH_to_IC_name( int xCH )
+   char* xCH_to_IC_name( int xCH ) const
    {return CSD->ICNL[xCH];}
 
  /// Returns the class codes of phase given the ICH index of PH
    /// or -1 if no such name was found in the DATACH ccPH list
-   char xCH_to_ccPH( int xCH )
+   char xCH_to_ccPH( int xCH ) const
    {return CSD->ccPH[xCH];}
 
    /// Returns the number of interaction parameters. Max parameter order (cols in IPx),
    /// and number of coefficients per parameter in PMc table [3*FIs]
-   long int* Get_LsMod ( )
+   long int* Get_LsMod ( ) const
    {return pmm->LsMod;}
 
    /// Returns DCH index of Phase given the Phase Name string
    /// or -1 if no such name was found in the DATACH Phase name list
-   long int Ph_name_to_xCH( const char *Name );
+   long int Ph_name_to_xCH( const char *Name ) const;
 
    /// Returns DBR index of IC given the IC Name string
    /// or -1 if no such name was found in the DATACH IC name list
-   inline long int IC_name_to_xDB( const char *Name )
+   inline long int IC_name_to_xDB( const char *Name ) const
    { return IC_xCH_to_xDB( IC_name_to_xCH( Name ) ); }
 
    /// Returns DBR index of DC given the DC Name string
    /// or -1 if no such name was found in the DATACH DC name list
-   inline long int DC_name_to_xDB( const char *Name )
+   inline long int DC_name_to_xDB( const char *Name ) const
    { return DC_xCH_to_xDB( DC_name_to_xCH( Name ) ); }
 
    /// Returns DBR index of Phase given the Phase Name string
    /// or -1 if no such name was found in the DATACH Phase name list
-   inline long int Ph_name_to_xDB( const char *Name )
+   inline long int Ph_name_to_xDB( const char *Name ) const
    { return Ph_xCH_to_xDB( Ph_name_to_xCH( Name ) ); }
 
    /// Converts the IC DCH index into the IC DBR index
    /// or returns -1 if this IC is not used in the data bridge
-   long int IC_xCH_to_xDB( const long int xCH );
+   long int IC_xCH_to_xDB( const long int xCH ) const;
 
    /// Converts the DC DCH index into the DC DBR index
    /// or returns -1 if this DC is not used in the data bridge
-   long int DC_xCH_to_xDB( const long int xCH );
+   long int DC_xCH_to_xDB( const long int xCH ) const;
 
    /// Converts the Phase DCH index into the Phase DBR index
    /// or returns -1 if this Phase is not used in the data bridge
-   long int Ph_xCH_to_xDB( const long int xCH );
+   long int Ph_xCH_to_xDB( const long int xCH ) const;
 
    /// Converts the IC DBR index into the IC DCH index
    inline long int IC_xDB_to_xCH( const long int xBR ) const
@@ -618,21 +623,21 @@ long int GEM_step_MT( const long int step )
    { return CSD->xph[xBR]; }
 
    /// Returns the DCH index of the first DC belonging to the phase with DCH index Phx
-    long int Phx_to_DCx( const long int Phx );
+    long int Phx_to_DCx( const long int Phx ) const;
 
    /// Returns the DCH index of the first DC belonging to the phase with DCH index Phx,
    /// plus returns through the nDCinPh (reference) parameter the number of DCs included into this phase
-    long int  PhtoDC_DCH( const long int Phx, long int& nDCinPh );
+    long int  PhtoDC_DCH( const long int Phx, long int& nDCinPh ) const;
 
    /// Returns the DCH index of the Phase to which the Dependent Component with index xCH belongs
-    long int  DCtoPh_DCH( const long int xCH );
+    long int  DCtoPh_DCH( const long int xCH ) const;
 
    ///  Returns the DBR index of the first DC belonging to the phase with DBR index Phx,
    /// plus returns through the nDCinPh (reference) parameter the number of DCs included into DBR for this phase
-    long int  PhtoDC_DBR( const long int Phx, long int& nDCinPh );
+    long int  PhtoDC_DBR( const long int Phx, long int& nDCinPh ) const;
 
    /// Returns the DBR index of the Phase to which the  Dependent Component with index xBR belongs
-     long int  DCtoPh_DBR( const long int xBR );
+     long int  DCtoPh_DBR( const long int xBR ) const;
 
     // Data exchange methods between GEMIPM and work node DATABR structure
     // Are called inside of GEM_run()
@@ -642,20 +647,20 @@ long int GEM_step_MT( const long int step )
     // Access to interpolated thermodynamic data from DCH structure
     /// Checks if given temperature T (K) and pressure P (Pa) fit within the interpolation
     /// intervals of the DATACH lookup arrays (returns true) or not (returns false)
-    bool  check_TP( double T, double P );
+    bool  check_TP( double T, double P ) const;
 
     /// Tests TK as a grid point for the interpolation of thermodynamic data.
     /// \return index in the lookup grid array or -1  if it is not a grid point
-    long int  check_grid_T( double TK );
+    long int  check_grid_T( double TK ) const;
 
     /// Tests P as a grid point for the interpolation of thermodynamic data.
     /// \return index in the lookup grid array or -1 if it is not a grid point
-    long int  check_grid_P( double P );
+    long int  check_grid_P( double P ) const;
 
     /// Tests T (K) and P (Pa) as a grid point for the interpolation of thermodynamic data using DATACH
     /// lookup arrays. \return -1L if interpolation is needed, or 1D index of the lookup array element
     /// if TK and P fit within the respective tolerances.
-     long int  check_grid_TP(  double T, double P );
+     long int  check_grid_TP(  double T, double P ) const;
 
      /// Returns number of temperature and  pressure grid points for one dependent component
      inline long int gridTP() const
@@ -690,7 +695,7 @@ long int GEM_step_MT( const long int step )
       /// \param TK temperature, Kelvin
       /// \param new_G0 in J/mol;
       /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
-      double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true);
+      double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true) const;
 
      /// Retrieves (interpolated, if necessary) molar volume V0(P,TK) value for Dependent Component (in J/Pa)
      /// from the DATACH structure.
@@ -698,7 +703,7 @@ long int GEM_step_MT( const long int step )
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \return V0(P,TK) (in J/Pa) or 0.0, if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_V0(const long int xCH, const double P, const double TK);
+     double DC_V0(const long int xCH, const double P, const double TK) const;
 
      /// Retrieves (interpolated) molar enthalpy H0(P,TK) value for Dependent Component (in J/mol)
      /// from the DATACH structure.
@@ -789,7 +794,7 @@ long int GEM_step_MT( const long int step )
      /// Works both for multicomponent and for single-component phases.
      /// \param xph is DBR phase index
      /// \return the current phase volume in m3 or 0.0, if the phase mole amount is zero.
-      double  Ph_Volume( const long int xBR );
+      double  Ph_Volume( const long int xBR ) const;
 
       /// Retrieves the current phase amount (in equilibrium) in moles in the reactive sub-system.
       /// Works both for multicomponent and for single-component phases.
@@ -801,7 +806,7 @@ long int GEM_step_MT( const long int step )
      /// Works for multicomponent and for single-component phases.
       /// \param xph is DBR phase index
       /// \return the phase mass in kg or 0.0, if the phase mole amount is zero.
-      double  Ph_Mass( const long int xBR );
+      double  Ph_Mass( const long int xBR ) const ;
 
       /// Retrieves the phase saturation index.
       /// Works for multicomponent and for single-component phases.
@@ -822,7 +827,7 @@ long int GEM_step_MT( const long int step )
       /// \param xic is IC DBR index
       /// \return total dissolved aqueous molality or 0.0,
       /// if there is no water in the node or no aqueous phase in DATACH.
-      double Get_mIC( const long xic );
+      double Get_mIC( const long xic ) const;
 
       /// Retrieves pH of the aqueous solution
       double Get_pH( );
@@ -890,12 +895,12 @@ long int GEM_step_MT( const long int step )
       /// Retrieval of (dual-thermodynamic) chemical potential of the DC.
       /// \param xdc is DC DBR index
       /// \param norm defines the scale: if true (1) then in mol/mol, otherwise in J/mol
-      double Get_muDC( const long int xDC, bool norm=true );
+      double Get_muDC( const long int xDC, bool norm=true ) const;
 
       /// Retrieval of (dual-thermodynamic) activity of the DC.
       /// \param xdc is DC DBR index
       /// \param scale if true then activity is returned, if false then log10(activity)
-      double Get_aDC( const long int xdc, bool scale=true );
+      double Get_aDC( const long int xdc, bool scale=true ) const;
 
       /// Retrieves concentration of Dependent Component in its phase
       /// in the respective concentration scale. For aqueous species, molality is returned;
@@ -903,7 +908,7 @@ long int GEM_step_MT( const long int step )
       /// for species in other phases - mole fraction.
       /// \param xdc is DC DBR index
       /// \return 0.0, if DC has zero amount.
-      double Get_cDC( const long int xdc );
+      double Get_cDC( const long int xdc ) const;
 
       /// Retrieves the activity coefficient of Dependent Component
       /// in its phase in the respective scale.

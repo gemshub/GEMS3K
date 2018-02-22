@@ -29,10 +29,11 @@ f_getline(istream& is, gstring& str, char delim);
 
 int main( int argc, char* argv[] )
  {
-     gstring gem2mt_in1 = "";
-     gstring ipm_lst = "";
-     gstring dbr_lst = "";
-     gstring vtk_fname = "";
+     gstring gem2mt_in1 = "TestAD/CalColumnAD.dat";
+     gstring ipm_lst = "TestAD/CalcColumn-dat.lst";
+     gstring dbr_lst = "TestAD/CalcColumn-dbr.lst";
+     gstring vtk_fname = "TestAD/VTK";
+
 
 // from argv
       if (argc >= 2 )
