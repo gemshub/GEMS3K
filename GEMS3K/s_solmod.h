@@ -1225,7 +1225,7 @@ class TCEFmod: public TSolMod
                 long int em_which(const long int s, const long int m , const long int jb, const long int je);
                 long int em_howmany( long int s, long int m );
                 double ysm( const long int j, const long int s );
-                double KronDelta( const long int j, const long int m );
+                bool KronDelta( const long int j, const long int m );
                 double dGref_dysigma(const long int l, const long int s );
                 double dGref_dysm(const long int s, const long m );
                 double dGm_dysm(const long int s, const long m ); // added by Nichenko

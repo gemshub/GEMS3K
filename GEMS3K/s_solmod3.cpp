@@ -2808,11 +2808,11 @@ double TCEFmod::RefFrameTerm( const long int j, const double G_ref )
         s = Sub[m];
         if ( KronDelta(j, m) ) { // If the moiety is a part of compound j
             for ( i=0; i<NComp; i++) { // Looking through all the compounds that contain moiety m
-                if ( KronDelta(i, m) ) { // If the moiety is a part of compound j
+                if ( KronDelta(i, m) ) { // If the moiety is a part of compound i
                     dgm_dysis += pyp[i] * oGf[i] / y[s][m];
-                }
-            }
-        }
+                } // (i, m)
+            } // i
+        } // (j, m)
     } // m
 
 
@@ -2821,7 +2821,8 @@ double TCEFmod::RefFrameTerm( const long int j, const double G_ref )
         s = Sub[m];
         for ( i=0; i<NComp; i++) { // Looking through all the compounds that contain moiety m
             if ( KronDelta(i, m) ) { // If the moiety is a part of compound j
-                dgm_dyjs  += mns[s] * y[s][m] * pyp[i] * oGf[i] / y[s][m];
+                //dgm_dyjs  += mns[s] * y[s][m] * pyp[i] * oGf[i] / y[s][m];
+                dgm_dyjs  += pyp[i] * oGf[i];
             }
         }
     } // m
@@ -2985,13 +2986,11 @@ double TCEFmod::Gidmix(){
     return G_idmix;
 }
 
-double TCEFmod::KronDelta( const long int j, const long int m ){
-    double krond = 0.;
+bool TCEFmod::KronDelta( const long int j, const long int m ){
     int s = Sub[m];
-
     if( mn[j][s][m] != 0 )
-       krond = 1.;
-    return krond;
+       return true;
+    return false;
 }
 
 double TCEFmod::Gexc(){
