@@ -4,7 +4,7 @@
 /// \file ms_multi_format.cpp
 /// Implementation of writing/reading IPM, DCH and DBR text I/O files
 //
-// Copyright (c) 2006-2013 S.Dmytriyeva,D.Kulik
+// Copyright (c) 2006-2018 S.Dmytriyeva,D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -33,7 +33,7 @@
 #endif
 
 //bool _comment = true;
-const char *_GEMIPM_version_stamp = " GEMS3K v.3.4.1 c.aa998ec ";
+const char *_GEMIPM_version_stamp = " GEMS3K v.3.4.1 c.175a3e2 ";
 
 //===================================================================
 // in the arrays below, the first field of each structure contains a string
