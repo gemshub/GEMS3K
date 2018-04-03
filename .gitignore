@@ -14,6 +14,7 @@ gemcalc-build/AfterCalcPhase.txt
 gemcalc-build/BeforeCalcPhase.txt
 gemcalc-build/CalcColumn_tp.out
 gemcalc-build/gemcalc
+gemcalc-build/node-gem
 gemcalc-build/ipmlog.txt
 gemcalc/gemcalc.pro.user
 gemcalc/gemcalc.pro.user.2.5pre1
@@ -35,6 +36,7 @@ node-gem-build/obj/*.o
 node-gem-build/object_script.node-gem.Debug
 node-gem-build/object_script.node-gem.Release
 node-gem-build/node-gem.app
+node-gem-build/node-gem
 node-gem-build/.qmake.*
 node-gem/node-gem.pro.user
 nodearray-gem-build/nodearrs

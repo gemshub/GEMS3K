@@ -25,7 +25,11 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <iomanip>
+#include  <iostream>
+//#include "io_arrays.h"
 #include "node.h"
+#include "gdatastream.h"
 #include "num_methods.h"
 
 #ifdef IPMGEMPLUGIN
@@ -127,7 +131,8 @@ void TNode::databr_copy( DATABR* otherCNode )
     else
          copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #else
-     ErrorIf(CNode->NodeStatusFMT != No_nodearray, ff.GetPath(),
+    fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
+    ErrorIf(CNode->NodeStatusFMT != No_nodearray, ipmLogFile().c_str(),
          "Error reading work dataBR structure from binary file (No_nodearray)");
      copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #endif
