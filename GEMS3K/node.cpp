@@ -484,7 +484,7 @@ if( binary_f )
    pmm->Tai[3] = CSD->Ttol;
 
   pmm->Fdev1[0] = 0.;
-  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copy from GEMS3 structure
+  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
   pmm->Fdev2[0] = 0.;
   pmm->Fdev2[1] = 1e-6;
 
@@ -507,7 +507,17 @@ if( binary_f )
         curPath = "";
         dbr_file_name = dbr_file;
 
-    return 0;
+// Creating and initializing the TActivity class instance for this TNode instance
+#ifdef IPMGEMPLUGIN
+//        InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
+        multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
+        this->InitCopyActivities( CSD, pmm, CNode );
+#else
+    ;
+#endif
+
+
+   return 0;
 
 #ifdef IPMGEMPLUGIN
     }
@@ -1358,7 +1368,7 @@ case DC_SCM_SPECIES:
 	 //double Mj0 = DC_G0( xCH, CNode->P, CNode->TK,  true );
 	 //return (Mj-Mj0)/2.302585093;
 	 return 	pow(10.0,pmm->Y_la[xCH]);
-  } 
+  }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Functions needed by GEMSFIT. Setting parameters for activity coefficient models.
@@ -1372,7 +1382,7 @@ case DC_SCM_SPECIES:
     //     NP_DC    = pmp->LsMdc[k*3];    // Number of non-ideality coeffs per one DC in multicomponent phase
     //     NsSit    = pmp->LsMdc[k*3+1];  // Number of sublattices considered in a multisite mixing model (0 if no sublattices considered)
     //     NsMoi    = pmp->LsMdc[k*3+2];  // Total number of moieties considered in sublattice phase model (0 if no sublattices considered)
-  
+
   // Functions for accessing parameters of mixing and properties of phase components used in TSolMod class
   // Retrieves indices of origin in TSolMod composite arrays for a phase of interest index_phase.
   // Parameters IN: index_phase is the DCH index of phase of interest.
@@ -1412,7 +1422,7 @@ case DC_SCM_SPECIES:
   // Parameters IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
   //    of the aIPc array; index_phase is the DCH index of phase of interest.
   void TNode::Set_aIPc ( const vector<double> aIPc, const long int &ipaIPc, const long int &index_phase )
-  { 
+  {
     long int rc, NPar, NPcoef;
     NPar = pmm->LsMod[ index_phase * 3 ];
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
@@ -1436,12 +1446,12 @@ case DC_SCM_SPECIES:
   // Parameters IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
   // Parameters OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
   void TNode::Get_aIPc ( vector<double> &aIPc, const long int &ipaIPc, const long int &index_phase )
-  { 
+  {
     long int i, NPar, NPcoef;
     NPar   = pmm->LsMod[ index_phase * 3 ];
     NPcoef = pmm->LsMod[ index_phase * 3 + 2 ];
     aIPc.clear();
-    aIPc.resize( (NPar*NPcoef) );	
+    aIPc.resize( (NPar*NPcoef) );
     i = 0;
     while (i<(NPar*NPcoef))
     {
@@ -1460,7 +1470,7 @@ case DC_SCM_SPECIES:
     NPar   = pmm->LsMod[ index_phase * 3 ];
     MaxOrd = pmm->LsMod[ index_phase * 3 + 1 ];
     aIPx.clear();
-    aIPx.resize( (NPar*MaxOrd) );	
+    aIPx.resize( (NPar*MaxOrd) );
     i = 0;
     while (i<(NPar*MaxOrd))
     {
@@ -1474,7 +1484,7 @@ case DC_SCM_SPECIES:
   // Parameters IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
   //    of the aDCc array; index_phase is the DCH index of phase of interest.
   void TNode::Set_aDCc( const vector<double> aDCc, const long int &ipaDCc, const long int &index_phase )
-  { 
+  {
     long int rc, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
     NP_DC = pmm->LsMdc[ index_phase ];
@@ -1528,9 +1538,9 @@ case DC_SCM_SPECIES:
 
   // Retrieves the current concentration of Dependent Component (xCH is DC DCH index) in its
   // phase directly from the GEM IPM work structure. Also activity of a DC not included into
-  // DATABR list can be retrieved. For aqueous species, molality is returned; for gas species, 
-  // partial pressure; for surface complexes - density in mol/m2; for species in other phases - 
-  // mole fraction. If DC has zero amount, the function returns 0.0. 
+  // DATABR list can be retrieved. For aqueous species, molality is returned; for gas species,
+  // partial pressure; for surface complexes - density in mol/m2; for species in other phases -
+  // mole fraction. If DC has zero amount, the function returns 0.0.
   double TNode::DC_c(const long int xCH)
   {
     double DCcon = 0.;
@@ -1627,13 +1637,17 @@ void TNode::allocMemory()
     databr_reset( CNode, 2 );
 
 #ifdef IPMGEMPLUGIN
-// internal structures
+// internal class instances
     multi = new TMulti( this );
     multi->set_def();
     pmm = multi->GetPM();
     profil = new TProfil( multi );
     multi->setPa(profil);
     //TProfil::pm = profil;
+    atp = new TActivity( CSD, CNode );
+//    atp->set_def();
+    kip = new TKinetics( CSD, CNode );
+    kip->set_def();
 #else
     profil = TProfil::pm;
 #endif

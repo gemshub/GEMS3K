@@ -57,8 +57,11 @@
 #define _node_h_
 
 #include "m_param.h"
+// #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
+#include "activities.h"
+#include "kinetics.h"
 
 #ifndef IPMGEMPLUGIN
 class QWidget;
@@ -84,8 +87,12 @@ protected:
 
 #ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMS3K programs
-    TMulti* multi;
-//    TProfil* profil;
+    TMulti* multi;     // GEM IPM3 implementation class
+//    TAllan *ipm;       // Allan's GEM IPM implementation class
+// more speciation algorithms classes, when provided
+    TActivity *atp;    // Activity term class
+    TKinetics *kip;    // MW reaction kinetics class
+//
 #endif
     TProfil* profil;
 
@@ -93,6 +100,7 @@ protected:
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
     DATABR* CNode;  ///< Pointer to a work node data bridge structure (node)
          ///< used for exchanging input data and results between FMT and GEM IPM
+    ACTIVITY* AiP; ///< Pointer to DC activities in phases and related properties
 
     // These four values are set by the last GEM_run() call
     double CalcTime;  ///< \protected GEMIPM2 calculation time, s
@@ -186,6 +194,38 @@ protected:
 
     // Virtual function for interaction with TNodeArray class
     virtual void  setNodeArray( gstring& , long int , bool ) { }
+#else
+public:
+
+void InitCopyActivities( DATACH* CSD, MULTI* pmm, DATABR* CNode );  // To fill out TActivity class instance
+
+// Generic access methods that use the new TActivity class
+void setTemperature(const double T); // set temperature (in units of K)
+void setPressure(const double P); // set pressure (in units of Pa)
+void updateStandardGibbsEnergies(); // compute standard Gibbs energies (so far only P,T interpolation)
+void updateStandardVolumes();
+void updateStandardEnthalpies();
+void updateStandardEntropies();
+void updateStandardHeatCapacities();
+void updateThermoData();
+
+void setSpeciation(const double* n); // set speciation (in units of moles)
+void updateConcentrations(); // compute concentrations in all phases
+void initActivityCoefficients(); // initialize models of mixing before GEM run
+void updateActivityCoefficients(); // compute activity coefficients
+void getIntegralPhaseProperties(); // compute integral phase properties after GEM run (TBD)
+void updateChemicalPotentials(); // compute primal chemical potentials
+double updateTotalGibbsEnergy(); // gets total Gibbs energy of the system at GEM iteration
+void updateActivities(); // compute primal activities
+void updateChemicalData();
+
+// Interface to kinetics and metastability controls (using TKinetics class)  TBD
+// void setSpeciesUpperAMRs( const double* nu );
+// void setSpeciesLowerAMRs( const double* nl );
+// void setPhasesUpperAMRs( const double* nfu );
+// void setPhasesLowerAMRs( const double* nfl );
+// long int updateKineticsMetastability( long int LinkMode );
+
 #endif
 
 public:
@@ -520,6 +560,9 @@ long int GEM_step_MT( const long int step )
 
     TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
    {        return multi;     }
+
+   TActivity* pActiv() const  /// Get pointer to TActivity class instance
+   {        return atp;       }
 
 #endif
     // These methods get contents of fields in the work node structure
