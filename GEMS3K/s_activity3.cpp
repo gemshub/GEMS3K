@@ -1,12 +1,12 @@
 //-------------------------------------------------------------------
 // $Id: s_activity3.cpp 986 2014-08-31 16:06:28Z kulik $
 //
-/// \file ipm_chemical3.cpp
+/// \file s_activity3.cpp
 /// Implementation of chemistry-specific functions (concentrations,
 /// activity coefficients, chemical potentials, etc.)
-/// for the IPM convex programming Gibbs energy minimization algorithm
+/// for the Activity API of GEMS3K code
 //
-// Copyright (c) 1992-2012  D.Kulik, T.Wagner, S.Dmitrieva, K.Chudnenko
+// Copyright (c) 1992-2018  D.Kulik, T.Wagner, S.Dmitrieva, A.Leal
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -56,6 +56,8 @@ TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k,
            break;
       case PH_GASMIX:  case PH_FLUID:   case PH_PLASMA:   case PH_SIMELT:
       case PH_HCARBL:  case PH_SINCOND:  case PH_SINDIS:  case PH_LIQUID:
+    case PH_IONEX:
+//    case PH_ADSORPT:
            break;
       case PH_POLYEL:
       case PH_SORPTION: // only sorbent end-members!
@@ -98,7 +100,8 @@ NonLogTermS = 0.0;
             case DC_GAS_COMP: case DC_GAS_H2O:  case DC_GAS_CO2:
             case DC_GAS_H2: case DC_GAS_N2:
                 break;
-            case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
+            case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP:
+            case DC_SOL_MAJDEP:case DC_SCM_SPECIES:
             break;
                 // non-electrolyte condensed mixtures
             case DC_SCP_CONDEN: case DC_SUR_MINAL:
@@ -137,7 +140,7 @@ NonLogTermS = 0.0;
                case DC_GAS_COMP: case DC_GAS_H2O: case DC_GAS_CO2: case DC_GAS_H2: case DC_GAS_N2:
                                 break;
                    case DC_SOL_IDEAL:  case DC_SOL_MINOR:  case DC_SOL_MAJOR: case DC_SOL_MINDEP:
-                   case DC_SOL_MAJDEP:
+                   case DC_SOL_MAJDEP:  case DC_SCM_SPECIES:
                         break;
                case DC_SCP_CONDEN: case DC_SUR_MINAL:
                             break;
@@ -230,6 +233,7 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
             {
                 case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
                 case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
+              case PH_IONEX: case PH_ADSORPT:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
                       sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
                     // new solution models (TW, DK 2007)
@@ -259,6 +263,7 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
             {
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
               case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
+            case PH_IONEX: case PH_ADSORPT:
            	       SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
            	       SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
            	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
@@ -373,6 +378,7 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
              goto END_LOOP;
              break;
          case PH_LIQUID: case PH_SIMELT: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
+        case PH_IONEX: case PH_ADSORPT:
              if( pmpXFk > act.DSM )
              {     // solid and liquid mixtures
                 switch( sMod[SPHAS_TYP] )

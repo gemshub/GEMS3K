@@ -140,6 +140,7 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
                         act.Y_la[j] += log10( act.Pc );
                     break;
                case DC_SOL_IDEAL: case DC_SOL_MINOR: case DC_SOL_MAJOR: case DC_SOL_MINDEP: case DC_SOL_MAJDEP:
+             case DC_SCM_SPECIES:
                     act.Y_la[j] = ln_to_lg * ( Muj - act.G0[j] );
                     break;
                case DC_SUR_GROUP:
@@ -230,6 +231,7 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
         case DC_SOL_MAJOR:
         case DC_SOL_MINDEP:
         case DC_SOL_MAJDEP:
+    case DC_SCM_SPECIES:
             act.FVOL[k] += act.Vol[j]*X[j];
             act.Y_la[j] = ln_to_lg * ( Muj - act.G0[j] );
             if( act.LO )
@@ -410,6 +412,8 @@ void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
         case PH_SINCOND:
         case PH_SINDIS:
         case PH_LIQUID:
+//    case PH_IONEX:
+//   case PH_ADSORPT:
             YFk = XF[k];
             for(jj=j; jj<i; jj++)
             {
