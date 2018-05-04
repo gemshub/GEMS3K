@@ -29,7 +29,7 @@
 
 //#include "s_fgl.h"
 
-// const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6,
+// const int   MAXDCNAME = 16, MAXPHASENAME = 16, MST =   6;
 
 const int MAXEILAYERS = 4;
 

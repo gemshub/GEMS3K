@@ -31,6 +31,7 @@
 
 #include "node.h"
 #include "m_param.h"
+#include "s_kinmet.h"
 #include "kinetics.h"
 
 
@@ -384,7 +385,8 @@ void TKinetics::KM_Create( long int jb, long int k, long int kc, long int kp,
             phKinMet[k]->UpdatePT( kin.Tc, kin.Pc );
             phKinMet[k]->UpdateTime( kin.kTau, kin.kdT );
             phKinMet[k]->UpdateFSA( kin.Aalp[k], kin.XF[k], kin.FWGT[k], kin.FVOL[k], kin.Falp[k],
-                                    kin.PfFact[k], kin.YOF[k], kin.IC, kin.pH, kin.pe, kin.Eh );
+                                    kin.PfFact[k], kin.YOF[k], kin.IC, kin.pH, kin.pe, kin.Eh,
+                                    kin.PUL[k], kin.PLL[k] );
                 return; // using old allocation and setup of the kinetics model
         }
 
@@ -619,7 +621,8 @@ TKinetics::KM_UpdateFSA( long int jb, long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
             TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
             myKM->UpdateFSA( kin.Aalp[k], kin.XF[k], kin.FWGT[k], kin.FVOL[k], kin.Falp[k],
-                             kin.PfFact[k], kin.YOF[k], kin.IC, kin.pH, kin.pe, kin.Eh  );
+                             kin.PfFact[k], kin.YOF[k], kin.IC, kin.pH, kin.pe, kin.Eh,
+                             kin.PUL[k], kin.PLL[k] );
             break;
         }
         case KM_PRO_UPT_:
@@ -627,7 +630,8 @@ TKinetics::KM_UpdateFSA( long int jb, long int k, const char *kMod )
             ErrorIf( !phKinMet[k], "KinMetUpdateFSA: ","Invalid index of phase");
             TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
             myKM->UpdateFSA( kin.Aalp[k], kin.XF[k], kin.FWGT[k], kin.FVOL[k], kin.Falp[k],
-                             kin.PfFact[k], kin.YOF[k], kin.IC, kin.pH, kin.pe, kin.Eh  );
+                             kin.PfFact[k], kin.YOF[k], kin.IC, kin.pH, kin.pe, kin.Eh,
+                             kin.PUL[k], kin.PLL[k] );
             break;
         }
         case KM_PRO_IEX_: case KM_PRO_ADS_: case KM_PRO_NUPR_:

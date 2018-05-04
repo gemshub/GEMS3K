@@ -6,7 +6,8 @@ LIB = libgem.a
 ${LIB}:  gdatastream.o s_solmod.o s_solmod5.o s_solmod6.o s_solmod2.o s_solmod3.o s_solmod4.o \
        node.o node_format.o ms_multi_file.o io_arrays.o \
        ms_multi_format.o ms_multi_file.cpp ipm_chemical.o ipm_chemical2.o ipm_chemical3.o \
-       ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o s_kinmet.o s_sorpmod.o
+       ipm_main.o ipm_simplex.o io_arrays.o ms_param.o num_methods.o s_kinmet.o s_sorpmod.o \
+       node_activities.o node_kinetics.o s_activity.o s_activity2.o s_activity3.o
 # mcotac.o mcotac1d.o datio.o erech.o inistat2.o inparf.o setpar_.o walk2_.o wegdat1d_.o hydro1d_.o 
              
 	$(LINK) -rvs ${LIB} *.o
@@ -53,6 +54,18 @@ s_kinmet.o: s_kinmet.cpp
 	$(CXX)  $(CCFLAGS) s_kinmet.cpp
 s_sorpmod.o: s_sorpmod.cpp 
 	$(CXX)  $(CCFLAGS) s_sorpmod.cpp
+
+s_activity.o: s_activity.cpp 
+	$(CXX)  $(CCFLAGS) s_activity.cpp
+s_activity2.o: s_activity2.cpp 
+	$(CXX)  $(CCFLAGS) s_activity2.cpp
+s_activity3.o: s_activity3.cpp 
+	$(CXX)  $(CCFLAGS) s_activity3.cpp
+node_activities.o: node_activities.cpp 
+	$(CXX)  $(CCFLAGS) node_activities.cpp
+node_kinetics.o: node_kinetics.cpp 
+	$(CXX)  $(CCFLAGS) node_kinetics.cpp
+
 
 #gwheader.h: gwheader.h
 #f_gem_node.h: f_gem_node.h
