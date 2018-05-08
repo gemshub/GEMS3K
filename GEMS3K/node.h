@@ -67,6 +67,8 @@
 class QWidget;
 #endif
 
+class TActivity;
+
 extern const double bar_to_Pa,
                m3_to_cm3,
                kg_to_g;
@@ -631,7 +633,7 @@ long int GEM_step_MT( const long int step )
 
 #ifdef IPMGEMPLUGIN
 
-    TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
+   TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
    {        return multi;     }
 
    TActivity* pActiv() const  /// Get pointer to TActivity class instance

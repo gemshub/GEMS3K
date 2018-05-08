@@ -30,8 +30,8 @@
 #include<iomanip>
 
 #include "node.h"
-#include "m_param.h"
-#include "activities.h"
+//#include "m_param.h"
+//#include "activities.h"
 
 
 // Generic access methods that use the new TActivity class
@@ -230,9 +230,10 @@ void
 TNode::InitCopyActivities( DATACH* csd, MULTI* mp, DATABR* cnd )
 {
 
-   atp = new TActivity( csd, cnd );
+   atp = new TActivity( csd, cnd, this );
 
    ACTIVITY* ap = atp->GetActivityDataPtr();
+   AiP = ap;
 
    // \section Chemical scalar variables
       ap->TK = cnd->TK;     //< Node temperature T (Kelvin)                     	         +      +      -     -
@@ -435,6 +436,56 @@ TNode::InitCopyActivities( DATACH* csd, MULTI* mp, DATABR* cnd )
 
        atp->Alloc_internal();
 
+}
+
+
+/// This allocation is used only in standalone GEMS3K
+TActivity::TActivity( DATACH *csd, DATABR *sbc, TNode *ptn )
+{
+    this->csd = csd;
+    this->cnd = sbc;
+    this->cno = ptn;
+
+    sizeN = 0;
+     AA = 0;
+     BB = 0;
+     arrL = 0;
+     arrAN = 0;
+
+     sizeFIs = 0;
+     phSolMod = 0;
+     sizeFIa = 0;
+     phSorpMod = 0;
+//             ICmin = 0.0001;
+//             sizeFI = 0;
+//             phKinMet = 0;
+     act.N = csd->nIC;      // Number of ICs
+         act.NR = act.N;       	///< NR - dimensions of R matrix
+     act.L = csd->nDC;      // Number of DCs
+     act.Ls = csd->nDCs;     // Total number of DCs in phases-solutions
+//             act.LO;     // LO -   index of water-solvent in DC list
+     act.FI = csd->nPH;     // Number of phases
+     act.FIs = csd->nPS;    // Number of phases-solutions,
+     set_def();
+     act.lnAct = new double[act.L];
+     act.tpp_G = new double[act.L];
+     load = false;
+     Alloc_TSolMod( csd->nPS );
+     sizeFIs = csd->nPS;
+//             Alloc_TSorpMod( na->CSD.nPS );
+//             sizeFIa = na->CSD.nPS;
+}
+
+TActivity::~TActivity( )
+{          // destructor
+ if(act.lnAct) delete[] act.lnAct;
+ if(act.tpp_G) delete[] act.tpp_G;
+ Free_TSolMod( );
+ Free_internal( );
+//        Free_TSorpMod( );
+//         this->csd = NULL;
+//         this->cnd = NULL;
+//         this->cno = NULL;
 }
 
 

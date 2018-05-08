@@ -1644,9 +1644,9 @@ void TNode::allocMemory()
     profil = new TProfil( multi );
     multi->setPa(profil);
     //TProfil::pm = profil;
-    atp = new TActivity( CSD, CNode );
+    atp = new TActivity( CSD, CNode, this );
 //    atp->set_def();
-    kip = new TKinetics( CSD, CNode );
+    kip = new TKinetics( CSD, CNode, this );
     kip->set_def();
 #else
     profil = TProfil::pm;

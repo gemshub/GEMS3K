@@ -32,11 +32,12 @@
 #ifndef _Activity_H_
 #define _Activity_H_
 
-#include "datach.h"
-#include "databr.h"
-#include "s_solmod.h"
-#include "s_sorpmod.h"
-#include "m_const.h"
+#include "node.h"
+//#include "datach.h"
+//#include "databr.h"
+//#include "s_solmod.h"
+//#include "s_sorpmod.h"
+//#include "m_const.h"
 
 /*
 const double R_CONSTANT = 8.31451,
@@ -275,6 +276,12 @@ class TActivity
 {
     ACTIVITY act;
 
+    DATACH* csd;
+//    MULTI* mp;
+    DATABR* cnd;
+// Current pointer to TNode class instance
+    TNode* cno;
+
     // Internal arrays for the performance optimization  (since version 2.0.0) <- MULTI
        long int sizeN; /*, sizeL, sizeAN;*/
        double *AA;
@@ -312,6 +319,16 @@ protected:
 
 public:
     void Alloc_internal();
+
+    // Explicit constructor
+    TActivity( DATACH *csd, DATABR *sbc, TNode *ptn );
+    ~TActivity( );
+
+    // Returns pointer to ACTIVITY work data structure
+    ACTIVITY* GetActivityDataPtr( void )
+    {
+        return &this->act;
+    }
 
     long int CheckMassBalanceResiduals(double *Y );
     double ConvertGj_toUniformStandardState( double g0, long int j, long int k );
@@ -373,53 +390,6 @@ public:
         void SolModStandProp ( long int jb, long int k, char ModCode );
         void SolModDarkenProp ( long int jb, long int k, char ModCode );
 
-        /// This allocation is used only in standalone GEMS3K
-        TActivity( DATACH *csd, DATABR *sbc )
-        {
-             sizeN = 0;
-             AA = 0;
-             BB = 0;
-             arrL = 0;
-             arrAN = 0;
-
-             sizeFIs = 0;
-             phSolMod = 0;
-             sizeFIa = 0;
-             phSorpMod = 0;
-//             ICmin = 0.0001;
-//             sizeFI = 0;
-//             phKinMet = 0;
-             act.N = csd->nIC;      // Number of ICs
-                 act.NR = act.N;       	///< NR - dimensions of R matrix
-             act.L = csd->nDC;      // Number of DCs
-             act.Ls = csd->nDCs;     // Total number of DCs in phases-solutions
-//             act.LO;     // LO -   index of water-solvent in DC list
-             act.FI = csd->nPH;     // Number of phases
-             act.FIs = csd->nPS;    // Number of phases-solutions,
-             set_def();
-             act.lnAct = new double[act.L];
-             act.tpp_G = new double[act.L];
-             load = false;
-             Alloc_TSolMod( csd->nPS );
-             sizeFIs = csd->nPS;
-//             Alloc_TSorpMod( na->CSD.nPS );
-//             sizeFIa = na->CSD.nPS;
-        }
-
-    ~TActivity( )
-    {          // destructor
-         if(act.lnAct) delete[] act.lnAct;
-         if(act.tpp_G) delete[] act.tpp_G;
-         Free_TSolMod( );
-         Free_internal( );
-//        Free_TSorpMod( );
-    }
-
-    // Returns pointer to ACTIVITY work data structure
-    ACTIVITY* GetActivityDataPtr( void )
-    {
-        return &this->act;
-    }
     // Generic access methods
     void setTemperature(double T); // set temperature (in units of K)
     void setPressure(double P); // set pressure (in units of Pa)

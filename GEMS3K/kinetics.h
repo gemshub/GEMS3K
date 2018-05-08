@@ -32,9 +32,10 @@
 #ifndef _Kinetics_H_
 #define _Kinetics_H_
 
-#include "datach.h"
-#include "databr.h"
-#include "m_const.h"
+#include "node.h"
+//#include "datach.h"
+//#include "databr.h"
+//#include "m_const.h"
 
 typedef struct  /// KINETICS - data structure for computing DC AMRs in phases
 {               /// DATACH indexation throughout, no I/O file exchange
@@ -146,6 +147,12 @@ typedef KINETICS*  KINETICSPTR;
 class TKinetics
 {
     KINETICS kin;
+
+    DATACH* csd;
+    DATABR* cnd;
+    // Current pointer to TNode class instance
+    TNode* cno;
+
     // How to link to KINETICS?
 
     long int sizeFI;      ///< current size of phKinMet
@@ -155,8 +162,11 @@ class TKinetics
 public:
 
     /// This allocation is used only in standalone GEMS3K
-    TKinetics( DATACH *csd, DATABR *sbc )
+    TKinetics( DATACH *csd, DATABR *sbc, TNode *ptn )
     {
+        this->csd = csd;
+        this->cnd = sbc;
+        this->cno = ptn;
 
             sizeFI = 0;
             phKinMet = 0;

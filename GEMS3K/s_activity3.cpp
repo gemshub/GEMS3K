@@ -28,8 +28,9 @@
 //
 
 #include <cmath>
-#include "m_param.h"
-#include "activities.h"
+#include "node.h"
+//#include "m_param.h"
+//#include "activities.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ///  Function for converting internal lnGam[j] value into an external (phase-scale-specific)

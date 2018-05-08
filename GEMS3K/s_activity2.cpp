@@ -27,8 +27,9 @@
 //-------------------------------------------------------------------
 //
 #include <cmath>
-#include "m_param.h"
-#include "activities.h"
+#include "node.h"
+//#include "m_param.h"
+//#include "activities.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating bulk stoichiometry of a multicomponent phase

@@ -30,9 +30,9 @@
 #include<iomanip>
 
 #include "node.h"
-#include "m_param.h"
-#include "s_kinmet.h"
-#include "kinetics.h"
+//#include "m_param.h"
+//#include "s_kinmet.h"
+//#include "kinetics.h"
 
 
 void TKinetics::set_def( void )

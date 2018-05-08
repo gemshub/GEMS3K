@@ -69,7 +69,13 @@ void TActivity::setPressure(double P)
 // compute standard Gibbs energies (so far only P,T interpolation)
 void TActivity::updateStandardGibbsEnergies()
 {
-    ;
+    bool norm = false;
+//    ACTIVITY* ap = atp->GetActivityDataPtr();
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->tpp_G[j] = cno->DC_G0( j, ap->P, ap->TK, norm );
+    }
 }
 
 void TActivity::updateStandardVolumes()
@@ -494,8 +500,7 @@ double TActivity::DC_PrimalChemicalPotential(
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// VJ - Update of primal chemical potentials
 //
-void
-TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
+void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
 {
     long int i,j,k;
     double NonLogTerm=0., v, Yw, Yf, YFk, logXw, logYFk, aqsTail; // v is debug variable
@@ -1016,6 +1021,7 @@ else fRestore = true;
        jb += act.L1[k];
     }  // for k
 }
+
 #endif
 
 //--------------------- End of s_activity.cpp ---------------------------
