@@ -216,9 +216,13 @@ void TNode::updateActivities()
     }
 }
 
+// Recomputes all chemical properties of DComps in one call
 void TNode::updateChemicalData()
 {
-    ;
+    updateConcentrations();
+    updateActivityCoefficients();
+    updateChemicalPotentials();
+    updateActivities();
 }
 
 // Initializes and fills out the TActivity class instance

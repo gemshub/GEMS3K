@@ -3611,8 +3611,8 @@ cout<<" in TELVIS::PTparam()"<<endl;
 
 
         // ONLY concentration dependence on volume parameter
-//		R[j] = aDCc[NP_DC*j+2] + \
-//		       aDCc[NP_DC*j+3] * (1-Xw) + \
+//		R[j] = aDCc[NP_DC*j+2] +
+//		       aDCc[NP_DC*j+3] * (1-Xw) +
 //		       aDCc[NP_DC*j+4] * (1-Xw)*(1-Xw);
 
         Q[j] = abs( aDCc[NP_DC*j] + aDCc[NP_DC*j+2]*Tk + aDCc[NP_DC*j+3]*Tk*Tk );   // surface parameter q of UNIQUAC term

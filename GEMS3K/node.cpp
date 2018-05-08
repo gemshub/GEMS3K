@@ -1426,7 +1426,7 @@ case DC_SCM_SPECIES:
     long int rc, NPar, NPcoef;
     NPar = pmm->LsMod[ index_phase * 3 ];
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
-    if( aIPc.size() != (NPar*NPcoef) )
+    if( aIPc.size() != (uint)(NPar*NPcoef) )
     {
 		cout<<endl;
         cout<<" TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! "<<endl;
@@ -1488,7 +1488,7 @@ case DC_SCM_SPECIES:
     long int rc, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
     NP_DC = pmm->LsMdc[ index_phase ];
-    if( aDCc.size() != (NComp*NP_DC) )
+    if( aDCc.size() != (uint)(NComp*NP_DC) )
     {
 		cout<<endl;
         cout<<"TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "<<endl;

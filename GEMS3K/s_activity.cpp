@@ -125,37 +125,59 @@ void TActivity::updateThermoData( bool norm )
 // set speciation (in units of moles)
 void TActivity::setSpeciation( const double* n )
 {
- ;
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->Y[j] = n[j] * ap->SizeFactor;
+        ap->X[j] = n[j] * ap->SizeFactor;
+//        ap.XY[j] *= ScFact;
+//        ap.XU[j] *= ScFact;
+    }
+    this->TotalPhasesAmounts( ap->X, ap->XF, ap->XFA );
+    this->TotalPhasesAmounts( ap->Y, ap->YF, ap->YFA );
 
 }
 
 // compute concentrations in all phases
 void TActivity::updateConcentrations()
 {
-    ;
+    ACTIVITY* ap = GetActivityDataPtr();
+    this->CalculateConcentrations( ap->X, ap->XF, ap->XFA);
 }
 
 // compute activity coefficients
 void TActivity::updateActivityCoefficients()
 {
-;
+    long int retCode;
+ //   ACTIVITY* ap = atp->GetActivityDataPtr();
+    retCode = this->CalculateActivityCoefficients( LINK_UX_MODE );
+ //   if(retCode)
+        // Errors
 }
 
 // compute primal chemical potentials
 void TActivity::updateChemicalPotentials()
 {
-;
+    ACTIVITY* ap = GetActivityDataPtr();
+    this->PrimalChemicalPotentials( ap->F, ap->Y, ap->YF, ap->YFA );
 }
 
 // compute primal activities
 void TActivity::updateActivities()
 {
-    ;
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->lnAct[j] = ap->F[j] - ap->tpp_G[j]/ap->RT;
+    }
 }
 
 void TActivity::updateChemicalData()
 {
-    ;
+    updateConcentrations();
+    updateActivityCoefficients();
+    updateChemicalPotentials();
+    updateActivities();
 }
 
 

@@ -47,7 +47,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     NComp(kmd->NComp_), nlPh(kmd->nlPh_), nlPc(kmd->nlPc_), nPRk(kmd->nPRk_), nSkr(kmd->nSkr_),
     nrpC(kmd->nrpC_), naptC(kmd->naptC_), nAscC(kmd->nAscC_), // numpC(kmd->numpC_), iRes4(kmd->iRes4_),
     R_CONST(8.31451), T_k(kmd->T_k_), P_bar(kmd->P_bar_), kTau(kmd->kTau_), kdT(kmd->kdT_),
-    sFact(kmd->sFact_), sSAi(kmd->sSA_), nPhi(kmd->nPh_), mPhi(kmd->mPh_), vPhi(kmd->vPh_),
+    sSAi(kmd->sSA_),  nPhi(kmd->nPh_), mPhi(kmd->mPh_), vPhi(kmd->vPh_), sFact(kmd->sFact_),
     IS(kmd->IS_), pH(kmd->pH_),  pe(kmd->pe_),  Eh(kmd->Eh_),
     sAPh(kmd->sAPh_), LaPh(kmd->LaPh_), OmPh(kmd->OmPh_),
     sgw(kmd->sgw_),  sgg(kmd->sgg_),  rX0(kmd->rX0_),  hX0(kmd->hX0_),
@@ -107,6 +107,7 @@ TKinMet::TKinMet( const KinMetData *kmd ):
     sSAcor = sSAi;  // Initialized corrected specific surface area (m2/kg)
     sAph_c = sAPh = mPh*sSA;  // Initialized corrected surface area of the phase (m2/kg)
     sSAV = sSAVcor = sAPh/vPh;
+    sFacti = sFact;
     // Calculation of total properties of linked phases
     if( nlPh )
        linked_phases_properties( true );

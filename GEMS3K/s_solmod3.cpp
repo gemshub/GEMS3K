@@ -1517,8 +1517,8 @@ long int TSubregular::MixMod()
         // assignments
         lnGamma[0] = lnGam1+lnGamDQF[0];
         lnGamma[1] = lnGam2+lnGamDQF[1];
-        return 0;
     }
+    return 0;
 }
 
 /// calculates bulk phase excess properties
