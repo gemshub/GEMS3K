@@ -106,9 +106,9 @@ void TNode::updateStandardHeatCapacities()
     }
 }
 
-void TNode::updateThermoData()
+void TNode::updateThermoData( bool norm )
 {
-    bool norm = true;
+//    bool norm = true;
     ACTIVITY* ap = atp->GetActivityDataPtr();
     for( long int j=0; j<CSD->nDC; j++ )
     {

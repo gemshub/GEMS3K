@@ -397,7 +397,8 @@ public:
     void updateStandardVolumes();
     void updateStandardEnthalpies();
     void updateStandardEntropies();
-//    void updateThermoData();
+    void updateStandardHeatCapacities();
+    void updateThermoData( bool norm = true );
 
     void setSpeciation(const double* n); // set speciation (in units of moles)
     void updateConcentrations(); // compute concentrations in all phases

@@ -46,8 +46,6 @@ void TActivity::setTemperature(double T)
 {
     if( T > 0. && T < 1e9 )
     {
-//        CNode->TK = T;
-//        ACTIVITY* ap = atp->GetActivityDataPtr();
         ACTIVITY* ap = GetActivityDataPtr();
         ap->TK = T;
         ap->RT = T*R_CONSTANT;
@@ -59,8 +57,6 @@ void TActivity::setPressure(double P)
 {
     if( P >= 0. && P < 1e12 )
     {
-//        CNode->P = P;
-//        ACTIVITY* ap = atp->GetActivityDataPtr();
         ACTIVITY* ap = GetActivityDataPtr();
         ap->P = P/bar_to_Pa;
     }
@@ -70,7 +66,6 @@ void TActivity::setPressure(double P)
 void TActivity::updateStandardGibbsEnergies()
 {
     bool norm = false;
-//    ACTIVITY* ap = atp->GetActivityDataPtr();
     ACTIVITY* ap = GetActivityDataPtr();
     for( long int j=0; j<csd->nDC; j++ )
     {
@@ -80,23 +75,52 @@ void TActivity::updateStandardGibbsEnergies()
 
 void TActivity::updateStandardVolumes()
 {
-    ;
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->Vol[j] = cno->DC_V0( j, ap->P, ap->TK ) * bar_to_Pa *10.;
+    }
 }
 
 void TActivity::updateStandardEnthalpies()
 {
-    ;
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->H0[j] = cno->DC_H0( j, ap->P, ap->TK );
+    }
 }
 
 void TActivity::updateStandardEntropies()
 {
-    ;
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->S0[j] = cno->DC_S0( j, ap->P, ap->TK );
+    }
 }
 
-//void TActivity::updateThermoData()
-//{
-//    ;
-//}
+void TActivity::updateStandardHeatCapacities()
+{
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->Cp0[j] = cno->DC_Cp0( j, ap->P, ap->TK );
+    }
+}
+
+void TActivity::updateThermoData( bool norm )
+{
+    ACTIVITY* ap = GetActivityDataPtr();
+    for( long int j=0; j<csd->nDC; j++ )
+    {
+        ap->tpp_G[j] = cno->DC_G0( j, ap->P, ap->TK, norm );
+        ap->Vol[j] = cno->DC_V0( j, ap->P, ap->TK )* 10. * bar_to_Pa;
+        ap->H0[j] = cno->DC_H0( j, ap->P, ap->TK );
+        ap->S0[j] = cno->DC_S0( j, ap->P, ap->TK );
+        ap->Cp0[j] = cno->DC_Cp0( j, ap->P, ap->TK );
+    }
+}
 
 // set speciation (in units of moles)
 void TActivity::setSpeciation( const double* n )

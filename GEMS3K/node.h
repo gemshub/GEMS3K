@@ -250,7 +250,7 @@ public:
 
     /// Computes all above standard properties for currently set T,P for all DComps in J/mol
     /// (so far only P,T interpolation) from the lookup arrays in CSD
-    void updateThermoData();
+    void updateThermoData( bool norm = true );
 
     // Handling speciation, concentrations, activities, and other properties of (mixed) phases
     //   and their components
