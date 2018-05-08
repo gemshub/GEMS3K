@@ -55,7 +55,7 @@ void TNode::setPressure(const double P)
         CNode->P = P;
         ACTIVITY* ap = atp->GetActivityDataPtr();
         ap->P = P/bar_to_Pa;
-    };
+    }
 }
 
 // compute standard Gibbs energies (so far only from P,T interpolation)

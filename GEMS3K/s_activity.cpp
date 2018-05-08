@@ -30,23 +30,40 @@
 #include<iomanip>
 
 #include "m_param.h"
-#include "activities.h"
+//#include "activities.h"
+#include "node.h"
 
 //#ifndef IPMGEMPLUGIN
 //#include "service.h"
 //#include "stepwise.h"
 //#endif
+#ifdef IPMGEMPLUGIN
 
+// These methods largely duplicate same-named methods from the TNode class
+//   (see node_activities.cpp)
 
 void TActivity::setTemperature(double T)
 {
-    ;
+    if( T > 0. && T < 1e9 )
+    {
+//        CNode->TK = T;
+//        ACTIVITY* ap = atp->GetActivityDataPtr();
+        ACTIVITY* ap = GetActivityDataPtr();
+        ap->TK = T;
+        ap->RT = T*R_CONSTANT;
+    }
 }
 
 // set pressure (in units of Pa)
 void TActivity::setPressure(double P)
 {
-    ;
+    if( P >= 0. && P < 1e12 )
+    {
+//        CNode->P = P;
+//        ACTIVITY* ap = atp->GetActivityDataPtr();
+        ACTIVITY* ap = GetActivityDataPtr();
+        ap->P = P/bar_to_Pa;
+    }
 }
 
 // compute standard Gibbs energies (so far only P,T interpolation)
@@ -999,6 +1016,6 @@ else fRestore = true;
        jb += act.L1[k];
     }  // for k
 }
-
+#endif
 
 //--------------------- End of s_activity.cpp ---------------------------
