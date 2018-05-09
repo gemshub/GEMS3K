@@ -555,6 +555,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                     case SM_IDEAL:   // Ideal (multi-site) model (DK 29.11.2010)
                     case SM_BERMAN:  // Non-ideal (multi-site) model (DK 07.12.2010)
                     case SM_CEF:     // multi-site non-ideal ss model (CALPHAD) DK 15.08.2014
+                    case SM_MBW:     // Modified Bregg-Williams model
                     case SM_REDKIS:  // Redlich-Kister model (binary)
                     case SM_MARGB:   // Subregular Margules model (binary)
                     case SM_MARGT:   // Regular Margules model (ternary)
@@ -1017,6 +1018,14 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
                 mySM = (TSolMod*)myPT;
                 break;
         }
+
+        case SM_MBW:
+        {
+                TMBWmod* myPT = new TMBWmod( &sd, pm.G0+jb );
+                mySM = (TSolMod*)myPT;
+                break;
+        }
+
         case SM_IDEAL:
         {
                 TIdeal* myPT = new TIdeal( &sd );
@@ -1050,7 +1059,7 @@ void TMulti::SolModParPT( long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-    case SM_BERMAN:  case SM_CEF:  /* new ss models */           case SM_SURCOM:
+    case SM_BERMAN:  case SM_CEF:  /* new ss models */   case SM_MBW: /* new mbw model */        case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models
@@ -1077,7 +1086,7 @@ void TMulti::SolModActCoeff( long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:   case SM_SURCOM:
+    case SM_BERMAN:  case SM_CEF:  case SM_MBW:   case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models
@@ -1115,7 +1124,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
         // case SM_USERDEF:  case SM_IDEAL:
         case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:   case SM_SURCOM:
+        case SM_BERMAN:  case SM_CEF:   case SM_MBW:  case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models
@@ -1167,7 +1176,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
         // case SM_USERDEF:
         case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
         case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
-        case SM_BERMAN:  case SM_CEF:   case SM_SURCOM:
+        case SM_BERMAN:  case SM_CEF:    case SM_MBW:   case SM_SURCOM:
         // aqueous DH models
         case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
         // aqueous SIT models

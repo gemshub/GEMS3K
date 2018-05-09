@@ -149,11 +149,11 @@ class TSolMod
 
 //   long int NlPh;     ///< new: Number of linked phases
 //   long int NlPc;     ///< new: Number of linked phase parameter coefficient per link (default 0)
-   long int NDQFpc;   ///< new: Number of DQF parameters per species (end member), 0 or 4
+        long int NDQFpc;   ///< new: Number of DQF parameters per species (end member), 0 or 4
 //   long int NrcPpc;   ///< new: Number of reciprocal parameters per species (end member)
 
         //        long int NPTP_DC;  // Number of properties per one DC at T,P of interest (columns in aDC)  !!!! Move to CG EOS subclass
-                long int *aIPx;    // Pointer to list of indexes of non-zero interaction parameters
+        long int *aIPx;    // Pointer to list of indexes of non-zero interaction parameters
 //   long int (*PhLin)[2];  ///< new: indexes of linked phase and link type codes [NlPhs][2] read-only
 
         double R_CONST; ///< R constant
@@ -189,6 +189,7 @@ class TSolMod
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
         double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF, *CTerm; ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
+        double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bregg-Williams
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
         double ***mn;     ///< array of end member moiety-site multiplicity numbers [NComp][NSub][NMoi]
@@ -1225,13 +1226,14 @@ class TCEFmod: public TSolMod
                 long int em_which(const long int s, const long int m , const long int jb, const long int je);
                 long int em_howmany( long int s, long int m );
                 double ysm( const long int j, const long int s );
-                bool KronDelta( const long int j, const long int m );
+                bool KronDelta( const long int j, const long int s, const long int m );
                 double dGref_dysigma(const long int l, const long int s );
                 double dGref_dysm(const long int s, const long m );
                 double dGm_dysm(const long int s, const long m ); // added by Nichenko
                 long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
-
+                long int ReferenceFramePart(); ///< Calculation of reference frame contributions to activity coefficients
                 double RefFrameTerm( const long int j, double G_ref );
+                double dGr_dysi( const long int i, const long int s, const long int ex_j );
                 long int IdealMixing(); // NSergii: added by Nichenko to rewrite the ideal part contribution
                 long int CalcSiteFractions(); // NSergii:
                 long int SLatt(const long int m);
@@ -1246,6 +1248,79 @@ class TCEFmod: public TSolMod
 
                 /// Destructor
                 ~TCEFmod();
+
+                /// Calculates T,P corrected interaction parameters
+                long int PTparam();
+
+                /// Calculates activity coefficients
+                long int MixMod();
+
+                /// Calculates excess properties
+                long int ExcessProp( double *Zex );
+
+                /// Calculates ideal mixing properties
+                long int IdealProp( double *Zid );
+
+};
+
+
+// -------------------------------------------------------------------------------------
+// TEST MODEL
+// Modified Bregg Williams model (MBW) for multi-component sublattice solid solutions
+// References:Xin Liua, Victor L. Vinograd, Xiancai Lu, and Björn Winkler (2018);
+// Emulation of short-range ordering within the frame of the Bragg-Williams model: Application to the solid solution of calcite and magnesite"
+
+class TMBWmod: public TSolMod
+{
+        private:
+                long int *NmoS;  ///< number of different moieties (in end members) on each sublattic
+                long int *Sub;  ///< lookup table for sublattice index for each moiety.
+                long int *InCf;   ///< Vector of moieties in interaction parameter table (moiesties in columns in aIPx)
+
+                double *Wu;    ///< Interaction parameter coefficients a
+                double *Ws;    ///< Interaction parameter coefficients b (f(T))
+                double *Wc;    ///< Interaction parameter coefficients b (f(TlnT))
+                double *Wv;    ///< Interaction parameter coefficients c (f(P))
+                double *Wpt;   ///< Interaction parameters corrected at P-T of interest
+                double **fjs;      ///< array of site activity coefficients for end members [NComp][NSub]
+
+                double *Grc;  ///< standard molar reciprocal energies (constant)
+                double *oGf;   ///< molar Gibbs energies of end-member compounds
+                double *G0f;   ///< standard molar Gibbs energies of end members (constant)
+                double *pyp;  ///< Products of site fractions for end members (CEF mod.) [NComp]
+//            double *pyn;  // Products of site fractions for sites not in the end member [NComp]
+                void alloc_internal();
+                void free_internal();
+                long int ExcessPart();
+                               ///< Arrays for ideal conf part must exist in base TSolMod instance
+                double PYproduct( const long int j );
+                long int em_which(const long int s, const long int m , const long int jb, const long int je);
+                long int em_howmany( long int s, long int m );
+                double ysm( const long int j, const long int s );
+                bool KronDelta( const long int j, const long int s, const long int m );
+                double dGref_dysigma(const long int l, const long int s );
+                double dGref_dysm(const long int s, const long m );
+                double dGm_dysi( const long int i, const long int s);
+                double dGr_dysi( const long int i, const long int s, const long int x);
+                double dGm_dysm(const long int s, const long m ); // added by Nichenko
+                long int ReciprocalPart();   ///< Calculation of reciprocal contributions to activity coefficients
+                long int CorrPart();   ///< The correction term which is constrained to be identically zero both in the disordered and fully ordered limits
+                long int ReferenceFramePart();///< Calculation of reference frame contributions to activity coefficients
+                double RefFrameTerm( const long int j, double G_ref );
+                long int IdealMixing(); // NSergii: added by Nichenko to rewrite the ideal part contribution
+                long int CalcSiteFractions(); // NSergii:
+                long int SLatt(const long int m);
+                double Gmix(); // NSergii:
+                double Gexc();
+                double Gref();
+                double Gidmix();
+        public:
+
+                /// Constructor
+                TMBWmod( SolutionData *sd, double *G0 );
+
+                /// Destructor
+                ~TMBWmod();
 
                 /// Calculates T,P corrected interaction parameters
                 long int PTparam();

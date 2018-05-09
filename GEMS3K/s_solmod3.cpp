@@ -143,47 +143,47 @@ TVanLaar::~TVanLaar()
 
 void TVanLaar::alloc_internal()
 {
-	Wu = new double [NPar];
-	Ws = new double [NPar];
-	Wv = new double [NPar];
-	Wpt = new double [NPar];
-	Phi = new double [NComp];
-	PsVol = new double [NComp];
+    Wu = new double [NPar];
+    Ws = new double [NPar];
+    Wv = new double [NPar];
+    Wpt = new double [NPar];
+    Phi = new double [NComp];
+    PsVol = new double [NComp];
 }
 
 
 void TVanLaar::free_internal()
 {
-	if(Wu) delete[]Wu;
-	if(Ws) delete[]Ws;
-	if(Wv) delete[]Wv;
-	if(Wpt) delete[]Wpt;
-	if(Phi) delete[]Phi;
-	if(PsVol) delete[]PsVol;
+    if(Wu) delete[]Wu;
+    if(Ws) delete[]Ws;
+    if(Wv) delete[]Wv;
+    if(Wpt) delete[]Wpt;
+    if(Phi) delete[]Phi;
+    if(PsVol) delete[]PsVol;
 }
 
 
 /// Calculates T,P corrected binary interaction parameters
 long int TVanLaar::PTparam()
 {
-	long int j, ip;
+    long int j, ip;
 
     if ( NPcoef < 3 || NPar < 1 )
        return 1;
 
     for (j=0; j<NComp; j++)
     {
-    	PsVol[j] = aDCc[NP_DC*j];  // reading pseudo-volumes
+        PsVol[j] = aDCc[NP_DC*j];  // reading pseudo-volumes
     }
 
     for (ip=0; ip<NPar; ip++)
-	{
+    {
            Wu[ip] = aIPc[NPcoef*ip];
            Ws[ip] = aIPc[NPcoef*ip+1];
            Wv[ip] = aIPc[NPcoef*ip+2];
            Wpt[ip] = Wu[ip]+ Ws[ip]*Tk + Wv[ip]*Pbar;
            aIP[ip] = Wpt[ip];
-	}
+    }
     return 0;
 }
 
@@ -191,11 +191,11 @@ long int TVanLaar::PTparam()
 /// Calculates activity coefficients
 long int TVanLaar::MixMod()
 {
-	long int ip, j, i1, i2;
+    long int ip, j, i1, i2;
         double dj, dk, sumPhi, lnGamRT, lnGam;
 
-	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+        return 1;
 
     // Trying sublattice ideal mixing model
     long int retCode;
@@ -206,101 +206,101 @@ long int TVanLaar::MixMod()
            lnGamma[j] += lnGamConf[j];
     }
 
-	// calculating Phi values
-	sumPhi = 0.;
-	for (j=0; j<NComp; j++)
-	{
-		sumPhi +=  x[j]*PsVol[j];
-	}
+    // calculating Phi values
+    sumPhi = 0.;
+    for (j=0; j<NComp; j++)
+    {
+        sumPhi +=  x[j]*PsVol[j];
+    }
 
-	if( fabs(sumPhi) < 1e-30 )
-		return 2;    // to prevent zerodivide
+    if( fabs(sumPhi) < 1e-30 )
+        return 2;    // to prevent zerodivide
 
-	for (j=0; j<NComp; j++)
-		Phi[j] = x[j]*PsVol[j]/sumPhi;
+    for (j=0; j<NComp; j++)
+        Phi[j] = x[j]*PsVol[j]/sumPhi;
 
-	// calculate activity coefficients
-	for (j=0; j<NComp; j++)
-	{
-		lnGamRT = 0.;
-		for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
-		{
-			i1 = aIPx[MaxOrd*ip];
-			i2 = aIPx[MaxOrd*ip+1];
+    // calculate activity coefficients
+    for (j=0; j<NComp; j++)
+    {
+        lnGamRT = 0.;
+        for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
+        {
+            i1 = aIPx[MaxOrd*ip];
+            i2 = aIPx[MaxOrd*ip+1];
 
-			if( j == i1 )
-				dj = 1.;
-			else
-				dj = 0.;
-			if( j == i2 )
-				dk = 1.;
-			else
-				dk = 0.;
-			lnGamRT -= (dj-Phi[i1])*(dk-Phi[i2])*Wpt[ip]
-			             *2.*PsVol[j]/(PsVol[i1]+PsVol[i2]);
-		}
-		lnGam = lnGamRT/(R_CONST*Tk);
+            if( j == i1 )
+                dj = 1.;
+            else
+                dj = 0.;
+            if( j == i2 )
+                dk = 1.;
+            else
+                dk = 0.;
+            lnGamRT -= (dj-Phi[i1])*(dk-Phi[i2])*Wpt[ip]
+                         *2.*PsVol[j]/(PsVol[i1]+PsVol[i2]);
+        }
+        lnGam = lnGamRT/(R_CONST*Tk);
         lnGamma[j] += lnGam;
-	}
-	return 0;
+    }
+    return 0;
 }
 
 
 /// calculates bulk phase excess properties
 long int TVanLaar::ExcessProp( double *Zex )
 {
-	long int ip, j, i1, i2;
-	double sumPhi, g, v, s, u;
+    long int ip, j, i1, i2;
+    double sumPhi, g, v, s, u;
 
-	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+        return 1;
 
-	// calculating Phi values
-	sumPhi = 0.;
-	for (j=0; j<NComp; j++)
-	{
-		PsVol[j] = aDCc[NP_DC*j];  // reading pseudo-volumes
-	    sumPhi +=  x[j]*PsVol[j];
-	}
+    // calculating Phi values
+    sumPhi = 0.;
+    for (j=0; j<NComp; j++)
+    {
+        PsVol[j] = aDCc[NP_DC*j];  // reading pseudo-volumes
+        sumPhi +=  x[j]*PsVol[j];
+    }
 
-	if( fabs(sumPhi) < 1e-30 )
-		return 2;    // to prevent zerodivide!
+    if( fabs(sumPhi) < 1e-30 )
+        return 2;    // to prevent zerodivide!
 
-	for (j=0; j<NComp; j++)
-	    Phi[j] = x[j]*PsVol[j]/sumPhi;
+    for (j=0; j<NComp; j++)
+        Phi[j] = x[j]*PsVol[j]/sumPhi;
 
-	// calculate bulk phase excess properties
-	g = 0.0; s = 0.0; v = 0.0; u = 0.0;
+    // calculate bulk phase excess properties
+    g = 0.0; s = 0.0; v = 0.0; u = 0.0;
 
-	for (ip=0; ip<NPar; ip++)
-	{
-		i1 = aIPx[MaxOrd*ip];
-	    i2 = aIPx[MaxOrd*ip+1];
-	    g += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
-	    v += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
-	    u += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
-	    s -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
-	 }
+    for (ip=0; ip<NPar; ip++)
+    {
+        i1 = aIPx[MaxOrd*ip];
+        i2 = aIPx[MaxOrd*ip+1];
+        g += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wpt[ip];
+        v += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wv[ip];
+        u += Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Wu[ip];
+        s -= Phi[i1]*Phi[i2]*2.*sumPhi/(PsVol[i1]+PsVol[i2])*Ws[ip];
+     }
 
-	 Gex = g;
-	 Sex = s;
-	 CPex = 0.0;
-	 Vex = v;
-	 Uex = u;
-	 Hex = Uex + Vex*Pbar;
-	 Aex = Gex - Vex*Pbar;
-	 Uex = Hex - Vex*Pbar;
+     Gex = g;
+     Sex = s;
+     CPex = 0.0;
+     Vex = v;
+     Uex = u;
+     Hex = Uex + Vex*Pbar;
+     Aex = Gex - Vex*Pbar;
+     Uex = Hex - Vex*Pbar;
 
-	 // assignments (excess properties)
-	 Zex[0] = Gex;
-	 Zex[1] = Hex;
-	 Zex[2] = Sex;
-	 Zex[3] = CPex;
-	 Zex[4] = Vex;
-	 Zex[5] = Aex;
-	 Zex[6] = Uex;
+     // assignments (excess properties)
+     Zex[0] = Gex;
+     Zex[1] = Hex;
+     Zex[2] = Sex;
+     Zex[3] = CPex;
+     Zex[4] = Vex;
+     Zex[5] = Aex;
+     Zex[6] = Uex;
 
-	 return 0;
+     return 0;
 }
 
 
@@ -315,25 +315,25 @@ long int TVanLaar::IdealProp( double *Zid )
 //		if ( x[j] > 1.0e-32 )
 //			si += x[j]*log(x[j]);
 //	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
     Sid = ideal_conf_entropy();
 //	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -445,44 +445,44 @@ long int TRegular::MixMod()
 /// calculates bulk phase excess properties
 long int TRegular::ExcessProp( double *Zex )
 {
-	long int ip, i1, i2;
-	double g, v, s, u;
+    long int ip, i1, i2;
+    double g, v, s, u;
 
-	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+        return 1;
 
-	// calculate bulk phase excess properties
-	g = 0.0; s = 0.0; v = 0.0; u = 0.0;
+    // calculate bulk phase excess properties
+    g = 0.0; s = 0.0; v = 0.0; u = 0.0;
 
-	for (ip=0; ip<NPar; ip++)
-	{
-		i1 = aIPx[MaxOrd*ip];
-		i2 = aIPx[MaxOrd*ip+1];
-		g += x[i1]*x[i2]*Wpt[ip];
-		v += x[i1]*x[i2]*Wv[ip];
-		u += x[i1]*x[i2]*Wu[ip];
-		s -= x[i1]*x[i2]*Ws[ip];
-	}
+    for (ip=0; ip<NPar; ip++)
+    {
+        i1 = aIPx[MaxOrd*ip];
+        i2 = aIPx[MaxOrd*ip+1];
+        g += x[i1]*x[i2]*Wpt[ip];
+        v += x[i1]*x[i2]*Wv[ip];
+        u += x[i1]*x[i2]*Wu[ip];
+        s -= x[i1]*x[i2]*Ws[ip];
+    }
 
-	Gex = g;
-	Sex = s;
-	CPex = 0.0;
-	Vex = v;
-	Uex = u;
-	Hex = Uex + Vex*Pbar;
-	Aex = Gex - Vex*Pbar;
-	Uex = Hex - Vex*Pbar;
+    Gex = g;
+    Sex = s;
+    CPex = 0.0;
+    Vex = v;
+    Uex = u;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
 
-	// assignments (excess properties)
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
-	return 0;
+    return 0;
 }
 
 
@@ -497,25 +497,25 @@ long int TRegular::IdealProp( double *Zid )
 //		if ( x[j] > 1.0e-32 )
 //			si += x[j]*log(x[j]);
 //	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
     Sid = ideal_conf_entropy();
 //	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -544,198 +544,198 @@ TRedlichKister::~TRedlichKister()
 
 void TRedlichKister::alloc_internal()
 {
-	Lu = new double [NPar][4];
-	Ls = new double [NPar][4];
-	Lcp = new double [NPar][4];
-	Lv = new double [NPar][4];
-	Lpt = new double [NPar][4];
+    Lu = new double [NPar][4];
+    Ls = new double [NPar][4];
+    Lcp = new double [NPar][4];
+    Lv = new double [NPar][4];
+    Lpt = new double [NPar][4];
 }
 
 
 void TRedlichKister::free_internal()
 {
-	if(Lu) delete[]Lu;
-	if(Ls) delete[]Ls;
-	if(Lv) delete[]Lv;
-	if(Lpt) delete[]Lpt;
-	if(Lcp) delete[]Lcp;
+    if(Lu) delete[]Lu;
+    if(Ls) delete[]Ls;
+    if(Lv) delete[]Lv;
+    if(Lpt) delete[]Lpt;
+    if(Lcp) delete[]Lcp;
 }
 
 
 ///   Calculates T,P corrected binary interaction parameters
 long int TRedlichKister::PTparam()
 {
-	long int ip;
+    long int ip;
 
-	if ( NPcoef < 16 || NPar < 1 )
-		return 1;
+    if ( NPcoef < 16 || NPar < 1 )
+        return 1;
 
-	// read in interaction parameters
-	for (ip=0; ip<NPar; ip++)
-	{
-		Lu[ip][0] = aIPc[NPcoef*ip+0];
-	   	Ls[ip][0] = aIPc[NPcoef*ip+1];
-	   	Lcp[ip][0] = aIPc[NPcoef*ip+2];
-	   	Lv[ip][0] = aIPc[NPcoef*ip+3];
-	   	Lpt[ip][0] = Lu[ip][0] + Ls[ip][0]*Tk + Lcp[ip][0]*Tk*log(Tk) + Lv[ip][0]*Pbar;
+    // read in interaction parameters
+    for (ip=0; ip<NPar; ip++)
+    {
+        Lu[ip][0] = aIPc[NPcoef*ip+0];
+        Ls[ip][0] = aIPc[NPcoef*ip+1];
+        Lcp[ip][0] = aIPc[NPcoef*ip+2];
+        Lv[ip][0] = aIPc[NPcoef*ip+3];
+        Lpt[ip][0] = Lu[ip][0] + Ls[ip][0]*Tk + Lcp[ip][0]*Tk*log(Tk) + Lv[ip][0]*Pbar;
                 aIP[ip] = Lpt[ip][0];
 
-	   	Lu[ip][1] = aIPc[NPcoef*ip+4];
-	   	Ls[ip][1] = aIPc[NPcoef*ip+5];
-	   	Lcp[ip][1] = aIPc[NPcoef*ip+6];
-	   	Lv[ip][1] = aIPc[NPcoef*ip+7];
-	   	Lpt[ip][1] = Lu[ip][1] + Ls[ip][1]*Tk + Lcp[ip][1]*Tk*log(Tk) + Lv[ip][1]*Pbar;
+        Lu[ip][1] = aIPc[NPcoef*ip+4];
+        Ls[ip][1] = aIPc[NPcoef*ip+5];
+        Lcp[ip][1] = aIPc[NPcoef*ip+6];
+        Lv[ip][1] = aIPc[NPcoef*ip+7];
+        Lpt[ip][1] = Lu[ip][1] + Ls[ip][1]*Tk + Lcp[ip][1]*Tk*log(Tk) + Lv[ip][1]*Pbar;
 
-	   	Lu[ip][2] = aIPc[NPcoef*ip+8];
-	   	Ls[ip][2] = aIPc[NPcoef*ip+9];
-	   	Lcp[ip][2] = aIPc[NPcoef*ip+10];
-	   	Lv[ip][2] = aIPc[NPcoef*ip+11];
-	   	Lpt[ip][2] = Lu[ip][2] + Ls[ip][2]*Tk + Lcp[ip][2]*Tk*log(Tk) + Lv[ip][2]*Pbar;
+        Lu[ip][2] = aIPc[NPcoef*ip+8];
+        Ls[ip][2] = aIPc[NPcoef*ip+9];
+        Lcp[ip][2] = aIPc[NPcoef*ip+10];
+        Lv[ip][2] = aIPc[NPcoef*ip+11];
+        Lpt[ip][2] = Lu[ip][2] + Ls[ip][2]*Tk + Lcp[ip][2]*Tk*log(Tk) + Lv[ip][2]*Pbar;
 
-	   	Lu[ip][3] = aIPc[NPcoef*ip+12];
-	   	Ls[ip][3] = aIPc[NPcoef*ip+13];
-	   	Lcp[ip][3] = aIPc[NPcoef*ip+14];
-	   	Lv[ip][3] = aIPc[NPcoef*ip+15];
-	   	Lpt[ip][3] = Lu[ip][3] + Ls[ip][3]*Tk + Lcp[ip][3]*Tk*log(Tk) + Lv[ip][3]*Pbar;
+        Lu[ip][3] = aIPc[NPcoef*ip+12];
+        Ls[ip][3] = aIPc[NPcoef*ip+13];
+        Lcp[ip][3] = aIPc[NPcoef*ip+14];
+        Lv[ip][3] = aIPc[NPcoef*ip+15];
+        Lpt[ip][3] = Lu[ip][3] + Ls[ip][3]*Tk + Lcp[ip][3]*Tk*log(Tk) + Lv[ip][3]*Pbar;
 
-	}
-	return 0;
+    }
+    return 0;
 }
 
 
 /// Calculates activity coefficients
 long int TRedlichKister::MixMod()
 {
-	long int ip, j, i1, i2, L, I, J;
+    long int ip, j, i1, i2, L, I, J;
         double L0, L1, L2, L3, lnGamRT, lnGam;
 
-	if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+        return 1;
 
-	// loop over species
-	for (j=0; j<NComp; j++)
-	{
-		lnGamRT = 0.;
-		for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
-		{
-			i1 = aIPx[MaxOrd*ip];
-			i2 = aIPx[MaxOrd*ip+1];
+    // loop over species
+    for (j=0; j<NComp; j++)
+    {
+        lnGamRT = 0.;
+        for (ip=0; ip<NPar; ip++)  // inter.parameters indexed with ip
+        {
+            i1 = aIPx[MaxOrd*ip];
+            i2 = aIPx[MaxOrd*ip+1];
 
-			if ( j == i1 || j == i2) // interaction terms with j
-			{
-				if ( i1 == j ) // check order of idexes
-				{
-					L = i1;
-					I = i2;
-					L0 = Lpt[ip][0];
-					L1 = Lpt[ip][1];
-					L2 = Lpt[ip][2];
-					L3 = Lpt[ip][3];
-				}
-				else
-				{
-					L = i2;
-					I = i1;
-					L0 = Lpt[ip][0];
-					L1 = -Lpt[ip][1];
-					L2 = Lpt[ip][2];
-					L3 = -Lpt[ip][3];
-				}
+            if ( j == i1 || j == i2) // interaction terms with j
+            {
+                if ( i1 == j ) // check order of idexes
+                {
+                    L = i1;
+                    I = i2;
+                    L0 = Lpt[ip][0];
+                    L1 = Lpt[ip][1];
+                    L2 = Lpt[ip][2];
+                    L3 = Lpt[ip][3];
+                }
+                else
+                {
+                    L = i2;
+                    I = i1;
+                    L0 = Lpt[ip][0];
+                    L1 = -Lpt[ip][1];
+                    L2 = Lpt[ip][2];
+                    L3 = -Lpt[ip][3];
+                }
 
-				lnGamRT += L0*x[I]*(1.-x[L])
-					+ L1*x[I]*(2.*(1.-x[L])*(x[L]-x[I])+x[I])
-					+ L2*x[I]*(x[L]-x[I])*(3.*(1.-x[L])*(x[L]-x[I])+2.*x[I])
-					+ L3*x[I]*pow((x[L]-x[I]),2.)*(4.*(1.-x[L])*(x[L]-x[I])+3.*x[I]);
-			}
+                lnGamRT += L0*x[I]*(1.-x[L])
+                    + L1*x[I]*(2.*(1.-x[L])*(x[L]-x[I])+x[I])
+                    + L2*x[I]*(x[L]-x[I])*(3.*(1.-x[L])*(x[L]-x[I])+2.*x[I])
+                    + L3*x[I]*pow((x[L]-x[I]),2.)*(4.*(1.-x[L])*(x[L]-x[I])+3.*x[I]);
+            }
 
-			else // interaction terms without j
-			{
-				I = i1;
-				J = i2;
-				L0 = Lpt[ip][0];
-				L1 = Lpt[ip][1];
-				L2 = Lpt[ip][2];
-				L3 = Lpt[ip][3];
+            else // interaction terms without j
+            {
+                I = i1;
+                J = i2;
+                L0 = Lpt[ip][0];
+                L1 = Lpt[ip][1];
+                L2 = Lpt[ip][2];
+                L3 = Lpt[ip][3];
 
-				lnGamRT -= x[I]*x[J]*( L0 + L1*2.*(x[I]-x[J])
-					+ L2*3.*pow((x[I]-x[J]),2.)
-					+ L3*4.*pow((x[I]-x[J]),3.) );
-			}
-		}
+                lnGamRT -= x[I]*x[J]*( L0 + L1*2.*(x[I]-x[J])
+                    + L2*3.*pow((x[I]-x[J]),2.)
+                    + L3*4.*pow((x[I]-x[J]),3.) );
+            }
+        }
 
-		lnGam = lnGamRT/(R_CONST*Tk);
-		lnGamma[j] = lnGam;
-	} // j
+        lnGam = lnGamRT/(R_CONST*Tk);
+        lnGamma[j] = lnGam;
+    } // j
 
-   	return 0;
+    return 0;
 }
 
 
 /// calculates bulk phase excess properties
 long int TRedlichKister::ExcessProp( double *Zex )
 {
-	long int ip, i1, i2;
-	double LU, LS, LCP, LV, LPT, g, v, s, cp, u;
+    long int ip, i1, i2;
+    double LU, LS, LCP, LV, LPT, g, v, s, cp, u;
 
-	if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 16 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+        return 1;
 
-   	// calculate bulk phase excess properties
-   	g = 0.0; s = 0.0; cp = 0.0; v = 0.0; u = 0.0;
+    // calculate bulk phase excess properties
+    g = 0.0; s = 0.0; cp = 0.0; v = 0.0; u = 0.0;
 
-   	for (ip=0; ip<NPar; ip++)
-   	{
-   		i1 = aIPx[MaxOrd*ip];
-   	   	i2 = aIPx[MaxOrd*ip+1];
+    for (ip=0; ip<NPar; ip++)
+    {
+        i1 = aIPx[MaxOrd*ip];
+        i2 = aIPx[MaxOrd*ip+1];
 
-      	LPT = Lpt[ip][0] + Lpt[ip][1]*(x[i1]-x[i2])
-      			+ Lpt[ip][2]*pow((x[i1]-x[i2]),2.)
-      			+ Lpt[ip][3]*pow((x[i1]-x[i2]),3.);
+        LPT = Lpt[ip][0] + Lpt[ip][1]*(x[i1]-x[i2])
+                + Lpt[ip][2]*pow((x[i1]-x[i2]),2.)
+                + Lpt[ip][3]*pow((x[i1]-x[i2]),3.);
 
-      	LV = Lv[ip][0] + Lv[ip][1]*(x[i1]-x[i2])
-      			+ Lv[ip][2]*pow((x[i1]-x[i2]),2.)
-      			+ Lv[ip][3]*pow((x[i1]-x[i2]),3.);
+        LV = Lv[ip][0] + Lv[ip][1]*(x[i1]-x[i2])
+                + Lv[ip][2]*pow((x[i1]-x[i2]),2.)
+                + Lv[ip][3]*pow((x[i1]-x[i2]),3.);
 
-   	   	LU = (Lu[ip][0]-Lcp[ip][0]*Tk)
-   	  			+ (Lu[ip][1]-Lcp[ip][1]*Tk)*(x[i1]-x[i2])
-      			+ (Lu[ip][2]-Lcp[ip][2]*Tk)*pow((x[i1]-x[i2]),2.)
-      			+ (Lu[ip][3]-Lcp[ip][3]*Tk)*pow((x[i1]-x[i2]),3.);
+        LU = (Lu[ip][0]-Lcp[ip][0]*Tk)
+                + (Lu[ip][1]-Lcp[ip][1]*Tk)*(x[i1]-x[i2])
+                + (Lu[ip][2]-Lcp[ip][2]*Tk)*pow((x[i1]-x[i2]),2.)
+                + (Lu[ip][3]-Lcp[ip][3]*Tk)*pow((x[i1]-x[i2]),3.);
 
-   	   	LS = (-Ls[ip][0]-Lcp[ip][0]*(1.+log(Tk)))
-      			+ (-Ls[ip][1]-Lcp[ip][1]*(1.+log(Tk)))*(x[i1]-x[i2])
-      			+ (-Ls[ip][2]-Lcp[ip][2]*(1.+log(Tk)))*pow((x[i1]-x[i2]),2.)
-      			+ (-Ls[ip][3]-Lcp[ip][3]*(1.+log(Tk)))*pow((x[i1]-x[i2]),3.);
+        LS = (-Ls[ip][0]-Lcp[ip][0]*(1.+log(Tk)))
+                + (-Ls[ip][1]-Lcp[ip][1]*(1.+log(Tk)))*(x[i1]-x[i2])
+                + (-Ls[ip][2]-Lcp[ip][2]*(1.+log(Tk)))*pow((x[i1]-x[i2]),2.)
+                + (-Ls[ip][3]-Lcp[ip][3]*(1.+log(Tk)))*pow((x[i1]-x[i2]),3.);
 
-   	   	LCP = (-Lcp[ip][0]) + (-Lcp[ip][1])*(x[i1]-x[i2])
-      			+ (-Lcp[ip][2])*pow((x[i1]-x[i2]),2.)
-      			+ (-Lcp[ip][3])*pow((x[i1]-x[i2]),3.);
+        LCP = (-Lcp[ip][0]) + (-Lcp[ip][1])*(x[i1]-x[i2])
+                + (-Lcp[ip][2])*pow((x[i1]-x[i2]),2.)
+                + (-Lcp[ip][3])*pow((x[i1]-x[i2]),3.);
 
-      	g += x[i1]*x[i2]*LPT;
-      	v += x[i1]*x[i2]*LV;
-      	u += x[i1]*x[i2]*LU;
-      	s += x[i1]*x[i2]*LS;
-      	cp += x[i1]*x[i2]*LCP;
-  	}
+        g += x[i1]*x[i2]*LPT;
+        v += x[i1]*x[i2]*LV;
+        u += x[i1]*x[i2]*LU;
+        s += x[i1]*x[i2]*LS;
+        cp += x[i1]*x[i2]*LCP;
+    }
 
-	Gex = g;
-	Sex = s;
-	CPex = cp;
-	Vex = v;
-	Uex = u;
-	Hex = Uex + Vex*Pbar;
-	Aex = Gex - Vex*Pbar;
-	Uex = Hex - Vex*Pbar;
+    Gex = g;
+    Sex = s;
+    CPex = cp;
+    Vex = v;
+    Uex = u;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
 
-	// assignments (excess properties)
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
-	return 0;
+    return 0;
 }
 
 
@@ -743,32 +743,32 @@ long int TRedlichKister::ExcessProp( double *Zex )
 long int TRedlichKister::IdealProp( double *Zid )
 {
 
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
-	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    long int j;
+    double si;
+    si = 0.0;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = (-1.)*R_CONST*si;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -797,249 +797,249 @@ TNRTL::~TNRTL()
 
 void TNRTL::alloc_internal()
 {
-	Tau = new double *[NComp];
-	dTau = new double *[NComp];
-	d2Tau = new double *[NComp];
-	Alp = new double *[NComp];
-	dAlp = new double *[NComp];
-	d2Alp = new double *[NComp];
-	G = new double *[NComp];
-	dG = new double *[NComp];
-	d2G = new double *[NComp];
+    Tau = new double *[NComp];
+    dTau = new double *[NComp];
+    d2Tau = new double *[NComp];
+    Alp = new double *[NComp];
+    dAlp = new double *[NComp];
+    d2Alp = new double *[NComp];
+    G = new double *[NComp];
+    dG = new double *[NComp];
+    d2G = new double *[NComp];
 
     for (long int j=0; j<NComp; j++)
     {
-    	Tau[j] = new double [NComp];
-    	dTau[j] = new double [NComp];
-    	d2Tau[j] = new double [NComp];
-    	Alp[j] = new double [NComp];
-    	dAlp[j] = new double [NComp];
-    	d2Alp[j] = new double [NComp];
-		G[j] = new double [NComp];
-		dG[j] = new double [NComp];
-		d2G[j] = new double [NComp];
-	}
+        Tau[j] = new double [NComp];
+        dTau[j] = new double [NComp];
+        d2Tau[j] = new double [NComp];
+        Alp[j] = new double [NComp];
+        dAlp[j] = new double [NComp];
+        d2Alp[j] = new double [NComp];
+        G[j] = new double [NComp];
+        dG[j] = new double [NComp];
+        d2G[j] = new double [NComp];
+    }
 }
 
 
 void TNRTL::free_internal()
 {
-	// cleaning memory
-	for (long int j=0; j<NComp; j++)
-	{
-		delete[]Tau[j];
-	   	delete[]dTau[j];
-	   	delete[]d2Tau[j];
-	   	delete[]Alp[j];
-	   	delete[]dAlp[j];
-	   	delete[]d2Alp[j];
-		delete[]G[j];
-		delete[]dG[j];
-		delete[]d2G[j];
-	}
-	delete[]Tau;
-	delete[]dTau;
-	delete[]d2Tau;
-	delete[]Alp;
-	delete[]dAlp;
-	delete[]d2Alp;
-	delete[]G;
-	delete[]dG;
-	delete[]d2G;
+    // cleaning memory
+    for (long int j=0; j<NComp; j++)
+    {
+        delete[]Tau[j];
+        delete[]dTau[j];
+        delete[]d2Tau[j];
+        delete[]Alp[j];
+        delete[]dAlp[j];
+        delete[]d2Alp[j];
+        delete[]G[j];
+        delete[]dG[j];
+        delete[]d2G[j];
+    }
+    delete[]Tau;
+    delete[]dTau;
+    delete[]d2Tau;
+    delete[]Alp;
+    delete[]dAlp;
+    delete[]d2Alp;
+    delete[]G;
+    delete[]dG;
+    delete[]d2G;
 }
 
 
 ///   Calculates T,P corrected binary interaction parameters
 long int TNRTL::PTparam()
 {
-	long int ip, i, j, i1, i2;
-	double A, B, C, D, E, F, tau, dtau, d2tau, alp, dalp, d2alp;
+    long int ip, i, j, i1, i2;
+    double A, B, C, D, E, F, tau, dtau, d2tau, alp, dalp, d2alp;
 
     if ( NPcoef < 6 || NPar < 1 )
        return 1;
 
-	// fill internal arrays of interaction parameters with standard value
-	for (j=0; j<NComp; j++)
-	{
-		for ( i=0; i<NComp; i++ )
-		{
-			Tau[j][i] = 0.0;
-			dTau[j][i] = 0.0;
-			d2Tau[j][i] = 0.0;
-			Alp[j][i] = 0.0;
-			dAlp[j][i] = 0.0;
-			d2Alp[j][i] = 0.0;
-			G[j][i] = 1.0;
-			dG[j][i] = 0.0;
-			d2G[j][i] = 0.0;
-		}
-	}
+    // fill internal arrays of interaction parameters with standard value
+    for (j=0; j<NComp; j++)
+    {
+        for ( i=0; i<NComp; i++ )
+        {
+            Tau[j][i] = 0.0;
+            dTau[j][i] = 0.0;
+            d2Tau[j][i] = 0.0;
+            Alp[j][i] = 0.0;
+            dAlp[j][i] = 0.0;
+            d2Alp[j][i] = 0.0;
+            G[j][i] = 1.0;
+            dG[j][i] = 0.0;
+            d2G[j][i] = 0.0;
+        }
+    }
 
-	// read and convert parameters that have non-standard value
-	for (ip=0; ip<NPar; ip++)
-	{
-		i1 = aIPx[MaxOrd*ip];
-		i2 = aIPx[MaxOrd*ip+1];
-		A = aIPc[NPcoef*ip+0];
-		B = aIPc[NPcoef*ip+1];
-		C = aIPc[NPcoef*ip+2];
-		D = aIPc[NPcoef*ip+3];
-		E = aIPc[NPcoef*ip+4];
-		F = aIPc[NPcoef*ip+5];
+    // read and convert parameters that have non-standard value
+    for (ip=0; ip<NPar; ip++)
+    {
+        i1 = aIPx[MaxOrd*ip];
+        i2 = aIPx[MaxOrd*ip+1];
+        A = aIPc[NPcoef*ip+0];
+        B = aIPc[NPcoef*ip+1];
+        C = aIPc[NPcoef*ip+2];
+        D = aIPc[NPcoef*ip+3];
+        E = aIPc[NPcoef*ip+4];
+        F = aIPc[NPcoef*ip+5];
 
-		tau = A + B/Tk + C*Tk + D*log(Tk);	// partial derivatives of tau and alp
-		dtau = - B/pow(Tk,2.) + C + D/Tk;
-		d2tau = 2.*B/pow(Tk,3.) - D/pow(Tk,2.);
-		alp = E + F*(Tk-273.15);
-		dalp = F;
-		d2alp = 0.0;
+        tau = A + B/Tk + C*Tk + D*log(Tk);	// partial derivatives of tau and alp
+        dtau = - B/pow(Tk,2.) + C + D/Tk;
+        d2tau = 2.*B/pow(Tk,3.) - D/pow(Tk,2.);
+        alp = E + F*(Tk-273.15);
+        dalp = F;
+        d2alp = 0.0;
 
-		Tau[i1][i2] = tau;
-		dTau[i1][i2] =  dtau;
-		d2Tau[i1][i2] = d2tau;
-		Alp[i1][i2] = alp;
-		dAlp[i1][i2] = dalp;
-		d2Alp[i1][i2] =  d2alp;
+        Tau[i1][i2] = tau;
+        dTau[i1][i2] =  dtau;
+        d2Tau[i1][i2] = d2tau;
+        Alp[i1][i2] = alp;
+        dAlp[i1][i2] = dalp;
+        d2Alp[i1][i2] =  d2alp;
 
-		G[i1][i2] = exp(-Alp[i1][i2]*Tau[i1][i2]);
-		dG[i1][i2] = - ( dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2] )
-				* exp(-Alp[i1][i2]*Tau[i1][i2]);
-		d2G[i1][i2] = - ( (d2Alp[i1][i2]*Tau[i1][i2] + 2.*dAlp[i1][i2]*dTau[i1][i2]
-				+ Alp[i1][i2]*d2Tau[i1][i2])*G[i1][i2]
-				+ (dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2])*dG[i1][i2] );
+        G[i1][i2] = exp(-Alp[i1][i2]*Tau[i1][i2]);
+        dG[i1][i2] = - ( dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2] )
+                * exp(-Alp[i1][i2]*Tau[i1][i2]);
+        d2G[i1][i2] = - ( (d2Alp[i1][i2]*Tau[i1][i2] + 2.*dAlp[i1][i2]*dTau[i1][i2]
+                + Alp[i1][i2]*d2Tau[i1][i2])*G[i1][i2]
+                + (dAlp[i1][i2]*Tau[i1][i2] + Alp[i1][i2]*dTau[i1][i2])*dG[i1][i2] );
 
-		// old version with constant Alp
-		// dG[i1][i2] = -Alp[i1][i2] * exp( -Alp[i1][i2]*Tau[i1][i2] ) * dTau[i1][i2];
-		// d2G[i1][i2] = -Alp[i1][i2]*(-Alp[i1][i2]*exp(-Alp[i1][i2]*Tau[i1][i2])*dTau[i1][i2]*dTau[i1][i2]
-		//		+ exp(-Alp[i1][i2]*Tau[i1][i2])*d2Tau[i1][i2]);
-	}
-	return 0;
+        // old version with constant Alp
+        // dG[i1][i2] = -Alp[i1][i2] * exp( -Alp[i1][i2]*Tau[i1][i2] ) * dTau[i1][i2];
+        // d2G[i1][i2] = -Alp[i1][i2]*(-Alp[i1][i2]*exp(-Alp[i1][i2]*Tau[i1][i2])*dTau[i1][i2]*dTau[i1][i2]
+        //		+ exp(-Alp[i1][i2]*Tau[i1][i2])*d2Tau[i1][i2]);
+    }
+    return 0;
 }
 
 
 /// Calculates activity coefficients
 long int TNRTL::MixMod()
 {
-	long int  j, i, k;
-	double K, L, M, N, O, lnGam;
+    long int  j, i, k;
+    double K, L, M, N, O, lnGam;
 
-	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-	        return 1;
+    if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
 
-	// loop over species
-	for (j=0; j<NComp; j++)
-	{
-		lnGam = 0.0;
-		K = 0.0;
-		L = 0.0;
-		M = 0.0;
-		for (i=0; i<NComp; i++)
-		{
-			N = 0.0;
-			O = 0.0;
-			K += ( x[i]*Tau[i][j]*G[i][j] );
-			L += ( x[i]*G[i][j] );
-			for (k=0; k<NComp; k++)
-			{
-				N += ( x[k]*G[k][i] );
-				O += ( x[k]*Tau[k][i]*G[k][i] );
-			}
-			M += ( x[i]*G[j][i]/N * ( Tau[j][i] - O/N ) );
-		}
-		lnGam = K/L + M;
-		lnGamma[j] = lnGam;
-	}
-	return 0;
+    // loop over species
+    for (j=0; j<NComp; j++)
+    {
+        lnGam = 0.0;
+        K = 0.0;
+        L = 0.0;
+        M = 0.0;
+        for (i=0; i<NComp; i++)
+        {
+            N = 0.0;
+            O = 0.0;
+            K += ( x[i]*Tau[i][j]*G[i][j] );
+            L += ( x[i]*G[i][j] );
+            for (k=0; k<NComp; k++)
+            {
+                N += ( x[k]*G[k][i] );
+                O += ( x[k]*Tau[k][i]*G[k][i] );
+            }
+            M += ( x[i]*G[j][i]/N * ( Tau[j][i] - O/N ) );
+        }
+        lnGam = K/L + M;
+        lnGamma[j] = lnGam;
+    }
+    return 0;
 }
 
 
 /// calculates bulk phase excess properties
 long int TNRTL::ExcessProp( double *Zex )
 {
-	long int  j, i;
-	double U, dU, V, dV, d2U, d2V, g, dg, d2g;
+    long int  j, i;
+    double U, dU, V, dV, d2U, d2V, g, dg, d2g;
 
-	if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-	        return 1;
+    if ( NPcoef < 6 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
 
-	// calculate bulk phase excess properties
-   	Gex = 0.0; Sex = 0.0; Hex = 0.0; CPex = 0.0; Vex = 0.0;
-   	g = 0.0; dg = 0.0; d2g = 0.0;
+    // calculate bulk phase excess properties
+    Gex = 0.0; Sex = 0.0; Hex = 0.0; CPex = 0.0; Vex = 0.0;
+    g = 0.0; dg = 0.0; d2g = 0.0;
 
-   	for (j=0; j<NComp; j++)
-   	{
-		U = 0.0;
-		V = 0.0;
-		dU = 0.0;
-		dV = 0.0;
-		d2U = 0.0;
-		d2V = 0.0;
-		for (i=0; i<NComp; i++)
-		{
-			U += x[i]*Tau[i][j]*G[i][j];
-			V += x[i]*G[i][j];
-			dU += x[i] * ( dTau[i][j]*G[i][j] + Tau[i][j]*dG[i][j] );
-			dV += x[i]*dG[i][j];
-			d2U += x[i] * ( d2Tau[i][j]*G[i][j] + 2.*dTau[i][j]*dG[i][j]
-					+ Tau[i][j]*d2G[i][j] );
-			d2V += x[i]*d2G[i][j];
-		}
-		g += x[j]*U/V;
-		dg += x[j] * (dU*V-U*dV)/pow(V,2.);
-		d2g += x[j] * ( (d2U*V+dU*dV)/pow(V,2.) - (dU*V)*(2.*dV)/pow(V,3.)
-				- (dU*dV+U*d2V)/pow(V,2.) + (U*dV)*(2.*dV)/pow(V,3.) );
-	}
+    for (j=0; j<NComp; j++)
+    {
+        U = 0.0;
+        V = 0.0;
+        dU = 0.0;
+        dV = 0.0;
+        d2U = 0.0;
+        d2V = 0.0;
+        for (i=0; i<NComp; i++)
+        {
+            U += x[i]*Tau[i][j]*G[i][j];
+            V += x[i]*G[i][j];
+            dU += x[i] * ( dTau[i][j]*G[i][j] + Tau[i][j]*dG[i][j] );
+            dV += x[i]*dG[i][j];
+            d2U += x[i] * ( d2Tau[i][j]*G[i][j] + 2.*dTau[i][j]*dG[i][j]
+                    + Tau[i][j]*d2G[i][j] );
+            d2V += x[i]*d2G[i][j];
+        }
+        g += x[j]*U/V;
+        dg += x[j] * (dU*V-U*dV)/pow(V,2.);
+        d2g += x[j] * ( (d2U*V+dU*dV)/pow(V,2.) - (dU*V)*(2.*dV)/pow(V,3.)
+                - (dU*dV+U*d2V)/pow(V,2.) + (U*dV)*(2.*dV)/pow(V,3.) );
+    }
 
-   	// final calculations
-	Gex = g*R_CONST*Tk;
-	Hex = -R_CONST*pow(Tk,2.)*dg;
-	Sex = (Hex-Gex)/Tk;
-	CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
-	Aex = Gex - Vex*Pbar;
-	Uex = Hex - Vex*Pbar;
+    // final calculations
+    Gex = g*R_CONST*Tk;
+    Hex = -R_CONST*pow(Tk,2.)*dg;
+    Sex = (Hex-Gex)/Tk;
+    CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
 
-	// assignments (excess properties)
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
-	return 0;
+    return 0;
 }
 
 
 /// calculates ideal mixing properties
 long int TNRTL::IdealProp( double *Zid )
 {
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
-	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    long int j;
+    double si;
+    si = 0.0;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = (-1.)*R_CONST*si;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -1068,187 +1068,187 @@ TWilson::~TWilson()
 
 void TWilson::alloc_internal()
 {
-	Lam = new double *[NComp];
-	dLam = new double *[NComp];
-	d2Lam = new double *[NComp];
+    Lam = new double *[NComp];
+    dLam = new double *[NComp];
+    d2Lam = new double *[NComp];
 
     for (long int j=0; j<NComp; j++)
     {
-    	Lam[j] = new double [NComp];
-		dLam[j] = new double [NComp];
-		d2Lam[j] = new double [NComp];
-	}
+        Lam[j] = new double [NComp];
+        dLam[j] = new double [NComp];
+        d2Lam[j] = new double [NComp];
+    }
 }
 
 
 void TWilson::free_internal()
 {
-   	// cleaning memory
-   	for (long int j=0; j<NComp; j++)
-   	{
-   		delete[]Lam[j];
-		delete[]dLam[j];
-		delete[]d2Lam[j];
-	}
-	delete[]Lam;
-	delete[]dLam;
-	delete[]d2Lam;
+    // cleaning memory
+    for (long int j=0; j<NComp; j++)
+    {
+        delete[]Lam[j];
+        delete[]dLam[j];
+        delete[]d2Lam[j];
+    }
+    delete[]Lam;
+    delete[]dLam;
+    delete[]d2Lam;
 }
 
 
 /// Calculates T-corrected interaction parameters
 long int TWilson::PTparam()
 {
-	long int ip, i, j, i1, i2;
-	double A, B, C, D, lam, dlam, d2lam;
+    long int ip, i, j, i1, i2;
+    double A, B, C, D, lam, dlam, d2lam;
 
     if ( NPcoef < 4 || NPar < 1 )
            return 1;
 
-	// fill internal arrays of interaction parameters with standard value
-	for (j=0; j<NComp; j++)
-	{
-		for ( i=0; i<NComp; i++ )
-		{
-			Lam[j][i] = 1.0;
-			dLam[j][i] = 0.0;
-			d2Lam[j][i] = 0.0;
-		}
-	}
-	// read and convert parameters that have non-standard value
-	for (ip=0; ip<NPar; ip++)
-	{
-		A = aIPc[NPcoef*ip+0];
-		B = aIPc[NPcoef*ip+1];
-		C = aIPc[NPcoef*ip+2];
-		D = aIPc[NPcoef*ip+3];
-		lam = exp( A + B/Tk + C*Tk + D*log(Tk) );
-		dlam = lam*( - B/pow(Tk,2.) + C + D/Tk );
-		d2lam = dlam*( - B/pow(Tk,2.) + C + D/Tk ) + lam*( 2.*B/pow(Tk,3.) - D/pow(Tk,2.) );
+    // fill internal arrays of interaction parameters with standard value
+    for (j=0; j<NComp; j++)
+    {
+        for ( i=0; i<NComp; i++ )
+        {
+            Lam[j][i] = 1.0;
+            dLam[j][i] = 0.0;
+            d2Lam[j][i] = 0.0;
+        }
+    }
+    // read and convert parameters that have non-standard value
+    for (ip=0; ip<NPar; ip++)
+    {
+        A = aIPc[NPcoef*ip+0];
+        B = aIPc[NPcoef*ip+1];
+        C = aIPc[NPcoef*ip+2];
+        D = aIPc[NPcoef*ip+3];
+        lam = exp( A + B/Tk + C*Tk + D*log(Tk) );
+        dlam = lam*( - B/pow(Tk,2.) + C + D/Tk );
+        d2lam = dlam*( - B/pow(Tk,2.) + C + D/Tk ) + lam*( 2.*B/pow(Tk,3.) - D/pow(Tk,2.) );
 
-		i1 = aIPx[MaxOrd*ip];
-		i2 = aIPx[MaxOrd*ip+1];
-		Lam[i1][i2] = lam;
-		dLam[i1][i2] = dlam;
-		d2Lam[i1][i2] = d2lam;
-	}
-	return 0;
+        i1 = aIPx[MaxOrd*ip];
+        i2 = aIPx[MaxOrd*ip+1];
+        Lam[i1][i2] = lam;
+        dLam[i1][i2] = dlam;
+        d2Lam[i1][i2] = d2lam;
+    }
+    return 0;
 }
 
 
 /// Calculates activity coefficients
 long int TWilson::MixMod()
 {
-	long int  j, i, k;
-	double K, L, M, lnGam;
+    long int  j, i, k;
+    double K, L, M, lnGam;
 
-	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-	        return 1;
+    if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
 
-	// loop over species
-	for (j=0; j<NComp; j++)
-	{
-		lnGam = 0.0;
-		K = 0.0;
-		L = 0.0;
-		for (i=0; i<NComp; i++)
-		{
-			M = 0.0;
-			K += x[i]*Lam[j][i];
-			for (k=0; k<NComp; k++)
-			{
-				M += x[k]*Lam[i][k];
-			}
-			L += x[i]*Lam[i][j]/M;
-		}
-		lnGam = 1.-log(K)-L;
-		lnGamma[j] = lnGam;
-	}
+    // loop over species
+    for (j=0; j<NComp; j++)
+    {
+        lnGam = 0.0;
+        K = 0.0;
+        L = 0.0;
+        for (i=0; i<NComp; i++)
+        {
+            M = 0.0;
+            K += x[i]*Lam[j][i];
+            for (k=0; k<NComp; k++)
+            {
+                M += x[k]*Lam[i][k];
+            }
+            L += x[i]*Lam[i][j]/M;
+        }
+        lnGam = 1.-log(K)-L;
+        lnGamma[j] = lnGam;
+    }
 
-	return 0;
+    return 0;
 }
 
 
 /// calculates bulk phase excess properties
 long int TWilson::ExcessProp( double *Zex )
 {
-	long int  j, i;
-	double U, dU, d2U, g, dg, d2g;
+    long int  j, i;
+    double U, dU, d2U, g, dg, d2g;
 
-	if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
-	        return 1;
+    if ( NPcoef < 4 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
 
-	// calculate bulk phase excess properties
-	Gex = 0.0; Sex = 0.0; Hex = 0.0; CPex = 0.0; Vex = 0.0;
-	g = 0.0; dg = 0.0; d2g = 0.0;
+    // calculate bulk phase excess properties
+    Gex = 0.0; Sex = 0.0; Hex = 0.0; CPex = 0.0; Vex = 0.0;
+    g = 0.0; dg = 0.0; d2g = 0.0;
 
-	// loop over species
-	for (j=0; j<NComp; j++)
-	{
-		U = 0.0;
-		dU = 0.0;
-		d2U = 0.0;
-		for (i=0; i<NComp; i++)
-		{
-			U += x[i]*Lam[j][i];
-			dU += x[i]*dLam[j][i];
-			d2U += x[i]*d2Lam[j][i];
-		}
-		g -= x[j]*log(U);
-		dg -= x[j]*(1./U)*dU;
-		d2g -= x[j] * ( (-1./pow(U,2.))*dU*dU + (1./U)*d2U );  // corrected 11.06.2008 (TW)
-	}
+    // loop over species
+    for (j=0; j<NComp; j++)
+    {
+        U = 0.0;
+        dU = 0.0;
+        d2U = 0.0;
+        for (i=0; i<NComp; i++)
+        {
+            U += x[i]*Lam[j][i];
+            dU += x[i]*dLam[j][i];
+            d2U += x[i]*d2Lam[j][i];
+        }
+        g -= x[j]*log(U);
+        dg -= x[j]*(1./U)*dU;
+        d2g -= x[j] * ( (-1./pow(U,2.))*dU*dU + (1./U)*d2U );  // corrected 11.06.2008 (TW)
+    }
 
-	// final calculations
-	Gex = g*R_CONST*Tk;
-	Hex = -R_CONST*pow(Tk,2.)*dg;
-	Sex = (Hex-Gex)/Tk;
-	CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
+    // final calculations
+    Gex = g*R_CONST*Tk;
+    Hex = -R_CONST*pow(Tk,2.)*dg;
+    Sex = (Hex-Gex)/Tk;
+    CPex = -R_CONST * ( 2.*Tk*dg + pow(Tk,2.)*d2g );
 
-	// assignments (excess properties)
-	Aex = Gex - Vex*Pbar;
-	Uex = Hex - Vex*Pbar;
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments (excess properties)
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
-	return 0;
+    return 0;
 }
 
 
 /// calculates ideal mixing properties
 long int TWilson::IdealProp( double *Zid )
 {
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
-	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    long int j;
+    double si;
+    si = 0.0;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = (-1.)*R_CONST*si;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -1278,28 +1278,28 @@ TMargules::~TMargules()
 /// Calculates T,P corrected binary interaction parameters
 long int TMargules::PTparam()
 {
-	if ( NPcoef < 3 || NPar < 4 )
-	           return 1;
+    if ( NPcoef < 3 || NPar < 4 )
+               return 1;
 
-	// load parameters
-	WU12 = aIPc[0];
-	WS12 = aIPc[1];
-	WV12 = aIPc[2];
-	WU13 = aIPc[3];
-	WS13 = aIPc[4];
-	WV13 = aIPc[5];
-	WU23 = aIPc[6];
-	WS23 = aIPc[7];
-	WV23 = aIPc[8];
-	WU123 = aIPc[9];
-	WS123 = aIPc[10];
-	WV123 = aIPc[11];
+    // load parameters
+    WU12 = aIPc[0];
+    WS12 = aIPc[1];
+    WV12 = aIPc[2];
+    WU13 = aIPc[3];
+    WS13 = aIPc[4];
+    WV13 = aIPc[5];
+    WU23 = aIPc[6];
+    WS23 = aIPc[7];
+    WV23 = aIPc[8];
+    WU123 = aIPc[9];
+    WS123 = aIPc[10];
+    WV123 = aIPc[11];
 
-	// calculate parameters at (T,P)
-	WG12 = WU12 - Tk*WS12 + Pbar*WV12;
-	WG13 = WU13 - Tk*WS13 + Pbar*WV13;
-	WG23 = WU23 - Tk*WS23 + Pbar*WV23;
-	WG123 = WU123 - Tk*WS123 + Pbar*WV123;
+    // calculate parameters at (T,P)
+    WG12 = WU12 - Tk*WS12 + Pbar*WV12;
+    WG13 = WU13 - Tk*WS13 + Pbar*WV13;
+    WG23 = WU23 - Tk*WS23 + Pbar*WV23;
+    WG123 = WU123 - Tk*WS123 + Pbar*WV123;
 
     return 0;
 }
@@ -1308,97 +1308,97 @@ long int TMargules::PTparam()
 /// Calculates activity coefficients
 long int TMargules::MixMod()
 {
-	double a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
+    double a12, a13, a23, a123, lnGam1, lnGam2, lnGam3, X1, X2, X3;
 
-	if ( NPcoef < 3 || NPar < 4 || NComp < 3 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 3 || NPar < 4 || NComp < 3 || !x || !lnGamma )
+        return 1;
 
-	a12 = WG12 / (R_CONST*Tk);
-	a13 = WG13 / (R_CONST*Tk);
-	a23 = WG23 / (R_CONST*Tk);
-	a123 = WG123 / (R_CONST*Tk);
+    a12 = WG12 / (R_CONST*Tk);
+    a13 = WG13 / (R_CONST*Tk);
+    a23 = WG23 / (R_CONST*Tk);
+    a123 = WG123 / (R_CONST*Tk);
 
-	X1 = x[0];
-	X2 = x[1];
-	X3 = x[2];
+    X1 = x[0];
+    X2 = x[1];
+    X3 = x[2];
 
-	// activity coefficients (normalized by RT)
-	lnGam1 = a12*X2*(1.-X1) + a13*X3*(1.-X1) - a23*X2*X3
-				+ a123*X2*X3*(1.-2.*X1);
-	lnGam2 = a23*X3*(1.-X2) + a12*X1*(1.-X2) - a13*X1*X3
-				+ a123*X1*X3*(1.-2.*X2);
-	lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
-				+ a123*X1*X2*(1.-2.*X3);
+    // activity coefficients (normalized by RT)
+    lnGam1 = a12*X2*(1.-X1) + a13*X3*(1.-X1) - a23*X2*X3
+                + a123*X2*X3*(1.-2.*X1);
+    lnGam2 = a23*X3*(1.-X2) + a12*X1*(1.-X2) - a13*X1*X3
+                + a123*X1*X3*(1.-2.*X2);
+    lnGam3 = a13*X1*(1.-X3) + a23*X2*(1.-X3) - a12*X1*X2
+                + a123*X1*X2*(1.-2.*X3);
 
-	// assignments
-	lnGamma[0] = lnGam1;
-	lnGamma[1] = lnGam2;
-	lnGamma[2] = lnGam3;
+    // assignments
+    lnGamma[0] = lnGam1;
+    lnGamma[1] = lnGam2;
+    lnGamma[2] = lnGam3;
 
-	return 0;
+    return 0;
 }
 
 
 /// calculates bulk phase excess properties
 long int TMargules::ExcessProp( double *Zex )
 {
-	double X1, X2, X3;
+    double X1, X2, X3;
 
-	X1 = x[0];
-	X2 = x[1];
-	X3 = x[2];
+    X1 = x[0];
+    X2 = x[1];
+    X3 = x[2];
 
-	// excess properties
-	Gex = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
-	Vex = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
-	Uex = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
-	Sex = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
-	CPex = 0.0;
-	Hex = Uex + Vex*Pbar;
-	Aex = Gex - Vex*Pbar;
+    // excess properties
+    Gex = X1*X2*WG12 + X1*X3*WG13 + X2*X3*WG23 + X1*X2*X3*WG123;
+    Vex = X1*X2*WV12 + X1*X3*WV13 + X2*X3*WV23 + X1*X2*X3*WV123;
+    Uex = X1*X2*WU12 + X1*X3*WU13 + X2*X3*WU23 + X1*X2*X3*WU123;
+    Sex = X1*X2*WS12 + X1*X3*WS13 + X2*X3*WS23 + X1*X2*X3*WS123;
+    CPex = 0.0;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
 
-	// assignments (excess properties)
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
-	return 0;
+    return 0;
 }
 
 
 /// calculates ideal mixing properties
 long int TMargules::IdealProp( double *Zid )
 {
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
-	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    long int j;
+    double si;
+    si = 0.0;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = (-1.)*R_CONST*si;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -1428,20 +1428,20 @@ TSubregular::~TSubregular()
 /// Calculates T,P corrected binary interaction parameters
 long int TSubregular::PTparam()
 {
-	if ( NPcoef < 3 || NPar < 2 )
-	           return 1;
+    if ( NPcoef < 3 || NPar < 2 )
+               return 1;
 
-	// load parameters
-	WU12 = aIPc[0];
-	WS12 = aIPc[1];
-	WV12 = aIPc[2];
-	WU21 = aIPc[3];
-	WS21 = aIPc[4];
-	WV21 = aIPc[5];
+    // load parameters
+    WU12 = aIPc[0];
+    WS12 = aIPc[1];
+    WV12 = aIPc[2];
+    WU21 = aIPc[3];
+    WS21 = aIPc[4];
+    WV21 = aIPc[5];
 
-	// calculate parameters at (T,P)
-	WG12 = WU12 - Tk*WS12 + Pbar*WV12;
-	WG21 = WU21 - Tk*WS21 + Pbar*WV21;
+    // calculate parameters at (T,P)
+    WG12 = WU12 - Tk*WS12 + Pbar*WV12;
+    WG21 = WU21 - Tk*WS21 + Pbar*WV21;
 
     if( NDQFpc < 4 )
         return 0;
@@ -1463,10 +1463,10 @@ long int TSubregular::PTparam()
 /// Calculates activity coefficients
 long int TSubregular::MixMod()
 {
-	double a1, a2, lnGam1, lnGam2, X1, X2;
+    double a1, a2, lnGam1, lnGam2, X1, X2;
 
-	if ( NPcoef < 3 || NPar < 2 || NComp < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 3 || NPar < 2 || NComp < 2 || !x || !lnGamma )
+        return 1;
     if( NDQFpc == 0 )
     {    // Classic Margules subregular model
         a1 = WG12 / (R_CONST*Tk);
@@ -1524,63 +1524,63 @@ long int TSubregular::MixMod()
 /// calculates bulk phase excess properties
 long int TSubregular::ExcessProp( double *Zex )
 {
-	double X1, X2;
+    double X1, X2;
 
-	X1 = x[0];
-	X2 = x[1];
+    X1 = x[0];
+    X2 = x[1];
 
-	// excess properties
-	Gex = X1*X2*( X2*WG12 + X1*WG21 );
-	Vex = X1*X2*( X2*WV12 + X1*WV21 );
-	Uex = X1*X2*( X2*WU12 + X1*WU21 );
-	Sex = X1*X2*( X2*WS12 + X1*WS21 );
-	CPex = 0.0;
-	Hex = Uex + Vex*Pbar;
-	Aex = Gex - Vex*Pbar;
+    // excess properties
+    Gex = X1*X2*( X2*WG12 + X1*WG21 );
+    Vex = X1*X2*( X2*WV12 + X1*WV21 );
+    Uex = X1*X2*( X2*WU12 + X1*WU21 );
+    Sex = X1*X2*( X2*WS12 + X1*WS21 );
+    CPex = 0.0;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
 
-	// assignments
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
     // TBD: DQF contributions
-	return 0;
+    return 0;
 }
 
 
 /// calculates ideal mixing properties
 long int TSubregular::IdealProp( double *Zid )
 {
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
-	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    long int j;
+    double si;
+    si = 0.0;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = (-1.)*R_CONST*si;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -1610,12 +1610,12 @@ TGuggenheim::~TGuggenheim()
 /// Calculates T,P corrected binary interaction parameters
 long int TGuggenheim::PTparam()
 {
-	if ( NPcoef < 3 || NPar < 1 )
-	           return 1;
+    if ( NPcoef < 3 || NPar < 1 )
+               return 1;
 
-	// load parameters
-	a0 = aIPc[0];
-	a1 = aIPc[1];
+    // load parameters
+    a0 = aIPc[0];
+    a1 = aIPc[1];
         a2 = aIPc[2]; // Bugfix was a1 = aIPc[2];
         return 0;
 }
@@ -1624,84 +1624,84 @@ long int TGuggenheim::PTparam()
 /// Calculates activity coefficients
 long int TGuggenheim::MixMod()
 {
-	double lnGam1, lnGam2, X1, X2;
+    double lnGam1, lnGam2, X1, X2;
 
-	if ( NPcoef < 3 || NPar < 1 || NComp < 2 || !x || !lnGamma )
-		return 1;
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || !x || !lnGamma )
+        return 1;
 
-	X1 = x[0];
-	X2 = x[1];
+    X1 = x[0];
+    X2 = x[1];
 
-	// activity coefficients (normalized by RT)
-	lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
-	lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
+    // activity coefficients (normalized by RT)
+    lnGam1 = X2*X2*( a0 + a1*(3.*X1-X2) + a2*(X1-X2)*(5.*X1-X2) );
+    lnGam2 = X1*X1*( a0 - a1*(3.*X2-X1) + a2*(X2-X1)*(5.*X2-X1) );
 
-	// assignments
-	lnGamma[0] = lnGam1;
-	lnGamma[1] = lnGam2;
-	return 0;
+    // assignments
+    lnGamma[0] = lnGam1;
+    lnGamma[1] = lnGam2;
+    return 0;
 }
 
 
 /// calculates bulk phase excess properties
 long int TGuggenheim::ExcessProp( double *Zex )
 {
-	double X1, X2;
+    double X1, X2;
 
-	X1 = x[0];
-	X2 = x[1];
+    X1 = x[0];
+    X2 = x[1];
 
-	// excess properties
-	Gex = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* (R_CONST*Tk);
-	Vex = 0.0;
-	Uex = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* (R_CONST*Tk);
-	Sex = 0.0;
-	CPex = 0.0;
-	Hex = Uex + Vex*Pbar;
-	Aex = Gex - Vex*Pbar;
+    // excess properties
+    Gex = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* (R_CONST*Tk);
+    Vex = 0.0;
+    Uex = (X1*X2*( a0 + a1*(X1-X2) + a2*pow((X1-X2),2.) ))* (R_CONST*Tk);
+    Sex = 0.0;
+    CPex = 0.0;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
 
-	// assignments
-	Zex[0] = Gex;
-	Zex[1] = Hex;
-	Zex[2] = Sex;
-	Zex[3] = CPex;
-	Zex[4] = Vex;
-	Zex[5] = Aex;
-	Zex[6] = Uex;
+    // assignments
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
 
-	return 0;
+    return 0;
 }
 
 
 /// calculates ideal mixing properties
 long int TGuggenheim::IdealProp( double *Zid )
 {
-	long int j;
-	double si;
-	si = 0.0;
-	for (j=0; j<NComp; j++)
-	{
-		if ( x[j] > 1.0e-32 )
-			si += x[j]*log(x[j]);
-	}
-	Hid = 0.0;
-	CPid = 0.0;
-	Vid = 0.0;
-	Sid = (-1.)*R_CONST*si;
-	Gid = Hid - Sid*Tk;
-	Aid = Gid - Vid*Pbar;
-	Uid = Hid - Vid*Pbar;
+    long int j;
+    double si;
+    si = 0.0;
+    for (j=0; j<NComp; j++)
+    {
+        if ( x[j] > 1.0e-32 )
+            si += x[j]*log(x[j]);
+    }
+    Hid = 0.0;
+    CPid = 0.0;
+    Vid = 0.0;
+    Sid = (-1.)*R_CONST*si;
+    Gid = Hid - Sid*Tk;
+    Aid = Gid - Vid*Pbar;
+    Uid = Hid - Vid*Pbar;
 
-	// assignments (ideal mixing properties)
-	Zid[0] = Gid;
-	Zid[1] = Hid;
-	Zid[2] = Sid;
-	Zid[3] = CPid;
-	Zid[4] = Vid;
-	Zid[5] = Aid;
-	Zid[6] = Uid;
+    // assignments (ideal mixing properties)
+    Zid[0] = Gid;
+    Zid[1] = Hid;
+    Zid[2] = Sid;
+    Zid[3] = CPid;
+    Zid[4] = Vid;
+    Zid[5] = Aid;
+    Zid[6] = Uid;
 
-	return 0;
+    return 0;
 }
 
 
@@ -2280,6 +2280,7 @@ double TBerman::RefFrameTerm( const long int j, const double G_ref )
     reftj = G_ref + sum_s;
     return reftj;
 }
+
 /* // This is to experiment with end members with >1 moiety per site
 double TBerman::RefFrameTerm( const long int j, const double G_ref )
 {
@@ -2338,13 +2339,13 @@ long int TBerman::ReciprocalPart()
         pyp[j] = PYproduct( j );
         G_ref += pyp[j] * oGf[j];
     }
-// cout << "G_ref= " << G_ref << endl;
+    // cout << "G_ref= " << G_ref << endl;
     // Calculation of reciprocal activity terms (modified from CEF, Sundman & Agren, 1981)
     for( j=0; j<NComp; j++)
     {
        rft = RefFrameTerm( j, G_ref );
        lnGamRecip[j] = rft - oGf[j];
-// cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
+    // cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
 //     << " pyp=" << pyp[j] << endl;
     }
 //    if( NSub != 2 )
@@ -2473,6 +2474,7 @@ long int TBerman::ExcessPart()
    return 0;
 
 }
+
 
 //=============================================================================================
 // CEF (Calphad) model for multi-component sublattice solid solutions extended with reciprocal terms
@@ -2691,7 +2693,7 @@ long int TCEFmod::IdealMixing() {
         dgm_dysis = 0.0;
         for( m=0; m < NMoi; m++ ) { // Looking through moieties
             s = Sub[m];
-            if (KronDelta(j, m)) {
+            if (KronDelta(j, s, m)) {
                 dgm_dysis += mns[s] * (1 + log(y[s][m]));
             }
         } // m
@@ -2797,46 +2799,75 @@ double TCEFmod::PYproduct( const long int j ) {
     return pyp_j;
 }
 
-double TCEFmod::RefFrameTerm( const long int j, const double G_ref )
+double TCEFmod::RefFrameTerm( const long int i, const double G_ref )
 {
-    long int i, s, m;
-    double sum_s, dgm_dysis, dgm_dyjs, reftj; //NSergii
+    long int j, s, m;
+    double sum_s, dgm_dysis, dgm_dyjs, reftj, kd_ysis; //NSergii
 
     sum_s = 0.0;
     dgm_dysis = 0.0;
-    for( m=0; m < NMoi; m++ ) { // Looking through moieties
-        s = Sub[m];
-        if ( KronDelta(j, m) ) { // If the moiety is a part of compound j
-            for ( i=0; i<NComp; i++) { // Looking through all the compounds that contain moiety m
-                if ( KronDelta(i, m) ) { // If the moiety is a part of compound i
-                    dgm_dysis += pyp[i] * oGf[i] / y[s][m];
-                } // (i, m)
-            } // i
-        } // (j, m)
-    } // m
 
+    for( s = 0; s < NSub; s++ ) { // Looking through moieties
 
-    dgm_dyjs = 0.0;
-    for( m=0; m < NMoi; m++ ) { // Looking through moieties
-        s = Sub[m];
-        for ( i=0; i<NComp; i++) { // Looking through all the compounds that contain moiety m
-            if ( KronDelta(i, m) ) { // If the moiety is a part of compound j
-                //dgm_dyjs  += mns[s] * y[s][m] * pyp[i] * oGf[i] / y[s][m];
-                dgm_dyjs  += pyp[i] * oGf[i];
+        dgm_dysis += dGr_dysi(i, s, -1);
+
+        for ( j = 0; j < NComp; j++) {
+            if (j != i) {
+                for( m=0; m < NMoi; m++ ) { // Looking through moieties
+                    if ( KronDelta(j, s, m) ) { // If the moiety is a part of compound j
+                        dgm_dyjs  += y[s][m] * oGf[i];
+                    }
+                }
             }
         }
-    } // m
-    reftj = G_ref + (dgm_dysis - dgm_dyjs);
+
+        sum_s = dgm_dysis - dgm_dyjs;
+    }
+
+    reftj = G_ref + sum_s;
     return reftj;
 }
 
+double TCEFmod::dGr_dysi( const long int i, const long int s, const long int ex_j )
+{
+    long int l, m, nmem;
+    double krond=0., ys, dst, dsum=0.;
+    bool kron;
+
+    for( l=0; l<NComp; l++ )
+    {
+       if( l == ex_j )   // this end member is marked to be skipped
+           continue;
+       ys = 0.; kron = false;
+       for( m=0; m < NMoi; m++ ) // Looking through moieties
+       {
+          nmem = em_howmany( s, m );
+          if( nmem == NComp )
+              continue;  // ignoring the moiety which is present in all end members
+          if( KronDelta( i, s, m ) )
+          {
+              ys += mn[l][s][m] * y[s][m];
+              kron = true;
+          }
+       } // m
+       if( kron == false )
+           continue;  // no moieties belonging to l-th end member that are also
+                      // present in j-th end member found in this sublattice
+       if( ys > 0. )
+       {
+           ys /= mns[s];
+           dst = oGf[l] * ( pyp[l] / ys );
+           dsum += dst;
+       }
+    } // l
+    return dsum;
+}
 
 /// CEF: calculates part of activity coefficients related to reciprocal energies
 /// (interactions between moieties on different sublattices)
 ///
 long int TCEFmod::ReciprocalPart() {
     long int j;
-    double rft; //NSergii
 
     for( j=0; j<NComp; j++)
          lnGamRecip[j] = 0.;
@@ -2847,15 +2878,16 @@ long int TCEFmod::ReciprocalPart() {
     // Tables of site fractions y and end-member multiplicities mn, mns have been
     // already calculated in the IdealMixing() - here we just use them.
 
-
     // CEF calculations - computing pyp[j] (site fraction products for end members) eq 42
     // and G_ref - total reference Gibbs energy
 
     double G_ref = Gref();
 
+    if( MixCode != MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
+        return 0;
+
     for( j=0; j<NComp; j++) {
-        rft = RefFrameTerm( j, G_ref );
-        lnGamRecip[j] = rft - oGf[j];
+        lnGamRecip[j] = RefFrameTerm( j, G_ref ) - oGf[j];
     }
     return 0;
 }
@@ -2884,7 +2916,7 @@ long int TCEFmod::ExcessPart() {
         dgm_dysis = 0.0;
         for( m=0; m < NMoi; m++ ) { // Looking through moieties
             s = Sub[m];
-            if ( KronDelta(j, m) ) { // If the moiety is a part of compound j
+            if ( KronDelta(j, s, m) ) { // If the moiety is a part of compound j
                 for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
 
                     for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
@@ -2986,11 +3018,21 @@ double TCEFmod::Gidmix(){
     return G_idmix;
 }
 
-bool TCEFmod::KronDelta( const long int j, const long int m ){
-    int s = Sub[m];
+bool TCEFmod::KronDelta( const long int j, const long int s, const long int m ){
     if( mn[j][s][m] != 0 )
        return true;
     return false;
+}
+
+long int TCEFmod::em_howmany( long int s, long int m )
+{
+    long int l, jc=0;
+    for( l=0; l<NComp; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+           jc++;
+    }
+    return jc;
 }
 
 double TCEFmod::Gexc(){
@@ -3019,11 +3061,1255 @@ double TCEFmod::Gexc(){
     return G_exc;
 }
 
+
+//=============================================================================================
+// TEST MODEL
+// Modified Bregg Williams model (MBW) for multi-component sublattice solid solutions
+// References:Xin Liua, Victor L. Vinograd, Xiancai Lu, and Björn Winkler (2018);
+// Emulation of short-range ordering within the frame of the Bragg-Williams model: Application to the solid solution of calcite and magnesite"
+//=============================================================================================
+
+// Generic constructor for the TMBWmod class
+TMBWmod::TMBWmod( SolutionData *sd, double *G0 ):
+                TSolMod( sd )
+{
+    alloc_internal();
+    G0f = G0;
+}
+
+TMBWmod::~TMBWmod()
+{
+    free_internal();
+}
+
+void TMBWmod::alloc_internal()
+{
+    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
+
+    if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
+        return;   // This is not a multi-site model or < 2 EMs or >6 sublattices
+
+    InCf = new long int[MaxOrd];
+    Wu = new double [NPar];
+    Ws = new double [NPar];
+    Wc = new double [NPar];
+    Wv = new double [NPar];
+    Wpt = new double [NPar];
+    NmoS = new long int [NSub];
+    Sub = new long int [NMoi];
+
+    fjs = new double *[NComp];
+    for( j=0; j<NComp; j++)
+    {
+       fjs[j] = new double[NSub];
+    }
+
+    pyp = new double [NComp];
+    oGf =  new double [NComp];
+    Grc = new double [NComp];
+
+    // Count the number of different moieties on each sublattice
+    for( s=0; s< NSub; s++ ) // Cleaning
+       NmoS[s] = 0L;
+    for( m=0; m<NMoi; m++ ) // Looking through moieties
+    {
+        bool mf=false; long int mem[8];
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+           mem[s] = 0;
+        for( j=0; j<NComp; j++) // looking through end members
+        {
+            for( s=0; s< NSub; s++ ) // looking through sublattices
+            {
+               if( mn[j][s][m] != 0. )
+               {
+                 mf=true;
+                 NmoS[s]++;
+                 mem[s]++;
+                 Sub[m] = s;
+                 break;
+               }
+            }
+            if( mf == true )
+               break;
+        } // end j
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+            if( mem[s] == NComp )
+               NmoS[s]--;  // don't count a moiety which is the same in all end members
+    } // m
+}
+
+void TMBWmod::free_internal()
+{
+    long int j,r,s;
+
+    delete[]InCf;
+    delete[]Wu;
+    delete[]Ws;
+    delete[]Wc;
+    delete[]Wv;
+    delete[]Wpt;
+    delete[]Sub;
+
+    for( j=0; j<NComp; j++)
+    {
+       delete[]fjs[j];
+    }
+    delete[]fjs;
+
+    delete[]Grc;
+    delete[]oGf;
+    delete[]NmoS;
+    delete[]pyp;
+//    delete[]pyn;
+}
+
+/// Calculates T-corrected interaction parameters
+long int TMBWmod::PTparam( )
+{
+    long int ip, j, r, j0, j1, j2, j3;
+
+    //if ( NPcoef < 4 || NPar < 1 ) NSergii: Have changed to 3 cause there is 3 params by default
+    if ( NPcoef < 3 || NPar < 1 )
+               return 1;
+
+    for (ip=0; ip<NPar; ip++)  // interaction parameters
+    {
+        Wu[ip] = aIPc[NPcoef*ip];
+        Ws[ip] = aIPc[NPcoef*ip+1];
+        Wc[ip] = aIPc[NPcoef*ip+2];
+        Wv[ip] = aIPc[NPcoef*ip+3];
+        Wpt[ip] = Wu[ip] + Ws[ip]*Tk + Wc[ip]*Tk*log(Tk) + Wv[ip]*Pbar;
+        // Lucas 2007 eq 5.66, Wv and Wc terms added for consistency with petrology
+        aIP[ip] = Wpt[ip];
+    }
+
+    for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
+       oGf[j] = G0f[j];
+//    else
+    { // no separate reciprocal free energy terms provided
+// cout << "NP_DC=" << NP_DC << endl;
+        for (j=0; j<NComp; j++)
+        {
+// cout << " j=" << j;
+            if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
+           {
+                aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
+// cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
+           }
+           Grc[j] = 0.;  // in J/mol
+           oGf[j] = G0f[j]+aGEX[j]; // normalized
+// cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
+        }
+    }
+    return 0;
+}
+
+// Calculates ideal config. term and activity coefficients
+long int TMBWmod::MixMod()
+{
+    double lng;
+    long int retCode, j;
+
+    retCode = IdealMixing();
+    if(!IdealMixing())
+    {
+       for(j=0; j<NComp; j++){
+           lng = lnGamConf[j];
+           lnGamma[j] += lnGamConf[j];
+       }
+    }
+
+    retCode = ReferenceFramePart();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++){
+           lng = lnGamRecip[j];
+           lnGamma[j] += lnGamRecip[j];
+       }
+    }
+
+    retCode = ExcessPart();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++){
+           lng = lnGamEx[j];
+           lnGamma[j] += lnGamEx[j];
+       }
+    }
+
+    return retCode;
+}
+
+
+// NSergii: calculates ideal mixing part from the CEF model
+long int TMBWmod::CalcSiteFractions(){
+    long int j,s,m, i;
+    double mnsxj;
+    // calculation of site fractions
+    for( s = 0; s < NSub; s++) {
+        for( m = 0; m < NMoi; m++) {
+            mnsxj = 0.;
+            for( j = 0; j < NComp; j++)
+               mnsxj += mn[j][s][m] * x[j];
+            // calculation of site fraction (eq 5.1-10)
+            y[s][m] = mnsxj/mns[s];
+        }
+    }
+    return_sitefr();
+    return 0;
+}
+
+//NSergii: Rewrote thte IdealMixing function according to Sundman (1981)
+
+long int TMBWmod::IdealMixing() {
+    long int j,s,m;
+    double dgm_dyjs, dgm_dysis, lnaconj, Gid;  // NSergii
+
+    if( !NSub || !NMoi ) {
+        for( j=0; j<NComp; j++)
+             lnGamConf[j] = 0.;
+        return 1;   // this is not a multi-site model - bailing out
+    }
+
+    CalcSiteFractions();
+    //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
+
+    Gid = Gidmix();
+    // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
+    // for each end member
+    for( j=0; j<NComp; j++) {
+        lnaconj = 0.0;
+
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if (KronDelta(j, s, m)) {
+                dgm_dysis += mns[s] * (1 + log(y[s][m]));
+            }
+        } // m
+
+
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            dgm_dyjs += y[s][m] * mns[s] * (1 + log(y[s][m]));
+        } // m
+
+        lnaconj = Gid + (dgm_dysis - dgm_dyjs);
+
+        lnGamConf[j] = 0.;
+        if(x[j] > 1e-32 )  // Check threshold
+            lnGamConf[j] = lnaconj - log(x[j]);
+    }
+    return 0;
+}
+
+long int TMBWmod::ExcessProp( double *Zex ) {
+    // check and add calculation of excess properties here
+    long int ip, i1, i2, s1, s2, d, e, f;
+    double g, v, s, u;
+
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
+
+    // calculate bulk phase excess properties
+    g = 0.0; s = 0.0; v = 0.0; u = 0.0;
+
+    for (ip=0; ip<NPar; ip++)
+    {
+        s1 = aIPx[MaxOrd*ip];   //
+        s2 = 1 - s1;
+
+        d = aIPx[MaxOrd*ip+1];
+        e = aIPx[MaxOrd*ip+2];
+        f = aIPx[MaxOrd*ip+3];
+
+        g += y[s1][d] * y[s1][e] * y[s2][f] * Wpt[ip];
+        v += y[s1][d] * y[s1][e] * y[s2][f] * Wv[ip];
+        u += y[s1][d] * y[s1][e] * y[s2][f] * Wu[ip];
+        s -= y[s1][d] * y[s1][e] * y[s2][f] * Ws[ip];
+    }
+
+    Gex = g;
+    Sex = s;
+    CPex = 0.0;
+    Vex = v;
+    Uex = u;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
+
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
+
+    return 0;
+}
+
+// calculates ideal mixing properties
+long int TMBWmod::IdealProp( double *Zid ) {
+        Hid = 0.0;
+        CPid = 0.0;
+        Vid = 0.0;
+        Sid = ideal_conf_entropy();
+        Gid = Hid - Sid*Tk;
+        Aid = Gid - Vid*Pbar;
+        Uid = Hid - Vid*Pbar;
+
+        // assignments (ideal mixing properties)
+        Zid[0] = Gid;
+        Zid[1] = Hid;
+        Zid[2] = Sid;
+        Zid[3] = CPid;
+        Zid[4] = Vid;
+        Zid[5] = Aid;
+        Zid[6] = Uid;
+
+        return 0;
+}
+
+/// CEF - computing pyp[j] (product of site fractions for j-th end member) eq 42
+//
+double TMBWmod::PYproduct( const long int j ) {
+    double pyp_j, ys;
+    long int s, m;
+
+    pyp_j = 1.0;
+    for( m=0; m < NMoi; m++){
+        s = Sub[m];
+        if (mn[j][s][m]>1.0e-10){
+            pyp_j *= y[s][m];
+        }
+    }
+    return pyp_j;
+}
+
+double TMBWmod::RefFrameTerm( const long int i, const double G_ref )
+{
+    long int j, s, m;
+    double sum_s, dgm_dysis, dgm_dyjs, reftj, kd_ysis; //NSergii
+
+    sum_s = 0.0;
+    dgm_dysis = 0.0;
+
+    for( s = 0; s < NSub; s++ ) { // Looking through moieties
+
+        dgm_dysis += dGm_dysi(i, s);
+
+        for ( j = 0; j < NComp; j++) {
+            if (j != i) {
+                for( m=0; m < NMoi; m++ ) { // Looking through moieties
+                    if ( KronDelta(j, s, m) ) { // If the moiety is a part of compound j
+                        dgm_dyjs  += y[s][m] * oGf[i];
+                    }
+                }
+            }
+        }
+
+        sum_s = dgm_dysis - dgm_dyjs;
+    }
+
+    reftj = G_ref + sum_s;
+    return reftj;
+}
+
+long int TMBWmod::em_howmany( long int s, long int m )
+{
+    long int l, jc=0;
+    for( l=0; l<NComp; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+           jc++;
+    }
+    return jc;
+}
+
+/// CEF: calculates part of activity coefficients related to reciprocal energies
+/// (interactions between moieties on different sublattices)
+///
+long int TMBWmod::ReferenceFramePart() {
+    long int j;
+
+    for( j=0; j<NComp; j++)
+         lnGamRecip[j] = 0.;
+    if( NSub == 0L || NMoi == 0L )
+        return 1;   // this is not a multi-site model - bailing out
+    if ( NSub > 6L )
+        return 2;  //  too many sublattices - bailing out
+
+    double G_ref = Gref();
+
+    if( MixCode != MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
+        return 0;
+
+    for( j=0; j<NComp; j++) {
+        lnGamRecip[j] = RefFrameTerm( j, G_ref ) - oGf[j];
+    }
+    return 0;
+}
+
+long int TMBWmod::ExcessPart() {
+    long int ip, pm, j, i, s, m, k, s1, s2, s3, s4, m1, m2, m3, m4;
+    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, lnaconj;
+    bool check;
+
+    if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
+        || NPcoef < 3 || !x || !lnGamma ) {
+        for( j=0; j<NComp; j++)
+             lnGamEx[j] = 0.;
+        return 1;   // this is not a multi-site mixing model - bailing out
+    }
+
+
+    // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
+    // for each end member
+    G_exc = Gexc();
+
+    for( j=0; j<NComp; j++) {
+        lnGamEx[j] = 0.;
+        lnaconj = 0.0;
+
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if (KronDelta(j, s, m)) {
+                dgm_dysis += dGm_dysi(j, m);
+            }
+        } // m
+
+
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            dgm_dyjs += y[s][m] * mns[s] * dGm_dysi(j, m);
+        } // m
+
+        lnaconj = (G_exc + (dgm_dysis - dgm_dyjs) ) / ( R_CONST*Tk );
+
+        if(x[j] > 1e-32 )  // Check threshold
+            lnGamEx[j] = lnaconj;// - log(x[j]);
+    }
+
+    G_exc = 0;
+    for (int j = 0; j < NComp; j++) {
+        if(x[j] > 1e-32 ) {  // Check threshold
+            lnaconj = lnGamEx[j];
+            G_exc += (R_CONST*Tk) * x[j] * lnGamEx[j];
+        }
+    }
+
+   return 0;
+}
+
+double TMBWmod::dGm_dysi( const long int i, const long int m) {
+    long int ip, pm, j, s, k, s1, s2, s3, s4, m1, m2, m3, m4, variant;
+    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, WW;
+    bool cond;
+
+    dgm_dysis = 0.0;
+
+    s = Sub[m];
+
+    if (y[s][m] < 1.0e-36)
+        return 0.0;
+
+    for ( ip = 0; ip < NPar; ip++) {  // interaction parameters indexed with ip
+
+        for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
+            InCf[pm] = aIPx[ MaxOrd * ip + pm ];
+        }
+
+        m1  = aIPx[ MaxOrd*ip + 0 ];
+        m2  = aIPx[ MaxOrd*ip + 1 ];
+        m3  = aIPx[ MaxOrd*ip + 2 ];
+        m4  = aIPx[ MaxOrd*ip + 3 ];
+        s1  = (m1 > -1) ? Sub[m1] : 0;
+        s2  = (m2 > -1) ? Sub[m2] : 0;
+        s3  = (m3 > -1) ? Sub[m3] : 0;
+        s4  = (m4 > -1) ? Sub[m4] : 0;
+        PY  = 1.0;
+        Wip = Wpt[ip];
+
+        cond = false;
+        PY    = 1.0;
+        for ( pm=0 ; pm<MaxOrd-1; pm++) {
+            k = InCf[pm];
+            if ( k > -1.0 ) {
+                s1 = Sub[k];
+                PY *= y[s1][k];
+                if (k == m)
+                    cond = true;
+            }
+        }
+
+        variant = InCf[MaxOrd-1];
+
+        switch (variant) {
+            case 0:
+                if (cond)
+                    dgm_dysis += PY * Wpt[ip] / y[s][m];
+                break;
+            case 1:
+                if (cond) {
+                    if (m1 == m || m2 == m || m3 == m)
+                        PY +=  y[s1][m1]*y[s2][m2] * y[s3][m3] / y[s][m];
+                    if (m1 == m || m2 == m || m4 == m)
+                        PY += -y[s1][m1]*y[s2][m2] * y[s4][m4] / y[s][m];
+                    dgm_dysis += PY * Wpt[ip];
+                }
+                break;
+            default:
+                if (cond)
+                    dgm_dysis += PY * Wpt[ip] / y[s][m];
+                break;
+        }
+
+        /*
+        if ( m1 > -1 && m2 > -1 && m3 > -1  && ip != 6 ) { // the is not the cross lattice parameter
+            if ( m == m1 || m ==  m2 || m == m3 ) { // If any of the moiety is a part of compound j
+                s1 = Sub[m1];
+                s2 = Sub[m2];
+                s3 = Sub[m3];
+                s4 = Sub[m4];
+                PY = y[s1][m1] * y[s2][m2] * y[s3][m3];
+
+                dgm_dysis += PY * Wip / y[s][m];// / x[j];
+            }
+        }
+
+        if ( m1 > -1 && m2 > -1 && m3 < 0 && m4 < 0  && ip != 6 ) { // the is the cross lattice parameter
+            if ( m == m1 || m == m2) { // If any of the moiety is a part of compound j
+                s1 = Sub[m1];
+                s2 = Sub[m2];
+                PY = y[s1][m1] * y[s2][m2];
+
+                dgm_dysis += PY * Wip / y[s][m];// / x[j];
+            }
+        } // if condition
+
+
+        if ( ip == 6 ) { // the is the K parameter
+
+            WW = (Wpt[0] + Wpt[2] + Wpt[4]);
+
+            if ( (m == 1 && s == 1) || (m == 3 && s == 0) ) {
+
+                PY = y[s1][m1] * y[s2][m2] * (y[s3][m3] - y[s4][m4]);
+                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
+            }
+
+            if (m == 0 && s == 0) {
+
+                PY  = y[s1][m1] * y[s2][m2];
+                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
+            }
+
+            if (m == 1 && s == 1) {
+
+                PY  = - y[s1][m1] * y[s2][m2];
+                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
+            }
+        } // if condition
+        */
+    }  // ip
+
+    return dgm_dysis;
+}
+
+double TMBWmod::Gref(){
+    int j;
+    double G_ref;
+
+    // Reference frame term
+    G_ref   = 0.0;
+    for( j=0; j<NComp; j++) {
+        pyp[j] = PYproduct( j );
+        G_ref += pyp[j] * oGf[j];
+    }
+    return G_ref;
+}
+
+double TMBWmod::Gidmix(){
+    int j, m, s;
+    double G_idmix;
+
+    // Reference frame term
+    G_idmix = 0.0;
+    for( m=0; m < NMoi; m++ ) { // Looking through moieties
+        s = Sub[m];
+        if (y[s][m] > 1.0e-24)
+            G_idmix  += mns[s] * y[s][m] * log(y[s][m]);
+    } // m
+    return G_idmix;
+}
+
+bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ){
+    if( mn[j][s][m] != 0 )
+       return true;
+    return false;
+}
+
+double TMBWmod::Gexc(){
+    int j, m, s1, s2, s3, s4, k, pm, ip, m1, m2, m3, m4, variant;
+    double G_exc, PY, wpt, xx, Wip, WW, lnGam, lnGamRT;
+
+    // Excess Gibbs energy term
+    G_exc    = 0.0;
+    for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
+
+        for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
+            InCf[pm] = aIPx[ MaxOrd * ip + pm ];
+        }
+
+        m1 = aIPx[ MaxOrd*ip + 0 ];
+        m2 = aIPx[ MaxOrd*ip + 1 ];
+        m3 = aIPx[ MaxOrd*ip + 2 ];
+        m4 = aIPx[ MaxOrd*ip + 3 ];
+        s1 = (m1 > -1) ? Sub[m1] : 0;
+        s2 = (m2 > -1) ? Sub[m2] : 0;
+        s3 = (m3 > -1) ? Sub[m3] : 0;
+        s4 = (m4 > -1) ? Sub[m4] : 0;
+
+        PY    = 1.0;
+        for ( pm=0 ; pm<MaxOrd-1; pm++) {
+            k = InCf[pm];
+            if ( k > -1.0 ) {
+                s1 = Sub[k];
+                PY *= y[s1][k];
+            }
+        }
+
+        variant = InCf[MaxOrd-1];
+
+        switch (variant) {
+            case 0:
+                G_exc += PY * Wpt[ip];
+                break;
+            case 1:
+                PY = y[s1][m1]*y[s2][m2] * (y[s3][m3] - y[s4][m4]);
+                G_exc += PY * Wpt[ip];
+                break;
+            default:
+                G_exc += PY * Wpt[ip];
+                break;
+        }
+    }  // ip
+    return G_exc;
+}
+
+
+
+
+/*
+//=============================================================================================
+// TEST MODEL
+// Modified Bregg Williams model (MBW) for multi-component sublattice solid solutions
+// References:Xin Liua, Victor L. Vinograd, Xiancai Lu, and Björn Winkler (2018);
+// Emulation of short-range ordering within the frame of the Bragg-Williams model: Application to the solid solution of calcite and magnesite"
+//=============================================================================================
+
+// Generic constructor for the TMBWmod class
+TMBWmod::TMBWmod( SolutionData *sd, double *G0 ):
+                TSolMod( sd )
+{
+    alloc_internal();
+    G0f = G0;
+}
+
+TMBWmod::~TMBWmod()
+{
+    free_internal();
+}
+
+void TMBWmod::alloc_internal()
+{
+    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
+
+    if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
+        return;   // This is not a multi-site model or < 2 EMs or >6 sublattices
+
+    InCf = new long int[MaxOrd];
+    Wu = new double [NPar];
+    Ws = new double [NPar];
+    Wc = new double [NPar];
+    Wv = new double [NPar];
+    Wpt = new double [NPar];
+    NmoS = new long int [NSub];
+    Sub = new long int [NMoi];
+
+    fjs = new double *[NComp];
+    for( j=0; j<NComp; j++)
+    {
+       fjs[j] = new double[NSub];
+    }
+
+    pyp = new double [NComp];
+    oGf =  new double [NComp];
+    Grc = new double [NComp];
+
+    // Count the number of different moieties on each sublattice
+    for( s=0; s< NSub; s++ ) // Cleaning
+       NmoS[s] = 0L;
+    for( m=0; m<NMoi; m++ ) // Looking through moieties
+    {
+        bool mf=false; long int mem[8];
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+           mem[s] = 0;
+        for( j=0; j<NComp; j++) // looking through end members
+        {
+            for( s=0; s< NSub; s++ ) // looking through sublattices
+            {
+               if( mn[j][s][m] != 0. )
+               {
+                 mf=true;
+                 NmoS[s]++;
+                 mem[s]++;
+                 Sub[m] = s;
+                 break;
+               }
+            }
+            if( mf == true )
+               break;
+        } // end j
+        for( s=0; s< NSub; s++ ) // looking through sublattices
+            if( mem[s] == NComp )
+               NmoS[s]--;  // don't count a moiety which is the same in all end members
+    } // m
+}
+
+void TMBWmod::free_internal()
+{
+    long int j,r,s;
+
+    delete[]InCf;
+    delete[]Wu;
+    delete[]Ws;
+    delete[]Wc;
+    delete[]Wv;
+    delete[]Wpt;
+    delete[]Sub;
+
+    for( j=0; j<NComp; j++)
+    {
+       delete[]fjs[j];
+    }
+    delete[]fjs;
+
+    delete[]Grc;
+    delete[]oGf;
+    delete[]NmoS;
+    delete[]pyp;
+//    delete[]pyn;
+}
+
+/// Calculates T-corrected interaction parameters
+long int TMBWmod::PTparam( )
+{
+    long int ip, j, r, j0, j1, j2, j3;
+
+    //if ( NPcoef < 4 || NPar < 1 ) NSergii: Have changed to 3 cause there is 3 params by default
+    if ( NPcoef < 3 || NPar < 1 )
+               return 1;
+
+    for (ip=0; ip<NPar; ip++)  // interaction parameters
+    {
+        Wu[ip] = aIPc[NPcoef*ip];
+        Ws[ip] = aIPc[NPcoef*ip+1];
+        Wc[ip] = aIPc[NPcoef*ip+2];
+        Wv[ip] = aIPc[NPcoef*ip+3];
+        Wpt[ip] = Wu[ip] + Ws[ip]*Tk + Wc[ip]*Tk*log(Tk) + Wv[ip]*Pbar;
+        // Lucas 2007 eq 5.66, Wv and Wc terms added for consistency with petrology
+        aIP[ip] = Wpt[ip];
+    }
+
+    for (j=0; j<NComp; j++)  // Reciprocal and standard Gibbs energy terms
+       oGf[j] = G0f[j];
+//    else
+    { // no separate reciprocal free energy terms provided
+// cout << "NP_DC=" << NP_DC << endl;
+        for (j=0; j<NComp; j++)
+        {
+// cout << " j=" << j;
+            if(NP_DC > 0) // use the first DCc coefficient (to be checked!)
+           {
+                aGEX[j] = aDCc[NP_DC*j]/(R_CONST*Tk);
+// cout << " aDCc[j][0]=" << aDCc[NP_DC*j] << " aGEX[j]=" << aGEX[j];
+           }
+           Grc[j] = 0.;  // in J/mol
+           oGf[j] = G0f[j]+aGEX[j]; // normalized
+// cout << " G0f[j]=" << G0f[j] << " | oGf[j]=" << oGf[j] << endl;
+        }
+    }
+    return 0;
+}
+
+// Calculates ideal config. term and activity coefficients
+long int TMBWmod::MixMod()
+{
+    double lng;
+    long int retCode, j;
+
+    retCode = IdealMixing();
+    if(!IdealMixing())
+    {
+       for(j=0; j<NComp; j++){
+           lng = lnGamConf[j];
+           lnGamma[j] += lnGamConf[j];
+       }
+    }
+
+    retCode = ReciprocalPart();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++){
+           lng = lnGamRecip[j];
+           lnGamma[j] += lnGamRecip[j];
+       }
+    }
+
+    retCode = ExcessPart();
+    if(!retCode)
+    {
+       for(j=0; j<NComp; j++){
+           lng = lnGamEx[j];
+           lnGamma[j] += lnGamEx[j];
+       }
+    }
+
+    return retCode;
+}
+
+
+// NSergii: calculates ideal mixing part from the CEF model
+long int TMBWmod::CalcSiteFractions(){
+    long int j,s,m, i;
+    double mnsxj;
+    // calculation of site fractions
+    for( s = 0; s < NSub; s++) {
+        for( m = 0; m < NMoi; m++) {
+            mnsxj = 0.;
+            for( j = 0; j < NComp; j++)
+               mnsxj += mn[j][s][m] * x[j];
+            // calculation of site fraction (eq 5.1-10)
+            y[s][m] = mnsxj/mns[s];
+        }
+    }
+    return_sitefr();
+    return 0;
+}
+
+//NSergii: Rewrote thte IdealMixing function according to Sundman (1981)
+
+long int TMBWmod::IdealMixing() {
+    long int j,s,m;
+    double dgm_dyjs, dgm_dysis, lnaconj, Gid;  // NSergii
+
+    if( !NSub || !NMoi ) {
+        for( j=0; j<NComp; j++)
+             lnGamConf[j] = 0.;
+        return 1;   // this is not a multi-site model - bailing out
+    }
+
+    CalcSiteFractions();
+    //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
+
+    Gid = Gidmix();
+    // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
+    // for each end member
+    for( j=0; j<NComp; j++) {
+        lnaconj = 0.0;
+
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if (KronDelta(j, s, m)) {
+                dgm_dysis += mns[s] * (1 + log(y[s][m]));
+            }
+        } // m
+
+
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            dgm_dyjs += y[s][m] * mns[s] * (1 + log(y[s][m]));
+        } // m
+
+        lnaconj = Gid + (dgm_dysis - dgm_dyjs);
+
+        lnGamConf[j] = 0.;
+        if(x[j] > 1e-32 )  // Check threshold
+            lnGamConf[j] = lnaconj - log(x[j]);
+    }
+    return 0;
+}
+
+long int TMBWmod::ExcessProp( double *Zex ) {
+    // check and add calculation of excess properties here
+    long int ip, i1, i2, s1, s2, d, e, f;
+    double g, v, s, u;
+
+    if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
+            return 1;
+
+    // calculate bulk phase excess properties
+    g = 0.0; s = 0.0; v = 0.0; u = 0.0;
+
+    for (ip=0; ip<NPar; ip++)
+    {
+        s1 = aIPx[MaxOrd*ip];   //
+        s2 = 1 - s1;
+
+        d = aIPx[MaxOrd*ip+1];
+        e = aIPx[MaxOrd*ip+2];
+        f = aIPx[MaxOrd*ip+3];
+
+        g += y[s1][d] * y[s1][e] * y[s2][f] * Wpt[ip];
+        v += y[s1][d] * y[s1][e] * y[s2][f] * Wv[ip];
+        u += y[s1][d] * y[s1][e] * y[s2][f] * Wu[ip];
+        s -= y[s1][d] * y[s1][e] * y[s2][f] * Ws[ip];
+    }
+
+    Gex = g;
+    Sex = s;
+    CPex = 0.0;
+    Vex = v;
+    Uex = u;
+    Hex = Uex + Vex*Pbar;
+    Aex = Gex - Vex*Pbar;
+    Uex = Hex - Vex*Pbar;
+
+    // assignments (excess properties)
+    Zex[0] = Gex;
+    Zex[1] = Hex;
+    Zex[2] = Sex;
+    Zex[3] = CPex;
+    Zex[4] = Vex;
+    Zex[5] = Aex;
+    Zex[6] = Uex;
+
+    return 0;
+}
+
+// calculates ideal mixing properties
+long int TMBWmod::IdealProp( double *Zid ) {
+        Hid = 0.0;
+        CPid = 0.0;
+        Vid = 0.0;
+        Sid = ideal_conf_entropy();
+        Gid = Hid - Sid*Tk;
+        Aid = Gid - Vid*Pbar;
+        Uid = Hid - Vid*Pbar;
+
+        // assignments (ideal mixing properties)
+        Zid[0] = Gid;
+        Zid[1] = Hid;
+        Zid[2] = Sid;
+        Zid[3] = CPid;
+        Zid[4] = Vid;
+        Zid[5] = Aid;
+        Zid[6] = Uid;
+
+        return 0;
+}
+
+/// CEF - computing pyp[j] (product of site fractions for j-th end member) eq 42
+//
+double TMBWmod::PYproduct( const long int j ) {
+    double pyp_j, ys;
+    long int s, m;
+
+    pyp_j = 1.0;
+    for( m=0; m < NMoi; m++){
+        s = Sub[m];
+        if (mn[j][s][m]>1.0e-10){
+            pyp_j *= y[s][m];
+        }
+    }
+    return pyp_j;
+}
+
+double TMBWmod::RefFrameTerm( const long int i, const double G_ref )
+{
+    long int j, s, m;
+    double sum_s, dgm_dysis, dgm_dyjs, reftj, kd_ysis; //NSergii
+
+    sum_s = 0.0;
+    dgm_dysis = 0.0;
+
+    for( s = 0; s < NSub; s++ ) { // Looking through moieties
+
+        dgm_dysis += dGm_dysi(i, s);
+
+        for ( j = 0; j < NComp; j++) {
+            if (j != i) {
+                for( m=0; m < NMoi; m++ ) { // Looking through moieties
+                    if ( KronDelta(j, s, m) ) { // If the moiety is a part of compound j
+                        dgm_dyjs  += y[s][m] * oGf[i];
+                    }
+                }
+            }
+        }
+
+        sum_s = dgm_dysis - dgm_dyjs;
+    }
+
+    reftj = G_ref + sum_s;
+    return reftj;
+}
+
+long int TMBWmod::em_howmany( long int s, long int m )
+{
+    long int l, jc=0;
+    for( l=0; l<NComp; l++ )
+    {
+       if( mn[l][s][m] != 0 )
+           jc++;
+    }
+    return jc;
+}
+
+/// CEF: calculates part of activity coefficients related to reciprocal energies
+/// (interactions between moieties on different sublattices)
+///
+long int TMBWmod::ReciprocalPart() {
+    long int j;
+
+    for( j=0; j<NComp; j++)
+         lnGamRecip[j] = 0.;
+    if( NSub == 0L || NMoi == 0L )
+        return 1;   // this is not a multi-site model - bailing out
+    if ( NSub > 6L )
+        return 2;  //  too many sublattices - bailing out
+    // Tables of site fractions y and end-member multiplicities mn, mns have been
+    // already calculated in the IdealMixing() - here we just use them.
+
+    // CEF calculations - computing pyp[j] (site fraction products for end members) eq 42
+    // and G_ref - total reference Gibbs energy
+
+    double G_ref = Gref();
+
+    if( MixCode != MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
+        return 0;
+
+    for( j=0; j<NComp; j++) {
+        lnGamRecip[j] = RefFrameTerm( j, G_ref ) - oGf[j];
+    }
+    return 0;
+}
+
+long int TMBWmod::ExcessPart() {
+    long int ip, pm, j, i, s, m, k, s1, s2, s3, s4, m1, m2, m3, m4;
+    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, lnaconj;
+    bool check;
+
+    if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
+        || NPcoef < 3 || !x || !lnGamma ) {
+        for( j=0; j<NComp; j++)
+             lnGamEx[j] = 0.;
+        return 1;   // this is not a multi-site mixing model - bailing out
+    }
+
+
+    // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
+    // for each end member
+    G_exc = Gexc();
+    for( j=0; j<NComp; j++) {
+        lnGamEx[j] = 0.;
+        lnaconj = 0.0;
+
+        dgm_dysis = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            if (KronDelta(j, s, m)) {
+                dgm_dysis += dGm_dysi(j, m);
+            }
+        } // m
+
+
+        dgm_dyjs = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            s = Sub[m];
+            dgm_dyjs += y[s][m] * mns[s] * dGm_dysi(j, m);
+        } // m
+
+        lnaconj = (G_exc + (dgm_dysis - dgm_dyjs) ) / ( R_CONST*Tk );
+
+        if(x[j] > 1e-32 )  // Check threshold
+            lnGamEx[j] = lnaconj;// - log(x[j]);
+    }
+
+    G_exc = 0;
+    for (int j = 0; j < NComp; j++) {
+        if(x[j] > 1e-32 ) {  // Check threshold
+            lnaconj = lnGamEx[j];
+            G_exc += (R_CONST*Tk) * x[j] * lnGamEx[j];
+        }
+    }
+
+   return 0;
+}
+
+double TMBWmod::dGm_dysi( const long int i, const long int m) {
+    long int ip, pm, j, s, k, s1, s2, s3, s4, m1, m2, m3, m4;
+    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, WW;
+
+    dgm_dysis = 0.0;
+
+    s = Sub[m];
+
+    if (y[s][m] < 1.0e-36)
+        return 0.0;
+
+    for ( ip = 0; ip < NPar; ip++) {  // interaction parameters indexed with ip
+
+        m1  = aIPx[MaxOrd*ip + 0];
+        m2  = aIPx[MaxOrd*ip + 1];
+        m3  = aIPx[MaxOrd*ip + 2];
+        m4  = aIPx[MaxOrd*ip + 3];
+        Wip = Wpt[ip];
+
+        if ( m1 > -1 && m2 > -1 && m3 > -1  && ip != 6 ) { // the is not the cross lattice parameter
+            if ( m == m1 || m ==  m2 || m == m3 ) { // If any of the moiety is a part of compound j
+                s1 = Sub[m1];
+                s2 = Sub[m2];
+                s3 = Sub[m3];
+                s4 = Sub[m4];
+                PY = y[s1][m1] * y[s2][m2] * y[s3][m3];
+
+                dgm_dysis += PY * Wip / y[s][m];// / x[j];
+            }
+        }
+
+        if ( m1 > -1 && m2 > -1 && m3 < 0 && m4 < 0  && ip != 6 ) { // the is the cross lattice parameter
+            if ( m == m1 || m == m2) { // If any of the moiety is a part of compound j
+                s1 = Sub[m1];
+                s2 = Sub[m2];
+                PY = y[s1][m1] * y[s2][m2];
+
+                dgm_dysis += PY * Wip / y[s][m];// / x[j];
+            }
+        } // if condition
+
+
+
+        if ( ip == 6 ) { // the is the K parameter
+
+            WW = (Wpt[0] + Wpt[2] + Wpt[4]);
+
+            if ( (m == 1 && s == 1) || (m == 3 && s == 0) ) {
+
+                PY = y[s1][m1] * y[s2][m2] * (y[s3][m3] - y[s4][m4]);
+                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
+            }
+
+            if (m == 0 && s == 0) {
+
+                PY  = y[s1][m1] * y[s2][m2];
+                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
+            }
+
+            if (m == 1 && s == 1) {
+
+                PY  = - y[s1][m1] * y[s2][m2];
+                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
+            }
+        } // if condition
+
+    }  // ip
+
+    return dgm_dysis;
+}
+
+double TMBWmod::Gref(){
+    int j;
+    double G_ref;
+
+    // Reference frame term
+    G_ref   = 0.0;
+    for( j=0; j<NComp; j++) {
+        pyp[j] = PYproduct( j );
+        G_ref += pyp[j] * oGf[j];
+    }
+    return G_ref;
+}
+
+double TMBWmod::Gidmix(){
+    int j, m, s;
+    double G_idmix;
+
+    // Reference frame term
+    G_idmix = 0.0;
+    for( m=0; m < NMoi; m++ ) { // Looking through moieties
+        s = Sub[m];
+        if (y[s][m] > 1.0e-24)
+            G_idmix  += mns[s] * y[s][m] * log(y[s][m]);
+    } // m
+    return G_idmix;
+}
+
+bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ){
+    if( mn[j][s][m] != 0 )
+       return true;
+    return false;
+}
+
+double TMBWmod::Gexc(){
+    int j, m, s1, s2, s3, s4, k, pm, ip, m1, m2, m3, m4;
+    double G_exc, PY, wpt, xx, Wip, WW, lnGam, lnGamRT;
+
+    // Excess Gibbs energy term
+    G_exc    = 0.0;
+
+    for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
+
+        for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
+            InCf[pm] = aIPx[MaxOrd*ip+pm];
+        }
+
+        m1 = aIPx[ MaxOrd*ip + 0 ];
+        m2 = aIPx[ MaxOrd*ip + 1 ];
+        m3 = aIPx[ MaxOrd*ip + 2 ];
+        m4 = aIPx[ MaxOrd*ip + 3 ];
+        Wip = Wpt[ ip ];
+
+        if ( m1 > -1 && m2 > -1 && m3 > -1 && m4 > -1 && ip != 6 ) { // the is not the cross lattice parameter
+            s1 = Sub[ m1 ];
+            s2 = Sub[ m2 ];
+            s3 = Sub[ m3 ];
+            PY = y[s1][m1] * y[s2][m2] * y[s3][m3];
+            G_exc += PY * Wip;
+        }
+
+        if ( m1 > -1 && m2 > -1 && m3 < 0 && m4 < 0 && ip != 6 ) { // the is the cross lattice parameter
+            s1 = Sub[m1];
+            s2 = Sub[m2];
+            PY = y[s1][m1] * y[s2][m2];
+            G_exc += PY * Wip;
+        } // if condition
+
+
+
+        if ( ip == 6 ) { // the is the K parameter
+            s1 = Sub[m1];
+            s2 = Sub[m2];
+            s3 = Sub[m3];
+            s4 = Sub[m4];
+            PY = y[s1][m1] * y[s2][m2] * (y[s3][m3] - y[s4][m4]);
+            WW = (Wpt[0] + Wpt[2] + Wpt[4]);
+            G_exc += -2.0 * PY * WW * (1.0 - Wip);
+        } // if condition
+
+    }  // ip
+
+    return G_exc;
+}
+
+*/
 //--------------------- End of s_solmod3.cpp ----------------------------------------
-
-
-
-
-
 
 
