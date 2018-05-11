@@ -26,6 +26,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
+
+#ifdef IPMGEMPLUGIN
 #include <cmath>
 #include "node.h"
 //#include "m_param.h"
@@ -1419,5 +1421,5 @@ void TActivity::GasParcP()
     }
 #endif
 }
-
+#endif
 //--------------------- End of s_activity2.cpp ---------------------------

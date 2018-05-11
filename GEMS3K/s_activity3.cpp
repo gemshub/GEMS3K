@@ -27,6 +27,8 @@
 //-------------------------------------------------------------------
 //
 
+#ifdef IPMGEMPLUGIN
+
 #include <cmath>
 #include "node.h"
 //#include "m_param.h"
@@ -1138,7 +1140,7 @@ void TActivity::SetSmoothingFactor( long int mode )
 }
 
 
-
+#endif
 
 //--------------------- End of s_activity3.cpp ---------------------------
 
