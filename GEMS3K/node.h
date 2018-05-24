@@ -9,7 +9,7 @@
 /// Works with DATACH and work DATABR structures without using
 /// the TNodearray class.
 //
-// Copyright (c) 2006-2013 S.Dmytriyeva, D.Kulik, G.Kosakowski, G.D.Miron, F.Hingerl
+// Copyright (c) 2006-2018 S.Dmytriyeva, D.Kulik, G.Kosakowski, G.D.Miron, A.Leal
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling
@@ -37,7 +37,7 @@
 /// improvements of convex programming Gibbs energy minimization algorithms achieved since
 /// 2000, when development and support of GEMS was taken over by LES in Paul Scherrer Institut
 /// (since 2008 jointly with IGP ETHZ) by the GEMS Development Team, currently consisting of
-/// D.Kulik (lead), T.Wagner, S.Dmytrieva, G. Kosakowski, G.D.Miron, K.Chudnenko, and U.Berner.
+/// D.Kulik (lead), G.D.Miron, A.Leal, S.Dmytrieva, S.Nichenko, G. Kosakowski, A.Yapparova.
 ///
 /// Standalone variant of the GEMS3K code can be coupled to reactive mass transport simulation
 /// codes, also those running on high-performance computers. Input files (in text format) for
@@ -57,12 +57,17 @@
 #define _node_h_
 
 #include "m_param.h"
+// #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
+#include "activities.h"
+#include "kinetics.h"
 
 #ifndef IPMGEMPLUGIN
 class QWidget;
 #endif
+
+class TActivity;
 
 extern const double bar_to_Pa,
                m3_to_cm3,
@@ -84,8 +89,12 @@ protected:
 
 #ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMS3K programs
-    TMulti* multi;
-//    TProfil* profil;
+    TMulti* multi;     // GEM IPM3 implementation class
+//    TAllan *ipm;       // Allan's GEM IPM implementation class
+// more speciation algorithms classes, when provided
+    TActivity *atp;    // Activity term class
+    TKinetics *kip;    // MW reaction kinetics class
+//
 #endif
     TProfil* profil;
 
@@ -93,6 +102,7 @@ protected:
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
     DATABR* CNode;  ///< Pointer to a work node data bridge structure (node)
          ///< used for exchanging input data and results between FMT and GEM IPM
+    ACTIVITY* AiP; ///< Pointer to DC activities in phases and related properties
 
     // These four values are set by the last GEM_run() call
     double CalcTime;  ///< \protected GEMIPM2 calculation time, s
@@ -146,12 +156,25 @@ protected:
     /// Reads work node (DATABR structure) from a text DBR file
     void databr_from_text_file(fstream& ff );
 
+// Methods to perform output to vtk files
+    /// Prints data of CNode data object element with handle nfild and index ndx into a VTK file
+    /// referenced by ff
     void databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, long int ndx );
+
+    /// Prints name of CNode data object element with handle nfild and index ndx into a VTK file
+    /// referenced by ff
     void databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long int ndx2=0 );
+
+    /// Prints size of data with handle nfild with dimensions nel and nel2 into a VTK file
+    /// referenced by ff
     void databr_size_to_vtk(  long int nfild, long int& nel, long int& nel2 );
+
+    /// Prints header of VTK data with name, time, loop # and xyz coordinates set to 1
+    /// into a VTK file referenced by ff
     void databr_head_to_vtk( fstream& ff, const char*name, double time, long cycle,
                             long nx = 1, long ny = 1, long nz = 1 );
 
+// Copying CSD and CNode data structures for TNodeArray parallelization
     /// Copy CSD (DATACH structure) data from other structure.
     void datach_copy( DATACH* otherCSD );
     /// Reads node (work DATABR structure) data from other DBR.
@@ -186,6 +209,98 @@ protected:
 
     // Virtual function for interaction with TNodeArray class
     virtual void  setNodeArray( gstring& , long int , bool ) { }
+#else
+public:
+
+// Added by AL and DK in 2014-2018 as an alternative (more generic for the chemical system) Activity API
+
+    /// Initializes and fills out a new TActivity class instance
+    /// from already existing CSD, work GEMS3K and CNode data structures
+    void InitCopyActivities( DATACH* CSD, MULTI* pmm, DATABR* CNode );
+
+    // Generic access methods to contents of the new TActivity class
+
+    // Handling of standard thermodynamic data for Dependent Components included in the system
+
+    /// Sets temperature T (in units of K)
+    void setTemperature(const double T);
+
+    // setS pressure p (in units of Pa)
+    void setPressure(const double P);
+
+    /// Computes standard Gibbs energies g0 for currently set T,P for all DComps in J/mol
+    /// (so far only P,T interpolation) from the lookup arrays in CSD
+    void updateStandardGibbsEnergies();
+
+    /// Computes standard molar volumes V0 for currently set T,P for all DComps in m3/mol
+    /// (so far only P,T interpolation) from the lookup arrays in CSD
+    void updateStandardVolumes();
+
+    /// Computes standard enthalpies h0 for currently set T,P for all DComps in J/mol
+    /// (so far only P,T interpolation) from the lookup arrays in CSD
+    void updateStandardEnthalpies();
+
+    /// Computes standard absolute entropies S0 for currently set T,P for all DComps in J/mol
+    /// (so far only P,T interpolation) from the lookup arrays in CSD
+    void updateStandardEntropies();
+
+    /// Computes standard heat capacities Cp0 for currently set T,P for all DComps in J/mol
+    /// (so far only P,T interpolation) from the lookup arrays in CSD
+    void updateStandardHeatCapacities();
+
+    /// Computes all above standard properties for currently set T,P for all DComps in J/mol
+    /// (so far only P,T interpolation) from the lookup arrays in CSD
+    void updateThermoData( bool norm = true );
+
+    // Handling speciation, concentrations, activities, and other properties of (mixed) phases
+    //   and their components
+
+    /// Set the speciation vector or parimal solution (called X or Y in GEMS3K (in units of moles)
+    ///   by copying from a provided vector n
+    void setSpeciation(const double* n);
+
+    /// (Re)Computes concentrations of DComps in all phases of the currently loaded system
+    /// (usually on a current iteration of GEM)
+    void updateConcentrations();
+
+    /// initialize models of mixing in multicomponent phases before the GEM run
+    void initActivityCoefficients();
+
+    /// (Re)Computes activity coefficients for all DComps in all phases
+    ///  (usually on a current iteration of GEM)
+    void updateActivityCoefficients();
+
+    /// (Re)Computes integral properties of all (multicpmponent?) phases
+    ///   usually after GEM run is finished (TBD)
+    void getIntegralPhaseProperties();
+
+    /// (Re)Computes primal chemical potentials of all DComps in all phases
+    ///  (usually on a current iteration of GEM)
+    void updateChemicalPotentials();
+
+    ///  (Re)Computes and returns total Gibbs energy of the system
+    ///  (usually on a current iteration of GEM)
+    double updateTotalGibbsEnergy();
+
+    // compute primal activities
+    void updateActivities();
+
+    /// Updates all above chemical properties of DComps and phases
+    /// after changed speciation and/or T,P or upon GEM iteration ?
+    void updateChemicalData();
+
+// Interface to kinetics and metastability controls (using TKinetics class)  TBD
+
+    // void setSpeciesUpperAMRs( const double* nu );
+
+    // void setSpeciesLowerAMRs( const double* nl );
+
+    // void setPhasesUpperAMRs( const double* nfu );
+
+    // void setPhasesLowerAMRs( const double* nfl );
+
+    // long int updateKineticsMetastability( long int LinkMode );
+
 #endif
 
 public:
@@ -518,8 +633,11 @@ long int GEM_step_MT( const long int step )
 
 #ifdef IPMGEMPLUGIN
 
-    TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
+   TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
    {        return multi;     }
+
+   TActivity* pActiv() const  /// Get pointer to TActivity class instance
+   {        return atp;       }
 
 #endif
     // These methods get contents of fields in the work node structure

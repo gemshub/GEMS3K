@@ -19,7 +19,11 @@
                     $$GEMS3K_H/node.h \
                     $$GEMS3K_H/nodearray.h \
 #                    $$GEMS3K_H/particlearray.h \
-                    $$GEMS3K_H/io_arrays.h
+                    $$GEMS3K_H/io_arrays.h \
+                    $$GEMS3K_H/activities.h \
+                    $$GEMS3K_H/kinetics.h
+
+
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
                       $$GEMS3K_CPP/num_methods.cpp \
@@ -46,5 +50,10 @@
                       $$GEMS3K_CPP/ms_param.cpp \
                       $$GEMS3K_CPP/io_arrays.cpp \
                       $$GEMS3K_CPP/node_copy.cpp \
-                      $$GEMS3K_CPP/ms_multi_copy.cpp
+                      $$GEMS3K_CPP/ms_multi_copy.cpp \
+                      $$GEMS3K_CPP/node_activities.cpp \ 
+                      $$GEMS3K_CPP/node_kinetics.cpp \ 
+                      $$GEMS3K_CPP/s_activity.cpp \ 
+                      $$GEMS3K_CPP/s_activity2.cpp \ 
+                      $$GEMS3K_CPP/s_activity3.cpp
 

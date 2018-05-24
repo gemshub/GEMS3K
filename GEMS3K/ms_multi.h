@@ -249,6 +249,7 @@ double
     *Aalp,    ///< Full vector of specific surface areas of phases (m2/g) [0:FI-1]
     *Sigw,    ///< Specific surface free energy for phase-water interface (J/m2)   [0:FI-1]
     *Sigg,  	///< Specific surface free energy for phase-gas interface (J/m2) (not yet used)  [0:FI-1], reserved
+// from here move to --> datach.h
   // TSolMod stuff
   *lPhc,  ///< new: Collected array of phase link parameters (sum(LsPhl[k][1] over Fi)
   *DQFc,  ///< new: Collected array of DQF parameters for DCs in phases -> L1[k] x LsMdc2[k][0]
@@ -270,6 +271,8 @@ double
   *AscpC,   /// new: parameter coefficients of equation for correction of specific surface area k-> += LsKin[k][4]
   *UMpcC  ///< new: Collected array of uptake model coefficients k-> += L1[k]*LsUpt[k][0];
       ;
+  // until here move to --> datach.h
+
   //  Data for old surface comlexation and sorption models (new variant [Kulik,2006])
   double  (*Xr0h0)[2];   ///< mean r & h of particles (- pores), nm  [0:FI-1][2], reserved
   double  (*Nfsp)[MST];  ///< Fractions of the sorbent specific surface area allocated to surface types  [FIs][FIat]
@@ -321,13 +324,13 @@ double
     *FVOL,    ///< phase volumes, cm3 comment corrected DK 04.08.2009  [0:FI-1]
     *FWGT,    ///< phase (carrier) masses, g                [0:FI-1]
 //
-    *G,       ///< Normalized DC energy function c(j), mole/mole [0:L-1]
-    *G0,      ///< Input normalized g0_j(T,P) for DC at unified standard scale[L]
-    *lnGam,   ///< ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1]
+    *G,       ///< Normalized DC energy function c(j), mole/mole [0:L-1]            --> activities.h
+    *G0,      ///< Input normalized g0_j(T,P) for DC at unified standard scale[L]   --> activities.h
+    *lnGam,   ///< ln of DC activity coefficients in unified (mole-fraction) scale [0:L-1] --> activities.h
     *lnGmo;   ///< Copy of lnGam from previous IPM iteration (reserved)
   double  (*lnSAC)[4]; ///< former lnSAT ln surface activity coeff and Coulomb's term  [Lads][4]
 
-  // TSolMod stuff (detailed output on partial energies of mixing)
+  // TSolMod stuff (detailed output on partial energies of mixing)   --> activities.h
   double *lnDQFt; ///< new: DQF terms adding to overall activity coefficients [Ls_]
   double *lnRcpt; ///< new: reciprocal terms adding to overall activity coefficients [Ls_]
   double *lnExet; ///< new: excess energy terms adding to overall activity coefficients [Ls_]
@@ -375,7 +378,7 @@ double
     *XY,  ///< Copy of x_j from previous loop of Selekt2() [0:L-1]
     *Qp,  ///< Work variables related to non-ideal phases FIs*(QPSIZE=180)
     *Qd,  ///< Work variables related to DC in non-ideal phases FIs*(QDSIZE=60)
-    *MU,  ///< mu_j values of differences between dual DC chem.potentials [L]
+    *MU,  ///< mu_j values of differences between dual and primal DC chem.potentials [L]
     *EMU, ///< Exponents of DC increment to F_a criterion for phase [L]
     *NMU, ///< DC increments to F_a criterion for phase [L]
     *W,   ///< Weight multipliers for DC (incl restrictions) in IPM [L]
@@ -538,7 +541,7 @@ void KinMetModLoad();
 #endif
 
 protected:
-
+// From here move to activities.h or node.h
    long int sizeFIs;     ///< current size of phSolMod
    TSolMod* (*phSolMod); ///< size current FIs - number of multicomponent phases
 
@@ -557,6 +560,7 @@ protected:
 
    void Alloc_TKinMet( long int newFI );
    void Free_TKinMet();
+// until here move to activities.h or node.h
 
 // Added for implementation of divergence detection in dual solution 06.05.2011 DK
    long int nNu;  ///< number of ICs in the system
