@@ -3330,14 +3330,14 @@ long int TMBWmod::ExcessProp( double *Zex ) {
         s -= y[s1][d] * y[s1][e] * y[s2][f] * Ws[ip];
     }
 
-    Gex = g;
-    Sex = s;
+    Gex  = calcGex() - Gidmix() * Tk;//g;
+    Sex  = R_CONST * Gidmix();// - ideal_conf_entropy();
     CPex = 0.0;
-    Vex = v;
-    Uex = u;
-    Hex = Uex + Vex*Pbar;
-    Aex = Gex - Vex*Pbar;
-    Uex = Hex - Vex*Pbar;
+    Vex  = v;
+    Uex  = u;
+    Hex  = calcGex();//Uex + Vex*Pbar;
+    Aex  = Gex - Vex*Pbar;
+    Uex  = Hex - Vex*Pbar;
 
     // assignments (excess properties)
     Zex[0] = Gex;
@@ -3466,9 +3466,8 @@ long int TMBWmod::ExcessPart() {
     }
 
 
-    // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
-    // for each end member
-    G_exc = Gexc();
+    // NSergii: Calculation of the excess activity term for each end member
+    G_exc = calcGex();
 
     for( j=0; j<NComp; j++) {
         lnGamEx[j] = 0.;
@@ -3495,6 +3494,7 @@ long int TMBWmod::ExcessPart() {
             lnGamEx[j] = lnaconj;// - log(x[j]);
     }
 
+    /*
     G_exc = 0;
     for (int j = 0; j < NComp; j++) {
         if(x[j] > 1e-32 ) {  // Check threshold
@@ -3502,12 +3502,13 @@ long int TMBWmod::ExcessPart() {
             G_exc += (R_CONST*Tk) * x[j] * lnGamEx[j];
         }
     }
+    */
 
    return 0;
 }
 
 double TMBWmod::dGm_dysi( const long int i, const long int m) {
-    long int ip, pm, j, s, k, s1, s2, s3, s4, m1, m2, m3, m4, variant;
+    long int ip, pm, j, s, k, sk, s1, s2, s3, s4, m1, m2, m3, m4, variant;
     double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, WW;
     bool cond;
 
@@ -3524,98 +3525,47 @@ double TMBWmod::dGm_dysi( const long int i, const long int m) {
             InCf[pm] = aIPx[ MaxOrd * ip + pm ];
         }
 
-        m1  = aIPx[ MaxOrd*ip + 0 ];
-        m2  = aIPx[ MaxOrd*ip + 1 ];
-        m3  = aIPx[ MaxOrd*ip + 2 ];
-        m4  = aIPx[ MaxOrd*ip + 3 ];
+        m1  = InCf[0];
+        m2  = InCf[1];
+        m3  = InCf[2];
+        m4  = InCf[3];
         s1  = (m1 > -1) ? Sub[m1] : 0;
         s2  = (m2 > -1) ? Sub[m2] : 0;
         s3  = (m3 > -1) ? Sub[m3] : 0;
         s4  = (m4 > -1) ? Sub[m4] : 0;
-        PY  = 1.0;
         Wip = Wpt[ip];
+        variant = InCf[MaxOrd-1];
 
         cond = false;
-        PY    = 1.0;
+        PY   = 1.0;
         for ( pm=0 ; pm<MaxOrd-1; pm++) {
             k = InCf[pm];
             if ( k > -1.0 ) {
-                s1 = Sub[k];
-                PY *= y[s1][k];
-                if (k == m)
-                    cond = true;
+                sk = Sub[k];
+                PY *= y[sk][k];
+                if (k == m) cond = true;
             }
         }
 
-        variant = InCf[MaxOrd-1];
 
-        switch (variant) {
-            case 0:
-                if (cond)
-                    dgm_dysis += PY * Wpt[ip] / y[s][m];
-                break;
-            case 1:
-                if (cond) {
+        if (cond) {
+            switch (variant) {
+                case 0:
+                    dgm_dysis += PY * Wip / y[s][m];
+                    break;
+                case 1:
+                    PY    = 0.0;
                     if (m1 == m || m2 == m || m3 == m)
                         PY +=  y[s1][m1]*y[s2][m2] * y[s3][m3] / y[s][m];
                     if (m1 == m || m2 == m || m4 == m)
                         PY += -y[s1][m1]*y[s2][m2] * y[s4][m4] / y[s][m];
-                    dgm_dysis += PY * Wpt[ip];
-                }
-                break;
-            default:
-                if (cond)
-                    dgm_dysis += PY * Wpt[ip] / y[s][m];
-                break;
-        }
-
-        /*
-        if ( m1 > -1 && m2 > -1 && m3 > -1  && ip != 6 ) { // the is not the cross lattice parameter
-            if ( m == m1 || m ==  m2 || m == m3 ) { // If any of the moiety is a part of compound j
-                s1 = Sub[m1];
-                s2 = Sub[m2];
-                s3 = Sub[m3];
-                s4 = Sub[m4];
-                PY = y[s1][m1] * y[s2][m2] * y[s3][m3];
-
-                dgm_dysis += PY * Wip / y[s][m];// / x[j];
+                    dgm_dysis += PY * Wip;
+                    break;
+                default:
+                    dgm_dysis += PY * Wip / y[s][m];
+                    break;
             }
         }
-
-        if ( m1 > -1 && m2 > -1 && m3 < 0 && m4 < 0  && ip != 6 ) { // the is the cross lattice parameter
-            if ( m == m1 || m == m2) { // If any of the moiety is a part of compound j
-                s1 = Sub[m1];
-                s2 = Sub[m2];
-                PY = y[s1][m1] * y[s2][m2];
-
-                dgm_dysis += PY * Wip / y[s][m];// / x[j];
-            }
-        } // if condition
-
-
-        if ( ip == 6 ) { // the is the K parameter
-
-            WW = (Wpt[0] + Wpt[2] + Wpt[4]);
-
-            if ( (m == 1 && s == 1) || (m == 3 && s == 0) ) {
-
-                PY = y[s1][m1] * y[s2][m2] * (y[s3][m3] - y[s4][m4]);
-                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
-            }
-
-            if (m == 0 && s == 0) {
-
-                PY  = y[s1][m1] * y[s2][m2];
-                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
-            }
-
-            if (m == 1 && s == 1) {
-
-                PY  = - y[s1][m1] * y[s2][m2];
-                dgm_dysis += -2.0 * PY * WW * (1.0 - Wip) / y[s][m];
-            }
-        } // if condition
-        */
     }  // ip
 
     return dgm_dysis;
@@ -3654,8 +3604,8 @@ bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ){
     return false;
 }
 
-double TMBWmod::Gexc(){
-    int j, m, s1, s2, s3, s4, k, pm, ip, m1, m2, m3, m4, variant;
+double TMBWmod::calcGex(){
+    int j, m, s1, s2, s3, s4, k, sk, pm, ip, m1, m2, m3, m4, variant;
     double G_exc, PY, wpt, xx, Wip, WW, lnGam, lnGamRT;
 
     // Excess Gibbs energy term
@@ -3666,36 +3616,36 @@ double TMBWmod::Gexc(){
             InCf[pm] = aIPx[ MaxOrd * ip + pm ];
         }
 
-        m1 = aIPx[ MaxOrd*ip + 0 ];
-        m2 = aIPx[ MaxOrd*ip + 1 ];
-        m3 = aIPx[ MaxOrd*ip + 2 ];
-        m4 = aIPx[ MaxOrd*ip + 3 ];
-        s1 = (m1 > -1) ? Sub[m1] : 0;
-        s2 = (m2 > -1) ? Sub[m2] : 0;
-        s3 = (m3 > -1) ? Sub[m3] : 0;
-        s4 = (m4 > -1) ? Sub[m4] : 0;
+        m1  = InCf[0];
+        m2  = InCf[1];
+        m3  = InCf[2];
+        m4  = InCf[3];
+        s1  = (m1 > -1) ? Sub[m1] : 0;
+        s2  = (m2 > -1) ? Sub[m2] : 0;
+        s3  = (m3 > -1) ? Sub[m3] : 0;
+        s4  = (m4 > -1) ? Sub[m4] : 0;
+        Wip = Wpt[ip];
+        variant = InCf[MaxOrd-1];
 
         PY    = 1.0;
         for ( pm=0 ; pm<MaxOrd-1; pm++) {
             k = InCf[pm];
             if ( k > -1.0 ) {
-                s1 = Sub[k];
-                PY *= y[s1][k];
+                sk = Sub[k];
+                PY *= y[sk][k];
             }
         }
 
-        variant = InCf[MaxOrd-1];
-
         switch (variant) {
             case 0:
-                G_exc += PY * Wpt[ip];
+                G_exc += PY * Wip;
                 break;
             case 1:
-                PY = y[s1][m1]*y[s2][m2] * (y[s3][m3] - y[s4][m4]);
-                G_exc += PY * Wpt[ip];
+                PY = y[s1][m1] * y[s2][m2] * (y[s3][m3] - y[s4][m4]);
+                G_exc += PY * Wip;
                 break;
             default:
-                G_exc += PY * Wpt[ip];
+                G_exc += PY * Wip;
                 break;
         }
     }  // ip
@@ -4117,7 +4067,7 @@ long int TMBWmod::ExcessPart() {
 
     // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
     // for each end member
-    G_exc = Gexc();
+    G_exc = calcGex();
     for( j=0; j<NComp; j++) {
         lnGamEx[j] = 0.;
         lnaconj = 0.0;
@@ -4258,7 +4208,7 @@ bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ){
     return false;
 }
 
-double TMBWmod::Gexc(){
+double TMBWmod::calcGex(){
     int j, m, s1, s2, s3, s4, k, pm, ip, m1, m2, m3, m4;
     double G_exc, PY, wpt, xx, Wip, WW, lnGam, lnGamRT;
 

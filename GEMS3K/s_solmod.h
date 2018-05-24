@@ -245,6 +245,11 @@ class TSolMod
 			return 0;
 		};
 
+        virtual long int StandardProp( double */*Zid*/ )
+        {
+            return 0;
+        };
+
         /// Set new system state
 		long int UpdatePT ( double T_k, double P_bar );
 
@@ -1311,7 +1316,7 @@ class TMBWmod: public TSolMod
                 long int CalcSiteFractions(); // NSergii:
                 long int SLatt(const long int m);
                 double Gmix(); // NSergii:
-                double Gexc();
+                double calcGex();
                 double Gref();
                 double Gidmix();
         public:

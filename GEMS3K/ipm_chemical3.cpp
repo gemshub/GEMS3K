@@ -355,10 +355,11 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
     SPP_SETTING *pa = paTProfil;
-
+    std::cout << "CalculateActivityCoefficients - 0 " << LinkMode << std::endl;
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
     {
+      std::cout << "CalculateActivityCoefficients - LinkMode" << std::endl;
       case LINK_TP_MODE:  // Built-in functions depending on T,P only
       {
         long int  jdqfc=0,  jrcpc=0; // jphl=0, jlphc=0,
@@ -406,7 +407,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                 case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID: case PH_ADSORPT:
                 case PH_IONEX:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
-                      sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
+                        sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
                     // new solution models (TW, DK 2007)
             	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
@@ -415,13 +416,14 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             }
 
             // move pointers
- //           jphl  += (pm.LsPhl[k*2]*2);
- //           jlphc += (pm.LsPhl[k*2]*pm.LsPhl[k*2+1]);
+ //           jphl  +=  (pm.LsPhl[k*2]*2);
+ //           jlphc += (pm.LsPhl[k*2 ]*pm.LsPhl[k*2+1]);
             jdqfc += (pm.LsMdc2[k*3]*pm.L1[k]);
             jrcpc += (pm.LsMdc2[k*3+1]*pm.L1[k]);
 
           } // k
         }
+        std::cout << "CalculateActivityCoefficients - LINK_TP_MODE" << std::endl;
         break;
 
       case LINK_PP_MODE: // Mode of calculation of integral solution phase properties
@@ -430,14 +432,15 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
             jb = je;
             je += pm.L1[k];
             sMod = pm.sMod[k];
-                switch( pm.PHC[k] )
+            switch( pm.PHC[k] )
             {
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
               case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:  case PH_ADSORPT:
               case PH_IONEX:
-           	       SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
-           	       SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
-           	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
+                std::cout << "CalculateActivityCoefficients - LINK_PP_MODE" << std::endl;
+                   SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
+                   SolModIdealProp(  jb, k, sMod[SPHAS_TYP] );
+                   SolModStandProp(  jb, k, sMod[SPHAS_TYP] );
            	       SolModDarkenProp( jb, k, sMod[SPHAS_TYP] );
            	       break;
               default:
@@ -1141,6 +1144,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
               break;
     }
     // assignments
+    std::cout << "Hellodfdfdfdfdf df sdf sdf sddfd" << std::endl;
     Gex = zex[0];
     Hex = zex[1];
     Sex = zex[2];
@@ -1246,11 +1250,46 @@ void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
+    long int j;
     double Gst=0., Hst=0., Sst=0., CPst=0., Vst=0., Ast=0., Ust=0.;
+    double zst[7];
 
     // add if statement that checks DC class code (aqueous or not)
-
+    for (j=0; j<7; j++)
+    {
+        zst[j] = 0.0;
+    }
+    // needs to check for DC class state to catch ideal gas phase case
+    switch( ModCode )
+    {   // check what solution phase (ideal gas?)
+        // case SM_USERDEF:
+        case SM_IDEAL: case SM_VANLAAR: case SM_REGULAR: case SM_GUGGENM: case SM_NRTLLIQ:
+        case SM_WILSLIQ: /* old ss models */ case SM_MARGT: case SM_MARGB: case SM_REDKIS:
+        case SM_BERMAN:  case SM_CEF:    case SM_MBW:   case SM_SURCOM:
+        // aqueous DH models
+        case SM_AQDH3: case SM_AQDH2: case SM_AQDH1: case SM_AQDHH: case SM_AQDHS: case SM_AQDAV:
+        // aqueous SIT models
+        case SM_AQPITZ: case SM_AQSIT: case SM_AQEXUQ: case SM_AQELVIS:
+        // fluid (gas) models
+        case SM_PRFLUID: case SM_CGFLUID: case SM_SRFLUID: case SM_PR78FL: case SM_CORKFL:
+        case SM_STFLUID:
+        {    ErrorIf( !phSolMod[k], "SolModIdealProp: ","Invalid index of phase");
+             TSolMod* mySM = phSolMod[k];
+             mySM->StandardProp( zst );
+             break;
+        }
+        default:
+            break;
+    }
     // assignments
+    // assignments
+    Gst = zst[0];
+    Hst = zst[1];
+    Sst = zst[2];
+    CPst = zst[3];
+    Vst = zst[4];
+    Ast = zst[5];
+    Ust = zst[6];
     pm.GPh[k][0] = Gst;
     pm.HPh[k][0] = Hst;
     pm.SPh[k][0] = Sst;
