@@ -1,6 +1,6 @@
 # GEMS3K #
 
-Numerical kernel solver of the GEM-Selektor v.3 package for geochemical modelling.
+Numerical kernel solver of the GEM-Selektor v.3 package for geochemical modelling. Just extended with an alternative Activity C++ API and a Python API (based on Pybind11) on top of it.
 
 ### Briefly about GEMS3K ###
 
