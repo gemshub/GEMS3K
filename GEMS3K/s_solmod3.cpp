@@ -3275,24 +3275,26 @@ long int TMBWmod::IdealMixing() {
     //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
 
     Gid = Gidmix();
+
+
     // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
     // for each end member
     for( j=0; j<NComp; j++) {
         lnaconj = 0.0;
-
         dgm_dysis = 0.0;
         for( m=0; m < NMoi; m++ ) { // Looking through moieties
             s = Sub[m];
             if (KronDelta(j, s, m)) {
                 dgm_dysis += mns[s] * (1 + log(y[s][m]));
+                //dgm_dysis += mn[j][s][m] * (1 + log(y[s][m]));
             }
         } // m
-
 
         dgm_dyjs = 0.0;
         for( m=0; m < NMoi; m++ ) { // Looking through moieties
             s = Sub[m];
             dgm_dyjs += y[s][m] * mns[s] * (1 + log(y[s][m]));
+            //dgm_dyjs += y[s][m] * mn[j][s][m] * (1 + log(y[s][m]));
         } // m
 
         lnaconj = Gid + (dgm_dysis - dgm_dyjs);
@@ -3323,11 +3325,6 @@ long int TMBWmod::ExcessProp( double *Zex ) {
         d = aIPx[MaxOrd*ip+1];
         e = aIPx[MaxOrd*ip+2];
         f = aIPx[MaxOrd*ip+3];
-
-        g += y[s1][d] * y[s1][e] * y[s2][f] * Wpt[ip];
-        v += y[s1][d] * y[s1][e] * y[s2][f] * Wv[ip];
-        u += y[s1][d] * y[s1][e] * y[s2][f] * Wu[ip];
-        s -= y[s1][d] * y[s1][e] * y[s2][f] * Ws[ip];
     }
 
     Gex  = calcGex() - Gidmix() * Tk;//g;
@@ -3509,8 +3506,8 @@ long int TMBWmod::ExcessPart() {
 
 double TMBWmod::dGm_dysi( const long int i, const long int m) {
     long int ip, pm, j, s, k, sk, s1, s2, s3, s4, m1, m2, m3, m4, variant;
-    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, WW;
-    bool cond;
+    double lnGam, dgm_dysis, dgm_dyjs, PY, PS, G_exc, Wip, WW;
+    double pow;
 
     dgm_dysis = 0.0;
 
@@ -3525,46 +3522,69 @@ double TMBWmod::dGm_dysi( const long int i, const long int m) {
             InCf[pm] = aIPx[ MaxOrd * ip + pm ];
         }
 
-        m1  = InCf[0];
-        m2  = InCf[1];
-        m3  = InCf[2];
-        m4  = InCf[3];
-        s1  = (m1 > -1) ? Sub[m1] : 0;
-        s2  = (m2 > -1) ? Sub[m2] : 0;
-        s3  = (m3 > -1) ? Sub[m3] : 0;
-        s4  = (m4 > -1) ? Sub[m4] : 0;
         Wip = Wpt[ip];
         variant = InCf[MaxOrd-1];
 
-        cond = false;
-        PY   = 1.0;
-        for ( pm=0 ; pm<MaxOrd-1; pm++) {
-            k = InCf[pm];
-            if ( k > -1.0 ) {
-                sk = Sub[k];
-                PY *= y[sk][k];
-                if (k == m) cond = true;
-            }
-        }
+        switch (variant) {
+            case 0:
+                PY   = 1.0;
+                pow  = 0.0;
+                for ( pm=0 ; pm<(MaxOrd-1); pm++) {
+                    k = InCf[pm];
+                    if ( k > -1.0 ) {
+                        sk = Sub[k];
+                        PY *= y[sk][k];
+                        if (k == m) pow += 1.0;
+                    }
+                }
+                dgm_dysis += PY * pow * Wip / y[s][m];
+                break;
+            case 1:
+                pow  = 0.0;
+                PY    = 1.0;
+                PS    = 0.0;
+                for ( pm=0 ; pm<(MaxOrd-3); pm++ ) {
+                    k = InCf[pm];
+                    if ( k > -1.0 ) {
+                        sk = Sub[k];
+                        PY *= y[sk][k];
+                        if (k == m) pow += 1.0;
+                    }
+                }
 
+                if ( pow > 0.0 ){
+                    m1  = InCf[MaxOrd-3];
+                    s1  = Sub[m1];
+                    if ( m1 == m ){
+                        PS +=  PY * y[s1][m1] * (pow + 1.0) / y[s][m];
+                    } else {
+                        PS +=  PY * y[s1][m1] * pow / y[s][m];
+                    }
 
-        if (cond) {
-            switch (variant) {
-                case 0:
-                    dgm_dysis += PY * Wip / y[s][m];
-                    break;
-                case 1:
-                    PY    = 0.0;
-                    if (m1 == m || m2 == m || m3 == m)
-                        PY +=  y[s1][m1]*y[s2][m2] * y[s3][m3] / y[s][m];
-                    if (m1 == m || m2 == m || m4 == m)
-                        PY += -y[s1][m1]*y[s2][m2] * y[s4][m4] / y[s][m];
-                    dgm_dysis += PY * Wip;
-                    break;
-                default:
-                    dgm_dysis += PY * Wip / y[s][m];
-                    break;
-            }
+                    m2  = InCf[MaxOrd-2];
+                    s2  = Sub[m2];
+                    if ( m2 == m ){
+                        PS -=  PY * y[s2][m2] * (pow + 1.0) / y[s][m];
+                    } else {
+                        PS -=  PY * y[s2][m2] * pow / y[s][m];
+                    }
+                }
+
+                dgm_dysis += PS * Wip;
+                break;
+            default:
+                PY   = 1.0;
+                pow = 0.0;
+                for ( pm=0 ; pm<(MaxOrd-1); pm++) {
+                    k = InCf[pm];
+                    if ( k > -1.0 ) {
+                        sk = Sub[k];
+                        PY *= y[sk][k];
+                        if (k == m) pow += 1.0;
+                    }
+                }
+                dgm_dysis += PY * pow * Wip / y[s][m];
+                break;
         }
     }  // ip
 
@@ -3606,7 +3626,7 @@ bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ){
 
 double TMBWmod::calcGex(){
     int j, m, s1, s2, s3, s4, k, sk, pm, ip, m1, m2, m3, m4, variant;
-    double G_exc, PY, wpt, xx, Wip, WW, lnGam, lnGamRT;
+    double G_exc, PY, PS, wpt, xx, Wip, WW, lnGam, lnGamRT;
 
     // Excess Gibbs energy term
     G_exc    = 0.0;
@@ -3616,35 +3636,52 @@ double TMBWmod::calcGex(){
             InCf[pm] = aIPx[ MaxOrd * ip + pm ];
         }
 
-        m1  = InCf[0];
-        m2  = InCf[1];
-        m3  = InCf[2];
-        m4  = InCf[3];
-        s1  = (m1 > -1) ? Sub[m1] : 0;
-        s2  = (m2 > -1) ? Sub[m2] : 0;
-        s3  = (m3 > -1) ? Sub[m3] : 0;
-        s4  = (m4 > -1) ? Sub[m4] : 0;
         Wip = Wpt[ip];
         variant = InCf[MaxOrd-1];
 
-        PY    = 1.0;
-        for ( pm=0 ; pm<MaxOrd-1; pm++) {
-            k = InCf[pm];
-            if ( k > -1.0 ) {
-                sk = Sub[k];
-                PY *= y[sk][k];
-            }
-        }
-
         switch (variant) {
             case 0:
-                G_exc += PY * Wip;
+                PY    = 1.0;
+                for ( pm=0 ; pm<(MaxOrd-1); pm++) {
+                    k = InCf[pm];
+                    if ( k > -1.0 ) {
+                        sk = Sub[k];
+                        PY *= y[sk][k];
+                    }
+                }
+                G_exc +=  PY * Wip;
                 break;
             case 1:
-                PY = y[s1][m1] * y[s2][m2] * (y[s3][m3] - y[s4][m4]);
-                G_exc += PY * Wip;
+                PY  = 1.0;
+                PS  = 1.0;
+
+                m1  = InCf[MaxOrd-3];
+                s1  = Sub[m1];
+                m2  = InCf[MaxOrd-2];
+                s2  = Sub[m2];
+                if (m1 > -1 && m2 > -1)
+                    PS    = y[s1][m1] - y[s2][m2];
+
+                for ( pm=0 ; pm<(MaxOrd-3); pm++) {
+                    k = InCf[pm];
+                    if ( k > -1.0 ) {
+                        sk = Sub[k];
+                        PY *= y[sk][k];
+                    }
+                }
+
+                //PY = y[s1][m1] * y[s2][m2] * ( y[s3][m3] - y[s4][m4] );
+                G_exc += PY * PS * Wip;
                 break;
             default:
+                PY    = 1.0;
+                for ( pm=0 ; pm<(MaxOrd-1); pm++) {
+                    k = InCf[pm];
+                    if ( k > -1.0 ) {
+                        sk = Sub[k];
+                        PY *= y[sk][k];
+                    }
+                }
                 G_exc += PY * Wip;
                 break;
         }
