@@ -1144,7 +1144,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
               break;
     }
     // assignments
-    std::cout << "Hellodfdfdfdfdf df sdf sdf sddfd" << std::endl;
+//    std::cout << "Assignment of calculated excess properties of mixing [2]" << std::endl;
     Gex = zex[0];
     Hex = zex[1];
     Sex = zex[2];
@@ -1197,6 +1197,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
             break;
     }
     // assignments
+//    std::cout << "Assignment of calculated ideal properties of mixing [1]" << std::endl;
     Gid = zid[0];
     Hid = zid[1];
     Sid = zid[2];
@@ -1227,7 +1228,7 @@ void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
     }
 
     // data object for derivative properties needs to be added in Multi and DODs in scripts
-
+//    std::cout << "Assignment of calculated Darken terms of mixing [2]" << std::endl;
     // assignments
     Gdq = zdq[0];
     Hdq = zdq[1];
@@ -1282,6 +1283,7 @@ void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
             break;
     }
     // assignments
+//    std::cout << "Assignment of calculated standard (reference) properties of mixed phase [0]" << std::endl;
     // assignments
     Gst = zst[0];
     Hst = zst[1];
