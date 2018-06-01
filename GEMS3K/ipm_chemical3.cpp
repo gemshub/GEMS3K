@@ -558,7 +558,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                     case SM_IDEAL:   // Ideal (multi-site) model (DK 29.11.2010)
                     case SM_BERMAN:  // Non-ideal (multi-site) model (DK 07.12.2010)
                     case SM_CEF:     // multi-site non-ideal ss model (CALPHAD) DK 15.08.2014
-                    case SM_MBW:     // Modified Bregg-Williams model
+                    case SM_MBW:     // Modified Bregg-Williams model, [Vinograd et al. 2018]
                     case SM_REDKIS:  // Redlich-Kister model (binary)
                     case SM_MARGB:   // Subregular Margules model (binary)
                     case SM_MARGT:   // Regular Margules model (ternary)
