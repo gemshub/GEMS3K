@@ -3552,22 +3552,20 @@ double TMBWmod::dGm_dysi( const long int i, const long int m) {
                     }
                 }
 
-                if ( pow > 0.0 ){
-                    m1  = InCf[MaxOrd-3];
-                    s1  = Sub[m1];
-                    if ( m1 == m ){
-                        PS +=  PY * y[s1][m1] * (pow + 1.0) / y[s][m];
-                    } else {
-                        PS +=  PY * y[s1][m1] * pow / y[s][m];
-                    }
+                m1  = InCf[MaxOrd-3];
+                s1  = Sub[m1];
+                if ( m1 == m ){
+                    PS +=  PY * y[s1][m1] * (pow + 1.0) / y[s][m];
+                } else {
+                    PS +=  PY * y[s1][m1] * pow / y[s][m];
+                }
 
-                    m2  = InCf[MaxOrd-2];
-                    s2  = Sub[m2];
-                    if ( m2 == m ){
-                        PS -=  PY * y[s2][m2] * (pow + 1.0) / y[s][m];
-                    } else {
-                        PS -=  PY * y[s2][m2] * pow / y[s][m];
-                    }
+                m2  = InCf[MaxOrd-2];
+                s2  = Sub[m2];
+                if ( m2 == m ){
+                    PS -=  PY * y[s2][m2] * (pow + 1.0) / y[s][m];
+                } else {
+                    PS -=  PY * y[s2][m2] * pow / y[s][m];
                 }
 
                 dgm_dysis += PS * Wip;
