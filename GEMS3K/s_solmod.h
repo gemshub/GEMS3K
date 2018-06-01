@@ -189,7 +189,7 @@ class TSolMod
         double Grs, Hrs, Srs, CPrs, Vrs, Ars, Urs;   ///< molar residual functions (fluids)
         double *lnGamConf, *lnGamRecip, *lnGamEx, *lnGamDQF, *CTerm; ///< Work pointers for lnGamma components
         double *lnGamma;   ///< Pointer to ln activity coefficients of end members (check that it is collected from three above arrays)
-        double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bregg-Williams model, [Vinograd et al. 2018]
+        double *lnGamCorr;   ///< Pointer to ln activity coefficients of correction term for Modified Bragg-Williams model, [Vinograd et al. 2018]
 
         double **y;       ///< table of moiety site fractions [NSub][NMoi]
         double ***mn;     ///< array of end member moiety-site multiplicity numbers [NComp][NSub][NMoi]
@@ -1271,7 +1271,7 @@ class TCEFmod: public TSolMod
 
 // -------------------------------------------------------------------------------------
 // TEST MODEL
-// Modified Bregg-Williams model, [Vinograd et al. 2018]
+// Modified Bragg-Williams model, [Vinograd et al. 2018]
 // Emulation of short-range ordering within the frame of the Bragg-Williams model: Application to the solid solution of calcite and magnesite"
 
 class TMBWmod: public TSolMod
