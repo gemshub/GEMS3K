@@ -3325,8 +3325,8 @@ long int TMBWmod::ExcessProp( double *Zex ) {
         f = aIPx[MaxOrd*ip+3];
     }
 
-    Gex  = Hmix() - idealSmix() * Tk;//g;
-    Sex  = R_CONST * idealSmix();// - ideal_conf_entropy();
+    Gex  = Hmix() + idealSmix() * Tk * R_CONST;//g;
+    Sex  = - R_CONST * idealSmix();// - ideal_conf_entropy();
     CPex = 0.0;
     Vex  = v;
     Uex  = u;
