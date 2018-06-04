@@ -1245,7 +1245,7 @@ class TCEFmod: public TSolMod
                 double Gmix(); // NSergii:
                 double Gexc();
                 double Gref();
-                double Gidmix();
+                double idealSmix();
         public:
 
                 /// Constructor
@@ -1315,9 +1315,11 @@ class TMBWmod: public TSolMod
                 long int CalcSiteFractions(); // NSergii:
                 long int SLatt(const long int m);
                 double Gmix(); // NSergii:
-                double calcGex();
+                //double calcGex();
+                double Hmix();
                 double Gref();
-                double Gidmix();
+                //double Gidmix();
+                double idealSmix();
         public:
 
                 /// Constructor

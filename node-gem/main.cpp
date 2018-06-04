@@ -55,7 +55,7 @@ int main( int argc, char* argv[] )
     //     whose names are given in the ipm_input_system_file_list_name
     if( node->GEM_init( input_system_file_list_name ) )
     {
-          cout << "Error occured during reading the files" ;
+          cout << "Error occured during reading the files" << std::endl;
           return 1;
     }
 

@@ -2684,7 +2684,7 @@ long int TCEFmod::IdealMixing() {
     CalcSiteFractions();
     //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
 
-    Gid = Gidmix();
+    Gid = idealSmix();
     // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
     // for each end member
     for( j=0; j<NComp; j++) {
@@ -3005,17 +3005,17 @@ double TCEFmod::Gref(){
     return G_ref;
 }
 
-double TCEFmod::Gidmix(){
+double TCEFmod::idealSmix(){
     int j, m, s;
-    double G_idmix;
+    double S_idmix;
 
     // Reference frame term
-    G_idmix = 0.0;
+    S_idmix = 0.0;
     for( m=0; m < NMoi; m++ ) { // Looking through moieties
         s = Sub[m];
-        G_idmix  += mns[s] * y[s][m] * log(y[s][m]);
+        S_idmix  += mns[s] * y[s][m] * log(y[s][m]);
     } // m
-    return G_idmix;
+    return S_idmix;
 }
 
 bool TCEFmod::KronDelta( const long int j, const long int s, const long int m ){
@@ -3262,7 +3262,7 @@ long int TMBWmod::CalcSiteFractions(){
 
 long int TMBWmod::IdealMixing() {
     long int j,s,m;
-    double dgm_dyjs, dgm_dysis, lnaconj, Gid;  // NSergii
+    double dgm_dyjs, dgm_dysis, lnaconj, S_idmix;  // NSergii
 
     if( !NSub || !NMoi ) {
         for( j=0; j<NComp; j++)
@@ -3273,8 +3273,7 @@ long int TMBWmod::IdealMixing() {
     CalcSiteFractions();
     //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
 
-    Gid = Gidmix();
-
+    S_idmix = idealSmix();
 
     // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
     // for each end member
@@ -3296,7 +3295,7 @@ long int TMBWmod::IdealMixing() {
             //dgm_dyjs += y[s][m] * mn[j][s][m] * (1 + log(y[s][m]));
         } // m
 
-        lnaconj = Gid + (dgm_dysis - dgm_dyjs);
+        lnaconj = S_idmix + (dgm_dysis - dgm_dyjs);
 
         lnGamConf[j] = 0.;
         if(x[j] > 1e-32 )  // Check threshold
@@ -3326,12 +3325,12 @@ long int TMBWmod::ExcessProp( double *Zex ) {
         f = aIPx[MaxOrd*ip+3];
     }
 
-    Gex  = calcGex() - Gidmix() * Tk;//g;
-    Sex  = R_CONST * Gidmix();// - ideal_conf_entropy();
+    Gex  = Hmix() - idealSmix() * Tk;//g;
+    Sex  = R_CONST * idealSmix();// - ideal_conf_entropy();
     CPex = 0.0;
     Vex  = v;
     Uex  = u;
-    Hex  = calcGex();//Uex + Vex*Pbar;
+    Hex  = Hmix();//Uex + Vex*Pbar;
     Aex  = Gex - Vex*Pbar;
     Uex  = Hex - Vex*Pbar;
 
@@ -3385,8 +3384,7 @@ double TMBWmod::PYproduct( const long int j ) {
     return pyp_j;
 }
 
-double TMBWmod::RefFrameTerm( const long int i, const double G_ref )
-{
+double TMBWmod::RefFrameTerm( const long int i, const double G_ref ) {
     long int j, s, m;
     double sum_s, dgm_dysis, dgm_dyjs, reftj, kd_ysis; //NSergii
 
@@ -3414,8 +3412,7 @@ double TMBWmod::RefFrameTerm( const long int i, const double G_ref )
     return reftj;
 }
 
-long int TMBWmod::em_howmany( long int s, long int m )
-{
+long int TMBWmod::em_howmany( long int s, long int m ) {
     long int l, jc=0;
     for( l=0; l<NComp; l++ )
     {
@@ -3451,7 +3448,7 @@ long int TMBWmod::ReferenceFramePart() {
 
 long int TMBWmod::ExcessPart() {
     long int ip, pm, j, i, s, m, k, s1, s2, s3, s4, m1, m2, m3, m4;
-    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc, Wip, lnaconj;
+    double lnGam, dgm_dysis, dgm_dyjs, PY, H_mix, Wip, lnaconj;
     bool check;
 
     if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
@@ -3463,7 +3460,7 @@ long int TMBWmod::ExcessPart() {
 
 
     // NSergii: Calculation of the excess activity term for each end member
-    G_exc = calcGex();
+    H_mix = Hmix();
 
     for( j=0; j<NComp; j++) {
         lnGamEx[j] = 0.;
@@ -3484,21 +3481,11 @@ long int TMBWmod::ExcessPart() {
             dgm_dyjs += y[s][m] * mns[s] * dGm_dysi(j, m);
         } // m
 
-        lnaconj = (G_exc + (dgm_dysis - dgm_dyjs) ) / ( R_CONST*Tk );
+        lnaconj = (H_mix + (dgm_dysis - dgm_dyjs) ) / ( R_CONST*Tk );
 
         if(x[j] > 1e-32 )  // Check threshold
             lnGamEx[j] = lnaconj;// - log(x[j]);
     }
-
-    /*
-    G_exc = 0;
-    for (int j = 0; j < NComp; j++) {
-        if(x[j] > 1e-32 ) {  // Check threshold
-            lnaconj = lnGamEx[j];
-            G_exc += (R_CONST*Tk) * x[j] * lnGamEx[j];
-        }
-    }
-    */
 
    return 0;
 }
@@ -3588,7 +3575,7 @@ double TMBWmod::dGm_dysi( const long int i, const long int m) {
     return dgm_dysis;
 }
 
-double TMBWmod::Gref(){
+double TMBWmod::Gref() {
     int j;
     double G_ref;
 
@@ -3601,7 +3588,7 @@ double TMBWmod::Gref(){
     return G_ref;
 }
 
-double TMBWmod::Gidmix(){
+double TMBWmod::idealSmix() {
     int j, m, s;
     double G_idmix;
 
@@ -3615,18 +3602,18 @@ double TMBWmod::Gidmix(){
     return G_idmix;
 }
 
-bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ){
+bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ) {
     if( mn[j][s][m] != 0 )
        return true;
     return false;
 }
 
-double TMBWmod::calcGex(){
+double TMBWmod::Hmix() {
     int j, m, s1, s2, s3, s4, k, sk, pm, ip, m1, m2, m3, m4, variant;
-    double G_exc, PY, PS, wpt, xx, Wip, WW, lnGam, lnGamRT;
+    double H_mix, PY, PS, wpt, xx, Wip, WW, lnGam, lnGamRT;
 
     // Excess Gibbs energy term
-    G_exc    = 0.0;
+    H_mix    = 0.0;
     for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
 
         for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
@@ -3646,7 +3633,7 @@ double TMBWmod::calcGex(){
                         PY *= y[sk][k];
                     }
                 }
-                G_exc +=  PY * Wip;
+                H_mix +=  PY * Wip;
                 break;
             case 1:
                 PY  = 1.0;
@@ -3668,7 +3655,7 @@ double TMBWmod::calcGex(){
                 }
 
                 //PY = y[s1][m1] * y[s2][m2] * ( y[s3][m3] - y[s4][m4] );
-                G_exc += PY * PS * Wip;
+                H_mix += PY * PS * Wip;
                 break;
             default:
                 PY    = 1.0;
@@ -3679,11 +3666,11 @@ double TMBWmod::calcGex(){
                         PY *= y[sk][k];
                     }
                 }
-                G_exc += PY * Wip;
+                H_mix += PY * Wip;
                 break;
         }
     }  // ip
-    return G_exc;
+    return H_mix;
 }
 
 //--------------------- End of s_solmod3.cpp ----------------------------------------
