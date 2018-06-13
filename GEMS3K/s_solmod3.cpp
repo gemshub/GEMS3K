@@ -2378,7 +2378,7 @@ long int TBerman::ReciprocalPart()
          }
          lnGamRecip[j] -= rcSum;
       }  // r
-cout << " GexRc=" << lnGamRecip[j] << endl;
+// cout << " GexRc=" << lnGamRecip[j] << endl;
     }  // j
     }
     return 0;

@@ -192,7 +192,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    {
      case 0:  // OK
        CalculateActivityCoefficients( LINK_PP_MODE);
-       std::cout << "  CalculateActivityCoefficients( LINK_PP_MODE); " << std::endl;
+//       std::cout << "  CalculateActivityCoefficients( LINK_PP_MODE); " << std::endl;
               break;
      case 2:  // max number of iterations has been exceeded in InteriorPointsMethod()
      case 1: // degeneration in R matrix  for InteriorPointsMethod()

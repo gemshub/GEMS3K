@@ -355,11 +355,11 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
     SPP_SETTING *pa = paTProfil;
-    std::cout << "CalculateActivityCoefficients - 0 " << LinkMode << std::endl;
+//    std::cout << "CalculateActivityCoefficients - 0 " << LinkMode << std::endl;
     // calculating concentrations of species in multi-component phases
     switch( LinkMode )
     {
-      std::cout << "CalculateActivityCoefficients - LinkMode" << std::endl;
+//      std::cout << "CalculateActivityCoefficients - LinkMode" << std::endl;
       case LINK_TP_MODE:  // Built-in functions depending on T,P only
       {
         long int  jdqfc=0,  jrcpc=0; // jphl=0, jlphc=0,
@@ -423,7 +423,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
 
           } // k
         }
-        std::cout << "CalculateActivityCoefficients - LINK_TP_MODE" << std::endl;
+//        std::cout << "CalculateActivityCoefficients - LINK_TP_MODE" << std::endl;
         break;
 
       case LINK_PP_MODE: // Mode of calculation of integral solution phase properties
@@ -437,7 +437,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
               case PH_AQUEL: case PH_LIQUID: case PH_SINCOND: case PH_SINDIS: case PH_HCARBL:
               case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:  case PH_ADSORPT:
               case PH_IONEX:
-                std::cout << "CalculateActivityCoefficients - LINK_PP_MODE" << std::endl;
+//                std::cout << "CalculateActivityCoefficients - LINK_PP_MODE" << std::endl;
                    SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
                    SolModIdealProp(  jb, k, sMod[SPHAS_TYP] );
                    SolModStandProp(  jb, k, sMod[SPHAS_TYP] );
