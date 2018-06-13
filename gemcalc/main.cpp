@@ -62,6 +62,7 @@ int main( int argc, char* argv[] )
   if( node->GEM_init( input_system_file_list_name ) )
   {
       // error occured during reading the files
+      cout << "error occured during reading the files" << endl;
       return 1;
   }
 

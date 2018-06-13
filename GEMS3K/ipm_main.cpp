@@ -153,7 +153,7 @@ STEP_POINT("After FIA");
     switch( eRet )
     {
      case 0:  // OK
-              break;
+         break;
      case 5:  // Initial Lagrange multiplier for metastability broken for DC
      case 4:  // Initial mass balance broken for IC
      case 3:  // too small step length in descent algorithm
@@ -191,6 +191,8 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    switch( eRet )
    {
      case 0:  // OK
+       CalculateActivityCoefficients( LINK_PP_MODE);
+//       std::cout << "  CalculateActivityCoefficients( LINK_PP_MODE); " << std::endl;
               break;
      case 2:  // max number of iterations has been exceeded in InteriorPointsMethod()
      case 1: // degeneration in R matrix  for InteriorPointsMethod()
@@ -337,6 +339,8 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
      //          goto mEFD;   // Forced after cleanup ( check what to do with pm.K2 )
            }
         } // end cleanup
+
+        CalculateActivityCoefficients( LINK_PP_MODE);
 
         switch( ps_rcode )
            {

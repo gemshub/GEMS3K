@@ -86,6 +86,7 @@ KINR_MOD,  /// see also enum kinmet_controls
     SM_IDEAL =  'I',	// ideal solution or single-component phase
     SM_BERMAN = 'B',    // built-in multicomponent multisite (a)symmetric solid-solution model
     SM_CEF = '$',    //     built-in multicomponent multisite solid-solution model (CALPHAD)
+    SM_MBW = '#',    //     built-in Modified Bragg-Williams model, [Vinograd et al. 2018]
     SM_REDKIS = 'G', 	// built-in binary Guggenheim (Redlich-Kister) solid-solution model
     SM_MARGB = 'M',	// built-in binary Margules solid-solutions (subregular)
     SM_MARGT = 'T',	// built-in ternary Margules solid-solution (regular)

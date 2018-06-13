@@ -3118,8 +3118,7 @@ long int TSRKcalc::FugacitySpec( double *fugpure )
 	B = bmix*Pbar/(R_CONST*Tk);
 
 	// calculate fugacity coefficient, fugacity and activity of species i
-	for (i=0; i<NComp; i++)
-	{
+    for (i=0; i<NComp; i++) {
 		bi = Pureparm[i][1];
 		Bi = bi*Pbar/(R_CONST*Tk);
 

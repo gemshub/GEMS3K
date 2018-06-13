@@ -78,6 +78,7 @@ TSolMod::TSolMod( SolutionData *sd ):
     lnGamConf = sd->arlnCnft;  // new double[NComp];
     lnGamRecip = sd->arlnRcpt; // new double[NComp];
     lnGamEx = sd->arlnExet;    // new double[NComp];
+    lnGamCorr = sd->arlnCnft;  // new double[NComp];
     lnGamDQF = sd->arlnDQFt;   // new double[NComp];
     CTerm = sd->arCTermt;     // Coulombic terms (new)
    // Arrays for lnGamma components - should we zero off?
@@ -86,6 +87,7 @@ TSolMod::TSolMod( SolutionData *sd ):
        lnGamConf[i] = 0.0;
        lnGamRecip[i] = 0.0;
        lnGamEx[i] = 0.0;
+       lnGamCorr[i] = 0.0;
        lnGamDQF[i] = 0.0;
        CTerm[i] = 0.0;
     }
