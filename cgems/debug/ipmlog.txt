@@ -1,0 +1,480 @@
+system-dat.lst  : Fileopen error
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X—twﬁ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒ^ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X
+x - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÅ3‚≤ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XagØ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X@‰¯ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X¡8≥π - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒÎIº - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒ_®% - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XQI“$ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°Dl˘ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÅıª› - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xë ∆r - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xë]Ñ® - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒ›†ú - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../sw_test/CalcCol-sw-dbr-0-0001.dat
+Formatted read error 01  :   - Invalid label of data.
+
+GEMS3K input : file ../sw_test/CalcCol-sw-dbr-0-0001.dat
+Error  : bIC - fields must be read from DataBR structure
+GEMS3K input : file ../sw_test/CalcCol-sw-dbr-0-0001.dat
+Error  : bIC - fields must be read from DataBR structure
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒﬂ±™ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XëYù - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XAj´˘ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X∞„( - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XQ•⁄. - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X!±=√ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/../data/dch.dat
+Formatted read error 01  : X±d‚ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°¬H - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X≠É - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X1"T§ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XEè - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XDõ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xë»dg - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X·`†2 - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xü= - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÅÁ[Y - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X!vª - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xaw≤, - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÄ¨À - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±ôÑ˙ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°öå„ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XAZÖ– - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XqwIu - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X—‰ „ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X¡Éµi - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xa~¶° - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÅÎÑ’ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XaúS¥ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°“ˇ~ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X—Uâë - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X¡çp? - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xqëñ‰ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±FÍ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±O— - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒPC≥ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±™— - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±" - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X5w· - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X·^Ïı - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X·bt› - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°[‘b - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xa?ƒ∏ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XŸB£ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°ÂL - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±m•  - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XQL
+ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XQÔLv - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÅÖ«Â - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒ˛Yª - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X{3 - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XÒ8DT - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xqâç¬ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : Xqd‡ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XqÆ]{ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XQ8QÃ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X°â6| - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : XQQ±Ç - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X±ˆÂ - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/dch.dat
+Formatted read error 01  : X!t - Invalid label of data.
+After successfully read <nDCinPH> 5 data items
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <pa_DB> - Invalid label of data.
+After successfully read <FIat> 1 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <pa_DB> - Invalid label of data.
+After successfully read <FIat> 1 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <pa_DB> - Invalid label of data.
+After successfully read <FIat> 1 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <pa_DHB> - Invalid label of data.
+After successfully read <FIat> 1 data items
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+E19IPM: ConvertDCC()  : Invalid DC class code. Memory corruption?
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : 
+ - Invalid label of data.
+After successfully read <LsMdc> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : 0 - Invalid label of data.
+After successfully read <B> 4 data items
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : <PMc> - Invalid label of data.
+After successfully read <LsMod> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : X—√ƒ - Invalid label of data.
+After successfully read <LsMdc> 6 data items
+GEMS3K input : file ../data/ipm.dat
+Error  : LsMdc - fields must be read from the MULTY structure
+GEMS3K input : file ../data/ipm.dat
+Formatted read error 01  : X—m`ì - Invalid label of data.
+After successfully read <LsMdc> 6 data items
