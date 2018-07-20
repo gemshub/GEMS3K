@@ -35,7 +35,6 @@
 using namespace std;
 #include "s_solmod.h"
 
-
 //=============================================================================================
 // Implementation of ideal mixing model for multicomponent solid solutions
 // References: Price 1989
@@ -2497,7 +2496,7 @@ TCEFmod::~TCEFmod()
 
 void TCEFmod::alloc_internal()
 {
-    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
+    long int j, s, m;
 
     if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
         return;   // This is not a multi-site model or < 2 EMs or >6 sublattices
@@ -2553,7 +2552,7 @@ void TCEFmod::alloc_internal()
 
 void TCEFmod::free_internal()
 {
-    long int j,r,s;
+    long int j;
 
     delete[]InCf;
     delete[]Wu;
@@ -2579,7 +2578,7 @@ void TCEFmod::free_internal()
 /// Calculates T-corrected interaction parameters
 long int TCEFmod::PTparam( )
 {
-    long int ip, j, r, j0, j1, j2, j3;
+    long int ip, j;
 
     //if ( NPcoef < 4 || NPar < 1 ) NSergii: Have changed to 3 cause there is 3 params by default
     if ( NPcoef < 3 || NPar < 1 )
@@ -2638,7 +2637,6 @@ long int TCEFmod::MixMod()
        }
     }
 
-
     retCode = ExcessPart();
     if(!retCode)
     {
@@ -2653,7 +2651,7 @@ long int TCEFmod::MixMod()
 
 // NSergii: calculates ideal mixing part from the CEF model
 long int TCEFmod::CalcSiteFractions(){
-    long int j,s,m, i;
+    long int j,s,m;
     double mnsxj;
     // calculation of site fractions
     for( s=0; s<NSub; s++) {
@@ -2716,7 +2714,7 @@ long int TCEFmod::IdealMixing() {
 
 long int TCEFmod::ExcessProp( double *Zex ) {
     // check and add calculation of excess properties here
-    long int ip, i1, i2, s1, s2, d, e, f;
+    long int ip, s1, s2, d, e, f;
     double g, v, s, u;
 
     if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
@@ -2786,7 +2784,7 @@ long int TCEFmod::IdealProp( double *Zid ) {
 /// CEF - computing pyp[j] (product of site fractions for j-th end member) eq 42
 //
 double TCEFmod::PYproduct( const long int j ) {
-    double pyp_j, ys;
+    double pyp_j;
     long int s, m;
 
     pyp_j = 1.0;
@@ -2802,10 +2800,11 @@ double TCEFmod::PYproduct( const long int j ) {
 double TCEFmod::RefFrameTerm( const long int i, const double G_ref )
 {
     long int j, s, m;
-    double sum_s, dgm_dysis, dgm_dyjs, reftj, kd_ysis; //NSergii
+    double sum_s, dgm_dysis, dgm_dyjs, reftj; //NSergii
 
     sum_s = 0.0;
     dgm_dysis = 0.0;
+    dgm_dyjs  = 0.0;
 
     for( s = 0; s < NSub; s++ ) { // Looking through moieties
 
@@ -2831,7 +2830,7 @@ double TCEFmod::RefFrameTerm( const long int i, const double G_ref )
 double TCEFmod::dGr_dysi( const long int i, const long int s, const long int ex_j )
 {
     long int l, m, nmem;
-    double krond=0., ys, dst, dsum=0.;
+    double ys, dst, dsum=0.;
     bool kron;
 
     for( l=0; l<NComp; l++ )
@@ -2897,9 +2896,8 @@ long int TCEFmod::ReciprocalPart() {
 /// After Berman (DK/TW June 2011), needs to be changed to CEF (Lukas ea 2007)
 //
 long int TCEFmod::ExcessPart() {
-    long int ip, pm, j, s, m, k, s1, s2;
-    double lnGam, dgm_dysis, dgm_dyjs, PY, G_exc;
-    bool check;
+    long int j, s, m;
+    double dgm_dysis, dgm_dyjs, G_mix, lnaconj;
 
     if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
         || NPcoef < 3 || !x || !lnGamma ) {
@@ -2909,43 +2907,17 @@ long int TCEFmod::ExcessPart() {
     }
 
     // calculating activity coefficients
-    G_exc = Gexc();
+    G_mix = Gmix();
 
     for( j=0; j<NComp; j++) {
-        lnGam = 0.0;
+        lnGamEx[j] = 0.;
+        lnaconj = 0.0;
+
         dgm_dysis = 0.0;
         for( m=0; m < NMoi; m++ ) { // Looking through moieties
             s = Sub[m];
-            if ( KronDelta(j, s, m) ) { // If the moiety is a part of compound j
-                for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
-
-                    for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
-                        InCf[pm] = aIPx[MaxOrd*ip+pm];
-                    }
-
-                    // check wheather m moiety is present in InCf vector
-                    check = false;
-                    for ( pm=0 ; pm<MaxOrd; pm++) {
-                        if (InCf[pm] == m){
-                            check = true;
-                            continue;
-                        }
-                    }
-
-                    if ( check ) { // If the m moiety is one of the moieties in index vector
-                        PY = 1.0;
-                        for ( pm=0 ; pm<MaxOrd; pm++) {
-                            k = InCf[pm];
-                            if ( k > -1.0 ){
-                                s1 = Sub[k];
-                                PY *= y[s1][k];
-                            }
-                        }
-
-                        s2 = Sub[m];
-                        dgm_dysis += PY / y[s2][m] * Wpt[ip];
-                    }
-                }  // ip
+            if (KronDelta(j, s, m)) {
+                dgm_dysis += dGm_dysi(m);
             }
         } // m
 
@@ -2953,43 +2925,54 @@ long int TCEFmod::ExcessPart() {
         dgm_dyjs = 0.0;
         for( m=0; m < NMoi; m++ ) { // Looking through moieties
             s = Sub[m];
-            for (ip=0; ip<NPar; ip++) {  // interaction parameters indexed with ip
-
-                for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
-                    InCf[pm] = aIPx[MaxOrd*ip+pm];
-                }
-
-                // check wheather m moiety is present in InCf vector
-                check = false;
-                for ( pm=0 ; pm<MaxOrd; pm++) {
-                    if (InCf[pm] == m){
-                        check = true;
-                        continue;
-                    }
-                }
-
-                if ( check ) { // If the m moiety is one of the moieties in index vector
-                    PY = 1.0;
-                    for ( pm=0 ; pm<MaxOrd; pm++) {
-                        k = InCf[pm];
-                        if ( k > -1.0 ){
-                            s1 = Sub[k];
-                            PY *= y[s1][k];
-                        }
-                    }
-
-                    s2 = Sub[m];
-                    dgm_dyjs += mns[s] * y[s][m] * PY / y[s2][m] * Wpt[ip];
-                }
-            }  // ip
+            dgm_dyjs += y[s][m] * mns[s] * dGm_dysi(m);
         } // m
-        lnGam = G_exc + (dgm_dysis - dgm_dyjs);
 
-        lnGamEx[j] = 0.;
+        lnaconj = (G_mix + (dgm_dysis - dgm_dyjs) ) / ( R_CONST*Tk );
+
         if(x[j] > 1e-32 )  // Check threshold
-            lnGamEx[j] = lnGam/(R_CONST*Tk);
-    } // s
+            lnGamEx[j] = lnaconj;// - log(x[j]);
+    }
+
    return 0;
+}
+
+
+double TCEFmod::dGm_dysi(const long int m) {
+    long int ip, pm, s, k, sk;
+    double dgm_dysis, PY, Wip;
+    double pow;
+
+    dgm_dysis = 0.0;
+
+    s = Sub[m];
+
+    if (y[s][m] < 1.0e-36)
+        return 0.0;
+
+    for ( ip = 0; ip < NPar; ip++) {  // interaction parameters indexed with ip
+        for ( pm=0 ; pm<MaxOrd; pm++) { // Reading the moieties from a row in interaction parameters table
+            InCf[pm] = aIPx[ MaxOrd * ip + pm ];
+        }
+
+        Wip = Wpt[ip];
+
+        PY   = 1.0;
+        pow  = 0.0;
+        for ( pm=0 ; pm<(MaxOrd-1); pm++) {
+            k = InCf[pm];
+            if ( k > -1.0 ) {
+                sk = Sub[k];
+                PY *= y[sk][k];
+                if (k == m) pow += 1.0;
+            }
+        }
+
+        dgm_dysis += PY * pow * Wip / y[s][m];
+
+    }  // ip
+
+    return dgm_dysis;
 }
 
 double TCEFmod::Gref(){
@@ -3006,7 +2989,7 @@ double TCEFmod::Gref(){
 }
 
 double TCEFmod::idealSmix(){
-    int j, m, s;
+    long int m, s;
     double S_idmix;
 
     // Reference frame term
@@ -3019,7 +3002,7 @@ double TCEFmod::idealSmix(){
 }
 
 bool TCEFmod::KronDelta( const long int j, const long int s, const long int m ){
-    if( mn[j][s][m] != 0 )
+    if( mn[j][s][m] != 0.0 )
        return true;
     return false;
 }
@@ -3029,14 +3012,14 @@ long int TCEFmod::em_howmany( long int s, long int m )
     long int l, jc=0;
     for( l=0; l<NComp; l++ )
     {
-       if( mn[l][s][m] != 0 )
+       if( mn[l][s][m] != 0.0 )
            jc++;
     }
     return jc;
 }
 
-double TCEFmod::Gexc(){
-    int m, s1, k, pm, ip;
+double TCEFmod::Gmix(){
+    long int sk, k, pm, ip;
     double G_exc, PY;
 
     // Excess Gibbs energy term
@@ -3051,8 +3034,8 @@ double TCEFmod::Gexc(){
         for ( pm=0 ; pm<MaxOrd; pm++) {
             k = InCf[pm];
             if ( k > -1.0 ){
-                s1 = Sub[k];
-                PY *= y[s1][k];
+                sk = Sub[k];
+                PY *= y[sk][k];
             }
         }
 

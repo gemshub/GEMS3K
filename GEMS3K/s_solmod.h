@@ -1226,6 +1226,8 @@ class TCEFmod: public TSolMod
                 void alloc_internal();
                 void free_internal();
                 long int ExcessPart();
+                double dGm_dysi(const long int s);
+
                                ///< Arrays for ideal conf part must exist in base TSolMod instance
                 double PYproduct( const long int j );
                 long int em_which(const long int s, const long int m , const long int jb, const long int je);
@@ -1243,7 +1245,6 @@ class TCEFmod: public TSolMod
                 long int CalcSiteFractions(); // NSergii:
                 long int SLatt(const long int m);
                 double Gmix(); // NSergii:
-                double Gexc();
                 double Gref();
                 double idealSmix();
         public:
@@ -1341,7 +1342,6 @@ class TMBWmod: public TSolMod
                 long int IdealProp( double *Zid );
 
 };
-
 
 // -------------------------------------------------------------------------------------
 /// SIT model reimplementation for aqueous electrolyte solutions.
