@@ -29,9 +29,9 @@
 
 #include <cmath>
 #include <unistd.h>
-#ifndef __unix
-#include <io.h>
-#endif
+// #ifndef __unix
+// #include <io.h>
+// #endif
 
 #ifdef NODEARRAYLEVEL
 #ifndef NOPARTICLEARRAY
