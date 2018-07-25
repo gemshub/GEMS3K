@@ -1,4 +1,7 @@
 .directory
+build/
+install/
+cgems/
 GEMS3K/ms_multi_new.h
 GEMS3K/s_fgl_new.h
 gemcalc-build/Makefile.*
