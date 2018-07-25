@@ -1,7 +1,0 @@
-../data/infile.lst  : Fileopen error
-../data/infile.lst  : Fileopen error
-../data/infile.lst  : Fileopen error
-../data/infile.lst  : Fileopen error
-/data/infile.lst  : Fileopen error
-data/infile.lst  : Fileopen error
-../data/infile.lst  : Fileopen error
