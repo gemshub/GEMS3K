@@ -123,7 +123,7 @@ public:
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path,  DATACH  *dCH );
 
-   double ComputeEquilibriumState( long int& PrecLoops_, long int& NumIterFIA_, long int& NumIterIPM_ );
+   double ComputeEquilibriumState( /*long int& PrecLoops_,*/ long int& NumIterFIA_, long int& NumIterIPM_ );
 
    inline double HelmholtzEnergy( double x )
    {
@@ -435,7 +435,7 @@ public:
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path,  DATACH  *dCH );
    void CmReadMulti( QWidget* par, const char* path );
-   double ComputeEquilibriumState( long int& NumPrecLoops, long int& NumIterFIA, long int& NumIterIPM );
+   double ComputeEquilibriumState( /*long int& NumPrecLoops,*/ long int& NumIterFIA, long int& NumIterIPM );
    //long int testMulti( );
    bool CompareProjectName( const char* SysKey );
    void ChangeTPinKey( double T, double P );

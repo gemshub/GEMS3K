@@ -661,7 +661,7 @@ void KM_ReturnFSA(long int k, const char *kMod );
 void KM_CalcRates( long int k, const char *kMod );
 void KM_InitRates( long int k, const char *kMod );
 void KM_CalcSplit( long int jb, long int k, const char *kMod );
-void KM_InitSplit( long int jb, long int k, const char *kMod );
+void KM_InitSplit( /*long int jb,*/ long int k, const char *kMod );
 void KM_CalcUptake( long int jb, long int k, const char *kMod );
 void KM_InitUptake( long int jb, long int k, const char *kMod );
 void KM_SetAMRs( long int jb, long int k, const char *kMod );
@@ -669,7 +669,7 @@ void KM_SetAMRs( long int jb, long int k, const char *kMod );
 // ipm_main.cpp - numerical part of GEM IPM-2
     void GEM_IPM( long int rLoop );
     long int MassBalanceRefinement( long int WhereCalledFrom );
-    long int InteriorPointsMethod( long int &status, long int rLoop );
+    long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
     void AutoInitialApproximation( );
 
 // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
@@ -854,7 +854,7 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
-double CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM );
+double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
     void DC_LoadThermodynamicData( TNode* aNa = 0 );
     //DM 25.02.2014

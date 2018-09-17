@@ -507,7 +507,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
 /// Main call to GEM IPM calculation of equilibrium state in MULTI
 /// (with internal re-scaling of the system).
 //
-double TMulti::CalculateEquilibriumState( long int typeMin, long int& NumIterFIA, long int& NumIterIPM )
+double TMulti::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
 {
  // const char *key;
   double ScFact=1.;

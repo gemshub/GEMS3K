@@ -232,7 +232,7 @@ long int TNode::GEM_run( bool uPrimalSol )
        }
 
    // GEM IPM calculation of equilibrium state
-   CalcTime = profil->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
+   CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
     CNode->IterDone = NumIterFIA+NumIterIPM;

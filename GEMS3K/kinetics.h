@@ -195,15 +195,15 @@ public:
     void KM_ParPT( long int k, const char *kMod );
     void KM_InitTime( long int k, const char *kMod );
     void KM_UpdateTime( long int k, const char *kMod );
-    void KM_UpdateFSA(long jb, long int k, const char *kMod );
+    void KM_UpdateFSA(/*long jb,*/ long int k, const char *kMod );
     void KM_ReturnFSA(long int k, const char *kMod );
     void KM_CalcRates( long int k, const char *kMod );
     void KM_InitRates( long int k, const char *kMod );
-    void KM_CalcSplit( long int jb, long int k, const char *kMod );
-    void KM_InitSplit( long int jb, long int k, const char *kMod );
-    void KM_CalcUptake( long int jb, long int k, const char *kMod );
-    void KM_InitUptake( long int jb, long int k, const char *kMod );
-    void KM_SetAMRs( long int jb, long int k, const char *kMod );
+    void KM_CalcSplit( /*long int jb,*/ long int k, const char *kMod );
+    void KM_InitSplit( /*long int jb,*/ long int k, const char *kMod );
+    void KM_CalcUptake( /*long int jb,*/ long int k, const char *kMod );
+    void KM_InitUptake( /*long int jb,*/ long int k, const char *kMod );
+    void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
 
 
 };

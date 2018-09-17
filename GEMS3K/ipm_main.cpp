@@ -53,7 +53,6 @@ using namespace JAMA;
 void TMulti::GibbsEnergyMinimization()
 {
   bool IAstatus;
-  int KMretCode;
   Reset_uDD( 0L, uDDtrace); // Experimental - added 06.05.2011 KD
 
 // fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
@@ -115,7 +114,7 @@ FORCED_AIA:
 ///  rLoop is the index of the primal solution refinement loop (for tracing)
 ///   or -1 if this is main GEM_IPM call
 //
-void TMulti::GEM_IPM( long int rLoop )
+void TMulti::GEM_IPM( long int /*rLoop*/ )
 {
     long int i, j, eRet, status=0; long int csRet=0;
 // bool CleanAfterIPM = true;
@@ -173,7 +172,7 @@ STEP_POINT("After FIA");
     }
 
    // calling the MainIPMDescent() minimization algorithm
-   eRet = InteriorPointsMethod( status, pm.K2 );
+   eRet = InteriorPointsMethod( status/*, pm.K2*/ );
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpD.txt" );   // Debugging
@@ -517,7 +516,7 @@ to_text_file( "MultiDumpE.txt" );   // Debugging
 bool TMulti::GEM_IPM_InitialApproximation(  )
 {
     long int i, j, k, NN, eCode=-1L;
-    double minB, sfactor;
+    double minB;//, sfactor;
     char buf[512];
     SPP_SETTING *pa = paTProfil;
 
@@ -558,7 +557,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
        setErrorMessage( -1, "" , "");
     }
 
-    sfactor = RescaleToSize( false ); //  replacing calcSfactor();
+    /*sfactor =*/ RescaleToSize( false ); //  replacing calcSfactor();
 
 #ifndef IPMGEMPLUGIN
 #ifndef Use_mt_mode
@@ -751,7 +750,7 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
 {
     long int IT1;
     long int I, J, Z,  N, sRet, iRet=0, j, jK;
-    double LM, pmp_PCI;
+    double LM;//, pmp_PCI;
     SPP_SETTING *pa = paTProfil;
 
     ErrorIf( !pm.MU || !pm.W, "MassBalanceRefinement()",
@@ -840,7 +839,7 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
 
       // SOLVED: solution of linear matrix has been obtained
          //          pm.PCI = calcDikin( N, true);
-      pmp_PCI = DikinsCriterion( N, true);  // calc of MU values and Dikin criterion
+      /*pmp_PCI =*/ DikinsCriterion( N, true);  // calc of MU values and Dikin criterion
 
       LM = StepSizeEstimate( true ); // Estimation of the MBR() iteration step size LM
 
@@ -908,7 +907,7 @@ STEP_POINT("FIA Iteration");
 ///          4, Mass balance broken  in DualTH (Mol_u)
 ///          5, Divergence in dual solution u vector has been detected
 //
-long int TMulti::InteriorPointsMethod( long int &status, long int rLoop )
+long int TMulti::InteriorPointsMethod( long int &status/*, long int rLoop*/ )
 {
     bool StatusDivg;
     long int N, IT1,J,Z,iRet,i,  nDivIC;
@@ -1590,7 +1589,7 @@ void TMulti::Restore_Y_YF_Vectors()
 
 /// Calculation of the system size scaling factor and modified thresholds/cutoffs/insertion values
 /// Replaces calcSfactor()
-double TMulti::RescaleToSize( bool standard_size )
+double TMulti::RescaleToSize( bool /*standard_size*/ )
 {
     double SizeFactor=1.;
     SPP_SETTING *pa = paTProfil;
@@ -1789,7 +1788,7 @@ void TMulti::Reset_uDD( long int nr, bool trace )
 void TMulti::Increment_uDD( long int r, bool trace )
 {
     long int i;
-    double delta;
+    //double delta;
     cnr = r; // r+1;
     if( cnr == 0 )
         return;
@@ -1825,7 +1824,7 @@ void TMulti::Increment_uDD( long int r, bool trace )
       }
       U_CVo[i] = U_CV[i];
       U_CV[i] = U_mean[i] - U_M2[i];
-      delta = fabs(U_CV[i] - U_CVo[i]);
+      //delta = fabs(U_CV[i] - U_CVo[i]);
       if( trace )
       {
 //      cout << pm.U[i] << " ";

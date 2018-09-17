@@ -103,7 +103,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 if( k < pm.FIs )
                 {
                     KM_InitUptake( jb, k, kMod );
-                    KM_InitSplit( jb, k, kMod );
+                    KM_InitSplit( /*jb,*/ k, kMod );
                 }
                 KM_ReturnFSA( k, kMod );
                 break;
@@ -550,7 +550,7 @@ TMulti::KM_CalcRates( long int k, const char *kMod )
 // Calculation of initial AMR splitting for end members of SS phase
 //
 void
-TMulti::KM_InitSplit( long int jb, long int k, const char *kMod )
+TMulti::KM_InitSplit( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
