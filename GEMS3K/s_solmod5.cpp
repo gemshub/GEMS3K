@@ -1631,7 +1631,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
     long int a, n, c1, a1;
     double GM1, GM2, alp, alp1, g1, g2, B2, C, x_alp,
                 GM3, GM3a, Phi, z, z1, Q, GM4, GM5a, GM5, GM6a, GM6, GM;
-    double actcoeffM;
+    //double actcoeffM;
 
     // Calculate GM1
     GM1 = (zc[M]*zc[M])*Ffac;
@@ -1714,7 +1714,7 @@ double TPitzer::lnGammaM( long int M, double DH_term  )
     // Term GM
     GM = GM1+GM2+GM3+GM4+GM5+GM6;
 
-    actcoeffM = exp(GM);
+    //actcoeffM = exp(GM);
     return GM;
 }
 
@@ -1730,7 +1730,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
     double GX4;
     double GX5a, GX5;
     double GX6a, GX6;
-    double GX, actcoeffX;
+    double GX;//, actcoeffX;
 
     // Term GX1 (Pitzer-Toughreact Report 2006, equation A4)
     GX1=(za[X]*za[X])*Ffac;
@@ -1808,7 +1808,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
     // Term GX
     GX = GX1+GX2+GX3+GX4+GX5+GX6;
 
-    actcoeffX = exp(GX);
+    //actcoeffX = exp(GX);
 
     return GX;
 }
@@ -1818,7 +1818,7 @@ double TPitzer::lnGammaX( long int X, double DH_term )
 double TPitzer::lnGammaN( long int N )
 {
     long int c, a;
-    double GN1, GN2, GN3, GN, actcoeffN;
+    double GN1, GN2, GN3, GN;//, actcoeffN;
 
     // Term GN1
     GN1 = 0.;
@@ -1843,7 +1843,7 @@ double TPitzer::lnGammaN( long int N )
     // Term GN
     GN = GN1+GN2+GN3;
 
-    actcoeffN = exp(GN);
+    //actcoeffN = exp(GN);
 
   return GN;
 }
@@ -1864,7 +1864,7 @@ double TPitzer::McInnes_KCl( )
     double B0_KOH = McI_PT_array[3];
     double B1_KOH = McI_PT_array[4];
     double Cphi_KOH = McI_PT_array[5];
-    double B0_HCl = McI_PT_array[6];
+    //double B0_HCl = McI_PT_array[6];
     double B1_HCl = McI_PT_array[7];
     double Cphi_HCl = McI_PT_array[8];
     double Theta_KH = McI_PT_array[9];
@@ -1874,7 +1874,7 @@ double TPitzer::McInnes_KCl( )
 
     double C_KCl, C_KOH, C_HCl;
     double alp = 2.0;
-    double B_KCl, B_KOH, B_HCl;
+    double B_KCl, B_KOH;//, B_HCl;
     double g;
     long int M, N, X;
 
@@ -1890,7 +1890,7 @@ double TPitzer::McInnes_KCl( )
     g = 2.*(1.-(1.+v)*exp(-v))/(v*v);
     B_KCl = B0_KCl + B1_KCl*g;
     B_KOH = B0_KOH + B1_KOH*g;
-    B_HCl = B0_HCl + B1_HCl*g;
+    //B_HCl = B0_HCl + B1_HCl*g;
 
     // Calculation of molalities from Ionic Strength of Solution (pH fixed at 7)
     mH = 1.0e-7;
@@ -2234,12 +2234,12 @@ long int TEUNIQUAC::PTparam()
 long int TEUNIQUAC::MixMod()
 {
     long int j, i, l, k, w;
-    double Mw, Xw, b, RR, QQ, K, L, M, gamDH, gamC, gamR, lnGam, Gam;
+    double Mw, /*Xw,*/ b, RR, QQ, K, L, M, gamDH, gamC, gamR, lnGam;//, Gam;
     b = 1.5; Mw = 0.01801528;
 
     // get index of water (assumes water is last species in phase)
     w = NComp - 1;
-    Xw = x[w];
+    //Xw = x[w];
 
     // calculation of ionic strength
     IonicStrength();
@@ -2290,7 +2290,7 @@ long int TEUNIQUAC::MixMod()
             lnGamma[j] = lnGam;
 
             // write debug results
-            Gam = exp(lnGam);
+            //Gam = exp(lnGam);
             gammaDH[j] = gamDH;
             gammaC[j] = gamC;
             gammaR[j] = gamR;
@@ -2321,7 +2321,7 @@ long int TEUNIQUAC::MixMod()
             lnGamma[j] = lnGam;
 
             // write debug results
-            Gam = exp(lnGam);
+            //Gam = exp(lnGam);
             gammaDH[j]=gamDH;
             gammaC[j] = gamC;
             gammaR[j] = gamR;
@@ -2335,15 +2335,15 @@ long int TEUNIQUAC::MixMod()
 long int TEUNIQUAC::ExcessProp( double *Zex )
 {
     long int j, i, w;
-    double Mw, Xw, b, phiti, phthi, RR, QQ, N, TPI, tpx, TPX,
+    double Mw, /*Xw,*/ b, phiti, phthi, RR, QQ, N, TPI, tpx, TPX,
                 dtpx, DTPX, con;
-    double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX, dg, d2g, dgRI, d2gRI,
+    double gDH, gCI, gRI, gCX, gRX, dg, d2g, dgRI, d2gRI,
                 dgRX, d2gRX, dgDH, d2gDH, dgDHdP;
     b = 1.5; Mw = 0.01801528;
 
     // get index of water (assumes water is last species in phase)
     w = NComp - 1;
-    Xw = x[w];
+   // Xw = x[w];
 
     // calculation of ionic strength
     IonicStrength();
@@ -2364,7 +2364,6 @@ long int TEUNIQUAC::ExcessProp( double *Zex )
 
     // calculation of bulk phase excess properties
     Gex = 0.0; Hex = 0.0; Sex = 0.0; CPex = 0.0; Vex = 0.0;
-    gC = 0.0; gR = 0.0; hR = 0.0; cpR = 0.0;
 
     // infinite dilution part
     gCI = 0.; gRI = 0.; dgRI = 0.; d2gRI = 0.;

@@ -1708,7 +1708,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
 //       PhaseAmount = pm.XF[k];                         // bugfix 04.04.2011 DK
        if( /* logSI > -pa->p.DFM && */ PhaseAmount >= pm.DSM )
        { // Cleaning up a phase which is present in mass balance
-          bool Degenerated = false;
+          //bool Degenerated = false;
           L1kZeroDCs = 0;
           for(j=jb; j<jb+L1k; j++)
           {
@@ -1779,7 +1779,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
         if( L1k - L1kZeroDCs <= 1 && L1k > 1 )
         {
            if( L1k - L1kZeroDCs )
-              Degenerated = true;
+              ; //Degenerated = true;
            else
               PHremoved++;
            NeedToImproveMassBalance = true;

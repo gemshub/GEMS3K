@@ -45,7 +45,7 @@ using namespace std;
 
 
 // Generic constructor for the TModOther class
-TModOther::TModOther( SolutionData *sd, double *dW, double *eW ):
+TModOther::TModOther( SolutionData *sd, double */*dW*/, double */*eW*/ ):
                 TSolMod( sd )
 {
     alloc_internal();

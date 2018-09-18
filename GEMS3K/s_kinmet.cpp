@@ -647,7 +647,7 @@ TKinMet::UpdateTime( const double Tau, const double dTau )
 double
 TKinMet::PRrateCon( TKinReact &rk, const long int r )
 {
-   long int xj, j, atopc, facex;
+   long int xj, j, atopc;//, facex;
    double atp, ajp, aj, bc, tt;  // ,kr
 
 //cout << "kTau: " << kTau << " k: " << rk.k << " K: " << rk.K << " Omg: " << OmPh <<
@@ -660,7 +660,7 @@ TKinMet::PRrateCon( TKinReact &rk, const long int r )
 if( rk.xPR != r )     // index of this parallel reaction
         cout << rk.xPR << " <-> " << r << " mismatch" << endl;
    atopc = rk.ocPRk[0]; // operation code for this kinetic parallel reaction affinity term
-   facex = rk.ocPRk[1]; // particle face index (reserved)
+   //facex = rk.ocPRk[1]; // particle face index (reserved)
 
    // activity (catalysis) product term (f(prod(a))
    rk.cat = 1.;
@@ -873,7 +873,7 @@ TKinMet::CorrSpecSurfArea( const double sFratio, const bool toinit = false )
 bool
 TKinMet::RateInit( )
 {   
-    double rPR, sSAcr;
+    double rPR;//, sSAcr;
     long int r, atopc;
 
     kTot = 0.;
@@ -907,7 +907,7 @@ TKinMet::RateInit( )
        gTot = kTot * mPh/nPh;  // initial rate in kg/m2/s
        vTot =  kTot * vPh/nPh;  // orthogonal mean growth/dissolution velocity in m/s
        if( KinSizedCode != KM_UNDEF_ )
-           sSAcr = CorrSpecSurfArea( 1.0, true );
+           /*sSAcr =*/ CorrSpecSurfArea( 1.0, true );
     }
     else {
 //        sSAcr = 0.;
@@ -924,7 +924,7 @@ TKinMet::RateInit( )
 bool
 TKinMet::RateMod( )
 {
-    double sFratio = 1., rPR, sSAcr;
+    double sFratio = 1., rPR;//, sSAcr;
     long int r, atopc;
 
     kTot = 0.;   // overall specific rate (mol/m2/s)
@@ -958,7 +958,7 @@ TKinMet::RateMod( )
        gTot = kTot * mPh/nPh;  // rate in kg/m2/s
        vTot = kTot * vPh/nPh;  // linear growth/dissolution velocity in m/s - see eq (2.11)
        if( KinSizedCode != KM_UNDEF_ )
-           sSAcr = CorrSpecSurfArea( sFratio, false );
+           /*sSAcr =*/ CorrSpecSurfArea( sFratio, false );
     }
     else {
         gTot = 0.;
@@ -1266,7 +1266,7 @@ TUptakeKin::free_upttabs()
 }
 
 bool
-TUptakeKin::UptKinPTparam( const double TK, const double P )
+TUptakeKin::UptKinPTparam( const double /*TK*/, const double /*P*/ )
 {
     // No T,P corrections so far ...
     return false;
@@ -1308,7 +1308,7 @@ TUptakeKin::UptakeMod()
     {
         case  KM_UPT_ENTRAP_: //  = 'E',  //	Unified entrapment model (Thien,Kulik,Curti 2013)
         {
-            double FTr, DelTr0, Ds, Dl, l, m, xtTr, xtHc, CF, Rd_rest;
+            double FTr, DelTr0, Ds, /*Dl,*/ l, m, xtTr, xtHc, CF, Rd_rest;
             double DelTr, Vml, molSum=0., molMinSum=0., molMajSum=0., spMinSum=0, spMajSum=0;
 
 // Calculating the sums of tot.diss.molal. for all elements relevant to major and minor endmembers
@@ -1339,7 +1339,7 @@ TUptakeKin::UptakeMod()
                 FTr =    arUmpCon[j][0];  // d-less
                 DelTr0 = arUmpCon[j][1];  // eq tr fract.coeff.
                 Ds =     arUmpCon[j][2];  // in nm2/s
-                Dl =     arUmpCon[j][3];  // in nm2/s
+                //Dl =     arUmpCon[j][3];  // in nm2/s
                 l =      arUmpCon[j][4];  // in nm
                 m =      arUmpCon[j][5];  // d-less
 

@@ -35,10 +35,10 @@
 long int
 TMulti::CalculateKinMet( long int LinkMode  )
 {
-   long int k, j, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
+   long int k, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
             kc, kd, kce=0, kde=0, ku, kue=0, ki, kie=0, jphl=0, jlphc=0;
 
-   SPP_SETTING *pa = paTProfil;
+   //SPP_SETTING *pa = paTProfil;
    char *kMod;
 
    for( k=0; k<pm.FI; k++ )
@@ -99,10 +99,10 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 KM_InitTime( k, kMod );
                 KM_UpdateFSA( jb, k, kMod );
                 KM_InitRates( k, kMod );
-                KM_SetAMRs( jb, k, kMod );
+                KM_SetAMRs( /*jb,*/ k, kMod );
                 if( k < pm.FIs )
                 {
-                    KM_InitUptake( jb, k, kMod );
+                    KM_InitUptake(/* jb,*/ k, kMod );
                     KM_InitSplit( /*jb,*/ k, kMod );
                 }
                 KM_ReturnFSA( k, kMod );
@@ -126,11 +126,11 @@ TMulti::CalculateKinMet( long int LinkMode  )
                 KM_UpdateTime( k, kMod );
                 KM_UpdateFSA( jb, k, kMod );
                 KM_CalcRates( k, kMod );
-                KM_SetAMRs( jb, k, kMod );
+                KM_SetAMRs( /*jb,*/ k, kMod );
                 if( k < pm.FIs )
                 {
-                    KM_CalcUptake( jb, k, kMod );
-                    KM_CalcSplit( jb, k, kMod );
+                    KM_CalcUptake( /*jb,*/ k, kMod );
+                    KM_CalcSplit( /*jb,*/ k, kMod );
                 }
                 KM_ReturnFSA( k, kMod );
                 break;
@@ -168,7 +168,7 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
                            long int kf, long int ka, long int ks, long int kd, long int ku, long int ki,
                            const char *kmod, long int jphl, long int jlphc )
 {
-    double *aZ, *aM, PUL, PLL;
+    double PUL, PLL;
     KinMetData kmd;
     char KinProCode;
 
@@ -578,7 +578,7 @@ TMulti::KM_InitSplit( /*long int jb,*/ long int k, const char *kMod )
 // Calculation of current AMR splitting for end members of SS phase
 //
 void
-TMulti::KM_CalcSplit( long int jb, long int k, const char *kMod )
+TMulti::KM_CalcSplit( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -606,7 +606,7 @@ TMulti::KM_CalcSplit( long int jb, long int k, const char *kMod )
 // Sets new metastability constraints based on updated kinetic rates
 //
 void
-TMulti::KM_SetAMRs( long int jb, long int k,const char *kMod )
+TMulti::KM_SetAMRs( /*long int jb,*/ long int k,const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -632,7 +632,7 @@ TMulti::KM_SetAMRs( long int jb, long int k,const char *kMod )
 }
 
 void
-TMulti::KM_CalcUptake( long int jb, long int k, const char *kMod )
+TMulti::KM_CalcUptake( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -659,7 +659,7 @@ TMulti::KM_CalcUptake( long int jb, long int k, const char *kMod )
 
 
 void
-TMulti::KM_InitUptake( long int jb, long int k, const char *kMod )
+TMulti::KM_InitUptake( /*long int jb,*/ long int k, const char *kMod )
 {   
     switch( kMod[0] )
     {      

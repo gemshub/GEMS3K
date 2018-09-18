@@ -407,7 +407,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                 case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID: case PH_ADSORPT:
                 case PH_IONEX:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
-                        sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
+                        sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc/*,  jrcpc*/  );
                     // new solution models (TW, DK 2007)
             	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
@@ -439,9 +439,9 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
               case PH_IONEX:
 //                std::cout << "CalculateActivityCoefficients - LINK_PP_MODE" << std::endl;
                    SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
-                   SolModIdealProp(  jb, k, sMod[SPHAS_TYP] );
-                   SolModStandProp(  jb, k, sMod[SPHAS_TYP] );
-           	       SolModDarkenProp( jb, k, sMod[SPHAS_TYP] );
+                   SolModIdealProp(  /*jb,*/ k, sMod[SPHAS_TYP] );
+                   SolModStandProp(  /*jb,*/ k, sMod[SPHAS_TYP] );
+                   SolModDarkenProp( /*jb,*/ k/*, sMod[SPHAS_TYP]*/ );
            	       break;
               default:
                        break;
@@ -761,7 +761,7 @@ END_LOOP:
 //
 void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                            long int k, long int ipb, char ModCode, char MixCode,
-                           /* long int jphl, long int jlphc, */ long int jdqfc, long int  jrcpc)
+                           /* long int jphl, long int jlphc, */ long int jdqfc/*, long int  jrcpc*/)
 {
     double *aZ, *aM;//, *aVol;
     //long int *aIPx;
@@ -1163,7 +1163,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
 
 
 /// Wrapper call for calculation of bulk phase ideal mixing properties
-void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
+void TMulti::SolModIdealProp( /*long int jb,*/ long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -1215,7 +1215,7 @@ void TMulti::SolModIdealProp( long int jb, long int k, char ModCode )
 }
 
 /// Wrapper call for retrieving bulk phase Darken quadratic terms
-void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
+void TMulti::SolModDarkenProp( /*long int jb,*/ long int k/*, char ModCode*/ )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -1248,7 +1248,7 @@ void TMulti::SolModDarkenProp( long int jb, long int k, char ModCode )
 }
 
 /// Wrapper call for retrieving bulk phase standard state terms
-void TMulti::SolModStandProp ( long int jb, long int k, char ModCode )
+void TMulti::SolModStandProp ( /*long int jb,*/ long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;

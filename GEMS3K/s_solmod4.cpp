@@ -151,8 +151,9 @@ long int THelgeson::MixMod()
 {
 	long int j, k, w;
 	double sqI, Z2, lgGam, lnGam, Nw, Lgam, lnxw, xw, Lam, sig,
-			Phi, Phit, zc, za, psi, lnaw, lg_to_ln;
-	zc = 1.; za = 1.; psi = 1.; lg_to_ln = 2.302585093;
+            Phi, Phit, /*zc, za, psi,*/ lnaw, lg_to_ln;
+    //zc = 1.; za = 1.;  psi = 1.;
+    lg_to_ln = 2.302585093;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
@@ -245,7 +246,7 @@ long int THelgeson::ExcessProp( double *Zex )
 	double U, V, dUdT, dVdT, d2UdT2, d2VdT2, dUdP, dVdP, U1, U2, U3, V1, V2, V3,
 			dU1dT, dU2dT, dU3dT, dV1dT, dV2dT, dV3dT, d2U1dT2, d2U2dT2, d2U3dT2,
 			d2V1dT2, d2V2dT2, d2V3dT2, dU1dP, dU2dP, dU3dP, dV1dP, dV2dP, dV3dP,
-			L, dLdT, d2LdT2, dLdP, Z, dZdT, d2ZdT2, dZdP;
+            L, dLdT, d2LdT2, dLdP, /*Z,*/ dZdT, d2ZdT2, dZdP;
 	lg_to_ln = 2.302585093;
 	g = 0.; dgt = 0.; d2gt = 0.; dgp = 0.;
 
@@ -362,7 +363,7 @@ long int THelgeson::ExcessProp( double *Zex )
 								+ 3.*pow(ao,3.)*pow(B,2.)*d2BdT2 ) * IS;
 					dV3dP = ( 3.*pow(ao,2.)*daodP*pow(B,3.) + 3.*pow(ao,3.)*pow(B,2.)*dBdP ) * IS;
 
-					Z = U1/V1 - U2/V2 - U3/V3;
+                    //Z = U1/V1 - U2/V2 - U3/V3;
 					dZdT = (dU1dT*V1 - U1*dV1dT)/pow(V1,2.) - (dU2dT*V2 - U2*dV2dT)/pow(V2,2.)
 								- (dU3dT*V3 - U3*dV3dT)/pow(V3,2.);
 					d2ZdT2 = (d2U1dT2*V1 + dU1dT*dV1dT)/pow(V1,2.) - (dU1dT*V1)*(2.*dV1dT)/pow(V1,3.)
@@ -1621,7 +1622,7 @@ long int TDebyeHueckel::ExcessProp( double *Zex )
 	double U, V, dUdT, dVdT, d2UdT2, d2VdT2, dUdP, dVdP, U1, U2, U3, V1, V2, V3,
 			dU1dT, dU2dT, dU3dT, dV1dT, dV2dT, dV3dT, d2U1dT2, d2U2dT2, d2U3dT2,
 			d2V1dT2, d2V2dT2, d2V3dT2, dU1dP, dU2dP, dU3dP, dV1dP, dV2dP, dV3dP,
-			L, dLdT, d2LdT2, dLdP, Z, dZdT, d2ZdT2, dZdP;
+            L, dLdT, d2LdT2, dLdP, /*Z,*/ dZdT, d2ZdT2, dZdP;
 	lg_to_ln = 2.302585093;
 	g = 0.; dgt = 0.; d2gt = 0.; dgp = 0.;
 
@@ -1730,7 +1731,7 @@ long int TDebyeHueckel::ExcessProp( double *Zex )
 					d2V3dT2 = ( 6.*pow(ao,3.)*B*pow(dBdT,2.) + 3.*pow(ao,3.)*pow(B,2.)*d2BdT2 ) * IS;
 					dV3dP = ( 3.*pow(ao,3.)*pow(B,2.)*dBdP ) * IS;
 
-					Z = U1/V1 - U2/V2 - U3/V3;
+                    //Z = U1/V1 - U2/V2 - U3/V3;
 					dZdT = (dU1dT*V1 - U1*dV1dT)/pow(V1,2.) - (dU2dT*V2 - U2*dV2dT)/pow(V2,2.)
 								- (dU3dT*V3 - U3*dV3dT)/pow(V3,2.);
 					d2ZdT2 = (d2U1dT2*V1 + dU1dT*dV1dT)/pow(V1,2.) - (dU1dT*V1)*(2.*dV1dT)/pow(V1,3.)
@@ -2000,8 +2001,9 @@ long int TKarpov::MixMod()
 {
 	long int j, k, w;
 	double sqI, Z2, lgGam, lnGam, Nw, Lgam, lnxw, xw, Lam, sig,
-			Phi, Phit, psi, zc, za, lnaw, lg_to_ln;
-	zc = 1.; za = 1.; psi = 1.; lg_to_ln = 2.302585093;
+            Phi, Phit, /*psi, zc, za,*/ lnaw, lg_to_ln;
+    //zc = 1.; za = 1.; psi = 1.;
+    lg_to_ln = 2.302585093;
 
 	// get index of water (assumes water is last species in phase)
 	w = NComp - 1;
@@ -2094,7 +2096,7 @@ long int TKarpov::ExcessProp( double *Zex )
 	double U, V, dUdT, dVdT, d2UdT2, d2VdT2, dUdP, dVdP, U1, U2, U3, V1, V2, V3,
 			dU1dT, dU2dT, dU3dT, dV1dT, dV2dT, dV3dT, d2U1dT2, d2U2dT2, d2U3dT2,
 			d2V1dT2, d2V2dT2, d2V3dT2, dU1dP, dU2dP, dU3dP, dV1dP, dV2dP, dV3dP,
-			L, dLdT, d2LdT2, dLdP, Z, dZdT, d2ZdT2, dZdP;
+            L, dLdT, d2LdT2, dLdP, /*Z,*/ dZdT, d2ZdT2, dZdP;
 	lg_to_ln = 2.302585093;
 	g = 0.; dgt = 0.; d2gt = 0.; dgp = 0.;
 
@@ -2203,7 +2205,7 @@ long int TKarpov::ExcessProp( double *Zex )
 					d2V3dT2 = ( 6.*pow(ao,3.)*B*pow(dBdT,2.) + 3.*pow(ao,3.)*pow(B,2.)*d2BdT2 ) * IS;
 					dV3dP = ( 3.*pow(ao,3.)*pow(B,2.)*dBdP ) * IS;
 
-					Z = U1/V1 - U2/V2 - U3/V3;
+                    //Z = U1/V1 - U2/V2 - U3/V3;
 					dZdT = (dU1dT*V1 - U1*dV1dT)/pow(V1,2.) - (dU2dT*V2 - U2*dV2dT)/pow(V2,2.)
 								- (dU3dT*V3 - U3*dV3dT)/pow(V3,2.);
 					d2ZdT2 = (d2U1dT2*V1 + dU1dT*dV1dT)/pow(V1,2.) - (dU1dT*V1)*(2.*dV1dT)/pow(V1,3.)
@@ -2675,7 +2677,7 @@ long int TShvarov::PTparam()
 long int TShvarov::MixMod()
 {
 	long int j, k, w;
-	double sqI, Z2, lgGam, lnGam, Nw, xw, lnxw, Lgam,
+    double sqI, Z2, lgGam, /*lnGam,*/ Nw, xw, /*lnxw,*/ Lgam,
 				msum, C, lg_to_ln;
 	lg_to_ln = 2.302585093;
 
@@ -2691,15 +2693,15 @@ long int TShvarov::MixMod()
 	Lgam = log10(xw);  // Helgeson large gamma simplified
 	if( Lgam < -0.7 )
 		Lgam = -0.7;  // experimental truncation of Lgam to min ln(0.5)
-	lnxw = log(xw);
+    //lnxw = log(xw);
 	sqI = sqrt(IS);
 	C = (0.5*bgam);
 
 	// loop over species
 	for( j=0; j<NComp; j++ )
 	{
-		lgGam = 0.0;
-		lnGam = 0.0;
+        lgGam = 0.0;
+        //lnGam = 0.0;
 		msum = 0.0;
 
 		// calculate (bj*mj) sum
@@ -2711,9 +2713,9 @@ long int TShvarov::MixMod()
 		// charged species
 		if ( z[j] )
 		{
-			lgGam = 0.0;
+            lgGam = 0.0;
 			Z2 = z[j]*z[j];
-			lgGam = - (A*Z2*sqI) / (1.+ao*B*sqI) + C*bj[j]*msum;
+            lgGam = - (A*Z2*sqI) / (1.+ao*B*sqI) + C*bj[j]*msum;
 			lnGamma[j] = (lgGam + Lgam) * lg_to_ln;
 		}
 
@@ -2736,7 +2738,7 @@ long int TShvarov::MixMod()
 			else
 			{
 				lgGam = 0.0;
-				lnGam = 0.0;
+                //lnGam = 0.0;
 				if ( flagH2O == 1 )
 				{
 					lgGam = - A/(ao*B) * (2./Nw) * ( IS/(1.+ao*B*sqI) - 2.*sqI/(ao*B) + 2./pow((ao*B),2.) * log(1.+ao*B*sqI) )
@@ -2755,8 +2757,8 @@ long int TShvarov::MixMod()
 
 long int TShvarov::ExcessProp( double *Zex )
 {
-	long int j, k, w;
-	double sqI, Z2, Nw, xw, msum, C, dCdT, d2CdT2, dCdP, lg_to_ln,
+    long int j, k;//, w;
+    double sqI, Z2, Nw, /*xw,*/ msum, C, dCdT, d2CdT2, dCdP, lg_to_ln,
 				g, dgt, d2gt, dgp;
 	double U, V, dUdT, dVdT, d2UdT2, d2VdT2, dUdP, dVdP, U1, U2, U3, V1, V2, V3,
 				dU1dT, dU2dT, dU3dT, dV1dT, dV2dT, dV3dT, d2U1dT2, d2U2dT2, d2U3dT2,
@@ -2766,12 +2768,12 @@ long int TShvarov::ExcessProp( double *Zex )
 	g = 0.; dgt = 0.; d2gt = 0.; dgp = 0.;
 
 	// get index of water (assumes water is last species in phase)
-	w = NComp - 1;
+    //w = NComp - 1;
 
 	// calculate ionic strength and total molalities
 	IonicStrength();
 
-	xw = x[w];
+    //xw = x[w];
 	Nw = 1000./18.01528;
 	sqI = sqrt(IS);
 	C = (0.5*bgam);
@@ -3567,9 +3569,8 @@ cout<<" in TELVIS::PTparam()"<<endl;
     #endif
 
     long j, i, ip, i1, i2;
-    int ii;
-    double bet0, bet1, alp, cn, ra_, rc_, qa_, qc_;
-    double u, psi, v, weps, diffU, Xw = 0.;
+    double /*bet0, bet1, cn,*/ ra_, rc_, qa_, qc_;
+    double u, psi, /*v,*/ weps, diffU, Xw = 0.;
     double dudp, dudt, d2udt2;
     double* spec_frac = new double [NComp-1];
     double spec_sum = 0.0;
@@ -3650,7 +3651,9 @@ cout<<" in TELVIS::PTparam()"<<endl;
 
     for( ip=0; ip<NPar; ip++ )
     {
-        weps = 0.0; u = 0.0; bet0 = 0.; bet1 = 0.; cn = 0.;
+        weps = 0.0; u = 0.0;
+        //bet0 = 0.; bet1 = 0.;
+        //cn = 0.;
         i1 		= aIPx[MaxOrd*ip];
         i2 		= aIPx[MaxOrd*ip+1];
         if( aIPc[NPcoef*ip]>0.99 && aIPc[NPcoef*ip]<1.01 )
@@ -3674,7 +3677,7 @@ cout<<" in TELVIS::PTparam()"<<endl;
             WEps[i1][i2] 	= weps;
                 WEps[i2][i1]	= weps;
 
-            cn = aIPc[NPcoef*ip+2] + aIPc[NPcoef*ip+3] * IS;		// variable coordination number
+            //cn = aIPc[NPcoef*ip+2] + aIPc[NPcoef*ip+3] * IS;		// variable coordination number
             coord[i1][i2] 	= weps;
                 coord[i2][i1]	= weps;
 /*
@@ -3763,7 +3766,7 @@ cout<<" in TELVIS::PTparam()"<<endl;
         {
             diffU = U[j][i]-U[i][i];
             psi = exp( -diffU/Tk );
-            v = (U[j][i]-U[i][i])/pow(Tk,2.) - (dU[j][i]-dU[i][i])/Tk;
+            //v = (U[j][i]-U[i][i])/pow(Tk,2.) - (dU[j][i]-dU[i][i])/Tk;
             Psi[j][i] = psi;
         }
     }
@@ -3858,8 +3861,8 @@ cout<<" in TELVIS::PTparam()"<<endl;
 // Calculates activity coefficients
 long int TELVIS::MixMod()
 {
-        long int j;
-        double osmcoeff, msum;
+    //  long int j;
+    //  double osmcoeff, msum;
 
 //#ifdef GEMSFIT_DEBUG
 //cout << " TELVIS::MixMod():	m[0] = "<<m[0]<<endl;
@@ -3921,8 +3924,8 @@ long int TELVIS::CalcAct()
         {
           molT += m[j];
         }
-        double Gamma_gamma = log(1.+0.001801*molT);
-        int w = NComp - 1;
+        //double Gamma_gamma = log(1.+0.001801*molT);
+        //int w = NComp - 1;
 
         for( j=0;j<NComp;j++ )
         {
@@ -4075,14 +4078,15 @@ void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
 void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
 {
         int j, i, l, k, w;
-        double Mw, Xw, b, RR, QQ, K, L, M;
+        double /*Mw, Xw, b,*/ RR, QQ, K, L, M;
         double gamC = 0.0; double gamR = 0.0;
-        double lnGam = 0.0; double Gam = 0.0;
-        b = 1.5; Mw = 0.01801528;
+        //double lnGam = 0.0;
+        //double Gam = 0.0;
+        //b = 1.5; Mw = 0.01801528;
 
         // get index of water (assumes water is last species in phase)
         w = NComp - 1;
-        Xw = x[w];
+        //Xw = x[w];
 
         // calculation of Phi and Theta terms
         for( j=0; j<NComp; j++ )
@@ -4108,7 +4112,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
 
 // -------------------------------- COORDINATION NUMBER --------------------------------------------- //
         // species fractions:
-        double spec_sum=0.;
+        //double spec_sum=0.;
         CN = 0.;
         vector<double> spec_frac((NComp-1),0);
 
@@ -4245,7 +4249,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
 //                        gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - 5.0*Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
                         gamC = log(Phi[j]/x[j]) + 1. - Phi[j]/x[j] - CN * Q[j] * ( log(Phi[j]/Theta[j]) + 1. - Phi[j]/Theta[j] );
                         gamR = Q[j] * (1. - log(K) - L );
-                        lnGam = gamC + gamR;
+                        //lnGam = gamC + gamR;
 #ifdef ELVIS_DEBUG
                             cout<<"z["<<j<<"] = "<<z[j]<<endl;
                             cout<<"R["<<j<<"] = "<<R[j]<<endl;
@@ -4262,7 +4266,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
                         ELVIS_lnGam_UNIQUAC[j] = gamC + gamR;
 
                         // write debug results
-                        Gam 	  = exp(lnGam);
+                        //Gam 	  = exp(lnGam);
                 }
         }
 
@@ -4273,12 +4277,12 @@ long int TELVIS::ExcessProp( double *Zex )
 {
     long int j, i, k, w;
     double Mw, Xw;
-    double gDH, gC, gR, hR, cpR, gCI, gRI, gCX, gRX, dg=0.0, d2g=0.0;
+    double /*gC, gR, hR, cpR,*/ dg=0.0, d2g=0.0;
     double DHTv, CTv, RTv, rtv1;
     double DHTg, CTg, RTg, rtg;
     double SRI = 0.0, xr = 0.0, xq = 0.0, xDrDp = 0.0, xDqDp = 0.0;
     Gex = 0.0; Hex = 0.0; Sex = 0.0; CPex = 0.0; Vex = 0.0;
-    gC  = 0.0; gR  = 0.0; hR  = 0.0; cpR  = 0.0;
+    //gC  = 0.0; gR  = 0.0; hR  = 0.0; cpR  = 0.0;
     DHTv = 0.0; CTv  = 0.0; RTv  = 0.0; rtv1 = 0.0;
     DHTg = 0.0; CTg  = 0.0; RTg  = 0.0; rtg  = 0.0;
 
@@ -4614,7 +4618,6 @@ double TELVIS::App_molar_volume()
         long int j      = 0;
         double m_infdil = 1.1e-6;
         double m_el 	= m[j]; 	// concentration of electrolyte
-        double result, error;
 
         double app_molar_vol_part = R_CONST*Tk* qsimp( m_infdil, m[j], j, 1 )/m_el;
 
