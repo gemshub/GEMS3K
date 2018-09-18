@@ -148,9 +148,8 @@ void TActivity::updateConcentrations()
 // compute activity coefficients
 void TActivity::updateActivityCoefficients()
 {
-    long int retCode;
  //   ACTIVITY* ap = atp->GetActivityDataPtr();
-    retCode = this->CalculateActivityCoefficients( LINK_UX_MODE );
+   /* long int retCode = */this->CalculateActivityCoefficients( LINK_UX_MODE );
  //   if(retCode)
         // Errors
 }
@@ -329,12 +328,12 @@ void TActivity::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
 //  Last modif. 05 Jan 2000 by DK to include BSM EDL model.
 double TActivity::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
 {
-    long int ja=0, ist, isp, jc=-1;
-    double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
-    double FactSur, FactSurT;
+    //long int jc=-1;
+    double F0=0.0;//, Fold, Mk=0.0;
+    //double FactSur, FactSurT;
 //    SPP_SETTING *pa = paTProfil;
 
-    Fold = act.F0[j];    // No old sorption models in this implementation!
+   // Fold = act.F0[j];    // No old sorption models in this implementation!
 //    if( act.FIat > 0 && j < act.Ls && j >= act.Ls - act.Lads )
 //    {
 //        ja = j - ( act.Ls - act.Lads );
@@ -345,9 +344,9 @@ double TActivity::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
 //    }
     if( k < act.FIs && act.XFA[k] > 1e-12)
     {
-           if( jc < 0 ) // phase (carrier) molar mass g/mkmol
+           /*if( jc < 0 ) // phase (carrier) molar mass g/mkmol
               Mk = act.FWGT[k]/act.XFA[k]*1e-6;
-           else Mk = act.MM[jc]*(act.X[jc]/act.XFA[k])*1e-6;
+           else Mk = act.MM[jc]*(act.X[jc]/act.XFA[k])*1e-6;*/
         // DC carrier molar mass g/mkmol
     }
     switch( act.DCC[j] )
@@ -549,7 +548,7 @@ double TActivity::DC_PrimalChemicalPotential(
 void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
 {
     long int i,j,k;
-    double NonLogTerm=0., v, Yw, Yf, YFk, logXw, logYFk, aqsTail; // v is debug variable
+    double NonLogTerm=0., v, /*Yw,*/ Yf, YFk, logXw, logYFk;//, aqsTail; // v is debug variable
 
     for( j=0; j<act.L; j++)
        F[j] =0;
@@ -592,8 +591,8 @@ NonLogTerm = 0.0;
         }
         if( act.PHC[k] == PH_AQUEL )
         {    // ln moles of solvent in aqueous phase
-            Yw = YFk;
-            aqsTail = NonLogTerm;
+            //Yw = YFk;
+            //aqsTail = NonLogTerm;
         }
         for( ; j<i; j++ )
         { //  cycle by DC
@@ -652,7 +651,7 @@ double TActivity::DC_GibbsEnergyContribution(
 ///  just copies vector Y[] into X[].
 ///  \return of G(X) in moles.
 //
-double TActivity::GX( double LM  )
+double TActivity::GX( double /*LM*/  )
 {
     long int i, j, k;
     double x, XF, XFw, FX, Gi; // debug variable

@@ -238,7 +238,7 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
                 case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
               case PH_IONEX: case PH_ADSORPT:
                     SolModCreate( jb, jmb, jsb, jpb, jdb, k, ipb,
-                      sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc,  jrcpc  );
+                      sMod[SPHAS_TYP], sMod[MIX_TYP], /* jphl, jlphc,*/ jdqfc/*,  jrcpc*/  );
                     // new solution models (TW, DK 2007)
             	    SolModParPT( k, sMod[SPHAS_TYP] );
             	    break;
@@ -268,9 +268,9 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
               case PH_SIMELT: case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
             case PH_IONEX: case PH_ADSORPT:
            	       SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
-           	       SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
-           	       SolModStandProp( jb, k, sMod[SPHAS_TYP] );
-           	       SolModDarkenProp( jb, k, sMod[SPHAS_TYP] );
+                   SolModIdealProp( /*jb,*/ k, sMod[SPHAS_TYP] );
+                   SolModStandProp( /*jb,*/ k/*, sMod[SPHAS_TYP]*/ );
+                   SolModDarkenProp( /*jb,*/ k/*, sMod[SPHAS_TYP]*/ );
            	       break;
               default:
                        break;
@@ -474,7 +474,7 @@ END_LOOP:
 //
 void TActivity::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                            long int k, long int ipb, char ModCode, char MixCode,
-                           /* long int jphl, long int jlphc, */ long int jdqfc, long int  jrcpc)
+                           /* long int jphl, long int jlphc, */ long int jdqfc/*, long int  jrcpc*/)
 {
     double *aZ, *aM;//, *aVol;
     //long int *aIPx;
@@ -859,7 +859,7 @@ void TActivity::SolModExcessProp( long int k, char ModCode )
 
 
 /// Wrapper call for calculation of bulk phase ideal mixing properties
-void TActivity::SolModIdealProp( long int jb, long int k, char ModCode )
+void TActivity::SolModIdealProp( /*long int jb,*/ long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -910,7 +910,7 @@ void TActivity::SolModIdealProp( long int jb, long int k, char ModCode )
 }
 
 /// Wrapper call for retrieving bulk phase Darken quadratic terms
-void TActivity::SolModDarkenProp( long int jb, long int k, char ModCode )
+void TActivity::SolModDarkenProp(/* long int jb,*/ long int k/*, char ModCode*/ )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -943,7 +943,7 @@ void TActivity::SolModDarkenProp( long int jb, long int k, char ModCode )
 }
 
 /// Wrapper call for retrieving bulk phase standard state terms
-void TActivity::SolModStandProp ( long int jb, long int k, char ModCode )
+void TActivity::SolModStandProp ( /*long int jb,*/ long int k/*, char ModCode*/ )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     double Gst=0., Hst=0., Sst=0., CPst=0., Vst=0., Ast=0., Ust=0.;
@@ -1063,7 +1063,7 @@ void TActivity::Free_TKinMet()
 ///       1, 2, ...  taking log(CD) average from the moving window of length mode
 ///       (up to 5 consecutive values)
 ///
-void TActivity::SetSmoothingFactor( long int mode )
+void TActivity::SetSmoothingFactor( long int /*mode*/ )
 {
     double TF=1., al, ag, dg, iim, irf; // rg=0.0;
     long int ir; //, Level, itqF, itq;

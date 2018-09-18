@@ -354,7 +354,7 @@ long int TParticleArray::MoveParticleBetweenNodes( long int px, bool CompMode, d
 long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, double t0, double t1 )
 {
 
-  long int iNode, iType, iRet = 0, cpx;
+  long int iNode, iType, /*iRet = 0,*/ cpx;
   double *mass, m_;
 
 // set up new masses to particles after GEM calculations
@@ -372,11 +372,11 @@ long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, 
 
  // new  particle position xyz
   for( cpx=0; cpx < anParts; cpx++ )
-     iRet = DisplaceParticle( cpx, t0, t1 );
+     /*iRet =*/ DisplaceParticle( cpx, t0, t1 );
 
  // Walk (transport step) for particles between nodes
   for( cpx=0; cpx < anParts; cpx++ )
-     iRet = MoveParticleBetweenNodes( cpx, CompMode, t0, t1 );
+     /*iRet =*/ MoveParticleBetweenNodes( cpx, CompMode, t0, t1 );
 
   bool reset = false;
   for( iNode=0; iNode < nNodes; iNode++ )

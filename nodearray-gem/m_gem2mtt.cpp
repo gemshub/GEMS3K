@@ -383,7 +383,7 @@ void TGEM2MT::MassTransParticleStep( bool CompMode )
 void TGEM2MT::MassTransAdvecStep( bool CompMode )
 {
  double c0, c1, cm1,  cm2, /*cmax,*/ c12, cm12,
-        charge, /*c0new,*/ dc, cr, aji, fmolal;      // some help variables
+        /*charge, c0new,*/ dc, cr, aji, fmolal;      // some help variables
  long int ii, ic, jc;
 
  //  Getting direct access to TNodeArray class data
@@ -481,7 +481,7 @@ void TGEM2MT::MassTransAdvecStep( bool CompMode )
     	 } // loop over IC
      }
 	 // checking charge balance
-	 charge = node1_bIC(ii, CH->nICb-1 );
+     //charge = node1_bIC(ii, CH->nICb-1 );
      node1_bIC(ii, CH->nICb-1 ) = 0.0;		// debugging
    } // end of loop over nodes
 }
