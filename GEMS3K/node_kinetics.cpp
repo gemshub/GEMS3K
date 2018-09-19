@@ -891,8 +891,8 @@ void TKinetics::Free_TKinMet()
 
   if( phKinMet )
   {  for(  kk=0; kk<sizeFI; kk++ )
-      if( phKinMet[kk] )
-           delete phKinMet[kk];
+          if( phKinMet[kk] )
+              delete phKinMet[kk];
 
       delete[]  phKinMet;
   }

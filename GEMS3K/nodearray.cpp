@@ -1334,18 +1334,18 @@ long int TNodeArray::FindNodeFromLocation( LOCATION cxyz, long int old_node ) co
  }
  else // check only nearest nodes
  {
-	 long int i1, j1, k1;
-   i1 = indN( old_node );
-   j1 = indM( old_node );
-   k1 = indK( old_node );
+     long int i1, j1, k1;
+     i1 = indN( old_node );
+     j1 = indM( old_node );
+     k1 = indK( old_node );
 
-   for( i = i1-1; i <= i1+1; i++ )
-     for( j = j1-1; j <= j1+1; j++ )
-       for( k = k1-1; k <= k1+1; k++ )
-       {
-          if(  isLocationInNode( i, j, k, cxyz ) )
-              return iNode( i, j, k );
-       }
+     for( i = i1-1; i <= i1+1; i++ )
+         for( j = j1-1; j <= j1+1; j++ )
+             for( k = k1-1; k <= k1+1; k++ )
+             {
+                 if(  isLocationInNode( i, j, k, cxyz ) )
+                     return iNode( i, j, k );
+             }
  }
  return -1; // behind region
 }
@@ -1497,31 +1497,31 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
     for(long int jc=0; jc < pCSD()->nDC; jc++ )
 	{
 	  mol = 0.; // moles of DC transported in the particle
-	  switch( tcode )
-	  {
-        case DISSOLVED: // moving only dissolved DC (-H2O)
-//             if( jc == xWatCH )
-//            	 continue;  // H2O is ignored - not moved with the particle 
-	    case ADVECTIVE: // moving DC of the whole aq phase
-             if( jc > xWatCH )
-            	 continue;     // ignoring non-aqueous species 
-	    	 mol = node1_xDC( ndx_from, jc ) * coeff * fmolal;
-             break;                	 
-//             ( node1_bPS( ndx_from, ips, ie )
-//                   - nodeCH_A( xWatCH, ie)
-//                   * node1_xPA(ndx_from,ips)) * coeff;
-	     case COLLOID:  // moving DC of solid particle - to be completed!     
-// 	    	 if( ips < dch->nPSb )
-//                  mol = node1_bPS( ndx_from, ips, ie ) * coeff;
-//             else
-//                  mol = node1_bPH( ndx_from, ips, ie ) * coeff;
-	    	 break;
-	     case DIFFUSIVE: // moving DC - a diffusing species
-             if( jc != ips )
-            	 continue;     // ignoring other diffusive species 
-	    	 mol = node1_xDC( ndx_from, jc ) * coeff * fmolal;
-             break;                	 
-	  }
+      switch( tcode )
+      {
+      case DISSOLVED: // moving only dissolved DC (-H2O)
+          //             if( jc == xWatCH )
+          //            	 continue;  // H2O is ignored - not moved with the particle
+      case ADVECTIVE: // moving DC of the whole aq phase
+          if( jc > xWatCH )
+              continue;     // ignoring non-aqueous species
+          mol = node1_xDC( ndx_from, jc ) * coeff * fmolal;
+          break;
+          //             ( node1_bPS( ndx_from, ips, ie )
+          //                   - nodeCH_A( xWatCH, ie)
+          //                   * node1_xPA(ndx_from,ips)) * coeff;
+      case COLLOID:  // moving DC of solid particle - to be completed!
+          // 	    	 if( ips < dch->nPSb )
+          //                  mol = node1_bPS( ndx_from, ips, ie ) * coeff;
+          //             else
+          //                  mol = node1_bPH( ndx_from, ips, ie ) * coeff;
+          break;
+      case DIFFUSIVE: // moving DC - a diffusing species
+          if( jc != ips )
+              continue;     // ignoring other diffusive species
+          mol = node1_xDC( ndx_from, jc ) * coeff * fmolal;
+          break;
+      }
 	  if( tcode == DISSOLVED || tcode == ADVECTIVE || tcode == DIFFUSIVE )
 	      mol /= fmolal;       // back from molality to moles
       

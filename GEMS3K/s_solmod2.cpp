@@ -1092,18 +1092,19 @@ long int TCGFcalc::MixMod()
 		phVOL[0] = phWGT[0] / roro;
 
 	}
-
 	else  // Setting Fugcoefs to 0 outside TP interval
-		for( j=0; j<NComp; j++ )
+    {
+        for( j=0; j<NComp; j++ )
 			FugCoefs[ j ] = 0.0;
+    }
 
-		for( j=0; j<NComp; j++  )
-		{
+   for( j=0; j<NComp; j++  )
+   {
 			if( FugCoefs[j] > 1e-23 )
 				lnGamma[j] = log(FugCoefs[j]/Pparc[j]);
 			else
 				lnGamma[j] = 0;
-		}  // j
+    }  // j
 	return 0;
 }
 

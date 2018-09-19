@@ -721,13 +721,13 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
     pm.ICC[ii] =  dCH->ccIC[ii];
   }
 
-if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
-  for( long int jj=0; jj< dCH->nDC; jj++ )  // Added by DK on 03.03.2007
-  {
-    dCH->DCmm[jj] = 0.0;
-    for( ii=0; ii< dCH->nIC; ii++ )
-       dCH->DCmm[jj] += dCH->ICmm[ii]*dCH->A[jj*dCH->nIC+ii];
-  }
+  if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
+      for( long int jj=0; jj< dCH->nDC; jj++ )  // Added by DK on 03.03.2007
+      {
+          dCH->DCmm[jj] = 0.0;
+          for( ii=0; ii< dCH->nIC; ii++ )
+              dCH->DCmm[jj] += dCH->ICmm[ii]*dCH->A[jj*dCH->nIC+ii];
+      }
 
   for( ii=0; ii< dCH->nDC; ii++ )
   {

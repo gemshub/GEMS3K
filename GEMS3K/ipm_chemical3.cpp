@@ -1323,10 +1323,10 @@ void TMulti::Free_TSolMod()
   long int kk;
 
   if( phSolMod )
-  {  for(  kk=0; kk<sizeFIs; kk++ )
-      if( phSolMod[kk] )
+  {
+      for(  kk=0; kk<sizeFIs; kk++ )
+        if( phSolMod[kk] )
            delete phSolMod[kk];
-
       delete[]  phSolMod;
   }
   phSolMod = 0;
@@ -1353,10 +1353,10 @@ void TMulti::Free_TSorpMod()
   long int kk;
 
   if( phSorpMod )
-  {  for(  kk=0; kk<sizeFIa; kk++ )
-      if( phSorpMod[kk] )
+  {
+      for(  kk=0; kk<sizeFIa; kk++ )
+         if( phSorpMod[kk] )
            delete phSorpMod[kk];
-
       delete[]  phSorpMod;
   }
   phSorpMod = 0;

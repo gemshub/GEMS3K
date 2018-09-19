@@ -1359,8 +1359,9 @@ long int TMulti::MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr 
       (*(AA+(ii)+(kk)*N)) = 0.;
 
   for( jj=0; jj < pm.L; jj++ )
-   if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
-   {
+  {
+    if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
+    {
       for( k = arrL[jj]; k < arrL[jj+1]; k++)
         for( i = arrL[jj]; i < arrL[jj+1]; i++ )
         { ii = arrAN[i];
@@ -1369,7 +1370,8 @@ long int TMulti::MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr 
            continue;
           (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pm.W[jj];
         }
-   }
+    }
+  }
 
    if( initAppr )
      for( ii = 0; ii < N; ii++ )

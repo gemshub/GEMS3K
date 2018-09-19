@@ -878,10 +878,10 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
     Alloc_uDD( pm.N );      // Added 06.05.2011 DK
 
   // calculate mass of the system
-   pm.MBX = 0.0;
+  pm.MBX = 0.0;
   for(int i=0; i<pm.N; i++ )
-   pm.MBX += pm.B[i] * pm.Awt[i];
-   pm.MBX /= 1000.;
+     pm.MBX += pm.B[i] * pm.Awt[i];
+  pm.MBX /= 1000.;
 
    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
 

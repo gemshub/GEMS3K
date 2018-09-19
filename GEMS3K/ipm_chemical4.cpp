@@ -705,10 +705,10 @@ void TMulti::Free_TKinMet()
   long int kk;
 
   if( phKinMet )
-  {  for(  kk=0; kk<sizeFI; kk++ )
-      if( phKinMet[kk] )
-           delete phKinMet[kk];
-
+  {
+      for(  kk=0; kk<sizeFI; kk++ )
+          if( phKinMet[kk] )
+               delete phKinMet[kk];
       delete[]  phKinMet;
   }
   phKinMet = 0;

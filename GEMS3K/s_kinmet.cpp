@@ -364,11 +364,13 @@ bool
 TKinMet::linked_phases_properties( bool if_init = false )
 {
     // this is a phase linked to one or more other phases!
-          long int klp, k, xlc, lpcode, i;
+          long int klp, k, xlc, lpcode=0, i;
           double lc[8], xpk, mpk, vpk, aspk;
 
           sSAlp = 0.;    sSAVlp = 0.;  sAPhlp = 0.;   // reset totals for linked phases
           mPhlp = 0.;    vPhlp = 0.;   Rholp =0.;  nPhlp = 0.;
+          for( i=0; i<8; i++ )
+              lc[i] =0.;
 
           // Checking if there is a phase linkage
           for( klp=0; klp<nlPh; klp++ )

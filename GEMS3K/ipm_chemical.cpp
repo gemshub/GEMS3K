@@ -221,10 +221,11 @@ double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, lo
    long int i, ii;
    double Nu = 0.0;
    for( i = arrL[j]; i < arrL[j+1]; i++ )
-   {  ii = arrAN[i];
+   {
+      ii = arrAN[i];
       if( ii >= N )
-       continue;
-       Nu += U[ii]*(AL[ii]);
+         continue;
+      Nu += U[ii]*(AL[ii]);
    }
    return Nu;
 }
@@ -1060,7 +1061,7 @@ double TMulti:: ConvertGj_toUniformStandardState( double g0, long int j, long in
     case DC_AQ_PROTON:
     case DC_AQ_ELECTRON:
     case DC_AQ_SPECIES:
-case DC_AQ_SURCOMP:
+    case DC_AQ_SURCOMP:
         G += pm.ln5551;
         // calculate molar mass of solvent
     case DC_AQ_SOLVCOM:
