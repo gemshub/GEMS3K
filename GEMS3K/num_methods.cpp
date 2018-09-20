@@ -347,7 +347,7 @@ double GoldenSectionTwo::calcFunction( double x, double y )
         return minF( y, x );
 }
 
-double GoldenSectionTwo::getMinimum( double val2 )
+double GoldenSectionTwo::getMinimum( double /*val2*/ )
 {
    double x, y=dat2.a, Fxy, Fay, Fxa;
 

@@ -98,12 +98,12 @@ inline void TGEM2MT::dMBfluxDir( long int q, long int i, double *dm, double fRat
 // calculate kk-th flux between boxes with indexes in FDLi[kk]
 //  !!!!!!!!!!!!!!!!!!!!!!!!! To be checked and revised!
 //
-void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double t )
+void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double /*t*/ )
 {
   long int  q, p, f, fe=-1, i;
   char FLXid[MAXSYMB+1], MGPid[MAXSYMB+1];
   long int FLXorder/*, FLXtype*/;
-  double nbIC, fRate, fRateS, MGPo=0., MGPi=0., vkk=1., mqfi, gqfi, Hfei, MBqi, MBpi;
+  double nbIC, fRate, fRateS, MGPo=0., MGPi=0., vkk=1., mqfi, gqfi, Hfei, MBqi;//, MBpi;
   bool sinkOut=false;
 
   fe = -1;
@@ -179,7 +179,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double t )
                      break;
                  for(i=0; i<mtp->Nf; i++ )
                  {
-                    gqfi = g(q,f,i); MBqi = MB(q,i); MBpi = MB(p,i);
+                    gqfi = g(q,f,i); MBqi = MB(q,i);// MBpi = MB(p,i);
                     fRate = gqfi * vkk * MGPo * MGPi; // * MBqi * MBpi;
                     dMBfluxDir( q, i, dm, fRate, (-1.)); // dMB(q,i) -=  fRate;
                     dMBfluxDir( p, i, dm, fRate); // dMB(p,i) +=  fRate;
@@ -190,7 +190,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double t )
                     break;
                  for(i=0; i<mtp->Nf; i++ )
                  {
-                    gqfi = g(q,f,i); MBpi = MB(p,i);
+                    gqfi = g(q,f,i); //MBpi = MB(p,i);
                     fRate = gqfi * vkk * MGPi; // * MBpi;
                     dMBfluxDir( q,i, dm, fRate, (-1.)); //dMB(q,i) -=  fRate;
                     dMBfluxDir( p,i, dm, fRate); //dMB(p,i) +=  fRate;
@@ -236,7 +236,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double t )
                          break;
                    for(i=0; i<mtp->Nf; i++ )
                    {
-                      Hfei = H(fe,i); MBqi = MB(q,i); MBpi = MB(p,i);
+                      Hfei = H(fe,i); MBqi = MB(q,i); //MBpi = MB(p,i);
                       fRate = Hfei * vkk * MGPo * MGPi; // * MBqi * MBpi;
                       dMBfluxDir( q,i, dm, fRate, (-1.)); //dMB(q,i) -=  fRate;
                       if( p != q )
@@ -248,7 +248,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double t )
                        break;
                    for(i=0; i<mtp->Nf; i++ )
                    {
-                       Hfei = H(fe,i); MBpi = MB(p,i);
+                       Hfei = H(fe,i); //MBpi = MB(p,i);
                        fRate = Hfei * vkk * MGPi; // * MBpi;
                        dMBfluxDir( q,i, dm, fRate, (-1.)); //dMB(q,i) -=  fRate;
                        if( p != q )
@@ -522,7 +522,7 @@ void TGEM2MT::CalcMGPdata()
 //  step - current time step
 //
 bool
-TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int pr, double tcur, double step )
+TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, double step )
 {
   bool iRet = true;
   FILE* diffile = NULL;
@@ -672,8 +672,8 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 
   try {
     //gstring Vmessage;
-    long int p, i, kk, x_aq=-1, x_gf=-1, naqgf=1, lastp=0;
-    bool iRet = false;
+    long int p, i, kk, x_aq=-1, x_gf=-1;//, naqgf=1, lastp=0;
+    //bool iRet = false;
     clock_t outp_time = (clock_t)0;
 
     BoxFluxTransportStart();
@@ -721,9 +721,9 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
                      node1_xPA( 0, 0 ) = node1_mPS( 0, 0 )*1000./18.0153;
         break;
      case MGP_TT_SOLID:  // '4'  TBD
-                    naqgf = 0;
+                   /* naqgf = 0;
                     if( (x_aq + x_gf) == 1 )
-                        naqgf = 1;
+                        naqgf = 1;*/
 
         break;
      case MGP_TT_AQGF:   // '3'  TBD
@@ -781,8 +781,8 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
       // Set up new boxes states at cTau
      for( p = 1/*0*/; p < mtp->nC; p++ )
      {
-         if( p == mtp->nC-1 )
-             lastp = p;  // for debugging
+         //if( p == mtp->nC-1 )
+         //    lastp = p;  // for debugging
          for(i =0; i< mtp->Nf; i++ )
            dMb( p, i) = 0.;
          for(kk=0; kk < mtp->nFD-1; kk++ )  // Looking through the list of fluxes
@@ -813,8 +813,8 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
          // calculate equilibrium state in q-th box
          node1_Tm( p ) = mtp->cTau;
          node1_dt( p ) = mtp->dTau;
-         if( !na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), p, 0 ) )
-           iRet = false;  // Analysis of errors after GEM calculation?
+         /*iRet =*/ na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), p, 0 );
+          // Analysis of errors after GEM calculation?
          mtp->qc = p;
             //  iRet = false;
 //         if( iRet == true )  // Error in GEM calculation
@@ -877,7 +877,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 //Calculate generic box megasystem of 'B' type with MGP fluxes
 //   mode - SIA or AIA
 //
-bool TGEM2MT::CalcBoxFluxModel( char mode )
+bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
 {
   try{
 	 

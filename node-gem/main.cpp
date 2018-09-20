@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
     if (argc >= 3 )  // Read DATABR structure from text file
     {
        char NextRecipeFileName[256];
-       char NextRecipeOutFileName[300];
+       //char NextRecipeOutFileName[300];
        char input_recipes_file_list_path[256-fileNameLength] = "";
 
        // Reading list of recipes names from file

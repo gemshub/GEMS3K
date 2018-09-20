@@ -1732,9 +1732,7 @@ long int TBerman::choose( const long n, const long k )
 
 void TBerman::alloc_internal()
 {
-    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
-    long int emx[4], si[4];  // pairwise recip. reactions; max 6 sublattices
-    double mnn;
+    long int j, s,  m,  r, em;
 
     if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
     {
@@ -1991,7 +1989,7 @@ long int TBerman::PTparam( )
     if( MixCode == MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
      {
         // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
-        double dGrc; long int i;
+        double dGrc;
         for( r=0; r< Nrc; r++ ) // looking through reactions
         {
            j0 = XrcM[r][0][0]; j1 = XrcM[r][1][0]; j2 = XrcM[r][2][0]; j3 = XrcM[r][3][0];
@@ -2111,7 +2109,7 @@ double TBerman::KronDelta( const long int j, const long s, const long m )
 double TBerman::PYproduct( const long int j )
 {
     double pyp_j = 1., ys;
-    long int s, m;
+    long int s;
 
     for(s = 0; s < NSub; s++)
     {
@@ -2247,7 +2245,7 @@ long int TBerman::em_howmany( long int s, long int m )
 //
 double TBerman::RefFrameTerm( const long int j, const double G_ref )
 {
-    long int l, m, s, nmem;
+    long int m, s, nmem;
     double reftj, sum_s, sum_m, ys, ydp, dgr_dys;
 
     sum_s = 0.;
@@ -2312,10 +2310,10 @@ double TBerman::RefFrameTerm( const long int j, const double G_ref )
 // For 2 sublattices also using reciprocal reactions
 long int TBerman::ReciprocalPart()
 {
-    long int j, r, s, m;
+    long int j, r, s;
     long int xm[4];  // max 4 sublattices
     bool skip;
-    double rcSum, rft, yss, ysn;
+    double rcSum, rft;
 
     for( j=0; j<NComp; j++)
          lnGamRecip[j] = 0.;
@@ -2387,7 +2385,7 @@ long int TBerman::ReciprocalPart()
 // reaction excess energy terms for the end member with index j
 // Returns in xm the moiety indexes for each sublattice for picking up their site fractions
 // (max. 4 sublattices can be considered)
-bool TBerman::CheckThisReciprocalReaction( const long int r, const long int j, long int *xm )
+bool TBerman::CheckThisReciprocalReaction( const long int /*r*/, const long int /*j*/, long int */*xm*/ )
 {
     return true; // this reaction to be skipped
 }
@@ -3066,7 +3064,7 @@ TMBWmod::~TMBWmod()
 
 void TMBWmod::alloc_internal()
 {
-    long int j, jk, jx, s, sk, sx, m, mk, mx, r, em;
+    long int j, s, m;
 
     if( !NSub || !NMoi || NComp < 2 || NSub > 6 )
         return;   // This is not a multi-site model or < 2 EMs or >6 sublattices
@@ -3122,7 +3120,7 @@ void TMBWmod::alloc_internal()
 
 void TMBWmod::free_internal()
 {
-    long int j,r,s;
+    long int j;
 
     delete[]InCf;
     delete[]Wu;
@@ -3148,7 +3146,7 @@ void TMBWmod::free_internal()
 /// Calculates T-corrected interaction parameters
 long int TMBWmod::PTparam( )
 {
-    long int ip, j, r, j0, j1, j2, j3;
+    long int ip, j;
 
     //if ( NPcoef < 4 || NPar < 1 ) NSergii: Have changed to 3 cause there is 3 params by default
     if ( NPcoef < 3 || NPar < 1 )
@@ -3189,14 +3187,14 @@ long int TMBWmod::PTparam( )
 // Calculates ideal config. term and activity coefficients
 long int TMBWmod::MixMod()
 {
-    double lng;
+    //double lng;
     long int retCode, j;
 
     retCode = IdealMixing();
     if(!IdealMixing())
     {
        for(j=0; j<NComp; j++){
-           lng = lnGamConf[j];
+           //lng = lnGamConf[j];
            lnGamma[j] += lnGamConf[j];
        }
     }
@@ -3205,7 +3203,7 @@ long int TMBWmod::MixMod()
     if(!retCode)
     {
        for(j=0; j<NComp; j++){
-           lng = lnGamRecip[j];
+           //lng = lnGamRecip[j];
            lnGamma[j] += lnGamRecip[j];
        }
     }
@@ -3214,7 +3212,7 @@ long int TMBWmod::MixMod()
     if(!retCode)
     {
        for(j=0; j<NComp; j++){
-           lng = lnGamEx[j];
+           //lng = lnGamEx[j];
            lnGamma[j] += lnGamEx[j];
        }
     }
@@ -3225,7 +3223,7 @@ long int TMBWmod::MixMod()
 
 // NSergii: calculates ideal mixing part from the CEF model
 long int TMBWmod::CalcSiteFractions(){
-    long int j,s,m, i;
+    long int j,s,m;
     double mnsxj;
     // calculation of site fractions
     for( s = 0; s < NSub; s++) {
@@ -3289,16 +3287,16 @@ long int TMBWmod::IdealMixing() {
 
 long int TMBWmod::ExcessProp( double *Zex ) {
     // check and add calculation of excess properties here
-    long int ip, i1, i2, s1, s2, d, e, f;
-    double g, v, s, u;
+    //long int ip, s1, s2, d, e, f;
+    double  v, u;
 
     if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
             return 1;
 
     // calculate bulk phase excess properties
-    g = 0.0; s = 0.0; v = 0.0; u = 0.0;
+    v = 0.0; u = 0.0;
 
-    for (ip=0; ip<NPar; ip++)
+    /*for (ip=0; ip<NPar; ip++)
     {
         s1 = aIPx[MaxOrd*ip];   //
         s2 = 1 - s1;
@@ -3306,7 +3304,7 @@ long int TMBWmod::ExcessProp( double *Zex ) {
         d = aIPx[MaxOrd*ip+1];
         e = aIPx[MaxOrd*ip+2];
         f = aIPx[MaxOrd*ip+3];
-    }
+    }*/
 
     Gex  = Hmix() + idealSmix() * Tk * R_CONST;//g;
     Sex  = - R_CONST * idealSmix();// - ideal_conf_entropy();
@@ -3354,7 +3352,7 @@ long int TMBWmod::IdealProp( double *Zid ) {
 /// CEF - computing pyp[j] (product of site fractions for j-th end member) eq 42
 //
 double TMBWmod::PYproduct( const long int j ) {
-    double pyp_j, ys;
+    double pyp_j;
     long int s, m;
 
     pyp_j = 1.0;
@@ -3369,7 +3367,7 @@ double TMBWmod::PYproduct( const long int j ) {
 
 double TMBWmod::RefFrameTerm( const long int i, const double G_ref ) {
     long int j, s, m;
-    double sum_s, dgm_dysis, dgm_dyjs, reftj, kd_ysis; //NSergii
+    double sum_s, dgm_dysis, dgm_dyjs, reftj; //NSergii
 
     sum_s = 0.0;
     dgm_dysis = 0.0;
@@ -3430,9 +3428,9 @@ long int TMBWmod::ReferenceFramePart() {
 }
 
 long int TMBWmod::ExcessPart() {
-    long int ip, pm, j, i, s, m, k, s1, s2, s3, s4, m1, m2, m3, m4;
-    double lnGam, dgm_dysis, dgm_dyjs, PY, H_mix, Wip, lnaconj;
-    bool check;
+    long int j,  s, m;
+    double dgm_dysis, dgm_dyjs, H_mix, lnaconj;
+
 
     if( NSub < 1 || NMoi < 2 || NPar < 1 || NComp < 2 || MaxOrd < 4
         || NPcoef < 3 || !x || !lnGamma ) {
@@ -3473,9 +3471,9 @@ long int TMBWmod::ExcessPart() {
    return 0;
 }
 
-double TMBWmod::dGm_dysi( const long int i, const long int m) {
-    long int ip, pm, j, s, k, sk, s1, s2, s3, s4, m1, m2, m3, m4, variant;
-    double lnGam, dgm_dysis, dgm_dyjs, PY, PS, G_exc, Wip, WW;
+double TMBWmod::dGm_dysi( const long int /*i*/, const long int m) {
+    long int ip, pm,  s, k, sk, s1, s2, m1, m2, variant;
+    double dgm_dysis,  PY, PS, Wip;
     double pow;
 
     dgm_dysis = 0.0;
@@ -3572,7 +3570,7 @@ double TMBWmod::Gref() {
 }
 
 double TMBWmod::idealSmix() {
-    int j, m, s;
+    int  m, s;
     double G_idmix;
 
     // Reference frame term
@@ -3592,8 +3590,8 @@ bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ) 
 }
 
 double TMBWmod::Hmix() {
-    int j, m, s1, s2, s3, s4, k, sk, pm, ip, m1, m2, m3, m4, variant;
-    double H_mix, PY, PS, wpt, xx, Wip, WW, lnGam, lnGamRT;
+    int s1, s2,  k, sk, pm, ip, m1, m2, variant;
+    double H_mix, PY, PS, Wip;
 
     // Excess Gibbs energy term
     H_mix    = 0.0;

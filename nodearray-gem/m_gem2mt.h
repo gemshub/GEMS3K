@@ -438,7 +438,7 @@ protected:
     void  BoxesBCupdate();  // was CalcNodeFlux()
     void  CalcMGPdata();
     // Calculate new box states for tcur = x
-    bool BoxEqStatesUpdate( long int Ni,long int pr, double x, double step );
+    bool BoxEqStatesUpdate( long int Ni, long int pr, double x, double step );
     bool CalcSeqReacModel( char mode ); // Calculation of S-mode sequential reactors model
     bool CalcBoxFluxModel( char mode ); // integrate boxes with fluxes of Mobile Groups of Phases
 

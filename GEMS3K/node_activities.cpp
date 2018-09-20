@@ -147,7 +147,7 @@ void TNode::updateConcentrations()
 // also initializes G0 values
 void TNode::initActivityCoefficients()
 {
-    long int k, j, jb, je, retCode;
+    long int k, j, jb, je;
 
     je = 0;
 
@@ -164,7 +164,7 @@ void TNode::initActivityCoefficients()
          ap->G0[j] = atp->ConvertGj_toUniformStandardState( ap->tpp_G[j], j, k );
        }
     }
-    retCode = atp->CalculateActivityCoefficients( LINK_TP_MODE );
+    /*long int retCode = */atp->CalculateActivityCoefficients( LINK_TP_MODE );
     //   if(retCode)
            // Errors
 }
@@ -172,9 +172,8 @@ void TNode::initActivityCoefficients()
 // compute activity coefficients on GEM iterations
 void TNode::updateActivityCoefficients()
 {
-   long int retCode;
 //   ACTIVITY* ap = atp->GetActivityDataPtr();
-   retCode = atp->CalculateActivityCoefficients( LINK_UX_MODE );
+   /*long int retCode =*/ atp->CalculateActivityCoefficients( LINK_UX_MODE );
 //   if(retCode)
        // Errors
 }
@@ -182,9 +181,8 @@ void TNode::updateActivityCoefficients()
 // compute integral phase properties after GEM run (TBD)
 void TNode::getIntegralPhaseProperties()
 {
-    long int retCode;
 //    ACTIVITY* ap = atp->GetActivityDataPtr();
-    retCode = atp->CalculateActivityCoefficients( LINK_PP_MODE );
+   /* long int retCode =*/ atp->CalculateActivityCoefficients( LINK_PP_MODE );
     atp->StabilityIndexes( );
     //   if(retCode)
            // Errors

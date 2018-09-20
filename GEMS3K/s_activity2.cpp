@@ -98,10 +98,10 @@ double TActivity::bfc_mass( void )
 /// concentrations for DCs (indexed jb to je) in a k-th phase.
 // Input arrays X, XF, XFA,  input factors: Factor, MMC
 //
-void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
+void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double /*XFA*/[],
               double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
-    long int j, ii, i;
+    long int j;
     double Muj, /* DsurT=0.0,*/ SPmol, lnFmol=4.016535;
 //    SPP_SETTING *pa = &TProfil::pm->pa;
 
@@ -296,8 +296,8 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
 //
 void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
-    long int k, ii, i, j, ist, jj, jja;
-    double Factor=0.0, Dsur=0.0, MMC=0.0, VXc, YFk;
+    long int k, i, j, jj;
+    double Factor=0.0, Dsur=0.0, MMC=0.0, VXc;//, YFk;
 //    SPP_SETTING *pa = paTProfil;
 
 //    if( act.Ls < 2 || !act.FIs )  Temporary disabled  09.03.2010 DK
@@ -417,7 +417,7 @@ void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
         case PH_LIQUID:
 //    case PH_IONEX:
 //   case PH_ADSORPT:
-            YFk = XF[k];
+            //YFk = XF[k];
             for(jj=j; jj<i; jj++)
             {
                 if( X[jj] > act.DcMinM)      // fixed 30.08.2009 DK

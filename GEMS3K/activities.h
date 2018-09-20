@@ -382,13 +382,13 @@ public:
     // Generic solution model calls
         void SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                            long int k, long int ipb, char ModCode, char MixCode,
-                           /* long int jphl, long int jlphc, */ long int jdqfc, long int jrcpc );
+                           /* long int jphl, long int jlphc, */ long int jdqfc/*, long int jrcpc*/ );
         void SolModParPT( long int k, char ModCode );
         void SolModActCoeff( long int k, char ModCode );
         void SolModExcessProp( long int k, char ModCode );
-        void SolModIdealProp ( long int jb, long int k, char ModCode );
-        void SolModStandProp ( long int jb, long int k, char ModCode );
-        void SolModDarkenProp ( long int jb, long int k, char ModCode );
+        void SolModIdealProp ( /*long int jb,*/ long int k, char ModCode );
+        void SolModStandProp ( /*long int jb,*/ long int k/*, char ModCode*/ );
+        void SolModDarkenProp ( /*long int jb,*/ long int k/*, char ModCode*/ );
 
     // Generic access methods
     void setTemperature(double T); // set temperature (in units of K)

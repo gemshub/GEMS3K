@@ -110,11 +110,11 @@ TProfil::TProfil( TMulti* amulti )
 }
 
 /// GEM IPM calculation of equilibrium state in MULTI
-double TProfil::ComputeEquilibriumState( long int& RefinLoops_, long int& NumIterFIA_, long int& NumIterIPM_ )
+double TProfil::ComputeEquilibriumState( /*long int& RefinLoops_,*/ long int& NumIterFIA_, long int& NumIterIPM_ )
 {
-   long int RefineLoops = RefinLoops_;
-   RefineLoops = 0L; // Provisional
-   return multi->CalculateEquilibriumState( RefineLoops, NumIterFIA_, NumIterIPM_ );
+   //long int RefineLoops = RefinLoops_;
+   //RefineLoops = 0L; // Provisional
+   return multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA_, NumIterIPM_ );
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file

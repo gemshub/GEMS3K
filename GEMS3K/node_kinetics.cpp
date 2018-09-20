@@ -223,7 +223,7 @@ NEXT_PHASE:
 long int
 TKinetics::CalculateKinMet( long int LinkMode  )
 {
-   long int k, j, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
+   long int k, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
             kc, kd, kce=0, kde=0, ku, kue=0, ki, kie=0, jphl=0, jlphc=0;
 
 //   SPP_SETTING *pa = paTProfil;
@@ -286,13 +286,13 @@ TKinetics::CalculateKinMet( long int LinkMode  )
              // Correction for T,P
                 KM_ParPT( k, kMod );
                 KM_InitTime( k, kMod );
-                KM_UpdateFSA( jb, k, kMod );
+                KM_UpdateFSA( /*jb,*/ k, kMod );
                 KM_InitRates( k, kMod );
-                KM_SetAMRs( jb, k, kMod );
+                KM_SetAMRs( /*jb,*/ k, kMod );
                 if( k < kin.FIs )
                 {
-                    KM_InitUptake( jb, k, kMod );
-                    KM_InitSplit( jb, k, kMod );
+                    KM_InitUptake( /*jb,*/ k, kMod );
+                    KM_InitSplit( /*jb,*/ k, kMod );
                 }
                 KM_ReturnFSA( k, kMod );
                 break;
@@ -311,13 +311,13 @@ TKinetics::CalculateKinMet( long int LinkMode  )
         // Correction for T,P
                 KM_ParPT( k, kMod );
                 KM_UpdateTime( k, kMod );
-                KM_UpdateFSA( jb, k, kMod );
+                KM_UpdateFSA( /*jb,*/ k, kMod );
                 KM_CalcRates( k, kMod );
-                KM_SetAMRs( jb, k, kMod );
+                KM_SetAMRs( /*jb,*/ k, kMod );
                 if( k < kin.FIs )
                 {
-                    KM_CalcUptake( jb, k, kMod );
-                    KM_CalcSplit( jb, k, kMod );
+                    KM_CalcUptake( /*jb,*/ k, kMod );
+                    KM_CalcSplit( /*jb,*/ k, kMod );
                 }
                 KM_ReturnFSA( k, kMod );
                 break;
@@ -354,7 +354,6 @@ void TKinetics::KM_Create( long int jb, long int k, long int kc, long int kp,
                            long int kf, long int ka, long int ks, long int kd, long int ku, long int ki,
                            const char *kmod, long int jphl, long int jlphc )
 {
-    double *aZ, *aM;
     KinMetData kmd;
     char KinProCode;
 
@@ -601,9 +600,9 @@ TKinetics::KM_UpdateTime( long int k, const char *kMod )
 ///    and current properties of aqueous solution
 /// uses TKinMet class
 void
-TKinetics::KM_UpdateFSA( long int jb, long int k, const char *kMod )
+TKinetics::KM_UpdateFSA( /*long int jb,*/ long int k, const char *kMod )
 {
-    double PUL=1e6, PLL=0.;
+    /*double PUL=1e6, PLL=0.;
     if( k < kin.FIs )
     {
         PUL = kin.PUL[k];
@@ -612,7 +611,7 @@ TKinetics::KM_UpdateFSA( long int jb, long int k, const char *kMod )
     else {
         PUL = kin.DUL[jb];
         PLL = kin.DLL[jb];    // bugfix 9.10.2013 DK
-    }
+    }*/
     //
     switch( kMod[0] )
     {
@@ -736,7 +735,7 @@ TKinetics::KM_CalcRates( long int k, const char *kMod )
 // Calculation of initial AMR splitting for end members of SS phase
 //
 void
-TKinetics::KM_InitSplit( long int jb, long int k, const char *kMod )
+TKinetics::KM_InitSplit( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -764,7 +763,7 @@ TKinetics::KM_InitSplit( long int jb, long int k, const char *kMod )
 // Calculation of current AMR splitting for end members of SS phase
 //
 void
-TKinetics::KM_CalcSplit( long int jb, long int k, const char *kMod )
+TKinetics::KM_CalcSplit( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -792,7 +791,7 @@ TKinetics::KM_CalcSplit( long int jb, long int k, const char *kMod )
 // Sets new metastability constraints based on updated kinetic rates
 //
 void
-TKinetics::KM_SetAMRs( long int jb, long int k,const char *kMod )
+TKinetics::KM_SetAMRs( /*long int jb,*/ long int k,const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -818,7 +817,7 @@ TKinetics::KM_SetAMRs( long int jb, long int k,const char *kMod )
 }
 
 void
-TKinetics::KM_CalcUptake( long int jb, long int k, const char *kMod )
+TKinetics::KM_CalcUptake( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -845,7 +844,7 @@ TKinetics::KM_CalcUptake( long int jb, long int k, const char *kMod )
 
 
 void
-TKinetics::KM_InitUptake( long int jb, long int k, const char *kMod )
+TKinetics::KM_InitUptake( /*long int jb,*/ long int k, const char *kMod )
 {   
     switch( kMod[0] )
     {      
@@ -892,8 +891,8 @@ void TKinetics::Free_TKinMet()
 
   if( phKinMet )
   {  for(  kk=0; kk<sizeFI; kk++ )
-      if( phKinMet[kk] )
-           delete phKinMet[kk];
+          if( phKinMet[kk] )
+              delete phKinMet[kk];
 
       delete[]  phKinMet;
   }

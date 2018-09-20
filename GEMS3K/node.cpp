@@ -232,7 +232,7 @@ long int TNode::GEM_run( bool uPrimalSol )
        }
 
    // GEM IPM calculation of equilibrium state
-   CalcTime = profil->ComputeEquilibriumState( PrecLoops, NumIterFIA, NumIterIPM );
+   CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
     CNode->IterDone = NumIterFIA+NumIterIPM;
@@ -1234,24 +1234,24 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 
          case DC_SOL_IDEAL:
 	     case DC_SOL_MINOR:
-             case DC_SOL_MAJOR:
-             case DC_SOL_MINDEP:
-             case DC_SOL_MAJDEP:
-case DC_SCM_SPECIES:
+         case DC_SOL_MAJOR:
+         case DC_SOL_MINDEP:
+         case DC_SOL_MAJDEP:
+         case DC_SCM_SPECIES:
 
 	     case DC_PEL_CARRIER:
 	     case DC_SUR_MINAL:
 	     case DC_SUR_CARRIER:
-                                if( CNode->xPH[xph] )
+                          if( CNode->xPH[xph] )
                                   DCcon =  CNode->xDC[xdc]/CNode->xPH[xph];  //pmp->Wx[xCH];
-	                          break;
+                          break;
 	      case DC_GAS_COMP:
 	      case DC_GAS_H2O:
 	      case DC_GAS_CO2:
 	      case DC_GAS_H2:
-              case DC_GAS_N2:   if( CNode->xPH[xph] )
+          case DC_GAS_N2:   if( CNode->xPH[xph] )
                                   DCcon =  CNode->xDC[xdc]/CNode->xPH[xph]; // *CNode->P;
-	                          break;
+                            break;
 	     case DC_AQ_PROTON:
 	     case DC_AQ_SPECIES:
 	     case DC_AQ_SURCOMP:
@@ -2240,17 +2240,18 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
        else
            str_file = fname;
 
-	   if( binary_f )
-           {
+
+       if( binary_f )
+       {
             // gstring str_file = fname;
               GemDataStream out_br(str_file, ios::out|ios::binary);
               databr_to_file(out_br);
-           }
-      else
-      {  fstream out_br(str_file.c_str(), ios::out );
+       }
+       else
+       {  fstream out_br(str_file.c_str(), ios::out );
          ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
          databr_to_text_file(out_br, with_comments, brief_mode, str_file.c_str() );
-      }
+       }
    }
 
 // (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.

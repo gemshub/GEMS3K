@@ -98,9 +98,6 @@ long int TSCM_NEM::ExcessProp( double *Zex )
 /// calculates ideal mixing properties
 long int TSCM_NEM::IdealProp( double *Zid )
 {
-
-    long int j;
-
      Hid = 0.0;
      CPid = 0.0;
      Vid = 0.0;
