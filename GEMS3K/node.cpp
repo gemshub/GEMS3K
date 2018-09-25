@@ -1152,12 +1152,14 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 	{
         for( jj=dcx1; jj<Ndc+dcx1; jj++)
         	SatInd +=  Get_aDC( jj )/Get_gDC(jj);
+
+        SatInd = pmm->Falps[xph]; // Fixed by DK on 25.09.2018 (temporarily)
 	}
 	else
 	{
 	  SatInd = Get_aDC( dcx1 );
 	}
-    return SatInd;
+	return SatInd;           
   }
 
   // Retrieval of the phase bulk composition ( xph is DBR phase index) into memory indicated by
