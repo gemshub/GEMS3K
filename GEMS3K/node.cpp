@@ -1145,20 +1145,20 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   double TNode::Ph_SatInd(const long int xph )
   {
     double SatInd=0.;
-//    long int jj, dcx1, Ndc;
-//    dcx1 = PhtoDC_DBR( xph, Ndc );
-//    if( xph < CSD->nPSb )
-//    {
-//        for( jj=dcx1; jj<Ndc+dcx1; jj++)
-//            SatInd +=  Get_aDC( jj )/Get_gDC(jj);
-//    }
-//    else
-//    {
-//      SatInd = Get_aDC( dcx1 );
-//    }
-//    if( SatInd > 0.0 )
-//        SatInd = log10(SatInd);
-    SatInd = pmm->Falp[xph]; // Fixed by DK on 8.10.2018 (temporarily)
+    long int jj, dcx1, Ndc;
+    dcx1 = PhtoDC_DBR( xph, Ndc );
+    if( xph < CSD->nPSb )
+    {
+        for( jj=dcx1; jj<Ndc+dcx1; jj++)
+            SatInd +=  Get_aDC( jj )/Get_gDC(jj);
+    }
+    else
+    {
+      SatInd = Get_aDC( dcx1 );
+    }
+    if( SatInd > 0.0 )
+        SatInd = log10(SatInd);
+//    SatInd = pmm->Falp[xph]; // Falps[xph]; // Fixed by DK on 8.10.2018 (temporarily)
 	return SatInd;           
   }
 
