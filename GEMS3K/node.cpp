@@ -1141,24 +1141,22 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   }
 
   // Retrieves the phase saturation index ( xph is DBR phase index). Works for multicomponent and for
-  // single-component phases. Returns 0.0 if phase amount is zero.
+  // single-component phases.
   double TNode::Ph_SatInd(const long int xph )
   {
     double SatInd=0.;
-    long int jj, dcx1, Ndc;
-    dcx1 = PhtoDC_DBR( xph, Ndc );
-
-    if( xph < CSD->nPSb )
-	{
-        for( jj=dcx1; jj<Ndc+dcx1; jj++)
-        	SatInd +=  Get_aDC( jj )/Get_gDC(jj);
-
-        SatInd = pmm->Falps[xph]; // Fixed by DK on 25.09.2018 (temporarily)
-	}
-	else
-	{
-	  SatInd = Get_aDC( dcx1 );
-	}
+//    long int jj, dcx1, Ndc;
+//    dcx1 = PhtoDC_DBR( xph, Ndc );
+//    if( xph < CSD->nPSb )
+//	{
+//        for( jj=dcx1; jj<Ndc+dcx1; jj++)
+//        	SatInd +=  Get_aDC( jj )/Get_gDC(jj);
+//	}
+//	else
+//	{
+//	  SatInd = Get_aDC( dcx1 );
+//	}
+    SatInd = pmm->Falps[xph]; // Fixed by DK on 8.10.2018 (temporarily)
 	return SatInd;           
   }
 
@@ -2000,8 +1998,8 @@ TNode::TNode( MULTI *apm  )
 // Constructor of the class instance in memory for standalone GEMS3K or coupled program
 TNode::TNode()
 {
-  CSD = 0;
-  CNode = 0;
+  CSD = NULL;
+  CNode = NULL;
   allocMemory();
   //na = this;
   dbr_file_name = "dbr_file_name";
@@ -2562,7 +2560,7 @@ void TNode::GEM_from_MT(
    {  long int jj;
       // Correction of bIC vector by convoluting the amounts of DCs
       for( jj=0; jj<CSD->nDCb; jj++ )
-        if( p_xDC[jj] )
+        if( p_xDC[jj] > 0.0 )
           for( ii=0; ii<CSD->nICb; ii++ )
             CNode->bIC[ii] += p_xDC[jj] * DCaJI( jj, ii );
    }

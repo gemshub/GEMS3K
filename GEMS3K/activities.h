@@ -289,11 +289,11 @@ class TActivity
        long int *arrL;
        long int *arrAN;
 
-    long int sizeFIs;     ///< current size of phSolMod
+    size_t sizeFIs;     ///< current size of phSolMod
     TSolMod* (*phSolMod); ///< size current FIs - number of multicomponent phases
 
     // new - allocation of TsorpMod
-    long int sizeFIa;       ///< current size of phSorpMod
+    size_t sizeFIa;       ///< current size of phSorpMod
     TSorpMod* (*phSorpMod); ///< size current FIa - number of adsorption phases
 
     bool load;
@@ -306,9 +306,9 @@ class TActivity
 protected:
 
     void set_def( );
-    void Alloc_TSolMod( long int newFIs );
+    void Alloc_TSolMod( size_t newFIs );
     void Free_TSolMod( );
-    void Alloc_TSorpMod( long int newFIs );
+    void Alloc_TSorpMod( size_t newFIs );
     void Free_TSorpMod();
 
     void Alloc_A_B( long int newN );

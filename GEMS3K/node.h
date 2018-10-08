@@ -129,7 +129,7 @@ protected:
 
     /// Deletes fields of DATABR structure indicated by data_BR_
     /// and sets the pointer data_BR_ to NULL
-    DATABR* databr_free( DATABR* data_BR_ =0);
+    DATABR* databr_free( DATABR* data_BR_ );
 
     // Binary i/o functions
     // including file i/o using GemDataStream class (with account for endianness)
@@ -939,7 +939,7 @@ long int GEM_step_MT( const long int step )
       /// \return pointer to ARout which may also be  allocated inside of Ph_BC()
       /// in the case if parameter ARout = NULL is specified;
       /// to avoid a memory leak, you will have to free this memory wherever appropriate.
-      double *Ph_BC( const long int xph, double* ARout=0 );
+      double *Ph_BC( const long int xph, double* ARout = NULL );
 
       /// Retrieves total dissolved aqueous molality of Independent Component with DBR index xic.
       /// \param xic is IC DBR index
@@ -1033,7 +1033,7 @@ long int GEM_step_MT( const long int step )
       /// \param xdc is DC DBR index
       /// \return 1.0, if DC has zero amount.
       inline double Get_gDC(const long int xdc) const
-      {  return ( CNode->gam[xdc] ? CNode->gam[xdc]: 1.);  }
+      {  return ( CNode->xDC[xdc] != 0.0 ? CNode->gam[xdc]: 1.0);  }
 
       /// Retrieves the molar mass of Dependent Component in kg/mol.
       /// \param xdc is DC DBR index
@@ -1066,7 +1066,7 @@ long int GEM_step_MT( const long int step )
       /// Sets the mLook Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid).
        /// \param mLook is 0 or 1
         void Set_mLook(const double mLook)
-        {  CSD->mLook = mLook;  multi->set_load(false);}
+        {  CSD->mLook = (long)mLook;  multi->set_load(false);}
 
       /// Sets the value of the interaction parameter.
       /// Internal re-scaling to mass of the system is applied.

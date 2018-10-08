@@ -964,7 +964,7 @@ void TActivity::SolModStandProp ( /*long int jb,*/ long int k/*, char ModCode*/ 
 //-------------------------------------------------------------------------
 /// Internal memory allocation for TSolMod performance optimization
 /// (since version 2.3.0)
-void TActivity::Alloc_TSolMod( long int newFIs )
+void TActivity::Alloc_TSolMod( size_t newFIs )
 {
   if(  phSolMod && ( newFIs == sizeFIs) )
     return;
@@ -973,28 +973,30 @@ void TActivity::Alloc_TSolMod( long int newFIs )
   // alloc memory for all multicomponents phases
   phSolMod = new  TSolMod *[newFIs];
   sizeFIs = newFIs;
- for( long int ii=0; ii<newFIs; ii++ )
-    	  phSolMod[ii] = 0;
+ for( size_t ii=0; ii<newFIs; ii++ )
+          phSolMod[ii] = NULL;
 }
 
 void TActivity::Free_TSolMod()
 {
-  long int kk;
+  size_t kk;
 
   if( phSolMod )
-  {  for(  kk=0; kk<sizeFIs; kk++ )
-      if( phSolMod[kk] )
+  {
+      for(  kk=0; kk<sizeFIs; kk++ )
+      {
+          if( phSolMod[kk] )
            delete phSolMod[kk];
-
+      }
       delete[]  phSolMod;
   }
-  phSolMod = 0;
+  phSolMod = NULL;
   sizeFIs = 0;
 }
 
 /// Internal memory allocation for TSorpMod performance optimization
 /// (since version 3.4.0)
-void TActivity::Alloc_TSorpMod( long int newFIs )
+void TActivity::Alloc_TSorpMod( size_t newFIs )
 {
   if(  phSorpMod && ( newFIs == sizeFIa) )
     return;
@@ -1003,22 +1005,24 @@ void TActivity::Alloc_TSorpMod( long int newFIs )
   // allocate memory for all multicomponent phases
   phSorpMod = new  TSorpMod *[newFIs];
   sizeFIa = newFIs;
- for( long int ii=0; ii<newFIs; ii++ )
-          phSorpMod[ii] = 0;
+ for( size_t ii=0; ii<newFIs; ii++ )
+          phSorpMod[ii] = NULL;
 }
 
 void TActivity::Free_TSorpMod()
 {
-  long int kk;
+  size_t kk;
 
-  if( phSorpMod )
-  {  for(  kk=0; kk<sizeFIa; kk++ )
-      if( phSorpMod[kk] )
-           delete phSorpMod[kk];
-
+  if( phSorpMod != NULL )
+  {
+      for(  kk=0; kk<sizeFIa; kk++ )
+      {
+          if( phSorpMod[kk] )
+            delete phSorpMod[kk];
+      }
       delete[]  phSorpMod;
   }
-  phSorpMod = 0;
+  phSorpMod = NULL;
   sizeFIa = 0;
 }
 

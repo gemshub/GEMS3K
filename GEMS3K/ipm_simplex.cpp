@@ -512,7 +512,7 @@ double TMulti::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIt
  // const char *key;
   double ScFact=1.;
 
-  long int KMretCode = 0;
+//  long int KMretCode = 0;
 //#ifndef IPMGEMPLUGIN
 //  key = rt[RT_SYSEQ].UnpackKey();
 //#else
@@ -532,16 +532,16 @@ double TMulti::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIt
   {
     if( pm.ITau < 0 || pm.pKMM != 1 )
     {
-        KMretCode = CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
+      /*  KMretCode = */ CalculateKinMet( LINK_TP_MODE ); // Re-create TKinMet class instances
         pm.ITau = 0; pm.pKMM = 1;
-        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
+      /*  KMretCode = */ CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
     }
 //    if( pm.ITau == 0 )
 //    {
 //        KMretCode = CalculateKinMet( LINK_IN_MODE ); // Initial state calculation of rates
 //    }
     else if( pm.ITau >= 0 ) {
-        KMretCode = CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
+      /*  KMretCode = */ CalculateKinMet( LINK_PP_MODE ); // Calculation of rates and metast.constraints at time step
     }
 //  switch(KMretCode)
 //  {
@@ -1086,7 +1086,7 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
   long int j, jj, k, xTP, jb, je=0;
   double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
-  double T, TK, P, PPa;
+  double TK, P, PPa;
 
 #ifndef IPMGEMPLUGIN
   TNode* na;
@@ -1104,7 +1104,7 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 #endif
   DATACH  *dCH = na->pCSD();
   P = PPa/bar_to_Pa;
-  T = TK-C_to_K;
+//  double T = TK-C_to_K;
 
 #ifndef IPMGEMPLUGIN
   if( !aNa )

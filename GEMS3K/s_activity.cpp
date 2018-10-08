@@ -281,8 +281,8 @@ double TActivity::DC_DualChemicalPotential( double U[], double AL[], long int N,
    for( i = arrL[j]; i < arrL[j+1]; i++ )
    {  ii = arrAN[i];
       if( ii >= N )
-       continue;
-       Nu += U[ii]*(AL[ii]);
+        continue;
+      Nu += U[ii]*(AL[ii]);
    }
    return Nu;
 }
@@ -548,7 +548,7 @@ double TActivity::DC_PrimalChemicalPotential(
 void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
 {
     long int i,j,k;
-    double NonLogTerm=0., v, /*Yw,*/ Yf, YFk, logXw, logYFk;//, aqsTail; // v is debug variable
+    double NonLogTerm=0., v, /*Yw,*/ Yf, YFk, logXw=0.0, logYFk = 0.0;//, aqsTail; // v is debug variable
 
     for( j=0; j<act.L; j++)
        F[j] =0;
