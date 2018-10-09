@@ -1140,12 +1140,15 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     return mass;
   }
 
-  // Retrieves the phase saturation index ( xph is DBR phase index). Works for multicomponent and for
-  // single-component phases.
-  double TNode::Ph_SatInd(const long int xph )
+  // Retrieves the phase saturation index ( xBR is DBR phase index).
+  // Works for multicomponent and for single-component phases.
+  double TNode::Ph_SatInd(const long int xBR )
   {
-    double SatInd=0.;
-/*    long int jj, dcx1, Ndc;
+    double SatX;
+    SatX = CNode->omPH[xBR];
+    return SatX;
+/*    double SatInd = 0.0;
+    long int jj, dcx1, Ndc;
     dcx1 = PhtoDC_DBR( xph, Ndc );
     if( xph < CSD->nPSb )
     {
@@ -1153,13 +1156,12 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
             SatInd +=  Get_aDC( jj )/Get_gDC(jj);
     }
     else
-    {
       SatInd = Get_aDC( dcx1 );
-    }
     if( SatInd > 0.0 )
-        SatInd = log10(SatInd); */
+        SatInd = log10(SatInd);
     SatInd = pmm->Falp[xph]; // Falps[xph] contains zeros; // Fixed by DK on 8.10.2018 (temporarily)
 	return SatInd;           
+*/
   }
 
   // Retrieval of the phase bulk composition ( xph is DBR phase index) into memory indicated by
