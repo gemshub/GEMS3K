@@ -926,11 +926,11 @@ long int GEM_step_MT( const long int step )
       /// \return the phase mass in kg or 0.0, if the phase mole amount is zero.
       double  Ph_Mass( const long int xBR ) const ;
 
-      /// Retrieves the phase saturation index.
+      /// Retrieves the phase stability (saturation) index (lgOmega).
       /// Works for multicomponent and for single-component phases.
-      /// \param xph is DBR phase index
-      /// \return the phase saturation index or 0.0, if the phase mole amount is zero.
-      double Ph_SatInd(const long int xph );
+      /// \param xBR is DBR phase index
+      /// \return the phase saturation index in log10 scale.
+      double Ph_SatInd(const long int xBR );
 
       /// Retrieval of the phase bulk composition into memory indicated by  ARout.
       /// This function works for multicomponent and for single-component phases
