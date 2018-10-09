@@ -96,7 +96,7 @@ int main( int argc, char* argv[] )
 node->GEM_print_ipm( "BeforeCalcPhase.txt" );   // possible debugging printout
 
 // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
-   int NodeStatusCH = node->GEM_run( false );
+   long NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
@@ -108,7 +108,8 @@ node->GEM_print_ipm( "AfterCalcPhase.txt" );   // possible debugging printout
        node->GEM_print_ipm( NULL );   // possible debugging printout
        return 5; // GEM IPM did not converge properly - error message needed
    }
-
+   cout << "SatIndx aq" << node->Ph_SatInd(0) << " gas " << node->Ph_SatInd(1) << " s1 " << node->Ph_SatInd(2)
+        << " s2 " << node->Ph_SatInd(3) << " s3 " << node->Ph_SatInd(4) << " s4 " << node->Ph_SatInd(5) << endl;
 return 0;
    // test internal functions
   cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;   
