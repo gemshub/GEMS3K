@@ -73,6 +73,11 @@ extern const double bar_to_Pa,
                m3_to_cm3,
                kg_to_g;
 
+const long int
+    MaxICnameLength =      6,      // IC name length
+    MaxDCnameLength =      16,     // DC name length
+    MaxPHnameLength =      16;     // PH name length
+
 /// \class TNode (GEMS3K kernel)
 /// Implements a simple C/C++ interface between GEM IPM and FMT codes.
 /// Works with DATACH and work DATABR structures without using
@@ -677,17 +682,17 @@ long int GEM_step_MT( const long int step )
    /// or -1 if no such name was found in the DATACH DC name list
    long int DC_name_to_xCH( const char *Name ) const;
 
-   /// Returns DC Name string given the DCH index of DC
+   /// Returns DC Name string given the DCH index of DC, check MaxDCnameLength
    /// or -1 if no such name was found in the DATACH DC name list
    char* xCH_to_DC_name( int xCH ) const
    {return CSD->DCNL[xCH];}
 
-   /// Returns IC Name string given the ICH index of IC
+   /// Returns IC Name string given the ICH index of IC, check MaxICnameLength
    /// or -1 if no such name was found in the DATACH IC name list
    char* xCH_to_IC_name( int xCH ) const
    {return CSD->ICNL[xCH];}
 
- /// Returns the class codes of phase given the ICH index of PH
+ /// Returns the class codes of phase given the ICH index of PH, check check MaxPHnameLength
    /// or -1 if no such name was found in the DATACH ccPH list
    char xCH_to_ccPH( int xCH ) const
    {return CSD->ccPH[xCH];}
