@@ -1786,7 +1786,8 @@ void TBerman::alloc_internal()
     } // m
     // Count the maximum number of minals L and the number of independent minals M
     // see (Aranovich, 1991 p.27)
-    long int L=1, M=-1, C=1, ns=0;
+    long int L=1, M=0, C=1;  //  M=-1, changed because of crash in line 1862
+    ns=0;
     for( s=0; s< NSub; s++ )
     {
         if( NmoS[s] < 2L )
@@ -1801,7 +1802,7 @@ void TBerman::alloc_internal()
     Nrc = 0;
 // cout << "NComp=" << NComp << " L=" << L << " M=" << M << " NrcR= " << NrcR << endl;
 
-    if( ns == 2 && MixCode == MR_B_RCPT_ )  // using CEF reciprocal part in Berman model
+    if( MixCode == MR_B_RCPT_ && ns == 2 && NrcR > 0 )  // using CEF reciprocal part in Berman model
     // NSub == 2 )
     {
        // Allocate memory for reciprocal reactions DeltaG and indexation
@@ -1863,12 +1864,14 @@ long int TBerman::CollectReciprocalReactions2( void )
                   XrcM[rn][1][0] = jf1; XrcM[rn][1][1] = s1;
                   XrcM[rn][3][0] = jf3; XrcM[rn][3][1] = s3;
 // cout << "rn=" << rn << " | j0=" << XrcM[rn][0][0] << " s0=" << XrcM[rn][0][1]
-//                  << "  j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
+//                 << "  j1=" << XrcM[rn][1][0] << " s1=" << XrcM[rn][1][1]
 //                  << "  j2=" << XrcM[rn][2][0] << " s2=" << XrcM[rn][2][1]
 //                  << "  j3=" << XrcM[rn][3][0] << " s3=" << XrcM[rn][3][1] << endl;
                   rn++;  // next reaction
-                  if( rn > NrcR )
-                  { return rn-1; } // indexation error
+                  if( rn > NrcR-1 )
+                  {
+                     return rn;  // more reactions than size of arrays - trying to probe the same reactions again
+                  }
                   jb3 = jf3+1;
                }   // while jb3
                jb1 = jf1+1;
@@ -1898,7 +1901,8 @@ long int TBerman::FindIdenticalSublatticeRow(const long si, const long ji,
        match = true;
        for( m=0; m < NMoi; m++ ) // Looking through moieties
        {
-          if( mn[ji][si][m] == mn[j][si][m] )
+          // if( mn[ji][si][m] == mn[j][si][m] )
+          if( fabs(mn[ji][si][m] - mn[j][si][m]) < 1e-14 )
               continue;
           match = false;
           break;
@@ -1931,8 +1935,8 @@ void TBerman::free_internal()
     delete[]pyp;
 //    delete[]pyn;
 
-    if( NSub == 2 && MixCode == MR_B_RCPT_ )  // if using CEF reciprocal part in Berman model
-    {
+    if( MixCode == MR_B_RCPT_ && ns == 2 && NrcR > 0 )  // if using CEF reciprocal part in Berman model
+    {                                       // with 2 active sublattices
         delete[]DGrc;
         for(r=0; r<NrcR; r++)
         {
@@ -1986,9 +1990,9 @@ long int TBerman::PTparam( )
     if( !Nrc )
       return 0;
 
-    if( MixCode == MR_B_RCPT_ )  // blocking CEF reciprocal part in Berman model
-     {
-        // Calculation of DeltaG of reciprocal reactions (NSub==2 only)
+    if( MixCode == MR_B_RCPT_ && ns == 2 && NrcR > 0 )  // if using CEF reciprocal part in Berman model
+    {                                       // with 2 active sublattices
+        // Calculation of DeltaG of reciprocal reactions (ns==2 only)
         double dGrc;
         for( r=0; r< Nrc; r++ ) // looking through reactions
         {
@@ -2100,7 +2104,8 @@ long int TBerman::IdealProp( double *Zid )
 double TBerman::KronDelta( const long int j, const long s, const long m )
 {
     double krond = 0.;
-    if( mn[j][s][m] != 0 )
+    // if( mn[j][s][m] != 0 )
+    if( fabs(mn[j][s][m]) > 1e-14 )
        krond = 1.;
     return krond;
 }
@@ -2222,7 +2227,8 @@ long int TBerman::em_which(const long int s, const long int m, const long int jb
     long int l;
     for( l=jb; l<=je; l++ )
     {
-       if( mn[l][s][m] != 0 )
+       // if( mn[l][s][m] != 0 )
+       if( fabs(mn[l][s][m]) > 1e-14 )
            return l;
     }
     return -1L;
@@ -2235,7 +2241,8 @@ long int TBerman::em_howmany( long int s, long int m )
     long int l, jc=0;
     for( l=0; l<NComp; l++ )
     {
-       if( mn[l][s][m] != 0 )
+       // if( mn[l][s][m] != 0 )
+       if( fabs(mn[l][s][m]) > 1e-14 )
            jc++;
     }
     return jc;
@@ -2342,13 +2349,12 @@ long int TBerman::ReciprocalPart()
     {
        rft = RefFrameTerm( j, G_ref );
        lnGamRecip[j] = rft - oGf[j];
-    // cout << "j=" << j  << " rft=" << rft << " lnGam=" << lnGamRecip[j]
-//     << " pyp=" << pyp[j] << endl;
+//     cout << "j=" << j  << " rft=" << rft << " lnGamRecip=" << lnGamRecip[j] << " pyp=" << pyp[j] << endl;
     }
 //    if( NSub != 2 )
         return 0;
 
-    if( NSub == 2L && Nrc > 0 )
+    if( ns == 2 && NrcR > 0 && Nrc > 0 )
     {  // using reciprocal reactions for 2-site case
         // We use DGrc - normamized G effects of reciprocal reactions
         // and XrcM - the array of indexes of end members involved in recip. reactions
@@ -2375,7 +2381,7 @@ long int TBerman::ReciprocalPart()
          }
          lnGamRecip[j] -= rcSum;
       }  // r
-// cout << " GexRc=" << lnGamRecip[j] << endl;
+      cout << "Alternative from recip.reactions: j=" << j << "  GexRc/(RT)=" << lnGamRecip[j] << endl;
     }  // j
     }
     return 0;
@@ -3370,7 +3376,7 @@ double TMBWmod::RefFrameTerm( const long int i, const double G_ref ) {
     double sum_s, dgm_dysis, dgm_dyjs, reftj; //NSergii
 
     sum_s = 0.0;
-    dgm_dysis = 0.0;
+    dgm_dysis = 0.0; dgm_dyjs = 0.0;
 
     for( s = 0; s < NSub; s++ ) { // Looking through moieties
 
