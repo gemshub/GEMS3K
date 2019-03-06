@@ -1140,9 +1140,11 @@ class TBerman: public TSolMod
                 long int NrcR;   ///< max. possible number of reciprocal reactions (allocated)
                 long int Nrc;    ///< number of reciprocal reactions (actual)
                 long int *NmoS;  ///< number of different moieties (in end members) on each sublattice
-            long int ***XrcM;  ///< Table of indexes of end members, sublattices and moieties involved in
+
+                long int ***XrcM;  ///< Table of indexes of end members, sublattices and moieties involved in
                                ///< reciprocal reactions [NrecR][4][2], two left and two right side.
                                ///< for each of 4 reaction components: j, mark, // s1, m1, s2, m2.
+            long int ns;       ///< number of sites (sublattices) that have two or more different moieties
 
                 double *Wu;    ///< Interaction parameter coefficients a
                 double *Ws;    ///< Interaction parameter coefficients b (f(T))
