@@ -1104,11 +1104,13 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 #endif
   DATACH  *dCH = na->pCSD();
   P = PPa/bar_to_Pa;
-//  double T = TK-C_to_K;
 
 #ifndef IPMGEMPLUGIN
+
   if( !aNa )
-  {  TMTparm::sm->GetTP()->curT=T;
+  {
+     double T = TK-C_to_K;
+     TMTparm::sm->GetTP()->curT=T;
      TMTparm::sm->GetTP()->curP=P;
    }
 #endif
