@@ -1090,7 +1090,6 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 
 #ifndef IPMGEMPLUGIN
   TNode* na;
-  double T;
   if( aNa )
    na = aNa;// for reading GEMIPM files task
   else

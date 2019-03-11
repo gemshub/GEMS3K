@@ -90,7 +90,7 @@ void copyValues( double* arr, float* data, int size )
   if( !arr || !data )
     return;
   for(int ii=0; ii<size; ii++)
-    arr[ii] = (double)data[ii];
+    arr[ii] = static_cast<double>(data[ii]);
 }
 
 inline
@@ -99,7 +99,7 @@ void copyValues( float* arr, double* data, int size )
   if( !arr || !data )
     return;
   for(int ii=0; ii<size; ii++)
-    arr[ii] = (float)data[ii];
+    arr[ii] = static_cast<float>(data[ii]);
 }
 
 inline
@@ -108,7 +108,7 @@ void copyValues( long int* arr, short* data, int size )
   if( !arr || !data )
     return;
   for(int ii=0; ii<size; ii++)
-    arr[ii] = (long int)data[ii];
+    arr[ii] = static_cast<long int>(data[ii]);
 }
 
 #ifndef IPMGEMPLUGIN
