@@ -944,7 +944,7 @@ long int GEM_step_MT( const long int step )
       /// \return pointer to ARout which may also be  allocated inside of Ph_BC()
       /// in the case if parameter ARout = NULL is specified;
       /// to avoid a memory leak, you will have to free this memory wherever appropriate.
-      double *Ph_BC( const long int xph, double* ARout = NULL );
+      double *Ph_BC( const long int xph, double* ARout = nullptr );
 
       /// Retrieves total dissolved aqueous molality of Independent Component with DBR index xic.
       /// \param xic is IC DBR index

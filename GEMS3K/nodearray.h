@@ -35,6 +35,9 @@
 
 #include "node.h"
 
+/// The function is executed when ProcessProgress
+using  ProcessProgressFunction = std::function<bool( const gstring& message, long point )>;
+
 // These structures are needed for implementation of Random Walk and
 // similar particle-based transport algorithms
 enum  PTCODE /// Codes of particle type
@@ -54,7 +57,7 @@ struct  LOCATION /// Location (coordinates) of a point in space
   LOCATION():
    x(0.), y (0.), z(0.) {}
 
-  LOCATION( float ax, float ay=0., float az=0. ):
+  LOCATION( double ax, double ay=0., double az=0. ):
      x(ax), y (ay), z(az) {}
 
   LOCATION( const LOCATION& loc ):
@@ -222,6 +225,20 @@ public:
        bool bin_mode = false, bool brief_mode = false, bool with_comments = true,
        bool putNodT1=false, bool addMui=false );
 
+  /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+  /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+  /// or if putNodT1 == true  as a break point for the running FMT calculation
+  /// \param filepath - IPM work structure file path&name
+  /// \param message - callback message function
+  /// \param nIV - Number of allocated nodes
+  /// \param bin_mode - Write IPM, DCH and DBR files in binary mode ( false - txt mode)
+  /// \param brief_mode - Do not write data items that contain only default values
+  /// \param with_comments -Write files with comments for all data entries ( in text mode)
+  /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
+  void genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
+          long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
+          bool putNodT1, bool addMui );
+
    /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
    /// Copying data from work DATABR structure into the node array NodT0
    /// and read DATABR structure into the node array NodT1 from file dbr_file
@@ -290,7 +307,7 @@ public:
    DATABR *reallocDBR( long int ndx, long int nNodes, DATABRPTR* anyNodeArray)
    {
        if( ndx < 0 || ndx>= nNodes )
-         return 0;
+         return nullptr;
        // free old memory
        if( anyNodeArray[ndx] )
        {
@@ -465,7 +482,7 @@ public:
 
     ///  Set grid coordinate array use predefined array aGrid
     /// or set up regular scale
-     void SetGrid( double aSize[3], double (*aGrid)[3] = 0 );
+     void SetGrid( double aSize[3], double (*aGrid)[3] = nullptr );
 
      /// Finds a node absolute index for the current
      /// point location. Uses grid coordinate array grid[].
@@ -492,7 +509,7 @@ public:
 
      /// Writes work node (DATABR structure) to a text VTK file
      void databr_to_vtk( fstream& ff, const char*name, double time, long cycle,
-                               long int nFields=0, long int (*Flds)[2]=0);
+                               long int nFields=0, long int (*Flds)[2]=nullptr);
 
 };
 

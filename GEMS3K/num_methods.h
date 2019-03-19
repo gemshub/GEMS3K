@@ -110,6 +110,9 @@ public:
     minF = f_proc;
   }
 
+  virtual ~GoldenSection( )
+  {  }
+
   virtual double calcFunction( double x, double y )
   {
       return minF( x, y );

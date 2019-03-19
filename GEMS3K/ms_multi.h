@@ -722,7 +722,7 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
 public:
     TNode *node;
 
-    void set_def( long int i=0);
+    void set_def( int i=0);
 
 #ifndef IPMGEMPLUGIN
 
@@ -738,7 +738,7 @@ public:
 //      Free_TSolMod();     // Added 06.05.2011 DK - possible bugfix
        Free_internal();
        Free_uDD();
-    };
+    }
 
     void ods_link( int i=0);
     void dyn_set( int i=0);
@@ -757,7 +757,7 @@ public:
     void MultiKeyInit( const char*key );
     void EqstatExpand( /*const char *key,*/  bool calcActivityModels/*, bool calcKineticModels*/ );
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
-     tget_ndx *get_ndx = 0 );
+     tget_ndx *get_ndx = nullptr );
     void getNamesList( int nO, TCStringArray& lst );
 
    class UserCancelException {};
@@ -856,10 +856,10 @@ public:
     void Alloc_internal();
 double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
-    void DC_LoadThermodynamicData( TNode* aNa = 0 );
+    void DC_LoadThermodynamicData( TNode* aNa = nullptr );
     //DM 25.02.2014
     void Access_GEM_IMP_init();
-    int get_sizeFIs () {return sizeFIs;}
+    long get_sizeFIs () {return sizeFIs;}
     // acces for node class
     TSolMod * pTSolMod (int xPH);
 

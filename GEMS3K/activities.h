@@ -29,8 +29,9 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef _Activity_H_
-#define _Activity_H_
+#ifndef Activity_H_
+
+#define Activity_H_
 
 #include "node.h"
 //#include "datach.h"
@@ -409,8 +410,8 @@ public:
 };
 
 
-#endif
 
+#endif
 // -----------------------------------------------------------------------------
-// end of _Activity_h
+// end of Activity_h
 

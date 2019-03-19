@@ -75,6 +75,10 @@ class TRWArrays  /// Basic class for red/write fields of structure
     	ff( fin ), numFlds(aNumFlds), flds(aFlds)
     {}
 
+     virtual ~TRWArrays()
+    {}
+
+
     /// Find field by name
     virtual  long int findFld( const char *Name );
 

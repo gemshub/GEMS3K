@@ -354,7 +354,7 @@ public:
 
     SPP_SETTING pa;
 
-    TProfil( int nrt );
+    TProfil( uint nrt );
     void InitSubModules();
 
     const char* GetName() const
@@ -376,7 +376,7 @@ public:
 
     // work with Project
     bool initCalcMode( const char * profileKey );
-    void loadSystat( const char *key=0 );
+    void loadSystat( const char *key=nullptr );
     void newSystat( int mode );
     void deriveSystat();
     void PackSystat();
@@ -405,7 +405,7 @@ public:
 
     // Proces make functions
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
-     tget_ndx *get_ndx = 0 )
+      tget_ndx *get_ndx = nullptr )
      { multi->ET_translate( nOet, nOpex, JB, JE, jb, je, get_ndx); }
     void getNamesList( int nO, TCStringArray& lst )
      { multi->getNamesList(nO, lst); }

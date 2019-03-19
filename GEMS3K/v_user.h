@@ -74,13 +74,13 @@ void fillValue( T* arr, T value, int size )
     arr[ii] = value;
 }
 
-template <class T>
+template <class T, class IT>
 inline
-void copyValues( T* arr, T* data, int size )
+void copyValues( T* arr, T* data, IT size )
 {
   if( !arr || !data )
     return;
-  for(int ii=0; ii<size; ii++)
+  for(IT ii=0; ii<size; ii++)
     arr[ii] = data[ii];
 }
 

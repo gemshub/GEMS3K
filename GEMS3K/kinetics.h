@@ -29,8 +29,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef _Kinetics_H_
-#define _Kinetics_H_
+#ifndef Kinetics_H_
+#define Kinetics_H_
 
 #include "node.h"
 //#include "datach.h"
@@ -169,7 +169,7 @@ public:
         this->cno = ptn;
 
             sizeFI = 0;
-            phKinMet = 0;
+            phKinMet = nullptr;
 
          load = false;
          Alloc_TKinMet( csd->nPH );

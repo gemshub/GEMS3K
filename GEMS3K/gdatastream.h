@@ -46,7 +46,7 @@ class GemDataStream				// data stream class
 
 public:
 //    GemDataStream( fstream& ff  );
-    GemDataStream( ) {    setByteOrder(LittleEndian); };
+    GemDataStream( ) {    setByteOrder(LittleEndian); }
     GemDataStream( gstring& aPath, ios::openmode aMod  );
     virtual ~GemDataStream();
 
@@ -59,7 +59,7 @@ public:
 //    bool	 eof() const;
 
     enum ByteOrder { BigEndian, LittleEndian };
-    int	 byteOrder() const { return byteorder; };
+    int	 byteOrder() const { return byteorder; }
     void setByteOrder( int );
 
     filebuf* rdbuf() { return ff.rdbuf(); }
@@ -72,10 +72,10 @@ public:
     bool good() { return ff.good(); }
     void clear() { ff.clear(); }
     void flush() { ff.flush(); }
-    size_t tellg() { return ff.tellg(); }
+    long tellg() { return ff.tellg(); }
     void open(const char* filename, ios::openmode mode) { ff.open(filename, mode); }
-    ostream& seekp(size_t pos, ios_base::seekdir dir) { return ff.seekp(pos, dir); }
-    istream& seekg(size_t pos, ios_base::seekdir dir) { return ff.seekg(pos, dir); }
+    ostream& seekp(long pos, ios_base::seekdir dir) { return ff.seekp(pos, dir); }
+    istream& seekg(long pos, ios_base::seekdir dir) { return ff.seekg(pos, dir); }
 
     GemDataStream &operator>>( char &i );
     GemDataStream &operator>>( unsigned char &i ) { return operator>>((char&)i); }
