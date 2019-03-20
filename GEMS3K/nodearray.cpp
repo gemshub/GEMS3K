@@ -733,7 +733,7 @@ AGAIN:
 
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
-void TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
+gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
                                        long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
                                        bool putNodT1, bool addMui )
 {
@@ -875,6 +875,7 @@ void TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressF
         }
     } // ii
 
+    return path2; // dbr list file
 }
 
 

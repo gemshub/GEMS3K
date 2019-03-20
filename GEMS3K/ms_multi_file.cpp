@@ -31,6 +31,12 @@
 #include "node.h"
 #include "gdatastream.h"
 
+void  TMulti::GEMS3k_write_dbr( const char* fname,  bool binary_f,
+                          bool with_comments, bool brief_mode )
+{
+   node->GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
+}
+
 void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 {  LsModSum = 0;
    LsIPxSum = 0;

@@ -123,6 +123,7 @@ IsSpace(char ch)
 }
 
 void StripLine(gstring& line);
+void KeyToName(gstring& line);
 
 // Added by SD on 22/12/2001
 // Change string on templates

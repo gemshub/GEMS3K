@@ -719,8 +719,9 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
 
-public:
     TNode *node;
+
+public:
 
     void set_def( int i=0);
 
@@ -870,6 +871,19 @@ double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, lo
 
     double HelmholtzEnergy( double x );
     double InternalEnergy( double TC, double P );
+
+    ///  Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
+    ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+    ///                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
+    ///                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+    ///   \param binary_f      defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task
+    ///                 if called in the loop for each node), or in text format (false or 0, default).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written.
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void  GEMS3k_write_dbr( const char* fname,  bool binary_f=false,
+                              bool with_comments = true, bool brief_mode = false);
 
 };
 

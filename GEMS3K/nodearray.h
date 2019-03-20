@@ -173,7 +173,7 @@ public:
 
   static TNodeArray* na;   ///< static pointer to this class
 
-  TNode getCalcNode()
+  const TNode& getCalcNode()
   { return calcNode;}
 
   DATACH* pCSD() const  /// Get the pointer to chemical system definition data structure
@@ -235,7 +235,8 @@ public:
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments -Write files with comments for all data entries ( in text mode)
   /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
-  void genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
+  /// \return DATABR list file name
+  gstring genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
           long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
           bool putNodT1, bool addMui );
 
