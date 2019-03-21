@@ -34,6 +34,7 @@
 void  TMulti::GEMS3k_write_dbr( const char* fname,  bool binary_f,
                           bool with_comments, bool brief_mode )
 {
+   node->packDataBr();
    node->GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
 }
 

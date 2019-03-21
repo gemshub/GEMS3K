@@ -318,6 +318,26 @@ protected:
     bool NewProfileMode( bool remakeRec, gstring& key_templ );
     bool NewProfileModeElements( bool remakeRec, gstring& key_templ );
     void CalcAllSystems(int makeDump);
+
+
+    /// Dump all Systems&Processes to GEMS3K module
+    void GEMS3KallSystems(int makeDump);
+
+    /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param filepath - IPM work structure file path&name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param with_comments -Write files with comments for all data entries
+    void CurrentSystem2GEMS3K( const gstring& filepath, bool brief_mode, bool with_comments = false );
+
+    /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param filepath - IPM work structure file path&name
+    /// \param key - loads system record before generate
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param with_comments -Write files with comments for all data entries
+    void System2GEMS3K( const gstring& filepath, const gstring key, bool brief_mode, bool with_comments = false );
+
     void SaveOldList();
     void DeleteOldList();
     void TestChangeProfile();
