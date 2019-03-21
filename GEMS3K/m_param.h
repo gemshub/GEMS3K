@@ -323,20 +323,30 @@ protected:
     /// Dump all Systems&Processes to GEMS3K module
     void GEMS3KallSystems(int makeDump);
 
-    /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Generate for current loaded system MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
     /// \param filepath - IPM work structure file path&name
     /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments -Write files with comments for all data entries
+    /// \param with_comments - Write files with comments for all data entries
     void CurrentSystem2GEMS3K( const gstring& filepath, bool brief_mode, bool with_comments = false );
 
-    /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Load&Calculate system and Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
-    /// \param filepath - IPM work structure file path&name
     /// \param key - loads system record before generate
+    /// \param calcMode - system calculate mode: 0 - no calculation; 2- NEED_GEM_SIA; 1-NEED_GEM_AIA
+    /// \param filepath - IPM work structure file path&name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param with_comments - Write files with comments for all data entries
+    void System2GEMS3K( const gstring key, int calcMode, const gstring& filepath, bool brief_mode, bool with_comments = false );
+
+    /// For all systems in project generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param savedSystems - system records key to be ignored
+    /// \param calc_mode - system calculate mode: 0 - no calculation; 2- NEED_GEM_SIA; 1-NEED_GEM_AIA
+    /// \param files_dir - IPM work structure directory name
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments -Write files with comments for all data entries
-    void System2GEMS3K( const gstring& filepath, const gstring key, bool brief_mode, bool with_comments = false );
+    void allSystems2GEMS3K( TCStringArray& savedSystems, int calc_mode, const gstring& files_dir, bool brief_mode, bool with_comments = false);
 
     void SaveOldList();
     void DeleteOldList();
