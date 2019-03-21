@@ -348,6 +348,14 @@ protected:
     /// \param with_comments -Write files with comments for all data entries
     void allSystems2GEMS3K( TCStringArray& savedSystems, int calc_mode, const gstring& files_dir, bool brief_mode, bool with_comments = false);
 
+    /// For all processes in project generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param savedSystems - system records key to be ignored
+    /// \param files_dir - IPM work structure directory name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param with_comments -Write files with comments for all data entries
+    void allProcess2GEMS3K( TCStringArray& savedSystems, const gstring& files_dir, bool brief_mode, bool with_comments = false );
+
     void SaveOldList();
     void DeleteOldList();
     void TestChangeProfile();
