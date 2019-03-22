@@ -30,6 +30,9 @@
 #include "m_param.h"
 #include "node.h"
 #include "num_methods.h"
+#include "activities.h"
+#include "kinetics.h"
+
 
 #ifdef IPMGEMPLUGIN
 enum volume_code {  // Codes of volume parameter ???

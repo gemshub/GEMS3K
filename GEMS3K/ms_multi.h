@@ -52,6 +52,8 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 #include "s_sorpmod.h"
 #include "s_kinmet.h"
 
+class GemDataStream;
+
 typedef struct
 {  // MULTI is base structure to Project (local values)
   char
@@ -719,9 +721,10 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
 
-    TNode *node;
 
 public:
+    TNode *node;
+
 
     void set_def( int i=0);
 
@@ -773,29 +776,29 @@ public:
      pmp = &pm;
      node = na_; // parent
      sizeN = 0;
-     AA = 0;
-     BB = 0;
-     arrL = 0;
-     arrAN = 0;
+     AA = nullptr;
+     BB = nullptr;
+     arrL = nullptr;
+     arrAN = nullptr;
 
- U_mean = 0;
- U_M2 = 0;
- U_CVo = 0;
- U_CV = 0;
- ICNud = 0;
+ U_mean = nullptr;
+ U_M2 = nullptr;
+ U_CVo = nullptr;
+ U_CV = nullptr;
+ ICNud = nullptr;
 
      sizeFIs = 0;
-     phSolMod = 0;
+     phSolMod = nullptr;
      sizeFIa = 0;
-     phSorpMod = 0;
+     phSorpMod = nullptr;
      sizeFI = 0;
-     phKinMet = 0;
+     phKinMet = nullptr;
 
-     pmp->Guns = 0;
-     pmp->Vuns = 0;
-     pmp->tpp_G = 0;
-     pmp->tpp_S = 0;
-     pmp->tpp_Vm = 0;
+     pmp->Guns = nullptr;
+     pmp->Vuns = nullptr;
+     pmp->tpp_G = nullptr;
+     pmp->tpp_S = nullptr;
+     pmp->tpp_Vm = nullptr;
 
      load = false;
    }

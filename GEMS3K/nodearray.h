@@ -33,6 +33,7 @@
 #ifndef _nodearray_h_
 #define _nodearray_h_
 
+#include <functional>
 #include "node.h"
 
 /// The function is executed when ProcessProgress

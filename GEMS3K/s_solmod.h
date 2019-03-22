@@ -223,32 +223,32 @@ class TSolMod
 		virtual long int PureSpecies()
 		{
 			return 0;
-		};
+        }
 
 		virtual long int PTparam()
 		{
 			return 0;
-		};
+        }
 
 		virtual long int MixMod()
 		{
 			return 0;
-		};
+        }
 
         virtual long int ExcessProp( double */*Zex*/ )
 		{
 			return 0;
-		};
+        }
 
         virtual long int IdealProp( double */*Zid*/ )
 		{
 			return 0;
-		};
+        }
 
         virtual long int StandardProp( double */*Zid*/ )
         {
             return 0;
-        };
+        }
 
         /// Set new system state
 		long int UpdatePT ( double T_k, double P_bar );
@@ -363,7 +363,7 @@ class EOSPARAM
 			if ( i==j ) return epspar[i];
                         if (i<j) return mixpar[j][i];
                             else return mixpar[i][j];
-		};
+        }
 
                 double SIG3( long int i){ return sig3par[i]; }
                 double M2R( long int i) { return m2par[i]; }
@@ -524,7 +524,7 @@ class TCGFcalc: public TSolMod
 		double GetDELTA( void )
 		{
 			return DELTA;
-		};
+        }
 };
 
 

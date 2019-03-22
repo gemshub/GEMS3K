@@ -33,13 +33,14 @@
 
 #define Activity_H_
 
-#include "node.h"
-//#include "datach.h"
-//#include "databr.h"
-//#include "s_solmod.h"
-//#include "s_sorpmod.h"
-//#include "m_const.h"
+//#include "node.h"
+#include "datach.h"
+#include "databr.h"
+#include "s_solmod.h"
+#include "s_sorpmod.h"
+#include "m_const.h"
 
+class TNode;
 /*
 const double R_CONSTANT = 8.31451,
               NA_CONSTANT = 6.0221367e23,

@@ -53,21 +53,21 @@
 /// Copyright (C) 2012 GEMS Development Team
 /// Available on web at http://gems.web.psi.ch/GEMS3K
 
-#ifndef _node_h_
-#define _node_h_
+#ifndef NODE_H
+#define NODE_H
 
 #include "m_param.h"
 // #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
 #include "activities.h"
-#include "kinetics.h"
 
 #ifndef IPMGEMPLUGIN
-class QWidget;
+ class QWidget;
 #endif
 
 class TActivity;
+class TKinetics;
 
 extern const double bar_to_Pa,
                m3_to_cm3,
@@ -1071,7 +1071,7 @@ long int GEM_step_MT( const long int step )
       /// Sets the mLook Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid).
        /// \param mLook is 0 or 1
         void Set_mLook(const double mLook)
-        {  CSD->mLook = (long)mLook;  multi->set_load(false);}
+        {  CSD->mLook = static_cast<long>(mLook);  multi->set_load(false);}
 
       /// Sets the value of the interaction parameter.
       /// Internal re-scaling to mass of the system is applied.

@@ -133,10 +133,10 @@ void TMulti::SetSmoothingFactor( long int mode )
     long int ir; //, Level, itqF, itq;
 
     ir = pm.IT;
-    irf = (double)ir;
+    irf = static_cast<double>(ir);
     ag = paTProfil->p.AG; // pm.FitVar[4];
     dg = paTProfil->p.DGC;
-    iim = (double)paTProfil->p.IIM;
+    iim = paTProfil->p.IIM;
 
     if( dg > -0.0001 && ag >= 0.0001 ) // Smoothing used in the IPM-2 algorithm
     {					// with some improvements
@@ -158,7 +158,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     	double logr, inv_r = 1., logr_m;
     	dg = fabs( dg );
         if( pm.IT )
-          inv_r = 1./(double)pm.IT;
+          inv_r = 1./static_cast<double>(pm.IT);
         logr = log( inv_r );
         logr_m = log( 1./iim );
         al = dg + ( ag - dg ) / ( 1. + exp( logr_m - logr ) / dg );
@@ -188,7 +188,7 @@ void TMulti::SetSmoothingFactor( long int mode )
     	  	     cd = 0.0;
     	   	     for(i=0; i < mode; i++ )
                          cd += pm.logCDvalues[i];
-                     cd /= (double)mode; // 5. - bugfix
+                     cd /= (static_cast<double>(mode)); // 5. - bugfix
     	   	     break;
     	}
         al = dg + ( ag - dg ) / ( 1. + exp( dk - cd ) / dg );
@@ -826,7 +826,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
     aZ = pm.EZ+jb;
     sd.arVol = pm.Vol+jb;
 
-    TSolMod* mySM = 0;
+    TSolMod* mySM = nullptr;
 
    // creating instances of subclasses of TSolMod base class
     switch( ModCode )
@@ -836,14 +836,14 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
         {
                 TModOther* myPT = new TModOther( &sd, pm.denW, pm.epsW );
                 myPT->GetPhaseName( pm.SF[k] );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_VANLAAR:  // Van Laar solid solution model (multicomponent)
         {
                 TVanLaar* myPT = new TVanLaar( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
              // break;
@@ -851,70 +851,70 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
         case SM_REGULAR:  // Regular solid solution model (multicomponent)
         {
                 TRegular* myPT = new TRegular( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_GUGGENM:  // Redlich-Kister solid solution model (multicomponent)
         {
                 TRedlichKister* myPT = new TRedlichKister( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_NRTLLIQ:  // NRTL liquid solution model (multicomponent)
         {
                 TNRTL* myPT = new TNRTL( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_WILSLIQ:  // Wilson liquid solution model (multicomponent)
         {
                 TWilson* myPT = new TWilson( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_MARGT:  // Margules ternary (regular) solid solution model
         {
                 TMargules* myPT = new TMargules( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_MARGB:  // Margules binary (subregular) solid solution model
         {
                 TSubregular* myPT = new TSubregular( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_REDKIS:  // Gugenheim binary (REdlich-Kister) solid solution
         {
                 TGuggenheim* myPT = new TGuggenheim( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_AQPITZ:  // Pitzer aqueous electrolyte model (multicomponent)
         {
                 TPitzer* myPT = new TPitzer( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_AQSIT:  // SIT aqueous electrolyte model (multicomponent)
         {
                 TSIT* myPT = new TSIT( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_AQEXUQ:  // EUNIQUAC aqueous electrolyte model (multicomponent)
         {
                 TEUNIQUAC* myPT = new TEUNIQUAC( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 /*
@@ -928,104 +928,104 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
         case SM_AQDH3:  // extended Debye-Hueckel aqueous electrolyte model (Karpov version)
         {
                 TKarpov* myPT = new TKarpov( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
         	break;
         }
 
         case SM_AQDH2:   // Debye-Hueckel aqueous electrolyte model
         {
                 TDebyeHueckel* myPT = new TDebyeHueckel( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
         	break;
         }
 
         case SM_AQDH1:   // Debye-Hueckel limiting law aqueous electrolyte model
         {
                 TLimitingLaw* myPT = new TLimitingLaw( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
         	break;
         }
 
         case SM_AQDHS:  // extended Debye-Hueckel aqueous electrolyte model (Shvarov version)
         {
                 TShvarov* myPT = new TShvarov( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
         	break;
         }
 
         case SM_AQDHH:  // extended Debye-Hueckel aqueous electrolyte model (Helgeson version)
         {
                 THelgeson* myPT = new THelgeson( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
         	break;
         }
 
         case SM_AQDAV:  // Davies aqueous electrolyte model (in NEA TDB version)
         {
                 TDavies* myPT = new TDavies( &sd, aM, aZ, pm.denW, pm.epsW );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
         	break;
         }
 
         case SM_PRFLUID:  // PRSV fluid mixture (multicomponent)
         {
                 TPRSVcalc* myPT = new TPRSVcalc( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_CGFLUID:  // CG fluid mixture (multicomponent)
         {
                 TCGFcalc* myPT = new TCGFcalc( &sd, pm.FWGT+k, pm.X+jb  );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_SRFLUID:  // SRK fluid mixture (multicomponent)
         {
                 TSRKcalc* myPT = new TSRKcalc( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_PR78FL:  // PR78 fluid mixture (multicomponent)
         {
                 TPR78calc* myPT = new TPR78calc( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_CORKFL:  // CORK fluid mixture (multicomponent)
         {
                 TCORKcalc* myPT = new TCORKcalc( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_STFLUID:  // STP fluid mixture (H2O-CO2)
         {
                 TSTPcalc* myPT = new TSTPcalc ( &sd );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_BERMAN:  // Non-ideal (multi-site) model
         {
                 TBerman* myPT = new TBerman( &sd, pm.G0+jb );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
         case SM_CEF:  // Non-ideal (multi-site) model (CALPHAD)
         {
                 TCEFmod* myPT = new TCEFmod( &sd, pm.G0+jb );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
         case SM_MBW:
         {
                 TMBWmod* myPT = new TMBWmod( &sd, pm.G0+jb );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
 
@@ -1033,7 +1033,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
         {
                 TIdeal* myPT = new TIdeal( &sd );
                 myPT->GetPhaseName( pm.SF[k] );
-                mySM = (TSolMod*)myPT;
+                mySM = myPT;
                 break;
         }
         // case SM_USERDEF:
@@ -1041,7 +1041,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
         {
             TSCM_NEM* myPT = new TSCM_NEM( &sd );
             myPT->GetPhaseName( pm.SF[k] );
-            mySM = (TSCM_NEM*)myPT;
+            mySM = myPT;
             break;
         }
         default:
@@ -1315,7 +1315,7 @@ void TMulti::Alloc_TSolMod( long int newFIs )
   phSolMod = new  TSolMod *[newFIs];
   sizeFIs = newFIs;
  for( long int ii=0; ii<newFIs; ii++ )
-    	  phSolMod[ii] = 0;
+          phSolMod[ii] = nullptr;
 }
 
 void TMulti::Free_TSolMod()
@@ -1329,7 +1329,7 @@ void TMulti::Free_TSolMod()
            delete phSolMod[kk];
       delete[]  phSolMod;
   }
-  phSolMod = 0;
+  phSolMod = nullptr;
   sizeFIs = 0;
 }
 
@@ -1345,7 +1345,7 @@ void TMulti::Alloc_TSorpMod( long int newFIs )
   phSorpMod = new  TSorpMod *[newFIs];
   sizeFIa = newFIs;
  for( long int ii=0; ii<newFIs; ii++ )
-          phSorpMod[ii] = 0;
+          phSorpMod[ii] = nullptr;
 }
 
 void TMulti::Free_TSorpMod()
@@ -1359,7 +1359,7 @@ void TMulti::Free_TSorpMod()
            delete phSorpMod[kk];
       delete[]  phSorpMod;
   }
-  phSorpMod = 0;
+  phSorpMod = nullptr;
   sizeFIa = 0;
 }
 

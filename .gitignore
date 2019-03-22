@@ -19,7 +19,7 @@ gemcalc-build/gemcalc
 gemcalc-build/node-gem
 gemcalc-build/ipmlog.txt
 gemcalc/gemcalc.pro.user
-gemcalc/gemcalc.pro.user.2.5pre1
+gemcalc/gemcalc.pro.user.*
 lib-gems3k/Makefile
 lib-gems3k/Makefile.Debug
 lib-gems3k/Makefile.Release
