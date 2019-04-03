@@ -834,7 +834,7 @@ long int GEM_step_MT( const long int step )
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \return H0(P,TK) (in J/mol) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_H0(const long int xCH, const double P, const double TK);
+     double DC_H0(const long int xCH, const double P, const double TK) const;
 
      /// Retrieves (interpolated) absolute molar enropy S0(P,TK) value for Dependent Component (in J/K/mol)
      /// from the DATACH structure.
@@ -842,7 +842,7 @@ long int GEM_step_MT( const long int step )
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \return S0(P,TK) (in J/K/mol) or 0.0, if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_S0(const long int xCH, const double P, const double TK);
+     double DC_S0(const long int xCH, const double P, const double TK) const;
 
      /// Retrieves (interpolated) constant-pressure heat capacity Cp0(P,TK) value for Dependent Component (in J/K/mol)
      /// from the DATACH structure.
@@ -850,7 +850,7 @@ long int GEM_step_MT( const long int step )
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \return Cp0(P,TK) (in J/K/mol) or 0.0, if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_Cp0(const long int xCH, const double P, const double TK);
+     double DC_Cp0(const long int xCH, const double P, const double TK) const;
 
      /// Retrieves (interpolated) Helmholtz energy  of Dependent Component (in J/mol)
      /// from the DATACH structure.
@@ -858,7 +858,7 @@ long int GEM_step_MT( const long int step )
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \return Helmholtz energy (in J/mol) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_A0(const long int xCH, const double P, const double TK);
+     double DC_A0(const long int xCH, const double P, const double TK) const;
 
      /// Retrieves (interpolated) Internal energy of  Dependent Component (in J/mol)
      /// from the DATACH structure.
@@ -866,7 +866,7 @@ long int GEM_step_MT( const long int step )
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
      /// \return Internal energy (in J/mol) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
-     double DC_U0(const long int xCH, const double P, const double TK);
+     double DC_U0(const long int xCH, const double P, const double TK) const;
 
      /// Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
      /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
@@ -918,6 +918,12 @@ long int GEM_step_MT( const long int step )
      /// \param xph is DBR phase index
      /// \return the current phase volume in m3 or 0.0, if the phase mole amount is zero.
       double  Ph_Volume( const long int xBR ) const;
+      
+     /// Retrieves the current phase enthalpy in J in the reactive sub-system.
+     /// Works both for multicomponent and for single-component phases.
+     /// \param xph is DBR phase index
+     /// \return the current phase volume in m3 or 0.0, if the phase mole amount is zero.
+      double  Ph_Enthalpy( const long int xBR ) const;
 
       /// Retrieves the current phase amount (in equilibrium) in moles in the reactive sub-system.
       /// Works both for multicomponent and for single-component phases.
