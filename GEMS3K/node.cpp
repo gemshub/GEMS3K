@@ -1120,16 +1120,16 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
  
  //Retrieves the current phase enthalpy in J ( xph is DBR phase index) in the reactive sub-system.
  // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
- double  TNode::Ph_Enthalpy( const long int xBR ) const
+ double  TNode::Ph_Enthalpy( const long int xph ) const
  {
    double ent, enth = 0.0;
    long int xdc, xdcb, xdce, nDCinPh, xch;
    
    // Getting the DBR index of the first DC belonging to the phase with DBR index xBR,
    // with nDCinPh being the number of DCs included into DBR for this phase
-   xdcb = PhtoDC_DBR( xBR, nDCinPh );
+   xdcb = PhtoDC_DBR( xph, nDCinPh );
    xdce = xdcb + nDCinPh;
-   
+//std::cout << "xph: " << xph << " xdcb: " << xdcb <<  " xdce: " << xdce << std::endl;
    for(xdc = xdcb; xdc < xdce; xdc++ )
    {
         xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC  
@@ -1138,6 +1138,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
         if( ent < 7777777.0 )
             enth += ent * CNode->xDC[xdc];
         // else out of P or T range of interpolation
+//        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " enth: " << enth << std::endl;
    }
    // Not yet accounting for the enthalpy of mixing!
    return enth;
