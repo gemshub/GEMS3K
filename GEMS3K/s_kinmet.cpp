@@ -1178,6 +1178,11 @@ TKinMet::SplitMod( )
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //  Implementation of TMWReaKin class
 //
+// Destructor
+TMWReaKin::~TMWReaKin()
+{}
+
+
 // Initializes uptake rates
 bool
 TMWReaKin::SSReaKinInit()
@@ -1390,6 +1395,17 @@ TUptakeKin::UptakeMod()
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+// Destructor
+TIonExKin::~TIonExKin()
+{}
+
+
+// Destructor
+TAdsorpKin::~TAdsorpKin()
+{}
+
+TNucleKin::~TNucleKin()
+{}
 
 /*
 // -----------------------------------------------------------------------------

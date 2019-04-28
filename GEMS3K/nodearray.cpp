@@ -356,7 +356,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
           InitNodeArray( dbrfiles_lst_name, nodeTypes, getNodT1, binary_f  );
     else
        if( nNodes() ==1 )
-              setNodeArray( 0 , 0  );
+              setNodeArray( 0 , nullptr  );
           else // undefined TNodeArray
                   Error( "GEM_init", "GEM_init() error: Undefined boundary condition!" );
    return 0;
@@ -584,7 +584,7 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
      {
 
 #ifndef IPMGEMPLUGIN
-   pVisor->Message( 0, "GEM2MT node array",
+   pVisor->Message( nullptr, "GEM2MT node array",
       "Reading from disk a set of node array files to resume an interrupted RMT task. "
            "Please, wait...", i, nNodes() );
 #endif
@@ -693,175 +693,191 @@ void  TNodeArray::setNodeArray( gstring& dbr_file, long int ndx, bool binary_f )
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
 gstring TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
-		bool bin_mode, bool brief_mode, bool with_comments,
-	    bool putNodT1, bool addMui )
+                                     bool bin_mode, bool brief_mode, bool with_comments,
+                                     bool putNodT1, bool addMui )
 {
-  fstream fout;
-  fstream fout2;
-  gstring Path_;
-  gstring dir;
-  gstring name;
-  gstring newname;
-  gstring path;
-  char buf[20];
-
-  // Get name of filenames structure
-   path = gstring( rt[RT_SYSEQ].FldKey(2), 0, rt[RT_SYSEQ].FldLen(2));;
-   path.strip();
-   if( bin_mode )
-     path += "-bin.lst";
-   else
-     path += "-dat.lst";
+    // Get name of filenames structure
+    gstring path = gstring( rt[RT_SYSEQ].FldKey(2), 0, rt[RT_SYSEQ].FldLen(2));;
+    path.strip();
+    if( bin_mode )
+        path += "-bin.lst";
+    else
+        path += "-dat.lst";
 
 AGAIN:
-      // open file to output
-   if( vfChooseFileSave(par, path,
-          "Please, enter IPM work structure file name", "*.lst" ) == false )
-               return "";
-   u_splitpath( path, dir, name, newname );
-   if( !access(path.c_str(), 0 ) ) //file exists
-     switch( vfQuestion3( par, name.c_str(),
-        "This set of files exists!",
-             "&Overwrite", "&Rename", "&Cancel") )
-            {
-            case VF3_2:
-                goto AGAIN;
-            case VF3_1:
-                break;
-            case VF3_3:
-                return path;
-            }
+    // open file to output
+    if( vfChooseFileSave(par, path, "Please, enter IPM work structure file name", "*.lst" ) == false )
+        return "";
 
-// get name
-   unsigned long int pos = name.rfind("-");
-   if( pos != gstring::npos )
-      name = name.substr(0, pos);
+    if( !access(path.c_str(), 0 ) ) //file exists
+        switch( vfQuestion3( par, path.c_str(), "This set of files exists!",
+                             "&Overwrite", "&Rename", "&Cancel") )
+        {
+        case VF3_2:
+            goto AGAIN;
+        case VF3_1:
+            break;
+        case VF3_3:
+            return path;
+        }
 
-// making special files
-// put data to pmfiles-bin.lst file
-   if( bin_mode )
-   {
-       fout.open(path.c_str(), ios::out);
-       fout << "-b \"" << name.c_str() << "-dch.bin\"";
-       fout << " \"" << name.c_str() << ".ipm\" ";
-   }
-// put data to pmfiles-dat.lst file
-   else
-   {   fout.open(path.c_str(), ios::out);
-       fout << "-t \"" << name.c_str() << "-dch.dat\"";
-       fout << " \"" << name.c_str() << "-ipm.dat\" ";
-   }
+    ProcessProgressFunction messageF = [nIV, par](const gstring& message, long point){
+        return  pVisor->Message( par, "GEM2MT node array",  message.c_str() , point, nIV );
+    };
+    genGEMS3KInputFiles(  path, messageF, nIV, bin_mode, brief_mode, with_comments,
+                          putNodT1, addMui );
 
-   gstring path2 = name;
-   path2 += "-dbr";
-   path2 = u_makepath( dir, path2, "lst" );
-   fout2.open(path2.c_str(), ios::out);
-
-  if( bin_mode )
-  {
-//  putting MULTI to binary file
-    Path_ = u_makepath( dir, name, "ipm" );
-    GemDataStream  ff(Path_, ios::out|ios::binary);
-    TProfil::pm->outMulti( ff, Path_  );
-  }
- else
-  {
-// output MULTI to txt file
-    newname = name+"-ipm";
-    Path_ = u_makepath( dir, newname, "dat" );
-    TProfil::pm->outMulti( Path_, addMui,  with_comments, brief_mode );
-  }
-
-// out dataCH to binary file
-   newname = name+"-dch";
-   if( bin_mode )
-   {  Path_ = u_makepath( dir, newname, "bin" );
-      GemDataStream  f_ch1(Path_, ios::out|ios::binary);
-      calcNode.datach_to_file(f_ch1);
-      f_ch1.close();
-   }
-// out dataCH to text file
-   else
-   {  //newname = name+"-dch";
-      Path_ = u_makepath( dir, newname, "dat" );
-      fstream  f_ch2(Path_.c_str(), ios::out);
-      calcNode.datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
-      f_ch2.close();
-   }
-
- nIV = min( nIV, nNodes() );
- bool first = true;
- for( long int ii = 0; ii < nIV; ii++ )
- {
-   if( !NodT0[ii] )
-      continue;
-
-   pVisor->Message( par, "GEM2MT node array",
-      "Writing to disk a set of node array files from interrupted RMT task. "
-           "Please, wait...", ii, nIV );
-   // Save databr
-   CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT0 );
-
-   sprintf( buf, "%4.4ld", ii );
-   // dataBR files - binary
-   if( bin_mode )
-    {
-       newname =  name + + "-dbr-0-"  + buf;
-       Path_ = u_makepath( dir, newname, "bin" );
-       GemDataStream  f_br1(Path_, ios::out|ios::binary);
-       calcNode.databr_to_file(f_br1);
-       f_br1.close();
-       if( first )
-          fout << " \"" << newname.c_str() << ".bin\"";
-       if( !first )
-          fout2 << ",";
-       fout2 << " \"" << newname.c_str() << ".bin\"";
-     }
-     else
-     {
-        newname = name + "-dbr-0-" + buf;
-        Path_ = u_makepath( dir, newname, "dat" );
-        fstream  f_br2(Path_.c_str(), ios::out);
-        calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
-        f_br2.close();
-        if( first )
-           fout << " \"" << newname.c_str() << ".dat\"";
-        if( !first )
-           fout2 << ",";
-        fout2 << " \"" << newname.c_str() << ".dat\"";
-     }
-     first = false;
-
-   if( putNodT1 && NodT1[ii]) // put NodT1[ii] data
-   {
-
-       // Save databr
-      CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT1 );
-
-      // dataBR files - binary
-      if( bin_mode )
-      {
-         newname =  name +  "-dbr-1-"  + buf;
-         Path_ = u_makepath( dir, newname, "bin" );
-         GemDataStream  f_br1(Path_, ios::out|ios::binary);
-         calcNode.databr_to_file(f_br1);
-         f_br1.close();
-//         fout << ", \"" << newname.c_str() << ".bin\"";
-      }
-     else
-      {
-         newname = name + "-dbr-1-" + buf;
-         Path_ = u_makepath( dir, newname, "dat" );
-         fstream  f_br2(Path_.c_str(), ios::out);
-         calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
-         f_br2.close();
-//         fout << ", \"" << newname.c_str() << ".dat\"";
-      }
-   }
- } // ii
- pVisor->CloseMessage();
- return path;
+    pVisor->CloseMessage();
+    return path;
 }
+
+// Writing dataCH, dataBR structure to binary/text files
+// and other necessary GEM2MT files
+gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
+                                       long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
+                                       bool putNodT1, bool addMui )
+{
+    fstream fout;
+    fstream fout2;
+    gstring Path_;
+    gstring dir;
+    gstring name;
+    gstring newname;
+    gstring path;
+    char buf[20];
+
+    path = filepath;
+    u_splitpath( path, dir, name, newname );
+
+    // get name
+    unsigned long int pos = name.rfind("-");
+    if( pos != gstring::npos )
+        name = name.substr(0, pos);
+
+    // making special files
+    // put data to pmfiles-bin.lst file
+    if( bin_mode )
+    {
+        fout.open(path.c_str(), ios::out);
+        fout << "-b \"" << name.c_str() << "-dch.bin\"";
+        fout << " \"" << name.c_str() << ".ipm\" ";
+    }
+    // put data to pmfiles-dat.lst file
+    else
+    {   fout.open(path.c_str(), ios::out);
+        fout << "-t \"" << name.c_str() << "-dch.dat\"";
+        fout << " \"" << name.c_str() << "-ipm.dat\" ";
+    }
+
+    gstring path2 = name;
+    path2 += "-dbr";
+    path2 = u_makepath( dir, path2, "lst" );
+    fout2.open(path2.c_str(), ios::out);
+
+    if( bin_mode )
+    {
+        //  putting MULTI to binary file
+        Path_ = u_makepath( dir, name, "ipm" );
+        GemDataStream  ff(Path_, ios::out|ios::binary);
+        TProfil::pm->outMulti( ff, Path_  );
+    }
+    else
+    {
+        // output MULTI to txt file
+        newname = name+"-ipm";
+        Path_ = u_makepath( dir, newname, "dat" );
+        TProfil::pm->outMulti( Path_, addMui,  with_comments, brief_mode );
+    }
+
+    // out dataCH to binary file
+    newname = name+"-dch";
+    if( bin_mode )
+    {  Path_ = u_makepath( dir, newname, "bin" );
+        GemDataStream  f_ch1(Path_, ios::out|ios::binary);
+        calcNode.datach_to_file(f_ch1);
+        f_ch1.close();
+    }
+    // out dataCH to text file
+    else
+    {  //newname = name+"-dch";
+        Path_ = u_makepath( dir, newname, "dat" );
+        fstream  f_ch2(Path_.c_str(), ios::out);
+        calcNode.datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
+        f_ch2.close();
+    }
+
+    nIV = min( nIV, nNodes() );
+    bool first = true;
+    for( long int ii = 0; ii < nIV; ii++ )
+    {
+        if( !NodT0[ii] )
+            continue;
+
+        message( "Writing to disk a set of node array files from interrupted RMT task. \nPlease, wait...", ii );
+        // Save databr
+        CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT0 );
+
+        sprintf( buf, "%4.4ld", ii );
+        // dataBR files - binary
+        if( bin_mode )
+        {
+            newname =  name + + "-dbr-0-"  + buf;
+            Path_ = u_makepath( dir, newname, "bin" );
+            GemDataStream  f_br1(Path_, ios::out|ios::binary);
+            calcNode.databr_to_file(f_br1);
+            f_br1.close();
+            if( first )
+                fout << " \"" << newname.c_str() << ".bin\"";
+            if( !first )
+                fout2 << ",";
+            fout2 << " \"" << newname.c_str() << ".bin\"";
+        }
+        else
+        {
+            newname = name + "-dbr-0-" + buf;
+            Path_ = u_makepath( dir, newname, "dat" );
+            fstream  f_br2(Path_.c_str(), ios::out);
+            calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
+            f_br2.close();
+            if( first )
+                fout << " \"" << newname.c_str() << ".dat\"";
+            if( !first )
+                fout2 << ",";
+            fout2 << " \"" << newname.c_str() << ".dat\"";
+        }
+        first = false;
+
+        if( putNodT1 && NodT1[ii]) // put NodT1[ii] data
+        {
+
+            // Save databr
+            CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT1 );
+
+            // dataBR files - binary
+            if( bin_mode )
+            {
+                newname =  name +  "-dbr-1-"  + buf;
+                Path_ = u_makepath( dir, newname, "bin" );
+                GemDataStream  f_br1(Path_, ios::out|ios::binary);
+                calcNode.databr_to_file(f_br1);
+                f_br1.close();
+                //         fout << ", \"" << newname.c_str() << ".bin\"";
+            }
+            else
+            {
+                newname = name + "-dbr-1-" + buf;
+                Path_ = u_makepath( dir, newname, "dat" );
+                fstream  f_br2(Path_.c_str(), ios::out);
+                calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
+                f_br2.close();
+                //         fout << ", \"" << newname.c_str() << ".dat\"";
+            }
+        }
+    } // ii
+
+    return path2; // dbr list file
+}
+
 
 #endif
 
@@ -869,34 +885,34 @@ AGAIN:
 
 void TNodeArray::allocMemory()
 {
-	long int ii;
+    long int ii;
 
     // The NodeArray must be allocated here
     /// calcNode = new TNode();
 
-// alloc memory for data bidge structures
-// did in constructor TNode::allocMemory();
+    // alloc memory for data bidge structures
+    // did in constructor TNode::allocMemory();
 
-// alloc memory for all nodes at current time point
+    // alloc memory for all nodes at current time point
     NodT0 = new  DATABRPTR[anNodes];
     for(  ii=0; ii<anNodes; ii++ )
-        NodT0[ii] = 0;
+        NodT0[ii] = nullptr;
 
-// alloc memory for all nodes at previous time point
+    // alloc memory for all nodes at previous time point
     NodT1 = new  DATABRPTR[anNodes];
     for(  ii=0; ii<anNodes; ii++ )
-        NodT1[ii] = 0;
+        NodT1[ii] = nullptr;
     
-// alloc memory for the work array of node types
+    // alloc memory for the work array of node types
     tcNode = new char[anNodes];
     for(  ii=0; ii<anNodes; ii++ )
-        tcNode[ii] = normal;    
-        
-// alloc memory for the work array of IA indicators
+        tcNode[ii] = normal;
+
+    // alloc memory for the work array of IA indicators
     iaNode = new bool[anNodes];
     for(  ii=0; ii<anNodes; ii++ )
         iaNode[ii] = true;
-// grid ?    
+    // grid ?
 }
 
 void TNodeArray::freeMemory()
@@ -909,13 +925,13 @@ void TNodeArray::freeMemory()
         if( NodT0[ii] )
            NodT0[ii] = calcNode.databr_free(NodT0[ii]);
      delete[]  NodT0;
-     NodT0 = 0;
+     NodT0 = nullptr;
      if( NodT1 )
        for(  ii=0; ii<anNodes; ii++ )
         if( NodT1[ii] )
           NodT1[ii] = calcNode.databr_free(NodT1[ii]);
      delete[]  NodT1;
-     NodT1 = 0;
+     NodT1 = nullptr;
    }
 
   if( grid )
@@ -937,11 +953,11 @@ TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):
     anNodes = nNod;
     sizeN = anNodes;
     sizeM = sizeK =1;
-    NodT0 = 0;  // nodes at current time point
-    NodT1 = 0;  // nodes at previous time point
-    grid  = 0;   // Array of grid point locations, size is anNodes+1
-    tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
-    iaNode = 0;
+    NodT0 = nullptr;  // nodes at current time point
+    NodT1 = nullptr;  // nodes at previous time point
+    grid  = nullptr;   // Array of grid point locations, size is anNodes+1
+    tcNode = nullptr;     // Node type codes (see DataBR.h) size anNodes+1
+    iaNode = nullptr;
     allocMemory();
     na = this;
 }
@@ -950,11 +966,11 @@ TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK, MULTI
 calcNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
 {
   anNodes = asizeN*asizeM*asizeK;
-  NodT0 = 0;  // nodes at current time point
-  NodT1 = 0;  // nodes at previous time point
-  grid  = 0;   // Array of grid point locations, size is anNodes+1
-  tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
-  iaNode = 0;
+  NodT0 = nullptr;  // nodes at current time point
+  NodT1 = nullptr;  // nodes at previous time point
+  grid  = nullptr;   // Array of grid point locations, size is anNodes+1
+  tcNode = nullptr;     // Node type codes (see DataBR.h) size anNodes+1
+  iaNode = nullptr;
   allocMemory();
   na = this;
 }
@@ -1056,7 +1072,7 @@ void TNodeArray::CopyWorkNodeFromArray( TNode& wrkNode, long int ii, long int nN
   copyValues( wrkNode.pCNode()->gam, arr_BR[ii]->gam, wrkNode.pCSD()->nDCb );
   if( pCSD()->nAalp >0 )
       copyValues( wrkNode.pCNode()->aPH, arr_BR[ii]->aPH, wrkNode.pCSD()->nPHb );
-  else  wrkNode.pCNode()->aPH = 0;
+  else  wrkNode.pCNode()->aPH = nullptr;
   copyValues( wrkNode.pCNode()->xPH, arr_BR[ii]->xPH, wrkNode.pCSD()->nPHb );
   copyValues( wrkNode.pCNode()->omPH, arr_BR[ii]->omPH, wrkNode.pCSD()->nPHb );
   copyValues( wrkNode.pCNode()->vPS, arr_BR[ii]->vPS, wrkNode.pCSD()->nPSb );
@@ -1132,7 +1148,7 @@ void TNodeArray::MoveWorkNodeToArray( TNode& wrkNode, long int ii, long int nNod
     copyValues( arr_BR[ii]->gam, wrkNode.pCNode()->gam, wrkNode.pCSD()->nDCb );
     if( wrkNode.pCSD()->nAalp >0 )
         copyValues( arr_BR[ii]->aPH, wrkNode.pCNode()->aPH, wrkNode.pCSD()->nPHb );
-    else  arr_BR[ii]->aPH = 0;
+    else  arr_BR[ii]->aPH = nullptr;
     copyValues( arr_BR[ii]->xPH, wrkNode.pCNode()->xPH, wrkNode.pCSD()->nPHb );
     copyValues( arr_BR[ii]->omPH, wrkNode.pCNode()->omPH, wrkNode.pCSD()->nPHb );
     copyValues( arr_BR[ii]->vPS, wrkNode.pCNode()->vPS, wrkNode.pCSD()->nPSb );

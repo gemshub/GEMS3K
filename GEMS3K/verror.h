@@ -55,8 +55,13 @@ struct TError
             title(titl)
     {}
 
-    virtual ~TError()
+    TError(const TError& other ):
+            mess(other.mess),
+            title(other.title)
     {}
+
+    virtual ~TError() = default;
+
 
 };
 
@@ -67,7 +72,7 @@ struct TFatalError:
     TFatalError()
     {}
 
-    TFatalError(TError& err):
+    TFatalError(const TError& err):
             TError(err)
     {}
 

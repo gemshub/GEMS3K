@@ -271,7 +271,7 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
 // More stuff here, if needed
 
     KinProCode = kmd.KinProCod_;
-    TKinMet* myKM = NULL;
+    TKinMet* myKM = nullptr;
 
    // creating instances of derived classes from the TKinMet base class
     switch( KinProCode )
@@ -280,7 +280,7 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
         {
                 TMWReaKin* myPT = new TMWReaKin( &kmd );
 //                myPT->GetPhaseName( pm.SF[k] );
-                myKM = (TKinMet*)myPT;
+                myKM = myPT;
                 break;
         }
         case KM_PRO_UPT_:  // Kinetics of uptake/entrapment (of minor/trace element) into solid solution
@@ -289,33 +289,33 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
              {
                 TUptakeKin* myPT = new TUptakeKin( &kmd, pm.LsUpt[k*2], pm.N, pm.UMpcC+ku, pm.xICuC+ki,
                         pm.IC_m, pm.emRd+jb, pm.emDf+jb );
-                myKM = (TKinMet*)myPT;
+                myKM = myPT;
              }
              break;
         }
         case KM_PRO_IEX_:  // Kinetics of ion exchange (clays, C-S-H, zeolites, ...)
         {
                 TIonExKin* myPT = new TIonExKin( &kmd );
-                myKM = (TKinMet*)myPT;
+                myKM = myPT;
                 break;
         }
         case KM_PRO_ADS_:  // Kinetics of adsorption (on MWI), redox
         {
                 TAdsorpKin* myPT = new TAdsorpKin( &kmd );
-                myKM = (TKinMet*)myPT;
+                myKM = myPT;
                 break;
         }
         case KM_PRO_NUPR_:  // Kinetics of nucleation followed by precipitation
         {
            // new:new: array of nucleation model parameters here (A.Testino?)
                 TNucleKin* myPT = new TNucleKin( &kmd );
-                myKM = (TKinMet*)myPT;
+                myKM = myPT;
                 break;
         }
 
         // case KM_USERDEF:
         default:
-            myKM = NULL;
+            myKM = nullptr;
         	break;
     }
     if(phKinMet[k])
@@ -335,14 +335,14 @@ TMulti::KM_ParPT( long int k, const char* kMod )
         case KM_PRO_MWR_:
         {
             ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
-            TMWReaKin* myKM = (TMWReaKin*)phKinMet[k];
+            TMWReaKin* myKM = dynamic_cast<TMWReaKin*>(phKinMet[k]);
              myKM->PTparam( pm.Tc, pm.Pc );
              break;
         }
         case KM_PRO_UPT_:
         {
             ErrorIf( !phKinMet[k], "KinMetParPT: ","Invalid index of phase");
-            TUptakeKin* myKM = (TUptakeKin*)phKinMet[k];
+            TUptakeKin* myKM = dynamic_cast<TUptakeKin*>(phKinMet[k]);
             myKM->PTparam( pm.Tc, pm.Pc );
             myKM->UptKinPTparam( pm.Tc, pm.Pc );
             break;

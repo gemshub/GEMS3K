@@ -29,8 +29,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef _DataBr_H_
-#define _DataBr_H_
+#ifndef DataBr_H_
+#define DataBr_H_
 
 
 
@@ -209,5 +209,5 @@ f_mPH, f_vPH, f_m_t, f_con, f_mju, f_lga
 #endif
 
 // -----------------------------------------------------------------------------
-// end of _DataBr_h
+// end of DataBr_h
 

@@ -30,6 +30,9 @@
 #include "m_param.h"
 #include "node.h"
 #include "num_methods.h"
+#include "activities.h"
+#include "kinetics.h"
+
 
 #ifdef IPMGEMPLUGIN
 enum volume_code {  // Codes of volume parameter ???
@@ -1090,7 +1093,6 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 
 #ifndef IPMGEMPLUGIN
   TNode* na;
-  double T;
   if( aNa )
    na = aNa;// for reading GEMIPM files task
   else

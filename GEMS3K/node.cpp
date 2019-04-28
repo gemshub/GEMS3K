@@ -29,6 +29,10 @@
 #include "node.h"
 #include "gdatastream.h"
 #include "num_methods.h"
+#include "kinetics.h"
+#include "activities.h"
+
+
 #include <cmath>
 #include <algorithm>
 

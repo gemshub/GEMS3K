@@ -89,13 +89,13 @@ void i_refvec<T>::copy_(T* p, const T* q, const T* e)
 }
 
 template <class T>
-i_refvec<T>::i_refvec() : data_(NULL), ref_count_(NULL) {}
+i_refvec<T>::i_refvec() : data_(NULL), ref_count_(nullptr) {}
 
 /**
 	In case n is 0 or negative, it does NOT call new. 
 */
 template <class T>
-i_refvec<T>::i_refvec(int n) : data_(NULL), ref_count_(NULL)
+i_refvec<T>::i_refvec(int n) : data_(NULL), ref_count_(nullptr)
 {
 	if (n >= 1)
 	{
@@ -118,7 +118,7 @@ inline	 i_refvec<T>::i_refvec(const i_refvec<T> &V): data_(V.data_),
 
 
 template <class T>
-i_refvec<T>::i_refvec(T* data) : data_(data), ref_count_(NULL) {}
+i_refvec<T>::i_refvec(T* data) : data_(data), ref_count_(nullptr) {}
 
 template <class T>
 inline T* i_refvec<T>::begin()

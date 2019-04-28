@@ -30,8 +30,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //------------------------------------------------------------------------------
 //
-#ifndef _DataCh_H_
-#define _DataCh_H_
+#ifndef DataCh_H_
+#define DataCh_H_
 
 const long int
     MaxICN =      6,      // IC name length

@@ -318,6 +318,47 @@ protected:
     bool NewProfileMode( bool remakeRec, gstring& key_templ );
     bool NewProfileModeElements( bool remakeRec, gstring& key_templ );
     void CalcAllSystems(int makeDump);
+
+
+    /// Dump all Systems&Processes to GEMS3K module
+    /// \param calcMode - system calculate mode: 0 - no calculation; 2- NEED_GEM_SIA; 1-NEED_GEM_AIA
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
+    void GEMS3KallSystems(int makeCalc, bool brief_mode=true, bool add_mui = false);
+
+    /// Generate for current loaded system MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param filepath - IPM work structure file path&name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
+    void CurrentSystem2GEMS3K( const gstring& filepath, bool brief_mode, bool add_mui = false );
+
+    /// Load&Calculate system and Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param key - loads system record before generate
+    /// \param calcMode - system calculate mode: 0 - no calculation; 2- NEED_GEM_SIA; 1-NEED_GEM_AIA
+    /// \param filepath - IPM work structure file path&name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
+    void System2GEMS3K( const gstring key, int calcMode, const gstring& filepath, bool brief_mode, bool add_mui = false );
+
+    /// For all systems in project generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param savedSystems - system records key to be ignored
+    /// \param calc_mode - system calculate mode: 0 - no calculation; 2- NEED_GEM_SIA; 1-NEED_GEM_AIA
+    /// \param files_dir - IPM work structure directory name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
+    void allSystems2GEMS3K( TCStringArray& savedSystems, int calc_mode, const gstring& files_dir, bool brief_mode, bool add_mui = false);
+
+    /// For all processes in project generate MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+    /// \param savedSystems - system records key to be ignored
+    /// \param files_dir - IPM work structure directory name
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
+    void allProcess2GEMS3K( TCStringArray& savedSystems, const gstring& files_dir, bool brief_mode, bool add_mui = false );
+
     void SaveOldList();
     void DeleteOldList();
     void TestChangeProfile();
@@ -354,7 +395,7 @@ public:
 
     SPP_SETTING pa;
 
-    TProfil( int nrt );
+    TProfil( uint nrt );
     void InitSubModules();
 
     const char* GetName() const
@@ -376,7 +417,7 @@ public:
 
     // work with Project
     bool initCalcMode( const char * profileKey );
-    void loadSystat( const char *key=0 );
+    void loadSystat( const char *key=nullptr );
     void newSystat( int mode );
     void deriveSystat();
     void PackSystat();
@@ -405,7 +446,7 @@ public:
 
     // Proces make functions
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
-     tget_ndx *get_ndx = 0 )
+      tget_ndx *get_ndx = nullptr )
      { multi->ET_translate( nOet, nOpex, JB, JE, jb, je, get_ndx); }
     void getNamesList( int nO, TCStringArray& lst )
      { multi->getNamesList(nO, lst); }

@@ -52,6 +52,8 @@ typedef int (tget_ndx)( int nI, int nO, int Xplace );
 #include "s_sorpmod.h"
 #include "s_kinmet.h"
 
+class GemDataStream;
+
 typedef struct
 {  // MULTI is base structure to Project (local values)
   char
@@ -719,10 +721,12 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
 
+
 public:
     TNode *node;
 
-    void set_def( long int i=0);
+
+    void set_def( int i=0);
 
 #ifndef IPMGEMPLUGIN
 
@@ -738,7 +742,7 @@ public:
 //      Free_TSolMod();     // Added 06.05.2011 DK - possible bugfix
        Free_internal();
        Free_uDD();
-    };
+    }
 
     void ods_link( int i=0);
     void dyn_set( int i=0);
@@ -757,7 +761,7 @@ public:
     void MultiKeyInit( const char*key );
     void EqstatExpand( /*const char *key,*/  bool calcActivityModels/*, bool calcKineticModels*/ );
     void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
-     tget_ndx *get_ndx = 0 );
+     tget_ndx *get_ndx = nullptr );
     void getNamesList( int nO, TCStringArray& lst );
 
    class UserCancelException {};
@@ -772,29 +776,29 @@ public:
      pmp = &pm;
      node = na_; // parent
      sizeN = 0;
-     AA = 0;
-     BB = 0;
-     arrL = 0;
-     arrAN = 0;
+     AA = nullptr;
+     BB = nullptr;
+     arrL = nullptr;
+     arrAN = nullptr;
 
- U_mean = 0;
- U_M2 = 0;
- U_CVo = 0;
- U_CV = 0;
- ICNud = 0;
+ U_mean = nullptr;
+ U_M2 = nullptr;
+ U_CVo = nullptr;
+ U_CV = nullptr;
+ ICNud = nullptr;
 
      sizeFIs = 0;
-     phSolMod = 0;
+     phSolMod = nullptr;
      sizeFIa = 0;
-     phSorpMod = 0;
+     phSorpMod = nullptr;
      sizeFI = 0;
-     phKinMet = 0;
+     phKinMet = nullptr;
 
-     pmp->Guns = 0;
-     pmp->Vuns = 0;
-     pmp->tpp_G = 0;
-     pmp->tpp_S = 0;
-     pmp->tpp_Vm = 0;
+     pmp->Guns = nullptr;
+     pmp->Vuns = nullptr;
+     pmp->tpp_G = nullptr;
+     pmp->tpp_S = nullptr;
+     pmp->tpp_Vm = nullptr;
 
      load = false;
    }
@@ -856,10 +860,10 @@ public:
     void Alloc_internal();
 double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
-    void DC_LoadThermodynamicData( TNode* aNa = 0 );
+    void DC_LoadThermodynamicData( TNode* aNa = nullptr );
     //DM 25.02.2014
     void Access_GEM_IMP_init();
-    int get_sizeFIs () {return sizeFIs;}
+    long get_sizeFIs () {return sizeFIs;}
     // acces for node class
     TSolMod * pTSolMod (int xPH);
 
@@ -870,6 +874,19 @@ double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, lo
 
     double HelmholtzEnergy( double x );
     double InternalEnergy( double TC, double P );
+
+    ///  Writes the contents of the work instance of the DATABR structure into a disk file with path name  fname.
+    ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
+    ///                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
+    ///                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
+    ///   \param binary_f      defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task
+    ///                 if called in the loop for each node), or in text format (false or 0, default).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written.
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void  GEMS3k_write_dbr( const char* fname,  bool binary_f=false,
+                              bool with_comments = true, bool brief_mode = false);
 
 };
 

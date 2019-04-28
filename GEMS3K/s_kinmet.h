@@ -473,7 +473,7 @@ class TMWReaKin: public TKinMet  // Generic MWR kinetics models no nucleation/up
             }
 
             // Destructor
-            ~TMWReaKin(){}
+            ~TMWReaKin();
 
             // Initializes uptake rates
             bool SSReaKinInit();
@@ -547,7 +547,7 @@ class TIonExKin: public TKinMet  // Ion exchange (layered) kinetics model TBD
     }
 
     // Destructor
-    ~TIonExKin(){}
+    ~TIonExKin();
 
     // Calculates ion exchange rates
     long int IonExRatesMod();
@@ -575,7 +575,7 @@ class TAdsorpKin: public TKinMet  // Adsorption (layered) kinetics model TBD
     }
 
     // Destructor
-    ~TAdsorpKin(){}
+    ~TAdsorpKin();
 
     // Calculates uptake rates
     long int AdsorpRatesMod();
@@ -604,7 +604,7 @@ class TNucleKin: public TKinMet  // Mineral nucleation/growth kinetics models TB
     }
 
     // Destructor
-    ~TNucleKin(){}
+    ~TNucleKin();
 
     // Calculates uptake rates
     long int NucleGrowthMod();

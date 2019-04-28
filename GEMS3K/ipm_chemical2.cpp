@@ -1104,8 +1104,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                      /pm.Aalp[k]/1.66054; // Density per nm2 on site type iss
                 if( pa->p.PC <= 2 )
                     rIEPS = pa->p.IEPS * xj0; // relative IEPS
-                if(xj >= xj0/(double)dent)
-                     xj = xj0/(double)dent - rIEPS;  // upper limit
+                if(xj >= xj0/static_cast<double>(dent) )
+                     xj = xj0/static_cast<double>(dent) - rIEPS;  // upper limit
 //                ISAT = 0.0;
                 q2 = xj0 - xj*dent;  // Computing differences in QCA gamma
                 q1 = xj0 - xj;

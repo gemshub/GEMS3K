@@ -28,6 +28,7 @@
 #define _num_methods_h_
 
 #include <cmath>
+#include <algorithm>
 
 // Calculate number of points from iterators
 long int  getNpoints( double Tai[4] );
@@ -82,8 +83,8 @@ struct GoldenSectionData
       Xtol = Xtol_;
       x1 = xstart;
       x2 = xend;
-      a = min( x1, x2 );
-      b = max( x1, x2 );
+      a = std::min( x1, x2 );
+      b = std::max( x1, x2 );
    }
 
  };
@@ -109,6 +110,9 @@ public:
   {
     minF = f_proc;
   }
+
+  virtual ~GoldenSection( )
+  {  }
 
   virtual double calcFunction( double x, double y )
   {

@@ -29,16 +29,18 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef _Activity_H_
-#define _Activity_H_
+#ifndef Activity_H_
 
-#include "node.h"
-//#include "datach.h"
-//#include "databr.h"
-//#include "s_solmod.h"
-//#include "s_sorpmod.h"
-//#include "m_const.h"
+#define Activity_H_
 
+//#include "node.h"
+#include "datach.h"
+#include "databr.h"
+#include "s_solmod.h"
+#include "s_sorpmod.h"
+#include "m_const.h"
+
+class TNode;
 /*
 const double R_CONSTANT = 8.31451,
               NA_CONSTANT = 6.0221367e23,
@@ -409,8 +411,8 @@ public:
 };
 
 
-#endif
 
+#endif
 // -----------------------------------------------------------------------------
-// end of _Activity_h
+// end of Activity_h
 

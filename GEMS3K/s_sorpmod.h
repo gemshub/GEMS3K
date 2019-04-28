@@ -330,22 +330,22 @@ double q_Cst;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent
     virtual long int SorptionSpecies()
     {
             return 0;
-    };
+    }
 
     virtual long int PTparam()
     {
             return 0;
-    };
+    }
 
     virtual long int IsothermMod()
     {
             return 0;
-    };
+    }
 
     virtual long int ElstatMod()
     {
             return 0;
-    };
+    }
 /*
     virtual long int ExcessProp( double *Zex )
     {
