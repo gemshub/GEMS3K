@@ -8,7 +8,7 @@
 TEMPLATE	= lib
 LANGUAGE	= C++
 TARGET		= gems3k
-VERSION		= 3.1.0
+VERSION		= 3.4.6
 
 CONFIG		-= qt
 CONFIG		+= warn_on

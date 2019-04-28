@@ -1,10 +1,10 @@
-#  qmake project file for the node-gem example (part of GEMS3K standalone code)
-# © 2012 GEMS Developer Team
+﻿#  qmake project file for the node-gem example (part of GEMS3K standalone code)
+# © 2012-2019 GEMS Developer Team
  
 TEMPLATE = app
 LANGUAGE = C++
 TARGET = node-gem
-VERSION = 3.1.0
+VERSION = 3.4.6
 
 CONFIG -= qt
 CONFIG += warn_on

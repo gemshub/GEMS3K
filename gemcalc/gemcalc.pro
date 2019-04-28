@@ -1,10 +1,10 @@
 #  qmake project file for the gemcalc example (part of GEMS3K standalone code)
-# (c) 2012 GEMS Developer Team
+# (c) 2012-2019 GEMS Developer Team
  
 TEMPLATE = app
 LANGUAGE = C++
 TARGET = gemcalc
-VERSION = 3.1.0
+VERSION = 3.4.6
 
 CONFIG -= qt
 CONFIG -= warn_on
