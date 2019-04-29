@@ -43,7 +43,7 @@
 int main( int argc, char* argv[] )
  {
    long nRecipes = 0;
-   char (*recipes)[fileNameLength] = 0;
+   char (*recipes)[fileNameLength] = nullptr;
    
    // Analyzing command line arguments
    // Default arguments
@@ -54,7 +54,7 @@ int main( int argc, char* argv[] )
        strncpy( input_system_file_list_name, argv[1], 256);
    // list of DCH, IPM and DBR input files for initializing GEMS3K
    
-   // Creates TNode structure instance accessible trough the "node" pointer
+   // Creates TNode structure instance accessible through the "node" pointer
    TNode* node  = new TNode();
   
    // (1) Initialization of GEMS3K internal data by reading  files
@@ -93,19 +93,24 @@ int main( int argc, char* argv[] )
    // Asking GEM to run with automatic initial approximation 
    dBR->NodeStatusCH = NEED_GEM_AIA;
 
-node->GEM_print_ipm( "BeforeCalcPhase.txt" );   // possible debugging printout
+//node->Ph_Enthalpy(0);
+//node->Ph_Enthalpy(1);
+//node->Ph_Enthalpy(2);
+//node->Ph_Enthalpy(3);
+
+   node->GEM_print_ipm( "BeforeCalcPhase.txt" );   // possible debugging printout
 
 // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
    long NodeStatusCH = node->GEM_run( false );
 
    if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  )
    {    // (3) Writing results in default DBR file
-       node->GEM_write_dbr( NULL, false, true, false );
+       node->GEM_write_dbr( nullptr, false, true, false );
 node->GEM_print_ipm( "AfterCalcPhase.txt" );   // possible debugging printout
    }
    else {
       // (4) possible return status analysis, error message
-       node->GEM_print_ipm( NULL );   // possible debugging printout
+       node->GEM_print_ipm( nullptr );   // possible debugging printout
        return 5; // GEM IPM did not converge properly - error message needed
    }
    cout << "SatIndx aq" << node->Ph_SatInd(0) << " gas " << node->Ph_SatInd(1) << " s1 " << node->Ph_SatInd(2)
@@ -179,7 +184,7 @@ return 0;
    }	 
    // end of possible loop on input recipes
    delete node;
-   if( recipes ) delete recipes;
+   if( recipes ) delete[] recipes;
 
  // End of example  
    return 0; 
