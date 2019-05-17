@@ -1300,7 +1300,9 @@ TUptakeKin::UptakeInit()
        spcfl[j] = arWx[j];
      Rdj[j] = arWx[j]/arElm[i];
      Rd_rest = (1.-arWx[j])/(molSum-arElm[i]);
-     Dfj[j] = Rdj[j]/Rd_rest;
+     if( fabs(Rd_rest) >1e-20  )
+            Dfj[j] = Rdj[j]/Rd_rest;
+     //cout << "Rd_rest(UptakeInit) = " << Rd_rest << "  Dfj[j] = " <<  Dfj[j]<< endl;
     }
     return false;
 }
@@ -1373,7 +1375,9 @@ TUptakeKin::UptakeMod()
                 // Rd and Df calculation (on the bulk basis)
                 Rdj[j] = spcfu[j]/arElm[i];
                 Rd_rest = (1-spcfu[j])/(molSum-arElm[i]);
-                Dfj[j] = Rdj[j]/Rd_rest;
+                if( fabs(Rd_rest) >1e-20 )
+                    Dfj[j] = Rdj[j]/Rd_rest;
+                //cout << "Rd_rest(UptakeMod) = " << Rd_rest << "  Dfj[j] = " <<  Dfj[j]<< endl;
                 // Other ways of Dfj calculation are possible!
             }
             break;
