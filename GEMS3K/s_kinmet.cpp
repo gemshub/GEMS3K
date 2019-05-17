@@ -291,12 +291,12 @@ TKinMet::init_arPRt()
             arPRt[xj].rpCon = arrpCon[xj];
             if( nSkr && naptC )
                 arPRt[xj].apCon = arapCon[xj];
-            else arPRt[xj].apCon = NULL;
+            else arPRt[xj].apCon = nullptr;
             // work data: unpacked rpCon[nrpC]
             if( nrpC >=4 )
             {
                 arPRt[xj].ko = arPRt[xj].rpCon[0];  /// rate constant at standard temperature (mol/m2/s)
-                arPRt[xj].Ko = arPRt[xj].rpCon[1];  /// rate constant at standard temperature (mol/m2/s)
+                arPRt[xj].Ko = arPRt[xj].rpCon[1];  /// gross rate constant at standard temperature (mol/m2/s)
                 arPRt[xj].Ap = arPRt[xj].rpCon[2];  /// Arrhenius parameter
                 arPRt[xj].Ea = arPRt[xj].rpCon[3];  /// activation energy at st.temperature J/mol
             }
@@ -672,7 +672,7 @@ if( rk.xPR != r )     // index of this parallel reaction
         {
             j = rk.xSKr[xj];
             bc = rk.apCon[xj][0];
-            if( bc )
+            if( bc  != 0.0 )
             {
                 aj = pow( 10., arla[j] );  // bugfix 4.10.2013 DK
                 ajp = pow( aj, bc );
@@ -680,15 +680,15 @@ if( rk.xPR != r )     // index of this parallel reaction
             }
         }
    }
-   if( rk.pPR )
+   if( rk.pPR != 0.0 )
        rk.cat = pow( rk.cat, rk.pPR );
-   if( rk.bI )
+   if( rk.bI  != 0.0 )
        rk.cat *= pow( IS, rk.bI );
-   if( rk.bpH )
+   if( rk.bpH != 0.0 )
        rk.cat *= pow( pH, rk.bpH );
-   if( rk.bpe )
+   if( rk.bpe != 0.0 )
        rk.cat *= pow( pe, rk.bpe );
-   if( rk.bEh )
+   if( rk.bEh != 0.0 )
        rk.cat *= pow( Eh, rk.bEh );
 
    // affinity term (f(Omega))
@@ -712,13 +712,13 @@ if( rk.xPR != r )     // index of this parallel reaction
 //       rk.aft *= -1.;
        break;
     case ATOP_SCHOTT_: // = 2,      Schott et al. 2012 fig. 1e
-       if( OmPh )
+       if( OmPh  != 0.0 )
            rk.aft = exp( -rk.uPR/OmPh );
        else
            rk.aft = 0.;
        break;
     case ATOP_HELLMANN_: // = 3,    Hellmann Tisserand 2006 eq 9
-       if( OmPh )
+       if( OmPh  >= 0.0 )
        {
           atp = pow( rk.qPR*log( OmPh ), rk.uPR );
           rk.aft = 1 - exp( -atp );
@@ -728,7 +728,7 @@ if( rk.xPR != r )     // index of this parallel reaction
        }
        break;
     case ATOP_TENG1_: // = 4,       Teng et al. 2000, eq 13
-       if( OmPh )
+       if( OmPh  >= 0.0 )
            atp = log( OmPh );
        else
            atp = 0.;
@@ -1343,12 +1343,12 @@ TUptakeKin::UptakeMod()
                     continue; // not a minor/trace element
                 }
                 // Minor/trace component
-                FTr =    arUmpCon[j][0];  // d-less
-                DelTr0 = arUmpCon[j][1];  // eq tr fract.coeff.
-                Ds =     arUmpCon[j][2];  // in nm2/s
-                //Dl =     arUmpCon[j][3];  // in nm2/s
-                l =      arUmpCon[j][4];  // in nm
-                m =      arUmpCon[j][5];  // d-less
+                FTr =    arUmpCon[j][0];  // FTr:    surface enrichment factor, dimensionless
+                DelTr0 = arUmpCon[j][1];  // DelTr0: trace element fractionation coefficient in ssas equilibrium
+                Ds =     arUmpCon[j][2];  // Ds:     effective diffusivity of trace element in surface layer, in nm2/s
+              //Dl =     arUmpCon[j][3];  // Dl:     effective diffusivity of trace element in crystal lattice, in nm2/s
+                l =      arUmpCon[j][4];  // l:      effective thickness of the surface layer, in nm
+                m =      arUmpCon[j][5];  // m:      d-less multiplier to effective thickness l, dimensionless
 
                 // Calculate orthogonal linear rate
                 Vml = -vTot * m * l * 1e9;     // here vTot is in m/s and Vml is in nm2/s

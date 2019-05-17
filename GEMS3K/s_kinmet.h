@@ -147,7 +147,6 @@ double sFact_;   /// phase surface area - volume shape factor ( >= 4.836 for sph
     double *arrpCon_;  /// Pointer to input array of kinetic rate constants for faces and 'parallel reactions' [nPRk*nrpC] read-only
     double *arapCon_;  /// Pointer to array of parameters per species involved in 'activity product' terms [nPRk * nSkr*naptC] read-only
     double *arAscp_;   /// Pointer to array of parameter coefficients of equation for correction of specific surface area [nAscC] read-only
-    // new:new: array of nucleation model parameters (A.Testino?)
 
     char  (*SM_)[MAXDCNAME_];  /// pointer to the classifier of DCs involved in sorption phase [NComp] read-only
     char  *arDCC_;       /// pointer to the classifier of DCs involved in the phase [NComp] read-only
