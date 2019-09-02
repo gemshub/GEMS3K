@@ -32,7 +32,7 @@
 
 // Calculate number of points from iterators
 long int  getNpoints( double Tai[4] );
-double    getStep( double *Tai, int nPoints );
+double    getStep( double *Tai, long int nPoints );
 
 
 // Lagrangian interpolation functions

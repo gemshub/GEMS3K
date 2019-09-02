@@ -36,7 +36,7 @@ long int  getNpoints( double Tai[4] )
   if( fabs(Tai[2]) <= 1e-30 )
           nPoints = 1;
   else
-          nPoints = (long int)( (Tai[1]-Tai[0]) / Tai[2] )+1;
+          nPoints = static_cast<long int>( (Tai[1]-Tai[0]) / Tai[2] )+1;
 
   if( nPoints < 1 )
      nPoints = 1;
@@ -44,14 +44,14 @@ long int  getNpoints( double Tai[4] )
    return nPoints;
 }
 
-double getStep( double *Tai, int nPoints )
+double getStep( double *Tai, long int nPoints )
 {
   double step;
 
   if( nPoints <=1 )
    step = (Tai[1]-Tai[0]);
   else
-    step = (Tai[1]-Tai[0])/(double)(nPoints-1);
+    step = (Tai[1]-Tai[0])/(static_cast<double>(nPoints-1));
   return step;
 }
 
