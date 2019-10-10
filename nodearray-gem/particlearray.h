@@ -119,7 +119,7 @@ class TParticleArray
 
    void freeMemory();
    LOCATION setPointInNode( LOCATION nodeSize[2] );
-   double InterpolationVp_hDl_1D( long int px,double& vp, double& al, double& Dif );
+   double InterpolationVp_hDl_1D( long int px,double& vp, double& al, double& Dif, double& Dpm );
 
   // Important for masstransport step
   // Calculation of new particle locations
