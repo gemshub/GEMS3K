@@ -84,13 +84,13 @@ struct TFatalError:
 
 
 inline
-void Error(const gstring& title, const gstring& message)
+void Error (const gstring& title, const gstring& message)
 {
     throw TError(title, message);
 }
 
 inline
-void ErrorIf(bool error, const gstring& title, const gstring& message)
+void ErrorIf (bool error, const gstring& title, const gstring& message)
 {
     if(error)
         throw TError(title, message);
