@@ -1246,7 +1246,7 @@ class TCEFmod: public TSolMod
                 long int IdealMixing(); // NSergii: added by Nichenko to rewrite the ideal part contribution
                 long int CalcSiteFractions(); // NSergii:
                 long int SLatt(const long int m);
-                double Gmix(); // NSergii:
+                double Hmix(); // NSergii:
                 double Gref();
                 double idealSmix();
         public:
