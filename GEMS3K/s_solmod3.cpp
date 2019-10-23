@@ -2789,31 +2789,42 @@ double TCEFmod::PYproduct( const long int j ) {
 
 double TCEFmod::RefFrameTerm( const long int i, const double G_ref )
 {
-    long int j, s, m;
-    double sum_s, dgm_dysis, dgm_dyjs, reftj; //NSergii
+    long int j, s, m, nmem;
+    double sum_s, sum_m, dgm_dysis, dgm_dyjs, reftj; //NSergii
 
     sum_s = 0.0;
     dgm_dysis = 0.0;
     dgm_dyjs  = 0.0;
 
     for( s = 0; s < NSub; s++ ) { // Looking through moieties
+        if( NmoS[s] < 2L )
+            continue; // no reciprocal contribution from sublattices with one moiety
 
-        dgm_dysis += dGr_dysi(i, s, -1);
+        dgm_dysis = dGr_dysi(i, s, -1);
+        sum_s += dgm_dysis;
 
-        for ( j = 0; j < NComp; j++) {
-            if (j != i) {
-                for( m=0; m < NMoi; m++ ) { // Looking through moieties
-                    if ( KronDelta(j, s, m) ) { // If the moiety is a part of compound j
-                        dgm_dyjs  += y[s][m] * oGf[i];
+        sum_m = 0.0;
+        for( m=0; m < NMoi; m++ ) { // Looking through moieties
+            dgm_dyjs  = 0.0;
+
+            nmem = em_howmany( s, m );
+            if( nmem == NComp )
+                continue;  // ignoring the moiety which is present in all end members
+
+            for ( j = 0; j < NComp; j++) {
+                //if (j != i) {
+                    if ( KronDelta(j, s, m) & (y[s][m] > 1.0e-24)) { // If the moiety is a part of compound j
+                        dgm_dyjs  += pyp[j] / y[s][m] * oGf[j];
                     }
-                }
+                //}
             }
+            sum_m += y[s][m] * dgm_dyjs;
         }
-
-        sum_s = dgm_dysis - dgm_dyjs;
+        sum_s -= sum_m;
     }
 
     reftj = G_ref + sum_s;
+
     return reftj;
 }
 
@@ -2851,6 +2862,7 @@ double TCEFmod::dGr_dysi( const long int i, const long int s, const long int ex_
     } // l
     return dsum;
 }
+
 
 /// CEF: calculates part of activity coefficients related to reciprocal energies
 /// (interactions between moieties on different sublattices)
