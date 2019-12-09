@@ -124,6 +124,7 @@ IsSpace(char ch)
 
 void StripLine(gstring& line);
 void KeyToName(gstring& line);
+TCStringArray split(const gstring& str, const gstring& delimiters);
 
 // Added by SD on 22/12/2001
 // Change string on templates
