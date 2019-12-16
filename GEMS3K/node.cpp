@@ -269,30 +269,30 @@ long int TNode::GEM_run( bool uPrimalSol )
     }
 
    }
-   catch(TError& err)
+  catch(TError& err)
+  {
+   if( profil->pa.p.PSM  )
    {
-    if( profil->pa.p.PSM  )
-	{
-        fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
-        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-          err.title.c_str() << ":" << endl;
-       if( profil->pa.p.PSM >= 2  )
-          f_log  << err.mess.c_str() << endl;
-	}
-    if( CNode->NodeStatusCH  == NEED_GEM_AIA )
-      CNode->NodeStatusCH = ERR_GEM_AIA;
-    else
-      CNode->NodeStatusCH = ERR_GEM_SIA;
-
+       fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
+       f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
+         err.title.c_str() << ":" << endl;
+      if( profil->pa.p.PSM >= 2  )
+         f_log  << err.mess.c_str() << endl;
    }
-   catch(...)
-   {
-    fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
-    f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-                << "gems3: Unknown exception: GEM calculation aborted" << endl;
-    CNode->NodeStatusCH = T_ERROR_GEM;
-    }
-   return CNode->NodeStatusCH;
+   if( CNode->NodeStatusCH  == NEED_GEM_AIA )
+     CNode->NodeStatusCH = ERR_GEM_AIA;
+   else
+     CNode->NodeStatusCH = ERR_GEM_SIA;
+
+  }
+  catch(...)
+  {
+   fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
+   f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
+               << "gems3: Unknown exception: GEM calculation aborted" << endl;
+   CNode->NodeStatusCH = T_ERROR_GEM;
+   }
+  return CNode->NodeStatusCH;
 }
 
 // Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() -

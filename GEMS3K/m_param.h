@@ -475,12 +475,21 @@ public:
    void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path,  DATACH  *dCH );
-   void CmReadMulti( QWidget* par, const char* path );
+   void CmReadMulti( const char* path );
    double ComputeEquilibriumState( /*long int& NumPrecLoops,*/ long int& NumIterFIA, long int& NumIterIPM );
    //long int testMulti( );
    bool CompareProjectName( const char* SysKey );
    void ChangeTPinKey( double T, double P );
    void SetSysSwitchesFromMulti( );
+
+
+   // new Reactoro
+   /// Run process of calculate equilibria into the GEMSGUI shell
+   double CalculateEquilibriumGUI( const gstring& path);
+
+   /// Run process of calculate equilibria into the GEMS3K side
+   double CalculateEquilibriumServer( const gstring& path );
+
 };
 
 /* Work codes of surface site types in pm->AtNdx vector (compatibility with old-style SCMs *

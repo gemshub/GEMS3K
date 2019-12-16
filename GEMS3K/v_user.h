@@ -84,30 +84,33 @@ void copyValues( T* arr, T* data, IT size )
     arr[ii] = data[ii];
 }
 
+template <class IT>
 inline
-void copyValues( double* arr, float* data, int size )
+void copyValues( double* arr, float* data, IT size )
 {
   if( !arr || !data )
     return;
-  for(int ii=0; ii<size; ii++)
+  for(IT ii=0; ii<size; ii++)
     arr[ii] = static_cast<double>(data[ii]);
 }
 
+template <class IT>
 inline
-void copyValues( float* arr, double* data, int size )
+void copyValues( float* arr, double* data, IT size )
 {
   if( !arr || !data )
     return;
-  for(int ii=0; ii<size; ii++)
+  for(IT ii=0; ii<size; ii++)
     arr[ii] = static_cast<float>(data[ii]);
 }
 
+template <class IT>
 inline
-void copyValues( long int* arr, short* data, int size )
+void copyValues( long int* arr, short* data, IT size )
 {
   if( !arr || !data )
     return;
-  for(int ii=0; ii<size; ii++)
+  for(IT ii=0; ii<size; ii++)
     arr[ii] = static_cast<long int>(data[ii]);
 }
 
