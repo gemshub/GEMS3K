@@ -371,8 +371,10 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
          { // loop on solution phases
             jb = je;
             je += pm.L1[k];
-            //  if( pm.L1[k] == 1 )  SD 13/12/19
-            //     continue;
+            if( pm.L1[k] == 1 && !( pm.PHC[k] == PH_GASMIX ||
+                                    pm.PHC[k] == PH_PLASMA ||
+                                    pm.PHC[k] == PH_FLUID ))  // SD 13/12/19
+                 continue;
             // Indexes for extracting data from IPx, PMc and DMc arrays
             ipb = ipe;
             ipe += pm.LsMod[k*3]*pm.LsMod[k*3+1];
