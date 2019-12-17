@@ -475,7 +475,7 @@ public:
    void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff );
    void readMulti( const char* path,  DATACH  *dCH );
-   void CmReadMulti( const char* path );
+   void CmReadMulti( const char* path, bool new_ipm = false );
    double ComputeEquilibriumState( /*long int& NumPrecLoops,*/ long int& NumIterFIA, long int& NumIterIPM );
    //long int testMulti( );
    bool CompareProjectName( const char* SysKey );
