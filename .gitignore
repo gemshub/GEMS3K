@@ -4,6 +4,14 @@ install/
 cgems/
 GEMS3K/ms_multi_new.h
 GEMS3K/s_fgl_new.h
+gemserver-build/Makefile.*
+gemserver-build/Makefile
+gemserver-build/obj
+gemcalc-build/gems3_server.app
+gemserver-build/.qmake.*
+gemserver-build/gems3_server
+gemserver/*.pro.user
+gemserver/*.pro.user.*
 gemcalc-build/Makefile.*
 gemcalc-build/Makefile
 gemcalc-build/obj
