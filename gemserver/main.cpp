@@ -69,15 +69,17 @@ int main () {
 
         //  Wait for next request from client
         socket.recv (request, rsv_flag);
-        std::cout << "Received: " << request.str() << std::endl;
+        string path = string( static_cast<const char*>(request.data()));
+        std::cout << "Received: " << path << std::endl;
 
         //  Do some 'work'
-        sleep(1);
+        auto time = CalculateEquilibriumServer( path );
+        auto stime = std::to_string(time);
 
         //  Send reply back to client
         zmq::send_flags snd_flags=zmq::send_flags::none;
-        zmq::message_t reply(5);
-        memcpy( reply.data(), "World", 5 );
+        zmq::message_t reply(stime.begin(), stime.end());
+        //memcpy( reply.data(), "World", 5 );
         socket.send( reply, snd_flags );
     }
     return 0;
@@ -90,10 +92,10 @@ double  CalculateEquilibriumServer( const gstring& lst_f_name )
     double ret=0.;
     try
     {
-        auto dbr_lst_f_name  = replace( lst_f_name,"-dat","-dbr");
+        auto dbr_lst_f_name  = replace( lst_f_name,"-dat.lst","-dbr-out.dat");
 
         // Creates TNode structure instance accessible through the "node" pointer
-        TNode* node  = new TNode();
+        std::shared_ptr<TNode> node(new TNode());
 
         // (1) Initialization of GEMS3K internal data by reading  files
         //     whose names are given in the lst_f_name
