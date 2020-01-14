@@ -7,9 +7,11 @@ GEMS3K/s_fgl_new.h
 gemserver-build/Makefile.*
 gemserver-build/Makefile
 gemserver-build/obj
-gemcalc-build/gems3_server.app
 gemserver-build/.qmake.*
 gemserver-build/gems3_server
+gemcalc-build/gems3_server.app
+gemserver-build/gems3_client
+gemcalc-build/gems3_client.app
 gemserver/*.pro.user
 gemserver/*.pro.user.*
 gemcalc-build/Makefile.*
