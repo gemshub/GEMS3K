@@ -2278,7 +2278,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
    {
        gstring str_file;
        if( fname == 0)
-    	   str_file = dbr_file_name+".out";
+           str_file = dbr_file_name;//+".out";
        else
            str_file = fname;
 

@@ -69,7 +69,7 @@ int main () {
 
         //  Wait for next request from client
         socket.recv (request, rsv_flag);
-        string path = string( static_cast<const char*>(request.data()));
+        string path =  request.to_string();//string( static_cast<const char*>(request.data()));
         std::cout << "Received: " << path << std::endl;
 
         //  Do some 'work'
@@ -112,7 +112,7 @@ double  CalculateEquilibriumServer( const gstring& lst_f_name )
 
         if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  ){
             // (3) Writing results in default DBR file
-            node->GEM_write_dbr( dbr_lst_f_name.c_str(), false, true, false );
+            node->GEM_write_dbr( nullptr/*dbr_lst_f_name.c_str()*/, false, false, false );
             node->GEM_print_ipm( "GEMipmOK.txt" );   // possible debugging printout
         }
         else {
