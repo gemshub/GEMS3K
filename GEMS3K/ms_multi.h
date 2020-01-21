@@ -538,7 +538,6 @@ void KinMetModLoad();
 
 #else
 
-   bool load; // internal value
 
 #endif
 
@@ -800,7 +799,6 @@ public:
      pmp->tpp_S = nullptr;
      pmp->tpp_Vm = nullptr;
 
-     load = false;
    }
 
     ~TMulti()
@@ -808,10 +806,6 @@ public:
 
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
-
-    void CheckMtparam(); // Test load thermodynamic data before
-
-    void set_load (bool what); // DM 20.05.2013 - Ensures the re-reading of the system properties into GEM IMP data structure
 
 #endif
 

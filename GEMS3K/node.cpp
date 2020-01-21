@@ -771,7 +771,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     if( xTP >= 0 )
     {
        CSD->G0[ jj + xTP ]=new_G0;
-       multi->set_load(false);
+       load_thermodynamic_data = false;
     }
     else
         cout << "ERROR P and TK pair not present in the DATACH";
@@ -2135,8 +2135,9 @@ void TNode::unpackDataBr( bool uPrimalSol )
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
- multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
+ //multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
 #endif
+  CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
   pmm->kTau = CNode->Tm;  // added 18.12.14 DK
   pmm->kdT = CNode->dt;   // added 18.12.14 DK
 

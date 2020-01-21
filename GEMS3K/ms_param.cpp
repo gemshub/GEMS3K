@@ -191,35 +191,7 @@ void TProfil::readMulti( const char* path, DATACH  *dCH )
 }
 
 
-/// Test and load thermodynamic data from GEMS project database
-void TMulti::CheckMtparam()
-{
-  double TK, P, PPa;
 
-  //DATACH  *dCH = TNode::na->pCSD();
-  //TK = TNode::na->cTK();
-  //PPa = TNode::na->cP();
-
-  DATACH  *dCH = node->pCSD();
-  TK = node->cTK();
-  PPa = node->cP();
-
-  P = PPa/bar_to_Pa;
-
-  //pmp->pTPD = 2;
-
-  if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
-           || fabs( pm.Pc - P )  > dCH->Ptol/bar_to_Pa  )
-  {
-     pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
-  }
-  load = true;
-}
-
-void TMulti::set_load (bool what)  // DM 20.05.2013
-{
-load = what;
-}
 //-------------------------------------------------------------------------
 // internal functions
 

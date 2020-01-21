@@ -615,3 +615,22 @@ void TNode::datach_reset()
     CSD->ccPH = 0;
 }
 
+// Test if load thermodynamic data
+void TNode::CheckMtparam()
+{
+    double TK, P, PPa;
+
+    TK = cTK();
+    PPa = cP();
+    P = PPa/bar_to_Pa;
+    //pmp->pTPD = 2;
+
+    if( !load_thermodynamic_data || fabs( pmm->Tc - TK ) > CSD->Ttol
+            || fabs( pmm->Pc - P )  > CSD->Ptol/bar_to_Pa  )
+    {
+        // cout<< "CheckMtparam " << pmm->Tc <<" - "<<  TK << endl;
+        pmm->pTPD = 0;      //T, P is changed
+    }
+
+    load_thermodynamic_data = true;
+}
