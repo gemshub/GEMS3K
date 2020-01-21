@@ -4,6 +4,7 @@ install/
 cgems/
 GEMS3K/ms_multi_new.h
 GEMS3K/s_fgl_new.h
+gemserver-build/
 gemserver-build/Makefile.*
 gemserver-build/Makefile
 gemserver-build/obj
