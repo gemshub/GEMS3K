@@ -628,8 +628,15 @@ void TNode::CheckMtparam()
     if( !load_thermodynamic_data || fabs( pmm->Tc - TK ) > CSD->Ttol
             || fabs( pmm->Pc - P )  > CSD->Ptol/bar_to_Pa  )
     {
-        // cout<< "CheckMtparam " << pmm->Tc <<" - "<<  TK << endl;
+        cout<< "CheckMtparam " << pmm->Tc <<" - "<<  TK << endl;
+//#ifdef IPMGEMPLUGIN
         pmm->pTPD = 0;      //T, P is changed
+/*#else
+        pmm->TC = TK-C_to_K;
+        pmm->T = TK;
+        pmm->P  = P/bar_to_Pa;
+        TMulti::sm->DC_LoadThermodynamicData( this );
+#endif*/
     }
 
     load_thermodynamic_data = true;
