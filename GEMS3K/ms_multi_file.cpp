@@ -301,8 +301,8 @@ pm.kdT = 0.;   // current time step, s (kinetics)
     pm.logYFk = 0.;     // work variable
     pm.YFk = 0.;        // Current number of moles in a multicomponent phase
     pm.FitVar[0] =pm.FitVar[1] = pm.FitVar[2]= pm.FitVar[3]= pm.FitVar[4] = 0.;
-    fillValue( pm.Tai, 0., 4 );
-    fillValue( pm.Pai, 0., 4 );
+    fillValue( pm.Tai_1, 0., 4 );
+    fillValue( pm.Pai_1, 0., 4 );
     pm.SizeFactor = 1.; // using in TNode class
 
     // pointers

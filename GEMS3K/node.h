@@ -196,7 +196,7 @@ protected:
     /// Test to reload thermodynamic data from grid
     void CheckMtparam();
     /// false - Ensures the re-reading of the system properties into GEM IMP data structure
-    bool load_thermodynamic_data = false; // internal value
+    bool load_thermodynamic_data = true; // false; // internal value
 
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS-PSI GUI environment
