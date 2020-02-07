@@ -847,12 +847,12 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
     node = new TNode( pmp );
     newInterval = true;
   }
-  else if( !node->TestTPGrid(pm.Tai_1, pm.Pai_1 ))
+  else if( !node->TestTPGrid(pm.Tai, pm.Pai ))
                newInterval = true;
 
  if( newInterval )
  {   // build/rebuild internal lookup arrays
-    node->MakeNodeStructures(window(), true, pm.Tai_1, pm.Pai_1 );
+    node->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
  }
 
 //cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
@@ -1319,20 +1319,23 @@ double U_TP( double TC, double P)
 }
 */
 
+#ifndef IPMGEMPLUGIN
+
 // Load System data to define lookup arrays
 void TMulti::rebuild_lookup(  double Tai[4], double Pai[4] )
 {
    // copy intervals for minimizatiom
-   pm.Pai_1[0] = Pai[0];
-   pm.Pai_1[1] = Pai[1];
-   pm.Pai_1[2] = Pai[2];
-   pm.Pai_1[3] = Pai[3];
-   pm.Tai_1[0] = Tai[0];
-   pm.Tai_1[1] = Tai[1];
-   pm.Tai_1[2] = Tai[2];
-   pm.Tai_1[3] = Tai[3];
+   pm.Pai[0] = Pai[0];
+   pm.Pai[1] = Pai[1];
+   pm.Pai[2] = Pai[2];
+   pm.Pai[3] = Pai[3];
+   pm.Tai[0] = Tai[0];
+   pm.Tai[1] = Tai[1];
+   pm.Tai[2] = Tai[2];
+   pm.Tai[3] = Tai[3];
    if( node )
-      node->MakeNodeStructures(window(), true, pm.Tai_1, pm.Pai_1 );
+      node->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
 }
+#endif
 
 //--------------------- End of ipm_simplex.cpp ---------------------------

@@ -444,8 +444,8 @@ double
 double *GamFs;   ///< Copy of activity coefficients Gamma before the first enter in PhaseSelection() [L] new
 
   double // Iterators for MTP interpolation (do not load/unload for IPM)
-  Pai_1[4],    ///< Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol
-  Tai_1[4],    ///< Temperature T, C: start, end, increment for MTP array in DataCH , Ttol
+  Pai[4],    ///< Pressure P, bar: start, end, increment for MTP array in DataCH , Ptol
+  Tai[4],    ///< Temperature T, C: start, end, increment for MTP array in DataCH , Ttol
   Fdev1[2],  ///< Function1 and target deviations for  minimization of thermodynamic potentials
   Fdev2[2];  ///< Function2 and target deviations for  minimization of thermodynamic potentials
 
@@ -768,6 +768,8 @@ public:
    /// connection to UnSpace
    double pb_GX( double *Gxx  );
 
+   void rebuild_lookup(double Tai[], double Pai[]);
+
 #else
 /// This allocation is used only in standalone GEMS3K
    TMulti( TNode* na_ )
@@ -882,7 +884,6 @@ double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, lo
     void  GEMS3k_write_dbr( const char* fname,  bool binary_f=false,
                               bool with_comments = true, bool brief_mode = false);
 
-    void rebuild_lookup(double Tai[], double Pai[]);
 };
 
 // ???? syp->PGmax

@@ -477,15 +477,15 @@ if( binary_f )
   }
 
   // copy intervals for minimizatiom
-   pmm->Pai_1[0] = CSD->Pval[0]/bar_to_Pa;
-   pmm->Pai_1[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
-   pmm->Pai_1[2] = getStep( pmm->Pai_1, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-   pmm->Pai_1[3] = CSD->Ptol/bar_to_Pa;
+   pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
+   pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
+   pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+   pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
 
-   pmm->Tai_1[0] = CSD->TKval[0]-C_to_K;
-   pmm->Tai_1[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
-   pmm->Tai_1[2] = getStep( pmm->Tai_1, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-   pmm->Tai_1[3] = CSD->Ttol;
+   pmm->Tai[0] = CSD->TKval[0]-C_to_K;
+   pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
+   pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+   pmm->Tai[3] = CSD->Ttol;
 
   pmm->Fdev1[0] = 0.;
   pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
