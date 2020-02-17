@@ -136,63 +136,57 @@ class TPrintArrays: public  TRWArrays
 
 public:
 
-    /*inline*/ void writeValue(float val);
-    /*inline*/ void writeValue(double val);
-    /*inline*/ void writeValue(long val);
+    /// Constructor
+    TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):
+        TRWArrays( aNumFlds, aFlds, fout)
+    {}
+
+    template < typename T >
+    void writeValue( const T& value )
+    {
+        ff << value;// << " ";
+    }
 
     /// Writes long field to a text file.
     /// <flds[f_num].name> value
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeField(long f_num, long value, bool with_comments, bool brief_mode  );
-
-    /// Writes short field to a text file.
-    /// <flds[f_num].name> value
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void writeField(long f_num, short value, bool with_comments, bool brief_mode  );
-
-    /// Writes char field to a text file.
-    /// <flds[f_num].name> 'value'
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void writeField(long f_num, char value, bool with_comments, bool brief_mode  );
-
-    /// Writes double field to a text file.
-    /// <flds[f_num].name> value
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void writeField(long f_num, double value, bool with_comments, bool brief_mode  );
-
-    /// Writes string field to a text file.
-    /// <flds[f_num].name> value
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void writeField(long f_num, gstring value, bool with_comments, bool brief_mode  );
+    template < typename T >
+    void writeField( long f_num, const T& value, bool with_comments, bool brief_mode  )
+    {
+        if(!brief_mode || getAlws( f_num ))
+        {
+            if( with_comments && flds[f_num].comment.length()>1)
+                ff << endl << flds[f_num].comment.c_str();
+            ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+            writeValue(value);
+        }
+    }
 
     /// Writes array to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num,  double* arr,  long int size, long int l_size,
-                    bool with_comments = false, bool brief_mode = false );
+    template < typename T >
+    void writeArray( long f_num,  T* arr,  long int size, long int l_size,
+                    bool with_comments = false, bool brief_mode = false )
+    {
+      if(!brief_mode || getAlws(f_num ))
+      {
+        if( with_comments )
+             ff <<  endl << flds[f_num].comment.c_str();
+        writeArray( flds[f_num].name.c_str(),  arr, size, l_size );
+      }
+    }
 
-    /// Writes array to a text file.
+    /// Writes double vector to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, long* arr,  long int size, long int l_size,
-                    bool with_comments = false, bool brief_mode = false );
-
-    /// Writes array to a text file.
-    /// <flds[f_num].name> arr[0] ... arr[size-1]
-    /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, short* arr,  long int size, long int l_size,
-                    bool with_comments = false, bool brief_mode = false );
+    void writeArray( long f_num, const vector<double>& arr, long int l_size=0,
+                     bool with_comments = false, bool brief_mode = false);
 
     /// Writes char array to a text file.
     /// <flds[f_num].name> "arr[0]" ... "arr[size-1]"
@@ -202,57 +196,80 @@ public:
     void writeArrayF( long f_num, char* arr,  long int size, long int l_size,
                     bool with_comments = false, bool brief_mode = false );
 
-    /// Writes double vector to a text file.
-    /// <flds[f_num].name> arr[0] ... arr[size-1]
-    /// \param l_size - Setup number of elements in line
-    /// \param with_comments - Write files with comments for all data entries
-    /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num,  vector<double> arr, long int l_size=0,
-                     bool with_comments = false, bool brief_mode = false);
+    /// Writes T array to a text file.
+    template < typename T, typename LT >
+    void writeArray( const char *name, T*   arr, LT size, LT arr_size=static_cast<LT>(-1) )
+    {
+        int sz = 40;
+        if( arr_size > 0 )
+            sz = arr_size;
 
-    /// Constructor
-    TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):
-        TRWArrays( aNumFlds, aFlds, fout)
-    {}
-
-    /// Writes char array to a text file.
-    void writeArray( const char *name, char*   arr, long int size, long int arr_size );
-    /// Writes float array to a text file.
-    void writeArray( const char *name, float*  arr, long int size, long int l_size=-1L );
-    /// Writes double array to a text file.
-    void writeArray( const char *name, double* arr, long int size, long int l_size=-1L );
-    /// Writes long array to a text file.
-    void writeArray( const char *name, long* arr, long int size, long int l_size=-1L  );
+        ff << endl << "<" << name << ">" << endl;
+        for( int ii=0, jj=0; ii<size; ii++, jj++  )
+        {
+            if(jj == sz) {
+                jj=0;  ff << endl;
+            }
+            writeValue(arr[ii]);
+            ff << " ";
+        }
+    }
 
     /// Writes char array to a text file.
-    void writeArray( const char *name, char*   arr, int size, int arr_size );
+    template < typename T=char, typename LT >
+    void writeArray( const char *name, char*  arr, LT size, LT arr_size=static_cast<LT>(-1) )
+    {
+     bool isComment = false;
+
+     if( name )
+         ff << endl << "<" << name << ">" << endl;
+     else
+     {
+         ff << endl << "#  ";
+         isComment = true;
+     }
+     for( long int ii=0, jj=0; ii<size; ii++, jj++  )
+     {
+        if(jj == 40 )
+        {
+          jj=0;  ff << endl;
+          if(isComment)
+              ff << "#  ";
+        }
+        gstring str = gstring( arr +(ii*arr_size), 0, arr_size );
+        writeValue(str);
+        ff << " ";
+     }
+    }
+
+    /// Writes selected elements from float array to a text file.
+    template < typename T, typename LT >
+    void writeArray( const char *name, T* arr, LT size, long int* selArr,
+                     LT nColumns=static_cast<LT>(1), LT l_size=static_cast<LT>(-1) )
+    {
+        if(!arr)
+            return;
+
+        long int sz = 40;
+        if( l_size > 0 )
+            sz = l_size;
+
+        ff << endl << "<" << name << ">" << endl;
+        for( long int ii=0, jj=0; ii<size; ii++  )
+        {
+            for(long int cc=0; cc<nColumns; cc++ )
+            {
+                if(jj == sz){
+                    jj=0;  ff << endl;
+                }
+                writeValue(arr[selArr[ii]*nColumns+cc]);
+                ff << " ";
+                jj++;
+            }
+        }
+    }
+
     void writeArrayS( const char *name, char* arr, long int size, long int arr_siz );
-    /// Writes float array to a text file.
-    void writeArray( const char *name, float*  arr, int size, int l_size=-1 );
-    /// Writes double array to a text file.
-    void writeArray( const char *name, double* arr, int size, int l_size=-1 );
-    /// Writes short array to a text file.
-    void writeArray( const char *name, short* arr, int size, int l_size=-1  );
-
-    /// Writes selected elements from float array to a text file.
-    void writeArray( const char *name, float*  arr, long int size, long int* selAr,
-    		long int nColumns=1L, long int l_size=-1L );
-    /// Writes selected elements from double array to a text file.
-    void writeArray( const char *name, double* arr, long int size, long int* selAr,
-    		long int nColumns=1L, long int l_size=-1L );
-    /// Writes selected elements from long array to a text file.
-    void writeArray( const char *name, long* arr, long int size, long int* selAr,
-    		long int nColumns=1L, long int l_size=-1L );
-
-    /// Writes selected elements from float array to a text file.
-    void writeArray( const char *name, float*  arr, int size, long int* selAr,
-    		int nColumns=1, int l_size=-1 );
-    /// Writes selected elements from double array to a text file.
-    void writeArray( const char *name, double* arr, int size, long int* selAr,
-    		int nColumns=1, int l_size=-1 );
-    /// Writes selected elements from short array to a text file.
-    void writeArray( const char *name, short* arr, int size, long int* selAr,
-    		int nColumns=1, int l_size=-1 );
 
 };
 
@@ -313,4 +330,10 @@ public:
         long int size, vector<IOJFormat>& vFormats );
 };
 
-//=============================================================================
+template <> void TPrintArrays::writeValue( const double& );
+template <> void TPrintArrays::writeValue( const float& );
+template <> void TPrintArrays::writeValue( const char& value );
+template <> void TPrintArrays::writeValue( const gstring& value );
+
+
+ //=============================================================================

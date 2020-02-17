@@ -69,446 +69,90 @@ long int TRWArrays::findFld( const char *Name )
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
 
-/// Write long value to file
-/*inline*/ void TPrintArrays::writeValue(long val)
-    {
-
-       ff << val << " ";
-    }
 
 /// Write float value to file
-/*inline*/ void TPrintArrays::writeValue(float val)
-    {
-      if( IsFloatEmpty( val ))
+template <> void TPrintArrays::writeValue( const double& val )
+{
+    if( IsFloatEmpty( val ))
         ff << CHAR_EMPTY << " ";
-      else
-    //    ff << setprecision(10) << scientific << arr[ii] << " ";
-       ff << setprecision(7) << val << " ";
-    }
+    else
+        //    ff << setprecision(10) << scientific << arr[ii] << " ";
+        ff << setprecision(7) << val;// << " ";
+}
 
 /// Write double value to file
-/*inline*/ void TPrintArrays::writeValue(double val)
-    {
-      if( IsDoubleEmpty( val ))
+template <> void TPrintArrays::writeValue( const float& val )
+{
+    if( IsDoubleEmpty( val ))
         ff << CHAR_EMPTY << " ";
-      else
-//    ff << setprecision(18) << scientific << arr[ii] << " ";
-    ff << setprecision(15) << val << " ";
-    }
+    else
+        //    ff << setprecision(18) << scientific << arr[ii] << " ";
+        ff << setprecision(15) << val;// << " ";
+}
 
- void TPrintArrays::writeField(long f_num, long value, bool with_comments, bool brief_mode  )
-    {
-      if(!brief_mode || getAlws( f_num ))
-      {  if( with_comments && flds[f_num].comment.length()>1)
-          ff << endl << flds[f_num].comment.c_str();
-        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << /*left << setw(17)  <<*/  value;
-      }
-    }
-
- void TPrintArrays::writeField(long f_num, short value, bool with_comments, bool brief_mode  )
-    {
-      if(!brief_mode || getAlws( f_num ))
-      {  if( with_comments && flds[f_num].comment.length()>1)
-          ff <<  endl << flds[f_num].comment.c_str();
-        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << /*left << setw(17)  <<*/  value;
-      }
-    }
-
- void TPrintArrays::writeField(long f_num, char value, bool with_comments, bool brief_mode  )
-    {
-      if(!brief_mode || getAlws( f_num ))
-      {  if( with_comments && flds[f_num].comment.length()>1)
-          ff <<  endl <<  flds[f_num].comment.c_str();
-        ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-        ff << "\'" << value << "\'";
-      }
-    }
-
- void TPrintArrays::writeField(long f_num, double value, bool with_comments, bool brief_mode  )
-  {
-     if(!brief_mode || getAlws(f_num ))
-     { if( with_comments && flds[f_num].comment.length()>1 )
-            ff <<  endl <<  flds[f_num].comment.c_str();
-         ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-         ff << /*left << setw(7) <<*/  value;
-     }
-  }
-
- void TPrintArrays::writeField(long f_num, gstring value, bool with_comments, bool brief_mode  )
- {
-     if(!brief_mode || getAlws( f_num ))
-     { if( with_comments && flds[f_num].comment.length()>1 )
-            ff <<  endl <<  flds[f_num].comment.c_str();
-         ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-
- #ifdef IPMGEMPLUGIN // 24/08/2010
-     strip(value);
- #else
-     value.strip();
- #endif
-     ff  << "\'" << value.c_str() << "\'" /*<< " "*/; // commented out (space after text conflicts with gemsfit2 read-in) DM 16.07.2013
-   }
- }
-
-
- void TPrintArrays::writeArray( long f_num,  double* arr,
-                 long int size, long int l_size, bool with_comments, bool brief_mode )
- {
-
-   if(!brief_mode || getAlws(f_num ))
-   { if( with_comments )
-          ff <<  endl << flds[f_num].comment.c_str();
-     writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
-   }
- }
-
- void TPrintArrays::writeArray( long f_num, long* arr,
-               long int size, long int l_size, bool with_comments, bool brief_mode  )
- {
-     if(!brief_mode || getAlws(f_num ))
-     { if( with_comments )
-            ff <<  endl << flds[f_num].comment.c_str();
-        writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
-     }
- }
-
- void TPrintArrays::writeArray( long f_num, short* arr,
-               long int size, long int l_size, bool with_comments, bool brief_mode  )
- {
-     if(!brief_mode || getAlws(f_num ))
-     { if( with_comments )
-            ff <<  endl << flds[f_num].comment.c_str();
-        writeArray( flds[f_num].name.c_str(),  arr,size, l_size);
-     }
- }
-
- void TPrintArrays::writeArrayF( long f_num, char* arr,
-               long int size, long int l_size, bool with_comments, bool brief_mode  )
- {
-     if(!brief_mode || getAlws(f_num ))
-     { if( with_comments )
-            ff <<  endl << flds[f_num].comment.c_str();
-        writeArrayS( flds[f_num].name.c_str(),  arr,size, l_size);
-     }
- }
-
-
- void TPrintArrays::writeArrayS( const char *name, char* arr,
-         long int size, long int arr_siz )
- {
-    writeArray( name,  arr,size, arr_siz);
- }
-
-/// If the first parameter is given as NULL then the char array
-/// will be printed as a comment
-void TPrintArrays::writeArray( const char *name, char* arr,
-		long int size, long int arr_siz )
+/// Write double value to file
+template <> void TPrintArrays::writeValue( const char& value )
 {
- bool isComment = false;
+    ff << "\'" << value << "\'";
+}
 
- if( name )
-     ff << endl << "<" << name << ">" << endl;
- else
- { ff << endl << "#  ";
-   isComment = true;
- }
- for( long int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == 40 )
-    { jj=0;  ff << endl;
-      if(isComment)
-    	  ff << "#  ";
-    }
-    gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
+/// Write double value to file
+template <> void TPrintArrays::writeValue( const gstring& value )
+{
+    auto val = value;
 #ifdef IPMGEMPLUGIN // 24/08/2010
-    strip(str);
+    strip(val);
 #else
-    str.strip();
+    val.strip();
 #endif
-    ff  << "\'" << str.c_str() << "\'" << " ";
- }
+    ff  << "\'" << val.c_str() << "\'" /*<< " "*/;
+    // commented out (space after text conflicts with gemsfit2 read-in) DM 16.07.2013
 }
 
-void TPrintArrays::writeArray( const char *name, char* arr,
-		int size, int arr_siz )
-{
- bool isComment = false;
-
- if( name )
-     ff << endl << "<" << name << ">" << endl;
- else
- { ff << endl << "#  ";
-   isComment = true;
- }
- for( int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == 40 )
-    { jj=0;  ff << endl;
-      if(isComment)
-    	  ff << "#  ";
-    }
-    gstring str = gstring( arr +(ii*arr_siz), 0, arr_siz );
-#ifdef IPMGEMPLUGIN // 24/08/2010
-    strip(str);
-#else
-    str.strip();
-#endif
-    ff  << "\'" << str.c_str() << "\'" << " ";
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  float* arr,
-		long int size, long int l_size )
-{
- long int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( long int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == sz)
-    { jj=0;  ff << endl;}
-    writeValue(arr[ii]);
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  float* arr,
-		int size, int l_size )
-{
- int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == sz)
-    { jj=0;  ff << endl;}
-    writeValue(arr[ii]);
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  double* arr,
-		long int size, long int l_size )
-{
- long int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( long int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == sz)
-    { jj=0;  ff << endl;}
-    writeValue(arr[ii]);
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  double* arr,
-		int size, int l_size )
-{
- int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == sz)
-    { jj=0;  ff << endl;}
-    writeValue(arr[ii]);
- }
-}
-
-void TPrintArrays::writeArray( long f_num,  vector<double> arr, long int l_size,
+void TPrintArrays::writeArray( long f_num, const vector<double>& arr, long int l_size,
                                bool with_comments, bool brief_mode )
 {
-
     long int jj;
     if(!brief_mode || getAlws(f_num ))
     {
-       if( with_comments )
-           ff <<  endl << flds[f_num].comment.c_str();
+        if( with_comments )
+            ff <<  endl << flds[f_num].comment.c_str();
 
-      int sz = 40;
-      if( l_size > 0 )
-       sz = l_size;
+        int sz = 40;
+        if( l_size > 0 )
+            sz = l_size;
 
-      ff << endl << "<" << flds[f_num].name.c_str() << ">" << endl;
-      jj=0;
-      for( size_t ii=0; ii<arr.size(); ii++, jj++  )
-      {
-         if(jj == sz)
-         { jj=0;  ff << endl;}
-         writeValue(arr[ii]);
-      }
-    }
-}
-
-void TPrintArrays::writeArray( const char *name, long* arr, long int size, long int l_size  )
-{
- long int sz = 40;
-  if( l_size > 0 )
-        sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( long int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == sz)
-    { jj=0;  ff << endl;}
-    writeValue(arr[ii]);//ff << arr[ii] << " ";
- }
-}
-
-
-void TPrintArrays::writeArray( const char *name, short* arr, int size, int l_size  )
-{
- int sz = 40;
-  if( l_size > 0 )
-        sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( int ii=0, jj=0; ii<size; ii++, jj++  )
- {
-    if(jj == sz)
-    { jj=0;  ff << endl;}
-    ff << arr[ii] << " ";
- }
-}
-
-//-------------------------------------------------------------------------
-
-void TPrintArrays::writeArray( const char *name,  float* arr,
-		long int size, long int* selArr, long int nColumns, long int l_size )
-{
- if(!arr) return;
- long int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( long int ii=0, jj=0; ii<size; ii++  )
- {
-    for(long int cc=0; cc<nColumns; cc++ )
-    {
-    	if(jj == sz)
-	    { jj=0;  ff << endl;}
-         writeValue(arr[selArr[ii]*nColumns+cc]);
-        jj++;
-   }
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  float* arr,
-		int size, long int* selArr, int nColumns, int l_size )
-{
- if(!arr) return;
- int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( int ii=0, jj=0; ii<size; ii++  )
- {
-   for( int cc=0; cc<nColumns; cc++ )
-    {
-    	if(jj == sz)
-	    { jj=0;  ff << endl;}
-       writeValue(arr[selArr[ii]*nColumns+cc]);
-        jj++;
-    }
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  double* arr,
-		long int size, long int* selArr, long int nColumns, long int l_size )
-{
- if(!arr) return;
- long int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( long int ii=0, jj=0; ii<size; ii++  )
- {
-    for(long int cc=0; cc<nColumns; cc++ )
+        ff << endl << "<" << flds[f_num].name.c_str() << ">" << endl;
+        jj=0;
+        for( size_t ii=0; ii<arr.size(); ii++, jj++  )
         {
-              if(jj == sz)
-	        { jj=0;  ff << endl;}
-              writeValue(arr[selArr[ii]*nColumns+cc]);
-              jj++;
+            if(jj == sz) {
+                jj=0;  ff << endl;
+            }
+            writeValue(arr[ii]);
+            ff << " ";
         }
- }
-}
-
-void TPrintArrays::writeArray( const char *name,  double* arr,
-		int size, long int* selArr, int nColumns, int l_size )
-{
- if(!arr) return;
- int sz = 40;
- if( l_size > 0 )
-       sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( int ii=0, jj=0; ii<size; ii++  )
- {
-     for( int cc=0; cc<nColumns; cc++ )
-        {
-           if(jj == sz)
-           { jj=0;  ff << endl;}
-             writeValue(arr[selArr[ii]*nColumns+cc]);
-             jj++;
-           }
- }
-}
-
-
-void TPrintArrays::writeArray( const char *name, long* arr,
-		long int size, long int* selArr, long int nColumns, long int l_size )
-{
-  if(!arr) return;
-  long int sz = 40;
-  if( l_size > 0 )
-        sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( long int ii=0, jj=0; ii<size; ii++  )
- {
-	for(long int cc=0; cc<nColumns; cc++ )
-    {
-		if(jj == sz)
-        { jj=0;  ff << endl;}
-    	ff << arr[selArr[ii]*nColumns+cc] << " ";
-    	jj++;
     }
- }
 }
 
-void TPrintArrays::writeArray( const char *name, short* arr,
-		int size, long int* selArr, int nColumns, int l_size )
+void TPrintArrays::writeArrayF( long f_num, char* arr,
+                                long int size, long int l_size, bool with_comments, bool brief_mode  )
 {
-  if(!arr) return;
-  int sz = 40;
-  if( l_size > 0 )
-        sz = l_size;
-
- ff << endl << "<" << name << ">" << endl;
- for( int ii=0, jj=0; ii<size; ii++  )
- {
-	for( int cc=0; cc<nColumns; cc++ )
+    if(!brief_mode || getAlws(f_num ))
     {
-		if(jj == sz)
-        { jj=0;  ff << endl;}
-    	ff << arr[selArr[ii]*nColumns+cc] << " ";
-    	jj++;
+        if( with_comments )
+            ff <<  endl << flds[f_num].comment.c_str();
+        writeArrayS( flds[f_num].name.c_str(),  arr,size, l_size);
     }
- }
 }
 
-//-------------------------------------------------------------------------
+
+void TPrintArrays::writeArrayS( const char *name, char* arr,
+                                long int size, long int arr_siz )
+{
+    writeArray( name, arr, size, arr_siz );
+}
+
 //------------------------------------------------------------------
 
  inline void TReadArrays::readValue(float& val)

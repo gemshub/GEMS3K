@@ -255,7 +255,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( _comment )
    {   ff << "\n\n### Arrays: for dimensions and index lists, see Section (2) of DCH file" << endl << endl;
        ff << "## (4) Data for Independent Components";
-       prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
+       prar.writeArray(  nullptr, CSD->ICNL[0], CSD->nIC, MaxICN );
        //ff << endl;
    }
 
@@ -266,7 +266,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 
   if( _comment )
   {    ff << "\n\n## (5) Data for Dependent Components";
-       prar.writeArray(  NULL, CSD->DCNL[0], CSD->nDC, MaxDCN );
+       prar.writeArray(  nullptr, CSD->DCNL[0], CSD->nDC, MaxDCN );
        //ff << endl;
   }
 
@@ -277,7 +277,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 
   if( _comment )
   {    ff << "\n\n## (6) Data for Phases";
-        prar.writeArray(  NULL, CSD->PHNL[0], CSD->nPH, MaxPHN );
+        prar.writeArray(  nullptr, CSD->PHNL[0], CSD->nPH, MaxPHN );
        // ff << endl;
   }
 
@@ -294,7 +294,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   {  if( _comment )
      {
           ff << DataBR_fields[f_bPS].comment.c_str();
-	  prar.writeArray(  NULL, CSD->ICNL[0], CSD->nIC, MaxICN );
+      prar.writeArray(  nullptr, CSD->ICNL[0], CSD->nIC, MaxICN );
       }
      prar.writeArray(  f_bPS,  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb,false, brief_mode );
   }
@@ -1124,7 +1124,7 @@ void TNode::databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, 
          break;
    default: break;
   }
-  ff << endl;
+  ff << " " << endl;
 }
 
 
