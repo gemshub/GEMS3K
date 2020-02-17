@@ -1,3 +1,0 @@
-zmq::message_t [size 028] ( server_data/toServer-dat.lst)  : Fileopen error
-zmq::message_t [size 028] ( server_data/toServer-dat.lst)  : Fileopen error
-zmq::message_t [size 028] ( server_data/toServer-dat.lst)  : Fileopen error
