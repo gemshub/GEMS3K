@@ -34,6 +34,9 @@
 #ifdef NODEARRAYLEVEL
 #include "nodearray.h"
 #endif
+#ifdef  JSON_OUT
+#include "io_json.h"
+#endif
 
 //extern bool _comment;
 extern const char* _GEMIPM_version_stamp;
@@ -177,7 +180,17 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   bool _comment = with_comments;
 
+#ifndef  JSON_OUT
+
   TPrintArrays  prar(f_omph+1/*55*/, DataBR_fields, ff);
+
+#else
+
+  _comment = false;
+  nlohmann::json json_data;
+  TPrintJson  prar(f_omph+1/*55*/, DataBR_fields, json_data);
+
+#endif
 
    if( _comment )
    {
@@ -299,10 +312,13 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
      prar.writeArray(  f_bPS,  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb,false, brief_mode );
   }
 
+#ifdef  JSON_OUT
+  ff << json_data.dump(4);
+#endif
   ff << endl;
   if( _comment )
    {   //  ff << "\n# reserved" << endl;
-         ff << "\n# End of file"<< endl;
+         ff << "\n# End of file\n"<< endl;
    }
 }
 
@@ -489,8 +505,21 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   bool _comment = with_comments;
+
+#ifndef  JSON_OUT
+
   TPrintArrays  prar1(14, DataCH_static_fields, ff);
   TPrintArrays  prar(30, DataCH_dynamic_fields, ff);
+
+#else
+
+  _comment = false;
+  nlohmann::json json_data;
+  TPrintJson  prar1(14, DataCH_static_fields, json_data);
+  TPrintJson  prar(30, DataCH_dynamic_fields, json_data);
+
+#endif
+
   if( CSD->nIC == CSD->nICb )
           prar.setNoAlws( f_xic);
   if(CSD->nDC == CSD->nDCb )
@@ -526,7 +555,9 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
   prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
+#ifndef  JSON_OUT
   ff << endl << "\n<END_DIM>" << endl;
+#endif
 
 // dynamic arrays - must follow static data
   if( _comment )
@@ -569,14 +600,18 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( _comment )
     ff << "\n\n# (8) Data for Dependent Components";
   prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
+#ifndef JSON_OUT
   ff << endl;
+#endif
 
   if( _comment )
     ff << "\n## (9) Thermodynamic data for Dependent Components";
   prar.writeField(  f_Ttol, CSD->Ttol, _comment, brief_mode  );
   prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
   prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );
+#ifndef JSON_OUT
   ff << endl;
+#endif
 
   prar.writeField(  f_Ptol, CSD->Ptol, _comment, brief_mode  );
   prar.writeArray(  f_Pval, CSD->Pval, CSD->nPp,  -1L,_comment, brief_mode );
@@ -599,9 +634,12 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
   if( CSD->iGrd  )
     prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
 
+#ifdef  JSON_OUT
+  ff << json_data.dump(4);
+#endif
   ff << endl;
   if( _comment )
-      ff << "\n# End of file";
+      ff << "\n# End of file\n";
 }
 
 // Reading dataCH structure from text file

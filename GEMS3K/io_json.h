@@ -23,161 +23,66 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#pragma once
 
-#include  <fstream>
-#include <vector>
-#include <cmath>
-#include "verror.h"
-
-struct outField /// Internal descriptions of fields
- {
-   gstring name; ///< name of field in structure
-   long int alws;    ///< 1 - must be read, 0 - default values can be used
-   long int readed;  ///< 0; set to 1 after reading the field from input file
-   long int indexation;  ///< 1 - static object; 0 - undefined; <0 type of indexation, >1 number of elements in array
-   gstring comment;
-
-};
-
-enum FormatType {
-        ft_Value=0,   // value
-        ft_F,   // command F
-        ft_L,   // command L
-        ft_R,   // command R
-        ft_Internal
-};
-
-struct IOJFormat /// Internal descriptions of output/input formats with JSON notation
- {
-   long int index;    ///< index formatted value into reading array
-   long int type;  ///< type of formatted value { F, L, R, ...}
-   gstring format; ///< string with formatted data for different type
-
-   IOJFormat( char aType, int aIndex, gstring aFormat ):
-               index(aIndex), type(aType), format(aFormat)
-       {}
-
-   IOJFormat( const IOJFormat& data ):
-       index(data.index), type(data.type),  format(data.format)
-       { }
-};
-
-class TRWArrays  /// Basic class for red/write fields of structure
- {
- protected:
-    long int numFlds; ///< Size of array flds
-    outField* flds;   ///< Array of permissible fields
-
- public:
-
-    /// Constructor
-     TRWArrays( short aNumFlds, outField* aFlds ):
-         numFlds(aNumFlds), flds(aFlds)
-    {}
-
-     virtual ~TRWArrays()
-    {}
+#include <nlohmann/json.hpp>
+#include "io_arrays.h"
 
 
-    /// Find field by name
-    virtual  long int findFld( const char *Name );
-
-     /// Set the data object can be skipped from the file
-     /// and default value(s) can be used
-     /// \param ii index in array flds
-    void  setNoAlws( long int ii )
-    {  flds[ii].alws = 0; }
-
-    /// Set the data object can be skipped from the file
-    /// and default value(s) can be used
-    /// \param Name of field in array flds
-    void  setNoAlws( const char *Name )
-    {
-    	long int ii = findFld( Name );
-         if( ii >=0 )
-            setNoAlws(ii);
-    }
-
-    /// Set the data object  must be always present in the file
-    /// \param ii index in array flds
-    void  setAlws( long int ii )
-    {  flds[ii].alws = 1; }
-
-    /// Set the data object Name must be always present in the file
-    /// \param Name of field in array flds
-    void  setAlws( const char *Name )
-    {
-    	long int ii = findFld( Name );
-         if( ii >=0 )
-            setAlws(ii);
-    }
-
-    /// Test the data object  must be always present in the file
-    /// \param ii index in array flds
-    bool  getAlws( long int ii )
-    {  return (flds[ii].alws == 1); }
-
-    /// Test the data object Name must be always present in the file
-    /// \param Name of field in array flds
-    bool  getAlws( const char *Name )
-    {
-    	long int ii = findFld( Name );
-         if( ii >=0 )
-           return getAlws(ii);
-         else
-        return false;	 
-    }
-
-};
 
 /// Print fields of structure outField
-class TPrintArrays: public  TRWArrays
+class TPrintJson: public  TRWArrays
 {
-    fstream& ff;
+    fstream ff;
+
+    /// Internal structure of file data
+    nlohmann::json& json_data;
+
+    template <class T>
+    void writeValue( const T& value, nlohmann::json& json_arr  )
+    {
+       json_arr.push_back(value);
+    }
+
+    std::string key( const char * name ) const
+    {
+      return std::string("<") + name + ">";
+    }
 
 public:
 
     /// Constructor
-    TPrintArrays( short  aNumFlds, outField* aFlds, fstream& fout ):
-        TRWArrays( aNumFlds, aFlds), ff( fout )
+    TPrintJson( short  aNumFlds, outField* aFlds, nlohmann::json& json_out ):
+        TRWArrays( aNumFlds, aFlds), json_data( json_out )
     {}
 
-    template < typename T >
-    void writeValue( const T& value )
-    {
-        ff << value;// << " ";
-    }
-
-    /// Writes long field to a text file.
+    /// Writes integral field to a json.
     /// <flds[f_num].name> value
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    template < typename T >
-    void writeField( long f_num, const T& value, bool with_comments, bool brief_mode  )
+    template <class T>
+    void writeField( long f_num, const T& value, bool /*with_comments*/, bool brief_mode  )
     {
-        if(!brief_mode || getAlws( f_num ))
+        if( !brief_mode || getAlws( f_num ))
         {
-            if( with_comments && flds[f_num].comment.length()>1)
-                ff << endl << flds[f_num].comment.c_str();
-            ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-            writeValue(value);
+            //if( with_comments && flds[f_num].comment.length()>1)
+            //    ff << endl << flds[f_num].comment.c_str();
+            json_data[ key( flds[f_num].name.c_str() ) ] = value;
         }
     }
 
-    /// Writes array to a text file.
+    /// Writes array to a json.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
     template < typename T >
     void writeArray( long f_num,  T* arr,  long int size, long int l_size,
-                    bool with_comments = false, bool brief_mode = false )
+                    bool /*with_comments*/ = false, bool brief_mode = false )
     {
       if(!brief_mode || getAlws(f_num ))
       {
-        if( with_comments )
-             ff <<  endl << flds[f_num].comment.c_str();
+        //if( with_comments )
+        //     ff <<  endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr, size, l_size );
       }
     }
@@ -200,73 +105,46 @@ public:
 
     /// Writes T array to a text file.
     template < typename T, typename LT >
-    void writeArray( const char *name, T*   arr, LT size, LT arr_size=static_cast<LT>(-1) )
+    void writeArray( const char *name, T*   arr, LT size, LT =static_cast<LT>(-1) )
     {
-        int sz = 40;
-        if( arr_size > 0 )
-            sz = arr_size;
-
-        ff << endl << "<" << name << ">" << endl;
-        for( int ii=0, jj=0; ii<size; ii++, jj++  )
+        auto arr_key = key( name );
+        json_data[ arr_key ] = nlohmann::json::array();
+        for( int ii=0; ii<size; ii++ )
         {
-            if(jj == sz) {
-                jj=0;  ff << endl;
-            }
-            writeValue(arr[ii]);
-            ff << " ";
+            writeValue(arr[ii], json_data[ arr_key ]);
         }
     }
 
-    /// Writes char array to a text file.
+    /// Writes char array to a json file.
     template < typename T=char, typename LT >
     void writeArray( const char *name, char*  arr, LT size, LT arr_size=static_cast<LT>(-1) )
     {
-     bool isComment = false;
-
-     if( name )
-         ff << endl << "<" << name << ">" << endl;
-     else
-     {
-         ff << endl << "#  ";
-         isComment = true;
-     }
-     for( long int ii=0, jj=0; ii<size; ii++, jj++  )
-     {
-        if(jj == 40 )
+        if( !name )  // comment
+          return;
+        auto arr_key = key( name );
+        json_data[ arr_key ] = nlohmann::json::array();
+        for( int ii=0, jj=0; ii<size; ii++, jj++  )
         {
-          jj=0;  ff << endl;
-          if(isComment)
-              ff << "#  ";
+            gstring str = gstring( arr +(ii*arr_size), 0, arr_size );
+            writeValue(str, json_data[ arr_key ]);
         }
-        gstring str = gstring( arr +(ii*arr_size), 0, arr_size );
-        writeValue(str);
-        ff << " ";
-     }
     }
 
     /// Writes selected elements from float array to a text file.
     template < typename T, typename LT >
     void writeArray( const char *name, T* arr, LT size, long int* selArr,
-                     LT nColumns=static_cast<LT>(1), LT l_size=static_cast<LT>(-1) )
+                     LT nColumns=static_cast<LT>(1), LT =static_cast<LT>(-1) )
     {
-        if(!arr)
+        if( !arr )
             return;
 
-        long int sz = 40;
-        if( l_size > 0 )
-            sz = l_size;
-
-        ff << endl << "<" << name << ">" << endl;
-        for( long int ii=0, jj=0; ii<size; ii++  )
+        auto arr_key = key( name );
+        json_data[ arr_key ] = nlohmann::json::array();
+        for( long int ii=0; ii<size; ii++  )
         {
             for(long int cc=0; cc<nColumns; cc++ )
             {
-                if(jj == sz){
-                    jj=0;  ff << endl;
-                }
-                writeValue(arr[selArr[ii]*nColumns+cc]);
-                ff << " ";
-                jj++;
+                writeValue(arr[selArr[ii]*nColumns+cc], json_data[ arr_key ]);
             }
         }
     }
@@ -276,10 +154,10 @@ public:
 };
 
 
- class TReadArrays : public  TRWArrays /// Read fields of structure
+ class TReadJson : public  TRWArrays /// Read fields of structure
  {
-     fstream& ff;
-     gstring curArray;
+    fstream& ff;
+    gstring curArray;
 
  protected:
     /// Reads value from a text file.
@@ -295,7 +173,7 @@ public:
  public:
 
     /// Constructor
-    TReadArrays( short aNumFlds, outField* aFlds, fstream& fin ):
+    TReadJson( short aNumFlds, outField* aFlds, fstream& fin ):
         TRWArrays( aNumFlds, aFlds), ff( fin ), curArray("")
     {}
 
@@ -344,10 +222,10 @@ public:
         long int size, vector<IOJFormat>& vFormats );
 };
 
-template <> void TPrintArrays::writeValue( const double& );
-template <> void TPrintArrays::writeValue( const float& );
-template <> void TPrintArrays::writeValue( const char& value );
-template <> void TPrintArrays::writeValue( const gstring& value );
+template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json_arr );
+template <> void TPrintJson::writeValue( const gstring& value, nlohmann::json& json_arr );
+template <> void TPrintJson::writeField( long f_num, const char& value, bool /*with_comments*/, bool brief_mode  );
+template <> void TPrintJson::writeField( long f_num, const gstring& value, bool /*with_comments*/, bool brief_mode  );
 
 
  //=============================================================================

@@ -28,6 +28,10 @@
 #include "m_param.h"
 #include <iomanip>
 
+#ifdef  JSON_OUT
+#include "io_json.h"
+#endif
+
 #ifdef IPMGEMPLUGIN
   istream& f_getline(istream& is, gstring& str, char delim);
 #endif
@@ -177,8 +181,21 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
 #endif
   fstream ff( path, ios::out );
   ErrorIf( !ff.good() , path, "Fileopen error");
+
+#ifndef  JSON_OUT
+
   TPrintArrays  prar1( 8, MULTI_static_fields, ff);
   TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
+
+#else
+
+  _comment = false;
+  nlohmann::json json_data;
+  TPrintJson  prar1( 8, MULTI_static_fields, json_data);
+  TPrintJson  prar( 80, MULTI_dynamic_fields, json_data);
+
+#endif
+
 
 // set up array flags for permanent fields
    if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -214,7 +231,12 @@ if( _comment )
    ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
    ff << "# ID key of the initial chemical system definition" << endl;
 }
-  ff << "<ID_key> \"" << pm.stkey << "\"" << endl;
+
+#ifdef JSON_OUT
+    json_data["<ID_key>"] = std::string(pm.stkey);
+#else
+    ff << "<ID_key> \"" << pm.stkey << "\"" << endl;
+#endif
 
  if( _comment )
      ff << "\n## (1) Flags that affect memory allocation";
@@ -228,14 +250,18 @@ if( _comment )
 
  prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
  prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
+
+#ifdef JSON_OUT
+ json_data["<PAalp>"] = std::string(1,PAalp);
+ json_data["<PSigm>"] = std::string(1,PSigm);
+#else
  if( _comment )
-   ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
- ff << endl << left << setw(12) << "<PAalp> " <<  right << setw(6) <<
-    "\'" << PAalp << "\'" << endl;
+     ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
+ ff << endl << left << setw(12) << "<PAalp> " <<  right << setw(6) << "\'" << PAalp << "\'" << endl;
  if( _comment )
-  ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
- ff << left << setw(12) << "<PSigm> " <<  right << setw(6) <<
-    "\'" << PSigm << "\'" << endl;
+     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
+ ff << left << setw(12) << "<PSigm> " <<  right << setw(6) << "\'" << PSigm << "\'" << endl;
+#endif
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
   { if( _comment )
@@ -248,9 +274,11 @@ if( _comment )
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
 
-ff << "\n\n<END_DIM>\n";
+#ifndef JSON_OUT
+    ff << "\n\n<END_DIM>\n";
+#endif
 
-// static data not affected by dimensionalities
+   // static data not affected by dimensionalities
    if( _comment )
    {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
       ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
@@ -572,9 +600,13 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    prar.writeArray(  f_muj, pm.muj,  pm.L, -1L, _comment, brief_mode);
  }
 
- ff << endl;
+#ifdef  JSON_OUT
+  ff << json_data.dump(4);
+#endif
+  ff << endl;
+
  if( _comment )
-   ff << "\n# End of file" << endl;
+   ff << "\n# End of file\n" << endl;
 
 }
 
