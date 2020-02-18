@@ -132,135 +132,22 @@ inline void TReadJson::setCurrentArray( const char* name, long int size )
     curArray = buf;
 }
 
-void TReadJson::readValue(float& val)
-{
-    char input;
-    skipSpace();
-
-    ff.get( input );
-    if( input == CHAR_EMPTY )
-        val = FLOAT_EMPTY;
-    else
-    {
-        ff.putback(input);
-        ff >> val;
-    }
-}
-
-void TReadJson::readValue(double& val)
-{
-    char input;
-    skipSpace();
-
-    ff.get( input );
-    if( input == CHAR_EMPTY )
-        val = DOUBLE_EMPTY;
-    else
-    {
-        ff.putback(input);
-        ff >> val;
-    }
-}
-
-long int TReadJson::readFormatValue(double& val, gstring& format)
-{
-    char input;
-    format = "";
-    long int type = ft_Value;
-
-    skipSpace();
-
-    if( ff.eof() )
-        return ft_Internal;
-
-    ff.get( input );
-    switch( input )
-    {
-    case CHAR_EMPTY: val = DOUBLE_EMPTY;
-        return type;
-    case '<': ff.putback(input);
-        return ft_Internal;
-    case 'F': type = ft_F;
-        if(!readFormat( format ))
-            ff >> val;
-        break;
-    case 'L': type = ft_L;
-        if(!readFormat( format ))
-            ff >> val;
-        break;
-    case 'R': type = ft_R;
-        if(!readFormat( format ))
-            ff >> val;
-        break;
-    default:
-    {   ff.putback(input);
-        ff >> val;
-        break;
-    }
-    }
-    return type;
-}
-
-// skip  ' ',  '\n', '\t' and comments (from '#' to end of line)
-void  TReadJson::skipSpace()
-{
-    char input;
-    if( ff.eof() )
-        return;
-    ff.get( input );
-    while( input == '#' || input == ' ' ||
-           input == '\n' || input == '\t')
-    {
-        if( input == '#' )
-            do{
-            ff.get( input );
-        }while( input != '\n' && input != '\0' && !ff.eof());
-        if( input == '\0' || ff.eof() )
-            return;
-        ff.get( input );
-    }
-    ff.putback(input);
-    // cout << ff << endl; // comented out DM 03.05.2013
-}
-
-// Read format string
-bool  TReadJson::readFormat( gstring& format )
-{
-    char input;
-    format = "";
-    long int count1=0;  // counters of {}
-    long int count2=0;  // counters of []
-
-    skipSpace();
-    ff.get( input );
-    if( input != '{' && input != '[')
-    {
-        ff.putback(input);
-        return false;  // no format string (only value)
-    }
-    do
-    {
-        format += input;
-        if( input == '{')
-            count1++;
-        if( input == '}')
-            count1--;
-        if( input == '[')
-            count2++;
-        if( input == ']')
-            count2--;
-        ff.get( input );
-        if( input == '\0' || ff.eof() )
-            break;
-    } while( count1 != 0 || count2 !=0 );
-
-    return true;
-}
-
 void TReadJson::reset()
 {
     for(long int ii=0; ii < numFlds; ii++ )
         flds[ii].readed = 0;
+}
+
+gstring TReadJson::testRead()
+{
+    gstring ret = "";
+    for(long int ii=0; ii < numFlds; ii++ )
+        if( flds[ii].alws==1 && flds[ii].readed != 1 )
+        {  if( !ret.empty() )
+                ret += ", ";
+            ret += flds[ii].name;
+        }
+    return ret;
 }
 
 long int TReadJson::findFld( const char *Name )
@@ -278,177 +165,77 @@ long int TReadJson::findFld( const char *Name )
 
 long int TReadJson::findNext()
 {
-    char buf[200];
-    skipSpace();
-
-    if( ff.eof() )
-        return -3;
-
-    ff >> buf;
-
-    if( !( memcmp( "END_DIM", buf+1, 7 )) )
-        return -2;
-
-    long int ii = findFld( buf+1 );
-    if(  ii < 0 )
+    long int ii;
+    std::string jkey;
+    while( json_it != json_data.end() )
     {
-        gstring msg = buf;
-        msg += " - Invalid label of data.\n";
-        msg += curArray;
-        Error( "Formatted read error 01", msg );
+        jkey = json_it.key();
+        json_it++;
+        ii = findFld( jkey.c_str()+1 );
+        if( ii >= 0 )
+        {
+            flds[ii].readed = 1;
+            return ii;
+        }
     }
-
-    flds[ii].readed = 1;
-    return ii;
+    return -3;
 }
 
 
-void TReadJson::readNext( const char* label)
+void TReadJson::readNext( const char* label )
 {
-    char buf[200];
+    std::string jkey = key( label );
     gstring msg;
-    skipSpace();
-
-    if( ff.eof() )
+    if( json_data.find(jkey) == json_data.end() )
     {
         msg = label;
         msg += " - No data where expected.\n";
         msg += curArray;
-        Error( "Formatted read error 02", msg );
-    }
-
-    ff >> buf;
-    gstring str = buf+1;
-    size_t len = str.find('>');
-    str = str.substr(0, len );
-
-    if( !( strcmp( label, str.c_str() ) ))
-        return;
-
-    msg = buf;
-    msg += " - Invalid label of data.\n";
-    msg += curArray;
-    Error( "Formatted read error 03", msg );
-
-}
-
-long int TReadJson::findNextNotAll()
-{
-    char bufx[200];
-    char input;
-
-    skipSpace();
-
-    if( ff.eof() )
-        return -3;
-
-again:
-
-    ff >> bufx;
-
-    if( !( memcmp( "END_DIM", bufx+1, 7 )) )
-        return -2;
-
-    long int ii = findFld( bufx+1 );
-    if(  ii < 0 )
-    {
-        do{
-            ff.get( input );
-            if( input == '#' )
-            { ff.putback(input);
-                skipSpace();
-            }
-        }while( input != '<' && input != '\0' && !ff.eof());
-        if( input == '\0' || ff.eof() )
-            return -3;
-        ff.putback(input);
-        goto again;
-    }
-
-    flds[ii].readed = 1;
-    //cout << flds[ii].name << endl;
-    return ii;
-}
-
-void TReadJson::readFormatArray( const char* name, double* arr,
-                                   long int size, vector<IOJFormat>& vFormats )
-{
-    gstring format;
-    long int type;
-
-    setCurrentArray( name, size);
-    // vFormats.clear();
-
-    //ff << setprecision(15);
-    for( long int ii=0; ii<size; ii++  )
-    {
-        type = readFormatValue(arr[ii], format);
-        if(type > ft_Value && type< ft_Internal )
-        {
-            vFormats.push_back( IOJFormat(type, ii, format));
-        }
+        Error( "Json read error 01", msg );
     }
 }
+
 
 void TReadJson::readArray( const char* name, char* arr, long int size, long int el_size )
 {
-    char ch;
-    char buf[200];
-
     setCurrentArray( name, size);
 
-    for( long int ii=0; ii<size; ii++  )
+    std::string jkey = key( name );
+    gstring msg;
+    std::string val;
+    auto json_arr_it = json_data.find(jkey);
+    if( json_arr_it == json_data.end() )
     {
-        skipSpace();
-        ff.get(ch);
-        //   while( ff.good() && ch != '\'' )
-        //       ff.get(ch);
-        ff.getline( buf, el_size+1, '\'');
-        copyValues( arr +(ii*el_size), buf, el_size );
+        msg = name;
+        msg += " - No data where expected.\n";
+        Error( "Json read error 01", msg );
     }
 
-}
-
-void TReadJson::readArray( const char* name, vector<double> arr )
-{
-    int retSimb= 0; // next field is only value
-    double value;
-    gstring str;
-
-    setCurrentArray( name, 0);
-    //ff << setprecision(15);
-
-    do{
-        retSimb = readFormatValue(value, str);
-        if( retSimb == ft_Value )
-            arr.push_back( value );
-    } while(retSimb == ft_Value );
-}
-
-// DM corrected added gstring& arr instead of gstring arr 18.04.2013
-void TReadJson::readArray( const char* name, gstring& arr, long int el_size )
-{
-    char ch;
-    char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
-
-    setCurrentArray( name, 1);
-    skipSpace();
-    ff.get(ch);
-    ff.getline( buf, el_size+1, '\'');
-    arr = buf;
-}
-
-gstring TReadJson::testRead()
-{
-    gstring ret = "";
-    for(long int ii=0; ii < numFlds; ii++ )
-        if( flds[ii].alws==1 && flds[ii].readed != 1 )
-        {  if( !ret.empty() )
-                ret += ", ";
-            ret += flds[ii].name;
+    if( !json_arr_it->is_structured() &&  size==1 )
+    {
+        json_arr_it->get_to(val);
+        memcpy( arr, val.c_str(), el_size );
+    }
+    else
+    {
+        if( json_arr_it->size() != static_cast<size_t>(size) )
+        {
+            msg = name;
+            msg += " - No size (";
+            msg += std::to_string(size).c_str();
+            msg += ") as expected ";
+            msg += std::to_string(json_arr_it->size()).c_str();
+            Error( "Json read error 04", msg );
         }
-    return ret;
+        for( long int ii=0; ii<size; ii++  )
+        {
+            json_arr_it->at(ii).get_to( val );
+            memcpy( arr +(ii*el_size), val.c_str(), el_size );
+        }
+    }
 }
+
+
 
 //=============================================================================
 // io_arrays.cpp

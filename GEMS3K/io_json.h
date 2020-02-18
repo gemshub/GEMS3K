@@ -23,17 +23,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-
 #include <nlohmann/json.hpp>
 #include "io_arrays.h"
-
-
 
 /// Print fields of structure outField
 class TPrintJson: public  TRWArrays
 {
-    fstream ff;
-
     /// Internal structure of file data
     nlohmann::json& json_data;
 
@@ -156,70 +151,86 @@ public:
 
  class TReadJson : public  TRWArrays /// Read fields of structure
  {
-    fstream& ff;
+    fstream ff;
+    /// Internal structure of file data
+    nlohmann::json& json_data;
+    nlohmann::json::iterator json_it;
     gstring curArray;
 
  protected:
-    /// Reads value from a text file.
-    void readValue(float& val);
-    /// Reads value from a text file.
-    void readValue(double& val);
-    /// Reads format value from a text file.
-    long int readFormatValue(double& val, gstring& format);
-    bool  readFormat( gstring& format );
 
-    inline void setCurrentArray( const char* name, long int size );
- 
+    void setCurrentArray( const char* name, long int size );
+
+    std::string key( const char * name ) const
+    {
+      return std::string("<") + name + ">";
+    }
+
+    long int findFld( const char *Name ); ///< Find field by name
+
  public:
 
     /// Constructor
-    TReadJson( short aNumFlds, outField* aFlds, fstream& fin ):
-        TRWArrays( aNumFlds, aFlds), ff( fin ), curArray("")
-    {}
+    TReadJson( short aNumFlds, outField* aFlds, nlohmann::json& json_in ):
+        TRWArrays( aNumFlds, aFlds), json_data( json_in ), curArray("")
+    {
+       json_it = json_data.begin();
+    }
 
-    void  skipSpace();
-    void reset();  ///< Reset to 0 all flags (readed)
 
-    long int findFld( const char *Name ); ///< Find field by name
     long int findNext();  ///< Read next name from file and find in fields list
-    long int findNextNotAll();  ///< Read next name from file and find in fields list (if doesnot find read next name)
     void  readNext( const char* label); ///< Read next name from file
 
+    void reset();  ///< Reset to 0 all flags (readed)
     gstring testRead();   ///< Test for reading all fields must be always present in the file
 
     /// Reads array from a text file.
-    template <class T,
-             typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
+    template <class T>
     void readArray( const char *name, T* arr, long int size )
     {
         setCurrentArray( name, size);
-        for( long int ii=0; ii<size; ii++  )
+
+        std::string jkey = key( name );
+        gstring msg;
+        auto json_arr_it = json_data.find(jkey);
+        if( json_arr_it == json_data.end() )
         {
-            skipSpace();
-            ff >> arr[ii];
+            msg = name;
+            msg += " - No data where expected.\n";
+            Error( "Json read error 01", msg );
+        }
+
+        if( !json_arr_it->is_structured() &&  size==1 )
+        {
+            json_arr_it->get_to<T>(*arr);
+        }
+        else
+        {
+            if( json_arr_it->size() != static_cast<size_t>(size) )
+            {
+                msg = name;
+                msg += " - No size (";
+                msg += std::to_string(size).c_str();
+                msg += ") as expected ";
+                msg += std::to_string(json_arr_it->size()).c_str();
+                Error( "Json read error 03", msg );
+            }
+            for( long int ii=0; ii<size; ii++  )
+            {
+                json_arr_it->at(ii).get_to<T>( arr[ii] );
+            }
         }
     }
 
     /// Reads array from a text file.
-    template <class T,
-             typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
-    void readArray( const char *name, T* arr, long int size )
-    {
-     setCurrentArray( name, size);
-     for( long int ii=0; ii<size; ii++  )
-        readValue(arr[ii]);
-    }
-
-    /// Reads array from a text file.
     void readArray( const char *name, char* arr, long int size, long int el_size );
-
+/*
     /// Reads string from a text file.
     void readArray( const char* name, gstring &arr, long int el_size=198 );
     /// Reads double vector from a text file.
     void readArray( const char* name, vector<double> arr );
+*/
 
-    void readFormatArray( const char* name, double* arr,
-        long int size, vector<IOJFormat>& vFormats );
 };
 
 template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json_arr );

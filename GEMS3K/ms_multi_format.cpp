@@ -660,21 +660,30 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
   ErrorIf( !ff.good() , path, "Fileopen error");
 
 // static data
-   TReadArrays  rdar( 8, MULTI_static_fields, ff);
-   gstring str;
-   rdar.skipSpace();
-   char buf[300];
-   ff.getline(buf, 300,  '\n' );
-   str = buf;
-   size_t pos1 = str.find('\"');
-   if( pos1 < gstring::npos )
-      str = str.substr( pos1+1);
-   pos1 = str.find('\"');
-   if( pos1 < gstring::npos )
-   {   str = str.substr( 0, pos1 );
-      //f_getline( ff, str, '\n');
-      copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
-   }
+#ifndef JSON_OUT
+ TReadArrays  rdar( 8, MULTI_static_fields, ff);
+ rdar.skipSpace();
+ gstring str;
+ char buf[300];
+ ff.getline(buf, 300,  '\n' );
+ str = buf;
+ size_t pos1 = str.find('\"');
+ if( pos1 < gstring::npos )
+    str = str.substr( pos1+1);
+ pos1 = str.find('\"');
+ if( pos1 < gstring::npos )
+ {   str = str.substr( 0, pos1 );
+    //f_getline( ff, str, '\n');
+    copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
+ }
+
+#else
+ nlohmann::json json_data;
+ ff >> json_data;
+ TReadJson  rdar( 8, MULTI_static_fields, json_data);
+ memcpy( pm.stkey, json_data["<ID_key>"].get<std::string>().c_str(), EQ_RKLEN );
+#endif
+
 
    nfild = rdar.findNext();
    while( nfild >=0 )
@@ -785,7 +794,11 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
   ConvertDCC();
 
 //reads dynamic values from txt file
-   TReadArrays  rddar( 80, MULTI_dynamic_fields, ff);
+#ifndef JSON_OUT
+ TReadArrays  rddar( 80, MULTI_dynamic_fields, ff);
+#else
+ TReadJson  rddar( 80, MULTI_dynamic_fields, json_data);
+#endif
 
 // set up array flags for permanent fields
 

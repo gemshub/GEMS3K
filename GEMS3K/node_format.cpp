@@ -333,7 +333,14 @@ void TNode::databr_from_text_file( fstream& ff )
 
  // mem_set( &CNode->Tm, 0, 19*sizeof(double));
  databr_reset( CNode );
+
+#ifndef JSON_OUT
  TReadArrays  rdar(f_omph+1/*55*/, DataBR_fields, ff);
+#else
+ nlohmann::json json_data;
+ ff >> json_data;
+ TReadJson  rdar(f_omph+1/*55*/, DataBR_fields, json_data);
+#endif
  long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
@@ -482,7 +489,7 @@ void TNode::databr_from_text_file( fstream& ff )
            break;
    case f_amru: rdar.readArray( "amru",  CNode->amru, CSD->nPSb );
            break;
-   case f_amrl: rdar.readArray( "arml",  CNode->amrl, CSD->nPSb );
+   case f_amrl: rdar.readArray( "amrl",  CNode->amrl, CSD->nPSb );
            break;
    case f_omph: rdar.readArray( "omPH",  CNode->omPH, CSD->nPHb );
            break;
@@ -650,7 +657,14 @@ void TNode::datach_from_text_file(fstream& ff)
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
 // static arrays
+#ifndef JSON_OUT
  TReadArrays  rdar( 14, DataCH_static_fields, ff);
+#else
+ nlohmann::json json_data;
+ ff >> json_data;
+ TReadJson  rdar( 14, DataCH_static_fields, json_data);
+#endif
+
  long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
@@ -699,7 +713,11 @@ void TNode::datach_from_text_file(fstream& ff)
   databr_realloc();
 
 //dynamic data
+#ifndef JSON_OUT
  TReadArrays  rddar( 30, DataCH_dynamic_fields, ff);
+#else
+ TReadJson  rddar( 30, DataCH_dynamic_fields, json_data);
+#endif
 
    if( CSD->iGrd  )
       rddar.setAlws( f_DD /*28 "DD"*/);
