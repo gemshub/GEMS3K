@@ -765,8 +765,8 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
     // put data to pmfiles-dat.lst file
     else
     {   fout.open(path.c_str(), ios::out);
-        fout << "-t \"" << name.c_str() << "-dch.dat\"";
-        fout << " \"" << name.c_str() << "-ipm.dat\" ";
+        fout << "-t \"" << name.c_str() << "-dch."<<dat_ext << "\"";
+        fout << " \"" << name.c_str() << "-ipm."<<dat_ext << "\" ";
     }
 
     gstring path2 = name;
@@ -785,7 +785,7 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
     {
         // output MULTI to txt file
         newname = name+"-ipm";
-        Path_ = u_makepath( dir, newname, "dat" );
+        Path_ = u_makepath( dir, newname, dat_ext );
         TProfil::pm->outMulti( Path_, addMui,  with_comments, brief_mode );
     }
 
@@ -800,7 +800,7 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
     // out dataCH to text file
     else
     {  //newname = name+"-dch";
-        Path_ = u_makepath( dir, newname, "dat" );
+        Path_ = u_makepath( dir, newname, dat_ext );
         fstream  f_ch2(Path_.c_str(), ios::out);
         calcNode.datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
         f_ch2.close();
@@ -835,15 +835,15 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
         else
         {
             newname = name + "-dbr-0-" + buf;
-            Path_ = u_makepath( dir, newname, "dat" );
+            Path_ = u_makepath( dir, newname, dat_ext );
             fstream  f_br2(Path_.c_str(), ios::out);
             calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
             f_br2.close();
             if( first )
-                fout << " \"" << newname.c_str() << ".dat\"";
+                fout << " \"" << newname.c_str() << "."<<dat_ext << "\"";
             if( !first )
                 fout2 << ",";
-            fout2 << " \"" << newname.c_str() << ".dat\"";
+            fout2 << " \"" << newname.c_str() << "."<<dat_ext << "\"";
         }
         first = false;
 
@@ -866,11 +866,11 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
             else
             {
                 newname = name + "-dbr-1-" + buf;
-                Path_ = u_makepath( dir, newname, "dat" );
+                Path_ = u_makepath( dir, newname, dat_ext );
                 fstream  f_br2(Path_.c_str(), ios::out);
                 calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
                 f_br2.close();
-                //         fout << ", \"" << newname.c_str() << ".dat\"";
+                //         fout << ", \"" << newname.c_str() << "."<< dat_ext << "\"";
             }
         }
     } // ii

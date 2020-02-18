@@ -48,6 +48,14 @@
 
 //TNode* TNode::na;
 
+#ifdef JSON_OUT
+  const char *dat_ext = "json";
+  const char *dat_filt = "*.json";
+#else
+const char *dat_ext = "dat";
+const char *dat_filt = "*.dat";
+#endif
+
 // Conversion factors
 const double bar_to_Pa = 1e5,
                m3_to_cm3 = 1e6,

@@ -69,6 +69,9 @@
 class TActivity;
 class TKinetics;
 
+extern const char *dat_ext;
+extern const char *dat_filt;
+
 extern const double bar_to_Pa,
                m3_to_cm3,
                kg_to_g;
