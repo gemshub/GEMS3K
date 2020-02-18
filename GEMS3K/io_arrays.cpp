@@ -57,14 +57,14 @@ inline bool IsDoubleEmpty( const double v )
 #endif
 
 long int TRWArrays::findFld( const char *Name )
-  {
-  	long int ii;
+{
+    long int ii;
 
-   for( ii=0; ii < numFlds; ii++ )
-    if( !( strcmp( flds[ii].name.c_str(), Name ) ))
-      return ii;
-   return -1;
-  }
+    for( ii=0; ii < numFlds; ii++ )
+        if( !( strcmp( flds[ii].name.c_str(), Name ) ))
+            return ii;
+    return -1;
+}
 
 //---------------------------------------------------------//
 // print Arrays ( fields of structure )
@@ -155,372 +155,329 @@ void TPrintArrays::writeArrayS( const char *name, char* arr,
 
 //------------------------------------------------------------------
 
- inline void TReadArrays::readValue(float& val)
- {
-   char input;
-   skipSpace();
+inline void TReadArrays::setCurrentArray( const char* name, long int size )
+{
+    char buf[200];
+    sprintf( buf, "After successfully read <%s> %ld data items", name, size);
+    curArray = buf;
+}
 
-   ff.get( input );
-   if( input == CHAR_EMPTY )
-      val = FLOAT_EMPTY;
-   else
-      {
+void TReadArrays::readValue(float& val)
+{
+    char input;
+    skipSpace();
+
+    ff.get( input );
+    if( input == CHAR_EMPTY )
+        val = FLOAT_EMPTY;
+    else
+    {
         ff.putback(input);
         ff >> val;
-      }
-  }
+    }
+}
 
- inline void TReadArrays::setCurrentArray( const char* name, long int size )
- {
-   char buf[200];
-   sprintf( buf, "After successfully read <%s> %ld data items", name, size);
-   curArray = buf;
- }
+void TReadArrays::readValue(double& val)
+{
+    char input;
+    skipSpace();
 
- inline void TReadArrays::readValue(double& val)
- {
-   char input;
-   skipSpace();
-
-   ff.get( input );
-   if( input == CHAR_EMPTY )
-      val = DOUBLE_EMPTY;
-   else
-      {
+    ff.get( input );
+    if( input == CHAR_EMPTY )
+        val = DOUBLE_EMPTY;
+    else
+    {
         ff.putback(input);
         ff >> val;
-      }
- }
+    }
+}
 
- long int TReadArrays::readFormatValue(double& val, gstring& format)
- {
-   char input;
-   format = "";
-   long int type = ft_Value;
+long int TReadArrays::readFormatValue(double& val, gstring& format)
+{
+    char input;
+    format = "";
+    long int type = ft_Value;
 
-   skipSpace();
+    skipSpace();
 
-   if( ff.eof() )
-     return ft_Internal;
+    if( ff.eof() )
+        return ft_Internal;
 
-   ff.get( input );
-   switch( input )
-   {
-     case CHAR_EMPTY: val = DOUBLE_EMPTY;
-                    return type;
-     case '<': ff.putback(input);
-                 return ft_Internal;
-     case 'F': type = ft_F;
-             if(!readFormat( format ))
-              ff >> val;
-             break;
-   case 'L': type = ft_L;
-             if(!readFormat( format ))
-               ff >> val;
-             break;
-   case 'R': type = ft_R;
-             if(!readFormat( format ))
-               ff >> val;
-             break;
-   default:
-       {   ff.putback(input);
-           ff >> val;
-           break;
-       }
-   }
-  return type;
- }
+    ff.get( input );
+    switch( input )
+    {
+    case CHAR_EMPTY: val = DOUBLE_EMPTY;
+        return type;
+    case '<': ff.putback(input);
+        return ft_Internal;
+    case 'F': type = ft_F;
+        if(!readFormat( format ))
+            ff >> val;
+        break;
+    case 'L': type = ft_L;
+        if(!readFormat( format ))
+            ff >> val;
+        break;
+    case 'R': type = ft_R;
+        if(!readFormat( format ))
+            ff >> val;
+        break;
+    default:
+    {   ff.putback(input);
+        ff >> val;
+        break;
+    }
+    }
+    return type;
+}
 
 // skip  ' ',  '\n', '\t' and comments (from '#' to end of line)
 void  TReadArrays::skipSpace()
 {
-  char input;
-  if( ff.eof() )
-       return;
-  ff.get( input );
-  while( input == '#' || input == ' ' ||
-        input == '\n' || input == '\t')
- {
-   if( input == '#' )
-    do{
-         ff.get( input );
-      }while( input != '\n' && input != '\0' && !ff.eof());
-   if( input == '\0' || ff.eof() )
-     return;
-   ff.get( input );
-  }
- ff.putback(input);
-// cout << ff << endl; // comented out DM 03.05.2013
+    char input;
+    if( ff.eof() )
+        return;
+    ff.get( input );
+    while( input == '#' || input == ' ' ||
+           input == '\n' || input == '\t')
+    {
+        if( input == '#' )
+            do{
+            ff.get( input );
+        }while( input != '\n' && input != '\0' && !ff.eof());
+        if( input == '\0' || ff.eof() )
+            return;
+        ff.get( input );
+    }
+    ff.putback(input);
+    // cout << ff << endl; // comented out DM 03.05.2013
 }
 
 // Read format string
 bool  TReadArrays::readFormat( gstring& format )
 {
-  char input;
-  format = "";
-  long int count1=0;  // counters of {}
-  long int count2=0;  // counters of []
+    char input;
+    format = "";
+    long int count1=0;  // counters of {}
+    long int count2=0;  // counters of []
 
-  skipSpace();
-  ff.get( input );
-  if( input != '{' && input != '[')
-  {
-      ff.putback(input);
-      return false;  // no format string (only value)
-  }
-  do
-  {
-      format += input;
-      if( input == '{')
-       count1++;
-      if( input == '}')
-       count1--;
-      if( input == '[')
-       count2++;
-      if( input == ']')
-       count2--;
-      ff.get( input );
-      if( input == '\0' || ff.eof() )
-        break;
-  } while( count1 != 0 || count2 !=0 );
+    skipSpace();
+    ff.get( input );
+    if( input != '{' && input != '[')
+    {
+        ff.putback(input);
+        return false;  // no format string (only value)
+    }
+    do
+    {
+        format += input;
+        if( input == '{')
+            count1++;
+        if( input == '}')
+            count1--;
+        if( input == '[')
+            count2++;
+        if( input == ']')
+            count2--;
+        ff.get( input );
+        if( input == '\0' || ff.eof() )
+            break;
+    } while( count1 != 0 || count2 !=0 );
 
-  return true;
+    return true;
 }
 
 void TReadArrays::reset()
 {
- for(long int ii=0; ii < numFlds; ii++ )
-    flds[ii].readed = 0;
+    for(long int ii=0; ii < numFlds; ii++ )
+        flds[ii].readed = 0;
 }
 
 long int TReadArrays::findFld( const char *Name )
 {
-	long int ii;
- gstring str = Name;
- size_t len = str.find('>');
- str = str.substr(0, len );
+    long int ii;
+    gstring str = Name;
+    size_t len = str.find('>');
+    str = str.substr(0, len );
 
- for( ii=0; ii < numFlds; ii++ )
-  if( !( strcmp( flds[ii].name.c_str(), str.c_str() ) ))
-    return ii;
- return -1;
+    for( ii=0; ii < numFlds; ii++ )
+        if( !( strcmp( flds[ii].name.c_str(), str.c_str() ) ))
+            return ii;
+    return -1;
 }
 
 long int TReadArrays::findNext()
 {
- char buf[200];
- skipSpace();
+    char buf[200];
+    skipSpace();
 
- if( ff.eof() )
-   return -3;
+    if( ff.eof() )
+        return -3;
 
- ff >> buf;
+    ff >> buf;
 
- if( !( memcmp( "END_DIM", buf+1, 7 )) )
-  return -2;
+    if( !( memcmp( "END_DIM", buf+1, 7 )) )
+        return -2;
 
- long int ii = findFld( buf+1 );
- if(  ii < 0 )
- {
-    gstring msg = buf;
-          msg += " - Invalid label of data.\n";
-          msg += curArray;
-     Error( "Formatted read error 01", msg );
- }
+    long int ii = findFld( buf+1 );
+    if(  ii < 0 )
+    {
+        gstring msg = buf;
+        msg += " - Invalid label of data.\n";
+        msg += curArray;
+        Error( "Formatted read error 01", msg );
+    }
 
- flds[ii].readed = 1;
- return ii;
+    flds[ii].readed = 1;
+    return ii;
 }
 
 
 void TReadArrays::readNext( const char* label)
 {
- char buf[200];
- gstring msg;
- skipSpace();
+    char buf[200];
+    gstring msg;
+    skipSpace();
 
- if( ff.eof() )
- {
-    msg = label;
-    msg += " - No data where expected.\n";
+    if( ff.eof() )
+    {
+        msg = label;
+        msg += " - No data where expected.\n";
+        msg += curArray;
+        Error( "Formatted read error 02", msg );
+    }
+
+    ff >> buf;
+    gstring str = buf+1;
+    size_t len = str.find('>');
+    str = str.substr(0, len );
+
+    if( !( strcmp( label, str.c_str() ) ))
+        return;
+
+    msg = buf;
+    msg += " - Invalid label of data.\n";
     msg += curArray;
-    Error( "Formatted read error 02", msg );
- }
-
- ff >> buf;
- gstring str = buf+1;
- size_t len = str.find('>');
- str = str.substr(0, len );
-
- if( !( strcmp( label, str.c_str() ) ))
-     return;
-
- msg = buf;
- msg += " - Invalid label of data.\n";
- msg += curArray;
- Error( "Formatted read error 03", msg );
+    Error( "Formatted read error 03", msg );
 
 }
 
 long int TReadArrays::findNextNotAll()
 {
- char bufx[200];
- char input;
+    char bufx[200];
+    char input;
 
- skipSpace();
+    skipSpace();
 
- if( ff.eof() )
-   return -3;
+    if( ff.eof() )
+        return -3;
 
 again:
 
- ff >> bufx;
+    ff >> bufx;
 
- if( !( memcmp( "END_DIM", bufx+1, 7 )) )
-  return -2;
+    if( !( memcmp( "END_DIM", bufx+1, 7 )) )
+        return -2;
 
- long int ii = findFld( bufx+1 );
- if(  ii < 0 )
- {
-    do{
-        ff.get( input );
-        if( input == '#' )
-        { ff.putback(input);
-          skipSpace();
-        }
-      }while( input != '<' && input != '\0' && !ff.eof());
-      if( input == '\0' || ff.eof() )
-        return -3;
-      ff.putback(input);
-      goto again;
-  }
+    long int ii = findFld( bufx+1 );
+    if(  ii < 0 )
+    {
+        do{
+            ff.get( input );
+            if( input == '#' )
+            { ff.putback(input);
+                skipSpace();
+            }
+        }while( input != '<' && input != '\0' && !ff.eof());
+        if( input == '\0' || ff.eof() )
+            return -3;
+        ff.putback(input);
+        goto again;
+    }
 
- flds[ii].readed = 1;
- //cout << flds[ii].name << endl;
- return ii;
-}
-
-void TReadArrays::readArray( const char* name, short* arr, long int size )
-{
- setCurrentArray( name, size);
- for( long int ii=0; ii<size; ii++  )
- {
-   skipSpace();
-   ff >> arr[ii];
- }
-}
-
-void TReadArrays::readArray( const char* name, int* arr, long int size )
-{
- setCurrentArray( name, size);
- for( long int ii=0; ii<size; ii++  )
- {
-   skipSpace();
-   ff >> arr[ii];
- }
-}
-
-void TReadArrays::readArray( const char* name, long int* arr, long int size )
-{
- setCurrentArray( name, size);
- for( long int ii=0; ii<size; ii++  )
- {
-   skipSpace();
-   ff >> arr[ii];
- }
-}
-void TReadArrays::readArray( const char* name, float* arr, long int size )
-{
- setCurrentArray( name, size);
- for( long int ii=0; ii<size; ii++  )
-    readValue(arr[ii]);
-}
-
-void TReadArrays::readArray( const char* name, double* arr, long int size )
-{
- setCurrentArray( name, size);
- //ff << setprecision(15);
- for( long int ii=0; ii<size; ii++  )
-    readValue(arr[ii]);
+    flds[ii].readed = 1;
+    //cout << flds[ii].name << endl;
+    return ii;
 }
 
 void TReadArrays::readFormatArray( const char* name, double* arr,
-    long int size, vector<IOJFormat>& vFormats )
+                                   long int size, vector<IOJFormat>& vFormats )
 {
- gstring format;
- long int type;
+    gstring format;
+    long int type;
 
- setCurrentArray( name, size);
- // vFormats.clear();
+    setCurrentArray( name, size);
+    // vFormats.clear();
 
- //ff << setprecision(15);
- for( long int ii=0; ii<size; ii++  )
- {
-     type = readFormatValue(arr[ii], format);
-     if(type > ft_Value && type< ft_Internal )
-     {    vFormats.push_back( IOJFormat(type, ii, format));
-     }
- }
+    //ff << setprecision(15);
+    for( long int ii=0; ii<size; ii++  )
+    {
+        type = readFormatValue(arr[ii], format);
+        if(type > ft_Value && type< ft_Internal )
+        {
+            vFormats.push_back( IOJFormat(type, ii, format));
+        }
+    }
 }
 
 void TReadArrays::readArray( const char* name, char* arr, long int size, long int el_size )
 {
- char ch;
- char buf[200];
+    char ch;
+    char buf[200];
 
- setCurrentArray( name, size);
+    setCurrentArray( name, size);
 
- for( long int ii=0; ii<size; ii++  )
- {
-   skipSpace();
-   ff.get(ch);
-//   while( ff.good() && ch != '\'' )
-//       ff.get(ch);
-   ff.getline( buf, el_size+1, '\'');
-   copyValues( arr +(ii*el_size), buf, el_size );
- }
+    for( long int ii=0; ii<size; ii++  )
+    {
+        skipSpace();
+        ff.get(ch);
+        //   while( ff.good() && ch != '\'' )
+        //       ff.get(ch);
+        ff.getline( buf, el_size+1, '\'');
+        copyValues( arr +(ii*el_size), buf, el_size );
+    }
 
 }
 
 void TReadArrays::readArray( const char* name, vector<double> arr )
 {
-  int retSimb= 0; // next field is only value
-  double value;
-  gstring str;
+    int retSimb= 0; // next field is only value
+    double value;
+    gstring str;
 
-  setCurrentArray( name, 0);
- //ff << setprecision(15);
+    setCurrentArray( name, 0);
+    //ff << setprecision(15);
 
-  do{
-       retSimb = readFormatValue(value, str);
-       if( retSimb == ft_Value )
-        arr.push_back( value );
-  } while(retSimb == ft_Value );
+    do{
+        retSimb = readFormatValue(value, str);
+        if( retSimb == ft_Value )
+            arr.push_back( value );
+    } while(retSimb == ft_Value );
 }
 
 // DM corrected added gstring& arr instead of gstring arr 18.04.2013
 void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
 {
- char ch;
- char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
+    char ch;
+    char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
 
- setCurrentArray( name, 1);
- skipSpace();
- ff.get(ch);
- ff.getline( buf, el_size+1, '\'');
- arr = buf;
+    setCurrentArray( name, 1);
+    skipSpace();
+    ff.get(ch);
+    ff.getline( buf, el_size+1, '\'');
+    arr = buf;
 }
 
 gstring TReadArrays::testRead()
 {
- gstring ret = "";
- for(long int ii=0; ii < numFlds; ii++ )
-  if( flds[ii].alws==1 && flds[ii].readed != 1 )
-  {  if( !ret.empty() )
-       ret += ", ";
-     ret += flds[ii].name;
-  }
- return ret;
+    gstring ret = "";
+    for(long int ii=0; ii < numFlds; ii++ )
+        if( flds[ii].alws==1 && flds[ii].readed != 1 )
+        {  if( !ret.empty() )
+                ret += ", ";
+            ret += flds[ii].name;
+        }
+    return ret;
 }
 
 //=============================================================================

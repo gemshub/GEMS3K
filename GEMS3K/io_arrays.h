@@ -25,7 +25,7 @@
 
 #include  <fstream>
 #include <vector>
-
+#include <cmath>
 #include "verror.h"
 
 struct outField /// Internal descriptions of fields
@@ -137,7 +137,7 @@ class TPrintArrays: public  TRWArrays
 public:
 
     /// Constructor
-    TPrintArrays( short aNumFlds, outField* aFlds, fstream& fout ):
+    TPrintArrays( short  aNumFlds, outField* aFlds, fstream& fout ):
         TRWArrays( aNumFlds, aFlds, fout)
     {}
 
@@ -280,16 +280,15 @@ public:
 
  protected:
     /// Reads value from a text file.
-    inline void readValue(float& val);
+    void readValue(float& val);
     /// Reads value from a text file.
-    inline void readValue(double& val);
+    void readValue(double& val);
     /// Reads format value from a text file.
     long int readFormatValue(double& val, gstring& format);
     bool  readFormat( gstring& format );
 
     inline void setCurrentArray( const char* name, long int size );
  
-
  public:
 
     /// Constructor
@@ -308,15 +307,28 @@ public:
     gstring testRead();   ///< Test for reading all fields must be always present in the file
 
     /// Reads array from a text file.
-    void readArray( const char *name, short* arr, long int size );
+    template <class T,
+             typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
+    void readArray( const char *name, T* arr, long int size )
+    {
+        setCurrentArray( name, size);
+        for( long int ii=0; ii<size; ii++  )
+        {
+            skipSpace();
+            ff >> arr[ii];
+        }
+    }
+
     /// Reads array from a text file.
-    void readArray( const char *name, int* arr, long int size );
-    /// Reads array from a text file.
-    void readArray( const char *name, long int* arr, long int size );
-    /// Reads array from a text file.
-    void readArray( const char *name, float* arr, long int size );
-    /// Reads array from a text file.
-    void readArray( const char *name, double* arr, long int size );
+    template <class T,
+             typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+    void readArray( const char *name, T* arr, long int size )
+    {
+     setCurrentArray( name, size);
+     for( long int ii=0; ii<size; ii++  )
+        readValue(arr[ii]);
+    }
+
     /// Reads array from a text file.
     void readArray( const char *name, char* arr, long int size, long int el_size );
 
@@ -324,7 +336,6 @@ public:
     void readArray( const char* name, gstring &arr, long int el_size=198 );
     /// Reads double vector from a text file.
     void readArray( const char* name, vector<double> arr );
-
 
     void readFormatArray( const char* name, double* arr,
         long int size, vector<IOJFormat>& vFormats );
