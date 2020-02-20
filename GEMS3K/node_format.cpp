@@ -601,7 +601,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 
   ff << endl;
   if( _comment )
-      ff << "\n# End of file";
+      ff << "\n# End of file\n";
 }
 
 // Reading dataCH structure from text file

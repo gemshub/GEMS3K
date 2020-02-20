@@ -574,7 +574,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 
  ff << endl;
  if( _comment )
-   ff << "\n# End of file" << endl;
+   ff << "\n# End of file\n" << endl;
 
 }
 
