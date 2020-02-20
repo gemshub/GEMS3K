@@ -43,6 +43,7 @@
 #include <string>
 #include <iostream>
 #ifndef _WIN32
+#include <sys/stat.h>
 #include <unistd.h>
 #else
 #include <windows.h>
@@ -62,6 +63,9 @@ int main () {
     socket.bind ("tcp://*:5555");
 
     std::cout << "ZeroMQ server start..." << "\nSocket :  " << socket.handle()  << std::endl;
+
+    // create server_data directory
+    mkdir("server_data", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     while (true) {
         zmq::recv_flags rsv_flag = zmq::recv_flags::none;
