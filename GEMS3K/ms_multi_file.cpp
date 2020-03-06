@@ -282,7 +282,7 @@ pm.kdT = 0.;   // current time step, s (kinetics)
     pm.Eh = 0.;         // Eh of aqueous solution = 0.; V
     pm.DHBM = 0.;       // Adjusted balance precision criterion (IPM-2 )
     pm.DSM = 0.;        // min value phase DS (IPM-2)
-    pm.GWAT = 0.;       // used in ipm_gamma()
+    pm.GWAT = 55.50837344;       // used in ipm_gamma()
     pm.YMET = 0.;       // reserved
     fillValue( pm.denW, 0., 5 );
     fillValue( pm.denWg, 0., 5 );
@@ -1165,6 +1165,7 @@ void TMulti::to_text_file( const char *path, bool append )
   prar.writeArray( "Double_PARAM",  &paTProfil->p.DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 39L );
   prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
+  prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );
   prar.writeArray(  "EpsW", pm.epsW, 5);
   prar.writeArray(  "EpsWg", pm.epsWg, 5);
   prar.writeArray(  "DenW", pm.denW, 5);

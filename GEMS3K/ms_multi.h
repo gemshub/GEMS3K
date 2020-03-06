@@ -125,7 +125,7 @@ pKMM, ///< new: State of KinMet arrays: 0-create; 1-available; -1 remake
     SX_,    ///< Total entropy of the system S(X)
     SXc,   ///<	 reserved
     CpX_,  ///< reserved
-    CpXc,  ///< reserved
+    CpXc,  ///< 20 reserved
     CvX_,  ///< reserved
     CvXc,  ///< reserved
   // TKinMet stuff

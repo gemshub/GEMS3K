@@ -595,6 +595,8 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
             else pm.lnGam[j] = 0.;
             pm.Gamma[j] = 1.;
         }
+        //cout << "Point 2 after " << "pm.lnGam[0] " << setprecision(15)<< pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
+
         for( j=0; j<pm.L; j++)
             pm.G[j] = pm.G0[j] + pm.lnGam[j];  // Provisory cleanup 4.12.2009 DK
         if( pm.LO )
@@ -1013,6 +1015,7 @@ to_text_file( "MultiDumpDC.txt" );   // Debugging
        LM1 = OptimizeStepSize( LM ); // Finding an optimal value of the descent step size
        FX1 = GX( LM1 ); // Calculation of the total Gibbs energy of the system G(X)
                           // and copying of Y, YF vectors into X,XF, respectively.
+       //cout<< "LM = " << LM << " LM1= " << LM1 << " FX1= " << FX1 << endl;
        pm.FX=FX1;
        // temporary
        for(i=4; i>0; i-- )
@@ -1152,6 +1155,9 @@ double TMulti::OptimizeStepSize( double LM )
     FX2= GX( LM2 );
 
 SH1:
+    if( fabs(FX1 - FX2) <= ( (fabs(FX1) < fabs(FX2) ? fabs(FX2) : fabs(FX1)) * 1e-13) )
+        goto OCT;
+
     if( FX1>FX2)
         goto SH2;
     else goto SH3;

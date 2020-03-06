@@ -26,6 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
+#include <iomanip>
 #include <cmath>
 #include "m_param.h"
 
@@ -457,6 +458,8 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
         }
         // calculation of species concentrations in k-th phase
         CalculateConcentrationsInPhase( X, XF, XFA, Factor, MMC, Dsur, j, i, k );
+        //if( k == 0)
+        //cout << "Point !" << "X[0] " << setprecision(15)<< X[0] << " XF[0] " << XF[0] << " pm.Wx[0] " << pm.Wx[0] << endl;
 
 NEXT_PHASE:
         pm.VXc += pm.FVOL[k];
@@ -971,6 +974,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
     SPP_SETTING *pa = paTProfil;
 
+    //cout << "Point 1 before " << "pm.lnGam[0] " << setprecision(15) << pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
+
     if( pm.XF[k] <= pm.DSM ) // No sorbent retained by the IPM - phase killed
         return status;
     if( pm.XFA[k] <=  pa->p.ScMin )  // elimination of sorption phase
@@ -1363,7 +1368,9 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
             }
         }
     }  // j
-   return status;
+
+    //cout << "Point 1 after " << "pm.lnGam[0] " << setprecision(15) << pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
+    return status;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

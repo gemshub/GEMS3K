@@ -243,6 +243,7 @@ long int TNode::GEM_run( bool uPrimalSol )
                pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
        }
 
+   profil->outMultiTxt( "React_before.dump.txt"  );
    // GEM IPM calculation of equilibrium state
    //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
 #ifndef IPMGEMPLUGIN
@@ -250,6 +251,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 #else
     CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 #endif
+    profil->outMultiTxt( "React_after.dump.txt"  );
 
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
@@ -2086,7 +2088,7 @@ void TNode::packDataBr()
    CNode->TK = pmm->TCc+C_to_K; //25
    CNode->P = pmm->Pc*bar_to_Pa; //1
 //   CNode->IterDone = pmm->IT;
-   CNode->IterDone = pmm->ITF+pmm->IT;   // Now complete number of FIA and IPM iterations
+   CNode->IterDone = /*pmm->ITF+*/pmm->IT;   // Now complete number of FIA and IPM iterations
 // values
   CNode->Vs = pmm->VXc*1.e-6; // from cm3 to m3
   CNode->Gs = pmm->FX;
@@ -2158,6 +2160,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   pmm->Tc = CNode->TK;
   pmm->Pc  = CNode->P/bar_to_Pa;
   pmm->VXc = CNode->Vs/1.e-6; // from cm3 to m3
+
   // Obligatory arrays - always unpacked!
   for( ii=0; ii<CSD->nDCb; ii++ )
   {
@@ -2204,7 +2207,8 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //   pmm->IT = 0;
  }
  else {   // Unpacking primal solution provided in the node DATABR structure
-  pmm->IT = 0;
+  pmm->IT = CNode->IterDone; // ?  pmm->ITF+pmm->IT;
+  //pmm->IT = 0;
   pmm->MBX = CNode->Ms;
   pmm->IC = CNode->IC;
   pmm->Eh = CNode->Eh;

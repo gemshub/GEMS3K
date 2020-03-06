@@ -845,6 +845,7 @@ long int TDavies::MixMod()
 	lnxw = log(xw);
 	sqI = sqrt(IS);
 
+    //cout << "MixMod " << setprecision(15)<< xw << " " << Lgam << " " << sqI << endl;
 	// loop over species
 	for( j=0; j<NComp; j++ )
 	{

@@ -984,8 +984,8 @@ double TMulti::GX( double LM  )
 NEXT_PHASE:
         j = i;
     }  // k
-//    cout << "GX  " << setprecision(16) << scientific <<  FX << endl;
-    return(FX);
+//cout << setprecision(16) << scientific << " LM " << LM << " GX  " <<  FX << endl;
+  return(FX);
 }
 
 #ifndef IPMGEMPLUGIN

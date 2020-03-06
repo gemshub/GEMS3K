@@ -28,6 +28,7 @@
 //
 
 #include <cmath>
+#include <iomanip>
 #include "m_param.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -357,6 +358,9 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
     SPP_SETTING *pa = paTProfil;
 //    std::cout << "CalculateActivityCoefficients - 0 " << LinkMode << std::endl;
     // calculating concentrations of species in multi-component phases
+
+    //cout << "Point 3 before " << LinkMode << " pm.lnGam[0] " << setprecision(15)<< pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
+
     switch( LinkMode )
     {
 //      std::cout << "CalculateActivityCoefficients - LinkMode" << std::endl;
@@ -513,7 +517,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
         //jsb = jse;
         //jse += pm.LsMdc[k*3+1]*pm.LsMdc[k*3+2];
 
-   if( LinkMode == LINK_UX_MODE && sMod[SGM_MODE] == SM_STNGAM )
+        if( LinkMode == LINK_UX_MODE && sMod[SGM_MODE] == SM_STNGAM )
    {    // check that SGM_MODE for adsorption or multi-site ideal SS is not SM_IDEAL in Phase records!
         switch( pm.PHC[k] )
         {  // calculating activity coefficients using built-in functions
@@ -599,6 +603,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
        } // end switch
    }  // end if LinkMode == LINK_UX_MODE
 
+
+
 #ifndef IPMGEMPLUGIN
 // This part running Phase math scripts is not used in standalone GEMS3K
         // Link DOD and set sizes of work arrays
@@ -654,6 +660,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
                 break;
 
         case LINK_UX_MODE:  // the model is dependent on current concentrations on IPM iteration
+
             switch( pm.PHC[k] )
             {  //
               case PH_AQUEL:
@@ -748,6 +755,8 @@ END_LOOP:
            }
         }
     }  // k - end loop over phases
+
+    //cout << "Point 3 after " << "pm.lnGam[0] " << setprecision(15)<< pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
 
     if( statusGC )
         return statusGC;

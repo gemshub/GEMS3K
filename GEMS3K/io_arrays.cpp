@@ -71,17 +71,17 @@ long int TRWArrays::findFld( const char *Name )
 
 
 /// Write float value to file
-template <> void TPrintArrays::writeValue( const double& val )
+template <> void TPrintArrays::writeValue( const float& val )
 {
     if( IsFloatEmpty( val ))
         ff << CHAR_EMPTY << " ";
     else
         //    ff << setprecision(10) << scientific << arr[ii] << " ";
-        ff << setprecision(7) << val;// << " ";
+        ff << setprecision(15) << val;// << " ";
 }
 
 /// Write double value to file
-template <> void TPrintArrays::writeValue( const float& val )
+template <> void TPrintArrays::writeValue( const double& val )
 {
     if( IsDoubleEmpty( val ))
         ff << CHAR_EMPTY << " ";
