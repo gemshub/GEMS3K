@@ -111,7 +111,7 @@ double  CalculateEquilibriumServer( const gstring& lst_f_name )
         }
 
         // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
-        long NodeStatusCH = node->GEM_run( false );
+        long NodeStatusCH = node->GEM_run( true );
         ret  = node->GEM_CalcTime();
 
         if( NodeStatusCH == OK_GEM_AIA || NodeStatusCH == OK_GEM_SIA  ){
