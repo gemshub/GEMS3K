@@ -148,7 +148,7 @@ void TProfil::outMultiTxt( const char *path, bool append  )
 void TProfil::readMulti( GemDataStream& ff )
 {
     //DATACH  *dCH = TNode::na->pCSD();
-    DATACH  *dCH =  multi->node->pCSD();
+    DATACH  *dCH =  multi->node1->pCSD();
     short arr[10];
 
 	 ff.readArray( arr, 10 );
@@ -200,9 +200,9 @@ void TMulti::CheckMtparam()
   //TK = TNode::na->cTK();
   //PPa = TNode::na->cP();
 
-  DATACH  *dCH = node->pCSD();
-  TK = node->cTK();
-  PPa = node->cP();
+  DATACH  *dCH = node1->pCSD();
+  TK = node1->cTK();
+  PPa = node1->cP();
 
   P = PPa/bar_to_Pa;
 

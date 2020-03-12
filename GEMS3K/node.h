@@ -90,7 +90,6 @@ class TNode
     friend class TNodeArray;
 
     gstring dbr_file_name;  ///< place for the *dbr. I/O file name
-    gstring ipmlog_file_name;  ///< full name of the ipmlog file
 
 protected:
    MULTI* pmm;  ///< \protected Pointer to GEM IPM work data structure (ms_multi.h)
@@ -219,6 +218,7 @@ protected:
     virtual void  setNodeArray( gstring& , long int , bool ) { }
 #else
 public:
+
 
 // Added by AL and DK in 2014-2018 as an alternative (more generic for the chemical system) Activity API
 
@@ -1252,7 +1252,9 @@ long int GEM_step_MT( const long int step )
     virtual void databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
                               long int nFilds, long int (*Flds)[2]);
 
-    /// Get full name of the ipmlog file
+    static gstring ipmLogFile;  ///< full name of the ipmlog file
+
+    /* Get full name of the ipmlog file
     const gstring& ipmLogFile() const {
         return ipmlog_file_name;
     }
@@ -1260,7 +1262,7 @@ long int GEM_step_MT( const long int step )
     /// Set full name of the ipmlog file
     void setipmLogFile(const gstring& logFile) {
         ipmlog_file_name = logFile;
-    }
+    }*/
 
 
 };

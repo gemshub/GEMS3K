@@ -41,7 +41,7 @@ TNode::TNode( const TNode& otherNode )
 
   allocMemory();
   dbr_file_name = otherNode.dbr_file_name;
-  ipmlog_file_name = otherNode.ipmlog_file_name;
+  //ipmlog_file_name = otherNode.ipmlog_file_name;
 
   // copy data from otherNode
   datach_copy( otherNode.CSD );
@@ -131,8 +131,8 @@ void TNode::databr_copy( DATABR* otherCNode )
     else
          copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #else
-    fstream f_log(ipmLogFile().c_str(), ios::out|ios::app );
-    ErrorIf(CNode->NodeStatusFMT != No_nodearray, ipmLogFile().c_str(),
+    fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+    ErrorIf(CNode->NodeStatusFMT != No_nodearray, TNode::ipmLogFile.c_str(),
          "Error reading work dataBR structure from binary file (No_nodearray)");
      copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #endif

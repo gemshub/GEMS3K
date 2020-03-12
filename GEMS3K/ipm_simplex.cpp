@@ -842,17 +842,17 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
 
   // build new TNode
-  if( !node )
+  if( !node1 )
   {
-    node = new TNode( pmp );
+    node1 = new TNode( pmp );
     newInterval = true;
   }
-  else if( !node->TestTPGrid(pm.Tai, pm.Pai ))
+  else if( !node1->TestTPGrid(pm.Tai, pm.Pai ))
                newInterval = true;
 
  if( newInterval )
  {   // build/rebuild internal lookup arrays
-    node->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
+    node1->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
  }
 
 //cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
@@ -1096,12 +1096,12 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
   if( aNa )
    na = aNa;// for reading GEMIPM files task
   else
-   na = node;
+   na = node1;
   TK =  pm.TC+C_to_K;
   PPa = pm.P*bar_to_Pa;
 
 #else
-  TNode* na = node;
+  TNode* na = node1;
   TK =  na->cTK();
   PPa = na->cP();
 #endif

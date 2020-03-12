@@ -34,8 +34,8 @@
 void  TMulti::GEMS3k_write_dbr( const char* fname,  bool binary_f,
                           bool with_comments, bool brief_mode )
 {
-   node->packDataBr();
-   node->GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
+   node1->packDataBr();
+   node1->GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
 }
 
 void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
@@ -161,7 +161,7 @@ long int TMulti::testMulti( )
   {
     if( paTProfil->p.PSM == 2 )
     {
-      fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
+      fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
       f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
       f_log << pm.errorBuf << endl;
     }
@@ -179,7 +179,7 @@ long int TMulti::testMulti()
   {
    if( paTProfil->p.PSM >= 2 )
    {
-     fstream f_log(node->ipmLogFile().c_str(), ios::out|ios::app );
+     fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
      f_log << pm.errorBuf << endl;
    }

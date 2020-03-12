@@ -723,7 +723,7 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
 
 
 public:
-    TNode *node;
+    TNode *node1;
 
 
     void set_def( int i=0);
@@ -774,7 +774,7 @@ public:
    TMulti( TNode* na_ )
    {
      pmp = &pm;
-     node = na_; // parent
+     node1 = na_; // parent
      sizeN = 0;
      AA = nullptr;
      BB = nullptr;
