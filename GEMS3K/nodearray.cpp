@@ -879,6 +879,14 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
 }
 
 
+
+void  TNodeArray::GEMS3k_write_dbr( const char* fname,  bool binary_f,
+                          bool with_comments, bool brief_mode )
+{
+   calcNode.packDataBr();
+   calcNode.GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
+}
+
 #endif
 
 //---------------------------------------------------------//

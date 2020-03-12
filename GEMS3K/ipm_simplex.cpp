@@ -806,22 +806,23 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
    MultiConstInit();
 
 #ifndef IPMGEMPLUGIN
+
    // for GEMIPM unpackDataBr( bool uPrimalSol );
    // to define quantities
 
-   bool newInterval = false;
+///   bool newInterval = false;
 
    //   MultiKeyInit( key ); //into PMtest
 
-//cout << " pm.pBAL = " << pm.pBAL;
+   //  cout << " pm.pBAL = " << pm.pBAL;
 
- if( !pm.pBAL )
-     newInterval = true;    // to rebuild lookup arrays
+/// if( !pm.pBAL )
+///     newInterval = true;    // to rebuild lookup arrays
 
- if( pm.pBAL < 2  || pm.pTPD < 2 )
- {
-     SystemToLookup();
- }
+/// if( pm.pBAL < 2  || pm.pTPD < 2 )
+/// {
+///     SystemToLookup();
+/// }
 
  if( pm.pBAL < 2  )
    {
@@ -842,18 +843,18 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
 
 
   // build new TNode
-  if( !node1 )
-  {
-    node1 = new TNode( pmp );
-    newInterval = true;
-  }
-  else if( !node1->TestTPGrid(pm.Tai, pm.Pai ))
-               newInterval = true;
+///  if( !node1 )
+///  {
+///    node1 = new TNode( pmp );
+///    newInterval = true;
+///  }
+///  else if( !node1->TestTPGrid(pm.Tai, pm.Pai ))
+///               newInterval = true;
 
- if( newInterval )
- {   // build/rebuild internal lookup arrays
-    node1->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
- }
+/// if( newInterval )
+/// {   // build/rebuild internal lookup arrays
+///    node1->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
+/// }
 
 //cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
 
@@ -864,11 +865,6 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
     pm.pKMM = 1;
  }
 
-//#else
-//
-   //TProfil::pm->CheckMtparam(); //test load thermodynamic data before
-//   CheckMtparam(); // this call was in the wrong place!  DK DM 11.10.2012
-//
 #endif
 
 
@@ -1092,23 +1088,20 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
   double TK, P, PPa;
 
 #ifndef IPMGEMPLUGIN
-  TNode* na;
-  if( aNa )
-   na = aNa;// for reading GEMIPM files task
-  else
-   na = node1;
+  ErrorIf( aNa == nullptr, "DC_LoadThermodynamicData", "Could not be undefined node" );
+  TNode* na = aNa;// for reading GEMIPM files task
   TK =  pm.TC+C_to_K;
   PPa = pm.P*bar_to_Pa;
-
 #else
   TNode* na = node1;
   TK =  na->cTK();
   PPa = na->cP();
 #endif
+
   DATACH  *dCH = na->pCSD();
   P = PPa/bar_to_Pa;
 
-#ifndef IPMGEMPLUGIN
+/*#ifndef IPMGEMPLUGIN
 
   if( !aNa )
   {
@@ -1116,7 +1109,7 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
      TMTparm::sm->GetTP()->curT=T;
      TMTparm::sm->GetTP()->curP=P;
    }
-#endif
+#endif */
 
   if( dCH->nTp <1 || dCH->nPp <1 || na->check_TP( TK, PPa ) == false )
   {

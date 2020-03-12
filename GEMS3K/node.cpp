@@ -2157,7 +2157,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
  char buf[300];
  sprintf( buf, "Node:%ld:time:%lg:dt:%lg", CNode->NodeHandle, CNode->Tm, CNode->dt );
  strncpy( pmm->stkey, buf, EQ_RKLEN );
- multi->CheckMtparam(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
+ multi->CheckMtparam1(); // T or P change detection - moved to here from InitalizeGEM_IPM_Data() 11.10.2012
 #endif
   pmm->kTau = CNode->Tm;  // added 18.12.14 DK
   pmm->kdT = CNode->dt;   // added 18.12.14 DK

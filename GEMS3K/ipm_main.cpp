@@ -1698,10 +1698,10 @@ void TMulti::Free_internal()
 {
   Free_compressed_xAN();
   Free_A_B();
-#ifndef IPMGEMPLUGIN
-  if( node1 )
-    delete node1;
-#endif
+//#ifndef IPMGEMPLUGIN
+ // if( node1 )
+ //   delete node1;
+//#endif
  }
 
 /// Internal memory allocation for IPM performance optimization

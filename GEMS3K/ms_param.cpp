@@ -192,7 +192,7 @@ void TProfil::readMulti( const char* path, DATACH  *dCH )
 
 
 /// Test and load thermodynamic data from GEMS project database
-void TMulti::CheckMtparam()
+void TMulti::CheckMtparam1()
 {
   double TK, P, PPa;
 

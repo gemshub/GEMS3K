@@ -723,7 +723,6 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
 
 
 public:
-    TNode *node1;
 
 
     void set_def( int i=0);
@@ -770,8 +769,10 @@ public:
    double pb_GX( double *Gxx  );
 
 #else
-/// This allocation is used only in standalone GEMS3K
-   TMulti( TNode* na_ )
+    const TNode *node1;
+
+   /// This allocation is used only in standalone GEMS3K
+   TMulti( const TNode* na_ )
    {
      pmp = &pm;
      node1 = na_; // parent
@@ -809,7 +810,7 @@ public:
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
 
-    void CheckMtparam(); // Test load thermodynamic data before
+    void CheckMtparam1(); // Test load thermodynamic data before
 
     void set_load (bool what); // DM 20.05.2013 - Ensures the re-reading of the system properties into GEM IMP data structure
 
@@ -858,9 +859,15 @@ public:
     // EXTERNAL FUNCTIONS
     // MultiCalc
     void Alloc_internal();
-double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
+    double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
+
+#ifndef IPMGEMPLUGIN
+    void DC_LoadThermodynamicData();
+    void DC_LoadThermodynamicData( TNode* aNa  );
+#else
     void DC_LoadThermodynamicData( TNode* aNa = nullptr );
+#endif
     //DM 25.02.2014
     void Access_GEM_IMP_init();
     long get_sizeFIs () {return sizeFIs;}
@@ -885,8 +892,8 @@ double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, lo
     ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
     ///                 If   false (0), comments will not be written.
     ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-    void  GEMS3k_write_dbr( const char* fname,  bool binary_f=false,
-                              bool with_comments = true, bool brief_mode = false);
+    //void  GEMS3k_write_dbr( const char* fname,  bool binary_f=false,
+    //                          bool with_comments = true, bool brief_mode = false);
 
 };
 
