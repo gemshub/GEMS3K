@@ -1093,7 +1093,7 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
   TK =  pm.TC+C_to_K;
   PPa = pm.P*bar_to_Pa;
 #else
-  TNode* na = node1;
+  const TNode* na = node1;
   TK =  na->cTK();
   PPa = na->cP();
 #endif
