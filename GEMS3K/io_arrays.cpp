@@ -170,6 +170,12 @@ void TReadArrays::readValue(float& val)
     ff.get( input );
     if( input == CHAR_EMPTY )
         val = FLOAT_EMPTY;
+    else if( input =='i') //inf
+    {
+        ff.get( input );
+        ff.get( input );
+        val = FLOAT_EMPTY;
+    }
     else
     {
         ff.putback(input);
@@ -185,6 +191,12 @@ void TReadArrays::readValue(double& val)
     ff.get( input );
     if( input == CHAR_EMPTY )
         val = DOUBLE_EMPTY;
+    else if( input =='i') //inf
+    {
+        ff.get( input );
+        ff.get( input );
+        val = DOUBLE_EMPTY;
+    }
     else
     {
         ff.putback(input);
