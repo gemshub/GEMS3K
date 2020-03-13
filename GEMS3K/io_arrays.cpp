@@ -185,10 +185,17 @@ void TReadArrays::readValue(float& val)
 
 void TReadArrays::readValue(double& val)
 {
-    char input;
+    //char input;
     skipSpace();
 
-    ff.get( input );
+    std::string buf;
+    ff >> buf;
+    if( buf == "`" || buf == "inf" || buf == "-inf" )
+        val = DOUBLE_EMPTY;
+    else
+        val = std::atof( buf.c_str());
+
+    /*ff.get( input );
     if( input == CHAR_EMPTY )
         val = DOUBLE_EMPTY;
     else if( input =='i') //inf
@@ -201,7 +208,7 @@ void TReadArrays::readValue(double& val)
     {
         ff.putback(input);
         ff >> val;
-    }
+    }*/
 }
 
 long int TReadArrays::readFormatValue(double& val, gstring& format)

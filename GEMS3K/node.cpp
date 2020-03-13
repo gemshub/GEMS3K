@@ -1993,7 +1993,7 @@ void TNode::makeStartDataChBR( QWidget* par,
 
   CSD->Ttol = Tai[3];
   CSD->Ptol = Pai[3]*bar_to_Pa;
-
+  fillValue(CSD->Psat, 1e-5, CSD->nTp );
 // Build Look up array
   cT = Tai[START_];
    for( i1=0; i1<CSD->nTp; i1++ )

@@ -839,7 +839,7 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
       if( pm.pESU == 0 )
            pm.pNP = 0;
 
-  //TProfil::pm->CheckMtparam(); //load tpp structure
+  TProfil::pm->CheckMtparam(); //load tpp structure
 
 
   // build new TNode
