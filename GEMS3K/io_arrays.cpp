@@ -132,7 +132,7 @@ long int TRWArrays::findFld( const char *Name )
      { if( with_comments && flds[f_num].comment.length()>1 )
             ff <<  endl <<  flds[f_num].comment.c_str();
          ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
-         ff << /*left << setw(7) <<*/  value;
+         ff << setprecision(15) <<  value;
      }
   }
 
