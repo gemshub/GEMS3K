@@ -1798,9 +1798,6 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
 
 #ifndef IPMGEMPLUGIN
     STEP_POINT("PSSC()");
-#ifndef Use_mt_mode
-        pVisor->Update(false);  // "PhaseSelectionSpeciationCleanup()"
-#endif
 #endif
     // Analysis of phase selection and cleanup status
 // PZ    // Indicator of PhaseSelection() status (since r1594):
@@ -2080,9 +2077,6 @@ kur = ku;
     }
 #ifndef IPMGEMPLUGIN
     STEP_POINT("Selekt2 procedure");
-#ifndef Use_mt_mode
-        pVisor->Update(false);  // "PhaseSelection"
-#endif
 #endif
     if( pm.K2 > 1 )
     { // more then the first step - but the IPM solution has not improved

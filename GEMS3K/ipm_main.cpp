@@ -145,9 +145,6 @@ to_text_file( "MultiDumpC.txt" );   // Debugging
 #endif
 
 #ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-    pVisor->Update(false);
-#endif
 // STEPWISE (2)  - stop point to examine output from EFD()
 STEP_POINT("After FIA");
 #endif
@@ -181,9 +178,6 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 #endif
 
 #ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-    pVisor->Update(false);
-#endif
 // STEPWISE (3)  - stop point to examine output from IPM()
    STEP_POINT("After IPM");
 #endif
@@ -242,13 +236,10 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
 
        ps_rcode = PhaseSelectionSpeciationCleanup( k_miss, k_unst, cleanupStatus );
 
-  #ifndef IPMGEMPLUGIN
-  #ifndef Use_mt_mode
-      pVisor->Update(false);
-  #endif
+#ifndef IPMGEMPLUGIN
   // STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
-     STEP_POINT("After PSSC()");
-  #endif
+  STEP_POINT("After PSSC()");
+#endif
 
        switch( ps_rcode )  // analyzing return code of PSSC()
        {
@@ -326,9 +317,6 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
               CalculateConcentrations( pm.X, pm.XF, pm.XFA );  // also ln activities (DualTh)
 
 #ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-    pVisor->Update(false);
-#endif
  // STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
     STEP_POINT("After Cleanup");
 #endif
@@ -411,9 +399,6 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
          CalculateConcentrations( pm.X, pm.XF, pm.XFA );  // also ln activities (DualTh)
 
 #ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-    pVisor->Update(false);
-#endif
 // STEPWISE (3)  - stop point to examine output from SpeciationCleanup()
    STEP_POINT("After Cleanup");
 #endif
@@ -468,9 +453,6 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
 // STEPWISE (4) Stop point after PhaseSelect()
    STEP_POINT("Before Refine()");
-#ifndef Use_mt_mode
-   pVisor->Update( false );
-#endif
 #endif
 //   if( pm.MK == 2 )
 //       goto FORCED_AIA;
@@ -561,11 +543,6 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 
     /*sfactor =*/ RescaleToSize( false ); //  replacing calcSfactor();
 
-#ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-   pVisor->Update(false);
-#endif
-#endif
    bool AllPhasesPure = true;   // Added by DK on 09.03.2010
    // checking if all phases are pure
    for( k=0; k < pm.FI; k++ )
@@ -641,9 +618,6 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 //20/03/2015            KarpovsPhaseStabilityCriteria( );  // calculation of Karpov phase stability criteria
 //20/03/2015         else if( pa->p.PC >= 2 )
 //20/03/2015             StabilityIndexes(); // calculation of new phase stability indexes
-#ifndef Use_mt_mode
-   pVisor->Update(false);
-#endif
 #endif
 //  STEPWISE (0) - stop point for examining results from LPP-based IA
 #ifndef IPMGEMPLUGIN
@@ -660,9 +634,6 @@ to_text_file( "MultiDumpLP.txt" );   // Debugging
 #ifndef IPMGEMPLUGIN
    pm.t_end = clock();
    pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
-#ifndef Use_mt_mode
-   pVisor->Update( false );
-#endif
 #endif
            pm.FI1 = 0;
            pm.FI1s = 0;
@@ -866,9 +837,6 @@ long int TMulti::MassBalanceRefinement( long int WhereCalledFrom )
             pm.Y[J] += LM * pm.MU[J];
 
 #ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-  pVisor->Update( false );
-#endif
 // STEPWISE (5) Stop point at end of iteration of FIA()
 STEP_POINT("FIA Iteration");
 #endif
@@ -1041,9 +1009,6 @@ if( pm.pNP && status ) // && rLoop < 0  )
 }
 
 #ifndef IPMGEMPLUGIN
-#ifndef Use_mt_mode
-  pVisor->Update( false );
-#endif
 // STEPWISE (6)  Stop point at IPM() main iteration
 STEP_POINT( "IPM Iteration" );
 #endif

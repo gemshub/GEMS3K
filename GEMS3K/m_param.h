@@ -384,9 +384,6 @@ public:
     bool useAqPhase;
     bool useGasPhase;
 
-// temporary !Use_mt_mode
-    bool fStopCalc;
-
     //RMULTS* mup;
     //MTPARM *tpp;
     //SYSTEM *syp;
