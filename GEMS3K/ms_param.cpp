@@ -191,7 +191,7 @@ void TProfil::readMulti( const char* path, DATACH  *dCH )
 }
 
 
-/// Test and load thermodynamic data from GEMS project database
+/* Test and load thermodynamic data from GEMS project database
 void TMulti::CheckMtparam1()
 {
   double TK, P, PPa;
@@ -214,12 +214,8 @@ void TMulti::CheckMtparam1()
      pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
   }
   load = true;
-}
+}*/
 
-void TMulti::set_load (bool what)  // DM 20.05.2013
-{
-load = what;
-}
 //-------------------------------------------------------------------------
 // internal functions
 

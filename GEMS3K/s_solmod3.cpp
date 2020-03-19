@@ -2719,8 +2719,8 @@ long int TCEFmod::IdealMixing() {
 
 long int TCEFmod::ExcessProp( double *Zex ) {
     // check and add calculation of excess properties here
-    long int ip, s1, s2, d, e, f;
-    double g, v, s, u;
+//    long int ip, s1, s2, d, e, f;
+    double v, u;  // , g, s;
 
     if ( NPcoef < 3 || NPar < 1 || NComp < 2 || MaxOrd < 2 || !x || !lnGamma )
             return 1;

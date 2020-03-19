@@ -195,6 +195,11 @@ protected:
         databr_realloc();
     }*/
 
+    /// Test to reload thermodynamic data from grid
+    void CheckMtparam();
+    /// false - Ensures the re-reading of the system properties into GEM IMP data structure
+    bool load_thermodynamic_data = true; // false; // internal value
+
 #ifndef IPMGEMPLUGIN
     // Integration in GEMS-PSI GUI environment
     // Prepares and writes DCH and DBR files for reading into the coupled code
@@ -1080,18 +1085,18 @@ long int GEM_step_MT( const long int step )
       /// Sets the mLook Mode of lookup-interpolation: 0 interpolation (on nTp*nPp grid).
        /// \param mLook is 0 or 1
         void Set_mLook(const double mLook)
-        {  CSD->mLook = static_cast<long>(mLook);  multi->set_load(false);}
+        {  CSD->mLook = static_cast<long>(mLook);  load_thermodynamic_data = false;}
 
       /// Sets the value of the interaction parameter.
       /// Internal re-scaling to mass of the system is applied.
       /// These methods can only be used for the current work node (direct access to GEM IPM data)
       /// \param xPMC is the index of the interaction parameter
       inline void Set_PMc( const double PMc_val, const long int xPMc)
-      { pmm->PMc[xPMc] = PMc_val; multi->set_load(false); }
+      { pmm->PMc[xPMc] = PMc_val; load_thermodynamic_data = false; }
 
       /// Gets the value of the interaction parameter.
       inline void Get_PMc( double &PMc_val, const long int xPMc)
-      {  PMc_val = pmm->PMc[xPMc]; multi->set_load(false); }
+      {  PMc_val = pmm->PMc[xPMc]; load_thermodynamic_data = false; }
 
       /// Gets code of the aquesous solution model
       inline void Get_sMod( int ndx, string &sMod)
@@ -1102,7 +1107,7 @@ long int GEM_step_MT( const long int step )
       /// These methods can only be used for the current work node (direct access to GEM IPM data)
       /// \param xDMC is the index of the interaction parameter
       inline void Set_DMc( const double DMc_val, const long int xDMc)
-      { pmm->DMc[xDMc] = DMc_val; multi->set_load(false); }
+      { pmm->DMc[xDMc] = DMc_val; load_thermodynamic_data = false; }
 #endif
 
       /// Retrieves the current total amount of Independent Component.

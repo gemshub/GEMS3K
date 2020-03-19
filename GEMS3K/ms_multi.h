@@ -538,7 +538,6 @@ void KinMetModLoad();
 
 #else
 
-   bool load; // internal value
 
 #endif
 
@@ -768,6 +767,8 @@ public:
    /// connection to UnSpace
    double pb_GX( double *Gxx  );
 
+   // void rebuild_lookup(double Tai[], double Pai[]);
+
 #else
     const TNode *node1;
 
@@ -801,7 +802,6 @@ public:
      pmp->tpp_S = nullptr;
      pmp->tpp_Vm = nullptr;
 
-     load = false;
    }
 
     ~TMulti()
@@ -810,9 +810,7 @@ public:
     void multi_realloc( char PAalp, char PSigm );
     void multi_free();
 
-    void CheckMtparam1(); // Test load thermodynamic data before
-
-    void set_load (bool what); // DM 20.05.2013 - Ensures the re-reading of the system properties into GEM IMP data structure
+   //void CheckMtparam1(); // Test load thermodynamic data before
 
 #endif
 
