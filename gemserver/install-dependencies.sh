@@ -1,8 +1,8 @@
 #!/bin/bash
 # Installing dependencies needed to build GEMS-Reactoro for linux 16.04 or 18.04
 
-sudo rm -f /usr/local/lib/libzmq.a
-sudo rm -f /usr/local/include/zmq.hpp
+#sudo rm -f /usr/local/lib/libzmq.a
+#sudo rm -f /usr/local/include/zmq.hpp
 
 threads=3
 workfolder=${PWD}
@@ -31,7 +31,7 @@ test -f /usr/local/lib/libzmq.a || {
 # zeromq/cppzmq
 test -f /usr/local/include/zmq.hpp || {
 
-	# Building yaml-cpp library
+	# Building zmq library
 	mkdir -p ~/code && \
 		cd ~/code && \
                 git clone https://github.com/zeromq/cppzmq.git && \
