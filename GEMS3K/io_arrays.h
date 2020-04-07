@@ -290,7 +290,7 @@ public:
     long int readFormatValue(double& val, gstring& format);
     bool  readFormat( gstring& format );
 
-    inline void setCurrentArray( const char* name, long int size );
+    void setCurrentArray( const char* name, long int size );
  
  public:
 

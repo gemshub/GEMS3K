@@ -125,7 +125,7 @@ void TPrintJson::writeArrayS( const char *name, char* arr,
 
 //------------------------------------------------------------------
 
-inline void TReadJson::setCurrentArray( const char* name, long int size )
+void TReadJson::setCurrentArray( const char* name, long int size )
 {
     char buf[200];
     sprintf( buf, "After successfully read <%s> %ld data items", name, size);

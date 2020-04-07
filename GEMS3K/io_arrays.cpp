@@ -155,7 +155,7 @@ void TPrintArrays::writeArrayS( const char *name, char* arr,
 
 //------------------------------------------------------------------
 
-inline void TReadArrays::setCurrentArray( const char* name, long int size )
+void TReadArrays::setCurrentArray( const char* name, long int size )
 {
     char buf[200];
     sprintf( buf, "After successfully read <%s> %ld data items", name, size);
@@ -464,7 +464,7 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
     double value;
     gstring str;
 
-    setCurrentArray( name, 0);
+    setCurrentArray( name, 0L);
     //ff << setprecision(15);
 
     do{
@@ -480,7 +480,7 @@ void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
     char ch;
     char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
 
-    setCurrentArray( name, 1);
+    setCurrentArray( name, 1L);
     skipSpace();
     ff.get(ch);
     ff.getline( buf, el_size+1, '\'');
