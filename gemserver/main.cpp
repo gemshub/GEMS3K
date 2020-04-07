@@ -36,10 +36,13 @@
 //#include <math.h>
 //#include <string.h>
 
+#define OLD
+
 #include "node.h"
 #include <iomanip>
 
 #include <zmq.hpp>
+#include <zmq_addon.hpp>
 #include <string>
 #include <iostream>
 #ifndef _WIN32
@@ -68,6 +71,8 @@ int main () {
     mkdir("server_data", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     while (true) {
+
+#ifdef OLD
         zmq::recv_flags rsv_flag = zmq::recv_flags::none;
         zmq::message_t request;
 
@@ -79,6 +84,18 @@ int main () {
         //  Do some 'work'
         auto time = CalculateEquilibriumServer( path );
         auto stime = std::to_string(time);
+#else
+       auto stime = std::string("10");
+       std::vector<zmq::message_t> omsgs;
+       auto oret = zmq::recv_multipart(socket, std::back_inserter(omsgs));
+
+       for( const auto& msg: omsgs )
+       {
+           std::cout <<  msg.to_string() <<  "\n\n-------------------------------------------\n\n" << std::endl;
+       }
+
+
+#endif
 
         //  Send reply back to client
         zmq::send_flags snd_flags=zmq::send_flags::none;
@@ -136,6 +153,7 @@ double  CalculateEquilibriumServer( const gstring& lst_f_name )
     }
     return ret;
 }
+
 
 // The method replace() returns a copy of the string
 // in which the first occurrence of old have been replaced with new

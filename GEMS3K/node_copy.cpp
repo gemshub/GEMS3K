@@ -37,7 +37,7 @@
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
 // \param with_comments - Write files with comments for all data entries
-std::string TNode::datach_to_string( bool with_comments, bool brief_mode )
+std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
     datach_to_text_file( ss, with_comments, brief_mode );
@@ -56,7 +56,7 @@ bool TNode::datach_from_string( const std::string& data )
 // Writes work node (DATABR structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
 // \param with_comments - Write files with comments for all data entries
-std::string TNode::databr_to_string( bool with_comments, bool brief_mode )
+std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
     databr_to_text_file( ss, with_comments, brief_mode );

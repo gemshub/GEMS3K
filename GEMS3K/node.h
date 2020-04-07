@@ -153,13 +153,13 @@ protected:
     /// Writes CSD (DATACH structure) to a text DCH file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void datach_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " );
+    void datach_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " ) const;
     /// Reads CSD (DATACH structure) from a text DCH file
     void datach_from_text_file( iostream& ff);
     /// Writes work node (DATABR structure) to a text DBR file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void databr_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " );
+    void databr_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " ) const;
     /// Reads work node (DATABR structure) from a text DBR file
     void databr_from_text_file(iostream& ff );
 
@@ -347,13 +347,13 @@ public:
   /// Writes CSD (DATACH structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments - Write files with comments for all data entries
-  std::string datach_to_string( bool with_comments = true, bool brief_mode = false );
+  std::string datach_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads CSD (DATACH structure) from a json/key-value string
   bool datach_from_string( const std::string& data );
   /// Writes work node (DATABR structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
   /// \param with_comments - Write files with comments for all data entries
-  std::string databr_to_string( bool with_comments = true, bool brief_mode = false );
+  std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads work node (DATABR structure) from a json/key-value string
   bool databr_from_string( const std::string& data );
 

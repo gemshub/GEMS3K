@@ -174,7 +174,7 @@ outField DataCH_dynamic_fields[30] =  { //+4
 
 //===============================================================
 
-void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path )
+void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
 {
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -507,7 +507,7 @@ void TNode::databr_from_text_file( iostream& ff )
 
 //==============================================================================
 
-void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path )
+void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
