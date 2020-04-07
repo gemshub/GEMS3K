@@ -611,7 +611,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
-void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
+void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
 {
   SPP_SETTING *pa = paTProfil;
   long int ii, nfild, len;
@@ -654,10 +654,6 @@ void TMulti::from_text_file_gemipm( const char *path,  DATACH  *dCH )
   pm.FIa = 0;
   pm.FIat = 0; //6
   pm.PLIM  = 1;
-
-  // reads sizes and constants from txt file
-  fstream ff( path, ios::in );
-  ErrorIf( !ff.good() , path, "Fileopen error");
 
 // static data
 #ifndef JSON_OUT
