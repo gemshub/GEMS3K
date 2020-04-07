@@ -134,12 +134,12 @@ class TRWArrays  /// Basic class for red/write fields of structure
 /// Print fields of structure outField
 class TPrintArrays: public  TRWArrays
 {
-    fstream& ff;
+    iostream& ff;
 
 public:
 
     /// Constructor
-    TPrintArrays( short  aNumFlds, outField* aFlds, fstream& fout ):
+    TPrintArrays( short  aNumFlds, outField* aFlds, iostream& fout ):
         TRWArrays( aNumFlds, aFlds), ff( fout )
     {}
 
@@ -278,7 +278,7 @@ public:
 
  class TReadArrays : public  TRWArrays /// Read fields of structure
  {
-     fstream& ff;
+     iostream& ff;
      gstring curArray;
 
  protected:
@@ -295,7 +295,7 @@ public:
  public:
 
     /// Constructor
-    TReadArrays( short aNumFlds, outField* aFlds, fstream& fin ):
+    TReadArrays( short aNumFlds, outField* aFlds, iostream& fin ):
         TRWArrays( aNumFlds, aFlds), ff( fin ), curArray("")
     {}
 

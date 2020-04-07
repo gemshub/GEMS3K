@@ -153,15 +153,15 @@ protected:
     /// Writes CSD (DATACH structure) to a text DCH file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void datach_to_text_file( fstream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " );
+    void datach_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " );
     /// Reads CSD (DATACH structure) from a text DCH file
-    void datach_from_text_file( fstream& ff);
+    void datach_from_text_file( iostream& ff);
     /// Writes work node (DATABR structure) to a text DBR file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void databr_to_text_file( fstream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " );
+    void databr_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " );
     /// Reads work node (DATABR structure) from a text DBR file
-    void databr_from_text_file(fstream& ff );
+    void databr_from_text_file(iostream& ff );
 
 // Methods to perform output to vtk files
     /// Prints data of CNode data object element with handle nfild and index ndx into a VTK file

@@ -831,7 +831,7 @@ public:
     void to_file( GemDataStream& ff );
     void to_text_file( const char *path, bool append=false  );
     void from_file( GemDataStream& ff );
-    void to_text_file_gemipm( const char *path, bool addMui,
+    void to_text_file_gemipm( iostream& ff, bool addMui,
     		bool with_comments = true, bool brief_mode = false );
     void from_text_file_gemipm( const char *path,  DATACH  *dCH );
     void copyMULTI( const TMulti& otherMulti );

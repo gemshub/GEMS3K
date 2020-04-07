@@ -164,7 +164,7 @@ outField MULTI_dynamic_fields[80] =  {
 //===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
-void TMulti::to_text_file_gemipm( const char *path, bool addMui,
+void TMulti::to_text_file_gemipm( iostream& ff, bool addMui,
 		bool with_comments, bool brief_mode )
 {
   SPP_SETTING *pa = paTProfil;
@@ -179,8 +179,8 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    PAalp = PAalp_;
    PSigm = PSigm_;
 #endif
-  fstream ff( path, ios::out );
-  ErrorIf( !ff.good() , path, "Fileopen error");
+  //fstream ff( path, ios::out );
+  //ErrorIf( !ff.good() , path, "Fileopen error");
 
 #ifndef  JSON_OUT
 
@@ -225,7 +225,7 @@ void TMulti::to_text_file_gemipm( const char *path, bool addMui,
    }
 
 if( _comment )
-{  ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
+{  ff << "# " << _GEMIPM_version_stamp << endl;// << "# File: " << path << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
    ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << endl;
    ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;

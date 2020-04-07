@@ -174,7 +174,7 @@ outField DataCH_dynamic_fields[30] =  { //+4
 
 //===============================================================
 
-void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mode, const char* path )
+void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path )
 {
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -323,7 +323,7 @@ void TNode::databr_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 }
 
 // Reading work dataBR structure from text file
-void TNode::databr_from_text_file( fstream& ff )
+void TNode::databr_from_text_file( iostream& ff )
 {
 #ifndef NODEARRAYLEVEL
    double tmpVal;
@@ -507,7 +507,7 @@ void TNode::databr_from_text_file( fstream& ff )
 
 //==============================================================================
 
-void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mode, const char* path )
+void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path )
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -650,7 +650,7 @@ void TNode::datach_to_text_file( fstream& ff, bool with_comments, bool brief_mod
 }
 
 // Reading dataCH structure from text file
-void TNode::datach_from_text_file(fstream& ff)
+void TNode::datach_from_text_file(iostream& ff)
 {
   long int ii;
 // fstream ff("DataCH.out", ios::in );
