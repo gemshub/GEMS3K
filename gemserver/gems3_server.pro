@@ -16,7 +16,7 @@ CONFIG += console
 DEFINES += IPMGEMPLUGIN
 #DEFINES += NODEARRAYLEVEL
 DEFINES += NOPARTICLEARRAY
-#DEFINES  += JSON_OUT
+DEFINES  += JSON_OUT
 
 !win32 {
   DEFINES += __unix
@@ -37,7 +37,8 @@ QMAKE_LFLAGS +=
 QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
-SOURCES      +=   main.cpp
+SOURCES      +=   main.cpp \
+                  main_calc.cpp
 
 LIBS += -lzmq
 

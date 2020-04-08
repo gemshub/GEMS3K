@@ -557,6 +557,72 @@ if( binary_f )
 #endif
 }
 
+
+//  Parameters:
+//  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
+//  @param ipm_json -  Multi structure as a json/key-value string
+//  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
+long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json )
+{
+#ifdef IPMGEMPLUGIN
+  fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+  try
+    {
+#endif
+    // Reading DCH_DAT data
+    datach_from_string(dch_json);
+
+    // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
+#ifdef IPMGEMPLUGIN
+    profil->gemipm_from_string( ipm_json,CSD );
+#else
+    TProfil::pm->gemipm_from_string(ipm_json,CSD );
+#endif
+
+  // copy intervals for minimizatiom
+   pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
+   pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
+   pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+   pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
+
+   pmm->Tai[0] = CSD->TKval[0]-C_to_K;
+   pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
+   pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+   pmm->Tai[3] = CSD->Ttol;
+
+  pmm->Fdev1[0] = 0.;
+  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
+  pmm->Fdev2[0] = 0.;
+  pmm->Fdev2[1] = 1e-6;
+
+  // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+  databr_from_string(dbr_json);
+
+// Creating and initializing the TActivity class instance for this TNode instance
+#ifdef IPMGEMPLUGIN
+//        InitReadActivities( mult_in.c_str(),CSD ); // from DCH file in future?
+        multi->InitalizeGEM_IPM_Data();              // In future, initialize data in TActivity also
+        this->InitCopyActivities( CSD, pmm, CNode );
+#else
+    ;
+#endif
+   return 0;
+
+#ifdef IPMGEMPLUGIN
+    }
+    catch(TError& err)
+    {
+      f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+    }
+    catch(...)
+    {
+        return -1;
+    }
+    return 1;
+#endif
+}
+
+
 //-----------------------------------------------------------------
 // work with lists
 

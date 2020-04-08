@@ -601,7 +601,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
  }
 
 #ifdef  JSON_OUT
-  ff << json_data.dump(4);
+  ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
   ff << endl;
 

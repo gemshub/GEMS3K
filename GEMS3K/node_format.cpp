@@ -313,7 +313,7 @@ void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mo
   }
 
 #ifdef  JSON_OUT
-  ff << json_data.dump(4);
+  ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
   ff << endl;
   if( _comment )
@@ -642,7 +642,7 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
     prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
 
 #ifdef  JSON_OUT
-  ff << json_data.dump(4);
+  ff << json_data.dump( ( _comment ? 4 : 0 ));
 #endif
   ff << endl;
   if( _comment )

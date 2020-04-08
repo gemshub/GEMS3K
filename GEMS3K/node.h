@@ -343,6 +343,16 @@ public:
 ///                      -1 if internal memory allocation error occurred.
   long int  GEM_init( const char *ipmfiles_lst_name );
 
+/// (1)
+/// Initialization of GEM IPM3 data structures in coupled programs
+/// that use GEMS3K module. Also reads data from the IPM, DCH and one DBR  input string.
+/// Parameters:
+///  @param dch_json -  DATACH - the Data for CHemistry data structure as a json/key-value string
+///  @param ipm_json -  Multi structure as a json/key-value string
+///  @param dbr_json -  DATABR - the data bridge structure as a json/key-value string
+  long int  GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json );
+
+
   // String i/o functions
   /// Writes CSD (DATACH structure) to a json/key-value string
   /// \param brief_mode - Do not write data items that contain only default values
