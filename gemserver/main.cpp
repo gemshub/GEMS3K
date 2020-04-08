@@ -2,7 +2,7 @@
 #define OLD
 
 
-#include <iomanip>
+//#include <iomanip>
 
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
@@ -60,7 +60,7 @@ int main () {
 
 #else
        std::vector<zmq::message_t> omsgs;
-       auto oret = zmq::recv_multipart(socket, std::back_inserter(omsgs));
+       /*auto oret =*/ zmq::recv_multipart(socket, std::back_inserter(omsgs));
 
        auto stime = std::string("10");
        std::string dbr_result;
@@ -78,7 +78,7 @@ int main () {
        std::vector<zmq::message_t> msgs_vec;
        msgs_vec.push_back( zmq::message_t(stime.begin(), stime.end()));
        msgs_vec.push_back( zmq::message_t(dbr_result.begin(), dbr_result.end()));
-       auto iret = zmq::send_multipart(socket, msgs_vec);
+       /*auto iret =*/ zmq::send_multipart(socket, msgs_vec);
 
 #endif
 

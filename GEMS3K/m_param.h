@@ -503,8 +503,19 @@ public:
    double CalculateEquilibriumServerOld( const gstring& path );
 
    /// Run process of calculate equilibria into the GEMS3K side
-   double CalculateEquilibriumServer( const std::string& mode, bool addMui, bool brief_mode = false );
+   /// @param IPM work structures array json/key-value format ( <mode>, DATACH, MULTI, DATABR )
+   /// @return report mesages  from server
+   std::vector<std::string> CalculateEquilibriumServer( const std::vector<std::string>& msg_data );
 
+   /// Generate for current loaded system DATACH, MULTI  and DATABR structure prepared from GEMS.
+   /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
+   /// @return IPM work structures array json/key-value format ( <mode>, DATACH, MULTI, DATABR )
+   /// @param brief_mode - Do not write data items that contain only default values
+   /// @param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
+   std::vector<std::string> CurrentSystem2GEMS3Kjson( bool brief_mode, bool add_mui );
+
+   /// Reading structure MULTI (GEM IPM work structure)
+   double readMultiServer( const std::vector<std::string>& send_msg, const std::vector<std::string>& recv_msg );
 };
 
 /* Work codes of surface site types in pm->AtNdx vector (compatibility with old-style SCMs *
