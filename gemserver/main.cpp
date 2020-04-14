@@ -15,7 +15,8 @@
 
 double  CalculateEquilibriumServer( const std::string& lst_f_name );
 /// Run process of calculate equilibria into the GEMS3K side (read from strings)
-double  CalculateEquilibriumServer( const std::vector<std::string>& dch_ipm_dbr, std::string& dbr_result );
+std::vector<std::string>  CalculateEquilibriumServer( const std::vector<std::string>& dch_ipm_dbr );
+
 
 
 
@@ -55,25 +56,26 @@ int main () {
         socket.send( reply, snd_flags );
 
 #else
+       std::vector<std::string> ret_msgs;
+
+       // get input data
        std::vector<zmq::message_t> omsgs;
        /*auto oret =*/ zmq::recv_multipart(socket, std::back_inserter(omsgs));
-
-       auto stime = std::string("10");
-       std::string dbr_result;
        std::vector<std::string> msgs_data;
        for( const auto& msg: omsgs )
            msgs_data.push_back(  msg.to_string() );
 
+       // execute command
        if(  msgs_data.size() >= 4 and msgs_data[0] == "system")
        {
          // one system calculation
-           auto time = CalculateEquilibriumServer( msgs_data, dbr_result );
-           stime = std::to_string(time);
+           ret_msgs = CalculateEquilibriumServer( msgs_data );
        }
 
+       // send result
        std::vector<zmq::message_t> msgs_vec;
-       msgs_vec.push_back( zmq::message_t(stime.begin(), stime.end()));
-       msgs_vec.push_back( zmq::message_t(dbr_result.begin(), dbr_result.end()));
+       for( const auto& msg: ret_msgs )
+           msgs_vec.push_back(  zmq::message_t(msg.begin(), msg.end()) );
        /*auto iret =*/ zmq::send_multipart(socket, msgs_vec);
 
 #endif

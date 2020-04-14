@@ -367,7 +367,16 @@ public:
   /// Reads work node (DATABR structure) from a json/key-value string
   bool databr_from_string( const std::string& data );
 
-
+  /// Return code of error in IPM
+  std::string code_error_IPM() const
+  {
+    return std::string(pmm->errorCode, 100);
+  }
+  /// Returndescription of error in IPM
+  std::string description_error_IPM() const
+  {
+    return std::string(pmm->errorBuf, 1024);
+  }
 
 #ifdef IPMGEMPLUGIN
 //  Calls for direct coupling of a FMT code with GEMS3K
@@ -578,7 +587,7 @@ long int GEM_step_MT( const long int step )
 /// Returns GEMIPM2 calculation time in seconds elapsed during the last call of GEM_run() - can be used for monitoring
 ///                      the performance of calculations.
 /// \return double number, may contain 0.0 if the calculation time is less than the internal time resolution of C/C++ function
-   double GEM_CalcTime();
+   double GEM_CalcTime(long int& NumK2, long int& NumIterFIA, long int& NumIterIPM);
 
 /// To obtain the number of GEM IPM2 iterations performed during the last call of GEM_run() e.g. for monitoring the
 /// performance of GEMS3K in AIA or SIA modes, or for problem diagnostics.
