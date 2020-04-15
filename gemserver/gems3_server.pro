@@ -37,9 +37,13 @@ QMAKE_LFLAGS +=
 QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
-SOURCES      +=   main.cpp \
-                  main_calc.cpp
+HEADERS  +=  tnodetask.h
+
+SOURCES  +=   main.cpp \
+              main_calc.cpp \
+              tnodetask.cpp
 
 LIBS += -lzmq
 
 include($$GEMS3K_CPP/gems3k.pri) 
+

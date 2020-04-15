@@ -13,14 +13,14 @@
 #define sleep(n)    Sleep(n)
 #endif
 
+#include "tnodetask.h"
 double  CalculateEquilibriumServer( const std::string& lst_f_name );
-/// Run process of calculate equilibria into the GEMS3K side (read from strings)
-std::vector<std::string>  CalculateEquilibriumServer( const std::vector<std::string>& dch_ipm_dbr );
 
 
 
-
-int main () {
+int main ()
+{
+    TNodeTask task_data;
 
     //  Prepare our context and socket
     zmq::context_t context (1);
@@ -69,7 +69,9 @@ int main () {
        if(  msgs_data.size() >= 4 and msgs_data[0] == "system")
        {
          // one system calculation
-           ret_msgs = CalculateEquilibriumServer( msgs_data );
+           ret_msgs =  task_data.initGEM( msgs_data[1], msgs_data[2], msgs_data[3] );
+           if( ret_msgs.empty() )
+                 ret_msgs = task_data.calculateEquilibrium("");
        }
 
        // send result
