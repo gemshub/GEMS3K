@@ -568,7 +568,9 @@ if( binary_f )
 long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json )
 {
 #ifdef IPMGEMPLUGIN
-  fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+    load_thermodynamic_data = false; // need load thermo
+
+    fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
   try
     {
 #endif

@@ -493,7 +493,29 @@ long int retCode;
 
 // GEM IPM calculation of equilibrium state in MULTI
   wrkNode.pCNode()->NodeStatusCH = abs(Mode);
+
+#ifdef IPMGEMPLUGIN
   retCode = wrkNode.GEM_run( uPrimalSol );
+#else
+
+  std::vector<std::string> send_msg;
+  send_msg.push_back("dbr");
+  send_msg.push_back( wrkNode.databr_to_string( false, false ));
+  auto recv_message = TProfil::pm->CalculateEquilibriumServer( send_msg );
+
+  if( (recv_message[0] == "ipmOK" || recv_message[0] == "ipmError")  && recv_message.size() >= 2 )
+  {
+      if( !recv_message[1].empty() )
+      {
+          // update dbr
+          wrkNode.databr_from_string(recv_message[1]);
+   retCode = OK_GEM_AIA;
+      }
+
+     // if( recv_message[0] == "ipmError"  && recv_message.size() >= 4 )
+     //  Error(recv_message[2].c_str(), recv_message[3].c_str() );
+  }
+#endif
 
 // Copying data for node iNode back from work DATABR structure into the node array
 //   if( retCode == OK_GEM_AIA ||

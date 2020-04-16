@@ -68,10 +68,16 @@ int main ()
        // execute command
        if(  msgs_data.size() >= 4 and msgs_data[0] == "system")
        {
+         std::cout << "Init... "  << msgs_data.size()  << std::endl;
          // one system calculation
            ret_msgs =  task_data.initGEM( msgs_data[1], msgs_data[2], msgs_data[3] );
            if( ret_msgs.empty() )
                  ret_msgs = task_data.calculateEquilibrium("");
+       }
+       else if(  msgs_data.size() >= 2 and msgs_data[0] == "dbr" )
+       {
+          std::cout << "dbr... "  << msgs_data.size()  << std::endl;
+          ret_msgs = task_data.calculateEquilibrium(msgs_data[1]);
        }
 
        // send result
