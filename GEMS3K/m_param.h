@@ -515,7 +515,7 @@ public:
    std::vector<std::string> CurrentSystem2GEMS3Kjson( bool brief_mode, bool add_mui );
 
    /// Reading structure MULTI (GEM IPM work structure)
-   double readMultiServer( const std::vector<std::string>& send_msg, const std::vector<std::string>& recv_msg );
+   double readMultiServer( long int NodeStatusCH, const std::vector<std::string>& send_msg, const std::vector<std::string>& recv_msg );
 };
 
 /* Work codes of surface site types in pm->AtNdx vector (compatibility with old-style SCMs *

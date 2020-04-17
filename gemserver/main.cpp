@@ -20,7 +20,7 @@ double  CalculateEquilibriumServer( const std::string& lst_f_name );
 
 int main ()
 {
-    TNodeTask task_data;
+    NodeGEMSTask task_data;
 
     //  Prepare our context and socket
     zmq::context_t context (1);
@@ -66,17 +66,26 @@ int main ()
            msgs_data.push_back(  msg.to_string() );
 
        // execute command
-       if(  msgs_data.size() >= 4 and msgs_data[0] == "system")
+       if(  msgs_data.size() >= 4 and msgs_data[0] == one_system_task)
        {
-         std::cout << "Init... "  << msgs_data.size()  << std::endl;
-         // one system calculation
-           ret_msgs =  task_data.initGEM( msgs_data[1], msgs_data[2], msgs_data[3] );
-           if( ret_msgs.empty() )
+         std::cout << "Init... "  << msgs_data.size() << std::endl;
+         ret_msgs =  task_data.initData( msgs_data[1], msgs_data[2], msgs_data[3] );
+         if( ret_msgs.empty() )
                  ret_msgs = task_data.calculateEquilibrium("");
        }
-       else if(  msgs_data.size() >= 2 and msgs_data[0] == "dbr" )
+       else if(  msgs_data.size() >= 4 and msgs_data[0] == nodearray_task )
        {
-          std::cout << "dbr... "  << msgs_data.size()  << std::endl;
+          std::cout << "gem2mt... "  << msgs_data.size() << std::endl;
+          ret_msgs =  task_data.initData( msgs_data[1], msgs_data[2], msgs_data[3] );
+          if( ret_msgs.empty() )
+          {
+              //task_data.calculateEquilibrium("");
+              ret_msgs.push_back("ok");
+          }
+       }
+       else if(  msgs_data.size() >= 2 and msgs_data[0] == only_dbr_task )
+       {
+          std::cout << "dbr... "  << msgs_data.size() << std::endl;
           ret_msgs = task_data.calculateEquilibrium(msgs_data[1]);
        }
 

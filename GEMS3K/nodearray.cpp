@@ -483,8 +483,7 @@ long int  TNodeArray::RunGEM( TNode& wrkNode, long int  iNode, long int Mode, DA
 {
 
 bool uPrimalSol = false;
-long int retCode;
-
+long int retCode = T_ERROR_GEM;
   if( Mode < 0 || abs(Mode) == NEED_GEM_SIA )
 	  uPrimalSol = true;
 	  
@@ -501,19 +500,18 @@ long int retCode;
   std::vector<std::string> send_msg;
   send_msg.push_back("dbr");
   send_msg.push_back( wrkNode.databr_to_string( false, false ));
+  send_msg.push_back( std::to_string(iNode) );
   auto recv_message = TProfil::pm->CalculateEquilibriumServer( send_msg );
 
-  if( (recv_message[0] == "ipmOK" || recv_message[0] == "ipmError")  && recv_message.size() >= 2 )
-  {
-      if( !recv_message[1].empty() )
-      {
-          // update dbr
-          wrkNode.databr_from_string(recv_message[1]);
-   retCode = OK_GEM_AIA;
-      }
+  if( recv_message.size() >= 2 )
+      retCode =  atol( recv_message[0].c_str() );
+  else
+      Error("RunGEM", "Illegal number of messages" );
 
-     // if( recv_message[0] == "ipmError"  && recv_message.size() >= 4 )
-     //  Error(recv_message[2].c_str(), recv_message[3].c_str() );
+
+  if( retCode == OK_GEM_AIA || retCode ==  OK_GEM_SIA )
+  {
+     wrkNode.databr_from_string(recv_message[1]);
   }
 #endif
 

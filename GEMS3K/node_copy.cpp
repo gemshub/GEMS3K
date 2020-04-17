@@ -66,6 +66,9 @@ std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 // Reads work node (DATABR structure) from a json/key-value string
 bool TNode::databr_from_string( const std::string& data )
 {
+    if( data.empty() )
+        return false;
+
     std::stringstream ss;
     ss.str(data);
     databr_from_text_file( ss );

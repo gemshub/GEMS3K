@@ -7,34 +7,59 @@
 
 class TNode;
 
-class TNodeTask
+extern const char* one_system_task;
+extern const char* only_dbr_task;
+extern const char* nodearray_task;
+
+
+class NodeInterface
+{
+
+public:
+
+    /// Destructor
+    virtual ~NodeInterface()  {}
+
+    /// Initialization of GEMS3K internal data from json/key-value strings
+    virtual std::vector<std::string> initData( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json ) = 0;
+
+    /// Initialization of GEM IPM3 data structures in coupled programs
+    /// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
+    virtual std::vector<std::string> initData( const char *ipmfiles_lst_name ) = 0;
+
+    /// Run process of calculate equilibria into the GEMS3K side
+    virtual std::vector<std::string> calculateEquilibrium( const std::string& new_dbr ) = 0;
+
+};
+
+class NodeGEMSTask: public NodeInterface
 {
 
 public:
 
     /// Constructor
-    TNodeTask();
+    NodeGEMSTask();
     /// Copy constructor
-    TNodeTask(const TNodeTask &other );
+    NodeGEMSTask(const NodeGEMSTask &other );
     /// Move constructor
-    TNodeTask( TNodeTask &&other ) = default;
+    NodeGEMSTask( NodeGEMSTask &&other ) = default;
     /// Destructor
-    virtual ~TNodeTask()  {}
+    ~NodeGEMSTask()  {}
 
     /// Copy assignment
-    TNodeTask &operator =( const TNodeTask &other);
+    NodeGEMSTask &operator =( const NodeGEMSTask &other);
     /// Move assignment
-    TNodeTask &operator =( TNodeTask &&other) = default;
+    NodeGEMSTask &operator =( NodeGEMSTask &&other) = default;
 
     /// Initialization of GEMS3K internal data from json/key-value strings
-    std::vector<std::string> initGEM( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json );
+    std::vector<std::string> initData( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json ) override;
 
     /// Initialization of GEM IPM3 data structures in coupled programs
     /// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
-    std::vector<std::string> initGEM( const char *ipmfiles_lst_name );
+    std::vector<std::string> initData( const char *ipmfiles_lst_name ) override;
 
     /// Run process of calculate equilibria into the GEMS3K side
-    std::vector<std::string> calculateEquilibrium( const std::string& new_dbr );
+    std::vector<std::string> calculateEquilibrium( const std::string& new_dbr ) override;
 
 
 protected:
@@ -46,7 +71,7 @@ protected:
     std::string task_name;
 
     /// copy data
-    void copy(const TNodeTask &other);
+    void copy(const NodeGEMSTask &other);
 };
 
 #endif // TNODETASK_H
