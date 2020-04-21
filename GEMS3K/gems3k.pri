@@ -44,6 +44,7 @@
                       $$GEMS3K_CPP/ipm_simplex.cpp \
                       $$GEMS3K_CPP/node.cpp \
                       $$GEMS3K_CPP/nodearray.cpp \
+                      $$GEMS3K_CPP/nodearray_new.cpp \
                       $$GEMS3K_CPP/node_format.cpp \
 #                      $$GEMS3K_CPP/particlearray.cpp \
                       $$GEMS3K_CPP/ms_multi_file.cpp \
@@ -54,7 +55,7 @@
                       $$GEMS3K_CPP/node_copy.cpp \
                       $$GEMS3K_CPP/ms_multi_copy.cpp \
                       $$GEMS3K_CPP/node_activities.cpp \
-                      $$GEMS3K_CPP/node_kinetics.cpp \ 
+                      $$GEMS3K_CPP/node_kinetics.cpp \
                       $$GEMS3K_CPP/s_activity.cpp \ 
                       $$GEMS3K_CPP/s_activity2.cpp \ 
                       $$GEMS3K_CPP/s_activity3.cpp
