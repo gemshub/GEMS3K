@@ -430,7 +430,7 @@ bool TNodeArray::InitNodeServer()
     zmq_message_t send_msg;
     send_msg.push_back( "nodearray" );
     send_msg.push_back( calcNode.datach_to_string( false, false ) );
-    send_msg.push_back( TProfil::pm->gemipm_to_string( true, false, false ));
+    send_msg.push_back( calcNode.gemipm_to_string( true, false, false ));
     send_msg.push_back( calcNode.databr_to_string( false, false ));
 
     auto recv_message = TProfil::pm->CalculateEquilibriumServer( send_msg );
