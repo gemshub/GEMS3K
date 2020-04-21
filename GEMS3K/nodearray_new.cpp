@@ -38,6 +38,7 @@
 #include "nodearray.h"
 #include "io_arrays.h"
 #include "gdatastream.h"
+#include "zmqclient.h"
 
 #ifndef IPMGEMPLUGIN
 #include "visor.h"
@@ -340,6 +341,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
 }
 
 
+
 #endif
 
 
@@ -356,7 +358,6 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
 
 long int  TNodeArray::RunGEM( TNode& wrkNode, long int  iNode, long int Mode, DATABRPTR* nodeArray )
 {
-
     bool uPrimalSol = false;
     long int retCode = T_ERROR_GEM;
     if( Mode < 0 || abs(Mode) == NEED_GEM_SIA )
@@ -371,23 +372,7 @@ long int  TNodeArray::RunGEM( TNode& wrkNode, long int  iNode, long int Mode, DA
 #ifdef IPMGEMPLUGIN
     retCode = wrkNode.GEM_run( uPrimalSol );
 #else
-
-    std::vector<std::string> send_msg;
-    send_msg.push_back("dbr");
-    send_msg.push_back( wrkNode.databr_to_string( false, false ));
-    send_msg.push_back( std::to_string(iNode) );
-    auto recv_message = TProfil::pm->CalculateEquilibriumServer( send_msg );
-
-    if( recv_message.size() >= 2 )
-        retCode =  atol( recv_message[0].c_str() );
-    else
-        Error("RunGEM", "Illegal number of messages" );
-
-
-    if( retCode == OK_GEM_AIA || retCode ==  OK_GEM_SIA )
-    {
-        wrkNode.databr_from_string(recv_message[1]);
-    }
+    retCode = CalcNodeServer( wrkNode, iNode );
 #endif
 
     // Copying data for node iNode back from work DATABR structure into the node array
@@ -414,6 +399,48 @@ void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long i
                 retCodes[node] = na->RunGEM(workNode, node, Mode, nodeArray);
         }
     }
+}
+
+long int  TNodeArray::CalcNodeServer( TNode& wrkNode, long int  iNode)
+{
+    long int  retCode = T_ERROR_GEM;
+
+    zmq_message_t send_msg;
+    send_msg.push_back("dbr");
+    send_msg.push_back( wrkNode.databr_to_string( false, false ));
+    send_msg.push_back( std::to_string(iNode) );
+
+    auto recv_message = TProfil::pm->CalculateEquilibriumServer( send_msg );
+
+    if( recv_message.size() >= 2 )
+        retCode  =  atol( recv_message[0].c_str() );
+    else
+        Error("RunGEM", "Illegal number of messages" );
+
+    if( retCode == OK_GEM_AIA || retCode ==  OK_GEM_SIA )
+    {
+        wrkNode.databr_from_string(recv_message[1]);
+    }
+
+    return retCode;
+}
+
+bool TNodeArray::InitNodeServer()
+{
+    zmq_message_t send_msg;
+    send_msg.push_back( "nodearray" );
+    send_msg.push_back( calcNode.datach_to_string( false, false ) );
+    send_msg.push_back( TProfil::pm->gemipm_to_string( true, false, false ));
+    send_msg.push_back( calcNode.databr_to_string( false, false ));
+
+    auto recv_message = TProfil::pm->CalculateEquilibriumServer( send_msg );
+
+    if( recv_message.size() >= 2 )
+    {
+        Error(recv_message[0].c_str(), recv_message[1].c_str() );
+    }
+
+    return true;
 }
 
 

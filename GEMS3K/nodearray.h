@@ -168,6 +168,9 @@ protected:
         return node;
     }
 
+    ///  Here we run command a GEM calculation in box iNode on to GEMS3_server
+    long int CalcNodeServer(TNode& wrkNode, long int  iNode);
+
     // end of new stuff -------------------------------------------------------
 
 public:
@@ -425,6 +428,9 @@ public:
     ///                      -1 if internal memory allocation error occurred.
     long int  GEM_init( const char* ipmfiles_lst_name,
                         const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1);
+
+    ///  Here we run command to setup GEMS3_server for GEM calculation in boxes from  start_node to end_node
+    bool InitNodeServer();
 
     // end of new stuff -------------------------------------------------------
 
