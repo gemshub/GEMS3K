@@ -68,14 +68,14 @@ int main ()
        // execute command
        if(  msgs_data.size() >= 4 and msgs_data[0] == one_system_task)
        {
-         std::cout << "Init... "  << msgs_data.size() << std::endl;
+         //std::cout << "Init... "  << msgs_data.size() << std::endl;
          ret_msgs =  task_data.initData( msgs_data[1], msgs_data[2], msgs_data[3] );
          if( ret_msgs.empty() )
                  ret_msgs = task_data.calculateEquilibrium("");
        }
        else if(  msgs_data.size() >= 4 and msgs_data[0] == nodearray_task )
        {
-          std::cout << "gem2mt... "  << msgs_data.size() << std::endl;
+          //std::cout << "gem2mt... "  << msgs_data.size() << std::endl;
           ret_msgs =  task_data.initData( msgs_data[1], msgs_data[2], msgs_data[3] );
           if( ret_msgs.empty() )
           {
@@ -85,7 +85,7 @@ int main ()
        }
        else if(  msgs_data.size() >= 2 and msgs_data[0] == only_dbr_task )
        {
-          std::cout << "dbr... "  << msgs_data.size() << std::endl;
+          //std::cout << "dbr... "  << msgs_data.size() << std::endl;
           ret_msgs = task_data.calculateEquilibrium(msgs_data[1]);
        }
 

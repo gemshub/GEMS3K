@@ -38,11 +38,12 @@
 #include "nodearray.h"
 #include "io_arrays.h"
 #include "gdatastream.h"
-#include "zmqclient.h"
+
 
 #ifndef IPMGEMPLUGIN
 #include "visor.h"
 #include "m_gem2mt.h"
+#include "zmqclient.h"
 #else
 istream& f_getline(istream& is, gstring& str, char delim);
 #endif
@@ -401,6 +402,8 @@ void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long i
     }
 }
 
+#ifndef IPMGEMPLUGIN
+
 long int  TNodeArray::CalcNodeServer( TNode& wrkNode, long int  iNode)
 {
     long int  retCode = T_ERROR_GEM;
@@ -427,6 +430,7 @@ long int  TNodeArray::CalcNodeServer( TNode& wrkNode, long int  iNode)
 
 bool TNodeArray::InitNodeServer()
 {
+    na = this; // temporaly fix
     zmq_message_t send_msg;
     send_msg.push_back( "nodearray" );
     send_msg.push_back( calcNode.datach_to_string( false, false ) );
@@ -443,6 +447,7 @@ bool TNodeArray::InitNodeServer()
     return true;
 }
 
+#endif
 
 // New init ================================================================
 
