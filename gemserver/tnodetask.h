@@ -1,36 +1,11 @@
 #ifndef TNODETASK_H
 #define TNODETASK_H
 
-#include <string>
-#include <vector>
+#include "tnodeinterface.h"
 #include <memory>
 
 class TNode;
 
-extern const char* one_system_task;
-extern const char* only_dbr_task;
-extern const char* nodearray_task;
-
-
-class NodeInterface
-{
-
-public:
-
-    /// Destructor
-    virtual ~NodeInterface()  {}
-
-    /// Initialization of GEMS3K internal data from json/key-value strings
-    virtual std::vector<std::string> initData( const std::string& dch_json, const std::string& ipm_json, const std::string& dbr_json ) = 0;
-
-    /// Initialization of GEM IPM3 data structures in coupled programs
-    /// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
-    virtual std::vector<std::string> initData( const char *ipmfiles_lst_name ) = 0;
-
-    /// Run process of calculate equilibria into the GEMS3K side
-    virtual std::vector<std::string> calculateEquilibrium( const std::string& new_dbr ) = 0;
-
-};
 
 class NodeGEMSTask: public NodeInterface
 {
@@ -56,7 +31,7 @@ public:
 
     /// Initialization of GEM IPM3 data structures in coupled programs
     /// that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
-    std::vector<std::string> initData( const char *ipmfiles_lst_name ) override;
+    virtual std::vector<std::string> initData( const char *ipmfiles_lst_name );
 
     /// Run process of calculate equilibria into the GEMS3K side
     std::vector<std::string> calculateEquilibrium( const std::string& new_dbr ) override;

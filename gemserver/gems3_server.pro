@@ -37,10 +37,11 @@ QMAKE_LFLAGS +=
 QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
-HEADERS  +=  tnodetask.h
+HEADERS  +=  tnodetask.h \
+    tnodeinterface.h
 
 SOURCES  +=   main.cpp \
-              main_calc.cpp \
+#              main_calc.cpp \
               tnodetask.cpp
 
 LIBS += -lzmq

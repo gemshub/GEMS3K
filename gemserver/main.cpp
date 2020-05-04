@@ -16,7 +16,9 @@
 #include "tnodetask.h"
 double  CalculateEquilibriumServer( const std::string& lst_f_name );
 
-
+const char* one_system_task = "system";
+const char* only_dbr_task = "dbr";
+const char* nodearray_task = "nodearray";
 
 int main ()
 {

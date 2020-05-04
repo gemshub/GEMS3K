@@ -1,10 +1,6 @@
 #include "tnodetask.h"
 #include "node.h"
 
-const char* one_system_task = "system";
-const char* only_dbr_task = "dbr";
-const char* nodearray_task = "nodearray";
-
 NodeGEMSTask::NodeGEMSTask():
     current_task(nullptr), task_name()
 { }
