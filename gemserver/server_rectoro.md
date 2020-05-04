@@ -8,7 +8,7 @@ more detailed comparisons will be done in the next tasks.
 
 Main focus at Stage 2 will be to modify Reaktoro as a standalone server using ZeroMQ messaging in a similar way as it has been already done with GEMS3K, and  to be able to run Reaktoro server alternatively to GEMS3K server and compare the results of solving the same test equilibria and processes.
 
-This task may be facilitated by using the new JSON format of GEMS3K I/O files, already readable/writable by GEMS3K server and possible to be used by the Reaktoro/Optima server.
+This task may be facilitated by using the new JSON format of GEMS3K I/O strings, already readable/writable by GEMS3K server and possible to be used by the Reaktoro/Optima server.
 
 
 
