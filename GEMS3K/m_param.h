@@ -495,7 +495,7 @@ public:
    void SetSysSwitchesFromMulti( );
 
 
-   // new Reactoro
+   // new Reaktoro
    /// Run process of calculate equilibria into the GEMSGUI shell
    double CalculateEquilibriumGUI( const gstring& path);
 

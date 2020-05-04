@@ -1,4 +1,4 @@
-## ZeroMQ server { GEMS-Reactoro project } ##
+## ZeroMQ server { GEMS-Reaktoro project } ##
 
 Now we are at the end of Stage 1 having the first working variant GEMS3K-server of GEMS-Reaktoro code.
 With GEMS-Reaktoro GUI, we can set up a chemical equilibrium problem as usual and compute Systems and Processes using the GEMS3K code as a standalone server.
@@ -8,7 +8,7 @@ more detailed comparisons will be done in the next tasks.
 
 Main focus at Stage 2 will be to modify Reaktoro as a standalone server using ZeroMQ messaging in a similar way as it has been already done with GEMS3K, and  to be able to run Reaktoro server alternatively to GEMS3K server and compare the results of solving the same test equilibria and processes.
 
-This task may be facilitated by using the new JSON format of GEMS3K I/O strings, already readable/writable by GEMS3K server and possible to be used by the Reaktoro/Optima server.
+This task may be facilitated by using the new JSON format of GEMS3K I/O messages, already readable/writable by GEMS3K server and possible to be used by the Reaktoro/Optima server.
 
 
 
@@ -20,12 +20,12 @@ Implementation of ZeroMQ GEMS3K-server you can see: https://bitbucket.org/gems4/
 
 * main.cpp
 
-Implementation of ZeroMQ exchange. Would be the same for GEMS3K-server and Reactoro-server
+Implementation of ZeroMQ exchange. Would be the same for GEMS3K-server and Reaktoro-server
 
 
 * tnodeinterface.h
 
-NodeInterface interface, that must be implemented for GEMS3K-server and Reactoro-server
+NodeInterface interface, that must be implemented for GEMS3K-server and Reaktoro-server
 
 ```c++
 
@@ -42,7 +42,7 @@ NodeInterface interface, that must be implemented for GEMS3K-server and Reactoro
 
 ```c++
 
-/// Run process of calculate equilibria into the GEMS3K/Reactoro side
+/// Run process of calculate equilibria into the GEMS3K/Reaktoro side
 /// Parameters:
 ///  @param dbr_json -  DATABR - the data bridge structure as a json string
 ///  @return array with strings contains:
@@ -87,9 +87,13 @@ Implementation NodeInterface for GEMS3K-server
 
 
 
+
+
+
+
 > To generate test files in json format for server you can use command "Data/Export GEMS3K files ..."
 
-> You can use key-value format data exchange if comment ```c++ DEFINES  += JSON_OUT``` in client and server projects.
+> You can use key-value format data exchange if comment ``` DEFINES  += JSON_OUT``` in client and server projects.
 
 
 ### Some addition applications

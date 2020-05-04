@@ -29,7 +29,7 @@ public:
     // that use GEMS3K module. Also reads in the IPM, DCH and one or many DBR text input files.
     //virtual std::vector<std::string> initData( const char *ipmfiles_lst_name ) = 0;
 
-    /// Run process of calculate equilibria into the GEMS3K/Reactoro side
+    /// Run process of calculate equilibria into the GEMS3K/Reaktoro side
     /// Parameters:
     ///  @param dbr_json -  DATABR - the data bridge structure as a json string
     ///  @return array with strings contains:

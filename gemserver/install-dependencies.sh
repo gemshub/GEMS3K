@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installing dependencies needed to build GEMS-Reactoro for linux 16.04 or 18.04
+# Installing dependencies needed to build GEMS-Reaktoro for linux 16.04 or 18.04
 
 #sudo rm -f /usr/local/lib/libzmq.a
 #sudo rm -f /usr/local/include/zmq.hpp
