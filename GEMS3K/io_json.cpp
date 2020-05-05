@@ -30,33 +30,6 @@
 #include "io_json.h"
 #include "v_user.h"
 
-#ifdef IPMGEMPLUGIN
-
-istream& f_getline(istream& is, gstring& str, char delim);
-
-//    This constants should be 'defined' to satisfy all compilers
-#define SHORT_EMPTY 	   -32768
-#define LONG_EMPTY             -2147483648L
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
-#define CHAR_EMPTY   	     '`'
-
-inline bool IsFloatEmpty( const float v )
-{
-    return ( v>0. && v <= FLOAT_EMPTY);
-}
-inline bool IsDoubleEmpty( const double v )
-{
-    return ( v>0. && v <= DOUBLE_EMPTY);
-}
-
-#else
-
-#include "v_vals.h"
-
-#endif
-
-
 /// Write double value to file
 template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json_arr )
 {
@@ -67,11 +40,7 @@ template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json
 template <> void TPrintJson::writeValue( const gstring& value, nlohmann::json& json_arr )
 {
     auto val = value;
-#ifdef IPMGEMPLUGIN
     strip(val);
-#else
-    val.strip();
-#endif
     json_arr.push_back( std::string(val.c_str()) );
 }
 
@@ -236,6 +205,5 @@ void TReadJson::readArray( const char* name, char* arr, long int size, long int 
 }
 
 
-
 //=============================================================================
-// io_arrays.cpp
+// io_json.cpp

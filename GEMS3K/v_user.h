@@ -230,6 +230,30 @@ private:
 
 #endif    // IPMGEMPLUGIN
 
+#ifdef IPMGEMPLUGIN
+
+//    This constants should be 'defined' to satisfy all compilers
+#define FLOAT_EMPTY	          1.17549435e-38F
+#define DOUBLE_EMPTY         2.2250738585072014e-308
+#define CHAR_EMPTY   	     '`'
+
+inline bool IsFloatEmpty( const float v )
+{
+    return ( v>0. && v <= FLOAT_EMPTY);
+}
+inline bool IsDoubleEmpty( const double v )
+{
+    return ( v>0. && v <= DOUBLE_EMPTY);
+}
+
+#else
+
+#include "v_vals.h"
+
+#endif
+
+
+
 /// Combines path, directory, name and extension to full pathname
 gstring
 u_makepath(const gstring& dir,

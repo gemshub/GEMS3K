@@ -24,37 +24,11 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <iomanip>
+#include  <iomanip>
 #include  <iostream>
 
 #include "io_arrays.h"
 #include "v_user.h"
-
-#ifdef IPMGEMPLUGIN
-
-istream& f_getline(istream& is, gstring& str, char delim);
-
-//    This constants should be 'defined' to satisfy all compilers
-#define SHORT_EMPTY 	   -32768
-#define LONG_EMPTY             -2147483648L
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
-#define CHAR_EMPTY   	     '`'
-
-inline bool IsFloatEmpty( const float v )
-{
-    return ( v>0. && v <= FLOAT_EMPTY);
-}
-inline bool IsDoubleEmpty( const double v )
-{
-    return ( v>0. && v <= DOUBLE_EMPTY);
-}
-
-#else
-
-#include "v_vals.h"
-
-#endif
 
 long int TRWArrays::findFld( const char *Name )
 {
@@ -100,11 +74,7 @@ template <> void TPrintArrays::writeValue( const char& value )
 template <> void TPrintArrays::writeValue( const gstring& value )
 {
     auto val = value;
-#ifdef IPMGEMPLUGIN // 24/08/2010
     strip(val);
-#else
-    val.strip();
-#endif
     ff  << "\'" << val.c_str() << "\'" /*<< " "*/;
     // commented out (space after text conflicts with gemsfit2 read-in) DM 16.07.2013
 }

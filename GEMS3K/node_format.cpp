@@ -1207,13 +1207,8 @@ void TNode::databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long 
     default: str = gstring( "UNDEFINED");
   }
 
-#ifdef IPMGEMPLUGIN
   strip(str);
   strip(str2);
-#else
-  str.strip();
-  str2.strip();
-#endif
 
   if( !str.empty() )
   { ff << "_" << str.c_str();

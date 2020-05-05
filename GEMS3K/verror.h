@@ -41,6 +41,8 @@ void strip(string& str);
 
 #include "gstring.h"
 
+void strip(gstring& str);
+
 #endif
 
 struct TError
