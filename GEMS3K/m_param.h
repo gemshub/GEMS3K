@@ -512,10 +512,10 @@ public:
    /// @return IPM work structures array json/key-value format ( <mode>, DATACH, MULTI, DATABR )
    /// @param brief_mode - Do not write data items that contain only default values
    /// @param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
-   std::vector<std::string> CurrentSystem2GEMS3Kjson( bool brief_mode, bool add_mui );
+   std::vector<std::string> CurrentSystem2GEMS3Kjson( std::shared_ptr<TNode>& na, bool brief_mode, bool add_mui );
 
    /// Reading structure MULTI (GEM IPM work structure)
-   double readMultiServer( long int NodeStatusCH, const std::vector<std::string>& send_msg, const std::vector<std::string>& recv_msg );
+   double readMultiServer( std::shared_ptr<TNode>& na, long int NodeStatusCH, const std::vector<std::string>& recv_msg );
 };
 
 /* Work codes of surface site types in pm->AtNdx vector (compatibility with old-style SCMs *
