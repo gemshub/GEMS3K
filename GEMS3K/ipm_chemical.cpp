@@ -30,10 +30,10 @@
 #include<iomanip>
 
 #include "m_param.h"
-#ifndef IPMGEMPLUGIN
-#include "service.h"
-#include "stepwise.h"
-#endif
+//#ifndef IPMGEMPLUGIN
+//#include "service.h"
+//#include "stepwise.h"
+//#endif
 
 // #define GEMITERTRACE
 
@@ -42,7 +42,7 @@
 ///  to improve IPM-2 convergence at high SACT values.
 ///  xj0 values are placed as upper kinetic constraints
 //
-void TMulti::XmaxSAT_IPM2()
+void TMultiBase::XmaxSAT_IPM2()
 {
     long int i, j, ja, k, jb, je=0, ist=0, Cj, iSite[6];
     double XS0, xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, xjn;
@@ -190,7 +190,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL <<
 }
 
 /* // clearing pm.DUL constraints!
-void TMulti::XmaxSAT_IPM2_reset()
+void TMultiBase::XmaxSAT_IPM2_reset()
 {
     long int j, ja, k, jb, je=0;
 
@@ -216,7 +216,7 @@ void TMulti::XmaxSAT_IPM2_reset()
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating value of dual chemical potential of j-th dependent component
 ///     performance optimized version  (February 2007)
-double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, long int j )
+double TMultiBase::DC_DualChemicalPotential( double U[], double AL[], long int N, long int j )
 {
    long int i, ii;
    double Nu = 0.0;
@@ -237,7 +237,7 @@ double TMulti::DC_DualChemicalPotential( double U[], double AL[], long int N, lo
 ///  concentration units. InitState: true - reset constraints (only SIA mode)
 /// false - use kinetic constraints as they are.
 //
-void TMulti::Set_DC_limits( bool InitState )
+void TMultiBase::Set_DC_limits( bool InitState )
 {
     double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
     long int jb, je, j,k, MpL;
@@ -399,7 +399,7 @@ NEXT_PHASE:
 ///  concentration units. Mode: 0 - initialization of AMRs; 1 - current iteration
 //  Needs much more work, elaboration, and performance optimization
 //
-void TMulti::Set_DC_limits( long int Mode )
+void TMultiBase::Set_DC_limits( long int Mode )
 {
     double XFL, XFU, XFS=0., XFM, MWXW, MXV, XL=0., XU=0.;
     long int jb, je, j,k, MpL;
@@ -549,7 +549,7 @@ NEXT_PHASE:
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating total amounts of phases
 //
-void TMulti::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
+void TMultiBase::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
 {
     long int jj, j, i, k;
     double XFw, XFs, x;
@@ -581,7 +581,7 @@ void TMulti::TotalPhasesAmounts( double X[], double XF[], double XFA[] )
 ///  Returns double value of corrected chem. potential.
 ///  If error, returns +7777777 J/mole.
 //  Last modif. 05 Jan 2000 by DK to include BSM EDL model.
-double TMulti::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
+double TMultiBase::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
 {
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
@@ -760,7 +760,7 @@ case DC_SCM_SPECIES:
 /// molar Gibbs energy gT (obtained from pm.G[]) which includes
 /// activity coefficient terms.
 /// On error returns F = +7777777.
-double TMulti::DC_PrimalChemicalPotential(
+double TMultiBase::DC_PrimalChemicalPotential(
     double G,      ///< gT0+gEx
     double logY,   ///< ln x
     double logYF,  ///< ln Xa
@@ -798,7 +798,7 @@ double TMulti::DC_PrimalChemicalPotential(
 /// VJ - Update of primal chemical potentials
 //
 void
-TMulti::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
+TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], double YFA[] )
 {
     long int i,j,k;
     double NonLogTerm=0., v, Yf; // v is debug variable
@@ -870,7 +870,7 @@ NEXT_PHASE:
 /// Calculation of a species contribution to the total Gibbs energy G(X)
 /// of the system. On error returns +7777777.
 //
-double TMulti::DC_GibbsEnergyContribution(
+double TMultiBase::DC_GibbsEnergyContribution(
     double G,      ///< gT0+gEx
     double x,      ///< x - mole amount of species
     double logXF,  ///< ln Xa - mole amount of phase
@@ -907,7 +907,7 @@ double TMulti::DC_GibbsEnergyContribution(
 ///  just copies vector Y[] into X[].
 ///  \return of G(X) in moles.
 //
-double TMulti::GX( double LM  )
+double TMultiBase::GX( double LM  )
 {
     long int i, j, k;
     double x, XF, XFw, FX, Gi; // debug variable
@@ -988,67 +988,12 @@ NEXT_PHASE:
   return(FX);
 }
 
-#ifndef IPMGEMPLUGIN
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Variant of GX() function for use in the UnSpace module (non-optimized)
-// Should not be called from within GEMIPM!
-//
-double TMulti::pb_GX( double *Gxx  )
-{
-    long int i, j, k;
-    double Gi, x, XF, XFw, FX;
-    SPP_SETTING *pa = paTProfil;
-
-    // calculating G(X)
-    FX=0.;
-    j=0;
-    for( k=0; k<pm.FI; k++ )
-    { // phase loop
-        i=j+pm.L1[k];
-        pm.logXw = -101.;
-        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
-        if( pm.FIs && k<pm.FIs )
-            XFw = pm.XFA[k];
- //       if( XFw > const1 )
-        if( ( pm.PHC[k] == PH_AQUEL && XFw >= pa->p.XwMin )
-                        || ( pm.PHC[k] == PH_SORPTION && XFw >= pa->p.ScMin )
-                        || ( pm.PHC[k] == PH_POLYEL && XFw >= pa->p.ScMin ) )
-             pm.logXw = log( XFw );
-        /*   */
-        XF = pm.XF[k];
-        if( !(pm.FIs && k < pm.FIs) )
-        {
-                if( XF < pa->p.PhMin )
-        		goto NEXT_PHASE;
-        }
-        else if( XF < pa->p.DS && pm.logXw < 100. )
-        	goto NEXT_PHASE;
-        pm.logYFk = log( XF );
-
-        for( ; j<i; j++ )
-        { // DC loop
-            x = pm.X[j];
-            if( x < pa->p.DcMin )
-                continue;
-            // calculating DC increment to G(x)
-            Gi = DC_GibbsEnergyContribution( Gxx[j], x, pm.logYFk, pm.logXw,
-                                 pm.DCCW[j] );
-            FX += Gi;
-        }   // j
-NEXT_PHASE:
-        j = i;
-    }  // k
-    return(FX);
-}
-#endif
-
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Conversion of g(T,P) value for DCs into the uniform cj scale.
 /// \param k - index of phase, \param j - index DC in phase
 /// \return if error code, returns 777777777.
 //
-double TMulti:: ConvertGj_toUniformStandardState( double g0, long int j, long int k )
+double TMultiBase::ConvertGj_toUniformStandardState( double g0, long int j, long int k )
 {
     double G, YOF=0;
 
@@ -1066,12 +1011,9 @@ double TMulti:: ConvertGj_toUniformStandardState( double g0, long int j, long in
         // calculate molar mass of solvent
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
-#ifndef IPMGEMPLUGIN
-        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-#endif
+        if( testTSyst( 0 ) ) //TSyst::sm->GetSY()->PYOF != S_OFF )
           if( YOF != 0.0 )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
-
         break;
     case DC_GAS_COMP: // gases except H2O and CO2
     case DC_GAS_H2O: // index to switch off?
@@ -1097,11 +1039,9 @@ case DC_SCM_SPECIES:
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
-#ifndef IPMGEMPLUGIN
-        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-#endif
-          if( YOF != 0.0 )
-        	 G += YOF;
+        if( testTSyst( 0 ) )//TSyst::sm->GetSY()->PYOF != S_OFF )
+            if( YOF != 0.0 )
+                G += YOF;
         break;
         // Sorption phases
     case DC_SSC_A0:
@@ -1129,7 +1069,7 @@ case DC_SCM_SPECIES:
 
 /// Converting DC class codes into generic internal codes of IPM
 //
-void TMulti::ConvertDCC()
+void TMultiBase::ConvertDCC()
 {
     long int i, j, k, iRet=0;
     char DCCW;
@@ -1214,7 +1154,7 @@ NEXT_PHASE:
 }
 
 /// Get the index of volume IC ("Vv") for the volume balance constraint
-long int TMulti::getXvolume()
+long int TMultiBase::getXvolume()
 {
  long int ii, ret = -1;
  for( ii = pm.N-1; ii>=0; ii--)
@@ -1229,7 +1169,7 @@ long int TMulti::getXvolume()
 /// Calculation of Karpov stability criteria for a DC
 // Modified for kinetic constraints 05.11.2007, 16.04.2012 by DK
 //
-double TMulti::KarpovCriterionDC(
+double TMultiBase::KarpovCriterionDC(
     double *dNuG,  // logarithmic Nu[j]-c[j] difference - is modified here
     double logYF,  // ln Xa   (Xa is mole amount of the whole phase)
     double asTail, // asymmetry correction (0 for symmetric phases)
@@ -1269,7 +1209,7 @@ double TMulti::KarpovCriterionDC(
 /// Calculation of Karpov stability criteria for all phases
 // Modifications for metastability-controlled components: DK 16.04.2012
 //
-void TMulti::KarpovsPhaseStabilityCriteria()
+void TMultiBase::KarpovsPhaseStabilityCriteria()
 {
     bool KinConstr, fRestore;
     long int k, j, ii;
@@ -1380,7 +1320,7 @@ if( pm.L1[k] > 1 && YF <= pm.DSM && fRestore == false )
 ///        -1 if cleanup has been done and the degeneration of the chemical system occurred
 ///         2 solution is seriously distorted and full PhaseSelect3() loop is necessary
 ///
-long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double MjuDiffCutoff )
+long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double MjuDiffCutoff )
 {
     long int NeedToImproveMassBalance = 0, L1k, L1kZeroDCs, k, j, jb = 0;
     double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
@@ -1508,7 +1448,7 @@ long int TMulti::SpeciationCleanup( double AmountCorrectionThreshold, double Mju
 /// \return 1L if Ok; 0 if one more IPM loop should be done;
 ///          -1L if 3 loops did not fix the problem
 //
-long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, long int CleanupStatus )
+long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, long int CleanupStatus )
 {
     double logSI, PhaseAmount = 0., AmThExp, AmountThreshold = 0.;
     double YFcleaned, Yj, YjDiff, YjCleaned=0., MjuPrimal, MjuDual, MjuDiff;
@@ -1796,10 +1736,9 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
    } // k
 }
 
-#ifndef IPMGEMPLUGIN
     STEP_POINT("PSSC()");
-#endif
-    // Analysis of phase selection and cleanup status
+
+// Analysis of phase selection and cleanup status
 // PZ    // Indicator of PhaseSelection() status (since r1594):
 //            0 untouched, 1 phase(s) inserted, 2 insertion done after 5 major IPM loops
 // W1     // Indicator of SpeciationCleanup() status (since r1594) 0 untouched,
@@ -1846,7 +1785,7 @@ long int TMulti::PhaseSelectionSpeciationCleanup( long int &kfr, long int &kur, 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculation of (logarithmic) stability indexes logSI for all phases
 //
-void TMulti::StabilityIndexes( void )
+void TMultiBase::StabilityIndexes( void )
 {
     long int L1k, k, j, jb = 0;
     double ln_ax_dual, gamma_primal, x_estimate, StabIndex, logSI;
@@ -1953,7 +1892,7 @@ else fRestore = true;
 ///  In this case, the index of most problematic phase is passed through kfr or
 ///  kur parameter (parameter value -1 means that no problematic phases were found)
 //
-long int TMulti::PhaseSelect( long int &kfr, long int &kur, long int RaiseStatus ) //  rLoop )
+long int TMultiBase::PhaseSelect( long int &kfr, long int &kur, long int RaiseStatus ) //  rLoop )
 {
     long int k, j, jb, kf, ku;
     double F1, F2, *F0; // , sfactor;
@@ -2075,9 +2014,9 @@ kur = ku;
             jb+=pm.L1[k];
         }
     }
-#ifndef IPMGEMPLUGIN
+
     STEP_POINT("Selekt2 procedure");
-#endif
+
     if( pm.K2 > 1 )
     { // more then the first step - but the IPM solution has not improved
 //      double RaiseZeroVal = pm.DHBM*0.1;   // experimental
@@ -2095,7 +2034,7 @@ S6: // copy of X vector has been changed by Selekt2() algorithm - store
 }
 
 /// New function to improve on raising zero values in PhaseSelect() and after SolveSimplex()
-double TMulti::RaiseDC_Value( const long int j )
+double TMultiBase::RaiseDC_Value( const long int j )
 {
         double RaiseZeroVal = pm.DFYsM;
 

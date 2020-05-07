@@ -680,7 +680,7 @@ void TNode::CheckMtparam()
         //pmm->TC = TK-C_to_K;
         //pmm->T = TK;
         //pmm->P  = P/bar_to_Pa;
-        TMulti::sm->DC_LoadThermodynamicData( this );
+        TMulti::sm->DC_ LoadThermodynamicData( this );
 #endif*/
     }
     load_thermodynamic_data = true;

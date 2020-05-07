@@ -96,7 +96,7 @@ protected:
 
 #ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMS3K programs
-    TMulti* multi;     // GEM IPM3 implementation class
+    TMultiBase* multi;     // GEM IPM3 implementation class
 //    TAllan *ipm;       // Allan's GEM IPM implementation class
 // more speciation algorithms classes, when provided
     TActivity *atp;    // Activity term class
@@ -688,7 +688,7 @@ long int GEM_step_MT( const long int step )
 
 #ifdef IPMGEMPLUGIN
 
-   TMulti* pMulti() const  /// Get pointer to GEM IPM work structure
+   TMultiBase* pMulti() const  /// Get pointer to GEM IPM work structure
    {        return multi;     }
 
    TActivity* pActiv() const  /// Get pointer to TActivity class instance
@@ -720,7 +720,6 @@ long int GEM_step_MT( const long int step )
 // and DataBR (or node) data structures for components and phases
 // (i.e. between the chemical system definition and the node)
 
-//  void AtcivityCoeficient ();
     /// Return a pointer to a phase (TSolMod) with index xPH
   void *get_ptrTSolMod( int xPH ) const;
 

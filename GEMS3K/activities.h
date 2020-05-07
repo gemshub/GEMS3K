@@ -371,7 +371,6 @@ public:
 
 //  Surface activity coefficient terms
 //        long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
-//    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
 
 //  ipm_chemical3.cpp
 //        void IS_EtaCalc();

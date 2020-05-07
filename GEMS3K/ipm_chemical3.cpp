@@ -31,82 +31,11 @@
 #include <iomanip>
 #include "m_param.h"
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Linking DOD for executing Phase mixing model scripts
-#ifdef IPMGEMPLUGIN
-   void TMulti::pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ )
-   {
-#else
-	void TMulti::pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb )
-	{
-
-        ErrorIf( k < 0 || k >= pm.FIs , "CalculateActivityCoefficients():", "Invalid link: k=0||>FIs" );
-    aObj[ o_nsmod].SetPtr( pm.sMod[k] );
-    aObj[ o_nncp].SetPtr( pm.LsMod+k*3 );
-    aObj[ o_nncd].SetPtr( pm.LsMdc+k*3 );
-    aObj[ o_ndc].SetPtr(  pm.L1+k );
-    aObj[ o_nez].SetPtr( pm.EZ+jb );
-    aObj[o_nez].SetN(  pm.L1[k]);
-    aObj[ o_npcv].SetPtr( pm.PMc+jpb );
-    aObj[o_npcv].SetDim( pm.LsMod[k*3], pm.LsMod[k*3+2]);
-    //  Object for indexation of interaction parameters
-    aObj[ o_nu].SetPtr( pm.IPx+ipb ); // added 07.12.2006  KD
-    aObj[o_nu].SetDim( pm.LsMod[k*3], pm.LsMod[k*3+1]);
-    //
-    aObj[ o_ndcm].SetPtr( pm.DMc+jdb );
-    aObj[o_ndcm].SetDim( pm.L1[k], pm.LsMdc[k*3] );
-    aObj[ o_nmvol].SetPtr( pm.Vol+jb );
-    aObj[o_nmvol].SetN( pm.L1[k]);
-    aObj[ o_nppar].SetPtr(pm.G0+jb );  // changed 10.12.2008 by DK
-    aObj[o_nppar].SetN(  pm.L1[k]);
-//    aObj[ o_ngtn].SetPtr( pm.G0+jb );
-    aObj[ o_ngtn].SetPtr( pm.fDQF+jb );     // changed 05.12.2006 by DK
-    aObj[o_ngtn].SetN( pm.L1[k] );
-    aObj[ o_ngam].SetPtr( pm.Gamma+jb ); // Gamma calculated
-    aObj[o_ngam].SetN( pm.L1[k] );
-    aObj[ o_nlngam].SetPtr( pm.lnGam+jb ); // ln Gamma calculated
-    aObj[o_nlngam].SetN( pm.L1[k]);
-    aObj[ o_nas].SetPtr(  pm.A+pm.N*jb );
-    aObj[o_nas].SetDim(  pm.L1[k], pm.N );
-    aObj[ o_nxa].SetPtr(  pm.XF+k );
-    aObj[ o_nxaa].SetPtr(  pm.XFA+k );
-    if( pm.FIat > 0 )
-    {
-        aObj[ o_nxast].SetPtr( pm.XFTS[k] );
-        aObj[ o_nxcec].SetPtr( pm.MASDT[k] );
-    }
-    else
-    {
-        aObj[ o_nxast].SetPtr( 0 );
-        aObj[ o_nxcec].SetPtr( 0 );
-    }
-    //
-    aObj[ o_nbmol].SetPtr( pm.FVOL+k );  // phase volume
-    aObj[ o_nxx].SetPtr(  pm.X+jb );
-    aObj[o_nxx].SetN( pm.L1[k]);
-    aObj[ o_nwx].SetPtr(  pm.Wx+jb );
-    aObj[o_nwx].SetN( pm.L1[k]);
-    aObj[ o_nmju].SetPtr( pm.Fx+jb );
-    aObj[o_nmju].SetN( pm.L1[k]);
-    aObj[ o_nqp].SetPtr( pm.Qp+k*QPSIZE );
-    aObj[ o_nqd].SetPtr( pm.Qd+k*QDSIZE );   // Fixed 7.12.04 by KD
-
-    // phase excess properties
-    aObj[o_ngte].SetPtr( &pm.GPh[k][0] );
-    aObj[o_nhte].SetPtr( &pm.HPh[k][0] );
-    aObj[o_nste].SetPtr( &pm.SPh[k][0] );
-    aObj[o_nvte].SetPtr( &pm.VPh[k][0] );
-    aObj[o_ncpte].SetPtr( &pm.CPh[k][0] );
-    aObj[o_nate].SetPtr( &pm.APh[k][0] );
-    aObj[o_nute].SetPtr( &pm.UPh[k][0] );
-
-#endif
-}
 
 
 /// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
 // added 18.06.2008 DK
-double TMulti::SmoothingFactor( )
+double TMultiBase::SmoothingFactor( )
 {
    if( pm.FitVar[4] < 0 )
    {  // To start SIA mode (smart initial approximation)
@@ -128,7 +57,7 @@ double TMulti::SmoothingFactor( )
 ///       1, 2, ...  taking log(CD) average from the moving window of length mode
 ///       (up to 5 consecutive values)
 ///
-void TMulti::SetSmoothingFactor( long int mode )
+void TMultiBase::SetSmoothingFactor( long int mode )
 {
     double TF=1., al, ag, dg, iim, irf; // rg=0.0;
     long int ir; //, Level, itqF, itq;
@@ -211,7 +140,7 @@ void TMulti::SetSmoothingFactor( long int mode )
 ///    amount is zero (X[j] == 0) (is this a correct policy for zeroed-off components?)
 //
 double
-TMulti::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
+TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k, long int DirFlag )
 {
     double NonLogTerm = 0., NonLogTermW = 0., NonLogTermS = 0., MMC = 0.;
 //    SPP_SETTING *pa = &TProfil::pm->pa;
@@ -334,7 +263,7 @@ NonLogTermS = 0.0;
 }
 
 //--------------------------------------------------------------------------------
-static double ICold=0.;
+///static double ICold=0.;
 /// Main call point for calculation of DC activity coefficients (lnGam vector)
 ///    formerly GammaCalc().
 /// Controls various built-in models, as well as generic Phase script calculation
@@ -347,7 +276,7 @@ static double ICold=0.;
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with surface complexation models)
 long int
-TMulti::CalculateActivityCoefficients( long int LinkMode  )
+TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
 {
     long int k, j, jb, je=0, jpb, jdb, ipb,  jpe=0, jde=0, ipe=0;
     //long int  jmb, jme=0, jsb, jse=0;
@@ -533,7 +462,7 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
 					default:
 						break;
                 }
-                ICold = pm.IC;
+                ///ICold = pm.IC;
              }
              goto END_LOOP;
              break;
@@ -603,120 +532,8 @@ TMulti::CalculateActivityCoefficients( long int LinkMode  )
        } // end switch
    }  // end if LinkMode == LINK_UX_MODE
 
-
-
-#ifndef IPMGEMPLUGIN
-// This part running Phase math scripts is not used in standalone GEMS3K
-        // Link DOD and set sizes of work arrays
-        pm_GC_ods_link( k, jb, jpb, jdb, ipb );
-        pm.is=0;
-        pm.js=0;
-        pm.next=1;
-
-        switch( LinkMode )
-        { // check the calculation mode
-        case LINK_TP_MODE: // running TP-dependent scripts
-            if(( sMod[SPHAS_DEP] == SM_TPDEP || sMod[SPHAS_DEP] == SM_UXDEP ) && qEp[k].nEquat() )
-            {	// Changed on 26.02.2008 to try TW DQF scripts - DK
-        	      qEp[k].CalcEquat();
-            }
-        	if((sMod[DCOMP_DEP] == SM_TPDEP || sMod[DCOMP_DEP] == SM_UXDEP) && qEd[k].nEquat() )
-            {
-                switch( sMod[DCE_LINK] )
-                {
-                case SM_PUBLIC:  // one script for all species
-                    for( pm.js=0, pm.is=0; pm.js<pm.L1[k]; pm.js++ )
-                        qEd[k].CalcEquat();
-                    break;
-                case SM_PRIVATE_: // separate group of equations per species
-                    qEd[k].CalcEquat();
-                    break;
-                }
-            }
-        	break;
-
-        case LINK_PP_MODE: // Mode of calculation of integral solution phase properties
-                        switch( pm.PHC[k] )
-                {
-                  case PH_AQUEL:
-                  case PH_LIQUID:
-                  case PH_SINCOND:
-                  case PH_SINDIS:
-                  case PH_HCARBL:
-                  case PH_SIMELT:
-                  case PH_IONEX:
-                  case PH_ADSORPT:
-                  case PH_GASMIX:
-                  case PH_PLASMA:
-                  case PH_FLUID:  // How to pull this stuff out of the script (pointers to integral phase properties added)
-                	  // SolModExcessProp( k, sMod[SPHAS_TYP] ); // extracting integral phase properties
-                	  // SolModIdealProp( jb, k, sMod[SPHAS_TYP] );
-                	  // SolModStandProp( jb, k, sMod[SPHAS_TYP] );
-                	  // SolModDarkenProp( jb, k, sMod[SPHAS_TYP] );
-               	       break;
-                  default:
-                       break;
-                }
-                break;
-
-        case LINK_UX_MODE:  // the model is dependent on current concentrations on IPM iteration
-
-            switch( pm.PHC[k] )
-            {  //
-              case PH_AQUEL:
-                  if(!(pmpXFk > pm.DSM && pm.X[pm.LO] > pm.XwMinM && pm.IC > pa->p.ICmin ))
-                	 goto END_LOOP;
-                 break;
-              case PH_GASMIX:
-              case PH_PLASMA:
-              case PH_FLUID:
-                 if( !(pmpXFk > pm.DSM && pm.XF[k] > pa->p.PhMin))
-                     goto END_LOOP;
-                 break;
-             case PH_LIQUID:
-             case PH_SIMELT:
-             case PH_SINCOND:
-             case PH_SINDIS:
-             case PH_IONEX:
-             case PH_ADSORPT:
-             case PH_HCARBL:  // solid and liquid mixtures
-                 if( !(pmpXFk > pm.DSM) )
-                     goto END_LOOP;
-                 SolModActCoeff( k, sMod[SPHAS_TYP] );  // Added to introduce multi-site ideal term 29.11.2010
-                 break;
-            case PH_POLYEL:  // PoissonBoltzmann( q, jb, je, k ); break;
-            case PH_SORPTION: // electrostatic potenials from Gouy-Chapman eqn
-                  if( !(pm.PHC[0] == PH_AQUEL && pmpXFk > pm.DSM
-                      && (pm.XFA[0] > pm.XwMinM && pm.XF[0] > pm.DSM )))
-                	goto END_LOOP;
-                break;
-             default:
-                goto END_LOOP;
-           } // end switch
-
-            if( sMod[SPHAS_DEP] == SM_UXDEP && qEp[k].nEquat() )
-                // Equations for the whole phase
-                qEp[k].CalcEquat();
-            if( sMod[DCOMP_DEP] == SM_UXDEP && qEd[k].nEquat() )
-            {  // Equations for species
-                switch( sMod[DCE_LINK] )
-                {
-                case SM_PUBLIC:  // one script for all species
-                    for( pm.js=0, pm.is=0; pm.js<pm.L1[k]; pm.js++ )
-                        qEd[k].CalcEquat();
-                    break;
-                case SM_PRIVATE_:  // separate group of equations for each species
-                    qEd[k].CalcEquat();
-                    break;
-                }
-            }
-            if( pm.PHC[k] == PH_AQUEL )
-                ICold = pm.IC;
-            break;
-        default:
-            Error("CalculateActivityCoefficients()","Invalid LinkMode for a scripted solution model");
-        } // end switch
-#endif
+   if( !calculateActivityCoefficients_scripts( LinkMode, k, jb, jpb, jdb, ipb, pmpXFk ) )
+       goto END_LOOP;
 
 END_LOOP:
         if( LinkMode == LINK_TP_MODE )  // TP mode - added 04.03.2008 by DK
@@ -770,7 +587,7 @@ END_LOOP:
 /// Wrapper calls for creating multi-component mixing models for phases
 /// using  TSolMod class. Now including multi-site ideal and scripted models
 //
-void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
+void TMultiBase::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb, long int jdb,
                            long int k, long int ipb, char ModCode, char MixCode,
                            /* long int jphl, long int jlphc, */ long int jdqfc/*, long int  jrcpc*/)
 {
@@ -1065,7 +882,7 @@ void TMulti::SolModCreate( long int jb, long int jmb, long int jsb, long int jpb
 
 /// Wrapper call for calculation of temperature and pressure correction
 /// uses TSolMod class
-void TMulti::SolModParPT( long int k, char ModCode )
+void TMultiBase::SolModParPT( long int k, char ModCode )
 {
     // Extended constructor to connect to params, coeffs, and mole fractions
     switch( ModCode )
@@ -1093,7 +910,7 @@ void TMulti::SolModParPT( long int k, char ModCode )
 
 /// Wrapper call for calculation of activity coefficients
 /// uses TSolMod class
-void TMulti::SolModActCoeff( long int k, char ModCode )
+void TMultiBase::SolModActCoeff( long int k, char ModCode )
 {
     switch( ModCode )
     {   // solid and liquid solutions
@@ -1120,7 +937,7 @@ void TMulti::SolModActCoeff( long int k, char ModCode )
 
 /// Wrapper call for calculation of bulk phase excess properties
 /// uses TSolMod class
-void TMulti::SolModExcessProp( long int k, char ModCode )
+void TMultiBase::SolModExcessProp( long int k, char ModCode )
 {
 
     // order of phase properties: G, H, S, CP, V, A, U
@@ -1174,7 +991,7 @@ void TMulti::SolModExcessProp( long int k, char ModCode )
 
 
 /// Wrapper call for calculation of bulk phase ideal mixing properties
-void TMulti::SolModIdealProp( /*long int jb,*/ long int k, char ModCode )
+void TMultiBase::SolModIdealProp( /*long int jb,*/ long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -1226,7 +1043,7 @@ void TMulti::SolModIdealProp( /*long int jb,*/ long int k, char ModCode )
 }
 
 /// Wrapper call for retrieving bulk phase Darken quadratic terms
-void TMulti::SolModDarkenProp( /*long int jb,*/ long int k/*, char ModCode*/ )
+void TMultiBase::SolModDarkenProp( /*long int jb,*/ long int k/*, char ModCode*/ )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -1259,7 +1076,7 @@ void TMulti::SolModDarkenProp( /*long int jb,*/ long int k/*, char ModCode*/ )
 }
 
 /// Wrapper call for retrieving bulk phase standard state terms
-void TMulti::SolModStandProp ( /*long int jb,*/ long int k, char ModCode )
+void TMultiBase::SolModStandProp ( /*long int jb,*/ long int k, char ModCode )
 {
     // order of phase properties: G, H, S, CP, V, A, U
     long int j;
@@ -1316,7 +1133,7 @@ void TMulti::SolModStandProp ( /*long int jb,*/ long int k, char ModCode )
 //-------------------------------------------------------------------------
 /// Internal memory allocation for TSolMod performance optimization
 /// (since version 2.3.0)
-void TMulti::Alloc_TSolMod( long int newFIs )
+void TMultiBase::Alloc_TSolMod( long int newFIs )
 {
   if(  phSolMod && ( newFIs == sizeFIs) )
     return;
@@ -1329,7 +1146,7 @@ void TMulti::Alloc_TSolMod( long int newFIs )
           phSolMod[ii] = nullptr;
 }
 
-void TMulti::Free_TSolMod()
+void TMultiBase::Free_TSolMod()
 {
   long int kk;
 
@@ -1346,7 +1163,7 @@ void TMulti::Free_TSolMod()
 
 /// Internal memory allocation for TSorpMod performance optimization
 /// (since version 3.4.0)
-void TMulti::Alloc_TSorpMod( long int newFIs )
+void TMultiBase::Alloc_TSorpMod( long int newFIs )
 {
   if(  phSorpMod && ( newFIs == sizeFIa) )
     return;
@@ -1359,7 +1176,7 @@ void TMulti::Alloc_TSorpMod( long int newFIs )
           phSorpMod[ii] = nullptr;
 }
 
-void TMulti::Free_TSorpMod()
+void TMultiBase::Free_TSorpMod()
 {
   long int kk;
 
@@ -1374,37 +1191,6 @@ void TMulti::Free_TSorpMod()
   sizeFIa = 0;
 }
 
-/*
-/// Internal memory allocation for TKinMet performance optimization
-/// (since version 3.3.0)
-void TMulti::Alloc_TKinMet( long int newFI )
-{
-  if(  phKinMet && ( newFI == sizeFI) )
-    return;
-
-  Free_TKinMet();
-  // alloc memory for all multicomponents phases
-  phKinMet = new  TKinMet *[newFI];
-  sizeFI = newFI;
- for( long int ii=0; ii<newFI; ii++ )
-          phKinMet[ii] = 0;
-}
-
-void TMulti::Free_TKinMet()
-{
-  long int kk;
-
-  if( phKinMet )
-  {  for(  kk=0; kk<sizeFI; kk++ )
-      if( phKinMet[kk] )
-           delete phKinMet[kk];
-
-      delete[]  phKinMet;
-  }
-  phKinMet = 0;
-  sizeFI = 0;
-}
-*/
 
 //--------------------- End of ipm_chemical3.cpp ---------------------------
 

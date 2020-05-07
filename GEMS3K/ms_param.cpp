@@ -26,9 +26,6 @@
 //-------------------------------------------------------------------
 //
 #ifdef IPMGEMPLUGIN
-#ifdef __unix__
-#include <unistd.h>
-#endif
 
 #include <math.h>
 #include "m_param.h"
@@ -102,7 +99,7 @@ void SPP_SETTING::write(fstream& oss)
     p.write( oss );
 }
 
-TProfil::TProfil( TMulti* amulti )
+TProfil::TProfil( TMultiBase* amulti )
 {
     pa= pa_;
     multi = amulti;
@@ -185,30 +182,7 @@ void TProfil::readMulti( GemDataStream& ff )
   }
 
 
-/* Test and load thermodynamic data from GEMS project database
-void TMulti::CheckMtparam1()
-{
-  double TK, P, PPa;
 
-  //DATACH  *dCH = TNode::na->pCSD();
-  //TK = TNode::na->cTK();
-  //PPa = TNode::na->cP();
-
-  DATACH  *dCH = node1->pCSD();
-  TK = node1->cTK();
-  PPa = node1->cP();
-
-  P = PPa/bar_to_Pa;
-
-  //pmp->pTPD = 2;
-
-  if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
-           || fabs( pm.Pc - P )  > dCH->Ptol/bar_to_Pa  )
-  {
-     pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
-  }
-  load = true;
-}*/
 
 //-------------------------------------------------------------------------
 // internal functions

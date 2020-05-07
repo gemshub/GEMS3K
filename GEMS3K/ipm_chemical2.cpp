@@ -33,7 +33,7 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating bulk stoichiometry of a multicomponent phase
 //
-void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
+void TMultiBase::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
 {
     long int ii, i, j;
     double Xx;
@@ -59,7 +59,7 @@ void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X
 /// Adds phase to total bulk stoichiometry of all solid phases in the system
 // Done on request by TW in November 2006
 //
-void TMulti::phase_bfc( long int k, long int jj )
+void TMultiBase::phase_bfc( long int k, long int jj )
 {
     long int ii, i, j;
     double Xx;
@@ -81,7 +81,7 @@ void TMulti::phase_bfc( long int k, long int jj )
 }
 
 /// Returns mass of all solid phases in grams (from the BFC vector)
-double TMulti::bfc_mass( void )
+double TMultiBase::bfc_mass( void )
 {
    double TotalMass = 0.;
    for(long int i = 0; i<pm.N; i++ )
@@ -97,7 +97,7 @@ double TMulti::bfc_mass( void )
 //
 //  Do we need this all in GEMIPM ?
 //
-void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
+void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
               double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
     long int j, ii, i;
@@ -293,7 +293,7 @@ case DC_SCM_SPECIES:
 // This function has to be rewritten using new set of built-in
 // chemical functions.
 //
-void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
+void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
@@ -483,7 +483,7 @@ NEXT_PHASE:
 
 //--------------------------------------------------------------------------------
 /// Calculation of surface charge densities on multi-surface sorption phase
-void TMulti::IS_EtaCalc()
+void TMultiBase::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
     double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
@@ -639,7 +639,7 @@ NEXT_PHASE:
 ///    electric potentials (for detecting bad PIA), 0 otherwise
 //
 long int
-TMulti::GouyChapman(  long int, long int, long int k )
+TMultiBase::GouyChapman(  long int, long int, long int k )
 {
     long int ist, status=0;
     double SigA=0., SigD=0., SigB=0., SigDDL=0.,
@@ -966,7 +966,7 @@ GEMU_CALC:
 ///    0 otherwise (for detecting bad PIA)
 //
 long int
-TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
+TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
 {
 	long int status = 0;
         long int i, ii, j, ja, ist=0, iss, dent, Cj, iSite[MST];
@@ -1373,53 +1373,5 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
     return status;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Calculating demo partial pressures of gases (works only in GEMS-PSI)
-//
-void TMulti::GasParcP()
-{
-#ifndef IPMGEMPLUGIN
-
-        long int k,  i, jj=0;
-    long int jb, je, j;
-
-    if( !pm.PG )
-        return;
-
-  char (*SMbuf)[MAXDCNAME] =
-      (char (*)[MAXDCNAME])aObj[ o_w_tprn].Alloc( pm.PG, 1, MAXDCNAME );
-  pm.Fug = (double *)aObj[ o_wd_fug].Alloc( pm.PG, 1, D_ );
-  pm.Fug_l = (double *)aObj[ o_wd_fugl].Alloc( pm.PG, 1, D_ );
-  pm.Ppg_l = (double *)aObj[ o_wd_ppgl].Alloc( pm.PG, 1, D_ );
-
-    for( k=0, je=0; k<pm.FIs; k++ ) // phase
-    {
-        jb = je;
-        je = jb+pm.L1[k];
-        if( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA
-           || pm.PHC[k] == PH_FLUID )
-        {
-            for( j=jb; j<je; j++,jj++ )
-            {  // fixed 02.03.98 DK
-
-                copyValues(SMbuf[jj], pm.SM[j], MAXDCNAME );
-                pm.Fug_l[jj] = -(pm.G0[j] + pm.fDQF[j]);
-                if( pm.Pc > 1e-9 )
-                    pm.Fug_l[jj] += log(pm.Pc);
-                for( i=0; i<pm.N; i++ )
-                    pm.Fug_l[jj] += *(pm.A+j*pm.N+i) * pm.U[i];
-                if( pm.Fug_l[jj] > -37. && pm.Fug_l[jj] < 16. )
-                    pm.Fug[jj] = exp( pm.Fug_l[jj] );
-                else  pm.Fug[jj] = 0.0;
-                // Partial pressure
-                pm.Ppg_l[jj] = pm.Fug_l[jj] - pm.lnGam[j];
-                pm.Fug_l[jj] *= .43429448;
-                pm.Ppg_l[jj] *= .43429448;
-            }
-            // break;
-        }
-    }
-#endif
-}
 
 //--------------------- End of ipm_chemical2.cpp ---------------------------

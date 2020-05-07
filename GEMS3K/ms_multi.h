@@ -28,24 +28,26 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifndef _ms_multi_h_
-#define _ms_multi_h_
+#ifndef MS_MULTI_BASE_H
+#define MS_MULTI_BASE_H
 
-#ifndef IPMGEMPLUGIN
+//#ifndef IPMGEMPLUGIN
 
-#include "m_param.h"
-#include "v_ipnc.h"
+//#include "m_param.h"
+//#include "v_ipnc.h"
 
-// Internal subroutine for ET_translate() to process Phase scripts
-typedef int (tget_ndx)( int nI, int nO, int Xplace );
+//// Internal subroutine for ET_translate() to process Phase scripts
+////typedef int (tget_ndx)( int nI, int nO, int Xplace );
 
-#else
+//#else
 
 #include <ctime>
 #include "m_const.h"
 #include "datach.h"
+//#define STEP_POINT(a)  if(0) std::cout << a << std::endl;
 
-#endif
+//#endif
+
 // TSolMod header
 #include "s_solmod.h"
 // new: TsorpMod and TKinMet
@@ -484,16 +486,20 @@ class TProfil;
 class TNode;
 
 // Data of MULTI
-class TMulti
-#ifndef IPMGEMPLUGIN
-  : public TSubModule
-#endif
+class TMultiBase
 {
+
+public:
+
+
+protected:
+
     MULTI pm;
     MULTI *pmp;
     SPP_SETTING *paTProfil;
 
 // Internal arrays for the performance optimization  (since version 2.0.0)
+
    long int sizeN; /*, sizeL, sizeAN;*/
    double *AA;
    double *BB;
@@ -506,42 +512,7 @@ class TMulti
    void Free_compressed_xAN();
    void Free_internal();
 
-#ifndef IPMGEMPLUGIN
-// These pointers and methods are only used in GEMS-PSI
-    //SYSTEM *syp;
-    //MTPARM *tpp;
-    //RMULTS *mup;
 
-    void MultiSystemInit();
-    void SystemToLookup();
-
-    void multi_sys_dc();
-    void multi_sys_ph();
-    void ph_sur_param( int k, int kk );
-    void ph_surtype_assign( int k, int kk, int jb, int je,
-                            int car_l[], int car_c, int Cjs );
-    void sm_text_analyze( int nph, int Type, int JB, int JE, int jb, int je );
-    void SolModLoad();
-// new TKinMet stuff
-void KinMetModLoad();
-    bool CompressPhaseIpxt( int kPH );
-    gstring PressSolMod( int nP );
-    char *ExtractEG( char *Etext, int jp, int *EGlen, int Nes );
-    int find_icnum( char *name, int LNmode );
-    int find_dcnum( char *name, int jb, int je, int LNmode, char *stmt  );
-    int find_phnum( char *name, int LNmode );
-    int find_acnum( char *name, int LNmode );
-    int find_phnum_multi( const char *name);
-    int find_dcnum_multi( const char *name);
-    int find_icnum_multi( const char *name);
-    const char* GetHtml();
-
-#else
-
-
-#endif
-
-protected:
 // From here move to activities.h or node.h
    long int sizeFIs;     ///< current size of phSolMod
    TSolMod* (*phSolMod); ///< size current FIs - number of multicomponent phases
@@ -578,13 +549,30 @@ protected:
    void Increment_uDD( long int r, bool trace = false );
    long int Check_uDD( long int mode, double DivTol, bool trace = false );
 
-#ifdef IPMGEMPLUGIN
+///#ifdef IPMGEMPLUGIN
 
    char PAalp_; ///< Flag for using (+) or ignoring (-) specific surface areas of phases
    char PSigm_; ///< Flag for using (+) or ignoring (-) specific surface free energies
 
-#endif
+///#endif
 
+   // empty functions for GUI level using
+   virtual void loadData( bool ){}
+   virtual void GasParcP(){}
+   virtual void pm_GC_ods_link( long int /*k*/, long int /*jb*/, long int /*jpb*/, long int /*jdb*/, long int /*ipb*/ ){}
+   virtual bool calculateActivityCoefficients_scripts( long int, long, long, long, long, long, double  )
+   { return true; }
+   virtual bool testTSyst( int ) const
+   { return true; }
+   virtual void initalizeGEM_IPM_Data_GUI() {}
+   virtual void multiConstInit_PN();
+   virtual void GEM_IPM_Init_gui1() {}
+   virtual void GEM_IPM_Init_gui2() {}
+
+   virtual void STEP_POINT( const char* /*str*/)
+   {
+       // std::cout << str << std::endl;
+   }
    void setErrorMessage( long int num, const char *code, const char * msg);
    void addErrorMessage( const char * msg);
 
@@ -592,7 +580,6 @@ protected:
     void XmaxSAT_IPM2();
 //    void XmaxSAT_IPM2_reset();
     double DC_DualChemicalPotential( double U[], double AL[], long int N, long int j );
-//    void Set_DC_limits( long int Mode );
     void Set_DC_limits( bool InitState );
     void TotalPhasesAmounts( double X[], double XF[], double XFA[] );
     double DC_PrimalChemicalPotentialUpdate( long int j, long int k );
@@ -603,31 +590,32 @@ protected:
     double KarpovCriterionDC( double *dNuG, double logYF, double asTail,
                  double logYw, double Wx,  char DCCW );
     void KarpovsPhaseStabilityCriteria();
-    void  StabilityIndexes( );   // added 01.05.2010 DK
+    void  StabilityIndexes( );
     double DC_GibbsEnergyContribution(   double G,  double x,  double logXF,
                              double logXw,  char DCCW );
     double GX( double LM  );
-
     void ConvertDCC();
     long int  getXvolume();
+    long int SpeciationCleanup( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
+    long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
+    long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
 
 // ipm_chemical2.cpp
-    void GasParcP();
+
     void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
     void phase_bfc( long int k, long int jj );
     double bfc_mass( void );
     void CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
          double Factor, double MMC, double Dsur, long int jb, long int je, long int k );
     void CalculateConcentrations( double X[], double XF[], double XFA[]);
+    void IS_EtaCalc();
     long int GouyChapman(  long int jb, long int je, long int k );
-
-//  Surface activity coefficient terms
+    //  Surface activity coefficient terms
     long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
-//    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
+
 
 // ipm_chemical3.cpp
-    void IS_EtaCalc();
-    void pm_GC_ods_link( long int k, long int jb, long int jpb, long int jdb, long int ipb );
+
     double SmoothingFactor( );
     void SetSmoothingFactor( long int mode ); // new smoothing function (3 variants)
 // Main call for calculation of activity coefficients on IPM iterations
@@ -649,6 +637,7 @@ protected:
     // void IdealOneSite( long int jb, long int k, double *Zid );
     // void IdealMultiSite( long int jb, long int k, double *Zid );
 
+    // ipm_chemical4.cpp
 // New stuff for TKinMet class implementation
 long int CalculateKinMet( long int LinkMode  );
 void KM_Create(long int jb, long int k, long int kc, long int kp, long int kf,
@@ -668,20 +657,19 @@ void KM_InitUptake( /*long int jb,*/ long int k, const char *kMod );
 void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
 
 // ipm_main.cpp - numerical part of GEM IPM-2
+    void GibbsEnergyMinimization();
     void GEM_IPM( long int rLoop );
     long int MassBalanceRefinement( long int WhereCalledFrom );
     long int InteriorPointsMethod( long int &status/*, long int rLoop*/ );
-    void AutoInitialApproximation( );
 
 // ipm_main.cpp - miscellaneous fuctions of GEM IPM-2
+
    void MassBalanceResiduals( long int N, long int L, double *A, double *Y,
                                double *B, double *C );
-//   long int CheckMassBalanceResiduals(double *Y );
    double OptimizeStepSize( double LM );
    void DC_ZeroOff( long int jStart, long int jEnd, long int k=-1L );
    void DC_RaiseZeroedOff( long int jStart, long int jEnd, long int k=-1L );
    double RaiseDC_Value( const long int j );
-   //   void LagrangeMultiplier();
    long int MetastabilityLagrangeMultiplier();
    void WeightMultipliers( bool square );
    long int MakeAndSolveSystemOfLinearEquations( long int N, bool initAppr );
@@ -690,12 +678,10 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
    void Restore_Y_YF_Vectors();
 
    double RescaleToSize( bool standard_size ); // replaced calcSfactor() 30.08.2009 DK
-   long int SpeciationCleanup( double AmountThreshold, double ChemPotDiffCutoff ); // added 25.03.10 DK
-   long int PhaseSelectionSpeciationCleanup( long int &k_miss, long int &k_unst, long int rLoop );
-   long int PhaseSelect( long int &k_miss, long int &k_unst, long int rLoop );
    bool GEM_IPM_InitialApproximation();
 
    // IPM_SIMPLEX.CPP Simplex method modified with two-sided constraints (Karpov ea 1997)
+    void AutoInitialApproximation( );
     void SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                  double *UND, double *UP, double *B, double *U,
                  double *AA, long int *STR, long int *NMB );
@@ -713,67 +699,24 @@ void KM_SetAMRs( /*long int jb,*/ long int k, const char *kMod );
     void FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
              long int BASE[],double UND[],double UP[],double U[],
              double AA[],double *A,double Q[],long int *ITER);
-    void GibbsEnergyMinimization();
+
     double SystemTotalMolesIC( );
     void ScaleSystemToInternal(  double ScFact );
     void RescaleSystemFromInternal(  double ScFact );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
 
-
 public:
 
 
-    void set_def( int i=0);
+    virtual void set_def( int i=0 );
 
-#ifndef IPMGEMPLUGIN
+//#ifdef IPMGEMPLUGIN
 
-    static TMulti* sm;
-
-// This is used only in GEM-Selektor
-    TIArray<IPNCalc> qEp;
-    TIArray<IPNCalc> qEd;
-
-    TMulti( int nrt );
-    ~TMulti()
-    {
-//      Free_TSolMod();     // Added 06.05.2011 DK - possible bugfix
-       Free_internal();
-       Free_uDD();
-    }
-
-    void ods_link( int i=0);
-    void dyn_set( int i=0);
-    void dyn_kill( int i=0);
-    void dyn_new( int i=0);
-//    void set_def( int i=0);
-//    void sit_dyn_new();
-
-    // ms_muleq.cpp
-    void packData();
-    void packData( TCIntArray PHon, TCIntArray DCon );
-    void setSizes();
-    void loadData( bool newRec );
-    void unpackData();
-
-    void MultiKeyInit( const char*key );
-    void EqstatExpand( /*const char *key,*/  bool calcActivityModels/*, bool calcKineticModels*/ );
-    void ET_translate( int nOet, int nOpex, int JB, int JE, int jb, int je,
-     tget_ndx *get_ndx = nullptr );
-    void getNamesList( int nO, TCStringArray& lst );
-
-   class UserCancelException {};
-
-   /// connection to UnSpace
-   double pb_GX( double *Gxx  );
-
-   // void rebuild_lookup(double Tai[], double Pai[]);
-
-#else
     const TNode *node1;
 
    /// This allocation is used only in standalone GEMS3K
-   TMulti( const TNode* na_ )
+   TMultiBase( const TNode* na_ )
    {
      pmp = &pm;
      node1 = na_; // parent
@@ -796,45 +739,39 @@ public:
      sizeFI = 0;
      phKinMet = nullptr;
 
+#ifdef IPMGEMPLUGIN
      pmp->Guns = nullptr;
      pmp->Vuns = nullptr;
      pmp->tpp_G = nullptr;
      pmp->tpp_S = nullptr;
      pmp->tpp_Vm = nullptr;
+#endif
 
    }
 
-    ~TMulti()
-    {  multi_free(); }
+    virtual ~TMultiBase()
+    {
+       multi_kill();
+    }
 
-    void multi_realloc( char PAalp, char PSigm );
-    void multi_free();
+   virtual void multi_realloc( char PAalp, char PSigm );
+   virtual void multi_kill();
 
-   //void CheckMtparam1(); // Test load thermodynamic data before
-
-#endif
 
     MULTI* GetPM()
     { return &pm; }
 
-    void setPa( TProfil *prof);
-    long int testMulti( );
-
-    const char* GetName() const
-    {  return "Multi";  }
-
-    // Internal functions for SCMs
-//       void getLsModsum( long int& LsModSum, long int& LsIPxSum );
-//       void getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum );
+    void setPa( TProfil *prof);  ///?
+    virtual long int testMulti( );
 
     //connection to mass transport
-    void to_file( GemDataStream& ff );
-    void to_text_file( const char *path, bool append=false  );
-    void from_file( GemDataStream& ff );
-    void to_text_file_gemipm( iostream& ff, bool addMui,
+    virtual void to_file( GemDataStream& ff );
+    virtual void to_text_file( const char *path, bool append=false  );
+    virtual void from_file( GemDataStream& ff );
+    virtual void to_text_file_gemipm( iostream& ff, bool addMui,
     		bool with_comments = true, bool brief_mode = false );
-    void from_text_file_gemipm( iostream& ff,  DATACH  *dCH );
-    void copyMULTI( const TMulti& otherMulti );
+    virtual void from_text_file_gemipm( iostream& ff,  DATACH  *dCH );
+    virtual void copyMULTI( const TMultiBase& otherMulti );
 
 
     // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
@@ -859,19 +796,10 @@ public:
     void Alloc_internal();
     double CalculateEquilibriumState( /*long int typeMin,*/ long int& NumIterFIA, long int& NumIterIPM );
     void InitalizeGEM_IPM_Data();
+    virtual void DC_LoadThermodynamicData( TNode* aNa = nullptr );
 
-#ifndef IPMGEMPLUGIN
-    void DC_LoadThermodynamicData();
-    void DC_LoadThermodynamicData( TNode* aNa  );
-#else
-    void DC_LoadThermodynamicData( TNode* aNa = nullptr );
-#endif
-    //DM 25.02.2014
-    void Access_GEM_IMP_init();
-    long get_sizeFIs () {return sizeFIs;}
     // acces for node class
     TSolMod * pTSolMod (int xPH);
-
 
     long int CheckMassBalanceResiduals(double *Y );
     double ConvertGj_toUniformStandardState( double g0, long int j, long int k );
@@ -948,7 +876,6 @@ typedef enum {  // Field index into outField structure
     f_LsESmo, f_LsISmo, f_SorMc, f_LsMdc2, f_LsPhl
 
 } MULTI_DYNAMIC_FIELDS;
-
 
 
 #endif   //_ms_multi_h

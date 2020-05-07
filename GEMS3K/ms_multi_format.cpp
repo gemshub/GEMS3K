@@ -164,7 +164,7 @@ outField MULTI_dynamic_fields[80] =  {
 //===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
-void TMulti::to_text_file_gemipm( iostream& ff, bool addMui,
+void TMultiBase::to_text_file_gemipm( iostream& ff, bool addMui,
 		bool with_comments, bool brief_mode )
 {
   SPP_SETTING *pa = paTProfil;
@@ -611,7 +611,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
-void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
+void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
 {
   SPP_SETTING *pa = paTProfil;
   long int ii, nfild, len;
@@ -723,11 +723,7 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
 #endif
 
    //realloc memory
-#ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
-#else
-   dyn_new();
-#endif
 
 // get dynamic data from DATACH file
   for( ii=0; ii<dCH->nPH; ii++)

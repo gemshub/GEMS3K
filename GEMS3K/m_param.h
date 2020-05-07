@@ -107,11 +107,11 @@ public:
 
     //static TProfil* pm;
 
-    TMulti* multi;
+    TMultiBase* multi;
     MULTI *pmp;
     SPP_SETTING pa;
 
-    TProfil( TMulti* amulti );
+    TProfil( TMultiBase* amulti );
 
     const char* GetName() const
     {
@@ -155,7 +155,7 @@ enum QpQdSizes {   // see m_phase.h
 #include "ms_rmults.h"
 #include "ms_mtparm.h"
 #include "ms_system.h"
-#include "ms_multi.h"
+#include "ms_multi_new.h"
 #include "ms_calc.h"
 
 class GemDataStream;
@@ -489,7 +489,6 @@ public:
    void CmReadMulti( const char* path, bool new_ipm = false );
    void CmReadMultiServer( const char* path );
    double ComputeEquilibriumState( /*long int& NumPrecLoops,*/ long int& NumIterFIA, long int& NumIterIPM );
-   //long int testMulti( );
    bool CompareProjectName( const char* SysKey );
    void ChangeTPinKey( double T, double P );
    void SetSysSwitchesFromMulti( );

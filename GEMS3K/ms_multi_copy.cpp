@@ -57,9 +57,9 @@ void TProfil::readMulti( const char* path, DATACH  *dCH )
 }
 
 
-#ifdef IPMGEMPLUGIN
+///#ifdef IPMGEMPLUGIN
 
-void TMulti::copyMULTI( const TMulti& otherMulti )
+void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
 {
     MULTI* otherPM = otherMulti.pmp;
     *paTProfil = *otherMulti.paTProfil;
@@ -83,12 +83,7 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
     PSigm = PSigm_ = otherMulti.PSigm_;
  #endif
 
-    //realloc memory
- //#ifdef IPMGEMPLUGIN
-    multi_realloc( PAalp, PSigm );
- //#else
- //   dyn_new();
- //#endif
+   multi_realloc( PAalp, PSigm );
 
  //dynamic values
 
@@ -262,7 +257,7 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
         long int PhLinSum, lPhcSum;
         getLsPhlsum( PhLinSum,lPhcSum );
 
-//  #ifdef IPMGEMPLUGIN
+#ifdef IPMGEMPLUGIN
         pm.IPx = new long int[LsIPxSum];
         pm.PMc = new double[LsModSum];
         pm.DMc = new double[LsMdcSum];
@@ -273,7 +268,7 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
         pm.PhLin = new long int[PhLinSum][2];
         pm.lPhc = new double[lPhcSum];
 
-/*  #else
+#else
         pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
         pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
         pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
@@ -283,8 +278,8 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
  //       pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
         pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
         pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
-  #endif
-*/
+#endif
+
         copyValues(pm.IPx, otherPM->IPx, LsIPxSum);
         copyValues(pm.PMc, otherPM->PMc, LsModSum);
         copyValues(pm.DMc, otherPM->DMc, LsMdcSum);
@@ -311,21 +306,21 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
         long int IsoPcSum, xSMdSum;
         getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
 
- //#ifdef IPMGEMPLUGIN
+#ifdef IPMGEMPLUGIN
         pm.xSMd = new long int[xSMdSum];
         pm.IsoPc = new double[IsoPcSum];
         pm.IsoSc = new double[IsoScSum];
         pm.IsoCt = new char[IsoCtSum];
         pm.EImc = new double[EImcSum];
         pm.mCDc = new double[mCDcSum];
- /*#else
+#else
          pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
          pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
          pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
          pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
          pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
          pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
- #endif*/
+ #endif
          copyValues(  pm.xSMd, otherPM->xSMd, xSMdSum);
          copyValues(  pm.IsoPc,  otherPM->IsoPc,  IsoPcSum);
          copyValues(  pm.IsoSc, otherPM->IsoSc, IsoScSum);
@@ -349,7 +344,7 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
          long int rpConCSum, apConCSum, AscpCSum;
          getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
 
-// #ifdef IPMGEMPLUGIN
+#ifdef IPMGEMPLUGIN
          pm.xSKrC = new long int[xSKrCSum];
          pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
          pm.feSArC = new double[ocPRkC_feSArC_Sum];
@@ -358,7 +353,7 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
          pm.AscpC = new double[AscpCSum];
          pm.UMpcC = new double[UMpcSum];
          pm.xICuC = new long int[xICuCSum];
- /*#else
+#else
          pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
          pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
          pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
@@ -367,7 +362,7 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
          pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
          pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
          pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
- #endif*/
+#endif
          copyValues( pm.xSKrC, otherPM->xSKrC, xSKrCSum);
          copyValues( &pm.ocPRkC[0][0],  &otherPM->ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
          copyValues( pm.feSArC, otherPM->feSArC, ocPRkC_feSArC_Sum);
@@ -406,11 +401,11 @@ void TMulti::copyMULTI( const TMulti& otherMulti )
 }
 
 /// Realloc dynamic memory
-void TMulti::multi_realloc( char PAalp, char PSigm )
+void TMultiBase::multi_realloc( char PAalp, char PSigm )
 {
   long int ii, jj ;
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
-        Error( GetName(), "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
+        Error( "Multi", "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
 
     // Part 1
      // need  always to alloc vectors
@@ -1065,7 +1060,7 @@ else
 
 
 /// Reallocation of dynamic memory
-void TMulti::multi_free()
+void TMultiBase::multi_kill()
 {
     // Part 1
      // need  always to alloc vectors
@@ -1287,4 +1282,4 @@ if( pm.D ) delete[] pm.D;
     Free_uDD();
 }
 
-#endif
+

@@ -631,11 +631,6 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
 //-----------------------------------------------------------------
 // work with lists
 
-//void TNode::AtcivityCoeficient()
-//{
-//    multi->Access_GEM_IMP_init();
-//}
-
 #ifdef IPMGEMPLUGIN
 void *TNode::get_ptrTSolMod(int xPH) const
 {
@@ -1763,7 +1758,7 @@ void TNode::allocMemory()
 
 #ifdef IPMGEMPLUGIN
 // internal class instances
-    multi = new TMulti( this );
+    multi = new TMultiBase( this );
     multi->set_def();
     pmm = multi->GetPM();
     profil = new TProfil( multi );

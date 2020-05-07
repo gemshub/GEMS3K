@@ -31,7 +31,7 @@
 #include "node.h"
 #include "gdatastream.h"
 
-void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
+void TMultiBase::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 {  LsModSum = 0;
    LsIPxSum = 0;
    for(long int i=0; i<pm.FIs; i++)
@@ -42,7 +42,7 @@ void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 }
 
 
-void TMulti::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum )
+void TMultiBase::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum )
 {  LsMdcSum = 0;
    LsMsnSum = 0;
    LsSitSum = 0;
@@ -56,7 +56,7 @@ void TMulti::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitS
  }
 
 // dimensions from LsPhl array
-void TMulti::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
+void TMultiBase::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
 {  PhLinSum = 0;
    lPhcSum = 0;
 
@@ -69,7 +69,7 @@ void TMulti::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
  }
 
 // dimensions from LsMdc2 array
-void TMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
+void TMultiBase::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
 {  DQFcSum = 0;
    rcpcSum = 0;
 
@@ -81,7 +81,7 @@ void TMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
  }
 
 // dimensions from LsISmo array
-void TMulti::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum )
+void TMultiBase::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum )
 {  IsoCtSum = 0;
    IsoScSum = 0;
    IsoPcSum = 0;
@@ -97,7 +97,7 @@ void TMulti::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoP
  }
 
 // dimensions from LsESmo array
-void TMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
+void TMultiBase::getLsESmosum( long int& EImcSum,long int& mCDcSum )
 {  EImcSum = 0;
    mCDcSum = 0;
 
@@ -109,7 +109,7 @@ void TMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
  }
 
 // dimensions from LsKin array
-void TMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
+void TMultiBase::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
               long int& rpConCSum,long int& apConCSum, long int& AscpCSum )
 {  xSKrCSum = 0;
    ocPRkC_feSArC_Sum = 0;
@@ -128,7 +128,7 @@ void TMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
  }
 
 // dimensions from LsUpt array
-void TMulti::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
+void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
 {
    UMpcSum = 0;
    for(long int i=0; i<pm.FIs; i++)
@@ -140,15 +140,13 @@ void TMulti::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
  }
 
-void TMulti::setPa( TProfil *prof)
+void TMultiBase::setPa( TProfil *prof)
 {
     paTProfil = &prof->pa;
 }
 
-#ifdef IPMGEMPLUGIN
-
 /// Output to "ipmlog.txt" file Warnings
-long int TMulti::testMulti( )
+long int TMultiBase::testMulti()
 {
   if( pm.MK || pm.PZ )
   {
@@ -163,45 +161,10 @@ long int TMulti::testMulti( )
   return 0L	;
 }
 
-#else
-
-long int TMulti::testMulti()
-{
-  //MULTI *pmp = multi->GetPM();
-  if( pm.MK || pm.PZ )
-  {
-   if( paTProfil->p.PSM >= 2 )
-   {
-     fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
-     f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
-     f_log << pm.errorBuf << endl;
-   }
-   if( showMss )
-   {
-           addErrorMessage(" \nContinue?");
-      switch( vfQuestion3(0, pm.errorCode, pm.errorBuf,
-                           "&Yes", "&No", "&Yes to All" ))
-       {
-       case VF3_3:
-           showMss=0l;
-       case VF3_1:
-           break;
-       case VF3_2:
-           Error(pmp->errorCode, pmp->errorBuf);
-       }
-   }
-
-   return 1L;
-  }
-
-  return 0L	;
-}
-
-#endif
 
 //---------------------------------------------------------//
 /// Set default information
-void TMulti::set_def( int /*q*/)
+void TMultiBase::set_def( int )
 {
     //mem_cpy( &pm.PunE, "jjbC", 4 );
     pm.PunE = 'j';         // Units of energy  { j;  J c C N reserved }
@@ -494,10 +457,10 @@ pm.GamFs = nullptr;
 
 //---------------------------------------------------------//
 /// Writing MULTI to binary file
-void TMulti::to_file( GemDataStream& ff  )
+void TMultiBase::to_file( GemDataStream& ff  )
 {
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
-        Error( GetName(), "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
+        Error( "Multi", "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
 
    //static values
    char PAalp;
@@ -779,7 +742,7 @@ ff.writeArray((double*)pm.D, MST*MST);
 }
 
 /// Reading MULTI from binary file
-void TMulti::from_file( GemDataStream& ff )
+void TMultiBase::from_file( GemDataStream& ff )
 {
    //static values
    char PAalp;
@@ -804,13 +767,9 @@ void TMulti::from_file( GemDataStream& ff )
 #endif
 
    //realloc memory
-#ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
-#else
-   dyn_new();
-#endif
 
-      //dynamic values
+   //dynamic values
     // Part 1
 
     /* need  always to alloc vectors */
@@ -1127,7 +1086,7 @@ ff.readArray((double*)pm.D, MST*MST);
 
 
 /// Writing structure MULTI ( free format file  )
-void TMulti::to_text_file( const char *path, bool append )
+void TMultiBase::to_text_file( const char *path, bool append )
 {
     //static values
    char PAalp;
