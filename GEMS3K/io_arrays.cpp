@@ -71,7 +71,7 @@ template <> void TPrintArrays::writeValue( const char& value )
 }
 
 /// Write double value to file
-template <> void TPrintArrays::writeValue( const gstring& value )
+template <> void TPrintArrays::writeValue( const std::string& value )
 {
     auto val = value;
     strip(val);
@@ -181,7 +181,7 @@ void TReadArrays::readValue(double& val)
     }*/
 }
 
-long int TReadArrays::readFormatValue(double& val, gstring& format)
+long int TReadArrays::readFormatValue(double& val, std::string& format)
 {
     char input;
     format = "";
@@ -243,7 +243,7 @@ void  TReadArrays::skipSpace()
 }
 
 // Read format string
-bool  TReadArrays::readFormat( gstring& format )
+bool  TReadArrays::readFormat( std::string& format )
 {
     char input;
     format = "";
@@ -285,7 +285,7 @@ void TReadArrays::reset()
 long int TReadArrays::findFld( const char *Name )
 {
     long int ii;
-    gstring str = Name;
+    std::string str = Name;
     size_t len = str.find('>');
     str = str.substr(0, len );
 
@@ -311,7 +311,7 @@ long int TReadArrays::findNext()
     long int ii = findFld( buf+1 );
     if(  ii < 0 )
     {
-        gstring msg = buf;
+        std::string msg = buf;
         msg += " - Invalid label of data.\n";
         msg += curArray;
         Error( "Formatted read error 01", msg );
@@ -325,7 +325,7 @@ long int TReadArrays::findNext()
 void TReadArrays::readNext( const char* label)
 {
     char buf[200];
-    gstring msg;
+    std::string msg;
     skipSpace();
 
     if( ff.eof() )
@@ -337,7 +337,7 @@ void TReadArrays::readNext( const char* label)
     }
 
     ff >> buf;
-    gstring str = buf+1;
+    std::string str = buf+1;
     size_t len = str.find('>');
     str = str.substr(0, len );
 
@@ -392,7 +392,7 @@ again:
 void TReadArrays::readFormatArray( const char* name, double* arr,
                                    long int size, vector<IOJFormat>& vFormats )
 {
-    gstring format;
+    std::string format;
     long int type;
 
     setCurrentArray( name, size);
@@ -432,7 +432,7 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
 {
     int retSimb= 0; // next field is only value
     double value;
-    gstring str;
+    std::string str;
 
     setCurrentArray( name, 0L);
     //ff << setprecision(15);
@@ -444,8 +444,8 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
     } while(retSimb == ft_Value );
 }
 
-// DM corrected added gstring& arr instead of gstring arr 18.04.2013
-void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
+// DM corrected added std::string& arr instead of std::string arr 18.04.2013
+void TReadArrays::readArray( const char* name, std::string& arr, long int el_size )
 {
     char ch;
     char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
@@ -457,9 +457,9 @@ void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
     arr = buf;
 }
 
-gstring TReadArrays::testRead()
+std::string TReadArrays::testRead()
 {
-    gstring ret = "";
+    std::string ret = "";
     for(long int ii=0; ii < numFlds; ii++ )
         if( flds[ii].alws==1 && flds[ii].readed != 1 )
         {  if( !ret.empty() )

@@ -118,7 +118,7 @@ public:
         return "Project";
     }
 
-   void outMulti( GemDataStream& ff, gstring& path  );
+   void outMulti( GemDataStream& ff, std::string& path  );
    void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff, DATACH  *dCH );
    void readMulti( const char* path,  DATACH  *dCH );
@@ -337,7 +337,7 @@ protected:
     /// \param filepath - IPM work structure file path&name
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    void CurrentSystem2GEMS3K( const gstring& filepath, bool brief_mode, bool add_mui = false );
+    void CurrentSystem2GEMS3K( const std::string& filepath, bool brief_mode, bool add_mui = false );
 
     /// Load&Calculate system and Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
@@ -346,7 +346,7 @@ protected:
     /// \param filepath - IPM work structure file path&name
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    void System2GEMS3K( const gstring key, int calcMode, const gstring& filepath, bool brief_mode, bool add_mui = false );
+    void System2GEMS3K( const gstring key, int calcMode, const std::string& filepath, bool brief_mode, bool add_mui = false );
 
     /// For all systems in project generate MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
@@ -355,7 +355,7 @@ protected:
     /// \param files_dir - IPM work structure directory name
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    void allSystems2GEMS3K( TCStringArray& savedSystems, int calc_mode, const gstring& files_dir, bool brief_mode, bool add_mui = false);
+    void allSystems2GEMS3K( TCStringArray& savedSystems, int calc_mode, const std::string& files_dir, bool brief_mode, bool add_mui = false);
 
     /// For all processes in project generate MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module
@@ -363,7 +363,7 @@ protected:
     /// \param files_dir - IPM work structure directory name
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param add_mui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    void allProcess2GEMS3K( TCStringArray& savedSystems, const gstring& files_dir, bool brief_mode, bool add_mui = false );
+    void allProcess2GEMS3K( TCStringArray& savedSystems, const std::string& files_dir, bool brief_mode, bool add_mui = false );
 
     void SaveOldList();
     void DeleteOldList();
@@ -469,11 +469,11 @@ public:
 
 
    //test
-   void outMulti( GemDataStream& ff, gstring& path  );
+   void outMulti( GemDataStream& ff, std::string& path  );
    // brief_mode - Do not write data items that contain only default values
    // with_comments -Write files with comments for all data entries ( in text mode)
    // addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
-   void outMulti( gstring& path, bool addMui, bool with_comments = true, bool brief_mode = false );
+   void outMulti( std::string& path, bool addMui, bool with_comments = true, bool brief_mode = false );
    void makeGEM2MTFiles(QWidget* par);
    void outMultiTxt( const char *path, bool append=false  );
    void readMulti( GemDataStream& ff, DATACH  *dCH );
@@ -496,7 +496,7 @@ public:
 
    // new Reaktoro
    /// Run process of calculate equilibria into the GEMSGUI shell
-   double CalculateEquilibriumGUI( const gstring& path);
+   double CalculateEquilibriumGUI( const std::string& path);
 
    /// Run process of calculate equilibria into the GEMS3K side
    double CalculateEquilibriumServerOld( const gstring& path );

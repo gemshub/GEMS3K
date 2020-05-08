@@ -126,7 +126,7 @@ IsSpace(char ch)
 }
 
 void StripLine(gstring& line);
-void KeyToName(gstring& line);
+void KeyToName(std::string& line);
 TCStringArray split(const gstring& str, const gstring& delimiters);
 
 // Added by SD on 22/12/2001
@@ -139,7 +139,7 @@ ChangeforTempl( gstring& data_str,  const gstring& from_templ1,
 gstring curDate();
 
 // Returns string representation of current date in dd/mm/yy format
-gstring curDateSmol(char ch = '/');
+std::string curDateSmol(char ch = '/');
 
 // Returns string representation of current time in HH:MM  format
 gstring curTime();
@@ -153,7 +153,7 @@ gstring curDateTime()
 
 // reads line to gstring class from istream with a delimiter
 istream& u_getline(istream& instream, gstring& dst_string, char delimit = '\n');
-istream& f_getline(istream& is, gstring& str, char delim);
+istream& f_getline(istream& is, std::string& str, char delim);
 
 /* returns pointer after spaces in gstring 's'*/
 /*
@@ -255,14 +255,14 @@ inline bool IsDoubleEmpty( const double v )
 
 
 /// Combines path, directory, name and extension to full pathname
-gstring
-u_makepath(const gstring& dir,
-           const gstring& name, const gstring& ext);
+std::string
+u_makepath(const std::string& dir,
+           const std::string& name, const std::string& ext);
 
 /// Splits full pathname to path, directory, name and extension
 void
-u_splitpath(const gstring& Path, gstring& dir,
-            gstring& name, gstring& ext);
+u_splitpath(const std::string& Path, std::string& dir,
+            std::string& name, std::string& ext);
 
 #define fileNameLength 64
 /// Get Path of file and Reading list of file names from it, return number of files

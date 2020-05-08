@@ -498,7 +498,7 @@ void TNode::databr_from_text_file( iostream& ff )
  }
 
  // testing read
- gstring ret = rdar.testRead();
+ std::string ret = rdar.testRead();
  if( !ret.empty() )
   { ret += " - fields must be read from DataBR structure";
     Error( "Error", ret);
@@ -703,7 +703,7 @@ void TNode::datach_from_text_file(iostream& ff)
  }
 
  // testing read
- gstring ret = rdar.testRead();
+ std::string ret = rdar.testRead();
  if( !ret.empty() )
   { ret += " - fields must be read from DataCH structure";
     Error( "Error", ret);
@@ -1186,25 +1186,25 @@ void TNode::databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, 
 
 void TNode::databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long int nx2 )
 {
-  gstring str="", str2="";
+  std::string str="", str2="";
   // full name of data fiels (add index name)
   ff << "SCALARS " <<  DataBR_fields[nfild].name.c_str();
 
   switch( DataBR_fields[nfild].indexation )
   {
     case 1: break;
-    case nICbi: str = gstring( CSD->ICNL[ IC_xDB_to_xCH( ndx ) ], 0,MaxICN );
+    case nICbi: str = std::string( CSD->ICNL[ IC_xDB_to_xCH( ndx ) ], 0,MaxICN );
                 break;
-    case nDCbi: str = gstring( CSD->DCNL[ DC_xDB_to_xCH( ndx ) ], 0,MaxDCN );
+    case nDCbi: str = std::string( CSD->DCNL[ DC_xDB_to_xCH( ndx ) ], 0,MaxDCN );
               break;
     case nPHbi:
-    case nPSbi: str = gstring(  CSD->PHNL[ Ph_xDB_to_xCH( ndx ) ], 0,MaxPHN );
+    case nPSbi: str = std::string(  CSD->PHNL[ Ph_xDB_to_xCH( ndx ) ], 0,MaxPHN );
             break;
     case nPSbnICbi:
-                str = gstring(  CSD->PHNL[ Ph_xDB_to_xCH( ndx/nx2 ) ], 0,MaxPHN );
-                str2 = gstring( CSD->ICNL[ IC_xDB_to_xCH( ndx%nx2 ) ], 0, MaxICN );
+                str = std::string(  CSD->PHNL[ Ph_xDB_to_xCH( ndx/nx2 ) ], 0,MaxPHN );
+                str2 = std::string( CSD->ICNL[ IC_xDB_to_xCH( ndx%nx2 ) ], 0, MaxICN );
           break;
-    default: str = gstring( "UNDEFINED");
+    default: str = std::string( "UNDEFINED");
   }
 
   strip(str);

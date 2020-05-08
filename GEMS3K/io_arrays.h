@@ -32,11 +32,11 @@
 
 struct outField /// Internal descriptions of fields
  {
-   gstring name; ///< name of field in structure
+   std::string name; ///< name of field in structure
    long int alws;    ///< 1 - must be read, 0 - default values can be used
    long int readed;  ///< 0; set to 1 after reading the field from input file
    long int indexation;  ///< 1 - static object; 0 - undefined; <0 type of indexation, >1 number of elements in array
-   gstring comment;
+   std::string comment;
 
 };
 
@@ -52,9 +52,9 @@ struct IOJFormat /// Internal descriptions of output/input formats with JSON not
  {
    long int index;    ///< index formatted value into reading array
    long int type;  ///< type of formatted value { F, L, R, ...}
-   gstring format; ///< string with formatted data for different type
+   std::string format; ///< string with formatted data for different type
 
-   IOJFormat( char aType, int aIndex, gstring aFormat ):
+   IOJFormat( char aType, int aIndex, std::string aFormat ):
                index(aIndex), type(aType), format(aFormat)
        {}
 
@@ -238,7 +238,7 @@ public:
           if(isComment)
               ff << "#  ";
         }
-        gstring str = gstring( arr +(ii*arr_size), 0, arr_size );
+        std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
         writeValue(str);
         ff << " ";
      }
@@ -279,7 +279,7 @@ public:
  class TReadArrays : public  TRWArrays /// Read fields of structure
  {
      iostream& ff;
-     gstring curArray;
+     std::string curArray;
 
  protected:
     /// Reads value from a text file.
@@ -287,8 +287,8 @@ public:
     /// Reads value from a text file.
     void readValue(double& val);
     /// Reads format value from a text file.
-    long int readFormatValue(double& val, gstring& format);
-    bool  readFormat( gstring& format );
+    long int readFormatValue(double& val, std::string& format);
+    bool  readFormat( std::string& format );
 
     void setCurrentArray( const char* name, long int size );
  
@@ -307,7 +307,7 @@ public:
     long int findNextNotAll();  ///< Read next name from file and find in fields list (if doesnot find read next name)
     void  readNext( const char* label); ///< Read next name from file
 
-    gstring testRead();   ///< Test for reading all fields must be always present in the file
+    std::string testRead();   ///< Test for reading all fields must be always present in the file
 
     /// Reads array from a text file.
     template <class T,
@@ -336,7 +336,7 @@ public:
     void readArray( const char *name, char* arr, long int size, long int el_size );
 
     /// Reads string from a text file.
-    void readArray( const char* name, gstring &arr, long int el_size=198 );
+    void readArray( const char* name, std::string &arr, long int el_size=198 );
     /// Reads double vector from a text file.
     void readArray( const char* name, vector<double> arr );
 
@@ -347,7 +347,7 @@ public:
 template <> void TPrintArrays::writeValue( const double& );
 template <> void TPrintArrays::writeValue( const float& );
 template <> void TPrintArrays::writeValue( const char& value );
-template <> void TPrintArrays::writeValue( const gstring& value );
+template <> void TPrintArrays::writeValue( const std::string& value );
 
 
  //=============================================================================

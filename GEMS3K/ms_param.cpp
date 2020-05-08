@@ -120,7 +120,7 @@ double TProfil::ComputeEquilibriumState( /*long int& RefinLoops_,*/ long int& Nu
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file
-void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
+void TProfil::outMulti( GemDataStream& ff, std::string& /*path*/  )
 {
 	 short arr[10];
 
@@ -206,7 +206,7 @@ void replaceall(string& str, char ch1, char ch2)
 }
 
 /// read string as: "<characters>"
-istream& f_getline(istream& is, gstring& str, char delim)
+istream& f_getline(istream& is, std::string& str, char delim)
 {
     char ch;
     is.get(ch);
@@ -227,10 +227,10 @@ istream& f_getline(istream& is, gstring& str, char delim)
    return is;
 }
 
-gstring u_makepath(const gstring& dir,
-           const gstring& name, const gstring& ext)
+std::string u_makepath(const std::string& dir,
+           const std::string& name, const std::string& ext)
 {
-    gstring Path(dir);
+    std::string Path(dir);
     if( dir != "")
       Path += "/";
     Path += name;
@@ -240,27 +240,27 @@ gstring u_makepath(const gstring& dir,
     return Path;
 }
 
-void u_splitpath(const gstring& aPath, gstring& dir,
-            gstring& name, gstring& ext)
+void u_splitpath(const std::string& aPath, std::string& dir,
+            std::string& name, std::string& ext)
 {
-    gstring Path = aPath;
+    std::string Path = aPath;
     replaceall( Path, '\\', '/');
     size_t pos = Path.rfind("/");
-    if( pos != npos )
+    if( pos != std::string::npos )
         dir = Path.substr(0, pos), pos++;
     else
         dir = "",    pos = 0;
 
     size_t pose = Path.rfind(".");
-    if( pose != npos )
+    if( pose != std::string::npos )
     {
-        ext = Path.substr( pose+1, npos );
+        ext = Path.substr( pose+1, std::string::npos );
         name = Path.substr(pos, pose-pos);
     }
     else
     {
         ext = "";
-        name = Path.substr(pos, npos);
+        name = Path.substr(pos, std::string::npos);
     }
 }
 
@@ -274,15 +274,15 @@ char  (* f_getfiles(const char *f_name, char *Path,
   char  (*filesList)[fileNameLength];
   char  (*filesListNew)[fileNameLength];
   filesList = new char[bSize][fileNameLength];
-  gstring name;
+  std::string name;
 
 // Get path
-   gstring path_;
-   gstring flst_name = f_name;
+   std::string path_;
+   std::string flst_name = f_name;
     replaceall( flst_name, '\\', '/');
    unsigned long int pos = flst_name.rfind("/");
    path_ = "";
-   if( pos < npos )
+   if( pos < std::string::npos )
       path_ = flst_name.substr(0, pos+1);
    strncpy( Path, path_.c_str(), 256-fileNameLength);
    Path[255] = '\0';

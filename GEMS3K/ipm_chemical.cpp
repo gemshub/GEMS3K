@@ -819,7 +819,7 @@ TMultiBase::PrimalChemicalPotentials( double F[], double Y[], double YF[], doubl
             pm.YFk = YFA[k];
         if( Yf >= 1e6 )
         {                 // error - will result in zerodivide!
-           gstring pbuf(pm.SF[k],0,20);
+           std::string pbuf(pm.SF[k],0,20);
            char buf[200];
            sprintf( buf, "Broken phase amount from primal approximation: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
            Error( "E13IPM: PrimalChemicalPotentials():", buf);

@@ -38,7 +38,7 @@ class GemDataStream				// data stream class
 {
 
     ios::openmode mod;
-    gstring Path;
+    std::string Path;
 
     int swap;
     int	byteorder;
@@ -47,10 +47,10 @@ class GemDataStream				// data stream class
 public:
 //    GemDataStream( fstream& ff  );
     GemDataStream( ) {    setByteOrder(LittleEndian); }
-    GemDataStream( gstring& aPath, ios::openmode aMod  );
+    GemDataStream( std::string& aPath, ios::openmode aMod  );
     virtual ~GemDataStream();
 
-    const gstring& GetPath() const
+    const std::string& GetPath() const
     {
         return Path;
     }

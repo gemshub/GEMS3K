@@ -246,12 +246,12 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
              default:
              case -1:  // the IPM solution is inconsistent after 5 phase insertion loops
              {
-                 gstring pmbuf("");
+                 std::string pmbuf("");
                  if(k_miss >=0 )
-                  pmbuf = gstring(pm.SF[k_miss],0,20);
-                 gstring pubuf("");
+                  pmbuf = std::string(pm.SF[k_miss],0,20);
+                 std::string pubuf("");
                  if(k_unst >=0 )
-                 pubuf = gstring(pm.SF[k_unst],0,20);
+                 pubuf = std::string(pm.SF[k_unst],0,20);
                  char buf[400];
                  sprintf( buf,
           " Computed phase assemblage remains inconsistent after 5 phase selection loops.\n"
@@ -335,12 +335,12 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
               default:
               case -1:  // the IPM solution is inconsistent after 3 phase selection loops
               {
-                  gstring pmbuf("");
+                  std::string pmbuf("");
                   if(k_miss >=0 )
-                   pmbuf = gstring(pm.SF[k_miss],0,20);
-                  gstring pubuf("");
+                   pmbuf = std::string(pm.SF[k_miss],0,20);
+                  std::string pubuf("");
                   if(k_unst >=0 )
-                  pubuf = gstring(pm.SF[k_unst],0,20);
+                  pubuf = std::string(pm.SF[k_unst],0,20);
                   char buf[400];
                   sprintf( buf,
            " Computed phase assemblage remains inconsistent after 3 phase selection loops.\n"
@@ -731,7 +731,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     {  // Experimental
         char buf[320];
         sprintf( buf, "(EFD(%ld)) Invalid initial Lagrange multiplier for metastability-constrained DC %16s ",
-                 WhereCalledFrom, gstring( pm.SM[jK], 0,  MAXDCNAME ).c_str() );
+                 WhereCalledFrom, std::string( pm.SM[jK], 0,  MAXDCNAME ).c_str() );
                 setErrorMessage( 17, "E17IPM: Mass Balance Refinement: ", buf);
       	return 5;
     }

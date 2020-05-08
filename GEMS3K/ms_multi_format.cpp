@@ -648,15 +648,15 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
 #ifndef JSON_OUT
  TReadArrays  rdar( 8, MULTI_static_fields, ff);
  rdar.skipSpace();
- gstring str;
+ std::string str;
  char buf[300];
  ff.getline(buf, 300,  '\n' );
  str = buf;
  size_t pos1 = str.find('\"');
- if( pos1 < gstring::npos )
+ if( pos1 < std::string::npos )
     str = str.substr( pos1+1);
  pos1 = str.find('\"');
- if( pos1 < gstring::npos )
+ if( pos1 < std::string::npos )
  {   str = str.substr( 0, pos1 );
     //f_getline( ff, str, '\n');
     copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
@@ -697,7 +697,7 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
  }
 
  // testing read
- gstring ret = rdar.testRead();
+ std::string ret = rdar.testRead();
  if( !ret.empty() )
   { ret += " - fields must be read from the MULTI structure";
     Error( "Error", ret);

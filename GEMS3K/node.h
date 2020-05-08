@@ -89,7 +89,7 @@ class TNode
 {
     friend class TNodeArray;
 
-    gstring dbr_file_name;  ///< place for the *dbr. I/O file name
+    std::string dbr_file_name;  ///< place for the *dbr. I/O file name
 
 protected:
    MULTI* pmm;  ///< \protected Pointer to GEM IPM work data structure (ms_multi.h)
@@ -227,7 +227,7 @@ protected:
 
 
     // Virtual function for interaction with TNodeArray class
-    virtual void  setNodeArray( gstring& , long int , bool ) { }
+    virtual void  setNodeArray( std::string& , long int , bool ) { }
 #else
 public:
 
@@ -1298,15 +1298,15 @@ long int GEM_step_MT( const long int step )
     virtual void databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
                               long int nFilds, long int (*Flds)[2]);
 
-    static gstring ipmLogFile;  ///< full name of the ipmlog file
+    static std::string ipmLogFile;  ///< full name of the ipmlog file
 
     /* Get full name of the ipmlog file
-    const gstring& ipmLogFile() const {
+    const std::string& ipmLogFile() const {
         return ipmlog_file_name;
     }
 
     /// Set full name of the ipmlog file
-    void setipmLogFile(const gstring& logFile) {
+    void setipmLogFile(const std::string& logFile) {
         ipmlog_file_name = logFile;
     }*/
 

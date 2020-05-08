@@ -43,7 +43,7 @@
 #ifndef IPMGEMPLUGIN
   #include "visor.h"
 #else
-  istream& f_getline(istream& is, gstring& str, char delim);
+  istream& f_getline(istream& is, std::string& str, char delim);
 #endif
 
 //TNode* TNode::na;
@@ -61,7 +61,7 @@ const double bar_to_Pa = 1e5,
                m3_to_cm3 = 1e6,
                kg_to_g = 1e3;
 
-gstring TNode::ipmLogFile = "ipmlog.txt";
+std::string TNode::ipmLogFile = "ipmlog.txt";
 
 double TNode::get_Ppa_sat( double Tk )
 {
@@ -353,7 +353,7 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
   {
     if( binary_f )
 	{
-       gstring str_file = fname;
+       std::string str_file = fname;
 	   GemDataStream in_br(str_file, ios::in|ios::binary);
        databr_from_file(in_br);
 	}
@@ -411,17 +411,17 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
 
    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
-   gstring curPath = ""; //current reading file path
+   std::string curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
   fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
   try
     {
 #else
-      size_t npos = gstring::npos;
+      size_t npos = std::string::npos;
 #endif
      bool binary_f = false;
-     gstring lst_in = ipmfiles_lst_name;
-     gstring Path = "";         // was " "   fixed 10.12.2009 by DK
+     std::string lst_in = ipmfiles_lst_name;
+     std::string Path = "";         // was " "   fixed 10.12.2009 by DK
 // Get path
 #ifdef IPMGEMPLUGIN
 #ifdef _WIN32
@@ -436,14 +436,14 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
       else
          pos = max(pos, lst_in.rfind("/") );
 #endif
-	  if( pos < npos )
+      if( pos < std::string::npos )
       Path = lst_in.substr(0, pos+1);
 
 //  open file stream for the file names list file
       fstream f_lst( lst_in.c_str(), ios::in );
       ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
 
-      gstring datachbr_fn;
+      std::string datachbr_fn;
       f_getline( f_lst, datachbr_fn, ' ');
 
 //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
@@ -451,7 +451,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 
 //Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
       pos = datachbr_fn.find( '-');
-      if( pos != /*gstring::*/npos )
+      if( pos != std::string::npos )
       {
          if( datachbr_fn[pos+1] == 'b' )
             binary_f = true;
@@ -459,11 +459,11 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
       }
  //     f_getline( f_lst, datachbr_fn, ' ');
       // Reading name of DCH_DAT file
-      gstring dat_ch = Path + datachbr_fn;
+      std::string dat_ch = Path + datachbr_fn;
 
       // Reading name of IPM_DAT file for structure MULTI (GEM IPM work structure)
       f_getline( f_lst, datachbr_fn, ' ');
-      gstring mult_in = Path + datachbr_fn;
+      std::string mult_in = Path + datachbr_fn;
 
 // Reading DCH_DAT file in binary or text format
       curPath = dat_ch;
@@ -516,7 +516,7 @@ if( binary_f )
   // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
        f_getline( f_lst, datachbr_fn, ' ');
 
-        gstring dbr_file = Path + datachbr_fn;
+        std::string dbr_file = Path + datachbr_fn;
         curPath = dbr_file;
         if( binary_f )
         {
@@ -2110,7 +2110,7 @@ TNode::TNode( MULTI *apm  )
     //na = this;
     dbr_file_name = "dbr_file_name";
 
-    ipmLogFile = pVisor->userGEMDir();
+    ipmLogFile = pVisor->userGEMDir().c_str();
     ipmLogFile += "ipmlog.txt";
     //ipmlog_file_name = pVisor->userGEMDir();
     //ipmlog_file_name += "ipmlog.txt";
@@ -2360,7 +2360,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
 //
 void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments, bool brief_mode )
    {
-       gstring str_file;
+       std::string str_file;
        if( fname == 0)
            str_file = dbr_file_name;//+".out";
        else
@@ -2369,7 +2369,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 
        if( binary_f )
        {
-            // gstring str_file = fname;
+            // std::string str_file = fname;
               GemDataStream out_br(str_file, ios::out|ios::binary);
               databr_to_file(out_br);
        }
@@ -2389,7 +2389,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
 //
    void  TNode::GEM_print_ipm( const char* fname )
    {
-     gstring str_file;
+     std::string str_file;
      if( fname == 0)
     	   str_file = dbr_file_name + ".Dump.out";
      else

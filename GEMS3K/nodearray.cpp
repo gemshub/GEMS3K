@@ -97,9 +97,9 @@ long int TNodeArray::SmartMode( const TestModeGEMParam& modeParam, long int ii, 
     return Mode;
 }
 
-gstring TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int step  )
+std::string TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int step  )
 {
-    gstring err_msg;
+    std::string err_msg;
     char buf[200];
 
     sprintf( buf, " Node= %-8ld  Step= %-8ld\n", ii, step );

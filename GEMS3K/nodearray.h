@@ -37,7 +37,7 @@
 #include "node.h"
 
 /// The function is executed when ProcessProgress
-using  ProcessProgressFunction = std::function<bool( const gstring& message, long point )>;
+using  ProcessProgressFunction = std::function<bool( const std::string& message, long point )>;
 
 // These structures are needed for implementation of Random Walk and
 // similar particle-based transport algorithms
@@ -153,7 +153,7 @@ protected:
     long int SmartMode( const TestModeGEMParam& modeParam, long int ii,  bool* piaN  );
 
     /// Build bad GEM result message
-    gstring ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
+    std::string ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
 
     ///  Here we do a GEM calculation in box ii (implementation thread-safe)
     bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode& wrkNode,
@@ -225,7 +225,7 @@ public:
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments -Write files with comments for all data entries ( in text mode)
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
-    gstring PutGEM2MTFiles(  QWidget* par, long int nIV,
+    std::string PutGEM2MTFiles(  QWidget* par, long int nIV,
                              bool bin_mode = false, bool brief_mode = false, bool with_comments = true,
                              bool putNodT1=false, bool addMui=false );
 
@@ -240,7 +240,7 @@ public:
     /// \param with_comments -Write files with comments for all data entries ( in text mode)
     /// \param addMui - Print internal indices in RMULTS to IPM file for reading into Gems back
     /// \return DATABR list file name
-    gstring genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
+    std::string genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
                                   long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
                                   bool putNodT1, bool addMui );
 
@@ -260,7 +260,7 @@ public:
     /// Reads DATABR files saved by GEMS as a break point of the FMT calculation.
     /// Copying data from work DATABR structure into the node array NodT0
     /// and read DATABR structure into the node array NodT1 from file dbr_file
-    void  setNodeArray( gstring& dbr_file, long int ndx, bool binary_f );
+    void  setNodeArray( std::string& dbr_file, long int ndx, bool binary_f );
 
     /// Overloaded variant - takes lists of ICs, DCs and phases according to
     /// already existing index vectors axIC, axDC, axPH (with anICb, anDCb,

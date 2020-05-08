@@ -45,7 +45,7 @@
 #include "m_gem2mt.h"
 #include "zmqclient.h"
 #else
-istream& f_getline(istream& is, gstring& str, char delim);
+istream& f_getline(istream& is, std::string& str, char delim);
 #endif
 
 
@@ -187,7 +187,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
         // checking RetCode from GEM IPM calculation
         if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
         {
-            gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
+            std::string err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
             iRet = false;
 
             if( diffile )
@@ -254,7 +254,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
         // checking RetCode from GEM IPM calculation
         if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
         {
-            gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
+            std::string err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
             iRet = false;
             if( diffile )
             {
@@ -316,7 +316,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
         // checking RetCode from GEM IPM calculation
         if( !(RetCode==OK_GEM_AIA || RetCode == OK_GEM_SIA ))
         {
-            gstring err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
+            std::string err_msg = ErrorGEMsMessage( RetCode,  ii, modeParam.step  );
             iRet = false;
 
             if( diffile )
@@ -484,13 +484,13 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
 
     calcNode.GEM_init( ipmfiles_lst_name );
     // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
-    gstring curPath = ""; //current reading file path
+    std::string curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
     fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
     try
     {
 #else
-       size_t npos = gstring::npos;
+       size_t npos = std::string::npos;
 #endif
         bool binary_f = false;
 
@@ -498,12 +498,12 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
         fstream f_lst( ipmfiles_lst_name, ios::in );
         ErrorIf( !f_lst.good() , ipmfiles_lst_name, "Fileopen error");
 
-        gstring datachbr_fn;
+        std::string datachbr_fn;
         f_getline( f_lst, datachbr_fn, ' ');
 
         //Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
         size_t pos = datachbr_fn.find( '-');
-        if( pos != /*gstring::*/npos )
+        if( pos != std::string::npos )
         {
             if( datachbr_fn[pos+1] == 'b' )
                 binary_f = true;
@@ -545,16 +545,16 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
                                  long int *nodeTypes, bool getNodT1, bool binary_f  )
 {
     int i;
-    gstring datachbr_fn;
+    std::string datachbr_fn;
 
-    gstring curPath = ""; //current reading file path
+    std::string curPath = ""; //current reading file path
 
 #ifndef IPMGEMPLUGIN
-    size_t npos = gstring::npos;
+    size_t npos = std::string::npos;
 #endif
 
-    gstring lst_in = dbrfiles_lst_name;
-    gstring Path = "";
+    std::string lst_in = dbrfiles_lst_name;
+    std::string Path = "";
 
     // Get path
 #ifdef IPMGEMPLUGIN
@@ -570,7 +570,7 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
     else
         pos = max(pos, lst_in.rfind("/") );
 #endif
-    if( pos < npos )
+    if( pos < std::string::npos )
         Path = lst_in.substr(0, pos+1);
 
     //  open file stream for the file names list file
@@ -595,7 +595,7 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
         else
             f_getline( f_lst, datachbr_fn, ' ');
 
-        gstring dbr_file = Path + datachbr_fn;
+        std::string dbr_file = Path + datachbr_fn;
         curPath = dbr_file;
         if( binary_f )
         {
@@ -658,9 +658,9 @@ void  TNodeArray::checkNodeArray(
 //
 //-------------------------------------------------------------------
 
-void  TNodeArray::setNodeArray( gstring& dbr_file, long int ndx, bool binary_f )
+void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, bool binary_f )
 {
-    dbr_file = dbr_file.replace("dbr-0-","dbr-1-");
+    replace(dbr_file, "dbr-0-","dbr-1-");
     if( binary_f )
     {
         GemDataStream in_br(dbr_file, ios::in|ios::binary);
@@ -681,13 +681,13 @@ void  TNodeArray::setNodeArray( gstring& dbr_file, long int ndx, bool binary_f )
 
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
-gstring TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
+std::string TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
                                      bool bin_mode, bool brief_mode, bool with_comments,
                                      bool putNodT1, bool addMui )
 {
     // Get name of filenames structure
-    gstring path = gstring( rt[RT_SYSEQ].FldKey(2), 0, rt[RT_SYSEQ].FldLen(2));;
-    path.strip();
+    std::string path = std::string( rt[RT_SYSEQ].FldKey(2), 0, rt[RT_SYSEQ].FldLen(2));;
+    strip(path);
     if( bin_mode )
         path += "-bin.lst";
     else
@@ -710,7 +710,7 @@ AGAIN:
             return path;
         }
 
-    ProcessProgressFunction messageF = [nIV, par](const gstring& message, long point){
+    ProcessProgressFunction messageF = [nIV, par](const std::string& message, long point){
         return  pVisor->Message( par, "GEM2MT node array",  message.c_str() , point, nIV );
     };
     genGEMS3KInputFiles(  path, messageF, nIV, bin_mode, brief_mode, with_comments,
@@ -722,17 +722,17 @@ AGAIN:
 
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
-gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgressFunction message,
+std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
                                           long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
                                           bool putNodT1, bool addMui )
 {
     fstream fout;
     fstream fout2;
-    gstring Path_;
-    gstring dir;
-    gstring name;
-    gstring newname;
-    gstring path;
+    std::string Path_;
+    std::string dir;
+    std::string name;
+    std::string newname;
+    std::string path;
     char buf[20];
 
     path = filepath;
@@ -740,7 +740,7 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
 
     // get name
     unsigned long int pos = name.rfind("-");
-    if( pos != gstring::npos )
+    if( pos != std::string::npos )
         name = name.substr(0, pos);
 
     // making special files
@@ -758,7 +758,7 @@ gstring TNodeArray::genGEMS3KInputFiles(  const gstring& filepath, ProcessProgre
         fout << " \"" << name.c_str() << "-ipm."<<dat_ext << "\" ";
     }
 
-    gstring path2 = name;
+    std::string path2 = name;
     path2 += "-dbr";
     path2 = u_makepath( dir, path2, "lst" );
     fout2.open(path2.c_str(), ios::out);
