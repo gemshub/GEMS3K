@@ -25,13 +25,17 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifdef IPMGEMPLUGIN
 
+
+
+#include  <sstream>
 #include <math.h>
 #include "m_param.h"
 #include "num_methods.h"
 #include "gdatastream.h"
 #include "node.h"
+
+#ifdef IPMGEMPLUGIN
 
 //TProfil* TProfil::pm;
 
@@ -48,9 +52,9 @@ const double R_CONSTANT = 8.31451,
                              H2O_mol_to_kg = 55.50837344,
                                Min_phys_amount = 1.66e-24;
 
-enum volume_code {  // Codes of volume parameter
-    VOL_UNDEF, VOL_CALC, VOL_CONSTR
-};
+//enum volume_code {  // Codes of volume parameter
+//    VOL_UNDEF, VOL_CALC, VOL_CONSTR
+//};
 
 SPP_SETTING pa_ = {
     " GEMS-GUI v.3.1 r.2150 (rc) " " GEMS3K v.3.1 r.690 (rc) ",
@@ -105,6 +109,7 @@ TProfil::TProfil( TMultiBase* amulti )
     multi = amulti;
     pmp = multi->GetPM();
 }
+
 
 /// GEM IPM calculation of equilibrium state in MULTI
 double TProfil::ComputeEquilibriumState( /*long int& RefinLoops_,*/ long int& NumIterFIA_, long int& NumIterIPM_ )
@@ -317,6 +322,35 @@ char  (* f_getfiles(const char *f_name, char *Path,
   return filesList;
 }
 #endif
+
+/// Writes Multi to a json/key-value string
+/// \param brief_mode - Do not write data items that contain only default values
+/// \param with_comments - Write files with comments for all data entries
+std::string TProfil::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
+{
+    std::stringstream ss;
+    multi->to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
+    return ss.str();
+}
+
+/// Reads Multi structure from a json/key-value string
+bool TProfil::gemipm_from_string( const std::string& data,  DATACH  *dCH )
+{
+    std::stringstream ss;
+    ss.str(data);
+    multi->from_text_file_gemipm( ss, dCH );
+    return true;
+}
+
+/// Reading structure MULTI (GEM IPM work structure) from text file
+void TProfil::readMulti( const char* path, DATACH  *dCH )
+{
+    // reads sizes and constants from txt file
+    fstream ff( path, ios::in );
+    ErrorIf( !ff.good() , path, "Fileopen error");
+    multi->from_text_file_gemipm( ff, dCH);
+}
+
 // ------------------ End of ms_param.cpp -----------------------
 
 

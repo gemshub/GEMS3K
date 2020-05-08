@@ -25,36 +25,7 @@
 //-------------------------------------------------------------------
 
 #include <cmath>
-#include  <sstream>
 #include "m_param.h"
-
-/// Writes Multi to a json/key-value string
-/// \param brief_mode - Do not write data items that contain only default values
-/// \param with_comments - Write files with comments for all data entries
-std::string TProfil::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
-{
-    std::stringstream ss;
-    multi->to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
-    return ss.str();
-}
-
-/// Reads Multi structure from a json/key-value string
-bool TProfil::gemipm_from_string( const std::string& data,  DATACH  *dCH )
-{
-    std::stringstream ss;
-    ss.str(data);
-    multi->from_text_file_gemipm( ss, dCH );
-    return true;
-}
-
-/// Reading structure MULTI (GEM IPM work structure) from text file
-void TProfil::readMulti( const char* path, DATACH  *dCH )
-{
-    // reads sizes and constants from txt file
-    fstream ff( path, ios::in );
-    ErrorIf( !ff.good() , path, "Fileopen error");
-    multi->from_text_file_gemipm( ff, dCH);
-}
 
 void TMultiBase::get_PAalp_PSigm( char& PAalp, char& PSigm)
 {

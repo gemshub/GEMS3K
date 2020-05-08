@@ -27,12 +27,9 @@
 //-------------------------------------------------------------------
 //
 
-#ifdef IPMGEMPLUGIN
 
-#include <cmath>
 #include "node.h"
-//#include "m_param.h"
-//#include "activities.h"
+#include "activities.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ///  Function for converting internal lnGam[j] value into an external (phase-scale-specific)
@@ -1143,8 +1140,6 @@ void TActivity::SetSmoothingFactor( long int /*mode*/ )
       FitVar[3] = TF;
 }
 
-
-#endif
 
 //--------------------- End of s_activity3.cpp ---------------------------
 

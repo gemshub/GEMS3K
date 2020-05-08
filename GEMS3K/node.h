@@ -103,7 +103,7 @@ protected:
     TKinetics *kip;    // MW reaction kinetics class
 //
 #endif
-    TProfil* profil;
+    TProfil* profil1;
 
 
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
@@ -167,7 +167,7 @@ protected:
     /// \param with_comments - Write files with comments for all data entries
     std::string gemipm_to_string( bool addMui, bool with_comments = true, bool brief_mode = false )
     {
-        return profil->gemipm_to_string( addMui, with_comments, brief_mode );
+        return profil1->gemipm_to_string( addMui, with_comments, brief_mode );
     }
 
 // Methods to perform output to vtk files

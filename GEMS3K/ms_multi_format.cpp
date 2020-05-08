@@ -32,11 +32,6 @@
 #include "io_json.h"
 #endif
 
-//#ifdef IPMGEMPLUGIN
-//istream& f_getline(istream& is, gstring& str, char delim);
-//#endif
-
-//bool _comment = true;
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.0 c.fdcdd2b5 ";
 
 //===================================================================

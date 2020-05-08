@@ -245,7 +245,7 @@ long int TNode::GEM_run( bool uPrimalSol )
                pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
        }
 
-   profil->outMultiTxt( "React_before.dump.txt"  );
+   /*multi->to_text_file("React_before.dump.txt");//*/profil1->outMultiTxt( "React_before.dump.txt"  );
    // GEM IPM calculation of equilibrium state
    //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
 #ifndef IPMGEMPLUGIN
@@ -253,7 +253,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 #else
     CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 #endif
-    profil->outMultiTxt( "React_after.dump.txt"  );
+    /*multi->to_text_file("React_after.dump.txt");//*/profil1->outMultiTxt( "React_after.dump.txt" );
 
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
@@ -289,12 +289,12 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
   catch(TError& err)
   {
-   if( profil->pa.p.PSM  )
+   if( profil1->pa.p.PSM  )
    {
        fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
          err.title.c_str() << ":" << endl;
-      if( profil->pa.p.PSM >= 2  )
+      if( profil1->pa.p.PSM >= 2  )
          f_log  << err.mess.c_str() << endl;
    }
    if( CNode->NodeStatusCH  == NEED_GEM_AIA )
@@ -483,7 +483,7 @@ if( binary_f )
  {
    GemDataStream f_m(mult_in, ios::in|ios::binary);
 #ifdef IPMGEMPLUGIN
-    profil->readMulti(f_m, CSD);
+    profil1->readMulti(f_m, CSD);
 #else
     TProfil::pm->readMulti(f_m, CSD);
 #endif
@@ -491,7 +491,7 @@ if( binary_f )
   else
   {
 #ifdef IPMGEMPLUGIN
-        profil->readMulti(mult_in.c_str(), CSD );
+        profil1->readMulti(mult_in.c_str(), CSD );
 #else
     TProfil::pm->readMulti(mult_in.c_str(), CSD );
 #endif
@@ -579,7 +579,7 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
 
     // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
 #ifdef IPMGEMPLUGIN
-    profil->gemipm_from_string( ipm_json,CSD );
+    profil1->gemipm_from_string( ipm_json,CSD );
 #else
     TProfil::pm->gemipm_from_string(ipm_json,CSD );
 #endif
@@ -1760,15 +1760,15 @@ void TNode::allocMemory()
 // internal class instances
     multi = new TMultiBase( this );
     pmm = multi->GetPM();
-    profil = new TProfil( multi );
-    multi->setPa(profil);
+    profil1 = new TProfil( multi );
+    multi->setPa(profil1);
     //TProfil::pm = profil;
     atp = new TActivity( CSD, CNode, this );
 //    atp->set_def();
     kip = new TKinetics( CSD, CNode, this );
     kip->set_def();
 #else
-    profil = TProfil::pm;
+    profil1 = TProfil::pm;
 #endif
 }
 
@@ -1781,7 +1781,7 @@ void TNode::freeMemory()
 
 #ifdef IPMGEMPLUGIN
   delete multi;
-  delete profil;
+  delete profil1;
 #endif
 }
 
@@ -2249,7 +2249,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nICb; ii++ )
   {
       pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
-      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil->pa.p.DB )
+      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil1->pa.p.DB )
       {
          char buf[300];
          sprintf(buf, "Bulk mole amount of IC %-6.6s is %lg - out of range",
@@ -2395,7 +2395,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
      else
            str_file = fname;
 
-       profil->outMultiTxt( str_file.c_str()  );
+       /*multi->to_text_file(str_file.c_str());//*/profil1->outMultiTxt( str_file.c_str()  );
    }
 
 #ifdef IPMGEMPLUGIN

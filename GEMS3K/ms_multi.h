@@ -43,6 +43,11 @@
 
 class GemDataStream;
 
+enum volume_code {  /* Codes of volume parameter */
+    VOL_UNDEF, VOL_CALC, VOL_CONSTR
+};
+
+
 typedef struct
 {  // MULTI is base structure to Project (local values)
     char

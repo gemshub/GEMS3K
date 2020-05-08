@@ -33,13 +33,6 @@
 #include "activities.h"
 #include "kinetics.h"
 
-
-#ifdef IPMGEMPLUGIN
-enum volume_code {  // Codes of volume parameter ???
-    VOL_UNDEF, VOL_CALC, VOL_CONSTR
-};
-#endif
-
 /// Calculation of LPP-based automatic initial approximation of the primal vector x.
 /// Use the modified simplex method with two-side constraints on x
 //
