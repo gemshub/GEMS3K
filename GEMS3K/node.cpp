@@ -483,17 +483,17 @@ if( binary_f )
  {
    GemDataStream f_m(mult_in, ios::in|ios::binary);
 #ifdef IPMGEMPLUGIN
-    profil->readMulti(f_m);
+    profil->readMulti(f_m, CSD);
 #else
-    TProfil::pm->readMulti(f_m);
+    TProfil::pm->readMulti(f_m, CSD);
 #endif
   }
   else
   {
 #ifdef IPMGEMPLUGIN
-        profil->readMulti(mult_in.c_str(),CSD );
+        profil->readMulti(mult_in.c_str(), CSD );
 #else
-    TProfil::pm->readMulti(mult_in.c_str(),CSD );
+    TProfil::pm->readMulti(mult_in.c_str(), CSD );
 #endif
   }
 
@@ -1759,7 +1759,6 @@ void TNode::allocMemory()
 #ifdef IPMGEMPLUGIN
 // internal class instances
     multi = new TMultiBase( this );
-    multi->set_def();
     pmm = multi->GetPM();
     profil = new TProfil( multi );
     multi->setPa(profil);

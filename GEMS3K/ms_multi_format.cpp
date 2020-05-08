@@ -32,9 +32,9 @@
 #include "io_json.h"
 #endif
 
-#ifdef IPMGEMPLUGIN
-  istream& f_getline(istream& is, gstring& str, char delim);
-#endif
+//#ifdef IPMGEMPLUGIN
+//istream& f_getline(istream& is, gstring& str, char delim);
+//#endif
 
 //bool _comment = true;
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.0 c.fdcdd2b5 ";
@@ -171,14 +171,8 @@ void TMultiBase::to_text_file_gemipm( iostream& ff, bool addMui,
    bool _comment = with_comments;
    char PAalp;
    char PSigm;
+   get_PAalp_PSigm( PAalp, PSigm);
 
-#ifndef IPMGEMPLUGIN
-   PAalp = TSyst::sm->GetSY()->PAalp;
-   PSigm = TSyst::sm->GetSY()->PSigm;
-#else
-   PAalp = PAalp_;
-   PSigm = PSigm_;
-#endif
   //fstream ff( path, ios::out );
   //ErrorIf( !ff.good() , path, "Fileopen error");
 
@@ -188,7 +182,6 @@ void TMultiBase::to_text_file_gemipm( iostream& ff, bool addMui,
   TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
 
 #else
-
   _comment = false;
   nlohmann::json json_data;
   TPrintJson  prar1( 8, MULTI_static_fields, json_data);
@@ -620,9 +613,10 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
    char PAalp;
    char PSigm;
 
-#ifdef IPMGEMPLUGIN
-   set_def();
-#endif
+///#ifdef IPMGEMPLUGIN 07/05/2020
+///   set_def();
+///#endif
+
   //mem_set( &pm.N, 0, 39*sizeof(long int));
   //mem_set( &pm.TC, 0, 55*sizeof(double));
   // get sizes from DATACH
@@ -714,14 +708,8 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
     Error( "Error", ret);
   }
 
-#ifndef IPMGEMPLUGIN
-//   syp->PAalp = PAalp;
-//   syp->PSigm = PSigm;
-#else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-#endif
-
    //realloc memory
    multi_realloc( PAalp, PSigm );
 
@@ -836,24 +824,16 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
               long int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
               if(LsIPxSum )
-              { rddar.readNext( "IPxPH");
-#ifdef IPMGEMPLUGIN
-              if(!pm.IPx )
-                  pm.IPx = new long int[LsIPxSum];
-#else
-                 pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
-#endif
-                rddar.readArray( "IPxPH", pm.IPx,  LsIPxSum);
+              {
+                  rddar.readNext( "IPxPH");
+                  alloc_IPx(LsIPxSum);
+                  rddar.readArray( "IPxPH", pm.IPx,  LsIPxSum);
               }
               if(LsModSum )
-              { rddar.readNext( "PMc");
-#ifdef IPMGEMPLUGIN
-              if(!pm.PMc )
-                  pm.PMc = new double[LsModSum];
-#else
-               pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
-#endif
-                rddar.readArray( "PMc", pm.PMc,  LsModSum);
+              {
+                  rddar.readNext( "PMc");
+                  alloc_PMc(LsModSum);
+                  rddar.readArray( "PMc", pm.PMc,  LsModSum);
               }
               break;
              }
@@ -865,27 +845,18 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
                 long int LsSitSum;
                 getLsMdcsum( LsMdcSum,LsMsnSum, LsSitSum );
                 if(LsMdcSum )
-                { rddar.readNext( "DMc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.DMc )
-                     pm.DMc = new double[LsMdcSum];
-#else
-                pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
-#endif
-                rddar.readArray( "DMc", pm.DMc,  LsMdcSum);
+                {
+                    rddar.readNext( "DMc");
+                    alloc_DMc(LsMdcSum);
+                   rddar.readArray( "DMc", pm.DMc,  LsMdcSum);
                 }
               if(LsMsnSum )
-              { rddar.readNext( "MoiSN");
-#ifdef IPMGEMPLUGIN
-              if(!pm.MoiSN )
-                   pm.MoiSN = new double[LsMsnSum];
-              pm.SitFr = new double[LsSitSum];
-#else
-              pm.MoiSN = (double *)aObj[ o_wi_moisn].Alloc( LsMsnSum, 1, D_ );
-              pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
-#endif
-              fillValue( pm.SitFr, 0., LsSitSum );
-              rddar.readArray( "MoiSN", pm.MoiSN,  LsMsnSum);
+              {
+                  rddar.readNext( "MoiSN");
+                  alloc_MoiSN(LsMsnSum);
+                  alloc_SitFr(LsSitSum);
+                  fillValue( pm.SitFr, 0., LsSitSum );
+                  rddar.readArray( "MoiSN", pm.MoiSN,  LsMsnSum);
               }
               break;
             }
@@ -897,25 +868,11 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
           long int DQFcSum, rcpcSum;
           getLsMdc2sum( DQFcSum, rcpcSum );
          if(DQFcSum )
-         {  rddar.readNext( "DQFc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.DQFc )
-                     pm.DQFc = new double[DQFcSum];
-#else
-                pm.DQFc = (double *)aObj[o_wi_dqfc ].Alloc( DQFcSum, 1, D_ );
-#endif
-                rddar.readArray(  "DQFc", pm.DQFc,  DQFcSum);
+         {
+             rddar.readNext( "DQFc");
+             alloc_DQFc(DQFcSum);
+             rddar.readArray(  "DQFc", pm.DQFc,  DQFcSum);
           }
-//        if(rcpcSum )
-//        { rddar.readNext( "rcpc");
-//#ifdef IPMGEMPLUGIN
-//                if(!pm.rcpc )
-//                     pm.rcpc = new double[rcpcSum];
-//#else
-//                pm.rcpc = (double *)aObj[ o_wi_rcpc].Alloc( rcpcSum, 1, D_ );
-//#endif
-//                rddar.readArray(  "rcpc", pm.rcpc,  rcpcSum);
-//        }
         break;
         }
       case f_LsPhl:
@@ -926,24 +883,16 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
           getLsPhlsum( PhLinSum,lPhcSum );
 
           if(PhLinSum )
-          {   rddar.readNext( "PhLin");
-#ifdef IPMGEMPLUGIN
-                if(!pm.PhLin )
-                    pm.PhLin = new long int[PhLinSum][2];
-#else
-                pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
-#endif
-                rddar.readArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
+          {
+              rddar.readNext( "PhLin");
+              alloc_PhLin(PhLinSum);
+              rddar.readArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
         }
         if(lPhcSum )
-        {   rddar.readNext( "lPhc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.lPhc )
-                    pm.lPhc = new double[lPhcSum];
-#else
-                pm.lPhc = (double*)aObj[ o_wi_lphc].Alloc( lPhcSum, 1, D_ );
-#endif
-                rddar.readArray(  "lPhc", pm.lPhc,  lPhcSum);
+        {
+            rddar.readNext( "lPhc");
+            alloc_lPhc(lPhcSum);
+            rddar.readArray(  "lPhc", pm.lPhc,  lPhcSum);
         }
         break;
        }
@@ -961,44 +910,28 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
 
         if(xSMdSum )
-        {   rddar.readNext( "xSMd");
-#ifdef IPMGEMPLUGIN
-                if(!pm.xSMd )
-                    pm.xSMd = new long int[xSMdSum];
-#else
-                pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
-#endif
-                rddar.readArray(  "xSMd", pm.xSMd, xSMdSum);
+        {
+            rddar.readNext( "xSMd");
+            alloc_xSMd(xSMdSum);
+            rddar.readArray(  "xSMd", pm.xSMd, xSMdSum);
         }
         if(IsoPcSum )
-        {   rddar.readNext( "IsoPc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.IsoPc )
-                    pm.IsoPc = new double[IsoPcSum];
-#else
-                pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
-#endif
-                rddar.readArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
+        {
+            rddar.readNext( "IsoPc");
+            alloc_IsoPc(IsoPcSum);
+            rddar.readArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
         }
         if(IsoScSum )
-        {   rddar.readNext( "IsoSc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.IsoSc )
-                    pm.IsoSc = new double[IsoScSum];
-#else
-                pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
-#endif
-                rddar.readArray(  "IsoSc", pm.IsoSc, IsoScSum);
+        {
+            rddar.readNext( "IsoSc");
+            alloc_IsoSc(IsoScSum);
+            rddar.readArray(  "IsoSc", pm.IsoSc, IsoScSum);
         }
         if(IsoCtSum )
-        {    rddar.readNext( "IsoCt");
-#ifdef IPMGEMPLUGIN
-                if(!pm.IsoCt )
-                    pm.IsoCt = new char[IsoCtSum];
-#else
-                pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
-#endif
-                rddar.readArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
+        {
+            rddar.readNext( "IsoCt");
+            alloc_IsoCt(IsoCtSum);
+            rddar.readArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
         }
         break;
        }
@@ -1011,24 +944,16 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         getLsESmosum( EImcSum, mCDcSum );
 
         if(EImcSum )
-        {   rddar.readNext( "EImc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.EImc )
-                    pm.EImc = new double[EImcSum];
-#else
-                pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
-#endif
-                rddar.readArray(  "EImc", pm.EImc, EImcSum);
+        {
+            rddar.readNext( "EImc");
+            alloc_EImc(EImcSum);
+            rddar.readArray(  "EImc", pm.EImc, EImcSum);
         }
         if(mCDcSum )
-        {   rddar.readNext( "mCDc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.mCDc )
-                    pm.mCDc = new double[mCDcSum];
-#else
-                pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
-#endif
-                rddar.readArray(  "mCDc", pm.mCDc,  mCDcSum);
+        {
+            rddar.readNext( "mCDc");
+            alloc_mCDc( mCDcSum );
+            rddar.readArray(  "mCDc", pm.mCDc,  mCDcSum);
         }
         break;
         }
@@ -1046,59 +971,37 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
         if(xSKrCSum )
-        {   rddar.readNext( "xSKrC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.xSKrC )
-                    pm.xSKrC = new long int[xSKrCSum];
-#else
-                pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
-#endif
-                rddar.readArray(  "xSKrC", pm.xSKrC, xSKrCSum);
+        {
+            rddar.readNext( "xSKrC");
+            alloc_xSKrC(xSKrCSum);
+            rddar.readArray(  "xSKrC", pm.xSKrC, xSKrCSum);
         }
         if(ocPRkC_feSArC_Sum )
-        {   rddar.readNext( "ocPRkC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.ocPRkC )
-                    pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
-                if(!pm.feSArC )
-                    pm.feSArC = new double[ocPRkC_feSArC_Sum];
-#else
-            pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
-            pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
-#endif
+        {
+            rddar.readNext( "ocPRkC");
+            alloc_ocPRkC(ocPRkC_feSArC_Sum);
+            alloc_feSArC(ocPRkC_feSArC_Sum);
            rddar.readArray(  "ocPRkC", &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
            rddar.readNext( "feSArC");
            rddar.readArray(  "feSArC", pm.feSArC, ocPRkC_feSArC_Sum);
         }
         if(rpConCSum )
-        {   rddar.readNext( "rpConC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.rpConC )
-                    pm.rpConC = new double[rpConCSum];
-#else
-                pm.rpConC = (double*)aObj[ o_wi_krpc].Alloc( rpConCSum, 1, D_ );
-#endif
-                rddar.readArray(  "rpConC", pm.rpConC,  rpConCSum);
+        {
+            rddar.readNext( "rpConC");
+            alloc_rpConC(rpConCSum);
+            rddar.readArray(  "rpConC", pm.rpConC,  rpConCSum);
         }
         if(apConCSum )
-        {   rddar.readNext( "apConC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.apConC )
-                    pm.apConC = new double[apConCSum];
-#else
-                pm.apConC = (double*)aObj[ o_wi_apconc].Alloc( apConCSum, 1, D_ );
-#endif
-                rddar.readArray(  "apConC", pm.apConC, apConCSum);
+        {
+            rddar.readNext( "apConC");
+            alloc_apConC(apConCSum);
+            rddar.readArray(  "apConC", pm.apConC, apConCSum);
         }
         if(AscpCSum )
-        {   rddar.readNext( "AscpC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.AscpC )
-                    pm.AscpC = new double[AscpCSum];
-#else
-                pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
-#endif
-                rddar.readArray(  "AscpC", pm.AscpC,  AscpCSum);
+        {
+            rddar.readNext( "AscpC");
+            alloc_AscpC(AscpCSum);
+            rddar.readArray(  "AscpC", pm.AscpC,  AscpCSum);
         }
         break;
         }
@@ -1111,14 +1014,10 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         long int UMpcSum, xICuCSum;
         getLsUptsum( UMpcSum, xICuCSum );
         if(UMpcSum )
-        {   rddar.readNext( "UMpcC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.UMpcC )
-                    pm.UMpcC = new double[UMpcSum];
-#else
-                pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
-#endif
-                rddar.readArray(  "UMpcC", pm.UMpcC, UMpcSum);
+        {
+            rddar.readNext( "UMpcC");
+            alloc_UMpcC(UMpcSum);
+            rddar.readArray(  "UMpcC", pm.UMpcC, UMpcSum);
         }
         break;
         }
@@ -1128,14 +1027,9 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
          {
             long int UMpcSum, xICuCSum;
             getLsUptsum( UMpcSum, xICuCSum );
-#ifdef IPMGEMPLUGIN
-                if(!pm.xICuC )
-                     pm.xICuC = new long int[xICuCSum];
-#else
-                pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
-#endif
-                rddar.readArray(  "xICuC", pm.xICuC, xICuCSum );
-                break;
+            alloc_xICuC(xICuCSum);
+            rddar.readArray(  "xICuC", pm.xICuC, xICuCSum );
+            break;
          }
       case f_B: rddar.readArray( "B", pm.B,  pm.N);
               break;

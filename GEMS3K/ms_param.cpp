@@ -142,11 +142,9 @@ void TProfil::outMultiTxt( const char *path, bool append  )
 }
 
 /// Reading structure MULTI (GEM IPM work structure) from binary file
-void TProfil::readMulti( GemDataStream& ff )
+void TProfil::readMulti( GemDataStream& ff, DATACH  *dCH )
 {
-    //DATACH  *dCH = TNode::na->pCSD();
-    DATACH  *dCH =  multi->node1->pCSD();
-    short arr[10];
+     short arr[10];
 
 	 ff.readArray( arr, 10 );
 	  pa.p.PC = arr[0];

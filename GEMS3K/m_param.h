@@ -120,7 +120,7 @@ public:
 
    void outMulti( GemDataStream& ff, gstring& path  );
    void outMultiTxt( const char *path, bool append=false  );
-   void readMulti( GemDataStream& ff );
+   void readMulti( GemDataStream& ff, DATACH  *dCH );
    void readMulti( const char* path,  DATACH  *dCH );
    /// Writes Multi to a json/key-value string
    /// \param brief_mode - Do not write data items that contain only default values
@@ -476,7 +476,7 @@ public:
    void outMulti( gstring& path, bool addMui, bool with_comments = true, bool brief_mode = false );
    void makeGEM2MTFiles(QWidget* par);
    void outMultiTxt( const char *path, bool append=false  );
-   void readMulti( GemDataStream& ff );
+   void readMulti( GemDataStream& ff, DATACH  *dCH );
    void readMulti( const char* path,  DATACH  *dCH );
 
    /// Writes Multi to a json/key-value string

@@ -40,12 +40,6 @@
 using namespace TNT;
 using namespace JAMA;
 
-//#ifndef IPMGEMPLUGIN
-//#include "service.h"
-//#include "stepwise.h"
-//#endif
-
-
 // #define GEMITERTRACE
 #define uDDtrace false
 
@@ -441,10 +435,10 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    }
  }
 
-//#ifndef IPMGEMPLUGIN 07/05/2020
+///#ifndef IPMGEMPLUGIN 07/05/2020
    pm.t_end = clock();
    pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
-//#endif
+///#endif
   // STEPWISE (4) Stop point after PhaseSelect()
    STEP_POINT("Before Refine()");
 
@@ -626,10 +620,10 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
 to_text_file( "MultiDumpLP.txt" );   // Debugging
 #endif
 
-//#ifndef IPMGEMPLUGIN 07/05/2020
+///#ifndef IPMGEMPLUGIN 07/05/2020
    pm.t_end = clock();
    pm.t_elap_sec = double(pm.t_end - pm.t_start)/double(CLOCKS_PER_SEC);
-//#endif
+///#endif
            pm.FI1 = 0;
            pm.FI1s = 0;
            for( i=0; i<pm.FI; i++ )

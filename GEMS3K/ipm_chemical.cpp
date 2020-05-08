@@ -30,11 +30,6 @@
 #include<iomanip>
 
 #include "m_param.h"
-//#ifndef IPMGEMPLUGIN
-//#include "service.h"
-//#include "stepwise.h"
-//#endif
-
 // #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -500,7 +495,7 @@ if( k < pm.FIs )
                     break;
                 case CON_WTFR:
 //Ask DK! 20/04/2002
-#ifndef IPMGEMPLUGIN
+//#ifndef IPMGEMPLUGIN
                     XU = pm.DUL[j]*XFU*MWXW /
          TProfil::pm->MolWeight(pm.N, pm.Awt, pm.A+j*pm.N );
                     XL = pm.DLL[j]*XFL*MWXW /

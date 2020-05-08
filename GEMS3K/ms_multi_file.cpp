@@ -465,17 +465,7 @@ void TMultiBase::to_file( GemDataStream& ff  )
    //static values
    char PAalp;
    char PSigm;
-
-
-#ifndef IPMGEMPLUGIN
-
-   PAalp = TSyst::sm->GetSY()->PAalp;
-   PSigm = TSyst::sm->GetSY()->PSigm;
-#else
-   PAalp = PAalp_;
-   PSigm = PSigm_;
-#endif
-
+   get_PAalp_PSigm( PAalp, PSigm);
 
    ff.writeArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.writeArray( &pm.N, 39);
@@ -758,14 +748,8 @@ void TMultiBase::from_file( GemDataStream& ff )
    ff.readArray( pm.epsW, 5);
    ff.readArray( pm.epsWg, 5);
 
-#ifndef IPMGEMPLUGIN
-//   syp->PAalp = PAalp;
-//   syp->PSigm = PSigm;
-#else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-#endif
-
    //realloc memory
    multi_realloc( PAalp, PSigm );
 
@@ -942,28 +926,15 @@ ff.readArray((double*)pm.D, MST*MST);
        long int PhLinSum, lPhcSum;
        getLsPhlsum( PhLinSum,lPhcSum );
 
- #ifdef IPMGEMPLUGIN
-       pm.IPx = new long int[LsIPxSum];
-       pm.PMc = new double[LsModSum];
-       pm.DMc = new double[LsMdcSum];
-       pm.MoiSN = new double[LsMsnSum];
-       pm.SitFr = new double[LsSitSum];
-       pm.DQFc = new double[DQFcSum];
-//       pm.rcpc = new double[rcpcSum];
-       pm.PhLin = new long int[PhLinSum][2];
-       pm.lPhc = new double[lPhcSum];
-
- #else
-       pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
-       pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
-       pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
-       pm.MoiSN = (double *)aObj[ o_wi_moisn].Alloc( LsMsnSum, 1, D_ );
-       pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
-       pm.DQFc = (double *)aObj[ o_wi_dqfc].Alloc( DQFcSum, 1, D_ );
-//       pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
-       pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
-       pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
- #endif
+       alloc_IPx(LsIPxSum);
+       alloc_PMc(LsModSum);
+       alloc_DMc(LsMdcSum);
+       alloc_MoiSN(LsMsnSum);
+       alloc_SitFr(LsSitSum);
+       alloc_DQFc(DQFcSum);
+       //       pm.rcpc = new double[rcpcSum];
+       alloc_PhLin(PhLinSum);
+       alloc_lPhc(lPhcSum);
 
        ff.readArray(pm.IPx, LsIPxSum);
        ff.readArray(pm.PMc, LsModSum);
@@ -991,22 +962,14 @@ ff.readArray((double*)pm.D, MST*MST);
        long int IsoPcSum, xSMdSum;
        getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
 
-#ifdef IPMGEMPLUGIN
-       pm.xSMd = new long int[xSMdSum];
-       pm.IsoPc = new double[IsoPcSum];
-       pm.IsoSc = new double[IsoScSum];
-       pm.IsoCt = new char[IsoCtSum];
-       pm.EImc = new double[EImcSum];
-       pm.mCDc = new double[mCDcSum];
-#else
-        pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
-        pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
-        pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
-        pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
-        pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
-        pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
-#endif
-        ff.readArray(  pm.xSMd, xSMdSum);
+       alloc_xSMd(xSMdSum);
+       alloc_IsoPc(IsoPcSum);
+       alloc_IsoSc(IsoScSum);
+       alloc_IsoCt(IsoCtSum);
+       alloc_EImc(EImcSum);
+       alloc_mCDc(mCDcSum);
+
+       ff.readArray(  pm.xSMd, xSMdSum);
         ff.readArray(  pm.IsoPc,  IsoPcSum);
         ff.readArray(  pm.IsoSc, IsoScSum);
         ff.readArray(  pm.IsoCt,  IsoCtSum);
@@ -1029,25 +992,15 @@ ff.readArray((double*)pm.D, MST*MST);
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
 
-#ifdef IPMGEMPLUGIN
-        pm.xSKrC = new long int[xSKrCSum];
-        pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
-        pm.feSArC = new double[ocPRkC_feSArC_Sum];
-        pm.rpConC = new double[rpConCSum];
-        pm.apConC = new double[apConCSum];
-        pm.AscpC = new double[AscpCSum];
-        pm.UMpcC = new double[UMpcSum];
-        pm.xICuC = new long int[xICuCSum];
-#else
-        pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
-        pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
-        pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
-        pm.rpConC = (double*)aObj[ o_wi_krpc].Alloc( rpConCSum, 1, D_ );
-        pm.apConC = (double*)aObj[ o_wi_apconc].Alloc( apConCSum, 1, D_ );
-        pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
-        pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
-        pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
-#endif
+        alloc_xSKrC(xSKrCSum);
+        alloc_ocPRkC(ocPRkC_feSArC_Sum);
+        alloc_feSArC(ocPRkC_feSArC_Sum);
+        alloc_rpConC(rpConCSum);
+        alloc_apConC(apConCSum);
+        alloc_AscpC(AscpCSum);
+        alloc_UMpcC(UMpcSum);
+        alloc_xICuC(xICuCSum);
+
         ff.readArray( pm.xSKrC, xSKrCSum);
         ff.readArray( &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
         ff.readArray( pm.feSArC, ocPRkC_feSArC_Sum);
@@ -1067,7 +1020,6 @@ ff.readArray((double*)pm.D, MST*MST);
      }
 
      // Part 4
-
     if( pm.Ls > 1 && pm.FIs > 0 )
     {
       ff.readArray(pm.Wb, pm.Ls);
@@ -1091,14 +1043,7 @@ void TMultiBase::to_text_file( const char *path, bool append )
     //static values
    char PAalp;
    char PSigm;
-
-#ifndef IPMGEMPLUGIN
-   PAalp = TSyst::sm->GetSY()->PAalp;
-   PSigm = TSyst::sm->GetSY()->PSigm;
-#else
-   PAalp = PAalp_;
-   PSigm = PSigm_;
-#endif
+   get_PAalp_PSigm( PAalp, PSigm);
 
    ios::openmode mod = ios::out;
     if( append )

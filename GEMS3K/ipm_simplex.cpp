@@ -39,6 +39,7 @@ enum volume_code {  // Codes of volume parameter ???
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
 };
 #endif
+
 /// Calculation of LPP-based automatic initial approximation of the primal vector x.
 /// Use the modified simplex method with two-side constraints on x
 //
@@ -996,16 +997,12 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
   double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
   double TK, P, PPa;
 
-#ifndef IPMGEMPLUGIN
-  ErrorIf( aNa == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
-  TNode* na = aNa;// for reading GEMIPM files task
-  TK =  pm.TC+C_to_K;
-  PPa = pm.P*bar_to_Pa;
-#else
   const TNode* na = node1;
+  if( aNa != nullptr )
+    na = aNa;   // for reading GEMIPM files task
+  ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
   TK =  na->cTK();
   PPa = na->cP();
-#endif
 
   DATACH  *dCH = na->pCSD();
   P = PPa/bar_to_Pa;
@@ -1097,12 +1094,12 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
        if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,5 );
      }
-#ifndef IPMGEMPLUGIN
-      if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
-             Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
- // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
- //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
-#else
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//      if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
+//             Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
+// // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
+// //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
+//#else
       if( pm.tpp_G )
              pm.tpp_G[j] = Go;
       if( pm.Guns )
@@ -1111,40 +1108,40 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
              Gg = 0.;
 
       Ge = 0.;
-#endif
+//#endif
       pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
       // Inside this function, pm.YOF[k] can be added!
 
-#ifndef IPMGEMPLUGIN
-     if( TMTparm::sm->GetTP()->PtvVm != S_ON )
-        pm.Vol[j] = 0.;
-     else
-#endif
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//     if( TMTparm::sm->GetTP()->PtvVm != S_ON )
+//        pm.Vol[j] = 0.;
+//     else
+//#endif
      switch( pm.PV )
      { // put molar volumes of components into A matrix or into the vector of molar volumes
        // to be checked!
        case VOL_CONSTR:
-#ifndef IPMGEMPLUGIN
-          if( TSyst::sm->GetSY()->Vuns )
-             Vv += TSyst::sm->GetSY()->Vuns[j];
-#else
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//          if( TSyst::sm->GetSY()->Vuns )
+//             Vv += TSyst::sm->GetSY()->Vuns[j];
+//#else
          if( pm.Vuns )
             Vv += pm.Vuns[j];
-#endif
+//#endif
          if( xVol >= 0 )
             pm.A[j*pm.N+xVol] = Vv;
 
        case VOL_CALC:
        case VOL_UNDEF:
-#ifndef IPMGEMPLUGIN
-         if( TSyst::sm->GetSY()->Vuns )
-            Vv += TSyst::sm->GetSY()->Vuns[j];
-#else
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//         if( TSyst::sm->GetSY()->Vuns )
+//            Vv += TSyst::sm->GetSY()->Vuns[j];
+//#else
          if( pm.tpp_Vm )
                pm.tpp_Vm[j] = Vv;
          if( pm.Vuns )
                Vv += pm.Vuns[j];
-#endif
+//#endif
            pm.Vol[j] = Vv  * 10.;
            break;
      }
@@ -1158,7 +1155,6 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 } // k
  pm.pTPD = 2;
 }
-
 
 
 //===========================================================================================
