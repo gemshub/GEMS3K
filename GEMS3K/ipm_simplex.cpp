@@ -56,7 +56,7 @@ void TMultiBase::AutoInitialApproximation( )
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
-        EPS = paTProfil->p.EPS; //  13.10.00  KC  DK
+        EPS = pa_p_ptr()->EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
@@ -542,7 +542,7 @@ double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& N
 //  to_text_file( "MultiDump1.txt" );   // Debugging
   }
 
-    if( paTProfil->p.DG > 1e-5 )
+    if( pa_p_ptr()->DG > 1e-5 )
     {
         ScFact = SystemTotalMolesIC();
         ScaleSystemToInternal( ScFact );
@@ -587,7 +587,7 @@ try{
   catch( TError& xcpt )
   {
 
-      if( paTProfil->p.DG > 1e-5 )
+      if( pa_p_ptr()->DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
@@ -599,7 +599,7 @@ try{
      Error( xcpt.title, xcpt.mess);
   }
 
-  if( paTProfil->p.DG > 1e-5 )
+  if( pa_p_ptr()->DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
@@ -623,7 +623,7 @@ double TMultiBase::SystemTotalMolesIC( )
 
   pm.TMols = mass_temp;
 
-  pm.SMols = paTProfil->p.DG;
+  pm.SMols = pa_p_ptr()->DG;
   ScFact = pm.SMols/pm.TMols;
 
   return ScFact;
@@ -853,7 +853,7 @@ void TMultiBase::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiIn
 
 void TMultiBase::multiConstInit_PN()
 {
-    pm.PZ = paTProfil->p.DW;  // in IPM
+    pm.PZ = pa_p_ptr()->DW;  // in IPM
     //  pm.FitVar[0] = 0.0640000030398369;
 }
 
@@ -862,13 +862,13 @@ void TMultiBase::multiConstInit_PN()
 /// Do it before calculations
 void TMultiBase::MultiConstInit() // from MultiRemake
 {
-  SPP_SETTING *pa = paTProfil;
+  const BASE_PARAM *pa_p = pa_p_ptr();
 
   pm.FI1 = 0;
   pm.FI1s = 0;
   pm.FI1a = 0;
   pm.ITF = 0; pm.ITG = 0;
-  pm.PD = pa->p.PD;
+  pm.PD =pa_p_ptr()->PD;
   pm.Ec = pm.K2 = pm.MK = 0;
   pm.W1 = 0;
   pm.is = 0;
@@ -878,7 +878,7 @@ void TMultiBase::MultiConstInit() // from MultiRemake
   pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
   pm.logXw = -16.;
   pm.logYFk = -9.;
-  pm.DXM = pa->p.DK;
+  pm.DXM = pa_p_ptr()->DK;
 
   //  ???????
   pm.FX = 7777777.;

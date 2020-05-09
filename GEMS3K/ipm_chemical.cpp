@@ -79,7 +79,7 @@ void TMultiBase::XmaxSAT_IPM2()
     { // Loop over DCs
         if( pm.X[j] <= min( pm.lowPosNum, pm.DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
-        rIEPS = paTProfil->p.IEPS;
+        rIEPS = pa_p_ptr()->IEPS;
         ja = j - ( pm.Ls - pm.Lads );
 
         switch( pm.DCC[j] )  // code of species class
@@ -166,7 +166,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL <<
 */                break;
 
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
-                rIEPS = paTProfil->p.IEPS;
+                rIEPS = pa_p_ptr()->IEPS;
                 XS0 = (max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
                 XS0 = XS0 * XVk * Mm / 1e6 * pm.Nfsp[k][ist]; // in moles
 
@@ -581,7 +581,7 @@ double TMultiBase::DC_PrimalChemicalPotentialUpdate( long int j, long int k )
     long int ja=0, ist, isp, jc=-1;
     double F0=0.0, Fold, dF0, Mk=0.0, Ez, psiA, psiB, CD0, CDb, ObS;
     double FactSur, FactSurT;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     Fold = pm.F0[j];
     if( pm.FIat > 0 && j < pm.Ls && j >= pm.Ls - pm.Lads )
@@ -707,7 +707,7 @@ case DC_SCM_SPECIES:
         }
         if( Mk > 1e-9 )  // Mk is carrier molar mass in g/mkmol
         {   // Correction for standard density, surface area and surface type fraction
-                FactSur = Mk * (pm.Aalp[k]) * pa->p.DNS*1.66054;
+                FactSur = Mk * (pm.Aalp[k]) * pa_p->DNS*1.66054;
         	    // FactSur is adsorbed mole amount at st. surf. density per mole of solid carrier
                 FactSurT = FactSur * (pm.Nfsp[k][ist]);
                 if( pm.SCM[k][ist] == SC_MXC || pm.SCM[k][ist] == SC_NNE ||
@@ -728,7 +728,7 @@ case DC_SCM_SPECIES:
     case DC_SUR_CARRIER: // Mk is carrier molar mass in g/mkmol
         if( !pm.Lads || !pm.FIat )   // Foolproof - to prevent crash DK 22.12.2009
             break;
-        FactSur = Mk * (pm.Aalp[k]) * pa->p.DNS*1.66054;
+        FactSur = Mk * (pm.Aalp[k]) * pa_p->DNS*1.66054;
         F0 -= FactSur / ( 1. + FactSur );
         F0 += FactSur;
         break;
@@ -1209,7 +1209,7 @@ void TMultiBase::KarpovsPhaseStabilityCriteria()
     bool KinConstr, fRestore;
     long int k, j, ii;
     double *EMU,*NMU, YF, Nu, dNuG, Wx, Yj, Fj, sumWx, NonLogTerm = 0.;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     EMU = pm.EMU;
     NMU = pm.NMU;
@@ -1282,8 +1282,8 @@ else  { // if phase is removed then a saved copy of activity coefficients is use
                 }
             }
       }
-            if( ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa->p.DKIN ) )
-                || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa->p.DKIN ) ) )
+            if( ( pm.DUL[j] < 1e6 && Yj >= ( pm.DUL[j] - pa_p->DKIN ) )
+                || ( pm.DLL[j] > 0 && Yj <= ( pm.DLL[j] + pa_p->DKIN ) ) )
                 KinConstr = true; // DC with the amount lying on the non-trivial kinetic constraint
             // calculating Karpov stability criteria for DCs
             Fj = KarpovCriterionDC( &dNuG, pm.logYFk, NonLogTerm,
@@ -1321,7 +1321,7 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
     double MjuPrimal, MjuDual, MjuDiff, Yj, YjDiff=0., YjCleaned;
     double CutoffDistortionMBR = 0.1 * pm.DHBM;
     bool KinConstr, Degenerated = false;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     PrimalChemicalPotentials( pm.F, pm.Y, pm.YF, pm.YFA );
     jb=0;
@@ -1359,8 +1359,8 @@ long int TMultiBase::SpeciationCleanup( double AmountCorrectionThreshold, double
 //               else
                if( Yj >= pm.DcMinM )
                {   // we check in the Ls set only, except metastability constraints
-                  if( ( pm.DUL[j] < 1e6 && Yj > pm.DUL[j] - pa->p.DKIN )
-                      || ( pm.DLL[j] > 0 && Yj < pm.DLL[j] + pa->p.DKIN ) )
+                  if( ( pm.DUL[j] < 1e6 && Yj > pm.DUL[j] - pa_p->DKIN )
+                      || ( pm.DLL[j] > 0 && Yj < pm.DLL[j] + pa_p->DKIN ) )
                       continue; // we don't clean xDC sitting too close to metast. constraints
                   MjuPrimal = pm.F[j];   // normalized
                   MjuDual = pm.Fx[j];    // /pmp->RT; Fixed DK 12.03.2012
@@ -1454,10 +1454,10 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     long int L1k, L1kZeroDCs, k, j, jb = 0, status,
         DCinserted = 0, DCremoved = 0, PHinserted = 0, PHremoved = 0;
     double MjuDiffCutoff = 1e-3; // InsValue;
-    SPP_SETTING *pa = paTProfil;
-    if( pa->p.GAS > 1e-6 )
-         MjuDiffCutoff = pa->p.GAS;
-    AmThExp = (double)abs( pa->p.PRD );
+    const BASE_PARAM *pa_p = pa_p_ptr();
+    if( pa_p->GAS > 1e-6 )
+         MjuDiffCutoff = pa_p->GAS;
+    AmThExp = (double)abs( pa_p->PRD );
     if( AmThExp && AmThExp < 4.)
     {
         AmThExp = 4.;
@@ -1533,7 +1533,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
 
        PhaseAmount = pm.XF[k];
        logSI = pm.Falp[k];
-       if( logSI > -pa->p.DFM && logSI < pa->p.DF && PhaseAmount < pm.DSM )
+       if( logSI > -pa_p->DFM && logSI < pa_p->DF && PhaseAmount < pm.DSM )
        {  // Phase is stable and present in zero or less than DS amount - zeroing off
           bool RemFlagDC = false;
           for(j=jb; j<jb+L1k; j++)
@@ -1548,7 +1548,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
              PHremoved++;
           goto NextPhase;
        }
-       if( logSI >= pa->p.DF )  // 2 - INSERTION CASE
+       if( logSI >= pa_p->DF )  // 2 - INSERTION CASE
        {  // this phase is stable or over-stable
            if( PhaseAmount < pm.DSM ) // pm.DFYsM )
            {  // phase appears to be lost - insertion of all components of the phase
@@ -1563,7 +1563,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
            } // otherwise (if present), the phase is cleaned up
            goto NextPhase;
        }
-       if( logSI <= -pa->p.DFM )  // 3 - ELIMINATION CASE
+       if( logSI <= -pa_p->DFM )  // 3 - ELIMINATION CASE
        {
 //         bool Incomplete = false;
           if( PhaseAmount >= pm.DcMinM )
@@ -1596,7 +1596,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
    // First loop over phases finished
 
    // Speciation Cleanup mode (PRD: amount threshold exponent)
-   if( CleanupStatus && pa->p.PRD ) // && MassBalanceViolation == false ) temporarily disabled DK 13.04.2012
+   if( CleanupStatus && pa_p->PRD ) // && MassBalanceViolation == false ) temporarily disabled DK 13.04.2012
    {  //  not done if insertion or elimination of some phases requires another IPM loop
      jb = 0;
      for(k=0;k<pm.FI;k++)  // Speciation Cleanup loop on phases
@@ -1638,7 +1638,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           goto NextPhaseC;       // Added by DK 27.08.2012
        PhaseAmount = pm.XF[k];                           // bugfix 04.04.2011 DK
        logSI = pm.Falp[k];  // phase stability criterion
-       if( !KinConstrPh && ( logSI >= pa->p.DF || logSI <= -pa->p.DFM ) // DK 13.04.2012
+       if( !KinConstrPh && ( logSI >= pa_p->DF || logSI <= -pa_p->DFM ) // DK 13.04.2012
            && !(( pm.PHC[k] == PH_SORPTION || pm.PHC[k] == PH_POLYEL) && PhaseAmount < pm.DSM ))
            goto NextPhaseC;  // Already done in previous part
 //       PhaseAmount = pm.XF[k];                         // bugfix 04.04.2011 DK
@@ -1654,8 +1654,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                  continue; // metastability-controlled DCs were already fixed
             if( Yj >= pm.DcMinM )
             {  // we check here in the Ls set only, except metastability constraints
-               if( ( pm.DUL[j] < 1e6 && Yj > pm.DUL[j] - pa->p.DKIN )
-                  || ( pm.DLL[j] > 0 && Yj < pm.DLL[j] + pa->p.DKIN ) )
+               if( ( pm.DUL[j] < 1e6 && Yj > pm.DUL[j] - pa_p->DKIN )
+                  || ( pm.DLL[j] > 0 && Yj < pm.DLL[j] + pa_p->DKIN ) )
                   continue; // we don't clean xDC sitting close to metast. constraints
                MjuPrimal = pm.F[j];   // normalized
                MjuDual = pm.Fx[j];    // /pmp->RT; Fixed DK 12.03.2012
@@ -1667,7 +1667,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
                   {  // Pure phase
                       if( logSI <= -0.4343*MjuDiffCutoff && YjCleaned < AmountThreshold )
                           YjCleaned = 0.;
-                      if( logSI >= pa->p.DF && YjCleaned < pm.DFYsM )
+                      if( logSI >= pa_p->DF && YjCleaned < pm.DFYsM )
                       {   // over-stable phase in too small amount - insertion and next IPM loop (experimental)
                           YjCleaned = pm.DFYsM;
                           kfr = k;
@@ -1891,7 +1891,7 @@ long int TMultiBase::PhaseSelect( long int &kfr, long int &kur, long int RaiseSt
 {
     long int k, j, jb, kf, ku;
     double F1, F2, *F0; // , sfactor;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
     int rLoop = -1;
 //    sfactor = calcSfactor();
     if( !pm.K2 )
@@ -1905,8 +1905,8 @@ long int TMultiBase::PhaseSelect( long int &kfr, long int &kur, long int RaiseSt
 
     (pm.K2)++;
     kf = -1; ku = -1;  // Index for phase diagnostics
-    F1 = pa->p.DF;  // Fixed 29.10.2007  DK
-    F2 = -pa->p.DFM;  // Meaning of DFM changed 02.11.2007
+    F1 = pa_p->DF;  // Fixed 29.10.2007  DK
+    F2 = -pa_p->DFM;  // Meaning of DFM changed 02.11.2007
 
     for(k=0;k<pm.FI;k++)
     {
@@ -1929,7 +1929,7 @@ kur = ku;
         return 1L;
     }
 
-    if( (F2 < -pa->p.DFM ) && ( ku >= 0 ) )
+    if( (F2 < -pa_p->DFM ) && ( ku >= 0 ) )
     {
         if( pm.K2 > 4 ) // Three Selekt2() loops have already been done!
                 return -1L;   // Persistent presence of unstable phase(s) - bad system!
@@ -1943,7 +1943,7 @@ kur = ku;
             DC_ZeroOff( jb, jb+pm.L1[ku], ku ); // Zeroing the phase off
             pm.FI1--;
             // find a new phase to exclude, if any exists
-            F2= -pa->p.DFM;
+            F2= -pa_p->DFM;
             ku = -1;
             for( k=0; k<pm.FI; k++ )
                 if( F0[k] < F2 && pm.YF[k] >= pm.DSM )
@@ -1952,11 +1952,11 @@ kur = ku;
                     ku=k;
                 }
         }
-        while( ( F2 <= -pa->p.DFM ) && ( ku >= 0 ) );
+        while( ( F2 <= -pa_p->DFM ) && ( ku >= 0 ) );
     } //if ku
 
     // Inserting problematic phases
-    if( F1 > pa->p.DF && kf >= 0 )
+    if( F1 > pa_p->DF && kf >= 0 )
     {
         if( pm.K2 > 4 )
            return -1L;   // Persistent absence of stable phase(s) - bad system!
@@ -1985,7 +1985,7 @@ kur = ku;
                     kf=k;
                 }
         }
-        while( F1 > pa->p.DF && kf >= 0 );
+        while( F1 > pa_p->DF && kf >= 0 );
         // end of insertion cycle
     } // if kf changed SD 03/02/2009
 

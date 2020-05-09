@@ -32,6 +32,7 @@
 #define MS_MULTI_BASE_H
 
 #include <iostream>
+#include <memory>
 #include <ctime>
 #include "m_const.h"
 #include "datach.h"
@@ -473,6 +474,7 @@ enum IndexationSATX {
     XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
+struct BASE_PARAM;
 struct SPP_SETTING;
 class TProfil;
 class TNode;
@@ -494,6 +496,8 @@ public:
     /// This allocation is used only in standalone GEMS3K
     explicit TMultiBase( const TNode* na_ = nullptr )
     {
+        ///pa_standalone.reset( new BASE_PARAM() );
+
         pmp = &pm;
         node1 = na_; // parent
         sizeN = 0;
@@ -535,6 +539,12 @@ public:
 
     MULTI* GetPM()
     { return &pm; }
+
+    virtual BASE_PARAM* pa_p_ptr() const;
+//    {
+//        return paTProfil1->p;
+//        // return pa_standalone.get();
+//    }
 
     void setPa( TProfil *prof);  ///?
     virtual long int testMulti( );
@@ -587,7 +597,9 @@ protected:
 
     MULTI pm;
     MULTI *pmp;
-    SPP_SETTING *paTProfil;
+    std::shared_ptr<BASE_PARAM> pa_standalone;
+
+    SPP_SETTING *paTProfil1;
 
     // Internal arrays for the performance optimization  (since version 2.0.0)
 

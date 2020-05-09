@@ -297,7 +297,7 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
 //    if( pm.Ls < 2 || !pm.FIs )  Temporary disabled  09.03.2010 DK
 //        return;
@@ -319,7 +319,7 @@ void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
         pm.FVOL[k] = 0.0;
         //   Dsur = 0.0;
 
-        if( XF[k] > pm.DSM && !( pm.PHC[k] == PH_SORPTION && XFA[k] <= pa->p.ScMin ))
+        if( XF[k] > pm.DSM && !( pm.PHC[k] == PH_SORPTION && XFA[k] <= pa_p->ScMin ))
            phase_bfc( k, j );
 
         if( k >= pm.FIs || pm.L1[k] == 1 )
@@ -467,11 +467,11 @@ NEXT_PHASE:
             for( ii=0; ii<pm.NR; ii++ )
             {
                if( pm.LO  )
-               { if( pm.IC_m[ii] >= pa->p.DB )
+               { if( pm.IC_m[ii] >= pa_p->DB )
                     pm.IC_lm[ii] = ln_to_lg*log( pm.IC_m[ii] );
                 else
                     pm.IC_lm[ii] = 0;
-                if( pm.FWGT[k] >= pa->p.DB )
+                if( pm.FWGT[k] >= pa_p->DB )
                     pm.IC_wm[ii] *= pm.Awt[ii]*1000./pm.FWGT[k];
                 else
                     pm.IC_wm[ii] = 0;
@@ -972,13 +972,13 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
         long int i, ii, j, ja, ist=0, iss, dent, Cj, iSite[MST];
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     //cout << "Point 1 before " << "pm.lnGam[0] " << setprecision(15) << pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
 
     if( pm.XF[k] <= pm.DSM ) // No sorbent retained by the IPM - phase killed
         return status;
-    if( pm.XFA[k] <=  pa->p.ScMin )  // elimination of sorption phase
+    if( pm.XFA[k] <=  pa_p->ScMin )  // elimination of sorption phase
         return status;  // No surface species left
 
     for(i=0; i<MST; i++)
@@ -1020,7 +1020,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
             continue;  // This surface DC has been killed by IPM
 //        OSAT = pm.lnGmo[j]; // added 6.07.01 by KDA
         ja = j - ( pm.Ls - pm.Lads );
-        rIEPS =  pa->p.IEPS;   // default 1e-3 (for old SAT - 1e-9)
+        rIEPS =  pa_p->IEPS;   // default 1e-3 (for old SAT - 1e-9)
 //        dent = 1;  // default - monodentate
         switch( pm.DCC[j] )  // code of species class
         {
@@ -1074,14 +1074,14 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                       pm.Aalp[k]/1.66054;  // per nm2
                 XS0 = (fabs(pm.MASDJ[ja][PI_DEN])/pm.Aalp[k]/1.66054);
                         // max. density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;   // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;   // relative IEPS
                 if( XSkC < 0.0 )
                     XSkC = 0.0;
                 if( XSkC >= XS0 )               // Setting limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( (pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                if( (pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1107,8 +1107,8 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6     // xj
                      /pm.Aalp[k]/1.66054; // Density per nm2 on site type iss
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/static_cast<double>(dent) )
                      xj = xj0/static_cast<double>(dent) - rIEPS;  // upper limit
 //                ISAT = 0.0;
@@ -1129,8 +1129,8 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6  //  xj
                      /pm.Aalp[k]/1.66054; // Current density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
                      xj = xj0/dent - rIEPS;  // upper limit
                 q2 = xj0 - xj*dent;  // Computing differences in QCA gamma
@@ -1156,14 +1156,14 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                        / pm.Aalp[k]/1.66054;  // per nm2
                 XS0 = (pm.MASDJ[ja][PI_DEN]/pm.Aalp[k]/1.66054);
                          // max.dens.per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;  // relative IEPS
                 if( XSkC < 0.0 )
                     XSkC = 0.0;
                 if( XSkC >= XS0 )  // Limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if(( pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                if(( pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1192,8 +1192,8 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6
                      /pm.Aalp[k]/1.66054; // Current density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
                      xj = xj0/dent - rIEPS;  // upper limit
                 q2 = xj0 - xj*dent;  // Computing differences in gamma
@@ -1224,8 +1224,8 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6
                      /pm.Aalp[k]/1.66054; // Current density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
                      xj = xj0/dent - rIEPS;  // upper limit
                 ISAT = 0.0;
@@ -1259,8 +1259,8 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                 else xjn = pm.X[iSite[ist]]; // neutral site does not compete!
                 XS0 = pm.MASDT[k][ist] * XVk * Mm / 1e6
                       * pm.Nfsp[k][ist]; // expected total in moles
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;  // relative IEPS
                 XSkC = XSk - xjn - xj; // occupied by the competing species;
                                      // this sorbate cannot compete to itself
                 if( XSkC < 0.0 )
@@ -1276,7 +1276,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                 {
                    q1 = xj0 - xj;
                    q2 = rIEPS * XS0;
-                   if( (pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                   if( (pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                    {
                       if( q1 > q2 )
                         q2 = q1;
@@ -1295,8 +1295,8 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                 // rIEPS = pa->p.IEPS * 2;
                 xj0 = fabs( pm.MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
                       * pm.Nfsp[k][ist]; // in moles
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0;  // relative IEPS
                 if(xj >= xj0)
                      xj = xj0 - rIEPS;  // upper limit
                 if( xj * 2.0 <= xj0 )   // Linear adsorption - to improve !
@@ -1305,7 +1305,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                 {
                     q1 = xj0 - xj;      // limits: rIEPS to 0.5*xj0
                     q2 = xj0 * rIEPS;
-                    if( pa->p.PC == 3 && pm.W1 )
+                    if( pa_p->PC == 3 && pm.W1 )
                        ISAT = log( xj ) - log( q1 );
                     else {
                        if( q1 > q2 )
@@ -1325,16 +1325,16 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                 XSkC = XSs / XVk / Mm * 1e6  // total non-solvent surf.species
                    /pm.Nfsp[k][ist]/ pm.Aalp[k]/1.66054;  // per nm2
                 XS0 = (max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
-                SATst = pa->p.DNS*1.66054*pm.Aalp[k]/XS0;
+                SATst = pa_p->DNS*1.66054*pm.Aalp[k]/XS0;
                 XS0 = XS0 / pm.Aalp[k]/1.66054;
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;  // relative IEPS
                 if( XSkC < 0.0 )
                     XSkC = 0.0;
                 if( XSkC >= XS0 )  // Limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( (pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                if( (pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )

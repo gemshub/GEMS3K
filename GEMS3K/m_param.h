@@ -40,7 +40,7 @@ extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
 #include "ms_multi.h"
 #include "verror.h"
 
-struct BASE_PARAM /// Flags and thresholds for numeric modules
+struct BASE_PARAM_nnn /// Flags and thresholds for numeric modules
 {
    long int
            PC,   ///< Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }

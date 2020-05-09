@@ -64,9 +64,9 @@ void TMultiBase::SetSmoothingFactor( long int mode )
 
     ir = pm.IT;
     irf = static_cast<double>(ir);
-    ag = paTProfil->p.AG; // pm.FitVar[4];
-    dg = paTProfil->p.DGC;
-    iim = paTProfil->p.IIM;
+    ag = pa_p_ptr()->AG; // pm.FitVar[4];
+    dg = pa_p_ptr()->DGC;
+    iim = pa_p_ptr()->IIM;
 
     if( dg > -0.0001 && ag >= 0.0001 ) // Smoothing used in the IPM-2 algorithm
     {					// with some improvements
@@ -284,7 +284,7 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
     char *sMod;
     long int statusGam=0, statusGC=0, statusSACT=0, SmMode = 0;
     double LnGam, pmpXFk;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 //    std::cout << "CalculateActivityCoefficients - 0 " << LinkMode << std::endl;
     // calculating concentrations of species in multi-component phases
 
@@ -451,7 +451,7 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
         switch( pm.PHC[k] )
         {  // calculating activity coefficients using built-in functions
           case PH_AQUEL:   // DH III variant consistent with HKF
-             if( pmpXFk > pm.DSM && pm.X[pm.LO] > pm.XwMinM && pm.IC > pa->p.ICmin )
+             if( pmpXFk > pm.DSM && pm.X[pm.LO] > pm.XwMinM && pm.IC > pa_p->ICmin )
              {
                 switch( sMod[SPHAS_TYP] )
                 {
@@ -467,7 +467,7 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
              goto END_LOOP;
              break;
           case PH_GASMIX: case PH_PLASMA: case PH_FLUID:
-             if( pmpXFk > pm.DSM && pm.XF[k] > pa->p.PhMin )
+             if( pmpXFk > pm.DSM && pm.XF[k] >pa_p->PhMin )
              {
                  if( sMod[SPHAS_TYP] == SM_CGFLUID )  // CG EoS fluid model
                      SolModActCoeff( k, sMod[SPHAS_TYP] );

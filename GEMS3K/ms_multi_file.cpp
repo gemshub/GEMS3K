@@ -142,7 +142,13 @@ void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
 
 void TMultiBase::setPa( TProfil *prof)
 {
-    paTProfil = &prof->pa;
+    paTProfil1 = &prof->pa;
+}
+
+BASE_PARAM* TMultiBase::pa_p_ptr() const
+{
+    return &paTProfil1->p;
+    // return pa_standalone.get();
 }
 
 /// Output to "ipmlog.txt" file Warnings
@@ -150,7 +156,7 @@ long int TMultiBase::testMulti()
 {
   if( pm.MK || pm.PZ )
   {
-    if( paTProfil->p.PSM == 2 )
+    if( pa_p_ptr()->PSM == 2 )
     {
       fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
       f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
@@ -1058,8 +1064,8 @@ void TMultiBase::to_text_file( const char *path, bool append )
 
   TPrintArrays  prar(0,0,ff);
 
-  prar.writeArray( "Short_PARAM",  &paTProfil->p.PC, 10L );
-  prar.writeArray( "Double_PARAM",  &paTProfil->p.DG, 28L );
+  prar.writeArray( "Short_PARAM",  &pa_p_ptr()->PC, 10L );
+  prar.writeArray( "Double_PARAM",  &pa_p_ptr()->DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 39L );
   prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
   prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );

@@ -36,7 +36,7 @@ void TMultiBase::get_PAalp_PSigm( char& PAalp, char& PSigm)
 void TMultiBase::copyMULTI( const TMultiBase& otherMulti )
 {
     MULTI* otherPM = otherMulti.pmp;
-    *paTProfil = *otherMulti.paTProfil;
+    pa_standalone = otherMulti.pa_standalone;  //???? copy or share?
     //static values
     copyValues(pm.stkey, otherPM->stkey, sizeof(char)*(EQ_RKLEN+5));
     copyValues( &pm.N, &otherPM->N, 39);

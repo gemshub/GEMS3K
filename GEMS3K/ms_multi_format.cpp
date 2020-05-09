@@ -162,7 +162,7 @@ outField MULTI_dynamic_fields[80] =  {
 void TMultiBase::to_text_file_gemipm( iostream& ff, bool addMui,
 		bool with_comments, bool brief_mode )
 {
-  SPP_SETTING *pa = paTProfil;
+  const BASE_PARAM *pa_p = pa_p_ptr();
    bool _comment = with_comments;
    char PAalp;
    char PSigm;
@@ -229,8 +229,8 @@ if( _comment )
  if( _comment )
      ff << "\n## (1) Flags that affect memory allocation";
 
- if(!brief_mode || pa->p.PE != pa_.p.PE )
-   prar1.writeField(f_pa_PE, pa->p.PE, _comment, false  );
+ if(!brief_mode || pa_p->PE != pa_.p.PE )
+   prar1.writeField(f_pa_PE, pa_p->PE, _comment, false  );
 
  //   ff << "# Do not know if this stuff is really necessary" << endl;
  //   ff << "# 'GWAT'         55.50837344" << endl;
@@ -271,95 +271,95 @@ if( _comment )
    {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
       ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
    }
-   if( !brief_mode ||pa->p.DB != pa_.p.DB )
-      prar.writeField(f_pa_DB, pa->p.DB, _comment, false  );
-   if( !brief_mode ||pa->p.DHB != pa_.p.DHB )
-      prar.writeField(f_pa_DHB, pa->p.DHB, _comment, false  );
-   if( !brief_mode ||pa->p.EPS != pa_.p.EPS )
-       prar.writeField(f_pa_EPS, pa->p.EPS, _comment, false  );
-   if( !brief_mode ||pa->p.DK != pa_.p.DK )
-       prar.writeField(f_pa_DK, pa->p.DK, _comment, false  );
-   if( !brief_mode ||pa->p.DS != pa_.p.DS )
-       prar.writeField(f_pa_DS,  pa->p.DS, _comment, false  );
-   if( !brief_mode ||pa->p.DF != pa_.p.DF )
-       prar.writeField(f_pa_DF, pa->p.DF, _comment, false  );
-   if( !brief_mode ||pa->p.DFM != pa_.p.DFM )
-       prar.writeField(f_pa_DFM,  pa->p.DFM, _comment, false  );
-   if(!brief_mode || pa->p.DP != pa_.p.DP )
-       prar.writeField(f_pa_DP,  pa->p.DP, _comment, false  );
-   if(!brief_mode || pa->p.IIM != pa_.p.IIM )
-       prar.writeField(f_pa_IIM,  pa->p.IIM, _comment, false  );
-   if(!brief_mode || pa->p.PD != pa_.p.PD )
-       prar.writeField(f_pa_PD,  pa->p.PD, _comment, false  );
-   if(!brief_mode || pa->p.PRD != pa_.p.PRD )
-       prar.writeField(f_pa_PRD,  pa->p.PRD, _comment, false  );
-   if(!brief_mode || pa->p.AG != pa_.p.AG )
-       prar.writeField(f_pa_AG,  pa->p.AG, _comment, false  );
-   if(!brief_mode || pa->p.DGC != pa_.p.DGC )
-       prar.writeField(f_pa_DGC,  pa->p.DGC, _comment, false  );
-   if(!brief_mode || pa->p.PSM != pa_.p.PSM )
-       prar.writeField(f_pa_PSM,  pa->p.PSM, _comment, false  );
-   if(!brief_mode || pa->p.GAR != pa_.p.GAR )
-       prar.writeField(f_pa_GAR,  pa->p.GAR, _comment, false  );
-   if(!brief_mode || pa->p.GAH != pa_.p.GAH )
-       prar.writeField(f_pa_GAH,  pa->p.GAH, _comment, false  );
+   if( !brief_mode ||pa_p->DB != pa_.p.DB )
+      prar.writeField(f_pa_DB, pa_p->DB, _comment, false  );
+   if( !brief_mode ||pa_p->DHB != pa_.p.DHB )
+      prar.writeField(f_pa_DHB, pa_p->DHB, _comment, false  );
+   if( !brief_mode ||pa_p->EPS != pa_.p.EPS )
+       prar.writeField(f_pa_EPS, pa_p->EPS, _comment, false  );
+   if( !brief_mode ||pa_p->DK != pa_.p.DK )
+       prar.writeField(f_pa_DK, pa_p->DK, _comment, false  );
+   if( !brief_mode ||pa_p->DS != pa_.p.DS )
+       prar.writeField(f_pa_DS,  pa_p->DS, _comment, false  );
+   if( !brief_mode ||pa_p->DF != pa_.p.DF )
+       prar.writeField(f_pa_DF, pa_p->DF, _comment, false  );
+   if( !brief_mode ||pa_p->DFM != pa_.p.DFM )
+       prar.writeField(f_pa_DFM,  pa_p->DFM, _comment, false  );
+   if(!brief_mode || pa_p->DP != pa_.p.DP )
+       prar.writeField(f_pa_DP,  pa_p->DP, _comment, false  );
+   if(!brief_mode || pa_p->IIM != pa_.p.IIM )
+       prar.writeField(f_pa_IIM,  pa_p->IIM, _comment, false  );
+   if(!brief_mode || pa_p->PD != pa_.p.PD )
+       prar.writeField(f_pa_PD,  pa_p->PD, _comment, false  );
+   if(!brief_mode || pa_p->PRD != pa_.p.PRD )
+       prar.writeField(f_pa_PRD,  pa_p->PRD, _comment, false  );
+   if(!brief_mode || pa_p->AG != pa_.p.AG )
+       prar.writeField(f_pa_AG,  pa_p->AG, _comment, false  );
+   if(!brief_mode || pa_p->DGC != pa_.p.DGC )
+       prar.writeField(f_pa_DGC,  pa_p->DGC, _comment, false  );
+   if(!brief_mode || pa_p->PSM != pa_.p.PSM )
+       prar.writeField(f_pa_PSM,  pa_p->PSM, _comment, false  );
+   if(!brief_mode || pa_p->GAR != pa_.p.GAR )
+       prar.writeField(f_pa_GAR,  pa_p->GAR, _comment, false  );
+   if(!brief_mode || pa_p->GAH != pa_.p.GAH )
+       prar.writeField(f_pa_GAH,  pa_p->GAH, _comment, false  );
 
    if(!brief_mode)
     if( _comment )
      {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
      }
 
-   if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
-       prar.writeField(f_pa_XwMin,  pa->p.XwMin, _comment, false  );
-   if(!brief_mode || pa->p.ScMin != pa_.p.ScMin )
-       prar.writeField(f_pa_ScMin,  pa->p.ScMin, _comment, false  );
-   if(!brief_mode || pa->p.DcMin != pa_.p.DcMin )
-       prar.writeField(f_pa_DcMin,  pa->p.DcMin, _comment, false  );
-   if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
-       prar.writeField(f_pa_PhMin,  pa->p.PhMin, _comment, false  );
-   if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
-       prar.writeField(f_pa_ICmin,  pa->p.ICmin, _comment, false  );
-   if(!brief_mode || pa->p.PC != pa_.p.PC )
-       prar.writeField(f_pa_PC,  pa->p.PC, _comment, false  );
+   if(!brief_mode || pa_p->XwMin != pa_.p.XwMin )
+       prar.writeField(f_pa_XwMin,  pa_p->XwMin, _comment, false  );
+   if(!brief_mode || pa_p->ScMin != pa_.p.ScMin )
+       prar.writeField(f_pa_ScMin,  pa_p->ScMin, _comment, false  );
+   if(!brief_mode || pa_p->DcMin != pa_.p.DcMin )
+       prar.writeField(f_pa_DcMin,  pa_p->DcMin, _comment, false  );
+   if(!brief_mode || pa_p->PhMin != pa_.p.PhMin )
+       prar.writeField(f_pa_PhMin,  pa_p->PhMin, _comment, false  );
+   if(!brief_mode || pa_p->ICmin != pa_.p.ICmin )
+       prar.writeField(f_pa_ICmin,  pa_p->ICmin, _comment, false  );
+   if(!brief_mode || pa_p->PC != pa_.p.PC )
+       prar.writeField(f_pa_PC,  pa_p->PC, _comment, false  );
 
    if( _comment )
       ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
 
-   if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
-       prar.writeField(f_pa_DFYw,  pa->p.DFYw, _comment, false  );
-   if(!brief_mode || pa->p.DFYaq != pa_.p.DFYaq )
-       prar.writeField(f_pa_DFYaq,  pa->p.DFYaq, _comment, false  );
-   if(!brief_mode || pa->p.DFYid != pa_.p.DFYid )
-       prar.writeField(f_pa_DFYid,  pa->p.DFYid, _comment, false  );
-   if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
-       prar.writeField(f_pa_DFYr,  pa->p.DFYr, _comment, false  );
-   if(!brief_mode || pa->p.DFYh != pa_.p.DFYh )
-       prar.writeField(f_pa_DFYh,  pa->p.DFYh, _comment, false  );
-   if(!brief_mode || pa->p.DFYc != pa_.p.DFYc )
-       prar.writeField(f_pa_DFYc,  pa->p.DFYc, _comment, false  );
-   if(!brief_mode || pa->p.DFYs != pa_.p.DFYs )
-       prar.writeField(f_pa_DFYs,  pa->p.DFYs, _comment, false  );
+   if(!brief_mode || pa_p->DFYw != pa_.p.DFYw )
+       prar.writeField(f_pa_DFYw,  pa_p->DFYw, _comment, false  );
+   if(!brief_mode || pa_p->DFYaq != pa_.p.DFYaq )
+       prar.writeField(f_pa_DFYaq,  pa_p->DFYaq, _comment, false  );
+   if(!brief_mode || pa_p->DFYid != pa_.p.DFYid )
+       prar.writeField(f_pa_DFYid,  pa_p->DFYid, _comment, false  );
+   if(!brief_mode || pa_p->DFYr != pa_.p.DFYr )
+       prar.writeField(f_pa_DFYr,  pa_p->DFYr, _comment, false  );
+   if(!brief_mode || pa_p->DFYh != pa_.p.DFYh )
+       prar.writeField(f_pa_DFYh,  pa_p->DFYh, _comment, false  );
+   if(!brief_mode || pa_p->DFYc != pa_.p.DFYc )
+       prar.writeField(f_pa_DFYc,  pa_p->DFYc, _comment, false  );
+   if(!brief_mode || pa_p->DFYs != pa_.p.DFYs )
+       prar.writeField(f_pa_DFYs,  pa_p->DFYs, _comment, false  );
 
    if( _comment )
      ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm ";
 
-   if(!brief_mode || pa->p.DW != pa_.p.DW )
-       prar.writeField(f_pa_DW,  pa->p.DW, _comment, false  );
-   if(!brief_mode || pa->p.DT != pa_.p.DT )
-       prar.writeField(f_pa_DT,  pa->p.DT, _comment, false  );
-   if(!brief_mode || pa->p.GAS != pa_.p.GAS )
-       prar.writeField(f_pa_GAS,  pa->p.GAS, _comment, false  );
-   if(!brief_mode || pa->p.DG != pa_.p.DG )
-       prar.writeField(f_pa_DG,  pa->p.DG, _comment, false  );
-   if(!brief_mode || pa->p.DNS != pa_.p.DNS )
-       prar.writeField(f_pa_DNS, pa->p.DNS, _comment, false  );
-   if(!brief_mode || pa->p.IEPS != pa_.p.IEPS )
-       prar.writeField(f_pa_IEPS, pa->p.IEPS, _comment, false  );
+   if(!brief_mode || pa_p->DW != pa_.p.DW )
+       prar.writeField(f_pa_DW,  pa_p->DW, _comment, false  );
+   if(!brief_mode || pa_p->DT != pa_.p.DT )
+       prar.writeField(f_pa_DT,  pa_p->DT, _comment, false  );
+   if(!brief_mode || pa_p->GAS != pa_.p.GAS )
+       prar.writeField(f_pa_GAS,  pa_p->GAS, _comment, false  );
+   if(!brief_mode || pa_p->DG != pa_.p.DG )
+       prar.writeField(f_pa_DG,  pa_p->DG, _comment, false  );
+   if(!brief_mode || pa_p->DNS != pa_.p.DNS )
+       prar.writeField(f_pa_DNS, pa_p->DNS, _comment, false  );
+   if(!brief_mode || pa_p->IEPS != pa_.p.IEPS )
+       prar.writeField(f_pa_IEPS, pa_p->IEPS, _comment, false  );
   prar.writeField(f_pKin, pm.PLIM, _comment, brief_mode  );
-  if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
-       prar.writeField(f_pa_DKIN, pa->p.DKIN, _comment, false  );
-  if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
-       prar.writeField(f_pa_PLLG, pa->p.PLLG, _comment, false  );
+  if(!brief_mode || pa_p->DKIN != pa_.p.DKIN )
+       prar.writeField(f_pa_DKIN, pa_p->DKIN, _comment, false  );
+  if(!brief_mode || pa_p->PLLG != pa_.p.PLLG )
+       prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
   if(!brief_mode || pm.tMin != G_TP_ )
        prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -601,7 +601,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 /// Reading structure MULTI (GEM IPM work structure)
 void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
 {
-  SPP_SETTING *pa = paTProfil;
+  BASE_PARAM *pa_p = pa_p_ptr();
   long int ii, nfild, len;
 
    //static values
@@ -634,7 +634,7 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
   }
 
   // setup default constants
-  pa->p.PE =  pm.E = 1;
+  pa_p_ptr()->PE =  pm.E = 1;
   pm.PV = 0;
   pm.PSOL = 0;
   PAalp = '+';
@@ -675,8 +675,8 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
    {
      switch( nfild )
      {
-       case f_pa_PE: rdar.readArray("pa_PE" , &pa->p.PE, 1);
-                 pm.E = pa->p.PE;
+       case f_pa_PE: rdar.readArray("pa_PE" , &pa_p->PE, 1);
+                 pm.E = pa_p->PE;
               break;
        case f_PV: rdar.readArray("PV" , &pm.PV, 1);
               break;
@@ -1100,79 +1100,79 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
                 Error( "Error", "Array DCC3 not used in this problem");
                rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
                break;
-      case f_pa_DB: rddar.readArray( "pa_DB" , &pa->p.DB, 1);
+      case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
                break;
-      case f_pa_DHB: rddar.readArray("pa_DHB", &pa->p.DHB, 1);
+      case f_pa_DHB: rddar.readArray("pa_DHB", &pa_p->DHB, 1);
                break;
-      case f_pa_EPS: rddar.readArray("pa_EPS" , &pa->p.EPS, 1);
+      case f_pa_EPS: rddar.readArray("pa_EPS" , &pa_p->EPS, 1);
                break;
-      case f_pa_DK: rddar.readArray("pa_DK" , &pa->p.DK, 1);
+      case f_pa_DK: rddar.readArray("pa_DK" , &pa_p->DK, 1);
                break;
-      case f_pa_DF: rddar.readArray("pa_DF" , &pa->p.DF, 1);
+      case f_pa_DF: rddar.readArray("pa_DF" , &pa_p->DF, 1);
                break;
-      case f_pa_DP: rddar.readArray("pa_DP", &pa->p.DP, 1);
+      case f_pa_DP: rddar.readArray("pa_DP", &pa_p->DP, 1);
                break;
-      case f_pa_IIM: rddar.readArray("pa_IIM", &pa->p.IIM, 1);
+      case f_pa_IIM: rddar.readArray("pa_IIM", &pa_p->IIM, 1);
                break;
-      case f_pa_PD: rddar.readArray("pa_PD" , &pa->p.PD, 1);
+      case f_pa_PD: rddar.readArray("pa_PD" , &pa_p->PD, 1);
                break;
-      case f_pa_PRD: rddar.readArray("pa_PRD" , &pa->p.PRD, 1);
+      case f_pa_PRD: rddar.readArray("pa_PRD" , &pa_p->PRD, 1);
                break;
-      case f_pa_AG: rddar.readArray("pa_AG" , &pa->p.AG, 1);
+      case f_pa_AG: rddar.readArray("pa_AG" , &pa_p->AG, 1);
                break;
-      case f_pa_DGC: rddar.readArray("pa_DGC" , &pa->p.DGC, 1);
+      case f_pa_DGC: rddar.readArray("pa_DGC" , &pa_p->DGC, 1);
                break;
-      case f_pa_PSM: rddar.readArray("pa_PSM" , &pa->p.PSM, 1);
+      case f_pa_PSM: rddar.readArray("pa_PSM" , &pa_p->PSM, 1);
                break;
-      case f_pa_GAR: rddar.readArray("pa_GAR" , &pa->p.GAR, 1);
+      case f_pa_GAR: rddar.readArray("pa_GAR" , &pa_p->GAR, 1);
                break;
-      case f_pa_GAH: rddar.readArray("pa_GAH" , &pa->p.GAH, 1);
+      case f_pa_GAH: rddar.readArray("pa_GAH" , &pa_p->GAH, 1);
                break;
-      case f_pa_DS: rddar.readArray("pa_DS", &pa->p.DS, 1);
+      case f_pa_DS: rddar.readArray("pa_DS", &pa_p->DS, 1);
                break;
-      case f_pa_XwMin: rddar.readArray("pa_XwMin" , &pa->p.XwMin, 1);
+      case f_pa_XwMin: rddar.readArray("pa_XwMin" , &pa_p->XwMin, 1);
                break;
-      case f_pa_ScMin: rddar.readArray("pa_ScMin" , &pa->p.ScMin, 1);
+      case f_pa_ScMin: rddar.readArray("pa_ScMin" , &pa_p->ScMin, 1);
                break;
-      case f_pa_DcMin: rddar.readArray("pa_DcMin" , &pa->p.DcMin, 1);
+      case f_pa_DcMin: rddar.readArray("pa_DcMin" , &pa_p->DcMin, 1);
                break;
-      case f_pa_PhMin: rddar.readArray("pa_PhMin" , &pa->p.PhMin, 1);
+      case f_pa_PhMin: rddar.readArray("pa_PhMin" , &pa_p->PhMin, 1);
                break;
-      case f_pa_ICmin: rddar.readArray("pa_ICmin" , &pa->p.ICmin, 1);
+      case f_pa_ICmin: rddar.readArray("pa_ICmin" , &pa_p->ICmin, 1);
                break;
-      case f_pa_PC: rddar.readArray("pa_PC" , &pa->p.PC, 1);
+      case f_pa_PC: rddar.readArray("pa_PC" , &pa_p->PC, 1);
                break;
-      case f_pa_DFM: rddar.readArray("pa_DFM" , &pa->p.DFM, 1);
+      case f_pa_DFM: rddar.readArray("pa_DFM" , &pa_p->DFM, 1);
                break;
-      case f_pa_DFYw: rddar.readArray("pa_DFYw" , &pa->p.DFYw, 1);
+      case f_pa_DFYw: rddar.readArray("pa_DFYw" , &pa_p->DFYw, 1);
                break;
-      case f_pa_DFYaq: rddar.readArray("pa_DFYaq" , &pa->p.DFYaq, 1);
+      case f_pa_DFYaq: rddar.readArray("pa_DFYaq" , &pa_p->DFYaq, 1);
                break;
-      case f_pa_DFYid: rddar.readArray("pa_DFYid" , &pa->p.DFYid, 1);
+      case f_pa_DFYid: rddar.readArray("pa_DFYid" , &pa_p->DFYid, 1);
                break;
-      case f_pa_DFYr: rddar.readArray("pa_DFYr" , &pa->p.DFYr, 1);
+      case f_pa_DFYr: rddar.readArray("pa_DFYr" , &pa_p->DFYr, 1);
                break;
-      case f_pa_DFYh: rddar.readArray("pa_DFYh" , &pa->p.DFYh, 1);
+      case f_pa_DFYh: rddar.readArray("pa_DFYh" , &pa_p->DFYh, 1);
                break;
-      case f_pa_DFYc: rddar.readArray("pa_DFYc" , &pa->p.DFYc, 1);
+      case f_pa_DFYc: rddar.readArray("pa_DFYc" , &pa_p->DFYc, 1);
                break;
-      case f_pa_DFYs: rddar.readArray("pa_DFYs", &pa->p.DFYs, 1);
+      case f_pa_DFYs: rddar.readArray("pa_DFYs", &pa_p->DFYs, 1);
                break;
-      case f_pa_DW: rddar.readArray("pa_DW", &pa->p.DW , 1);
+      case f_pa_DW: rddar.readArray("pa_DW", &pa_p->DW , 1);
                break;
-      case f_pa_DT: rddar.readArray("pa_DT", &pa->p.DT , 1);
+      case f_pa_DT: rddar.readArray("pa_DT", &pa_p->DT , 1);
                break;
-      case f_pa_GAS: rddar.readArray("pa_GAS", &pa->p.GAS, 1);
+      case f_pa_GAS: rddar.readArray("pa_GAS", &pa_p->GAS, 1);
                break;
-      case f_pa_DG: rddar.readArray("pa_DG" , &pa->p.DG, 1);
+      case f_pa_DG: rddar.readArray("pa_DG" , &pa_p->DG, 1);
                break;
-      case f_pa_DNS: rddar.readArray("pa_DNS" , &pa->p.DNS, 1);
+      case f_pa_DNS: rddar.readArray("pa_DNS" , &pa_p->DNS, 1);
                break;
-      case f_pa_IEPS: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
+      case f_pa_IEPS: rddar.readArray("pa_IEPS" , &pa_p->IEPS, 1);
                break;
       case f_pKin: rddar.readArray("pKin" , &pm.PLIM, 1);
                break;
-      case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
+      case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa_p->DKIN, 1);
                break;
       case f_mui: rddar.readArray("mui" , pm.mui, pm.N);
                break;
@@ -1180,7 +1180,7 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
                break;
       case f_muj: rddar.readArray("muj" , pm.muj, pm.L);
                break;
-      case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa->p.PLLG, 1);
+      case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa_p->PLLG, 1);
                break;
       case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
              break;

@@ -114,7 +114,7 @@ void TMultiBase::GEM_IPM( long int /*rLoop*/ )
 {
     long int i, j, eRet, status=0; long int csRet=0;
 // bool CleanAfterIPM = true;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
 #ifdef GEMITERTRACE
   to_text_file( "MultiDumpB.txt" );   // Debugging
@@ -220,10 +220,10 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
    }
 
    // Here the entry to new PSSC() module controlled by PC >= 2
-   if( pa->p.PC >= 2 && nCNud <= 0 ) // only if there is no divergence in the dual solution
+   if( pa_p->PC >= 2 && nCNud <= 0 ) // only if there is no divergence in the dual solution
    {
        long int ps_rcode, k_miss, k_unst, cleanupStatus = 1;
-       if( pa->p.PC > 2 )
+       if( pa_p->PC > 2 )
            cleanupStatus = 0; // in this case separate SpeciationCleanup() is called
 
        ps_rcode = PhaseSelectionSpeciationCleanup( k_miss, k_unst, cleanupStatus );
@@ -276,25 +276,25 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
        } // end switch
 
    }
-   else if( pa->p.PC == 1 && nCNud <= 0 ) // Old PhaseSelect() mode PC = 1
+   else if( pa_p->PC == 1 && nCNud <= 0 ) // Old PhaseSelect() mode PC = 1
    {
        //=================== calling old Phase Selection algorithm =====================
         long int ps_rcode, k_miss, k_unst, RaiseZeroDCs = 0;
 
         ps_rcode = PhaseSelect( k_miss, k_unst, RaiseZeroDCs );
 
-        if( (ps_rcode == 0 || ps_rcode == 1) && pa->p.PRD != 0 )
+        if( (ps_rcode == 0 || ps_rcode == 1) && pa_p->PRD != 0 )
             // This block is calling the separate cleanup speciation function
         {
            double AmThExp, AmountThreshold, ChemPotDiffCutoff = 1e-2;
      //      long int eRet;
 
-           AmThExp = (double)abs(pa->p.PRD);
+           AmThExp = (double)abs(pa_p->PRD);
            if( AmThExp < 4.)
                AmThExp = 4.;
            AmountThreshold = pow(10,-AmThExp);
-           if( pa->p.GAS > 1e-6 )
-                ChemPotDiffCutoff = pa->p.GAS;
+           if( pa_p->GAS > 1e-6 )
+                ChemPotDiffCutoff = pa_p->GAS;
            for( j=0; j<pm.L; j++ )
                pm.XY[j]=pm.Y[j];    // Storing a copy of speciation vector
            csRet = SpeciationCleanup( AmountThreshold, ChemPotDiffCutoff );
@@ -399,7 +399,7 @@ to_text_file( "MultiDumpD.txt" );   // Debugging
       }
    } // end cleanup
 */
-   if( pa->p.PC == 3 )
+   if( pa_p->PC == 3 )
         XmaxSAT_IPM2();  // Install upper limits to xj of surface species (questionable)!
 
   if( nCNud <= 0 )
@@ -490,7 +490,7 @@ bool TMultiBase::GEM_IPM_InitialApproximation(  )
     long int i, j, k, NN, eCode=-1L;
     double minB;//, sfactor;
     char buf[512];
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
 #ifdef GEMITERTRACE
 to_text_file( "MultiDumpA.txt" );   // Debugging
@@ -501,7 +501,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
     minB = pm.B[0]; // pa->p.DB;
     for(i=0;i<NN;i++)
     {
-        if( pm.B[i] < pa->p.DB )
+        if( pm.B[i] < pa_p->DB )
         {
            if( eCode < 0  )
     	   {
@@ -516,7 +516,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
                   sprintf(buf,"  %-3.3s = %lg" ,  pm.SB[i], pm.B[i] );
         	  addErrorMessage( buf );
            }
-           pm.B[i] = pa->p.DB;
+           pm.B[i] = pa_p->DB;
         }
         if( pm.B[i] < minB )
            minB = pm.B[i];      // Looking for the smallest IC amount
@@ -713,7 +713,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
     long int IT1;
     long int I, J, Z,  N, sRet, iRet=0, j, jK;
     double LM;//, pmp_PCI;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     ErrorIf( !pm.MU || !pm.W, "MassBalanceRefinement()",
                               "Error of memory allocation for pm.MU or pm.W." );
@@ -739,7 +739,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
 
 //----------------------------------------------------------------------------
 // BEGIN:  main loop
-    for( IT1=0; IT1 < pa->p.DP; IT1++, pm.ITF++ )
+    for( IT1=0; IT1 < pa_p->DP; IT1++, pm.ITF++ )
     {
         // get size of task
         pm.NR=pm.N;
@@ -752,7 +752,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
        MassBalanceResiduals( pm.N, pm.L, pm.A, pm.Y, pm.B, pm.C);
        // Testing mass balance residuals
        Z = pm.N - pm.E;
-       if( !pa->p.DT )
+       if( !pa_p->DT )
        {   // relative balance accuracy for all ICs
            for( I=0;I<Z;I++ )
              if( fabs(pm.C[I]) > pm.B[I] * pm.DHBM )
@@ -760,7 +760,7 @@ long int TMultiBase::MassBalanceRefinement( long int WhereCalledFrom )
        }
        else { // combined balance accuracy - absolute for major and relative for trace ICs
            double AbsMbAccExp, AbsMbCutoff;
-           AbsMbAccExp = (double)abs( pa->p.DT );
+           AbsMbAccExp = (double)abs( pa_p->DT );
            if( AbsMbAccExp < 2. )  // If DT is set to 1 or -1 then DHBM is used also as the absolute cutoff
                AbsMbCutoff = pm.DHBM;
            else
@@ -829,12 +829,12 @@ STEP_POINT("FIA Iteration");
 //----------------------------------------------------------------------------
     //  Prescribed mass balance precision cannot be reached
                     // Temporary workaround for pathological systems 06.05.2010 DK
-   if( pa->p.DW && ( WhereCalledFrom == 0L || pm.pNP ) )  // Now controlled by DW flag
+   if( pa_p->DW && ( WhereCalledFrom == 0L || pm.pNP ) )  // Now controlled by DW flag
    {  // Strict mode of mass balance control
        iRet = 2;
        char buf[320];
        sprintf( buf, "(MBR(%ld)) Maximum allowed number of MBR iterations (%ld) exceeded! ",
-                WhereCalledFrom, (long int)pa->p.DP );
+                WhereCalledFrom, (long int)pa_p->DP );
        setErrorMessage( 4, "E04IPM: Mass Balance Refinement: ", buf );
        return iRet; // no MBR() solution
    }
@@ -869,7 +869,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
     bool StatusDivg;
     long int N, IT1,J,Z,iRet,i,  nDivIC;
     double LM=0., LM1=1., FX1,    DivTol;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     status = 0;
     if( pm.FIs )
@@ -884,7 +884,7 @@ long int TMultiBase::InteriorPointsMethod( long int &status/*, long int rLoop*/ 
 
 //----------------------------------------------------------------------------
 //  Main loop of IPM iterations
-    for( IT1 = 0; IT1 < pa->p.IIM; IT1++, pm.IT++, pm.ITG++ )
+    for( IT1 = 0; IT1 < pa_p->IIM; IT1++, pm.IT++, pm.ITG++ )
     {
         StatusDivg = false;
         pm.NR=pm.N;
@@ -920,11 +920,11 @@ to_text_file( "MultiDumpDC1.txt" );   // Debugging
           return 1;
         }
 
-   if( !nCNud && paTProfil->p.PLLG )   // disabled if PLLG = 0
+   if( !nCNud && pa_p_ptr()->PLLG )   // disabled if PLLG = 0
    { // Experimental - added 06.05.2011 by DK
       Increment_uDD( pm.ITG, uDDtrace );
 //   DivTol = pow( 10., -fabs( (double)TProfil::pm->pa.p.PLLG ) );
-      DivTol = (double)paTProfil->p.PLLG;
+      DivTol = (double)pa_p_ptr()->PLLG;
       if( fabs(DivTol) >= 30000. )
           DivTol = 1e6;  // this is to allow complete tracing in the case of divergence
 //      if( pm.ITG )
@@ -1215,7 +1215,7 @@ case DC_SCM_SPECIES:
 /// Adjustment of primal approximation according to kinetic constraints
 long int TMultiBase::MetastabilityLagrangeMultiplier()
 {
-    double E = paTProfil->p.DKIN; //1E-8;  Default min value of Lagrange multiplier p
+    double E = pa_p_ptr()->DKIN; //1E-8;  Default min value of Lagrange multiplier p
 //    E = 1E-30;
 
     for(long int J=0;J<pm.L;J++)
@@ -1520,7 +1520,7 @@ void TMultiBase::Restore_Y_YF_Vectors()
  {
    if( pm.XF[Z] <= pm.DSM ||
        ( pm.PHC[Z] == PH_SORPTION &&
-       ( pm.XFA[Z] < paTProfil->p.ScMin) ) )
+       ( pm.XFA[Z] < pa_p_ptr()->ScMin) ) )
    {
       pm.YF[Z]= 0.;
       if( pm.FIs && Z<pm.FIs )
@@ -1549,28 +1549,28 @@ void TMultiBase::Restore_Y_YF_Vectors()
 double TMultiBase::RescaleToSize( bool /*standard_size*/ )
 {
     double SizeFactor=1.;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     pm.SizeFactor = 1.;
 //  re-scaling numeric settings
-    pm.DHBM = SizeFactor * pa->p.DHB; // Mass balance accuracy threshold
-    pm.DXM =  SizeFactor * pa->p.DK;   // Dikin' convergence threshold
-//    pm.DX = pa->p.DK;
-    pm.DSM =  SizeFactor * pa->p.DS;   // Cutoff for solution phase amount
+    pm.DHBM = SizeFactor * pa_p->DHB; // Mass balance accuracy threshold
+    pm.DXM =  SizeFactor * pa_p->DK;   // Dikin' convergence threshold
+//    pm.DX = pa_p->DK;
+    pm.DSM =  SizeFactor * pa_p->DS;   // Cutoff for solution phase amount
 // Cutoff amounts for DCs
-    pm.XwMinM = SizeFactor * pa->p.XwMin;  // cutoff for the amount of water-solvent
-    pm.ScMinM = SizeFactor * pa->p.ScMin;  // cutoff for amount of the sorbent
-    pm.DcMinM = SizeFactor * pa->p.DcMin;  // cutoff for Ls set (amount of solution phase component)
-    pm.PhMinM = SizeFactor * pa->p.PhMin;  // cutoff for single-comp.phase amount and its DC
+    pm.XwMinM = SizeFactor * pa_p->XwMin;  // cutoff for the amount of water-solvent
+    pm.ScMinM = SizeFactor * pa_p->ScMin;  // cutoff for amount of the sorbent
+    pm.DcMinM = SizeFactor * pa_p->DcMin;  // cutoff for Ls set (amount of solution phase component)
+    pm.PhMinM = SizeFactor * pa_p->PhMin;  // cutoff for single-comp.phase amount and its DC
   // insertion values before SolveSimplex() (re-scaled to system size)
-    pm.DFYwM = SizeFactor * pa->p.DFYw;
-    pm.DFYaqM = SizeFactor * pa->p.DFYaq;
-    pm.DFYidM = SizeFactor * pa->p.DFYid;
-    pm.DFYrM = SizeFactor * pa->p.DFYr;
-    pm.DFYhM = SizeFactor * pa->p.DFYh;
-    pm.DFYcM = SizeFactor * pa->p.DFYc;
+    pm.DFYwM = SizeFactor * pa_p->DFYw;
+    pm.DFYaqM = SizeFactor * pa_p->DFYaq;
+    pm.DFYidM = SizeFactor * pa_p->DFYid;
+    pm.DFYrM = SizeFactor * pa_p->DFYr;
+    pm.DFYhM = SizeFactor * pa_p->DFYh;
+    pm.DFYcM = SizeFactor * pa_p->DFYc;
     // Insertion value for PhaseSelection()
-    pm.DFYsM = SizeFactor * pa->p.DFYs; // pure condenced phase and its DC
+    pm.DFYsM = SizeFactor * pa_p->DFYs; // pure condenced phase and its DC
 
     return SizeFactor;
 }
@@ -1729,7 +1729,7 @@ void TMultiBase::Reset_uDD( long int nr, bool trace )
        cout << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
        cout << " Itr   C_D:   " << pm.SB1[0] ;
     }
-    if( paTProfil->p.PSM >= 3 )
+    if( pa_p_ptr()->PSM >= 3 )
     {
       fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
       f_log << " UD3 trace: " << pm.stkey << " SIA= " << pm.pNP << endl;
@@ -1745,7 +1745,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
     cnr = r; // r+1;
     if( cnr == 0 )
         return;
-    if( paTProfil->p.PSM >= 3 )
+    if( pa_p_ptr()->PSM >= 3 )
     {
        fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
        f_log << r << " " << pm.PCI << " ";
@@ -1785,7 +1785,7 @@ void TMultiBase::Increment_uDD( long int r, bool trace )
 //      cout << U_CV[i] << " ";
 //      cout << delta << " ";
       }
-      if( paTProfil->p.PSM >= 3 )
+      if( pa_p_ptr()->PSM >= 3 )
       {
           fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
           f_log << U_mean[i] << " ";
@@ -1827,7 +1827,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
     tol_gen = DivTol;
     if( pm.PCI < 1 )
     tol_gen *= pm.PCI;
-    if( paTProfil->p.PSM >= 3 )
+    if( pa_p_ptr()->PSM >= 3 )
     {
         fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
         f_log << " Tol= " << tol_gen << " |" << endl;
@@ -1880,7 +1880,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
       {
          if( trace )
             cout << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
-         if( paTProfil->p.PSM >= 3 )
+         if( pa_p_ptr()->PSM >= 3 )
          {
             fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
             f_log << "uDD ITG= " << pm.ITG << " |" << " Divergent ICs: ";
@@ -1893,7 +1893,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
           buf[MAXICNAME] = '\0';
           cout << buf << " ln_bi= " << log_bi << " Tol= " << tolerance << " ";
       }
-      if( paTProfil->p.PSM >= 3 )
+      if( pa_p_ptr()->PSM >= 3 )
       {
           fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
           memcpy(buf, pm.SB[i], MAXICNAME );
@@ -1904,7 +1904,7 @@ long int TMultiBase::Check_uDD( long int mode, double DivTol,  bool trace )
     if( !FirstTime )
     {    if( trace )
            cout << " |" << endl;
-         if( paTProfil->p.PSM >= 3 )
+         if( pa_p_ptr()->PSM >= 3 )
          {
              fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
              f_log << " |" << endl;
