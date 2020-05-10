@@ -26,7 +26,7 @@ std::vector<std::string> NodeGEMSTask::initData(const std::string &dch_json, con
     current_task.reset(new TNode());
     if( current_task->GEM_init( dch_json, ipm_json, dbr_json ) )
     {
-        cout << "error occured during deserialize the data" << endl;
+        std::cout << "error occured during deserialize the data" << std::endl;
         ret_mess.push_back(std::to_string(T_ERROR_GEM));
         ret_mess.push_back("Error occured during deserialize the data");
     }
@@ -40,7 +40,7 @@ std::vector<std::string> NodeGEMSTask::initData(const char *ipmfiles_lst_name)
     current_task.reset(new TNode());
     if( current_task->GEM_init( ipmfiles_lst_name ) )
     {
-        cout << "error occured during deserialize the data" << endl;
+        std::cout << "error occured during deserialize the data" << std::endl;
         ret_mess.push_back(std::to_string(T_ERROR_GEM));
         ret_mess.push_back("Error occured during deserialize the data");
     }

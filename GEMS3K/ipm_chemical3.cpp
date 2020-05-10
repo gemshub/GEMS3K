@@ -29,8 +29,7 @@
 
 #include <cmath>
 #include <iomanip>
-#include "m_param.h"
-
+#include "ms_multi.h"
 
 
 /// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
@@ -325,7 +324,7 @@ TMultiBase::CalculateActivityCoefficients( long int LinkMode  )
                     double nxk = 1./pm.L1[k];
             for( j= jb; j<je; j++ )
     		{
-                if(pm.XF[k] < min( pm.DSM, pm.PhMinM ) ) // pm.lowPosNum )   // workaround 10.03.2008 DK
+                if(pm.XF[k] < std::min( pm.DSM, pm.PhMinM ) ) // pm.lowPosNum )   // workaround 10.03.2008 DK
                         pm.Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
                 pm.fDQF[j] =0.0;  // cleaning fDQF in TP mode!
                 pm.lnGmo[j] = pm.lnGam[j]; // saving activity coefficients in TP mode

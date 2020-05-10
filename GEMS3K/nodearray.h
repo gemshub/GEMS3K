@@ -531,7 +531,7 @@ public:
                            char tcode, unsigned char ips, double m_v );
 
     /// Writes work node (DATABR structure) to a text VTK file
-    void databr_to_vtk( fstream& ff, const char*name, double time, long cycle,
+    void databr_to_vtk( std::fstream& ff, const char*name, double time, long cycle,
                         long int nFields=0, long int (*Flds)[2]=nullptr);
 
 };

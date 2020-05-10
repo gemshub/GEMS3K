@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <unistd.h>
+#include "v_detail.h"
 
 #ifdef NODEARRAYLEVEL
 
@@ -45,7 +46,7 @@
 #include "m_gem2mt.h"
 #include "zmqclient.h"
 #else
-istream& f_getline(istream& is, std::string& str, char delim);
+//istream& f_getline(istream& is, std::string& str, char delim);
 #endif
 
 
@@ -223,8 +224,8 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
     DATABRPTR* C1 = pNodT1();
     bool* iaN = piaNode();     // indicators for IA in the nodes
 
-    start_node = max( start_node, 0L );
-    end_node = min( end_node, anNodes );
+    start_node =std:: max( start_node, 0L );
+    end_node = std::min( end_node, anNodes );
 
 
     for( ii = start_node; ii<= end_node; ii++) // node iteration
@@ -486,7 +487,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
     // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
     std::string curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
-    fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
     try
     {
 #else
@@ -495,7 +496,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
         bool binary_f = false;
 
         //  open file stream for the file names list file
-        fstream f_lst( ipmfiles_lst_name, ios::in );
+        std::fstream f_lst( ipmfiles_lst_name, std::ios::in );
         ErrorIf( !f_lst.good() , ipmfiles_lst_name, "Fileopen error");
 
         std::string datachbr_fn;
@@ -523,8 +524,8 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
     }
     catch(TError& err) {
         if( !curPath.empty() )
-            f_log << "GEMS3K input : file " << curPath.c_str() << endl;
-        f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+            f_log << "GEMS3K input : file " << curPath.c_str() << std::endl;
+        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
     }
     catch(...) {
         return -1;
@@ -574,7 +575,7 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
         Path = lst_in.substr(0, pos+1);
 
     //  open file stream for the file names list file
-    fstream f_lst( lst_in.c_str(), ios::in );
+    std::fstream f_lst( lst_in.c_str(), std::ios::in );
     ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
 
 
@@ -599,11 +600,11 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
         curPath = dbr_file;
         if( binary_f )
         {
-            GemDataStream in_br(dbr_file, ios::in|ios::binary);
+            GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
             calcNode.databr_from_file(in_br);
         }
         else
-        {   fstream in_br(dbr_file.c_str(), ios::in );
+        {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
             ErrorIf( !in_br.good() , datachbr_fn.c_str(),
                      "DBR_DAT fileopen error");
             calcNode.databr_from_text_file(in_br);
@@ -642,7 +643,7 @@ void  TNodeArray::checkNodeArray(
         for( long int ii=0; ii<anNodes; ii++)
             if(   nodeTypes[ii]<0 || nodeTypes[ii] >= i )
             {
-                cout << anNodes << " " << nodeTypes[ii] << " i = " << i<< endl;
+                std::cout << anNodes << " " << nodeTypes[ii] << " i = " << i<< std::endl;
                 Error( datachbr_file,
                        "GEM_init() error: Undefined boundary condition!" );
             }
@@ -768,7 +769,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         //  putting MULTI to binary file
         Path_ = u_makepath( dir, name, "ipm" );
         GemDataStream  ff(Path_, ios::out|ios::binary);
-        TProfil::pm->outMulti( ff, Path_  );
+        multi->out_multi( ff, Path_  );
     }
     else
     {

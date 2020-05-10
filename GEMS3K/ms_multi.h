@@ -34,7 +34,7 @@
 #include <iostream>
 #include <memory>
 #include <ctime>
-#include "m_const.h"
+#include "m_const_base.h"
 #include "datach.h"
 // TSolMod header
 #include "s_solmod.h"
@@ -44,8 +44,66 @@
 
 class GemDataStream;
 
+const int  QPSIZE = 180, // earlier 20, 40 SD oct 2005
+           QDSIZE = 60;
+
+// Physical constants - see m_param.cpp or ms_param.cpp
+extern const double R_CONSTANT, NA_CONSTANT, F_CONSTANT,
+    e_CONSTANT,k_CONSTANT, cal_to_J, C_to_K, lg_to_ln, ln_to_lg, H2O_mol_to_kg, Min_phys_amount;
+
 enum volume_code {  /* Codes of volume parameter */
     VOL_UNDEF, VOL_CALC, VOL_CONSTR
+};
+
+struct BASE_PARAM
+{ // Flags and thresholds for numeric modules
+  short
+    PC,   // Mode of PhaseSelect() operation ( 0 1 2 ... ) { 1 }
+    PD,   // abs(PD): Mode of execution of CalculateActivityCoefficients() functions { 2 }
+          // Mode of CalculateActivityCoefficients(): 0-invoke, 1-at EFD only, 2-every EFD it, every IPM it. 3-not EFD, every IPM it.
+          // if PD < 0 then use test qd_real accuracy mode
+    PRD,  // Since r1583/r409: Disable (0) or activate (-5 or less) the SpeciationCleanup() procedure { -5 }
+    PSM,  // Level of diagnostic messages: 0- disabled (no ipmlog file); 1- errors; 2- also warnings 3- uDD trace { 1 }
+    DP,   // Maximum allowed number of iterations in the MassBalanceRefinement() procedure {  30 }
+    DW,   // Since r1583: Activate (1) or disable (0) error condition when DP was exceeded { 1 }
+    DT,   // Since r1583/r409: DHB is relative for all (0) or absolute (-6 or less ) cutoff for major ICs { 0 }
+    PLLG, // IPM tolerance for detecting divergence in dual solution { 10; range 1 to 1000; 0 disables the detection }
+    PE,   // Flag for using electroneutrality condition in GEM IPM calculations { 0 1 }
+    IIM   // Maximum allowed number of iterations in the MainIPM_Descent() procedure up to 9999 { 1000 }
+    ;
+  double DG,   // Standart total moles { 1e5 }
+    DHB,  // Maximum allowed relative mass balance residual for Independent Components ( 1e-9 to 1e-15 ) { 1e-10 }
+    DS,   // Cutoff minimum mole amount of stable Phase present in the IPM primal solution { 1e-12 }
+    DK,   // IPM-2 convergence threshold for the Dikin criterion (may be set in the interval 1e-6 < DK < 1e-4) { 1e-5 }
+    DF,   // Threshold for the application of the Karpov phase stability criterion: (Fa > DF) for a lost stable phase { 0.01 }
+    DFM,  // Threshold for Karpov stability criterion f_a for insertion of a phase (Fa < -DFM) for a present unstable phase { 0.1 }
+    DFYw, // Insertion mole amount for water-solvent { 1e-6 }
+    DFYaq,// Insertion mole amount for aqueous species { 1e-6 }
+    DFYid,// Insertion mole amount for ideal solution components { 1e-6 }
+    DFYr, // Insertion mole amount for major solution components { 1e-6 }
+    DFYh, // Insertion mole amount for minor solution components { 1e-6 }
+    DFYc, // Insertion mole amount for single-component phase { 1e-6 }
+    DFYs, // Insertion mole amount used in PhaseSelect() for a condensed phase component  { 1e-7 }
+    DB,   // Minimum amount of Independent Component in the bulk system composition (except charge "Zz") (moles) (1e-17)
+    AG,   // Smoothing parameter for non-ideal increments to primal chemical potentials between IPM descent iterations { -1 }
+    DGC,  // Exponent in the sigmoidal smoothing function, or minimal smoothing factor in new functions { -0.99 }
+    GAR,  // Initial activity coefficient value for major (M) species in a solution phase before LPP approximation { 1 }
+    GAH,  // Initial activity coefficient value for minor (J) species in a solution phase before LPP approximation { 1000 }
+    GAS,  // Since r1583: threshold for primal-dual chem.pot.difference (mol/mol) used in SpeciationCleanup() { 1e-3 }
+          // before: Obsolete IPM-2 balance accuracy control ratio DHBM[i]/b[i], for minor ICs { 1e-3 }
+    DNS,  // Standard surface density (nm-2) for calculating activity of surface species (12.05)
+    XwMin,// Cutoff mole amount for elimination of water-solvent { 1e-9 }
+    ScMin,// Cutoff mole amount for elimination of solid sorbent {1e-7}
+    DcMin,// Cutoff mole amount for elimination of solution- or surface species { 1e-30 }
+    PhMin,// Cutoff mole amount for elimination of  non-electrolyte solution phase with all its components { 1e-10 }
+    ICmin,// Minimal effective ionic strength (molal), below which the activity coefficients for aqueous species are set to 1. { 3e-5 }
+    EPS,  // Precision criterion of the SolveSimplex() procedure to obtain the AIA ( 1e-6 to 1e-14 ) { 1e-10 }
+    IEPS, // Convergence parameter of SACT calculation in sorption/surface complexation models { 0.01 to 0.000001, default 0.001 }
+    DKIN; // Tolerance on the amount of DC with two-side metastability constraints  { 1e-7 }
+    char *tprn;       // internal
+    void write(GemDataStream& oss);
+    void read(GemDataStream& oss);
+    void write(std::fstream& oss);
 };
 
 
@@ -474,10 +532,11 @@ enum IndexationSATX {
     XL_ST = 0, XL_EM = 1, XL_SI = 2, XL_SP = 3
 };
 
-struct BASE_PARAM;
-struct SPP_SETTING;
+//struct BASE_PARAM;
+//struct SPP_SETTING;
 class TProfil;
 class TNode;
+extern BASE_PARAM pa_p_;
 
 // Data of MULTI
 class TMultiBase
@@ -496,10 +555,12 @@ public:
     /// This allocation is used only in standalone GEMS3K
     explicit TMultiBase( const TNode* na_ = nullptr )
     {
-        ///pa_standalone.reset( new BASE_PARAM() );
+        pa_standalone.reset( new BASE_PARAM() );
+        *pa_standalone = pa_p_;
 
         pmp = &pm;
         node1 = na_; // parent
+
         sizeN = 0;
         AA = nullptr;
         BB = nullptr;
@@ -540,24 +601,32 @@ public:
     MULTI* GetPM()
     { return &pm; }
 
-    virtual BASE_PARAM* pa_p_ptr() const;
-//    {
-//        return paTProfil1->p;
-//        // return pa_standalone.get();
-//    }
+    virtual BASE_PARAM* pa_p_ptr() const
+    {
+        //return paTProfil1->p;
+        return pa_standalone.get();
+    }
 
-    void setPa( TProfil *prof);  ///?
+    //void setPa( TProfil *prof);  ///?
     virtual long int testMulti( );
 
     //connection to mass transport
-    virtual void to_file( GemDataStream& ff );
-    virtual void to_text_file( const char *path, bool append=false  );
-    virtual void from_file( GemDataStream& ff );
-    virtual void to_text_file_gemipm( iostream& ff, bool addMui,
+    void to_file( GemDataStream& ff );
+    void to_text_file( const char *path, bool append=false  );
+    void from_file( GemDataStream& ff );
+    void to_text_file_gemipm( std::iostream& ff, bool addMui,
                                       bool with_comments = true, bool brief_mode = false );
-    virtual void from_text_file_gemipm( iostream& ff,  DATACH  *dCH );
+    void from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH );
+    /// Writes Multi to a json/key-value string
+    /// \param brief_mode - Do not write data items that contain only default values
+    /// \param with_comments - Write files with comments for all data entries
+    std::string gemipm_to_string( bool addMui, bool with_comments = true, bool brief_mode = false );
+    /// Reads Multi structure from a json/key-value string
+    bool gemipm_from_string( const std::string& data,  DATACH  *dCH );
     virtual void copyMULTI( const TMultiBase& otherMulti );
-
+    void read_multi(GemDataStream &ff, DATACH *dCH);
+    /// Writing structure MULTI (GEM IPM work structure) to binary file
+    void out_multi( GemDataStream& ff, std::string& /*path*/  );
 
     // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
     void getLsModsum( long int& LsModSum, long int& LsIPxSum );
@@ -599,7 +668,7 @@ protected:
     MULTI *pmp;
     std::shared_ptr<BASE_PARAM> pa_standalone;
 
-    SPP_SETTING *paTProfil1;
+    //SPP_SETTING *paTProfil1;
 
     // Internal arrays for the performance optimization  (since version 2.0.0)
 
@@ -911,6 +980,7 @@ protected:
     void RescaleSystemFromInternal(  double ScFact );
     void MultiConstInit(); // from MultiRemake
     void GEM_IPM_Init();
+
 
 };
 

@@ -28,7 +28,7 @@
 #include  <iostream>
 
 #include "io_json.h"
-#include "v_user.h"
+#include "v_detail.h"
 
 /// Write double value to file
 template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json_arr )
@@ -64,7 +64,7 @@ template <> void TPrintJson::writeField( long f_num, const std::string& value, b
     }
 }
 
-void TPrintJson::writeArray( long f_num, const vector<double>& arr, long int /*l_size*/,
+void TPrintJson::writeArray( long f_num, const std::vector<double>& arr, long int /*l_size*/,
                              bool /*with_comments*/, bool brief_mode )
 {
     if(!brief_mode || getAlws(f_num ))

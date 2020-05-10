@@ -29,8 +29,7 @@
 #include <cmath>
 #include<iomanip>
 
-#include "m_param.h"
-
+#include "ms_multi.h"
 #include "node.h"
 #include "activities.h"
 
@@ -564,7 +563,7 @@ void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], d
             YFk = YFA[k];
         if( Yf >= 1e6 )
         {                 // error - will result in zerodivide!
-           string pbuf(act.SF[k],0,20);
+           std::string pbuf(act.SF[k],0,20);
            char buf[200];
            sprintf( buf, "Broken phase amount from primal approximation: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
            Error( "E13IPM: PrimalChemicalPotentials():", buf);

@@ -36,23 +36,10 @@
 #include "databr.h"
 #include "s_solmod.h"
 #include "s_sorpmod.h"
-#include "m_const.h"
+#include "m_const_base.h"
 
 class TNode;
-/*
-const double R_CONSTANT = 8.31451,
-              NA_CONSTANT = 6.0221367e23,
-                F_CONSTANT = 96485.309,
-                  e_CONSTANT = 1.60217733e-19,
-                    k_CONSTANT = 1.380658e-23,
-// Conversion factors
-                      cal_to_J = 4.184,
-                        C_to_K = 273.15,
-                          lg_to_ln = 2.302585093,
-                            ln_to_lg = 0.434294481,
-                             H2O_mol_to_kg = 55.50837344,
-                               Min_phys_amount = 1.66e-24;
-*/
+
 typedef struct  /// ACTIVITY - data structure for computing DC activities in phases
 {               /// DATACH indexation throughout, no I/O file exchange
 

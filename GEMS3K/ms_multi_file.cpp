@@ -26,8 +26,9 @@
 
 #include <cmath>
 
+#include "v_detail.h"
 #include "io_arrays.h"
-#include "m_param.h"
+#include "ms_multi.h"
 #include "node.h"
 #include "gdatastream.h"
 
@@ -140,16 +141,10 @@ void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
  }
 
-void TMultiBase::setPa( TProfil *prof)
-{
-    paTProfil1 = &prof->pa;
-}
-
-BASE_PARAM* TMultiBase::pa_p_ptr() const
-{
-    return &paTProfil1->p;
-    // return pa_standalone.get();
-}
+//void TMultiBase::setPa( TProfil *prof)
+//{
+//    paTProfil1 = &prof->pa;
+//}
 
 /// Output to "ipmlog.txt" file Warnings
 long int TMultiBase::testMulti()
@@ -158,9 +153,9 @@ long int TMultiBase::testMulti()
   {
     if( pa_p_ptr()->PSM == 2 )
     {
-      fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
-      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
-      f_log << pm.errorBuf << endl;
+      std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << std::endl;
+      f_log << pm.errorBuf << std::endl;
     }
    return 1L;
   }
@@ -459,6 +454,64 @@ pm.GamFs = nullptr;
         pm.emRd   = 0;
         pm.emDf   = 0;
         pm.xICuC = 0;
+}
+
+/// Writing structure MULTI (GEM IPM work structure) to binary file
+void TMultiBase::out_multi( GemDataStream& ff, std::string& /*path*/  )
+{
+     short arr[10];
+
+      arr[0] = pa_p_ptr()->PC;
+      arr[1] = pa_p_ptr()->PD;
+      arr[2] = pa_p_ptr()->PRD;
+      arr[3] = pa_p_ptr()->PSM;
+      arr[4] = pa_p_ptr()->DP;
+      arr[5] = pa_p_ptr()->DW;
+      arr[6] = pa_p_ptr()->DT;
+      arr[7] = pa_p_ptr()->PLLG;
+      arr[8] = pa_p_ptr()->PE;
+      arr[9] = pa_p_ptr()->IIM;
+
+    ff.writeArray( arr, 10 );
+    ff.writeArray( &pa_p_ptr()->DG, 28 );
+    to_file( ff );
+}
+
+/// Reading structure MULTI (GEM IPM work structure) from binary file
+void TMultiBase::read_multi( GemDataStream& ff, DATACH  *dCH )
+{
+    short arr[10];
+
+    ff.readArray( arr, 10 );
+    pa_p_ptr()->PC = arr[0];
+    pa_p_ptr()->PD = arr[1];
+    pa_p_ptr()->PRD = arr[2];
+    pa_p_ptr()->PSM = arr[3];
+    pa_p_ptr()->DP = arr[4];
+    pa_p_ptr()->DW = arr[5];
+    pa_p_ptr()->DT = arr[6];
+    pa_p_ptr()->PLLG = arr[7];
+    pa_p_ptr()->PE = arr[8];
+    pa_p_ptr()->IIM = arr[9];
+
+    ff.readArray( &pa_p_ptr()->DG, 28 );
+    from_file( ff );
+
+    // copy intervals for minimizatiom
+    if(  dCH->nPp > 1  )
+    {
+        pmp->Pai[0] = dCH->Pval[0];
+        pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
+        pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+    }
+    pmp->Pai[3] = dCH->Ptol;
+    if(  dCH->nTp > 1  )
+    {
+        pmp->Tai[0] = dCH->TKval[0];
+        pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
+        pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+    }
+    pmp->Tai[3] = dCH->Ttol;
 }
 
 //---------------------------------------------------------//
@@ -1051,15 +1104,15 @@ void TMultiBase::to_text_file( const char *path, bool append )
    char PSigm;
    get_PAalp_PSigm( PAalp, PSigm);
 
-   ios::openmode mod = ios::out;
+   std::ios::openmode mod = std::ios::out;
     if( append )
-     mod = ios::out|ios::app;
-  fstream ff(path, mod );
+     mod = std::ios::out|std::ios::app;
+  std::fstream ff(path, mod );
   ErrorIf( !ff.good() , path, "Fileopen error");
 
   if( append )
-   ff << "\nNext record" << endl;
-  ff << pm.stkey << endl;
+   ff << "\nNext record" << std::endl;
+  ff << pm.stkey << std::endl;
 //  TProfil::pm->pa.p.write(ff);
 
   TPrintArrays  prar(0,0,ff);
@@ -1073,8 +1126,8 @@ void TMultiBase::to_text_file( const char *path, bool append )
   prar.writeArray(  "EpsWg", pm.epsWg, 5);
   prar.writeArray(  "DenW", pm.denW, 5);
   prar.writeArray(  "DenWg", pm.denWg, 5);
-  ff << endl << "Error Code " << pm.errorCode << endl;
-  ff << "Error Message" << pm.errorBuf << endl;
+  ff << std::endl << "Error Code " << pm.errorCode << std::endl;
+  ff << "Error Message" << pm.errorBuf << std::endl;
 
    //dynamic values
 

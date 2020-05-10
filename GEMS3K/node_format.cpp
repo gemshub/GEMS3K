@@ -27,6 +27,7 @@
 
 #include <iomanip>
 #include  <iostream>
+#include "v_detail.h"
 #include "io_arrays.h"
 #include "node.h"
 #include "gdatastream.h"
@@ -174,7 +175,7 @@ outField DataCH_dynamic_fields[30] =  { //+4
 
 //===============================================================
 
-void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
+void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
 {
 // fstream ff("DataBR.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -194,10 +195,10 @@ void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mo
 
    if( _comment )
    {
-      ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-      ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
-      ff << "# DBR text input file for node system recipe and speciation data" << endl;
-      ff << "# (should be read only after the DCH and the IPM files)" << endl << endl;
+      ff << "# " << _GEMIPM_version_stamp << std::endl << "# File: " << path << std::endl;
+      ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
+      ff << "# DBR text input file for node system recipe and speciation data" << std::endl;
+      ff << "# (should be read only after the DCH and the IPM files)" << std::endl << std::endl;
       ff << "# (1): Flags controlling GEM IPM-3 operation and data exchange";
    }
 
@@ -266,7 +267,7 @@ void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mo
 #endif
 
   if( _comment )
-   {   ff << "\n\n### Arrays: for dimensions and index lists, see Section (2) of DCH file" << endl << endl;
+   {   ff << "\n\n### Arrays: for dimensions and index lists, see Section (2) of DCH file" << std::endl << std::endl;
        ff << "## (4) Data for Independent Components";
        prar.writeArray(  nullptr, CSD->ICNL[0], CSD->nIC, MaxICN );
        //ff << endl;
@@ -315,15 +316,15 @@ void TNode::databr_to_text_file( iostream& ff, bool with_comments, bool brief_mo
 #ifdef  JSON_OUT
   ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
-  ff << endl;
+  ff << std::endl;
   if( _comment )
    {   //  ff << "\n# reserved" << endl;
-         ff << "\n# End of file\n"<< endl;
+         ff << "\n# End of file\n"<< std::endl;
    }
 }
 
 // Reading work dataBR structure from text file
-void TNode::databr_from_text_file( iostream& ff )
+void TNode::databr_from_text_file( std::iostream& ff )
 {
 #ifndef NODEARRAYLEVEL
    double tmpVal;
@@ -507,7 +508,7 @@ void TNode::databr_from_text_file( iostream& ff )
 
 //==============================================================================
 
-void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
+void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
 {
 // fstream ff("DataCH.out", ios::out );
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
@@ -536,9 +537,9 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
 
   if( _comment )
   {
-     ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-     ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
-     ff << "# DCH text input file (should be read before IPM and DBR files)" << endl << endl;
+     ff << "# " << _GEMIPM_version_stamp << std::endl << "# File: " << path << std::endl;
+     ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
+     ff << "# DCH text input file (should be read before IPM and DBR files)" << std::endl << std::endl;
      ff << "## (1) Dimensions for memory allocation";
   }
   prar1.writeField(f_nIC, CSD->nIC, _comment, brief_mode  );
@@ -548,14 +549,14 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
   prar1.writeField(f_nDCs, CSD->nDCs, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "\n## (2) Dimensions for DBR node recipe (memory allocation)";
+    ff << std::endl << "\n## (2) Dimensions for DBR node recipe (memory allocation)";
   prar1.writeField(f_nICb, CSD->nICb, _comment, brief_mode  );
   prar1.writeField(f_nDCb, CSD->nDCb, _comment, brief_mode  );
   prar1.writeField(f_nPHb, CSD->nPHb, _comment, brief_mode  );
   prar1.writeField(f_nPSb, CSD->nPSb, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "\n## (3) Dimensions for thermodynamic data arrays";
+    ff << std::endl << "\n## (3) Dimensions for thermodynamic data arrays";
   prar1.writeField(f_nTp, CSD->nTp, _comment, brief_mode  );
   prar1.writeField(f_nPp, CSD->nPp, _comment, brief_mode  );
   prar1.writeField(f_iGrd, CSD->iGrd, _comment, brief_mode  );
@@ -563,7 +564,7 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
   prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
 #ifndef  JSON_OUT
-  ff << endl << "\n<END_DIM>" << endl;
+  ff << std::endl << "\n<END_DIM>" << std::endl;
 #endif
 
 // dynamic arrays - must follow static data
@@ -595,7 +596,7 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
   prar.writeArray(  f_DCmm, CSD->DCmm, CSD->nDC, -1L,_comment, brief_mode);
 
   if( _comment )
-    ff << "\n\n## (7) Phases and their codes" << endl;
+    ff << "\n\n## (7) Phases and their codes" << std::endl;
   if(!brief_mode || prar.getAlws( f_PHNL ))
   { if( _comment )
       ff << "# PHNL: List of Phase names (<=16 characters per name) [nPH]";
@@ -608,7 +609,7 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
     ff << "\n\n# (8) Data for Dependent Components";
   prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
 #ifndef JSON_OUT
-  ff << endl;
+  ff << std::endl;
 #endif
 
   if( _comment )
@@ -617,7 +618,7 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
   prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
   prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );
 #ifndef JSON_OUT
-  ff << endl;
+  ff << std::endl;
 #endif
 
   prar.writeField(  f_Ptol, CSD->Ptol, _comment, brief_mode  );
@@ -644,13 +645,13 @@ void TNode::datach_to_text_file( iostream& ff, bool with_comments, bool brief_mo
 #ifdef  JSON_OUT
   ff << json_data.dump( ( _comment ? 4 : 0 ));
 #endif
-  ff << endl;
+  ff << std::endl;
   if( _comment )
       ff << "\n# End of file\n";
 }
 
 // Reading dataCH structure from text file
-void TNode::datach_from_text_file(iostream& ff)
+void TNode::datach_from_text_file(std::iostream& ff)
 {
   long int ii;
 // fstream ff("DataCH.out", ios::in );
@@ -1046,7 +1047,7 @@ void TNode::databr_from_file( GemDataStream& ff )
 
 //===============================================================
 
-void TNode::databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, long int ndx )
+void TNode::databr_element_to_vtk( std::fstream& ff, DATABR *CNode_, long int nfild, long int ndx )
 {
 
   TPrintArrays  prar(f_lga+1/*58*/, DataBR_fields, ff);
@@ -1180,11 +1181,11 @@ void TNode::databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, 
          break;
    default: break;
   }
-  ff << " " << endl;
+  ff << " " << std::endl;
 }
 
 
-void TNode::databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long int nx2 )
+void TNode::databr_name_to_vtk( std::fstream& ff, long int nfild, long int ndx, long int nx2 )
 {
   std::string str="", str2="";
   // full name of data fiels (add index name)
@@ -1221,9 +1222,9 @@ void TNode::databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long 
      ff << " long";
   else
      ff << " double";
-  ff << " 1" << endl;
+  ff << " 1" << std::endl;
 
-  ff << "LOOKUP_TABLE default" << endl;
+  ff << "LOOKUP_TABLE default" << std::endl;
 }
 
 void TNode::databr_size_to_vtk(  long int nfild, long int& nel, long int& nel2 )
@@ -1248,24 +1249,24 @@ void TNode::databr_size_to_vtk(  long int nfild, long int& nel, long int& nel2 )
 
 }
 
-void TNode::databr_head_to_vtk( fstream& ff, const char*name, double time, long cycle,
+void TNode::databr_head_to_vtk( std::fstream& ff, const char*name, double time, long cycle,
                                long nx, long ny, long nz )
 {
- ff << "# vtk DataFile Version 3.0" <<  endl;
- ff << "GEM2MT " << name <<  endl;
- ff << "ASCII" <<  endl;
- ff << "DATASET STRUCTURED_POINTS" <<  endl;
- ff << "DIMENSIONS " <<  nx << " " << ny << " " << nz << endl;
- ff << "ORIGIN 0.0 0.0 0.0" <<  endl;
- ff << "SPACING 1.0 1.0 1.0" <<  endl;
+ ff << "# vtk DataFile Version 3.0" <<  std::endl;
+ ff << "GEM2MT " << name <<  std::endl;
+ ff << "ASCII" <<  std::endl;
+ ff << "DATASET STRUCTURED_POINTS" <<  std::endl;
+ ff << "DIMENSIONS " <<  nx << " " << ny << " " << nz << std::endl;
+ ff << "ORIGIN 0.0 0.0 0.0" <<  std::endl;
+ ff << "SPACING 1.0 1.0 1.0" <<  std::endl;
  //????
- ff << "FIELD TimesAndCycles 2" << endl;
- ff << "TIME 1 1 double" <<  endl << time << endl;
- ff << "CYCLE 1 1 long" <<  endl << cycle << endl;
- ff << "POINT_DATA " << nx*ny*nz << endl;
+ ff << "FIELD TimesAndCycles 2" << std::endl;
+ ff << "TIME 1 1 double" <<  std::endl << time << std::endl;
+ ff << "CYCLE 1 1 long" <<  std::endl << cycle << std::endl;
+ ff << "POINT_DATA " << nx*ny*nz << std::endl;
 }
 
-void TNode::databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+void TNode::databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                           long int  nFilds, long int  (*Flds)[2])
 {
    bool all = false;

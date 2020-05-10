@@ -30,7 +30,7 @@
 
 #include  <sstream>
 #include <math.h>
-#include "m_param.h"
+//#include "m_param.h"
 #include "num_methods.h"
 #include "gdatastream.h"
 #include "node.h"
@@ -119,70 +119,70 @@ double TProfil::ComputeEquilibriumState( /*long int& RefinLoops_,*/ long int& Nu
    return multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA_, NumIterIPM_ );
 }
 
-/// Writing structure MULTI (GEM IPM work structure) to binary file
-void TProfil::outMulti( GemDataStream& ff, std::string& /*path*/  )
-{
-	 short arr[10];
+///// Writing structure MULTI (GEM IPM work structure) to binary file
+//void TProfil::outMulti( GemDataStream& ff, std::string& /*path*/  )
+//{
+//	 short arr[10];
 
-	  arr[0] = pa.p.PC;
-	  arr[1] = pa.p.PD;
-	  arr[2] = pa.p.PRD;
-	  arr[3] = pa.p.PSM;
-	  arr[4] = pa.p.DP;
-	  arr[5] = pa.p.DW;
-	  arr[6] = pa.p.DT;
-	  arr[7] = pa.p.PLLG;
-	  arr[8] = pa.p.PE;
-	  arr[9] = pa.p.IIM;
+//	  arr[0] = pa.p.PC;
+//	  arr[1] = pa.p.PD;
+//	  arr[2] = pa.p.PRD;
+//	  arr[3] = pa.p.PSM;
+//	  arr[4] = pa.p.DP;
+//	  arr[5] = pa.p.DW;
+//	  arr[6] = pa.p.DT;
+//	  arr[7] = pa.p.PLLG;
+//	  arr[8] = pa.p.PE;
+//	  arr[9] = pa.p.IIM;
 
-	ff.writeArray( arr, 10 );
-    ff.writeArray( &pa.p.DG, 28 );
-    multi->to_file( ff );
-}
+//	ff.writeArray( arr, 10 );
+//    ff.writeArray( &pa.p.DG, 28 );
+//    multi->to_file( ff );
+//}
 
-/// Writing structure MULTI ( free format text file  )
-void TProfil::outMultiTxt( const char *path, bool append  )
-{
-    multi->to_text_file( path, append );
-}
+///// Writing structure MULTI ( free format text file  )
+//void TProfil::outMultiTxt( const char *path, bool append  )
+//{
+//    multi->to_text_file( path, append );
+//}
 
-/// Reading structure MULTI (GEM IPM work structure) from binary file
-void TProfil::readMulti( GemDataStream& ff, DATACH  *dCH )
-{
-     short arr[10];
+///// Reading structure MULTI (GEM IPM work structure) from binary file
+//void TProfil::readMulti( GemDataStream& ff, DATACH  *dCH )
+//{
+//     short arr[10];
 
-	 ff.readArray( arr, 10 );
-	  pa.p.PC = arr[0];
-	  pa.p.PD = arr[1];
-	  pa.p.PRD = arr[2];
-	  pa.p.PSM = arr[3];
-	  pa.p.DP = arr[4];
-	  pa.p.DW = arr[5];
-	  pa.p.DT = arr[6];
-	  pa.p.PLLG = arr[7];
-	  pa.p.PE = arr[8];
-	  pa.p.IIM = arr[9];
+//	 ff.readArray( arr, 10 );
+//	  pa.p.PC = arr[0];
+//	  pa.p.PD = arr[1];
+//	  pa.p.PRD = arr[2];
+//	  pa.p.PSM = arr[3];
+//	  pa.p.DP = arr[4];
+//	  pa.p.DW = arr[5];
+//	  pa.p.DT = arr[6];
+//	  pa.p.PLLG = arr[7];
+//	  pa.p.PE = arr[8];
+//	  pa.p.IIM = arr[9];
 
-      ff.readArray( &pa.p.DG, 28 );
-      multi->from_file( ff );
+//      ff.readArray( &pa.p.DG, 28 );
+//      multi->from_file( ff );
 
-      // copy intervals for minimizatiom
-      if(  dCH->nPp > 1  )
-      {
-         pmp->Pai[0] = dCH->Pval[0];
-         pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
-         pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-      }
-      pmp->Pai[3] = dCH->Ptol;
-      if(  dCH->nTp > 1  )
-      {
-         pmp->Tai[0] = dCH->TKval[0];
-         pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
-         pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-      }
-      pmp->Tai[3] = dCH->Ttol;
+//      // copy intervals for minimizatiom
+//      if(  dCH->nPp > 1  )
+//      {
+//         pmp->Pai[0] = dCH->Pval[0];
+//         pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
+//         pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+//      }
+//      pmp->Pai[3] = dCH->Ptol;
+//      if(  dCH->nTp > 1  )
+//      {
+//         pmp->Tai[0] = dCH->TKval[0];
+//         pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
+//         pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+//      }
+//      pmp->Tai[3] = dCH->Ttol;
 
-  }
+//  }
 
 
 
@@ -323,33 +323,33 @@ char  (* f_getfiles(const char *f_name, char *Path,
 }
 #endif
 
-/// Writes Multi to a json/key-value string
-/// \param brief_mode - Do not write data items that contain only default values
-/// \param with_comments - Write files with comments for all data entries
-std::string TProfil::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
-{
-    std::stringstream ss;
-    multi->to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
-    return ss.str();
-}
+///// Writes Multi to a json/key-value string
+///// \param brief_mode - Do not write data items that contain only default values
+///// \param with_comments - Write files with comments for all data entries
+//std::string TProfil::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
+//{
+//    std::stringstream ss;
+//    multi->to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
+//    return ss.str();
+//}
 
-/// Reads Multi structure from a json/key-value string
-bool TProfil::gemipm_from_string( const std::string& data,  DATACH  *dCH )
-{
-    std::stringstream ss;
-    ss.str(data);
-    multi->from_text_file_gemipm( ss, dCH );
-    return true;
-}
+///// Reads Multi structure from a json/key-value string
+//bool TProfil::gemipm_from_string( const std::string& data,  DATACH  *dCH )
+//{
+//    std::stringstream ss;
+//    ss.str(data);
+//    multi->from_text_file_gemipm( ss, dCH );
+//    return true;
+//}
 
-/// Reading structure MULTI (GEM IPM work structure) from text file
-void TProfil::readMulti( const char* path, DATACH  *dCH )
-{
-    // reads sizes and constants from txt file
-    fstream ff( path, ios::in );
-    ErrorIf( !ff.good() , path, "Fileopen error");
-    multi->from_text_file_gemipm( ff, dCH);
-}
+///// Reading structure MULTI (GEM IPM work structure) from text file
+//void TProfil::readMulti( const char* path, DATACH  *dCH )
+//{
+//    // reads sizes and constants from txt file
+//    fstream ff( path, ios::in );
+//    ErrorIf( !ff.good() , path, "Fileopen error");
+//    multi->from_text_file_gemipm( ff, dCH);
+//}
 
 // ------------------ End of ms_param.cpp -----------------------
 

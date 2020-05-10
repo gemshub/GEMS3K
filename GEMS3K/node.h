@@ -56,7 +56,8 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "m_param.h"
+#include <iostream>
+#include "ms_multi.h"
 // #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
@@ -94,16 +95,18 @@ class TNode
 protected:
    MULTI* pmm;  ///< \protected Pointer to GEM IPM work data structure (ms_multi.h)
 
+   TMultiBase* multi = nullptr;     // GEM IPM3 implementation class
+
 #ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMS3K programs
-    TMultiBase* multi;     // GEM IPM3 implementation class
+ //   TMultiBase* multi = nullptr;     // GEM IPM3 implementation class
 //    TAllan *ipm;       // Allan's GEM IPM implementation class
 // more speciation algorithms classes, when provided
-    TActivity *atp;    // Activity term class
-    TKinetics *kip;    // MW reaction kinetics class
+    TActivity *atp = nullptr;    // Activity term class
+    TKinetics *kip = nullptr;    // MW reaction kinetics class
 //
 #endif
-    TProfil* profil1;
+    //TProfil* profil1;
 
 
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
@@ -153,31 +156,24 @@ protected:
     /// Writes CSD (DATACH structure) to a text DCH file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void datach_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " ) const;
+    void datach_to_text_file( std::iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " ) const;
     /// Reads CSD (DATACH structure) from a text DCH file
-    void datach_from_text_file( iostream& ff);
+    void datach_from_text_file( std::iostream& ff);
     /// Writes work node (DATABR structure) to a text DBR file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void databr_to_text_file( iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " ) const;
+    void databr_to_text_file( std::iostream& ff, bool with_comments = true, bool brief_mode = false, const char* path = " " ) const;
     /// Reads work node (DATABR structure) from a text DBR file
-    void databr_from_text_file(iostream& ff );
-    /// Writes Multi to a json/key-value string
-    /// \param brief_mode - Do not write data items that contain only default values
-    /// \param with_comments - Write files with comments for all data entries
-    std::string gemipm_to_string( bool addMui, bool with_comments = true, bool brief_mode = false )
-    {
-        return profil1->gemipm_to_string( addMui, with_comments, brief_mode );
-    }
+    void databr_from_text_file(std::iostream& ff );
 
 // Methods to perform output to vtk files
     /// Prints data of CNode data object element with handle nfild and index ndx into a VTK file
     /// referenced by ff
-    void databr_element_to_vtk( fstream& ff, DATABR *CNode_, long int nfild, long int ndx );
+    void databr_element_to_vtk( std::fstream& ff, DATABR *CNode_, long int nfild, long int ndx );
 
     /// Prints name of CNode data object element with handle nfild and index ndx into a VTK file
     /// referenced by ff
-    void databr_name_to_vtk( fstream& ff, long int nfild, long int ndx, long int ndx2=0 );
+    void databr_name_to_vtk( std::fstream& ff, long int nfild, long int ndx, long int ndx2=0 );
 
     /// Prints size of data with handle nfild with dimensions nel and nel2 into a VTK file
     /// referenced by ff
@@ -185,7 +181,7 @@ protected:
 
     /// Prints header of VTK data with name, time, loop # and xyz coordinates set to 1
     /// into a VTK file referenced by ff
-    void databr_head_to_vtk( fstream& ff, const char*name, double time, long cycle,
+    void databr_head_to_vtk( std::fstream& ff, const char*name, double time, long cycle,
                             long nx = 1, long ny = 1, long nz = 1 );
 
 // Copying CSD and CNode data structures for TNodeArray parallelization
@@ -329,7 +325,7 @@ public:
 
 #ifndef IPMGEMPLUGIN
   /// Constructor of the class instance in memory in GEMS environment
-  TNode( MULTI *apm );
+  TNode( TMultiBase *apm );
 #else
   /// Constructor of the class instance in memory for standalone GEMS3K or coupled program
   TNode();
@@ -373,6 +369,13 @@ public:
   std::string databr_to_string( bool with_comments = true, bool brief_mode = false ) const;
   /// Reads work node (DATABR structure) from a json/key-value string
   bool databr_from_string( const std::string& data );
+  /// Writes Multi to a json/key-value string
+  /// \param brief_mode - Do not write data items that contain only default values
+  /// \param with_comments - Write files with comments for all data entries
+  std::string gemipm_to_string( bool addMui, bool with_comments = true, bool brief_mode = false )
+  {
+      return multi->gemipm_to_string( addMui, with_comments, brief_mode );
+  }
 
   /// Return code of error in IPM
   std::string code_error_IPM() const
@@ -922,14 +925,14 @@ long int GEM_step_MT( const long int step )
 	 /// \param P refers to the pressure in Pascal
 	 /// \param TK refers to the temperature in Kelvin
 	 /// \param DensAW contains the density of water (at P and Tk) and its temperature and pressure derivatives 
-     void DensArrayH2Ow( const double P, const double TK, vector<double>& DensAW );
+     void DensArrayH2Ow( const double P, const double TK, std::vector<double>& DensAW );
 
      /// Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
      /// if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
      /// \param P refers to the pressure in Pascal
 	 /// \param TK refers to the temperature in Kelvin
      /// \param EpsAW contains the permittivity of water (at P and Tk) and its temperature and pressure derivatives
-	 void EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW );
+     void EpsArrayH2Ow( const double P, const double TK, std::vector<double>& EpsAW );
 
 
      /// Retrieves (interpolated) dielectric constant of liquid water at (P,TK) from the DATACH structure.
@@ -1140,7 +1143,7 @@ long int GEM_step_MT( const long int step )
       {  PMc_val = pmm->PMc[xPMc]; load_thermodynamic_data = false; }
 
       /// Gets code of the aquesous solution model
-      inline void Get_sMod( int ndx, string &sMod)
+      inline void Get_sMod( int ndx, std::string &sMod)
       {  sMod = pmm->sMod[ndx];}
 
       /// Sets the value of the phase component parameter.
@@ -1195,27 +1198,27 @@ long int GEM_step_MT( const long int step )
       /// Gets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
       /// \param IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
       /// \param OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
-      void Get_aIPc ( vector<double> &vaIPc, const long int &ipaIPc, const long int &index_phase );
+      void Get_aIPc ( std::vector<double> &vaIPc, const long int &ipaIPc, const long int &index_phase );
 
       /// Gets values of the aIPx list array (of indexes of interacting moieties or components) for the solution phase of interest index_phase.
       /// \param IN: ipaIPx is the origin index (of the first element) of the aIPx array; index_phase is the DCH index of phase of interest.
       /// \param OUT: returns vaIPx - vector with the contents of the aIPx sub-array.
-      void Get_aIPx ( vector<long int> &vaIPx,   const long int &ipaIPx, const long &index_phase );
+      void Get_aIPx ( std::vector<long int> &vaIPx,   const long int &ipaIPx, const long &index_phase );
 
       /// Gets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
       /// \param IN: ipaDCc is the origin index (of the first element) of the aDCc array; index_phase is the DCH index of phase of interest.
       /// \param OUT: returns vaDCc - vector with the contents of the aDCc sub-array.
-      void Get_aDCc ( vector<double> &vaDCc, const long &ipaDCc, const long &index_phase );
+      void Get_aDCc ( std::vector<double> &vaDCc, const long &ipaDCc, const long &index_phase );
 
       /// Sets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
       /// \param IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
       /// \param     of the aIPc array; index_phase is the DCH index of phase of interest.
-      void Set_aIPc ( const vector<double> vaIPc, const long int &ipaIPc, const long &index_phase );
+      void Set_aIPc ( const std::vector<double> vaIPc, const long int &ipaIPc, const long &index_phase );
 
       /// Sets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
       /// \param IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
       /// \param of the aDCc array; index_phase is the DCH index of phase of interest.
-      void Set_aDCc ( const vector<double> vaDCc, const long &ipaDCc, const long &index_phase );
+      void Set_aDCc ( const std::vector<double> vaDCc, const long &ipaDCc, const long &index_phase );
 
       /// These methods set contents of fields in the work node structure
       /// Direct access to set temperature T_K in the current (work) node
@@ -1295,7 +1298,7 @@ long int GEM_step_MT( const long int step )
 #endif
 
     /// Writes work node (DATABR structure) to a text VTK file
-    virtual void databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+    virtual void databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                               long int nFilds, long int (*Flds)[2]);
 
     static std::string ipmLogFile;  ///< full name of the ipmlog file

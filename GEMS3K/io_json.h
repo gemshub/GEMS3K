@@ -24,6 +24,7 @@
 //-------------------------------------------------------------------
 
 #include <nlohmann/json.hpp>
+#include <fstream>
 #include "io_arrays.h"
 
 /// Print fields of structure outField
@@ -87,7 +88,7 @@ public:
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, const vector<double>& arr, long int l_size=0,
+    void writeArray( long f_num, const std::vector<double>& arr, long int l_size=0,
                      bool with_comments = false, bool brief_mode = false);
 
     /// Writes char array to a text file.
@@ -151,7 +152,7 @@ public:
 
  class TReadJson : public  TRWArrays /// Read fields of structure
  {
-    fstream ff;
+    std::fstream ff;
     /// Internal structure of file data
     nlohmann::json& json_data;
     nlohmann::json::iterator json_it;

@@ -25,10 +25,10 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <iomanip>
+#include  <iomanip>
 #include  <iostream>
 #include  <sstream>
-//#include "io_arrays.h"
+#include "v_detail.h"
 #include "node.h"
 #include "gdatastream.h"
 #include "num_methods.h"
@@ -110,7 +110,7 @@ TNode::TNode( const TNode& otherNode )
   pmm->Fdev2[0] = 0.;
   pmm->Fdev2[1] = 1e-6;
 
-  cout << "copy constructor..." << endl;
+  std::cout << "copy constructor..." << std::endl;
 }
 
 // Copy CSD (DATACH structure) data from other structure.

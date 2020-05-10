@@ -28,7 +28,7 @@
 //
 #include <iomanip>
 #include <cmath>
-#include "m_param.h"
+#include "ms_multi.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating bulk stoichiometry of a multicomponent phase
@@ -164,7 +164,7 @@ void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double
         }
         // calculation of the mole fraction
         pm.Wx[j] = X[j]/XF[k];
-        if( X[j] > min( pm.lowPosNum, pm.DcMinM ) )
+        if( X[j] > std::min( pm.lowPosNum, pm.DcMinM ) )
             pm.VL[j] = log( pm.Wx[j] );     // this is used nowhere except in some scripts. Remove?
         else pm.VL[j] = log( pm.lowPosNum );   // debugging 29.11.05 KD
         pm.Y_la[j] = 0.0;
@@ -1016,7 +1016,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
     for( j=jb; j<je; j++ )
     { // Main loop for DCs - surface complexes
         lnGamjo = pm.lnGmo[j];             // bugfix 16.03.2008 DK
-        if( pm.X[j] < min( pm.DcMinM, pm.lowPosNum ) )
+        if( pm.X[j] < std::min( pm.DcMinM, pm.lowPosNum ) )
             continue;  // This surface DC has been killed by IPM
 //        OSAT = pm.lnGmo[j]; // added 6.07.01 by KDA
         ja = j - ( pm.Ls - pm.Lads );
@@ -1324,7 +1324,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
                    XSs += pm.D[i][ist];
                 XSkC = XSs / XVk / Mm * 1e6  // total non-solvent surf.species
                    /pm.Nfsp[k][ist]/ pm.Aalp[k]/1.66054;  // per nm2
-                XS0 = (max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
+                XS0 = (std::max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
                 SATst = pa_p->DNS*1.66054*pm.Aalp[k]/XS0;
                 XS0 = XS0 / pm.Aalp[k]/1.66054;
                 if( pa_p->PC <= 2 )

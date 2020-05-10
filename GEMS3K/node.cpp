@@ -26,6 +26,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include "v_detail.h"
 #include "node.h"
 #include "gdatastream.h"
 #include "num_methods.h"
@@ -43,7 +44,7 @@
 #ifndef IPMGEMPLUGIN
   #include "visor.h"
 #else
-  istream& f_getline(istream& is, std::string& str, char delim);
+
 #endif
 
 //TNode* TNode::na;
@@ -155,10 +156,10 @@ bool  TNode::check_TP( double TK, double P ) const
       }
       if( okT == false )
       {
-        fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+        std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
          f_log << "In node "<< CNode->NodeHandle << ",  Given TK= "<<  TK <<
              "  is beyond the interpolation range for thermodynamic data near boundary T_= "
-     		<< T_ << endl;
+            << T_ << std::endl;
        }
 
       if( P <= CSD->Pval[0] - CSD->Ptol )
@@ -173,10 +174,10 @@ bool  TNode::check_TP( double TK, double P ) const
       }
       if( !okP )
       {
-        fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+        std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
           f_log << "In node "<< CNode->NodeHandle << ", Given P= "<<  P <<
            "  is beyond the interpolation range for thermodynamic data near boundary P_= "
-           << P_ << endl;
+           << P_ << std::endl;
       }
       return ( okT && okP );
    }
@@ -245,7 +246,7 @@ long int TNode::GEM_run( bool uPrimalSol )
                pmm->pKMM = 1; // pmm->ITau = CNode->Tm/CNode->dt;
        }
 
-   /*multi->to_text_file("React_before.dump.txt");//*/profil1->outMultiTxt( "React_before.dump.txt"  );
+   multi->to_text_file("React_before.dump.txt");//profil1->outMultiTxt( "React_before.dump.txt"  );
    // GEM IPM calculation of equilibrium state
    //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
 #ifndef IPMGEMPLUGIN
@@ -253,7 +254,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 #else
     CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
 #endif
-    /*multi->to_text_file("React_after.dump.txt");//*/profil1->outMultiTxt( "React_after.dump.txt" );
+    multi->to_text_file("React_after.dump.txt");//profil1->outMultiTxt( "React_after.dump.txt" );
 
 // Extracting and packing GEM IPM results into work DATABR structure
     packDataBr();
@@ -289,13 +290,13 @@ long int TNode::GEM_run( bool uPrimalSol )
    }
   catch(TError& err)
   {
-   if( profil1->pa.p.PSM  )
+   if( multi->pa_p_ptr()->PSM  )
    {
-       fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+       std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
        f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-         err.title.c_str() << ":" << endl;
-      if( profil1->pa.p.PSM >= 2  )
-         f_log  << err.mess.c_str() << endl;
+         err.title.c_str() << ":" << std::endl;
+      if( multi->pa_p_ptr()->PSM >= 2  )
+         f_log  << err.mess.c_str() << std::endl;
    }
    if( CNode->NodeStatusCH  == NEED_GEM_AIA )
      CNode->NodeStatusCH = ERR_GEM_AIA;
@@ -305,9 +306,9 @@ long int TNode::GEM_run( bool uPrimalSol )
   }
   catch(...)
   {
-   fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+   std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
    f_log << "Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": "
-               << "gems3: Unknown exception: GEM calculation aborted" << endl;
+               << "gems3: Unknown exception: GEM calculation aborted" << std::endl;
    CNode->NodeStatusCH = T_ERROR_GEM;
    }
   return CNode->NodeStatusCH;
@@ -354,11 +355,11 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
     if( binary_f )
 	{
        std::string str_file = fname;
-	   GemDataStream in_br(str_file, ios::in|ios::binary);
+       GemDataStream in_br(str_file, std::ios::in|std::ios::binary);
        databr_from_file(in_br);
 	}
    else
-   {   fstream in_br(fname, ios::in );
+   {   std::fstream in_br(fname, std::ios::in );
        ErrorIf( !in_br.good() , fname, "DataBR Fileopen error");
        databr_from_text_file(in_br);
    }
@@ -367,10 +368,10 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 
   } catch(TError& err)
     {
-      fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
-      f_log << "GEMS3K input : file " << fname << endl;
+      std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+      f_log << "GEMS3K input : file " << fname << std::endl;
       f_log << "Error Node:" << CNode->NodeHandle << ":time:" << CNode->Tm << ":dt:" << CNode->dt<< ": " <<
-        err.title.c_str() << ":" <<  err.mess.c_str() << endl;
+        err.title.c_str() << ":" <<  err.mess.c_str() << std::endl;
       return 1;
     }
     catch(...)
@@ -413,7 +414,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
    // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
    std::string curPath = ""; //current reading file path
 #ifdef IPMGEMPLUGIN
-  fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+  std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
   try
     {
 #else
@@ -440,7 +441,7 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
       Path = lst_in.substr(0, pos+1);
 
 //  open file stream for the file names list file
-      fstream f_lst( lst_in.c_str(), ios::in );
+      std::fstream f_lst( lst_in.c_str(), std::ios::in );
       ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
 
       std::string datachbr_fn;
@@ -468,11 +469,11 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 // Reading DCH_DAT file in binary or text format
       curPath = dat_ch;
       if( binary_f )
-      {  GemDataStream f_ch(dat_ch, ios::in|ios::binary);
+      {  GemDataStream f_ch(dat_ch, std::ios::in|std::ios::binary);
          datach_from_file(f_ch);
        }
       else
-      { fstream f_ch(dat_ch.c_str(), ios::in );
+      { std::fstream f_ch(dat_ch.c_str(), std::ios::in );
          ErrorIf( !f_ch.good() , dat_ch.c_str(), "DCH_DAT fileopen error");
          datach_from_text_file(f_ch);
       }
@@ -481,20 +482,14 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 curPath = mult_in;
 if( binary_f )
  {
-   GemDataStream f_m(mult_in, ios::in|ios::binary);
-#ifdef IPMGEMPLUGIN
-    profil1->readMulti(f_m, CSD);
-#else
-    TProfil::pm->readMulti(f_m, CSD);
-#endif
-  }
+   GemDataStream f_m(mult_in, std::ios::in|std::ios::binary);
+   multi->read_multi(f_m, CSD);
+ }
   else
   {
-#ifdef IPMGEMPLUGIN
-        profil1->readMulti(mult_in.c_str(), CSD );
-#else
-    TProfil::pm->readMulti(mult_in.c_str(), CSD );
-#endif
+    std::fstream ff( mult_in, std::ios::in );
+    ErrorIf( !ff.good() , mult_in, "Fileopen error");
+    multi->from_text_file_gemipm( ff, CSD);
   }
 
   // copy intervals for minimizatiom
@@ -520,11 +515,11 @@ if( binary_f )
         curPath = dbr_file;
         if( binary_f )
         {
-               GemDataStream in_br(dbr_file, ios::in|ios::binary);
+               GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
                databr_from_file(in_br);
         }
         else
-        {   fstream in_br(dbr_file.c_str(), ios::in );
+        {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
                    ErrorIf( !in_br.good() , datachbr_fn.c_str(),
                       "DBR_DAT fileopen error");
                  databr_from_text_file(in_br);
@@ -549,8 +544,8 @@ if( binary_f )
     catch(TError& err)
     {
       if( !curPath.empty() )
-          f_log << "GEMS3K input : file " << curPath.c_str() << endl;
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+          f_log << "GEMS3K input : file " << curPath.c_str() << std::endl;
+      f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
     }
     catch(...)
     {
@@ -570,7 +565,7 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
 #ifdef IPMGEMPLUGIN
     load_thermodynamic_data = false; // need load thermo
 
-    fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
   try
     {
 #endif
@@ -579,7 +574,7 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
 
     // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
 #ifdef IPMGEMPLUGIN
-    profil1->gemipm_from_string( ipm_json,CSD );
+    multi->gemipm_from_string( ipm_json,CSD );
 #else
     TProfil::pm->gemipm_from_string(ipm_json,CSD );
 #endif
@@ -617,7 +612,7 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
     }
     catch(TError& err)
     {
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+      f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
     }
     catch(...)
     {
@@ -643,7 +638,7 @@ void *TNode::get_ptrTSolMod(int xPH) const
 long int TNode::IC_name_to_xCH( const char *Name ) const
 {
   long int ii, len = strlen( Name );
-  len =  min(len,MaxICN);
+  len =  std::min(len,MaxICN);
 
   for(ii = 0; ii<CSD->nIC; ii++ )
        if(!memcmp(Name, CSD->ICNL[ii], len ))
@@ -657,10 +652,10 @@ long int TNode::IC_name_to_xCH( const char *Name ) const
  long int TNode::DC_name_to_xCH( const char *Name ) const
  {
   long int ii, len = strlen( Name );
-  len =  min(len,MaxDCN);
+  len =  std::min(len,MaxDCN);
 
   for( ii = 0; ii<CSD->nDC; ii++ )
-       if(!memcmp(Name, CSD->DCNL[ii], min(len,MaxDCN)))
+       if(!memcmp(Name, CSD->DCNL[ii], std::min(len,MaxDCN)))
         if( len == MaxDCN || CSD->DCNL[ii][len] == ' ' || CSD->DCNL[ii][len] == '\0' )
          return ii;
   return -1;
@@ -671,10 +666,10 @@ long int TNode::IC_name_to_xCH( const char *Name ) const
 long int TNode::Ph_name_to_xCH( const char *Name ) const
 {
   long int ii, len = strlen( Name );
-  len =  min(len,MaxPHN);
+  len =  std::min(len,MaxPHN);
 
   for( ii = 0; ii<CSD->nPH; ii++ )
-       if(!memcmp(Name, CSD->PHNL[ii], min(len,MaxPHN)))
+       if(!memcmp(Name, CSD->PHNL[ii], std::min(len,MaxPHN)))
         if( len == MaxPHN || CSD->PHNL[ii][len] == ' ' || CSD->PHNL[ii][len] == '\0' )
          return ii;
   return -1;
@@ -858,7 +853,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
        load_thermodynamic_data = false;
     }
     else
-        cout << "ERROR P and TK pair not present in the DATACH";
+        std::cout << "ERROR P and TK pair not present in the DATACH";
       return 0;
    }
 #endif
@@ -1025,7 +1020,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 
    // Retrieves (interpolated) dielectric constant and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
    // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   void TNode::EpsArrayH2Ow( const double P, const double TK, vector<double>& EpsAW )
+   void TNode::EpsArrayH2Ow( const double P, const double TK, std::vector<double>& EpsAW )
    {
 		long int xTP;
 		EpsAW.resize(5);
@@ -1063,7 +1058,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 
    // Retrieves (interpolated) density and its derivatives of liquid water at (P,TK) from the DATACH structure or 0.0,
    // if TK (temperature, Kelvin) or P (pressure, Pa) parameters go beyond the valid lookup array intervals or tolerances.
-   void TNode::DensArrayH2Ow( const double P, const double TK, vector<double>& DensAW )
+   void TNode::DensArrayH2Ow( const double P, const double TK, std::vector<double>& DensAW )
    {
 		long int xTP;
 		DensAW.resize(5);
@@ -1541,18 +1536,17 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // Sets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
   // Parameters IN: vaIPc - vector with the contents of the aIPc sub-array to be set; ipaIPc is the origin index (of the first element)
   //    of the aIPc array; index_phase is the DCH index of phase of interest.
-  void TNode::Set_aIPc ( const vector<double> aIPc, const long int &ipaIPc, const long int &index_phase )
+  void TNode::Set_aIPc ( const std::vector<double> aIPc, const long int &ipaIPc, const long int &index_phase )
   {
     long int rc, NPar, NPcoef;
     NPar = pmm->LsMod[ index_phase * 3 ];
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
     if( aIPc.size() != (uint)(NPar*NPcoef) )
     {
-		cout<<endl;
-        cout<<" TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! "<<endl;
-		cout<<" aIPc.size() = "<<aIPc.size()<<", NPar*NPcoef = "<<NPar*NPcoef<<endl;
-		cout<<" bailing out now ... "<<endl;
-		cout<<endl;
+        std::cout  << std::endl
+                   << " TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! \n"
+                   <<" aIPc.size() = "<<aIPc.size()<<", NPar*NPcoef = "<<NPar*NPcoef<<std::endl
+                   <<" bailing out now ... \n" << std::endl;
 		exit(1);
     }
     for ( rc=0;rc<(NPar*NPcoef);rc++ )
@@ -1565,7 +1559,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // Gets values of the aIPc array (of interaction parameter coefficients) for the solution phase of interest index_phase.
   // Parameters IN: ipaIPc is the origin index (of the first element) of the aIPc array; index_phase is the DCH index of phase of interest.
   // Parameters OUT: returns vaIPc - vector with the contents of the aIPc sub-array.
-  void TNode::Get_aIPc ( vector<double> &aIPc, const long int &ipaIPc, const long int &index_phase )
+  void TNode::Get_aIPc ( std::vector<double> &aIPc, const long int &ipaIPc, const long int &index_phase )
   {
     long int i, NPar, NPcoef;
     NPar   = pmm->LsMod[ index_phase * 3 ];
@@ -1584,7 +1578,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // Gets values of the aIPx list array (of indexes of interacting moieties or components) for the solution phase of interest index_phase.
   // Parameters IN: ipaIPx is the origin index (of the first element) of the aIPx array; index_phase is the DCH index of phase of interest.
   // Parameters OUT: returns vaIPx - vector with the contents of the aIPx sub-array.
-  void TNode::Get_aIPx ( vector<long int> &aIPx, const long int &ipaIPx, const long int &index_phase )
+  void TNode::Get_aIPx ( std::vector<long int> &aIPx, const long int &ipaIPx, const long int &index_phase )
   {
     long int i, NPar, MaxOrd;
     NPar   = pmm->LsMod[ index_phase * 3 ];
@@ -1603,18 +1597,18 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // Sets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
   // Parameters IN: vaDCc - vector with the contents of the aDCc sub-array to be set. ipaDCc is the origin index (of the first element)
   //    of the aDCc array; index_phase is the DCH index of phase of interest.
-  void TNode::Set_aDCc( const vector<double> aDCc, const long int &ipaDCc, const long int &index_phase )
+  void TNode::Set_aDCc( const std::vector<double> aDCc, const long int &ipaDCc, const long int &index_phase )
   {
     long int rc, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
     NP_DC = pmm->LsMdc[ index_phase ];
     if( aDCc.size() != (uint)(NComp*NP_DC) )
     {
-		cout<<endl;
-        cout<<"TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "<<endl;
-		cout<<" aDCc.size() = "<<aDCc.size()<<", NComp*NP_DC = "<<NComp*NP_DC<<endl;
-		cout<<" bailing out now ... "<<endl;
-		cout<<endl;
+        std::cout<<std::endl;
+        std::cout<<"TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "<<std::endl;
+        std::cout<<" aDCc.size() = "<<aDCc.size()<<", NComp*NP_DC = "<<NComp*NP_DC<<std::endl;
+        std::cout<<" bailing out now ... "<<std::endl;
+        std::cout<<std::endl;
 		exit(1);
     }
     for ( rc=0;rc<(NComp*NP_DC);rc++ )
@@ -1627,7 +1621,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // Gets values of the aDCc array (of components property coefficients) for the solution phase of interest index_phase.
   // Parameters IN: ipaDCc is the origin index (of the first element) of the aDCc array; index_phase is the DCH index of phase of interest.
   // Parameters OUT: returns vaDCc - vector with the contents of the aDCc sub-array.
-  void TNode::Get_aDCc( vector<double> &aDCc, const long int &index_phase_aDCc, const long int &index_phase )
+  void TNode::Get_aDCc( std::vector<double> &aDCc, const long int &index_phase_aDCc, const long int &index_phase )
   {
     long int i, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
@@ -1760,8 +1754,8 @@ void TNode::allocMemory()
 // internal class instances
     multi = new TMultiBase( this );
     pmm = multi->GetPM();
-    profil1 = new TProfil( multi );
-    multi->setPa(profil1);
+//    profil1 = new TProfil( multi );
+//    multi->setPa(profil1);
     //TProfil::pm = profil;
     atp = new TActivity( CSD, CNode, this );
 //    atp->set_def();
@@ -1781,7 +1775,7 @@ void TNode::freeMemory()
 
 #ifdef IPMGEMPLUGIN
   delete multi;
-  delete profil1;
+  //delete profil1;
 #endif
 }
 
@@ -2249,7 +2243,7 @@ void TNode::unpackDataBr( bool uPrimalSol )
   for( ii=0; ii<CSD->nICb; ii++ )
   {
       pmm->B[ CSD->xic[ii] ] = CNode->bIC[ii];
-      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < profil1->pa.p.DB )
+      if( ii < CSD->nICb-1 && pmm->B[ CSD->xic[ii] ] < multi->pa_p_ptr()->DB )
       {
          char buf[300];
          sprintf(buf, "Bulk mole amount of IC %-6.6s is %lg - out of range",
@@ -2370,11 +2364,11 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
        if( binary_f )
        {
             // std::string str_file = fname;
-              GemDataStream out_br(str_file, ios::out|ios::binary);
+              GemDataStream out_br(str_file, std::ios::out|std::ios::binary);
               databr_to_file(out_br);
        }
        else
-       {  fstream out_br(str_file.c_str(), ios::out );
+       {  std::fstream out_br(str_file.c_str(), std::ios::out );
          ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
          databr_to_text_file(out_br, with_comments, brief_mode, str_file.c_str() );
        }
@@ -2395,7 +2389,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
      else
            str_file = fname;
 
-       /*multi->to_text_file(str_file.c_str());//*/profil1->outMultiTxt( str_file.c_str()  );
+       multi->to_text_file(str_file.c_str());//profil1->outMultiTxt( str_file.c_str()  );
    }
 
 #ifdef IPMGEMPLUGIN

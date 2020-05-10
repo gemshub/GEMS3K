@@ -27,8 +27,8 @@
 //-------------------------------------------------------------------
 //
 
-#include "m_param.h"
-#include "node.h"
+#include "v_detail.h"
+#include "ms_multi.h"
 #include "num_methods.h"
 #include "activities.h"
 #include "kinetics.h"

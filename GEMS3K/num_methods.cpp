@@ -25,7 +25,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "v_user.h"
+#include <cmath>
+#include "verror.h"
 #include "num_methods.h"
 
 /// Calculate number of points from iterators
@@ -89,7 +90,7 @@ double LagranInterp(double *y, double *x, double *d, double yoi,
       return d[0];
 
 // find the point in the row
-   ppy = min( N-1, pp );
+   ppy = std::min( N-1, pp );
    for(jy=0;jy<N;jy++)
      if ( yoi >= y[jy] && yoi <= y[jy+1])
         break;
@@ -98,7 +99,7 @@ double LagranInterp(double *y, double *x, double *d, double yoi,
    jy1=jy;
 
 // find the point in the column
-   ppx = min( M-1, pp );
+   ppx = std::min( M-1, pp );
    for(jx=0;jx<M;jx++)
         if(xoi >= x[jx] && xoi <= x[jx+1])
             break;
@@ -189,7 +190,7 @@ double LagranInterp1D(double *x, double *d, double xoi, long int M, long int pp 
       return d[0];
 
 // find the point in the column
-   ppx = min( M-1, pp );
+   ppx = std::min( M-1, pp );
    for(jx=0;jx<M;jx++)
         if(xoi >= x[jx] && xoi <= x[jx+1])
             break;

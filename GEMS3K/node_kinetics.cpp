@@ -30,16 +30,12 @@
 #include <iomanip>
 
 #include "node.h"
-//#include "m_param.h"
-//#include "s_kinmet.h"
 #include "kinetics.h"
-
 
 void TKinetics::set_def( void )
 {
 
 }
-
 
 
 // void TNode::setSpeciesUpperAMRs( const double* nu )
@@ -170,7 +166,7 @@ if( k < kin.FIs )
                     break;
                 case CON_WTFR:
 //Ask DK! 20/04/2002
-#ifndef IPMGEMPLUGIN
+//#ifndef IPMGEMPLUGIN
                     XU = kin.DUL[j]*XFU*MWXW /
          TProfil::pm->MolWeight(kin.N, kin.Awt, kin.A+j*kin.N );
                     XL = kin.DLL[j]*XFL*MWXW /

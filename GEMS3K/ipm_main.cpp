@@ -31,8 +31,8 @@
 
 #include<iomanip>
 
-#include "node.h"
-#include "m_param.h"
+//#include "node.h"
+#include "ms_multi.h"
 #include "jama_lu.h"
 #include "jama_cholesky.h"
 #include "kinetics.h"

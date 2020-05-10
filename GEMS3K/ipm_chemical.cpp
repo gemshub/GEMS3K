@@ -29,7 +29,7 @@
 #include <cmath>
 #include<iomanip>
 
-#include "m_param.h"
+#include "ms_multi.h"
 // #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -54,7 +54,7 @@ void TMultiBase::XmaxSAT_IPM2()
 
     if( pm.XFA[k] < pm.DSM ) // No sorbent retained by the IPM
         continue;
-    if( pm.XF[k]-pm.XFA[k] < min( pm.lowPosNum, pm.DcMinM ) ) // may need qd_real in subtraction!
+    if( pm.XF[k]-pm.XFA[k] < std::min( pm.lowPosNum, pm.DcMinM ) ) // may need qd_real in subtraction!
         continue;  // No surface species
 
     for(i=0; i<6; i++)
@@ -77,7 +77,7 @@ void TMultiBase::XmaxSAT_IPM2()
 
     for( j=jb; j<je; j++ )
     { // Loop over DCs
-        if( pm.X[j] <= min( pm.lowPosNum, pm.DcMinM ) )
+        if( pm.X[j] <= std::min( pm.lowPosNum, pm.DcMinM ) )
             continue;  // This surface DC has been killed by the IPM
         rIEPS = pa_p_ptr()->IEPS;
         ja = j - ( pm.Ls - pm.Lads );
@@ -126,7 +126,7 @@ void TMultiBase::XmaxSAT_IPM2()
                 if( iSite[ist] < 0 )
                     xjn = 0.0;
                 else xjn = pm.X[iSite[ist]]; // neutral site does not compete!
-                XS0 = max(pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN]);
+                XS0 = std::max(pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN]);
                 XS0 = XS0 * XVk * Mm / 1e6 * pm.Nfsp[k][ist];
                             // expected total in moles
                 XSkC = XSk - xjn - xj; // occupied by the competing species
@@ -167,7 +167,7 @@ cout << "XmaxSAT_IPM2 Ncomp IT= " << pm.IT << " j= " << j << " oDUL=" << oDUL <<
 
             case SAT_SOLV:  // Neutral surface site (e.g. >O0.5H@ group)
                 rIEPS = pa_p_ptr()->IEPS;
-                XS0 = (max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
+                XS0 = (std::max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
                 XS0 = XS0 * XVk * Mm / 1e6 * pm.Nfsp[k][ist]; // in moles
 
                 pm.DUL[j] =  XS0 - rIEPS;
@@ -743,7 +743,7 @@ case DC_SCM_SPECIES:
     {
         double SmoSensT = 1e-5;   // to be adjusted
         dF0 = F0 - Fold;
-        if( pm.X[j] > min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
+        if( pm.X[j] > std::min( pm.lowPosNum, pm.DcMinM ) && fabs( dF0 ) >= SmoSensT )
        	    F0 = Fold + dF0 * SmoothingFactor();    // Changed 18.06.2008 DK
     }
     return F0;
@@ -847,7 +847,7 @@ NonLogTerm = 0.0;
         }
         for( ; j<i; j++ )
         { //  cycle by DC
-            if( Y[j] < min( pm.DcMinM, pm.lowPosNum ))
+            if( Y[j] < std::min( pm.DcMinM, pm.lowPosNum ))
                 continue;  // exception by minimum DC quantity
                            // calculate chemical potential of j-th DC
             v = DC_PrimalChemicalPotential( pm.G[j], log(Y[j]), pm.logYFk,
@@ -2001,7 +2001,7 @@ kur = ku;
                  pm.YF[k]=0.;
                  for(j=jb;j<jb+pm.L1[k];j++)
                  {
-                    if( pm.Y[j] < min( pm.lowPosNum, pm.DcMinM ) )  // fixed 30.08.2009
+                    if( pm.Y[j] < std::min( pm.lowPosNum, pm.DcMinM ) )  // fixed 30.08.2009
                         pm.Y[j] = RaiseDC_Value( j ); // bugfix 29.10.07
                     pm.YF[k] += pm.Y[j]; // calculate new amounts of phases
                  }

@@ -24,9 +24,12 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "io_arrays.h"
-#include "m_param.h"
+#include <cmath>
+#include <sstream>
 #include <iomanip>
+#include "v_detail.h"
+#include "io_arrays.h"
+#include "ms_multi.h"
 
 #ifdef  JSON_OUT
 #include "io_json.h"
@@ -159,7 +162,7 @@ outField MULTI_dynamic_fields[80] =  {
 //===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
-void TMultiBase::to_text_file_gemipm( iostream& ff, bool addMui,
+void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
 		bool with_comments, bool brief_mode )
 {
   const BASE_PARAM *pa_p = pa_p_ptr();
@@ -213,23 +216,23 @@ void TMultiBase::to_text_file_gemipm( iostream& ff, bool addMui,
    }
 
 if( _comment )
-{  ff << "# " << _GEMIPM_version_stamp << endl;// << "# File: " << path << endl;
-   ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
-   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << endl;
-   ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
-   ff << "# ID key of the initial chemical system definition" << endl;
+{  ff << "# " << _GEMIPM_version_stamp << std::endl;// << "# File: " << path << endl;
+   ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
+   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << std::endl;
+   ff << "# (should be read after the DCH file and before DBR files)" << std::endl << std::endl;
+   ff << "# ID key of the initial chemical system definition" << std::endl;
 }
 
 #ifdef JSON_OUT
     json_data["<ID_key>"] = std::string(pm.stkey);
 #else
-    ff << "<ID_key> \"" << pm.stkey << "\"" << endl;
+    ff << "<ID_key> \"" << pm.stkey << "\"" << std::endl;
 #endif
 
  if( _comment )
      ff << "\n## (1) Flags that affect memory allocation";
 
- if(!brief_mode || pa_p->PE != pa_.p.PE )
+ if(!brief_mode || pa_p->PE != pa_p_.PE )
    prar1.writeField(f_pa_PE, pa_p->PE, _comment, false  );
 
  //   ff << "# Do not know if this stuff is really necessary" << endl;
@@ -245,10 +248,10 @@ if( _comment )
 #else
  if( _comment )
      ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
- ff << endl << left << setw(12) << "<PAalp> " <<  right << setw(6) << "\'" << PAalp << "\'" << endl;
+ ff << std::endl << std::left << std::setw(12) << "<PAalp> " <<  std::right << std::setw(6) << "\'" << PAalp << "\'" << std::endl;
  if( _comment )
-     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
- ff << left << setw(12) << "<PSigm> " <<  right << setw(6) << "\'" << PSigm << "\'" << endl;
+     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << std::endl;
+ ff << std::left << std::setw(12) << "<PSigm> " <<  std::right << std::setw(6) << "\'" << PSigm << "\'" << std::endl;
 #endif
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
@@ -268,40 +271,40 @@ if( _comment )
 
    // static data not affected by dimensionalities
    if( _comment )
-   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
+   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << std::endl;
       ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
    }
-   if( !brief_mode ||pa_p->DB != pa_.p.DB )
+   if( !brief_mode ||pa_p->DB != pa_p_.DB )
       prar.writeField(f_pa_DB, pa_p->DB, _comment, false  );
-   if( !brief_mode ||pa_p->DHB != pa_.p.DHB )
+   if( !brief_mode ||pa_p->DHB != pa_p_.DHB )
       prar.writeField(f_pa_DHB, pa_p->DHB, _comment, false  );
-   if( !brief_mode ||pa_p->EPS != pa_.p.EPS )
+   if( !brief_mode ||pa_p->EPS != pa_p_.EPS )
        prar.writeField(f_pa_EPS, pa_p->EPS, _comment, false  );
-   if( !brief_mode ||pa_p->DK != pa_.p.DK )
+   if( !brief_mode ||pa_p->DK != pa_p_.DK )
        prar.writeField(f_pa_DK, pa_p->DK, _comment, false  );
-   if( !brief_mode ||pa_p->DS != pa_.p.DS )
+   if( !brief_mode ||pa_p->DS != pa_p_.DS )
        prar.writeField(f_pa_DS,  pa_p->DS, _comment, false  );
-   if( !brief_mode ||pa_p->DF != pa_.p.DF )
+   if( !brief_mode ||pa_p->DF != pa_p_.DF )
        prar.writeField(f_pa_DF, pa_p->DF, _comment, false  );
-   if( !brief_mode ||pa_p->DFM != pa_.p.DFM )
+   if( !brief_mode ||pa_p->DFM != pa_p_.DFM )
        prar.writeField(f_pa_DFM,  pa_p->DFM, _comment, false  );
-   if(!brief_mode || pa_p->DP != pa_.p.DP )
+   if(!brief_mode || pa_p->DP != pa_p_.DP )
        prar.writeField(f_pa_DP,  pa_p->DP, _comment, false  );
-   if(!brief_mode || pa_p->IIM != pa_.p.IIM )
+   if(!brief_mode || pa_p->IIM != pa_p_.IIM )
        prar.writeField(f_pa_IIM,  pa_p->IIM, _comment, false  );
-   if(!brief_mode || pa_p->PD != pa_.p.PD )
+   if(!brief_mode || pa_p->PD != pa_p_.PD )
        prar.writeField(f_pa_PD,  pa_p->PD, _comment, false  );
-   if(!brief_mode || pa_p->PRD != pa_.p.PRD )
+   if(!brief_mode || pa_p->PRD != pa_p_.PRD )
        prar.writeField(f_pa_PRD,  pa_p->PRD, _comment, false  );
-   if(!brief_mode || pa_p->AG != pa_.p.AG )
+   if(!brief_mode || pa_p->AG != pa_p_.AG )
        prar.writeField(f_pa_AG,  pa_p->AG, _comment, false  );
-   if(!brief_mode || pa_p->DGC != pa_.p.DGC )
+   if(!brief_mode || pa_p->DGC != pa_p_.DGC )
        prar.writeField(f_pa_DGC,  pa_p->DGC, _comment, false  );
-   if(!brief_mode || pa_p->PSM != pa_.p.PSM )
+   if(!brief_mode || pa_p->PSM != pa_p_.PSM )
        prar.writeField(f_pa_PSM,  pa_p->PSM, _comment, false  );
-   if(!brief_mode || pa_p->GAR != pa_.p.GAR )
+   if(!brief_mode || pa_p->GAR != pa_p_.GAR )
        prar.writeField(f_pa_GAR,  pa_p->GAR, _comment, false  );
-   if(!brief_mode || pa_p->GAH != pa_.p.GAH )
+   if(!brief_mode || pa_p->GAH != pa_p_.GAH )
        prar.writeField(f_pa_GAH,  pa_p->GAH, _comment, false  );
 
    if(!brief_mode)
@@ -309,56 +312,56 @@ if( _comment )
      {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
      }
 
-   if(!brief_mode || pa_p->XwMin != pa_.p.XwMin )
+   if(!brief_mode || pa_p->XwMin != pa_p_.XwMin )
        prar.writeField(f_pa_XwMin,  pa_p->XwMin, _comment, false  );
-   if(!brief_mode || pa_p->ScMin != pa_.p.ScMin )
+   if(!brief_mode || pa_p->ScMin != pa_p_.ScMin )
        prar.writeField(f_pa_ScMin,  pa_p->ScMin, _comment, false  );
-   if(!brief_mode || pa_p->DcMin != pa_.p.DcMin )
+   if(!brief_mode || pa_p->DcMin != pa_p_.DcMin )
        prar.writeField(f_pa_DcMin,  pa_p->DcMin, _comment, false  );
-   if(!brief_mode || pa_p->PhMin != pa_.p.PhMin )
+   if(!brief_mode || pa_p->PhMin != pa_p_.PhMin )
        prar.writeField(f_pa_PhMin,  pa_p->PhMin, _comment, false  );
-   if(!brief_mode || pa_p->ICmin != pa_.p.ICmin )
+   if(!brief_mode || pa_p->ICmin != pa_p_.ICmin )
        prar.writeField(f_pa_ICmin,  pa_p->ICmin, _comment, false  );
-   if(!brief_mode || pa_p->PC != pa_.p.PC )
+   if(!brief_mode || pa_p->PC != pa_p_.PC )
        prar.writeField(f_pa_PC,  pa_p->PC, _comment, false  );
 
    if( _comment )
-      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
+      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << std::endl;
 
-   if(!brief_mode || pa_p->DFYw != pa_.p.DFYw )
+   if(!brief_mode || pa_p->DFYw != pa_p_.DFYw )
        prar.writeField(f_pa_DFYw,  pa_p->DFYw, _comment, false  );
-   if(!brief_mode || pa_p->DFYaq != pa_.p.DFYaq )
+   if(!brief_mode || pa_p->DFYaq != pa_p_.DFYaq )
        prar.writeField(f_pa_DFYaq,  pa_p->DFYaq, _comment, false  );
-   if(!brief_mode || pa_p->DFYid != pa_.p.DFYid )
+   if(!brief_mode || pa_p->DFYid != pa_p_.DFYid )
        prar.writeField(f_pa_DFYid,  pa_p->DFYid, _comment, false  );
-   if(!brief_mode || pa_p->DFYr != pa_.p.DFYr )
+   if(!brief_mode || pa_p->DFYr != pa_p_.DFYr )
        prar.writeField(f_pa_DFYr,  pa_p->DFYr, _comment, false  );
-   if(!brief_mode || pa_p->DFYh != pa_.p.DFYh )
+   if(!brief_mode || pa_p->DFYh != pa_p_.DFYh )
        prar.writeField(f_pa_DFYh,  pa_p->DFYh, _comment, false  );
-   if(!brief_mode || pa_p->DFYc != pa_.p.DFYc )
+   if(!brief_mode || pa_p->DFYc != pa_p_.DFYc )
        prar.writeField(f_pa_DFYc,  pa_p->DFYc, _comment, false  );
-   if(!brief_mode || pa_p->DFYs != pa_.p.DFYs )
+   if(!brief_mode || pa_p->DFYs != pa_p_.DFYs )
        prar.writeField(f_pa_DFYs,  pa_p->DFYs, _comment, false  );
 
    if( _comment )
      ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm ";
 
-   if(!brief_mode || pa_p->DW != pa_.p.DW )
+   if(!brief_mode || pa_p->DW != pa_p_.DW )
        prar.writeField(f_pa_DW,  pa_p->DW, _comment, false  );
-   if(!brief_mode || pa_p->DT != pa_.p.DT )
+   if(!brief_mode || pa_p->DT != pa_p_.DT )
        prar.writeField(f_pa_DT,  pa_p->DT, _comment, false  );
-   if(!brief_mode || pa_p->GAS != pa_.p.GAS )
+   if(!brief_mode || pa_p->GAS != pa_p_.GAS )
        prar.writeField(f_pa_GAS,  pa_p->GAS, _comment, false  );
-   if(!brief_mode || pa_p->DG != pa_.p.DG )
+   if(!brief_mode || pa_p->DG != pa_p_.DG )
        prar.writeField(f_pa_DG,  pa_p->DG, _comment, false  );
-   if(!brief_mode || pa_p->DNS != pa_.p.DNS )
+   if(!brief_mode || pa_p->DNS != pa_p_.DNS )
        prar.writeField(f_pa_DNS, pa_p->DNS, _comment, false  );
-   if(!brief_mode || pa_p->IEPS != pa_.p.IEPS )
+   if(!brief_mode || pa_p->IEPS != pa_p_.IEPS )
        prar.writeField(f_pa_IEPS, pa_p->IEPS, _comment, false  );
   prar.writeField(f_pKin, pm.PLIM, _comment, brief_mode  );
-  if(!brief_mode || pa_p->DKIN != pa_.p.DKIN )
+  if(!brief_mode || pa_p->DKIN != pa_p_.DKIN )
        prar.writeField(f_pa_DKIN, pa_p->DKIN, _comment, false  );
-  if(!brief_mode || pa_p->PLLG != pa_.p.PLLG )
+  if(!brief_mode || pa_p->PLLG != pa_p_.PLLG )
        prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
   if(!brief_mode || pm.tMin != G_TP_ )
        prar.writeField(f_tMin, pm.tMin, _comment, false  );
@@ -542,7 +545,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    prar.writeArray(  f_DUL, pm.DUL,  pm.L, -1L, _comment, brief_mode);
 
    if( _comment )
-     ff << "\n\n# (7) Initial data for Phases" << endl;
+     ff << "\n\n# (7) Initial data for Phases" << std::endl;
    prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
    if( PSigm != S_OFF )
    {
@@ -591,15 +594,15 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 #ifdef  JSON_OUT
   ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
-  ff << endl;
+  ff << std::endl;
 
  if( _comment )
-   ff << "\n# End of file\n" << endl;
+   ff << "\n# End of file\n" << std::endl;
 
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
-void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
+void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
 {
   BASE_PARAM *pa_p = pa_p_ptr();
   long int ii, nfild, len;
@@ -732,12 +735,12 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
     fillValue(pm.SB[ii], ' ', MaxICN );
     len = strlen(dCH->ICNL[ii]);
     //len = min(  len,MaxICN);
-    copyValues( pm.SB[ii], dCH->ICNL[ii], min(len,(long int)MAXICNAME));
+    copyValues( pm.SB[ii], dCH->ICNL[ii], std::min(len,(long int)MAXICNAME));
     pm.SB[ii][MaxICN] = dCH->ccIC[ii];
     pm.ICC[ii] =  dCH->ccIC[ii];
   }
 
-  if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
+  if( std::fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       for( long int jj=0; jj< dCH->nDC; jj++ )  // Added by DK on 03.03.2007
       {
           dCH->DCmm[jj] = 0.0;
@@ -751,7 +754,7 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
     pm.DCC[ii] = dCH->ccDC[ii];
     len =strlen(dCH->DCNL[ii]);
     //len = min(  len,MaxDCN);
-    copyValues( pm.SM[ii], dCH->DCNL[ii], min(len,(long int)MAXDCNAME) );
+    copyValues( pm.SM[ii], dCH->DCNL[ii], std::min(len,(long int)MAXDCNAME) );
   }
 
   for( ii=0; ii< dCH->nPH; ii++ )
@@ -759,7 +762,7 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
      len =strlen(dCH->PHNL[ii]);
      //len = min(  len,MaxPHN);
           fillValue( pm.SF[ii], ' ', MAXPHNAME+MAXSYMB );
-          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], min(len,(long int)MAXPHNAME) );
+          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], std::min(len,(long int)MAXPHNAME) );
      pm.SF[ii][0] = dCH->ccPH[ii];
      pm.PHC[ii] = dCH->ccPH[ii];
   }
@@ -1195,6 +1198,26 @@ void TMultiBase::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
   { ret += " - fields must be read from the MULTY structure";
     Error( "Error", ret);
   }
+}
+
+
+/// Writes Multi to a json/key-value string
+/// \param brief_mode - Do not write data items that contain only default values
+/// \param with_comments - Write files with comments for all data entries
+std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
+{
+    std::stringstream ss;
+    to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
+    return ss.str();
+}
+
+/// Reads Multi structure from a json/key-value string
+bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
+{
+    std::stringstream ss;
+    ss.str(data);
+    from_text_file_gemipm( ss, dCH );
+    return true;
 }
 
 //=============================================================================

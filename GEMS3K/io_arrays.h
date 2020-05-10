@@ -25,9 +25,9 @@
 
 #pragma once
 
-#include  <fstream>
+#include <iostream>
 #include <vector>
-#include <cmath>
+//#include <cmath>
 #include "verror.h"
 
 struct outField /// Internal descriptions of fields
@@ -134,12 +134,12 @@ class TRWArrays  /// Basic class for red/write fields of structure
 /// Print fields of structure outField
 class TPrintArrays: public  TRWArrays
 {
-    iostream& ff;
+    std::iostream& ff;
 
 public:
 
     /// Constructor
-    TPrintArrays( short  aNumFlds, outField* aFlds, iostream& fout ):
+    TPrintArrays( short  aNumFlds, outField* aFlds, std::iostream& fout ):
         TRWArrays( aNumFlds, aFlds), ff( fout )
     {}
 
@@ -159,8 +159,8 @@ public:
         if(!brief_mode || getAlws( f_num ))
         {
             if( with_comments && flds[f_num].comment.length()>1)
-                ff << endl << flds[f_num].comment.c_str();
-            ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+                ff << std::endl << flds[f_num].comment.c_str();
+            ff << std::endl << "<" << flds[f_num].name.c_str() << ">  ";
             writeValue(value);
         }
     }
@@ -177,7 +177,7 @@ public:
       if(!brief_mode || getAlws(f_num ))
       {
         if( with_comments )
-             ff <<  endl << flds[f_num].comment.c_str();
+             ff <<  std::endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr, size, l_size );
       }
     }
@@ -187,7 +187,7 @@ public:
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, const vector<double>& arr, long int l_size=0,
+    void writeArray( long f_num, const std::vector<double>& arr, long int l_size=0,
                      bool with_comments = false, bool brief_mode = false);
 
     /// Writes char array to a text file.
@@ -206,11 +206,11 @@ public:
         if( arr_size > 0 )
             sz = arr_size;
 
-        ff << endl << "<" << name << ">" << endl;
+        ff << std::endl << "<" << name << ">" << std::endl;
         for( int ii=0, jj=0; ii<size; ii++, jj++  )
         {
             if(jj == sz) {
-                jj=0;  ff << endl;
+                jj=0;  ff << std::endl;
             }
             writeValue(arr[ii]);
             ff << " ";
@@ -224,17 +224,17 @@ public:
      bool isComment = false;
 
      if( name )
-         ff << endl << "<" << name << ">" << endl;
+         ff << std::endl << "<" << name << ">" << std::endl;
      else
      {
-         ff << endl << "#  ";
+         ff << std::endl << "#  ";
          isComment = true;
      }
      for( long int ii=0, jj=0; ii<size; ii++, jj++  )
      {
         if(jj == 40 )
         {
-          jj=0;  ff << endl;
+          jj=0;  ff << std::endl;
           if(isComment)
               ff << "#  ";
         }
@@ -256,13 +256,13 @@ public:
         if( l_size > 0 )
             sz = l_size;
 
-        ff << endl << "<" << name << ">" << endl;
+        ff << std::endl << "<" << name << ">" << std::endl;
         for( long int ii=0, jj=0; ii<size; ii++  )
         {
             for(long int cc=0; cc<nColumns; cc++ )
             {
                 if(jj == sz){
-                    jj=0;  ff << endl;
+                    jj=0;  ff << std::endl;
                 }
                 writeValue(arr[selArr[ii]*nColumns+cc]);
                 ff << " ";
@@ -278,7 +278,7 @@ public:
 
  class TReadArrays : public  TRWArrays /// Read fields of structure
  {
-     iostream& ff;
+     std::iostream& ff;
      std::string curArray;
 
  protected:
@@ -295,7 +295,7 @@ public:
  public:
 
     /// Constructor
-    TReadArrays( short aNumFlds, outField* aFlds, iostream& fin ):
+    TReadArrays( short aNumFlds, outField* aFlds, std::iostream& fin ):
         TRWArrays( aNumFlds, aFlds), ff( fin ), curArray("")
     {}
 
@@ -338,10 +338,10 @@ public:
     /// Reads string from a text file.
     void readArray( const char* name, std::string &arr, long int el_size=198 );
     /// Reads double vector from a text file.
-    void readArray( const char* name, vector<double> arr );
+    void readArray( const char* name, std::vector<double> arr );
 
     void readFormatArray( const char* name, double* arr,
-        long int size, vector<IOJFormat>& vFormats );
+        long int size, std::vector<IOJFormat>& vFormats );
 };
 
 template <> void TPrintArrays::writeValue( const double& );

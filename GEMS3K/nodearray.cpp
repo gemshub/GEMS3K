@@ -27,6 +27,9 @@
 //-------------------------------------------------------------------
 //
 
+#include <cmath>
+#include "v_detail.h"
+
 #ifdef NODEARRAYLEVEL
 
 #include "nodearray.h"
@@ -59,7 +62,7 @@ bool TNodeArray::NeedGEMS( TNode& wrkNode, const TestModeGEMParam& modeParam, DA
             C1->bIC[ic] = modeParam.cez; // to prevent loss of Independent Component
 
         dc = C0->bIC[ic] - C1->bIC[ic];
-        if( fabs( dc ) > min( modeParam.cdv, (C1->bIC[ic] * 1e-3 ) ))
+        if( fabs( dc ) > std::min( modeParam.cdv, (C1->bIC[ic] * 1e-3 ) ))
         {
             NeedGEM = true;  // we still need to recalculate equilibrium
             // in this node because its vector b has changed
@@ -770,7 +773,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                 }
                 else
                     if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-                        cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << endl;
+                        std::cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << std::endl;
                 // 	  			  Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
                 //	   }
             }
@@ -815,7 +818,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
             }
             else
                 if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-                    cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << endl;
+                    std::cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << std::endl;
             //        	 Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
 
         } // loop ie
@@ -986,7 +989,7 @@ void TNodeArray::logProfilePhVol( FILE* logfile, long int t, double at, long int
     fprintf( logfile, "\n" );
 }
 
-void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+void TNodeArray::databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                                 long int  nFilds, long int  (*Flds)[2])
 {
     bool all = false;

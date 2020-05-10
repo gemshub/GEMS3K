@@ -27,7 +27,7 @@
 //-------------------------------------------------------------------
 //
 
-
+#include <cmath>
 #include "node.h"
 #include "activities.h"
 
@@ -218,7 +218,7 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
                     double nxk = 1./act.L1[k];
             for( j= jb; j<je; j++ )
     		{
-                if(act.XF[k] < min( act.DSM, act.PhMinM ) ) // act.lowPosNum )   // workaround 10.03.2008 DK
+                if(act.XF[k] < std::min( act.DSM, act.PhMinM ) ) // act.lowPosNum )   // workaround 10.03.2008 DK
                         act.Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
                 act.fDQF[j] =0.0;  // cleaning fDQF in TP mode!
                 act.lnGmo[j] = act.lnGam[j]; // saving activity coefficients in TP mode

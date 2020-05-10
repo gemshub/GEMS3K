@@ -25,14 +25,11 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifdef IPMGEMPLUGIN
+//#ifdef IPMGEMPLUGIN
+
 #include <cmath>
-#include<iomanip>
-
+#include <iomanip>
 #include "node.h"
-//#include "m_param.h"
-//#include "activities.h"
-
 
 // Generic access methods that use the new TActivity class
 // set temperature (in units of K)
@@ -489,7 +486,7 @@ TActivity::~TActivity( )
 //         this->cnd = NULL;
 //         this->cno = NULL;
 }
-#endif
+//#endif
 
 //--------------------- End of node_activities.cpp ---------------------------
 
