@@ -151,6 +151,7 @@ typedef enum {  // classes of independent components IC, used in ccIC code list
         IC_SITE     =  's'   // sorption site for site balance constraint (reserved)
 } ICL_CLASSES;
 
+
 typedef enum {  // Classifications of DC
     // Type of input data for
     SRC_DCOMP =  'd',  // the key points to existing PDB record in DCOMP chain
@@ -308,10 +309,23 @@ KinLinkCode = 5,
     KM_LNK_PVOL = 'P',    ///    Link to (fraction of) solid substrate (pore) volume
     KM_LNK_MASS = 'M',    ///	Link to (fraction of) solid substrate mass
 KinSizedCode = 6,
+        KM_SIZED_ETM = 'T',   ///  Empirical f(time) cubic polynomial f = a + bt +ct^2 + dt^3 (default)
+        KM_SIZED_ESI = 'S',   ///  Empirical f(lgSI) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_ESA = 'A',   ///  Empirical f(sarea-change) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_EVOL = 'V',  ///  Empirical f(volume-change) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_MASS = 'M',  ///  Empirical f(mass-change) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_MOL = 'X',   ///  Empirical f(amount-change) cubic polynomial f = a + bt +ct^2 + dt^3
     KM_SIZED_UNI = 'U',   /// 	Uniform particle/pore size distribution
     KM_SIZED_BIN = 'B',   /// 	Binodal particle/pore size distribution
     KM_SIZED_FUN = 'F',   ///    Empirical distribution function
 KinResCode = 7,
+        KM_RES_SURF_N = 'A',   /// surface-scaled rate constant (k in mol/m2/s), default
+        KM_RES_SURF_M = 'M',   /// surface-scaled rate constant (k in kg/m2/s)
+        KM_RES_PVS_N  = 'V',   /// pore-volume-scaled rate constant (k in mol/m3/s)
+        KM_RES_PVS_M  = 'W',   /// pore-volume-scaled rate constant (k in kg/m3/s)
+        KM_RES_ABS_N  = 'F',   /// absolute (unscaled) rate constant (k in mol/s)
+        KM_RES_ABS_M  = 'G',   /// absolute (unscaled) rate constant (k in kg/s)
+        KM_LIN_RATE   = 'L',   /// linear growth/dissolution rate constant (v in m/s)
     KM_RES_SURF = 'A',    /// surface-scaled rate model (k in mol/m2/s)
     KM_RES_PVS = 'V'      /// pore-volume-scaled model (k in mol/m3/s)
 

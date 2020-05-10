@@ -212,10 +212,10 @@ public:
     // These calls are used only inside of GEMS-PSI GEM2MT module
 
     /// Constructor for integration in GEM2MT module of GEMS-PSI
-    TNodeArray( long int nNodes, MULTI *apm );
+    TNodeArray( long int nNodes, TMultiBase *apm );
 
     /// Constructor that uses 3D node arrangement
-    TNodeArray( long int asizeN, long int asizeM, long int asizeK, MULTI *apm );
+    TNodeArray( long int asizeN, long int asizeM, long int asizeK, TMultiBase *apm );
 
     /// Prints MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// Prints files for separate coupled FMT-GEM programs that use GEMS3K module

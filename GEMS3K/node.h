@@ -65,6 +65,7 @@
 
 #ifndef IPMGEMPLUGIN
  class QWidget;
+#include "array.h"
 #endif
 
 class TActivity;
@@ -97,7 +98,7 @@ protected:
 
    TMultiBase* multi = nullptr;     // GEM IPM3 implementation class
 
-#ifdef IPMGEMPLUGIN
+///#ifdef IPMGEMPLUGIN
        // These pointers are only used in standalone GEMS3K programs
  //   TMultiBase* multi = nullptr;     // GEM IPM3 implementation class
 //    TAllan *ipm;       // Allan's GEM IPM implementation class
@@ -105,8 +106,8 @@ protected:
     TActivity *atp = nullptr;    // Activity term class
     TKinetics *kip = nullptr;    // MW reaction kinetics class
 //
-#endif
-    //TProfil* profil1;
+///#endif
+//TProfil* profil1;
 
 
     DATACH* CSD;  ///< Pointer to chemical system data structure CSD (DATACH)
@@ -224,7 +225,8 @@ protected:
 
     // Virtual function for interaction with TNodeArray class
     virtual void  setNodeArray( std::string& , long int , bool ) { }
-#else
+#endif
+
 public:
 
 
@@ -317,7 +319,7 @@ public:
 
     // long int updateKineticsMetastability( long int LinkMode );
 
-#endif
+///#endif
 
 public:
 

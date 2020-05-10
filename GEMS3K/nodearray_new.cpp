@@ -52,7 +52,7 @@
 
 #ifndef IPMGEMPLUGIN
 
-TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):
+TNodeArray::TNodeArray( long int nNod, TMultiBase *apm  ):
     calcNode( apm )
 {
     anNodes = nNod;
@@ -67,7 +67,7 @@ TNodeArray::TNodeArray( long int nNod, MULTI *apm  ):
     na = this;
 }
 
-TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK, MULTI *apm  ):
+TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK, TMultiBase *apm  ):
     calcNode( apm ), sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
 {
     anNodes = asizeN*asizeM*asizeK;
@@ -769,7 +769,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         //  putting MULTI to binary file
         Path_ = u_makepath( dir, name, "ipm" );
         GemDataStream  ff(Path_, ios::out|ios::binary);
-        multi->out_multi( ff, Path_  );
+        calcNode.multi->out_multi( ff, Path_  );
     }
     else
     {

@@ -43,6 +43,8 @@
 
 #ifndef IPMGEMPLUGIN
   #include "visor.h"
+  #include "service.h"
+#include "m_param.h"
 #else
 
 #endif
@@ -249,11 +251,7 @@ long int TNode::GEM_run( bool uPrimalSol )
    multi->to_text_file("React_before.dump.txt");//profil1->outMultiTxt( "React_before.dump.txt"  );
    // GEM IPM calculation of equilibrium state
    //CalcTime = profil->ComputeEquilibriumState( /*PrecLoops,*/ NumIterFIA, NumIterIPM );
-#ifndef IPMGEMPLUGIN
-    CalcTime = TMulti::sm->CalculateEquilibriumState( /*RefineLoops,*/  NumIterFIA, NumIterIPM );
-#else
     CalcTime = multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA, NumIterIPM  );
-#endif
     multi->to_text_file("React_after.dump.txt");//profil1->outMultiTxt( "React_after.dump.txt" );
 
 // Extracting and packing GEM IPM results into work DATABR structure
@@ -266,11 +264,7 @@ long int TNode::GEM_run( bool uPrimalSol )
 // *********************************************************
 
     // test error result GEM IPM calculation of equilibrium state in MULTI
-#ifndef IPMGEMPLUGIN
-    long int erCode = TMulti::sm->testMulti();
-#else
     long int erCode = multi->testMulti();
-#endif
 
     if( erCode )
     {
@@ -573,11 +567,7 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
     datach_from_string(dch_json);
 
     // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
-#ifdef IPMGEMPLUGIN
     multi->gemipm_from_string( ipm_json,CSD );
-#else
-    TProfil::pm->gemipm_from_string(ipm_json,CSD );
-#endif
 
   // copy intervals for minimizatiom
    pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
@@ -1762,7 +1752,7 @@ void TNode::allocMemory()
     kip = new TKinetics( CSD, CNode, this );
     kip->set_def();
 #else
-    profil1 = TProfil::pm;
+//    profil1 = TProfil::pm;
 #endif
 }
 
@@ -2095,9 +2085,10 @@ bool TNode::TestTPGrid(  double Tai[4], double Pai[4] )
 
 
 //Constructor of the class instance in memory
-TNode::TNode( MULTI *apm  )
+TNode::TNode(TMultiBase *apm  )
 {
-    pmm = apm;
+    multi = apm;
+    pmm = multi->GetPM();
     CSD = 0;
     CNode = 0;
     allocMemory();
