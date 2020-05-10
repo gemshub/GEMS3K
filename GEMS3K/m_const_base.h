@@ -29,8 +29,6 @@
 #ifndef M_CONST_H
 #define M_CONST_H
 
-//#ifdef IPMGEMPLUGIN
-
 // This header is only used in standalone GEMS3K code!
 #include <ctype.h>
 #include <fstream>
@@ -379,8 +377,7 @@ typedef enum { // Units of measurement of quantities and concentrations
 const char S_OFF = '-',
                    S_ON = '+',
                           S_REM = '*',
-                                  A_NUL ='?';
-//#endif
+                                 A_NUL ='?';
 
 #endif  // M_CONST_H
 

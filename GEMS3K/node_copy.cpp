@@ -76,43 +76,6 @@ bool TNode::databr_from_string( const std::string& data )
 }
 
 
-
-#ifdef IPMGEMPLUGIN
-
-TNode::TNode( const TNode& otherNode )
-{
-  CSD = 0;
-  CNode = 0;
-
-  allocMemory();
-  dbr_file_name = otherNode.dbr_file_name;
-  //ipmlog_file_name = otherNode.ipmlog_file_name;
-
-  // copy data from otherNode
-  datach_copy( otherNode.CSD );
-  databr_copy( otherNode.CNode );
-
-  multi->copyMULTI( *otherNode.multi );
-
-  // copy intervals for minimizatiom
-   pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
-   pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
-   pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-   pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
-
-   pmm->Tai[0] = CSD->TKval[0]-C_to_K;
-   pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
-   pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-   pmm->Tai[3] = CSD->Ttol;
-
-  pmm->Fdev1[0] = 0.;
-  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copy from GEMS3 structure
-  pmm->Fdev2[0] = 0.;
-  pmm->Fdev2[1] = 1e-6;
-
-  std::cout << "copy constructor..." << std::endl;
-}
-
 // Copy CSD (DATACH structure) data from other structure.
 void TNode::datach_copy( DATACH* otherCSD )
 {
@@ -204,7 +167,7 @@ void TNode::databr_copy( DATABR* otherCNode )
     copyValues( CNode->omPH, otherCNode->omPH, CSD->nPHb );
 }
 
-#endif
+//#endif
 
 // allocating DataCH structure
 void TNode::datach_realloc()
@@ -685,3 +648,4 @@ void TNode::CheckMtparam()
     }
     load_thermodynamic_data = true;
 }
+

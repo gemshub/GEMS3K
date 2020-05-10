@@ -154,69 +154,7 @@ void  TNodeArray::setNodeArray( long int ndx, long int* nodeTypes  )
         }
 }
 
-
 //---------------------------------------------------------//
-void TNodeArray::allocMemory()
-{
-    long int ii;
-
-    // The NodeArray must be allocated here
-    /// calcNode = new TNode();
-
-    // alloc memory for data bidge structures
-    // did in constructor TNode::allocMemory();
-
-    // alloc memory for all nodes at current time point
-    NodT0 = new  DATABRPTR[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        NodT0[ii] = nullptr;
-
-    // alloc memory for all nodes at previous time point
-    NodT1 = new  DATABRPTR[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        NodT1[ii] = nullptr;
-    
-    // alloc memory for the work array of node types
-    tcNode = new char[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        tcNode[ii] = normal;
-
-    // alloc memory for the work array of IA indicators
-    iaNode = new bool[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        iaNode[ii] = true;
-    // grid ?
-}
-
-void TNodeArray::freeMemory()
-{
-    long int ii;
-
-    if( anNodes )
-    { if( NodT0 )
-            for(  ii=0; ii<anNodes; ii++ )
-                if( NodT0[ii] )
-                    NodT0[ii] = calcNode.databr_free(NodT0[ii]);
-        delete[]  NodT0;
-        NodT0 = nullptr;
-        if( NodT1 )
-            for(  ii=0; ii<anNodes; ii++ )
-                if( NodT1[ii] )
-                    NodT1[ii] = calcNode.databr_free(NodT1[ii]);
-        delete[]  NodT1;
-        NodT1 = nullptr;
-    }
-
-    if( grid )
-        delete[] grid;
-    if( tcNode)
-        delete[] tcNode;
-    if( iaNode )
-        delete[] iaNode;
-
-    ///if(calcNode)
-    ///   delete calcNode;
-}
 
 
 // Copying data for node ii from node array into work DATABR structure

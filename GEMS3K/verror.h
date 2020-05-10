@@ -80,25 +80,6 @@ void ErrorIf (bool error, const std::string& title, const std::string& message)
         throw TError(title, message);
 }
 
-//#ifndef IPMGEMPLUGIN
-
-//#include "gstring.h"
-
-//inline
-//void Error (const gstring& title, const gstring& message)
-//{
-//    throw TError(title.c_str(), message.c_str());
-//}
-
-//inline
-//void ErrorIf (bool error, const gstring& title, const gstring& message)
-//{
-//    if(error)
-//        throw TError(title.c_str(), message.c_str());
-//}
-
-//#endif
-
 inline
 void Error (const char* title, const char* message)
 {

@@ -50,3 +50,46 @@ std::istream& f_getline(std::istream& is, std::string& str, char delim)
 
    return is;
 }
+
+std::string
+u_makepath(const std::string& dir,
+           const std::string& name, const std::string& ext)
+{
+    std::string Path(dir);
+    if( dir != "")
+      Path += "/";
+    Path += name;
+    Path += ".";
+    Path += ext;
+
+    return Path;
+}
+
+
+void
+u_splitpath(const std::string& Path, std::string& dir,
+            std::string& name, std::string& ext)
+{
+    size_t pos = Path.rfind("/");
+    if( pos != std::string::npos )
+    {
+        dir = Path.substr(0, pos);
+        pos++;
+    }
+    else
+    {
+        dir = "";
+        pos = 0;
+    }
+    size_t pose = Path.rfind(".");
+    if( pose != std::string::npos )
+    {
+        ext = Path.substr( pose+1, std::string::npos );
+        name = Path.substr(pos, pose-pos);
+    }
+    else
+    {
+        ext = "";
+        name = Path.substr(pos, std::string::npos);
+    }
+}

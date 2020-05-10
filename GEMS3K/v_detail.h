@@ -34,6 +34,13 @@ void replace( std::string& str, const char* old_part, const char* new_part);
 void replaceall( std::string& str, const char* old_part, const char* new_part);
 /// read string as: "<characters>"
 std::istream& f_getline(std::istream& is, std::string& str, char delim);
+/// Combines path, directory, name and extension to full pathname
+std::string u_makepath(const std::string& dir,
+           const std::string& name, const std::string& ext);
+
+/// Splits full pathname to path, directory, name and extension
+void u_splitpath(const std::string& Path, std::string& dir,
+            std::string& name, std::string& ext);
 
 #define FLOAT_EMPTY	          1.17549435e-38F
 #define DOUBLE_EMPTY         2.2250738585072014e-308
