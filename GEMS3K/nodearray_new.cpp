@@ -42,12 +42,13 @@
 
 
 TNodeArray::TNodeArray( long int nNod  ):
-    internal_Node(new TNode()), calcNode(*internal_Node.get()),
+    internal_Node(new TNode()), calcNode(internal_Node.get()),
     anNodes(nNod)
 {
     sizeN = anNodes;
     sizeM = sizeK =1;
     NodT0 = 0;  // nodes at current time point
+
     NodT1 = 0;  // nodes at previous time point
     grid  = 0;   // Array of grid point locations, size is anNodes+1
     tcNode = 0;     // Node type codes (see DataBR.h) size anNodes+1
@@ -57,7 +58,7 @@ TNodeArray::TNodeArray( long int nNod  ):
 }
 
 TNodeArray::TNodeArray( long int asizeN, long int asizeM, long int asizeK ):
-    internal_Node(new TNode()), calcNode(*internal_Node.get()),
+    internal_Node(new TNode()), calcNode(internal_Node.get()),
     sizeN(asizeN), sizeM(asizeM), sizeK(asizeK)
 {
     anNodes = asizeN*asizeM*asizeK;
@@ -116,13 +117,13 @@ void TNodeArray::freeMemory()
     { if( NodT0 )
             for(  ii=0; ii<anNodes; ii++ )
                 if( NodT0[ii] )
-                    NodT0[ii] = calcNode.databr_free(NodT0[ii]);
+                    NodT0[ii] = calcNode->databr_free(NodT0[ii]);
         delete[]  NodT0;
         NodT0 = nullptr;
         if( NodT1 )
             for(  ii=0; ii<anNodes; ii++ )
                 if( NodT1[ii] )
-                    NodT1[ii] = calcNode.databr_free(NodT1[ii]);
+                    NodT1[ii] = calcNode->databr_free(NodT1[ii]);
         delete[]  NodT1;
         NodT1 = nullptr;
     }
@@ -193,7 +194,7 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode,
+bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode,
                                long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
 {
     bool iRet = true;
@@ -260,7 +261,7 @@ bool TNodeArray::CalcIPM_List( const TestModeGEMParam& modeParam, long int start
 //   return code   true   Ok
 //                 false  Error in GEMipm calculation part
 //
-bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode,
+bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode* wrkNode,
                                long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* piaN, FILE* diffile )
 {
     bool iRet = true;
@@ -303,7 +304,7 @@ bool TNodeArray::CalcIPM_Node( const TestModeGEMParam& modeParam, TNode& wrkNode
 //
 //-------------------------------------------------------------------
 
-long int  TNodeArray::RunGEM( TNode& wrkNode, long int  iNode, long int Mode, DATABRPTR* nodeArray )
+long int  TNodeArray::RunGEM( TNode* wrkNode, long int  iNode, long int Mode, DATABRPTR* nodeArray )
 {
     long int retCode = T_ERROR_GEM;
 
@@ -311,7 +312,7 @@ long int  TNodeArray::RunGEM( TNode& wrkNode, long int  iNode, long int Mode, DA
     CopyWorkNodeFromArray( wrkNode, iNode, anNodes, nodeArray );
 
     // GEM IPM calculation of equilibrium state in MULTI
-    wrkNode.pCNode()->NodeStatusCH = std::abs(Mode);
+    wrkNode->pCNode()->NodeStatusCH = std::abs(Mode);
 
     retCode = CalcNodeServer( wrkNode, iNode, Mode );
 
@@ -323,12 +324,12 @@ long int  TNodeArray::RunGEM( TNode& wrkNode, long int  iNode, long int Mode, DA
     return retCode;
 }
 
-long TNodeArray::CalcNodeServer(TNode &wrkNode, long ,  long int Mode)
+long TNodeArray::CalcNodeServer(TNode* wrkNode, long ,  long int Mode)
 {
     bool uPrimalSol = false;
     if( Mode < 0 || std::abs(Mode) == NEED_GEM_SIA )
         uPrimalSol = true;
-    return  wrkNode.GEM_run( uPrimalSol );
+    return  wrkNode->GEM_run( uPrimalSol );
 }
 
 
@@ -338,14 +339,14 @@ void TNodeArray::RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long i
 #pragma omp parallel
 #endif
     {
-        TNode workNode(na->getCalcNode());
+        TNode workNode(*na->getCalcNode());
 #ifdef useOMP
 #pragma omp for
 #endif
         for (long int node=0;node<nNodes;node++)
         {
             if (nodeFlags[node])
-                retCodes[node] = na->RunGEM(workNode, node, Mode, nodeArray);
+                retCodes[node] = na->RunGEM(&workNode, node, Mode, nodeArray);
         }
     }
 }
@@ -384,7 +385,7 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
                                 const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 {
 
-    calcNode.GEM_init( ipmfiles_lst_name );
+    calcNode->GEM_init( ipmfiles_lst_name );
     // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
     std::string curPath = ""; //current reading file path
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
@@ -480,13 +481,13 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
         if( binary_f )
         {
             GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
-            calcNode.databr_from_file(in_br);
+            calcNode->databr_from_file(in_br);
         }
         else
         {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
             ErrorIf( !in_br.good() , datachbr_fn.c_str(),
                      "DBR_DAT fileopen error");
-            calcNode.databr_from_text_file(in_br);
+            calcNode->databr_from_text_file(in_br);
         }
         curPath = "";
         // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
@@ -539,13 +540,13 @@ void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, bool binary
     if( binary_f )
     {
         GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
-        calcNode.databr_from_file(in_br);
+        calcNode->databr_from_file(in_br);
     }
     else
     {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
         ErrorIf( !in_br.good() , dbr_file.c_str(),
                  "DataBR Fileopen error");
-        calcNode.databr_from_text_file(in_br);
+        calcNode->databr_from_text_file(in_br);
     }
 
     NodT0[ndx] = allocNewDBR( calcNode);
@@ -643,7 +644,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         //  putting MULTI to binary file
         Path_ = u_makepath( dir, name, "ipm" );
         GemDataStream  ff(Path_, std::ios::out|std::ios::binary);
-        calcNode.multi->out_multi( ff, Path_  );
+        calcNode->multi->out_multi( ff, Path_  );
     }
     else
     {
@@ -652,7 +653,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         Path_ = u_makepath( dir, newname, dat_ext );
         std::fstream ff( path.c_str(), std::ios::out );
         ErrorIf( !ff.good() , path, "Fileopen error");
-        calcNode.multi->to_text_file_gemipm( ff, addMui, with_comments, brief_mode );
+        calcNode->multi->to_text_file_gemipm( ff, addMui, with_comments, brief_mode );
     }
 
     // out dataCH to binary file
@@ -660,7 +661,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     if( bin_mode )
     {  Path_ = u_makepath( dir, newname, "bin" );
         GemDataStream  f_ch1(Path_, std::ios::out|std::ios::binary);
-        calcNode.datach_to_file(f_ch1);
+        calcNode->datach_to_file(f_ch1);
         f_ch1.close();
     }
     // out dataCH to text file
@@ -668,7 +669,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     {  //newname = name+"-dch";
         Path_ = u_makepath( dir, newname, dat_ext );
         std::fstream  f_ch2(Path_.c_str(), std::ios::out);
-        calcNode.datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
+        calcNode->datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
         f_ch2.close();
     }
 
@@ -690,7 +691,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
             newname =  name + + "-dbr-0-"  + buf;
             Path_ = u_makepath( dir, newname, "bin" );
             GemDataStream  f_br1(Path_, std::ios::out|std::ios::binary);
-            calcNode.databr_to_file(f_br1);
+            calcNode->databr_to_file(f_br1);
             f_br1.close();
             if( first )
                 fout << " \"" << newname.c_str() << ".bin\"";
@@ -703,7 +704,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
             newname = name + "-dbr-0-" + buf;
             Path_ = u_makepath( dir, newname, dat_ext );
             std::fstream  f_br2(Path_.c_str(), std::ios::out);
-            calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
+            calcNode->databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
             f_br2.close();
             if( first )
                 fout << " \"" << newname.c_str() << "."<<dat_ext << "\"";
@@ -725,7 +726,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
                 newname =  name +  "-dbr-1-"  + buf;
                 Path_ = u_makepath( dir, newname, "bin" );
                 GemDataStream  f_br1(Path_, std::ios::out|std::ios::binary);
-                calcNode.databr_to_file(f_br1);
+                calcNode->databr_to_file(f_br1);
                 f_br1.close();
                 //         fout << ", \"" << newname.c_str() << ".bin\"";
             }
@@ -734,7 +735,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
                 newname = name + "-dbr-1-" + buf;
                 Path_ = u_makepath( dir, newname, dat_ext );
                 std::fstream  f_br2(Path_.c_str(), std::ios::out);
-                calcNode.databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
+                calcNode->databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
                 f_br2.close();
                 //         fout << ", \"" << newname.c_str() << "."<< dat_ext << "\"";
             }
@@ -749,8 +750,8 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
 void  TNodeArray::GEMS3k_write_dbr( const char* fname,  bool binary_f,
                                     bool with_comments, bool brief_mode )
 {
-    calcNode.packDataBr();
-    calcNode.GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
+    calcNode->packDataBr();
+    calcNode->GEM_write_dbr( fname,  binary_f, with_comments, brief_mode );
 }
 
 #endif

@@ -95,7 +95,7 @@ class TNodeArray
 protected:
 
     std::shared_ptr<TNode> internal_Node;
-    TNode& calcNode;
+    TNode* calcNode;
     DATABR* (*NodT0);  ///< array of nodes for previous time point
     DATABR* (*NodT1);  ///< array of nodes for current time point
 
@@ -134,20 +134,20 @@ protected:
     ///  Copies data for a node ndx from the array of nodes anyNodeArray that
     /// contains nNodes into the work node data bridge structure
     ///  (implementation thread-safe)
-    void CopyWorkNodeFromArray( TNode& wrkNode, long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
+    void CopyWorkNodeFromArray( TNode* wrkNode, long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
 
     ///  Moves work node data to the ndx element of the node array anyNodeArray
     /// that has nNodes. Previous contents of the ndx element will be lost,
     /// work node will be allocated new and will contain no data
     ///  (implementation thread-safe)
-    void MoveWorkNodeToArray( TNode& wrkNode, long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
+    void MoveWorkNodeToArray( TNode* wrkNode, long int ndx, long int nNodes, DATABRPTR* anyNodeArray );
 
     /// New Stuff--------------------------------------------------------------
 
     /// Here we compare this node for current time and for previous time to test need to recalculate equilibrium
     /// in this node because its vector b has changed
     /// Zeroing charge off in bulk composition
-    bool NeedGEMS( TNode& wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
+    bool NeedGEMS( TNode* wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  );
 
     ///  Testing indicators for IA in the ii node for smart algorithm
     long int SmartMode( const TestModeGEMParam& modeParam, long int ii,  bool* piaN  );
@@ -156,20 +156,20 @@ protected:
     std::string ErrorGEMsMessage( long int RetCode,  long int ii, long int step  );
 
     ///  Here we do a GEM calculation in box ii (implementation thread-safe)
-    virtual bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode& wrkNode,
+    virtual bool CalcIPM_Node(  const TestModeGEMParam& modeParam, TNode* wrkNode,
                         long int ii, DATABRPTR* C0, DATABRPTR* C1, bool* iaN, FILE* diffile  );
 
     // alloc new memory
-    DATABR * allocNewDBR( TNode& wrkNode)
+    DATABR * allocNewDBR( TNode* wrkNode)
     {
         DATABR *node = new DATABR;
-        wrkNode.databr_reset( node, 1 );
-        wrkNode.databr_realloc(node);
+        wrkNode->databr_reset( node, 1 );
+        wrkNode->databr_realloc(node);
         return node;
     }
 
     ///  Here we run command a GEM calculation in box iNode on to GEMS3_server
-    virtual long int CalcNodeServer(TNode& wrkNode, long int  iNode, long int Mode);
+    virtual long int CalcNodeServer(TNode* wrkNode, long int  iNode, long int Mode);
 
     virtual void pVisor_Message( bool , long int =0, long int =0 ) {}
     // end of new stuff -------------------------------------------------------
@@ -178,7 +178,7 @@ public:
 
     static TNodeArray* na;   ///< static pointer to this class
 
-    const TNode& getCalcNode()
+    const TNode* getCalcNode()
     { return calcNode;}
 
     DATACH* pCSD() const  /// Get the pointer to chemical system definition data structure
@@ -193,21 +193,21 @@ public:
     /// \param xdc is DC DBR index
     /// \param xic is IC DBR index
     inline double DCaJI( const long int xdc, const long int xic) const
-    { return calcNode.DCaJI( xdc, xic); }
+    { return calcNode->DCaJI( xdc, xic); }
 
     /// Retrieves the molar mass of Independent Component in kg/mol.
     /// \param xic is IC DBR index
     inline double ICmm( const long int xic ) const
-    { return calcNode.ICmm(  xic); }
+    { return calcNode->ICmm(  xic); }
 
     /// Retrieves the molar mass of Dependent Component in kg/mol.
     /// \param xdc is DC DBR index
     inline double DCmm( const long int xdc ) const
-    { return calcNode.DCmm( xdc); }
+    { return calcNode->DCmm( xdc); }
 
     /// Converts the Phase DBR index into the Phase DCH index
     inline long int Ph_xDB_to_xCH( const long int xBR ) const
-    { return calcNode.Ph_xDB_to_xCH( xBR ); }
+    { return calcNode->Ph_xDB_to_xCH( xBR ); }
 
 //#ifndef IPMGEMPLUGIN
 //    // These calls are used only inside of GEMS-PSI GEM2MT module
@@ -271,7 +271,7 @@ public:
 //                                  double* Tai, double* Pai,  long int nTp_,
 //                                  long int nPp_, double Ttol_, double Ptol_  )
 //    {
-//        calcNode.MakeNodeStructures(  anICb, anDCb,  anPHb,
+//        calcNode->MakeNodeStructures(  anICb, anDCb,  anPHb,
 //                                      axIC, axDC,  axPH, no_interpolat,
 //                                      Tai,  Pai,  nTp_,  nPp_, Ttol_,  Ptol_  ) ;
 //    }
@@ -283,7 +283,7 @@ public:
 //    void MakeNodeStructuresOne( QWidget* par, bool select_all,
 //                                double Tai[4], double Pai[4]  )
 //    {
-//        calcNode.MakeNodeStructures( par, select_all,  Tai, Pai  );
+//        calcNode->MakeNodeStructures( par, select_all,  Tai, Pai  );
 //        // setup dataBR and NodeT0 data
 //        NodT0[0] = allocNewDBR( calcNode);
 //        NodT1[0] = allocNewDBR( calcNode);
@@ -298,7 +298,7 @@ public:
 //                                double *Tai, double *Pai, long int nTp_ = 1 ,
 //                                long int nPp_ = 1 , double Ttol_ = 1., double Ptol_ =1. )
 //    {
-//        calcNode.MakeNodeStructures( par, select_all, no_interpolat,
+//        calcNode->MakeNodeStructures( par, select_all, no_interpolat,
 //                                     Tai, Pai, nTp_, nPp_, Ttol_, Ptol_ );
 //        NodT0[0] = allocNewDBR( calcNode);
 //        NodT1[0] = allocNewDBR( calcNode);
@@ -315,7 +315,7 @@ public:
 //    void SaveToNode( long int ndx, long int nNodes, DATABRPTR* anyNodeArray )
 //    {
 //        // Save databr
-//        calcNode.packDataBr();
+//        calcNode->packDataBr();
 //        if( !NodT0[ndx] )
 //            NodT0[ndx] = allocNewDBR( calcNode);
 //        if( !NodT1[ndx] )
@@ -330,7 +330,7 @@ public:
 //        // free old memory
 //        if( anyNodeArray[ndx] )
 //        {
-//            anyNodeArray[ndx] = calcNode.databr_free( anyNodeArray[ndx] );
+//            anyNodeArray[ndx] = calcNode->databr_free( anyNodeArray[ndx] );
 //            delete[] anyNodeArray[ndx];
 //        }
 //        anyNodeArray[ndx] = allocNewDBR( calcNode );
@@ -436,14 +436,14 @@ public:
     // end of new stuff -------------------------------------------------------
 
     /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( TNode& wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
+    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
     
     /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
     /// in a loop with an optional openmp parallelization
     void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
 
     /// Calls GEM IPM for one node with three indexes (along x,y,z)
-    long int  RunGEM( TNode& wrkNode, long int indN, long int indM, long int indK,
+    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
                       long int Mode, DATABRPTR* nodeArray  )
     { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
     // (both calls clean the work node DATABR structure)
