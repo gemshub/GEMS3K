@@ -2110,12 +2110,6 @@ void TNode::packDataBr()
  long int ii;
 
 // set default data to DataBr
-#ifndef IPMGEMPLUGIN
-//   CNode->NodeHandle = 0;
-//   CNode->NodeTypeHY = normal;
-   CNode->NodeTypeMT = normal;
-   CNode->NodeStatusFMT = Initial_RUN;
-#endif
 //   CNode->NodeStatusCH = NEED_GEM_AIA;
    if( pmm->pNP == 0 )
     CNode->NodeStatusCH = NEED_GEM_AIA;

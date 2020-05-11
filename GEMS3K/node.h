@@ -801,7 +801,7 @@ long int GEM_step_MT( const long int step )
 
     // Data exchange methods between GEMIPM and work node DATABR structure
     // Are called inside of GEM_run()
-    void packDataBr();   ///<  Packs GEMIPM calculation results into work node structure
+    virtual void packDataBr();   ///<  Packs GEMIPM calculation results into work node structure
     void unpackDataBr( bool uPrimalSol ); ///<  unpacks work DATABR content into GEMIPM data structure
 
     // Access to interpolated thermodynamic data from DCH structure
