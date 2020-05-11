@@ -31,7 +31,7 @@
 #include "io_arrays.h"
 #include "ms_multi.h"
 
-#ifdef  JSON_OUT
+#ifndef  NO_JSON_OUT
 #include "io_json.h"
 #endif
 
@@ -174,7 +174,7 @@ void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
   //fstream ff( path, ios::out );
   //ErrorIf( !ff.good() , path, "Fileopen error");
 
-#ifndef  JSON_OUT
+#ifdef  NO_JSON_OUT
 
   TPrintArrays  prar1( 8, MULTI_static_fields, ff);
   TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
@@ -223,7 +223,7 @@ if( _comment )
    ff << "# ID key of the initial chemical system definition" << std::endl;
 }
 
-#ifdef JSON_OUT
+#ifndef NO_JSON_OUT
     json_data["<ID_key>"] = std::string(pm.stkey);
 #else
     ff << "<ID_key> \"" << pm.stkey << "\"" << std::endl;
@@ -242,7 +242,7 @@ if( _comment )
  prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
  prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
 
-#ifdef JSON_OUT
+#ifndef NO_JSON_OUT
  json_data["<PAalp>"] = std::string(1,PAalp);
  json_data["<PSigm>"] = std::string(1,PSigm);
 #else
@@ -265,7 +265,7 @@ if( _comment )
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
 
-#ifndef JSON_OUT
+#ifdef NO_JSON_OUT
     ff << "\n\n<END_DIM>\n";
 #endif
 
@@ -591,7 +591,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    prar.writeArray(  f_muj, pm.muj,  pm.L, -1L, _comment, brief_mode);
  }
 
-#ifdef  JSON_OUT
+#ifndef  NO_JSON_OUT
   ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
   ff << std::endl;
@@ -648,7 +648,7 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
   pm.PLIM  = 1;
 
 // static data
-#ifndef JSON_OUT
+#ifdef NO_JSON_OUT
  TReadArrays  rdar( 8, MULTI_static_fields, ff);
  rdar.skipSpace();
  std::string str;
@@ -772,7 +772,7 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
   ConvertDCC();
 
 //reads dynamic values from txt file
-#ifndef JSON_OUT
+#ifdef NO_JSON_OUT
  TReadArrays  rddar( 80, MULTI_dynamic_fields, ff);
 #else
  TReadJson  rddar( 80, MULTI_dynamic_fields, json_data);

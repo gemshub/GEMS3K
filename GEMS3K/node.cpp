@@ -41,7 +41,7 @@
 #include <io.h>
 #endif
 
-#ifdef JSON_OUT
+#ifndef NO_JSON_OUT
   const char *dat_ext = "json";
   const char *dat_filt = "*.json";
 #else
