@@ -24,6 +24,7 @@
 //-------------------------------------------------------------------
 
 #include <nlohmann/json.hpp>
+#include <fstream>
 #include "io_arrays.h"
 
 /// Print fields of structure outField
@@ -87,7 +88,7 @@ public:
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, const vector<double>& arr, long int l_size=0,
+    void writeArray( long f_num, const std::vector<double>& arr, long int l_size=0,
                      bool with_comments = false, bool brief_mode = false);
 
     /// Writes char array to a text file.
@@ -120,7 +121,7 @@ public:
         json_data[ arr_key ] = nlohmann::json::array();
         for( int ii=0, jj=0; ii<size; ii++, jj++  )
         {
-            gstring str = gstring( arr +(ii*arr_size), 0, arr_size );
+            std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
             writeValue(str, json_data[ arr_key ]);
         }
     }
@@ -151,11 +152,11 @@ public:
 
  class TReadJson : public  TRWArrays /// Read fields of structure
  {
-    fstream ff;
+    std::fstream ff;
     /// Internal structure of file data
     nlohmann::json& json_data;
     nlohmann::json::iterator json_it;
-    gstring curArray;
+    std::string curArray;
 
  protected:
 
@@ -182,7 +183,7 @@ public:
     void  readNext( const char* label); ///< Read next name from file
 
     void reset();  ///< Reset to 0 all flags (readed)
-    gstring testRead();   ///< Test for reading all fields must be always present in the file
+    std::string testRead();   ///< Test for reading all fields must be always present in the file
 
     /// Reads array from a text file.
     template <class T>
@@ -191,7 +192,7 @@ public:
         setCurrentArray( name, size);
 
         std::string jkey = key( name );
-        gstring msg;
+        std::string msg;
         auto json_arr_it = json_data.find(jkey);
         if( json_arr_it == json_data.end() )
         {
@@ -226,7 +227,7 @@ public:
     void readArray( const char *name, char* arr, long int size, long int el_size );
 /*
     /// Reads string from a text file.
-    void readArray( const char* name, gstring &arr, long int el_size=198 );
+    void readArray( const char* name, std::string &arr, long int el_size=198 );
     /// Reads double vector from a text file.
     void readArray( const char* name, vector<double> arr );
 */
@@ -234,9 +235,9 @@ public:
 };
 
 template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json_arr );
-template <> void TPrintJson::writeValue( const gstring& value, nlohmann::json& json_arr );
+template <> void TPrintJson::writeValue( const std::string& value, nlohmann::json& json_arr );
 template <> void TPrintJson::writeField( long f_num, const char& value, bool /*with_comments*/, bool brief_mode  );
-template <> void TPrintJson::writeField( long f_num, const gstring& value, bool /*with_comments*/, bool brief_mode  );
+template <> void TPrintJson::writeField( long f_num, const std::string& value, bool /*with_comments*/, bool brief_mode  );
 
 
  //=============================================================================

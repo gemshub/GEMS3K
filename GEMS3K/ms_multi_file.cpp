@@ -26,12 +26,13 @@
 
 #include <cmath>
 
+#include "v_detail.h"
 #include "io_arrays.h"
-#include "m_param.h"
+#include "ms_multi.h"
 #include "node.h"
 #include "gdatastream.h"
 
-void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
+void TMultiBase::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 {  LsModSum = 0;
    LsIPxSum = 0;
    for(long int i=0; i<pm.FIs; i++)
@@ -42,7 +43,7 @@ void TMulti::getLsModsum( long int& LsModSum, long int& LsIPxSum )
 }
 
 
-void TMulti::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum )
+void TMultiBase::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitSum )
 {  LsMdcSum = 0;
    LsMsnSum = 0;
    LsSitSum = 0;
@@ -56,7 +57,7 @@ void TMulti::getLsMdcsum( long int& LsMdcSum,long int& LsMsnSum,long int& LsSitS
  }
 
 // dimensions from LsPhl array
-void TMulti::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
+void TMultiBase::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
 {  PhLinSum = 0;
    lPhcSum = 0;
 
@@ -69,7 +70,7 @@ void TMulti::getLsPhlsum( long int& PhLinSum,long int& lPhcSum )
  }
 
 // dimensions from LsMdc2 array
-void TMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
+void TMultiBase::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
 {  DQFcSum = 0;
    rcpcSum = 0;
 
@@ -81,7 +82,7 @@ void TMulti::getLsMdc2sum( long int& DQFcSum,long int& rcpcSum )
  }
 
 // dimensions from LsISmo array
-void TMulti::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum )
+void TMultiBase::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoPcSum,long int& xSMdSum )
 {  IsoCtSum = 0;
    IsoScSum = 0;
    IsoPcSum = 0;
@@ -97,7 +98,7 @@ void TMulti::getLsISmosum( long int& IsoCtSum,long int& IsoScSum, long int& IsoP
  }
 
 // dimensions from LsESmo array
-void TMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
+void TMultiBase::getLsESmosum( long int& EImcSum,long int& mCDcSum )
 {  EImcSum = 0;
    mCDcSum = 0;
 
@@ -109,7 +110,7 @@ void TMulti::getLsESmosum( long int& EImcSum,long int& mCDcSum )
  }
 
 // dimensions from LsKin array
-void TMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
+void TMultiBase::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
               long int& rpConCSum,long int& apConCSum, long int& AscpCSum )
 {  xSKrCSum = 0;
    ocPRkC_feSArC_Sum = 0;
@@ -128,7 +129,7 @@ void TMulti::getLsKinsum( long int& xSKrCSum,long int& ocPRkC_feSArC_Sum,
  }
 
 // dimensions from LsUpt array
-void TMulti::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
+void TMultiBase::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
 {
    UMpcSum = 0;
    for(long int i=0; i<pm.FIs; i++)
@@ -140,68 +141,31 @@ void TMulti::getLsUptsum(long int& UMpcSum, long int& xICuCSum )
        xICuCSum += pm.LsUpt[i*2+1]; // pm.L1[i];
  }
 
-void TMulti::setPa( TProfil *prof)
-{
-    paTProfil = &prof->pa;
-}
-
-#ifdef IPMGEMPLUGIN
+//void TMultiBase::setPa( TProfil *prof)
+//{
+//    paTProfil1 = &prof->pa;
+//}
 
 /// Output to "ipmlog.txt" file Warnings
-long int TMulti::testMulti( )
+long int TMultiBase::testMulti()
 {
   if( pm.MK || pm.PZ )
   {
-    if( paTProfil->p.PSM == 2 )
+    if( pa_p_ptr()->PSM == 2 )
     {
-      fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
-      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
-      f_log << pm.errorBuf << endl;
+      std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+      f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << std::endl;
+      f_log << pm.errorBuf << std::endl;
     }
    return 1L;
   }
   return 0L	;
 }
 
-#else
-
-long int TMulti::testMulti()
-{
-  //MULTI *pmp = multi->GetPM();
-  if( pm.MK || pm.PZ )
-  {
-   if( paTProfil->p.PSM >= 2 )
-   {
-     fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
-     f_log << "Warning " << pm.stkey << ": " <<  pm.errorCode << ":" << endl;
-     f_log << pm.errorBuf << endl;
-   }
-   if( showMss )
-   {
-           addErrorMessage(" \nContinue?");
-      switch( vfQuestion3(0, pm.errorCode, pm.errorBuf,
-                           "&Yes", "&No", "&Yes to All" ))
-       {
-       case VF3_3:
-           showMss=0l;
-       case VF3_1:
-           break;
-       case VF3_2:
-           Error(pmp->errorCode, pmp->errorBuf);
-       }
-   }
-
-   return 1L;
-  }
-
-  return 0L	;
-}
-
-#endif
 
 //---------------------------------------------------------//
 /// Set default information
-void TMulti::set_def( int /*q*/)
+void TMultiBase::set_def( int )
 {
     //mem_cpy( &pm.PunE, "jjbC", 4 );
     pm.PunE = 'j';         // Units of energy  { j;  J c C N reserved }
@@ -492,27 +456,75 @@ pm.GamFs = nullptr;
         pm.xICuC = 0;
 }
 
+/// Writing structure MULTI (GEM IPM work structure) to binary file
+void TMultiBase::out_multi( GemDataStream& ff, std::string& /*path*/  )
+{
+     short arr[10];
+
+      arr[0] = pa_p_ptr()->PC;
+      arr[1] = pa_p_ptr()->PD;
+      arr[2] = pa_p_ptr()->PRD;
+      arr[3] = pa_p_ptr()->PSM;
+      arr[4] = pa_p_ptr()->DP;
+      arr[5] = pa_p_ptr()->DW;
+      arr[6] = pa_p_ptr()->DT;
+      arr[7] = pa_p_ptr()->PLLG;
+      arr[8] = pa_p_ptr()->PE;
+      arr[9] = pa_p_ptr()->IIM;
+
+    ff.writeArray( arr, 10 );
+    ff.writeArray( &pa_p_ptr()->DG, 28 );
+    to_file( ff );
+}
+
+/// Reading structure MULTI (GEM IPM work structure) from binary file
+void TMultiBase::read_multi( GemDataStream& ff, DATACH  *dCH )
+{
+    short arr[10];
+
+    ff.readArray( arr, 10 );
+    pa_p_ptr()->PC = arr[0];
+    pa_p_ptr()->PD = arr[1];
+    pa_p_ptr()->PRD = arr[2];
+    pa_p_ptr()->PSM = arr[3];
+    pa_p_ptr()->DP = arr[4];
+    pa_p_ptr()->DW = arr[5];
+    pa_p_ptr()->DT = arr[6];
+    pa_p_ptr()->PLLG = arr[7];
+    pa_p_ptr()->PE = arr[8];
+    pa_p_ptr()->IIM = arr[9];
+
+    ff.readArray( &pa_p_ptr()->DG, 28 );
+    from_file( ff );
+
+    // copy intervals for minimizatiom
+    if(  dCH->nPp > 1  )
+    {
+        pmp->Pai[0] = dCH->Pval[0];
+        pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
+        pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+    }
+    pmp->Pai[3] = dCH->Ptol;
+    if(  dCH->nTp > 1  )
+    {
+        pmp->Tai[0] = dCH->TKval[0];
+        pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
+        pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+    }
+    pmp->Tai[3] = dCH->Ttol;
+}
+
 //---------------------------------------------------------//
 /// Writing MULTI to binary file
-void TMulti::to_file( GemDataStream& ff  )
+void TMultiBase::to_file( GemDataStream& ff  )
 {
    if( pm.N < 2 || pm.L < 2 || pm.FI < 1 )
-        Error( GetName(), "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
+        Error( "Multi", "pm.N < 2 || pm.L < 2 || pm.FI < 1" );
 
    //static values
    char PAalp;
    char PSigm;
-
-
-#ifndef IPMGEMPLUGIN
-
-   PAalp = TSyst::sm->GetSY()->PAalp;
-   PSigm = TSyst::sm->GetSY()->PSigm;
-#else
-   PAalp = PAalp_;
-   PSigm = PSigm_;
-#endif
-
+   get_PAalp_PSigm( PAalp, PSigm);
 
    ff.writeArray(pm.stkey, sizeof(char)*(EQ_RKLEN+5));
    ff.writeArray( &pm.N, 39);
@@ -779,7 +791,7 @@ ff.writeArray((double*)pm.D, MST*MST);
 }
 
 /// Reading MULTI from binary file
-void TMulti::from_file( GemDataStream& ff )
+void TMultiBase::from_file( GemDataStream& ff )
 {
    //static values
    char PAalp;
@@ -795,22 +807,12 @@ void TMulti::from_file( GemDataStream& ff )
    ff.readArray( pm.epsW, 5);
    ff.readArray( pm.epsWg, 5);
 
-#ifndef IPMGEMPLUGIN
-//   syp->PAalp = PAalp;
-//   syp->PSigm = PSigm;
-#else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-#endif
-
    //realloc memory
-#ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
-#else
-   dyn_new();
-#endif
 
-      //dynamic values
+   //dynamic values
     // Part 1
 
     /* need  always to alloc vectors */
@@ -983,28 +985,15 @@ ff.readArray((double*)pm.D, MST*MST);
        long int PhLinSum, lPhcSum;
        getLsPhlsum( PhLinSum,lPhcSum );
 
- #ifdef IPMGEMPLUGIN
-       pm.IPx = new long int[LsIPxSum];
-       pm.PMc = new double[LsModSum];
-       pm.DMc = new double[LsMdcSum];
-       pm.MoiSN = new double[LsMsnSum];
-       pm.SitFr = new double[LsSitSum];
-       pm.DQFc = new double[DQFcSum];
-//       pm.rcpc = new double[rcpcSum];
-       pm.PhLin = new long int[PhLinSum][2];
-       pm.lPhc = new double[lPhcSum];
-
- #else
-       pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
-       pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
-       pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
-       pm.MoiSN = (double *)aObj[ o_wi_moisn].Alloc( LsMsnSum, 1, D_ );
-       pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
-       pm.DQFc = (double *)aObj[ o_wi_dqfc].Alloc( DQFcSum, 1, D_ );
-//       pm.rcpc  = (double *)aObj[ o_wi_rcpc ].Alloc( rcpcSum, 1, D_ );
-       pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
-       pm.lPhc  = (double *)aObj[ o_wi_lphc ].Alloc( lPhcSum, 1, D_ );
- #endif
+       alloc_IPx(LsIPxSum);
+       alloc_PMc(LsModSum);
+       alloc_DMc(LsMdcSum);
+       alloc_MoiSN(LsMsnSum);
+       alloc_SitFr(LsSitSum);
+       alloc_DQFc(DQFcSum);
+       //       pm.rcpc = new double[rcpcSum];
+       alloc_PhLin(PhLinSum);
+       alloc_lPhc(lPhcSum);
 
        ff.readArray(pm.IPx, LsIPxSum);
        ff.readArray(pm.PMc, LsModSum);
@@ -1032,22 +1021,14 @@ ff.readArray((double*)pm.D, MST*MST);
        long int IsoPcSum, xSMdSum;
        getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
 
-#ifdef IPMGEMPLUGIN
-       pm.xSMd = new long int[xSMdSum];
-       pm.IsoPc = new double[IsoPcSum];
-       pm.IsoSc = new double[IsoScSum];
-       pm.IsoCt = new char[IsoCtSum];
-       pm.EImc = new double[EImcSum];
-       pm.mCDc = new double[mCDcSum];
-#else
-        pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
-        pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
-        pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
-        pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
-        pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
-        pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
-#endif
-        ff.readArray(  pm.xSMd, xSMdSum);
+       alloc_xSMd(xSMdSum);
+       alloc_IsoPc(IsoPcSum);
+       alloc_IsoSc(IsoScSum);
+       alloc_IsoCt(IsoCtSum);
+       alloc_EImc(EImcSum);
+       alloc_mCDc(mCDcSum);
+
+       ff.readArray(  pm.xSMd, xSMdSum);
         ff.readArray(  pm.IsoPc,  IsoPcSum);
         ff.readArray(  pm.IsoSc, IsoScSum);
         ff.readArray(  pm.IsoCt,  IsoCtSum);
@@ -1070,25 +1051,15 @@ ff.readArray((double*)pm.D, MST*MST);
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
 
-#ifdef IPMGEMPLUGIN
-        pm.xSKrC = new long int[xSKrCSum];
-        pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
-        pm.feSArC = new double[ocPRkC_feSArC_Sum];
-        pm.rpConC = new double[rpConCSum];
-        pm.apConC = new double[apConCSum];
-        pm.AscpC = new double[AscpCSum];
-        pm.UMpcC = new double[UMpcSum];
-        pm.xICuC = new long int[xICuCSum];
-#else
-        pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
-        pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
-        pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
-        pm.rpConC = (double*)aObj[ o_wi_krpc].Alloc( rpConCSum, 1, D_ );
-        pm.apConC = (double*)aObj[ o_wi_apconc].Alloc( apConCSum, 1, D_ );
-        pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
-        pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
-        pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
-#endif
+        alloc_xSKrC(xSKrCSum);
+        alloc_ocPRkC(ocPRkC_feSArC_Sum);
+        alloc_feSArC(ocPRkC_feSArC_Sum);
+        alloc_rpConC(rpConCSum);
+        alloc_apConC(apConCSum);
+        alloc_AscpC(AscpCSum);
+        alloc_UMpcC(UMpcSum);
+        alloc_xICuC(xICuCSum);
+
         ff.readArray( pm.xSKrC, xSKrCSum);
         ff.readArray( &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
         ff.readArray( pm.feSArC, ocPRkC_feSArC_Sum);
@@ -1108,7 +1079,6 @@ ff.readArray((double*)pm.D, MST*MST);
      }
 
      // Part 4
-
     if( pm.Ls > 1 && pm.FIs > 0 )
     {
       ff.readArray(pm.Wb, pm.Ls);
@@ -1127,35 +1097,28 @@ ff.readArray((double*)pm.D, MST*MST);
 
 
 /// Writing structure MULTI ( free format file  )
-void TMulti::to_text_file( const char *path, bool append )
+void TMultiBase::to_text_file( const char *path, bool append )
 {
     //static values
    char PAalp;
    char PSigm;
+   get_PAalp_PSigm( PAalp, PSigm);
 
-#ifndef IPMGEMPLUGIN
-   PAalp = TSyst::sm->GetSY()->PAalp;
-   PSigm = TSyst::sm->GetSY()->PSigm;
-#else
-   PAalp = PAalp_;
-   PSigm = PSigm_;
-#endif
-
-   ios::openmode mod = ios::out;
+   std::ios::openmode mod = std::ios::out;
     if( append )
-     mod = ios::out|ios::app;
-  fstream ff(path, mod );
+     mod = std::ios::out|std::ios::app;
+  std::fstream ff(path, mod );
   ErrorIf( !ff.good() , path, "Fileopen error");
 
   if( append )
-   ff << "\nNext record" << endl;
-  ff << pm.stkey << endl;
+   ff << "\nNext record" << std::endl;
+  ff << pm.stkey << std::endl;
 //  TProfil::pm->pa.p.write(ff);
 
   TPrintArrays  prar(0,0,ff);
 
-  prar.writeArray( "Short_PARAM",  &paTProfil->p.PC, 10L );
-  prar.writeArray( "Double_PARAM",  &paTProfil->p.DG, 28L );
+  prar.writeArray( "Short_PARAM",  &pa_p_ptr()->PC, 10L );
+  prar.writeArray( "Double_PARAM",  &pa_p_ptr()->DG, 28L );
   prar.writeArray( "Short_Const",  &pm.N, 39L );
   prar.writeArray(  "Double_Const",  &pm.TC, 53, 20 );
   prar.writeArray(  "Add_Double_Const",  &pm.XwMinM, 12, 20 );
@@ -1163,8 +1126,8 @@ void TMulti::to_text_file( const char *path, bool append )
   prar.writeArray(  "EpsWg", pm.epsWg, 5);
   prar.writeArray(  "DenW", pm.denW, 5);
   prar.writeArray(  "DenWg", pm.denWg, 5);
-  ff << endl << "Error Code " << pm.errorCode << endl;
-  ff << "Error Message" << pm.errorBuf << endl;
+  ff << std::endl << "Error Code " << pm.errorCode << std::endl;
+  ff << "Error Message" << pm.errorBuf << std::endl;
 
    //dynamic values
 

@@ -28,12 +28,12 @@
 //
 #include <iomanip>
 #include <cmath>
-#include "m_param.h"
+#include "ms_multi.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Calculating bulk stoichiometry of a multicomponent phase
 //
-void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
+void TMultiBase::phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] )
 {
     long int ii, i, j;
     double Xx;
@@ -59,7 +59,7 @@ void TMulti::phase_bcs( long int N, long int M, long int jb, double *A, double X
 /// Adds phase to total bulk stoichiometry of all solid phases in the system
 // Done on request by TW in November 2006
 //
-void TMulti::phase_bfc( long int k, long int jj )
+void TMultiBase::phase_bfc( long int k, long int jj )
 {
     long int ii, i, j;
     double Xx;
@@ -81,7 +81,7 @@ void TMulti::phase_bfc( long int k, long int jj )
 }
 
 /// Returns mass of all solid phases in grams (from the BFC vector)
-double TMulti::bfc_mass( void )
+double TMultiBase::bfc_mass( void )
 {
    double TotalMass = 0.;
    for(long int i = 0; i<pm.N; i++ )
@@ -97,7 +97,7 @@ double TMulti::bfc_mass( void )
 //
 //  Do we need this all in GEMIPM ?
 //
-void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
+void TMultiBase::CalculateConcentrationsInPhase( double X[], double XF[], double XFA[],
               double Factor, double MMC, double /*Dsur*/, long int jb, long int je, long int k)
 {
     long int j, ii, i;
@@ -164,7 +164,7 @@ void TMulti::CalculateConcentrationsInPhase( double X[], double XF[], double XFA
         }
         // calculation of the mole fraction
         pm.Wx[j] = X[j]/XF[k];
-        if( X[j] > min( pm.lowPosNum, pm.DcMinM ) )
+        if( X[j] > std::min( pm.lowPosNum, pm.DcMinM ) )
             pm.VL[j] = log( pm.Wx[j] );     // this is used nowhere except in some scripts. Remove?
         else pm.VL[j] = log( pm.lowPosNum );   // debugging 29.11.05 KD
         pm.Y_la[j] = 0.0;
@@ -293,11 +293,11 @@ case DC_SCM_SPECIES:
 // This function has to be rewritten using new set of built-in
 // chemical functions.
 //
-void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
+void TMultiBase::CalculateConcentrations( double X[], double XF[], double XFA[])
 {
     long int k, ii, i, j, ist, jj, jja;
     double Factor=0.0, Dsur=0.0, MMC=0.0;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
 //    if( pm.Ls < 2 || !pm.FIs )  Temporary disabled  09.03.2010 DK
 //        return;
@@ -319,7 +319,7 @@ void TMulti::CalculateConcentrations( double X[], double XF[], double XFA[])
         pm.FVOL[k] = 0.0;
         //   Dsur = 0.0;
 
-        if( XF[k] > pm.DSM && !( pm.PHC[k] == PH_SORPTION && XFA[k] <= pa->p.ScMin ))
+        if( XF[k] > pm.DSM && !( pm.PHC[k] == PH_SORPTION && XFA[k] <= pa_p->ScMin ))
            phase_bfc( k, j );
 
         if( k >= pm.FIs || pm.L1[k] == 1 )
@@ -467,11 +467,11 @@ NEXT_PHASE:
             for( ii=0; ii<pm.NR; ii++ )
             {
                if( pm.LO  )
-               { if( pm.IC_m[ii] >= pa->p.DB )
+               { if( pm.IC_m[ii] >= pa_p->DB )
                     pm.IC_lm[ii] = ln_to_lg*log( pm.IC_m[ii] );
                 else
                     pm.IC_lm[ii] = 0;
-                if( pm.FWGT[k] >= pa->p.DB )
+                if( pm.FWGT[k] >= pa_p->DB )
                     pm.IC_wm[ii] *= pm.Awt[ii]*1000./pm.FWGT[k];
                 else
                     pm.IC_wm[ii] = 0;
@@ -483,7 +483,7 @@ NEXT_PHASE:
 
 //--------------------------------------------------------------------------------
 /// Calculation of surface charge densities on multi-surface sorption phase
-void TMulti::IS_EtaCalc()
+void TMultiBase::IS_EtaCalc()
 {
     long int k, i, ist, isp, j=0, ja;
     double XetaS=0., XetaW=0.,  Ez, CD0, CDb;
@@ -639,7 +639,7 @@ NEXT_PHASE:
 ///    electric potentials (for detecting bad PIA), 0 otherwise
 //
 long int
-TMulti::GouyChapman(  long int, long int, long int k )
+TMultiBase::GouyChapman(  long int, long int, long int k )
 {
     long int ist, status=0;
     double SigA=0., SigD=0., SigB=0., SigDDL=0.,
@@ -966,19 +966,19 @@ GEMU_CALC:
 ///    0 otherwise (for detecting bad PIA)
 //
 long int
-TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
+TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long int k )
 {
 	long int status = 0;
         long int i, ii, j, ja, ist=0, iss, dent, Cj, iSite[MST];
     double XS0,  xj0, XVk, XSk, XSkC, xj, Mm, rIEPS, ISAT, XSs,
            SATst, xjn, q1, q2, aF, cN, eF, lnGamjo, lnDiff, lnFactor;
-    SPP_SETTING *pa = paTProfil;
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
     //cout << "Point 1 before " << "pm.lnGam[0] " << setprecision(15) << pm.lnGam[0] << " pm.lnGmo[0] " << pm.lnGmo[0] << endl;
 
     if( pm.XF[k] <= pm.DSM ) // No sorbent retained by the IPM - phase killed
         return status;
-    if( pm.XFA[k] <=  pa->p.ScMin )  // elimination of sorption phase
+    if( pm.XFA[k] <=  pa_p->ScMin )  // elimination of sorption phase
         return status;  // No surface species left
 
     for(i=0; i<MST; i++)
@@ -1016,11 +1016,11 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
     for( j=jb; j<je; j++ )
     { // Main loop for DCs - surface complexes
         lnGamjo = pm.lnGmo[j];             // bugfix 16.03.2008 DK
-        if( pm.X[j] < min( pm.DcMinM, pm.lowPosNum ) )
+        if( pm.X[j] < std::min( pm.DcMinM, pm.lowPosNum ) )
             continue;  // This surface DC has been killed by IPM
 //        OSAT = pm.lnGmo[j]; // added 6.07.01 by KDA
         ja = j - ( pm.Ls - pm.Lads );
-        rIEPS =  pa->p.IEPS;   // default 1e-3 (for old SAT - 1e-9)
+        rIEPS =  pa_p->IEPS;   // default 1e-3 (for old SAT - 1e-9)
 //        dent = 1;  // default - monodentate
         switch( pm.DCC[j] )  // code of species class
         {
@@ -1074,14 +1074,14 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                       pm.Aalp[k]/1.66054;  // per nm2
                 XS0 = (fabs(pm.MASDJ[ja][PI_DEN])/pm.Aalp[k]/1.66054);
                         // max. density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;   // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;   // relative IEPS
                 if( XSkC < 0.0 )
                     XSkC = 0.0;
                 if( XSkC >= XS0 )               // Setting limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( (pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                if( (pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1107,8 +1107,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6     // xj
                      /pm.Aalp[k]/1.66054; // Density per nm2 on site type iss
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/static_cast<double>(dent) )
                      xj = xj0/static_cast<double>(dent) - rIEPS;  // upper limit
 //                ISAT = 0.0;
@@ -1129,8 +1129,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6  //  xj
                      /pm.Aalp[k]/1.66054; // Current density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
                      xj = xj0/dent - rIEPS;  // upper limit
                 q2 = xj0 - xj*dent;  // Computing differences in QCA gamma
@@ -1156,14 +1156,14 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                        / pm.Aalp[k]/1.66054;  // per nm2
                 XS0 = (pm.MASDJ[ja][PI_DEN]/pm.Aalp[k]/1.66054);
                          // max.dens.per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;  // relative IEPS
                 if( XSkC < 0.0 )
                     XSkC = 0.0;
                 if( XSkC >= XS0 )  // Limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if(( pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                if(( pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1192,8 +1192,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6
                      /pm.Aalp[k]/1.66054; // Current density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
                      xj = xj0/dent - rIEPS;  // upper limit
                 q2 = xj0 - xj*dent;  // Computing differences in gamma
@@ -1224,8 +1224,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                                              // Max site density per nm2
                 xj = XSs / XVk / Mm / pm.Nfsp[k][ist] * 1e6
                      /pm.Aalp[k]/1.66054; // Current density per nm2
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0; // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0; // relative IEPS
                 if(xj >= xj0/dent)
                      xj = xj0/dent - rIEPS;  // upper limit
                 ISAT = 0.0;
@@ -1259,8 +1259,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                 else xjn = pm.X[iSite[ist]]; // neutral site does not compete!
                 XS0 = pm.MASDT[k][ist] * XVk * Mm / 1e6
                       * pm.Nfsp[k][ist]; // expected total in moles
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;  // relative IEPS
                 XSkC = XSk - xjn - xj; // occupied by the competing species;
                                      // this sorbate cannot compete to itself
                 if( XSkC < 0.0 )
@@ -1276,7 +1276,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                 {
                    q1 = xj0 - xj;
                    q2 = rIEPS * XS0;
-                   if( (pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                   if( (pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                    {
                       if( q1 > q2 )
                         q2 = q1;
@@ -1295,8 +1295,8 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                 // rIEPS = pa->p.IEPS * 2;
                 xj0 = fabs( pm.MASDJ[ja][PI_DEN] ) * XVk * Mm / 1e6
                       * pm.Nfsp[k][ist]; // in moles
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * xj0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * xj0;  // relative IEPS
                 if(xj >= xj0)
                      xj = xj0 - rIEPS;  // upper limit
                 if( xj * 2.0 <= xj0 )   // Linear adsorption - to improve !
@@ -1305,7 +1305,7 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                 {
                     q1 = xj0 - xj;      // limits: rIEPS to 0.5*xj0
                     q2 = xj0 * rIEPS;
-                    if( pa->p.PC == 3 && pm.W1 )
+                    if( pa_p->PC == 3 && pm.W1 )
                        ISAT = log( xj ) - log( q1 );
                     else {
                        if( q1 > q2 )
@@ -1324,17 +1324,17 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
                    XSs += pm.D[i][ist];
                 XSkC = XSs / XVk / Mm * 1e6  // total non-solvent surf.species
                    /pm.Nfsp[k][ist]/ pm.Aalp[k]/1.66054;  // per nm2
-                XS0 = (max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
-                SATst = pa->p.DNS*1.66054*pm.Aalp[k]/XS0;
+                XS0 = (std::max( pm.MASDT[k][ist], pm.MASDJ[ja][PI_DEN] ));
+                SATst = pa_p->DNS*1.66054*pm.Aalp[k]/XS0;
                 XS0 = XS0 / pm.Aalp[k]/1.66054;
-                if( pa->p.PC <= 2 )
-                    rIEPS = pa->p.IEPS * XS0;  // relative IEPS
+                if( pa_p->PC <= 2 )
+                    rIEPS = pa_p->IEPS * XS0;  // relative IEPS
                 if( XSkC < 0.0 )
                     XSkC = 0.0;
                 if( XSkC >= XS0 )  // Limits
                     XSkC = XS0 - 2.0 * rIEPS;
                 q1 = XS0 - XSkC;
-                if( (pa->p.PC == 3 && !pm.W1) || pa->p.PC != 3 )
+                if( (pa_p->PC == 3 && !pm.W1) || pa_p->PC != 3 )
                 {
                   q2 = rIEPS * XS0;
                   if( q1 > q2 )
@@ -1373,53 +1373,5 @@ TMulti::SurfaceActivityCoeff( long int jb, long int je, long int, long int, long
     return status;
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/// Calculating demo partial pressures of gases (works only in GEMS-PSI)
-//
-void TMulti::GasParcP()
-{
-#ifndef IPMGEMPLUGIN
-
-        long int k,  i, jj=0;
-    long int jb, je, j;
-
-    if( !pm.PG )
-        return;
-
-  char (*SMbuf)[MAXDCNAME] =
-      (char (*)[MAXDCNAME])aObj[ o_w_tprn].Alloc( pm.PG, 1, MAXDCNAME );
-  pm.Fug = (double *)aObj[ o_wd_fug].Alloc( pm.PG, 1, D_ );
-  pm.Fug_l = (double *)aObj[ o_wd_fugl].Alloc( pm.PG, 1, D_ );
-  pm.Ppg_l = (double *)aObj[ o_wd_ppgl].Alloc( pm.PG, 1, D_ );
-
-    for( k=0, je=0; k<pm.FIs; k++ ) // phase
-    {
-        jb = je;
-        je = jb+pm.L1[k];
-        if( pm.PHC[k] == PH_GASMIX || pm.PHC[k] == PH_PLASMA
-           || pm.PHC[k] == PH_FLUID )
-        {
-            for( j=jb; j<je; j++,jj++ )
-            {  // fixed 02.03.98 DK
-
-                copyValues(SMbuf[jj], pm.SM[j], MAXDCNAME );
-                pm.Fug_l[jj] = -(pm.G0[j] + pm.fDQF[j]);
-                if( pm.Pc > 1e-9 )
-                    pm.Fug_l[jj] += log(pm.Pc);
-                for( i=0; i<pm.N; i++ )
-                    pm.Fug_l[jj] += *(pm.A+j*pm.N+i) * pm.U[i];
-                if( pm.Fug_l[jj] > -37. && pm.Fug_l[jj] < 16. )
-                    pm.Fug[jj] = exp( pm.Fug_l[jj] );
-                else  pm.Fug[jj] = 0.0;
-                // Partial pressure
-                pm.Ppg_l[jj] = pm.Fug_l[jj] - pm.lnGam[j];
-                pm.Fug_l[jj] *= .43429448;
-                pm.Ppg_l[jj] *= .43429448;
-            }
-            // break;
-        }
-    }
-#endif
-}
 
 //--------------------- End of ipm_chemical2.cpp ---------------------------

@@ -24,37 +24,11 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#include <cstring>
 #include <iomanip>
-#include  <iostream>
-
 #include "io_arrays.h"
-#include "v_user.h"
+#include "v_detail.h"
 
-#ifdef IPMGEMPLUGIN
-
-istream& f_getline(istream& is, gstring& str, char delim);
-
-//    This constants should be 'defined' to satisfy all compilers
-#define SHORT_EMPTY 	   -32768
-#define LONG_EMPTY             -2147483648L
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
-#define CHAR_EMPTY   	     '`'
-
-inline bool IsFloatEmpty( const float v )
-{
-    return ( v>0. && v <= FLOAT_EMPTY);
-}
-inline bool IsDoubleEmpty( const double v )
-{
-    return ( v>0. && v <= DOUBLE_EMPTY);
-}
-
-#else
-
-#include "v_vals.h"
-
-#endif
 
 long int TRWArrays::findFld( const char *Name )
 {
@@ -77,7 +51,7 @@ template <> void TPrintArrays::writeValue( const float& val )
         ff << CHAR_EMPTY << " ";
     else
         //    ff << setprecision(10) << scientific << arr[ii] << " ";
-        ff << setprecision(15) << val;// << " ";
+        ff << std::setprecision(15) << val;// << " ";
 }
 
 /// Write double value to file
@@ -87,7 +61,7 @@ template <> void TPrintArrays::writeValue( const double& val )
         ff << CHAR_EMPTY << " ";
     else
         //    ff << setprecision(18) << scientific << arr[ii] << " ";
-        ff << setprecision(15) << val;// << " ";
+        ff << std::setprecision(15) << val;// << " ";
 }
 
 /// Write double value to file
@@ -97,37 +71,33 @@ template <> void TPrintArrays::writeValue( const char& value )
 }
 
 /// Write double value to file
-template <> void TPrintArrays::writeValue( const gstring& value )
+template <> void TPrintArrays::writeValue( const std::string& value )
 {
     auto val = value;
-#ifdef IPMGEMPLUGIN // 24/08/2010
     strip(val);
-#else
-    val.strip();
-#endif
     ff  << "\'" << val.c_str() << "\'" /*<< " "*/;
     // commented out (space after text conflicts with gemsfit2 read-in) DM 16.07.2013
 }
 
-void TPrintArrays::writeArray( long f_num, const vector<double>& arr, long int l_size,
+void TPrintArrays::writeArray( long f_num, const std::vector<double>& arr, long int l_size,
                                bool with_comments, bool brief_mode )
 {
     long int jj;
     if(!brief_mode || getAlws(f_num ))
     {
         if( with_comments )
-            ff <<  endl << flds[f_num].comment.c_str();
+            ff <<  std::endl << flds[f_num].comment.c_str();
 
         int sz = 40;
         if( l_size > 0 )
             sz = l_size;
 
-        ff << endl << "<" << flds[f_num].name.c_str() << ">" << endl;
+        ff << std::endl << "<" << flds[f_num].name.c_str() << ">" << std::endl;
         jj=0;
         for( size_t ii=0; ii<arr.size(); ii++, jj++  )
         {
             if(jj == sz) {
-                jj=0;  ff << endl;
+                jj=0;  ff << std::endl;
             }
             writeValue(arr[ii]);
             ff << " ";
@@ -141,7 +111,7 @@ void TPrintArrays::writeArrayF( long f_num, char* arr,
     if(!brief_mode || getAlws(f_num ))
     {
         if( with_comments )
-            ff <<  endl << flds[f_num].comment.c_str();
+            ff <<  std::endl << flds[f_num].comment.c_str();
         writeArrayS( flds[f_num].name.c_str(),  arr,size, l_size);
     }
 }
@@ -211,7 +181,7 @@ void TReadArrays::readValue(double& val)
     }*/
 }
 
-long int TReadArrays::readFormatValue(double& val, gstring& format)
+long int TReadArrays::readFormatValue(double& val, std::string& format)
 {
     char input;
     format = "";
@@ -273,7 +243,7 @@ void  TReadArrays::skipSpace()
 }
 
 // Read format string
-bool  TReadArrays::readFormat( gstring& format )
+bool  TReadArrays::readFormat( std::string& format )
 {
     char input;
     format = "";
@@ -315,7 +285,7 @@ void TReadArrays::reset()
 long int TReadArrays::findFld( const char *Name )
 {
     long int ii;
-    gstring str = Name;
+    std::string str = Name;
     size_t len = str.find('>');
     str = str.substr(0, len );
 
@@ -341,7 +311,7 @@ long int TReadArrays::findNext()
     long int ii = findFld( buf+1 );
     if(  ii < 0 )
     {
-        gstring msg = buf;
+        std::string msg = buf;
         msg += " - Invalid label of data.\n";
         msg += curArray;
         Error( "Formatted read error 01", msg );
@@ -355,7 +325,7 @@ long int TReadArrays::findNext()
 void TReadArrays::readNext( const char* label)
 {
     char buf[200];
-    gstring msg;
+    std::string msg;
     skipSpace();
 
     if( ff.eof() )
@@ -367,7 +337,7 @@ void TReadArrays::readNext( const char* label)
     }
 
     ff >> buf;
-    gstring str = buf+1;
+    std::string str = buf+1;
     size_t len = str.find('>');
     str = str.substr(0, len );
 
@@ -420,9 +390,9 @@ again:
 }
 
 void TReadArrays::readFormatArray( const char* name, double* arr,
-                                   long int size, vector<IOJFormat>& vFormats )
+                                   long int size, std::vector<IOJFormat>& vFormats )
 {
-    gstring format;
+    std::string format;
     long int type;
 
     setCurrentArray( name, size);
@@ -458,11 +428,11 @@ void TReadArrays::readArray( const char* name, char* arr, long int size, long in
 
 }
 
-void TReadArrays::readArray( const char* name, vector<double> arr )
+void TReadArrays::readArray( const char* name, std::vector<double> arr )
 {
     int retSimb= 0; // next field is only value
     double value;
-    gstring str;
+    std::string str;
 
     setCurrentArray( name, 0L);
     //ff << setprecision(15);
@@ -474,8 +444,8 @@ void TReadArrays::readArray( const char* name, vector<double> arr )
     } while(retSimb == ft_Value );
 }
 
-// DM corrected added gstring& arr instead of gstring arr 18.04.2013
-void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
+// DM corrected added std::string& arr instead of std::string arr 18.04.2013
+void TReadArrays::readArray( const char* name, std::string& arr, long int el_size )
 {
     char ch;
     char buf[10000]; // DM changed form 400 to be able to read long character sections like DataSelect
@@ -487,9 +457,9 @@ void TReadArrays::readArray( const char* name, gstring& arr, long int el_size )
     arr = buf;
 }
 
-gstring TReadArrays::testRead()
+std::string TReadArrays::testRead()
 {
-    gstring ret = "";
+    std::string ret = "";
     for(long int ii=0; ii < numFlds; ii++ )
         if( flds[ii].alws==1 && flds[ii].readed != 1 )
         {  if( !ret.empty() )

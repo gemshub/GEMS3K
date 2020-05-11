@@ -33,9 +33,6 @@
 #define Kinetics_H_
 
 #include "node.h"
-//#include "datach.h"
-//#include "databr.h"
-//#include "m_const.h"
 
 typedef struct  /// KINETICS - data structure for computing DC AMRs in phases
 {               /// DATACH indexation throughout, no I/O file exchange

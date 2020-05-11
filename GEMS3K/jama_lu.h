@@ -3,6 +3,7 @@
 
 #include "tnt.h"
 #include <algorithm>
+#include <cmath>
 //for min(), max() below
 
 using namespace TNT;

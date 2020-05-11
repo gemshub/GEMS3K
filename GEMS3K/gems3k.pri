@@ -1,6 +1,6 @@
        HEADERS	 += $$GEMS3K_H/verror.h  \
                     $$GEMS3K_H/gdatastream.h  \
-                    $$GEMS3K_H/v_user.h \
+                    ##$$GEMS3K_H/v_user.h \
                     $$GEMS3K_H/tnt_i_refvec.h \
                     $$GEMS3K_H/tnt_array1d.h \
                     $$GEMS3K_H/tnt_array2d.h \
@@ -11,8 +11,8 @@
                     $$GEMS3K_H/s_solmod.h \
                     $$GEMS3K_H/s_sorpmod.h \
                     $$GEMS3K_H/s_kinmet.h \
-                    $$GEMS3K_H/m_param.h  \
-                    $$GEMS3K_H/m_const.h  \
+                    ##$$GEMS3K_H/m_param.h  \
+                    $$GEMS3K_H/m_const_base.h  \
                     $$GEMS3K_H/ms_multi.h \
                     $$GEMS3K_H/databr.h \
                     $$GEMS3K_H/datach.h \
@@ -22,8 +22,8 @@
                     $$GEMS3K_H/io_arrays.h \
                     $$GEMS3K_H/io_json.h \
                     $$GEMS3K_H/activities.h \
-                    $$GEMS3K_H/kinetics.h
-
+                    $$GEMS3K_H/kinetics.h \
+                    $$GEMS3K_H/v_detail.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
@@ -49,14 +49,15 @@
 #                      $$GEMS3K_CPP/particlearray.cpp \
                       $$GEMS3K_CPP/ms_multi_file.cpp \
                       $$GEMS3K_CPP/ms_multi_format.cpp \
-                      $$GEMS3K_CPP/ms_param.cpp \
                       $$GEMS3K_CPP/io_arrays.cpp \
                       $$GEMS3K_CPP/io_json.cpp \
                       $$GEMS3K_CPP/node_copy.cpp \
                       $$GEMS3K_CPP/ms_multi_copy.cpp \
                       $$GEMS3K_CPP/node_activities.cpp \
                       $$GEMS3K_CPP/node_kinetics.cpp \
-                      $$GEMS3K_CPP/s_activity.cpp \ 
+                      $$GEMS3K_CPP/s_activity.cpp \
                       $$GEMS3K_CPP/s_activity2.cpp \ 
-                      $$GEMS3K_CPP/s_activity3.cpp
+                      $$GEMS3K_CPP/s_activity3.cpp  \
+                      #$$GEMS3K_CPP/ms_param.cpp \
+                      $$GEMS3K_CPP/v_detail.cpp \
 

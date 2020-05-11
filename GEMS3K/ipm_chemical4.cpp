@@ -27,13 +27,13 @@
 //
 
 #include <cmath>
-#include "m_param.h"
+#include "ms_multi.h"
 
 //-  static double ICold=0.;
 /// \return status code (0 if o.k., non-zero values if there were problems
 ///     with kinetic/metastability models)
 long int
-TMulti::CalculateKinMet( long int LinkMode  )
+TMultiBase::CalculateKinMet( long int LinkMode  )
 {
    long int k, jb, je=0, kf, kfe=0, kp, kpe=0, ka, kae=0, ks, kse=0,
             kc, kd, kce=0, kde=0, ku, kue=0, ki, kie=0, jphl=0, jlphc=0;
@@ -164,7 +164,7 @@ TMulti::CalculateKinMet( long int LinkMode  )
 /// Wrapper functions for creating kinetics and metastability models for phases
 /// using the TKinMet class.
 //
-void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
+void TMultiBase::KM_Create( long int jb, long int k, long int kc, long int kp,
                            long int kf, long int ka, long int ks, long int kd, long int ku, long int ki,
                            const char *kmod, long int jphl, long int jlphc )
 {
@@ -327,7 +327,7 @@ void TMulti::KM_Create( long int jb, long int k, long int kc, long int kp,
 /// Wrapper call for calculation of temperature and pressure correction
 /// uses TKinMet class
 void
-TMulti::KM_ParPT( long int k, const char* kMod )
+TMultiBase::KM_ParPT( long int k, const char* kMod )
 {
     //
     switch( kMod[0] )
@@ -356,7 +356,7 @@ TMulti::KM_ParPT( long int k, const char* kMod )
 /// Wrapper call for initialization of time (step) variables
 /// uses TKinMet class
 void
-TMulti::KM_InitTime( long int k, const char *kMod )
+TMultiBase::KM_InitTime( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -385,7 +385,7 @@ TMulti::KM_InitTime( long int k, const char *kMod )
 /// Wrapper call for updating the time (step) variables
 /// uses TKinMet class
 void
-TMulti::KM_UpdateTime( long int k, const char *kMod )
+TMultiBase::KM_UpdateTime( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -415,7 +415,7 @@ TMulti::KM_UpdateTime( long int k, const char *kMod )
 ///    and current properties of aqueous solution
 /// uses TKinMet class
 void
-TMulti::KM_UpdateFSA( long int jb, long int k, const char *kMod )
+TMultiBase::KM_UpdateFSA( long int jb, long int k, const char *kMod )
 {
     double PUL=1e6, PLL=0.;
     if( k < pm.FIs )
@@ -457,7 +457,7 @@ TMulti::KM_UpdateFSA( long int jb, long int k, const char *kMod )
 /// Wrapper call for updating surface area of the phase and phase amount metastability constraints
 /// uses TKinMet class
 void
-TMulti::KM_ReturnFSA( long int k, const char *kMod )
+TMultiBase::KM_ReturnFSA( long int k, const char *kMod )
 {
     double PUL=1e6, PLL=0.;
     //
@@ -491,7 +491,7 @@ TMulti::KM_ReturnFSA( long int k, const char *kMod )
 // Calculation of initial kinetic rates
 //
 void
-TMulti::KM_InitRates( long int k, const char *kMod )
+TMultiBase::KM_InitRates( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -521,7 +521,7 @@ TMulti::KM_InitRates( long int k, const char *kMod )
 // Calculation of current kinetic rates
 //
 void
-TMulti::KM_CalcRates( long int k, const char *kMod )
+TMultiBase::KM_CalcRates( long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -550,7 +550,7 @@ TMulti::KM_CalcRates( long int k, const char *kMod )
 // Calculation of initial AMR splitting for end members of SS phase
 //
 void
-TMulti::KM_InitSplit( /*long int jb,*/ long int k, const char *kMod )
+TMultiBase::KM_InitSplit( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -578,7 +578,7 @@ TMulti::KM_InitSplit( /*long int jb,*/ long int k, const char *kMod )
 // Calculation of current AMR splitting for end members of SS phase
 //
 void
-TMulti::KM_CalcSplit( /*long int jb,*/ long int k, const char *kMod )
+TMultiBase::KM_CalcSplit( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -606,7 +606,7 @@ TMulti::KM_CalcSplit( /*long int jb,*/ long int k, const char *kMod )
 // Sets new metastability constraints based on updated kinetic rates
 //
 void
-TMulti::KM_SetAMRs( /*long int jb,*/ long int k,const char *kMod )
+TMultiBase::KM_SetAMRs( /*long int jb,*/ long int k,const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -632,7 +632,7 @@ TMulti::KM_SetAMRs( /*long int jb,*/ long int k,const char *kMod )
 }
 
 void
-TMulti::KM_CalcUptake( /*long int jb,*/ long int k, const char *kMod )
+TMultiBase::KM_CalcUptake( /*long int jb,*/ long int k, const char *kMod )
 {
     //
     switch( kMod[0] )
@@ -659,7 +659,7 @@ TMulti::KM_CalcUptake( /*long int jb,*/ long int k, const char *kMod )
 
 
 void
-TMulti::KM_InitUptake( /*long int jb,*/ long int k, const char *kMod )
+TMultiBase::KM_InitUptake( /*long int jb,*/ long int k, const char *kMod )
 {   
     switch( kMod[0] )
     {      
@@ -687,7 +687,7 @@ TMulti::KM_InitUptake( /*long int jb,*/ long int k, const char *kMod )
 // ------------------------------------------------------------------------------------
 /// Internal memory allocation for TKinMet performance optimization
 /// (since version 3.3.0)
-void TMulti::Alloc_TKinMet( long int newFI )
+void TMultiBase::Alloc_TKinMet( long int newFI )
 {
   if(  phKinMet && ( newFI == sizeFI) )
     return;
@@ -700,7 +700,7 @@ void TMulti::Alloc_TKinMet( long int newFI )
           phKinMet[ii] = 0;
 }
 
-void TMulti::Free_TKinMet()
+void TMultiBase::Free_TKinMet()
 {
   long int kk;
 

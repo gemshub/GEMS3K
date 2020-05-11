@@ -1,8 +1,13 @@
 # Require a certain version of cmake
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.7)
 
 # Set the name of the project
-project(GEMS3K)
+project(GEMS3K CXX C)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_MACOSX_RPATH ON)
 
 # Include the cmake variables with values for installation directories
 include(GNUInstallDirs)
@@ -22,9 +27,13 @@ if(NOT CMAKE_BUILD_TYPE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# Define which types of libraries to build
+option(BUILD_SHARED_LIBS "Build shared libraries." ON)
+option(BUILD_STATIC_LIBS "Build static libraries." ON)
+
 # Set the list of compiler flags for GNU compiler
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
-    add_compile_options(-std=c++11 -Wall -Wno-misleading-indentation -Wno-ignored-attributes -Wno-pedantic -Wno-variadic-macros -Wno-deprecated)
+    add_compile_options(-std=c++11 -Wall -Wno-pedantic -Wno-variadic-macros -Wno-deprecated)
 endif()
 
 # Set the list of compiler flags for Clang compiler
@@ -42,5 +51,22 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     add_compile_options("/W0 -D_SCL_SECURE_NO_WARNINGS /MP4")
 endif()
 
+
+# Set the jsonio14 source directory path
+set(GEMS3K_SOURCE_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
+set(GEMS3K_HEADER_DIR ${CMAKE_SOURCE_DIR}/GEMS3K)
+
+# Set the include directories
+include_directories(${GEMS3K_HEADER_DIR})
+if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+    include_directories("/usr/local/include")
+    link_directories("/usr/local/lib")
+endif()
+
 # Compile GEMS3K
 add_subdirectory(GEMS3K)
+link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
+link_directories(${CMAKE_BINARY_DIR}/lib)
+
+# Compile GEMS3K
+add_subdirectory(gemserver)

@@ -27,6 +27,9 @@
 //-------------------------------------------------------------------
 //
 
+#include <cmath>
+#include "v_detail.h"
+
 #ifdef NODEARRAYLEVEL
 
 #include "nodearray.h"
@@ -38,10 +41,10 @@ TNodeArray* TNodeArray::na;
 
 // ------------------------------------------------------------------
 
-bool TNodeArray::NeedGEMS( TNode& wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  )
+bool TNodeArray::NeedGEMS( TNode* wrkNode, const TestModeGEMParam& modeParam, DATABR* C0, DATABR* C1  )
 {
     bool NeedGEM = false;
-    DATACH* CH = wrkNode.pCSD();  // DataCH structure
+    DATACH* CH = wrkNode->pCSD();  // DataCH structure
     double dc;
 
     if( modeParam.useSIA == S_OFF )
@@ -59,7 +62,7 @@ bool TNodeArray::NeedGEMS( TNode& wrkNode, const TestModeGEMParam& modeParam, DA
             C1->bIC[ic] = modeParam.cez; // to prevent loss of Independent Component
 
         dc = C0->bIC[ic] - C1->bIC[ic];
-        if( fabs( dc ) > min( modeParam.cdv, (C1->bIC[ic] * 1e-3 ) ))
+        if( fabs( dc ) > std::min( modeParam.cdv, (C1->bIC[ic] * 1e-3 ) ))
         {
             NeedGEM = true;  // we still need to recalculate equilibrium
             // in this node because its vector b has changed
@@ -97,9 +100,9 @@ long int TNodeArray::SmartMode( const TestModeGEMParam& modeParam, long int ii, 
     return Mode;
 }
 
-gstring TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int step  )
+std::string TNodeArray::ErrorGEMsMessage( long int RetCode,  long int ii, long int step  )
 {
-    gstring err_msg;
+    std::string err_msg;
     char buf[200];
 
     sprintf( buf, " Node= %-8ld  Step= %-8ld\n", ii, step );
@@ -140,7 +143,7 @@ void  TNodeArray::setNodeArray( long int ndx, long int* nodeTypes  )
         if(  (!nodeTypes && ndx==0) ||
              ( nodeTypes && (nodeTypes[ii] == ndx/*i+1*/ )) )
         {
-            calcNode.pCNode()->NodeHandle = ndx/*(i+1)*/;
+            calcNode->pCNode()->NodeHandle = ndx/*(i+1)*/;
             NodT0[ii] = allocNewDBR( calcNode);
             NodT1[ii] = allocNewDBR( calcNode);
 
@@ -151,222 +154,160 @@ void  TNodeArray::setNodeArray( long int ndx, long int* nodeTypes  )
         }
 }
 
-
 //---------------------------------------------------------//
-void TNodeArray::allocMemory()
-{
-    long int ii;
-
-    // The NodeArray must be allocated here
-    /// calcNode = new TNode();
-
-    // alloc memory for data bidge structures
-    // did in constructor TNode::allocMemory();
-
-    // alloc memory for all nodes at current time point
-    NodT0 = new  DATABRPTR[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        NodT0[ii] = nullptr;
-
-    // alloc memory for all nodes at previous time point
-    NodT1 = new  DATABRPTR[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        NodT1[ii] = nullptr;
-    
-    // alloc memory for the work array of node types
-    tcNode = new char[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        tcNode[ii] = normal;
-
-    // alloc memory for the work array of IA indicators
-    iaNode = new bool[anNodes];
-    for(  ii=0; ii<anNodes; ii++ )
-        iaNode[ii] = true;
-    // grid ?
-}
-
-void TNodeArray::freeMemory()
-{
-    long int ii;
-
-    if( anNodes )
-    { if( NodT0 )
-            for(  ii=0; ii<anNodes; ii++ )
-                if( NodT0[ii] )
-                    NodT0[ii] = calcNode.databr_free(NodT0[ii]);
-        delete[]  NodT0;
-        NodT0 = nullptr;
-        if( NodT1 )
-            for(  ii=0; ii<anNodes; ii++ )
-                if( NodT1[ii] )
-                    NodT1[ii] = calcNode.databr_free(NodT1[ii]);
-        delete[]  NodT1;
-        NodT1 = nullptr;
-    }
-
-    if( grid )
-        delete[] grid;
-    if( tcNode)
-        delete[] tcNode;
-    if( iaNode )
-        delete[] iaNode;
-
-    ///if(calcNode)
-    ///   delete calcNode;
-}
 
 
 // Copying data for node ii from node array into work DATABR structure
 //
-void TNodeArray::CopyWorkNodeFromArray( TNode& wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
+void TNodeArray::CopyWorkNodeFromArray( TNode* wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
 {
     // from arr_BR[ii] to pCNode() structure
     if( ii < 0 || ii>= nNodes )
         return;
     // memory must be allocated before
 
-    // mem_cpy( &wrkNode.pCNode()->NodeHandle, &arr_BR[ii]->NodeHandle, 6*sizeof(short));
-    wrkNode.pCNode()->NodeHandle = arr_BR[ii]->NodeHandle;
-    wrkNode.pCNode()->NodeTypeHY = arr_BR[ii]->NodeTypeHY;
-    wrkNode.pCNode()->NodeTypeMT = arr_BR[ii]->NodeTypeMT;
-    wrkNode.pCNode()->NodeStatusFMT = arr_BR[ii]->NodeStatusFMT;
-    wrkNode.pCNode()->NodeStatusCH = arr_BR[ii]->NodeStatusCH;
-    wrkNode.pCNode()->IterDone = arr_BR[ii]->IterDone;      //6
-    // mem_cpy( &wrkNode.pCNode()->TK, &arr_BR[ii]->TK, 32*sizeof(double));
-    wrkNode.pCNode()->TK = arr_BR[ii]->TK;
-    wrkNode.pCNode()->P = arr_BR[ii]->P;
-    wrkNode.pCNode()->Vs = arr_BR[ii]->Vs;
-    wrkNode.pCNode()->Vi = arr_BR[ii]->Vi;
-    wrkNode.pCNode()->Ms = arr_BR[ii]->Ms;
-    wrkNode.pCNode()->Mi = arr_BR[ii]->Mi;
-    wrkNode.pCNode()->Gs = arr_BR[ii]->Gs;
-    wrkNode.pCNode()->Hs = arr_BR[ii]->Hs;
-    wrkNode.pCNode()->Hi = arr_BR[ii]->Hi;
-    wrkNode.pCNode()->IC = arr_BR[ii]->IC;
-    wrkNode.pCNode()->pH = arr_BR[ii]->pH;
-    wrkNode.pCNode()->pe = arr_BR[ii]->pe;
-    wrkNode.pCNode()->Eh = arr_BR[ii]->Eh; //13
+    // mem_cpy( &wrkNode->pCNode()->NodeHandle, &arr_BR[ii]->NodeHandle, 6*sizeof(short));
+    wrkNode->pCNode()->NodeHandle = arr_BR[ii]->NodeHandle;
+    wrkNode->pCNode()->NodeTypeHY = arr_BR[ii]->NodeTypeHY;
+    wrkNode->pCNode()->NodeTypeMT = arr_BR[ii]->NodeTypeMT;
+    wrkNode->pCNode()->NodeStatusFMT = arr_BR[ii]->NodeStatusFMT;
+    wrkNode->pCNode()->NodeStatusCH = arr_BR[ii]->NodeStatusCH;
+    wrkNode->pCNode()->IterDone = arr_BR[ii]->IterDone;      //6
+    // mem_cpy( &wrkNode->pCNode()->TK, &arr_BR[ii]->TK, 32*sizeof(double));
+    wrkNode->pCNode()->TK = arr_BR[ii]->TK;
+    wrkNode->pCNode()->P = arr_BR[ii]->P;
+    wrkNode->pCNode()->Vs = arr_BR[ii]->Vs;
+    wrkNode->pCNode()->Vi = arr_BR[ii]->Vi;
+    wrkNode->pCNode()->Ms = arr_BR[ii]->Ms;
+    wrkNode->pCNode()->Mi = arr_BR[ii]->Mi;
+    wrkNode->pCNode()->Gs = arr_BR[ii]->Gs;
+    wrkNode->pCNode()->Hs = arr_BR[ii]->Hs;
+    wrkNode->pCNode()->Hi = arr_BR[ii]->Hi;
+    wrkNode->pCNode()->IC = arr_BR[ii]->IC;
+    wrkNode->pCNode()->pH = arr_BR[ii]->pH;
+    wrkNode->pCNode()->pe = arr_BR[ii]->pe;
+    wrkNode->pCNode()->Eh = arr_BR[ii]->Eh; //13
 
-    wrkNode.pCNode()->Tm = arr_BR[ii]->Tm;
-    wrkNode.pCNode()->dt = arr_BR[ii]->dt;
+    wrkNode->pCNode()->Tm = arr_BR[ii]->Tm;
+    wrkNode->pCNode()->dt = arr_BR[ii]->dt;
 #ifdef NODEARRAYLEVEL
-    wrkNode.pCNode()->Dif = arr_BR[ii]->Dif;
-    wrkNode.pCNode()->Vt = arr_BR[ii]->Vt;
-    wrkNode.pCNode()->vp = arr_BR[ii]->vp;
-    wrkNode.pCNode()->eps = arr_BR[ii]->eps;
-    wrkNode.pCNode()->Km = arr_BR[ii]->Km;
-    wrkNode.pCNode()->Kf = arr_BR[ii]->Kf;
-    wrkNode.pCNode()->S = arr_BR[ii]->S;
-    wrkNode.pCNode()->Tr = arr_BR[ii]->Tr;
-    wrkNode.pCNode()->h = arr_BR[ii]->h;
-    wrkNode.pCNode()->rho = arr_BR[ii]->rho;
-    wrkNode.pCNode()->al = arr_BR[ii]->al;
-    wrkNode.pCNode()->at = arr_BR[ii]->at;
-    wrkNode.pCNode()->av = arr_BR[ii]->av;
-    wrkNode.pCNode()->hDl = arr_BR[ii]->hDl;
-    wrkNode.pCNode()->hDt = arr_BR[ii]->hDt;
-    wrkNode.pCNode()->hDv = arr_BR[ii]->hDv;
-    wrkNode.pCNode()->nto = arr_BR[ii]->nto; //19
+    wrkNode->pCNode()->Dif = arr_BR[ii]->Dif;
+    wrkNode->pCNode()->Vt = arr_BR[ii]->Vt;
+    wrkNode->pCNode()->vp = arr_BR[ii]->vp;
+    wrkNode->pCNode()->eps = arr_BR[ii]->eps;
+    wrkNode->pCNode()->Km = arr_BR[ii]->Km;
+    wrkNode->pCNode()->Kf = arr_BR[ii]->Kf;
+    wrkNode->pCNode()->S = arr_BR[ii]->S;
+    wrkNode->pCNode()->Tr = arr_BR[ii]->Tr;
+    wrkNode->pCNode()->h = arr_BR[ii]->h;
+    wrkNode->pCNode()->rho = arr_BR[ii]->rho;
+    wrkNode->pCNode()->al = arr_BR[ii]->al;
+    wrkNode->pCNode()->at = arr_BR[ii]->at;
+    wrkNode->pCNode()->av = arr_BR[ii]->av;
+    wrkNode->pCNode()->hDl = arr_BR[ii]->hDl;
+    wrkNode->pCNode()->hDt = arr_BR[ii]->hDt;
+    wrkNode->pCNode()->hDv = arr_BR[ii]->hDv;
+    wrkNode->pCNode()->nto = arr_BR[ii]->nto; //19
 #endif
     // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
     // exchange of values occurs through lists of indices, e.g. xDC, xPH
-    copyValues( wrkNode.pCNode()->xDC, arr_BR[ii]->xDC, wrkNode.pCSD()->nDCb );
-    copyValues( wrkNode.pCNode()->gam, arr_BR[ii]->gam, wrkNode.pCSD()->nDCb );
+    copyValues( wrkNode->pCNode()->xDC, arr_BR[ii]->xDC, wrkNode->pCSD()->nDCb );
+    copyValues( wrkNode->pCNode()->gam, arr_BR[ii]->gam, wrkNode->pCSD()->nDCb );
     if( pCSD()->nAalp >0 )
-        copyValues( wrkNode.pCNode()->aPH, arr_BR[ii]->aPH, wrkNode.pCSD()->nPHb );
-    else  wrkNode.pCNode()->aPH = nullptr;
-    copyValues( wrkNode.pCNode()->xPH, arr_BR[ii]->xPH, wrkNode.pCSD()->nPHb );
-    copyValues( wrkNode.pCNode()->omPH, arr_BR[ii]->omPH, wrkNode.pCSD()->nPHb );
-    copyValues( wrkNode.pCNode()->vPS, arr_BR[ii]->vPS, wrkNode.pCSD()->nPSb );
-    copyValues( wrkNode.pCNode()->mPS, arr_BR[ii]->mPS, wrkNode.pCSD()->nPSb );
+        copyValues( wrkNode->pCNode()->aPH, arr_BR[ii]->aPH, wrkNode->pCSD()->nPHb );
+    else  wrkNode->pCNode()->aPH = nullptr;
+    copyValues( wrkNode->pCNode()->xPH, arr_BR[ii]->xPH, wrkNode->pCSD()->nPHb );
+    copyValues( wrkNode->pCNode()->omPH, arr_BR[ii]->omPH, wrkNode->pCSD()->nPHb );
+    copyValues( wrkNode->pCNode()->vPS, arr_BR[ii]->vPS, wrkNode->pCSD()->nPSb );
+    copyValues( wrkNode->pCNode()->mPS, arr_BR[ii]->mPS, wrkNode->pCSD()->nPSb );
 
-    copyValues( wrkNode.pCNode()->bPS, arr_BR[ii]->bPS,
-                wrkNode.pCSD()->nPSb*wrkNode.pCSD()->nICb );
-    copyValues( wrkNode.pCNode()->xPA, arr_BR[ii]->xPA, wrkNode.pCSD()->nPSb );
-    copyValues( wrkNode.pCNode()->dul, arr_BR[ii]->dul, wrkNode.pCSD()->nDCb );
-    copyValues( wrkNode.pCNode()->dll, arr_BR[ii]->dll, wrkNode.pCSD()->nDCb );
-    copyValues( wrkNode.pCNode()->bIC, arr_BR[ii]->bIC, wrkNode.pCSD()->nICb );
-    copyValues( wrkNode.pCNode()->rMB, arr_BR[ii]->rMB, wrkNode.pCSD()->nICb );
-    copyValues( wrkNode.pCNode()->uIC, arr_BR[ii]->uIC, wrkNode.pCSD()->nICb );
-    copyValues( wrkNode.pCNode()->bSP, arr_BR[ii]->bSP, wrkNode.pCSD()->nICb );
-    copyValues( wrkNode.pCNode()->amru, arr_BR[ii]->amru, wrkNode.pCSD()->nPSb );
-    copyValues( wrkNode.pCNode()->amrl, arr_BR[ii]->amrl, wrkNode.pCSD()->nPSb );
+    copyValues( wrkNode->pCNode()->bPS, arr_BR[ii]->bPS,
+                wrkNode->pCSD()->nPSb*wrkNode->pCSD()->nICb );
+    copyValues( wrkNode->pCNode()->xPA, arr_BR[ii]->xPA, wrkNode->pCSD()->nPSb );
+    copyValues( wrkNode->pCNode()->dul, arr_BR[ii]->dul, wrkNode->pCSD()->nDCb );
+    copyValues( wrkNode->pCNode()->dll, arr_BR[ii]->dll, wrkNode->pCSD()->nDCb );
+    copyValues( wrkNode->pCNode()->bIC, arr_BR[ii]->bIC, wrkNode->pCSD()->nICb );
+    copyValues( wrkNode->pCNode()->rMB, arr_BR[ii]->rMB, wrkNode->pCSD()->nICb );
+    copyValues( wrkNode->pCNode()->uIC, arr_BR[ii]->uIC, wrkNode->pCSD()->nICb );
+    copyValues( wrkNode->pCNode()->bSP, arr_BR[ii]->bSP, wrkNode->pCSD()->nICb );
+    copyValues( wrkNode->pCNode()->amru, arr_BR[ii]->amru, wrkNode->pCSD()->nPSb );
+    copyValues( wrkNode->pCNode()->amrl, arr_BR[ii]->amrl, wrkNode->pCSD()->nPSb );
 }
 
 // new Copying data for node iNode back from work DATABR structure into the node array
-void TNodeArray::MoveWorkNodeToArray( TNode& wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
+void TNodeArray::MoveWorkNodeToArray( TNode* wrkNode, long int ii, long int nNodes, DATABRPTR* arr_BR )
 {
     // from arr_BR[ii] to pCNode() structure
     if( ii < 0 || ii>= nNodes )
         return;
     // memory must be allocated before
 
-    // mem_cpy( &wrkNode.pCNode()->NodeHandle, &arr_BR[ii]->NodeHandle, 6*sizeof(short));
-    arr_BR[ii]->NodeHandle = wrkNode.pCNode()->NodeHandle;
-    arr_BR[ii]->NodeTypeHY = wrkNode.pCNode()->NodeTypeHY;
-    arr_BR[ii]->NodeTypeMT = wrkNode.pCNode()->NodeTypeMT;
-    arr_BR[ii]->NodeStatusFMT = wrkNode.pCNode()->NodeStatusFMT;
-    arr_BR[ii]->NodeStatusCH = wrkNode.pCNode()->NodeStatusCH;
-    arr_BR[ii]->IterDone = wrkNode.pCNode()->IterDone;      //6
-    // mem_cpy( &wrkNode.pCNode()->TK, &arr_BR[ii]->TK, 32*sizeof(double));
-    arr_BR[ii]->TK = wrkNode.pCNode()->TK;
-    arr_BR[ii]->P = wrkNode.pCNode()->P;
-    arr_BR[ii]->Vs = wrkNode.pCNode()->Vs;
-    arr_BR[ii]->Vi = wrkNode.pCNode()->Vi;
-    arr_BR[ii]->Ms = wrkNode.pCNode()->Ms;
-    arr_BR[ii]->Mi = wrkNode.pCNode()->Mi;
-    arr_BR[ii]->Gs = wrkNode.pCNode()->Gs;
-    arr_BR[ii]->Hs = wrkNode.pCNode()->Hs;
-    arr_BR[ii]->Hi = wrkNode.pCNode()->Hi;
-    arr_BR[ii]->IC = wrkNode.pCNode()->IC;
-    arr_BR[ii]->pH = wrkNode.pCNode()->pH;
-    arr_BR[ii]->pe = wrkNode.pCNode()->pe;
-    arr_BR[ii]->Eh = wrkNode.pCNode()->Eh; //13
+    // mem_cpy( &wrkNode->pCNode()->NodeHandle, &arr_BR[ii]->NodeHandle, 6*sizeof(short));
+    arr_BR[ii]->NodeHandle = wrkNode->pCNode()->NodeHandle;
+    arr_BR[ii]->NodeTypeHY = wrkNode->pCNode()->NodeTypeHY;
+    arr_BR[ii]->NodeTypeMT = wrkNode->pCNode()->NodeTypeMT;
+    arr_BR[ii]->NodeStatusFMT = wrkNode->pCNode()->NodeStatusFMT;
+    arr_BR[ii]->NodeStatusCH = wrkNode->pCNode()->NodeStatusCH;
+    arr_BR[ii]->IterDone = wrkNode->pCNode()->IterDone;      //6
+    // mem_cpy( &wrkNode->pCNode()->TK, &arr_BR[ii]->TK, 32*sizeof(double));
+    arr_BR[ii]->TK = wrkNode->pCNode()->TK;
+    arr_BR[ii]->P = wrkNode->pCNode()->P;
+    arr_BR[ii]->Vs = wrkNode->pCNode()->Vs;
+    arr_BR[ii]->Vi = wrkNode->pCNode()->Vi;
+    arr_BR[ii]->Ms = wrkNode->pCNode()->Ms;
+    arr_BR[ii]->Mi = wrkNode->pCNode()->Mi;
+    arr_BR[ii]->Gs = wrkNode->pCNode()->Gs;
+    arr_BR[ii]->Hs = wrkNode->pCNode()->Hs;
+    arr_BR[ii]->Hi = wrkNode->pCNode()->Hi;
+    arr_BR[ii]->IC = wrkNode->pCNode()->IC;
+    arr_BR[ii]->pH = wrkNode->pCNode()->pH;
+    arr_BR[ii]->pe = wrkNode->pCNode()->pe;
+    arr_BR[ii]->Eh = wrkNode->pCNode()->Eh; //13
 
-    arr_BR[ii]->Tm = wrkNode.pCNode()->Tm;
-    arr_BR[ii]->dt = wrkNode.pCNode()->dt;
+    arr_BR[ii]->Tm = wrkNode->pCNode()->Tm;
+    arr_BR[ii]->dt = wrkNode->pCNode()->dt;
 #ifdef NODEARRAYLEVEL
-    arr_BR[ii]->Dif = wrkNode.pCNode()->Dif;
-    arr_BR[ii]->Vt = wrkNode.pCNode()->Vt;
-    arr_BR[ii]->vp = wrkNode.pCNode()->vp;
-    arr_BR[ii]->eps = wrkNode.pCNode()->eps;
-    arr_BR[ii]->Km = wrkNode.pCNode()->Km;
-    arr_BR[ii]->Kf = wrkNode.pCNode()->Kf;
-    arr_BR[ii]->S = wrkNode.pCNode()->S;
-    arr_BR[ii]->Tr = wrkNode.pCNode()->Tr;
-    arr_BR[ii]->h = wrkNode.pCNode()->h;
-    arr_BR[ii]->rho = wrkNode.pCNode()->rho;
-    arr_BR[ii]->al = wrkNode.pCNode()->al;
-    arr_BR[ii]->at = wrkNode.pCNode()->at;
-    arr_BR[ii]->av = wrkNode.pCNode()->av;
-    arr_BR[ii]->hDl = wrkNode.pCNode()->hDl;
-    arr_BR[ii]->hDt = wrkNode.pCNode()->hDt;
-    arr_BR[ii]->hDv = wrkNode.pCNode()->hDv;
-    arr_BR[ii]->nto = wrkNode.pCNode()->nto; //19
+    arr_BR[ii]->Dif = wrkNode->pCNode()->Dif;
+    arr_BR[ii]->Vt = wrkNode->pCNode()->Vt;
+    arr_BR[ii]->vp = wrkNode->pCNode()->vp;
+    arr_BR[ii]->eps = wrkNode->pCNode()->eps;
+    arr_BR[ii]->Km = wrkNode->pCNode()->Km;
+    arr_BR[ii]->Kf = wrkNode->pCNode()->Kf;
+    arr_BR[ii]->S = wrkNode->pCNode()->S;
+    arr_BR[ii]->Tr = wrkNode->pCNode()->Tr;
+    arr_BR[ii]->h = wrkNode->pCNode()->h;
+    arr_BR[ii]->rho = wrkNode->pCNode()->rho;
+    arr_BR[ii]->al = wrkNode->pCNode()->al;
+    arr_BR[ii]->at = wrkNode->pCNode()->at;
+    arr_BR[ii]->av = wrkNode->pCNode()->av;
+    arr_BR[ii]->hDl = wrkNode->pCNode()->hDl;
+    arr_BR[ii]->hDt = wrkNode->pCNode()->hDt;
+    arr_BR[ii]->hDv = wrkNode->pCNode()->hDv;
+    arr_BR[ii]->nto = wrkNode->pCNode()->nto; //19
 #endif
     // Dynamic data - dimensions see in DATACH.H and DATAMT.H structures
     // exchange of values occurs through lists of indices, e.g. xDC, xPH
-    copyValues( arr_BR[ii]->xDC, wrkNode.pCNode()->xDC, wrkNode.pCSD()->nDCb );
-    copyValues( arr_BR[ii]->gam, wrkNode.pCNode()->gam, wrkNode.pCSD()->nDCb );
-    if( wrkNode.pCSD()->nAalp >0 )
-        copyValues( arr_BR[ii]->aPH, wrkNode.pCNode()->aPH, wrkNode.pCSD()->nPHb );
+    copyValues( arr_BR[ii]->xDC, wrkNode->pCNode()->xDC, wrkNode->pCSD()->nDCb );
+    copyValues( arr_BR[ii]->gam, wrkNode->pCNode()->gam, wrkNode->pCSD()->nDCb );
+    if( wrkNode->pCSD()->nAalp >0 )
+        copyValues( arr_BR[ii]->aPH, wrkNode->pCNode()->aPH, wrkNode->pCSD()->nPHb );
     else  arr_BR[ii]->aPH = nullptr;
-    copyValues( arr_BR[ii]->xPH, wrkNode.pCNode()->xPH, wrkNode.pCSD()->nPHb );
-    copyValues( arr_BR[ii]->omPH, wrkNode.pCNode()->omPH, wrkNode.pCSD()->nPHb );
-    copyValues( arr_BR[ii]->vPS, wrkNode.pCNode()->vPS, wrkNode.pCSD()->nPSb );
-    copyValues( arr_BR[ii]->mPS, wrkNode.pCNode()->mPS, wrkNode.pCSD()->nPSb );
+    copyValues( arr_BR[ii]->xPH, wrkNode->pCNode()->xPH, wrkNode->pCSD()->nPHb );
+    copyValues( arr_BR[ii]->omPH, wrkNode->pCNode()->omPH, wrkNode->pCSD()->nPHb );
+    copyValues( arr_BR[ii]->vPS, wrkNode->pCNode()->vPS, wrkNode->pCSD()->nPSb );
+    copyValues( arr_BR[ii]->mPS, wrkNode->pCNode()->mPS, wrkNode->pCSD()->nPSb );
 
-    copyValues( arr_BR[ii]->bPS, wrkNode.pCNode()->bPS,
-                wrkNode.pCSD()->nPSb*wrkNode.pCSD()->nICb );
-    copyValues( arr_BR[ii]->xPA, wrkNode.pCNode()->xPA, wrkNode.pCSD()->nPSb );
-    copyValues( arr_BR[ii]->dul, wrkNode.pCNode()->dul, wrkNode.pCSD()->nDCb );
-    copyValues( arr_BR[ii]->dll, wrkNode.pCNode()->dll, wrkNode.pCSD()->nDCb );
-    copyValues( arr_BR[ii]->bIC, wrkNode.pCNode()->bIC, wrkNode.pCSD()->nICb );
-    copyValues( arr_BR[ii]->rMB, wrkNode.pCNode()->rMB, wrkNode.pCSD()->nICb );
-    copyValues( arr_BR[ii]->uIC, wrkNode.pCNode()->uIC, wrkNode.pCSD()->nICb );
-    copyValues( arr_BR[ii]->bSP, wrkNode.pCNode()->bSP, wrkNode.pCSD()->nICb );
-    copyValues( arr_BR[ii]->amru, wrkNode.pCNode()->amru, wrkNode.pCSD()->nPSb );
-    copyValues( arr_BR[ii]->amrl, wrkNode.pCNode()->amrl, wrkNode.pCSD()->nPSb );
+    copyValues( arr_BR[ii]->bPS, wrkNode->pCNode()->bPS,
+                wrkNode->pCSD()->nPSb*wrkNode->pCSD()->nICb );
+    copyValues( arr_BR[ii]->xPA, wrkNode->pCNode()->xPA, wrkNode->pCSD()->nPSb );
+    copyValues( arr_BR[ii]->dul, wrkNode->pCNode()->dul, wrkNode->pCSD()->nDCb );
+    copyValues( arr_BR[ii]->dll, wrkNode->pCNode()->dll, wrkNode->pCSD()->nDCb );
+    copyValues( arr_BR[ii]->bIC, wrkNode->pCNode()->bIC, wrkNode->pCSD()->nICb );
+    copyValues( arr_BR[ii]->rMB, wrkNode->pCNode()->rMB, wrkNode->pCSD()->nICb );
+    copyValues( arr_BR[ii]->uIC, wrkNode->pCNode()->uIC, wrkNode->pCSD()->nICb );
+    copyValues( arr_BR[ii]->bSP, wrkNode->pCNode()->bSP, wrkNode->pCSD()->nICb );
+    copyValues( arr_BR[ii]->amru, wrkNode->pCNode()->amru, wrkNode->pCSD()->nPSb );
+    copyValues( arr_BR[ii]->amrl, wrkNode->pCNode()->amrl, wrkNode->pCSD()->nPSb );
 }
 
 
@@ -401,16 +342,16 @@ void TNodeArray::CopyNodeFromTo( long int ndx, long int nNod,
 // Calculate phase (carrier) mass, kg  of single component phase
 double TNodeArray::get_mPH( long int ia, long int nodex, long int PHx )
 {
-    long int DCx = calcNode.Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
+    long int DCx = calcNode->Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
     double val=0.;
 
     if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
     {
         val = pCSD()->DCmm[DCx];
         if( ia == 0)
-            val *= pNodT0()[nodex]->xDC[calcNode.DC_xCH_to_xDB(DCx)];
+            val *= pNodT0()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
         else
-            val *= pNodT1()[nodex]->xDC[calcNode.DC_xCH_to_xDB(DCx)];
+            val *= pNodT1()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
     }
 
     return val;
@@ -419,7 +360,7 @@ double TNodeArray::get_mPH( long int ia, long int nodex, long int PHx )
 // Calculate phase volume (in cm3) of single - component phase
 double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
 {
-    long int DCx = calcNode.Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
+    long int DCx = calcNode->Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
     double val=0.;
 
     if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
@@ -429,15 +370,15 @@ double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
         {
             T = pNodT0()[(nodex)]->TK;
             P = pNodT0()[(nodex)]->P;
-            val = pNodT0()[nodex]->xDC[calcNode.DC_xCH_to_xDB(DCx)]; // number of moles
+            val = pNodT0()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)]; // number of moles
         }
         else
         {
             T = pNodT1()[(nodex)]->TK;
             P = pNodT1()[(nodex)]->P;
-            val = pNodT1()[nodex]->xDC[calcNode.DC_xCH_to_xDB(DCx)];
+            val = pNodT1()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
         }
-        val *= calcNode.DC_V0( DCx, P, T );
+        val *= calcNode->DC_V0( DCx, P, T );
     }
     return val;
 }
@@ -446,16 +387,16 @@ double TNodeArray::get_vPH( long int ia, long int nodex, long int PHx )
 // Calculate bulk compositions  of single component phase
 double TNodeArray::get_bPH( long int ia, long int nodex, long int PHx, long int ICx )
 {
-    long int DCx = calcNode.Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
+    long int DCx = calcNode->Phx_to_DCx( Ph_xDB_to_xCH(PHx) );
     double val=0.;
 
     if( DCx >= pCSD()->nDCs && DCx < pCSD()->nDC )
     {
         val = pCSD()->A[ pCSD()->xic[ICx] + DCx * pCSD()->nIC];
         if( ia == 0)
-            val *= pNodT0()[nodex]->xDC[calcNode.DC_xCH_to_xDB(DCx)];
+            val *= pNodT0()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
         else
-            val *= pNodT1()[nodex]->xDC[calcNode.DC_xCH_to_xDB(DCx)];
+            val *= pNodT1()[nodex]->xDC[calcNode->DC_xCH_to_xDB(DCx)];
     }
 
     return val;
@@ -770,7 +711,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                 }
                 else
                     if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-                        cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << endl;
+                        std::cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << std::endl;
                 // 	  			  Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
                 //	   }
             }
@@ -815,7 +756,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
             }
             else
                 if(dbr->NodeTypeHY != NBC3sink  && dbr->NodeTypeHY != NBC3source)
-                    cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << endl;
+                    std::cout << "W002MTRW " << "Warning: Particle jumped outside the domain" << std::endl;
             //        	 Error( "W002MTRW", "Warning: Particle jumped outside the domain" );
 
         } // loop ie
@@ -986,7 +927,7 @@ void TNodeArray::logProfilePhVol( FILE* logfile, long int t, double at, long int
     fprintf( logfile, "\n" );
 }
 
-void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long int  cycle,
+void TNodeArray::databr_to_vtk( std::fstream& ff, const char*name, double time, long int  cycle,
                                 long int  nFilds, long int  (*Flds)[2])
 {
     bool all = false;
@@ -997,7 +938,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
     kk = sizeM;
     if(sizeM==1 && sizeK==1) // 05.12.2012 workaround for 2D paraview
         kk=2;
-    calcNode.databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
+    calcNode->databr_head_to_vtk( ff, name, time, cycle, sizeN, kk, sizeK );
 
     if( nFilds < 1 || !Flds )
     {  all = true;
@@ -1011,7 +952,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
         else
             nf= Flds[kk][0];
 
-        calcNode.databr_size_to_vtk(  nf, nel, nel2 );
+        calcNode->databr_size_to_vtk(  nf, nel, nel2 );
 
         if( all )
         { ii=0;}
@@ -1022,7 +963,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
 
         for( ; ii<nel; ii++ )
         {
-            calcNode.databr_name_to_vtk( ff, nf, ii, nel2 );
+            calcNode->databr_name_to_vtk( ff, nf, ii, nel2 );
 
             // cycle for TNode array
             for( i = 0; i < sizeN; i++ )
@@ -1031,7 +972,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
                     {
                         int ndx = iNode( i, j, k );
                         CopyWorkNodeFromArray( calcNode, ndx, anNodes,  pNodT0() );
-                        calcNode.databr_element_to_vtk( ff, calcNode.pCNode()/*pNodT0()[(ndx)]*/, nf, ii );
+                        calcNode->databr_element_to_vtk( ff, calcNode->pCNode()/*pNodT0()[(ndx)]*/, nf, ii );
                     }
             if( sizeM==1 && sizeK==1)  // 05.12.2012 workaround for 2D paraview
             {
@@ -1041,7 +982,7 @@ void TNodeArray::databr_to_vtk( fstream& ff, const char*name, double time, long 
                         {
                             int ndx = iNode( i, j, k );
                             CopyWorkNodeFromArray( calcNode, ndx, anNodes,  pNodT0() );
-                            calcNode.databr_element_to_vtk( ff, calcNode.pCNode()/*pNodT0()[(ndx)]*/, nf, ii );
+                            calcNode->databr_element_to_vtk( ff, calcNode->pCNode()/*pNodT0()[(ndx)]*/, nf, ii );
                         }
             }
         }

@@ -22,35 +22,19 @@
 // You should have received a copy of the GNU General Public License
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
-#ifndef _verror_h_
-#define _verror_h_
-
-#ifdef IPMGEMPLUGIN
+#ifndef VERROR_H
+#define VERROR_H
 
 #include <string>
 
-using namespace std;
-typedef string gstring;
-static const size_t npos = string::npos;
-//   static const size_t npos = static_cast<size_t>(-1);
-//   static  const size_t npos=32767;   /wp sergey 2004 from below assignment
-
-void strip(string& str);
-
-#else
-
-#include "gstring.h"
-
-#endif
-
 struct TError
 {
-    gstring mess;
-    gstring title;
+    std::string mess;
+    std::string title;
     TError()
     {}
 
-    TError(const gstring& titl, const gstring& msg):
+    TError(const std::string& titl, const std::string& msg):
             mess(msg),
             title(titl)
     {}
@@ -76,7 +60,7 @@ struct TFatalError:
             TError(err)
     {}
 
-    TFatalError(const gstring& titl, const gstring& msg):
+    TFatalError(const std::string& titl, const std::string& msg):
             TError( titl, msg )
     {}
 
@@ -84,19 +68,31 @@ struct TFatalError:
 
 
 inline
-void Error (const gstring& title, const gstring& message)
+void Error (const std::string& title, const std::string& message)
 {
     throw TError(title, message);
 }
 
 inline
-void ErrorIf (bool error, const gstring& title, const gstring& message)
+void ErrorIf (bool error, const std::string& title, const std::string& message)
+{
+    if(error)
+        throw TError(title, message);
+}
+
+inline
+void Error (const char* title, const char* message)
+{
+    throw TError(title, message);
+}
+
+inline
+void ErrorIf (bool error, const char* title, const char* message)
 {
     if(error)
         throw TError(title, message);
 }
 
 
-#endif
-// _verror_h
+#endif  // VERROR_H
 

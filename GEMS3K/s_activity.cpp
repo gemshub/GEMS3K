@@ -29,15 +29,9 @@
 #include <cmath>
 #include<iomanip>
 
-#include "m_param.h"
-//#include "activities.h"
+#include "ms_multi.h"
 #include "node.h"
-
-//#ifndef IPMGEMPLUGIN
-//#include "service.h"
-//#include "stepwise.h"
-//#endif
-#ifdef IPMGEMPLUGIN
+#include "activities.h"
 
 // These methods largely duplicate same-named methods from the TNode class
 //   (see node_activities.cpp)
@@ -569,7 +563,7 @@ void TActivity::PrimalChemicalPotentials( double F[], double Y[], double YF[], d
             YFk = YFA[k];
         if( Yf >= 1e6 )
         {                 // error - will result in zerodivide!
-           string pbuf(act.SF[k],0,20);
+           std::string pbuf(act.SF[k],0,20);
            char buf[200];
            sprintf( buf, "Broken phase amount from primal approximation: Phase %s  Yf= %lg", pbuf.c_str(), Yf );
            Error( "E13IPM: PrimalChemicalPotentials():", buf);
@@ -732,61 +726,6 @@ NEXT_PHASE:
     return(FX);
 }
 
-//#ifndef IPMGEMPLUGIN
-/*
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Variant of GX() function for use in the UnSpace module (non-optimized)
-// Should not be called from within GEMIPM!
-//
-double TActivity::pb_GX( double *Gxx  )
-{
-    long int i, j, k;
-    double Gi, x, XF, XFw, FX;
-    SPP_SETTING *pa = paTProfil;
-
-    // calculating G(X)
-    FX=0.;
-    j=0;
-    for( k=0; k<act.FI; k++ )
-    { // phase loop
-        i=j+act.L1[k];
-        act.logXw = -101.;
-        XFw = 0.0;  // calculating mole amount of the solvent/sorbent
-        if( act.FIs && k<act.FIs )
-            XFw = act.XFA[k];
- //       if( XFw > const1 )
-        if( ( act.PHC[k] == PH_AQUEL && XFw >= pa->p.XwMin )
-                        || ( act.PHC[k] == PH_SORPTION && XFw >= pa->p.ScMin )
-                        || ( act.PHC[k] == PH_POLYEL && XFw >= pa->p.ScMin ) )
-             act.logXw = log( XFw );
-        / *   * /
-        XF = act.XF[k];
-        if( !(act.FIs && k < act.FIs) )
-        {
-                if( XF < pa->p.PhMin )
-        		goto NEXT_PHASE;
-        }
-        else if( XF < pa->p.DS && act.logXw < 100. )
-        	goto NEXT_PHASE;
-        act.logYFk = log( XF );
-
-        for( ; j<i; j++ )
-        { // DC loop
-            x = act.X[j];
-            if( x < pa->p.DcMin )
-                continue;
-            // calculating DC increment to G(x)
-            Gi = DC_GibbsEnergyContribution( Gxx[j], x, act.logYFk, act.logXw,
-                                 act.DCCW[j] );
-            FX += Gi;
-        }   // j
-NEXT_PHASE:
-        j = i;
-    }  // k
-    return(FX);
-}
-//#endif
-*/
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 /// Conversion of g(T,P) value for DCs into the uniform cj scale.
 /// \param k - index of phase, \param j - index DC in phase
@@ -805,14 +744,14 @@ double TActivity:: ConvertGj_toUniformStandardState( double g0, long int j, long
     case DC_AQ_PROTON:
     case DC_AQ_ELECTRON:
     case DC_AQ_SPECIES:
-case DC_AQ_SURCOMP:
+    case DC_AQ_SURCOMP:
         G += act.ln5551;
         // calculate molar mass of solvent
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
-#ifndef IPMGEMPLUGIN
-        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-#endif
+//#ifndef IPMGEMPLUGIN
+//        if( TSyst::sm->GetSY()->PYOF != S_OFF )
+//#endif
           if( YOF != 0.0 )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
 
@@ -841,9 +780,9 @@ case DC_SCM_SPECIES:
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
-#ifndef IPMGEMPLUGIN
-        if( TSyst::sm->GetSY()->PYOF != S_OFF )
-#endif
+//#ifndef IPMGEMPLUGIN
+//        if( TSyst::sm->GetSY()->PYOF != S_OFF )
+//#endif
           if( YOF != 0.0 )
         	 G += YOF;
         break;
@@ -1067,6 +1006,5 @@ else fRestore = true;
     }  // for k
 }
 
-#endif
 
 //--------------------- End of s_activity.cpp ---------------------------

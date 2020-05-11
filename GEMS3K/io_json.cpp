@@ -28,34 +28,7 @@
 #include  <iostream>
 
 #include "io_json.h"
-#include "v_user.h"
-
-#ifdef IPMGEMPLUGIN
-
-istream& f_getline(istream& is, gstring& str, char delim);
-
-//    This constants should be 'defined' to satisfy all compilers
-#define SHORT_EMPTY 	   -32768
-#define LONG_EMPTY             -2147483648L
-#define FLOAT_EMPTY	          1.17549435e-38F
-#define DOUBLE_EMPTY         2.2250738585072014e-308
-#define CHAR_EMPTY   	     '`'
-
-inline bool IsFloatEmpty( const float v )
-{
-    return ( v>0. && v <= FLOAT_EMPTY);
-}
-inline bool IsDoubleEmpty( const double v )
-{
-    return ( v>0. && v <= DOUBLE_EMPTY);
-}
-
-#else
-
-#include "v_vals.h"
-
-#endif
-
+#include "v_detail.h"
 
 /// Write double value to file
 template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json_arr )
@@ -64,14 +37,10 @@ template <> void TPrintJson::writeValue( const char& value, nlohmann::json& json
 }
 
 /// Write double value to file
-template <> void TPrintJson::writeValue( const gstring& value, nlohmann::json& json_arr )
+template <> void TPrintJson::writeValue( const std::string& value, nlohmann::json& json_arr )
 {
     auto val = value;
-#ifdef IPMGEMPLUGIN
     strip(val);
-#else
-    val.strip();
-#endif
     json_arr.push_back( std::string(val.c_str()) );
 }
 
@@ -85,7 +54,7 @@ template <> void TPrintJson::writeField( long f_num, const char& value, bool /*w
     }
 }
 
-template <> void TPrintJson::writeField( long f_num, const gstring& value, bool /*with_comments*/, bool brief_mode  )
+template <> void TPrintJson::writeField( long f_num, const std::string& value, bool /*with_comments*/, bool brief_mode  )
 {
     if( !brief_mode || getAlws( f_num ))
     {
@@ -95,7 +64,7 @@ template <> void TPrintJson::writeField( long f_num, const gstring& value, bool 
     }
 }
 
-void TPrintJson::writeArray( long f_num, const vector<double>& arr, long int /*l_size*/,
+void TPrintJson::writeArray( long f_num, const std::vector<double>& arr, long int /*l_size*/,
                              bool /*with_comments*/, bool brief_mode )
 {
     if(!brief_mode || getAlws(f_num ))
@@ -138,9 +107,9 @@ void TReadJson::reset()
         flds[ii].readed = 0;
 }
 
-gstring TReadJson::testRead()
+std::string TReadJson::testRead()
 {
-    gstring ret = "";
+    std::string ret = "";
     for(long int ii=0; ii < numFlds; ii++ )
         if( flds[ii].alws==1 && flds[ii].readed != 1 )
         {  if( !ret.empty() )
@@ -153,7 +122,7 @@ gstring TReadJson::testRead()
 long int TReadJson::findFld( const char *Name )
 {
     long int ii;
-    gstring str = Name;
+    std::string str = Name;
     size_t len = str.find('>');
     str = str.substr(0, len );
 
@@ -185,7 +154,7 @@ long int TReadJson::findNext()
 void TReadJson::readNext( const char* label )
 {
     std::string jkey = key( label );
-    gstring msg;
+    std::string msg;
     if( json_data.find(jkey) == json_data.end() )
     {
         msg = label;
@@ -201,7 +170,7 @@ void TReadJson::readArray( const char* name, char* arr, long int size, long int 
     setCurrentArray( name, size);
 
     std::string jkey = key( name );
-    gstring msg;
+    std::string msg;
     std::string val;
     auto json_arr_it = json_data.find(jkey);
     if( json_arr_it == json_data.end() )
@@ -236,6 +205,5 @@ void TReadJson::readArray( const char* name, char* arr, long int size, long int 
 }
 
 
-
 //=============================================================================
-// io_arrays.cpp
+// io_json.cpp

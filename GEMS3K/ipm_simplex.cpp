@@ -27,22 +27,16 @@
 //-------------------------------------------------------------------
 //
 
-#include "m_param.h"
-#include "node.h"
+#include "v_detail.h"
+#include "ms_multi.h"
 #include "num_methods.h"
 #include "activities.h"
 #include "kinetics.h"
 
-
-#ifdef IPMGEMPLUGIN
-enum volume_code {  // Codes of volume parameter ???
-    VOL_UNDEF, VOL_CALC, VOL_CONSTR
-};
-#endif
 /// Calculation of LPP-based automatic initial approximation of the primal vector x.
 /// Use the modified simplex method with two-side constraints on x
 //
-void TMulti::AutoInitialApproximation( )
+void TMultiBase::AutoInitialApproximation( )
 {
     long int T,Q,*STR=0,*NMB=0;
     long int i,j,k;
@@ -62,7 +56,7 @@ void TMulti::AutoInitialApproximation( )
         ErrorIf( !DN || !DU || !B1, "AutoInitialApproximation()", "Memory alloc error." );
         for( i=0; i<pm.N; i++)
              DU[i+Q] = 0.;
-        EPS = paTProfil->p.EPS; //  13.10.00  KC  DK
+        EPS = pa_p_ptr()->EPS; //  13.10.00  KC  DK
         GZ = 1./EPS;    
 
         T=0; // Calcuation of all non-zero values in A and G arrays
@@ -155,7 +149,7 @@ void TMulti::AutoInitialApproximation( )
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  SPOS function
 //
-void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[])
+void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[])
 {
     long int I,K;
     K=0;
@@ -174,7 +168,7 @@ void TMulti::SPOS( double *P, long int STR[],long int NMB[],long int J,long int 
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  START function
 //
-void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB[],
+void TMultiBase::START( long int T,long int *ITER,long int M,long int N,long int NMB[],
            double GZ,double EPS,long int STR[],long int *BASE, double B[],
            double UND[],double UP[],double AA[],double *A, double *Q )
 {
@@ -225,7 +219,7 @@ void TMulti::START( long int T,long int *ITER,long int M,long int N,long int NMB
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  NEW function
 //
-void TMulti::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
+void TMultiBase::NEW(long int *OPT,long int N,long int M,double EPS,double *LEVEL,long int *J0,
                   long int *Z,long int STR[], long int NMB[], double UP[],
                   double AA[], double *A)
 {
@@ -303,7 +297,7 @@ MK4:
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  WORK function
 //
-void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
+void TMultiBase::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,long int *ITER,
                    long int M, long int STR[],long int NMB[],double AA[],
                    long int BASE[],long int *UNO,double UP[],double *A,double Q[])
 {
@@ -397,7 +391,7 @@ void TMulti::WORK(double GZ,double EPS,long int *I0, long int *J0,long int *Z,lo
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  FIN function
 //
-void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
+void TMultiBase::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
                   long int BASE[],double UND[],double UP[],double U[],
                   double AA[],double *A,double Q[],long int * /*ITER*/)
 {
@@ -453,7 +447,7 @@ void TMulti::FIN(double EPS,long int M,long int N,long int STR[],long int NMB[],
 ///         1 if inconsistent input constraints;
 ///        -1 if memory allocation error;
 //
-void TMulti::SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
+void TMultiBase::SolveSimplex(long int M, long int N, long int T, double GZ, double EPS,
                       double *UND, double *UP, double *B, double *U,
                       double *AA, long int *STR, long int *NMB )
 {
@@ -510,18 +504,12 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
 /// Main call to GEM IPM calculation of equilibrium state in MULTI
 /// (with internal re-scaling of the system).
 //
-double TMulti::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
+double TMultiBase::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIterIPM )
 {
  // const char *key;
   double ScFact=1.;
 
 //  long int KMretCode = 0;
-//#ifndef IPMGEMPLUGIN
-//  key = rt[RT_SYSEQ].UnpackKey();
-//#else
-//  key = "GEMS3K";
-//#endif
-
   InitalizeGEM_IPM_Data();
 
   pm.t_start = clock();
@@ -554,7 +542,7 @@ double TMulti::CalculateEquilibriumState(  long int& NumIterFIA, long int& NumIt
 //  to_text_file( "MultiDump1.txt" );   // Debugging
   }
 
-    if( paTProfil->p.DG > 1e-5 )
+    if( pa_p_ptr()->DG > 1e-5 )
     {
         ScFact = SystemTotalMolesIC();
         ScaleSystemToInternal( ScFact );
@@ -599,7 +587,7 @@ try{
   catch( TError& xcpt )
   {
 
-      if( paTProfil->p.DG > 1e-5 )
+      if( pa_p_ptr()->DG > 1e-5 )
          RescaleSystemFromInternal( ScFact );
 //      to_text_file( "MultiDump2.txt" );   // Debugging
 
@@ -611,7 +599,7 @@ try{
      Error( xcpt.title, xcpt.mess);
   }
 
-  if( paTProfil->p.DG > 1e-5 )
+  if( pa_p_ptr()->DG > 1e-5 )
        RescaleSystemFromInternal(  ScFact );
 //  to_text_file( "MultiDump3.txt" );   // Debugging
 
@@ -626,7 +614,7 @@ try{
 
 /// Calculate total IC mole amounts in b vector and
 /// return the scaling factor
-double TMulti::SystemTotalMolesIC( )
+double TMultiBase::SystemTotalMolesIC( )
 {
   double ScFact, mass_temp = 0.0;
 
@@ -635,14 +623,14 @@ double TMulti::SystemTotalMolesIC( )
 
   pm.TMols = mass_temp;
 
-  pm.SMols = paTProfil->p.DG;
+  pm.SMols = pa_p_ptr()->DG;
   ScFact = pm.SMols/pm.TMols;
 
   return ScFact;
 }
 
 /// Resizes MULTI (GEM IPM work structure) data into internally scaled constant mass
-void TMulti::ScaleSystemToInternal(  double ScFact )
+void TMultiBase::ScaleSystemToInternal(  double ScFact )
 {
  long int i, j, k;
 
@@ -718,7 +706,7 @@ void TMulti::ScaleSystemToInternal(  double ScFact )
 
 /// Re-scaling the internal constant-mass MULTI system definition
 /// back to real size
-void TMulti::RescaleSystemFromInternal(  double ScFact )
+void TMultiBase::RescaleSystemFromInternal(  double ScFact )
 {
  long int i, j, k;
 
@@ -800,73 +788,12 @@ void TMulti::RescaleSystemFromInternal(  double ScFact )
 // Before Calculations
 /// Calculation by IPM (preparing for calculation, unpacking data)
 /// In IPM
-void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit()
+void TMultiBase::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiInit()
 {
 
    MultiConstInit();
 
-#ifndef IPMGEMPLUGIN
-
-   // for GEMIPM unpackDataBr( bool uPrimalSol );
-   // to define quantities
-
-///   bool newInterval = false;
-
-   //   MultiKeyInit( key ); //into PMtest
-
-   //  cout << " pm.pBAL = " << pm.pBAL;
-
-/// if( !pm.pBAL )
-///     newInterval = true;    // to rebuild lookup arrays
-
-/// if( pm.pBAL < 2  || pm.pTPD < 2 )
-/// {
-///     SystemToLookup();
-/// }
-
- if( pm.pBAL < 2  )
-   {
-     // Allocating list of phases currently present in non-zero quantities
-     MultiSystemInit( );
-   }
-
-   // Allocating list of phases currently present in non-zero quantities
-     if( !pm.SFs )
-        pm.SFs = (char (*)[MAXPHNAME+MAXSYMB])aObj[ o_wd_sfs].Alloc(
-                    pm.FI, 1, MAXPHNAME+MAXSYMB );
-
-   // no old solution => must be simplex
-      if( pm.pESU == 0 )
-           pm.pNP = 0;
-
-  TProfil::pm->CheckMtparam(); //load tpp structure
-
-
-  // build new TNode
-///  if( !node1 )
-///  {
-///    node1 = new TNode( pmp );
-///    newInterval = true;
-///  }
-///  else if( !node1->TestTPGrid(pm.Tai, pm.Pai ))
-///               newInterval = true;
-
-/// if( newInterval )
-/// {   // build/rebuild internal lookup arrays
-///    node1->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
-/// }
-
-//cout << "newInterval = " << newInterval << " pm.pTPD = " << pm.pTPD << endl;
-
- // New: TKinMet stuff
- if( pm.pKMM <= 0 )
- {
-    KinMetModLoad();  // Call point to loading parameters for kinetic models
-    pm.pKMM = 1;
- }
-
-#endif
-
+   initalizeGEM_IPM_Data_GUI();
 
    if( pm.pTPD < 2 )
     {
@@ -888,9 +815,7 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
     {  //  Smart Initial Approximation mode
        long int j,k;
 
-#ifndef IPMGEMPLUGIN
-       loadData( false );  // unpack SysEq record into MULTI
-#endif
+     loadData( false );  // unpack SysEq record into MULTI
 
      bool AllPhasesPure = true;   // Added by DK on 09.03.2010
      // checking if all phases are pure
@@ -926,18 +851,24 @@ void TMulti::InitalizeGEM_IPM_Data( ) // Reset internal data formerly MultiInit(
     }
 }
 
+void TMultiBase::multiConstInit_PN()
+{
+    pm.PZ = pa_p_ptr()->DW;  // in IPM
+    //  pm.FitVar[0] = 0.0640000030398369;
+}
+
 
 /// Setup/copy flags and thresholds for numeric modules to TMulti structure.
 /// Do it before calculations
-void TMulti::MultiConstInit() // from MultiRemake
+void TMultiBase::MultiConstInit() // from MultiRemake
 {
-  SPP_SETTING *pa = paTProfil;
+  const BASE_PARAM *pa_p = pa_p_ptr();
 
   pm.FI1 = 0;
   pm.FI1s = 0;
   pm.FI1a = 0;
   pm.ITF = 0; pm.ITG = 0;
-  pm.PD = pa->p.PD;
+  pm.PD =pa_p_ptr()->PD;
   pm.Ec = pm.K2 = pm.MK = 0;
   pm.W1 = 0;
   pm.is = 0;
@@ -947,7 +878,7 @@ void TMulti::MultiConstInit() // from MultiRemake
   pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
   pm.logXw = -16.;
   pm.logYFk = -9.;
-  pm.DXM = pa->p.DK;
+  pm.DXM = pa_p_ptr()->DK;
 
   //  ???????
   pm.FX = 7777777.;
@@ -957,19 +888,11 @@ void TMulti::MultiConstInit() // from MultiRemake
   pm.PCI = 1.0;
   pm.FitVar[4] = 1.0;
 
-#ifndef IPMGEMPLUGIN
-  pm.PZ = 0; // IPM default
-//  pm.FitVar[0] = pa->aqPar[0]; // setting T,P dependent b_gamma parameters
-//  pm.pH = pm.Eh = pm.pe = 0.0;
-#else
-  pm.PZ = pa->p.DW;  // in IPM
-//  pm.FitVar[0] = 0.0640000030398369;
-#endif
-
+  multiConstInit_PN();
 }
 
 /// Calculation by IPM (internal step initialization)
-void TMulti::GEM_IPM_Init()
+void TMultiBase::GEM_IPM_Init()
 {
    int i,j,k;
 
@@ -1013,17 +936,10 @@ void TMulti::GEM_IPM_Init()
 
     if( pm.FIs && AllPhasesPure == false )   /// line must be tested !pm.FIs
     {
-#ifndef IPMGEMPLUGIN
-       if( pm.pIPN <=0 )  // mixing models finalized in any case (AIA or SIA)
-       {
-             // not done if these models are already present in MULTI !
-           pm.PD = TProfil::pm->pa.p.PD;
-           SolModLoad();   // Call point to loading scripts and parameters for mixing models
-       }
-       pm.pIPN = 1;
-#endif
-        // Calc Eh, pe, pH,and other stuff
-       if( pm.E && pm.LO && pm.pNP )
+      GEM_IPM_Init_gui1();
+
+      // Calc Eh, pe, pH,and other stuff
+      if( pm.E && pm.LO && pm.pNP )
        {
             CalculateConcentrations( pm.X, pm.XF, pm.XFA);
             IS_EtaCalc();
@@ -1057,23 +973,10 @@ void TMulti::GEM_IPM_Init()
 //          Set_DC_limits(  DC_LIM_INIT );
 //        Set_DC_limits( true );  // test 29.07.15
 
-#ifndef IPMGEMPLUGIN
-    // dynamic work arrays - loading initial data
-    for( k=0; k<pm.FI; k++ )
-    {
-        pm.XFs[k] = pm.YF[k];
-        pm.Falps[k] = pm.Falp[k];
-        memcpy( pm.SFs[k], pm.SF[k], MAXPHNAME+MAXSYMB );
-    }
-#endif
+  GEM_IPM_Init_gui2();
 }
 
-void TMulti::Access_GEM_IMP_init()
-{
-    GEM_IPM_Init();
-}
-
-TSolMod * TMulti::pTSolMod (int xPH){
+TSolMod * TMultiBase::pTSolMod (int xPH){
     return this->phSolMod[xPH];
 }
 
@@ -1081,42 +984,28 @@ TSolMod * TMulti::pTSolMod (int xPH){
 
 /// Load Thermodynamic Data from DATACH to MULTI using Lagrangian Interpolator
 //
-void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
+void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 {
   long int j, jj, k, xTP, jb, je=0;
   double Go, Gg=0., Ge=0., Vv, h0=0., S0 = 0., Cp0= 0., a0 = 0., u0 = 0.;
   double TK, P, PPa;
 
-#ifndef IPMGEMPLUGIN
-  ErrorIf( aNa == nullptr, "DC_LoadThermodynamicData", "Could not be undefined node" );
-  TNode* na = aNa;// for reading GEMIPM files task
-  TK =  pm.TC+C_to_K;
-  PPa = pm.P*bar_to_Pa;
-#else
   const TNode* na = node1;
+  if( aNa != nullptr )
+    na = aNa;   // for reading GEMIPM files task
+  ErrorIf( na == nullptr, "DCLoadThermodynamicData", "Could not be undefined node" );
   TK =  na->cTK();
   PPa = na->cP();
-#endif
 
   DATACH  *dCH = na->pCSD();
   P = PPa/bar_to_Pa;
-
-/*#ifndef IPMGEMPLUGIN
-
-  if( !aNa )
-  {
-     double T = TK-C_to_K;
-     TMTparm::sm->GetTP()->curT=T;
-     TMTparm::sm->GetTP()->curP=P;
-   }
-#endif */
 
   if( dCH->nTp <1 || dCH->nPp <1 || na->check_TP( TK, PPa ) == false )
   {
           char buff[256];
           sprintf( buff, " Temperature %g or pressure %g out of range, or no T/D data are provided\n",
                           TK, PPa );
-          Error( "DC_LoadThermodynamicData(): " , buff );
+          Error( "DCLoadThermodynamicData(): " , buff );
       return;
   }
 
@@ -1198,12 +1087,12 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
        if( dCH->U0 ) u0 =  LagranInterp( dCH->Pval, dCH->TKval, dCH->U0+jj,
                           PPa, TK, dCH->nTp, dCH->nPp,5 );
      }
-#ifndef IPMGEMPLUGIN
-      if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
-             Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
- // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
- //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
-#else
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//      if( TSyst::sm->GetSY()->Guns )  // This is used mainly in UnSpace calculations
+//             Gg = TSyst::sm->GetSY()->Guns[pm.muj[j]];    // User-set increment to G0 from project system
+// // SDGEX     if( syp->GEX && syp->PGEX != S_OFF )   // User-set increment to G0 from project system
+// //            Ge = syp->GEX[pm.muj[j]];     //now Ge is integrated into pm.G0 (since 07.03.2008) DK
+//#else
       if( pm.tpp_G )
              pm.tpp_G[j] = Go;
       if( pm.Guns )
@@ -1212,40 +1101,40 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
              Gg = 0.;
 
       Ge = 0.;
-#endif
+//#endif
       pm.G0[j] = ConvertGj_toUniformStandardState( Go+Gg+Ge, j, k ); // formerly Cj_init_calc()
       // Inside this function, pm.YOF[k] can be added!
 
-#ifndef IPMGEMPLUGIN
-     if( TMTparm::sm->GetTP()->PtvVm != S_ON )
-        pm.Vol[j] = 0.;
-     else
-#endif
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//     if( TMTparm::sm->GetTP()->PtvVm != S_ON )
+//        pm.Vol[j] = 0.;
+//     else
+//#endif
      switch( pm.PV )
      { // put molar volumes of components into A matrix or into the vector of molar volumes
        // to be checked!
        case VOL_CONSTR:
-#ifndef IPMGEMPLUGIN
-          if( TSyst::sm->GetSY()->Vuns )
-             Vv += TSyst::sm->GetSY()->Vuns[j];
-#else
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//          if( TSyst::sm->GetSY()->Vuns )
+//             Vv += TSyst::sm->GetSY()->Vuns[j];
+//#else
          if( pm.Vuns )
             Vv += pm.Vuns[j];
-#endif
+//#endif
          if( xVol >= 0 )
             pm.A[j*pm.N+xVol] = Vv;
 
        case VOL_CALC:
        case VOL_UNDEF:
-#ifndef IPMGEMPLUGIN
-         if( TSyst::sm->GetSY()->Vuns )
-            Vv += TSyst::sm->GetSY()->Vuns[j];
-#else
+//#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
+//         if( TSyst::sm->GetSY()->Vuns )
+//            Vv += TSyst::sm->GetSY()->Vuns[j];
+//#else
          if( pm.tpp_Vm )
                pm.tpp_Vm[j] = Vv;
          if( pm.Vuns )
                Vv += pm.Vuns[j];
-#endif
+//#endif
            pm.Vol[j] = Vv  * 10.;
            break;
      }
@@ -1257,10 +1146,8 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 
  }  // j
 } // k
-
  pm.pTPD = 2;
 }
-
 
 
 //===========================================================================================
@@ -1268,27 +1155,17 @@ void TMulti::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 
 /// Calls to minimization of other system potentials - HelmholtzEnergy.
 /// Calc function for Method of golden section (only in GEMS ).
-double TMulti::HelmholtzEnergy( double x )
+double TMultiBase::HelmholtzEnergy( double x )
 {
     pm.P = x;
     DC_LoadThermodynamicData(); // from lookup arrays
     GibbsEnergyMinimization();
     return( pm.VXc - pm.VX_ ); // VXc current value, VX_ value from key
 }
-//
-// kg44: not properly implemented...removed it
-/*
-double A_P( double x, double )
-{
-#ifndef IPMGEMPLUGIN
-  return TProfil::pm->HelmholtzEnergy(x);
-#endif
-}
-*/
 
 /// Calls to minimization of other system potentials - InternalEnergy.
 /// Calc function for Method of golden section (only in GEMS ).
-double TMulti::InternalEnergy( double TC, double P )
+double TMultiBase::InternalEnergy( double TC, double P )
 {
     pm.P = P;
     pm.TC = TC;
@@ -1297,34 +1174,6 @@ double TMulti::InternalEnergy( double TC, double P )
     return( (pm.VXc - pm.VX_)+(pm.SXc - pm.SX_) ); // VXc current value, VX_ value from key
 }
 
-// kg44: not properly implemented...removed it
-/*
-double U_TP( double TC, double P)
-{
-#ifndef IPMGEMPLUGIN
-  return TProfil::pm->InternalEnergy(  TC,  P );
-#endif
-}
-*/
 
-/*
-#ifndef IPMGEMPLUGIN
-
-// Load System data to define lookup arrays
-void TMulti::rebuild_lookup(  double Tai[4], double Pai[4] )
-{
-   // copy intervals for minimizatiom
-   pm.Pai[0] = Pai[0];
-   pm.Pai[1] = Pai[1];
-   pm.Pai[2] = Pai[2];
-   pm.Pai[3] = Pai[3];
-   pm.Tai[0] = Tai[0];
-   pm.Tai[1] = Tai[1];
-   pm.Tai[2] = Tai[2];
-   pm.Tai[3] = Tai[3];
-   if( node )
-      node->MakeNodeStructures(window(), true, pm.Tai, pm.Pai );
-}
-#endif */
 
 //--------------------- End of ipm_simplex.cpp ---------------------------

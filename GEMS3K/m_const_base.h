@@ -1,7 +1,7 @@
 //-------------------------------------------------------------------
 // $Id$
 //
-/// \file m_const.h
+/// \file m_const_base.h
 /// Declarations of enums and constants from GEM-Selektor code that
 /// are used in GEMS3K standalone code (this file is not used otherwise).
 //
@@ -26,20 +26,25 @@
 //-------------------------------------------------------------------
 //
 
-#ifndef _m_const_h
-#define _m_const_h
+#ifndef M_CONST_H
+#define M_CONST_H
 
-#ifdef IPMGEMPLUGIN
 // This header is only used in standalone GEMS3K code!
 #include <ctype.h>
 #include <fstream>
-
-using namespace std;
 #include "verror.h"
-#include "v_user.h"
+
+// Work DC classifier codes  pm->DCCW
+enum SolDCodes {
+
+    DC_SINGLE = 'U',        // This DC is a single-component phase
+    DC_SYMMETRIC = 'I',     // This DC is in symmetric solution phase
+    DC_ASYM_SPECIES = 'S',  // This is DC-solute(sorbate) in asymmetric phase
+    DC_ASYM_CARRIER = 'W'   // This is carrier(solvent) DC in asymmetric phase
+};
 
 const long int MST =  6,
-          DFCN = 6; // number of columns in MASDJ table
+               DFCN = 6; // number of columns in MASDJ table
 
 const unsigned long int
     MAXICNAME =      6,
@@ -57,6 +62,7 @@ const int 	MPP_TOT = 0,       // index of column with total mixed phase property
 	MPP_ID = 3,        // index of column with ideal mixing property for the phases
 	MPP_EX = 4,        // index of column with excess mixing property for the phases
 	MIXPHPROPS = 5;    // Number of columns in the property table for mixed phases
+
 
 enum solmod_switches { // indexes of keys of model solution
     SPHAS_TYP,
@@ -142,6 +148,7 @@ typedef enum {  // classes of independent components IC, used in ccIC code list
     IC_VOLUME   =  'v',  // volume (for the volume balance constraint)
         IC_SITE     =  's'   // sorption site for site balance constraint (reserved)
 } ICL_CLASSES;
+
 
 typedef enum {  // Classifications of DC
     // Type of input data for
@@ -300,10 +307,23 @@ KinLinkCode = 5,
     KM_LNK_PVOL = 'P',    ///    Link to (fraction of) solid substrate (pore) volume
     KM_LNK_MASS = 'M',    ///	Link to (fraction of) solid substrate mass
 KinSizedCode = 6,
+        KM_SIZED_ETM = 'T',   ///  Empirical f(time) cubic polynomial f = a + bt +ct^2 + dt^3 (default)
+        KM_SIZED_ESI = 'S',   ///  Empirical f(lgSI) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_ESA = 'A',   ///  Empirical f(sarea-change) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_EVOL = 'V',  ///  Empirical f(volume-change) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_MASS = 'M',  ///  Empirical f(mass-change) cubic polynomial f = a + bt +ct^2 + dt^3
+        KM_SIZED_MOL = 'X',   ///  Empirical f(amount-change) cubic polynomial f = a + bt +ct^2 + dt^3
     KM_SIZED_UNI = 'U',   /// 	Uniform particle/pore size distribution
     KM_SIZED_BIN = 'B',   /// 	Binodal particle/pore size distribution
     KM_SIZED_FUN = 'F',   ///    Empirical distribution function
 KinResCode = 7,
+        KM_RES_SURF_N = 'A',   /// surface-scaled rate constant (k in mol/m2/s), default
+        KM_RES_SURF_M = 'M',   /// surface-scaled rate constant (k in kg/m2/s)
+        KM_RES_PVS_N  = 'V',   /// pore-volume-scaled rate constant (k in mol/m3/s)
+        KM_RES_PVS_M  = 'W',   /// pore-volume-scaled rate constant (k in kg/m3/s)
+        KM_RES_ABS_N  = 'F',   /// absolute (unscaled) rate constant (k in mol/s)
+        KM_RES_ABS_M  = 'G',   /// absolute (unscaled) rate constant (k in kg/s)
+        KM_LIN_RATE   = 'L',   /// linear growth/dissolution rate constant (v in m/s)
     KM_RES_SURF = 'A',    /// surface-scaled rate model (k in mol/m2/s)
     KM_RES_PVS = 'V'      /// pore-volume-scaled model (k in mol/m3/s)
 
@@ -357,103 +377,8 @@ typedef enum { // Units of measurement of quantities and concentrations
 const char S_OFF = '-',
                    S_ON = '+',
                           S_REM = '*',
-                                  A_NUL ='?';
-/*#ifdef IPMGEMPLUGIN
+                                 A_NUL ='?';
 
-#ifndef _chbr_classes_h_
-#define _chbr_classes_h_
+#endif  // M_CONST_H
 
-typedef enum {  // classes of independent components IC used in ccIC code list
-    IC_ELEMENT  =  'e',  // chemical element (except oxygen and hydrogen)
-    IC_OXYGEN   =  'o',  // oxygen
-    IC_HYDROGEN =  'h',  // hydrogen (natural mixture of isotopes) H
-    IC_PROTIUM   = 'p',  // protium Hp (reserved)
-    IC_DEYTERIUM = 'd',  // deuterium D (reserved)
-    IC_TRITIUM  =  't',  // tritium T (reserved)
-    IC_FORMULA  =  'f',  // formula unit (eg. for Sio - a symbol of SiO2)
-    IC_METALION =  'm',  // metal ion (cation), reserved
-    IC_LIGAND   =  'l',  // ligand (anion), reserved
-    IC_ADDIT    =  'a',  // IC with unknown stoichiometry (eg: Hum - humate ligand)
-    IC_ISOTOPE  =  'i',  // isotope of chemical element (mass from 1 to 250)
-    IC_OXYGEN16 =  'q',  // q  - oxygen 16O (reserved)
-    IC_OXYGEN18 =  'r',  // r  - oxygen 18O (reserved)
-    IC_CHARGE   =  'z',  // z  - electrical charge
-    IC_VOLUME   =  'v',  // volume (for the volume balance constraint)
-    IC_SITE     =  's'   // sorption site for site balance constraint (reserved)
-} ICL_CLASSES;
-
-typedef enum {  // Classes of dependent components DC used in ccDC code list
-
-        // Single-component (pure) condensed phases:
-    DC_SCP_CONDEN  = 'O',       // DC forming a single-component phase
-
-        // Solid/liquid non-electrolyte multicomponent phases:
-    DC_SOL_IDEAL   = 'I',      // end-member of ideal solution
-    DC_SOL_MINOR   = 'J',      // junior independent end member (for initial approximation)
-    DC_SOL_MAJOR   = 'M',      // major independent end member (for initial approximation)
-    DC_SOL_MINDEP   = 'F',     // junior independent end member (for initial approximation)
-    DC_SOL_MAJDEP   = 'D',     // major independent end member (for initial approximation)
-
-        // Aqueous electrolyte phase:
-    DC_AQ_PROTON   = 'T',      // hydrogen ion H+
-    DC_AQ_ELECTRON = 'E',      // electron (as a DC)
-    DC_AQ_SPECIES  = 'S',      // other aqueous species (ions, complexes and ion pairs)
-    DC_AQ_SURCOMP  = 'K',       // Surface complex represented as aqueous species
-    DC_AQ_SOLVENT  = 'W',      // water H2O (major solvent)
-    DC_AQ_SOLVCOM  = 'L',      // other components of a solvent (eg. alcohol)
-
-        // Gas phase ( G code can be used for all gases; V,C,H,N codes are reserved
-    // for future use in the built-in equations of state):
-    DC_GAS_COMP    = 'G',      // other gases
-    DC_GAS_H2O     = 'V',      // H2O steam
-    DC_GAS_CO2     = 'C',      // CO2 (carbon dioxide)
-    DC_GAS_H2      = 'H',      // H2 hydrogen
-    DC_GAS_N2      = 'N',      // N2 nitrogen
-
-        // Sorption phases and poly(oligo)electrolytes
-    DC_SUR_CARRIER = 'Q',   // Principal end-member of solid carrier (sorbent)
-    DC_SUR_MINAL   = 'P',   // Minor end-member of solid carrier (sorbent)
-    DC_PEL_CARRIER = 'R',   // Carrier of poly(oligo)electrolyte (for future use)
-
-    // GEM CD-MUSIC and NE surface complexation models
-    DC_SUR_GROUP   = 'X',   // Surface group (surface solvent), also fictive
-    DC_SUR_COMPLEX = 'Y',   // Inner-sphere (strong) surface complex, the same as '0' code
-    DC_SUR_IPAIR   = 'Z',   // Outer-sphere (weak) surface complex, surface ion pair,
-                                  // exchange ion (the same as '1')
-
-    // Obsolete codes for old GEM SCMs - usage in newly created models is not recommended
-    DC_SSC_A0 = '0', DC_SSC_A1 = '2', DC_SSC_A2 = '4', DC_SSC_A3 = '6',
-    DC_SSC_A4 = '8',        // Strong surface complex on site type 0,1,2,3,4 - A plane
-    DC_WSC_A0 = '1', DC_WSC_A1 = '3', DC_WSC_A2 = '5', DC_WSC_A3 = '7',
-    DC_WSC_A4 = '9',        // Weak surface complex on site type 0,1,2,3,4 - B plane
-    DC_IESC_A  = 'A',       // Strong exchange ion const-charge plane
-    DC_IEWC_B  = 'B',       // Weak exchange ion const-charge plane
-
-    // New surface complexation models (added 16.11.2017 by DK)
-    DC_SCM_SPECIES = 'U',
-
-    // Special class codes for diffusing species etc. (reserved)
-    DCaquoCATION   = 'c',
-    DCaquoANION    = 'n',
-    DCaquoLIGAND   = 'l',
-    DCaquoCOMPLEX  = 'x',
-    DCaquoIONPAIR  = 'p',
-    DCaquoGAS      = 'g',
-
-} DCL_CLASSES;
-
-typedef enum {  // Classes of Phases used in ccPH code list
-    PH_AQUEL    = 'a',  // aqueous electrolyte (also with HKF EoS)
-    PH_GASMIX   = 'g',  // mixture of gases (also corresponding states theory)
-    PH_FLUID    = 'f',  // supercritical fluid phase with special EoS
-    PH_LIQUID   = 'l',  // non-electrolyte liquid (melt)
-    PH_SORPTION = 'x',  // dispersed solid with adsorption (ion exchange) in aqueous system
-    PH_POLYEL   = 'y',  // colloidal poly- (oligo)electrolyte (reserved)
-    PH_SINCOND  = 's',  // condenced solid phase, also multicomponent (solid solution)
-    PH_SINDIS   = 'd',  // dispersed solid phase, also multicomponent
-} PHL_CLASSES;
-
-#endif*/
-#endif
-#endif
 // m_const.h in GEMS3K

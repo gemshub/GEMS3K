@@ -24,19 +24,17 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include "io_arrays.h"
-#include "m_param.h"
+#include <cmath>
+#include <sstream>
 #include <iomanip>
+#include "v_detail.h"
+#include "io_arrays.h"
+#include "ms_multi.h"
 
-#ifdef  JSON_OUT
+#ifndef  NO_JSON_OUT
 #include "io_json.h"
 #endif
 
-#ifdef IPMGEMPLUGIN
-  istream& f_getline(istream& is, gstring& str, char delim);
-#endif
-
-//bool _comment = true;
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.0 c.fdcdd2b5 ";
 
 //===================================================================
@@ -164,31 +162,24 @@ outField MULTI_dynamic_fields[80] =  {
 //===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
-void TMulti::to_text_file_gemipm( iostream& ff, bool addMui,
+void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
 		bool with_comments, bool brief_mode )
 {
-  SPP_SETTING *pa = paTProfil;
+  const BASE_PARAM *pa_p = pa_p_ptr();
    bool _comment = with_comments;
    char PAalp;
    char PSigm;
+   get_PAalp_PSigm( PAalp, PSigm);
 
-#ifndef IPMGEMPLUGIN
-   PAalp = TSyst::sm->GetSY()->PAalp;
-   PSigm = TSyst::sm->GetSY()->PSigm;
-#else
-   PAalp = PAalp_;
-   PSigm = PSigm_;
-#endif
   //fstream ff( path, ios::out );
   //ErrorIf( !ff.good() , path, "Fileopen error");
 
-#ifndef  JSON_OUT
+#ifdef  NO_JSON_OUT
 
   TPrintArrays  prar1( 8, MULTI_static_fields, ff);
   TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
 
 #else
-
   _comment = false;
   nlohmann::json json_data;
   TPrintJson  prar1( 8, MULTI_static_fields, json_data);
@@ -225,24 +216,24 @@ void TMulti::to_text_file_gemipm( iostream& ff, bool addMui,
    }
 
 if( _comment )
-{  ff << "# " << _GEMIPM_version_stamp << endl;// << "# File: " << path << endl;
-   ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
-   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << endl;
-   ff << "# (should be read after the DCH file and before DBR files)" << endl << endl;
-   ff << "# ID key of the initial chemical system definition" << endl;
+{  ff << "# " << _GEMIPM_version_stamp << std::endl;// << "# File: " << path << endl;
+   ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
+   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << std::endl;
+   ff << "# (should be read after the DCH file and before DBR files)" << std::endl << std::endl;
+   ff << "# ID key of the initial chemical system definition" << std::endl;
 }
 
-#ifdef JSON_OUT
+#ifndef NO_JSON_OUT
     json_data["<ID_key>"] = std::string(pm.stkey);
 #else
-    ff << "<ID_key> \"" << pm.stkey << "\"" << endl;
+    ff << "<ID_key> \"" << pm.stkey << "\"" << std::endl;
 #endif
 
  if( _comment )
      ff << "\n## (1) Flags that affect memory allocation";
 
- if(!brief_mode || pa->p.PE != pa_.p.PE )
-   prar1.writeField(f_pa_PE, pa->p.PE, _comment, false  );
+ if(!brief_mode || pa_p->PE != pa_p_.PE )
+   prar1.writeField(f_pa_PE, pa_p->PE, _comment, false  );
 
  //   ff << "# Do not know if this stuff is really necessary" << endl;
  //   ff << "# 'GWAT'         55.50837344" << endl;
@@ -251,16 +242,16 @@ if( _comment )
  prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
  prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
 
-#ifdef JSON_OUT
+#ifndef NO_JSON_OUT
  json_data["<PAalp>"] = std::string(1,PAalp);
  json_data["<PSigm>"] = std::string(1,PSigm);
 #else
  if( _comment )
      ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
- ff << endl << left << setw(12) << "<PAalp> " <<  right << setw(6) << "\'" << PAalp << "\'" << endl;
+ ff << std::endl << std::left << std::setw(12) << "<PAalp> " <<  std::right << std::setw(6) << "\'" << PAalp << "\'" << std::endl;
  if( _comment )
-     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << endl;
- ff << left << setw(12) << "<PSigm> " <<  right << setw(6) << "\'" << PSigm << "\'" << endl;
+     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << std::endl;
+ ff << std::left << std::setw(12) << "<PSigm> " <<  std::right << std::setw(6) << "\'" << PSigm << "\'" << std::endl;
 #endif
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
@@ -274,104 +265,104 @@ if( _comment )
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
 
-#ifndef JSON_OUT
+#ifdef NO_JSON_OUT
     ff << "\n\n<END_DIM>\n";
 #endif
 
    // static data not affected by dimensionalities
    if( _comment )
-   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << endl;
+   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << std::endl;
       ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
    }
-   if( !brief_mode ||pa->p.DB != pa_.p.DB )
-      prar.writeField(f_pa_DB, pa->p.DB, _comment, false  );
-   if( !brief_mode ||pa->p.DHB != pa_.p.DHB )
-      prar.writeField(f_pa_DHB, pa->p.DHB, _comment, false  );
-   if( !brief_mode ||pa->p.EPS != pa_.p.EPS )
-       prar.writeField(f_pa_EPS, pa->p.EPS, _comment, false  );
-   if( !brief_mode ||pa->p.DK != pa_.p.DK )
-       prar.writeField(f_pa_DK, pa->p.DK, _comment, false  );
-   if( !brief_mode ||pa->p.DS != pa_.p.DS )
-       prar.writeField(f_pa_DS,  pa->p.DS, _comment, false  );
-   if( !brief_mode ||pa->p.DF != pa_.p.DF )
-       prar.writeField(f_pa_DF, pa->p.DF, _comment, false  );
-   if( !brief_mode ||pa->p.DFM != pa_.p.DFM )
-       prar.writeField(f_pa_DFM,  pa->p.DFM, _comment, false  );
-   if(!brief_mode || pa->p.DP != pa_.p.DP )
-       prar.writeField(f_pa_DP,  pa->p.DP, _comment, false  );
-   if(!brief_mode || pa->p.IIM != pa_.p.IIM )
-       prar.writeField(f_pa_IIM,  pa->p.IIM, _comment, false  );
-   if(!brief_mode || pa->p.PD != pa_.p.PD )
-       prar.writeField(f_pa_PD,  pa->p.PD, _comment, false  );
-   if(!brief_mode || pa->p.PRD != pa_.p.PRD )
-       prar.writeField(f_pa_PRD,  pa->p.PRD, _comment, false  );
-   if(!brief_mode || pa->p.AG != pa_.p.AG )
-       prar.writeField(f_pa_AG,  pa->p.AG, _comment, false  );
-   if(!brief_mode || pa->p.DGC != pa_.p.DGC )
-       prar.writeField(f_pa_DGC,  pa->p.DGC, _comment, false  );
-   if(!brief_mode || pa->p.PSM != pa_.p.PSM )
-       prar.writeField(f_pa_PSM,  pa->p.PSM, _comment, false  );
-   if(!brief_mode || pa->p.GAR != pa_.p.GAR )
-       prar.writeField(f_pa_GAR,  pa->p.GAR, _comment, false  );
-   if(!brief_mode || pa->p.GAH != pa_.p.GAH )
-       prar.writeField(f_pa_GAH,  pa->p.GAH, _comment, false  );
+   if( !brief_mode ||pa_p->DB != pa_p_.DB )
+      prar.writeField(f_pa_DB, pa_p->DB, _comment, false  );
+   if( !brief_mode ||pa_p->DHB != pa_p_.DHB )
+      prar.writeField(f_pa_DHB, pa_p->DHB, _comment, false  );
+   if( !brief_mode ||pa_p->EPS != pa_p_.EPS )
+       prar.writeField(f_pa_EPS, pa_p->EPS, _comment, false  );
+   if( !brief_mode ||pa_p->DK != pa_p_.DK )
+       prar.writeField(f_pa_DK, pa_p->DK, _comment, false  );
+   if( !brief_mode ||pa_p->DS != pa_p_.DS )
+       prar.writeField(f_pa_DS,  pa_p->DS, _comment, false  );
+   if( !brief_mode ||pa_p->DF != pa_p_.DF )
+       prar.writeField(f_pa_DF, pa_p->DF, _comment, false  );
+   if( !brief_mode ||pa_p->DFM != pa_p_.DFM )
+       prar.writeField(f_pa_DFM,  pa_p->DFM, _comment, false  );
+   if(!brief_mode || pa_p->DP != pa_p_.DP )
+       prar.writeField(f_pa_DP,  pa_p->DP, _comment, false  );
+   if(!brief_mode || pa_p->IIM != pa_p_.IIM )
+       prar.writeField(f_pa_IIM,  pa_p->IIM, _comment, false  );
+   if(!brief_mode || pa_p->PD != pa_p_.PD )
+       prar.writeField(f_pa_PD,  pa_p->PD, _comment, false  );
+   if(!brief_mode || pa_p->PRD != pa_p_.PRD )
+       prar.writeField(f_pa_PRD,  pa_p->PRD, _comment, false  );
+   if(!brief_mode || pa_p->AG != pa_p_.AG )
+       prar.writeField(f_pa_AG,  pa_p->AG, _comment, false  );
+   if(!brief_mode || pa_p->DGC != pa_p_.DGC )
+       prar.writeField(f_pa_DGC,  pa_p->DGC, _comment, false  );
+   if(!brief_mode || pa_p->PSM != pa_p_.PSM )
+       prar.writeField(f_pa_PSM,  pa_p->PSM, _comment, false  );
+   if(!brief_mode || pa_p->GAR != pa_p_.GAR )
+       prar.writeField(f_pa_GAR,  pa_p->GAR, _comment, false  );
+   if(!brief_mode || pa_p->GAH != pa_p_.GAH )
+       prar.writeField(f_pa_GAH,  pa_p->GAH, _comment, false  );
 
    if(!brief_mode)
     if( _comment )
      {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
      }
 
-   if(!brief_mode || pa->p.XwMin != pa_.p.XwMin )
-       prar.writeField(f_pa_XwMin,  pa->p.XwMin, _comment, false  );
-   if(!brief_mode || pa->p.ScMin != pa_.p.ScMin )
-       prar.writeField(f_pa_ScMin,  pa->p.ScMin, _comment, false  );
-   if(!brief_mode || pa->p.DcMin != pa_.p.DcMin )
-       prar.writeField(f_pa_DcMin,  pa->p.DcMin, _comment, false  );
-   if(!brief_mode || pa->p.PhMin != pa_.p.PhMin )
-       prar.writeField(f_pa_PhMin,  pa->p.PhMin, _comment, false  );
-   if(!brief_mode || pa->p.ICmin != pa_.p.ICmin )
-       prar.writeField(f_pa_ICmin,  pa->p.ICmin, _comment, false  );
-   if(!brief_mode || pa->p.PC != pa_.p.PC )
-       prar.writeField(f_pa_PC,  pa->p.PC, _comment, false  );
+   if(!brief_mode || pa_p->XwMin != pa_p_.XwMin )
+       prar.writeField(f_pa_XwMin,  pa_p->XwMin, _comment, false  );
+   if(!brief_mode || pa_p->ScMin != pa_p_.ScMin )
+       prar.writeField(f_pa_ScMin,  pa_p->ScMin, _comment, false  );
+   if(!brief_mode || pa_p->DcMin != pa_p_.DcMin )
+       prar.writeField(f_pa_DcMin,  pa_p->DcMin, _comment, false  );
+   if(!brief_mode || pa_p->PhMin != pa_p_.PhMin )
+       prar.writeField(f_pa_PhMin,  pa_p->PhMin, _comment, false  );
+   if(!brief_mode || pa_p->ICmin != pa_p_.ICmin )
+       prar.writeField(f_pa_ICmin,  pa_p->ICmin, _comment, false  );
+   if(!brief_mode || pa_p->PC != pa_p_.PC )
+       prar.writeField(f_pa_PC,  pa_p->PC, _comment, false  );
 
    if( _comment )
-      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << endl;
+      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << std::endl;
 
-   if(!brief_mode || pa->p.DFYw != pa_.p.DFYw )
-       prar.writeField(f_pa_DFYw,  pa->p.DFYw, _comment, false  );
-   if(!brief_mode || pa->p.DFYaq != pa_.p.DFYaq )
-       prar.writeField(f_pa_DFYaq,  pa->p.DFYaq, _comment, false  );
-   if(!brief_mode || pa->p.DFYid != pa_.p.DFYid )
-       prar.writeField(f_pa_DFYid,  pa->p.DFYid, _comment, false  );
-   if(!brief_mode || pa->p.DFYr != pa_.p.DFYr )
-       prar.writeField(f_pa_DFYr,  pa->p.DFYr, _comment, false  );
-   if(!brief_mode || pa->p.DFYh != pa_.p.DFYh )
-       prar.writeField(f_pa_DFYh,  pa->p.DFYh, _comment, false  );
-   if(!brief_mode || pa->p.DFYc != pa_.p.DFYc )
-       prar.writeField(f_pa_DFYc,  pa->p.DFYc, _comment, false  );
-   if(!brief_mode || pa->p.DFYs != pa_.p.DFYs )
-       prar.writeField(f_pa_DFYs,  pa->p.DFYs, _comment, false  );
+   if(!brief_mode || pa_p->DFYw != pa_p_.DFYw )
+       prar.writeField(f_pa_DFYw,  pa_p->DFYw, _comment, false  );
+   if(!brief_mode || pa_p->DFYaq != pa_p_.DFYaq )
+       prar.writeField(f_pa_DFYaq,  pa_p->DFYaq, _comment, false  );
+   if(!brief_mode || pa_p->DFYid != pa_p_.DFYid )
+       prar.writeField(f_pa_DFYid,  pa_p->DFYid, _comment, false  );
+   if(!brief_mode || pa_p->DFYr != pa_p_.DFYr )
+       prar.writeField(f_pa_DFYr,  pa_p->DFYr, _comment, false  );
+   if(!brief_mode || pa_p->DFYh != pa_p_.DFYh )
+       prar.writeField(f_pa_DFYh,  pa_p->DFYh, _comment, false  );
+   if(!brief_mode || pa_p->DFYc != pa_p_.DFYc )
+       prar.writeField(f_pa_DFYc,  pa_p->DFYc, _comment, false  );
+   if(!brief_mode || pa_p->DFYs != pa_p_.DFYs )
+       prar.writeField(f_pa_DFYs,  pa_p->DFYs, _comment, false  );
 
    if( _comment )
      ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm ";
 
-   if(!brief_mode || pa->p.DW != pa_.p.DW )
-       prar.writeField(f_pa_DW,  pa->p.DW, _comment, false  );
-   if(!brief_mode || pa->p.DT != pa_.p.DT )
-       prar.writeField(f_pa_DT,  pa->p.DT, _comment, false  );
-   if(!brief_mode || pa->p.GAS != pa_.p.GAS )
-       prar.writeField(f_pa_GAS,  pa->p.GAS, _comment, false  );
-   if(!brief_mode || pa->p.DG != pa_.p.DG )
-       prar.writeField(f_pa_DG,  pa->p.DG, _comment, false  );
-   if(!brief_mode || pa->p.DNS != pa_.p.DNS )
-       prar.writeField(f_pa_DNS, pa->p.DNS, _comment, false  );
-   if(!brief_mode || pa->p.IEPS != pa_.p.IEPS )
-       prar.writeField(f_pa_IEPS, pa->p.IEPS, _comment, false  );
+   if(!brief_mode || pa_p->DW != pa_p_.DW )
+       prar.writeField(f_pa_DW,  pa_p->DW, _comment, false  );
+   if(!brief_mode || pa_p->DT != pa_p_.DT )
+       prar.writeField(f_pa_DT,  pa_p->DT, _comment, false  );
+   if(!brief_mode || pa_p->GAS != pa_p_.GAS )
+       prar.writeField(f_pa_GAS,  pa_p->GAS, _comment, false  );
+   if(!brief_mode || pa_p->DG != pa_p_.DG )
+       prar.writeField(f_pa_DG,  pa_p->DG, _comment, false  );
+   if(!brief_mode || pa_p->DNS != pa_p_.DNS )
+       prar.writeField(f_pa_DNS, pa_p->DNS, _comment, false  );
+   if(!brief_mode || pa_p->IEPS != pa_p_.IEPS )
+       prar.writeField(f_pa_IEPS, pa_p->IEPS, _comment, false  );
   prar.writeField(f_pKin, pm.PLIM, _comment, brief_mode  );
-  if(!brief_mode || pa->p.DKIN != pa_.p.DKIN )
-       prar.writeField(f_pa_DKIN, pa->p.DKIN, _comment, false  );
-  if(!brief_mode || pa->p.PLLG != pa_.p.PLLG )
-       prar.writeField(f_pa_PLLG, pa->p.PLLG, _comment, false  );
+  if(!brief_mode || pa_p->DKIN != pa_p_.DKIN )
+       prar.writeField(f_pa_DKIN, pa_p->DKIN, _comment, false  );
+  if(!brief_mode || pa_p->PLLG != pa_p_.PLLG )
+       prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );
   if(!brief_mode || pm.tMin != G_TP_ )
        prar.writeField(f_tMin, pm.tMin, _comment, false  );
 
@@ -554,7 +545,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    prar.writeArray(  f_DUL, pm.DUL,  pm.L, -1L, _comment, brief_mode);
 
    if( _comment )
-     ff << "\n\n# (7) Initial data for Phases" << endl;
+     ff << "\n\n# (7) Initial data for Phases" << std::endl;
    prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
    if( PSigm != S_OFF )
    {
@@ -600,29 +591,30 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    prar.writeArray(  f_muj, pm.muj,  pm.L, -1L, _comment, brief_mode);
  }
 
-#ifdef  JSON_OUT
+#ifndef  NO_JSON_OUT
   ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
-  ff << endl;
+  ff << std::endl;
 
  if( _comment )
-   ff << "\n# End of file\n" << endl;
+   ff << "\n# End of file\n" << std::endl;
 
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
-void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
+void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
 {
-  SPP_SETTING *pa = paTProfil;
+  BASE_PARAM *pa_p = pa_p_ptr();
   long int ii, nfild, len;
 
    //static values
    char PAalp;
    char PSigm;
 
-#ifdef IPMGEMPLUGIN
-   set_def();
-#endif
+///#ifdef IPMGEMPLUGIN 07/05/2020
+///   set_def();
+///#endif
+
   //mem_set( &pm.N, 0, 39*sizeof(long int));
   //mem_set( &pm.TC, 0, 55*sizeof(double));
   // get sizes from DATACH
@@ -645,7 +637,7 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
   }
 
   // setup default constants
-  pa->p.PE =  pm.E = 1;
+  pa_p_ptr()->PE =  pm.E = 1;
   pm.PV = 0;
   pm.PSOL = 0;
   PAalp = '+';
@@ -656,18 +648,18 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
   pm.PLIM  = 1;
 
 // static data
-#ifndef JSON_OUT
+#ifdef NO_JSON_OUT
  TReadArrays  rdar( 8, MULTI_static_fields, ff);
  rdar.skipSpace();
- gstring str;
+ std::string str;
  char buf[300];
  ff.getline(buf, 300,  '\n' );
  str = buf;
  size_t pos1 = str.find('\"');
- if( pos1 < gstring::npos )
+ if( pos1 < std::string::npos )
     str = str.substr( pos1+1);
  pos1 = str.find('\"');
- if( pos1 < gstring::npos )
+ if( pos1 < std::string::npos )
  {   str = str.substr( 0, pos1 );
     //f_getline( ff, str, '\n');
     copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
@@ -686,8 +678,8 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
    {
      switch( nfild )
      {
-       case f_pa_PE: rdar.readArray("pa_PE" , &pa->p.PE, 1);
-                 pm.E = pa->p.PE;
+       case f_pa_PE: rdar.readArray("pa_PE" , &pa_p->PE, 1);
+                 pm.E = pa_p->PE;
               break;
        case f_PV: rdar.readArray("PV" , &pm.PV, 1);
               break;
@@ -708,26 +700,16 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
  }
 
  // testing read
- gstring ret = rdar.testRead();
+ std::string ret = rdar.testRead();
  if( !ret.empty() )
   { ret += " - fields must be read from the MULTI structure";
     Error( "Error", ret);
   }
 
-#ifndef IPMGEMPLUGIN
-//   syp->PAalp = PAalp;
-//   syp->PSigm = PSigm;
-#else
    PAalp_ = PAalp;
    PSigm_ = PSigm;
-#endif
-
    //realloc memory
-#ifdef IPMGEMPLUGIN
    multi_realloc( PAalp, PSigm );
-#else
-   dyn_new();
-#endif
 
 // get dynamic data from DATACH file
   for( ii=0; ii<dCH->nPH; ii++)
@@ -753,12 +735,12 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
     fillValue(pm.SB[ii], ' ', MaxICN );
     len = strlen(dCH->ICNL[ii]);
     //len = min(  len,MaxICN);
-    copyValues( pm.SB[ii], dCH->ICNL[ii], min(len,(long int)MAXICNAME));
+    copyValues( pm.SB[ii], dCH->ICNL[ii], std::min(len,(long int)MAXICNAME));
     pm.SB[ii][MaxICN] = dCH->ccIC[ii];
     pm.ICC[ii] =  dCH->ccIC[ii];
   }
 
-  if( fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
+  if( std::fabs(dCH->DCmm[0]) < 1e-32 )  // Restore DCmm if skipped from the DCH file
       for( long int jj=0; jj< dCH->nDC; jj++ )  // Added by DK on 03.03.2007
       {
           dCH->DCmm[jj] = 0.0;
@@ -772,7 +754,7 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
     pm.DCC[ii] = dCH->ccDC[ii];
     len =strlen(dCH->DCNL[ii]);
     //len = min(  len,MaxDCN);
-    copyValues( pm.SM[ii], dCH->DCNL[ii], min(len,(long int)MAXDCNAME) );
+    copyValues( pm.SM[ii], dCH->DCNL[ii], std::min(len,(long int)MAXDCNAME) );
   }
 
   for( ii=0; ii< dCH->nPH; ii++ )
@@ -780,7 +762,7 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
      len =strlen(dCH->PHNL[ii]);
      //len = min(  len,MaxPHN);
           fillValue( pm.SF[ii], ' ', MAXPHNAME+MAXSYMB );
-          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], min(len,(long int)MAXPHNAME) );
+          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], std::min(len,(long int)MAXPHNAME) );
      pm.SF[ii][0] = dCH->ccPH[ii];
      pm.PHC[ii] = dCH->ccPH[ii];
   }
@@ -790,7 +772,7 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
   ConvertDCC();
 
 //reads dynamic values from txt file
-#ifndef JSON_OUT
+#ifdef NO_JSON_OUT
  TReadArrays  rddar( 80, MULTI_dynamic_fields, ff);
 #else
  TReadJson  rddar( 80, MULTI_dynamic_fields, json_data);
@@ -840,24 +822,16 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
               long int LsIPxSum;
               getLsModsum( LsModSum, LsIPxSum );
               if(LsIPxSum )
-              { rddar.readNext( "IPxPH");
-#ifdef IPMGEMPLUGIN
-              if(!pm.IPx )
-                  pm.IPx = new long int[LsIPxSum];
-#else
-                 pm.IPx = (long int *)aObj[ o_wi_ipxpm ].Alloc(LsIPxSum, 1, L_);
-#endif
-                rddar.readArray( "IPxPH", pm.IPx,  LsIPxSum);
+              {
+                  rddar.readNext( "IPxPH");
+                  alloc_IPx(LsIPxSum);
+                  rddar.readArray( "IPxPH", pm.IPx,  LsIPxSum);
               }
               if(LsModSum )
-              { rddar.readNext( "PMc");
-#ifdef IPMGEMPLUGIN
-              if(!pm.PMc )
-                  pm.PMc = new double[LsModSum];
-#else
-               pm.PMc = (double *)aObj[ o_wi_pmc].Alloc( LsModSum, 1, D_);
-#endif
-                rddar.readArray( "PMc", pm.PMc,  LsModSum);
+              {
+                  rddar.readNext( "PMc");
+                  alloc_PMc(LsModSum);
+                  rddar.readArray( "PMc", pm.PMc,  LsModSum);
               }
               break;
              }
@@ -869,27 +843,18 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
                 long int LsSitSum;
                 getLsMdcsum( LsMdcSum,LsMsnSum, LsSitSum );
                 if(LsMdcSum )
-                { rddar.readNext( "DMc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.DMc )
-                     pm.DMc = new double[LsMdcSum];
-#else
-                pm.DMc = (double *)aObj[ o_wi_dmc].Alloc( LsMdcSum, 1, D_ );
-#endif
-                rddar.readArray( "DMc", pm.DMc,  LsMdcSum);
+                {
+                    rddar.readNext( "DMc");
+                    alloc_DMc(LsMdcSum);
+                   rddar.readArray( "DMc", pm.DMc,  LsMdcSum);
                 }
               if(LsMsnSum )
-              { rddar.readNext( "MoiSN");
-#ifdef IPMGEMPLUGIN
-              if(!pm.MoiSN )
-                   pm.MoiSN = new double[LsMsnSum];
-              pm.SitFr = new double[LsSitSum];
-#else
-              pm.MoiSN = (double *)aObj[ o_wi_moisn].Alloc( LsMsnSum, 1, D_ );
-              pm.SitFr  = (double *)aObj[ o_wo_sitfr ].Alloc( LsSitSum, 1, D_ );
-#endif
-              fillValue( pm.SitFr, 0., LsSitSum );
-              rddar.readArray( "MoiSN", pm.MoiSN,  LsMsnSum);
+              {
+                  rddar.readNext( "MoiSN");
+                  alloc_MoiSN(LsMsnSum);
+                  alloc_SitFr(LsSitSum);
+                  fillValue( pm.SitFr, 0., LsSitSum );
+                  rddar.readArray( "MoiSN", pm.MoiSN,  LsMsnSum);
               }
               break;
             }
@@ -901,25 +866,11 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
           long int DQFcSum, rcpcSum;
           getLsMdc2sum( DQFcSum, rcpcSum );
          if(DQFcSum )
-         {  rddar.readNext( "DQFc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.DQFc )
-                     pm.DQFc = new double[DQFcSum];
-#else
-                pm.DQFc = (double *)aObj[o_wi_dqfc ].Alloc( DQFcSum, 1, D_ );
-#endif
-                rddar.readArray(  "DQFc", pm.DQFc,  DQFcSum);
+         {
+             rddar.readNext( "DQFc");
+             alloc_DQFc(DQFcSum);
+             rddar.readArray(  "DQFc", pm.DQFc,  DQFcSum);
           }
-//        if(rcpcSum )
-//        { rddar.readNext( "rcpc");
-//#ifdef IPMGEMPLUGIN
-//                if(!pm.rcpc )
-//                     pm.rcpc = new double[rcpcSum];
-//#else
-//                pm.rcpc = (double *)aObj[ o_wi_rcpc].Alloc( rcpcSum, 1, D_ );
-//#endif
-//                rddar.readArray(  "rcpc", pm.rcpc,  rcpcSum);
-//        }
         break;
         }
       case f_LsPhl:
@@ -930,24 +881,16 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
           getLsPhlsum( PhLinSum,lPhcSum );
 
           if(PhLinSum )
-          {   rddar.readNext( "PhLin");
-#ifdef IPMGEMPLUGIN
-                if(!pm.PhLin )
-                    pm.PhLin = new long int[PhLinSum][2];
-#else
-                pm.PhLin = (long int (*)[2])aObj[ o_wi_phlin].Alloc( PhLinSum, 2, L_ );
-#endif
-                rddar.readArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
+          {
+              rddar.readNext( "PhLin");
+              alloc_PhLin(PhLinSum);
+              rddar.readArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
         }
         if(lPhcSum )
-        {   rddar.readNext( "lPhc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.lPhc )
-                    pm.lPhc = new double[lPhcSum];
-#else
-                pm.lPhc = (double*)aObj[ o_wi_lphc].Alloc( lPhcSum, 1, D_ );
-#endif
-                rddar.readArray(  "lPhc", pm.lPhc,  lPhcSum);
+        {
+            rddar.readNext( "lPhc");
+            alloc_lPhc(lPhcSum);
+            rddar.readArray(  "lPhc", pm.lPhc,  lPhcSum);
         }
         break;
        }
@@ -965,44 +908,28 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
 
         if(xSMdSum )
-        {   rddar.readNext( "xSMd");
-#ifdef IPMGEMPLUGIN
-                if(!pm.xSMd )
-                    pm.xSMd = new long int[xSMdSum];
-#else
-                pm.xSMd = (long int*)aObj[ o_wi_xsmd].Alloc( xSMdSum, 1, L_ );
-#endif
-                rddar.readArray(  "xSMd", pm.xSMd, xSMdSum);
+        {
+            rddar.readNext( "xSMd");
+            alloc_xSMd(xSMdSum);
+            rddar.readArray(  "xSMd", pm.xSMd, xSMdSum);
         }
         if(IsoPcSum )
-        {   rddar.readNext( "IsoPc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.IsoPc )
-                    pm.IsoPc = new double[IsoPcSum];
-#else
-                pm.IsoPc = (double*)aObj[ o_wi_isopc].Alloc( IsoPcSum, 1, D_ );
-#endif
-                rddar.readArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
+        {
+            rddar.readNext( "IsoPc");
+            alloc_IsoPc(IsoPcSum);
+            rddar.readArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
         }
         if(IsoScSum )
-        {   rddar.readNext( "IsoSc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.IsoSc )
-                    pm.IsoSc = new double[IsoScSum];
-#else
-                pm.IsoSc = (double*)aObj[ o_wi_isosc].Alloc( IsoScSum, 1, D_ );
-#endif
-                rddar.readArray(  "IsoSc", pm.IsoSc, IsoScSum);
+        {
+            rddar.readNext( "IsoSc");
+            alloc_IsoSc(IsoScSum);
+            rddar.readArray(  "IsoSc", pm.IsoSc, IsoScSum);
         }
         if(IsoCtSum )
-        {    rddar.readNext( "IsoCt");
-#ifdef IPMGEMPLUGIN
-                if(!pm.IsoCt )
-                    pm.IsoCt = new char[IsoCtSum];
-#else
-                pm.IsoCt = (char*)aObj[ o_wi_isoct].Alloc( IsoCtSum, 1, A_ );
-#endif
-                rddar.readArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
+        {
+            rddar.readNext( "IsoCt");
+            alloc_IsoCt(IsoCtSum);
+            rddar.readArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
         }
         break;
        }
@@ -1015,24 +942,16 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         getLsESmosum( EImcSum, mCDcSum );
 
         if(EImcSum )
-        {   rddar.readNext( "EImc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.EImc )
-                    pm.EImc = new double[EImcSum];
-#else
-                pm.EImc = (double*)aObj[ o_wi_eimc].Alloc( EImcSum, 1, D_ );
-#endif
-                rddar.readArray(  "EImc", pm.EImc, EImcSum);
+        {
+            rddar.readNext( "EImc");
+            alloc_EImc(EImcSum);
+            rddar.readArray(  "EImc", pm.EImc, EImcSum);
         }
         if(mCDcSum )
-        {   rddar.readNext( "mCDc");
-#ifdef IPMGEMPLUGIN
-                if(!pm.mCDc )
-                    pm.mCDc = new double[mCDcSum];
-#else
-                pm.mCDc = (double*)aObj[ o_wi_mcdc].Alloc( mCDcSum, 1, D_ );
-#endif
-                rddar.readArray(  "mCDc", pm.mCDc,  mCDcSum);
+        {
+            rddar.readNext( "mCDc");
+            alloc_mCDc( mCDcSum );
+            rddar.readArray(  "mCDc", pm.mCDc,  mCDcSum);
         }
         break;
         }
@@ -1050,59 +969,37 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         long int rpConCSum, apConCSum, AscpCSum;
         getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
         if(xSKrCSum )
-        {   rddar.readNext( "xSKrC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.xSKrC )
-                    pm.xSKrC = new long int[xSKrCSum];
-#else
-                pm.xSKrC = (long int*)aObj[ o_wi_jcrdc].Alloc( xSKrCSum, 1, L_ );
-#endif
-                rddar.readArray(  "xSKrC", pm.xSKrC, xSKrCSum);
+        {
+            rddar.readNext( "xSKrC");
+            alloc_xSKrC(xSKrCSum);
+            rddar.readArray(  "xSKrC", pm.xSKrC, xSKrCSum);
         }
         if(ocPRkC_feSArC_Sum )
-        {   rddar.readNext( "ocPRkC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.ocPRkC )
-                    pm.ocPRkC = new long int[ocPRkC_feSArC_Sum][2];
-                if(!pm.feSArC )
-                    pm.feSArC = new double[ocPRkC_feSArC_Sum];
-#else
-            pm.ocPRkC = (long int(*)[2])aObj[ o_wi_ocprkc].Alloc( ocPRkC_feSArC_Sum, 2, L_ );
-            pm.feSArC = (double*)aObj[ o_wi_fsac].Alloc( ocPRkC_feSArC_Sum, 1, D_ );
-#endif
+        {
+            rddar.readNext( "ocPRkC");
+            alloc_ocPRkC(ocPRkC_feSArC_Sum);
+            alloc_feSArC(ocPRkC_feSArC_Sum);
            rddar.readArray(  "ocPRkC", &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
            rddar.readNext( "feSArC");
            rddar.readArray(  "feSArC", pm.feSArC, ocPRkC_feSArC_Sum);
         }
         if(rpConCSum )
-        {   rddar.readNext( "rpConC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.rpConC )
-                    pm.rpConC = new double[rpConCSum];
-#else
-                pm.rpConC = (double*)aObj[ o_wi_krpc].Alloc( rpConCSum, 1, D_ );
-#endif
-                rddar.readArray(  "rpConC", pm.rpConC,  rpConCSum);
+        {
+            rddar.readNext( "rpConC");
+            alloc_rpConC(rpConCSum);
+            rddar.readArray(  "rpConC", pm.rpConC,  rpConCSum);
         }
         if(apConCSum )
-        {   rddar.readNext( "apConC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.apConC )
-                    pm.apConC = new double[apConCSum];
-#else
-                pm.apConC = (double*)aObj[ o_wi_apconc].Alloc( apConCSum, 1, D_ );
-#endif
-                rddar.readArray(  "apConC", pm.apConC, apConCSum);
+        {
+            rddar.readNext( "apConC");
+            alloc_apConC(apConCSum);
+            rddar.readArray(  "apConC", pm.apConC, apConCSum);
         }
         if(AscpCSum )
-        {   rddar.readNext( "AscpC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.AscpC )
-                    pm.AscpC = new double[AscpCSum];
-#else
-                pm.AscpC = (double*)aObj[ o_wi_ascpc].Alloc( AscpCSum, 1, D_ );
-#endif
-                rddar.readArray(  "AscpC", pm.AscpC,  AscpCSum);
+        {
+            rddar.readNext( "AscpC");
+            alloc_AscpC(AscpCSum);
+            rddar.readArray(  "AscpC", pm.AscpC,  AscpCSum);
         }
         break;
         }
@@ -1115,14 +1012,10 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
         long int UMpcSum, xICuCSum;
         getLsUptsum( UMpcSum, xICuCSum );
         if(UMpcSum )
-        {   rddar.readNext( "UMpcC");
-#ifdef IPMGEMPLUGIN
-                if(!pm.UMpcC )
-                    pm.UMpcC = new double[UMpcSum];
-#else
-                pm.UMpcC = (double*)aObj[ o_wi_umpc].Alloc( UMpcSum, 1, D_ );
-#endif
-                rddar.readArray(  "UMpcC", pm.UMpcC, UMpcSum);
+        {
+            rddar.readNext( "UMpcC");
+            alloc_UMpcC(UMpcSum);
+            rddar.readArray(  "UMpcC", pm.UMpcC, UMpcSum);
         }
         break;
         }
@@ -1132,14 +1025,9 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
          {
             long int UMpcSum, xICuCSum;
             getLsUptsum( UMpcSum, xICuCSum );
-#ifdef IPMGEMPLUGIN
-                if(!pm.xICuC )
-                     pm.xICuC = new long int[xICuCSum];
-#else
-                pm.xICuC = (long int *)aObj[o_wi_xicuc ].Alloc( xICuCSum, 1, L_ );
-#endif
-                rddar.readArray(  "xICuC", pm.xICuC, xICuCSum );
-                break;
+            alloc_xICuC(xICuCSum);
+            rddar.readArray(  "xICuC", pm.xICuC, xICuCSum );
+            break;
          }
       case f_B: rddar.readArray( "B", pm.B,  pm.N);
               break;
@@ -1215,79 +1103,79 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
                 Error( "Error", "Array DCC3 not used in this problem");
                rddar.readArray( "DCads", pm.DCC3, pm.Lads, 1 );
                break;
-      case f_pa_DB: rddar.readArray( "pa_DB" , &pa->p.DB, 1);
+      case f_pa_DB: rddar.readArray( "pa_DB" , &pa_p->DB, 1);
                break;
-      case f_pa_DHB: rddar.readArray("pa_DHB", &pa->p.DHB, 1);
+      case f_pa_DHB: rddar.readArray("pa_DHB", &pa_p->DHB, 1);
                break;
-      case f_pa_EPS: rddar.readArray("pa_EPS" , &pa->p.EPS, 1);
+      case f_pa_EPS: rddar.readArray("pa_EPS" , &pa_p->EPS, 1);
                break;
-      case f_pa_DK: rddar.readArray("pa_DK" , &pa->p.DK, 1);
+      case f_pa_DK: rddar.readArray("pa_DK" , &pa_p->DK, 1);
                break;
-      case f_pa_DF: rddar.readArray("pa_DF" , &pa->p.DF, 1);
+      case f_pa_DF: rddar.readArray("pa_DF" , &pa_p->DF, 1);
                break;
-      case f_pa_DP: rddar.readArray("pa_DP", &pa->p.DP, 1);
+      case f_pa_DP: rddar.readArray("pa_DP", &pa_p->DP, 1);
                break;
-      case f_pa_IIM: rddar.readArray("pa_IIM", &pa->p.IIM, 1);
+      case f_pa_IIM: rddar.readArray("pa_IIM", &pa_p->IIM, 1);
                break;
-      case f_pa_PD: rddar.readArray("pa_PD" , &pa->p.PD, 1);
+      case f_pa_PD: rddar.readArray("pa_PD" , &pa_p->PD, 1);
                break;
-      case f_pa_PRD: rddar.readArray("pa_PRD" , &pa->p.PRD, 1);
+      case f_pa_PRD: rddar.readArray("pa_PRD" , &pa_p->PRD, 1);
                break;
-      case f_pa_AG: rddar.readArray("pa_AG" , &pa->p.AG, 1);
+      case f_pa_AG: rddar.readArray("pa_AG" , &pa_p->AG, 1);
                break;
-      case f_pa_DGC: rddar.readArray("pa_DGC" , &pa->p.DGC, 1);
+      case f_pa_DGC: rddar.readArray("pa_DGC" , &pa_p->DGC, 1);
                break;
-      case f_pa_PSM: rddar.readArray("pa_PSM" , &pa->p.PSM, 1);
+      case f_pa_PSM: rddar.readArray("pa_PSM" , &pa_p->PSM, 1);
                break;
-      case f_pa_GAR: rddar.readArray("pa_GAR" , &pa->p.GAR, 1);
+      case f_pa_GAR: rddar.readArray("pa_GAR" , &pa_p->GAR, 1);
                break;
-      case f_pa_GAH: rddar.readArray("pa_GAH" , &pa->p.GAH, 1);
+      case f_pa_GAH: rddar.readArray("pa_GAH" , &pa_p->GAH, 1);
                break;
-      case f_pa_DS: rddar.readArray("pa_DS", &pa->p.DS, 1);
+      case f_pa_DS: rddar.readArray("pa_DS", &pa_p->DS, 1);
                break;
-      case f_pa_XwMin: rddar.readArray("pa_XwMin" , &pa->p.XwMin, 1);
+      case f_pa_XwMin: rddar.readArray("pa_XwMin" , &pa_p->XwMin, 1);
                break;
-      case f_pa_ScMin: rddar.readArray("pa_ScMin" , &pa->p.ScMin, 1);
+      case f_pa_ScMin: rddar.readArray("pa_ScMin" , &pa_p->ScMin, 1);
                break;
-      case f_pa_DcMin: rddar.readArray("pa_DcMin" , &pa->p.DcMin, 1);
+      case f_pa_DcMin: rddar.readArray("pa_DcMin" , &pa_p->DcMin, 1);
                break;
-      case f_pa_PhMin: rddar.readArray("pa_PhMin" , &pa->p.PhMin, 1);
+      case f_pa_PhMin: rddar.readArray("pa_PhMin" , &pa_p->PhMin, 1);
                break;
-      case f_pa_ICmin: rddar.readArray("pa_ICmin" , &pa->p.ICmin, 1);
+      case f_pa_ICmin: rddar.readArray("pa_ICmin" , &pa_p->ICmin, 1);
                break;
-      case f_pa_PC: rddar.readArray("pa_PC" , &pa->p.PC, 1);
+      case f_pa_PC: rddar.readArray("pa_PC" , &pa_p->PC, 1);
                break;
-      case f_pa_DFM: rddar.readArray("pa_DFM" , &pa->p.DFM, 1);
+      case f_pa_DFM: rddar.readArray("pa_DFM" , &pa_p->DFM, 1);
                break;
-      case f_pa_DFYw: rddar.readArray("pa_DFYw" , &pa->p.DFYw, 1);
+      case f_pa_DFYw: rddar.readArray("pa_DFYw" , &pa_p->DFYw, 1);
                break;
-      case f_pa_DFYaq: rddar.readArray("pa_DFYaq" , &pa->p.DFYaq, 1);
+      case f_pa_DFYaq: rddar.readArray("pa_DFYaq" , &pa_p->DFYaq, 1);
                break;
-      case f_pa_DFYid: rddar.readArray("pa_DFYid" , &pa->p.DFYid, 1);
+      case f_pa_DFYid: rddar.readArray("pa_DFYid" , &pa_p->DFYid, 1);
                break;
-      case f_pa_DFYr: rddar.readArray("pa_DFYr" , &pa->p.DFYr, 1);
+      case f_pa_DFYr: rddar.readArray("pa_DFYr" , &pa_p->DFYr, 1);
                break;
-      case f_pa_DFYh: rddar.readArray("pa_DFYh" , &pa->p.DFYh, 1);
+      case f_pa_DFYh: rddar.readArray("pa_DFYh" , &pa_p->DFYh, 1);
                break;
-      case f_pa_DFYc: rddar.readArray("pa_DFYc" , &pa->p.DFYc, 1);
+      case f_pa_DFYc: rddar.readArray("pa_DFYc" , &pa_p->DFYc, 1);
                break;
-      case f_pa_DFYs: rddar.readArray("pa_DFYs", &pa->p.DFYs, 1);
+      case f_pa_DFYs: rddar.readArray("pa_DFYs", &pa_p->DFYs, 1);
                break;
-      case f_pa_DW: rddar.readArray("pa_DW", &pa->p.DW , 1);
+      case f_pa_DW: rddar.readArray("pa_DW", &pa_p->DW , 1);
                break;
-      case f_pa_DT: rddar.readArray("pa_DT", &pa->p.DT , 1);
+      case f_pa_DT: rddar.readArray("pa_DT", &pa_p->DT , 1);
                break;
-      case f_pa_GAS: rddar.readArray("pa_GAS", &pa->p.GAS, 1);
+      case f_pa_GAS: rddar.readArray("pa_GAS", &pa_p->GAS, 1);
                break;
-      case f_pa_DG: rddar.readArray("pa_DG" , &pa->p.DG, 1);
+      case f_pa_DG: rddar.readArray("pa_DG" , &pa_p->DG, 1);
                break;
-      case f_pa_DNS: rddar.readArray("pa_DNS" , &pa->p.DNS, 1);
+      case f_pa_DNS: rddar.readArray("pa_DNS" , &pa_p->DNS, 1);
                break;
-      case f_pa_IEPS: rddar.readArray("pa_IEPS" , &pa->p.IEPS, 1);
+      case f_pa_IEPS: rddar.readArray("pa_IEPS" , &pa_p->IEPS, 1);
                break;
       case f_pKin: rddar.readArray("pKin" , &pm.PLIM, 1);
                break;
-      case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa->p.DKIN, 1);
+      case f_pa_DKIN: rddar.readArray("pa_DKIN" , &pa_p->DKIN, 1);
                break;
       case f_mui: rddar.readArray("mui" , pm.mui, pm.N);
                break;
@@ -1295,7 +1183,7 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
                break;
       case f_muj: rddar.readArray("muj" , pm.muj, pm.L);
                break;
-      case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa->p.PLLG, 1);
+      case f_pa_PLLG: rddar.readArray("pa_PLLG" , &pa_p->PLLG, 1);
                break;
       case f_tMin: rddar.readArray("tMin" , &pm.tMin, 1);
              break;
@@ -1310,6 +1198,26 @@ void TMulti::from_text_file_gemipm( iostream& ff,  DATACH  *dCH )
   { ret += " - fields must be read from the MULTY structure";
     Error( "Error", ret);
   }
+}
+
+
+/// Writes Multi to a json/key-value string
+/// \param brief_mode - Do not write data items that contain only default values
+/// \param with_comments - Write files with comments for all data entries
+std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
+{
+    std::stringstream ss;
+    to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
+    return ss.str();
+}
+
+/// Reads Multi structure from a json/key-value string
+bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
+{
+    std::stringstream ss;
+    ss.str(data);
+    from_text_file_gemipm( ss, dCH );
+    return true;
 }
 
 //=============================================================================

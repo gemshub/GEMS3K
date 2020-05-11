@@ -30,31 +30,16 @@
 //-------------------------------------------------------------------
 //
 #ifndef Activity_H_
-
 #define Activity_H_
 
-//#include "node.h"
 #include "datach.h"
 #include "databr.h"
 #include "s_solmod.h"
 #include "s_sorpmod.h"
-#include "m_const.h"
+#include "m_const_base.h"
 
 class TNode;
-/*
-const double R_CONSTANT = 8.31451,
-              NA_CONSTANT = 6.0221367e23,
-                F_CONSTANT = 96485.309,
-                  e_CONSTANT = 1.60217733e-19,
-                    k_CONSTANT = 1.380658e-23,
-// Conversion factors
-                      cal_to_J = 4.184,
-                        C_to_K = 273.15,
-                          lg_to_ln = 2.302585093,
-                            ln_to_lg = 0.434294481,
-                             H2O_mol_to_kg = 55.50837344,
-                               Min_phys_amount = 1.66e-24;
-*/
+
 typedef struct  /// ACTIVITY - data structure for computing DC activities in phases
 {               /// DATACH indexation throughout, no I/O file exchange
 
@@ -360,7 +345,6 @@ public:
         long int  getXvolume();
 
     // ipm_chemical2.cpp
-        void GasParcP();
         void phase_bcs( long int N, long int M, long int jb, double *A, double X[], double BF[] );
         void phase_bfc( long int k, long int jj );
         double bfc_mass( void );
@@ -371,7 +355,6 @@ public:
 
 //  Surface activity coefficient terms
 //        long int SurfaceActivityCoeff( long int jb, long int je, long int jpb, long int jdb, long int k );
-//    void SurfaceActivityTerm( long int jb, long int je, long int k );  // Obsolete / deleted
 
 //  ipm_chemical3.cpp
 //        void IS_EtaCalc();
@@ -409,8 +392,6 @@ public:
     void updateActivities(); // compute primal activities
     void updateChemicalData();
 };
-
-
 
 #endif
 // -----------------------------------------------------------------------------

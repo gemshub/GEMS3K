@@ -25,16 +25,17 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#ifdef IPMGEMPLUGIN
-#ifdef __unix__
-#include <unistd.h>
-#endif
 
+
+
+#include  <sstream>
 #include <math.h>
-#include "m_param.h"
+//#include "m_param.h"
 #include "num_methods.h"
 #include "gdatastream.h"
 #include "node.h"
+
+#ifdef IPMGEMPLUGIN
 
 //TProfil* TProfil::pm;
 
@@ -51,9 +52,9 @@ const double R_CONSTANT = 8.31451,
                              H2O_mol_to_kg = 55.50837344,
                                Min_phys_amount = 1.66e-24;
 
-enum volume_code {  // Codes of volume parameter
-    VOL_UNDEF, VOL_CALC, VOL_CONSTR
-};
+//enum volume_code {  // Codes of volume parameter
+//    VOL_UNDEF, VOL_CALC, VOL_CONSTR
+//};
 
 SPP_SETTING pa_ = {
     " GEMS-GUI v.3.1 r.2150 (rc) " " GEMS3K v.3.1 r.690 (rc) ",
@@ -102,12 +103,13 @@ void SPP_SETTING::write(fstream& oss)
     p.write( oss );
 }
 
-TProfil::TProfil( TMulti* amulti )
+TProfil::TProfil( TMultiBase* amulti )
 {
     pa= pa_;
     multi = amulti;
     pmp = multi->GetPM();
 }
+
 
 /// GEM IPM calculation of equilibrium state in MULTI
 double TProfil::ComputeEquilibriumState( /*long int& RefinLoops_,*/ long int& NumIterFIA_, long int& NumIterIPM_ )
@@ -117,98 +119,73 @@ double TProfil::ComputeEquilibriumState( /*long int& RefinLoops_,*/ long int& Nu
    return multi->CalculateEquilibriumState( /*RefineLoops,*/ NumIterFIA_, NumIterIPM_ );
 }
 
-/// Writing structure MULTI (GEM IPM work structure) to binary file
-void TProfil::outMulti( GemDataStream& ff, gstring& /*path*/  )
-{
-	 short arr[10];
+///// Writing structure MULTI (GEM IPM work structure) to binary file
+//void TProfil::outMulti( GemDataStream& ff, std::string& /*path*/  )
+//{
+//	 short arr[10];
 
-	  arr[0] = pa.p.PC;
-	  arr[1] = pa.p.PD;
-	  arr[2] = pa.p.PRD;
-	  arr[3] = pa.p.PSM;
-	  arr[4] = pa.p.DP;
-	  arr[5] = pa.p.DW;
-	  arr[6] = pa.p.DT;
-	  arr[7] = pa.p.PLLG;
-	  arr[8] = pa.p.PE;
-	  arr[9] = pa.p.IIM;
+//	  arr[0] = pa.p.PC;
+//	  arr[1] = pa.p.PD;
+//	  arr[2] = pa.p.PRD;
+//	  arr[3] = pa.p.PSM;
+//	  arr[4] = pa.p.DP;
+//	  arr[5] = pa.p.DW;
+//	  arr[6] = pa.p.DT;
+//	  arr[7] = pa.p.PLLG;
+//	  arr[8] = pa.p.PE;
+//	  arr[9] = pa.p.IIM;
 
-	ff.writeArray( arr, 10 );
-    ff.writeArray( &pa.p.DG, 28 );
-    multi->to_file( ff );
-}
+//	ff.writeArray( arr, 10 );
+//    ff.writeArray( &pa.p.DG, 28 );
+//    multi->to_file( ff );
+//}
 
-/// Writing structure MULTI ( free format text file  )
-void TProfil::outMultiTxt( const char *path, bool append  )
-{
-    multi->to_text_file( path, append );
-}
+///// Writing structure MULTI ( free format text file  )
+//void TProfil::outMultiTxt( const char *path, bool append  )
+//{
+//    multi->to_text_file( path, append );
+//}
 
-/// Reading structure MULTI (GEM IPM work structure) from binary file
-void TProfil::readMulti( GemDataStream& ff )
-{
-    //DATACH  *dCH = TNode::na->pCSD();
-    DATACH  *dCH =  multi->node1->pCSD();
-    short arr[10];
+///// Reading structure MULTI (GEM IPM work structure) from binary file
+//void TProfil::readMulti( GemDataStream& ff, DATACH  *dCH )
+//{
+//     short arr[10];
 
-	 ff.readArray( arr, 10 );
-	  pa.p.PC = arr[0];
-	  pa.p.PD = arr[1];
-	  pa.p.PRD = arr[2];
-	  pa.p.PSM = arr[3];
-	  pa.p.DP = arr[4];
-	  pa.p.DW = arr[5];
-	  pa.p.DT = arr[6];
-	  pa.p.PLLG = arr[7];
-	  pa.p.PE = arr[8];
-	  pa.p.IIM = arr[9];
+//	 ff.readArray( arr, 10 );
+//	  pa.p.PC = arr[0];
+//	  pa.p.PD = arr[1];
+//	  pa.p.PRD = arr[2];
+//	  pa.p.PSM = arr[3];
+//	  pa.p.DP = arr[4];
+//	  pa.p.DW = arr[5];
+//	  pa.p.DT = arr[6];
+//	  pa.p.PLLG = arr[7];
+//	  pa.p.PE = arr[8];
+//	  pa.p.IIM = arr[9];
 
-      ff.readArray( &pa.p.DG, 28 );
-      multi->from_file( ff );
+//      ff.readArray( &pa.p.DG, 28 );
+//      multi->from_file( ff );
 
-      // copy intervals for minimizatiom
-      if(  dCH->nPp > 1  )
-      {
-         pmp->Pai[0] = dCH->Pval[0];
-         pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
-         pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-      }
-      pmp->Pai[3] = dCH->Ptol;
-      if(  dCH->nTp > 1  )
-      {
-         pmp->Tai[0] = dCH->TKval[0];
-         pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
-         pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-      }
-      pmp->Tai[3] = dCH->Ttol;
+//      // copy intervals for minimizatiom
+//      if(  dCH->nPp > 1  )
+//      {
+//         pmp->Pai[0] = dCH->Pval[0];
+//         pmp->Pai[1] = dCH->Pval[dCH->nPp-1];
+//         pmp->Pai[2] = (pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+//      }
+//      pmp->Pai[3] = dCH->Ptol;
+//      if(  dCH->nTp > 1  )
+//      {
+//         pmp->Tai[0] = dCH->TKval[0];
+//         pmp->Tai[1] = dCH->TKval[dCH->nTp-1];
+//         pmp->Tai[2] = (pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+//      }
+//      pmp->Tai[3] = dCH->Ttol;
 
-  }
+//  }
 
 
-/* Test and load thermodynamic data from GEMS project database
-void TMulti::CheckMtparam1()
-{
-  double TK, P, PPa;
 
-  //DATACH  *dCH = TNode::na->pCSD();
-  //TK = TNode::na->cTK();
-  //PPa = TNode::na->cP();
-
-  DATACH  *dCH = node1->pCSD();
-  TK = node1->cTK();
-  PPa = node1->cP();
-
-  P = PPa/bar_to_Pa;
-
-  //pmp->pTPD = 2;
-
-  if( !load || fabs( pm.Tc - TK ) > dCH->Ttol
-           || fabs( pm.Pc - P )  > dCH->Ptol/bar_to_Pa  )
-  {
-     pm.pTPD = 0;      //T, P is changed - problematic for UnSpace!
-  }
-  load = true;
-}*/
 
 //-------------------------------------------------------------------------
 // internal functions
@@ -229,7 +206,7 @@ void replaceall(string& str, char ch1, char ch2)
 }
 
 /// read string as: "<characters>"
-istream& f_getline(istream& is, gstring& str, char delim)
+istream& f_getline(istream& is, std::string& str, char delim)
 {
     char ch;
     is.get(ch);
@@ -250,10 +227,10 @@ istream& f_getline(istream& is, gstring& str, char delim)
    return is;
 }
 
-gstring u_makepath(const gstring& dir,
-           const gstring& name, const gstring& ext)
+std::string u_makepath(const std::string& dir,
+           const std::string& name, const std::string& ext)
 {
-    gstring Path(dir);
+    std::string Path(dir);
     if( dir != "")
       Path += "/";
     Path += name;
@@ -263,27 +240,27 @@ gstring u_makepath(const gstring& dir,
     return Path;
 }
 
-void u_splitpath(const gstring& aPath, gstring& dir,
-            gstring& name, gstring& ext)
+void u_splitpath(const std::string& aPath, std::string& dir,
+            std::string& name, std::string& ext)
 {
-    gstring Path = aPath;
+    std::string Path = aPath;
     replaceall( Path, '\\', '/');
     size_t pos = Path.rfind("/");
-    if( pos != npos )
+    if( pos != std::string::npos )
         dir = Path.substr(0, pos), pos++;
     else
         dir = "",    pos = 0;
 
     size_t pose = Path.rfind(".");
-    if( pose != npos )
+    if( pose != std::string::npos )
     {
-        ext = Path.substr( pose+1, npos );
+        ext = Path.substr( pose+1, std::string::npos );
         name = Path.substr(pos, pose-pos);
     }
     else
     {
         ext = "";
-        name = Path.substr(pos, npos);
+        name = Path.substr(pos, std::string::npos);
     }
 }
 
@@ -297,15 +274,15 @@ char  (* f_getfiles(const char *f_name, char *Path,
   char  (*filesList)[fileNameLength];
   char  (*filesListNew)[fileNameLength];
   filesList = new char[bSize][fileNameLength];
-  gstring name;
+  std::string name;
 
 // Get path
-   gstring path_;
-   gstring flst_name = f_name;
+   std::string path_;
+   std::string flst_name = f_name;
     replaceall( flst_name, '\\', '/');
    unsigned long int pos = flst_name.rfind("/");
    path_ = "";
-   if( pos < npos )
+   if( pos < std::string::npos )
       path_ = flst_name.substr(0, pos+1);
    strncpy( Path, path_.c_str(), 256-fileNameLength);
    Path[255] = '\0';
@@ -345,6 +322,35 @@ char  (* f_getfiles(const char *f_name, char *Path,
   return filesList;
 }
 #endif
+
+///// Writes Multi to a json/key-value string
+///// \param brief_mode - Do not write data items that contain only default values
+///// \param with_comments - Write files with comments for all data entries
+//std::string TProfil::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
+//{
+//    std::stringstream ss;
+//    multi->to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
+//    return ss.str();
+//}
+
+///// Reads Multi structure from a json/key-value string
+//bool TProfil::gemipm_from_string( const std::string& data,  DATACH  *dCH )
+//{
+//    std::stringstream ss;
+//    ss.str(data);
+//    multi->from_text_file_gemipm( ss, dCH );
+//    return true;
+//}
+
+///// Reading structure MULTI (GEM IPM work structure) from text file
+//void TProfil::readMulti( const char* path, DATACH  *dCH )
+//{
+//    // reads sizes and constants from txt file
+//    fstream ff( path, ios::in );
+//    ErrorIf( !ff.good() , path, "Fileopen error");
+//    multi->from_text_file_gemipm( ff, dCH);
+//}
+
 // ------------------ End of ms_param.cpp -----------------------
 
 

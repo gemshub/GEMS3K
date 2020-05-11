@@ -27,12 +27,9 @@
 //-------------------------------------------------------------------
 //
 
-#ifdef IPMGEMPLUGIN
-
 #include <cmath>
 #include "node.h"
-//#include "m_param.h"
-//#include "activities.h"
+#include "activities.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ///  Function for converting internal lnGam[j] value into an external (phase-scale-specific)
@@ -221,7 +218,7 @@ TActivity::CalculateActivityCoefficients( long int LinkMode  )
                     double nxk = 1./act.L1[k];
             for( j= jb; j<je; j++ )
     		{
-                if(act.XF[k] < min( act.DSM, act.PhMinM ) ) // act.lowPosNum )   // workaround 10.03.2008 DK
+                if(act.XF[k] < std::min( act.DSM, act.PhMinM ) ) // act.lowPosNum )   // workaround 10.03.2008 DK
                         act.Wx[j] = nxk;  // need this eventually to avoid problems with zero mole fractions
                 act.fDQF[j] =0.0;  // cleaning fDQF in TP mode!
                 act.lnGmo[j] = act.lnGam[j]; // saving activity coefficients in TP mode
@@ -1143,8 +1140,6 @@ void TActivity::SetSmoothingFactor( long int /*mode*/ )
       FitVar[3] = TF;
 }
 
-
-#endif
 
 //--------------------- End of s_activity3.cpp ---------------------------
 

@@ -25,18 +25,18 @@
 
 #pragma once
 
-#include  <fstream>
+#include <iostream>
 #include <vector>
-#include <cmath>
+//#include <cmath>
 #include "verror.h"
 
 struct outField /// Internal descriptions of fields
  {
-   gstring name; ///< name of field in structure
+   std::string name; ///< name of field in structure
    long int alws;    ///< 1 - must be read, 0 - default values can be used
    long int readed;  ///< 0; set to 1 after reading the field from input file
    long int indexation;  ///< 1 - static object; 0 - undefined; <0 type of indexation, >1 number of elements in array
-   gstring comment;
+   std::string comment;
 
 };
 
@@ -52,9 +52,9 @@ struct IOJFormat /// Internal descriptions of output/input formats with JSON not
  {
    long int index;    ///< index formatted value into reading array
    long int type;  ///< type of formatted value { F, L, R, ...}
-   gstring format; ///< string with formatted data for different type
+   std::string format; ///< string with formatted data for different type
 
-   IOJFormat( char aType, int aIndex, gstring aFormat ):
+   IOJFormat( char aType, int aIndex, std::string aFormat ):
                index(aIndex), type(aType), format(aFormat)
        {}
 
@@ -134,12 +134,12 @@ class TRWArrays  /// Basic class for red/write fields of structure
 /// Print fields of structure outField
 class TPrintArrays: public  TRWArrays
 {
-    iostream& ff;
+    std::iostream& ff;
 
 public:
 
     /// Constructor
-    TPrintArrays( short  aNumFlds, outField* aFlds, iostream& fout ):
+    TPrintArrays( short  aNumFlds, outField* aFlds, std::iostream& fout ):
         TRWArrays( aNumFlds, aFlds), ff( fout )
     {}
 
@@ -159,8 +159,8 @@ public:
         if(!brief_mode || getAlws( f_num ))
         {
             if( with_comments && flds[f_num].comment.length()>1)
-                ff << endl << flds[f_num].comment.c_str();
-            ff << endl << "<" << flds[f_num].name.c_str() << ">  ";
+                ff << std::endl << flds[f_num].comment.c_str();
+            ff << std::endl << "<" << flds[f_num].name.c_str() << ">  ";
             writeValue(value);
         }
     }
@@ -177,7 +177,7 @@ public:
       if(!brief_mode || getAlws(f_num ))
       {
         if( with_comments )
-             ff <<  endl << flds[f_num].comment.c_str();
+             ff <<  std::endl << flds[f_num].comment.c_str();
         writeArray( flds[f_num].name.c_str(),  arr, size, l_size );
       }
     }
@@ -187,7 +187,7 @@ public:
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void writeArray( long f_num, const vector<double>& arr, long int l_size=0,
+    void writeArray( long f_num, const std::vector<double>& arr, long int l_size=0,
                      bool with_comments = false, bool brief_mode = false);
 
     /// Writes char array to a text file.
@@ -206,11 +206,11 @@ public:
         if( arr_size > 0 )
             sz = arr_size;
 
-        ff << endl << "<" << name << ">" << endl;
+        ff << std::endl << "<" << name << ">" << std::endl;
         for( int ii=0, jj=0; ii<size; ii++, jj++  )
         {
             if(jj == sz) {
-                jj=0;  ff << endl;
+                jj=0;  ff << std::endl;
             }
             writeValue(arr[ii]);
             ff << " ";
@@ -224,21 +224,21 @@ public:
      bool isComment = false;
 
      if( name )
-         ff << endl << "<" << name << ">" << endl;
+         ff << std::endl << "<" << name << ">" << std::endl;
      else
      {
-         ff << endl << "#  ";
+         ff << std::endl << "#  ";
          isComment = true;
      }
      for( long int ii=0, jj=0; ii<size; ii++, jj++  )
      {
         if(jj == 40 )
         {
-          jj=0;  ff << endl;
+          jj=0;  ff << std::endl;
           if(isComment)
               ff << "#  ";
         }
-        gstring str = gstring( arr +(ii*arr_size), 0, arr_size );
+        std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
         writeValue(str);
         ff << " ";
      }
@@ -256,13 +256,13 @@ public:
         if( l_size > 0 )
             sz = l_size;
 
-        ff << endl << "<" << name << ">" << endl;
+        ff << std::endl << "<" << name << ">" << std::endl;
         for( long int ii=0, jj=0; ii<size; ii++  )
         {
             for(long int cc=0; cc<nColumns; cc++ )
             {
                 if(jj == sz){
-                    jj=0;  ff << endl;
+                    jj=0;  ff << std::endl;
                 }
                 writeValue(arr[selArr[ii]*nColumns+cc]);
                 ff << " ";
@@ -278,8 +278,8 @@ public:
 
  class TReadArrays : public  TRWArrays /// Read fields of structure
  {
-     iostream& ff;
-     gstring curArray;
+     std::iostream& ff;
+     std::string curArray;
 
  protected:
     /// Reads value from a text file.
@@ -287,15 +287,15 @@ public:
     /// Reads value from a text file.
     void readValue(double& val);
     /// Reads format value from a text file.
-    long int readFormatValue(double& val, gstring& format);
-    bool  readFormat( gstring& format );
+    long int readFormatValue(double& val, std::string& format);
+    bool  readFormat( std::string& format );
 
     void setCurrentArray( const char* name, long int size );
  
  public:
 
     /// Constructor
-    TReadArrays( short aNumFlds, outField* aFlds, iostream& fin ):
+    TReadArrays( short aNumFlds, outField* aFlds, std::iostream& fin ):
         TRWArrays( aNumFlds, aFlds), ff( fin ), curArray("")
     {}
 
@@ -307,7 +307,7 @@ public:
     long int findNextNotAll();  ///< Read next name from file and find in fields list (if doesnot find read next name)
     void  readNext( const char* label); ///< Read next name from file
 
-    gstring testRead();   ///< Test for reading all fields must be always present in the file
+    std::string testRead();   ///< Test for reading all fields must be always present in the file
 
     /// Reads array from a text file.
     template <class T,
@@ -336,18 +336,18 @@ public:
     void readArray( const char *name, char* arr, long int size, long int el_size );
 
     /// Reads string from a text file.
-    void readArray( const char* name, gstring &arr, long int el_size=198 );
+    void readArray( const char* name, std::string &arr, long int el_size=198 );
     /// Reads double vector from a text file.
-    void readArray( const char* name, vector<double> arr );
+    void readArray( const char* name, std::vector<double> arr );
 
     void readFormatArray( const char* name, double* arr,
-        long int size, vector<IOJFormat>& vFormats );
+        long int size, std::vector<IOJFormat>& vFormats );
 };
 
 template <> void TPrintArrays::writeValue( const double& );
 template <> void TPrintArrays::writeValue( const float& );
 template <> void TPrintArrays::writeValue( const char& value );
-template <> void TPrintArrays::writeValue( const gstring& value );
+template <> void TPrintArrays::writeValue( const std::string& value );
 
 
  //=============================================================================
