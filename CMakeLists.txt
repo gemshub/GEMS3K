@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.7)
 
 # Set the name of the project
-project(GEMS3K CXX C)
+project(GEMS3K VERSION 3.7.0 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 11)
@@ -11,6 +11,15 @@ set(CMAKE_MACOSX_RPATH ON)
 
 # Include the cmake variables with values for installation directories
 include(GNUInstallDirs)
+
+# Set the cmake module path of the project
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
+# Use ccache to speed up repeated compilations
+include(CCache)
+
+# Ensure proper configuration if in a conda environment
+include(CondaAware)
 
 # Set the output directories of the built libraries and binaries
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -63,6 +72,9 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     link_directories("/usr/local/lib")
 endif()
 
+# Find all GEMS3K dependencies
+include(GEMS3KFindDeps)
+
 # Compile GEMS3K
 add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
@@ -70,3 +82,6 @@ link_directories(${CMAKE_BINARY_DIR}/lib)
 
 # Compile GEMS3K
 add_subdirectory(gemserver)
+
+# Install the cmake config files that permit users to use find_package(gems3k)
+#include(GEMS3KInstallCMakeConfigFiles)

@@ -1,0 +1,19 @@
+name: GEMS3K
+
+dependencies:
+  - gxx_linux-64=7.3.0  # [linux]
+  - cmake>=3.13
+  - ninja # [unix]
+  - make  # [win]
+  - git
+  - ccache  # [unix]
+  - cppzmq
+  - nlohmann_json
+
+environment:
+
+  LD_LIBRARY_PATH:                                                   # [unix]
+    - {{ root }}/artifacts/lib                                       # [unix]
+
+  PATH:                                                              # [win]
+    - {{ root }}\artifacts\bin                                       # [win]
