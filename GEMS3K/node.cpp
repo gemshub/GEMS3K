@@ -37,7 +37,7 @@
 #include <cmath>
 #include <algorithm>
 
-#ifndef __unix
+#ifdef _MSC_VER
 #include <io.h>
 #endif
 
