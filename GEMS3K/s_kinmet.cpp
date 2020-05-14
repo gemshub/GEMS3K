@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <fstream>
 #include <cstring>
+#include <algorithm>
 using namespace std;
 #include "verror.h"
 #include "s_kinmet.h"
