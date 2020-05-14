@@ -28,7 +28,12 @@
 //
 
 #include <cmath>
+#ifdef _MSC_VER
+#include <stdint.h>
+#else
 #include <unistd.h>
+#endif
+#include <algorithm>
 #include "v_detail.h"
 
 #ifdef NODEARRAYLEVEL

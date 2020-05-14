@@ -28,6 +28,7 @@
 //
 
 #include <cmath>
+#include <algorithm>
 #include "node.h"
 #include "activities.h"
 

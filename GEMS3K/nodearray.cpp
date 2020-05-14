@@ -28,6 +28,7 @@
 //
 
 #include <cmath>
+#include <algorithm>
 #include "v_detail.h"
 
 #ifdef NODEARRAYLEVEL

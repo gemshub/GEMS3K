@@ -1570,7 +1570,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     long int rc, NPar, NPcoef;
     NPar = pmm->LsMod[ index_phase * 3 ];
     NPcoef =  pmm->LsMod[ index_phase * 3 + 2 ];
-    if( aIPc.size() != (uint)(NPar*NPcoef) )
+    if( aIPc.size() != (unsigned int)(NPar*NPcoef) )
     {
         std::cout  << std::endl
                    << " TNode::Set_aIPc() error: vector aIPc does not match the dimensions specified in the GEMS3K IPM file (NPar*NPcoef) !!!! \n"
@@ -1631,7 +1631,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     long int rc, NComp, NP_DC;
     NComp = pmm->L1[ index_phase ];
     NP_DC = pmm->LsMdc[ index_phase ];
-    if( aDCc.size() != (uint)(NComp*NP_DC) )
+    if( aDCc.size() != (unsigned int)(NComp*NP_DC) )
     {
         std::cout<<std::endl;
         std::cout<<"TNode::Set_aDCc() error: vector aDCc does not match the dimensions specified in the GEMS3K IPM file (NComp*NP_DC) !!!! "<<std::endl;
@@ -1882,7 +1882,7 @@ case DC_SCM_SPECIES:
 //                           long int nTp_, long int nPp_, bool no_interpolation )
 //{
 //// set sizes for DataCh
-//  uint ii;
+//  unsigned int ii;
 //  long int i1;
 //// reallocates memory for     DATACH  *CSD;  and  DATABR  *CNode;
 //  if( !CSD )
