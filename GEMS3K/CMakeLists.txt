@@ -35,7 +35,7 @@ endif()
 # Install debug symbols
 if(MSVC)
     install(
-        FILES $<TARGET_PDB_FILE:GEMS3K>
+        FILES $<TARGET_PDB_FILE:GEMS3K_SHARED>
         DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT libraries
         OPTIONAL
