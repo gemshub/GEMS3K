@@ -26,6 +26,7 @@
 //-------------------------------------------------------------------
 
 #include <cmath>
+#include <algorithm>
 #include "verror.h"
 #include "num_methods.h"
 

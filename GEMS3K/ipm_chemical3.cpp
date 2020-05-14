@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <iomanip>
+#include <algorithm>
 #include "ms_multi.h"
 
 

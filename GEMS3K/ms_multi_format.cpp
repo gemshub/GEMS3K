@@ -27,6 +27,7 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 #include "v_detail.h"
 #include "io_arrays.h"
 #include "ms_multi.h"

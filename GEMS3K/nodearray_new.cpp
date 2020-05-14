@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <unistd.h>
+#include <algorithm>
 #include "v_detail.h"
 
 #ifdef NODEARRAYLEVEL
