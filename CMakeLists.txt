@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.7)
 
 # Set the name of the project
-project(GEMS3K VERSION 3.7.0 LANGUAGES CXX C)
+project(GEMS3K VERSION 4.0.0 LANGUAGES CXX C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 11)
