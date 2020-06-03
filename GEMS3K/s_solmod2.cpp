@@ -30,6 +30,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <memory>
 using namespace std;
 #include "s_solmod.h"
 #include "verror.h"
