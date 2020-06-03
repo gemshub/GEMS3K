@@ -682,7 +682,7 @@ long int GEM_step_MT( const long int step )
    {        return atp.get();       }
 
 ///#endif
-/// \
+///
     // These methods get contents of fields in the work node structure
     double cTC() const     /// Get current node Temperature T, Celsius
     {  return CNode->TK-C_to_K;   }
