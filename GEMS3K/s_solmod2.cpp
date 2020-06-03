@@ -1232,10 +1232,13 @@ long int TCGFcalc::CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fug
 long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
 		   unsigned long int NN,   double Pbar, double T, double &roro )
 {
-	double *xtmp,*Fx;
+    double *xtmp,*Fx;
 	double P = Pbar/10.;
-	xtmp = new double [NN];
-	Fx = new double [NN];
+    std::shared_ptr<double> xtmp_mem = std::make_shared<double>(NN); // new double [NN];
+    std::shared_ptr<double> Fx_mem = std::make_shared<double>(NN); // new double [NN];
+
+    xtmp = xtmp_mem.get();
+    Fx = Fx_mem.get();
 
 	if(!paar)
 		paar = new  EOSPARAM(X, param, NN);
@@ -1295,8 +1298,8 @@ long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
 
 	// GMix+=F0 + ax;
 	// MLPutRealList(stdlink,act,paar.NCmp());
-	delete[]xtmp;
-	delete[]Fx;
+    //delete[]xtmp;
+    //delete[]Fx;
 	roro = ro;  // added, 21.06.2008 (TW)
 
 	return 0;  // changed, 21.06.2008 (TW)
