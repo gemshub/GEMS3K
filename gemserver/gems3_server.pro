@@ -11,6 +11,7 @@ CONFIG -= warn_on
 CONFIG += debug
 #CONFIG += windows
 CONFIG += console
+CONFIG += c++11
 
 
 #DEFINES += IPMGEMPLUGIN
