@@ -3572,7 +3572,8 @@ cout<<" in TELVIS::PTparam()"<<endl;
     double /*bet0, bet1, cn,*/ ra_, rc_, qa_, qc_;
     double u, psi, /*v,*/ weps, diffU, Xw = 0.;
     double dudp, dudt, d2udt2;
-    double* spec_frac = new double [NComp-1];
+    //double* spec_frac = new double [NComp-1];
+     vector<double> spec_frac((NComp-1),0);
     double spec_sum = 0.0;
     u = 0.0; psi = 0.0; weps = 0.0;
 
@@ -3853,7 +3854,7 @@ cout<<" in TELVIS::PTparam()"<<endl;
 
     aDH = aDH*1e-8;
 
-    delete[]spec_frac;
+    //delete[]spec_frac;
     return 0;
 }
 
@@ -4001,7 +4002,8 @@ void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
 
 
     // species fractions:
-    double* spec_frac = new double [NComp-1];
+    //double* spec_frac = new double [NComp-1];
+     vector<double> spec_frac((NComp-1),0);
     double spec_sum = 0.0;
     for( i=0;i<(NComp-1);i++ )
     {
@@ -4070,7 +4072,7 @@ void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
           ELVIS_OsmCoeff_DH[j] = z[j]*z[j]*(A_gamma * pow(IS,0.5)*(xbx- (1./(xbx)) - 2.*log(xbx))) / ( pow(IS,(3./2.)) *b*b*b);
     }
 
-    delete[] spec_frac;
+    //delete[] spec_frac;
 }
 
 
