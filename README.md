@@ -1,5 +1,9 @@
 # GEMS3K
 
+[![Build Status](https://travis-ci.com/gemshub/GEMS3K.svg?branch=master)](https://travis-ci.com/gemshub/GEMS3K)
+[![Build status](https://ci.appveyor.com/api/projects/status/o6sqwb9xamhi7txn?svg=true)](https://ci.appveyor.com/project/gdmiron/gems3k)
+[![Conda Forge](https://anaconda.org/conda-forge/gems3k/badges/version.svg)](https://anaconda.org/conda-forge/gems3k)
+
 Numerical kernel solver of the GEM-Selektor v.3 package for geochemical modelling. 
 Just extended with an alternative Activity C++ API as the basis for a new Python API (based on Pybind11) on top of it, see xGEMS repository.
 
