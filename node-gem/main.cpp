@@ -30,8 +30,14 @@
 //-------------------------------------------------------------------
 
 #include "main.h"
+#include "GEMS3K/v_detail.h"
 #include <time.h>
 time_t start,stop;
+
+#define fileNameLength 64
+/// Get Path of file and Reading list of file names from it, return number of files
+char  (* f_getfiles(const char *f_name, char *Path,
+        long int& nElem, char delim ))[fileNameLength];
 
 //The case of data exchange in computer memory
 int main( int argc, char* argv[] )
@@ -460,6 +466,62 @@ double TMyTransport::OneTimeStepRun_CN( long int *ICndx, long int nICndx )
     return dt;
 }
 
+const int bGRAN = 20;
+
+// Get Path of file and Reading list of file names from it, return number of files
+char  (* f_getfiles(const char *f_name, char *Path,
+        long int& nElem, char delim ))[fileNameLength]
+{
+  int ii, bSize = bGRAN;
+  char  (*filesList)[fileNameLength];
+  char  (*filesListNew)[fileNameLength];
+  filesList = new char[bSize][fileNameLength];
+  string name;
+
+// Get path
+   string path_;
+   string flst_name = f_name;
+   size_t pos = flst_name.rfind("/");
+   path_ = "";
+   if( pos < string::npos )
+      path_ = flst_name.substr(0, pos+1);
+   strncpy( Path, path_.c_str(), 256-fileNameLength);
+   Path[255] = '\0';
+
+//  open file stream for the file names list file
+   fstream f_lst( f_name/*flst_name.c_str()*/, ios::in );
+   ErrorIf( !f_lst.good(), f_name, "Fileopen error");
+
+// Reading list of names from file
+  nElem = 0;
+  while( !f_lst.eof() )
+  {
+    f_getline( f_lst, name, delim);
+    if( nElem >= bSize )
+    {    bSize = bSize+bGRAN;
+         filesListNew = new char[bSize][fileNameLength];
+         for( ii=0; ii<nElem-1; ii++ )
+           strncpy( filesListNew[ii], filesList[ii], fileNameLength);
+         delete[] filesList;
+         filesList =  filesListNew;
+    }
+    strncpy( filesList[nElem], name.c_str(), fileNameLength);
+    filesList[nElem][fileNameLength-1] = '\0';
+    nElem++;
+  }
+
+  // Realloc memory for reading size
+  if( nElem != bSize )
+  {
+    filesListNew = new char[nElem][fileNameLength];
+    for(  ii=0; ii<nElem; ii++ )
+      strncpy( filesListNew[ii], filesList[ii], fileNameLength);
+    delete[] filesList;
+    filesList =  filesListNew;
+  }
+
+  return filesList;
+}
 
 //---------------------------------------------------------------------------
 // end of main.cpp for the node-gem (TNode-level usage) coupled-code example
