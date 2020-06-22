@@ -604,8 +604,8 @@ void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, bool binary
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
 std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
-                                          long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
-                                          bool putNodT1, bool addMui )
+                                              long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
+                                              bool putNodT1, bool addMui )
 {
     std::fstream fout;
     std::fstream fout2;
