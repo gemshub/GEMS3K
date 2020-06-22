@@ -604,8 +604,8 @@ void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, bool binary
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
 std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,
-                                          long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
-                                          bool putNodT1, bool addMui )
+                                              long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
+                                              bool putNodT1, bool addMui )
 {
     std::fstream fout;
     std::fstream fout2;
@@ -656,8 +656,8 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         // output MULTI to txt file
         newname = name+"-ipm";
         Path_ = u_makepath( dir, newname, dat_ext );
-        std::fstream ff( path.c_str(), std::ios::out );
-        ErrorIf( !ff.good() , path, "Fileopen error");
+        std::fstream ff( Path_.c_str(), std::ios::out );
+        ErrorIf( !ff.good() , Path_, "Fileopen error");
         calcNode->multi->to_text_file_gemipm( ff, addMui, with_comments, brief_mode );
     }
 

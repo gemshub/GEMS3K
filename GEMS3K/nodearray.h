@@ -81,8 +81,8 @@ struct TestModeGEMParam
     double cdv;       /// cutoff for IC amount differences in the node between time steps (mol, 1e-9)
     double cez;       /// cutoff for minimal amounts of IC in node bulk compositions (mol, 1e-12)
 
-    TestModeGEMParam( char amode, char  auseSIA,
-                      long int astep,   double acdv,  double acez ):
+    explicit TestModeGEMParam( char amode = NEED_GEM_AIA, char  auseSIA='*',
+                      long int astep=0,   double acdv=1e-9,  double acez=1e-12 ):
         mode(amode), useSIA(auseSIA), step(astep), cdv(acdv), cez(acez) {}
 };
 

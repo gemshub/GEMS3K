@@ -139,7 +139,7 @@ void TNode::databr_copy( DATABR* otherCNode )
     else
          copyValues( &CNode->TK, &otherCNode->TK, 15 );
 #else
-    fstream f_log(TNode::ipmLogFile.c_str(), ios::out|ios::app );
+    std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
     ErrorIf(CNode->NodeStatusFMT != No_nodearray, TNode::ipmLogFile.c_str(),
          "Error reading work dataBR structure from binary file (No_nodearray)");
      copyValues( &CNode->TK, &otherCNode->TK, 15 );
