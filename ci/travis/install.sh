@@ -1,4 +1,3 @@
-set -u
 ferr(){
 echo "$@"
 exit 1
