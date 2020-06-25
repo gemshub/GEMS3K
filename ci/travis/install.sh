@@ -1,3 +1,8 @@
+set -u
+ferr(){
+echo "$@"
+exit 1
+}
 if [ ! -f $HOME/miniconda/bin/conda ]; then
     echo "Downloading and installing miniconda"
     if [ $TRAVIS_OS_NAME = "linux" ]; then OS=Linux-x86_64; else OS=MacOSX-x86_64; fi
