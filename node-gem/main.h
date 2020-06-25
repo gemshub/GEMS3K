@@ -33,7 +33,7 @@
 
 #include <time.h>
 #include <math.h>
-#include <string.h>
+#include <string>
 #include <iomanip> // setprecision
 using namespace std;
 
