@@ -87,8 +87,6 @@ add_subdirectory(GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/GEMS3K)
 link_directories(${CMAKE_BINARY_DIR}/lib)
 
-# Compile GEMS3K
-add_subdirectory(gemserver)
 
 # Install the cmake config files that permit users to use find_package(gems3k)
 #include(GEMS3KInstallCMakeConfigFiles)
