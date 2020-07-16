@@ -9,7 +9,7 @@
 /// development of coupled reactive transport codes.
 /// Works with DATACH and an array of DATABR structures; uses TNode class
 //
-// Copyright (C) 2006-2017 S.Dmytriyeva, D.Kulik
+// Copyright (C) 2006-2020 S.Dmytriyeva, D.Kulik
 // <GEMS Development Team, mailto:gems2.support@psi.ch>
 //
 // This file is part of the GEMS3K code for thermodynamic modelling

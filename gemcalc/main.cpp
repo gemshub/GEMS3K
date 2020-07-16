@@ -240,6 +240,7 @@ char  (* f_getfiles(const char *f_name, char *Path,
     nElem++;
   }
 
+
   // Realloc memory for reading size
   if( nElem != bSize )
   {
