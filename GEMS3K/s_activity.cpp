@@ -752,7 +752,7 @@ double TActivity:: ConvertGj_toUniformStandardState( double g0, long int j, long
 //#ifndef IPMGEMPLUGIN
 //        if( TSyst::sm->GetSY()->PYOF != S_OFF )
 //#endif
-          if( YOF != 0.0 )
+          if( noZero( YOF ) )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
 
         break;
@@ -783,7 +783,7 @@ case DC_SCM_SPECIES:
 //#ifndef IPMGEMPLUGIN
 //        if( TSyst::sm->GetSY()->PYOF != S_OFF )
 //#endif
-          if( YOF != 0.0 )
+          if( noZero( YOF ) )
         	 G += YOF;
         break;
         // Sorption phases
@@ -939,9 +939,9 @@ void TActivity::StabilityIndexes( void )
           gamma_primal = act.Gamma[j];  // primal (external) activity coefficient
 if( YFk <= act.DSM )
 {
-    if( !act.K2 && gamma_primal != 1.0 ) // can insert because gamma is available
+    if( !act.K2 && !essentiallyEqual( gamma_primal, 1.0) ) // can insert because gamma is available
        fRestore = true;
-    if( act.K2 && act.GamFs[j] != 1.0 && act.Gamma[j] == 1.0 )
+    if( act.K2 && !essentiallyEqual( act.GamFs[j], 1.0) && essentiallyEqual( act.Gamma[j], 1.0) )
     {
        gamma_primal = act.GamFs[j];  // taking saved gamma if the phase was removed
        fRestore = true;

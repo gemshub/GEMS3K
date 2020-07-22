@@ -58,6 +58,7 @@
 
 #include <iostream>
 #include "ms_multi.h"
+#include "v_detail.h"
 // #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
@@ -1081,7 +1082,7 @@ long int GEM_step_MT( const long int step )
       /// \param xdc is DC DBR index
       /// \return 1.0, if DC has zero amount.
       inline double Get_gDC(const long int xdc) const
-      {  return ( CNode->xDC[xdc] != 0.0 ? CNode->gam[xdc]: 1.0);  }
+      {  return ( noZero( CNode->xDC[xdc] ) ? CNode->gam[xdc]: 1.0);  }
 
       /// Retrieves the molar mass of Dependent Component in kg/mol.
       /// \param xdc is DC DBR index

@@ -26,12 +26,16 @@
 #ifndef V_DETAIL_H
 #define V_DETAIL_H
 
+#include <limits>
+#include <cmath>
+//#include <algorithm>
 #include "verror.h"
 
 
 void strip( std::string& str);
 void replace( std::string& str, const char* old_part, const char* new_part);
 void replaceall( std::string& str, const char* old_part, const char* new_part);
+void replaceall(std::string& str, char ch1, char ch2);
 /// read string as: "<characters>"
 std::istream& f_getline(std::istream& is, std::string& str, char delim);
 /// Combines path, directory, name and extension to full pathname
@@ -100,5 +104,40 @@ inline void copyValues( long int* arr, short* data, IT size )
     arr[ii] = static_cast<long int>(data[ii]);
 }
 
+template<typename T>
+bool approximatelyEqual( const T& a, const T& b, const T& epsilon = std::numeric_limits<T>::epsilon() )
+{
+    return fabs(a - b) <= ( (fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+}
+
+template<typename T>
+bool essentiallyEqual( const T& a, const T& b, const T& epsilon = std::numeric_limits<T>::epsilon() )
+{
+    return fabs(a - b) <= ( (fabs(a) > fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+}
+
+template<typename T>
+bool definitelyGreaterThan( const T& a, const T& b, const T& epsilon = std::numeric_limits<T>::epsilon() )
+{
+    return (a - b) > ( (fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+}
+
+template<typename T>
+bool definitelyLessThan( const T& a, const T& b, const T& epsilon = std::numeric_limits<T>::epsilon() )
+{
+    return (b - a) > ( (fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
+}
+
+template<typename T>
+bool approximatelyZero( const T& a, const T& epsilon = std::numeric_limits<T>::epsilon() )
+{
+    return fabs(a) <=  epsilon;
+}
+
+template<typename T>
+bool noZero( const T& a, const T& epsilon = std::numeric_limits<T>::epsilon() )
+{
+    return fabs(a) >  epsilon;
+}
 
 #endif // V_DETAIL_H

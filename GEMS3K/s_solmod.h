@@ -1755,9 +1755,9 @@ class TELVIS: public TSolMod
                 long int IonicStrength();
 
                 // activity coefficient contributions
-                void ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH);
+                void ELVIS_DH(double* ELVIS_lnGam_DH1, double* ELVIS_OsmCoeff_DH1);
                 void ELVIS_Born(double* ELVIS_lnGam_Born);
-                void ELVIS_UNIQUAC(double* ELVIS_lnGam_UNIQUAC);
+                void ELVIS_UNIQUAC(double* ELVIS_lnGam_UNIQUAC1);
 
                 // Osmotic coefficient
                 double Int_OsmCoeff();

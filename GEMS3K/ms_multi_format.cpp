@@ -275,19 +275,19 @@ if( _comment )
    {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << std::endl;
       ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
    }
-   if( !brief_mode ||pa_p->DB != pa_p_.DB )
+   if( !brief_mode || !essentiallyEqual(pa_p->DB, pa_p_.DB ) )
       prar.writeField(f_pa_DB, pa_p->DB, _comment, false  );
-   if( !brief_mode ||pa_p->DHB != pa_p_.DHB )
+   if( !brief_mode || !essentiallyEqual(pa_p->DHB, pa_p_.DHB ) )
       prar.writeField(f_pa_DHB, pa_p->DHB, _comment, false  );
-   if( !brief_mode ||pa_p->EPS != pa_p_.EPS )
+   if( !brief_mode || !essentiallyEqual(pa_p->EPS, pa_p_.EPS ) )
        prar.writeField(f_pa_EPS, pa_p->EPS, _comment, false  );
-   if( !brief_mode ||pa_p->DK != pa_p_.DK )
+   if( !brief_mode || !essentiallyEqual(pa_p->DK, pa_p_.DK ) )
        prar.writeField(f_pa_DK, pa_p->DK, _comment, false  );
-   if( !brief_mode ||pa_p->DS != pa_p_.DS )
+   if( !brief_mode || !essentiallyEqual(pa_p->DS, pa_p_.DS ) )
        prar.writeField(f_pa_DS,  pa_p->DS, _comment, false  );
-   if( !brief_mode ||pa_p->DF != pa_p_.DF )
+   if( !brief_mode || !essentiallyEqual(pa_p->DF, pa_p_.DF ) )
        prar.writeField(f_pa_DF, pa_p->DF, _comment, false  );
-   if( !brief_mode ||pa_p->DFM != pa_p_.DFM )
+   if( !brief_mode || !essentiallyEqual(pa_p->DFM, pa_p_.DFM ) )
        prar.writeField(f_pa_DFM,  pa_p->DFM, _comment, false  );
    if(!brief_mode || pa_p->DP != pa_p_.DP )
        prar.writeField(f_pa_DP,  pa_p->DP, _comment, false  );
@@ -297,15 +297,15 @@ if( _comment )
        prar.writeField(f_pa_PD,  pa_p->PD, _comment, false  );
    if(!brief_mode || pa_p->PRD != pa_p_.PRD )
        prar.writeField(f_pa_PRD,  pa_p->PRD, _comment, false  );
-   if(!brief_mode || pa_p->AG != pa_p_.AG )
+   if(!brief_mode || !essentiallyEqual(pa_p->AG, pa_p_.AG ) )
        prar.writeField(f_pa_AG,  pa_p->AG, _comment, false  );
-   if(!brief_mode || pa_p->DGC != pa_p_.DGC )
+   if(!brief_mode || !essentiallyEqual(pa_p->DGC, pa_p_.DGC ) )
        prar.writeField(f_pa_DGC,  pa_p->DGC, _comment, false  );
    if(!brief_mode || pa_p->PSM != pa_p_.PSM )
        prar.writeField(f_pa_PSM,  pa_p->PSM, _comment, false  );
-   if(!brief_mode || pa_p->GAR != pa_p_.GAR )
+   if(!brief_mode || !essentiallyEqual(pa_p->GAR, pa_p_.GAR ) )
        prar.writeField(f_pa_GAR,  pa_p->GAR, _comment, false  );
-   if(!brief_mode || pa_p->GAH != pa_p_.GAH )
+   if(!brief_mode || !essentiallyEqual(pa_p->GAH, pa_p_.GAH ) )
        prar.writeField(f_pa_GAH,  pa_p->GAH, _comment, false  );
 
    if(!brief_mode)
@@ -313,15 +313,15 @@ if( _comment )
      {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
      }
 
-   if(!brief_mode || pa_p->XwMin != pa_p_.XwMin )
+   if(!brief_mode || !essentiallyEqual(pa_p->XwMin, pa_p_.XwMin ) )
        prar.writeField(f_pa_XwMin,  pa_p->XwMin, _comment, false  );
-   if(!brief_mode || pa_p->ScMin != pa_p_.ScMin )
+   if(!brief_mode || !essentiallyEqual(pa_p->ScMin, pa_p_.ScMin ) )
        prar.writeField(f_pa_ScMin,  pa_p->ScMin, _comment, false  );
-   if(!brief_mode || pa_p->DcMin != pa_p_.DcMin )
+   if(!brief_mode || !essentiallyEqual(pa_p->DcMin, pa_p_.DcMin ) )
        prar.writeField(f_pa_DcMin,  pa_p->DcMin, _comment, false  );
-   if(!brief_mode || pa_p->PhMin != pa_p_.PhMin )
+   if(!brief_mode || !essentiallyEqual(pa_p->PhMin, pa_p_.PhMin ) )
        prar.writeField(f_pa_PhMin,  pa_p->PhMin, _comment, false  );
-   if(!brief_mode || pa_p->ICmin != pa_p_.ICmin )
+   if(!brief_mode || !essentiallyEqual(pa_p->ICmin, pa_p_.ICmin ))
        prar.writeField(f_pa_ICmin,  pa_p->ICmin, _comment, false  );
    if(!brief_mode || pa_p->PC != pa_p_.PC )
        prar.writeField(f_pa_PC,  pa_p->PC, _comment, false  );
@@ -329,19 +329,19 @@ if( _comment )
    if( _comment )
       ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << std::endl;
 
-   if(!brief_mode || pa_p->DFYw != pa_p_.DFYw )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYw, pa_p_.DFYw ) )
        prar.writeField(f_pa_DFYw,  pa_p->DFYw, _comment, false  );
-   if(!brief_mode || pa_p->DFYaq != pa_p_.DFYaq )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYaq, pa_p_.DFYaq) )
        prar.writeField(f_pa_DFYaq,  pa_p->DFYaq, _comment, false  );
-   if(!brief_mode || pa_p->DFYid != pa_p_.DFYid )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYid, pa_p_.DFYid ) )
        prar.writeField(f_pa_DFYid,  pa_p->DFYid, _comment, false  );
-   if(!brief_mode || pa_p->DFYr != pa_p_.DFYr )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYr, pa_p_.DFYr ) )
        prar.writeField(f_pa_DFYr,  pa_p->DFYr, _comment, false  );
-   if(!brief_mode || pa_p->DFYh != pa_p_.DFYh )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYh, pa_p_.DFYh ) )
        prar.writeField(f_pa_DFYh,  pa_p->DFYh, _comment, false  );
-   if(!brief_mode || pa_p->DFYc != pa_p_.DFYc )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYc, pa_p_.DFYc ) )
        prar.writeField(f_pa_DFYc,  pa_p->DFYc, _comment, false  );
-   if(!brief_mode || pa_p->DFYs != pa_p_.DFYs )
+   if(!brief_mode || !essentiallyEqual(pa_p->DFYs, pa_p_.DFYs ) )
        prar.writeField(f_pa_DFYs,  pa_p->DFYs, _comment, false  );
 
    if( _comment )
@@ -351,16 +351,16 @@ if( _comment )
        prar.writeField(f_pa_DW,  pa_p->DW, _comment, false  );
    if(!brief_mode || pa_p->DT != pa_p_.DT )
        prar.writeField(f_pa_DT,  pa_p->DT, _comment, false  );
-   if(!brief_mode || pa_p->GAS != pa_p_.GAS )
+   if(!brief_mode || !essentiallyEqual(pa_p->GAS, pa_p_.GAS ) )
        prar.writeField(f_pa_GAS,  pa_p->GAS, _comment, false  );
-   if(!brief_mode || pa_p->DG != pa_p_.DG )
+   if(!brief_mode || !essentiallyEqual(pa_p->DG, pa_p_.DG ) )
        prar.writeField(f_pa_DG,  pa_p->DG, _comment, false  );
-   if(!brief_mode || pa_p->DNS != pa_p_.DNS )
+   if(!brief_mode || !essentiallyEqual(pa_p->DNS, pa_p_.DNS ) )
        prar.writeField(f_pa_DNS, pa_p->DNS, _comment, false  );
-   if(!brief_mode || pa_p->IEPS != pa_p_.IEPS )
+   if(!brief_mode || !essentiallyEqual(pa_p->IEPS, pa_p_.IEPS) )
        prar.writeField(f_pa_IEPS, pa_p->IEPS, _comment, false  );
   prar.writeField(f_pKin, pm.PLIM, _comment, brief_mode  );
-  if(!brief_mode || pa_p->DKIN != pa_p_.DKIN )
+  if(!brief_mode || !essentiallyEqual(pa_p->DKIN, pa_p_.DKIN ) )
        prar.writeField(f_pa_DKIN, pa_p->DKIN, _comment, false  );
   if(!brief_mode || pa_p->PLLG != pa_p_.PLLG )
        prar.writeField(f_pa_PLLG, pa_p->PLLG, _comment, false  );

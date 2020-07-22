@@ -381,11 +381,11 @@ long int TNode::GEM_run( bool uPrimalSol )
 // can be used for monitoring the performance of calculations.
 // Return value:  double number, may contain 0.0 if the calculation time is less than the
 //                internal time resolution of C/C++ function
-double TNode::GEM_CalcTime( long int& NumK2, long int& NumIterFIA, long int& NumIterIPM)
+double TNode::GEM_CalcTime( long int& NumK2, long int& NumIterFIA1, long int& NumIterIPM1)
 {
     NumK2 = pmm->K2;
-    NumIterFIA = pmm->ITF;
-    NumIterIPM = pmm->ITG;
+    NumIterFIA1 = pmm->ITF;
+    NumIterIPM1 = pmm->ITG;
     return CalcTime;
 }
 
@@ -1386,14 +1386,14 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 	     case DC_PEL_CARRIER:
 	     case DC_SUR_MINAL:
 	     case DC_SUR_CARRIER:
-                          if( CNode->xPH[xph] )
+                          if( noZero(CNode->xPH[xph]) )
                                   DCcon =  CNode->xDC[xdc]/CNode->xPH[xph];  //pmp->Wx[xCH];
                           break;
 	      case DC_GAS_COMP:
 	      case DC_GAS_H2O:
 	      case DC_GAS_CO2:
 	      case DC_GAS_H2:
-          case DC_GAS_N2:   if( CNode->xPH[xph] )
+          case DC_GAS_N2:   if( noZero(CNode->xPH[xph]) )
                                   DCcon =  CNode->xDC[xdc]/CNode->xPH[xph]; // *CNode->P;
                             break;
 	     case DC_AQ_PROTON:

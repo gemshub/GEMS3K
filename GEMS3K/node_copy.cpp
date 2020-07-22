@@ -497,77 +497,77 @@ DATABR * TNode::databr_free( DATABR *CNode_ )
 }
 
 // set default values(zeros) for DATABR structure
-void TNode::databr_reset( DATABR *CNode, long int level )
+void TNode::databr_reset( DATABR *CNode1, long int level )
 {
     //  FMT variables (units or dimensionsless) - to be used for storing them
     //  at the nodearray level = 0.; normally not used in the single-node FMT-GEM coupling
-        CNode->Tm = 0.;
-        CNode->dt = 0.;
+        CNode1->Tm = 0.;
+        CNode1->dt = 0.;
 #ifdef NODEARRAYLEVEL
-        CNode->Dif = 0.;
-        CNode->Vt = 0.;
-        CNode->vp = 0.;
-        CNode->eps = 0.;
-        CNode->Km = 0.;
-        CNode->Kf = 0.;
-        CNode->S = 0.;
-        CNode->Tr = 0.;
-        CNode->h = 0.;
-        CNode->rho = 0.;
-        CNode->al = 0.;
-        CNode->at = 0.;
-        CNode->av = 0.;
-        CNode->hDl = 0.;
-        CNode->hDt = 0.;
-        CNode->hDv = 0.;
-        CNode->nto = 0.; //19
+        CNode1->Dif = 0.;
+        CNode1->Vt = 0.;
+        CNode1->vp = 0.;
+        CNode1->eps = 0.;
+        CNode1->Km = 0.;
+        CNode1->Kf = 0.;
+        CNode1->S = 0.;
+        CNode1->Tr = 0.;
+        CNode1->h = 0.;
+        CNode1->rho = 0.;
+        CNode1->al = 0.;
+        CNode1->at = 0.;
+        CNode1->av = 0.;
+        CNode1->hDl = 0.;
+        CNode1->hDt = 0.;
+        CNode1->hDv = 0.;
+        CNode1->nto = 0.; //19
 #endif
         if(level <1 )
           return;
 
-   CNode->NodeHandle = 0;
-   CNode->NodeTypeHY = normal;
-   CNode->NodeTypeMT = normal;
-   CNode->NodeStatusFMT = Initial_RUN;
-   CNode->NodeStatusCH = NEED_GEM_AIA;
-   CNode->IterDone = 0;      //6
+   CNode1->NodeHandle = 0;
+   CNode1->NodeTypeHY = normal;
+   CNode1->NodeTypeMT = normal;
+   CNode1->NodeStatusFMT = Initial_RUN;
+   CNode1->NodeStatusCH = NEED_GEM_AIA;
+   CNode1->IterDone = 0;      //6
 
 // Chemical scalar variables
-    CNode->TK = 0.;
-    CNode->P = 0.;
-    CNode->Vs = 0.;
-    CNode->Vi = 0.;
-    CNode->Ms = 0.;
-    CNode->Mi = 0.;
-    CNode->Gs = 0.;
-    CNode->Hs = 0.;
-    CNode->Hi = 0.;
-    CNode->IC = 0.;
-    CNode->pH = 0.;
-    CNode->pe = 0.;
-    CNode->Eh = 0.; //13
+    CNode1->TK = 0.;
+    CNode1->P = 0.;
+    CNode1->Vs = 0.;
+    CNode1->Vi = 0.;
+    CNode1->Ms = 0.;
+    CNode1->Mi = 0.;
+    CNode1->Gs = 0.;
+    CNode1->Hs = 0.;
+    CNode1->Hi = 0.;
+    CNode1->IC = 0.;
+    CNode1->pH = 0.;
+    CNode1->pe = 0.;
+    CNode1->Eh = 0.; //13
 
     if( level < 2 )
        return;
 
 // Data arrays - dimensions nICb, nDCb, nPHb, nPSb see in the DATACH structure
-    CNode->bIC = 0;
-    CNode->rMB = 0;
-    CNode->uIC = 0;
-    CNode->xDC = 0;
-    CNode->gam = 0;
-   CNode->dul = 0;
-   CNode->dll = 0;
-   CNode->aPH = 0;
-   CNode->xPH = 0;
-   CNode->vPS = 0;
-   CNode->mPS = 0;
-   CNode->bPS = 0;
-   CNode->xPA = 0;
-   CNode->bSP = 0;
-   CNode->amru = 0;
-   CNode->amrl = 0;
-   CNode->omPH = 0;
+    CNode1->bIC = 0;
+    CNode1->rMB = 0;
+    CNode1->uIC = 0;
+    CNode1->xDC = 0;
+    CNode1->gam = 0;
+   CNode1->dul = 0;
+   CNode1->dll = 0;
+   CNode1->aPH = 0;
+   CNode1->xPH = 0;
+   CNode1->vPS = 0;
+   CNode1->mPS = 0;
+   CNode1->bPS = 0;
+   CNode1->xPA = 0;
+   CNode1->bSP = 0;
+   CNode1->amru = 0;
+   CNode1->amrl = 0;
+   CNode1->omPH = 0;
 }
 
 // set default values(zeros) for DATACH structure

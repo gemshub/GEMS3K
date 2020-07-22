@@ -25,7 +25,6 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
@@ -34,7 +33,7 @@
 using namespace std;
 #include "s_solmod.h"
 #include "verror.h"
-
+#include "v_detail.h"
 
 //=======================================================================================================
 // Peng-Robinson-Stryjek-Vera (PRSV) model for fluid mixtures
@@ -362,7 +361,7 @@ long int TPRSVcalc::MixingTemp()
 	{
 		for (j=0; j<NComp; j++)
 		{
-			if ( a[i][j] == 0.0 )
+            if ( approximatelyZero( a[i][j] ) )
 				tmp = 1.0;
 			else
 				tmp = a[i][j];
@@ -603,7 +602,7 @@ long int TPRSVcalc::Cardano( double a2, double a1, double a0, double &z1, double
 	else  // one real root
 	{
 		ac = (-1.)*rc/fabs(rc)*pow(fabs(rc)+sqrt(rc2-q3), 1./3.);
-		if (ac != 0.)
+        if ( noZero(ac) )
 			bc = q/ac;
 		else
 			bc = 0.;
@@ -1192,7 +1191,7 @@ long int TCGFcalc::IdealProp( double *Zid )
 
 
 /// high-level method to retrieve pure fluid properties
-long int TCGFcalc::CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fugacity,
+long int TCGFcalc::CGFugacityPT( double *EoSparam2, double *EoSparPT, double &Fugacity,
         double &Volume, double P, double T, double &roro )
 {
 	long int iRet = 0;
@@ -1201,10 +1200,10 @@ long int TCGFcalc::CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fug
 	double FugPure[1];
 
 	// modification to simplify CG database structure, 20.03.2007 (TW)
-	EoSparPT[0] = EoSparam[0] + EoSparam[4]*exp(T*EoSparam[5]);
-	EoSparPT[1] = EoSparam[1] + EoSparam[6]*exp(T*EoSparam[7]);
-	EoSparPT[2] = EoSparam[2] + EoSparam[8]/(T+EoSparam[9]);
-	EoSparPT[3] = EoSparam[3] + EoSparam[10]/(T+EoSparam[11]);
+    EoSparPT[0] = EoSparam2[0] + EoSparam2[4]*exp(T*EoSparam2[5]);
+    EoSparPT[1] = EoSparam2[1] + EoSparam2[6]*exp(T*EoSparam2[7]);
+    EoSparPT[2] = EoSparam2[2] + EoSparam2[8]/(T+EoSparam2[9]);
+    EoSparPT[3] = EoSparam2[3] + EoSparam2[10]/(T+EoSparam2[11]);
 
 	// returns density
 	CGActivCoefPT( X, EoSparPT, FugPure, 1, P, T, roro );  // changed, 21.06.2008 (TW)
@@ -1231,10 +1230,10 @@ long int TCGFcalc::CGFugacityPT( double *EoSparam, double *EoSparPT, double &Fug
 
 
 long int TCGFcalc::CGActivCoefPT( double *X,double *param, double *act,
-		   unsigned long int NN,   double Pbar, double T, double &roro )
+           unsigned long int NN,   double Pbar1, double T, double &roro )
 {
     double *xtmp,*Fx;
-	double P = Pbar/10.;
+    double P = Pbar1/10.;
     std::shared_ptr<double> xtmp_mem = std::make_shared<double>(NN); // new double [NN];
     std::shared_ptr<double> Fx_mem = std::make_shared<double>(NN); // new double [NN];
 
@@ -1453,7 +1452,7 @@ double TCGFcalc::DIntegral( double T, double ro, unsigned long int IType )
 	unsigned long int n;
 	double *dtmp,rez;
 
-	if ( (T!=TOld) || (ro!=roOld) )
+    if ( !essentiallyEqual( T, TOld ) || !essentiallyEqual( ro, roOld ) )
 	{
 		TOld = T;
 		roOld = ro;
@@ -1493,7 +1492,7 @@ double TCGFcalc::LIntegral( double T, double ro,unsigned long int IType )
 
 	double *dtmp,rez;
 
-	if ( (T!=TOld) || (ro!=roOld) )
+    if ( !essentiallyEqual(T,TOld) || !essentiallyEqual(ro,roOld) )
 	{
 		TOld = T;
 		roOld = ro;
@@ -1537,7 +1536,7 @@ double TCGFcalc::KIntegral( double T, double ro,unsigned long int IType )
 
 	double *dtmp,rez;
 
-	if ( (T!=TOld) || (ro!=roOld) )
+    if ( !essentiallyEqual(T,TOld) || !essentiallyEqual(ro,roOld) )
 	{
 		TOld = T;
 		roOld = ro;
@@ -1584,7 +1583,7 @@ double TCGFcalc::K23_13( double T, double ro )
 	static double dtmp[]=
 	{ -1.050534, 1.747476,  1.749366,  -1.999227, -0.661046, -3.028720};
 
-	if ( (T!=TOld) || (ro!=roOld) )
+    if ( !essentiallyEqual(T,TOld) || !essentiallyEqual(ro,roOld) )
 	{
 		TOld = T;
 		roOld = ro;
@@ -1603,9 +1602,9 @@ double TCGFcalc::K23_13( double T, double ro )
 
 
 
-double TCGFcalc::DENSITY( double *X, double *param, unsigned long NN, double Pbar, double T )
+double TCGFcalc::DENSITY( double *X, double *param, unsigned long NN, double Pbar1, double T )
 {
-	double P = Pbar * 0.1;
+    double P = Pbar1 * 0.1;
 	double *xtmp;
 	double ro;
 
@@ -1770,7 +1769,7 @@ double TCGFcalc::FWCA( double T,double ro )
 	double F0,F1,FA;
 	double rm,rmdw1,rmdw2,rmdw3,rmdw4,rmdw5;
 
-	if ((T==TOld) && (ro==roOld))
+    if( essentiallyEqual(T,TOld) && essentiallyEqual(ro,roOld))
 	{
 		return F;
 	}
@@ -1936,7 +1935,7 @@ double TCGFcalc::FTOTALMIX( double T_Real,double ro_Real,EOSPARAM* param )
          A2 = -A2*TWOPI*rotmp/(3.*T2R);
          // A2 done
 
-         if ( A2!=0. )
+         if( noZero( A2 ) )
          {
 
           A3 = 0.;
@@ -2113,7 +2112,7 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
      double Ptmp[FIRSTSEED], ro0, ro1, rotest, PP0, PP1 /* ,Ptest */;
      double a,b;
      double inttofloat;
-     double f[4],x[4],ff,dens[5],pres[5];
+     double f[4],xx[4],ff,dens[5],pres[5];
      unsigned long int x1=0L,x2=0L;
 // double ptmp;
 
@@ -2198,9 +2197,9 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
      pres[1] = PP1;
 
      // first order
-     x[0] = P-pres[0];
+     xx[0] = P-pres[0];
      f[0] = (dens[1]-dens[0])/(pres[1]-pres[0]);
-     ff += f[0]*x[0];
+     ff += f[0]*xx[0];
 
      // second order
      dens[2] = ff;
@@ -2211,11 +2210,11 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
        return ff*fact0;
      }
 
-     x[1] = x[0]*(P-pres[1]);
+     xx[1] = xx[0]*(P-pres[1]);
      f[1] = (dens[2]-dens[1])/(pres[2]-pres[1]);
 
      f[0] = (f[1]-f[0])/(pres[2]-pres[0]);
-     ff += f[0]*x[1];
+     ff += f[0]*xx[1];
 
      // third order
      dens[3] = ff;
@@ -2224,11 +2223,11 @@ double TCGFcalc::ROTOTALMIX( double P,double TT,EOSPARAM* param )
      {
       return ff*fact0;
      }
-     x[2] = x[1]*(P-pres[2]);
+     xx[2] = xx[1]*(P-pres[2]);
      f[2] = (dens[3]-dens[2])/(pres[3]-pres[2]);
      f[1] = (f[2]-f[1])/(pres[3]-pres[1]);
      f[0] = (f[1]-f[0])/(pres[3]-pres[0]);
-     ff += f[0]*x[2];
+     ff += f[0]*xx[2];
      dens[4] = ff;
      pres[4] = ZTOTALMIX(TT,ff*fact0,param)*ff*fact;
      if ( fabs(pres[4]-P)<1e-6 )
@@ -2740,7 +2739,7 @@ long int TSRKcalc::MixingTemp()
 	{
 		for (j=0; j<NComp; j++)
 		{
-			if ( a[i][j] == 0.0 )
+            if ( approximatelyZero( a[i][j] ) )
 				tmp = 1.0;
 			else
 				tmp = a[i][j];
@@ -2997,7 +2996,7 @@ long int TSRKcalc::Cardano( double a2, double a1, double a0, double &z1, double 
 	else  // one real root
 	{
 		ac = (-1.)*rc/fabs(rc)*pow(fabs(rc)+sqrt(rc2-q3), 1./3.);
-		if (ac != 0.)
+        if( noZero( ac ) )
 			bc = q/ac;
 		else
 			bc = 0.;
@@ -3543,7 +3542,7 @@ long int TPR78calc::MixingTemp()
 	{
 		for (j=0; j<NComp; j++)
 		{
-			if ( a[i][j] == 0.0 )
+            if ( approximatelyZero( a[i][j] ) )
 				tmp = 1.0;
 			else
 				tmp = a[i][j];
@@ -3809,7 +3808,7 @@ long int TPR78calc::Cardano( double a2, double a1, double a0, double &z1, double
 	else  // one real root
 	{
 		ac = (-1.)*rc/fabs(rc)*pow(fabs(rc)+sqrt(rc2-q3), 1./3.);
-		if (ac != 0.)
+        if( noZero( ac ) )
 			bc = q/ac;
 		else
 			bc = 0.;
@@ -4852,7 +4851,7 @@ long int TCORKcalc::Cardano(double cb, double cc, double cd, double &v1, double 
     if ( (cp2-cq3)>0. )  // one real root
     {
         cr = -cp/fabs(cp)*pow(fabs(cp)+sqrt(cp2-cq3),1./3.);
-        if (cr!=0)
+        if(  noZero( cr ) )
         {
             v1 = cr + cq/cr - cb/3.;
             v2 = cr + cq/cr - cb/3.;

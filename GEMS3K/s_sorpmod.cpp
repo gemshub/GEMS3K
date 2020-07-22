@@ -134,15 +134,15 @@ long int TSCM_NEM::EDLmod()
 double TSCM_NEM::SCM_conf_entropy()
 {
     long int j;
-    double si = 0.0, Sid = 0.0;
+    double si = 0.0;
 
     for (j=0; j<NComp; j++)
     {
         if ( x[j] > 1.0e-32 )
             si += x[j]*log(x[j]);
     }
-    Sid = (-1.)*R_CONST*si;
-    return Sid;
+    auto Sid1 = (-1.)*R_CONST*si;
+    return Sid1;
 }
 
 //--------------------- End of s_sorption.cpp ---------------------------

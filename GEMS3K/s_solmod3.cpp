@@ -27,13 +27,13 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 using namespace std;
 #include "s_solmod.h"
+#include "v_detail.h"
 
 //=============================================================================================
 // Implementation of ideal mixing model for multicomponent solid solutions
@@ -1769,7 +1769,7 @@ void TBerman::alloc_internal()
         {
             for( s=0; s< NSub; s++ ) // looking through sublattices
             {
-               if( mn[j][s][m] != 0. )
+               if( noZero(mn[j][s][m]) )
                {
                  mf=true;
                  NmoS[s]++;
@@ -2135,7 +2135,7 @@ double TBerman::ysigma( const long int j, const long s )
     double ys = 0.;
     for( m=0; m < NMoi; m++ ) // Looking through moieties
     {
-       if( mn[j][s][m] != 0. ) // This site is occupied in j-th end member
+       if( noZero( mn[j][s][m] ) ) // This site is occupied in j-th end member
            ys += mn[j][s][m] * y[s][m];
     }
     if( ys > 0. )
@@ -2161,7 +2161,7 @@ double TBerman::dGref_dysigma( const long int j, const long int s, const long in
           if( nmem == NComp )
               continue;  // ignoring the moiety which is present in all end members
           krond = KronDelta( j, s, m );
-          if( krond != 0. )
+          if( noZero( krond ) )
           {
               ys += mn[l][s][m] * y[s][m];
               kron = true;
@@ -2193,7 +2193,7 @@ double TBerman::dGref_dysm( const long int s, const long m, const long int ex_j 
            continue;
        ys = 0.; kron = false;
        krond = KronDelta( l, s, m );
-       if( krond != 0. )
+       if( noZero( krond ) )
        {
            ys = y[s][m];
            kron = true;
@@ -2209,7 +2209,7 @@ double TBerman::dGref_dysm( const long int s, const long m, const long int ex_j 
        } // m
 */     if( kron == false )
            continue;  // no moieties belonging to l-th end member found in this sublattice
-       if( ys != 0. )
+       if( noZero( ys ) )
        {
 //           ys /= mns[s];
            dst = oGf[l] * ( pyp[l] / ys );
@@ -2536,7 +2536,7 @@ void TCEFmod::alloc_internal()
         {
             for( s=0; s< NSub; s++ ) // looking through sublattices
             {
-               if( mn[j][s][m] != 0. )
+               if( noZero( mn[j][s][m] ) )
                {
                  mf=true;
                  NmoS[s]++;
@@ -2675,7 +2675,7 @@ long int TCEFmod::CalcSiteFractions(){
 
 long int TCEFmod::IdealMixing() {
     long int j,s,m;
-    double dgm_dyjs, dgm_dysis, lnaconj, Gid;  // NSergii
+    double dgm_dyjs, dgm_dysis, lnaconj, Gid1;  // NSergii
 
     if( !NSub || !NMoi ) {
         for( j=0; j<NComp; j++)
@@ -2686,7 +2686,7 @@ long int TCEFmod::IdealMixing() {
     CalcSiteFractions();
     //return_sitefr(); // sending site fractions back to TMulti - was moved to CalcSiteFractions()
 
-    Gid = idealSmix();
+    Gid1 = idealSmix();
     // NSergii: Calculation of the ideal activity cnf term and fictive activity coefficient
     // for each end member
     for( j=0; j<NComp; j++) {
@@ -2708,7 +2708,7 @@ long int TCEFmod::IdealMixing() {
                 dgm_dyjs += y[s][m] * mns[s] * (1 + log(y[s][m]));
         } // m
 
-        lnaconj = Gid + (dgm_dysis - dgm_dyjs);
+        lnaconj = Gid1 + (dgm_dysis - dgm_dyjs);
 
         lnGamConf[j] = 0.;
         if(x[j] > 1e-32 )  // Check threshold
@@ -3005,7 +3005,7 @@ double TCEFmod::idealSmix(){
 }
 
 bool TCEFmod::KronDelta( const long int j, const long int s, const long int m ){
-    if( mn[j][s][m] != 0.0 )
+    if( noZero( mn[j][s][m] ) )
        return true;
     return false;
 }
@@ -3015,7 +3015,7 @@ long int TCEFmod::em_howmany( long int s, long int m )
     long int l, jc=0;
     for( l=0; l<NComp; l++ )
     {
-       if( mn[l][s][m] != 0.0 )
+       if( noZero( mn[l][s][m]) )
            jc++;
     }
     return jc;
@@ -3105,7 +3105,7 @@ void TMBWmod::alloc_internal()
         {
             for( s=0; s< NSub; s++ ) // looking through sublattices
             {
-               if( mn[j][s][m] != 0. )
+               if( noZero( mn[j][s][m] ) )
                {
                  mf=true;
                  NmoS[s]++;
@@ -3402,7 +3402,7 @@ long int TMBWmod::em_howmany( long int s, long int m ) {
     long int l, jc=0;
     for( l=0; l<NComp; l++ )
     {
-       if( mn[l][s][m] != 0 )
+       if( noZero( mn[l][s][m] ) )
            jc++;
     }
     return jc;
@@ -3589,7 +3589,7 @@ double TMBWmod::idealSmix() {
 }
 
 bool TMBWmod::KronDelta( const long int j, const long int s, const long int m ) {
-    if( mn[j][s][m] != 0 )
+    if( noZero( mn[j][s][m] ) )
        return true;
     return false;
 }

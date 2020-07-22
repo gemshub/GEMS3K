@@ -562,8 +562,8 @@ public:
         node1 = na_; // parent
 
         sizeN = 0;
-        AA = nullptr;
-        BB = nullptr;
+        AA1 = nullptr;
+        BB1 = nullptr;
         arrL = nullptr;
         arrAN = nullptr;
 
@@ -673,8 +673,8 @@ protected:
     // Internal arrays for the performance optimization  (since version 2.0.0)
 
     long int sizeN; /*, sizeL, sizeAN;*/
-    double *AA;
-    double *BB;
+    double *AA1;
+    double *BB1;
     long int *arrL;
     long int *arrAN;
 

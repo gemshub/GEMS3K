@@ -49,7 +49,7 @@ TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k,
     switch( act.PHC[k] )
     {
       case PH_AQUEL:
-           if( act.XF[k] && act.XFA[k] )
+           if( noZero(act.XF[k]) && noZero(act.XFA[k]) )
            {
                 NonLogTerm = 1. - act.XFA[k]/act.XF[k];
                 NonLogTermW = 2. - act.XFA[k]/act.XF[k] - act.XF[k]/act.XFA[k];
@@ -62,7 +62,7 @@ TActivity::PhaseSpecificGamma( long int j, long int jb, long int je, long int k,
            break;
       case PH_POLYEL:
       case PH_SORPTION: // only sorbent end-members!
-           if( act.XF[k] && act.XFA[k] )
+           if( noZero(act.XF[k]) && noZero(act.XFA[k]) )
            {
               for( long int jj=jb; jj<je; jj++ )
               {
@@ -84,7 +84,7 @@ NonLogTermS = 0.0;
 #endif
         if( DirFlag == 0 )
         {	 // Converting lnGam[j] into Gamma[j]
-            if( !act.X[j] && !act.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012
+            if( approximatelyZero(act.X[j]) && approximatelyZero(act.XF[k]) )   // && !pm->XF[k]  added by DK 13.04.2012
                         return 1.;
             double Gamma = 1.;
             double lnGamS = act.lnGam[j];
@@ -124,11 +124,11 @@ NonLogTermS = 0.0;
             return Gamma;
         }
         else { // Converting Gamma[j] into lnGam[j]
-                if( !act.X[j] && !act.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012
+                if( approximatelyZero(act.X[j]) && approximatelyZero(act.XF[k]) )   // && !pm->XF[k]  added by DK 13.04.2012
                         return 0.;
                 double Gamma = act.Gamma[j];
                 double lnGam = 0.0;  // Cleanup by DK 5.12.2009
-                if( Gamma != 1.0 && Gamma > act.lowPosNum )
+                if( !essentiallyEqual( Gamma, 1.0) && Gamma > act.lowPosNum )
                     lnGam = log( Gamma );
                 switch( act.DCC[j] )
         { // Aqueous electrolyte

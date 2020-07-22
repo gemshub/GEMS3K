@@ -24,7 +24,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
@@ -34,6 +33,7 @@
 using namespace std;
 #include "verror.h"
 #include "s_kinmet.h"
+#include "v_detail.h"
 
 //=============================================================================================
 // TKinMet base class constructor (simulation of phase metastability and MWR kinetics)
@@ -485,8 +485,10 @@ TKinMet::UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, co
 {
     long int i;
     bool status = false;
-    if( sSA != pAsk || nPh != pXFk || mPh != pFWGTk || vPh != pFVOLk || p_sFact != sFact
-        || LaPh != pLaPh || IS != pICa || pH != ppHa || pe != ppea || Eh != pEha || sGP != pYOFk*mPh )
+    if( !essentiallyEqual( sSA, pAsk) || !essentiallyEqual(nPh, pXFk) || !essentiallyEqual(mPh, pFWGTk) ||
+        !essentiallyEqual( vPh, pFVOLk ) || !essentiallyEqual( p_sFact, sFact) || !essentiallyEqual( LaPh, pLaPh ) ||
+        !essentiallyEqual( IS, pICa ) || !essentiallyEqual( pH, ppHa ) || !essentiallyEqual( pe, ppea ) ||
+        !essentiallyEqual( Eh, pEha ) || !essentiallyEqual( sGP, pYOFk*mPh ) )
         status = true;
     sSA = pAsk*1000.; // from m2/g to m2/kg
     nPh = pXFk;
@@ -518,7 +520,7 @@ TKinMet::UpdateFSA(const double pAsk, const double pXFk, const double pFWGTk, co
     }
     for( i = 0; i < nPRk; i++ )
     {
-       if( arPRt[i].feSAr != arfeSAr[i] )
+       if( !essentiallyEqual( arPRt[i].feSAr, arfeSAr[i] ) )
        {    // copying (externally modified) surface area fractions for parallel reactions
            status = true;
            arfeSAr[i] = arPRt[i].feSAr;
@@ -620,7 +622,7 @@ TKinMet::UpdatePT ( const double T_K, const double P_BAR )
     for( i=0; i<nPRk; i++ )
     {
         Arf = arPRt[i].Ap * exp(-(arPRt[i].Ea)/RT);
-        if( arPRt[i].Ap != 0.0 )
+        if( noZero( arPRt[i].Ap ) )
             arPRt[i].arf = Arf;
         else
             Arf = 1.0;
@@ -639,7 +641,7 @@ bool
 TKinMet::UpdateTime( const double Tau, const double dTau )
 {
     bool status = false;
-    if( Tau != kTau || dTau != kdT )
+    if( !essentiallyEqual( Tau, kTau ) || !essentiallyEqual( dTau, kdT ) )
         status = true;
     kTau = Tau;
     kdT = dTau;
@@ -673,7 +675,7 @@ if( rk.xPR != r )     // index of this parallel reaction
         {
             j = rk.xSKr[xj];
             bc = rk.apCon[xj][0];
-            if( bc  != 0.0 )
+            if( noZero( bc ) )
             {
                 aj = pow( 10., arla[j] );  // bugfix 4.10.2013 DK
                 ajp = pow( aj, bc );
@@ -681,15 +683,15 @@ if( rk.xPR != r )     // index of this parallel reaction
             }
         }
    }
-   if( rk.pPR != 0.0 )
+   if( noZero( rk.pPR ) )
        rk.cat = pow( rk.cat, rk.pPR );
-   if( rk.bI  != 0.0 )
+   if( noZero( rk.bI  ) )
        rk.cat *= pow( IS, rk.bI );
-   if( rk.bpH != 0.0 )
+   if( noZero( rk.bpH ) )
        rk.cat *= pow( pH, rk.bpH );
-   if( rk.bpe != 0.0 )
+   if( noZero( rk.bpe ) )
        rk.cat *= pow( pe, rk.bpe );
-   if( rk.bEh != 0.0 )
+   if( noZero( rk.bEh ) )
        rk.cat *= pow( Eh, rk.bEh );
 
    // affinity term (f(Omega))
@@ -701,19 +703,19 @@ if( rk.xPR != r )     // index of this parallel reaction
        if( LaPh > -OmgTol )
            break;
        rk.aft = - rk.uPR + 1. - pow( OmPh, rk.qPR );
-       if( rk.aft != 0. && rk.mPR != 0. )
+       if( noZero( rk.aft ) && noZero( rk.mPR ) )
            rk.aft = pow( rk.aft, rk.mPR );
        break;
     case ATOP_CLASSIC_REV_: // = 1, classic TST affinity term, reversed (for growth)
        if( LaPh < OmgTol )
            break;
        rk.aft = pow( OmPh, rk.qPR ) - 1. - rk.uPR;
-       if( rk.aft != 0. && rk.mPR != 0. )
+       if( noZero( rk.aft ) && noZero( rk.mPR ) )
            rk.aft = pow( rk.aft, rk.mPR );
 //       rk.aft *= -1.;
        break;
     case ATOP_SCHOTT_: // = 2,      Schott et al. 2012 fig. 1e
-       if( OmPh  != 0.0 )
+       if( noZero( OmPh  ) )
            rk.aft = exp( -rk.uPR/OmPh );
        else
            rk.aft = 0.;
@@ -757,21 +759,21 @@ if( rk.xPR != r )     // index of this parallel reaction
    // Calculating rate for this partial reaction (output) in mol/m2/s (in mol/s/kgw for nucleation)
    if( LaPh < -OmgTol ) // dissolution  (needs more flexible check based on Fa stability criterion!
    {
-       if( rk.k > 0 && rk.K == 0.0 ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
+       if( rk.k > 0 && approximatelyZero( rk.K ) ) // k    net dissolution rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.k * rk.cat * rk.aft;
-       else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
+       else if ( noZero( rk.K ) ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
    }
    if( LaPh > OmgTol ) {
-       if( rk.k < 0 && rk.K == 0.0 ) //   net precipitation rate constant (corrected for T) in mol/m2/s
+       if( rk.k < 0 && approximatelyZero( rk.K ) ) //   net precipitation rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.k * rk.cat * rk.aft;
-       else if ( rk.K != 0.0 ) // K  gross rate constant (corrected for T) in mol/m2/s
+       else if ( noZero( rk.K ) ) // K  gross rate constant (corrected for T) in mol/m2/s
            rk.rPR = rk.K * rk.cat * rk.aft;
    }
 //   else {  // equilibrium - no rate of change
 //       ;
 //   }
-   if( atopc != ATOP_HELLEV_ && rk.rPR != 0.0 )
+   if( atopc != ATOP_HELLEV_ && noZero( rk.rPR ) )
        rk.rPR *= rk.feSAr; // Theta: fraction of surface area of the solid related to this parallel reaction
    return rk.rPR;
 //   rmol,   // rate for the whole face (output) in mol//m2/s    TBD
@@ -1021,7 +1023,7 @@ nPll = nPul;     // dolomite kinetics works, no warnings!
 //              nPll = max( 0.0, nPul - dnPh );    // ensuring slackness
        }
        else {  // nucleation (rTot already includes nucleation rate)
-          if( nPh == 0. )
+          if( approximatelyZero( nPh ) )
           {
               if( dnNuc >= 1e-12 )
               {  // no phase but significant nucleation rate - onset of the phase at cutoff 1e-10 mol
@@ -1215,7 +1217,7 @@ Dfj = p_Dfj;  // direct access
 
     alloc_upttabs();
     init_upttabs( p_arUmpCon );
-};
+}
 
 /// Destructor
 TUptakeKin::~TUptakeKin()

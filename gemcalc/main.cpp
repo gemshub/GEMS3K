@@ -164,7 +164,7 @@ return 0;
       for(int cRecipe=0; cRecipe < nRecipes; cRecipe++ )
       { 
          // Trying to read the next file name 
-        sprintf(NextRecipeFileName , "%s\%s", input_recipes_file_list_path, recipes[cRecipe] );
+        sprintf(NextRecipeFileName , "%s\\%s", input_recipes_file_list_path, recipes[cRecipe] );
 
         // (5) Reading the next DBR file with different input composition or temperature
         node->GEM_read_dbr( NextRecipeFileName );
