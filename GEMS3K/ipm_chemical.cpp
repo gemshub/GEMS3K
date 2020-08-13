@@ -1004,6 +1004,7 @@ double TMultiBase::ConvertGj_toUniformStandardState( double g0, long int j, long
     case DC_AQ_SURCOMP:
         G += pm.ln5551;
         // calculate molar mass of solvent
+         [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
         if( testTSyst( 0 ) ) //TSyst::sm->GetSY()->PYOF != S_OFF )
@@ -1030,6 +1031,7 @@ case DC_SCM_SPECIES:
                G += log( pm.Pc ); // log general pressure (changed 04.12.2006)
         }
         // non-electrolyte condensed mixtures
+         [[fallthrough]];
     case DC_SCP_CONDEN: // single-component phase
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:

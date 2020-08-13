@@ -747,6 +747,7 @@ double TActivity:: ConvertGj_toUniformStandardState( double g0, long int j, long
     case DC_AQ_SURCOMP:
         G += act.ln5551;
         // calculate molar mass of solvent
+         [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
 //#ifndef IPMGEMPLUGIN
@@ -776,6 +777,7 @@ case DC_SCM_SPECIES:
                G += log( act.Pc ); // log general pressure (changed 04.12.2006)
         }
         // non-electrolyte condensed mixtures
+         [[fallthrough]];
     case DC_SCP_CONDEN: // single-component phase
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:

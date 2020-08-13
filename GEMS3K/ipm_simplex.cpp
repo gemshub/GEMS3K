@@ -1122,7 +1122,7 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 //#endif
          if( xVol >= 0 )
             pm.A[j*pm.N+xVol] = Vv;
-
+          [[fallthrough]];
        case VOL_CALC:
        case VOL_UNDEF:
 //#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
