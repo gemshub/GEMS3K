@@ -668,8 +668,9 @@ void *TNode::get_ptrTSolMod(int xPH) const
 // or -1 if no such name was found in the DATACH IC name list
 long int TNode::IC_name_to_xCH( const char *Name ) const
 {
-  long int ii, len = strlen( Name );
-  len =  std::min(len,MaxICN);
+  long int ii;
+  size_t len = strlen( Name );
+  len =  std::min<size_t>(len,MaxICN);
 
   for(ii = 0; ii<CSD->nIC; ii++ )
        if(!memcmp(Name, CSD->ICNL[ii], len ))
@@ -682,11 +683,12 @@ long int TNode::IC_name_to_xCH( const char *Name ) const
 // or -1 if no such name was found in the DATACH DC name list
  long int TNode::DC_name_to_xCH( const char *Name ) const
  {
-  long int ii, len = strlen( Name );
-  len =  std::min(len,MaxDCN);
+  long int ii;
+  size_t len = strlen( Name );
+  len =  std::min<size_t>(len,MaxDCN);
 
   for( ii = 0; ii<CSD->nDC; ii++ )
-       if(!memcmp(Name, CSD->DCNL[ii], std::min(len,MaxDCN)))
+       if(!memcmp(Name, CSD->DCNL[ii], std::min<size_t>(len,MaxDCN)))
         if( len == MaxDCN || CSD->DCNL[ii][len] == ' ' || CSD->DCNL[ii][len] == '\0' )
          return ii;
   return -1;
@@ -696,11 +698,12 @@ long int TNode::IC_name_to_xCH( const char *Name ) const
 // or -1 if no such name was found in the DATACH Phase name list
 long int TNode::Ph_name_to_xCH( const char *Name ) const
 {
-  long int ii, len = strlen( Name );
-  len =  std::min(len,MaxPHN);
+  long int ii;
+  size_t len = strlen( Name );
+  len =  std::min<size_t>(len,MaxPHN);
 
   for( ii = 0; ii<CSD->nPH; ii++ )
-       if(!memcmp(Name, CSD->PHNL[ii], std::min(len,MaxPHN)))
+       if(!memcmp(Name, CSD->PHNL[ii], std::min<size_t>(len,MaxPHN)))
         if( len == MaxPHN || CSD->PHNL[ii][len] == ' ' || CSD->PHNL[ii][len] == '\0' )
          return ii;
   return -1;

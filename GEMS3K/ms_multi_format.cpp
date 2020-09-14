@@ -606,7 +606,8 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
 {
   BASE_PARAM *pa_p = pa_p_ptr();
-  long int ii, nfild, len;
+  long int ii, nfild;
+  size_t len;
 
    //static values
    char PAalp;
@@ -638,7 +639,8 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
   }
 
   // setup default constants
-  pa_p_ptr()->PE =  pm.E = 1;
+  pa_p_ptr()->PE = 1;
+  pm.E = 1;
   pm.PV = 0;
   pm.PSOL = 0;
   PAalp = '+';
@@ -736,7 +738,7 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
     fillValue(pm.SB[ii], ' ', MaxICN );
     len = strlen(dCH->ICNL[ii]);
     //len = min(  len,MaxICN);
-    copyValues( pm.SB[ii], dCH->ICNL[ii], std::min(len,(long int)MAXICNAME));
+    copyValues( pm.SB[ii], dCH->ICNL[ii], std::min<size_t>(len,MAXICNAME));
     pm.SB[ii][MaxICN] = dCH->ccIC[ii];
     pm.ICC[ii] =  dCH->ccIC[ii];
   }
@@ -755,7 +757,7 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
     pm.DCC[ii] = dCH->ccDC[ii];
     len =strlen(dCH->DCNL[ii]);
     //len = min(  len,MaxDCN);
-    copyValues( pm.SM[ii], dCH->DCNL[ii], std::min(len,(long int)MAXDCNAME) );
+    copyValues( pm.SM[ii], dCH->DCNL[ii], std::min<size_t>(len,MAXDCNAME) );
   }
 
   for( ii=0; ii< dCH->nPH; ii++ )
@@ -763,7 +765,7 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
      len =strlen(dCH->PHNL[ii]);
      //len = min(  len,MaxPHN);
           fillValue( pm.SF[ii], ' ', MAXPHNAME+MAXSYMB );
-          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], std::min(len,(long int)MAXPHNAME) );
+          copyValues( pm.SF[ii]+MAXSYMB, dCH->PHNL[ii], std::min<size_t>(len,MAXPHNAME) );
      pm.SF[ii][0] = dCH->ccPH[ii];
      pm.PHC[ii] = dCH->ccPH[ii];
   }

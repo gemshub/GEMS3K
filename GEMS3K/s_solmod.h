@@ -235,17 +235,17 @@ class TSolMod
 			return 0;
         }
 
-        virtual long int ExcessProp( double */*Zex*/ )
+        virtual long int ExcessProp( double* /*Zex*/ )
 		{
 			return 0;
         }
 
-        virtual long int IdealProp( double */*Zid*/ )
+        virtual long int IdealProp( double* /*Zid*/ )
 		{
 			return 0;
         }
 
-        virtual long int StandardProp( double */*Zid*/ )
+        virtual long int StandardProp( double* /*Zid*/ )
         {
             return 0;
         }
@@ -843,7 +843,7 @@ class TSTPcalc: public TSolMod
                 // constants and external parameters
                 double RC, RR, TMIN, TMAX, PMIN, PMAX;
                 double Pkbar, Pkb, Pmpa;
-                double PhVol;   ///< phase volume in cm3
+                //double PhVol;   ///< phase volume in cm3
                 double *Pparc;  ///< DC partial pressures (pure fugacities)
 
                 // internal work data
@@ -1427,7 +1427,7 @@ private:
     double *RhoW;  ///< water density properties
     double *EpsW;  ///< water dielectrical properties
 
-        double Aphi, dAphidT, d2AphidT2, dAphidP;  ///< Computing A-Factor
+        double Aphi, dAphidT, d2AphidT2; ///<, dAphidP;  ///< Computing A-Factor
     double I;  ///< Ionic Strength
     double Is;  ///< Ionic Strength square root
     double Ffac; ///< F-Factor
@@ -1825,8 +1825,8 @@ class THelgeson: public TSolMod
         double *m;   ///< species molalities
         double *RhoW;  ///< water density properties
         double *EpsW;  ///< water dielectrical properties
-        double *an;  ///< individual ion size-parameters
-        double *bg;  ///< individual extended-term parameters
+        //double *an;  ///< individual ion size-parameters
+        //double *bg;  ///< individual extended-term parameters
         double ac;  ///< common ion size parameters
         double bc;  ///< common extended-term parameter
 

@@ -652,7 +652,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
     }
     coeff = m_v/mass; // mass of particle/mass of phase (solvent). Is this reasonable?
 
-    if( CompMode == true )
+    if( CompMode )
     { // Moving dependent components
         for(long int jc=0; jc < pCSD()->nDC; jc++ )
         {

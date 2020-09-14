@@ -1658,7 +1658,7 @@ void TMultiBase::Alloc_internal()
 // add09
 void TMultiBase::setErrorMessage( long int num, const char *code, const char * msg)
 {
-  long int len_code, len_msg;
+  size_t len_code, len_msg;
   pm.Ec  = num;
   len_code = strlen(code);
   if(len_code > 99)
@@ -1674,8 +1674,8 @@ void TMultiBase::setErrorMessage( long int num, const char *code, const char * m
 
 void TMultiBase::addErrorMessage( const char * msg)
 {
-  long int len = strlen(pm.errorBuf);
-  long int lenm = strlen( msg );
+  auto len = strlen(pm.errorBuf);
+  auto lenm = strlen( msg );
   if( len + lenm < 1023 )
   {
     memcpy(pm.errorBuf+len, msg, lenm  );

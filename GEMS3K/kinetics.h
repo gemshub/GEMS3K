@@ -153,7 +153,7 @@ class TKinetics
     // How to link to KINETICS?
 
     long int sizeFI;      ///< current size of phKinMet
-    TKinMet* (*phKinMet); ///< size current FI -   number of phases
+    TKinMet* *phKinMet; ///< size current FI -   number of phases
     bool load;
 
 public:

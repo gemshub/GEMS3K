@@ -46,6 +46,11 @@ std::string u_makepath(const std::string& dir,
 void u_splitpath(const std::string& Path, std::string& dir,
             std::string& name, std::string& ext);
 
+inline int ROUND(double x )
+{
+    return int((x)+.5);
+}
+
 #define FLOAT_EMPTY	          1.17549435e-38F
 #define DOUBLE_EMPTY         2.2250738585072014e-308
 #define CHAR_EMPTY   	     '`'

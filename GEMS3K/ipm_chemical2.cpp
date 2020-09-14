@@ -1063,7 +1063,7 @@ TMultiBase::SurfaceActivityCoeff( long int jb, long int je, long int, long int, 
             {
                cN = pm.MASDJ[ja][PI_P2];  // Frumkin/Pivovarov water coord. number
                if( cN > 0 )
-                   dent = cN;   // denticity for L and QCA isoterms
+                   dent = static_cast<long>(cN);   // denticity for L and QCA isoterms
                else dent = 1;   // Cleanup DK 07.12.2009
                aF = pm.MASDJ[ja][PI_P1];  // Frumkin lateral interaction energy term
             //   bet = pm.MASDJ[ja][PI_P3];   // BET beta parameter (reserved)

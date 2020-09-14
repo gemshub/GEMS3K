@@ -2391,7 +2391,7 @@ long int TBerman::ReciprocalPart()
 // reaction excess energy terms for the end member with index j
 // Returns in xm the moiety indexes for each sublattice for picking up their site fractions
 // (max. 4 sublattices can be considered)
-bool TBerman::CheckThisReciprocalReaction( const long int /*r*/, const long int /*j*/, long int */*xm*/ )
+bool TBerman::CheckThisReciprocalReaction( const long int /*r*/, const long int /*j*/, long int* /*xm*/ )
 {
     return true; // this reaction to be skipped
 }
