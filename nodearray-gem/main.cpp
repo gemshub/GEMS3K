@@ -25,10 +25,18 @@
 
 int main( int argc, char* argv[] )
  {
+
+#ifdef NO_JSON_OUT
      std::string gem2mt_in1 = "TestAD/CalColumnAD.dat";
      std::string ipm_lst = "TestAD/CalcColumn-dat.lst";
      std::string dbr_lst = "TestAD/CalcColumn-dbr.lst";
      std::string vtk_fname = "TestAD/VTK";
+#else
+    std::string gem2mt_in1 = "TestAD1/CalcColumnAD.json";
+    std::string ipm_lst = "TestAD1/CalcColumn-dat.lst";
+    std::string dbr_lst = "TestAD1/CalcColumn-dbr.lst";
+    std::string vtk_fname = "TestAD1/VTK";
+#endif
 
 
 // from argv
