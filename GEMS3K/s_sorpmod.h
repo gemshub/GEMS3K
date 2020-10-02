@@ -306,7 +306,7 @@ double q_Cst;    // Standard sorption capacity, mol/kg(sorbent) or eq/kg(sorbent
     double *nx;     // pointer to moles of surface species on this surface tile (read-only) [Nspec]
 
     double **lnSACTs;  // Work array of ln SACT for surface species on sites [Nspec][NsiteTs]
-    double *(XTS[2]);  // Total number of moles of surface DC and 'solvent' DC at surface site [2][NsiteTs]
+    double *XTS[2];  // Total number of moles of surface DC and 'solvent' DC at surface site [2][NsiteTs]
 
     // current results
     double Gex, Hex, Sex, CPex, Vex, Aex, Uex;   // molar electrostatic excess properties for surface species

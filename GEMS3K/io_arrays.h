@@ -54,7 +54,7 @@ struct IOJFormat /// Internal descriptions of output/input formats with JSON not
    long int type;  ///< type of formatted value { F, L, R, ...}
    std::string format; ///< string with formatted data for different type
 
-   IOJFormat( char aType, int aIndex, std::string aFormat ):
+   IOJFormat( long int aType, long int aIndex, std::string aFormat ):
                index(aIndex), type(aType), format(aFormat)
        {}
 

@@ -16,6 +16,10 @@
 #include <iomanip>
 #include "io_arrays.h"
 #include "m_gem2mt.h"
+#ifndef  USE_OLD_KV_IO_FILES
+#include "io_json.h"
+#endif
+
 
 extern const char* _GEMIPM_version_stamp;
 
@@ -200,73 +204,73 @@ void TGEM2MT::set_def(int q)
     mtp->Tau[STOP_] = 1000.;
     mtp->Tau[STEP_] = 1.;
 // pointers
-    mtp->lNam = NULL;
-    mtp->lNamE = NULL;
-    mtp->tExpr = 0;
-    mtp->gExpr = 0;
-    mtp->sdref = 0;
-    mtp->sdval = 0;
-    mtp->DiCp = 0;
-    mtp->FDLi = 0;
-    mtp->PTVm = 0;
-    mtp->StaP = 0;
-    mtp->xVTKfld = 0;
-    mtp->xEt = 0;
-    mtp->yEt = 0;
-    mtp->Bn = 0;
-    mtp->HydP = 0;
-    mtp->qpi = 0;
-    mtp->qpc = 0;
-    mtp->xt = 0;
-    mtp->yt = 0;
-    mtp->CIb = 0;
-    mtp->CAb = 0;
-    mtp->FDLf = 0;
-    mtp->PGT = 0;
-    mtp->Tval = 0;
-    mtp->Pval = 0;
-    mtp->nam_i = 0;
-    mtp->for_i = 0;
-    mtp->stld = 0;
-    mtp->CIclb = 0;
-    mtp->AUcln = 0;
-    mtp->FDLid = 0;
-    mtp->FDLop = 0;
-    mtp->FDLmp = 0;
-    mtp->MGPid = 0;
-    mtp->UMGP = 0;
-    mtp->SBM = 0;
+    mtp->lNam = nullptr;
+    mtp->lNamE = nullptr;
+    mtp->tExpr = nullptr;
+    mtp->gExpr = nullptr;
+    mtp->sdref = nullptr;
+    mtp->sdval = nullptr;
+    mtp->DiCp = nullptr;
+    mtp->FDLi = nullptr;
+    mtp->PTVm = nullptr;
+    mtp->StaP = nullptr;
+    mtp->xVTKfld = nullptr;
+    mtp->xEt = nullptr;
+    mtp->yEt = nullptr;
+    mtp->Bn = nullptr;
+    mtp->HydP = nullptr;
+    mtp->qpi = nullptr;
+    mtp->qpc = nullptr;
+    mtp->xt = nullptr;
+    mtp->yt = nullptr;
+    mtp->CIb = nullptr;
+    mtp->CAb = nullptr;
+    mtp->FDLf = nullptr;
+    mtp->PGT = nullptr;
+    mtp->Tval = nullptr;
+    mtp->Pval = nullptr;
+    mtp->nam_i = nullptr;
+    mtp->for_i = nullptr;
+    mtp->stld = nullptr;
+    mtp->CIclb = nullptr;
+    mtp->AUcln = nullptr;
+    mtp->FDLid = nullptr;
+    mtp->FDLop = nullptr;
+    mtp->FDLmp = nullptr;
+    mtp->MGPid = nullptr;
+    mtp->UMGP = nullptr;
+    mtp->SBM = nullptr;
 #ifndef IPMGEMPLUGIN
-    plot = 0;
+    plot = nullptr;
 #endif
-    mtp->BSF = 0;
-    mtp->MB = 0;
-    mtp->dMB = 0;
-    mtp->DDc = 0;
-    mtp->DIc = 0;
-    mtp->DEl = 0;
-    mtp->for_e = 0;
-    mtp->xIC = 0;
-    mtp->xDC = 0;
-    mtp->xPH = 0;
-    mtp->grid = 0;
-    mtp->NPmean = 0;
-    mtp->nPmin = 0;
-    mtp->nPmax = 0;
-    mtp->ParTD = 0;
-    mtp->arr1 = 0;
-    mtp->arr2 = 0;
+    mtp->BSF = nullptr;
+    mtp->MB = nullptr;
+    mtp->dMB = nullptr;
+    mtp->DDc = nullptr;
+    mtp->DIc = nullptr;
+    mtp->DEl = nullptr;
+    mtp->for_e = nullptr;
+    mtp->xIC = nullptr;
+    mtp->xDC = nullptr;
+    mtp->xPH = nullptr;
+    mtp->grid = nullptr;
+    mtp->NPmean = nullptr;
+    mtp->nPmin = nullptr;
+    mtp->nPmax = nullptr;
+    mtp->ParTD = nullptr;
+    mtp->arr1 = nullptr;
+    mtp->arr2 = nullptr;
 
 // work
-    mtp->An = 0;
-    mtp->Ae = 0;
-    mtp->gfc = 0;
-    mtp->yfb = 0;
-    mtp->tt = 0;
-    mtp->etext = 0;
-    mtp->tprn = 0;
-    na = 0;
-    pa_mt = 0;
+    mtp->An = nullptr;
+    mtp->Ae = nullptr;
+    mtp->gfc = nullptr;
+    mtp->yfb = nullptr;
+    mtp->tt = nullptr;
+    mtp->etext = nullptr;
+    mtp->tprn = nullptr;
+    na = nullptr;
+    pa_mt = nullptr;
 }
 
 
@@ -450,27 +454,39 @@ void TGEM2MT::checkAlws(TRWArrays&  prar1, TRWArrays&  prar)
      }
 }
 
-void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, const char* path )
+void TGEM2MT::to_text_file( std::fstream& ff, bool with_comments, bool brief_mode, const char* path )
 {
   bool _comment = with_comments;
 
+#ifdef USE_OLD_KV_IO_FILES
+
   TPrintArrays  prar1(57, GEM2MT_static_fields, ff);
   TPrintArrays  prar(26, GEM2MT_dynamic_fields, ff);
+
+#else
+
+  _comment = false;
+  nlohmann::json json_data;
+  TPrintJson  prar1(57, GEM2MT_static_fields, json_data);
+  TPrintJson  prar(26, GEM2MT_dynamic_fields, json_data);
+
+#endif
+
 
   // Set always for task
   checkAlws(prar1,prar);
 
   if( _comment )
   {
-     ff << "# " << _GEMIPM_version_stamp << endl << "# File: " << path << endl;
-     ff << "# Comments can be marked with # $ ; as the first character in the line" << endl;
+     ff << "# " << _GEMIPM_version_stamp << std::endl << "# File: " << path << std::endl;
+     ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
   }
 
   prar1.writeArrayF(f_Name, mtp->name, 1, MAXFORMULA, _comment, brief_mode );
   prar1.writeArrayF(f_Note, mtp->notes, 1, MAXFORMULA, _comment, brief_mode );
 
   if( _comment )
-      ff << endl <<"\n## (1) Allocation and setup flags";
+      ff << std::endl <<"\n## (1) Allocation and setup flags";
 
   prar1.writeField(f_PvPGD, mtp->PvPGD, _comment, brief_mode  );
   prar1.writeField(f_PvFDL, mtp->PvFDL, _comment, brief_mode  );
@@ -481,7 +497,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
   prar1.writeField(f_PvnVTK, mtp->PvnVTK, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "\n## (2) Controls on operation";
+    ff << std::endl << "\n## (2) Controls on operation";
 
   prar1.writeField(f_PsMode, mtp->PsMode, _comment, brief_mode  );
   prar1.writeField(f_PsSIA, mtp->PsSIA, _comment, brief_mode  );
@@ -493,7 +509,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
   prar1.writeField(f_PsMPh, mtp->PsMPh, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "\n## (3) Dimensions for gem2mt (memory allocation)";
+    ff << std::endl << "\n## (3) Dimensions for gem2mt (memory allocation)";
 
   prar1.writeField(f_nC, mtp->nC, _comment, brief_mode  );
   prar1.writeField(f_nIV, mtp->nIV, _comment, brief_mode  );
@@ -518,7 +534,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
   prar1.writeArray(f_sizeLc, mtp->sizeLc, 3, 3, _comment, brief_mode  );
 
   if( _comment )
-    ff << endl << "\n## (4) Input for compositions of initial systems";
+    ff << std::endl << "\n## (4) Input for compositions of initial systems";
 
   prar1.writeField(f_InpSys, mtp->Msysb, _comment, brief_mode  );
   prar1.writeField(f_Vsysb, mtp->Vsysb, _comment, brief_mode  );
@@ -542,18 +558,20 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
 
 
   if( _comment )
-    ff << endl << "\n## (5) Internal stop point";
+    ff << std::endl << "\n## (5) Internal stop point";
 
   prar1.writeArray(f_mtWrkS, &mtp->ctm, 12, 6, _comment, brief_mode  );
   prar1.writeArray(f_mtWrkF, &mtp->cT, 10, 6, _comment, brief_mode  );
 
-  ff << endl << "\n<END_DIM>" << endl;
+#ifdef USE_OLD_KV_IO_FILES
+  ff << std::endl << "\n<END_DIM>" << std::endl;
+#endif
 
 // dynamic arrays - must follow static data
   if( mtp->PsMode == RMT_MODE_W  )
   {
     if( _comment )
-         ff << endl << "\n## W random-walk advection-diffusion coupled RMT model";
+         ff << std::endl << "\n## W random-walk advection-diffusion coupled RMT model";
     prar.writeArray(  f__NPmean, mtp->NPmean, mtp->nPTypes, -1L,_comment, brief_mode);
     prar.writeArray(  f__nPmin, mtp->nPmin, mtp->nPTypes, -1L,_comment, brief_mode);
     prar.writeArray(  f__nPmax, mtp->nPmax, mtp->nPTypes, -1L,_comment, brief_mode);
@@ -569,7 +587,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
   if( mtp->PvFDL == S_ON )
     {
       if( _comment )
-           ff << endl << "\n## Use flux definition list";
+           ff << std::endl << "\n## Use flux definition list";
       prar.writeArray(  f__FDLi, &mtp->FDLi[0][0],  mtp->nFD*2, 2L,_comment, brief_mode);
       prar.writeArray(  f__FDLf, &mtp->FDLf[0][0],  mtp->nFD*4, 4L,_comment, brief_mode);
       prar.writeArrayF(  f__FDLid, &mtp->FDLid[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
@@ -580,7 +598,7 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
   if( mtp->PvPGD == S_ON )
     {
       if( _comment )
-           ff << endl << "\n## Use phase groups definitions";
+           ff << std::endl << "\n## Use phase groups definitions";
       prar.writeArray(  f__PGT, mtp->PGT,  mtp->FIf*mtp->nPG, mtp->nPG,_comment, brief_mode);
       prar.writeArrayF(  f__MGPid, &mtp->MGPid[0][0],  mtp->nPG, MAXSYMB,_comment, brief_mode);
       prar.writeArrayF(  f__UMGP, mtp->UMGP, mtp->FIf, 1L,_comment, brief_mode);
@@ -619,17 +637,27 @@ void TGEM2MT::to_text_file( fstream& ff, bool with_comments, bool brief_mode, co
      //!!!mtp->Tval  = new double[ mtp->nTai ];  // from DataCH
      //!!!mtp->Pval  = new double[ mtp->nPai ];
 
-  ff << endl;
+#ifndef  USE_OLD_KV_IO_FILES
+  ff << json_data.dump(( _comment ? 4 : 0 ));
+#endif
+  ff << std::endl;
   if( _comment )
-      ff << "\n# End of file";
+      ff << "\n# End of file\n";
 }
 
 // Reading dataCH structure from text file
-void TGEM2MT::from_text_file(fstream& ff)
+void TGEM2MT::from_text_file(std::fstream& ff)
 {
 
 // static arrays
+#ifdef USE_OLD_KV_IO_FILES
  TReadArrays  rdar( 57, GEM2MT_static_fields, ff);
+#else
+ nlohmann::json json_data;
+ ff >> json_data;
+ TReadJson  rdar( 57, GEM2MT_static_fields, json_data);
+#endif
+
  long int nfild = rdar.findNext();
  while( nfild >=0 )
  {
@@ -756,13 +784,18 @@ void TGEM2MT::from_text_file(fstream& ff)
  }
 
  //dynamic data
-  TReadArrays  rddar( 26, GEM2MT_dynamic_fields, ff);
+#ifdef USE_OLD_KV_IO_FILES
+ TReadArrays  rddar( 26, GEM2MT_dynamic_fields, ff);
+#else
+ TReadJson  rddar( 26, GEM2MT_dynamic_fields, json_data);
+#endif
+
 
   // set alwase flags for gems2mt
   checkAlws(rdar, rddar);
 
   // testing read
- gstring ret = rdar.testRead();
+ auto ret = rdar.testRead();
  if( !ret.empty() )
   { ret += " - fields must be read from gem2mt structure";
     Error( "Error", ret);

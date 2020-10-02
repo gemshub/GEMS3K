@@ -189,8 +189,10 @@ void TActivity::CalculateConcentrationsInPhase( double X[], double XF[], double 
             break;
         case DC_AQ_PROTON:  // in molal scale!
             act.pH = -ln_to_lg*(Muj-act.G0[j] + lnFmol );
+             [[fallthrough]];
         case DC_AQ_SPECIES:
             act.IC += 0.5* X[j]*Factor *(act.EZ[j]*act.EZ[j]); // increment to effective molal ionic strength
+             [[fallthrough]];
         case DC_AQ_SURCOMP:
             SPmol = X[j]*Factor;  // molality
  //           act.IC += 0.5* SPmol *(act.EZ[j]*act.EZ[j]); // Bugfix DK 21.10.2011 'K' species don't count here!
@@ -406,6 +408,7 @@ void TActivity::CalculateConcentrations( double X[], double XF[], double XFA[])
 //            act.IC=0.;
             act.pe = ln_to_lg* act.U[act.N-1];
             act.Eh = 0.000086 * act.U[act.N-1] * act.Tc;
+             [[fallthrough]];
         case PH_GASMIX:
         case PH_FLUID:
         case PH_PLASMA:

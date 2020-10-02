@@ -17,9 +17,10 @@
 //-------------------------------------------------------------------
 //
 
+#include <cmath>
 #include "particlearray.h"
 
-static long int idum = -10000l;
+static long int idum_static = -10000l;
 static double Rand = -1;
 
 TParticleArray::TParticleArray( long int nPTypes, long int nProps,
@@ -85,10 +86,10 @@ TParticleArray::~TParticleArray()
 // Particle array initialization
 void TParticleArray::ParticleArrayInit()
 {
-	long int iNode, iType, k, cpx;
+    long int iNode, iType, k, cpx1;
   LOCATION nodeSize[2];
 
-  cpx = 0;
+  cpx1 = 0;
   ndxCsource = 0;
   Rand = -1.;
   for( iNode=0; iNode < nNodes; iNode++ )
@@ -100,16 +101,16 @@ void TParticleArray::ParticleArrayInit()
 //      double dd = (nodeSize[1].x-nodeSize[0].x)/NPnum[iNode*anPTypes+iType];
      for( k=0; k < NPmean[iType]; k++ )
       {
-        ParT0[cpx].ptype = (char)iType;
-        ParT0[cpx].mmode = ParTD[iType].mmode;
-        ParT0[cpx].tcode = ParTD[iType].tcode;
-        ParT0[cpx].ips = ParTD[iType].ips;
-        ParT0[cpx].m_v = 0.;
-        ParT0[cpx].node = iNode;
-//        ParT0[cpx].xyz.x = nodeSize[0].x+k*dd;
-        ParT0[cpx].xyz = setPointInNode(nodeSize);
-        ParT1[cpx] = ParT0[cpx];
-        cpx++;
+        ParT0[cpx1].ptype = iType;
+        ParT0[cpx1].mmode = ParTD[iType].mmode;
+        ParT0[cpx1].tcode = ParTD[iType].tcode;
+        ParT0[cpx1].ips = ParTD[iType].ips;
+        ParT0[cpx1].m_v = 0.;
+        ParT0[cpx1].node = iNode;
+//        ParT0[cpx1].xyz.x = nodeSize[0].x+k*dd;
+        ParT0[cpx1].xyz = setPointInNode(nodeSize);
+        ParT1[cpx1] = ParT0[cpx1];
+        cpx1++;
       }
     }
   }
@@ -211,6 +212,7 @@ double TParticleArray::InterpolationVp_hDl_1D( long int px,
     Dif = dbr1->Dif;
     eps = dbr1->eps;
     nto = dbr1->nto;
+    Dpm = dbr1->Dif*dbr1->eps/dbr1->nto;
 #endif
   }
   else
@@ -231,7 +233,9 @@ double TParticleArray::InterpolationVp_hDl_1D( long int px,
     eps -= (dbr2->eps - dbr1->eps )*d;
     nto = dbr1->nto;
     nto -= (dbr2->nto - dbr1->nto )*d;
-    Dpm = eps*Dif/nto;  // added account for tortuosity and porosity DK 9.05.19
+    Dpm =  dbr1->Dif*dbr1->eps/dbr1->nto;    // fix?
+    Dpm -= (dbr2->Dif*dbr2->eps/dbr2->nto - dbr1->Dif*dbr1->eps/dbr1->nto)*d;
+//    Dpm = eps*Dif/nto;  // added account for tortuosity and porosity DK 9.05.19
 //    hDl = al*vp+Dif;
     hDl = al*vp+Dpm;    // added DK 9.05.19
 #endif
@@ -268,7 +272,7 @@ long int TParticleArray::DisplaceParticle( long int px, double /*t0*/, double /*
 // hDl = dbr->hDl;   // testing without interpolation
          if( hDl > 0)
 //         ds = 2.*(randuni( idum )-0.5)*sqrt( 6.*hDl*vp*dt);
-         ds = 2.*(ran3( idum )-0.5)*sqrt( 6.*hDl*dt);
+         ds = 2.*(ran3( idum_static )-0.5)* std::sqrt( 6.*hDl*dt);
          ParT1[px].xyz.x += vp*dt + ds;
                         break;
    }
@@ -385,10 +389,10 @@ long int TParticleArray::MoveParticleBetweenNodes( long int px, bool CompMode, d
 // call to the whole Random Walk method time step over all particles and nodes
 // returns 0 if time step is accepted; not 0 if rejected (another dt is needed)
 // GEM was called before this function
-long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, double t0, double t1 )
+long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, double t01, double t11 )
 {
 
-  long int iNode, iType, /*iRet = 0,*/ cpx;
+  long int iNode, iType, /*iRet = 0,*/ cpx1;
   double *mass, m_;
 
 // set up new masses to particles after GEM calculations
@@ -400,17 +404,17 @@ long int TParticleArray::RandomWalkIteration( long int /*Mode*/, bool CompMode, 
             ParTD[iType].tcode, ParTD[iType].ips );
        mass[iNode*anPTypes+iType] = m_/ NPnum[iNode*anPTypes+iType];
   }
-  for( cpx=0; cpx < anParts; cpx++ )
-    ParT1[cpx].m_v = mass[ParT1[cpx].node*anPTypes+ParT1[cpx].ptype];
+  for( cpx1=0; cpx1 < anParts; cpx1++ )
+    ParT1[cpx1].m_v = mass[ParT1[cpx1].node*anPTypes+ParT1[cpx1].ptype];
   delete[] mass;
 
  // new  particle position xyz
-  for( cpx=0; cpx < anParts; cpx++ )
-     /*iRet =*/ DisplaceParticle( cpx, t0, t1 );
+  for( cpx1=0; cpx1 < anParts; cpx1++ )
+     /*iRet =*/ DisplaceParticle( cpx1, t01, t11 );
 
  // Walk (transport step) for particles between nodes
-  for( cpx=0; cpx < anParts; cpx++ )
-    /* iRet =*/ MoveParticleBetweenNodes( cpx, CompMode, t0, t1 );
+  for( cpx1=0; cpx1 < anParts; cpx1++ )
+    /* iRet =*/ MoveParticleBetweenNodes( cpx1, CompMode, t01, t11 );
 
   bool reset = false;
   for( iNode=0; iNode < nNodes; iNode++ )
@@ -484,7 +488,7 @@ double randuni (double& x)
     double R;
     j=rand();
     R = ceil(24359738368.*j/RAND_MAX + 10000000000.);
-    if( !fmod(R,2) )
+    if( approximatelyZero(fmod(R,2)) )
       R=R+1.;
     x = R;
   }

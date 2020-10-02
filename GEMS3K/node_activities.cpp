@@ -438,9 +438,9 @@ TNode::InitCopyActivities( DATACH* csd, MULTI* mp, DATABR* cnd )
 
 
 /// This allocation is used only in standalone GEMS3K
-TActivity::TActivity( DATACH *csd, DATABR *sbc, TNode *ptn )
+TActivity::TActivity( DATACH *csd1, DATABR *sbc, TNode *ptn )
 {
-    this->csd = csd;
+    this->csd = csd1;
     this->cnd = sbc;
     this->cno = ptn;
 
@@ -457,19 +457,19 @@ TActivity::TActivity( DATACH *csd, DATABR *sbc, TNode *ptn )
 //             ICmin = 0.0001;
 //             sizeFI = 0;
 //             phKinMet = 0;
-     act.N = csd->nIC;      // Number of ICs
+     act.N = csd1->nIC;      // Number of ICs
          act.NR = act.N;       	///< NR - dimensions of R matrix
-     act.L = csd->nDC;      // Number of DCs
-     act.Ls = csd->nDCs;     // Total number of DCs in phases-solutions
+     act.L = csd1->nDC;      // Number of DCs
+     act.Ls = csd1->nDCs;     // Total number of DCs in phases-solutions
 //             act.LO;     // LO -   index of water-solvent in DC list
-     act.FI = csd->nPH;     // Number of phases
-     act.FIs = csd->nPS;    // Number of phases-solutions,
+     act.FI = csd1->nPH;     // Number of phases
+     act.FIs = csd1->nPS;    // Number of phases-solutions,
      set_def();
      act.lnAct = new double[act.L];
      act.tpp_G = new double[act.L];
      load = false;
-     Alloc_TSolMod( csd->nPS );
-     sizeFIs = csd->nPS;
+     Alloc_TSolMod( csd1->nPS );
+     sizeFIs = csd1->nPS;
 //             Alloc_TSorpMod( na->CSD.nPS );
 //             sizeFIa = na->CSD.nPS;
 }

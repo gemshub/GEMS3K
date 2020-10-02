@@ -466,7 +466,7 @@ bool TNodeArray::isLocationInNode( long int ii, long int jj, long int kk, LOCATI
     // analiz pryamougol`nika pri y1 == const, poisk z21 i z22
     // analiz otrezka po z2
     if( grid[ndx].x <= cxyz.x &&
-            ( cxyz.x < maxl.x || ( cxyz.x <= maxl.x && size.x == maxl.x ) )&&
+            ( cxyz.x < maxl.x || ( cxyz.x <= maxl.x && essentiallyEqual( size.x,maxl.x ) ) )&&
             grid[ndx].y <= cxyz.y &&  cxyz.y <= maxl.y &&
             grid[ndx].z <= cxyz.z &&  cxyz.z <= maxl.z )
         return true;
@@ -652,7 +652,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
     }
     coeff = m_v/mass; // mass of particle/mass of phase (solvent). Is this reasonable?
 
-    if( CompMode == true )
+    if( CompMode )
     { // Moving dependent components
         for(long int jc=0; jc < pCSD()->nDC; jc++ )
         {
@@ -693,7 +693,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                     for( ic=0; ic<pCSD()->nICb; ic++)  // incrementing independent components
                     {
                         aji = DCaJI( jc, ic );
-                        if( aji )
+                        if( noZero( aji ) )
                             node1_bIC(ndx_from, ic) -= aji * mol;
                     }
                 }
@@ -705,7 +705,7 @@ void TNodeArray::MoveParticleMass( long int ndx_from, long int ndx_to,
                         for( ic=0; ic<pCSD()->nICb; ic++)  // incrementing independent components
                         {
                             aji = DCaJI( jc, ic );
-                            if( aji )
+                            if( noZero( aji ) )
                                 node1_bIC(ndx_to, ic) += aji * mol;
                         }
                     }

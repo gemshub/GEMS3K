@@ -27,10 +27,10 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include <iomanip>
 #include <algorithm>
 #include "ms_multi.h"
+#include "v_detail.h"
 
 
 /// Returns current value of smoothing factor for chemical potentials of highly non-ideal DCs
@@ -148,7 +148,7 @@ TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k
     switch( pm.PHC[k] )
     {
       case PH_AQUEL:
-           if( pm.XF[k] && pm.XFA[k] )
+           if( noZero( pm.XF[k] ) && noZero( pm.XFA[k] ) )
            {
                 NonLogTerm = 1. - pm.XFA[k]/pm.XF[k];
                 NonLogTermW = 2. - pm.XFA[k]/pm.XF[k] - pm.XF[k]/pm.XFA[k];
@@ -160,7 +160,7 @@ TMultiBase::PhaseSpecificGamma( long int j, long int jb, long int je, long int k
            break;  
       case PH_POLYEL:
       case PH_SORPTION: // only sorbent end-members!
-           if( pm.XF[k] && pm.XFA[k] )
+           if( noZero( pm.XF[k] ) && noZero( pm.XFA[k] ) )
            {
               for( long int jj=jb; jj<je; jj++ )
               {
@@ -184,7 +184,7 @@ NonLogTermS = 0.0;
 #endif
         if( DirFlag == 0 )
         {	 // Converting lnGam[j] into Gamma[j]
-            if( !pm.X[j] && !pm.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012
+            if( approximatelyZero(pm.X[j]) && approximatelyZero(pm.XF[k]) )   // && !pm->XF[k]  added by DK 13.04.2012
                         return 1.;
             double Gamma = 1.;
             double lnGamS = pm.lnGam[j];
@@ -224,11 +224,11 @@ NonLogTermS = 0.0;
             return Gamma;
         }
         else { // Converting Gamma[j] into lnGam[j]
-                if( !pm.X[j] && !pm.XF[k] )   // && !pm->XF[k]  added by DK 13.04.2012
+                if( approximatelyZero(pm.X[j]) && approximatelyZero(pm.XF[k]) )   // && !pm->XF[k]  added by DK 13.04.2012
                         return 0.;
                 double Gamma = pm.Gamma[j];
                 double lnGam = 0.0;  // Cleanup by DK 5.12.2009
-                if( Gamma != 1.0 && Gamma > pm.lowPosNum )
+                if( !essentiallyEqual(Gamma, 1.0) && Gamma > pm.lowPosNum )
                     lnGam = log( Gamma );
                 switch( pm.DCC[j] )
         { // Aqueous electrolyte

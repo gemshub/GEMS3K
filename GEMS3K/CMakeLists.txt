@@ -8,6 +8,7 @@ file(GLOB SOURCE_FILES *.cpp)
 #add_definitions(-DIPMGEMPLUGIN)
 add_definitions(-DNOPARTICLEARRAY)
 add_definitions(-DNODEARRAYLEVEL)
+#add_definitions(-DUSE_OLD_KV_IO_FILES)
 
 # Compile the C++ source code into object files
 add_library(GEMS3K_OBJECT OBJECT ${HEADER_FILES} ${SOURCE_FILES})

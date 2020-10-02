@@ -277,11 +277,11 @@ class TActivity
        long int *arrAN;
 
     size_t sizeFIs;     ///< current size of phSolMod
-    TSolMod* (*phSolMod); ///< size current FIs - number of multicomponent phases
+    TSolMod* *phSolMod; ///< size current FIs - number of multicomponent phases
 
     // new - allocation of TsorpMod
     size_t sizeFIa;       ///< current size of phSorpMod
-    TSorpMod* (*phSorpMod); ///< size current FIa - number of adsorption phases
+    TSorpMod* *phSorpMod; ///< size current FIa - number of adsorption phases
 
     bool load;
     long int IT, IIM;  // current number of iterations of GEM algorithm (used in smoothing)

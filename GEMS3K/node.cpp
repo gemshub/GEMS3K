@@ -41,7 +41,7 @@
 #include <io.h>
 #endif
 
-#ifndef NO_JSON_OUT
+#ifndef USE_OLD_KV_IO_FILES
   const char *dat_ext = "json";
   const char *dat_filt = "*.json";
 #else
@@ -381,11 +381,11 @@ long int TNode::GEM_run( bool uPrimalSol )
 // can be used for monitoring the performance of calculations.
 // Return value:  double number, may contain 0.0 if the calculation time is less than the
 //                internal time resolution of C/C++ function
-double TNode::GEM_CalcTime( long int& NumK2, long int& NumIterFIA, long int& NumIterIPM)
+double TNode::GEM_CalcTime( long int& NumK2, long int& NumIterFIA1, long int& NumIterIPM1)
 {
     NumK2 = pmm->K2;
-    NumIterFIA = pmm->ITF;
-    NumIterIPM = pmm->ITG;
+    NumIterFIA1 = pmm->ITF;
+    NumIterIPM1 = pmm->ITG;
     return CalcTime;
 }
 
@@ -492,11 +492,11 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
       Path = lst_in.substr(0, pos+1);
 
 //  open file stream for the file names list file
-      std::fstream f_lst( lst_in.c_str(), std::ios::in );
-      ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
+    std::fstream f_lst( lst_in.c_str(), std::ios::in );
+    ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
 
-      std::string datachbr_fn;
-      f_getline( f_lst, datachbr_fn, ' ');
+     std::string datachbr_fn;
+     f_getline( f_lst, datachbr_fn, ' ');
 
 //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
 //       "<DBR_DAT file1 name>" [, ... , "<DBR_DAT fileN name>"]
@@ -668,8 +668,9 @@ void *TNode::get_ptrTSolMod(int xPH) const
 // or -1 if no such name was found in the DATACH IC name list
 long int TNode::IC_name_to_xCH( const char *Name ) const
 {
-  long int ii, len = strlen( Name );
-  len =  std::min(len,MaxICN);
+  long int ii;
+  size_t len = strlen( Name );
+  len =  std::min<size_t>(len,MaxICN);
 
   for(ii = 0; ii<CSD->nIC; ii++ )
        if(!memcmp(Name, CSD->ICNL[ii], len ))
@@ -682,11 +683,12 @@ long int TNode::IC_name_to_xCH( const char *Name ) const
 // or -1 if no such name was found in the DATACH DC name list
  long int TNode::DC_name_to_xCH( const char *Name ) const
  {
-  long int ii, len = strlen( Name );
-  len =  std::min(len,MaxDCN);
+  long int ii;
+  size_t len = strlen( Name );
+  len =  std::min<size_t>(len,MaxDCN);
 
   for( ii = 0; ii<CSD->nDC; ii++ )
-       if(!memcmp(Name, CSD->DCNL[ii], std::min(len,MaxDCN)))
+       if(!memcmp(Name, CSD->DCNL[ii], std::min<size_t>(len,MaxDCN)))
         if( len == MaxDCN || CSD->DCNL[ii][len] == ' ' || CSD->DCNL[ii][len] == '\0' )
          return ii;
   return -1;
@@ -696,11 +698,12 @@ long int TNode::IC_name_to_xCH( const char *Name ) const
 // or -1 if no such name was found in the DATACH Phase name list
 long int TNode::Ph_name_to_xCH( const char *Name ) const
 {
-  long int ii, len = strlen( Name );
-  len =  std::min(len,MaxPHN);
+  long int ii;
+  size_t len = strlen( Name );
+  len =  std::min<size_t>(len,MaxPHN);
 
   for( ii = 0; ii<CSD->nPH; ii++ )
-       if(!memcmp(Name, CSD->PHNL[ii], std::min(len,MaxPHN)))
+       if(!memcmp(Name, CSD->PHNL[ii], std::min<size_t>(len,MaxPHN)))
         if( len == MaxPHN || CSD->PHNL[ii][len] == ' ' || CSD->PHNL[ii][len] == '\0' )
          return ii;
   return -1;
@@ -883,8 +886,8 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
        load_thermodynamic_data = false;
     }
     else
-        std::cout << "ERROR P and TK pair not present in the DATACH";
-      return 0;
+        std::cout << "ERROR: given P and TK pair is not provided in DATACH";
+     return 0;
    }
 
   //Retrieves (interpolated) molar Gibbs energy G0(P,TK) value for Dependent Component
@@ -1218,25 +1221,53 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
  {
    double vol;
    if( xBR < CSD->nPSb )
+   {    // Phase-solution
     vol = CNode->vPS[xBR];
+    // Perhaps not yet accounting for the volume of mixing!
+   }
    else
    {
      long int xdc = Phx_to_DCx( Ph_xDB_to_xCH( xBR ));
      vol = DC_V0( xdc, CNode->P, CNode->TK );
      vol *= CNode->xDC[DC_xCH_to_xDB(xdc)];
    }
-   
-   // Perhaps not yet accounting for the volume of mixing!
    return vol;
  }
  
- //Retrieves the current phase enthalpy in J ( xph is DBR phase index) in the reactive sub-system.
+ // Added on Oct 1, 2020
+ // Retrieves the current phase total Gibbs energy in J (xph is DBR phase index) in the reactive sub-system.
+ // Chemical potential of phase (J/mol) is Gibbs energy divided by moles of the phase.
+ // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
+ double  TNode::Ph_GibbsEnergy( const long int xph ) const
+  {
+     long int xic;
+     double mol = CNode->xPH[xph];
+     if(mol < 1e-20)
+         return 0.0;
+     // Getting bulk elemental composition vector of the phase
+     double *PhBI = new double[ CSD->nICb ];
+     PhBI = Ph_BC( xph, PhBI );
+     double phGn = 0.0, phG = 0.0;
+     for(xic = 0L; xic < CSD->nICb; xic++ )
+     {
+        phGn += PhBI[xic] * (CNode->uIC[xic]);
+     }
+     delete[] PhBI;
+     phG = phGn * R_CONSTANT * (CNode->TK); // phG in J/mol
+     // Multiplying by moles amount of the phase
+     return phG*mol;
+  }
+
+ // Retrieves the current phase enthalpy in J (xph is DBR phase index) in the reactive sub-system.
  // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
  double  TNode::Ph_Enthalpy( const long int xph ) const
  {
    double ent, enth = 0.0;
    long int xdc, xdcb, xdce, nDCinPh, xch;
    
+   double mol = CNode->xPH[xph];
+   if(mol < 1e-20)
+       return 0.0;
    // Getting the DBR index of the first DC belonging to the phase with DBR index xBR,
    // with nDCinPh being the number of DCs included into DBR for this phase
    xdcb = PhtoDC_DBR( xph, nDCinPh );
@@ -1252,11 +1283,81 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
         // else out of P or T range of interpolation
 //        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " enth: " << enth << std::endl;
    }
-   // Not yet accounting for the enthalpy of mixing!
+   // Not yet accounting for the enthalpy of mixing!  TBD
+   
    return enth;
  }
 
- //Retrieves the current phase amount in moles ( xph is DBR phase index) in the reactive sub-system.
+ // Added on Oct 1, 2020
+ // Retrieves the current phase entropy in J/K (xph is DBR phase index) in the reactive sub-system.
+ // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
+ double  TNode::Ph_Entropy( const long int xph ) const
+  {
+     double ent, entr = 0.0;
+     long int xdc, xdcb, xdce, nDCinPh, xch;
+
+     double mol = CNode->xPH[xph];
+     if(mol < 1e-20)
+         return 0.0;
+     // Getting the DBR index of the first DC belonging to the phase with DBR index xBR,
+     // with nDCinPh being the number of DCs included into DBR for this phase
+     xdcb = PhtoDC_DBR( xph, nDCinPh );
+     xdce = xdcb + nDCinPh;
+  //std::cout << "xph: " << xph << " xdcb: " << xdcb <<  " xdce: " << xdce << std::endl;
+     for(xdc = xdcb; xdc < xdce; xdc++ )
+     {
+          xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
+          // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
+          ent = DC_S0( xch, CNode->P, CNode->TK );
+          if( ent != 0.0 )
+              entr += ent * (CNode->xDC[xdc]);
+          // else out of P or T range of interpolation
+  //        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " entr: " << entr << std::endl;
+     }
+     // Not yet accounting for the enthalpy of mixing!  TBD
+     return entr;  // in J/K
+  }
+
+ // Added on Oct 1, 2020
+ // Retrieves the current phase heat capacity Cp in J/K (xph is DBR phase index) in the reactive sub-system.
+ // Works both for multicomponent and for single-component phases. Returns 0.0 if the phase mole amount is zero.
+ double  TNode::Ph_HeatCapacityCp( const long int xph ) const
+  {
+     double cap, capp = 0.0;
+     long int xdc, xdcb, xdce, nDCinPh, xch;
+
+     double mol = CNode->xPH[xph];
+     if(mol < 1e-20)
+         return 0.0;
+     // Getting the DBR index of the first DC belonging to the phase with DBR index xBR,
+     // with nDCinPh being the number of DCs included into DBR for this phase
+     xdcb = PhtoDC_DBR( xph, nDCinPh );
+     xdce = xdcb + nDCinPh;
+  //std::cout << "xph: " << xph << " xdcb: " << xdcb <<  " xdce: " << xdce << std::endl;
+     for(xdc = xdcb; xdc < xdce; xdc++ )
+     {
+          xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
+          // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
+          cap = DC_Cp0( xch, CNode->P, CNode->TK );
+          if( cap != 0.0 )
+              capp += cap * (CNode->xDC[xdc]);
+          // else out of P or T range of interpolation
+  //        std::cout << "        xdc: " << xdc << " xch: " << xch << " cap: " << cap << " capp: " << capp << std::endl;
+     }
+     // Not yet accounting for the enthalpy of mixing!  TBD
+     return capp;  // in J/K
+  }
+
+ //Retrieves the current phase amount in moles (xph is DBR phase index) in the reactive sub-system.
+ double  TNode::Ph_Moles( const long int xBR ) const
+ {
+   double mol;
+   mol = CNode->xPH[xBR];
+
+   return mol;
+ }
+
+ //Obsolete: Retrieves the current phase amount in moles ( xph is DBR phase index) in the reactive sub-system.
  double  TNode::Ph_Mole( const long int xBR )
  {
    double mol;
@@ -1265,7 +1366,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
    return mol;
  }
 
-  // Retrieves the phase mass in kg ( xph is DBR phase index).
+  // Retrieves the phase mass in kg (xph is DBR phase index).
   // Works for multicomponent and for single-component phases. Returns 0.0 if phase amount is zero.
   double  TNode::Ph_Mass( const long int xBR ) const
   {
@@ -1280,9 +1381,9 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
     return mass;
   }
 
-  // Retrieves the phase saturation index ( xBR is DBR phase index).
+  // Retrieves the phase saturation index (xBR is DBR phase index).
   // Works for multicomponent and for single-component phases.
-  double TNode::Ph_SatInd(const long int xBR )
+  double TNode::Ph_SatInd(const long int xBR ) const
   {
     double SatX;
     SatX = CNode->omPH[xBR];
@@ -1309,7 +1410,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
   // allocated inside of Ph_BC() in the case if parameter ARout = NULL is specified;
   // to avoid a memory leak, you will have to free this memory wherever appropriate.
   // This function works for multicomponent and for single-component phases
-  double *TNode::Ph_BC( const long int xBR, double* ARout )
+  double* TNode::Ph_BC( const long int xBR, double* ARout ) const
   {
     long int ii;
     if( !ARout )
@@ -1386,14 +1487,14 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
 	     case DC_PEL_CARRIER:
 	     case DC_SUR_MINAL:
 	     case DC_SUR_CARRIER:
-                          if( CNode->xPH[xph] )
+                          if( noZero(CNode->xPH[xph]) )
                                   DCcon =  CNode->xDC[xdc]/CNode->xPH[xph];  //pmp->Wx[xCH];
                           break;
 	      case DC_GAS_COMP:
 	      case DC_GAS_H2O:
 	      case DC_GAS_CO2:
 	      case DC_GAS_H2:
-          case DC_GAS_N2:   if( CNode->xPH[xph] )
+          case DC_GAS_N2:   if( noZero(CNode->xPH[xph]) )
                                   DCcon =  CNode->xDC[xdc]/CNode->xPH[xph]; // *CNode->P;
                             break;
 	     case DC_AQ_PROTON:

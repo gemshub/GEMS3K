@@ -36,7 +36,7 @@
 
 class GemDataStream				// data stream class
 {
-    std::ios::openmode mod;
+    //std::ios::openmode mod;
     std::string Path;
 
     int swap;

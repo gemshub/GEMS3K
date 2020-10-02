@@ -11,14 +11,23 @@ CONFIG -= warn_on
 CONFIG += debug
 #CONFIG += windows
 CONFIG += console
+CONFIG += c++17
 
 
-DEFINES += IPMGEMPLUGIN
+#DEFINES += IPMGEMPLUGIN
 DEFINES += NODEARRAYLEVEL
 DEFINES += NOPARTICLEARRAY
+DEFINES += USE_OLD_KV_IO_FILES
 
 !win32 {
   DEFINES += __unix
+QMAKE_CFLAGS += pedantic -Wall -Wextra -Wwrite-strings -Werror
+
+QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith \
+ -Wmissing-declarations -Winline -Wundef \ #-Weffc++ \
+ -Wcast-qual -Wshadow -Wwrite-strings -Wno-unused-parameter \
+ -Wfloat-equal -pedantic -ansi
+
 }
 
 GEMS3K_CPP = ../GEMS3K

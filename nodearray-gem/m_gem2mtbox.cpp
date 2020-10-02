@@ -83,6 +83,7 @@ inline void TGEM2MT::dMBfluxDir( long int q, long int i, double *dm, double fRat
        case NBC3source:  // 3: Cauchy source ( constant flux )
                  if( sign < 0 )
                       break;
+                 [[fallthrough]];
        case NBC1source:  //1: Dirichlet source ( constant concentration )
        case NBC1sink:    // -1: Dirichlet sink
        case NBC2source:  // 2: Neumann source ( constant gradient )
@@ -100,7 +101,7 @@ inline void TGEM2MT::dMBfluxDir( long int q, long int i, double *dm, double fRat
 //
 void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double /*t*/ )
 {
-  long int  q, p, f, fe=-1, i;
+  long int  q, p, f, fe=-1; int i;
   char FLXid[MAXSYMB+1], MGPid[MAXSYMB+1];
   long int FLXorder/*, FLXtype*/;
   double nbIC, fRate, fRateS, MGPo=0., MGPi=0., vkk=1., mqfi, gqfi, Hfei, MBqi;//, MBpi;
@@ -179,7 +180,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double /*t*/ )
                      break;
                  for(i=0; i<mtp->Nf; i++ )
                  {
-                    gqfi = g(q,f,i); MBqi = MB(q,i);// MBpi = MB(p,i);
+                    gqfi = g(q,f,i); MBqi = MB(q,i); //MBpi = MB(p,i);
                     fRate = gqfi * vkk * MGPo * MGPi; // * MBqi * MBpi;
                     dMBfluxDir( q, i, dm, fRate, (-1.)); // dMB(q,i) -=  fRate;
                     dMBfluxDir( p, i, dm, fRate); // dMB(p,i) +=  fRate;
@@ -190,7 +191,7 @@ void TGEM2MT::dMBflux( long int kk, double *m, double *dm, double /*t*/ )
                     break;
                  for(i=0; i<mtp->Nf; i++ )
                  {
-                    gqfi = g(q,f,i); //MBpi = MB(p,i);
+                    gqfi = g(q,f,i);// MBpi = MB(p,i);
                     fRate = gqfi * vkk * MGPi; // * MBpi;
                     dMBfluxDir( q,i, dm, fRate, (-1.)); //dMB(q,i) -=  fRate;
                     dMBfluxDir( p,i, dm, fRate); //dMB(p,i) +=  fRate;
@@ -347,7 +348,7 @@ double TGEM2MT::BoxMasses( long int q )
 // variant for simplified box-flux and sequential reactors transport models
 // Differs from 'standard' module in interpretation of the mole amount of MPG:
 //     1 'M' means the whole source amount (of aq, gas or solid phase) for S models
-//     and just mole amount of phase for B models
+//     and just mole amount of phase for F and B models
 //
 void TGEM2MT::ComposMGPinBox( long int q  )
 {
@@ -378,7 +379,7 @@ void TGEM2MT::ComposMGPinBox( long int q  )
       for( k=0; k<mtp->FIf; k++)
       {
           Xe = mtp->PGT[k*mtp->nPG+f];  // given quantity of phase to add to MGP
-          if( !Xe )
+          if( fabs(Xe)<1e-19 )
               continue;
           UNITP = mtp->UMGP[k];
           if( k < na->pCSD()->nPSb )
@@ -525,7 +526,7 @@ bool
 TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, double step )
 {
   bool iRet = true;
-  FILE* diffile = NULL;
+  FILE* diffile = nullptr;
 
   mtp->dTau = step;
   mtp->cTau = tcur;
@@ -534,11 +535,11 @@ TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, double s
   if( Ni >= 0)
   {
       char buf[300];
-      //gstring Vmessage;
+      //std::string Vmessage;
       sprintf(buf, "   step %ld; time %lg; dtime %lg  ", mtp->ct, mtp->cTau, mtp->dTau );
-      Vmessage = "Calculating Reactive Transport Box-Flux Simulation: ";
+      Vmessage = "Simulating Reactive Transport in a Box-Flux chain: ";
       Vmessage += buf;
-      Vmessage += ". Please, wait (may take long)...";
+      Vmessage += ". Please, wait (may take time)...";
 
 #ifdef Use_mt_mode
     if( mtp->PsSmode != S_OFF  )
@@ -554,7 +555,7 @@ TGEM2MT::BoxEqStatesUpdate(  long int Ni, long int /*pr*/, double tcur, double s
 #endif
 
    if( iRet )
-         Error("GEM2MT Box-Flux model", "Cancel by user");
+         Error("GEM2MT Box-Flux model", "Cancelled by the user");
   }
 #endif
   
@@ -602,11 +603,12 @@ void TGEM2MT::BoxFluxTransportStart()
     mtp->oTau =  mtp->Tau[START_];
     // mtp->cTau = mtp->Tau[START_];
     mtp->ct = 0;
+    mtp->qf = 0;
 
 #ifndef IPMGEMPLUGIN
-    mtp->gfc = (double *)aObj[ o_mtgfc].Alloc(  mtp->nC*mtp->nPG, mtp->Nf, D_);
-    mtp->yfb = (double *)aObj[ o_mtyfb].Alloc(  mtp->nC*mtp->nPG, mtp->Nf, D_);
-    mtp->tt  = (double (*)[9])aObj[ o_mttt].Alloc(  mtp->nC*mtp->Nf, 9, D_);
+    mtp->gfc = (double *)aObj[ o_mtgfc]->Alloc(  mtp->nC*mtp->nPG, mtp->Nf, D_);
+    mtp->yfb = (double *)aObj[ o_mtyfb]->Alloc(  mtp->nC*mtp->nPG, mtp->Nf, D_);
+    mtp->tt  = (double (*)[9])aObj[ o_mttt]->Alloc(  mtp->nC*mtp->Nf, 9, D_);
 #else
     if( mtp->gfc )
             delete[] mtp->gfc;
@@ -628,8 +630,9 @@ void TGEM2MT::BoxFluxTransportStart()
        for( q=0; q <mtp->nC; q++ )
            for(f=0; f<mtp->nPG; f++ )
                for(i=0; i<mtp->Nf; i++ )
-               {      y(q,f,i) = 0.0;
-                      g(q,f,i) = 0.0;
+               {
+                   y(q,f,i) = 0.0;
+                   g(q,f,i) = 0.0;
                }
 }
 
@@ -648,9 +651,26 @@ void TGEM2MT::FlowThroughBoxFluxStep()
 //   or -1 if the identifier was not found in the MGP id list
 long int TGEM2MT::LookUpXMGP( const char* MGPid )
 {
-        long int found = -1;
+        long int found = -1, smgpx = -1;
         // Check if the first character is 0 1 2 3 4 5 6 7 8 9
+        switch(MGPid[0])
+        {
+            case '0': smgpx = 0; break;
+            case '1': smgpx = 1; break;
+            case '2': smgpx = 2; break;
+            case '3': smgpx = 3; break;
+            case '4': smgpx = 4; break;
+            case '5': smgpx = 5; break;
+            case '6': smgpx = 6; break;
+            case '7': smgpx = 7; break;
+            case '8': smgpx = 8; break;
+            case '9': smgpx = 9; break;
+            default: break;
+        }
         // If so, this is index of elemental flux with composition from BSF table
+        if(smgpx >= 0)
+            return found;
+        // Looking for a normal MGP index
         for( long int f=0; f < mtp->nPG; f++ )
         {
             if( strncmp( mtp->MGPid[f], MGPid, MAXSYMB ) )
@@ -671,9 +691,9 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 {
 
   try {
-    //gstring Vmessage;
+    //std::string Vmessage;
     long int p, i, kk, x_aq=-1, x_gf=-1;//, naqgf=1, lastp=0;
-    //bool iRet = false;
+    bool iRet = false;
     clock_t outp_time = (clock_t)0;
 
     BoxFluxTransportStart();
@@ -687,7 +707,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
       if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
              GetName(), "Use graphic monitoring?") )
         {
-            RecordPlot( 0 );
+            RecordPlot( nullptr );
             UseGraphMonitoring = true;
         }
 #endif
@@ -721,7 +741,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
                      node1_xPA( 0, 0 ) = node1_mPS( 0, 0 )*1000./18.0153;
         break;
      case MGP_TT_SOLID:  // '4'  TBD
-                   /* naqgf = 0;
+                    /*naqgf = 0;
                     if( (x_aq + x_gf) == 1 )
                         naqgf = 1;*/
 
@@ -739,6 +759,8 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
      default: break;
     }
 
+    if( !na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), 0, 0 ) )
+      iRet = false;  // Analysis of errors after GEM calculation?
     // Calculation of current box 0 reactive IC masses in kg
     BoxMasses( 0 );
     // Calculation of MGP bulk compositions in box 0 (in moles of ICs)
@@ -757,9 +779,9 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
           CalcStartScript();
 
       sprintf(buf, "   step %ld; time %lg; dtime %lg  ", mtp->ct, mtp->cTau, mtp->dTau );
-      Vmessage = "Calculating Transport through Sequential Reactors: ";
+      Vmessage = "Simulating Transport through Sequential Reactors chain: ";
       Vmessage += buf;
-      Vmessage += ". Please, wait (may take long)...";
+      Vmessage += ". Please, wait (may take time)...";
 
 #ifdef Use_mt_mode
     if( mtp->PsSmode != S_OFF  )
@@ -813,8 +835,8 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
          // calculate equilibrium state in q-th box
          node1_Tm( p ) = mtp->cTau;
          node1_dt( p ) = mtp->dTau;
-         /*iRet =*/ na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), p, 0 );
-          // Analysis of errors after GEM calculation?
+         if( !na->CalcIPM_One( TestModeGEMParam(mode, mtp->PsSIA, mtp->ct, mtp->cdv, mtp->cez ), p, 0 ) )
+           iRet = false;  // Analysis of errors after GEM calculation?
          mtp->qc = p;
             //  iRet = false;
 //         if( iRet == true )  // Error in GEM calculation
@@ -855,7 +877,7 @@ bool TGEM2MT::CalcSeqReacModel( char mode )
 #ifndef IPMGEMPLUGIN
        vfMessage(window(), xcpt.title, xcpt.mess);
 #else
-       cerr << xcpt.title.c_str() << "  " <<  xcpt.mess.c_str() << endl;
+       std::cerr << xcpt.title.c_str() << "  " <<  xcpt.mess.c_str() << std::endl;
 #endif
        return 1;
   }
@@ -892,7 +914,7 @@ bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
           if(  mtp->PvMSg != S_OFF && vfQuestion(window(),
              GetName(), "Use graphic monitoring?") )
         {
-            RecordPlot( 0 );
+            RecordPlot( nullptr );
             UseGraphMonitoring = true;
         }
 #endif
@@ -909,10 +931,10 @@ bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
    
 #ifndef IPMGEMPLUGIN
        iRet = pVisor->Message( window(), GetName(),
-           "Calculating Reactive Mass Transport (RMT). "
-           "Please, wait (may take long)...", nstep, mtp->ntM, UseGraphMonitoring );
+           "Simulating Reactive Transport in a Box-Flux setup. "
+           "Please, wait (may take time)...", nstep, mtp->ntM, UseGraphMonitoring );
        if( iRet )
-        Error("GEM2MT generic box-flux model", "Cancel by user");
+        Error("GEM2MT generic box-flux model", "Cancelled by the user");
 #endif
   INTEG( 1e-3, /*mtp->cdv,*/ mtp->dTau, mtp->Tau[START_], mtp->Tau[STOP_] );
 
@@ -926,7 +948,7 @@ bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
 #ifndef IPMGEMPLUGIN
        vfMessage(window(), xcpt.title, xcpt.mess);
 #else
-       cerr << xcpt.title.c_str() << "  " <<  xcpt.mess.c_str() << endl;
+       std::cerr << xcpt.title.c_str() << "  " <<  xcpt.mess.c_str() << std::endl;
 #endif
        return 1;
    }
@@ -945,7 +967,7 @@ bool TGEM2MT::CalcBoxFluxModel( char /*mode*/ )
 //--------------------------------------------------------------------
 // Integration process
 
-const long int NMAX = 800;
+//const long int NMAX = 800;
 const long int KM = 8;
 const double UROUND = 1.73e-18;
 const double FAC1 = 2.e-2;
@@ -1025,19 +1047,19 @@ void TGEM2MT::MIDEX( long int j, double t, double h )
         { // 
             v2 = fabs( mtp->tt[ i ][ 0 ] );
             v1 = fabs( x[ i ] );
-            v1 = max( v1, v2 );
-            v2 = max( 1.e-6, UROUND / epsd4 );
-            scal = max( v1, v2 );
+            v1 = std::max( v1, v2 );
+            v2 = std::max( 1.e-6, UROUND / epsd4 );
+            scal = std::max( v1, v2 );
             err += pow( (mtp->tt[ i ][ 0 ] - mtp->tt[ i ][ 1 ] ) / scal, 2. );
         }
         err = pow( err / (double)n, .5 );
         //
         expo = 1.e0 / (double)( 2 * ( j + 1 )-1 );
         facmin = pow( FAC1, expo );
-        v1 = max( facmin, pow( err/epsd4, expo ) / SAFE2 );
-        fac = min( FAC2/facmin, v1 );
+        v1 = std::max( facmin, pow( err/epsd4, expo ) / SAFE2 );
+        fac = std::min( FAC2/facmin, v1 );
         fac= 1.e0 / fac;
-        hh[ j ] = min( h * fac, MAXSTEP );
+        hh[ j ] = std::min( h * fac, MAXSTEP );
         w[ j ] = a1[ j ] / hh[ j ];
 
 VEL:
@@ -1077,12 +1099,12 @@ TGEM2MT::INTEG( double eps, double& step, double t_begin, double t_end )
     h = step;
     epsd4 = eps * SAFE1;
     v1 = -log10(eps)*.6+1.5;
-    v1 = min( 8.0, v1 );
-    k = (long int)max( 3.0, v1 ) - 1;
+    v1 = std::min( 8.0, v1 );
+    k = std::max( 3.0, v1 ) - 1;
     t = t_begin;
     h1 = t_end-t;
-    v1 = min( MAXSTEP, h1/2. );
-    h = min( h, v1 );
+    v1 = std::min( MAXSTEP, h1/2. );
+    h = std::min( h, v1 );
     //BoxEqStatesUpdate( 0, k, t, h ); // 14/12/2007 ????? may be done before in calc
     err = w[ 0 ] = 0.0;
     reject = last = 0;   // false
@@ -1090,8 +1112,8 @@ TGEM2MT::INTEG( double eps, double& step, double t_begin, double t_end )
     //
     while( fabs( h1 ) >= UROUND )
     {
-        v1 = min( h1, MAXSTEP);
-        h = min( h, v1 );
+        v1 = std::min( h1, MAXSTEP);
+        h = std::min( h, v1 );
         if( h >= ( h1 - UROUND ) )  last = 1;      // true
         Solut(  x, dx, t );
         nfcn++;
@@ -1153,7 +1175,7 @@ l60:
             kopt = kc;
             if( w[kc-1] < w[kc]*FAC3 ) kopt = kc - 1;
             if( w[kc] < w[kc-1]*FAC3 )
-                kopt = min( (kc+1) , (KM-1) );
+                kopt = std::min( (kc+1) , (KM-1) );
         }
         else
         {
@@ -1161,13 +1183,13 @@ l60:
             if( kc > 2 && w[kc-2] < w[kc-1]*FAC3 )
                 kopt = kc - 2;
             if( w[kc] < w[kopt]*FAC3 )
-                kopt = min( kc, (KM-1) );
+                kopt = std::min( kc, (KM-1) );
         }
         // 
         if( reject )
         {
-            k = min( kopt, kc );
-            h = min( h, hh[ k ] );
+            k = std::min( kopt, kc );
+            h = std::min( h, hh[ k ] );
             reject = 0;           // false
         }
         else
@@ -1185,7 +1207,7 @@ l60:
     step = h;
     return;
 l100:
-    k = min( k, kc );
+    k = std::min( k, kc );
     if( k > 1 && ( w[k-1] < w[k] * FAC3 ) )
         k--;
     nrejct++;
