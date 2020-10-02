@@ -16,8 +16,8 @@
 #include <iomanip>
 #include "io_arrays.h"
 #include "m_gem2mt.h"
-#ifndef  NO_JSON_OUT
-#include "GEMS3K/io_json.h"
+#ifndef  USE_OLD_KV_IO_FILES
+#include "io_json.h"
 #endif
 
 
@@ -458,7 +458,7 @@ void TGEM2MT::to_text_file( std::fstream& ff, bool with_comments, bool brief_mod
 {
   bool _comment = with_comments;
 
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
 
   TPrintArrays  prar1(57, GEM2MT_static_fields, ff);
   TPrintArrays  prar(26, GEM2MT_dynamic_fields, ff);
@@ -563,7 +563,7 @@ void TGEM2MT::to_text_file( std::fstream& ff, bool with_comments, bool brief_mod
   prar1.writeArray(f_mtWrkS, &mtp->ctm, 12, 6, _comment, brief_mode  );
   prar1.writeArray(f_mtWrkF, &mtp->cT, 10, 6, _comment, brief_mode  );
 
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
   ff << std::endl << "\n<END_DIM>" << std::endl;
 #endif
 
@@ -637,7 +637,7 @@ void TGEM2MT::to_text_file( std::fstream& ff, bool with_comments, bool brief_mod
      //!!!mtp->Tval  = new double[ mtp->nTai ];  // from DataCH
      //!!!mtp->Pval  = new double[ mtp->nPai ];
 
-#ifndef  NO_JSON_OUT
+#ifndef  USE_OLD_KV_IO_FILES
   ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
   ff << std::endl;
@@ -650,7 +650,7 @@ void TGEM2MT::from_text_file(std::fstream& ff)
 {
 
 // static arrays
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
  TReadArrays  rdar( 57, GEM2MT_static_fields, ff);
 #else
  nlohmann::json json_data;
@@ -784,7 +784,7 @@ void TGEM2MT::from_text_file(std::fstream& ff)
  }
 
  //dynamic data
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
  TReadArrays  rddar( 26, GEM2MT_dynamic_fields, ff);
 #else
  TReadJson  rddar( 26, GEM2MT_dynamic_fields, json_data);

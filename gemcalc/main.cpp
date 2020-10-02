@@ -36,8 +36,8 @@
 #include <math.h>
 #include <string>
 #include <iomanip>
-#include "GEMS3K/node.h"
-#include "GEMS3K/v_detail.h"
+#include "node.h"
+#include "v_detail.h"
 using namespace std;
 
 #define fileNameLength 64
@@ -121,7 +121,6 @@ node->GEM_print_ipm( "AfterCalcPhase.txt" );   // possible debugging printout
    }
    cout << "SatIndx aq" << node->Ph_SatInd(0) << " gas " << node->Ph_SatInd(1) << " s1 " << node->Ph_SatInd(2)
         << " s2 " << node->Ph_SatInd(3) << " s3 " << node->Ph_SatInd(4) << " s4 " << node->Ph_SatInd(5) << endl;
-return 0;
    // test internal functions
   cout << "Ph_Volume   Aq: " << node->Ph_Volume(xbaq) <<  " Calcite: " << node->Ph_Volume(xbCalcite) << endl;   
   cout << "Ph_Mass     Aq: " << node->Ph_Mass(xbaq) <<  " Calcite: " << node->Ph_Mass(xbCalcite) << endl;   

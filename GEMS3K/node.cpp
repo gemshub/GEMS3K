@@ -41,7 +41,7 @@
 #include <io.h>
 #endif
 
-#ifndef NO_JSON_OUT
+#ifndef USE_OLD_KV_IO_FILES
   const char *dat_ext = "json";
   const char *dat_filt = "*.json";
 #else
