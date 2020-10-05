@@ -174,6 +174,32 @@ protected:
     virtual void pVisor_Message( bool , long int =0, long int =0 ) {}
     // end of new stuff -------------------------------------------------------
 
+    /// Calls GEM IPM calculation for a node with absolute index ndx
+    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
+
+    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
+    /// in a loop with an optional openmp parallelization
+    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
+
+    /// Calls GEM IPM for one node with three indexes (along x,y,z)
+    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
+                      long int Mode, DATABRPTR* nodeArray  )
+    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
+    // (both calls clean the work node DATABR structure)
+
+    /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
+    /// copying data from work DATABR structure into the node array
+    ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
+    ///                      containing the list of names of  DBR input files.
+    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
+    ///  \param nodeTypes    the initial node contents from DATABR files will be distributed among nodes in array
+    ///                      according to the distribution list nodeTypes
+    ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
+    ///                      task interruption  in GEM-Selektor
+    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f  );
+
+    //---------------------------------------------------------
+
 public:
 
     static TNodeArray* na;   ///< static pointer to this class
@@ -435,31 +461,6 @@ public:
 
     // end of new stuff -------------------------------------------------------
 
-    /// Calls GEM IPM calculation for a node with absolute index ndx
-    long int RunGEM( TNode* wrkNode,  long int  ndx, long int Mode, DATABRPTR* nodeArray );
-    
-    /// Calls GEM IPM calculation for a selected group of nodes of TNodeArray (that have nodeFlag = 1)
-    /// in a loop with an optional openmp parallelization
-    void RunGEM( long int Mode, int nNodes, DATABRPTR* nodeArray, long int* nodeFlags, long int* retCodes );
-
-    /// Calls GEM IPM for one node with three indexes (along x,y,z)
-    long int  RunGEM( TNode* wrkNode, long int indN, long int indM, long int indK,
-                      long int Mode, DATABRPTR* nodeArray  )
-    { return RunGEM( wrkNode, iNode( indN, indM, indK ), Mode, nodeArray ); }
-    // (both calls clean the work node DATABR structure)
-
-    /// Initialization of TNodeArray data structures. Reads in the DBR text input files and
-    /// copying data from work DATABR structure into the node array
-    ///  \param dbrfiles_lst_name  pointer to a null-terminated C string with a path to a text file
-    ///                      containing the list of names of  DBR input files.
-    ///                      Example: file "test-dbr.lst" with a content:    "dbr-0.dat" , "dbr-1.dat" , "dbr-2.dat"
-    ///  \param nodeTypes    the initial node contents from DATABR files will be distributed among nodes in array
-    ///                      according to the distribution list nodeTypes
-    ///  \param getNodT1     optional parameter used only when reading multiple DBR files after modeling
-    ///                      task interruption  in GEM-Selektor
-    void  InitNodeArray( const char *dbrfiles_lst_name, long int *nodeTypes, bool getNodT1, bool binary_f  );
-
-    //---------------------------------------------------------
     // Methods for working with node arrays (access to data from DBR)
     /// Calculate phase (carrier) mass, kg  of single component phase
     double get_mPH( long int ia, long int nodex, long int PHx );

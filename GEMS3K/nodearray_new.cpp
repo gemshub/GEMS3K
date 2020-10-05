@@ -390,7 +390,10 @@ long int  TNodeArray::GEM_init( const char* ipmfiles_lst_name,
                                 const char* dbrfiles_lst_name, long int* nodeTypes, bool getNodT1)
 {
 
-    calcNode->GEM_init( ipmfiles_lst_name );
+    auto ret = calcNode->GEM_init( ipmfiles_lst_name );
+    if( ret )
+        return ret;
+
     // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
     std::string curPath = ""; //current reading file path
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );

@@ -19,6 +19,16 @@ gemserver-build/gems3_client
 gemserver-build/gems3_client.app
 gemserver/*.pro.user
 gemserver/*.pro.user.*
+tools-build/*.dat
+tools-build/*.txt
+tools-build/Makefile.*
+tools-build/Makefile.*
+tools-build/Makefile
+tools-build/obj
+tools-build/.qmake.*
+tools-build/tools
+tools/*.pro.user
+tools/*.pro.user.*
 gemcalc-build/Makefile.*
 gemcalc-build/Makefile
 gemcalc-build/obj
