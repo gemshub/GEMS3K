@@ -19,6 +19,7 @@ gemserver-build/gems3_client
 gemserver-build/gems3_client.app
 gemserver/*.pro.user
 gemserver/*.pro.user.*
+tools-build/*.json
 tools-build/*.dat
 tools-build/*.txt
 tools-build/Makefile.*

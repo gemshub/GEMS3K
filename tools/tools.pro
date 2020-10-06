@@ -45,9 +45,13 @@ QMAKE_LFLAGS +=
 QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
-SOURCES      +=   calc2convert.cpp
+SOURCES      +=   calc2convert.cpp \
+    io_nlohmann.cpp \
+    io_template.cpp
 
 include($$GEMS3K_CPP/gems3k.pri) 
 
 HEADERS += \
-    gems3k_impex.h
+    gems3k_impex.h \
+    io_nlohmann.h \
+    io_template.h

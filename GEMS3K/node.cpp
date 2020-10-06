@@ -1309,7 +1309,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
           // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
           ent = DC_S0( xch, CNode->P, CNode->TK );
-          if( ent != 0.0 )
+          if( noZero(ent) )
               entr += ent * (CNode->xDC[xdc]);
           // else out of P or T range of interpolation
   //        std::cout << "        xdc: " << xdc << " xch: " << xch << " ent: " << ent << " entr: " << entr << std::endl;
@@ -1339,7 +1339,7 @@ long int TNode::Ph_xCH_to_xDB( const long int xCH ) const
           xch = DC_xDB_to_xCH( xdc ); // getting DCH index from DBR index of DC
           // Retrieves (interpolated) molar entropy S0(P,TK) value for Dependent Component (in J/K/mol)
           cap = DC_Cp0( xch, CNode->P, CNode->TK );
-          if( cap != 0.0 )
+          if( noZero(cap) )
               capp += cap * (CNode->xDC[xdc]);
           // else out of P or T range of interpolation
   //        std::cout << "        xdc: " << xdc << " xch: " << xch << " cap: " << cap << " capp: " << capp << std::endl;

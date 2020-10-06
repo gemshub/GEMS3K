@@ -217,7 +217,8 @@ void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
    }
 
 if( _comment )
-{  ff << "# " << _GEMIPM_version_stamp << std::endl;// << "# File: " << path << endl;
+{
+   ff << "# " << _GEMIPM_version_stamp << std::endl;// << "# File: " << path << endl;
    ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
    ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << std::endl;
    ff << "# (should be read after the DCH file and before DBR files)" << std::endl << std::endl;

@@ -40,6 +40,83 @@
 #include "v_detail.h"
 #include "gems3k_impex.h"
 
+#include "io_nlohmann.h"
+#include "io_template.h"
+
+
+void show_usage( const std::string &name );
+int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImpexData& export_data );
+
+
+// -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
+
+//The simplest case: data exchange using disk files only
+int main( int argc, char* argv[] )
+{
+    try{
+        io_formats::NlohmannJsonWrite out_json;
+        io_formats::TPrintArrays<io_formats::NlohmannJsonWrite> writer( 0, nullptr, out_json);
+
+        std::fstream ff( "complex_out.json", std::ios::in );
+        ErrorIf( !ff.good() , "complex_out.json", "Fileopen error");
+        io_formats::NlohmannJsonRead in_json( ff );
+        io_formats::TReadArrays<io_formats::NlohmannJsonRead> reader( 0, nullptr, in_json);
+
+        std::string input_lst_path;
+        GEMS3KImpexData export_data;
+
+        if( extract_args( argc, argv, input_lst_path, export_data ))
+            return 1;
+
+        // Creates TNodeArray structure instance accessible through the "node_arr" pointer
+        std::shared_ptr<TNodeArray> node_arr  = std::make_shared<TNodeArray>( export_data.nIV );
+
+        // (1) Initialization of GEMS3K internal data by reading  files
+        //     whose names are given in the input_system_file_list_name
+        if( node_arr->GEM_init( input_lst_path.c_str(), nullptr, nullptr, false ) )
+        {
+            // error occured during reading the files
+            std::cout << "error occured during reading the files" << std::endl;
+            return 1;
+        }
+
+        // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
+        TestModeGEMParam calc_param;  // use default data
+        FILE* diffile = fopen( "tools-ICdif-log.dat", "w+" );
+        if( !diffile)
+          return 1;
+        if( !node_arr->CalcIPM_List( calc_param, 0, export_data.nIV-1, diffile ) )
+        {
+            std::cout << "error occured during calculation" << std::endl;
+            return 1;
+        }
+
+        // (3) Writing results in defined output format
+        ProcessProgressFunction messageF = [](const std::string& , long ){
+            //std::cout << "TProcess GEM3k output" <<  message.c_str() << point << std::endl;
+            return false;
+        };
+
+        auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
+                                                         export_data.io_mode==GEMS3KImpexData::f_binary, export_data.brief_mode,
+                                                         export_data.with_comments, export_data.putNodT1, export_data.add_mui );
+
+        return 0;
+    }
+    catch(TError& err)
+    {
+        std::cout  << err.title << err.mess << std::endl;
+    }
+    catch(std::exception& e)
+    {
+        std::cout  << "std::exception: " << e.what() << std::endl;
+    }
+    catch(...)
+    {
+        std::cout  << "unknown exception" << std::endl;
+    }
+    return -1;
+}
 
 void show_usage( const std::string &name )
 {
@@ -113,67 +190,3 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
         return 1;
     return 0;
 }
-
-
-// -h -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
-//The simplest case: data exchange using disk files only
-int main( int argc, char* argv[] )
-{
-    try{
-
-        std::string input_lst_path;
-        GEMS3KImpexData export_data;
-
-        if( extract_args( argc, argv, input_lst_path, export_data ))
-            return 1;
-
-        // Creates TNodeArray structure instance accessible through the "node_arr" pointer
-        std::shared_ptr<TNodeArray> node_arr  = std::make_shared<TNodeArray>( export_data.nIV );
-
-        // (1) Initialization of GEMS3K internal data by reading  files
-        //     whose names are given in the input_system_file_list_name
-        if( node_arr->GEM_init( input_lst_path.c_str(), nullptr, nullptr, false ) )
-        {
-            // error occured during reading the files
-            std::cout << "error occured during reading the files" << std::endl;
-            return 1;
-        }
-
-        // (2) re-calculating equilibrium by calling GEMS3K, getting the status back
-        TestModeGEMParam calc_param;  // use default data
-        FILE* diffile = fopen( "tools-ICdif-log.dat", "w+" );
-        if( !diffile)
-          return 1;
-        if( !node_arr->CalcIPM_List( calc_param, 0, export_data.nIV-1, diffile ) )
-        {
-            std::cout << "error occured during calculation" << std::endl;
-            return 1;
-        }
-
-        // (3) Writing results in defined output format
-        ProcessProgressFunction messageF = [](const std::string& , long ){
-            //std::cout << "TProcess GEM3k output" <<  message.c_str() << point << std::endl;
-            return false;
-        };
-
-        auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
-                                                         export_data.io_mode==GEMS3KImpexData::f_binary, export_data.brief_mode,
-                                                         export_data.with_comments, export_data.putNodT1, export_data.add_mui );
-
-        return 0;
-    }
-    catch(TError& err)
-    {
-        std::cout  << err.title << err.mess << std::endl;
-    }
-    catch(std::exception& e)
-    {
-        std::cout  << "std::exception: " << e.what() << std::endl;
-    }
-    catch(...)
-    {
-        std::cout  << "unknown exception" << std::endl;
-    }
-    return -1;
-}
-
