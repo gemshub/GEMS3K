@@ -247,7 +247,9 @@ public:
     /// Constructor
     TReadArrays( short aNumFlds, outField* aFlds, TIO& fin ):
         TRWArrays( aNumFlds, aFlds), in_format( fin ), current_readed("")
-    {}
+    {
+       in_format.reset();
+    }
 
     /// Read next name from file and find in fields list
     long int findNext()

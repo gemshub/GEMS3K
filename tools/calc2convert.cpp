@@ -40,6 +40,7 @@
 #include "v_detail.h"
 #include "gems3k_impex.h"
 
+#include "io_keyvalue.h"
 #include "io_nlohmann.h"
 #include "io_template.h"
 
@@ -54,13 +55,20 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
 int main( int argc, char* argv[] )
 {
     try{
-        io_formats::NlohmannJsonWrite out_json;
-        io_formats::TPrintArrays<io_formats::NlohmannJsonWrite> writer( 0, nullptr, out_json);
+
+        std::fstream ffout( "test.json", std::ios::out );
+        ErrorIf( !ffout.good() , "test.json", "Fileopen error");
+        //io_formats::NlohmannJsonWrite out_json( ffout );
+        io_formats::KeyValueWrite out_json( ffout );
+        //io_formats::TPrintArrays<io_formats::NlohmannJsonWrite> writer( 0, nullptr, out_json);
+        io_formats::TPrintArrays writer( 0, nullptr, out_json);
 
         std::fstream ff( "complex_out.json", std::ios::in );
         ErrorIf( !ff.good() , "complex_out.json", "Fileopen error");
-        io_formats::NlohmannJsonRead in_json( ff );
-        io_formats::TReadArrays<io_formats::NlohmannJsonRead> reader( 0, nullptr, in_json);
+        //io_formats::NlohmannJsonRead in_json( ff );
+        io_formats::KeyValueRead in_json( ff );
+        //io_formats::TReadArrays<io_formats::NlohmannJsonRead> reader( 0, nullptr, in_json);
+        io_formats::TReadArrays reader( 0, nullptr, in_json);
 
         std::string input_lst_path;
         GEMS3KImpexData export_data;

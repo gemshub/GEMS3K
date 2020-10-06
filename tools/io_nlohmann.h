@@ -25,7 +25,7 @@
 
 #include <nlohmann/json.hpp>
 #include <fstream>
-#include "io_arrays.h"
+#include "verror.h"
 
 namespace  io_formats {
 
@@ -35,6 +35,7 @@ class NlohmannJsonWrite
 
     /// Internal structure of file data
     nlohmann::json json_data;
+    std::iostream& fout;
 
     template <class T>
     void add_value( const T& value, nlohmann::json& json_arr  )
@@ -50,7 +51,13 @@ class NlohmannJsonWrite
 public:
 
     /// Constructor
-    NlohmannJsonWrite(): json_data() {}
+    NlohmannJsonWrite( std::iostream& ff ): json_data(), fout(ff)
+    {}
+
+    void dump( bool brief )
+    {
+       fout << json_data.dump(( brief ? 0 : 4 ));
+    }
 
     void write_comment( const std::string&  ) {}
 
@@ -145,6 +152,11 @@ public:
         json_it = json_data.begin();
     }
 
+    /// Reset json loop
+    void reset()
+    {
+      json_it = json_data.begin();
+    }
 
     /// Read next name from file
     bool  has_next( std::string& next_field_name );
