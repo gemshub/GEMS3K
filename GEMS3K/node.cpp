@@ -32,7 +32,8 @@
 #include "num_methods.h"
 #include "kinetics.h"
 #include "activities.h"
-
+#include "io_keyvalue.h"
+#include "io_nlohmann.h"
 
 #include <cmath>
 #include <algorithm>
@@ -2430,9 +2431,10 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
               databr_to_file(out_br);
        }
        else
-       {  std::fstream out_br(str_file.c_str(), std::ios::out );
+       {
+         std::fstream out_br(str_file.c_str(), std::ios::out );
          ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
-         databr_to_text_file(out_br, with_comments, brief_mode, str_file.c_str() );
+         databr_to_text_file( out_br, with_comments, brief_mode, str_file.c_str() );
        }
    }
 

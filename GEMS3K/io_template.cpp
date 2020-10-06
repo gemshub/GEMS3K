@@ -36,7 +36,7 @@ long int TRWArrays::findFld(  const std::string& name  ) const
     return -1;
 }
 
-std::string TRWArrays::test_read() const
+std::string TRWArrays::testRead() const
 {
     std::string ret = "";
     for( long int ii=0; ii < num_flds; ii++ )

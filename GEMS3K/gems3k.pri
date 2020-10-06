@@ -21,6 +21,9 @@
 #                    $$GEMS3K_H/particlearray.h \
                     $$GEMS3K_H/io_arrays.h \
                     $$GEMS3K_H/io_json.h \
+                    $$GEMS3K_H/io_template.h \
+                    $$GEMS3K_H/io_nlohmann.h \
+                    $$GEMS3K_H/io_keyvalue.h \
                     $$GEMS3K_H/activities.h \
                     $$GEMS3K_H/kinetics.h \
                     $$GEMS3K_H/v_detail.h
@@ -51,6 +54,9 @@
                       $$GEMS3K_CPP/ms_multi_format.cpp \
                       $$GEMS3K_CPP/io_arrays.cpp \
                       $$GEMS3K_CPP/io_json.cpp \
+                      $$GEMS3K_CPP/io_template.cpp \
+                      $$GEMS3K_CPP/io_nlohmann.cpp \
+                      $$GEMS3K_CPP/io_keyvalue.cpp \
                       $$GEMS3K_CPP/node_copy.cpp \
                       $$GEMS3K_CPP/ms_multi_copy.cpp \
                       $$GEMS3K_CPP/node_activities.cpp \

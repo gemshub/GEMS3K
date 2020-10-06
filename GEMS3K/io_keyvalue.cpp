@@ -32,7 +32,7 @@
 namespace  io_formats {
 
 /// Write float value to file
-template <> void KeyValueWrite::write_value( const float& val )
+template <> void KeyValueWrite::writeValue( const float& val )
 {
     if( IsFloatEmpty( val ))
         fout << CHAR_EMPTY << " ";
@@ -42,7 +42,7 @@ template <> void KeyValueWrite::write_value( const float& val )
 }
 
 /// Write double value to file
-template <> void KeyValueWrite::write_value( const double& val )
+template <> void KeyValueWrite::writeValue( const double& val )
 {
     if( IsDoubleEmpty( val ))
         fout << CHAR_EMPTY << " ";
@@ -52,13 +52,13 @@ template <> void KeyValueWrite::write_value( const double& val )
 }
 
 /// Write double value to file
-template <> void KeyValueWrite::write_value( const char& value )
+template <> void KeyValueWrite::writeValue( const char& value )
 {
     fout << "\'" << value << "\'";
 }
 
 /// Write double value to file
-template <> void KeyValueWrite::write_value( const std::string& value )
+template <> void KeyValueWrite::writeValue( const std::string& value )
 {
     auto val = value;
     strip(val);
@@ -78,7 +78,7 @@ void KeyValueWrite::write_array(const std::string &field_name, const std::vector
             jj=0;
             fout << std::endl;
         }
-        write_value( arr[ii] );
+        writeValue( arr[ii] );
         fout << " ";
     }
 }

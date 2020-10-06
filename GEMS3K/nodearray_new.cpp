@@ -38,13 +38,14 @@
 
 #ifdef NODEARRAYLEVEL
 
-#ifndef NOPARTICLEARRAY
-#include "particlearray.h"
-#endif
+//#ifndef NOPARTICLEARRAY
+//#include "particlearray.h"
+//#endif
 #include "nodearray.h"
 #include "io_arrays.h"
 #include "gdatastream.h"
-
+#include "io_keyvalue.h"
+#include "io_nlohmann.h"
 
 TNodeArray::TNodeArray( long int nNod  ):
     internal_Node(new TNode()), calcNode(internal_Node.get()),

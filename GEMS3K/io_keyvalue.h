@@ -55,7 +55,7 @@ public:
     }
 
     template < typename T >
-    void write_value( const T& value )
+    void writeValue( const T& value )
     {
         fout << value;
     }
@@ -65,7 +65,7 @@ public:
     void write_key_value( const std::string& field_name, const T& value  )
     {
         fout << std::endl << "<" << field_name << ">  ";
-        write_value(value);
+        writeValue(value);
     }
 
     /// Writes double vector to a text file.
@@ -89,7 +89,7 @@ public:
                 jj=0;
                 fout << std::endl;
             }
-            write_value(arr[ii]);
+            writeValue(arr[ii]);
             fout << " ";
         }
     }
@@ -117,7 +117,7 @@ public:
                     fout << "#  ";
             }
             std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
-            write_value( str );
+            writeValue( str );
             fout << " ";
         }
     }
@@ -207,10 +207,10 @@ public:
 };
 
 
-template <> void KeyValueWrite::write_value( const double& );
-template <> void KeyValueWrite::write_value( const float& );
-template <> void KeyValueWrite::write_value( const char& value );
-template <> void KeyValueWrite::write_value( const std::string& value );
+template <> void KeyValueWrite::writeValue( const double& );
+template <> void KeyValueWrite::writeValue( const float& );
+template <> void KeyValueWrite::writeValue( const char& value );
+template <> void KeyValueWrite::writeValue( const std::string& value );
 
 }  // io_formats
 

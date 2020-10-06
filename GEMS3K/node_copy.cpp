@@ -32,7 +32,8 @@
 #include "node.h"
 #include "gdatastream.h"
 #include "num_methods.h"
-
+#include "io_keyvalue.h"
+#include "io_nlohmann.h"
 
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values

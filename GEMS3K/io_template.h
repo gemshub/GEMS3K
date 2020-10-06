@@ -116,7 +116,7 @@ public:
     }
 
     /// Test for reading all fields must be always present in the file
-    std::string test_read() const;
+    std::string testRead() const;
 
 protected:
 
@@ -149,7 +149,7 @@ public:
     template < typename T >
     void writeValue( const T& value )
     {
-        out_format.write_value( value );
+        out_format.writeValue( value );
     }
 
     /// Writes long field to a text file.

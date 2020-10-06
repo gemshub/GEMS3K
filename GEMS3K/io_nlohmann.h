@@ -56,13 +56,13 @@ public:
 
     void dump( bool brief )
     {
-       fout << json_data.dump(( brief ? 0 : 4 ));
+       fout << json_data.dump(( brief ? 4 : 0 ));
     }
 
     void write_comment( const std::string&  ) {}
 
     template < typename T >
-    void write_value( const T& value )
+    void writeValue( const T& value )
     {
         if( json_data.is_array() )
             json_data.push_back(value);

@@ -137,7 +137,7 @@ void show_usage( const std::string &name )
               << "\t-t,\t--key-value \twrite IPM, DCH and DBR files in txt mode \n"
               << "\t-b,\t--binary    \twrite IPM, DCH and DBR files in binary mode \n"
                  // method
-              << "\t-d,\t--brife   \tdo not write data items that contain only default values (default false) \n"
+              << "\t-d,\t--brife    \tdo not write data items that contain only default values (default false) \n"
               << "\t-c,\t--comments \twrite files with comments for all data entries ( in text mode ) (default false) \n\n"
               << std::endl;
 }
