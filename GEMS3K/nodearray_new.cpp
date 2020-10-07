@@ -42,7 +42,6 @@
 //#include "particlearray.h"
 //#endif
 #include "nodearray.h"
-#include "io_arrays.h"
 #include "gdatastream.h"
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"

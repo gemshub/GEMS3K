@@ -29,12 +29,10 @@
 #include <iomanip>
 #include <algorithm>
 #include "v_detail.h"
-#include "io_arrays.h"
+#include "io_template.h"
+#include "io_nlohmann.h"
+#include "io_keyvalue.h"
 #include "ms_multi.h"
-
-#ifndef  USE_OLD_KV_IO_FILES
-#include "io_json.h"
-#endif
 
 const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.0 c.fdcdd2b5 ";
 
@@ -48,7 +46,7 @@ const char *_GEMIPM_version_stamp = " GEMS3K v.3.7.0 c.fdcdd2b5 ";
 // the text of the comment for this data object, optionally written into the
 // text-format output IPM file.
 //
-outField MULTI_static_fields[8] =  {
+io_formats::outField MULTI_static_fields[8] =  {
   { "pa_PE" , 0 , 0, 0, "# PE: Flag for using electroneutrality condition in GEM IPM calculations (1 or 0)" },
   { "PV" ,    0 , 0, 0, "\n# PV: Flag for the volume balance constraint (on Vol IC) for indifferent equilibria at P_Sat (0 or 1)" },
   { "PSOL" ,  0 , 0, 0, "\n# PSOL: Total number of DCs in liquid hydrocarbon phases (0; reserved)" },
@@ -59,7 +57,7 @@ outField MULTI_static_fields[8] =  {
   { "FIat" ,  0 , 0, 0, "# FIat: Maximum number of surface types per adsorption phase (if FIa > 0, set FIat = 6)" }
 };
 
-outField MULTI_dynamic_fields[80] =  {
+io_formats::outField MULTI_dynamic_fields[80] =  {
 // write/read dynamic (array) data to/from the text-format IPM file
    {  "sMod",  1 , 0, 0, "# sMod: Codes for TSolMod built-in  models of mixing in multicomponent phases [nPS*8]" },
    {  "LsMod", 1 , 0, 0, "\n# LsMod: Dimensions of TSolMod <IPxPH> and <PMc> data arrays [nPS*3]. In each row (for phase):"
@@ -163,30 +161,35 @@ outField MULTI_dynamic_fields[80] =  {
 //===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
-void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
+void TMultiBase::to_text_file_gemipm( std::iostream& ff1, bool addMui,
 		bool with_comments, bool brief_mode )
 {
-  const BASE_PARAM *pa_p = pa_p_ptr();
+   const BASE_PARAM *pa_p = pa_p_ptr();
    bool _comment = with_comments;
    char PAalp;
    char PSigm;
    get_PAalp_PSigm( PAalp, PSigm);
 
-  //fstream ff( path, ios::out );
-  //ErrorIf( !ff.good() , path, "Fileopen error");
-
-#ifdef  USE_OLD_KV_IO_FILES
-
-  TPrintArrays  prar1( 8, MULTI_static_fields, ff);
-  TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
-
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonWrite out_format( ff1 );
 #else
-  _comment = false;
-  nlohmann::json json_data;
-  TPrintJson  prar1( 8, MULTI_static_fields, json_data);
-  TPrintJson  prar( 80, MULTI_dynamic_fields, json_data);
-
+    io_formats::KeyValueWrite out_format( ff );
 #endif
+    io_formats::TPrintArrays  prar1( 8, MULTI_static_fields, out_format );
+    io_formats::TPrintArrays  prar( 80, MULTI_dynamic_fields, out_format );
+
+//#ifdef  USE_OLD_KV_IO_FILES
+
+//  TPrintArrays  prar1( 8, MULTI_static_fields, ff);
+//  TPrintArrays  prar( 80, MULTI_dynamic_fields, ff);
+
+//#else
+//  _comment = false;
+//  nlohmann::json json_data;
+//  TPrintJson  prar1( 8, MULTI_static_fields, json_data);
+//  TPrintJson  prar( 80, MULTI_dynamic_fields, json_data);
+
+//#endif
 
 
 // set up array flags for permanent fields
@@ -218,21 +221,18 @@ void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
 
 if( _comment )
 {
-   ff << "# " << _GEMIPM_version_stamp << std::endl;// << "# File: " << path << endl;
-   ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
-   ff << "# IPM text input file for the internal GEM IPM-3 kernel data" << std::endl;
-   ff << "# (should be read after the DCH file and before DBR files)" << std::endl << std::endl;
-   ff << "# ID key of the initial chemical system definition" << std::endl;
+   prar.writeComment( _comment, std::string("# ") + _GEMIPM_version_stamp );
+   // << "# File: " << path << endl;
+   prar.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line");
+   prar.writeComment( _comment, "# IPM text input file for the internal GEM IPM-3 kernel data");
+   prar.writeComment( _comment, "# (should be read after the DCH file and before DBR files)\n");
+   prar.writeComment( _comment, "# ID key of the initial chemical system definition");
 }
 
-#ifndef USE_OLD_KV_IO_FILES
-    json_data["<ID_key>"] = std::string(pm.stkey);
-#else
-    ff << "<ID_key> \"" << pm.stkey << "\"" << std::endl;
-#endif
+ prar.addField( "ID_key", std::string(pm.stkey));
 
  if( _comment )
-     ff << "\n## (1) Flags that affect memory allocation";
+     prar.writeComment( _comment, "## (1) Flags that affect memory allocation");
 
  if(!brief_mode || pa_p->PE != pa_p_.PE )
    prar1.writeField(f_pa_PE, pa_p->PE, _comment, false  );
@@ -244,21 +244,13 @@ if( _comment )
  prar1.writeField(f_PV, pm.PV, _comment, brief_mode  );
  prar1.writeField(f_PSOL, pm.PSOL, _comment, brief_mode  );
 
-#ifndef USE_OLD_KV_IO_FILES
- json_data["<PAalp>"] = std::string(1,PAalp);
- json_data["<PSigm>"] = std::string(1,PSigm);
-#else
- if( _comment )
-     ff << "\n\n# PAalp: Flag for using (+) or ignoring (-) specific surface areas of phases ";
- ff << std::endl << std::left << std::setw(12) << "<PAalp> " <<  std::right << std::setw(6) << "\'" << PAalp << "\'" << std::endl;
- if( _comment )
-     ff << "\n# PSigm: Flag for using (+) or ignoring (-) specific surface free energies  " << std::endl;
- ff << std::left << std::setw(12) << "<PSigm> " <<  std::right << std::setw(6) << "\'" << PSigm << "\'" << std::endl;
-#endif
+ prar1.writeField(f_PAalp, PAalp, _comment, brief_mode  );
+ prar1.writeField(f_PSigm, PSigm, _comment, brief_mode  );
 
   if( !brief_mode || pm.FIat > 0 || pm.Lads > 0 )
-  { if( _comment )
-      ff << "\n## (2) Dimensionalities that affect memory allocation";
+  {
+    if( _comment )
+      prar.writeComment( _comment, "## (2) Dimensionalities that affect memory allocation");
     prar1.writeField(f_Lads, pm.Lads, _comment, false  );
     prar1.writeField(f_FIa, pm.FIa, _comment, false  );
     prar1.writeField(f_FIat,  pm.FIat, _comment, false  );
@@ -267,14 +259,13 @@ if( _comment )
 //   ff << left << setw(12) << "<sitNa> " <<  right << setw(8) << pm.sitNan << endl;
     } // brief_mode
 
-#ifdef USE_OLD_KV_IO_FILES
-    ff << "\n\n<END_DIM>\n";
-#endif
+  prar.writeComment( _comment, "\n<END_DIM>\n");
 
    // static data not affected by dimensionalities
    if( _comment )
-   {  ff << "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel" << std::endl;
-      ff << "#      - Need to be changed only in special cases (see gems3k_ipm.html)";
+   {
+      prar.writeComment( _comment, "\n## (3) Numerical controls and tolerances of GEM IPM-3 kernel");
+      prar.writeComment( _comment,"#      - Need to be changed only in special cases (see gems3k_ipm.html)");
    }
    if( !brief_mode || !essentiallyEqual(pa_p->DB, pa_p_.DB ) )
       prar.writeField(f_pa_DB, pa_p->DB, _comment, false  );
@@ -311,7 +302,8 @@ if( _comment )
 
    if(!brief_mode)
     if( _comment )
-     {  ff << "\n\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance";
+     {
+        prar.writeComment( _comment, "\n# X*Min: Cutoff amounts for elimination of unstable species ans phases from mass balance");
      }
 
    if(!brief_mode || !essentiallyEqual(pa_p->XwMin, pa_p_.XwMin ) )
@@ -328,7 +320,7 @@ if( _comment )
        prar.writeField(f_pa_PC,  pa_p->PC, _comment, false  );
 
    if( _comment )
-      ff << "\n# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm" << std::endl;
+      prar.writeComment( _comment, "# DFY: Insertion mole amounts used after the LPP AIA and in PhaseSelection() algorithm\n");
 
    if(!brief_mode || !essentiallyEqual(pa_p->DFYw, pa_p_.DFYw ) )
        prar.writeField(f_pa_DFYw,  pa_p->DFYw, _comment, false  );
@@ -346,7 +338,7 @@ if( _comment )
        prar.writeField(f_pa_DFYs,  pa_p->DFYs, _comment, false  );
 
    if( _comment )
-     ff << "\n# Tolerances and controls of the high-precision IPM-3 algorithm ";
+     prar.writeComment( _comment, "# Tolerances and controls of the high-precision IPM-3 algorithm ");
 
    if(!brief_mode || pa_p->DW != pa_p_.DW )
        prar.writeField(f_pa_DW,  pa_p->DW, _comment, false  );
@@ -372,7 +364,7 @@ if( _comment )
 if( pm.FIs > 0 && pm.Ls > 0 )
 {
   if( _comment )
-     ff << "\n\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)";
+     prar.writeComment( _comment, "\n## (4) Initial data for multicomponent phases (see DCH file for dimension nPHs)");
   prar.writeArrayF(  f_sMod, pm.sMod[0], pm.FIs, 8L, _comment, brief_mode );
 
 long int LsModSum;
@@ -388,50 +380,55 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   if(LsIPxSum )
   {
    if( _comment )
-      ff << "\n\n# IPxPH: Index lists (in TSolMod convention) for interaction parameters of non-ideal solutions";
+      prar.writeComment( _comment, "\n# IPxPH: Index lists (in TSolMod convention) for interaction parameters of non-ideal solutions");
    prar.writeArray(  "IPxPH", pm.IPx,  LsIPxSum);
   }
   if(LsModSum )
    {
      if( _comment )
-        ff << "\n\n# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions";
+        prar.writeComment( _comment, "\n# PMc: Tables (in TSolMod convention) of interaction parameter coefficients  for non-ideal solutions");
     prar.writeArray(  "PMc", pm.PMc,  LsModSum);
    }
    prar.writeArray(  f_LsMdc, pm.LsMdc, pm.FIs*3, 3L, _comment, brief_mode);
    if(LsMdcSum )
-   {   if( _comment )
-          ff << "\n\n# DMc: Tables (in TSolMod convention) of  parameter coefficients for dependent components";
-    prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# DMc: Tables (in TSolMod convention) of  parameter coefficients for dependent components");
+       prar.writeArray(  "DMc", pm.DMc,  LsMdcSum);
    }
    if(LsMsnSum )
-   {   if( _comment )
-          ff << "\n\n# MoiSN:  end member moiety / site multiplicity number tables (in TSolMod convention) ";
+   {
+       if( _comment )
+          prar.writeComment( _comment,  "\n# MoiSN:  end member moiety / site multiplicity number tables (in TSolMod convention) ");
     prar.writeArray(  "MoiSN", pm.MoiSN,  LsMsnSum);
    }
    long int DQFcSum, rcpcSum;
    getLsMdc2sum( DQFcSum, rcpcSum );
    prar.writeArray(  f_LsMdc2, pm.LsMdc2, pm.FIs*3, 3L, _comment, brief_mode);
    if(DQFcSum )
-   {   if( _comment )
-          ff << "\n\n# DQFc:  Collected array of DQF parameters for DCs in phases ";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# DQFc:  Collected array of DQF parameters for DCs in phases ");
    prar.writeArray(  "DQFc", pm.DQFc,  DQFcSum);
    }
 //   if(rcpcSum )
 //   {   if( _comment )
-//          ff << "\n\n# rcpc:  Collected array of reciprocal parameters for DCs in phases ";
+//          prar.writeComment( _comment, "\n# rcpc:  Collected array of reciprocal parameters for DCs in phases ");
 //     prar.writeArray(  "rcpc", pm.rcpc,  rcpcSum);
 //   }
    long int PhLinSum, lPhcSum;
    getLsPhlsum( PhLinSum,lPhcSum );
    prar.writeArray(  f_LsPhl, pm.LsPhl, pm.FI*2, 2L, _comment, brief_mode);
    if(PhLinSum )
-   {   if( _comment )
-          ff << "\n\n# PhLin:  indexes of linked phases and link type codes ";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# PhLin:  indexes of linked phases and link type codes ");
    prar.writeArray(  "PhLin", &pm.PhLin[0][0], PhLinSum*2);
    }
    if(lPhcSum )
-   {   if( _comment )
-          ff << "\n\n# lPhc:  Collected array of phase link parameters ";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# lPhc:  Collected array of phase link parameters ");
        prar.writeArray(  "lPhc", pm.lPhc,  lPhcSum);
    }
    prar.writeArray(  f_SorMc, pm.SorMc, pm.FIs*16, 16L, _comment, brief_mode);
@@ -442,36 +439,42 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    getLsISmosum( IsoCtSum,IsoScSum,IsoPcSum, xSMdSum );
    prar.writeArray(  f_LsISmo, pm.LsISmo, pm.FIs*4, 4L, _comment, brief_mode);
    if(xSMdSum )
-   {   if( _comment )
-          ff << "\n\n# xSMd:  denticity of surface species per surface site (site allocation) ";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# xSMd:  denticity of surface species per surface site (site allocation) ");
    prar.writeArray(  "xSMd", pm.xSMd, xSMdSum);
    }
    if(IsoPcSum )
-   {   if( _comment )
-          ff << "\n\n# IsoPc:  Collected isotherm coefficients per DC ";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# IsoPc:  Collected isotherm coefficients per DC ");
    prar.writeArray(  "IsoPc", pm.IsoPc,  IsoPcSum);
    }
    if(IsoScSum )
-   {   if( _comment )
-          ff << "\n\n# IsoSc:  Collected isotherm coeffs per site";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# IsoSc:  Collected isotherm coeffs per site");
    prar.writeArray(  "IsoSc", pm.IsoSc, IsoScSum);
    }
    if(IsoCtSum )
-   {   if( _comment )
-          ff << "\n\n# IsoCt:  Collected isotherm and SATC codes for surface site types";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# IsoCt:  Collected isotherm and SATC codes for surface site types");
    prar.writeArray(  "IsoCt", pm.IsoCt,  IsoCtSum, 1L);
    }
    long int EImcSum, mCDcSum;
    getLsESmosum( EImcSum, mCDcSum );
    prar.writeArray(  f_LsESmo, pm.LsESmo, pm.FIs*4, 4L, _comment, brief_mode);
    if(EImcSum )
-   {   if( _comment )
-          ff << "\n\n# EImc:  Collected EIL model coefficients";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# EImc:  Collected EIL model coefficients");
    prar.writeArray(  "EImc", pm.EImc, EImcSum);
    }
    if(mCDcSum )
-   {   if( _comment )
-          ff << "\n\n# mCDc:  Collected CD EIL model coefficients per DC ";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# mCDc:  Collected CD EIL model coefficients per DC ");
    prar.writeArray(  "mCDc", pm.mCDc,  mCDcSum);
    }
    // TKinMet stuff
@@ -481,33 +484,39 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    getLsKinsum( xSKrCSum, ocPRkC_feSArC_Sum, rpConCSum, apConCSum, AscpCSum );
    prar.writeArray(  f_LsKin, pm.LsKin, pm.FI*6, 6L, _comment, brief_mode);
    if(xSKrCSum )
-   {   if( _comment )
-          ff << "\n\n# xSKrC:  Collected array of aq/gas/sorption species indexes used in activity products";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# xSKrC:  Collected array of aq/gas/sorption species indexes used in activity products");
    prar.writeArray(  "xSKrC", pm.xSKrC, xSKrCSum);
    }
    if(ocPRkC_feSArC_Sum )
-   {   if( _comment )
-          ff << "\n\n# ocPRkC:  Collected array of operation codes for kinetic parallel reaction terms";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# ocPRkC:  Collected array of operation codes for kinetic parallel reaction terms");
    prar.writeArray(  "ocPRkC", &pm.ocPRkC[0][0],  ocPRkC_feSArC_Sum*2);
    }
    if(ocPRkC_feSArC_Sum )
-   {   if( _comment )
-          ff << "\n\n# feSArC:  Collected array of fractions of surface area related to parallel reactions";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# feSArC:  Collected array of fractions of surface area related to parallel reactions");
    prar.writeArray(  "feSArC", pm.feSArC, ocPRkC_feSArC_Sum);
    }
    if(rpConCSum )
-   {   if( _comment )
-          ff << "\n\n# rpConC:  Collected array of kinetic rate constants";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# rpConC:  Collected array of kinetic rate constants");
    prar.writeArray(  "rpConC", pm.rpConC,  rpConCSum);
    }
    if(apConCSum )
-   {   if( _comment )
-          ff << "\n\n# apConC:  Collected array of parameters per species involved in activity product terms";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# apConC:  Collected array of parameters per species involved in activity product terms");
    prar.writeArray(  "apConC", pm.apConC, apConCSum);
    }
    if(AscpCSum )
-   {   if( _comment )
-          ff << "\n\n# AscpC:  parameter coefficients of equation for correction of specific surface area";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# AscpC:  parameter coefficients of equation for correction of specific surface area");
    prar.writeArray(  "AscpC", pm.AscpC,  AscpCSum);
    }
    prar.writeArray(  f_PfFact, pm.PfFact, pm.FI, 1L, _comment, brief_mode);
@@ -516,8 +525,9 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    getLsUptsum( UMpcSum, xICuCSum );
    prar.writeArray(  f_LsUpt, pm.LsUpt, pm.FIs*2, 2L, _comment, brief_mode);
    if( UMpcSum )
-   {   if( _comment )
-          ff << "\n\n# UMpcC:  Collected array of uptake model coefficients";
+   {
+       if( _comment )
+          prar.writeComment( _comment, "\n# UMpcC:  Collected array of uptake model coefficients");
        prar.writeArray(  "UMpcC", pm.UMpcC, UMpcSum);
    }
    if( pm.xICuC )
@@ -528,11 +538,11 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
 } // sMod
 
   if( _comment )
-    ff << "\n\n## (5) Data arrays which are provided neither in DCH nor in DBR files";
+    prar.writeComment( _comment, "\n## (5) Data arrays which are provided neither in DCH nor in DBR files");
   prar.writeArray(  f_B, pm.B,  pm.N, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs";
+     prar.writeComment( _comment, "\n# Initial data for DCs - see DATACH file for dimensions nDC, nDCs");
   prar.writeArray(  f_Pparc, pm.Pparc,  pm.L, -1L, _comment, brief_mode);
   //  ff << "\n\n# This is not necessary - can be calculated from G0 ???????????";
   // prar.writeArray(  "G0", pm.G0,  pm.L);
@@ -540,14 +550,14 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
   prar.writeArray(  f_lnGmf, pm.lnGmf,  pm.L, -1L, _comment, brief_mode);
 
   if( _comment )
-     ff << "\n\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)";
+     prar.writeComment( _comment, "\n# (6) Metastability constraints on DC amounts from above (DUL) and below (DLL)");
    prar.writeArrayF(  f_RLC, pm.RLC, pm.L, 1L, _comment, brief_mode );
    prar.writeArrayF(  f_RSC, pm.RSC, pm.L, 1L, _comment, brief_mode );
    prar.writeArray(  f_DLL, pm.DLL, pm.L, -1L, _comment, brief_mode);
    prar.writeArray(  f_DUL, pm.DUL,  pm.L, -1L, _comment, brief_mode);
 
    if( _comment )
-     ff << "\n\n# (7) Initial data for Phases" << std::endl;
+     prar.writeComment( _comment, "\n# (7) Initial data for Phases\n");
    prar.writeArray(  f_Aalp, pm.Aalp,  pm.FI, -1L, _comment, brief_mode);
    if( PSigm != S_OFF )
    {
@@ -559,7 +569,7 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    if( pm.FIat > 0 &&  pm.FIs > 0 )
     { // ADSORPTION AND ION EXCHANGE
       if( _comment )
-        ff << "\n\n# (8) Initial data for sorption phases";
+        prar.writeComment( _comment, "\n# (8) Initial data for sorption phases");
 
       prar.writeArray(  f_Nfsp, &pm.Nfsp[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
       prar.writeArray(  f_MASDT, &pm.MASDT[0][0], pm.FIs*pm.FIat, pm.FIat, _comment, brief_mode);
@@ -593,18 +603,12 @@ getLsMdcsum( LsMdcSum, LsMsnSum, LsSitSum );
    prar.writeArray(  f_muj, pm.muj,  pm.L, -1L, _comment, brief_mode);
  }
 
-#ifndef  USE_OLD_KV_IO_FILES
-  ff << json_data.dump(( _comment ? 4 : 0 ));
-#endif
-  ff << std::endl;
-
- if( _comment )
-   ff << "\n# End of file\n" << std::endl;
+  out_format.dump(  _comment );
 
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
-void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
+void TMultiBase::from_text_file_gemipm( std::iostream& ff1,  DATACH  *dCH )
 {
   BASE_PARAM *pa_p = pa_p_ptr();
   long int ii, nfild;
@@ -651,31 +655,44 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
   pm.FIat = 0; //6
   pm.PLIM  = 1;
 
-// static data
-#ifdef USE_OLD_KV_IO_FILES
- TReadArrays  rdar( 8, MULTI_static_fields, ff);
- rdar.skipSpace();
- std::string str;
- char buf[300];
- ff.getline(buf, 300,  '\n' );
- str = buf;
- size_t pos1 = str.find('\"');
- if( pos1 < std::string::npos )
-    str = str.substr( pos1+1);
- pos1 = str.find('\"');
- if( pos1 < std::string::npos )
- {   str = str.substr( 0, pos1 );
-    //f_getline( ff, str, '\n');
-    copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
- }
-
+  // static arrays
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonRead in_format( ff1 );
 #else
- nlohmann::json json_data;
- ff >> json_data;
- TReadJson  rdar( 8, MULTI_static_fields, json_data);
- memcpy( pm.stkey, json_data["<ID_key>"].get<std::string>().c_str(), EQ_RKLEN );
+    io_formats::KeyValueRead in_format( ff1 );
 #endif
 
+    io_formats::TReadArrays rdar( 8, MULTI_static_fields, in_format);
+
+    rdar.readNext( "ID_key");
+    rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
+
+    // memcpy( pm.stkey, json_data["<ID_key>"].get<std::string>().c_str(), EQ_RKLEN );
+
+//// static data
+//#ifdef USE_OLD_KV_IO_FILES
+// TReadArrays  rdar( 8, MULTI_static_fields, ff);
+// rdar.skipSpace();
+// std::string str;
+// char buf[300];
+// ff.getline(buf, 300,  '\n' );
+// str = buf;
+// size_t pos1 = str.find('\"');
+// if( pos1 < std::string::npos )
+//    str = str.substr( pos1+1);
+// pos1 = str.find('\"');
+// if( pos1 < std::string::npos )
+// {   str = str.substr( 0, pos1 );
+//    //f_getline( ff, str, '\n');
+//    copyValues( pm.stkey, (char * )str.c_str(), EQ_RKLEN );
+// }
+
+//#else
+// nlohmann::json json_data;
+// ff >> json_data;
+// TReadJson  rdar( 8, MULTI_static_fields, json_data);
+// memcpy( pm.stkey, json_data["<ID_key>"].get<std::string>().c_str(), EQ_RKLEN );
+//#endif
 
    nfild = rdar.findNext();
    while( nfild >=0 )
@@ -775,12 +792,8 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH )
   // set up DCCW
   ConvertDCC();
 
-//reads dynamic values from txt file
-#ifdef USE_OLD_KV_IO_FILES
- TReadArrays  rddar( 80, MULTI_dynamic_fields, ff);
-#else
- TReadJson  rddar( 80, MULTI_dynamic_fields, json_data);
-#endif
+  //dynamic data
+  io_formats::TReadArrays   rddar( 80, MULTI_dynamic_fields, in_format);
 
 // set up array flags for permanent fields
 

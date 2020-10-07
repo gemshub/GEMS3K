@@ -26,9 +26,8 @@
 //-------------------------------------------------------------------
 
 #include <iomanip>
-#include  <iostream>
+#include <iostream>
 #include "v_detail.h"
-#include "io_arrays.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_keyvalue.h"
@@ -39,11 +38,6 @@
 #ifdef NODEARRAYLEVEL
 #include "nodearray.h"
 #endif
-#ifndef  USE_OLD_KV_IO_FILES
-#include "io_json.h"
-#endif
-
-//extern bool _comment;
 extern const char* _GEMIPM_version_stamp;
 
 //===============================================================
@@ -126,7 +120,7 @@ io_formats::outField DataBR_fields[f_lga+1/*60*/] =  {
     { "lga",  0, 0, nDCbi, "# lga: DC activities in equilibrium, in log10 scale [nDCb]" }
 };
 
-outField DataCH_static_fields[14] =  {
+io_formats::outField DataCH_static_fields[14] =  {
   { "nIC",   1, 0, 0, "# nIC: Number of Independent Components (usually chemical elements and charge)" },
   { "nDC",   1, 0, 0, "# nDC: Number of Dependent Components (chemical species made of Independent Components)" },
   { "nPH",   1, 0, 0, "# nPH: Number of phases (into which Dependent Components are grouped)" },
@@ -143,7 +137,7 @@ outField DataCH_static_fields[14] =  {
   { "mLook", 1, 0, 0, "# mLook: Lookup mode: 0 interpolation over nTp*nPp grid; 1 data for T,P pairs, no interpolation"}
 };
 
-outField DataCH_dynamic_fields[30] =  { //+4
+io_formats::outField DataCH_dynamic_fields[30] =  { //+4
    { "xic",   1, 0, 0, "# xIC: DATACH access index list for ICs kept in the DATABR structure and in DBR files [nICb]" },
    { "xdc",   1, 0, 0, "# xDC: DATACH access index list of DCs kept in the DATABR  structure and in DBR files [nDCb]" },
    { "xph",   1, 0, 0, "# xPH: DATACH access index list for Phases kept in the DATABR structure and in DBR files [nPHb]" },
@@ -324,8 +318,6 @@ void TNode::databr_from_text_file( std::iostream& ff )
 #ifndef NODEARRAYLEVEL
     double tmpVal;
 #endif
-    // fstream ff("DataBR.out", ios::out );
-    // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset( CNode );
@@ -335,7 +327,6 @@ void TNode::databr_from_text_file( std::iostream& ff )
 #else
     io_formats::KeyValueRead in_format( ff );
 #endif
-
     io_formats::TReadArrays  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
@@ -506,161 +497,143 @@ void TNode::databr_from_text_file( std::iostream& ff )
 
 void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
 {
-// fstream ff("DataCH.out", ios::out );
-// ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
-  bool _comment = with_comments;
+    bool _comment = with_comments;
 
-#ifdef  USE_OLD_KV_IO_FILES
-
-  TPrintArrays  prar1(14, DataCH_static_fields, ff);
-  TPrintArrays  prar(30, DataCH_dynamic_fields, ff);
-
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonWrite out_format( ff );
 #else
-
-  _comment = false;
-  nlohmann::json json_data;
-  TPrintJson  prar1(14, DataCH_static_fields, json_data);
-  TPrintJson  prar(30, DataCH_dynamic_fields, json_data);
-
+    io_formats::KeyValueWrite out_format( ff );
 #endif
+    io_formats::TPrintArrays  prar1(14, DataCH_static_fields, out_format );
+    io_formats::TPrintArrays  prar( 30, DataCH_dynamic_fields, out_format );
 
-  if( CSD->nIC == CSD->nICb )
-          prar.setNoAlws( f_xic);
-  if(CSD->nDC == CSD->nDCb )
-          prar.setNoAlws( f_xdc);
-  if(CSD->nPH == CSD->nPHb )
-          prar.setNoAlws( f_xph );
+    if( CSD->nIC == CSD->nICb )
+        prar.setNoAlws( f_xic);
+    if(CSD->nDC == CSD->nDCb )
+        prar.setNoAlws( f_xdc);
+    if(CSD->nPH == CSD->nPHb )
+        prar.setNoAlws( f_xph );
 
-  if( _comment )
-  {
-     ff << "# " << _GEMIPM_version_stamp << std::endl << "# File: " << path << std::endl;
-     ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
-     ff << "# DCH text input file (should be read before IPM and DBR files)" << std::endl << std::endl;
-     ff << "## (1) Dimensions for memory allocation";
-  }
-  prar1.writeField(f_nIC, CSD->nIC, _comment, brief_mode  );
-  prar1.writeField(f_nDC, CSD->nDC, _comment, brief_mode  );
-  prar1.writeField(f_nPH, CSD->nPH, _comment, brief_mode  );
-  prar1.writeField(f_nPS, CSD->nPS, _comment, brief_mode  );
-  prar1.writeField(f_nDCs, CSD->nDCs, _comment, brief_mode  );
+    if( _comment )
+    {
+        prar.writeComment( _comment, std::string( "# ") + _GEMIPM_version_stamp );
+        prar.writeComment( _comment, std::string("# File: ")+ path  );
+        prar.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line");
+        prar.writeComment( _comment, "# DCH text input file (should be read before IPM and DBR files)");
+        prar.writeComment( _comment, "\n## (1) Dimensions for memory allocation");
+    }
+    prar1.writeField(f_nIC, CSD->nIC, _comment, brief_mode  );
+    prar1.writeField(f_nDC, CSD->nDC, _comment, brief_mode  );
+    prar1.writeField(f_nPH, CSD->nPH, _comment, brief_mode  );
+    prar1.writeField(f_nPS, CSD->nPS, _comment, brief_mode  );
+    prar1.writeField(f_nDCs, CSD->nDCs, _comment, brief_mode  );
 
-  if( _comment )
-    ff << std::endl << "\n## (2) Dimensions for DBR node recipe (memory allocation)";
-  prar1.writeField(f_nICb, CSD->nICb, _comment, brief_mode  );
-  prar1.writeField(f_nDCb, CSD->nDCb, _comment, brief_mode  );
-  prar1.writeField(f_nPHb, CSD->nPHb, _comment, brief_mode  );
-  prar1.writeField(f_nPSb, CSD->nPSb, _comment, brief_mode  );
+    if( _comment )
+        ff << std::endl << "\n## (2) Dimensions for DBR node recipe (memory allocation)";
+    prar1.writeField(f_nICb, CSD->nICb, _comment, brief_mode  );
+    prar1.writeField(f_nDCb, CSD->nDCb, _comment, brief_mode  );
+    prar1.writeField(f_nPHb, CSD->nPHb, _comment, brief_mode  );
+    prar1.writeField(f_nPSb, CSD->nPSb, _comment, brief_mode  );
 
-  if( _comment )
-    ff << std::endl << "\n## (3) Dimensions for thermodynamic data arrays";
-  prar1.writeField(f_nTp, CSD->nTp, _comment, brief_mode  );
-  prar1.writeField(f_nPp, CSD->nPp, _comment, brief_mode  );
-  prar1.writeField(f_iGrd, CSD->iGrd, _comment, brief_mode  );
-  prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
-  prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
+    if( _comment )
+        ff << std::endl << "\n## (3) Dimensions for thermodynamic data arrays";
+    prar1.writeField(f_nTp, CSD->nTp, _comment, brief_mode  );
+    prar1.writeField(f_nPp, CSD->nPp, _comment, brief_mode  );
+    prar1.writeField(f_iGrd, CSD->iGrd, _comment, brief_mode  );
+    prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
+    prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
-#ifdef  USE_OLD_KV_IO_FILES
-  ff << std::endl << "\n<END_DIM>" << std::endl;
-#endif
+    prar.writeComment( _comment,  "\n<END_DIM>\n" );
 
-// dynamic arrays - must follow static data
-  if( _comment )
-     ff << "\n## (4) DBR node recipe connection index lists";
-  prar.writeArray(  f_xic, CSD->xic, CSD->nICb, -1L,_comment, brief_mode);
-  prar.writeArray(  f_xdc, CSD->xdc, CSD->nDCb, -1L,_comment, brief_mode);
-  prar.writeArray(  f_xph, CSD->xph, CSD->nPHb, -1L,_comment, brief_mode);
+    // dynamic arrays - must follow static data
+    if( _comment )
+        prar.writeComment( _comment, "## (4) DBR node recipe connection index lists");
+    prar.writeArray(  f_xic, CSD->xic, CSD->nICb, -1L,_comment, brief_mode);
+    prar.writeArray(  f_xdc, CSD->xdc, CSD->nDCb, -1L,_comment, brief_mode);
+    prar.writeArray(  f_xph, CSD->xph, CSD->nPHb, -1L,_comment, brief_mode);
 
-  if( _comment )
-     ff << "\n\n## (5) Independent Components and their properties";
-  if(!brief_mode || prar.getAlws( f_ICNL ))
-  {
-     if( _comment )
-         ff << "\n# ICNL: List of Independent Component names (<=4 characters per name) [nIC]";
-      prar.writeArray(  "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
-  }
-  prar.writeArrayF(  f_ccIC, CSD->ccIC, CSD->nIC, 1L,_comment, brief_mode );
-  prar.writeArray(  f_ICmm, CSD->ICmm, CSD->nIC, -1L,_comment, brief_mode);
+    if( _comment )
+        prar.writeComment( _comment, "\n## (5) Independent Components and their properties");
+    if(!brief_mode || prar.getAlws( f_ICNL ))
+    {
+        if( _comment )
+            prar.writeComment( _comment, "# ICNL: List of Independent Component names (<=4 characters per name) [nIC]");
+        prar.writeArray(  "ICNL", CSD->ICNL[0], CSD->nIC, MaxICN );
+    }
+    prar.writeArrayF(  f_ccIC, CSD->ccIC, CSD->nIC, 1L,_comment, brief_mode );
+    prar.writeArray(  f_ICmm, CSD->ICmm, CSD->nIC, -1L,_comment, brief_mode);
 
-  if( _comment )
-    ff << "\n\n## (6) Dependent Components and their codes";
-  if(!brief_mode || prar.getAlws( f_DCNL ))
-  {	  if( _comment )
-       ff << "\n# DCNL: Name list of Dependent Components (<=16 characters per name) [nDC]";
-     prar.writeArray(  "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
-  }
-  prar.writeArrayF(  f_ccDC, CSD->ccDC, CSD->nDC, 1L,_comment, brief_mode );
-  prar.writeArray(  f_DCmm, CSD->DCmm, CSD->nDC, -1L,_comment, brief_mode);
+    if( _comment )
+        prar.writeComment( _comment, "\n## (6) Dependent Components and their codes");
+    if(!brief_mode || prar.getAlws( f_DCNL ))
+    {
+        if( _comment )
+            prar.writeComment( _comment, "# DCNL: Name list of Dependent Components (<=16 characters per name) [nDC]");
+        prar.writeArray(  "DCNL", CSD->DCNL[0], CSD->nDC, MaxDCN );
+    }
+    prar.writeArrayF(  f_ccDC, CSD->ccDC, CSD->nDC, 1L,_comment, brief_mode );
+    prar.writeArray(  f_DCmm, CSD->DCmm, CSD->nDC, -1L,_comment, brief_mode);
 
-  if( _comment )
-    ff << "\n\n## (7) Phases and their codes" << std::endl;
-  if(!brief_mode || prar.getAlws( f_PHNL ))
-  { if( _comment )
-      ff << "# PHNL: List of Phase names (<=16 characters per name) [nPH]";
-    prar.writeArray(  "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
-  }
-  prar.writeArrayF(  f_ccPH, CSD->ccPH, CSD->nPH, 1L,_comment, brief_mode );
-  prar.writeArray(  f_nDCinPH, CSD->nDCinPH, CSD->nPH, -1L,_comment, brief_mode);
+    if( _comment )
+        prar.writeComment( _comment, "\n## (7) Phases and their codes");
+    if(!brief_mode || prar.getAlws( f_PHNL ))
+    {
+        if( _comment )
+            prar.writeComment( _comment, "# PHNL: List of Phase names (<=16 characters per name) [nPH]");
+        prar.writeArray(  "PHNL", CSD->PHNL[0], CSD->nPH, MaxPHN );
+    }
+    prar.writeArrayF(  f_ccPH, CSD->ccPH, CSD->nPH, 1L,_comment, brief_mode );
+    prar.writeArray(  f_nDCinPH, CSD->nDCinPH, CSD->nPH, -1L,_comment, brief_mode);
 
-  if( _comment )
-    ff << "\n\n# (8) Data for Dependent Components";
-  prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
-#ifdef USE_OLD_KV_IO_FILES
-  ff << std::endl;
-#endif
+    if( _comment )
+        prar.writeComment( _comment, "\n# (8) Data for Dependent Components");
+    prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
+    prar.writeComment( _comment,  " ");
 
-  if( _comment )
-    ff << "\n## (9) Thermodynamic data for Dependent Components";
-  prar.writeField(  f_Ttol, CSD->Ttol, _comment, brief_mode  );
-  prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
-  prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );
-#ifdef USE_OLD_KV_IO_FILES
-  ff << std::endl;
-#endif
+    if( _comment )
+        prar.writeComment( _comment, "\n## (9) Thermodynamic data for Dependent Components");
+    prar.writeField(  f_Ttol, CSD->Ttol, _comment, brief_mode  );
+    prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
+    prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );
+    prar.writeComment( _comment,  " ");
 
-  prar.writeField(  f_Ptol, CSD->Ptol, _comment, brief_mode  );
-  prar.writeArray(  f_Pval, CSD->Pval, CSD->nPp,  -1L,_comment, brief_mode );
+    prar.writeField(  f_Ptol, CSD->Ptol, _comment, brief_mode  );
+    prar.writeArray(  f_Pval, CSD->Pval, CSD->nPp,  -1L,_comment, brief_mode );
 
-  if( CSD->ccPH[0] == PH_AQUEL )
-  {
-    prar.writeArray(  f_denW, CSD->denW, 5*(gridTP()), gridTP(), _comment, brief_mode );
-    prar.writeArray(  f_denWg, CSD->denWg, 5*(gridTP()), gridTP(), _comment, brief_mode );
-    prar.writeArray(  f_epsW, CSD->epsW,  5*(gridTP()), gridTP(), _comment, brief_mode );
-    prar.writeArray(  f_epsWg, CSD->epsWg, 5*(gridTP()),  gridTP(), _comment, brief_mode );
-  }
-  prar.writeArray(  f_V0, CSD->V0,  CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
-  prar.writeArray(  f_G0, CSD->G0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
-  prar.writeArray(  f_H0, CSD->H0,  CSD->nDC*gridTP(),gridTP(), _comment, brief_mode );
-  prar.writeArray(  f_S0, CSD->S0,CSD->nDC*gridTP(),  gridTP(), _comment, brief_mode  );
-  prar.writeArray(  f_Cp0, CSD->Cp0,CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
-  prar.writeArray(  f_A0, CSD->A0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
-  prar.writeArray(  f_U0, CSD->U0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
+    if( CSD->ccPH[0] == PH_AQUEL )
+    {
+        prar.writeArray(  f_denW, CSD->denW, 5*(gridTP()), gridTP(), _comment, brief_mode );
+        prar.writeArray(  f_denWg, CSD->denWg, 5*(gridTP()), gridTP(), _comment, brief_mode );
+        prar.writeArray(  f_epsW, CSD->epsW,  5*(gridTP()), gridTP(), _comment, brief_mode );
+        prar.writeArray(  f_epsWg, CSD->epsWg, 5*(gridTP()),  gridTP(), _comment, brief_mode );
+    }
+    prar.writeArray(  f_V0, CSD->V0,  CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
+    prar.writeArray(  f_G0, CSD->G0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode );
+    prar.writeArray(  f_H0, CSD->H0,  CSD->nDC*gridTP(),gridTP(), _comment, brief_mode );
+    prar.writeArray(  f_S0, CSD->S0,CSD->nDC*gridTP(),  gridTP(), _comment, brief_mode  );
+    prar.writeArray(  f_Cp0, CSD->Cp0,CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
+    prar.writeArray(  f_A0, CSD->A0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
+    prar.writeArray(  f_U0, CSD->U0, CSD->nDC*gridTP(), gridTP(), _comment, brief_mode  );
 
-  if( CSD->iGrd  )
-    prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
+    if( CSD->iGrd  )
+        prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
 
-#ifndef  USE_OLD_KV_IO_FILES
-  ff << json_data.dump( ( _comment ? 4 : 0 ));
-#endif
-  ff << std::endl;
-  if( _comment )
-      ff << "\n# End of file\n";
+    out_format.dump(  _comment );
 }
 
 // Reading dataCH structure from text file
 void TNode::datach_from_text_file(std::iostream& ff)
 {
   long int ii;
-// fstream ff("DataCH.out", ios::in );
-// ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
-// static arrays
-#ifdef USE_OLD_KV_IO_FILES
- TReadArrays  rdar( 14, DataCH_static_fields, ff);
+  // static arrays
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonRead in_format( ff );
 #else
- nlohmann::json json_data;
- ff >> json_data;
- TReadJson  rdar( 14, DataCH_static_fields, json_data);
+    io_formats::KeyValueRead in_format( ff );
 #endif
+
+    io_formats::TReadArrays rdar( 14, DataCH_static_fields, in_format);
 
  long int nfild = rdar.findNext();
  while( nfild >=0 )
@@ -709,12 +682,8 @@ void TNode::datach_from_text_file(std::iostream& ff)
   datach_realloc();
   databr_realloc();
 
-//dynamic data
-#ifdef USE_OLD_KV_IO_FILES
- TReadArrays  rddar( 30, DataCH_dynamic_fields, ff);
-#else
- TReadJson  rddar( 30, DataCH_dynamic_fields, json_data);
-#endif
+  //dynamic data
+  io_formats::TReadArrays   rddar( 30, DataCH_dynamic_fields, in_format);
 
    if( CSD->iGrd  )
       rddar.setAlws( f_DD /*28 "DD"*/);

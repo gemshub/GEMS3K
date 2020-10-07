@@ -167,6 +167,19 @@ public:
         }
     }
 
+    /// Writes field to a text file.
+    template < typename T >
+    void addField( const std::string& field_name , const T& value )
+    {
+            out_format.write_key_value( field_name, value );
+    }
+
+    /// Writes field to a text file.
+    void addField( const std::string& field_name , const char *value )
+    {
+            out_format.write_key_value( field_name, std::string(value) );
+    }
+
     /// Writes array to a text file.
     /// <flds[f_num].name> arr[0] ... arr[size-1]
     /// \param l_size - Setup number of elements in line
@@ -271,7 +284,7 @@ public:
     /// Read next label from file ( must be exist, otherwise error )
     void  readNext( const std::string& label)
     {
-        if( in_format.test_next_is( label )  )
+        if( !in_format.test_next_is( label )  )
         {
             std::string msg = label;
             msg += " - No data where expected.\n";

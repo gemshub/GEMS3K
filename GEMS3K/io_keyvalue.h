@@ -211,6 +211,7 @@ template <> void KeyValueWrite::writeValue( const double& );
 template <> void KeyValueWrite::writeValue( const float& );
 template <> void KeyValueWrite::writeValue( const char& value );
 template <> void KeyValueWrite::writeValue( const std::string& value );
+template <> void KeyValueWrite::write_key_value( const std::string& field_name, const std::string& value );
 
 }  // io_formats
 

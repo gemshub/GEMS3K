@@ -62,7 +62,13 @@ template <> void KeyValueWrite::writeValue( const std::string& value )
 {
     auto val = value;
     strip(val);
-    fout  << "\'" << val.c_str() << "\'";
+    fout  << "\'" << val << "\'";
+}
+
+template <> void KeyValueWrite::write_key_value( const std::string& field_name, const std::string& value )
+{
+    fout << std::endl << "<" << field_name << ">  ";
+    fout  << "\"" << value << "\"";
 }
 
 void KeyValueWrite::write_array(const std::string &field_name, const std::vector<double> &arr, long l_size )
