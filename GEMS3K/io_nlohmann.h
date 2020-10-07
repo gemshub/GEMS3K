@@ -54,9 +54,9 @@ public:
     NlohmannJsonWrite( std::iostream& ff ): json_data(), fout(ff)
     {}
 
-    void dump( bool brief )
+    void dump( bool not_brief )
     {
-       fout << json_data.dump(( brief ? 4 : 0 ));
+       fout << json_data.dump(( not_brief ? 4 : 0 ));
     }
 
     void write_comment( const std::string&  ) {}

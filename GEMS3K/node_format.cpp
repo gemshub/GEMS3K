@@ -104,7 +104,7 @@ io_formats::outField DataBR_fields[f_lga+1/*60*/] =  {
   { "xPH",  0, 0, nPHbi, "\n# xPH: Amounts of phases in equilibrium state, moles (GEM output) [nPHb]" },
   { "vPS",  0, 0, nPSbi, "\n# vPS: Volumes of multicomponent phases, m3 (GEM output) [nPSb]" },
   { "mPS",  0, 0, nPSbi, "\n# mPS: Masses of multicomponent phases, kg (GEM output) [nPSb]" },
-  { "bPS",  0, 0, nPSbnICbi, "\n\n# bPS: Bulk elemental compositions of multicomponent phases, moles (GEM output) [nPSb*nICb]"},
+  { "bPS",  0, 0, nPSbnICbi, "\n# bPS: Bulk elemental compositions of multicomponent phases, moles (GEM output) [nPSb*nICb]"},
   { "xPA",  0, 0, nPSbi, "\n# xPA: Amount of carrier (sorbent or solvent) in multicomponent phases, moles (GEM output) [nPSb]" },
   { "bSP",  0, 0, nICbi, "\n# bSP: Output bulk composition of the equilibrium solid part of the system, moles " },
     { "amru",  0, 0, nPSbi, "\n# amru: Upper AMRs on amounts of multi-component phases (mol) [nPSb]  " },
@@ -304,7 +304,7 @@ void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool bri
         if( _comment )
         {
             prar.writeComment( _comment,  DataBR_fields[f_bPS].comment.c_str() );
-            prar.writeArray(  nullptr, CSD->ICNL[0], CSD->nIC, MaxICN );
+            prar.writeArray(  "", CSD->ICNL[0], CSD->nIC, MaxICN );
         }
         prar.writeArray(  f_bPS,  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb,false, brief_mode );
     }
@@ -543,7 +543,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
     prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
     prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
-    prar.writeComment( _comment,  "\n<END_DIM>\n" );
+    prar.writeComment( true,  "\n<END_DIM>\n" );
 
     // dynamic arrays - must follow static data
     if( _comment )
@@ -588,14 +588,14 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
     if( _comment )
         prar.writeComment( _comment, "\n# (8) Data for Dependent Components");
     prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
-    prar.writeComment( _comment,  " ");
+    prar.writeComment( true,  "");
 
     if( _comment )
-        prar.writeComment( _comment, "\n## (9) Thermodynamic data for Dependent Components");
+        prar.writeComment( _comment, "## (9) Thermodynamic data for Dependent Components");
     prar.writeField(  f_Ttol, CSD->Ttol, _comment, brief_mode  );
     prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
     prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );
-    prar.writeComment( _comment,  " ");
+    prar.writeComment( true,  "");
 
     prar.writeField(  f_Ptol, CSD->Ptol, _comment, brief_mode  );
     prar.writeArray(  f_Pval, CSD->Pval, CSD->nPp,  -1L,_comment, brief_mode );
@@ -618,7 +618,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
     if( CSD->iGrd  )
         prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
 
-    out_format.dump(  _comment );
+    out_format.dump( _comment );
 }
 
 // Reading dataCH structure from text file

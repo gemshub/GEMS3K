@@ -37,10 +37,6 @@
 #include "v_detail.h"
 
 #ifdef NODEARRAYLEVEL
-
-//#ifndef NOPARTICLEARRAY
-//#include "particlearray.h"
-//#endif
 #include "nodearray.h"
 #include "gdatastream.h"
 #include "io_keyvalue.h"

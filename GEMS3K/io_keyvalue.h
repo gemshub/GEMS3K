@@ -42,10 +42,10 @@ public:
     /// Constructor
     KeyValueWrite( std::iostream& ff ): fout(ff) {}
 
-    void dump( bool brief )
+    void dump( bool _comment )
     {
-       if( !brief )
-         fout << "\n# End of file";
+       if( _comment )
+         fout << "\n\n# End of file\n";
        fout << std::endl;
     }
 
@@ -100,7 +100,7 @@ public:
     {
         bool isComment = false;
 
-        if( field_name.empty() )
+        if( !field_name.empty() )
             fout << std::endl << "<" << field_name << ">" << std::endl;
         else
         {
@@ -179,7 +179,7 @@ public:
     /// Reads array from a text file.
     template <class T,
               typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
-    void read_array( const char *, T* arr, long int size )
+    void read_array( const std::string&, T* arr, long int size )
     {
         for( long int ii=0; ii<size; ii++  )
         {
@@ -191,7 +191,7 @@ public:
     /// Reads array from a text file.
     template <class T,
               typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
-    void read_array( const char *, T* arr, long int size )
+    void read_array( const std::string&, T* arr, long int size )
     {
         for( long int ii=0; ii<size; ii++  )
             read_value(arr[ii]);

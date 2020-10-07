@@ -189,9 +189,9 @@ void KeyValueRead::read_strings_array( const std::string&, char *arr, long size,
     {
         skip_space();
         fin.get(ch);
-        //   while( fin.good() && ch != '\'' )
+        //   while( fin.good() && ch != '\'' && ch != '\"' )
         //       fin.get(ch);
-        fin.getline( buf, el_size+1, '\'');
+        fin.getline( buf, el_size+1, ch /*'\''*/);
         copyValues( arr +(ii*el_size), buf, el_size );
     }
 }

@@ -50,6 +50,7 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
 
 
 // -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
+// -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-out/pHtitr-dat.lst
 
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
