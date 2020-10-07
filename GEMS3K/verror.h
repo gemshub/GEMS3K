@@ -34,60 +34,43 @@ struct TError
     TError()
     {}
 
-    TError(const std::string& titl, const std::string& msg):
-            mess(msg),
-            title(titl)
+    TError( const std::string& titl, const std::string& msg):
+        mess(msg),
+        title(titl)
     {}
 
-    TError(const TError& other ):
-            mess(other.mess),
-            title(other.title)
+    TError( const TError& other ):
+        mess(other.mess),
+        title(other.title)
     {}
 
-    virtual ~TError() = default;
-
-
+    virtual ~TError() {};
 };
 
 
 struct TFatalError:
-            public TError
+        public TError
 {
     TFatalError()
     {}
 
     TFatalError(const TError& err):
-            TError(err)
+        TError(err)
     {}
 
     TFatalError(const std::string& titl, const std::string& msg):
-            TError( titl, msg )
+        TError( titl, msg )
     {}
 
 };
 
 
-inline
-void Error (const std::string& title, const std::string& message)
+[[ noreturn ]] inline void Error( const std::string& title, const std::string& message )
 {
     throw TError(title, message);
 }
 
-inline
-void ErrorIf (bool error, const std::string& title, const std::string& message)
-{
-    if(error)
-        throw TError(title, message);
-}
-
-inline
-void Error (const char* title, const char* message)
-{
-    throw TError(title, message);
-}
-
-inline
-void ErrorIf (bool error, const char* title, const char* message)
+inline void ErrorIf( bool error, const std::string& title, const std::string& message )
 {
     if(error)
         throw TError(title, message);

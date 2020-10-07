@@ -142,7 +142,7 @@ void TMultiBase::AutoInitialApproximation( )
         if( B1) delete[]B1;
         if( STR) delete[]STR;
         if( NMB) delete[]NMB;
-        Error( xcpt.title.c_str(), xcpt.mess.c_str());
+        Error( xcpt.title, xcpt.mess );
     }
 }
 
@@ -493,7 +493,7 @@ FINISH: FIN( EPS, M, N, STR, NMB, BASE, UND, UP, U, AA, A, Q, &ITER);
         if( A) delete[]A;
         if( Q) delete[]Q;
         if( BASE) delete[]BASE;
-        Error( xcpt.title.c_str(), xcpt.mess.c_str());
+        Error( xcpt.title, xcpt.mess);
     }
 
     // Done
