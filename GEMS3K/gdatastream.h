@@ -46,7 +46,7 @@ class GemDataStream				// data stream class
 public:
 //    GemDataStream( fstream& ff  );
     GemDataStream( ) {    setByteOrder(LittleEndian); }
-    GemDataStream( std::string& aPath, std::ios::openmode aMod  );
+    GemDataStream( const std::string& aPath, std::ios::openmode aMod  );
     virtual ~GemDataStream();
 
     const std::string& GetPath() const

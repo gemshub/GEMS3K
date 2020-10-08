@@ -458,7 +458,7 @@ pm.GamFs = nullptr;
 }
 
 /// Writing structure MULTI (GEM IPM work structure) to binary file
-void TMultiBase::out_multi( GemDataStream& ff, std::string& /*path*/  )
+void TMultiBase::out_multi( GemDataStream& ff  )
 {
      short arr[10];
 

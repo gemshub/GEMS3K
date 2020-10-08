@@ -174,7 +174,7 @@ io_formats::outField DataCH_dynamic_fields[30] =  { //+4
 //===============================================================
 
 
-void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
+void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode ) const
 {
 
     bool _comment = with_comments;
@@ -190,7 +190,7 @@ void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool bri
     if( _comment )
     {
         prar.writeComment( _comment, std::string("# ") + _GEMIPM_version_stamp );
-        prar.writeComment( _comment, std::string("# File: ") + path );
+        //prar.writeComment( _comment, std::string("# File: ") + path );
         prar.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line" );
         prar.writeComment( _comment, "# DBR text input file for node system recipe and speciation data" );
         prar.writeComment( _comment, "# (should be read only after the DCH and the IPM files)\n" );
@@ -495,7 +495,7 @@ void TNode::databr_from_text_file( std::iostream& ff )
 
 //==============================================================================
 
-void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode, const char* path ) const
+void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode ) const
 {
     bool _comment = with_comments;
 
@@ -517,7 +517,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
     if( _comment )
     {
         prar.writeComment( _comment, std::string( "# ") + _GEMIPM_version_stamp );
-        prar.writeComment( _comment, std::string("# File: ")+ path  );
+        //prar.writeComment( _comment, std::string("# File: ")+ path  );
         prar.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line");
         prar.writeComment( _comment, "# DCH text input file (should be read before IPM and DBR files)");
         prar.writeComment( _comment, "\n## (1) Dimensions for memory allocation");

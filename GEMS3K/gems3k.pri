@@ -26,7 +26,8 @@
                     $$GEMS3K_H/io_keyvalue.h \
                     $$GEMS3K_H/activities.h \
                     $$GEMS3K_H/kinetics.h \
-                    $$GEMS3K_H/v_detail.h
+                    $$GEMS3K_H/v_detail.h \
+    $$PWD/gems3k_impex.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \

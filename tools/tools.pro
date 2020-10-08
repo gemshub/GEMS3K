@@ -17,7 +17,7 @@ CONFIG += c++17
 #DEFINES += IPMGEMPLUGIN
 DEFINES += NODEARRAYLEVEL
 DEFINES += NOPARTICLEARRAY
-DEFINES += USE_OLD_KV_IO_FILES
+#DEFINES += USE_OLD_KV_IO_FILES
 
 !win32 {
   DEFINES += __unix
@@ -48,5 +48,8 @@ OBJECTS_DIR = obj
 SOURCES    +=   calc2convert.cpp
 
 include($$GEMS3K_CPP/gems3k.pri) 
+
+HEADERS += \
+    args_impex.h
 
 

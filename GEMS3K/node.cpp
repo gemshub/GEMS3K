@@ -525,7 +525,8 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
          datach_from_file(f_ch);
        }
       else
-      { std::fstream f_ch(dat_ch.c_str(), std::ios::in );
+      {
+          std::fstream f_ch(dat_ch.c_str(), std::ios::in );
          ErrorIf( !f_ch.good() , dat_ch.c_str(), "DCH_DAT fileopen error");
          datach_from_text_file(f_ch);
       }
@@ -2434,7 +2435,7 @@ void  TNode::GEM_write_dbr( const char* fname, bool binary_f, bool with_comments
        {
          std::fstream out_br(str_file.c_str(), std::ios::out );
          ErrorIf( !out_br.good() , str_file.c_str(), "DataBR text make error");
-         databr_to_text_file( out_br, with_comments, brief_mode, str_file.c_str() );
+         databr_to_text_file( out_br, with_comments, brief_mode );
        }
    }
 

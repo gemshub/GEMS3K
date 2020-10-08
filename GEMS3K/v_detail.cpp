@@ -52,8 +52,7 @@ std::istream& f_getline(std::istream& is, std::string& str, char delim)
 }
 
 std::string
-u_makepath(const std::string& dir,
-           const std::string& name, const std::string& ext)
+u_makepath(const std::string& dir,  const std::string& name, const std::string& ext)
 {
     std::string Path(dir);
     if( dir != "")

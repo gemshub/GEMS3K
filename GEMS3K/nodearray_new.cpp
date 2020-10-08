@@ -41,6 +41,7 @@
 #include "gdatastream.h"
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"
+#include "gems3k_impex.h"
 
 TNodeArray::TNodeArray( long int nNod  ):
     internal_Node(new TNode()), calcNode(internal_Node.get()),
@@ -606,75 +607,40 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
                                               long int nIV, bool bin_mode, bool brief_mode, bool with_comments,
                                               bool putNodT1, bool addMui )
 {
-    std::fstream fout;
-    std::fstream fout2;
-    std::string Path_;
-    std::string dir;
-    std::string name;
-    std::string newname;
-    std::string path;
-    char buf[20];
+    std::fstream fout_dat_lst;
+    std::fstream fout_dbr_lst;
+    GEMS3KImpexGenerator generator( filepath, nIV, ( bin_mode? GEMS3KImpexGenerator::f_binary: GEMS3KImpexGenerator::f_json ));
 
-    path = filepath;
-    u_splitpath( path, dir, name, newname );
+    // open *-dat.lst
+    fout_dat_lst.open( filepath, std::ios::out );
+    fout_dat_lst << generator.gen_dat_lst_head();
 
-    // get name
-    auto pos = name.rfind("-");
-    if( pos != std::string::npos )
-        name = name.substr(0, pos);
+    // open *-dbr.lst
+    std::string dbr_lst_file_path = generator.get_dbr_file_lst_path();
+    fout_dbr_lst.open( dbr_lst_file_path, std::ios::out);
 
-    // making special files
-    // put data to pmfiles-bin.lst file
-    if( bin_mode )
+    switch( generator.files_mode() )
     {
-        fout.open(path.c_str(), std::ios::out);
-        fout << "-b \"" << name.c_str() << "-dch.bin\"";
-        fout << " \"" << name.c_str() << ".ipm\" ";
-    }
-    // put data to pmfiles-dat.lst file
-    else
-    {   fout.open(path.c_str(), std::ios::out);
-        fout << "-t \"" << name.c_str() << "-dch."<<dat_ext << "\"";
-        fout << " \"" << name.c_str() << "-ipm."<<dat_ext << "\" ";
-    }
-
-    std::string path2 = name;
-    path2 += "-dbr";
-    path2 = u_makepath( dir, path2, "lst" );
-    fout2.open(path2.c_str(), std::ios::out);
-
-    if( bin_mode )
+    case GEMS3KImpexGenerator::f_binary:
     {
-        //  putting MULTI to binary file
-        Path_ = u_makepath( dir, name, "ipm" );
-        GemDataStream  ff(Path_, std::ios::out|std::ios::binary);
-        calcNode->multi->out_multi( ff, Path_  );
+        GemDataStream  ff( generator.get_ipm_path(), std::ios::out|std::ios::binary );
+        calcNode->multi->out_multi( ff  );
+
+        GemDataStream  f_ch( generator.get_dch_path(), std::ios::out|std::ios::binary);
+        calcNode->datach_to_file( f_ch);
     }
-    else
+        break;
+    case GEMS3KImpexGenerator::f_key_value:
+    case GEMS3KImpexGenerator::f_json:
     {
-        // output MULTI to txt file
-        newname = name+"-ipm";
-        Path_ = u_makepath( dir, newname, dat_ext );
-        std::fstream ff( Path_.c_str(), std::ios::out );
-        ErrorIf( !ff.good() , Path_, "Fileopen error");
+        std::fstream ff( generator.get_ipm_path(), std::ios::out );
+        ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
         calcNode->multi->to_text_file_gemipm( ff, addMui, with_comments, brief_mode );
-    }
 
-    // out dataCH to binary file
-    newname = name+"-dch";
-    if( bin_mode )
-    {  Path_ = u_makepath( dir, newname, "bin" );
-        GemDataStream  f_ch1(Path_, std::ios::out|std::ios::binary);
-        calcNode->datach_to_file(f_ch1);
-        f_ch1.close();
+        std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
+        calcNode->datach_to_text_file( f_ch, with_comments, brief_mode );
     }
-    // out dataCH to text file
-    else
-    {  //newname = name+"-dch";
-        Path_ = u_makepath( dir, newname, dat_ext );
-        std::fstream  f_ch2(Path_.c_str(), std::ios::out);
-        calcNode->datach_to_text_file(f_ch2, with_comments, brief_mode, Path_.c_str() );
-        f_ch2.close();
+        break;
     }
 
     nIV = std::min( nIV, nNodes() );
@@ -685,70 +651,60 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
             continue;
 
         message( "Writing to disk a set of node array files from interrupted RMT task. \nPlease, wait...", ii );
-        // Save databr
         CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT0 );
+        auto dbr_file_name = generator.gen_dbr_file_name( 0, ii );
 
-        sprintf( buf, "%4.4ld", ii );
-        // dataBR files - binary
-        if( bin_mode )
+        switch( generator.files_mode() )
         {
-            newname =  name + + "-dbr-0-"  + buf;
-            Path_ = u_makepath( dir, newname, "bin" );
-            GemDataStream  f_br1(Path_, std::ios::out|std::ios::binary);
-            calcNode->databr_to_file(f_br1);
-            f_br1.close();
-            if( first )
-                fout << " \"" << newname.c_str() << ".bin\"";
-            if( !first )
-                fout2 << ",";
-            fout2 << " \"" << newname.c_str() << ".bin\"";
-        }
-        else
+        case GEMS3KImpexGenerator::f_binary:
         {
-            newname = name + "-dbr-0-" + buf;
-            Path_ = u_makepath( dir, newname, dat_ext );
-            std::fstream  f_br2(Path_.c_str(), std::ios::out);
-            calcNode->databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
-            f_br2.close();
-            if( first )
-                fout << " \"" << newname.c_str() << "."<<dat_ext << "\"";
-            if( !first )
-                fout2 << ",";
-            fout2 << " \"" << newname.c_str() << "."<<dat_ext << "\"";
+            GemDataStream  f_br( generator.get_path(dbr_file_name), std::ios::out|std::ios::binary );
+            calcNode->databr_to_file(f_br);
         }
+            break;
+        case GEMS3KImpexGenerator::f_key_value:
+        case GEMS3KImpexGenerator::f_json:
+        {
+            std::fstream  f_br( generator.get_path(dbr_file_name), std::ios::out);
+            calcNode->databr_to_text_file( f_br, with_comments, brief_mode );
+        }
+            break;
+        }
+
+        fout_dat_lst << " \"" << dbr_file_name << "\"";
+        if( !first )
+            fout_dbr_lst << ",";
+        fout_dbr_lst << " \"" << dbr_file_name << "\"";
         first = false;
 
         if( putNodT1 && NodT1[ii]) // put NodT1[ii] data
         {
 
-            // Save databr
             CopyWorkNodeFromArray( calcNode, ii, anNodes, NodT1 );
+            auto dbr2_file_name = generator.gen_dbr_file_name( 1, ii );
 
-            // dataBR files - binary
-            if( bin_mode )
+            switch( generator.files_mode() )
             {
-                newname =  name +  "-dbr-1-"  + buf;
-                Path_ = u_makepath( dir, newname, "bin" );
-                GemDataStream  f_br1(Path_, std::ios::out|std::ios::binary);
-                calcNode->databr_to_file(f_br1);
-                f_br1.close();
-                //         fout << ", \"" << newname.c_str() << ".bin\"";
-            }
-            else
+            case GEMS3KImpexGenerator::f_binary:
             {
-                newname = name + "-dbr-1-" + buf;
-                Path_ = u_makepath( dir, newname, dat_ext );
-                std::fstream  f_br2(Path_.c_str(), std::ios::out);
-                calcNode->databr_to_text_file(f_br2, with_comments, brief_mode, Path_.c_str() );
-                f_br2.close();
-                //         fout << ", \"" << newname.c_str() << "."<< dat_ext << "\"";
+                GemDataStream  f_br( generator.get_path(dbr2_file_name), std::ios::out|std::ios::binary );
+                calcNode->databr_to_file(f_br);
             }
+                break;
+            case GEMS3KImpexGenerator::f_key_value:
+            case GEMS3KImpexGenerator::f_json:
+            {
+                std::fstream  f_br( generator.get_path(dbr2_file_name), std::ios::out);
+                calcNode->databr_to_text_file( f_br, with_comments, brief_mode );
+            }
+                break;
+            }
+
         }
     } // ii
 
-    return path2; // dbr list file
+    return dbr_lst_file_path;
 }
-
 
 
 void  TNodeArray::GEMS3k_write_dbr( const char* fname,  bool binary_f,
@@ -759,4 +715,5 @@ void  TNodeArray::GEMS3k_write_dbr( const char* fname,  bool binary_f,
 }
 
 #endif
+
 //-----------------------End of nodearray_new.cpp--------------------------

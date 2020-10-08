@@ -626,7 +626,7 @@ public:
     virtual void copyMULTI( const TMultiBase& otherMulti );
     void read_multi(GemDataStream &ff, DATACH *dCH);
     /// Writing structure MULTI (GEM IPM work structure) to binary file
-    void out_multi( GemDataStream& ff, std::string& /*path*/  );
+    void out_multi( GemDataStream& ff  );
 
     // New functions for TSolMod, TKinMet and TSorpMod parameter arrays
     void getLsModsum( long int& LsModSum, long int& LsIPxSum );
