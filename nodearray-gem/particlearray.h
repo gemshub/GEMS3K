@@ -135,10 +135,10 @@ class TParticleArray
   long int FCellWalkIteration( long int Mode, bool CompMode, double t0, double t1 );
 
 // not use functions
-  void particles_to_text_file( fstream& ff );    // writes particle array(s) to a text file
-  void particles_from_text_file( fstream& ff);   // reads particle array(s) from a text file
-  void PGlists_to_text_file(fstream& ff );     // writes work node (DATABR structure) to text file
-  void PGlists_from_text_file(fstream& ff );   // reads work node (DATABR structure) from text file
+  void particles_to_text_file( std::fstream& ff );    // writes particle array(s) to a text file
+  void particles_from_text_file( std::fstream& ff);   // reads particle array(s) from a text file
+  void PGlists_to_text_file(std::fstream& ff );     // writes work node (DATABR structure) to text file
+  void PGlists_from_text_file(std::fstream& ff );   // reads work node (DATABR structure) from text file
 
 
 public:

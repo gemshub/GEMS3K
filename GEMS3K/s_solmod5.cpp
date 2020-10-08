@@ -26,7 +26,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
@@ -34,7 +33,7 @@
 using namespace std;
 #include "verror.h"
 #include "s_solmod.h"
-
+#include "v_detail.h"
 
 //=============================================================================================
 // SIT model (NEA version) reimplementation for aqueous electrolyte solutions
@@ -217,7 +216,7 @@ long int TSIT::MixMod()
         }
 
         // Charged species
-        if( z[j] )
+        if( noZero(z[j]) )
         {
             lgGam = 0.;
             Z2 = z[j]*z[j];
@@ -293,7 +292,7 @@ long int TSIT::ExcessProp( double *Zex )
         }
 
         // Charged species (no TP dependence of SIT parameters)
-        if( z[j] )
+        if( noZero(z[j]) )
         {
             Z2 = z[j]*z[j];
             LnG[j] = - ( ( A * sqI * Z2 ) / ( 1. + 1.5 * sqI ) + SumSIT ) * lg_to_ln;
@@ -937,7 +936,7 @@ double TPitzer::CP_ex_par8(long int ii)
 
 double TPitzer::setvalue(long int ii, int Gex_or_Sex)
 {
-    double value;
+    double value = 0.;
     //   int Gex_or_Sex == 0 -> Gex (unchanged formula for PT correction of interaction params used)
     //	  int Gex_or_Sex == 1 -> Sex (first temperature derivative)
     //    int Gex_or_Sex == 2 -> CPex (second temperature derivative)
@@ -1176,7 +1175,7 @@ void TPitzer::PTcalc( int Gex_or_Sex )
                     ia = getIa( aIPx[ii * MaxOrd + 0] );
                     if( ia < 0 )
                         ia = getIa( aIPx[ii * MaxOrd + 1] );
-                }
+                    }
                 ErrorIf( ic<0||ia<0||in<0, "PTcalc",
                         "Index of neutral species, index of cation and index of anion needed here"  );
                 Zeta[in][ic][ia] = setvalue(ii, Gex_or_Sex);
@@ -1204,9 +1203,9 @@ void TPitzer::PTcalc( int Gex_or_Sex )
         {-0.006,	0,	0,	0,	0}				//PT_Psi_ClOHK
     };
 
-    for( int ii=0; ii<13; ii++ ) {
-        McI_PT_array[ii] = McI_par_array[ii][0] + McI_par_array[ii][1]*(1./Tk-1./Tr) + McI_par_array[ii][2]*log(Tk/Tr) +
-                        McI_par_array[ii][3]*(Tk-Tr) + McI_par_array[ii][4]*(Tk*Tk-Tr*Tr);
+    for( int i1=0; i1<13; i1++ ) {
+        McI_PT_array[i1] = McI_par_array[i1][0] + McI_par_array[i1][1]*(1./Tk-1./Tr) + McI_par_array[i1][2]*log(Tk/Tr) +
+                        McI_par_array[i1][3]*(Tk-Tr) + McI_par_array[i1][4]*(Tk*Tk-Tr*Tr);
     }
 
     // Calculation of Debye-H�ckel Parameter and its derivatives
@@ -1272,11 +1271,11 @@ void TPitzer::calcSizes()
 
 /// Calculate Etheta and Ethetap factors.
 /// Reference: Anderson (2005), p. 610
-void TPitzer::Ecalc( double z, double z1, double I, double DH_term,
+void TPitzer::Ecalc( double z, double z1, double I1, double DH_term,
         double& Etheta, double& Ethetap)
 {
     long int k, m;
-    double xMN, xMM, xNN,  x;
+    double xMN, xMM, xNN,  x1;
     double zet=0., dzdx=0.;
     double bk[23], dk[23];
     double JMN=0., JpMN=0., JMM=0., JpMM=0., JNN=0., JpNN=0.;
@@ -1299,26 +1298,26 @@ void TPitzer::Ecalc( double z, double z1, double I, double DH_term,
                       -0.000000006944757, -0.000000002849257,  0.000000000237816,
                        0.0, 0.0 };
 
-    xMN= 6. * z*z1 * DH_term * pow(I,0.5);
-    xMM= 6. * z1*z1 * DH_term * pow(I,0.5);
-    xNN= 6. * z*z * DH_term * pow(I,0.5);
+    xMN= 6. * z*z1 * DH_term * pow(I1,0.5);
+    xMM= 6. * z1*z1 * DH_term * pow(I1,0.5);
+    xNN= 6. * z*z * DH_term * pow(I1,0.5);
 
     for( k=1; k<=3; k++ )
     {
         if( k==1)
-            x=xMN;
+            x1=xMN;
         else if( k==2 )
-            x=xMM;
+            x1=xMM;
         else
-          x=xNN;
+          x1=xNN;
 
-        if( x <= 1 )
+        if( x1 <= 1 )
         {
-            int sign = (x<0)?(-1):(1);
-            zet = sign * 4.0 * pow(fabs(x), 0.2) - 2.0;
-            dzdx = sign * 0.8 * 1./pow(fabs(x),(0.8));
-                // zet=4.0 * pow(x, 0.2) - 2.0;
-                // dzdx=0.8 * pow(x,(-0.8));
+            int sign = (x1<0)?(-1):(1);
+            zet = sign * 4.0 * pow(fabs(x1), 0.2) - 2.0;
+            dzdx = sign * 0.8 * 1./pow(fabs(x1),(0.8));
+                // zet=4.0 * pow(x1, 0.2) - 2.0;
+                // dzdx=0.8 * pow(x1,(-0.8));
             bk[22] = 0.; bk[21] = 0.;
             dk[21] = 0.; dk[22] = 0.;
             for( m=20; m>=0; m--)
@@ -1328,10 +1327,10 @@ void TPitzer::Ecalc( double z, double z1, double I, double DH_term,
             }
         }
 
-        else if( x > 1)
+        else if( x1 > 1)
         {
-            zet=-22.0/9.0 + (40.0/9.0) * 1./pow(x,(0.1));
-            dzdx= (-40.0/90.) * 1./pow(x,(11./10.));
+            zet=-22.0/9.0 + (40.0/9.0) * 1./pow(x1,(0.1));
+            dzdx= (-40.0/90.) * 1./pow(x1,(11./10.));
             bk[22]=0.; bk[21]=0.;
             dk[21]=0.; dk[22]=0.;
             for( m=20; m>=0; m--)
@@ -1343,25 +1342,25 @@ void TPitzer::Ecalc( double z, double z1, double I, double DH_term,
 
         if( k == 1 )
         {
-            JMN=0.25*x -1. + 0.5* (bk[0]-bk[2]);
+            JMN=0.25*x1 -1. + 0.5* (bk[0]-bk[2]);
             JpMN=0.25 + 0.5*dzdx*(dk[0]-dk[2]);
         }
 
         else if( k==2 )
         {
-            JMM=0.25*x -1. + 0.5*(bk[0]-bk[2]);
+            JMM=0.25*x1 -1. + 0.5*(bk[0]-bk[2]);
             JpMM=0.25 + 0.5*dzdx*(dk[0]-dk[2]);
         }
 
         else
         {
-            JNN=0.25*x -1. +0.5*(bk[0]-bk[2]);
+            JNN=0.25*x1 -1. +0.5*(bk[0]-bk[2]);
             JpNN=0.25 +0.5*dzdx*(dk[0]-dk[2]);
         }
     } //k
 
-    Etheta=((z*z1) /(4.0*I)) * (JMN - 0.5*JMM - 0.5*JNN);
-    Ethetap= - (Etheta/I) +((z*z1)/(8.0*I*I)) *(xMN*JpMN - 0.5*xMM*JpMM - 0.5*xNN*JpNN);
+    Etheta=((z*z1) /(4.0*I1)) * (JMN - 0.5*JMM - 0.5*JNN);
+    Ethetap= - (Etheta/I1) +((z*z1)/(8.0*I1*I1)) *(xMN*JpMN - 0.5*xMM*JpMM - 0.5*xNN*JpNN);
 }
 
 
@@ -1384,7 +1383,7 @@ double TPitzer::Z_Term()
 
 
 /// Calculate Ionic Strength
-double TPitzer::IonicStr( double& I )
+double TPitzer::IonicStr( double& I1 )
 {
     double Ia=0., Ic=0., IS;
     long int a, c;
@@ -1396,7 +1395,7 @@ double TPitzer::IonicStr( double& I )
         Ic += zc[c]* zc[c]* mc[c];
 
     IS =0.5*(Ia+Ic);
-    I=IS;
+    I1=IS;
 
     return pow(IS,0.5);
 }
@@ -1423,7 +1422,7 @@ double TPitzer::lnGammaH2O( double DH_term )
             C = Cphi[c][a] / (2.*sqrt(fabs(za[a]*zc[c])));	// Pitzer-Toughreact Report 2006, equation (A7)
             h1=alp*Is;
             h2=alp1*Is;
-            if (alp1==0)
+            if ( approximatelyZero(alp1) )
                 B3 = Bet0[c][a]+ Bet1[c][a]*exp(-h1);
             else
                 B3 = Bet0[c][a]+ Bet1[c][a]*exp(-h1)+(Bet2[c][a]*exp(-h2)); //Pitzer-Toughreact Report 2006 equation (A9)
@@ -1516,13 +1515,13 @@ double TPitzer::lnGammaH2O( double DH_term )
 /// retrieve Alpha parameter
 void TPitzer::getAlp( long int c, long int a, double& alp, double& alp1 )
 {
-    if( zc[c] == 1. || za[a] == -1. )
+    if( essentiallyEqual( zc[c], 1.) || essentiallyEqual( za[a],-1.) )
     {
         alp=2.;
             // alp1=12.;
         alp1=0.;
     }
-    else if( zc[c] == 2. && za[a] == -2. )
+    else if( essentiallyEqual( zc[c], 2.) && essentiallyEqual( za[a], -2.) )
     {
         alp=1.4;
         alp1=12.;
@@ -1542,7 +1541,7 @@ double TPitzer::get_g( double x_alp )
 
     g = 2.*(1.-(1.+x_alp)*exp(-x_alp))/(x_alp*x_alp);
 
-    if(x_alp==0)
+    if( approximatelyZero(x_alp) )
     {
         g = 0.;
     }
@@ -1555,9 +1554,13 @@ double TPitzer::get_gp( double x_alp )
 {
     double gp;
 
-    gp = -2.*(1.-(1.+x_alp+x_alp*x_alp*0.5)*exp(-x_alp))/(x_alp*x_alp);
-    if(x_alp==0){
+    if( approximatelyZero(x_alp) )
+    {
         gp = 0.;
+    }
+    else
+    {
+        gp = -2.*(1.-(1.+x_alp+x_alp*x_alp*0.5)*exp(-x_alp))/(x_alp*x_alp);
     }
     return gp;
 }

@@ -58,6 +58,7 @@
 
 #include <iostream>
 #include "ms_multi.h"
+#include "v_detail.h"
 // #include "allan_ipm.h"
 #include "datach.h"
 #include "databr.h"
@@ -839,12 +840,12 @@ long int GEM_step_MT( const long int step )
 
      double Get_Psat (double Tk);
 
-    /// Sets new molar Gibbs energy G0(P,TK) value for Dependent Component
+    /// Sets new molar Gibbs energy G0(P,TK) value for Dependent Component for the lookup grid point (P,TK)
     /// in the DATACH structure.
      /// \param xCH is the DC DCH index
      /// \param P pressure, Pa
      /// \param TK temperature, Kelvin
-     /// \param norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
+     /// \param new_G0 in J/mol;
      /// \return 0
      double Set_DC_G0(const long int xCH, const double P, const double TK, const double new_G0 );
 
@@ -853,7 +854,7 @@ long int GEM_step_MT( const long int step )
       /// \param xCH is the DC DCH index
       /// \param P pressure, Pa
       /// \param TK temperature, Kelvin
-      /// \param new_G0 in J/mol;
+      /// \param norm defines in wnich units the value is returned: false - in J/mol; true (default) - in mol/mol
       /// \return G0(P,TK) or 7777777., if TK or P  go beyond the valid lookup array intervals or tolerances.
       double DC_G0(const long int xCH, const double P, const double TK,  bool norm=true) const;
 
@@ -953,32 +954,52 @@ long int GEM_step_MT( const long int step )
      /// Retrieves the current phase volume in m3 in the reactive sub-system.
      /// Works both for multicomponent and for single-component phases.
      /// \param xph is DBR phase index
-     /// \return the current phase volume in m3 or 0.0, if the phase mole amount is zero.
+     /// \return the current phase volume in m3 or 0.0, if the phase mole amount is very close to zero.
       double  Ph_Volume( const long int xBR ) const;
-      
+
+      /// Retrieves the current phase total Gibbs energy in J in the reactive sub-system.
+      /// Chemical potential of phase (J/mol) is Gibbs energy divided by moles of the phase.
+      /// Works both for multicomponent and for single-component phases.
+      /// \param xph is DBR phase index
+      /// \return the current phase total gibbs energy in J or 0.0, if the phase mole amount is very close to zero.
+      double  Ph_GibbsEnergy( const long int xBR ) const;
+
      /// Retrieves the current phase enthalpy in J in the reactive sub-system.
      /// Works both for multicomponent and for single-component phases.
      /// \param xph is DBR phase index
-     /// \return the current phase volume in m3 or 0.0, if the phase mole amount is zero.
+     /// \return the current phase enthalpy in J or 0.0, if the phase mole amount is very close to zero.
       double  Ph_Enthalpy( const long int xBR ) const;
+
+      /// Retrieves the current phase entropy in J/K in the reactive sub-system.
+      /// Works both for multicomponent and for single-component phases.
+      /// \param xph is DBR phase index
+      /// \return the current phase entropy in J/K or 0.0, if the phase mole amount is very close to zero.
+       double  Ph_Entropy( const long int xBR ) const;
+
+       /// Retrieves the current phase heat capacity Cp in J/K in the reactive sub-system.
+       /// Works both for multicomponent and for single-component phases.
+       /// \param xph is DBR phase index
+       /// \return the current phase heat capacity Cp in J/K or 0.0, if the phase mole amount is very close to zero.
+        double  Ph_HeatCapacityCp( const long int xBR ) const;
 
       /// Retrieves the current phase amount (in equilibrium) in moles in the reactive sub-system.
       /// Works both for multicomponent and for single-component phases.
       /// \param xph is DBR phase index
-      /// \return the current phase volume in moles or 0.0, if the phase mole amount is zero.
-       double  Ph_Mole( const long int xBR );
+      /// \return the current phase volume in moles or 0.0, if the phase mole amount is very close to zero.
+       double  Ph_Moles( const long int xBR ) const; // Added for consistency on Oct 1, 2020
+       double  Ph_Mole( const long int xBR );  // obsolete, not recommended to use in new coupled codes
 
      /// Retrieves the phase mass in kg.
      /// Works for multicomponent and for single-component phases.
       /// \param xph is DBR phase index
-      /// \return the phase mass in kg or 0.0, if the phase mole amount is zero.
-      double  Ph_Mass( const long int xBR ) const ;
+      /// \return the phase mass in kg or 0.0, if the phase mole amount is very close to zero.
+      double  Ph_Mass( const long int xBR ) const;
 
       /// Retrieves the phase stability (saturation) index (lgOmega).
       /// Works for multicomponent and for single-component phases.
       /// \param xBR is DBR phase index
-      /// \return the phase saturation index in log10 scale.
-      double Ph_SatInd(const long int xBR );
+      /// \return the phase saturation index in log10 scale (also for phases in zero amount).
+      double Ph_SatInd(const long int xBR ) const;
 
       /// Retrieval of the phase bulk composition into memory indicated by  ARout.
       /// This function works for multicomponent and for single-component phases
@@ -987,7 +1008,7 @@ long int GEM_step_MT( const long int step )
       /// \return pointer to ARout which may also be  allocated inside of Ph_BC()
       /// in the case if parameter ARout = NULL is specified;
       /// to avoid a memory leak, you will have to free this memory wherever appropriate.
-      double *Ph_BC( const long int xph, double* ARout = nullptr );
+      double* Ph_BC( const long int xph, double* ARout = nullptr ) const;
 
       /// Retrieves total dissolved aqueous molality of Independent Component with DBR index xic.
       /// \param xic is IC DBR index
@@ -1018,11 +1039,11 @@ long int GEM_step_MT( const long int step )
        {  CNode->P = P;  }
 
        /// Retrieves the pressure P (Pa) in the current (work) node
-       inline double Get_P( )
+       inline double Get_P( ) const
        {  return CNode->P;  }
 
        /// Retrieves the temperature T_K (Kelvin) in the current (work) node
-       inline double Get_TK( )
+       inline double Get_TK( ) const
        {  return CNode->TK;  }
 
        /// Sets the amount of IC  in the bIC input vector of the work DATABR structure.
@@ -1030,6 +1051,11 @@ long int GEM_step_MT( const long int step )
        /// \param bIC is amount of IC
         void Set_bIC( const long int xic, const double bIC)
         {  CNode->bIC[xic] = bIC;  }
+
+        /// Retrieves the current dual chemical potential of IC in normalized scale.
+        /// \param xic is IC DBR index
+        inline double Get_uIC(const long int xic) const
+        {  return CNode->uIC[xic];  }
 
       /// Retrieves the current amount of Independent Component.
       /// \param xic is IC DBR index
@@ -1081,7 +1107,7 @@ long int GEM_step_MT( const long int step )
       /// \param xdc is DC DBR index
       /// \return 1.0, if DC has zero amount.
       inline double Get_gDC(const long int xdc) const
-      {  return ( CNode->xDC[xdc] != 0.0 ? CNode->gam[xdc]: 1.0);  }
+      {  return ( noZero( CNode->xDC[xdc] ) ? CNode->gam[xdc]: 1.0);  }
 
       /// Retrieves the molar mass of Dependent Component in kg/mol.
       /// \param xdc is DC DBR index

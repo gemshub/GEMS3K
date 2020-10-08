@@ -3,9 +3,7 @@
 
 #include "tnt.h"
 #include <algorithm>
-#include <cmath>
-//for min(), max() below
-
+#include "v_detail.h"
 using namespace TNT;
 using namespace std;
 
@@ -33,7 +31,7 @@ class LU
    /* Array for internal storage of decomposition.  */
    Array2D<Real>  LU_;
    int m, n, pivsign;
-   Array1D<int> piv;
+   Array1D<int> piv1;
 
 
    Array2D<Real> permute_copy(const Array2D<Real> &A,
@@ -76,16 +74,11 @@ class LU
    */
 
     LU (const Array2D<Real> &A) : LU_(A.copy()), m(A.dim1()), n(A.dim2()),
-		piv(A.dim1())
-
+        piv1(A.dim1())
 	{
-
-      int i;
    // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
-
-
-      for ( i = 0; i < m; i++) {
-         piv[i] = i;
+      for (int i = 0; i < m; i++) {
+         piv1[i] = i;
       }
       pivsign = 1;
       Real *LUrowi = 0;;
@@ -94,7 +87,6 @@ class LU
       // Outer loop.
 
       for (int j = 0; j < n; j++) {
-
          int i;
          // Make a copy of the j-th column to localize references.
 
@@ -133,17 +125,17 @@ class LU
 			   LU_[p][k] = LU_[j][k];
 			   LU_[j][k] = t;
             }
-            k = piv[p];
-			piv[p] = piv[j];
-			piv[j] = k;
+            k = piv1[p];
+            piv1[p] = piv1[j];
+            piv1[j] = k;
             pivsign = -pivsign;
          }
 
          // Compute multipliers.
 
-         if ((j < m) && (LU_[j][j] != 0.0)) {
-            for (int i = j+1; i < m; i++) {
-               LU_[i][j] /= LU_[j][j];
+         if ( (j < m) && noZero(LU_[j][j]) ) {
+            for (int ii = j+1; ii < m; ii++) {
+               LU_[ii][j] /= LU_[j][j];
             }
          }
       }
@@ -157,7 +149,7 @@ class LU
 
    int isNonsingular () {
       for (int j = 0; j < n; j++) {
-         if (LU_[j][j] == 0)
+         if ( approximatelyZero( LU_[j][j] ))
             return 0;
       }
       return 1;
@@ -206,7 +198,7 @@ class LU
    */
 
    Array1D<int> getPivot () {
-      return piv;
+      return piv1;
    }
 
 
@@ -247,7 +239,7 @@ class LU
       int nx = B.dim2();
 
 
-	  Array2D<Real> X = permute_copy(B, piv, 0, nx-1);
+      Array2D<Real> X = permute_copy(B, piv1, 0, nx-1);
 
       // Solve L*Y = B(piv,:)
       for (int k = 0; k < n; k++) {
@@ -294,7 +286,7 @@ class LU
       }
 
 
-	  Array1D<Real> x = permute_copy(b, piv);
+      Array1D<Real> x = permute_copy(b, piv1);
 
       // Solve L*Y = B(piv)
       for ( k = 0; k < n; k++) {

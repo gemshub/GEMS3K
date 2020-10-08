@@ -620,7 +620,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
     u_splitpath( path, dir, name, newname );
 
     // get name
-    unsigned long int pos = name.rfind("-");
+    auto pos = name.rfind("-");
     if( pos != std::string::npos )
         name = name.substr(0, pos);
 

@@ -27,7 +27,6 @@
 //-------------------------------------------------------------------
 //
 
-#include <cmath>
 #include <cstdio>
 #include <iostream>
 #include <iomanip>
@@ -35,7 +34,7 @@
 using namespace std;
 #include "verror.h"
 #include "s_solmod.h"
-
+#include "v_detail.h"
 
 
 
@@ -177,7 +176,7 @@ long int THelgeson::MixMod()
 		lnGam = 0.0;
 
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -216,7 +215,7 @@ long int THelgeson::MixMod()
 
 					for (k=0; k<(NComp-1); k++)
 					{
-						if ( (z[k] == 0) && (flagNeut == 0) )
+                        if ( approximatelyZero(z[k]) && (flagNeut == 0) )
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) );
 						else
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) - bgam*IS/2. );
@@ -269,7 +268,7 @@ long int THelgeson::ExcessProp( double *Zex )
 	for( j=0; j<NComp; j++ )
 	{
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			Z2 = z[j]*z[j];
 			U = - (Z2*A) * sqI;
@@ -381,7 +380,7 @@ long int THelgeson::ExcessProp( double *Zex )
 
 					for (k=0; k<(NComp-1); k++)
 					{
-						if ( (z[k] == 0) && (flagNeut == 0) )
+                        if ( approximatelyZero(z[k]) && (flagNeut == 0) )
 						{
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) );
 							dPhitdT  += - log(10.) * m[k] * ( pow(z[k],2.)*dZdT );
@@ -497,7 +496,7 @@ long int THelgeson::IonicStrength()
 	{
 		is += 0.5*m[j]*z[j]*z[j];
 		mt += m[j];
-		if ( z[j] )
+        if ( noZero(z[j]) )
 			mz += m[j];
 	}
 
@@ -516,7 +515,7 @@ long int THelgeson::BgammaTP()
 	// ni: stoichiometric number of moles of ions in one mole of electrolyte
 	// rc, ra: radius of cation and anion, respectively at 298 K/1 bar
 	// units are cal, kg, K, mol, bar
-	double ni, nc, na, zc, za, rc, ra, a1, a2, a3, a4, a5, c1, c2, omg, bg, bs, bh, rec, rea,
+    double ni, nc, na, zc, za, rc, ra, a1, a2, a3, a4, a5, c1, c2, omg, bg1, bs, bh, rec, rea,
 			omgpt, domdt, d2omdt2, domdp, nbg, nbv, nbj, nbh;
 	double eps, eta, xborn, yborn, qborn, X1, X2;
 
@@ -533,32 +532,32 @@ long int THelgeson::BgammaTP()
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.030056; a2 = -202.55; a3 = -2.9092; a4 = 20302;
 			a5 = -0.206; c1 = -1.50; c2 = 53300.; omg = 178650.;
-			bg = -174.623; bs = 2.164; rc = 0.97; ra = 1.81;
+            bg1 = -174.623; bs = 2.164; rc = 0.97; ra = 1.81;
 			break;
 		case 2:  // KCl
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.0172; a2 = -115.36; a3 = -1.1857; a4 = 13854.2;
 			a5 = -0.262; c1 = -2.53; c2 = 38628.4; omg = 164870.;
-			bg = -70.0; bs = 1.727; rc = 1.33; ra = 1.81;
+            bg1 = -70.0; bs = 1.727; rc = 1.33; ra = 1.81;
 			break;
 		case 3:  // NaOH
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.030056; a2 = -202.55; a3 = -2.9092; a4 = 20302;
 			a5 = -0.206; c1 = -1.50; c2 = 53300.; omg = 205520.;
-			bg = -267.4; bs = 1.836; rc = 0.97; ra = 1.40;
+            bg1 = -267.4; bs = 1.836; rc = 0.97; ra = 1.40;
 			break;
 		case 4:  // KOH
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.0172; a2 = -115.36; a3 = -1.1857; a4 = 13854.2;
 			a5 = -0.262; c1 = -2.53; c2 = 38628.4; omg = 191730.;
-			bg = -335.7; bs = 1.26; rc = 1.33; ra = 1.40;
+            bg1 = -335.7; bs = 1.26; rc = 1.33; ra = 1.40;
 			break;
 		default:  // wrong mode
 			return -1;
 	}
 
 	// calculation part, extended 06.06.2009 (TW)
-	bh = bg + (298.15)*bs;
+    bh = bg1 + (298.15)*bs;
 	rec = rc + fabs(zc)*(0.94+Gf);
 	rea = ra + fabs(za)*Gf;
 	X1 = - eta*nc*( fabs(pow(zc,3.))/pow(rec,2.) - zc/pow((3.082+Gf),2.) )
@@ -570,7 +569,7 @@ long int THelgeson::BgammaTP()
 	domdt = X1*dGfdT;
 	d2omdt2 = X2*pow(dGfdT,2.) + X1*d2GfdT2;
 	domdp = X1*dGfdP;
-	nbg = - ni*bg/2. + ni*bs*(Tk-298.15)/2. - c1*(Tk*log(Tk/298.15)-Tk+298.15)
+    nbg = - ni*bg1/2. + ni*bs*(Tk-298.15)/2. - c1*(Tk*log(Tk/298.15)-Tk+298.15)
 				+ a1*(Pbar-1.) + a2*log((2600.+Pbar)/(2600.+1.))
 				- c2*((1./(Tk-228.)-1./(298.15-228.))*(228.-Tk)/228.-Tk/(228.*228.)
 				* log((298.15*(Tk-228.))/(Tk*(298.15-228.))))
@@ -853,7 +852,7 @@ long int TDavies::MixMod()
 		lnGam = 0.0;
 
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -941,7 +940,7 @@ long int TDavies::ExcessProp( double *Zex )
 	for( j=0; j<NComp; j++ )
 	{
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -1201,7 +1200,7 @@ long int TLimitingLaw::MixMod()
 		lnGam = 0.0;
 
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -1278,7 +1277,7 @@ long int TLimitingLaw::ExcessProp( double *Zex )
 	for( j=0; j<NComp; j++ )
 	{
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			Z2 = z[j]*z[j];
 			LnG[j] = - ( A * Z2 * sqI ) * lg_to_ln;
@@ -1547,7 +1546,7 @@ long int TDebyeHueckel::MixMod()
 		lnGam = 0.0;
 
 		// charged species
-		if ( z[j] )
+        if ( noZero( z[j]) )
 		{
 			lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -1592,7 +1591,7 @@ long int TDebyeHueckel::MixMod()
 
 					for (k=0; k<(NComp-1); k++)
 					{
-						if ( (z[k] == 0) && (flagNeut == 1) )
+                        if ( approximatelyZero(z[k]) && (flagNeut == 1) )
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) - bg[k]*IS/2. );
 						else
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) );
@@ -1646,7 +1645,7 @@ long int TDebyeHueckel::ExcessProp( double *Zex )
 	for( j=0; j<NComp; j++ )
 	{
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			Z2 = z[j]*z[j];
 			U = - (Z2*A) * sqI;
@@ -1750,7 +1749,7 @@ long int TDebyeHueckel::ExcessProp( double *Zex )
 
 					for (k=0; k<(NComp-1); k++)
 					{
-						if ( (z[k] == 0) && (flagNeut == 1) )
+                        if ( approximatelyZero(z[k]) && (flagNeut == 1) )
 						{
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) - bg[k]*IS/2. );
 							dPhitdT  += - log(10.) * m[k] * ( pow(z[k],2.)*dZdT );
@@ -1867,7 +1866,7 @@ long int TDebyeHueckel::IonicStrength()
 	{
 		is += 0.5*m[j]*z[j]*z[j];
 		mt += m[j];
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			mz += m[j];
 			as += m[j]*an[j];
@@ -2028,7 +2027,7 @@ long int TKarpov::MixMod()
 		lnGam = 0.0;
 
 		// charged species (individual ion size parameters)
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -2067,7 +2066,7 @@ long int TKarpov::MixMod()
 
 					for (k=0; k<(NComp-1); k++)
 					{
-						if ( (z[k] == 0) && (flagNeut == 0) )
+                        if ( approximatelyZero(z[k]) && (flagNeut == 0) )
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) );
 						else
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) - bgam*IS/2. );
@@ -2120,7 +2119,7 @@ long int TKarpov::ExcessProp( double *Zex )
 	for( j=0; j<NComp; j++ )
 	{
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			Z2 = z[j]*z[j];
 			U = - (Z2*A) * sqI;
@@ -2224,7 +2223,7 @@ long int TKarpov::ExcessProp( double *Zex )
 
 					for (k=0; k<(NComp-1); k++)
 					{
-						if ( (z[k] == 0) && (flagNeut == 0) )
+                        if ( approximatelyZero(z[k]) && (flagNeut == 0) )
 						{
 							Phit += - log(10.) * m[k] * ( (pow(z[k],2.)*A*sqI*sig)/3. + Lgam/(0.0180153*molT) );
 							dPhitdT  += - log(10.) * m[k] * ( pow(z[k],2.)*dZdT );
@@ -2340,7 +2339,7 @@ long int TKarpov::IonicStrength()
 	{
 		is += 0.5*m[j]*z[j]*z[j];
 		mt += m[j];
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			mz += m[j];
 			as += m[j]*an[j];
@@ -2363,7 +2362,7 @@ long int TKarpov::BgammaTP()
 	// ni: stoichiometric number of moles of ions in one mole of electrolyte
 	// rc, ra: radius of cation and anion, respectively at 298 K/1 bar
 	// units are cal, kg, K, mol, bar
-	double ni, nc, na, zc, za, rc, ra, a1, a2, a3, a4, a5, c1, c2, omg, bg, bs, bh, rec, rea,
+    double ni, nc, na, zc, za, rc, ra, a1, a2, a3, a4, a5, c1, c2, omg, bg1, bs, bh, rec, rea,
 			omgpt, domdt, d2omdt2, domdp, nbg, nbv, nbj, nbh;
 	double eps, eta, xborn, yborn, qborn, X1, X2;
 
@@ -2380,32 +2379,32 @@ long int TKarpov::BgammaTP()
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.030056; a2 = -202.55; a3 = -2.9092; a4 = 20302;
 			a5 = -0.206; c1 = -1.50; c2 = 53300.; omg = 178650.;
-			bg = -174.623; bs = 2.164; rc = 0.97; ra = 1.81;
+            bg1 = -174.623; bs = 2.164; rc = 0.97; ra = 1.81;
 			break;
 		case 2:  // KCl
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.0172; a2 = -115.36; a3 = -1.1857; a4 = 13854.2;
 			a5 = -0.262; c1 = -2.53; c2 = 38628.4; omg = 164870.;
-			bg = -70.0; bs = 1.727; rc = 1.33; ra = 1.81;
+            bg1 = -70.0; bs = 1.727; rc = 1.33; ra = 1.81;
 			break;
 		case 3:  // NaOH
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.030056; a2 = -202.55; a3 = -2.9092; a4 = 20302;
 			a5 = -0.206; c1 = -1.50; c2 = 53300.; omg = 205520.;
-			bg = -267.4; bs = 1.836; rc = 0.97; ra = 1.40;
+            bg1 = -267.4; bs = 1.836; rc = 0.97; ra = 1.40;
 			break;
 		case 4:  // KOH
 			ni = 2.; nc = 1.; na = 1.; zc = 1.; za = -1.;
 			a1 = 0.0172; a2 = -115.36; a3 = -1.1857; a4 = 13854.2;
 			a5 = -0.262; c1 = -2.53; c2 = 38628.4; omg = 191730.;
-			bg = -335.7; bs = 1.26; rc = 1.33; ra = 1.40;
+            bg1 = -335.7; bs = 1.26; rc = 1.33; ra = 1.40;
 			break;
 		default:  // wrong mode
 			return -1;
 	}
 
 	// calculation part, extended 06.06.2009 (TW)
-	bh = bg + (298.15)*bs;
+    bh = bg1 + (298.15)*bs;
 	rec = rc + fabs(zc)*(0.94+Gf);
 	rea = ra + fabs(za)*Gf;
 	X1 = - eta*nc*( fabs(pow(zc,3.))/pow(rec,2.) - zc/pow((3.082+Gf),2.) )
@@ -2417,7 +2416,7 @@ long int TKarpov::BgammaTP()
 	domdt = X1*dGfdT;
 	d2omdt2 = X2*pow(dGfdT,2.) + X1*d2GfdT2;
 	domdp = X1*dGfdP;
-	nbg = - ni*bg/2. + ni*bs*(Tk-298.15)/2. - c1*(Tk*log(Tk/298.15)-Tk+298.15)
+    nbg = - ni*bg1/2. + ni*bs*(Tk-298.15)/2. - c1*(Tk*log(Tk/298.15)-Tk+298.15)
 				+ a1*(Pbar-1.) + a2*log((2600.+Pbar)/(2600.+1.))
 				- c2*((1./(Tk-228.)-1./(298.15-228.))*(228.-Tk)/228.-Tk/(228.*228.)
 				* log((298.15*(Tk-228.))/(Tk*(298.15-228.))))
@@ -2712,7 +2711,7 @@ long int TShvarov::MixMod()
 		}
 
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
             lgGam = 0.0;
 			Z2 = z[j]*z[j];
@@ -2794,7 +2793,7 @@ long int TShvarov::ExcessProp( double *Zex )
 		}
 
 		// charged species
-		if ( z[j] )
+        if ( noZero(z[j]) )
 		{
 			Z2 = z[j]*z[j];
 			U = - (Z2*A) * sqI;
@@ -3991,7 +3990,7 @@ void TELVIS::get_lnGamma( vector<double> &ln_gamma )
 }
 
 
-void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
+void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH1, double* ELVIS_OsmCoeff_DH1)
 {
     // Debye-Huckel Term
     double a0, A_gamma, B_gamma, lambda, b, xbx, rhow, epsw;
@@ -4054,9 +4053,9 @@ void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
     // solutes
     for( j=0; j<(NComp-1); j++ )
     {
-        ELVIS_lnGam_DH[j] = ( -A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda ); // / log10(exp(1.0));//* log(10); // + Gamma_gamma;
+        ELVIS_lnGam_DH1[j] = ( -A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda ); // / log10(exp(1.0));//* log(10); // + Gamma_gamma;
 #ifdef ELVIS_DEBUG
-    cout<<" ELVIS: A_gamma = "<<A_gamma<<", B_gamma = "<<B_gamma<<", b = "<<b<<", loggam_DH["<<j<<"] = "<<ELVIS_lnGam_DH[j]<<endl;
+    cout<<" ELVIS: A_gamma = "<<A_gamma<<", B_gamma = "<<B_gamma<<", b = "<<b<<", loggam_DH["<<j<<"] = "<<ELVIS_lnGam_DH1[j]<<endl;
     cout<<"lggamDM Helgeson 1982 = "<< (-A_gamma * z[j]*z[j]*pow(IS,0.5)/lambda) * log(10) <<endl; // + Gamma_gamma;
 #endif
     }
@@ -4065,12 +4064,12 @@ void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
     xbx = 1+b*pow(IS,0.5);
 
     // solvent: activity: formula form dissertation of Kaj Thomsen (1997)
-    ELVIS_lnGam_DH[NComp-1] = (Mw*2*A_gamma/(b*b*b))*(xbx - 1/xbx - 2*log(xbx));
+    ELVIS_lnGam_DH1[NComp-1] = (Mw*2*A_gamma/(b*b*b))*(xbx - 1/xbx - 2*log(xbx));
 
     // solvent: osmotic coefficient, formula form helgeson 1981, p. 1355
     for( j=0; j<(NComp-1); j++ )
     {
-          ELVIS_OsmCoeff_DH[j] = z[j]*z[j]*(A_gamma * pow(IS,0.5)*(xbx- (1./(xbx)) - 2.*log(xbx))) / ( pow(IS,(3./2.)) *b*b*b);
+          ELVIS_OsmCoeff_DH1[j] = z[j]*z[j]*(A_gamma * pow(IS,0.5)*(xbx- (1./(xbx)) - 2.*log(xbx))) / ( pow(IS,(3./2.)) *b*b*b);
     }
 
     //delete[] spec_frac;
@@ -4078,7 +4077,7 @@ void TELVIS::ELVIS_DH(double* ELVIS_lnGam_DH, double* ELVIS_OsmCoeff_DH)
 
 
 
-void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
+void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC1 )
 {
         int j, i, l, k, w;
         double /*Mw, Xw, b,*/ RR, QQ, K, L, M;
@@ -4204,7 +4203,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
                         }
 
 
-                        ELVIS_lnGam_UNIQUAC[j] = gamC + gamR;
+                        ELVIS_lnGam_UNIQUAC1[j] = gamC + gamR;
 
                         gammaC[j] = gamC;
                         gammaR[j] = gamR;
@@ -4266,7 +4265,7 @@ void TELVIS::ELVIS_UNIQUAC( double* ELVIS_lnGam_UNIQUAC )
 
 
                         // Add combinatorial and residual terms without infinite dilution terms (!!!!)
-                        ELVIS_lnGam_UNIQUAC[j] = gamC + gamR;
+                        ELVIS_lnGam_UNIQUAC1[j] = gamC + gamR;
 
                         // write debug results
                         //Gam 	  = exp(lnGam);
@@ -4444,7 +4443,7 @@ long int TELVIS::IonicStrength()
 }
 
 
-void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
+void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born1)
 {
     int i=0,j=0;
 
@@ -4479,7 +4478,7 @@ void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
                 part2 += 2 * m[j] * ( beta0[i][j] * beta1[i][j] * 2*(1-(1+x)*exp(-x))/(x*x) );
             }
         }
-        ELVIS_lnGam_Born[ i ] = z[i] * z[i] * part1 + part2;	}
+        ELVIS_lnGam_Born1[ i ] = z[i] * z[i] * part1 + part2;	}
 */
 
         // species fractions:
@@ -4489,7 +4488,7 @@ void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
 
         for( i=0;i<(NComp-1);i++ )
         {
-            if( z[i] != 0 )
+            if( noZero( z[i] ) )
             {
                 spec_sum += m[i];
             }
@@ -4507,7 +4506,7 @@ void TELVIS::ELVIS_Born(double* ELVIS_lnGam_Born)
         }
 
 
-        ELVIS_lnGam_Born[ i ] = EP;
+        ELVIS_lnGam_Born1[ i ] = EP;
 
 }
 
@@ -4757,7 +4756,7 @@ void TELVIS::molfrac_update()
 // Numerical Integration code from Numerical recipes in C (4th edition).
 double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int& species, int select)
 {
-        double x,tnm,sum,del = 0.0;
+        double xx,tnm,sum,del = 0.0;
         static double s;
         int it,j = 0;
 
@@ -4774,8 +4773,8 @@ double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int
                         tnm=it;
                         del=(m_j-m_infdil)/tnm;
         //		This is the spacing of the points to be added.
-                        x=m_infdil+0.5*del;
-                        for (sum=0.0,j=1;j<=it;j++,x+=del) sum += FinDiff(x,species);
+                        xx=m_infdil+0.5*del;
+                        for (sum=0.0,j=1;j<=it;j++,xx+=del) sum += FinDiff(xx,species);
                         s=0.5*(s+(m_j-m_infdil)*sum/tnm);
         //		This replaces s by its refined value.
                                 return s;
@@ -4797,8 +4796,8 @@ double TELVIS::trapzd( const double m_infdil, const double m_j, int& n, long int
                         tnm=it;
                         del=(m_j-m_infdil)/tnm;
         //		This is the spacing of the points to be added.
-                        x=m_infdil+0.5*del;
-                        for (sum=0.0,j=1;j<=it;j++,x+=del) sum += FinDiffVol(x,species);
+                        xx=m_infdil+0.5*del;
+                        for (sum=0.0,j=1;j<=it;j++,xx+=del) sum += FinDiffVol(xx,species);
                         s=0.5*(s+(m_j-m_infdil)*sum/tnm);
         //		This replaces s by its refined value.
                                 return s;
@@ -4828,7 +4827,7 @@ double TELVIS::qsimp(const double m_infdil, const double m_j, long int& species,
         s=(4.0*st-ost)/3.0;
                         if( k > 6 )
                 //		Avoid spurious early convergence.
-                                if( fabs(s-os) < EPS*fabs(os) || (s == 0.0 && os == 0.0) ) return s;
+                                if( fabs(s-os) < EPS*fabs(os) || ( approximatelyZero(s) && approximatelyZero(os) ) ) return s;
                 os=s;
                 ost=st;
         }

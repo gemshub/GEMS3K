@@ -35,7 +35,7 @@
 #ifdef NODEARRAYLEVEL
 #include "nodearray.h"
 #endif
-#ifndef  NO_JSON_OUT
+#ifndef  USE_OLD_KV_IO_FILES
 #include "io_json.h"
 #endif
 
@@ -181,7 +181,7 @@ void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool bri
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   bool _comment = with_comments;
 
-#ifdef  NO_JSON_OUT
+#ifdef  USE_OLD_KV_IO_FILES
 
   TPrintArrays  prar(f_omph+1/*55*/, DataBR_fields, ff);
 
@@ -313,7 +313,7 @@ void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool bri
      prar.writeArray(  f_bPS,  CNode->bPS, CSD->nPSb*CSD->nICb, CSD->nICb,false, brief_mode );
   }
 
-#ifndef  NO_JSON_OUT
+#ifndef  USE_OLD_KV_IO_FILES
   ff << json_data.dump(( _comment ? 4 : 0 ));
 #endif
   ff << std::endl;
@@ -335,7 +335,7 @@ void TNode::databr_from_text_file( std::iostream& ff )
  // mem_set( &CNode->Tm, 0, 19*sizeof(double));
  databr_reset( CNode );
 
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
  TReadArrays  rdar(f_omph+1/*55*/, DataBR_fields, ff);
 #else
  nlohmann::json json_data;
@@ -514,7 +514,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
   bool _comment = with_comments;
 
-#ifdef  NO_JSON_OUT
+#ifdef  USE_OLD_KV_IO_FILES
 
   TPrintArrays  prar1(14, DataCH_static_fields, ff);
   TPrintArrays  prar(30, DataCH_dynamic_fields, ff);
@@ -563,7 +563,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
   prar1.writeField(f_fAalp, CSD->nAalp, _comment, brief_mode  );
   prar1.writeField(f_mLook, CSD->mLook, _comment, brief_mode  );
 
-#ifdef  NO_JSON_OUT
+#ifdef  USE_OLD_KV_IO_FILES
   ff << std::endl << "\n<END_DIM>" << std::endl;
 #endif
 
@@ -608,7 +608,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
   if( _comment )
     ff << "\n\n# (8) Data for Dependent Components";
   prar.writeArray(  f_A, CSD->A, CSD->nDC*CSD->nIC, CSD->nIC, _comment, brief_mode );
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
   ff << std::endl;
 #endif
 
@@ -617,7 +617,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
   prar.writeField(  f_Ttol, CSD->Ttol, _comment, brief_mode  );
   prar.writeArray(  f_TKval, CSD->TKval, CSD->nTp, -1L,_comment, brief_mode );
   prar.writeArray(  f_Psat, CSD->Psat, CSD->nTp, -1L,_comment, brief_mode );
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
   ff << std::endl;
 #endif
 
@@ -642,7 +642,7 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
   if( CSD->iGrd  )
     prar.writeArray(  f_DD, CSD->DD, CSD->nDCs*gridTP(),  gridTP(),  _comment, brief_mode);
 
-#ifndef  NO_JSON_OUT
+#ifndef  USE_OLD_KV_IO_FILES
   ff << json_data.dump( ( _comment ? 4 : 0 ));
 #endif
   ff << std::endl;
@@ -658,7 +658,7 @@ void TNode::datach_from_text_file(std::iostream& ff)
 // ErrorIf( !ff.good() , "DataCH.out", "Fileopen error");
 
 // static arrays
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
  TReadArrays  rdar( 14, DataCH_static_fields, ff);
 #else
  nlohmann::json json_data;
@@ -714,7 +714,7 @@ void TNode::datach_from_text_file(std::iostream& ff)
   databr_realloc();
 
 //dynamic data
-#ifdef NO_JSON_OUT
+#ifdef USE_OLD_KV_IO_FILES
  TReadArrays  rddar( 30, DataCH_dynamic_fields, ff);
 #else
  TReadJson  rddar( 30, DataCH_dynamic_fields, json_data);

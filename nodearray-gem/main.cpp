@@ -14,10 +14,6 @@
 #include <time.h>
 #include <math.h>
 #include "m_gem2mt.h"
-//#include "gstring.h"
-
-istream&
-f_getline(istream& is, gstring& str, char delim);
 
 //---------------------------------------------------------------------------
 // Test of 1D advection (finite difference method provided by Dr. F.Enzmann,
@@ -29,10 +25,18 @@ f_getline(istream& is, gstring& str, char delim);
 
 int main( int argc, char* argv[] )
  {
-     gstring gem2mt_in1 = "TestAD/CalColumnAD.dat";
-     gstring ipm_lst = "TestAD/CalcColumn-dat.lst";
-     gstring dbr_lst = "TestAD/CalcColumn-dbr.lst";
-     gstring vtk_fname = "TestAD/VTK";
+
+#ifdef USE_OLD_KV_IO_FILES
+     std::string gem2mt_in1 = "TestAD/CalColumnAD.dat";
+     std::string ipm_lst = "TestAD/CalcColumn-dat.lst";
+     std::string dbr_lst = "TestAD/CalcColumn-dbr.lst";
+     std::string vtk_fname = "TestAD/VTK";
+#else
+    std::string gem2mt_in1 = "TestAD1/CalcColumnAD.json";
+    std::string ipm_lst = "TestAD1/CalcColumn-dat.lst";
+    std::string dbr_lst = "TestAD1/CalcColumn-dbr.lst";
+    std::string vtk_fname = "TestAD1/VTK";
+#endif
 
 
 // from argv
@@ -68,8 +72,8 @@ int main( int argc, char* argv[] )
    }
    catch(TError& err)
        {
-        fstream f_log("gem2mtlog.txt", ios::out|ios::app );
-        f_log << err.title.c_str() << ": " << err.mess.c_str() << endl;
+        std::fstream f_log("gem2mtlog.txt", std::ios::out|std::ios::app );
+        f_log << err.title.c_str() << ": " << err.mess.c_str() << std::endl;
         return 1;
        }
 

@@ -153,24 +153,24 @@ class TKinetics
     // How to link to KINETICS?
 
     long int sizeFI;      ///< current size of phKinMet
-    TKinMet* (*phKinMet); ///< size current FI -   number of phases
+    TKinMet* *phKinMet; ///< size current FI -   number of phases
     bool load;
 
 public:
 
     /// This allocation is used only in standalone GEMS3K
-    TKinetics( DATACH *csd, DATABR *sbc, TNode *ptn )
+    TKinetics( DATACH *dch, DATABR *sbc, TNode *ptn )
     {
-        this->csd = csd;
+        this->csd = dch;
         this->cnd = sbc;
         this->cno = ptn;
 
-            sizeFI = 0;
-            phKinMet = nullptr;
+        sizeFI = 0;
+        phKinMet = nullptr;
 
-         load = false;
-         Alloc_TKinMet( csd->nPH );
-         sizeFI = csd->nPH;
+        load = false;
+        Alloc_TKinMet( dch->nPH );
+        sizeFI = dch->nPH;
     }
 
 ~TKinetics( )

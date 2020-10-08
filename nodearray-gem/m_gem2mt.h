@@ -20,18 +20,18 @@
 #define _m_gem2mt_h_
 
 
-#include "m_param.h"
 #include "particlearray.h"
 class TRWArrays;
 
 #ifndef IPMGEMPLUGIN
 
+#include "m_param.h"
 #include "v_ipnc.h"
-#include "graph.h"
+#include "graph_window.h"
 
 #else
 // internal
-enum grr_constants { // gstring len for graph
+enum grr_constants { // std::string len for graph
     MAXAXISNAME = 9,
     MAXGSNAME = 70,
     MAXGRNAME = 16
@@ -86,8 +86,8 @@ typedef struct
    PvFDL,    // Use flux definition list (+ -)
    PvSFL,    // Use source fluxes and elemental stoichiometries for them? (+ -)
    PvGrid,   // Use array of grid point locations? (+ -)
-PvDDc,  //  Use diffusion coefficients for DC - DDc vector (+ -)
-PvDIc,  //  Use diffusion coefficients for IC - DIc vector (+ -)
+   PvDDc,  //  Use diffusion coefficients for DC - DDc vector (+ -)
+   PvDIc,  //  Use diffusion coefficients for IC - DIc vector (+ -)
    PvDCH,  //  Select ICs, DCs and phases to be exchanged via DATABR file (take all, if unchecked) (+ -)?
    PvnVTK, //  Use selected fields to VTK format (+ -)?
    Pvres1, //  reserved(+ -)?
@@ -133,14 +133,14 @@ PvDIc,  //  Use diffusion coefficients for IC - DIc vector (+ -)
    Nb,   // N - number of independent components (set automatically from RMults)
    FIb,  // N - number of phases (set automatically from RMults)
    Lb,   // N - number of dependent components in multycomponent phases (set automatically from RMults)
-      bTau, // Time point for the simulation break (Tau[0] at start)   // not used
+   bTau, // Time point for the simulation break (Tau[0] at start)   // not used
    ntM,  // Maximum allowed number of time iteration steps (default 1000)
    nYS,  // number of plots (columns in the yt array)
    nE,   // Total number of experiments points (in xEt, yEt) to plot over
    nYE,  // number of experimental parameters (columns in the yEt array)
    nPai,  // Number of P points in MTP interpolation array in DataCH ( 1 to 10 )
    nTai,  // Number of T points in MTP interpolation array in DataCH ( 1 to 20 )
-      Lsf,       // number of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
+   Lsf,       // number of DCs in phases-solutions in Multi (DATACH) for setting box-fluxes
   // These dimensionalities define sizes of dynamic data in DATABR structure!!!
   // Needed to reduce on storage demand for data bridge instances (nodes)!
   // Connection occurs through xIC, xPH and xDC lists!
@@ -179,8 +179,8 @@ nRes3,  //   reserved
    al_in,  // initial specific longitudinal dispersivity (m), usually 1e-3
    Dif_in, // initial general diffusivity (m2/sec), usually 1e-9
    nto_in, // initial tortuosity factor, usually 1
-  cdv,     // cutoff for IC amount differences in the node between time steps (mol, 1e-9)
-  cez,     // cutoff for minimal amounts of IC in node bulk compositions (mol, 1e-12)
+   cdv,     // cutoff for IC amount differences in the node between time steps (mol, 1e-9)
+   cez,     // cutoff for minimal amounts of IC in node bulk compositions (mol, 1e-12)
    ADrs1   // reserved
   ;
 
@@ -237,7 +237,7 @@ nRes3,  //   reserved
              // line in the BSF table", and so on
 double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flux rate, MGP quantities)
     double
- *PGT,  // Quantities of phases in MGP [FIf][nPG]
+     *PGT,  // Quantities of phases in MGP [FIf][nPG]
      *BSF,   // [nSFD][Nf] table of bulk compositions of elemental fluxes
               //  More to be added here for seq reactors?
      *MB,    // [nC][Nf] column of current IC masses in the boxes (in kg)
@@ -246,8 +246,8 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
 
  // graphics
     double
-*xEt,    // Abscissa for experimental points [nXE]
-*yEt,       // Ordinates for experimental points to plot [nXE, nYE]
+     *xEt,    // Abscissa for experimental points [nXE]
+     *yEt,    // Ordinates for experimental points to plot [nXE, nYE]
      *qpi,   //  [Nqpi] Work array for initial systems math script
      *qpc,   //  [Nqpc] Work array for mass transport math script,
      *xt,    //  Abscissa for sampled data [nS]
@@ -271,17 +271,17 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
 //
    *CIclb, // [Nb] Units of IC quantity/concentration for initial systems compositions
    *AUcln, // [Lbi] Units of setting UDF quantities for initial system compositions
-       *UMGP;  // [FIf] units for setting phase quantities in MGP (see PGT )
+   *UMGP;  // [FIf] units for setting phase quantities in MGP (see PGT )
 
   char (*sdref)[V_SD_RKLEN]; // "List of bibl. refs to data sources" [0:Nsd-1]
   char (*sdval)[V_SD_VALEN];  // "Parameters taken from the respective data sources"[0:Nsd-1]
   char (*nam_i)[MAXIDNAME]; // [nIV][12] id names of initial systems
   char (*for_i)[MAXFORMUNITDT]; // [Lbi][40] formulae for setting initial system compositions
-       char (*for_e)[MAXFORMUNITDT]; // [nE][40] formulae for diffusing dissolved electrolytes
+  char (*for_e)[MAXFORMUNITDT]; // [nE][40] formulae for diffusing dissolved electrolytes
   char (*stld)[EQ_RKLEN]; // List of SysEq record keys for initial systems [nIV]
   char (*FDLid)[MAXSYMB]; // [nFD] ID of fluxes
   char (*FDLop)[MAXSYMB]; // [nFD] Operation codes (letters): flux order,  type codes
-       char (*FDLmp)[MAXSYMB]; // [nFD] ID of MGP to move in this flux (if starts with letter)
+  char (*FDLmp)[MAXSYMB]; // [nFD] ID of MGP to move in this flux (if starts with letter)
                              // Otherwise BSF row index of elemental flux (if 0,1,2,...) 
   char (*MGPid)[MAXSYMB]; // [nPG] ID list of mobile phase groups
 
@@ -307,7 +307,7 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
    *etext,              // internal
    *tprn;              // internal
 
- //work data
+ //work data indices/counters
  long int
    ctm,    // current CSD #
    cnv,    //  current restriction variant #
@@ -320,7 +320,7 @@ double  (*FDLf)[4]; // [nFD][4] Part of the flux defnition list (flux order, flu
    jdi,   // current index of diffusing IC
    ide,   // current index of diffusing electrolyte
    ct,    // actual time iterator
-   rei5
+   qf     // current index of flux (in the flux table)
    ;
 
  double
@@ -353,18 +353,17 @@ class TGEM2MT
 
 #ifndef IPMGEMPLUGIN
     IPNCalc rpn[2];      // IPN
-
-    GraphWindow* gd_gr;
+    jsonui::GraphDialog *gd_gr = nullptr;
     TPlotLine* plot;
-    gstring title;           // changed titler to title
+    std::string title;           // changed titler to title
 #endif
 
   TNodeArray* na;       // pointer to nodearray class instance
   TParticleArray* pa_mt;       // pointer to TParticleArray class instance
 
-    gstring pathVTK;
-    gstring nameVTK;
-    gstring prefixVTK;
+    std::string pathVTK;
+    std::string nameVTK;
+    std::string prefixVTK;
 
 protected:
 
@@ -400,10 +399,12 @@ protected:
               long int start_node = 0, long int end_node = 1000 );
 
     bool  CalcIPM( char mode, long int start_node = 0,
-         long int end_node = 1000, FILE* diffile = NULL );
+         long int end_node = 1000, FILE* diffile = nullptr );
 
     void  MassTransAdvecStart();
     void  MassTransAdvecStep( bool ComponentMode = true );
+    void  MassTransCraNicStart();
+    void  MassTransCraNicStep( bool ComponentMode = true );
     void  MassTransParticleStart();
     void  MassTransParticleStep( bool ComponentMode = true );
     bool Trans1D( char mode  );  // return true if canceled
@@ -438,7 +439,7 @@ protected:
     void  BoxesBCupdate();  // was CalcNodeFlux()
     void  CalcMGPdata();
     // Calculate new box states for tcur = x
-    bool BoxEqStatesUpdate( long int Ni, long int pr, double x, double step );
+    bool BoxEqStatesUpdate( long int Ni,long int pr, double x, double step );
     bool CalcSeqReacModel( char mode ); // Calculation of S-mode sequential reactors model
     bool CalcBoxFluxModel( char mode ); // integrate boxes with fluxes of Mobile Groups of Phases
 
@@ -446,7 +447,7 @@ protected:
     void MIDEX( long int j, double t, double h );
     void INTEG( double eps, double& step, double t_begin, double t_end );
 
-    double PrintPoint( long int nPoint, FILE* diffile = NULL, FILE* logfile = NULL, FILE* ph_file = NULL);
+    double PrintPoint( long int nPoint, FILE* diffile = nullptr, FILE* logfile = nullptr, FILE* ph_file = nullptr);
     
 public:
 
@@ -454,7 +455,14 @@ public:
 
     GEM2MT *mtp;
 
-    TGEM2MT( int nrt );
+    explicit TGEM2MT( uint nrt );
+
+#ifndef IPMGEMPLUGIN
+    ~TGEM2MT()
+    {
+        delete gd_gr;
+    }
+#endif
 
     const char* GetName() const
     {
@@ -469,21 +477,25 @@ public:
     void dyn_new( int i=0);
     void set_def( int i=0);
     bool check_input( const char *key, int level=1 );
-    gstring   GetKeyofRecord( const char *oldKey, const char *strTitle,
+    std::string   GetKeyofRecord( const char *oldKey, const char *strTitle,
                               int keyType );
 
     void RecInput( const char *key );
     void MakeQuery();
     int RecBuild( const char *key, int mode = VF_UNDEF );
     void RecCalc( const char *key );
-    void RecordPrint( const char *key=0 ); //sddata key
+    void RecordPrint( const char *key=nullptr ); //sddata key
     void RecordPlot( const char *key );
-    bool SaveGraphData( GraphData* graph );
+
+    bool SaveChartData( jsonui::ChartData* grdata );
+    void ClearGraphDialog()
+    {  gd_gr = nullptr; }
+
     //void CmHelp();
     const char* GetHtml();
 
-   void InsertChanges( TIArray<CompItem>& aIComp,
-          TIArray<CompItem>& aPhase,  TIArray<CompItem>&aDComp );
+   void InsertChanges( std::vector<CompItem>& aIComp,
+          std::vector<CompItem>& aPhase,  std::vector<CompItem>&aDComp );
    void FreeNa();
 
 #else
@@ -508,13 +520,13 @@ public:
 
     // for separate
     void checkAlws(TRWArrays&  prar1, TRWArrays&  prar);
-    void to_text_file( fstream& ff, bool with_comments, bool brief_mode, const char* path );
-    void from_text_file(fstream& ff);
+    void to_text_file( std::fstream& ff, bool with_comments, bool brief_mode, const char* path );
+    void from_text_file( std::fstream& ff);
 
     bool userCancel;
     bool stepWise;
     bool calcFinished;
-    gstring Vmessage;
+    std::string Vmessage;
 
   class UserCancelException {};
    bool internalCalc();
@@ -530,8 +542,9 @@ enum gem2mt_inernal {
   RMT_MODE_F = 'F',    // F Flow-through reactors RMT simulation ( with MGP fluxes )
 
   RMT_MODE_A = 'A',    // A 1D advection (finite-difference) coupled RMT model
+  RMT_MODE_C = 'C',    // A 1D advection (Crank-Nicolson) coupled RMT model
   RMT_MODE_W = 'W',    // W random-walk advection-diffusion coupled RMT model
-  RMT_MODE_D = 'D',    // D 1D diffusion (finite-volume) coupled RMT model
+  RMT_MODE_D = 'D',    // D 1D diffusion (finite-volume) coupled RMT model (TBD)
 
   // Type of transport in box models ( Added 25.11.2011 DK )
    MGP_TT_UNDEF = '0',  // Undefined

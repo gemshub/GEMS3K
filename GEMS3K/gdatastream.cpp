@@ -131,7 +131,7 @@ inline double SWAP(double x) {
 
 
 GemDataStream::GemDataStream( std::string& aPath, ios::openmode aMod  ):
-        mod( aMod ),
+     //   mod( aMod ),
         Path( aPath ),
     //    byteorder( LittleEndian ),
         ff(aPath.c_str(), aMod)

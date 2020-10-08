@@ -26,10 +26,10 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 //
-#include <cmath>
 #include<iomanip>
 #include <algorithm>
 #include "ms_multi.h"
+#include "v_detail.h"
 // #define GEMITERTRACE
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1004,10 +1004,11 @@ double TMultiBase::ConvertGj_toUniformStandardState( double g0, long int j, long
     case DC_AQ_SURCOMP:
         G += pm.ln5551;
         // calculate molar mass of solvent
+         [[fallthrough]];
     case DC_AQ_SOLVCOM:
     case DC_AQ_SOLVENT:
         if( testTSyst( 0 ) ) //TSyst::sm->GetSY()->PYOF != S_OFF )
-          if( YOF != 0.0 )
+          if( noZero( YOF ) )
         	G += YOF;  // In GEMS3K, YOF[k] is the only way to influence G directly
         break;
     case DC_GAS_COMP: // gases except H2O and CO2
@@ -1030,12 +1031,13 @@ case DC_SCM_SPECIES:
                G += log( pm.Pc ); // log general pressure (changed 04.12.2006)
         }
         // non-electrolyte condensed mixtures
+         [[fallthrough]];
     case DC_SCP_CONDEN: // single-component phase
     case DC_SUR_MINAL:
     case DC_SUR_CARRIER:
     case DC_PEL_CARRIER:
         if( testTSyst( 0 ) )//TSyst::sm->GetSY()->PYOF != S_OFF )
-            if( YOF != 0.0 )
+            if( noZero( YOF ) )
                 G += YOF;
         break;
         // Sorption phases
@@ -1266,9 +1268,9 @@ if( YF > pm.DSM )  // if-else rearranged 24.08.2012 DK
 }
 else  { // if phase is removed then a saved copy of activity coefficients is used
         //   dNuG += pm.fDQF[j];   // bugfix 28.08.2012 DK
-            if( pm.K2 && pm.lnGam[j] == 0. && pm.GamFs[j] != 0 )
+            if( pm.K2 && approximatelyZero( pm.lnGam[j]) && noZero( pm.GamFs[j] ) )
                 dNuG -= pm.GamFs[j];
-            if( pm.GamFs[j] != 0 )
+            if( noZero( pm.GamFs[j] ) )
             {
                 fRestore = true;
                 Wx = pow( 10., (pm.Y_la[j] - pm.GamFs[j]/lg_to_ln ));
@@ -1458,7 +1460,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
     if( pa_p->GAS > 1e-6 )
          MjuDiffCutoff = pa_p->GAS;
     AmThExp = (double)abs( pa_p->PRD );
-    if( AmThExp && AmThExp < 4.)
+    if( noZero( AmThExp ) && AmThExp < 4.)
     {
         AmThExp = 4.;
     }
@@ -1538,7 +1540,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           bool RemFlagDC = false;
           for(j=jb; j<jb+L1k; j++)
           {
-             if( pm.Y[j] )
+             if( noZero( pm.Y[j] ) )
              {
                 DCremoved++; RemFlagDC = true;
              }
@@ -1634,7 +1636,7 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           }
           YFcleaned += pm.Y[j];  // Added by DK 27.08.2012
        } //  j
-       if( YFcleaned == 0. )     // No cleanup in the eliminated phase!
+       if( approximatelyZero( YFcleaned ) )     // No cleanup in the eliminated phase!
           goto NextPhaseC;       // Added by DK 27.08.2012
        PhaseAmount = pm.XF[k];                           // bugfix 04.04.2011 DK
        logSI = pm.Falp[k];  // phase stability criterion
@@ -1649,8 +1651,8 @@ long int TMultiBase::PhaseSelectionSpeciationCleanup( long int &kfr, long int &k
           for(j=jb; j<jb+L1k; j++)
           {
             Yj = YjCleaned = pm.Y[j];
-            if( ( pm.DUL[j] < 1e6 && Yj == pm.DUL[j] )
-                 || ( pm.DLL[j] > 0 && Yj == pm.DLL[j] ) )
+            if( ( pm.DUL[j] < 1e6 && essentiallyEqual( Yj, pm.DUL[j] ) )
+                 || ( pm.DLL[j] > 0 && essentiallyEqual( Yj, pm.DLL[j]) ) )
                  continue; // metastability-controlled DCs were already fixed
             if( Yj >= pm.DcMinM )
             {  // we check here in the Ls set only, except metastability constraints
@@ -1807,9 +1809,9 @@ void TMultiBase::StabilityIndexes( void )
           gamma_primal = pm.Gamma[j];  // primal (external) activity coefficient
 if( YFk <= pm.DSM )
 {
-    if( !pm.K2 && gamma_primal != 1.0 ) // can insert because gamma is available
+    if( !pm.K2 && !essentiallyEqual( gamma_primal, 1.0) ) // can insert because gamma is available
        fRestore = true;
-    if( pm.K2 && pm.GamFs[j] != 1.0 && pm.Gamma[j] == 1.0 )
+    if( pm.K2 && !essentiallyEqual(pm.GamFs[j], 1.0) && essentiallyEqual(pm.Gamma[j], 1.0) )
     {
        gamma_primal = pm.GamFs[j];  // taking saved gamma if the phase was removed
        fRestore = true;

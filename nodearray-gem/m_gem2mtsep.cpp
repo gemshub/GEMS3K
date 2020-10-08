@@ -41,7 +41,7 @@ bool DirExists( const char* aPath )
 
 TGEM2MT* TGEM2MT::pm;
 
-TGEM2MT::TGEM2MT( int /*nrt*/ )
+TGEM2MT::TGEM2MT( uint /*nrt*/ )
 {
   mtp=&mt[0];
   set_def( 0 );
@@ -72,7 +72,7 @@ void TGEM2MT::RecCalc()
       if( mtp->PsVTK != S_OFF )
       {
          if( !DirExists( pathVTK.c_str() ) )
-#ifdef _MSC_VER
+#ifndef  __unix
             mkdir( pathVTK.c_str() );
 #else
              mkdir( pathVTK.c_str(), 0755 );
@@ -109,7 +109,7 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
  // read GEM2MT structure from file
   try
   {
-   fstream ff(gem2mt_in1, ios::in );
+   std::fstream ff(gem2mt_in1, std::ios::in );
    ErrorIf( !ff.good() , gem2mt_in1, "Fileopen error");
    from_text_file( ff );
    pathVTK = vtk_dir;
@@ -123,8 +123,8 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
   }
   catch(TError& err)
   {
-      fstream f_log("gem2mtlog.txt", ios::out|ios::app );
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+      std::fstream f_log("gem2mtlog.txt", std::ios::out|std::ios::app );
+      f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
   }
   return 1;
 }
@@ -135,15 +135,15 @@ int TGEM2MT::WriteTask( const char *gem2mt_out )
  // write GEM2MT structure to file
   try
   {
-   fstream ff(gem2mt_out, ios::out );
+   std::fstream ff(gem2mt_out, std::ios::out );
    ErrorIf( !ff.good() , gem2mt_out, "Fileopen error");
    to_text_file( ff, true, false, gem2mt_out );
    return 0;
   }
   catch(TError& err)
   {
-      fstream f_log("gem2mtlog.txt", ios::out|ios::app );
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << endl;
+      std::fstream f_log("gem2mtlog.txt", std::ios::out|std::ios::app );
+      f_log << err.title.c_str() << "  : " << err.mess.c_str() <<std:: endl;
   }
   return 1;
 }
@@ -156,17 +156,19 @@ int TGEM2MT::MassTransInit( const char *lst_f_name, const char *dbr_lst_f_name )
   int ii;
 
   // define name of vtk file
-  gstring lst_in = lst_f_name;
+  std::string lst_in = lst_f_name;
   size_t pos = lst_in.rfind("\\");
   size_t pos2 = lst_in.rfind("/");
-  if( pos == npos )
+  if( pos == std::string::npos )
       pos = pos2;
   else
-      if( pos2 < npos)
-         pos = max(pos, pos2 );
-  if( pos < npos )
-  {   if( pathVTK.empty() )
-      {  pathVTK = lst_in.substr(0, pos+1);
+      if( pos2 < std::string::npos)
+         pos = std::max(pos, pos2 );
+  if( pos < std::string::npos )
+  {
+      if( pathVTK.empty() )
+      {
+          pathVTK = lst_in.substr(0, pos+1);
           pathVTK += "VTK/";
       }
       lst_in = lst_in.substr(pos+1);

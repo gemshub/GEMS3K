@@ -555,7 +555,7 @@ to_text_file( "MultiDumpA.txt" );   // Debugging
         // Cleaning vectors of activity coefficients
         for( j=0; j<pm.L; j++ )
         {
-            if( pm.lnGmf[j] )
+            if( noZero(pm.lnGmf[j]) )
                 pm.lnGam[j] = pm.lnGmf[j]; // setting up fixed act.coeff. for SolveSimplex()
             else pm.lnGam[j] = 0.;
             pm.Gamma[j] = 1.;
@@ -1311,7 +1311,7 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
   // Making the  matrix of IPM linear equations
   for( kk = 0; kk < N; kk++)
    for( ii=0; ii < N; ii++ )
-      (*(AA+(ii)+(kk)*N)) = 0.;
+      (*(AA1+(ii)+(kk)*N)) = 0.;
 
   for( jj=0; jj < pm.L; jj++ )
   {
@@ -1323,30 +1323,30 @@ long int TMultiBase::MakeAndSolveSystemOfLinearEquations( long int N, bool initA
           kk = arrAN[k];
           if( ii >= N || kk >= N )
            continue;
-          (*(AA+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pm.W[jj];
+          (*(AA1+(ii)+(kk)*N)) += a(jj,ii) * a(jj,kk) * pm.W[jj];
         }
     }
   }
 
    if( initAppr )
      for( ii = 0; ii < N; ii++ )
-         BB[ii] = pm.C[ii];
+         BB1[ii] = pm.C[ii];
    else {
      for( ii = 0; ii < N; ii++ )
-         BB[ii] = 0.;
+         BB1[ii] = 0.;
      for( jj=0; jj < pm.L; jj++ )
         if( pm.Y[jj] > min( pm.lowPosNum, pm.DcMinM ) )
            for( i = arrL[jj]; i < arrL[jj+1]; i++ )
            {  ii = arrAN[i];
               if( ii >= N )
                 continue;
-              BB[ii] += pm.F[jj] * a(jj,ii) * pm.W[jj];
+              BB1[ii] += pm.F[jj] * a(jj,ii) * pm.W[jj];
            }
     }
 
 #ifndef PGf90
-  Array2D<double> A( N, N, AA );
-  Array1D<double> B( N, BB );
+  Array2D<double> A( N, N, AA1 );
+  Array1D<double> B( N, BB1 );
 #else
   Array2D<double> A( N, N);
   Array1D<double> B( N );
@@ -1581,20 +1581,20 @@ double TMultiBase::RescaleToSize( bool /*standard_size*/ )
 //
 void TMultiBase::Alloc_A_B( long int newN )
 {
-  if( AA && BB && (newN == sizeN) )
+  if( AA1 && BB1 && (newN == sizeN) )
     return;
   Free_A_B();
-  AA = new  double[newN*newN];
-  BB = new  double[newN];
+  AA1 = new  double[newN*newN];
+  BB1 = new  double[newN];
   sizeN = newN;
 }
 
 void TMultiBase::Free_A_B()
 {
-  if( AA  )
-    { delete[] AA; AA = 0; }
-  if( BB )
-    { delete[] BB; BB = 0; }
+  if( AA1  )
+    { delete[] AA1; AA1 = 0; }
+  if( BB1 )
+    { delete[] BB1; BB1 = 0; }
   sizeN = 0;
 }
 
@@ -1658,7 +1658,7 @@ void TMultiBase::Alloc_internal()
 // add09
 void TMultiBase::setErrorMessage( long int num, const char *code, const char * msg)
 {
-  long int len_code, len_msg;
+  size_t len_code, len_msg;
   pm.Ec  = num;
   len_code = strlen(code);
   if(len_code > 99)
@@ -1674,8 +1674,8 @@ void TMultiBase::setErrorMessage( long int num, const char *code, const char * m
 
 void TMultiBase::addErrorMessage( const char * msg)
 {
-  long int len = strlen(pm.errorBuf);
-  long int lenm = strlen( msg );
+  auto len = strlen(pm.errorBuf);
+  auto lenm = strlen( msg );
   if( len + lenm < 1023 )
   {
     memcpy(pm.errorBuf+len, msg, lenm  );

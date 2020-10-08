@@ -149,7 +149,7 @@ void TMultiBase::AutoInitialApproximation( )
 /// Generic simplex method with two sided constraints (c) K.Chudnenko 1992
 ///  SPOS function
 //
-void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M,double AA[])
+void TMultiBase::SPOS( double *P, long int STR[],long int NMB[],long int J,long int M, double AA[])
 {
     long int I,K;
     K=0;
@@ -812,43 +812,42 @@ void TMultiBase::InitalizeGEM_IPM_Data() // Reset internal data formerly MultiIn
    RescaleToSize( true );  // Added to set default cutoffs/inserts 30.08.2009 DK
 
    if(  pm.pNP )
-    {  //  Smart Initial Approximation mode
-       long int j,k;
+   {  //  Smart Initial Approximation mode
 
-     loadData( false );  // unpack SysEq record into MULTI
+       loadData( false );  // unpack SysEq record into MULTI
 
-     bool AllPhasesPure = true;   // Added by DK on 09.03.2010
-     // checking if all phases are pure
-     for( k=0; k < pm.FI; k++ )
-     if( pm.L1[k] > 1 )
-        AllPhasesPure = false;
+       bool AllPhasesPure = true;   // Added by DK on 09.03.2010
+       // checking if all phases are pure
+       for( long int k=0; k < pm.FI; k++ )
+           if( pm.L1[k] > 1 )
+               AllPhasesPure = false;
 
-     for( j=0; j< pm.L; j++ )
-         pm.X[j] = pm.Y[j];
-//       pm.IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
-      TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
-      CalculateConcentrations( pm.X, pm.XF, pm.XFA);  // 13.03.2008  DK
+       for(long int j=0; j< pm.L; j++ )
+           pm.X[j] = pm.Y[j];
+       //       pm.IC = 0.;  //  Problematic statement!  blocked 13.03.2008 DK
+       TotalPhasesAmounts( pm.X, pm.XF, pm.XFA );
+       CalculateConcentrations( pm.X, pm.XF, pm.XFA);  // 13.03.2008  DK
        // test multicomponent phases and load data for mixing models
        if( pm.FIs && AllPhasesPure == false )
        {
            // Load activity coeffs for phases-solutions
-         int k, jb, je=0;
-         for( k=0; k<pm.FIs; k++ )
-         { // loop on solution phases
-            jb = je;
-            je += pm.L1[k];
-            // Load activity coeffs for phases-solutions
-            for( j=jb; j< je; j++ )
-            {
-               pm.lnGmo[j] = pm.lnGam[j];
-               if( fabs( pm.lnGam[j] ) <= 84. )
-      //                pm.Gamma[j] = exp( pm.lnGam[j] );
-                      pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
-               else pm.Gamma[j] = 1.0;
-             } // j
-          }  // k
+           int k, jb, je=0;
+           for( k=0; k<pm.FIs; k++ )
+           { // loop on solution phases
+               jb = je;
+               je += pm.L1[k];
+               // Load activity coeffs for phases-solutions
+               for(auto j=jb; j< je; j++ )
+               {
+                   pm.lnGmo[j] = pm.lnGam[j];
+                   if( fabs( pm.lnGam[j] ) <= 84. )
+                       //                pm.Gamma[j] = exp( pm.lnGam[j] );
+                       pm.Gamma[j] = PhaseSpecificGamma( j, jb, je, k, 0 );
+                   else pm.Gamma[j] = 1.0;
+               } // j
+           }  // k
        }
-    }
+   }
 }
 
 void TMultiBase::multiConstInit_PN()
@@ -862,46 +861,46 @@ void TMultiBase::multiConstInit_PN()
 /// Do it before calculations
 void TMultiBase::MultiConstInit() // from MultiRemake
 {
-  const BASE_PARAM *pa_p = pa_p_ptr();
+    const BASE_PARAM *pa_p = pa_p_ptr();
 
-  pm.FI1 = 0;
-  pm.FI1s = 0;
-  pm.FI1a = 0;
-  pm.ITF = 0; pm.ITG = 0;
-  pm.PD =pa_p_ptr()->PD;
-  pm.Ec = pm.K2 = pm.MK = 0;
-  pm.W1 = 0;
-  pm.is = 0;
-  pm.js = 0;
-  pm.next  = 0;
-  pm.ln5551 = log( H2O_mol_to_kg );             // constant corrected 30.08.2008
-  pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
-  pm.logXw = -16.;
-  pm.logYFk = -9.;
-  pm.DXM = pa_p_ptr()->DK;
+    pm.FI1 = 0;
+    pm.FI1s = 0;
+    pm.FI1a = 0;
+    pm.ITF = 0; pm.ITG = 0;
+    pm.PD =pa_p_ptr()->PD;
+    pm.Ec = pm.K2 = pm.MK = 0;
+    pm.W1 = 0;
+    pm.is = 0;
+    pm.js = 0;
+    pm.next  = 0;
+    pm.ln5551 = log( H2O_mol_to_kg );             // constant corrected 30.08.2008
+    pm.lowPosNum = Min_phys_amount;               // = 1.66e-24 mol
+    pm.logXw = -16.;
+    pm.logYFk = -9.;
+    pm.DXM = pa_p_ptr()->DK;
 
-  //  ???????
-  pm.FX = 7777777.;
-  if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
-      pm.pH = pm.Eh = pm.pe = 0.0;
-  pm.YMET = 0;                      // always 0.0 ????
-  pm.PCI = 1.0;
-  pm.FitVar[4] = 1.0;
+    //  ???????
+    pm.FX = 7777777.;
+    if( pm.pH < -15. || pm.pH > 16.  )   // Check for trash in pH - bugfix 19.06.2013
+        pm.pH = pm.Eh = pm.pe = 0.0;
+    pm.YMET = 0;                      // always 0.0 ????
+    pm.PCI = 1.0;
+    pm.FitVar[4] = 1.0;
 
-  multiConstInit_PN();
+    multiConstInit_PN();
 }
 
 /// Calculation by IPM (internal step initialization)
 void TMultiBase::GEM_IPM_Init()
 {
-   int i,j,k;
+   int i,j;
 
    for( i=0; i<pm.N; i++ )
      pm.Uefd[i] = 0.;
 
    bool AllPhasesPure = true;   // Added by DK on 09.03.2010
   // checking if all phases are pure
-  for( k=0; k < pm.FI; k++ )
+  for(int k=0; k < pm.FI; k++ )
     if( pm.L1[k] > 1 )
         AllPhasesPure = false;
 
@@ -1123,7 +1122,7 @@ void TMultiBase::DC_LoadThermodynamicData(TNode* aNa ) // formerly CompG0Load()
 //#endif
          if( xVol >= 0 )
             pm.A[j*pm.N+xVol] = Vv;
-
+          [[fallthrough]];
        case VOL_CALC:
        case VOL_UNDEF:
 //#ifndef IPMGEMPLUGIN 08/05/2020 (used only in Read command in GUI )
