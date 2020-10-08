@@ -1,18 +1,8 @@
 #ifndef GEMS3K_IMPEX_H
 #define GEMS3K_IMPEX_H
 
-#include "sstream"
 #include "vector"
 #include "v_detail.h"
-
-//#ifndef USE_OLD_KV_IO_FILES
-//  const char *dat_ext = "json";
-//  const char *dat_filt = "*.json";
-//#else
-//const char *dat_ext = "dat";
-//const char *dat_filt = "*.dat";
-//#endif
-
 
 /// Descripton of data to generate MULTI, DATACH and DATABR files structure prepared from GEMS.
 class GEMS3KImpexGenerator
@@ -27,8 +17,15 @@ public:
         f_json
     };
 
-
-public:
+    /// Constructor
+    /// Reads MULTI, DATACH and DATABR files structure prepared from GEMS.
+    /// \param filepath - IPM work structure file path&name
+    explicit GEMS3KImpexGenerator(  const std::string& filepath ):
+        ipmfiles_lst_name( filepath )
+    {
+        set_internal_data();
+        load_dat_lst_file();
+    }
 
     /// Constructor
     /// Generate MULTI, DATACH and DATABR files structure prepared from GEMS.
@@ -42,23 +39,13 @@ public:
     explicit GEMS3KImpexGenerator(  const std::string& filepath, long int anIV, FileIOModes file_mode ):
         ipmfiles_lst_name(filepath), nIV(anIV), io_mode(file_mode)
     {
-        std::string ext;
-        u_splitpath( ipmfiles_lst_name, impex_dir, base_name, ext );
-        auto pos = base_name.rfind("-");
-        if( pos != std::string::npos )
-            base_name = base_name.substr(0, pos);
+        set_internal_data();
     }
 
     /// Get selected file output mode
     FileIOModes files_mode() const
     {
         return io_mode;
-    }
-
-    /// Generate MULTI file name
-    std::string get_dbr_file_lst_path() const
-    {
-        return  u_makepath( impex_dir, base_name + "-dbr", "lst" );
     }
 
     /// Generate full path
@@ -79,6 +66,14 @@ public:
         return  ( impex_dir.empty() ? datach_file_name : impex_dir+"/"+datach_file_name );
     }
 
+    /// Generate full path for dbr file
+    std::string get_dbr_path( size_t index ) const
+    {
+        if( index >= databr_file_names.size() )
+           return "";
+        return  ( impex_dir.empty() ? databr_file_names[index] : impex_dir+"/"+databr_file_names[index] );
+    }
+
     /// Generate MULTI file name
     std::string gen_ipm_file_name()
     {
@@ -94,24 +89,13 @@ public:
     }
 
     /// Generate dataBR file name
-    std::string gen_dbr_file_name( int time_point, size_t index ) const
-    {
-        char buf[5];
-        snprintf( buf, 5, "%4.4ld", index );
-        std::string dbr_name = base_name + "-dbr-";
-        dbr_name += std::to_string(time_point) + "-" + buf +".";
-        dbr_name +=  extension();
-        return dbr_name;
-    }
+    std::string gen_dbr_file_name( int time_point, size_t index ) const;
 
     /// Generate *-dat.lst file data
-    std::string gen_dat_lst_head()
-    {
-        std::stringstream fout;
-        fout << mode() << " \"" << gen_dch_file_name() + "\"";
-        fout << " \"" << gen_ipm_file_name() << "\" ";
-        return fout.str();
-    }
+    std::string gen_dat_lst_head();
+
+    /// Generate dbr lst file path
+    std::string get_dbr_file_lst_path() const;
 
 protected:
 
@@ -146,20 +130,10 @@ protected:
         return "dat";
     }
 
-    std::string mode() const
-    {
-        switch( io_mode )
-        {
-        case f_binary:
-            return "-b";
-        case f_json:
-            return "-j";
-        default:
-        case f_key_value:
-            break;
-        }
-        return "-t";
-    }
+    std::string mode() const;
+    void get_mode( const std::string& str_mode );
+    void set_internal_data();
+    void load_dat_lst_file();
 
 };
 

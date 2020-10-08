@@ -609,7 +609,7 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
 {
     std::fstream fout_dat_lst;
     std::fstream fout_dbr_lst;
-    GEMS3KImpexGenerator generator( filepath, nIV, ( bin_mode? GEMS3KImpexGenerator::f_binary: GEMS3KImpexGenerator::f_json ));
+    GEMS3KImpexGenerator generator( filepath, nIV, ( bin_mode? GEMS3KImpexGenerator::f_binary: GEMS3KImpexGenerator::f_key_value ));
 
     // open *-dat.lst
     fout_dat_lst.open( filepath, std::ios::out );

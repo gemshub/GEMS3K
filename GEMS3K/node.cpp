@@ -34,6 +34,7 @@
 #include "activities.h"
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"
+#include "gems3k_impex.h"
 
 #include <cmath>
 #include <algorithm>
@@ -474,122 +475,85 @@ long int  TNode::GEM_read_dbr( const char* fname, bool binary_f )
 //-------------------------------------------------------------------
 long int  TNode::GEM_init( const char* ipmfiles_lst_name )
 {
-
-   // cout << ipmfiles_lst_name << "  " << dbrfiles_lst_name << endl;
-  std::string curPath = ""; //current reading file path
-  std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-  try
+    std::fstream f_log( TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
+    try
     {
-     bool binary_f = false;
-     std::string lst_in = ipmfiles_lst_name;
-     std::string Path = "";         // was " "   fixed 10.12.2009 by DK
-// Get path
-      size_t pos = lst_in.rfind("\\");
-      if( pos == std::string::npos )
-         pos = lst_in.rfind("/");
-      else
-         pos = std::max(pos, lst_in.rfind("/") );
-      if( pos < std::string::npos )
-      Path = lst_in.substr(0, pos+1);
+        //  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
+        //       "<DBR_DAT file1 name>" [ ...  "<DBR_DAT fileN name>"]
+        GEMS3KImpexGenerator generator( ipmfiles_lst_name );
 
-//  open file stream for the file names list file
-    std::fstream f_lst( lst_in.c_str(), std::ios::in );
-    ErrorIf( !f_lst.good() , lst_in.c_str(), "Fileopen error");
-
-     std::string datachbr_fn;
-     f_getline( f_lst, datachbr_fn, ' ');
-
-//  Syntax: -t/-b  "<DCH_DAT file name>"  "<IPM_DAT file name>"
-//       "<DBR_DAT file1 name>" [, ... , "<DBR_DAT fileN name>"]
-
-//Testing flag "-t" or "-b" (by default "-t")   // use binary or text files
-      pos = datachbr_fn.find( '-');
-      if( pos != std::string::npos )
-      {
-         if( datachbr_fn[pos+1] == 'b' )
-            binary_f = true;
-         f_getline( f_lst, datachbr_fn, ' ');
-      }
- //     f_getline( f_lst, datachbr_fn, ' ');
-      // Reading name of DCH_DAT file
-      std::string dat_ch = Path + datachbr_fn;
-
-      // Reading name of IPM_DAT file for structure MULTI (GEM IPM work structure)
-      f_getline( f_lst, datachbr_fn, ' ');
-      std::string mult_in = Path + datachbr_fn;
-
-// Reading DCH_DAT file in binary or text format
-      curPath = dat_ch;
-      if( binary_f )
-      {  GemDataStream f_ch(dat_ch, std::ios::in|std::ios::binary);
-         datach_from_file(f_ch);
-       }
-      else
-      {
-          std::fstream f_ch(dat_ch.c_str(), std::ios::in );
-         ErrorIf( !f_ch.good() , dat_ch.c_str(), "DCH_DAT fileopen error");
-         datach_from_text_file(f_ch);
-      }
-
-// Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
-curPath = mult_in;
-if( binary_f )
- {
-   GemDataStream f_m(mult_in, std::ios::in|std::ios::binary);
-   multi->read_multi(f_m, CSD);
- }
-  else
-  {
-    std::fstream ff( mult_in, std::ios::in );
-    ErrorIf( !ff.good() , mult_in, "Fileopen error");
-    multi->from_text_file_gemipm( ff, CSD);
-  }
-
-  // copy intervals for minimizatiom
-   pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
-   pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
-   pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
-   pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
-
-   pmm->Tai[0] = CSD->TKval[0]-C_to_K;
-   pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
-   pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
-   pmm->Tai[3] = CSD->Ttol;
-
-  pmm->Fdev1[0] = 0.;
-  pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
-  pmm->Fdev2[0] = 0.;
-  pmm->Fdev2[1] = 1e-6;
-
-  // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
-       f_getline( f_lst, datachbr_fn, ' ');
-
-        std::string dbr_file = Path + datachbr_fn;
-        curPath = dbr_file;
-        if( binary_f )
+        switch( generator.files_mode() )
         {
-               GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
-               databr_from_file(in_br);
+        case GEMS3KImpexGenerator::f_binary:
+        {
+            GemDataStream f_ch( generator.get_dch_path(), std::ios::in|std::ios::binary );
+            datach_from_file(f_ch);
+
+            GemDataStream f_m( generator.get_ipm_path(), std::ios::in|std::ios::binary );
+            multi->read_multi(f_m, CSD);
         }
-        else
-        {   std::fstream in_br(dbr_file.c_str(), std::ios::in );
-                   ErrorIf( !in_br.good() , datachbr_fn.c_str(),
-                      "DBR_DAT fileopen error");
-                 databr_from_text_file(in_br);
+            break;
+        case GEMS3KImpexGenerator::f_key_value:
+        case GEMS3KImpexGenerator::f_json:
+        {
+            std::fstream f_ch( generator.get_dch_path(), std::ios::in );
+            ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
+            datach_from_text_file(f_ch);
+
+            std::fstream ff( generator.get_ipm_path(), std::ios::in );
+            ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
+            multi->from_text_file_gemipm( ff, CSD);
         }
-        curPath = "";
+            break;
+        }
+
+        // copy intervals for minimizatiom
+        pmm->Pai[0] = CSD->Pval[0]/bar_to_Pa;
+        pmm->Pai[1] = CSD->Pval[CSD->nPp-1]/bar_to_Pa;
+        pmm->Pai[2] = getStep( pmm->Pai, CSD->nPp )/bar_to_Pa;//(pmp->Pai[1]-pmp->Pai[0])/(double)dCH->nPp;
+        pmm->Pai[3] = CSD->Ptol/bar_to_Pa;
+
+        pmm->Tai[0] = CSD->TKval[0]-C_to_K;
+        pmm->Tai[1] = CSD->TKval[CSD->nTp-1]-C_to_K;
+        pmm->Tai[2] = getStep( pmm->Tai, CSD->nTp );//(pmp->Tai[1]-pmp->Tai[0])/(double)dCH->nTp;
+        pmm->Tai[3] = CSD->Ttol;
+
+        pmm->Fdev1[0] = 0.;
+        pmm->Fdev1[1] = 1e-6;   // 24/05/2010 must be copied from GEMS3 structure
+        pmm->Fdev2[0] = 0.;
+        pmm->Fdev2[1] = 1e-6;
+
+        // Reading DBR_DAT file into work DATABR structure from ipmfiles_lst_name
+        std::string dbr_file = generator.get_dbr_path( 0 );
+        ErrorIf( dbr_file.empty() , ipmfiles_lst_name, " Undefined DBR_DAT file name");
+        switch( generator.files_mode() )
+        {
+        case GEMS3KImpexGenerator::f_binary:
+        {
+            GemDataStream in_br(dbr_file, std::ios::in|std::ios::binary);
+            databr_from_file(in_br);
+        }
+            break;
+        case GEMS3KImpexGenerator::f_key_value:
+        case GEMS3KImpexGenerator::f_json:
+        {
+            std::fstream in_br( dbr_file.c_str(), std::ios::in );
+            ErrorIf( !in_br.good() , dbr_file.c_str(),  "DBR_DAT fileopen error");
+            databr_from_text_file(in_br);
+        }
+            break;
+        }
         dbr_file_name = dbr_file;
 
-// Creating and initializing the TActivity class instance for this TNode instance
+        // Creating and initializing the TActivity class instance for this TNode instance
         init_into_gems3k();
-   return 0;
-
+        return 0;
     }
     catch(TError& err)
     {
-      if( !curPath.empty() )
-          f_log << "GEMS3K input : file " << curPath.c_str() << std::endl;
-      f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
+        if( ipmfiles_lst_name )
+            f_log << "GEMS3K input : file " << ipmfiles_lst_name << std::endl;
+        f_log << err.title.c_str() << "  : " << err.mess.c_str() << std::endl;
     }
     catch(...)
     {
@@ -607,9 +571,9 @@ long int  TNode::GEM_init( const std::string& dch_json, const std::string& ipm_j
 {
     load_thermodynamic_data = false; // need load thermo
     std::fstream f_log(TNode::ipmLogFile.c_str(), std::ios::out|std::ios::app );
-  try
+    try
     {
-    // Reading DCH_DAT data
+        // Reading DCH_DAT data
     datach_from_string(dch_json);
 
     // Reading IPM_DAT file into structure MULTI (GEM IPM work structure)
