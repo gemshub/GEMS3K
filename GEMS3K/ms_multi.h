@@ -614,9 +614,11 @@ public:
     void to_file( GemDataStream& ff );
     void to_text_file( const char *path, bool append=false  );
     void from_file( GemDataStream& ff );
-    void to_text_file_gemipm( std::iostream& ff, bool addMui,
-                                      bool with_comments = true, bool brief_mode = false );
-    void from_text_file_gemipm( std::iostream& ff,  DATACH  *dCH );
+    template<typename TIO>
+    void to_text_file_gemipm( TIO& out_format, bool addMui,
+                              bool with_comments = true, bool brief_mode = false );
+    template<typename TIO>
+    void from_text_file_gemipm( TIO& in_format,  DATACH  *dCH );
     /// Writes Multi to a json/key-value string
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries

@@ -580,15 +580,30 @@ std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, Proce
         calcNode->datach_to_file( f_ch);
     }
         break;
-    case GEMS3KImpexGenerator::f_key_value:
     case GEMS3KImpexGenerator::f_json:
+#ifndef USE_OLD_KV_IO_FILES
     {
         std::fstream ff( generator.get_ipm_path(), std::ios::out );
         ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
-        calcNode->multi->to_text_file_gemipm( ff, addMui, with_comments, brief_mode );
+        io_formats::NlohmannJsonWrite out_ipm( ff );
+        calcNode->multi->to_text_file_gemipm( out_ipm, addMui, with_comments, brief_mode );
 
         std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
-        calcNode->datach_to_text_file( f_ch, with_comments, brief_mode );
+       io_formats::NlohmannJsonWrite out_format( f_ch );
+        calcNode->datach_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+#endif
+    case GEMS3KImpexGenerator::f_key_value:
+    {
+        std::fstream ff( generator.get_ipm_path(), std::ios::out );
+        ErrorIf( !ff.good(), generator.get_ipm_path(), "Fileopen error");
+        io_formats::KeyValueWrite out_ipm( ff );
+        calcNode->multi->to_text_file_gemipm( out_ipm, addMui, with_comments, brief_mode );
+
+        std::fstream  f_ch( generator.get_dch_path(), std::ios::out);
+        io_formats::KeyValueWrite out_format( f_ch );
+        calcNode->datach_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
     }

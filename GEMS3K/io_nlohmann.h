@@ -23,6 +23,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#ifndef USE_OLD_KV_IO_FILES
+
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include "verror.h"
@@ -218,3 +220,5 @@ template <> void NlohmannJsonWrite::write_key_value( const std::string& field_na
 template <> void NlohmannJsonWrite::write_key_value( const std::string& field_name, const std::string& value );
 
 }  // io_formats
+
+#endif

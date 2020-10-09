@@ -40,36 +40,21 @@
 #include "v_detail.h"
 #include "args_impex.h"
 
-#include "io_keyvalue.h"
-#include "io_nlohmann.h"
-#include "io_template.h"
-
 
 void show_usage( const std::string &name );
 int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImpexData& export_data );
 
 
-// -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
-// -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-out/pHtitr-dat.lst
+// -j -i solvus-in/series1-dat.lst -e solvus-out/series1-dat.lst
+// -t -i solvus-in/series1-dat.lst -e solvus-kv/series1-dat.lst
+
+// -t -c -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-out/pHtitr-dat.lst
+// -j  -i Kaolinite-in/pHtitr-dat.lst -e Kaolinite-json/pHtitr-dat.lst
 
 //The simplest case: data exchange using disk files only
 int main( int argc, char* argv[] )
 {
     try{
-
-        std::fstream ffout( "test.json", std::ios::out );
-        ErrorIf( !ffout.good() , "test.json", "Fileopen error");
-        //io_formats::NlohmannJsonWrite out_json( ffout );
-        io_formats::KeyValueWrite out_json( ffout );
-        //io_formats::TPrintArrays<io_formats::NlohmannJsonWrite> writer( 0, nullptr, out_json);
-        io_formats::TPrintArrays writer( 0, nullptr, out_json);
-
-        std::fstream ff( "complex_out.json", std::ios::in );
-        ErrorIf( !ff.good() , "complex_out.json", "Fileopen error");
-        //io_formats::NlohmannJsonRead in_json( ff );
-        io_formats::KeyValueRead in_json( ff );
-        //io_formats::TReadArrays<io_formats::NlohmannJsonRead> reader( 0, nullptr, in_json);
-        io_formats::TReadArrays reader( 0, nullptr, in_json);
 
         std::string input_lst_path;
         GEMS3KImpexData export_data;
@@ -107,7 +92,7 @@ int main( int argc, char* argv[] )
         };
 
         auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
-                                                         2, export_data.brief_mode,
+                                                         export_data.io_mode, export_data.brief_mode,
                                                          export_data.with_comments, export_data.putNodT1, export_data.add_mui );
 
         return 0;

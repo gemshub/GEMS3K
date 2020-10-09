@@ -121,8 +121,10 @@ protected:
         {
         case f_binary:
             return "bin";
+#ifndef USE_OLD_KV_IO_FILES
         case f_json:
             return "json";
+#endif
         default:
         case f_key_value:
             break;

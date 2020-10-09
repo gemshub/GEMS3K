@@ -31,7 +31,6 @@
 #include "io_template.h"
 #include "io_nlohmann.h"
 #include "io_keyvalue.h"
-
 #include "node.h"
 #include "gdatastream.h"
 
@@ -173,17 +172,17 @@ io_formats::outField DataCH_dynamic_fields[30] =  { //+4
 
 //===============================================================
 
-
-void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode ) const
+template<typename TIO>
+void TNode::databr_to_text_file( TIO& out_format, bool with_comments, bool brief_mode ) const
 {
 
     bool _comment = with_comments;
 
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonWrite out_format( ff );
-#else
-    io_formats::KeyValueWrite out_format( ff );
-#endif
+//#ifndef USE_OLD_KV_IO_FILES
+//    io_formats::NlohmannJsonWrite out_format( ff );
+//#else
+//    io_formats::KeyValueWrite out_format( ff );
+//#endif
 
     io_formats::TPrintArrays  prar( f_omph+1/*55*/, DataBR_fields, out_format );
 
@@ -313,7 +312,8 @@ void TNode::databr_to_text_file( std::iostream& ff, bool with_comments, bool bri
 }
 
 // Reading work dataBR structure from text file
-void TNode::databr_from_text_file( std::iostream& ff )
+template<typename TIO>
+void TNode::databr_from_text_file( TIO& in_format )
 {
 #ifndef NODEARRAYLEVEL
     double tmpVal;
@@ -322,11 +322,11 @@ void TNode::databr_from_text_file( std::iostream& ff )
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset( CNode );
 
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonRead in_format( ff );
-#else
-    io_formats::KeyValueRead in_format( ff );
-#endif
+//#ifndef USE_OLD_KV_IO_FILES
+//    io_formats::NlohmannJsonRead in_format( ff );
+//#else
+//    io_formats::KeyValueRead in_format( ff );
+//#endif
     io_formats::TReadArrays  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
@@ -495,15 +495,16 @@ void TNode::databr_from_text_file( std::iostream& ff )
 
 //==============================================================================
 
-void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool brief_mode ) const
+template<typename TIO>
+void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brief_mode ) const
 {
     bool _comment = with_comments;
 
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonWrite out_format( ff );
-#else
-    io_formats::KeyValueWrite out_format( ff );
-#endif
+//#ifndef USE_OLD_KV_IO_FILES
+//    io_formats::NlohmannJsonWrite out_format( ff );
+//#else
+//    io_formats::KeyValueWrite out_format( ff );
+//#endif
     io_formats::TPrintArrays  prar1(14, DataCH_static_fields, out_format );
     io_formats::TPrintArrays  prar( 30, DataCH_dynamic_fields, out_format );
 
@@ -529,14 +530,14 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
     prar1.writeField(f_nDCs, CSD->nDCs, _comment, brief_mode  );
 
     if( _comment )
-        ff << std::endl << "\n## (2) Dimensions for DBR node recipe (memory allocation)";
+        prar.writeComment( _comment, "\n## (2) Dimensions for DBR node recipe (memory allocation)");
     prar1.writeField(f_nICb, CSD->nICb, _comment, brief_mode  );
     prar1.writeField(f_nDCb, CSD->nDCb, _comment, brief_mode  );
     prar1.writeField(f_nPHb, CSD->nPHb, _comment, brief_mode  );
     prar1.writeField(f_nPSb, CSD->nPSb, _comment, brief_mode  );
 
     if( _comment )
-        ff << std::endl << "\n## (3) Dimensions for thermodynamic data arrays";
+        prar.writeComment( _comment, "\n## (3) Dimensions for thermodynamic data arrays");
     prar1.writeField(f_nTp, CSD->nTp, _comment, brief_mode  );
     prar1.writeField(f_nPp, CSD->nPp, _comment, brief_mode  );
     prar1.writeField(f_iGrd, CSD->iGrd, _comment, brief_mode  );
@@ -622,16 +623,17 @@ void TNode::datach_to_text_file( std::iostream& ff, bool with_comments, bool bri
 }
 
 // Reading dataCH structure from text file
-void TNode::datach_from_text_file(std::iostream& ff)
+template<typename TIO>
+void TNode::datach_from_text_file(TIO& in_format)
 {
   long int ii;
 
   // static arrays
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonRead in_format( ff );
-#else
-    io_formats::KeyValueRead in_format( ff );
-#endif
+//#ifndef USE_OLD_KV_IO_FILES
+//    io_formats::NlohmannJsonRead in_format( ff );
+//#else
+//    io_formats::KeyValueRead in_format( ff );
+//#endif
 
     io_formats::TReadArrays rdar( 14, DataCH_static_fields, in_format);
 
@@ -1269,7 +1271,15 @@ void TNode::databr_to_vtk( std::fstream& ff, const char*name, double time, long 
    }
 }
 
-//template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode, const char* path ) const;
-//template void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode, const char* path ) const;
+#ifndef USE_OLD_KV_IO_FILES
+template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::databr_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
+template void  TNode::datach_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::datach_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
+#endif
+template void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::databr_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
+template void  TNode::datach_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TNode::datach_from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
 
 //-----------------------End of node_format.cpp--------------------------

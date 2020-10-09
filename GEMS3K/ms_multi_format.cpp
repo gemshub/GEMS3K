@@ -161,7 +161,8 @@ io_formats::outField MULTI_dynamic_fields[80] =  {
 //===================================================================
 
 /// Writing structure MULTI (GEM IPM work structure)
-void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
+template<typename TIO>
+void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
                                       bool with_comments, bool brief_mode )
 {
     const BASE_PARAM *pa_p = pa_p_ptr();
@@ -170,11 +171,11 @@ void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
     char PSigm;
     get_PAalp_PSigm( PAalp, PSigm);
 
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonWrite out_format( ff );
-#else
-    io_formats::KeyValueWrite out_format( ff );
-#endif
+//#ifndef USE_OLD_KV_IO_FILES
+//    io_formats::NlohmannJsonWrite out_format( ff );
+//#else
+//    io_formats::KeyValueWrite out_format( ff );
+//#endif
     io_formats::TPrintArrays  prar1( 8, MULTI_static_fields, out_format );
     io_formats::TPrintArrays  prar( 80, MULTI_dynamic_fields, out_format );
 
@@ -595,7 +596,8 @@ void TMultiBase::to_text_file_gemipm( std::iostream& ff, bool addMui,
 }
 
 /// Reading structure MULTI (GEM IPM work structure)
-void TMultiBase::from_text_file_gemipm( std::iostream& ff1,  DATACH  *dCH )
+template<typename TIO>
+void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 {
     BASE_PARAM *pa_p = pa_p_ptr();
     long int ii, nfild;
@@ -643,11 +645,11 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff1,  DATACH  *dCH )
     pm.PLIM  = 1;
 
     // static arrays
-#ifndef USE_OLD_KV_IO_FILES
-    io_formats::NlohmannJsonRead in_format( ff1 );
-#else
-    io_formats::KeyValueRead in_format( ff1 );
-#endif
+//#ifndef USE_OLD_KV_IO_FILES
+//    io_formats::NlohmannJsonRead in_format( ff1 );
+//#else
+//    io_formats::KeyValueRead in_format( ff1 );
+//#endif
 
     io_formats::TReadArrays rdar( 8, MULTI_static_fields, in_format);
     rdar.readNext( "ID_key");
@@ -1183,7 +1185,12 @@ void TMultiBase::from_text_file_gemipm( std::iostream& ff1,  DATACH  *dCH )
 std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
 {
     std::stringstream ss;
-    to_text_file_gemipm( ss, addMui, with_comments, brief_mode );
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonWrite out_format( ss );
+#else
+    io_formats::KeyValueWrite out_format( ss );
+#endif
+    to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -1192,9 +1199,21 @@ bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
 {
     std::stringstream ss;
     ss.str(data);
-    from_text_file_gemipm( ss, dCH );
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonRead in_format( ss );
+#else
+    io_formats::KeyValueRead in_format( ss );
+#endif
+    from_text_file_gemipm( in_format, dCH );
     return true;
 }
+
+#ifndef USE_OLD_KV_IO_FILES
+template void TMultiBase::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
+template void TMultiBase::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
+#endif
+template void TMultiBase::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );
+template void TMultiBase::to_text_file_gemipm<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 
 //=============================================================================
 // ms_multi_format.cpp

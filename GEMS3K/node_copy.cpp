@@ -50,7 +50,12 @@ const char *dat_filt = "*.dat";
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    datach_to_text_file( ss, with_comments, brief_mode );
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonWrite out_format( ss );
+#else
+    io_formats::KeyValueWrite out_format( ss );
+#endif
+    datach_to_text_file( out_format, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -59,7 +64,12 @@ bool TNode::datach_from_string( const std::string& data )
 {
     std::stringstream ss;
     ss.str(data);
-    datach_from_text_file( ss );
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonRead in_format( ss );
+#else
+    io_formats::KeyValueRead in_format( ss );
+#endif
+    datach_from_text_file( in_format );
     return true;
 }
 
@@ -69,7 +79,12 @@ bool TNode::datach_from_string( const std::string& data )
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    databr_to_text_file( ss, with_comments, brief_mode );
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonWrite out_format( ss );
+#else
+    io_formats::KeyValueWrite out_format( ss );
+#endif
+    databr_to_text_file( out_format, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -81,7 +96,12 @@ bool TNode::databr_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-    databr_from_text_file( ss );
+#ifndef USE_OLD_KV_IO_FILES
+    io_formats::NlohmannJsonRead in_format( ss );
+#else
+    io_formats::KeyValueRead in_format( ss );
+#endif
+    databr_from_text_file( in_format );
     return true;
 }
 
@@ -96,12 +116,22 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, int type_f )
         databr_from_file(in_br);
     }
         break;
-    case GEMS3KImpexGenerator::f_key_value:
     case GEMS3KImpexGenerator::f_json:
+#ifndef USE_OLD_KV_IO_FILES
     {
         std::fstream in_br( dbr_file, std::ios::in );
         ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
-        databr_from_text_file(in_br);
+        io_formats::NlohmannJsonRead in_format( in_br );
+        databr_from_text_file(in_format);
+    }
+        break;
+#endif
+    case GEMS3KImpexGenerator::f_key_value:
+    {
+        std::fstream in_br( dbr_file, std::ios::in );
+        ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
+        io_formats::KeyValueRead in_format( in_br );
+        databr_from_text_file(in_format);
     }
         break;
     }
@@ -119,11 +149,20 @@ void  TNode::write_dbr_format_file( const std::string& dbr_file, int type_f,
         databr_to_file(f_br);
     }
         break;
-    case GEMS3KImpexGenerator::f_key_value:
     case GEMS3KImpexGenerator::f_json:
+#ifndef USE_OLD_KV_IO_FILES
     {
         std::fstream  f_br( dbr_file, std::ios::out);
-        databr_to_text_file( f_br, with_comments, brief_mode );
+        io_formats::NlohmannJsonWrite out_format( f_br );
+        databr_to_text_file( out_format, with_comments, brief_mode );
+    }
+        break;
+#endif
+    case GEMS3KImpexGenerator::f_key_value:
+    {
+        std::fstream  f_br( dbr_file, std::ios::out);
+        io_formats::KeyValueWrite out_format( f_br );
+        databr_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
     }
@@ -176,16 +215,32 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
             multi->read_multi(f_m, CSD);
         }
             break;
-        case GEMS3KImpexGenerator::f_key_value:
         case GEMS3KImpexGenerator::f_json:
+#ifndef USE_OLD_KV_IO_FILES
         {
             std::fstream f_ch( generator.get_dch_path(), std::ios::in );
             ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
-            datach_from_text_file(f_ch);
+            io_formats::NlohmannJsonRead in_format( f_ch );
+            datach_from_text_file(in_format);
 
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
             ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
-            multi->from_text_file_gemipm( ff, CSD);
+            io_formats::NlohmannJsonRead in_ipm( ff );
+            multi->from_text_file_gemipm( in_ipm, CSD);
+        }
+            break;
+#endif
+        case GEMS3KImpexGenerator::f_key_value:
+        {
+            std::fstream f_ch( generator.get_dch_path(), std::ios::in );
+            ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
+            io_formats::KeyValueRead in_format( f_ch );
+            datach_from_text_file(in_format);
+
+            std::fstream ff( generator.get_ipm_path(), std::ios::in );
+            ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
+            io_formats::KeyValueRead in_ipm( ff );
+            multi->from_text_file_gemipm( in_ipm, CSD);
         }
             break;
         }

@@ -24,6 +24,8 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
+#ifndef USE_OLD_KV_IO_FILES
+
 #include "io_nlohmann.h"
 #include "v_detail.h"
 
@@ -124,3 +126,5 @@ void NlohmannJsonRead::read_array(const std::string &field_name, std::vector<dou
 }
 
 }  // io_formats
+
+#endif

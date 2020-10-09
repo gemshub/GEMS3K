@@ -143,15 +143,19 @@ protected:
     /// Writes CSD (DATACH structure) to a text DCH file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void datach_to_text_file( std::iostream& ff, bool with_comments = true, bool brief_mode = false ) const;
+    template<typename TIO>
+    void datach_to_text_file( TIO& out_format, bool with_comments = true, bool brief_mode = false ) const;
     /// Reads CSD (DATACH structure) from a text DCH file
-    void datach_from_text_file( std::iostream& ff);
+    template<typename TIO>
+    void datach_from_text_file( TIO& in_format );
     /// Writes work node (DATABR structure) to a text DBR file
     /// \param brief_mode - Do not write data items that contain only default values
     /// \param with_comments - Write files with comments for all data entries
-    void databr_to_text_file( std::iostream& ff, bool with_comments = true, bool brief_mode = false ) const;
+    template<typename TIO>
+    void databr_to_text_file( TIO& out_format, bool with_comments = true, bool brief_mode = false ) const;
     /// Reads work node (DATABR structure) from a text DBR file
-    void databr_from_text_file(std::iostream& ff );
+    template<typename TIO>
+    void databr_from_text_file( TIO& in_format );
 
     ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name dbr_file.
     ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
@@ -1336,6 +1340,8 @@ long int GEM_step_MT( const long int step )
 // #define nodeCH_DD( DCx )    ( TNode::na->pCSD()->DD[
 //                              TNode::na->pCSD()->xDC[(DCx)]] )
 
+//template<> void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode, const char* path ) const;
+//template<> void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode, const char* path ) const;
 
 #endif
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

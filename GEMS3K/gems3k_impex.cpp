@@ -65,8 +65,10 @@ void GEMS3KImpexGenerator::get_mode( const std::string &str_mode )
     io_mode = f_key_value;
     if( str_mode == "-b" )
         io_mode = f_binary;
+#ifndef USE_OLD_KV_IO_FILES
     else  if( str_mode == "-j" )
         io_mode = f_json;
+#endif
 }
 
 std::string GEMS3KImpexGenerator::mode() const
@@ -75,8 +77,10 @@ std::string GEMS3KImpexGenerator::mode() const
     {
     case f_binary:
         return "-b";
+#ifndef USE_OLD_KV_IO_FILES
     case f_json:
         return "-j";
+#endif
     default:
     case f_key_value:
         break;

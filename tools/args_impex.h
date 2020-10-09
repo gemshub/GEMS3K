@@ -13,8 +13,8 @@ public:
 
     /// These are used io formats
     enum FileIOModes {
-        f_binary,
         f_key_value,
+        f_binary,
         f_json
     };
 
