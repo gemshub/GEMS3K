@@ -153,7 +153,22 @@ protected:
     /// Reads work node (DATABR structure) from a text DBR file
     void databr_from_text_file(std::iostream& ff );
 
-// Methods to perform output to vtk files
+    ///  Reads the contents of the work instance of the DATABR structure from a disk file with path name dbr_file.
+    ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    void  read_dbr_format_file( const std::string& dbr_file, int type_f );
+
+    /// Writes the contents of the work instance of the DATABR structure into a disk file with path name  dbr_file.
+    ///   \param dbr_file  string containing a full path to the DBR disk file to be read.
+    ///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
+    ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
+    ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
+    ///                 If   false (0), comments will not be written.
+    ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
+    void  write_dbr_format_file( const std::string& dbr_file, int type_f, bool with_comments, bool brief_mode );
+
+    // Methods to perform output to vtk files
+
     /// Prints data of CNode data object element with handle nfild and index ndx into a VTK file
     /// referenced by ff
     void databr_element_to_vtk( std::fstream& ff, DATABR *CNode_, long int nfild, long int ndx );
@@ -562,9 +577,9 @@ long int GEM_step_MT( const long int step )
 /// (5) Reads another DBR file (with input system composition, T,P etc.) \ . The DBR file must be compatible with
 /// the currently loaded IPM and DCH files (see description  of GEM_init() function call).
 /// \param fname     Null-terminated (C) string containing a full path to the input DBR disk file.
-/// \param binary_f  Flag defining whether the file specified in fname is in text fromat (false or 0, default) or in binary format (true or 1)
+/// \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2)
 /// \return  0  if successful; 1 if input file(s) has not found been or is corrupt; -1 if internal memory allocation error occurred.
-   long int GEM_read_dbr( const char* fname, bool binary_f=false );
+   long int GEM_read_dbr( const char* fname, int  type_f );
 
 /// (2) Main call for GEM IPM calculations using the input bulk composition, temperature, pressure
 ///   and metastability constraints provided in the work instance of DATABR structure.
@@ -597,13 +612,12 @@ long int GEM_step_MT( const long int step )
 ///   \param fname         null-terminated (C) string containing a full path to the DBR disk file to be written.
 ///                 NULL  - the disk file name path stored in the  dbr_file_name  field of the TNode class instance
 ///                 will be used, extended with ".out".  Usually the dbr_file_name field contains the path to the last input DBR file.
-///   \param binary_f      defines if the file is to be written in binary format (true or 1, good for interruption of coupled modeling task
-///                 if called in the loop for each node), or in text format (false or 0, default).
+///   \param type_f    defines if the file is in binary format (1), in text format (0) or in json format (2).
 ///   \param with_comments (text format only): defines the mode of output of comments written before each data tag and  content
 ///                 in the DBR file. If set to true (1), the comments will be written for all data entries (default).
 ///                 If   false (0), comments will not be written.
 ///  \param brief_mode     if true, tells that do not write data items,  that contain only default values in text format
-   void  GEM_write_dbr( const char* fname,  bool binary_f=false,
+   void  GEM_write_dbr( const char* fname, int  type_f=0,
 		                  bool with_comments = true, bool brief_mode = false);
 
 /// (4) Produces a formatted text file with detailed contents (scalars and arrays) of the GEM IPM work structure.

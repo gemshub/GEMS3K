@@ -42,9 +42,11 @@ std::istream& f_getline(std::istream& is, std::string& str, char delim);
 std::string u_makepath(const std::string& dir,
            const std::string& name, const std::string& ext);
 
-/// Splits full pathname to path, directory, name and extension
-void u_splitpath(const std::string& Path, std::string& dir,
+/// Splitting full pathname to path, directory, name and extension
+void u_splitpath(const std::string& pathname, std::string& dir,
             std::string& name, std::string& ext);
+/// Get directory from full pathname
+std::string u_getpath( const std::string& pathname );
 
 inline int ROUND(double x )
 {

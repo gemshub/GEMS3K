@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
         };
 
         auto dbr_list =  node_arr->genGEMS3KInputFiles(  export_data.ipmfiles_lst_name, messageF, export_data.nIV,
-                                                         export_data.io_mode==GEMS3KImpexData::f_binary, export_data.brief_mode,
+                                                         2, export_data.brief_mode,
                                                          export_data.with_comments, export_data.putNodT1, export_data.add_mui );
 
         return 0;

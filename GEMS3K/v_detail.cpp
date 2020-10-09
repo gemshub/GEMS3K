@@ -64,12 +64,20 @@ u_makepath(const std::string& dir,  const std::string& name, const std::string& 
     return Path;
 }
 
+std::string u_getpath( const std::string& file_path )
+{
+    std::size_t pos = file_path.find_last_of("/\\");
+    if( pos != std::string::npos )
+        return file_path.substr(0, pos);
+    return "";
+}
 
-void
-u_splitpath(const std::string& Path, std::string& dir,
+
+void u_splitpath(const std::string& Path, std::string& dir,
             std::string& name, std::string& ext)
 {
-    size_t pos = Path.rfind("/");
+    // Get path
+    std::size_t pos = Path.find_last_of("/\\");
     if( pos != std::string::npos )
     {
         dir = Path.substr(0, pos);
@@ -80,15 +88,15 @@ u_splitpath(const std::string& Path, std::string& dir,
         dir = "";
         pos = 0;
     }
-    size_t pose = Path.rfind(".");
+    name = Path.substr(pos);
+    size_t pose = name.rfind(".");
     if( pose != std::string::npos )
     {
-        ext = Path.substr( pose+1, std::string::npos );
-        name = Path.substr(pos, pose-pos);
+        ext = name.substr( pose+1, std::string::npos );
+        name = name.substr(0, pose);
     }
     else
     {
         ext = "";
-        name = Path.substr(pos, std::string::npos);
     }
 }
