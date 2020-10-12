@@ -210,28 +210,6 @@ protected:
     bool load_thermodynamic_data = true; // false; // internal value
 
     virtual void init_into_gems3k();
-//#ifndef IPMGEMPLUGIN
-//    // Integration in GEMS-PSI GUI environment
-//    // Prepares and writes DCH and DBR files for reading into the coupled code
-//    void makeStartDataChBR( QWidget* par, bool no_interpolat,
-//         TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-//         long int nTp_, long int nPp_, double Ttol_, double Ptol_,
-//         double *Tai, double *Pai );
-//    void makeStartDataChBR( QWidget* par,
-//      TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-//      double Tai[4], double Pai[4] );
-
-//    // Building internal dataCH and DataBR structures from Multi
-//    void setupDataChBR( TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH,
-//                               long int nTp_, long int nPp_, bool use_grid );
-//    // Build lists names of components for selection into DataBridge
-//    void getDataBridgeNames( QWidget* par, bool select_all,
-//        TCIntArray& selIC, TCIntArray& selDC, TCIntArray& selPH  );
-
-
-//    // Virtual function for interaction with TNodeArray class
-//    virtual void  setNodeArray( std::string& , long int , bool ) { }
-//#endif
 
 public:
 

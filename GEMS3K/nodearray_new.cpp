@@ -510,47 +510,6 @@ void  TNodeArray::setNodeArray( std::string& dbr_file, long int ndx, int type_f 
     MoveWorkNodeToArray(calcNode, ndx, anNodes, NodT1);
 }
 
-//// Writing dataCH, dataBR structure to binary/text files
-//// and other necessary GEM2MT files
-//std::string TNodeArray::PutGEM2MTFiles(  QWidget* par, long int nIV,
-//                                     bool bin_mode, bool brief_mode, bool with_comments,
-//                                     bool putNodT1, bool addMui )
-//{
-//    // Get name of filenames structure
-//    std::string path = std::string( rt[RT_SYSEQ].FldKey(2), 0, rt[RT_SYSEQ].FldLen(2));;
-//    strip(path);
-//    if( bin_mode )
-//        path += "-bin.lst";
-//    else
-//        path += "-dat.lst";
-
-//AGAIN:
-//    // open file to output
-//    if( vfChooseFileSave(par, path, "Please, enter IPM work structure file name", "*.lst" ) == false )
-//        return "";
-
-//    if( !access(path.c_str(), 0 ) ) //file exists
-//        switch( vfQuestion3( par, path.c_str(), "This set of files exists!",
-//                             "&Overwrite", "&Rename", "&Cancel") )
-//        {
-//        case VF3_2:
-//            goto AGAIN;
-//        case VF3_1:
-//            break;
-//        case VF3_3:
-//            return path;
-//        }
-
-//    ProcessProgressFunction messageF = [nIV, par](const std::string& message, long point){
-//        return  pVisor->Message( par, "GEM2MT node array",  message.c_str() , point, nIV );
-//    };
-//    genGEMS3KInputFiles(  path, messageF, nIV, bin_mode, brief_mode, with_comments,
-//                          putNodT1, addMui );
-
-//    pVisor->CloseMessage();
-//    return path;
-//}
-
 // Writing dataCH, dataBR structure to binary/text files
 // and other necessary GEM2MT files
 std::string TNodeArray::genGEMS3KInputFiles(  const std::string& filepath, ProcessProgressFunction message,

@@ -319,7 +319,7 @@ long int TNode::GEM_run( bool uPrimalSol )
     CNode->IterDone = NumIterFIA+NumIterIPM;
 //**************************************************************
 // only for testing output results for files
-//    GEM_write_dbr( "calculated_dbr.dat",  false );
+//    GEM_write_dbr( "calculated_dbr.dat",  2 /*json*/ );
 //    GEM_print_ipm( "calc_multi.ipm" );
 // *********************************************************
 

@@ -17,6 +17,23 @@ public:
         f_json
     };
 
+    static std::string ext( FileIOModes type )
+    {
+        switch( type )
+        {
+        case f_binary:
+            return "bin";
+#ifndef USE_OLD_KV_IO_FILES
+        case f_json:
+            return "json";
+#endif
+        default:
+        case f_key_value:
+            break;
+        }
+        return "dat";
+    }
+
     /// Constructor
     /// Reads MULTI, DATACH and DATABR files structure prepared from GEMS.
     /// \param filepath - IPM work structure file path&name
@@ -117,19 +134,7 @@ protected:
 
     std::string extension() const
     {
-        switch( io_mode )
-        {
-        case f_binary:
-            return "bin";
-#ifndef USE_OLD_KV_IO_FILES
-        case f_json:
-            return "json";
-#endif
-        default:
-        case f_key_value:
-            break;
-        }
-        return "dat";
+       return ext( io_mode );
     }
 
     std::string mode() const;
