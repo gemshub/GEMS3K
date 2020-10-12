@@ -136,7 +136,7 @@ class TPrintArrays: public  TRWArrays
 public:
 
     /// Constructor
-    TPrintArrays( short  aNumFlds, outField* aFlds, TIO& fout ):
+    TPrintArrays( int  aNumFlds, outField* aFlds, TIO& fout ):
         TRWArrays( aNumFlds, aFlds), out_format( fout )
     {}
 
@@ -258,7 +258,7 @@ class TReadArrays : public  TRWArrays
 public:
 
     /// Constructor
-    TReadArrays( short aNumFlds, outField* aFlds, TIO& fin ):
+    TReadArrays( int aNumFlds, outField* aFlds, TIO& fin ):
         TRWArrays( aNumFlds, aFlds), in_format( fin ), current_readed("")
     {
        in_format.reset();

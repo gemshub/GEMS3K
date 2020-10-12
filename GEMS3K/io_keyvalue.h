@@ -138,7 +138,7 @@ public:
                     jj=0;
                     fout << std::endl;
                 }
-                write_value( arr[sel_arr[ii]*ncolumns+cc] );
+                writeValue( arr[sel_arr[ii]*ncolumns+cc] );
                 fout << " ";
                 jj++;
             }
