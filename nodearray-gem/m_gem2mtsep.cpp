@@ -14,8 +14,9 @@
 #include <time.h>
 #include <math.h>
 #include <iomanip>
-#include "io_arrays.h"
 #include "m_gem2mt.h"
+#include "io_keyvalue.h"
+#include "io_nlohmann.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -109,9 +110,25 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
  // read GEM2MT structure from file
   try
   {
-   std::fstream ff(gem2mt_in1, std::ios::in );
-   ErrorIf( !ff.good() , gem2mt_in1, "Fileopen error");
-   from_text_file( ff );
+
+   std::string gem2mt_in = gem2mt_in1;
+   std::fstream ff(gem2mt_in, std::ios::in );
+   ErrorIf( !ff.good() , gem2mt_in, "Fileopen error");
+
+
+#ifndef USE_OLD_KV_IO_FILES
+   if( gem2mt_in.rfind(".json") != std::string::npos )
+   {
+       io_formats::NlohmannJsonRead in_format( ff );
+       from_text_file( in_format );
+   }
+   else
+#endif
+   {
+       io_formats::KeyValueRead in_format( ff );
+       from_text_file( in_format );
+   }
+
    pathVTK = vtk_dir;
    if( !pathVTK.empty() )
    {
@@ -130,14 +147,27 @@ int TGEM2MT::ReadTask( const char *gem2mt_in1, const char *vtk_dir )
 }
 
 // Write TGEM2MT structure to file
-int TGEM2MT::WriteTask( const char *gem2mt_out )
+int TGEM2MT::WriteTask( const char *gem2mt_out1 )
 {
  // write GEM2MT structure to file
   try
   {
+   std::string gem2mt_out = gem2mt_out1;
    std::fstream ff(gem2mt_out, std::ios::out );
    ErrorIf( !ff.good() , gem2mt_out, "Fileopen error");
-   to_text_file( ff, true, false, gem2mt_out );
+#ifndef USE_OLD_KV_IO_FILES
+   if( gem2mt_out.rfind(".json") != std::string::npos )
+   {
+       io_formats::NlohmannJsonWrite out_format( ff );
+       to_text_file( out_format, true, false );
+   }
+   else
+#endif
+   {
+       io_formats::KeyValueWrite out_format( ff );
+       to_text_file( out_format, true, false );
+   }
+
    return 0;
   }
   catch(TError& err)

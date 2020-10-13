@@ -9,8 +9,8 @@
 // modelling by Gibbs energy minimization
 // Uses: GEM-Selektor GUI GUI DBMS library, gems/lib/gemvizor.lib
 //
-// This file may be distributed under the terms of GEMS3 Development
-// Quality Assurance Licence (GEMS3.QAL)
+// This file may be distributed under the GPL v.3 license
+
 //
 // See http://gems.web.psi.ch/ for more information
 // E-mail: gems2.support@psi.ch
@@ -176,7 +176,7 @@ void  TGEM2MT::NewNodeArray()
         return false;
     };
 
-    auto dbr_list =  na->genGEMS3KInputFiles(  "Te_start/Test-dat.lst", messageF, mtp->nC, false, false, false, false, false );
+    auto dbr_list =  na->genGEMS3KInputFiles(  "Te_start/Test-dat.lst", messageF, mtp->nC, 0, false, false, false, false );
     */
 }
 
@@ -331,7 +331,7 @@ bool TGEM2MT::CalcIPM( char mode, long int start_node, long int end_node, FILE* 
        return false;
    };
 
-   auto dbr_list =  na->genGEMS3KInputFiles(  "Te_point/Test-dat.lst", messageF, mtp->nC, false, false, false, true, false );
+   auto dbr_list =  na->genGEMS3KInputFiles(  "Te_point/Test-dat.lst", messageF, mtp->nC, 0, false, false, true, false );
    */
 
 #ifdef useOMP
@@ -840,7 +840,7 @@ char buf[300];
        Vmessage += buf;
        Vmessage += ". Please, wait (may take time)...";
 
-#ifdef Use_mt_mode
+
        if( mtp->PsSmode != S_OFF  )
        {
          STEP_POINT2();
@@ -848,10 +848,6 @@ char buf[300];
        else
            iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
                            mtp->ct, mtp->ntM, UseGraphMonitoring );
-#else
-          iRet = pVisor->Message( window(), GetName(),Vmessage.c_str(),
-                             mtp->ct, mtp->ntM, UseGraphMonitoring );
-#endif
 
 #endif
       if( iRet )

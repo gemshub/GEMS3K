@@ -14,18 +14,17 @@
 #include <time.h>
 #include <math.h>
 #include <iomanip>
-#include "io_arrays.h"
 #include "m_gem2mt.h"
-#ifndef  USE_OLD_KV_IO_FILES
-#include "io_json.h"
-#endif
 
+#include "GEMS3K/io_template.h"
+#include "GEMS3K/io_nlohmann.h"
+#include "GEMS3K/io_keyvalue.h"
 
 extern const char* _GEMIPM_version_stamp;
 
 //=============================================================
 
-outField GEM2MT_static_fields[57] =  {
+io_formats::outField GEM2MT_static_fields[57] =  {
     // Allocation and setup flags
      { "PvPGD" , 1, 0, 0, "# PvPGD: Use mobile phase groups definitions (+ -)" },
      { "PvFDL" , 1, 0, 0, "# PvFDL: Use MGP flux definition list (+ -)" },
@@ -89,7 +88,7 @@ outField GEM2MT_static_fields[57] =  {
     { "mtWrkF" , 0 , 0, 0, "# mtWrkF: internal" }
 };
 
-outField GEM2MT_dynamic_fields[26] =
+io_formats::outField GEM2MT_dynamic_fields[26] =
 {  // write/read dynamic (array) data to/from the text-format IPM file
    {  "SDref",  0, 0, 0, "# SDref: List of SDref keys to data sources " },
    {  "SDval",  0, 0, 0, "# SDval: List of short comments to SDref  record keys in the GSDref list " },
@@ -388,7 +387,7 @@ void TGEM2MT::set_def(int q)
 
 //==============================================================================
 
-void TGEM2MT::checkAlws(TRWArrays&  prar1, TRWArrays&  prar)
+void TGEM2MT::checkAlws(io_formats::TRWArrays&  prar1, io_formats::TRWArrays&  prar) const
 {
     // Set always for task
     if( mtp->PsMode == RMT_MODE_W  )
@@ -454,429 +453,408 @@ void TGEM2MT::checkAlws(TRWArrays&  prar1, TRWArrays&  prar)
      }
 }
 
-void TGEM2MT::to_text_file( std::fstream& ff, bool with_comments, bool brief_mode, const char* path )
+template<typename TIO>
+void TGEM2MT::to_text_file( TIO& out_format, bool with_comments, bool brief_mode ) const
 {
-  bool _comment = with_comments;
+    bool _comment = with_comments;
 
-#ifdef USE_OLD_KV_IO_FILES
+    io_formats::TPrintArrays<TIO>  prar1(57, GEM2MT_static_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar(26, GEM2MT_dynamic_fields, out_format );
 
-  TPrintArrays  prar1(57, GEM2MT_static_fields, ff);
-  TPrintArrays  prar(26, GEM2MT_dynamic_fields, ff);
+    // Set always for task
+    checkAlws(prar1,prar);
 
-#else
-
-  _comment = false;
-  nlohmann::json json_data;
-  TPrintJson  prar1(57, GEM2MT_static_fields, json_data);
-  TPrintJson  prar(26, GEM2MT_dynamic_fields, json_data);
-
-#endif
-
-
-  // Set always for task
-  checkAlws(prar1,prar);
-
-  if( _comment )
-  {
-     ff << "# " << _GEMIPM_version_stamp << std::endl << "# File: " << path << std::endl;
-     ff << "# Comments can be marked with # $ ; as the first character in the line" << std::endl;
-  }
-
-  prar1.writeArrayF(f_Name, mtp->name, 1, MAXFORMULA, _comment, brief_mode );
-  prar1.writeArrayF(f_Note, mtp->notes, 1, MAXFORMULA, _comment, brief_mode );
-
-  if( _comment )
-      ff << std::endl <<"\n## (1) Allocation and setup flags";
-
-  prar1.writeField(f_PvPGD, mtp->PvPGD, _comment, brief_mode  );
-  prar1.writeField(f_PvFDL, mtp->PvFDL, _comment, brief_mode  );
-  prar1.writeField(f_PvSFL, mtp->PvSFL, _comment, brief_mode  );
-  prar1.writeField(f_PvGrid, mtp->PvGrid, _comment, brief_mode  );
-  prar1.writeField(f_PvDDc, mtp->PvDDc, _comment, brief_mode  );
-  prar1.writeField(f_PvDIc, mtp->PvDIc, _comment, brief_mode  );
-  prar1.writeField(f_PvnVTK, mtp->PvnVTK, _comment, brief_mode  );
-
-  if( _comment )
-    ff << std::endl << "\n## (2) Controls on operation";
-
-  prar1.writeField(f_PsMode, mtp->PsMode, _comment, brief_mode  );
-  prar1.writeField(f_PsSIA, mtp->PsSIA, _comment, brief_mode  );
-  prar1.writeField(f_PsSdat, mtp->PsSdat, _comment, brief_mode  );
-  prar1.writeField(f_PsSdef, mtp->PsSdef, _comment, brief_mode  );
-  prar1.writeField(f_PsScom, mtp->PsScom, _comment, brief_mode  );
-  prar1.writeField(f_PsMO, mtp->PsMO, _comment, brief_mode  );
-  prar1.writeField(f_PsVTK, mtp->PsVTK, _comment, brief_mode  );
-  prar1.writeField(f_PsMPh, mtp->PsMPh, _comment, brief_mode  );
-
-  if( _comment )
-    ff << std::endl << "\n## (3) Dimensions for gem2mt (memory allocation)";
-
-  prar1.writeField(f_nC, mtp->nC, _comment, brief_mode  );
-  prar1.writeField(f_nIV, mtp->nIV, _comment, brief_mode  );
-  prar1.writeField(f_nMGP, mtp->nPG, _comment, brief_mode  );
-  prar1.writeField(f_nFD, mtp->nFD, _comment, brief_mode  );
-  prar1.writeField(f_nSFD, mtp->nSFD, _comment, brief_mode  );
-  prar1.writeField(f_nEl, mtp->nEl, _comment, brief_mode  );
-  prar1.writeField(f_nPTypes, mtp->nPTypes, _comment, brief_mode  );
-  prar1.writeField(f_nProps, mtp->nProps, _comment, brief_mode  );
-  prar1.writeField(f_Nsd, mtp->Nsd, _comment, brief_mode  );
-  prar1.writeField(f_bTau, mtp->bTau, _comment, brief_mode  );
-  prar1.writeField(f_ntM, mtp->ntM, _comment, brief_mode  );
-  prar1.writeField(f_nVTKfld, mtp->nVTKfld, _comment, brief_mode  );
-
-  prar1.writeField(f_nPai, mtp->nPai, _comment, brief_mode  );
-  prar1.writeField(f_nTai, mtp->nTai, _comment, brief_mode  );
-  prar1.writeField(f_Lsf, mtp->Lsf, _comment, brief_mode  );
-  prar1.writeField(f_Nf, mtp->Nf, _comment, brief_mode  );
-  prar1.writeField(f_FIf, mtp->FIf, _comment, brief_mode  );
-
-  prar1.writeArray(f_Tau, mtp->Tau, 3, 3, _comment, brief_mode  );
-  prar1.writeArray(f_sizeLc, mtp->sizeLc, 3, 3, _comment, brief_mode  );
-
-  if( _comment )
-    ff << std::endl << "\n## (4) Input for compositions of initial systems";
-
-  prar1.writeField(f_InpSys, mtp->Msysb, _comment, brief_mode  );
-  prar1.writeField(f_Vsysb, mtp->Vsysb, _comment, brief_mode  );
-  prar1.writeField(f_Mwatb, mtp->Mwatb, _comment, brief_mode  );
-  prar1.writeField(f_Maqb, mtp->Maqb, _comment, brief_mode  );
-  prar1.writeField(f_Vaqb, mtp->Vaqb, _comment, brief_mode  );
-  prar1.writeField(f_Pgb, mtp->Pgb, _comment, brief_mode  );
-  prar1.writeField(f_Tmolb, mtp->Tmolb, _comment, brief_mode  );
-  prar1.writeField(f_WmCb, mtp->WmCb, _comment, brief_mode  );
-  prar1.writeField(f_Asur, mtp->Asur, _comment, brief_mode  );
-  prar1.writeField(ff_tf, mtp->tf, _comment, brief_mode  );
-  prar1.writeField(ff_Vt, mtp->vol_in, _comment, brief_mode  );
-  prar1.writeField(ff_vp, mtp->fVel, _comment, brief_mode  );
-  prar1.writeField(ff_eps, mtp->eps_in, _comment, brief_mode  );
-  prar1.writeField(ff_Km, mtp->Km_in, _comment, brief_mode  );
-  prar1.writeField(ff_al, mtp->al_in, _comment, brief_mode  );
-  prar1.writeField(ff_Dif, mtp->Dif_in, _comment, brief_mode  );
-  prar1.writeField(ff_nto, mtp->nto_in, _comment, brief_mode  );
-  prar1.writeField(ff_cdv, mtp->cdv, _comment, brief_mode  );
-  prar1.writeField(ff_cez, mtp->cez, _comment, brief_mode  );
-
-
-  if( _comment )
-    ff << std::endl << "\n## (5) Internal stop point";
-
-  prar1.writeArray(f_mtWrkS, &mtp->ctm, 12, 6, _comment, brief_mode  );
-  prar1.writeArray(f_mtWrkF, &mtp->cT, 10, 6, _comment, brief_mode  );
-
-#ifdef USE_OLD_KV_IO_FILES
-  ff << std::endl << "\n<END_DIM>" << std::endl;
-#endif
-
-// dynamic arrays - must follow static data
-  if( mtp->PsMode == RMT_MODE_W  )
-  {
     if( _comment )
-         ff << std::endl << "\n## W random-walk advection-diffusion coupled RMT model";
-    prar.writeArray(  f__NPmean, mtp->NPmean, mtp->nPTypes, -1L,_comment, brief_mode);
-    prar.writeArray(  f__nPmin, mtp->nPmin, mtp->nPTypes, -1L,_comment, brief_mode);
-    prar.writeArray(  f__nPmax, mtp->nPmax, mtp->nPTypes, -1L,_comment, brief_mode);
-    prar.writeArray(  f__ParTD, &mtp->ParTD[0][0], mtp->nPTypes*6, 6L,_comment, brief_mode);
-  }
-  if( mtp->PvGrid == S_ON )
-      prar.writeArray(  f__mGrid, &mtp->grid[0][0], mtp->nC*3, 3L,_comment, brief_mode);
-  prar.writeArray(  f__DiCp, &mtp->DiCp[0][0], mtp->nC*2, 2L,_comment, brief_mode);
-
-  if( mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B )
-      prar.writeArray(  f__HydP, &mtp->HydP[0][0], mtp->nC*SIZE_HYDP, SIZE_HYDP,_comment, brief_mode);
-
-  if( mtp->PvFDL == S_ON )
     {
-      if( _comment )
-           ff << std::endl << "\n## Use flux definition list";
-      prar.writeArray(  f__FDLi, &mtp->FDLi[0][0],  mtp->nFD*2, 2L,_comment, brief_mode);
-      prar.writeArray(  f__FDLf, &mtp->FDLf[0][0],  mtp->nFD*4, 4L,_comment, brief_mode);
-      prar.writeArrayF(  f__FDLid, &mtp->FDLid[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
-      prar.writeArrayF(  f__FDLop, &mtp->FDLop[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
-      prar.writeArrayF(  f__FDLmp, &mtp->FDLmp[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
+        prar1.writeComment( _comment, std::string( "# ") + _GEMIPM_version_stamp);;
+        //        << "# File: " << path << endl;
+        prar1.writeComment( _comment, "# Comments can be marked with # $ ; as the first character in the line\n");
     }
 
-  if( mtp->PvPGD == S_ON )
+    prar1.writeArrayF(f_Name, mtp->name, 1, MAXFORMULA, _comment, brief_mode );
+    prar1.writeArrayF(f_Note, mtp->notes, 1, MAXFORMULA, _comment, brief_mode );
+
+    if( _comment )
+        prar1.writeComment( _comment, "\n## (1) Allocation and setup flags");
+
+    prar1.writeField(f_PvPGD, mtp->PvPGD, _comment, brief_mode  );
+    prar1.writeField(f_PvFDL, mtp->PvFDL, _comment, brief_mode  );
+    prar1.writeField(f_PvSFL, mtp->PvSFL, _comment, brief_mode  );
+    prar1.writeField(f_PvGrid, mtp->PvGrid, _comment, brief_mode  );
+    prar1.writeField(f_PvDDc, mtp->PvDDc, _comment, brief_mode  );
+    prar1.writeField(f_PvDIc, mtp->PvDIc, _comment, brief_mode  );
+    prar1.writeField(f_PvnVTK, mtp->PvnVTK, _comment, brief_mode  );
+
+    if( _comment )
+        prar1.writeComment( _comment, "\n## (2) Controls on operation");
+
+    prar1.writeField(f_PsMode, mtp->PsMode, _comment, brief_mode  );
+    prar1.writeField(f_PsSIA, mtp->PsSIA, _comment, brief_mode  );
+    prar1.writeField(f_PsSdat, mtp->PsSdat, _comment, brief_mode  );
+    prar1.writeField(f_PsSdef, mtp->PsSdef, _comment, brief_mode  );
+    prar1.writeField(f_PsScom, mtp->PsScom, _comment, brief_mode  );
+    prar1.writeField(f_PsMO, mtp->PsMO, _comment, brief_mode  );
+    prar1.writeField(f_PsVTK, mtp->PsVTK, _comment, brief_mode  );
+    prar1.writeField(f_PsMPh, mtp->PsMPh, _comment, brief_mode  );
+
+    if( _comment )
+        prar1.writeComment( _comment, "\n## (3) Dimensions for gem2mt (memory allocation)");
+
+    prar1.writeField(f_nC, mtp->nC, _comment, brief_mode  );
+    prar1.writeField(f_nIV, mtp->nIV, _comment, brief_mode  );
+    prar1.writeField(f_nMGP, mtp->nPG, _comment, brief_mode  );
+    prar1.writeField(f_nFD, mtp->nFD, _comment, brief_mode  );
+    prar1.writeField(f_nSFD, mtp->nSFD, _comment, brief_mode  );
+    prar1.writeField(f_nEl, mtp->nEl, _comment, brief_mode  );
+    prar1.writeField(f_nPTypes, mtp->nPTypes, _comment, brief_mode  );
+    prar1.writeField(f_nProps, mtp->nProps, _comment, brief_mode  );
+    prar1.writeField(f_Nsd, mtp->Nsd, _comment, brief_mode  );
+    prar1.writeField(f_bTau, mtp->bTau, _comment, brief_mode  );
+    prar1.writeField(f_ntM, mtp->ntM, _comment, brief_mode  );
+    prar1.writeField(f_nVTKfld, mtp->nVTKfld, _comment, brief_mode  );
+
+    prar1.writeField(f_nPai, mtp->nPai, _comment, brief_mode  );
+    prar1.writeField(f_nTai, mtp->nTai, _comment, brief_mode  );
+    prar1.writeField(f_Lsf, mtp->Lsf, _comment, brief_mode  );
+    prar1.writeField(f_Nf, mtp->Nf, _comment, brief_mode  );
+    prar1.writeField(f_FIf, mtp->FIf, _comment, brief_mode  );
+
+    prar1.writeArray(f_Tau, mtp->Tau, 3, 3, _comment, brief_mode  );
+    prar1.writeArray(f_sizeLc, mtp->sizeLc, 3, 3, _comment, brief_mode  );
+
+    if( _comment )
+        prar1.writeComment( _comment, "\n## (4) Input for compositions of initial systems");
+
+    prar1.writeField(f_InpSys, mtp->Msysb, _comment, brief_mode  );
+    prar1.writeField(f_Vsysb, mtp->Vsysb, _comment, brief_mode  );
+    prar1.writeField(f_Mwatb, mtp->Mwatb, _comment, brief_mode  );
+    prar1.writeField(f_Maqb, mtp->Maqb, _comment, brief_mode  );
+    prar1.writeField(f_Vaqb, mtp->Vaqb, _comment, brief_mode  );
+    prar1.writeField(f_Pgb, mtp->Pgb, _comment, brief_mode  );
+    prar1.writeField(f_Tmolb, mtp->Tmolb, _comment, brief_mode  );
+    prar1.writeField(f_WmCb, mtp->WmCb, _comment, brief_mode  );
+    prar1.writeField(f_Asur, mtp->Asur, _comment, brief_mode  );
+    prar1.writeField(ff_tf, mtp->tf, _comment, brief_mode  );
+    prar1.writeField(ff_Vt, mtp->vol_in, _comment, brief_mode  );
+    prar1.writeField(ff_vp, mtp->fVel, _comment, brief_mode  );
+    prar1.writeField(ff_eps, mtp->eps_in, _comment, brief_mode  );
+    prar1.writeField(ff_Km, mtp->Km_in, _comment, brief_mode  );
+    prar1.writeField(ff_al, mtp->al_in, _comment, brief_mode  );
+    prar1.writeField(ff_Dif, mtp->Dif_in, _comment, brief_mode  );
+    prar1.writeField(ff_nto, mtp->nto_in, _comment, brief_mode  );
+    prar1.writeField(ff_cdv, mtp->cdv, _comment, brief_mode  );
+    prar1.writeField(ff_cez, mtp->cez, _comment, brief_mode  );
+
+
+    if( _comment )
+        prar1.writeComment( _comment, "\n## (5) Internal stop point");
+
+    prar1.writeArray(f_mtWrkS, &mtp->ctm, 12, 6, _comment, brief_mode  );
+    prar1.writeArray(f_mtWrkF, &mtp->cT, 10, 6, _comment, brief_mode  );
+
+    prar1.writeComment( true,  "\n<END_DIM>\n" );
+
+    // dynamic arrays - must follow static data
+    if( mtp->PsMode == RMT_MODE_W  )
     {
-      if( _comment )
-           ff << std::endl << "\n## Use phase groups definitions";
-      prar.writeArray(  f__PGT, mtp->PGT,  mtp->FIf*mtp->nPG, mtp->nPG,_comment, brief_mode);
-      prar.writeArrayF(  f__MGPid, &mtp->MGPid[0][0],  mtp->nPG, MAXSYMB,_comment, brief_mode);
-      prar.writeArrayF(  f__UMGP, mtp->UMGP, mtp->FIf, 1L,_comment, brief_mode);
+        if( _comment )
+            prar.writeComment( _comment,  "\n## W random-walk advection-diffusion coupled RMT model");
+        prar.writeArray(  f__NPmean, mtp->NPmean, mtp->nPTypes, -1L,_comment, brief_mode);
+        prar.writeArray(  f__nPmin, mtp->nPmin, mtp->nPTypes, -1L,_comment, brief_mode);
+        prar.writeArray(  f__nPmax, mtp->nPmax, mtp->nPTypes, -1L,_comment, brief_mode);
+        prar.writeArray(  f__ParTD, &mtp->ParTD[0][0], mtp->nPTypes*6, 6L,_comment, brief_mode);
+    }
+    if( mtp->PvGrid == S_ON )
+        prar.writeArray(  f__mGrid, &mtp->grid[0][0], mtp->nC*3, 3L,_comment, brief_mode);
+    prar.writeArray(  f__DiCp, &mtp->DiCp[0][0], mtp->nC*2, 2L,_comment, brief_mode);
+
+    if( mtp->PsMode != RMT_MODE_S  && mtp->PsMode != RMT_MODE_F && mtp->PsMode != RMT_MODE_B )
+        prar.writeArray(  f__HydP, &mtp->HydP[0][0], mtp->nC*SIZE_HYDP, SIZE_HYDP,_comment, brief_mode);
+
+    if( mtp->PvFDL == S_ON )
+    {
+        if( _comment )
+            prar.writeComment( _comment, "\n## Use flux definition list");
+        prar.writeArray(  f__FDLi, &mtp->FDLi[0][0],  mtp->nFD*2, 2L,_comment, brief_mode);
+        prar.writeArray(  f__FDLf, &mtp->FDLf[0][0],  mtp->nFD*4, 4L,_comment, brief_mode);
+        prar.writeArrayF(  f__FDLid, &mtp->FDLid[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
+        prar.writeArrayF(  f__FDLop, &mtp->FDLop[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
+        prar.writeArrayF(  f__FDLmp, &mtp->FDLmp[0][0], mtp->nFD, MAXSYMB,_comment, brief_mode);
     }
 
-  if( mtp->PvSFL == S_ON )
-     prar.writeArray(  f__BSF, mtp->BSF,  mtp->nSFD*mtp->Nf, mtp->Nf,_comment, brief_mode);
-
-  if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF )
+    if( mtp->PvPGD == S_ON )
     {
-      prar.writeArray(  f__MB, mtp->MB,  mtp->nC*mtp->Nf, mtp->Nf,_comment, brief_mode);
-      prar.writeArray(  f__dMB, mtp->dMB, mtp->nC*mtp->Nf,mtp->Nf,_comment, brief_mode);
+        if( _comment )
+            prar.writeComment( _comment, "\n## Use phase groups definitions");
+        prar.writeArray(  f__PGT, mtp->PGT,  mtp->FIf*mtp->nPG, mtp->nPG,_comment, brief_mode);
+        prar.writeArrayF(  f__MGPid, &mtp->MGPid[0][0],  mtp->nPG, MAXSYMB,_comment, brief_mode);
+        prar.writeArrayF(  f__UMGP, mtp->UMGP, mtp->FIf, 1L,_comment, brief_mode);
     }
 
-  if( mtp->PvnVTK == S_ON )
+    if( mtp->PvSFL == S_ON )
+        prar.writeArray(  f__BSF, mtp->BSF,  mtp->nSFD*mtp->Nf, mtp->Nf,_comment, brief_mode);
+
+    if( mtp->PvPGD != S_OFF && mtp->PvFDL != S_OFF )
+    {
+        prar.writeArray(  f__MB, mtp->MB,  mtp->nC*mtp->Nf, mtp->Nf,_comment, brief_mode);
+        prar.writeArray(  f__dMB, mtp->dMB, mtp->nC*mtp->Nf,mtp->Nf,_comment, brief_mode);
+    }
+
+    if( mtp->PvnVTK == S_ON )
         prar.writeArray(  f__xFlds, &mtp->xVTKfld[0][0],  mtp->nVTKfld*2, 2L,_comment, brief_mode);
 
-  if( mtp->PvDDc == S_ON )
-      prar.writeArray(  f__mDDc, mtp->DDc, mtp->Lsf, -1L,_comment, brief_mode);
-  if( mtp->PvDIc == S_ON )
+    if( mtp->PvDDc == S_ON )
+        prar.writeArray(  f__mDDc, mtp->DDc, mtp->Lsf, -1L,_comment, brief_mode);
+    if( mtp->PvDIc == S_ON )
         prar.writeArray(  f__mDIc, mtp->DIc, mtp->Nf, -1L,_comment, brief_mode);
-  if( mtp->nEl > 0  )
+    if( mtp->nEl > 0  )
     {
         prar.writeArray(  f__mDEl, mtp->DEl, mtp->nEl, -1L,_comment, brief_mode);
         prar.writeArrayF(  f__for_e, mtp->for_e[0],mtp->nEl, MAXFORMUNITDT,_comment, brief_mode);
-   }
+    }
 
-  prar.writeArrayF(  f__nam_i, mtp->nam_i[0],mtp->nIV, MAXIDNAME,_comment, brief_mode);
+    prar.writeArrayF(  f__nam_i, mtp->nam_i[0],mtp->nIV, MAXIDNAME,_comment, brief_mode);
 
-   if( mtp->Nsd > 0 )
+    if( mtp->Nsd > 0 )
     {
-       prar.writeArrayF(  f_SDref, mtp->sdref[0],mtp->Nsd, V_SD_RKLEN,_comment, brief_mode);
-       prar.writeArrayF(  f__SDval, mtp->sdval[0],mtp->Nsd, V_SD_RKLEN,_comment, brief_mode);
-     }
+        prar.writeArrayF(  f_SDref, mtp->sdref[0],mtp->Nsd, V_SD_RKLEN,_comment, brief_mode);
+        prar.writeArrayF(  f__SDval, mtp->sdval[0],mtp->Nsd, V_SD_RKLEN,_comment, brief_mode);
+    }
 
-     //!!!mtp->Tval  = new double[ mtp->nTai ];  // from DataCH
-     //!!!mtp->Pval  = new double[ mtp->nPai ];
+    //!!!mtp->Tval  = new double[ mtp->nTai ];  // from DataCH
+    //!!!mtp->Pval  = new double[ mtp->nPai ];
 
-#ifndef  USE_OLD_KV_IO_FILES
-  ff << json_data.dump(( _comment ? 4 : 0 ));
-#endif
-  ff << std::endl;
-  if( _comment )
-      ff << "\n# End of file\n";
+    out_format.dump( _comment );
 }
 
 // Reading dataCH structure from text file
-void TGEM2MT::from_text_file(std::fstream& ff)
+template<typename TIO>
+void TGEM2MT::from_text_file(TIO& in_format)
 {
+    io_formats::TReadArrays<TIO> rdar( 57, GEM2MT_static_fields, in_format);
 
-// static arrays
-#ifdef USE_OLD_KV_IO_FILES
- TReadArrays  rdar( 57, GEM2MT_static_fields, ff);
-#else
- nlohmann::json json_data;
- ff >> json_data;
- TReadJson  rdar( 57, GEM2MT_static_fields, json_data);
-#endif
+    long int nfild = rdar.findNext();
+    while( nfild >=0 )
+    {
+        switch( nfild )
+        {
+        case f_PvPGD: rdar.readArray( "PvPGD",  &mtp->PvPGD, 1, 1);
+            break;
+        case f_PvFDL: rdar.readArray( "PvFDL", &mtp->PvFDL, 1, 1);
+            break;
+        case f_PvSFL: rdar.readArray( "PvSFL", &mtp->PvSFL, 1, 1);
+            break;
+        case f_PvGrid: rdar.readArray( "PvGrid",  &mtp->PvGrid, 1, 1);
+            break;
+        case f_PvDDc: rdar.readArray( "PvDDc", &mtp->PvDDc, 1, 1);
+            break;
+        case f_PvDIc: rdar.readArray( "PvDIc", &mtp->PvDIc, 1, 1);
+            break;
+        case f_PvnVTK: rdar.readArray( "PvnVTK", &mtp->PvnVTK, 1, 1);
+            break;
+        case f_PsMode: rdar.readArray( "PsMode",  &mtp->PsMode, 1, 1);
+            break;
+        case f_PsSIA: rdar.readArray( "PsSIA",  &mtp->PsSIA, 1, 1);
+            break;
+        case f_PsSdat: rdar.readArray( "PsSdat",  &mtp->PsSdat, 1, 1);
+            break;
+        case f_PsSdef: rdar.readArray( "PsSdef",  &mtp->PsSdef, 1, 1);
+            break;
+        case f_PsScom: rdar.readArray( "PsScom",  &mtp->PsScom, 1, 1);
+            break;
+        case f_PsMO: rdar.readArray( "PsMO",  &mtp->PsMO, 1, 1);
+            break;
+        case f_PsVTK: rdar.readArray( "PsVTK",  &mtp->PsVTK, 1, 1);
+            break;
+        case f_PsMPh: rdar.readArray( "PsMPh",  &mtp->PsMPh, 1, 1);
+            break;
+        case f_nC: rdar.readArray( "nC",  &mtp->nC, 1);
+            break;
+        case f_nIV: rdar.readArray( "nIV",  &mtp->nIV, 1);
+            break;
+        case f_nMGP: rdar.readArray( "nMGP",  &mtp->nPG, 1);
+            break;
+        case f_nFD: rdar.readArray( "nFD",  &mtp->nFD, 1);
+            break;
+        case f_nSFD: rdar.readArray( "nSFD",  &mtp->nSFD, 1);
+            break;
+        case f_nEl: rdar.readArray( "nEl",  &mtp->nEl, 1);
+            break;
+        case f_nPTypes: rdar.readArray( "nPTypes",  &mtp->nPTypes, 1);
+            break;
+        case f_nProps: rdar.readArray( "nProps",  &mtp->nProps, 1);
+            break;
+        case f_Nsd: rdar.readArray( "Nsd",  &mtp->Nsd, 1);
+            break;
+        case f_bTau: rdar.readArray( "bTau",  &mtp->bTau, 1);
+            break;
+        case f_ntM: rdar.readArray( "ntM",  &mtp->ntM, 1);
+            break;
+        case f_nVTKfld: rdar.readArray( "nVTKfld",  &mtp->nVTKfld, 1);
+            break;
 
- long int nfild = rdar.findNext();
- while( nfild >=0 )
- {
-   switch( nfild )
-   {
-   case f_PvPGD: rdar.readArray( "PvPGD",  &mtp->PvPGD, 1, 1);
-           break;
-   case f_PvFDL: rdar.readArray( "PvFDL", &mtp->PvFDL, 1, 1);
-          break;
-   case f_PvSFL: rdar.readArray( "PvSFL", &mtp->PvSFL, 1, 1);
-           break;
-   case f_PvGrid: rdar.readArray( "PvGrid",  &mtp->PvGrid, 1, 1);
-           break;
-   case f_PvDDc: rdar.readArray( "PvDDc", &mtp->PvDDc, 1, 1);
-          break;
-   case f_PvDIc: rdar.readArray( "PvDIc", &mtp->PvDIc, 1, 1);
-           break;
-   case f_PvnVTK: rdar.readArray( "PvnVTK", &mtp->PvnVTK, 1, 1);
-           break;
-   case f_PsMode: rdar.readArray( "PsMode",  &mtp->PsMode, 1, 1);
-           break;
-   case f_PsSIA: rdar.readArray( "PsSIA",  &mtp->PsSIA, 1, 1);
-           break;
-   case f_PsSdat: rdar.readArray( "PsSdat",  &mtp->PsSdat, 1, 1);
-           break;
-   case f_PsSdef: rdar.readArray( "PsSdef",  &mtp->PsSdef, 1, 1);
-           break;
-   case f_PsScom: rdar.readArray( "PsScom",  &mtp->PsScom, 1, 1);
-           break;
-   case f_PsMO: rdar.readArray( "PsMO",  &mtp->PsMO, 1, 1);
-           break;
-   case f_PsVTK: rdar.readArray( "PsVTK",  &mtp->PsVTK, 1, 1);
-           break;
-   case f_PsMPh: rdar.readArray( "PsMPh",  &mtp->PsMPh, 1, 1);
-           break;
-   case f_nC: rdar.readArray( "nC",  &mtp->nC, 1);
-           break;
-   case f_nIV: rdar.readArray( "nIV",  &mtp->nIV, 1);
-           break;
-   case f_nMGP: rdar.readArray( "nMGP",  &mtp->nPG, 1);
-           break;
-   case f_nFD: rdar.readArray( "nFD",  &mtp->nFD, 1);
-           break;
-   case f_nSFD: rdar.readArray( "nSFD",  &mtp->nSFD, 1);
-           break;
-   case f_nEl: rdar.readArray( "nEl",  &mtp->nEl, 1);
-           break;
-   case f_nPTypes: rdar.readArray( "nPTypes",  &mtp->nPTypes, 1);
-           break;
-   case f_nProps: rdar.readArray( "nProps",  &mtp->nProps, 1);
-           break;
-   case f_Nsd: rdar.readArray( "Nsd",  &mtp->Nsd, 1);
-           break;
-   case f_bTau: rdar.readArray( "bTau",  &mtp->bTau, 1);
-           break;
-   case f_ntM: rdar.readArray( "ntM",  &mtp->ntM, 1);
-           break;
-   case f_nVTKfld: rdar.readArray( "nVTKfld",  &mtp->nVTKfld, 1);
-           break;
+        case f_nPai: rdar.readArray( "nPai",  &mtp->nPai, 1);
+            break;
+        case f_nTai: rdar.readArray( "nTai",  &mtp->nTai, 1);
+            break;
+        case f_Lsf: rdar.readArray( "Lsf",  &mtp->Lsf, 1);
+            break;
+        case f_Nf: rdar.readArray( "Nf",  &mtp->Nf, 1);
+            break;
+        case f_FIf: rdar.readArray( "FIf",  &mtp->FIf, 1);
+            break;
 
-   case f_nPai: rdar.readArray( "nPai",  &mtp->nPai, 1);
-           break;
-   case f_nTai: rdar.readArray( "nTai",  &mtp->nTai, 1);
-           break;
-   case f_Lsf: rdar.readArray( "Lsf",  &mtp->Lsf, 1);
-           break;
-   case f_Nf: rdar.readArray( "Nf",  &mtp->Nf, 1);
-           break;
-   case f_FIf: rdar.readArray( "FIf",  &mtp->FIf, 1);
-           break;
+        case f_Tau: rdar.readArray( "Tau",  mtp->Tau, 3);
+            break;
+        case f_sizeLc: rdar.readArray( "sizeLc",  mtp->sizeLc, 3);
+            break;
+        case f_InpSys: rdar.readArray( "InpSys",  &mtp->Msysb, 1);
+            break;
+        case f_Vsysb: rdar.readArray( "Vsysb",  &mtp->Vsysb, 1);
+            break;
+        case f_Mwatb: rdar.readArray( "Mwatb",  &mtp->Mwatb, 1);
+            break;
+        case f_Maqb: rdar.readArray( "Maqb",  &mtp->Maqb, 1);
+            break;
+        case f_Vaqb: rdar.readArray( "Vaqb",  &mtp->Vaqb, 1);
+            break;
+        case f_Pgb: rdar.readArray( "Pgb",  &mtp->Pgb, 1);
+            break;
+        case f_Tmolb: rdar.readArray( "Tmolb",  &mtp->Tmolb, 1);
+            break;
+        case f_WmCb: rdar.readArray( "WmCb",  &mtp->WmCb, 1);
+            break;
+        case f_Asur: rdar.readArray( "Asur",  &mtp->Asur, 1);
+            break;
+        case ff_tf: rdar.readArray( "tf",  &mtp->tf, 1);
+            break;
+        case ff_Vt: rdar.readArray( "Vt",  &mtp->vol_in, 1);
+            break;
+        case ff_vp: rdar.readArray( "vp",  &mtp->fVel, 1);
+            break;
+        case ff_eps: rdar.readArray( "eps",  &mtp->eps_in, 1);
+            break;
+        case ff_Km: rdar.readArray( "Km",  &mtp->Km_in, 1);
+            break;
+        case ff_al: rdar.readArray( "al",  &mtp->al_in, 1);
+            break;
+        case ff_Dif: rdar.readArray( "Dif",  &mtp->Dif_in, 1);
+            break;
+        case ff_nto: rdar.readArray( "nto",  &mtp->nto_in, 1);
+            break;
+        case ff_cdv: rdar.readArray( "cdv",  &mtp->cdv, 1);
+            break;
+        case ff_cez: rdar.readArray( "cez",  &mtp->cez, 1);
+            break;
 
-   case f_Tau: rdar.readArray( "Tau",  mtp->Tau, 3);
-           break;
-   case f_sizeLc: rdar.readArray( "sizeLc",  mtp->sizeLc, 3);
-           break;
-   case f_InpSys: rdar.readArray( "InpSys",  &mtp->Msysb, 1);
-           break;
-   case f_Vsysb: rdar.readArray( "Vsysb",  &mtp->Vsysb, 1);
-           break;
-   case f_Mwatb: rdar.readArray( "Mwatb",  &mtp->Mwatb, 1);
-           break;
-   case f_Maqb: rdar.readArray( "Maqb",  &mtp->Maqb, 1);
-           break;
-   case f_Vaqb: rdar.readArray( "Vaqb",  &mtp->Vaqb, 1);
-           break;
-   case f_Pgb: rdar.readArray( "Pgb",  &mtp->Pgb, 1);
-           break;
-   case f_Tmolb: rdar.readArray( "Tmolb",  &mtp->Tmolb, 1);
-           break;
-   case f_WmCb: rdar.readArray( "WmCb",  &mtp->WmCb, 1);
-           break;
-   case f_Asur: rdar.readArray( "Asur",  &mtp->Asur, 1);
-           break;
-   case ff_tf: rdar.readArray( "tf",  &mtp->tf, 1);
-           break;
-   case ff_Vt: rdar.readArray( "Vt",  &mtp->vol_in, 1);
-           break;
-   case ff_vp: rdar.readArray( "vp",  &mtp->fVel, 1);
-           break;
-   case ff_eps: rdar.readArray( "eps",  &mtp->eps_in, 1);
-           break;
-   case ff_Km: rdar.readArray( "Km",  &mtp->Km_in, 1);
-           break;
-   case ff_al: rdar.readArray( "al",  &mtp->al_in, 1);
-           break;
-   case ff_Dif: rdar.readArray( "Dif",  &mtp->Dif_in, 1);
-           break;
-   case ff_nto: rdar.readArray( "nto",  &mtp->nto_in, 1);
-           break;
-   case ff_cdv: rdar.readArray( "cdv",  &mtp->cdv, 1);
-           break;
-   case ff_cez: rdar.readArray( "cez",  &mtp->cez, 1);
-           break;
+        case f_Name: rdar.readArray( "Name",  mtp->name, 1, MAXFORMULA);
+            break;
+        case f_Note: rdar.readArray( "Note",  mtp->notes, 1, MAXFORMULA);
+            break;
+        case f_mtWrkS: rdar.readArray( "mtWrkS",  &mtp->ctm, 12);
+            break;
+        case f_mtWrkF: rdar.readArray( "mtWrkF",  &mtp->cT, 10);
+        }
+        nfild = rdar.findNext();
+    }
 
-   case f_Name: rdar.readArray( "Name",  mtp->name, 1, MAXFORMULA);
-           break;
-   case f_Note: rdar.readArray( "Note",  mtp->notes, 1, MAXFORMULA);
-           break;
-   case f_mtWrkS: rdar.readArray( "mtWrkS",  &mtp->ctm, 12);
-           break;
-   case f_mtWrkF: rdar.readArray( "mtWrkF",  &mtp->cT, 10);
-  }
-   nfild = rdar.findNext();
- }
+    //dynamic data
+    io_formats::TReadArrays<TIO>   rddar(  26, GEM2MT_dynamic_fields, in_format);
 
- //dynamic data
-#ifdef USE_OLD_KV_IO_FILES
- TReadArrays  rddar( 26, GEM2MT_dynamic_fields, ff);
-#else
- TReadJson  rddar( 26, GEM2MT_dynamic_fields, json_data);
-#endif
+    // set alwase flags for gems2mt
+    checkAlws(rdar, rddar);
 
+    // testing read
+    auto ret = rdar.testRead();
+    if( !ret.empty() )
+    { ret += " - fields must be read from gem2mt structure";
+        Error( "Error", ret);
+    }
 
-  // set alwase flags for gems2mt
-  checkAlws(rdar, rddar);
-
-  // testing read
- auto ret = rdar.testRead();
- if( !ret.empty() )
-  { ret += " - fields must be read from gem2mt structure";
-    Error( "Error", ret);
-  }
-
- // realloc memory
+    // realloc memory
 #ifndef IPMGEMPLUGIN
-  dyn_new(0);
+    dyn_new(0);
 #else
-   mem_new(0);
+    mem_new(0);
 #endif
 
- nfild = rddar.findNext();
-  while( nfild >=0 )
-  {
-   switch( nfild )
-   {
-   case f__NPmean: rddar.readArray( "NPmean", mtp->NPmean, mtp->nPTypes);
-           break;
-   case f__nPmin: rddar.readArray( "nPmin", mtp->nPmin, mtp->nPTypes);
-           break;
-   case f__nPmax: rddar.readArray( "nPmax", mtp->nPmax, mtp->nPTypes);
-           break;
-   case f__ParTD: rddar.readArray( "ParTD", &mtp->ParTD[0][0], mtp->nPTypes*6);
-           break;
-   case f__mGrid: rddar.readArray( "mGrid", &mtp->grid[0][0], mtp->nC*3);
-           break;
-   case f__DiCp: rddar.readArray( "DiCp", &mtp->DiCp[0][0], mtp->nC*2);
-           break;
-   case f__HydP: rddar.readArray( "HydP", &mtp->HydP[0][0], mtp->nC*SIZE_HYDP);
-           break;
-   case f__FDLi: rddar.readArray( "FDLi", &mtp->FDLi[0][0], mtp->nFD*2);
-           break;
-   case f__FDLf: rddar.readArray( "FDLf", &mtp->FDLf[0][0], mtp->nFD*4);
-           break;
-   case f__FDLid: rddar.readArray( "FDLid", &mtp->FDLid[0][0], mtp->nFD, MAXSYMB);
-           break;
-   case f__FDLop: rddar.readArray( "FDLop", &mtp->FDLop[0][0], mtp->nFD, MAXSYMB);
-           break;
-   case f__FDLmp: rddar.readArray( "FDLmp", &mtp->FDLmp[0][0], mtp->nFD, MAXSYMB);
-           break;
-   case f__PGT: rddar.readArray( "PGT", mtp->PGT, mtp->FIf*mtp->nPG);
-           break;
-   case f__MGPid: rddar.readArray( "MGPid", &mtp->MGPid[0][0], mtp->nPG, MAXSYMB);
-           break;
-   case f__UMGP: rddar.readArray( "UMGP", mtp->UMGP, mtp->FIf, 1);
-           break;
-   case f__BSF: rddar.readArray( "BSF", mtp->BSF, mtp->nSFD*mtp->Nf);
-           break;
-   case f__MB: rddar.readArray( "MB", mtp->MB, mtp->nC*mtp->Nf);
-           break;
-   case f__dMB: rddar.readArray( "dMB", mtp->dMB, mtp->nC*mtp->Nf);
-           break;
-   case f__xFlds: rddar.readArray( "xFlds", &mtp->xVTKfld[0][0], mtp->nVTKfld*2);
-           break;
-   case f__mDDc: rddar.readArray( "mDDc", mtp->DDc, mtp->Lsf);
-           break;
-   case f__mDIc: rddar.readArray( "mDIc", mtp->DIc, mtp->Nf);
-           break;
-   case f__mDEl: rddar.readArray( "mDEl", mtp->DEl, mtp->nEl);
-           break;
-   case f__for_e: rddar.readArray( "for_e", mtp->for_e[0],mtp->nEl, MAXFORMUNITDT);
-           break;
-   case f__nam_i: rddar.readArray( "nam_i", mtp->nam_i[0],mtp->nIV, MAXIDNAME);
-           break;
-   case f_SDref: rddar.readArray( "SDref",mtp->sdref[0],mtp->Nsd, V_SD_RKLEN);
-           break;
-   case f__SDval: rddar.readArray( "SDval", mtp->sdval[0],mtp->Nsd, V_SD_RKLEN);
-           break;
-   }
-     nfild = rddar.findNext();
- }
+    nfild = rddar.findNext();
+    while( nfild >=0 )
+    {
+        switch( nfild )
+        {
+        case f__NPmean: rddar.readArray( "NPmean", mtp->NPmean, mtp->nPTypes);
+            break;
+        case f__nPmin: rddar.readArray( "nPmin", mtp->nPmin, mtp->nPTypes);
+            break;
+        case f__nPmax: rddar.readArray( "nPmax", mtp->nPmax, mtp->nPTypes);
+            break;
+        case f__ParTD: rddar.readArray( "ParTD", &mtp->ParTD[0][0], mtp->nPTypes*6);
+            break;
+        case f__mGrid: rddar.readArray( "mGrid", &mtp->grid[0][0], mtp->nC*3);
+            break;
+        case f__DiCp: rddar.readArray( "DiCp", &mtp->DiCp[0][0], mtp->nC*2);
+            break;
+        case f__HydP: rddar.readArray( "HydP", &mtp->HydP[0][0], mtp->nC*SIZE_HYDP);
+            break;
+        case f__FDLi: rddar.readArray( "FDLi", &mtp->FDLi[0][0], mtp->nFD*2);
+            break;
+        case f__FDLf: rddar.readArray( "FDLf", &mtp->FDLf[0][0], mtp->nFD*4);
+            break;
+        case f__FDLid: rddar.readArray( "FDLid", &mtp->FDLid[0][0], mtp->nFD, MAXSYMB);
+            break;
+        case f__FDLop: rddar.readArray( "FDLop", &mtp->FDLop[0][0], mtp->nFD, MAXSYMB);
+            break;
+        case f__FDLmp: rddar.readArray( "FDLmp", &mtp->FDLmp[0][0], mtp->nFD, MAXSYMB);
+            break;
+        case f__PGT: rddar.readArray( "PGT", mtp->PGT, mtp->FIf*mtp->nPG);
+            break;
+        case f__MGPid: rddar.readArray( "MGPid", &mtp->MGPid[0][0], mtp->nPG, MAXSYMB);
+            break;
+        case f__UMGP: rddar.readArray( "UMGP", mtp->UMGP, mtp->FIf, 1);
+            break;
+        case f__BSF: rddar.readArray( "BSF", mtp->BSF, mtp->nSFD*mtp->Nf);
+            break;
+        case f__MB: rddar.readArray( "MB", mtp->MB, mtp->nC*mtp->Nf);
+            break;
+        case f__dMB: rddar.readArray( "dMB", mtp->dMB, mtp->nC*mtp->Nf);
+            break;
+        case f__xFlds: rddar.readArray( "xFlds", &mtp->xVTKfld[0][0], mtp->nVTKfld*2);
+            break;
+        case f__mDDc: rddar.readArray( "mDDc", mtp->DDc, mtp->Lsf);
+            break;
+        case f__mDIc: rddar.readArray( "mDIc", mtp->DIc, mtp->Nf);
+            break;
+        case f__mDEl: rddar.readArray( "mDEl", mtp->DEl, mtp->nEl);
+            break;
+        case f__for_e: rddar.readArray( "for_e", mtp->for_e[0],mtp->nEl, MAXFORMUNITDT);
+            break;
+        case f__nam_i: rddar.readArray( "nam_i", mtp->nam_i[0],mtp->nIV, MAXIDNAME);
+            break;
+        case f_SDref: rddar.readArray( "SDref",mtp->sdref[0],mtp->Nsd, V_SD_RKLEN);
+            break;
+        case f__SDval: rddar.readArray( "SDval", mtp->sdval[0],mtp->Nsd, V_SD_RKLEN);
+            break;
+        }
+        nfild = rddar.findNext();
+    }
 
- // testing read
- ret = rddar.testRead();
- if( !ret.empty() )
-  { ret += " - fields must be read from gem2mt structure";
-    Error( "Error", ret);
-  }
+    // testing read
+    ret = rddar.testRead();
+    if( !ret.empty() )
+    { ret += " - fields must be read from gem2mt structure";
+        Error( "Error", ret);
+    }
 
 }
+
+#ifndef USE_OLD_KV_IO_FILES
+template void  TGEM2MT::to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TGEM2MT::from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
+#endif
+template void  TGEM2MT::to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode ) const;
+template void  TGEM2MT::from_text_file<io_formats::KeyValueRead>( io_formats::KeyValueRead& out_format );
+
 
 // --------------------- end of m_gem2mtbox.cpp ---------------------------
 

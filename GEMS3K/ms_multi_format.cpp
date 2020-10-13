@@ -176,8 +176,8 @@ void TMultiBase::to_text_file_gemipm( TIO& out_format, bool addMui,
 //#else
 //    io_formats::KeyValueWrite out_format( ff );
 //#endif
-    io_formats::TPrintArrays  prar1( 8, MULTI_static_fields, out_format );
-    io_formats::TPrintArrays  prar( 80, MULTI_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar1( 8, MULTI_static_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 80, MULTI_dynamic_fields, out_format );
 
     // set up array flags for permanent fields
     if( !( pm.FIs > 0 && pm.Ls > 0 ) )
@@ -651,7 +651,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 //    io_formats::KeyValueRead in_format( ff1 );
 //#endif
 
-    io_formats::TReadArrays rdar( 8, MULTI_static_fields, in_format);
+    io_formats::TReadArrays<TIO> rdar( 8, MULTI_static_fields, in_format);
     rdar.readNext( "ID_key");
     rdar.readArray( "ID_key", pm.stkey,  1, EQ_RKLEN);
 
@@ -754,7 +754,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
     ConvertDCC();
 
     //dynamic data
-    io_formats::TReadArrays   rddar( 80, MULTI_dynamic_fields, in_format);
+    io_formats::TReadArrays<TIO>   rddar( 80, MULTI_dynamic_fields, in_format);
 
     // set up array flags for permanent fields
 

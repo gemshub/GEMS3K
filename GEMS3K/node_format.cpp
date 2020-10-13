@@ -184,7 +184,7 @@ void TNode::databr_to_text_file( TIO& out_format, bool with_comments, bool brief
 //    io_formats::KeyValueWrite out_format( ff );
 //#endif
 
-    io_formats::TPrintArrays  prar( f_omph+1/*55*/, DataBR_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( f_omph+1/*55*/, DataBR_fields, out_format );
 
     if( _comment )
     {
@@ -327,7 +327,7 @@ void TNode::databr_from_text_file( TIO& in_format )
 //#else
 //    io_formats::KeyValueRead in_format( ff );
 //#endif
-    io_formats::TReadArrays  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
+    io_formats::TReadArrays<TIO>  rdar(f_omph+1/*55*/, DataBR_fields, in_format);
 
     long int nfild = rdar.findNext();
     while( nfild >=0 )
@@ -505,8 +505,8 @@ void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brie
 //#else
 //    io_formats::KeyValueWrite out_format( ff );
 //#endif
-    io_formats::TPrintArrays  prar1(14, DataCH_static_fields, out_format );
-    io_formats::TPrintArrays  prar( 30, DataCH_dynamic_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar1(14, DataCH_static_fields, out_format );
+    io_formats::TPrintArrays<TIO>  prar( 30, DataCH_dynamic_fields, out_format );
 
     if( CSD->nIC == CSD->nICb )
         prar.setNoAlws( f_xic);
@@ -635,7 +635,7 @@ void TNode::datach_from_text_file(TIO& in_format)
 //    io_formats::KeyValueRead in_format( ff );
 //#endif
 
-    io_formats::TReadArrays rdar( 14, DataCH_static_fields, in_format);
+    io_formats::TReadArrays<TIO> rdar( 14, DataCH_static_fields, in_format);
 
  long int nfild = rdar.findNext();
  while( nfild >=0 )
@@ -685,7 +685,7 @@ void TNode::datach_from_text_file(TIO& in_format)
   databr_realloc();
 
   //dynamic data
-  io_formats::TReadArrays   rddar( 30, DataCH_dynamic_fields, in_format);
+  io_formats::TReadArrays<TIO>   rddar( 30, DataCH_dynamic_fields, in_format);
 
    if( CSD->iGrd  )
       rddar.setAlws( f_DD /*28 "DD"*/);

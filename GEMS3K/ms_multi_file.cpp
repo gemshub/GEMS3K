@@ -1112,7 +1112,7 @@ void TMultiBase::to_text_file( const char *path, bool append )
   ErrorIf( !ff.good() , path, "Fileopen error");
 
   io_formats::KeyValueWrite out_format( ff );
-  io_formats::TPrintArrays  prar( 0, nullptr, out_format );
+  io_formats::TPrintArrays<io_formats::KeyValueWrite>  prar( 0, nullptr, out_format );
 
   if( append )
    prar.writeComment( true,"\nNext record" );
