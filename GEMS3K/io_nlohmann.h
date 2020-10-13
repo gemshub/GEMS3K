@@ -47,7 +47,7 @@ class NlohmannJsonWrite
 
     std::string key( const std::string& name ) const
     {
-        return std::string("<") + name + ">";
+        return  name;
     }
 
 public:
@@ -142,7 +142,7 @@ class NlohmannJsonRead
 
     std::string key( const std::string& name ) const
     {
-        return std::string("<") + name + ">";
+        return name;
     }
 
 public:

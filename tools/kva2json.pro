@@ -45,11 +45,11 @@ QMAKE_LFLAGS +=
 QMAKE_CXXFLAGS += -Wall -Wno-unused
 OBJECTS_DIR = obj
 
-SOURCES    +=   calc2convert.cpp
+SOURCES    +=   kva2json.cpp
 
 include($$GEMS3K_CPP/gems3k.pri) 
 
 HEADERS += \
-    args_impex.h
+    args_tool.h
 
 
