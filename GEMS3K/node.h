@@ -67,9 +67,6 @@
 class TActivity;
 class TKinetics;
 
-extern const char *dat_ext;
-extern const char *dat_filt;
-
 extern const double bar_to_Pa,
                m3_to_cm3,
                kg_to_g;
@@ -1318,8 +1315,6 @@ long int GEM_step_MT( const long int step )
 // #define nodeCH_DD( DCx )    ( TNode::na->pCSD()->DD[
 //                              TNode::na->pCSD()->xDC[(DCx)]] )
 
-//template<> void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode, const char* path ) const;
-//template<> void  TNode::databr_to_text_file<io_formats::KeyValueWrite>( io_formats::KeyValueWrite& out_format, bool with_comments, bool brief_mode, const char* path ) const;
 
 #endif
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

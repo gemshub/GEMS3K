@@ -36,14 +36,6 @@
 #include "io_nlohmann.h"
 #include "gems3k_impex.h"
 
-#ifndef USE_OLD_KV_IO_FILES
-  const char *dat_ext = "json";
-  const char *dat_filt = "*.json";
-#else
-const char *dat_ext = "dat";
-const char *dat_filt = "*.dat";
-#endif
-
 // Writes CSD (DATACH structure) to a json/key-value string
 // \param brief_mode - Do not write data items that contain only default values
 // \param with_comments - Write files with comments for all data entries

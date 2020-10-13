@@ -435,7 +435,7 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
     int i;
     std::string datachbr_fn;
     std::string lst_in = dbrfiles_lst_name;
-    std::string Path = u_getpath( lst_in );
+    std::string dir_path = u_getpath( lst_in )  + "/";
 
     //  open file stream for the file names list file
     std::fstream f_lst( lst_in, std::ios::in );
@@ -445,14 +445,14 @@ void  TNodeArray::InitNodeArray( const char *dbrfiles_lst_name,
     i = 0;
     while( !f_lst.eof() )  // For all DBR_DAT files listed
     {
-        pVisor_Message(false, i, nNodes() );
+        pVisor_Message( false, i, nNodes() );
 
         // Reading DBR_DAT file into work DATABR structure
         getline( f_lst, datachbr_fn, ',');
         trim( datachbr_fn );
         trim( datachbr_fn, "\"" );
 
-        std::string dbr_file = Path + datachbr_fn;
+        std::string dbr_file = dir_path + datachbr_fn;
         calcNode->read_dbr_format_file( dbr_file,  type_f );
 
         // Unpacking work DATABR structure into MULTI (GEM IPM work structure): uses DATACH
