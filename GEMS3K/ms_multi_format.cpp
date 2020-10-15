@@ -31,6 +31,7 @@
 #include "v_detail.h"
 #include "io_template.h"
 #include "io_nlohmann.h"
+#include "io_simdjson.h"
 #include "io_keyvalue.h"
 #include "ms_multi.h"
 
@@ -1210,6 +1211,7 @@ bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
 
 #ifndef USE_OLD_KV_IO_FILES
 template void TMultiBase::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
+template void TMultiBase::from_text_file_gemipm<io_formats::SimdJsonRead>( io_formats::SimdJsonRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 #endif
 template void TMultiBase::from_text_file_gemipm<io_formats::KeyValueRead>( io_formats::KeyValueRead& in_format,  DATACH  *dCH );

@@ -34,6 +34,7 @@
 #include "num_methods.h"
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"
+#include "io_simdjson.h"
 #include "gems3k_impex.h"
 
 // Writes CSD (DATACH structure) to a json/key-value string
@@ -113,7 +114,8 @@ void  TNode::read_dbr_format_file( const std::string& dbr_file, int type_f )
     {
         std::fstream in_br( dbr_file, std::ios::in );
         ErrorIf( !in_br.good() , dbr_file, "DBR_DAT fileopen error");
-        io_formats::NlohmannJsonRead in_format( in_br );
+        //io_formats::NlohmannJsonRead in_format( in_br );
+        io_formats::SimdJsonRead in_format( in_br );
         databr_from_text_file(in_format);
     }
         break;
@@ -212,12 +214,14 @@ long int  TNode::GEM_init( const char* ipmfiles_lst_name )
         {
             std::fstream f_ch( generator.get_dch_path(), std::ios::in );
             ErrorIf( !f_ch.good() , generator.get_dch_path(), "DCH_DAT fileopen error");
-            io_formats::NlohmannJsonRead in_format( f_ch );
+            //io_formats::NlohmannJsonRead in_format( f_ch );
+            io_formats::SimdJsonRead in_format( f_ch );
             datach_from_text_file(in_format);
 
             std::fstream ff( generator.get_ipm_path(), std::ios::in );
             ErrorIf( !ff.good() , generator.get_ipm_path(), "Fileopen error");
-            io_formats::NlohmannJsonRead in_ipm( ff );
+            //io_formats::NlohmannJsonRead in_ipm( ff );
+            io_formats::SimdJsonRead in_ipm( ff );
             multi->from_text_file_gemipm( in_ipm, CSD);
         }
             break;

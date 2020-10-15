@@ -32,14 +32,19 @@ QMAKE_CXXFLAGS += -Wall -Wextra -Wformat-nonliteral -Wcast-align -Wpointer-arith
 
 GEMS3K_CPP = ../GEMS3K
 GEMS3K_H   = $$GEMS3K_CPP
+SJSON_CPP = ../simdjson/singleheader
+SJSON_H   = $$SJSON_CPP
+
 
 DEPENDPATH +=
 DEPENDPATH += .
 DEPENDPATH += $$GEMS3K_H
+DEPENDPATH += $$SJSON_H
 
 INCLUDEPATH += 
 INCLUDEPATH += .
 INCLUDEPATH += $$GEMS3K_H
+INCLUDEPATH += $$SJSON_H
 
 QMAKE_LFLAGS +=
 QMAKE_CXXFLAGS += -Wall -Wno-unused

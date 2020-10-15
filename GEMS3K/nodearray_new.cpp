@@ -41,6 +41,7 @@
 #include "gdatastream.h"
 #include "io_keyvalue.h"
 #include "io_nlohmann.h"
+#include "io_simdjson.h"
 #include "gems3k_impex.h"
 
 TNodeArray::TNodeArray( long int nNod  ):

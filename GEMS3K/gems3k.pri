@@ -1,4 +1,9 @@
-       HEADERS	 += $$GEMS3K_H/verror.h  \
+SJSON_CPP = $$GEMS3K_H/../simdjson/singleheader
+SJSON_H   = $$SJSON_CPP
+DEPENDPATH += $$SJSON_H
+INCLUDEPATH += $$SJSON_H
+
+ HEADERS	 += $$GEMS3K_H/verror.h  \
                     $$GEMS3K_H/gdatastream.h  \
                     ##$$GEMS3K_H/v_user.h \
                     $$GEMS3K_H/tnt_i_refvec.h \
@@ -27,7 +32,9 @@
                     $$GEMS3K_H/gems3k_impex.h \
                     $$GEMS3K_H/activities.h \
                     $$GEMS3K_H/kinetics.h \
-                    $$GEMS3K_H/v_detail.h
+                    $$GEMS3K_H/v_detail.h \
+    $$PWD/io_simdjson.h \
+                    $$SJSON_H/simdjson.h
 
 
         SOURCES	  +=  $$GEMS3K_CPP/gdatastream.cpp  \
@@ -68,4 +75,6 @@
                       $$GEMS3K_CPP/s_activity3.cpp  \
                       #$$GEMS3K_CPP/ms_param.cpp \
                       $$GEMS3K_CPP/v_detail.cpp \
+    $$PWD/io_simdjson.cpp \
+                      $$SJSON_CPP/simdjson.cpp
 
