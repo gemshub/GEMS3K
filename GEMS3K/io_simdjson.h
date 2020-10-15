@@ -201,6 +201,35 @@ public:
         }
     }
 
+    /// Reads array from a TIO format.
+    void read_array(  const std::string& field_name, short* arr, long int size )
+    {
+        int64_t value;
+        std::string msg;
+        std::string jkey = key( field_name );
+        simdjson::dom::element json_arr;
+
+        auto error = json_data.at_key(jkey).get(json_arr);
+        test_simdjson_error( error );
+
+        if( json_arr.type() != simdjson::dom::element_type::ARRAY &&  size==1 )
+        {
+            error = json_arr.get<int64_t>(value);
+            *arr = value;
+            test_simdjson_error( error );
+        }
+        else
+        {
+            for( long int ii=0; ii<size; ++ii )
+            {
+                error = json_arr.at(ii).get<int64_t>(value);
+                arr[ii]  = value;
+                // error if different size
+                test_simdjson_error( error );
+            }
+        }
+    }
+
     /// Reads strings array from a text file.
     void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
 

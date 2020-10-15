@@ -27,7 +27,7 @@
 #ifndef USE_OLD_KV_IO_FILES
 
 #include "io_simdjson.h"
-//#include "simdjson.cpp"
+#include "simdjson.cpp"
 #include "v_detail.h"
 
 
