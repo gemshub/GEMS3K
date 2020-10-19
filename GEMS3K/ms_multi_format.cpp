@@ -1175,7 +1175,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
 {
     std::stringstream ss;
-    write_ipm_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, addMui, with_comments, brief_mode );
+    write_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, addMui, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -1187,7 +1187,7 @@ bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
 
     std::stringstream ss;
     ss.str(data);
-    read_ipm_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, dCH );
+    read_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, dCH );
     return true;
 }
 

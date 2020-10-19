@@ -42,7 +42,7 @@
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    write_dch_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, with_comments, brief_mode );
+    write_dch_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -54,7 +54,7 @@ bool TNode::datach_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-    read_dch_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/ );
+    read_dch_format_stream( ss, GEMS3KGenerator::default_type_f );
     return true;
 }
 
@@ -64,7 +64,7 @@ bool TNode::datach_from_string( const std::string& data )
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    write_dbr_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, with_comments, brief_mode );
+    write_dbr_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -76,7 +76,7 @@ bool TNode::databr_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-    read_dbr_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/ );
+    read_dbr_format_stream( ss, GEMS3KGenerator::default_type_f );
     return true;
 }
 

@@ -55,7 +55,6 @@ int extract_args( int argc, char* argv[], std::string& input_lst_path, GEMS3KImp
 int main( int argc, char* argv[] )
 {
     try{
-
         std::string input_lst_path;
         GEMS3KImpexData export_data;
 

@@ -76,5 +76,6 @@ INCLUDEPATH += $$SJSON_H
                       #$$GEMS3K_CPP/ms_param.cpp \
                       $$GEMS3K_CPP/v_detail.cpp \
                       $$GEMS3K_CPP/io_simdjson.cpp \
-                      #$$SJSON_CPP/simdjson.cpp
+ \                      #$$SJSON_CPP/simdjson.cpp
+    $$PWD/../simdjson/simdjson.cpp
 

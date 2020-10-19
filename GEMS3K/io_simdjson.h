@@ -201,32 +201,47 @@ public:
     }
 
     /// Reads array from a TIO format.
-    template <class T>
+    template <class T,
+              typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
     void read_array(  const std::string& field_name, T* arr, long int size )
     {
         std::string msg;
-        std::string jkey = key( field_name );
-        simdjson::dom::element json_arr;
+        std::vector<int64_t> js_arr;
+        read_array( field_name, js_arr );
 
-        auto error = json_data.at_key(jkey).get(json_arr);
-        test_simdjson_error( error );
+        ErrorIf( static_cast<size_t>(size) > js_arr.size(), std::string("SimdJson read error :"),
+                 "illegal array size "+ field_name );
 
-        if( json_arr.type() != simdjson::dom::element_type::ARRAY &&  size==1 )
+        for( long int ii=0; ii<size; ++ii )
         {
-            read_value( *arr, json_arr );
+            arr[ii] = static_cast<T>(js_arr[ii]);
         }
-        else
+    }
+
+    /// Reads array from a TIO format.
+    template <class T,
+              typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+    void read_array(  const std::string& field_name, T* arr, long int size )
+    {
+        std::string msg;
+        std::vector<double> js_arr;
+        read_array( field_name, js_arr );
+
+        ErrorIf( static_cast<size_t>(size) > js_arr.size(), std::string("SimdJson read error :"),
+                 "illegal array size "+ field_name );
+
+        for( long int ii=0; ii<size; ++ii )
         {
-            for( long int ii=0; ii<size; ++ii )
-                read_value( arr[ii], json_arr.at(ii) );
+            arr[ii] = static_cast<T>(js_arr[ii]);
         }
     }
 
     /// Reads strings array from a text file.
     void read_strings_array( const std::string& field_name, char* arr, long int size, long int el_size );
-
     /// Reads double vector from a text file.
-    void read_array( const std::string& name, std::vector<double> arr );
+    void read_array( const std::string& name, std::vector<double>& arr );
+    /// Reads int vector from a text file.
+    void read_array(const std::string &field_name, std::vector<int64_t>& arr);
 
 protected:
 
@@ -246,25 +261,25 @@ protected:
                  simdjson::error_message(error) );
     }
 
-    /// Reads array from a text file.
-    template <class T,
-              typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
-    void read_value( T&  arr_value, const simdjson::dom::element json_arr )
-    {
-        auto [ ival, error] = json_arr.get<int64_t>();
-        test_simdjson_error( error );
-        arr_value = static_cast<T>(ival);
-    }
+//    /// Reads array from a text file.
+//    template <class T,
+//              typename std::enable_if<std::is_integral<T>::value,T>::type* = nullptr>
+//    void read_value( T&  arr_value, const simdjson::dom::element json_arr )
+//    {
+//        auto [ ival, error] = json_arr.get<int64_t>();
+//        test_simdjson_error( error );
+//        arr_value = static_cast<T>(ival);
+//    }
 
-    /// Reads array from a text file.
-    template <class T,
-              typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
-    void read_value( T& arr_value, const simdjson::dom::element json_arr )
-    {
-        auto [ dval, error] = json_arr.get<double>();
-        test_simdjson_error( error );
-        arr_value = static_cast<T>(dval);
-    }
+//    /// Reads array from a text file.
+//    template <class T,
+//              typename std::enable_if<std::is_floating_point<T>::value,T>::type* = nullptr>
+//    void read_value( T& arr_value, const simdjson::dom::element json_arr )
+//    {
+//        auto [ dval, error] = json_arr.get<double>();
+//        test_simdjson_error( error );
+//        arr_value = static_cast<T>(dval);
+//    }
 
 };
 

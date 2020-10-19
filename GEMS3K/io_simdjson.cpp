@@ -26,9 +26,8 @@
 
 
 #include "io_simdjson.h"
-#include "simdjson/simdjson.cpp"
+//#include "simdjson/simdjson.cpp"
 #include "v_detail.h"
-
 
 namespace  io_formats {
 
@@ -76,7 +75,7 @@ void SimdJsonWrite::write_array(const std::string &field_name, const std::vector
 
 //------------------------------------------------------------------------------------------
 
-io_formats::SimdJsonRead::SimdJsonRead(std::iostream &ff): json_data()
+SimdJsonRead::SimdJsonRead(std::iostream &ff): json_data()
 {
     std::stringstream buffer;
     buffer << ff.rdbuf();
@@ -130,7 +129,7 @@ void SimdJsonRead::read_strings_array(const std::string &field_name, char *arr, 
         }
 }
 
-void SimdJsonRead::read_array(const std::string &field_name, std::vector<double> arr)
+void SimdJsonRead::read_array(const std::string &field_name, std::vector<double>& arr)
 {
     double value;
     std::string jkey = key( field_name );
@@ -149,8 +148,40 @@ void SimdJsonRead::read_array(const std::string &field_name, std::vector<double>
             arr.push_back(value);
         }
     }
+    else
+    {
+        error = json_arr.get(value);
+        test_simdjson_error( error );
+        arr.push_back(value);
+    }
 }
 
+void SimdJsonRead::read_array(const std::string &field_name, std::vector<int64_t>& arr)
+{
+    int64_t value;
+    std::string jkey = key( field_name );
+    arr.clear();
+
+    simdjson::dom::element json_arr;
+    auto error = json_data.at_key(jkey).get(json_arr);
+    test_simdjson_error( error );
+
+    if(  json_arr.type() == simdjson::dom::element_type::ARRAY  )
+    {
+        for (simdjson::dom::element arr_element : json_arr)
+        {
+            error = arr_element.get(value);
+            test_simdjson_error( error );
+            arr.push_back(value);
+        }
+    }
+    else
+    {
+        error = json_arr.get(value);
+        test_simdjson_error( error );
+        arr.push_back(value);
+    }
+}
 
 }  // io_formats
 
