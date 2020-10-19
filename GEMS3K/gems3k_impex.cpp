@@ -74,7 +74,7 @@ void GEMS3KGenerator::get_mode( const std::string &str_mode )
         io_mode = f_binary;
     else  if( str_mode == "-j" )
         io_mode = f_json;
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     else  if( str_mode == "-n" )
         io_mode = f_nlohmanjson;
 #endif
@@ -87,7 +87,7 @@ std::string GEMS3KGenerator::mode() const
     case f_binary:
         return "-b";
     case f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
         return "-n";
 #endif
     case f_json:

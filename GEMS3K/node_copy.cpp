@@ -42,7 +42,7 @@
 std::string TNode::datach_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    write_dch_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
+    write_dch_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -54,7 +54,7 @@ bool TNode::datach_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-    read_dch_format_stream( ss, GEMS3KGenerator::default_type_f );
+    read_dch_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/ );
     return true;
 }
 
@@ -64,7 +64,7 @@ bool TNode::datach_from_string( const std::string& data )
 std::string TNode::databr_to_string( bool with_comments, bool brief_mode ) const
 {
     std::stringstream ss;
-    write_dbr_format_stream( ss, GEMS3KGenerator::default_type_f, with_comments, brief_mode );
+    write_dbr_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -76,7 +76,7 @@ bool TNode::databr_from_string( const std::string& data )
 
     std::stringstream ss;
     ss.str(data);
-    read_dbr_format_stream( ss, GEMS3KGenerator::default_type_f );
+    read_dbr_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/ );
     return true;
 }
 
@@ -127,7 +127,7 @@ void  TNode::read_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IOM
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     {
         io_formats::NlohmannJsonRead in_format( stream );
         databr_from_text_file(in_format);
@@ -158,7 +158,7 @@ void  TNode::write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IO
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream );
         databr_to_text_file( out_format, with_comments, brief_mode );
@@ -167,7 +167,7 @@ void  TNode::write_dbr_format_stream( std::iostream& stream, GEMS3KGenerator::IO
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonWrite out_format( stream );
+        io_formats::SimdJsonWrite out_format( stream, with_comments );
         databr_to_text_file( out_format, with_comments, brief_mode );
     }
         break;
@@ -187,7 +187,7 @@ void  TNode::read_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IOM
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     {
         io_formats::NlohmannJsonRead in_format( stream );
         datach_from_text_file(in_format);
@@ -218,7 +218,7 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream );
         datach_to_text_file( out_format, with_comments, brief_mode );
@@ -227,7 +227,7 @@ void  TNode::write_dch_format_stream( std::iostream& stream, GEMS3KGenerator::IO
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonWrite out_format( stream );
+        io_formats::SimdJsonWrite out_format( stream, with_comments );
         datach_to_text_file( out_format, with_comments, brief_mode );
     }
         break;

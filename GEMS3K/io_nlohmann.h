@@ -23,7 +23,7 @@
 // along with GEMS3K code. If not, see <http://www.gnu.org/licenses/>.
 //-------------------------------------------------------------------
 
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
 
 #include <nlohmann/json.hpp>
 #include <fstream>

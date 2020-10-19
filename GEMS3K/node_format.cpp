@@ -179,7 +179,7 @@ void TNode::databr_to_text_file( TIO& out_format, bool with_comments, bool brief
 
     bool _comment = with_comments;
 
-//#ifndef USE_OLD_KV_IO_FILES
+//#ifdef USE_OLD_NLOHMANJSON
 //    io_formats::NlohmannJsonWrite out_format( ff );
 //#else
 //    io_formats::KeyValueWrite out_format( ff );
@@ -323,7 +323,7 @@ void TNode::databr_from_text_file( TIO& in_format )
     // mem_set( &CNode->Tm, 0, 19*sizeof(double));
     databr_reset( CNode );
 
-//#ifndef USE_OLD_KV_IO_FILES
+//#ifdef USE_OLD_NLOHMANJSON
 //    io_formats::NlohmannJsonRead in_format( ff );
 //#else
 //    io_formats::KeyValueRead in_format( ff );
@@ -501,7 +501,7 @@ void TNode::datach_to_text_file(  TIO& out_format, bool with_comments, bool brie
 {
     bool _comment = with_comments;
 
-//#ifndef USE_OLD_KV_IO_FILES
+//#ifdef USE_OLD_NLOHMANJSON
 //    io_formats::NlohmannJsonWrite out_format( ff );
 //#else
 //    io_formats::KeyValueWrite out_format( ff );
@@ -630,7 +630,7 @@ void TNode::datach_from_text_file(TIO& in_format)
   long int ii;
 
   // static arrays
-//#ifndef USE_OLD_KV_IO_FILES
+//#ifdef USE_OLD_NLOHMANJSON
 //    io_formats::NlohmannJsonRead in_format( ff );
 //#else
 //    io_formats::KeyValueRead in_format( ff );
@@ -1272,7 +1272,7 @@ void TNode::databr_to_vtk( std::fstream& ff, const char*name, double time, long 
    }
 }
 
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
 template void  TNode::databr_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;
 template void  TNode::databr_from_text_file<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& out_format );
 template void  TNode::datach_to_text_file<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool with_comments, bool brief_mode ) const;

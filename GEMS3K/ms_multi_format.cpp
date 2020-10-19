@@ -1175,7 +1175,7 @@ void TMultiBase::from_text_file_gemipm( TIO& in_format,  DATACH  *dCH )
 std::string TMultiBase::gemipm_to_string( bool addMui, bool with_comments, bool brief_mode )
 {
     std::stringstream ss;
-    write_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, addMui, with_comments, brief_mode );
+    write_ipm_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, addMui, with_comments, brief_mode );
     return ss.str();
 }
 
@@ -1187,7 +1187,7 @@ bool TMultiBase::gemipm_from_string( const std::string& data,  DATACH  *dCH )
 
     std::stringstream ss;
     ss.str(data);
-    read_ipm_format_stream( ss, GEMS3KGenerator::default_type_f, dCH );
+    read_ipm_format_stream( ss, GEMS3KGenerator::f_nlohmanjson/* default_type_f*/, dCH );
     return true;
 }
 
@@ -1198,7 +1198,7 @@ void  TMultiBase::read_ipm_format_stream( std::iostream& stream, GEMS3KGenerator
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     {
         io_formats::NlohmannJsonRead in_format( stream );
         from_text_file_gemipm( in_format, dCH );
@@ -1228,7 +1228,7 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
     case GEMS3KGenerator::f_binary:
         break;
     case GEMS3KGenerator::f_nlohmanjson:
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
     {
         io_formats::NlohmannJsonWrite out_format( stream );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
@@ -1237,7 +1237,7 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
 #endif
     case GEMS3KGenerator::f_json:
     {
-        io_formats::SimdJsonWrite out_format( stream );
+        io_formats::SimdJsonWrite out_format( stream, with_comments );
         to_text_file_gemipm( out_format, addMui, with_comments, brief_mode );
     }
         break;
@@ -1251,7 +1251,7 @@ void  TMultiBase::write_ipm_format_stream( std::iostream& stream, GEMS3KGenerato
 }
 
 
-#ifndef USE_OLD_KV_IO_FILES
+#ifdef USE_OLD_NLOHMANJSON
 template void TMultiBase::from_text_file_gemipm<io_formats::NlohmannJsonRead>( io_formats::NlohmannJsonRead& in_format,  DATACH  *dCH );
 template void TMultiBase::to_text_file_gemipm<io_formats::NlohmannJsonWrite>( io_formats::NlohmannJsonWrite& out_format, bool addMui, bool with_comments, bool brief_mode );
 #endif

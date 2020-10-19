@@ -25,8 +25,6 @@
 
 #pragma once
 
-
-#include <nlohmann/json.hpp>
 #include "simdjson/simdjson.h"
 #include <fstream>
 #include "verror.h"
@@ -37,46 +35,32 @@ namespace  io_formats {
 class SimdJsonWrite
 {
 
-    /// Internal structure of file data
-    nlohmann::json json_data;
-    std::iostream& fout;
-
-    template <class T>
-    void add_value( const T& value, nlohmann::json& json_arr  )
-    {
-        json_arr.push_back(value);
-    }
-
-    std::string key( const std::string& name ) const
-    {
-        return  name;
-    }
-
 public:
 
     /// Constructor
-    SimdJsonWrite( std::iostream& ff ): json_data(), fout(ff)
-    {}
-
-    void dump( bool not_brief )
+    SimdJsonWrite( std::iostream& ff, bool not_brief ): fout(ff), dense(not_brief)
     {
-        fout << json_data.dump(( not_brief ? 4 : 0 ));
+      if( fout.tellp() == 0 )
+      {
+        first = true;
+        fout << "{";
+      }
+    }
+
+    void dump( bool  )
+    {
+        fout << "\n}\n";
     }
 
     void write_comment( const std::string&  ) {}
 
-//    template < typename T >
-//    void writeValue( const T& value )
-//    {
-//        if( json_data.is_array() )
-//            json_data.push_back(value);
-//    }
 
     /// Writes integral field to a json.
     template <class T>
     void write_key_value( const std::string& field_name, const T& value  )
     {
-        json_data[ key( field_name ) ] = value;
+        add_key( field_name );
+        add_value( value );
     }
 
     /// Writes double vector to a text file.
@@ -84,21 +68,22 @@ public:
     /// \param l_size - Setup number of elements in line
     /// \param with_comments - Write files with comments for all data entries
     /// \param brief_mode - Do not write data items that contain only default values
-    void write_array( const std::string& field_name, const std::vector<double>& arr, long int  )
-    {
-        json_data[ key(field_name) ] = arr;
-    }
+    void write_array( const std::string& field_name, const std::vector<double>& arr, long int l_size );
 
     /// Writes T array to a text file.
     template < typename T, typename LT >
-    void write_array( const std::string& field_name, T* arr, LT size, LT  )
+    void write_array( const std::string& field_name, T* arr, LT size, LT l_size )
     {
-        auto arr_key = key( field_name );
-        json_data[ arr_key ] = nlohmann::json::array();
-        for( int ii=0; ii<size; ii++ )
+        LT jj=0, sz = ( l_size > 0 ? l_size: values_in_line );
+        add_key( key( field_name ) );
+        fout  << ( dense ? "[\n        " : "[\n" );
+
+        for( LT ii=0; ii<size; ii++, jj++ )
         {
-            add_value( arr[ii], json_data[ arr_key ]);
+            add_next( ii, jj, sz );
+            add_value( arr[ii] );
         }
+        fout << ( dense ? "\n    ]" : "\n]" );
     }
 
     /// Writes char array to a json file.
@@ -107,29 +92,86 @@ public:
     {
         if( field_name.empty() )  // comment
             return;
-        auto arr_key = key( field_name );
-        json_data[ arr_key ] = nlohmann::json::array();
-        for( int ii=0, jj=0; ii<size; ii++, jj++  )
+
+        LT jj=0, sz = values_in_line;
+        add_key( key( field_name ) );
+        fout  << ( dense ? "[\n        " : "[\n" );
+
+        for( LT ii=0; ii<size; ii++, jj++ )
         {
-            std::string str = std::string( arr +(ii*arr_size), 0, arr_size );
-            add_value( str, json_data[ arr_key ] );
+            add_next( ii, jj, sz );
+            add_value( std::string( arr +(ii*arr_size), 0, arr_size ) );
         }
+
+        fout << ( dense ? "\n    ]" : "\n]" );
     }
 
     /// Writes selected elements from float array to a text file.
     template < typename T, typename LT >
-    void write_sel_array( const std::string& field_name, T* arr, LT size, long int* sel_arr, LT ncolumns, LT  )
+    void write_sel_array( const std::string& field_name, T* arr, LT size, long int* sel_arr, LT ncolumns, LT l_size )
     {
-        auto arr_key = key( field_name );
-        json_data[ arr_key ] = nlohmann::json::array();
-        for( long int ii=0; ii<size; ii++  )
+        LT jj=0, kk=0, sz = ( l_size > 0 ? l_size: values_in_line );
+        add_key( key( field_name ) );
+        fout  << ( dense ? "[\n        " : "[\n" );
+
+        for( LT ii=0; ii<size; ii++ )
         {
-            for(long int cc=0; cc<ncolumns; cc++ )
+            for(LT cc=0; cc<ncolumns; cc++ )
             {
-                add_value( arr[sel_arr[ii]*ncolumns+cc], json_data[ arr_key ] );
+              add_next( kk++, jj++, sz );
+              add_value( arr[sel_arr[ii]*ncolumns+cc] );
             }
         }
+
+        fout << ( dense ? "\n    ]" : "\n]" );
     }
+
+private:
+
+    /// Internal structure of file data
+    std::iostream& fout;
+    bool dense = false;
+    bool first = false;
+    const long values_in_line = 10;
+
+    template <class T>
+    void add_value( const T& value  )
+    {
+        fout << value;
+    }
+
+
+    void add_key( const std::string& field_name )
+    {
+        if( first )
+        {
+            first = false;
+            fout << "\n";
+        }
+        else
+        {
+            fout << ",\n";
+        }
+        fout << ( dense ? "    \"" : "\"" );
+        fout << field_name << "\": ";
+    }
+
+    void add_next( long ndx, long& jj, long line_size )
+    {
+        if( ndx )
+            fout << ", ";
+        if( jj == line_size )
+        {
+            jj=0;
+            fout << ( dense ? "\n        " : "\n" );
+        }
+    }
+
+    std::string key( const std::string& name ) const
+    {
+        return  name;
+    }
+
 
 };
 
@@ -227,10 +269,11 @@ protected:
 };
 
 
-template <> void SimdJsonWrite::add_value( const char& value, nlohmann::json& json_arr );
-template <> void SimdJsonWrite::add_value( const std::string& value, nlohmann::json& json_arr );
-template <> void SimdJsonWrite::write_key_value( const std::string& field_name, const char& value );
-template <> void SimdJsonWrite::write_key_value( const std::string& field_name, const std::string& value );
+
+template <> void SimdJsonWrite::add_value( const double& );
+template <> void SimdJsonWrite::add_value( const float& );
+template <> void SimdJsonWrite::add_value( const char& value );
+template <> void SimdJsonWrite::add_value( const std::string& value );
 
 }  // io_formats
 
